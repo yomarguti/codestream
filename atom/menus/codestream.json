@@ -1,0 +1,26 @@
+{
+  "context-menu": {
+    "atom-text-editor": [
+      {
+        "label": "Toggle codestream",
+        "command": "codestream:toggle"
+      }
+    ]
+  },
+  "menu": [
+    {
+      "label": "Packages",
+      "submenu": [
+        {
+          "label": "codestream",
+          "submenu": [
+            {
+              "label": "Toggle",
+              "command": "codestream:toggle"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
