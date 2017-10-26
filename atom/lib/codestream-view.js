@@ -1,46 +1,40 @@
-import React, { Component } from "react"
+import React from "react"
 import { render, unmountComponentAtNode } from "react-dom"
+import Onboarding from "./components/Onboarding"
 
-class CodestreamView {
-  constructor(serializedState) {
-    this.isVisible = false
-    this.element = document.createElement("div")
-    render(<p>Hello from Codestream</p>, this.element)
-  }
+export default class CodestreamView {
+	constructor(serializedState) {
+		this.element = document.createElement("div")
+		this.element.classList.add("codestream")
+		render(<Onboarding />, this.element)
+	}
 
-  getTitle() {
-    return "Codestream"
-  }
+	getTitle() {
+		return "CodeStream"
+	}
 
-  getDefaultLocation() {
-    return "right"
-  }
+	getDefaultLocation() {
+		return "right"
+	}
 
-  // Returns an object that can be retrieved when package is activated
-  serialize() {}
+	getAllowedLocations() {
+		return ["right", "left"]
+	}
 
-  // Tear down any state and detach
-  destroy() {
-    unmountComponentAtNode(this.element)
-    this.element.remove()
-  }
+	isPermanentDockItem() {
+		return false
+	}
 
-  toggle() {
-    this.isVisible ? this.hide() : this.show()
-  }
+	getURI() {
+		return "atom://codestream"
+	}
 
-  hide() {
-    atom.workspace.hide(this)
-    this.isVisible = false
-  }
+	// Returns an object that can be retrieved when package is activated
+	serialize() {}
 
-  show() {
-    if (!this.isVisible) {
-      atom.workspace.open(this).then(() => {
-        this.isVisible = true
-        atom.workspace.getRightDock().show()
-      })
-    }
-  }
+	// Tear down any state and detach
+	destroy() {
+		unmountComponentAtNode(this.element)
+		this.element.remove()
+	}
 }
-module.exports = CodestreamView
