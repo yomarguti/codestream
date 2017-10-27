@@ -1,73 +1,46 @@
-'use babel';
+import React from "react"
+import Enzyme, { render, mount } from "enzyme"
+import Adapter from "enzyme-adapter-react-16"
+import Onboarding from "../lib/components/Onboarding"
 
-import Codestream from '../lib/codestream';
+Enzyme.configure({ adapter: new Adapter() })
 
-// Use the command `window:run-package-specs` (cmd-alt-ctrl-p) to run specs.
-//
-// To run a specific `it` or `describe` block add an `f` to the front (e.g. `fit`
-// or `fdescribe`). Remove the `f` to unfocus the block.
+const mockRepository = { getConfigValue() {}, getWorkingDirectory() {} }
 
-describe('Codestream', () => {
-  let workspaceElement, activationPromise;
+describe("Onboarding view", () => {
+	it("has fields for username, password, and email address", () => {
+		const view = render(<Onboarding repository={mockRepository} />)
+		expect(view.find('input[placeholder="Username"]').length).toBe(1)
+		expect(view.find('input[placeholder="Password"]').length).toBe(1)
+		expect(view.find('input[placeholder="Email Address"]').length).toBe(1)
+	})
 
-  beforeEach(() => {
-    workspaceElement = atom.views.getView(atom.workspace);
-    activationPromise = atom.packages.activatePackage('codestream');
-  });
+	describe("Username field", () => {
+		const systemUser = "tommy"
+		const view = mount(<Onboarding repository={mockRepository} username={systemUser} />)
 
-  describe('when the codestream:toggle event is triggered', () => {
-    it('hides and shows the modal panel', () => {
-      // Before the activation event the view is not on the DOM, and no panel
-      // has been created
-      expect(workspaceElement.querySelector('.codestream')).not.toExist();
+		describe("when a username is provided", () => {
+			it("is pre-populated with given username", () => {
+				expect(view.find('input[name="username"]').prop("value")).toBe(systemUser)
+			})
+		})
 
-      // This is an activation event, triggering it will cause the package to be
-      // activated.
-      atom.commands.dispatch(workspaceElement, 'codestream:toggle');
+		describe("when a username is not provided", () => {
+			it("uses 'Username' as the placeholder", () => {
+				expect(view.find('input[name="username"]').prop("placeholder")).toBe("Username")
+			})
+		})
 
-      waitsForPromise(() => {
-        return activationPromise;
-      });
+		it("shows errors when left empty", () => {
+			view.find('input[name="username"]').simulate("blur")
+			expect(view.find('input[placeholder="Username"][required]').exists()).toBe(true)
+		})
 
-      runs(() => {
-        expect(workspaceElement.querySelector('.codestream')).toExist();
-
-        let codestreamElement = workspaceElement.querySelector('.codestream');
-        expect(codestreamElement).toExist();
-
-        let codestreamPanel = atom.workspace.panelForItem(codestreamElement);
-        expect(codestreamPanel.isVisible()).toBe(true);
-        atom.commands.dispatch(workspaceElement, 'codestream:toggle');
-        expect(codestreamPanel.isVisible()).toBe(false);
-      });
-    });
-
-    it('hides and shows the view', () => {
-      // This test shows you an integration test testing at the view level.
-
-      // Attaching the workspaceElement to the DOM is required to allow the
-      // `toBeVisible()` matchers to work. Anything testing visibility or focus
-      // requires that the workspaceElement is on the DOM. Tests that attach the
-      // workspaceElement to the DOM are generally slower than those off DOM.
-      jasmine.attachToDOM(workspaceElement);
-
-      expect(workspaceElement.querySelector('.codestream')).not.toExist();
-
-      // This is an activation event, triggering it causes the package to be
-      // activated.
-      atom.commands.dispatch(workspaceElement, 'codestream:toggle');
-
-      waitsForPromise(() => {
-        return activationPromise;
-      });
-
-      runs(() => {
-        // Now we can test for view visibility
-        let codestreamElement = workspaceElement.querySelector('.codestream');
-        expect(codestreamElement).toBeVisible();
-        atom.commands.dispatch(workspaceElement, 'codestream:toggle');
-        expect(codestreamElement).not.toBeVisible();
-      });
-    });
-  });
-});
+		// TODO
+		xit("shows errors when there are invalid characters", () => {
+			const event = { target: { value: "foobar\\" } }
+			view.find('input[name="username"]').simulate("change", event)
+			expect(view.find(".error-message").text()).toBe("message about characters")
+		})
+	})
+})
