@@ -6,14 +6,14 @@ export default class Onboarding extends Component {
 		const { repository } = props
 		this.state = {
 			email: repository.getConfigValue("user.email", repository.getWorkingDirectory()),
-			username: "",
-			usernameTouched: false
+			username: props.username || "",
+			isUsernameTouched: false
 		}
 	}
 
 	onBlur = () => {
-		if (this.state.usernameTouched) return
-		this.setState({ usernameTouched: true })
+		if (this.state.isUsernameTouched) return
+		this.setState({ isUsernameTouched: true })
 	}
 
 	render() {
@@ -24,14 +24,16 @@ export default class Onboarding extends Component {
 						<input
 							className="native-key-bindings input-text control"
 							type="text"
+							name="username"
 							placeholder="Username"
 							minLength="6"
 							maxLength="21"
 							pattern="^[-a-z0-9_.]{6,21}$"
 							tabIndex="0"
-							defaultValue={this.state.username}
+							value={this.state.username}
+							onChange={e => this.setState({ username: e.target.value })}
 							onBlur={this.onBlur}
-							required={this.state.usernameTouched}
+							required={this.state.isUsernameTouched}
 						/>
 						<small>6-21 characters</small>
 					</div>

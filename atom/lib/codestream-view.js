@@ -1,5 +1,6 @@
 import React from "react"
 import { render, unmountComponentAtNode } from "react-dom"
+import getSystemUser from "username"
 import Onboarding from "./components/Onboarding"
 
 export const CODESTREAM_VIEW_URI = "atom://codestream"
@@ -13,7 +14,10 @@ export default class CodestreamView {
 		if (repositories.length === 0) {
 			render(<h2 id="no-git">CodeStream only works in git repositories</h2>, this.element)
 		} else {
-			render(<Onboarding repository={repositories[0]} />, this.element)
+			render(
+				<Onboarding repository={repositories[0]} username={getSystemUser.sync()} />,
+				this.element
+			)
 		}
 	}
 
