@@ -2,8 +2,10 @@ import React from "react"
 import { render, unmountComponentAtNode } from "react-dom"
 import Onboarding from "./components/Onboarding"
 
+export const CODESTREAM_VIEW_URI = "atom://codestream"
+
 export default class CodestreamView {
-	constructor(serializedState) {
+	constructor() {
 		this.element = document.createElement("div")
 		this.element.classList.add("codestream")
 		render(<Onboarding />, this.element)
@@ -26,13 +28,15 @@ export default class CodestreamView {
 	}
 
 	getURI() {
-		return "atom://codestream"
+		return CODESTREAM_VIEW_URI
 	}
 
-	// Returns an object that can be retrieved when package is activated
-	serialize() {}
+	serialize() {
+		return {
+			deserializer: "codestream/CodestreamView"
+		}
+	}
 
-	// Tear down any state and detach
 	destroy() {
 		unmountComponentAtNode(this.element)
 		this.element.remove()
