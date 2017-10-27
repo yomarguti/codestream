@@ -5,8 +5,15 @@ export default class Onboarding extends Component {
 		super(props)
 		const { repository } = props
 		this.state = {
-			email: repository.getConfigValue("user.email", repository.getWorkingDirectory())
+			email: repository.getConfigValue("user.email", repository.getWorkingDirectory()),
+			username: "",
+			usernameTouched: false
 		}
+	}
+
+	onBlur = () => {
+		if (this.state.usernameTouched) return
+		this.setState({ usernameTouched: true })
 	}
 
 	render() {
@@ -22,6 +29,9 @@ export default class Onboarding extends Component {
 							maxLength="21"
 							pattern="^[-a-z0-9_.]{6,21}$"
 							tabIndex="0"
+							defaultValue={this.state.username}
+							onBlur={this.onBlur}
+							required={this.state.usernameTouched}
 						/>
 						<small>6-21 characters</small>
 					</div>
