@@ -8,11 +8,21 @@ export default class CodestreamView {
 	constructor() {
 		this.element = document.createElement("div")
 		this.element.classList.add("codestream")
-		render(<Onboarding />, this.element)
+
+		const repositories = atom.project.getRepositories().filter(Boolean)
+		if (repositories.length === 0) {
+			render(<h2 id="no-git">CodeStream only works in git repositories</h2>, this.element)
+		} else {
+			render(<Onboarding repository={repositories[0]} />, this.element)
+		}
 	}
 
 	getTitle() {
 		return "CodeStream"
+	}
+
+	getIconName() {
+		return "comment-discussion"
 	}
 
 	getDefaultLocation() {
