@@ -7,13 +7,28 @@ export default class Onboarding extends Component {
 		this.state = {
 			email: repository.getConfigValue("user.email", repository.getWorkingDirectory()),
 			username: props.username || "",
-			isUsernameTouched: false
+			password: "",
+			isUsernameTouched: false,
+			isPasswordTouched: false
 		}
 	}
 
 	onBlur = () => {
 		if (this.state.isUsernameTouched) return
 		this.setState({ isUsernameTouched: true })
+	}
+
+	onBlurPassword = () => {
+		if (this.state.isPasswordTouched) return
+		this.setState({ isPasswordTouched: true })
+	}
+
+	renderPasswordHelp = () => {
+		const length = this.state.password.length
+		if (length < 6 && this.state.isPasswordTouched) {
+			return <span className="error-message">{`${6 - length} more character(s) please`}</span>
+		}
+		return <span>6 + characters</span>
 	}
 
 	render() {
@@ -28,7 +43,7 @@ export default class Onboarding extends Component {
 							placeholder="Username"
 							minLength="6"
 							maxLength="21"
-							pattern="^[-a-z0-9_.]{6,21}$"
+							pattern="[-a-z0-9_.]{6,21}"
 							tabIndex="0"
 							value={this.state.username}
 							onChange={e => this.setState({ username: e.target.value })}
@@ -41,11 +56,16 @@ export default class Onboarding extends Component {
 						<input
 							className="native-key-bindings input-text control"
 							type="password"
+							name="password"
 							placeholder="Password"
 							minLength="6"
 							tabIndex="1"
+							value={this.state.password}
+							onChange={e => this.setState({ password: e.target.value })}
+							onBlur={this.onBlurPassword}
+							required={this.state.isPasswordTouched}
 						/>
-						<small>6+ characters</small>
+						{this.renderPasswordHelp()}
 					</div>
 					<div className="control-group">
 						<input

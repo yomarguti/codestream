@@ -33,7 +33,7 @@ describe("Onboarding view", () => {
 
 		it("shows errors when left empty", () => {
 			view.find('input[name="username"]').simulate("blur")
-			expect(view.find('input[placeholder="Username"][required]').exists()).toBe(true)
+			expect(view.find('input[name="username"][required]').exists()).toBe(true)
 		})
 
 		// TODO
@@ -41,6 +41,21 @@ describe("Onboarding view", () => {
 			const event = { target: { value: "foobar\\" } }
 			view.find('input[name="username"]').simulate("change", event)
 			expect(view.find(".error-message").text()).toBe("message about characters")
+		})
+	})
+
+	describe("Password field", () => {
+		const view = mount(<Onboarding repository={mockRepository} />)
+
+		it("shows errors when left empty", () => {
+			view.find('input[name="password"]').simulate("blur")
+			expect(view.find('input[name="password"][required]').exists()).toBe(true)
+		})
+
+		it("shows message when value is not long enough", () => {
+			const event = { target: { value: "five" } }
+			view.find('input[name="password"]').simulate("change", event)
+			expect(view.find(".error-message").text()).toBe("2 more character(s) please")
 		})
 	})
 })
