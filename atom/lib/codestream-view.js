@@ -14,10 +14,9 @@ export default class CodestreamView {
 		if (repositories.length === 0) {
 			render(<h2 id="no-git">CodeStream only works in git repositories</h2>, this.element)
 		} else {
-			render(
-				<Onboarding repository={repositories[0]} username={getSystemUser.sync()} />,
-				this.element
-			)
+			const repository = repositories[0]
+			const email = repository.getConfigValue("user.email", repository.getWorkingDirectory())
+			render(<Onboarding email={email} username={getSystemUser.sync()} />, this.element)
 		}
 	}
 

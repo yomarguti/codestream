@@ -5,15 +5,16 @@ export default class Onboarding extends Component {
 		super(props)
 		const { repository } = props
 		this.state = {
-			email: repository.getConfigValue("user.email", repository.getWorkingDirectory()),
 			username: props.username || "",
 			password: "",
+			email: this.props.email || "",
 			usernameTouched: false,
-			passwordTouched: false
+			passwordTouched: false,
+			emailTouched: false
 		}
 	}
 
-	onBlur = () => {
+	onBlurUsername = () => {
 		if (this.state.usernameTouched) return
 		this.setState({ usernameTouched: true })
 	}
@@ -21,6 +22,11 @@ export default class Onboarding extends Component {
 	onBlurPassword = () => {
 		if (this.state.passwordTouched) return
 		this.setState({ passwordTouched: true })
+	}
+
+	onBlurEmail = () => {
+		if (this.state.emailTouched) return
+		this.setState({ emailTouched: true })
 	}
 
 	renderPasswordHelp = () => {
@@ -47,7 +53,7 @@ export default class Onboarding extends Component {
 							tabIndex="0"
 							value={this.state.username}
 							onChange={e => this.setState({ username: e.target.value })}
-							onBlur={this.onBlur}
+							onBlur={this.onBlurUsername}
 							required={this.state.usernameTouched}
 						/>
 						<small>6-21 characters</small>
@@ -71,9 +77,13 @@ export default class Onboarding extends Component {
 						<input
 							className="native-key-bindings input-text control"
 							type="email"
+							name="email"
 							placeholder="Email Address"
-							value={this.state.email}
 							tabIndex="2"
+							value={this.state.email}
+							onChange={e => this.setState({ email: e.target.value })}
+							onBlur={this.onBlurEmail}
+							required={this.state.emailTouched}
 						/>
 						<small>FYI, we got this from Git</small>
 					</div>
