@@ -8,24 +8,24 @@ export default class Onboarding extends Component {
 			email: repository.getConfigValue("user.email", repository.getWorkingDirectory()),
 			username: props.username || "",
 			password: "",
-			isUsernameTouched: false,
-			isPasswordTouched: false
+			usernameTouched: false,
+			passwordTouched: false
 		}
 	}
 
 	onBlur = () => {
-		if (this.state.isUsernameTouched) return
-		this.setState({ isUsernameTouched: true })
+		if (this.state.usernameTouched) return
+		this.setState({ usernameTouched: true })
 	}
 
 	onBlurPassword = () => {
-		if (this.state.isPasswordTouched) return
-		this.setState({ isPasswordTouched: true })
+		if (this.state.passwordTouched) return
+		this.setState({ passwordTouched: true })
 	}
 
 	renderPasswordHelp = () => {
 		const length = this.state.password.length
-		if (length < 6 && this.state.isPasswordTouched) {
+		if (length < 6 && this.state.passwordTouched) {
 			return <span className="error-message">{`${6 - length} more character(s) please`}</span>
 		}
 		return <span>6 + characters</span>
@@ -48,7 +48,7 @@ export default class Onboarding extends Component {
 							value={this.state.username}
 							onChange={e => this.setState({ username: e.target.value })}
 							onBlur={this.onBlur}
-							required={this.state.isUsernameTouched}
+							required={this.state.usernameTouched}
 						/>
 						<small>6-21 characters</small>
 					</div>
@@ -63,7 +63,7 @@ export default class Onboarding extends Component {
 							value={this.state.password}
 							onChange={e => this.setState({ password: e.target.value })}
 							onBlur={this.onBlurPassword}
-							required={this.state.isPasswordTouched}
+							required={this.state.passwordTouched}
 						/>
 						{this.renderPasswordHelp()}
 					</div>
