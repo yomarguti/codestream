@@ -37,6 +37,20 @@ export default class Onboarding extends Component {
 		return <span>6 + characters</span>
 	}
 
+	isFormInvalid = () => {
+		const usernameRegex = new RegExp("^[-a-z0-9_.]{6,21}$")
+		const emailRegex = new RegExp(
+			"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
+		)
+		const { username, password, email } = this.state
+		const usernameInvalid = usernameRegex.test(username) === false
+		const passwordInvalid = password.length < 6
+		const emailInvalid = email === "" || emailRegex.test(email) === false
+		return usernameInvalid || passwordInvalid || emailInvalid
+	}
+
+	submitCredentials = () => {}
+
 	render() {
 		return (
 			<div className="signup-form">
@@ -76,7 +90,7 @@ export default class Onboarding extends Component {
 					<div className="control-group">
 						<input
 							className="native-key-bindings input-text control"
-							type="email"
+							type="text"
 							name="email"
 							placeholder="Email Address"
 							tabIndex="2"
@@ -91,6 +105,8 @@ export default class Onboarding extends Component {
 						id="signup-button"
 						className="control btn btn-primary inline-block-tight"
 						tabIndex="3"
+						disabled={this.isFormInvalid()}
+						onClick={this.submitCredentials}
 					>
 						SIGN UP
 					</button>

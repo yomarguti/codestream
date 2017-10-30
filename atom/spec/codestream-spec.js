@@ -80,4 +80,20 @@ describe("Onboarding view", () => {
 			})
 		})
 	})
+
+	describe("Sign Up button", () => {
+		const view = mount(<Onboarding repository={mockRepository} />)
+
+		it("is disabled while the form values are invalid", () => {
+			expect(view.find("#signup-button").prop("disabled")).toBe(true)
+		})
+
+		it("is clickable while the form values are valid", () => {
+			view.find('input[name="username"]').simulate("change", { target: { value: "f_oo-b7a.r" } })
+			view.find('input[name="password"]').simulate("change", { target: { value: "somePassword" } })
+			view.find('input[name="email"]').simulate("change", { target: { value: "foo@bar.com" } })
+
+			expect(view.find("#signup-button").prop("disabled")).toBe(false)
+		})
+	})
 })
