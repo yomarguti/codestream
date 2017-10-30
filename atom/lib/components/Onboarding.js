@@ -2,6 +2,12 @@ import React, { Component } from "react"
 
 const isUsernameInvalid = username => new RegExp("^[-a-z0-9_.]{6,21}$").test(username) === false
 const isPasswordInvalid = password => password.length < 6
+const isEmailInvalid = email => {
+	const emailRegex = new RegExp(
+		"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
+	)
+	return email.leng === "" || emailRegex.test(email) === false
+}
 
 export default class Onboarding extends Component {
 	constructor(props) {
@@ -51,13 +57,16 @@ export default class Onboarding extends Component {
 		return <span>6+ characters</span>
 	}
 
+	renderEmailHelp = () => {
+		const { email } = this.state
+		if (isEmailInvalid(email))
+			return <small className="error-message">That looks like an invalid email address</small>
+		else return <small>FYI, we got this from Git</small>
+	}
+
 	isFormInvalid = () => {
-		const emailRegex = new RegExp(
-			"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
-		)
 		const { username, password, email } = this.state
-		const emailInvalid = email === "" || emailRegex.test(email) === false
-		return isUsernameInvalid(username) || isPasswordInvalid(password) || emailInvalid
+		return isUsernameInvalid(username) || isPasswordInvalid(password) || isEmailInvalid(email)
 	}
 
 	submitCredentials = () => {}
@@ -98,7 +107,7 @@ export default class Onboarding extends Component {
 						/>
 						{this.renderPasswordHelp()}
 					</div>
-					<div className="control-group">
+					<div id="email-controls" className="control-group">
 						<input
 							className="native-key-bindings input-text control"
 							type="text"
@@ -110,7 +119,7 @@ export default class Onboarding extends Component {
 							onBlur={this.onBlurEmail}
 							required={this.state.emailTouched}
 						/>
-						<small>FYI, we got this from Git</small>
+						{this.renderEmailHelp()}
 					</div>
 					<button
 						id="signup-button"

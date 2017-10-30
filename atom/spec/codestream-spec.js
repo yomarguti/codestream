@@ -61,23 +61,31 @@ describe("Onboarding view", () => {
 	})
 
 	describe("Email address field", () => {
-		const email = "foo@bar.com"
-		const view = mount(<Onboarding repository={mockRepository} email={email} />)
+		const view = mount(<Onboarding repository={mockRepository} />)
 
 		it("shows errors when left empty", () => {
 			view.find('input[name="email"]').simulate("blur")
 			expect(view.find('input[name="email"][required]').exists()).toBe(true)
 		})
 
-		describe("when an email address has is provided", () => {
-			it("is pre-populated with given email address", () => {
-				expect(view.find('input[name="email"]').prop("value")).toBe(email)
-			})
+		it("shows errors when provided input is invalid", () => {
+			view.find('input[name="email"]').simulate("change", { target: { value: "foo@" } })
+			expect(view.find("#email-controls .error-message").text()).toBe(
+				"That looks like an invalid email address"
+			)
 		})
 
 		describe("when an email address is not provided", () => {
 			it("uses 'Email Address' as the placeholder", () => {
 				expect(view.find('input[name="email"]').prop("placeholder")).toBe("Email Address")
+			})
+		})
+
+		describe("when an email address is provided to the component", () => {
+			const email = "foo@bar.com"
+			const view = mount(<Onboarding repository={mockRepository} email={email} />)
+			it("is pre-populated with given email address", () => {
+				expect(view.find('input[name="email"]').prop("value")).toBe(email)
 			})
 		})
 	})
