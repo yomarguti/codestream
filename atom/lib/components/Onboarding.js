@@ -29,6 +29,15 @@ export default class Onboarding extends Component {
 		this.setState({ emailTouched: true })
 	}
 
+	renderUsernameHelp = () => {
+		const { username } = this.state
+		if (username.length < 6 || username.length > 21)
+			return <small className="error-message">6-21 characters</small>
+		else if (new RegExp("^[-a-z0-9_.]{6,21}$").test(username) === false)
+			return <small className="error-message">Valid special characters are (.-_)</small>
+		else return <small>6-21 characters</small>
+	}
+
 	renderPasswordHelp = () => {
 		const length = this.state.password.length
 		if (length < 6 && this.state.passwordTouched) {
@@ -55,7 +64,7 @@ export default class Onboarding extends Component {
 		return (
 			<div className="signup-form">
 				<div id="controls">
-					<div className="control-group">
+					<div id="username-controls" className="control-group">
 						<input
 							className="native-key-bindings input-text control"
 							type="text"
@@ -70,9 +79,9 @@ export default class Onboarding extends Component {
 							onBlur={this.onBlurUsername}
 							required={this.state.usernameTouched}
 						/>
-						<small>6-21 characters</small>
+						{this.renderUsernameHelp()}
 					</div>
-					<div className="control-group">
+					<div id="password-controls" className="control-group">
 						<input
 							className="native-key-bindings input-text control"
 							type="password"

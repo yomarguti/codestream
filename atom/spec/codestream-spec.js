@@ -36,11 +36,10 @@ describe("Onboarding view", () => {
 			expect(view.find('input[name="username"][required]').exists()).toBe(true)
 		})
 
-		// TODO
-		xit("shows errors when there are invalid characters", () => {
-			const event = { target: { value: "foobar\\" } }
+		it("shows errors when there are invalid characters", () => {
+			const event = { target: { value: "foobar\\?^$" } }
 			view.find('input[name="username"]').simulate("change", event)
-			expect(view.find(".error-message").text()).toBe("message about characters")
+			expect(view.find("#username-controls .error-message").text()).toContain("characters")
 		})
 	})
 
@@ -53,9 +52,11 @@ describe("Onboarding view", () => {
 		})
 
 		it("shows message when value is not long enough", () => {
-			const event = { target: { value: "five" } }
-			view.find('input[name="password"]').simulate("change", event)
-			expect(view.find(".error-message").text()).toBe("2 more character(s) please")
+			view.find('input[name="password"]').simulate("blur")
+			view.find('input[name="password"]').simulate("change", { target: { value: "four" } })
+			expect(view.find("#password-controls .error-message").text()).toBe(
+				"2 more character(s) please"
+			)
 		})
 	})
 
