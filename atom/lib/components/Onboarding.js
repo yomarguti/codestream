@@ -1,5 +1,8 @@
 import React, { Component } from "react"
 
+const isUsernameInvalid = username => new RegExp("^[-a-z0-9_.]{6,21}$").test(username) === false
+const isPasswordInvalid = password => password.length < 6
+
 export default class Onboarding extends Component {
 	constructor(props) {
 		super(props)
@@ -33,29 +36,28 @@ export default class Onboarding extends Component {
 		const { username } = this.state
 		if (username.length < 6 || username.length > 21)
 			return <small className="error-message">6-21 characters</small>
-		else if (new RegExp("^[-a-z0-9_.]{6,21}$").test(username) === false)
+		else if (isUsernameInvalid(username))
 			return <small className="error-message">Valid special characters are (.-_)</small>
 		else return <small>6-21 characters</small>
 	}
 
 	renderPasswordHelp = () => {
-		const length = this.state.password.length
-		if (length < 6 && this.state.passwordTouched) {
-			return <span className="error-message">{`${6 - length} more character(s) please`}</span>
+		const { password, passwordTouched } = this.state
+		if (isPasswordInvalid(password) && passwordTouched) {
+			return (
+				<span className="error-message">{`${6 - password.length} more character(s) please`}</span>
+			)
 		}
-		return <span>6 + characters</span>
+		return <span>6+ characters</span>
 	}
 
 	isFormInvalid = () => {
-		const usernameRegex = new RegExp("^[-a-z0-9_.]{6,21}$")
 		const emailRegex = new RegExp(
 			"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
 		)
 		const { username, password, email } = this.state
-		const usernameInvalid = usernameRegex.test(username) === false
-		const passwordInvalid = password.length < 6
 		const emailInvalid = email === "" || emailRegex.test(email) === false
-		return usernameInvalid || passwordInvalid || emailInvalid
+		return isUsernameInvalid(username) || isPasswordInvalid(password) || emailInvalid
 	}
 
 	submitCredentials = () => {}
