@@ -1,4 +1,5 @@
 import React, { Component } from "react"
+import cx from "classnames"
 
 const isUsernameInvalid = username => new RegExp("^[-a-z0-9_.]{6,21}$").test(username) === false
 const isPasswordInvalid = password => password.length < 6
@@ -69,11 +70,15 @@ export default class Onboarding extends Component {
 		return isUsernameInvalid(username) || isPasswordInvalid(password) || isEmailInvalid(email)
 	}
 
-	submitCredentials = () => {}
+	submitCredentials = () => {
+		if (this.isFormInvalid()) return
+		this.setState({ loading: true })
+		setTimeout(() => this.setState({ loading: false }), 4000)
+	}
 
 	render() {
 		return (
-			<div className="signup-form">
+			<form className="signup-form" onSubmit={this.submitCredentials}>
 				<div id="controls">
 					<div id="username-controls" className="control-group">
 						<input
@@ -123,19 +128,23 @@ export default class Onboarding extends Component {
 					</div>
 					<button
 						id="signup-button"
-						className="control btn btn-primary inline-block-tight"
+						className={cx("control btn inline-block-tight", { "btn-primary": !this.state.loading })}
 						tabIndex="3"
-						disabled={this.isFormInvalid()}
+						disabled={this.state.loading || this.isFormInvalid()}
 						onClick={this.submitCredentials}
 					>
-						SIGN UP
+						{this.state.loading ? (
+							<span className="loading loading-spinner-tiny inline-block" />
+						) : (
+							"SIGN UP"
+						)}
 					</button>
 					<small>
 						By clicking Sign Up, you agree to CodeStream's <a>Terms of Service</a> and{" "}
 						<a>Privacy Policy</a>
 					</small>
 				</div>
-			</div>
+			</form>
 		)
 	}
 }
