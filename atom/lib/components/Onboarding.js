@@ -94,6 +94,10 @@ export default class Onboarding extends Component {
 					>
 						SIGN UP
 					</button>
+					<small>
+						By clicking Sign Up, you agree to CodeStream's <a>Terms of Service</a> and{" "}
+						<a>Privacy Policy</a>
+					</small>
 				</div>
 			</div>
 		)
