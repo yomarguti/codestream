@@ -7,7 +7,7 @@ const isEmailInvalid = email => {
 	const emailRegex = new RegExp(
 		"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
 	)
-	return email.leng === "" || emailRegex.test(email) === false
+	return email === "" || emailRegex.test(email) === false
 }
 
 export default class Onboarding extends Component {
