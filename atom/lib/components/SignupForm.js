@@ -72,7 +72,7 @@ export default class SignupForm extends Component {
 	submitCredentials = () => {
 		if (this.isFormInvalid()) return
 		this.setState({ loading: true })
-		setTimeout(() => this.props.transition("success"), 4000)
+		setTimeout(() => this.props.transition("success", { email: this.state.email }), 4000)
 	}
 
 	render() {

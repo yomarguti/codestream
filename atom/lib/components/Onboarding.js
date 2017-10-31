@@ -7,17 +7,18 @@ export default class Onboarding extends Component {
 	constructor(props) {
 		super(props)
 		this.state = {
-			current: onboardingFlow.initial
+			current: onboardingFlow.initial,
+			email: ""
 		}
 	}
 
-	transition = action =>
-		this.setState(state => ({ current: onboardingFlow.transition(state.current, action) }))
+	transition = (action, data) =>
+		this.setState(state => ({ ...data, current: onboardingFlow.transition(state.current, action) }))
 
 	render() {
 		const views = {
 			signUp: <SignupForm {...this.props} transition={this.transition} />,
-			confirmEmail: <ConfirmEmail />,
+			confirmEmail: <ConfirmEmail email={this.state.email} />,
 			signIn: "Sign in here..."
 		}
 		return views[this.state.current]
