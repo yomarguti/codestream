@@ -46,7 +46,8 @@
     "classnames": "^2.2.5",
     "react": "^16.0.0",
     "react-dom": "^16.0.0",
-    "username": "^3.0.0"
+    "username": "^3.0.0",
+    "xstate": "^1.2.1"
   },
   "devDependencies": {
     "atom-babel6-transpiler": "^1.1.2",

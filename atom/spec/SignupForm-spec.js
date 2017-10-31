@@ -1,15 +1,15 @@
 import React from "react"
 import Enzyme, { render, mount } from "enzyme"
 import Adapter from "enzyme-adapter-react-16"
-import Onboarding from "../lib/components/Onboarding"
+import SignupForm from "../lib/components/SignupForm"
 
 Enzyme.configure({ adapter: new Adapter() })
 
 const mockRepository = { getConfigValue() {}, getWorkingDirectory() {} }
 
-describe("Onboarding view", () => {
+describe("SignupForm view", () => {
 	it("has fields for username, password, and email address", () => {
-		const view = render(<Onboarding repository={mockRepository} />)
+		const view = render(<SignupForm repository={mockRepository} />)
 		expect(view.find('input[placeholder="Username"]').length).toBe(1)
 		expect(view.find('input[placeholder="Password"]').length).toBe(1)
 		expect(view.find('input[placeholder="Email Address"]').length).toBe(1)
@@ -17,7 +17,7 @@ describe("Onboarding view", () => {
 
 	describe("Username field", () => {
 		const systemUser = "tommy"
-		const view = mount(<Onboarding repository={mockRepository} username={systemUser} />)
+		const view = mount(<SignupForm repository={mockRepository} username={systemUser} />)
 
 		describe("when a username is provided", () => {
 			it("is pre-populated with given username", () => {
@@ -44,7 +44,7 @@ describe("Onboarding view", () => {
 	})
 
 	describe("Password field", () => {
-		const view = mount(<Onboarding repository={mockRepository} />)
+		const view = mount(<SignupForm repository={mockRepository} />)
 
 		it("shows errors when left empty", () => {
 			view.find('input[name="password"]').simulate("blur")
@@ -61,7 +61,7 @@ describe("Onboarding view", () => {
 	})
 
 	describe("Email address field", () => {
-		const view = mount(<Onboarding repository={mockRepository} />)
+		const view = mount(<SignupForm repository={mockRepository} />)
 
 		it("shows errors when left empty", () => {
 			view.find('input[name="email"]').simulate("blur")
@@ -83,7 +83,7 @@ describe("Onboarding view", () => {
 
 		describe("when an email address is provided to the component", () => {
 			const email = "foo@bar.com"
-			const view = mount(<Onboarding repository={mockRepository} email={email} />)
+			const view = mount(<SignupForm repository={mockRepository} email={email} />)
 			it("is pre-populated with given email address", () => {
 				expect(view.find('input[name="email"]').prop("value")).toBe(email)
 			})
@@ -91,7 +91,7 @@ describe("Onboarding view", () => {
 	})
 
 	describe("Sign Up button", () => {
-		const view = mount(<Onboarding repository={mockRepository} />)
+		const view = mount(<SignupForm repository={mockRepository} />)
 
 		it("is disabled while the form values are invalid", () => {
 			expect(view.find("#signup-button").prop("disabled")).toBe(true)
