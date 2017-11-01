@@ -2,6 +2,7 @@ import React from "react"
 import { render, unmountComponentAtNode } from "react-dom"
 import getSystemUser from "username"
 import Onboarding from "./components/Onboarding"
+import NoGit from "./components/NoGit"
 
 export const CODESTREAM_VIEW_URI = "atom://codestream"
 
@@ -12,7 +13,7 @@ export default class CodestreamView {
 
 		const repositories = atom.project.getRepositories().filter(Boolean)
 		if (repositories.length === 0) {
-			render(<h2 id="no-git">CodeStream only works in git repositories</h2>, this.element)
+			render(<NoGit />, this.element)
 		} else {
 			const repository = repositories[0]
 			const email = repository.getConfigValue("user.email", repository.getWorkingDirectory())
