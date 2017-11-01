@@ -72,12 +72,12 @@ export default class SignupForm extends Component {
 	submitCredentials = () => {
 		if (this.isFormInvalid()) return
 		this.setState({ loading: true })
-		setTimeout(() => this.props.transition("success", { email: this.state.email }), 4000)
+		setTimeout(() => this.props.transition("success", { email: this.state.email }), 0)
 	}
 
 	render() {
 		return (
-			<form id="signup-form" onSubmit={this.submitCredentials}>
+			<div id="signup-form" onSubmit={this.submitCredentials}>
 				<div id="controls">
 					<div id="username-controls" className="control-group">
 						<input
@@ -143,7 +143,7 @@ export default class SignupForm extends Component {
 						<a>Privacy Policy</a>
 					</small>
 				</div>
-			</form>
+			</div>
 		)
 	}
 }
