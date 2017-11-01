@@ -5,6 +5,17 @@
 @import "ui-variables";
 
 .codestream {
+	min-width: 300px;
+	max-width: 500px;
+	padding-top: 1%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+
+	& > * {
+		width: 75%;
+	}
+
 	a {
 		text-decoration: underline;
 	}
@@ -13,16 +24,11 @@
 		text-align: center;
 	}
 
-	.signup-form {
-		padding-top: 5%;
-
+	#signup-form {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-
 		#controls {
-			width: 60%;
-
 			.control-group {
 				margin: 5% 0;
 
@@ -46,7 +52,6 @@
 		h2 {
 			text-align: center;
 		}
-		padding: 0 5%;
 
 		#inputs {
 			margin-bottom: 5%;

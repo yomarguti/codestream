@@ -40,6 +40,10 @@ export default class CodestreamView {
 		return false
 	}
 
+	getPreferredWidth() {
+		return 300
+	}
+
 	getURI() {
 		return CODESTREAM_VIEW_URI
 	}
