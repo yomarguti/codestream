@@ -9,9 +9,10 @@ export default class ConfirmEmail extends Component {
 	}
 
 	onChange = index => event => {
-		if (isNaN(event.target.value)) return
+		const value = event.target.value
+		if (isNaN(value)) return
 		const values = this.state.values.slice()
-		values[index] = event.target.value
+		values[index] = value
 		this.setState({ values })
 	}
 
