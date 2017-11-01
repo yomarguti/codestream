@@ -15,6 +15,8 @@ export default class ConfirmEmail extends Component {
 		this.setState({ values })
 	}
 
+	goToSignup = () => this.props.transition("back")
+
 	render() {
 		const { email } = this.props
 
@@ -26,7 +28,10 @@ export default class ConfirmEmail extends Component {
 					Didn't receive it? Check your spam folder, or have us <a>send another email</a>.
 				</p>
 				<p>
-					<strong>{email}</strong> not correct? <a>Change it</a>.
+					<strong>{email}</strong> not correct?{" "}
+					<a id="go-back" onClick={this.goToSignup}>
+						Change it
+					</a>.
 				</p>
 				<div>
 					<div id="inputs">

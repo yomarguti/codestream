@@ -18,7 +18,7 @@ export default class Onboarding extends Component {
 	render() {
 		const views = {
 			signUp: <SignupForm {...this.props} transition={this.transition} />,
-			confirmEmail: <ConfirmEmail email={this.state.email} />,
+			confirmEmail: <ConfirmEmail email={this.state.email} transition={this.transition} />,
 			signIn: "Sign in here..."
 		}
 		return views[this.state.current]

@@ -27,4 +27,15 @@ describe("ConfirmEmail view", () => {
 			})
 		})
 	})
+
+	describe("'Change it' link", () => {
+		it("routes back to the sign up form", () => {
+			const stub = jasmine.createSpy()
+			const view = mount(<ConfirmEmail transition={stub} />)
+
+			view.find("#go-back").simulate("click")
+
+			expect(stub).toHaveBeenCalledWith("back")
+		})
+	})
 })

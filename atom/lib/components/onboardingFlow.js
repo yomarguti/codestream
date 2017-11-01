@@ -13,7 +13,8 @@ export default Machine({
 		confirmEmail: {
 			on: {
 				success: "signIn"
-			}
+			},
+			on: { back: "signUp" }
 		},
 		signIn: {
 			on: {
