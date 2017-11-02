@@ -9,6 +9,11 @@ const isEmailInvalid = email => {
 	)
 	return email === "" || emailRegex.test(email) === false
 }
+const createUser = async attributes => {
+	const randomNumber = Math.floor(Math.random() * (10 - 1)) + 1
+	if (randomNumber % 3 === 0) return Promise.reject({ usernameTaken: true, emailTaken: false })
+	else return Promise.resolve({ email: attributes.email })
+}
 
 export default class SignupForm extends Component {
 	constructor(props) {
@@ -39,11 +44,13 @@ export default class SignupForm extends Component {
 	}
 
 	renderUsernameHelp = () => {
-		const { username } = this.state
+		const { username, usernameTaken } = this.state
 		if (username.length < 6 || username.length > 21)
 			return <small className="error-message">6-21 characters</small>
 		else if (isUsernameInvalid(username))
 			return <small className="error-message">Valid special characters are (.-_)</small>
+		else if (usernameTaken)
+			return <small className="error-message">Sorry, someone already grabbed that username.</small>
 		else return <small>6-21 characters</small>
 	}
 
@@ -72,7 +79,14 @@ export default class SignupForm extends Component {
 	submitCredentials = () => {
 		if (this.isFormInvalid()) return
 		this.setState({ loading: true })
-		setTimeout(() => this.props.transition("success", { email: this.state.email }), 0)
+		const { transition } = this.props
+		const { username, password, email } = this.state
+		createUser({ username, password, email, name: this.props.name })
+			.then(user => transition("success", user))
+			.catch(error => {
+				if (error.usernameTaken) this.setState({ loading: false, usernameTaken: true })
+				else if (error.emailTaken) transition("emailTaken", email)
+			})
 	}
 
 	render() {

@@ -17,7 +17,8 @@ export default class CodestreamView {
 		} else {
 			const repository = repositories[0]
 			const email = repository.getConfigValue("user.email", repository.getWorkingDirectory())
-			render(<Onboarding email={email} username={getSystemUser.sync()} />, this.element)
+			const name = repository.getConfigValue("user.name", repository.getWorkingDirectory())
+			render(<Onboarding email={email} username={getSystemUser.sync()} name={name} />, this.element)
 		}
 	}
 

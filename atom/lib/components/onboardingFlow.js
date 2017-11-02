@@ -7,14 +7,15 @@ export default Machine({
 	states: {
 		signUp: {
 			on: {
-				success: "confirmEmail"
+				success: "confirmEmail",
+				emailTaken: "signIn"
 			}
 		},
 		confirmEmail: {
 			on: {
-				success: "signIn"
-			},
-			on: { back: "signUp" }
+				success: "signIn",
+				back: "signUp"
+			}
 		},
 		signIn: {
 			on: {
