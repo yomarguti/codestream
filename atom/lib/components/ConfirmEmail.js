@@ -1,10 +1,16 @@
 import React, { Component } from "react"
+import createClassString from "classnames"
+
+const confirmEmail = async parameters => {
+	return new Promise(resolve => setTimeout(resolve, 1000))
+}
 
 export default class ConfirmEmail extends Component {
 	constructor(props) {
 		super(props)
 		this.state = {
-			values: ["", "", "", "", "", ""]
+			values: ["", "", "", "", "", ""],
+			loading: false
 		}
 	}
 
@@ -17,6 +23,15 @@ export default class ConfirmEmail extends Component {
 	}
 
 	goToSignup = () => this.props.transition("back")
+
+	submitCode = async () => {
+		const code = this.state.values.join("")
+		const { email, userId, transition } = this.props
+		this.setState(state => ({ loading: true }))
+		confirmEmail({ userId, email, code }).then(user => transition("success"))
+	}
+
+	isFormInvalid = () => this.state.values.includes("")
 
 	render() {
 		const { email } = this.props
@@ -48,8 +63,19 @@ export default class ConfirmEmail extends Component {
 							/>
 						))}
 					</div>
-					<button id="submit-button" className="btn inline-block-tight btn-primary">
-						SUBMIT
+					<button
+						id="submit-button"
+						className={createClassString("control btn inline-block-tight", {
+							"btn-primary": !this.state.loading
+						})}
+						disabled={this.state.loading || this.isFormInvalid()}
+						onClick={this.submitCode}
+					>
+						{this.state.loading ? (
+							<span className="loading loading-spinner-tiny inline-block" />
+						) : (
+							"SUBMIT"
+						)}
 					</button>
 				</div>
 			</div>

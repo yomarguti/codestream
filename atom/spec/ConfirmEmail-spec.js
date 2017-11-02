@@ -10,19 +10,15 @@ describe("ConfirmEmail view", () => {
 		const view = mount(<ConfirmEmail />)
 
 		it("they won't accept non-numerical values", () => {
-			view
-				.find("#inputs input")
-				.forEach(input => input.simulate("change", { target: { value: "a" } }))
-			view.find("#inputs input").forEach(input => {
+			view.find("input").forEach(input => input.simulate("change", { target: { value: "a" } }))
+			view.find("input").forEach(input => {
 				expect(input.prop("value")).toBe("")
 			})
 		})
 
 		it("they will accept numerical values", () => {
-			view
-				.find("#inputs input")
-				.forEach(input => input.simulate("change", { target: { value: "1" } }))
-			view.find("#inputs input").forEach(input => {
+			view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }))
+			view.find("input").forEach(input => {
 				expect(input.prop("value")).toBe("1")
 			})
 		})
@@ -30,12 +26,32 @@ describe("ConfirmEmail view", () => {
 
 	describe("'Change it' link", () => {
 		it("routes back to the sign up form", () => {
-			const stub = jasmine.createSpy()
-			const view = mount(<ConfirmEmail transition={stub} />)
+			const transition = jasmine.createSpy()
+			const view = mount(<ConfirmEmail transition={transition} />)
 
 			view.find("#go-back").simulate("click")
 
-			expect(stub).toHaveBeenCalledWith("back")
+			expect(transition).toHaveBeenCalledWith("back")
+		})
+	})
+
+	describe("Submit button", () => {
+		const view = mount(<ConfirmEmail />)
+
+		it("is disabled while the form is empty", () => {
+			expect(view.find("#submit-button").prop("disabled")).toBe(true)
+		})
+
+		it("is disabled while the form is invalid", () => {
+			view.find("input").forEach((input, index) => {
+				if (index < 3) input.simulate("change", { target: { value: "1" } })
+			})
+			expect(view.find("#submit-button").prop("disabled")).toBe(true)
+		})
+
+		it("is enabled when the form is valid", () => {
+			view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }))
+			expect(view.find("#submit-button").prop("disabled")).toBe(false)
 		})
 	})
 })

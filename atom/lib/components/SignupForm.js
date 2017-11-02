@@ -1,5 +1,5 @@
 import React, { Component } from "react"
-import cx from "classnames"
+import createClassString from "classnames"
 import { shell } from "electron"
 
 const isUsernameInvalid = username => new RegExp("^[-a-z0-9_.]{6,21}$").test(username) === false
@@ -13,7 +13,7 @@ const isEmailInvalid = email => {
 const createUser = async attributes => {
 	const randomNumber = Math.floor(Math.random() * (10 - 1)) + 1
 	if (randomNumber % 3 === 0) return Promise.reject({ usernameTaken: true, emailTaken: false })
-	else return Promise.resolve({ email: attributes.email })
+	else return Promise.resolve({ email: attributes.email, userId: "123" })
 }
 
 export default class SignupForm extends Component {
@@ -77,7 +77,7 @@ export default class SignupForm extends Component {
 		return isUsernameInvalid(username) || isPasswordInvalid(password) || isEmailInvalid(email)
 	}
 
-	submitCredentials = () => {
+	submitCredentials = async () => {
 		if (this.isFormInvalid()) return
 		this.setState({ loading: true })
 		const { transition } = this.props
@@ -142,7 +142,9 @@ export default class SignupForm extends Component {
 					</div>
 					<button
 						id="signup-button"
-						className={cx("control btn inline-block-tight", { "btn-primary": !this.state.loading })}
+						className={createClassString("control btn inline-block-tight", {
+							"btn-primary": !this.state.loading
+						})}
 						tabIndex="3"
 						disabled={this.state.loading || this.isFormInvalid()}
 						onClick={this.submitCredentials}
