@@ -1,5 +1,6 @@
 import React, { Component } from "react"
 import cx from "classnames"
+import { shell } from "electron"
 
 const isUsernameInvalid = username => new RegExp("^[-a-z0-9_.]{6,21}$").test(username) === false
 const isPasswordInvalid = password => password.length < 6
@@ -153,8 +154,9 @@ export default class SignupForm extends Component {
 						)}
 					</button>
 					<small>
-						By clicking Sign Up, you agree to CodeStream's <a>Terms of Service</a> and{" "}
-						<a>Privacy Policy</a>
+						By clicking Sign Up, you agree to CodeStream's{" "}
+						<a onClick={() => shell.openExternal("https://codestream.com")}>Terms of Service</a> and{" "}
+						<a onClick={() => shell.openExternal("https://codestream.com")}>Privacy Policy</a>
 					</small>
 					<div id="signin-footer">
 						<p>
