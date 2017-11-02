@@ -56,8 +56,10 @@ describe("ConfirmEmail view", () => {
 	})
 
 	describe("when submitted code is invalid", () => {
-		it("shows an error", () => {
-			const view = mount(<ConfirmEmail confirmEmail={() => Promise.reject()} />)
+		it("shows an error message", () => {
+			const view = mount(
+				<ConfirmEmail confirmEmail={() => Promise.reject({ invalidCode: true })} />
+			)
 			view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }))
 			view.find("#submit-button").simulate("click")
 			waitsFor(() => view.state("invalidCode"))
@@ -71,7 +73,10 @@ describe("ConfirmEmail view", () => {
 			it("sends them back to sign up page", () => {
 				const transition = jasmine.createSpy("transition function")
 				const view = mount(
-					<ConfirmEmail confirmEmail={() => Promise.reject()} transition={transition} />
+					<ConfirmEmail
+						confirmEmail={() => Promise.reject({ invalidCode: true })}
+						transition={transition}
+					/>
 				)
 				view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }))
 				view.find("#submit-button").simulate("click")
@@ -87,6 +92,21 @@ describe("ConfirmEmail view", () => {
 				})
 				waitsFor(() => transition.callCount > 0)
 				runs(() => expect(transition).toHaveBeenCalledWith("back"))
+			})
+		})
+	})
+
+	describe("when the submitted code has expired", () => {
+		it("shows an error message", () => {
+			const view = mount(
+				<ConfirmEmail confirmEmail={() => Promise.reject({ expiredCode: true })} />
+			)
+			view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }))
+			view.find("#submit-button").simulate("click")
+			waitsFor(() => view.state("expiredCode"))
+			runs(() => {
+				view.update()
+				expect(view.find(".error-message").text()).toBe("Sorry, that code has expired.")
 			})
 		})
 	})

@@ -33,17 +33,22 @@ export default class ConfirmEmail extends Component {
 		this.setState(state => ({ loading: true }))
 		confirmEmail({ userId, email, code })
 			.then(user => transition("success"))
-			.catch(error => {
-				if (this.state.failCount === 2) {
-					transition("back")
-				} else {
-					this.setState(state => {
-						return {
-							failCount: state.failCount + 1,
-							invalidCode: true,
-							loading: false,
-							values: state.values.fill("")
-						}
+			.catch(({ invalidCode, expiredCode }) => {
+				if (invalidCode) {
+					if (this.state.failCount === 2) return transition("back")
+					this.setState({
+						failCount: ++this.state.failCount,
+						invalidCode: true,
+						expiredCode: false,
+						loading: false,
+						values: this.state.values.fill("")
+					})
+				} else if (expiredCode) {
+					this.setState({
+						invalidCode: false,
+						expiredCode: true,
+						loading: false,
+						values: this.state.values.fill("")
 					})
 				}
 			})
@@ -53,6 +58,8 @@ export default class ConfirmEmail extends Component {
 
 	renderError = () => {
 		if (this.state.invalidCode) return <span className="error-message">Uh oh. Invalid code.</span>
+		if (this.state.expiredCode)
+			return <span className="error-message">Sorry, that code has expired.</span>
 	}
 
 	render() {
