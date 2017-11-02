@@ -54,4 +54,40 @@ describe("ConfirmEmail view", () => {
 			expect(view.find("#submit-button").prop("disabled")).toBe(false)
 		})
 	})
+
+	describe("when submitted code is invalid", () => {
+		it("shows an error", () => {
+			const view = mount(<ConfirmEmail confirmEmail={() => Promise.reject()} />)
+			view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }))
+			view.find("#submit-button").simulate("click")
+			waitsFor(() => view.state("invalidCode"))
+			runs(() => {
+				view.update()
+				expect(view.find(".error-message").text()).toBe("Uh oh. Invalid code.")
+			})
+		})
+
+		describe("after 3 failed attempts", () => {
+			it("sends them back to sign up page", () => {
+				const transition = jasmine.createSpy("transition function")
+				const view = mount(
+					<ConfirmEmail confirmEmail={() => Promise.reject()} transition={transition} />
+				)
+				view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }))
+				view.find("#submit-button").simulate("click")
+				waitsFor(() => view.state("failCount") === 1)
+				runs(() => {
+					view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }))
+					view.find("#submit-button").simulate("click")
+				})
+				waitsFor(() => view.state("failCount") === 2)
+				runs(() => {
+					view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }))
+					view.find("#submit-button").simulate("click")
+				})
+				waitsFor(() => transition.callCount > 0)
+				runs(() => expect(transition).toHaveBeenCalledWith("back"))
+			})
+		})
+	})
 })

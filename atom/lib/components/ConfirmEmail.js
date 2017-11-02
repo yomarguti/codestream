@@ -1,14 +1,17 @@
 import React, { Component } from "react"
 import createClassString from "classnames"
 
-const confirmEmail = async parameters => {
-	return new Promise(resolve => setTimeout(resolve, 1000))
-}
-
 export default class ConfirmEmail extends Component {
+	static defaultProps = {
+		confirmEmail: async parameters => {
+			return new Promise((resolve, reject) => setTimeout(reject, 1000))
+		}
+	}
+
 	constructor(props) {
 		super(props)
 		this.state = {
+			failCount: 0,
 			values: ["", "", "", "", "", ""],
 			loading: false
 		}
@@ -26,15 +29,35 @@ export default class ConfirmEmail extends Component {
 
 	submitCode = async () => {
 		const code = this.state.values.join("")
-		const { email, userId, transition } = this.props
+		const { email, userId, transition, confirmEmail } = this.props
 		this.setState(state => ({ loading: true }))
-		confirmEmail({ userId, email, code }).then(user => transition("success"))
+		confirmEmail({ userId, email, code })
+			.then(user => transition("success"))
+			.catch(error => {
+				if (this.state.failCount === 2) {
+					transition("back")
+				} else {
+					this.setState(state => {
+						return {
+							failCount: state.failCount + 1,
+							invalidCode: true,
+							loading: false,
+							values: state.values.fill("")
+						}
+					})
+				}
+			})
 	}
 
 	isFormInvalid = () => this.state.values.includes("")
 
+	renderError = () => {
+		if (this.state.invalidCode) return <span className="error-message">Uh oh. Invalid code.</span>
+	}
+
 	render() {
 		const { email } = this.props
+		const { values } = this.state
 
 		return (
 			<div id="email-confirmation">
@@ -49,9 +72,10 @@ export default class ConfirmEmail extends Component {
 						Change it
 					</a>.
 				</p>
-				<div>
+				<div id="form">
+					{this.renderError()}
 					<div id="inputs">
-						{this.state.values.map((value, index) => (
+						{values.map((value, index) => (
 							<input
 								className="native-key-bindings input-text"
 								type="text"
