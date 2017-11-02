@@ -85,7 +85,7 @@ export default class SignupForm extends Component {
 			.then(user => transition("success", user))
 			.catch(error => {
 				if (error.usernameTaken) this.setState({ loading: false, usernameTaken: true })
-				else if (error.emailTaken) transition("emailTaken", email)
+				else if (error.emailTaken) transition("emailExists", email)
 			})
 	}
 
@@ -156,6 +156,16 @@ export default class SignupForm extends Component {
 						By clicking Sign Up, you agree to CodeStream's <a>Terms of Service</a> and{" "}
 						<a>Privacy Policy</a>
 					</small>
+					<div id="signin-footer">
+						<p>
+							<strong>Already have an account?</strong>
+						</p>
+						<p>
+							<strong>
+								<a onClick={() => this.props.transition("emailExists")}>Sign In</a>
+							</strong>
+						</p>
+					</div>
 				</div>
 			</div>
 		)

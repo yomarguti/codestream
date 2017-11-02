@@ -8,7 +8,7 @@ export default Machine({
 		signUp: {
 			on: {
 				success: "confirmEmail",
-				emailTaken: "signIn"
+				emailExists: "signIn"
 			}
 		},
 		confirmEmail: {
