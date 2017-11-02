@@ -71,7 +71,7 @@ describe("SignupForm view", () => {
 		it("shows errors when provided input is invalid", () => {
 			view.find('input[name="email"]').simulate("change", { target: { value: "foo@" } })
 			expect(view.find("#email-controls .error-message").text()).toBe(
-				"That looks like an invalid email address"
+				"Looks like an invalid email address!"
 			)
 		})
 
