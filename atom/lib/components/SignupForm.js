@@ -67,7 +67,7 @@ export default class SignupForm extends Component {
 	renderEmailHelp = () => {
 		const { email } = this.state
 		if (isEmailInvalid(email))
-			return <small className="error-message">That looks like an invalid email address</small>
+			return <small className="error-message">Looks like an invalid email address!</small>
 		else return <small>FYI, we got this from Git</small>
 	}
 
