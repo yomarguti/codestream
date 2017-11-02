@@ -3,8 +3,14 @@ import createClassString from "classnames"
 
 export default class ConfirmEmail extends Component {
 	static defaultProps = {
-		confirmEmail: async parameters => {
-			return new Promise((resolve, reject) => setTimeout(reject, 1000))
+		confirmEmail: async ({ code }) => {
+			return new Promise((resolve, reject) => {
+				setTimeout(() => {
+					if (code === "111111") resolve()
+					else if (code === "123456") reject({ expiredCode: true })
+					else reject({ invalidCode: true })
+				}, 1000)
+			})
 		}
 	}
 
