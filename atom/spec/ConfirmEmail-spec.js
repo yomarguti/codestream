@@ -39,19 +39,19 @@ describe("ConfirmEmail view", () => {
 		const view = mount(<ConfirmEmail />)
 
 		it("is disabled while the form is empty", () => {
-			expect(view.find("#submit-button").prop("disabled")).toBe(true)
+			expect(view.find("Button").prop("disabled")).toBe(true)
 		})
 
 		it("is disabled while the form is invalid", () => {
 			view.find("input").forEach((input, index) => {
 				if (index < 3) input.simulate("change", { target: { value: "1" } })
 			})
-			expect(view.find("#submit-button").prop("disabled")).toBe(true)
+			expect(view.find("Button").prop("disabled")).toBe(true)
 		})
 
 		it("is enabled when the form is valid", () => {
 			view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }))
-			expect(view.find("#submit-button").prop("disabled")).toBe(false)
+			expect(view.find("Button").prop("disabled")).toBe(false)
 		})
 	})
 

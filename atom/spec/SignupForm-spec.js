@@ -94,7 +94,7 @@ describe("SignupForm view", () => {
 		const view = mount(<SignupForm repository={mockRepository} />)
 
 		it("is disabled while the form values are invalid", () => {
-			expect(view.find("#signup-button").prop("disabled")).toBe(true)
+			expect(view.find("Button").prop("disabled")).toBe(true)
 		})
 
 		it("is clickable while the form values are valid", () => {
@@ -102,7 +102,7 @@ describe("SignupForm view", () => {
 			view.find('input[name="password"]').simulate("change", { target: { value: "somePassword" } })
 			view.find('input[name="email"]').simulate("change", { target: { value: "foo@bar.com" } })
 
-			expect(view.find("#signup-button").prop("disabled")).toBe(false)
+			expect(view.find("Button").prop("disabled")).toBe(false)
 		})
 	})
 })

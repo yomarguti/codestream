@@ -1,6 +1,6 @@
 import React, { Component } from "react"
-import createClassString from "classnames"
 import { shell } from "electron"
+import Button from "./Button"
 
 const isUsernameInvalid = username => new RegExp("^[-a-z0-9_.]{6,21}$").test(username) === false
 const isPasswordInvalid = password => password.length < 6
@@ -77,7 +77,8 @@ export default class SignupForm extends Component {
 		return isUsernameInvalid(username) || isPasswordInvalid(password) || isEmailInvalid(email)
 	}
 
-	submitCredentials = async () => {
+	submitCredentials = async event => {
+		event.preventDefault()
 		if (this.isFormInvalid()) return
 		this.setState({ loading: true })
 		const { transition } = this.props
@@ -140,21 +141,15 @@ export default class SignupForm extends Component {
 						/>
 						{this.renderEmailHelp()}
 					</div>
-					<button
+					<Button
 						id="signup-button"
-						className={createClassString("control btn inline-block-tight", {
-							"btn-primary": !this.state.loading
-						})}
+						className="control"
 						tabIndex="3"
-						disabled={this.state.loading || this.isFormInvalid()}
+						disabled={this.isFormInvalid()}
 						onClick={this.submitCredentials}
 					>
-						{this.state.loading ? (
-							<span className="loading loading-spinner-tiny inline-block" />
-						) : (
-							"SIGN UP"
-						)}
-					</button>
+						SIGN UP
+					</Button>
 					<small>
 						By clicking Sign Up, you agree to CodeStream's{" "}
 						<a onClick={() => shell.openExternal("https://codestream.com")}>Terms of Service</a> and{" "}

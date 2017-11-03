@@ -1,5 +1,5 @@
 import React, { Component } from "react"
-import createClassString from "classnames"
+import Button from "./Button"
 
 export default class ConfirmEmail extends Component {
 	static defaultProps = {
@@ -118,20 +118,14 @@ export default class ConfirmEmail extends Component {
 							/>
 						))}
 					</div>
-					<button
+					<Button
 						id="submit-button"
 						type="submit"
-						className={createClassString("native-key-bindings control btn inline-block-tight", {
-							"btn-primary": !this.state.loading
-						})}
-						disabled={this.state.loading || this.isFormInvalid()}
+						disabled={this.isFormInvalid()}
+						loading={this.state.loading}
 					>
-						{this.state.loading ? (
-							<span className="loading loading-spinner-tiny inline-block" />
-						) : (
-							"SUBMIT"
-						)}
-					</button>
+						SUBMIT
+					</Button>
 				</div>
 			</form>
 		)
