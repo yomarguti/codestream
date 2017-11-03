@@ -92,7 +92,7 @@ export default class SignupForm extends Component {
 
 	render() {
 		return (
-			<div id="signup-form" onSubmit={this.submitCredentials}>
+			<form id="signup-form" onSubmit={this.submitCredentials}>
 				<div id="controls">
 					<div id="username-controls" className="control-group">
 						<input
@@ -171,7 +171,7 @@ export default class SignupForm extends Component {
 						</p>
 					</div>
 				</div>
-			</div>
+			</form>
 		)
 	}
 }
