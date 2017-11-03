@@ -45,7 +45,7 @@ export default class ConfirmEmail extends Component {
 		const { email, userId, transition, confirmEmail } = this.props
 		this.setState(state => ({ loading: true }))
 		confirmEmail({ userId, email, code })
-			.then(user => transition("success"))
+			.then(user => transition("success", { email: "" }))
 			.catch(({ invalidCode, expiredCode }) => {
 				if (invalidCode) {
 					if (this.state.failCount === 2) return transition("back")
@@ -72,9 +72,9 @@ export default class ConfirmEmail extends Component {
 
 	renderError = () => {
 		if (this.state.invalidCode)
-			return <span className="error-message small">Uh oh. Invalid code.</span>
+			return <span className="error-message form-error">Uh oh. Invalid code.</span>
 		if (this.state.expiredCode)
-			return <span className="error-message small">Sorry, that code has expired.</span>
+			return <span className="error-message form-error">Sorry, that code has expired.</span>
 	}
 
 	sendNewCode = () => {

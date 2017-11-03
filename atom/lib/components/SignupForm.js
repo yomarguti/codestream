@@ -150,6 +150,7 @@ export default class SignupForm extends Component {
 						tabIndex="3"
 						type="submit"
 						disabled={this.isFormInvalid()}
+						loading={this.state.loading}
 					>
 						SIGN UP
 					</Button>

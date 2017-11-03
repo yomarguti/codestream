@@ -1,20 +1,23 @@
 import React, { Component } from "react"
 import Button from "./Button"
 
-const isPasswordInvalid = password => password.length < 6
+const isPasswordInvalid = password => password.length === 0
 const isEmailInvalid = email => {
 	const emailRegex = new RegExp(
 		"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
 	)
 	return email === "" || emailRegex.test(email) === false
 }
-const createUser = async attributes => {
-	const randomNumber = Math.floor(Math.random() * (10 - 1)) + 1
-	if (randomNumber % 3 === 0) return Promise.reject({ emailTaken: false })
-	else return Promise.resolve({ email: attributes.email, userId: "123" })
-}
 
 export default class LoginForm extends Component {
+	static defaultProps = {
+		authenticate: async ({ password }) => {
+			return new Promise((resolve, reject) =>
+				setTimeout(() => (password === "foobar" ? resolve() : reject()), 1000)
+			)
+		}
+	}
+
 	constructor(props) {
 		super(props)
 		this.state = {
@@ -44,10 +47,17 @@ export default class LoginForm extends Component {
 	renderPasswordHelp = () => {
 		const { password, passwordTouched } = this.state
 		if (isPasswordInvalid(password) && passwordTouched) {
-			return (
-				<span className="error-message">{`${6 - password.length} more character(s) please`}</span>
-			)
+			return <span className="error-message">You might need this.</span>
 		}
+	}
+
+	renderError = () => {
+		if (this.state.failed)
+			return (
+				<span className="error-message form-error">
+					Sorry, you entered an incorrect email or password.
+				</span>
+			)
 	}
 
 	isFormInvalid = () => {
@@ -59,12 +69,12 @@ export default class LoginForm extends Component {
 		event.preventDefault()
 		if (this.isFormInvalid()) return
 		this.setState({ loading: true })
-		const { transition } = this.props
+		const { authenticate, transition } = this.props
 		const { password, email } = this.state
-		createUser({ password, email, name: this.props.name })
+		authenticate({ password, email })
 			.then(user => transition("success", user))
-			.catch(error => {
-				if (error.emailTaken) transition("emailExists", email)
+			.catch(() => {
+				this.setState({ loading: false, failed: true, password: "", passwordTouched: false })
 			})
 	}
 
@@ -72,6 +82,10 @@ export default class LoginForm extends Component {
 		return (
 			<form id="login-form" onSubmit={this.submitCredentials}>
 				<h2>Sign In</h2>
+				{this.props.email !== "" && (
+					<p>Looks like you're already signed up! Please enter your password.</p>
+				)}
+				{this.renderError()}
 				<div id="controls">
 					<div id="email-controls" className="control-group">
 						<input
@@ -93,7 +107,6 @@ export default class LoginForm extends Component {
 							type="password"
 							name="password"
 							placeholder="Password"
-							minLength="6"
 							tabIndex="1"
 							value={this.state.password}
 							onChange={e => this.setState({ password: e.target.value })}
@@ -111,6 +124,7 @@ export default class LoginForm extends Component {
 						tabIndex="2"
 						type="submit"
 						disabled={this.isFormInvalid()}
+						loading={this.state.loading}
 					>
 						SIGN IN
 					</Button>
