@@ -16,10 +16,15 @@
 		width: 75%;
 	}
 
+	// global styles
 	a {
 		text-decoration: underline;
 	}
+	.error-message {
+		color: @text-color-error;
+	}
 
+	// screen styles
 	#no-git {
 		h2 {
 			text-align: center;
@@ -37,10 +42,6 @@
 				&:first-child,
 				&:last-child {
 					margin: 0;
-				}
-
-				.error-message {
-					color: @text-color-error;
 				}
 			}
 
@@ -66,11 +67,10 @@
 		#form {
 			display: flex;
 			flex-direction: column;
-			.error-message {
+			.small {
 				text-align: center;
 				line-height: 1;
 				margin-bottom: 5%;
-				color: @text-color-error;
 			}
 		}
 

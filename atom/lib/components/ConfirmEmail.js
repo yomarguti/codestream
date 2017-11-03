@@ -64,9 +64,10 @@ export default class ConfirmEmail extends Component {
 	isFormInvalid = () => this.state.values.includes("")
 
 	renderError = () => {
-		if (this.state.invalidCode) return <span className="error-message">Uh oh. Invalid code.</span>
+		if (this.state.invalidCode)
+			return <span className="error-message small">Uh oh. Invalid code.</span>
 		if (this.state.expiredCode)
-			return <span className="error-message">Sorry, that code has expired.</span>
+			return <span className="error-message small">Sorry, that code has expired.</span>
 	}
 
 	sendNewCode = () => {
