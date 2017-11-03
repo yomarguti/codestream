@@ -29,7 +29,13 @@ export default class ConfirmEmail extends Component {
 		if (isNaN(value)) return
 		const values = this.state.values.slice()
 		values[index] = value
-		this.setState({ values })
+		this.setState(
+			() => ({ values }),
+			() => {
+				const nextInput = this[`input${index + 1}`]
+				if (nextInput !== undefined) nextInput.focus()
+			}
+		)
 	}
 
 	goToSignup = () => this.props.transition("back")
@@ -104,6 +110,7 @@ export default class ConfirmEmail extends Component {
 								type="text"
 								maxLength="1"
 								tabIndex={index}
+								ref={element => (this[`input${index}`] = element)}
 								key={index}
 								value={value}
 								onChange={this.onChange(index)}
@@ -112,6 +119,7 @@ export default class ConfirmEmail extends Component {
 					</div>
 					<button
 						id="submit-button"
+						tabIndex={values.length + 1}
 						className={createClassString("control btn inline-block-tight", {
 							"btn-primary": !this.state.loading
 						})}
