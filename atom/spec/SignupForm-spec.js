@@ -105,4 +105,26 @@ describe("SignupForm view", () => {
 			expect(view.find("Button").prop("disabled")).toBe(false)
 		})
 	})
+
+	describe("when valid credentials are submitted", () => {
+		describe("when the email already exists", () => {
+			it("the user is taken to the login page", () => {
+				const email = "foo@bar.com"
+				const createUser = () => Promise.reject({ emailExists: true })
+				const transition = jasmine.createSpy("transition function")
+				const view = mount(
+					<SignupForm repository={mockRepository} createUser={createUser} transition={transition} />
+				)
+				view.find('input[name="username"]').simulate("change", { target: { value: "f_oo-b7a.r" } })
+				view
+					.find('input[name="password"]')
+					.simulate("change", { target: { value: "somePassword" } })
+				view.find('input[name="email"]').simulate("change", { target: { value: email } })
+
+				view.find("form").simulate("submit")
+				waitsFor(() => transition.callCount > 0)
+				runs(() => expect(transition).toHaveBeenCalledWith("emailExists", { email }))
+			})
+		})
+	})
 })

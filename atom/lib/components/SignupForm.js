@@ -10,13 +10,16 @@ const isEmailInvalid = email => {
 	)
 	return email === "" || emailRegex.test(email) === false
 }
-const createUser = async attributes => {
-	const randomNumber = Math.floor(Math.random() * (10 - 1)) + 1
-	if (randomNumber % 3 === 0) return Promise.reject({ usernameTaken: true, emailTaken: false })
-	else return Promise.resolve({ email: attributes.email, userId: "123" })
-}
 
 export default class SignupForm extends Component {
+	static defaultProps = {
+		createUser: async attributes => {
+			const randomNumber = Math.floor(Math.random() * (10 - 1)) + 1
+			if (randomNumber % 3 === 0) return Promise.reject({ usernameTaken: true, emailExists: false })
+			else return Promise.resolve({ email: attributes.email, userId: "123" })
+		}
+	}
+
 	constructor(props) {
 		super(props)
 		this.state = {
@@ -81,13 +84,13 @@ export default class SignupForm extends Component {
 		event.preventDefault()
 		if (this.isFormInvalid()) return
 		this.setState({ loading: true })
-		const { transition } = this.props
+		const { createUser, transition, name } = this.props
 		const { username, password, email } = this.state
-		createUser({ username, password, email, name: this.props.name })
+		createUser({ username, password, email, name })
 			.then(user => transition("success", user))
 			.catch(error => {
 				if (error.usernameTaken) this.setState({ loading: false, usernameTaken: true })
-				else if (error.emailTaken) transition("emailExists", email)
+				else if (error.emailExists) transition("emailExists", { email })
 			})
 	}
 
