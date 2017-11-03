@@ -8,18 +8,19 @@ export default Machine({
 		signUp: {
 			on: {
 				success: "confirmEmail",
-				emailExists: "signIn"
+				emailExists: "login"
 			}
 		},
 		confirmEmail: {
 			on: {
-				success: "signIn",
+				success: "login",
 				back: "signUp"
 			}
 		},
-		signIn: {
+		login: {
 			on: {
-				success: "chat"
+				success: "chat",
+				signUp: "signUp"
 			}
 		}
 	}

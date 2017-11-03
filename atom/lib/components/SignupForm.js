@@ -143,7 +143,7 @@ export default class SignupForm extends Component {
 					</div>
 					<Button
 						id="signup-button"
-						className="control"
+						className="control-button"
 						tabIndex="3"
 						type="submit"
 						disabled={this.isFormInvalid()}
@@ -155,7 +155,7 @@ export default class SignupForm extends Component {
 						<a onClick={() => shell.openExternal("https://codestream.com")}>Terms of Service</a> and{" "}
 						<a onClick={() => shell.openExternal("https://codestream.com")}>Privacy Policy</a>
 					</small>
-					<div id="signin-footer">
+					<div className="footer">
 						<p>
 							<strong>Already have an account?</strong>
 						</p>

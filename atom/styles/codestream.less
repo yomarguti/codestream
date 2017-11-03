@@ -30,10 +30,16 @@
 		}
 	}
 
-	#signup-form {
+	#signup-form,
+	#login-form {
 		display: flex;
 		flex-direction: column;
-		align-items: center;
+		justify-content: center;
+
+		h2 {
+			text-align: center;
+		}
+
 		#controls {
 			.control-group {
 				margin: 5% 0;
@@ -42,13 +48,17 @@
 				&:last-child {
 					margin: 0;
 				}
+
+				.help-link {
+					text-align: right;
+				}
 			}
 
-			#signup-button {
+			.control-button {
 				width: 100%;
 			}
 
-			#signin-footer {
+			.footer {
 				margin-top: 10%;
 				text-align: center;
 				p {

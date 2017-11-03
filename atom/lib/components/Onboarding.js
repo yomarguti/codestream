@@ -2,6 +2,7 @@ import React, { Component } from "react"
 import onboardingFlow from "./onboardingFlow"
 import SignupForm from "./SignupForm"
 import EmailConfirmationForm from "./EmailConfirmationForm"
+import LoginForm from "./LoginForm"
 
 export default class Onboarding extends Component {
 	constructor(props) {
@@ -19,7 +20,7 @@ export default class Onboarding extends Component {
 		const views = {
 			signUp: <SignupForm {...this.props} transition={this.transition} />,
 			confirmEmail: <EmailConfirmationForm email={this.state.email} transition={this.transition} />,
-			signIn: "Sign in here..."
+			login: <LoginForm transition={this.transition} />
 		}
 		return views[this.state.current]
 	}
