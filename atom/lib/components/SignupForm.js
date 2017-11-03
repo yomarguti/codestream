@@ -145,8 +145,8 @@ export default class SignupForm extends Component {
 						id="signup-button"
 						className="control"
 						tabIndex="3"
+						type="submit"
 						disabled={this.isFormInvalid()}
-						onClick={this.submitCredentials}
 					>
 						SIGN UP
 					</Button>
