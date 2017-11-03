@@ -11,7 +11,8 @@ export default class ConfirmEmail extends Component {
 					else reject({ invalidCode: true })
 				}, 1000)
 			})
-		}
+		},
+		sendCode: async attributes => Promise.resolve()
 	}
 
 	constructor(props) {
@@ -68,6 +69,13 @@ export default class ConfirmEmail extends Component {
 			return <span className="error-message">Sorry, that code has expired.</span>
 	}
 
+	sendNewCode = () => {
+		const { userId, email, sendCode } = this.props
+		sendCode({ userId, email }).then(() => {
+			atom.notifications.addInfo("Email Sent!")
+		})
+	}
+
 	render() {
 		const { email } = this.props
 		const { values } = this.state
@@ -77,7 +85,8 @@ export default class ConfirmEmail extends Component {
 				<h2>You're almost there!</h2>
 				<p>Please check your email. We've sent you a 6-digit code to confirm your email address.</p>
 				<p>
-					Didn't receive it? Check your spam folder, or have us <a>send another email</a>.
+					Didn't receive it? Check your spam folder, or have us{" "}
+					<a onClick={this.sendNewCode}>send another email</a>.
 				</p>
 				<p>
 					<strong>{email}</strong> not correct?{" "}
