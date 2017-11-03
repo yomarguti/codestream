@@ -64,6 +64,7 @@ export default class ConfirmEmail extends Component {
 						values: this.state.values.fill("")
 					})
 				}
+				this.input0.focus()
 			})
 	}
 
@@ -88,7 +89,7 @@ export default class ConfirmEmail extends Component {
 		const { values } = this.state
 
 		return (
-			<div id="email-confirmation">
+			<form id="email-confirmation" onSubmit={this.submitCode}>
 				<h2>You're almost there!</h2>
 				<p>Please check your email. We've sent you a 6-digit code to confirm your email address.</p>
 				<p>
@@ -119,12 +120,11 @@ export default class ConfirmEmail extends Component {
 					</div>
 					<button
 						id="submit-button"
-						tabIndex={values.length + 1}
-						className={createClassString("control btn inline-block-tight", {
+						type="submit"
+						className={createClassString("native-key-bindings control btn inline-block-tight", {
 							"btn-primary": !this.state.loading
 						})}
 						disabled={this.state.loading || this.isFormInvalid()}
-						onClick={this.submitCode}
 					>
 						{this.state.loading ? (
 							<span className="loading loading-spinner-tiny inline-block" />
@@ -133,7 +133,7 @@ export default class ConfirmEmail extends Component {
 						)}
 					</button>
 				</div>
-			</div>
+			</form>
 		)
 	}
 }
