@@ -97,7 +97,7 @@ export default class SignupForm extends Component {
 				<div id="controls">
 					<div id="username-controls" className="control-group">
 						<input
-							className="native-key-bindings input-text control"
+							className="native-key-bindings input-text"
 							type="text"
 							name="username"
 							placeholder="Username"
@@ -114,7 +114,7 @@ export default class SignupForm extends Component {
 					</div>
 					<div id="password-controls" className="control-group">
 						<input
-							className="native-key-bindings input-text control"
+							className="native-key-bindings input-text"
 							type="password"
 							name="password"
 							placeholder="Password"
@@ -129,7 +129,7 @@ export default class SignupForm extends Component {
 					</div>
 					<div id="email-controls" className="control-group">
 						<input
-							className="native-key-bindings input-text control"
+							className="native-key-bindings input-text"
 							type="text"
 							name="email"
 							placeholder="Email Address"

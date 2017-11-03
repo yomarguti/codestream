@@ -89,7 +89,7 @@ export default class LoginForm extends Component {
 					</div>
 					<div id="password-controls" className="control-group">
 						<input
-							className="native-key-bindings input-text control"
+							className="native-key-bindings input-text"
 							type="password"
 							name="password"
 							placeholder="Password"
