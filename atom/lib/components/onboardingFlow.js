@@ -20,7 +20,8 @@ export default Machine({
 		login: {
 			on: {
 				success: "chat",
-				signUp: "signUp"
+				signUp: "signUp",
+				forgotPassword: "resetPassword"
 			}
 		}
 	}
