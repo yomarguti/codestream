@@ -1,5 +1,5 @@
 import React, { Component } from "react"
-import createClassString from "classnames"
+import Button from "./Button"
 
 export default class ConfirmEmail extends Component {
 	static defaultProps = {
@@ -29,7 +29,13 @@ export default class ConfirmEmail extends Component {
 		if (isNaN(value)) return
 		const values = this.state.values.slice()
 		values[index] = value
-		this.setState({ values })
+		this.setState(
+			() => ({ values }),
+			() => {
+				const nextInput = this[`input${index + 1}`]
+				if (nextInput !== undefined) nextInput.focus()
+			}
+		)
 	}
 
 	goToSignup = () => this.props.transition("back")
@@ -58,15 +64,17 @@ export default class ConfirmEmail extends Component {
 						values: this.state.values.fill("")
 					})
 				}
+				this.input0.focus()
 			})
 	}
 
 	isFormInvalid = () => this.state.values.includes("")
 
 	renderError = () => {
-		if (this.state.invalidCode) return <span className="error-message">Uh oh. Invalid code.</span>
+		if (this.state.invalidCode)
+			return <span className="error-message small">Uh oh. Invalid code.</span>
 		if (this.state.expiredCode)
-			return <span className="error-message">Sorry, that code has expired.</span>
+			return <span className="error-message small">Sorry, that code has expired.</span>
 	}
 
 	sendNewCode = () => {
@@ -81,7 +89,7 @@ export default class ConfirmEmail extends Component {
 		const { values } = this.state
 
 		return (
-			<div id="email-confirmation">
+			<form id="email-confirmation" onSubmit={this.submitCode}>
 				<h2>You're almost there!</h2>
 				<p>Please check your email. We've sent you a 6-digit code to confirm your email address.</p>
 				<p>
@@ -103,28 +111,23 @@ export default class ConfirmEmail extends Component {
 								type="text"
 								maxLength="1"
 								tabIndex={index}
+								ref={element => (this[`input${index}`] = element)}
 								key={index}
 								value={value}
 								onChange={this.onChange(index)}
 							/>
 						))}
 					</div>
-					<button
+					<Button
 						id="submit-button"
-						className={createClassString("control btn inline-block-tight", {
-							"btn-primary": !this.state.loading
-						})}
-						disabled={this.state.loading || this.isFormInvalid()}
-						onClick={this.submitCode}
+						type="submit"
+						disabled={this.isFormInvalid()}
+						loading={this.state.loading}
 					>
-						{this.state.loading ? (
-							<span className="loading loading-spinner-tiny inline-block" />
-						) : (
-							"SUBMIT"
-						)}
-					</button>
+						SUBMIT
+					</Button>
 				</div>
-			</div>
+			</form>
 		)
 	}
 }

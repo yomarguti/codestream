@@ -39,19 +39,19 @@ describe("ConfirmEmail view", () => {
 		const view = mount(<ConfirmEmail />)
 
 		it("is disabled while the form is empty", () => {
-			expect(view.find("#submit-button").prop("disabled")).toBe(true)
+			expect(view.find("Button").prop("disabled")).toBe(true)
 		})
 
 		it("is disabled while the form is invalid", () => {
 			view.find("input").forEach((input, index) => {
 				if (index < 3) input.simulate("change", { target: { value: "1" } })
 			})
-			expect(view.find("#submit-button").prop("disabled")).toBe(true)
+			expect(view.find("Button").prop("disabled")).toBe(true)
 		})
 
 		it("is enabled when the form is valid", () => {
 			view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }))
-			expect(view.find("#submit-button").prop("disabled")).toBe(false)
+			expect(view.find("Button").prop("disabled")).toBe(false)
 		})
 	})
 
@@ -61,7 +61,7 @@ describe("ConfirmEmail view", () => {
 				<ConfirmEmail confirmEmail={() => Promise.reject({ invalidCode: true })} />
 			)
 			view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }))
-			view.find("#submit-button").simulate("click")
+			view.find("form").simulate("submit")
 			waitsFor(() => view.state("invalidCode"))
 			runs(() => {
 				view.update()
@@ -79,16 +79,16 @@ describe("ConfirmEmail view", () => {
 					/>
 				)
 				view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }))
-				view.find("#submit-button").simulate("click")
+				view.find("form").simulate("submit")
 				waitsFor(() => view.state("failCount") === 1)
 				runs(() => {
 					view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }))
-					view.find("#submit-button").simulate("click")
+					view.find("form").simulate("submit")
 				})
 				waitsFor(() => view.state("failCount") === 2)
 				runs(() => {
 					view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }))
-					view.find("#submit-button").simulate("click")
+					view.find("form").simulate("submit")
 				})
 				waitsFor(() => transition.callCount > 0)
 				runs(() => expect(transition).toHaveBeenCalledWith("back"))
@@ -102,7 +102,7 @@ describe("ConfirmEmail view", () => {
 				<ConfirmEmail confirmEmail={() => Promise.reject({ expiredCode: true })} />
 			)
 			view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }))
-			view.find("#submit-button").simulate("click")
+			view.find("form").simulate("submit")
 			waitsFor(() => view.state("expiredCode"))
 			runs(() => {
 				view.update()
