@@ -1,13 +1,13 @@
 import React from "react"
 import Enzyme, { mount } from "enzyme"
 import Adapter from "enzyme-adapter-react-16"
-import ConfirmEmail from "../lib/components/ConfirmEmail"
+import EmailConfirmationForm from "../lib/components/EmailConfirmationForm"
 
 Enzyme.configure({ adapter: new Adapter() })
 
-describe("ConfirmEmail view", () => {
+describe("EmailConfirmationForm view", () => {
 	describe("input fields", () => {
-		const view = mount(<ConfirmEmail />)
+		const view = mount(<EmailConfirmationForm />)
 
 		it("they won't accept non-numerical values", () => {
 			view.find("input").forEach(input => input.simulate("change", { target: { value: "a" } }))
@@ -27,7 +27,7 @@ describe("ConfirmEmail view", () => {
 	describe("'Change it' link", () => {
 		it("routes back to the sign up form", () => {
 			const transition = jasmine.createSpy()
-			const view = mount(<ConfirmEmail transition={transition} />)
+			const view = mount(<EmailConfirmationForm transition={transition} />)
 
 			view.find("#go-back").simulate("click")
 
@@ -36,7 +36,7 @@ describe("ConfirmEmail view", () => {
 	})
 
 	describe("Submit button", () => {
-		const view = mount(<ConfirmEmail />)
+		const view = mount(<EmailConfirmationForm />)
 
 		it("is disabled while the form is empty", () => {
 			expect(view.find("Button").prop("disabled")).toBe(true)
@@ -58,7 +58,7 @@ describe("ConfirmEmail view", () => {
 	describe("when submitted code is invalid", () => {
 		it("shows an error message", () => {
 			const view = mount(
-				<ConfirmEmail confirmEmail={() => Promise.reject({ invalidCode: true })} />
+				<EmailConfirmationForm confirmEmail={() => Promise.reject({ invalidCode: true })} />
 			)
 			view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }))
 			view.find("form").simulate("submit")
@@ -73,7 +73,7 @@ describe("ConfirmEmail view", () => {
 			it("sends them back to sign up page", () => {
 				const transition = jasmine.createSpy("transition function")
 				const view = mount(
-					<ConfirmEmail
+					<EmailConfirmationForm
 						confirmEmail={() => Promise.reject({ invalidCode: true })}
 						transition={transition}
 					/>
@@ -99,7 +99,7 @@ describe("ConfirmEmail view", () => {
 	describe("when the submitted code has expired", () => {
 		it("shows an error message", () => {
 			const view = mount(
-				<ConfirmEmail confirmEmail={() => Promise.reject({ expiredCode: true })} />
+				<EmailConfirmationForm confirmEmail={() => Promise.reject({ expiredCode: true })} />
 			)
 			view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }))
 			view.find("form").simulate("submit")

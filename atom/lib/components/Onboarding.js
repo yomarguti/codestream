@@ -1,7 +1,7 @@
 import React, { Component } from "react"
 import onboardingFlow from "./onboardingFlow"
 import SignupForm from "./SignupForm"
-import ConfirmEmail from "./ConfirmEmail"
+import EmailConfirmationForm from "./EmailConfirmationForm"
 
 export default class Onboarding extends Component {
 	constructor(props) {
@@ -18,7 +18,7 @@ export default class Onboarding extends Component {
 	render() {
 		const views = {
 			signUp: <SignupForm {...this.props} transition={this.transition} />,
-			confirmEmail: <ConfirmEmail email={this.state.email} transition={this.transition} />,
+			confirmEmail: <EmailConfirmationForm email={this.state.email} transition={this.transition} />,
 			signIn: "Sign in here..."
 		}
 		return views[this.state.current]
