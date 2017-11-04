@@ -11,11 +11,7 @@ const isEmailInvalid = email => {
 
 export default class LoginForm extends Component {
 	static defaultProps = {
-		authenticate: async ({ password }) => {
-			return new Promise((resolve, reject) =>
-				setTimeout(() => (password === "foobar" ? resolve() : reject()), 1000)
-			)
-		}
+		authenticate: async ({ password }) => Promise.resolve({})
 	}
 
 	constructor(props) {
@@ -73,7 +69,7 @@ export default class LoginForm extends Component {
 		const { password, email } = this.state
 		authenticate({ password, email })
 			.then(user => transition("success", user))
-			.catch(() => {
+			.catch(e => {
 				this.setState({ loading: false, failed: true, password: "", passwordTouched: false })
 			})
 	}
@@ -115,7 +111,7 @@ export default class LoginForm extends Component {
 						/>
 						{this.renderPasswordHelp()}
 						<div className="help-link">
-							<a>Forgot password?</a>
+							<a onClick={() => this.props.transition("forgotPassword")}>Forgot password?</a>
 						</div>
 					</div>
 					<Button

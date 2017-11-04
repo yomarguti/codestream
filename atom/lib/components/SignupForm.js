@@ -165,7 +165,7 @@ export default class SignupForm extends Component {
 						</p>
 						<p>
 							<strong>
-								<a onClick={() => this.props.transition("emailExists")}>Sign In</a>
+								<a onClick={() => this.props.transition("alreadySignedUp")}>Sign In</a>
 							</strong>
 						</p>
 					</div>
