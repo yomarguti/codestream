@@ -29,9 +29,9 @@ describe("LoginForm", () => {
 			})
 		})
 
-		describe("when an email address is provided to the component", () => {
+		describe("when 'email' and 'alreadySignedUp' props are provided to the component", () => {
 			const email = "foo@bar.com"
-			const view = mount(<LoginForm email={email} />)
+			const view = mount(<LoginForm email={email} alreadySignedUp={true} />)
 			it("is pre-populated with given email address", () => {
 				expect(view.find('input[name="email"]').prop("value")).toBe(email)
 			})

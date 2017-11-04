@@ -90,7 +90,7 @@ export default class SignupForm extends Component {
 			.then(user => transition("success", user))
 			.catch(error => {
 				if (error.usernameTaken) this.setState({ loading: false, usernameTaken: true })
-				else if (error.emailExists) transition("emailExists", { email })
+				else if (error.emailExists) transition("emailExists", { email, alreadySignedUp: true })
 			})
 	}
 

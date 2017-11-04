@@ -45,7 +45,7 @@ export default class ConfirmEmail extends Component {
 		const { email, userId, transition, confirmEmail } = this.props
 		this.setState(state => ({ loading: true }))
 		confirmEmail({ userId, email, code })
-			.then(user => transition("success", { email: "" }))
+			.then(user => transition("success"))
 			.catch(({ invalidCode, expiredCode }) => {
 				if (invalidCode) {
 					if (this.state.failCount === 2) return transition("back")

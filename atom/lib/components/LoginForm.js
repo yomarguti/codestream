@@ -11,7 +11,11 @@ const isEmailInvalid = email => {
 
 export default class LoginForm extends Component {
 	static defaultProps = {
-		authenticate: async ({ password }) => Promise.resolve({})
+		authenticate: async ({ password }) => {
+			return new Promise((resolve, reject) => {
+				setTimeout(() => (password === "foobar" ? resolve() : reject()), 1000)
+			})
+		}
 	}
 
 	constructor(props) {
@@ -47,6 +51,11 @@ export default class LoginForm extends Component {
 		}
 	}
 
+	renderAlreadySignedupMessage = () => {
+		if (this.props.alreadySignedUp)
+			return <p>Looks like you're already signed up! Please enter your password.</p>
+	}
+
 	renderError = () => {
 		if (this.state.failed)
 			return (
@@ -78,9 +87,7 @@ export default class LoginForm extends Component {
 		return (
 			<form id="login-form" onSubmit={this.submitCredentials}>
 				<h2>Sign In</h2>
-				{this.props.email !== "" && (
-					<p>Looks like you're already signed up! Please enter your password.</p>
-				)}
+				{this.renderAlreadySignedupMessage()}
 				{this.renderError()}
 				<div id="controls">
 					<div id="email-controls" className="control-group">

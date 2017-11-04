@@ -123,7 +123,9 @@ describe("SignupForm view", () => {
 
 				view.find("form").simulate("submit")
 				waitsFor(() => transition.callCount > 0)
-				runs(() => expect(transition).toHaveBeenCalledWith("emailExists", { email }))
+				runs(() =>
+					expect(transition).toHaveBeenCalledWith("emailExists", { email, alreadySignedUp: true })
+				)
 			})
 		})
 	})
