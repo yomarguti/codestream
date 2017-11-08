@@ -1,6 +1,7 @@
 import React, { Component } from "react"
 import { shell } from "electron"
 import Button from "./Button"
+import { post } from "../network-request"
 
 const isUsernameInvalid = username => new RegExp("^[-a-z0-9_.]{6,21}$").test(username) === false
 const isPasswordInvalid = password => password.length < 6
@@ -14,9 +15,7 @@ const isEmailInvalid = email => {
 export default class SignupForm extends Component {
 	static defaultProps = {
 		createUser: async attributes => {
-			const randomNumber = Math.floor(Math.random() * (10 - 1)) + 1
-			if (randomNumber % 3 === 0) return Promise.reject({ usernameTaken: true, emailExists: false })
-			else return Promise.resolve({ email: attributes.email, userId: "123" })
+			return post("http://localhost:12079/no-auth/register", attributes).then(({ user }) => user)
 		}
 	}
 
@@ -88,9 +87,10 @@ export default class SignupForm extends Component {
 		const { username, password, email } = this.state
 		createUser({ username, password, email, name })
 			.then(user => transition("success", user))
-			.catch(error => {
-				if (error.usernameTaken) this.setState({ loading: false, usernameTaken: true })
-				else if (error.emailExists) transition("emailExists", { email, alreadySignedUp: true })
+			.catch(({ data }) => {
+				if (data.usernameTaken) this.setState({ loading: false, usernameTaken: true })
+				else if (data.code === "RAPI-1004")
+					transition("emailExists", { email, alreadySignedUp: true })
 			})
 	}
 

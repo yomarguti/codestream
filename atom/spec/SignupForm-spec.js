@@ -110,7 +110,7 @@ describe("SignupForm view", () => {
 		describe("when the email already exists", () => {
 			it("the user is taken to the login page", () => {
 				const email = "foo@bar.com"
-				const createUser = () => Promise.reject({ emailExists: true })
+				const createUser = () => Promise.reject({ data: { code: "RAPI-1004" } })
 				const transition = jasmine.createSpy("transition function")
 				const view = mount(
 					<SignupForm repository={mockRepository} createUser={createUser} transition={transition} />
