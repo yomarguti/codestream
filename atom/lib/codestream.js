@@ -40,6 +40,6 @@ module.exports = {
 			atom.commands.dispatch(document.querySelector("atom-workspace"), "codestream:toggle")
 		atom.tooltips.add(div, { title: "Toggle CodeStream" })
 		div.appendChild(icon)
-		this.statusBarTile = statusBar.addRightTile({ item: div, priority: 0 })
+		this.statusBarTile = statusBar.addRightTile({ item: div, priority: 400 })
 	}
 }
