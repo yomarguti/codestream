@@ -10,7 +10,7 @@ const mockRepository = { getConfigValue() {}, getWorkingDirectory() {} }
 describe("SignupForm view", () => {
 	describe("Username field", () => {
 		const systemUser = "tommy"
-		const view = mount(<SignupForm repository={mockRepository} username={systemUser} />)
+		const view = mount(<SignupForm username={systemUser} />)
 
 		describe("when a username is provided", () => {
 			it("is pre-populated with given username", () => {
@@ -37,7 +37,7 @@ describe("SignupForm view", () => {
 	})
 
 	describe("Password field", () => {
-		const view = mount(<SignupForm repository={mockRepository} />)
+		const view = mount(<SignupForm />)
 
 		it("shows errors when left empty", () => {
 			view.find('input[name="password"]').simulate("blur")
@@ -54,7 +54,7 @@ describe("SignupForm view", () => {
 	})
 
 	describe("Email address field", () => {
-		const view = mount(<SignupForm repository={mockRepository} />)
+		const view = mount(<SignupForm />)
 
 		it("shows errors when left empty", () => {
 			view.find('input[name="email"]').simulate("blur")
@@ -76,7 +76,7 @@ describe("SignupForm view", () => {
 
 		describe("when an email address is provided to the component", () => {
 			const email = "foo@bar.com"
-			const view = mount(<SignupForm repository={mockRepository} email={email} />)
+			const view = mount(<SignupForm email={email} />)
 			it("is pre-populated with given email address", () => {
 				expect(view.find('input[name="email"]').prop("value")).toBe(email)
 			})
@@ -84,7 +84,7 @@ describe("SignupForm view", () => {
 	})
 
 	describe("Sign Up button", () => {
-		const view = mount(<SignupForm repository={mockRepository} />)
+		const view = mount(<SignupForm />)
 
 		it("is disabled while the form values are invalid", () => {
 			expect(view.find("Button").prop("disabled")).toBe(true)
@@ -112,12 +112,7 @@ describe("SignupForm view", () => {
 				const lastName = "Bar"
 				const name = `${firstName} ${lastName}`
 				const view = mount(
-					<SignupForm
-						repository={mockRepository}
-						createUser={createUser}
-						transition={transition}
-						name={name}
-					/>
+					<SignupForm createUser={createUser} transition={transition} name={name} />
 				)
 				view.find('input[name="username"]').simulate("change", { target: { value: username } })
 				view.find('input[name="password"]').simulate("change", { target: { value: password } })
@@ -132,12 +127,7 @@ describe("SignupForm view", () => {
 			it("sends the name as firstName", () => {
 				const firstName = "Foo"
 				const view = mount(
-					<SignupForm
-						repository={mockRepository}
-						createUser={createUser}
-						transition={transition}
-						name={firstName}
-					/>
+					<SignupForm createUser={createUser} transition={transition} name={firstName} />
 				)
 				view.find('input[name="username"]').simulate("change", { target: { value: username } })
 				view.find('input[name="password"]').simulate("change", { target: { value: password } })
@@ -158,12 +148,7 @@ describe("SignupForm view", () => {
 			it("sends the name as firstName", () => {
 				const name = "Foo Baz Bar"
 				const view = mount(
-					<SignupForm
-						repository={mockRepository}
-						createUser={createUser}
-						transition={transition}
-						name={name}
-					/>
+					<SignupForm createUser={createUser} transition={transition} name={name} />
 				)
 				view.find('input[name="username"]').simulate("change", { target: { value: username } })
 				view.find('input[name="password"]').simulate("change", { target: { value: password } })
@@ -185,9 +170,7 @@ describe("SignupForm view", () => {
 				const email = "foo@bar.com"
 				const createUser = () => Promise.reject({ data: { code: "RAPI-1004" } })
 				const transition = jasmine.createSpy("transition function")
-				const view = mount(
-					<SignupForm repository={mockRepository} createUser={createUser} transition={transition} />
-				)
+				const view = mount(<SignupForm createUser={createUser} transition={transition} />)
 				view.find('input[name="username"]').simulate("change", { target: { value: "f_oo-b7a.r" } })
 				view
 					.find('input[name="password"]')
