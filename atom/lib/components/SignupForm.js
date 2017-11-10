@@ -3,7 +3,7 @@ import { shell } from "electron"
 import Button from "./Button"
 import { post } from "../network-request"
 
-const isUsernameInvalid = username => new RegExp("^[-a-z0-9_.]{6,21}$").test(username) === false
+const isUsernameInvalid = username => new RegExp("^[-a-z0-9_.]{1,21}$").test(username) === false
 const isPasswordInvalid = password => password.length < 6
 const isEmailInvalid = email => {
 	const emailRegex = new RegExp(
@@ -48,13 +48,13 @@ export default class SignupForm extends Component {
 
 	renderUsernameHelp = () => {
 		const { username, usernameTaken } = this.state
-		if (username.length < 6 || username.length > 21)
-			return <small className="error-message">6-21 characters</small>
+		if (username.length === 0 || username.length > 21)
+			return <small className="error-message">Up to 21 characters</small>
 		else if (isUsernameInvalid(username))
 			return <small className="error-message">Valid special characters are (.-_)</small>
 		else if (usernameTaken)
 			return <small className="error-message">Sorry, someone already grabbed that username.</small>
-		else return <small>6-21 characters</small>
+		else return <small>Up to 21 characters</small>
 	}
 
 	renderPasswordHelp = () => {
@@ -104,9 +104,8 @@ export default class SignupForm extends Component {
 							type="text"
 							name="username"
 							placeholder="Username"
-							minLength="6"
+							minLength="1"
 							maxLength="21"
-							pattern="[-a-z0-9_.]{6,21}"
 							tabIndex="0"
 							value={this.state.username}
 							onChange={e => this.setState({ username: e.target.value })}

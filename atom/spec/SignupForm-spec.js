@@ -8,13 +8,6 @@ Enzyme.configure({ adapter: new Adapter() })
 const mockRepository = { getConfigValue() {}, getWorkingDirectory() {} }
 
 describe("SignupForm view", () => {
-	it("has fields for username, password, and email address", () => {
-		const view = render(<SignupForm repository={mockRepository} />)
-		expect(view.find('input[name="username"]').length).toBe(1)
-		expect(view.find('input[name="password"]').length).toBe(1)
-		expect(view.find('input[name="email"]').length).toBe(1)
-	})
-
 	describe("Username field", () => {
 		const systemUser = "tommy"
 		const view = mount(<SignupForm repository={mockRepository} username={systemUser} />)
