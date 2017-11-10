@@ -22,7 +22,9 @@ const parseName = name => {
 
 export default class SignupForm extends Component {
 	static defaultProps = {
+		email: "",
 		name: "",
+		username: "",
 		createUser: async attributes => {
 			return post("http://localhost:12079/no-auth/register", attributes).then(({ user }) => user)
 		}
@@ -31,9 +33,9 @@ export default class SignupForm extends Component {
 	constructor(props) {
 		super(props)
 		this.state = {
-			username: props.username || "",
+			username: props.username,
 			password: "",
-			email: this.props.email || "",
+			email: this.props.email,
 			usernameTouched: false,
 			passwordTouched: false,
 			emailTouched: false
