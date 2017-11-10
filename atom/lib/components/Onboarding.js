@@ -56,7 +56,13 @@ export default class Onboarding extends Component {
 		const views = {
 			signUp: <SignupForm {...this.props} transition={this.transition} />,
 			confirmEmail: <EmailConfirmationForm email={this.state.email} transition={this.transition} />,
-			login: <LoginForm email={this.state.email} transition={this.transition} />,
+			login: (
+				<LoginForm
+					email={this.state.email}
+					alreadySignedUp={this.state.alreadySignedUp}
+					transition={this.transition}
+				/>
+			),
 			chat: "TODO: show chat",
 			resetPassword: "TODO: reset password"
 		}

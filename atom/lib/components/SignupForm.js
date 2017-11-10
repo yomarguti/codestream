@@ -1,8 +1,9 @@
 import React, { Component } from "react"
 import { shell } from "electron"
 import Button from "./Button"
+import { post } from "../network-request"
 
-const isUsernameInvalid = username => new RegExp("^[-a-z0-9_.]{6,21}$").test(username) === false
+const isUsernameInvalid = username => new RegExp("^[-a-z0-9_.]{1,21}$").test(username) === false
 const isPasswordInvalid = password => password.length < 6
 const isEmailInvalid = email => {
 	const emailRegex = new RegExp(
@@ -10,13 +11,20 @@ const isEmailInvalid = email => {
 	)
 	return email === "" || emailRegex.test(email) === false
 }
+const parseName = name => {
+	const names = name.split(" ")
+	if (names.length > 2) return { firstName: name, lastName: "" }
+	else {
+		const [firstName, lastName = ""] = names
+		return { firstName, lastName }
+	}
+}
 
 export default class SignupForm extends Component {
 	static defaultProps = {
+		name: "",
 		createUser: async attributes => {
-			const randomNumber = Math.floor(Math.random() * (10 - 1)) + 1
-			if (randomNumber % 3 === 0) return Promise.reject({ usernameTaken: true, emailExists: false })
-			else return Promise.resolve({ email: attributes.email, userId: "123" })
+			return post("http://localhost:12079/no-auth/register", attributes).then(({ user }) => user)
 		}
 	}
 
@@ -49,13 +57,13 @@ export default class SignupForm extends Component {
 
 	renderUsernameHelp = () => {
 		const { username, usernameTaken } = this.state
-		if (username.length < 6 || username.length > 21)
-			return <small className="error-message">6-21 characters</small>
+		if (username.length === 0 || username.length > 21)
+			return <small className="error-message">Up to 21 characters</small>
 		else if (isUsernameInvalid(username))
 			return <small className="error-message">Valid special characters are (.-_)</small>
 		else if (usernameTaken)
 			return <small className="error-message">Sorry, someone already grabbed that username.</small>
-		else return <small>6-21 characters</small>
+		else return <small>Up to 21 characters</small>
 	}
 
 	renderPasswordHelp = () => {
@@ -86,11 +94,12 @@ export default class SignupForm extends Component {
 		this.setState({ loading: true })
 		const { createUser, transition, name } = this.props
 		const { username, password, email } = this.state
-		createUser({ username, password, email, name })
+		createUser({ username, password, email, ...parseName(name) })
 			.then(user => transition("success", user))
-			.catch(error => {
-				if (error.usernameTaken) this.setState({ loading: false, usernameTaken: true })
-				else if (error.emailExists) transition("emailExists", { email, alreadySignedUp: true })
+			.catch(({ data }) => {
+				if (data.usernameTaken) this.setState({ loading: false, usernameTaken: true })
+				else if (data.code === "RAPI-1004")
+					transition("emailExists", { email, alreadySignedUp: true })
 			})
 	}
 
@@ -104,9 +113,8 @@ export default class SignupForm extends Component {
 							type="text"
 							name="username"
 							placeholder="Username"
-							minLength="6"
+							minLength="1"
 							maxLength="21"
-							pattern="[-a-z0-9_.]{6,21}"
 							tabIndex="0"
 							value={this.state.username}
 							onChange={e => this.setState({ username: e.target.value })}
