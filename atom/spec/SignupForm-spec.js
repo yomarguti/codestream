@@ -100,6 +100,86 @@ describe("SignupForm view", () => {
 	})
 
 	describe("when valid credentials are submitted", () => {
+		const email = "foo@bar.com"
+		const username = "foobar"
+		const password = "somePassword"
+		const createUser = jasmine.createSpy("create user stub")
+		const transition = jasmine.createSpy("transition function")
+
+		describe("when the name provided is a simple two part name", () => {
+			it("sends first and last name", () => {
+				const firstName = "Foo"
+				const lastName = "Bar"
+				const name = `${firstName} ${lastName}`
+				const view = mount(
+					<SignupForm
+						repository={mockRepository}
+						createUser={createUser}
+						transition={transition}
+						name={name}
+					/>
+				)
+				view.find('input[name="username"]').simulate("change", { target: { value: username } })
+				view.find('input[name="password"]').simulate("change", { target: { value: password } })
+				view.find('input[name="email"]').simulate("change", { target: { value: email } })
+
+				view.find("form").simulate("submit")
+				expect(createUser).toHaveBeenCalledWith({ email, username, password, firstName, lastName })
+			})
+		})
+
+		describe("when the name provided is a single word", () => {
+			it("sends the name as firstName", () => {
+				const firstName = "Foo"
+				const view = mount(
+					<SignupForm
+						repository={mockRepository}
+						createUser={createUser}
+						transition={transition}
+						name={firstName}
+					/>
+				)
+				view.find('input[name="username"]').simulate("change", { target: { value: username } })
+				view.find('input[name="password"]').simulate("change", { target: { value: password } })
+				view.find('input[name="email"]').simulate("change", { target: { value: email } })
+
+				view.find("form").simulate("submit")
+				expect(createUser).toHaveBeenCalledWith({
+					email,
+					username,
+					password,
+					firstName,
+					lastName: ""
+				})
+			})
+		})
+
+		describe("when the name provided is more than two words", () => {
+			it("sends the name as firstName", () => {
+				const name = "Foo Baz Bar"
+				const view = mount(
+					<SignupForm
+						repository={mockRepository}
+						createUser={createUser}
+						transition={transition}
+						name={name}
+					/>
+				)
+				view.find('input[name="username"]').simulate("change", { target: { value: username } })
+				view.find('input[name="password"]').simulate("change", { target: { value: password } })
+				view.find('input[name="email"]').simulate("change", { target: { value: email } })
+
+				view.find("form").simulate("submit")
+				expect(createUser).toHaveBeenCalledWith({
+					email,
+					username,
+					password,
+					firstName: name,
+					lastName: ""
+				})
+			})
+		})
+
 		describe("when the email already exists", () => {
 			it("the user is taken to the login page", () => {
 				const email = "foo@bar.com"

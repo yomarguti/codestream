@@ -11,9 +11,18 @@ const isEmailInvalid = email => {
 	)
 	return email === "" || emailRegex.test(email) === false
 }
+const parseName = name => {
+	const names = name.split(" ")
+	if (names.length > 2) return { firstName: name, lastName: "" }
+	else {
+		const [firstName, lastName = ""] = names
+		return { firstName, lastName }
+	}
+}
 
 export default class SignupForm extends Component {
 	static defaultProps = {
+		name: "",
 		createUser: async attributes => {
 			return post("http://localhost:12079/no-auth/register", attributes).then(({ user }) => user)
 		}
@@ -85,7 +94,7 @@ export default class SignupForm extends Component {
 		this.setState({ loading: true })
 		const { createUser, transition, name } = this.props
 		const { username, password, email } = this.state
-		createUser({ username, password, email, name })
+		createUser({ username, password, email, ...parseName(name) })
 			.then(user => transition("success", user))
 			.catch(({ data }) => {
 				if (data.usernameTaken) this.setState({ loading: false, usernameTaken: true })
