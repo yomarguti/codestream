@@ -1,8 +1,8 @@
 {
-	"name": "Codestream",
+	"name": "CodeStream",
 	"main": "./lib/codestream",
 	"version": "0.0.0",
-	"description": "A short description of your package",
+	"description": "Better teamwork, better code",
 	"keywords": [],
 	"activationCommands": {},
 	"repository": "",
