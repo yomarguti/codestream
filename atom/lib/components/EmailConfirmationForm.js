@@ -1,16 +1,16 @@
 import React, { Component } from "react"
 import Button from "./Button"
+import { post } from "../network-request"
 
 export default class ConfirmEmail extends Component {
 	static defaultProps = {
-		confirmEmail: async ({ code }) => {
-			return new Promise((resolve, reject) => {
-				setTimeout(() => {
-					if (code === "111111") resolve()
-					else if (code === "123456") reject({ expiredCode: true })
-					else reject({ invalidCode: true })
-				}, 1000)
-			})
+		confirmEmail: async ({ email, userId, code }) => {
+			const params = {
+				email: email,
+				user_id: userId,
+				confirmation_code: code
+			}
+			post("http://localhost:12079/no-auth/confirm", params)
 		},
 		sendCode: async attributes => Promise.resolve()
 	}
@@ -42,12 +42,13 @@ export default class ConfirmEmail extends Component {
 
 	submitCode = async () => {
 		const code = this.state.values.join("")
-		const { email, userId, transition, confirmEmail } = this.props
+		const { email, _id, transition, confirmEmail } = this.props
 		this.setState(state => ({ loading: true }))
-		confirmEmail({ userId, email, code })
+		confirmEmail({ userId: _id, email, code })
 			.then(user => transition("success"))
-			.catch(({ invalidCode, expiredCode }) => {
-				if (invalidCode) {
+			.catch(({ data }) => {
+				if (data.code === "USRC-1006") transition("alreadyConfirmed")
+				if (data.invalidCode) {
 					if (this.state.failCount === 2) return transition("back")
 					this.setState({
 						failCount: ++this.state.failCount,
@@ -56,7 +57,7 @@ export default class ConfirmEmail extends Component {
 						loading: false,
 						values: this.state.values.fill("")
 					})
-				} else if (expiredCode) {
+				} else if (data.expiredCode) {
 					this.setState({
 						invalidCode: false,
 						expiredCode: true,
