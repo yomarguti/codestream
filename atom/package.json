@@ -10,6 +10,7 @@
 	"engines": {
 		"atom": ">=1.0.0 <2.0.0"
 	},
+	"scripts": {},
 	"deserializers": {
 		"codestream/CodestreamView": "deserializeCodestreamView"
 	},
@@ -51,6 +52,7 @@
 		"classnames": "^2.2.5",
 		"react": "^16.0.0",
 		"react-dom": "^16.0.0",
+		"react-intl": "^2.4.0",
 		"username": "^3.0.0",
 		"xstate": "^1.2.1"
 	},

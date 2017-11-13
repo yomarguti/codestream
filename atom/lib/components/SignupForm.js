@@ -1,5 +1,6 @@
 import React, { Component } from "react"
 import { shell } from "electron"
+import { FormattedMessage } from "react-intl"
 import Button from "./Button"
 import { post } from "../network-request"
 
@@ -60,29 +61,64 @@ export default class SignupForm extends Component {
 	renderUsernameHelp = () => {
 		const { username, usernameTaken } = this.state
 		if (username.length === 0 || username.length > 21)
-			return <small className="error-message">Up to 21 characters</small>
+			return (
+				<small className="error-message">
+					<FormattedMessage id="signUp.username.length" />
+				</small>
+			)
 		else if (isUsernameInvalid(username))
-			return <small className="error-message">Valid special characters are (.-_)</small>
+			return (
+				<small className="error-message">
+					<FormattedMessage id="signUp.username.validCharacters" />
+				</small>
+			)
 		else if (usernameTaken)
-			return <small className="error-message">Sorry, someone already grabbed that username.</small>
-		else return <small>Up to 21 characters</small>
+			return (
+				<small className="error-message">
+					<FormattedMessage id="signUp.username.alreadyTaken" />
+				</small>
+			)
+		else
+			return (
+				<small>
+					<FormattedMessage id="signUp.username.length" />
+				</small>
+			)
 	}
 
 	renderPasswordHelp = () => {
 		const { password, passwordTouched } = this.state
 		if (isPasswordInvalid(password) && passwordTouched) {
 			return (
-				<span className="error-message">{`${6 - password.length} more character(s) please`}</span>
+				<span className="error-message">
+					<FormattedMessage
+						id="signUp.password.tooShort"
+						values={{ countNeeded: 6 - password.length }}
+					/>
+				</span>
 			)
 		}
-		return <span>6+ characters</span>
+		return (
+			<span>
+				<FormattedMessage id="signUp.password.help" />
+			</span>
+		)
 	}
 
 	renderEmailHelp = () => {
 		const { email } = this.state
 		if (isEmailInvalid(email))
-			return <small className="error-message">Looks like an invalid email address!</small>
-		else return <small>FYI, we got this from Git</small>
+			return (
+				<small className="error-message">
+					<FormattedMessage id="signUp.email.invalid" />
+				</small>
+			)
+		else
+			return (
+				<small>
+					<FormattedMessage id="signUp.email.help" />
+				</small>
+			)
 	}
 
 	isFormInvalid = () => {
@@ -162,20 +198,29 @@ export default class SignupForm extends Component {
 						disabled={this.isFormInvalid()}
 						loading={this.state.loading}
 					>
-						SIGN UP
+						<FormattedMessage id="signUp.submitButton" />
 					</Button>
 					<small>
-						By clicking Sign Up, you agree to CodeStream's{" "}
-						<a onClick={() => shell.openExternal("https://codestream.com")}>Terms of Service</a> and{" "}
-						<a onClick={() => shell.openExternal("https://codestream.com")}>Privacy Policy</a>
+						<FormattedMessage id="signUp.legal.start" />{" "}
+						<a onClick={() => shell.openExternal("https://codestream.com")}>
+							<FormattedMessage id="signUp.legal.termsOfService" />
+						</a>{" "}
+						<FormattedMessage id="and" />{" "}
+						<a onClick={() => shell.openExternal("https://codestream.com")}>
+							<FormattedMessage id="signUp.legal.privacyPolicy" />
+						</a>
 					</small>
 					<div className="footer">
 						<p>
-							<strong>Already have an account?</strong>
+							<strong>
+								<FormattedMessage id="signUp.footer.alreadySignedUp" />
+							</strong>
 						</p>
 						<p>
 							<strong>
-								<a onClick={() => this.props.transition("alreadySignedUp")}>Sign In</a>
+								<a onClick={() => this.props.transition("alreadySignedUp")}>
+									<FormattedMessage id="signUp.footer.signIn" />
+								</a>
 							</strong>
 						</p>
 					</div>

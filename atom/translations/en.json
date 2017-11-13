@@ -1,0 +1,17 @@
+{
+	"and": "and",
+	"signUp.username.length": "Up to 21 characters",
+	"signUp.username.validCharacters": "Valid special characters are (.-_)",
+	"signUp.username.alreadyTaken": "Sorry, someone already grabbed that username.",
+	"signUp.password.tooShort":
+		"{countNeeded, number} more {countNeeded, plural, one {character} other {characters}} please",
+	"signUp.password.help": "6+ characters",
+	"signUp.email.invalid": "Looks like an invalid email address!",
+	"signUp.email.help": "FYI, we got this from Git",
+	"signUp.submitButton": "SIGN UP",
+	"signUp.legal.start": "By clicking Sign Up, you agree to CodeStream's",
+	"signUp.legal.termsOfService": "Terms of Service",
+	"signUp.legal.privacyPolicy": "Privacy Policy",
+	"signUp.footer.alreadySignedUp": "Already have an account?",
+	"signUp.footer.signIn": "Sign In"
+}

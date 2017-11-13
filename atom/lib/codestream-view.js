@@ -1,6 +1,11 @@
 import React from "react"
 import { render, unmountComponentAtNode } from "react-dom"
+import { addLocaleData, IntlProvider } from "react-intl"
+import en from "react-intl/locale-data/en"
 import CodeStreamRoot from "./components/CodeStreamRoot"
+import copy from "../translations/en.json"
+
+addLocaleData([...en])
 
 export const CODESTREAM_VIEW_URI = "atom://codestream"
 
@@ -10,7 +15,12 @@ export default class CodestreamView {
 		this.element.classList.add("codestream")
 
 		const repositories = atom.project.getRepositories().filter(Boolean)
-		render(<CodeStreamRoot repositories={repositories} />, this.element)
+		render(
+			<IntlProvider locale="en" messages={copy}>
+				<CodeStreamRoot repositories={repositories} />
+			</IntlProvider>,
+			this.element
+		)
 	}
 
 	getTitle() {
