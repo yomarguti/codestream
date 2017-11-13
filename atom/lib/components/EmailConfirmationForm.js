@@ -18,7 +18,6 @@ export default class ConfirmEmail extends Component {
 	constructor(props) {
 		super(props)
 		this.state = {
-			failCount: 0,
 			values: ["", "", "", "", "", ""],
 			loading: false
 		}
@@ -48,16 +47,16 @@ export default class ConfirmEmail extends Component {
 			.then(user => transition("success"))
 			.catch(({ data }) => {
 				if (data.code === "USRC-1006") transition("alreadyConfirmed")
-				if (data.invalidCode) {
-					if (this.state.failCount === 2) return transition("back")
+				if (data.code === "USRC-1004") transition("back")
+				if (data.code === "USRC-1002") {
 					this.setState({
-						failCount: ++this.state.failCount,
 						invalidCode: true,
 						expiredCode: false,
 						loading: false,
 						values: this.state.values.fill("")
 					})
-				} else if (data.expiredCode) {
+				}
+				if (data.code === "USRC-1003") {
 					this.setState({
 						invalidCode: false,
 						expiredCode: true,

@@ -75,7 +75,7 @@ describe("EmailConfirmationForm view", () => {
 		it("shows an error message", () => {
 			const view = mount(
 				<EmailConfirmationForm
-					confirmEmail={() => Promise.reject({ data: { invalidCode: true } })}
+					confirmEmail={() => Promise.reject({ data: { code: "USRC-1002" } })}
 				/>
 			)
 			view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }))
@@ -92,22 +92,12 @@ describe("EmailConfirmationForm view", () => {
 				const transition = jasmine.createSpy("transition function")
 				const view = mount(
 					<EmailConfirmationForm
-						confirmEmail={() => Promise.reject({ data: { invalidCode: true } })}
+						confirmEmail={() => Promise.reject({ data: { code: "USRC-1004" } })}
 						transition={transition}
 					/>
 				)
 				view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }))
 				view.find("form").simulate("submit")
-				waitsFor(() => view.state("failCount") === 1)
-				runs(() => {
-					view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }))
-					view.find("form").simulate("submit")
-				})
-				waitsFor(() => view.state("failCount") === 2)
-				runs(() => {
-					view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }))
-					view.find("form").simulate("submit")
-				})
 				waitsFor(() => transition.callCount > 0)
 				runs(() => expect(transition).toHaveBeenCalledWith("back"))
 			})
@@ -118,7 +108,7 @@ describe("EmailConfirmationForm view", () => {
 		it("shows an error message", () => {
 			const view = mount(
 				<EmailConfirmationForm
-					confirmEmail={() => Promise.reject({ data: { expiredCode: true } })}
+					confirmEmail={() => Promise.reject({ data: { code: "USRC-1003" } })}
 				/>
 			)
 			view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }))
