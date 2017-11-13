@@ -18,6 +18,7 @@ const chart = {
 		confirmEmail: {
 			on: {
 				success: "login",
+				alreadyConfirmed: "login",
 				back: "signUp"
 			}
 		},
@@ -40,6 +41,7 @@ export default class Onboarding extends Component {
 		super(props)
 		this.state = {
 			currentStep: this.flow.getInitialState(),
+			currentProps: this.props,
 			email: ""
 		}
 	}
@@ -47,22 +49,17 @@ export default class Onboarding extends Component {
 	transition = (action, data = {}) =>
 		this.setState(state => {
 			return {
-				...data,
+				currentProps: data,
 				currentStep: this.flow.transition(state.currentStep, action).toString()
 			}
 		})
 
 	render() {
+		const nextProps = { transition: this.transition, ...this.state.currentProps }
 		const views = {
-			signUp: <SignupForm {...this.props} transition={this.transition} />,
-			confirmEmail: <EmailConfirmationForm email={this.state.email} transition={this.transition} />,
-			login: (
-				<LoginForm
-					email={this.state.email}
-					alreadySignedUp={this.state.alreadySignedUp}
-					transition={this.transition}
-				/>
-			),
+			signUp: <SignupForm {...nextProps} />,
+			confirmEmail: <EmailConfirmationForm {...nextProps} />,
+			login: <LoginForm {...nextProps} />,
 			chat: "TODO: show chat",
 			resetPassword: "TODO: reset password"
 		}
