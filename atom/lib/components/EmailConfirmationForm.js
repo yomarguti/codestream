@@ -2,7 +2,7 @@ import React, { Component } from "react"
 import { injectIntl, FormattedMessage } from "react-intl"
 import PropTypes from "prop-types"
 import Button from "./Button"
-import { post } from "../network-request"
+import { User } from "../api"
 
 class EmailConfirmationForm extends Component {
 	static contextTypes = {
@@ -10,14 +10,7 @@ class EmailConfirmationForm extends Component {
 	}
 
 	static defaultProps = {
-		confirmEmail: async ({ email, userId, code }) => {
-			const params = {
-				email: email,
-				user_id: userId,
-				confirmation_code: code
-			}
-			post("http://localhost:12079/no-auth/confirm", params)
-		},
+		confirmEmail: User.confirmEmail,
 		sendCode: async attributes => Promise.resolve()
 	}
 

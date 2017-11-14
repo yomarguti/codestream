@@ -102,7 +102,7 @@ describe("SignupForm view", () => {
 		const email = "foo@bar.com"
 		const username = "foobar"
 		const password = "somePassword"
-		const createUser = jasmine.createSpy("create user stub").andReturn(Promise.resolve())
+		const register = jasmine.createSpy("stub for register api").andReturn(Promise.resolve())
 		const transition = jasmine.createSpy("transition function")
 
 		describe("when the name provided is a simple two part name", () => {
@@ -111,14 +111,14 @@ describe("SignupForm view", () => {
 				const lastName = "Bar"
 				const name = `${firstName} ${lastName}`
 				const view = mountWithIntl(
-					<SignupForm createUser={createUser} transition={transition} name={name} />
+					<SignupForm register={register} transition={transition} name={name} />
 				)
 				view.find('input[name="username"]').simulate("change", { target: { value: username } })
 				view.find('input[name="password"]').simulate("change", { target: { value: password } })
 				view.find('input[name="email"]').simulate("change", { target: { value: email } })
 
 				view.find("form").simulate("submit")
-				expect(createUser).toHaveBeenCalledWith({ email, username, password, firstName, lastName })
+				expect(register).toHaveBeenCalledWith({ email, username, password, firstName, lastName })
 			})
 		})
 
@@ -126,14 +126,14 @@ describe("SignupForm view", () => {
 			it("sends the name as firstName", () => {
 				const firstName = "Foo"
 				const view = mountWithIntl(
-					<SignupForm createUser={createUser} transition={transition} name={firstName} />
+					<SignupForm register={register} transition={transition} name={firstName} />
 				)
 				view.find('input[name="username"]').simulate("change", { target: { value: username } })
 				view.find('input[name="password"]').simulate("change", { target: { value: password } })
 				view.find('input[name="email"]').simulate("change", { target: { value: email } })
 
 				view.find("form").simulate("submit")
-				expect(createUser).toHaveBeenCalledWith({
+				expect(register).toHaveBeenCalledWith({
 					email,
 					username,
 					password,
@@ -147,14 +147,14 @@ describe("SignupForm view", () => {
 			it("sends the name as firstName", () => {
 				const name = "Foo Baz Bar"
 				const view = mountWithIntl(
-					<SignupForm createUser={createUser} transition={transition} name={name} />
+					<SignupForm register={register} transition={transition} name={name} />
 				)
 				view.find('input[name="username"]').simulate("change", { target: { value: username } })
 				view.find('input[name="password"]').simulate("change", { target: { value: password } })
 				view.find('input[name="email"]').simulate("change", { target: { value: email } })
 
 				view.find("form").simulate("submit")
-				expect(createUser).toHaveBeenCalledWith({
+				expect(register).toHaveBeenCalledWith({
 					email,
 					username,
 					password,
@@ -167,9 +167,9 @@ describe("SignupForm view", () => {
 		describe("when the email already exists", () => {
 			it("the user is taken to the login page", () => {
 				const email = "foo@bar.com"
-				const createUser = () => Promise.reject({ data: { code: "RAPI-1004" } })
+				const register = () => Promise.reject({ data: { code: "RAPI-1004" } })
 				const transition = jasmine.createSpy("transition function")
-				const view = mountWithIntl(<SignupForm createUser={createUser} transition={transition} />)
+				const view = mountWithIntl(<SignupForm register={register} transition={transition} />)
 				view.find('input[name="username"]').simulate("change", { target: { value: "f_oo-b7a.r" } })
 				view
 					.find('input[name="password"]')
