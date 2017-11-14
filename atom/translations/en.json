@@ -32,5 +32,7 @@
 	"login.forgotPassword": "Forgot password?",
 	"login.submitButton": "SIGN IN",
 	"login.footer.noAccount": "Don't have an account?",
-	"login.footer.signUp": "Sign Up"
+	"login.footer.signUp": "Sign Up",
+	"noGit.header": "Got Git?",
+	"noGit.message": "Unfortunately, CodeStream only works with projects controlled by Git. :-("
 }
