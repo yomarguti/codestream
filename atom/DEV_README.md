@@ -12,7 +12,7 @@ Once you have your sandbox, set an environment variable:
 
 This is required for local development because chrome won't be happy about our self signed certificates and all requests from atom will be rejected.
 
-Next, you'll need to tell the plugin where the server is by editing your atom configs. This can be done from atom or the command line.
+Now you can start the api server. Next, you'll need to tell the plugin where the server is by editing your atom configs. This can be done from atom or the command line.
 
 ### From Atom
 1. Click on 'Atom' in the top left of the status bar
