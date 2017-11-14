@@ -2,7 +2,7 @@ import React, { Component } from "react"
 import { shell } from "electron"
 import { FormattedMessage } from "react-intl"
 import Button from "./Button"
-import { post } from "../network-request"
+import { User } from "../api"
 
 const isUsernameInvalid = username => new RegExp("^[-a-z0-9_.]{1,21}$").test(username) === false
 const isPasswordInvalid = password => password.length < 6
@@ -26,9 +26,7 @@ export default class SignupForm extends Component {
 		email: "",
 		name: "",
 		username: "",
-		createUser: async attributes => {
-			return post("http://localhost:12079/no-auth/register", attributes).then(({ user }) => user)
-		}
+		register: User.register
 	}
 
 	constructor(props) {
@@ -130,9 +128,9 @@ export default class SignupForm extends Component {
 		event.preventDefault()
 		if (this.isFormInvalid()) return
 		this.setState({ loading: true })
-		const { createUser, transition, name } = this.props
+		const { register, transition, name } = this.props
 		const { username, password, email } = this.state
-		createUser({ username, password, email, ...parseName(name) })
+		register({ username, password, email, ...parseName(name) })
 			.then(user => transition("success", user))
 			.catch(({ data }) => {
 				if (data.usernameTaken) this.setState({ loading: false, usernameTaken: true })
