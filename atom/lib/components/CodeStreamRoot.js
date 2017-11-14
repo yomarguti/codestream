@@ -16,11 +16,12 @@ export default class CodeStreamRoot extends Component {
 	render() {
 		const { repositories } = this.props
 
-		if (this.props.repositories.length === 0) return <NoGit />
+		if (repositories.length === 0) return <NoGit />
 		else {
 			const repository = repositories[0]
-			const email = repository.getConfigValue("user.email", repository.getWorkingDirectory())
-			const name = repository.getConfigValue("user.name", repository.getWorkingDirectory())
+			const gitDirectory = repository.getWorkingDirectory()
+			const email = repository.getConfigValue("user.email", gitDirectory)
+			const name = repository.getConfigValue("user.name", gitDirectory)
 			return <Onboarding email={email} username={getSystemUser.sync()} name={name} />
 		}
 	}
