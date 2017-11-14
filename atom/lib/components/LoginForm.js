@@ -1,4 +1,5 @@
 import React, { Component } from "react"
+import { FormattedMessage } from "react-intl"
 import Button from "./Button"
 
 const isPasswordInvalid = password => password.length === 0
@@ -41,26 +42,38 @@ export default class LoginForm extends Component {
 	renderEmailHelp = () => {
 		const { email, emailTouched } = this.state
 		if (isEmailInvalid(email) && emailTouched)
-			return <small className="error-message">Looks like an invalid email address!</small>
+			return (
+				<small className="error-message">
+					<FormattedMessage id="login.email.invalid" />
+				</small>
+			)
 	}
 
 	renderPasswordHelp = () => {
 		const { password, passwordTouched } = this.state
 		if (isPasswordInvalid(password) && passwordTouched) {
-			return <span className="error-message">You might need this.</span>
+			return (
+				<span className="error-message">
+					<FormattedMessage id="login.password.required" />
+				</span>
+			)
 		}
 	}
 
 	renderAlreadySignedupMessage = () => {
 		if (this.props.alreadySignedUp)
-			return <p>Looks like you're already signed up! Please enter your password.</p>
+			return (
+				<p>
+					<FormattedMessage id="login.alreadySignedUp" />
+				</p>
+			)
 	}
 
 	renderError = () => {
 		if (this.state.failed)
 			return (
 				<span className="error-message form-error">
-					Sorry, you entered an incorrect email or password.
+					<FormattedMessage id="login.invalid" />
 				</span>
 			)
 	}
@@ -118,7 +131,9 @@ export default class LoginForm extends Component {
 						/>
 						{this.renderPasswordHelp()}
 						<div className="help-link">
-							<a onClick={() => this.props.transition("forgotPassword")}>Forgot password?</a>
+							<a onClick={() => this.props.transition("forgotPassword")}>
+								<FormattedMessage id="login.forgotPassword" />
+							</a>
 						</div>
 					</div>
 					<Button
@@ -129,15 +144,19 @@ export default class LoginForm extends Component {
 						disabled={this.isFormInvalid()}
 						loading={this.state.loading}
 					>
-						SIGN IN
+						<FormattedMessage id="login.submitButton" />
 					</Button>
 					<div className="footer">
 						<p>
-							<strong>Don't have an account?</strong>
+							<strong>
+								<FormattedMessage id="login.footer.noAccount" />
+							</strong>
 						</p>
 						<p>
 							<strong>
-								<a onClick={() => this.props.transition("signUp")}>Sign Up</a>
+								<a onClick={() => this.props.transition("signUp")}>
+									<FormattedMessage id="login.footer.signUp" />
+								</a>
 							</strong>
 						</p>
 					</div>

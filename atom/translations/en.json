@@ -24,5 +24,13 @@
 	"confirmation.sendAnother": "send another email.",
 	"confirmation.incorrectEmail": "{email} not correct?",
 	"confirmation.changeEmail": "Change it.",
-	"confirmation.submitButton": "SUBMIT"
+	"confirmation.submitButton": "SUBMIT",
+	"login.email.invalid": "Looks like an invalid email address!",
+	"login.password.required": "You might need this.",
+	"login.alreadySignedUp": "Looks like you're already signed up! Please enter your password.",
+	"login.invalid": "Sorry, you entered an incorrect email or password.",
+	"login.forgotPassword": "Forgot password?",
+	"login.submitButton": "SIGN IN",
+	"login.footer.noAccount": "Don't have an account?",
+	"login.footer.signUp": "Sign Up"
 }
