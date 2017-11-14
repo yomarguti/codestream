@@ -1,6 +1,7 @@
 import React from "react"
-import Enzyme, { render, mount } from "enzyme"
+import Enzyme, { render } from "enzyme"
 import Adapter from "enzyme-adapter-react-16"
+import { mountWithIntl } from "./intl-test-helper.js"
 import LoginForm from "../lib/components/LoginForm"
 
 Enzyme.configure({ adapter: new Adapter() })
@@ -9,7 +10,7 @@ const mockRepository = { getConfigValue() {}, getWorkingDirectory() {} }
 
 describe("LoginForm", () => {
 	describe("Email address field", () => {
-		const view = mount(<LoginForm />)
+		const view = mountWithIntl(<LoginForm />)
 
 		it("shows errors when left empty", () => {
 			view.find('input[name="email"]').simulate("blur")
@@ -31,7 +32,7 @@ describe("LoginForm", () => {
 
 		describe("when 'email' and 'alreadySignedUp' props are provided to the component", () => {
 			const email = "foo@baz.com"
-			const view = mount(<LoginForm email={email} alreadySignedUp={true} />)
+			const view = mountWithIntl(<LoginForm email={email} alreadySignedUp={true} />)
 			it("is pre-populated with given email address", () => {
 				expect(view.find('input[name="email"]').prop("value")).toBe(email)
 			})
@@ -46,14 +47,14 @@ describe("LoginForm", () => {
 
 	describe("Password field", () => {
 		it("shows errors when left empty", () => {
-			const view = mount(<LoginForm />)
+			const view = mountWithIntl(<LoginForm />)
 			view.find('input[name="password"]').simulate("blur")
 			expect(view.find('input[name="password"][required]').exists()).toBe(true)
 		})
 	})
 
 	describe("Sign In button", () => {
-		const view = mount(<LoginForm />)
+		const view = mountWithIntl(<LoginForm />)
 
 		it("is disabled while the form values are invalid", () => {
 			expect(view.find("Button").prop("disabled")).toBe(true)
@@ -72,7 +73,7 @@ describe("LoginForm", () => {
 			it("shows an error", () => {
 				const email = "foo@bar.com"
 				const authenticate = () => Promise.reject()
-				const view = mount(<LoginForm authenticate={authenticate} />)
+				const view = mountWithIntl(<LoginForm authenticate={authenticate} />)
 				view.find('input[name="email"]').simulate("change", { target: { value: email } })
 				view
 					.find('input[name="password"]')

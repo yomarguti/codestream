@@ -1,6 +1,7 @@
 import React from "react"
-import Enzyme, { render, mount } from "enzyme"
+import Enzyme, { render } from "enzyme"
 import Adapter from "enzyme-adapter-react-16"
+import { mountWithIntl } from "./intl-test-helper.js"
 import SignupForm from "../lib/components/SignupForm"
 
 Enzyme.configure({ adapter: new Adapter() })
@@ -10,7 +11,7 @@ const mockRepository = { getConfigValue() {}, getWorkingDirectory() {} }
 describe("SignupForm view", () => {
 	describe("Username field", () => {
 		const systemUser = "tommy"
-		const view = mount(<SignupForm username={systemUser} />)
+		const view = mountWithIntl(<SignupForm username={systemUser} />)
 
 		describe("when a username is provided", () => {
 			it("is pre-populated with given username", () => {
@@ -37,7 +38,7 @@ describe("SignupForm view", () => {
 	})
 
 	describe("Password field", () => {
-		const view = mount(<SignupForm />)
+		const view = mountWithIntl(<SignupForm />)
 
 		it("shows errors when left empty", () => {
 			view.find('input[name="password"]').simulate("blur")
@@ -47,14 +48,12 @@ describe("SignupForm view", () => {
 		it("shows message when value is not long enough", () => {
 			view.find('input[name="password"]').simulate("blur")
 			view.find('input[name="password"]').simulate("change", { target: { value: "four" } })
-			expect(view.find("#password-controls .error-message").text()).toBe(
-				"2 more character(s) please"
-			)
+			expect(view.find("#password-controls .error-message").text()).toBe("2 more characters please")
 		})
 	})
 
 	describe("Email address field", () => {
-		const view = mount(<SignupForm />)
+		const view = mountWithIntl(<SignupForm />)
 
 		it("shows errors when left empty", () => {
 			view.find('input[name="email"]').simulate("blur")
@@ -76,7 +75,7 @@ describe("SignupForm view", () => {
 
 		describe("when an email address is provided to the component", () => {
 			const email = "foo@bar.com"
-			const view = mount(<SignupForm email={email} />)
+			const view = mountWithIntl(<SignupForm email={email} />)
 			it("is pre-populated with given email address", () => {
 				expect(view.find('input[name="email"]').prop("value")).toBe(email)
 			})
@@ -84,7 +83,7 @@ describe("SignupForm view", () => {
 	})
 
 	describe("Sign Up button", () => {
-		const view = mount(<SignupForm />)
+		const view = mountWithIntl(<SignupForm />)
 
 		it("is disabled while the form values are invalid", () => {
 			expect(view.find("Button").prop("disabled")).toBe(true)
@@ -103,7 +102,7 @@ describe("SignupForm view", () => {
 		const email = "foo@bar.com"
 		const username = "foobar"
 		const password = "somePassword"
-		const createUser = jasmine.createSpy("create user stub")
+		const createUser = jasmine.createSpy("create user stub").andReturn(Promise.resolve())
 		const transition = jasmine.createSpy("transition function")
 
 		describe("when the name provided is a simple two part name", () => {
@@ -111,7 +110,7 @@ describe("SignupForm view", () => {
 				const firstName = "Foo"
 				const lastName = "Bar"
 				const name = `${firstName} ${lastName}`
-				const view = mount(
+				const view = mountWithIntl(
 					<SignupForm createUser={createUser} transition={transition} name={name} />
 				)
 				view.find('input[name="username"]').simulate("change", { target: { value: username } })
@@ -126,7 +125,7 @@ describe("SignupForm view", () => {
 		describe("when the name provided is a single word", () => {
 			it("sends the name as firstName", () => {
 				const firstName = "Foo"
-				const view = mount(
+				const view = mountWithIntl(
 					<SignupForm createUser={createUser} transition={transition} name={firstName} />
 				)
 				view.find('input[name="username"]').simulate("change", { target: { value: username } })
@@ -147,7 +146,7 @@ describe("SignupForm view", () => {
 		describe("when the name provided is more than two words", () => {
 			it("sends the name as firstName", () => {
 				const name = "Foo Baz Bar"
-				const view = mount(
+				const view = mountWithIntl(
 					<SignupForm createUser={createUser} transition={transition} name={name} />
 				)
 				view.find('input[name="username"]').simulate("change", { target: { value: username } })
@@ -170,7 +169,7 @@ describe("SignupForm view", () => {
 				const email = "foo@bar.com"
 				const createUser = () => Promise.reject({ data: { code: "RAPI-1004" } })
 				const transition = jasmine.createSpy("transition function")
-				const view = mount(<SignupForm createUser={createUser} transition={transition} />)
+				const view = mountWithIntl(<SignupForm createUser={createUser} transition={transition} />)
 				view.find('input[name="username"]').simulate("change", { target: { value: "f_oo-b7a.r" } })
 				view
 					.find('input[name="password"]')

@@ -1,10 +1,15 @@
 import React from "react"
+import { FormattedMessage } from "react-intl"
 
 export default () => {
 	return (
 		<div id="no-git">
-			<h2>Got Git?</h2>
-			<h5>Unfortunately, CodeStream only works with projects controlled by Git. :-(</h5>
+			<h2>
+				<FormattedMessage id="noGit.header" />
+			</h2>
+			<h5>
+				<FormattedMessage id="noGit.message" />
+			</h5>
 		</div>
 	)
 }

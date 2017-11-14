@@ -1,8 +1,14 @@
 import React, { Component } from "react"
+import { injectIntl, FormattedMessage } from "react-intl"
+import PropTypes from "prop-types"
 import Button from "./Button"
 import { post } from "../network-request"
 
-export default class ConfirmEmail extends Component {
+class EmailConfirmationForm extends Component {
+	static contextTypes = {
+		intl: PropTypes.shape({ formatMessage: PropTypes.func.isRequired })
+	}
+
 	static defaultProps = {
 		confirmEmail: async ({ email, userId, code }) => {
 			const params = {
@@ -72,15 +78,24 @@ export default class ConfirmEmail extends Component {
 
 	renderError = () => {
 		if (this.state.invalidCode)
-			return <span className="error-message form-error">Uh oh. Invalid code.</span>
+			return (
+				<span className="error-message form-error">
+					<FormattedMessage id="confirmation.invalid" />
+				</span>
+			)
 		if (this.state.expiredCode)
-			return <span className="error-message form-error">Sorry, that code has expired.</span>
+			return (
+				<span className="error-message form-error">
+					<FormattedMessage id="confirmation.expired" />
+				</span>
+			)
 	}
 
 	sendNewCode = () => {
 		const { userId, email, sendCode } = this.props
+		const { intl } = this.context
 		sendCode({ userId, email }).then(() => {
-			atom.notifications.addInfo("Email Sent!")
+			atom.notifications.addInfo(intl.formatMessage({ id: "confirmation.emailSent" }))
 		})
 	}
 
@@ -90,17 +105,33 @@ export default class ConfirmEmail extends Component {
 
 		return (
 			<form id="email-confirmation" onSubmit={this.submitCode}>
-				<h2>You're almost there!</h2>
-				<p>Please check your email. We've sent you a 6-digit code to confirm your email address.</p>
+				<h2>
+					<FormattedMessage id="confirmation.header" />
+				</h2>
 				<p>
-					Didn't receive it? Check your spam folder, or have us{" "}
-					<a onClick={this.sendNewCode}>send another email</a>.
+					<FormattedMessage id="confirmation.instructions" />
 				</p>
 				<p>
-					<strong>{email}</strong> not correct?{" "}
+					<FormattedMessage id="confirmation.didNotReceive" />{" "}
+					<FormattedMessage id="confirmation.sendAnother">
+						{text => <a onClick={this.sendNewCode}>{text}</a>}
+					</FormattedMessage>
+				</p>
+				<p>
+					<FormattedMessage id="confirmation.incorrectEmail" values={{ email }}>
+						{text => {
+							const [email, ...rest] = text.split(" ")
+							return (
+								<span>
+									<strong>{email}</strong>
+									{` ${rest.join(" ")} `}
+								</span>
+							)
+						}}
+					</FormattedMessage>
 					<a id="go-back" onClick={this.goToSignup}>
-						Change it
-					</a>.
+						<FormattedMessage id="confirmation.changeEmail" />
+					</a>
 				</p>
 				<div id="form">
 					{this.renderError()}
@@ -124,10 +155,12 @@ export default class ConfirmEmail extends Component {
 						disabled={this.isFormInvalid()}
 						loading={this.state.loading}
 					>
-						SUBMIT
+						<FormattedMessage id="confirmation.submitButton" />
 					</Button>
 				</div>
 			</form>
 		)
 	}
 }
+
+export default EmailConfirmationForm
