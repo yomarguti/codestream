@@ -13,5 +13,16 @@
 	"signUp.legal.termsOfService": "Terms of Service",
 	"signUp.legal.privacyPolicy": "Privacy Policy",
 	"signUp.footer.alreadySignedUp": "Already have an account?",
-	"signUp.footer.signIn": "Sign In"
+	"signUp.footer.signIn": "Sign In",
+	"confirmation.invalid": "Uh oh. Invalid code.",
+	"confirmation.expired": "Sorry, that code has expired.",
+	"confirmation.emailSent": "Email Sent!",
+	"confirmation.header": "You're almost there!",
+	"confirmation.instructions":
+		"Please check your email. We've sent you a 6-digit code to confirm your email address.",
+	"confirmation.didNotReceive": "Didn't receive it? Check your spam folder, or have us",
+	"confirmation.sendAnother": "send another email.",
+	"confirmation.incorrectEmail": "{email} not correct?",
+	"confirmation.changeEmail": "Change it.",
+	"confirmation.submitButton": "SUBMIT"
 }

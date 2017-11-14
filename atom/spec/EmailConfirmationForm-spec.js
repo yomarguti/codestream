@@ -1,13 +1,14 @@
 import React from "react"
-import Enzyme, { mount } from "enzyme"
+import Enzyme from "enzyme"
 import Adapter from "enzyme-adapter-react-16"
-import EmailConfirmationForm from "../lib/components/EmailConfirmationForm"
+import { mountWithIntl } from "./intl-test-helper.js"
+import EmailConfirmationForm, { Simple } from "../lib/components/EmailConfirmationForm"
 
 Enzyme.configure({ adapter: new Adapter() })
 
 describe("EmailConfirmationForm view", () => {
 	describe("input fields", () => {
-		const view = mount(<EmailConfirmationForm />)
+		const view = mountWithIntl(<EmailConfirmationForm />)
 
 		it("they won't accept non-numerical values", () => {
 			view.find("input").forEach(input => input.simulate("change", { target: { value: "a" } }))
@@ -27,7 +28,7 @@ describe("EmailConfirmationForm view", () => {
 	describe("'Change it' link", () => {
 		it("routes back to the sign up form", () => {
 			const transition = jasmine.createSpy()
-			const view = mount(<EmailConfirmationForm transition={transition} />)
+			const view = mountWithIntl(<EmailConfirmationForm transition={transition} />)
 
 			view.find("#go-back").simulate("click")
 
@@ -36,7 +37,7 @@ describe("EmailConfirmationForm view", () => {
 	})
 
 	describe("Submit button", () => {
-		const view = mount(<EmailConfirmationForm />)
+		const view = mountWithIntl(<EmailConfirmationForm />)
 
 		it("is disabled while the form is empty", () => {
 			expect(view.find("Button").prop("disabled")).toBe(true)
@@ -61,7 +62,7 @@ describe("EmailConfirmationForm view", () => {
 			confirmEmail.andReturn(Promise.resolve())
 			const email = "foo@bar.com"
 			const userId = "12345"
-			const view = mount(
+			const view = mountWithIntl(
 				<EmailConfirmationForm confirmEmail={confirmEmail} email={email} _id={userId} />
 			)
 			view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }))
@@ -73,7 +74,7 @@ describe("EmailConfirmationForm view", () => {
 
 	describe("when submitted code is invalid", () => {
 		it("shows an error message", () => {
-			const view = mount(
+			const view = mountWithIntl(
 				<EmailConfirmationForm
 					confirmEmail={() => Promise.reject({ data: { code: "USRC-1002" } })}
 				/>
@@ -90,7 +91,7 @@ describe("EmailConfirmationForm view", () => {
 		describe("after 3 failed attempts", () => {
 			it("sends them back to sign up page", () => {
 				const transition = jasmine.createSpy("transition function")
-				const view = mount(
+				const view = mountWithIntl(
 					<EmailConfirmationForm
 						confirmEmail={() => Promise.reject({ data: { code: "USRC-1004" } })}
 						transition={transition}
@@ -106,7 +107,7 @@ describe("EmailConfirmationForm view", () => {
 
 	describe("when the submitted code has expired", () => {
 		it("shows an error message", () => {
-			const view = mount(
+			const view = mountWithIntl(
 				<EmailConfirmationForm
 					confirmEmail={() => Promise.reject({ data: { code: "USRC-1003" } })}
 				/>
@@ -124,7 +125,7 @@ describe("EmailConfirmationForm view", () => {
 	describe("when the user is already confirmed", () => {
 		it("redirects them to the login form", () => {
 			const transition = jasmine.createSpy("transition stub")
-			const view = mount(
+			const view = mountWithIntl(
 				<EmailConfirmationForm
 					transition={transition}
 					confirmEmail={() => Promise.reject({ data: { code: "USRC-1006" } })}
