@@ -1,64 +1,68 @@
-import React from "react"
-import { render, unmountComponentAtNode } from "react-dom"
-import { addLocaleData, IntlProvider } from "react-intl"
-import en from "react-intl/locale-data/en"
-import CodeStreamRoot from "./components/CodeStreamRoot"
-import copy from "../translations/en.json"
+import React from "react";
+import { render, unmountComponentAtNode } from "react-dom";
+import { addLocaleData, IntlProvider } from "react-intl";
+import en from "react-intl/locale-data/en";
+import CodeStreamRoot from "./components/CodeStreamRoot";
+import copy from "../translations/en.json";
 
-addLocaleData([...en])
+addLocaleData([...en]);
 
-export const CODESTREAM_VIEW_URI = "atom://codestream"
+export const CODESTREAM_VIEW_URI = "atom://codestream";
 
 export default class CodestreamView {
 	constructor() {
-		this.element = document.createElement("div")
-		this.element.classList.add("codestream")
+		this.element = document.createElement("div");
+		this.element.classList.add("codestream");
 
-		const repositories = atom.project.getRepositories().filter(Boolean)
-		render(
-			<IntlProvider locale="en" messages={copy}>
-				<CodeStreamRoot repositories={repositories} />
-			</IntlProvider>,
-			this.element
-		)
+		const directories = atom.project.getDirectories();
+		const repoPromises = directories.map(repo => atom.project.repositoryForDirectory(repo));
+		Promise.all(repoPromises).then(repos => {
+			repos = repos.filter(Boolean);
+			render(
+				<IntlProvider locale="en" messages={copy}>
+					<CodeStreamRoot repositories={repos} />
+				</IntlProvider>,
+				this.element
+			);
+		});
 	}
 
 	getTitle() {
-		return "CodeStream"
+		return "CodeStream";
 	}
 
 	getIconName() {
-		return "comment-discussion"
+		return "comment-discussion";
 	}
 
 	getDefaultLocation() {
-		return "right"
+		return "right";
 	}
 
 	getAllowedLocations() {
-		return ["right", "left"]
+		return ["right", "left"];
 	}
 
 	isPermanentDockItem() {
-		return false
+		return false;
 	}
 
 	getPreferredWidth() {
-		return 300
+		return 300;
 	}
 
 	getURI() {
-		return CODESTREAM_VIEW_URI
+		return CODESTREAM_VIEW_URI;
 	}
 
 	serialize() {
 		return {
 			deserializer: "codestream/CodestreamView"
-		}
+		};
 	}
 
 	destroy() {
-		unmountComponentAtNode(this.element)
-		this.element.remove()
+		unmountComponentAtNode(this.element);
+		this.element.remove();
 	}
 }
