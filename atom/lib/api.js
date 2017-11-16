@@ -9,9 +9,9 @@ export const User = {
 
 	confirmEmail({ email, userId, code }) {
 		const attributes = {
-			email: email,
-			user_id: userId,
-			confirmation_code: code
+			email,
+			userId,
+			confirmationCode: code
 		};
 		return post(getPath("/no-auth/confirm"), attributes);
 	}
