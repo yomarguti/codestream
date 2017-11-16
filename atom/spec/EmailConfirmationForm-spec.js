@@ -2,7 +2,7 @@ import React from "react";
 import Enzyme from "enzyme";
 import Adapter from "enzyme-adapter-react-16";
 import { mountWithIntl } from "./intl-test-helper.js";
-import EmailConfirmationForm, { Simple } from "../lib/components/EmailConfirmationForm";
+import { SimpleEmailConfirmationForm as EmailConfirmationForm } from "../lib/components/EmailConfirmationForm";
 
 Enzyme.configure({ adapter: new Adapter() });
 
@@ -68,7 +68,9 @@ describe("EmailConfirmationForm view", () => {
 			view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }));
 			view.find("form").simulate("submit");
 			waitsFor(() => confirmEmail.callCount > 0);
-			runs(() => expect(confirmEmail).toHaveBeenCalledWith({ email, userId, code: "111111" }));
+			runs(() =>
+				expect(confirmEmail).toHaveBeenCalledWith({ email, userId, confirmationCode: "111111" })
+			);
 		});
 	});
 

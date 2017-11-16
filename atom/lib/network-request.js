@@ -6,7 +6,9 @@ class ApiRequestError extends Error {
 	}
 }
 
-export async function post(url, body) {
+const getPath = route => `${atom.config.get("codestream.url")}${route}`;
+
+export async function post(route, body) {
 	const config = {
 		method: "POST",
 		headers: new Headers({
@@ -15,7 +17,7 @@ export async function post(url, body) {
 		}),
 		body: JSON.stringify(body)
 	};
-	const response = await fetch(url, config);
+	const response = await fetch(getPath(route), config);
 	const json = await response.json();
 	if (response.status >= 200 && response.status < 300) return json;
 	else throw new ApiRequestError(json.message, json);

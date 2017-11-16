@@ -1,16 +1,16 @@
 import React, { Component } from "react";
 import { injectIntl, FormattedMessage } from "react-intl";
 import PropTypes from "prop-types";
+import withAPI from "./withAPI";
 import Button from "./Button";
-import { User } from "../api";
+import { confirmEmail } from "../actions/user";
 
-class EmailConfirmationForm extends Component {
+export class SimpleEmailConfirmationForm extends Component {
 	static contextTypes = {
 		intl: PropTypes.shape({ formatMessage: PropTypes.func.isRequired })
 	};
 
 	static defaultProps = {
-		confirmEmail: User.confirmEmail,
 		sendCode: async attributes => Promise.resolve()
 	};
 
@@ -39,14 +39,14 @@ class EmailConfirmationForm extends Component {
 	goToSignup = () => this.props.transition("back");
 
 	submitCode = async () => {
-		const code = this.state.values.join("");
+		const confirmationCode = this.state.values.join("");
 		const { email, _id, transition, confirmEmail } = this.props;
 		this.setState(state => ({ loading: true }));
-		confirmEmail({ userId: _id, email, code })
+		confirmEmail({ userId: _id, email, confirmationCode })
 			.then(user => transition("success"))
 			.catch(({ data }) => {
-				if (data.code === "USRC-1006") transition("alreadyConfirmed");
-				if (data.code === "USRC-1004") transition("back");
+				if (data.code === "USRC-1006") return transition("alreadyConfirmed");
+				if (data.code === "USRC-1004") return transition("back");
 				if (data.code === "USRC-1002") {
 					this.setState({
 						invalidCode: true,
@@ -156,4 +156,4 @@ class EmailConfirmationForm extends Component {
 	}
 }
 
-export default EmailConfirmationForm;
+export default withAPI({ confirmEmail })(SimpleEmailConfirmationForm);

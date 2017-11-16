@@ -1,15 +1,19 @@
 import { CompositeDisposable } from "atom";
+import createStore from "redux-zero";
 import CodestreamView, { CODESTREAM_VIEW_URI } from "./codestream-view";
+
+let store;
 
 module.exports = {
 	subscriptions: null,
 
 	activate(state) {
+		store = store || createStore(state.session || {});
 		this.subscriptions = new CompositeDisposable();
 		this.subscriptions.add(
 			atom.workspace.addOpener(uri => {
 				if (uri === CODESTREAM_VIEW_URI) {
-					return new CodestreamView();
+					return new CodestreamView(store);
 				}
 			}),
 			atom.commands.add("atom-workspace", {
@@ -24,11 +28,12 @@ module.exports = {
 	},
 
 	serialize() {
-		return {};
+		return { session: store.getState() };
 	},
 
 	deserializeCodestreamView(serialized) {
-		return new CodestreamView();
+		store = createStore(serialized.session);
+		return new CodestreamView(store);
 	},
 
 	consumeStatusBar(statusBar) {

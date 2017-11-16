@@ -53,6 +53,7 @@
     "react": "^16.0.0",
     "react-dom": "^16.0.0",
     "react-intl": "^2.4.0",
+    "redux-zero": "^4.5.0",
     "username": "^3.0.0",
     "xstate": "^1.2.1"
   },

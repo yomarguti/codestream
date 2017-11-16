@@ -1,8 +1,9 @@
 import React, { Component } from "react";
-import { shell } from "electron";
 import { FormattedMessage } from "react-intl";
+import { shell } from "electron";
 import Button from "./Button";
-import { User } from "../api";
+import withAPI from "./withAPI";
+import { register } from "../actions/user";
 
 const isUsernameInvalid = username => new RegExp("^[-a-z0-9_.]{1,21}$").test(username) === false;
 const isPasswordInvalid = password => password.length < 6;
@@ -21,12 +22,11 @@ const parseName = name => {
 	}
 };
 
-export default class SignupForm extends Component {
+export class SimpleSignupForm extends Component {
 	static defaultProps = {
 		email: "",
 		name: "",
-		username: "",
-		register: User.register
+		username: ""
 	};
 
 	constructor(props) {
@@ -227,3 +227,5 @@ export default class SignupForm extends Component {
 		);
 	}
 }
+
+export default withAPI({ register })(SimpleSignupForm);

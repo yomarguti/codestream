@@ -1,6 +1,7 @@
 import React from "react";
 import { render, unmountComponentAtNode } from "react-dom";
 import { addLocaleData, IntlProvider } from "react-intl";
+import { Provider } from "redux-zero/react";
 import en from "react-intl/locale-data/en";
 import CodeStreamRoot from "./components/CodeStreamRoot";
 import copy from "../translations/en.json";
@@ -10,7 +11,8 @@ addLocaleData([...en]);
 export const CODESTREAM_VIEW_URI = "atom://codestream";
 
 export default class CodestreamView {
-	constructor() {
+	constructor(store) {
+		this.store = store;
 		this.element = document.createElement("div");
 		this.element.classList.add("codestream");
 
@@ -20,7 +22,9 @@ export default class CodestreamView {
 			repos = repos.filter(Boolean);
 			render(
 				<IntlProvider locale="en" messages={copy}>
-					<CodeStreamRoot repositories={repos} />
+					<Provider store={store}>
+						<CodeStreamRoot repositories={repos} />
+					</Provider>
 				</IntlProvider>,
 				this.element
 			);
@@ -57,7 +61,8 @@ export default class CodestreamView {
 
 	serialize() {
 		return {
-			deserializer: "codestream/CodestreamView"
+			deserializer: "codestream/CodestreamView",
+			session: this.store.getState()
 		};
 	}
 
