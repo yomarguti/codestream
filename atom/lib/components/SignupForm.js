@@ -1,25 +1,25 @@
-import React, { Component } from "react"
-import { shell } from "electron"
-import { FormattedMessage } from "react-intl"
-import Button from "./Button"
-import { User } from "../api"
+import React, { Component } from "react";
+import { shell } from "electron";
+import { FormattedMessage } from "react-intl";
+import Button from "./Button";
+import { User } from "../api";
 
-const isUsernameInvalid = username => new RegExp("^[-a-z0-9_.]{1,21}$").test(username) === false
-const isPasswordInvalid = password => password.length < 6
+const isUsernameInvalid = username => new RegExp("^[-a-z0-9_.]{1,21}$").test(username) === false;
+const isPasswordInvalid = password => password.length < 6;
 const isEmailInvalid = email => {
 	const emailRegex = new RegExp(
 		"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
-	)
-	return email === "" || emailRegex.test(email) === false
-}
+	);
+	return email === "" || emailRegex.test(email) === false;
+};
 const parseName = name => {
-	const names = name.split(" ")
-	if (names.length > 2) return { firstName: name, lastName: "" }
+	const names = name.split(" ");
+	if (names.length > 2) return { firstName: name, lastName: "" };
 	else {
-		const [firstName, lastName = ""] = names
-		return { firstName, lastName }
+		const [firstName, lastName = ""] = names;
+		return { firstName, lastName };
 	}
-}
+};
 
 export default class SignupForm extends Component {
 	static defaultProps = {
@@ -27,10 +27,10 @@ export default class SignupForm extends Component {
 		name: "",
 		username: "",
 		register: User.register
-	}
+	};
 
 	constructor(props) {
-		super(props)
+		super(props);
 		this.state = {
 			username: props.username,
 			password: "",
@@ -38,54 +38,54 @@ export default class SignupForm extends Component {
 			usernameTouched: false,
 			passwordTouched: false,
 			emailTouched: false
-		}
+		};
 	}
 
 	onBlurUsername = () => {
-		if (this.state.usernameTouched) return
-		this.setState({ usernameTouched: true })
-	}
+		if (this.state.usernameTouched) return;
+		this.setState({ usernameTouched: true });
+	};
 
 	onBlurPassword = () => {
-		if (this.state.passwordTouched) return
-		this.setState({ passwordTouched: true })
-	}
+		if (this.state.passwordTouched) return;
+		this.setState({ passwordTouched: true });
+	};
 
 	onBlurEmail = () => {
-		if (this.state.emailTouched) return
-		this.setState({ emailTouched: true })
-	}
+		if (this.state.emailTouched) return;
+		this.setState({ emailTouched: true });
+	};
 
 	renderUsernameHelp = () => {
-		const { username, usernameTaken } = this.state
+		const { username, usernameTaken } = this.state;
 		if (username.length === 0 || username.length > 21)
 			return (
 				<small className="error-message">
 					<FormattedMessage id="signUp.username.length" />
 				</small>
-			)
+			);
 		else if (isUsernameInvalid(username))
 			return (
 				<small className="error-message">
 					<FormattedMessage id="signUp.username.validCharacters" />
 				</small>
-			)
+			);
 		else if (usernameTaken)
 			return (
 				<small className="error-message">
 					<FormattedMessage id="signUp.username.alreadyTaken" />
 				</small>
-			)
+			);
 		else
 			return (
 				<small>
 					<FormattedMessage id="signUp.username.length" />
 				</small>
-			)
-	}
+			);
+	};
 
 	renderPasswordHelp = () => {
-		const { password, passwordTouched } = this.state
+		const { password, passwordTouched } = this.state;
 		if (isPasswordInvalid(password) && passwordTouched) {
 			return (
 				<span className="error-message">
@@ -94,50 +94,50 @@ export default class SignupForm extends Component {
 						values={{ countNeeded: 6 - password.length }}
 					/>
 				</span>
-			)
+			);
 		}
 		return (
 			<span>
 				<FormattedMessage id="signUp.password.help" />
 			</span>
-		)
-	}
+		);
+	};
 
 	renderEmailHelp = () => {
-		const { email } = this.state
+		const { email } = this.state;
 		if (isEmailInvalid(email))
 			return (
 				<small className="error-message">
 					<FormattedMessage id="signUp.email.invalid" />
 				</small>
-			)
+			);
 		else
 			return (
 				<small>
 					<FormattedMessage id="signUp.email.help" />
 				</small>
-			)
-	}
+			);
+	};
 
 	isFormInvalid = () => {
-		const { username, password, email } = this.state
-		return isUsernameInvalid(username) || isPasswordInvalid(password) || isEmailInvalid(email)
-	}
+		const { username, password, email } = this.state;
+		return isUsernameInvalid(username) || isPasswordInvalid(password) || isEmailInvalid(email);
+	};
 
 	submitCredentials = async event => {
-		event.preventDefault()
-		if (this.isFormInvalid()) return
-		this.setState({ loading: true })
-		const { register, transition, name } = this.props
-		const { username, password, email } = this.state
+		event.preventDefault();
+		if (this.isFormInvalid()) return;
+		this.setState({ loading: true });
+		const { register, transition, name } = this.props;
+		const { username, password, email } = this.state;
 		register({ username, password, email, ...parseName(name) })
 			.then(user => transition("success", user))
 			.catch(({ data }) => {
-				if (data.usernameTaken) this.setState({ loading: false, usernameTaken: true })
+				if (data.usernameTaken) this.setState({ loading: false, usernameTaken: true });
 				else if (data.code === "RAPI-1004")
-					transition("emailExists", { email, alreadySignedUp: true })
-			})
-	}
+					transition("emailExists", { email, alreadySignedUp: true });
+			});
+	};
 
 	render() {
 		return (
@@ -224,6 +224,6 @@ export default class SignupForm extends Component {
 					</div>
 				</div>
 			</form>
-		)
+		);
 	}
 }

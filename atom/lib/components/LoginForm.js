@@ -1,64 +1,64 @@
-import React, { Component } from "react"
-import { FormattedMessage } from "react-intl"
-import Button from "./Button"
+import React, { Component } from "react";
+import { FormattedMessage } from "react-intl";
+import Button from "./Button";
 
-const isPasswordInvalid = password => password.length === 0
+const isPasswordInvalid = password => password.length === 0;
 const isEmailInvalid = email => {
 	const emailRegex = new RegExp(
 		"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
-	)
-	return email === "" || emailRegex.test(email) === false
-}
+	);
+	return email === "" || emailRegex.test(email) === false;
+};
 
 export default class LoginForm extends Component {
 	static defaultProps = {
 		authenticate: async ({ password }) => {
 			return new Promise((resolve, reject) => {
-				setTimeout(() => (password === "foobar" ? resolve() : reject()), 1000)
-			})
+				setTimeout(() => (password === "foobar" ? resolve() : reject()), 1000);
+			});
 		}
-	}
+	};
 
 	constructor(props) {
-		super(props)
+		super(props);
 		this.state = {
 			password: "",
 			email: this.props.email || "",
 			passwordTouched: false,
 			emailTouched: false
-		}
+		};
 	}
 
 	onBlurPassword = () => {
-		if (this.state.passwordTouched) return
-		this.setState({ passwordTouched: true })
-	}
+		if (this.state.passwordTouched) return;
+		this.setState({ passwordTouched: true });
+	};
 
 	onBlurEmail = () => {
-		if (this.state.emailTouched) return
-		this.setState({ emailTouched: true })
-	}
+		if (this.state.emailTouched) return;
+		this.setState({ emailTouched: true });
+	};
 
 	renderEmailHelp = () => {
-		const { email, emailTouched } = this.state
+		const { email, emailTouched } = this.state;
 		if (isEmailInvalid(email) && emailTouched)
 			return (
 				<small className="error-message">
 					<FormattedMessage id="login.email.invalid" />
 				</small>
-			)
-	}
+			);
+	};
 
 	renderPasswordHelp = () => {
-		const { password, passwordTouched } = this.state
+		const { password, passwordTouched } = this.state;
 		if (isPasswordInvalid(password) && passwordTouched) {
 			return (
 				<span className="error-message">
 					<FormattedMessage id="login.password.required" />
 				</span>
-			)
+			);
 		}
-	}
+	};
 
 	renderAlreadySignedupMessage = () => {
 		if (this.props.alreadySignedUp)
@@ -66,8 +66,8 @@ export default class LoginForm extends Component {
 				<p>
 					<FormattedMessage id="login.alreadySignedUp" />
 				</p>
-			)
-	}
+			);
+	};
 
 	renderError = () => {
 		if (this.state.failed)
@@ -75,26 +75,26 @@ export default class LoginForm extends Component {
 				<span className="error-message form-error">
 					<FormattedMessage id="login.invalid" />
 				</span>
-			)
-	}
+			);
+	};
 
 	isFormInvalid = () => {
-		const { password, email } = this.state
-		return isPasswordInvalid(password) || isEmailInvalid(email)
-	}
+		const { password, email } = this.state;
+		return isPasswordInvalid(password) || isEmailInvalid(email);
+	};
 
 	submitCredentials = async event => {
-		event.preventDefault()
-		if (this.isFormInvalid()) return
-		this.setState({ loading: true })
-		const { authenticate, transition } = this.props
-		const { password, email } = this.state
+		event.preventDefault();
+		if (this.isFormInvalid()) return;
+		this.setState({ loading: true });
+		const { authenticate, transition } = this.props;
+		const { password, email } = this.state;
 		authenticate({ password, email })
 			.then(user => transition("success", user))
 			.catch(e => {
-				this.setState({ loading: false, failed: true, password: "", passwordTouched: false })
-			})
-	}
+				this.setState({ loading: false, failed: true, password: "", passwordTouched: false });
+			});
+	};
 
 	render() {
 		return (
@@ -162,6 +162,6 @@ export default class LoginForm extends Component {
 					</div>
 				</div>
 			</form>
-		)
+		);
 	}
 }

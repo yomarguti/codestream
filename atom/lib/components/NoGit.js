@@ -1,5 +1,5 @@
-import React from "react"
-import { FormattedMessage } from "react-intl"
+import React from "react";
+import { FormattedMessage } from "react-intl";
 
 export default () => {
 	return (
@@ -11,5 +11,5 @@ export default () => {
 				<FormattedMessage id="noGit.message" />
 			</h5>
 		</div>
-	)
-}
+	);
+};

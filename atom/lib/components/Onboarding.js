@@ -1,8 +1,8 @@
-import React, { Component } from "react"
-import { Machine } from "xstate"
-import SignupForm from "./SignupForm"
-import EmailConfirmationForm from "./EmailConfirmationForm"
-import LoginForm from "./LoginForm"
+import React, { Component } from "react";
+import { Machine } from "xstate";
+import SignupForm from "./SignupForm";
+import EmailConfirmationForm from "./EmailConfirmationForm";
+import LoginForm from "./LoginForm";
 
 const chart = {
 	key: "onboarding",
@@ -32,18 +32,18 @@ const chart = {
 		chat: {},
 		resetPassword: {}
 	}
-}
+};
 
 export default class Onboarding extends Component {
-	flow = Machine(chart)
+	flow = Machine(chart);
 
 	constructor(props) {
-		super(props)
+		super(props);
 		this.state = {
 			currentStep: this.flow.getInitialState(),
 			currentProps: this.props,
 			email: ""
-		}
+		};
 	}
 
 	transition = (action, data = {}) =>
@@ -51,18 +51,18 @@ export default class Onboarding extends Component {
 			return {
 				currentProps: data,
 				currentStep: this.flow.transition(state.currentStep, action).toString()
-			}
-		})
+			};
+		});
 
 	render() {
-		const nextProps = { transition: this.transition, ...this.state.currentProps }
+		const nextProps = { transition: this.transition, ...this.state.currentProps };
 		const views = {
 			signUp: <SignupForm {...nextProps} />,
 			confirmEmail: <EmailConfirmationForm {...nextProps} />,
 			login: <LoginForm {...nextProps} />,
 			chat: "TODO: show chat",
 			resetPassword: "TODO: reset password"
-		}
-		return views[this.state.currentStep]
+		};
+		return views[this.state.currentStep];
 	}
 }

@@ -1,59 +1,59 @@
-import React, { Component } from "react"
-import { injectIntl, FormattedMessage } from "react-intl"
-import PropTypes from "prop-types"
-import Button from "./Button"
-import { User } from "../api"
+import React, { Component } from "react";
+import { injectIntl, FormattedMessage } from "react-intl";
+import PropTypes from "prop-types";
+import Button from "./Button";
+import { User } from "../api";
 
 class EmailConfirmationForm extends Component {
 	static contextTypes = {
 		intl: PropTypes.shape({ formatMessage: PropTypes.func.isRequired })
-	}
+	};
 
 	static defaultProps = {
 		confirmEmail: User.confirmEmail,
 		sendCode: async attributes => Promise.resolve()
-	}
+	};
 
 	constructor(props) {
-		super(props)
+		super(props);
 		this.state = {
 			values: ["", "", "", "", "", ""],
 			loading: false
-		}
+		};
 	}
 
 	onChange = index => event => {
-		const value = event.target.value
-		if (isNaN(value)) return
-		const values = this.state.values.slice()
-		values[index] = value
+		const value = event.target.value;
+		if (isNaN(value)) return;
+		const values = this.state.values.slice();
+		values[index] = value;
 		this.setState(
 			() => ({ values }),
 			() => {
-				const nextInput = this[`input${index + 1}`]
-				if (nextInput !== undefined) nextInput.focus()
+				const nextInput = this[`input${index + 1}`];
+				if (nextInput !== undefined) nextInput.focus();
 			}
-		)
-	}
+		);
+	};
 
-	goToSignup = () => this.props.transition("back")
+	goToSignup = () => this.props.transition("back");
 
 	submitCode = async () => {
-		const code = this.state.values.join("")
-		const { email, _id, transition, confirmEmail } = this.props
-		this.setState(state => ({ loading: true }))
+		const code = this.state.values.join("");
+		const { email, _id, transition, confirmEmail } = this.props;
+		this.setState(state => ({ loading: true }));
 		confirmEmail({ userId: _id, email, code })
 			.then(user => transition("success"))
 			.catch(({ data }) => {
-				if (data.code === "USRC-1006") transition("alreadyConfirmed")
-				if (data.code === "USRC-1004") transition("back")
+				if (data.code === "USRC-1006") transition("alreadyConfirmed");
+				if (data.code === "USRC-1004") transition("back");
 				if (data.code === "USRC-1002") {
 					this.setState({
 						invalidCode: true,
 						expiredCode: false,
 						loading: false,
 						values: this.state.values.fill("")
-					})
+					});
 				}
 				if (data.code === "USRC-1003") {
 					this.setState({
@@ -61,13 +61,13 @@ class EmailConfirmationForm extends Component {
 						expiredCode: true,
 						loading: false,
 						values: this.state.values.fill("")
-					})
+					});
 				}
-				this.input0.focus()
-			})
-	}
+				this.input0.focus();
+			});
+	};
 
-	isFormInvalid = () => this.state.values.includes("")
+	isFormInvalid = () => this.state.values.includes("");
 
 	renderError = () => {
 		if (this.state.invalidCode)
@@ -75,26 +75,26 @@ class EmailConfirmationForm extends Component {
 				<span className="error-message form-error">
 					<FormattedMessage id="confirmation.invalid" />
 				</span>
-			)
+			);
 		if (this.state.expiredCode)
 			return (
 				<span className="error-message form-error">
 					<FormattedMessage id="confirmation.expired" />
 				</span>
-			)
-	}
+			);
+	};
 
 	sendNewCode = () => {
-		const { userId, email, sendCode } = this.props
-		const { intl } = this.context
+		const { userId, email, sendCode } = this.props;
+		const { intl } = this.context;
 		sendCode({ userId, email }).then(() => {
-			atom.notifications.addInfo(intl.formatMessage({ id: "confirmation.emailSent" }))
-		})
-	}
+			atom.notifications.addInfo(intl.formatMessage({ id: "confirmation.emailSent" }));
+		});
+	};
 
 	render() {
-		const { email } = this.props
-		const { values } = this.state
+		const { email } = this.props;
+		const { values } = this.state;
 
 		return (
 			<form id="email-confirmation" onSubmit={this.submitCode}>
@@ -113,13 +113,13 @@ class EmailConfirmationForm extends Component {
 				<p>
 					<FormattedMessage id="confirmation.incorrectEmail" values={{ email }}>
 						{text => {
-							const [email, ...rest] = text.split(" ")
+							const [email, ...rest] = text.split(" ");
 							return (
 								<span>
 									<strong>{email}</strong>
 									{` ${rest.join(" ")} `}
 								</span>
-							)
+							);
 						}}
 					</FormattedMessage>
 					<a id="go-back" onClick={this.goToSignup}>
@@ -152,8 +152,8 @@ class EmailConfirmationForm extends Component {
 					</Button>
 				</div>
 			</form>
-		)
+		);
 	}
 }
 
-export default EmailConfirmationForm
+export default EmailConfirmationForm;

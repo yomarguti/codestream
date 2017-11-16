@@ -1,11 +1,11 @@
-import React from "react"
-import createClassString from "classnames"
+import React from "react";
+import createClassString from "classnames";
 
 Button.defaultProps = {
 	className: "",
 	disabled: false,
 	loading: false
-}
+};
 
 export default function Button({ children, className, disabled, loading, ...extras }) {
 	return (
@@ -18,5 +18,5 @@ export default function Button({ children, className, disabled, loading, ...extr
 		>
 			{loading ? <span className="loading loading-spinner-tiny inline-block" /> : children}
 		</button>
-	)
+	);
 }

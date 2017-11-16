@@ -1,10 +1,10 @@
-import { post } from "./network-request"
+import { post } from "./network-request";
 
-const getPath = route => `${atom.config.get("codestream.url")}${route}`
+const getPath = route => `${atom.config.get("codestream.url")}${route}`;
 
 export const User = {
 	register(attributes) {
-		return post(getPath("/no-auth/register"), attributes).then(({ user }) => user)
+		return post(getPath("/no-auth/register"), attributes).then(({ user }) => user);
 	},
 
 	confirmEmail({ email, userId, code }) {
@@ -12,11 +12,11 @@ export const User = {
 			email: email,
 			user_id: userId,
 			confirmation_code: code
-		}
-		return post(getPath("/no-auth/confirm"), attributes)
+		};
+		return post(getPath("/no-auth/confirm"), attributes);
 	}
-}
+};
 
 export default {
 	User
-}
+};
