@@ -3,7 +3,7 @@ import { injectIntl, FormattedMessage } from "react-intl";
 import PropTypes from "prop-types";
 import withAPI from "./withAPI";
 import Button from "./Button";
-import { confirmEmail } from "../actions/user";
+import { confirmEmail, sendNewCode } from "../actions/user";
 
 export class SimpleEmailConfirmationForm extends Component {
 	static contextTypes = {
@@ -40,9 +40,9 @@ export class SimpleEmailConfirmationForm extends Component {
 
 	submitCode = async () => {
 		const confirmationCode = this.state.values.join("");
-		const { email, _id, transition, confirmEmail } = this.props;
+		const { email, userId, transition, confirmEmail } = this.props;
 		this.setState(state => ({ loading: true }));
-		confirmEmail({ userId: _id, email, confirmationCode })
+		confirmEmail({ userId, email, confirmationCode })
 			.then(user => transition("success"))
 			.catch(({ data }) => {
 				if (data.code === "USRC-1006") return transition("alreadyConfirmed");
@@ -85,10 +85,12 @@ export class SimpleEmailConfirmationForm extends Component {
 	};
 
 	sendNewCode = () => {
-		const { userId, email, sendCode } = this.props;
+		const { username, email, password, sendNewCode } = this.props;
 		const { intl } = this.context;
-		sendCode({ userId, email }).then(() => {
-			atom.notifications.addInfo(intl.formatMessage({ id: "confirmation.emailSent" }));
+		sendNewCode({ username, email, password }).catch(({ data }) => {
+			if (data.code === "RAPI-1004") {
+				atom.notifications.addInfo(intl.formatMessage({ id: "confirmation.emailSent" }));
+			}
 		});
 	};
 
@@ -107,7 +109,11 @@ export class SimpleEmailConfirmationForm extends Component {
 				<p>
 					<FormattedMessage id="confirmation.didNotReceive" />{" "}
 					<FormattedMessage id="confirmation.sendAnother">
-						{text => <a onClick={this.sendNewCode}>{text}</a>}
+						{text => (
+							<a id="send-new-code" onClick={this.sendNewCode}>
+								{text}
+							</a>
+						)}
 					</FormattedMessage>
 				</p>
 				<p>
@@ -156,4 +162,4 @@ export class SimpleEmailConfirmationForm extends Component {
 	}
 }
 
-export default withAPI({ confirmEmail })(SimpleEmailConfirmationForm);
+export default withAPI({ confirmEmail, sendNewCode })(SimpleEmailConfirmationForm);

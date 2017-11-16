@@ -131,7 +131,7 @@ export class SimpleSignupForm extends Component {
 		const { register, transition, name } = this.props;
 		const { username, password, email } = this.state;
 		register({ username, password, email, ...parseName(name) })
-			.then(user => transition("success", user))
+			.then(user => transition("success", { username, password, email, userId: user.id }))
 			.catch(({ data }) => {
 				if (data.usernameTaken) this.setState({ loading: false, usernameTaken: true });
 				else if (data.code === "RAPI-1004")

@@ -63,7 +63,7 @@ describe("EmailConfirmationForm view", () => {
 			const email = "foo@bar.com";
 			const userId = "12345";
 			const view = mountWithIntl(
-				<EmailConfirmationForm confirmEmail={confirmEmail} email={email} _id={userId} />
+				<EmailConfirmationForm confirmEmail={confirmEmail} email={email} userId={userId} />
 			);
 			view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }));
 			view.find("form").simulate("submit");
@@ -137,6 +137,26 @@ describe("EmailConfirmationForm view", () => {
 			view.find("form").simulate("submit");
 			waitsFor(() => transition.callCount > 0);
 			runs(() => expect(transition).toHaveBeenCalledWith("alreadyConfirmed"));
+		});
+	});
+
+	describe("the link to send a new code", () => {
+		it("calls the sendNewCode action with the right values", () => {
+			const sendNewCode = jasmine.createSpy("sendNewCode stub").andReturn(Promise.resolve());
+			const email = "foo@bar.com";
+			const username = "foobar";
+			const password = "foobar";
+			const view = mountWithIntl(
+				<EmailConfirmationForm
+					sendNewCode={sendNewCode}
+					email={email}
+					username={username}
+					password={password}
+				/>
+			);
+			view.find("#send-new-code").simulate("click");
+			waitsFor(() => sendNewCode.callCount > 0);
+			runs(() => expect(sendNewCode).toHaveBeenCalledWith({ email, username, password }));
 		});
 	});
 });

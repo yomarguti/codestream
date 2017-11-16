@@ -2,8 +2,10 @@ import { post } from "../network-request";
 
 export const register = (store, attributes) => {
 	return post("/no-auth/register", attributes).then(({ user, accessToken }) => {
-		store.setState({ accessToken, user });
-		return user;
+		const { _id, ...rest } = user;
+		const userObject = { id: _id, ...rest };
+		store.setState({ accessToken, user: userObject });
+		return userObject;
 	});
 };
 
@@ -11,7 +13,12 @@ export const confirmEmail = (store, attributes) => {
 	return post("/no-auth/confirm", attributes);
 };
 
+export const sendNewCode = (store, attributes) => {
+	return post("/no-auth/register", attributes);
+};
+
 export default {
 	register,
-	confirmEmail
+	confirmEmail,
+	sendNewCode
 };
