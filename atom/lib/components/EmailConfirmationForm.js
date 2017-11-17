@@ -45,7 +45,8 @@ export class SimpleEmailConfirmationForm extends Component {
 		confirmEmail({ userId, email, confirmationCode })
 			.then(user => transition("success"))
 			.catch(({ data }) => {
-				if (data.code === "USRC-1006") return transition("alreadyConfirmed");
+				if (data.code === "USRC-1006")
+					return transition("alreadyConfirmed", { alreadyConfirmed: true, email });
 				if (data.code === "USRC-1004") return transition("back");
 				if (data.code === "USRC-1002") {
 					this.setState({

@@ -127,16 +127,23 @@ describe("EmailConfirmationForm view", () => {
 	describe("when the user is already confirmed", () => {
 		it("redirects them to the login form", () => {
 			const transition = jasmine.createSpy("transition stub");
+			const email = "foo@bar.com";
 			const view = mountWithIntl(
 				<EmailConfirmationForm
 					transition={transition}
+					email={email}
 					confirmEmail={() => Promise.reject({ data: { code: "USRC-1006" } })}
 				/>
 			);
 			view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }));
 			view.find("form").simulate("submit");
 			waitsFor(() => transition.callCount > 0);
-			runs(() => expect(transition).toHaveBeenCalledWith("alreadyConfirmed"));
+			runs(() =>
+				expect(transition).toHaveBeenCalledWith("alreadyConfirmed", {
+					email,
+					alreadyConfirmed: true
+				})
+			);
 		});
 	});
 

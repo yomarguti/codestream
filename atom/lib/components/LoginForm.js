@@ -60,11 +60,17 @@ export default class LoginForm extends Component {
 		}
 	};
 
-	renderAlreadySignedupMessage = () => {
+	renderAccountMessage = () => {
 		if (this.props.alreadySignedUp)
 			return (
 				<p>
 					<FormattedMessage id="login.alreadySignedUp" />
+				</p>
+			);
+		if (this.props.alreadyConfirmed)
+			return (
+				<p>
+					<FormattedMessage id="login.alreadyConfirmed" />
 				</p>
 			);
 	};
@@ -100,7 +106,7 @@ export default class LoginForm extends Component {
 		return (
 			<form id="login-form" onSubmit={this.submitCredentials}>
 				<h2>Sign In</h2>
-				{this.renderAlreadySignedupMessage()}
+				{this.renderAccountMessage()}
 				{this.renderError()}
 				<div id="controls">
 					<div id="email-controls" className="control-group">

@@ -28,6 +28,7 @@
 	"login.email.invalid": "Looks like an invalid email address!",
 	"login.password.required": "You might need this.",
 	"login.alreadySignedUp": "Looks like you're already signed up! Please enter your password.",
+	"login.alreadyConfirmed": "Your email is already confirmed! Please enter your password.",
 	"login.invalid": "Sorry, you entered an incorrect email or password.",
 	"login.forgotPassword": "Forgot password?",
 	"login.submitButton": "SIGN IN",
