@@ -37,13 +37,14 @@ describe("SignupForm view", () => {
 		});
 
 		describe("when a username is already in use on a team", () => {
-			it("shows errors", () => {
+			it("shows errors on blur", () => {
 				const team = {
 					usernames: ["foobar"]
 				};
 				const view = mountWithIntl(<SignupForm username={systemUser} team={team} />);
 				const event = { target: { value: "foobar" } };
 				view.find('input[name="username"]').simulate("change", event);
+				view.find('input[name="username"]').simulate("blur");
 				expect(view.find("#username-controls .error-message").text()).toBe(
 					"Sorry, someone already grabbed that username."
 				);

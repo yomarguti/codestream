@@ -43,18 +43,10 @@ export class SimpleSignupForm extends Component {
 		};
 	}
 
-	onChangeUsername = event => {
-		const usernamesInTeam = this.props.team.usernames;
-		const input = event.target.value;
-		this.setState({
-			username: input,
-			usernameInUse: usernamesInTeam.includes(input)
-		});
-	};
-
 	onBlurUsername = () => {
-		if (this.state.usernameTouched) return;
-		this.setState({ usernameTouched: true });
+		const usernamesInTeam = this.props.team.usernames;
+		const { username } = this.state;
+		this.setState({ usernameTouched: true, usernameInUse: usernamesInTeam.includes(username) });
 	};
 
 	onBlurPassword = () => {
@@ -162,7 +154,7 @@ export class SimpleSignupForm extends Component {
 							maxLength="21"
 							tabIndex="0"
 							value={this.state.username}
-							onChange={this.onChangeUsername}
+							onChange={event => this.setState({ username: event.target.value })}
 							onBlur={this.onBlurUsername}
 							required={this.state.usernameTouched}
 						/>
