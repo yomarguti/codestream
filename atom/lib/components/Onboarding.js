@@ -17,7 +17,8 @@ const chart = {
 		},
 		confirmEmail: {
 			on: {
-				success: "login",
+				confirmedNewMember: "chat",
+				confirmedFirstMember: "createTeam",
 				alreadyConfirmed: "login",
 				back: "signUp"
 			}
@@ -28,7 +29,8 @@ const chart = {
 				signUp: "signUp"
 			}
 		},
-		chat: {}
+		chat: {},
+		createTeam: {}
 	}
 };
 
@@ -59,7 +61,7 @@ export default class Onboarding extends Component {
 			confirmEmail: <EmailConfirmationForm {...nextProps} />,
 			login: <LoginForm {...nextProps} />,
 			chat: "TODO: show chat",
-			resetPassword: "TODO: reset password"
+			createTeam: "TODO: create team"
 		};
 		return views[this.state.currentStep];
 	}

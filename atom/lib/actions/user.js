@@ -10,7 +10,10 @@ export const register = (store, attributes) => {
 };
 
 export const confirmEmail = (store, attributes) => {
-	return post("/no-auth/confirm", attributes);
+	return post("/no-auth/confirm", attributes).then(data => {
+		store.setState(data);
+		return { teams: data.teams, repos: data.repos };
+	});
 };
 
 export const sendNewCode = (store, attributes) => {
