@@ -26,7 +26,8 @@ export class SimpleSignupForm extends Component {
 	static defaultProps = {
 		email: "",
 		name: "",
-		username: ""
+		username: "",
+		team: { usernames: [] }
 	};
 
 	constructor(props) {
@@ -37,9 +38,19 @@ export class SimpleSignupForm extends Component {
 			email: this.props.email,
 			usernameTouched: false,
 			passwordTouched: false,
-			emailTouched: false
+			emailTouched: false,
+			usernameInUse: false
 		};
 	}
+
+	onChangeUsername = event => {
+		const usernamesInTeam = this.props.team.usernames;
+		const input = event.target.value;
+		this.setState({
+			username: input,
+			usernameInUse: usernamesInTeam.includes(input)
+		});
+	};
 
 	onBlurUsername = () => {
 		if (this.state.usernameTouched) return;
@@ -57,7 +68,7 @@ export class SimpleSignupForm extends Component {
 	};
 
 	renderUsernameHelp = () => {
-		const { username, usernameTaken } = this.state;
+		const { username, usernameInUse } = this.state;
 		if (username.length === 0 || username.length > 21)
 			return (
 				<small className="error-message">
@@ -70,7 +81,7 @@ export class SimpleSignupForm extends Component {
 					<FormattedMessage id="signUp.username.validCharacters" />
 				</small>
 			);
-		else if (usernameTaken)
+		else if (usernameInUse)
 			return (
 				<small className="error-message">
 					<FormattedMessage id="signUp.username.alreadyTaken" />
@@ -133,9 +144,7 @@ export class SimpleSignupForm extends Component {
 		register({ username, password, email, ...parseName(name) })
 			.then(user => transition("success", { username, password, email, userId: user.id }))
 			.catch(({ data }) => {
-				if (data.usernameTaken) this.setState({ loading: false, usernameTaken: true });
-				else if (data.code === "RAPI-1004")
-					transition("emailExists", { email, alreadySignedUp: true });
+				if (data.code === "RAPI-1004") transition("emailExists", { email, alreadySignedUp: true });
 			});
 	};
 
@@ -153,7 +162,7 @@ export class SimpleSignupForm extends Component {
 							maxLength="21"
 							tabIndex="0"
 							value={this.state.username}
-							onChange={e => this.setState({ username: e.target.value })}
+							onChange={this.onChangeUsername}
 							onBlur={this.onBlurUsername}
 							required={this.state.usernameTouched}
 						/>

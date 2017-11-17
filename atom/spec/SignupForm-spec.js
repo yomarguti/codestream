@@ -35,6 +35,20 @@ describe("SignupForm view", () => {
 			view.find('input[name="username"]').simulate("change", event);
 			expect(view.find("#username-controls .error-message").text()).toContain("characters");
 		});
+
+		describe("when a username is already in use on a team", () => {
+			it("shows errors", () => {
+				const team = {
+					usernames: ["foobar"]
+				};
+				const view = mountWithIntl(<SignupForm username={systemUser} team={team} />);
+				const event = { target: { value: "foobar" } };
+				view.find('input[name="username"]').simulate("change", event);
+				expect(view.find("#username-controls .error-message").text()).toBe(
+					"Sorry, someone already grabbed that username."
+				);
+			});
+		});
 	});
 
 	describe("Password field", () => {

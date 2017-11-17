@@ -1,14 +1,47 @@
 import { CompositeDisposable } from "atom";
 import createStore from "redux-zero";
 import CodestreamView, { CODESTREAM_VIEW_URI } from "./codestream-view";
+import { get } from "./network-request";
+import git from "./git";
 
 let store;
+
+const syncStore = session => {
+	if (store === undefined) {
+		store = createStore(session);
+	} else {
+		store.setState(session);
+	}
+};
 
 module.exports = {
 	subscriptions: null,
 
+	async initialize() {
+		const directories = atom.project.getDirectories();
+		const repoPromises = directories.map(repo => atom.project.repositoryForDirectory(repo));
+
+		const allRepos = await Promise.all(repoPromises);
+		const repos = allRepos.filter(Boolean);
+		if (repos.length > 0) {
+			const repo = repos[0];
+			const repoUrl = repo.getOriginURL();
+			const firstCommitHash = await git("rev-list --max-parents=0 HEAD", {
+				cwd: repo.getWorkingDirectory()
+			});
+			const data = await get(
+				`/no-auth/find-repo?url=${repoUrl}&firstCommitHash=${firstCommitHash}`
+			);
+			const session =
+				Object.keys(data).length === 0
+					? data
+					: { repoMetadata: data.repo, team: { usernames: data.usernames } };
+			syncStore(session);
+		}
+	},
+
 	activate(state) {
-		store = store || createStore(state.session || {});
+		syncStore(state.session);
 		this.subscriptions = new CompositeDisposable();
 		this.subscriptions.add(
 			atom.workspace.addOpener(uri => {
@@ -32,7 +65,7 @@ module.exports = {
 	},
 
 	deserializeCodestreamView(serialized) {
-		store = createStore(serialized.session);
+		syncStore(serialized.session);
 		return new CodestreamView(store);
 	},
 

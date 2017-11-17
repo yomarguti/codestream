@@ -25,12 +25,10 @@ const chart = {
 		login: {
 			on: {
 				success: "chat",
-				signUp: "signUp",
-				forgotPassword: "resetPassword"
+				signUp: "signUp"
 			}
 		},
-		chat: {},
-		resetPassword: {}
+		chat: {}
 	}
 };
 

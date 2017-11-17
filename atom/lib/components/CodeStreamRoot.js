@@ -1,9 +1,10 @@
 import React, { Component } from "react";
+import { connect } from "redux-zero/react";
 import getSystemUser from "username";
 import NoGit from "./NoGit";
 import Onboarding from "./Onboarding";
 
-export default class CodeStreamRoot extends Component {
+class CodeStreamRoot extends Component {
 	static defaultProps = {
 		repositories: []
 	};
@@ -14,7 +15,7 @@ export default class CodeStreamRoot extends Component {
 	}
 
 	render() {
-		const { repositories } = this.props;
+		const { repositories, team } = this.props;
 
 		if (repositories.length === 0) return <NoGit />;
 		else {
@@ -22,7 +23,10 @@ export default class CodeStreamRoot extends Component {
 			const gitDirectory = repository.getWorkingDirectory();
 			const email = repository.getConfigValue("user.email", gitDirectory);
 			const name = repository.getConfigValue("user.name", gitDirectory);
-			return <Onboarding email={email} username={getSystemUser.sync()} name={name} />;
+			return <Onboarding team={team} email={email} username={getSystemUser.sync()} name={name} />;
 		}
 	}
 }
+
+const mapStateToProps = ({ team }) => ({ team });
+export default connect(mapStateToProps)(CodeStreamRoot);

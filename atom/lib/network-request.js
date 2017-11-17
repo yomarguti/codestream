@@ -8,6 +8,19 @@ class ApiRequestError extends Error {
 
 const getPath = route => `${atom.config.get("codestream.url")}${route}`;
 
+export async function get(route) {
+	const config = {
+		headers: new Headers({
+			Accept: "application/json",
+			"Content-Type": "application/json"
+		})
+	};
+	const response = await fetch(getPath(route), config);
+	const json = await response.json();
+	if (response.ok) return json;
+	else throw new ApiRequestError(json.message, json);
+}
+
 export async function post(route, body) {
 	const config = {
 		method: "POST",
@@ -19,7 +32,7 @@ export async function post(route, body) {
 	};
 	const response = await fetch(getPath(route), config);
 	const json = await response.json();
-	if (response.status >= 200 && response.status < 300) return json;
+	if (response.ok) return json;
 	else throw new ApiRequestError(json.message, json);
 }
 
