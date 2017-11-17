@@ -8,9 +8,18 @@ If you want to use a local instance of the api server,
 you'll need to use the dev_tools to create a sandbox for it.
 Once you have your sandbox, set an environment variable:
 
-`CS_API_IGNORE_HTTPS=true`
+`export CS_API_IGNORE_HTTPS=true`
 
 This is required for local development because chrome won't be happy about our self signed certificates and all requests from atom will be rejected.
+
+By default in development, the api server will automatically confirm new accounts and in the plugin,
+when you sign up and see the confirmation form, you can enter any code and you'll just be forwarded to log in form.
+If you want to enable the confirmation code email and turn on the confirmation step, set the following variables in your shell.
+
+``` bash
+export CS_API_EMAIL_TO=#put your email here
+export CS_API_CONFIRMATION_REQUIRE=1
+```
 
 Now you can start the api server. Next, you'll need to tell the plugin where the server is by editing your atom configs. This can be done from atom or the command line.
 
