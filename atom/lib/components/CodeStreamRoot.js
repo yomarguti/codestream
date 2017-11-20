@@ -8,8 +8,7 @@ import Stream from "./Stream";
 class CodeStreamRoot extends Component {
 	static defaultProps = {
 		repositories: [],
-		user: {},
-		team: {}
+		user: {}
 	};
 
 	constructor(props) {

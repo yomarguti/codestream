@@ -34,7 +34,7 @@ module.exports = {
 			);
 			const session =
 				Object.keys(data).length === 0
-					? data
+					? null
 					: { repoMetadata: data.repo, team: { usernames: data.usernames } };
 			syncStore(session);
 		}

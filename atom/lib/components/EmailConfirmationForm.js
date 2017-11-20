@@ -40,12 +40,14 @@ export class SimpleEmailConfirmationForm extends Component {
 
 	submitCode = async () => {
 		const confirmationCode = this.state.values.join("");
-		const { email, userId, transition, confirmEmail } = this.props;
+		const { email, userId, transition, confirmEmail, store } = this.props;
 		this.setState(state => ({ loading: true }));
 		confirmEmail({ userId, email, confirmationCode })
 			.then(data => {
-				if (data.teams.length > 0) transition("confirmedNewMember", data);
-				else transition("confirmedFirstMember");
+				// if (store.getState().team) transition("confirmedNewMember", data);
+				if (store.getState().team === null && data.teams.length === 0) {
+					transition("confirmedFirstMember");
+				}
 			})
 			.catch(({ data }) => {
 				if (data.code === "USRC-1006")
