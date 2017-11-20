@@ -2,6 +2,11 @@
 1. clone the repo
 2. `cd` into the repo
 3. run `apm install && apm link`
+4. install the prettier-atom package in atom
+5. in the settings for prettier-atom, enable the following settings
+  - 'Format Files on Save'
+  - 'Only format if Prettier is found in your project's dependencies'
+  - 'Only format if a Prettier config is found'
 
 ## Connecting to server
 If you want to use a local instance of the api server,
@@ -42,3 +47,8 @@ Add a new entry to the top under the '*' so it looks like
 ```
 
 __Notice the protocol is 'http' because the api server has been configured to ignore ssl__
+
+In order to get through onboarding right now,
+you need to sign up, confirm your account, reload,
+skip to sign in, sign in with your credentials,
+and then you'll be shown the current stream interface, which is not hooked up to anything yet.

@@ -3,47 +3,7 @@ import { connect } from "redux-zero/react";
 import getSystemUser from "username";
 import NoGit from "./NoGit";
 import Onboarding from "./Onboarding";
-import Chat from "./Chat";
-
-const onboardingChart = {
-	initial: "signUp",
-	on: {
-		complete: "chat"
-	},
-	states: {
-		signUp: {
-			on: {
-				success: "confirmEmail",
-				emailExists: "login",
-				alreadySignedUp: "login"
-			}
-		},
-		confirmEmail: {
-			on: {
-				confirmedNewMember: "complete",
-				confirmedFirstMember: "createTeam",
-				alreadyConfirmed: "login",
-				back: "signUp"
-			}
-		},
-		login: {
-			on: {
-				success: "complete",
-				signUp: "signUp"
-			}
-		},
-		createTeam: {}
-	}
-};
-
-const codestreamChart = {
-	key: "codestream",
-	initial: "onboarding",
-	states: {
-		onboarding: onboardingChart,
-		chat: {}
-	}
-};
+import Stream from "./Stream";
 
 class CodeStreamRoot extends Component {
 	static defaultProps = {
@@ -61,7 +21,7 @@ class CodeStreamRoot extends Component {
 		const { user, repositories, team } = this.props;
 
 		if (repositories.length === 0) return <NoGit />;
-		else if (user.onboarded) return <Chat />;
+		else if (user.onboarded) return <Stream />;
 		else {
 			const repository = repositories[0];
 			const gitDirectory = repository.getWorkingDirectory();
