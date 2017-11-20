@@ -17,7 +17,7 @@ const chart = {
 		},
 		confirmEmail: {
 			on: {
-				confirmedNewMember: "chat",
+				confirmedNewMember: "complete",
 				confirmedFirstMember: "createTeam",
 				alreadyConfirmed: "login",
 				back: "signUp"
@@ -25,11 +25,11 @@ const chart = {
 		},
 		login: {
 			on: {
-				success: "chat",
+				success: "complete",
 				signUp: "signUp"
 			}
 		},
-		chat: {},
+		complete: {},
 		createTeam: {}
 	}
 };
@@ -41,18 +41,21 @@ export default class Onboarding extends Component {
 		super(props);
 		this.state = {
 			currentStep: this.flow.getInitialState(),
-			currentProps: this.props,
-			email: ""
+			currentProps: this.props
 		};
 	}
 
-	transition = (action, data = {}) =>
-		this.setState(state => {
-			return {
-				currentProps: data,
-				currentStep: this.flow.transition(state.currentStep, action).toString()
-			};
-		});
+	transition = (action, data = {}) => {
+		const nextStep = this.flow.transition(this.state.currentStep, action).toString();
+		if (nextStep === "complete") this.props.onComplete();
+		else
+			this.setState(state => {
+				return {
+					currentProps: data,
+					currentStep: nextStep
+				};
+			});
+	};
 
 	render() {
 		const nextProps = { transition: this.transition, ...this.state.currentProps };
@@ -60,7 +63,6 @@ export default class Onboarding extends Component {
 			signUp: <SignupForm {...nextProps} />,
 			confirmEmail: <EmailConfirmationForm {...nextProps} />,
 			login: <LoginForm {...nextProps} />,
-			chat: "TODO: show chat",
 			createTeam: "TODO: create team"
 		};
 		return views[this.state.currentStep];
