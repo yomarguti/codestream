@@ -7,13 +7,15 @@ class ApiRequestError extends Error {
 }
 
 const getPath = route => `${atom.config.get("codestream.url")}${route}`;
+const getHeaders = () =>
+	new Headers({
+		Accept: "application/json",
+		"Content-Type": "application/json"
+	});
 
 export async function get(route) {
 	const config = {
-		headers: new Headers({
-			Accept: "application/json",
-			"Content-Type": "application/json"
-		})
+		headers: getHeaders()
 	};
 	const response = await fetch(getPath(route), config);
 	const json = await response.json();
@@ -22,10 +24,7 @@ export async function get(route) {
 }
 
 export async function post(route, body, accessToken) {
-	const headers = new Headers({
-		Accept: "application/json",
-		"Content-Type": "application/json"
-	});
+	const headers = getHeaders();
 	if (accessToken) {
 		headers.set("Authorization", `Bearer ${accessToken}`);
 	}
@@ -40,4 +39,16 @@ export async function post(route, body, accessToken) {
 	else throw new ApiRequestError(json.message, json);
 }
 
-export default { post };
+export async function put(route, body) {
+	const config = {
+		headers: getHeaders(),
+		method: "PUT",
+		body: JSON.stringify(body)
+	};
+	const response = await fetch(getPath(route), config);
+	const json = await response.json();
+	if (response.ok) return json;
+	else throw new ApiRequestError(json.message, json);
+}
+
+export default { get, post, put };

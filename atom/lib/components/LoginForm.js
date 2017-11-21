@@ -1,6 +1,8 @@
 import React, { Component } from "react";
 import { FormattedMessage } from "react-intl";
 import Button from "./Button";
+import withAPI from "./withAPI";
+import { authenticate } from "../actions/user";
 
 const isPasswordInvalid = password => password.length === 0;
 const isEmailInvalid = email => {
@@ -10,15 +12,7 @@ const isEmailInvalid = email => {
 	return email === "" || emailRegex.test(email) === false;
 };
 
-export default class LoginForm extends Component {
-	static defaultProps = {
-		authenticate: async ({ password }) => {
-			return new Promise((resolve, reject) => {
-				setTimeout(() => (password === "foobar" ? resolve() : reject()), 1000);
-			});
-		}
-	};
-
+export class SimpleLoginForm extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
@@ -96,8 +90,8 @@ export default class LoginForm extends Component {
 		const { authenticate, transition } = this.props;
 		const { password, email } = this.state;
 		authenticate({ password, email })
-			.then(user => transition("success", user))
-			.catch(e => {
+			.then(() => transition("success"))
+			.catch(error => {
 				this.setState({ loading: false, failed: true, password: "", passwordTouched: false });
 			});
 	};
@@ -171,3 +165,5 @@ export default class LoginForm extends Component {
 		);
 	}
 }
+
+export default withAPI({ authenticate })(SimpleLoginForm);
