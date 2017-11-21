@@ -3,6 +3,7 @@ import { Machine } from "xstate";
 import SignupForm from "./SignupForm";
 import EmailConfirmationForm from "./EmailConfirmationForm";
 import LoginForm from "./LoginForm";
+import TeamCreation from "./TeamCreation";
 
 const chart = {
 	key: "onboarding",
@@ -63,7 +64,7 @@ export default class Onboarding extends Component {
 			signUp: <SignupForm {...nextProps} />,
 			confirmEmail: <EmailConfirmationForm {...nextProps} />,
 			login: <LoginForm {...nextProps} />,
-			createTeam: "TODO: create team"
+			createTeam: <TeamCreation {...nextProps} />
 		};
 		return views[this.state.currentStep];
 	}
