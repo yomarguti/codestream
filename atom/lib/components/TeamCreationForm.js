@@ -4,7 +4,7 @@ import withAPI from "./withAPI";
 import Button from "./Button";
 import { post } from "../network-request";
 
-export class SimpleTeamCreation extends Component {
+export class SimpleTeamCreationForm extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
@@ -17,15 +17,20 @@ export class SimpleTeamCreation extends Component {
 
 	onSubmit = () => {
 		this.setState({ loading: true });
-		const { store, createTeam } = this.props;
+		const { store, createTeam, transition } = this.props;
 		const { name } = this.state;
 		const { url, firstCommitHash } = store.getState().repoMetaData;
 		createTeam({ name, url, firstCommitHash })
 			.then(data => {
 				this.setState({ loading: false });
+				transition("success");
 				atom.notifications.addInfo("Success! More to come...");
 			})
-			.catch(() => this.setState({ loading: false }));
+			.catch(error => {
+				this.setState({ loading: false });
+				atom.notifications.addError("There was an error creating the team");
+				console.log("there was an error creating this team", error);
+			});
 	};
 
 	render() {
@@ -74,4 +79,4 @@ const createTeam = (store, attributes) => {
 	});
 };
 
-export default withAPI({ createTeam })(SimpleTeamCreation);
+export default withAPI({ createTeam })(SimpleTeamCreationForm);

@@ -2,14 +2,14 @@ import React from "react";
 import Enzyme from "enzyme";
 import Adapter from "enzyme-adapter-react-16";
 import { mountWithIntl } from "./intl-test-helper.js";
-import { SimpleTeamCreation as TeamCreation } from "../lib/components/TeamCreation";
+import { SimpleTeamCreationForm as TeamCreationForm } from "../lib/components/TeamCreationForm";
 
 Enzyme.configure({ adapter: new Adapter() });
 
-describe("TeamCreation form ", () => {
+describe("TeamCreationForm", () => {
 	describe("name input", () => {
 		it("shows errors when left empty", () => {
-			const view = mountWithIntl(<TeamCreation />);
+			const view = mountWithIntl(<TeamCreationForm />);
 			view.find("input").simulate("blur");
 			expect(view.find("input").exists()).toBe(true);
 		});
@@ -17,12 +17,12 @@ describe("TeamCreation form ", () => {
 
 	describe("submit button", () => {
 		it("is disabled while the form is invalid", () => {
-			const view = mountWithIntl(<TeamCreation />);
+			const view = mountWithIntl(<TeamCreationForm />);
 			expect(view.find("Button").prop("disabled")).toBe(true);
 		});
 
 		it("is enabled while the form is valid", () => {
-			const view = mountWithIntl(<TeamCreation />);
+			const view = mountWithIntl(<TeamCreationForm />);
 			view.find("input").simulate("change", { target: { value: "Foo Team" } });
 			expect(view.find("Button").prop("disabled")).toBe(false);
 		});
@@ -36,7 +36,7 @@ describe("TeamCreation form ", () => {
 			const team = { name };
 			const store = { getState: () => ({ repoMetaData: { url, firstCommitHash } }) };
 			const createTeam = jasmine.createSpy("createTeam stub").andReturn(Promise.resolve());
-			const view = mountWithIntl(<TeamCreation createTeam={createTeam} store={store} />);
+			const view = mountWithIntl(<TeamCreationForm createTeam={createTeam} store={store} />);
 
 			view.find("input").simulate("change", { target: { value: name } });
 			view.find("form").simulate("submit");
