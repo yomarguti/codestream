@@ -1,0 +1,83 @@
+// The ui-variables file is provided by base themes provided by Atom.
+//
+// See https://github.com/atom/atom-dark-ui/blob/master/styles/ui-variables.less
+// for a full listing of what's available.
+@import "ui-variables";
+
+.codestream .stream {
+	width: 100%;
+
+	.compose {
+		display: block;
+		width: 100%;
+		border: none;
+		border-top: 1px solid #ddd;
+		background-color: inherit;
+		position: absolute;
+		bottom: -5px;
+		padding: 10px;
+		box-sizing: border-box;
+
+		textarea {
+			box-sizing: border-box;
+			width: 100%;
+			padding: 10px;
+			border-radius: 4px;
+			background: #f6f6f6;
+			border: 1px solid #ddd;
+			resize: none;
+			// height: 20px;
+		}
+	}
+
+	.postslist {
+	}
+
+	.post {
+		padding: 10px;
+		cursor: pointer;
+		min-height: 56px;
+		.headshot {
+			display: block;
+			margin: 0 0 -36px 0;
+			width: 36px;
+			height: 36px;
+			border-radius: 4px;
+			// border: 1px solid #ddd;
+			background: #fff;
+		}
+		author {
+			color: #000;
+			font-size: 13px;
+			padding: 3px 3px 3px 46px;
+			font-weight: 600;
+		}
+		.timestamp {
+			color: #bbb;
+			font-size: 11px;
+			padding: 3px 3px 3px 8px;
+		}
+		.body {
+			padding-left: 46px;
+			// background: #f6f6f6;
+			// border: 1px solid #ddd;
+			// border-radius: 4px;
+			// padding: 10px;
+		}
+		.icon-gear {
+			color: #bbb;
+			display: none;
+			float: right;
+			margin: -3px -10px 0 0;
+		}
+	}
+	.post:hover {
+		background: #eee;
+		.icon-gear {
+			display: block;
+		}
+		.icon-gear:hover {
+			color: #aaa;
+		}
+	}
+}

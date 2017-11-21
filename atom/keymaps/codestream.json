@@ -1,5 +1,6 @@
 {
-  "atom-workspace": {
-    "ctrl-alt-o": "codestream:toggle"
-  }
+	"atom-workspace": {
+		"ctrl-alt-o": "codestream:toggle",
+		"ctrl-enter": "codestream:comment"
+	}
 }

@@ -50,7 +50,8 @@ module.exports = {
 				}
 			}),
 			atom.commands.add("atom-workspace", {
-				"codestream:toggle": () => atom.workspace.toggle(CODESTREAM_VIEW_URI)
+				"codestream:toggle": () => atom.workspace.toggle(CODESTREAM_VIEW_URI),
+				"codestream:comment": () => atom.workspace.toggle(CODESTREAM_VIEW_URI)
 			})
 		);
 	},
