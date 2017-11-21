@@ -21,13 +21,17 @@ export async function get(route) {
 	else throw new ApiRequestError(json.message, json);
 }
 
-export async function post(route, body) {
+export async function post(route, body, accessToken) {
+	const headers = new Headers({
+		Accept: "application/json",
+		"Content-Type": "application/json"
+	});
+	if (accessToken) {
+		headers.set("Authorization", `Bearer ${accessToken}`);
+	}
 	const config = {
+		headers,
 		method: "POST",
-		headers: new Headers({
-			Accept: "application/json",
-			"Content-Type": "application/json"
-		}),
 		body: JSON.stringify(body)
 	};
 	const response = await fetch(getPath(route), config);

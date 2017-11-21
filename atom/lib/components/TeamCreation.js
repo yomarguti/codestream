@@ -1,8 +1,10 @@
 import React, { Component } from "react";
 import { FormattedMessage } from "react-intl";
+import withAPI from "./withAPI";
 import Button from "./Button";
+import { post } from "../network-request";
 
-export default class TeamCreation extends Component {
+export class SimpleTeamCreation extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
@@ -12,6 +14,19 @@ export default class TeamCreation extends Component {
 	}
 
 	onBlurName = () => this.setState(state => ({ nameTouched: true }));
+
+	onSubmit = () => {
+		this.setState({ loading: true });
+		const { store, createTeam } = this.props;
+		const { name } = this.state;
+		const { url, firstCommitHash } = store.getState().repoMetaData;
+		createTeam({ name, url, firstCommitHash })
+			.then(data => {
+				this.setState({ loading: false });
+				atom.notifications.addInfo("Success! More to come...");
+			})
+			.catch(() => this.setState({ loading: false }));
+	};
 
 	render() {
 		return (
@@ -25,15 +40,16 @@ export default class TeamCreation extends Component {
 				<p>
 					<FormattedMessage id="createTeam.additionalInfo" />
 				</p>
-				<form>
+				<form onSubmit={this.onSubmit}>
 					<input
 						className="native-key-bindings input-text control"
 						placeholder="Team Name"
-						onChange={event => this.setState(state => ({ name: event.target.value }))}
+						onChange={event => this.setState({ name: event.target.value })}
+						value={this.state.name}
 						onBlur={this.onBlurName}
 						required={this.state.touched}
 					/>
-					<Button id="submit-button" disabled={this.state.name === ""}>
+					<Button id="submit-button" disabled={this.state.name === ""} loading={this.state.loading}>
 						<FormattedMessage id="createTeam.submitButton" />
 					</Button>
 				</form>
@@ -41,3 +57,21 @@ export default class TeamCreation extends Component {
 		);
 	}
 }
+
+const createTeam = (store, attributes) => {
+	const params = {
+		url: attributes.url,
+		firstCommitHash: attributes.firstCommitHash,
+		team: {
+			name: attributes.name
+		}
+	};
+	return post("/repos", params, store.getState().accessToken).then(data => {
+		store.setState({
+			...store.getState(),
+			...data
+		});
+	});
+};
+
+export default withAPI({ createTeam })(SimpleTeamCreation);
