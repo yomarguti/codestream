@@ -6,12 +6,16 @@ import { SimpleSignupForm as SignupForm } from "../lib/components/SignupForm";
 
 Enzyme.configure({ adapter: new Adapter() });
 
-const mockRepository = { getConfigValue() {}, getWorkingDirectory() {} };
+const mockStore = {
+	subscribe() {
+		return () => {};
+	}
+};
 
 describe("SignupForm view", () => {
 	describe("Username field", () => {
 		const systemUser = "tommy";
-		const view = mountWithIntl(<SignupForm username={systemUser} />);
+		const view = mountWithIntl(<SignupForm store={mockStore} username={systemUser} />);
 
 		describe("when a username is provided", () => {
 			it("is pre-populated with given username", () => {
@@ -41,7 +45,9 @@ describe("SignupForm view", () => {
 				const team = {
 					usernames: ["foobar"]
 				};
-				const view = mountWithIntl(<SignupForm username={systemUser} team={team} />);
+				const view = mountWithIntl(
+					<SignupForm username={systemUser} team={team} store={mockStore} />
+				);
 				const event = { target: { value: "foobar" } };
 				view.find('input[name="username"]').simulate("change", event);
 				view.find('input[name="username"]').simulate("blur");
@@ -53,7 +59,7 @@ describe("SignupForm view", () => {
 	});
 
 	describe("Password field", () => {
-		const view = mountWithIntl(<SignupForm />);
+		const view = mountWithIntl(<SignupForm store={mockStore} />);
 
 		it("shows errors when left empty", () => {
 			view.find('input[name="password"]').simulate("blur");
@@ -70,7 +76,7 @@ describe("SignupForm view", () => {
 	});
 
 	describe("Email address field", () => {
-		const view = mountWithIntl(<SignupForm />);
+		const view = mountWithIntl(<SignupForm store={mockStore} />);
 
 		it("shows errors when left empty", () => {
 			view.find('input[name="email"]').simulate("blur");
@@ -92,7 +98,7 @@ describe("SignupForm view", () => {
 
 		describe("when an email address is provided to the component", () => {
 			const email = "foo@bar.com";
-			const view = mountWithIntl(<SignupForm email={email} />);
+			const view = mountWithIntl(<SignupForm email={email} store={mockStore} />);
 			it("is pre-populated with given email address", () => {
 				expect(view.find('input[name="email"]').prop("value")).toBe(email);
 			});
@@ -100,7 +106,7 @@ describe("SignupForm view", () => {
 	});
 
 	describe("Sign Up button", () => {
-		const view = mountWithIntl(<SignupForm />);
+		const view = mountWithIntl(<SignupForm store={mockStore} />);
 
 		it("is disabled while the form values are invalid", () => {
 			expect(view.find("Button").prop("disabled")).toBe(true);
@@ -128,7 +134,7 @@ describe("SignupForm view", () => {
 				const lastName = "Bar";
 				const name = `${firstName} ${lastName}`;
 				const view = mountWithIntl(
-					<SignupForm register={register} transition={transition} name={name} />
+					<SignupForm register={register} transition={transition} name={name} store={mockStore} />
 				);
 				view.find('input[name="username"]').simulate("change", { target: { value: username } });
 				view.find('input[name="password"]').simulate("change", { target: { value: password } });
@@ -143,7 +149,12 @@ describe("SignupForm view", () => {
 			it("sends the name as firstName", () => {
 				const firstName = "Foo";
 				const view = mountWithIntl(
-					<SignupForm register={register} transition={transition} name={firstName} />
+					<SignupForm
+						register={register}
+						transition={transition}
+						name={firstName}
+						store={mockStore}
+					/>
 				);
 				view.find('input[name="username"]').simulate("change", { target: { value: username } });
 				view.find('input[name="password"]').simulate("change", { target: { value: password } });
@@ -164,7 +175,7 @@ describe("SignupForm view", () => {
 			it("sends the name as firstName", () => {
 				const name = "Foo Baz Bar";
 				const view = mountWithIntl(
-					<SignupForm register={register} transition={transition} name={name} />
+					<SignupForm register={register} transition={transition} name={name} store={mockStore} />
 				);
 				view.find('input[name="username"]').simulate("change", { target: { value: username } });
 				view.find('input[name="password"]').simulate("change", { target: { value: password } });
@@ -186,7 +197,9 @@ describe("SignupForm view", () => {
 				const email = "foo@bar.com";
 				const register = () => Promise.reject({ data: { code: "RAPI-1004" } });
 				const transition = jasmine.createSpy("transition function");
-				const view = mountWithIntl(<SignupForm register={register} transition={transition} />);
+				const view = mountWithIntl(
+					<SignupForm register={register} transition={transition} store={mockStore} />
+				);
 				view.find('input[name="username"]').simulate("change", { target: { value: "f_oo-b7a.r" } });
 				view
 					.find('input[name="password"]')
