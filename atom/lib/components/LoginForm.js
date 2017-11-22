@@ -130,11 +130,11 @@ export class SimpleLoginForm extends Component {
 							required={this.state.passwordTouched}
 						/>
 						{this.renderPasswordHelp()}
-						<div className="help-link">
+						{/* <div className="help-link">
 							<a onClick={() => this.props.transition("forgotPassword")}>
 								<FormattedMessage id="login.forgotPassword" />
 							</a>
-						</div>
+						</div> */}
 					</div>
 					<Button
 						id="login-button"
