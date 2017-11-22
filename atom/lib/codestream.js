@@ -33,15 +33,16 @@ module.exports = {
 		if (repos.length > 0) {
 			const repo = repos[0];
 			const repoUrl = repo.getOriginURL();
-			const firstCommitHash = await git("rev-list --max-parents=0 HEAD", {
+			let firstCommitHash = await git("rev-list --max-parents=0 HEAD", {
 				cwd: repo.getWorkingDirectory()
 			});
+			firstCommitHash = firstCommitHash.trim();
 			const data = await get(
 				`/no-auth/find-repo?url=${repoUrl}&firstCommitHash=${firstCommitHash}`
 			);
 			const session =
 				Object.keys(data).length === 0
-					? null
+					? { repoMetaData: { url: repoUrl, firstCommitHash } }
 					: { repoMetadata: data.repo, team: { usernames: data.usernames } };
 			syncStore(session);
 		}

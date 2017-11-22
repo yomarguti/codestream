@@ -3,7 +3,7 @@ import { Machine } from "xstate";
 import SignupForm from "./SignupForm";
 import EmailConfirmationForm from "./EmailConfirmationForm";
 import LoginForm from "./LoginForm";
-import TeamCreation from "./TeamCreation";
+import TeamCreationForm from "./TeamCreationForm";
 
 const chart = {
 	key: "onboarding",
@@ -30,8 +30,13 @@ const chart = {
 				signUp: "signUp"
 			}
 		},
-		complete: {},
-		createTeam: {}
+		createTeam: {
+			on: {
+				success: "identifyMembers"
+			}
+		},
+		identifyMembers: {},
+		complete: {}
 	}
 };
 
@@ -64,7 +69,8 @@ export default class Onboarding extends Component {
 			signUp: <SignupForm {...nextProps} />,
 			confirmEmail: <EmailConfirmationForm {...nextProps} />,
 			login: <LoginForm {...nextProps} />,
-			createTeam: <TeamCreation {...nextProps} />
+			createTeam: <TeamCreationForm {...nextProps} />,
+			identifyMembers: "who's on the team?"
 		};
 		return views[this.state.currentStep];
 	}

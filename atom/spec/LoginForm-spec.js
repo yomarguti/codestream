@@ -2,7 +2,7 @@ import React from "react";
 import Enzyme, { render } from "enzyme";
 import Adapter from "enzyme-adapter-react-16";
 import { mountWithIntl } from "./intl-test-helper.js";
-import LoginForm from "../lib/components/LoginForm";
+import { SimpleLoginForm as LoginForm } from "../lib/components/LoginForm";
 
 Enzyme.configure({ adapter: new Adapter() });
 
@@ -69,6 +69,19 @@ describe("LoginForm", () => {
 	});
 
 	describe("when valid credentials are submitted", () => {
+		it("sends the email and password", () => {
+			const email = "foo@bar.com";
+			const password = "somePassword";
+			const authenticate = jasmine.createSpy("");
+			const view = mountWithIntl(<LoginForm authenticate={authenticate} />);
+			view.find('input[name="email"]').simulate("change", { target: { value: email } });
+			view.find('input[name="password"]').simulate("change", { target: { value: password } });
+			view.find("form").simulate("submit");
+
+			waitsFor(() => authenticate.callCount > 0);
+			runs(() => expect(authenticate).toHaveBeenCalledWith({ email, password }));
+		});
+
 		describe("when authentication fails", () => {
 			it("shows an error", () => {
 				const email = "foo@bar.com";

@@ -1,4 +1,4 @@
-import { post } from "../network-request";
+import { post, put } from "../network-request";
 
 export const register = (store, attributes) => {
 	return post("/no-auth/register", attributes).then(({ user, accessToken }) => {
@@ -20,8 +20,14 @@ export const sendNewCode = (store, attributes) => {
 	return post("/no-auth/register", attributes);
 };
 
+export const authenticate = async (store, attributes) => {
+	const data = await put("/no-auth/login", attributes);
+	return store.setState(data);
+};
+
 export default {
 	register,
 	confirmEmail,
-	sendNewCode
+	sendNewCode,
+	authenticate
 };

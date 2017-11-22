@@ -39,12 +39,19 @@ export class SimpleSignupForm extends Component {
 			usernameTouched: false,
 			passwordTouched: false,
 			emailTouched: false,
-			usernameInUse: false
+			usernameInUse: false,
+			team: this.props.team
 		};
+
+		this.unsubscribe = props.store.subscribe(({ team }) => this.setState({ team }));
+	}
+
+	componentWillUnmount() {
+		this.unsubscribe();
 	}
 
 	onBlurUsername = () => {
-		const usernamesInTeam = this.props.team.usernames;
+		const usernamesInTeam = this.state.team.usernames;
 		const { username } = this.state;
 		this.setState({ usernameTouched: true, usernameInUse: usernamesInTeam.includes(username) });
 	};
