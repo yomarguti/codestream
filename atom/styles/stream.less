@@ -23,7 +23,7 @@
 			width: 100%;
 			padding: 10px;
 			border-radius: 4px;
-			background: #f6f6f6;
+			background: #fff;
 			border: 1px solid #ddd;
 			resize: none;
 			// height: 20px;
@@ -50,7 +50,7 @@
 			color: #000;
 			font-size: 13px;
 			padding: 3px 3px 3px 46px;
-			font-weight: 600;
+			font-weight: 700;
 		}
 		.timestamp {
 			color: #bbb;
@@ -70,7 +70,25 @@
 			float: right;
 			margin: -3px -10px 0 0;
 		}
+		.code {
+			max-width: 250px;
+			white-space: pre;
+			font-family: Menlo, Consolas, "DejaVu Sans Mono", monospace;
+			font-size: 11px;
+			background: #f6f6f6;
+			border-radius: 4px;
+			padding: 10px;
+			// margin: 10px -15px -5px -15px;
+			border: 1px solid #ddd;
+			margin: 5px 0 0 0;
+			overflow-x: auto;
+			overflow-y: auto;
+			max-height: 200px;
+			line-height: 12px;
+			tab-size: 2;
+		}
 	}
+
 	.post:hover {
 		background: #eee;
 		.icon-gear {

@@ -16,6 +16,13 @@ const syncStore = session => {
 
 module.exports = {
 	subscriptions: null,
+	config: {
+		showHeadshots: {
+			description: "Display headshots in the stream",
+			type: "boolean",
+			default: true
+		}
+	},
 
 	async initialize() {
 		const directories = atom.project.getDirectories();

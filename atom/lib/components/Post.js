@@ -10,6 +10,7 @@ export default class Post extends Component {
 
 	render() {
 		const { post } = this.state;
+		const codeblock = post.codeblock ? <div className="code">{post.codeblock}</div> : "";
 
 		return (
 			<div className="post" id={post.id}>
@@ -17,7 +18,10 @@ export default class Post extends Component {
 				<img className="headshot" src="http://i.imgur.com/N9iFDUq.png" />
 				<author>{post.author}</author>
 				<span className="timestamp">{post.timestamp}</span>
-				<div className="body">{post.body}</div>
+				<div className="body">
+					{post.body}
+					{codeblock}
+				</div>
 			</div>
 		);
 	}
