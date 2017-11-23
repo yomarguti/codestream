@@ -30,7 +30,7 @@ export default class Stream extends Component {
 					})}
 				</div>
 				<form className="compose" onSubmit={this.submitPost}>
-					<input
+					<textarea
 						rows="1"
 						value={this.state.newPostText}
 						onChange={e => this.setState({ newPostText: e.target.value })}
