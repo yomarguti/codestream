@@ -52,6 +52,7 @@ export default class CodestreamView {
 	}
 
 	getPreferredWidth() {
+		// FIXME save this as a preference
 		return 300;
 	}
 

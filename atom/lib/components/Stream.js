@@ -1,7 +1,9 @@
 import React, { Component } from "react";
 import Post from "./Post";
 
-export default class Stream extends Component {
+export default class SimpleStream extends Component {
+	subscriptions = null;
+
 	constructor(props) {
 		super(props);
 		this.state = {
@@ -18,34 +20,70 @@ export default class Stream extends Component {
 				}
 			]
 		};
+		let editor = atom.workspace.getActiveTextEditor();
+		if (editor) {
+			editor.onDidChangeSelectionRange(this.handleSelectionChange);
+			this.editor = editor;
+		}
 	}
 
 	render() {
 		const posts = this.state.posts;
+		const streamClass = atom.config.get("CodeStream.showHeadshots")
+			? "stream"
+			: "stream no-headshots";
 		return (
-			<div className="stream">
+			<div className={streamClass}>
 				<div className="postslist">
 					{posts.map(post => {
 						return <Post post={post} />;
 					})}
 				</div>
-				<form className="compose" onSubmit={this.submitPost}>
-					<textarea
+				<div className="compose">
+					<div
+						contenteditable="true"
+						className="input-div native-key-bindings"
 						rows="1"
-						value={this.state.newPostText}
-						onChange={e => this.setState({ newPostText: e.target.value })}
+						tabIndex="-1"
+						// onChange={e => this.setState({ newPostText: e.target.innerText })}
 						onKeyPress={this.handleOnKeyPress}
-						className="native-key-bindings"
-						placeholder="Type here FIXME loc"
-					/>
-				</form>
+					>
+						{this.state.newPostText}
+					</div>
+				</div>
 			</div>
 		);
 	}
 
+	handleSelectionChange(event) {
+		console.log("SELECTION HAS CHANGED");
+		console.log(event);
+	}
+
+	addBlameAtMention(selectionRange, gitData) {
+		// console.log(data);
+		var authors = [];
+		for (var lineNum = selectionRange.start.row; lineNum <= selectionRange.end.row; lineNum++) {
+			var lineData = gitData[lineNum - 1];
+			if (lineData) {
+				var author = lineData["author"];
+				if (author !== "Not Committed Yet" && author !== "Peter Pezaris") {
+					authors.push(author);
+				}
+			}
+		}
+		authors = _.uniq(authors);
+		console.log("AUTHORS ARE: " + authors);
+		if (authors.length > 0) {
+			var newText = authors.join(", ") + ": " + this.state.newPostText;
+			this.setState({ newPostText: newText });
+		}
+	}
+
 	handleOnKeyPress = async event => {
-		var value = event.target.value;
-		console.log(event.key);
+		var innerText = event.target.innerText;
+		this.setState({ newPostText: innerText });
+		console.log(event.key + " set state to: " + innerText);
 		if (this.atMentionsOn) {
 			if (event.key == "Escape") {
 				this.hideAtMentionSelectors();
@@ -58,28 +96,35 @@ export default class Stream extends Component {
 			}
 		} else if (event.key == "Escape") {
 			that.slideThreadOut();
-		} else if (event.key == "Enter") {
-			this.submitPost();
+		} else if (event.key == "Enter" && !event.shiftKey) {
+			event.preventDefault();
+			if (innerText.length > 0) {
+				this.submitPost(innerText);
+			} else {
+				// don't submit blank posts
+			}
 		}
 	};
 
-	submitPost = async event => {
+	submitPost(newText) {
 		var newPost = {
 			// FIXME fake data
 			id: 3,
 			author: "pez",
-			body: this.state.newPostText,
+			body: newText,
 			timestamp: "just now"
 		};
 		let editor = atom.workspace.getActiveTextEditor();
 		if (editor) {
 			let code = editor.getSelectedText();
 			if (code.length > 0) {
+				// FIXME -- remove common leading whitespace if possible
 				newPost.codeblock = code;
 			}
 		}
 		this.setState(prevState => ({
 			posts: [...prevState.posts, newPost]
 		}));
-	};
+		this.setState({ newPostText: "" });
+	}
 }

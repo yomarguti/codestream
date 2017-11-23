@@ -4,98 +4,116 @@
 // for a full listing of what's available.
 @import "ui-variables";
 
-.codestream .stream {
-	width: 100%;
-
-	.compose {
-		display: block;
+.codestream {
+	.stream {
 		width: 100%;
-		border: none;
-		border-top: 1px solid #ddd;
-		background-color: inherit;
-		position: absolute;
-		bottom: -5px;
-		padding: 10px;
-		box-sizing: border-box;
+		height: 100%;
+		padding-bottom: 60px;
+		// background: black;
+		// overflow-y: auto;
 
-		textarea {
-			box-sizing: border-box;
+		.compose {
+			display: block;
 			width: 100%;
+			border: none;
+			border-top: 1px solid #ddd;
+			background-color: inherit;
+			position: absolute;
+			bottom: 0px;
 			padding: 10px;
-			border-radius: 4px;
-			background: #fff;
-			border: 1px solid #ddd;
-			resize: none;
-			// height: 20px;
-		}
-	}
+			box-sizing: border-box;
 
-	.postslist {
-	}
+			.input-div {
+				box-sizing: border-box;
+				width: 100%;
+				padding: 10px;
+				border-radius: 4px;
+				background: #fff;
+				border: 1px solid #ddd;
+				resize: none;
+				// height: 20px;
+			}
+		}
 
-	.post {
-		padding: 10px;
-		cursor: pointer;
-		min-height: 56px;
-		.headshot {
-			display: block;
-			margin: 0 0 -36px 0;
-			width: 36px;
-			height: 36px;
-			border-radius: 4px;
-			// border: 1px solid #ddd;
-			background: #fff;
-		}
-		author {
-			color: #000;
-			font-size: 13px;
-			padding: 3px 3px 3px 46px;
-			font-weight: 700;
-		}
-		.timestamp {
-			color: #bbb;
-			font-size: 11px;
-			padding: 3px 3px 3px 8px;
-		}
-		.body {
-			padding-left: 46px;
-			// background: #f6f6f6;
-			// border: 1px solid #ddd;
-			// border-radius: 4px;
-			// padding: 10px;
-		}
-		.icon-gear {
-			color: #bbb;
-			display: none;
-			float: right;
-			margin: -3px -10px 0 0;
-		}
-		.code {
-			max-width: 250px;
-			white-space: pre;
-			font-family: Menlo, Consolas, "DejaVu Sans Mono", monospace;
-			font-size: 11px;
-			background: #f6f6f6;
-			border-radius: 4px;
-			padding: 10px;
-			// margin: 10px -15px -5px -15px;
-			border: 1px solid #ddd;
-			margin: 5px 0 0 0;
-			overflow-x: auto;
+		.postslist {
+			width: 100%;
+			max-height: 100%;
 			overflow-y: auto;
-			max-height: 200px;
-			line-height: 12px;
-			tab-size: 2;
+		}
+
+		.post {
+			padding: 10px;
+			cursor: pointer;
+			min-height: 56px;
+			.headshot {
+				display: block;
+				margin: 0 0 -36px 0;
+				width: 36px;
+				height: 36px;
+				border-radius: 4px;
+				// border: 1px solid #ddd;
+				background: #fff;
+			}
+			author {
+				color: #000;
+				font-size: 13px;
+				padding: 3px 3px 3px 46px;
+				font-weight: 700;
+			}
+			.timestamp {
+				color: #bbb;
+				font-size: 11px;
+				padding: 3px 3px 3px 8px;
+			}
+			.body {
+				padding-left: 46px;
+			}
+			.icon-gear {
+				color: #bbb;
+				display: none;
+				float: right;
+				margin: -3px -10px 0 0;
+			}
+			.code {
+				max-width: 250px;
+				white-space: pre;
+				font-family: Menlo, Consolas, "DejaVu Sans Mono", monospace;
+				font-size: 11px;
+				background: #f6f6f6;
+				border-radius: 4px;
+				padding: 10px;
+				border: 1px solid #ddd;
+				margin: 5px 0 0 0;
+				overflow-x: auto;
+				overflow-y: auto;
+				max-height: 200px;
+				line-height: 12px;
+				tab-size: 2;
+			}
+		}
+
+		.post:hover {
+			background: #eee;
+			.icon-gear {
+				display: block;
+			}
+			.icon-gear:hover {
+				color: #aaa;
+			}
 		}
 	}
-
-	.post:hover {
-		background: #eee;
-		.icon-gear {
-			display: block;
-		}
-		.icon-gear:hover {
-			color: #aaa;
+	.stream.no-headshots {
+		.post {
+			min-height: 50px;
+			.headshot {
+				display: none;
+			}
+			.body {
+				padding-left: 10px;
+			}
+			author {
+				padding-left: 10px;
+			}
 		}
 	}
 }
