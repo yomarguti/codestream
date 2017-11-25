@@ -59,9 +59,18 @@ module.exports = {
 			}),
 			atom.commands.add("atom-workspace", {
 				"codestream:toggle": () => atom.workspace.toggle(CODESTREAM_VIEW_URI),
-				"codestream:comment": () => atom.workspace.toggle(CODESTREAM_VIEW_URI)
+				"codestream:comment": event => this.addComment()
 			})
+			// atom.commands.add(".codestream .compose.mentions-on", {
+			// 	"codestream:at-mention-move-up": event => this.handleAtMentionKeyPress(event, "up"),
+			// 	"codestream:at-mention-move-down": event => this.handleAtMentionKeyPress(event, "down"),
+			// 	"codestream:at-mention-escape": event => this.handleAtMentionKeyPress(event, "escape")
+			// })
 		);
+	},
+
+	addComment(event) {
+		console.log("Adding comment...");
 	},
 
 	deactivate() {

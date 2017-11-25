@@ -20,7 +20,7 @@ class CodeStreamRoot extends Component {
 		const { user, repositories, team } = this.props;
 
 		if (repositories.length === 0) return <NoGit />;
-		else if (user.onboarded) return <Stream />;
+		else if (user.onboarded || true) return <Stream />;
 		else {
 			const repository = repositories[0];
 			const gitDirectory = repository.getWorkingDirectory();

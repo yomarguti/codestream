@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-//import Gravatar from "react-gravatar";
+import Gravatar from "react-gravatar";
 
 export default class Post extends Component {
 	constructor(props) {
@@ -12,6 +12,7 @@ export default class Post extends Component {
 	componentDidMount() {
 		// console.log("SCROLLING BECAUSE OF MOUNT");
 		// FIXME -- probably don't want to be doing something to parent here
+		let currentScroll = this._div.parentNode.scrollTop;
 		this._div.parentNode.scrollTop = 10000;
 	}
 
@@ -19,15 +20,32 @@ export default class Post extends Component {
 		const { post } = this.state;
 		const codeblock = post.codeblock ? <div className="code">{post.codeblock}</div> : "";
 
-		// <Gravatar email="ppezaris@gmail.com" />
+		// fixme -- only replace the at-mentions of actual authors, rather than any
+		// string that starts with an @
+		let body = post.body.replace(/(@\w+)/g, <span class="at-mention">$1</span>);
+		let bodyParts = post.body.split(/(@\w+)/);
+		// <img className="headshot" src="http://i.imgur.com/N9iFDUq.png" />
+		// FIXME use a real email address
 		return (
 			<div className="post" id={post.id} onClick={this.handleClick} ref={ref => (this._div = ref)}>
-				<span className="icon icon-gear" />
-				<img className="headshot" src="http://i.imgur.com/N9iFDUq.png" />
+				<span className="icon icon-gear" onClick={this.handleMenuClick} />
+				<Gravatar
+					className="headshot"
+					size={36}
+					default="retro"
+					protocol="http://"
+					email={post.email}
+				/>
 				<author>{post.author}</author>
 				<span className="timestamp">{post.timestamp}</span>
 				<div className="body">
-					{post.body}
+					{bodyParts.map(part => {
+						if (part.charAt(0) == "@") {
+							return <span class="at-mention">{part}</span>;
+						} else {
+							return part;
+						}
+					})}
 					{codeblock}
 				</div>
 			</div>
@@ -36,5 +54,10 @@ export default class Post extends Component {
 
 	handleClick = async event => {
 		console.log("CLICK ON POST: " + event.target.innerHTML);
+	};
+
+	handleMenuClick = async event => {
+		event.stopPropagation();
+		console.log("CLICK ON MENU: ");
 	};
 }

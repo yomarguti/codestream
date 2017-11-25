@@ -29,7 +29,10 @@
 			"transpiler": "atom-babel6-transpiler",
 			"options": {
 				"babel": {
-					"presets": ["es2015", "react"],
+					"presets": [
+						"es2015",
+						"react"
+					],
 					"plugins": [
 						"transform-object-rest-spread",
 						[
@@ -48,7 +51,9 @@
 		"classnames": "^2.2.5",
 		"prop-types": "^15.6.0",
 		"react": "^16.0.0",
+		"react-contenteditable": "https://github.com/lovasoa/react-contenteditable.git",
 		"react-dom": "^16.0.0",
+		"react-gravatar": "git+https://github.com/KyleAMathews/react-gravatar.git",
 		"react-intl": "^2.4.0",
 		"redux-zero": "^4.5.0",
 		"username": "^3.0.0",

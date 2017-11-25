@@ -1,26 +1,30 @@
 {
-  "context-menu": {
-    "atom-text-editor": [
-      {
-        "label": "Toggle CodeStream",
-        "command": "codestream:toggle"
-      }
-    ]
-  },
-  "menu": [
-    {
-      "label": "Packages",
-      "submenu": [
-        {
-          "label": "CodeStream",
-          "submenu": [
-            {
-              "label": "Toggle",
-              "command": "codestream:toggle"
-            }
-          ]
-        }
-      ]
-    }
-  ]
+	"context-menu": {
+		"atom-text-editor": [
+			{
+				"label": "Add Comment",
+				"command": "codestream:comment"
+			},
+			{
+				"label": "Toggle CodeStream",
+				"command": "codestream:toggle"
+			}
+		]
+	},
+	"menu": [
+		{
+			"label": "Packages",
+			"submenu": [
+				{
+					"label": "CodeStream",
+					"submenu": [
+						{
+							"label": "Toggle",
+							"command": "codestream:toggle"
+						}
+					]
+				}
+			]
+		}
+	]
 }
