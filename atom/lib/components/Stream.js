@@ -50,13 +50,6 @@ export default class SimpleStream extends Component {
 			]
 		};
 
-		this.handleOnKeyDown = this.handleOnKeyDown.bind(this);
-		this.handleOnKeyPress = this.handleOnKeyPress.bind(this);
-		this.handleClickAddComment = this.handleClickAddComment.bind(this);
-		this.handleHoverAtMention = this.handleHoverAtMention.bind(this);
-		this.handleSelectAtMention = this.handleSelectAtMention.bind(this);
-		this.handleClickDismissQuote = this.handleClickDismissQuote.bind(this);
-
 		this.subscriptions = new CompositeDisposable();
 		this.subscriptions.add(
 			atom.commands.add(".codestream .compose.mentions-on", {
@@ -121,7 +114,6 @@ export default class SimpleStream extends Component {
 						rows="1"
 						tabIndex="-1"
 						onChange={this.handleOnChange}
-						onKeyDown={this.handleOnKeyDown}
 						html={newPostText}
 					/>
 					{quoteHint}
@@ -142,7 +134,7 @@ export default class SimpleStream extends Component {
 		this.setState({ newPostText: text });
 	}
 
-	handleClickDismissQuote() {
+	handleClickDismissQuote = () => {
 		// not very React-ish but not sure how to set focus otherwise
 		document.getElementById("input-div").focus();
 
@@ -150,7 +142,7 @@ export default class SimpleStream extends Component {
 			quoteText: "",
 			quoteRange: null
 		});
-	}
+	};
 
 	addBlameAtMention(selectionRange, gitData) {
 		// console.log(data);
@@ -172,7 +164,7 @@ export default class SimpleStream extends Component {
 		}
 	}
 
-	handleClickAddComment() {
+	handleClickAddComment = () => {
 		// not very React-ish but not sure how to set focus otherwise
 		document.getElementById("input-div").focus();
 
@@ -181,6 +173,8 @@ export default class SimpleStream extends Component {
 
 		var range = editor.getSelectedBufferRange();
 		let code = editor.getSelectedText();
+		// FIXME -- if there is no selected text, i.e. no range,
+		// then grab the current line of code that the cursor is on
 		if (code.length > 0) {
 			// console.log("READY TO QUOTE CODE");
 		}
@@ -188,7 +182,7 @@ export default class SimpleStream extends Component {
 			quoteRange: range,
 			quoteText: code
 		});
-	}
+	};
 
 	handleOnChange = async event => {
 		var newPostText = event.target.value;
@@ -210,10 +204,6 @@ export default class SimpleStream extends Component {
 			}
 		}
 		this.setNewPostText(newPostText);
-	};
-
-	handleOnKeyDown = async event => {
-		console.log("ON KEY DOWN");
 	};
 
 	handleOnKeyPress = async event => {
@@ -308,7 +298,7 @@ export default class SimpleStream extends Component {
 		}
 	}
 
-	handleHoverAtMention(nick) {
+	handleHoverAtMention = nick => {
 		let index = this.state.atMentionsPeople.findIndex(x => x.nick == nick);
 
 		console.log(index);
@@ -316,9 +306,9 @@ export default class SimpleStream extends Component {
 			atMentionsIndex: index,
 			selectedAtMention: nick
 		});
-	}
+	};
 
-	handleSelectAtMention(nick) {
+	handleSelectAtMention = nick => {
 		// if no nick is passed, we assume that we're selecting
 		// the currently-selected at mention
 		if (!nick) {
@@ -333,7 +323,7 @@ export default class SimpleStream extends Component {
 			atMentionsOn: false
 		});
 		this.setNewPostText(text);
-	}
+	};
 
 	submitPost(newText) {
 		newText = newText.replace(/<br>/g, "\n");
