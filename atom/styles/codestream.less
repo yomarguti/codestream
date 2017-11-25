@@ -6,6 +6,7 @@
 
 // Mixin for padding for non-stream screens
 .onboarding-screen {
+	max-width: 225px;
 	width: 75%;
 }
 
@@ -115,6 +116,25 @@
 
 		#submit-button {
 			width: 100%;
+		}
+	}
+
+	#team-selection {
+		.onboarding-screen;
+		h2 {
+			text-align: center;
+		}
+
+		#name-input {
+			width: 80%;
+			margin-left: 8%;
+		}
+		#submit-button {
+			width: 100%;
+		}
+
+		.control-group {
+			margin-bottom: 5%;
 		}
 	}
 }

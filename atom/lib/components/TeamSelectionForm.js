@@ -1,0 +1,125 @@
+import React, { Component } from "react";
+import { FormattedMessage } from "react-intl";
+import withAPI from "./withAPI";
+import Button from "./Button";
+import { createTeam } from "../actions/team";
+
+export class SimpleTeamSelectionForm extends Component {
+	constructor(props) {
+		super(props);
+		this.state = {
+			selectedValue: "",
+			newTeamName: "",
+			loading: false,
+			teams: props.store.getState().teams
+		};
+	}
+
+	isSelected = value => this.state.selectedValue === value;
+
+	isFormInvalid = () => {
+		const { selectedValue, newTeamName } = this.state;
+		const noSelection = selectedValue === "";
+		const noTeamName = selectedValue === "createTeam" && newTeamName === "";
+		return noSelection || noTeamName;
+	};
+
+	onSelect = event => {
+		const { value } = event.target;
+		this.setState({ selectedValue: value });
+		if (value === "createTeam") this.nameInput.focus();
+	};
+
+	onChange = event =>
+		this.setState({ selectedValue: "createTeam", newTeamName: event.target.value });
+
+	onSubmit = () => {
+		if (this.isFormInvalid()) return;
+		this.setState({ loading: true });
+		const { createTeam, store, transition } = this.props;
+		const { url, firstCommitHash } = store.getState().repoMetaData;
+		const { selectedValue, newTeamName, teams } = this.state;
+		const name = selectedValue === "createTeam" ? newTeamName : selectedValue;
+
+		let promise;
+		if (selectedValue === "createTeam") {
+			promise = createTeam({ name: newTeamName, url, firstCommitHash });
+		} else {
+			promise = createTeam({ teamId: selectedValue, url, firstCommitHash });
+		}
+		promise
+			.then(data => {
+				this.setState({ loading: false });
+				transition("success");
+				atom.notifications.addInfo("Success! More to come...");
+			})
+			.catch(error => {
+				this.setState({ loading: false });
+				atom.notifications.addError("There was an error...");
+				console.log("there was an error...", error);
+			});
+	};
+
+	render() {
+		return (
+			<div id="team-selection">
+				<h2>
+					<FormattedMessage id="teamSelection.header" defaultMessage=" Select Team" />
+				</h2>
+				<p>
+					<FormattedMessage
+						id="teamSelection.whichTeam"
+						defaultMessage="Which team owns this repo?"
+					/>
+				</p>
+				<form onSubmit={this.onSubmit}>
+					<div className="control-group">
+						<label className="input-label">
+							<input
+								className="input-radio"
+								type="radio"
+								name="team"
+								value="createTeam"
+								checked={this.isSelected("createTeam")}
+								onChange={this.onSelect}
+							/>
+							<FormattedMessage id="teamSelection.createTeam" defaultMessage="Create a new team" />
+						</label>
+						<input
+							id="name-input"
+							type="text"
+							className="native-key-bindings input-text"
+							placeholder="Team Name"
+							required={this.isSelected("createTeam") && this.state.newTeamName === ""}
+							value={this.state.newTeamName}
+							onChange={this.onChange}
+							ref={element => (this.nameInput = element)}
+						/>
+					</div>
+					{this.state.teams.map((team, index) => {
+						return (
+							<div key={index} className="control-group">
+								<label className="input-label">
+									<input
+										className="input-radio"
+										type="radio"
+										name="team"
+										value={team.id}
+										checked={this.isSelected(team.name)}
+										onChange={this.onSelect}
+									/>
+									{team.name}
+								</label>
+							</div>
+						);
+					})}
+					<Button id="submit-button" disabled={this.isFormInvalid()} loading={this.state.loading}>
+						<FormattedMessage id="teamSelection.submitButton" defaultMessage="NEXT" />
+					</Button>
+				</form>
+			</div>
+		);
+	}
+}
+
+export default withAPI({ createTeam })(SimpleTeamSelectionForm);

@@ -4,6 +4,7 @@ import SignupForm from "./SignupForm";
 import EmailConfirmationForm from "./EmailConfirmationForm";
 import LoginForm from "./LoginForm";
 import TeamCreationForm from "./TeamCreationForm";
+import TeamSelectionForm from "./TeamSelectionForm";
 
 const chart = {
 	key: "onboarding",
@@ -18,7 +19,7 @@ const chart = {
 		},
 		confirmEmail: {
 			on: {
-				confirmedNewMember: "complete",
+				confirmedFirstMemberWithTeams: "selectTeam",
 				confirmedFirstMember: "createTeam",
 				alreadyConfirmed: "login",
 				back: "signUp"
@@ -31,6 +32,11 @@ const chart = {
 			}
 		},
 		createTeam: {
+			on: {
+				success: "identifyMembers"
+			}
+		},
+		selectTeam: {
 			on: {
 				success: "identifyMembers"
 			}
@@ -70,6 +76,7 @@ export default class Onboarding extends Component {
 			confirmEmail: <EmailConfirmationForm {...nextProps} />,
 			login: <LoginForm {...nextProps} />,
 			createTeam: <TeamCreationForm {...nextProps} />,
+			selectTeam: <TeamSelectionForm {...nextProps} />,
 			identifyMembers: "who's on the team?"
 		};
 		return views[this.state.currentStep];

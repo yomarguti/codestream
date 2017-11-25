@@ -147,7 +147,7 @@ describe("EmailConfirmationForm view", () => {
 		});
 	});
 
-	describe("on successfull confirmation", () => {
+	describe("on successful confirmation", () => {
 		describe("when there are no teams for the repository and the user is not a member of any teams", () => {
 			it("redirects them to the team creation form", () => {
 				const transition = jasmine.createSpy("transition stub");
@@ -166,6 +166,27 @@ describe("EmailConfirmationForm view", () => {
 				view.find("form").simulate("submit");
 				waitsFor(() => transition.callCount > 0);
 				runs(() => expect(transition).toHaveBeenCalledWith("confirmedFirstMember"));
+			});
+		});
+		describe("when there are no teams for the repository and the user is already a member of team", () => {
+			it("redirects them to the team selection form", () => {
+				const transition = jasmine.createSpy("transition stub");
+				const userTeam = { _id: "teamId" };
+				const confirmEmail = () => Promise.resolve({ teams: [userTeam] });
+				const store = { getState: () => ({ team: null }) };
+				const email = "foo@bar.com";
+				const view = mountWithIntl(
+					<EmailConfirmationForm
+						store={store}
+						transition={transition}
+						email={email}
+						confirmEmail={confirmEmail}
+					/>
+				);
+				view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }));
+				view.find("form").simulate("submit");
+				waitsFor(() => transition.callCount > 0);
+				runs(() => expect(transition).toHaveBeenCalledWith("confirmedFirstMemberWithTeams"));
 			});
 		});
 	});
