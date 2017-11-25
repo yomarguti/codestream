@@ -100,7 +100,7 @@ export default class SimpleStream extends Component {
 			<div className={streamClass}>
 				<div className="postslist">
 					{posts.map(post => {
-						return <Post post={post} />;
+						return <Post post={post} key={post.id} />;
 					})}
 				</div>
 				<AddCommentPopup handleClickAddComent={this.handleClickAddComment} />
@@ -178,10 +178,11 @@ export default class SimpleStream extends Component {
 
 		var range = editor.getSelectedBufferRange();
 		let code = editor.getSelectedText();
-		// FIXME -- if there is no selected text, i.e. no range,
+		// if there is no selected text, i.e. it is a 0-width range,
 		// then grab the current line of code that the cursor is on
-		if (code.length > 0) {
-			// console.log("READY TO QUOTE CODE");
+		if (code.length == 0 && range.start.row == range.end.row) {
+			let lineRange = [[range.start.row, 0], [range.start.row, 10000]];
+			code = editor.getTextInBufferRange(lineRange);
 		}
 		this.setState({
 			quoteRange: range,
