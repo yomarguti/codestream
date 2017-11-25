@@ -23,7 +23,7 @@
 			padding: 10px;
 			box-sizing: border-box;
 
-			.input-div {
+			#input-div {
 				box-sizing: border-box;
 				width: 100%;
 				padding: 10px;
@@ -35,6 +35,21 @@
 				max-height: 300px;
 				max-width: 100%;
 				overflow: auto;
+			}
+
+			.hint {
+				margin: 4px -5px 0 2px;
+				font-size: 12px;
+				opacity: 0.5;
+				.icon {
+					cursor: pointer;
+					float: right;
+				}
+				.icon:hover {
+					color: red;
+				}
+			}
+			.code {
 			}
 		}
 
@@ -50,6 +65,23 @@
 			// background: #f6f6f6;
 			// margin: -2px 0;
 			// border: 1px solid @base-border-color;
+		}
+
+		.code {
+			max-width: 100%;
+			max-height: 200px;
+			white-space: pre;
+			font-family: Menlo, Consolas, "DejaVu Sans Mono", monospace;
+			font-size: 11px;
+			background: #f6f6f6;
+			border-radius: 4px;
+			padding: 10px;
+			border: 1px solid @base-border-color;
+			margin: 5px 0 0 0;
+			overflow-x: auto;
+			overflow-y: auto;
+			line-height: 12px;
+			tab-size: 2;
 		}
 
 		.mentions-popup {
@@ -159,22 +191,6 @@
 				display: none;
 				float: right;
 				margin: -3px -10px 0 0;
-			}
-			.code {
-				max-width: 250px;
-				white-space: pre;
-				font-family: Menlo, Consolas, "DejaVu Sans Mono", monospace;
-				font-size: 11px;
-				background: #f6f6f6;
-				border-radius: 4px;
-				padding: 10px;
-				border: 1px solid @base-border-color;
-				margin: 5px 0 0 0;
-				overflow-x: auto;
-				overflow-y: auto;
-				max-height: 200px;
-				line-height: 12px;
-				tab-size: 2;
 			}
 		}
 

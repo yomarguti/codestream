@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import Post from "./Post";
 import AtMentionsPopup from "./AtMentionsPopup";
+import AddCommentPopup from "./AddCommentPopup";
 import ContentEditable from "react-contenteditable";
 import { CompositeDisposable } from "atom";
 
@@ -48,15 +49,13 @@ export default class SimpleStream extends Component {
 				{ id: 5, nick: "colin", fullName: "Colin Stryker", email: "colin@codestream.com" }
 			]
 		};
-		let editor = atom.workspace.getActiveTextEditor();
-		if (editor) {
-			editor.onDidChangeSelectionRange(this.handleSelectionChange);
-			this.editor = editor;
-		}
+
 		this.handleOnKeyDown = this.handleOnKeyDown.bind(this);
 		this.handleOnKeyPress = this.handleOnKeyPress.bind(this);
+		this.handleClickAddComment = this.handleClickAddComment.bind(this);
 		this.handleHoverAtMention = this.handleHoverAtMention.bind(this);
 		this.handleSelectAtMention = this.handleSelectAtMention.bind(this);
+		this.handleClickDismissQuote = this.handleClickDismissQuote.bind(this);
 
 		this.subscriptions = new CompositeDisposable();
 		this.subscriptions.add(
@@ -80,6 +79,25 @@ export default class SimpleStream extends Component {
 		// strip out the at-mention markup, and add it back.
 		// newPostText = newPostText.replace(/(@\w+)/g, '<span class="at-mention">$1</span> ');
 
+		let quoteInfo = this.state.quoteText ? <div className="code">{this.state.quoteText}</div> : "";
+		// FIXME loc
+		let range = this.state.quoteRange;
+		let rangeText = null;
+		if (range) {
+			if (range.start.row == range.end.row) {
+				rangeText = "Commenting on line " + (range.start.row + 1);
+			} else {
+				rangeText = "Commenting on lines " + (range.start.row + 1) + "-" + (range.end.row + 1);
+			}
+		}
+		let quoteHint = rangeText ? (
+			<div className="hint">
+				{rangeText}
+				<span onClick={this.handleClickDismissQuote} class="icon icon-x" />
+			</div>
+		) : (
+			""
+		);
 		return (
 			<div className={streamClass}>
 				<div className="postslist">
@@ -87,6 +105,7 @@ export default class SimpleStream extends Component {
 						return <Post post={post} />;
 					})}
 				</div>
+				<AddCommentPopup handleClickAddComent={this.handleClickAddComment} />
 				<AtMentionsPopup
 					on={this.state.atMentionsOn}
 					people={this.state.atMentionsPeople}
@@ -97,13 +116,16 @@ export default class SimpleStream extends Component {
 				/>
 				<div className={composeClass} onKeyPress={this.handleOnKeyPress}>
 					<ContentEditable
-						className="input-div native-key-bindings"
+						className="native-key-bindings"
+						id="input-div"
 						rows="1"
 						tabIndex="-1"
 						onChange={this.handleOnChange}
 						onKeyDown={this.handleOnKeyDown}
 						html={newPostText}
 					/>
+					{quoteHint}
+					{quoteInfo}
 				</div>
 			</div>
 		);
@@ -120,35 +142,14 @@ export default class SimpleStream extends Component {
 		this.setState({ newPostText: text });
 	}
 
-	handleSelectionChange(event) {
-		// FIXME if there is text selected, add a UI element to make it easy to
-		// understand that you can add a comment
-		return;
-		let editor = atom.workspace.getActiveTextEditor();
-		if (editor) {
-			var selectionRange = editor.getSelectedBufferRange();
-			console.log(selectionRange);
-			let code = editor.getSelectedText();
-			if (code.length > 0) {
-				console.log("READY TO QUOTE CODE");
-			}
-			let startRange = [
-				[selectionRange.start.row, selectionRange.start.column],
-				[selectionRange.end.row, selectionRange.end.column]
-			];
-			var marker = editor.markBufferRange(selectionRange, { invalidate: "touch" });
-			//marker.setProperties({ cider_stream_id: stream_id });
-			let item = document.createElement("div");
-			item.innerHTML = "Comment";
-			item.className = "codestream-add-comment";
-			editor.decorateMarker(marker, {
-				type: "overlay",
-				// class: "codestream-add-comment",
-				position: "head",
-				// onlyHead: true
-				item: item
-			});
-		}
+	handleClickDismissQuote() {
+		// not very React-ish but not sure how to set focus otherwise
+		document.getElementById("input-div").focus();
+
+		this.setState({
+			quoteText: "",
+			quoteRange: null
+		});
 	}
 
 	addBlameAtMention(selectionRange, gitData) {
@@ -169,6 +170,24 @@ export default class SimpleStream extends Component {
 			var newText = authors.join(", ") + ": " + this.state.newPostText;
 			this.setNewPostText(newText);
 		}
+	}
+
+	handleClickAddComment() {
+		// not very React-ish but not sure how to set focus otherwise
+		document.getElementById("input-div").focus();
+
+		let editor = atom.workspace.getActiveTextEditor();
+		if (!editor) return;
+
+		var range = editor.getSelectedBufferRange();
+		let code = editor.getSelectedText();
+		if (code.length > 0) {
+			// console.log("READY TO QUOTE CODE");
+		}
+		this.setState({
+			quoteRange: range,
+			quoteText: code
+		});
 	}
 
 	handleOnChange = async event => {
@@ -326,21 +345,22 @@ export default class SimpleStream extends Component {
 			email: "pez@codestream.com",
 			timestamp: "just now"
 		};
-		let editor = atom.workspace.getActiveTextEditor();
-		if (editor) {
-			// FIXME -- don't always assume selected text is meant to be quoted
-			let code = editor.getSelectedText();
-			if (code.length > 0) {
-				// FIXME -- remove common leading whitespace if possible
-				newPost.codeblock = code;
-			}
+
+		if (this.state.quoteText) {
+			newPost.quoteText = this.state.quoteText;
+			newPost.quoteRange = this.state.quoteRange;
 		}
+
 		// FIXME -- add the posts to some collection rather than directly
 		// manipulating state
 		this.setState(prevState => ({
 			posts: [...prevState.posts, newPost]
 		}));
 		// reset the input field to blank
-		this.setState({ newPostText: "" });
+		this.setState({
+			newPostText: "",
+			quoteRange: null,
+			quoteText: ""
+		});
 	}
 }

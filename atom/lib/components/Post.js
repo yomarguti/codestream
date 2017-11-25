@@ -18,7 +18,7 @@ export default class Post extends Component {
 
 	render() {
 		const { post } = this.state;
-		const codeblock = post.codeblock ? <div className="code">{post.codeblock}</div> : "";
+		const codeblock = post.quoteText ? <div className="code">{post.quoteText}</div> : "";
 
 		// fixme -- only replace the at-mentions of actual authors, rather than any
 		// string that starts with an @
