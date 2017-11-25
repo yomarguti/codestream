@@ -32,7 +32,7 @@ export default class AtMentionsPopup extends Component {
 							return (
 								<li
 									className={className}
-									id={person.nick}
+									key={person.nick}
 									onMouseEnter={event => this.handleMouseEnter(person.nick)}
 									onClick={event => this.handleClickPerson(person.nick)}
 								>
