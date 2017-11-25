@@ -16,7 +16,7 @@ export default class AtMentionsPopup extends Component {
 	componentDidMount() {}
 
 	render() {
-		if (!this.props.on) return "";
+		if (!this.props.on) return null;
 
 		const people = this.props.people;
 
