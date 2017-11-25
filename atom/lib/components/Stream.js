@@ -238,7 +238,7 @@ export default class SimpleStream extends Component {
 
 		for (var index = 0; index < this.state.authors.length; index++) {
 			let person = this.state.authors[index];
-			let toMatch = person.name + "*" + person.nick; // + "*" + person.email;
+			let toMatch = person.fullName + "*" + person.nick; // + "*" + person.email;
 			let lowered = toMatch.toLowerCase();
 			if (lowered.indexOf(prefix) !== -1) {
 				peopleToShow.push(person);

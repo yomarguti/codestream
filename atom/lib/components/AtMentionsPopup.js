@@ -10,11 +10,7 @@ import Gravatar from "react-gravatar";
 export default class AtMentionsPopup extends Component {
 	constructor(props) {
 		super(props);
-		this.state = {
-			on: props.on,
-			people: props.people,
-			prefix: props.prefix
-		};
+		this.state = {};
 	}
 
 	componentDidMount() {}
