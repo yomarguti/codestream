@@ -175,12 +175,12 @@
 				background: #fff;
 			}
 			author {
-				color: #000;
 				font-size: 13px;
 				padding: 3px 3px 3px 46px;
 				font-weight: 700;
 			}
 			.timestamp {
+				// FIXME -- hardcoded color
 				color: #bbb;
 				font-size: 11px;
 				padding: 3px 3px 3px 8px;
@@ -193,6 +193,22 @@
 				display: none;
 				float: right;
 				margin: -3px -10px 0 0;
+			}
+		}
+
+		.date-separator {
+			font-size: 13px;
+			text-align: center;
+			font-weight: 600;
+			margin: 25px 0 8px 0;
+			border-top: 1px solid @base-border-color;
+			span {
+				position: relative;
+				padding: 0 8px;
+				background-color: @app-background-color;
+				display: inline-block;
+				width: auto;
+				top: -11px;
 			}
 		}
 

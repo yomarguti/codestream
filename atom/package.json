@@ -29,10 +29,7 @@
 			"transpiler": "atom-babel6-transpiler",
 			"options": {
 				"babel": {
-					"presets": [
-						"es2015",
-						"react"
-					],
+					"presets": ["es2015", "react"],
 					"plugins": [
 						"transform-object-rest-spread",
 						[
@@ -57,7 +54,8 @@
 		"react-intl": "^2.4.0",
 		"redux-zero": "^4.5.0",
 		"username": "^3.0.0",
-		"xstate": "^1.2.1"
+		"xstate": "^1.2.1",
+		"moment": "^2.0.0"
 	},
 	"devDependencies": {
 		"atom-babel6-transpiler": "^1.1.2",

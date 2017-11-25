@@ -1,12 +1,14 @@
 import React, { Component } from "react";
+import { connect } from "redux-zero/react";
 import Post from "./Post";
 import AtMentionsPopup from "./AtMentionsPopup";
 import AddCommentPopup from "./AddCommentPopup";
 import ContentEditable from "react-contenteditable";
 import { CompositeDisposable } from "atom";
 import createClassString from "classnames";
+import DateSeparator from "./DateSeparator";
 
-export default class SimpleStream extends Component {
+export class SimpleStream extends Component {
 	subscriptions = null;
 
 	constructor(props) {
@@ -18,14 +20,14 @@ export default class SimpleStream extends Component {
 					id: 1,
 					author: "akonwi",
 					body: "this is a post",
-					timestamp: "12:55AM",
+					timestamp: 1410650773000,
 					email: "akonwi@codestream.com"
 				},
 				{
 					id: 2,
 					author: "jj",
 					body: "this is another post",
-					timestamp: "12:56AM",
+					timestamp: 1411680773000,
 					email: "jj@codestream.com"
 				},
 				{
@@ -33,7 +35,7 @@ export default class SimpleStream extends Component {
 					author: "marcelo",
 					body:
 						"because of the way browsers work, @pez although this will change the scrollbar thumb position, it will not change what @akonwi is looking at (i.e. posts won't shift around).",
-					timestamp: "12:59AM",
+					timestamp: 1501650773000,
 					email: "marcelo@codestream.com"
 				}
 			],
@@ -96,11 +98,21 @@ export default class SimpleStream extends Component {
 		) : (
 			""
 		);
+
+		let lastTimestamp = null;
+
 		return (
 			<div className={streamClass}>
 				<div className="postslist">
 					{posts.map(post => {
-						return <Post post={post} key={post.id} />;
+						const returnValue = (
+							<div>
+								<DateSeparator timestamp1={lastTimestamp} timestamp2={post.timestamp} />
+								<Post post={post} lastDay={lastTimestamp} key={post.id} />
+							</div>
+						);
+						lastTimestamp = post.timestamp;
+						return returnValue;
 					})}
 				</div>
 				<AddCommentPopup handleClickAddComent={this.handleClickAddComment} />
@@ -193,7 +205,7 @@ export default class SimpleStream extends Component {
 	handleOnChange = async event => {
 		var newPostText = event.target.value;
 
-		// FIXME -- this should anchor at the carat not end of line
+		// FIXME -- this should anchor at the carat, not end-of-line
 		var match = newPostText.match(/@([a-zA-Z]*)$/);
 		if (this.state.atMentionsOn) {
 			if (match) {
@@ -333,14 +345,17 @@ export default class SimpleStream extends Component {
 
 	submitPost(newText) {
 		newText = newText.replace(/<br>/g, "\n");
+		var timestamp = +new Date();
 		var newPost = {
 			// FIXME fake data
 			id: 3,
 			author: "pez",
 			body: newText,
 			email: "pez@codestream.com",
-			timestamp: "just now"
+			timestamp: timestamp
 		};
+
+		console.log(this.props.user);
 
 		if (this.state.quoteText) {
 			newPost.quoteText = this.state.quoteText;
@@ -360,3 +375,9 @@ export default class SimpleStream extends Component {
 		});
 	}
 }
+
+const mapToProps = state => {
+	return { user: state.user };
+};
+
+export default connect(mapToProps)(SimpleStream);

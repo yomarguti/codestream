@@ -20,13 +20,12 @@ export default class AddCommentPopup extends Component {
 	componentDidMount() {}
 
 	render() {
-		// if (!this.state.on) return "";
-		return "";
-		return (
-			<div className="codestream-add-comment-popup" onClick={this.handleClick}>
-				<div className="body">+</div>
-			</div>
-		);
+		return null;
+		// return (
+		// 	<div className="codestream-add-comment-popup" onClick={this.handleClick}>
+		// 		<div className="body">+</div>
+		// 	</div>
+		// );
 	}
 
 	handleClick() {

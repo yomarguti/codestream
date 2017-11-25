@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import Gravatar from "react-gravatar";
+import Timestamp from "./Timestamp";
 
 export default class Post extends Component {
 	constructor(props) {
@@ -20,11 +21,11 @@ export default class Post extends Component {
 		const { post } = this.state;
 		const codeblock = post.quoteText ? <div className="code">{post.quoteText}</div> : "";
 
-		// fixme -- only replace the at-mentions of actual authors, rather than any
+		// FIXME -- only replace the at-mentions of actual authors, rather than any
 		// string that starts with an @
 		let body = post.body.replace(/(@\w+)/g, <span class="at-mention">$1</span>);
 		let bodyParts = post.body.split(/(@\w+)/);
-		// <img className="headshot" src="http://i.imgur.com/N9iFDUq.png" />
+
 		// FIXME use a real email address
 		return (
 			<div className="post" id={post.id} onClick={this.handleClick} ref={ref => (this._div = ref)}>
@@ -37,7 +38,7 @@ export default class Post extends Component {
 					email={post.email}
 				/>
 				<author>{post.author}</author>
-				<span className="timestamp">{post.timestamp}</span>
+				<Timestamp time={post.timestamp} />
 				<div className="body">
 					{bodyParts.map(part => {
 						if (part.charAt(0) == "@") {
