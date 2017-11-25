@@ -4,6 +4,7 @@ import AtMentionsPopup from "./AtMentionsPopup";
 import AddCommentPopup from "./AddCommentPopup";
 import ContentEditable from "react-contenteditable";
 import { CompositeDisposable } from "atom";
+import createClassString from "classnames";
 
 export default class SimpleStream extends Component {
 	subscriptions = null;
@@ -62,10 +63,14 @@ export default class SimpleStream extends Component {
 
 	render() {
 		const posts = this.state.posts;
-		const streamClass = atom.config.get("CodeStream.showHeadshots")
-			? "stream"
-			: "stream no-headshots";
-		const composeClass = this.state.atMentionsOn ? "compose mentions-on" : "compose";
+		const streamClass = createClassString({
+			stream: true,
+			"no-headshots": !atom.config.get("CodeStream.showHeadshots")
+		});
+		const composeClass = createClassString({
+			compose: true,
+			"mentions-on": this.state.atMentionsOn
+		});
 
 		let newPostText = this.state.newPostText || "";
 
