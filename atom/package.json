@@ -46,6 +46,7 @@
 	],
 	"dependencies": {
 		"classnames": "^2.2.5",
+		"pathwatcher": "^6.9.0",
 		"prop-types": "^15.6.0",
 		"react": "^16.0.0",
 		"react-contenteditable": "https://github.com/lovasoa/react-contenteditable.git",
@@ -55,6 +56,7 @@
 		"redux-zero": "^4.5.0",
 		"username": "^3.0.0",
 		"xstate": "^1.2.1",
+		"underscore": "^1.0.0",
 		"moment": "^2.0.0"
 	},
 	"devDependencies": {

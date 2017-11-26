@@ -9,6 +9,7 @@ export default class AddCommentPopup extends Component {
 		this.handleClick = this.handleClick.bind(this);
 		this.handleSelectionChange = this.handleSelectionChange.bind(this);
 
+		// FIXME -- do we want this to be a disposable?
 		let editor = atom.workspace.getActiveTextEditor();
 		if (editor) {
 			editor.onDidChangeSelectionRange(this.handleSelectionChange);
@@ -20,12 +21,8 @@ export default class AddCommentPopup extends Component {
 	componentDidMount() {}
 
 	render() {
+		// nothing to render until there is a selection
 		return null;
-		// return (
-		// 	<div className="codestream-add-comment-popup" onClick={this.handleClick}>
-		// 		<div className="body">+</div>
-		// 	</div>
-		// );
 	}
 
 	handleClick() {
@@ -44,6 +41,7 @@ export default class AddCommentPopup extends Component {
 		if (code.length > 0) {
 			// console.log("READY TO QUOTE CODE");
 		}
+		// FIXME set the position of this marker here
 		let row = range.start.row > range.end.row ? range.end.row : range.start.row;
 		let startRange = [[row, 0], [row, 0]];
 		this.marker = editor.markBufferRange(startRange, { invalidate: "touch" });

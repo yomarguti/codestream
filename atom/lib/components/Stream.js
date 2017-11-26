@@ -7,12 +7,21 @@ import ContentEditable from "react-contenteditable";
 import { CompositeDisposable } from "atom";
 import createClassString from "classnames";
 import DateSeparator from "./DateSeparator";
+var Blamer = require("../util/blamer");
+var Directory = require("pathwatcher").Directory;
+var path = require("path");
 
 export class SimpleStream extends Component {
 	subscriptions = null;
 
 	constructor(props) {
 		super(props);
+
+		// FIXME -- this stuff shouldn't be stored here
+		this.projectBlamers = {};
+		this.blameData = {};
+		// end FIXME
+
 		this.state = {
 			stream: {},
 			posts: [
@@ -163,28 +172,31 @@ export class SimpleStream extends Component {
 
 	addBlameAtMention(selectionRange, gitData) {
 		// console.log(data);
-		var authors = [];
+		var authors = {};
 		for (var lineNum = selectionRange.start.row; lineNum <= selectionRange.end.row; lineNum++) {
 			var lineData = gitData[lineNum - 1];
 			if (lineData) {
 				var author = lineData["author"];
-				if (author !== "Not Committed Yet" && author !== "Peter Pezaris") {
-					authors.push(author);
+				// FIXME -- skip it if it's me
+				if (author && author !== "Not Committed Yet") {
+					// find the author -- FIXME this feels fragile
+					for (var index = 0; index < this.state.authors.length; index++) {
+						let person = this.state.authors[index];
+						if (person.fullName == author) {
+							authors["@" + person.nick] = true;
+						}
+					}
 				}
 			}
 		}
-		authors = _.uniq(authors);
-		console.log("AUTHORS ARE: " + authors);
-		if (authors.length > 0) {
-			var newText = authors.join(", ") + ": " + this.state.newPostText;
+
+		if (Object.keys(authors).length > 0) {
+			var newText = Object.keys(authors).join(", ") + ": " + (this.state.newPostText || "");
 			this.setNewPostText(newText);
 		}
 	}
 
 	handleClickAddComment = () => {
-		// not very React-ish but not sure how to set focus otherwise
-		document.getElementById("input-div").focus();
-
 		let editor = atom.workspace.getActiveTextEditor();
 		if (!editor) return;
 
@@ -196,6 +208,38 @@ export class SimpleStream extends Component {
 			let lineRange = [[range.start.row, 0], [range.start.row, 10000]];
 			code = editor.getTextInBufferRange(lineRange);
 		}
+
+		var that = this;
+		let filePath = editor.getPath();
+		atom.project
+			.repositoryForDirectory(new Directory(path.dirname(filePath)))
+			.then(function(projectRepo) {
+				// Ensure this project is backed by a git repository
+				if (!projectRepo) {
+					errorController.showError("error-not-backed-by-git");
+					return;
+				}
+
+				if (!(projectRepo.path in that.projectBlamers)) {
+					that.projectBlamers[projectRepo.path] = new Blamer(projectRepo);
+				}
+				// BlameViewController.toggleBlame(this.projectBlamers[projectRepo.path]);
+				var blamer = that.projectBlamers[projectRepo.path];
+
+				if (!that.blameData[filePath]) {
+					console.log(blamer);
+					blamer.blame(filePath, function(err, data) {
+						that.blameData[filePath] = data;
+						that.addBlameAtMention(range, data, that.input);
+					});
+				} else {
+					that.addBlameAtMention(range, that.blameData[filePath], that.input);
+				}
+			});
+
+		// not very React-ish but not sure how to set focus otherwise
+		document.getElementById("input-div").focus();
+
 		this.setState({
 			quoteRange: range,
 			quoteText: code
