@@ -9,14 +9,13 @@ export default class DateSeparator extends Component {
 	}
 
 	render() {
-		let sameDay = this.sameDateAs(this.props.timestamp1, this.props.timestamp2);
-		// don't show a separator if we don't have something to compare to,
-		// or if the days are the same
-		if (!this.props.timestamp1 || sameDay) return null;
-		let dateText = this.prettyDateDay(this.props.timestamp2);
+		// don't show a separator if the day of this post is the same
+		// as the day of the last post
+		if (this.sameDateAs(this.props.timestamp1, this.props.timestamp2)) return null;
+
 		return (
 			<div className="date-separator">
-				<span>{dateText}</span>
+				<span>{this.prettyDateDay(this.props.timestamp2)}</span>
 			</div>
 		);
 	}
