@@ -13,7 +13,8 @@ export default class Post extends Component {
 	componentDidMount() {
 		// console.log("SCROLLING BECAUSE OF MOUNT");
 		// FIXME -- probably don't want to be doing something to parent here
-		let currentScroll = this._div.parentNode.scrollTop;
+		let currentScroll = this._div.parentNode.parentNode.scrollTop;
+		// FIXME -- if i am manually scrolling, don't programatically change it
 		this._div.parentNode.parentNode.scrollTop = 10000;
 	}
 

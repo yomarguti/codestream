@@ -227,7 +227,7 @@ export class SimpleStream extends Component {
 				var blamer = that.projectBlamers[projectRepo.path];
 
 				if (!that.blameData[filePath]) {
-					console.log(blamer);
+					// console.log(blamer);
 					blamer.blame(filePath, function(err, data) {
 						that.blameData[filePath] = data;
 						that.addBlameAtMention(range, data, that.input);
@@ -271,7 +271,7 @@ export class SimpleStream extends Component {
 	handleOnKeyPress = async event => {
 		var newPostText = this.state.newPostText;
 
-		console.log("ON KEYPRESS");
+		// console.log("ON KEYPRESS");
 		// if we have the at-mentions popup open, then the keys
 		// do something different than if we have the focus in
 		// the textarea
