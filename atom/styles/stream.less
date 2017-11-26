@@ -17,7 +17,7 @@
 			width: 100%;
 			border: none;
 			border-top: 1px solid @base-border-color;
-			background-color: inherit;
+			// background-color: inherit;
 			background-color: @app-background-color;
 			position: absolute;
 			bottom: 0px;
@@ -48,7 +48,7 @@
 					transform: scale(0.8);
 				}
 				.icon:hover {
-					color: red;
+					color: @text-color-error;
 				}
 			}
 			.code {
@@ -56,17 +56,15 @@
 		}
 
 		.at-mention {
-			// color: #00b;
 			padding: 1px 3px;
 			margin: -1px 0px;
 			font-weight: bold;
 			display: inline-block;
 			border-radius: 4px;
-			background-color: #fff;
+			// FIXME -- background-color-info is too intense, but this
+			// is a hard-coded color which is Bad.
 			background-color: #ffffe6;
-			// background: #f6f6f6;
-			// margin: -2px 0;
-			// border: 1px solid @base-border-color;
+			// background-color: @background-color-info;
 		}
 
 		.code {
@@ -171,8 +169,7 @@
 				width: 36px;
 				height: 36px;
 				border-radius: 4px;
-				// border: 1px solid @base-border-color;
-				background: #fff;
+				background: @base-background-color;
 			}
 			author {
 				font-size: 13px;
@@ -180,8 +177,8 @@
 				font-weight: 700;
 			}
 			.timestamp {
-				// FIXME -- hardcoded color
-				color: #bbb;
+				color: @text-color-subtle;
+				opacity: 0.5;
 				font-size: 11px;
 				padding: 3px 3px 3px 8px;
 			}
@@ -189,7 +186,8 @@
 				padding-left: 46px;
 			}
 			.icon-gear {
-				color: #bbb;
+				color: @text-color-subtle;
+				opacity: 0.5;
 				display: none;
 				float: right;
 				margin: -3px -10px 0 0;
@@ -197,18 +195,19 @@
 		}
 
 		.date-separator {
-			font-size: 13px;
+			// font-size: 13px;
 			text-align: center;
-			font-weight: 600;
 			margin: 25px 0 8px 0;
 			border-top: 1px solid @base-border-color;
 			span {
 				position: relative;
 				padding: 0 8px;
+				// font-weight: 600;
 				background-color: @app-background-color;
 				display: inline-block;
 				width: auto;
 				top: -11px;
+				color: @text-color-subtle;
 			}
 		}
 
