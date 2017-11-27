@@ -46,9 +46,9 @@ export class SimpleEmailConfirmationForm extends Component {
 			.then(data => {
 				const teamForRepo = store.getState().team;
 				const userTeams = data.teams;
-				if (!teamForRepo && userTeams.length > 0) transition("confirmedFirstMemberWithTeams");
+				if (!teamForRepo && userTeams.length > 0) transition("selectTeamForRepo");
 				if (!teamForRepo && userTeams.length === 0) {
-					transition("confirmedFirstMember");
+					transition("newTeamForRepo");
 				}
 			})
 			.catch(({ data }) => {

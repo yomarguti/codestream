@@ -165,7 +165,7 @@ describe("EmailConfirmationForm view", () => {
 				view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }));
 				view.find("form").simulate("submit");
 				waitsFor(() => transition.callCount > 0);
-				runs(() => expect(transition).toHaveBeenCalledWith("confirmedFirstMember"));
+				runs(() => expect(transition).toHaveBeenCalledWith("newTeamForRepo"));
 			});
 		});
 		describe("when there are no teams for the repository and the user is already a member of team", () => {
@@ -186,7 +186,7 @@ describe("EmailConfirmationForm view", () => {
 				view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }));
 				view.find("form").simulate("submit");
 				waitsFor(() => transition.callCount > 0);
-				runs(() => expect(transition).toHaveBeenCalledWith("confirmedFirstMemberWithTeams"));
+				runs(() => expect(transition).toHaveBeenCalledWith("selectTeamForRepo"));
 			});
 		});
 	});

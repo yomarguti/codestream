@@ -19,8 +19,8 @@ const chart = {
 		},
 		confirmEmail: {
 			on: {
-				confirmedFirstMemberWithTeams: "selectTeam",
-				confirmedFirstMember: "createTeam",
+				selectTeamForRepo: "selectTeam",
+				newTeamForRepo: "createTeam",
 				alreadyConfirmed: "login",
 				back: "signUp"
 			}
