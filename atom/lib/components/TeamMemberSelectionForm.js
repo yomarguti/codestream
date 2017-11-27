@@ -21,12 +21,10 @@ export class SimpleTeamMemberSelectionForm extends Component {
 
 	async componentDidMount() {
 		const repository = this.context.repositories[0];
-		const recentCommitterData = await git(
-			["log", "--format=%an<trim-this>%ae", '--since="1 month ago"'],
-			{
-				cwd: repository.getWorkingDirectory()
-			}
-		);
+		const cwd = repository.getWorkingDirectory();
+		const logFormat = "--format=%an<trim-this>%ae";
+		const activeDate = "1 month ago";
+		const recentCommitterData = await git(["log", logFormat, `--since="${activeDate}"`], { cwd });
 		const recentCommitterString = recentCommitterData.split("\n");
 		const recentCommitters = _.uniq(recentCommitterString)
 			.filter(Boolean)
@@ -34,12 +32,7 @@ export class SimpleTeamMemberSelectionForm extends Component {
 				const [name, email] = string.split("<trim-this>");
 				return { name, email, selected: true };
 			});
-		const olderCommitterData = await git(
-			["log", "--format=%an<trim-this>%ae", '--before="1 month ago"'],
-			{
-				cwd: repository.getWorkingDirectory()
-			}
-		);
+		const olderCommitterData = await git(["log", logFormat, `--before="${activeDate}"`], { cwd });
 		const olderCommitterString = olderCommitterData.split("\n");
 		const olderCommitters = _.uniq(olderCommitterString)
 			.filter(Boolean)
