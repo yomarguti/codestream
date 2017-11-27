@@ -78,6 +78,66 @@ describe("TeamSelectionForm", () => {
 					})
 				);
 			});
+
+			describe("server errors", () => {
+				describe("when the team does not exist", () => {
+					it("shows an error", () => {
+						const createTeam = jasmine
+							.createSpy("createTeam stub")
+							.andReturn(Promise.reject({ data: { code: "RAPI-1003" } }));
+						const view = mountWithIntl(
+							<TeamSelectionForm
+								createTeam={createTeam}
+								store={mockStore}
+								transition={transition}
+							/>
+						);
+
+						view
+							.find('input[type="radio"]')
+							.at(1)
+							.simulate("change", { target: { value: "1" } });
+
+						view.find("form").simulate("submit");
+
+						waitsFor(() => view.state("teamNotFound"));
+						runs(() => {
+							view.update();
+							expect(view.find(".error-message").text()).toBe("The selected team doesn't exist.");
+						});
+					});
+				});
+
+				describe("when the user is not on the selected team", () => {
+					it("shows an error", () => {
+						const createTeam = jasmine
+							.createSpy("createTeam stub")
+							.andReturn(Promise.reject({ data: { code: "RAPI-1011" } }));
+						const view = mountWithIntl(
+							<TeamSelectionForm
+								createTeam={createTeam}
+								store={mockStore}
+								transition={transition}
+							/>
+						);
+
+						view
+							.find('input[type="radio"]')
+							.at(1)
+							.simulate("change", { target: { value: "1" } });
+
+						view.find("form").simulate("submit");
+
+						waitsFor(() => view.state("noPermission"));
+						runs(() => {
+							view.update();
+							expect(view.find(".error-message").text()).toBe(
+								"You don't seem to a member of the selected team."
+							);
+						});
+					});
+				});
+			});
 		});
 
 		describe("when the user is creating a new team", () => {

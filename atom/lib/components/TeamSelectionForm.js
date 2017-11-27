@@ -11,6 +11,7 @@ export class SimpleTeamSelectionForm extends Component {
 			selectedValue: "",
 			newTeamName: "",
 			loading: false,
+			teamNotFound: false,
 			teams: props.store.getState().teams
 		};
 	}
@@ -55,9 +56,34 @@ export class SimpleTeamSelectionForm extends Component {
 			})
 			.catch(error => {
 				this.setState({ loading: false });
-				atom.notifications.addError("There was an error...");
-				console.log("there was an error...", error);
+				if (error.data.code === "RAPI-1003") {
+					this.setState({ teamNotFound: true });
+				}
+				if (error.data.code === "RAPI-1011") {
+					this.setState({ noPermission: true });
+				}
 			});
+	};
+
+	renderError = () => {
+		if (this.state.teamNotFound)
+			return (
+				<p className="error-message">
+					<FormattedMessage
+						id="teamSelection.teamNotFound"
+						defaultMessage="The selected team doesn't exist."
+					/>
+				</p>
+			);
+		else
+			return (
+				<p className="error-message">
+					<FormattedMessage
+						id="teamSelection.noPermission"
+						defaultMessage="You don't seem to a member of the selected team."
+					/>
+				</p>
+			);
 	};
 
 	render() {
@@ -73,6 +99,7 @@ export class SimpleTeamSelectionForm extends Component {
 					/>
 				</p>
 				<form onSubmit={this.onSubmit}>
+					{this.renderError()}
 					<div className="control-group">
 						<label className="input-label">
 							<input
