@@ -58,8 +58,7 @@ module.exports = {
 				}
 			}),
 			atom.commands.add("atom-workspace", {
-				"codestream:toggle": () => atom.workspace.toggle(CODESTREAM_VIEW_URI),
-				"codestream:comment": event => this.addComment()
+				"codestream:toggle": () => atom.workspace.toggle(CODESTREAM_VIEW_URI)
 			})
 			// atom.commands.add(".codestream .compose.mentions-on", {
 			// 	"codestream:at-mention-move-up": event => this.handleAtMentionKeyPress(event, "up"),

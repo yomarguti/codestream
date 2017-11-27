@@ -70,6 +70,22 @@ export class SimpleStream extends Component {
 				"codestream:at-mention-escape": event => this.handleAtMentionKeyPress(event, "escape")
 			})
 		);
+		this.subscriptions.add(
+			atom.commands.add("atom-workspace", {
+				"codestream:comment": event => this.handleClickAddComment()
+			})
+		);
+	}
+
+	componentDidMount() {
+		const streamHeight = this._div.offsetHeight;
+		const postslistHeight = this._postslist.offsetHeight;
+		if (postslistHeight < streamHeight) {
+			let newHeight =
+				streamHeight - postslistHeight + this._intro.offsetHeight - this._compose.offsetHeight;
+			this._intro.style.height = newHeight + "px";
+		}
+		this._postslist.scrollTop = 10000;
 	}
 
 	render() {
@@ -111,8 +127,14 @@ export class SimpleStream extends Component {
 		let lastTimestamp = null;
 
 		return (
-			<div className={streamClass}>
-				<div className="postslist">
+			<div className={streamClass} ref={ref => (this._div = ref)}>
+				<style id="dynamic-add-comment-popup-style" />
+				<div className="postslist" ref={ref => (this._postslist = ref)}>
+					<div className="intro" ref={ref => (this._intro = ref)}>
+						<label>
+							Welcome to the stream.<br />Info goes here.
+						</label>
+					</div>
 					{posts.map(post => {
 						const returnValue = (
 							<div>
@@ -124,7 +146,7 @@ export class SimpleStream extends Component {
 						return returnValue;
 					})}
 				</div>
-				<AddCommentPopup handleClickAddComent={this.handleClickAddComment} />
+				<AddCommentPopup handleClickAddComment={this.handleClickAddComment} />
 				<AtMentionsPopup
 					on={this.state.atMentionsOn}
 					people={this.state.atMentionsPeople}
@@ -133,7 +155,11 @@ export class SimpleStream extends Component {
 					handleHoverAtMention={this.handleHoverAtMention}
 					handleSelectAtMention={this.handleSelectAtMention}
 				/>
-				<div className={composeClass} onKeyPress={this.handleOnKeyPress}>
+				<div
+					className={composeClass}
+					onKeyPress={this.handleOnKeyPress}
+					ref={ref => (this._compose = ref)}
+				>
 					<ContentEditable
 						className="native-key-bindings"
 						id="input-div"
@@ -148,11 +174,6 @@ export class SimpleStream extends Component {
 			</div>
 		);
 	}
-	// {postTextArray.map(fragment => {
-	// 	console.log("FRAGMENT IS: " + fragment);
-	// 	return fragment;
-	// })}
-	// onChange={e => this.setState({ newPostText: e.target.innerText })}
 
 	setNewPostText(text) {
 		// text = text.replace(/<span class="at-mention">(@\w+)<\/span> /g, "$1");
@@ -164,6 +185,7 @@ export class SimpleStream extends Component {
 		// not very React-ish but not sure how to set focus otherwise
 		document.getElementById("input-div").focus();
 
+		// FIXME remove any at-mentions that we have added manually
 		this.setState({
 			quoteText: "",
 			quoteRange: null
@@ -191,7 +213,7 @@ export class SimpleStream extends Component {
 		}
 
 		if (Object.keys(authors).length > 0) {
-			var newText = Object.keys(authors).join(", ") + ": " + (this.state.newPostText || "");
+			var newText = Object.keys(authors).join(", ") + " " + (this.state.newPostText || "");
 			this.setNewPostText(newText);
 		}
 	}

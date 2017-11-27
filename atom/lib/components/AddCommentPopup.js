@@ -7,12 +7,12 @@ export default class AddCommentPopup extends Component {
 			on: false
 		};
 		this.handleClick = this.handleClick.bind(this);
-		this.handleSelectionChange = this.handleSelectionChange.bind(this);
 
 		// FIXME -- do we want this to be a disposable?
 		let editor = atom.workspace.getActiveTextEditor();
 		if (editor) {
 			editor.onDidChangeSelectionRange(this.handleSelectionChange);
+			editor.onDidChange(this.handleChange);
 			this.editor = editor;
 		}
 		this.marker = null;
@@ -27,12 +27,36 @@ export default class AddCommentPopup extends Component {
 
 	handleClick() {
 		if (this.marker) this.marker.destroy();
-		return this.props.handleClickAddComent();
+		return this.props.handleClickAddComment();
 	}
 
-	handleSelectionChange(event) {
+	// FIXME -- add an ID to the style element so we can re-use it,
+	// and move this function into a util package
+	addStyleString(str) {
+		var node = document.createElement("style");
+		node.innerHTML = str;
+		document.body.appendChild(node);
+	}
+
+	handleChange = event => {
+		console.log("HANDLING A CHANGE");
+		console.log(this.marker);
+		if (this.marker) this.marker.destroy();
+	};
+
+	handleSelectionChange = event => {
+		console.log("SELECTION HAS CHANGED");
 		let editor = atom.workspace.getActiveTextEditor();
 		if (!editor) return;
+
+		// FIXME -- this seems fragile, and it is also not responsive to
+		// window resizes
+		let lineDivs = document.querySelectorAll("atom-text-editor.is-focused .line");
+		if (lineDivs && lineDivs.length) {
+			let lineWidth = lineDivs[0].offsetWidth - 20;
+			let newStyle = ".codestream-add-comment-popup { left: " + lineWidth + "px; }";
+			this.addStyleString(newStyle);
+		}
 
 		if (this.marker) this.marker.destroy();
 
@@ -40,7 +64,11 @@ export default class AddCommentPopup extends Component {
 		let code = editor.getSelectedText();
 		if (code.length > 0) {
 			// console.log("READY TO QUOTE CODE");
+			this.addMarker(editor, range);
 		}
+	};
+
+	addMarker(editor, range) {
 		// FIXME set the position of this marker here
 		let row = range.start.row > range.end.row ? range.end.row : range.start.row;
 		let startRange = [[row, 0], [row, 0]];
