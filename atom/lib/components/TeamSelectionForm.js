@@ -38,7 +38,7 @@ export class SimpleTeamSelectionForm extends Component {
 		if (this.isFormInvalid()) return;
 		this.setState({ loading: true });
 		const { createTeam, store, transition } = this.props;
-		const { url, firstCommitHash } = store.getState().repoMetaData;
+		const { url, firstCommitHash } = store.getState().repoMetadata;
 		const { selectedValue, newTeamName, teams } = this.state;
 		const name = selectedValue === "createTeam" ? newTeamName : selectedValue;
 
@@ -75,12 +75,12 @@ export class SimpleTeamSelectionForm extends Component {
 					/>
 				</p>
 			);
-		else
+		if (this.state.noPermission)
 			return (
 				<p className="error-message">
 					<FormattedMessage
 						id="teamSelection.noPermission"
-						defaultMessage="You don't seem to a member of the selected team."
+						defaultMessage="You don't seem to be a member of the selected team."
 					/>
 				</p>
 			);

@@ -40,10 +40,11 @@ module.exports = {
 			const data = await get(
 				`/no-auth/find-repo?url=${repoUrl}&firstCommitHash=${firstCommitHash}`
 			);
+			const repoMetadata = { url: repoUrl, firstCommitHash };
 			const session =
 				Object.keys(data).length === 0
-					? { repoMetaData: { url: repoUrl, firstCommitHash } }
-					: { repoMetadata: data.repo, team: { usernames: data.usernames } };
+					? { repoMetadata, team: undefined, repo: undefined }
+					: { repoMetadata, team: { usernames: data.usernames }, repo: data.repo };
 			syncStore(session);
 		}
 	},

@@ -14,7 +14,7 @@ const mockStore = {
 	getState() {
 		return {
 			teams: [{ id: 1, name: "The Foobars" }, { id: 2, name: "Cool Coders" }],
-			repoMetaData: {
+			repoMetadata: {
 				url: repoUrl,
 				firstCommitHash
 			}
@@ -132,7 +132,7 @@ describe("TeamSelectionForm", () => {
 						runs(() => {
 							view.update();
 							expect(view.find(".error-message").text()).toBe(
-								"You don't seem to a member of the selected team."
+								"You don't seem to be a member of the selected team."
 							);
 						});
 					});

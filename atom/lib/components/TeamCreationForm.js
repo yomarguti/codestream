@@ -19,7 +19,7 @@ export class SimpleTeamCreationForm extends Component {
 		this.setState({ loading: true });
 		const { store, createTeam, transition } = this.props;
 		const { name } = this.state;
-		const { url, firstCommitHash } = store.getState().repoMetaData;
+		const { url, firstCommitHash } = store.getState().repoMetadata;
 		createTeam({ name, url, firstCommitHash })
 			.then(data => {
 				this.setState({ loading: false });

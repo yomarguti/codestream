@@ -34,7 +34,7 @@ describe("TeamCreationForm", () => {
 			const url = "foobar.com";
 			const firstCommitHash = "123ba3";
 			const team = { name };
-			const store = { getState: () => ({ repoMetaData: { url, firstCommitHash } }) };
+			const store = { getState: () => ({ repoMetadata: { url, firstCommitHash } }) };
 			const createTeam = jasmine.createSpy("createTeam stub").andReturn(Promise.resolve());
 			const view = mountWithIntl(<TeamCreationForm createTeam={createTeam} store={store} />);
 
