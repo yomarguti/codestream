@@ -58,10 +58,13 @@ export default class AddCommentPopup extends Component {
 
 			// FIXME -- this seems fragile, and it is also not responsive to
 			// window resizes, which is the only time it really needs to run
-			let lineDivs = document.querySelectorAll("atom-text-editor.is-focused .line");
-			if (lineDivs && lineDivs.length) {
-				let lineWidth = lineDivs[0].offsetWidth - 20;
-				let newStyle = ".codestream-add-comment-popup { left: " + lineWidth + "px; }";
+			// let lineDivs = document.querySelectorAll("atom-text-editor.is-focused .lines");
+			let scrollViewDivs = document.querySelectorAll("atom-text-editor.is-focused .scroll-view");
+			if (scrollViewDivs && scrollViewDivs.length) {
+				// let lineLeft = lineDivs[0].getBoundingClientRect().left;
+				// let codestreamLeft = codestreamDivs[0].getBoundingClientRect().left;
+				let width = scrollViewDivs[0].offsetWidth - 20;
+				let newStyle = ".codestream-add-comment-popup { left: " + width + "px; }";
 				console.log("Adding style string; " + newStyle);
 				this.addStyleString(newStyle);
 			}
