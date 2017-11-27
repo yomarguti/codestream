@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import { connect } from "redux-zero/react";
 import getSystemUser from "username";
+import PropTypes from "prop-types";
 import NoGit from "./NoGit";
 import Onboarding from "./Onboarding";
 import Stream from "./Stream";
@@ -11,9 +12,19 @@ class CodeStreamRoot extends Component {
 		user: {}
 	};
 
+	static childContextTypes = {
+		repositories: PropTypes.array
+	};
+
 	constructor(props) {
 		super(props);
 		this.state = {};
+	}
+
+	getChildContext() {
+		return {
+			repositories: this.props.repositories
+		};
 	}
 
 	render() {

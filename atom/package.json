@@ -1,67 +1,71 @@
 {
-	"name": "CodeStream",
-	"main": "./lib/codestream",
-	"version": "0.0.0",
-	"description": "Better teamwork, better code",
-	"keywords": [],
-	"activationCommands": {},
-	"repository": "",
-	"license": "MIT",
-	"engines": {
-		"atom": ">=1.0.0 <2.0.0"
-	},
-	"scripts": {
-		"prettify": "prettier --config .prettierrc --write ./{lib,spec}/*.js ./{lib,spec}/**/*.js"
-	},
-	"deserializers": {
-		"codestream/CodestreamView": "deserializeCodestreamView"
-	},
-	"consumedServices": {
-		"status-bar": {
-			"versions": {
-				"^1.0.0": "consumeStatusBar"
-			}
-		}
-	},
-	"atomTranspilers": [
-		{
-			"glob": "{lib,spec}/**/*.js",
-			"transpiler": "atom-babel6-transpiler",
-			"options": {
-				"babel": {
-					"presets": ["es2015", "react"],
-					"plugins": [
-						"transform-object-rest-spread",
-						[
-							"transform-class-properties",
-							{
-								"spec": true
-							}
-						]
-					],
-					"babelrc": false
-				}
-			}
-		}
-	],
-	"dependencies": {
-		"classnames": "^2.2.5",
-		"prop-types": "^15.6.0",
-		"react": "^16.0.0",
-		"react-dom": "^16.0.0",
-		"react-intl": "^2.4.0",
-		"redux-zero": "^4.5.0",
-		"username": "^3.0.0",
-		"xstate": "^1.2.1"
-	},
-	"devDependencies": {
-		"atom-babel6-transpiler": "^1.1.2",
-		"babel-plugin-transform-class-properties": "^6.24.1",
-		"babel-plugin-transform-object-rest-spread": "^6.26.0",
-		"babel-preset-es2015": "^6.24.1",
-		"babel-preset-react": "^6.24.1",
-		"enzyme": "^3.1.0",
-		"enzyme-adapter-react-16": "^1.0.2",
-		"prettier": "^1.7.4"
-	}
+  "name": "CodeStream",
+  "main": "./lib/codestream",
+  "version": "0.0.0",
+  "description": "Better teamwork, better code",
+  "keywords": [],
+  "activationCommands": {},
+  "repository": "",
+  "license": "MIT",
+  "engines": {
+    "atom": ">=1.0.0 <2.0.0"
+  },
+  "scripts": {
+    "prettify": "prettier --config .prettierrc --write ./{lib,spec}/*.js ./{lib,spec}/**/*.js"
+  },
+  "deserializers": {
+    "codestream/CodestreamView": "deserializeCodestreamView"
+  },
+  "consumedServices": {
+    "status-bar": {
+      "versions": {
+        "^1.0.0": "consumeStatusBar"
+      }
+    }
+  },
+  "atomTranspilers": [
+    {
+      "glob": "{lib,spec}/**/*.js",
+      "transpiler": "atom-babel6-transpiler",
+      "options": {
+        "babel": {
+          "presets": [
+            "es2015",
+            "react"
+          ],
+          "plugins": [
+            "transform-object-rest-spread",
+            [
+              "transform-class-properties",
+              {
+                "spec": true
+              }
+            ]
+          ],
+          "babelrc": false
+        }
+      }
+    }
+  ],
+  "dependencies": {
+    "classnames": "^2.2.5",
+    "prop-types": "^15.6.0",
+    "react": "^16.0.0",
+    "react-dom": "^16.0.0",
+    "react-intl": "^2.4.0",
+    "redux-zero": "^4.5.0",
+    "underscore": "^1.8.3",
+    "username": "^3.0.0",
+    "xstate": "^1.2.1"
+  },
+  "devDependencies": {
+    "atom-babel6-transpiler": "^1.1.2",
+    "babel-plugin-transform-class-properties": "^6.24.1",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-react": "^6.24.1",
+    "enzyme": "^3.1.0",
+    "enzyme-adapter-react-16": "^1.0.2",
+    "prettier": "^1.7.4"
+  }
 }

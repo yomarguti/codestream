@@ -5,6 +5,7 @@ import EmailConfirmationForm from "./EmailConfirmationForm";
 import LoginForm from "./LoginForm";
 import TeamCreationForm from "./TeamCreationForm";
 import TeamSelectionForm from "./TeamSelectionForm";
+import TeamMemberSelectionForm from "./TeamMemberSelectionForm";
 
 const chart = {
 	key: "onboarding",
@@ -41,7 +42,11 @@ const chart = {
 				success: "identifyMembers"
 			}
 		},
-		identifyMembers: {},
+		identifyMembers: {
+			on: {
+				success: "complete"
+			}
+		},
 		complete: {}
 	}
 };
@@ -77,7 +82,7 @@ export default class Onboarding extends Component {
 			login: <LoginForm {...nextProps} />,
 			createTeam: <TeamCreationForm {...nextProps} />,
 			selectTeam: <TeamSelectionForm {...nextProps} />,
-			identifyMembers: "who's on the team?"
+			identifyMembers: <TeamMemberSelectionForm {...nextProps} />
 		};
 		return views[this.state.currentStep];
 	}

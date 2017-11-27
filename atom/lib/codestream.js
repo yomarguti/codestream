@@ -33,7 +33,7 @@ module.exports = {
 		if (repos.length > 0) {
 			const repo = repos[0];
 			const repoUrl = repo.getOriginURL();
-			let firstCommitHash = await git("rev-list --max-parents=0 HEAD", {
+			let firstCommitHash = await git(["rev-list", "--max-parents=0", "HEAD"], {
 				cwd: repo.getWorkingDirectory()
 			});
 			firstCommitHash = firstCommitHash.trim();

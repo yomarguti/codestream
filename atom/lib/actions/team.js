@@ -16,4 +16,12 @@ export const createTeam = (store, attributes) => {
 	});
 };
 
-export default { createTeam };
+export const addMembers = (store, attributes) => {
+	return post("/repos", attributes, store.getState().accessToken).then(data => {
+		store.setState({
+			...store.getState(),
+			...data
+		});
+	});
+};
+export default { createTeam, addMembers };
