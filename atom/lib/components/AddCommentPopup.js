@@ -49,21 +49,23 @@ export default class AddCommentPopup extends Component {
 		let editor = atom.workspace.getActiveTextEditor();
 		if (!editor) return;
 
-		// FIXME -- this seems fragile, and it is also not responsive to
-		// window resizes
-		let lineDivs = document.querySelectorAll("atom-text-editor.is-focused .line");
-		if (lineDivs && lineDivs.length) {
-			let lineWidth = lineDivs[0].offsetWidth - 20;
-			let newStyle = ".codestream-add-comment-popup { left: " + lineWidth + "px; }";
-			this.addStyleString(newStyle);
-		}
-
 		if (this.marker) this.marker.destroy();
 
 		var range = editor.getSelectedBufferRange();
 		let code = editor.getSelectedText();
 		if (code.length > 0) {
 			// console.log("READY TO QUOTE CODE");
+
+			// FIXME -- this seems fragile, and it is also not responsive to
+			// window resizes, which is the only time it really needs to run
+			let lineDivs = document.querySelectorAll("atom-text-editor.is-focused .line");
+			if (lineDivs && lineDivs.length) {
+				let lineWidth = lineDivs[0].offsetWidth - 20;
+				let newStyle = ".codestream-add-comment-popup { left: " + lineWidth + "px; }";
+				console.log("Adding style string; " + newStyle);
+				this.addStyleString(newStyle);
+			}
+
 			this.addMarker(editor, range);
 		}
 	};

@@ -77,7 +77,12 @@ export class SimpleStream extends Component {
 		);
 	}
 
-	componentDidMount() {
+	handleResizeCompose = () => {
+		console.log("COMPOSE RESIZE");
+		this.resizeStream();
+	};
+
+	resizeStream = () => {
 		const streamHeight = this._div.offsetHeight;
 		const postslistHeight = this._postslist.offsetHeight;
 		if (postslistHeight < streamHeight) {
@@ -85,7 +90,12 @@ export class SimpleStream extends Component {
 				streamHeight - postslistHeight + this._intro.offsetHeight - this._compose.offsetHeight;
 			this._intro.style.height = newHeight + "px";
 		}
+		this._div.style.paddingBottom = this._compose.offsetHeight + "px";
 		this._postslist.scrollTop = 10000;
+	};
+
+	componentDidMount() {
+		new ResizeObserver(this.handleResizeCompose).observe(this._compose);
 	}
 
 	render() {
