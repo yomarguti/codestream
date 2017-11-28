@@ -74,7 +74,8 @@ export class SimpleStream extends Component {
 		this.subscriptions.add(
 			atom.commands.add("atom-workspace", {
 				"codestream:add-dummy-post": event => this.addDummyPost(),
-				"codestream:comment": event => this.handleClickAddComment()
+				"codestream:comment": event => this.handleClickAddComment(),
+				"codestream:focus-input": event => this.focusInput()
 			})
 		);
 
@@ -223,9 +224,13 @@ export class SimpleStream extends Component {
 		this.setState({ newPostText: text });
 	}
 
+	focusInput = () => {
+		document.getElementById("input-div").focus();
+	};
+
 	handleClickDismissQuote = () => {
 		// not very React-ish but not sure how to set focus otherwise
-		document.getElementById("input-div").focus();
+		this.focusInput();
 
 		// FIXME remove any at-mentions that we have added manually
 		this.setState({
@@ -266,6 +271,7 @@ export class SimpleStream extends Component {
 
 		var range = editor.getSelectedBufferRange();
 		let code = editor.getSelectedText();
+
 		// if there is no selected text, i.e. it is a 0-width range,
 		// then grab the current line of code that the cursor is on
 		if (code.length == 0 && range.start.row == range.end.row) {

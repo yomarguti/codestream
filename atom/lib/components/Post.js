@@ -18,7 +18,9 @@ export default class Post extends Component {
 		let offBottom = scrollHeight - currentScroll - streamDiv.offsetHeight - this._div.offsetHeight;
 		// if i am manually scrolling, don't programatically scroll to bottom
 		// unless the post is mine, in which case we always scroll to bottom
-		if (offBottom < 20 || this.state.post.author == "pez") {
+		// we check to see if it's below 100 because if you are scrolled
+		// almost to the bottom, we count that as being at the bottom for UX reasons
+		if (offBottom < 100 || this.state.post.author == "pez") {
 			// big number to make sure we've scrolled all the way down
 			streamDiv.scrollTop = 100000;
 		}
