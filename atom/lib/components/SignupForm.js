@@ -51,7 +51,8 @@ export class SimpleSignupForm extends Component {
 	}
 
 	onBlurUsername = () => {
-		const usernamesInTeam = this.state.team.usernames;
+		const { team } = this.state;
+		const usernamesInTeam = (team && team.usernames) || [];
 		const { username } = this.state;
 		this.setState({ usernameTouched: true, usernameInUse: usernamesInTeam.includes(username) });
 	};
