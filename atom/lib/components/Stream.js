@@ -459,6 +459,9 @@ export class SimpleStream extends Component {
 
 	submitPost(newText) {
 		newText = newText.replace(/<br>/g, "\n");
+		var doc = new DOMParser().parseFromString(newText, "text/html");
+		newText = doc.documentElement.textContent;
+
 		var timestamp = +new Date();
 		var newPost = {
 			// FIXME fake data
