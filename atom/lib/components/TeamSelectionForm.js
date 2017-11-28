@@ -52,7 +52,6 @@ export class SimpleTeamSelectionForm extends Component {
 			.then(data => {
 				this.setState({ loading: false });
 				transition("success");
-				atom.notifications.addInfo("Success! More to come...");
 			})
 			.catch(error => {
 				this.setState({ loading: false });
