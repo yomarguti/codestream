@@ -11,11 +11,17 @@ export default class Post extends Component {
 	}
 
 	componentDidMount() {
-		// console.log("SCROLLING BECAUSE OF MOUNT");
 		// FIXME -- probably don't want to be doing something to parent here
-		let currentScroll = this._div.parentNode.parentNode.scrollTop;
-		// FIXME -- if i am manually scrolling, don't programatically change it
-		this._div.parentNode.parentNode.scrollTop = 10000;
+		let streamDiv = this._div.parentNode.parentNode;
+		let currentScroll = streamDiv.scrollTop;
+		let scrollHeight = streamDiv.scrollHeight;
+		let offBottom = scrollHeight - currentScroll - streamDiv.offsetHeight - this._div.offsetHeight;
+		// if i am manually scrolling, don't programatically scroll to bottom
+		// unless the post is mine, in which case we always scroll to bottom
+		if (offBottom < 20 || this.state.post.author == "pez") {
+			// big number to make sure we've scrolled all the way down
+			streamDiv.scrollTop = 100000;
+		}
 	}
 
 	render() {

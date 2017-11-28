@@ -72,14 +72,42 @@ export class SimpleStream extends Component {
 		);
 		this.subscriptions.add(
 			atom.commands.add("atom-workspace", {
+				"codestream:add-dummy-post": event => this.addDummyPost(),
 				"codestream:comment": event => this.handleClickAddComment()
+			})
+		);
+
+		this.subscriptions.add(
+			atom.workspace.onDidStopChangingActivePaneItem((editor: AtomCore.IEditor) => {
+				this.handlePaneSwitch(editor);
 			})
 		);
 	}
 
+	handlePaneSwitch = editor => {
+		console.log(editor);
+	};
+
 	handleResizeCompose = () => {
 		console.log("COMPOSE RESIZE");
 		this.resizeStream();
+	};
+
+	handleNewPost = () => {};
+
+	addDummyPost = () => {
+		var timestamp = +new Date();
+		var newPost = {
+			id: 3,
+			author: "colin",
+			body:
+				"perhaps. blame isn't part of git-plus so I can't think of anything that stands out yet. there is a git-blame package that users wanted to see merged into git-plus. maybe there's some insight there",
+			email: "colin@codestream.com",
+			timestamp: timestamp
+		};
+		this.setState(prevState => ({
+			posts: [...prevState.posts, newPost]
+		}));
 	};
 
 	resizeStream = () => {
