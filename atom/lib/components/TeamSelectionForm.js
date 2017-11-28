@@ -124,8 +124,8 @@ export class SimpleTeamSelectionForm extends Component {
 										className="input-radio"
 										type="radio"
 										name="team"
-										value={team.id}
-										checked={this.isSelected(team.name)}
+										value={team._id}
+										checked={this.isSelected(team._id)}
 										onChange={this.onSelect}
 									/>
 									{team.name}

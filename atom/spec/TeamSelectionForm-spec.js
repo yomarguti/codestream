@@ -13,7 +13,7 @@ const transition = jasmine.createSpy("transition stub");
 const mockStore = {
 	getState() {
 		return {
-			teams: [{ id: 1, name: "The Foobars" }, { id: 2, name: "Cool Coders" }],
+			teams: [{ _id: 1, name: "The Foobars" }, { _id: 2, name: "Cool Coders" }],
 			repoMetadata: {
 				url: repoUrl,
 				firstCommitHash
