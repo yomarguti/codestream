@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import { Machine } from "xstate";
+import { connect } from "redux-zero/react";
 import SignupForm from "./SignupForm";
 import EmailConfirmationForm from "./EmailConfirmationForm";
 import LoginForm from "./LoginForm";
@@ -51,27 +52,31 @@ const chart = {
 	}
 };
 
-export default class Onboarding extends Component {
+class Onboarding extends Component {
 	flow = Machine(chart);
 
 	constructor(props) {
 		super(props);
 		this.state = {
-			currentStep: this.flow.getInitialState(),
-			currentProps: this.props
+			currentStep: props.currentStep || this.flow.getInitialState(),
+			currentProps: props.currentProps || props
 		};
 	}
 
 	transition = (action, data = {}) => {
+		const { updateOnboarding } = this.props;
 		const nextStep = this.flow.transition(this.state.currentStep, action).toString();
-		if (nextStep === "complete") this.props.onComplete();
-		else
-			this.setState(state => {
-				return {
-					currentProps: data,
-					currentStep: nextStep
-				};
-			});
+		if (nextStep === "complete") {
+			updateOnboarding(undefined);
+			this.props.onComplete();
+		} else {
+			const nextState = {
+				currentProps: data,
+				currentStep: nextStep
+			};
+			updateOnboarding(nextState);
+			this.setState(nextState);
+		}
 	};
 
 	render() {
@@ -87,3 +92,11 @@ export default class Onboarding extends Component {
 		return views[this.state.currentStep];
 	}
 }
+
+const mapStateToProps = ({ onboarding }) => ({ ...onboarding });
+const actions = {
+	updateOnboarding(state, onboarding) {
+		return { onboarding };
+	}
+};
+export default connect(mapStateToProps, actions)(Onboarding);
