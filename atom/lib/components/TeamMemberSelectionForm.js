@@ -23,6 +23,8 @@ export class SimpleTeamMemberSelectionForm extends Component {
 		super(props);
 		this.state = {
 			committers: [],
+			serverLoading: false,
+			loadingCommitters: true,
 			addingMissingMember: false,
 			newMemberInputTouched: false,
 			newMemberEmail: ""
@@ -52,7 +54,10 @@ export class SimpleTeamMemberSelectionForm extends Component {
 			})
 			.filter(committer => _.findWhere(recentCommitters, { email: committer.email }));
 
-		this.setState({ committers: [...recentCommitters, ...olderCommitters] });
+		this.setState({
+			loadingCommitters: false,
+			committers: [...recentCommitters, ...olderCommitters]
+		});
 	}
 
 	onChange = event => {
@@ -100,19 +105,13 @@ export class SimpleTeamMemberSelectionForm extends Component {
 		if (this.state.teamNotFound)
 			return (
 				<p className="error-message">
-					<FormattedMessage
-						id="teamSelection.teamNotFound"
-						defaultMessage="The selected team doesn't exist."
-					/>
+					<FormattedMessage id="teamSelection.error.teamNotFound" />
 				</p>
 			);
 		if (this.state.noPermission)
 			return (
 				<p className="error-message">
-					<FormattedMessage
-						id="teamSelection.noPermission"
-						defaultMessage="You don't seem to be a member of the selected team."
-					/>
+					<FormattedMessage id="teamSelection.error.noPermission" />
 				</p>
 			);
 	};
@@ -161,7 +160,11 @@ export class SimpleTeamMemberSelectionForm extends Component {
 						</p>
 					)}
 				</div>
-				<Button id="submit-button" loading={this.state.loading} onClick={this.onSubmitTeamMembers}>
+				<Button
+					id="submit-button"
+					loading={this.state.serverLoading}
+					onClick={this.onSubmitTeamMembers}
+				>
 					<FormattedMessage id="teamMemberSelection.submitButton" defaultMessage="GET STARTED" />
 				</Button>
 			</form>
@@ -227,14 +230,27 @@ export class SimpleTeamMemberSelectionForm extends Component {
 		);
 	}
 
+	renderSpinner() {
+		return (
+			<div className="spinner">
+				<span className="loading loading-spinner-small inline-block" />
+			</div>
+		);
+	}
+
+	renderContent() {
+		if (this.state.loadingCommitters) return this.renderSpinner();
+		if (this.state.committers.length === 0) return this.renderNewInput();
+		else return this.renderSelectMembersForm();
+	}
+
 	render() {
 		return (
 			<div id="team-member-selection">
 				<h2>
 					<FormattedMessage id="teamMemberSelection.header" defaultMessage="Who's on the team?" />
 				</h2>
-				{this.state.committers.length === 0 && this.renderNewInput()}
-				{this.state.committers.length > 0 && this.renderSelectMembersForm()}
+				{this.renderContent()}
 				<div className="footer">
 					<FormattedMessage
 						id="teamMemberSelection.footer"

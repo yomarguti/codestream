@@ -68,19 +68,13 @@ export class SimpleTeamSelectionForm extends Component {
 		if (this.state.teamNotFound)
 			return (
 				<p className="error-message">
-					<FormattedMessage
-						id="teamSelection.teamNotFound"
-						defaultMessage="The selected team doesn't exist."
-					/>
+					<FormattedMessage id="teamSelection.error.teamNotFound" />
 				</p>
 			);
 		if (this.state.noPermission)
 			return (
 				<p className="error-message">
-					<FormattedMessage
-						id="teamSelection.noPermission"
-						defaultMessage="You don't seem to be a member of the selected team."
-					/>
+					<FormattedMessage id="teamSelection.error.noPermission" />
 				</p>
 			);
 	};

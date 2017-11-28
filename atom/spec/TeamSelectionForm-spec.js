@@ -132,7 +132,7 @@ describe("TeamSelectionForm", () => {
 						runs(() => {
 							view.update();
 							expect(view.find(".error-message").text()).toBe(
-								"You don't seem to be a member of the selected team."
+								"You are not a member of the selected team."
 							);
 						});
 					});
