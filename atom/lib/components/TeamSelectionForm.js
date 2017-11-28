@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { FormattedMessage } from "react-intl";
 import withAPI from "./withAPI";
 import Button from "./Button";
-import { createTeam } from "../actions/team";
+import { createTeam, addRepoForTeam } from "../actions/team";
 
 export class SimpleTeamSelectionForm extends Component {
 	constructor(props) {
@@ -37,21 +37,24 @@ export class SimpleTeamSelectionForm extends Component {
 	onSubmit = () => {
 		if (this.isFormInvalid()) return;
 		this.setState({ loading: true });
-		const { createTeam, store, transition } = this.props;
+		const { createTeam, store, transition, addRepoForTeam } = this.props;
 		const { url, firstCommitHash } = store.getState().repoMetadata;
 		const { selectedValue, newTeamName, teams } = this.state;
-		const name = selectedValue === "createTeam" ? newTeamName : selectedValue;
+		const creatingNewTeam = selectedValue === "createTeam";
 
 		let promise;
-		if (selectedValue === "createTeam") {
+		if (creatingNewTeam) {
 			promise = createTeam({ name: newTeamName, url, firstCommitHash });
 		} else {
-			promise = createTeam({ teamId: selectedValue, url, firstCommitHash });
+			promise = addRepoForTeam({ teamId: selectedValue, url, firstCommitHash });
 		}
 		promise
 			.then(data => {
 				this.setState({ loading: false });
-				transition("success");
+				if (!creatingNewTeam) {
+					const teamName = teams.filter(({ _id }) => _id === selectedValue)[0].name;
+					transition("success", { existingTeam: true, teamName });
+				} else transition("success");
 			})
 			.catch(error => {
 				this.setState({ loading: false });
@@ -142,4 +145,4 @@ export class SimpleTeamSelectionForm extends Component {
 	}
 }
 
-export default withAPI({ createTeam })(SimpleTeamSelectionForm);
+export default withAPI({ createTeam, addRepoForTeam })(SimpleTeamSelectionForm);
