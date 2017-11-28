@@ -33,8 +33,8 @@ export class SimpleTeamMemberSelectionForm extends Component {
 		const repository = this.context.repositories[0];
 		const cwd = repository.getWorkingDirectory();
 		const logFormat = "--format=%an<trim-this>%ae";
-		const activeDate = "1 month ago";
-		const recentCommitterData = await git(["log", logFormat, `--since="${activeDate}"`], { cwd });
+		const cutoffDate = "1 month ago";
+		const recentCommitterData = await git(["log", logFormat, `--since="${cutoffDate}"`], { cwd });
 		const recentCommitterString = recentCommitterData.split("\n");
 		const recentCommitters = _.uniq(recentCommitterString)
 			.filter(Boolean)
@@ -42,7 +42,7 @@ export class SimpleTeamMemberSelectionForm extends Component {
 				const [name, email] = string.split("<trim-this>");
 				return { name, email, selected: true };
 			});
-		const olderCommitterData = await git(["log", logFormat, `--before="${activeDate}"`], { cwd });
+		const olderCommitterData = await git(["log", logFormat, `--before="${cutoffDate}"`], { cwd });
 		const olderCommitterString = olderCommitterData.split("\n");
 		const olderCommitters = _.uniq(olderCommitterString)
 			.filter(Boolean)
