@@ -57,9 +57,15 @@ describe("TeamSelectionForm", () => {
 	describe("when the form is submitted", () => {
 		describe("when the user selects an existing team", () => {
 			it("sends the repo url, first commit hash, team id", () => {
-				const createTeam = jasmine.createSpy("createTeam stub").andReturn(Promise.resolve());
+				const addRepoForTeam = jasmine
+					.createSpy("addRepoForTeam stub")
+					.andReturn(Promise.resolve());
 				const view = mountWithIntl(
-					<TeamSelectionForm createTeam={createTeam} store={mockStore} transition={transition} />
+					<TeamSelectionForm
+						addRepoForTeam={addRepoForTeam}
+						store={mockStore}
+						transition={transition}
+					/>
 				);
 
 				view
@@ -69,9 +75,9 @@ describe("TeamSelectionForm", () => {
 
 				view.find("form").simulate("submit");
 
-				waitsFor(() => createTeam.callCount > 0);
+				waitsFor(() => addRepoForTeam.callCount > 0);
 				runs(() =>
-					expect(createTeam).toHaveBeenCalledWith({
+					expect(addRepoForTeam).toHaveBeenCalledWith({
 						url: repoUrl,
 						firstCommitHash,
 						teamId: "1"
@@ -82,12 +88,12 @@ describe("TeamSelectionForm", () => {
 			describe("server errors", () => {
 				describe("when the team does not exist", () => {
 					it("shows an error", () => {
-						const createTeam = jasmine
-							.createSpy("createTeam stub")
+						const addRepoForTeam = jasmine
+							.createSpy("addRepoForTeam stub")
 							.andReturn(Promise.reject({ data: { code: "RAPI-1003" } }));
 						const view = mountWithIntl(
 							<TeamSelectionForm
-								createTeam={createTeam}
+								addRepoForTeam={addRepoForTeam}
 								store={mockStore}
 								transition={transition}
 							/>
@@ -110,12 +116,12 @@ describe("TeamSelectionForm", () => {
 
 				describe("when the user is not on the selected team", () => {
 					it("shows an error", () => {
-						const createTeam = jasmine
-							.createSpy("createTeam stub")
+						const addRepoForTeam = jasmine
+							.createSpy("addRepoForTeam stub")
 							.andReturn(Promise.reject({ data: { code: "RAPI-1011" } }));
 						const view = mountWithIntl(
 							<TeamSelectionForm
-								createTeam={createTeam}
+								addRepoForTeam={addRepoForTeam}
 								store={mockStore}
 								transition={transition}
 							/>
