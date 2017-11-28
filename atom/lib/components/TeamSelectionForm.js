@@ -53,7 +53,7 @@ export class SimpleTeamSelectionForm extends Component {
 				this.setState({ loading: false });
 				if (!creatingNewTeam) {
 					const teamName = teams.filter(({ _id }) => _id === selectedValue)[0].name;
-					transition("success", { existingTeam: true, teamName });
+					transition("success", { existingTeam: true, teamName, teamId: selectedValue });
 				} else transition("success");
 			})
 			.catch(error => {

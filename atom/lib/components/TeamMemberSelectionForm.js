@@ -5,7 +5,7 @@ import _ from "underscore";
 import withAPI from "./withAPI";
 import Button from "./Button";
 import git from "../git";
-import { addMembers } from "../actions/team";
+import { addMembers, getMembers } from "../actions/team";
 
 const isEmailInvalid = email => {
 	const emailRegex = new RegExp(
@@ -54,9 +54,18 @@ export class SimpleTeamMemberSelectionForm extends Component {
 			})
 			.filter(committer => _.findWhere(recentCommitters, { email: committer.email }));
 
+		let committers = [...recentCommitters, ...olderCommitters];
+
+		if (this.props.existingTeam) {
+			const members = await this.props.getMembers(this.props.teamId);
+			const memberEmails = members.map(m => m.email);
+
+			committers = committers.filter(c => !memberEmails.includes(c.email));
+		}
+
 		this.setState({
 			loadingCommitters: false,
-			committers: [...recentCommitters, ...olderCommitters]
+			committers
 		});
 	}
 
@@ -76,12 +85,12 @@ export class SimpleTeamMemberSelectionForm extends Component {
 	onSubmitTeamMembers = () => {
 		this.setState({ loading: true });
 		const { addMembers, store, transition } = this.props;
-		const { team, repoMetadata } = store.getState();
+		const { repo, teams } = store.getState();
 		const emails = this.state.committers.filter(c => c.selected).map(c => c.email);
 		addMembers({
-			teamId: team._id,
-			url: repoMetadata.url,
-			firstCommitHash: repoMetadata.firstCommitHash,
+			teamId: repo.teamId,
+			url: repo.url,
+			firstCommitHash: repo.firstCommitHash,
 			emails
 		})
 			.then(() => transition("success"))
@@ -116,9 +125,23 @@ export class SimpleTeamMemberSelectionForm extends Component {
 			);
 	};
 
+	renderInfo() {
+		if (this.props.existingTeam)
+			return (
+				<p>
+					<FormattedMessage
+						id="teamMemberSelection.addNewMembersToExistingTeam"
+						defaultMessage="We’ve found some people that you might want to add to the {teamName}."
+						values={{ teamName: this.props.teamName }}
+					/>
+				</p>
+			);
+	}
+
 	renderSelectMembersForm() {
 		return (
 			<form className="select-members-form">
+				{this.renderInfo()}
 				{this.renderSubmissionOfNewMembersError()}
 				<ul>
 					{this.state.committers.map(committer => {
@@ -262,4 +285,4 @@ export class SimpleTeamMemberSelectionForm extends Component {
 	}
 }
 
-export default withAPI({ addMembers })(SimpleTeamMemberSelectionForm);
+export default withAPI({ addMembers, getMembers })(SimpleTeamMemberSelectionForm);

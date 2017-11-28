@@ -1,4 +1,4 @@
-import { post, put } from "../network-request";
+import { get, post, put } from "../network-request";
 
 export const createTeam = (store, attributes) => {
 	const params = {
@@ -33,4 +33,9 @@ export const addMembers = (store, attributes) => {
 		});
 	});
 };
-export default { createTeam, addMembers };
+
+export const getMembers = (store, teamId) => {
+	return get(`/users?teamId=${teamId}`, store.getState().accessToken).then(data => data.users);
+};
+
+export default { createTeam, addMembers, getMembers, addRepoForTeam };
