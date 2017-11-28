@@ -148,7 +148,7 @@ describe("EmailConfirmationForm view", () => {
 	});
 
 	describe("on successful confirmation", () => {
-		describe("when there are no teams for the repository and the user is not a member of any teams", () => {
+		describe("when there is no team for the repository and the user is not a member of any teams", () => {
 			it("redirects them to the team creation form", () => {
 				const transition = jasmine.createSpy("transition stub");
 				const confirmEmail = () => Promise.resolve({ teams: [] });
@@ -168,12 +168,12 @@ describe("EmailConfirmationForm view", () => {
 				runs(() => expect(transition).toHaveBeenCalledWith("newTeamForRepo"));
 			});
 		});
-		describe("when there are no teams for the repository and the user is already a member of team", () => {
+
+		describe("when there is no team for the repository and the user is already a member of a team", () => {
 			it("redirects them to the team selection form", () => {
 				const transition = jasmine.createSpy("transition stub");
-				const userTeam = { _id: "teamId" };
-				const confirmEmail = () => Promise.resolve({ teams: [userTeam] });
-				const store = { getState: () => ({ team: null }) };
+				const confirmEmail = () => Promise.resolve({ teams: [{ _id: "teamId" }] });
+				const store = { getState: () => ({}) };
 				const email = "foo@bar.com";
 				const view = mountWithIntl(
 					<EmailConfirmationForm
@@ -187,6 +187,30 @@ describe("EmailConfirmationForm view", () => {
 				view.find("form").simulate("submit");
 				waitsFor(() => transition.callCount > 0);
 				runs(() => expect(transition).toHaveBeenCalledWith("selectTeamForRepo"));
+			});
+		});
+
+		describe("when there is a team for the repository and the user is already a member of that team", () => {
+			it("completes onboarding", () => {
+				const transition = jasmine.createSpy("transition stub");
+				const userTeam = { _id: "teamId" };
+				const confirmEmail = () => Promise.resolve({ teams: [userTeam] });
+				const store = {
+					getState: () => ({ repo: { teamId: "teamId" } })
+				};
+				const email = "foo@bar.com";
+				const view = mountWithIntl(
+					<EmailConfirmationForm
+						store={store}
+						transition={transition}
+						email={email}
+						confirmEmail={confirmEmail}
+					/>
+				);
+				view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }));
+				view.find("form").simulate("submit");
+				waitsFor(() => transition.callCount > 0);
+				runs(() => expect(transition).toHaveBeenCalledWith("confirmedNewMember"));
 			});
 		});
 	});

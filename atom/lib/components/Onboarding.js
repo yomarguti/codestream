@@ -24,6 +24,7 @@ const chart = {
 				selectTeamForRepo: "selectTeam",
 				newTeamForRepo: "createTeam",
 				alreadyConfirmed: "login",
+				confirmedNewMember: "complete",
 				back: "signUp"
 			}
 		},
