@@ -24,6 +24,7 @@ export class SimpleStream extends Component {
 
 		this.state = {
 			stream: {},
+			streamName: "Dummy.js",
 			posts: [
 				{
 					id: 1,
@@ -139,6 +140,8 @@ export class SimpleStream extends Component {
 
 		let newPostText = this.state.newPostText || "";
 
+		let placeholderText = "Message " + this.state.streamName;
+
 		// strip out the at-mention markup, and add it back.
 		// newPostText = newPostText.replace(/(@\w+)/g, '<span class="at-mention">$1</span> ');
 
@@ -205,6 +208,7 @@ export class SimpleStream extends Component {
 						tabIndex="-1"
 						onChange={this.handleOnChange}
 						html={newPostText}
+						placeholder={placeholderText}
 					/>
 					{quoteHint}
 					{quoteInfo}
