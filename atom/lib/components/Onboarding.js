@@ -68,8 +68,7 @@ class Onboarding extends Component {
 		const { updateOnboarding } = this.props;
 		const nextStep = this.flow.transition(this.state.currentStep, action).toString();
 		if (nextStep === "complete") {
-			updateOnboarding(undefined);
-			this.props.onComplete();
+			updateOnboarding({ complete: true });
 		} else {
 			const nextState = {
 				currentProps: data,

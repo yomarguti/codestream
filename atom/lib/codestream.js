@@ -4,15 +4,12 @@ import CodestreamView, { CODESTREAM_VIEW_URI } from "./codestream-view";
 import { get } from "./network-request";
 import git from "./git";
 
-let store;
-
-const syncStore = session => {
-	if (store === undefined) {
-		store = createStore(session);
-	} else {
-		store.setState(session);
-	}
+const defaultSession = {
+	onboarding: {}
 };
+const store = createStore(defaultSession);
+
+const syncStore = session => store.setState(session);
 
 module.exports = {
 	subscriptions: null,
