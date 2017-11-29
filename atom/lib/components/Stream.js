@@ -41,6 +41,14 @@ export class SimpleStream extends Component {
 					email: "jj@codestream.com"
 				},
 				{
+					id: 2,
+					author: "colin",
+					body: "AvE adds more value to my life than some of my family members",
+					timestamp: 1411680774000,
+					newSeparator: true,
+					email: "colin@codestream.com"
+				},
+				{
 					id: 3,
 					author: "marcelo",
 					body:
@@ -438,7 +446,6 @@ export class SimpleStream extends Component {
 	handleHoverAtMention = nick => {
 		let index = this.state.atMentionsPeople.findIndex(x => x.nick == nick);
 
-		console.log(index);
 		this.setState({
 			atMentionsIndex: index,
 			selectedAtMention: nick

@@ -162,6 +162,52 @@
 			}
 		}
 
+		.post .menu-popup {
+			right: 20px;
+			margin-top: -10px;
+		}
+		.menu-popup {
+			// height: 500px;
+			position: absolute;
+			z-index: 50;
+			padding: 0 10px 0 10px;
+			user-select: none;
+			cursor: pointer;
+			border-radius: 5px;
+
+			.body {
+				width: 100%;
+				box-shadow: 0 5px 10px #ccc;
+				border-radius: 5px;
+				border: 1px solid @base-border-color;
+				background: #eee;
+			}
+			ul {
+				// border-top: 1px solid @base-border-color;
+				background: #fff;
+				padding: 5px 0;
+				border-radius: 0 5px 5px 0;
+			}
+			li {
+				padding: 5px 10px;
+				.headshot {
+					width: 18px;
+					height: 18px;
+					border-radius: 3px;
+					margin-right: 6px;
+				}
+			}
+			// li:hover,
+			li.hover {
+				color: #fff;
+				background: #4979f1;
+			}
+			.nick {
+				font-weight: 700;
+				padding-right: 5px;
+			}
+		}
+
 		.postslist {
 			width: 100%;
 			max-height: 100%;
@@ -203,6 +249,21 @@
 				float: right;
 				margin: -3px -10px 0 0;
 			}
+		}
+
+		.post.new-separator {
+			border-top: 1px solid #99f;
+			position: relative;
+		}
+		.post.new-separator::before {
+			content: "new messages";
+			display: block;
+			right: 10px;
+			top: -10px;
+			color: #9af;
+			background: @app-background-color;
+			padding: 0 5px;
+			position: absolute;
 		}
 
 		.date-separator {
