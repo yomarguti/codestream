@@ -6,7 +6,7 @@ class ApiRequestError extends Error {
 	}
 }
 
-const getPath = route => `${atom.config.get("codestream.url")}${route}`;
+const getPath = route => `${atom.config.get("CodeStream.url")}${route}`;
 const getHeaders = () =>
 	new Headers({
 		Accept: "application/json",
