@@ -44,5 +44,28 @@ describe("TeamCreationForm", () => {
 			waitsFor(() => createTeam.callCount > 0);
 			runs(() => expect(createTeam).toHaveBeenCalledWith({ url, firstCommitHash, name }));
 		});
+
+		describe("when the server responds with 200", () => {
+			it("redirects to team member selection", () => {
+				const name = "Foo Team";
+				const url = "foobar.com";
+				const firstCommitHash = "123ba3";
+				const team = { name };
+				const store = { getState: () => ({ repoMetadata: { url, firstCommitHash } }) };
+				const createTeam = jasmine
+					.createSpy("createTeam stub")
+					.andReturn(Promise.resolve({ team: { _id: "teamId" } }));
+				const transition = jasmine.createSpy("transition stub");
+				const view = mountWithIntl(
+					<TeamCreationForm createTeam={createTeam} transition={transition} store={store} />
+				);
+
+				view.find("input").simulate("change", { target: { value: name } });
+				view.find("form").simulate("submit");
+
+				waitsFor(() => transition.callCount > 0);
+				runs(() => expect(transition).toHaveBeenCalledWith("success", { teamId: "teamId" }));
+			});
+		});
 	});
 });

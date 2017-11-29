@@ -52,16 +52,14 @@ export class SimpleTeamMemberSelectionForm extends Component {
 				const [name, email] = string.split("<trim-this>");
 				return { name, email, selected: false };
 			})
-			.filter(committer => _.findWhere(recentCommitters, { email: committer.email }));
+			.filter(committer => !_.findWhere(recentCommitters, { email: committer.email }));
 
-		let committers = [...recentCommitters, ...olderCommitters];
+		const members = await this.props.getMembers(this.props.teamId);
+		const memberEmails = members.map(m => m.email);
 
-		if (this.props.existingTeam) {
-			const members = await this.props.getMembers(this.props.teamId);
-			const memberEmails = members.map(m => m.email);
-
-			committers = committers.filter(c => !memberEmails.includes(c.email));
-		}
+		const committers = [...recentCommitters, ...olderCommitters].filter(
+			c => !memberEmails.includes(c.email)
+		);
 
 		this.setState({
 			loadingCommitters: false,

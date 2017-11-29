@@ -13,6 +13,7 @@ export const createTeam = (store, attributes) => {
 			...store.getState(),
 			...data
 		});
+		return data;
 	});
 };
 

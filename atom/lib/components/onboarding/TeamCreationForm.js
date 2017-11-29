@@ -23,7 +23,7 @@ export class SimpleTeamCreationForm extends Component {
 		createTeam({ name, url, firstCommitHash })
 			.then(data => {
 				this.setState({ loading: false });
-				transition("success");
+				transition("success", { teamId: data.team._id });
 			})
 			.catch(error => {
 				this.setState({ loading: false });
