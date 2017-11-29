@@ -26,7 +26,7 @@ export default class AtMentionsPopup extends Component {
 					<div className="instructions" onClick={event => this.handleClickInstructions()}>
 						People matching <b>"@{this.props.prefix}"</b>
 					</div>
-					<ul className="at-mentions-list">
+					<ul className="compact at-mentions-list">
 						{this.props.people.map(person => {
 							let className = person.nick == this.props.selected ? "hover" : "none";
 							return (

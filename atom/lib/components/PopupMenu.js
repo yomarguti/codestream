@@ -22,7 +22,7 @@ export default class PopupMenu extends Component {
 					<div className="instructions" onClick={event => this.handleClickInstructions()}>
 						{this.props.instructions}
 					</div>
-					<ul className="menu-list">
+					<ul compact className="menu-list">
 						{this.props.items.map(item => {
 							let className = item.id == this.props.selected ? "hover" : "none";
 							return (
