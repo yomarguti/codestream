@@ -3,7 +3,7 @@ import { connect } from "redux-zero/react";
 import getSystemUser from "username";
 import PropTypes from "prop-types";
 import NoGit from "./NoGit";
-import Onboarding from "./Onboarding";
+import Onboarding from "./onboarding/Onboarding";
 import Stream from "./Stream";
 
 class CodeStreamRoot extends Component {

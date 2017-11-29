@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { FormattedMessage } from "react-intl";
 import Button from "./Button";
 import withAPI from "./withAPI";
-import { authenticate } from "../actions/user";
+import { authenticate } from "../../actions/user";
 
 const isPasswordInvalid = password => password.length === 0;
 const isEmailInvalid = email => {

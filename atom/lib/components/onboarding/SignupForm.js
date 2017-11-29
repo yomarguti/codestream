@@ -3,7 +3,7 @@ import { FormattedMessage } from "react-intl";
 import { shell } from "electron";
 import Button from "./Button";
 import withAPI from "./withAPI";
-import { register } from "../actions/user";
+import { register } from "../../actions/user";
 
 const isUsernameInvalid = username => new RegExp("^[-a-z0-9_.]{1,21}$").test(username) === false;
 const isPasswordInvalid = password => password.length < 6;

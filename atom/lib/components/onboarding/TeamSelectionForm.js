@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { FormattedMessage } from "react-intl";
 import withAPI from "./withAPI";
 import Button from "./Button";
-import { createTeam, addRepoForTeam } from "../actions/team";
+import { createTeam, addRepoForTeam } from "../../actions/team";
 
 export class SimpleTeamSelectionForm extends Component {
 	constructor(props) {

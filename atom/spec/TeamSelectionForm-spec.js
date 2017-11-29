@@ -2,7 +2,7 @@ import React from "react";
 import Enzyme from "enzyme";
 import Adapter from "enzyme-adapter-react-16";
 import { mountWithIntl } from "./intl-test-helper.js";
-import { SimpleTeamSelectionForm as TeamSelectionForm } from "../lib/components/TeamSelectionForm";
+import { SimpleTeamSelectionForm as TeamSelectionForm } from "../lib/components/onboarding/TeamSelectionForm";
 
 Enzyme.configure({ adapter: new Adapter() });
 

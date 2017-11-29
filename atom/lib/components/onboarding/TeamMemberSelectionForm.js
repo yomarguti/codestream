@@ -4,8 +4,8 @@ import PropTypes from "prop-types";
 import _ from "underscore";
 import withAPI from "./withAPI";
 import Button from "./Button";
-import git from "../git";
-import { addMembers, getMembers } from "../actions/team";
+import git from "../../git";
+import { addMembers, getMembers } from "../../actions/team";
 
 const isEmailInvalid = email => {
 	const emailRegex = new RegExp(

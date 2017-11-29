@@ -2,7 +2,7 @@ import React from "react";
 import Enzyme from "enzyme";
 import Adapter from "enzyme-adapter-react-16";
 import { mountWithIntl } from "./intl-test-helper.js";
-import { SimpleEmailConfirmationForm as EmailConfirmationForm } from "../lib/components/EmailConfirmationForm";
+import { SimpleEmailConfirmationForm as EmailConfirmationForm } from "../lib/components/onboarding/EmailConfirmationForm";
 
 Enzyme.configure({ adapter: new Adapter() });
 

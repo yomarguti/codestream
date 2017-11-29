@@ -2,7 +2,7 @@ import React from "react";
 import Enzyme, { render } from "enzyme";
 import Adapter from "enzyme-adapter-react-16";
 import { mountWithIntl } from "./intl-test-helper.js";
-import { SimpleLoginForm as LoginForm } from "../lib/components/LoginForm";
+import { SimpleLoginForm as LoginForm } from "../lib/components/onboarding/LoginForm";
 
 Enzyme.configure({ adapter: new Adapter() });
 

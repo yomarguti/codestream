@@ -3,7 +3,7 @@ import { injectIntl, FormattedMessage } from "react-intl";
 import PropTypes from "prop-types";
 import withAPI from "./withAPI";
 import Button from "./Button";
-import { confirmEmail, sendNewCode } from "../actions/user";
+import { confirmEmail, sendNewCode } from "../../actions/user";
 
 export class SimpleEmailConfirmationForm extends Component {
 	static contextTypes = {
