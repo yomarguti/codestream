@@ -8,8 +8,6 @@ import { CompositeDisposable } from "atom";
 import createClassString from "classnames";
 import DateSeparator from "./DateSeparator";
 var Blamer = require("../util/blamer");
-var Directory = require("pathwatcher").Directory;
-var path = require("path");
 
 export class SimpleStream extends Component {
 	subscriptions = null;
@@ -286,31 +284,30 @@ export class SimpleStream extends Component {
 
 		var that = this;
 		let filePath = editor.getPath();
-		atom.project
-			.repositoryForDirectory(new Directory(path.dirname(filePath)))
-			.then(function(projectRepo) {
-				// Ensure this project is backed by a git repository
-				if (!projectRepo) {
-					errorController.showError("error-not-backed-by-git");
-					return;
-				}
+		const directory = atom.project.getDirectories().find(directory => directory.contains(filePath));
+		atom.project.repositoryForDirectory(directory).then(function(projectRepo) {
+			// Ensure this project is backed by a git repository
+			if (!projectRepo) {
+				errorController.showError("error-not-backed-by-git");
+				return;
+			}
 
-				if (!(projectRepo.path in that.projectBlamers)) {
-					that.projectBlamers[projectRepo.path] = new Blamer(projectRepo);
-				}
-				// BlameViewController.toggleBlame(this.projectBlamers[projectRepo.path]);
-				var blamer = that.projectBlamers[projectRepo.path];
+			if (!(projectRepo.path in that.projectBlamers)) {
+				that.projectBlamers[projectRepo.path] = new Blamer(projectRepo);
+			}
+			// BlameViewController.toggleBlame(this.projectBlamers[projectRepo.path]);
+			var blamer = that.projectBlamers[projectRepo.path];
 
-				if (!that.blameData[filePath]) {
-					// console.log(blamer);
-					blamer.blame(filePath, function(err, data) {
-						that.blameData[filePath] = data;
-						that.addBlameAtMention(range, data, that.input);
-					});
-				} else {
-					that.addBlameAtMention(range, that.blameData[filePath], that.input);
-				}
-			});
+			if (!that.blameData[filePath]) {
+				// console.log(blamer);
+				blamer.blame(filePath, function(err, data) {
+					that.blameData[filePath] = data;
+					that.addBlameAtMention(range, data, that.input);
+				});
+			} else {
+				that.addBlameAtMention(range, that.blameData[filePath], that.input);
+			}
+		});
 
 		// not very React-ish but not sure how to set focus otherwise
 		document.getElementById("input-div").focus();
