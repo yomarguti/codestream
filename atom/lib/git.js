@@ -5,7 +5,7 @@ export default (args, options = { env: process.env }) => {
 		let output = "";
 		const process = new BufferedProcess({
 			command: "git",
-			args: args.split(" "),
+			args,
 			options,
 			stdout: data => {
 				output += data.toString();

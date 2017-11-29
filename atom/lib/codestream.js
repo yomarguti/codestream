@@ -4,15 +4,12 @@ import CodestreamView, { CODESTREAM_VIEW_URI } from "./codestream-view";
 import { get } from "./network-request";
 import git from "./git";
 
-let store;
-
-const syncStore = session => {
-	if (store === undefined) {
-		store = createStore(session);
-	} else {
-		store.setState(session);
-	}
+const defaultSession = {
+	onboarding: {}
 };
+const store = createStore(defaultSession);
+
+const syncStore = session => store.setState(session);
 
 module.exports = {
 	subscriptions: null,
@@ -33,17 +30,18 @@ module.exports = {
 		if (repos.length > 0) {
 			const repo = repos[0];
 			const repoUrl = repo.getOriginURL();
-			let firstCommitHash = await git("rev-list --max-parents=0 HEAD", {
+			let firstCommitHash = await git(["rev-list", "--max-parents=0", "HEAD"], {
 				cwd: repo.getWorkingDirectory()
 			});
 			firstCommitHash = firstCommitHash.trim();
 			const data = await get(
 				`/no-auth/find-repo?url=${repoUrl}&firstCommitHash=${firstCommitHash}`
 			);
+			const repoMetadata = { url: repoUrl, firstCommitHash };
 			const session =
 				Object.keys(data).length === 0
-					? { repoMetaData: { url: repoUrl, firstCommitHash } }
-					: { repoMetadata: data.repo, team: { usernames: data.usernames } };
+					? { repoMetadata, team: undefined, repo: undefined }
+					: { repoMetadata, team: { usernames: data.usernames }, repo: data.repo };
 			syncStore(session);
 		}
 	},

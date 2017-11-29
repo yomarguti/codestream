@@ -13,10 +13,12 @@ const getHeaders = () =>
 		"Content-Type": "application/json"
 	});
 
-export async function get(route) {
-	const config = {
-		headers: getHeaders()
-	};
+export async function get(route, accessToken) {
+	const headers = getHeaders();
+	if (accessToken) {
+		headers.set("Authorization", `Bearer ${accessToken}`);
+	}
+	const config = { headers };
 	const response = await fetch(getPath(route), config);
 	const json = await response.json();
 	if (response.ok) return json;

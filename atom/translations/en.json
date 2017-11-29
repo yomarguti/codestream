@@ -40,5 +40,7 @@
 	"createTeam.info":
 		"Each repository on CodeStream is owned by a developer team. What's the name of your team?",
 	"createTeam.additionalInfo": "Note that a team can own multiple repositories.",
-	"createTeam.submitButton": "NEXT"
+	"createTeam.submitButton": "NEXT",
+	"teamSelection.error.noPermission": "You are not a member of the selected team.",
+	"teamSelection.error.teamNotFound": "The selected team doesn't exist."
 }

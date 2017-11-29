@@ -1,9 +1,12 @@
 import React, { Component } from "react";
 import { Machine } from "xstate";
+import { connect } from "redux-zero/react";
 import SignupForm from "./SignupForm";
 import EmailConfirmationForm from "./EmailConfirmationForm";
 import LoginForm from "./LoginForm";
 import TeamCreationForm from "./TeamCreationForm";
+import TeamSelectionForm from "./TeamSelectionForm";
+import TeamMemberSelectionForm from "./TeamMemberSelectionForm";
 
 const chart = {
 	key: "onboarding",
@@ -18,9 +21,10 @@ const chart = {
 		},
 		confirmEmail: {
 			on: {
-				confirmedNewMember: "complete",
-				confirmedFirstMember: "createTeam",
+				selectTeamForRepo: "selectTeam",
+				newTeamForRepo: "createTeam",
 				alreadyConfirmed: "login",
+				confirmedNewMember: "complete",
 				back: "signUp"
 			}
 		},
@@ -35,32 +39,44 @@ const chart = {
 				success: "identifyMembers"
 			}
 		},
-		identifyMembers: {},
+		selectTeam: {
+			on: {
+				success: "identifyMembers"
+			}
+		},
+		identifyMembers: {
+			on: {
+				success: "complete"
+			}
+		},
 		complete: {}
 	}
 };
 
-export default class Onboarding extends Component {
+class Onboarding extends Component {
 	flow = Machine(chart);
 
 	constructor(props) {
 		super(props);
 		this.state = {
-			currentStep: this.flow.getInitialState(),
-			currentProps: this.props
+			currentStep: props.currentStep || this.flow.getInitialState(),
+			currentProps: props.currentProps || props
 		};
 	}
 
 	transition = (action, data = {}) => {
+		const { updateOnboarding } = this.props;
 		const nextStep = this.flow.transition(this.state.currentStep, action).toString();
-		if (nextStep === "complete") this.props.onComplete();
-		else
-			this.setState(state => {
-				return {
-					currentProps: data,
-					currentStep: nextStep
-				};
-			});
+		if (nextStep === "complete") {
+			updateOnboarding({ complete: true });
+		} else {
+			const nextState = {
+				currentProps: data,
+				currentStep: nextStep
+			};
+			updateOnboarding(nextState);
+			this.setState(nextState);
+		}
 	};
 
 	render() {
@@ -70,8 +86,17 @@ export default class Onboarding extends Component {
 			confirmEmail: <EmailConfirmationForm {...nextProps} />,
 			login: <LoginForm {...nextProps} />,
 			createTeam: <TeamCreationForm {...nextProps} />,
-			identifyMembers: "who's on the team?"
+			selectTeam: <TeamSelectionForm {...nextProps} />,
+			identifyMembers: <TeamMemberSelectionForm {...nextProps} />
 		};
 		return views[this.state.currentStep];
 	}
 }
+
+const mapStateToProps = ({ onboarding }) => ({ ...onboarding });
+const actions = {
+	updateOnboarding(state, onboarding) {
+		return { onboarding };
+	}
+};
+export default connect(mapStateToProps, actions)(Onboarding);

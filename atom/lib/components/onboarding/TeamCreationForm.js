@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { FormattedMessage } from "react-intl";
 import withAPI from "./withAPI";
 import Button from "./Button";
-import { post } from "../network-request";
+import { createTeam } from "../../actions/team";
 
 export class SimpleTeamCreationForm extends Component {
 	constructor(props) {
@@ -19,12 +19,11 @@ export class SimpleTeamCreationForm extends Component {
 		this.setState({ loading: true });
 		const { store, createTeam, transition } = this.props;
 		const { name } = this.state;
-		const { url, firstCommitHash } = store.getState().repoMetaData;
+		const { url, firstCommitHash } = store.getState().repoMetadata;
 		createTeam({ name, url, firstCommitHash })
 			.then(data => {
 				this.setState({ loading: false });
-				transition("success");
-				atom.notifications.addInfo("Success! More to come...");
+				transition("success", { teamId: data.team._id });
 			})
 			.catch(error => {
 				this.setState({ loading: false });
@@ -62,21 +61,5 @@ export class SimpleTeamCreationForm extends Component {
 		);
 	}
 }
-
-const createTeam = (store, attributes) => {
-	const params = {
-		url: attributes.url,
-		firstCommitHash: attributes.firstCommitHash,
-		team: {
-			name: attributes.name
-		}
-	};
-	return post("/repos", params, store.getState().accessToken).then(data => {
-		store.setState({
-			...store.getState(),
-			...data
-		});
-	});
-};
 
 export default withAPI({ createTeam })(SimpleTeamCreationForm);

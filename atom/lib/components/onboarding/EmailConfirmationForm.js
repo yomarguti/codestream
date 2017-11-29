@@ -3,7 +3,7 @@ import { injectIntl, FormattedMessage } from "react-intl";
 import PropTypes from "prop-types";
 import withAPI from "./withAPI";
 import Button from "./Button";
-import { confirmEmail, sendNewCode } from "../actions/user";
+import { confirmEmail, sendNewCode } from "../../actions/user";
 
 export class SimpleEmailConfirmationForm extends Component {
 	static contextTypes = {
@@ -44,9 +44,15 @@ export class SimpleEmailConfirmationForm extends Component {
 		this.setState(state => ({ loading: true }));
 		confirmEmail({ userId, email, confirmationCode })
 			.then(data => {
-				// if (store.getState().team) transition("confirmedNewMember", data);
-				if (!store.getState().team && data.teams.length === 0) {
-					transition("confirmedFirstMember");
+				const { repo } = store.getState();
+				const teamForRepo = repo && repo.teamId;
+				const userTeams = data.teams;
+				if (!teamForRepo && userTeams.length > 0) transition("selectTeamForRepo");
+				if (!teamForRepo && userTeams.length === 0) {
+					transition("newTeamForRepo");
+				}
+				if (teamForRepo && userTeams.find(t => t._id === repo.teamId)) {
+					transition("confirmedNewMember");
 				}
 			})
 			.catch(({ data }) => {
