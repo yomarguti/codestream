@@ -259,11 +259,12 @@
 			content: "new messages";
 			display: block;
 			right: 10px;
-			top: -10px;
+			top: -12px;
 			color: @text-color-info;
 			background: @app-background-color;
-			padding: 0 5px;
+			padding: 2px 5px;
 			position: absolute;
+			border-radius: 10px;
 		}
 
 		.date-separator {
@@ -321,6 +322,15 @@
 			bottom: 0;
 			left: 0;
 			width: 100%;
+		}
+		.logo {
+			// color: lighten(@text-color-subtle, 50%);
+			color: #fff;
+			transform: perspective(600px) rotateX(60deg) rotateZ(30deg);
+			text-shadow: 5px 10px 30px #999;
+			font-size: 135px;
+			display: block;
+			opacity: 0.75;
 		}
 	}
 }

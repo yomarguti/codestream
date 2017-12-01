@@ -23,10 +23,13 @@ export default class Post extends Component {
 		// unless the post is mine, in which case we always scroll to bottom
 		// we check to see if it's below 100 because if you are scrolled
 		// almost to the bottom, we count that as being at the bottom for UX reasons
-		if (offBottom < 100 || this.state.post.author == "pez") {
+		if (offBottom < 100 || this.state.post.nick == "pez") {
 			// big number to make sure we've scrolled all the way down
 			streamDiv.scrollTop = 100000;
 		}
+
+		if (this.props.post.fullName)
+			atom.tooltips.add(this._authorDiv, { title: this.props.post.fullName });
 	}
 
 	render() {
@@ -72,7 +75,7 @@ export default class Post extends Component {
 					protocol="http://"
 					email={post.email}
 				/>
-				<author>{post.author}</author>
+				<author ref={ref => (this._authorDiv = ref)}>{post.nick}</author>
 				<Timestamp time={post.timestamp} />
 				<div className="body">
 					{bodyParts.map(part => {
