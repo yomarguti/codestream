@@ -20,6 +20,7 @@ export default class CodestreamView {
 		const repoPromises = directories.map(repo => atom.project.repositoryForDirectory(repo));
 		Promise.all(repoPromises).then(repos => {
 			repos = repos.filter(Boolean);
+			this.observeActiveTextEditor(repos[0]);
 			render(
 				<IntlProvider locale="en" messages={copy}>
 					<Provider store={store}>
@@ -63,12 +64,20 @@ export default class CodestreamView {
 	serialize() {
 		return {
 			deserializer: "codestream/CodestreamView",
-			session: this.store.getState()
+			session: {} || this.store.getSession()
 		};
 	}
 
 	destroy() {
 		unmountComponentAtNode(this.element);
 		this.element.remove();
+	}
+
+	observeActiveTextEditor(repo) {
+		atom.workspace.observeActiveTextEditor(editor => {
+			this.store.updateSession({
+				currentFile: editor ? repo.relativize(editor.getPath()) : ""
+			});
+		});
 	}
 }

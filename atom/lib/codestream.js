@@ -3,13 +3,22 @@ import createStore from "redux-zero";
 import CodestreamView, { CODESTREAM_VIEW_URI } from "./codestream-view";
 import { get } from "./network-request";
 import git from "./git";
+import DataManager from "./data-manager";
 
 const defaultSession = {
 	onboarding: {}
 };
-const store = createStore(defaultSession);
+const createReducer = (session, localCache) => {
+	return ({ type, payload }) => {
+		if (type === "ADD_STREAM") {
+			localCache.streams;
+		}
+	};
+};
 
-const syncStore = session => store.setState(session);
+const store = new DataManager(defaultSession, createReducer);
+
+const syncStore = session => store.updateSession(session);
 
 module.exports = {
 	subscriptions: null,
@@ -72,7 +81,7 @@ module.exports = {
 	},
 
 	serialize() {
-		return { session: store.getState() };
+		return { session: {} || store.getSession() };
 	},
 
 	deserializeCodestreamView(serialized) {

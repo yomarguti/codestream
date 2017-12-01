@@ -32,8 +32,8 @@ export default class Post extends Component {
 
 		// FIXME -- only replace the at-mentions of actual authors, rather than any
 		// string that starts with an @
-		let body = post.body.replace(/(@\w+)/g, <span class="at-mention">$1</span>);
-		let bodyParts = post.body.split(/(@\w+)/);
+		let body = post.text.replace(/(@\w+)/g, <span class="at-mention">$1</span>);
+		let bodyParts = post.text.split(/(@\w+)/);
 
 		// FIXME use a real email address
 		return (

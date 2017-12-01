@@ -92,6 +92,7 @@ export class SimpleLoginForm extends Component {
 		authenticate({ password, email })
 			.then(() => transition("success"))
 			.catch(error => {
+				debugger;
 				this.setState({ loading: false, failed: true, password: "", passwordTouched: false });
 			});
 	};
@@ -166,4 +167,4 @@ export class SimpleLoginForm extends Component {
 	}
 }
 
-export default withAPI({ authenticate })(SimpleLoginForm);
+export default withAPI(() => ({}), { authenticate })(SimpleLoginForm);

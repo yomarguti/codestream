@@ -4,14 +4,15 @@ export const register = (store, attributes) => {
 	return post("/no-auth/register", attributes).then(({ user, accessToken }) => {
 		const { _id, ...rest } = user;
 		const userObject = { id: _id, ...rest };
-		store.setState({ accessToken, user: userObject });
+		store.updateSession({ accessToken });
+		store.addUser(userObject);
 		return userObject;
 	});
 };
 
 export const confirmEmail = (store, attributes) => {
 	return post("/no-auth/confirm", attributes).then(data => {
-		store.setState(data);
+		store.upsertUser(data.user);
 		return { teams: data.teams, repos: data.repos };
 	});
 };
@@ -21,8 +22,11 @@ export const sendNewCode = (store, attributes) => {
 };
 
 export const authenticate = async (store, attributes) => {
-	const data = await put("/no-auth/login", attributes);
-	return store.setState(data);
+	const { accessToken, user, teams, repos } = await put("/no-auth/login", attributes);
+	store.updateSession({ accessToken });
+	store.upsertUser(user);
+	store.upsertTeams(teams);
+	store.upsertRepos(repos);
 };
 
 export default {

@@ -1,10 +1,10 @@
 import React, { Component } from "react";
-import { connect } from "redux-zero/react";
 import getSystemUser from "username";
 import PropTypes from "prop-types";
 import NoGit from "./NoGit";
 import Onboarding from "./onboarding/Onboarding";
 import Stream from "./Stream";
+import withAPI from "./onboarding/withAPI";
 
 class CodeStreamRoot extends Component {
 	static defaultProps = {
@@ -30,6 +30,8 @@ class CodeStreamRoot extends Component {
 	render() {
 		const { accessToken, user, repositories, team, onboarding } = this.props;
 
+		console.log("renering in CodeStreamRoot", this.props);
+
 		if (repositories.length === 0) return <NoGit />;
 		else if (onboarding.complete && accessToken) return <Stream />;
 		else {
@@ -48,4 +50,4 @@ const mapStateToProps = ({ accessToken, user, team, onboarding }) => ({
 	team,
 	onboarding
 });
-export default connect(mapStateToProps)(CodeStreamRoot);
+export default withAPI(mapStateToProps)(CodeStreamRoot);

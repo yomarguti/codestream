@@ -19,7 +19,7 @@ export class SimpleTeamCreationForm extends Component {
 		this.setState({ loading: true });
 		const { store, createTeam, transition } = this.props;
 		const { name } = this.state;
-		const { url, firstCommitHash } = store.getState().repoMetadata;
+		const { url, firstCommitHash } = store.getViewData().repoMetadata;
 		createTeam({ name, url, firstCommitHash })
 			.then(data => {
 				this.setState({ loading: false });
@@ -62,4 +62,4 @@ export class SimpleTeamCreationForm extends Component {
 	}
 }
 
-export default withAPI({ createTeam })(SimpleTeamCreationForm);
+export default withAPI(() => ({}), { createTeam })(SimpleTeamCreationForm);

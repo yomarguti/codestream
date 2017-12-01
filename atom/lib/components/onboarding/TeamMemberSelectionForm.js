@@ -83,7 +83,7 @@ export class SimpleTeamMemberSelectionForm extends Component {
 	onSubmitTeamMembers = () => {
 		this.setState({ loading: true });
 		const { addMembers, store, transition } = this.props;
-		const { repo, teams } = store.getState();
+		const { repo, teams } = store.getViewData();
 		const emails = this.state.committers.filter(c => c.selected).map(c => c.email);
 		addMembers({
 			teamId: repo.teamId,
@@ -283,4 +283,4 @@ export class SimpleTeamMemberSelectionForm extends Component {
 	}
 }
 
-export default withAPI({ addMembers, getMembers })(SimpleTeamMemberSelectionForm);
+export default withAPI(() => ({}), { addMembers, getMembers })(SimpleTeamMemberSelectionForm);

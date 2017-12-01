@@ -12,7 +12,7 @@ export class SimpleTeamSelectionForm extends Component {
 			newTeamName: "",
 			loading: false,
 			teamNotFound: false,
-			teams: props.store.getState().teams
+			teams: props.store.getViewData().teams
 		};
 	}
 
@@ -38,7 +38,7 @@ export class SimpleTeamSelectionForm extends Component {
 		if (this.isFormInvalid()) return;
 		this.setState({ loading: true });
 		const { createTeam, store, transition, addRepoForTeam } = this.props;
-		const { url, firstCommitHash } = store.getState().repoMetadata;
+		const { url, firstCommitHash } = store.getViewData().repoMetadata;
 		const { selectedValue, newTeamName, teams } = this.state;
 		const creatingNewTeam = selectedValue === "createTeam";
 
@@ -145,4 +145,4 @@ export class SimpleTeamSelectionForm extends Component {
 	}
 }
 
-export default withAPI({ createTeam, addRepoForTeam })(SimpleTeamSelectionForm);
+export default withAPI(() => ({}), { createTeam, addRepoForTeam })(SimpleTeamSelectionForm);

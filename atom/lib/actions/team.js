@@ -8,35 +8,28 @@ export const createTeam = (store, attributes) => {
 			name: attributes.name
 		}
 	};
-	return post("/repos", params, store.getState().accessToken).then(data => {
-		store.setState({
-			...store.getState(),
-			...data
-		});
+	return post("/repos", params, store.getViewData().accessToken).then(data => {
+		store.addTeam(data);
 		return data;
 	});
 };
 
 export const addRepoForTeam = (store, attributes) => {
-	return post("/repos", attributes, store.getState().accessToken).then(data => {
-		store.setState({
-			...store.getState(),
-			...data
-		});
+	return post("/repos", attributes, store.getViewData().accessToken).then(data => {
+		store.addRepo(data);
 	});
 };
 
 export const addMembers = (store, attributes) => {
-	return post("/repos", attributes, store.getState().accessToken).then(data => {
-		store.setState({
-			...store.getState(),
-			...data
-		});
+	return post("/repos", attributes, store.getViewData().accessToken).then(data => {
+		store.addMembers(data);
 	});
 };
 
 export const getMembers = (store, teamId) => {
-	return get(`/users?teamId=${teamId}`, store.getState().accessToken).then(data => data.users);
+	// (store.getTeam(teamId)) return store.getTeam(teamId).members
+	// else
+	return get(`/users?teamId=${teamId}`, store.getViewData().accessToken).then(data => data.users);
 };
 
 export default { createTeam, addMembers, getMembers, addRepoForTeam };

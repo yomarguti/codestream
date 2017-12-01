@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import { Machine } from "xstate";
-import { connect } from "redux-zero/react";
+import withAPI from "./withAPI";
 import SignupForm from "./SignupForm";
 import EmailConfirmationForm from "./EmailConfirmationForm";
 import LoginForm from "./LoginForm";
@@ -95,8 +95,8 @@ class Onboarding extends Component {
 
 const mapStateToProps = ({ onboarding }) => ({ ...onboarding });
 const actions = {
-	updateOnboarding(state, onboarding) {
-		return { onboarding };
+	updateOnboarding(store, onboarding) {
+		store.updateSession({ onboarding });
 	}
 };
-export default connect(mapStateToProps, actions)(Onboarding);
+export default withAPI(mapStateToProps, actions)(Onboarding);

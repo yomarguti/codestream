@@ -44,7 +44,7 @@ export class SimpleEmailConfirmationForm extends Component {
 		this.setState(state => ({ loading: true }));
 		confirmEmail({ userId, email, confirmationCode })
 			.then(data => {
-				const { repo } = store.getState();
+				const { repo } = store.getViewData();
 				const teamForRepo = repo && repo.teamId;
 				const userTeams = data.teams;
 				if (!teamForRepo && userTeams.length > 0) transition("selectTeamForRepo");
@@ -174,4 +174,4 @@ export class SimpleEmailConfirmationForm extends Component {
 	}
 }
 
-export default withAPI({ confirmEmail, sendNewCode })(SimpleEmailConfirmationForm);
+export default withAPI(() => ({}), { confirmEmail, sendNewCode })(SimpleEmailConfirmationForm);

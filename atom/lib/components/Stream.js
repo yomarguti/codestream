@@ -1,5 +1,4 @@
 import React, { Component } from "react";
-import { connect } from "redux-zero/react";
 import Post from "./Post";
 import AtMentionsPopup from "./AtMentionsPopup";
 import AddCommentPopup from "./AddCommentPopup";
@@ -8,6 +7,8 @@ import { CompositeDisposable } from "atom";
 import createClassString from "classnames";
 import DateSeparator from "./DateSeparator";
 var Blamer = require("../util/blamer");
+import actions from "../actions/stream";
+import withAPI from "./onboarding/withAPI";
 
 export class SimpleStream extends Component {
 	subscriptions = null;
@@ -23,30 +24,30 @@ export class SimpleStream extends Component {
 		this.state = {
 			stream: {},
 			streamName: "Dummy.js",
-			posts: [
-				{
-					id: 1,
-					author: "akonwi",
-					body: "this is a post",
-					timestamp: 1410650773000,
-					email: "akonwi@codestream.com"
-				},
-				{
-					id: 2,
-					author: "jj",
-					body: "this is another post",
-					timestamp: 1411680773000,
-					email: "jj@codestream.com"
-				},
-				{
-					id: 3,
-					author: "marcelo",
-					body:
-						"because of the way browsers work, @pez although this will change the scrollbar thumb position, it will not change what @akonwi is looking at (i.e. posts won't shift around).",
-					timestamp: 1501650773000,
-					email: "marcelo@codestream.com"
-				}
-			],
+			// posts: [
+			// 	{
+			// 		id: 1,
+			// 		author: "akonwi",
+			// 		body: "this is a post",
+			// 		timestamp: 1410650773000,
+			// 		email: "akonwi@codestream.com"
+			// 	},
+			// 	{
+			// 		id: 2,
+			// 		author: "jj",
+			// 		body: "this is another post",
+			// 		timestamp: 1411680773000,
+			// 		email: "jj@codestream.com"
+			// 	},
+			// 	{
+			// 		id: 3,
+			// 		author: "marcelo",
+			// 		body:
+			// 			"because of the way browsers work, @pez although this will change the scrollbar thumb position, it will not change what @akonwi is looking at (i.e. posts won't shift around).",
+			// 		timestamp: 1501650773000,
+			// 		email: "marcelo@codestream.com"
+			// 	}
+			// ],
 			authors: [
 				{ id: 1, nick: "pez", fullName: "Peter Pezaris", email: "pez@codestream.com" },
 				{
@@ -123,6 +124,7 @@ export class SimpleStream extends Component {
 	};
 
 	componentDidMount() {
+		if (!this.state.id) this.props.fetchStream();
 		new ResizeObserver(this.handleResizeCompose).observe(this._compose);
 		document.querySelector('div[contenteditable="true"]').addEventListener("paste", function(e) {
 			e.preventDefault();
@@ -171,6 +173,7 @@ export class SimpleStream extends Component {
 
 		let lastTimestamp = null;
 
+		console.log("rendering", this.props.posts);
 		return (
 			<div className={streamClass} ref={ref => (this._div = ref)}>
 				<style id="dynamic-add-comment-popup-style" />
@@ -180,15 +183,14 @@ export class SimpleStream extends Component {
 							Welcome to the stream.<br />Info goes here.
 						</label>
 					</div>
-					{posts.map(post => {
-						const returnValue = (
-							<div>
-								<DateSeparator timestamp1={lastTimestamp} timestamp2={post.timestamp} />
-								<Post post={post} lastDay={lastTimestamp} key={post.id} />
+					{this.props.posts.map(post => {
+						lastTimestamp = post.createdAt;
+						return (
+							<div key={post._id}>
+								<DateSeparator timestamp1={lastTimestamp} timestamp2={post.createdAt} />
+								<Post post={post} lastDay={lastTimestamp} />
 							</div>
 						);
-						lastTimestamp = post.timestamp;
-						return returnValue;
 					})}
 				</div>
 				<AddCommentPopup handleClickAddComment={this.handleClickAddComment} />
@@ -483,10 +485,11 @@ export class SimpleStream extends Component {
 
 		// FIXME -- add the posts to some collection rather than directly
 		// manipulating state
-		this.setState(prevState => ({
-			posts: [...prevState.posts, newPost]
-		}));
+		// this.setState(prevState => ({
+		// 	posts: [...prevState.posts, newPost]
+		// }));
 		// reset the input field to blank
+		this.props.createPost(newText);
 		this.setState({
 			newPostText: "",
 			quoteRange: null,
@@ -495,8 +498,15 @@ export class SimpleStream extends Component {
 	}
 }
 
-const mapToProps = state => {
-	return { user: state.user };
+const mapToProps = ({ user, currentFile, streams = [], postsByStream = {} }) => {
+	const stream = streams.find(stream => stream.file === currentFile) || {};
+	const props = {
+		user,
+		id: stream._id,
+		posts: stream._id ? postsByStream[stream._id] : []
+	};
+	console.log("new props", props);
+	return props;
 };
 
-export default connect(mapToProps)(SimpleStream);
+export default withAPI(mapToProps, actions)(SimpleStream);

@@ -237,4 +237,4 @@ export class SimpleSignupForm extends Component {
 	}
 }
 
-export default withAPI({ register })(SimpleSignupForm);
+export default withAPI(() => ({}), { register })(SimpleSignupForm);
