@@ -27,21 +27,24 @@ export class SimpleStream extends Component {
 			posts: [
 				{
 					id: 1,
-					author: "akonwi",
+					nick: "akonwi",
+					fullName: "Akonwi Ngoh",
 					body: "this is a post",
 					timestamp: 1410650773000,
 					email: "akonwi@codestream.com"
 				},
 				{
 					id: 2,
-					author: "jj",
+					nick: "jj",
+					fullName: "James Price",
 					body: "this is another post",
 					timestamp: 1411680773000,
 					email: "jj@codestream.com"
 				},
 				{
 					id: 2,
-					author: "colin",
+					nick: "colin",
+					fullName: "Colin Stryker",
 					body: "AvE adds more value to my life than some of my family members",
 					timestamp: 1411680774000,
 					newSeparator: true,
@@ -49,7 +52,8 @@ export class SimpleStream extends Component {
 				},
 				{
 					id: 3,
-					author: "marcelo",
+					nick: "marcelo",
+					fullName: "Marcelo",
 					body:
 						"because of the way browsers work, @pez although this will change the scrollbar thumb position, it will not change what @akonwi is looking at (i.e. posts won't shift around).",
 					timestamp: 1501650773000,
