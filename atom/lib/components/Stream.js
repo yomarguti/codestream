@@ -467,30 +467,15 @@ export class SimpleStream extends Component {
 		var doc = new DOMParser().parseFromString(newText, "text/html");
 		newText = doc.documentElement.textContent;
 
-		var timestamp = +new Date();
-		var newPost = {
-			// FIXME fake data
-			id: 3,
-			author: "pez",
-			body: newText,
-			email: "pez@codestream.com",
-			timestamp: timestamp
-		};
+		// TODO: add selected snippet to post
+		// if (this.state.quoteText) {
+		// 	newPost.quoteText = this.state.quoteText;
+		// 	newPost.quoteRange = this.state.quoteRange;
+		// }
 
-		console.log(this.props.user);
-
-		if (this.state.quoteText) {
-			newPost.quoteText = this.state.quoteText;
-			newPost.quoteRange = this.state.quoteRange;
-		}
-
-		// FIXME -- add the posts to some collection rather than directly
-		// manipulating state
-		// this.setState(prevState => ({
-		// 	posts: [...prevState.posts, newPost]
-		// }));
-		// reset the input field to blank
 		this.props.createPost(newText);
+
+		// reset the input field to blank
 		this.setState({
 			newPostText: "",
 			quoteRange: null,
@@ -506,13 +491,11 @@ const getPostsForStream = (streamId = "", postsByStream) => {
 
 const mapStateToProps = ({ user, currentFile, streams = [], postsByStream = {} }) => {
 	const stream = streams.find(stream => stream.file === currentFile) || {};
-	const props = {
+	return {
 		user,
 		id: stream._id,
 		posts: getPostsForStream(stream.id, postsByStream)
 	};
-	console.log("new props", props);
-	return props;
 };
 
 const mapDispatchToProps = dispatch => {
