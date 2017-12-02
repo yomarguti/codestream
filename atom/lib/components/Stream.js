@@ -87,7 +87,7 @@ export class SimpleStream extends Component {
 			atom.commands.add("atom-workspace", {
 				"codestream:add-dummy-post": event => this.addDummyPost(),
 				"codestream:comment": event => this.handleClickAddComment(),
-				"codestream:focus-input": event => this.focusInput()
+				"codestream:focus-input": event => this.toggleFocusInput()
 			})
 		);
 
@@ -241,6 +241,12 @@ export class SimpleStream extends Component {
 		// text = text.replace(/(@\w+)/g, <span class="at-mention">$1</span>);
 		this.setState({ newPostText: text });
 	}
+
+	toggleFocusInput = () => {
+		if (document.activeElement && document.activeElement.id == "input-div")
+			atom.workspace.getCenter().activate();
+		else this.focusInput();
+	};
 
 	focusInput = () => {
 		document.getElementById("input-div").focus();
