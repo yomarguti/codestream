@@ -1,14 +1,14 @@
+import { CompositeDisposable } from "atom";
 import React, { Component } from "react";
+import { connect } from "react-redux";
+import ContentEditable from "react-contenteditable";
 import Post from "./Post";
 import AtMentionsPopup from "./AtMentionsPopup";
 import AddCommentPopup from "./AddCommentPopup";
-import ContentEditable from "react-contenteditable";
-import { CompositeDisposable } from "atom";
 import createClassString from "classnames";
 import DateSeparator from "./DateSeparator";
 var Blamer = require("../util/blamer");
-import actions from "../actions/stream";
-import withAPI from "./onboarding/withAPI";
+import { fetchStream, createPost } from "../actions/stream";
 
 export class SimpleStream extends Component {
 	subscriptions = null;
@@ -125,6 +125,7 @@ export class SimpleStream extends Component {
 
 	componentDidMount() {
 		if (!this.state.id) this.props.fetchStream();
+		// TODO: scroll to bottom
 		new ResizeObserver(this.handleResizeCompose).observe(this._compose);
 		document.querySelector('div[contenteditable="true"]').addEventListener("paste", function(e) {
 			e.preventDefault();
@@ -186,7 +187,7 @@ export class SimpleStream extends Component {
 					{this.props.posts.map(post => {
 						lastTimestamp = post.createdAt;
 						return (
-							<div key={post._id}>
+							<div key={post.id}>
 								<DateSeparator timestamp1={lastTimestamp} timestamp2={post.createdAt} />
 								<Post post={post} lastDay={lastTimestamp} />
 							</div>
@@ -498,15 +499,26 @@ export class SimpleStream extends Component {
 	}
 }
 
-const mapToProps = ({ user, currentFile, streams = [], postsByStream = {} }) => {
+const getPostsForStream = (streamId = "", postsByStream) => {
+	if (streamId === "") return [];
+	return postsByStream[streamId] || [];
+};
+
+const mapStateToProps = ({ user, currentFile, streams = [], postsByStream = {} }) => {
 	const stream = streams.find(stream => stream.file === currentFile) || {};
 	const props = {
 		user,
 		id: stream._id,
-		posts: stream._id ? postsByStream[stream._id] : []
+		posts: getPostsForStream(stream.id, postsByStream)
 	};
 	console.log("new props", props);
 	return props;
 };
 
-export default withAPI(mapToProps, actions)(SimpleStream);
+const mapDispatchToProps = dispatch => {
+	return {
+		fetchStream: () => dispatch(fetchStream()),
+		createPost: text => dispatch(createPost(text))
+	};
+};
+export default connect(mapStateToProps, mapDispatchToProps)(SimpleStream);
