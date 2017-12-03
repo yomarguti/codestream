@@ -2,13 +2,15 @@ import React from "react";
 import Enzyme from "enzyme";
 import Adapter from "enzyme-adapter-react-16";
 import { mountWithIntl } from "./intl-test-helper.js";
-import { SimpleEmailConfirmationForm as EmailConfirmationForm } from "../lib/components/onboarding/EmailConfirmationForm";
+import EmailConfirmationForm, {
+	SimpleEmailConfirmationForm
+} from "../lib/components/onboarding/EmailConfirmationForm";
 
 Enzyme.configure({ adapter: new Adapter() });
 
 describe("EmailConfirmationForm view", () => {
 	describe("input fields", () => {
-		const view = mountWithIntl(<EmailConfirmationForm />);
+		const view = mountWithIntl(<SimpleEmailConfirmationForm errors={{}} />);
 
 		it("they won't accept non-numerical values", () => {
 			view.find("input").forEach(input => input.simulate("change", { target: { value: "a" } }));
@@ -26,18 +28,20 @@ describe("EmailConfirmationForm view", () => {
 	});
 
 	describe("'Change it' link", () => {
-		it("routes back to the sign up form", () => {
-			const transition = jasmine.createSpy();
-			const view = mountWithIntl(<EmailConfirmationForm transition={transition} />);
+		it("calls the goToSignup function", () => {
+			const goToSignup = jasmine.createSpy();
+			const view = mountWithIntl(
+				<SimpleEmailConfirmationForm goToSignup={goToSignup} errors={{}} />
+			);
 
 			view.find("#go-back").simulate("click");
 
-			expect(transition).toHaveBeenCalledWith("back");
+			expect(goToSignup).toHaveBeenCalled();
 		});
 	});
 
 	describe("Submit button", () => {
-		const view = mountWithIntl(<EmailConfirmationForm />);
+		const view = mountWithIntl(<SimpleEmailConfirmationForm errors={{}} />);
 
 		it("is disabled while the form is empty", () => {
 			expect(view.find("Button").prop("disabled")).toBe(true);
@@ -63,7 +67,12 @@ describe("EmailConfirmationForm view", () => {
 			const email = "foo@bar.com";
 			const userId = "12345";
 			const view = mountWithIntl(
-				<EmailConfirmationForm confirmEmail={confirmEmail} email={email} userId={userId} />
+				<SimpleEmailConfirmationForm
+					confirmEmail={confirmEmail}
+					email={email}
+					userId={userId}
+					errors={{}}
+				/>
 			);
 			view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }));
 			view.find("form").simulate("submit");
@@ -74,159 +83,33 @@ describe("EmailConfirmationForm view", () => {
 		});
 	});
 
-	describe("when submitted code is invalid", () => {
+	describe("when the submitted code is invalid", () => {
 		it("shows an error message", () => {
-			const view = mountWithIntl(
-				<EmailConfirmationForm
-					confirmEmail={() => Promise.reject({ data: { code: "USRC-1002" } })}
-				/>
-			);
-			view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }));
-			view.find("form").simulate("submit");
-			waitsFor(() => view.state("invalidCode"));
-			runs(() => {
-				view.update();
-				expect(view.find(".error-message").text()).toBe("Uh oh. Invalid code.");
-			});
-		});
-
-		describe("after 3 failed attempts", () => {
-			it("sends them back to sign up page", () => {
-				const transition = jasmine.createSpy("transition function");
-				const view = mountWithIntl(
-					<EmailConfirmationForm
-						confirmEmail={() => Promise.reject({ data: { code: "USRC-1004" } })}
-						transition={transition}
-					/>
-				);
-				view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }));
-				view.find("form").simulate("submit");
-				waitsFor(() => transition.callCount > 0);
-				runs(() => expect(transition).toHaveBeenCalledWith("back"));
-			});
+			const view = mountWithIntl(<SimpleEmailConfirmationForm errors={{ invalidCode: true }} />);
+			expect(view.find(".error-message").text()).toBe("Uh oh. Invalid code.");
 		});
 	});
 
 	describe("when the submitted code has expired", () => {
 		it("shows an error message", () => {
-			const view = mountWithIntl(
-				<EmailConfirmationForm
-					confirmEmail={() => Promise.reject({ data: { code: "USRC-1003" } })}
-				/>
-			);
-			view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }));
-			view.find("form").simulate("submit");
-			waitsFor(() => view.state("expiredCode"));
-			runs(() => {
-				view.update();
-				expect(view.find(".error-message").text()).toBe("Sorry, that code has expired.");
-			});
-		});
-	});
-
-	describe("when the user is already confirmed", () => {
-		it("redirects them to the login form", () => {
-			const transition = jasmine.createSpy("transition stub");
-			const email = "foo@bar.com";
-			const view = mountWithIntl(
-				<EmailConfirmationForm
-					transition={transition}
-					email={email}
-					confirmEmail={() => Promise.reject({ data: { code: "USRC-1006" } })}
-				/>
-			);
-			view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }));
-			view.find("form").simulate("submit");
-			waitsFor(() => transition.callCount > 0);
-			runs(() =>
-				expect(transition).toHaveBeenCalledWith("alreadyConfirmed", {
-					email,
-					alreadyConfirmed: true
-				})
-			);
-		});
-	});
-
-	describe("on successful confirmation", () => {
-		describe("when there is no team for the repository and the user is not a member of any teams", () => {
-			it("redirects them to the team creation form", () => {
-				const transition = jasmine.createSpy("transition stub");
-				const confirmEmail = () => Promise.resolve({ teams: [] });
-				const store = { getState: () => ({ team: null }) };
-				const email = "foo@bar.com";
-				const view = mountWithIntl(
-					<EmailConfirmationForm
-						store={store}
-						transition={transition}
-						email={email}
-						confirmEmail={confirmEmail}
-					/>
-				);
-				view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }));
-				view.find("form").simulate("submit");
-				waitsFor(() => transition.callCount > 0);
-				runs(() => expect(transition).toHaveBeenCalledWith("newTeamForRepo"));
-			});
-		});
-
-		describe("when there is no team for the repository and the user is already a member of a team", () => {
-			it("redirects them to the team selection form", () => {
-				const transition = jasmine.createSpy("transition stub");
-				const confirmEmail = () => Promise.resolve({ teams: [{ _id: "teamId" }] });
-				const store = { getState: () => ({}) };
-				const email = "foo@bar.com";
-				const view = mountWithIntl(
-					<EmailConfirmationForm
-						store={store}
-						transition={transition}
-						email={email}
-						confirmEmail={confirmEmail}
-					/>
-				);
-				view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }));
-				view.find("form").simulate("submit");
-				waitsFor(() => transition.callCount > 0);
-				runs(() => expect(transition).toHaveBeenCalledWith("selectTeamForRepo"));
-			});
-		});
-
-		describe("when there is a team for the repository and the user is already a member of that team", () => {
-			it("completes onboarding", () => {
-				const transition = jasmine.createSpy("transition stub");
-				const userTeam = { _id: "teamId" };
-				const confirmEmail = () => Promise.resolve({ teams: [userTeam] });
-				const store = {
-					getState: () => ({ repo: { teamId: "teamId" } })
-				};
-				const email = "foo@bar.com";
-				const view = mountWithIntl(
-					<EmailConfirmationForm
-						store={store}
-						transition={transition}
-						email={email}
-						confirmEmail={confirmEmail}
-					/>
-				);
-				view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }));
-				view.find("form").simulate("submit");
-				waitsFor(() => transition.callCount > 0);
-				runs(() => expect(transition).toHaveBeenCalledWith("confirmedNewMember"));
-			});
+			const view = mountWithIntl(<SimpleEmailConfirmationForm errors={{ expiredCode: true }} />);
+			expect(view.find(".error-message").text()).toBe("Sorry, that code has expired.");
 		});
 	});
 
 	describe("the link to send a new code", () => {
-		it("calls the sendNewCode action with the right values", () => {
+		it("calls the sendNewCode function with the right values", () => {
 			const sendNewCode = jasmine.createSpy("sendNewCode stub").andReturn(Promise.resolve());
 			const email = "foo@bar.com";
 			const username = "foobar";
 			const password = "foobar";
 			const view = mountWithIntl(
-				<EmailConfirmationForm
+				<SimpleEmailConfirmationForm
 					sendNewCode={sendNewCode}
 					email={email}
 					username={username}
 					password={password}
+					errors={{}}
 				/>
 			);
 			view.find("#send-new-code").simulate("click");

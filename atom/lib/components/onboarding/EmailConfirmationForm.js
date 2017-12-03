@@ -1,24 +1,14 @@
 import React, { Component } from "react";
-import { injectIntl, FormattedMessage } from "react-intl";
-import PropTypes from "prop-types";
-import withAPI from "./withAPI";
+import { FormattedMessage } from "react-intl";
+import { connect } from "react-redux";
 import Button from "./Button";
-import { confirmEmail, sendNewCode } from "../../actions/user";
+import actions from "../../actions/onboarding";
 
 export class SimpleEmailConfirmationForm extends Component {
-	static contextTypes = {
-		intl: PropTypes.shape({ formatMessage: PropTypes.func.isRequired })
-	};
-
-	static defaultProps = {
-		sendCode: async attributes => Promise.resolve()
-	};
-
 	constructor(props) {
 		super(props);
 		this.state = {
-			values: ["", "", "", "", "", ""],
-			loading: false
+			values: ["", "", "", "", "", ""]
 		};
 	}
 
@@ -36,59 +26,24 @@ export class SimpleEmailConfirmationForm extends Component {
 		);
 	};
 
-	goToSignup = () => this.props.transition("back");
-
-	submitCode = async () => {
+	submitCode = () => {
 		const confirmationCode = this.state.values.join("");
 		const { email, userId, transition, confirmEmail, store } = this.props;
-		this.setState(state => ({ loading: true }));
-		confirmEmail({ userId, email, confirmationCode })
-			.then(data => {
-				const { repo } = store.getViewData();
-				const teamForRepo = repo && repo.teamId;
-				const userTeams = data.teams;
-				if (!teamForRepo && userTeams.length > 0) transition("selectTeamForRepo");
-				if (!teamForRepo && userTeams.length === 0) {
-					transition("newTeamForRepo");
-				}
-				if (teamForRepo && userTeams.find(t => t._id === repo.teamId)) {
-					transition("confirmedNewMember");
-				}
-			})
-			.catch(({ data }) => {
-				if (data.code === "USRC-1006")
-					return transition("alreadyConfirmed", { alreadyConfirmed: true, email });
-				if (data.code === "USRC-1004") return transition("back");
-				if (data.code === "USRC-1002") {
-					this.setState({
-						invalidCode: true,
-						expiredCode: false,
-						loading: false,
-						values: this.state.values.fill("")
-					});
-				}
-				if (data.code === "USRC-1003") {
-					this.setState({
-						invalidCode: false,
-						expiredCode: true,
-						loading: false,
-						values: this.state.values.fill("")
-					});
-				}
-				this.input0.focus();
-			});
+		confirmEmail({ userId, email, confirmationCode });
+		this.setState({ values: this.state.values.fill("") });
+		this.input0.focus();
 	};
 
 	isFormInvalid = () => this.state.values.includes("");
 
 	renderError = () => {
-		if (this.state.invalidCode)
+		if (this.props.errors.invalidCode)
 			return (
 				<span className="error-message form-error">
 					<FormattedMessage id="confirmation.invalid" />
 				</span>
 			);
-		if (this.state.expiredCode)
+		if (this.props.errors.expiredCode)
 			return (
 				<span className="error-message form-error">
 					<FormattedMessage id="confirmation.expired" />
@@ -98,12 +53,7 @@ export class SimpleEmailConfirmationForm extends Component {
 
 	sendNewCode = () => {
 		const { username, email, password, sendNewCode } = this.props;
-		const { intl } = this.context;
-		sendNewCode({ username, email, password }).catch(({ data }) => {
-			if (data.code === "RAPI-1004") {
-				atom.notifications.addInfo(intl.formatMessage({ id: "confirmation.emailSent" }));
-			}
-		});
+		sendNewCode({ username, email, password });
 	};
 
 	render() {
@@ -140,7 +90,7 @@ export class SimpleEmailConfirmationForm extends Component {
 							);
 						}}
 					</FormattedMessage>
-					<a id="go-back" onClick={this.goToSignup}>
+					<a id="go-back" onClick={this.props.goToSignup}>
 						<FormattedMessage id="confirmation.changeEmail" />
 					</a>
 				</p>
@@ -164,7 +114,7 @@ export class SimpleEmailConfirmationForm extends Component {
 						id="submit-button"
 						type="submit"
 						disabled={this.isFormInvalid()}
-						loading={this.state.loading}
+						loading={this.props.loading}
 					>
 						<FormattedMessage id="confirmation.submitButton" />
 					</Button>
@@ -174,4 +124,13 @@ export class SimpleEmailConfirmationForm extends Component {
 	}
 }
 
-export default withAPI(() => ({}), { confirmEmail, sendNewCode })(SimpleEmailConfirmationForm);
+const mapStateToProps = ({ onboarding }) => {
+	const { userId, email, password, username } = onboarding.props;
+	return {
+		userId,
+		attributesForNewCode: { email, password, username },
+		errors: onboarding.errors,
+		loading: onboarding.requestInProcess
+	};
+};
+export default connect(mapStateToProps, actions)(SimpleEmailConfirmationForm);
