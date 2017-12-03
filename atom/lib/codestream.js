@@ -79,7 +79,7 @@ module.exports = {
 
 	serialize() {
 		const { session, team, repo } = store.getState();
-		localStorage.setItem("codestream.accessToken", session.accessToken);
+		if (session.accessToken) localStorage.setItem("codestream.accessToken", session.accessToken);
 		return { team, repo };
 	},
 
