@@ -1,7 +1,13 @@
+import { combineReducers } from "redux";
+import onboarding from "./onboarding";
+
 const initialState = {
 	currentFile: "",
 	streams: [],
-	postsByStream: {}
+	postsByStream: {},
+	repo: undefined,
+	repoMetadata: undefined,
+	team: undefined
 };
 
 const reduceStreams = (state = [], action) => {
@@ -35,6 +41,11 @@ const reducePosts = (state = {}, { type, payload }) => {
 	}
 };
 
+const reduceUsers = (state = [], { type, payload }) => {
+	if (type === "ADD_USER") return [...state, payload];
+	return state;
+};
+
 export default (state = initialState, action) => {
 	if (action.type === "addDataFromOnboarding")
 		return {
@@ -42,10 +53,15 @@ export default (state = initialState, action) => {
 			...action.payload
 		};
 	if (action.type === "ACTIVE_FILE_CHANGED") return { ...state, currentFile: action.payload };
+	if (action.type === "ADD_REPO_INFO") return { ...state, ...action.payload };
+	if (action.type === "ADD_ACCESS_TOKEN")
+		return { ...state, session: { accessToken: action.payload } };
 	else
 		return {
 			...state,
+			onboarding: onboarding(state.onboarding, action),
 			streams: reduceStreams(state.streams, action),
-			postsByStream: reducePosts(state.postsByStream, action)
+			postsByStream: reducePosts(state.postsByStream, action),
+			users: reduceUsers(state.users, action)
 		};
 };

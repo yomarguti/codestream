@@ -1,32 +1,35 @@
 import React from "react";
+import { Provider } from "react-redux";
 import Enzyme, { render } from "enzyme";
 import Adapter from "enzyme-adapter-react-16";
 import { mountWithIntl } from "./intl-test-helper.js";
-import { SimpleSignupForm as SignupForm } from "../lib/components/onboarding/SignupForm";
+import SignupForm, { SimpleSignupForm } from "../lib/components/onboarding/SignupForm";
+import createStore from "../lib/createStore";
+import RepositoryProvider from "./RepositoryProvider";
 
 Enzyme.configure({ adapter: new Adapter() });
 
-const mockStore = {
-	subscribe() {
-		return () => {};
-	}
-};
+const store = createStore();
+const repository = { getConfigValue: () => {}, getWorkingDirectory: () => {} };
+const repositories = [repository];
 
 describe("SignupForm view", () => {
 	describe("Username field", () => {
 		const systemUser = "tommy";
-		const view = mountWithIntl(<SignupForm store={mockStore} username={systemUser} />);
+		const view = mountWithIntl(
+			<Provider store={store}>
+				<RepositoryProvider repositories={repositories}>
+					<SignupForm />
+				</RepositoryProvider>
+			</Provider>
+		);
 
-		describe("when a username is provided", () => {
-			it("is pre-populated with given username", () => {
-				expect(view.find('input[name="username"]').prop("value")).toBe(systemUser);
-			});
+		xit("is pre-populated with the system username", () => {
+			expect(view.find('input[name="username"]').prop("value")).toBe(systemUser);
 		});
 
-		describe("when a username is not provided", () => {
-			it("uses 'Username' as the placeholder", () => {
-				expect(view.find('input[name="username"]').prop("placeholder")).toBe("Username");
-			});
+		it("uses 'Username' as the placeholder", () => {
+			expect(view.find('input[name="username"]').prop("placeholder")).toBe("Username");
 		});
 
 		it("shows errors when left empty", () => {
@@ -45,9 +48,10 @@ describe("SignupForm view", () => {
 				const team = {
 					usernames: ["foobar"]
 				};
-				const view = mountWithIntl(
-					<SignupForm username={systemUser} team={team} store={mockStore} />
-				);
+				store.dispatch({
+					type: "ADD_REPO_INFO",
+					payload: { team }
+				});
 				const event = { target: { value: "foobar" } };
 				view.find('input[name="username"]').simulate("change", event);
 				view.find('input[name="username"]').simulate("blur");
@@ -59,7 +63,13 @@ describe("SignupForm view", () => {
 	});
 
 	describe("Password field", () => {
-		const view = mountWithIntl(<SignupForm store={mockStore} />);
+		const view = mountWithIntl(
+			<Provider store={store}>
+				<RepositoryProvider repositories={repositories}>
+					<SignupForm />
+				</RepositoryProvider>
+			</Provider>
+		);
 
 		it("shows errors when left empty", () => {
 			view.find('input[name="password"]').simulate("blur");
@@ -76,7 +86,13 @@ describe("SignupForm view", () => {
 	});
 
 	describe("Email address field", () => {
-		const view = mountWithIntl(<SignupForm store={mockStore} />);
+		const view = mountWithIntl(
+			<Provider store={store}>
+				<RepositoryProvider repositories={repositories}>
+					<SignupForm />
+				</RepositoryProvider>
+			</Provider>
+		);
 
 		it("shows errors when left empty", () => {
 			view.find('input[name="email"]').simulate("blur");
@@ -90,15 +106,20 @@ describe("SignupForm view", () => {
 			);
 		});
 
-		describe("when an email address is not provided", () => {
-			it("uses 'Email Address' as the placeholder", () => {
-				expect(view.find('input[name="email"]').prop("placeholder")).toBe("Email Address");
-			});
+		it("uses 'Email Address' as the placeholder", () => {
+			expect(view.find('input[name="email"]').prop("placeholder")).toBe("Email Address");
 		});
 
-		describe("when an email address is provided to the component", () => {
+		describe("when an email address is in git config", () => {
 			const email = "foo@bar.com";
-			const view = mountWithIntl(<SignupForm email={email} store={mockStore} />);
+			spyOn(repository, "getConfigValue").andReturn(email);
+			const view = mountWithIntl(
+				<Provider store={store}>
+					<RepositoryProvider repositories={repositories}>
+						<SignupForm />
+					</RepositoryProvider>
+				</Provider>
+			);
 			it("is pre-populated with given email address", () => {
 				expect(view.find('input[name="email"]').prop("value")).toBe(email);
 			});
@@ -106,7 +127,13 @@ describe("SignupForm view", () => {
 	});
 
 	describe("Sign Up button", () => {
-		const view = mountWithIntl(<SignupForm store={mockStore} />);
+		const view = mountWithIntl(
+			<Provider store={store}>
+				<RepositoryProvider repositories={repositories}>
+					<SignupForm />
+				</RepositoryProvider>
+			</Provider>
+		);
 
 		it("is disabled while the form values are invalid", () => {
 			expect(view.find("Button").prop("disabled")).toBe(true);
@@ -125,16 +152,21 @@ describe("SignupForm view", () => {
 		const email = "foo@bar.com";
 		const username = "foobar";
 		const password = "somePassword";
+		const firstName = "Foo";
+		const lastName = "Bar";
 		const register = jasmine.createSpy("stub for register api").andReturn(Promise.resolve());
-		const transition = jasmine.createSpy("transition function");
 
-		describe("when the name provided is a simple two part name", () => {
+		describe("when the name in the git config is a simple two part name", () => {
 			it("sends first and last name", () => {
-				const firstName = "Foo";
-				const lastName = "Bar";
 				const name = `${firstName} ${lastName}`;
+				spyOn(repository, "getConfigValue").andCallFake(() => {
+					if (repository.getConfigValue.mostRecentCall.args[0] === "email") return "email";
+					else return name;
+				});
 				const view = mountWithIntl(
-					<SignupForm register={register} transition={transition} name={name} store={mockStore} />
+					<RepositoryProvider repositories={repositories}>
+						<SimpleSignupForm register={register} />
+					</RepositoryProvider>
 				);
 				view.find('input[name="username"]').simulate("change", { target: { value: username } });
 				view.find('input[name="password"]').simulate("change", { target: { value: password } });
@@ -145,17 +177,18 @@ describe("SignupForm view", () => {
 			});
 		});
 
-		describe("when the name provided is a single word", () => {
+		describe("when the name in the git config is a single word", () => {
 			it("sends the name as firstName", () => {
-				const firstName = "Foo";
+				spyOn(repository, "getConfigValue").andCallFake(() => {
+					if (repository.getConfigValue.mostRecentCall.args[0] === "email") return "email";
+					else return firstName;
+				});
 				const view = mountWithIntl(
-					<SignupForm
-						register={register}
-						transition={transition}
-						name={firstName}
-						store={mockStore}
-					/>
+					<RepositoryProvider repositories={repositories}>
+						<SimpleSignupForm register={register} />
+					</RepositoryProvider>
 				);
+
 				view.find('input[name="username"]').simulate("change", { target: { value: username } });
 				view.find('input[name="password"]').simulate("change", { target: { value: password } });
 				view.find('input[name="email"]').simulate("change", { target: { value: email } });
@@ -174,8 +207,14 @@ describe("SignupForm view", () => {
 		describe("when the name provided is more than two words", () => {
 			it("sends the name as firstName", () => {
 				const name = "Foo Baz Bar";
+				spyOn(repository, "getConfigValue").andCallFake(() => {
+					if (repository.getConfigValue.mostRecentCall.args[0] === "email") return "email";
+					else return name;
+				});
 				const view = mountWithIntl(
-					<SignupForm register={register} transition={transition} name={name} store={mockStore} />
+					<RepositoryProvider repositories={repositories}>
+						<SimpleSignupForm register={register} />
+					</RepositoryProvider>
 				);
 				view.find('input[name="username"]').simulate("change", { target: { value: username } });
 				view.find('input[name="password"]').simulate("change", { target: { value: password } });
@@ -189,28 +228,6 @@ describe("SignupForm view", () => {
 					firstName: name,
 					lastName: ""
 				});
-			});
-		});
-
-		describe("when the email already exists", () => {
-			it("the user is taken to the login page", () => {
-				const email = "foo@bar.com";
-				const register = () => Promise.reject({ data: { code: "RAPI-1004" } });
-				const transition = jasmine.createSpy("transition function");
-				const view = mountWithIntl(
-					<SignupForm register={register} transition={transition} store={mockStore} />
-				);
-				view.find('input[name="username"]').simulate("change", { target: { value: "f_oo-b7a.r" } });
-				view
-					.find('input[name="password"]')
-					.simulate("change", { target: { value: "somePassword" } });
-				view.find('input[name="email"]').simulate("change", { target: { value: email } });
-
-				view.find("form").simulate("submit");
-				waitsFor(() => transition.callCount > 0);
-				runs(() =>
-					expect(transition).toHaveBeenCalledWith("emailExists", { email, alreadySignedUp: true })
-				);
 			});
 		});
 	});

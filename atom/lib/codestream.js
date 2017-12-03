@@ -1,27 +1,13 @@
 import { CompositeDisposable } from "atom";
-import createStore from "redux-zero";
 import CodestreamView, { CODESTREAM_VIEW_URI } from "./codestream-view";
 import { get } from "./network-request";
 import git from "./git";
-import DataManager from "./data-manager";
+import createStore from "./createStore";
 
-const defaultSession = {
-	onboarding: {}
-};
-const createReducer = (session, localCache) => {
-	return ({ type, payload }) => {
-		if (type === "ADD_STREAM") {
-			localCache.streams;
-		}
-	};
-};
-
-const store = new DataManager(defaultSession, createReducer);
-
-const syncStore = session => store.updateSession(session);
+const store = createStore();
 
 module.exports = {
-	subscriptions: null,
+	subscriptions: new CompositeDisposable(),
 	config: {
 		showHeadshots: {
 			description: "Display headshots in the stream",
@@ -38,6 +24,16 @@ module.exports = {
 		const repos = allRepos.filter(Boolean);
 		if (repos.length > 0) {
 			const repo = repos[0];
+
+			this.subscriptions.add(
+				atom.workspace.observeActiveTextEditor(editor => {
+					store.dispatch({
+						type: "ACTIVE_FILE_CHANGED",
+						payload: editor ? repo.relativize(editor.getPath()) : ""
+					});
+				})
+			);
+
 			const repoUrl = repo.getOriginURL();
 			let firstCommitHash = await git(["rev-list", "--max-parents=0", "HEAD"], {
 				cwd: repo.getWorkingDirectory()
@@ -47,17 +43,18 @@ module.exports = {
 				`/no-auth/find-repo?url=${repoUrl}&firstCommitHash=${firstCommitHash}`
 			);
 			const repoMetadata = { url: repoUrl, firstCommitHash };
-			const session =
+			const info =
 				Object.keys(data).length === 0
 					? { repoMetadata, team: undefined, repo: undefined }
 					: { repoMetadata, team: { usernames: data.usernames }, repo: data.repo };
-			syncStore(session);
+			store.dispatch({
+				type: "ADD_REPO_INFO",
+				payload: info
+			});
 		}
 	},
 
 	activate(state) {
-		syncStore(state.session);
-		this.subscriptions = new CompositeDisposable();
 		this.subscriptions.add(
 			atom.workspace.addOpener(uri => {
 				if (uri === CODESTREAM_VIEW_URI) {
@@ -81,11 +78,12 @@ module.exports = {
 	},
 
 	serialize() {
-		return { session: {} || store.getSession() };
+		const { session, team, repo } = store.getState();
+		localStorage.setItem("codestream.accessToken", session.accessToken);
+		return { team, repo };
 	},
 
-	deserializeCodestreamView(serialized) {
-		syncStore(serialized.session);
+	deserializeCodestreamView(data) {
 		return new CodestreamView(store);
 	},
 

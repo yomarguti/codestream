@@ -1,7 +1,7 @@
 import React from "react";
 import { render, unmountComponentAtNode } from "react-dom";
 import { addLocaleData, IntlProvider } from "react-intl";
-import { Provider } from "redux-zero/react";
+import { Provider } from "react-redux";
 import en from "react-intl/locale-data/en";
 import CodeStreamRoot from "./components/CodeStreamRoot";
 import copy from "../translations/en.json";
@@ -20,7 +20,6 @@ export default class CodestreamView {
 		const repoPromises = directories.map(repo => atom.project.repositoryForDirectory(repo));
 		Promise.all(repoPromises).then(repos => {
 			repos = repos.filter(Boolean);
-			this.observeActiveTextEditor(repos[0]);
 			render(
 				<IntlProvider locale="en" messages={copy}>
 					<Provider store={store}>
@@ -63,21 +62,12 @@ export default class CodestreamView {
 
 	serialize() {
 		return {
-			deserializer: "codestream/CodestreamView",
-			session: {} || this.store.getSession()
+			deserializer: "codestream/CodestreamView"
 		};
 	}
 
 	destroy() {
 		unmountComponentAtNode(this.element);
 		this.element.remove();
-	}
-
-	observeActiveTextEditor(repo) {
-		atom.workspace.observeActiveTextEditor(editor => {
-			this.store.updateSession({
-				currentFile: editor ? repo.relativize(editor.getPath()) : ""
-			});
-		});
 	}
 }

@@ -1,9 +1,11 @@
+import { shell } from "electron";
 import React, { Component } from "react";
 import { FormattedMessage } from "react-intl";
-import { shell } from "electron";
+import { connect } from "react-redux";
+import PropTypes from "prop-types";
+import getSystemUser from "username";
 import Button from "./Button";
-import withAPI from "./withAPI";
-import { register } from "../../actions/user";
+import actions from "../../actions/user";
 
 const isUsernameInvalid = username => new RegExp("^[-a-z0-9_.]{1,21}$").test(username) === false;
 const isPasswordInvalid = password => password.length < 6;
@@ -23,36 +25,35 @@ const parseName = name => {
 };
 
 export class SimpleSignupForm extends Component {
-	static defaultProps = {
-		email: "",
-		name: "",
-		username: "",
-		team: { usernames: [] }
+	static contextTypes = {
+		repositories: PropTypes.array
 	};
 
 	constructor(props) {
 		super(props);
 		this.state = {
-			username: props.username,
+			username: getSystemUser.sync(),
 			password: "",
-			email: this.props.email,
+			email: "",
 			usernameTouched: false,
 			passwordTouched: false,
 			emailTouched: false,
-			usernameInUse: false,
-			team: this.props.team
+			usernameInUse: false
 		};
-
-		this.unsubscribe = props.store.subscribe(({ team }) => this.setState({ team }));
 	}
 
-	componentWillUnmount() {
-		this.unsubscribe();
+	componentDidMount() {
+		const { repositories } = this.context;
+		const repository = repositories[0];
+		const gitDirectory = repository.getWorkingDirectory();
+		this.setState({
+			email: repository.getConfigValue("user.email", gitDirectory),
+			name: repository.getConfigValue("user.name", gitDirectory)
+		});
 	}
 
 	onBlurUsername = () => {
-		const { team } = this.state;
-		const usernamesInTeam = (team && team.usernames) || [];
+		const { usernamesInTeam } = this.props;
 		const { username } = this.state;
 		this.setState({ usernameTouched: true, usernameInUse: usernamesInTeam.includes(username) });
 	};
@@ -135,17 +136,13 @@ export class SimpleSignupForm extends Component {
 		return isUsernameInvalid(username) || isPasswordInvalid(password) || isEmailInvalid(email);
 	};
 
-	submitCredentials = async event => {
+	submitCredentials = event => {
 		event.preventDefault();
 		if (this.isFormInvalid()) return;
 		this.setState({ loading: true });
-		const { register, transition, name } = this.props;
-		const { username, password, email } = this.state;
-		register({ username, password, email, ...parseName(name) })
-			.then(user => transition("success", { username, password, email, userId: user.id }))
-			.catch(({ data }) => {
-				if (data.code === "RAPI-1004") transition("emailExists", { email, alreadySignedUp: true });
-			});
+		const { register } = this.props;
+		const { username, password, email, name } = this.state;
+		register({ username, password, email, ...parseName(name) });
 	};
 
 	render() {
@@ -237,4 +234,7 @@ export class SimpleSignupForm extends Component {
 	}
 }
 
-export default withAPI(() => ({}), { register })(SimpleSignupForm);
+const mapStateToProps = state => {
+	return { usernamesInTeam: (state.team || {}).usernames || [] };
+};
+export default connect(mapStateToProps, actions)(SimpleSignupForm);
