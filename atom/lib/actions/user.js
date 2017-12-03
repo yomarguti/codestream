@@ -12,11 +12,10 @@ const addUser = user => dispatch => {
 
 export const register = attributes => dispatch => {
 	post("/no-auth/register", attributes)
-		.then(({ user, accessToken }) => {
+		.then(({ user }) => {
 			const { _id, ...rest } = user;
 			const userObject = { id: _id, ...rest };
 			dispatch(addUser(userObject));
-			dispatch({ type: "ADD_ACCESS_TOKEN", payload: accessToken });
 			dispatch({ type: "SIGNUP_SUCCESS", payload: { ...attributes, userId: _id } });
 			return userObject;
 		})
