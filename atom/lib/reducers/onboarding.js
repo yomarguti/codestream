@@ -28,6 +28,8 @@ export default (state = initialState, { type, payload }) => {
 			return { ...state, errors: { invalidCode: true } };
 		case "EXPIRED_CONFIRMATION_CODE":
 			return { ...state, errors: { expiredCode: true } };
+		case "TEAM_CREATED":
+			return { ...state, step: "identifyMembers", props: payload };
 		default:
 			return state;
 	}

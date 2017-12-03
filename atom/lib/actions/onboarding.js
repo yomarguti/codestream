@@ -13,7 +13,7 @@ const addUser = user => dispatch => {
 };
 
 const addTeams = teams => dispatch => {
-	db.teams.batchPut(teams).then(() =>
+	db.teams.bulkPut(teams).then(() =>
 		dispatch({
 			type: "ADD_TEAMS",
 			payload: teams
@@ -21,11 +21,29 @@ const addTeams = teams => dispatch => {
 	);
 };
 
+const addTeam = team => dispatch => {
+	db.teams.add(team).then(() =>
+		dispatch({
+			type: "ADD_TEAM",
+			payload: team
+		})
+	);
+};
+
 const addRepos = repos => dispatch => {
-	db.repos.batchPut(repos).then(() =>
+	db.repos.bulkPut(repos).then(() =>
 		dispatch({
 			type: "ADD_REPOS",
 			payload: teams
+		})
+	);
+};
+
+const addRepo = repo => dispatch => {
+	db.repos.add(repo).then(() =>
+		dispatch({
+			type: "ADD_REPO",
+			payload: repo
 		})
 	);
 };
@@ -59,12 +77,13 @@ export const confirmEmail = attributes => (dispatch, getState) => {
 	dispatch({ type: "REQUEST_STARTED" });
 	post("/no-auth/confirm", attributes)
 		.then(({ accessToken, user, teams, repos }) => {
+			dispatch({ type: "REQUEST_FINISHED" });
 			user = normalize(user);
 			dispatch(initSession({ user, accessToken }));
 
 			const { team } = getState();
 			const teamForRepo = team && team.id;
-			const userTeams = data.teams.map(normalize);
+			const userTeams = teams.map(normalize);
 
 			dispatch(addRepos(repos.map(normalize)));
 			dispatch(addTeams(userTeams));
@@ -82,7 +101,7 @@ export const confirmEmail = attributes => (dispatch, getState) => {
 			if (data.code === "USRC-1006")
 				dispatch({
 					type: "USER_ALREADY_CONFIRMED",
-					payload: { alreadyConfirmed: true, email }
+					payload: { alreadyConfirmed: true, email: attributes.email }
 				});
 			if (data.code === "USRC-1004") dispatch({ type: "GO_TO_SIGNUP" });
 			if (data.code === "USRC-1002") dispatch({ type: "INVALID_CONFIRMATION_CODE" });
@@ -93,6 +112,24 @@ export const confirmEmail = attributes => (dispatch, getState) => {
 export const sendNewCode = attributes => dispatch => {
 	post("/no-auth/register", attributes).catch(({ data }) => {
 		if (data.code === "RAPI-1004") atom.notifications.addInfo("Email sent!"); // TODO: i18n
+	});
+};
+
+export const createTeam = name => (dispatch, getState) => {
+	const { session, repoMetadata } = getState();
+	const params = {
+		url: repoMetadata.url,
+		firstCommitHash: repoMetadata.firstCommitHash,
+		team: { name }
+	};
+	dispatch({ type: "REQUEST_STARTED" });
+	post("/repos", params, session.accessToken).then(data => {
+		dispatch({ type: "REQUEST_FINISHED" });
+		const team = normalize(data.team);
+		dispatch({ type: "TEAM_CREATED", payload: { teamId: team.id } });
+		dispatch(addTeam(team));
+		dispatch(addRepo(normalize(data.repo)));
+		dispatch({ type: "TEAM_SELECTED_FOR_REPO", payload: team });
 	});
 };
 
@@ -109,5 +146,6 @@ export default {
 	register,
 	confirmEmail,
 	sendNewCode,
-	authenticate
+	authenticate,
+	createTeam
 };

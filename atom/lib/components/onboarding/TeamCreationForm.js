@@ -1,8 +1,8 @@
 import React, { Component } from "react";
 import { FormattedMessage } from "react-intl";
-import withAPI from "./withAPI";
+import { connect } from "react-redux";
 import Button from "./Button";
-import { createTeam } from "../../actions/team";
+import { createTeam } from "../../actions/onboarding";
 
 export class SimpleTeamCreationForm extends Component {
 	constructor(props) {
@@ -15,22 +15,7 @@ export class SimpleTeamCreationForm extends Component {
 
 	onBlurName = () => this.setState(state => ({ nameTouched: true }));
 
-	onSubmit = () => {
-		this.setState({ loading: true });
-		const { store, createTeam, transition } = this.props;
-		const { name } = this.state;
-		const { url, firstCommitHash } = store.getViewData().repoMetadata;
-		createTeam({ name, url, firstCommitHash })
-			.then(data => {
-				this.setState({ loading: false });
-				transition("success", { teamId: data.team._id });
-			})
-			.catch(error => {
-				this.setState({ loading: false });
-				atom.notifications.addError("There was an error creating the team");
-				console.log("there was an error creating this team", error);
-			});
-	};
+	onSubmit = () => this.props.createTeam(this.state.name);
 
 	render() {
 		return (
@@ -53,7 +38,7 @@ export class SimpleTeamCreationForm extends Component {
 						onBlur={this.onBlurName}
 						required={this.state.touched}
 					/>
-					<Button id="submit-button" disabled={this.state.name === ""} loading={this.state.loading}>
+					<Button id="submit-button" disabled={this.state.name === ""} loading={this.props.loading}>
 						<FormattedMessage id="createTeam.submitButton" />
 					</Button>
 				</form>
@@ -62,4 +47,7 @@ export class SimpleTeamCreationForm extends Component {
 	}
 }
 
-export default withAPI(() => ({}), { createTeam })(SimpleTeamCreationForm);
+const mapStateToProps = ({ onboarding }) => ({
+	loading: onboarding.requestInProcess
+});
+export default connect(mapStateToProps, { createTeam })(SimpleTeamCreationForm);

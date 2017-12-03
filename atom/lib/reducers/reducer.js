@@ -24,12 +24,14 @@ const reduceUsers = (state = [], { type, payload }) => {
 const reduceTeams = (state = [], { type, payload }) => {
 	// is it naive to just replace the existing ones?
 	if (type === "ADD_TEAMS") return payload;
+	if (type === "ADD_TEAM") return [...state, payload];
 	return state;
 };
 
 const reduceRepos = (state = [], { type, payload }) => {
 	// is it naive to just replace the existing ones?
 	if (type === "ADD_REPOS") return payload;
+	if (type === "ADD_REPO") return [...state, payload];
 	return state;
 };
 
@@ -50,6 +52,7 @@ const reduceRest = combineReducers({
 export default (state = initialState, action) => {
 	if (action.type === "ACTIVE_FILE_CHANGED") return { ...state, currentFile: action.payload };
 	if (action.type === "ADD_REPO_INFO") return { ...state, ...action.payload };
+	if (action.type === "TEAM_SELECTED_FOR_REPO") return { ...state, team: action.payload };
 	else
 		return {
 			...state,
