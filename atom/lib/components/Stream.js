@@ -517,12 +517,15 @@ const getPostsForStream = (streamId = "", postsByStream) => {
 	return postsByStream[streamId] || [];
 };
 
-const mapStateToProps = ({ user, context, streams, postsByStream = {} }) => {
+const mapStateToProps = ({ user, context, streams, users, postsByStream = {} }) => {
 	const stream = streams.byFile[context.currentFile] || {};
 	return {
 		user,
 		id: stream.id,
-		posts: getPostsForStream(stream.id, postsByStream)
+		posts: getPostsForStream(stream.id, postsByStream).map(post => ({
+			...post,
+			author: users[post.creatorId]
+		}))
 	};
 };
 

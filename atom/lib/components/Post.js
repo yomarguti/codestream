@@ -73,9 +73,9 @@ export default class Post extends Component {
 					size={36}
 					default="retro"
 					protocol="http://"
-					email={post.email}
+					email={post.author.email}
 				/>
-				<author ref={ref => (this._authorDiv = ref)}>{post.nick}</author>
+				<author ref={ref => (this._authorDiv = ref)}>{post.author.username}</author>
 				<Timestamp time={post.timestamp} />
 				<div className="body">
 					{bodyParts.map(part => {

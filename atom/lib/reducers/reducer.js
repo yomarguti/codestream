@@ -3,14 +3,7 @@ import onboarding from "./onboarding";
 import postsByStream from "./postsByStream";
 import context from "./context";
 import streams from "./streams";
-
-const users = (state = [], { type, payload }) => {
-	if (type === "BOOTSTRAP_USERS") return payload;
-	if (type === "ADD_USER") return [...state, payload];
-	if (type === "ADD_USERS") return [...state, ...payload];
-	if (type === "UPDATE_USER") return state.map(user => (user.id === payload.id ? payload : user));
-	return state;
-};
+import users from "./users";
 
 const teams = (state = [], { type, payload }) => {
 	// is it naive to just replace the existing ones?

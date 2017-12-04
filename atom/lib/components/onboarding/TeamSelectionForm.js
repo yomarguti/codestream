@@ -118,9 +118,9 @@ export class SimpleTeamSelectionForm extends Component {
 }
 
 const mapStateToProps = ({ onboarding, session, teams, users }) => {
-	const user = users.find(u => u.id === session.userId);
+	const currentUser = users[session.userId];
 	return {
-		teams: teams.filter(team => user.teamIds.includes(team.id)),
+		teams: teams.filter(team => currentUser.teamIds.includes(team.id)),
 		loading: onboarding.requestInProcess,
 		errors: onboarding.errors
 	};

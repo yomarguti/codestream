@@ -76,6 +76,7 @@ export const createPost = (streamId, text) => async (dispatch, getState) => {
 		id: "temp1",
 		teamId: currentTeamId,
 		timestamp: new Date().getTime(),
+		creatorId: session.userId,
 		streamId,
 		text
 	};

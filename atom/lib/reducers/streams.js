@@ -1,7 +1,6 @@
-const initialState = { byFile: {}, byId: {} };
+import { toMapBy } from "./utils";
 
-const toMapBy = (key, entities) =>
-	entities.reduce((result, entity) => ({ ...result, [entity[key]]: entity }), {});
+const initialState = { byFile: {}, byId: {} };
 
 export default (state = initialState, { type, payload }) => {
 	if (type === "BOOTSTRAP_STREAMS")
