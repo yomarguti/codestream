@@ -1,5 +1,13 @@
 export default (state = {}, { type, payload }) => {
 	switch (type) {
+		case "BOOTSTRAP_POSTS": {
+			const nextState = {};
+			payload.forEach(post => {
+				const existingPosts = nextState[post.streamId] || [];
+				nextState[post.streamId] = [...existingPosts, post];
+			});
+			return nextState;
+		}
 		case "ADD_POSTS_FOR_STREAM": {
 			const { streamId, posts } = payload;
 			const existingPosts = state[streamId] || [];
