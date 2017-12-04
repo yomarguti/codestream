@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React from "react";
 import { connect } from "react-redux";
 import SignupForm from "./SignupForm";
 import EmailConfirmationForm from "./EmailConfirmationForm";
@@ -8,13 +8,9 @@ import TeamSelectionForm from "./TeamSelectionForm";
 import TeamMemberSelectionForm from "./TeamMemberSelectionForm";
 
 const mapStateToProps = ({ onboarding }) => ({ ...onboarding });
-const actions = {
-	updateOnboarding(store, onboarding) {
-		store.updateSession({ onboarding });
-	}
-};
-export default connect(mapStateToProps, actions)(props => {
-	const nextProps = { ...props.props };
+
+export default connect(mapStateToProps)(({ step, props }) => {
+	const nextProps = { ...props };
 	const views = {
 		signUp: <SignupForm {...nextProps} />,
 		confirmEmail: <EmailConfirmationForm {...nextProps} />,
@@ -23,5 +19,5 @@ export default connect(mapStateToProps, actions)(props => {
 		selectTeam: <TeamSelectionForm {...nextProps} />,
 		identifyMembers: <TeamMemberSelectionForm {...nextProps} />
 	};
-	return views[props.step];
+	return views[step];
 });
