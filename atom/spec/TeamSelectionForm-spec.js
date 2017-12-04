@@ -20,7 +20,7 @@ const team2 = { id: "2", name: "Cool Coders" };
 const store = createStore({
 	session: { userId: "userId" },
 	users: { userId: { id: "userId", teamIds: ["1", "2"] } },
-	teams: [team1, team2, { id: "3", name: "Open Sourcerers" }],
+	teams: { "1": team1, "2": team2, "3": { id: "3", name: "Open Sourcerers" } },
 	repoAttributes: {
 		url: repoUrl,
 		firstCommitHash

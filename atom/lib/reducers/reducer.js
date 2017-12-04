@@ -5,13 +5,7 @@ import context from "./context";
 import streams from "./streams";
 import users from "./users";
 import repos from "./repos";
-
-const teams = (state = [], { type, payload }) => {
-	// is it naive to just replace the existing ones?
-	if (type === "ADD_TEAMS") return payload;
-	if (type === "ADD_TEAM") return [...state, payload];
-	return state;
-};
+import teams from "./teams";
 
 const session = (state = {}, { type, payload }) => {
 	if (type === "INIT_SESSION") return payload;
