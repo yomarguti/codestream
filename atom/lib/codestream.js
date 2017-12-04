@@ -48,10 +48,10 @@ module.exports = {
 			const repoMetadata = { url: repoUrl, firstCommitHash };
 			const info =
 				Object.keys(data).length === 0
-					? { repoMetadata, team: undefined, repo: undefined }
+					? { repoMetadata }
 					: {
 							repoMetadata,
-							team: { usernames: data.usernames },
+							usernamesInTeam: data.usernames,
 							currentRepoId: data.repo._id,
 							currentTeamId: data.repo.teamId
 						};

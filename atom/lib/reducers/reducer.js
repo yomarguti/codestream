@@ -5,9 +5,10 @@ import postsByStream from "./postsByStream";
 const initialState = {
 	currentFile: "",
 	session: {},
-	repo: undefined,
+	currentTeamId: undefined,
+	currentRepoId: undefined,
 	repoMetadata: undefined,
-	team: undefined
+	usernamesInTeam: []
 };
 
 const reduceStreams = (state = [], { type, payload }) => {

@@ -9,7 +9,7 @@ import RepositoryProvider from "./RepositoryProvider";
 
 Enzyme.configure({ adapter: new Adapter() });
 
-const store = createStore();
+const store = createStore({ usernamesInTeam: [] });
 const repository = { getConfigValue: () => {}, getWorkingDirectory: () => {} };
 const repositories = [repository];
 
@@ -45,12 +45,9 @@ describe("SignupForm view", () => {
 
 		describe("when a username is already in use on a team", () => {
 			it("shows errors on blur", () => {
-				const team = {
-					usernames: ["foobar"]
-				};
 				store.dispatch({
 					type: "ADD_REPO_INFO",
-					payload: { team }
+					payload: { usernamesInTeam: ["foobar"] }
 				});
 				const event = { target: { value: "foobar" } };
 				view.find('input[name="username"]').simulate("change", event);

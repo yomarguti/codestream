@@ -234,7 +234,5 @@ export class SimpleSignupForm extends Component {
 	}
 }
 
-const mapStateToProps = state => {
-	return { usernamesInTeam: (state.team || {}).usernames || [] };
-};
+const mapStateToProps = ({ usernamesInTeam }) => ({ usernamesInTeam });
 export default connect(mapStateToProps, actions)(SimpleSignupForm);
