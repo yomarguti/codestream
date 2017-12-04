@@ -1,5 +1,6 @@
 import { CompositeDisposable } from "atom";
 import CodestreamView, { CODESTREAM_VIEW_URI } from "./codestream-view";
+import { bootstrapStore } from "./local-cache";
 import { get } from "./network-request";
 import git from "./git";
 import createStore from "./createStore";
@@ -21,6 +22,7 @@ module.exports = {
 	},
 
 	async initialize() {
+		bootstrapStore(store);
 		const directories = atom.project.getDirectories();
 		const repoPromises = directories.map(repo => atom.project.repositoryForDirectory(repo));
 
@@ -59,6 +61,7 @@ module.exports = {
 
 	activate(state) {
 		store.dispatch({ type: "LOAD_ONBOARDING", payload: state.onboarding });
+		store.dispatch(setContext(state.context));
 		this.subscriptions.add(
 			atom.workspace.addOpener(uri => {
 				if (uri === CODESTREAM_VIEW_URI) {
@@ -82,9 +85,9 @@ module.exports = {
 	},
 
 	serialize() {
-		const { session, onboarding } = store.getState();
+		const { session, onboarding, context } = store.getState();
 		if (session.accessToken) localStorage.setItem("codestream.accessToken", session.accessToken);
-		return { onboarding };
+		return { onboarding, context };
 	},
 
 	deserializeCodestreamView(data) {

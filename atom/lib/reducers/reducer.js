@@ -2,13 +2,10 @@ import { combineReducers } from "redux";
 import onboarding from "./onboarding";
 import postsByStream from "./postsByStream";
 import context from "./context";
-
-const streams = (state = [], { type, payload }) => {
-	if (type === "ADD_STREAM") return [...state, payload];
-	else return state;
-};
+import streams from "./streams";
 
 const users = (state = [], { type, payload }) => {
+	if (type === "BOOTSTRAP_USERS") return payload;
 	if (type === "ADD_USER") return [...state, payload];
 	if (type === "ADD_USERS") return [...state, ...payload];
 	if (type === "UPDATE_USER") return state.map(user => (user.id === payload.id ? payload : user));

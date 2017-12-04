@@ -517,8 +517,8 @@ const getPostsForStream = (streamId = "", postsByStream) => {
 	return postsByStream[streamId] || [];
 };
 
-const mapStateToProps = ({ user, context, streams = [], postsByStream = {} }) => {
-	const stream = streams.find(stream => stream.file === context.currentFile) || {};
+const mapStateToProps = ({ user, context, streams, postsByStream = {} }) => {
+	const stream = streams.byFile[context.currentFile] || {};
 	return {
 		user,
 		id: stream.id,
