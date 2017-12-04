@@ -1,8 +1,8 @@
 import React, { Component } from "react";
 import { FormattedMessage } from "react-intl";
+import { connect } from "react-redux";
 import Button from "./Button";
-import withAPI from "./withAPI";
-import { authenticate } from "../../actions/onboarding";
+import * as actions from "../../actions/onboarding";
 
 const isPasswordInvalid = password => password.length === 0;
 const isEmailInvalid = email => {
@@ -23,15 +23,9 @@ export class SimpleLoginForm extends Component {
 		};
 	}
 
-	onBlurPassword = () => {
-		if (this.state.passwordTouched) return;
-		this.setState({ passwordTouched: true });
-	};
+	onBlurPassword = () => this.setState({ passwordTouched: true });
 
-	onBlurEmail = () => {
-		if (this.state.emailTouched) return;
-		this.setState({ emailTouched: true });
-	};
+	onBlurEmail = () => this.setState({ emailTouched: true });
 
 	renderEmailHelp = () => {
 		const { email, emailTouched } = this.state;
@@ -70,7 +64,7 @@ export class SimpleLoginForm extends Component {
 	};
 
 	renderError = () => {
-		if (this.state.failed)
+		if (this.props.errors.invalidCredentials)
 			return (
 				<span className="error-message form-error">
 					<FormattedMessage id="login.invalid" />
@@ -86,15 +80,8 @@ export class SimpleLoginForm extends Component {
 	submitCredentials = async event => {
 		event.preventDefault();
 		if (this.isFormInvalid()) return;
-		this.setState({ loading: true });
-		const { authenticate, transition } = this.props;
 		const { password, email } = this.state;
-		authenticate({ password, email })
-			.then(() => transition("success"))
-			.catch(error => {
-				debugger;
-				this.setState({ loading: false, failed: true, password: "", passwordTouched: false });
-			});
+		this.props.authenticate({ password, email });
 	};
 
 	render() {
@@ -143,7 +130,7 @@ export class SimpleLoginForm extends Component {
 						tabIndex="2"
 						type="submit"
 						disabled={this.isFormInvalid()}
-						loading={this.state.loading}
+						loading={this.props.loading}
 					>
 						<FormattedMessage id="login.submitButton" />
 					</Button>
@@ -167,4 +154,9 @@ export class SimpleLoginForm extends Component {
 	}
 }
 
-export default withAPI(() => ({}), { authenticate })(SimpleLoginForm);
+const mapStateToProps = ({ onboarding }) => ({
+	...onboarding.props,
+	errors: onboarding.errors,
+	loading: onboarding.requestInProcess
+});
+export default connect(mapStateToProps, actions)(SimpleLoginForm);

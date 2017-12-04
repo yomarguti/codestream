@@ -16,6 +16,8 @@ export default (state = initialState, { type, payload }) => {
 			return { ...state, step: "confirmEmail", props: payload };
 		case "SIGNUP_EMAIL_EXISTS":
 			return { ...state, step: "login", props: payload };
+		case "GO_TO_LOGIN":
+			return { ...initialState, step: "login" };
 		case "GO_TO_SIGNUP":
 			return { ...initialState, step: "signUp" };
 		case "NEW_USER_CONFIRMED_IN_NEW_REPO":
@@ -36,6 +38,9 @@ export default (state = initialState, { type, payload }) => {
 			return { ...state, errors: { noPermission: true } };
 		case "REPO_ADDED_FOR_TEAM":
 			return { ...initialState, step: "identifyMembers", props: { existingTeam: true } };
+		case "INVALID_CREDENTIALS":
+			return { ...initialState, errors: { invalidCredentials: true } };
+		case "LOGGED_IN":
 		case "ONBOARDING_COMPLETE":
 			return { ...initialState, complete: true };
 		default:

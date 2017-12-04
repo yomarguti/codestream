@@ -5,7 +5,7 @@ import { connect } from "react-redux";
 import PropTypes from "prop-types";
 import getSystemUser from "username";
 import Button from "./Button";
-import actions from "../../actions/onboarding";
+import * as actions from "../../actions/onboarding";
 
 const isUsernameInvalid = username => new RegExp("^[-a-z0-9_.]{1,21}$").test(username) === false;
 const isPasswordInvalid = password => password.length < 6;
@@ -222,7 +222,7 @@ export class SimpleSignupForm extends Component {
 						</p>
 						<p>
 							<strong>
-								<a onClick={() => this.props.transition("alreadySignedUp")}>
+								<a onClick={this.props.alreadySignedUp}>
 									<FormattedMessage id="signUp.footer.signIn" />
 								</a>
 							</strong>

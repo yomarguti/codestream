@@ -1,16 +1,22 @@
 import React from "react";
 import Enzyme, { render } from "enzyme";
+import { Provider } from "react-redux";
 import Adapter from "enzyme-adapter-react-16";
 import { mountWithIntl } from "./intl-test-helper.js";
-import { SimpleLoginForm as LoginForm } from "../lib/components/onboarding/LoginForm";
+import LoginForm, { SimpleLoginForm } from "../lib/components/onboarding/LoginForm";
+import createStore from "../lib/createStore";
 
 Enzyme.configure({ adapter: new Adapter() });
 
-const mockRepository = { getConfigValue() {}, getWorkingDirectory() {} };
+const store = createStore();
 
 describe("LoginForm", () => {
 	describe("Email address field", () => {
-		const view = mountWithIntl(<LoginForm />);
+		const view = mountWithIntl(
+			<Provider store={store}>
+				<LoginForm />
+			</Provider>
+		);
 
 		it("shows errors when left empty", () => {
 			view.find('input[name="email"]').simulate("blur");
@@ -24,15 +30,15 @@ describe("LoginForm", () => {
 			);
 		});
 
-		describe("when an email address is not provided", () => {
-			it("uses 'Email Address' as the placeholder", () => {
-				expect(view.find('input[name="email"]').prop("placeholder")).toBe("Email Address");
-			});
+		it("uses 'Email Address' as the placeholder", () => {
+			expect(view.find('input[name="email"]').prop("placeholder")).toBe("Email Address");
 		});
 
 		describe("when 'email' and 'alreadySignedUp' props are provided to the component", () => {
 			const email = "foo@baz.com";
-			const view = mountWithIntl(<LoginForm email={email} alreadySignedUp={true} />);
+			const view = mountWithIntl(
+				<SimpleLoginForm email={email} alreadySignedUp={true} errors={{}} />
+			);
 			it("is pre-populated with given email address", () => {
 				expect(view.find('input[name="email"]').prop("value")).toBe(email);
 			});
@@ -47,14 +53,22 @@ describe("LoginForm", () => {
 
 	describe("Password field", () => {
 		it("shows errors when left empty", () => {
-			const view = mountWithIntl(<LoginForm />);
+			const view = mountWithIntl(
+				<Provider store={store}>
+					<LoginForm />
+				</Provider>
+			);
 			view.find('input[name="password"]').simulate("blur");
 			expect(view.find('input[name="password"][required]').exists()).toBe(true);
 		});
 	});
 
 	describe("Sign In button", () => {
-		const view = mountWithIntl(<LoginForm />);
+		const view = mountWithIntl(
+			<Provider store={store}>
+				<LoginForm />
+			</Provider>
+		);
 
 		it("is disabled while the form values are invalid", () => {
 			expect(view.find("Button").prop("disabled")).toBe(true);
@@ -69,11 +83,11 @@ describe("LoginForm", () => {
 	});
 
 	describe("when valid credentials are submitted", () => {
-		it("sends the email and password", () => {
+		it("calls the authenticate function with the email and password", () => {
 			const email = "foo@bar.com";
 			const password = "somePassword";
 			const authenticate = jasmine.createSpy("");
-			const view = mountWithIntl(<LoginForm authenticate={authenticate} />);
+			const view = mountWithIntl(<SimpleLoginForm authenticate={authenticate} errors={{}} />);
 			view.find('input[name="email"]').simulate("change", { target: { value: email } });
 			view.find('input[name="password"]').simulate("change", { target: { value: password } });
 			view.find("form").simulate("submit");
@@ -84,22 +98,11 @@ describe("LoginForm", () => {
 
 		describe("when authentication fails", () => {
 			it("shows an error", () => {
-				const email = "foo@bar.com";
-				const authenticate = () => Promise.reject();
-				const view = mountWithIntl(<LoginForm authenticate={authenticate} />);
-				view.find('input[name="email"]').simulate("change", { target: { value: email } });
-				view
-					.find('input[name="password"]')
-					.simulate("change", { target: { value: "somePassword" } });
-				view.find("form").simulate("submit");
+				const view = mountWithIntl(<SimpleLoginForm errors={{ invalidCredentials: true }} />);
 
-				waitsFor(() => view.state("failed"));
-				runs(() => {
-					view.update();
-					expect(view.find(".form-error").text()).toBe(
-						"Sorry, you entered an incorrect email or password."
-					);
-				});
+				expect(view.find(".form-error").text()).toBe(
+					"Sorry, you entered an incorrect email or password."
+				);
 			});
 		});
 	});

@@ -16,6 +16,15 @@ const addUser = user => dispatch => {
 	);
 };
 
+const saveUser = user => dispatch => {
+	db.users.put(user).then(() =>
+		dispatch({
+			type: "ADD_USER",
+			payload: user
+		})
+	);
+};
+
 const saveUsers = users => dispatch => {
 	db
 		.transaction("rw", db.users, () => {
@@ -64,7 +73,7 @@ const addRepo = repo => dispatch => {
 	);
 };
 
-const initSession = ({ user, accessToken }) => dispatch => {
+const initializeSession = ({ user, accessToken }) => dispatch => {
 	db.users.put(user).then(() => {
 		dispatch({ type: "UPDATE_USER", payload: user });
 		dispatch({ type: "INIT_SESSION", payload: { accessToken, userId: user.id } });
@@ -80,6 +89,11 @@ const fetchTeamMembers = teams => (dispatch, getState) => {
 	});
 };
 
+const userAlreadySignedUp = email => ({
+	type: "SIGNUP_EMAIL_EXISTS",
+	payload: { email, alreadySignedUp: true }
+});
+
 export const register = attributes => dispatch => {
 	post("/no-auth/register", attributes)
 		.then(({ user }) => {
@@ -88,15 +102,12 @@ export const register = attributes => dispatch => {
 			dispatch({ type: "SIGNUP_SUCCESS", payload: { ...attributes, userId: user.id } });
 		})
 		.catch(({ data }) => {
-			if (data.code === "RAPI-1004")
-				dispatch({
-					type: "SIGNUP_EMAIL_EXISTS",
-					payload: { email: attributes.email, alreadySignedUp: true }
-				});
+			if (data.code === "RAPI-1004") dispatch(userAlreadySignedUp(attributes.email));
 		});
 };
 
 export const goToSignup = () => ({ type: "GO_TO_SIGNUP" });
+export const alreadySignedUp = () => ({ type: "GO_TO_LOGIN" });
 
 export const confirmEmail = attributes => (dispatch, getState) => {
 	dispatch(requestStarted());
@@ -104,7 +115,7 @@ export const confirmEmail = attributes => (dispatch, getState) => {
 		.then(({ accessToken, user, teams, repos }) => {
 			dispatch(requestFinished());
 			user = normalize(user);
-			dispatch(initSession({ user, accessToken }));
+			dispatch(initializeSession({ user, accessToken }));
 
 			const { team } = getState();
 			const teamForRepo = team && team.id;
@@ -197,12 +208,22 @@ export const addMembers = emails => (dispatch, getState) => {
 		});
 };
 
-export const authenticate = async (store, attributes) => {
-	const { accessToken, user, teams, repos } = await put("/no-auth/login", attributes);
-	store.updateSession({ accessToken });
-	store.upsertUser(user);
-	store.upsertTeams(teams);
-	store.upsertRepos(repos);
+export const authenticate = params => (dispatch, getState) => {
+	dispatch(requestStarted());
+	put("/no-auth/login", params)
+		.then(({ accessToken, user, teams, repos }) => {
+			dispatch(requestFinished());
+			user = normalize(user);
+			dispatch(saveUser(user));
+			dispatch(initializeSession({ accessToken, user }));
+			dispatch(addTeams(teams.map(normalize)));
+			dispatch(addRepos(repos.map(normalize)));
+			dispatch({ type: "LOGGED_IN" });
+		})
+		.catch(error => {
+			dispatch(requestFinished());
+			dispatch({ type: "INVALID_CREDENTIALS" });
+		});
 };
 
 export default {
