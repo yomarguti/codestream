@@ -52,3 +52,10 @@ looks like
 In order to get through onboarding right now, you need to sign up, confirm your account, reload,
 skip to sign in, sign in with your credentials, and then you'll be shown the current stream
 interface, which is not hooked up to anything yet.
+
+
+## Resetting the database(s)
+
+At some point, you'll want to reset everything. The plugin keeps data cached in indexeddb so if you wipe everything in mongo, you probably should clear indexeddb too.
+
+To clear what's in indexeddb run `indexedDB.deleteDatabase('CodeStream')` in the dev console of atom and then reload atom.
