@@ -7,7 +7,7 @@ export default (state = initialState, { type, payload }) => {
 		case "BOOTSTRAP_REPOS":
 			return toMapBy("id", payload);
 		case "ADD_REPOS":
-			return { ...state, ...toMapBy(id, payload) };
+			return { ...state, ...toMapBy("id", payload) };
 		case "ADD_REPO":
 			return { ...state, [payload.id]: payload };
 		default:

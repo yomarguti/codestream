@@ -7,7 +7,7 @@ export default (state = initialState, { type, payload }) => {
 		case "BOOTSTRAP_TEAMS":
 			return toMapBy("id", payload);
 		case "ADD_TEAMS":
-			return { ...state, ...toMapBy(id, payload) };
+			return { ...state, ...toMapBy("id", payload) };
 		case "ADD_TEAM":
 			return { ...state, [payload.id]: payload };
 		default:

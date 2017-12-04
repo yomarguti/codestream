@@ -23,7 +23,7 @@ export const bootstrapStore = store => {
 			db.streams.limit(200).toArray(streams => store.dispatch(bootstrapStreams(streams)));
 		})
 		.catch(error => {
-			debugger;
+			// TODO: wtf
 		});
 };
 

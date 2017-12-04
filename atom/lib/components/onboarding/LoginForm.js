@@ -142,7 +142,7 @@ export class SimpleLoginForm extends Component {
 						</p>
 						<p>
 							<strong>
-								<a onClick={() => this.props.transition("signUp")}>
+								<a onClick={this.props.goToSignup}>
 									<FormattedMessage id="login.footer.signUp" />
 								</a>
 							</strong>

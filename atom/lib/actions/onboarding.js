@@ -1,6 +1,6 @@
 import { get, post, put } from "../network-request";
 import { normalize } from "./utils";
-import { setCurrentRepo } from "./context";
+import { setCurrentRepo, setCurrentTeam } from "./context";
 import db from "../local-cache";
 
 const requestStarted = () => ({ type: "REQUEST_STARTED" });
@@ -47,12 +47,12 @@ const addTeams = teams => dispatch => {
 };
 
 const addTeam = team => dispatch => {
-	db.teams.add(team).then(() =>
+	return db.teams.add(team).then(() => {
 		dispatch({
 			type: "ADD_TEAM",
 			payload: team
-		})
-	);
+		});
+	});
 };
 
 const addRepos = repos => dispatch => {
@@ -119,9 +119,9 @@ export const confirmEmail = attributes => (dispatch, getState) => {
 
 			const { team } = getState();
 			const teamForRepo = team && team.id;
-			const userTeams = teams.map(normalize);
+			const userTeams = normalize(teams);
 
-			dispatch(addRepos(repos.map(normalize)));
+			dispatch(addRepos(normalize(repos)));
 			dispatch(addTeams(userTeams));
 			if (!teamForRepo && userTeams.length === 0)
 				dispatch({ type: "NEW_USER_CONFIRMED_IN_NEW_REPO" });
@@ -166,11 +166,11 @@ export const createTeam = name => (dispatch, getState) => {
 		dispatch(requestFinished());
 		const team = normalize(data.team);
 		const repo = normalize(data.repo);
-		dispatch({ type: "TEAM_CREATED", payload: { teamId: team.id } });
-		dispatch(addTeam(team));
-		dispatch(addRepo(repo));
-		dispatch({ type: "SET_CURRENT_TEAM", payload: team.id });
+		dispatch(setCurrentTeam(team.id));
 		dispatch(setCurrentRepo(repo.id));
+		dispatch(addRepo(repo));
+		const teamAdded = dispatch(addTeam(team));
+		teamAdded.then(() => dispatch({ type: "TEAM_CREATED", payload: { teamId: team.id } }));
 	});
 };
 

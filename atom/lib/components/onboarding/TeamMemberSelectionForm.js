@@ -258,11 +258,9 @@ export class SimpleTeamMemberSelectionForm extends Component {
 		);
 	}
 }
-const mapStateToProps = ({ session, onboarding, users, currentTeamId }) => {
+const mapStateToProps = ({ session, onboarding, users, context, teams }) => {
 	return {
-		memberEmails: users
-			.filter(({ id, teamIds = [] }) => teamIds.includes(currentTeamId) || session.userId === id)
-			.map(user => user.email),
+		memberEmails: teams[context.currentTeamId].memberIds.map(id => users[id].email),
 		serverLoading: onboarding.requestInProcess,
 		errors: onboarding.errors
 	};
