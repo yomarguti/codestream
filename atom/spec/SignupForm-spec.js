@@ -6,10 +6,11 @@ import { mountWithIntl } from "./intl-test-helper.js";
 import SignupForm, { SimpleSignupForm } from "../lib/components/onboarding/SignupForm";
 import createStore from "../lib/createStore";
 import RepositoryProvider from "./RepositoryProvider";
+import { setContext } from "../lib/actions/context";
 
 Enzyme.configure({ adapter: new Adapter() });
 
-const store = createStore({ usernamesInTeam: [] });
+const store = createStore();
 const repository = { getConfigValue: () => {}, getWorkingDirectory: () => {} };
 const repositories = [repository];
 
@@ -45,10 +46,11 @@ describe("SignupForm view", () => {
 
 		describe("when a username is already in use on a team", () => {
 			it("shows errors on blur", () => {
-				store.dispatch({
-					type: "ADD_REPO_INFO",
-					payload: { usernamesInTeam: ["foobar"] }
-				});
+				store.dispatch(
+					setContext({
+						usernamesInTeam: ["foobar"]
+					})
+				);
 				const event = { target: { value: "foobar" } };
 				view.find('input[name="username"]').simulate("change", event);
 				view.find('input[name="username"]').simulate("blur");

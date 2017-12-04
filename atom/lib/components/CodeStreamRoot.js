@@ -29,7 +29,6 @@ class CodeStreamRoot extends Component {
 	render() {
 		const { accessToken, repositories, onboarding } = this.props;
 
-		console.log("rendering with", this.props);
 		if (repositories.length === 0) return <NoGit />;
 		else if (onboarding.complete && accessToken) return <Stream />;
 		else {
@@ -38,12 +37,8 @@ class CodeStreamRoot extends Component {
 	}
 }
 
-const mapStateToProps = ({ session, user, team, onboarding, repos, repoMetadata }) => ({
+const mapStateToProps = ({ session, onboarding }) => ({
 	accessToken: session.accessToken,
-	user,
-	team,
-	onboarding,
-	repos,
-	repoMetadata
+	onboarding
 });
 export default connect(mapStateToProps)(CodeStreamRoot);

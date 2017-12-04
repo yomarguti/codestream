@@ -3,6 +3,7 @@ import CodestreamView, { CODESTREAM_VIEW_URI } from "./codestream-view";
 import { get } from "./network-request";
 import git from "./git";
 import createStore from "./createStore";
+import { setRepoAttributes, setContext, setCurrentFile } from "./actions/context";
 
 // TODO: figure out if there's a better place for this
 const accessToken = localStorage.getItem("codestream.accessToken");
@@ -30,10 +31,8 @@ module.exports = {
 
 			this.subscriptions.add(
 				atom.workspace.observeActiveTextEditor(editor => {
-					store.dispatch({
-						type: "ACTIVE_FILE_CHANGED",
-						payload: editor ? repo.relativize(editor.getPath()) : ""
-					});
+					const path = editor ? repo.relativize(editor.getPath()) : "";
+					store.dispatch(setCurrentFile(path));
 				})
 			);
 
@@ -45,20 +44,16 @@ module.exports = {
 			const data = await get(
 				`/no-auth/find-repo?url=${repoUrl}&firstCommitHash=${firstCommitHash}`
 			);
-			const repoMetadata = { url: repoUrl, firstCommitHash };
-			const info =
-				Object.keys(data).length === 0
-					? { repoMetadata, usernamesInTeam: [] }
-					: {
-							repoMetadata,
-							usernamesInTeam: data.usernames,
-							currentRepoId: data.repo._id,
-							currentTeamId: data.repo.teamId
-						};
-			store.dispatch({
-				type: "ADD_REPO_INFO",
-				payload: info
-			});
+			store.dispatch(setRepoAttributes({ url: repoUrl, firstCommitHash }));
+			if (Object.keys(data).length > 0) {
+				store.dispatch(
+					setContext({
+						usernamesInTeam: data.usernames,
+						currentRepoId: data.repo._id,
+						currentTeamId: data.repo.teamId
+					})
+				);
+			}
 		}
 	},
 

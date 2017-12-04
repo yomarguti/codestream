@@ -49,17 +49,22 @@ const rejectPendingPost = (streamId, pendingId, post) => dispatch => {
 };
 
 export const fetchStream = () => async (dispatch, getState) => {
-	const { session, currentFile, currentTeamId, currentRepoId } = getState();
+	const { session, context } = getState();
 	// create stream - right now the server doesn't complain if a stream already exists
 	const streamData = await http.post(
 		"/streams",
-		{ teamId: currentTeamId, type: "file", file: currentFile, repoId: currentRepoId },
+		{
+			teamId: context.currentTeamId,
+			type: "file",
+			file: context.currentFile,
+			repoId: context.currentRepoId
+		},
 		session.accessToken
 	);
 	const stream = normalize(streamData.stream);
 	dispatch(addStream(stream));
 	const { posts } = await http.get(
-		`/posts?teamId=${currentTeamId}&streamId=${stream.id}`,
+		`/posts?teamId=${context.currentTeamId}&streamId=${stream.id}`,
 		session.accessToken
 	);
 	dispatch(addPostsForStream(stream.id, normalize(posts)));

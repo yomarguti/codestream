@@ -21,7 +21,7 @@ const store = createStore({
 	session: { userId: "userId" },
 	users: [{ id: "userId", teamIds: ["1", "2"] }],
 	teams: [team1, team2, { id: "3", name: "Open Sourcerers" }],
-	repoMetadata: {
+	repoAttributes: {
 		url: repoUrl,
 		firstCommitHash
 	}

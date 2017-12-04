@@ -1,11 +1,11 @@
 import { get, post, put } from "../network-request";
 import { normalize } from "./utils";
+import { setCurrentRepo } from "./context";
 import db from "../local-cache";
 
 const requestStarted = () => ({ type: "REQUEST_STARTED" });
 const requestFinished = () => ({ type: "REQUEST_FINISHED" });
 const completeOnboarding = () => ({ type: "ONBOARDING_COMPLETE" });
-const setCurrentRepo = id => ({ type: "SET_CURRENT_REPO", payload: id });
 
 const addUser = user => dispatch => {
 	db.users.add(user).then(() =>
@@ -155,10 +155,10 @@ export const sendNewCode = attributes => dispatch => {
 };
 
 export const createTeam = name => (dispatch, getState) => {
-	const { session, repoMetadata } = getState();
+	const { session, repoAttributes } = getState();
 	const params = {
-		url: repoMetadata.url,
-		firstCommitHash: repoMetadata.firstCommitHash,
+		url: repoAttributes.url,
+		firstCommitHash: repoAttributes.firstCommitHash,
 		team: { name }
 	};
 	dispatch(requestStarted());
@@ -175,8 +175,8 @@ export const createTeam = name => (dispatch, getState) => {
 };
 
 export const addRepoForTeam = teamId => (dispatch, getState) => {
-	const { repoMetadata, session } = getState();
-	const params = { ...repoMetadata, teamId };
+	const { repoAttributes, session } = getState();
+	const params = { ...repoAttributes, teamId };
 	dispatch(requestStarted());
 	post("/repos", params, session.accessToken)
 		.then(data => {
@@ -197,8 +197,8 @@ export const teamNotFound = () => ({ type: "TEAM_NOT_FOUND" });
 export const noPermission = () => ({ type: "INVALID_PERMISSION_FOR_TEAM" });
 
 export const addMembers = emails => (dispatch, getState) => {
-	const { repoMetadata, currentTeamId, session } = getState();
-	const params = { ...repoMetadata, teamId: currentTeamId, emails };
+	const { repoAttributes, currentTeamId, session } = getState();
+	const params = { ...repoAttributes, teamId: currentTeamId, emails };
 	post("/repos", params, session.accessToken)
 		.then(({ users }) => {
 			dispatch(saveUsers(users.map(normalize)));
