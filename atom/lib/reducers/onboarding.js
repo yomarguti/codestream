@@ -8,6 +8,8 @@ const initialState = {
 
 export default (state = initialState, { type, payload }) => {
 	switch (type) {
+		case "LOAD_ONBOARDING":
+			return payload || state;
 		case "REQUEST_STARTED":
 			return { ...state, requestInProcess: true };
 		case "REQUEST_FINISHED":

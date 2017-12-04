@@ -63,6 +63,7 @@ module.exports = {
 	},
 
 	activate(state) {
+		store.dispatch({ type: "LOAD_ONBOARDING", payload: state.onboarding });
 		this.subscriptions.add(
 			atom.workspace.addOpener(uri => {
 				if (uri === CODESTREAM_VIEW_URI) {
@@ -86,9 +87,9 @@ module.exports = {
 	},
 
 	serialize() {
-		const { session, team, repo } = store.getState();
+		const { session, onboarding } = store.getState();
 		if (session.accessToken) localStorage.setItem("codestream.accessToken", session.accessToken);
-		return { team, repo };
+		return { onboarding };
 	},
 
 	deserializeCodestreamView(data) {
