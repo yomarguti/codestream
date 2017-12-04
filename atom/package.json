@@ -50,7 +50,7 @@
   "dependencies": {
     "classnames": "^2.2.5",
     "dexie": "^2.0.1",
-    "moment": "^2.0.0",
+    "moment": "^2.19.3",
     "prop-types": "^15.6.0",
     "react": "^16.0.0",
     "react-contenteditable": "^2.0.5",
@@ -59,6 +59,7 @@
     "react-intl": "^2.4.0",
     "react-redux": "^5.0.6",
     "redux": "^3.7.2",
+    "redux-devtools-extension": "^2.13.2",
     "redux-thunk": "^2.2.0",
     "underscore": "^1.8.3",
     "username": "^3.0.0",

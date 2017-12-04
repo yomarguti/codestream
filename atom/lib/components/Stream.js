@@ -24,30 +24,42 @@ export class SimpleStream extends Component {
 		this.state = {
 			stream: {},
 			streamName: "Dummy.js",
-			// posts: [
-			// 	{
-			// 		id: 1,
-			// 		author: "akonwi",
-			// 		body: "this is a post",
-			// 		timestamp: 1410650773000,
-			// 		email: "akonwi@codestream.com"
-			// 	},
-			// 	{
-			// 		id: 2,
-			// 		author: "jj",
-			// 		body: "this is another post",
-			// 		timestamp: 1411680773000,
-			// 		email: "jj@codestream.com"
-			// 	},
-			// 	{
-			// 		id: 3,
-			// 		author: "marcelo",
-			// 		body:
-			// 			"because of the way browsers work, @pez although this will change the scrollbar thumb position, it will not change what @akonwi is looking at (i.e. posts won't shift around).",
-			// 		timestamp: 1501650773000,
-			// 		email: "marcelo@codestream.com"
-			// 	}
-			// ],
+			posts: [
+				// {
+				// 	id: 1,
+				// 	nick: "akonwi",
+				// 	fullName: "Akonwi Ngoh",
+				// 	body: "this is a post",
+				// 	timestamp: 1410650773000,
+				// 	email: "akonwi@codestream.com"
+				// },
+				// {
+				// 	id: 2,
+				// 	nick: "jj",
+				// 	fullName: "James Price",
+				// 	body: "this is another post",
+				// 	timestamp: 1411680773000,
+				// 	email: "jj@codestream.com"
+				// },
+				// {
+				// 	id: 2,
+				// 	nick: "colin",
+				// 	fullName: "Colin Stryker",
+				// 	body: "AvE adds more value to my life than some of my family members",
+				// 	timestamp: 1411680774000,
+				// 	newSeparator: true,
+				// 	email: "colin@codestream.com"
+				// },
+				// {
+				// 	id: 3,
+				// 	nick: "marcelo",
+				// 	fullName: "Marcelo",
+				// 	body:
+				// 		"because of the way browsers work, @pez although this will change the scrollbar thumb position, it will not change what @akonwi is looking at (i.e. posts won't shift around).",
+				// 	timestamp: 1501650773000,
+				// 	email: "marcelo@codestream.com"
+				// }
+			],
 			authors: [
 				{ id: 1, nick: "pez", fullName: "Peter Pezaris", email: "pez@codestream.com" },
 				{
@@ -74,7 +86,7 @@ export class SimpleStream extends Component {
 			atom.commands.add("atom-workspace", {
 				"codestream:add-dummy-post": event => this.addDummyPost(),
 				"codestream:comment": event => this.handleClickAddComment(),
-				"codestream:focus-input": event => this.focusInput()
+				"codestream:focus-input": event => this.toggleFocusInput()
 			})
 		);
 
@@ -100,7 +112,7 @@ export class SimpleStream extends Component {
 		var timestamp = +new Date();
 		var newPost = {
 			id: 3,
-			author: "colin",
+			nick: "colin",
 			body:
 				"perhaps. blame isn't part of git-plus so I can't think of anything that stands out yet. there is a git-blame package that users wanted to see merged into git-plus. maybe there's some insight there",
 			email: "colin@codestream.com",
@@ -181,6 +193,7 @@ export class SimpleStream extends Component {
 				<div className="postslist" ref={ref => (this._postslist = ref)}>
 					<div className="intro" ref={ref => (this._intro = ref)}>
 						<label>
+							<span class="logo">&#x2B22;</span>
 							Welcome to the stream.<br />Info goes here.
 						</label>
 					</div>
@@ -229,6 +242,12 @@ export class SimpleStream extends Component {
 		// text = text.replace(/(@\w+)/g, <span class="at-mention">$1</span>);
 		this.setState({ newPostText: text });
 	}
+
+	toggleFocusInput = () => {
+		if (document.activeElement && document.activeElement.id == "input-div")
+			atom.workspace.getCenter().activate();
+		else this.focusInput();
+	};
 
 	focusInput = () => {
 		document.getElementById("input-div").focus();
@@ -438,7 +457,6 @@ export class SimpleStream extends Component {
 	handleHoverAtMention = nick => {
 		let index = this.state.atMentionsPeople.findIndex(x => x.nick == nick);
 
-		console.log(index);
 		this.setState({
 			atMentionsIndex: index,
 			selectedAtMention: nick
@@ -472,6 +490,16 @@ export class SimpleStream extends Component {
 		// 	newPost.quoteText = this.state.quoteText;
 		// 	newPost.quoteRange = this.state.quoteRange;
 		// }
+		var timestamp = +new Date();
+		var newPost = {
+			// FIXME fake data
+			id: 3,
+			nick: "pez",
+			fullName: "Peter Pezaris",
+			body: newText,
+			email: "pez@codestream.com",
+			timestamp: timestamp
+		};
 
 		this.props.createPost(this.props.id, newText);
 

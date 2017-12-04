@@ -1,12 +1,15 @@
 import React, { Component } from "react";
 import Gravatar from "react-gravatar";
 import Timestamp from "./Timestamp";
+import Menu from "./Menu";
+import createClassString from "classnames";
 
 export default class Post extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			post: props.post
+			post: props.post,
+			menuOpen: false
 		};
 	}
 
@@ -20,14 +23,24 @@ export default class Post extends Component {
 		// unless the post is mine, in which case we always scroll to bottom
 		// we check to see if it's below 100 because if you are scrolled
 		// almost to the bottom, we count that as being at the bottom for UX reasons
-		if (offBottom < 100 || this.state.post.author == "pez") {
+		if (offBottom < 100 || this.state.post.nick == "pez") {
 			// big number to make sure we've scrolled all the way down
 			streamDiv.scrollTop = 100000;
 		}
+
+		if (this.props.post.fullName)
+			atom.tooltips.add(this._authorDiv, { title: this.props.post.fullName });
 	}
 
 	render() {
 		const { post } = this.state;
+
+		const postClass = createClassString({
+			post: true,
+			"new-separator": post.newSeparator
+		});
+		console.log(postClass);
+
 		const codeblock = post.quoteText ? <div className="code">{post.quoteText}</div> : "";
 
 		// FIXME -- only replace the at-mentions of actual authors, rather than any
@@ -35,10 +48,26 @@ export default class Post extends Component {
 		let body = post.text.replace(/(@\w+)/g, <span class="at-mention">$1</span>);
 		let bodyParts = post.text.split(/(@\w+)/);
 
+		let menuItems = [
+			{ label: "Mark Unread", key: "mark-unread" },
+			{ label: "Add Reaction", key: "add-reaction" },
+			{ label: "Pin to Stream", key: "pin-to-stream" },
+			{ label: "Edit Message", key: "edit-message" },
+			{ label: "Delete Message", key: "delete-message" }
+		];
+
+		let menu = this.state.menuOpen ? <Menu items={menuItems} /> : null;
+
 		// FIXME use a real email address
 		return (
-			<div className="post" id={post.id} onClick={this.handleClick} ref={ref => (this._div = ref)}>
+			<div
+				className={postClass}
+				id={post.id}
+				onClick={this.handleClick}
+				ref={ref => (this._div = ref)}
+			>
 				<span className="icon icon-gear" onClick={this.handleMenuClick} />
+				{menu}
 				<Gravatar
 					className="headshot"
 					size={36}
@@ -46,7 +75,7 @@ export default class Post extends Component {
 					protocol="http://"
 					email={post.email}
 				/>
-				<author>{post.author}</author>
+				<author ref={ref => (this._authorDiv = ref)}>{post.nick}</author>
 				<Timestamp time={post.timestamp} />
 				<div className="body">
 					{bodyParts.map(part => {
@@ -68,6 +97,7 @@ export default class Post extends Component {
 
 	handleMenuClick = async event => {
 		event.stopPropagation();
+		this.setState({ menuOpen: !this.state.menuOpen });
 		console.log("CLICK ON MENU: ");
 	};
 }
