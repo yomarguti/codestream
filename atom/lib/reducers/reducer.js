@@ -4,18 +4,12 @@ import postsByStream from "./postsByStream";
 import context from "./context";
 import streams from "./streams";
 import users from "./users";
+import repos from "./repos";
 
 const teams = (state = [], { type, payload }) => {
 	// is it naive to just replace the existing ones?
 	if (type === "ADD_TEAMS") return payload;
 	if (type === "ADD_TEAM") return [...state, payload];
-	return state;
-};
-
-const repos = (state = [], { type, payload }) => {
-	// is it naive to just replace the existing ones?
-	if (type === "ADD_REPOS") return payload;
-	if (type === "ADD_REPO") return [...state, payload];
 	return state;
 };
 
