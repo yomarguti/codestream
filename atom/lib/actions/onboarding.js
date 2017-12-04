@@ -5,6 +5,7 @@ import db from "../local-cache";
 const requestStarted = () => ({ type: "REQUEST_STARTED" });
 const requestFinished = () => ({ type: "REQUEST_FINISHED" });
 const completeOnboarding = () => ({ type: "ONBOARDING_COMPLETE" });
+const setCurrentRepo = id => ({ type: "SET_CURRENT_REPO", payload: id });
 
 const addUser = user => dispatch => {
 	db.users.add(user).then(() =>
@@ -164,10 +165,12 @@ export const createTeam = name => (dispatch, getState) => {
 	post("/repos", params, session.accessToken).then(data => {
 		dispatch(requestFinished());
 		const team = normalize(data.team);
+		const repo = normalize(data.repo);
 		dispatch({ type: "TEAM_CREATED", payload: { teamId: team.id } });
 		dispatch(addTeam(team));
-		dispatch(addRepo(normalize(data.repo)));
+		dispatch(addRepo(repo));
 		dispatch({ type: "SET_CURRENT_TEAM", payload: team.id });
+		dispatch(setCurrentRepo(repo.id));
 	});
 };
 
@@ -180,7 +183,7 @@ export const addRepoForTeam = teamId => (dispatch, getState) => {
 			const repo = normalize(data.repo);
 			dispatch(requestFinished());
 			dispatch(addRepo(repo));
-			dispatch({ type: "SET_CURRENT_REPO", payload: repo.id });
+			dispatch(setCurrentRepo(repo.id));
 			dispatch({ type: "REPO_ADDED_FOR_TEAM" });
 		})
 		.catch(error => {
