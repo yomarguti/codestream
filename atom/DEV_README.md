@@ -58,4 +58,6 @@ interface, which is not hooked up to anything yet.
 
 At some point, you'll want to reset everything. The plugin keeps data cached in indexeddb so if you wipe everything in mongo, you probably should clear indexeddb too.
 
+You can use Mongo's app, [Compass](https://www.mongodb.com/products/compass), for interacting with databases.
+
 To clear what's in indexeddb run `indexedDB.deleteDatabase('CodeStream')` in the dev console of atom and then reload atom.
