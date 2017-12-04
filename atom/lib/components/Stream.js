@@ -113,7 +113,7 @@ export class SimpleStream extends Component {
 		var timestamp = +new Date();
 		var newPost = {
 			id: 3,
-			author: "colin",
+			nick: "colin",
 			body:
 				"perhaps. blame isn't part of git-plus so I can't think of anything that stands out yet. there is a git-blame package that users wanted to see merged into git-plus. maybe there's some insight there",
 			email: "colin@codestream.com",
