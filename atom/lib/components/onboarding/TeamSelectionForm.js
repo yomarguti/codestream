@@ -1,18 +1,15 @@
 import React, { Component } from "react";
 import { FormattedMessage } from "react-intl";
-import withAPI from "./withAPI";
+import { connect } from "react-redux";
 import Button from "./Button";
-import { createTeam, addRepoForTeam } from "../../actions/team";
+import actions from "../../actions/onboarding";
 
 export class SimpleTeamSelectionForm extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
 			selectedValue: "",
-			newTeamName: "",
-			loading: false,
-			teamNotFound: false,
-			teams: props.store.getViewData().teams
+			newTeamName: ""
 		};
 	}
 
@@ -36,45 +33,20 @@ export class SimpleTeamSelectionForm extends Component {
 
 	onSubmit = () => {
 		if (this.isFormInvalid()) return;
-		this.setState({ loading: true });
-		const { createTeam, store, transition, addRepoForTeam } = this.props;
-		const { url, firstCommitHash } = store.getViewData().repoMetadata;
-		const { selectedValue, newTeamName, teams } = this.state;
-		const creatingNewTeam = selectedValue === "createTeam";
+		const { selectedValue, newTeamName } = this.state;
 
-		let promise;
-		if (creatingNewTeam) {
-			promise = createTeam({ name: newTeamName, url, firstCommitHash });
-		} else {
-			promise = addRepoForTeam({ teamId: selectedValue, url, firstCommitHash });
-		}
-		promise
-			.then(data => {
-				this.setState({ loading: false });
-				if (!creatingNewTeam) {
-					const teamName = teams.filter(({ _id }) => _id === selectedValue)[0].name;
-					transition("success", { existingTeam: true, teamName, teamId: selectedValue });
-				} else transition("success");
-			})
-			.catch(error => {
-				this.setState({ loading: false });
-				if (error.data.code === "RAPI-1003") {
-					this.setState({ teamNotFound: true });
-				}
-				if (error.data.code === "RAPI-1011") {
-					this.setState({ noPermission: true });
-				}
-			});
+		if (selectedValue === "createTeam") this.props.createTeam(newTeamName);
+		else this.props.addRepoForTeam(selectedValue);
 	};
 
 	renderError = () => {
-		if (this.state.teamNotFound)
+		if (this.props.errors.teamNotFound)
 			return (
 				<p className="error-message">
 					<FormattedMessage id="teamSelection.error.teamNotFound" />
 				</p>
 			);
-		if (this.state.noPermission)
+		if (this.props.errors.noPermission)
 			return (
 				<p className="error-message">
 					<FormattedMessage id="teamSelection.error.noPermission" />
@@ -119,7 +91,7 @@ export class SimpleTeamSelectionForm extends Component {
 							ref={element => (this.nameInput = element)}
 						/>
 					</div>
-					{this.state.teams.map((team, index) => {
+					{this.props.teams.map((team, index) => {
 						return (
 							<div key={index} className="control-group">
 								<label className="input-label">
@@ -127,8 +99,8 @@ export class SimpleTeamSelectionForm extends Component {
 										className="input-radio"
 										type="radio"
 										name="team"
-										value={team._id}
-										checked={this.isSelected(team._id)}
+										value={team.id}
+										checked={this.isSelected(team.id)}
 										onChange={this.onSelect}
 									/>
 									{team.name}
@@ -136,7 +108,7 @@ export class SimpleTeamSelectionForm extends Component {
 							</div>
 						);
 					})}
-					<Button id="submit-button" disabled={this.isFormInvalid()} loading={this.state.loading}>
+					<Button id="submit-button" disabled={this.isFormInvalid()} loading={this.props.loading}>
 						<FormattedMessage id="teamSelection.submitButton" defaultMessage="NEXT" />
 					</Button>
 				</form>
@@ -145,4 +117,12 @@ export class SimpleTeamSelectionForm extends Component {
 	}
 }
 
-export default withAPI(() => ({}), { createTeam, addRepoForTeam })(SimpleTeamSelectionForm);
+const mapStateToProps = ({ onboarding, session, teams, users }) => {
+	const user = users.find(u => u.id === session.userId);
+	return {
+		teams: teams.filter(team => user.teamIds.includes(team.id)),
+		loading: onboarding.requestInProcess,
+		errors: onboarding.errors
+	};
+};
+export default connect(mapStateToProps, actions)(SimpleTeamSelectionForm);

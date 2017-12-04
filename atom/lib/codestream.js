@@ -4,7 +4,10 @@ import { get } from "./network-request";
 import git from "./git";
 import createStore from "./createStore";
 
-const store = createStore();
+// TODO: figure out if there's a better place for this
+const accessToken = localStorage.getItem("codestream.accessToken");
+const session = accessToken === "undefined" ? {} : { accessToken };
+const store = createStore({ session });
 
 module.exports = {
 	subscriptions: new CompositeDisposable(),

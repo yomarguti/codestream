@@ -3,6 +3,9 @@ import db from "../local-cache";
 
 const normalize = ({ _id, ...rest }) => ({ id: _id, ...rest });
 
+const requestStarted = () => ({ type: "REQUEST_STARTED" });
+const requestFinished = () => ({ type: "REQUEST_FINISHED" });
+
 const addUser = user => dispatch => {
 	db.users.add(user).then(() =>
 		dispatch({
@@ -34,7 +37,7 @@ const addRepos = repos => dispatch => {
 	db.repos.bulkPut(repos).then(() =>
 		dispatch({
 			type: "ADD_REPOS",
-			payload: teams
+			payload: repos
 		})
 	);
 };
@@ -51,7 +54,7 @@ const addRepo = repo => dispatch => {
 const initSession = ({ user, accessToken }) => dispatch => {
 	db.users.put(user).then(() => {
 		dispatch({ type: "UPDATE_USER", payload: user });
-		dispatch({ type: "INIT_SESSION", payload: { accessToken } });
+		dispatch({ type: "INIT_SESSION", payload: { accessToken, userId: user.id } });
 	});
 };
 
@@ -74,10 +77,10 @@ export const register = attributes => dispatch => {
 export const goToSignup = () => ({ type: "GO_TO_SIGNUP" });
 
 export const confirmEmail = attributes => (dispatch, getState) => {
-	dispatch({ type: "REQUEST_STARTED" });
+	dispatch(requestStarted());
 	post("/no-auth/confirm", attributes)
 		.then(({ accessToken, user, teams, repos }) => {
-			dispatch({ type: "REQUEST_FINISHED" });
+			dispatch(requestFinished());
 			user = normalize(user);
 			dispatch(initSession({ user, accessToken }));
 
@@ -89,15 +92,14 @@ export const confirmEmail = attributes => (dispatch, getState) => {
 			dispatch(addTeams(userTeams));
 			if (!teamForRepo && userTeams.length === 0)
 				dispatch({ type: "NEW_USER_CONFIRMED_IN_NEW_REPO" });
-			if (!teamForRepo && userTeams > 0) {
+			if (!teamForRepo && userTeams.length > 0)
 				dispatch({ type: "EXISTING_USER_CONFIRMED_IN_NEW_REPO" });
-			}
 			if (userTeams.find(t => t.id === teamForRepo)) {
 				dispatch({ type: "EXISTING_USER_CONFIRMED" });
 			}
 		})
 		.catch(({ data }) => {
-			dispatch({ type: "REQUEST_FINISHED" });
+			dispatch(requestFinished());
 			if (data.code === "USRC-1006")
 				dispatch({
 					type: "USER_ALREADY_CONFIRMED",
@@ -122,9 +124,9 @@ export const createTeam = name => (dispatch, getState) => {
 		firstCommitHash: repoMetadata.firstCommitHash,
 		team: { name }
 	};
-	dispatch({ type: "REQUEST_STARTED" });
+	dispatch(requestStarted());
 	post("/repos", params, session.accessToken).then(data => {
-		dispatch({ type: "REQUEST_FINISHED" });
+		dispatch(requestFinished());
 		const team = normalize(data.team);
 		dispatch({ type: "TEAM_CREATED", payload: { teamId: team.id } });
 		dispatch(addTeam(team));
@@ -132,6 +134,28 @@ export const createTeam = name => (dispatch, getState) => {
 		dispatch({ type: "TEAM_SELECTED_FOR_REPO", payload: team });
 	});
 };
+
+export const addRepoForTeam = teamId => (dispatch, getState) => {
+	const { repoMetadata, session } = getState();
+	const params = { ...repoMetadata, teamId };
+	dispatch(requestStarted());
+	post("/repos", params, session.accessToken)
+		.then(data => {
+			const repo = normalize(data.repo);
+			dispatch(requestFinished());
+			dispatch(addRepo(repo));
+			dispatch({ type: "SET_CURRENT_REPO", payload: repo.id });
+			dispatch({ type: "REPO_ADDED_FOR_TEAM" });
+		})
+		.catch(error => {
+			dispatch(requestFinished());
+			if (error.data.code === "RAPI-1003") dispatch(teamNotFound());
+			if (error.data.code === "RAPI-1011") dispatch(noPermission());
+		});
+};
+
+export const teamNotFound = () => ({ type: "TEAM_NOT_FOUND" });
+export const noPermission = () => ({ type: "INVALID_PERMISSION_FOR_TEAM" });
 
 export const authenticate = async (store, attributes) => {
 	const { accessToken, user, teams, repos } = await put("/no-auth/login", attributes);

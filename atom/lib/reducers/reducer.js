@@ -36,7 +36,7 @@ const reduceRepos = (state = [], { type, payload }) => {
 };
 
 const reduceSession = (state = {}, { type, payload }) => {
-	if (type === "INIT_SESSION") return { accessToken: payload.accessToken, user: payload.user };
+	if (type === "INIT_SESSION") return payload;
 	else return state;
 };
 
@@ -53,6 +53,7 @@ export default (state = initialState, action) => {
 	if (action.type === "ACTIVE_FILE_CHANGED") return { ...state, currentFile: action.payload };
 	if (action.type === "ADD_REPO_INFO") return { ...state, ...action.payload };
 	if (action.type === "TEAM_SELECTED_FOR_REPO") return { ...state, team: action.payload };
+	if (action.type === "SET_CURRENT_REPO") return { ...state, currentRepo: action.payload };
 	else
 		return {
 			...state,

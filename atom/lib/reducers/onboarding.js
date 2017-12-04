@@ -17,11 +17,11 @@ export default (state = initialState, { type, payload }) => {
 		case "SIGNUP_EMAIL_EXISTS":
 			return { ...state, step: "login", props: payload };
 		case "GO_TO_SIGNUP":
-			return { ...state, step: "signUp" };
+			return { ...initialState, step: "signUp" };
 		case "NEW_USER_CONFIRMED_IN_NEW_REPO":
-			return { ...state, step: "createTeam" };
+			return { ...initialState, step: "createTeam" };
 		case "EXISTING_USER_CONFIRMED_IN_NEW_REPO":
-			return { ...state, step: "selectTeam" };
+			return { ...initialState, step: "selectTeam" };
 		case "EXISTING_USER_CONFIRMED":
 			return { ...initialState, complete: true };
 		case "INVALID_CONFIRMATION_CODE":
@@ -30,6 +30,12 @@ export default (state = initialState, { type, payload }) => {
 			return { ...state, errors: { expiredCode: true } };
 		case "TEAM_CREATED":
 			return { ...state, step: "identifyMembers", props: payload };
+		case "TEAM_NOT_FOUND":
+			return { ...state, errors: { teamNotFound: true } };
+		case "INVALID_PERMISSION_FOR_TEAM":
+			return { ...state, errors: { noPermission: true } };
+		case "REPO_ADDED_FOR_TEAM":
+			return { ...initialState, step: "identifyMembers", props: { existingTeam: true } };
 		default:
 			return state;
 	}
