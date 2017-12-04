@@ -2,7 +2,7 @@ import Dexie from "dexie";
 
 Dexie.debug = true;
 
-const db = new Dexie("myDb");
+const db = new Dexie("CodeStream");
 db.version(1).stores({
 	streams: "id, teamId, repoId",
 	posts: "id, teamId, streamId, creatorId",

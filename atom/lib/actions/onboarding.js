@@ -1,10 +1,11 @@
-import { post, put } from "../network-request";
+import { get, post, put } from "../network-request";
 import db from "../local-cache";
 
 const normalize = ({ _id, ...rest }) => ({ id: _id, ...rest });
 
 const requestStarted = () => ({ type: "REQUEST_STARTED" });
 const requestFinished = () => ({ type: "REQUEST_FINISHED" });
+const completeOnboarding = () => ({ type: "ONBOARDING_COMPLETE" });
 
 const addUser = user => dispatch => {
 	db.users.add(user).then(() =>
@@ -13,6 +14,18 @@ const addUser = user => dispatch => {
 			payload: user
 		})
 	);
+};
+
+const saveUsers = users => dispatch => {
+	db
+		.transaction("rw", db.users, () => {
+			db.users.bulkPut(users).then(() => {
+				dispatch({ type: "ADD_USERS", payload: users });
+			});
+		})
+		.catch(e => {
+			console.log(e);
+		});
 };
 
 const addTeams = teams => dispatch => {
@@ -58,6 +71,15 @@ const initSession = ({ user, accessToken }) => dispatch => {
 	});
 };
 
+const fetchTeamMembers = teams => (dispatch, getState) => {
+	const { session } = getState();
+	teams.forEach(({ id }) => {
+		get(`/users?teamId=${id}`, session.accessToken).then(({ users }) =>
+			dispatch(saveUsers(users.map(normalize)))
+		);
+	});
+};
+
 export const register = attributes => dispatch => {
 	post("/no-auth/register", attributes)
 		.then(({ user }) => {
@@ -92,9 +114,13 @@ export const confirmEmail = attributes => (dispatch, getState) => {
 			dispatch(addTeams(userTeams));
 			if (!teamForRepo && userTeams.length === 0)
 				dispatch({ type: "NEW_USER_CONFIRMED_IN_NEW_REPO" });
-			if (!teamForRepo && userTeams.length > 0)
+			if (!teamForRepo && userTeams.length > 0) {
+				dispatch(fetchTeamMembers(userTeams));
 				dispatch({ type: "EXISTING_USER_CONFIRMED_IN_NEW_REPO" });
+			}
 			if (userTeams.find(t => t.id === teamForRepo)) {
+				// TODO: maybe?
+				// dispatch(fetchTeamMembers(userTeams));
 				dispatch({ type: "EXISTING_USER_CONFIRMED" });
 			}
 		})
@@ -131,7 +157,7 @@ export const createTeam = name => (dispatch, getState) => {
 		dispatch({ type: "TEAM_CREATED", payload: { teamId: team.id } });
 		dispatch(addTeam(team));
 		dispatch(addRepo(normalize(data.repo)));
-		dispatch({ type: "TEAM_SELECTED_FOR_REPO", payload: team });
+		dispatch({ type: "SET_CURRENT_TEAM", payload: team.id });
 	});
 };
 
@@ -156,6 +182,20 @@ export const addRepoForTeam = teamId => (dispatch, getState) => {
 
 export const teamNotFound = () => ({ type: "TEAM_NOT_FOUND" });
 export const noPermission = () => ({ type: "INVALID_PERMISSION_FOR_TEAM" });
+
+export const addMembers = emails => (dispatch, getState) => {
+	const { repoMetadata, currentTeamId, session } = getState();
+	const params = { ...repoMetadata, teamId: currentTeamId, emails };
+	post("/repos", params, session.accessToken)
+		.then(({ users }) => {
+			dispatch(saveUsers(users.map(normalize)));
+			dispatch(completeOnboarding());
+		})
+		.catch(error => {
+			if (error.data.code === "RAPI-1003") dispatch(teamNotFound());
+			if (error.data.code === "RAPI-1011") dispatch(noPermission());
+		});
+};
 
 export const authenticate = async (store, attributes) => {
 	const { accessToken, user, teams, repos } = await put("/no-auth/login", attributes);

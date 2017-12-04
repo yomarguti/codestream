@@ -1,11 +1,11 @@
 import React, { Component } from "react";
 import { FormattedMessage } from "react-intl";
+import { connect } from "react-redux";
 import PropTypes from "prop-types";
 import _ from "underscore";
-import withAPI from "./withAPI";
 import Button from "./Button";
 import git from "../../git";
-import { addMembers, getMembers } from "../../actions/team";
+import * as actions from "../../actions/onboarding";
 
 const isEmailInvalid = email => {
 	const emailRegex = new RegExp(
@@ -23,7 +23,6 @@ export class SimpleTeamMemberSelectionForm extends Component {
 		super(props);
 		this.state = {
 			committers: [],
-			serverLoading: false,
 			loadingCommitters: true,
 			addingMissingMember: false,
 			newMemberInputTouched: false,
@@ -54,11 +53,8 @@ export class SimpleTeamMemberSelectionForm extends Component {
 			})
 			.filter(committer => !_.findWhere(recentCommitters, { email: committer.email }));
 
-		const members = await this.props.getMembers(this.props.teamId);
-		const memberEmails = members.map(m => m.email);
-
 		const committers = [...recentCommitters, ...olderCommitters].filter(
-			c => !memberEmails.includes(c.email)
+			c => !this.props.memberEmails.includes(c.email)
 		);
 
 		this.setState({
@@ -81,41 +77,21 @@ export class SimpleTeamMemberSelectionForm extends Component {
 	};
 
 	onSubmitTeamMembers = () => {
-		this.setState({ loading: true });
-		const { addMembers, store, transition } = this.props;
-		const { repo, teams } = store.getViewData();
 		const emails = this.state.committers.filter(c => c.selected).map(c => c.email);
-		addMembers({
-			teamId: repo.teamId,
-			url: repo.url,
-			firstCommitHash: repo.firstCommitHash,
-			emails
-		})
-			.then(() => transition("success"))
-			.catch(error => {
-				this.setState({ loading: false });
-				atom.notifications.addError("there was a problem...");
-				console.log(error);
-				if (error.data.code === "RAPI-1003") {
-					this.setState({ teamNotFound: true });
-				}
-				if (error.data.code === "RAPI-1011") {
-					this.setState({ noPermission: true });
-				}
-			});
+		this.props.addMembers(emails);
 	};
 
 	toggleNewMemberInput = () =>
 		this.setState(state => ({ addingMissingMember: !state.addingMissingMember }));
 
 	renderSubmissionOfNewMembersError = () => {
-		if (this.state.teamNotFound)
+		if (this.props.errors.teamNotFound)
 			return (
 				<p className="error-message">
 					<FormattedMessage id="teamSelection.error.teamNotFound" />
 				</p>
 			);
-		if (this.state.noPermission)
+		if (this.props.errors.noPermission)
 			return (
 				<p className="error-message">
 					<FormattedMessage id="teamSelection.error.noPermission" />
@@ -183,7 +159,7 @@ export class SimpleTeamMemberSelectionForm extends Component {
 				</div>
 				<Button
 					id="submit-button"
-					loading={this.state.serverLoading}
+					loading={this.props.serverLoading}
 					onClick={this.onSubmitTeamMembers}
 				>
 					<FormattedMessage id="teamMemberSelection.submitButton" defaultMessage="GET STARTED" />
@@ -282,5 +258,13 @@ export class SimpleTeamMemberSelectionForm extends Component {
 		);
 	}
 }
-
-export default withAPI(() => ({}), { addMembers, getMembers })(SimpleTeamMemberSelectionForm);
+const mapStateToProps = ({ session, onboarding, users, currentTeamId }) => {
+	return {
+		memberEmails: users
+			.filter(({ id, teamIds = [] }) => teamIds.includes(currentTeamId) || session.userId === id)
+			.map(user => user.email),
+		serverLoading: onboarding.requestInProcess,
+		errors: onboarding.errors
+	};
+};
+export default connect(mapStateToProps, actions)(SimpleTeamMemberSelectionForm);

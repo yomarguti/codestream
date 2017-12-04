@@ -36,6 +36,8 @@ export default (state = initialState, { type, payload }) => {
 			return { ...state, errors: { noPermission: true } };
 		case "REPO_ADDED_FOR_TEAM":
 			return { ...initialState, step: "identifyMembers", props: { existingTeam: true } };
+		case "ONBOARDING_COMPLETE":
+			return { ...initialState, complete: true };
 		default:
 			return state;
 	}

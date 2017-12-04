@@ -17,6 +17,7 @@ const reduceStreams = (state = [], { type, payload }) => {
 
 const reduceUsers = (state = [], { type, payload }) => {
 	if (type === "ADD_USER") return [...state, payload];
+	if (type === "ADD_USERS") return [...state, ...payload];
 	if (type === "UPDATE_USER") return state.map(user => (user.id === payload.id ? payload : user));
 	return state;
 };
@@ -52,8 +53,8 @@ const reduceRest = combineReducers({
 export default (state = initialState, action) => {
 	if (action.type === "ACTIVE_FILE_CHANGED") return { ...state, currentFile: action.payload };
 	if (action.type === "ADD_REPO_INFO") return { ...state, ...action.payload };
-	if (action.type === "TEAM_SELECTED_FOR_REPO") return { ...state, team: action.payload };
-	if (action.type === "SET_CURRENT_REPO") return { ...state, currentRepo: action.payload };
+	if (action.type === "SET_CURRENT_TEAM") return { ...state, currentTeamId: action.payload };
+	if (action.type === "SET_CURRENT_REPO") return { ...state, currentRepoId: action.payload };
 	else
 		return {
 			...state,
