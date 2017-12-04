@@ -14,7 +14,7 @@ export class SimpleEmailConfirmationForm extends Component {
 
 	onChange = index => event => {
 		const value = event.target.value;
-		if (value === "" && isNaN(value)) return;
+		if (value === "" || isNaN(value)) return;
 		const values = this.state.values.slice();
 		values[index] = value;
 		this.setState(
