@@ -49,7 +49,12 @@ module.exports = {
 			const info =
 				Object.keys(data).length === 0
 					? { repoMetadata, team: undefined, repo: undefined }
-					: { repoMetadata, team: { usernames: data.usernames }, repo: data.repo };
+					: {
+							repoMetadata,
+							team: { usernames: data.usernames },
+							currentRepoId: data.repo._id,
+							currentTeamId: data.repo.teamId
+						};
 			store.dispatch({
 				type: "ADD_REPO_INFO",
 				payload: info

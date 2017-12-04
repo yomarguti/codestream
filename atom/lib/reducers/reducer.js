@@ -11,7 +11,7 @@ const initialState = {
 };
 
 const reduceStreams = (state = [], { type, payload }) => {
-	if (type === "ADD_STREAM") return [...state, action.payload];
+	if (type === "ADD_STREAM") return [...state, payload];
 	else return state;
 };
 

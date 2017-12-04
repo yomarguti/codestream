@@ -222,7 +222,7 @@ export class SimpleSignupForm extends Component {
 						</p>
 						<p>
 							<strong>
-								<a onClick={this.props.alreadySignedUp}>
+								<a onClick={this.props.goToLogin}>
 									<FormattedMessage id="signUp.footer.signIn" />
 								</a>
 							</strong>

@@ -8,7 +8,7 @@ import AddCommentPopup from "./AddCommentPopup";
 import createClassString from "classnames";
 import DateSeparator from "./DateSeparator";
 var Blamer = require("../util/blamer");
-import { fetchStream, createPost } from "../actions/stream";
+import * as actions from "../actions/stream";
 
 export class SimpleStream extends Component {
 	subscriptions = null;
@@ -473,7 +473,7 @@ export class SimpleStream extends Component {
 		// 	newPost.quoteRange = this.state.quoteRange;
 		// }
 
-		this.props.createPost(newText);
+		this.props.createPost(this.props.id, newText);
 
 		// reset the input field to blank
 		this.setState({
@@ -493,15 +493,9 @@ const mapStateToProps = ({ user, currentFile, streams = [], postsByStream = {} }
 	const stream = streams.find(stream => stream.file === currentFile) || {};
 	return {
 		user,
-		id: stream._id,
+		id: stream.id,
 		posts: getPostsForStream(stream.id, postsByStream)
 	};
 };
 
-const mapDispatchToProps = dispatch => {
-	return {
-		fetchStream: () => dispatch(fetchStream()),
-		createPost: text => dispatch(createPost(text))
-	};
-};
-export default connect(mapStateToProps, mapDispatchToProps)(SimpleStream);
+export default connect(mapStateToProps, actions)(SimpleStream);

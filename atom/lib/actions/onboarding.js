@@ -1,7 +1,6 @@
 import { get, post, put } from "../network-request";
+import { normalize } from "./utils";
 import db from "../local-cache";
-
-const normalize = ({ _id, ...rest }) => ({ id: _id, ...rest });
 
 const requestStarted = () => ({ type: "REQUEST_STARTED" });
 const requestFinished = () => ({ type: "REQUEST_FINISHED" });
@@ -107,7 +106,7 @@ export const register = attributes => dispatch => {
 };
 
 export const goToSignup = () => ({ type: "GO_TO_SIGNUP" });
-export const alreadySignedUp = () => ({ type: "GO_TO_LOGIN" });
+export const goToLogin = () => ({ type: "GO_TO_LOGIN" });
 
 export const confirmEmail = attributes => (dispatch, getState) => {
 	dispatch(requestStarted());
