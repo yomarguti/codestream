@@ -186,7 +186,6 @@ export class SimpleStream extends Component {
 
 		let lastTimestamp = null;
 
-		console.log("rendering", this.props.posts);
 		return (
 			<div className={streamClass} ref={ref => (this._div = ref)}>
 				<style id="dynamic-add-comment-popup-style" />
