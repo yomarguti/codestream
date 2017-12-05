@@ -124,14 +124,15 @@ export class SimpleStream extends Component {
 	};
 
 	resizeStream = () => {
+		if (!this._div) return;
 		const streamHeight = this._div.offsetHeight;
 		const postslistHeight = this._postslist.offsetHeight;
-		if (postslistHeight < streamHeight) {
+		if (false && postslistHeight < streamHeight) {
 			let newHeight =
 				streamHeight - postslistHeight + this._intro.offsetHeight - this._compose.offsetHeight;
 			this._intro.style.height = newHeight + "px";
 		}
-		this._div.style.paddingBottom = this._compose.offsetHeight + "px";
+		if (this._compose) this._div.style.paddingBottom = this._compose.offsetHeight + "px";
 		this._postslist.scrollTop = 10000;
 	};
 
