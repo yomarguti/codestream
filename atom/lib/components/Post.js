@@ -28,8 +28,8 @@ export default class Post extends Component {
 			streamDiv.scrollTop = 100000;
 		}
 
-		if (this.props.post.fullName)
-			atom.tooltips.add(this._authorDiv, { title: this.props.post.fullName });
+		if (this.props.post.author.fullName)
+			atom.tooltips.add(this._authorDiv, { title: this.props.post.author.fullName });
 	}
 
 	render() {
