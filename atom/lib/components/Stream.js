@@ -105,6 +105,10 @@ export class SimpleStream extends Component {
 		);
 	}
 
+	componentWillReceiveProps(nextProps) {
+		if (!nextProps.id) this.props.fetchStream();
+	}
+
 	handlePaneSwitch = editor => {
 		console.log(editor);
 	};
@@ -145,7 +149,7 @@ export class SimpleStream extends Component {
 	};
 
 	componentDidMount() {
-		if (!this.state.id) this.props.fetchStream();
+		if (!this.props.id) this.props.fetchStream();
 		// TODO: scroll to bottom
 		new ResizeObserver(this.handleResizeCompose).observe(this._compose);
 		document.querySelector('div[contenteditable="true"]').addEventListener("paste", function(e) {
