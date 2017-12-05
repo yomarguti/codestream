@@ -39,7 +39,7 @@ export default class Post extends Component {
 			post: true,
 			"new-separator": post.newSeparator
 		});
-		console.log(postClass);
+		// console.log("RENDERING A POST: " + postClass);
 
 		const codeblock = post.quoteText ? <div className="code">{post.quoteText}</div> : "";
 

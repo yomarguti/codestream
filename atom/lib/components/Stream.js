@@ -33,7 +33,7 @@ export class SimpleStream extends Component {
 						fullName: "Akonwi Ngoh"
 					},
 					text: "this is a post",
-					timestamp: 1410650773000
+					createdAt: 1410650773000
 				},
 				{
 					id: 2,
@@ -43,7 +43,7 @@ export class SimpleStream extends Component {
 						fullName: "James Price"
 					},
 					text: "this is another post",
-					timestamp: 1411680773000
+					createdAt: 1411680773000
 				},
 				{
 					id: 2,
@@ -53,7 +53,7 @@ export class SimpleStream extends Component {
 						fullName: "Colin Stryker"
 					},
 					text: "AvE adds more value to my life than some of my family members",
-					timestamp: 1411680774000,
+					createdAt: 1411680774000,
 					newSeparator: true
 				},
 				{
@@ -65,7 +65,7 @@ export class SimpleStream extends Component {
 					},
 					text:
 						"because of the way browsers work, @pez although this will change the scrollbar thumb position, it will not change what @akonwi is looking at (i.e. posts won't shift around).",
-					timestamp: 1501650773000
+					createdAt: 1501650773000
 				}
 			],
 			authors: [
@@ -135,7 +135,7 @@ export class SimpleStream extends Component {
 		if (!this._div) return;
 		const streamHeight = this._div.offsetHeight;
 		const postslistHeight = this._postslist.offsetHeight;
-		if (false && postslistHeight < streamHeight) {
+		if (postslistHeight < streamHeight) {
 			let newHeight =
 				streamHeight - postslistHeight + this._intro.offsetHeight - this._compose.offsetHeight;
 			this._intro.style.height = newHeight + "px";
@@ -206,13 +206,14 @@ export class SimpleStream extends Component {
 						</label>
 					</div>
 					{this.state.posts.map(post => {
-						lastTimestamp = post.createdAt;
-						return (
+						const returnValue = (
 							<div key={post.id}>
 								<DateSeparator timestamp1={lastTimestamp} timestamp2={post.createdAt} />
 								<Post post={post} lastDay={lastTimestamp} />
 							</div>
 						);
+						lastTimestamp = post.createdAt;
+						return returnValue;
 					})}
 				</div>
 				<AddCommentPopup handleClickAddComment={this.handleClickAddComment} />
