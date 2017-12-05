@@ -9,6 +9,7 @@ import teams from "./teams";
 
 const session = (state = {}, { type, payload }) => {
 	if (type === "INIT_SESSION") return payload;
+	if (type === "CLEAR_SESSION") return {};
 	else return state;
 };
 

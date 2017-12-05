@@ -45,6 +45,8 @@ export default (state = initialState, { type, payload }) => {
 		case "LOGGED_IN":
 		case "ONBOARDING_COMPLETE":
 			return { ...initialState, complete: true };
+		case "RESET_ONBOARDING":
+			return initialState;
 		default:
 			return state;
 	}

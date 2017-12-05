@@ -18,3 +18,7 @@ export const setCurrentFile = file => ({
 	type: "SET_CURRENT_FILE",
 	payload: file
 });
+export const logout = () => dispatch => {
+	dispatch({ type: "CLEAR_SESSION" });
+	dispatch({ type: "RESET_ONBOARDING" });
+};

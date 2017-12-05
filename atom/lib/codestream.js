@@ -4,7 +4,7 @@ import { bootstrapStore } from "./local-cache";
 import { get } from "./network-request";
 import git from "./git";
 import createStore from "./createStore";
-import { setRepoAttributes, setContext, setCurrentFile } from "./actions/context";
+import { setRepoAttributes, setContext, setCurrentFile, logout } from "./actions/context";
 
 // TODO: figure out if there's a better place for this
 const session = JSON.parse(localStorage.getItem("codestream.session")) || {};
@@ -73,7 +73,9 @@ module.exports = {
 				}
 			}),
 			atom.commands.add("atom-workspace", {
-				"codestream:toggle": () => atom.workspace.toggle(CODESTREAM_VIEW_URI)
+				"codestream:toggle": () => atom.workspace.toggle(CODESTREAM_VIEW_URI),
+				"codestream:logout": () => store.dispatch(logout()),
+				"codestream:wipe-cache": () => indexedDB.deleteDatabase("CodeStream")
 			})
 			// atom.commands.add(".codestream .compose.mentions-on", {
 			// 	"codestream:at-mention-move-up": event => this.handleAtMentionKeyPress(event, "up"),
