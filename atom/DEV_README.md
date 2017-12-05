@@ -61,5 +61,5 @@ wipe everything in mongo, you probably should clear indexeddb too.
 You can use Mongo's app, [Compass](https://www.mongodb.com/products/compass), for interacting with
 databases.
 
-To clear what's in indexeddb run `indexedDB.deleteDatabase('CodeStream')` in the dev console of atom
-and then reload atom.
+To clear what's the clients cache, run open atom's command palette and run the `Codestream: Wipe
+Cache` command.
