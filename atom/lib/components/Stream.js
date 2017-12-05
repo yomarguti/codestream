@@ -27,37 +27,45 @@ export class SimpleStream extends Component {
 			posts: [
 				{
 					id: 1,
-					nick: "akonwi",
-					fullName: "Akonwi Ngoh",
-					body: "this is a post",
-					timestamp: 1410650773000,
-					email: "akonwi@codestream.com"
+					author: {
+						username: "akonwi",
+						email: "akonwi@codestream.com",
+						fullName: "Akonwi Ngoh"
+					},
+					text: "this is a post",
+					timestamp: 1410650773000
 				},
 				{
 					id: 2,
-					nick: "jj",
-					fullName: "James Price",
-					body: "this is another post",
-					timestamp: 1411680773000,
-					email: "jj@codestream.com"
+					author: {
+						username: "jj",
+						email: "jj@codestream.com",
+						fullName: "James Price"
+					},
+					text: "this is another post",
+					timestamp: 1411680773000
 				},
 				{
 					id: 2,
-					nick: "colin",
-					fullName: "Colin Stryker",
-					body: "AvE adds more value to my life than some of my family members",
+					author: {
+						username: "colin",
+						email: "colin@codestream.com",
+						fullName: "Colin Stryker"
+					},
+					text: "AvE adds more value to my life than some of my family members",
 					timestamp: 1411680774000,
-					newSeparator: true,
-					email: "colin@codestream.com"
+					newSeparator: true
 				},
 				{
 					id: 3,
-					nick: "marcelo",
-					fullName: "Marcelo",
-					body:
+					author: {
+						username: "marcelo",
+						email: "marcelo@codestream.com",
+						fullName: "Marcelo"
+					},
+					text:
 						"because of the way browsers work, @pez although this will change the scrollbar thumb position, it will not change what @akonwi is looking at (i.e. posts won't shift around).",
-					timestamp: 1501650773000,
-					email: "marcelo@codestream.com"
+					timestamp: 1501650773000
 				}
 			],
 			authors: [
@@ -113,7 +121,7 @@ export class SimpleStream extends Component {
 		var newPost = {
 			id: 3,
 			nick: "colin",
-			body:
+			text:
 				"perhaps. blame isn't part of git-plus so I can't think of anything that stands out yet. there is a git-blame package that users wanted to see merged into git-plus. maybe there's some insight there",
 			email: "colin@codestream.com",
 			timestamp: timestamp
@@ -197,7 +205,7 @@ export class SimpleStream extends Component {
 							Welcome to the stream.<br />Info goes here.
 						</label>
 					</div>
-					{this.props.posts.map(post => {
+					{this.state.posts.map(post => {
 						lastTimestamp = post.createdAt;
 						return (
 							<div key={post.id}>
@@ -496,7 +504,7 @@ export class SimpleStream extends Component {
 			id: 3,
 			nick: "pez",
 			fullName: "Peter Pezaris",
-			body: newText,
+			text: newText,
 			email: "pez@codestream.com",
 			timestamp: timestamp
 		};
@@ -522,10 +530,13 @@ const mapStateToProps = ({ user, context, streams, users, postsByStream = {} }) 
 	return {
 		user,
 		id: stream.id,
-		posts: getPostsForStream(stream.id, postsByStream).map(post => ({
-			...post,
-			author: users[post.creatorId]
-		}))
+		posts: getPostsForStream(stream.id, postsByStream).map(post => {
+			const { username, email, firstName, lastName } = users[post.creatorId];
+			return {
+				...post,
+				author: { username, email, fullName: `${firstName} ${lastName}`.trim() }
+			};
+		})
 	};
 };
 
