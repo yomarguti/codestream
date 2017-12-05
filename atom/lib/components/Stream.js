@@ -206,6 +206,9 @@ export class SimpleStream extends Component {
 						</label>
 					</div>
 					{this.state.posts.map(post => {
+						// this needs to be done by storing the return value of the render,
+						// then setting lastTimestamp, otherwise you wouldn't be able to
+						// compare the current one to the prior one.
 						const returnValue = (
 							<div key={post.id}>
 								<DateSeparator timestamp1={lastTimestamp} timestamp2={post.createdAt} />
