@@ -41,7 +41,7 @@ export default (state = initialState, { type, payload }) => {
 		case "REPO_ADDED_FOR_TEAM":
 			return { ...initialState, step: "identifyMembers", props: { existingTeam: true } };
 		case "INVALID_CREDENTIALS":
-			return { ...initialState, errors: { invalidCredentials: true } };
+			return { ...state, errors: { invalidCredentials: true } };
 		case "LOGGED_IN":
 		case "ONBOARDING_COMPLETE":
 			return { ...initialState, complete: true };
