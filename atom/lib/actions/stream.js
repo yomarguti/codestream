@@ -56,25 +56,29 @@ const rejectPendingPost = (streamId, pendingId, post) => dispatch => {
 };
 
 export const fetchStream = () => async (dispatch, getState) => {
-	const { session, context } = getState();
-	// create stream - right now the server doesn't complain if a stream already exists
-	const streamData = await http.post(
-		"/streams",
-		{
-			teamId: context.currentTeamId,
-			type: "file",
-			file: context.currentFile,
-			repoId: context.currentRepoId
-		},
-		session.accessToken
-	);
-	const stream = normalize(streamData.stream);
-	const { posts } = await http.get(
-		`/posts?teamId=${context.currentTeamId}&streamId=${stream.id}`,
-		session.accessToken
-	);
-	await dispatch(addStream(stream));
-	dispatch(addPostsForStream(stream.id, normalize(posts)));
+	const { session, context, streams } = getState();
+	if (!streams.isFetching) {
+		dispatch({ type: "FETCH_STREAM" });
+		// create stream - right now the server doesn't complain if a stream already exists
+		const streamData = await http.post(
+			"/streams",
+			{
+				teamId: context.currentTeamId,
+				type: "file",
+				file: context.currentFile,
+				repoId: context.currentRepoId
+			},
+			session.accessToken
+		);
+		dispatch({ type: "RECEIVE_STREAM" });
+		const stream = normalize(streamData.stream);
+		const { posts } = await http.get(
+			`/posts?teamId=${context.currentTeamId}&streamId=${stream.id}`,
+			session.accessToken
+		);
+		await dispatch(addStream(stream));
+		dispatch(addPostsForStream(stream.id, normalize(posts)));
+	}
 };
 
 export const createPost = (streamId, text) => async (dispatch, getState) => {
