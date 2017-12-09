@@ -2,8 +2,13 @@ import http from "../network-request";
 import db from "../local-cache";
 import { normalize } from "./utils";
 
+const tempId = (() => {
+	let count = 0;
+	return () => String(count++);
+})();
+
 export const addStream = stream => dispatch => {
-	db.streams.put(stream).then(() => {
+	return db.streams.put(stream).then(() => {
 		dispatch({
 			type: "ADD_STREAM",
 			payload: stream
@@ -12,7 +17,7 @@ export const addStream = stream => dispatch => {
 };
 
 export const addPostsForStream = (streamId, posts) => dispatch => {
-	db.posts.bulkPut(posts).then(() => {
+	return db.posts.bulkPut(posts).then(() => {
 		dispatch({
 			type: "ADD_POSTS_FOR_STREAM",
 			payload: { streamId, posts }
@@ -30,9 +35,11 @@ const addPendingPost = post => dispatch => {
 };
 
 const resolvePendingPost = (id, post) => dispatch => {
-	db.posts
-		.delete(id)
-		.then(() => db.posts.add(post))
+	db
+		.transaction("rw", db.posts, async () => {
+			await db.posts.delete(id);
+			await db.posts.add(post);
+		})
 		.then(() => {
 			dispatch({
 				type: "RESOLVE_PENDING_POST",
@@ -49,31 +56,36 @@ const rejectPendingPost = (streamId, pendingId, post) => dispatch => {
 };
 
 export const fetchStream = () => async (dispatch, getState) => {
-	const { session, context } = getState();
-	// create stream - right now the server doesn't complain if a stream already exists
-	const streamData = await http.post(
-		"/streams",
-		{
-			teamId: context.currentTeamId,
-			type: "file",
-			file: context.currentFile,
-			repoId: context.currentRepoId
-		},
-		session.accessToken
-	);
-	const stream = normalize(streamData.stream);
-	dispatch(addStream(stream));
-	const { posts } = await http.get(
-		`/posts?teamId=${context.currentTeamId}&streamId=${stream.id}`,
-		session.accessToken
-	);
-	dispatch(addPostsForStream(stream.id, normalize(posts)));
+	const { session, context, streams } = getState();
+	if (!streams.isFetching) {
+		dispatch({ type: "FETCH_STREAM" });
+		// create stream - right now the server doesn't complain if a stream already exists
+		const streamData = await http.post(
+			"/streams",
+			{
+				teamId: context.currentTeamId,
+				type: "file",
+				file: context.currentFile,
+				repoId: context.currentRepoId
+			},
+			session.accessToken
+		);
+		dispatch({ type: "RECEIVE_STREAM" });
+		const stream = normalize(streamData.stream);
+		const { posts } = await http.get(
+			`/posts?teamId=${context.currentTeamId}&streamId=${stream.id}`,
+			session.accessToken
+		);
+		await dispatch(addStream(stream));
+		dispatch(addPostsForStream(stream.id, normalize(posts)));
+	}
 };
 
 export const createPost = (streamId, text) => async (dispatch, getState) => {
 	const { session, currentTeamId } = getState();
+	const pendingId = tempId();
 	const post = {
-		id: "temp1",
+		id: pendingId,
 		teamId: currentTeamId,
 		timestamp: new Date().getTime(),
 		creatorId: session.userId,
@@ -85,9 +97,9 @@ export const createPost = (streamId, text) => async (dispatch, getState) => {
 
 	try {
 		const data = await http.post("/posts", post, session.accessToken);
-		dispatch(resolvePendingPost("temp1", normalize(data.post)));
+		dispatch(resolvePendingPost(pendingId, normalize(data.post)));
 	} catch (error) {
 		// TODO: different types of errors?
-		dispatch(rejectPendingPost(streamId, "temp1", { ...post, error: true }));
+		dispatch(rejectPendingPost(streamId, pendingId, { ...post, error: true }));
 	}
 };

@@ -61,5 +61,16 @@ wipe everything in mongo, you probably should clear indexeddb too.
 You can use Mongo's app, [Compass](https://www.mongodb.com/products/compass), for interacting with
 databases.
 
-To clear what's in indexeddb run `indexedDB.deleteDatabase('CodeStream')` in the dev console of atom
-and then reload atom.
+To clear what's the clients cache, run open atom's command palette and run the `Codestream: Wipe
+Cache` command.
+
+## Redux DevTools
+
+Visualizing the UI state is really helpful when trying to debug and see how the data changes. This
+is where the Redux DevTools chrome extension comes in. Since atom runs on electron, which is sort of
+an instance of chrome, it has support for some chrome extensions that are for the develper console.
+
+To install the Redux DevTools, follow the steps
+[here](https://github.com/electron/electron/blob/master/docs/tutorial/devtools-extension.md#how-to-load-a-devtools-extension).
+**Note:** in those instructions, there's a reference to the `BrowserWindow` object. It can be
+accessed with `require('electron').remote.BrowserWindow`.

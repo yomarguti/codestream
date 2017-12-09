@@ -528,17 +528,17 @@ export class SimpleStream extends Component {
 	}
 }
 
-const getPostsForStream = (streamId = "", postsByStream) => {
+const getPostsForStream = (streamId = "", { byStream, sortPerStream }) => {
 	if (streamId === "") return [];
-	return postsByStream[streamId] || [];
+	const posts = byStream[streamId];
+	return (sortPerStream[streamId] || []).map(id => posts[id]);
 };
 
-const mapStateToProps = ({ user, context, streams, users, postsByStream = {} }) => {
+const mapStateToProps = ({ context, streams, users, posts }) => {
 	const stream = streams.byFile[context.currentFile] || {};
 	return {
-		user,
 		id: stream.id,
-		posts: getPostsForStream(stream.id, postsByStream).map(post => {
+		posts: getPostsForStream(stream.id, posts).map(post => {
 			const { username, email, firstName, lastName } = users[post.creatorId];
 			return {
 				...post,

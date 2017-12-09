@@ -1,6 +1,6 @@
 import { combineReducers } from "redux";
 import onboarding from "./onboarding";
-import postsByStream from "./postsByStream";
+import posts from "./posts";
 import context from "./context";
 import streams from "./streams";
 import users from "./users";
@@ -27,5 +27,5 @@ export default combineReducers({
 	context,
 	repoAttributes,
 	onboarding,
-	postsByStream
+	posts
 });

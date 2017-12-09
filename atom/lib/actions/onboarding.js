@@ -6,18 +6,13 @@ import db from "../local-cache";
 const requestStarted = () => ({ type: "REQUEST_STARTED" });
 const requestFinished = () => ({ type: "REQUEST_FINISHED" });
 const completeOnboarding = () => ({ type: "ONBOARDING_COMPLETE" });
-
-const addUser = user => dispatch => {
-	db.users.add(user).then(() =>
-		dispatch({
-			type: "ADD_USER",
-			payload: user
-		})
-	);
-};
+const userAlreadySignedUp = email => ({
+	type: "SIGNUP_EMAIL_EXISTS",
+	payload: { email, alreadySignedUp: true }
+});
 
 const saveUser = user => dispatch => {
-	db.users.put(user).then(() =>
+	return db.users.put(user).then(() =>
 		dispatch({
 			type: "ADD_USER",
 			payload: user
@@ -26,7 +21,7 @@ const saveUser = user => dispatch => {
 };
 
 const saveUsers = users => dispatch => {
-	db
+	return db
 		.transaction("rw", db.users, () => {
 			db.users.bulkPut(users).then(() => {
 				dispatch({ type: "ADD_USERS", payload: users });
@@ -65,12 +60,48 @@ const addRepos = repos => dispatch => {
 };
 
 const addRepo = repo => dispatch => {
-	db.repos.add(repo).then(() =>
+	return db.repos.add(repo).then(() =>
 		dispatch({
 			type: "ADD_REPO",
 			payload: repo
 		})
 	);
+};
+
+const saveTeamAndRepo = ({ team, repo }) => dispatch => {
+	return db
+		.transaction("rw", db.teams, db.repos, () => {
+			db.teams.put(team);
+			db.repos.put(repo);
+		})
+		.then(() => {
+			dispatch({
+				type: "ADD_REPO",
+				payload: repo
+			});
+			dispatch({
+				type: "ADD_TEAM",
+				payload: team
+			});
+		});
+};
+
+const saveTeamsAndRepos = ({ teams, repos }) => dispatch => {
+	return db
+		.transaction("rw", db.teams, db.repos, () => {
+			db.teams.bulkPut(teams);
+			db.repos.bulkPut(repos);
+		})
+		.then(() => {
+			dispatch({
+				type: "ADD_REPOS",
+				payload: repos
+			});
+			dispatch({
+				type: "ADD_TEAMS",
+				payload: teams
+			});
+		});
 };
 
 const initializeSession = ({ user, accessToken }) => dispatch => {
@@ -89,16 +120,14 @@ const fetchTeamMembers = teams => (dispatch, getState) => {
 	});
 };
 
-const userAlreadySignedUp = email => ({
-	type: "SIGNUP_EMAIL_EXISTS",
-	payload: { email, alreadySignedUp: true }
-});
+export const goToSignup = () => ({ type: "GO_TO_SIGNUP" });
+export const goToLogin = () => ({ type: "GO_TO_LOGIN" });
 
 export const register = attributes => dispatch => {
 	post("/no-auth/register", attributes)
-		.then(({ user }) => {
+		.then(async ({ user }) => {
 			user = normalize(user);
-			dispatch(addUser(user));
+			await dispatch(saveUser(user));
 			dispatch({ type: "SIGNUP_SUCCESS", payload: { ...attributes, userId: user.id } });
 		})
 		.catch(({ data }) => {
@@ -106,13 +135,10 @@ export const register = attributes => dispatch => {
 		});
 };
 
-export const goToSignup = () => ({ type: "GO_TO_SIGNUP" });
-export const goToLogin = () => ({ type: "GO_TO_LOGIN" });
-
 export const confirmEmail = attributes => (dispatch, getState) => {
 	dispatch(requestStarted());
 	post("/no-auth/confirm", attributes)
-		.then(({ accessToken, user, teams, repos }) => {
+		.then(async ({ accessToken, user, teams, repos }) => {
 			dispatch(requestFinished());
 			user = normalize(user);
 			dispatch(initializeSession({ user, accessToken }));
@@ -121,8 +147,9 @@ export const confirmEmail = attributes => (dispatch, getState) => {
 			const teamForRepo = team && team.id;
 			const userTeams = normalize(teams);
 
-			dispatch(addRepos(normalize(repos)));
-			dispatch(addTeams(userTeams));
+			// TODO: handle db error - maybe continue updating the view?
+			await dispatch(saveTeamsAndRepos({ teams: userTeams, repos }));
+
 			if (!teamForRepo && userTeams.length === 0)
 				dispatch({ type: "NEW_USER_CONFIRMED_IN_NEW_REPO" });
 			if (!teamForRepo && userTeams.length > 0) {
@@ -150,7 +177,7 @@ export const confirmEmail = attributes => (dispatch, getState) => {
 
 export const sendNewCode = attributes => dispatch => {
 	post("/no-auth/register", attributes).catch(({ data }) => {
-		if (data.code === "RAPI-1004") atom.notifications.addInfo("Email sent!"); // TODO: i18n
+		if (data.code === "RAPI-1004") atom.notifications.addInfo("Email sent!"); // TODO: return promise so caller can show i18n message
 	});
 };
 
@@ -162,15 +189,17 @@ export const createTeam = name => (dispatch, getState) => {
 		team: { name }
 	};
 	dispatch(requestStarted());
-	post("/repos", params, session.accessToken).then(data => {
+	post("/repos", params, session.accessToken).then(async data => {
 		dispatch(requestFinished());
 		const team = normalize(data.team);
 		const repo = normalize(data.repo);
+
+		await dispatch(saveTeamAndRepo({ team, repo }));
+
 		dispatch(setCurrentTeam(team.id));
 		dispatch(setCurrentRepo(repo.id));
-		dispatch(addRepo(repo));
-		const teamAdded = dispatch(addTeam(team));
-		teamAdded.then(() => dispatch({ type: "TEAM_CREATED", payload: { teamId: team.id } }));
+
+		dispatch({ type: "TEAM_CREATED", payload: { teamId: team.id } });
 	});
 };
 
@@ -179,10 +208,10 @@ export const addRepoForTeam = teamId => (dispatch, getState) => {
 	const params = { ...repoAttributes, teamId };
 	dispatch(requestStarted());
 	post("/repos", params, session.accessToken)
-		.then(data => {
+		.then(async data => {
 			const repo = normalize(data.repo);
 			dispatch(requestFinished());
-			dispatch(addRepo(repo));
+			await dispatch(addRepo(repo));
 			dispatch(setCurrentRepo(repo.id));
 			dispatch({ type: "REPO_ADDED_FOR_TEAM" });
 		})
@@ -213,13 +242,15 @@ export const addMembers = emails => (dispatch, getState) => {
 export const authenticate = params => (dispatch, getState) => {
 	dispatch(requestStarted());
 	put("/no-auth/login", params)
-		.then(({ accessToken, user, teams, repos }) => {
+		.then(async ({ accessToken, user, teams, repos }) => {
 			dispatch(requestFinished());
 			user = normalize(user);
-			dispatch(saveUser(user));
+			await dispatch(saveUser(user));
 			dispatch(initializeSession({ accessToken, user }));
-			dispatch(addTeams(teams.map(normalize)));
-			dispatch(addRepos(repos.map(normalize)));
+			await saveTeamsAndRepos({
+				teams: normalize(teams),
+				repos: normalize(repos)
+			});
 			dispatch({ type: "LOGGED_IN" });
 		})
 		.catch(error => {
