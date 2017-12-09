@@ -8,7 +8,8 @@ export default class AddCommentPopup extends Component {
 		};
 		this.handleClick = this.handleClick.bind(this);
 
-		// FIXME -- do we want this to be a disposable?
+		// FIXME -- we want these event triggers to be installed when we create
+		// the popup, and torn down when we destroy it
 		let editor = atom.workspace.getActiveTextEditor();
 		if (editor) {
 			editor.onDidChangeSelectionRange(this.handleSelectionChange);
@@ -39,8 +40,8 @@ export default class AddCommentPopup extends Component {
 	}
 
 	handleChange = event => {
-		console.log("HANDLING A CHANGE");
-		console.log(this.marker);
+		// console.log("HANDLING A CHANGE");
+		// console.log(this.marker);
 		if (this.marker) this.marker.destroy();
 	};
 

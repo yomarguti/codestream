@@ -114,7 +114,7 @@ export class SimpleStream extends Component {
 	};
 
 	handleResizeCompose = () => {
-		console.log("COMPOSE RESIZE");
+		// console.log("COMPOSE RESIZE");
 		this.resizeStream();
 	};
 
@@ -145,7 +145,7 @@ export class SimpleStream extends Component {
 			this._intro.style.height = newHeight + "px";
 		}
 		if (this._compose) this._div.style.paddingBottom = this._compose.offsetHeight + "px";
-		this._postslist.scrollTop = 10000;
+		this._postslist.scrollTop = 100000;
 	};
 
 	componentDidMount() {
@@ -209,7 +209,7 @@ export class SimpleStream extends Component {
 							Welcome to the stream.<br />Info goes here.
 						</label>
 					</div>
-					{this.state.posts.map(post => {
+					{this.props.posts.map(post => {
 						// this needs to be done by storing the return value of the render,
 						// then setting lastTimestamp, otherwise you wouldn't be able to
 						// compare the current one to the prior one.
