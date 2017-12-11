@@ -23,7 +23,7 @@
 			cursor: pointer;
 		}
 		#close-thread:hover {
-			opactiy: 1;
+			opacity: 1;
 		}
 
 		.new-messages-below {
@@ -248,11 +248,28 @@
 			display: none;
 		}
 
+		.post-details {
+			.button-group {
+				padding: 10px;
+				button {
+					overflow: hidden;
+					text-overflow: ellipsis;
+					margin: 0;
+					// this crazy escape syntax is required due to a bug in LESS
+					width: calc(~"50% - 5px");
+				}
+				button:first-child {
+					margin-right: 10px;
+				}
+			}
+		}
+
 		.post {
 			padding: 10px;
 			cursor: pointer;
 			min-height: 56px;
 			white-space: pre-wrap;
+			position: relative;
 			.headshot {
 				display: block;
 				margin: 0 0 -36px 0;
@@ -281,6 +298,22 @@
 				display: none;
 				float: right;
 				margin: -3px -10px 0 0;
+			}
+			.icon-alert {
+				color: @background-color-error;
+				position: absolute;
+				bottom: 3px;
+				right: 5px;
+				z-index: 10;
+				&:before {
+					font-size: 22px;
+					// font-size: 36px;
+				}
+
+				// right: auto;
+				// bottom: auto;
+				// top: 50px;
+				// left: 30px;
 			}
 		}
 

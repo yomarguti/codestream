@@ -81,21 +81,28 @@ export const fetchStream = () => async (dispatch, getState) => {
 	}
 };
 
-export const createPost = (streamId, parentPostId, text) => async (dispatch, getState) => {
+export const createPost = (streamId, parentPostId, text, codeBlocks) => async (
+	dispatch,
+	getState
+) => {
 	const { session, currentTeamId } = getState();
 	const pendingId = tempId();
 
 	// TODO populate the commitShaWhenPosted field
-	const post = {
+	let post = {
 		id: pendingId,
 		teamId: currentTeamId,
 		timestamp: new Date().getTime(),
 		creatorId: session.userId,
 		parentPostId: parentPostId,
+		codeBlocks: codeBlocks,
+		commitHashWhenPosted: "57299ce2113d0c16f8ff3f4310897b690669f72a",
 		streamId,
 		text
 	};
 
+	console.log("SAVING A POST");
+	console.log(post);
 	dispatch(addPendingPost(post));
 
 	try {
