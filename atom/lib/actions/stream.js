@@ -81,14 +81,17 @@ export const fetchStream = () => async (dispatch, getState) => {
 	}
 };
 
-export const createPost = (streamId, text) => async (dispatch, getState) => {
+export const createPost = (streamId, parentPostId, text) => async (dispatch, getState) => {
 	const { session, currentTeamId } = getState();
 	const pendingId = tempId();
+
+	// TODO populate the commitShaWhenPosted field
 	const post = {
 		id: pendingId,
 		teamId: currentTeamId,
 		timestamp: new Date().getTime(),
 		creatorId: session.userId,
+		parentPostId: parentPostId,
 		streamId,
 		text
 	};

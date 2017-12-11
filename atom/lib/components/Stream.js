@@ -3,6 +3,7 @@ import React, { Component } from "react";
 import { connect } from "react-redux";
 import ContentEditable from "react-contenteditable";
 import Post from "./Post";
+import PostDetails from "./PostDetails";
 import AtMentionsPopup from "./AtMentionsPopup";
 import AddCommentPopup from "./AddCommentPopup";
 import createClassString from "classnames";
@@ -91,27 +92,26 @@ export class SimpleStream extends Component {
 			})
 		);
 		this.subscriptions.add(
+			atom.commands.add(".codestream", {
+				"codestream:escape": event => this.handleEscape(event)
+			})
+		);
+		this.subscriptions.add(
 			atom.commands.add("atom-workspace", {
 				"codestream:add-dummy-post": event => this.addDummyPost(),
 				"codestream:comment": event => this.handleClickAddComment(),
 				"codestream:focus-input": event => this.toggleFocusInput()
 			})
 		);
+	}
 
-		this.subscriptions.add(
-			atom.workspace.onDidStopChangingActivePaneItem((editor: AtomCore.IEditor) => {
-				this.handlePaneSwitch(editor);
-			})
-		);
+	componentDidUpdate(prevProps, prevState) {
+		this._postslist.scrollTop = 100000;
 	}
 
 	componentWillReceiveProps(nextProps) {
 		if (!nextProps.id) this.props.fetchStream();
 	}
-
-	handlePaneSwitch = editor => {
-		console.log(editor);
-	};
 
 	handleResizeCompose = () => {
 		// console.log("COMPOSE RESIZE");
@@ -121,18 +121,11 @@ export class SimpleStream extends Component {
 	handleNewPost = () => {};
 
 	addDummyPost = () => {
-		var timestamp = +new Date();
-		var newPost = {
-			id: 3,
-			nick: "colin",
-			text:
-				"perhaps. blame isn't part of git-plus so I can't think of anything that stands out yet. there is a git-blame package that users wanted to see merged into git-plus. maybe there's some insight there",
-			email: "colin@codestream.com",
-			timestamp: timestamp
-		};
-		this.setState(prevState => ({
-			posts: [...prevState.posts, newPost]
-		}));
+		this.props.createPost(
+			this.props.id,
+			this.state.threadId,
+			"perhaps. blame isn't part of git-plus so I can't think of anything that stands out yet. there is a git-blame package that users wanted to see merged into git-plus. maybe there's some insight there"
+		);
 	};
 
 	resizeStream = () => {
@@ -157,6 +150,16 @@ export class SimpleStream extends Component {
 			var text = e.clipboardData.getData("text/plain");
 			document.execCommand("insertHTML", false, text);
 		});
+
+		console.log("WE MOUNTED THE STREAM COMPONENT");
+	}
+
+	findPostById(id) {
+		let foundPost = null;
+		this.props.posts.map(post => {
+			if (id && id == post.id) foundPost = post;
+		});
+		return foundPost;
 	}
 
 	render() {
@@ -169,10 +172,17 @@ export class SimpleStream extends Component {
 			compose: true,
 			"mentions-on": this.state.atMentionsOn
 		});
+		const postsListClass = createClassString({
+			postslist: true,
+			inactive: this.state.threadId
+		});
+		const threadPostsListClass = createClassString({
+			postslist: true,
+			threadlist: true,
+			inactive: !this.state.threadId
+		});
 
 		let newPostText = this.state.newPostText || "";
-
-		let placeholderText = "Message " + this.state.streamName;
 
 		// strip out the at-mention markup, and add it back.
 		// newPostText = newPostText.replace(/(@\w+)/g, '<span class="at-mention">$1</span> ');
@@ -197,12 +207,35 @@ export class SimpleStream extends Component {
 			""
 		);
 
+		var threadKeyMap = {};
+		var threadKeyCounter = 0;
+		this.props.posts.map(post => {
+			if (post.parentPostId) {
+				if (!threadKeyMap[post.parentPostId]) {
+					threadKeyMap[post.parentPostId] = threadKeyCounter++;
+				}
+			}
+		});
+
 		let lastTimestamp = null;
+		let threadId = this.state.threadId;
+		let threadPost = this.findPostById(threadId);
+		let hasNewMessagesBelowFold = false;
+
+		let placeholderText = "Message " + this.state.streamName;
+		// FIXME -- this doesn't update when it should for some reason
+		if (threadPost) {
+			placeholderText = "Reply to " + threadPost.author.username;
+		}
 
 		return (
 			<div className={streamClass} ref={ref => (this._div = ref)}>
 				<style id="dynamic-add-comment-popup-style" />
-				<div className="postslist" ref={ref => (this._postslist = ref)}>
+				<div
+					className={postsListClass}
+					ref={ref => (this._postslist = ref)}
+					onClick={this.handleClickPost}
+				>
 					<div className="intro" ref={ref => (this._intro = ref)}>
 						<label>
 							<span class="logo">&#x2B22;</span>
@@ -213,16 +246,49 @@ export class SimpleStream extends Component {
 						// this needs to be done by storing the return value of the render,
 						// then setting lastTimestamp, otherwise you wouldn't be able to
 						// compare the current one to the prior one.
+						const threadKey = threadKeyMap[post.parentPostId] || threadKeyMap[post.id] || 0;
 						const returnValue = (
 							<div key={post.id}>
 								<DateSeparator timestamp1={lastTimestamp} timestamp2={post.createdAt} />
-								<Post post={post} lastDay={lastTimestamp} />
+								<Post post={post} threadKey={threadKey} />
 							</div>
 						);
 						lastTimestamp = post.createdAt;
 						return returnValue;
 					})}
 				</div>
+
+				<div
+					className={threadPostsListClass}
+					ref={ref => (this._threadpostslist = ref)}
+					onclick={this.handleClickPost}
+				>
+					<div id="close-thread" onClick={this.handleDismissThread}>
+						&larr; Back to stream
+					</div>
+					<PostDetails post={threadPost} />
+					{
+						(lastTimestamp =
+							0 ||
+							this.props.posts.map(post => {
+								if (threadId && threadId != post.parentPostId) {
+									return null;
+								}
+								// this needs to be done by storing the return value of the render,
+								// then setting lastTimestamp, otherwise you wouldn't be able to
+								// compare the current one to the prior one.
+								const returnValue = (
+									<div key={post.id}>
+										<DateSeparator timestamp1={lastTimestamp} timestamp2={post.createdAt} />
+										<Post post={post} lastDay={lastTimestamp} />
+									</div>
+								);
+								lastTimestamp = post.createdAt;
+								return returnValue;
+							}))
+					}
+				</div>
+
 				<AddCommentPopup handleClickAddComment={this.handleClickAddComment} />
 				<AtMentionsPopup
 					on={this.state.atMentionsOn}
@@ -237,6 +303,11 @@ export class SimpleStream extends Component {
 					onKeyPress={this.handleOnKeyPress}
 					ref={ref => (this._compose = ref)}
 				>
+					{hasNewMessagesBelowFold && (
+						<div className="new-messages-below" onClick={this.handleClickScrollToNewMessages}>
+							&darr; Unread Messages &darr;
+						</div>
+					)}
 					<ContentEditable
 						className="native-key-bindings"
 						id="input-div"
@@ -245,6 +316,7 @@ export class SimpleStream extends Component {
 						onChange={this.handleOnChange}
 						html={newPostText}
 						placeholder={placeholderText}
+						ref={ref => (this._contentEditable = ref)}
 					/>
 					{quoteHint}
 					{quoteInfo}
@@ -253,9 +325,26 @@ export class SimpleStream extends Component {
 		);
 	}
 
+	handleDismissThread = () => {
+		this.setState({ threadId: null });
+	};
+
+	handleClickPost = event => {
+		var postDiv = event.target.closest(".post");
+		if (!postDiv) return;
+		console.log("Setting thread id to: " + postDiv.getAttribute("thread"));
+		if (postDiv.getAttribute("thread")) {
+			// console.log("Setting thread id to: " + postDiv.thread);
+			this.setState({ threadId: postDiv.getAttribute("thread") });
+		}
+	};
+
 	setNewPostText(text) {
 		// text = text.replace(/<span class="at-mention">(@\w+)<\/span> /g, "$1");
 		// text = text.replace(/(@\w+)/g, <span class="at-mention">$1</span>);
+		console.log("SETTING TEXT TO: " + text);
+		console.log(this._contentEditable);
+		// this._contentEditable.htmlEl.innerHTML = text;
 		this.setState({ newPostText: text });
 	}
 
@@ -267,6 +356,11 @@ export class SimpleStream extends Component {
 
 	focusInput = () => {
 		document.getElementById("input-div").focus();
+	};
+
+	handleClickScrollToNewMessages = () => {
+		console.log("CLICKED SCROLL DOWN");
+		this._postslist.scrollTop = 100000;
 	};
 
 	handleClickDismissQuote = () => {
@@ -356,11 +450,21 @@ export class SimpleStream extends Component {
 		});
 	};
 
+	reportRange() {
+		var sel, range, html;
+		sel = window.getSelection();
+		range = sel.getRangeAt(0);
+	}
+
 	handleOnChange = async event => {
 		var newPostText = event.target.value;
 
-		// FIXME -- this should anchor at the carat, not end-of-line
-		var match = newPostText.match(/@([a-zA-Z]*)$/);
+		this.reportRange();
+		let selection = window.getSelection();
+		let range = selection.getRangeAt(0);
+		let upToCursor = newPostText.substring(0, range.startOffset);
+		// console.log("UTC: >" + upToCursor + "<");
+		var match = upToCursor.match(/@([a-zA-Z]*)$/);
 		if (this.state.atMentionsOn) {
 			if (match) {
 				var text = match[0].replace(/@/, "");
@@ -375,7 +479,8 @@ export class SimpleStream extends Component {
 				this.showAtMentionSelectors(text);
 			}
 		}
-		this.setNewPostText(newPostText);
+		// track newPostText as the user types
+		this.setState({ newPostText: newPostText });
 	};
 
 	handleOnKeyPress = async event => {
@@ -444,10 +549,10 @@ export class SimpleStream extends Component {
 	}
 
 	handleAtMentionKeyPress(event, eventType) {
+		// console.log("AT MENTION KEY PRESS: " + eventType);
 		if (eventType == "escape") {
-			this.setState({
-				atMentionsOn: false
-			});
+			if (this.state.atMentionsOn) this.setState({ atMentionsOn: false });
+			else this.setState({ threadId: null });
 		} else {
 			let newIndex = 0;
 			if (eventType == "down") {
@@ -470,6 +575,11 @@ export class SimpleStream extends Component {
 		}
 	}
 
+	handleEscape(event) {
+		if (this.state.atMentionsOn) this.setState({ atMentionsOn: false });
+		else this.setState({ threadId: null });
+	}
+
 	handleHoverAtMention = nick => {
 		let index = this.state.atMentionsPeople.findIndex(x => x.nick == nick);
 
@@ -486,6 +596,7 @@ export class SimpleStream extends Component {
 			nick = this.state.selectedAtMention;
 		}
 
+		// console.log("HANDLING SAM: " + this.state.newPostText);
 		// otherwise explicitly use the one passed in
 		// FIXME -- this should anchor at the carat, not end-of-line
 		var re = new RegExp("@" + this.state.atMentionsPrefix + "$");
@@ -493,11 +604,28 @@ export class SimpleStream extends Component {
 		this.setState({
 			atMentionsOn: false
 		});
+		let toInsert = nick.replace(this.state.atMentionsPrefix, "");
+		this.insertTextAtCursor(toInsert);
 		this.setNewPostText(text);
 	};
 
+	insertTextAtCursor(text) {
+		var sel, range, html;
+		sel = window.getSelection();
+		range = sel.getRangeAt(0);
+		range.deleteContents();
+		var textNode = document.createTextNode(text);
+		range.insertNode(textNode);
+		range.setStartAfter(textNode);
+		sel.removeAllRanges();
+		sel.addRange(range);
+		this._contentEditable.htmlEl.normalize();
+	}
+
 	submitPost(newText) {
 		newText = newText.replace(/<br>/g, "\n");
+
+		// convert the text to plaintext so there is no HTML
 		var doc = new DOMParser().parseFromString(newText, "text/html");
 		newText = doc.documentElement.textContent;
 
@@ -506,18 +634,18 @@ export class SimpleStream extends Component {
 		// 	newPost.quoteText = this.state.quoteText;
 		// 	newPost.quoteRange = this.state.quoteRange;
 		// }
-		var timestamp = +new Date();
-		var newPost = {
-			// FIXME fake data
-			id: 3,
-			nick: "pez",
-			fullName: "Peter Pezaris",
-			text: newText,
-			email: "pez@codestream.com",
-			timestamp: timestamp
-		};
+		// var timestamp = +new Date();
+		// var newPost = {
+		// 	// FIXME fake data
+		// 	id: 3,
+		// 	nick: "pez",
+		// 	fullName: "Peter Pezaris",
+		// 	text: newText,
+		// 	email: "pez@codestream.com",
+		// 	timestamp: timestamp
+		// };
 
-		this.props.createPost(this.props.id, newText);
+		this.props.createPost(this.props.id, this.state.threadId, newText);
 
 		// reset the input field to blank
 		this.setState({

@@ -16,6 +16,35 @@
 		// background: black;
 		// overflow-y: auto;
 
+		#close-thread {
+			// float: right;
+			opacity: 0.5;
+			margin: 10px;
+			cursor: pointer;
+		}
+		#close-thread:hover {
+			opactiy: 1;
+		}
+
+		.new-messages-below {
+			cursor: pointer;
+			box-sizing: border-box;
+			// position: absolute;
+			width: 100%;
+			margin: -41px 0 11px 0;
+			padding-top: 5px;
+			// top: -30px;
+			// color: @text-color-info;
+			background-color: @background-color-info;
+			border-radius: 8px 8px 0 0;
+			text-align: center;
+			height: 30px;
+			color: #fff;
+		}
+		.new-messages-below:hover {
+			background-color: lighten(@background-color-info, 5%);
+		}
+
 		.compose {
 			display: block;
 			width: 100%;
@@ -215,6 +244,10 @@
 			position: relative;
 		}
 
+		.postslist.inactive {
+			display: none;
+		}
+
 		.post {
 			padding: 10px;
 			cursor: pointer;
@@ -249,6 +282,28 @@
 				float: right;
 				margin: -3px -10px 0 0;
 			}
+		}
+
+		.thread-key-0 {
+			border-left: 3px solid transparent;
+		}
+		.thread-key-1 {
+			border-left: 3px solid blue;
+		}
+		.thread-key-2 {
+			border-left: 3px solid green;
+		}
+		.thread-key-3 {
+			border-left: 3px solid red;
+		}
+		.thread-key-4 {
+			border-left: 3px solid orange;
+		}
+		.thread-key-5 {
+			border-left: 3px solid brown;
+		}
+		.thread-key-6 {
+			border-left: 3px solid aqua;
 		}
 
 		.post.new-separator {

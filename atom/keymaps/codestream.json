@@ -10,8 +10,10 @@
 		"ctrl-cmd-shift-enter": "codestream:comment"
 	},
 	".codestream .compose.mentions-on .native-key-bindings": {
-		"up": "codestream:at-mention-move-up",
 		"down": "codestream:at-mention-move-down",
-		"escape": "codestream:at-mention-escape"
+		"up": "codestream:at-mention-move-up"
+	},
+	".codestream": {
+		"escape": "codestream:escape"
 	}
 }

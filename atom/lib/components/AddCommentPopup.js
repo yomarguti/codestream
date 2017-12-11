@@ -46,7 +46,7 @@ export default class AddCommentPopup extends Component {
 	};
 
 	handleSelectionChange = event => {
-		console.log("SELECTION HAS CHANGED");
+		// console.log("SELECTION HAS CHANGED");
 		let editor = atom.workspace.getActiveTextEditor();
 		if (!editor) return;
 

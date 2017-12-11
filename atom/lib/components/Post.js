@@ -26,6 +26,9 @@ export default class Post extends Component {
 		if (offBottom < 100 || this.state.post.nick == "pez") {
 			// big number to make sure we've scrolled all the way down
 			streamDiv.scrollTop = 100000;
+			// console.log("SCROLLING TO BOTTOM");
+		} else {
+			// console.log("*********NOT SCROLLING TO BOTTOM");
 		}
 
 		if (this.props.post.author.fullName)
@@ -37,7 +40,8 @@ export default class Post extends Component {
 
 		const postClass = createClassString({
 			post: true,
-			"new-separator": post.newSeparator
+			"new-separator": post.newSeparator,
+			[`thread-key-${this.props.threadKey}`]: true
 		});
 		// console.log("RENDERING A POST: " + postClass);
 
@@ -58,12 +62,14 @@ export default class Post extends Component {
 
 		let menu = this.state.menuOpen ? <Menu items={menuItems} /> : null;
 
+		let parentPost = null;
+
 		// FIXME use a real email address
 		return (
 			<div
 				className={postClass}
 				id={post.id}
-				onClick={this.handleClick}
+				thread={post.parentPostId || post.id}
 				ref={ref => (this._div = ref)}
 			>
 				<span className="icon icon-gear" onClick={this.handleMenuClick} />
@@ -76,7 +82,8 @@ export default class Post extends Component {
 					email={post.author.email}
 				/>
 				<author ref={ref => (this._authorDiv = ref)}>{post.author.username}</author>
-				<Timestamp time={post.timestamp} />
+				{parentPost && <span class="replying-to">replying to {parentPost.author.username}</span>}
+				<Timestamp time={post.createdAt} />
 				<div className="body">
 					{bodyParts.map(part => {
 						if (part.charAt(0) == "@") {
