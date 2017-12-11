@@ -25,6 +25,7 @@ export class SimpleStream extends Component {
 		this.state = {
 			stream: {},
 			streamName: "Dummy.js",
+			threadId: null,
 			posts: [
 				{
 					id: 1,
@@ -111,6 +112,7 @@ export class SimpleStream extends Component {
 
 	componentWillReceiveProps(nextProps) {
 		if (!nextProps.id) this.props.fetchStream();
+		if (nextProps.id !== this.props.id) this.handleDismissThread();
 	}
 
 	handleResizeCompose = () => {
@@ -155,11 +157,7 @@ export class SimpleStream extends Component {
 	}
 
 	findPostById(id) {
-		let foundPost = null;
-		this.props.posts.map(post => {
-			if (id && id == post.id) foundPost = post;
-		});
-		return foundPost;
+		return this.props.posts.find(post => id === post.id);
 	}
 
 	render() {
@@ -261,7 +259,7 @@ export class SimpleStream extends Component {
 				<div
 					className={threadPostsListClass}
 					ref={ref => (this._threadpostslist = ref)}
-					onclick={this.handleClickPost}
+					onClick={this.handleClickPost}
 				>
 					<div id="close-thread" onClick={this.handleDismissThread}>
 						&larr; Back to stream
