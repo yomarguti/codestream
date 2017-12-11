@@ -67,7 +67,9 @@ export default class Post extends Component {
 			{ label: "Delete Message", key: "delete-message" }
 		];
 
-		let menu = this.state.menuOpen ? <Menu items={menuItems} /> : null;
+		let menu = this.state.menuOpen ? (
+			<Menu items={menuItems} handleSelectMenu={this.handleSelectMenu} />
+		) : null;
 
 		let parentPost = null;
 
@@ -114,5 +116,11 @@ export default class Post extends Component {
 		event.stopPropagation();
 		this.setState({ menuOpen: !this.state.menuOpen });
 		console.log("CLICK ON MENU: ");
+	};
+
+	handleSelectMenu = (event, id) => {
+		console.log("Clicked: " + id);
+		event.stopPropagation();
+		this.setState({ menuOpen: false });
 	};
 }

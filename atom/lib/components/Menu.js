@@ -25,7 +25,7 @@ export default class Menu extends Component {
 									className={className}
 									key={item.key}
 									onMouseEnter={event => this.handleMouseEnter(item.key)}
-									onClick={event => this.handleClickItem(item.key)}
+									onClick={event => this.handleClickItem(event, item.key)}
 								>
 									{item.icon && <span class="icon">{item.icon}</span>}
 									{item.label && <span class="label">{item.label}</span>}
@@ -47,9 +47,9 @@ export default class Menu extends Component {
 		});
 	}
 
-	handleClickItem(key) {
-		return this.props.handleSelectMenu(key);
-	}
+	handleClickItem = async (event, key) => {
+		return this.props.handleSelectMenu(event, key);
+	};
 
 	handleClick = async event => {
 		console.log("CLICK ON MENU: " + event.target.innerHTML);
