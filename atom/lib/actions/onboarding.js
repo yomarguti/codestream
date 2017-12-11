@@ -143,12 +143,13 @@ export const confirmEmail = attributes => (dispatch, getState) => {
 			user = normalize(user);
 			dispatch(initializeSession({ user, accessToken }));
 
-			const { team } = getState();
-			const teamForRepo = team && team.id;
+			const { context } = getState();
+			const teamForRepo = context.currentTeamId;
 			const userTeams = normalize(teams);
+			const userRepos = normalize(repos);
 
 			// TODO: handle db error - maybe continue updating the view?
-			await dispatch(saveTeamsAndRepos({ teams: userTeams, repos }));
+			await dispatch(saveTeamsAndRepos({ teams: userTeams, repos: userRepos }));
 
 			if (!teamForRepo && userTeams.length === 0)
 				dispatch({ type: "NEW_USER_CONFIRMED_IN_NEW_REPO" });

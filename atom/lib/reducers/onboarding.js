@@ -28,6 +28,8 @@ export default (state = initialState, { type, payload }) => {
 			return { ...initialState, step: "selectTeam" };
 		case "EXISTING_USER_CONFIRMED_IN_FOREIGN_REPO":
 			return { ...initialState, step: "noAccess" };
+		case "USER_ALREADY_CONFIRMED":
+			return { ...initialState, step: "login", props: payload };
 		case "EXISTING_USER_CONFIRMED":
 			return { ...initialState, complete: true };
 		case "INVALID_CONFIRMATION_CODE":
