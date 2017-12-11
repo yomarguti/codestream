@@ -25,6 +25,7 @@ export class SimpleStream extends Component {
 		this.state = {
 			stream: {},
 			streamName: "Dummy.js",
+			threadId: null,
 			posts: [
 				{
 					id: 1,
@@ -111,6 +112,7 @@ export class SimpleStream extends Component {
 
 	componentWillReceiveProps(nextProps) {
 		if (!nextProps.id) this.props.fetchStream();
+		if (nextProps.id !== this.props.id) this.handleDismissThread();
 	}
 
 	handleResizeCompose = () => {
@@ -155,11 +157,7 @@ export class SimpleStream extends Component {
 	}
 
 	findPostById(id) {
-		let foundPost = null;
-		this.props.posts.map(post => {
-			if (id && id == post.id) foundPost = post;
-		});
-		return foundPost;
+		return this.props.posts.find(post => id === post.id);
 	}
 
 	render() {
@@ -261,7 +259,7 @@ export class SimpleStream extends Component {
 				<div
 					className={threadPostsListClass}
 					ref={ref => (this._threadpostslist = ref)}
-					onclick={this.handleClickPost}
+					onClick={this.handleClickPost}
 				>
 					<div id="close-thread" onClick={this.handleDismissThread}>
 						&larr; Back to stream
@@ -332,10 +330,25 @@ export class SimpleStream extends Component {
 	handleClickPost = event => {
 		var postDiv = event.target.closest(".post");
 		if (!postDiv) return;
-		console.log("Setting thread id to: " + postDiv.getAttribute("thread"));
-		if (postDiv.getAttribute("thread")) {
-			// console.log("Setting thread id to: " + postDiv.thread);
-			this.setState({ threadId: postDiv.getAttribute("thread") });
+		if (postDiv.getAttribute("thread")) this.setState({ threadId: postDiv.getAttribute("thread") });
+
+		let post = this.findPostById(postDiv.id);
+		if (post && post.codeBlocks && post.codeBlocks.length) {
+			let codeBlock = post.codeBlocks[0];
+
+			// FIXME -- look up the marker position for this commit hash
+			return;
+
+			// FIXME -- switch to stream if code is from another buffer
+			var editor = atom.workspace.getActiveTextEditor();
+			Post_Marker = editor.markBufferRange(post.quote_range, { invalidate: "never" });
+			editor.decorateMarker(Post_Marker, { type: "highlight", class: "codestream-highlight" });
+
+			var start = post.quote_range.start;
+			editor.setCursorBufferPosition(start);
+			editor.scrollToBufferPosition(start, {
+				center: true
+			});
 		}
 	};
 
@@ -386,7 +399,7 @@ export class SimpleStream extends Component {
 					// find the author -- FIXME this feels fragile
 					for (var index = 0; index < this.state.authors.length; index++) {
 						let person = this.state.authors[index];
-						if (person.fullName == author) {
+						if (person.fullName == author || person.nick == author) {
 							authors["@" + person.nick] = true;
 						}
 					}
@@ -395,8 +408,8 @@ export class SimpleStream extends Component {
 		}
 
 		if (Object.keys(authors).length > 0) {
-			var newText = Object.keys(authors).join(", ") + " " + (this.state.newPostText || "");
-			this.setNewPostText(newText);
+			var newText = Object.keys(authors).join(", ") + " ";
+			this.insertTextAtCursor(newText);
 		}
 	}
 
@@ -628,24 +641,26 @@ export class SimpleStream extends Component {
 		// convert the text to plaintext so there is no HTML
 		var doc = new DOMParser().parseFromString(newText, "text/html");
 		newText = doc.documentElement.textContent;
+		console.log(this.state.quoteRange);
+		let codeBlocks = [];
+		if (this.state.quoteText) {
+			let quoteRange = this.state.quoteRange;
+			codeBlocks = [
+				{
+					code: this.state.quoteText,
+					location: [
+						quoteRange.start.row,
+						quoteRange.end.row,
+						quoteRange.start.column,
+						quoteRange.end.column
+					],
+					// for now, we assume this codeblock came from this buffer
+					streamId: this.props.id
+				}
+			];
+		}
 
-		// TODO: add selected snippet to post
-		// if (this.state.quoteText) {
-		// 	newPost.quoteText = this.state.quoteText;
-		// 	newPost.quoteRange = this.state.quoteRange;
-		// }
-		// var timestamp = +new Date();
-		// var newPost = {
-		// 	// FIXME fake data
-		// 	id: 3,
-		// 	nick: "pez",
-		// 	fullName: "Peter Pezaris",
-		// 	text: newText,
-		// 	email: "pez@codestream.com",
-		// 	timestamp: timestamp
-		// };
-
-		this.props.createPost(this.props.id, this.state.threadId, newText);
+		this.props.createPost(this.props.id, this.state.threadId, newText, codeBlocks);
 
 		// reset the input field to blank
 		this.setState({

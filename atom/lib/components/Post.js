@@ -33,6 +33,8 @@ export default class Post extends Component {
 
 		if (this.props.post.author.fullName)
 			atom.tooltips.add(this._authorDiv, { title: this.props.post.author.fullName });
+
+		// atom.tooltips.add($icon.get(0), {'title': 'This block of code is different than your current copy.'});
 	}
 
 	render() {
@@ -43,9 +45,13 @@ export default class Post extends Component {
 			"new-separator": post.newSeparator,
 			[`thread-key-${this.props.threadKey}`]: true
 		});
-		// console.log("RENDERING A POST: " + postClass);
 
-		const codeblock = post.quoteText ? <div className="code">{post.quoteText}</div> : "";
+		let codeBlock = null;
+		let alert = null;
+		if (post.codeBlocks && post.codeBlocks.length) {
+			codeBlock = <div className="code">{post.codeBlocks[0].code}</div>;
+			alert = <span class="icon icon-alert" />;
+		}
 
 		// FIXME -- only replace the at-mentions of actual authors, rather than any
 		// string that starts with an @
@@ -53,6 +59,7 @@ export default class Post extends Component {
 		let bodyParts = post.text.split(/(@\w+)/);
 
 		let menuItems = [
+			{ label: "Create Thread", key: "make-thread" },
 			{ label: "Mark Unread", key: "mark-unread" },
 			{ label: "Add Reaction", key: "add-reaction" },
 			{ label: "Pin to Stream", key: "pin-to-stream" },
@@ -60,7 +67,9 @@ export default class Post extends Component {
 			{ label: "Delete Message", key: "delete-message" }
 		];
 
-		let menu = this.state.menuOpen ? <Menu items={menuItems} /> : null;
+		let menu = this.state.menuOpen ? (
+			<Menu items={menuItems} handleSelectMenu={this.handleSelectMenu} />
+		) : null;
 
 		let parentPost = null;
 
@@ -92,7 +101,8 @@ export default class Post extends Component {
 							return part;
 						}
 					})}
-					{codeblock}
+					{codeBlock}
+					{alert}
 				</div>
 			</div>
 		);
@@ -106,5 +116,11 @@ export default class Post extends Component {
 		event.stopPropagation();
 		this.setState({ menuOpen: !this.state.menuOpen });
 		console.log("CLICK ON MENU: ");
+	};
+
+	handleSelectMenu = (event, id) => {
+		console.log("Clicked: " + id);
+		event.stopPropagation();
+		this.setState({ menuOpen: false });
 	};
 }

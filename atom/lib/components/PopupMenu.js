@@ -43,12 +43,12 @@ export default class PopupMenu extends Component {
 		);
 	}
 
-	handleMouseEnter(nick) {
-		return this.props.handleHoverMenuItem(nick);
+	handleMouseEnter(id) {
+		return this.props.handleHoverMenuItem(id);
 	}
 
-	handleClickItem(nick) {
-		return this.props.handleSelectMenuItem(nick);
+	handleClickItem(id) {
+		return this.props.handleSelectMenuItem(id);
 	}
 
 	handleClickInstructions() {
