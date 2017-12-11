@@ -152,14 +152,15 @@ export const confirmEmail = attributes => (dispatch, getState) => {
 
 			if (!teamForRepo && userTeams.length === 0)
 				dispatch({ type: "NEW_USER_CONFIRMED_IN_NEW_REPO" });
-			if (!teamForRepo && userTeams.length > 0) {
+			else if (!teamForRepo && userTeams.length > 0) {
 				dispatch(fetchTeamMembers(userTeams));
 				dispatch({ type: "EXISTING_USER_CONFIRMED_IN_NEW_REPO" });
-			}
-			if (userTeams.find(t => t.id === teamForRepo)) {
+			} else if (userTeams.find(team => team.id === teamForRepo)) {
 				// TODO: maybe?
 				// dispatch(fetchTeamMembers(userTeams));
 				dispatch({ type: "EXISTING_USER_CONFIRMED" });
+			} else {
+				dispatch({ type: "EXISTING_USER_CONFIRMED_IN_FOREIGN_REPO" });
 			}
 		})
 		.catch(({ data }) => {
