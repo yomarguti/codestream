@@ -6,6 +6,7 @@ import streams from "./streams";
 import users from "./users";
 import repos from "./repos";
 import teams from "./teams";
+import markers from "./markers";
 
 const session = (state = {}, { type, payload }) => {
 	if (type === "INIT_SESSION") return payload;
@@ -18,7 +19,13 @@ const repoAttributes = (state = {}, { type, payload }) => {
 	return state;
 };
 
+const bootstrapped = (state = false, { type }) => {
+	if (type === "BOOTSTRAP_COMPLETE") return true;
+	return state;
+};
+
 export default combineReducers({
+	bootstrapped,
 	session,
 	streams,
 	users,
@@ -27,5 +34,6 @@ export default combineReducers({
 	context,
 	repoAttributes,
 	onboarding,
-	posts
+	posts,
+	markers
 });
