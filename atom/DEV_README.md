@@ -22,7 +22,7 @@ set the following variables in your shell.
 
 ```bash
 export CS_API_EMAIL_TO=#put your email here
-export CS_API_CONFIRMATION_REQUIRE=1
+export CS_API_CONFIRMATION_REQUIRED=1
 ```
 
 Now you can start the api server. Next, you'll need to tell the plugin where the server is by
@@ -49,9 +49,9 @@ looks like
     url: "https://localhost.codestream.us:12079"
 ```
 
-In order to get through onboarding right now, you need to sign up, confirm your account, reload,
-skip to sign in, sign in with your credentials, and then you'll be shown the current stream
-interface, which is not hooked up to anything yet.
+## Other Environments you can point to
+
+Dev server - https://tca3.codestream.us:9443
 
 ## Resetting the database(s)
 
@@ -61,14 +61,16 @@ wipe everything in mongo, you probably should clear indexeddb too.
 You can use Mongo's app, [Compass](https://www.mongodb.com/products/compass), for interacting with
 databases.
 
-To clear what's the clients cache, run open atom's command palette and run the `Codestream: Wipe
+To clear what's in the client cache, open atom's command palette and run the `Codestream: Wipe
 Cache` command.
+
+If you want to logout and create a new session, from the command palette run `Codestream: Logout`.
 
 ## Redux DevTools
 
 Visualizing the UI state is really helpful when trying to debug and see how the data changes. This
 is where the Redux DevTools chrome extension comes in. Since atom runs on electron, which is sort of
-an instance of chrome, it has support for some chrome extensions that are for the develper console.
+an instance of chrome, it has support for some chrome extensions that are for the developer console.
 
 To install the Redux DevTools, follow the steps
 [here](https://github.com/electron/electron/blob/master/docs/tutorial/devtools-extension.md#how-to-load-a-devtools-extension).
