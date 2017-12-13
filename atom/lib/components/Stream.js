@@ -117,7 +117,7 @@ export class SimpleStream extends Component {
 	}
 
 	componentDidMount() {
-		if (!this.props.id) this.props.fetchStream();
+		this.props.fetchStream(); // Fetch any new stuff
 		// TODO: scroll to bottom
 		new ResizeObserver(this.handleResizeCompose).observe(this._compose);
 		document.querySelector('div[contenteditable="true"]').addEventListener("paste", function(e) {

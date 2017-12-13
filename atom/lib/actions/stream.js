@@ -44,12 +44,17 @@ const saveMarkers = markers => dispatch => {
 };
 
 const saveMarkerLocations = locations => dispatch => {
-	return db.markerLocations.put(locations).then(() => {
-		dispatch({
-			type: "ADD_MARKER_LOCATIONS",
-			payload: locations
+	return db.markerLocations
+		.put(locations)
+		.then(() => {
+			dispatch({
+				type: "ADD_MARKER_LOCATIONS",
+				payload: locations
+			});
+		})
+		.catch("DataError", () => {
+			/* DataError is thrown when the primary key is not on the object. We can swallow that since it's no-op*/
 		});
-	});
 };
 
 const resolvePendingPost = (id, data) => dispatch => {
@@ -101,7 +106,15 @@ export const fetchStream = () => async (dispatch, getState) => {
 			`/posts?teamId=${context.currentTeamId}&streamId=${stream.id}`,
 			session.accessToken
 		);
+		const { markers, markerLocations } = await http.get(
+			`/markers?teamId=${context.currentTeamId}&streamId=${stream.id}&commitHash=${
+				context.currentCommit
+			}`,
+			session.accessToken
+		);
 		await dispatch(addStream(stream));
+		await dispatch(saveMarkers(normalize(markers)));
+		await dispatch(saveMarkerLocations(normalize(markerLocations)));
 		dispatch(savePostsForStream(stream.id, normalize(posts)));
 	}
 };
