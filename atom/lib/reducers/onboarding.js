@@ -26,6 +26,7 @@ export default (state = initialState, { type, payload }) => {
 			return { ...initialState, step: "createTeam" };
 		case "EXISTING_USER_CONFIRMED_IN_NEW_REPO":
 			return { ...initialState, step: "selectTeam" };
+		case "LOGGED_INTO_FOREIGN_REPO":
 		case "EXISTING_USER_CONFIRMED_IN_FOREIGN_REPO":
 			return { ...initialState, step: "noAccess" };
 		case "USER_ALREADY_CONFIRMED":

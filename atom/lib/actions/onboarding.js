@@ -247,13 +247,16 @@ export const authenticate = params => (dispatch, getState) => {
 		.then(async ({ accessToken, user, teams, repos }) => {
 			dispatch(requestFinished());
 			user = normalize(user);
+			teams = normalize(teams);
+			repos = normalize(repos);
 			await dispatch(saveUser(user));
 			dispatch(initializeSession({ accessToken, user }));
-			await saveTeamsAndRepos({
-				teams: normalize(teams),
-				repos: normalize(repos)
-			});
-			dispatch({ type: "LOGGED_IN" });
+			await saveTeamsAndRepos({ teams, repos });
+
+			const { currentTeamId } = getState().context;
+
+			if (teams.find(team => team.id === currentTeamId)) dispatch({ type: "LOGGED_IN" });
+			else dispatch({ type: "LOGGED_INTO_FOREIGN_REPO" });
 		})
 		.catch(error => {
 			dispatch(requestFinished());
