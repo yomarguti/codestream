@@ -688,13 +688,23 @@ const getPostsForStream = (streamId = "", { byStream, sortPerStream }) => {
 	return (sortPerStream[streamId] || []).map(id => posts[id]);
 };
 
-const getMarkerLocations = (locationsByCommit = {}, commitHash) => {
-	return locationsByCommit[commitHash] || {};
+const getLocationsByPost = (locationsByCommit = {}, commitHash, markers) => {
+	const locations = locationsByCommit[commitHash] || {};
+	const locationsByPost = {};
+	Object.keys(locations).forEach(markerId => {
+		const marker = markers[markerId];
+		locationsByPost[marker.postId] = locations[markerId];
+	});
+	return locationsByPost;
 };
 
-const mapStateToProps = ({ context, streams, users, posts, markerLocations }) => {
+const mapStateToProps = ({ context, streams, users, posts, markers, markerLocations }) => {
 	const stream = streams.byFile[context.currentFile] || {};
-	const locations = getMarkerLocations(markerLocations.byStream[stream.id]);
+	const locations = getLocationsByPost(
+		markerLocations.byStream[stream.id],
+		context.currentCommit,
+		markers
+	);
 	return {
 		id: stream.id,
 		posts: getPostsForStream(stream.id, posts).map(post => {
