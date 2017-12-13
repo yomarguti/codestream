@@ -92,14 +92,14 @@ export default class Post extends Component {
 				/>
 				<author ref={ref => (this._authorDiv = ref)}>{post.author.username}</author>
 				{this.props.replyingTo && (
-					<span class="replying-to">replying to {this.props.replyingTo}</span>
+					<span className="replying-to">replying to {this.props.replyingTo}</span>
 				)}
 				<Timestamp time={post.createdAt} />
 				<div className="body">
 					{bodyParts.map(part => {
 						if (part.charAt(0) == "@") {
-							if (part == "@pez") return <span class="at-mention me">{part}</span>;
-							else return <span class="at-mention">{part}</span>;
+							if (part == "@pez") return <span className="at-mention me">{part}</span>;
+							else return <span className="at-mention">{part}</span>;
 						} else {
 							return part;
 						}
