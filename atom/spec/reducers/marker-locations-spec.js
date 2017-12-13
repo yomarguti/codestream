@@ -11,7 +11,7 @@ const locations2 = {
 	teamId: "5a2f611486d0fdeeeb51b78a",
 	streamId: "streamId",
 	commitHash: "commitHash",
-	locations: { somePost: [80, 81, 0, 0] }
+	locations: { someMarker: [80, 81, 0, 0] }
 };
 
 describe("reducer for marker locations", () => {
@@ -64,7 +64,7 @@ describe("reducer for marker locations", () => {
 
 				const updatedLocations = {
 					...locations,
-					locations: { newPostId: [0] }
+					locations: { markerId: [0] }
 				};
 
 				const result = reduce(state, { type: "ADD_MARKER_LOCATIONS", payload: updatedLocations });
@@ -92,7 +92,7 @@ describe("reducer for marker locations", () => {
 				const updatedLocations = {
 					...locations,
 					commitHash: "newCommit",
-					locations: { newPostId: [0] }
+					locations: { markerId: [0] }
 				};
 
 				const result = reduce(state, { type: "ADD_MARKER_LOCATIONS", payload: updatedLocations });
