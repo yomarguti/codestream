@@ -103,8 +103,13 @@
 			border-radius: 4px;
 			// FIXME -- background-color-info is too intense, but this
 			// is a hard-coded color which is Bad.
-			background-color: #ffffe6;
+			background-color: @background-color-highlight;
 			// background-color: @background-color-info;
+		}
+		.at-mention.me {
+			color: @app-background-color;
+			background-color: @background-color-info;
+			// color: @text-color-error;
 		}
 
 		.code {
@@ -314,6 +319,9 @@
 				// bottom: auto;
 				// top: 50px;
 				// left: 30px;
+			}
+			.replying-to {
+				opacity: 0.5;
 			}
 		}
 

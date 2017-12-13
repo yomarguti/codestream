@@ -71,7 +71,7 @@ export default class Post extends Component {
 			<Menu items={menuItems} handleSelectMenu={this.handleSelectMenu} />
 		) : null;
 
-		let parentPost = null;
+		let parentPost = this.props.parentPost;
 
 		// FIXME use a real email address
 		return (
@@ -91,12 +91,15 @@ export default class Post extends Component {
 					email={post.author.email}
 				/>
 				<author ref={ref => (this._authorDiv = ref)}>{post.author.username}</author>
-				{parentPost && <span class="replying-to">replying to {parentPost.author.username}</span>}
+				{this.props.replyingTo && (
+					<span class="replying-to">replying to {this.props.replyingTo}</span>
+				)}
 				<Timestamp time={post.createdAt} />
 				<div className="body">
 					{bodyParts.map(part => {
 						if (part.charAt(0) == "@") {
-							return <span class="at-mention">{part}</span>;
+							if (part == "@pez") return <span class="at-mention me">{part}</span>;
+							else return <span class="at-mention">{part}</span>;
 						} else {
 							return part;
 						}

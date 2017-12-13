@@ -216,6 +216,11 @@ export class SimpleStream extends Component {
 			}
 		});
 
+		var postUsernames = {};
+		this.props.posts.map(post => {
+			postUsernames[post.id] = post.author.username;
+		});
+
 		let lastTimestamp = null;
 		let threadId = this.state.threadId;
 		let threadPost = this.findPostById(threadId);
@@ -249,7 +254,11 @@ export class SimpleStream extends Component {
 						const returnValue = (
 							<div key={post.id}>
 								<DateSeparator timestamp1={lastTimestamp} timestamp2={post.createdAt} />
-								<Post post={post} threadKey={threadKey} />
+								<Post
+									post={post}
+									threadKey={threadKey}
+									replyingTo={postUsernames[post.parentPostId]}
+								/>
 							</div>
 						);
 						lastTimestamp = post.createdAt;
@@ -336,6 +345,7 @@ export class SimpleStream extends Component {
 		if (post && post.codeBlocks && post.codeBlocks.length) {
 			let codeBlock = post.codeBlocks[0];
 
+			console.log(post);
 			// FIXME -- look up the marker position for this commit hash
 			return;
 
@@ -650,8 +660,8 @@ export class SimpleStream extends Component {
 					code: this.state.quoteText,
 					location: [
 						quoteRange.start.row,
-						quoteRange.end.row,
 						quoteRange.start.column,
+						quoteRange.end.row,
 						quoteRange.end.column
 					],
 					// for now, we assume this codeblock came from this buffer
