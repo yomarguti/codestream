@@ -5,6 +5,8 @@ import NoGit from "./NoGit";
 import Onboarding from "./onboarding/Onboarding";
 import Stream from "./Stream";
 
+const Loading = () => <span className="loading loading-spinner-large inline-block" />;
+
 class CodeStreamRoot extends Component {
 	static defaultProps = {
 		repositories: [],
@@ -27,9 +29,10 @@ class CodeStreamRoot extends Component {
 	}
 
 	render() {
-		const { accessToken, repositories, onboarding } = this.props;
+		const { accessToken, bootstrapped, repositories, onboarding } = this.props;
 
 		if (repositories.length === 0) return <NoGit />;
+		if (!bootstrapped) return <Loading />;
 		else if (onboarding.complete && accessToken) return <Stream />;
 		else {
 			return <Onboarding />;
@@ -37,8 +40,9 @@ class CodeStreamRoot extends Component {
 	}
 }
 
-const mapStateToProps = ({ session, onboarding }) => ({
+const mapStateToProps = ({ bootstrapped, session, onboarding }) => ({
 	accessToken: session.accessToken,
+	bootstrapped,
 	onboarding
 });
 export default connect(mapStateToProps)(CodeStreamRoot);

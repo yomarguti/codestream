@@ -10,19 +10,28 @@ db.version(1).stores({
 	users: "id, *teamIds, email, username",
 	teams: "id, *memberIds"
 });
+db.version(2).stores({
+	markers: "id, streamId, postId",
+	markerLocations: "commitHash, streamId"
+});
 
 export default db;
 
 export const bootstrapStore = store => {
 	db
-		.transaction("r", db.posts, db.users, db.streams, db.teams, db.repos, () => {
+		.transaction("r", db.posts, db.users, db.streams, db.teams, db.repos, db.markers, () => {
 			db.users.limit(100).toArray(users => store.dispatch(bootstrapUsers(users)));
 			db.repos.limit(100).toArray(repos => store.dispatch(bootstrapRepos(repos)));
 			db.teams.limit(100).toArray(teams => store.dispatch(bootstrapTeams(teams)));
 			db.posts.limit(300).toArray(posts => store.dispatch(bootstrapPosts(posts)));
 			db.streams.limit(200).toArray(streams => store.dispatch(bootstrapStreams(streams)));
+			db.markers.limit(300).toArray(markers => store.dispatch(bootstrapMarkers(markers)));
+		})
+		.then(() => {
+			store.dispatch({ type: "BOOTSTRAP_COMPLETE" });
 		})
 		.catch(error => {
+			console.error(error);
 			// TODO: wtf
 		});
 };
@@ -32,3 +41,4 @@ const bootstrapRepos = payload => ({ type: "BOOTSTRAP_REPOS", payload });
 const bootstrapTeams = payload => ({ type: "BOOTSTRAP_TEAMS", payload });
 const bootstrapPosts = payload => ({ type: "BOOTSTRAP_POSTS", payload });
 const bootstrapStreams = payload => ({ type: "BOOTSTRAP_STREAMS", payload });
+const bootstrapMarkers = payload => ({ type: "BOOTSTRAP_MARKERS", payload });
