@@ -34,7 +34,7 @@ const addPendingPost = post => dispatch => {
 	});
 };
 
-const saveMarkers = markers => {
+const saveMarkers = markers => dispatch => {
 	return db.markers.bulkPut(markers).then(() => {
 		dispatch({
 			type: "ADD_MARKERS",
@@ -43,7 +43,7 @@ const saveMarkers = markers => {
 	});
 };
 
-const saveMarkerLocations = locations => {
+const saveMarkerLocations = locations => dispatch => {
 	return db.markerLocations.put(locations).then(() => {
 		dispatch({
 			type: "ADD_MARKER_LOCATIONS",

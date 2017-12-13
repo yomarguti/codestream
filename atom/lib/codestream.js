@@ -74,7 +74,11 @@ module.exports = {
 			}),
 			atom.commands.add("atom-workspace", {
 				"codestream:toggle": () => atom.workspace.toggle(CODESTREAM_VIEW_URI),
-				"codestream:logout": () => store.dispatch(logout()),
+				"codestream:logout": () => {
+					store.dispatch(logout());
+					localStorage.removeItem("codestream.session");
+					localStorage.removeItem("codestream.accessToken");
+				},
 				"codestream:wipe-cache": () => indexedDB.deleteDatabase("CodeStream")
 			})
 			// atom.commands.add(".codestream .compose.mentions-on", {
