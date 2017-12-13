@@ -201,7 +201,7 @@ export class SimpleStream extends Component {
 		let quoteHint = rangeText ? (
 			<div className="hint">
 				{rangeText}
-				<span onClick={this.handleClickDismissQuote} class="icon icon-x" />
+				<span onClick={this.handleClickDismissQuote} className="icon icon-x" />
 			</div>
 		) : (
 			""
@@ -243,7 +243,7 @@ export class SimpleStream extends Component {
 				>
 					<div className="intro" ref={ref => (this._intro = ref)}>
 						<label>
-							<span class="logo">&#x2B22;</span>
+							<span className="logo">&#x2B22;</span>
 							Welcome to the stream.<br />Info goes here.
 						</label>
 					</div>

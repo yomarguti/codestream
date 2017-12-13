@@ -50,12 +50,12 @@ export default class Post extends Component {
 		let alert = null;
 		if (post.codeBlocks && post.codeBlocks.length) {
 			codeBlock = <div className="code">{post.codeBlocks[0].code}</div>;
-			alert = <span class="icon icon-alert" />;
+			alert = <span className="icon icon-alert" />;
 		}
 
 		// FIXME -- only replace the at-mentions of actual authors, rather than any
 		// string that starts with an @
-		let body = post.text.replace(/(@\w+)/g, <span class="at-mention">$1</span>);
+		let body = post.text.replace(/(@\w+)/g, <span className="at-mention">$1</span>);
 		let bodyParts = post.text.split(/(@\w+)/);
 
 		let menuItems = [
