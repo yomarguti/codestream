@@ -1,35 +1,23 @@
-import React, { Component } from "react";
-
-export default class AddCommentPopup extends Component {
+export default class AddCommentPopup {
 	constructor(props) {
-		super(props);
-		this.state = {
-			on: false
-		};
-		this.handleClick = this.handleClick.bind(this);
+		this.props = props;
+		this.installHandlers();
+	}
 
-		// FIXME -- we want these event triggers to be installed when we create
-		// the popup, and torn down when we destroy it
+	installHandlers() {
 		let editor = atom.workspace.getActiveTextEditor();
-		if (editor) {
+		if (editor && !editor.hasAddCommentPopupHandlers) {
 			editor.onDidChangeSelectionRange(this.handleSelectionChange);
-			editor.onDidChange(this.handleChange);
-			this.editor = editor;
+			editor.onDidChange(this.destroyMarker);
+			editor.hasAddCommentPopupHandlers = true;
 		}
-		this.marker = null;
+		this.destroyMarker();
 	}
 
-	componentDidMount() {}
-
-	render() {
-		// nothing to render until there is a selection
-		return null;
-	}
-
-	handleClick() {
+	handleClick = () => {
 		if (this.marker) this.marker.destroy();
 		return this.props.handleClickAddComment();
-	}
+	};
 
 	// FIXME -- add an ID to the style element so we can re-use it,
 	// and move this function into a util package
@@ -39,18 +27,12 @@ export default class AddCommentPopup extends Component {
 		document.body.appendChild(node);
 	}
 
-	handleChange = event => {
-		// console.log("HANDLING A CHANGE");
-		// console.log(this.marker);
-		if (this.marker) this.marker.destroy();
-	};
-
 	handleSelectionChange = event => {
 		// console.log("SELECTION HAS CHANGED");
 		let editor = atom.workspace.getActiveTextEditor();
 		if (!editor) return;
 
-		if (this.marker) this.marker.destroy();
+		this.destroyMarker();
 
 		var range = editor.getSelectedBufferRange();
 		let code = editor.getSelectedText();
@@ -74,6 +56,13 @@ export default class AddCommentPopup extends Component {
 		}
 	};
 
+	destroyMarker = () => {
+		if (!this.marker) return;
+
+		this.marker.destroy();
+		this.tooltip.dispose();
+	};
+
 	addMarker(editor, range) {
 		// FIXME set the position of this marker here
 		let row = range.start.row > range.end.row ? range.end.row : range.start.row;
@@ -84,5 +73,6 @@ export default class AddCommentPopup extends Component {
 		item.className = "codestream-add-comment-popup";
 		item.onclick = this.handleClick;
 		editor.decorateMarker(this.marker, { type: "overlay", item: item });
+		this.tooltip = atom.tooltips.add(item, { title: "Add a comment" });
 	}
 }

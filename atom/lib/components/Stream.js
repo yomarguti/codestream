@@ -113,6 +113,7 @@ export class SimpleStream extends Component {
 	componentWillReceiveProps(nextProps) {
 		if (!nextProps.id) this.props.fetchStream();
 		if (nextProps.id !== this.props.id) this.handleDismissThread();
+		new AddCommentPopup({ handleClickAddComment: this.handleClickAddComment });
 	}
 
 	handleResizeCompose = () => {
@@ -153,7 +154,7 @@ export class SimpleStream extends Component {
 			document.execCommand("insertHTML", false, text);
 		});
 
-		console.log("WE MOUNTED THE STREAM COMPONENT");
+		// console.log("WE MOUNTED THE STREAM COMPONENT");
 	}
 
 	findPostById(id) {
@@ -287,7 +288,6 @@ export class SimpleStream extends Component {
 					}
 				</div>
 
-				<AddCommentPopup handleClickAddComment={this.handleClickAddComment} />
 				<AtMentionsPopup
 					on={this.state.atMentionsOn}
 					people={this.state.atMentionsPeople}
