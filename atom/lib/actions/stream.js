@@ -110,18 +110,17 @@ export const createPost = (streamId, parentPostId, text, codeBlocks) => async (
 	dispatch,
 	getState
 ) => {
-	const { session, currentTeamId } = getState();
+	const { session, context } = getState();
 	const pendingId = tempId();
 
-	// TODO populate the commitShaWhenPosted field
 	let post = {
 		id: pendingId,
-		teamId: currentTeamId,
+		teamId: context.currentTeamId,
 		timestamp: new Date().getTime(),
 		creatorId: session.userId,
 		parentPostId: parentPostId,
 		codeBlocks: codeBlocks,
-		commitHashWhenPosted: "57299ce2113d0c16f8ff3f4310897b690669f72a",
+		commitHashWhenPosted: context.currentCommit,
 		streamId,
 		text
 	};

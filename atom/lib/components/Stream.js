@@ -106,14 +106,27 @@ export class SimpleStream extends Component {
 		);
 	}
 
-	componentDidUpdate(prevProps, prevState) {
-		this._postslist.scrollTop = 100000;
-	}
-
 	componentWillReceiveProps(nextProps) {
 		if (!nextProps.id) this.props.fetchStream();
 		if (nextProps.id !== this.props.id) this.handleDismissThread();
 		new AddCommentPopup({ handleClickAddComment: this.handleClickAddComment });
+	}
+
+	componentDidUpdate(prevProps, prevState) {
+		this._postslist.scrollTop = 100000;
+	}
+
+	componentDidMount() {
+		if (!this.props.id) this.props.fetchStream();
+		// TODO: scroll to bottom
+		new ResizeObserver(this.handleResizeCompose).observe(this._compose);
+		document.querySelector('div[contenteditable="true"]').addEventListener("paste", function(e) {
+			e.preventDefault();
+			var text = e.clipboardData.getData("text/plain");
+			document.execCommand("insertHTML", false, text);
+		});
+
+		console.log("WE MOUNTED THE STREAM COMPONENT");
 	}
 
 	handleResizeCompose = () => {
@@ -144,25 +157,13 @@ export class SimpleStream extends Component {
 		this._postslist.scrollTop = 100000;
 	};
 
-	componentDidMount() {
-		if (!this.props.id) this.props.fetchStream();
-		// TODO: scroll to bottom
-		new ResizeObserver(this.handleResizeCompose).observe(this._compose);
-		document.querySelector('div[contenteditable="true"]').addEventListener("paste", function(e) {
-			e.preventDefault();
-			var text = e.clipboardData.getData("text/plain");
-			document.execCommand("insertHTML", false, text);
-		});
-
-		// console.log("WE MOUNTED THE STREAM COMPONENT");
-	}
-
 	findPostById(id) {
 		return this.props.posts.find(post => id === post.id);
 	}
 
 	render() {
 		const posts = this.state.posts;
+		console.log("rendering posts", posts);
 		const streamClass = createClassString({
 			stream: true,
 			"no-headshots": !atom.config.get("CodeStream.showHeadshots")
@@ -687,14 +688,20 @@ const getPostsForStream = (streamId = "", { byStream, sortPerStream }) => {
 	return (sortPerStream[streamId] || []).map(id => posts[id]);
 };
 
-const mapStateToProps = ({ context, streams, users, posts }) => {
+const getMarkerLocations = (locationsByCommit = {}, commitHash) => {
+	return locationsByCommit[commitHash] || {};
+};
+
+const mapStateToProps = ({ context, streams, users, posts, markerLocations }) => {
 	const stream = streams.byFile[context.currentFile] || {};
+	const locations = getMarkerLocations(markerLocations.byStream[stream.id]);
 	return {
 		id: stream.id,
 		posts: getPostsForStream(stream.id, posts).map(post => {
 			const { username, email, firstName, lastName } = users[post.creatorId];
 			return {
 				...post,
+				markerLocation: locations[post.id],
 				author: { username, email, fullName: `${firstName} ${lastName}`.trim() }
 			};
 		})

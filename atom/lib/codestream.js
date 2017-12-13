@@ -4,11 +4,25 @@ import { bootstrapStore } from "./local-cache";
 import { get } from "./network-request";
 import git from "./git";
 import createStore from "./createStore";
-import { setRepoAttributes, setContext, setCurrentFile, logout } from "./actions/context";
+import {
+	setRepoAttributes,
+	setContext,
+	setCurrentFile,
+	setCurrentCommit,
+	commitHashChanged,
+	logout
+} from "./actions/context";
 
 // TODO: figure out if there's a better place for this
 const session = JSON.parse(localStorage.getItem("codestream.session")) || {};
 const store = createStore({ session });
+
+const getCurrentCommit = async repo => {
+	const data = await git(["rev-parse", "--verify", "HEAD"], {
+		cwd: repo.getWorkingDirectory()
+	});
+	return data.trim();
+};
 
 module.exports = {
 	subscriptions: new CompositeDisposable(),
@@ -35,10 +49,18 @@ module.exports = {
 				if (repos.length > 0) {
 					const repo = repos[0];
 
+					getCurrentCommit(repo).then(commitHash => store.dispatch(setCurrentCommit(commitHash)));
+
 					this.subscriptions.add(
 						atom.workspace.observeActiveTextEditor(editor => {
 							const path = editor ? repo.relativize(editor.getPath()) : "";
 							store.dispatch(setCurrentFile(path));
+						}),
+
+						repo.onDidChangeStatuses(async event => {
+							const commitHash = await getCurrentCommit(repo);
+							if (store.getState().context.currentCommit !== commitHash)
+								store.dispatch(commitHashChanged(commitHash));
 						})
 					);
 

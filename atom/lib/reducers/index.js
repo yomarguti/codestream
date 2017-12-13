@@ -7,6 +7,7 @@ import users from "./users";
 import repos from "./repos";
 import teams from "./teams";
 import markers from "./markers";
+import markerLocations from "./marker-locations";
 
 const session = (state = {}, { type, payload }) => {
 	if (type === "INIT_SESSION") return payload;
@@ -35,5 +36,6 @@ export default combineReducers({
 	repoAttributes,
 	onboarding,
 	posts,
-	markers
+	markers,
+	markerLocations
 });

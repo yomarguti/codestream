@@ -18,6 +18,14 @@ export const setCurrentFile = file => ({
 	type: "SET_CURRENT_FILE",
 	payload: file
 });
+export const setCurrentCommit = hash => ({
+	type: "SET_CURRENT_COMMIT",
+	payload: hash
+});
+export const commitHashChanged = hash => ({
+	type: "COMMIT_HASH_CHANGED",
+	payload: hash
+});
 export const logout = () => dispatch => {
 	dispatch({ type: "CLEAR_SESSION" });
 	dispatch({ type: "RESET_ONBOARDING" });
