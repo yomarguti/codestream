@@ -106,6 +106,17 @@ export class SimpleStream extends Component {
 		);
 	}
 
+	installSelectionHandler() {
+		// if (this.selectionHandler) return;
+		let editor = atom.workspace.getActiveTextEditor();
+		this.selectionHandler = editor.onDidChangeSelectionRange(this.destroyPostMarker);
+	}
+
+	destroyPostMarker = () => {
+		if (this.postMarker) this.postMarker.destroy();
+		if (this.selectionHandler) this.selectionHandler.dispose();
+	};
+
 	componentWillReceiveProps(nextProps) {
 		if (!nextProps.id) this.props.fetchStream();
 		if (nextProps.id !== this.props.id) this.handleDismissThread();
@@ -351,14 +362,20 @@ export class SimpleStream extends Component {
 				let markerRange = [[location[0], location[1]], [location[2], location[3]]];
 				// FIXME -- switch to stream if code is from another buffer
 				const editor = atom.workspace.getActiveTextEditor();
-				let postMarker = editor.markBufferRange(markerRange, { invalidate: "never" });
-				editor.decorateMarker(postMarker, { type: "highlight", class: "codestream-highlight" });
+				if (this.marker) this.marker.destroy();
+				this.postMarker = editor.markBufferRange(markerRange, { invalidate: "touch" });
+				editor.decorateMarker(this.postMarker, {
+					type: "highlight",
+					class: "codestream-highlight"
+				});
 
 				var start = [location[0], location[1]];
 				editor.setCursorBufferPosition(start);
 				editor.scrollToBufferPosition(start, {
 					center: true
 				});
+
+				this.installSelectionHandler();
 			}
 		}
 	};

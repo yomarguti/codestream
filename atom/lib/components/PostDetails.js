@@ -95,7 +95,7 @@ export default class PostDetails extends Component {
 				var diffDiv = document.createElement("div");
 				diffDiv.appendChild(atom.views.getView(this.diffEditor));
 
-				var marker2 = editor.markBufferRange([[range[1][0] - 1, 0], [range[1][0] - 1, 0]]);
+				var marker2 = editor.markBufferRange([[range[1][0], 0], [range[1][0], 0]]);
 				editor.decorateMarker(marker2, {
 					type: "block",
 					position: "after",
