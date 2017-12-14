@@ -98,16 +98,23 @@
 		.at-mention {
 			padding: 1px 3px;
 			margin: -1px 0px;
-			font-weight: bold;
 			display: inline-block;
 			border-radius: 4px;
-			// background-color: @background-color-highlight;
 			// background-color: @background-color-info;
+			color: @text-color-info;
 		}
 		.at-mention.me {
-			color: @app-background-color;
-			background-color: @background-color-info;
+			color: @text-color-info;
+			font-weight: bold;
+
+			// take the app background color, and shade it towards
+			// a neutral grey by 25%
+			// background-color: mix(@app-background-color, #808080, 75%);
+			background-color: rgba(127, 127, 127, 0.25);
+
+			// filter: brightness(90%);
 			// color: @text-color-error;
+			// background-color: @background-color-highlight;
 		}
 
 		.code {

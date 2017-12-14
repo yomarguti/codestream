@@ -69,6 +69,14 @@ export default class PostDetails extends Component {
 		this.diffMarkers = [];
 	};
 
+	scrollToLine = line => {
+		const editor = atom.workspace.getActiveTextEditor();
+		editor.setCursorBufferPosition([line, 0]);
+		editor.scrollToBufferPosition([line, 0], {
+			center: true
+		});
+	};
+
 	handleClickShowDiff = async event => {
 		if (this.state.diffShowing) {
 			this.destroyDiffMarkers();
@@ -76,11 +84,13 @@ export default class PostDetails extends Component {
 			var editor = atom.workspace.getActiveTextEditor();
 			const post = this.props.post;
 			const codeBlock = post.codeBlocks[0];
-			const range = this.dummyRange(); // FIXME
 
 			let location = post.markerLocation;
 			if (location) {
 				let range = [[location[0], location[1]], [location[2], location[3]]];
+
+				this.scrollToLine(location[0]);
+
 				var marker = editor.markBufferRange(range);
 				editor.decorateMarker(marker, { type: "line", class: "git-diff-details-old-highlighted" });
 				this.diffMarkers.push(marker);
@@ -116,21 +126,28 @@ export default class PostDetails extends Component {
 	};
 
 	handleClickApplyPatch = async event => {
-		var editor = atom.workspace.getActiveTextEditor();
+		let editor = atom.workspace.getActiveTextEditor();
 		const post = this.props.post;
-		const codeBlock = post.codeBlocks[0];
-		const range = this.dummyRange(); // FIXME
-		if (this.state.patchApplied) {
-			// revert
-			console.log("Putting it back to: " + this.state.oldCode);
-			editor.setTextInBufferRange(range, this.state.oldCode);
-		} else {
-			// apply patch
-			var currentCode = editor.getTextInBufferRange(range);
-			console.log("Setting old code to: " + currentCode);
-			this.setState({ oldCode: currentCode });
-			editor.setTextInBufferRange(range, codeBlock.code);
+
+		let location = post.markerLocation;
+		if (location) {
+			let range = [[location[0], location[1]], [location[2], location[3]]];
+
+			this.scrollToLine(location[0]);
+
+			if (this.state.patchApplied) {
+				// revert
+				console.log("Putting it back to: " + this.state.oldCode);
+				editor.setTextInBufferRange(range, this.state.oldCode);
+			} else {
+				// apply patch
+				const codeBlock = post.codeBlocks[0];
+				var currentCode = editor.getTextInBufferRange(range);
+				console.log("Setting old code to: " + currentCode);
+				this.setState({ oldCode: currentCode });
+				editor.setTextInBufferRange(range, codeBlock.code);
+			}
+			this.setState({ patchApplied: !this.state.patchApplied });
 		}
-		this.setState({ patchApplied: !this.state.patchApplied });
 	};
 }
