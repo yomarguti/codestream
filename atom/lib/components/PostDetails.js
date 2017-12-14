@@ -21,38 +21,39 @@ export default class PostDetails extends Component {
 			post: true
 		});
 		// console.log("RENDERING A POST DETAILS: " + postClass);
+		console.log(post);
 
 		const applyPatchLabel = this.state.patchApplied ? "Revert" : "Apply Patch";
 		const showDiffLabel = this.state.diffShowing ? "Hide Diff" : "Show Diff";
+		const hasCodeBlock = post.codeBlocks && post.codeBlocks.length ? true : null;
 
 		return (
 			<div className="post-details" id={post.id} ref={ref => (this._div = ref)}>
 				<Post post={post} />
-				{post.codeBlocks &&
-					post.codeBlocks.length && (
-						<div className="button-group">
-							<Button
-								id="show-diff-button"
-								className="control-button"
-								tabIndex="2"
-								type="submit"
-								loading={this.props.loading}
-								onClick={this.handleClickShowDiff}
-							>
-								{showDiffLabel}
-							</Button>
-							<Button
-								id="show-diff-button"
-								className="control-button"
-								tabIndex="2"
-								type="submit"
-								loading={this.props.loading}
-								onClick={this.handleClickApplyPatch}
-							>
-								{applyPatchLabel}
-							</Button>
-						</div>
-					)}
+				{hasCodeBlock && (
+					<div className="button-group">
+						<Button
+							id="show-diff-button"
+							className="control-button"
+							tabIndex="2"
+							type="submit"
+							loading={this.props.loading}
+							onClick={this.handleClickShowDiff}
+						>
+							{showDiffLabel}
+						</Button>
+						<Button
+							id="show-diff-button"
+							className="control-button"
+							tabIndex="2"
+							type="submit"
+							loading={this.props.loading}
+							onClick={this.handleClickApplyPatch}
+						>
+							{applyPatchLabel}
+						</Button>
+					</div>
+				)}
 			</div>
 		);
 	}
