@@ -37,6 +37,10 @@ export default class Post extends Component {
 		// atom.tooltips.add($icon.get(0), {'title': 'This block of code is different than your current copy.'});
 	}
 
+	makeRange(location) {
+		return [[location[0], location[1]], [location[2], location[3]]];
+	}
+
 	render() {
 		const { post } = this.state;
 
@@ -49,8 +53,14 @@ export default class Post extends Component {
 		let codeBlock = null;
 		let alert = null;
 		if (post.codeBlocks && post.codeBlocks.length) {
-			codeBlock = <div className="code">{post.codeBlocks[0].code}</div>;
-			alert = <span className="icon icon-alert" />;
+			let code = post.codeBlocks[0].code;
+			codeBlock = <div className="code">{code}</div>;
+			if (post.markerLocation) {
+				const editor = atom.workspace.getActiveTextEditor();
+				let range = this.makeRange(post.markerLocation);
+				var existingCode = editor.getTextInBufferRange(range);
+				if (code !== existingCode) alert = <span className="icon icon-alert" />;
+			}
 		}
 
 		// FIXME -- only replace the at-mentions of actual authors, rather than any
