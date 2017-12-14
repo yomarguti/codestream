@@ -53,10 +53,14 @@ module.exports = {
 
 					this.subscriptions.add(
 						atom.workspace.observeActiveTextEditor(editor => {
+							// TODO: only dispatch the action if there is a current file
+							// that way if a user looks at settings or a non-repo file, the stream for the previously active file is still visible
 							const path = editor ? repo.relativize(editor.getPath()) : "";
 							store.dispatch(setCurrentFile(path));
 						}),
 
+						// Subscribe to git status changes in order to be aware of current commit hash.
+						// This is probably a naive implementation.
 						repo.onDidChangeStatuses(async event => {
 							const commitHash = await getCurrentCommit(repo);
 							if (store.getState().context.currentCommit !== commitHash)
