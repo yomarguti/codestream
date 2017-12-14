@@ -715,6 +715,18 @@ const getLocationsByPost = (locationsByCommit = {}, commitHash, markers) => {
 	return locationsByPost;
 };
 
+const getMarkersForStreamAndCommit = (locationsByCommit = {}, commitHash, markers) => {
+	const locations = locationsByCommit[commitHash] || {};
+	return Object.keys(locations).map(markerId => {
+		const marker = markers[markerId];
+		return {
+			id: marker.id,
+			postId: marker.postId,
+			location: locations[markerId]
+		};
+	});
+};
+
 const mapStateToProps = ({ context, streams, users, posts, markers, markerLocations }) => {
 	const stream = streams.byFile[context.currentFile] || {};
 	const locations = getLocationsByPost(
@@ -724,6 +736,11 @@ const mapStateToProps = ({ context, streams, users, posts, markers, markerLocati
 	);
 	return {
 		id: stream.id,
+		markers: getMarkersForStreamAndCommit(
+			markerLocations.byStream[stream.id],
+			context.currentCommit,
+			markers
+		),
 		posts: getPostsForStream(stream.id, posts).map(post => {
 			const { username, email, firstName, lastName } = users[post.creatorId];
 			return {
