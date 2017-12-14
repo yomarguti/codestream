@@ -77,35 +77,39 @@ export default class PostDetails extends Component {
 			const codeBlock = post.codeBlocks[0];
 			const range = this.dummyRange(); // FIXME
 
-			var marker = editor.markBufferRange(range);
-			editor.decorateMarker(marker, { type: "line", class: "git-diff-details-old-highlighted" });
-			this.diffMarkers.push(marker);
+			let location = post.markerLocation;
+			if (location) {
+				let range = [[location[0], location[1]], [location[2], location[3]]];
+				var marker = editor.markBufferRange(range);
+				editor.decorateMarker(marker, { type: "line", class: "git-diff-details-old-highlighted" });
+				this.diffMarkers.push(marker);
 
-			this.diffEditor = atom.workspace.buildTextEditor({
-				lineNumberGutterVisible: false,
-				scrollPastEnd: false
-			});
+				this.diffEditor = atom.workspace.buildTextEditor({
+					lineNumberGutterVisible: false,
+					scrollPastEnd: false
+				});
 
-			this.diffEditor.setGrammar(editor.getGrammar());
-			this.diffEditor.setText(codeBlock.code.replace(/[\r\n]+$/g, ""));
+				this.diffEditor.setGrammar(editor.getGrammar());
+				this.diffEditor.setText(codeBlock.code.replace(/[\r\n]+$/g, ""));
 
-			var diffDiv = document.createElement("div");
-			diffDiv.appendChild(atom.views.getView(this.diffEditor));
+				var diffDiv = document.createElement("div");
+				diffDiv.appendChild(atom.views.getView(this.diffEditor));
 
-			var marker2 = editor.markBufferRange([[range[1][0] - 1, 0], [range[1][0] - 1, 0]]);
-			editor.decorateMarker(marker2, {
-				type: "block",
-				position: "after",
-				item: diffDiv
-			});
-			this.diffMarkers.push(marker2);
+				var marker2 = editor.markBufferRange([[range[1][0] - 1, 0], [range[1][0] - 1, 0]]);
+				editor.decorateMarker(marker2, {
+					type: "block",
+					position: "after",
+					item: diffDiv
+				});
+				this.diffMarkers.push(marker2);
 
-			var marker3 = this.diffEditor.markBufferRange([[0, 0], [200, 0]]);
-			this.diffEditor.decorateMarker(marker3, {
-				type: "line",
-				class: "git-diff-details-new-highlighted"
-			});
-			this.diffMarkers.push(marker3);
+				var marker3 = this.diffEditor.markBufferRange([[0, 0], [200, 0]]);
+				this.diffEditor.decorateMarker(marker3, {
+					type: "line",
+					class: "git-diff-details-new-highlighted"
+				});
+				this.diffMarkers.push(marker3);
+			}
 		}
 		this.setState({ diffShowing: !this.state.diffShowing });
 	};

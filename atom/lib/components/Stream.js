@@ -345,29 +345,29 @@ export class SimpleStream extends Component {
 		let post = this.findPostById(postDiv.id);
 		if (post && post.codeBlocks && post.codeBlocks.length) {
 			let codeBlock = post.codeBlocks[0];
-
+			let location = post.markerLocation;
 			console.log(post);
-			// FIXME -- look up the marker position for this commit hash
-			return;
+			if (location) {
+				let markerRange = [[location[0], location[1]], [location[2], location[3]]];
+				// FIXME -- switch to stream if code is from another buffer
+				const editor = atom.workspace.getActiveTextEditor();
+				let postMarker = editor.markBufferRange(markerRange, { invalidate: "never" });
+				editor.decorateMarker(postMarker, { type: "highlight", class: "codestream-highlight" });
 
-			// FIXME -- switch to stream if code is from another buffer
-			var editor = atom.workspace.getActiveTextEditor();
-			Post_Marker = editor.markBufferRange(post.quote_range, { invalidate: "never" });
-			editor.decorateMarker(Post_Marker, { type: "highlight", class: "codestream-highlight" });
-
-			var start = post.quote_range.start;
-			editor.setCursorBufferPosition(start);
-			editor.scrollToBufferPosition(start, {
-				center: true
-			});
+				var start = [location[0], location[1]];
+				editor.setCursorBufferPosition(start);
+				editor.scrollToBufferPosition(start, {
+					center: true
+				});
+			}
 		}
 	};
 
 	setNewPostText(text) {
 		// text = text.replace(/<span class="at-mention">(@\w+)<\/span> /g, "$1");
 		// text = text.replace(/(@\w+)/g, <span class="at-mention">$1</span>);
-		console.log("SETTING TEXT TO: " + text);
-		console.log(this._contentEditable);
+		// console.log("SETTING TEXT TO: " + text);
+		// console.log(this._contentEditable);
 		// this._contentEditable.htmlEl.innerHTML = text;
 		this.setState({ newPostText: text });
 	}

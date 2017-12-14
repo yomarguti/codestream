@@ -15,7 +15,7 @@ export default class AddCommentPopup {
 	}
 
 	handleClick = () => {
-		if (this.marker) this.marker.destroy();
+		this.destroyMarker();
 		return this.props.handleClickAddComment();
 	};
 
