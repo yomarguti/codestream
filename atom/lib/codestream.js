@@ -13,9 +13,12 @@ import {
 	logout
 } from "./actions/context";
 
-// TODO: figure out if there's a better place for this
-const session = JSON.parse(localStorage.getItem("codestream.session")) || {};
-const store = createStore({ session });
+let store;
+
+const initializeStore = state => {
+	const session = JSON.parse(localStorage.getItem("codestream.session")) || {};
+	store = createStore({ session, ...state });
+};
 
 const getCurrentCommit = async repo => {
 	const data = await git(["rev-parse", "--verify", "HEAD"], {
@@ -35,9 +38,8 @@ module.exports = {
 	},
 
 	initialize(state) {
+		initializeStore(state);
 		bootstrapStore(store);
-		store.dispatch({ type: "LOAD_ONBOARDING", payload: state.onboarding });
-		store.dispatch(setContext(state.context));
 
 		this.subscriptions.add(
 			atom.packages.onDidActivateInitialPackages(async () => {
