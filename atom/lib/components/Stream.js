@@ -165,6 +165,8 @@ export class SimpleStream extends Component {
 			this._intro.style.height = newHeight + "px";
 		}
 		if (this._compose) this._div.style.paddingBottom = this._compose.offsetHeight + "px";
+		// if (this._atMentionsPopup)
+		// this._atMentionsPopup.style.bottom = this._compose.offsetHeight + "px";
 		this._postslist.scrollTop = 100000;
 	};
 
@@ -174,7 +176,7 @@ export class SimpleStream extends Component {
 
 	render() {
 		const posts = this.state.posts;
-		console.log("rendering posts", posts);
+		// console.log("rendering posts", posts);
 		const streamClass = createClassString({
 			stream: true,
 			"no-headshots": !atom.config.get("CodeStream.showHeadshots")
@@ -333,6 +335,7 @@ export class SimpleStream extends Component {
 						rows="1"
 						tabIndex="-1"
 						onChange={this.handleOnChange}
+						onBlur={this.handleOnBlur}
 						html={newPostText}
 						placeholder={placeholderText}
 						ref={ref => (this._contentEditable = ref)}
@@ -383,7 +386,7 @@ export class SimpleStream extends Component {
 	setNewPostText(text) {
 		// text = text.replace(/<span class="at-mention">(@\w+)<\/span> /g, "$1");
 		// text = text.replace(/(@\w+)/g, <span class="at-mention">$1</span>);
-		// console.log("SETTING TEXT TO: " + text);
+		// console.log("SETTING TEXT TO: >" + text + "<");
 		// console.log(this._contentEditable);
 		// this._contentEditable.htmlEl.innerHTML = text;
 		this.setState({ newPostText: text });
@@ -400,7 +403,7 @@ export class SimpleStream extends Component {
 	};
 
 	handleClickScrollToNewMessages = () => {
-		console.log("CLICKED SCROLL DOWN");
+		// console.log("CLICKED SCROLL DOWN");
 		this._postslist.scrollTop = 100000;
 	};
 
@@ -436,7 +439,8 @@ export class SimpleStream extends Component {
 		}
 
 		if (Object.keys(authors).length > 0) {
-			var newText = Object.keys(authors).join(", ") + " ";
+			var newText = Object.keys(authors).join(", ") + ":  ";
+			// console.log("NEWTEXT IS: >" + newText + "<");
 			this.insertTextAtCursor(newText);
 		}
 	}
@@ -475,10 +479,10 @@ export class SimpleStream extends Component {
 				// console.log(blamer);
 				blamer.blame(filePath, function(err, data) {
 					that.blameData[filePath] = data;
-					that.addBlameAtMention(range, data, that.input);
+					that.addBlameAtMention(range, data);
 				});
 			} else {
-				that.addBlameAtMention(range, that.blameData[filePath], that.input);
+				that.addBlameAtMention(range, that.blameData[filePath]);
 			}
 		});
 
@@ -497,10 +501,16 @@ export class SimpleStream extends Component {
 		range = sel.getRangeAt(0);
 	}
 
+	handleOnBlur = async event => {
+		this.setState({
+			atMentionsOn: false
+		});
+	};
+
 	handleOnChange = async event => {
 		var newPostText = event.target.value;
 
-		this.reportRange();
+		// this.reportRange();
 		let selection = window.getSelection();
 		let range = selection.getRangeAt(0);
 		let upToCursor = newPostText.substring(0, range.startOffset);
