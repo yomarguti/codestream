@@ -16,7 +16,7 @@ describe("onboarding action creators", () => {
 
 				confirmEmail()(dispatch, () => ({ context: { currentTeamId: "1" } }));
 
-				waitsFor(() => dispatch.callCount > 4);
+				waitsFor(() => dispatch.callCount > 3);
 				runs(() => {
 					expect(dispatch).toHaveBeenCalledWith({
 						type: "EXISTING_USER_CONFIRMED_IN_FOREIGN_REPO"
