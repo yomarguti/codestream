@@ -79,7 +79,7 @@
 			}
 
 			.hint {
-				margin: 4px -5px 0 2px;
+				margin: 4px -5px 4px 2px;
 				font-size: 12px;
 				opacity: 0.5;
 				.icon {
@@ -96,25 +96,26 @@
 		}
 
 		.at-mention {
-			padding: 1px 3px;
-			margin: -1px 0px;
 			display: inline-block;
-			border-radius: 4px;
 			// background-color: @background-color-info;
 			color: @text-color-info;
 		}
 		.at-mention.me {
 			color: @text-color-info;
 			font-weight: bold;
+			padding: 1px 3px;
+			margin: -1px 0px;
+			border-radius: 4px;
 
 			// take the app background color, and shade it towards
 			// a neutral grey by 25%
 			// background-color: mix(@app-background-color, #808080, 75%);
-			background-color: rgba(127, 127, 127, 0.25);
+			background-color: rgba(127, 127, 127, 0.2);
 
 			// filter: brightness(90%);
 			// color: @text-color-error;
 			// background-color: @background-color-highlight;
+			// box-shadow: 0 5px 10px #ccc;
 		}
 
 		.code {
@@ -127,7 +128,7 @@
 			border-radius: 4px;
 			padding: 10px;
 			border: 1px solid @base-border-color;
-			margin: 5px 0 0 0;
+			margin: 0 0 5px 0;
 			overflow-x: auto;
 			overflow-y: auto;
 			line-height: 12px;
@@ -327,7 +328,18 @@
 				// left: 30px;
 			}
 			.replying-to {
-				opacity: 0.5;
+				height: 1.4em;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: pre;
+				color: @text-color-info;
+				span {
+					opacity: 0.5;
+					color: @text-color;
+				}
+				b {
+					font-weight: normal;
+				}
 			}
 		}
 

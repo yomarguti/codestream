@@ -72,7 +72,11 @@ export default class AddCommentPopup {
 		item.innerHTML = "+";
 		item.className = "codestream-add-comment-popup";
 		item.onclick = this.handleClick;
-		editor.decorateMarker(this.marker, { type: "overlay", item: item });
+		editor.decorateMarker(this.marker, {
+			type: "overlay",
+			item: item,
+			class: "codestream-overlay"
+		});
 		this.tooltip = atom.tooltips.add(item, { title: "Add a comment" });
 	}
 }

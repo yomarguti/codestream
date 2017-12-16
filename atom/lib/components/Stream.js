@@ -145,8 +145,9 @@ export class SimpleStream extends Component {
 	// to be able to animate between the two streams, since they will both be
 	// visible during the transition
 	render() {
-		const posts = this.state.posts;
+		const posts = this.props.posts;
 		// console.log("rendering posts", posts);
+
 		const streamClass = createClassString({
 			stream: true,
 			"no-headshots": !atom.config.get("CodeStream.showHeadshots")
@@ -190,21 +191,6 @@ export class SimpleStream extends Component {
 			""
 		);
 
-		var threadKeyMap = {};
-		var threadKeyCounter = 0;
-		this.props.posts.map(post => {
-			if (post.parentPostId) {
-				if (!threadKeyMap[post.parentPostId]) {
-					threadKeyMap[post.parentPostId] = threadKeyCounter++;
-				}
-			}
-		});
-
-		var postUsernames = {};
-		this.props.posts.map(post => {
-			postUsernames[post.id] = post.author.username;
-		});
-
 		let lastTimestamp = null;
 		let threadId = this.state.threadId;
 		let threadPost = this.findPostById(threadId);
@@ -233,19 +219,15 @@ export class SimpleStream extends Component {
 							Welcome to the stream.<br />Info goes here.
 						</label>
 					</div>
-					{this.props.posts.map(post => {
+					{posts.map(post => {
 						// this needs to be done by storing the return value of the render,
 						// then setting lastTimestamp, otherwise you wouldn't be able to
 						// compare the current one to the prior one.
-						const threadKey = threadKeyMap[post.parentPostId] || threadKeyMap[post.id] || 0;
+						const parentPost = posts.find(p => p.id === post.parentPostId);
 						const returnValue = (
 							<div key={post.id}>
 								<DateSeparator timestamp1={lastTimestamp} timestamp2={post.createdAt} />
-								<Post
-									post={post}
-									threadKey={threadKey}
-									replyingTo={postUsernames[post.parentPostId]}
-								/>
+								<Post post={post} replyingTo={parentPost} />
 							</div>
 						);
 						lastTimestamp = post.createdAt;
@@ -275,7 +257,7 @@ export class SimpleStream extends Component {
 								const returnValue = (
 									<div key={post.id}>
 										<DateSeparator timestamp1={lastTimestamp} timestamp2={post.createdAt} />
-										<Post post={post} lastDay={lastTimestamp} />
+										<Post post={post} />
 									</div>
 								);
 								lastTimestamp = post.createdAt;
@@ -302,6 +284,8 @@ export class SimpleStream extends Component {
 							&darr; Unread Messages &darr;
 						</div>
 					)}
+					{quoteInfo}
+					{quoteHint}
 					<ContentEditable
 						className="native-key-bindings"
 						id="input-div"
@@ -313,8 +297,6 @@ export class SimpleStream extends Component {
 						placeholder={placeholderText}
 						ref={ref => (this._contentEditable = ref)}
 					/>
-					{quoteHint}
-					{quoteInfo}
 				</div>
 			</div>
 		);
@@ -353,7 +335,7 @@ export class SimpleStream extends Component {
 			item.onclick = function() {
 				that.selectPost(codeMarker.postId);
 			};
-			editor.decorateMarker(marker, { type: "overlay", item: item });
+			editor.decorateMarker(marker, { type: "overlay", item: item, class: "codestream-overlay" });
 			this.tooltip = atom.tooltips.add(item, { title: "View comments" });
 
 			return;
@@ -488,7 +470,7 @@ export class SimpleStream extends Component {
 		}
 
 		if (Object.keys(authors).length > 0) {
-			var newText = Object.keys(authors).join(", ") + ":  ";
+			var newText = Object.keys(authors).join(", ") + ": ";
 			// console.log("NEWTEXT IS: >" + newText + "<");
 			this.insertTextAtCursor(newText);
 		}
