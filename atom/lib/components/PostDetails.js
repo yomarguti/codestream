@@ -58,10 +58,6 @@ export default class PostDetails extends Component {
 		);
 	}
 
-	dummyRange = () => {
-		return [[2, 0], [12, 0]];
-	};
-
 	destroyDiffMarkers = () => {
 		for (var i = 0; i < this.diffMarkers.length; i++) {
 			this.diffMarkers[i].destroy();

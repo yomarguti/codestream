@@ -24,52 +24,8 @@ export class SimpleStream extends Component {
 
 		this.state = {
 			stream: {},
-			streamName: "Dummy.js",
 			threadId: null,
-			posts: [
-				{
-					id: 1,
-					author: {
-						username: "akonwi",
-						email: "akonwi@codestream.com",
-						fullName: "Akonwi Ngoh"
-					},
-					text: "this is a post",
-					createdAt: 1410650773000
-				},
-				{
-					id: 2,
-					author: {
-						username: "jj",
-						email: "jj@codestream.com",
-						fullName: "James Price"
-					},
-					text: "this is another post",
-					createdAt: 1411680773000
-				},
-				{
-					id: 2,
-					author: {
-						username: "colin",
-						email: "colin@codestream.com",
-						fullName: "Colin Stryker"
-					},
-					text: "AvE adds more value to my life than some of my family members",
-					createdAt: 1411680774000,
-					newSeparator: true
-				},
-				{
-					id: 3,
-					author: {
-						username: "marcelo",
-						email: "marcelo@codestream.com",
-						fullName: "Marcelo"
-					},
-					text:
-						"because of the way browsers work, @pez although this will change the scrollbar thumb position, it will not change what @akonwi is looking at (i.e. posts won't shift around).",
-					createdAt: 1501650773000
-				}
-			],
+			posts: [],
 			authors: [
 				{ id: 1, nick: "pez", fullName: "Peter Pezaris", email: "pez@codestream.com" },
 				{
@@ -137,7 +93,7 @@ export class SimpleStream extends Component {
 			document.execCommand("insertHTML", false, text);
 		});
 
-		console.log("WE MOUNTED THE STREAM COMPONENT");
+		// console.log("WE MOUNTED THE STREAM COMPONENT");
 	}
 
 	handleResizeCompose = () => {
@@ -172,6 +128,11 @@ export class SimpleStream extends Component {
 
 	findPostById(id) {
 		return this.props.posts.find(post => id === post.id);
+	}
+
+	fileAbbreviation() {
+		if (!this.props.currentFile) return "";
+		return this.props.currentFile.replace(/.*\//g, "");
 	}
 
 	render() {
@@ -240,11 +201,13 @@ export class SimpleStream extends Component {
 		let threadPost = this.findPostById(threadId);
 		let hasNewMessagesBelowFold = false;
 
-		let placeholderText = "Message " + this.state.streamName;
+		let placeholderText = "Message " + this.fileAbbreviation();
 		// FIXME -- this doesn't update when it should for some reason
 		if (threadPost) {
 			placeholderText = "Reply to " + threadPost.author.username;
 		}
+
+		this.renderCommentMarkers();
 
 		return (
 			<div className={streamClass} ref={ref => (this._div = ref)}>
@@ -346,6 +309,28 @@ export class SimpleStream extends Component {
 			</div>
 		);
 	}
+
+	makeRange(location) {
+		return [[location[0], location[1]], [location[2], location[3]]];
+	}
+
+	renderCommentMarkers = () => {
+		let that = this;
+		let editor = atom.workspace.getActiveTextEditor();
+		if (!this.props.markers) return;
+		this.props.markers.forEach(codeMarker => {
+			let location = codeMarker.location;
+			var range = [[location[0], location[1]], [location[0], location[1]]];
+			var marker = editor.markBufferRange(range, { invalidate: "never" });
+			// marked.setProperties({ codestreamStreamId: streamId });
+			var commentCount = Math.floor(Math.random() * 6 + 1);
+			if (commentCount > 10) commentCount = "10-plus";
+			editor.decorateMarker(marker, {
+				type: "line-number",
+				class: "codestream-comment-marker codestream-comment-marker-" + commentCount
+			});
+		});
+	};
 
 	handleDismissThread = () => {
 		this.setState({ threadId: null });
@@ -487,7 +472,7 @@ export class SimpleStream extends Component {
 		});
 
 		// not very React-ish but not sure how to set focus otherwise
-		document.getElementById("input-div").focus();
+		this.focusInput();
 
 		this.setState({
 			quoteRange: range,
@@ -746,6 +731,7 @@ const mapStateToProps = ({ context, streams, users, posts, markers, markerLocati
 	);
 	return {
 		id: stream.id,
+		currentFile: context.currentFile,
 		markers: getMarkersForStreamAndCommit(
 			markerLocations.byStream[stream.id],
 			context.currentCommit,
