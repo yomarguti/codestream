@@ -13,9 +13,12 @@ import {
 	logout
 } from "./actions/context";
 
-// TODO: figure out if there's a better place for this
-const session = JSON.parse(localStorage.getItem("codestream.session")) || {};
-const store = createStore({ session });
+let store;
+
+const initializeStore = state => {
+	const session = JSON.parse(localStorage.getItem("codestream.session")) || {};
+	store = createStore({ ...state, session });
+};
 
 const getCurrentCommit = async repo => {
 	const data = await git(["rev-parse", "--verify", "HEAD"], {
@@ -35,9 +38,8 @@ module.exports = {
 	},
 
 	initialize(state) {
+		initializeStore(state);
 		bootstrapStore(store);
-		store.dispatch({ type: "LOAD_ONBOARDING", payload: state.onboarding });
-		store.dispatch(setContext(state.context));
 
 		this.subscriptions.add(
 			atom.packages.onDidActivateInitialPackages(async () => {
@@ -53,10 +55,14 @@ module.exports = {
 
 					this.subscriptions.add(
 						atom.workspace.observeActiveTextEditor(editor => {
+							// TODO: only dispatch the action if there is a current file
+							// that way if a user looks at settings or a non-repo file, the stream for the previously active file is still visible
 							const path = editor ? repo.relativize(editor.getPath()) : "";
 							store.dispatch(setCurrentFile(path));
 						}),
 
+						// Subscribe to git status changes in order to be aware of current commit hash.
+						// This is probably a naive implementation.
 						repo.onDidChangeStatuses(async event => {
 							const commitHash = await getCurrentCommit(repo);
 							if (store.getState().context.currentCommit !== commitHash)

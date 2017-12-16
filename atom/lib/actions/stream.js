@@ -7,11 +7,20 @@ const tempId = (() => {
 	return () => String(count++);
 })();
 
-export const addStream = stream => dispatch => {
+export const saveStream = stream => dispatch => {
 	return db.streams.put(stream).then(() => {
 		dispatch({
 			type: "ADD_STREAM",
 			payload: stream
+		});
+	});
+};
+
+export const saveStreams = streams => dispatch => {
+	return db.streams.bulkPut(streams).then(() => {
+		dispatch({
+			type: "ADD_STREAMS",
+			payload: streams
 		});
 	});
 };
@@ -21,6 +30,24 @@ export const savePostsForStream = (streamId, posts) => dispatch => {
 		dispatch({
 			type: "ADD_POSTS_FOR_STREAM",
 			payload: { streamId, posts }
+		});
+	});
+};
+
+export const savePost = post => dispatch => {
+	return db.posts.put(post).then(() => {
+		dispatch({
+			type: "ADD_POST",
+			payload: post
+		});
+	});
+};
+
+export const savePosts = posts => dispatch => {
+	return db.posts.bulkPut(posts).then(() => {
+		dispatch({
+			type: "ADD_POSTS",
+			payload: posts
 		});
 	});
 };
@@ -112,7 +139,7 @@ export const fetchStream = () => async (dispatch, getState) => {
 			}`,
 			session.accessToken
 		);
-		await dispatch(addStream(stream));
+		await dispatch(saveStream(stream));
 		await dispatch(saveMarkers(normalize(markers)));
 		await dispatch(saveMarkerLocations(normalize(markerLocations)));
 		dispatch(savePostsForStream(stream.id, normalize(posts)));

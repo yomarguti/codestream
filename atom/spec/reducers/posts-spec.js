@@ -5,22 +5,26 @@ const post2 = { streamId: "1", id: "1-2", text: "text2" };
 const post3 = { streamId: "2", id: "2-1", text: "text3" };
 
 describe("reducer for posts", () => {
-	it("bootstraps data", () => {
-		const postsFromDb = [post1, post2, post3];
+	describe("on BOOTSTRAP_POSTS and ADD_POSTS", () => {
+		it("saves an array of posts by stream", () => {
+			const postsFromDb = [post1, post2, post3];
 
-		const expected = {
-			byStream: {
-				"1": { [post1.id]: post1, [post2.id]: post2 },
-				"2": { [post3.id]: post3 }
-			},
-			sortPerStream: {
-				"1": [post1.id, post2.id],
-				"2": [post3.id]
-			}
-		};
-		const result = reduce(undefined, { type: "BOOTSTRAP_POSTS", payload: postsFromDb });
+			const expected = {
+				byStream: {
+					"1": { [post1.id]: post1, [post2.id]: post2 },
+					"2": { [post3.id]: post3 }
+				},
+				sortPerStream: {
+					"1": [post1.id, post2.id],
+					"2": [post3.id]
+				}
+			};
+			const bootstrapResult = reduce(undefined, { type: "BOOTSTRAP_POSTS", payload: postsFromDb });
+			const addResult = reduce(undefined, { type: "ADD_POSTS", payload: postsFromDb });
 
-		expect(result).toEqual(expected);
+			expect(bootstrapResult).toEqual(expected);
+			expect(addResult).toEqual(expected);
+		});
 	});
 
 	it("adds posts to the stream and its sorted collection", () => {
