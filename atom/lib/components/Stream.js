@@ -65,11 +65,11 @@ export class SimpleStream extends Component {
 	installSelectionHandler() {
 		// if (this.selectionHandler) return;
 		let editor = atom.workspace.getActiveTextEditor();
-		this.selectionHandler = editor.onDidChangeSelectionRange(this.destroyPostMarker);
+		this.selectionHandler = editor.onDidChangeSelectionRange(this.destroyCodeBlockMarker);
 	}
 
-	destroyPostMarker = () => {
-		if (this.postMarker) this.postMarker.destroy();
+	destroyCodeBlockMarker = () => {
+		if (this.codeBlockMarker) this.codeBlockMarker.destroy();
 		if (this.selectionHandler) this.selectionHandler.dispose();
 	};
 
@@ -126,15 +126,24 @@ export class SimpleStream extends Component {
 		this._postslist.scrollTop = 100000;
 	};
 
+	// return the post, if any, with the given ID
 	findPostById(id) {
 		return this.props.posts.find(post => id === post.id);
 	}
 
+	// return a simple identifying string to represent the current path.
+	// example is /path/to/foo.bar would just return "foo.bar"
+	// FIXME -- this should be improved for systems that don't use "/"
+	// as a path delimiter
 	fileAbbreviation() {
 		if (!this.props.currentFile) return "";
 		return this.props.currentFile.replace(/.*\//g, "");
 	}
 
+	// we render both a main stream (postslist) plus also a postslist related
+	// to the currently selected thread (if it exists). the reason for this is
+	// to be able to animate between the two streams, since they will both be
+	// visible during the transition
 	render() {
 		const posts = this.state.posts;
 		// console.log("rendering posts", posts);
@@ -208,6 +217,7 @@ export class SimpleStream extends Component {
 		}
 
 		this.renderCommentMarkers();
+		// this.installGutter();
 
 		return (
 			<div className={streamClass} ref={ref => (this._div = ref)}>
@@ -310,49 +320,91 @@ export class SimpleStream extends Component {
 		);
 	}
 
+	// turn a codestream flat-array range into the format that atom understands
 	makeRange(location) {
 		return [[location[0], location[1]], [location[2], location[3]]];
 	}
 
+	// comment markers are the annotation indicators that appear in the right
+	// margin between the buffer and the codestream pane
+	// this is only partially implemented, as it's very fragile as-is
+	// improvement pending discussion with the team
 	renderCommentMarkers = () => {
 		let that = this;
 		let editor = atom.workspace.getActiveTextEditor();
 		if (!this.props.markers) return;
+		if (this.markersRendered) return;
+		this.markersRendered = true;
 		this.props.markers.forEach(codeMarker => {
+			// console.log(codeMarker);
 			let location = codeMarker.location;
-			var range = [[location[0], location[1]], [location[0], location[1]]];
+			var range = [[location[0], 0], [location[0], 0]];
 			var marker = editor.markBufferRange(range, { invalidate: "never" });
-			// marked.setProperties({ codestreamStreamId: streamId });
+			// marker.setProperties({ codestreamStreamId: streamId });
+
+			// FIXME -- get the real comment count
 			var commentCount = Math.floor(Math.random() * 6 + 1);
-			if (commentCount > 10) commentCount = "10-plus";
-			editor.decorateMarker(marker, {
-				type: "line-number",
-				class: "codestream-comment-marker codestream-comment-marker-" + commentCount
-			});
+			if (commentCount > 10) commentCount = "10+";
+			commentCount = 2;
+
+			let item = document.createElement("div");
+			item.innerText = commentCount;
+			item.className = "codestream-add-comment-popup";
+			item.onclick = function() {
+				that.selectPost(codeMarker.postId);
+			};
+			editor.decorateMarker(marker, { type: "overlay", item: item });
+			this.tooltip = atom.tooltips.add(item, { title: "View comments" });
+
+			return;
+
+			// not using a gutter for now
+			// let gutter = editor.gutterWithName("CodeStream");
+			// if (gutter) {
+			// 	var numCommentsDiv = document.createElement("div");
+			// 	numCommentsDiv.innerText = commentCount;
+			// 	gutter.decorateMarker(marker, {
+			// 		class: "codestream-comment-marker",
+			// 		item: numCommentsDiv
+			// 	});
+			// }
 		});
 	};
 
+	// dismiss the thread stream and return to the main stream
 	handleDismissThread = () => {
 		this.setState({ threadId: null });
 	};
 
+	// by clicking on the post, we select it
 	handleClickPost = event => {
 		var postDiv = event.target.closest(".post");
 		if (!postDiv) return;
-		if (postDiv.getAttribute("thread")) this.setState({ threadId: postDiv.getAttribute("thread") });
+		this.selectPost(postDiv.id);
+	};
 
-		let post = this.findPostById(postDiv.id);
-		if (post && post.codeBlocks && post.codeBlocks.length) {
+	// show the thread related to the given post, and if there is
+	// a codeblock, scroll to it and select it
+	selectPost = id => {
+		let post = this.findPostById(id);
+		if (!post) return;
+
+		// if it is a child in the thread, it'll have a parentPostId,
+		// otherwise use the id. any post can become the head of a thread
+		let threadId = post.parentPostId || post.id;
+		this.setState({ threadId: threadId });
+
+		if (post.codeBlocks && post.codeBlocks.length) {
 			let codeBlock = post.codeBlocks[0];
 			let location = post.markerLocation;
-			console.log(post);
+			// console.log(post);
 			if (location) {
 				let markerRange = [[location[0], location[1]], [location[2], location[3]]];
 				// FIXME -- switch to stream if code is from another buffer
 				const editor = atom.workspace.getActiveTextEditor();
 				if (this.marker) this.marker.destroy();
-				this.postMarker = editor.markBufferRange(markerRange, { invalidate: "touch" });
-				editor.decorateMarker(this.postMarker, {
+				this.codeBlockMarker = editor.markBufferRange(markerRange, { invalidate: "touch" });
+				editor.decorateMarker(this.codeBlockMarker, {
 					type: "highlight",
 					class: "codestream-highlight"
 				});
@@ -368,6 +420,15 @@ export class SimpleStream extends Component {
 		}
 	};
 
+	// not using a gutter for now
+	// installGutter() {
+	// 	let editor = atom.workspace.getActiveTextEditor();
+	// 	if (editor && !editor.gutterWithName("CodeStream")) {
+	// 		editor.addGutter({ name: "CodeStream", priority: 150 });
+	// 	}
+	// }
+
+	// programatically set the text in the composition box
 	setNewPostText(text) {
 		// text = text.replace(/<span class="at-mention">(@\w+)<\/span> /g, "$1");
 		// text = text.replace(/(@\w+)/g, <span class="at-mention">$1</span>);
@@ -377,6 +438,7 @@ export class SimpleStream extends Component {
 		this.setState({ newPostText: text });
 	}
 
+	// toggle focus between the buffer and the compose input field
 	toggleFocusInput = () => {
 		if (document.activeElement && document.activeElement.id == "input-div")
 			atom.workspace.getCenter().activate();
@@ -403,6 +465,8 @@ export class SimpleStream extends Component {
 		});
 	};
 
+	// figure out who to at-mention based on the git blame data.
+	// insert the text into the compose field
 	addBlameAtMention(selectionRange, gitData) {
 		// console.log(data);
 		var authors = {};
@@ -430,6 +494,8 @@ export class SimpleStream extends Component {
 		}
 	}
 
+	// configure the compose field in preparation for a comment on a codeBlock
+	// this is what happens when someone clicks the floating (+) popup
 	handleClickAddComment = () => {
 		let editor = atom.workspace.getActiveTextEditor();
 		if (!editor) return;
@@ -480,22 +546,19 @@ export class SimpleStream extends Component {
 		});
 	};
 
-	reportRange() {
-		var sel, range, html;
-		sel = window.getSelection();
-		range = sel.getRangeAt(0);
-	}
-
+	// when the input field loses focus, one thing we want to do is
+	// to hide the at-mention popup
 	handleOnBlur = async event => {
 		this.setState({
 			atMentionsOn: false
 		});
 	};
 
+	// depending on the contents of the input field, if the user
+	// types a "@" then open the at-mention popup
 	handleOnChange = async event => {
 		var newPostText = event.target.value;
 
-		// this.reportRange();
 		let selection = window.getSelection();
 		let range = selection.getRangeAt(0);
 		let upToCursor = newPostText.substring(0, range.startOffset);
@@ -555,6 +618,7 @@ export class SimpleStream extends Component {
 		this.handleSelectAtMention();
 	}
 
+	// set up the parameters to pass to the at mention popup
 	showAtMentionSelectors(prefix) {
 		let peopleToShow = [];
 
@@ -584,6 +648,8 @@ export class SimpleStream extends Component {
 		}
 	}
 
+	// the keypress handler for tracking up and down arrow
+	// and enter, while the at mention popup is open
 	handleAtMentionKeyPress(event, eventType) {
 		// console.log("AT MENTION KEY PRESS: " + eventType);
 		if (eventType == "escape") {
@@ -611,11 +677,14 @@ export class SimpleStream extends Component {
 		}
 	}
 
+	// close the at mention popup when the customer types ESC
 	handleEscape(event) {
 		if (this.state.atMentionsOn) this.setState({ atMentionsOn: false });
 		else this.setState({ threadId: null });
 	}
 
+	// when the user hovers over an at-mention list item, change the
+	// state to represent a hovered state
 	handleHoverAtMention = nick => {
 		let index = this.state.atMentionsPeople.findIndex(x => x.nick == nick);
 
@@ -632,7 +701,6 @@ export class SimpleStream extends Component {
 			nick = this.state.selectedAtMention;
 		}
 
-		// console.log("HANDLING SAM: " + this.state.newPostText);
 		// otherwise explicitly use the one passed in
 		// FIXME -- this should anchor at the carat, not end-of-line
 		var re = new RegExp("@" + this.state.atMentionsPrefix + "$");
@@ -645,6 +713,7 @@ export class SimpleStream extends Component {
 		this.setNewPostText(text);
 	};
 
+	// insert the given text at the cursor of the input field
 	insertTextAtCursor(text) {
 		var sel, range, html;
 		sel = window.getSelection();
@@ -658,6 +727,7 @@ export class SimpleStream extends Component {
 		this._contentEditable.htmlEl.normalize();
 	}
 
+	// create a new post
 	submitPost(newText) {
 		newText = newText.replace(/<br>/g, "\n");
 

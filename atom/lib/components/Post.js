@@ -121,10 +121,6 @@ export default class Post extends Component {
 		);
 	}
 
-	handleClick = async event => {
-		console.log("CLICK ON POST: " + event.target.innerHTML);
-	};
-
 	handleMenuClick = async event => {
 		event.stopPropagation();
 		this.setState({ menuOpen: !this.state.menuOpen });
