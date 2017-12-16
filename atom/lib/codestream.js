@@ -17,7 +17,7 @@ let store;
 
 const initializeStore = state => {
 	const session = JSON.parse(localStorage.getItem("codestream.session")) || {};
-	store = createStore({ session, ...state });
+	store = createStore({ ...state, session });
 };
 
 const getCurrentCommit = async repo => {
