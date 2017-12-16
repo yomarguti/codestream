@@ -25,6 +25,15 @@ export const savePostsForStream = (streamId, posts) => dispatch => {
 	});
 };
 
+export const savePost = post => dispatch => {
+	return db.posts.put(post).then(() => {
+		dispatch({
+			type: "ADD_POST",
+			payload: post
+		});
+	});
+};
+
 const addPendingPost = post => dispatch => {
 	db.posts.add(post).then(() => {
 		dispatch({

@@ -37,6 +37,7 @@ export default (state = initialState, { type, payload }) => {
 				sortPerStream: { ...state.sortPerStream, [streamId]: order }
 			};
 		}
+		case "ADD_POST":
 		case "ADD_PENDING_POST": {
 			const { streamId, id } = payload;
 			const streamPosts = state.byStream[streamId] || {};
