@@ -5,8 +5,12 @@ const initialState = {
 
 export default (state = initialState, { type, payload }) => {
 	switch (type) {
+		case "ADD_POSTS":
 		case "BOOTSTRAP_POSTS": {
-			const nextState = { ...initialState };
+			const nextState = {
+				byStream: { ...state.byStream },
+				sortPerStream: { ...state.sortPerStream }
+			};
 			payload.forEach(post => {
 				const streamPosts = nextState.byStream[post.streamId] || {};
 				streamPosts[post.id] = post;

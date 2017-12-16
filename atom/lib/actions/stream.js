@@ -16,6 +16,15 @@ export const saveStream = stream => dispatch => {
 	});
 };
 
+export const saveStreams = streams => dispatch => {
+	return db.streams.bulkPut(streams).then(() => {
+		dispatch({
+			type: "ADD_STREAMS",
+			payload: streams
+		});
+	});
+};
+
 export const savePostsForStream = (streamId, posts) => dispatch => {
 	return db.posts.bulkPut(posts).then(() => {
 		dispatch({
@@ -30,6 +39,15 @@ export const savePost = post => dispatch => {
 		dispatch({
 			type: "ADD_POST",
 			payload: post
+		});
+	});
+};
+
+export const savePosts = posts => dispatch => {
+	return db.posts.bulkPut(posts).then(() => {
+		dispatch({
+			type: "ADD_POSTS",
+			payload: posts
 		});
 	});
 };

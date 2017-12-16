@@ -1,8 +1,11 @@
 import PubNub from "pubnub";
 import _ from "underscore-plus";
 import { normalize } from "./actions/utils";
-import { savePost, saveStream } from "./actions/stream";
-import { saveUser } from "./actions/user";
+import { savePost, savePosts, saveStream, saveStreams } from "./actions/stream";
+import { saveUser, saveUsers } from "./actions/user";
+import { saveTeam, saveTeams } from "./actions/team";
+import { saveRepo, saveRepos } from "./actions/repo";
+import { saveMarker, saveMarkers } from "./actions/marker";
 
 export const createReceiver = store => new PubNubReceiver(store);
 
@@ -47,15 +50,19 @@ export default class PubNubReceiver {
 
 	getMessageHandler(type) {
 		const handlers = {
-			stream: stream => {
-				this.store.dispatch(saveStream(normalize(stream)));
-			},
-			post: post => {
-				this.store.dispatch(savePost(normalize(post)));
-			},
-			user: user => {
-				this.store.dispatch(saveUser(normalize(user)));
-			}
+			stream: stream => this.store.dispatch(saveStream(normalize(stream))),
+			streams: streams => this.store.dispatch(saveStreams(normalize(streams))),
+			post: post => this.store.dispatch(savePost(normalize(post))),
+			posts: posts => this.store.dispatch(savePosts(normalize(posts))),
+			user: user => this.store.dispatch(saveUser(normalize(user))),
+			users: users => this.store.dispatch(saveUsers(normalize(users))),
+			team: team => this.store.dispatch(saveTeam(normalize(team))),
+			teams: teams => this.store.dispatch(saveTeams(normalize(teams))),
+			repo: repo => this.store.dispatch(saveRepo(normalize(repo))),
+			repos: repos => this.store.dispatch(saveRepos(normalize(repos))),
+			marker: marker => this.store.dispatch(saveMarker(normalize(marker))),
+			markers: markers => this.store.dispatch(saveMarkers(normalize(markers)))
+			// TODO: markerLocations
 		};
 
 		return handlers[type];

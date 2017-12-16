@@ -8,3 +8,12 @@ export const saveUser = user => dispatch => {
 		})
 	);
 };
+
+export const saveUsers = users => dispatch => {
+	return db.users.bulkPut(users).then(() =>
+		dispatch({
+			type: "ADD_USERS",
+			payload: users
+		})
+	);
+};
