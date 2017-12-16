@@ -8,7 +8,6 @@ export default store => {
 
 		// Once users have been loaded from indexedDB, if continuing a session,
 		// find current user and subscribe to team channels
-		// TODO: combine this with previous condition?
 		if (action.type === "BOOTSTRAP_USERS") {
 			const { session, onboarding, users } = store.getState();
 			if (onboarding.complete && session.accessToken) {

@@ -247,8 +247,8 @@ export const authenticate = params => (dispatch, getState) => {
 
 			const { currentTeamId } = getState().context;
 
-			await dispatch(fetchTeamMembers(teams));
 			dispatch(initializeSession({ accessToken, user }));
+			await dispatch(fetchTeamMembers(teams));
 
 			if (teams.find(team => team.id === currentTeamId)) dispatch({ type: "LOGGED_IN" });
 			else dispatch({ type: "LOGGED_INTO_FOREIGN_REPO" });

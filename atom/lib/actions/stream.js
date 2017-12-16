@@ -7,7 +7,7 @@ const tempId = (() => {
 	return () => String(count++);
 })();
 
-export const addStream = stream => dispatch => {
+export const saveStream = stream => dispatch => {
 	return db.streams.put(stream).then(() => {
 		dispatch({
 			type: "ADD_STREAM",
@@ -121,7 +121,7 @@ export const fetchStream = () => async (dispatch, getState) => {
 			}`,
 			session.accessToken
 		);
-		await dispatch(addStream(stream));
+		await dispatch(saveStream(stream));
 		await dispatch(saveMarkers(normalize(markers)));
 		await dispatch(saveMarkerLocations(normalize(markerLocations)));
 		dispatch(savePostsForStream(stream.id, normalize(posts)));
