@@ -207,7 +207,6 @@ export class SimpleStream extends Component {
 
 		return (
 			<div className={streamClass} ref={ref => (this._div = ref)}>
-				<style id="dynamic-add-comment-popup-style" />
 				<div
 					className={postsListClass}
 					ref={ref => (this._postslist = ref)}
@@ -331,7 +330,7 @@ export class SimpleStream extends Component {
 
 			let item = document.createElement("div");
 			item.innerText = commentCount;
-			item.className = "codestream-add-comment-popup";
+			item.className = "codestream-comment-popup";
 			item.onclick = function() {
 				that.selectPost(codeMarker.postId);
 			};

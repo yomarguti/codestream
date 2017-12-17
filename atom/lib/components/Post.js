@@ -54,13 +54,15 @@ export default class Post extends Component {
 		let alert = null;
 		if (post.codeBlocks && post.codeBlocks.length) {
 			let code = post.codeBlocks[0].code;
-			codeBlock = <div className="code">{code}</div>;
 			if (post.markerLocation) {
 				const editor = atom.workspace.getActiveTextEditor();
 				let range = this.makeRange(post.markerLocation);
 				var existingCode = editor.getTextInBufferRange(range);
 				if (code !== existingCode) alert = <span className="icon icon-alert" />;
+			} else {
+				// alert = <span className="icon icon-question" />;
 			}
+			codeBlock = <div className="code">{code}</div>;
 		}
 
 		// FIXME -- only replace the at-mentions of actual authors, rather than any
