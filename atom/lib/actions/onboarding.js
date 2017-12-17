@@ -1,7 +1,7 @@
 import { get, post, put } from "../network-request";
 import { normalize } from "./utils";
 import { setCurrentRepo, setCurrentTeam } from "./context";
-import { saveUser } from "./user";
+import { saveUser, saveUsers } from "./user";
 import db from "../local-cache";
 
 const requestStarted = () => ({ type: "REQUEST_STARTED" });
@@ -11,18 +11,6 @@ const userAlreadySignedUp = email => ({
 	type: "SIGNUP_EMAIL_EXISTS",
 	payload: { email, alreadySignedUp: true }
 });
-
-const saveUsers = users => dispatch => {
-	return db
-		.transaction("rw", db.users, () => {
-			db.users.bulkPut(users).then(() => {
-				dispatch({ type: "ADD_USERS", payload: users });
-			});
-		})
-		.catch(e => {
-			console.log(e);
-		});
-};
 
 const addTeams = teams => dispatch => {
 	db.teams.bulkPut(teams).then(() =>
@@ -106,7 +94,7 @@ const fetchTeamMembers = teams => (dispatch, getState) => {
 	const { session } = getState();
 	const promises = teams.map(({ id }) => {
 		return get(`/users?teamId=${id}`, session.accessToken).then(({ users }) =>
-			dispatch(saveUsers(users.map(normalize)))
+			dispatch(saveUsers(normalize(users)))
 		);
 	});
 	return Promise.all(promises);
@@ -140,12 +128,14 @@ export const confirmEmail = attributes => (dispatch, getState) => {
 			const userRepos = normalize(repos);
 
 			// TODO: handle db error - maybe continue updating the view?
+			await saveUser(user);
 			await dispatch(saveTeamsAndRepos({ teams: userTeams, repos: userRepos }));
+			await dispatch(initializeSession({ user, accessToken }));
 
 			if (!teamForRepo && userTeams.length === 0)
 				dispatch({ type: "NEW_USER_CONFIRMED_IN_NEW_REPO" });
 			else if (!teamForRepo && userTeams.length > 0) {
-				dispatch(fetchTeamMembers(userTeams));
+				await dispatch(fetchTeamMembers(userTeams));
 				dispatch({ type: "EXISTING_USER_CONFIRMED_IN_NEW_REPO" });
 			} else if (userTeams.find(team => team.id === teamForRepo)) {
 				// TODO: maybe?
@@ -154,8 +144,6 @@ export const confirmEmail = attributes => (dispatch, getState) => {
 			} else {
 				return dispatch({ type: "EXISTING_USER_CONFIRMED_IN_FOREIGN_REPO" });
 			}
-
-			dispatch(initializeSession({ user, accessToken }));
 		})
 		.catch(({ data }) => {
 			dispatch(requestFinished());
@@ -225,7 +213,7 @@ export const addMembers = emails => (dispatch, getState) => {
 	const params = { ...repoAttributes, teamId: currentTeamId, emails };
 	post("/repos", params, session.accessToken)
 		.then(({ users }) => {
-			dispatch(saveUsers(users.map(normalize)));
+			dispatch(saveUsers(normalize(users)));
 			dispatch(completeOnboarding());
 		})
 		.catch(error => {
