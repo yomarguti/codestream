@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { FormattedMessage } from "react-intl";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
-import _ from "underscore";
+import _ from "underscore-plus";
 import Button from "./Button";
 import git from "../../git";
 import * as actions from "../../actions/onboarding";
