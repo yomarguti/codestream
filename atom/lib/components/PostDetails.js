@@ -133,15 +133,13 @@ export default class PostDetails extends Component {
 
 			if (this.state.patchApplied) {
 				// revert
-				console.log("Putting it back to: " + this.state.oldCode);
-				editor.setTextInBufferRange(range, this.state.oldCode);
+				editor.setTextInBufferRange(this.state.oldRange, this.state.oldCode);
 			} else {
 				// apply patch
 				const codeBlock = post.codeBlocks[0];
 				var currentCode = editor.getTextInBufferRange(range);
-				console.log("Setting old code to: " + currentCode);
-				this.setState({ oldCode: currentCode });
-				editor.setTextInBufferRange(range, codeBlock.code);
+				let oldRange = editor.setTextInBufferRange(range, codeBlock.code);
+				this.setState({ oldCode: currentCode, oldRange: oldRange });
 			}
 			this.setState({ patchApplied: !this.state.patchApplied });
 		}

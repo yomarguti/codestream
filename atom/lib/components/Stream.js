@@ -86,8 +86,12 @@ export class SimpleStream extends Component {
 	componentDidMount() {
 		this.props.fetchStream(); // Fetch any new stuff
 		// TODO: scroll to bottom
+
+		let inputDiv = document.querySelector('div[contenteditable="true"]');
+		if (!inputDiv) return;
+
 		new ResizeObserver(this.handleResizeCompose).observe(this._compose);
-		document.querySelector('div[contenteditable="true"]').addEventListener("paste", function(e) {
+		inputDiv.addEventListener("paste", function(e) {
 			e.preventDefault();
 			var text = e.clipboardData.getData("text/plain");
 			document.execCommand("insertHTML", false, text);
