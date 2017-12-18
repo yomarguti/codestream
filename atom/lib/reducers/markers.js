@@ -8,6 +8,8 @@ export default (state = initialState, { type, payload }) => {
 			return toMapBy("id", payload);
 		case "ADD_MARKERS":
 			return { ...state, ...toMapBy("id", payload) };
+		case "ADD_MARKER":
+			return { ...state, [payload.id]: payload };
 		default:
 			return state;
 	}

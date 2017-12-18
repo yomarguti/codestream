@@ -1,6 +1,7 @@
 import { get, post, put } from "../network-request";
 import { normalize } from "./utils";
 import { setCurrentRepo, setCurrentTeam } from "./context";
+import { saveUser } from "./user";
 import db from "../local-cache";
 
 const requestStarted = () => ({ type: "REQUEST_STARTED" });
@@ -10,15 +11,6 @@ const userAlreadySignedUp = email => ({
 	type: "SIGNUP_EMAIL_EXISTS",
 	payload: { email, alreadySignedUp: true }
 });
-
-const saveUser = user => dispatch => {
-	return db.users.put(user).then(() =>
-		dispatch({
-			type: "ADD_USER",
-			payload: user
-		})
-	);
-};
 
 const saveUsers = users => dispatch => {
 	return db
@@ -104,20 +96,20 @@ const saveTeamsAndRepos = ({ teams, repos }) => dispatch => {
 		});
 };
 
-const initializeSession = ({ user, accessToken }) => dispatch => {
-	db.users.put(user).then(() => {
-		dispatch({ type: "UPDATE_USER", payload: user });
-		dispatch({ type: "INIT_SESSION", payload: { accessToken, userId: user.id } });
-	});
-};
+const initializeSession = ({ user, accessToken }) => ({
+	type: "INIT_SESSION",
+	payload: { accessToken, userId: user.id },
+	meta: { user }
+});
 
 const fetchTeamMembers = teams => (dispatch, getState) => {
 	const { session } = getState();
-	teams.forEach(({ id }) => {
-		get(`/users?teamId=${id}`, session.accessToken).then(({ users }) =>
+	const promises = teams.map(({ id }) => {
+		return get(`/users?teamId=${id}`, session.accessToken).then(({ users }) =>
 			dispatch(saveUsers(users.map(normalize)))
 		);
 	});
+	return Promise.all(promises);
 };
 
 export const goToSignup = () => ({ type: "GO_TO_SIGNUP" });
@@ -141,7 +133,6 @@ export const confirmEmail = attributes => (dispatch, getState) => {
 		.then(async ({ accessToken, user, teams, repos }) => {
 			dispatch(requestFinished());
 			user = normalize(user);
-			dispatch(initializeSession({ user, accessToken }));
 
 			const { context } = getState();
 			const teamForRepo = context.currentTeamId;
@@ -161,8 +152,10 @@ export const confirmEmail = attributes => (dispatch, getState) => {
 				// dispatch(fetchTeamMembers(userTeams));
 				dispatch({ type: "EXISTING_USER_CONFIRMED" });
 			} else {
-				dispatch({ type: "EXISTING_USER_CONFIRMED_IN_FOREIGN_REPO" });
+				return dispatch({ type: "EXISTING_USER_CONFIRMED_IN_FOREIGN_REPO" });
 			}
+
+			dispatch(initializeSession({ user, accessToken }));
 		})
 		.catch(({ data }) => {
 			dispatch(requestFinished());
@@ -250,10 +243,12 @@ export const authenticate = params => (dispatch, getState) => {
 			teams = normalize(teams);
 			repos = normalize(repos);
 			await dispatch(saveUser(user));
-			dispatch(initializeSession({ accessToken, user }));
 			await saveTeamsAndRepos({ teams, repos });
 
 			const { currentTeamId } = getState().context;
+
+			dispatch(initializeSession({ accessToken, user }));
+			await dispatch(fetchTeamMembers(teams));
 
 			if (teams.find(team => team.id === currentTeamId)) dispatch({ type: "LOGGED_IN" });
 			else dispatch({ type: "LOGGED_INTO_FOREIGN_REPO" });
