@@ -84,9 +84,12 @@ describe("TeamSelectionForm", () => {
 			it("calls the addRepoForTeam function with the teamId", () => {
 				const addRepoForTeam = jasmine.createSpy("addRepoForTeam stub");
 				const view = mountWithIntl(
-					<Provider store={store}>
-						<TeamSelectionForm addRepoForTeam={addRepoForTeam} teams={[team1, team2]} />
-					</Provider>
+					<SimpleTeamSelectionForm
+						addRepoForTeam={addRepoForTeam}
+						teams={[team1, team2]}
+						loading={false}
+						errors={{}}
+					/>
 				);
 
 				view
