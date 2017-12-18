@@ -145,9 +145,16 @@ export class SimpleSignupForm extends Component {
 		register({ username, password, email, ...parseName(name) });
 	};
 
+	renderDebugInfo() {
+		const apiPath = atom.config.get("codestream.url");
+		if (atom.inDevMode() && apiPath)
+			return <p style={{ position: "static", top: "0px" }}>{apiPath}</p>;
+	}
+
 	render() {
 		return (
 			<form id="signup-form" onSubmit={this.submitCredentials}>
+				{this.renderDebugInfo()}
 				<div id="controls">
 					<div id="username-controls" className="control-group">
 						<input

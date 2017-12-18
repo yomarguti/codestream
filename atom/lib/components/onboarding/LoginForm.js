@@ -84,9 +84,16 @@ export class SimpleLoginForm extends Component {
 		this.props.authenticate({ password, email });
 	};
 
+	renderDebugInfo() {
+		const apiPath = atom.config.get("codestream.url");
+		if (atom.inDevMode() && apiPath)
+			return <p style={{ position: "static", top: "0px" }}>{apiPath}</p>;
+	}
+
 	render() {
 		return (
 			<form id="login-form" onSubmit={this.submitCredentials}>
+				{this.renderDebugInfo()}
 				<h2>Sign In</h2>
 				{this.renderAccountMessage()}
 				{this.renderError()}
