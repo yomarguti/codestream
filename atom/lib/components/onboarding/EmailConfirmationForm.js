@@ -26,6 +26,13 @@ export class SimpleEmailConfirmationForm extends Component {
 		);
 	};
 
+	onPaste = event => {
+		const clipped = atom.clipboard.read().split("");
+		if (clipped.length === 6 && clipped.every(char => Number.isInteger(Number(char)))) {
+			this.setState({ values: clipped });
+		}
+	};
+
 	submitCode = () => {
 		const confirmationCode = this.state.values.join("");
 		const { email, userId, transition, confirmEmail, store } = this.props;
@@ -107,6 +114,7 @@ export class SimpleEmailConfirmationForm extends Component {
 								key={index}
 								value={value}
 								onChange={this.onChange(index)}
+								onPaste={this.onPaste}
 							/>
 						))}
 					</div>
