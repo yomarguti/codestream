@@ -17,6 +17,16 @@ db.version(2).stores({
 
 export default db;
 
+export function upsert(db, tableName, changes) {
+	return db.transaction("rw", tableName, () => {
+		const table = db.table(tableName);
+		const primaryKeyPath = table.schema.primKey.keyPath;
+
+		if (Array.isArray(changes)) return bulkUpsert(table, primaryKeyPath, changes);
+		return singleUpsert(table, primaryKeyPath, changes);
+	});
+}
+
 export const bootstrapStore = store => {
 	db
 		.transaction(
@@ -56,3 +66,19 @@ const bootstrapPosts = payload => ({ type: "BOOTSTRAP_POSTS", payload });
 const bootstrapStreams = payload => ({ type: "BOOTSTRAP_STREAMS", payload });
 const bootstrapMarkers = payload => ({ type: "BOOTSTRAP_MARKERS", payload });
 const bootstrapMarkerLocations = payload => ({ type: "BOOTSTRAP_MARKER_LOCATIONS", payload });
+
+const bulkUpsert = (table, primaryKeyPath, changes) => {
+	return Promise.all(changes.map(change => singleUpsert(table, primaryKeyPath, change)));
+};
+
+const singleUpsert = (table, primaryKeyPath, changes) => {
+	const primaryKey = changes[primaryKeyPath];
+	return table.get(primaryKey).then(async entity => {
+		if (entity) {
+			await table.update(primaryKey, changes);
+		} else {
+			await table.add(changes);
+		}
+		return table.get(primaryKey);
+	});
+};
