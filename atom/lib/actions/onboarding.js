@@ -246,12 +246,3 @@ export const authenticate = params => (dispatch, getState) => {
 			dispatch({ type: "INVALID_CREDENTIALS" });
 		});
 };
-
-export default {
-	goToSignup,
-	register,
-	confirmEmail,
-	sendNewCode,
-	authenticate,
-	createTeam
-};
