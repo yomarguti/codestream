@@ -1,7 +1,8 @@
 import PubNub from "pubnub";
 import _ from "underscore-plus";
 import { normalize } from "./actions/utils";
-import { savePost, savePosts, saveStream, saveStreams } from "./actions/stream";
+import { saveStream, saveStreams } from "./actions/stream";
+import { savePost, savePosts } from "./actions/post";
 import { saveUser, saveUsers } from "./actions/user";
 import { saveTeam, saveTeams } from "./actions/team";
 import { saveRepo, saveRepos } from "./actions/repo";

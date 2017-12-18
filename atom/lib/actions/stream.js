@@ -1,14 +1,24 @@
 import http from "../network-request";
-import db from "../local-cache";
+import db, { upsert } from "../local-cache";
 import { normalize } from "./utils";
+import {
+	savePendingPost,
+	resolvePendingPost,
+	rejectPendingPost,
+	savePostsForStream,
+	savePost,
+	savePosts
+} from "./post";
+import { saveMarkers } from "./marker";
+import { saveMarkerLocations } from "./marker-location";
 
 const tempId = (() => {
 	let count = 0;
 	return () => String(count++);
 })();
 
-export const saveStream = stream => dispatch => {
-	return db.streams.put(stream).then(() => {
+export const saveStream = attributes => dispatch => {
+	return upsert(db, "streams", attributes).then(stream => {
 		dispatch({
 			type: "ADD_STREAM",
 			payload: stream
@@ -16,100 +26,13 @@ export const saveStream = stream => dispatch => {
 	});
 };
 
-export const saveStreams = streams => dispatch => {
-	return db.streams.bulkPut(streams).then(() => {
+export const saveStreams = attributes => dispatch => {
+	return upsert(db, "streams", attributes).then(streams =>
 		dispatch({
 			type: "ADD_STREAMS",
 			payload: streams
-		});
-	});
-};
-
-export const savePostsForStream = (streamId, posts) => dispatch => {
-	return db.posts.bulkPut(posts).then(() => {
-		dispatch({
-			type: "ADD_POSTS_FOR_STREAM",
-			payload: { streamId, posts }
-		});
-	});
-};
-
-export const savePost = post => dispatch => {
-	return db.posts.put(post).then(() => {
-		dispatch({
-			type: "ADD_POST",
-			payload: post
-		});
-	});
-};
-
-export const savePosts = posts => dispatch => {
-	return db.posts.bulkPut(posts).then(() => {
-		dispatch({
-			type: "ADD_POSTS",
-			payload: posts
-		});
-	});
-};
-
-const addPendingPost = post => dispatch => {
-	db.posts.add(post).then(() => {
-		dispatch({
-			type: "ADD_PENDING_POST",
-			payload: post
-		});
-	});
-};
-
-const saveMarkers = markers => dispatch => {
-	return db.markers.bulkPut(markers).then(() => {
-		dispatch({
-			type: "ADD_MARKERS",
-			payload: markers
-		});
-	});
-};
-
-const saveMarkerLocations = locations => dispatch => {
-	return db.markerLocations
-		.put(locations)
-		.then(() => {
-			dispatch({
-				type: "ADD_MARKER_LOCATIONS",
-				payload: locations
-			});
 		})
-		.catch("DataError", () => {
-			/* DataError is thrown when the primary key is not on the object. We can swallow that since it's no-op*/
-		});
-};
-
-const resolvePendingPost = (id, data) => dispatch => {
-	const post = normalize(data.post);
-	const markers = normalize(data.markers);
-	const { markerLocations } = data;
-	return db
-		.transaction("rw", db.posts, async () => {
-			await db.posts.delete(id);
-			await db.posts.add(post);
-		})
-		.then(async () => {
-			await dispatch(saveMarkers(markers));
-			await dispatch(saveMarkerLocations(markerLocations));
-		})
-		.then(() => {
-			dispatch({
-				type: "RESOLVE_PENDING_POST",
-				payload: {
-					pendingId: id,
-					post
-				}
-			});
-		});
-};
-
-const rejectPendingPost = (streamId, pendingId, post) => dispatch => {
-	// TODO
+	);
 };
 
 export const fetchStream = () => async (dispatch, getState) => {
@@ -165,11 +88,17 @@ export const createPost = (streamId, parentPostId, text, codeBlocks) => async (
 		text
 	};
 
-	dispatch(addPendingPost(post));
+	dispatch(savePendingPost(post));
 
 	try {
 		const data = await http.post("/posts", post, session.accessToken);
-		dispatch(resolvePendingPost(pendingId, data));
+		dispatch(
+			resolvePendingPost(pendingId, {
+				post: normalize(data.post),
+				markers: normalize(data.markers),
+				markerLocations: data.markerLocations
+			})
+		);
 	} catch (error) {
 		// TODO: different types of errors?
 		dispatch(rejectPendingPost(streamId, pendingId, { ...post, error: true }));

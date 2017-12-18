@@ -1,9 +1,13 @@
-import db from "../local-cache";
+import db, { upsert } from "../local-cache";
 
-export const saveRepo = repo => dispatch => {
-	return db.repos.put(repo).then(() => dispatch({ type: "ADD_REPO", payload: repo }));
+export const saveRepo = attributes => dispatch => {
+	return upsert(db, "repos", attributes).then(repo =>
+		dispatch({ type: "ADD_REPO", payload: repo })
+	);
 };
 
-export const saveRepos = repos => dispatch => {
-	return db.repos.bulkPut(repos).then(() => dispatch({ type: "ADD_REPOS", payload: repos }));
+export const saveRepos = attributes => dispatch => {
+	return upsert(db, "repos", attributes).then(repos =>
+		dispatch({ type: "ADD_REPOS", payload: repos })
+	);
 };

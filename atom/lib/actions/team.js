@@ -1,9 +1,13 @@
-import db from "../local-cache";
+import db, { upsert } from "../local-cache";
 
-export const saveTeam = team => dispatch => {
-	return db.teams.put(team).then(() => dispatch({ type: "ADD_TEAM", payload: team }));
+export const saveTeam = attributes => dispatch => {
+	return upsert(db, "teams", attributes).then(team =>
+		dispatch({ type: "ADD_TEAM", payload: team })
+	);
 };
 
-export const saveTeams = teams => dispatch => {
-	return db.teams.bulkPut(teams).then(() => dispatch({ type: "ADD_TEAMS", payload: teams }));
+export const saveTeams = attributes => dispatch => {
+	return upsert(db, "teams", attributes).then(teams =>
+		dispatch({ type: "ADD_TEAMS", payload: teams })
+	);
 };
