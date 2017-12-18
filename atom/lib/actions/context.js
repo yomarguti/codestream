@@ -31,6 +31,6 @@ export const logout = () => dispatch => {
 	dispatch({ type: "RESET_ONBOARDING" });
 	dispatch({
 		type: "SET_CONTEXT",
-		payload: { usernamesInTeam: [] }
+		payload: { currentTeamId: undefined, currentRepoId: undefined, usernamesInTeam: [] }
 	});
 };
