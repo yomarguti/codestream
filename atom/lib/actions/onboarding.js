@@ -1,100 +1,19 @@
 import { get, post, put } from "../network-request";
 import { normalize } from "./utils";
 import { setCurrentRepo, setCurrentTeam } from "./context";
-import { saveUser } from "./user";
+import { saveUser, saveUsers } from "./user";
+import { saveRepo, saveRepos } from "./repo";
+import { saveTeam, saveTeams } from "./team";
 import db from "../local-cache";
 
 const requestStarted = () => ({ type: "REQUEST_STARTED" });
 const requestFinished = () => ({ type: "REQUEST_FINISHED" });
 const completeOnboarding = () => ({ type: "ONBOARDING_COMPLETE" });
+
 const userAlreadySignedUp = email => ({
 	type: "SIGNUP_EMAIL_EXISTS",
 	payload: { email, alreadySignedUp: true }
 });
-
-const saveUsers = users => dispatch => {
-	return db
-		.transaction("rw", db.users, () => {
-			db.users.bulkPut(users).then(() => {
-				dispatch({ type: "ADD_USERS", payload: users });
-			});
-		})
-		.catch(e => {
-			console.log(e);
-		});
-};
-
-const addTeams = teams => dispatch => {
-	db.teams.bulkPut(teams).then(() =>
-		dispatch({
-			type: "ADD_TEAMS",
-			payload: teams
-		})
-	);
-};
-
-const addTeam = team => dispatch => {
-	return db.teams.add(team).then(() => {
-		dispatch({
-			type: "ADD_TEAM",
-			payload: team
-		});
-	});
-};
-
-const addRepos = repos => dispatch => {
-	db.repos.bulkPut(repos).then(() =>
-		dispatch({
-			type: "ADD_REPOS",
-			payload: repos
-		})
-	);
-};
-
-const addRepo = repo => dispatch => {
-	return db.repos.add(repo).then(() =>
-		dispatch({
-			type: "ADD_REPO",
-			payload: repo
-		})
-	);
-};
-
-const saveTeamAndRepo = ({ team, repo }) => dispatch => {
-	return db
-		.transaction("rw", db.teams, db.repos, () => {
-			db.teams.put(team);
-			db.repos.put(repo);
-		})
-		.then(() => {
-			dispatch({
-				type: "ADD_REPO",
-				payload: repo
-			});
-			dispatch({
-				type: "ADD_TEAM",
-				payload: team
-			});
-		});
-};
-
-const saveTeamsAndRepos = ({ teams, repos }) => dispatch => {
-	return db
-		.transaction("rw", db.teams, db.repos, () => {
-			db.teams.bulkPut(teams);
-			db.repos.bulkPut(repos);
-		})
-		.then(() => {
-			dispatch({
-				type: "ADD_REPOS",
-				payload: repos
-			});
-			dispatch({
-				type: "ADD_TEAMS",
-				payload: teams
-			});
-		});
-};
 
 const initializeSession = ({ user, accessToken }) => ({
 	type: "INIT_SESSION",
@@ -106,7 +25,7 @@ const fetchTeamMembers = teams => (dispatch, getState) => {
 	const { session } = getState();
 	const promises = teams.map(({ id }) => {
 		return get(`/users?teamId=${id}`, session.accessToken).then(({ users }) =>
-			dispatch(saveUsers(users.map(normalize)))
+			dispatch(saveUsers(normalize(users)))
 		);
 	});
 	return Promise.all(promises);
@@ -140,12 +59,15 @@ export const confirmEmail = attributes => (dispatch, getState) => {
 			const userRepos = normalize(repos);
 
 			// TODO: handle db error - maybe continue updating the view?
-			await dispatch(saveTeamsAndRepos({ teams: userTeams, repos: userRepos }));
+			await saveUser(user);
+			await dispatch(saveTeams(userTeams));
+			await dispatch(saveRepos(userRepos));
+			await dispatch(initializeSession({ user, accessToken }));
 
 			if (!teamForRepo && userTeams.length === 0)
 				dispatch({ type: "NEW_USER_CONFIRMED_IN_NEW_REPO" });
 			else if (!teamForRepo && userTeams.length > 0) {
-				dispatch(fetchTeamMembers(userTeams));
+				await dispatch(fetchTeamMembers(userTeams));
 				dispatch({ type: "EXISTING_USER_CONFIRMED_IN_NEW_REPO" });
 			} else if (userTeams.find(team => team.id === teamForRepo)) {
 				// TODO: maybe?
@@ -154,8 +76,6 @@ export const confirmEmail = attributes => (dispatch, getState) => {
 			} else {
 				return dispatch({ type: "EXISTING_USER_CONFIRMED_IN_FOREIGN_REPO" });
 			}
-
-			dispatch(initializeSession({ user, accessToken }));
 		})
 		.catch(({ data }) => {
 			dispatch(requestFinished());
@@ -189,7 +109,8 @@ export const createTeam = name => (dispatch, getState) => {
 		const team = normalize(data.team);
 		const repo = normalize(data.repo);
 
-		await dispatch(saveTeamAndRepo({ team, repo }));
+		await dispatch(saveRepo(repo));
+		await dispatch(saveTeam(team));
 
 		dispatch(setCurrentTeam(team.id));
 		dispatch(setCurrentRepo(repo.id));
@@ -206,7 +127,7 @@ export const addRepoForTeam = teamId => (dispatch, getState) => {
 		.then(async data => {
 			const repo = normalize(data.repo);
 			dispatch(requestFinished());
-			await dispatch(addRepo(repo));
+			await dispatch(saveRepo(repo));
 			dispatch(setCurrentRepo(repo.id));
 			dispatch({ type: "REPO_ADDED_FOR_TEAM" });
 		})
@@ -225,7 +146,7 @@ export const addMembers = emails => (dispatch, getState) => {
 	const params = { ...repoAttributes, teamId: currentTeamId, emails };
 	post("/repos", params, session.accessToken)
 		.then(({ users }) => {
-			dispatch(saveUsers(users.map(normalize)));
+			dispatch(saveUsers(normalize(users)));
 			dispatch(completeOnboarding());
 		})
 		.catch(error => {
@@ -243,7 +164,8 @@ export const authenticate = params => (dispatch, getState) => {
 			teams = normalize(teams);
 			repos = normalize(repos);
 			await dispatch(saveUser(user));
-			await saveTeamsAndRepos({ teams, repos });
+			await dispatch(saveTeams(teams));
+			await dispatch(saveRepos(repos));
 
 			const { currentTeamId } = getState().context;
 
@@ -255,15 +177,9 @@ export const authenticate = params => (dispatch, getState) => {
 		})
 		.catch(error => {
 			dispatch(requestFinished());
-			dispatch({ type: "INVALID_CREDENTIALS" });
+			if (error.data.code === "USRC-1001") dispatch({ type: "INVALID_CREDENTIALS" });
+			else {
+				console.error(errror);
+			}
 		});
-};
-
-export default {
-	goToSignup,
-	register,
-	confirmEmail,
-	sendNewCode,
-	authenticate,
-	createTeam
 };

@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { FormattedMessage } from "react-intl";
 import { connect } from "react-redux";
 import Button from "./Button";
-import actions from "../../actions/onboarding";
+import * as actions from "../../actions/onboarding";
 
 export class SimpleTeamSelectionForm extends Component {
 	constructor(props) {

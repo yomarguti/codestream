@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { FormattedMessage } from "react-intl";
 import { connect } from "react-redux";
 import Button from "./Button";
-import actions from "../../actions/onboarding";
+import * as actions from "../../actions/onboarding";
 
 export class SimpleEmailConfirmationForm extends Component {
 	constructor(props) {
@@ -24,6 +24,13 @@ export class SimpleEmailConfirmationForm extends Component {
 				if (nextInput !== undefined) nextInput.focus();
 			}
 		);
+	};
+
+	onPaste = event => {
+		const clipped = atom.clipboard.read().split("");
+		if (clipped.length === 6 && clipped.every(char => Number.isInteger(Number(char)))) {
+			this.setState({ values: clipped });
+		}
 	};
 
 	submitCode = () => {
@@ -107,6 +114,7 @@ export class SimpleEmailConfirmationForm extends Component {
 								key={index}
 								value={value}
 								onChange={this.onChange(index)}
+								onPaste={this.onPaste}
 							/>
 						))}
 					</div>

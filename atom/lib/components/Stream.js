@@ -2,6 +2,7 @@ import { CompositeDisposable } from "atom";
 import React, { Component } from "react";
 import { connect } from "react-redux";
 import ContentEditable from "react-contenteditable";
+import _ from "underscore-plus";
 import Post from "./Post";
 import PostDetails from "./PostDetails";
 import AtMentionsPopup from "./AtMentionsPopup";
@@ -758,10 +759,9 @@ export class SimpleStream extends Component {
 	}
 }
 
-const getPostsForStream = (streamId = "", { byStream, sortPerStream }) => {
+const getPostsForStream = (streamId = "", { byStream }) => {
 	if (streamId === "") return [];
-	const posts = byStream[streamId];
-	return (sortPerStream[streamId] || []).map(id => posts[id]);
+	return _.sortBy(byStream[streamId], "seqNumber");
 };
 
 const getLocationsByPost = (locationsByCommit = {}, commitHash, markers) => {
