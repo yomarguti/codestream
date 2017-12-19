@@ -77,7 +77,9 @@ export class SimpleStream extends Component {
 
 	componentWillReceiveProps(nextProps) {
 		if (!nextProps.id) this.props.fetchStream();
-		if (nextProps.id !== this.props.id) this.handleDismissThread();
+		if (nextProps.id !== this.props.id) {
+			this.handleDismissThread();
+		}
 		new AddCommentPopup({ handleClickAddComment: this.handleClickAddComment });
 	}
 
@@ -105,13 +107,35 @@ export class SimpleStream extends Component {
 			document.execCommand("insertHTML", false, text);
 		});
 
-		// console.log("WE MOUNTED THE STREAM COMPONENT");
+		let scrollViewDiv = document.querySelector("atom-text-editor.is-focused .scroll-view");
+		if (scrollViewDiv) {
+			new ResizeObserver(this.handleResizeWindow).observe(scrollViewDiv);
+			// that.handleResizeWindow();
+		}
 	}
 
 	handleResizeCompose = () => {
 		// console.log("COMPOSE RESIZE");
 		this.resizeStream();
 	};
+
+	handleResizeWindow = () => {
+		let scrollViewDiv = document.querySelector("atom-text-editor.is-focused .scroll-view");
+		if (scrollViewDiv) {
+			let width = scrollViewDiv.offsetWidth - 20;
+			let newStyle = ".codestream-comment-popup { left: " + width + "px; }";
+			// console.log("Adding style string; " + newStyle);
+			this.addStyleString(newStyle);
+		}
+	};
+
+	// add a style to the document, reusing a style node that we attach to the DOM
+	addStyleString(str) {
+		let node = document.getElementById("codestream-style-tag") || document.createElement("style");
+		node.id = "codestream-style-tag";
+		node.innerHTML = str;
+		document.body.appendChild(node);
+	}
 
 	handleNewPost = () => {};
 
@@ -329,7 +353,7 @@ export class SimpleStream extends Component {
 		if (this.markersRendered) return;
 		this.markersRendered = true;
 		this.props.markers.forEach(codeMarker => {
-			// console.log(codeMarker);
+			console.log(codeMarker);
 			let location = codeMarker.location;
 			var range = [[location[0], 0], [location[0], 0]];
 			var marker = editor.markBufferRange(range, { invalidate: "never" });

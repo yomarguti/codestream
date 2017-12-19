@@ -19,13 +19,6 @@ export default class AddCommentPopup {
 		return this.props.handleClickAddComment();
 	};
 
-	addStyleString(str) {
-		let node = document.getElementById("codestream-style-tag") || document.createElement("style");
-		node.id = "codestream-style-tag";
-		node.innerHTML = str;
-		document.body.appendChild(node);
-	}
-
 	handleSelectionChange = event => {
 		let editor = atom.workspace.getActiveTextEditor();
 		if (!editor) return;
@@ -34,19 +27,6 @@ export default class AddCommentPopup {
 
 		let code = editor.getSelectedText();
 		if (code.length > 0) {
-			// FIXME -- this seems fragile, and it is also not responsive to
-			// window resizes, which is the only time it really needs to run
-			// let lineDivs = document.querySelectorAll("atom-text-editor.is-focused .lines");
-			let scrollViewDivs = document.querySelectorAll("atom-text-editor.is-focused .scroll-view");
-			if (scrollViewDivs && scrollViewDivs.length) {
-				// let lineLeft = lineDivs[0].getBoundingClientRect().left;
-				// let codestreamLeft = codestreamDivs[0].getBoundingClientRect().left;
-				let width = scrollViewDivs[0].offsetWidth - 20;
-				let newStyle = ".codestream-comment-popup { left: " + width + "px; }";
-				console.log("Adding style string; " + newStyle);
-				this.addStyleString(newStyle);
-			}
-
 			this.addMarker(editor, editor.getSelectedBufferRange());
 		}
 	};
