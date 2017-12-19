@@ -123,9 +123,9 @@ module.exports = {
 	},
 
 	serialize() {
-		const { session, onboarding } = store.getState();
+		const { session, onboarding, context } = store.getState();
 		localStorage.setItem("codestream.session", JSON.stringify(session));
-		return { onboarding };
+		return { onboarding, context };
 	},
 
 	deserializeCodestreamView(data) {
