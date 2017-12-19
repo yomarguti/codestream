@@ -45,6 +45,7 @@ export class SimpleStream extends Component {
 			atom.commands.add(".codestream .compose.mentions-on", {
 				"codestream:at-mention-move-up": event => this.handleAtMentionKeyPress(event, "up"),
 				"codestream:at-mention-move-down": event => this.handleAtMentionKeyPress(event, "down"),
+				"codestream:at-mention-tab": event => this.handleAtMentionKeyPress(event, "tab"),
 				"codestream:at-mention-escape": event => this.handleAtMentionKeyPress(event, "escape")
 			})
 		);
@@ -90,7 +91,13 @@ export class SimpleStream extends Component {
 		let inputDiv = document.querySelector('div[contenteditable="true"]');
 		if (!inputDiv) return;
 
+		// this listener pays attention to when the input field resizes,
+		// presumably because the user has typed more than one line of text
+		// in it, and calls a function to handle the new size
 		new ResizeObserver(this.handleResizeCompose).observe(this._compose);
+
+		// so that HTML doesn't get pasted into the input field. without this,
+		// HTML would be rendered as HTML when pasted
 		inputDiv.addEventListener("paste", function(e) {
 			e.preventDefault();
 			var text = e.clipboardData.getData("text/plain");
@@ -250,7 +257,7 @@ export class SimpleStream extends Component {
 					{
 						(lastTimestamp =
 							0 ||
-							this.props.posts.map(post => {
+							posts.map(post => {
 								if (threadId && threadId != post.parentPostId) {
 									return null;
 								}
@@ -570,7 +577,7 @@ export class SimpleStream extends Component {
 	handleOnKeyPress = async event => {
 		var newPostText = this.state.newPostText;
 
-		// console.log("ON KEYPRESS");
+		console.log("ON KEYPRESS: " + event.key);
 		// if we have the at-mentions popup open, then the keys
 		// do something different than if we have the focus in
 		// the textarea
@@ -654,6 +661,8 @@ export class SimpleStream extends Component {
 				} else {
 					newIndex = this.state.atMentionsIndex - 1;
 				}
+			} else if (eventType == "tab") {
+				this.selectFirstAtMention();
 			}
 			this.setState({
 				atMentionsIndex: newIndex,

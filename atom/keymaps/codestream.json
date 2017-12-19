@@ -11,7 +11,8 @@
 	},
 	".codestream .compose.mentions-on .native-key-bindings": {
 		"down": "codestream:at-mention-move-down",
-		"up": "codestream:at-mention-move-up"
+		"up": "codestream:at-mention-move-up",
+		"tab": "codestream:at-mention-tab"
 	},
 	".codestream": {
 		"escape": "codestream:escape"
