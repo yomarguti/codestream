@@ -13,10 +13,6 @@ describe("reducer for posts", () => {
 				byStream: {
 					"1": { [post1.id]: post1, [post2.id]: post2 },
 					"2": { [post3.id]: post3 }
-				},
-				sortPerStream: {
-					"1": [post1.id, post2.id],
-					"2": [post3.id]
 				}
 			};
 			const bootstrapResult = reduce(undefined, { type: "BOOTSTRAP_POSTS", payload: postsFromDb });
@@ -27,15 +23,11 @@ describe("reducer for posts", () => {
 		});
 	});
 
-	it("adds posts to the stream and its sorted collection", () => {
+	it("adds posts to the stream", () => {
 		const state = {
 			byStream: {
 				"1": { [post1.id]: post1, [post2.id]: post2 },
 				"2": { [post3.id]: post3 }
-			},
-			sortPerStream: {
-				"1": [post1.id, post2.id],
-				"2": [post3.id]
 			}
 		};
 
@@ -45,10 +37,6 @@ describe("reducer for posts", () => {
 			byStream: {
 				"1": { [post1.id]: post1, [post2.id]: post2 },
 				"2": { [post3.id]: post3, [newPost.id]: newPost }
-			},
-			sortPerStream: {
-				"1": [post1.id, post2.id],
-				"2": [post3.id, newPost.id]
 			}
 		};
 
@@ -63,10 +51,6 @@ describe("reducer for posts", () => {
 				byStream: {
 					"1": { [post1.id]: post1, [post2.id]: post2 },
 					"2": { [post3.id]: post3 }
-				},
-				sortPerStream: {
-					"1": [post1.id, post2.id],
-					"2": [post3.id]
 				}
 			};
 
@@ -78,10 +62,6 @@ describe("reducer for posts", () => {
 				byStream: {
 					"1": { [post1.id]: post1, [post2.id]: replacementForPost2, [newPost.id]: newPost },
 					"2": { [post3.id]: post3 }
-				},
-				sortPerStream: {
-					"1": [post1.id, post2.id, newPost.id],
-					"2": [post3.id]
 				}
 			};
 
@@ -99,10 +79,6 @@ describe("reducer for posts", () => {
 			byStream: {
 				"1": { [post1.id]: post1, [post2.id]: post2 },
 				"2": { [post3.id]: post3, pendingId: { streamId: "2", id: "pendingId" } }
-			},
-			sortPerStream: {
-				"1": [post1.id, post2.id],
-				"2": [post3.id, "pendingId"]
 			}
 		};
 
@@ -112,10 +88,6 @@ describe("reducer for posts", () => {
 			byStream: {
 				"1": { [post1.id]: post1, [post2.id]: post2 },
 				"2": { [post3.id]: post3, [resolvedPost.id]: resolvedPost }
-			},
-			sortPerStream: {
-				"1": [post1.id, post2.id],
-				"2": [post3.id, resolvedPost.id]
 			}
 		};
 
