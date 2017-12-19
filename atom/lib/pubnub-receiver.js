@@ -7,6 +7,7 @@ import { saveUser, saveUsers } from "./actions/user";
 import { saveTeam, saveTeams } from "./actions/team";
 import { saveRepo, saveRepos } from "./actions/repo";
 import { saveMarker, saveMarkers } from "./actions/marker";
+import { saveMarkerLocations } from "./actions/marker-location";
 
 export const createReceiver = store => new PubNubReceiver(store);
 
@@ -34,6 +35,7 @@ export default class PubNubReceiver {
 				const type = Object.keys(rest)[0];
 				const handler = this.getMessageHandler(type);
 				if (handler) handler(event.message[type]);
+				console.debug("pubnub event", event.message);
 			}
 		});
 	}
@@ -62,8 +64,8 @@ export default class PubNubReceiver {
 			repo: repo => this.store.dispatch(saveRepo(normalize(repo))),
 			repos: repos => this.store.dispatch(saveRepos(normalize(repos))),
 			marker: marker => this.store.dispatch(saveMarker(normalize(marker))),
-			markers: markers => this.store.dispatch(saveMarkers(normalize(markers)))
-			// TODO: markerLocations
+			markers: markers => this.store.dispatch(saveMarkers(normalize(markers))),
+			markerLocations: locations => this.store.dispatch(saveMarkerLocations(locations))
 		};
 
 		return handlers[type];
