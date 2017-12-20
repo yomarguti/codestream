@@ -3,7 +3,7 @@ import { normalize } from "./utils";
 import { setCurrentRepo, setCurrentTeam } from "./context";
 import { saveUser, saveUsers } from "./user";
 import { saveRepo, saveRepos } from "./repo";
-import { saveTeam, saveTeams } from "./team";
+import { saveTeam, saveTeams, joinTeam } from "./team";
 import db from "../local-cache";
 
 const requestStarted = () => ({ type: "REQUEST_STARTED" });
@@ -48,7 +48,7 @@ export const register = attributes => dispatch => {
 
 export const confirmEmail = attributes => (dispatch, getState) => {
 	dispatch(requestStarted());
-	post("/no-auth/confirm", attributes)
+	return post("/no-auth/confirm", attributes)
 		.then(async ({ accessToken, user, teams, repos }) => {
 			dispatch(requestFinished());
 			user = normalize(user);
@@ -70,11 +70,11 @@ export const confirmEmail = attributes => (dispatch, getState) => {
 				await dispatch(fetchTeamMembers(userTeams));
 				dispatch({ type: "EXISTING_USER_CONFIRMED_IN_NEW_REPO" });
 			} else if (userTeams.find(team => team.id === teamForRepo)) {
-				// TODO: maybe?
-				// dispatch(fetchTeamMembers(userTeams));
+				await dispatch(fetchTeamMembers(userTeams));
 				dispatch({ type: "EXISTING_USER_CONFIRMED" });
 			} else {
-				return dispatch({ type: "EXISTING_USER_CONFIRMED_IN_FOREIGN_REPO" });
+				await dispatch(joinTeam());
+				dispatch({ type: "EXISTING_USER_CONFIRMED" });
 			}
 		})
 		.catch(({ data }) => {
@@ -144,7 +144,7 @@ export const noPermission = () => ({ type: "INVALID_PERMISSION_FOR_TEAM" });
 export const addMembers = emails => (dispatch, getState) => {
 	const { repoAttributes, currentTeamId, session } = getState();
 	const params = { ...repoAttributes, teamId: currentTeamId, emails };
-	post("/repos", params, session.accessToken)
+	return post("/repos", params, session.accessToken)
 		.then(({ users }) => {
 			dispatch(saveUsers(normalize(users)));
 			dispatch(completeOnboarding());

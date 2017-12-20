@@ -1,26 +1,28 @@
 import sinon from "sinon";
-import db from "../../lib/local-cache";
 import * as http from "../../lib/network-request";
-import { confirmEmail, authenticate } from "../../lib/actions/onboarding";
+import * as actions from "../../lib/actions/onboarding";
 
 describe("onboarding action creators", () => {
 	describe("confirmEmail", () => {
 		describe("when the confirmed user is not a member of the team for the current repo", () => {
-			afterEach(() => http.post.restore());
+			afterEach(() => {
+				http.post.restore();
+			});
 
-			it("dispatches a no access action", () => {
+			it("adds them to team", () => {
+				const email = "foo@bar.com";
 				sinon
 					.stub(http, "post")
-					.returns(Promise.resolve({ accessToken: "", user: {}, teams: [], repos: [] }));
+					.returns(Promise.resolve({ accessToken: "", user: { email }, teams: [], repos: [] }));
+				// sinon.stub(actions, "addMembers").returns(Promise.resolve());
 				const dispatch = jasmine.createSpy("spy for dispatch");
 
-				confirmEmail()(dispatch, () => ({ context: { currentTeamId: "1" } }));
-
-				waitsFor(() => dispatch.callCount > 3);
-				runs(() => {
-					expect(dispatch).toHaveBeenCalledWith({
-						type: "EXISTING_USER_CONFIRMED_IN_FOREIGN_REPO"
-					});
+				waitsForPromise(async () => {
+					await actions.confirmEmail({ email })(dispatch, () => ({
+						context: { currentTeamId: "1" }
+					}));
+					// expect(actions.addMembers.calledWith([email])).toBe(true);
+					expect(dispatch).toHaveBeenCalledWith({ type: "EXISTING_USER_CONFIRMED" });
 				});
 			});
 		});
@@ -38,7 +40,7 @@ describe("onboarding action creators", () => {
 					);
 				const dispatch = jasmine.createSpy("spy for dispatch");
 
-				authenticate()(dispatch, () => ({ context: { currentTeamId: "1" } }));
+				actions.authenticate()(dispatch, () => ({ context: { currentTeamId: "1" } }));
 
 				waitsFor(() => dispatch.callCount > 3);
 				runs(() => {
