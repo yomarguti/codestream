@@ -10,6 +10,10 @@
 * 'Only format if Prettier is found in your project's dependencies'
 * 'Only format if a Prettier config is found'
 
+**Pro-tip** If you open atom in dev mode (`atom --dev path/to/project`), there will be additional
+debugging functionality, which will be noted below. It's probably best to default to using the
+`--dev` flag while working locally.
+
 ## Connecting to server
 
 If you want to use a local instance of the api server, you'll need to use the dev_tools to create a
@@ -56,6 +60,11 @@ looks like
 
 Dev server - https://tca3.codestream.us:9443
 
+**Dev mode:** While running atom in dev mode, there will be commands to toggle which environment the
+plugin interacts with for server calls. The commands will be `Codestream: Point to [dev|local]`. A
+reload of atom is required after toggling. Additionally, the login and signup forms will display the
+configured url for easy identification.
+
 ## Resetting the database(s)
 
 At some point, you'll want to reset everything. The plugin keeps data cached in indexeddb so if you
@@ -64,8 +73,8 @@ wipe everything in mongo, you probably should clear indexeddb too.
 You can use Mongo's app, [Compass](https://www.mongodb.com/products/compass), for interacting with
 databases.
 
-To clear what's in the client cache, open atom's command palette and run the `Codestream: Wipe
-Cache` command.
+**Dev mode:** To clear what's in the client cache, open atom's command palette and run the
+`Codestream: Wipe Cache` command.
 
 If you want to logout and create a new session, from the command palette run `Codestream: Logout`.
 
