@@ -15,20 +15,7 @@ export default class CodestreamView {
 		this.store = store;
 		this.element = document.createElement("div");
 		this.element.classList.add("codestream");
-
-		const directories = atom.project.getDirectories();
-		const repoPromises = directories.map(repo => atom.project.repositoryForDirectory(repo));
-		Promise.all(repoPromises).then(repos => {
-			repos = repos.filter(Boolean);
-			render(
-				<IntlProvider locale="en" messages={copy}>
-					<Provider store={store}>
-						<CodeStreamRoot repositories={repos} />
-					</Provider>
-				</IntlProvider>,
-				this.element
-			);
-		});
+		this.render();
 	}
 
 	getTitle() {
@@ -69,5 +56,21 @@ export default class CodestreamView {
 	destroy() {
 		unmountComponentAtNode(this.element);
 		this.element.remove();
+	}
+
+	render() {
+		const directories = atom.project.getDirectories();
+		const repoPromises = directories.map(repo => atom.project.repositoryForDirectory(repo));
+		Promise.all(repoPromises).then(repos => {
+			repos = repos.filter(Boolean);
+			render(
+				<IntlProvider locale="en" messages={copy}>
+					<Provider store={this.store}>
+						<CodeStreamRoot repositories={repos} />
+					</Provider>
+				</IntlProvider>,
+				this.element
+			);
+		});
 	}
 }

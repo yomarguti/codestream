@@ -5,6 +5,7 @@ import { connect } from "react-redux";
 import PropTypes from "prop-types";
 import getSystemUser from "username";
 import Button from "./Button";
+import withConfigs from "../withConfigs";
 import * as actions from "../../actions/onboarding";
 
 const isUsernameInvalid = username => new RegExp("^[-a-z0-9_.]{1,21}$").test(username) === false;
@@ -146,7 +147,7 @@ export class SimpleSignupForm extends Component {
 	};
 
 	renderDebugInfo() {
-		const apiPath = atom.config.get("codestream.url");
+		const apiPath = this.props.configs.url;
 		if (atom.inDevMode() && apiPath)
 			return <p style={{ position: "static", top: "0px" }}>{apiPath}</p>;
 	}
@@ -242,4 +243,4 @@ export class SimpleSignupForm extends Component {
 }
 
 const mapStateToProps = ({ context }) => ({ usernamesInTeam: context.usernamesInTeam });
-export default connect(mapStateToProps, actions)(SimpleSignupForm);
+export default connect(mapStateToProps, actions)(withConfigs(SimpleSignupForm));

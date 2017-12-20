@@ -164,7 +164,7 @@ describe("SignupForm view", () => {
 				});
 				const view = mountWithIntl(
 					<RepositoryProvider repositories={repositories}>
-						<SimpleSignupForm register={register} />
+						<SimpleSignupForm register={register} configs={{}} />
 					</RepositoryProvider>
 				);
 				view.find('input[name="username"]').simulate("change", { target: { value: username } });
@@ -184,7 +184,7 @@ describe("SignupForm view", () => {
 				});
 				const view = mountWithIntl(
 					<RepositoryProvider repositories={repositories}>
-						<SimpleSignupForm register={register} />
+						<SimpleSignupForm register={register} configs={{}} />
 					</RepositoryProvider>
 				);
 
@@ -212,7 +212,7 @@ describe("SignupForm view", () => {
 				});
 				const view = mountWithIntl(
 					<RepositoryProvider repositories={repositories}>
-						<SimpleSignupForm register={register} />
+						<SimpleSignupForm register={register} configs={{}} />
 					</RepositoryProvider>
 				);
 				view.find('input[name="username"]').simulate("change", { target: { value: username } });

@@ -106,8 +106,7 @@ module.exports = {
 					store.dispatch(logout());
 					localStorage.removeItem("codestream.session");
 					localStorage.removeItem("codestream.accessToken");
-				},
-				"codestream:wipe-cache": () => indexedDB.deleteDatabase("CodeStream")
+				}
 			})
 			// atom.commands.add(".codestream .compose.mentions-on", {
 			// 	"codestream:at-mention-move-up": event => this.handleAtMentionKeyPress(event, "up"),
@@ -115,6 +114,20 @@ module.exports = {
 			// 	"codestream:at-mention-escape": event => this.handleAtMentionKeyPress(event, "escape")
 			// })
 		);
+		// Dev mode goodies
+		if (atom.inDevMode()) {
+			this.subscriptions.add(
+				atom.commands.add("atom-workspace", {
+					"codestream:wipe-cache": () => indexedDB.deleteDatabase("CodeStream"),
+					"codestream:point-to-dev": () => {
+						atom.config.set("codestream.url", "https://tca3.codestream.us:9443");
+					},
+					"codestream:point-to-local": () => {
+						atom.config.set("codestream.url", "https://localhost.codestream.us:12079");
+					}
+				})
+			);
+		}
 	},
 
 	deactivate() {

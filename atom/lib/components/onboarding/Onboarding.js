@@ -10,8 +10,8 @@ import NoAccess from "./NoAccess";
 
 const mapStateToProps = ({ onboarding }) => ({ ...onboarding });
 
-export default connect(mapStateToProps)(({ step, props }) => {
-	const nextProps = { ...props };
+export default connect(mapStateToProps)(({ step, props, configs }) => {
+	const nextProps = { configs, ...props };
 	const views = {
 		signUp: <SignupForm {...nextProps} />,
 		confirmEmail: <EmailConfirmationForm {...nextProps} />,

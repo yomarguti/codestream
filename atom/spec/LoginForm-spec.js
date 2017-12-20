@@ -37,7 +37,7 @@ describe("LoginForm", () => {
 		describe("when 'email' and 'alreadySignedUp' props are provided to the component", () => {
 			const email = "foo@baz.com";
 			const view = mountWithIntl(
-				<SimpleLoginForm email={email} alreadySignedUp={true} errors={{}} />
+				<SimpleLoginForm email={email} alreadySignedUp={true} configs={{}} errors={{}} />
 			);
 			it("is pre-populated with given email address", () => {
 				expect(view.find('input[name="email"]').prop("value")).toBe(email);
@@ -87,7 +87,9 @@ describe("LoginForm", () => {
 			const email = "foo@bar.com";
 			const password = "somePassword";
 			const authenticate = jasmine.createSpy("");
-			const view = mountWithIntl(<SimpleLoginForm authenticate={authenticate} errors={{}} />);
+			const view = mountWithIntl(
+				<SimpleLoginForm authenticate={authenticate} configs={{}} errors={{}} />
+			);
 			view.find('input[name="email"]').simulate("change", { target: { value: email } });
 			view.find('input[name="password"]').simulate("change", { target: { value: password } });
 			view.find("form").simulate("submit");
@@ -98,7 +100,9 @@ describe("LoginForm", () => {
 
 		describe("when authentication fails", () => {
 			it("shows an error", () => {
-				const view = mountWithIntl(<SimpleLoginForm errors={{ invalidCredentials: true }} />);
+				const view = mountWithIntl(
+					<SimpleLoginForm errors={{ invalidCredentials: true }} configs={{}} />
+				);
 
 				expect(view.find(".form-error").text()).toBe(
 					"Sorry, you entered an incorrect email or password."

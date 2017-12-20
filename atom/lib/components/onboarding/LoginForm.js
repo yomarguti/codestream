@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { FormattedMessage } from "react-intl";
 import { connect } from "react-redux";
 import Button from "./Button";
+import withConfigs from "../withConfigs";
 import * as actions from "../../actions/onboarding";
 
 const isPasswordInvalid = password => password.length === 0;
@@ -85,7 +86,7 @@ export class SimpleLoginForm extends Component {
 	};
 
 	renderDebugInfo() {
-		const apiPath = atom.config.get("codestream.url");
+		const apiPath = this.props.configs.url;
 		if (atom.inDevMode() && apiPath)
 			return <p style={{ position: "static", top: "0px" }}>{apiPath}</p>;
 	}
@@ -166,4 +167,4 @@ const mapStateToProps = ({ onboarding }) => ({
 	errors: onboarding.errors,
 	loading: onboarding.requestInProcess
 });
-export default connect(mapStateToProps, actions)(SimpleLoginForm);
+export default connect(mapStateToProps, actions)(withConfigs(SimpleLoginForm));
