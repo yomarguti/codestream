@@ -6,7 +6,6 @@ import LoginForm from "./LoginForm";
 import TeamCreationForm from "./TeamCreationForm";
 import TeamSelectionForm from "./TeamSelectionForm";
 import TeamMemberSelectionForm from "./TeamMemberSelectionForm";
-import NoAccess from "./NoAccess";
 
 const mapStateToProps = ({ onboarding }) => ({ ...onboarding });
 
@@ -18,8 +17,7 @@ export default connect(mapStateToProps)(({ step, props, configs }) => {
 		login: <LoginForm {...nextProps} />,
 		createTeam: <TeamCreationForm {...nextProps} />,
 		selectTeam: <TeamSelectionForm {...nextProps} />,
-		identifyMembers: <TeamMemberSelectionForm {...nextProps} />,
-		noAccess: <NoAccess />
+		identifyMembers: <TeamMemberSelectionForm {...nextProps} />
 	};
 	return views[step];
 });

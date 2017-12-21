@@ -1,9 +1,8 @@
-class ApiRequestError extends Error {
-	constructor(message, data) {
-		super(message);
-		Error.captureStackTrace(this, ApiRequestError);
-		this.data = data;
-	}
+// Babel doesn't support extending native Objects like Error, Array, etc.
+// so extending Error for custom errors is done the old fashioned way. https://github.com/chaijs/chai/issues/909
+export function ApiRequestError(message, data) {
+	Error.prototype.constructor.apply(this, arguments);
+	this.data = data;
 }
 
 const getPath = route => `${atom.config.get("codestream.url")}${route}`;
@@ -53,4 +52,4 @@ export async function put(route, body) {
 	else throw new ApiRequestError(json.message, json);
 }
 
-export default { get, post, put };
+export default { get, post, put, ApiRequestError };

@@ -34,3 +34,4 @@ export const logout = () => dispatch => {
 		payload: { currentTeamId: undefined, currentRepoId: undefined, usernamesInTeam: [] }
 	});
 };
+export const noAccess = () => ({ type: "NO_ACCESS" });

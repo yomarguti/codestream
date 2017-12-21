@@ -3,6 +3,7 @@ const initialState = {
 	currentTeamId: "",
 	currentRepoId: "",
 	currentCommit: "",
+	noAccess: false,
 	usernamesInTeam: []
 };
 
@@ -13,5 +14,6 @@ export default (state = initialState, { type, payload }) => {
 	if (type === "SET_CURRENT_REPO") return { ...state, currentRepoId: payload };
 	if (type === "SET_CURRENT_COMMIT") return { ...state, currentCommit: payload };
 	if (type === "COMMIT_HASH_CHANGED") return { ...state, currentCommit: payload };
+	if (type === "NO_ACCESS") return { ...state, noAccess: true };
 	return state;
 };

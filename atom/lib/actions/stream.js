@@ -37,7 +37,7 @@ export const saveStreams = attributes => dispatch => {
 
 export const fetchStream = () => async (dispatch, getState) => {
 	const { session, context, streams } = getState();
-	if (!streams.isFetching) {
+	if (!streams.isFetching && context.currentFile !== "") {
 		dispatch({ type: "FETCH_STREAM" });
 		// create stream - right now the server doesn't complain if a stream already exists
 		const streamData = await http.post(

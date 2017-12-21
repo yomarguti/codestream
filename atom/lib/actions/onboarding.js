@@ -1,9 +1,9 @@
-import { get, post, put } from "../network-request";
+import { get, post, put, ApiRequestError } from "../network-request";
 import { normalize } from "./utils";
-import { setCurrentRepo, setCurrentTeam } from "./context";
+import { setCurrentRepo, setCurrentTeam, noAccess } from "./context";
 import { saveUser, saveUsers } from "./user";
 import { saveRepo, saveRepos } from "./repo";
-import { saveTeam, saveTeams } from "./team";
+import { saveTeam, saveTeams, joinTeam } from "./team";
 import db from "../local-cache";
 
 const requestStarted = () => ({ type: "REQUEST_STARTED" });
@@ -48,7 +48,7 @@ export const register = attributes => dispatch => {
 
 export const confirmEmail = attributes => (dispatch, getState) => {
 	dispatch(requestStarted());
-	post("/no-auth/confirm", attributes)
+	return post("/no-auth/confirm", attributes)
 		.then(async ({ accessToken, user, teams, repos }) => {
 			dispatch(requestFinished());
 			user = normalize(user);
@@ -70,23 +70,27 @@ export const confirmEmail = attributes => (dispatch, getState) => {
 				await dispatch(fetchTeamMembers(userTeams));
 				dispatch({ type: "EXISTING_USER_CONFIRMED_IN_NEW_REPO" });
 			} else if (userTeams.find(team => team.id === teamForRepo)) {
-				// TODO: maybe?
-				// dispatch(fetchTeamMembers(userTeams));
+				await dispatch(fetchTeamMembers(userTeams));
 				dispatch({ type: "EXISTING_USER_CONFIRMED" });
 			} else {
-				return dispatch({ type: "EXISTING_USER_CONFIRMED_IN_FOREIGN_REPO" });
+				await dispatch(joinTeam());
+				dispatch({ type: "EXISTING_USER_CONFIRMED" });
 			}
 		})
-		.catch(({ data }) => {
+		.catch(error => {
 			dispatch(requestFinished());
-			if (data.code === "USRC-1006")
-				dispatch({
-					type: "USER_ALREADY_CONFIRMED",
-					payload: { alreadyConfirmed: true, email: attributes.email }
-				});
-			if (data.code === "USRC-1004") dispatch({ type: "GO_TO_SIGNUP" });
-			if (data.code === "USRC-1002") dispatch({ type: "INVALID_CONFIRMATION_CODE" });
-			if (data.code === "usrc-1003") dispatch({ type: "EXPIRED_CONFIRMATION_CODE" });
+			if (error instanceof ApiRequestError) {
+				const { data } = error;
+				if (data.code === "USRC-1002") dispatch({ type: "INVALID_CONFIRMATION_CODE" });
+				if (data.code === "USRC-1003") dispatch({ type: "EXPIRED_CONFIRMATION_CODE" });
+				if (data.code === "USRC-1004") dispatch(goToSignup());
+				if (data.code === "USRC-1006")
+					dispatch({
+						type: "USER_ALREADY_CONFIRMED",
+						payload: { alreadyConfirmed: true, email: attributes.email }
+					});
+				if (data.code === "REPO-1000") dispatch(noAccess());
+			} else console.error("An unexpected error occured", error);
 		});
 };
 
@@ -104,19 +108,27 @@ export const createTeam = name => (dispatch, getState) => {
 		team: { name }
 	};
 	dispatch(requestStarted());
-	post("/repos", params, session.accessToken).then(async data => {
-		dispatch(requestFinished());
-		const team = normalize(data.team);
-		const repo = normalize(data.repo);
+	return post("/repos", params, session.accessToken)
+		.then(async data => {
+			dispatch(requestFinished());
+			const team = normalize(data.team);
+			const repo = normalize(data.repo);
 
-		await dispatch(saveRepo(repo));
-		await dispatch(saveTeam(team));
+			await dispatch(saveRepo(repo));
+			await dispatch(saveTeam(team));
 
-		dispatch(setCurrentTeam(team.id));
-		dispatch(setCurrentRepo(repo.id));
+			dispatch(setCurrentTeam(team.id));
+			dispatch(setCurrentRepo(repo.id));
 
-		dispatch({ type: "TEAM_CREATED", payload: { teamId: team.id } });
-	});
+			dispatch({ type: "TEAM_CREATED", payload: { teamId: team.id } });
+		})
+		.catch(error => {
+			dispatch(requestFinished());
+			if (error instanceof ApiRequestError) {
+				if (error.data.code === "RAPI-1005") dispatch({ type: "CREATE_TEAM-INVALID_REPO_URL" });
+				atom.notifications.addError(`Your origin url (${repoAttributes.url}) is invalid`);
+			} else console.error("Encountered an unexpected error while creating team", error);
+		});
 };
 
 export const addRepoForTeam = teamId => (dispatch, getState) => {
@@ -144,7 +156,7 @@ export const noPermission = () => ({ type: "INVALID_PERMISSION_FOR_TEAM" });
 export const addMembers = emails => (dispatch, getState) => {
 	const { repoAttributes, currentTeamId, session } = getState();
 	const params = { ...repoAttributes, teamId: currentTeamId, emails };
-	post("/repos", params, session.accessToken)
+	return post("/repos", params, session.accessToken)
 		.then(({ users }) => {
 			dispatch(saveUsers(normalize(users)));
 			dispatch(completeOnboarding());
@@ -173,13 +185,18 @@ export const authenticate = params => (dispatch, getState) => {
 			await dispatch(fetchTeamMembers(teams));
 
 			if (teams.find(team => team.id === currentTeamId)) dispatch({ type: "LOGGED_IN" });
-			else dispatch({ type: "LOGGED_INTO_FOREIGN_REPO" });
+			else {
+				await dispatch(joinTeam());
+				dispatch({ type: "LOGGED_IN" });
+			}
+			// TODO: if no team exists, go to team creation
 		})
 		.catch(error => {
 			dispatch(requestFinished());
-			if (error.data.code === "USRC-1001") dispatch({ type: "INVALID_CREDENTIALS" });
-			else {
-				console.error(errror);
-			}
+			if (error instanceof ApiRequestError) {
+				if (error.data.code === "USRC-1001") dispatch({ type: "INVALID_CREDENTIALS" });
+				if (error.data.code === "REPO-1000") dispatch(noAccess());
+				if (error.data.code === "RAPI-1005") dispatch(noAccess()); // TODO: How to handle url invalid here? Just bailing and saying no access for url invalid
+			} else console.error("Encountered unexpected error while authenticating", error);
 		});
 };
