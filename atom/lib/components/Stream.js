@@ -840,7 +840,19 @@ const mapStateToProps = ({ context, streams, users, posts, markers, markerLocati
 			markers
 		),
 		posts: getPostsForStream(stream.id, posts).map(post => {
-			const { username, email, firstName, lastName } = users[post.creatorId];
+			let user = users[post.creatorId];
+			if (!user) {
+				console.warn(
+					`Redux store doesn't have a user with id ${post.creatorId} for post with id ${post.id}`
+				);
+				user = {
+					username: "Unknown user",
+					email: "",
+					firstName: "",
+					lastName: ""
+				};
+			}
+			const { username, email, firstName, lastName } = user;
 			return {
 				...post,
 				markerLocation: locations[post.id],
