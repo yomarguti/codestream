@@ -5,6 +5,7 @@ import { get } from "./network-request";
 import git from "./git";
 import createStore from "./createStore";
 import {
+	noAccess,
 	setRepoAttributes,
 	setContext,
 	setCurrentFile,
@@ -76,17 +77,28 @@ module.exports = {
 					});
 					firstCommitHash = firstCommitHash.trim();
 					store.dispatch(setRepoAttributes({ url: repoUrl, firstCommitHash }));
-					const data = await get(
-						`/no-auth/find-repo?url=${repoUrl}&firstCommitHash=${firstCommitHash}`
-					);
-					if (Object.keys(data).length > 0) {
-						store.dispatch(
-							setContext({
-								usernamesInTeam: data.usernames,
-								currentRepoId: data.repo._id,
-								currentTeamId: data.repo.teamId
-							})
+					try {
+						const data = await get(
+							`/no-auth/find-repo?url=${encodeURIComponent(repoUrl)}&firstCommitHash=${
+								firstCommitHash
+							}`
 						);
+						store.dispatch(setContext({ noAccess: false }));
+						if (Object.keys(data).length > 0) {
+							store.dispatch(
+								setContext({
+									usernamesInTeam: data.usernames,
+									currentRepoId: data.repo._id,
+									currentTeamId: data.repo.teamId
+								})
+							);
+						}
+					} catch (error) {
+						if (error instanceof ApiRequestError) {
+							if (error.data.code === "REPO-1000") store.dispatch(noAccess());
+							if (error.data.code === "UNKNOWN") store.dispatch(noAccess());
+						} else
+							console.error("encountered unexpected error while initializing CodeStream", error);
 					}
 				}
 			})

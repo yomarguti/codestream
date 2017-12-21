@@ -1,6 +1,6 @@
-import { get, post, put } from "../network-request";
+import { get, post, put, ApiRequestError } from "../network-request";
 import { normalize } from "./utils";
-import { setCurrentRepo, setCurrentTeam } from "./context";
+import { setCurrentRepo, setCurrentTeam, noAccess } from "./context";
 import { saveUser, saveUsers } from "./user";
 import { saveRepo, saveRepos } from "./repo";
 import { saveTeam, saveTeams, joinTeam } from "./team";
@@ -77,16 +77,20 @@ export const confirmEmail = attributes => (dispatch, getState) => {
 				dispatch({ type: "EXISTING_USER_CONFIRMED" });
 			}
 		})
-		.catch(({ data }) => {
+		.catch(error => {
 			dispatch(requestFinished());
-			if (data.code === "USRC-1006")
-				dispatch({
-					type: "USER_ALREADY_CONFIRMED",
-					payload: { alreadyConfirmed: true, email: attributes.email }
-				});
-			if (data.code === "USRC-1004") dispatch({ type: "GO_TO_SIGNUP" });
-			if (data.code === "USRC-1002") dispatch({ type: "INVALID_CONFIRMATION_CODE" });
-			if (data.code === "usrc-1003") dispatch({ type: "EXPIRED_CONFIRMATION_CODE" });
+			if (error instanceof ApiRequestError) {
+				const { data } = error;
+				if (data.code === "USRC-1002") dispatch({ type: "INVALID_CONFIRMATION_CODE" });
+				if (data.code === "USRC-1003") dispatch({ type: "EXPIRED_CONFIRMATION_CODE" });
+				if (data.code === "USRC-1004") dispatch(goToSignup());
+				if (data.code === "USRC-1006")
+					dispatch({
+						type: "USER_ALREADY_CONFIRMED",
+						payload: { alreadyConfirmed: true, email: attributes.email }
+					});
+				if (data.code === "REPO-1000") dispatch(noAccess());
+			} else console.error("An unexpected error occured", error);
 		});
 };
 

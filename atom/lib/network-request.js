@@ -53,4 +53,4 @@ export async function put(route, body) {
 	else throw new ApiRequestError(json.message, json);
 }
 
-export default { get, post, put };
+export default { get, post, put, ApiRequestError };

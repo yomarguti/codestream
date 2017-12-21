@@ -4,6 +4,7 @@ import { connect } from "react-redux";
 import NoGit from "./NoGit";
 import Onboarding from "./onboarding/Onboarding";
 import Stream from "./Stream";
+import NoAccess from "./NoAccess";
 
 const Loading = () => <span className="loading loading-spinner-large inline-block" />;
 
@@ -29,9 +30,10 @@ class CodeStreamRoot extends Component {
 	}
 
 	render() {
-		const { accessToken, bootstrapped, repositories, onboarding } = this.props;
+		const { accessToken, bootstrapped, repositories, onboarding, noAccess } = this.props;
 
 		if (repositories.length === 0) return <NoGit />;
+		if (noAccess) return <NoAccess />;
 		if (!bootstrapped) return <Loading />;
 		else if (onboarding.complete && accessToken) return <Stream />;
 		else {
@@ -40,8 +42,9 @@ class CodeStreamRoot extends Component {
 	}
 }
 
-const mapStateToProps = ({ bootstrapped, session, onboarding }) => ({
+const mapStateToProps = ({ bootstrapped, session, onboarding, context }) => ({
 	accessToken: session.accessToken,
+	noAccess: context.noAccess,
 	bootstrapped,
 	onboarding
 });
