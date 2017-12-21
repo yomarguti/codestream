@@ -1,7 +1,7 @@
 import { CompositeDisposable } from "atom";
 import CodestreamView, { CODESTREAM_VIEW_URI } from "./codestream-view";
 import { bootstrapStore } from "./local-cache";
-import { get } from "./network-request";
+import { get, ApiRequestError } from "./network-request";
 import git from "./git";
 import createStore from "./createStore";
 import {
