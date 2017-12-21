@@ -177,13 +177,17 @@ export const authenticate = params => (dispatch, getState) => {
 			await dispatch(fetchTeamMembers(teams));
 
 			if (teams.find(team => team.id === currentTeamId)) dispatch({ type: "LOGGED_IN" });
-			else dispatch({ type: "LOGGED_INTO_FOREIGN_REPO" });
+			else {
+				await dispatch(joinTeam());
+				dispatch({ type: "LOGGED_IN" });
+			}
+			// TODO: if no team exists, go to team creation
 		})
 		.catch(error => {
 			dispatch(requestFinished());
-			if (error.data.code === "USRC-1001") dispatch({ type: "INVALID_CREDENTIALS" });
-			else {
-				console.error(errror);
-			}
+			if (error instanceof ApiRequestError) {
+				if (error.data.code === "USRC-1001") dispatch({ type: "INVALID_CREDENTIALS" });
+				if (error.data.code === "REPO-1000") dispatch(noAccess());
+			} else console.error("Encountered unexpected error while authenticating", error);
 		});
 };

@@ -28,7 +28,7 @@ describe("onboarding action creators", () => {
 		});
 	});
 
-	describe("authenticate", () => {
+	xdescribe("authenticate", () => {
 		describe("when the authenticated user is not a member of the team for the current repo", () => {
 			afterEach(() => http.put.restore());
 
