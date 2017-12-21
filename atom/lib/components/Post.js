@@ -60,7 +60,7 @@ export default class Post extends Component {
 				var existingCode = editor.getTextInBufferRange(range);
 				if (code !== existingCode) alert = <span className="icon icon-alert" />;
 			} else {
-				// alert = <span className="icon icon-question" />;
+				alert = <span className="icon icon-question" />;
 			}
 			codeBlock = <div className="code">{code}</div>;
 		}

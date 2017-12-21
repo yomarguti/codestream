@@ -367,7 +367,7 @@ export class SimpleStream extends Component {
 		if (this.markersRendered) return;
 		this.markersRendered = true;
 		this.props.markers.forEach(codeMarker => {
-			console.log(codeMarker);
+			console.log("Rendering a marker: ", codeMarker);
 			let location = codeMarker.location;
 			var range = [[location[0], 0], [location[0], 0]];
 			var marker = editor.markBufferRange(range, { invalidate: "never" });
