@@ -35,6 +35,8 @@ export default (state = initialState, { type, payload }) => {
 			return { ...state, errors: { invalidCode: true } };
 		case "EXPIRED_CONFIRMATION_CODE":
 			return { ...state, errors: { expiredCode: true } };
+		case "CREATE_TEAM-INVALID_REPO_URL":
+			return { ...state, errors: { invalidRepoUrl: true } };
 		case "TEAM_CREATED":
 			return { ...state, step: "identifyMembers", props: payload };
 		case "TEAM_NOT_FOUND":

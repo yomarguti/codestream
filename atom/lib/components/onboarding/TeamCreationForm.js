@@ -17,6 +17,18 @@ export class SimpleTeamCreationForm extends Component {
 
 	onSubmit = () => this.props.createTeam(this.state.name);
 
+	renderErrors = () => {
+		if (this.props.errors.invalidRepoUrl)
+			return (
+				<span className="error-message">
+					<FormattedMessage
+						id="createTeam.invalidRepoUrl"
+						defaultMessage="Your repository's origin url is invalid. Please correct it and reload atom to try again."
+					/>
+				</span>
+			);
+	};
+
 	render() {
 		return (
 			<div id="team-creation">
@@ -29,6 +41,7 @@ export class SimpleTeamCreationForm extends Component {
 				<p>
 					<FormattedMessage id="createTeam.additionalInfo" />
 				</p>
+				{this.renderErrors()}
 				<form onSubmit={this.onSubmit}>
 					<input
 						className="native-key-bindings input-text control"
@@ -48,6 +61,7 @@ export class SimpleTeamCreationForm extends Component {
 }
 
 const mapStateToProps = ({ onboarding }) => ({
-	loading: onboarding.requestInProcess
+	loading: onboarding.requestInProcess,
+	errors: onboarding.errors
 });
 export default connect(mapStateToProps, { createTeam })(SimpleTeamCreationForm);

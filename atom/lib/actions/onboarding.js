@@ -108,19 +108,27 @@ export const createTeam = name => (dispatch, getState) => {
 		team: { name }
 	};
 	dispatch(requestStarted());
-	post("/repos", params, session.accessToken).then(async data => {
-		dispatch(requestFinished());
-		const team = normalize(data.team);
-		const repo = normalize(data.repo);
+	return post("/repos", params, session.accessToken)
+		.then(async data => {
+			dispatch(requestFinished());
+			const team = normalize(data.team);
+			const repo = normalize(data.repo);
 
-		await dispatch(saveRepo(repo));
-		await dispatch(saveTeam(team));
+			await dispatch(saveRepo(repo));
+			await dispatch(saveTeam(team));
 
-		dispatch(setCurrentTeam(team.id));
-		dispatch(setCurrentRepo(repo.id));
+			dispatch(setCurrentTeam(team.id));
+			dispatch(setCurrentRepo(repo.id));
 
-		dispatch({ type: "TEAM_CREATED", payload: { teamId: team.id } });
-	});
+			dispatch({ type: "TEAM_CREATED", payload: { teamId: team.id } });
+		})
+		.catch(error => {
+			dispatch(requestFinished());
+			if (error instanceof ApiRequestError) {
+				if (error.data.code === "RAPI-1005") dispatch({ type: "CREATE_TEAM-INVALID_REPO_URL" });
+				atom.notifications.addError(`Your origin url (${repoAttributes.url}) is invalid`);
+			} else console.error("Encountered an unexpected error while creating team", error);
+		});
 };
 
 export const addRepoForTeam = teamId => (dispatch, getState) => {
@@ -188,6 +196,7 @@ export const authenticate = params => (dispatch, getState) => {
 			if (error instanceof ApiRequestError) {
 				if (error.data.code === "USRC-1001") dispatch({ type: "INVALID_CREDENTIALS" });
 				if (error.data.code === "REPO-1000") dispatch(noAccess());
+				if (error.data.code === "RAPI-1005") dispatch(noAccess()); // TODO: How to handle url invalid here? Just bailing and saying no access for url invalid
 			} else console.error("Encountered unexpected error while authenticating", error);
 		});
 };
