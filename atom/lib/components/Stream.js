@@ -85,6 +85,23 @@ export class SimpleStream extends Component {
 
 	componentDidUpdate(prevProps, prevState) {
 		this._postslist.scrollTop = 100000;
+		this.installEditorHandlers();
+	}
+
+	installEditorHandlers() {
+		let editor = atom.workspace.getActiveTextEditor();
+		console.log(editor);
+		if (editor && !editor.hasCodeStreamHandlers) {
+			console.log("INSTALLING RESIZE OBSERVER");
+			let scrollViewDiv = document.querySelector("atom-text-editor.is-focused .scroll-view");
+			// console.log("SV IS: ", scrollViewDiv);
+			if (scrollViewDiv) {
+				// console.log("INSTALLING RESIZE OBSERVER 2");
+				new ResizeObserver(this.handleResizeWindow).observe(scrollViewDiv);
+				// that.handleResizeWindow();
+				editor.hasCodeStreamHandlers = true;
+			}
+		}
 	}
 
 	componentDidMount() {
@@ -106,12 +123,6 @@ export class SimpleStream extends Component {
 			var text = e.clipboardData.getData("text/plain");
 			document.execCommand("insertHTML", false, text);
 		});
-
-		let scrollViewDiv = document.querySelector("atom-text-editor.is-focused .scroll-view");
-		if (scrollViewDiv) {
-			new ResizeObserver(this.handleResizeWindow).observe(scrollViewDiv);
-			// that.handleResizeWindow();
-		}
 	}
 
 	handleResizeCompose = () => {
@@ -123,9 +134,12 @@ export class SimpleStream extends Component {
 		let scrollViewDiv = document.querySelector("atom-text-editor.is-focused .scroll-view");
 		if (scrollViewDiv) {
 			let width = scrollViewDiv.offsetWidth - 20;
+			// FIXME -- if there is panel is on the right, then subtract 20 more
 			let newStyle = ".codestream-comment-popup { left: " + width + "px; }";
 			// console.log("Adding style string; " + newStyle);
 			this.addStyleString(newStyle);
+		} else {
+			console.log("Couldn't find scroll view");
 		}
 	};
 

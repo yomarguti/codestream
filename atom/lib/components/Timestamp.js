@@ -11,7 +11,7 @@ export default class Timestamp extends Component {
 	render() {
 		let timestampText = this.renderTimestamp(this.props.time);
 
-		return <span className="timestamp">{timestampText}</span>;
+		return <time>{timestampText}</time>;
 	}
 
 	sameDateAs(date1, date2) {

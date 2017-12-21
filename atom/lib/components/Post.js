@@ -102,7 +102,9 @@ export default class Post extends Component {
 					protocol="http://"
 					email={post.author.email}
 				/>
-				<author ref={ref => (this._authorDiv = ref)}>{post.author.username}</author>
+				<span className="author" ref={ref => (this._authorDiv = ref)}>
+					{post.author.username}
+				</span>
 				<Timestamp time={post.createdAt} />
 				<div className="body">
 					{parentPost && (
@@ -114,8 +116,18 @@ export default class Post extends Component {
 					{alert}
 					{bodyParts.map(part => {
 						if (part.charAt(0) == "@") {
-							if (part == "@pez") return <span className="at-mention me">{part}</span>;
-							else return <span className="at-mention">{part}</span>;
+							if (part == "@pez")
+								return (
+									<span key={part} className="at-mention me">
+										{part}
+									</span>
+								);
+							else
+								return (
+									<span key={part} className="at-mention">
+										{part}
+									</span>
+								);
 						} else {
 							return part;
 						}
