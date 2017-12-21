@@ -9,7 +9,7 @@ Enzyme.configure({ adapter: new Adapter() });
 describe("TeamCreationForm", () => {
 	describe("name input", () => {
 		it("shows errors when left empty", () => {
-			const view = mountWithIntl(<SimpleTeamCreationForm />);
+			const view = mountWithIntl(<SimpleTeamCreationForm errors={{}} />);
 			view.find("input").simulate("blur");
 			expect(view.find("input").exists()).toBe(true);
 		});
@@ -17,12 +17,12 @@ describe("TeamCreationForm", () => {
 
 	describe("submit button", () => {
 		it("is disabled while the form is invalid", () => {
-			const view = mountWithIntl(<SimpleTeamCreationForm />);
+			const view = mountWithIntl(<SimpleTeamCreationForm errors={{}} />);
 			expect(view.find("Button").prop("disabled")).toBe(true);
 		});
 
 		it("is enabled while the form is valid", () => {
-			const view = mountWithIntl(<SimpleTeamCreationForm />);
+			const view = mountWithIntl(<SimpleTeamCreationForm errors={{}} />);
 			view.find("input").simulate("change", { target: { value: "Foo Team" } });
 			expect(view.find("Button").prop("disabled")).toBe(false);
 		});
@@ -36,7 +36,9 @@ describe("TeamCreationForm", () => {
 			const team = { name };
 			const store = { getState: () => ({ repoAttributes: { url, firstCommitHash } }) };
 			const createTeam = jasmine.createSpy("createTeam stub").andReturn(Promise.resolve());
-			const view = mountWithIntl(<SimpleTeamCreationForm createTeam={createTeam} store={store} />);
+			const view = mountWithIntl(
+				<SimpleTeamCreationForm createTeam={createTeam} store={store} errors={{}} />
+			);
 
 			view.find("input").simulate("change", { target: { value: name } });
 			view.find("form").simulate("submit");
