@@ -785,7 +785,7 @@ export class SimpleStream extends Component {
 
 const getPostsForStream = (streamId = "", { byStream }) => {
 	if (streamId === "") return [];
-	return _.sortBy(byStream[streamId], "seqNumber");
+	return _.sortBy(byStream[streamId], "seqNum");
 };
 
 const getLocationsByPost = (locationsByCommit = {}, commitHash, markers) => {
