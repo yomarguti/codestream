@@ -1,7 +1,7 @@
 import PubNub from "pubnub";
 import _ from "underscore-plus";
 import { normalize } from "./actions/utils";
-import { saveStream, saveStreams } from "./actions/stream";
+import { saveStream, saveStreams, resolveFromPubnub } from "./actions/stream";
 import { savePost, savePosts } from "./actions/post";
 import { saveUser, saveUsers } from "./actions/user";
 import { saveTeam, saveTeams } from "./actions/team";
@@ -31,11 +31,12 @@ export default class PubNubReceiver {
 	setupListener() {
 		this.pubnub.addListener({
 			message: event => {
-				const { requestId, ...rest } = event.message;
-				const type = Object.keys(rest)[0];
-				const handler = this.getMessageHandler(type);
-				if (handler) handler(event.message[type]);
-				console.debug("pubnub event", event.message);
+				const { requestId, ...objects } = event.message;
+				console.debug(`pubnub event - ${requestId}`, event.message);
+				Object.keys(objects).forEach(key => {
+					const handler = this.getMessageHandler(key);
+					if (handler) handler(objects[key]);
+				});
 			}
 		});
 	}
@@ -53,7 +54,7 @@ export default class PubNubReceiver {
 
 	getMessageHandler(type) {
 		const handlers = {
-			stream: stream => this.store.dispatch(saveStream(normalize(stream))),
+			stream: data => this.store.dispatch(resolveFromPubnub(normalize(data))),
 			streams: streams => this.store.dispatch(saveStreams(normalize(streams))),
 			post: post => this.store.dispatch(savePost(normalize(post))),
 			posts: posts => this.store.dispatch(savePosts(normalize(posts))),

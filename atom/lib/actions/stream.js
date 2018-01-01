@@ -1,6 +1,6 @@
 import http from "../network-request";
 import db, { upsert } from "../local-cache";
-import { normalize } from "./utils";
+import { normalize, resolve } from "./utils";
 import {
 	savePendingPost,
 	resolvePendingPost,
@@ -103,4 +103,19 @@ export const createPost = (streamId, parentPostId, text, codeBlocks) => async (
 		// TODO: different types of errors?
 		dispatch(rejectPendingPost(streamId, pendingId, { ...post, error: true }));
 	}
+};
+
+export const resolveFromPubnub = changes => (dispatch, getState, { db }) => {
+	return db.streams
+		.get(changes.id)
+		.then(async stream => {
+			if (stream) {
+				await db.streams.update(changes.id, resolve(stream, changes));
+				return db.streams.get(changes.id);
+			}
+			// else {
+			// 	// TODO: fetch the stream from server?
+			// }
+		})
+		.then(stream => dispatch({ type: "STREAM_UPDATE_FROM_PUBNUB", payload: stream }));
 };
