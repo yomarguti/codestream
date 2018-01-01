@@ -25,6 +25,7 @@ describe("stream action creators", () => {
 			const id = "id1";
 			const changes = {
 				id,
+				name: "fizz",
 				$set: { foo: "bar" },
 				$unset: { oldProperty: true },
 				$addToSet: {
@@ -34,7 +35,7 @@ describe("stream action creators", () => {
 			waitsForPromise(async () => {
 				await db.streams.add({ id, oldProperty: "ipsum", things: [1] });
 				const action = await resolveFromPubnub(changes)(dispatch, null, { db });
-				expect(action.payload).toEqual({ id, foo: "bar", things: [1, 2] });
+				expect(action.payload).toEqual({ id, name: "fizz", foo: "bar", things: [1, 2] });
 			});
 		});
 	});

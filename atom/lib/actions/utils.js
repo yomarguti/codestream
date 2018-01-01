@@ -5,46 +5,80 @@ export const normalize = data => {
 	else return normalizeObject(data);
 };
 
+const NESTED_PROPERTY_REGEX = /^(.+)\.(.+)$/;
+
+const handle = (property, object, data, recurse, apply) => {
+	const nestedPropertyMatch = property.match(NESTED_PROPERTY_REGEX);
+	if (nestedPropertyMatch) {
+		let [, topField, subField] = nestedPropertyMatch;
+		if (typeof object[topField] === "object")
+			recurse(object[topField], { [subField]: data[property] });
+	} else apply();
+};
+
+const operations = {
+	$set(object, data) {
+		Object.keys(data).forEach(property => {
+			handle(property, object, data, operations.$set, () => (object[property] = data[property]));
+		});
+	},
+	$unset(object, data) {
+		Object.keys(data).forEach(property => {
+			handle(property, object, data, operations.$unset, () => (object[property] = undefined));
+		});
+	},
+	$push(object, data) {
+		Object.keys(data).forEach(property => {
+			handle(property, object, data, operations.$push, () => {
+				const value = object[property];
+				if (Array.isArray(value)) value.push(data[property]);
+			});
+		});
+	},
+	$pull(object, data) {
+		Object.keys(data).forEach(property => {
+			handle(property, object, data, operations.$pull, () => {
+				const value = object[property];
+				if (Array.isArray(value)) object[property] = value.filter(it => it !== data[property]);
+			});
+		});
+	},
+	$addToSet(object, data) {
+		Object.keys(data).forEach(property => {
+			handle(property, object, data, operations.$addToSet, () => {
+				const value = object[property];
+				if (value === undefined) object[property] = [data[property]];
+				else if (Array.isArray(value)) {
+					if (!value.find(it => it === data[property])) value.push(data[property]);
+				}
+			});
+		});
+	},
+	$inc(object, data) {
+		Object.keys(data).forEach(property => {
+			handle(property, object, data, operations.$inc, () => {
+				const value = object[property];
+				if (value === undefined) object[property] = data[property];
+				else if (Number.isInteger(value)) object[property] = value + data[property];
+			});
+		});
+	}
+};
+
 export function resolve({ id, ...object }, changes) {
 	let result = { ...object };
-	if (changes.$set) {
-		const values = changes.$set;
-		result = { ...result, ...values };
-	}
-	if (changes.$unset) {
-		Object.keys(changes.$unset).forEach(property => (result[property] = undefined));
-	}
-	if (changes.$push) {
-		const data = changes.$push;
-		Object.keys(data).forEach(property => {
-			const value = result[property];
-			if (Array.isArray(value)) value.push(data[property]);
-		});
-	}
-	if (changes.$pull) {
-		const data = changes.$pull;
-		Object.keys(data).forEach(property => {
-			const value = result[property];
-			if (Array.isArray(value)) result[property] = value.filter(it => it !== data[property]);
-		});
-	}
-	if (changes.$addToSet) {
-		const data = changes.$addToSet;
-		Object.keys(data).forEach(property => {
-			const value = result[property];
-			if (value === undefined) result[property] = data[property];
-			else if (Array.isArray(value)) {
-				if (!value.find(it => it === data[property])) value.push(data[property]);
-			}
-		});
-	}
-	if (changes.$inc) {
-		const data = changes.$inc;
-		Object.keys(data).forEach(property => {
-			const value = result[property];
-			if (value === undefined) result[property] = 0 + data[property];
-			else if (Number.isInteger(value)) result[property] = value + data[property];
-		});
-	}
+	Object.keys(changes).forEach(change => {
+		const operation = operations[change];
+		if (operation) {
+			operation(result, changes[change]);
+			delete changes[change];
+		} else {
+			const nestedPropertyMatch = change.match(NESTED_PROPERTY_REGEX);
+			if (nestedPropertyMatch) {
+				const [, topField, subField] = nestedPropertyMatch;
+				result[topField] = resolve(result[topField], { [subField]: changes[change] });
+			} else result[change] = changes[change];
+		}
+	});
 	return result;
 }

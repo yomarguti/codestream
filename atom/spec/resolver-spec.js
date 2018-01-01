@@ -1,25 +1,38 @@
 import { resolve } from "../lib/actions/utils";
 
 describe("resolver for modifications to objects", () => {
-	it("can $set", () => {
+	it("can handle simple property assignment", () => {
 		const changes = {
-			$set: { foo: "bar" }
+			name: "foo",
+			age: 24,
+			"child.age": 5
 		};
 
-		expect(resolve({}, changes)).toEqual({ foo: "bar" });
+		expect(resolve({ child: {} }, changes)).toEqual({ name: "foo", age: 24, child: { age: 5 } });
+	});
+
+	it("can $set", () => {
+		const changes = {
+			$set: {
+				foo: "bar",
+				"child.foo": "childBar"
+			}
+		};
+
+		expect(resolve({ child: {} }, changes)).toEqual({ foo: "bar", child: { foo: "childBar" } });
 	});
 
 	it("can $unset", () => {
 		const changes = {
 			$unset: {
 				foo: true,
-				bar: true
+				"child.bar": true
 			}
 		};
 
-		expect(resolve({ foo: "bar", bar: "foo" }, changes)).toEqual({
+		expect(resolve({ foo: "bar", child: { bar: "foo" } }, changes)).toEqual({
 			foo: undefined,
-			bar: undefined
+			child: { bar: undefined }
 		});
 	});
 
@@ -27,13 +40,17 @@ describe("resolver for modifications to objects", () => {
 		const changes = {
 			$push: {
 				things: 3,
-				singleItem: "foo"
+				singleItem: "foo",
+				"child.things": 1
 			}
 		};
 
-		expect(resolve({ things: [1, 2], singleItem: "bar" }, changes)).toEqual({
+		expect(resolve({ things: [1, 2], singleItem: "bar", child: { things: [] } }, changes)).toEqual({
 			things: [1, 2, 3],
-			singleItem: "bar"
+			singleItem: "bar",
+			child: {
+				things: [1]
+			}
 		});
 	});
 
@@ -41,12 +58,18 @@ describe("resolver for modifications to objects", () => {
 		const changes = {
 			$pull: {
 				things: 2,
-				singleItem: "foo"
+				singleItem: "foo",
+				"child.things": 1
 			}
 		};
 
-		expect(resolve({ things: [1, 2], singleItem: "bar" }, changes)).toEqual({
+		expect(
+			resolve({ things: [1, 2], child: { things: [1, 2] }, singleItem: "bar" }, changes)
+		).toEqual({
 			things: [1],
+			child: {
+				things: [2]
+			},
 			singleItem: "bar"
 		});
 	});
@@ -57,15 +80,24 @@ describe("resolver for modifications to objects", () => {
 				things: 3,
 				otherThings: 4,
 				singleItem: "foo",
-				newProperty: "a"
+				newProperty: "a",
+				"child.things": 1
 			}
 		};
 
-		expect(resolve({ things: [1, 2], otherThings: [4, 5], singleItem: "bar" }, changes)).toEqual({
+		expect(
+			resolve(
+				{ things: [1, 2], otherThings: [4, 5], singleItem: "bar", child: { things: [] } },
+				changes
+			)
+		).toEqual({
 			things: [1, 2, 3],
 			otherThings: [4, 5],
-			newProperty: "a",
-			singleItem: "bar"
+			newProperty: ["a"],
+			singleItem: "bar",
+			child: {
+				things: [1]
+			}
 		});
 	});
 
@@ -73,13 +105,17 @@ describe("resolver for modifications to objects", () => {
 		const changes = {
 			$inc: {
 				count: 3,
-				newCount: 2
+				newCount: 2,
+				"child.count": 1
 			}
 		};
 
-		expect(resolve({ count: 2 }, changes)).toEqual({
+		expect(resolve({ count: 2, child: { count: 0 } }, changes)).toEqual({
 			count: 5,
-			newCount: 2
+			newCount: 2,
+			child: {
+				count: 1
+			}
 		});
 	});
 });
