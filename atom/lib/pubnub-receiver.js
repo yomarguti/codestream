@@ -1,7 +1,8 @@
 import PubNub from "pubnub";
 import _ from "underscore-plus";
 import { normalize } from "./actions/utils";
-import { saveStream, saveStreams, resolveFromPubnub } from "./actions/stream";
+import { resolveFromPubnub } from "./actions/pubnub-event";
+import { saveStream, saveStreams } from "./actions/stream";
 import { savePost, savePosts } from "./actions/post";
 import { saveUser, saveUsers } from "./actions/user";
 import { saveTeam, saveTeams } from "./actions/team";
@@ -35,6 +36,7 @@ export default class PubNubReceiver {
 				console.debug(`pubnub event - ${requestId}`, event.message);
 				Object.keys(objects).forEach(key => {
 					const handler = this.getMessageHandler(key);
+					console.log("handler is", handler);
 					if (handler) handler(objects[key]);
 				});
 			}
@@ -53,22 +55,33 @@ export default class PubNubReceiver {
 	}
 
 	getMessageHandler(type) {
-		const handlers = {
-			stream: data => this.store.dispatch(resolveFromPubnub(normalize(data))),
-			streams: streams => this.store.dispatch(saveStreams(normalize(streams))),
-			post: post => this.store.dispatch(savePost(normalize(post))),
-			posts: posts => this.store.dispatch(savePosts(normalize(posts))),
-			user: user => this.store.dispatch(saveUser(normalize(user))),
-			users: users => this.store.dispatch(saveUsers(normalize(users))),
-			team: team => this.store.dispatch(saveTeam(normalize(team))),
-			teams: teams => this.store.dispatch(saveTeams(normalize(teams))),
-			repo: repo => this.store.dispatch(saveRepo(normalize(repo))),
-			repos: repos => this.store.dispatch(saveRepos(normalize(repos))),
-			marker: marker => this.store.dispatch(saveMarker(normalize(marker))),
-			markers: markers => this.store.dispatch(saveMarkers(normalize(markers))),
-			markerLocations: locations => this.store.dispatch(saveMarkerLocations(locations))
-		};
-
-		return handlers[type];
+		let tableName;
+		switch (type) {
+			case "stream":
+			case "streams":
+				tableName = "streams";
+				break;
+			case "post":
+			case "posts":
+				tableName = "posts";
+				break;
+		}
+		if (tableName)
+			return data => this.store.dispatch(resolveFromPubnub(tableName, normalize(data)));
+		// const handlers = {
+		// 	post: post => this.store.dispatch(savePost(normalize(post))),
+		// 	posts: posts => this.store.dispatch(savePosts(normalize(posts))),
+		// 	user: user => this.store.dispatch(saveUser(normalize(user))),
+		// 	users: users => this.store.dispatch(saveUsers(normalize(users))),
+		// 	team: team => this.store.dispatch(saveTeam(normalize(team))),
+		// 	teams: teams => this.store.dispatch(saveTeams(normalize(teams))),
+		// 	repo: repo => this.store.dispatch(saveRepo(normalize(repo))),
+		// 	repos: repos => this.store.dispatch(saveRepos(normalize(repos))),
+		// 	marker: marker => this.store.dispatch(saveMarker(normalize(marker))),
+		// 	markers: markers => this.store.dispatch(saveMarkers(normalize(markers))),
+		// 	markerLocations: locations => this.store.dispatch(saveMarkerLocations(locations))
+		// };
+		//
+		// return handlers[type];
 	}
 }
