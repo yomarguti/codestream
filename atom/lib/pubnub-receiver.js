@@ -65,23 +65,27 @@ export default class PubNubReceiver {
 			case "posts":
 				tableName = "posts";
 				break;
+			case "user":
+			case "users":
+				tableName = "users";
+				break;
+			case "team":
+			case "teams":
+				tableName = "teams";
+				break;
+			case "repo":
+			case "repos":
+				tableName = "repos";
+				break;
+			case "marker":
+			case "markers":
+				tableName = "markers";
+				break;
+			case "markerLocations":
+				tableName = "markerLocations";
+				break;
 		}
 		if (tableName)
 			return data => this.store.dispatch(resolveFromPubnub(tableName, normalize(data)));
-		// const handlers = {
-		// 	post: post => this.store.dispatch(savePost(normalize(post))),
-		// 	posts: posts => this.store.dispatch(savePosts(normalize(posts))),
-		// 	user: user => this.store.dispatch(saveUser(normalize(user))),
-		// 	users: users => this.store.dispatch(saveUsers(normalize(users))),
-		// 	team: team => this.store.dispatch(saveTeam(normalize(team))),
-		// 	teams: teams => this.store.dispatch(saveTeams(normalize(teams))),
-		// 	repo: repo => this.store.dispatch(saveRepo(normalize(repo))),
-		// 	repos: repos => this.store.dispatch(saveRepos(normalize(repos))),
-		// 	marker: marker => this.store.dispatch(saveMarker(normalize(marker))),
-		// 	markers: markers => this.store.dispatch(saveMarkers(normalize(markers))),
-		// 	markerLocations: locations => this.store.dispatch(saveMarkerLocations(locations))
-		// };
-		//
-		// return handlers[type];
 	}
 }

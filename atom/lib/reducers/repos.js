@@ -8,6 +8,7 @@ export default (state = initialState, { type, payload }) => {
 			return toMapBy("id", payload);
 		case "ADD_REPOS":
 			return { ...state, ...toMapBy("id", payload) };
+		case "REPOS-UPDATE_FROM_PUBNUB":
 		case "ADD_REPO":
 			return { ...state, [payload.id]: payload };
 		default:

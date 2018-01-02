@@ -19,6 +19,7 @@ export default (state = initialState, { type, payload }) => {
 			});
 			return nextState;
 		}
+		case "MARKERLOCATIONS-UPDATE_FROM_PUBNUB":
 		case "ADD_MARKER_LOCATIONS": {
 			const existingCommitsForStream = state.byStream[payload.streamId] || {};
 			const existingLocationsForCommit = existingCommitsForStream[payload.commitHash] || {};
