@@ -19,9 +19,7 @@ describe("stream action creators", () => {
 
 	describe("resolveFromPubnub", () => {
 		it("updates the local cache with the changes provided", () => {
-			const dispatch = jasmine
-				.createSpy("dispatch spy")
-				.andCallFake(() => dispatch.mostRecentCall.args[0]);
+			const dispatch = arg => arg;
 			const id = "id1";
 			const changes = {
 				id,
