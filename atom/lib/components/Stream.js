@@ -817,8 +817,7 @@ const getMarkersForStreamAndCommit = (locationsByCommit = {}, commitHash, marker
 	return Object.keys(locations).map(markerId => {
 		const marker = markers[markerId];
 		return {
-			id: marker.id,
-			postId: marker.postId,
+			...marker,
 			location: locations[markerId]
 		};
 	});
