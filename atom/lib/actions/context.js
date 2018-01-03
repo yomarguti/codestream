@@ -57,8 +57,8 @@ export const fetchRepoInfo = ({ url, firstCommitHash }) => async (dispatch, getS
 		if (http.isApiRequestError(error)) {
 			if (error.data.code === "REPO-1000") dispatch(noAccess());
 			if (error.data.code === "UNKNOWN") dispatch(noAccess());
-		} else if (error.message === "Failed to fetch") {
-			console.error("Couldn't connect to server");
+		} else if (http.isApiUnreachableError(error)) {
+			/* swallow this for now? */
 		} else console.error("encountered unexpected error while initializing CodeStream", error);
 	}
 };

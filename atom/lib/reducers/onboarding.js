@@ -52,6 +52,8 @@ export default (state = initialState, { type, payload }) => {
 			return { ...initialState, complete: true };
 		case "RESET_ONBOARDING":
 			return initialState;
+		case "ONBOARDING-SERVER_UNREACHABLE":
+			return { ...state, errors: { unknown: true } };
 		default:
 			return state;
 	}

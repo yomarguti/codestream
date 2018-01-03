@@ -143,7 +143,9 @@ export class SimpleSignupForm extends Component {
 		this.setState({ loading: true });
 		const { register } = this.props;
 		const { username, password, email, name } = this.state;
-		register({ username, password, email, ...parseName(name) });
+		register({ username, password, email, ...parseName(name) }).then(() =>
+			this.setState({ loading: false })
+		);
 	};
 
 	renderDebugInfo() {
@@ -152,10 +154,27 @@ export class SimpleSignupForm extends Component {
 			return <p style={{ position: "static", top: "0px" }}>{apiPath}</p>;
 	}
 
+	renderPageErrors() {
+		if (this.props.errors.unknown)
+			return (
+				<span id="page-error" className="error-message">
+					<FormattedMessage
+						id="signUp.error.unexpected"
+						defaultMessage="Something went wrong! Please try again, or "
+					/>
+					<a onClick={() => shell.openExternal("https://help.codestream.com")}>
+						<FormattedMessage id="signUp.contactSupport" defaultMessage="contact support" />
+					</a>
+					.
+				</span>
+			);
+	}
+
 	render() {
 		return (
 			<form id="signup-form" onSubmit={this.submitCredentials}>
 				{this.renderDebugInfo()}
+				{this.renderPageErrors()}
 				<div id="controls">
 					<div id="username-controls" className="control-group">
 						<input
@@ -242,5 +261,8 @@ export class SimpleSignupForm extends Component {
 	}
 }
 
-const mapStateToProps = ({ context }) => ({ usernamesInTeam: context.usernamesInTeam });
+const mapStateToProps = ({ context, onboarding }) => ({
+	usernamesInTeam: context.usernamesInTeam,
+	errors: onboarding.errors
+});
 export default connect(mapStateToProps, actions)(withConfigs(SimpleSignupForm));

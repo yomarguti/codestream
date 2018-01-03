@@ -164,7 +164,7 @@ describe("SignupForm view", () => {
 				});
 				const view = mountWithIntl(
 					<RepositoryProvider repositories={repositories}>
-						<SimpleSignupForm register={register} configs={{}} />
+						<SimpleSignupForm register={register} configs={{}} errors={{}} />
 					</RepositoryProvider>
 				);
 				view.find('input[name="username"]').simulate("change", { target: { value: username } });
@@ -184,7 +184,7 @@ describe("SignupForm view", () => {
 				});
 				const view = mountWithIntl(
 					<RepositoryProvider repositories={repositories}>
-						<SimpleSignupForm register={register} configs={{}} />
+						<SimpleSignupForm register={register} configs={{}} errors={{}} />
 					</RepositoryProvider>
 				);
 
@@ -212,7 +212,7 @@ describe("SignupForm view", () => {
 				});
 				const view = mountWithIntl(
 					<RepositoryProvider repositories={repositories}>
-						<SimpleSignupForm register={register} configs={{}} />
+						<SimpleSignupForm register={register} configs={{}} errors={{}} />
 					</RepositoryProvider>
 				);
 				view.find('input[name="username"]').simulate("change", { target: { value: username } });
@@ -228,6 +228,20 @@ describe("SignupForm view", () => {
 					lastName: ""
 				});
 			});
+		});
+	});
+
+	describe("unexpected errors", () => {
+		it("displays a message", () => {
+			const view = mountWithIntl(
+				<RepositoryProvider repositories={repositories}>
+					<SimpleSignupForm configs={{}} errors={{ unknown: true }} />
+				</RepositoryProvider>
+			);
+
+			expect(view.find("#page-error").text()).toBe(
+				"Something went wrong! Please try again, or contact support."
+			);
 		});
 	});
 });

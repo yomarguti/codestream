@@ -5,7 +5,12 @@ export function ApiRequestError(message, data) {
 	this.data = data;
 }
 
+function ApiUnreachableError(message) {
+	Error.prototype.constructor.apply(this, arguments);
+}
+
 export const isApiRequestError = error => error instanceof ApiRequestError;
+export const isApiUnreachableError = error => error instanceof ApiUnreachableError;
 
 const getPath = route => `${atom.config.get("codestream.url")}${route}`;
 const getHeaders = () =>
@@ -14,16 +19,29 @@ const getHeaders = () =>
 		"Content-Type": "application/json"
 	});
 
+const tryFetch = async (url, config) => {
+	let throwable;
+	try {
+		const response = await fetch(url, config);
+		const json = await response.json();
+		if (response.ok) return json;
+		else throw json;
+	} catch (data) {
+		if (data.message === "Failed to fetch" && navigator.onLine)
+			throwable = new ApiUnreachableError(`Could not connect to ${url}`);
+		else throwable = new ApiRequestError(data.message, data);
+	} finally {
+		throw throwable;
+	}
+};
+
 export async function get(route, accessToken) {
 	const headers = getHeaders();
 	if (accessToken) {
 		headers.set("Authorization", `Bearer ${accessToken}`);
 	}
 	const config = { headers };
-	const response = await fetch(getPath(route), config);
-	const json = await response.json();
-	if (response.ok) return json;
-	else throw new ApiRequestError(json.message, json);
+	return tryFetch(getPath(route), config);
 }
 
 export async function post(route, body, accessToken) {
@@ -36,10 +54,7 @@ export async function post(route, body, accessToken) {
 		method: "POST",
 		body: JSON.stringify(body)
 	};
-	const response = await fetch(getPath(route), config);
-	const json = await response.json();
-	if (response.ok) return json;
-	else throw new ApiRequestError(json.message, json);
+	return tryFetch(getPath(route), config);
 }
 
 export async function put(route, body) {

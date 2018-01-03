@@ -33,15 +33,19 @@ const fetchTeamMembers = teams => (dispatch, getState) => {
 export const goToSignup = () => ({ type: "GO_TO_SIGNUP" });
 export const goToLogin = () => ({ type: "GO_TO_LOGIN" });
 
-export const register = attributes => dispatch => {
-	post("/no-auth/register", attributes)
+export const register = attributes => (dispatch, getState, { http }) => {
+	return http
+		.post("/no-auth/register", attributes)
 		.then(async ({ user }) => {
 			user = normalize(user);
 			await dispatch(saveUser(user));
 			dispatch({ type: "SIGNUP_SUCCESS", payload: { ...attributes, userId: user.id } });
 		})
-		.catch(({ data }) => {
-			if (data.code === "RAPI-1004") dispatch(userAlreadySignedUp(attributes.email));
+		.catch(error => {
+			if (http.isApiRequestError(error)) {
+				if (error.data.code === "RAPI-1004") dispatch(userAlreadySignedUp(attributes.email));
+			}
+			if (http.isApiUnreachableError(error)) dispatch({ type: "ONBOARDING-SERVER_UNREACHABLE" });
 		});
 };
 
