@@ -1,4 +1,5 @@
 import { CompositeDisposable } from "atom";
+import Dexie from "dexie";
 import CodestreamView, { CODESTREAM_VIEW_URI } from "./codestream-view";
 import { bootstrapStore } from "./local-cache";
 import { get, ApiRequestError } from "./network-request";
@@ -130,6 +131,14 @@ module.exports = {
 		if (atom.inDevMode()) {
 			this.subscriptions.add(
 				atom.commands.add("atom-workspace", {
+					"codestream:reset": async () => {
+						atom.commands.dispatch(
+							document.querySelector("atom-workspace"),
+							"codestream:wipe-cache"
+						);
+						atom.commands.dispatch(document.querySelector("atom-workspace"), "codestream:logout");
+						atom.reload();
+					},
 					"codestream:wipe-cache": () => indexedDB.deleteDatabase("CodeStream"),
 					"codestream:point-to-dev": () => {
 						atom.config.set("codestream.url", "https://tca3.codestream.us:9443");
