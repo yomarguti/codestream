@@ -6,13 +6,14 @@ import { get, ApiRequestError } from "./network-request";
 import git from "./git";
 import createStore from "./createStore";
 import {
+	commitHashChanged,
+	fetchRepoInfo,
+	logout,
 	noAccess,
 	setRepoAttributes,
 	setContext,
 	setCurrentFile,
-	setCurrentCommit,
-	commitHashChanged,
-	logout
+	setCurrentCommit
 } from "./actions/context";
 
 let store;
@@ -57,10 +58,10 @@ module.exports = {
 
 					this.subscriptions.add(
 						atom.workspace.observeActiveTextEditor(editor => {
-							// TODO: only dispatch the action if there is a current file
+							// Only dispatches the action if there is a current file
 							// that way if a user looks at settings or a non-repo file, the stream for the previously active file is still visible
 							const path = editor ? repo.relativize(editor.getPath()) : "";
-							store.dispatch(setCurrentFile(path));
+							path !== "" && store.dispatch(setCurrentFile(path));
 						}),
 
 						// Subscribe to git status changes in order to be aware of current commit hash.
@@ -76,31 +77,9 @@ module.exports = {
 					let firstCommitHash = await git(["rev-list", "--max-parents=0", "HEAD"], {
 						cwd: repo.getWorkingDirectory()
 					});
-					firstCommitHash = firstCommitHash.trim();
-					store.dispatch(setRepoAttributes({ url: repoUrl, firstCommitHash }));
-					try {
-						const data = await get(
-							`/no-auth/find-repo?url=${encodeURIComponent(repoUrl)}&firstCommitHash=${
-								firstCommitHash
-							}`
-						);
-						store.dispatch(setContext({ noAccess: false }));
-						if (Object.keys(data).length > 0) {
-							store.dispatch(
-								setContext({
-									usernamesInTeam: data.usernames,
-									currentRepoId: data.repo._id,
-									currentTeamId: data.repo.teamId
-								})
-							);
-						}
-					} catch (error) {
-						if (error instanceof ApiRequestError) {
-							if (error.data.code === "REPO-1000") store.dispatch(noAccess());
-							if (error.data.code === "UNKNOWN") store.dispatch(noAccess());
-						} else
-							console.error("encountered unexpected error while initializing CodeStream", error);
-					}
+					const repoAttributes = { url: repoUrl, firstCommitHash: firstCommitHash.trim() };
+					store.dispatch(setRepoAttributes(repoAttributes));
+					store.dispatch(fetchRepoInfo(repoAttributes));
 				}
 			})
 		);

@@ -5,6 +5,8 @@ export function ApiRequestError(message, data) {
 	this.data = data;
 }
 
+export const isApiRequestError = error => error instanceof ApiRequestError;
+
 const getPath = route => `${atom.config.get("codestream.url")}${route}`;
 const getHeaders = () =>
 	new Headers({

@@ -35,3 +35,30 @@ export const logout = () => dispatch => {
 	});
 };
 export const noAccess = () => ({ type: "NO_ACCESS" });
+
+export const fetchRepoInfo = ({ url, firstCommitHash }) => async (dispatch, getState, { http }) => {
+	try {
+		const { repo, usernames } = await http.get(
+			`/no-auth/find-repo?url=${encodeURIComponent(url)}&firstCommitHash=${firstCommitHash}`
+		);
+
+		dispatch(setContext({ noAccess: false })); // reset access property in store
+
+		if (repo) {
+			dispatch(
+				setContext({
+					usernamesInTeam: usernames,
+					currentRepoId: repo._id,
+					currentTeamId: repo.teamId
+				})
+			);
+		}
+	} catch (error) {
+		if (http.isApiRequestError(error)) {
+			if (error.data.code === "REPO-1000") dispatch(noAccess());
+			if (error.data.code === "UNKNOWN") dispatch(noAccess());
+		} else if (error.message === "Failed to fetch") {
+			console.error("Couldn't connect to server");
+		} else console.error("encountered unexpected error while initializing CodeStream", error);
+	}
+};
