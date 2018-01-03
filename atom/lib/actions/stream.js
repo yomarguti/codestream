@@ -1,6 +1,6 @@
 import http from "../network-request";
-import db, { upsert } from "../local-cache";
-import { normalize, resolve } from "./utils";
+import { upsert } from "../local-cache";
+import { normalize } from "./utils";
 import {
 	savePendingPost,
 	resolvePendingPost,
@@ -17,7 +17,7 @@ const tempId = (() => {
 	return () => String(count++);
 })();
 
-export const saveStream = attributes => dispatch => {
+export const saveStream = attributes => (dispatch, getState, { db }) => {
 	return upsert(db, "streams", attributes).then(stream => {
 		dispatch({
 			type: "ADD_STREAM",
@@ -26,7 +26,7 @@ export const saveStream = attributes => dispatch => {
 	});
 };
 
-export const saveStreams = attributes => dispatch => {
+export const saveStreams = attributes => (dispatch, getState, { db }) => {
 	return upsert(db, "streams", attributes).then(streams =>
 		dispatch({
 			type: "ADD_STREAMS",

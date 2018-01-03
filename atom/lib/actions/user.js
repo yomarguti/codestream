@@ -1,6 +1,6 @@
-import db, { upsert } from "../local-cache";
+import { upsert } from "../local-cache";
 
-export const saveUser = attributes => dispatch => {
+export const saveUser = attributes => (dispatch, getState, { db }) => {
 	return upsert(db, "users", attributes).then(user =>
 		dispatch({
 			type: "ADD_USER",
@@ -9,7 +9,7 @@ export const saveUser = attributes => dispatch => {
 	);
 };
 
-export const saveUsers = attributes => dispatch => {
+export const saveUsers = attributes => (dispatch, getState, { db }) => {
 	return upsert(db, "users", attributes).then(users =>
 		dispatch({
 			type: "ADD_USERS",

@@ -1,6 +1,6 @@
-import db, { upsert } from "../local-cache";
+import { upsert } from "../local-cache";
 
-export const saveMarkerLocations = attributes => dispatch => {
+export const saveMarkerLocations = attributes => (dispatch, getState, { db }) => {
 	return upsert(db, "markerLocations", attributes)
 		.then(locations => dispatch({ type: "ADD_MARKER_LOCATIONS", payload: locations }))
 		.catch("DataError", () => {

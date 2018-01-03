@@ -1,8 +1,8 @@
-import db, { upsert } from "../local-cache";
+import { upsert } from "../local-cache";
 import { saveMarkers } from "./marker";
 import { saveMarkerLocations } from "./marker-location";
 
-export const savePost = attributes => dispatch => {
+export const savePost = attributes => (dispatch, getState, { db }) => {
 	return upsert(db, "posts", attributes).then(post => {
 		dispatch({
 			type: "ADD_POST",
@@ -11,7 +11,7 @@ export const savePost = attributes => dispatch => {
 	});
 };
 
-export const savePosts = attributes => dispatch => {
+export const savePosts = attributes => (dispatch, getState, { db }) => {
 	return upsert(db, "posts", attributes).then(posts => {
 		dispatch({
 			type: "ADD_POSTS",
@@ -20,7 +20,7 @@ export const savePosts = attributes => dispatch => {
 	});
 };
 
-export const savePostsForStream = (streamId, attributes) => dispatch => {
+export const savePostsForStream = (streamId, attributes) => (dispatch, getState, { db }) => {
 	return upsert(db, "posts", attributes).then(posts => {
 		dispatch({
 			type: "ADD_POSTS_FOR_STREAM",
@@ -29,7 +29,7 @@ export const savePostsForStream = (streamId, attributes) => dispatch => {
 	});
 };
 
-export const savePendingPost = attributes => dispatch => {
+export const savePendingPost = attributes => (dispatch, getState, { db }) => {
 	return upsert(db, "posts", attributes).then(post => {
 		dispatch({
 			type: "ADD_PENDING_POST",
@@ -38,7 +38,11 @@ export const savePendingPost = attributes => dispatch => {
 	});
 };
 
-export const resolvePendingPost = (id, { post, markers, markerLocations }) => dispatch => {
+export const resolvePendingPost = (id, { post, markers, markerLocations }) => (
+	dispatch,
+	getState,
+	{ db }
+) => {
 	return db
 		.transaction("rw", db.posts, async () => {
 			await db.posts.delete(id);
@@ -59,6 +63,6 @@ export const resolvePendingPost = (id, { post, markers, markerLocations }) => di
 		});
 };
 
-export const rejectPendingPost = (streamId, pendingId, post) => dispatch => {
+export const rejectPendingPost = (streamId, pendingId, post) => (dispatch, getState, { db }) => {
 	// TODO
 };

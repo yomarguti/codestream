@@ -36,7 +36,6 @@ export default class PubNubReceiver {
 				console.debug(`pubnub event - ${requestId}`, event.message);
 				Object.keys(objects).forEach(key => {
 					const handler = this.getMessageHandler(key);
-					console.log("handler is", handler);
 					if (handler) handler(objects[key]);
 				});
 			}
