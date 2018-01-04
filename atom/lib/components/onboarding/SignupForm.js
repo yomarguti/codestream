@@ -5,6 +5,7 @@ import { connect } from "react-redux";
 import PropTypes from "prop-types";
 import getSystemUser from "username";
 import Button from "./Button";
+import UnexpectedErrorMessage from "./UnexpectedErrorMessage";
 import withConfigs from "../withConfigs";
 import * as actions from "../../actions/onboarding";
 
@@ -156,18 +157,7 @@ export class SimpleSignupForm extends Component {
 
 	renderPageErrors() {
 		if (this.props.errors.unknown)
-			return (
-				<span id="page-error" className="error-message">
-					<FormattedMessage
-						id="signUp.error.unexpected"
-						defaultMessage="Something went wrong! Please try again, or "
-					/>
-					<a onClick={() => shell.openExternal("https://help.codestream.com")}>
-						<FormattedMessage id="signUp.contactSupport" defaultMessage="contact support" />
-					</a>
-					.
-				</span>
-			);
+			return <UnexpectedErrorMessage classes="error-message page-error" />;
 	}
 
 	render() {

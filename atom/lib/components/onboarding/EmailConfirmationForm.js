@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { FormattedMessage } from "react-intl";
 import { connect } from "react-redux";
 import Button from "./Button";
+import UnexpectedErrorMessage from "./UnexpectedErrorMessage";
 import * as actions from "../../actions/onboarding";
 
 export class SimpleEmailConfirmationForm extends Component {
@@ -56,19 +57,8 @@ export class SimpleEmailConfirmationForm extends Component {
 					<FormattedMessage id="confirmation.expired" />
 				</span>
 			);
-		if (this.props.errors.unknown)
-			return (
-				<span className="error-message form-error">
-					<FormattedMessage
-						id="signUp.error.unexpected"
-						defaultMessage="Something went wrong! Please try again, or "
-					/>
-					<a onClick={() => shell.openExternal("https://help.codestream.com")}>
-						<FormattedMessage id="signUp.contactSupport" defaultMessage="contact support" />
-					</a>
-					.
-				</span>
-			);
+		else if (this.props.errors.unknown)
+			return <UnexpectedErrorMessage classes="error-message form-error" />;
 	};
 
 	sendNewCode = () => {

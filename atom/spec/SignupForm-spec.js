@@ -239,7 +239,7 @@ describe("SignupForm view", () => {
 				</RepositoryProvider>
 			);
 
-			expect(view.find("#page-error").text()).toBe(
+			expect(view.find(".page-error").text()).toBe(
 				"Something went wrong! Please try again, or contact support."
 			);
 		});
