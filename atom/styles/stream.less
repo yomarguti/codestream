@@ -62,7 +62,8 @@
 				width: 100%;
 				padding: 10px;
 				border-radius: 4px;
-				background: #fff;
+				// background: #fff;
+				background: @base-background-color;
 				border: 1px solid @base-border-color;
 				resize: none;
 				// height: 20px;
@@ -125,7 +126,8 @@
 			white-space: pre;
 			font-family: Menlo, Consolas, "DejaVu Sans Mono", monospace;
 			font-size: 11px;
-			background: #f6f6f6;
+			// background: #f6f6f6;
+			background: @base-background-color;
 			border-radius: 4px;
 			padding: 10px;
 			border: 1px solid @base-border-color;
@@ -151,10 +153,12 @@
 
 			.body {
 				width: 100%;
-				box-shadow: 0 5px 10px #ccc;
+				// box-shadow: 0 5px 10px #ccc;
+				box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
 				border-radius: 5px;
 				border: 1px solid @base-border-color;
-				background: #eee;
+				// background: #eee;
+				background: @base-background-color;
 			}
 			.instructions {
 				font-size: 11px;
@@ -162,6 +166,7 @@
 				border-radius: 5px 5px 0 0;
 				opacity: 0.5;
 				background: #eee;
+				background: @base-background-color;
 			}
 			table {
 				// temporarily not displayed for aesthetic reasons
@@ -181,7 +186,8 @@
 			ul {
 				// border-bottom: 1px solid @base-border-color;
 				border-top: 1px solid @base-border-color;
-				background: #fff;
+				// background: #fff;
+				background: @base-background-color;
 				padding: 5px 0;
 				border-radius: 0 0 5px 5px;
 			}
@@ -421,10 +427,11 @@
 			width: 100%;
 		}
 		.logo {
-			// color: lighten(@text-color-subtle, 50%);
-			color: #fff;
+			color: lighten(@text-color-subtle, 50%);
+			// color: #fff;
 			transform: perspective(600px) rotateX(60deg) rotateZ(30deg);
-			text-shadow: 5px 10px 30px #999;
+			text-shadow: 5px 10px 30px rgba(127, 127, 127, .5);
+			text-shadow: 5px 10px 30px rgba(0, 0, 0, 0.2);
 			font-size: 135px;
 			display: block;
 			opacity: 0.75;
