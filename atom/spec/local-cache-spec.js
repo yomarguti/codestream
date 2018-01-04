@@ -95,8 +95,8 @@ describe("local-cache", () => {
 		it("can $addToSet", () => {
 			const changes = {
 				$addToSet: {
-					things: 3,
-					otherThings: 4,
+					things: [3],
+					otherThings: [4],
 					singleItem: "foo",
 					newProperty: "a",
 					"child.things": 1

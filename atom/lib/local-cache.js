@@ -93,7 +93,8 @@ const singleUpsert = (table, primaryKeyPath, changes) => {
 	const primaryKey = changes[primaryKeyPath];
 	return table.get(primaryKey).then(async entity => {
 		if (entity) {
-			await table.update(primaryKey, resolve(entity, changes));
+			const updated = await table.update(primaryKey, resolve(entity, changes));
+			// TODO: only return an object if there is an update
 		} else {
 			await table.add(changes);
 		}
@@ -142,10 +143,14 @@ const operations = {
 	$addToSet(object, data) {
 		Object.keys(data).forEach(property => {
 			handle(property, object, data, operations.$addToSet, () => {
-				const value = object[property];
-				if (value === undefined) object[property] = [data[property]];
-				else if (Array.isArray(value)) {
-					if (!value.find(it => it === data[property])) value.push(data[property]);
+				let newValue = data[property];
+				if (!Array.isArray(newValue)) newValue = [newValue];
+				const currentValue = object[property];
+				if (currentValue === undefined) object[property] = newValue;
+				else if (Array.isArray(currentValue)) {
+					newValue.forEach(value => {
+						if (!currentValue.find(it => it === value)) currentValue.push(value);
+					});
 				}
 			});
 		});
