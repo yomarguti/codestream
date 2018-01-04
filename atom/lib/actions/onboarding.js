@@ -100,9 +100,10 @@ export const confirmEmail = attributes => (dispatch, getState, { http }) => {
 		});
 };
 
-export const sendNewCode = attributes => dispatch => {
-	return post("/no-auth/register", attributes).catch(({ data }) => {
-		if (data.code === "RAPI-1004") atom.notifications.addInfo("Email sent!"); // TODO: return promise so caller can show i18n message
+export const sendNewCode = attributes => (dispatch, getState, { http }) => {
+	return http.post("/no-auth/register", attributes).catch(error => {
+		if (http.isApiRequestError(error) && error.data.code === "RAPI-1004") return true;
+		if (http.isApiUnreachableError(error)) dispatch(serverUnreachable());
 	});
 };
 

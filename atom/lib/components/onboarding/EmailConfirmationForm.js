@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { FormattedMessage } from "react-intl";
+import { FormattedMessage, injectIntl } from "react-intl";
 import { connect } from "react-redux";
 import Button from "./Button";
 import UnexpectedErrorMessage from "./UnexpectedErrorMessage";
@@ -62,8 +62,13 @@ export class SimpleEmailConfirmationForm extends Component {
 	};
 
 	sendNewCode = () => {
-		const { username, email, password, sendNewCode } = this.props;
-		sendNewCode({ username, email, password });
+		const { intl, username, email, password, sendNewCode } = this.props;
+		sendNewCode({ username, email, password }).then(success => {
+			if (success)
+				atom.notifications.addInfo(
+					intl.formatMessage({ id: "confirmation.emailSent", defaultMessage: "Email sent!" })
+				);
+		});
 	};
 
 	render() {
@@ -144,4 +149,4 @@ const mapStateToProps = ({ onboarding }) => {
 		loading: onboarding.requestInProcess
 	};
 };
-export default connect(mapStateToProps, actions)(SimpleEmailConfirmationForm);
+export default connect(mapStateToProps, actions)(injectIntl(SimpleEmailConfirmationForm));
