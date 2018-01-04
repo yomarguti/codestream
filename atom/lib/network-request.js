@@ -40,8 +40,7 @@ export async function get(route, accessToken) {
 	if (accessToken) {
 		headers.set("Authorization", `Bearer ${accessToken}`);
 	}
-	const config = { headers };
-	return tryFetch(getPath(route), config);
+	return tryFetch(getPath(route), { headers });
 }
 
 export async function post(route, body, accessToken) {
@@ -49,24 +48,19 @@ export async function post(route, body, accessToken) {
 	if (accessToken) {
 		headers.set("Authorization", `Bearer ${accessToken}`);
 	}
-	const config = {
+	return tryFetch(getPath(route), {
 		headers,
 		method: "POST",
 		body: JSON.stringify(body)
-	};
-	return tryFetch(getPath(route), config);
+	});
 }
 
 export async function put(route, body) {
-	const config = {
+	return tryFetch(getPath(route), {
 		headers: getHeaders(),
 		method: "PUT",
 		body: JSON.stringify(body)
-	};
-	const response = await fetch(getPath(route), config);
-	const json = await response.json();
-	if (response.ok) return json;
-	else throw new ApiRequestError(json.message, json);
+	});
 }
 
 export default { get, post, put, ApiRequestError };
