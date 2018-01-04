@@ -5,22 +5,18 @@ import * as actions from "../../lib/actions/onboarding";
 describe("onboarding action creators", () => {
 	describe("confirmEmail", () => {
 		describe("when the confirmed user is not a member of the team for the current repo", () => {
-			afterEach(() => {
-				http.post.restore();
-			});
-
 			it("adds them to team", () => {
 				const email = "foo@bar.com";
-				sinon
-					.stub(http, "post")
-					.returns(Promise.resolve({ accessToken: "", user: { email }, teams: [], repos: [] }));
-				// sinon.stub(actions, "addMembers").returns(Promise.resolve());
+				spyOn(http, "post").andReturn(
+					Promise.resolve({ accessToken: "", user: { email }, teams: [], repos: [] })
+				);
 				const dispatch = jasmine.createSpy("spy for dispatch");
+				const getState = () => ({
+					context: { currentTeamId: "1" }
+				});
 
 				waitsForPromise(async () => {
-					await actions.confirmEmail({ email })(dispatch, () => ({
-						context: { currentTeamId: "1" }
-					}));
+					await actions.confirmEmail({ email })(dispatch, getState, { http });
 					// expect(actions.addMembers.calledWith([email])).toBe(true);
 					expect(dispatch).toHaveBeenCalledWith({ type: "EXISTING_USER_CONFIRMED" });
 				});

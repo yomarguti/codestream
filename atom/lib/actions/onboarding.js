@@ -8,6 +8,7 @@ import { saveTeam, saveTeams, joinTeam } from "./team";
 const requestStarted = () => ({ type: "REQUEST_STARTED" });
 const requestFinished = () => ({ type: "REQUEST_FINISHED" });
 const completeOnboarding = () => ({ type: "ONBOARDING_COMPLETE" });
+const serverUnreachable = () => ({ type: "ONBOARDING-SERVER_UNREACHABLE" });
 
 const userAlreadySignedUp = email => ({
 	type: "SIGNUP_EMAIL_EXISTS",
@@ -45,13 +46,14 @@ export const register = attributes => (dispatch, getState, { http }) => {
 			if (http.isApiRequestError(error)) {
 				if (error.data.code === "RAPI-1004") dispatch(userAlreadySignedUp(attributes.email));
 			}
-			if (http.isApiUnreachableError(error)) dispatch({ type: "ONBOARDING-SERVER_UNREACHABLE" });
+			if (http.isApiUnreachableError(error)) dispatch(serverUnreachable());
 		});
 };
 
-export const confirmEmail = attributes => (dispatch, getState) => {
+export const confirmEmail = attributes => (dispatch, getState, { http }) => {
 	dispatch(requestStarted());
-	return post("/no-auth/confirm", attributes)
+	return http
+		.post("/no-auth/confirm", attributes)
 		.then(async ({ accessToken, user, teams, repos }) => {
 			dispatch(requestFinished());
 			user = normalize(user);
@@ -82,7 +84,7 @@ export const confirmEmail = attributes => (dispatch, getState) => {
 		})
 		.catch(error => {
 			dispatch(requestFinished());
-			if (error instanceof ApiRequestError) {
+			if (http.isApiRequestError(error)) {
 				const { data } = error;
 				if (data.code === "USRC-1002") dispatch({ type: "INVALID_CONFIRMATION_CODE" });
 				if (data.code === "USRC-1003") dispatch({ type: "EXPIRED_CONFIRMATION_CODE" });
@@ -93,12 +95,13 @@ export const confirmEmail = attributes => (dispatch, getState) => {
 						payload: { alreadyConfirmed: true, email: attributes.email }
 					});
 				if (data.code === "REPO-1000") dispatch(noAccess());
-			} else console.error("An unexpected error occured", error);
+			}
+			if (http.isApiUnreachableError(error)) dispatch(serverUnreachable());
 		});
 };
 
 export const sendNewCode = attributes => dispatch => {
-	post("/no-auth/register", attributes).catch(({ data }) => {
+	return post("/no-auth/register", attributes).catch(({ data }) => {
 		if (data.code === "RAPI-1004") atom.notifications.addInfo("Email sent!"); // TODO: return promise so caller can show i18n message
 	});
 };

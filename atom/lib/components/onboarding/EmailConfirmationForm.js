@@ -56,6 +56,19 @@ export class SimpleEmailConfirmationForm extends Component {
 					<FormattedMessage id="confirmation.expired" />
 				</span>
 			);
+		if (this.props.errors.unknown)
+			return (
+				<span className="error-message form-error">
+					<FormattedMessage
+						id="signUp.error.unexpected"
+						defaultMessage="Something went wrong! Please try again, or "
+					/>
+					<a onClick={() => shell.openExternal("https://help.codestream.com")}>
+						<FormattedMessage id="signUp.contactSupport" defaultMessage="contact support" />
+					</a>
+					.
+				</span>
+			);
 	};
 
 	sendNewCode = () => {

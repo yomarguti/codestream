@@ -97,6 +97,15 @@ describe("EmailConfirmationForm view", () => {
 		});
 	});
 
+	describe("when there is an unexpected error from server", () => {
+		it("shows an error message", () => {
+			const view = mountWithIntl(<SimpleEmailConfirmationForm errors={{ unknown: true }} />);
+			expect(view.find(".error-message").text()).toBe(
+				"Something went wrong! Please try again, or contact support."
+			);
+		});
+	});
+
 	describe("the link to send a new code", () => {
 		it("calls the sendNewCode function with the right values", () => {
 			const sendNewCode = jasmine.createSpy("sendNewCode stub").andReturn(Promise.resolve());
