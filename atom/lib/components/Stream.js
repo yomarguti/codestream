@@ -90,9 +90,9 @@ export class SimpleStream extends Component {
 
 	installEditorHandlers() {
 		let editor = atom.workspace.getActiveTextEditor();
-		console.log(editor);
+		// console.log(editor);
 		if (editor && !editor.hasCodeStreamHandlers) {
-			console.log("INSTALLING RESIZE OBSERVER");
+			// console.log("INSTALLING RESIZE OBSERVER");
 			let scrollViewDiv = document.querySelector("atom-text-editor.is-focused .scroll-view");
 			// console.log("SV IS: ", scrollViewDiv);
 			if (scrollViewDiv) {
@@ -492,6 +492,8 @@ export class SimpleStream extends Component {
 		// FIXME remove any at-mentions that we have added manually
 		this.setState({
 			quoteText: "",
+			preContext: "",
+			postContext: "",
 			quoteRange: null
 		});
 	};
@@ -533,6 +535,10 @@ export class SimpleStream extends Component {
 
 		var range = editor.getSelectedBufferRange();
 		let code = editor.getSelectedText();
+		// preContext is the 10 lines of code immediately preceeding the selection
+		let preContext = editor.getTextInBufferRange([[range.start.row-10, 0], [range.start.row, range.start.column]]);
+		// postContext is the 10 lines of code immediately following the selection
+		let postContext = editor.getTextInBufferRange([[range.end.row, range.end.column], [range.end.row+10, 0]]);
 
 		// if there is no selected text, i.e. it is a 0-width range,
 		// then grab the current line of code that the cursor is on
@@ -573,7 +579,9 @@ export class SimpleStream extends Component {
 
 		this.setState({
 			quoteRange: range,
-			quoteText: code
+			quoteText: code,
+			preContext: preContext,
+			postContext: postContext
 		});
 	};
 
@@ -780,6 +788,8 @@ export class SimpleStream extends Component {
 						quoteRange.end.row,
 						quoteRange.end.column
 					],
+					preContext: this.state.preContext,
+					postContext: this.state.postContext,
 					// for now, we assume this codeblock came from this buffer
 					streamId: this.props.id
 				}
@@ -792,7 +802,9 @@ export class SimpleStream extends Component {
 		this.setState({
 			newPostText: "",
 			quoteRange: null,
-			quoteText: ""
+			quoteText: "",
+			preContext: "",
+			postContext: ""
 		});
 	}
 }
