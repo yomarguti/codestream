@@ -136,10 +136,11 @@ export class SimpleStream extends Component {
 		// if the div has display: none then there will be no width
 		if (!scrollViewDiv || !scrollViewDiv.offsetWidth) return;
 
+		let rect = scrollViewDiv.getBoundingClientRect();
 		// FIXME -- if there is panel is on the right, then subtract 20 more
-		let width = scrollViewDiv.offsetWidth;
+		let width = scrollViewDiv.offsetWidth + rect.left;
 		let newStyle = ".codestream-comment-popup { left: " + width + "px; }";
-		// console.log("Adding style string; " + newStyle);
+		console.log("Adding style string; " + newStyle);
 		this.addStyleString(newStyle);
 	};
 
