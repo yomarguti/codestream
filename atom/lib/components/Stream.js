@@ -93,11 +93,13 @@ export class SimpleStream extends Component {
 		// console.log(editor);
 		if (editor && !editor.hasCodeStreamHandlers) {
 			// console.log("INSTALLING RESIZE OBSERVER");
-			let scrollViewDiv = document.querySelector("atom-text-editor.is-focused .scroll-view");
-			// console.log("SV IS: ", scrollViewDiv);
+			let scrollViewDiv = editor.component.element.querySelector(".scroll-view");
 			if (scrollViewDiv) {
 				// console.log("INSTALLING RESIZE OBSERVER 2");
-				new ResizeObserver(this.handleResizeWindow).observe(scrollViewDiv);
+				let that = this;
+				new ResizeObserver(function() {
+					that.handleResizeWindow(scrollViewDiv);
+				}).observe(scrollViewDiv);
 				// that.handleResizeWindow();
 				editor.hasCodeStreamHandlers = true;
 			}
@@ -130,17 +132,15 @@ export class SimpleStream extends Component {
 		this.resizeStream();
 	};
 
-	handleResizeWindow = () => {
-		let scrollViewDiv = document.querySelector("atom-text-editor.is-focused .scroll-view");
-		if (scrollViewDiv) {
-			let width = scrollViewDiv.offsetWidth - 20;
-			// FIXME -- if there is panel is on the right, then subtract 20 more
-			let newStyle = ".codestream-comment-popup { left: " + width + "px; }";
-			// console.log("Adding style string; " + newStyle);
-			this.addStyleString(newStyle);
-		} else {
-			console.log("Couldn't find scroll view");
-		}
+	handleResizeWindow = scrollViewDiv => {
+		// if the div has display: none then there will be no width
+		if (!scrollViewDiv || !scrollViewDiv.offsetWidth) return;
+
+		// FIXME -- if there is panel is on the right, then subtract 20 more
+		let width = scrollViewDiv.offsetWidth;
+		let newStyle = ".codestream-comment-popup { left: " + width + "px; }";
+		// console.log("Adding style string; " + newStyle);
+		this.addStyleString(newStyle);
 	};
 
 	// add a style to the document, reusing a style node that we attach to the DOM
@@ -292,7 +292,7 @@ export class SimpleStream extends Component {
 					<div id="close-thread" onClick={this.handleDismissThread}>
 						&larr; Back to stream
 					</div>
-					<PostDetails post={threadPost} />
+					<PostDetails post={threadPost} key={threadPost ? threadPost.id : 0} />
 					{
 						(lastTimestamp =
 							0 ||
@@ -364,46 +364,87 @@ export class SimpleStream extends Component {
 		let that = this;
 		let editor = atom.workspace.getActiveTextEditor();
 		if (!this.props.markers) return;
-		if (this.markersRendered) return;
-		this.markersRendered = true;
-		this.props.markers.forEach(codeMarker => {
-			console.log("Rendering a marker: ", codeMarker);
-			let location = codeMarker.location;
-			var range = [[location[0], 0], [location[0], 0]];
-			var marker = editor.markBufferRange(range, { invalidate: "never" });
-			// marker.setProperties({ codestreamStreamId: streamId });
+		if (editor.hasCodeStreamMarkersRendered) return;
+		editor.hasCodeStreamMarkersRendered = true;
+		// console.log(this.props.markers);
+		console.log("Rendering these markers: " + this.props.markers.length);
 
-			// FIXME -- get the real comment count
-			var commentCount = Math.floor(Math.random() * 6 + 1);
-			if (commentCount > 10) commentCount = "10+";
-			commentCount = 2;
+		// loop through and get starting line for each marker,
+		// to detect when we have overlaps with an O(N) algorithm
+		let markersByLine = {};
+		this.props.markers.forEach(codeMarker => {
+			let line = codeMarker.location[0];
+			if (!markersByLine[line]) markersByLine[line] = [];
+			markersByLine[line].push(codeMarker);
+		});
+
+		for (var line in markersByLine) {
+			let codeMarkers = markersByLine[line];
+			let numComments = 0;
 
 			let item = document.createElement("div");
-			item.innerText = commentCount;
 			item.className = "codestream-comment-popup";
-			item.onclick = function() {
-				that.selectPost(codeMarker.postId);
-			};
+			codeMarkers.forEach(function(codeMarker, index) {
+				console.log("Adding num comments: " + codeMarker.numComments);
+				numComments += codeMarker.numComments;
+
+				let bubble = document.createElement("div");
+				// we add a "count" class which is the reverse of the index
+				// so that bubbles lower in the stacking order can be offset
+				// by a few pixels giving a "stacked bubbles" effect in CSS
+				bubble.classList.add("count-" + (codeMarkers.length - index - 1));
+				bubble.onclick = function() {
+					that.selectPost(codeMarker.postId);
+				};
+				bubble.innerText = codeMarker.numComments > 9 ? "9+" : codeMarker.numComments;
+				item.appendChild(bubble);
+			});
+			// item.innerText = numComments > 9 ? "9+" : numComments;
+
+			var range = [[line * 1, 0], [line * 1, 0]];
+			var marker = editor.markBufferRange(range, { invalidate: "never" });
+
 			editor.decorateMarker(marker, { type: "overlay", item: item, class: "codestream-overlay" });
 			this.tooltip = atom.tooltips.add(item, { title: "View comments" });
+		}
 
-			return;
-
-			// not using a gutter for now
-			// let gutter = editor.gutterWithName("CodeStream");
-			// if (gutter) {
-			// 	var numCommentsDiv = document.createElement("div");
-			// 	numCommentsDiv.innerText = commentCount;
-			// 	gutter.decorateMarker(marker, {
-			// 		class: "codestream-comment-marker",
-			// 		item: numCommentsDiv
-			// 	});
-			// }
-		});
+		// this.props.markers.forEach(codeMarker => {
+		// 	// console.log("Rendering a marker: ", codeMarker);
+		// 	let location = codeMarker.location;
+		// 	let line = location[0];
+		// 	var range = [[line, 0], [line, 0]];
+		// 	var marker = editor.markBufferRange(range, { invalidate: "never" });
+		// 	// marker.setProperties({ codestreamStreamId: streamId });
+		//
+		// 	let numComments = codeMarker.numComments > 9 ? "9+" : codeMarker.numComments;
+		// 	let item = document.createElement("div");
+		// 	item.innerText = numComments;
+		// 	item.className = "codestream-comment-popup";
+		//
+		// 	// adding a class with the count of the # of markers on this line
+		// 	// allows us to control the position of the 2nd, 3rd, 4th
+		// 	// overlapping marker (see codestream.less for specifics)
+		// 	let countOnLine = markersByLine[location[0]].indexOf(codeMarker.id);
+		// 	console.log("COL is: " + countOnLine);
+		// 	item.classList.add("count-" + countOnLine);
+		//
+		// 	item.onclick = function() {
+		// 		that.selectPost(codeMarker.postId);
+		// 	};
+		// 	item.onmouseenter = function() {
+		// 		that.mouseEnter(codeMarker.postId, line, countOnLine);
+		// 	};
+		// 	item.onmouseleave = function() {
+		// 		that.mouseLeave(codeMarker.postId, line, countOnLine);
+		// 	};
+		// 	editor.decorateMarker(marker, { type: "overlay", item: item, class: "codestream-overlay" });
+		// 	this.tooltip = atom.tooltips.add(item, { title: "View comments" });
+		// });
 	};
 
 	// dismiss the thread stream and return to the main stream
 	handleDismissThread = () => {
+		this.destroyCodeBlockMarker();
 		this.setState({ threadId: null });
 	};
 
@@ -428,12 +469,11 @@ export class SimpleStream extends Component {
 		if (post.codeBlocks && post.codeBlocks.length) {
 			let codeBlock = post.codeBlocks[0];
 			let location = post.markerLocation;
-			// console.log(post);
 			if (location) {
 				let markerRange = [[location[0], location[1]], [location[2], location[3]]];
 				// FIXME -- switch to stream if code is from another buffer
 				const editor = atom.workspace.getActiveTextEditor();
-				if (this.marker) this.marker.destroy();
+				if (this.codeBlockMarker) this.codeBlockMarker.destroy();
 				this.codeBlockMarker = editor.markBufferRange(markerRange, { invalidate: "touch" });
 				editor.decorateMarker(this.codeBlockMarker, {
 					type: "highlight",
@@ -536,9 +576,15 @@ export class SimpleStream extends Component {
 		var range = editor.getSelectedBufferRange();
 		let code = editor.getSelectedText();
 		// preContext is the 10 lines of code immediately preceeding the selection
-		let preContext = editor.getTextInBufferRange([[range.start.row-10, 0], [range.start.row, range.start.column]]);
+		let preContext = editor.getTextInBufferRange([
+			[range.start.row - 10, 0],
+			[range.start.row, range.start.column]
+		]);
 		// postContext is the 10 lines of code immediately following the selection
-		let postContext = editor.getTextInBufferRange([[range.end.row, range.end.column], [range.end.row+10, 0]]);
+		let postContext = editor.getTextInBufferRange([
+			[range.end.row, range.end.column],
+			[range.end.row + 10, 0]
+		]);
 
 		// if there is no selected text, i.e. it is a 0-width range,
 		// then grab the current line of code that the cursor is on
@@ -624,7 +670,7 @@ export class SimpleStream extends Component {
 	handleOnKeyPress = async event => {
 		var newPostText = this.state.newPostText;
 
-		console.log("ON KEYPRESS: " + event.key);
+		// console.log("ON KEYPRESS: " + event.key);
 		// if we have the at-mentions popup open, then the keys
 		// do something different than if we have the focus in
 		// the textarea
@@ -775,7 +821,7 @@ export class SimpleStream extends Component {
 		// convert the text to plaintext so there is no HTML
 		var doc = new DOMParser().parseFromString(newText, "text/html");
 		newText = doc.documentElement.textContent;
-		console.log(this.state.quoteRange);
+		// console.log(this.state.quoteRange);
 		let codeBlocks = [];
 		if (this.state.quoteText) {
 			let quoteRange = this.state.quoteRange;
@@ -791,6 +837,8 @@ export class SimpleStream extends Component {
 					preContext: this.state.preContext,
 					postContext: this.state.postContext,
 					// for now, we assume this codeblock came from this buffer
+					// in the future we want to support commenting on codeBlocks
+					// from other files/buffers
 					streamId: this.props.id
 				}
 			];

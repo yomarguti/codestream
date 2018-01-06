@@ -36,8 +36,10 @@ export default class AddCommentPopup {
 		let startRange = [[row, 0], [row, 0]];
 		this.marker = editor.markBufferRange(startRange, { invalidate: "touch" });
 		let item = document.createElement("div");
-		item.innerHTML = "+";
 		item.className = "codestream-comment-popup";
+		let bubble = document.createElement("div");
+		bubble.innerHTML = "+";
+		item.appendChild(bubble);
 		item.onclick = this.handleClick;
 		editor.decorateMarker(this.marker, {
 			type: "overlay",
