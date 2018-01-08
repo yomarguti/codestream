@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { FormattedMessage } from "react-intl";
 import { connect } from "react-redux";
 import Button from "./Button";
+import UnexpectedErrorMessage from "./UnexpectedErrorMessage";
 import { createTeam } from "../../actions/onboarding";
 
 export class SimpleTeamCreationForm extends Component {
@@ -27,6 +28,7 @@ export class SimpleTeamCreationForm extends Component {
 					/>
 				</span>
 			);
+		if (this.props.errors.unknown) return <UnexpectedErrorMessage classes="error-message" />;
 	};
 
 	render() {

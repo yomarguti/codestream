@@ -107,7 +107,7 @@ export const sendNewCode = attributes => (dispatch, getState, { http }) => {
 	});
 };
 
-export const createTeam = name => (dispatch, getState) => {
+export const createTeam = name => (dispatch, getState, { http }) => {
 	const { session, repoAttributes } = getState();
 	const params = {
 		url: repoAttributes.url,
@@ -115,7 +115,8 @@ export const createTeam = name => (dispatch, getState) => {
 		team: { name }
 	};
 	dispatch(requestStarted());
-	return post("/repos", params, session.accessToken)
+	return http
+		.post("/repos", params, session.accessToken)
 		.then(async data => {
 			dispatch(requestFinished());
 			const team = normalize(data.team);
@@ -131,10 +132,10 @@ export const createTeam = name => (dispatch, getState) => {
 		})
 		.catch(error => {
 			dispatch(requestFinished());
-			if (error instanceof ApiRequestError) {
+			if (http.isApiRequestError(error)) {
 				if (error.data.code === "RAPI-1005") dispatch({ type: "CREATE_TEAM-INVALID_REPO_URL" });
-				atom.notifications.addError(`Your origin url (${repoAttributes.url}) is invalid`);
-			} else console.error("Encountered an unexpected error while creating team", error);
+			} else if (http.isApiUnreachableError(error)) dispatch(serverUnreachable());
+			else console.error("Encountered an unexpected error while creating team", error);
 		});
 };
 
