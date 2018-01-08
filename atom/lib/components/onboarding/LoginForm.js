@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import { FormattedMessage } from "react-intl";
 import { connect } from "react-redux";
+import UnexpectedErrorMessage from "./UnexpectedErrorMessage";
 import Button from "./Button";
 import withConfigs from "../withConfigs";
 import * as actions from "../../actions/onboarding";
@@ -71,6 +72,8 @@ export class SimpleLoginForm extends Component {
 					<FormattedMessage id="login.invalid" />
 				</span>
 			);
+		if (this.props.errors.unknown)
+			return <UnexpectedErrorMessage classes="error-message page-error" />;
 	};
 
 	isFormInvalid = () => {

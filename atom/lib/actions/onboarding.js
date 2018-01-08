@@ -139,11 +139,12 @@ export const createTeam = name => (dispatch, getState, { http }) => {
 		});
 };
 
-export const addRepoForTeam = teamId => (dispatch, getState) => {
+export const addRepoForTeam = teamId => (dispatch, getState, { http }) => {
 	const { repoAttributes, session } = getState();
 	const params = { ...repoAttributes, teamId };
 	dispatch(requestStarted());
-	post("/repos", params, session.accessToken)
+	http
+		.post("/repos", params, session.accessToken)
 		.then(async data => {
 			const repo = normalize(data.repo);
 			dispatch(requestFinished());
@@ -153,31 +154,41 @@ export const addRepoForTeam = teamId => (dispatch, getState) => {
 		})
 		.catch(error => {
 			dispatch(requestFinished());
-			if (error.data.code === "RAPI-1003") dispatch(teamNotFound());
-			if (error.data.code === "RAPI-1011") dispatch(noPermission());
+			if (http.isApiRequestError(error)) {
+				if (error.data.code === "RAPI-1003") dispatch(teamNotFound());
+				if (error.data.code === "RAPI-1011") dispatch(noPermission());
+			} else if (http.isApiUnreachableError(error)) {
+				dispatch(serverUnreachable());
+			}
 		});
 };
 
 export const teamNotFound = () => ({ type: "TEAM_NOT_FOUND" });
 export const noPermission = () => ({ type: "INVALID_PERMISSION_FOR_TEAM" });
 
-export const addMembers = emails => (dispatch, getState) => {
+export const addMembers = emails => (dispatch, getState, { http }) => {
 	const { repoAttributes, currentTeamId, session } = getState();
 	const params = { ...repoAttributes, teamId: currentTeamId, emails };
-	return post("/repos", params, session.accessToken)
+	return http
+		.post("/repos", params, session.accessToken)
 		.then(({ users }) => {
 			dispatch(saveUsers(normalize(users)));
 			dispatch(completeOnboarding());
 		})
 		.catch(error => {
-			if (error.data.code === "RAPI-1003") dispatch(teamNotFound());
-			if (error.data.code === "RAPI-1011") dispatch(noPermission());
+			if (http.isApiRequestError(error)) {
+				if (error.data.code === "RAPI-1003") dispatch(teamNotFound());
+				if (error.data.code === "RAPI-1011") dispatch(noPermission());
+			} else if (http.isApiUnreachableError(error)) {
+				dispatch(serverUnreachable());
+			}
 		});
 };
 
-export const authenticate = params => (dispatch, getState) => {
+export const authenticate = params => (dispatch, getState, { http }) => {
 	dispatch(requestStarted());
-	put("/no-auth/login", params)
+	http
+		.put("/no-auth/login", params)
 		.then(async ({ accessToken, user, teams, repos }) => {
 			dispatch(requestFinished());
 			user = normalize(user);
@@ -201,10 +212,11 @@ export const authenticate = params => (dispatch, getState) => {
 		})
 		.catch(error => {
 			dispatch(requestFinished());
-			if (error instanceof ApiRequestError) {
+			if (http.isApiRequestError(error)) {
 				if (error.data.code === "USRC-1001") dispatch({ type: "INVALID_CREDENTIALS" });
 				if (error.data.code === "REPO-1000") dispatch(noAccess());
 				if (error.data.code === "RAPI-1005") dispatch(noAccess()); // TODO: How to handle url invalid here? Just bailing and saying no access for url invalid
-			} else console.error("Encountered unexpected error while authenticating", error);
+			} else if (http.isApiUnreachableError(error)) dispatch(serverUnreachable());
+			else console.error("Encountered unexpected error while authenticating", error);
 		});
 };

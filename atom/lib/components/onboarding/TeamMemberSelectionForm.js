@@ -4,6 +4,7 @@ import { connect } from "react-redux";
 import PropTypes from "prop-types";
 import _ from "underscore-plus";
 import Button from "./Button";
+import UnexpectedErrorMessage from "./UnexpectedErrorMessage";
 import git from "../../git";
 import * as actions from "../../actions/onboarding";
 
@@ -97,6 +98,7 @@ export class SimpleTeamMemberSelectionForm extends Component {
 					<FormattedMessage id="teamSelection.error.noPermission" />
 				</p>
 			);
+		if (this.props.errors.unknown) return <UnexpectedErrorMessage classes="error-message" />;
 	};
 
 	renderInfo() {
