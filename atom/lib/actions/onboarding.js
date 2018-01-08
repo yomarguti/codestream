@@ -1,4 +1,3 @@
-import { get, post, put, ApiRequestError } from "../network-request";
 import { normalize } from "./utils";
 import { fetchRepoInfo, setCurrentRepo, setCurrentTeam, noAccess } from "./context";
 import { saveUser, saveUsers } from "./user";
@@ -21,12 +20,12 @@ const initializeSession = ({ user, accessToken }) => ({
 	meta: { user }
 });
 
-const fetchTeamMembers = teams => (dispatch, getState) => {
+const fetchTeamMembers = teams => (dispatch, getState, { http }) => {
 	const { session } = getState();
 	const promises = teams.map(({ id }) => {
-		return get(`/users?teamId=${id}`, session.accessToken).then(({ users }) =>
-			dispatch(saveUsers(normalize(users)))
-		);
+		return http
+			.get(`/users?teamId=${id}`, session.accessToken)
+			.then(({ users }) => dispatch(saveUsers(normalize(users))));
 	});
 	return Promise.all(promises);
 };
