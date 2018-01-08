@@ -12,7 +12,7 @@
 	"signUp.legal.start": "By clicking Sign Up, you agree to CodeStream's",
 	"signUp.legal.termsOfService": "Terms of Service",
 	"signUp.legal.privacyPolicy": "Privacy Policy",
-	"signUp.footer.alreadySignedUp": "Already have a CodeStream account? Sign in",
+	"signUp.footer.alreadySignedUp": "Already have a CodeStream account?",
 	"signUp.footer.signIn": "Sign In",
 	"confirmation.invalid": "Uh oh. Invalid code.",
 	"confirmation.expired": "Sorry, that code has expired.",

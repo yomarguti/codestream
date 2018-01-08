@@ -139,6 +139,7 @@ module.exports = {
 
 	serialize() {
 		const { session, onboarding, context } = store.getState();
+		onboarding.errors = {};
 		localStorage.setItem("codestream.session", JSON.stringify(session));
 		return { onboarding, context };
 	},
