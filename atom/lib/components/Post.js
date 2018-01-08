@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import Gravatar from "react-gravatar";
 import Timestamp from "./Timestamp";
 import Menu from "./Menu";
+import PostDetails from "./PostDetails";
 import createClassString from "classnames";
 
 export default class Post extends Component {
@@ -23,7 +24,7 @@ export default class Post extends Component {
 		// unless the post is mine, in which case we always scroll to bottom
 		// we check to see if it's below 100 because if you are scrolled
 		// almost to the bottom, we count that as being at the bottom for UX reasons
-		if (offBottom < 100 || this.state.post.nick == "pez") {
+		if (offBottom < 100 || this.state.post.username == "pez") {
 			// big number to make sure we've scrolled all the way down
 			streamDiv.scrollTop = 100000;
 			// console.log("SCROLLING TO BOTTOM");
@@ -35,10 +36,6 @@ export default class Post extends Component {
 			atom.tooltips.add(this._authorDiv, { title: this.props.post.author.fullName });
 
 		// atom.tooltips.add($icon.get(0), {'title': 'This block of code is different than your current copy.'});
-	}
-
-	makeRange(location) {
-		return [[location[0], location[1]], [location[2], location[3]]];
 	}
 
 	render() {
@@ -54,14 +51,6 @@ export default class Post extends Component {
 		let alert = null;
 		if (post.codeBlocks && post.codeBlocks.length) {
 			let code = post.codeBlocks[0].code;
-			if (post.markerLocation) {
-				const editor = atom.workspace.getActiveTextEditor();
-				let range = this.makeRange(post.markerLocation);
-				var existingCode = editor.getTextInBufferRange(range);
-				if (code !== existingCode) alert = <span className="icon icon-alert" />;
-			} else {
-				alert = <span className="icon icon-question" />;
-			}
 			codeBlock = <div className="code">{code}</div>;
 		}
 
@@ -84,6 +73,7 @@ export default class Post extends Component {
 		) : null;
 
 		let parentPost = this.props.replyingTo;
+		let alertClass = this.props.alert ? "icon icon-" + this.props.alert : null;
 
 		// FIXME use a real email address
 		return (
@@ -113,7 +103,8 @@ export default class Post extends Component {
 						</div>
 					)}
 					{codeBlock}
-					{alert}
+					{this.props.showDetails && <PostDetails post={post} />}
+					{alertClass && <span className={alertClass} />}
 					{bodyParts.map(part => {
 						if (part.charAt(0) == "@") {
 							if (part == "@pez")

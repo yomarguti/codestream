@@ -19,6 +19,7 @@ export default class AtMentionsPopup extends Component {
 		if (!this.props.on) return null;
 
 		const people = this.props.people;
+		console.log(people);
 
 		return (
 			<div className="mentions-popup" ref={ref => (this._div = ref)}>
@@ -28,13 +29,14 @@ export default class AtMentionsPopup extends Component {
 					</div>
 					<ul className="compact at-mentions-list">
 						{this.props.people.map(person => {
-							let className = person.nick == this.props.selected ? "hover" : "none";
+							let className = person.id == this.props.selected ? "hover" : "none";
+							let identifier = person.username || person.email;
 							return (
 								<li
 									className={className}
-									key={person.nick}
-									onMouseEnter={event => this.handleMouseEnter(person.nick)}
-									onClick={event => this.handleClickPerson(person.nick)}
+									key={person.id}
+									onMouseEnter={event => this.handleMouseEnter(person.id)}
+									onClick={event => this.handleClickPerson(person.id)}
 								>
 									<Gravatar
 										className="headshot"
@@ -43,30 +45,34 @@ export default class AtMentionsPopup extends Component {
 										protocol="http://"
 										email={person.email}
 									/>
-									<span class="nick">{person.nick}</span>{" "}
-									<span class="name">{person.fullName}</span>
+									<span className="username">{identifier}</span>{" "}
+									<span className="name">
+										{person.firstName} {person.lastName}
+									</span>
 								</li>
 							);
 						})}
 					</ul>
 					<table>
-						<tr>
-							<td>&uarr; or &darr; to navigate</td>
-							<td>&crarr; to select</td>
-							<td>esc to dismiss</td>
-						</tr>
+						<tbody>
+							<tr>
+								<td>&uarr; or &darr; to navigate</td>
+								<td>&crarr; to select</td>
+								<td>esc to dismiss</td>
+							</tr>
+						</tbody>
 					</table>
 				</div>
 			</div>
 		);
 	}
 
-	handleMouseEnter(nick) {
-		return this.props.handleHoverAtMention(nick);
+	handleMouseEnter(id) {
+		return this.props.handleHoverAtMention(id);
 	}
 
-	handleClickPerson(nick) {
-		return this.props.handleSelectAtMention(nick);
+	handleClickPerson(id) {
+		return this.props.handleSelectAtMention(id);
 	}
 
 	handleClickInstructions() {

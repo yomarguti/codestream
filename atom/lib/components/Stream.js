@@ -4,7 +4,6 @@ import { connect } from "react-redux";
 import ContentEditable from "react-contenteditable";
 import _ from "underscore-plus";
 import Post from "./Post";
-import PostDetails from "./PostDetails";
 import AtMentionsPopup from "./AtMentionsPopup";
 import AddCommentPopup from "./AddCommentPopup";
 import createClassString from "classnames";
@@ -26,19 +25,7 @@ export class SimpleStream extends Component {
 		this.state = {
 			stream: {},
 			threadId: null,
-			posts: [],
-			authors: [
-				{ id: 1, nick: "pez", fullName: "Peter Pezaris", email: "pez@codestream.com" },
-				{
-					id: 2,
-					nick: "marcelo",
-					fullName: "Marcelo Bukowski de Farias",
-					email: "marcelo@codestream.com"
-				},
-				{ id: 3, nick: "akonwi", fullName: "Akonwi Ngoh", email: "akonwi@codestream.com" },
-				{ id: 4, nick: "jj", fullName: "James Price", email: "jj@codestream.com" },
-				{ id: 5, nick: "colin", fullName: "Colin Stryker", email: "colin@codestream.com" }
-			]
+			posts: []
 		};
 
 		this.subscriptions = new CompositeDisposable();
@@ -92,7 +79,6 @@ export class SimpleStream extends Component {
 		let editor = atom.workspace.getActiveTextEditor();
 		// console.log(editor);
 		if (editor && !editor.hasCodeStreamHandlers) {
-			// console.log("INSTALLING RESIZE OBSERVER");
 			let scrollViewDiv = editor.component.element.querySelector(".scroll-view");
 			if (scrollViewDiv) {
 				// console.log("INSTALLING RESIZE OBSERVER 2");
@@ -254,7 +240,7 @@ export class SimpleStream extends Component {
 		}
 
 		this.renderCommentMarkers();
-		// this.installGutter();
+		this.renderUMI();
 
 		return (
 			<div className={streamClass} ref={ref => (this._div = ref)}>
@@ -293,7 +279,7 @@ export class SimpleStream extends Component {
 					<div id="close-thread" onClick={this.handleDismissThread}>
 						&larr; Back to stream
 					</div>
-					<PostDetails post={threadPost} key={threadPost ? threadPost.id : 0} />
+					{threadPost && <Post post={threadPost} key={threadPost.id} showDetails="1" />}
 					{
 						(lastTimestamp =
 							0 ||
@@ -357,6 +343,8 @@ export class SimpleStream extends Component {
 		return [[location[0], location[1]], [location[2], location[3]]];
 	}
 
+	renderUMI = () => {};
+
 	// comment markers are the annotation indicators that appear in the right
 	// margin between the buffer and the codestream pane
 	// this is only partially implemented, as it's very fragile as-is
@@ -364,6 +352,7 @@ export class SimpleStream extends Component {
 	renderCommentMarkers = () => {
 		let that = this;
 		let editor = atom.workspace.getActiveTextEditor();
+		if (!editor) return;
 		if (!this.props.markers) return;
 		if (editor.hasCodeStreamMarkersRendered) return;
 		editor.hasCodeStreamMarkersRendered = true;
@@ -382,6 +371,7 @@ export class SimpleStream extends Component {
 		for (var line in markersByLine) {
 			let codeMarkers = markersByLine[line];
 			let numComments = 0;
+			let maxLine = line * 1;
 
 			let item = document.createElement("div");
 			item.className = "codestream-comment-popup";
@@ -399,13 +389,25 @@ export class SimpleStream extends Component {
 				};
 				bubble.innerText = codeMarker.numComments > 9 ? "9+" : codeMarker.numComments;
 				item.appendChild(bubble);
+				if (codeMarker.location[2] > maxLine) maxLine = codeMarker.location[2] * 1;
 			});
 			// item.innerText = numComments > 9 ? "9+" : numComments;
 
-			var range = [[line * 1, 0], [line * 1, 0]];
+			console.log("RANGE IS: " + line + " - " + maxLine);
+			var range = [[line * 1, 0], [maxLine + 1, 0]];
 			var marker = editor.markBufferRange(range, { invalidate: "never" });
+			marker.onDidChange(function(event) {
+				console.log("in the ondidchange");
+				console.log("This is where we should update the markers because they ahve moved");
+				if (event.textChanged) that.checkMarkerDiff(codeMarkers);
+			});
 
-			editor.decorateMarker(marker, { type: "overlay", item: item, class: "codestream-overlay" });
+			editor.decorateMarker(marker, {
+				type: "overlay",
+				item: item,
+				position: "tail",
+				class: "codestream-overlay"
+			});
 			this.tooltip = atom.tooltips.add(item, { title: "View comments" });
 		}
 
@@ -441,6 +443,11 @@ export class SimpleStream extends Component {
 		// 	editor.decorateMarker(marker, { type: "overlay", item: item, class: "codestream-overlay" });
 		// 	this.tooltip = atom.tooltips.add(item, { title: "View comments" });
 		// });
+	};
+
+	checkMarkerDiff = codeMarkers => {
+		console.log("Checking diffs for markers");
+		console.log(codeMarkers);
 	};
 
 	// dismiss the thread stream and return to the main stream
@@ -551,12 +558,13 @@ export class SimpleStream extends Component {
 				// FIXME -- skip it if it's me
 				if (author && author !== "Not Committed Yet") {
 					// find the author -- FIXME this feels fragile
-					for (var index = 0; index < this.state.authors.length; index++) {
-						let person = this.state.authors[index];
-						if (person.fullName == author || person.nick == author) {
-							authors["@" + person.nick] = true;
+					Object.keys(this.props.users).forEach(personId => {
+						let person = this.props.users[personId];
+						let fullName = person.firstName + " " + person.lastName;
+						if (fullName == author || person.username == author) {
+							authors["@" + person.username] = true;
 						}
-					}
+					});
 				}
 			}
 		}
@@ -708,21 +716,21 @@ export class SimpleStream extends Component {
 	showAtMentionSelectors(prefix) {
 		let peopleToShow = [];
 
-		for (var index = 0; index < this.state.authors.length; index++) {
-			let person = this.state.authors[index];
-			let toMatch = person.fullName + "*" + person.nick; // + "*" + person.email;
+		Object.keys(this.props.users).forEach(personId => {
+			let person = this.props.users[personId];
+			let toMatch = person.firstName + " " + person.lastName + "*" + person.username; // + "*" + person.email;
 			let lowered = toMatch.toLowerCase();
 			if (lowered.indexOf(prefix) !== -1) {
 				peopleToShow.push(person);
 			}
-		}
+		});
 
 		if (peopleToShow.length == 0) {
 			this.setState({
 				atMentionsOn: false
 			});
 		} else {
-			let selected = peopleToShow[0].nick;
+			let selected = peopleToShow[0].id;
 
 			this.setState({
 				atMentionsOn: true,
@@ -760,7 +768,7 @@ export class SimpleStream extends Component {
 			}
 			this.setState({
 				atMentionsIndex: newIndex,
-				selectedAtMention: this.state.atMentionsPeople[newIndex].nick
+				selectedAtMention: this.state.atMentionsPeople[newIndex].id
 			});
 		}
 	}
@@ -773,30 +781,33 @@ export class SimpleStream extends Component {
 
 	// when the user hovers over an at-mention list item, change the
 	// state to represent a hovered state
-	handleHoverAtMention = nick => {
-		let index = this.state.atMentionsPeople.findIndex(x => x.nick == nick);
+	handleHoverAtMention = id => {
+		let index = this.state.atMentionsPeople.findIndex(x => x.id == id);
 
 		this.setState({
 			atMentionsIndex: index,
-			selectedAtMention: nick
+			selectedAtMention: id
 		});
 	};
 
-	handleSelectAtMention = nick => {
-		// if no nick is passed, we assume that we're selecting
+	handleSelectAtMention = id => {
+		// if no id is passed, we assume that we're selecting
 		// the currently-selected at mention
-		if (!nick) {
-			nick = this.state.selectedAtMention;
+		if (!id) {
+			id = this.state.selectedAtMention;
 		}
 
+		let user = this.props.users[id];
+		if (!user) return;
+		let username = user.username;
 		// otherwise explicitly use the one passed in
 		// FIXME -- this should anchor at the carat, not end-of-line
 		var re = new RegExp("@" + this.state.atMentionsPrefix + "$");
-		let text = this.state.newPostText.replace(re, "@" + nick);
+		let text = this.state.newPostText.replace(re, "@" + username);
 		this.setState({
 			atMentionsOn: false
 		});
-		let toInsert = nick.replace(this.state.atMentionsPrefix, "");
+		let toInsert = username.replace(this.state.atMentionsPrefix, "");
 		this.insertTextAtCursor(toInsert);
 		this.setNewPostText(text);
 	};
@@ -899,6 +910,7 @@ const mapStateToProps = ({ context, streams, users, posts, markers, markerLocati
 			context.currentCommit,
 			markers
 		),
+		users: users,
 		posts: getPostsForStream(stream.id, posts).map(post => {
 			let user = users[post.creatorId];
 			if (!user) {

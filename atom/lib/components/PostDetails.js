@@ -12,6 +12,10 @@ export default class PostDetails extends Component {
 		this.diffMarkers = [];
 	}
 
+	makeRange(location) {
+		return [[location[0], location[1]], [location[2], location[3]]];
+	}
+
 	render() {
 		const post = this.props.post;
 
@@ -27,10 +31,31 @@ export default class PostDetails extends Component {
 		const showDiffLabel = this.state.diffShowing ? "Hide Diff" : "Show Diff";
 		const hasCodeBlock = post.codeBlocks && post.codeBlocks.length ? true : null;
 
+		let hasDiff = false;
+		if (post.markerLocation) {
+			let code = post.codeBlocks[0].code;
+			const editor = atom.workspace.getActiveTextEditor();
+			let range = this.makeRange(post.markerLocation);
+			var existingCode = editor.getTextInBufferRange(range);
+			if (code !== existingCode) hasDiff = true;
+		}
+
+		console.log(post);
 		return (
 			<div className="post-details" id={post.id} ref={ref => (this._div = ref)}>
-				<Post post={post} />
-				{hasCodeBlock && (
+				{post.codeBlocks &&
+					post.codeBlocks.length && (
+						<Button
+							id="show-version-button"
+							className="control-button"
+							tabIndex="2"
+							type="submit"
+							onClick={this.handleShowVersion}
+						>
+							Warp to {post.commitHashWhenPosted}
+						</Button>
+					)}
+				{hasDiff && (
 					<div className="button-group">
 						<Button
 							id="show-diff-button"
@@ -71,6 +96,10 @@ export default class PostDetails extends Component {
 		editor.scrollToBufferPosition([line, 0], {
 			center: true
 		});
+	};
+
+	handleShowVersion = async event => {
+		console.log("Showing version...");
 	};
 
 	handleClickShowDiff = async event => {

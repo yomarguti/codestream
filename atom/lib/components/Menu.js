@@ -27,9 +27,9 @@ export default class Menu extends Component {
 									onMouseEnter={event => this.handleMouseEnter(item.key)}
 									onClick={event => this.handleClickItem(event, item.key)}
 								>
-									{item.icon && <span class="icon">{item.icon}</span>}
-									{item.label && <span class="label">{item.label}</span>}
-									{item.shortcut && <span class="shortcut">{item.shortcut}</span>}
+									{item.icon && <span className="icon">{item.icon}</span>}
+									{item.label && <span className="label">{item.label}</span>}
+									{item.shortcut && <span className="shortcut">{item.shortcut}</span>}
 								</li>
 							);
 						})}
