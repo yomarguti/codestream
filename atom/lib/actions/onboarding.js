@@ -2,7 +2,7 @@ import { normalize } from "./utils";
 import { fetchRepoInfo, setCurrentRepo, setCurrentTeam, noAccess } from "./context";
 import { saveUser, saveUsers } from "./user";
 import { saveRepo, saveRepos } from "./repo";
-import { saveTeam, saveTeams, joinTeam } from "./team";
+import { fetchTeamMembers, saveTeam, saveTeams, joinTeam } from "./team";
 
 const requestStarted = () => ({ type: "REQUEST_STARTED" });
 const requestFinished = () => ({ type: "REQUEST_FINISHED" });
@@ -19,16 +19,6 @@ const initializeSession = ({ user, accessToken }) => ({
 	payload: { accessToken, userId: user.id },
 	meta: { user }
 });
-
-const fetchTeamMembers = teams => (dispatch, getState, { http }) => {
-	const { session } = getState();
-	const promises = teams.map(({ id }) => {
-		return http
-			.get(`/users?teamId=${id}`, session.accessToken)
-			.then(({ users }) => dispatch(saveUsers(normalize(users))));
-	});
-	return Promise.all(promises);
-};
 
 export const goToSignup = () => ({ type: "GO_TO_SIGNUP" });
 export const goToLogin = () => ({ type: "GO_TO_LOGIN" });
@@ -99,8 +89,8 @@ export const confirmEmail = attributes => (dispatch, getState, { http }) => {
 						payload: { alreadyConfirmed: true, email: attributes.email }
 					});
 				if (data.code === "REPO-1000") dispatch(noAccess());
-			}
-			if (http.isApiUnreachableError(error)) dispatch(serverUnreachable());
+			} else if (http.isApiUnreachableError(error)) dispatch(serverUnreachable());
+			else console.error("Encountered an unexpected error while confirming email address", error);
 		});
 };
 
