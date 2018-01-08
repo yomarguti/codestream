@@ -1,6 +1,6 @@
 import { get, post, put, ApiRequestError } from "../network-request";
 import { normalize } from "./utils";
-import { setCurrentRepo, setCurrentTeam, noAccess } from "./context";
+import { fetchRepoInfo, setCurrentRepo, setCurrentTeam, noAccess } from "./context";
 import { saveUser, saveUsers } from "./user";
 import { saveRepo, saveRepos } from "./repo";
 import { saveTeam, saveTeams, joinTeam } from "./team";
@@ -58,8 +58,13 @@ export const confirmEmail = attributes => (dispatch, getState, { http }) => {
 			dispatch(requestFinished());
 			user = normalize(user);
 
-			const { context } = getState();
-			const teamForRepo = context.currentTeamId;
+			const { context, repoAttributes } = getState();
+			let teamForRepo = context.currentTeamId;
+			if (!teamForRepo) {
+				// fetch repo info again just in case a team has been created since CS was initialized
+				const action = await dispatch(fetchRepoInfo(repoAttributes));
+				if (action && action.payload) teamForRepo = payload.currentTeamId;
+			}
 			const userTeams = normalize(teams);
 			const userRepos = normalize(repos);
 

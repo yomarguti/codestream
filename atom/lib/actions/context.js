@@ -45,7 +45,7 @@ export const fetchRepoInfo = ({ url, firstCommitHash }) => async (dispatch, getS
 		dispatch(setContext({ noAccess: false })); // reset access property in store
 
 		if (repo) {
-			dispatch(
+			return dispatch(
 				setContext({
 					usernamesInTeam: usernames,
 					currentRepoId: repo._id,
