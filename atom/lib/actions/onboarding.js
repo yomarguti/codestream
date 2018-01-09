@@ -48,14 +48,16 @@ export const confirmEmail = attributes => (dispatch, getState, { http }) => {
 			user = normalize(user);
 
 			const { context, repoAttributes } = getState();
-			let teamForRepo = context.currentTeamId;
-			if (!teamForRepo) {
+			let teamIdForRepo = context.currentTeamId;
+			if (!teamIdForRepo) {
 				// fetch repo info again just in case a team has been created since CS was initialized
 				const action = await dispatch(fetchRepoInfo(repoAttributes));
-				if (action && action.payload) teamForRepo = payload.currentTeamId;
+				if (action && action.payload) teamIdForRepo = payload.currentTeamId;
 			}
 			const userTeams = normalize(teams);
 			const userRepos = normalize(repos);
+
+			const teamIdsForUser = user.teamIds || userTeams.map(team => team.id);
 
 			// TODO: handle db error - maybe continue updating the view?
 			await saveUser(user);
@@ -63,13 +65,13 @@ export const confirmEmail = attributes => (dispatch, getState, { http }) => {
 			await dispatch(saveRepos(userRepos));
 			await dispatch(initializeSession({ user, accessToken }));
 
-			if (!teamForRepo && userTeams.length === 0)
+			if (!teamIdForRepo && userTeams.length === 0)
 				dispatch({ type: "NEW_USER_CONFIRMED_IN_NEW_REPO" });
-			else if (!teamForRepo && userTeams.length > 0) {
-				await dispatch(fetchTeamMembers(userTeams));
+			else if (!teamIdForRepo && userTeams.length > 0) {
+				await dispatch(fetchTeamMembers(teamIdsForUser));
 				dispatch({ type: "EXISTING_USER_CONFIRMED_IN_NEW_REPO" });
-			} else if (userTeams.find(team => team.id === teamForRepo)) {
-				await dispatch(fetchTeamMembers(userTeams));
+			} else if (teamIdsForUser.includes(teamIdForRepo)) {
+				await dispatch(fetchTeamMembers(teamIdsForUser));
 				dispatch({ type: "EXISTING_USER_CONFIRMED" });
 			} else {
 				await dispatch(joinTeam());
@@ -195,7 +197,7 @@ export const authenticate = params => (dispatch, getState, { http }) => {
 			const { currentTeamId } = getState().context;
 
 			dispatch(initializeSession({ accessToken, user }));
-			await dispatch(fetchTeamMembers(teams));
+			await dispatch(fetchTeamMembers(user.teamIds));
 
 			if (teams.find(team => team.id === currentTeamId)) dispatch({ type: "LOGGED_IN" });
 			else {
