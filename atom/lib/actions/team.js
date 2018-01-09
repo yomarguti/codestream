@@ -1,5 +1,4 @@
 import { upsert } from "../local-cache";
-import http from "../network-request";
 import { saveUsers } from "./user";
 import { saveRepo } from "./repo";
 import { normalize } from "./utils";

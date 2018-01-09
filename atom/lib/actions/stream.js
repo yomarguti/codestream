@@ -1,4 +1,3 @@
-import http from "../network-request";
 import { upsert } from "../local-cache";
 import { normalize } from "./utils";
 import {
@@ -35,7 +34,7 @@ export const saveStreams = attributes => (dispatch, getState, { db }) => {
 	);
 };
 
-export const fetchStream = () => async (dispatch, getState) => {
+export const fetchStream = () => async (dispatch, getState, { http }) => {
 	const { session, context, streams } = getState();
 	if (!streams.isFetching && context.currentFile !== "") {
 		dispatch({ type: "FETCH_STREAM" });
@@ -71,7 +70,8 @@ export const fetchStream = () => async (dispatch, getState) => {
 
 export const createPost = (streamId, parentPostId, text, codeBlocks) => async (
 	dispatch,
-	getState
+	getState,
+	{ http }
 ) => {
 	const { session, context } = getState();
 	const pendingId = tempId();
