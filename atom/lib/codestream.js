@@ -2,7 +2,6 @@ import { CompositeDisposable } from "atom";
 import Dexie from "dexie";
 import CodestreamView, { CODESTREAM_VIEW_URI } from "./codestream-view";
 import { bootstrapStore } from "./local-cache";
-import { get, ApiRequestError } from "./network-request";
 import git from "./git";
 import createStore from "./createStore";
 import {
