@@ -15,6 +15,18 @@ const isEmailInvalid = email => {
 	return email === "" || emailRegex.test(email) === false;
 };
 
+export const parseCommitters = (strings, attrs = {}) => {
+	const committers = _.uniq(strings)
+		.filter(Boolean)
+		.map(string => {
+			const [name, email] = string.split("<trim-this>");
+			if (email !== "" && email !== "(none)") return { name, email, ...attrs };
+			else return false;
+		})
+		.filter(Boolean);
+	return _.uniq(committers, it => it.email);
+};
+
 export class SimpleTeamMemberSelectionForm extends Component {
 	static contextTypes = {
 		repositories: PropTypes.array
@@ -37,22 +49,11 @@ export class SimpleTeamMemberSelectionForm extends Component {
 		const logFormat = "--format=%an<trim-this>%ae";
 		const cutoffDate = "1 month ago";
 		const recentCommitterData = await git(["log", logFormat, `--since="${cutoffDate}"`], { cwd });
-		const recentCommitterString = recentCommitterData.split("\n");
-		const recentCommitters = _.uniq(recentCommitterString)
-			.filter(Boolean)
-			.map(string => {
-				const [name, email] = string.split("<trim-this>");
-				return { name, email, selected: true };
-			});
+		const recentCommitters = parseCommitters(recentCommitterData.split("\n"), { selected: true });
 		const olderCommitterData = await git(["log", logFormat, `--before="${cutoffDate}"`], { cwd });
-		const olderCommitterString = olderCommitterData.split("\n");
-		const olderCommitters = _.uniq(olderCommitterString)
-			.filter(Boolean)
-			.map(string => {
-				const [name, email] = string.split("<trim-this>");
-				return { name, email, selected: false };
-			})
-			.filter(committer => !_.findWhere(recentCommitters, { email: committer.email }));
+		const olderCommitters = parseCommitters(olderCommitterData.split("\n"), {
+			selected: false
+		}).filter(committer => !_.findWhere(recentCommitters, { email: committer.email }));
 
 		const committers = [...recentCommitters, ...olderCommitters].filter(
 			c => !this.props.memberEmails.includes(c.email)
