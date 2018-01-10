@@ -68,6 +68,23 @@ export const fetchStream = () => async (dispatch, getState, { http }) => {
 	}
 };
 
+export const markStreamRead = streamId => async (dispatch, getState, { http }) => {
+	const { session, context, streams } = getState();
+	if (!streams.isReading && context.currentFile !== "") {
+		dispatch({ type: "READING_STREAM" });
+		const markReadData = await http.put("/read/" + streamId, {}, session.accessToken);
+		dispatch({ type: "READ_STREAM" });
+		console.log(markReadData);
+		console.log("READ THE STREAM");
+		console.log(session);
+		if (false && this.props.currentUser) {
+			let lastReadsKey = "lastReads." + this.props.id;
+			delete this.props.currentUser[lastReadsKey];
+		}
+		//		await dispatch(saveStream(stream));
+	}
+};
+
 export const createPost = (streamId, parentPostId, text, codeBlocks) => async (
 	dispatch,
 	getState,

@@ -103,7 +103,9 @@ export default class Post extends Component {
 						</div>
 					)}
 					{codeBlock}
-					{this.props.showDetails && <PostDetails post={post} />}
+					{this.props.showDetails && (
+						<PostDetails post={post} currentCommit={this.props.currentCommit} />
+					)}
 					{alertClass && <span className={alertClass} />}
 					{bodyParts.map(part => {
 						if (part.charAt(0) == "@") {

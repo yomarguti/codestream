@@ -67,12 +67,29 @@ export class SimpleStream extends Component {
 		if (nextProps.id !== this.props.id) {
 			this.handleDismissThread();
 		}
+
 		new AddCommentPopup({ handleClickAddComment: this.handleClickAddComment });
 	}
 
 	componentDidUpdate(prevProps, prevState) {
 		this._postslist.scrollTop = 100000;
 		this.installEditorHandlers();
+
+		// if we just switched to a new stream, mark the
+		// stream as read
+		if (this.props.id !== prevProps.id) {
+			// FIXME -- is this the right place to call mark read?
+			// FIXME -- also seems like actions.markStreamRead would
+			// be the right place to change the user object, but it
+			// looks like i'd have to jump through hoops to have
+			// access to the ojbect there
+			if (this.props.currentUser) {
+				if (this.props.currentUser.lastReads[this.props.id]) {
+					this.props.markStreamRead(this.props.id);
+					delete this.props.currentUser.lastReads[this.props.id];
+				}
+			}
+		}
 	}
 
 	installEditorHandlers() {
@@ -279,7 +296,14 @@ export class SimpleStream extends Component {
 					<div id="close-thread" onClick={this.handleDismissThread}>
 						&larr; Back to stream
 					</div>
-					{threadPost && <Post post={threadPost} key={threadPost.id} showDetails="1" />}
+					{threadPost && (
+						<Post
+							post={threadPost}
+							key={threadPost.id}
+							showDetails="1"
+							currentCommit={this.props.currentCommit}
+						/>
+					)}
 					{
 						(lastTimestamp =
 							0 ||
@@ -378,7 +402,7 @@ export class SimpleStream extends Component {
 
 			const location = codeMarker.location;
 			const range = that.makeRange(location);
-			const displayMarker = editor.markBufferRange(range, { invalidate: 'touch' });
+			const displayMarker = editor.markBufferRange(range, { invalidate: "touch" });
 
 			displayMarker.onDidChange(event => {
 				const post = that.findPostById(codeMarker.postId);
@@ -388,7 +412,6 @@ export class SimpleStream extends Component {
 				);
 				// TODO update it locally
 			});
-
 		});
 
 		for (var line in markersByLine) {
@@ -431,7 +454,8 @@ export class SimpleStream extends Component {
 				position: "tail",
 				class: "codestream-overlay"
 			});
-			this.tooltip = atom.tooltips.add(item, { title: "View comments" });
+			if (numComments === 1) this.tooltip = atom.tooltips.add(item, { title: "View comment" });
+			else this.tooltip = atom.tooltips.add(item, { title: "View " + numComments + " comments" });
 		}
 
 		// this.props.markers.forEach(codeMarker => {
@@ -921,6 +945,7 @@ const getMarkersForStreamAndCommit = (locationsByCommit = {}, commitHash, marker
 
 const mapStateToProps = ({ context, streams, users, posts, markers, markerLocations }) => {
 	const stream = streams.byFile[context.currentFile] || {};
+	const currentUser = users[context.currentUserId];
 	const locations = getLocationsByPost(
 		markerLocations.byStream[stream.id],
 		context.currentCommit,
@@ -929,12 +954,14 @@ const mapStateToProps = ({ context, streams, users, posts, markers, markerLocati
 	return {
 		id: stream.id,
 		currentFile: context.currentFile,
+		currentCommit: context.currentCommit,
 		markers: getMarkersForStreamAndCommit(
 			markerLocations.byStream[stream.id],
 			context.currentCommit,
 			markers
 		),
 		users: users,
+		currentUser: currentUser,
 		posts: getPostsForStream(stream.id, posts).map(post => {
 			let user = users[post.creatorId];
 			if (!user) {

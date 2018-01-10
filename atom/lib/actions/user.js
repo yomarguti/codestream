@@ -17,3 +17,10 @@ export const saveUsers = attributes => (dispatch, getState, { db }) => {
 		})
 	);
 };
+
+export const incrementUMI = streamId => ({
+	type: "INCREMENT_UMI",
+	payload: streamId
+});
+
+export const clearUMI = streamId => ({});
