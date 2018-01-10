@@ -345,6 +345,15 @@ export class SimpleStream extends Component {
 
 	renderUMI = () => {};
 
+	makeLocation(headPosition, tailPosition) {
+		const location = [];
+		location[0] = tailPosition.row;
+		location[1] = tailPosition.column;
+		location[2] = headPosition.row;
+		location[3] = headPosition.column;
+		return location;
+	}
+
 	// comment markers are the annotation indicators that appear in the right
 	// margin between the buffer and the codestream pane
 	// this is only partially implemented, as it's very fragile as-is
@@ -366,6 +375,20 @@ export class SimpleStream extends Component {
 			let line = codeMarker.location[0];
 			if (!markersByLine[line]) markersByLine[line] = [];
 			markersByLine[line].push(codeMarker);
+
+			const location = codeMarker.location;
+			const range = that.makeRange(location);
+			const displayMarker = editor.markBufferRange(range, { invalidate: 'touch' });
+
+			displayMarker.onDidChange(event => {
+				const post = that.findPostById(codeMarker.postId);
+				post.markerLocation = codeMarker.location = that.makeLocation(
+					event.newHeadBufferPosition,
+					event.newTailBufferPosition
+				);
+				// TODO update it locally
+			});
+
 		});
 
 		for (var line in markersByLine) {
@@ -478,7 +501,7 @@ export class SimpleStream extends Component {
 			let codeBlock = post.codeBlocks[0];
 			let location = post.markerLocation;
 			if (location) {
-				let markerRange = [[location[0], location[1]], [location[2], location[3]]];
+				let markerRange = this.makeRange(location);
 				// FIXME -- switch to stream if code is from another buffer
 				const editor = atom.workspace.getActiveTextEditor();
 				if (this.codeBlockMarker) this.codeBlockMarker.destroy();

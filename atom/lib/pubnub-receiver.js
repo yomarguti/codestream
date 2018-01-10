@@ -29,6 +29,10 @@ export default class PubNubReceiver {
 		this.setupListener();
 	}
 
+	isInitialized() {
+		return Boolean(this.pubNub);
+	}
+
 	setupListener() {
 		this.pubnub.addListener({
 			message: event => {
@@ -51,6 +55,10 @@ export default class PubNubReceiver {
 		const newChannels = _.difference(channels, this.subscribedChannels);
 		this.pubnub.subscribe({ channels: newChannels });
 		this.subscribedChannels.push(...newChannels);
+		console.group("changed subscribed channels", this.subscribedChannels);
+		console.debug("arguments", channels);
+		console.debug("new channels", newChannels);
+		console.groupEnd();
 	}
 
 	getMessageHandler(type) {
