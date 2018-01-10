@@ -49,8 +49,8 @@ export class SimpleSignupForm extends Component {
 		const repository = repositories[0];
 		const gitDirectory = repository.getWorkingDirectory();
 		this.setState({
-			email: repository.getConfigValue("user.email", gitDirectory),
-			name: repository.getConfigValue("user.name", gitDirectory)
+			email: repository.getConfigValue("user.email", gitDirectory) || "",
+			name: repository.getConfigValue("user.name", gitDirectory) || ""
 		});
 	}
 
@@ -118,8 +118,8 @@ export class SimpleSignupForm extends Component {
 	};
 
 	renderEmailHelp = () => {
-		const { email } = this.state;
-		if (isEmailInvalid(email))
+		const { email, emailTouched } = this.state;
+		if (emailTouched && isEmailInvalid(email))
 			return (
 				<small className="error-message">
 					<FormattedMessage id="signUp.email.invalid" />
