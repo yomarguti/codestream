@@ -52,7 +52,7 @@ export const confirmEmail = attributes => (dispatch, getState, { http }) => {
 			if (!teamIdForRepo) {
 				// fetch repo info again just in case a team has been created since CS was initialized
 				const action = await dispatch(fetchRepoInfo(repoAttributes));
-				if (action && action.payload) teamIdForRepo = payload.currentTeamId;
+				if (action && action.payload) teamIdForRepo = action.payload.currentTeamId;
 			}
 			const userTeams = normalize(teams);
 			const userRepos = normalize(repos);
