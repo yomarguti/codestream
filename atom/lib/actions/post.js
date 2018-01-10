@@ -45,6 +45,7 @@ export const resolvePendingPost = (id, { post, markers, markerLocations }) => (
 ) => {
 	return db
 		.transaction("rw", db.posts, async () => {
+			// TODO: handle ConstraintError: Key already exists in the object store.
 			await db.posts.delete(id);
 			await db.posts.add(post);
 		})
