@@ -46,13 +46,6 @@ export const resolvePendingPost = (id, { post, markers, markerLocations }) => (
 	return db
 		.transaction("rw", db.posts, async () => {
 			await db.posts.delete(id);
-			await dispatch(savePost(post));
-		})
-		.then(async () => {
-			await dispatch(saveMarkers(markers));
-			await dispatch(saveMarkerLocations(markerLocations));
-		})
-		.then(() => {
 			dispatch({
 				type: "RESOLVE_PENDING_POST",
 				payload: {
@@ -60,6 +53,11 @@ export const resolvePendingPost = (id, { post, markers, markerLocations }) => (
 					post
 				}
 			});
+			await dispatch(savePost(post));
+		})
+		.then(async () => {
+			await dispatch(saveMarkers(markers));
+			await dispatch(saveMarkerLocations(markerLocations));
 		});
 };
 
