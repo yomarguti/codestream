@@ -44,7 +44,7 @@ export default class PostDetails extends Component {
 		return (
 			<div className="post-details" id={post.id} ref={ref => (this._div = ref)}>
 				{post.codeBlocks &&
-					post.codeBlocks.length && (
+					(post.codeBlocks.length > 0) && (
 						<Button
 							id="show-version-button"
 							className="control-button"
