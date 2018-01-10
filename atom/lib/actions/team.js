@@ -23,7 +23,7 @@ export const fetchTeamMembers = teamId => (dispatch, getState, { http }) => {
 		.then(({ users }) => dispatch(saveUsers(normalize(users))));
 };
 
-export const joinTeam = () => (dispatch, getState) => {
+export const joinTeam = () => (dispatch, getState, { http }) => {
 	const { repoAttributes, session } = getState();
 	return http.post("/repos", repoAttributes, session.accessToken).then(async data => {
 		await dispatch(saveUsers(normalize(data.users)));
