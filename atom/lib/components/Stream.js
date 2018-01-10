@@ -38,7 +38,7 @@ export class SimpleStream extends Component {
 			})
 		);
 		this.subscriptions.add(
-			atom.commands.add(".codestream", {
+			atom.commands.add("atom-workspace", {
 				"codestream:escape": event => this.handleEscape(event)
 			})
 		);
@@ -776,7 +776,8 @@ export class SimpleStream extends Component {
 	// close the at mention popup when the customer types ESC
 	handleEscape(event) {
 		if (this.state.atMentionsOn) this.setState({ atMentionsOn: false });
-		else this.setState({ threadId: null });
+		else if (this.state.threadId) this.setState({ threadId: null });
+		else event.abortKeyBinding();
 	}
 
 	// when the user hovers over an at-mention list item, change the

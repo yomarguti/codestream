@@ -14,7 +14,7 @@
 		"up": "codestream:at-mention-move-up",
 		"tab": "codestream:at-mention-tab"
 	},
-	".codestream": {
+	"atom-workspace": {
 		"escape": "codestream:escape"
 	}
 }
