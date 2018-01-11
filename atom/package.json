@@ -51,6 +51,7 @@
     "classnames": "^2.2.5",
     "dexie": "^2.0.1",
     "moment": "^2.19.3",
+    "nodegit": "^0.20.3",
     "prop-types": "^15.6.0",
     "pubnub": "^4.19.0",
     "react": "^16.0.0",
