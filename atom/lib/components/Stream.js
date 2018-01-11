@@ -6,6 +6,7 @@ import _ from "underscore-plus";
 import Post from "./Post";
 import UMIs from "./UMIs";
 import AtMentionsPopup from "./AtMentionsPopup";
+import MarkerManager from "./MarkerManager";
 import AddCommentPopup from "./AddCommentPopup";
 import createClassString from "classnames";
 import DateSeparator from "./DateSeparator";
@@ -261,6 +262,7 @@ export class SimpleStream extends Component {
 		return (
 			<div className={streamClass} ref={ref => (this._div = ref)}>
 				<UMIs />
+				<MarkerManager markers={this.props.markers} />
 				<div
 					className={postsListClass}
 					ref={ref => (this._postslist = ref)}
