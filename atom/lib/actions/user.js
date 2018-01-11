@@ -18,9 +18,14 @@ export const saveUsers = attributes => (dispatch, getState, { db }) => {
 	);
 };
 
+export const recalculateUMI = () => ({
+	type: "SET_UMI"
+});
+
 export const incrementUMI = streamId => ({
 	type: "INCREMENT_UMI",
 	payload: streamId
 });
 
-export const clearUMI = streamId => ({});
+// this is in actions/stream.js
+// export const clearUMI = streamId => ({});

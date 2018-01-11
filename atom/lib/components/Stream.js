@@ -4,6 +4,7 @@ import { connect } from "react-redux";
 import ContentEditable from "react-contenteditable";
 import _ from "underscore-plus";
 import Post from "./Post";
+import UMIs from "./UMIs";
 import AtMentionsPopup from "./AtMentionsPopup";
 import AddCommentPopup from "./AddCommentPopup";
 import createClassString from "classnames";
@@ -79,16 +80,7 @@ export class SimpleStream extends Component {
 		// stream as read
 		if (this.props.id !== prevProps.id) {
 			// FIXME -- is this the right place to call mark read?
-			// FIXME -- also seems like actions.markStreamRead would
-			// be the right place to change the user object, but it
-			// looks like i'd have to jump through hoops to have
-			// access to the ojbect there
-			if (this.props.currentUser) {
-				if (this.props.currentUser.lastReads[this.props.id]) {
-					this.props.markStreamRead(this.props.id);
-					delete this.props.currentUser.lastReads[this.props.id];
-				}
-			}
+			this.props.markStreamRead(this.props.id);
 		}
 	}
 
@@ -143,7 +135,7 @@ export class SimpleStream extends Component {
 		// FIXME -- if there is panel is on the right, then subtract 20 more
 		let width = scrollViewDiv.offsetWidth + rect.left;
 		let newStyle = ".codestream-comment-popup { left: " + width + "px; }";
-		console.log("Adding style string; " + newStyle);
+		// console.log("Adding style string; " + newStyle);
 		this.addStyleString(newStyle);
 	};
 
@@ -261,6 +253,7 @@ export class SimpleStream extends Component {
 
 		return (
 			<div className={streamClass} ref={ref => (this._div = ref)}>
+				<UMIs />
 				<div
 					className={postsListClass}
 					ref={ref => (this._postslist = ref)}
@@ -390,7 +383,7 @@ export class SimpleStream extends Component {
 		if (editor.hasCodeStreamMarkersRendered) return;
 		editor.hasCodeStreamMarkersRendered = true;
 		// console.log(this.props.markers);
-		console.log("Rendering these markers: " + this.props.markers.length);
+		// console.log("Rendering these markers: " + this.props.markers.length);
 
 		// loop through and get starting line for each marker,
 		// to detect when we have overlaps with an O(N) algorithm
@@ -943,9 +936,9 @@ const getMarkersForStreamAndCommit = (locationsByCommit = {}, commitHash, marker
 	});
 };
 
-const mapStateToProps = ({ context, streams, users, posts, markers, markerLocations }) => {
+const mapStateToProps = ({ session, context, streams, users, posts, markers, markerLocations }) => {
 	const stream = streams.byFile[context.currentFile] || {};
-	const currentUser = users[context.currentUserId];
+	const currentUser = users[session.userId];
 	const locations = getLocationsByPost(
 		markerLocations.byStream[stream.id],
 		context.currentCommit,
