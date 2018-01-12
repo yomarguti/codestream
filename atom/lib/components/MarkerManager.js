@@ -64,6 +64,18 @@ class LineBubbleDecoration extends Component {
 
 		this.decoration = this.props.editor.decorateMarker(this.marker, options);
 		this.subscriptions.add(
+			this.marker.onDidChange(event => {
+				console.log("decoration changed");
+				console.log(
+					"old location was",
+					Location(event.oldHeadBufferPosition, event.oldTailBufferPosition)
+				);
+				console.log(
+					"new location is",
+					Location(event.newHeadBufferPosition, event.newTailBufferPosition)
+				);
+				// TODO: mark marker/reference as dirtied with new location
+			}),
 			this.decoration.onDidDestroy(() => {
 				this.tearDown();
 				this.subscriptions.dispose();
@@ -137,18 +149,6 @@ class MarkerManager extends Component {
 			//
 			// 		let item = document.createElement("div");
 			// 		item.className = "codestream-comment-popup";
-			// 		markers.forEach((marker, index) => {
-			// 			const bubble = document.createElement("div");
-			// 			// we add a "count" class which is the reverse of the index
-			// 			// so that bubbles lower in the stacking order can be offset
-			// 			// by a few pixels giving a "stacked bubbles" effect in CSS
-			// 			bubble.classList.add("count-" + (markers.length - index - 1));
-			// 			// bubble.onclick = function() {
-			// 			// 	that.selectPost(codeMarker.postId);
-			// 			// };
-			// 			bubble.innerText = marker.numComments > 9 ? "9+" : marker.numComments;
-			// 			item.appendChild(bubble);
-			// 			if (marker.location[2] > maxLine) maxLine = marker.location[2] * 1;
 			// 		});
 			// 		console.log("RANGE IS: " + line + " - " + maxLine);
 			// 		const range = [[line * 1, 0], [maxLine + 1, 0]];
