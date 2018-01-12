@@ -262,7 +262,11 @@ export class SimpleStream extends Component {
 		return (
 			<div className={streamClass} ref={ref => (this._div = ref)}>
 				<UMIs />
-				<MarkerManager streamId={this.props.id} markers={this.props.markers} />
+				<MarkerManager
+					streamId={this.props.id}
+					markers={this.props.markers}
+					onSelect={this.selectPost}
+				/>
 				<div
 					className={postsListClass}
 					ref={ref => (this._postslist = ref)}

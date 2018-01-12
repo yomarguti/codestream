@@ -82,7 +82,7 @@ class LineBubbleDecoration extends Component {
 			this.props.references.map((reference, index, group) => {
 				return (
 					<div
-						onClick={e => console.log("clicked  on", reference)}
+						onClick={e => this.props.onSelect(reference.postId)}
 						key={reference.id}
 						className={`count-${group.length - index - 1}`}
 					>
@@ -176,6 +176,7 @@ class MarkerManager extends Component {
 				references={this.state.referencesByLine[line]}
 				position="tail"
 				className="codestream-overlay"
+				onSelect={this.props.onSelect}
 			/>
 		));
 	}
