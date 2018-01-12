@@ -4,8 +4,6 @@ import ReactDOM from "react-dom";
 import { connect } from "react-redux";
 import * as actions from "../actions/marker";
 
-// turn a codestream flat-array range into the format that atom understands
-const Range = location => [[location[0], location[1]], [location[2], location[3]]];
 // vice versa
 const Location = (headPosition, tailPosition) => {
 	const location = [];
@@ -16,7 +14,7 @@ const Location = (headPosition, tailPosition) => {
 	return location;
 };
 
-class MarkerBubbleDecoration extends Component {
+class LineBubbleDecoration extends Component {
 	subscriptions = new CompositeDisposable();
 
 	constructor(props) {
@@ -37,7 +35,6 @@ class MarkerBubbleDecoration extends Component {
 	}
 
 	componentWillReceiveProps(nextProps) {
-		console.log("MarkerBubbleDecoration: receiving new props", nextProps);
 		if (nextProps.editor.id !== this.props.editor.id) {
 			this.tearDown();
 			this.decorate(nextProps);
@@ -84,7 +81,11 @@ class MarkerBubbleDecoration extends Component {
 		return ReactDOM.createPortal(
 			this.props.references.map((reference, index, group) => {
 				return (
-					<div key={reference.id} className={`count-${group.length - index - 1}`}>
+					<div
+						onClick={e => console.log("clicked  on", reference)}
+						key={reference.id}
+						className={`count-${group.length - index - 1}`}
+					>
 						{reference.numComments > 9 ? "9+" : reference.numComments}
 					</div>
 				);
@@ -98,12 +99,10 @@ class MarkerManager extends Component {
 	state = { referencesByLine: {} };
 
 	componentDidMount() {
-		console.log("markers", this.props.markers);
 		this.configureReferences(this.props.markers);
 	}
 
 	componentWillReceiveProps(nextProps) {
-		console.log("receiving props", nextProps);
 		if (nextProps.streamId !== this.props.streamId) {
 			this.setState(
 				() => ({ referencesByLine: {} }),
@@ -112,17 +111,14 @@ class MarkerManager extends Component {
 		} else this.configureReferences(nextProps.markers);
 	}
 
-	configureReferences(markers) {
-		markers.forEach(reference => {
+	configureReferences(references) {
+		const referencesByLine = {};
+		references.forEach(reference => {
 			const line = reference.location[0];
-			const lineMarkers = (this.state.referencesByLine[line] || []).filter(
-				m => m.id !== reference.id
-			);
+			const lineMarkers = referencesByLine[line] || [];
 			lineMarkers.push(reference);
 
-			this.setState(state => ({
-				referencesByLine: { ...state.referencesByLine, [line]: lineMarkers }
-			}));
+			referencesByLine[line] = lineMarkers;
 
 			// const displayMarker = editor.markBufferRange(Range(marker.location), { invalidate: "touch" });
 
@@ -165,33 +161,23 @@ class MarkerManager extends Component {
 			// 			console.log("This is where we should update the markers because they ahve moved");
 			// 			// if (event.textChanged) that.checkMarkerDiff(codeMarkers);
 			// 		});
-			//
-			// 		// editor.decorateMarker(decoratedMarker, {
-			// 		// 	type: "overlay",
-			// 		// 	item: item,
-			// 		// 	position: "tail",
-			// 		// 	class: "codestream-overlay"
-			// 		// });
-			// 		this.tooltip = atom.tooltips.add(item, { title: "View comments" });
 			// 	}
 		});
+		this.setState({ referencesByLine });
 	}
 
 	render() {
-		console.log("MarkerManager rendering", this.state.referencesByLine);
 		const editor = atom.workspace.getActiveTextEditor();
-		return Object.keys(this.state.referencesByLine)
-			.map(line => [this.state.referencesByLine[line], line])
-			.map(([references, line]) => (
-				<MarkerBubbleDecoration
-					key={line} // FIXME: probably need something better
-					line={line}
-					editor={editor}
-					references={references}
-					position="tail"
-					className="codestream-overlay"
-				/>
-			));
+		return Object.keys(this.state.referencesByLine).map(line => (
+			<LineBubbleDecoration
+				key={line}
+				line={line}
+				editor={editor}
+				references={this.state.referencesByLine[line]}
+				position="tail"
+				className="codestream-overlay"
+			/>
+		));
 	}
 }
 
