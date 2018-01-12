@@ -14,7 +14,11 @@ export default (state = initialState, { type, payload }) => {
 		}
 		case "CLEAR_UMI": {
 			console.log("clear umis in the reducer: ", payload);
-			delete state[payload];
+			// instead of deleting it, we set it to zero
+			// so that when we loop through the keys we can
+			// still reference the fact that this div needs to be cleared
+			if (state[payload]) state[payload] = 0;
+			// delete state[payload];
 			return state;
 		}
 		case "RECALCULATE_UMI": {

@@ -98,17 +98,12 @@ module.exports = {
 					localStorage.removeItem("codestream.session");
 					localStorage.removeItem("codestream.accessToken");
 				}
-			}),
+			})
 			// atom.commands.add(".codestream .compose.mentions-on", {
 			// 	"codestream:at-mention-move-up": event => this.handleAtMentionKeyPress(event, "up"),
 			// 	"codestream:at-mention-move-down": event => this.handleAtMentionKeyPress(event, "down"),
 			// 	"codestream:at-mention-escape": event => this.handleAtMentionKeyPress(event, "escape")
 			// })
-			atom.packages.onDidActivatePackage(pkg => {
-				if (pkg.name === "tree-view") {
-					this.consumeTreeViewPackage(pkg);
-				}
-			})
 		);
 		// Dev mode goodies
 		if (atom.inDevMode()) {
@@ -162,22 +157,5 @@ module.exports = {
 		atom.tooltips.add(div, { title: "Toggle CodeStream" });
 		div.appendChild(icon);
 		this.statusBarTile = statusBar.addRightTile({ item: div, priority: 400 });
-	},
-
-	consumeTreeViewPackage(pkg) {
-		//	let selectedPaths = treeView.selectedPaths();
-		this.treeView = pkg.mainModule.treeView;
-		console.log("TREE VIEW: **************************************");
-		console.log(this.treeView);
-		this.decorateUMIs();
-		this.subscriptions.add(atom.project.onDidChangePaths(this.decorateUMIs.bind(this)));
-	},
-
-	decorateUMIs() {
-		this.treeView.roots.forEach(this.decorateUMI.bind(this));
-	},
-
-	decorateUMI(root) {
-		console.log("DECORATING UMI: ", root);
 	}
 };
