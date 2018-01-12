@@ -18,12 +18,11 @@ const Location = (headPosition, tailPosition) => {
 
 class MarkerBubbleDecoration extends Component {
 	subscriptions = new CompositeDisposable();
-	markers = [];
 
 	constructor(props) {
 		super(props);
 		this.item = document.createElement("div");
-		this.item.className = "codestream-comment-popup";
+		this.item.classList.add("codestream-comment-popup");
 		atom.tooltips.add(this.item, { title: "View comments" });
 
 		// if (reference.location[2] > maxLine) maxLine = reference.location[2] * 1;
@@ -32,8 +31,30 @@ class MarkerBubbleDecoration extends Component {
 			props.line * 1
 		);
 	}
+
 	componentDidMount() {
-		const props = this.props;
+		this.decorate(this.props);
+	}
+
+	componentWillReceiveProps(nextProps) {
+		console.log("MarkerBubbleDecoration: receiving new props", nextProps);
+		if (nextProps.editor.id !== this.props.editor.id) {
+			this.tearDown();
+			this.decorate(nextProps);
+		}
+	}
+
+	componentWillUnmount() {
+		this.tearDown();
+		this.subscriptions.dispose();
+	}
+
+	tearDown() {
+		this.decoration && this.decoration.destroy();
+		this.marker && this.marker.destroy();
+	}
+
+	decorate(props) {
 		const options = {
 			type: "overlay",
 			position: props.position,
@@ -47,27 +68,23 @@ class MarkerBubbleDecoration extends Component {
 		this.decoration = this.props.editor.decorateMarker(this.marker, options);
 		this.subscriptions.add(
 			this.decoration.onDidDestroy(() => {
-				this.decoration = null;
+				this.tearDown();
 				this.subscriptions.dispose();
+				this.subscriptions = new CompositeDisposable();
+			}),
+			this.marker.onDidDestroy(() => {
+				this.tearDown();
+				this.subscriptions.dispose();
+				this.subscriptions = new CompositeDisposable();
 			})
 		);
-	}
-
-	componentWillReceiveProps(nextProps) {
-		console.log("MarkerBubbleDecoration: receiving new props", nextProps);
-		this.render();
-	}
-
-	componentWillUnmount() {
-		this.decoration && this.decoration.destroy();
-		this.subscriptions.dispose();
 	}
 
 	render() {
 		return ReactDOM.createPortal(
 			this.props.references.map((reference, index, group) => {
 				return (
-					<div className={`count-${group.length - index - 1}`}>
+					<div key={reference.id} className={`count-${group.length - index - 1}`}>
 						{reference.numComments > 9 ? "9+" : reference.numComments}
 					</div>
 				);
@@ -82,22 +99,26 @@ class MarkerManager extends Component {
 
 	componentDidMount() {
 		console.log("markers", this.props.markers);
-		this.configureReferences();
+		this.configureReferences(this.props.markers);
 	}
 
 	componentWillReceiveProps(nextProps) {
 		console.log("receiving props", nextProps);
-		this.configureReferences();
+		if (nextProps.streamId !== this.props.streamId) {
+			this.setState(
+				() => ({ referencesByLine: {} }),
+				() => this.configureReferences(nextProps.markers)
+			);
+		} else this.configureReferences(nextProps.markers);
 	}
 
-	configureReferences() {
-		this.props.markers.forEach(reference => {
+	configureReferences(markers) {
+		markers.forEach(reference => {
 			const line = reference.location[0];
-			const lineMarkers = this.state.referencesByLine[line] || [];
-			const existingReference = lineMarkers.find(m => m.id === reference.id);
-			if (existingReference) {
-				// update it
-			} else lineMarkers.push(reference);
+			const lineMarkers = (this.state.referencesByLine[line] || []).filter(
+				m => m.id !== reference.id
+			);
+			lineMarkers.push(reference);
 
 			this.setState(state => ({
 				referencesByLine: { ...state.referencesByLine, [line]: lineMarkers }
@@ -157,6 +178,7 @@ class MarkerManager extends Component {
 	}
 
 	render() {
+		console.log("MarkerManager rendering", this.state.referencesByLine);
 		const editor = atom.workspace.getActiveTextEditor();
 		return Object.keys(this.state.referencesByLine)
 			.map(line => [this.state.referencesByLine[line], line])

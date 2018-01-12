@@ -56,8 +56,9 @@ export const resolvePendingPost = (id, { post, markers, markerLocations }) => (
 			await dispatch(savePost(post));
 		})
 		.then(async () => {
-			await dispatch(saveMarkers(markers));
-			await dispatch(saveMarkerLocations(markerLocations));
+			// TODO: Should these be saved? the updates will be published through pubnub and cause double updates
+			// await dispatch(saveMarkers(markers));
+			// await dispatch(saveMarkerLocations(markerLocations));
 		});
 };
 
