@@ -39,7 +39,8 @@ module.exports = {
 			default: true
 		},
 		showUnread: {
-			// description: "Decorate files with unread messages",
+			description:
+				"Note that you can override this setting on a per-file or per-directory basis by right-clicking the Tree View.",
 			title: "Files with Unread Messages",
 			type: "string",
 			default: "badge",
