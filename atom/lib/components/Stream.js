@@ -103,6 +103,7 @@ export class SimpleStream extends Component {
 
 	componentDidMount() {
 		this.props.fetchStream(); // Fetch any new stuff
+		this.props.recalculateUMI(); // set the UMI for the first time
 		// TODO: scroll to bottom
 
 		let inputDiv = document.querySelector('div[contenteditable="true"]');
@@ -214,6 +215,12 @@ export class SimpleStream extends Component {
 
 		let newPostText = this.state.newPostText || "";
 
+		let usernames = Object.keys(this.props.users)
+			.map(key => {
+				return this.props.users[key].username;
+			})
+			.join("|")
+			.replace(/\|\|+/g, "|");
 		// strip out the at-mention markup, and add it back.
 		// newPostText = newPostText.replace(/(@\w+)/g, '<span class="at-mention">$1</span> ');
 
@@ -273,7 +280,12 @@ export class SimpleStream extends Component {
 						const returnValue = (
 							<div key={post.id}>
 								<DateSeparator timestamp1={lastTimestamp} timestamp2={post.createdAt} />
-								<Post post={post} replyingTo={parentPost} />
+								<Post
+									post={post}
+									usernames={usernames}
+									currentUsername={this.props.currentUser.username}
+									replyingTo={parentPost}
+								/>
 							</div>
 						);
 						lastTimestamp = post.createdAt;
@@ -292,6 +304,8 @@ export class SimpleStream extends Component {
 					{threadPost && (
 						<Post
 							post={threadPost}
+							usernames={usernames}
+							currentUsername={this.props.currentUser.username}
 							key={threadPost.id}
 							showDetails="1"
 							currentCommit={this.props.currentCommit}
@@ -310,7 +324,11 @@ export class SimpleStream extends Component {
 								const returnValue = (
 									<div key={post.id}>
 										<DateSeparator timestamp1={lastTimestamp} timestamp2={post.createdAt} />
-										<Post post={post} />
+										<Post
+											post={post}
+											usernames={usernames}
+											currentUsername={this.props.currentUser.username}
+										/>
 									</div>
 								);
 								lastTimestamp = post.createdAt;
@@ -595,14 +613,14 @@ export class SimpleStream extends Component {
 			var lineData = gitData[lineNum - 1];
 			if (lineData) {
 				var author = lineData["author"];
-				// FIXME -- skip it if it's me
 				if (author && author !== "Not Committed Yet") {
 					// find the author -- FIXME this feels fragile
 					Object.keys(this.props.users).forEach(personId => {
 						let person = this.props.users[personId];
 						let fullName = person.firstName + " " + person.lastName;
 						if (fullName == author || person.username == author) {
-							authors["@" + person.username] = true;
+							if (person.username !== this.props.currentUser.username)
+								authors["@" + person.username] = true;
 						}
 					});
 				}

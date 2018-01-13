@@ -56,8 +56,8 @@ export default class Post extends Component {
 
 		// FIXME -- only replace the at-mentions of actual authors, rather than any
 		// string that starts with an @
-		let body = post.text.replace(/(@\w+)/g, <span className="at-mention">$1</span>);
-		let bodyParts = post.text.split(/(@\w+)/);
+		let usernameRegExp = new RegExp("(@(?:" + this.props.usernames + "))");
+		let bodyParts = post.text.split(usernameRegExp);
 
 		let menuItems = [
 			{ label: "Create Thread", key: "make-thread" },
@@ -108,8 +108,8 @@ export default class Post extends Component {
 					)}
 					{alertClass && <span className={alertClass} />}
 					{bodyParts.map(part => {
-						if (part.charAt(0) == "@") {
-							if (part == "@pez")
+						if (part.match(usernameRegExp)) {
+							if (part === "@" + this.props.currentUsername)
 								return (
 									<span key={part} className="at-mention me">
 										{part}
