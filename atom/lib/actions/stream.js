@@ -73,7 +73,7 @@ export const markStreamRead = streamId => async (dispatch, getState, { http }) =
 	if (context.currentFile !== "") {
 		const markReadData = await http.put("/read/" + streamId, {}, session.accessToken);
 		dispatch({ type: "CLEAR_UMI", payload: streamId });
-		console.log("READ THE STREAM", markReadData, session);
+		// console.log("READ THE STREAM", markReadData, session);
 
 		// don't do this here. change the state of the UMIs and let the
 		// server handle changing and updating the user object
@@ -82,6 +82,16 @@ export const markStreamRead = streamId => async (dispatch, getState, { http }) =
 		// 	delete this.props.currentUser[lastReadsKey];
 		// }
 	}
+};
+
+export const setStreamUMITreatment = (path, setting) => async (dispatch, getState) => {
+	const { session, context, streams } = getState();
+	// FIXME -- we should save this info to the server rather than atom config
+	let repo = atom.project.getRepositories()[0];
+	let relativePath = repo.relativize(path);
+	let stream = streams.byFile[relativePath];
+	atom.config.set("CodeStream.showUnread-" + stream.id, setting);
+	return;
 };
 
 export const createPost = (streamId, parentPostId, text, codeBlocks) => async (

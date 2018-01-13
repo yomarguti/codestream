@@ -18,14 +18,30 @@ export const saveUsers = attributes => (dispatch, getState, { db }) => {
 	);
 };
 
-export const recalculateUMI = () => ({
-	type: "SET_UMI"
-});
+export const recalculateUMI = () => async (dispatch, getState, { http }) => {
+	const { session, users } = getState();
+	const currentUser = users[session.userId];
+	dispatch({
+		type: "RECALCULATE_UMI",
+		payload: currentUser
+	});
+};
 
-export const incrementUMI = streamId => ({
-	type: "INCREMENT_UMI",
-	payload: streamId
-});
+export const incrementUMI = post => async (dispatch, getState, { http }) => {
+	const { session, users } = getState();
+	const currentUser = users[session.userId];
+
+	var re = new RegExp("@" + currentUser.username + "\\b");
+	var hasMention = post.text.match("@" + currentUser.username + "\\b");
+	console.log("HAS MENTION IS: ", hasMention);
+	console.log("Looking for: ", currentUser.username);
+	let type = hasMention ? "INCREMENT_MENTION" : "INCREMENT_UMI";
+	console.log("TYPE IS: ", type, post);
+	dispatch({
+		type: type,
+		payload: post.streamId
+	});
+};
 
 // this is in actions/stream.js
 // export const clearUMI = streamId => ({});

@@ -6,7 +6,7 @@ export default store => next => action => {
 		// If post is not in currently visible stream i.e `action.payload.streamId !== streams.byFile[context.currentFile].id`
 		// and action.payload.creatorId !== session.userId
 
-		store.dispatch(incrementUMI(action.payload.streamId));
+		store.dispatch(incrementUMI(action.payload));
 	}
 	return next(action);
 };

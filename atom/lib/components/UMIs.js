@@ -2,6 +2,9 @@ import React, { Component } from "react";
 import { connect } from "react-redux";
 import createClassString from "classnames";
 
+const remote = require("electron").remote;
+var app = remote.app;
+
 export class SimpleUMIs extends Component {
 	constructor(props) {
 		super(props);
@@ -29,12 +32,12 @@ export class SimpleUMIs extends Component {
 		const umis = this.props.umis;
 
 		// console.log("TREE TRACKER IS: ", this.treeView);
-		console.log("THE STREAMS ARE: ", this.props.streams);
+		// console.log("THE STREAMS ARE: ", this.props.streams);
 		// console.log("RENDERING UMIS", umis);
 		// console.log(this.cwd + "/marker_pseudo_code.js");
 		// console.log(this.treeView.entryForPath(this.cwd + "/marker_pseudo_code.js"));
 
-		function swap(json) {
+		function swapHash(json) {
 			var ret = {};
 			Object.keys(json).map(key => {
 				ret[json[key].id] = key;
@@ -42,21 +45,39 @@ export class SimpleUMIs extends Component {
 			return ret;
 		}
 
-		let streamMap = swap(this.props.streams.byFile);
+		let streamMap = swapHash(this.props.streams.byFile);
+
+		// FIXME -- shouldn't need this if we initialize properly
+		if (!umis.mentions) umis.mentions = {};
+		if (!umis.unread) umis.unread = {};
 
 		let totalUMICount = 0;
-		Object.keys(umis).map(key => {
+		Object.keys(umis.unread).map(key => {
+			let count = umis.unread[key];
+			let mentions = umis.mentions[key];
 			let element = this.treeView.entryForPath(this.cwd + "/" + streamMap[key]);
-			let count = umis[key];
-			// reset has UMI to 0
 
-			element.setAttribute("cs-has-umi", 0);
-			// if the user wants a badge... perhaps set cs-has-umi
-			if (atom.config.get("CodeStream.badge-" + key)) {
-				element.setAttribute("cs-has-umi", count > 0 ? 1 : 0);
+			element.setAttribute("cs-umi-mention", 0);
+			element.setAttribute("cs-umi-badge", 0);
+			element.setAttribute("cs-umi-count", 0);
+			element.setAttribute("cs-umi-bold", 0);
+
+			// if the user wants a badge... set the appropriate class
+			let treatment =
+				atom.config.get("CodeStream.showUnread-" + key) ||
+				atom.config.get("CodeStream.showUnread") ||
+				"badge";
+
+			if (mentions) {
+				element.setAttribute("cs-umi-mention", count > 0 ? 1 : 0);
+				element.setAttribute("cs-umi-badge", count > 0 ? 1 : 0);
 				element.setAttribute("cs-umi-count", count > 99 ? "99+" : count);
 				totalUMICount += count;
-			} else if (atom.config.get("CodeStream.mute-" + key)) {
+			} else if (treatment === "badge") {
+				element.setAttribute("cs-umi-badge", count > 0 ? 1 : 0);
+				element.setAttribute("cs-umi-count", count > 99 ? "99+" : count);
+				totalUMICount += count;
+			} else if (treatment === "mute") {
 				// do nothing if the user wants to mute
 			} else {
 				// default is to bold
@@ -64,6 +85,7 @@ export class SimpleUMIs extends Component {
 				totalUMICount += 0.000001;
 			}
 		});
+		app.setBadgeCount(Math.floor(totalUMICount));
 		return null;
 	}
 }
