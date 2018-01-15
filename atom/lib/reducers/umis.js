@@ -7,43 +7,45 @@ export default (state = initialState, { type, payload }) => {
 	switch (type) {
 		case "INCREMENT_UMI": {
 			console.log("incrementint umis in the reducer: ", payload);
-			if (!state.unread) state.unread = {};
-			state.unread[payload] = (state.unread[payload] || 0) + 1;
-			state.counter = (state.counter || 0) + 1;
-			console.log("STATE IS: ", state);
-			return state;
+			let nextState = { ...state };
+			if (!nextState.unread) nextState.unread = {};
+			nextState.unread[payload] = (nextState.unread[payload] || 0) + 1;
+			nextState.counter = (nextState.counter || 0) + 1;
+			console.log("STATE IS: ", nextState);
+			return nextState;
 		}
 		case "INCREMENT_MENTION": {
 			console.log("incrementing mention in the reducer: ", payload);
 			// payload is a streamId
-			if (!state.mentions) state.mentions = {};
-			if (!state.unread) state.unread = {};
-			state.mentions[payload] = (state.mentions[payload] || 0) + 1;
-			state.unread[payload] = (state.unread[payload] || 0) + 1;
-			state.counter = (state.counter || 0) + 1;
-			return state;
+			let nextState = { ...state };
+			if (!nextState.mentions) nextState.mentions = {};
+			if (!nextState.unread) nextState.unread = {};
+			nextState.mentions[payload] = (nextState.mentions[payload] || 0) + 1;
+			nextState.unread[payload] = (nextState.unread[payload] || 0) + 1;
+			nextState.counter = (nextState.counter || 0) + 1;
+			return nextState;
 		}
 		case "CLEAR_UMI": {
 			console.log("clear umis in the reducer: ", payload);
+			let nextState = { ...state };
 			// instead of deleting it, we set it to zero
 			// so that when we loop through the keys we can
 			// still reference the fact that this div needs to be cleared
-			if (!state.mentions) state.mentions = {};
-			if (!state.unread) state.unread = {};
-			if (state.mentions[payload]) state.mentions[payload] = 0;
-			if (state.unread[payload]) state.unread[payload] = 0;
-			// delete state[payload];
-			state.counter = (state.counter || 0) + 1;
-			return state;
+			if (!nextState.mentions) nextState.mentions = {};
+			if (!nextState.unread) nextState.unread = {};
+			if (nextState.mentions[payload]) nextState.mentions[payload] = 0;
+			if (nextState.unread[payload]) nextState.unread[payload] = 0;
+			return nextState;
 		}
 		case "RECALCULATE_UMI": {
-			state.mentions = {};
-			state.unread = {};
+			let nextState = {};
+			nextState.mentions = {};
+			nextState.unread = {};
 			console.log("RECALCULATING UMI: ", payload);
 			let mentionRegExp = new RegExp("@" + payload.currentUser.username + "\\b");
 
 			let lastReads = payload.currentUser.lastReads;
-			state = { mentions: {}, unread: {} };
+			nextState = { mentions: {}, unread: {} };
 			let streamsById = {};
 			Object.keys(payload.streams.byFile).forEach(key => {
 				streamsById[payload.streams.byFile[key].id] = payload.streams.byFile[key];
@@ -71,12 +73,11 @@ export default (state = initialState, { type, payload }) => {
 							mentions++;
 						}
 					}
-					if (unread) state.unread[key] = unread;
-					if (mentions) state.mentions[key] = mentions;
+					if (unread) nextState.unread[key] = unread;
+					if (mentions) nextState.mentions[key] = mentions;
 				}
 			});
-			state.counter = (state.counter || 0) + 1;
-			return state;
+			return nextState;
 		}
 		default:
 			return state;
