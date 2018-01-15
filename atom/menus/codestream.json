@@ -1,13 +1,31 @@
 {
 	"context-menu": {
+		".tree-view [is='tree-view-file']": [
+			{
+				"label": "Notifications",
+				"submenu": [
+					{ "label": "Mute", "command": "codestream:mute" },
+					{ "label": "Bold", "command": "codestream:bold" },
+					{ "label": "Badge", "command": "codestream:badge" }
+				]
+			},
+			{ "type": "separator" }
+		],
+		".tree-view [is='tree-view-directory']": [
+			{
+				"label": "Notifications",
+				"submenu": [
+					{ "label": "Mute", "command": "codestream:mute" },
+					{ "label": "Bold", "command": "codestream:bold" },
+					{ "label": "Badge", "command": "codestream:badge" }
+				]
+			},
+			{ "type": "separator" }
+		],
 		"atom-text-editor": [
 			{
 				"label": "Add Comment",
 				"command": "codestream:comment"
-			},
-			{
-				"label": "Toggle CodeStream",
-				"command": "codestream:toggle"
 			}
 		]
 	},

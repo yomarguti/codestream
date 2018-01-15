@@ -61,7 +61,7 @@ export async function put(route, body, accessToken) {
 		headers.set("Authorization", `Bearer ${accessToken}`);
 	}
 	return tryFetch(getPath(route), {
-		headers: headers,
+		headers,
 		method: "PUT",
 		body: JSON.stringify(body)
 	});

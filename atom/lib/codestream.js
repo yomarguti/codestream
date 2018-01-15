@@ -14,6 +14,7 @@ import {
 	setCurrentFile,
 	setCurrentCommit
 } from "./actions/context";
+import { setStreamUMITreatment } from "./actions/stream";
 import logger from "./util/Logger";
 
 logger.addHandler((level, msg) => {
@@ -41,6 +42,17 @@ module.exports = {
 			description: "Display headshots in the stream",
 			type: "boolean",
 			default: true
+		},
+		showUnread: {
+			description:
+				"Note that you can override this setting on a per-file or per-directory basis by right-clicking the Tree View.",
+			title: "Files with Unread Messages",
+			type: "string",
+			default: "badge",
+			enum: [
+				{ value: "badge", description: "Display a badge to the right of the file" },
+				{ value: "bold", description: "Bold the filename" }
+			]
 		}
 	},
 
@@ -103,6 +115,11 @@ module.exports = {
 					localStorage.removeItem("codestream.session");
 					localStorage.removeItem("codestream.accessToken");
 				}
+			}),
+			atom.commands.add(".tree-view", {
+				"codestream:mute": target => this.markMute(target),
+				"codestream:bold": target => this.markBold(target),
+				"codestream:badge": target => this.markBadge(target)
 			})
 			// atom.commands.add(".codestream .compose.mentions-on", {
 			// 	"codestream:at-mention-move-up": event => this.handleAtMentionKeyPress(event, "up"),
@@ -134,6 +151,31 @@ module.exports = {
 				})
 			);
 		}
+	},
+
+	markMute(event) {
+		this.markStream(event, "mute");
+	},
+	markBold(event) {
+		this.markStream(event, "bold");
+	},
+	markBadge(event) {
+		this.markStream(event, "badge");
+	},
+	getStreamIdFromPath(path) {
+		console.log("CHECKING PATH: ", path);
+	},
+	markStream(event, setting) {
+		let li = event.target.closest("li");
+
+		// TODO if there isn't a click event, use the active li
+		if (!li) return;
+
+		let type = li.classList.contains("directory") ? "directory" : "file";
+		let path = li.getElementsByTagName("span")[0].getAttribute("data-path");
+		setStreamUMITreatment(path, setting);
+		store.dispatch(setStreamUMITreatment(path, setting));
+		// this.render_umis();
 	},
 
 	deactivate() {

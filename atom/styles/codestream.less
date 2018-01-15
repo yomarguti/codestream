@@ -5,6 +5,88 @@
 @import "ui-variables";
 @import "octicon-mixins";
 
+.cs-unreads {
+	position: absolute !important;
+	background: @background-color-highlight;
+	border: 1px solid @base-border-color;
+	// color: white;
+	text-align: center;
+	padding: 5px 0;
+	width: 80%;
+	left: 10% !important;
+	z-index: 10;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 2.5em;
+	cursor: pointer !important;
+	transition: top 0.2s, bottom 0.2s;
+}
+.cs-unreads.active {
+	display: block;
+}
+.cs-unreads.mention {
+	background: @background-color-info;
+	color: white;
+}
+#cs-unreads-above {
+	top: -3em;
+	border-radius: 0 0 5px 5px;
+	border-top: none;
+	// box-shadow: 0 1px 15px rgba(0, 0, 0, 0.5);
+}
+#cs-unreads-above.active {
+	top: 0;
+}
+#cs-unreads-below {
+	top: auto !important;
+	bottom: -3em !important;
+	border-radius: 5px 5px 0 0;
+	border-bottom: none;
+	// box-shadow: 0 -1px 15px rgba(0, 0, 0, 0.5);
+}
+#cs-unreads-below.active {
+	bottom: 0 !important;
+}
+.tree-view {
+	li[cs-umi-badge="1"] {
+		position: relative;
+	}
+	li[cs-umi-bold="1"] span {
+		font-weight: 700 !important;
+		color: @text-color-highlight;
+		// text-shadow: 0px 1px 1px rgba(0, 0, 0, 1);
+	}
+	li[cs-umi-bold="1"] span::before {
+		font-weight: 900 !important;
+	}
+	li[cs-umi-badge="1"]::after {
+		display: block;
+		position: absolute;
+		right: 5px;
+		top: 0;
+		// float: right;
+		background-color: @base-background-color !important;
+		content: attr(cs-umi-count);
+		border-radius: 6px;
+		padding: 4px 12px 6px 12px;
+		margin: 2px 0 0 0;
+		color: @text-color;
+		font-size: 10px;
+		width: 32px;
+		text-align: center;
+		line-height: 1em !important;
+		box-shadow: -5px 0 5px @app-background-color, 15px 0 5px @app-background-color;
+	}
+	li.selected[cs-umi-badge="1"]::after {
+		box-shadow: -5px 0 5px @background-color-selected;
+	}
+	li[cs-umi-mention="1"]::after {
+		color: white;
+		background-color: @background-color-info !important;
+	}
+}
+
 .git-diff-details-new-highlighted {
 	background-color: rgba(162, 232, 120, 0.15) !important;
 }
