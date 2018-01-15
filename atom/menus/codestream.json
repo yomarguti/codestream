@@ -26,10 +26,6 @@
 			{
 				"label": "Add Comment",
 				"command": "codestream:comment"
-			},
-			{
-				"label": "Toggle CodeStream",
-				"command": "codestream:toggle"
 			}
 		]
 	},
