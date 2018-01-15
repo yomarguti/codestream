@@ -93,7 +93,11 @@ module.exports = {
 					let firstCommitHash = await git(["rev-list", "--max-parents=0", "HEAD"], {
 						cwd: repo.getWorkingDirectory()
 					});
-					const repoAttributes = { workingDirectory: workDir, url: repoUrl, firstCommitHash: firstCommitHash.trim() };
+					const repoAttributes = {
+						workingDirectory: workDir,
+						url: repoUrl,
+						firstCommitHash: firstCommitHash.trim()
+					};
 					store.dispatch(setRepoAttributes(repoAttributes));
 					store.dispatch(fetchRepoInfo(repoAttributes));
 				}
@@ -162,19 +166,18 @@ module.exports = {
 	markBadge(event) {
 		this.markStream(event, "badge");
 	},
-	getStreamIdFromPath(path) {
-		console.log("CHECKING PATH: ", path);
-	},
 	markStream(event, setting) {
 		let li = event.target.closest("li");
 
-		// TODO if there isn't a click event, use the active li
+		// TODO if there isn't a click event, use the active li from tree-veiw
 		if (!li) return;
 
 		let type = li.classList.contains("directory") ? "directory" : "file";
 		let path = li.getElementsByTagName("span")[0].getAttribute("data-path");
 		setStreamUMITreatment(path, setting);
 		store.dispatch(setStreamUMITreatment(path, setting));
+
+		// FIXME -- this should re-render the UMIs somehow. How?
 		// this.render_umis();
 	},
 
