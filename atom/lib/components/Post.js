@@ -76,8 +76,8 @@ export default class Post extends Component {
 		let alertClass = this.props.alert ? "icon icon-" + this.props.alert : null;
 		let defaultImage = encodeURI("https://i.imgur.com/hOylzTJ.gif");
 		let authorInitials = post.author.email.charAt(0);
-		if (post.author.firstName) {
-			authorInitials = post.author.firstName.charAt(0) + post.author.lastName.charAt(0);
+		if (post.author.fullName) {
+			authorInitials = post.author.fullName.replace(/(\w)\w*/g, "$1").replace(/\s/g, "");
 		}
 		let classNameInitials = "headshot-initials color-" + post.author.color;
 
