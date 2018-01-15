@@ -1,15 +1,20 @@
-var _levels = {
-		'ERROR': 0,
-		'WARN':  1,
-		'INFO':  2,
-		'DEBUG': 3,
-		'TRACE': 4,
-		'TICK':  5
-	},
-	_objectIdSeed = 0;
+'use strict';
+
+const _levels = {
+	'ERROR': 0,
+	'WARN':  1,
+	'INFO':  2,
+	'DEBUG': 3,
+	'TRACE': 4,
+	'TICK':  5
+};
+
+const _tickLevel = _levels['TICK'];
+
+let	_objectIdSeed = 0;
 
 function _normalizeLevel (level) {
-	var requestedLevel = level;
+	const requestedLevel = level;
 
 	if (typeof level === 'string') {
 		level = level.toUpperCase();
@@ -23,40 +28,73 @@ function _normalizeLevel (level) {
 	return level;
 }
 
-function Logger (_className, _level, _handlers, _parent) {
-	var me = this,
-		_childLoggers = [],
-		_tickLevel = _levels['TICK'],
-		_levelChangeListeners = [],
-		_tick,
-		_name;
+class Tick {
 
-	_level = _normalizeLevel(_level);
-	_handlers = (_handlers && _handlers.slice) ? _handlers.slice() : [];
-
-	function Tick (logger) {
-		var me = this,
-			lastTick = +new Date();
-
-		me.tock = function (message) {
-			if (_level < _tickLevel) {
-				return;
-			}
-
-			var now = +new Date(),
-				elapsed = now - lastTick;
-
-			lastTick = now;
-			logger.trace('[' + elapsed + 'ms] ' + message);
-		}
+	constructor (logger) {
+		const me = this;
+		me._logger = logger;
+		me._lastTick = +new Date();
 	}
 
-	function _log (msgLevel, args) {
-		var msgLevelName = msgLevel,
-			msg;
+
+	tock (message) {
+		const me = this;
+		const logger = me._logger;
+
+		if (logger._level < _tickLevel) {
+			return;
+		}
+
+		const now = +new Date();
+		const elapsed = now - lastTick;
+
+		me._lastTick = now;
+		logger.trace(`[${elapsed} ms] ${message}`);
+	}
+}
+
+class Logger {
+
+	constructor (className, level, handlers, parent) {
+		const me = this;
+		me._className = className;
+		me._level = _normalizeLevel(level);
+		me._handlers = handlers;
+		me._parent = parent;
+		me._childLoggers = [];
+		me._levelChangeListeners = [];
+		me._handlers = (handlers && handlers.slice) ? handlers.slice() : [];
+	}
+
+	error () {
+		this._log('ERROR', arguments);
+	}
+
+	warn () {
+		this._log('WARN', arguments);
+	}
+
+	info () {
+		this._log('INFO', arguments);
+	}
+
+	debug () {
+		this._log('DEBUG', arguments);
+	}
+
+	trace () {
+		this._log('TRACE', arguments);
+	}
+
+	_log (msgLevel, args) {
+		const me = this;
+		const msgLevelName = msgLevel;
+
+		let msg;
+
 		msgLevel = _normalizeLevel(msgLevel);
 
-		if (msgLevel <= _level) {
+		if (msgLevel <= this._level) {
 			for (let i = 0; i < args.length; i++) {
 				let arg = args[i];
 				if (arg == null) {
@@ -67,13 +105,12 @@ function Logger (_className, _level, _handlers, _parent) {
 				args[i] = arg;
 			}
 			msg = [].join.call(args, ' ');
-			msg = '[' + msgLevelName + '] '
-				+ (_className ? '[' + _className + '] ' : '')
-				+ msg;
+			const className = me._className;
+			msg = (className ? '[' + className + '] ' : '') + msg;
 
-			_handlers.forEach(function (handlerFn) {
+			me._handlers.forEach(handlerFn => {
 				try {
-					handlerFn.call(me, msgLevel, msg);
+					handlerFn.call(me, msgLevelName, msg);
 				} catch (err) {
 					console.error(err);
 				}
@@ -83,90 +120,78 @@ function Logger (_className, _level, _handlers, _parent) {
 		}
 	}
 
-	for (_name in _levels) {
-		let lowerCaseName = _name.toLowerCase();
-		me[lowerCaseName] = me[_levels[_name]] = (function () {
-			var l = _name;
-			return function () {
-				return _log(l, arguments);
-			}
-		}());
-	}
 
-	me.print = function (msg) {
-		_handlers.forEach(function (handlerFn) {
+
+	print (msg) {
+		const me = this;
+		this._handlers.forEach(handlerFn => {
 			handlerFn.call(me, 'INFO', msg);
 		});
 	}
 
-	me.tick = function () {
-		return _tick = new Tick(me);
-	}
+	forClass (className) {
+		const me = this;
+		const childLogger = new Logger(className, me._level, me._handlers, me);
 
-	me.tock = function () {
-		if (!_tick) {
-			return this.error('Logger.tock() must be invoked after Logger.tick()');
-		}
-		return _tick.tock.apply(this, arguments);
-	}
+		me._childLoggers.push(childLogger);
 
-	me.forClass = function (className) {
-		var childLogger = new Logger(className, _level, _handlers, me);
-		_childLoggers.push(childLogger);
 		return childLogger;
 	}
 
-	me.forObject = function (className, id) {
+	forObject (className, id) {
 		return this.forClass(className + '-' + (id || ++_objectIdSeed));
 	}
 
-	me.getLevel = function () {
-		return _level;
+	get level () {
+		return this._level;
 	}
 
-	me.setLevel = function (level, path) {
+	setLevel (level, path) {
+		const me = this;
+		const className = me._className;
+
 		level = _normalizeLevel(level);
-		if (!path || (_className && _className.indexOf(path) >= 0)) {
-			_level = level;
+
+		if (!path || (className && className.indexOf(path) >= 0)) {
+			me._level = level;
 		}
 
-		_levelChangeListeners.forEach(function (listener) {
-			listener.call(this, level, path);
-		});
+		for (const listener of me._levelChangeListeners) {
+			listener.call(me, level, path);
+		}
 
-		_childLoggers.forEach(function (childLogger) {
+		for (const childLogger of me._childLoggers) {
 			childLogger.setLevel(level, path);
-		});
+		}
 	}
 
-	me.addHandler = function (handlerFn) {
-		_handlers.push(handlerFn);
-		_childLoggers.forEach(function (childLogger) {
+	addHandler (handlerFn) {
+		const me = this;
+		me._handlers.push(handlerFn);
+		for (const childLogger of me._childLoggers) {
 			childLogger.addHandler(handlerFn);
-		});
+		}
 	}
 
-	me.onLevelChange = function (fn) {
-		_levelChangeListeners.push(fn);
+	onLevelChange (fn) {
+		this._levelChangeListeners.push(fn);
 	}
 
-	me.destroy = function () {
-		_parent._removeChild(me);
+	destroy () {
+		const me = this;
+		me._parent._removeChild(me);
 	}
 
-	me._removeChild = function (child) {
-		var index = _childLoggers.indexOf(child);
+	_removeChild (child) {
+		const childLoggers = this._childLoggers;
+		const index = childLoggers.indexOf(child);
 
 		if (index >= 0) {
-			_childLoggers.splice(index, 1);
+			childLoggers.splice(index, 1);
 		}
 	}
 }
 
-var _instance = new Logger(null, 'INFO');
+const _instance = new Logger(null, 'INFO');
 
-Logger.getInstance = function () {
-	return _instance;
-}
-
-module.exports = Logger;
+export default _instance;

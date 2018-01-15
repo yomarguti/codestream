@@ -17,7 +17,7 @@ class GitCommit {
 	async getParent() {
 		const parents = await this._gitCommit.getParents(1);
 		const parent = parents[0];
-		return parent & new GitCommit(parent);
+		return parent && new GitCommit(parent);
 	}
 
 }

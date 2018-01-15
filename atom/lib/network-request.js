@@ -55,9 +55,13 @@ export async function post(route, body, accessToken) {
 	});
 }
 
-export async function put(route, body) {
+export async function put(route, body, accessToken) {
+	const headers = getHeaders();
+	if (accessToken) {
+		headers.set("Authorization", `Bearer ${accessToken}`);
+	}
 	return tryFetch(getPath(route), {
-		headers: getHeaders(),
+		headers: headers,
 		method: "PUT",
 		body: JSON.stringify(body)
 	});

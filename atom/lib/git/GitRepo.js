@@ -113,14 +113,20 @@ class GitRepo {
 	async getDeltasBetweenCommits(oldCommit, newCommit) {
 		const oldTree = await oldCommit._gitCommit.getTree();
 		const newTree = await newCommit._gitCommit.getTree();
-		const diffs = await Git.diff(oldTree, newTree)
-		debugger;
-
+		const diff = await Git.Diff.treeToTree(this._git, oldTree, newTree);
+		const deltas = await this._buildDeltasFromDiffs([diff]);
+		return deltas;
 	}
 
 	async getDeltas(commit) {
-		const deltas = [];
 		const diffs = await commit._gitCommit.getDiff();
+		const deltas = await this._buildDeltasFromDiffs(diffs);
+		return deltas;
+	}
+
+	async _buildDeltasFromDiffs(diffs) {
+		const deltas = [];
+
 		for (const diff of diffs) {
 			await diff.findSimilar({
 				flags: Git.Diff.FIND.RENAMES

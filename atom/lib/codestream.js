@@ -14,6 +14,11 @@ import {
 	setCurrentFile,
 	setCurrentCommit
 } from "./actions/context";
+import logger from "./util/Logger";
+
+logger.addHandler((level, msg) => {
+	console.log(`[${level}] ${msg}`);
+});
 
 let store;
 
