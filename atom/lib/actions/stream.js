@@ -97,6 +97,9 @@ export const incrementUMI = post => async (dispatch, getState, { http }) => {
 	const { session, users } = getState();
 	const currentUser = users[session.userId];
 
+	// don't increment UMIs for posts you wrote yourself
+	if (post.creatorId === session.userId) return;
+
 	var hasMention = post.text.match("@" + currentUser.username + "\\b");
 	let type = hasMention ? "INCREMENT_MENTION" : "INCREMENT_UMI";
 	dispatch({
