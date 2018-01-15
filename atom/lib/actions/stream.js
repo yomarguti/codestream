@@ -10,11 +10,11 @@ import {
 } from "./post";
 import { saveMarkers } from "./marker";
 import { saveMarkerLocations } from "./marker-location";
-import { open as openRepo } from '../git/GitRepo';
-import rootLogger from '../util/Logger';
+import { open as openRepo } from "../git/GitRepo";
+import rootLogger from "../util/Logger";
 // rootLogger.setLevel('trace');
 
-const logger = rootLogger.forClass('actions/stream');
+const logger = rootLogger.forClass("actions/stream");
 
 const tempId = (() => {
 	let count = 0;
@@ -40,9 +40,8 @@ export const saveStreams = attributes => (dispatch, getState, { db }) => {
 };
 
 class MarkerLocationFinder {
-
 	constructor(repo, session, http, context, streamId) {
-		this._logger = logger.forObject('actions/stream/MarkerLocationFinder');
+		this._logger = logger.forObject("actions/stream/MarkerLocationFinder");
 		this._repo = repo;
 		this._session = session;
 		this._http = http;
@@ -69,15 +68,24 @@ class MarkerLocationFinder {
 			if (location) {
 				myLogger.debug(`Commit ${commit.hash} has location information for marker ${markerId}`);
 				if (!commit.equals(currentCommit)) {
-					myLogger.debug(`Location is not up to date - getting deltas from ${commit.hash} to ${currentCommit.hash}`);
+					myLogger.debug(
+						`Location is not up to date - getting deltas from ${commit.hash} to ${
+							currentCommit.hash
+						}`
+					);
 
 					const deltas = await repo.getDeltasBetweenCommits(commit, currentCommit);
 					const edits = this._getEditsForCurrentFile(deltas);
 					if (edits.length) {
 						const calculatedLocations = await this._calculateLocations(
-							locations, edits, commit.hash, currentCommit.hash);
-						const currentLocations = this._locationsByCommitHash[currentCommit.hash]
-							|| (this._locationsByCommitHash[currentCommit.hash] = {});
+							locations,
+							edits,
+							commit.hash,
+							currentCommit.hash
+						);
+						const currentLocations =
+							this._locationsByCommitHash[currentCommit.hash] ||
+							(this._locationsByCommitHash[currentCommit.hash] = {});
 						Object.assign(currentLocations, calculatedLocations);
 
 						myLogger.debug(`Location recalculated ${location} -> ${currentLocations[markerId]}`);
@@ -99,7 +107,9 @@ class MarkerLocationFinder {
 	}
 
 	async _calculateLocations(locations, edits, originalCommitHash, newCommitHash) {
-		const result = await this._http.put('/calculate-locations?', {
+		const result = await this._http.put(
+			"/calculate-locations?",
+			{
 				teamId: this._context.currentTeamId,
 				streamId: this._streamId,
 				originalCommitHash: originalCommitHash,
@@ -117,9 +127,7 @@ class MarkerLocationFinder {
 		const myLogger = me._logger;
 		const currentFile = me._context.currentFile;
 
-		let edits = deltas
-			.filter(delta => delta.newFile === currentFile)
-			.map(delta => delta.edits);
+		let edits = deltas.filter(delta => delta.newFile === currentFile).map(delta => delta.edits);
 		edits = [].concat.apply([], edits);
 
 		myLogger.debug(`Found ${edits.length} edits for file ${currentFile}`);
@@ -137,10 +145,10 @@ class MarkerLocationFinder {
 		if (!locations) {
 			myLogger.debug(`Locations not found - cache miss`);
 			const { markerLocations } = await this._http.get(
-				`/marker-locations?`
-				+ `teamId=${this._context.currentTeamId}&`
-				+ `streamId=${this._streamId}&`
-				+ `commitHash=${commitHash}`,
+				`/marker-locations?` +
+					`teamId=${this._context.currentTeamId}&` +
+					`streamId=${this._streamId}&` +
+					`commitHash=${commitHash}`,
 				this._session.accessToken
 			);
 			locations = cache[commitHash] = markerLocations.locations || {};
@@ -151,7 +159,6 @@ class MarkerLocationFinder {
 
 		return locations;
 	}
-
 }
 
 export const fetchStream = () => async (dispatch, getState, { http }) => {
@@ -188,7 +195,8 @@ export const fetchStream = () => async (dispatch, getState, { http }) => {
 			session,
 			http,
 			context,
-			stream.id);
+			stream.id
+		);
 
 		logger.debug(`Found ${markers.length} markers`);
 
@@ -204,7 +212,6 @@ export const fetchStream = () => async (dispatch, getState, { http }) => {
 
 		await dispatch(saveStream(stream));
 		await dispatch(saveMarkers(normalize(markers)));
-
 
 		await dispatch(saveMarkerLocations(normalize(markerLocations)));
 		dispatch(savePostsForStream(stream.id, normalize(posts)));
@@ -254,15 +261,48 @@ export const incrementUMI = post => async (dispatch, getState, { http }) => {
 export const recalculateUMI = () => async (dispatch, getState, { http }) => {
 	const { session, users, streams, posts } = getState();
 	const currentUser = users[session.userId];
-	console.log("POSTS ARE: ", posts);
+
 	// FIXME -- need all new posts as well
-	dispatch({
-		type: "RECALCULATE_UMI",
-		payload: {
-			streams: streams,
-			currentUser: currentUser,
-			posts: posts
+
+	console.log("RECALCULATING UMI: ");
+	let mentionRegExp = new RegExp("@" + currentUser.username + "\\b");
+
+	let lastReads = currentUser.lastReads;
+	let nextState = { mentions: {}, unread: {} };
+	let streamsById = {};
+	Object.keys(streams.byFile).forEach(key => {
+		streamsById[streams.byFile[key].id] = streams.byFile[key];
+	});
+	Object.keys(lastReads).forEach(key => {
+		let lastRead = lastReads[key];
+		let unread = 0;
+		let mentions = 0;
+		if (lastRead) {
+			// find the stream for key
+			// then calculate the unread Messages
+			let stream = streamsById[key];
+			let posts = _.sortBy(posts.byStream[key]);
+
+			if (!posts) return;
+			let postIds = posts.map(post => {
+				return post.id;
+			});
+			let index = postIds.indexOf(lastRead);
+			for (let i = index; i < posts.length; i++) {
+				unread++;
+				let post = posts[i];
+				if (post && post.text && post.text.match(mentionRegExp)) {
+					mentions++;
+				}
+			}
+			if (unread) nextState.unread[key] = unread;
+			if (mentions) nextState.mentions[key] = mentions;
 		}
+	});
+
+	dispatch({
+		type: "SET_UMI",
+		payload: nextState
 	});
 };
 
