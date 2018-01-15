@@ -5,12 +5,56 @@
 @import "ui-variables";
 @import "octicon-mixins";
 
+.cs-unreads {
+	position: absolute !important;
+	background: @background-color-highlight;
+	border: 1px solid @base-border-color;
+	// color: white;
+	text-align: center;
+	padding: 5px 0;
+	width: 80%;
+	left: 10% !important;
+	z-index: 10;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 2.5em;
+	cursor: pointer !important;
+	transition: top 0.2s, bottom 0.2s;
+}
+.cs-unreads.active {
+	display: block;
+}
+.cs-unreads.mention {
+	background: @background-color-info;
+	color: white;
+}
+#cs-unreads-above {
+	top: -3em;
+	border-radius: 0 0 5px 5px;
+	border-top: none;
+	// box-shadow: 0 1px 15px rgba(0, 0, 0, 0.5);
+}
+#cs-unreads-above.active {
+	top: 0;
+}
+#cs-unreads-below {
+	top: auto !important;
+	bottom: -3em !important;
+	border-radius: 5px 5px 0 0;
+	border-bottom: none;
+	// box-shadow: 0 -1px 15px rgba(0, 0, 0, 0.5);
+}
+#cs-unreads-below.active {
+	bottom: 0 !important;
+}
 .tree-view {
 	li[cs-umi-badge="1"] {
 		position: relative;
 	}
 	li[cs-umi-bold="1"] span {
-		font-weight: 900 !important;
+		font-weight: 700 !important;
+		color: @text-color-highlight;
 		// text-shadow: 0px 1px 1px rgba(0, 0, 0, 1);
 	}
 	li[cs-umi-bold="1"] span::before {
@@ -33,6 +77,10 @@
 		text-align: center;
 		line-height: 1em !important;
 		box-shadow: -5px 0 5px @app-background-color, 15px 0 5px @app-background-color;
+	}
+	// don't show a box shadow for the selected
+	li.selected[cs-umi-badge="1"]::after {
+		box-shadow: -5px 0 5px @background-color-selected, 15px 0 5px @background-color-selected;
 	}
 	li[cs-umi-mention="1"]::after {
 		color: white;

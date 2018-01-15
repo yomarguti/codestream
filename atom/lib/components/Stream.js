@@ -256,7 +256,6 @@ export class SimpleStream extends Component {
 		}
 
 		this.renderCommentMarkers();
-		this.renderUMI();
 
 		return (
 			<div className={streamClass} ref={ref => (this._div = ref)}>
@@ -377,8 +376,6 @@ export class SimpleStream extends Component {
 	makeRange(location) {
 		return [[location[0], location[1]], [location[2], location[3]]];
 	}
-
-	renderUMI = () => {};
 
 	makeLocation(headPosition, tailPosition) {
 		const location = [];

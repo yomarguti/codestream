@@ -165,11 +165,10 @@ module.exports = {
 
 		// TODO if there isn't a click event, use the active li
 		if (!li) return;
-		console.log("ONE");
+
+		let type = li.classList.contains("directory") ? "directory" : "file";
 		let path = li.getElementsByTagName("span")[0].getAttribute("data-path");
-		console.log("TWO");
 		setStreamUMITreatment(path, setting);
-		console.log("THREE");
 		store.dispatch(setStreamUMITreatment(path, setting));
 		// this.render_umis();
 	},

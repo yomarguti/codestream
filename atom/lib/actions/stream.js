@@ -85,12 +85,11 @@ export const markStreamRead = streamId => async (dispatch, getState, { http }) =
 };
 
 export const setStreamUMITreatment = (path, setting) => async (dispatch, getState) => {
-	const { session, context, streams } = getState();
+	const { session, context } = getState();
 	// FIXME -- we should save this info to the server rather than atom config
 	let repo = atom.project.getRepositories()[0];
 	let relativePath = repo.relativize(path);
-	let stream = streams.byFile[relativePath];
-	atom.config.set("CodeStream.showUnread-" + stream.id, setting);
+	atom.config.set("CodeStream.showUnread-" + relativePath, setting);
 	return;
 };
 
@@ -98,7 +97,6 @@ export const incrementUMI = post => async (dispatch, getState, { http }) => {
 	const { session, users } = getState();
 	const currentUser = users[session.userId];
 
-	var re = new RegExp("@" + currentUser.username + "\\b");
 	var hasMention = post.text.match("@" + currentUser.username + "\\b");
 	let type = hasMention ? "INCREMENT_MENTION" : "INCREMENT_UMI";
 	dispatch({
@@ -108,14 +106,16 @@ export const incrementUMI = post => async (dispatch, getState, { http }) => {
 };
 
 export const recalculateUMI = () => async (dispatch, getState, { http }) => {
-	const { session, users, streams } = getState();
+	const { session, users, streams, posts } = getState();
 	const currentUser = users[session.userId];
+	console.log("POSTS ARE: ", posts);
 	// FIXME -- need all new posts as well
 	dispatch({
 		type: "RECALCULATE_UMI",
 		payload: {
-			lastReads: currentUser.lastReads,
-			streams: streams
+			streams: streams,
+			currentUser: currentUser,
+			posts: posts
 		}
 	});
 };
