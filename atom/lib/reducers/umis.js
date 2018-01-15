@@ -26,8 +26,6 @@ export default (state = initialState, { type, payload }) => {
 			// instead of deleting it, we set it to zero
 			// so that when we loop through the keys we can
 			// still reference the fact that this div needs to be cleared
-			if (!nextState.mentions) nextState.mentions = {};
-			if (!nextState.unread) nextState.unread = {};
 			if (nextState.mentions[payload]) nextState.mentions[payload] = 0;
 			if (nextState.unread[payload]) nextState.unread[payload] = 0;
 			return nextState;
