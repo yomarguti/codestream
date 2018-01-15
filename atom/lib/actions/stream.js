@@ -12,7 +12,7 @@ import { saveMarkers } from "./marker";
 import { saveMarkerLocations } from "./marker-location";
 import { open as openRepo } from '../git/GitRepo';
 import rootLogger from '../util/Logger';
-rootLogger.setLevel('trace');
+// rootLogger.setLevel('trace');
 
 const logger = rootLogger.forClass('actions/stream');
 
