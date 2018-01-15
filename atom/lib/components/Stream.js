@@ -963,6 +963,9 @@ const mapStateToProps = ({ session, context, streams, users, posts, markers, mar
 		context.currentCommit,
 		markers
 	);
+	Object.keys(users).forEach(function(key, index) {
+		users[key].color = index % 10;
+	});
 	return {
 		id: stream.id,
 		currentFile: context.currentFile,
@@ -987,11 +990,11 @@ const mapStateToProps = ({ session, context, streams, users, posts, markers, mar
 					lastName: ""
 				};
 			}
-			const { username, email, firstName, lastName } = user;
+			const { username, email, firstName, lastName, color } = user;
 			return {
 				...post,
 				markerLocation: locations[post.id],
-				author: { username, email, fullName: `${firstName} ${lastName}`.trim() }
+				author: { username, email, color, fullName: `${firstName} ${lastName}`.trim() }
 			};
 		})
 	};

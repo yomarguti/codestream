@@ -74,6 +74,12 @@ export default class Post extends Component {
 
 		let parentPost = this.props.replyingTo;
 		let alertClass = this.props.alert ? "icon icon-" + this.props.alert : null;
+		let defaultImage = encodeURI("https://i.imgur.com/hOylzTJ.gif");
+		let authorInitials = post.author.email.charAt(0);
+		if (post.author.firstName) {
+			authorInitials = post.author.firstName.charAt(0) + post.author.lastName.charAt(0);
+		}
+		let classNameInitials = "headshot-initials color-" + post.author.color;
 
 		// FIXME use a real email address
 		return (
@@ -86,12 +92,14 @@ export default class Post extends Component {
 				<span className="icon icon-gear" onClick={this.handleMenuClick} />
 				{menu}
 				<Gravatar
+					ref={ref => (this._gravatar = ref)}
 					className="headshot"
 					size={36}
-					default="retro"
+					default={defaultImage}
 					protocol="http://"
 					email={post.author.email}
 				/>
+				<div className={classNameInitials}>{authorInitials}</div>
 				<span className="author" ref={ref => (this._authorDiv = ref)}>
 					{post.author.username}
 				</span>
