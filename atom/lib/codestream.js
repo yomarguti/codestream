@@ -15,6 +15,11 @@ import {
 	setCurrentCommit
 } from "./actions/context";
 import { setStreamUMITreatment } from "./actions/stream";
+import logger from "./util/Logger";
+
+logger.addHandler((level, msg) => {
+	console.log(`[${level}] ${msg}`);
+});
 
 let store;
 
@@ -64,7 +69,6 @@ module.exports = {
 
 				if (repos.length > 0) {
 					const repo = repos[0];
-
 					getCurrentCommit(repo).then(commitHash => store.dispatch(setCurrentCommit(commitHash)));
 
 					this.subscriptions.add(
@@ -84,11 +88,12 @@ module.exports = {
 						})
 					);
 
+					const workDir = repo.repo.workingDirectory;
 					const repoUrl = repo.getOriginURL();
 					let firstCommitHash = await git(["rev-list", "--max-parents=0", "HEAD"], {
 						cwd: repo.getWorkingDirectory()
 					});
-					const repoAttributes = { url: repoUrl, firstCommitHash: firstCommitHash.trim() };
+					const repoAttributes = { workingDirectory: workDir, url: repoUrl, firstCommitHash: firstCommitHash.trim() };
 					store.dispatch(setRepoAttributes(repoAttributes));
 					store.dispatch(fetchRepoInfo(repoAttributes));
 				}
