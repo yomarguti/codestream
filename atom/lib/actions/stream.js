@@ -54,7 +54,8 @@ class MarkerLocationFinder {
 	async find(markerId) {
 		const me = this;
 		const myLogger = me._logger;
-		logger.trace(`.find <= ${markerId}`);
+		myLogger.trace(`.find <= ${markerId}`);
+
 		const repo = me._repo;
 		const currentCommit = await repo.getCurrentCommit();
 		let commit = currentCommit;
