@@ -605,6 +605,7 @@ export class SimpleStream extends Component {
 	// insert the text into the compose field
 	addBlameAtMention(selectionRange, gitData) {
 		// console.log(data);
+		let postText = this.state.newPostText || "";
 		var authors = {};
 		for (var lineNum = selectionRange.start.row; lineNum <= selectionRange.end.row; lineNum++) {
 			var lineData = gitData[lineNum - 1];
@@ -616,8 +617,11 @@ export class SimpleStream extends Component {
 						let person = this.props.users[personId];
 						let fullName = person.firstName + " " + person.lastName;
 						if (fullName == author || person.username == author) {
-							if (person.username !== this.props.currentUser.username)
+							if (person.username !== this.props.currentUser.username) {
+								// skip if the input field already contains this user
+								if (postText.match("@" + person.username + "\\b")) return;
 								authors["@" + person.username] = true;
+							}
 						}
 					});
 				}
