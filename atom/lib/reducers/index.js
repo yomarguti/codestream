@@ -8,6 +8,7 @@ import repos from "./repos";
 import teams from "./teams";
 import markers from "./markers";
 import markerLocations from "./marker-locations";
+import umis from "./umis";
 
 const session = (state = {}, { type, payload }) => {
 	if (type === "INIT_SESSION") return payload;
@@ -29,6 +30,7 @@ export default combineReducers({
 	bootstrapped,
 	session,
 	streams,
+	umis,
 	users,
 	teams,
 	repos,

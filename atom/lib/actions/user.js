@@ -17,3 +17,6 @@ export const saveUsers = attributes => (dispatch, getState, { db }) => {
 		})
 	);
 };
+
+// this is in actions/stream.js
+// export const clearUMI = streamId => ({});

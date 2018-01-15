@@ -40,21 +40,30 @@ export default class PostDetails extends Component {
 			if (code !== existingCode) hasDiff = true;
 		}
 
+		console.log(post.commitHashWhenPosted, " vs ", this.props.currentCommit);
+		let commitDiv = null;
+		if (post.codeBlocks && post.codeBlocks.length > 0) {
+			if (post.commitHashWhenPosted == this.props.currentCommit) {
+				commitDiv = <span />;
+			} else {
+				commitDiv = (
+					<Button
+						id="show-version-button"
+						className="control-button"
+						tabIndex="2"
+						type="submit"
+						onClick={this.handleShowVersion}
+					>
+						Warp to {post.commitHashWhenPosted}
+					</Button>
+				);
+			}
+		}
+
 		console.log(post);
 		return (
 			<div className="post-details" id={post.id} ref={ref => (this._div = ref)}>
-				{post.codeBlocks &&
-					(post.codeBlocks.length > 0) && (
-						<Button
-							id="show-version-button"
-							className="control-button"
-							tabIndex="2"
-							type="submit"
-							onClick={this.handleShowVersion}
-						>
-							Warp to {post.commitHashWhenPosted}
-						</Button>
-					)}
+				{commitDiv}
 				{hasDiff && (
 					<div className="button-group">
 						<Button

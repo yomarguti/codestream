@@ -68,6 +68,58 @@ export const fetchStream = () => async (dispatch, getState, { http }) => {
 	}
 };
 
+export const markStreamRead = streamId => async (dispatch, getState, { http }) => {
+	const { session, context, streams } = getState();
+	if (context.currentFile !== "") {
+		const markReadData = await http.put("/read/" + streamId, {}, session.accessToken);
+		dispatch({ type: "CLEAR_UMI", payload: streamId });
+		// console.log("READ THE STREAM", markReadData, session);
+
+		// don't do this here. change the state of the UMIs and let the
+		// server handle changing and updating the user object
+		// if (false && this.props.currentUser) {
+		// 	let lastReadsKey = "lastReads." + this.props.id;
+		// 	delete this.props.currentUser[lastReadsKey];
+		// }
+	}
+};
+
+export const setStreamUMITreatment = (path, setting) => async (dispatch, getState) => {
+	const { session, context } = getState();
+	// FIXME -- we should save this info to the server rather than atom config
+	let repo = atom.project.getRepositories()[0];
+	let relativePath = repo.relativize(path);
+	atom.config.set("CodeStream.showUnread-" + relativePath, setting);
+	return;
+};
+
+export const incrementUMI = post => async (dispatch, getState, { http }) => {
+	const { session, users } = getState();
+	const currentUser = users[session.userId];
+
+	var hasMention = post.text.match("@" + currentUser.username + "\\b");
+	let type = hasMention ? "INCREMENT_MENTION" : "INCREMENT_UMI";
+	dispatch({
+		type: type,
+		payload: post.streamId
+	});
+};
+
+export const recalculateUMI = () => async (dispatch, getState, { http }) => {
+	const { session, users, streams, posts } = getState();
+	const currentUser = users[session.userId];
+	console.log("POSTS ARE: ", posts);
+	// FIXME -- need all new posts as well
+	dispatch({
+		type: "RECALCULATE_UMI",
+		payload: {
+			streams: streams,
+			currentUser: currentUser,
+			posts: posts
+		}
+	});
+};
+
 export const createPost = (streamId, parentPostId, text, codeBlocks) => async (
 	dispatch,
 	getState,

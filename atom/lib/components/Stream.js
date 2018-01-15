@@ -4,6 +4,7 @@ import { connect } from "react-redux";
 import ContentEditable from "react-contenteditable";
 import _ from "underscore-plus";
 import Post from "./Post";
+import UMIs from "./UMIs";
 import AtMentionsPopup from "./AtMentionsPopup";
 import AddCommentPopup from "./AddCommentPopup";
 import createClassString from "classnames";
@@ -67,12 +68,20 @@ export class SimpleStream extends Component {
 		if (nextProps.id !== this.props.id) {
 			this.handleDismissThread();
 		}
+
 		new AddCommentPopup({ handleClickAddComment: this.handleClickAddComment });
 	}
 
 	componentDidUpdate(prevProps, prevState) {
 		this._postslist.scrollTop = 100000;
 		this.installEditorHandlers();
+
+		// if we just switched to a new stream, mark the
+		// stream as read
+		if (this.props.id !== prevProps.id) {
+			// FIXME -- is this the right place to call mark read?
+			this.props.markStreamRead(this.props.id);
+		}
 	}
 
 	installEditorHandlers() {
@@ -94,6 +103,7 @@ export class SimpleStream extends Component {
 
 	componentDidMount() {
 		this.props.fetchStream(); // Fetch any new stuff
+		this.props.recalculateUMI(); // set the UMI for the first time
 		// TODO: scroll to bottom
 
 		let inputDiv = document.querySelector('div[contenteditable="true"]');
@@ -126,7 +136,7 @@ export class SimpleStream extends Component {
 		// FIXME -- if there is panel is on the right, then subtract 20 more
 		let width = scrollViewDiv.offsetWidth + rect.left;
 		let newStyle = ".codestream-comment-popup { left: " + width + "px; }";
-		console.log("Adding style string; " + newStyle);
+		// console.log("Adding style string; " + newStyle);
 		this.addStyleString(newStyle);
 	};
 
@@ -205,6 +215,12 @@ export class SimpleStream extends Component {
 
 		let newPostText = this.state.newPostText || "";
 
+		let usernames = Object.keys(this.props.users)
+			.map(key => {
+				return this.props.users[key].username;
+			})
+			.join("|")
+			.replace(/\|\|+/g, "|");
 		// strip out the at-mention markup, and add it back.
 		// newPostText = newPostText.replace(/(@\w+)/g, '<span class="at-mention">$1</span> ');
 
@@ -240,10 +256,10 @@ export class SimpleStream extends Component {
 		}
 
 		this.renderCommentMarkers();
-		this.renderUMI();
 
 		return (
 			<div className={streamClass} ref={ref => (this._div = ref)}>
+				<UMIs />
 				<div
 					className={postsListClass}
 					ref={ref => (this._postslist = ref)}
@@ -263,7 +279,12 @@ export class SimpleStream extends Component {
 						const returnValue = (
 							<div key={post.id}>
 								<DateSeparator timestamp1={lastTimestamp} timestamp2={post.createdAt} />
-								<Post post={post} replyingTo={parentPost} />
+								<Post
+									post={post}
+									usernames={usernames}
+									currentUsername={this.props.currentUser.username}
+									replyingTo={parentPost}
+								/>
 							</div>
 						);
 						lastTimestamp = post.createdAt;
@@ -279,7 +300,16 @@ export class SimpleStream extends Component {
 					<div id="close-thread" onClick={this.handleDismissThread}>
 						&larr; Back to stream
 					</div>
-					{threadPost && <Post post={threadPost} key={threadPost.id} showDetails="1" />}
+					{threadPost && (
+						<Post
+							post={threadPost}
+							usernames={usernames}
+							currentUsername={this.props.currentUser.username}
+							key={threadPost.id}
+							showDetails="1"
+							currentCommit={this.props.currentCommit}
+						/>
+					)}
 					{
 						(lastTimestamp =
 							0 ||
@@ -293,7 +323,11 @@ export class SimpleStream extends Component {
 								const returnValue = (
 									<div key={post.id}>
 										<DateSeparator timestamp1={lastTimestamp} timestamp2={post.createdAt} />
-										<Post post={post} />
+										<Post
+											post={post}
+											usernames={usernames}
+											currentUsername={this.props.currentUser.username}
+										/>
 									</div>
 								);
 								lastTimestamp = post.createdAt;
@@ -343,8 +377,6 @@ export class SimpleStream extends Component {
 		return [[location[0], location[1]], [location[2], location[3]]];
 	}
 
-	renderUMI = () => {};
-
 	makeLocation(headPosition, tailPosition) {
 		const location = [];
 		location[0] = tailPosition.row;
@@ -366,7 +398,7 @@ export class SimpleStream extends Component {
 		if (editor.hasCodeStreamMarkersRendered) return;
 		editor.hasCodeStreamMarkersRendered = true;
 		// console.log(this.props.markers);
-		console.log("Rendering these markers: " + this.props.markers.length);
+		// console.log("Rendering these markers: " + this.props.markers.length);
 
 		// loop through and get starting line for each marker,
 		// to detect when we have overlaps with an O(N) algorithm
@@ -378,7 +410,7 @@ export class SimpleStream extends Component {
 
 			const location = codeMarker.location;
 			const range = that.makeRange(location);
-			const displayMarker = editor.markBufferRange(range, { invalidate: 'touch' });
+			const displayMarker = editor.markBufferRange(range, { invalidate: "touch" });
 
 			displayMarker.onDidChange(event => {
 				const post = that.findPostById(codeMarker.postId);
@@ -388,7 +420,6 @@ export class SimpleStream extends Component {
 				);
 				// TODO update it locally
 			});
-
 		});
 
 		for (var line in markersByLine) {
@@ -431,7 +462,8 @@ export class SimpleStream extends Component {
 				position: "tail",
 				class: "codestream-overlay"
 			});
-			this.tooltip = atom.tooltips.add(item, { title: "View comments" });
+			if (numComments === 1) this.tooltip = atom.tooltips.add(item, { title: "View comment" });
+			else this.tooltip = atom.tooltips.add(item, { title: "View " + numComments + " comments" });
 		}
 
 		// this.props.markers.forEach(codeMarker => {
@@ -578,14 +610,14 @@ export class SimpleStream extends Component {
 			var lineData = gitData[lineNum - 1];
 			if (lineData) {
 				var author = lineData["author"];
-				// FIXME -- skip it if it's me
 				if (author && author !== "Not Committed Yet") {
 					// find the author -- FIXME this feels fragile
 					Object.keys(this.props.users).forEach(personId => {
 						let person = this.props.users[personId];
 						let fullName = person.firstName + " " + person.lastName;
 						if (fullName == author || person.username == author) {
-							authors["@" + person.username] = true;
+							if (person.username !== this.props.currentUser.username)
+								authors["@" + person.username] = true;
 						}
 					});
 				}
@@ -919,8 +951,9 @@ const getMarkersForStreamAndCommit = (locationsByCommit = {}, commitHash, marker
 	});
 };
 
-const mapStateToProps = ({ context, streams, users, posts, markers, markerLocations }) => {
+const mapStateToProps = ({ session, context, streams, users, posts, markers, markerLocations }) => {
 	const stream = streams.byFile[context.currentFile] || {};
+	const currentUser = users[session.userId];
 	const locations = getLocationsByPost(
 		markerLocations.byStream[stream.id],
 		context.currentCommit,
@@ -929,12 +962,14 @@ const mapStateToProps = ({ context, streams, users, posts, markers, markerLocati
 	return {
 		id: stream.id,
 		currentFile: context.currentFile,
+		currentCommit: context.currentCommit,
 		markers: getMarkersForStreamAndCommit(
 			markerLocations.byStream[stream.id],
 			context.currentCommit,
 			markers
 		),
 		users: users,
+		currentUser: currentUser,
 		posts: getPostsForStream(stream.id, posts).map(post => {
 			let user = users[post.creatorId];
 			if (!user) {
