@@ -1,14 +1,13 @@
 import { toMapBy } from "./utils";
 import _ from "underscore-plus";
 
-const initialState = { counter: 0 };
+const initialState = { mentions: {}, unread: {} };
 
 export default (state = initialState, { type, payload }) => {
 	switch (type) {
 		case "INCREMENT_UMI": {
 			console.log("incrementint umis in the reducer: ", payload);
 			let nextState = { ...state };
-			if (!nextState.unread) nextState.unread = {};
 			nextState.unread[payload] = (nextState.unread[payload] || 0) + 1;
 			console.log("STATE IS: ", nextState);
 			return nextState;
@@ -17,8 +16,6 @@ export default (state = initialState, { type, payload }) => {
 			console.log("incrementing mention in the reducer: ", payload);
 			// payload is a streamId
 			let nextState = { ...state };
-			if (!nextState.mentions) nextState.mentions = {};
-			if (!nextState.unread) nextState.unread = {};
 			nextState.mentions[payload] = (nextState.mentions[payload] || 0) + 1;
 			nextState.unread[payload] = (nextState.unread[payload] || 0) + 1;
 			return nextState;
