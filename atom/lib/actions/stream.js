@@ -78,10 +78,12 @@ class MarkerLocationFinder {
 
 			const calculatedLocationsCount = Object.keys(calculatedLocations).length;
 			myLogger.debug('Commit', commit.hash, 'has location information for', calculatedLocationsCount, 'markers');
-			if (calculatedLocationsCount && !commit.equals(currentCommit)) {		const deltas = await repo.getDeltasBetweenCommits(commit, currentCommit);
+			if (calculatedLocationsCount && !commit.equals(currentCommit)) {
+				const deltas = await repo.getDeltasBetweenCommits(commit, currentCommit);
 					const edits = this._getEditsForCurrentFile(deltas);
 					if (edits.length) {
-						myLogger.debug('File has changed from', commit.hash, 'to', currentCommit.hash, '- recalculating locations'); calculatedLocations = await this._calculateLocations(
+						myLogger.debug('File has changed from', commit.hash, 'to', currentCommit.hash, '- recalculating locations');
+						calculatedLocations = await this._calculateLocations(
 							calculatedLocations, edits, commit.hash, currentCommit.hash);
 				} else {
 					myLogger.debug('No changes in current file file from', commit.hash, 'to', currentCommit.hash);
