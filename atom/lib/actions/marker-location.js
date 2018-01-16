@@ -8,3 +8,26 @@ export const saveMarkerLocations = attributes => (dispatch, getState, { db }) =>
 				 Assuming that means it's an empty object, we can swallow this since it's no-op */
 		});
 };
+
+export const markerDirtied = (id, location) => (dispatch, getState, { db }) => {
+	const commitHash = getState().context.currentCommit;
+	return db
+		.transaction("rw", db.markerLocations, async () => {
+			const locationObject = await db.markerLocations.get(commitHash);
+			if (!locationObject.dirty) locationObject.dirty = {};
+			locationObject.dirty[id] = location;
+			await db.markerLocations.update(commitHash, { dirty: locationObject.dirty });
+			return db.markerLocations.get(commitHash);
+		})
+		.then(locationObject =>
+			dispatch({
+				type: "MARKER_DIRTIED",
+				payload: {
+					markerId: id,
+					streamId: locationObject.streamId,
+					commitHash: locationObject.commitHash,
+					location
+				}
+			})
+		);
+};

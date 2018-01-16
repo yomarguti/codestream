@@ -146,11 +146,11 @@ module.exports = {
 					"codestream:wipe-cache": () => indexedDB.deleteDatabase("CodeStream"),
 					"codestream:point-to-dev": () => {
 						atom.config.set("codestream.url", "https://tca3.codestream.us:9443");
-						atom.reload();
+						atom.commands.dispatch(document.querySelector("atom-workspace"), "codestream:logout");
 					},
 					"codestream:point-to-local": () => {
 						atom.config.set("codestream.url", "https://localhost.codestream.us:12079");
-						atom.reload();
+						atom.commands.dispatch(document.querySelector("atom-workspace"), "codestream:logout");
 					}
 				})
 			);

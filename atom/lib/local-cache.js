@@ -3,6 +3,7 @@ import Dexie from "dexie";
 Dexie.debug = true;
 
 const db = new Dexie("CodeStream");
+// TODO: export schemas so they can be used in testing
 db.version(1).stores({
 	streams: "id, teamId, repoId",
 	posts: "id, teamId, streamId, creatorId",

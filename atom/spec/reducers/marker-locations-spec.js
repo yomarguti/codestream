@@ -14,11 +14,19 @@ const locations2 = {
 	locations: { someMarker: [80, 81, 0, 0] }
 };
 
+const locationsWithLocalChanges = {
+	teamId: "5a2f611486d0fdeeeb51b78a",
+	streamId: "otherStreamId",
+	commitHash: "otherCommitHash",
+	locations: { otherMarker: [80, 81, 0, 0], aMarker: [1, 2, 3, 4] },
+	dirty: { otherMarker: [92, 81, 0, 0] }
+};
+
 describe("reducer for marker locations", () => {
 	it("bootstraps data", () => {
 		const result = reduce(undefined, {
 			type: "BOOTSTRAP_MARKER_LOCATIONS",
-			payload: [locations, locations2]
+			payload: [locations, locations2, locationsWithLocalChanges]
 		});
 
 		expect(result).toEqual({
@@ -28,6 +36,12 @@ describe("reducer for marker locations", () => {
 				},
 				[locations2.streamId]: {
 					[locations2.commitHash]: locations2.locations
+				},
+				[locationsWithLocalChanges.streamId]: {
+					[locationsWithLocalChanges.commitHash]: {
+						...locationsWithLocalChanges.locations,
+						...locationsWithLocalChanges.dirty
+					}
 				}
 			}
 		});
@@ -105,6 +119,34 @@ describe("reducer for marker locations", () => {
 						}
 					}
 				});
+			});
+		});
+	});
+
+	describe("MARKER_DIRTIED", () => {
+		it("uses the dirty location over the original location", () => {
+			const state = {
+				byStream: {
+					[locations.streamId]: {
+						[locations.commitHash]: locations.locations
+					}
+				}
+			};
+
+			const payload = {
+				markerId: "someMarker",
+				streamId: locations.streamId,
+				commitHash: locations.commitHash,
+				location: [1, 2, 3, 4]
+			};
+			const result = reduce(state, { type: "MARKER_DIRTIED", payload });
+
+			expect(result).toEqual({
+				byStream: {
+					[locations.streamId]: {
+						[locations.commitHash]: { ...locations.locations, someMarker: [1, 2, 3, 4] }
+					}
+				}
 			});
 		});
 	});

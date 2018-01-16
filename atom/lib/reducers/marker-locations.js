@@ -13,7 +13,11 @@ export default (state = initialState, { type, payload }) => {
 					...nextState.byStream,
 					[locations.streamId]: {
 						...existingCommitsForStream,
-						[locations.commitHash]: { ...existingLocationsForCommit, ...locations.locations }
+						[locations.commitHash]: {
+							...existingLocationsForCommit,
+							...locations.locations,
+							...locations.dirty
+						}
 					}
 				};
 			});
@@ -28,7 +32,27 @@ export default (state = initialState, { type, payload }) => {
 					...state.byStream,
 					[payload.streamId]: {
 						...existingCommitsForStream,
-						[payload.commitHash]: { ...existingLocationsForCommit, ...payload.locations }
+						[payload.commitHash]: {
+							...existingLocationsForCommit,
+							...payload.locations,
+							...payload.dirty
+						}
+					}
+				}
+			};
+		}
+		case "MARKER_DIRTIED": {
+			const existingCommitsForStream = state.byStream[payload.streamId] || {};
+			const existingLocationsForCommit = existingCommitsForStream[payload.commitHash] || {};
+			return {
+				byStream: {
+					...state.byStream,
+					[payload.streamId]: {
+						...existingCommitsForStream,
+						[payload.commitHash]: {
+							...existingLocationsForCommit,
+							[payload.markerId]: payload.location
+						}
 					}
 				}
 			};

@@ -40,6 +40,10 @@ export default store => {
 			if (receiver.isInitialized()) receiver.subscribe([`repo-${action.payload.currentRepoId}`]);
 		}
 
+		if (action.type === "TEAM_CREATED") receiver.subscribe([`team-${action.payload.teamId}`]);
+		if (action.type === "SET_CURRENT_TEAM") receiver.subscribe([`team-${action.payload}`]);
+		if (action.type === "SET_CURRENT_REPO") receiver.subscribe([`repo-${action.payload}`]);
+
 		return result;
 	};
 };
