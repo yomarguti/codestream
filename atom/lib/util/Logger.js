@@ -86,6 +86,10 @@ class Logger {
 		this._log('TRACE', arguments);
 	}
 
+	tick () {
+		return new Tick(this);
+	}
+
 	_log (msgLevel, args) {
 		const me = this;
 		const msgLevelName = msgLevel;
