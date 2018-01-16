@@ -885,7 +885,10 @@ export class SimpleStream extends Component {
 		// unless it is a &nbsp;, which is difficult to insert
 		// so we insert this unicode character instead
 		let toInsert = username.replace(this.state.atMentionsPrefix, "") + "\u00A0";
-		this.focusInput();
+		let that = this;
+		setTimeout(function() {
+			that.focusInput();
+		}, 20);
 		this.insertTextAtCursor(toInsert);
 		// this.setNewPostText(text);
 	};
