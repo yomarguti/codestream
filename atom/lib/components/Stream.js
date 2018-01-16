@@ -327,6 +327,8 @@ export class SimpleStream extends Component {
 											post={post}
 											usernames={usernames}
 											currentUsername={this.props.currentUser.username}
+											showDetails="1"
+											currentCommit={this.props.currentCommit}
 										/>
 									</div>
 								);

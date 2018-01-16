@@ -25,7 +25,7 @@ export default class PostDetails extends Component {
 			post: true
 		});
 		// console.log("RENDERING A POST DETAILS: " + postClass);
-		console.log(post);
+		// console.log(post);
 
 		const applyPatchLabel = this.state.patchApplied ? "Revert" : "Apply Patch";
 		const showDiffLabel = this.state.diffShowing ? "Hide Diff" : "Show Diff";
@@ -40,27 +40,31 @@ export default class PostDetails extends Component {
 			if (code !== existingCode) hasDiff = true;
 		}
 
-		console.log(post.commitHashWhenPosted, " vs ", this.props.currentCommit);
+		// console.log(post.commitHashWhenPosted, " vs ", this.props.currentCommit);
 		let commitDiv = null;
 		if (post.codeBlocks && post.codeBlocks.length > 0) {
-			if (post.commitHashWhenPosted == this.props.currentCommit) {
-				commitDiv = <span />;
-			} else {
-				commitDiv = (
-					<Button
-						id="show-version-button"
-						className="control-button"
-						tabIndex="2"
-						type="submit"
-						onClick={this.handleShowVersion}
-					>
-						Warp to {post.commitHashWhenPosted}
-					</Button>
-				);
-			}
+			commitDiv = (
+				<div className="posted-to">
+					<label>Posted to:</label> <span>{post.commitHashWhenPosted}</span>
+				</div>
+			);
+			// if (post.commitHashWhenPosted == this.props.currentCommit) {
+			// 	commitDiv = <span />;
+			// } else {
+			// 	commitDiv = (
+			// 		<Button
+			// 			id="show-version-button"
+			// 			className="control-button"
+			// 			tabIndex="2"
+			// 			type="submit"
+			// 			onClick={this.handleShowVersion}
+			// 		>
+			// 			Warp to {post.commitHashWhenPosted}
+			// 		</Button>
+			// 	);
+			// }
 		}
 
-		console.log(post);
 		return (
 			<div className="post-details" id={post.id} ref={ref => (this._div = ref)}>
 				{commitDiv}
