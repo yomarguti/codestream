@@ -39,7 +39,7 @@ export default class PostDetails extends Component {
 			let range = this.makeRange(post.markerLocation);
 			var existingCode = editor.getTextInBufferRange(range);
 			if (code !== existingCode) hasDiff = true;
-			if (code.length > 0 && post.markerLocation[5] && post.markerLocation[5].entirelyDeleted) {
+			if (code.length > 0 && post.markerLocation[4] && post.markerLocation[4].entirelyDeleted) {
 				alert = <span className="icon icon-alert" ref={ref => (this._alert = ref)} />;
 			}
 		}
