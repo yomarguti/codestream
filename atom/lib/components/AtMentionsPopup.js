@@ -30,6 +30,10 @@ export default class AtMentionsPopup extends Component {
 						{this.props.people.map(person => {
 							let className = person.id == this.props.selected ? "hover" : "none";
 							let identifier = person.username || person.email;
+							// the handleClickPerson event needs to fire onMouseDown
+							// rather than onclick because there is a handleblur
+							// event on the parent element that will un-render
+							// this component
 							return (
 								<li
 									className={className}
