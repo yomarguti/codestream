@@ -244,11 +244,20 @@ export const setStreamUMITreatment = (path, setting) => async (dispatch, getStat
 };
 
 export const incrementUMI = post => async (dispatch, getState, { http }) => {
-	const { session, users } = getState();
+	const { session, context, users, streams } = getState();
 	const currentUser = users[session.userId];
 
 	// don't increment UMIs for posts you wrote yourself
 	if (post.creatorId === session.userId) return;
+
+	// don't increment the UMI of the current stream, presumably because you
+	// see the post coming in. FIXME -- if we are not scrolled to the bottom,
+	// we should still increment the UMI
+	if (
+		streams.byFile[context.currentFile] &&
+		streams.byFile[context.currentFile].id === post.streamId
+	)
+		return;
 
 	var hasMention = post.text.match("@" + currentUser.username + "\\b");
 	let type = hasMention ? "INCREMENT_MENTION" : "INCREMENT_UMI";
