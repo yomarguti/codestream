@@ -121,9 +121,9 @@ module.exports = {
 				}
 			}),
 			atom.commands.add(".tree-view", {
-				"codestream:mute": target => this.markMute(target),
-				"codestream:bold": target => this.markBold(target),
-				"codestream:badge": target => this.markBadge(target)
+				"codestream:mute": target => this.markStreamMute(target),
+				"codestream:bold": target => this.markStreamBold(target),
+				"codestream:badge": target => this.markStreamBadge(target)
 			})
 			// atom.commands.add(".codestream .compose.mentions-on", {
 			// 	"codestream:at-mention-move-up": event => this.handleAtMentionKeyPress(event, "up"),
@@ -157,16 +157,18 @@ module.exports = {
 		}
 	},
 
-	markMute(event) {
-		this.markStream(event, "mute");
+	markStreamMute(event) {
+		this.markStreamTreatment(event, "mute");
 	},
-	markBold(event) {
-		this.markStream(event, "bold");
+	markStreamBold(event) {
+		this.markStreamTreatment(event, "bold");
 	},
-	markBadge(event) {
-		this.markStream(event, "badge");
+	markStreamBadge(event) {
+		this.markStreamTreatment(event, "badge");
 	},
-	markStream(event, setting) {
+	// set a preference for the treatment of a given stream
+	// to either mute, bold, or badge
+	markStreamTreatment(event, setting) {
 		let li = event.target.closest("li");
 
 		// TODO if there isn't a click event, use the active li from tree-veiw
@@ -174,11 +176,12 @@ module.exports = {
 
 		let type = li.classList.contains("directory") ? "directory" : "file";
 		let path = li.getElementsByTagName("span")[0].getAttribute("data-path");
-		setStreamUMITreatment(path, setting);
+		// setStreamUMITreatment(path, setting);
 		store.dispatch(setStreamUMITreatment(path, setting));
 
 		// FIXME -- this should re-render the UMIs somehow. How?
 		// this.render_umis();
+		// const { session, onboarding, context } = store.getState();
 	},
 
 	deactivate() {

@@ -52,6 +52,10 @@
 	li[cs-umi-badge="1"] {
 		position: relative;
 	}
+	li[cs-umi-badge="1"] span {
+		font-weight: 700 !important;
+		color: @text-color-highlight;
+	}
 	li[cs-umi-bold="1"] span {
 		font-weight: 700 !important;
 		color: @text-color-highlight;
@@ -66,12 +70,13 @@
 		right: 5px;
 		top: 0;
 		// float: right;
-		background-color: @base-background-color !important;
+		background-color: @background-color-highlight !important;
 		content: attr(cs-umi-count);
 		border-radius: 6px;
 		padding: 4px 12px 6px 12px;
 		margin: 2px 0 0 0;
 		color: @text-color;
+		// color: @text-color-highlight;
 		font-size: 10px;
 		width: 32px;
 		text-align: center;
