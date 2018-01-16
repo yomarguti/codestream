@@ -6,12 +6,13 @@ import _ from "underscore-plus";
 import Post from "./Post";
 import UMIs from "./UMIs";
 import AtMentionsPopup from "./AtMentionsPopup";
-import MarkerManager from "./MarkerManager";
+import BufferReferences from "./BufferReferences";
 import AddCommentPopup from "./AddCommentPopup";
 import createClassString from "classnames";
 import DateSeparator from "./DateSeparator";
 var Blamer = require("../util/blamer");
 import * as actions from "../actions/stream";
+import { toMapBy } from "../reducers/utils";
 
 export class SimpleStream extends Component {
 	subscriptions = null;
@@ -262,9 +263,9 @@ export class SimpleStream extends Component {
 		return (
 			<div className={streamClass} ref={ref => (this._div = ref)}>
 				<UMIs />
-				<MarkerManager
+				<BufferReferences
 					streamId={this.props.id}
-					markers={this.props.markers}
+					references={this.props.markers}
 					onSelect={this.selectPost}
 				/>
 				<div
@@ -987,12 +988,17 @@ const getMarkersForStreamAndCommit = (locationsByCommit = {}, commitHash, marker
 
 const mapStateToProps = ({ session, context, streams, users, posts, markers, markerLocations }) => {
 	const stream = streams.byFile[context.currentFile] || {};
-	const currentUser = users[session.userId];
-	const locations = getLocationsByPost(
+	const markersForStreamAndCommit = getMarkersForStreamAndCommit(
 		markerLocations.byStream[stream.id],
 		context.currentCommit,
 		markers
 	);
+	const locations = getLocationsByPost(
+		markerLocations.byStream[stream.id],
+		context.currentCommit,
+		toMapBy("id", markersForStreamAndCommit)
+	);
+
 	Object.keys(users).forEach(function(key, index) {
 		users[key].color = index % 10;
 		if (!users[key].username) {
@@ -1004,13 +1010,9 @@ const mapStateToProps = ({ session, context, streams, users, posts, markers, mar
 		id: stream.id,
 		currentFile: context.currentFile,
 		currentCommit: context.currentCommit,
-		markers: getMarkersForStreamAndCommit(
-			markerLocations.byStream[stream.id],
-			context.currentCommit,
-			markers
-		),
-		users: users,
-		currentUser: currentUser,
+		markers: markersForStreamAndCommit,
+		users: users, // TODO: only take team
+		currentUser: users[session.userId],
 		posts: getPostsForStream(stream.id, posts).map(post => {
 			let user = users[post.creatorId];
 			if (!user) {
