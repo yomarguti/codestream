@@ -19,7 +19,6 @@ export default class AtMentionsPopup extends Component {
 		if (!this.props.on) return null;
 
 		const people = this.props.people;
-		console.log(people);
 
 		return (
 			<div className="mentions-popup" ref={ref => (this._div = ref)}>
@@ -36,7 +35,7 @@ export default class AtMentionsPopup extends Component {
 									className={className}
 									key={person.id}
 									onMouseEnter={event => this.handleMouseEnter(person.id)}
-									onClick={event => this.handleClickPerson(person.id)}
+									onMouseDown={event => this.handleClickPerson(person.id)}
 								>
 									<Gravatar
 										className="headshot"

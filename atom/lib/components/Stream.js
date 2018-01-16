@@ -594,13 +594,20 @@ export class SimpleStream extends Component {
 		// not very React-ish but not sure how to set focus otherwise
 		this.focusInput();
 
-		// FIXME remove any at-mentions that we have added manually
-		this.setState({
+		let newState = {
 			quoteText: "",
 			preContext: "",
 			postContext: "",
 			quoteRange: null
-		});
+		};
+
+		// remove any at-mentions that we have added manually
+		if (this.state.newPostText.replace(/&nbsp;/g, " ").trim() === this.insertedAuthors.trim()) {
+			this.insertedAuthors = "";
+			newState.newPostText = "";
+		}
+
+		this.setState(newState);
 	};
 
 	// figure out who to at-mention based on the git blame data.
@@ -631,8 +638,12 @@ export class SimpleStream extends Component {
 		}
 
 		if (Object.keys(authors).length > 0) {
-			var newText = Object.keys(authors).join(", ") + ": ";
-			// console.log("NEWTEXT IS: >" + newText + "<");
+			// the reason for this unicode space is that chrome will
+			// not render a space at the end of a contenteditable div
+			// unless it is a &nbsp;, which is difficult to insert
+			// so we insert this unicode character instead
+			var newText = Object.keys(authors).join(", ") + ":\u00A0";
+			this.insertedAuthors = newText;
 			this.insertTextAtCursor(newText);
 		}
 	}
@@ -869,9 +880,14 @@ export class SimpleStream extends Component {
 		this.setState({
 			atMentionsOn: false
 		});
-		let toInsert = username.replace(this.state.atMentionsPrefix, "");
+		// the reason for this unicode space is that chrome will
+		// not render a space at the end of a contenteditable div
+		// unless it is a &nbsp;, which is difficult to insert
+		// so we insert this unicode character instead
+		let toInsert = username.replace(this.state.atMentionsPrefix, "") + "\u00A0";
+		this.focusInput();
 		this.insertTextAtCursor(toInsert);
-		this.setNewPostText(text);
+		// this.setNewPostText(text);
 	};
 
 	// insert the given text at the cursor of the input field
@@ -886,6 +902,8 @@ export class SimpleStream extends Component {
 		sel.removeAllRanges();
 		sel.addRange(range);
 		this._contentEditable.htmlEl.normalize();
+
+		this.setState({ newPostText: this._contentEditable.htmlEl.innerHTML });
 	}
 
 	// create a new post
@@ -921,6 +939,7 @@ export class SimpleStream extends Component {
 		this.props.createPost(this.props.id, this.state.threadId, newText, codeBlocks);
 
 		// reset the input field to blank
+		this.insertedAuthors = "";
 		this.setState({
 			newPostText: "",
 			quoteRange: null,
