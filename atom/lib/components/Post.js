@@ -59,18 +59,18 @@ export default class Post extends Component {
 		let usernameRegExp = new RegExp("(@(?:" + this.props.usernames + "))");
 		let bodyParts = post.text.split(usernameRegExp);
 
-		let menuItems = [
-			{ label: "Create Thread", key: "make-thread" },
-			{ label: "Mark Unread", key: "mark-unread" },
-			{ label: "Add Reaction", key: "add-reaction" },
-			{ label: "Pin to Stream", key: "pin-to-stream" },
-			{ label: "Edit Message", key: "edit-message" },
-			{ label: "Delete Message", key: "delete-message" }
-		];
+		// let menuItems = [
+		// 	{ label: "Create Thread", key: "make-thread" },
+		// 	{ label: "Mark Unread", key: "mark-unread" },
+		// 	// { label: "Add Reaction", key: "add-reaction" },
+		// 	// { label: "Pin to Stream", key: "pin-to-stream" },
+		// 	{ label: "Edit Message", key: "edit-message" },
+		// 	{ label: "Delete Message", key: "delete-message" }
+		// ];
 
-		let menu = this.state.menuOpen ? (
-			<Menu items={menuItems} handleSelectMenu={this.handleSelectMenu} />
-		) : null;
+		// let menu = this.state.menuOpen ? (
+		// <Menu items={menuItems} handleSelectMenu={this.handleSelectMenu} />
+		// ) : null;
 
 		let parentPost = this.props.replyingTo;
 		let alertClass = this.props.alert ? "icon icon-" + this.props.alert : null;
@@ -81,6 +81,10 @@ export default class Post extends Component {
 		}
 		let classNameInitials = "headshot-initials color-" + post.author.color;
 
+		// this was above Gravatar
+		// <span className="icon icon-gear" onClick={this.handleMenuClick} />
+		// {menu}
+
 		// FIXME use a real email address
 		return (
 			<div
@@ -89,8 +93,6 @@ export default class Post extends Component {
 				thread={post.parentPostId || post.id}
 				ref={ref => (this._div = ref)}
 			>
-				<span className="icon icon-gear" onClick={this.handleMenuClick} />
-				{menu}
 				<Gravatar
 					ref={ref => (this._gravatar = ref)}
 					className="headshot"
