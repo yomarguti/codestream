@@ -31,6 +31,7 @@ export default class PostDetails extends Component {
 		const showDiffLabel = this.state.diffShowing ? "Hide Diff" : "Show Diff";
 		const hasCodeBlock = post.codeBlocks && post.codeBlocks.length ? true : null;
 
+		let alert = null;
 		let hasDiff = false;
 		if (post.markerLocation) {
 			let code = post.codeBlocks[0].code;
@@ -38,6 +39,9 @@ export default class PostDetails extends Component {
 			let range = this.makeRange(post.markerLocation);
 			var existingCode = editor.getTextInBufferRange(range);
 			if (code !== existingCode) hasDiff = true;
+			if (code.length > 0 && post.markerLocation[5] && post.markerLocation[5].entirelyDeleted) {
+				alert = <span className="icon icon-alert" ref={ref => (this._alert = ref)} />;
+			}
 		}
 
 		// console.log(post.commitHashWhenPosted, " vs ", this.props.currentCommit);
@@ -67,6 +71,7 @@ export default class PostDetails extends Component {
 
 		return (
 			<div className="post-details" id={post.id} ref={ref => (this._div = ref)}>
+				{alert}
 				{commitDiv}
 				{hasDiff && (
 					<div className="button-group">
@@ -95,6 +100,13 @@ export default class PostDetails extends Component {
 			</div>
 		);
 	}
+
+	componentDidMount = () => {
+		if (this._alert)
+			atom.tooltips.add(this._alert, {
+				title: "This code no longer exists in this version of the file."
+			});
+	};
 
 	destroyDiffMarkers = () => {
 		for (var i = 0; i < this.diffMarkers.length; i++) {
