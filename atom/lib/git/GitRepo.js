@@ -98,6 +98,7 @@ class GitRepo {
 
 	constructor(git) {
 		this._git = git;
+		this._deltasBetweenCommits = {};
 	}
 
 	async getCurrentCommit() {
@@ -111,10 +112,18 @@ class GitRepo {
 	}
 
 	async getDeltasBetweenCommits(oldCommit, newCommit) {
-		const oldTree = await oldCommit._gitCommit.getTree();
-		const newTree = await newCommit._gitCommit.getTree();
-		const diff = await Git.Diff.treeToTree(this._git, oldTree, newTree);
-		const deltas = await this._buildDeltasFromDiffs([diff]);
+		const cache = this._deltasBetweenCommits;
+		const oldCommitDeltas = cache[oldCommit] || (cache[oldCommit] = {});
+
+		let deltas = oldCommitDeltas[newCommit];
+
+		if (!deltas) {
+			const oldTree = await oldCommit._gitCommit.getTree();
+			const newTree = await newCommit._gitCommit.getTree();
+			const diff = await Git.Diff.treeToTree(this._git, oldTree, newTree);
+			deltas = oldCommitDeltas[newCommit] = await this._buildDeltasFromDiffs([diff]);
+		}
+
 		return deltas;
 	}
 
