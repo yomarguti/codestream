@@ -249,7 +249,8 @@ export class SimpleStream extends Component {
 		let threadPost = this.findPostById(threadId);
 		let hasNewMessagesBelowFold = false;
 
-		let placeholderText = "Message " + this.fileAbbreviation();
+		let fileAbbreviation = this.fileAbbreviation();
+		let placeholderText = "Message " + fileAbbreviation;
 		// FIXME -- this doesn't update when it should for some reason
 		if (threadPost) {
 			placeholderText = "Reply to " + threadPost.author.username;
@@ -267,8 +268,7 @@ export class SimpleStream extends Component {
 				>
 					<div className="intro" ref={ref => (this._intro = ref)}>
 						<label>
-							<span className="logo">&#x2B22;</span>
-							Welcome to the stream.<br />Info goes here.
+							This is the start of your discussion about <b>{fileAbbreviation}</b>.
 						</label>
 					</div>
 					{posts.map(post => {
