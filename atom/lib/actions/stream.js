@@ -291,16 +291,16 @@ export const recalculateUMI = () => async (dispatch, getState, { http }) => {
 			// find the stream for key
 			// then calculate the unread Messages
 			let stream = streamsById[key];
-			let posts = _.sortBy(posts.byStream[key]);
+			const postsForStream = _.sortBy(posts.byStream[key]);
 
-			if (!posts) return;
-			let postIds = posts.map(post => {
+			if (!postsForStream) return;
+			let postIds = postsForStream.map(post => {
 				return post.id;
 			});
 			let index = postIds.indexOf(lastRead);
 			for (let i = index; i < posts.length; i++) {
 				unread++;
-				let post = posts[i];
+				let post = postsForStream[i];
 				if (post && post.text && post.text.match(mentionRegExp)) {
 					mentions++;
 				}
