@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import Gravatar from "react-gravatar";
+import Headshot from "./Headshot";
 import Timestamp from "./Timestamp";
 import Menu from "./Menu";
 import PostDetails from "./PostDetails";
@@ -81,7 +81,7 @@ export default class Post extends Component {
 		}
 		let classNameInitials = "headshot-initials color-" + post.author.color;
 
-		// this was above Gravatar
+		// this was above Headshot
 		// <span className="icon icon-gear" onClick={this.handleMenuClick} />
 		// {menu}
 
@@ -93,15 +93,7 @@ export default class Post extends Component {
 				thread={post.parentPostId || post.id}
 				ref={ref => (this._div = ref)}
 			>
-				<Gravatar
-					ref={ref => (this._gravatar = ref)}
-					className="headshot"
-					size={36}
-					default={defaultImage}
-					protocol="http://"
-					email={post.author.email}
-				/>
-				<div className={classNameInitials}>{authorInitials}</div>
+				<Headshot size={36} person={post.author} />
 				<span className="author" ref={ref => (this._authorDiv = ref)}>
 					{post.author.username}
 				</span>

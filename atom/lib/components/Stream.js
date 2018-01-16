@@ -989,6 +989,10 @@ const mapStateToProps = ({ session, context, streams, users, posts, markers, mar
 	);
 	Object.keys(users).forEach(function(key, index) {
 		users[key].color = index % 10;
+		if (!users[key].username) {
+			let email = users[key].email;
+			if (email) users[key].username = email.replace(/@.*/, "");
+		}
 	});
 	return {
 		id: stream.id,

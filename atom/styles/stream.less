@@ -197,10 +197,30 @@
 			li {
 				padding: 5px 10px;
 				.headshot {
+					display: inline-block;
+					position: relative;
+					width: 18px;
+					height: 18px;
+					margin-right: 6px;
+					vertical-align: -4px;
+				}
+				.headshot-gravatar {
+					position: absolute;
 					width: 18px;
 					height: 18px;
 					border-radius: 3px;
-					margin-right: 6px;
+					z-index: 2;
+				}
+				.headshot-initials {
+					position: absolute;
+					width: 18px;
+					height: 18px;
+					border-radius: 3px;
+					text-align: center;
+					font-size: 11px;
+					text-transform: capitalize;
+					padding-top: 1px;
+					z-index: 1;
 				}
 			}
 			// li:hover,
@@ -243,7 +263,7 @@
 			}
 			li {
 				padding: 5px 10px;
-				.headshot {
+				.headshot-gravatar {
 					width: 18px;
 					height: 18px;
 					border-radius: 3px;
@@ -306,13 +326,14 @@
 			position: relative;
 			max-width: 100%;
 			// overflow-x: hidden;
-			.headshot {
+			.headshot-gravatar {
 				display: block;
-				margin: 0 0 -36px 0;
+				position: absolute;
 				width: 36px;
 				height: 36px;
 				border-radius: 4px;
-				background: @base-background-color;
+				background: none;
+				z-index: 2;
 			}
 			.headshot-initials {
 				display: block;
@@ -324,36 +345,7 @@
 				text-align: center;
 				padding-top: 6px;
 				border-radius: 4px;
-			}
-			.color-1 {
-				background-color: #678;
-			}
-			.color-2 {
-				background-color: #687;
-			}
-			.color-3 {
-				background-color: #768;
-			}
-			.color-4 {
-				background-color: #786;
-			}
-			.color-5 {
-				background-color: #867;
-			}
-			.color-6 {
-				background-color: #876;
-			}
-			.color-7 {
-				background-color: #886;
-			}
-			.color-8 {
-				background-color: #868;
-			}
-			.color-9 {
-				background-color: #688;
-			}
-			.color-0 {
-				background-color: #666;
+				z-index: 1;
 			}
 			.author {
 				font-size: 13px;
@@ -495,5 +487,35 @@
 			display: block;
 			opacity: 0.75;
 		}
+	}
+	.color-1 {
+		background-color: #678;
+	}
+	.color-2 {
+		background-color: #687;
+	}
+	.color-3 {
+		background-color: #768;
+	}
+	.color-4 {
+		background-color: #786;
+	}
+	.color-5 {
+		background-color: #867;
+	}
+	.color-6 {
+		background-color: #876;
+	}
+	.color-7 {
+		background-color: #886;
+	}
+	.color-8 {
+		background-color: #868;
+	}
+	.color-9 {
+		background-color: #688;
+	}
+	.color-0 {
+		background-color: #666;
 	}
 }

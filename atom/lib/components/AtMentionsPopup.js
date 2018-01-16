@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import Gravatar from "react-gravatar";
+import Headshot from "./Headshot";
 
 // AtMentionsPopup expects an on/off switch determined by the on property
 // on = show the popup, off = hide the popup
@@ -37,13 +37,7 @@ export default class AtMentionsPopup extends Component {
 									onMouseEnter={event => this.handleMouseEnter(person.id)}
 									onMouseDown={event => this.handleClickPerson(person.id)}
 								>
-									<Gravatar
-										className="headshot"
-										size={18}
-										default="retro"
-										protocol="http://"
-										email={person.email}
-									/>
+									<Headshot size={18} person={person} />
 									<span className="username">{identifier}</span>{" "}
 									<span className="name">
 										{person.firstName} {person.lastName}
