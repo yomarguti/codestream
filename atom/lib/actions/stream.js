@@ -160,7 +160,7 @@ class MarkerLocationFinder {
 				`commitHash=${commitHash}`,
 			this._session.accessToken
 		);
-		constlocations = markerLocations.locations || {};
+		const locations = markerLocations.locations || {};
 
 		return locations;
 	}
