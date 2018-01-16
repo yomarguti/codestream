@@ -70,10 +70,11 @@ class MarkerLocationFinder {
 			const locations = await this._getMarkerLocations(commit.hash);
 			let calculatedLocations = {};
 
-			for (const markerId of Object.keys(locations)) {if (missingMarkerIds[markerId]) {
-				calculatedLocations[markerId] = locations[markerId];
-				delete missingMarkerIds[markerId];
-					}
+			for (const markerId of Object.keys(locations)) {
+				if (missingMarkerIds[markerId]) {
+					calculatedLocations[markerId] = locations[markerId];
+					delete missingMarkerIds[markerId];
+				}
 			}
 
 			const calculatedLocationsCount = Object.keys(calculatedLocations).length;
