@@ -4,6 +4,14 @@ import { connect } from "react-redux";
 import * as actions from "../actions/marker-location";
 
 const Range = location => [[location[0], location[1]], [location[2], location[3]]];
+const Location = (headPosition, tailPosition) => {
+	const location = [];
+	location[0] = tailPosition.row;
+	location[1] = tailPosition.column;
+	location[2] = headPosition.row;
+	location[3] = headPosition.column;
+	return location;
+};
 
 class ReferenceBubble extends Component {
 	subscriptions = new CompositeDisposable();
