@@ -82,6 +82,7 @@ export class SimpleUMIs extends Component {
 			element.setAttribute("cs-umi-badge", 0);
 			element.setAttribute("cs-umi-count", 0);
 			element.setAttribute("cs-umi-bold", 0);
+			element.setAttribute("cs-umi-mute", 0);
 			element.classList.remove("cs-has-umi");
 		}
 	}
@@ -141,7 +142,9 @@ export class SimpleUMIs extends Component {
 		} else if (treatment === "badge") {
 			element.setAttribute("cs-umi-badge", count > 0 ? 1 : 0);
 			element.setAttribute("cs-umi-count", count > 99 ? "99+" : count);
-		} else if (treatment !== "mute") {
+		} else if (treatment === "mute") {
+			// element.setAttribute("cs-umi-mute", 1);
+		} else {
 			// default is to bold
 			element.setAttribute("cs-umi-bold", count > 0 ? 1 : 0);
 		}
