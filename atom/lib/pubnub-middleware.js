@@ -1,4 +1,5 @@
 import PubNubReceiver from "./pubnub-receiver";
+import { fetchCurrentUser } from "./actions/user";
 
 export default store => {
 	const receiver = new PubNubReceiver(store);
@@ -8,9 +9,12 @@ export default store => {
 
 		// Once users have been loaded from indexedDB, if continuing a session,
 		// find current user and subscribe to team channels
+		// fetch the latest version of the current user object
 		if (action.type === "BOOTSTRAP_COMPLETE") {
 			const { session, onboarding, users, context } = store.getState();
 			if (onboarding.complete && session.accessToken) {
+				store.dispatch(fetchCurrentUser());
+
 				const user = users[session.userId];
 				const teamChannels = (user.teamIds || []).map(id => `team-${id}`);
 

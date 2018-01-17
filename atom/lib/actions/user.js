@@ -1,4 +1,5 @@
 import { upsert } from "../local-cache";
+import { normalize } from "./utils";
 
 export const saveUser = attributes => (dispatch, getState, { db }) => {
 	return upsert(db, "users", attributes).then(user =>
@@ -18,5 +19,9 @@ export const saveUsers = attributes => (dispatch, getState, { db }) => {
 	);
 };
 
-// this is in actions/stream.js
-// export const clearUMI = streamId => ({});
+export const fetchCurrentUser = () => (dispatch, getState, { http }) => {
+	const { session } = getState();
+	return http
+		.get("/users/me", session.accessToken)
+		.then(data => dispatch(saveUser(normalize(data.user))));
+};
