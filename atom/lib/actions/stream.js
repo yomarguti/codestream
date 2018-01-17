@@ -274,7 +274,6 @@ export const recalculateUMI = () => async (dispatch, getState, { http }) => {
 
 	// FIXME -- need all new posts as well
 
-	console.log("RECALCULATING UMI: ");
 	let mentionRegExp = new RegExp("@" + currentUser.username + "\\b");
 
 	let lastReads = currentUser.lastReads;
@@ -298,7 +297,8 @@ export const recalculateUMI = () => async (dispatch, getState, { http }) => {
 				return post.id;
 			});
 			let index = postIds.indexOf(lastRead);
-			for (let i = index; i < posts.length; i++) {
+			let postsLength = postsForStream.length;
+			for (let i = index; i < postsLength; i++) {
 				unread++;
 				let post = postsForStream[i];
 				if (post && post.text && post.text.match(mentionRegExp)) {
