@@ -58,7 +58,7 @@ export default class PubNubReceiver {
 	subscribe(channels) {
 		if (this.pubnub === null)
 			throw new Error(
-				"PubNubReceiver must be initialized with an authKey before subscribing to channels"
+				"PubNubReceiver must be initialized with an authKey and userId before subscribing to channels"
 			);
 
 		const newChannels = _.difference(channels, this.subscribedChannels);
