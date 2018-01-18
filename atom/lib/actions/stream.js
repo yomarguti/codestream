@@ -276,7 +276,7 @@ export const recalculateUMI = () => async (dispatch, getState, { http }) => {
 
 	let mentionRegExp = new RegExp("@" + currentUser.username + "\\b");
 
-	let lastReads = currentUser.lastReads;
+	let lastReads = currentUser.lastReads || {};
 	let nextState = { mentions: {}, unread: {} };
 	let streamsById = {};
 	Object.keys(streams.byFile).forEach(key => {

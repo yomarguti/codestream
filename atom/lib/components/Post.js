@@ -74,12 +74,6 @@ export default class Post extends Component {
 
 		let parentPost = this.props.replyingTo;
 		let alertClass = this.props.alert ? "icon icon-" + this.props.alert : null;
-		let defaultImage = encodeURI("https://i.imgur.com/hOylzTJ.gif");
-		let authorInitials = post.author.email.charAt(0);
-		if (post.author.fullName) {
-			authorInitials = post.author.fullName.replace(/(\w)\w*/g, "$1").replace(/\s/g, "");
-		}
-		let classNameInitials = "headshot-initials color-" + post.author.color;
 
 		// this was above Headshot
 		// <span className="icon icon-gear" onClick={this.handleMenuClick} />

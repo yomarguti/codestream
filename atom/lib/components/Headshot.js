@@ -17,6 +17,7 @@ export default class Headshot extends Component {
 		let authorInitials = person.email.charAt(0);
 		if (person.fullName) {
 			authorInitials = person.fullName.replace(/(\w)\w*/g, "$1").replace(/\s/g, "");
+			if (authorInitials.length > 2) authorInitials = authorInitials.substring(0, 2);
 		}
 		let classNameInitials = "headshot-initials color-" + person.color;
 

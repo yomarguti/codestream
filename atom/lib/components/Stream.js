@@ -31,6 +31,8 @@ export class SimpleStream extends Component {
 			posts: []
 		};
 
+		this.savedComposeState = {};
+
 		this.subscriptions = new CompositeDisposable();
 		this.subscriptions.add(
 			atom.commands.add(".codestream .compose.mentions-on", {
@@ -68,6 +70,7 @@ export class SimpleStream extends Component {
 	componentWillReceiveProps(nextProps) {
 		if (!nextProps.id) this.props.fetchStream();
 		if (nextProps.id !== this.props.id) {
+			this.saveComposeState(nextProps.id);
 			this.handleDismissThread();
 		}
 
@@ -514,6 +517,18 @@ export class SimpleStream extends Component {
 		console.log(codeMarkers);
 	};
 
+	saveComposeState(nextId) {
+		this.savedComposeState[this.props.id] = {
+			newPostText: this.state.newPostText,
+			quoteRange: this.state.quoteRange,
+			quoteText: this.state.quoteText,
+			preContext: this.state.preContext,
+			postContext: this.state.postContext
+		};
+		this.resetCompose(this.savedComposeState[nextId]);
+		delete this.savedComposeState[nextId];
+	}
+
 	// dismiss the thread stream and return to the main stream
 	handleDismissThread = () => {
 		this.destroyCodeBlockMarker();
@@ -949,14 +964,25 @@ export class SimpleStream extends Component {
 		this.props.createPost(this.props.id, this.state.threadId, newText, codeBlocks);
 
 		// reset the input field to blank
+		this.resetCompose();
+	}
+
+	// if we receive newState as an argument, set the compose state
+	// to that state. otherwise reset it (clear it out)
+	resetCompose(newState) {
 		this.insertedAuthors = "";
-		this.setState({
-			newPostText: "",
-			quoteRange: null,
-			quoteText: "",
-			preContext: "",
-			postContext: ""
-		});
+		if (newState) {
+			this.setState(newState);
+		} else {
+			this.setState({
+				newPostText: "",
+				quoteRange: null,
+				quoteText: "",
+				preContext: "",
+				postContext: ""
+			});
+			this.savedComposeState[this.id] = {};
+		}
 	}
 }
 
