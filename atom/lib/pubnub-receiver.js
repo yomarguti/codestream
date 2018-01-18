@@ -62,7 +62,7 @@ export default class PubNubReceiver {
 			);
 
 		const newChannels = _.difference(channels, this.subscribedChannels);
-		this.pubnub.subscribe({ channels: newChannels, withPresence: true });
+		this.pubnub.subscribe({ channels: newChannels, withPresence: false });
 		this.subscribedChannels.push(...newChannels);
 		console.group("changed subscribed channels", this.subscribedChannels);
 		console.debug("arguments", channels);
