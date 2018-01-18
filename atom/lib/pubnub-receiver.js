@@ -51,6 +51,9 @@ export default class PubNubReceiver {
 				console.debug(event.timestamp); // timestamp on the event is occurred
 				console.debug(event.uuid); // uuid of the user
 				console.debug(event.occupancy); // current number of users online
+			},
+			status: status => {
+				console.debug("pubnub status", status);
 			}
 		});
 	}
@@ -62,12 +65,14 @@ export default class PubNubReceiver {
 			);
 
 		const newChannels = _.difference(channels, this.subscribedChannels);
-		this.pubnub.subscribe({ channels: newChannels, withPresence: false });
-		this.subscribedChannels.push(...newChannels);
-		console.group("changed subscribed channels", this.subscribedChannels);
-		console.debug("arguments", channels);
-		console.debug("new channels", newChannels);
-		console.groupEnd();
+		newChannels.forEach(channel => {
+			console.debug("subscribing to", channel);
+			this.pubnub.subscribe({
+				channels: [channel],
+				withPresence: channel.startsWith("team-") || channel.startsWith("repo-")
+			});
+			this.subscribedChannels.push(channel);
+		});
 	}
 
 	getMessageHandler(type) {
