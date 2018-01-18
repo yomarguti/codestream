@@ -8,6 +8,7 @@ const requestStarted = () => ({ type: "REQUEST_STARTED" });
 const requestFinished = () => ({ type: "REQUEST_FINISHED" });
 const completeOnboarding = () => ({ type: "ONBOARDING_COMPLETE" });
 const serverUnreachable = () => ({ type: "ONBOARDING-SERVER_UNREACHABLE" });
+const invalidCredentials = () => ({ type: "INVALID_CREDENTIALS" });
 
 const userAlreadySignedUp = email => ({
 	type: "SIGNUP_EMAIL_EXISTS",
@@ -238,7 +239,8 @@ export const authenticate = params => (dispatch, getState, { http }) => {
 		.catch(error => {
 			dispatch(requestFinished());
 			if (http.isApiRequestError(error)) {
-				if (error.data.code === "USRC-1001") dispatch({ type: "INVALID_CREDENTIALS" });
+				if (error.data.code === "USRC-1001") dispatch(invalidCredentials());
+				if (error.data.code === "USRC-1003") dispatch(invalidCredentials());
 				if (error.data.code === "REPO-1000") dispatch(noAccess());
 				if (error.data.code === "RAPI-1005") dispatch(noAccess()); // TODO: How to handle url invalid here? Just bailing and saying no access for url invalid
 			} else if (http.isApiUnreachableError(error)) dispatch(serverUnreachable());
