@@ -52,6 +52,8 @@ export const fetchRepoInfo = ({ url, firstCommitHash }) => async (dispatch, getS
 					currentTeamId: repo.teamId
 				})
 			);
+		} else {
+			return dispatch(setContext({ usernamesInTeam: [], currentRepoId: "", currentTeamId: "" }));
 		}
 	} catch (error) {
 		if (http.isApiRequestError(error)) {

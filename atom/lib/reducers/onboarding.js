@@ -23,6 +23,7 @@ export default (state = initialState, { type, payload }) => {
 		case "NEW_USER_LOGGED_INTO_NEW_REPO":
 		case "NEW_USER_CONFIRMED_IN_NEW_REPO":
 			return { ...initialState, step: "createTeam" };
+		case "EXISTING_USER_LOGGED_INTO_NEW_REPO":
 		case "EXISTING_USER_CONFIRMED_IN_NEW_REPO":
 			return { ...initialState, step: "selectTeam" };
 		case "LOGGED_INTO_FOREIGN_REPO":

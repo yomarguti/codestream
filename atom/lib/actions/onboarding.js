@@ -146,6 +146,7 @@ export const addRepoForTeam = teamId => (dispatch, getState, { http }) => {
 			dispatch(requestFinished());
 			await dispatch(saveRepo(repo));
 			dispatch(setCurrentRepo(repo.id));
+			dispatch(setCurrentTeam(teamId));
 			dispatch({ type: "REPO_ADDED_FOR_TEAM" });
 		})
 		.catch(error => {
@@ -191,13 +192,14 @@ export const authenticate = params => (dispatch, getState, { http }) => {
 			const userTeams = normalize(teams);
 			repos = normalize(repos);
 			await dispatch(saveUser(user));
-			await dispatch(saveTeams(teams));
+			await dispatch(saveTeams(userTeams));
 			await dispatch(saveRepos(repos));
 
 			const { context, repoAttributes } = getState();
 
+			const teamIdsForUser = user.teamIds || userTeams.map(team => team.id);
+
 			dispatch(initializeSession({ accessToken, user }));
-			await dispatch(fetchTeamMembers(userTeams.map(t => t.id)));
 
 			let teamIdForRepo = context.currentTeamId;
 			if (!teamIdForRepo) {
@@ -208,7 +210,10 @@ export const authenticate = params => (dispatch, getState, { http }) => {
 
 			if (!teamIdForRepo && userTeams.length === 0)
 				dispatch({ type: "NEW_USER_LOGGED_INTO_NEW_REPO" });
-			else {
+			else if (!teamIdForRepo && userTeams.length > 0) {
+				await dispatch(fetchTeamMembers(teamIdsForUser));
+				dispatch({ type: "EXISTING_USER_LOGGED_INTO_NEW_REPO" });
+			} else {
 				// else if (user.teamIds.includes(currentTeamId)) dispatch({ type: "LOGGED_IN" });
 				await dispatch(joinTeam());
 				dispatch({ type: "LOGGED_IN" });
