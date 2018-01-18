@@ -20,6 +20,7 @@ export default (state = initialState, { type, payload }) => {
 			return { ...initialState, step: "login" };
 		case "GO_TO_SIGNUP":
 			return { ...initialState, step: "signUp" };
+		case "NEW_USER_LOGGED_INTO_NEW_REPO":
 		case "NEW_USER_CONFIRMED_IN_NEW_REPO":
 			return { ...initialState, step: "createTeam" };
 		case "EXISTING_USER_CONFIRMED_IN_NEW_REPO":

@@ -188,19 +188,28 @@ export const authenticate = params => (dispatch, getState, { http }) => {
 		.then(async ({ accessToken, user, teams, repos }) => {
 			dispatch(requestFinished());
 			user = normalize(user);
-			teams = normalize(teams);
+			const userTeams = normalize(teams);
 			repos = normalize(repos);
 			await dispatch(saveUser(user));
 			await dispatch(saveTeams(teams));
 			await dispatch(saveRepos(repos));
 
-			const { currentTeamId } = getState().context;
+			const { context, repoAttributes } = getState();
 
 			dispatch(initializeSession({ accessToken, user }));
-			await dispatch(fetchTeamMembers(user.teamIds));
+			await dispatch(fetchTeamMembers(userTeams.map(t => t.id)));
 
-			if (teams.find(team => team.id === currentTeamId)) dispatch({ type: "LOGGED_IN" });
+			let teamIdForRepo = context.currentTeamId;
+			if (!teamIdForRepo) {
+				// fetch repo info again just in case a team has been created since CS was initialized
+				const action = await dispatch(fetchRepoInfo(repoAttributes));
+				if (action && action.payload) teamIdForRepo = action.payload.currentTeamId;
+			}
+
+			if (!teamIdForRepo && userTeams.length === 0)
+				dispatch({ type: "NEW_USER_LOGGED_INTO_NEW_REPO" });
 			else {
+				// else if (user.teamIds.includes(currentTeamId)) dispatch({ type: "LOGGED_IN" });
 				await dispatch(joinTeam());
 				dispatch({ type: "LOGGED_IN" });
 			}
