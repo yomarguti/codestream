@@ -22,6 +22,7 @@ const initializeSession = ({ user, accessToken }) => ({
 
 export const goToSignup = () => ({ type: "GO_TO_SIGNUP" });
 export const goToLogin = () => ({ type: "GO_TO_LOGIN" });
+export const goToConfirmation = attributes => ({ type: "GO_TO_CONFIRMATION", payload: attributes });
 
 export const register = attributes => (dispatch, getState, { http }) => {
 	return http
@@ -189,6 +190,19 @@ export const authenticate = params => (dispatch, getState, { http }) => {
 		.then(async ({ accessToken, user, teams, repos }) => {
 			dispatch(requestFinished());
 			user = normalize(user);
+
+			if (!user.isRegistered)
+				return dispatch(
+					goToConfirmation({
+						userId: user.id,
+						username: user.username,
+						email: user.email,
+						password: params.password,
+						firstName: user.firstName || "",
+						lastName: user.lastName || ""
+					})
+				);
+
 			const userTeams = normalize(teams);
 			repos = normalize(repos);
 			await dispatch(saveUser(user));

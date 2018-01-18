@@ -12,6 +12,7 @@ export default (state = initialState, { type, payload }) => {
 			return { ...state, requestInProcess: true };
 		case "REQUEST_FINISHED":
 			return { ...state, requestInProcess: false };
+		case "GO_TO_CONFIRMATION":
 		case "SIGNUP_SUCCESS":
 			return { ...state, step: "confirmEmail", props: payload };
 		case "SIGNUP_EMAIL_EXISTS":
