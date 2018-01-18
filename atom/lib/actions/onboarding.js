@@ -184,7 +184,7 @@ export const addMembers = emails => (dispatch, getState, { http }) => {
 
 export const authenticate = params => (dispatch, getState, { http }) => {
 	dispatch(requestStarted());
-	http
+	return http
 		.put("/no-auth/login", params)
 		.then(async ({ accessToken, user, teams, repos }) => {
 			dispatch(requestFinished());
@@ -213,12 +213,13 @@ export const authenticate = params => (dispatch, getState, { http }) => {
 			else if (!teamIdForRepo && userTeams.length > 0) {
 				await dispatch(fetchTeamMembers(teamIdsForUser));
 				dispatch({ type: "EXISTING_USER_LOGGED_INTO_NEW_REPO" });
+			} else if (user.teamIds.includes(teamIdForRepo)) {
+				await dispatch(fetchTeamMembers(teamIdsForUser));
+				dispatch({ type: "LOGGED_IN" });
 			} else {
-				// else if (user.teamIds.includes(currentTeamId)) dispatch({ type: "LOGGED_IN" });
 				await dispatch(joinTeam());
 				dispatch({ type: "LOGGED_IN" });
 			}
-			// TODO: if no team exists, go to team creation
 		})
 		.catch(error => {
 			dispatch(requestFinished());
