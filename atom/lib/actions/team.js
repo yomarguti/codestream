@@ -1,4 +1,5 @@
 import { upsert } from "../local-cache";
+import { setCurrentTeam } from "./context";
 import { saveUsers } from "./user";
 import { saveRepo } from "./repo";
 import { normalize } from "./utils";
@@ -26,6 +27,7 @@ export const fetchTeamMembers = teamId => (dispatch, getState, { http }) => {
 export const joinTeam = () => (dispatch, getState, { http }) => {
 	const { repoAttributes, session } = getState();
 	return http.post("/repos", repoAttributes, session.accessToken).then(async data => {
+		dispatch(setCurrentTeam(data.repo.teamId));
 		// FIXME:
 		if (data.users) await dispatch(saveUsers(normalize(data.users)));
 		await dispatch(fetchTeamMembers(data.repo.teamId));

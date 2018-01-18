@@ -8,6 +8,7 @@ const requestStarted = () => ({ type: "REQUEST_STARTED" });
 const requestFinished = () => ({ type: "REQUEST_FINISHED" });
 const completeOnboarding = () => ({ type: "ONBOARDING_COMPLETE" });
 const serverUnreachable = () => ({ type: "ONBOARDING-SERVER_UNREACHABLE" });
+const invalidCredentials = () => ({ type: "INVALID_CREDENTIALS" });
 
 const userAlreadySignedUp = email => ({
 	type: "SIGNUP_EMAIL_EXISTS",
@@ -22,6 +23,7 @@ const initializeSession = ({ user, accessToken }) => ({
 
 export const goToSignup = () => ({ type: "GO_TO_SIGNUP" });
 export const goToLogin = () => ({ type: "GO_TO_LOGIN" });
+export const goToConfirmation = attributes => ({ type: "GO_TO_CONFIRMATION", payload: attributes });
 
 export const register = attributes => (dispatch, getState, { http }) => {
 	return http
@@ -146,6 +148,7 @@ export const addRepoForTeam = teamId => (dispatch, getState, { http }) => {
 			dispatch(requestFinished());
 			await dispatch(saveRepo(repo));
 			dispatch(setCurrentRepo(repo.id));
+			dispatch(setCurrentTeam(teamId));
 			dispatch({ type: "REPO_ADDED_FOR_TEAM" });
 		})
 		.catch(error => {
@@ -162,9 +165,9 @@ export const addRepoForTeam = teamId => (dispatch, getState, { http }) => {
 export const teamNotFound = () => ({ type: "TEAM_NOT_FOUND" });
 export const noPermission = () => ({ type: "INVALID_PERMISSION_FOR_TEAM" });
 
-export const addMembers = emails => (dispatch, getState, { http }) => {
+export const addMembers = people => (dispatch, getState, { http }) => {
 	const { repoAttributes, currentTeamId, session } = getState();
-	const params = { ...repoAttributes, teamId: currentTeamId, emails };
+	const params = { ...repoAttributes, teamId: currentTeamId, users: people };
 	return http
 		.post("/repos", params, session.accessToken)
 		.then(({ users }) => {
@@ -183,33 +186,61 @@ export const addMembers = emails => (dispatch, getState, { http }) => {
 
 export const authenticate = params => (dispatch, getState, { http }) => {
 	dispatch(requestStarted());
-	http
+	return http
 		.put("/no-auth/login", params)
 		.then(async ({ accessToken, user, teams, repos }) => {
 			dispatch(requestFinished());
 			user = normalize(user);
-			teams = normalize(teams);
+
+			if (!user.isRegistered)
+				return dispatch(
+					goToConfirmation({
+						userId: user.id,
+						username: user.username,
+						email: user.email,
+						password: params.password,
+						firstName: user.firstName || "",
+						lastName: user.lastName || ""
+					})
+				);
+
+			const userTeams = normalize(teams);
 			repos = normalize(repos);
 			await dispatch(saveUser(user));
-			await dispatch(saveTeams(teams));
+			await dispatch(saveTeams(userTeams));
 			await dispatch(saveRepos(repos));
 
-			const { currentTeamId } = getState().context;
+			const { context, repoAttributes } = getState();
+
+			const teamIdsForUser = user.teamIds || userTeams.map(team => team.id);
 
 			dispatch(initializeSession({ accessToken, user }));
-			await dispatch(fetchTeamMembers(user.teamIds));
 
-			if (teams.find(team => team.id === currentTeamId)) dispatch({ type: "LOGGED_IN" });
-			else {
+			let teamIdForRepo = context.currentTeamId;
+			if (!teamIdForRepo) {
+				// fetch repo info again just in case a team has been created since CS was initialized
+				const action = await dispatch(fetchRepoInfo(repoAttributes));
+				if (action && action.payload) teamIdForRepo = action.payload.currentTeamId;
+			}
+
+			if (!teamIdForRepo && userTeams.length === 0)
+				dispatch({ type: "NEW_USER_LOGGED_INTO_NEW_REPO" });
+			else if (!teamIdForRepo && userTeams.length > 0) {
+				await dispatch(fetchTeamMembers(teamIdsForUser));
+				dispatch({ type: "EXISTING_USER_LOGGED_INTO_NEW_REPO" });
+			} else if (user.teamIds.includes(teamIdForRepo)) {
+				await dispatch(fetchTeamMembers(teamIdsForUser));
+				dispatch({ type: "LOGGED_IN" });
+			} else {
 				await dispatch(joinTeam());
 				dispatch({ type: "LOGGED_IN" });
 			}
-			// TODO: if no team exists, go to team creation
 		})
 		.catch(error => {
 			dispatch(requestFinished());
 			if (http.isApiRequestError(error)) {
-				if (error.data.code === "USRC-1001") dispatch({ type: "INVALID_CREDENTIALS" });
+				if (error.data.code === "USRC-1001") dispatch(invalidCredentials());
+				if (error.data.code === "USRC-1003") dispatch(invalidCredentials());
 				if (error.data.code === "REPO-1000") dispatch(noAccess());
 				if (error.data.code === "RAPI-1005") dispatch(noAccess()); // TODO: How to handle url invalid here? Just bailing and saying no access for url invalid
 			} else if (http.isApiUnreachableError(error)) dispatch(serverUnreachable());

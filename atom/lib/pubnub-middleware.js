@@ -22,7 +22,7 @@ export default store => {
 
 				if (context.currentRepoId) channels.push(`repo-${context.currentRepoId}`);
 
-				receiver.initialize(session.accessToken);
+				receiver.initialize(session.accessToken, session.userId);
 				receiver.subscribe(channels);
 			}
 		}
@@ -36,7 +36,7 @@ export default store => {
 			const repoId = store.getState().context.currentRepoId;
 			if (repoId) channels.push(`repo-${repoId}`);
 
-			receiver.initialize(action.payload.accessToken);
+			receiver.initialize(action.payload.accessToken, user.id);
 			receiver.subscribe(channels);
 		}
 		// As context changes, subscribe

@@ -20,11 +20,14 @@ export default class PubNubReceiver {
 		this.store = store;
 	}
 
-	initialize(authKey) {
+	initialize(authKey, uuid) {
 		this.pubnub = new PubNub({
 			authKey,
+			uuid,
+			publishKey: "pub-c-8603fed4-39da-4feb-a82e-cf5311ddb4d6",
 			subscribeKey: "sub-c-e830d7da-fb14-11e6-9f57-02ee2ddab7fe",
-			restore: true
+			restore: true,
+			heartbeatInterval: 30
 		});
 		this.setupListener();
 	}
@@ -42,6 +45,15 @@ export default class PubNubReceiver {
 					const handler = this.getMessageHandler(key);
 					if (handler) handler(objects[key]);
 				});
+			},
+			presence: event => {
+				console.debug(event.action); // online status events
+				console.debug(event.timestamp); // timestamp on the event is occurred
+				console.debug(event.uuid); // uuid of the user
+				console.debug(event.occupancy); // current number of users online
+			},
+			status: status => {
+				console.debug("pubnub status", status);
 			}
 		});
 	}
@@ -49,16 +61,18 @@ export default class PubNubReceiver {
 	subscribe(channels) {
 		if (this.pubnub === null)
 			throw new Error(
-				"PubNubReceiver must be initialized with an authKey before subscribing to channels"
+				"PubNubReceiver must be initialized with an authKey and userId before subscribing to channels"
 			);
 
 		const newChannels = _.difference(channels, this.subscribedChannels);
-		this.pubnub.subscribe({ channels: newChannels });
-		this.subscribedChannels.push(...newChannels);
-		console.group("changed subscribed channels", this.subscribedChannels);
-		console.debug("arguments", channels);
-		console.debug("new channels", newChannels);
-		console.groupEnd();
+		newChannels.forEach(channel => {
+			console.debug("subscribing to", channel);
+			this.pubnub.subscribe({
+				channels: [channel],
+				withPresence: channel.startsWith("team-") || channel.startsWith("repo-")
+			});
+			this.subscribedChannels.push(channel);
+		});
 	}
 
 	getMessageHandler(type) {

@@ -35,8 +35,10 @@ export const logout = () => dispatch => {
 	});
 };
 export const noAccess = () => ({ type: "NO_ACCESS" });
+export const noRemoteUrl = () => ({ type: "NO_ACCESS-MISSING_REMOTE_URL" });
 
 export const fetchRepoInfo = ({ url, firstCommitHash }) => async (dispatch, getState, { http }) => {
+	if (!url) return dispatch(noRemoteUrl());
 	try {
 		const { repo, usernames } = await http.get(
 			`/no-auth/find-repo?url=${encodeURIComponent(url)}&firstCommitHash=${firstCommitHash}`
@@ -52,6 +54,8 @@ export const fetchRepoInfo = ({ url, firstCommitHash }) => async (dispatch, getS
 					currentTeamId: repo.teamId
 				})
 			);
+		} else {
+			return dispatch(setContext({ usernamesInTeam: [], currentRepoId: "", currentTeamId: "" }));
 		}
 	} catch (error) {
 		if (http.isApiRequestError(error)) {

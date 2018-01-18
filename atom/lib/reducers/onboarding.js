@@ -12,6 +12,7 @@ export default (state = initialState, { type, payload }) => {
 			return { ...state, requestInProcess: true };
 		case "REQUEST_FINISHED":
 			return { ...state, requestInProcess: false };
+		case "GO_TO_CONFIRMATION":
 		case "SIGNUP_SUCCESS":
 			return { ...state, step: "confirmEmail", props: payload };
 		case "SIGNUP_EMAIL_EXISTS":
@@ -20,8 +21,10 @@ export default (state = initialState, { type, payload }) => {
 			return { ...initialState, step: "login" };
 		case "GO_TO_SIGNUP":
 			return { ...initialState, step: "signUp" };
+		case "NEW_USER_LOGGED_INTO_NEW_REPO":
 		case "NEW_USER_CONFIRMED_IN_NEW_REPO":
 			return { ...initialState, step: "createTeam" };
+		case "EXISTING_USER_LOGGED_INTO_NEW_REPO":
 		case "EXISTING_USER_CONFIRMED_IN_NEW_REPO":
 			return { ...initialState, step: "selectTeam" };
 		case "LOGGED_INTO_FOREIGN_REPO":

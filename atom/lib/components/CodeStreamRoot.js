@@ -33,7 +33,7 @@ class CodeStreamRoot extends Component {
 		const { accessToken, bootstrapped, repositories, onboarding, noAccess } = this.props;
 
 		if (repositories.length === 0) return <NoGit />;
-		if (noAccess) return <NoAccess />;
+		if (noAccess) return <NoAccess reason={noAccess} />;
 		if (!bootstrapped) return <Loading />;
 		else if (onboarding.complete && accessToken) return <Stream />;
 		else {
