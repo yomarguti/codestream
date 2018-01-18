@@ -162,7 +162,7 @@ export class SimpleSignupForm extends Component {
 
 	render() {
 		return (
-			<form id="signup-form" onSubmit={this.submitCredentials}>
+			<form id="signup-form" onBlur={this.onBlurUsername} onSubmit={this.submitCredentials}>
 				{this.renderDebugInfo()}
 				{this.renderPageErrors()}
 				<div id="controls">
