@@ -3,21 +3,21 @@ import { parseCommitters } from "../lib/components/onboarding/teamMemberSelectio
 describe("parseCommitters", () => {
 	it("can return a unique list of objects", () => {
 		const input = [
-			"Tom<trim-this>tom@foo.com",
+			"Tom Ford<trim-this>tom@foo.com",
 			"Sam<trim-this>sam@bar.com",
 			"tom<trim-this>tom@foo.com"
 		];
 		expect(parseCommitters(input)).toEqual([
-			{ name: "Tom", email: "tom@foo.com" },
-			{ name: "Sam", email: "sam@bar.com" }
+			{ firstName: "Tom", lastName: "Ford", name: "Tom Ford", email: "tom@foo.com" },
+			{ firstName: "Sam", lastName: "", name: "Sam", email: "sam@bar.com" }
 		]);
 	});
 
 	it("adds provided properties to the objects", () => {
 		const input = ["Tom<trim-this>tom@foo.com", "Sam<trim-this>sam@bar.com"];
 		expect(parseCommitters(input, { selected: true })).toEqual([
-			{ name: "Tom", email: "tom@foo.com", selected: true },
-			{ name: "Sam", email: "sam@bar.com", selected: true }
+			{ name: "Tom", firstName: "Tom", lastName: "", email: "tom@foo.com", selected: true },
+			{ name: "Sam", firstName: "Sam", lastName: "", email: "sam@bar.com", selected: true }
 		]);
 	});
 
@@ -28,8 +28,8 @@ describe("parseCommitters", () => {
 			"Steve<trim-this>(none)"
 		];
 		expect(parseCommitters(input, { selected: true })).toEqual([
-			{ name: "Tom", email: "tom@foo.com", selected: true },
-			{ name: "Sam", email: "sam@bar.com", selected: true }
+			{ name: "Tom", firstName: "Tom", lastName: "", email: "tom@foo.com", selected: true },
+			{ name: "Sam", firstName: "Sam", lastName: "", email: "sam@bar.com", selected: true }
 		]);
 	});
 });

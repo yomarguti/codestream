@@ -165,9 +165,9 @@ export const addRepoForTeam = teamId => (dispatch, getState, { http }) => {
 export const teamNotFound = () => ({ type: "TEAM_NOT_FOUND" });
 export const noPermission = () => ({ type: "INVALID_PERMISSION_FOR_TEAM" });
 
-export const addMembers = emails => (dispatch, getState, { http }) => {
+export const addMembers = people => (dispatch, getState, { http }) => {
 	const { repoAttributes, currentTeamId, session } = getState();
-	const params = { ...repoAttributes, teamId: currentTeamId, emails };
+	const params = { ...repoAttributes, teamId: currentTeamId, users: people };
 	return http
 		.post("/repos", params, session.accessToken)
 		.then(({ users }) => {

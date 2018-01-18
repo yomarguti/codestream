@@ -15,12 +15,21 @@ const isEmailInvalid = email => {
 	return email === "" || emailRegex.test(email) === false;
 };
 
+const parseName = name => {
+	const names = name.split(" ");
+	if (names.length > 2) return { firstName: name, lastName: "" };
+	else {
+		const [firstName, lastName = ""] = names;
+		return { firstName, lastName };
+	}
+};
+
 export const parseCommitters = (strings, attrs = {}) => {
 	const committers = _.uniq(strings)
 		.filter(Boolean)
 		.map(string => {
 			const [name, email] = string.split("<trim-this>");
-			if (email !== "" && email !== "(none)") return { name, email, ...attrs };
+			if (email !== "" && email !== "(none)") return { name, email, ...attrs, ...parseName(name) };
 			else return false;
 		})
 		.filter(Boolean);
@@ -79,8 +88,10 @@ export class SimpleTeamMemberSelectionForm extends Component {
 	};
 
 	onSubmitTeamMembers = () => {
-		const emails = this.state.committers.filter(c => c.selected).map(c => c.email);
-		this.props.addMembers(emails);
+		const newMembers = this.state.committers
+			.filter(c => c.selected)
+			.map(({ selected, name, ...rest }) => ({ ...rest }));
+		this.props.addMembers(newMembers);
 	};
 
 	toggleNewMemberInput = () =>
