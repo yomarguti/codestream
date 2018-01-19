@@ -3,14 +3,15 @@
 import GitCommit from './GitCommit';
 import Git from 'nodegit';
 
-function log() {
-	console.log.apply(console, arguments);
-}
+
 
 export async function open(path) {
 	const git = await Git.Repository.open(path);
 	return new GitRepo(git);
 }
+
+const HISTORY_WALK_FETCH_SIZE = 100;
+
 
 class DeltaBuilder {
 
@@ -102,13 +103,13 @@ class GitRepo {
 	}
 
 	async getCurrentCommit() {
-		const gitCommit = await this._git.getHeadCommit();
-		return new GitCommit(gitCommit);
+		const headCommit = await this._git.getHeadCommit();
+		return new GitCommit(headCommit);
 	}
 
 	async getCommit(hash) {
-		const gitCommit = await this._git.getCommit(hash);
-		return new GitCommit(gitCommit);
+		const commit = await this._git.getCommit(hash);
+		return new GitCommit(commit);
 	}
 
 	async getDeltasBetweenCommits(oldCommit, newCommit) {
@@ -118,8 +119,8 @@ class GitRepo {
 		let deltas = oldCommitDeltas[newCommit];
 
 		if (!deltas) {
-			const oldTree = await oldCommit._gitCommit.getTree();
-			const newTree = await newCommit._gitCommit.getTree();
+			const oldTree = await oldCommit._commit.getTree();
+			const newTree = await newCommit._commit.getTree();
 			const diff = await Git.Diff.treeToTree(this._git, oldTree, newTree);
 			deltas = oldCommitDeltas[newCommit] = await this._buildDeltasFromDiffs([diff]);
 		}
@@ -128,7 +129,7 @@ class GitRepo {
 	}
 
 	async getDeltas(commit) {
-		const diffs = await commit._gitCommit.getDiff();
+		const diffs = await commit._commit.getDiff();
 		const deltas = await this._buildDeltasFromDiffs(diffs);
 		return deltas;
 	}
@@ -158,6 +159,56 @@ class GitRepo {
 		}
 
 		return deltas;
+	}
+
+	async getCommitHistoryForFile(filePath, maxHistorySize) {
+		const me = this;
+		const git = me._git;
+		const headCommit = await git.getHeadCommit();
+
+		const walker = git.createRevWalk();
+		walker.push(headCommit.sha());
+		walker.sorting(Git.Revwalk.SORT.TIME);
+		const commitsToWalk = await walker.fileHistoryWalk(filePath, HISTORY_WALK_FETCH_SIZE);
+		const commitHistory = await me._compileHistory(commitsToWalk, filePath, [], maxHistorySize);
+
+		const result = [];
+		for (const entry of commitHistory) {
+			const gitCommit = await me.getCommit(entry.commit.sha());
+			result.push(gitCommit);
+		}
+
+		return result;
+	}
+
+	async _compileHistory(commitsToWalk, filePath, commitHistory, maxHistorySize) {
+		const git = this._git;
+
+		let lastSha;
+		if (commitHistory.length > 0) {
+			lastSha = commitHistory[commitHistory.length - 1].commit.sha();
+			if (
+				commitsToWalk.length == 1 &&
+				commitsToWalk[0].commit.sha() == lastSha
+			) {
+				return commitHistory;
+			}
+		}
+
+		const missingHistorySize = maxHistorySize - commitHistory.length;
+		commitHistory = commitHistory.concat(commitsToWalk.slice(0, missingHistorySize));
+		if (commitHistory.length === maxHistorySize) {
+			return commitHistory;
+		}
+
+		lastSha = commitHistory[commitHistory.length - 1].commit.sha();
+
+		const walker = git.createRevWalk();
+		walker.push(lastSha);
+		walker.sorting(Git.Revwalk.SORT.TIME);
+
+		commitsToWalk = await walker.fileHistoryWalk(filePath, HISTORY_WALK_FETCH_SIZE);
+		return await this._compileHistory(commitsToWalk, filePath, commitHistory, maxHistorySize);
 	}
 
 }

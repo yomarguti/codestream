@@ -50,43 +50,51 @@ class MarkerLocationFinder {
 		this._streamId = streamId;
 	}
 
-	async findLocations(markerIds) {
+	async findLocations(markers) {
 		const me = this;
 		const myLogger = me._logger;
-		myLogger.trace(".findLocations <=", markerIds);
+		myLogger.trace(".findLocations <=", markers);
 
+		const filePath = me._context.currentFile;
 		const repo = me._repo;
 		const currentCommit = await repo.getCurrentCommit();
-		let commit = currentCommit;
-		let maxClimb = 10;
+		const currentCommitHash = currentCommit.hash;
+		const commitHistory = await repo.getCommitHistoryForFile(filePath, 10);
+		await this._addMarkersFirstCommitToCommitHistory(commitHistory, markers);
 
 		const currentLocations = {};
 		const missingMarkerIds = {};
-		for (const id of markerIds) {
-			missingMarkerIds[id] = 1;
+		for (const marker of markers) {
+			missingMarkerIds[marker._id] = 1;
 		}
 
-		while (Object.keys(missingMarkerIds).length && commit && --maxClimb) {
-			myLogger.debug("Getting locations for commit", commit.hash);
-			const locations = await this._getMarkerLocations(commit.hash);
-			let calculatedLocations = {};
+		for (const commit of commitHistory) {
+			if (Object.keys(missingMarkerIds).length === 0) {
+				break;
+			}
+
+			const commitHash = commit.hash;
+			myLogger.debug("Getting marker locations for commit", commitHash);
+			const locations = await this._getMarkerLocations(commitHash);
+			const lastKnownLocations = {};
 
 			for (const markerId of Object.keys(locations)) {
 				if (missingMarkerIds[markerId]) {
-					calculatedLocations[markerId] = locations[markerId];
+					lastKnownLocations[markerId] = locations[markerId];
 					delete missingMarkerIds[markerId];
 				}
 			}
 
-			const calculatedLocationsCount = Object.keys(calculatedLocations).length;
+			const lastKnownLocationsLength = Object.keys(lastKnownLocations).length;
 			myLogger.debug(
 				"Commit",
-				commit.hash,
+				commitHash,
 				"has location information for",
-				calculatedLocationsCount,
+				lastKnownLocationsLength,
 				"markers"
 			);
-			if (calculatedLocationsCount && !commit.equals(currentCommit)) {
+
+			if (lastKnownLocationsLength && !commit.equals(currentCommit)) {
 				const deltas = await repo.getDeltasBetweenCommits(commit, currentCommit);
 				const edits = this._getEditsForCurrentFile(deltas);
 				if (edits.length) {
@@ -97,27 +105,42 @@ class MarkerLocationFinder {
 						currentCommit.hash,
 						"- recalculating locations"
 					);
-					calculatedLocations = await this._calculateLocations(
-						calculatedLocations,
+					const calculatedLocations = await this._calculateLocations(
+						lastKnownLocations,
 						edits,
 						commit.hash,
-						currentCommit.hash
+						currentCommitHash
 					);
+					Object.assign(currentLocations, calculatedLocations);
 				} else {
 					myLogger.debug(
-						"No changes in current file file from",
+						"No changes in current file from",
 						commit.hash,
 						"to",
-						currentCommit.hash
+						currentCommitHash
 					);
 				}
 			}
-			Object.assign(currentLocations, calculatedLocations);
-
-			commit = await commit.getParent();
 		}
 
+
 		return currentLocations;
+	}
+
+	async _addMarkersFirstCommitToCommitHistory(commitHistory, markers) {
+		const repo = this._repo;
+		const commitsInHistory = {};
+
+		for (const commit of commitHistory) {
+			commitsInHistory[commit.hash] = 1;
+		}
+
+		for (const marker of markers) {
+			const commitHashWhenCreated = marker.commitHashWhenCreated;
+			if (!commitsInHistory[commitHashWhenCreated]) {
+				commitHistory.push(await repo.getCommit(commitHashWhenCreated));
+			}
+		}
 	}
 
 	async _calculateLocations(locations, edits, originalCommitHash, newCommitHash) {
@@ -193,6 +216,7 @@ export const fetchStream = () => async (dispatch, getState, { http }) => {
 			}`,
 			session.accessToken
 		);
+		logger.debug("Found", markers.length, "markers");
 
 		const locations = markerLocations.locations || {};
 		const markerLocationFinder = new MarkerLocationFinder(
@@ -203,13 +227,13 @@ export const fetchStream = () => async (dispatch, getState, { http }) => {
 			stream.id
 		);
 
-		logger.debug("Found", markers.length, "markers");
-		const missingMarkerIds = markers
+		const missingMarkers = markers
 			.filter(marker => !locations[marker._id])
-			.map(marker => marker._id);
-		logger.debug("Recalculating locations for", missingMarkerIds.length, "missing markers");
-		const calculatedLocations = markerLocationFinder.findLocations(missingMarkerIds);
-		Object.assign(locations, calculatedLocations);
+		if (missingMarkers.length) {
+			logger.debug("Recalculating locations for", missingMarkers.length, "missing markers");
+			const calculatedLocations = markerLocationFinder.findLocations(missingMarkers);
+			Object.assign(locations, calculatedLocations);
+		}
 
 		await dispatch(saveStream(stream));
 		await dispatch(saveMarkers(normalize(markers)));

@@ -2,12 +2,12 @@
 
 class GitCommit {
 
-	constructor(gitCommit) {
-		this._gitCommit = gitCommit;
+	constructor(commit) {
+		this._commit = commit;
 	}
 
 	get hash() {
-		return this._gitCommit.id().tostrS();
+		return this._commit.sha();
 	}
 
 	equals(that) {
@@ -15,7 +15,7 @@ class GitCommit {
 	}
 
 	async getParent() {
-		const parents = await this._gitCommit.getParents(1);
+		const parents = await this._commit.getParents(1);
 		const parent = parents[0];
 		return parent && new GitCommit(parent);
 	}
