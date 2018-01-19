@@ -23,11 +23,6 @@ logger.addHandler((level, msg) => {
 
 let store;
 
-const initializeStore = state => {
-	const session = JSON.parse(localStorage.getItem("codestream.session")) || {};
-	store = createStore({ ...state, session });
-};
-
 const getCurrentCommit = async repo => {
 	const data = await git(["rev-parse", "--verify", "HEAD"], {
 		cwd: repo.getWorkingDirectory()
@@ -57,7 +52,7 @@ module.exports = {
 	},
 
 	initialize(state) {
-		initializeStore(state);
+		store = createStore(state);
 		bootstrapStore(store);
 
 		this.subscriptions.add(
@@ -114,11 +109,7 @@ module.exports = {
 			}),
 			atom.commands.add("atom-workspace", {
 				"codestream:toggle": () => atom.workspace.toggle(CODESTREAM_VIEW_URI),
-				"codestream:logout": () => {
-					store.dispatch(logout());
-					localStorage.removeItem("codestream.session");
-					localStorage.removeItem("codestream.accessToken");
-				}
+				"codestream:logout": () => store.dispatch(logout())
 			}),
 			atom.commands.add(".tree-view", {
 				"codestream:mute": target => this.markStreamMute(target),
@@ -191,9 +182,7 @@ module.exports = {
 
 	serialize() {
 		const { session, onboarding, context } = store.getState();
-		onboarding.errors = {};
-		localStorage.setItem("codestream.session", JSON.stringify(session));
-		return { onboarding, context };
+		return { onboarding: { ...onboarding, errors: {} }, context, session };
 	},
 
 	deserializeCodestreamView(data) {
