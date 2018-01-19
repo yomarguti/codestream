@@ -261,8 +261,6 @@ export class SimpleStream extends Component {
 			placeholderText = "Reply to " + threadPost.author.username;
 		}
 
-		this.renderCommentMarkers();
-
 		return (
 			<div className={streamClass} ref={ref => (this._div = ref)}>
 				<UMIs />

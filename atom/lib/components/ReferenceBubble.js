@@ -12,9 +12,21 @@ const Location = (headPosition, tailPosition) => {
 	location[3] = headPosition.column;
 	return location;
 };
+const isValid = location => {
+	const sameLine = location[0] === location[2];
+	const startOfLine = location[1] === 0 && location[3] === 0;
+	return !(sameLine && startOfLine);
+};
 
 class ReferenceBubble extends Component {
 	subscriptions = new CompositeDisposable();
+
+	constructor(props) {
+		super(props);
+		this.state = {
+			isVisible: isValid(props.location)
+		};
+	}
 
 	componentDidMount() {
 		this.marker = this.props.editor.markBufferRange(Range(this.props.location), {
@@ -23,10 +35,13 @@ class ReferenceBubble extends Component {
 		this.subscriptions.add(
 			this.props.editor.onDidSave(event => {
 				console.group(`marker for reference ${this.props.id}`);
-				console.log("saved location is", this.props.location);
-				console.groupEnd();
+				console.debug("saved location is", this.props.location);
 				const { start, end } = this.marker.getBufferRange();
-				this.props.markerDirtied(this.props.id, Location(end, start));
+				const newLocation = Location(end, start);
+				console.debug("new location is", newLocation);
+				this.props.markerDirtied(this.props.id, newLocation);
+				this.setState({ isVisible: isValid(newLocation) });
+				console.groupEnd();
 			}),
 			this.marker.onDidDestroy(() => {
 				this.subscriptions.dispose();
@@ -40,6 +55,8 @@ class ReferenceBubble extends Component {
 	}
 
 	render() {
+		if (!this.state.isVisible) return false;
+
 		const { id, postId, onSelect, count, numComments } = this.props;
 		return (
 			<div onClick={e => onSelect(postId)} key={id} className={`count-${count}`}>
