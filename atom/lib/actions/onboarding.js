@@ -240,7 +240,7 @@ export const authenticate = params => (dispatch, getState, { http }) => {
 			dispatch(requestFinished());
 			if (http.isApiRequestError(error)) {
 				if (error.data.code === "USRC-1001") dispatch(invalidCredentials());
-				if (error.data.code === "USRC-1003") dispatch(invalidCredentials());
+				if (error.data.code === "RAPI-1003") dispatch(invalidCredentials());
 				if (error.data.code === "REPO-1000") dispatch(noAccess());
 				if (error.data.code === "RAPI-1005") dispatch(noAccess()); // TODO: How to handle url invalid here? Just bailing and saying no access for url invalid
 			} else if (http.isApiUnreachableError(error)) dispatch(serverUnreachable());
