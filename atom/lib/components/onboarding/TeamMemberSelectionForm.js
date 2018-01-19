@@ -56,7 +56,7 @@ export class SimpleTeamMemberSelectionForm extends Component {
 		const repository = this.context.repositories[0];
 		const cwd = repository.getWorkingDirectory();
 		const logFormat = "--format=%an<trim-this>%ae";
-		const cutoffDate = "1 month ago";
+		const cutoffDate = "12 months ago";
 		const recentCommitterData = await git(["log", logFormat, `--since="${cutoffDate}"`], { cwd });
 		const recentCommitters = parseCommitters(recentCommitterData.split("\n"), { selected: true });
 		const olderCommitterData = await git(["log", logFormat, `--before="${cutoffDate}"`], { cwd });
