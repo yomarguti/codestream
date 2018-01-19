@@ -38,7 +38,7 @@
 	"noGit.message": "Unfortunately, CodeStream only works with projects controlled by Git. :-(",
 	"createTeam.header": "Create a Team",
 	"createTeam.info":
-		"Each repository on CodeStream is owned by a developer team. What's the name of your team?",
+		"Each repository on CodeStream is owned by a development team. What's the name of your team?",
 	"createTeam.additionalInfo": "Note that a team can own multiple repositories.",
 	"createTeam.submitButton": "NEXT",
 	"teamSelection.error.noPermission": "You are not a member of the selected team.",
