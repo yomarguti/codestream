@@ -61,7 +61,7 @@ export class SimpleUMIs extends Component {
 			if (!path) return;
 			let count = umis.unread[key];
 			let mentions = umis.mentions[key];
-			console.log("CALCULATING: " + count + " FOR " + path + " with key: " + key);
+			// console.log("CALCULATING: " + count + " FOR " + path + " with key: " + key);
 			totalUMICount += this.calculateTreatment(path, count, mentions);
 		});
 		app.setBadgeCount(Math.floor(totalUMICount));
@@ -116,7 +116,7 @@ export class SimpleUMIs extends Component {
 			// this is bold; don't add to the app badge count
 			totalUMICount += 0.000001;
 		}
-		console.log("Returning: ", totalUMICount, " for ", path);
+		// console.log("Returning: ", totalUMICount, " for ", path);
 		return totalUMICount;
 	}
 
