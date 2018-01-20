@@ -36,7 +36,6 @@ export class SimpleUMIs extends Component {
 		// console.log("TREE TRACKER IS: ", this.treeView);
 		// console.log("THE STREAMS ARE: ", this.props.streams);
 		// console.log("RENDERING UMIS", umis);
-		this.handleScroll();
 		// console.log(this.cwd + "/marker_pseudo_code.js");
 		// console.log(this.treeView.entryForPath(this.cwd + "/marker_pseudo_code.js"));
 
@@ -69,6 +68,7 @@ export class SimpleUMIs extends Component {
 			let path = streamMap[key] || "";
 			this.treatPath(path);
 		});
+		this.handleScroll();
 		return null;
 	}
 
