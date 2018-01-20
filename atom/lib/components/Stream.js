@@ -905,20 +905,26 @@ export class SimpleStream extends Component {
 		// not render a space at the end of a contenteditable div
 		// unless it is a &nbsp;, which is difficult to insert
 		// so we insert this unicode character instead
-		let toInsert = username.replace(this.state.atMentionsPrefix, "") + "\u00A0";
+		let toInsert = username + "\u00A0";
 		let that = this;
 		setTimeout(function() {
 			that.focusInput();
 		}, 20);
-		this.insertTextAtCursor(toInsert);
+		this.insertTextAtCursor(toInsert, this.state.atMentionsPrefix);
 		// this.setNewPostText(text);
 	};
 
 	// insert the given text at the cursor of the input field
-	insertTextAtCursor(text) {
+	// after first deleting the text in toDelete
+	insertTextAtCursor(text, toDelete) {
 		var sel, range, html;
 		sel = window.getSelection();
 		range = sel.getRangeAt(0);
+
+		// delete the X characters before the caret
+		range.setStart(range.commonAncestorContainer, range.startOffset - toDelete.length);
+		// range.moveEnd("character", toDelete.length);
+
 		range.deleteContents();
 		var textNode = document.createTextNode(text);
 		range.insertNode(textNode);
