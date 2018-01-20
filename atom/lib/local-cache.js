@@ -3,17 +3,14 @@ import Dexie from "dexie";
 Dexie.debug = true;
 
 const db = new Dexie("CodeStream");
-// TODO: export schemas so they can be used in testing
 db.version(1).stores({
 	streams: "id, teamId, repoId",
 	posts: "id, teamId, streamId, creatorId",
 	repos: "id, teamId",
 	users: "id, *teamIds, email, username",
-	teams: "id, *memberIds"
-});
-db.version(2).stores({
+	teams: "id, *memberIds",
 	markers: "id, streamId, postId",
-	markerLocations: "commitHash, streamId"
+	markerLocations: "[streamId+teamId+commitHash]"
 });
 
 export default db;
