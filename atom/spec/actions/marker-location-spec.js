@@ -10,6 +10,14 @@ Dexie.debug = true;
 let db;
 
 describe("marker-location action creators", () => {
+	const teamId = "t1";
+	const streamId = "s1";
+	const markerId = "m1";
+	const markerId2 = "m2";
+	const commitHash = "c1";
+	const location = [7, 0, 13, 0];
+	const location2 = [0, 7, 3, 0];
+
 	beforeEach(() => {
 		db = new Dexie(dbName);
 		db.version(1).stores({
@@ -22,14 +30,6 @@ describe("marker-location action creators", () => {
 	});
 
 	describe("saveMarkerLocations", () => {
-		const teamId = "t1";
-		const streamId = "s1";
-		const markerId = "m1";
-		const markerId2 = "m2";
-		const commitHash = "c1";
-		const location = [7, 0, 13, 0];
-		const location2 = [0, 7, 3, 0];
-
 		it("saves locations by streamId+teamId+commitHash", () => {
 			const store = configureStore([thunk.withExtraArgument({ db })])();
 			const markerLocations = {
@@ -79,17 +79,29 @@ describe("marker-location action creators", () => {
 
 	describe("dirtied references due to buffer changes", () => {
 		it("saves the new location", () => {
+			const store = configureStore([thunk.withExtraArgument({ db })])({
+				context: { currentCommit: commitHash, currentTeamId: teamId }
+			});
+			const oldLocation = [1, 2, 3, 4];
+			const newLocation = [2, 3, 4, 5];
+			const expectedRecord = {
+				teamId,
+				streamId,
+				commitHash,
+				locations: { [markerId]: oldLocation },
+				dirty: { [markerId]: newLocation }
+			};
 			waitsForPromise(async () => {
 				await db.markerLocations.add({
-					commitHash: "abc1",
-					streamId: "s1",
-					locations: { marker1: [1, 2, 3, 4] }
+					teamId,
+					commitHash,
+					streamId,
+					locations: { [markerId]: oldLocation }
 				});
-				const getState = () => ({ context: { currentCommit: "abc1" } });
-				const action = await markerDirtied("marker1", [2, 3, 4, 5])(dispatch, getState, { db });
-				const locations = await db.markerLocations.get("abc1");
-				expect(locations.locations.marker1).toEqual([1, 2, 3, 4]);
-				expect(locations.dirty.marker1).toEqual([2, 3, 4, 5]);
+				await store.dispatch(markerDirtied({ markerId, streamId }, newLocation));
+				expect(store.getActions()).toContain({ type: "MARKER_DIRTIED", payload: expectedRecord });
+				const locations = await db.markerLocations.get({ streamId, teamId, commitHash });
+				expect(locations).toEqual(expectedRecord);
 			});
 		});
 	});

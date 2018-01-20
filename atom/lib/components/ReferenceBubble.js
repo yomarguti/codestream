@@ -39,7 +39,10 @@ class ReferenceBubble extends Component {
 				const { start, end } = this.marker.getBufferRange();
 				const newLocation = Location(end, start);
 				console.debug("new location is", newLocation);
-				this.props.markerDirtied(this.props.id, newLocation);
+				this.props.markerDirtied(
+					{ markerId: this.props.id, streamId: this.props.streamId },
+					newLocation
+				);
 				this.setState({ isVisible: isValid(newLocation) });
 				console.groupEnd();
 			}),

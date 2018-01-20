@@ -7,25 +7,19 @@ export const saveMarkerLocations = attributes => (dispatch, getState, { db }) =>
 	);
 };
 
-export const markerDirtied = (id, location) => (dispatch, getState, { db }) => {
-	const commitHash = getState().context.currentCommit;
-	return db
-		.transaction("rw", db.markerLocations, async () => {
-			const locationObject = await db.markerLocations.get(commitHash);
-			if (!locationObject.dirty) locationObject.dirty = {};
-			locationObject.dirty[id] = location;
-			await db.markerLocations.update(commitHash, { dirty: locationObject.dirty });
-			return db.markerLocations.get(commitHash);
+export const markerDirtied = ({ markerId, streamId }, location) => (dispatch, getState, { db }) => {
+	const { currentCommit, currentTeamId } = getState().context;
+	const changes = {
+		streamId,
+		teamId: currentTeamId,
+		commitHash: currentCommit,
+		dirty: { [markerId]: location }
+	};
+	return upsert(db, "markerLocations", changes).then(record =>
+		dispatch({
+			type: "MARKER_DIRTIED",
+			payload: record
 		})
-		.then(locationObject =>
-			dispatch({
-				type: "MARKER_DIRTIED",
-				payload: {
-					markerId: id,
-					streamId: locationObject.streamId,
-					commitHash: locationObject.commitHash,
-					location
-				}
-			})
-		);
+	);
+};
 };
