@@ -52,6 +52,7 @@
 #cs-unreads-below.active {
 	bottom: 0 !important;
 }
+
 .tree-view {
 	li[cs-umi-mute="1"] span {
 		opacity: 0.5;
@@ -69,24 +70,24 @@
 		// text-shadow: 0px 1px 1px rgba(0, 0, 0, 1);
 	}
 	li[cs-umi-bold="1"] span::before {
-		// this looks too fuzzy on some monitors
+		// this looks too fuzzy on some monitors, so commented out
 		// font-weight: 900 !important;
 	}
 	li[cs-umi-badge="1"]::after {
+		transition: left 0.1s ease-out;
 		display: block;
 		position: absolute;
-		right: 5px;
 		top: 0;
-		// float: right;
+		// left property is set by javascript to account for x-scrolling
+
 		background-color: @background-color-highlight !important;
 		background-color: @base-background-color !important;
 		border: 1px solid @base-border-color;
 		content: attr(cs-umi-count);
 		border-radius: 6px;
-		padding: 4px 12px 6px 12px;
+		padding: 4px 0 6px 0;
 		margin: 2px 0 0 0;
 		color: @text-color;
-		// color: @text-color-highlight;
 		font-size: 10px;
 		font-weight: bold;
 		width: 32px;
@@ -98,8 +99,11 @@
 		box-shadow: -5px 0 5px @background-color-selected;
 	}
 	li[cs-umi-mention="1"]::after {
+		top: 1px;
 		color: white;
 		background-color: @background-color-info !important;
+		// reverse video treatments don't mix well with borders
+		border: none;
 	}
 }
 

@@ -91,6 +91,7 @@ export class SimpleUMIs extends Component {
 
 	calculateTreatment(path, count, mentions) {
 		let treatment = this.getTreatment(path);
+		// console.log("FOR: ", count, " treatment is ", treatment, " in ", path);
 
 		let parts = path.split("/");
 		while (parts.length) {
@@ -223,6 +224,20 @@ export class SimpleUMIs extends Component {
 			unreadsBelow,
 			mentionsBelow
 		);
+
+		let width = scrollDiv.offsetWidth + scrollDiv.scrollLeft - 70;
+		let newStyle = ".tree-view li[cs-umi-badge='1']::after { left: " + width + "px; }";
+		// console.log("Adding style string; " + newStyle);
+		this.addStyleString(newStyle, "umi");
+	}
+
+	// add a style to the document, reusing a style node that we attach to the DOM
+	addStyleString(str, key) {
+		let id = "codestream-style-tag-" + key;
+		let node = document.getElementById(id) || document.createElement("style");
+		node.id = id;
+		node.innerHTML = str;
+		document.body.appendChild(node);
 	}
 
 	setUnreadsAttributes(element, active, mentions) {
