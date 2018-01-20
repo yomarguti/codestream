@@ -86,6 +86,7 @@ export class SimpleStream extends Component {
 		if (this.props.id !== prevProps.id) {
 			// FIXME -- is this the right place to call mark read?
 			this.props.markStreamRead(this.props.id);
+			this.resizeStream();
 		}
 	}
 
