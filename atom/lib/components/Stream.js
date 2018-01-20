@@ -72,6 +72,14 @@ export class SimpleStream extends Component {
 		if (nextProps.id !== this.props.id) {
 			this.saveComposeState(nextProps.id);
 			this.handleDismissThread();
+
+			// keep track of the new message indicator in "this" instead of looking
+			// directly at currentUser.lastReads, because that will change and trigger
+			// a re-render, which would remove the "new messages" line
+			this.postWithNewMessageIndicator = null;
+			if (this.props.currentUser && this.props.currentUser.lastReads) {
+				this.postWithNewMessageIndicator = this.props.currentUser.lastReads[nextProps.id];
+			}
 		}
 
 		new AddCommentPopup({ handleClickAddComment: this.handleClickAddComment });
@@ -293,6 +301,7 @@ export class SimpleStream extends Component {
 									usernames={usernames}
 									currentUsername={this.props.currentUser.username}
 									replyingTo={parentPost}
+									newMessageIndicator={post.id === this.postWithNewMessageIndicator}
 								/>
 							</div>
 						);
@@ -1037,6 +1046,7 @@ const mapStateToProps = ({ session, context, streams, users, posts, markers, mar
 			if (email) users[key].username = email.replace(/@.*/, "");
 		}
 	});
+
 	return {
 		id: stream.id,
 		currentFile: context.currentFile,

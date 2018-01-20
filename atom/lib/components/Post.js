@@ -43,7 +43,7 @@ export default class Post extends Component {
 
 		const postClass = createClassString({
 			post: true,
-			"new-separator": post.newSeparator,
+			"new-separator": this.props.newMessageIndicator,
 			[`thread-key-${this.props.threadKey}`]: true
 		});
 

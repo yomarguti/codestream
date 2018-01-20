@@ -119,7 +119,7 @@ export const setStreamUMITreatment = (path, setting) => async (dispatch, getStat
 	return;
 };
 
-export const incrementUMI = post => async (dispatch, getState, { http }) => {
+export const incrementUMI = post => async (dispatch, getState, { db }) => {
 	const { session, context, users, streams } = getState();
 	const currentUser = users[session.userId];
 
@@ -141,6 +141,19 @@ export const incrementUMI = post => async (dispatch, getState, { http }) => {
 		type: type,
 		payload: post.streamId
 	});
+
+	// if the user is up-to-date on this stream, then we need to create a pointer
+	// to the first unread message in the stream, stored in lastReads
+	if (!currentUser.lastReads[post.streamId]) {
+		currentUser.lastReads[post.streamId] = post.id;
+
+		return upsert(db, "users", currentUser).then(user =>
+			dispatch({
+				type: "UPDATE_USER",
+				payload: user
+			})
+		);
+	}
 };
 
 export const recalculateUMI = () => async (dispatch, getState, { http }) => {
