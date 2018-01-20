@@ -2,18 +2,21 @@ import Dexie from "dexie";
 import { upsert, resolve } from "../lib/local-cache";
 
 Dexie.debug = true;
+
+const dbName = "local-cache-spec";
 let db;
 
 describe("local-cache", () => {
 	beforeEach(() => {
-		db = new Dexie("test");
+		db = new Dexie(dbName);
 		db.version(1).stores({
-			records: "id"
+			records: "id",
+			compounds: "[foo+bar]"
 		});
 	});
 
 	afterEach(() => {
-		Dexie.delete("test");
+		Dexie.delete(dbName);
 	});
 
 	describe("resolver for modifications to objects", () => {
@@ -177,6 +180,17 @@ describe("local-cache", () => {
 					const changes2 = { id: 2, attr1: "foo", attr2: "fizz" };
 					const records = await upsert(db, "records", [changes1, changes2]);
 					expect(records).toEqual([changes1, changes2]);
+				});
+			});
+		});
+
+		describe("when the primaryKey is compound", () => {
+			it("still upserts", () => {
+				waitsForPromise(async () => {
+					const compound = { foo: "foo", bar: "bar" };
+					await upsert(db, "compounds", compound);
+					const saved = await db.compounds.get(compound);
+					expect(saved).toEqual(compound);
 				});
 			});
 		});
