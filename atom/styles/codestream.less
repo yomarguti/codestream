@@ -5,9 +5,12 @@
 @import "ui-variables";
 @import "octicon-mixins";
 
+.item-views {
+	overflow: hidden;
+}
 .cs-unreads {
 	position: absolute !important;
-	background: @background-color-highlight;
+	background: @base-background-color;
 	border: 1px solid @base-border-color;
 	// color: white;
 	text-align: center;
@@ -65,7 +68,8 @@
 		// text-shadow: 0px 1px 1px rgba(0, 0, 0, 1);
 	}
 	li[cs-umi-bold="1"] span::before {
-		font-weight: 900 !important;
+		// this looks too fuzzy on some monitors
+		// font-weight: 900 !important;
 	}
 	li[cs-umi-badge="1"]::after {
 		display: block;
