@@ -56,7 +56,13 @@ describe("marker-location action creators", () => {
 				teamId,
 				streamId,
 				commitHash,
-				locations: { [markerId]: location2 }
+				locations: { [markerId2]: [1, 2, 3, 4] }
+			};
+			const expectedRecord = {
+				teamId,
+				streamId,
+				commitHash,
+				locations: { [markerId]: location, [markerId2]: [1, 2, 3, 4] }
 			};
 			waitsForPromise(async () => {
 				await db.markerLocations.add({
@@ -67,17 +73,18 @@ describe("marker-location action creators", () => {
 				});
 
 				await store.dispatch(saveMarkerLocations(markerLocations));
+
 				expect(store.getActions()).toContain({
 					type: "ADD_MARKER_LOCATIONS",
-					payload: markerLocations
+					payload: expectedRecord
 				});
 				const record = await db.markerLocations.get({ streamId, teamId, commitHash });
-				expect(record).toEqual(markerLocations);
+				expect(record).toEqual(expectedRecord);
 			});
 		});
 	});
 
-	describe("dirtied references due to buffer changes", () => {
+	describe("markerDirtied", () => {
 		it("saves the new location", () => {
 			const store = configureStore([thunk.withExtraArgument({ db })])({
 				context: { currentCommit: commitHash, currentTeamId: teamId }
@@ -100,6 +107,39 @@ describe("marker-location action creators", () => {
 				});
 				await store.dispatch(markerDirtied({ markerId, streamId }, newLocation));
 				expect(store.getActions()).toContain({ type: "MARKER_DIRTIED", payload: expectedRecord });
+				const locations = await db.markerLocations.get({ streamId, teamId, commitHash });
+				expect(locations).toEqual(expectedRecord);
+			});
+		});
+	});
+
+	xdescribe("commitNewMarkerLocations", () => {
+		it("sends dirty locations to server and overwrites the local locations", () => {
+			const http = { put: jasmine.createSpy().andReturn(Promise.resolve()) };
+			const store = configureStore([thunk.withExtraArgument({ db, http })])({
+				context: { currentCommit: commitHash, currentTeamId: teamId }
+			});
+			const oldLocation = [1, 2, 3, 4];
+			const newLocation = [2, 3, 4, 5];
+
+			waitsForPromise(async () => {
+				await db.markerLocations.add({
+					teamId,
+					commitHash,
+					streamId,
+					locations: { [markerId]: oldLocation },
+					dirty: { [markerId]: newLocation }
+				});
+
+				const expectedRecord = [
+					{ teamId, commitHash, streamId, locations: { [markerId]: newLocation } }
+				];
+
+				await store.dispatch(commitNewMarkerLocations());
+				expect(store.getActions()).toContain({
+					type: "MARKER_LOCATIONS_COMMITTED_TO_SERVER",
+					payload: [expectedRecord]
+				});
 				const locations = await db.markerLocations.get({ streamId, teamId, commitHash });
 				expect(locations).toEqual(expectedRecord);
 			});

@@ -15,6 +15,7 @@ import {
 	setCurrentCommit
 } from "./actions/context";
 import { setStreamUMITreatment } from "./actions/stream";
+import { commitNewMarkerLocations } from "./actions/marker-location";
 import logger from "./util/Logger";
 
 logger.addHandler((level, msg) => {
@@ -75,11 +76,14 @@ module.exports = {
 						}),
 
 						// Subscribe to git status changes in order to be aware of current commit hash.
-						// This is probably a naive implementation.
+						// This is a naive implementation.
 						repo.onDidChangeStatuses(async event => {
+							const currentCommitHash = store.getState().context.currentCommit;
 							const commitHash = await getCurrentCommit(repo);
-							if (store.getState().context.currentCommit !== commitHash)
+							if (currentCommitHash !== commitHash) {
 								store.dispatch(commitHashChanged(commitHash));
+								store.dispatch(commitNewMarkerLocations(currentCommitHash, commitHash));
+							}
 						})
 					);
 
