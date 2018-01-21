@@ -55,15 +55,15 @@ export const commitNewMarkerLocations = (oldCommitHash, newCommitHash) => (
 	const { context, session } = getState();
 	return db.transaction("rw", db.streams, db.markerLocations, () => {
 		db.streams.where({ repoId: context.currentRepoId }).each(async stream => {
-			const reference = await db.markerLocations.get({
+			const record = await db.markerLocations.get({
 				streamId: stream.id,
 				teamId: stream.teamId,
 				commitHash: oldCommitHash
 			});
 
-			if (reference) {
+			if (record) {
 				const newRecord = {
-					...reference,
+					...record,
 					commitHash: newCommitHash,
 					locations: { ...reference.locations, ...reference.dirty },
 					dirty: undefined
