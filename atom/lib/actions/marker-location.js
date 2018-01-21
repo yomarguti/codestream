@@ -65,7 +65,7 @@ export const commitNewMarkerLocations = (oldCommitHash, newCommitHash) => (
 				const newRecord = {
 					...record,
 					commitHash: newCommitHash,
-					locations: { ...reference.locations, ...reference.dirty },
+					locations: { ...record.locations, ...record.dirty },
 					dirty: undefined
 				};
 				await http.put("/marker-locations", newRecord, session.accessToken);
