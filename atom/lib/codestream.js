@@ -15,7 +15,7 @@ import {
 	setCurrentCommit
 } from "./actions/context";
 import { setStreamUMITreatment } from "./actions/stream";
-import { commitNewMarkerLocations } from "./actions/marker-location";
+import { commitNewMarkerLocations, refreshMarkersAndLocations } from "./actions/marker-location";
 import logger from "./util/Logger";
 
 logger.addHandler((level, msg) => {
@@ -82,7 +82,11 @@ module.exports = {
 							const commitHash = await getCurrentCommit(repo);
 							if (currentCommitHash !== commitHash) {
 								store.dispatch(commitHashChanged(commitHash));
-								store.dispatch(commitNewMarkerLocations(currentCommitHash, commitHash));
+								git(["status"], { cwd: repo.getWorkingDirectory() }).then(status => {
+									if (!status.startsWith("HEAD detached"))
+										store.dispatch(commitNewMarkerLocations(currentCommitHash, commitHash));
+								});
+								store.dispatch(refreshMarkersAndLocations());
 							}
 						})
 					);
