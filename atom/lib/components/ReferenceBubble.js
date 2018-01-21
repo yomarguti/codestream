@@ -1,6 +1,7 @@
 import { CompositeDisposable } from "atom";
 import React, { Component } from "react";
 import { connect } from "react-redux";
+import _ from "underscore-plus";
 import * as actions from "../actions/marker-location";
 
 const Range = location => [[location[0], location[1]], [location[2], location[3]]];
@@ -39,11 +40,13 @@ class ReferenceBubble extends Component {
 				const { start, end } = this.marker.getBufferRange();
 				const newLocation = Location(end, start);
 				console.debug("new location is", newLocation);
-				this.props.markerDirtied(
-					{ markerId: this.props.id, streamId: this.props.streamId },
-					newLocation
-				);
-				this.setState({ isVisible: isValid(newLocation) });
+				if (!_.isEqual(newLocation, this.props.location)) {
+					this.props.markerDirtied(
+						{ markerId: this.props.id, streamId: this.props.streamId },
+						newLocation
+					);
+					this.setState({ isVisible: isValid(newLocation) });
+				}
 				console.groupEnd();
 			}),
 			this.marker.onDidDestroy(() => {
