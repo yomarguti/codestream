@@ -178,7 +178,6 @@ export class SimpleLoginForm extends Component {
 						className="control-button"
 						tabIndex="2"
 						type="submit"
-						// disabled={this.isFormInvalid()}
 						loading={this.props.loading}
 					>
 						<FormattedMessage id="login.submitButton" />

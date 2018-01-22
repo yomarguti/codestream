@@ -232,7 +232,6 @@ export class SimpleSignupForm extends Component {
 						className="control-button"
 						tabIndex="3"
 						type="submit"
-						// disabled={this.isFormInvalid()}
 						loading={this.state.loading}
 					>
 						<FormattedMessage id="signUp.submitButton" />
