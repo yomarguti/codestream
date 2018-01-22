@@ -134,10 +134,10 @@ describe("reducer for marker locations", () => {
 			};
 
 			const payload = {
-				markerId: "someMarker",
+				teamId: locations.teamId,
 				streamId: locations.streamId,
 				commitHash: locations.commitHash,
-				location: [1, 2, 3, 4]
+				locations: { someMarker: [1, 2, 3, 4] }
 			};
 			const result = reduce(state, { type: "MARKER_DIRTIED", payload });
 
