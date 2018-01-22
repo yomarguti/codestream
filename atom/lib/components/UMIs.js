@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
 import createClassString from "classnames";
+import { getUserPreference } from "../actions/user";
 
 const remote = require("electron").remote;
 var app = remote.app;
@@ -13,20 +14,10 @@ export class SimpleUMIs extends Component {
 		let treeView = atom.packages.getLoadedPackage("tree-view");
 		if (treeView) this.treeView = treeView.mainModule.getTreeViewInstance();
 
-		// console.log("hitting async ");
-		let f = async () => {
-			const directories = atom.project.getDirectories();
-			const repoPromises = directories.map(repo => atom.project.repositoryForDirectory(repo));
-			const allRepos = await Promise.all(repoPromises);
-			const repos = allRepos.filter(Boolean);
-
-			if (repos.length > 0) {
-				const repo = repos[0];
-				this.cwd = repo.getWorkingDirectory();
-				this.repo = repo;
-			}
-		};
-		f();
+		let repo = atom.project.getRepositories()[0];
+		this.cwd = repo.getWorkingDirectory();
+		this.repo = repo;
+		this.repoOrigin = repo.getOriginURL();
 	}
 
 	render() {
@@ -68,6 +59,15 @@ export class SimpleUMIs extends Component {
 			let path = streamMap[key] || "";
 			this.treatPath(path);
 		});
+
+		let prefPath = ["streamTreatments", this.repoOrigin];
+		let treatments = getUserPreference(this.props.currentUser, prefPath) || {};
+		Object.keys(treatments).map(path => {
+			// console.log("Treating ", path, " with ", treatments[path]);
+			let isMute = treatments[path] === "mute" ? 1 : 0;
+			this.treatMute(path, isMute);
+		});
+
 		this.handleScroll();
 		return null;
 	}
@@ -121,6 +121,20 @@ export class SimpleUMIs extends Component {
 		return totalUMICount;
 	}
 
+	treatMute(path, isMute) {
+		path = path.replace(/\*/g, ".");
+		let element = this.treeView.entryForPath(this.cwd + "/" + path);
+		// console.log("Treating element ", element, " with ", isMute);
+		if (!element) return;
+		// don't treat directories that are expanded
+		if (element.classList.contains("directory")) {
+			let liPath = element.getElementsByTagName("span")[0].getAttribute("data-path");
+			liPath = this.repo.relativize(liPath);
+			if (liPath !== path) return;
+		}
+		element.setAttribute("cs-umi-mute", isMute);
+	}
+
 	treatPath(path) {
 		let element = this.treeView.entryForPath(this.cwd + "/" + path);
 		if (!element) return;
@@ -165,11 +179,14 @@ export class SimpleUMIs extends Component {
 		let index = parts.length;
 		while (parts.length) {
 			let path = parts.join("/");
-			let treatment = atom.config.get("CodeStream.showUnread-" + path);
+			let prefPath = ["streamTreatments", this.repoOrigin, path];
+			let treatment = getUserPreference(this.props.currentUser, prefPath);
+			// console.log("GOT: ", treatment, " FOR ", ["streamTreatments", this.repoOrigin, path]);
+			// atom.config.get("CodeStream.showUnread-" + path);
 			if (treatment) return treatment;
 			parts.pop();
 		}
-		return atom.config.get("CodeStream.showUnread") || "badge";
+		return atom.config.get("CodeStream.showUnread") || "bold";
 	}
 
 	componentDidMount() {
@@ -272,12 +289,11 @@ export class SimpleUMIs extends Component {
 	}
 }
 
-const mapStateToProps = ({ context, streams, users, umis }) => {
-	const currentUser = users[context.currentUserId];
+const mapStateToProps = ({ session, streams, users, umis }) => {
 	return {
 		users: users,
 		streams: streams,
-		currentUser: currentUser,
+		currentUser: users[session.userId],
 		umis: umis
 	};
 };

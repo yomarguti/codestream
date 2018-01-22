@@ -14,7 +14,7 @@ import {
 	setCurrentFile,
 	setCurrentCommit
 } from "./actions/context";
-import { setStreamUMITreatment } from "./actions/stream";
+import { setStreamUMITreatment, recalculateUMI } from "./actions/stream";
 import logger from "./util/Logger";
 
 logger.addHandler((level, msg) => {
@@ -43,7 +43,7 @@ module.exports = {
 				"Note that you can override this setting on a per-file or per-directory basis by right-clicking the Tree View.",
 			title: "Files with Unread Messages",
 			type: "string",
-			default: "badge",
+			default: "bold",
 			enum: [
 				{ value: "badge", description: "Display a badge to the right of the file" },
 				{ value: "bold", description: "Bold the filename" }
@@ -169,10 +169,6 @@ module.exports = {
 		let path = li.getElementsByTagName("span")[0].getAttribute("data-path");
 		// setStreamUMITreatment(path, setting);
 		store.dispatch(setStreamUMITreatment(path, setting));
-
-		// FIXME -- this should re-render the UMIs somehow. How?
-		// this.render_umis();
-		// const { session, onboarding, context } = store.getState();
 	},
 
 	deactivate() {

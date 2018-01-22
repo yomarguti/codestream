@@ -11,6 +11,7 @@ import {
 } from "./post";
 import { saveMarkers } from "./marker";
 import { saveMarkerLocations } from "./marker-location";
+import { setUserPreference } from "./user";
 import { open as openRepo } from "../git/GitRepo";
 import MarkerLocationFinder from "../git/MarkerLocationFinder";
 import rootLogger from "../util/Logger";
@@ -105,11 +106,16 @@ export const markStreamRead = streamId => async (dispatch, getState, { http }) =
 };
 
 export const setStreamUMITreatment = (path, setting) => async (dispatch, getState) => {
-	const { session, context } = getState();
+	const { session, context, users } = getState();
 	// FIXME -- we should save this info to the server rather than atom config
 	let repo = atom.project.getRepositories()[0];
 	let relativePath = repo.relativize(path);
-	atom.config.set("CodeStream.showUnread-" + relativePath, setting);
+	// console.log(repo);
+	// atom.config.set("CodeStream.showUnread-" + relativePath, setting);
+	let repoRoot = repo.getOriginURL();
+	let prefPath = ["streamTreatments", repoRoot, relativePath];
+	dispatch(setUserPreference(prefPath, setting));
+	dispatch(recalculateUMI(true));
 	return;
 };
 
@@ -150,7 +156,7 @@ export const incrementUMI = post => async (dispatch, getState, { db }) => {
 	}
 };
 
-export const recalculateUMI = () => async (dispatch, getState, { http }) => {
+export const recalculateUMI = force => async (dispatch, getState, { http }) => {
 	const { session, users, streams, posts } = getState();
 	const currentUser = users[session.userId];
 
@@ -160,6 +166,7 @@ export const recalculateUMI = () => async (dispatch, getState, { http }) => {
 
 	let lastReads = currentUser.lastReads || {};
 	let nextState = { mentions: {}, unread: {} };
+	if (force) nextState.count = new Date().getTime();
 	let streamsById = {};
 	Object.keys(streams.byFile).forEach(key => {
 		streamsById[streams.byFile[key].id] = streams.byFile[key];
