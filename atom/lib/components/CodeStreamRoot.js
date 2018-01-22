@@ -29,6 +29,14 @@ class CodeStreamRoot extends Component {
 		};
 	}
 
+	// componentDidCatch(error, info) {
+	// 	debugger;
+	// 	// Display fallback UI
+	// 	this.setState({ hasError: true });
+	// 	// You can also log the error to an error reporting service
+	// 	console.error(error, info);
+	// }
+
 	render() {
 		const { accessToken, bootstrapped, repositories, onboarding, noAccess } = this.props;
 
