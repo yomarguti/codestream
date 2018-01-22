@@ -29,6 +29,7 @@ export const commitHashChanged = hash => ({
 export const logout = () => dispatch => {
 	dispatch({ type: "CLEAR_SESSION" });
 	dispatch({ type: "RESET_ONBOARDING" });
+	dispatch({ type: "RESET_UMI" });
 	dispatch({
 		type: "SET_CONTEXT",
 		payload: { currentTeamId: undefined, currentRepoId: undefined, usernamesInTeam: [] }

@@ -33,6 +33,10 @@ export default (state = initialState, { type, payload }) => {
 		case "SET_UMI": {
 			return payload;
 		}
+		case "RESET_UMI": {
+			let nextState = { ...initialState };
+			return nextState;
+		}
 		default:
 			return state;
 	}
