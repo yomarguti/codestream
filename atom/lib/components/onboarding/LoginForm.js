@@ -43,6 +43,10 @@ export class SimpleLoginForm extends Component {
 		this.addToolTip("login-input-password", "Your CodeStream password");
 	}
 
+	componentWillUnmount() {
+		this.subscriptions.dispose();
+	}
+
 	addToolTip(elementId, key) {
 		let div = document.getElementById(elementId);
 		this.subscriptions.add(

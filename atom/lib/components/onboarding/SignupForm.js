@@ -60,6 +60,10 @@ export class SimpleSignupForm extends Component {
 		this.addToolTip("onboard-input-email", "FYI, we got this from git");
 	}
 
+	componentWillUnmount() {
+		this.subscriptions.dispose();
+	}
+
 	addToolTip(elementId, key) {
 		let div = document.getElementById(elementId);
 		this.subscriptions.add(
