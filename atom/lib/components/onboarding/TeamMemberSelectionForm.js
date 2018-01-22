@@ -93,7 +93,8 @@ export class SimpleTeamMemberSelectionForm extends Component {
 		const newMembers = this.state.committers
 			.filter(c => c.selected)
 			.map(({ selected, name, ...rest }) => ({ ...rest }));
-		this.props.addMembers(newMembers);
+		if (newMembers.length === 0) this.props.completeOnboarding();
+		else this.props.addMembers(newMembers);
 	};
 
 	toggleNewMemberInput = () =>
@@ -173,13 +174,6 @@ export class SimpleTeamMemberSelectionForm extends Component {
 						</p>
 					)}
 				</div>
-				<Button
-					id="submit-button"
-					loading={this.props.serverLoading}
-					onClick={this.onSubmitTeamMembers}
-				>
-					<FormattedMessage id="teamMemberSelection.submitButton" defaultMessage="GET STARTED" />
-				</Button>
 			</form>
 		);
 	}
@@ -252,9 +246,21 @@ export class SimpleTeamMemberSelectionForm extends Component {
 	}
 
 	renderContent() {
-		if (this.state.loadingCommitters) return this.renderSpinner();
-		if (this.state.committers.length === 0) return this.renderNewInput();
-		else return this.renderSelectMembersForm();
+		let content;
+		if (this.state.loadingCommitters) content = this.renderSpinner();
+		if (this.state.committers.length === 0) content = this.renderNewInput();
+		else content = this.renderSelectMembersForm();
+
+		return [
+			content,
+			<Button
+				id="submit-button"
+				loading={this.props.serverLoading}
+				onClick={this.onSubmitTeamMembers}
+			>
+				<FormattedMessage id="teamMemberSelection.submitButton" defaultMessage="GET STARTED" />
+			</Button>
+		];
 	}
 
 	render() {
