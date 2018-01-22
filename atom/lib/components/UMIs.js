@@ -49,9 +49,11 @@ export class SimpleUMIs extends Component {
 		Object.keys(umis.unread).map(key => {
 			let path = streamMap[key] || "";
 			if (!path) return;
-			let count = umis.unread[key];
-			let mentions = umis.mentions[key];
-			// console.log("CALCULATING: " + count + " FOR " + path + " with key: " + key);
+			let count = umis.unread[key] || 0;
+			let mentions = umis.mentions[key] || 0;
+			console.log(
+				"CALCULATING: " + count + " FOR " + path + " with key: " + key + " mentions? " + mentions
+			);
 			totalUMICount += this.calculateTreatment(path, count, mentions);
 		});
 		app.setBadgeCount(Math.floor(totalUMICount));
@@ -91,7 +93,7 @@ export class SimpleUMIs extends Component {
 
 	calculateTreatment(path, count, mentions) {
 		let treatment = this.getTreatment(path);
-		// console.log("FOR: ", count, " treatment is ", treatment, " in ", path);
+		// console.log("FOR: ", count, " treat ", treatment, " in ", path, " with mentions ", mentions);
 
 		let parts = path.split("/");
 		while (parts.length) {
@@ -101,7 +103,7 @@ export class SimpleUMIs extends Component {
 				this.treatments[pathPart]["mentions"] =
 					(this.treatments[pathPart]["mentions"] || 0) + mentions;
 			}
-			if (treatment !== "mute") {
+			if (mentions || treatment !== "mute") {
 				this.treatments[pathPart]["count"] = (this.treatments[pathPart]["count"] || 0) + count;
 			}
 			// if (treatment !== "mute") this.treatments[pathPart]["treatment"] += treatment;
@@ -155,10 +157,10 @@ export class SimpleUMIs extends Component {
 		if (mentions) {
 			element.setAttribute("cs-umi-mention", count > 0 ? 1 : 0);
 			element.setAttribute("cs-umi-badge", count > 0 ? 1 : 0);
-			element.setAttribute("cs-umi-count", count > 99 ? "99+" : count);
+			element.setAttribute("cs-umi-count", count > 99 ? "99+" : count || 0);
 		} else if (treatment === "badge") {
 			element.setAttribute("cs-umi-badge", count > 0 ? 1 : 0);
-			element.setAttribute("cs-umi-count", count > 99 ? "99+" : count);
+			element.setAttribute("cs-umi-count", count > 99 ? "99+" : count || 0);
 		} else if (treatment === "mute") {
 			// element.setAttribute("cs-umi-mute", 1);
 		} else {
@@ -167,7 +169,7 @@ export class SimpleUMIs extends Component {
 		}
 
 		// if we actually have a UMI that hasn't been muted....
-		if (count > 0 && treatment !== "mute") {
+		if (mentions || (count > 0 && treatment !== "mute")) {
 			element.classList.add("cs-has-umi");
 		} else {
 			element.classList.remove("cs-has-umi");
