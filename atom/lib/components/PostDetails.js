@@ -36,11 +36,13 @@ export default class PostDetails extends Component {
 		if (post.markerLocation) {
 			let code = post.codeBlocks[0].code;
 			const editor = atom.workspace.getActiveTextEditor();
-			let range = this.makeRange(post.markerLocation);
-			var existingCode = editor.getTextInBufferRange(range);
-			if (code !== existingCode) hasDiff = true;
-			if (code.length > 0 && post.markerLocation[4] && post.markerLocation[4].entirelyDeleted) {
-				alert = <span className="icon icon-alert" ref={ref => (this._alert = ref)} />;
+			if (editor) {
+				let range = this.makeRange(post.markerLocation);
+				var existingCode = editor.getTextInBufferRange(range);
+				if (code !== existingCode) hasDiff = true;
+				if (code.length > 0 && post.markerLocation[4] && post.markerLocation[4].entirelyDeleted) {
+					alert = <span className="icon icon-alert" ref={ref => (this._alert = ref)} />;
+				}
 			}
 		}
 
