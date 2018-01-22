@@ -1,6 +1,7 @@
 import { CompositeDisposable } from "atom";
 import React, { Component } from "react";
 import { connect } from "react-redux";
+import _ from "underscore-plus";
 import * as actions from "../actions/marker-location";
 
 const Range = location => [[location[0], location[1]], [location[2], location[3]]];
@@ -33,16 +34,8 @@ class ReferenceBubble extends Component {
 			invalidate: "never"
 		});
 		this.subscriptions.add(
-			this.props.editor.onDidSave(event => {
-				console.group(`marker for reference ${this.props.id}`);
-				console.debug("saved location is", this.props.location);
-				const { start, end } = this.marker.getBufferRange();
-				const newLocation = Location(end, start);
-				console.debug("new location is", newLocation);
-				this.props.markerDirtied(this.props.id, newLocation);
-				this.setState({ isVisible: isValid(newLocation) });
-				console.groupEnd();
-			}),
+			this.props.editor.getBuffer().onDidReload(this.onDidWriteToDisk),
+			this.props.editor.onDidSave(this.onDidWriteToDisk),
 			this.marker.onDidDestroy(() => {
 				this.subscriptions.dispose();
 			})
@@ -53,6 +46,22 @@ class ReferenceBubble extends Component {
 		this.marker.destroy();
 		this.subscriptions.dispose();
 	}
+
+	onDidWriteToDisk = () => {
+		console.group(`marker for reference ${this.props.id}`);
+		console.debug("saved location is", this.props.location);
+		const { start, end } = this.marker.getBufferRange();
+		const newLocation = Location(end, start);
+		console.debug("new location is", newLocation);
+		if (!_.isEqual(newLocation, this.props.location)) {
+			this.props.markerDirtied(
+				{ markerId: this.props.id, streamId: this.props.streamId },
+				newLocation
+			);
+			this.setState({ isVisible: isValid(newLocation) });
+		}
+		console.groupEnd();
+	};
 
 	render() {
 		if (!this.state.isVisible) return false;

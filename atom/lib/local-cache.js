@@ -3,17 +3,14 @@ import Dexie from "dexie";
 Dexie.debug = true;
 
 const db = new Dexie("CodeStream");
-// TODO: export schemas so they can be used in testing
 db.version(1).stores({
 	streams: "id, teamId, repoId",
 	posts: "id, teamId, streamId, creatorId",
 	repos: "id, teamId",
 	users: "id, *teamIds, email, username",
-	teams: "id, *memberIds"
-});
-db.version(2).stores({
+	teams: "id, *memberIds",
 	markers: "id, streamId, postId",
-	markerLocations: "commitHash, streamId"
+	markerLocations: "[streamId+teamId+commitHash]"
 });
 
 export default db;
@@ -21,10 +18,10 @@ export default db;
 export function upsert(db, tableName, changes) {
 	return db.transaction("rw", tableName, () => {
 		const table = db.table(tableName);
-		const primaryKeyPath = table.schema.primKey.keyPath;
+		const primaryKeySchema = table.schema.primKey;
 
-		if (Array.isArray(changes)) return bulkUpsert(table, primaryKeyPath, changes);
-		return singleUpsert(table, primaryKeyPath, changes);
+		if (Array.isArray(changes)) return bulkUpsert(table, primaryKeySchema, changes);
+		return singleUpsert(table, primaryKeySchema, changes);
 	});
 }
 
@@ -86,16 +83,24 @@ const bootstrapStreams = payload => ({ type: "BOOTSTRAP_STREAMS", payload });
 const bootstrapMarkers = payload => ({ type: "BOOTSTRAP_MARKERS", payload });
 const bootstrapMarkerLocations = payload => ({ type: "BOOTSTRAP_MARKER_LOCATIONS", payload });
 
-const bulkUpsert = (table, primaryKeyPath, changes) => {
-	return Promise.all(changes.map(change => singleUpsert(table, primaryKeyPath, change)));
+const bulkUpsert = (table, primaryKeySchema, changes) => {
+	return Promise.all(changes.map(change => singleUpsert(table, primaryKeySchema, change)));
 };
 
-const singleUpsert = (table, primaryKeyPath, changes) => {
-	const primaryKey = changes[primaryKeyPath];
+const singleUpsert = (table, primaryKeySchema, changes) => {
+	let primaryKey;
+	if (primaryKeySchema.compound) {
+		primaryKey = primaryKeySchema.keyPath.reduce(
+			(result, path) => ({ ...result, [path]: changes[path] }),
+			{}
+		);
+		Object.freeze(primaryKey); // weirdly, calling update below attempts to modify this object
+	} else primaryKey = changes[primaryKeySchema.keyPath];
+
 	return table.get(primaryKey).then(async entity => {
 		if (entity) {
 			const updated = await table.update(primaryKey, resolve(entity, changes));
-			// TODO: only return an object if there is an update
+			// TODO?: only return an object if there is an update
 		} else {
 			await table.add(changes);
 		}
