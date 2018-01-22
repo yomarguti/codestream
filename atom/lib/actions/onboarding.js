@@ -6,7 +6,6 @@ import { fetchTeamMembers, saveTeam, saveTeams, joinTeam } from "./team";
 
 const requestStarted = () => ({ type: "REQUEST_STARTED" });
 const requestFinished = () => ({ type: "REQUEST_FINISHED" });
-const completeOnboarding = () => ({ type: "ONBOARDING_COMPLETE" });
 const serverUnreachable = () => ({ type: "ONBOARDING-SERVER_UNREACHABLE" });
 const invalidCredentials = () => ({ type: "INVALID_CREDENTIALS" });
 
@@ -21,6 +20,7 @@ const initializeSession = ({ user, accessToken }) => ({
 	meta: { user }
 });
 
+export const completeOnboarding = () => ({ type: "ONBOARDING_COMPLETE" });
 export const goToSignup = () => ({ type: "GO_TO_SIGNUP" });
 export const goToLogin = () => ({ type: "GO_TO_LOGIN" });
 export const goToConfirmation = attributes => ({ type: "GO_TO_CONFIRMATION", payload: attributes });

@@ -68,6 +68,8 @@ export class SimpleTeamMemberSelectionForm extends Component {
 			c => !this.props.memberEmails.includes(c.email)
 		);
 
+		if (committers.length === 0) return this.props.completeOnboarding();
+
 		this.setState({
 			loadingCommitters: false,
 			committers
