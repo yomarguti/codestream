@@ -119,8 +119,7 @@ export class SimpleLoginForm extends Component {
 
 	renderDebugInfo() {
 		const apiPath = this.props.configs.url;
-		if (atom.inDevMode() && apiPath)
-			return <p style={{ position: "fixed", top: "25px", right: "20px" }}>{apiPath}</p>;
+		if (atom.inDevMode() && apiPath) return <p>{apiPath}</p>;
 	}
 
 	render() {
