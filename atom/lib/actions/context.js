@@ -29,10 +29,7 @@ export const commitHashChanged = hash => ({
 export const logout = () => dispatch => {
 	dispatch({ type: "CLEAR_SESSION" });
 	dispatch({ type: "RESET_ONBOARDING" });
-	dispatch({
-		type: "SET_CONTEXT",
-		payload: { currentTeamId: undefined, currentRepoId: undefined, usernamesInTeam: [] }
-	});
+	dispatch({ type: "RESET_CONTEXT" });
 };
 export const noAccess = () => ({ type: "NO_ACCESS" });
 export const noRemoteUrl = () => ({ type: "NO_ACCESS-MISSING_REMOTE_URL" });

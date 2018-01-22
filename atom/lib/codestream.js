@@ -69,10 +69,19 @@ module.exports = {
 
 					this.subscriptions.add(
 						atom.workspace.observeActiveTextEditor(editor => {
-							// Only dispatches the action if there is a current file
-							// that way if a user looks at settings or a non-repo file, the stream for the previously active file is still visible
-							const path = editor ? repo.relativize(editor.getPath()) : "";
-							path !== "" && store.dispatch(setCurrentFile(path));
+							// Only dispatch the action if there is a current file that belongs to the git repo
+							// that way if a user looks at settings or a non-repo file,
+							// the stream for the last active repo file is still visible
+							if (editor) {
+								const directoryForFile = directories.find(directory =>
+									directory.contains(editor.getPath())
+								);
+								if (directoryForFile) {
+									atom.project.repositoryForDirectory(directoryForFile).then(repo => {
+										store.dispatch(setCurrentFile(repo.relativize(editor.getPath())));
+									});
+								}
+							}
 						}),
 
 						// Subscribe to git status changes in order to be aware of current commit hash.
