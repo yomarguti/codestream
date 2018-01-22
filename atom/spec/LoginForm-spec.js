@@ -4,17 +4,22 @@ import { Provider } from "react-redux";
 import Adapter from "enzyme-adapter-react-16";
 import { mountWithIntl } from "./intl-test-helper.js";
 import LoginForm, { SimpleLoginForm } from "../lib/components/onboarding/LoginForm";
+import RepositoryProvider from "./RepositoryProvider";
 import createStore from "../lib/createStore";
 
 Enzyme.configure({ adapter: new Adapter() });
 
 const store = createStore();
+const repository = { getConfigValue: () => {}, getWorkingDirectory: () => {} };
+const repositories = [repository];
 
 describe("LoginForm", () => {
 	describe("Email address field", () => {
 		const view = mountWithIntl(
 			<Provider store={store}>
-				<LoginForm />
+				<RepositoryProvider repositories={repositories}>
+					<LoginForm />
+				</RepositoryProvider>
 			</Provider>
 		);
 
@@ -55,7 +60,9 @@ describe("LoginForm", () => {
 		it("shows errors when left empty", () => {
 			const view = mountWithIntl(
 				<Provider store={store}>
-					<LoginForm />
+					<RepositoryProvider repositories={repositories}>
+						<LoginForm />
+					</RepositoryProvider>
 				</Provider>
 			);
 			view.find('input[name="password"]').simulate("blur");
@@ -66,7 +73,9 @@ describe("LoginForm", () => {
 	describe("Sign In button", () => {
 		const view = mountWithIntl(
 			<Provider store={store}>
-				<LoginForm />
+				<RepositoryProvider repositories={repositories}>
+					<LoginForm />
+				</RepositoryProvider>
 			</Provider>
 		);
 
@@ -88,7 +97,9 @@ describe("LoginForm", () => {
 			const password = "somePassword";
 			const authenticate = jasmine.createSpy("");
 			const view = mountWithIntl(
-				<SimpleLoginForm authenticate={authenticate} configs={{}} errors={{}} />
+				<RepositoryProvider repositories={repositories}>
+					<SimpleLoginForm authenticate={authenticate} configs={{}} errors={{}} />
+				</RepositoryProvider>
 			);
 			view.find('input[name="email"]').simulate("change", { target: { value: email } });
 			view.find('input[name="password"]').simulate("change", { target: { value: password } });
@@ -101,7 +112,9 @@ describe("LoginForm", () => {
 		describe("when authentication fails", () => {
 			it("shows an error", () => {
 				const view = mountWithIntl(
-					<SimpleLoginForm errors={{ invalidCredentials: true }} configs={{}} />
+					<RepositoryProvider repositories={repositories}>
+						<SimpleLoginForm errors={{ invalidCredentials: true }} configs={{}} />
+					</RepositoryProvider>
 				);
 
 				expect(view.find(".form-error").text()).toBe(
