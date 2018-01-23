@@ -3,30 +3,30 @@ import { saveMarkers } from "./marker";
 import { saveMarkerLocations } from "./marker-location";
 
 export const savePost = attributes => (dispatch, getState, { db }) => {
-	return upsert(db, "posts", attributes).then(post => {
+	return upsert(db, "posts", attributes).then(post =>
 		dispatch({
 			type: "ADD_POST",
 			payload: post
-		});
-	});
+		})
+	);
 };
 
 export const savePosts = attributes => (dispatch, getState, { db }) => {
-	return upsert(db, "posts", attributes).then(posts => {
+	return upsert(db, "posts", attributes).then(posts =>
 		dispatch({
 			type: "ADD_POSTS",
 			payload: posts
-		});
-	});
+		})
+	);
 };
 
 export const savePostsForStream = (streamId, attributes) => (dispatch, getState, { db }) => {
-	return upsert(db, "posts", attributes).then(posts => {
+	return upsert(db, "posts", attributes).then(posts =>
 		dispatch({
 			type: "ADD_POSTS_FOR_STREAM",
 			payload: { streamId, posts }
-		});
-	});
+		})
+	);
 };
 
 export const savePendingPost = attributes => (dispatch, getState, { db }) => {
