@@ -75,9 +75,11 @@ export const confirmEmail = attributes => (dispatch, getState, { http }) => {
 				dispatch({ type: "EXISTING_USER_CONFIRMED_IN_NEW_REPO" });
 			} else if (teamIdsForUser.includes(teamIdForRepo)) {
 				await dispatch(fetchTeamMembers(teamIdsForUser));
+				dispatch(fetchStreams());
 				dispatch({ type: "EXISTING_USER_CONFIRMED" });
 			} else {
 				await dispatch(joinTeam());
+				dispatch(fetchStreams());
 				dispatch({ type: "EXISTING_USER_CONFIRMED" });
 			}
 		})
