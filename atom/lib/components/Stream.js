@@ -1047,15 +1047,17 @@ const mapStateToProps = ({ session, context, streams, users, posts, markers, mar
 		}
 	});
 
+	const teamMembers = _.filter(
+		users,
+		user => user.teamIds.includes(context.currentTeamId) && user.id !== session.userId
+	);
+
 	return {
 		id: stream.id,
 		currentFile: context.currentFile,
 		currentCommit: context.currentCommit,
 		markers: markersForStreamAndCommit,
-		users: _.filter(
-			users,
-			user => user.teamIds.includes(context.currentTeamId) && user.id !== session.userId
-		),
+		users: toMapBy("id", teamMembers),
 		currentUser: users[session.userId],
 		posts: getPostsForStream(stream.id, posts).map(post => {
 			let user = users[post.creatorId];
