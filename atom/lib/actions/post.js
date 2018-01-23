@@ -89,7 +89,7 @@ export const createPost = (streamId, parentPostId, text, codeBlocks) => async (
 	const { session, context } = getState();
 	const pendingId = createTempId();
 
-	let post = {
+	const post = {
 		id: pendingId,
 		teamId: context.currentTeamId,
 		timestamp: new Date().getTime(),
@@ -97,11 +97,19 @@ export const createPost = (streamId, parentPostId, text, codeBlocks) => async (
 		parentPostId: parentPostId,
 		codeBlocks: codeBlocks,
 		commitHashWhenPosted: context.currentCommit,
-		streamId,
 		text
 	};
 
-	dispatch(savePendingPost(post));
+	if (streamId) {
+		post.streamId = streamId;
+		dispatch(savePendingPost(post));
+	} else
+		post.stream = {
+			teamId: context.currentTeamId,
+			type: "file",
+			file: context.currentFile,
+			repoId: context.currentRepoId
+		};
 
 	try {
 		const data = await http.post("/posts", post, session.accessToken);
