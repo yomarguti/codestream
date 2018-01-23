@@ -68,15 +68,15 @@ export class SimpleUMIs extends Component {
 	};
 
 	muteLabel = event => {
-		return this.getTreatmentFromEvent(event) === "mute" ? "Mute (selected)" : "Mute";
+		return this.getTreatmentFromEvent(event) === "mute" ? "\u2713 Mute" : "    Mute";
 	};
 
 	boldLabel = event => {
-		return this.getTreatmentFromEvent(event) === "bold" ? "Bold (selected)" : "Bold";
+		return this.getTreatmentFromEvent(event) === "bold" ? "\u2713 Bold" : "    Bold";
 	};
 
 	badgeLabel = event => {
-		return this.getTreatmentFromEvent(event) === "badge" ? "Badge (selected)" : "Badge";
+		return this.getTreatmentFromEvent(event) === "badge" ? "\u2713 Badge" : "    Badge";
 	};
 
 	render() {
