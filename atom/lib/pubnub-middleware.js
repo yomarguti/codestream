@@ -7,7 +7,7 @@ export default store => {
 	return next => action => {
 		const result = next(action);
 
-		// Once users have been loaded from indexedDB, if continuing a session,
+		// Once data has been loaded from indexedDB, if continuing a session,
 		// find current user and subscribe to team channels
 		// fetch the latest version of the current user object
 		if (action.type === "BOOTSTRAP_COMPLETE") {
