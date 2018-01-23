@@ -1052,7 +1052,10 @@ const mapStateToProps = ({ session, context, streams, users, posts, markers, mar
 		currentFile: context.currentFile,
 		currentCommit: context.currentCommit,
 		markers: markersForStreamAndCommit,
-		users: users, // TODO: only take team
+		users: _.filter(
+			users,
+			user => user.teamIds.includes(context.currentTeamId) && user.id !== session.userId
+		),
 		currentUser: users[session.userId],
 		posts: getPostsForStream(stream.id, posts).map(post => {
 			let user = users[post.creatorId];
