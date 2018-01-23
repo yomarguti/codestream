@@ -70,7 +70,7 @@ export default class PubNubReceiver {
 			console.debug("subscribing to", channel);
 			this.pubnub.subscribe({
 				channels: [channel],
-				withPresence: channel.startsWith("repo") || channel.startsWith("team")
+				withPresence: !channel.includes("user")
 			});
 			this.subscribedChannels.push(channel);
 		});
