@@ -64,7 +64,10 @@ export class SimpleStream extends Component {
 	}
 
 	componentDidMount() {
+<<<<<<< HEAD
 		logger.trace('.componentDidMount');
+=======
+>>>>>>> fetch streams upon login and fetch posts when displaying a stream and there are no posts locally
 		this.props.recalculateUMI(); // set the UMI for the first time
 		// TODO: scroll to bottom
 
@@ -86,7 +89,10 @@ export class SimpleStream extends Component {
 	}
 
 	componentWillReceiveProps(nextProps) {
+<<<<<<< HEAD
 		logger.trace('.componentWillReceiveProps');
+=======
+>>>>>>> fetch streams upon login and fetch posts when displaying a stream and there are no posts locally
 		const switchingStreams = nextProps.id !== this.props.id;
 		if (nextProps.id && switchingStreams && nextProps.posts.length === 0)
 			this.props.fetchPosts({ streamId: nextProps.id, teamId: nextProps.teamId });
@@ -121,14 +127,20 @@ export class SimpleStream extends Component {
 	}
 
 	installSelectionHandler() {
+<<<<<<< HEAD
 		logger.trace('.installSelectionHandler');
+=======
+>>>>>>> fetch streams upon login and fetch posts when displaying a stream and there are no posts locally
 		// if (this.selectionHandler) return;
 		let editor = atom.workspace.getActiveTextEditor();
 		this.selectionHandler = editor.onDidChangeSelectionRange(this.destroyCodeBlockMarker);
 	}
 
 	destroyCodeBlockMarker = () => {
+<<<<<<< HEAD
 		logger.trace('.destroyCodeBlockMarker');
+=======
+>>>>>>> fetch streams upon login and fetch posts when displaying a stream and there are no posts locally
 		if (this.codeBlockMarker) this.codeBlockMarker.destroy();
 		if (this.selectionHandler) this.selectionHandler.dispose();
 	};
@@ -1160,7 +1172,10 @@ const mapStateToProps = ({
 	return {
 		id: stream.id,
 		teamId: stream.teamId,
+<<<<<<< HEAD
 		firstTimeInAtom: onboarding.firstTimeInAtom,
+=======
+>>>>>>> fetch streams upon login and fetch posts when displaying a stream and there are no posts locally
 		currentFile: context.currentFile,
 		currentCommit: context.currentCommit,
 		markers: markersForStreamAndCommit,
@@ -1189,4 +1204,8 @@ const mapStateToProps = ({
 	};
 };
 
+<<<<<<< HEAD
 export default connect(mapStateToProps, { ...streamActions, fetchPosts, createPost })(SimpleStream);
+=======
+export default connect(mapStateToProps, { ...actions, fetchPosts })(SimpleStream);
+>>>>>>> fetch streams upon login and fetch posts when displaying a stream and there are no posts locally
