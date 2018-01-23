@@ -3,6 +3,7 @@ import { fetchRepoInfo, setCurrentRepo, setCurrentTeam, noAccess } from "./conte
 import { saveUser, saveUsers } from "./user";
 import { saveRepo, saveRepos } from "./repo";
 import { fetchTeamMembers, saveTeam, saveTeams, joinTeam } from "./team";
+import { fetchStreams } from "./stream";
 
 const requestStarted = () => ({ type: "REQUEST_STARTED" });
 const requestFinished = () => ({ type: "REQUEST_FINISHED" });
@@ -230,9 +231,11 @@ export const authenticate = params => (dispatch, getState, { http }) => {
 				dispatch({ type: "EXISTING_USER_LOGGED_INTO_NEW_REPO" });
 			} else if (user.teamIds.includes(teamIdForRepo)) {
 				await dispatch(fetchTeamMembers(teamIdsForUser));
+				dispatch(fetchStreams());
 				dispatch({ type: "LOGGED_IN" });
 			} else {
 				await dispatch(joinTeam());
+				dispatch(fetchStreams());
 				dispatch({ type: "LOGGED_IN" });
 			}
 		})

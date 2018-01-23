@@ -42,6 +42,18 @@ export const saveStreams = attributes => (dispatch, getState, { db }) => {
 	);
 };
 
+export const fetchStreams = () => async (dispatch, getState, { http }) => {
+	const { context, session } = getState();
+	return http
+		.get(
+			`/streams?teamId=${context.currentTeamId}&repoId=${context.currentRepoId}`,
+			session.accessToken
+		)
+		.then(({ streams }) => {
+			return dispatch(saveStreams(normalize(streams)));
+		});
+};
+
 export const fetchStream = () => async (dispatch, getState, { http }) => {
 	const { session, context, streams, repoAttributes } = getState();
 	if (!streams.isFetching && context.currentFile !== "") {

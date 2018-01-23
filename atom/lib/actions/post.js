@@ -1,4 +1,5 @@
 import { upsert } from "../local-cache";
+import { normalize } from "./utils";
 import { saveMarkers } from "./marker";
 import { saveMarkerLocations } from "./marker-location";
 
@@ -64,4 +65,13 @@ export const resolvePendingPost = (id, { post, markers, markerLocations }) => (
 
 export const rejectPendingPost = (streamId, pendingId, post) => (dispatch, getState, { db }) => {
 	// TODO
+};
+
+export const fetchPosts = ({ streamId, teamId }) => async (dispatch, getState, { db, http }) => {
+	const { session } = getState();
+	const { posts } = await http.get(
+		`/posts?teamId=${teamId}&streamId=${streamId}`,
+		session.accessToken
+	);
+	return dispatch(savePostsForStream(streamId, normalize(posts)));
 };
