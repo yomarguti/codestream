@@ -56,7 +56,7 @@ export default class Post extends Component {
 
 		// FIXME -- only replace the at-mentions of actual authors, rather than any
 		// string that starts with an @
-		let usernameRegExp = new RegExp("(@(?:" + this.props.usernames + "))");
+		let usernameRegExp = new RegExp("(@(?:" + this.props.usernames + ")\\b)");
 		let bodyParts = post.text.split(usernameRegExp);
 
 		// let menuItems = [
