@@ -11,8 +11,8 @@ import AddCommentPopup from "./AddCommentPopup";
 import createClassString from "classnames";
 import DateSeparator from "./DateSeparator";
 var Blamer = require("../util/blamer");
-import * as actions from "../actions/stream";
-import { fetchPosts } from "../actions/post";
+import * as streamActions from "../actions/stream";
+import { createPost, fetchPosts } from "../actions/post";
 import { toMapBy } from "../reducers/utils";
 
 export class SimpleStream extends Component {
@@ -1085,4 +1085,4 @@ const mapStateToProps = ({ session, context, streams, users, posts, markers, mar
 	};
 };
 
-export default connect(mapStateToProps, { ...actions, fetchPosts })(SimpleStream);
+export default connect(mapStateToProps, { ...streamActions, fetchPosts, createPost })(SimpleStream);

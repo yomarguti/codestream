@@ -1,14 +1,7 @@
 import _ from "underscore-plus";
 import { upsert } from "../local-cache";
 import { normalize } from "./utils";
-import {
-	savePendingPost,
-	resolvePendingPost,
-	rejectPendingPost,
-	savePostsForStream,
-	savePost,
-	savePosts
-} from "./post";
+import { savePostsForStream } from "./post";
 import { saveMarkers } from "./marker";
 import { saveMarkerLocations } from "./marker-location";
 import { setUserPreference } from "./user";
@@ -18,11 +11,6 @@ import rootLogger from "../util/Logger";
 rootLogger.setLevel("trace");
 
 const logger = rootLogger.forClass("actions/stream");
-
-const tempId = (() => {
-	let count = 0;
-	return () => String(count++);
-})();
 
 export const saveStream = attributes => (dispatch, getState, { db }) => {
 	return upsert(db, "streams", attributes).then(stream => {
@@ -215,41 +203,4 @@ export const recalculateUMI = force => async (dispatch, getState, { http }) => {
 		type: "SET_UMI",
 		payload: nextState
 	});
-};
-
-export const createPost = (streamId, parentPostId, text, codeBlocks) => async (
-	dispatch,
-	getState,
-	{ http }
-) => {
-	const { session, context } = getState();
-	const pendingId = tempId();
-
-	let post = {
-		id: pendingId,
-		teamId: context.currentTeamId,
-		timestamp: new Date().getTime(),
-		creatorId: session.userId,
-		parentPostId: parentPostId,
-		codeBlocks: codeBlocks,
-		commitHashWhenPosted: context.currentCommit,
-		streamId,
-		text
-	};
-
-	dispatch(savePendingPost(post));
-
-	try {
-		const data = await http.post("/posts", post, session.accessToken);
-		dispatch(
-			resolvePendingPost(pendingId, {
-				post: normalize(data.post),
-				markers: normalize(data.markers),
-				markerLocations: data.markerLocations
-			})
-		);
-	} catch (error) {
-		// TODO: different types of errors?
-		dispatch(rejectPendingPost(streamId, pendingId, { ...post, error: true }));
-	}
 };

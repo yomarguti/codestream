@@ -3,6 +3,11 @@ import { normalize } from "./utils";
 import { saveMarkers } from "./marker";
 import { saveMarkerLocations } from "./marker-location";
 
+const createTempId = (() => {
+	let count = 0;
+	return () => String(count++);
+})();
+
 export const savePost = attributes => (dispatch, getState, { db }) => {
 	return upsert(db, "posts", attributes).then(post =>
 		dispatch({
@@ -74,4 +79,41 @@ export const fetchPosts = ({ streamId, teamId }) => async (dispatch, getState, {
 		session.accessToken
 	);
 	return dispatch(savePostsForStream(streamId, normalize(posts)));
+};
+
+export const createPost = (streamId, parentPostId, text, codeBlocks) => async (
+	dispatch,
+	getState,
+	{ http }
+) => {
+	const { session, context } = getState();
+	const pendingId = createTempId();
+
+	let post = {
+		id: pendingId,
+		teamId: context.currentTeamId,
+		timestamp: new Date().getTime(),
+		creatorId: session.userId,
+		parentPostId: parentPostId,
+		codeBlocks: codeBlocks,
+		commitHashWhenPosted: context.currentCommit,
+		streamId,
+		text
+	};
+
+	dispatch(savePendingPost(post));
+
+	try {
+		const data = await http.post("/posts", post, session.accessToken);
+		dispatch(
+			resolvePendingPost(pendingId, {
+				post: normalize(data.post),
+				markers: normalize(data.markers),
+				markerLocations: data.markerLocations
+			})
+		);
+	} catch (error) {
+		// TODO: different types of errors?
+		dispatch(rejectPendingPost(streamId, pendingId, { ...post, error: true }));
+	}
 };
