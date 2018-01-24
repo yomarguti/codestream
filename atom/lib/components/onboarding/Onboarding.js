@@ -6,6 +6,7 @@ import LoginForm from "./LoginForm";
 import TeamCreationForm from "./TeamCreationForm";
 import TeamSelectionForm from "./TeamSelectionForm";
 import TeamMemberSelectionForm from "./TeamMemberSelectionForm";
+import ChangeUsernameForm from "./ChangeUsernameForm";
 
 const mapStateToProps = ({ onboarding }) => ({ ...onboarding });
 
@@ -17,7 +18,8 @@ export default connect(mapStateToProps)(({ step, props, configs }) => {
 		login: <LoginForm {...nextProps} />,
 		createTeam: <TeamCreationForm {...nextProps} />,
 		selectTeam: <TeamSelectionForm {...nextProps} />,
-		identifyMembers: <TeamMemberSelectionForm {...nextProps} />
+		identifyMembers: <TeamMemberSelectionForm {...nextProps} />,
+		changeUsername: <ChangeUsernameForm {...nextProps} />
 	};
 	return views[step];
 });

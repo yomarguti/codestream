@@ -2,13 +2,18 @@ import { normalize } from "./utils";
 import { fetchRepoInfo, setCurrentRepo, setCurrentTeam, noAccess } from "./context";
 import { saveUser, saveUsers } from "./user";
 import { saveRepo, saveRepos } from "./repo";
-import { fetchTeamMembers, saveTeam, saveTeams, joinTeam } from "./team";
+import { fetchTeamMembers, saveTeam, saveTeams, joinTeam as _joinTeam } from "./team";
 import { fetchStreams } from "./stream";
 
 const requestStarted = () => ({ type: "REQUEST_STARTED" });
 const requestFinished = () => ({ type: "REQUEST_FINISHED" });
 const serverUnreachable = () => ({ type: "ONBOARDING-SERVER_UNREACHABLE" });
 const invalidCredentials = () => ({ type: "INVALID_CREDENTIALS" });
+const loggedIn = () => ({ type: "LOGGED_IN" });
+const usernameCollisionAtLogin = takenUsername => ({
+	type: "USERNAME_COLLISION_AT_LOGIN",
+	payload: { takenUsername }
+});
 
 const userAlreadySignedUp = email => ({
 	type: "SIGNUP_EMAIL_EXISTS",
@@ -238,14 +243,12 @@ export const authenticate = params => (dispatch, getState, { http }) => {
 			else if (!teamIdForRepo && userTeams.length > 0) {
 				await dispatch(fetchTeamMembers(teamIdsForUser));
 				dispatch({ type: "EXISTING_USER_LOGGED_INTO_NEW_REPO" });
-			} else if (user.teamIds.includes(teamIdForRepo)) {
+			} else if (teamIdsForUser.includes(teamIdForRepo)) {
 				await dispatch(fetchTeamMembers(teamIdsForUser));
 				dispatch(fetchStreams());
-				dispatch({ type: "LOGGED_IN" });
+				dispatch(loggedIn());
 			} else {
 				await dispatch(joinTeam());
-				dispatch(fetchStreams());
-				dispatch({ type: "LOGGED_IN" });
 			}
 		})
 		.catch(error => {
@@ -258,4 +261,20 @@ export const authenticate = params => (dispatch, getState, { http }) => {
 			} else if (http.isApiUnreachableError(error)) dispatch(serverUnreachable());
 			else console.error("Encountered unexpected error while authenticating", error);
 		});
+};
+
+export const joinTeam = () => (dispatch, getState, { http }) => {
+	return dispatch(_joinTeam())
+		.then(() => dispatch(loggedIn()))
+		.catch(error => {
+			if (http.isApiRequestError(error)) {
+				if (error.data.code === "TEAM-1000") dispatch(usernameCollisionAtLogin(error.data.info));
+			}
+		});
+};
+
+export const changeUsername = username => (dispatch, getState, { http }) => {
+	return http
+		.put("/users/me", { username }, getState().session.accessToken)
+		.then(data => dispatch(saveUser(normalize(data.user))));
 };
