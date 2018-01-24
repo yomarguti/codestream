@@ -122,6 +122,10 @@ export const fetchMarkersAndLocations = ({ teamId, streamId }) => (dispatch, get
 
 export const refreshMarkersAndLocations = () => (dispatch, getState) => {
 	const { context, streams } = getState();
-	const stream = streams.byFile[context.currentFile];
-	return dispatch(calculateLocations({ teamId: context.currentTeamId, streamId: stream.id }));
+	return Promise.all(
+		Object.values(streams.byFile).map(stream => {
+			if (stream.teamId === context.currentTeamId)
+				dispatch(calculateLocations({ streamId: stream.id, teamId: context.currentTeamId }));
+		})
+	);
 };
