@@ -53,6 +53,7 @@ export default class LineBubbleDecoration extends Component {
 
 		this.decoration = this.props.editor.decorateMarker(this.marker, options);
 		this.subscriptions.add(
+			this.props.editor.onDidDestroy(() => this.marker.destroy()),
 			this.decoration.onDidDestroy(() => {
 				this.tearDown();
 				this.subscriptions.dispose();
