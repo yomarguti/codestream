@@ -64,10 +64,7 @@ export class SimpleStream extends Component {
 	}
 
 	componentDidMount() {
-<<<<<<< HEAD
 		logger.trace('.componentDidMount');
-=======
->>>>>>> fetch streams upon login and fetch posts when displaying a stream and there are no posts locally
 		this.props.recalculateUMI(); // set the UMI for the first time
 		// TODO: scroll to bottom
 
@@ -89,10 +86,7 @@ export class SimpleStream extends Component {
 	}
 
 	componentWillReceiveProps(nextProps) {
-<<<<<<< HEAD
 		logger.trace('.componentWillReceiveProps');
-=======
->>>>>>> fetch streams upon login and fetch posts when displaying a stream and there are no posts locally
 		const switchingStreams = nextProps.id !== this.props.id;
 		if (nextProps.id && switchingStreams && nextProps.posts.length === 0)
 			this.props.fetchPosts({ streamId: nextProps.id, teamId: nextProps.teamId });
@@ -235,6 +229,7 @@ export class SimpleStream extends Component {
 	}
 
 	renderIntro = () => {
+<<<<<<< HEAD
 		logger.trace('.renderIntro');
 		if (this.props.firstTimeInAtom && this.props.currentFile === this.state.fileForIntro) {
 			return [
@@ -263,6 +258,21 @@ export class SimpleStream extends Component {
 								defaultMessage="Share your wisdom by clicking on any post in the stream and adding a reply."
 							/>
 						</li>
+=======
+		if (this.props.firstTimeInAtom && this.props.currentFile === this.state.fileForIntro) {
+			return [
+				<label>Welcome to CodeStream!</label>,
+				<label>
+					<ul>
+						<li>
+							Every source file has its own conversation stream. Just pick a file, post a message,
+							and any of your teammates can contribute to the conversation.
+						</li>
+						<li>
+							Comment on a specific block of code by selecting it and then clicking the "+" button.
+						</li>
+						<li>Share your wisdom by clicking on any post in the stream and adding a reply.</li>
+>>>>>>> show CodeStream intro in first stream
 					</ul>
 				</label>,
 				<label>
@@ -1143,7 +1153,10 @@ const mapStateToProps = ({
 	markerLocations,
 	onboarding
 }) => {
+<<<<<<< HEAD
 	logger.trace('.mapStateToProps');
+=======
+>>>>>>> show CodeStream intro in first stream
 	const stream = streams.byFile[context.currentFile] || {};
 	const markersForStreamAndCommit = getMarkersForStreamAndCommit(
 		markerLocations.byStream[stream.id],
@@ -1173,9 +1186,13 @@ const mapStateToProps = ({
 		id: stream.id,
 		teamId: stream.teamId,
 <<<<<<< HEAD
+<<<<<<< HEAD
 		firstTimeInAtom: onboarding.firstTimeInAtom,
 =======
 >>>>>>> fetch streams upon login and fetch posts when displaying a stream and there are no posts locally
+=======
+		firstTimeInAtom: onboarding.firstTimeInAtom,
+>>>>>>> show CodeStream intro in first stream
 		currentFile: context.currentFile,
 		currentCommit: context.currentCommit,
 		markers: markersForStreamAndCommit,
