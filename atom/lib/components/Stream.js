@@ -1,3 +1,4 @@
+import { shell } from "electron";
 import { CompositeDisposable } from "atom";
 import React, { Component } from "react";
 import { connect } from "react-redux";
@@ -28,7 +29,8 @@ export class SimpleStream extends Component {
 		this.state = {
 			stream: {},
 			threadId: null,
-			posts: []
+			posts: [],
+			fileForIntro: this.props.currentFile
 		};
 
 		this.savedComposeState = {};
@@ -201,6 +203,37 @@ export class SimpleStream extends Component {
 		return this.props.currentFile.replace(/.*\//g, "");
 	}
 
+	renderIntro = () => {
+		if (this.props.firstTimeInAtom && this.props.currentFile === this.state.fileForIntro) {
+			return [
+				<label>Welcome to CodeStream!</label>,
+				<label>
+					<ul>
+						<li>
+							Every source file has its own conversation stream. Just pick a file, post a message,
+							and any of your teammates can contribute to the conversation.
+						</li>
+						<li>
+							Comment on a specific block of code by selecting it and then clicking the "+" button.
+						</li>
+						<li>Share your wisdom by clicking on any post in the stream and adding a reply.</li>
+					</ul>
+				</label>,
+				<label>
+					Learn more at{" "}
+					<a onClick={e => shell.openExternal("https://help.codestream.com")}>
+						help.codestream.com
+					</a>.
+				</label>
+			];
+		}
+		return (
+			<label>
+				This is the start of your discussion about <b>{this.fileAbbreviation()}</b>.
+			</label>
+		);
+	};
+
 	// we render both a main stream (postslist) plus also a postslist related
 	// to the currently selected thread (if it exists). the reason for this is
 	// to be able to animate between the two streams, since they will both be
@@ -284,9 +317,7 @@ export class SimpleStream extends Component {
 					onClick={this.handleClickPost}
 				>
 					<div className="intro" ref={ref => (this._intro = ref)}>
-						<label>
-							This is the start of your discussion about <b>{fileAbbreviation}</b>.
-						</label>
+						{this.renderIntro()}
 					</div>
 					{posts.map(post => {
 						// this needs to be done by storing the return value of the render,
@@ -1026,7 +1057,16 @@ const getMarkersForStreamAndCommit = (locationsByCommit = {}, commitHash, marker
 	});
 };
 
-const mapStateToProps = ({ session, context, streams, users, posts, markers, markerLocations }) => {
+const mapStateToProps = ({
+	session,
+	context,
+	streams,
+	users,
+	posts,
+	markers,
+	markerLocations,
+	onboarding
+}) => {
 	const stream = streams.byFile[context.currentFile] || {};
 	const markersForStreamAndCommit = getMarkersForStreamAndCommit(
 		markerLocations.byStream[stream.id],
@@ -1049,6 +1089,7 @@ const mapStateToProps = ({ session, context, streams, users, posts, markers, mar
 
 	return {
 		id: stream.id,
+		firstTimeInAtom: onboarding.firstTimeInAtom,
 		currentFile: context.currentFile,
 		currentCommit: context.currentCommit,
 		markers: markersForStreamAndCommit,
