@@ -1,16 +1,7 @@
 import _ from "underscore-plus";
 import { upsert } from "../local-cache";
 import { normalize } from "./utils";
-import { savePostsForStream } from "./post";
-import { saveMarkers } from "./marker";
-import { saveMarkerLocations } from "./marker-location";
 import { setUserPreference } from "./user";
-import { open as openRepo } from "../git/GitRepo";
-import MarkerLocationFinder from "../git/MarkerLocationFinder";
-import rootLogger from "../util/Logger";
-rootLogger.setLevel("trace");
-
-const logger = rootLogger.forClass("actions/stream");
 
 export const saveStream = attributes => (dispatch, getState, { db }) => {
 	return upsert(db, "streams", attributes).then(stream => {
@@ -40,59 +31,6 @@ export const fetchStreams = () => async (dispatch, getState, { http }) => {
 		.then(({ streams }) => {
 			return dispatch(saveStreams(normalize(streams)));
 		});
-};
-
-export const fetchStream = () => async (dispatch, getState, { http }) => {
-	const { session, context, streams, repoAttributes } = getState();
-	if (!streams.isFetching && context.currentFile !== "") {
-		dispatch({ type: "FETCH_STREAM" });
-		// create stream - right now the server doesn't complain if a stream already exists
-		const streamData = await http.post(
-			"/streams",
-			{
-				teamId: context.currentTeamId,
-				type: "file",
-				file: context.currentFile,
-				repoId: context.currentRepoId
-			},
-			session.accessToken
-		);
-		dispatch({ type: "RECEIVE_STREAM" });
-		const stream = normalize(streamData.stream);
-		const { posts } = await http.get(
-			`/posts?teamId=${context.currentTeamId}&streamId=${stream.id}`,
-			session.accessToken
-		);
-		const { markers, markerLocations } = await http.get(
-			`/markers?teamId=${context.currentTeamId}&streamId=${stream.id}&commitHash=${
-				context.currentCommit
-			}`,
-			session.accessToken
-		);
-		logger.debug("Found", markers.length, "markers");
-
-		const locations = markerLocations.locations || {};
-		const markerLocationFinder = new MarkerLocationFinder(
-			await openRepo(repoAttributes.workingDirectory),
-			session,
-			http,
-			context,
-			stream.id
-		);
-
-		const missingMarkers = markers.filter(marker => !locations[marker._id]);
-		if (missingMarkers.length) {
-			logger.debug("Recalculating locations for", missingMarkers.length, "missing markers");
-			const calculatedLocations = markerLocationFinder.findLocations(missingMarkers);
-			Object.assign(locations, calculatedLocations);
-		}
-
-		await dispatch(saveStream(stream));
-		await dispatch(saveMarkers(normalize(markers)));
-
-		await dispatch(saveMarkerLocations(normalize(markerLocations)));
-		dispatch(savePostsForStream(stream.id, normalize(posts)));
-	}
 };
 
 export const markStreamRead = streamId => async (dispatch, getState, { http }) => {
