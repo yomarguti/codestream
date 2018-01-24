@@ -1,7 +1,6 @@
 import { upsert } from "../local-cache";
 import { normalize } from "./utils";
-import { saveMarkers } from "./marker";
-import { saveMarkerLocations } from "./marker-location";
+import { fetchMarkersAndLocations } from "./marker-location";
 
 const createTempId = (() => {
 	let count = 0;
@@ -78,7 +77,8 @@ export const fetchPosts = ({ streamId, teamId }) => async (dispatch, getState, {
 		`/posts?teamId=${teamId}&streamId=${streamId}`,
 		session.accessToken
 	);
-	return dispatch(savePostsForStream(streamId, normalize(posts)));
+	dispatch(savePostsForStream(streamId, normalize(posts)));
+	return dispatch(fetchMarkersAndLocations({ streamId, teamId }));
 };
 
 export const createPost = (streamId, parentPostId, text, codeBlocks) => async (
