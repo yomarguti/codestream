@@ -3,6 +3,7 @@ import { CompositeDisposable } from "atom";
 import React, { Component } from "react";
 import { connect } from "react-redux";
 import ContentEditable from "react-contenteditable";
+import { FormattedMessage } from "react-intl";
 import _ from "underscore-plus";
 import Post from "./Post";
 import UMIs from "./UMIs";
@@ -208,17 +209,31 @@ export class SimpleStream extends Component {
 	renderIntro = () => {
 		if (this.props.firstTimeInAtom && this.props.currentFile === this.state.fileForIntro) {
 			return [
-				<label>Welcome to CodeStream!</label>,
+				<label>
+					<FormattedMessage id="stream.intro.welcome" defaultMessage="Welcome to CodeStream!" />
+				</label>,
 				<label>
 					<ul>
 						<li>
-							Every source file has its own conversation stream. Just pick a file, post a message,
-							and any of your teammates can contribute to the conversation.
+							<FormattedMessage
+								id="stream.intro.eachFile"
+								defaultMessage="Every source file has its own conversation stream. Just pick a file, post a message, and any of your teammates can contribute to the conversation."
+							/>
 						</li>
 						<li>
-							Comment on a specific block of code by selecting it and then clicking the "+" button.
+							<FormattedMessage
+								id="stream.intro.comment"
+								defaultMessage={
+									'Comment on a specific block of code by selecting it and then clicking the "+" button.'
+								}
+							/>
 						</li>
-						<li>Share your wisdom by clicking on any post in the stream and adding a reply.</li>
+						<li>
+							<FormattedMessage
+								id="stream.intro.share"
+								defaultMessage="Share your wisdom by clicking on any post in the stream and adding a reply."
+							/>
+						</li>
 					</ul>
 				</label>,
 				<label>
@@ -1097,7 +1112,7 @@ const mapStateToProps = ({
 	return {
 		id: stream.id,
 		teamId: stream.teamId,
-    firstTimeInAtom: onboarding.firstTimeInAtom,
+		firstTimeInAtom: onboarding.firstTimeInAtom,
 		currentFile: context.currentFile,
 		currentCommit: context.currentCommit,
 		markers: markersForStreamAndCommit,
