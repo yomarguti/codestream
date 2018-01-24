@@ -27,7 +27,8 @@ export default class PubNubReceiver {
 			publishKey: "pub-c-8603fed4-39da-4feb-a82e-cf5311ddb4d6",
 			subscribeKey: "sub-c-e830d7da-fb14-11e6-9f57-02ee2ddab7fe",
 			restore: true,
-			heartbeatInterval: 30
+			logVerbosity: false,
+			heartBeatInterval: 30
 		});
 		this.setupListener();
 	}
@@ -47,10 +48,10 @@ export default class PubNubReceiver {
 				});
 			},
 			presence: event => {
-				console.debug(event.action); // online status events
-				console.debug(event.timestamp); // timestamp on the event is occurred
-				console.debug(event.uuid); // uuid of the user
-				console.debug(event.occupancy); // current number of users online
+				// console.debug(event.action); // online status events
+				// console.debug(event.timestamp); // timestamp on the event is occurred
+				// console.debug(event.uuid); // uuid of the user
+				console.debug(`user ${event.uuid} ${event.action}. occupancy is ${event.occupancy}`); // uuid of the user
 			},
 			status: status => {
 				console.debug("pubnub status", status);
@@ -69,7 +70,7 @@ export default class PubNubReceiver {
 			console.debug("subscribing to", channel);
 			this.pubnub.subscribe({
 				channels: [channel],
-				withPresence: channel.startsWith("team-") || channel.startsWith("repo-")
+				withPresence: !channel.includes("user")
 			});
 			this.subscribedChannels.push(channel);
 		});

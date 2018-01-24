@@ -12,7 +12,8 @@ import AddCommentPopup from "./AddCommentPopup";
 import createClassString from "classnames";
 import DateSeparator from "./DateSeparator";
 var Blamer = require("../util/blamer");
-import * as actions from "../actions/stream";
+import * as streamActions from "../actions/stream";
+import { createPost, fetchPosts } from "../actions/post";
 import { toMapBy } from "../reducers/utils";
 
 export class SimpleStream extends Component {
@@ -58,20 +59,32 @@ export class SimpleStream extends Component {
 		);
 	}
 
-	installSelectionHandler() {
-		// if (this.selectionHandler) return;
-		let editor = atom.workspace.getActiveTextEditor();
-		this.selectionHandler = editor.onDidChangeSelectionRange(this.destroyCodeBlockMarker);
+	componentDidMount() {
+		this.props.recalculateUMI(); // set the UMI for the first time
+		// TODO: scroll to bottom
+
+		let inputDiv = document.querySelector('div[contenteditable="true"]');
+		if (!inputDiv) return;
+
+		// this listener pays attention to when the input field resizes,
+		// presumably because the user has typed more than one line of text
+		// in it, and calls a function to handle the new size
+		new ResizeObserver(this.handleResizeCompose).observe(this._compose);
+
+		// so that HTML doesn't get pasted into the input field. without this,
+		// HTML would be rendered as HTML when pasted
+		inputDiv.addEventListener("paste", function(e) {
+			e.preventDefault();
+			var text = e.clipboardData.getData("text/plain");
+			document.execCommand("insertHTML", false, text);
+		});
 	}
 
-	destroyCodeBlockMarker = () => {
-		if (this.codeBlockMarker) this.codeBlockMarker.destroy();
-		if (this.selectionHandler) this.selectionHandler.dispose();
-	};
-
 	componentWillReceiveProps(nextProps) {
-		if (!nextProps.id) this.props.fetchStream();
-		if (nextProps.id !== this.props.id) {
+		const switchingStreams = nextProps.id !== this.props.id;
+		if (nextProps.id && switchingStreams && nextProps.posts.length === 0)
+			this.props.fetchPosts({ streamId: nextProps.id, teamId: nextProps.teamId });
+		if (switchingStreams) {
 			this.saveComposeState(nextProps.id);
 			this.handleDismissThread();
 
@@ -100,6 +113,17 @@ export class SimpleStream extends Component {
 		}
 	}
 
+	installSelectionHandler() {
+		// if (this.selectionHandler) return;
+		let editor = atom.workspace.getActiveTextEditor();
+		this.selectionHandler = editor.onDidChangeSelectionRange(this.destroyCodeBlockMarker);
+	}
+
+	destroyCodeBlockMarker = () => {
+		if (this.codeBlockMarker) this.codeBlockMarker.destroy();
+		if (this.selectionHandler) this.selectionHandler.dispose();
+	};
+
 	installEditorHandlers() {
 		let editor = atom.workspace.getActiveTextEditor();
 		// console.log(editor);
@@ -115,28 +139,6 @@ export class SimpleStream extends Component {
 				editor.hasCodeStreamHandlers = true;
 			}
 		}
-	}
-
-	componentDidMount() {
-		this.props.fetchStream(); // Fetch any new stuff
-		this.props.recalculateUMI(); // set the UMI for the first time
-		// TODO: scroll to bottom
-
-		let inputDiv = document.querySelector('div[contenteditable="true"]');
-		if (!inputDiv) return;
-
-		// this listener pays attention to when the input field resizes,
-		// presumably because the user has typed more than one line of text
-		// in it, and calls a function to handle the new size
-		new ResizeObserver(this.handleResizeCompose).observe(this._compose);
-
-		// so that HTML doesn't get pasted into the input field. without this,
-		// HTML would be rendered as HTML when pasted
-		inputDiv.addEventListener("paste", function(e) {
-			e.preventDefault();
-			var text = e.clipboardData.getData("text/plain");
-			document.execCommand("insertHTML", false, text);
-		});
 	}
 
 	handleResizeCompose = () => {
@@ -1087,16 +1089,19 @@ const mapStateToProps = ({
 		}
 	});
 
+	const teamMembers = _.filter(
+		users,
+		user => user.teamIds.includes(context.currentTeamId) && user.id !== session.userId
+	);
+
 	return {
 		id: stream.id,
-		firstTimeInAtom: onboarding.firstTimeInAtom,
+		teamId: stream.teamId,
+    firstTimeInAtom: onboarding.firstTimeInAtom,
 		currentFile: context.currentFile,
 		currentCommit: context.currentCommit,
 		markers: markersForStreamAndCommit,
-		users: _.filter(
-			users,
-			user => user.teamIds.includes(context.currentTeamId) && user.id !== session.userId
-		),
+		users: toMapBy("id", teamMembers),
 		currentUser: users[session.userId],
 		posts: getPostsForStream(stream.id, posts).map(post => {
 			let user = users[post.creatorId];
@@ -1121,4 +1126,4 @@ const mapStateToProps = ({
 	};
 };
 
-export default connect(mapStateToProps, actions)(SimpleStream);
+export default connect(mapStateToProps, { ...streamActions, fetchPosts, createPost })(SimpleStream);

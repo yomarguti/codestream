@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { connect } from "react-redux";
 import createClassString from "classnames";
 import { getUserPreference } from "../actions/user";
+import { CompositeDisposable } from "atom";
 
 const remote = require("electron").remote;
 var app = remote.app;
@@ -18,7 +19,65 @@ export class SimpleUMIs extends Component {
 		this.cwd = repo.getWorkingDirectory();
 		this.repo = repo;
 		this.repoOrigin = repo.getOriginURL();
+
+		let that = this;
+		this.subscriptions = new CompositeDisposable();
+		this.subscriptions.add(
+			atom.contextMenu.add({
+				".tree-view [is='tree-view-file'], .tree-view [is='tree-view-directory']": [
+					{
+						label: "Notifications",
+						submenu: [
+							{
+								label: "Mute",
+								command: "codestream:mute",
+								created: function(event) {
+									this.label = that.muteLabel(event);
+								}
+							},
+							{
+								label: "Bold",
+								command: "codestream:bold",
+								created: function(event) {
+									this.label = that.boldLabel(event);
+								}
+							},
+							{
+								label: "Badge",
+								command: "codestream:badge",
+								created: function(event) {
+									this.label = that.badgeLabel(event);
+								}
+							}
+						]
+					},
+					{ type: "separator" }
+				]
+			})
+		);
 	}
+
+	getTreatmentFromEvent = event => {
+		let li = event.target.closest("li");
+		if (!li) return;
+
+		let path = li.getElementsByTagName("span")[0].getAttribute("data-path");
+		path = this.repo.relativize(path);
+		let prefPath = ["streamTreatments", this.repoOrigin, path];
+		return getUserPreference(this.props.currentUser, prefPath);
+	};
+
+	muteLabel = event => {
+		return this.getTreatmentFromEvent(event) === "mute" ? "\u2713 Mute" : "    Mute";
+	};
+
+	boldLabel = event => {
+		return this.getTreatmentFromEvent(event) === "bold" ? "\u2713 Bold" : "    Bold";
+	};
+
+	badgeLabel = event => {
+		return this.getTreatmentFromEvent(event) === "badge" ? "\u2713 Badge" : "    Badge";
+	};
 
 	render() {
 		const umis = this.props.umis;
@@ -242,7 +301,7 @@ export class SimpleUMIs extends Component {
 			mentionsBelow
 		);
 
-		let width = scrollDiv.offsetWidth + scrollDiv.scrollLeft - 70;
+		let width = scrollDiv.offsetWidth + scrollDiv.scrollLeft - 65;
 		let newStyle = ".tree-view li[cs-umi-badge='1']::after { left: " + width + "px; }";
 		// console.log("Adding style string; " + newStyle);
 		this.addStyleString(newStyle, "umi");

@@ -1,32 +1,37 @@
 import { upsert } from "../local-cache";
-import { saveMarkers } from "./marker";
-import { saveMarkerLocations } from "./marker-location";
+import { normalize } from "./utils";
+import { fetchMarkersAndLocations } from "./marker-location";
+
+const createTempId = (() => {
+	let count = 0;
+	return () => String(count++);
+})();
 
 export const savePost = attributes => (dispatch, getState, { db }) => {
-	return upsert(db, "posts", attributes).then(post => {
+	return upsert(db, "posts", attributes).then(post =>
 		dispatch({
 			type: "ADD_POST",
 			payload: post
-		});
-	});
+		})
+	);
 };
 
 export const savePosts = attributes => (dispatch, getState, { db }) => {
-	return upsert(db, "posts", attributes).then(posts => {
+	return upsert(db, "posts", attributes).then(posts =>
 		dispatch({
 			type: "ADD_POSTS",
 			payload: posts
-		});
-	});
+		})
+	);
 };
 
 export const savePostsForStream = (streamId, attributes) => (dispatch, getState, { db }) => {
-	return upsert(db, "posts", attributes).then(posts => {
+	return upsert(db, "posts", attributes).then(posts =>
 		dispatch({
 			type: "ADD_POSTS_FOR_STREAM",
 			payload: { streamId, posts }
-		});
-	});
+		})
+	);
 };
 
 export const savePendingPost = attributes => (dispatch, getState, { db }) => {
@@ -64,4 +69,59 @@ export const resolvePendingPost = (id, { post, markers, markerLocations }) => (
 
 export const rejectPendingPost = (streamId, pendingId, post) => (dispatch, getState, { db }) => {
 	// TODO
+};
+
+export const fetchPosts = ({ streamId, teamId }) => async (dispatch, getState, { db, http }) => {
+	const { session } = getState();
+	const { posts } = await http.get(
+		`/posts?teamId=${teamId}&streamId=${streamId}`,
+		session.accessToken
+	);
+	dispatch(savePostsForStream(streamId, normalize(posts)));
+	return dispatch(fetchMarkersAndLocations({ streamId, teamId }));
+};
+
+export const createPost = (streamId, parentPostId, text, codeBlocks) => async (
+	dispatch,
+	getState,
+	{ http }
+) => {
+	const { session, context } = getState();
+	const pendingId = createTempId();
+
+	const post = {
+		id: pendingId,
+		teamId: context.currentTeamId,
+		timestamp: new Date().getTime(),
+		creatorId: session.userId,
+		parentPostId: parentPostId,
+		codeBlocks: codeBlocks,
+		commitHashWhenPosted: context.currentCommit,
+		text
+	};
+
+	if (streamId) {
+		post.streamId = streamId;
+		dispatch(savePendingPost(post));
+	} else
+		post.stream = {
+			teamId: context.currentTeamId,
+			type: "file",
+			file: context.currentFile,
+			repoId: context.currentRepoId
+		};
+
+	try {
+		const data = await http.post("/posts", post, session.accessToken);
+		dispatch(
+			resolvePendingPost(pendingId, {
+				post: normalize(data.post),
+				markers: normalize(data.markers),
+				markerLocations: data.markerLocations
+			})
+		);
+	} catch (error) {
+		// TODO: different types of errors?
+		dispatch(rejectPendingPost(streamId, pendingId, { ...post, error: true }));
+	}
 };

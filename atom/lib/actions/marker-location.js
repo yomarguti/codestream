@@ -10,9 +10,10 @@ rootLogger.setLevel("trace");
 const logger = rootLogger.forClass("actions/marker-location");
 
 export const saveMarkerLocations = attributes => (dispatch, getState, { db }) => {
-	if (Object.keys(attributes).length === 0) return;
-
 	const { streamId, teamId, commitHash, locations } = attributes;
+
+	if (!(streamId && teamId && commitHash)) return;
+
 	const primaryKey = Object.freeze({ streamId, teamId, commitHash });
 	return db
 		.transaction("rw", db.markerLocations, async () => {
@@ -85,15 +86,10 @@ export const commitNewMarkerLocations = (oldCommitHash, newCommitHash) => (
 	});
 };
 
-export const refreshMarkersAndLocations = () => async (dispatch, getState, { http }) => {
-	const { context, repoAttributes, session, streams } = getState();
-
-	const stream = streams.byFile[context.currentFile];
-
+const calculateLocations = ({ teamId, streamId }) => async (dispatch, getState, { http }) => {
+	const { context, repoAttributes, session } = getState();
 	const { markers, markerLocations } = await http.get(
-		`/markers?teamId=${context.currentTeamId}&streamId=${stream.id}&commitHash=${
-			context.currentCommit
-		}`,
+		`/markers?teamId=${teamId}&streamId=${streamId}&commitHash=${context.currentCommit}`,
 		session.accessToken
 	);
 	logger.debug("Found", markers.length, "markers");
@@ -104,7 +100,7 @@ export const refreshMarkersAndLocations = () => async (dispatch, getState, { htt
 		session,
 		http,
 		context,
-		stream.id
+		streamId
 	);
 
 	const missingMarkers = markers.filter(marker => !locations[marker._id]);
@@ -117,4 +113,19 @@ export const refreshMarkersAndLocations = () => async (dispatch, getState, { htt
 
 	await dispatch(saveMarkers(normalize(markers)));
 	await dispatch(saveMarkerLocations({ ...normalize(markerLocations), locations }));
+};
+
+export const fetchMarkersAndLocations = ({ teamId, streamId }) => (dispatch, getState) => {
+	const { context, session, repoAttributes } = getState();
+	return dispatch(calculateLocations({ teamId, streamId }));
+};
+
+export const refreshMarkersAndLocations = () => (dispatch, getState) => {
+	const { context, streams } = getState();
+	return Promise.all(
+		Object.values(streams.byFile).map(stream => {
+			if (stream.teamId === context.currentTeamId)
+				dispatch(calculateLocations({ streamId: stream.id, teamId: context.currentTeamId }));
+		})
+	);
 };
