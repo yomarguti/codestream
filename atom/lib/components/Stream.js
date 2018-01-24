@@ -121,20 +121,14 @@ export class SimpleStream extends Component {
 	}
 
 	installSelectionHandler() {
-<<<<<<< HEAD
 		logger.trace('.installSelectionHandler');
-=======
->>>>>>> fetch streams upon login and fetch posts when displaying a stream and there are no posts locally
 		// if (this.selectionHandler) return;
 		let editor = atom.workspace.getActiveTextEditor();
 		this.selectionHandler = editor.onDidChangeSelectionRange(this.destroyCodeBlockMarker);
 	}
 
 	destroyCodeBlockMarker = () => {
-<<<<<<< HEAD
 		logger.trace('.destroyCodeBlockMarker');
-=======
->>>>>>> fetch streams upon login and fetch posts when displaying a stream and there are no posts locally
 		if (this.codeBlockMarker) this.codeBlockMarker.destroy();
 		if (this.selectionHandler) this.selectionHandler.dispose();
 	};
@@ -261,18 +255,36 @@ export class SimpleStream extends Component {
 =======
 		if (this.props.firstTimeInAtom && this.props.currentFile === this.state.fileForIntro) {
 			return [
-				<label>Welcome to CodeStream!</label>,
+				<label>
+					<FormattedMessage id="stream.intro.welcome" defaultMessage="Welcome to CodeStream!" />
+				</label>,
 				<label>
 					<ul>
 						<li>
-							Every source file has its own conversation stream. Just pick a file, post a message,
-							and any of your teammates can contribute to the conversation.
+							<FormattedMessage
+								id="stream.intro.eachFile"
+								defaultMessage="Every source file has its own conversation stream. Just pick a file, post a message, and any of your teammates can contribute to the conversation."
+							/>
 						</li>
 						<li>
-							Comment on a specific block of code by selecting it and then clicking the "+" button.
+							<FormattedMessage
+								id="stream.intro.comment"
+								defaultMessage={
+									'Comment on a specific block of code by selecting it and then clicking the "+" button.'
+								}
+							/>
 						</li>
+						<li>
+							<FormattedMessage
+								id="stream.intro.share"
+								defaultMessage="Share your wisdom by clicking on any post in the stream and adding a reply."
+							/>
+						</li>
+<<<<<<< HEAD
 						<li>Share your wisdom by clicking on any post in the stream and adding a reply.</li>
 >>>>>>> show CodeStream intro in first stream
+=======
+>>>>>>> i18n
 					</ul>
 				</label>,
 				<label>
