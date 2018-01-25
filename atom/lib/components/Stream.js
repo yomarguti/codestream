@@ -16,6 +16,9 @@ var Blamer = require("../util/blamer");
 import * as streamActions from "../actions/stream";
 import { createPost, fetchPosts } from "../actions/post";
 import { toMapBy } from "../reducers/utils";
+import rootLogger from "../util/Logger";
+
+const logger = rootLogger.forClass("components/Stream");
 
 export class SimpleStream extends Component {
 	subscriptions = null;
@@ -61,6 +64,7 @@ export class SimpleStream extends Component {
 	}
 
 	componentDidMount() {
+		logger.trace('.componentDidMount');
 		this.props.recalculateUMI(); // set the UMI for the first time
 		// TODO: scroll to bottom
 
@@ -82,6 +86,7 @@ export class SimpleStream extends Component {
 	}
 
 	componentWillReceiveProps(nextProps) {
+		logger.trace('.componentWillReceiveProps');
 		const switchingStreams = nextProps.id !== this.props.id;
 		if (nextProps.id && switchingStreams && nextProps.posts.length === 0)
 			this.props.fetchPosts({ streamId: nextProps.id, teamId: nextProps.teamId });
@@ -102,6 +107,7 @@ export class SimpleStream extends Component {
 	}
 
 	componentDidUpdate(prevProps, prevState) {
+		logger.trace('.componentDidUpdate');
 		this._postslist.scrollTop = 100000;
 		this.installEditorHandlers();
 
@@ -115,17 +121,20 @@ export class SimpleStream extends Component {
 	}
 
 	installSelectionHandler() {
+		logger.trace('.installSelectionHandler');
 		// if (this.selectionHandler) return;
 		let editor = atom.workspace.getActiveTextEditor();
 		this.selectionHandler = editor.onDidChangeSelectionRange(this.destroyCodeBlockMarker);
 	}
 
 	destroyCodeBlockMarker = () => {
+		logger.trace('.destroyCodeBlockMarker');
 		if (this.codeBlockMarker) this.codeBlockMarker.destroy();
 		if (this.selectionHandler) this.selectionHandler.dispose();
 	};
 
 	installEditorHandlers() {
+		logger.trace('.installEditorHandlers');
 		let editor = atom.workspace.getActiveTextEditor();
 		// console.log(editor);
 		if (editor && !editor.hasCodeStreamHandlers) {
@@ -143,11 +152,13 @@ export class SimpleStream extends Component {
 	}
 
 	handleResizeCompose = () => {
+		logger.trace('.handleResizeCompose');
 		// console.log("COMPOSE RESIZE");
 		this.resizeStream();
 	};
 
 	handleResizeWindow = scrollViewDiv => {
+		logger.trace('.handleResizeWindow');
 		// if the div has display: none then there will be no width
 		if (!scrollViewDiv || !scrollViewDiv.offsetWidth) return;
 
@@ -161,6 +172,7 @@ export class SimpleStream extends Component {
 
 	// add a style to the document, reusing a style node that we attach to the DOM
 	addStyleString(str) {
+		logger.trace('.addStyleString');
 		let node = document.getElementById("codestream-style-tag") || document.createElement("style");
 		node.id = "codestream-style-tag";
 		node.innerHTML = str;
@@ -170,6 +182,7 @@ export class SimpleStream extends Component {
 	handleNewPost = () => {};
 
 	addDummyPost = () => {
+		logger.trace('.addDummyPost');
 		this.props.createPost(
 			this.props.id,
 			this.state.threadId,
@@ -178,6 +191,7 @@ export class SimpleStream extends Component {
 	};
 
 	resizeStream = () => {
+		logger.trace('.resizeStream');
 		if (!this._div) return;
 		const streamHeight = this._div.offsetHeight;
 		const postslistHeight = this._postslist.offsetHeight;
@@ -194,6 +208,7 @@ export class SimpleStream extends Component {
 
 	// return the post, if any, with the given ID
 	findPostById(id) {
+		logger.trace('.findPostById', id);
 		return this.props.posts.find(post => id === post.id);
 	}
 
@@ -202,11 +217,13 @@ export class SimpleStream extends Component {
 	// FIXME -- this should be improved for systems that don't use "/"
 	// as a path delimiter
 	fileAbbreviation() {
+		logger.trace('.fileAbbreviation');
 		if (!this.props.currentFile) return "";
 		return this.props.currentFile.replace(/.*\//g, "");
 	}
 
 	renderIntro = () => {
+		logger.trace('.renderIntro');
 		if (this.props.firstTimeInAtom && this.props.currentFile === this.state.fileForIntro) {
 			return [
 				<label>
@@ -256,6 +273,7 @@ export class SimpleStream extends Component {
 	// to be able to animate between the two streams, since they will both be
 	// visible during the transition
 	render() {
+		logger.trace('.render');
 		const posts = this.props.posts;
 		// console.log("rendering posts", posts);
 
@@ -442,10 +460,12 @@ export class SimpleStream extends Component {
 
 	// turn a codestream flat-array range into the format that atom understands
 	makeRange(location) {
+		logger.trace('.makeRange');
 		return [[location[0], location[1]], [location[2], location[3]]];
 	}
 
 	makeLocation(headPosition, tailPosition) {
+		logger.trace('.makeLocation', headPosition, tailPosition);
 		const location = [];
 		location[0] = tailPosition.row;
 		location[1] = tailPosition.column;
@@ -459,6 +479,7 @@ export class SimpleStream extends Component {
 	// this is only partially implemented, as it's very fragile as-is
 	// improvement pending discussion with the team
 	renderCommentMarkers = () => {
+		logger.trace('.renderCommentMarkers');
 		let that = this;
 		let editor = atom.workspace.getActiveTextEditor();
 		if (!editor) return;
@@ -569,11 +590,13 @@ export class SimpleStream extends Component {
 	};
 
 	checkMarkerDiff = codeMarkers => {
+		logger.trace('.checkMarkerDiff');
 		console.log("Checking diffs for markers");
 		console.log(codeMarkers);
 	};
 
 	saveComposeState(nextId) {
+		logger.trace('.saveComposeState');
 		this.savedComposeState[this.props.id] = {
 			newPostText: this.state.newPostText,
 			quoteRange: this.state.quoteRange,
@@ -587,12 +610,14 @@ export class SimpleStream extends Component {
 
 	// dismiss the thread stream and return to the main stream
 	handleDismissThread = () => {
+		logger.trace('.handleDismissThread');
 		this.destroyCodeBlockMarker();
 		this.setState({ threadId: null });
 	};
 
 	// by clicking on the post, we select it
 	handleClickPost = event => {
+		logger.trace('.handleClickPost')
 		var postDiv = event.target.closest(".post");
 		if (!postDiv) return;
 		this.selectPost(postDiv.id);
@@ -601,6 +626,7 @@ export class SimpleStream extends Component {
 	// show the thread related to the given post, and if there is
 	// a codeblock, scroll to it and select it
 	selectPost = id => {
+		logger.trace('.selectPost');
 		let post = this.findPostById(id);
 		if (!post) return;
 
@@ -654,21 +680,25 @@ export class SimpleStream extends Component {
 
 	// toggle focus between the buffer and the compose input field
 	toggleFocusInput = () => {
+		logger.trace('.toggleFocusInput');
 		if (document.activeElement && document.activeElement.id == "input-div")
 			atom.workspace.getCenter().activate();
 		else this.focusInput();
 	};
 
 	focusInput = () => {
+		logger.trace('.focusInput');
 		document.getElementById("input-div").focus();
 	};
 
 	handleClickScrollToNewMessages = () => {
+		logger.trace('.handleClickScrollToNewMessages');
 		// console.log("CLICKED SCROLL DOWN");
 		this._postslist.scrollTop = 100000;
 	};
 
 	handleClickDismissQuote = () => {
+		logger.trace('.handleClickDismissQuote');
 		// not very React-ish but not sure how to set focus otherwise
 		this.focusInput();
 
@@ -691,6 +721,7 @@ export class SimpleStream extends Component {
 	// figure out who to at-mention based on the git blame data.
 	// insert the text into the compose field
 	addBlameAtMention(selectionRange, gitData) {
+		logger.trace('.addBlameAtMention');
 		// console.log(data);
 		let postText = this.state.newPostText || "";
 		var authors = {};
@@ -729,6 +760,7 @@ export class SimpleStream extends Component {
 	// configure the compose field in preparation for a comment on a codeBlock
 	// this is what happens when someone clicks the floating (+) popup
 	handleClickAddComment = () => {
+		logger.trace('.handleClickAddComment');
 		let editor = atom.workspace.getActiveTextEditor();
 		if (!editor) return;
 
@@ -793,6 +825,7 @@ export class SimpleStream extends Component {
 	// when the input field loses focus, one thing we want to do is
 	// to hide the at-mention popup
 	handleOnBlur = async event => {
+		logger.trace('.handleOnBlur');
 		this.setState({
 			atMentionsOn: false
 		});
@@ -801,6 +834,7 @@ export class SimpleStream extends Component {
 	// depending on the contents of the input field, if the user
 	// types a "@" then open the at-mention popup
 	handleOnChange = async event => {
+		logger.trace('.handleOnChange');
 		var newPostText = event.target.value;
 
 		let selection = window.getSelection();
@@ -827,6 +861,7 @@ export class SimpleStream extends Component {
 	};
 
 	handleOnKeyPress = async event => {
+		logger.trace('.handleOnKeyPress');
 		var newPostText = this.state.newPostText;
 
 		// console.log("ON KEYPRESS: " + event.key);
@@ -859,11 +894,13 @@ export class SimpleStream extends Component {
 	};
 
 	selectFirstAtMention() {
+		logger.trace('.selectFirstAtMention');
 		this.handleSelectAtMention();
 	}
 
 	// set up the parameters to pass to the at mention popup
 	showAtMentionSelectors(prefix) {
+		logger.trace('.showAtMentionSelectors');
 		let peopleToShow = [];
 
 		Object.keys(this.props.users).forEach(personId => {
@@ -895,6 +932,7 @@ export class SimpleStream extends Component {
 	// the keypress handler for tracking up and down arrow
 	// and enter, while the at mention popup is open
 	handleAtMentionKeyPress(event, eventType) {
+		logger.trace('.handleAtMentionKeyPress', event, eventType);
 		// console.log("AT MENTION KEY PRESS: " + eventType);
 		if (eventType == "escape") {
 			if (this.state.atMentionsOn) this.setState({ atMentionsOn: false });
@@ -925,6 +963,7 @@ export class SimpleStream extends Component {
 
 	// close the at mention popup when the customer types ESC
 	handleEscape(event) {
+		logger.trace('.handleEscape');
 		if (this.state.atMentionsOn) this.setState({ atMentionsOn: false });
 		else if (this.state.threadId) this.setState({ threadId: null });
 		else event.abortKeyBinding();
@@ -933,6 +972,7 @@ export class SimpleStream extends Component {
 	// when the user hovers over an at-mention list item, change the
 	// state to represent a hovered state
 	handleHoverAtMention = id => {
+		logger.trace('.handleHoverAtMention');
 		let index = this.state.atMentionsPeople.findIndex(x => x.id == id);
 
 		this.setState({
@@ -942,6 +982,7 @@ export class SimpleStream extends Component {
 	};
 
 	handleSelectAtMention = id => {
+		logger.trace('.handleSelectAtMention');
 		// if no id is passed, we assume that we're selecting
 		// the currently-selected at mention
 		if (!id) {
@@ -974,6 +1015,7 @@ export class SimpleStream extends Component {
 	// insert the given text at the cursor of the input field
 	// after first deleting the text in toDelete
 	insertTextAtCursor(text, toDelete) {
+		logger.trace('.insertTextAtCursor');
 		var sel, range, html;
 		sel = window.getSelection();
 		range = sel.getRangeAt(0);
@@ -995,6 +1037,7 @@ export class SimpleStream extends Component {
 
 	// create a new post
 	submitPost(newText) {
+		logger.trace('.submitPost');
 		newText = newText.replace(/<br>/g, "\n");
 
 		// convert the text to plaintext so there is no HTML
@@ -1032,6 +1075,7 @@ export class SimpleStream extends Component {
 	// if we receive newState as an argument, set the compose state
 	// to that state. otherwise reset it (clear it out)
 	resetCompose(newState) {
+		logger.trace('.resetCompose');
 		this.insertedAuthors = "";
 		if (newState) {
 			this.setState(newState);
@@ -1049,11 +1093,13 @@ export class SimpleStream extends Component {
 }
 
 const getPostsForStream = (streamId = "", { byStream }) => {
+	logger.trace('.getPostsForStream');
 	if (streamId === "") return [];
 	return _.sortBy(byStream[streamId], "seqNum");
 };
 
 const getLocationsByPost = (locationsByCommit = {}, commitHash, markers) => {
+	logger.trace('.getLocationsByPost');
 	const locations = locationsByCommit[commitHash] || {};
 	const locationsByPost = {};
 	Object.keys(locations).forEach(markerId => {
@@ -1064,6 +1110,7 @@ const getLocationsByPost = (locationsByCommit = {}, commitHash, markers) => {
 };
 
 const getMarkersForStreamAndCommit = (locationsByCommit = {}, commitHash, markers) => {
+	logger.trace('.getMarkersForStreamAndCommit');
 	const locations = locationsByCommit[commitHash] || {};
 	return Object.keys(locations).map(markerId => {
 		const marker = markers[markerId];
@@ -1084,6 +1131,7 @@ const mapStateToProps = ({
 	markerLocations,
 	onboarding
 }) => {
+	logger.trace('.mapStateToProps');
 	const stream = streams.byFile[context.currentFile] || {};
 	const markersForStreamAndCommit = getMarkersForStreamAndCommit(
 		markerLocations.byStream[stream.id],

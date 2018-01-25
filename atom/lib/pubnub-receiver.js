@@ -3,6 +3,9 @@ import _ from "underscore-plus";
 import { normalize } from "./actions/utils";
 import { resolveFromPubnub } from "./actions/pubnub-event";
 import { saveMarkerLocations } from "./actions/marker-location";
+import rootLogger from "./util/Logger";
+
+const logger = rootLogger.forClass("pubnub-receiver");
 
 export const createReceiver = store => new PubNubReceiver(store);
 
@@ -35,20 +38,20 @@ export default class PubNubReceiver {
 		this.pubnub.addListener({
 			message: event => {
 				const { requestId, ...objects } = event.message;
-				console.debug(`pubnub event - ${requestId}`, event.message);
+				logger.debug(`pubnub event - ${requestId}`, event.message);
 				Object.keys(objects).forEach(key => {
 					const handler = this.getMessageHandler(key);
 					if (handler) handler(objects[key]);
 				});
 			},
 			presence: event => {
-				// console.debug(event.action); // online status events
-				// console.debug(event.timestamp); // timestamp on the event is occurred
-				// console.debug(event.uuid); // uuid of the user
-				console.debug(`user ${event.uuid} ${event.action}. occupancy is ${event.occupancy}`); // uuid of the user
+				// logger.debug(event.action); // online status events
+				// logger.debug(event.timestamp); // timestamp on the event is occurred
+				// logger.debug(event.uuid); // uuid of the user
+				logger.debug(`user ${event.uuid} ${event.action}. occupancy is ${event.occupancy}`); // uuid of the user
 			},
 			status: status => {
-				console.debug("pubnub status", status);
+				logger.debug("pubnub status", status);
 			}
 		});
 	}
@@ -61,7 +64,7 @@ export default class PubNubReceiver {
 
 		const newChannels = _.difference(channels, this.subscribedChannels);
 		newChannels.forEach(channel => {
-			console.debug("subscribing to", channel);
+			logger.debug("subscribing to", channel);
 			this.pubnub.subscribe({
 				channels: [channel],
 				withPresence: !channel.includes("user")

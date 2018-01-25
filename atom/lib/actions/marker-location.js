@@ -10,6 +10,7 @@ rootLogger.setLevel("trace");
 const logger = rootLogger.forClass("actions/marker-location");
 
 export const saveMarkerLocations = attributes => (dispatch, getState, { db }) => {
+	logger.trace('.saveMarkerLocations');
 	const { streamId, teamId, commitHash, locations } = attributes;
 
 	if (!(streamId && teamId && commitHash)) return;
@@ -32,6 +33,7 @@ export const saveMarkerLocations = attributes => (dispatch, getState, { db }) =>
 };
 
 export const markerDirtied = ({ markerId, streamId }, location) => (dispatch, getState, { db }) => {
+	logger.trace('.markerDirtied');
 	const { context } = getState();
 
 	const primaryKey = Object.freeze({
@@ -62,6 +64,7 @@ export const commitNewMarkerLocations = (oldCommitHash, newCommitHash) => (
 	getState,
 	{ db, http }
 ) => {
+	logger.trace('.commitNewMarkerLocations');
 	const { context, session } = getState();
 	return db.transaction("rw", db.streams, db.markerLocations, () => {
 		db.streams.where({ repoId: context.currentRepoId }).each(async stream => {
@@ -87,6 +90,7 @@ export const commitNewMarkerLocations = (oldCommitHash, newCommitHash) => (
 };
 
 const calculateLocations = ({ teamId, streamId }) => async (dispatch, getState, { http }) => {
+	logger.trace('.calculateLocations');
 	const { context, repoAttributes, session } = getState();
 	const { markers, markerLocations } = await http.get(
 		`/markers?teamId=${teamId}&streamId=${streamId}&commitHash=${context.currentCommit}`,
@@ -116,11 +120,13 @@ const calculateLocations = ({ teamId, streamId }) => async (dispatch, getState, 
 };
 
 export const fetchMarkersAndLocations = ({ teamId, streamId }) => (dispatch, getState) => {
+	logger.trace('.fetchMarkersAndLocations');
 	const { context, session, repoAttributes } = getState();
 	return dispatch(calculateLocations({ teamId, streamId }));
 };
 
 export const refreshMarkersAndLocations = () => (dispatch, getState) => {
+	logger.trace('.refreshMarkersAndLocations');
 	const { context, streams } = getState();
 	return Promise.all(
 		Object.values(streams.byFile).map(stream => {
