@@ -1,7 +1,9 @@
+import { shell } from "electron";
 import { CompositeDisposable } from "atom";
 import React, { Component } from "react";
 import { connect } from "react-redux";
 import ContentEditable from "react-contenteditable";
+import { FormattedMessage } from "react-intl";
 import _ from "underscore-plus";
 import Post from "./Post";
 import UMIs from "./UMIs";
@@ -11,7 +13,8 @@ import AddCommentPopup from "./AddCommentPopup";
 import createClassString from "classnames";
 import DateSeparator from "./DateSeparator";
 var Blamer = require("../util/blamer");
-import * as actions from "../actions/stream";
+import * as streamActions from "../actions/stream";
+import { createPost, fetchPosts } from "../actions/post";
 import { toMapBy } from "../reducers/utils";
 
 export class SimpleStream extends Component {
@@ -28,7 +31,8 @@ export class SimpleStream extends Component {
 		this.state = {
 			stream: {},
 			threadId: null,
-			posts: []
+			posts: [],
+			fileForIntro: this.props.currentFile
 		};
 
 		this.savedComposeState = {};
@@ -56,20 +60,32 @@ export class SimpleStream extends Component {
 		);
 	}
 
-	installSelectionHandler() {
-		// if (this.selectionHandler) return;
-		let editor = atom.workspace.getActiveTextEditor();
-		this.selectionHandler = editor.onDidChangeSelectionRange(this.destroyCodeBlockMarker);
+	componentDidMount() {
+		this.props.recalculateUMI(); // set the UMI for the first time
+		// TODO: scroll to bottom
+
+		let inputDiv = document.querySelector('div[contenteditable="true"]');
+		if (!inputDiv) return;
+
+		// this listener pays attention to when the input field resizes,
+		// presumably because the user has typed more than one line of text
+		// in it, and calls a function to handle the new size
+		new ResizeObserver(this.handleResizeCompose).observe(this._compose);
+
+		// so that HTML doesn't get pasted into the input field. without this,
+		// HTML would be rendered as HTML when pasted
+		inputDiv.addEventListener("paste", function(e) {
+			e.preventDefault();
+			var text = e.clipboardData.getData("text/plain");
+			document.execCommand("insertHTML", false, text);
+		});
 	}
 
-	destroyCodeBlockMarker = () => {
-		if (this.codeBlockMarker) this.codeBlockMarker.destroy();
-		if (this.selectionHandler) this.selectionHandler.dispose();
-	};
-
 	componentWillReceiveProps(nextProps) {
-		if (!nextProps.id) this.props.fetchStream();
-		if (nextProps.id !== this.props.id) {
+		const switchingStreams = nextProps.id !== this.props.id;
+		if (nextProps.id && switchingStreams && nextProps.posts.length === 0)
+			this.props.fetchPosts({ streamId: nextProps.id, teamId: nextProps.teamId });
+		if (switchingStreams) {
 			this.saveComposeState(nextProps.id);
 			this.handleDismissThread();
 
@@ -98,6 +114,17 @@ export class SimpleStream extends Component {
 		}
 	}
 
+	installSelectionHandler() {
+		// if (this.selectionHandler) return;
+		let editor = atom.workspace.getActiveTextEditor();
+		this.selectionHandler = editor.onDidChangeSelectionRange(this.destroyCodeBlockMarker);
+	}
+
+	destroyCodeBlockMarker = () => {
+		if (this.codeBlockMarker) this.codeBlockMarker.destroy();
+		if (this.selectionHandler) this.selectionHandler.dispose();
+	};
+
 	installEditorHandlers() {
 		let editor = atom.workspace.getActiveTextEditor();
 		// console.log(editor);
@@ -113,28 +140,6 @@ export class SimpleStream extends Component {
 				editor.hasCodeStreamHandlers = true;
 			}
 		}
-	}
-
-	componentDidMount() {
-		this.props.fetchStream(); // Fetch any new stuff
-		this.props.recalculateUMI(); // set the UMI for the first time
-		// TODO: scroll to bottom
-
-		let inputDiv = document.querySelector('div[contenteditable="true"]');
-		if (!inputDiv) return;
-
-		// this listener pays attention to when the input field resizes,
-		// presumably because the user has typed more than one line of text
-		// in it, and calls a function to handle the new size
-		new ResizeObserver(this.handleResizeCompose).observe(this._compose);
-
-		// so that HTML doesn't get pasted into the input field. without this,
-		// HTML would be rendered as HTML when pasted
-		inputDiv.addEventListener("paste", function(e) {
-			e.preventDefault();
-			var text = e.clipboardData.getData("text/plain");
-			document.execCommand("insertHTML", false, text);
-		});
 	}
 
 	handleResizeCompose = () => {
@@ -200,6 +205,51 @@ export class SimpleStream extends Component {
 		if (!this.props.currentFile) return "";
 		return this.props.currentFile.replace(/.*\//g, "");
 	}
+
+	renderIntro = () => {
+		if (this.props.firstTimeInAtom && this.props.currentFile === this.state.fileForIntro) {
+			return [
+				<label>
+					<FormattedMessage id="stream.intro.welcome" defaultMessage="Welcome to CodeStream!" />
+				</label>,
+				<label>
+					<ul>
+						<li>
+							<FormattedMessage
+								id="stream.intro.eachFile"
+								defaultMessage="Every source file has its own conversation stream. Just pick a file, post a message, and any of your teammates can contribute to the conversation."
+							/>
+						</li>
+						<li>
+							<FormattedMessage
+								id="stream.intro.comment"
+								defaultMessage={
+									'Comment on a specific block of code by selecting it and then clicking the "+" button.'
+								}
+							/>
+						</li>
+						<li>
+							<FormattedMessage
+								id="stream.intro.share"
+								defaultMessage="Share your wisdom by clicking on any post in the stream and adding a reply."
+							/>
+						</li>
+					</ul>
+				</label>,
+				<label>
+					Learn more at{" "}
+					<a onClick={e => shell.openExternal("https://help.codestream.com")}>
+						help.codestream.com
+					</a>.
+				</label>
+			];
+		}
+		return (
+			<label>
+				This is the start of your discussion about <b>{this.fileAbbreviation()}</b>.
+			</label>
+		);
+	};
 
 	// we render both a main stream (postslist) plus also a postslist related
 	// to the currently selected thread (if it exists). the reason for this is
@@ -284,9 +334,7 @@ export class SimpleStream extends Component {
 					onClick={this.handleClickPost}
 				>
 					<div className="intro" ref={ref => (this._intro = ref)}>
-						<label>
-							This is the start of your discussion about <b>{fileAbbreviation}</b>.
-						</label>
+						{this.renderIntro()}
 					</div>
 					{posts.map(post => {
 						// this needs to be done by storing the return value of the render,
@@ -1026,7 +1074,16 @@ const getMarkersForStreamAndCommit = (locationsByCommit = {}, commitHash, marker
 	});
 };
 
-const mapStateToProps = ({ session, context, streams, users, posts, markers, markerLocations }) => {
+const mapStateToProps = ({
+	session,
+	context,
+	streams,
+	users,
+	posts,
+	markers,
+	markerLocations,
+	onboarding
+}) => {
 	const stream = streams.byFile[context.currentFile] || {};
 	const markersForStreamAndCommit = getMarkersForStreamAndCommit(
 		markerLocations.byStream[stream.id],
@@ -1054,6 +1111,8 @@ const mapStateToProps = ({ session, context, streams, users, posts, markers, mar
 
 	return {
 		id: stream.id,
+		teamId: stream.teamId,
+		firstTimeInAtom: onboarding.firstTimeInAtom,
 		currentFile: context.currentFile,
 		currentCommit: context.currentCommit,
 		markers: markersForStreamAndCommit,
@@ -1082,4 +1141,4 @@ const mapStateToProps = ({ session, context, streams, users, posts, markers, mar
 	};
 };
 
-export default connect(mapStateToProps, actions)(SimpleStream);
+export default connect(mapStateToProps, { ...streamActions, fetchPosts, createPost })(SimpleStream);

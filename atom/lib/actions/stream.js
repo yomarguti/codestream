@@ -1,28 +1,7 @@
 import _ from "underscore-plus";
 import { upsert } from "../local-cache";
 import { normalize } from "./utils";
-import {
-	savePendingPost,
-	resolvePendingPost,
-	rejectPendingPost,
-	savePostsForStream,
-	savePost,
-	savePosts
-} from "./post";
-import { saveMarkers } from "./marker";
-import { saveMarkerLocations } from "./marker-location";
 import { setUserPreference } from "./user";
-import { open as openRepo } from "../git/GitRepo";
-import MarkerLocationFinder from "../git/MarkerLocationFinder";
-import rootLogger from "../util/Logger";
-rootLogger.setLevel("trace");
-
-const logger = rootLogger.forClass("actions/stream");
-
-const tempId = (() => {
-	let count = 0;
-	return () => String(count++);
-})();
 
 export const saveStream = attributes => (dispatch, getState, { db }) => {
 	return upsert(db, "streams", attributes).then(stream => {
@@ -42,57 +21,16 @@ export const saveStreams = attributes => (dispatch, getState, { db }) => {
 	);
 };
 
-export const fetchStream = () => async (dispatch, getState, { http }) => {
-	const { session, context, streams, repoAttributes } = getState();
-	if (!streams.isFetching && context.currentFile !== "") {
-		dispatch({ type: "FETCH_STREAM" });
-		// create stream - right now the server doesn't complain if a stream already exists
-		const streamData = await http.post(
-			"/streams",
-			{
-				teamId: context.currentTeamId,
-				type: "file",
-				file: context.currentFile,
-				repoId: context.currentRepoId
-			},
+export const fetchStreams = () => async (dispatch, getState, { http }) => {
+	const { context, session } = getState();
+	return http
+		.get(
+			`/streams?teamId=${context.currentTeamId}&repoId=${context.currentRepoId}`,
 			session.accessToken
-		);
-		dispatch({ type: "RECEIVE_STREAM" });
-		const stream = normalize(streamData.stream);
-		const { posts } = await http.get(
-			`/posts?teamId=${context.currentTeamId}&streamId=${stream.id}`,
-			session.accessToken
-		);
-		const { markers, markerLocations } = await http.get(
-			`/markers?teamId=${context.currentTeamId}&streamId=${stream.id}&commitHash=${
-				context.currentCommit
-			}`,
-			session.accessToken
-		);
-		logger.debug("Found", markers.length, "markers");
-
-		const locations = markerLocations.locations || {};
-		const markerLocationFinder = new MarkerLocationFinder(
-			await openRepo(repoAttributes.workingDirectory),
-			session,
-			http,
-			context,
-			stream.id
-		);
-
-		const missingMarkers = markers.filter(marker => !locations[marker._id]);
-		if (missingMarkers.length) {
-			logger.debug("Recalculating locations for", missingMarkers.length, "missing markers");
-			const calculatedLocations = markerLocationFinder.findLocations(missingMarkers);
-			Object.assign(locations, calculatedLocations);
-		}
-
-		await dispatch(saveStream(stream));
-		await dispatch(saveMarkers(normalize(markers)));
-
-		await dispatch(saveMarkerLocations(normalize(markerLocations)));
-		dispatch(savePostsForStream(stream.id, normalize(posts)));
-	}
+		)
+		.then(({ streams }) => {
+			return dispatch(saveStreams(normalize(streams)));
+		});
 };
 
 export const markStreamRead = streamId => async (dispatch, getState, { http }) => {
@@ -203,41 +141,4 @@ export const recalculateUMI = force => async (dispatch, getState, { http }) => {
 		type: "SET_UMI",
 		payload: nextState
 	});
-};
-
-export const createPost = (streamId, parentPostId, text, codeBlocks) => async (
-	dispatch,
-	getState,
-	{ http }
-) => {
-	const { session, context } = getState();
-	const pendingId = tempId();
-
-	let post = {
-		id: pendingId,
-		teamId: context.currentTeamId,
-		timestamp: new Date().getTime(),
-		creatorId: session.userId,
-		parentPostId: parentPostId,
-		codeBlocks: codeBlocks,
-		commitHashWhenPosted: context.currentCommit,
-		streamId,
-		text
-	};
-
-	dispatch(savePendingPost(post));
-
-	try {
-		const data = await http.post("/posts", post, session.accessToken);
-		dispatch(
-			resolvePendingPost(pendingId, {
-				post: normalize(data.post),
-				markers: normalize(data.markers),
-				markerLocations: data.markerLocations
-			})
-		);
-	} catch (error) {
-		// TODO: different types of errors?
-		dispatch(rejectPendingPost(streamId, pendingId, { ...post, error: true }));
-	}
 };

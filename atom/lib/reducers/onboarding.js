@@ -1,6 +1,7 @@
 const initialState = {
 	complete: false,
 	requestInProcess: false,
+	firstTimeInAtom: false,
 	step: "signUp",
 	props: {},
 	errors: {}
@@ -22,18 +23,21 @@ export default (state = initialState, { type, payload }) => {
 		case "GO_TO_SIGNUP":
 			return { ...initialState, step: "signUp" };
 		case "NEW_USER_LOGGED_INTO_NEW_REPO":
-		case "NEW_USER_CONFIRMED_IN_NEW_REPO":
 			return { ...initialState, step: "createTeam" };
+		case "NEW_USER_CONFIRMED_IN_NEW_REPO":
+			return { ...initialState, step: "createTeam", firstTimeInAtom: true };
 		case "EXISTING_USER_LOGGED_INTO_NEW_REPO":
-		case "EXISTING_USER_CONFIRMED_IN_NEW_REPO":
 			return { ...initialState, step: "selectTeam" };
+		case "EXISTING_USER_CONFIRMED_IN_NEW_REPO":
+			return { ...initialState, step: "selectTeam", firstTimeInAtom: true };
 		case "LOGGED_INTO_FOREIGN_REPO":
-		case "EXISTING_USER_CONFIRMED_IN_FOREIGN_REPO":
 			return { ...initialState, step: "noAccess" };
+		case "EXISTING_USER_CONFIRMED_IN_FOREIGN_REPO":
+			return { ...initialState, step: "noAccess", firstTimeInAtom: true };
 		case "USER_ALREADY_CONFIRMED":
 			return { ...initialState, step: "login", props: payload };
 		case "EXISTING_USER_CONFIRMED":
-			return { ...initialState, complete: true };
+			return { ...initialState, complete: true, firstTimeInAtom: true };
 		case "INVALID_CONFIRMATION_CODE":
 			return { ...state, errors: { invalidCode: true } };
 		case "EXPIRED_CONFIRMATION_CODE":
