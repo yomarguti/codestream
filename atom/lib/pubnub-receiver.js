@@ -2,12 +2,6 @@ import PubNub from "pubnub";
 import _ from "underscore-plus";
 import { normalize } from "./actions/utils";
 import { resolveFromPubnub } from "./actions/pubnub-event";
-import { saveStream, saveStreams } from "./actions/stream";
-import { savePost, savePosts } from "./actions/post";
-import { saveUser, saveUsers } from "./actions/user";
-import { saveTeam, saveTeams } from "./actions/team";
-import { saveRepo, saveRepos } from "./actions/repo";
-import { saveMarker, saveMarkers } from "./actions/marker";
 import { saveMarkerLocations } from "./actions/marker-location";
 
 export const createReceiver = store => new PubNubReceiver(store);
@@ -104,8 +98,7 @@ export default class PubNubReceiver {
 				tableName = "markers";
 				break;
 			case "markerLocations":
-				tableName = "markerLocations";
-				break;
+				return data => this.store.dispatch(saveMarkerLocations(normalize(data)));
 		}
 		if (tableName)
 			return data => this.store.dispatch(resolveFromPubnub(tableName, normalize(data)));
