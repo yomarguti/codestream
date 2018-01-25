@@ -20,10 +20,9 @@ const userAlreadySignedUp = email => ({
 	payload: { email, alreadySignedUp: true }
 });
 
-const initializeSession = ({ user, accessToken }) => ({
+const initializeSession = payload => ({
 	type: "INIT_SESSION",
-	payload: { accessToken, userId: user.id },
-	meta: { user }
+	payload
 });
 
 export const completeOnboarding = () => ({ type: "ONBOARDING_COMPLETE" });
@@ -78,7 +77,7 @@ export const confirmEmail = attributes => (dispatch, getState, { http }) => {
 			await saveUser(user);
 			await dispatch(saveTeams(userTeams));
 			await dispatch(saveRepos(userRepos));
-			await dispatch(initializeSession({ user, accessToken }));
+			await dispatch(initializeSession({ userId: user.id, accessToken }));
 
 			if (!teamIdForRepo && userTeams.length === 0)
 				dispatch({ type: "NEW_USER_CONFIRMED_IN_NEW_REPO" });
@@ -229,7 +228,7 @@ export const authenticate = params => (dispatch, getState, { http }) => {
 
 			const teamIdsForUser = user.teamIds || userTeams.map(team => team.id);
 
-			dispatch(initializeSession({ accessToken, user }));
+			dispatch(initializeSession({ accessToken, userId: user.id }));
 
 			let teamIdForRepo = context.currentTeamId;
 			if (!teamIdForRepo) {
@@ -247,9 +246,7 @@ export const authenticate = params => (dispatch, getState, { http }) => {
 				await dispatch(fetchTeamMembers(teamIdsForUser));
 				dispatch(fetchStreams());
 				dispatch(loggedIn());
-			} else {
-				await dispatch(joinTeam());
-			}
+			} else await dispatch(joinTeam());
 		})
 		.catch(error => {
 			dispatch(requestFinished());

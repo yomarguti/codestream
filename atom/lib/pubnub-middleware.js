@@ -27,26 +27,25 @@ export default store => {
 			}
 		}
 		// When starting a new session, subscribe to channels
-		if (action.type === "INIT_SESSION") {
-			const { user } = action.meta;
+		if (action.type === "LOGGED_IN" || action.type === "ONBOARDING_COMPLETE") {
+			const { context, users, session } = store.getState();
+			const user = users[session.userId];
 			const teamChannels = (user.teamIds || []).map(id => `team-${id}`);
 
-			const channels = [`user-${user.id}`, ...teamChannels];
+			const channels = [...teamChannels, `user-${user.id}`, `repo-${context.currentRepoId}`];
 
-			const repoId = store.getState().context.currentRepoId;
-			if (repoId) channels.push(`repo-${repoId}`);
-
-			receiver.initialize(action.payload.accessToken, user.id);
+			receiver.initialize(session.accessToken, user.id);
 			receiver.subscribe(channels);
 		}
-		// As context changes, subscribe
-		if (action.type === "SET_CONTEXT" && action.payload.currentRepoId) {
-			if (receiver.isInitialized()) receiver.subscribe([`repo-${action.payload.currentRepoId}`]);
-		}
 
-		if (action.type === "TEAM_CREATED") receiver.subscribe([`team-${action.payload.teamId}`]);
-		if (action.type === "SET_CURRENT_TEAM") receiver.subscribe([`team-${action.payload}`]);
-		if (action.type === "SET_CURRENT_REPO") receiver.subscribe([`repo-${action.payload}`]);
+		// As context changes, subscribe
+		if (receiver.isInitialized()) {
+			if (action.type === "SET_CONTEXT" && action.payload.currentRepoId)
+				receiver.subscribe([`repo-${action.payload.currentRepoId}`]);
+			if (action.type === "TEAM_CREATED") receiver.subscribe([`team-${action.payload.teamId}`]);
+			if (action.type === "SET_CURRENT_TEAM") receiver.subscribe([`team-${action.payload}`]);
+			if (action.type === "SET_CURRENT_REPO") receiver.subscribe([`repo-${action.payload}`]);
+		}
 
 		return result;
 	};
