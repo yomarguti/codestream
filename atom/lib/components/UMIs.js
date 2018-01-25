@@ -3,6 +3,9 @@ import { connect } from "react-redux";
 import createClassString from "classnames";
 import { getUserPreference } from "../actions/user";
 import { CompositeDisposable } from "atom";
+import rootLogger from "../util/Logger";
+
+const logger = rootLogger.forClass("components/UMIs");
 
 const remote = require("electron").remote;
 var app = remote.app;
@@ -83,11 +86,11 @@ export class SimpleUMIs extends Component {
 		const umis = this.props.umis;
 
 		this.addUnreadsIndicatorDivs();
-		// console.log("TREE TRACKER IS: ", this.treeView);
-		// console.log("THE STREAMS ARE: ", this.props.streams);
-		// console.log("RENDERING UMIS", umis);
-		// console.log(this.cwd + "/marker_pseudo_code.js");
-		// console.log(this.treeView.entryForPath(this.cwd + "/marker_pseudo_code.js"));
+		// logger.debug("TREE TRACKER IS: ", this.treeView);
+		// logger.debug("THE STREAMS ARE: ", this.props.streams);
+		// logger.debug("RENDERING UMIS", umis);
+		// logger.debug(this.cwd + "/marker_pseudo_code.js");
+		// logger.debug(this.treeView.entryForPath(this.cwd + "/marker_pseudo_code.js"));
 
 		function swapHash(json) {
 			var ret = {};
@@ -110,7 +113,7 @@ export class SimpleUMIs extends Component {
 			if (!path) return;
 			let count = umis.unread[key] || 0;
 			let mentions = umis.mentions[key] || 0;
-			// console.log("CALC: " + count + " FOR " + path + " w/key: " + key + " ment? " + mentions);
+			// logger.debug("CALC: " + count + " FOR " + path + " w/key: " + key + " ment? " + mentions);
 			totalUMICount += this.calculateTreatment(path, count, mentions);
 		});
 		app.setBadgeCount(Math.floor(totalUMICount));
@@ -122,7 +125,7 @@ export class SimpleUMIs extends Component {
 		let prefPath = ["streamTreatments", this.repoOrigin];
 		let treatments = getUserPreference(this.props.currentUser, prefPath) || {};
 		Object.keys(treatments).map(path => {
-			// console.log("Treating ", path, " with ", treatments[path]);
+			// logger.debug("Treating ", path, " with ", treatments[path]);
 			let isMute = treatments[path] === "mute" ? 1 : 0;
 			this.treatMute(path, isMute);
 		});
@@ -150,7 +153,7 @@ export class SimpleUMIs extends Component {
 
 	calculateTreatment(path, count, mentions) {
 		let treatment = this.getTreatment(path);
-		// console.log("FOR: ", count, " treat ", treatment, " in ", path, " with mentions ", mentions);
+		// logger.debug("FOR: ", count, " treat ", treatment, " in ", path, " with mentions ", mentions);
 
 		let parts = path.split("/");
 		while (parts.length) {
@@ -176,14 +179,14 @@ export class SimpleUMIs extends Component {
 			// this is bold; don't add to the app badge count
 			totalUMICount += 0.000001;
 		}
-		// console.log("Returning: ", totalUMICount, " for ", path);
+		// logger.debug("Returning: ", totalUMICount, " for ", path);
 		return totalUMICount;
 	}
 
 	treatMute(path, isMute) {
 		path = path.replace(/\*/g, ".");
 		let element = this.treeView.entryForPath(this.cwd + "/" + path);
-		// console.log("Treating element ", element, " with ", isMute);
+		// logger.debug("Treating element ", element, " with ", isMute);
 		if (!element) return;
 		// don't treat directories that are expanded
 		if (element.classList.contains("directory")) {
@@ -240,7 +243,7 @@ export class SimpleUMIs extends Component {
 			let path = parts.join("/");
 			let prefPath = ["streamTreatments", this.repoOrigin, path];
 			let treatment = getUserPreference(this.props.currentUser, prefPath);
-			// console.log("GOT: ", treatment, " FOR ", ["streamTreatments", this.repoOrigin, path]);
+			// logger.debug("GOT: ", treatment, " FOR ", ["streamTreatments", this.repoOrigin, path]);
 			// atom.config.get("CodeStream.showUnread-" + path);
 			if (treatment) return treatment;
 			parts.pop();
@@ -304,7 +307,7 @@ export class SimpleUMIs extends Component {
 		let childNode = scrollDiv.childNodes[0];
 		let right = childNode.offsetWidth - scrollDiv.offsetWidth - scrollDiv.scrollLeft;
 		let newStyle = ".tree-view li[cs-umi-badge='1']::after { right: " + right + "px; }";
-		console.log("Adding style string; " + newStyle);
+		logger.debug("Adding style string; " + newStyle);
 		this.addStyleString(newStyle, "umi");
 	}
 
