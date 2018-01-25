@@ -2,7 +2,7 @@
 	"and": "and",
 	"signUp.username.length": "Up to 21 characters",
 	"signUp.username.validCharacters": "Valid special characters are (.-_)",
-	"signUp.username.alreadyTaken": "Sorry, someone already grabbed that username.",
+	"signUp.username.alreadyTaken": "Sorry, someone on the team already grabbed that username.",
 	"signUp.password.tooShort":
 		"{countNeeded, number} more {countNeeded, plural, one {character} other {characters}} please",
 	"signUp.password.help": "6+ characters",

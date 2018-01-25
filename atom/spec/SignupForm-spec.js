@@ -46,16 +46,16 @@ describe("SignupForm view", () => {
 
 		describe("when a username is already in use on a team", () => {
 			it("shows errors on blur", () => {
-				store.dispatch(
-					setContext({
-						usernamesInTeam: ["foobar"]
-					})
+				const view = mountWithIntl(
+					<RepositoryProvider repositories={repositories}>
+						<SimpleSignupForm errors={{ usernameInUse: true }} configs={{}} />
+					</RepositoryProvider>
 				);
 				const event = { target: { value: "foobar" } };
 				view.find('input[name="username"]').simulate("change", event);
 				view.find('input[name="username"]').simulate("blur");
 				expect(view.find("#username-controls .error-message").text()).toBe(
-					"Sorry, someone already grabbed that username."
+					"Sorry, someone on the team already grabbed that username."
 				);
 			});
 		});

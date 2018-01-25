@@ -26,7 +26,14 @@ export const goToSignup = () => ({ type: "GO_TO_SIGNUP" });
 export const goToLogin = () => ({ type: "GO_TO_LOGIN" });
 export const goToConfirmation = attributes => ({ type: "GO_TO_CONFIRMATION", payload: attributes });
 
-export const register = attributes => (dispatch, getState, { http }) => {
+export const register = attributes => async (dispatch, getState, { http }) => {
+	const { repoAttributes } = getState();
+
+	const { payload } = await dispatch(fetchRepoInfo(repoAttributes));
+
+	if (payload.usernamesInTeam.includes(attributes.username))
+		return dispatch({ type: "SIGNUP-USERNAME_COLLISION" });
+
 	return http
 		.post("/no-auth/register", attributes)
 		.then(async ({ user }) => {

@@ -39,8 +39,7 @@ export class SimpleSignupForm extends Component {
 			email: "",
 			usernameTouched: false,
 			passwordTouched: false,
-			emailTouched: false,
-			usernameInUse: false
+			emailTouched: false
 		};
 	}
 
@@ -55,9 +54,8 @@ export class SimpleSignupForm extends Component {
 	}
 
 	onBlurUsername = () => {
-		const { usernamesInTeam } = this.props;
 		const { username } = this.state;
-		this.setState({ usernameTouched: true, usernameInUse: usernamesInTeam.includes(username) });
+		this.setState({ usernameTouched: true });
 	};
 
 	onBlurPassword = () => {
@@ -84,7 +82,7 @@ export class SimpleSignupForm extends Component {
 					<FormattedMessage id="signUp.username.validCharacters" />
 				</small>
 			);
-		else if (usernameInUse)
+		else if (this.props.errors.usernameInUse)
 			return (
 				<small className="error-message">
 					<FormattedMessage id="signUp.username.alreadyTaken" />
@@ -162,7 +160,7 @@ export class SimpleSignupForm extends Component {
 
 	render() {
 		return (
-			<form id="signup-form" onBlur={this.onBlurUsername} onSubmit={this.submitCredentials}>
+			<form id="signup-form" onSubmit={this.submitCredentials}>
 				{this.renderDebugInfo()}
 				{this.renderPageErrors()}
 				<div id="controls">
@@ -251,8 +249,7 @@ export class SimpleSignupForm extends Component {
 	}
 }
 
-const mapStateToProps = ({ context, onboarding }) => ({
-	usernamesInTeam: context.usernamesInTeam,
+const mapStateToProps = ({ onboarding }) => ({
 	errors: onboarding.errors
 });
 export default connect(mapStateToProps, actions)(withConfigs(SimpleSignupForm));

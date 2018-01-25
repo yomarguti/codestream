@@ -56,65 +56,16 @@ module.exports = {
 		store = createStore(state);
 		bootstrapStore(store);
 
-		this.subscriptions.add(
-			atom.packages.onDidActivateInitialPackages(async () => {
-				const directories = atom.project.getDirectories();
-				const repoPromises = directories.map(repo => atom.project.repositoryForDirectory(repo));
-				const allRepos = await Promise.all(repoPromises);
-				const repos = allRepos.filter(Boolean);
-
-				if (repos.length > 0) {
-					const repo = repos[0];
-					getCurrentCommit(repo).then(commitHash => store.dispatch(setCurrentCommit(commitHash)));
-
-					this.subscriptions.add(
-						atom.workspace.observeActiveTextEditor(editor => {
-							// Only dispatch the action if there is a current file that belongs to the git repo
-							// that way if a user looks at settings or a non-repo file,
-							// the stream for the last active repo file is still visible
-							if (editor) {
-								const directoryForFile = directories.find(directory =>
-									directory.contains(editor.getPath())
-								);
-								if (directoryForFile) {
-									atom.project.repositoryForDirectory(directoryForFile).then(repo => {
-										store.dispatch(setCurrentFile(repo.relativize(editor.getPath())));
-									});
-								}
-							}
-						}),
-
-						// Subscribe to git status changes in order to be aware of current commit hash.
-						// This is a naive implementation.
-						repo.onDidChangeStatuses(async event => {
-							const currentCommitHash = store.getState().context.currentCommit;
-							const commitHash = await getCurrentCommit(repo);
-							if (currentCommitHash !== commitHash) {
-								store.dispatch(commitHashChanged(commitHash));
-								git(["status"], { cwd: repo.getWorkingDirectory() }).then(status => {
-									if (!status.startsWith("HEAD detached"))
-										store.dispatch(commitNewMarkerLocations(currentCommitHash, commitHash));
-								});
-								store.dispatch(refreshMarkersAndLocations());
-							}
-						})
-					);
-
-					const workDir = repo.repo.workingDirectory;
-					const repoUrl = repo.getOriginURL();
-					let firstCommitHash = await git(["rev-list", "--max-parents=0", "HEAD"], {
-						cwd: repo.getWorkingDirectory()
-					});
-					const repoAttributes = {
-						workingDirectory: workDir,
-						url: repoUrl,
-						firstCommitHash: firstCommitHash.trim()
-					};
-					store.dispatch(setRepoAttributes(repoAttributes));
-					store.dispatch(fetchRepoInfo(repoAttributes));
-				}
-			})
-		);
+		if (atom.project.getDirectories().length === 0) {
+			this.subscriptions.add(
+				atom.project.onDidChangePaths(paths => {
+					if (paths.length === 1) this.setup();
+					else {
+						/* TODO */
+					}
+				})
+			);
+		} else this.subscriptions.add(atom.packages.onDidActivateInitialPackages(this.setup));
 	},
 
 	activate(state) {
@@ -165,6 +116,78 @@ module.exports = {
 		}
 	},
 
+	deactivate() {
+		this.subscriptions.dispose();
+		if (this.statusBarTile) this.statusBarTile.destroy();
+	},
+
+	serialize() {
+		const { session, onboarding, context } = store.getState();
+		return { onboarding: { ...onboarding, errors: {} }, context, session };
+	},
+
+	deserializeCodestreamView(data) {
+		return new CodestreamView(store);
+	},
+
+	async setup() {
+		const directories = atom.project.getDirectories();
+		const repoPromises = directories.map(repo => atom.project.repositoryForDirectory(repo));
+		const allRepos = await Promise.all(repoPromises);
+		const repos = allRepos.filter(Boolean);
+
+		if (repos.length > 0) {
+			const repo = repos[0];
+			getCurrentCommit(repo).then(commitHash => store.dispatch(setCurrentCommit(commitHash)));
+
+			this.subscriptions.add(
+				atom.workspace.observeActiveTextEditor(editor => {
+					// Only dispatch the action if there is a current file that belongs to the git repo
+					// that way if a user looks at settings or a non-repo file,
+					// the stream for the last active repo file is still visible
+					if (editor) {
+						const directoryForFile = directories.find(directory =>
+							directory.contains(editor.getPath())
+						);
+						if (directoryForFile) {
+							atom.project.repositoryForDirectory(directoryForFile).then(repo => {
+								store.dispatch(setCurrentFile(repo.relativize(editor.getPath())));
+							});
+						}
+					}
+				}),
+
+				// Subscribe to git status changes in order to be aware of current commit hash.
+				// This is a naive implementation.
+				repo.onDidChangeStatuses(async event => {
+					const currentCommitHash = store.getState().context.currentCommit;
+					const commitHash = await getCurrentCommit(repo);
+					if (currentCommitHash !== commitHash) {
+						store.dispatch(commitHashChanged(commitHash));
+						git(["status"], { cwd: repo.getWorkingDirectory() }).then(status => {
+							if (!status.startsWith("HEAD detached"))
+								store.dispatch(commitNewMarkerLocations(currentCommitHash, commitHash));
+						});
+						store.dispatch(refreshMarkersAndLocations());
+					}
+				})
+			);
+
+			const workDir = repo.repo.workingDirectory;
+			const repoUrl = repo.getOriginURL();
+			let firstCommitHash = await git(["rev-list", "--max-parents=0", "HEAD"], {
+				cwd: repo.getWorkingDirectory()
+			});
+			const repoAttributes = {
+				workingDirectory: workDir,
+				url: repoUrl,
+				firstCommitHash: firstCommitHash.trim()
+			};
+			store.dispatch(setRepoAttributes(repoAttributes));
+			store.dispatch(fetchRepoInfo(repoAttributes));
+		}
+	},
+
 	markStreamMute(event) {
 		this.markStreamTreatment(event, "mute");
 	},
@@ -186,20 +209,6 @@ module.exports = {
 		let path = li.getElementsByTagName("span")[0].getAttribute("data-path");
 		// setStreamUMITreatment(path, setting);
 		store.dispatch(setStreamUMITreatment(path, setting));
-	},
-
-	deactivate() {
-		this.subscriptions.dispose();
-		if (this.statusBarTile) this.statusBarTile.destroy();
-	},
-
-	serialize() {
-		const { session, onboarding, context } = store.getState();
-		return { onboarding: { ...onboarding, errors: {} }, context, session };
-	},
-
-	deserializeCodestreamView(data) {
-		return new CodestreamView(store);
 	},
 
 	consumeStatusBar(statusBar) {
