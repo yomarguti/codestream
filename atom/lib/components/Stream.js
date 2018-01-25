@@ -43,7 +43,7 @@ export class SimpleStream extends Component {
 			})
 		);
 		this.subscriptions.add(
-			atom.commands.add(".codestream", {
+			atom.commands.add("atom-workspace", {
 				"codestream:escape": event => this.handleEscape(event)
 			})
 		);
