@@ -1,3 +1,4 @@
+export const resetContext = data => ({ type: "RESET_CONTEXT" });
 export const setContext = data => ({
 	type: "SET_CONTEXT",
 	payload: data

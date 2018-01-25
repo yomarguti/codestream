@@ -10,6 +10,7 @@ import {
 	logout,
 	noAccess,
 	setRepoAttributes,
+	resetContext,
 	setContext,
 	setCurrentFile,
 	setCurrentCommit
@@ -100,6 +101,7 @@ module.exports = {
 							"codestream:wipe-cache"
 						);
 						atom.commands.dispatch(document.querySelector("atom-workspace"), "codestream:logout");
+						store.dispatch(resetContext());
 						atom.reload();
 					},
 					"codestream:wipe-cache": () => indexedDB.deleteDatabase("CodeStream"),
