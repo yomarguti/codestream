@@ -1106,7 +1106,7 @@ const mapStateToProps = ({
 
 	const teamMembers = _.filter(
 		users,
-		user => user.teamIds.includes(context.currentTeamId) && user.id !== session.userId
+		user => (user.teamIds || []).includes(context.currentTeamId) && user.id !== session.userId
 	);
 
 	return {
