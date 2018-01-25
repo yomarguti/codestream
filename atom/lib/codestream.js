@@ -65,7 +65,7 @@ module.exports = {
 					}
 				})
 			);
-		} else this.subscriptions.add(atom.packages.onDidActivateInitialPackages(this.setup));
+		} else this.subscriptions.add(atom.packages.onDidActivateInitialPackages(() => this.setup()));
 	},
 
 	activate(state) {
