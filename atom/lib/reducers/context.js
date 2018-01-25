@@ -8,7 +8,6 @@ const initialState = {
 };
 
 export default (state = initialState, { type, payload }) => {
-	if (type === "RESET_CONTEXT") return initialState;
 	if (type === "SET_CONTEXT") return { ...state, ...payload };
 	if (type === "SET_CURRENT_FILE") return { ...state, currentFile: payload };
 	if (type === "SET_CURRENT_TEAM") return { ...state, currentTeamId: payload };
