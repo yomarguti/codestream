@@ -301,9 +301,10 @@ export class SimpleUMIs extends Component {
 			mentionsBelow
 		);
 
-		let width = scrollDiv.offsetWidth + scrollDiv.scrollLeft - 65;
-		let newStyle = ".tree-view li[cs-umi-badge='1']::after { left: " + width + "px; }";
-		// console.log("Adding style string; " + newStyle);
+		let childNode = scrollDiv.childNodes[0];
+		let right = childNode.offsetWidth - scrollDiv.offsetWidth - scrollDiv.scrollLeft;
+		let newStyle = ".tree-view li[cs-umi-badge='1']::after { right: " + right + "px; }";
+		console.log("Adding style string; " + newStyle);
 		this.addStyleString(newStyle, "umi");
 	}
 
