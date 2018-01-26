@@ -77,7 +77,6 @@ export const fetchPosts = ({ streamId, teamId }) => async (dispatch, getState, {
 		`/posts?teamId=${teamId}&streamId=${streamId}`,
 		session.accessToken
 	);
-<<<<<<< HEAD
 	dispatch(savePostsForStream(streamId, normalize(posts)));
 	return dispatch(fetchMarkersAndLocations({ streamId, teamId }));
 };
@@ -125,7 +124,4 @@ export const createPost = (streamId, parentPostId, text, codeBlocks) => async (
 		// TODO: different types of errors?
 		dispatch(rejectPendingPost(streamId, pendingId, { ...post, error: true }));
 	}
-=======
-	return dispatch(savePostsForStream(streamId, normalize(posts)));
->>>>>>> fetch streams upon login and fetch posts when displaying a stream and there are no posts locally
 };
