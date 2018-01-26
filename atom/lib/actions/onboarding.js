@@ -10,9 +10,9 @@ const requestFinished = () => ({ type: "REQUEST_FINISHED" });
 const serverUnreachable = () => ({ type: "ONBOARDING-SERVER_UNREACHABLE" });
 const invalidCredentials = () => ({ type: "INVALID_CREDENTIALS" });
 const loggedIn = () => ({ type: "LOGGED_IN" });
-const usernameCollisionAtLogin = takenUsername => ({
-	type: "USERNAME_COLLISION_AT_LOGIN",
-	payload: { takenUsername }
+const usernameCollision = (takenUsername, nextAction) => ({
+	type: "USERNAME_COLLISION_ON_TEAM",
+	payload: { takenUsername, nextAction }
 });
 
 const userAlreadySignedUp = email => ({
@@ -88,11 +88,7 @@ export const confirmEmail = attributes => (dispatch, getState, { http }) => {
 				await dispatch(fetchTeamMembers(teamIdsForUser));
 				dispatch(fetchStreams());
 				dispatch({ type: "EXISTING_USER_CONFIRMED" });
-			} else {
-				await dispatch(joinTeam());
-				dispatch(fetchStreams());
-				dispatch({ type: "EXISTING_USER_CONFIRMED" });
-			}
+			} else await dispatch(joinTeam("EXISTING_USER_CONFIRMED"));
 		})
 		.catch(error => {
 			dispatch(requestFinished());
@@ -246,7 +242,7 @@ export const authenticate = params => (dispatch, getState, { http }) => {
 				await dispatch(fetchTeamMembers(teamIdsForUser));
 				dispatch(fetchStreams());
 				dispatch(loggedIn());
-			} else await dispatch(joinTeam());
+			} else await dispatch(joinTeam(loggedIn().type));
 		})
 		.catch(error => {
 			dispatch(requestFinished());
@@ -260,12 +256,16 @@ export const authenticate = params => (dispatch, getState, { http }) => {
 		});
 };
 
-export const joinTeam = () => (dispatch, getState, { http }) => {
+export const joinTeam = nextAction => (dispatch, getState, { http }) => {
 	return dispatch(_joinTeam())
-		.then(() => dispatch(loggedIn()))
+		.then(() => {
+			dispatch({ type: nextAction });
+			dispatch(fetchStreams());
+		})
 		.catch(error => {
 			if (http.isApiRequestError(error)) {
-				if (error.data.code === "TEAM-1000") dispatch(usernameCollisionAtLogin(error.data.info));
+				if (error.data.code === "TEAM-1000")
+					dispatch(usernameCollision(error.data.info, nextAction));
 			}
 		});
 };

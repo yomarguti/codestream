@@ -27,7 +27,8 @@ export class ChangeUsernameForm extends Component {
 		event.preventDefault();
 		if (this.state.username === "") return;
 		await this.props.changeUsername(this.state.username);
-		await this.props.joinTeam();
+		await this.props.joinTeam(this.props.nextAction);
+		this.setState({ loading: false });
 	};
 
 	render() {
