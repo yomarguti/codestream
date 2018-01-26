@@ -279,12 +279,14 @@ export class SimpleStream extends Component {
 
 		let newPostText = this.state.newPostText || "";
 
-		let usernames = Object.keys(this.props.users)
-			.map(key => {
-				return this.props.users[key].username;
-			})
-			.join("|")
-			.replace(/\|\|+/g, "|");
+		if (!this.usernamesRegexp) {
+			this.usernamesRegexp = Object.keys(this.props.users)
+				.map(key => {
+					return this.props.users[key].username;
+				})
+				.join("|")
+				.replace(/\|\|+/g, "|");
+		}
 		// strip out the at-mention markup, and add it back.
 		// newPostText = newPostText.replace(/(@\w+)/g, '<span class="at-mention">$1</span> ');
 
@@ -346,7 +348,7 @@ export class SimpleStream extends Component {
 								<DateSeparator timestamp1={lastTimestamp} timestamp2={post.createdAt} />
 								<Post
 									post={post}
-									usernames={usernames}
+									usernames={this.usernamesRegexp}
 									currentUsername={this.props.currentUser.username}
 									replyingTo={parentPost}
 									newMessageIndicator={post.id === this.postWithNewMessageIndicator}
@@ -369,7 +371,7 @@ export class SimpleStream extends Component {
 					{threadPost && (
 						<Post
 							post={threadPost}
-							usernames={usernames}
+							usernames={this.usernamesRegexp}
 							currentUsername={this.props.currentUser.username}
 							key={threadPost.id}
 							showDetails="1"
@@ -391,7 +393,7 @@ export class SimpleStream extends Component {
 										<DateSeparator timestamp1={lastTimestamp} timestamp2={post.createdAt} />
 										<Post
 											post={post}
-											usernames={usernames}
+											usernames={this.usernamesRegexp}
 											currentUsername={this.props.currentUser.username}
 											showDetails="1"
 											currentCommit={this.props.currentCommit}
@@ -407,6 +409,7 @@ export class SimpleStream extends Component {
 				<AtMentionsPopup
 					on={this.state.atMentionsOn}
 					people={this.state.atMentionsPeople}
+					usernames={this.usernameRegExp}
 					prefix={this.state.atMentionsPrefix}
 					selected={this.state.selectedAtMention}
 					handleHoverAtMention={this.handleHoverAtMention}
@@ -807,7 +810,7 @@ export class SimpleStream extends Component {
 		let range = selection.getRangeAt(0);
 		let upToCursor = newPostText.substring(0, range.startOffset);
 		// console.log("UTC: >" + upToCursor + "<");
-		var match = upToCursor.match(/@([a-zA-Z]*)$/);
+		var match = upToCursor.match(/@([a-zA-Z_.+]*)$/);
 		if (this.state.atMentionsOn) {
 			if (match) {
 				var text = match[0].replace(/@/, "");
@@ -954,6 +957,7 @@ export class SimpleStream extends Component {
 		// otherwise explicitly use the one passed in
 		// FIXME -- this should anchor at the carat, not end-of-line
 		var re = new RegExp("@" + this.state.atMentionsPrefix + "$");
+		// var re = new RegExp("@" + this.state.atMentionsPrefix);
 		let text = this.state.newPostText.replace(re, "@" + username);
 		this.setState({
 			atMentionsOn: false
@@ -1023,7 +1027,17 @@ export class SimpleStream extends Component {
 			];
 		}
 
-		this.props.createPost(this.props.id, this.state.threadId, newText, codeBlocks);
+		let mentionUserIds = [];
+		Object.keys(this.props.users).forEach(personId => {
+			let person = this.props.users[personId];
+			if (!person) return;
+			let matcher = person.username || person.email.replace(/@.*/, "");
+			if (newText.match("@" + matcher + "\\b")) {
+				mentionUserIds.push(personId);
+			}
+		});
+
+		this.props.createPost(this.props.id, this.state.threadId, newText, codeBlocks, mentionUserIds);
 
 		// reset the input field to blank
 		this.resetCompose();
