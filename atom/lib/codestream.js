@@ -32,8 +32,21 @@ const getCurrentCommit = async repo => {
 	return data.trim();
 };
 
+const reloadPlugin = codestream => {
+	store = createStore({});
+	bootstrapStore(store);
+	codestream.view && codestream.view.update(store);
+
+	codestream.deactivate();
+	codestream.activate();
+	codestream.consumeStatusBar(codestream.statusBar);
+	codestream.setup();
+};
+
 module.exports = {
-	subscriptions: new CompositeDisposable(),
+	subscriptions: null,
+	view: null,
+	statusBar: null,
 	config: {
 		showHeadshots: {
 			description: "Display headshots in the stream",
@@ -54,26 +67,24 @@ module.exports = {
 	},
 
 	initialize(state) {
+		this.subscriptions = new CompositeDisposable();
 		store = createStore(state);
 		bootstrapStore(store);
 
-		if (atom.project.getDirectories().length === 0) {
-			this.subscriptions.add(
-				atom.project.onDidChangePaths(paths => {
-					if (paths.length === 1) this.setup();
-					else {
-						/* TODO */
-					}
-				})
-			);
-		} else this.subscriptions.add(atom.packages.onDidActivateInitialPackages(() => this.setup()));
+		if (atom.project.getDirectories().length === 1)
+			this.subscriptions.add(atom.packages.onDidActivateInitialPackages(() => this.setup()));
+
+		// this isn't aded to this.subscriptions because it should always run
+		atom.project.onDidChangePaths(paths => reloadPlugin(this));
 	},
 
 	activate(state) {
+		this.subscriptions = this.subscriptions || new CompositeDisposable();
 		this.subscriptions.add(
 			atom.workspace.addOpener(uri => {
 				if (uri === CODESTREAM_VIEW_URI) {
-					return new CodestreamView(store);
+					this.view = new CodestreamView(store);
+					return this.view;
 				}
 			}),
 			atom.commands.add("atom-workspace", {
@@ -129,7 +140,8 @@ module.exports = {
 	},
 
 	deserializeCodestreamView(data) {
-		return new CodestreamView(store);
+		this.view = new CodestreamView(store);
+		return this.view;
 	},
 
 	async setup() {
@@ -214,6 +226,7 @@ module.exports = {
 	},
 
 	consumeStatusBar(statusBar) {
+		this.statusBar = statusBar;
 		const div = document.createElement("div");
 		div.classList.add("inline-block");
 		const icon = document.createElement("span");

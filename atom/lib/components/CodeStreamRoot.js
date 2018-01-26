@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
 import NoGit from "./NoGit";
+import TooMuchGit from "./TooMuchGit";
 import Onboarding from "./onboarding/Onboarding";
 import Stream from "./Stream";
 import NoAccess from "./NoAccess";
@@ -41,6 +42,7 @@ class CodeStreamRoot extends Component {
 		const { accessToken, bootstrapped, repositories, onboarding, noAccess } = this.props;
 
 		if (repositories.length === 0) return <NoGit />;
+		if (repositories.length > 1) return <TooMuchGit />;
 		if (noAccess) return <NoAccess reason={noAccess} />;
 		if (!bootstrapped) return <Loading />;
 		else if (onboarding.complete && accessToken) return <Stream />;

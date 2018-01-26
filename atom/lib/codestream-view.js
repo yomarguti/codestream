@@ -58,6 +58,11 @@ export default class CodestreamView {
 		this.element.remove();
 	}
 
+	update(store) {
+		this.store = store;
+		this.render();
+	}
+
 	render() {
 		const directories = atom.project.getDirectories();
 		const repoPromises = directories.map(repo => atom.project.repositoryForDirectory(repo));
