@@ -20,7 +20,6 @@ const getHeaders = () =>
 	});
 
 const tryFetch = async (url, config) => {
-	let throwable;
 	try {
 		const response = await fetch(url, config);
 		const json = await response.json();
@@ -28,10 +27,8 @@ const tryFetch = async (url, config) => {
 		else throw json;
 	} catch (data) {
 		if (data.message === "Failed to fetch" && navigator.onLine)
-			throwable = new ApiUnreachableError(`Could not connect to ${url}`);
-		else throwable = new ApiRequestError(data.message, data);
-	} finally {
-		throw throwable;
+			throw new ApiUnreachableError(`Could not connect to ${url}`);
+		else throw new ApiRequestError(data.message, data);
 	}
 };
 
