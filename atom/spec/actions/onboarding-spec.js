@@ -3,7 +3,7 @@ import * as http from "../../lib/network-request";
 import * as actions from "../../lib/actions/onboarding";
 
 describe("onboarding action creators", () => {
-	describe("confirmEmail", () => {
+	xdescribe("confirmEmail", () => {
 		describe("when the confirmed user is not a member of the team for the current repo", () => {
 			it("adds them to team", () => {
 				const email = "foo@bar.com";

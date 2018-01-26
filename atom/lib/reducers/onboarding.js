@@ -56,6 +56,8 @@ export default (state = initialState, { type, payload }) => {
 			return { ...initialState, step: "identifyMembers", props: { existingTeam: true } };
 		case "INVALID_CREDENTIALS":
 			return { ...state, errors: { invalidCredentials: true } };
+		case "USERNAME_COLLISION_AT_LOGIN":
+			return { ...state, step: "changeUsername", props: payload };
 		case "LOGGED_IN":
 		case "ONBOARDING_COMPLETE":
 			return { ...initialState, complete: true };
