@@ -97,7 +97,7 @@ export const createPost = (streamId, parentPostId, text, codeBlocks, mentions) =
 		parentPostId: parentPostId,
 		codeBlocks: codeBlocks,
 		commitHashWhenPosted: context.currentCommit,
-		mentionUserIds: mentions && mentions.length ? mentions : null,
+		mentionedUserIds: mentions && mentions.length ? mentions : null,
 		text
 	};
 
