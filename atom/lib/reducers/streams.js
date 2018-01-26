@@ -10,7 +10,7 @@ export default (state = initialState, { type, payload }) => {
 			return { ...state, isFetching: false };
 		case "ADD_STREAMS":
 		case "BOOTSTRAP_STREAMS":
-			return { ...state, byFile: toMapBy("file", payload) };
+			return { ...state, byFile: { ...state.byFile, ...toMapBy("file", payload) } };
 		case "STREAMS-UPDATE_FROM_PUBNUB":
 		case "ADD_STREAM":
 			return {

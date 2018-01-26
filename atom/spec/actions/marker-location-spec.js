@@ -1,7 +1,6 @@
 import Dexie from "dexie";
 import configureStore from "redux-mock-store";
 import thunk from "redux-thunk";
-import { dispatch } from "../redux-mocks";
 import { markerDirtied, saveMarkerLocations } from "../../lib/actions/marker-location";
 
 const dbName = "marker-location-spec";

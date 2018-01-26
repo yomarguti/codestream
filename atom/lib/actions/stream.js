@@ -21,16 +21,16 @@ export const saveStreams = attributes => (dispatch, getState, { db }) => {
 	);
 };
 
-export const fetchStreams = () => async (dispatch, getState, { http }) => {
+export const fetchStreams = sortId => async (dispatch, getState, { http }) => {
 	const { context, session } = getState();
-	return http
-		.get(
-			`/streams?teamId=${context.currentTeamId}&repoId=${context.currentRepoId}`,
-			session.accessToken
-		)
-		.then(({ streams }) => {
-			return dispatch(saveStreams(normalize(streams)));
-		});
+	let url = `/streams?teamId=${context.currentTeamId}&repoId=${context.currentRepoId}`;
+	if (sortId) url += `&lt=${sortId}`;
+
+	return http.get(url, session.accessToken).then(({ streams, more }) => {
+		const save = dispatch(saveStreams(normalize(streams)));
+		if (more) return dispatch(fetchStreams(_.sortBy(streams, "sortId")[0].sortId));
+		else return save;
+	});
 };
 
 export const markStreamRead = streamId => async (dispatch, getState, { http }) => {
