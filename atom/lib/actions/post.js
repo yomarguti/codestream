@@ -81,7 +81,7 @@ export const fetchPosts = ({ streamId, teamId }) => async (dispatch, getState, {
 	return dispatch(fetchMarkersAndLocations({ streamId, teamId }));
 };
 
-export const createPost = (streamId, parentPostId, text, codeBlocks) => async (
+export const createPost = (streamId, parentPostId, text, codeBlocks, mentions) => async (
 	dispatch,
 	getState,
 	{ http }
@@ -97,6 +97,7 @@ export const createPost = (streamId, parentPostId, text, codeBlocks) => async (
 		parentPostId: parentPostId,
 		codeBlocks: codeBlocks,
 		commitHashWhenPosted: context.currentCommit,
+		mentionUserIds: mentions && mentions.length ? mentions : null,
 		text
 	};
 
