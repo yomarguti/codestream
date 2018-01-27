@@ -3,7 +3,8 @@
 		"ctrl-alt-o": "codestream:toggle",
 		"ctrl-shift-enter": "codestream:focus-input",
 		"ctrl-cmd-shift-enter": "codestream:comment",
-		"ctrl-!": "codestream:add-dummy-post"
+		"ctrl-!": "codestream:add-dummy-post",
+		"escape": "codestream:escape"
 	},
 	"atom-text-editor": {
 		"ctrl-shift-enter": "codestream:focus-input",
