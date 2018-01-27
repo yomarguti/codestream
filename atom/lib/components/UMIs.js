@@ -217,11 +217,13 @@ export class SimpleUMIs extends Component {
 		if (mentions) {
 			element.setAttribute("cs-umi-mention", count > 0 ? 1 : 0);
 			element.setAttribute("cs-umi-badge", count > 0 ? 1 : 0);
-			element.setAttribute("cs-umi-count", count > 99 ? "99+" : count || 0);
+			element.setAttribute("cs-umi-count", mentions > 99 ? "99+" : mentions || 0);
 		} else if (treatment === "badge") {
 			element.setAttribute("cs-umi-badge", count > 0 ? 1 : 0);
 			element.setAttribute("cs-umi-count", count > 99 ? "99+" : count || 0);
 		} else if (treatment === "mute") {
+			// no need to do this here; we're doing mute treatment at the end
+			// in a separate pass, since muted directories impact subdirs and files
 			// element.setAttribute("cs-umi-mute", 1);
 		} else {
 			// default is to bold

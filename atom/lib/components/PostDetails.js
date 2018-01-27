@@ -32,14 +32,16 @@ export default class PostDetails extends Component {
 		const hasCodeBlock = post.codeBlocks && post.codeBlocks.length ? true : null;
 
 		let alert = null;
-		let hasDiff = false;
+		// if a patch has been applied, we treat it as if there is
+		// a diff
+		let showDiffButtons = this.state.patchApplied;
 		if (post.markerLocation) {
 			let code = post.codeBlocks[0].code;
 			const editor = atom.workspace.getActiveTextEditor();
 			if (editor) {
 				let range = this.makeRange(post.markerLocation);
 				var existingCode = editor.getTextInBufferRange(range);
-				if (code !== existingCode) hasDiff = true;
+				if (code !== existingCode) showDiffButtons = true;
 				if (code.length > 0 && post.markerLocation[4] && post.markerLocation[4].entirelyDeleted) {
 					alert = <span className="icon icon-alert" ref={ref => (this._alert = ref)} />;
 				}
@@ -75,7 +77,7 @@ export default class PostDetails extends Component {
 			<div className="post-details" id={post.id} ref={ref => (this._div = ref)}>
 				{alert}
 				{commitDiv}
-				{hasDiff && (
+				{showDiffButtons && (
 					<div className="button-group">
 						<Button
 							id="show-diff-button"
