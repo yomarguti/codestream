@@ -1,14 +1,14 @@
+import { CompositeDisposable } from "atom";
 import React, { Component } from "react";
 import { connect } from "react-redux";
 import createClassString from "classnames";
+import withRepositories from "./withRepositories";
 import { getUserPreference } from "../actions/user";
-import { CompositeDisposable } from "atom";
 import rootLogger from "../util/Logger";
 
 const logger = rootLogger.forClass("components/UMIs");
 
-const remote = require("electron").remote;
-var app = remote.app;
+const { app } = require("electron").remote;
 
 export class SimpleUMIs extends Component {
 	constructor(props) {
@@ -18,10 +18,7 @@ export class SimpleUMIs extends Component {
 		let treeView = atom.packages.getLoadedPackage("tree-view");
 		if (treeView) this.treeView = treeView.mainModule.getTreeViewInstance();
 
-		let repo = atom.project.getRepositories()[0];
-		this.cwd = repo.getWorkingDirectory();
-		this.repo = repo;
-		this.repoOrigin = repo.getOriginURL();
+		this.repo = props.repositories[0];
 
 		let that = this;
 		this.subscriptions = new CompositeDisposable();
@@ -66,7 +63,7 @@ export class SimpleUMIs extends Component {
 
 		let path = li.getElementsByTagName("span")[0].getAttribute("data-path");
 		path = this.repo.relativize(path);
-		let prefPath = ["streamTreatments", this.repoOrigin, path];
+		let prefPath = ["streamTreatments", this.props.repoUrl, path];
 		return getUserPreference(this.props.currentUser, prefPath);
 	};
 
@@ -102,9 +99,6 @@ export class SimpleUMIs extends Component {
 
 		let streamMap = swapHash(this.props.streams.byFile);
 
-		// FIXME -- shouldn't need this if we initialize properly
-		if (!umis.mentions) umis.mentions = {};
-		if (!umis.unread) umis.unread = {};
 		this.clearTreatments();
 
 		let totalUMICount = 0;
@@ -122,7 +116,7 @@ export class SimpleUMIs extends Component {
 			this.treatPath(path);
 		});
 
-		let prefPath = ["streamTreatments", this.repoOrigin];
+		let prefPath = ["streamTreatments", this.props.repoUrl];
 		let treatments = getUserPreference(this.props.currentUser, prefPath) || {};
 		Object.keys(treatments).map(path => {
 			// logger.debug("Treating ", path, " with ", treatments[path]);
@@ -185,7 +179,7 @@ export class SimpleUMIs extends Component {
 
 	treatMute(path, isMute) {
 		path = path.replace(/\*/g, ".");
-		let element = this.treeView.entryForPath(this.cwd + "/" + path);
+		let element = this.treeView.entryForPath(this.props.workingDirectory + "/" + path);
 		// logger.debug("Treating element ", element, " with ", isMute);
 		if (!element) return;
 		// don't treat directories that are expanded
@@ -198,7 +192,7 @@ export class SimpleUMIs extends Component {
 	}
 
 	treatPath(path) {
-		let element = this.treeView.entryForPath(this.cwd + "/" + path);
+		let element = this.treeView.entryForPath(this.props.workingDirectory + "/" + path);
 		if (!element) return;
 
 		// don't treat directories that are expanded
@@ -243,9 +237,9 @@ export class SimpleUMIs extends Component {
 		let index = parts.length;
 		while (parts.length) {
 			let path = parts.join("/");
-			let prefPath = ["streamTreatments", this.repoOrigin, path];
+			let prefPath = ["streamTreatments", this.props.repoUrl, path];
 			let treatment = getUserPreference(this.props.currentUser, prefPath);
-			// logger.debug("GOT: ", treatment, " FOR ", ["streamTreatments", this.repoOrigin, path]);
+			// logger.debug("GOT: ", treatment, " FOR ", ["streamTreatments", this.props.repoUrl, path]);
 			// atom.config.get("CodeStream.showUnread-" + path);
 			if (treatment) return treatment;
 			parts.pop();
@@ -354,13 +348,15 @@ export class SimpleUMIs extends Component {
 	}
 }
 
-const mapStateToProps = ({ session, streams, users, umis }) => {
+const mapStateToProps = ({ repoAttributes, session, streams, users, umis }) => {
 	return {
 		users: users,
 		streams: streams,
 		currentUser: users[session.userId],
+		workingDirectory: repoAttributes.workingDirectory,
+		repoUrl: repoAttributes.url,
 		umis: umis
 	};
 };
 
-export default connect(mapStateToProps)(SimpleUMIs);
+export default connect(mapStateToProps)(withRepositories(SimpleUMIs));

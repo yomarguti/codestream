@@ -135,8 +135,8 @@ module.exports = {
 	},
 
 	serialize() {
-		const { session, onboarding, context } = store.getState();
-		return { onboarding: { ...onboarding, errors: {} }, context, session };
+		const { session, onboarding, context, repoAttributes } = store.getState();
+		return { onboarding: { ...onboarding, errors: {} }, context, session, repoAttributes };
 	},
 
 	deserializeCodestreamView(data) {
