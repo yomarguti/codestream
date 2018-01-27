@@ -4,6 +4,13 @@
 .onboarding-screen {
 	max-width: 225px;
 	width: 75%;
+
+	h2 {
+		text-align: center;
+		line-height: 1.5em;
+		color: @text-color-highlight;
+		font-weight: bold;
+	}
 }
 
 .codestream {
@@ -23,10 +30,6 @@
 	// screen styles
 	#no-git {
 		.onboarding-screen;
-
-		h2 {
-			text-align: center;
-		}
 	}
 
 	#signup-form,
@@ -36,11 +39,6 @@
 		flex-direction: column;
 		justify-content: center;
 		height: 100%;
-
-		h2 {
-			text-align: center;
-			line-height: 1.5em;
-		}
 
 		#controls {
 			label {
@@ -86,6 +84,12 @@
 				font-family: Menlo, Consolas, "DejaVu Sans Mono", monospace;
 				font-size: 1.15em;
 				padding: 4px 8px;
+				opacity: 0.6;
+			}
+			input[type="text"]:focus,
+			input[type="password"]:focus {
+				opacity: 1;
+				color: @text-color-highlight;
 			}
 			input + .tip {
 				display: none;
@@ -97,16 +101,10 @@
 			margin-top: 25px;
 			font-size: 1.15em;
 		}
-		#signup-button:hover + .fine-print {
-			opacity: 1;
-		}
 
 		.fine-print {
-			transition: opacity 0.2s;
 			display: block;
-			opacity: 0;
-			margin-top: 10px;
-			// opacity: 0.5;
+			margin-top: 20px;
 		}
 
 		.page-error {
@@ -116,9 +114,6 @@
 
 	#email-confirmation {
 		.onboarding-screen;
-		h2 {
-			text-align: center;
-		}
 
 		#form {
 			display: flex;
@@ -142,9 +137,6 @@
 
 	#team-creation {
 		.onboarding-screen;
-		h2 {
-			text-align: center;
-		}
 
 		form * {
 			margin: 5% 0;
@@ -157,9 +149,6 @@
 
 	#team-selection {
 		.onboarding-screen;
-		h2 {
-			text-align: center;
-		}
 
 		#name-input {
 			width: 80%;
@@ -179,10 +168,6 @@
 
 		height: inherit;
 		overflow-y: scroll;
-
-		h2 {
-			text-align: center;
-		}
 
 		ul {
 			padding: 0;

@@ -55,9 +55,12 @@ export class SimpleSignupForm extends Component {
 			name: repository.getConfigValue("user.name", gitDirectory) || ""
 		});
 
-		this.addToolTip("onboard-input-username", "Up to 21 characters");
+		this.addToolTip(
+			"onboard-input-username",
+			"Up to 21 characters. Valid special characters are (.-_)"
+		);
 		this.addToolTip("onboard-input-password", "6+ characters");
-		this.addToolTip("onboard-input-email", "FYI, we got this from git");
+		this.addToolTip("onboard-input-email", "Defaulted from git");
 	}
 
 	componentWillUnmount() {
@@ -182,11 +185,10 @@ export class SimpleSignupForm extends Component {
 							type="text"
 							name="email"
 							placeholder="Email Address"
-							tabIndex="2"
+							tabIndex="0"
 							value={this.state.email}
 							onChange={e => this.setState({ email: e.target.value })}
 							onBlur={this.onBlurEmail}
-							required={this.state.emailTouched}
 						/>
 						{this.renderEmailHelp()}
 					</div>
@@ -202,11 +204,10 @@ export class SimpleSignupForm extends Component {
 							placeholder="Username"
 							minLength="1"
 							maxLength="21"
-							tabIndex="0"
+							tabIndex="1"
 							value={this.state.username}
 							onChange={event => this.setState({ username: event.target.value })}
 							onBlur={this.onBlurUsername}
-							required={this.state.usernameTouched}
 						/>
 						{this.renderUsernameHelp()}
 					</div>
@@ -219,11 +220,10 @@ export class SimpleSignupForm extends Component {
 							className="native-key-bindings input-text"
 							type="password"
 							name="password"
-							tabIndex="1"
+							tabIndex="2"
 							value={this.state.password}
 							onChange={e => this.setState({ password: e.target.value })}
 							onBlur={this.onBlurPassword}
-							required={this.state.passwordTouched}
 						/>
 						{this.renderPasswordHelp()}
 					</div>
