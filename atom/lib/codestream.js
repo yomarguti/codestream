@@ -168,6 +168,11 @@ module.exports = {
 								store.dispatch(setCurrentFile(repo.relativize(editor.getPath())));
 							});
 						}
+					} else {
+						// in the case of no editor, for example the settings page,
+						// we display the "intro" welcome to codestream text, which
+						// is handled by lib/components/Stream.js when there is no file
+						store.dispatch(setCurrentFile(null));
 					}
 				}),
 

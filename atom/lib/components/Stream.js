@@ -102,6 +102,9 @@ export class SimpleStream extends Component {
 				this.postWithNewMessageIndicator = this.props.currentUser.lastReads[nextProps.id];
 			}
 		}
+		if (switchingStreams) {
+			console.log("Switch to: ", nextProps.id);
+		}
 
 		new AddCommentPopup({ handleClickAddComment: this.handleClickAddComment });
 	}
@@ -192,15 +195,15 @@ export class SimpleStream extends Component {
 
 	resizeStream = () => {
 		logger.trace(".resizeStream");
-		if (!this._div) return;
+		if (!this._div || !this._compose) return;
 		const streamHeight = this._div.offsetHeight;
 		const postslistHeight = this._postslist.offsetHeight;
+		const composeHeight = this._compose.offsetHeight;
 		if (postslistHeight < streamHeight) {
-			let newHeight =
-				streamHeight - postslistHeight + this._intro.offsetHeight - this._compose.offsetHeight;
+			let newHeight = streamHeight - postslistHeight + this._intro.offsetHeight - composeHeight;
 			this._intro.style.height = newHeight + "px";
 		}
-		if (this._compose) this._div.style.paddingBottom = this._compose.offsetHeight + "px";
+		this._div.style.paddingBottom = composeHeight + "px";
 		// if (this._atMentionsPopup)
 		// this._atMentionsPopup.style.bottom = this._compose.offsetHeight + "px";
 		this._postslist.scrollTop = 100000;
@@ -224,7 +227,10 @@ export class SimpleStream extends Component {
 
 	renderIntro = () => {
 		logger.trace(".renderIntro");
-		if (this.props.firstTimeInAtom && this.props.currentFile === this.state.fileForIntro) {
+		if (
+			!this.props.currentFile ||
+			(this.props.firstTimeInAtom && this.props.currentFile === this.state.fileForIntro)
+		) {
 			return [
 				<label>
 					<FormattedMessage id="stream.intro.welcome" defaultMessage="Welcome to CodeStream!" />
@@ -433,30 +439,32 @@ export class SimpleStream extends Component {
 					handleHoverAtMention={this.handleHoverAtMention}
 					handleSelectAtMention={this.handleSelectAtMention}
 				/>
-				<div
-					className={composeClass}
-					onKeyPress={this.handleOnKeyPress}
-					ref={ref => (this._compose = ref)}
-				>
-					{hasNewMessagesBelowFold && (
-						<div className="new-messages-below" onClick={this.handleClickScrollToNewMessages}>
-							&darr; Unread Messages &darr;
-						</div>
-					)}
-					{quoteInfo}
-					{quoteHint}
-					<ContentEditable
-						className="native-key-bindings"
-						id="input-div"
-						rows="1"
-						tabIndex="-1"
-						onChange={this.handleOnChange}
-						onBlur={this.handleOnBlur}
-						html={newPostText}
-						placeholder={placeholderText}
-						ref={ref => (this._contentEditable = ref)}
-					/>
-				</div>
+				{this.props.currentFile && (
+					<div
+						className={composeClass}
+						onKeyPress={this.handleOnKeyPress}
+						ref={ref => (this._compose = ref)}
+					>
+						{hasNewMessagesBelowFold && (
+							<div className="new-messages-below" onClick={this.handleClickScrollToNewMessages}>
+								&darr; Unread Messages &darr;
+							</div>
+						)}
+						{quoteInfo}
+						{quoteHint}
+						<ContentEditable
+							className="native-key-bindings"
+							id="input-div"
+							rows="1"
+							tabIndex="-1"
+							onChange={this.handleOnChange}
+							onBlur={this.handleOnBlur}
+							html={newPostText}
+							placeholder={placeholderText}
+							ref={ref => (this._contentEditable = ref)}
+						/>
+					</div>
+				)}
 			</div>
 		);
 	}
