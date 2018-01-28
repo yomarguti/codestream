@@ -8,6 +8,7 @@ import Button from "./Button";
 import UnexpectedErrorMessage from "./UnexpectedErrorMessage";
 import withConfigs from "../withConfigs";
 import * as actions from "../../actions/onboarding";
+const { CompositeDisposable } = require("atom");
 
 const isUsernameInvalid = username => new RegExp("^[-a-z0-9_.]{1,21}$").test(username) === false;
 const isPasswordInvalid = password => password.length < 6;
@@ -41,6 +42,7 @@ export class SimpleSignupForm extends Component {
 			passwordTouched: false,
 			emailTouched: false
 		};
+		this.subscriptions = new CompositeDisposable();
 	}
 
 	componentDidMount() {
@@ -51,6 +53,28 @@ export class SimpleSignupForm extends Component {
 			email: repository.getConfigValue("user.email", gitDirectory) || "",
 			name: repository.getConfigValue("user.name", gitDirectory) || ""
 		});
+
+		this.addToolTip(
+			"onboard-input-username",
+			"Up to 21 characters. Valid special characters are (.-_)"
+		);
+		this.addToolTip("onboard-input-password", "6+ characters");
+		this.addToolTip("onboard-input-email", "Defaulted from git");
+	}
+
+	componentWillUnmount() {
+		this.subscriptions.dispose();
+	}
+
+	addToolTip(elementId, key) {
+		let div = document.getElementById(elementId);
+		this.subscriptions.add(
+			atom.tooltips.add(div, {
+				title: key,
+				placement: "left",
+				delay: 0
+			})
+		);
 	}
 
 	onBlurUsername = () => {
@@ -70,7 +94,7 @@ export class SimpleSignupForm extends Component {
 
 	renderUsernameHelp = () => {
 		const { username, usernameInUse } = this.state;
-		if (username.length === 0 || username.length > 21)
+		if (username.length > 21)
 			return (
 				<small className="error-message">
 					<FormattedMessage id="signUp.username.length" />
@@ -88,31 +112,21 @@ export class SimpleSignupForm extends Component {
 					<FormattedMessage id="signUp.username.alreadyTaken" />
 				</small>
 			);
-		else
-			return (
-				<small>
-					<FormattedMessage id="signUp.username.length" />
-				</small>
-			);
+		else return <small>&nbsp;</small>;
 	};
 
 	renderPasswordHelp = () => {
 		const { password, passwordTouched } = this.state;
 		if (isPasswordInvalid(password) && passwordTouched) {
 			return (
-				<span className="error-message">
+				<small className="error-message">
 					<FormattedMessage
 						id="signUp.password.tooShort"
 						values={{ countNeeded: 6 - password.length }}
 					/>
-				</span>
+				</small>
 			);
-		}
-		return (
-			<span>
-				<FormattedMessage id="signUp.password.help" />
-			</span>
-		);
+		} else return <small>&nbsp;</small>;
 	};
 
 	renderEmailHelp = () => {
@@ -123,12 +137,7 @@ export class SimpleSignupForm extends Component {
 					<FormattedMessage id="signUp.email.invalid" />
 				</small>
 			);
-		else
-			return (
-				<small>
-					<FormattedMessage id="signUp.email.help" />
-				</small>
-			);
+		else return <small>&nbsp;</small>;
 	};
 
 	isFormInvalid = () => {
@@ -149,8 +158,7 @@ export class SimpleSignupForm extends Component {
 
 	renderDebugInfo() {
 		const apiPath = this.props.configs.url;
-		if (atom.inDevMode() && apiPath)
-			return <p style={{ position: "static", top: "0px" }}>{apiPath}</p>;
+		if (atom.inDevMode() && apiPath) return <p>{apiPath}</p>;
 	}
 
 	renderPageErrors() {
@@ -162,70 +170,77 @@ export class SimpleSignupForm extends Component {
 		return (
 			<form id="signup-form" onSubmit={this.submitCredentials}>
 				{this.renderDebugInfo()}
+				<h2>Sign Up for CodeStream</h2>
 				{this.renderPageErrors()}
 				<div id="controls">
-					<div id="username-controls" className="control-group">
+					<div id="email-controls" className="control-group">
+						<label>
+							<FormattedMessage id="signUp.email.label" />
+						</label>
 						<input
+							id="onboard-input-email"
+							className="native-key-bindings input-text"
+							type="text"
+							name="email"
+							placeholder="Email Address"
+							tabIndex="0"
+							value={this.state.email}
+							onChange={e => this.setState({ email: e.target.value })}
+							onBlur={this.onBlurEmail}
+						/>
+						{this.renderEmailHelp()}
+					</div>
+					<div id="username-controls" className="control-group">
+						<label>
+							<FormattedMessage id="signUp.username.label" />
+						</label>
+						<input
+							id="onboard-input-username"
 							className="native-key-bindings input-text"
 							type="text"
 							name="username"
 							placeholder="Username"
 							minLength="1"
 							maxLength="21"
-							tabIndex="0"
+							tabIndex="1"
 							value={this.state.username}
 							onChange={event => this.setState({ username: event.target.value })}
 							onBlur={this.onBlurUsername}
-							required={this.state.usernameTouched}
 						/>
 						{this.renderUsernameHelp()}
 					</div>
 					<div id="password-controls" className="control-group">
+						<label>
+							<FormattedMessage id="signUp.password.label" />
+						</label>
 						<input
+							id="onboard-input-password"
 							className="native-key-bindings input-text"
 							type="password"
 							name="password"
-							placeholder="Password"
-							minLength="6"
-							tabIndex="1"
+							tabIndex="2"
 							value={this.state.password}
 							onChange={e => this.setState({ password: e.target.value })}
 							onBlur={this.onBlurPassword}
-							required={this.state.passwordTouched}
 						/>
 						{this.renderPasswordHelp()}
-					</div>
-					<div id="email-controls" className="control-group">
-						<input
-							className="native-key-bindings input-text"
-							type="text"
-							name="email"
-							placeholder="Email Address"
-							tabIndex="2"
-							value={this.state.email}
-							onChange={e => this.setState({ email: e.target.value })}
-							onBlur={this.onBlurEmail}
-							required={this.state.emailTouched}
-						/>
-						{this.renderEmailHelp()}
 					</div>
 					<Button
 						id="signup-button"
 						className="control-button"
 						tabIndex="3"
 						type="submit"
-						disabled={this.isFormInvalid()}
 						loading={this.state.loading}
 					>
 						<FormattedMessage id="signUp.submitButton" />
 					</Button>
-					<small>
+					<small className="fine-print">
 						<FormattedMessage id="signUp.legal.start" />{" "}
-						<a onClick={() => shell.openExternal("https://codestream.com")}>
+						<a onClick={() => shell.openExternal("https://codestream.com/tos")}>
 							<FormattedMessage id="signUp.legal.termsOfService" />
 						</a>{" "}
 						<FormattedMessage id="and" />{" "}
-						<a onClick={() => shell.openExternal("https://codestream.com")}>
+						<a onClick={() => shell.openExternal("https://codestream.com/privacy")}>
 							<FormattedMessage id="signUp.legal.privacyPolicy" />
 						</a>
 					</small>

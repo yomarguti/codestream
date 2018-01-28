@@ -1,10 +1,12 @@
 import React, { Component } from "react";
 import { FormattedMessage } from "react-intl";
 import { connect } from "react-redux";
+import PropTypes from "prop-types";
 import UnexpectedErrorMessage from "./UnexpectedErrorMessage";
 import Button from "./Button";
 import withConfigs from "../withConfigs";
 import * as actions from "../../actions/onboarding";
+const { CompositeDisposable } = require("atom");
 
 const isPasswordInvalid = password => password.length === 0;
 const isEmailInvalid = email => {
@@ -15,6 +17,10 @@ const isEmailInvalid = email => {
 };
 
 export class SimpleLoginForm extends Component {
+	static contextTypes = {
+		repositories: PropTypes.array
+	};
+
 	constructor(props) {
 		super(props);
 		this.state = {
@@ -23,6 +29,33 @@ export class SimpleLoginForm extends Component {
 			passwordTouched: false,
 			emailTouched: false
 		};
+		this.subscriptions = new CompositeDisposable();
+	}
+
+	componentDidMount() {
+		const { repositories } = this.context;
+		const repository = repositories[0];
+		const gitDirectory = repository.getWorkingDirectory();
+		this.setState({
+			email: repository.getConfigValue("user.email", gitDirectory) || ""
+		});
+		this.addToolTip("login-input-email", "The email address for your CodeStream account");
+		this.addToolTip("login-input-password", "Your CodeStream password");
+	}
+
+	componentWillUnmount() {
+		this.subscriptions.dispose();
+	}
+
+	addToolTip(elementId, key) {
+		let div = document.getElementById(elementId);
+		this.subscriptions.add(
+			atom.tooltips.add(div, {
+				title: key,
+				placement: "left",
+				delay: 0
+			})
+		);
 	}
 
 	onBlurPassword = () => this.setState({ passwordTouched: true });
@@ -43,9 +76,9 @@ export class SimpleLoginForm extends Component {
 		const { password, passwordTouched } = this.state;
 		if (isPasswordInvalid(password) && passwordTouched) {
 			return (
-				<span className="error-message">
+				<small className="error-message">
 					<FormattedMessage id="login.password.required" />
-				</span>
+				</small>
 			);
 		}
 	};
@@ -90,24 +123,26 @@ export class SimpleLoginForm extends Component {
 
 	renderDebugInfo() {
 		const apiPath = this.props.configs.url;
-		if (atom.inDevMode() && apiPath)
-			return <p style={{ position: "static", top: "0px" }}>{apiPath}</p>;
+		if (atom.inDevMode() && apiPath) return <p>{apiPath}</p>;
 	}
 
 	render() {
 		return (
 			<form id="login-form" onSubmit={this.submitCredentials}>
 				{this.renderDebugInfo()}
-				<h2>Sign In</h2>
+				<h2>Sign In to CodeStream</h2>
 				{this.renderAccountMessage()}
 				{this.renderError()}
 				<div id="controls">
 					<div id="email-controls" className="control-group">
+						<label>
+							<FormattedMessage id="login.email.label" />
+						</label>
 						<input
+							id="login-input-email"
 							className="native-key-bindings input-text control"
 							type="text"
 							name="email"
-							placeholder="Email Address"
 							tabIndex="0"
 							value={this.state.email}
 							onChange={e => this.setState({ email: e.target.value })}
@@ -117,11 +152,14 @@ export class SimpleLoginForm extends Component {
 						{this.renderEmailHelp()}
 					</div>
 					<div id="password-controls" className="control-group">
+						<label>
+							<FormattedMessage id="login.password.label" />
+						</label>
 						<input
+							id="login-input-password"
 							className="native-key-bindings input-text"
 							type="password"
 							name="password"
-							placeholder="Password"
 							tabIndex="1"
 							value={this.state.password}
 							onChange={e => this.setState({ password: e.target.value })}
@@ -140,7 +178,6 @@ export class SimpleLoginForm extends Component {
 						className="control-button"
 						tabIndex="2"
 						type="submit"
-						disabled={this.isFormInvalid()}
 						loading={this.props.loading}
 					>
 						<FormattedMessage id="login.submitButton" />
@@ -165,7 +202,7 @@ export class SimpleLoginForm extends Component {
 	}
 }
 
-const mapStateToProps = ({ onboarding }) => ({
+const mapStateToProps = ({ context, onboarding }) => ({
 	...onboarding.props,
 	errors: onboarding.errors,
 	loading: onboarding.requestInProcess
