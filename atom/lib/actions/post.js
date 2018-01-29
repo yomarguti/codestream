@@ -1,6 +1,7 @@
 import { upsert } from "../local-cache";
 import { normalize } from "./utils";
 import { fetchMarkersAndLocations } from "./marker-location";
+import { saveStream } from "./stream";
 
 const createTempId = (() => {
 	let count = 0;
@@ -43,7 +44,7 @@ export const savePendingPost = attributes => (dispatch, getState, { db }) => {
 	});
 };
 
-export const resolvePendingPost = (id, { post, markers, markerLocations }) => (
+export const resolvePendingPost = (id, { post, markers, markerLocations, stream }) => (
 	dispatch,
 	getState,
 	{ db }
@@ -58,6 +59,7 @@ export const resolvePendingPost = (id, { post, markers, markerLocations }) => (
 					post
 				}
 			});
+			if (stream) await dispatch(saveStream(stream));
 			await dispatch(savePost(post));
 		})
 		.then(async () => {
@@ -118,7 +120,8 @@ export const createPost = (streamId, parentPostId, text, codeBlocks, mentions) =
 			resolvePendingPost(pendingId, {
 				post: normalize(data.post),
 				markers: normalize(data.markers),
-				markerLocations: data.markerLocations
+				markerLocations: data.markerLocations,
+				stream: streamId ? null : normalize(data.stream)
 			})
 		);
 	} catch (error) {
