@@ -66,7 +66,7 @@ export class SimpleStream extends Component {
 	}
 
 	componentDidMount() {
-		logger.trace('.componentDidMount');
+		logger.trace(".componentDidMount");
 		const me = this;
 		me.props.recalculateUMI(); // set the UMI for the first time
 		// TODO: scroll to bottom
@@ -130,7 +130,7 @@ export class SimpleStream extends Component {
 	}
 
 	recalculateMarkers() {
-		logger.trace('.recalculateMarkers');
+		logger.trace(".recalculateMarkers");
 		const me = this;
 		const props = me.props;
 		props.fetchMarkersAndLocations({
@@ -1081,4 +1081,9 @@ const mapStateToProps = ({
 	};
 };
 
-export default connect(mapStateToProps, { ...streamActions, fetchPosts, createPost, fetchMarkersAndLocations })(SimpleStream);
+export default connect(mapStateToProps, {
+	...streamActions,
+	fetchPosts,
+	createPost,
+	fetchMarkersAndLocations
+})(SimpleStream);
