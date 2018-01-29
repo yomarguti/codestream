@@ -305,9 +305,13 @@ export class SimpleStream extends Component {
 
 		if (!this.usernamesRegexp) {
 			const users = this.props.users;
+			// this usenames regexp is a pipe-separated list of
+			// either usernames or if no username exists for the
+			// user then his email address. it is sorted by length
+			// so that the longest possible match will be made.
 			this.usernamesRegexp = Object.keys(this.props.users)
 				.map(key => {
-					return users[key].username || users[key].email;
+					return users[key].username || (users[key].email || "").replace(/@.*/, "");
 				})
 				.sort(function(a, b) {
 					return b.length - a.length;
