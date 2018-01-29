@@ -68,6 +68,7 @@ export class SimpleSignupForm extends Component {
 
 	addToolTip(elementId, key) {
 		let div = document.getElementById(elementId);
+		if (!div) return;
 		this.subscriptions.add(
 			atom.tooltips.add(div, {
 				title: key,

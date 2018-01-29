@@ -317,7 +317,9 @@ export class SimpleStream extends Component {
 					return b.length - a.length;
 				})
 				.join("|")
-				.replace(/\|\|+/g, "|");
+				.replace(/\|\|+/g, "|") // remove blank identifiers
+				.replace(/\+/g, "\\+") // replace + and . with escaped versions
+				.replace(/\./g, "\\."); // so the regexp matches the literal chars
 		}
 		// strip out the at-mention markup, and add it back.
 		// newPostText = newPostText.replace(/(@\w+)/g, '<span class="at-mention">$1</span> ');

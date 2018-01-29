@@ -1,7 +1,7 @@
 {
 	"and": "and",
 	"signUp.username.label": "Username",
-	"signUp.username.tip": "Up to 21 characters. Valid special characters are (.-_)",
+	"signUp.username.tip": "Up to 21 characters. Valid special characters are (._-)",
 	"signUp.username.length": "Up to 21 characters",
 	"signUp.username.validCharacters": "Invalid character",
 	"signUp.username.alreadyTaken": "Sorry, already taken.",
@@ -13,7 +13,7 @@
 	"signUp.email.label": "Email",
 	"signUp.email.invalid": "Looks invalid?",
 	"signUp.email.help": "We got this from Git",
-	"signUp.email.tip": "We got this from Git",
+	"signUp.email.tip": "Defaulted from git",
 	"signUp.submitButton": "SIGN UP",
 	"signUp.legal.start": "By signing up, you agree to the",
 	"signUp.legal.termsOfService": "Terms of Service",

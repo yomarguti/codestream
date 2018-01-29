@@ -59,6 +59,7 @@ export default class Post extends Component {
 		let usernameRegExp = new RegExp("(@(?:" + this.props.usernames + ")\\b)");
 		let bodyParts = post.text.split(usernameRegExp);
 
+		console.log("UNR IS: ", this.props.usernames);
 		// let menuItems = [
 		// 	{ label: "Create Thread", key: "make-thread" },
 		// 	{ label: "Mark Unread", key: "mark-unread" },
