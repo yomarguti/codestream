@@ -2,6 +2,7 @@ import _ from "underscore-plus";
 import { upsert } from "../local-cache";
 import { normalize } from "./utils";
 import { setUserPreference } from "./user";
+import { fetchLatestPosts } from "./post";
 
 export const saveStream = attributes => (dispatch, getState, { db }) => {
 	return upsert(db, "streams", attributes).then(stream => {
@@ -27,7 +28,9 @@ export const fetchStreams = sortId => async (dispatch, getState, { http }) => {
 	if (sortId) url += `&lt=${sortId}`;
 
 	return http.get(url, session.accessToken).then(({ streams, more }) => {
-		const save = dispatch(saveStreams(normalize(streams)));
+		const normalizedStreams = normalize(streams);
+		dispatch(fetchLatestPosts(normalizedStreams));
+		const save = dispatch(saveStreams(normalizedStreams));
 		if (more) return dispatch(fetchStreams(_.sortBy(streams, "sortId")[0].sortId));
 		else return save;
 	});
