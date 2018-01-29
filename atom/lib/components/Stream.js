@@ -304,9 +304,13 @@ export class SimpleStream extends Component {
 		let newPostText = this.state.newPostText || "";
 
 		if (!this.usernamesRegexp) {
+			const users = this.props.users;
 			this.usernamesRegexp = Object.keys(this.props.users)
 				.map(key => {
-					return this.props.users[key].username;
+					return users[key].username || users[key].email;
+				})
+				.sort(function(a, b) {
+					return b.length - a.length;
 				})
 				.join("|")
 				.replace(/\|\|+/g, "|");
