@@ -4,6 +4,9 @@ import Timestamp from "./Timestamp";
 import Menu from "./Menu";
 import PostDetails from "./PostDetails";
 import createClassString from "classnames";
+import rootLogger from "../util/Logger";
+
+const logger = rootLogger.forClass("components/Post");
 
 export default class Post extends Component {
 	constructor(props) {
@@ -59,7 +62,7 @@ export default class Post extends Component {
 		let usernameRegExp = new RegExp("(@(?:" + this.props.usernames + ")\\b)");
 		let bodyParts = post.text.split(usernameRegExp);
 
-		console.log("UNR IS: ", this.props.usernames);
+		logger.debug("UNR IS: ", this.props.usernames);
 		// let menuItems = [
 		// 	{ label: "Create Thread", key: "make-thread" },
 		// 	{ label: "Mark Unread", key: "mark-unread" },
