@@ -74,7 +74,7 @@ export default class PubNubReceiver {
 	}
 
 	unsubscribeAll() {
-		this.channels = [];
+		this.subscribedChannels = [];
 		this.pubnub && this.pubnub.unsubscribeAll();
 	}
 
