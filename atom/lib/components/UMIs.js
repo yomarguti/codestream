@@ -57,6 +57,10 @@ export class SimpleUMIs extends Component {
 		);
 	}
 
+	componentWillUnmount() {
+		this.clearTreatments();
+	}
+
 	getTreatmentFromEvent = event => {
 		let li = event.target.closest("li");
 		if (!li) return;
