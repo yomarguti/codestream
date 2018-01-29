@@ -23,3 +23,5 @@ export function Button({ children, className, disabled, isOffline, loading, ...e
 }
 
 export default connect(state => ({ isOffline: state.connectivity.offline }))(Button);
+
+//dummy
