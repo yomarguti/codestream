@@ -1,9 +1,7 @@
 import React, { Component } from "react";
-import Gravatar from "react-gravatar";
-import Timestamp from "./Timestamp";
-import Post from "./Post";
 import createClassString from "classnames";
 import Button from "./onboarding/Button";
+import { locationToRange } from "../util/Marker";
 
 export default class PostDetails extends Component {
 	constructor(props) {
@@ -135,17 +133,16 @@ export default class PostDetails extends Component {
 		if (this.state.diffShowing) {
 			this.destroyDiffMarkers();
 		} else {
-			var editor = atom.workspace.getActiveTextEditor();
+			const editor = atom.workspace.getActiveTextEditor();
 			const post = this.props.post;
 			const codeBlock = post.codeBlocks[0];
 
-			let location = post.markerLocation;
+			const location = post.markerLocation;
 			if (location) {
-				let range = [[location[0], location[1]], [location[2], location[3]]];
+				const range = locationToRange(location);
+				this.scrollToLine(range.start.row);
 
-				this.scrollToLine(location[0]);
-
-				var marker = editor.markBufferRange(range);
+				const marker = editor.markBufferRange(range);
 				editor.decorateMarker(marker, { type: "line", class: "git-diff-details-old-highlighted" });
 				this.diffMarkers.push(marker);
 
@@ -157,10 +154,10 @@ export default class PostDetails extends Component {
 				this.diffEditor.setGrammar(editor.getGrammar());
 				this.diffEditor.setText(codeBlock.code.replace(/[\r\n]+$/g, ""));
 
-				var diffDiv = document.createElement("div");
+				const diffDiv = document.createElement("div");
 				diffDiv.appendChild(atom.views.getView(this.diffEditor));
 
-				var marker2 = editor.markBufferRange([[range[1][0], 0], [range[1][0], 0]]);
+				const marker2 = editor.markBufferRange(range);
 				editor.decorateMarker(marker2, {
 					type: "block",
 					position: "after",
@@ -168,7 +165,7 @@ export default class PostDetails extends Component {
 				});
 				this.diffMarkers.push(marker2);
 
-				var marker3 = this.diffEditor.markBufferRange([[0, 0], [200, 0]]);
+				const marker3 = this.diffEditor.markBufferRange([[0, 0], [200, 0]]);
 				this.diffEditor.decorateMarker(marker3, {
 					type: "line",
 					class: "git-diff-details-new-highlighted"

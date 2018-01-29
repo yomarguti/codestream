@@ -5,8 +5,6 @@ import MarkerLocationFinder from "../git/MarkerLocationFinder";
 import { open as openRepo } from "../git/GitRepo";
 import rootLogger from "../util/Logger";
 
-rootLogger.setLevel("trace");
-
 const logger = rootLogger.forClass("actions/marker-location");
 
 export const saveMarkerLocations = attributes => (dispatch, getState, { db }) => {
@@ -92,15 +90,19 @@ export const commitNewMarkerLocations = (oldCommitHash, newCommitHash) => (
 const calculateLocations = ({ teamId, streamId }) => async (dispatch, getState, { http }) => {
 	logger.trace('.calculateLocations');
 	const { context, repoAttributes, session } = getState();
+	const gitRepo = await openRepo(repoAttributes.workingDirectory);
+	// TODO check if context.currentCommit is already updated at this point, so
+	// we don't need to ask the repo
+	const currentCommit = await gitRepo.getCurrentCommit();
 	const { markers, markerLocations } = await http.get(
-		`/markers?teamId=${teamId}&streamId=${streamId}&commitHash=${context.currentCommit}`,
+		`/markers?teamId=${teamId}&streamId=${streamId}&commitHash=${currentCommit.hash}`,
 		session.accessToken
 	);
 	logger.debug("Found", markers.length, "markers");
 
 	const locations = markerLocations.locations || {};
 	const markerLocationFinder = new MarkerLocationFinder(
-		await openRepo(repoAttributes.workingDirectory),
+		gitRepo,
 		session,
 		http,
 		context,
@@ -110,13 +112,19 @@ const calculateLocations = ({ teamId, streamId }) => async (dispatch, getState, 
 	const missingMarkers = markers.filter(marker => !locations[marker._id]);
 	if (missingMarkers.length) {
 		logger.debug("Recalculating locations for", missingMarkers.length, "missing markers");
-		const calculatedLocations = markerLocationFinder.findLocations(missingMarkers);
+		const calculatedLocations = markerLocationFinder.findLocationsForCurrentCommit(missingMarkers);
 		logger.debug("locations", calculatedLocations);
 		Object.assign(locations, calculatedLocations);
 	}
 
 	await dispatch(saveMarkers(normalize(markers)));
 	await dispatch(saveMarkerLocations({ ...normalize(markerLocations), locations }));
+
+	const calculatedLocations = await markerLocationFinder.findLocationsForPendingChanges(locations);
+	for (const markerId of Object.keys(calculatedLocations)) {
+		const location = calculatedLocations[markerId];
+		await dispatch(markerDirtied({ markerId,  streamId}, location));
+	}
 };
 
 export const fetchMarkersAndLocations = ({ teamId, streamId }) => (dispatch, getState) => {

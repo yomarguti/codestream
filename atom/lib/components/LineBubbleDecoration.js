@@ -2,6 +2,10 @@ import { CompositeDisposable } from "atom";
 import React, { Component } from "react";
 import ReactDOM from "react-dom";
 import ReferenceBubble from "./ReferenceBubble";
+import { locationToRange } from "../util/Marker";
+import rootLogger from "../util/Logger";
+
+const logger = rootLogger.forClass("components/LineBubbleDecoration");
 
 export default class LineBubbleDecoration extends Component {
 	subscriptions = new CompositeDisposable();
@@ -24,10 +28,8 @@ export default class LineBubbleDecoration extends Component {
 	}
 
 	componentWillReceiveProps(nextProps) {
-		if (nextProps.editor.id !== this.props.editor.id) {
-			this.tearDown();
-			this.decorate(nextProps);
-		}
+		this.tearDown();
+		this.decorate(nextProps);
 	}
 
 	componentWillUnmount() {
@@ -48,7 +50,7 @@ export default class LineBubbleDecoration extends Component {
 			item: this.item
 		};
 
-		const range = [[props.line * 1, 0], [this.maxLine + 1, 0]];
+		const range = locationToRange([props.line, 1, this.maxLine + 1, 1]);
 		this.marker = props.editor.markBufferRange(range, { invalidate: "never" });
 
 		this.decoration = this.props.editor.decorateMarker(this.marker, options);

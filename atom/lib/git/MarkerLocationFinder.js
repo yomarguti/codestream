@@ -1,7 +1,5 @@
 import rootLogger from "../util/Logger";
 
-rootLogger.setLevel("trace");
-
 export default class MarkerLocationFinder {
 	constructor(repo, session, http, context, streamId) {
 		this._logger = rootLogger.forClass("MarkerLocationFinder");
@@ -12,10 +10,10 @@ export default class MarkerLocationFinder {
 		this._streamId = streamId;
 	}
 
-	async findLocations(markers) {
+	async findLocationsForCurrentCommit(markers) {
 		const me = this;
 		const myLogger = me._logger;
-		myLogger.trace(".findLocations <=", markers);
+		myLogger.trace(".findLocationsForCurrentCommit <=", markers);
 
 		const filePath = me._context.currentFile;
 		const repo = me._repo;
@@ -57,8 +55,8 @@ export default class MarkerLocationFinder {
 			);
 
 			if (lastKnownLocationsLength && !commit.equals(currentCommit)) {
-				const deltas = await repo.getDeltasBetweenCommits(commit, currentCommit);
-				const edits = this._getEditsForCurrentFile(deltas);
+				const deltas = await repo.getDeltasBetweenCommits(commit, currentCommit, filePath);
+				const edits = this._getEdits(deltas);
 				if (edits.length) {
 					myLogger.debug(
 						"File has changed from",
@@ -81,6 +79,30 @@ export default class MarkerLocationFinder {
 		}
 
 		return currentLocations;
+	}
+
+	async findLocationsForPendingChanges(currentCommitLocations) {
+		const me = this;
+		const myLogger = me._logger;
+		myLogger.trace(".findLocationsForPendingChanges <=", currentCommitLocations);
+
+		const filePath = me._context.currentFile;
+		const repo = me._repo;
+		const currentCommit = await repo.getCurrentCommit();
+		const deltas = await repo.getDeltasForPendingChanges(filePath);
+		const edits = this._getEdits(deltas);
+
+		if (edits.length) {
+			myLogger.debug("File has pending changes - recalculating locations");
+			const calculatedLocations = await this._calculateLocations(
+				currentCommitLocations,
+				edits,
+				currentCommit.hash
+			);
+			return calculatedLocations;
+		} else {
+			return currentCommitLocations;
+		}
 	}
 
 	async _addMarkersFirstCommitToCommitHistory(commitHistory, markers) {
@@ -115,11 +137,14 @@ export default class MarkerLocationFinder {
 		return result.markerLocations.locations;
 	}
 
-	_getEditsForCurrentFile(deltas) {
+	_getEdits(deltas) {
 		const me = this;
 		const myLogger = me._logger;
 		const currentFile = me._context.currentFile;
 
+		// the list of deltas should be already filtered for the current file
+		// but we still filter it here as a safeguard in case something
+		// goes wrong with our Git filtering
 		let edits = deltas.filter(delta => delta.newFile === currentFile).map(delta => delta.edits);
 		edits = [].concat.apply([], edits);
 

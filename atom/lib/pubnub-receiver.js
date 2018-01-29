@@ -38,7 +38,7 @@ export default class PubNubReceiver {
 		this.pubnub.addListener({
 			message: event => {
 				const { requestId, ...objects } = event.message;
-				logger.debug(`pubnub event - ${requestId}`, event.message);
+				// console.log(`pubnub event - ${requestId}`, event.message);
 				Object.keys(objects).forEach(key => {
 					const handler = this.getMessageHandler(key);
 					if (handler) handler(objects[key]);
