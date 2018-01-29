@@ -50,7 +50,7 @@ export const resolvePendingPost = (id, { post, markers, markerLocations, stream 
 	{ db }
 ) => {
 	return db
-		.transaction("rw", db.posts, async () => {
+		.transaction("rw", db.posts, db.streams, async () => {
 			await db.posts.delete(id);
 			dispatch({
 				type: "RESOLVE_PENDING_POST",
