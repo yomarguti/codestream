@@ -132,6 +132,7 @@ module.exports = {
 	deactivate() {
 		this.subscriptions.dispose();
 		if (this.statusBarTile) this.statusBarTile.destroy();
+		store.dispatch(logout());
 	},
 
 	serialize() {

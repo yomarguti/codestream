@@ -47,6 +47,9 @@ export default store => {
 			if (action.type === "SET_CURRENT_REPO") receiver.subscribe([`repo-${action.payload}`]);
 		}
 
+		if (action.type === "CLEAR_SESSION") {
+			receiver.unsubscribeAll();
+		}
 		return result;
 	};
 };

@@ -73,6 +73,11 @@ export default class PubNubReceiver {
 		});
 	}
 
+	unsubscribeAll() {
+		this.channels = [];
+		this.pubnub && this.pubnub.unsubscribeAll();
+	}
+
 	getMessageHandler(type) {
 		let tableName;
 		switch (type) {
