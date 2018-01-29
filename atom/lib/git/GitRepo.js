@@ -112,20 +112,24 @@ class GitRepo {
 		return new GitCommit(commit);
 	}
 
-	async getDeltasBetweenCommits(oldCommit, newCommit) {
-		const cache = this._deltasBetweenCommits;
-		const oldCommitDeltas = cache[oldCommit] || (cache[oldCommit] = {});
+	async getDeltasBetweenCommits(oldCommit, newCommit, filePath) {
+		const oldTree = await oldCommit._commit.getTree();
+		const newTree = await newCommit._commit.getTree();
+		const opts = {
+			pathspec: [ filePath ]
+		};
+		const diff = await Git.Diff.treeToTree(this._git, oldTree, newTree, opts);
+		return await this._buildDeltasFromDiffs([diff]);
+	}
 
-		let deltas = oldCommitDeltas[newCommit];
-
-		if (!deltas) {
-			const oldTree = await oldCommit._commit.getTree();
-			const newTree = await newCommit._commit.getTree();
-			const diff = await Git.Diff.treeToTree(this._git, oldTree, newTree);
-			deltas = oldCommitDeltas[newCommit] = await this._buildDeltasFromDiffs([diff]);
-		}
-
-		return deltas;
+	async getDeltasForPendingChanges(filePath) {
+		const currentCommit = await this.getCurrentCommit();
+		const currentTree = await currentCommit._commit.getTree();
+		const opts = {
+			pathspec: [ filePath ]
+		};
+		const diff = await Git.Diff.treeToWorkdir(this._git, currentTree, opts);
+		return await this._buildDeltasFromDiffs([diff]);
 	}
 
 	async getDeltas(commit) {

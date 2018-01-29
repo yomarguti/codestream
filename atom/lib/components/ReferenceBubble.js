@@ -3,16 +3,11 @@ import React, { Component } from "react";
 import { connect } from "react-redux";
 import _ from "underscore-plus";
 import * as actions from "../actions/marker-location";
+import { locationToRange } from "../util/Marker";
+import rootLogger from "../util/Logger";
 
-const Range = location => [[location[0], location[1]], [location[2], location[3]]];
-const Location = (headPosition, tailPosition) => {
-	const location = [];
-	location[0] = tailPosition.row;
-	location[1] = tailPosition.column;
-	location[2] = headPosition.row;
-	location[3] = headPosition.column;
-	return location;
-};
+const logger = rootLogger.forClass("components/ReferenceBubble");
+
 const isValid = location => {
 	const sameLine = location[0] === location[2];
 	const startOfLine = location[1] === 0 && location[3] === 0;
@@ -30,12 +25,13 @@ class ReferenceBubble extends Component {
 	}
 
 	componentDidMount() {
-		this.marker = this.props.editor.markBufferRange(Range(this.props.location), {
+		logger.trace('.componentDidMount');
+		const { location, editor } = this.props;
+		const range = locationToRange(location);
+		this.marker = editor.markBufferRange(range, {
 			invalidate: "never"
 		});
 		this.subscriptions.add(
-			this.props.editor.getBuffer().onDidReload(this.onDidWriteToDisk),
-			this.props.editor.onDidSave(this.onDidWriteToDisk),
 			this.marker.onDidDestroy(() => {
 				this.subscriptions.dispose();
 			})
@@ -43,27 +39,13 @@ class ReferenceBubble extends Component {
 	}
 
 	componentWillUnmount() {
+		logger.trace('.componentWillUnmount');
 		this.marker.destroy();
 		this.subscriptions.dispose();
 	}
 
-	onDidWriteToDisk = () => {
-		console.group(`marker for reference ${this.props.id}`);
-		console.debug("saved location is", this.props.location);
-		const { start, end } = this.marker.getBufferRange();
-		const newLocation = Location(end, start);
-		console.debug("new location is", newLocation);
-		if (!_.isEqual(newLocation, this.props.location)) {
-			this.props.markerDirtied(
-				{ markerId: this.props.id, streamId: this.props.streamId },
-				newLocation
-			);
-			this.setState({ isVisible: isValid(newLocation) });
-		}
-		console.groupEnd();
-	};
-
 	render() {
+		logger.trace('.render');
 		if (!this.state.isVisible) return false;
 
 		const { id, postId, onSelect, count, numComments } = this.props;
