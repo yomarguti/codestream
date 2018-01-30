@@ -728,7 +728,9 @@ export class SimpleStream extends Component {
 
 		let selection = window.getSelection();
 		let range = selection.getRangeAt(0);
-		let upToCursor = newPostText.substring(0, range.startOffset);
+		let node = range.commonAncestorContainer;
+		let nodeText = node.textContent || "";
+		let upToCursor = nodeText.substring(0, range.startOffset);
 		var match = upToCursor.match(/@([a-zA-Z_.+]*)$/);
 		if (this.state.atMentionsOn) {
 			if (match) {
