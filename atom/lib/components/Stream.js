@@ -606,7 +606,7 @@ export class SimpleStream extends Component {
 		Object.keys(this.props.users).forEach(personId => {
 			let person = this.props.users[personId];
 			if (!person) return;
-			let matcher = person.username || person.email.replace(/@.*/, "");
+			let matcher = person.username.replace(/\+/g, "\\+").replace(/\./g, "\\.");
 			if (text.match("@" + matcher + "\\b")) {
 				mentionUserIds.push(personId);
 			}
