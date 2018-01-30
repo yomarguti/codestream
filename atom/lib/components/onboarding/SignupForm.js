@@ -49,8 +49,9 @@ export class SimpleSignupForm extends Component {
 		const { repositories } = this.context;
 		const repository = repositories[0];
 		const gitDirectory = repository.getWorkingDirectory();
+		const defaultEmail = repository.getConfigValue("user.email", gitDirectory);
 		this.setState({
-			email: repository.getConfigValue("user.email", gitDirectory) || "",
+			email: defaultEmail || "",
 			name: repository.getConfigValue("user.name", gitDirectory) || ""
 		});
 
@@ -59,7 +60,7 @@ export class SimpleSignupForm extends Component {
 			"Up to 21 characters. Valid special characters are (.-_)"
 		);
 		this.addToolTip("onboard-input-password", "6+ characters");
-		this.addToolTip("onboard-input-email", "Defaulted from git");
+		if (defaultEmail) this.addToolTip("onboard-input-email", "Defaulted from git");
 	}
 
 	componentWillUnmount() {
