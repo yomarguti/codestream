@@ -5,6 +5,7 @@ import createClassString from "classnames";
 import withRepositories from "./withRepositories";
 import { getUserPreference } from "../actions/user";
 import rootLogger from "../util/Logger";
+import { getStreamsForRepo } from "../reducers/streams";
 
 const logger = rootLogger.forClass("components/UMIs");
 
@@ -101,7 +102,7 @@ export class SimpleUMIs extends Component {
 			return ret;
 		}
 
-		let streamMap = swapHash(this.props.streams.byFile);
+		let streamMap = swapHash(this.props.streams);
 
 		this.clearTreatments();
 
@@ -352,10 +353,10 @@ export class SimpleUMIs extends Component {
 	}
 }
 
-const mapStateToProps = ({ repoAttributes, session, streams, users, umis }) => {
+const mapStateToProps = ({ repoAttributes, context, session, streams, users, umis }) => {
 	return {
 		users: users,
-		streams: streams,
+		streams: getStreamsForRepo(streams, context.currentRepoId) || {},
 		currentUser: users[session.userId],
 		workingDirectory: repoAttributes.workingDirectory,
 		repoUrl: repoAttributes.url,

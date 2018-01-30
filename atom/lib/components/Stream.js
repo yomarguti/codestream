@@ -18,6 +18,7 @@ import { createPost, fetchPosts } from "../actions/post";
 import { fetchMarkersAndLocations } from "../actions/marker-location";
 import { toMapBy } from "../reducers/utils";
 import { locationToRange, rangeToLocation } from "../util/Marker";
+import { getStreamForRepoAndFile } from "../reducers/streams";
 import rootLogger from "../util/Logger";
 
 const logger = rootLogger.forClass("components/Stream");
@@ -1026,7 +1027,7 @@ const mapStateToProps = ({
 	onboarding
 }) => {
 	logger.trace(".mapStateToProps");
-	const stream = streams.byFile[context.currentFile] || {};
+	const stream = getStreamForRepoAndFile(streams, context.currentRepoId, context.currentFile) || {};
 	const markersForStreamAndCommit = getMarkersForStreamAndCommit(
 		markerLocations.byStream[stream.id],
 		context.currentCommit,
