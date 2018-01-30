@@ -3,6 +3,7 @@ import _ from "underscore-plus";
 import { normalize } from "./actions/utils";
 import { resolveFromPubnub } from "./actions/pubnub-event";
 import { saveMarkerLocations } from "./actions/marker-location";
+import { lastMessageReceived } from "./actions/messaging";
 import rootLogger from "./util/Logger";
 
 const logger = rootLogger.forClass("pubnub-receiver");
@@ -36,14 +37,7 @@ export default class PubNubReceiver {
 
 	setupListener() {
 		this.pubnub.addListener({
-			message: event => {
-				const { requestId, ...objects } = event.message;
-				// console.log(`pubnub event - ${requestId}`, event.message);
-				Object.keys(objects).forEach(key => {
-					const handler = this.getMessageHandler(key);
-					if (handler) handler(objects[key]);
-				});
-			},
+			message: this.pubnubEvent.bind(this),
 			presence: event => {
 				// logger.debug(event.action); // online status events
 				// logger.debug(event.timestamp); // timestamp on the event is occurred
@@ -53,6 +47,20 @@ export default class PubNubReceiver {
 			status: status => {
 				logger.debug("pubnub status", status);
 			}
+		});
+	}
+
+	pubnubEvent (event) {
+		this.store.dispatch(lastMessageReceived(event.timetoken));
+		this.pubnubMessage(event.message);
+	}
+
+	pubnubMessage (message) {
+		const { requestId, ...objects } = message;
+		// console.log(`pubnub event - ${requestId}`, message);
+		Object.keys(objects).forEach(key => {
+			const handler = this.getMessageHandler(key);
+			if (handler) handler(objects[key]);
 		});
 	}
 
@@ -110,5 +118,66 @@ export default class PubNubReceiver {
 		}
 		if (tableName)
 			return data => this.store.dispatch(resolveFromPubnub(tableName, normalize(data)));
+	}
+
+	async retrieveHistory (channels, messaging = {}) {
+		let retrieveSince;
+		if (messaging.lastMessageReceived) {
+			retrieveSince = messaging.lastMessageReceived;
+		}
+		else {
+			return true; // once this mechanism is in operation this should never happen
+		}
+		// FIXME: there probably needs to be a time limit here, where we assume it isn't
+		// worth replaying all the messages ... instead we just wipe the DB and refresh
+		// the session ... maybe a week?
+		return await this.retrieveHistorySince(channels, retrieveSince);
+	}
+
+	async retrieveHistorySince (channels, timeToken) {
+		let allMessages = [];
+		await Promise.all(channels.map(channel => {
+			return this.retrieveChannelHistorySince(channel, timeToken, allMessages);
+		}));
+		allMessages.forEach(message => {
+			message.timestamp = parseInt(message.timetoken, 10) / 10000;
+		});
+		allMessages.sort((a, b) => {
+			return a.timestamp - b.timestamp;
+		});
+		for (var message of allMessages) {
+			this.pubnubMessage(message.entry);
+		}
+		if (allMessages.length > 0) {
+			const lastMessage = allMessages[allMessages.length - 1];
+			this.store.dispatch(lastMessageReceived(lastMessage.timetoken));
+		}
+	}
+
+	async retrieveChannelHistorySince (channel, timeToken, allMessages) {
+		let response;
+		try {
+			response = await this.pubnub.history({
+				channel: channel,
+				reverse: false,	// oldest message first
+				end: timeToken,
+				stringifiedTimeToken: true
+			});
+		}
+		catch (error) {
+			// FIXME: this should be fatal, or perhaps lead to a session refresh
+			console.warn('PubNub history failed: ', error);
+			return true;
+		}
+		allMessages.push.apply(allMessages, response.messages);
+		if (response.messages.length < 100) {
+			return true;
+		}
+		else {
+			// FIXME: we can't let this go on too deep, there needs to be a limit
+			// once we reach that limit, we probably need to just clear the database and
+			// refresh the session (like you're coming back from vacation)
+			return this.retrieveChannelHistorySince(channel, response.endTimeToken, allMessages);
+		}
 	}
 }

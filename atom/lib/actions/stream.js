@@ -29,7 +29,7 @@ export const fetchStreams = sortId => async (dispatch, getState, { http }) => {
 
 	return http.get(url, session.accessToken).then(({ streams, more }) => {
 		const normalizedStreams = normalize(streams);
-		dispatch(fetchLatestPosts(normalizedStreams));
+//		dispatch(fetchLatestPosts(normalizedStreams));
 		const save = dispatch(saveStreams(normalizedStreams));
 		if (more) return dispatch(fetchStreams(_.sortBy(streams, "sortId")[0].sortId));
 		else return save;

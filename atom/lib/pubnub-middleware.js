@@ -1,6 +1,22 @@
 import PubNubReceiver from "./pubnub-receiver";
 import { fetchCurrentUser } from "./actions/user";
 
+const _initializePubnubAndSubscribe = async (store, receiver) => {
+	const { context, users, session, messaging } = store.getState();
+	const user = users[session.userId];
+	const teamChannels = (user.teamIds || []).map(id => `team-${id}`);
+
+	const channels = [`user-${user.id}`, ...teamChannels];
+
+	if (context.currentRepoId) {
+		channels.push(`repo-${context.currentRepoId}`);
+	}
+
+	receiver.initialize(session.accessToken, session.userId);
+	await receiver.retrieveHistory(channels, messaging);
+	receiver.subscribe(channels);
+}
+
 export default store => {
 	const receiver = new PubNubReceiver(store);
 
@@ -14,28 +30,12 @@ export default store => {
 			const { session, onboarding, users, context } = store.getState();
 			if (onboarding.complete && session.accessToken) {
 				store.dispatch(fetchCurrentUser());
-
-				const user = users[session.userId];
-				const teamChannels = (user.teamIds || []).map(id => `team-${id}`);
-
-				const channels = [`user-${user.id}`, ...teamChannels];
-
-				if (context.currentRepoId) channels.push(`repo-${context.currentRepoId}`);
-
-				receiver.initialize(session.accessToken, session.userId);
-				receiver.subscribe(channels);
+				_initializePubnubAndSubscribe(store, receiver);
 			}
 		}
 		// When starting a new session, subscribe to channels
 		if (action.type === "LOGGED_IN" || action.type === "ONBOARDING_COMPLETE") {
-			const { context, users, session } = store.getState();
-			const user = users[session.userId];
-			const teamChannels = (user.teamIds || []).map(id => `team-${id}`);
-
-			const channels = [...teamChannels, `user-${user.id}`, `repo-${context.currentRepoId}`];
-
-			receiver.initialize(session.accessToken, user.id);
-			receiver.subscribe(channels);
+			_initializePubnubAndSubscribe(store, receiver);
 		}
 
 		// As context changes, subscribe
