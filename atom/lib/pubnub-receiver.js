@@ -7,8 +7,6 @@ import rootLogger from "./util/Logger";
 
 const logger = rootLogger.forClass("pubnub-receiver");
 
-export const createReceiver = store => new PubNubReceiver(store);
-
 export default class PubNubReceiver {
 	subscribedChannels = [];
 	pubnub = null;
