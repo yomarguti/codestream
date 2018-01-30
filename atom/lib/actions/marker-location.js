@@ -1,6 +1,7 @@
 import { upsert } from "../local-cache";
 import { normalize } from "./utils";
 import { saveMarkers } from "./marker";
+import { getStreamsForRepo } from "../reducers/streams";
 import MarkerLocationFinder from "../git/MarkerLocationFinder";
 import { open as openRepo } from "../git/GitRepo";
 import rootLogger from "../util/Logger";
@@ -8,7 +9,7 @@ import rootLogger from "../util/Logger";
 const logger = rootLogger.forClass("actions/marker-location");
 
 export const saveMarkerLocations = attributes => (dispatch, getState, { db }) => {
-	logger.trace('.saveMarkerLocations');
+	logger.trace(".saveMarkerLocations");
 	const { streamId, teamId, commitHash, locations } = attributes;
 
 	if (!(streamId && teamId && commitHash)) return;
@@ -31,7 +32,7 @@ export const saveMarkerLocations = attributes => (dispatch, getState, { db }) =>
 };
 
 export const markerDirtied = ({ markerId, streamId }, location) => (dispatch, getState, { db }) => {
-	logger.trace('.markerDirtied');
+	logger.trace(".markerDirtied");
 	const { context } = getState();
 
 	const primaryKey = Object.freeze({
@@ -62,7 +63,7 @@ export const commitNewMarkerLocations = (oldCommitHash, newCommitHash) => (
 	getState,
 	{ db, http }
 ) => {
-	logger.trace('.commitNewMarkerLocations');
+	logger.trace(".commitNewMarkerLocations");
 	const { context, session } = getState();
 	return db.transaction("rw", db.streams, db.markerLocations, () => {
 		db.streams.where({ repoId: context.currentRepoId }).each(async stream => {
@@ -88,7 +89,7 @@ export const commitNewMarkerLocations = (oldCommitHash, newCommitHash) => (
 };
 
 const calculateLocations = ({ teamId, streamId }) => async (dispatch, getState, { http }) => {
-	logger.trace('.calculateLocations');
+	logger.trace(".calculateLocations");
 	const { context, repoAttributes, session } = getState();
 	const gitRepo = await openRepo(repoAttributes.workingDirectory);
 	// TODO check if context.currentCommit is already updated at this point, so
@@ -101,13 +102,7 @@ const calculateLocations = ({ teamId, streamId }) => async (dispatch, getState, 
 	logger.debug("Found", markers.length, "markers");
 
 	const locations = markerLocations.locations || {};
-	const markerLocationFinder = new MarkerLocationFinder(
-		gitRepo,
-		session,
-		http,
-		context,
-		streamId
-	);
+	const markerLocationFinder = new MarkerLocationFinder(gitRepo, session, http, context, streamId);
 
 	const missingMarkers = markers.filter(marker => !locations[marker._id]);
 	if (missingMarkers.length) {
@@ -123,21 +118,21 @@ const calculateLocations = ({ teamId, streamId }) => async (dispatch, getState, 
 	const calculatedLocations = await markerLocationFinder.findLocationsForPendingChanges(locations);
 	for (const markerId of Object.keys(calculatedLocations)) {
 		const location = calculatedLocations[markerId];
-		await dispatch(markerDirtied({ markerId,  streamId}, location));
+		await dispatch(markerDirtied({ markerId, streamId }, location));
 	}
 };
 
 export const fetchMarkersAndLocations = ({ teamId, streamId }) => (dispatch, getState) => {
-	logger.trace('.fetchMarkersAndLocations');
+	logger.trace(".fetchMarkersAndLocations");
 	const { context, session, repoAttributes } = getState();
 	return dispatch(calculateLocations({ teamId, streamId }));
 };
 
 export const refreshMarkersAndLocations = () => (dispatch, getState) => {
-	logger.trace('.refreshMarkersAndLocations');
+	logger.trace(".refreshMarkersAndLocations");
 	const { context, streams } = getState();
 	return Promise.all(
-		Object.values(streams.byFile).map(stream => {
+		Object.values(getStreamsForRepo(streams, context.currentRepoId) || {}).map(stream => {
 			if (stream.teamId === context.currentTeamId)
 				dispatch(calculateLocations({ streamId: stream.id, teamId: context.currentTeamId }));
 		})
