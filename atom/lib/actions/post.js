@@ -130,14 +130,14 @@ export const createPost = (streamId, parentPostId, text, codeBlocks, mentions) =
 	}
 };
 
-const fetchLatest = (currentId, streamId, teamId) => async (dispatch, getState, { http }) => {
-	const { posts, more } = await http.get(
-		`/posts?teamId=${teamId}&streamId=${streamId}&gt=${currentId}`,
-		getState().session.accessToken
-	);
+const fetchLatest = (mostRecentPost, streamId, teamId) => async (dispatch, getState, { http }) => {
+	let url = `/posts?teamId=${teamId}&streamId=${streamId}`;
+	if (mostRecentPost) url += `&gt=${mostRecentPost.id}`;
+	const { posts, more } = await http.get(url, getState().session.accessToken);
 	const normalizedPosts = normalize(posts);
 	const save = dispatch(savePostsForStream(streamId, normalizedPosts));
-	if (more) return dispatch(fetchLatest(normalizedPosts[0].id, streamId, teamId));
+	// only take the first page if no mostRecentPost
+	if (more && mostRecentPost) return dispatch(fetchLatest(normalizedPosts[0].id, streamId, teamId));
 	else return save;
 };
 
@@ -145,8 +145,8 @@ export const fetchLatestPosts = streams => (dispatch, getState, { db, http }) =>
 	return Promise.all(
 		streams.map(async stream => {
 			const cachedPosts = await db.posts.where({ streamId: stream.id }).sortBy("seqNum");
-			const mostRecentCachedId = cachedPosts[cachedPosts.length - 1].id;
-			return dispatch(fetchLatest(mostRecentCachedId, stream.id, stream.teamId));
+			const mostRecentCachedPost = cachedPosts[cachedPosts.length - 1];
+			return dispatch(fetchLatest(mostRecentCachedPost, stream.id, stream.teamId));
 		})
 	);
 };
