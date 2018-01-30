@@ -154,7 +154,8 @@ export class SimpleSignupForm extends Component {
 		this.setState({ loading: true });
 		const { register } = this.props;
 		const { username, password, email, name, telemetryConsent } = this.state;
-		register({ username, password, email, telemetryConsent, ...parseName(name) }).then(() =>
+		const preferences = { telemetryConsent };
+		register({ username, password, email, preferences, ...parseName(name) }).then(() =>
 			this.setState({ loading: false })
 		);
 	};
