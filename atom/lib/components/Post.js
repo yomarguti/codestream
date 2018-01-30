@@ -83,7 +83,7 @@ export default class Post extends Component {
 		// <span className="icon icon-gear" onClick={this.handleMenuClick} />
 		// {menu}
 
-		// FIXME use a real email address
+		let iterator = 0;
 		return (
 			<div
 				className={postClass}
@@ -111,13 +111,13 @@ export default class Post extends Component {
 						if (part.match(usernameRegExp)) {
 							if (part === "@" + this.props.currentUsername)
 								return (
-									<span key={part} className="at-mention me">
+									<span key={iterator++} className="at-mention me">
 										{part}
 									</span>
 								);
 							else
 								return (
-									<span key={part} className="at-mention">
+									<span key={iterator++} className="at-mention">
 										{part}
 									</span>
 								);
