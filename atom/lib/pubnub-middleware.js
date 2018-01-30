@@ -38,6 +38,15 @@ export default store => {
 			receiver.subscribe(channels);
 		}
 
+		// When user is confirmed, subscribe to my own "me" channel
+		if (action.type === "USER_CONFIRMED") {
+			const { users, session } = store.getState();
+			const user = users[session.userId];
+			const channel = `user-${user.id}`;
+			receiver.initialize(session.accessToken, user.id);
+			receiver.subscribe([channel]);
+		}
+
 		// As context changes, subscribe
 		if (receiver.isInitialized()) {
 			if (action.type === "SET_CONTEXT" && action.payload.currentRepoId)

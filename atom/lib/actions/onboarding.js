@@ -89,6 +89,7 @@ export const confirmEmail = attributes => (dispatch, getState, { http }) => {
 				dispatch(fetchStreams());
 				dispatch({ type: "EXISTING_USER_CONFIRMED" });
 			} else await dispatch(joinTeam("EXISTING_USER_CONFIRMED"));
+			await dispatch({ type: "USER_CONFIRMED" });
 		})
 		.catch(error => {
 			dispatch(requestFinished());
