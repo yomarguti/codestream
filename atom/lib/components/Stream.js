@@ -794,6 +794,7 @@ export class SimpleStream extends Component {
 		let peopleToShow = [];
 
 		Object.keys(this.props.users).forEach(personId => {
+			if (personId === this.props.currentUser.id) return;
 			let person = this.props.users[personId];
 			let toMatch = person.firstName + " " + person.lastName + "*" + person.username; // + "*" + person.email;
 			let lowered = toMatch.toLowerCase();
@@ -1047,10 +1048,7 @@ const mapStateToProps = ({
 		}
 	});
 
-	const teamMembers = _.filter(
-		users,
-		user => (user.teamIds || []).includes(context.currentTeamId) && user.id !== session.userId
-	);
+	const teamMembers = _.filter(users, user => (user.teamIds || []).includes(context.currentTeamId));
 
 	return {
 		id: stream.id,
