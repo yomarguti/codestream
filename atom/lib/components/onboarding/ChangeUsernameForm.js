@@ -4,6 +4,7 @@ import { connect } from "react-redux";
 import UnexpectedErrorMessage from "./UnexpectedErrorMessage";
 import Button from "./Button";
 import * as onboardingActions from "../../actions/onboarding";
+const { CompositeDisposable } = require("atom");
 
 export class ChangeUsernameForm extends Component {
 	constructor(props) {
@@ -13,6 +14,7 @@ export class ChangeUsernameForm extends Component {
 			touched: false,
 			loading: false
 		};
+		this.subscriptions = new CompositeDisposable();
 	}
 
 	onBlur = () => this.setState({ touched: true });
@@ -21,6 +23,22 @@ export class ChangeUsernameForm extends Component {
 		if (this.props.errors.unknown)
 			return <UnexpectedErrorMessage classes="error-message page-error" />;
 	};
+
+	componentDidMount() {
+		this.addToolTip("change-username", "Up to 21 characters. Valid special characters are (.-_)");
+	}
+
+	addToolTip(elementId, key) {
+		let div = document.getElementById(elementId);
+		if (!div) return;
+		this.subscriptions.add(
+			atom.tooltips.add(div, {
+				title: key,
+				placement: "left",
+				delay: 0
+			})
+		);
+	}
 
 	onSubmit = async event => {
 		this.setState({ loading: true });
@@ -48,6 +66,7 @@ export class ChangeUsernameForm extends Component {
 				<div id="controls">
 					<div id="username-controls" className="control-group">
 						<input
+							id="change-username"
 							className="native-key-bindings input-text control"
 							type="text"
 							name="username"
@@ -58,7 +77,6 @@ export class ChangeUsernameForm extends Component {
 							value={this.state.username}
 							onBlur={this.onBlur}
 							onChange={event => this.setState({ username: event.target.value })}
-							required={this.state.touched}
 						/>
 					</div>
 					<Button
