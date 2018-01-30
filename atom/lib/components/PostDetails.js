@@ -44,11 +44,14 @@ export default class PostDetails extends Component {
 					alert = <span className="icon icon-alert" ref={ref => (this._alert = ref)} />;
 				}
 			}
+		} else if (hasCodeBlock) {
+			// this is the case where we have a codeblock but no marker location
+			alert = <span className="icon icon-alert" ref={ref => (this._alert = ref)} />;
 		}
 
 		// console.log(post.commitHashWhenPosted, " vs ", this.props.currentCommit);
 		let commitDiv = null;
-		if (post.codeBlocks && post.codeBlocks.length > 0) {
+		if (hasCodeBlock) {
 			commitDiv = (
 				<div className="posted-to">
 					<label>Posted to:</label> <span>{post.commitHashWhenPosted}</span>
@@ -106,7 +109,7 @@ export default class PostDetails extends Component {
 	componentDidMount = () => {
 		if (this._alert)
 			atom.tooltips.add(this._alert, {
-				title: "This code no longer exists in this version of the file."
+				title: "Unknown codeblock location."
 			});
 	};
 
