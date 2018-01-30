@@ -85,6 +85,7 @@ export const incrementUMI = post => async (dispatch, getState, { db }) => {
 
 	// if the user is up-to-date on this stream, then we need to create a pointer
 	// to the first unread message in the stream, stored in lastReads
+	currentUser.lastReads = currentUser.lastReads || {};
 	if (!currentUser.lastReads[post.streamId]) {
 		currentUser.lastReads[post.streamId] = post.id;
 
