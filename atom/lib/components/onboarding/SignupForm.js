@@ -40,7 +40,8 @@ export class SimpleSignupForm extends Component {
 			email: "",
 			usernameTouched: false,
 			passwordTouched: false,
-			emailTouched: false
+			emailTouched: false,
+			telemetryConsent: true
 		};
 		this.subscriptions = new CompositeDisposable();
 	}
@@ -152,10 +153,20 @@ export class SimpleSignupForm extends Component {
 		if (this.isFormInvalid()) return;
 		this.setState({ loading: true });
 		const { register } = this.props;
-		const { username, password, email, name } = this.state;
-		register({ username, password, email, ...parseName(name) }).then(() =>
+		const { username, password, email, name, telemetryConsent } = this.state;
+		register({ username, password, email, telemetryConsent, ...parseName(name) }).then(() =>
 			this.setState({ loading: false })
 		);
+	};
+
+	handleTelemetryConsentChange = event => {
+		const target = event.target;
+		const value = target.type === "checkbox" ? target.checked : target.value;
+		const name = target.name;
+
+		this.setState({
+			[name]: value
+		});
 	};
 
 	renderDebugInfo() {
@@ -245,6 +256,28 @@ export class SimpleSignupForm extends Component {
 						<a onClick={() => shell.openExternal("https://codestream.com/privacy")}>
 							<FormattedMessage id="signUp.legal.privacyPolicy" />
 						</a>
+					</small>
+					<small className="fine-print" id="telemetry-consent">
+						<input
+							id="telemetry-checkbox"
+							className="control-checkbox"
+							type="checkbox"
+							name="telemetryConsent"
+							onChange={this.handleTelemetryConsentChange}
+							checked={this.state.telemetryConsent}
+						/>
+						<div className="telemetry-label">
+							<FormattedMessage id="signUp.legal.telemetryConsent" />{" "}
+							<a
+								onClick={() =>
+									shell.openExternal(
+										"https://codestream.zendesk.com/hc/en-us/articles/115002759031"
+									)
+								}
+							>
+								<FormattedMessage id="signUp.legal.learnMore" />
+							</a>
+						</div>
 					</small>
 					<div className="footer">
 						<p>
