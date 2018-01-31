@@ -45,6 +45,13 @@ export class SimpleStream extends Component {
 
 		this.subscriptions = new CompositeDisposable();
 		this.subscriptions.add(
+			atom.keymaps.add("codestream", {
+				"atom-workspace": {
+					escape: "codestream:escape"
+				}
+			})
+		);
+		this.subscriptions.add(
 			atom.commands.add(".codestream .compose.mentions-on", {
 				"codestream:at-mention-move-up": event => this.handleAtMentionKeyPress(event, "up"),
 				"codestream:at-mention-move-down": event => this.handleAtMentionKeyPress(event, "down"),
