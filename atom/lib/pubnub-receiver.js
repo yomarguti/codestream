@@ -159,8 +159,8 @@ export default class PubNubReceiver {
 		try {
 			response = await this.pubnub.history({
 				channel: channel,
-				reverse: false,	// oldest message first
-				end: timeToken,
+				reverse: true,	// oldest message first
+				start: timeToken,
 				stringifiedTimeToken: true
 			});
 		}
