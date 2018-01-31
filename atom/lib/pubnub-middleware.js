@@ -15,7 +15,7 @@ const _initializePubnubAndSubscribe = async (store, receiver) => {
 	receiver.initialize(session.accessToken, session.userId);
 	receiver.subscribe(channels);
 	return receiver.retrieveHistory(channels, messaging);
-}
+};
 
 export default store => {
 	const receiver = new PubNubReceiver(store);
@@ -36,8 +36,10 @@ export default store => {
 		// When starting a new session, subscribe to channels
 		if (
 			action.type === "LOGGED_IN" ||
-			action.type === "ONBOARDING_COMPLETE" || 
-			action.type === 'USER_CONFIRMED'
+			action.type === "ONBOARDING_COMPLETE" ||
+			action.type === "USER_CONFIRMED" ||
+			action.type === "EXISTING_USER_LOGGED_INTO_NEW_REPO" ||
+			action.type === "NEW_USER_LOGGED_INTO_NEW_REPO"
 		) {
 			_initializePubnubAndSubscribe(store, receiver);
 		}
