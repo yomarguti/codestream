@@ -185,11 +185,7 @@ export class SimpleLoginForm extends Component {
 					<div className="footer">
 						<p>
 							<strong>
-								<FormattedMessage id="login.footer.noAccount" />
-							</strong>
-						</p>
-						<p>
-							<strong>
+								<FormattedMessage id="login.footer.noAccount" />{" "}
 								<a onClick={this.props.goToSignup}>
 									<FormattedMessage id="login.footer.signUp" />
 								</a>

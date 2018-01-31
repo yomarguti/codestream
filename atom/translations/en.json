@@ -21,7 +21,7 @@
 	"signUp.legal.telemetryConsent":
 		"Help CodeStream improve by allowing the use of 3rd-party analytics tools.",
 	"signUp.legal.learnMore": "Learn more.",
-	"signUp.footer.alreadySignedUp": "Already have an account?",
+	"signUp.footer.alreadySignedUp": "Have an account?",
 	"signUp.footer.signIn": "Sign In",
 	"confirmation.invalid": "Uh oh. Invalid code.",
 	"confirmation.expired": "Sorry, that code has expired.",
