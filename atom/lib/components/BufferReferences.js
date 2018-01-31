@@ -1,4 +1,3 @@
-import { CompositeDisposable } from "atom";
 import React, { Component } from "react";
 import LineBubbleDecoration from "./LineBubbleDecoration";
 
