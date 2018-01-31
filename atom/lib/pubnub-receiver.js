@@ -124,7 +124,9 @@ export default class PubNubReceiver {
 			retrieveSince = messaging.lastMessageReceived;
 		}
 		else {
-			return true; // once this mechanism is in operation this should never happen
+			// once this mechanism is in operation this should never happen, but until then, 
+			// we'll need to invent a beginning of time (like before codestream existed)
+			retrieveSince = (new Date('1/1/2018').getTime() * 10000).toString();
 		}
 		// FIXME: there probably needs to be a time limit here, where we assume it isn't
 		// worth replaying all the messages ... instead we just wipe the DB and refresh
@@ -167,7 +169,7 @@ export default class PubNubReceiver {
 			console.warn('PubNub history failed: ', error);
 			return true;
 		}
-		allMessages.push.apply(allMessages, response.messages);
+		allMessages.push(...response.messages);
 		if (response.messages.length < 100) {
 			return true;
 		}

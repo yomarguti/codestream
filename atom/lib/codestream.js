@@ -15,6 +15,7 @@ import {
 	setCurrentFile,
 	setCurrentCommit
 } from "./actions/context";
+import { resetMessaging } from "./actions/messaging";
 import { setStreamUMITreatment, recalculateUMI } from "./actions/stream";
 import { commitNewMarkerLocations, refreshMarkersAndLocations } from "./actions/marker-location";
 import logger from "./util/Logger";
@@ -69,6 +70,7 @@ module.exports = {
 	initialize(state) {
 		this.subscriptions = new CompositeDisposable();
 		store = createStore(state);
+		window.CodeStreamStore = store;
 		bootstrapStore(store);
 
 		if (atom.project.getDirectories().length === 1)
@@ -112,7 +114,9 @@ module.exports = {
 							"codestream:wipe-cache"
 						);
 						atom.commands.dispatch(document.querySelector("atom-workspace"), "codestream:logout");
+						store.dispatch({ type: 'CLEAR_STATE' });
 						store.dispatch(resetContext());
+						store.dispatch(resetMessaging());
 						atom.reload();
 					},
 					"codestream:wipe-cache": () => indexedDB.deleteDatabase("CodeStream"),
