@@ -141,20 +141,29 @@ export class SimpleStream extends Component {
 		logger.trace(".initDisplayMarkers");
 		const editor = atom.workspace.getActiveTextEditor();
 
+		if (!editor) {
+			return;
+		}
+
 		if (!editor.displayMarkers) {
 			editor.displayMarkers = {};
+		}
 
-			for (const marker of markers) {
-				this.createDisplayMarker(marker);
-			}
+		for (const marker of markers) {
+			this.createDisplayMarker(marker);
 		}
 	}
 
 	createDisplayMarker(marker) {
-		logger.trace(".createDisplayMarker", marker.id);
+		const markerId = marker.id;
+		logger.trace(".createDisplayMarker", markerId);
 		const editor = atom.workspace.getActiveTextEditor();
 		const displayMarker = editor.markBufferRange(locationToRange(marker.location));
-		editor.displayMarkers[marker.id] = displayMarker;
+		const displayMarkers = editor.displayMarkers;
+
+		if (!displayMarkers[markerId]) {
+			displayMarkers[markerId] = displayMarker;
+		}
 	}
 
 	showDisplayMarker(markerId) {
