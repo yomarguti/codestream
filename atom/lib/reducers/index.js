@@ -27,7 +27,7 @@ const bootstrapped = (state = false, { type }) => {
 	return state;
 };
 
-export default combineReducers({
+const appReducer = combineReducers({
 	bootstrapped,
 	session,
 	streams,
@@ -43,3 +43,8 @@ export default combineReducers({
 	markerLocations,
 	messaging
 });
+
+export default (state, action) => {
+	if (action.type === "RESET") state = undefined;
+	return appReducer(state, action);
+};

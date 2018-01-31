@@ -15,7 +15,6 @@ import {
 	setCurrentFile,
 	setCurrentCommit
 } from "./actions/context";
-import { resetMessaging } from "./actions/messaging";
 import { setStreamUMITreatment, recalculateUMI } from "./actions/stream";
 import { commitNewMarkerLocations, refreshMarkersAndLocations } from "./actions/marker-location";
 import logger from "./util/Logger";
@@ -34,7 +33,7 @@ const getCurrentCommit = async repo => {
 };
 
 const reloadPlugin = codestream => {
-	store = createStore({});
+	store.dispatch({ type: "RESET" });
 	bootstrapStore(store);
 	codestream.view && codestream.view.update(store);
 
@@ -114,9 +113,7 @@ module.exports = {
 							"codestream:wipe-cache"
 						);
 						atom.commands.dispatch(document.querySelector("atom-workspace"), "codestream:logout");
-						store.dispatch({ type: 'CLEAR_STATE' });
-						store.dispatch(resetContext());
-						store.dispatch(resetMessaging());
+						store.dispatch({ type: "RESET" });
 						atom.reload();
 					},
 					"codestream:wipe-cache": () => indexedDB.deleteDatabase("CodeStream"),
@@ -141,7 +138,13 @@ module.exports = {
 
 	serialize() {
 		const { session, onboarding, context, repoAttributes, messaging } = store.getState();
-		return { onboarding: { ...onboarding, errors: {} }, context, session, repoAttributes, messaging };
+		return {
+			onboarding: { ...onboarding, errors: {} },
+			context,
+			session,
+			repoAttributes,
+			messaging
+		};
 	},
 
 	deserializeCodestreamView(data) {
