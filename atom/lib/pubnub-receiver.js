@@ -1,4 +1,5 @@
 import PubNub from "pubnub";
+import Raven from "raven-js";
 import _ from "underscore-plus";
 import { normalize } from "./actions/utils";
 import { resolveFromPubnub } from "./actions/pubnub-event";
@@ -48,14 +49,20 @@ export default class PubNubReceiver {
 		});
 	}
 
-	pubnubEvent (event) {
+	pubnubEvent(event) {
 		this.store.dispatch(lastMessageReceived(event.timetoken));
 		this.pubnubMessage(event.message);
 	}
 
-	pubnubMessage (message) {
+	pubnubMessage(message) {
 		const { requestId, ...objects } = message;
 		// console.log(`pubnub event - ${requestId}`, message);
+		Raven.captureBreadCrumb({
+			message: "pubnub event",
+			category: "pubnub",
+			data: { requestId, ...Object.keys(objects) },
+			level: "debug"
+		});
 		Object.keys(objects).forEach(key => {
 			const handler = this.getMessageHandler(key);
 			if (handler) handler(objects[key]);
@@ -76,6 +83,11 @@ export default class PubNubReceiver {
 				withPresence: !channel.includes("user")
 			});
 			this.subscribedChannels.push(channel);
+			Raven.captureBreadCrumb({
+				message: `Subscribed to ${channel}`,
+				category: "pubnub",
+				level: "info"
+			});
 		});
 	}
 
