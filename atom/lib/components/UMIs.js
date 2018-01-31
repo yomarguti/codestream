@@ -80,7 +80,7 @@ export class SimpleUMIs extends Component {
 
 		let path = li.getElementsByTagName("span")[0].getAttribute("data-path");
 		path = this.repo.relativize(path);
-		let prefPath = ["streamTreatments", this.props.repoUrl, path];
+		let prefPath = ["streamTreatments", this.props.repoId, path];
 		return getUserPreference(this.props.currentUser, prefPath);
 	};
 
@@ -133,7 +133,7 @@ export class SimpleUMIs extends Component {
 			this.treatPath(path);
 		});
 
-		let prefPath = ["streamTreatments", this.props.repoUrl];
+		let prefPath = ["streamTreatments", this.props.repoId];
 		let treatments = getUserPreference(this.props.currentUser, prefPath) || {};
 		Object.keys(treatments).map(path => {
 			// logger.debug("Treating ", path, " with ", treatments[path]);
@@ -254,9 +254,9 @@ export class SimpleUMIs extends Component {
 		let index = parts.length;
 		while (parts.length) {
 			let path = parts.join("/");
-			let prefPath = ["streamTreatments", this.props.repoUrl, path];
+			let prefPath = ["streamTreatments", this.props.repoId, path];
 			let treatment = getUserPreference(this.props.currentUser, prefPath);
-			// logger.debug("GOT: ", treatment, " FOR ", ["streamTreatments", this.props.repoUrl, path]);
+			// logger.debug("GOT: ", treatment, " FOR ", ["streamTreatments", this.props.repoId, path]);
 			// atom.config.get("CodeStream.showUnread-" + path);
 			if (treatment) return treatment;
 			parts.pop();
@@ -361,7 +361,7 @@ const mapStateToProps = ({ repoAttributes, context, session, streams, users, umi
 		streams: getStreamsForRepo(streams, context.currentRepoId) || {},
 		currentUser: users[session.userId],
 		workingDirectory: repoAttributes.workingDirectory,
-		repoUrl: repoAttributes.url,
+		repoId: context.currentRepoId,
 		umis: umis
 	};
 };

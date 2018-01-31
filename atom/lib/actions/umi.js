@@ -17,13 +17,9 @@ export const markStreamRead = streamId => async (dispatch, getState, { http }) =
 
 export const setStreamUMITreatment = (path, setting) => async (dispatch, getState) => {
 	const { session, context, users } = getState();
-	// FIXME -- we should save this info to the server rather than atom config
 	let repo = atom.project.getRepositories()[0];
 	let relativePath = repo.relativize(path);
-	// console.log(repo);
-	// atom.config.set("CodeStream.showUnread-" + relativePath, setting);
-	let repoRoot = repo.getOriginURL();
-	let prefPath = ["streamTreatments", repoRoot, relativePath];
+	let prefPath = ["streamTreatments", context.currentRepoId, relativePath];
 	dispatch(setUserPreference(prefPath, setting));
 	dispatch(recalculate(true));
 	return;
