@@ -1,4 +1,6 @@
+import os from "os";
 import { CompositeDisposable } from "atom";
+import Raven from "raven-js";
 import Dexie from "dexie";
 import CodestreamView, { CODESTREAM_VIEW_URI } from "./codestream-view";
 import { bootstrapStore } from "./local-cache";
@@ -18,6 +20,19 @@ import {
 import { setStreamUMITreatment } from "./actions/umi";
 import { commitNewMarkerLocations, refreshMarkersAndLocations } from "./actions/marker-location";
 import logger from "./util/Logger";
+
+Raven.config("https://46fd0a63e10340b585d895d333fec719@sentry.io/280733", {
+	captureUnhandledRejections: true,
+	tags: {
+		process: process.type,
+		platform: os.platform(),
+		platformRelease: os.release(),
+		atom: atom.getVersion()
+	}
+}).install();
+window.addEventListener("unhandledrejection", function(event) {
+	Raven.captureException(event.reason);
+});
 
 logger.addHandler((level, msg) => {
 	console.log(`[${level}] ${msg}`);

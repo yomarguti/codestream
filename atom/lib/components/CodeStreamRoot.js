@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
+import Raven from "raven-js";
 import NoGit from "./NoGit";
 import TooMuchGit from "./TooMuchGit";
 import Onboarding from "./onboarding/Onboarding";
@@ -30,17 +31,23 @@ class CodeStreamRoot extends Component {
 		};
 	}
 
-	// componentDidCatch(error, info) {
-	// 	debugger;
-	// 	// Display fallback UI
-	// 	this.setState({ hasError: true });
-	// 	// You can also log the error to an error reporting service
-	// 	console.error(error, info);
-	// }
+	componentDidCatch(error, info) {
+		this.setState({ hasError: true });
+		Raven.captureException(error, { extra: info });
+	}
 
 	render() {
 		const { accessToken, bootstrapped, repositories, onboarding, noAccess } = this.props;
 
+		if (this.state.hasError)
+			return (
+				<div>
+					<p>
+						Oops something went wrong. TODO: make this richer. For now, a reset is probably
+						required.
+					</p>
+				</div>
+			);
 		if (repositories.length === 0) return <NoGit />;
 		if (repositories.length > 1) return <TooMuchGit />;
 		if (noAccess) return <NoAccess reason={noAccess} />;
