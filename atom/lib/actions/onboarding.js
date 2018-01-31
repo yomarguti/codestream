@@ -239,6 +239,7 @@ export const authenticate = params => (dispatch, getState, { http }) => {
 			else if (!teamIdForRepo && userTeams.length > 0) {
 				await dispatch(fetchTeamMembers(teamIdsForUser));
 				dispatch({ type: "EXISTING_USER_LOGGED_INTO_NEW_REPO" });
+				dispatch(loggedIn());
 			} else if (teamIdsForUser.includes(teamIdForRepo)) {
 				await dispatch(fetchTeamMembers(teamIdsForUser));
 				dispatch(fetchStreams());
