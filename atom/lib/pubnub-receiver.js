@@ -57,7 +57,7 @@ export default class PubNubReceiver {
 	pubnubMessage(message) {
 		const { requestId, ...objects } = message;
 		// console.log(`pubnub event - ${requestId}`, message);
-		Raven.captureBreadCrumb({
+		Raven.captureBreadcrumb({
 			message: "pubnub event",
 			category: "pubnub",
 			data: { requestId, ...Object.keys(objects) },
@@ -83,7 +83,7 @@ export default class PubNubReceiver {
 				withPresence: !channel.includes("user")
 			});
 			this.subscribedChannels.push(channel);
-			Raven.captureBreadCrumb({
+			Raven.captureBreadcrumb({
 				message: `Subscribed to ${channel}`,
 				category: "pubnub",
 				level: "info"
@@ -130,15 +130,14 @@ export default class PubNubReceiver {
 			return data => this.store.dispatch(resolveFromPubnub(tableName, normalize(data)));
 	}
 
-	async retrieveHistory (channels, messaging = {}) {
+	async retrieveHistory(channels, messaging = {}) {
 		let retrieveSince;
 		if (messaging.lastMessageReceived) {
 			retrieveSince = messaging.lastMessageReceived;
-		}
-		else {
-			// once this mechanism is in operation this should never happen, but until then, 
+		} else {
+			// once this mechanism is in operation this should never happen, but until then,
 			// we'll need to invent a beginning of time (like before codestream existed)
-			retrieveSince = (new Date('1/1/2018').getTime() * 10000).toString();
+			retrieveSince = (new Date("1/1/2018").getTime() * 10000).toString();
 		}
 		// FIXME: there probably needs to be a time limit here, where we assume it isn't
 		// worth replaying all the messages ... instead we just wipe the DB and refresh
@@ -146,11 +145,13 @@ export default class PubNubReceiver {
 		return await this.retrieveHistorySince(channels, retrieveSince);
 	}
 
-	async retrieveHistorySince (channels, timeToken) {
+	async retrieveHistorySince(channels, timeToken) {
 		let allMessages = [];
-		await Promise.all(channels.map(channel => {
-			return this.retrieveChannelHistorySince(channel, timeToken, allMessages);
-		}));
+		await Promise.all(
+			channels.map(channel => {
+				return this.retrieveChannelHistorySince(channel, timeToken, allMessages);
+			})
+		);
 		allMessages.forEach(message => {
 			message.timestamp = parseInt(message.timetoken, 10) / 10000;
 		});
@@ -166,26 +167,24 @@ export default class PubNubReceiver {
 		}
 	}
 
-	async retrieveChannelHistorySince (channel, timeToken, allMessages) {
+	async retrieveChannelHistorySince(channel, timeToken, allMessages) {
 		let response;
 		try {
 			response = await this.pubnub.history({
 				channel: channel,
-				reverse: true,	// oldest message first
+				reverse: true, // oldest message first
 				start: timeToken,
 				stringifiedTimeToken: true
 			});
-		}
-		catch (error) {
+		} catch (error) {
 			// FIXME: this should be fatal, or perhaps lead to a session refresh
-			console.warn('PubNub history failed: ', error);
+			console.warn("PubNub history failed: ", error);
 			return true;
 		}
 		allMessages.push(...response.messages);
 		if (response.messages.length < 100) {
 			return true;
-		}
-		else {
+		} else {
 			// FIXME: we can't let this go on too deep, there needs to be a limit
 			// once we reach that limit, we probably need to just clear the database and
 			// refresh the session (like you're coming back from vacation)
