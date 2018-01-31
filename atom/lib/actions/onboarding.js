@@ -1,9 +1,15 @@
+import Raven from "raven-js";
 import { normalize } from "./utils";
 import { fetchRepoInfo, setCurrentRepo, setCurrentTeam, noAccess } from "./context";
 import { saveUser, saveUsers } from "./user";
 import { saveRepo, saveRepos } from "./repo";
 import { fetchTeamMembers, saveTeam, saveTeams, joinTeam as _joinTeam } from "./team";
 import { fetchStreams } from "./stream";
+
+const logError = (message, error) => {
+	Raven.captureException(error, { logger: "actions/onboarding" });
+	console.error(message, error);
+};
 
 const requestStarted = () => ({ type: "REQUEST_STARTED" });
 const requestFinished = () => ({ type: "REQUEST_FINISHED" });
@@ -105,7 +111,7 @@ export const confirmEmail = attributes => (dispatch, getState, { http }) => {
 					});
 				if (data.code === "REPO-1000") dispatch(noAccess());
 			} else if (http.isApiUnreachableError(error)) dispatch(serverUnreachable());
-			else console.error("Encountered an unexpected error while confirming email address", error);
+			else logError("Encountered an unexpected error while confirming email address", error);
 		});
 };
 
@@ -144,7 +150,7 @@ export const createTeam = name => (dispatch, getState, { http }) => {
 			if (http.isApiRequestError(error)) {
 				if (error.data.code === "RAPI-1005") dispatch({ type: "CREATE_TEAM-INVALID_REPO_URL" });
 			} else if (http.isApiUnreachableError(error)) dispatch(serverUnreachable());
-			else console.error("Encountered an unexpected error while creating team", error);
+			else logError("Encountered an unexpected error while creating team", error);
 		});
 };
 
@@ -253,7 +259,7 @@ export const authenticate = params => (dispatch, getState, { http }) => {
 				if (error.data.code === "REPO-1000") dispatch(noAccess());
 				if (error.data.code === "RAPI-1005") dispatch(noAccess()); // TODO: How to handle url invalid here? Just bailing and saying no access for url invalid
 			} else if (http.isApiUnreachableError(error)) dispatch(serverUnreachable());
-			else console.error("Encountered unexpected error while authenticating", error);
+			else logError("Encountered unexpected error while authenticating", error);
 		});
 };
 

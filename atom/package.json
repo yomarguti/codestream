@@ -54,6 +54,7 @@
     "nodegit": "^0.20.3",
     "prop-types": "^15.6.0",
     "pubnub": "^4.19.0",
+    "raven-for-redux": "^1.2.0",
     "raven-js": "^3.22.1",
     "react": "^16.0.0",
     "react-contenteditable": "^2.0.5",
