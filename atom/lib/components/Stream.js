@@ -14,6 +14,7 @@ import createClassString from "classnames";
 import DateSeparator from "./DateSeparator";
 var Blamer = require("../util/blamer");
 import * as streamActions from "../actions/stream";
+import * as umiActions from "../actions/umi";
 import { createPost, fetchPosts } from "../actions/post";
 import { fetchMarkersAndLocations, markerDirtied } from "../actions/marker-location";
 import { toMapBy } from "../reducers/utils";
@@ -76,7 +77,6 @@ export class SimpleStream extends Component {
 	componentDidMount() {
 		logger.trace(".componentDidMount");
 		const me = this;
-		me.props.recalculateUMI(); // set the UMI for the first time
 		// TODO: scroll to bottom
 
 		const inputDiv = document.querySelector('div[contenteditable="true"]');
@@ -129,11 +129,10 @@ export class SimpleStream extends Component {
 		this.initDisplayMarkers(markers);
 		this.installEditorHandlers();
 
-		// if we just switched to a new stream, mark the
-		// stream as read
+		// if we just switched to a new stream, (eagerly) mark both old and new as read
 		if (id !== prevProps.id) {
-			// FIXME -- is this the right place to call mark read?
 			markStreamRead(id);
+      markStreamRead(prevProps.id);
 			this.resizeStream();
 		}
 	}
@@ -1136,6 +1135,7 @@ const mapStateToProps = ({
 
 export default connect(mapStateToProps, {
 	...streamActions,
+	...umiActions,
 	fetchPosts,
 	createPost,
 	fetchMarkersAndLocations,

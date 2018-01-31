@@ -3,7 +3,7 @@ import thunkMiddleware from "redux-thunk";
 import { composeWithDevTools } from "redux-devtools-extension";
 import reducer from "./reducers";
 import pubnubMiddleWare from "./pubnub-middleware";
-import reduxMiddleWare from "./redux-middleware";
+import umiMiddleWare from "./umi-middleware";
 import db from "./local-cache";
 import * as http from "./network-request";
 
@@ -15,7 +15,7 @@ export default (initialState = {}) => {
 			applyMiddleware(
 				thunkMiddleware.withExtraArgument({ db, http }),
 				pubnubMiddleWare,
-				reduxMiddleWare
+				umiMiddleWare
 			)
 		)
 	);

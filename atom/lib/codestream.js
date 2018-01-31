@@ -15,7 +15,7 @@ import {
 	setCurrentFile,
 	setCurrentCommit
 } from "./actions/context";
-import { setStreamUMITreatment, recalculateUMI } from "./actions/stream";
+import { setStreamUMITreatment } from "./actions/umi";
 import { commitNewMarkerLocations, refreshMarkersAndLocations } from "./actions/marker-location";
 import logger from "./util/Logger";
 
