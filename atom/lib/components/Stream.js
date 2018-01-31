@@ -392,24 +392,6 @@ export class SimpleStream extends Component {
 
 		let newPostText = this.state.newPostText || "";
 
-		if (!this.usernamesRegexp) {
-			const users = this.props.users;
-			// this usenames regexp is a pipe-separated list of
-			// either usernames or if no username exists for the
-			// user then his email address. it is sorted by length
-			// so that the longest possible match will be made.
-			this.usernamesRegexp = Object.keys(this.props.users)
-				.map(key => {
-					return users[key].username || (users[key].email || "").replace(/@.*/, "");
-				})
-				.sort(function(a, b) {
-					return b.length - a.length;
-				})
-				.join("|")
-				.replace(/\|\|+/g, "|") // remove blank identifiers
-				.replace(/\+/g, "\\+") // replace + and . with escaped versions
-				.replace(/\./g, "\\."); // so the regexp matches the literal chars
-		}
 		// strip out the at-mention markup, and add it back.
 		// newPostText = newPostText.replace(/(@\w+)/g, '<span class="at-mention">$1</span> ');
 
@@ -471,7 +453,7 @@ export class SimpleStream extends Component {
 								<DateSeparator timestamp1={lastTimestamp} timestamp2={post.createdAt} />
 								<Post
 									post={post}
-									usernames={this.usernamesRegexp}
+									usernames={this.props.usernamesRegexp}
 									currentUsername={this.props.currentUser.username}
 									replyingTo={parentPost}
 									newMessageIndicator={post.id === this.postWithNewMessageIndicator}
@@ -494,7 +476,7 @@ export class SimpleStream extends Component {
 					{threadPost && (
 						<Post
 							post={threadPost}
-							usernames={this.usernamesRegexp}
+							usernames={this.props.usernamesRegexp}
 							currentUsername={this.props.currentUser.username}
 							key={threadPost.id}
 							showDetails="1"
@@ -516,7 +498,7 @@ export class SimpleStream extends Component {
 										<DateSeparator timestamp1={lastTimestamp} timestamp2={post.createdAt} />
 										<Post
 											post={post}
-											usernames={this.usernamesRegexp}
+											usernames={this.props.usernamesRegexp}
 											currentUsername={this.props.currentUser.username}
 											showDetails="1"
 											currentCommit={this.props.currentCommit}
@@ -1110,6 +1092,22 @@ const mapStateToProps = ({
 
 	const teamMembers = _.filter(users, user => (user.teamIds || []).includes(context.currentTeamId));
 
+	// this usenames regexp is a pipe-separated list of
+	// either usernames or if no username exists for the
+	// user then his email address. it is sorted by length
+	// so that the longest possible match will be made.
+	const usernamesRegexp = Object.keys(teamMembers)
+		.map(key => {
+			return teamMembers[key].username || "";
+		})
+		.sort(function(a, b) {
+			return b.length - a.length;
+		})
+		.join("|")
+		.replace(/\|\|+/g, "|") // remove blank identifiers
+		.replace(/\+/g, "\\+") // replace + and . with escaped versions so
+		.replace(/\./g, "\\."); // that the regexp matches the literal chars
+
 	return {
 		id: stream.id,
 		teamId: stream.teamId,
@@ -1118,6 +1116,7 @@ const mapStateToProps = ({
 		currentCommit: context.currentCommit,
 		markers: markersForStreamAndCommit,
 		users: toMapBy("id", teamMembers),
+		usernamesRegexp: usernamesRegexp,
 		currentUser: users[session.userId],
 		posts: getPostsForStream(stream.id, posts).map(post => {
 			let user = users[post.creatorId];
