@@ -1,4 +1,4 @@
-import { incrementUMI } from "./actions/stream";
+import { incrementUMI } from "./actions/umi";
 
 export default store => next => action => {
 	const { context } = store.getState();

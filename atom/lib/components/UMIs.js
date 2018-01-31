@@ -4,6 +4,7 @@ import { connect } from "react-redux";
 import createClassString from "classnames";
 import withRepositories from "./withRepositories";
 import { getUserPreference } from "../actions/user";
+import * as actions from "../actions/umi";
 import rootLogger from "../util/Logger";
 import { getStreamsForRepo } from "../reducers/streams";
 
@@ -56,6 +57,17 @@ export class SimpleUMIs extends Component {
 				]
 			})
 		);
+	}
+
+	componentDidMount() {
+		this.props.recalculate();
+		this.scrollDiv = document.getElementsByClassName("tree-view")[0];
+		this.scrollDiv.addEventListener("scroll", this.handleScroll.bind(this));
+		this.scrollDiv.addEventListener("click", this.handleClick.bind(this));
+		let that = this;
+		new ResizeObserver(function() {
+			that.handleScroll();
+		}).observe(this.scrollDiv);
 	}
 
 	componentWillUnmount() {
@@ -252,16 +264,6 @@ export class SimpleUMIs extends Component {
 		return atom.config.get("CodeStream.showUnread") || "bold";
 	}
 
-	componentDidMount() {
-		this.scrollDiv = document.getElementsByClassName("tree-view")[0];
-		this.scrollDiv.addEventListener("scroll", this.handleScroll.bind(this));
-		this.scrollDiv.addEventListener("click", this.handleClick.bind(this));
-		let that = this;
-		new ResizeObserver(function() {
-			that.handleScroll();
-		}).observe(this.scrollDiv);
-	}
-
 	handleClick(event) {
 		// rerender because there may be a directory open/close
 		this.render();
@@ -364,4 +366,4 @@ const mapStateToProps = ({ repoAttributes, context, session, streams, users, umi
 	};
 };
 
-export default connect(mapStateToProps)(withRepositories(SimpleUMIs));
+export default connect(mapStateToProps, actions)(withRepositories(SimpleUMIs));

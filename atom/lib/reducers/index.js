@@ -9,6 +9,7 @@ import teams from "./teams";
 import markers from "./markers";
 import markerLocations from "./marker-locations";
 import umis from "./umis";
+import messaging from "./messaging";
 
 const session = (state = {}, { type, payload }) => {
 	if (type === "INIT_SESSION") return payload;
@@ -26,7 +27,7 @@ const bootstrapped = (state = false, { type }) => {
 	return state;
 };
 
-export default combineReducers({
+const appReducer = combineReducers({
 	bootstrapped,
 	session,
 	streams,
@@ -39,5 +40,11 @@ export default combineReducers({
 	onboarding,
 	posts,
 	markers,
-	markerLocations
+	markerLocations,
+	messaging
 });
+
+export default (state, action) => {
+	if (action.type === "RESET") state = undefined;
+	return appReducer(state, action);
+};

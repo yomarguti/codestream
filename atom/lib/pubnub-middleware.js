@@ -1,6 +1,22 @@
 import PubNubReceiver from "./pubnub-receiver";
 import { fetchCurrentUser } from "./actions/user";
 
+const _initializePubnubAndSubscribe = async (store, receiver) => {
+	const { context, users, session, messaging } = store.getState();
+	const user = users[session.userId];
+	const teamChannels = (user.teamIds || []).map(id => `team-${id}`);
+
+	const channels = [`user-${user.id}`, ...teamChannels];
+
+	if (context.currentRepoId) {
+		channels.push(`repo-${context.currentRepoId}`);
+	}
+
+	receiver.initialize(session.accessToken, session.userId);
+	receiver.subscribe(channels);
+	return receiver.retrieveHistory(channels, messaging);
+}
+
 export default store => {
 	const receiver = new PubNubReceiver(store);
 
@@ -8,43 +24,22 @@ export default store => {
 		const result = next(action);
 
 		// Once data has been loaded from indexedDB, if continuing a session,
-		// find current user and subscribe to team channels
+		// find current user and subscribe to channels
 		// fetch the latest version of the current user object
 		if (action.type === "BOOTSTRAP_COMPLETE") {
-			const { session, onboarding, users, context } = store.getState();
+			const { session, onboarding } = store.getState();
 			if (onboarding.complete && session.accessToken) {
 				store.dispatch(fetchCurrentUser());
-
-				const user = users[session.userId];
-				const teamChannels = (user.teamIds || []).map(id => `team-${id}`);
-
-				const channels = [`user-${user.id}`, ...teamChannels];
-
-				if (context.currentRepoId) channels.push(`repo-${context.currentRepoId}`);
-
-				receiver.initialize(session.accessToken, session.userId);
-				receiver.subscribe(channels);
+				_initializePubnubAndSubscribe(store, receiver);
 			}
 		}
 		// When starting a new session, subscribe to channels
-		if (action.type === "LOGGED_IN" || action.type === "ONBOARDING_COMPLETE") {
-			const { context, users, session } = store.getState();
-			const user = users[session.userId];
-			const teamChannels = (user.teamIds || []).map(id => `team-${id}`);
-
-			const channels = [...teamChannels, `user-${user.id}`, `repo-${context.currentRepoId}`];
-
-			receiver.initialize(session.accessToken, user.id);
-			receiver.subscribe(channels);
-		}
-
-		// When user is confirmed, subscribe to my own "me" channel
-		if (action.type === "USER_CONFIRMED") {
-			const { users, session } = store.getState();
-			const user = users[session.userId];
-			const channel = `user-${user.id}`;
-			receiver.initialize(session.accessToken, user.id);
-			receiver.subscribe([channel]);
+		if (
+			action.type === "LOGGED_IN" ||
+			action.type === "ONBOARDING_COMPLETE" || 
+			action.type === 'USER_CONFIRMED'
+		) {
+			_initializePubnubAndSubscribe(store, receiver);
 		}
 
 		// As context changes, subscribe
