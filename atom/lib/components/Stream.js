@@ -919,7 +919,7 @@ export class SimpleStream extends Component {
 		range = sel.getRangeAt(0);
 
 		// delete the X characters before the caret
-		range.setStart(range.commonAncestorContainer, range.startOffset - toDelete.length);
+		range.setStart(range.commonAncestorContainer, range.startOffset - (toDelete || "").length);
 		// range.moveEnd("character", toDelete.length);
 
 		range.deleteContents();
