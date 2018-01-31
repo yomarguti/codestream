@@ -132,7 +132,7 @@ export class SimpleStream extends Component {
 		// if we just switched to a new stream, (eagerly) mark both old and new as read
 		if (id !== prevProps.id) {
 			markStreamRead(id);
-      markStreamRead(prevProps.id);
+			markStreamRead(prevProps.id);
 			this.resizeStream();
 		}
 	}
