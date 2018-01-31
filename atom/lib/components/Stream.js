@@ -16,7 +16,7 @@ var Blamer = require("../util/blamer");
 import * as streamActions from "../actions/stream";
 import * as umiActions from "../actions/umi";
 import { createPost, fetchPosts } from "../actions/post";
-import { fetchMarkersAndLocations } from "../actions/marker-location";
+import { fetchMarkersAndLocations, markerDirtied } from "../actions/marker-location";
 import { toMapBy } from "../reducers/utils";
 import { locationToRange, rangeToLocation } from "../util/Marker";
 import { getStreamForRepoAndFile } from "../reducers/streams";
@@ -45,6 +45,13 @@ export class SimpleStream extends Component {
 		this.savedComposeState = {};
 
 		this.subscriptions = new CompositeDisposable();
+		this.subscriptions.add(
+			atom.keymaps.add("codestream", {
+				"atom-workspace": {
+					escape: "codestream:escape"
+				}
+			})
+		);
 		this.subscriptions.add(
 			atom.commands.add(".codestream .compose.mentions-on", {
 				"codestream:at-mention-move-up": event => this.handleAtMentionKeyPress(event, "up"),
@@ -87,16 +94,16 @@ export class SimpleStream extends Component {
 			const text = e.clipboardData.getData("text/plain");
 			document.execCommand("insertHTML", false, text);
 		});
-
-		const editor = atom.workspace.getActiveTextEditor();
-		editor.getBuffer().onDidReload(() => this.recalculateMarkers());
 	}
 
 	componentWillReceiveProps(nextProps) {
 		logger.trace(".componentWillReceiveProps");
 		const switchingStreams = nextProps.id !== this.props.id;
-		if (nextProps.id && switchingStreams && nextProps.posts.length === 0)
+
+		if (nextProps.id && switchingStreams && nextProps.posts.length === 0) {
 			this.props.fetchPosts({ streamId: nextProps.id, teamId: nextProps.teamId });
+		}
+
 		if (switchingStreams) {
 			this.saveComposeState(nextProps.id);
 			this.handleDismissThread();
@@ -108,9 +115,7 @@ export class SimpleStream extends Component {
 			if (this.props.currentUser && this.props.currentUser.lastReads) {
 				this.postWithNewMessageIndicator = this.props.currentUser.lastReads[nextProps.id];
 			}
-		}
-		if (switchingStreams) {
-			console.log("Switch to: ", nextProps.id);
+			logger.debug("Switch to: ", nextProps.id);
 		}
 
 		new AddCommentPopup({ handleClickAddComment: this.handleClickAddComment });
@@ -118,14 +123,80 @@ export class SimpleStream extends Component {
 
 	componentDidUpdate(prevProps, prevState) {
 		logger.trace(".componentDidUpdate");
+		const { id, markers, markStreamRead } = this.props;
+
 		this._postslist.scrollTop = 100000;
+		this.initDisplayMarkers(markers);
 		this.installEditorHandlers();
 
 		// if we just switched to a new stream, (eagerly) mark both old and new as read
-		if (this.props.id !== prevProps.id) {
-			this.props.markStreamRead(prevProps.id);
-			this.props.markStreamRead(this.props.id);
+		if (id !== prevProps.id) {
+			markStreamRead(id);
+      markStreamRead(prevProps.id);
 			this.resizeStream();
+		}
+	}
+
+	initDisplayMarkers(markers) {
+		logger.trace(".initDisplayMarkers");
+		const editor = atom.workspace.getActiveTextEditor();
+
+		if (!editor.displayMarkers) {
+			editor.displayMarkers = {};
+
+			for (const marker of markers) {
+				this.createDisplayMarker(marker);
+			}
+		}
+	}
+
+	createDisplayMarker(marker) {
+		logger.trace(".createDisplayMarker", marker.id);
+		const editor = atom.workspace.getActiveTextEditor();
+		const displayMarker = editor.markBufferRange(locationToRange(marker.location));
+		editor.displayMarkers[marker.id] = displayMarker;
+	}
+
+	showDisplayMarker(markerId) {
+		logger.trace(".showDisplayMarker", markerId);
+		// FIXME -- switch to stream if code is from another buffer
+		const editor = atom.workspace.getActiveTextEditor();
+		const displayMarker = editor.displayMarkers[markerId];
+
+		if (displayMarker) {
+			const start = displayMarker.getBufferRange().start;
+
+			this.displayMarkerDecoration = editor.decorateMarker(displayMarker, {
+				type: "highlight",
+				class: "codestream-highlight"
+			});
+
+			editor.setCursorBufferPosition(start);
+			editor.scrollToBufferPosition(start, {
+				center: true
+			});
+		}
+	}
+
+	hideDisplayMarker() {
+		logger.trace(".hideDisplayMarker");
+		const decoration = this.displayMarkerDecoration;
+		if (decoration) {
+			decoration.destroy();
+		}
+	}
+
+	saveDirtyMarkerLocations() {
+		logger.trace(".saveDirtyMarkerLocations");
+
+		const { id: streamId, markerDirtied } = this.props;
+		const editor = atom.workspace.getActiveTextEditor();
+		const displayMarkers = editor.displayMarkers;
+
+		for (const markerId of Object.keys(displayMarkers)) {
+			const displayMarker = displayMarkers[markerId];
+			const location = rangeToLocation(displayMarker.getBufferRange());
+			markerDirtied({ markerId, streamId }, location);
 		}
 	}
 
@@ -139,32 +210,30 @@ export class SimpleStream extends Component {
 		});
 	}
 
-	installSelectionHandler() {
-		logger.trace(".installSelectionHandler");
-		// if (this.selectionHandler) return;
-		let editor = atom.workspace.getActiveTextEditor();
-		this.selectionHandler = editor.onDidChangeSelectionRange(this.destroyCodeBlockMarker);
-	}
-
-	destroyCodeBlockMarker = () => {
-		logger.trace(".destroyCodeBlockMarker");
-		if (this.codeBlockMarker) this.codeBlockMarker.destroy();
-		if (this.selectionHandler) this.selectionHandler.dispose();
-	};
-
 	installEditorHandlers() {
 		logger.trace(".installEditorHandlers");
-		let editor = atom.workspace.getActiveTextEditor();
-		if (editor && !editor.hasCodeStreamHandlers) {
+		const editor = atom.workspace.getActiveTextEditor();
+		if (!editor) {
+			return;
+		}
+
+		if (!editor.resizeHandler) {
 			let scrollViewDiv = editor.component.element.querySelector(".scroll-view");
 			if (scrollViewDiv) {
-				let that = this;
-				new ResizeObserver(function() {
-					that.handleResizeWindow(scrollViewDiv);
+				editor.resizeHandler = new ResizeObserver(() => {
+					this.handleResizeWindow(scrollViewDiv);
 				}).observe(scrollViewDiv);
-				// that.handleResizeWindow();
-				editor.hasCodeStreamHandlers = true;
 			}
+		}
+
+		if (!editor.hasMarkerLocationMonitors) {
+			editor.getBuffer().onDidReload(this.recalculateMarkers.bind(this));
+			editor.onDidStopChanging(this.saveDirtyMarkerLocations.bind(this));
+			editor.hasMarkerLocationMonitors = true;
+		}
+
+		if (!editor.selectionHandler) {
+			this.selectionHandler = editor.onDidChangeSelectionRange(this.hideDisplayMarker.bind(this));
 		}
 	}
 
@@ -506,7 +575,7 @@ export class SimpleStream extends Component {
 	// dismiss the thread stream and return to the main stream
 	handleDismissThread = () => {
 		logger.trace(".handleDismissThread");
-		this.destroyCodeBlockMarker();
+		this.hideDisplayMarker();
 		this.setState({ threadId: null });
 	};
 
@@ -531,26 +600,9 @@ export class SimpleStream extends Component {
 		this.setState({ threadId: threadId });
 
 		if (post.codeBlocks && post.codeBlocks.length) {
-			const location = post.markerLocation;
-			if (location) {
-				// FIXME -- switch to stream if code is from another buffer
-				const editor = atom.workspace.getActiveTextEditor();
-				if (this.codeBlockMarker) this.codeBlockMarker.destroy();
-				const range = locationToRange(location);
-				this.codeBlockMarker = editor.markBufferRange(range, { invalidate: "touch" });
-				editor.decorateMarker(this.codeBlockMarker, {
-					type: "highlight",
-					class: "codestream-highlight"
-				});
-
-				const start = range.start;
-				editor.setCursorBufferPosition(start);
-				editor.scrollToBufferPosition(start, {
-					center: true
-				});
-
-				this.installSelectionHandler();
-			}
+			const codeBlock = post.codeBlocks[0];
+			this.hideDisplayMarker();
+			this.showDisplayMarker(codeBlock.markerId);
 		}
 	};
 
@@ -1086,5 +1138,6 @@ export default connect(mapStateToProps, {
 	...umiActions,
 	fetchPosts,
 	createPost,
-	fetchMarkersAndLocations
+	fetchMarkersAndLocations,
+	markerDirtied
 })(SimpleStream);

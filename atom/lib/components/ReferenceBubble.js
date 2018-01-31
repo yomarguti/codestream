@@ -6,8 +6,6 @@ import * as actions from "../actions/marker-location";
 import { locationToRange } from "../util/Marker";
 import rootLogger from "../util/Logger";
 
-const logger = rootLogger.forClass("components/ReferenceBubble");
-
 const isValid = location => {
 	const sameLine = location[0] === location[2];
 	const startOfLine = location[1] === 0 && location[3] === 0;
@@ -22,30 +20,33 @@ class ReferenceBubble extends Component {
 		this.state = {
 			isVisible: isValid(props.location)
 		};
+		this.logger = rootLogger.forObject("components/ReferenceBubble");
 	}
 
 	componentDidMount() {
-		logger.trace('.componentDidMount');
+		this.logger.trace(".componentDidMount");
 		const { location, editor } = this.props;
+		const subscriptions = this.subscriptions;
 		const range = locationToRange(location);
-		this.marker = editor.markBufferRange(range, {
+		const marker = (this.marker = editor.markBufferRange(range, {
 			invalidate: "never"
-		});
-		this.subscriptions.add(
-			this.marker.onDidDestroy(() => {
-				this.subscriptions.dispose();
+		}));
+
+		subscriptions.add(
+			marker.onDidDestroy(() => {
+				subscriptions.dispose();
 			})
 		);
 	}
 
 	componentWillUnmount() {
-		logger.trace('.componentWillUnmount');
+		this.logger.trace(".componentWillUnmount");
 		this.marker.destroy();
 		this.subscriptions.dispose();
 	}
 
 	render() {
-		logger.trace('.render');
+		this.logger.trace(".render");
 		if (!this.state.isVisible) return false;
 
 		const { id, postId, onSelect, count, numComments } = this.props;

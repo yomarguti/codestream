@@ -2,16 +2,16 @@ import { CompositeDisposable } from "atom";
 import React, { Component } from "react";
 import ReactDOM from "react-dom";
 import ReferenceBubble from "./ReferenceBubble";
+import { markerDirtied } from "../actions/marker-location";
 import { locationToRange } from "../util/Marker";
 import rootLogger from "../util/Logger";
-
-const logger = rootLogger.forClass("components/LineBubbleDecoration");
 
 export default class LineBubbleDecoration extends Component {
 	subscriptions = new CompositeDisposable();
 
 	constructor(props) {
 		super(props);
+		this.logger = rootLogger.forObject("components/LineBubbleDecoration");
 		this.item = document.createElement("div");
 		this.item.classList.add("codestream-comment-popup");
 		atom.tooltips.add(this.item, { title: "View comments" });
@@ -40,6 +40,7 @@ export default class LineBubbleDecoration extends Component {
 	tearDown() {
 		this.decoration && this.decoration.destroy();
 		this.marker && this.marker.destroy();
+		this.logger.destroy();
 	}
 
 	decorate(props) {
@@ -50,23 +51,26 @@ export default class LineBubbleDecoration extends Component {
 			item: this.item
 		};
 
+		const { editor } = this.props;
+		const subscriptions = this.subscriptions;
 		const range = locationToRange([props.line, 1, this.maxLine + 1, 1]);
-		this.marker = props.editor.markBufferRange(range, { invalidate: "never" });
+		const marker = (this.marker = editor.markBufferRange(range, {
+			invalidate: "never",
+			maintainHistory: true
+		}));
+		const decoration = (this.decoration = editor.decorateMarker(marker, options));
 
-		this.decoration = this.props.editor.decorateMarker(this.marker, options);
-		this.subscriptions.add(
-			this.props.editor.onDidDestroy(() => this.marker.destroy()),
-			this.decoration.onDidDestroy(() => {
-				this.tearDown();
-				this.subscriptions.dispose();
-				this.subscriptions = new CompositeDisposable();
-			}),
-			this.marker.onDidDestroy(() => {
-				this.tearDown();
-				this.subscriptions.dispose();
-				this.subscriptions = new CompositeDisposable();
-			})
+		subscriptions.add(
+			editor.onDidDestroy(() => marker.destroy()),
+			decoration.onDidDestroy(this.tearDownAndDisposeSubscriptions.bind(this)),
+			marker.onDidDestroy(this.tearDownAndDisposeSubscriptions.bind(this))
 		);
+	}
+
+	tearDownAndDisposeSubscriptions() {
+		this.tearDown();
+		this.subscriptions.dispose();
+		this.subscriptions = new CompositeDisposable();
 	}
 
 	render() {
