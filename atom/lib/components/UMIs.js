@@ -165,7 +165,7 @@ export class SimpleUMIs extends Component {
 
 	calculateTreatment(path, count, mentions) {
 		let treatment = this.getTreatment(path);
-		// logger.debug("FOR: ", count, " treat ", treatment, " in ", path, " with mentions ", mentions);
+		logger.debug("FOR: ", count, " treat ", treatment, " in ", path, " with mentions ", mentions);
 
 		let parts = path.split(Path.sep);
 		while (parts.length) {
@@ -191,14 +191,14 @@ export class SimpleUMIs extends Component {
 			// this is bold; don't add to the app badge count
 			totalUMICount += 0.000001;
 		}
-		// logger.debug("Returning: ", totalUMICount, " for ", path);
+		logger.debug("Returning: ", totalUMICount, " for ", path);
 		return totalUMICount;
 	}
 
 	treatMute(path, isMute) {
 		path = path.replace(/\*/g, ".");
 		let element = this.treeView.entryForPath(this.props.workingDirectory + Path.sep + path);
-		// logger.debug("Treating element ", element, " with ", isMute);
+		logger.debug("Treating element ", element, " with ", isMute);
 		if (!element) return;
 		// don't treat directories that are expanded
 		if (element.classList.contains("directory")) {
