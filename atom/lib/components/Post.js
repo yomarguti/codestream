@@ -5,33 +5,11 @@ import Headshot from "./Headshot";
 import Timestamp from "./Timestamp";
 import Menu from "./Menu";
 import PostDetails from "./PostDetails";
+import RetrySpinner from "./RetrySpinner";
 import { retryPost } from "../actions/post";
 import rootLogger from "../util/Logger";
 
 const logger = rootLogger.forClass("components/Post");
-
-class RetrySpinner extends Component {
-	componentDidMount() {
-		this.tooltip = atom.tooltips.add(this.span, { title: "Retry" });
-	}
-
-	componentWillUnmount() {
-		this.tooltip.dispose();
-	}
-
-	onClick = event => {
-		this.props.onClick();
-		event.stopPropagation();
-	};
-
-	render() {
-		return (
-			<div className="retry-spinner" onClick={this.onClick}>
-				<span ref={element => (this.span = element)} className="icon icon-sync text-error" />
-			</div>
-		);
-	}
-}
 
 class Post extends Component {
 	constructor(props) {
@@ -124,7 +102,7 @@ class Post extends Component {
 					{post.author.username}
 				</span>
 				{post.error ? (
-					<RetrySpinner onClick={this.retryPost} />
+					<RetrySpinner callback={this.retryPost} />
 				) : (
 					<Timestamp time={post.createdAt} />
 				)}
