@@ -30,6 +30,7 @@ export default (state = initialState, { type, payload }) => {
 		case "POSTS-HISTORY_FROM_PUBNUB":
 		case "POSTS-UPDATE_FROM_PUBNUB":
 		case "ADD_POST":
+		case "PENDING_POST_FAILED":
 		case "ADD_PENDING_POST": {
 			const { streamId, id } = payload;
 			const streamPosts = state.byStream[streamId] || {};

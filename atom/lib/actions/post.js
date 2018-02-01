@@ -1,3 +1,4 @@
+import Raven from "raven-js";
 import { upsert } from "../local-cache";
 import { normalize } from "./utils";
 import { fetchMarkersAndLocations } from "./marker-location";
@@ -7,6 +8,8 @@ const createTempId = (() => {
 	let count = 0;
 	return () => String(count++);
 })();
+
+const pendingPostFailed = post => ({ type: "PENDING_POST_FAILED", payload: post });
 
 export const savePost = attributes => (dispatch, getState, { db }) => {
 	return upsert(db, "posts", attributes).then(post =>
@@ -60,7 +63,6 @@ export const resolvePendingPost = (id, { post, markers, markerLocations, stream 
 				}
 			});
 			if (stream) await dispatch(saveStream(stream));
-			await dispatch(savePost(post));
 		})
 		.then(async () => {
 			// TODO: Should these be saved? the updates will be published through pubnub and cause double updates
@@ -69,8 +71,35 @@ export const resolvePendingPost = (id, { post, markers, markerLocations, stream 
 		});
 };
 
-export const rejectPendingPost = (streamId, pendingId, post) => (dispatch, getState, { db }) => {
-	// TODO
+export const rejectPendingPost = pendingId => (dispatch, getState, { db }) => {
+	return upsert(db, "posts", { id: pendingId, error: true }).then(post =>
+		dispatch(pendingPostFailed(post))
+	);
+};
+
+export const retryPost = pendingId => async (dispatch, getState, { db, http }) => {
+	const pendingPost = await db.posts.get(pendingId);
+	return http
+		.post("/posts", pendingPost, getState().session.accessToken)
+		.then(data =>
+			dispatch(
+				resolvePendingPost(pendingId, {
+					post: normalize(data.post),
+					markers: normalize(data.markers),
+					markerLocations: data.markerLocations,
+					stream: pendingPost.stream ? normalize(data.stream) : null
+				})
+			)
+		)
+		.catch(error => {
+			Raven.captureBreadcrumb({
+				message: "Failed to retry a post",
+				category: "action",
+				data: { error, pendingPost },
+				level: "error"
+			});
+			dispatch(pendingPostFailed(pendingPost));
+		});
 };
 
 export const fetchPosts = ({ streamId, teamId }) => async (dispatch, getState, { db, http }) => {
@@ -126,7 +155,7 @@ export const createPost = (streamId, parentPostId, text, codeBlocks, mentions) =
 		);
 	} catch (error) {
 		// TODO: different types of errors?
-		dispatch(rejectPendingPost(streamId, pendingId, { ...post, error: true }));
+		dispatch(rejectPendingPost(pendingId, { ...post, error: true }));
 	}
 };
 

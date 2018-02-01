@@ -1,18 +1,42 @@
 import React, { Component } from "react";
+import { connect } from "react-redux";
+import createClassString from "classnames";
 import Headshot from "./Headshot";
 import Timestamp from "./Timestamp";
 import Menu from "./Menu";
 import PostDetails from "./PostDetails";
-import createClassString from "classnames";
+import { retryPost } from "../actions/post";
 import rootLogger from "../util/Logger";
 
 const logger = rootLogger.forClass("components/Post");
 
-export default class Post extends Component {
+class RetrySpinner extends Component {
+	componentDidMount() {
+		this.tooltip = atom.tooltips.add(this.span, { title: "Retry" });
+	}
+
+	componentWillUnmount() {
+		this.tooltip.dispose();
+	}
+
+	onClick = event => {
+		this.props.onClick();
+		event.stopPropagation();
+	};
+
+	render() {
+		return (
+			<div className="retry-spinner" onClick={this.onClick}>
+				<span ref={element => (this.span = element)} className="icon icon-sync text-error" />
+			</div>
+		);
+	}
+}
+
+class Post extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			post: props.post,
 			menuOpen: false
 		};
 	}
@@ -41,8 +65,12 @@ export default class Post extends Component {
 		// atom.tooltips.add($icon.get(0), {'title': 'This block of code is different than your current copy.'});
 	}
 
+	retryPost = () => {
+		this.props.retry(this.props.post.id);
+	};
+
 	render() {
-		const { post } = this.state;
+		const { post } = this.props;
 
 		const postClass = createClassString({
 			post: true,
@@ -95,7 +123,11 @@ export default class Post extends Component {
 				<span className="author" ref={ref => (this._authorDiv = ref)}>
 					{post.author.username}
 				</span>
-				<Timestamp time={post.createdAt} />
+				{post.error ? (
+					<RetrySpinner onClick={this.retryPost} />
+				) : (
+					<Timestamp time={post.createdAt} />
+				)}
 				<div className="body">
 					{parentPost && (
 						<div className="replying-to">
@@ -142,3 +174,5 @@ export default class Post extends Component {
 		this.setState({ menuOpen: false });
 	};
 }
+
+export default connect(null, { retry: retryPost })(Post);
