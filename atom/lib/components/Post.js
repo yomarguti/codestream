@@ -29,7 +29,7 @@ class Post extends Component {
 		// unless the post is mine, in which case we always scroll to bottom
 		// we check to see if it's below 100 because if you are scrolled
 		// almost to the bottom, we count that as being at the bottom for UX reasons
-		if (offBottom < 100 || this.state.post.username == "pez") {
+		if (offBottom < 100 || this.props.post.username == "pez") {
 			// big number to make sure we've scrolled all the way down
 			streamDiv.scrollTop = 100000;
 			// console.log("SCROLLING TO BOTTOM");
@@ -43,9 +43,7 @@ class Post extends Component {
 		// atom.tooltips.add($icon.get(0), {'title': 'This block of code is different than your current copy.'});
 	}
 
-	retryPost = () => {
-		this.props.retry(this.props.post.id);
-	};
+	reSubmit = () => this.props.retryPost(this.props.post.id);
 
 	render() {
 		const { post } = this.props;
@@ -102,7 +100,7 @@ class Post extends Component {
 					{post.author.username}
 				</span>
 				{post.error ? (
-					<RetrySpinner callback={this.retryPost} />
+					<RetrySpinner callback={this.reSubmit} />
 				) : (
 					<Timestamp time={post.createdAt} />
 				)}
@@ -153,4 +151,4 @@ class Post extends Component {
 	};
 }
 
-export default connect(null, { retry: retryPost })(Post);
+export default connect(null, { retryPost })(Post);
