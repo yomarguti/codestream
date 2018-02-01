@@ -36,3 +36,9 @@ export const fetchStreams = sortId => async (dispatch, getState, { http }) => {
 		else return save;
 	});
 };
+
+export const fetchLatestForStream = () => async (dispatch, getState, { http }) => {
+	const { context, streams } = getState();
+	const stream = getStreamForRepoAndFile(streams, context.currentRepoId, context.currentFile);
+	if (stream) return dispatch(fetchLatestPosts([stream]));
+};
