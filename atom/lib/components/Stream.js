@@ -22,6 +22,7 @@ import { locationToRange, rangeToLocation } from "../util/Marker";
 import { getStreamForRepoAndFile } from "../reducers/streams";
 import rootLogger from "../util/Logger";
 
+const path = require("path");
 const logger = rootLogger.forClass("components/Stream");
 
 export class SimpleStream extends Component {
@@ -312,7 +313,7 @@ export class SimpleStream extends Component {
 	fileAbbreviation() {
 		logger.trace(".fileAbbreviation");
 		if (!this.props.currentFile) return "";
-		return this.props.currentFile.replace(/.*\//g, "");
+		return path.basename(this.props.currentFile);
 	}
 
 	renderIntro = () => {
