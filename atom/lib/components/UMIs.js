@@ -8,7 +8,7 @@ import * as actions from "../actions/umi";
 import rootLogger from "../util/Logger";
 import { getStreamsForRepo } from "../reducers/streams";
 
-const path = require("path");
+const Path = require("path");
 const logger = rootLogger.forClass("components/UMIs");
 
 const { app } = require("electron").remote;
@@ -167,9 +167,9 @@ export class SimpleUMIs extends Component {
 		let treatment = this.getTreatment(path);
 		// logger.debug("FOR: ", count, " treat ", treatment, " in ", path, " with mentions ", mentions);
 
-		let parts = path.split(path.sep);
+		let parts = path.split(Path.sep);
 		while (parts.length) {
-			let pathPart = parts.join(path.sep);
+			let pathPart = parts.join(Path.sep);
 			if (!this.treatments[pathPart]) this.treatments[pathPart] = {};
 			if (mentions) {
 				this.treatments[pathPart]["mentions"] =
@@ -197,7 +197,7 @@ export class SimpleUMIs extends Component {
 
 	treatMute(path, isMute) {
 		path = path.replace(/\*/g, ".");
-		let element = this.treeView.entryForPath(this.props.workingDirectory + path.sep + path);
+		let element = this.treeView.entryForPath(this.props.workingDirectory + Path.sep + path);
 		// logger.debug("Treating element ", element, " with ", isMute);
 		if (!element) return;
 		// don't treat directories that are expanded
@@ -210,7 +210,7 @@ export class SimpleUMIs extends Component {
 	}
 
 	treatPath(path) {
-		let element = this.treeView.entryForPath(this.props.workingDirectory + path.sep + path);
+		let element = this.treeView.entryForPath(this.props.workingDirectory + Path.sep + path);
 		if (!element) return;
 
 		// don't treat directories that are expanded
@@ -251,10 +251,10 @@ export class SimpleUMIs extends Component {
 	}
 
 	getTreatment(path) {
-		let parts = path.split(path.sep);
+		let parts = path.split(Path.sep);
 		let index = parts.length;
 		while (parts.length) {
-			let path = parts.join(path.sep);
+			let path = parts.join(Path.sep);
 			let prefPath = ["streamTreatments", this.props.repoId, path];
 			let treatment = getUserPreference(this.props.currentUser, prefPath);
 			// logger.debug("GOT: ", treatment, " FOR ", ["streamTreatments", this.props.repoId, path]);
