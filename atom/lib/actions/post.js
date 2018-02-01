@@ -11,6 +11,37 @@ const createTempId = (() => {
 
 const pendingPostFailed = post => ({ type: "PENDING_POST_FAILED", payload: post });
 
+const fetchLatest = (mostRecentPost, streamId, teamId) => async (dispatch, getState, { http }) => {
+	let url = `/posts?teamId=${teamId}&streamId=${streamId}`;
+	if (mostRecentPost) url += `&gt=${mostRecentPost.id}`;
+	const { posts, more } = await http.get(url, getState().session.accessToken);
+	const normalizedPosts = normalize(posts);
+	const save = dispatch(savePostsForStream(streamId, normalizedPosts));
+	// only take the first page if no mostRecentPost
+	if (more && mostRecentPost) return dispatch(fetchLatest(normalizedPosts[0].id, streamId, teamId));
+	else return save;
+};
+
+export const fetchLatestPosts = streams => (dispatch, getState, { db, http }) => {
+	return Promise.all(
+		streams.map(async stream => {
+			const cachedPosts = await db.posts.where({ streamId: stream.id }).sortBy("seqNum");
+			const mostRecentCachedPost = cachedPosts[cachedPosts.length - 1];
+			return dispatch(fetchLatest(mostRecentCachedPost, stream.id, stream.teamId));
+		})
+	);
+};
+
+export const fetchPosts = ({ streamId, teamId }) => async (dispatch, getState, { db, http }) => {
+	const { session } = getState();
+	const { posts } = await http.get(
+		`/posts?teamId=${teamId}&streamId=${streamId}`,
+		session.accessToken
+	);
+	dispatch(savePostsForStream(streamId, normalize(posts)));
+	return dispatch(fetchMarkersAndLocations({ streamId, teamId }));
+};
+
 export const savePost = attributes => (dispatch, getState, { db }) => {
 	return upsert(db, "posts", attributes).then(post =>
 		dispatch({
@@ -45,6 +76,53 @@ export const savePendingPost = attributes => (dispatch, getState, { db }) => {
 			payload: post
 		});
 	});
+};
+
+export const createPost = (streamId, parentPostId, text, codeBlocks, mentions) => async (
+	dispatch,
+	getState,
+	{ http }
+) => {
+	const { session, context } = getState();
+	const pendingId = createTempId();
+
+	const post = {
+		id: pendingId,
+		teamId: context.currentTeamId,
+		timestamp: new Date().getTime(),
+		creatorId: session.userId,
+		parentPostId: parentPostId,
+		codeBlocks: codeBlocks,
+		commitHashWhenPosted: context.currentCommit,
+		mentionedUserIds: mentions && mentions.length ? mentions : null,
+		text
+	};
+
+	if (streamId) {
+		post.streamId = streamId;
+		dispatch(savePendingPost(post));
+	} else
+		post.stream = {
+			teamId: context.currentTeamId,
+			type: "file",
+			file: context.currentFile,
+			repoId: context.currentRepoId
+		};
+
+	try {
+		const data = await http.post("/posts", post, session.accessToken);
+		dispatch(
+			resolvePendingPost(pendingId, {
+				post: normalize(data.post),
+				markers: normalize(data.markers),
+				markerLocations: data.markerLocations,
+				stream: streamId ? null : normalize(data.stream)
+			})
+		);
+	} catch (error) {
+		// TODO: different types of errors?
+		dispatch(rejectPendingPost(pendingId, { ...post, error: true }));
+	}
 };
 
 export const resolvePendingPost = (id, { post, markers, markerLocations, stream }) => (
@@ -100,82 +178,4 @@ export const retryPost = pendingId => async (dispatch, getState, { db, http }) =
 			});
 			dispatch(pendingPostFailed(pendingPost));
 		});
-};
-
-export const fetchPosts = ({ streamId, teamId }) => async (dispatch, getState, { db, http }) => {
-	const { session } = getState();
-	const { posts } = await http.get(
-		`/posts?teamId=${teamId}&streamId=${streamId}`,
-		session.accessToken
-	);
-	dispatch(savePostsForStream(streamId, normalize(posts)));
-	return dispatch(fetchMarkersAndLocations({ streamId, teamId }));
-};
-
-export const createPost = (streamId, parentPostId, text, codeBlocks, mentions) => async (
-	dispatch,
-	getState,
-	{ http }
-) => {
-	const { session, context } = getState();
-	const pendingId = createTempId();
-
-	const post = {
-		id: pendingId,
-		teamId: context.currentTeamId,
-		timestamp: new Date().getTime(),
-		creatorId: session.userId,
-		parentPostId: parentPostId,
-		codeBlocks: codeBlocks,
-		commitHashWhenPosted: context.currentCommit,
-		mentionedUserIds: mentions && mentions.length ? mentions : null,
-		text
-	};
-
-	if (streamId) {
-		post.streamId = streamId;
-		dispatch(savePendingPost(post));
-	} else
-		post.stream = {
-			teamId: context.currentTeamId,
-			type: "file",
-			file: context.currentFile,
-			repoId: context.currentRepoId
-		};
-
-	try {
-		const data = await http.post("/posts", post, session.accessToken);
-		dispatch(
-			resolvePendingPost(pendingId, {
-				post: normalize(data.post),
-				markers: normalize(data.markers),
-				markerLocations: data.markerLocations,
-				stream: streamId ? null : normalize(data.stream)
-			})
-		);
-	} catch (error) {
-		// TODO: different types of errors?
-		dispatch(rejectPendingPost(pendingId, { ...post, error: true }));
-	}
-};
-
-const fetchLatest = (mostRecentPost, streamId, teamId) => async (dispatch, getState, { http }) => {
-	let url = `/posts?teamId=${teamId}&streamId=${streamId}`;
-	if (mostRecentPost) url += `&gt=${mostRecentPost.id}`;
-	const { posts, more } = await http.get(url, getState().session.accessToken);
-	const normalizedPosts = normalize(posts);
-	const save = dispatch(savePostsForStream(streamId, normalizedPosts));
-	// only take the first page if no mostRecentPost
-	if (more && mostRecentPost) return dispatch(fetchLatest(normalizedPosts[0].id, streamId, teamId));
-	else return save;
-};
-
-export const fetchLatestPosts = streams => (dispatch, getState, { db, http }) => {
-	return Promise.all(
-		streams.map(async stream => {
-			const cachedPosts = await db.posts.where({ streamId: stream.id }).sortBy("seqNum");
-			const mostRecentCachedPost = cachedPosts[cachedPosts.length - 1];
-			return dispatch(fetchLatest(mostRecentCachedPost, stream.id, stream.teamId));
-		})
-	);
 };
