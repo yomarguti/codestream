@@ -8,6 +8,7 @@ export default (state = initialState, { type, payload }) => {
 			return toMapBy("id", payload);
 		case "ADD_TEAMS":
 			return { ...state, ...toMapBy("id", payload) };
+		case "TEAMS-HISTORY_FROM_PUBNUB":
 		case "TEAMS-UPDATE_FROM_PUBNUB":
 		case "ADD_TEAM":
 			return { ...state, [payload.id]: payload };

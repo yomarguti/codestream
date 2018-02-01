@@ -54,18 +54,18 @@ export default class PubNubReceiver {
 		this.pubnubMessage(event.message);
 	}
 
-	pubnubMessage(message) {
+	pubnubMessage(message, { isHistory = false } = {}) {
 		const { requestId, ...objects } = message;
 		// console.log(`pubnub event - ${requestId}`, message);
 		Raven.captureBreadcrumb({
 			message: "pubnub event",
 			category: "pubnub",
-			data: { requestId, ...Object.keys(objects) },
+			data: { requestId, isHistory, ...Object.keys(objects) },
 			level: "debug"
 		});
 		Object.keys(objects).forEach(key => {
 			const handler = this.getMessageHandler(key);
-			if (handler) handler(objects[key]);
+			if (handler) handler(objects[key], isHistory);
 		});
 	}
 
@@ -127,7 +127,8 @@ export default class PubNubReceiver {
 				return data => this.store.dispatch(saveMarkerLocations(normalize(data)));
 		}
 		if (tableName)
-			return data => this.store.dispatch(resolveFromPubnub(tableName, normalize(data)));
+			return (data, isHistory) =>
+				this.store.dispatch(resolveFromPubnub(tableName, normalize(data), isHistory));
 	}
 
 	async retrieveHistory(channels, messaging = {}) {
@@ -159,7 +160,7 @@ export default class PubNubReceiver {
 			return a.timestamp - b.timestamp;
 		});
 		for (var message of allMessages) {
-			this.pubnubMessage(message.entry);
+			this.pubnubMessage(message.entry, { isHistory: true });
 		}
 		if (allMessages.length > 0) {
 			const lastMessage = allMessages[allMessages.length - 1];

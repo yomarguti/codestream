@@ -27,6 +27,7 @@ export default (state = initialState, { type, payload }) => {
 				byStream: { ...state.byStream, [streamId]: streamPosts }
 			};
 		}
+		case "POSTS-HISTORY_FROM_PUBNUB":
 		case "POSTS-UPDATE_FROM_PUBNUB":
 		case "ADD_POST":
 		case "ADD_PENDING_POST": {
