@@ -107,7 +107,9 @@ const calculateLocations = ({ teamId, streamId }) => async (dispatch, getState, 
 	const missingMarkers = markers.filter(marker => !locations[marker._id]);
 	if (missingMarkers.length) {
 		logger.debug("Recalculating locations for", missingMarkers.length, "missing markers");
-		const calculatedLocations = markerLocationFinder.findLocationsForCurrentCommit(missingMarkers);
+		const calculatedLocations = await markerLocationFinder.findLocationsForCurrentCommit(
+			missingMarkers
+		);
 		logger.debug("locations", calculatedLocations);
 		Object.assign(locations, calculatedLocations);
 	}
