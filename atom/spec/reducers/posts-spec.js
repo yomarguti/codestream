@@ -1,48 +1,39 @@
-import reduce from "../../lib/reducers/posts";
+import reduce, { getPostsForStream } from "../../lib/reducers/posts";
 
 const post1 = { streamId: "1", id: "1-1", text: "text1" };
 const post2 = { streamId: "1", id: "1-2", text: "text2" };
 const post3 = { streamId: "2", id: "2-1", text: "text3" };
+const pendingPost = { streamId: "2", id: "2-1", text: "text4", pending: true };
 
 describe("reducer for posts", () => {
-	describe("on BOOTSTRAP_POSTS and ADD_POSTS", () => {
-		it("saves an array of posts by stream", () => {
-			const postsFromDb = [post1, post2, post3];
+	describe("BOOTSTRAP_POSTS", () => {
+		it("saves posts and pending posts", () => {
+			const postsFromDb = [post1, post2, post3, pendingPost];
 
-			const expected = {
+			const bootstrapResult = reduce(undefined, { type: "BOOTSTRAP_POSTS", payload: postsFromDb });
+
+			expect(bootstrapResult).toEqual({
 				byStream: {
 					"1": { [post1.id]: post1, [post2.id]: post2 },
 					"2": { [post3.id]: post3 }
-				}
-			};
-			const bootstrapResult = reduce(undefined, { type: "BOOTSTRAP_POSTS", payload: postsFromDb });
-			const addResult = reduce(undefined, { type: "ADD_POSTS", payload: postsFromDb });
-
-			expect(bootstrapResult).toEqual(expected);
-			expect(addResult).toEqual(expected);
+				},
+				pending: [pendingPost]
+			});
 		});
 	});
 
-	it("adds posts to the stream", () => {
-		const state = {
-			byStream: {
-				"1": { [post1.id]: post1, [post2.id]: post2 },
-				"2": { [post3.id]: post3 }
-			}
-		};
+	describe("ADD_POSTS", () => {
+		it("saves posts", () => {
+			const addResult = reduce(undefined, { type: "ADD_POSTS", payload: [post1, post2, post3] });
 
-		const newPost = { streamId: "2", id: "2-2", text: "text4" };
-
-		const expected = {
-			byStream: {
-				"1": { [post1.id]: post1, [post2.id]: post2 },
-				"2": { [post3.id]: post3, [newPost.id]: newPost }
-			}
-		};
-
-		const result = reduce(state, { type: "ADD_PENDING_POST", payload: newPost });
-
-		expect(result).toEqual(expected);
+			expect(addResult).toEqual({
+				byStream: {
+					"1": { [post1.id]: post1, [post2.id]: post2 },
+					"2": { [post3.id]: post3 }
+				},
+				pending: []
+			});
+		});
 	});
 
 	describe("adding posts in bulk", () => {
@@ -74,30 +65,92 @@ describe("reducer for posts", () => {
 		});
 	});
 
-	it("resolves pending posts by replacing it", () => {
-		const state = {
-			byStream: {
-				"1": { [post1.id]: post1, [post2.id]: post2 },
-				"2": { [post3.id]: post3, pendingId: { streamId: "2", id: "pendingId" } }
-			}
-		};
+	describe("pending posts", () => {
+		describe("ADD_PENDING_POST", () => {
+			it("adds pending posts for non-existent streams", () => {
+				const state = { byStream: {}, pending: [] };
+				const pendingPost = { id: post2.id };
+				const action = {
+					type: "ADD_PENDING_POST",
+					payload: pendingPost
+				};
+				expect(reduce(state, action).pending).toEqual([pendingPost]);
+			});
+		});
 
-		const resolvedPost = { streamId: "2", id: "2-2", text: "text4" };
+		describe("RESOLVE_PENDING_POST", () => {
+			it("removes pending post and adds to appropriate stream", () => {
+				const state = {
+					byStream: {
+						"1": { [post1.id]: post1 }
+					},
+					pending: [post2]
+				};
 
-		const expected = {
-			byStream: {
-				"1": { [post1.id]: post1, [post2.id]: post2 },
-				"2": { [post3.id]: post3, [resolvedPost.id]: resolvedPost }
-			}
-		};
+				const resolvedPost = { streamId: "2", id: "2-2", text: "text4" };
 
-		const action = {
-			type: "RESOLVE_PENDING_POST",
-			payload: { pendingId: "pendingId", post: resolvedPost }
-		};
+				const action = {
+					type: "RESOLVE_PENDING_POST",
+					payload: { pendingId: post2.id, post: resolvedPost }
+				};
 
-		const result = reduce(state, action);
-		console.log(result);
-		expect(result).toEqual(expected);
+				expect(reduce(state, action)).toEqual({
+					byStream: {
+						...state.byStream,
+						[resolvedPost.streamId]: { [resolvedPost.id]: resolvedPost }
+					},
+					pending: []
+				});
+			});
+		});
+
+		describe("PENDING_POST_FAILED", () => {
+			it("updates the pending post", () => {
+				const state = {
+					byStream: {},
+					pending: [post1]
+				};
+
+				const action = { type: "PENDING_POST_FAILED", payload: { ...post1, error: true } };
+
+				expect(reduce(state, action)).toEqual({
+					byStream: {},
+					pending: [action.payload]
+				});
+			});
+		});
+	});
+});
+
+describe("getPostsForStream selector", () => {
+	const stream1Post1 = { streamId: "1", id: "1-1", text: "text1", seqNum: 1 };
+	const stream1Post2 = { streamId: "1", id: "1-2", text: "text2", seqNum: 2 };
+	const stream2Post1 = { streamId: "2", id: "2-1", text: "text3", seqNum: 1 };
+	const stream2PendingPost2 = { streamId: "2", id: "2-2", text: "text4" };
+	const newFilePendingPost1 = { id: "1?", text: "text5", stream: { file: "dir/newFile" } };
+	const state = {
+		byStream: {
+			"1": { [stream1Post1.id]: stream1Post1, [stream1Post2.id]: stream1Post2 },
+			"2": { [stream2Post1.id]: stream2Post1 }
+		},
+		pending: [stream2PendingPost2, newFilePendingPost1]
+	};
+
+	it("returns an empty list if no streamId provided", () => {
+		expect(getPostsForStream(state)).toEqual([]);
+	});
+
+	it("returns posts for the stream", () => {
+		expect(getPostsForStream(state, "1")).toEqual([stream1Post1, stream1Post2]);
+	});
+
+	it("includes pending posts for the streamId", () => {
+		expect(getPostsForStream(state, "2")).toEqual([stream2Post1, stream2PendingPost2]);
+	});
+
+	describe("when there is no stream yet and a filePath is passed as streamId", () => {
+		it("includes pending posts for the filePath", () => {
+			expect(getPostsForStream(state, "dir/newFile")).toEqual([newFilePendingPost1]);
+		});
 	});
 });

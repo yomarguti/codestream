@@ -1,18 +1,20 @@
 import React, { Component } from "react";
+import { connect } from "react-redux";
+import createClassString from "classnames";
 import Headshot from "./Headshot";
 import Timestamp from "./Timestamp";
 import Menu from "./Menu";
 import PostDetails from "./PostDetails";
-import createClassString from "classnames";
+import RetrySpinner from "./RetrySpinner";
+import { retryPost } from "../actions/post";
 import rootLogger from "../util/Logger";
 
 const logger = rootLogger.forClass("components/Post");
 
-export default class Post extends Component {
+class Post extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			post: props.post,
 			menuOpen: false
 		};
 	}
@@ -27,7 +29,7 @@ export default class Post extends Component {
 		// unless the post is mine, in which case we always scroll to bottom
 		// we check to see if it's below 100 because if you are scrolled
 		// almost to the bottom, we count that as being at the bottom for UX reasons
-		if (offBottom < 100 || this.state.post.username == "pez") {
+		if (offBottom < 100 || this.props.post.username == "pez") {
 			// big number to make sure we've scrolled all the way down
 			streamDiv.scrollTop = 100000;
 			// console.log("SCROLLING TO BOTTOM");
@@ -41,8 +43,10 @@ export default class Post extends Component {
 		// atom.tooltips.add($icon.get(0), {'title': 'This block of code is different than your current copy.'});
 	}
 
+	reSubmit = () => this.props.retryPost(this.props.post.id);
+
 	render() {
-		const { post } = this.state;
+		const { post } = this.props;
 
 		const postClass = createClassString({
 			post: true,
@@ -95,7 +99,11 @@ export default class Post extends Component {
 				<span className="author" ref={ref => (this._authorDiv = ref)}>
 					{post.author.username}
 				</span>
-				<Timestamp time={post.createdAt} />
+				{post.error ? (
+					<RetrySpinner callback={this.reSubmit} />
+				) : (
+					<Timestamp time={post.createdAt} />
+				)}
 				<div className="body">
 					{parentPost && (
 						<div className="replying-to">
@@ -142,3 +150,5 @@ export default class Post extends Component {
 		this.setState({ menuOpen: false });
 	};
 }
+
+export default connect(null, { retryPost })(Post);

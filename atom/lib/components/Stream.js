@@ -20,6 +20,7 @@ import { fetchMarkersAndLocations, markerDirtied } from "../actions/marker-locat
 import { toMapBy } from "../reducers/utils";
 import { locationToRange, rangeToLocation } from "../util/Marker";
 import { getStreamForRepoAndFile } from "../reducers/streams";
+import { getPostsForStream } from "../reducers/posts";
 import rootLogger from "../util/Logger";
 
 const Path = require("path");
@@ -1031,12 +1032,6 @@ export class SimpleStream extends Component {
 	}
 }
 
-const getPostsForStream = (streamId = "", { byStream }) => {
-	logger.trace(".getPostsForStream");
-	if (streamId === "") return [];
-	return _.sortBy(byStream[streamId], "seqNum");
-};
-
 const getLocationsByPost = (locationsByCommit = {}, commitHash, markers) => {
 	logger.trace(".getLocationsByPost");
 	const locations = locationsByCommit[commitHash] || {};
@@ -1119,7 +1114,7 @@ const mapStateToProps = ({
 		users: toMapBy("id", teamMembers),
 		usernamesRegexp: usernamesRegexp,
 		currentUser: users[session.userId],
-		posts: getPostsForStream(stream.id, posts).map(post => {
+		posts: getPostsForStream(posts, stream.id || context.currentFile).map(post => {
 			let user = users[post.creatorId];
 			if (!user) {
 				console.warn(
