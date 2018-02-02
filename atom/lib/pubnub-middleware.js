@@ -12,6 +12,8 @@ const _initializePubnubAndSubscribe = async (store, receiver) => {
 		channels.push(`repo-${context.currentRepoId}`);
 	}
 
+	store.dispatch({ type: "CATCHING_UP" });
+
 	receiver.initialize(session.accessToken, session.userId);
 	receiver.subscribe(channels);
 	return receiver.retrieveHistory(channels, messaging);

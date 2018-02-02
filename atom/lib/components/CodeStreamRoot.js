@@ -8,7 +8,12 @@ import Onboarding from "./onboarding/Onboarding";
 import Stream from "./Stream";
 import NoAccess from "./NoAccess";
 
-const Loading = () => <span className="loading loading-spinner-large inline-block" />;
+const Loading = props => (
+	<div className="loading-page">
+		<span className="loading loading-spinner-large inline-block" />
+		<p>{props.message}</p>
+	</div>
+);
 
 class CodeStreamRoot extends Component {
 	static defaultProps = {
@@ -37,7 +42,14 @@ class CodeStreamRoot extends Component {
 	}
 
 	render() {
-		const { accessToken, bootstrapped, repositories, onboarding, noAccess } = this.props;
+		const {
+			catchingUp,
+			accessToken,
+			bootstrapped,
+			repositories,
+			onboarding,
+			noAccess
+		} = this.props;
 
 		if (this.state.hasError)
 			return (
@@ -51,7 +63,8 @@ class CodeStreamRoot extends Component {
 		if (repositories.length === 0) return <NoGit />;
 		if (repositories.length > 1) return <TooMuchGit />;
 		if (noAccess) return <NoAccess reason={noAccess} />;
-		if (!bootstrapped) return <Loading />;
+		if (!bootstrapped) return <Loading message="CodeStream engage..." />;
+		if (catchingUp) return <Loading message="Hold on, we're catching you up" />;
 		else if (onboarding.complete && accessToken) return <Stream />;
 		else {
 			return <Onboarding />;
@@ -59,9 +72,10 @@ class CodeStreamRoot extends Component {
 	}
 }
 
-const mapStateToProps = ({ bootstrapped, session, onboarding, context }) => ({
+const mapStateToProps = ({ bootstrapped, session, onboarding, context, messaging }) => ({
 	accessToken: session.accessToken,
 	noAccess: context.noAccess,
+	catchingUp: messaging.catchingUp,
 	bootstrapped,
 	onboarding
 });
