@@ -28,7 +28,8 @@ Raven.config("https://46fd0a63e10340b585d895d333fec719@sentry.io/280733", {
 		process: process.type,
 		platform: os.platform(),
 		platformRelease: os.release(),
-		atom: atom.getVersion()
+		atom: atom.getVersion(),
+		codestreamUrl: atom.config.get("codestream.url")
 	}
 }).install();
 window.addEventListener("unhandledrejection", function(event) {
