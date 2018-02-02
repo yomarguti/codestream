@@ -51,10 +51,10 @@ export default class PubNubReceiver {
 
 	pubnubEvent(event) {
 		this.store.dispatch(lastMessageReceived(event.timetoken));
-		this.pubnubMessage(event.message);
+		this.pubnubMessage(event.timetoken, event.message);
 	}
 
-	pubnubMessage(message, { isHistory = false } = {}) {
+	pubnubMessage(timetoken, message, { isHistory = false } = {}) {
 		const { requestId, ...objects } = message;
 		// console.log(`pubnub event - ${requestId}`, message);
 		Raven.captureBreadcrumb({
@@ -67,6 +67,9 @@ export default class PubNubReceiver {
 			const handler = this.getMessageHandler(key);
 			if (handler) handler(objects[key], isHistory);
 		});
+		if (isHistory) {
+			if (this.lastHistoryTimeToken === timetoken) this.store.dispatch({ type: "CAUGHT_UP" });
+		}
 	}
 
 	subscribe(channels) {
@@ -160,12 +163,15 @@ export default class PubNubReceiver {
 		allMessages.sort((a, b) => {
 			return a.timestamp - b.timestamp;
 		});
-		for (var message of allMessages) {
-			this.pubnubMessage(message.entry, { isHistory: true });
-		}
+
 		if (allMessages.length > 0) {
 			const lastMessage = allMessages[allMessages.length - 1];
+			this.lastHistoryTimeToken = lastMessage.timetoken;
 			this.store.dispatch(lastMessageReceived(lastMessage.timetoken));
+		} else this.store.dispatch({ type: "CAUGHT_UP" });
+
+		for (var message of allMessages) {
+			this.pubnubMessage(message.timetoken, message.entry, { isHistory: true });
 		}
 	}
 
