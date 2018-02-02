@@ -794,8 +794,7 @@ export class SimpleStream extends Component {
 		this.setState({ newPostText: newPostText });
 	};
 
-	handleOnKeyPress = async event => {
-		logger.trace(".handleOnKeyPress");
+	handleOnKeyPress = event => {
 		var newPostText = this.state.newPostText;
 
 		// if we have the at-mentions popup open, then the keys
@@ -812,13 +811,13 @@ export class SimpleStream extends Component {
 				var text = match ? match[0].replace(/@/, "") : "";
 				// this.showAtMentionSelectors(text);
 			}
-		} else if (event.key == "@") {
+		} else if (event.key === "@") {
 			this.showAtMentionSelectors("");
-		} else if (event.key == "Escape") {
+		} else if (event.key === "Escape") {
 			this.slideThreadOut();
-		} else if (event.key == "Enter" && !event.shiftKey) {
+		} else if (event.key === "Enter" && !event.shiftKey) {
 			event.preventDefault();
-			if (newPostText.length > 0) {
+			if (newPostText.trim().length > 0) {
 				this.submitPost(newPostText);
 			} else {
 				// don't submit blank posts
