@@ -12,6 +12,8 @@ const _initiateTicks = (store, receiver) => {
 			// stopped execution for longer than expected ... we'll make sure we're 
 			// subscribed to the channels we need to be and fetch history to catch up,
 			// in case we missed any messages
+			console.debug('WAKING FROM SLEEP');
+			receiver.unsubscribeAll();
 			_initializePubnubAndSubscribe(store, receiver);
 		}
 		lastTick = now;
