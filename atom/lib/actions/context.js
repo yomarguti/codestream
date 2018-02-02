@@ -1,4 +1,5 @@
 export const resetContext = data => ({ type: "RESET_CONTEXT" });
+import { offline } from "./connectivity";
 export const setContext = data => ({
 	type: "SET_CONTEXT",
 	payload: data

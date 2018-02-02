@@ -133,6 +133,7 @@ export default class PubNubReceiver {
 
 	async retrieveHistory(channels, messaging = {}) {
 		let retrieveSince;
+		channels = channels || this.subscribedChannels;
 		if (messaging.lastMessageReceived) {
 			retrieveSince = messaging.lastMessageReceived;
 		} else {
