@@ -20,6 +20,7 @@ import {
 import { setStreamUMITreatment } from "./actions/umi";
 import { commitNewMarkerLocations, refreshMarkersAndLocations } from "./actions/marker-location";
 import logger from "./util/Logger";
+import { online, offline } from "./actions/connectivity";
 
 Raven.config("https://46fd0a63e10340b585d895d333fec719@sentry.io/280733", {
 	captureUnhandledRejections: true,
@@ -214,6 +215,9 @@ module.exports = {
 					}
 				})
 			);
+
+			window.addEventListener("online", e => store.dispatch(online()), false);
+			window.addEventListener("offline", e => store.dispatch(offline()), false);
 
 			const workDir = repo.repo.workingDirectory;
 			const repoUrl = repo.getOriginURL();

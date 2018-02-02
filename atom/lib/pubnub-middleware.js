@@ -1,6 +1,24 @@
 import PubNubReceiver from "./pubnub-receiver";
 import { fetchCurrentUser } from "./actions/user";
 
+let lastTick = null;
+let ticksInitiated = false;
+const _initiateTicks = (store, receiver) => {
+	// start a ticking clock, look for anything that misses a tick by more than a whole second
+	setInterval(() => {
+		const now = Date.now();
+		if (lastTick && now - lastTick > 2000) {
+			// we'll assume this is a laptop sleep event or something that otherwise
+			// stopped execution for longer than expected ... we'll make sure we're 
+			// subscribed to the channels we need to be and fetch history to catch up,
+			// in case we missed any messages
+			_initializePubnubAndSubscribe(store, receiver);
+		}
+		lastTick = now;
+	}, 1000);
+	ticksInitiated = true;
+};
+
 const _initializePubnubAndSubscribe = async (store, receiver) => {
 	const { context, users, session, messaging } = store.getState();
 	const user = users[session.userId];
@@ -14,6 +32,9 @@ const _initializePubnubAndSubscribe = async (store, receiver) => {
 
 	receiver.initialize(session.accessToken, session.userId);
 	receiver.subscribe(channels);
+	if (!ticksInitiated) {
+		_initiateTicks(store, receiver);
+	}
 	return receiver.retrieveHistory(channels, messaging);
 };
 
@@ -56,6 +77,13 @@ export default store => {
 		if (action.type === "CLEAR_SESSION") {
 			receiver.unsubscribeAll();
 		}
+
+		// if we come online after a period of being offline, retrieve message history
+		if (action.type === 'ONLINE') {
+			const { messaging } = store.getState();
+			receiver.retrieveHistory(null, messaging);
+		}
+
 		return result;
 	};
 };
