@@ -41,7 +41,8 @@ export class SimpleStream extends Component {
 			stream: {},
 			threadId: null,
 			posts: [],
-			fileForIntro: this.props.currentFile
+			fileForIntro: this.props.currentFile,
+			newPostText: ""
 		};
 
 		this.savedComposeState = {};
@@ -318,7 +319,6 @@ export class SimpleStream extends Component {
 	}
 
 	renderIntro = () => {
-		logger.trace(".renderIntro");
 		if (
 			!this.props.currentFile ||
 			(this.props.firstTimeInAtom && this.props.currentFile === this.state.fileForIntro)
@@ -371,7 +371,6 @@ export class SimpleStream extends Component {
 	// to be able to animate between the two streams, since they will both be
 	// visible during the transition
 	render() {
-		logger.trace(".render");
 		const posts = this.props.posts;
 
 		const streamClass = createClassString({
