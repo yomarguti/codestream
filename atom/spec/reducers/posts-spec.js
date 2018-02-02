@@ -3,24 +3,36 @@ import reduce, { getPostsForStream } from "../../lib/reducers/posts";
 const post1 = { streamId: "1", id: "1-1", text: "text1" };
 const post2 = { streamId: "1", id: "1-2", text: "text2" };
 const post3 = { streamId: "2", id: "2-1", text: "text3" };
+const pendingPost = { streamId: "2", id: "2-1", text: "text4", pending: true };
 
-fdescribe("reducer for posts", () => {
-	describe("on BOOTSTRAP_POSTS and ADD_POSTS", () => {
-		it("saves an array of posts by stream", () => {
-			const postsFromDb = [post1, post2, post3];
+describe("reducer for posts", () => {
+	describe("BOOTSTRAP_POSTS", () => {
+		it("saves posts and pending posts", () => {
+			const postsFromDb = [post1, post2, post3, pendingPost];
 
-			const expected = {
+			const bootstrapResult = reduce(undefined, { type: "BOOTSTRAP_POSTS", payload: postsFromDb });
+
+			expect(bootstrapResult).toEqual({
+				byStream: {
+					"1": { [post1.id]: post1, [post2.id]: post2 },
+					"2": { [post3.id]: post3 }
+				},
+				pending: [pendingPost]
+			});
+		});
+	});
+
+	describe("ADD_POSTS", () => {
+		it("saves posts", () => {
+			const addResult = reduce(undefined, { type: "ADD_POSTS", payload: [post1, post2, post3] });
+
+			expect(addResult).toEqual({
 				byStream: {
 					"1": { [post1.id]: post1, [post2.id]: post2 },
 					"2": { [post3.id]: post3 }
 				},
 				pending: []
-			};
-			const bootstrapResult = reduce(undefined, { type: "BOOTSTRAP_POSTS", payload: postsFromDb });
-			const addResult = reduce(undefined, { type: "ADD_POSTS", payload: postsFromDb });
-
-			expect(bootstrapResult).toEqual(expected);
-			expect(addResult).toEqual(expected);
+			});
 		});
 	});
 
@@ -91,10 +103,26 @@ fdescribe("reducer for posts", () => {
 				});
 			});
 		});
+
+		describe("PENDING_POST_FAILED", () => {
+			it("updates the pending post", () => {
+				const state = {
+					byStream: {},
+					pending: [post1]
+				};
+
+				const action = { type: "PENDING_POST_FAILED", payload: { ...post1, error: true } };
+
+				expect(reduce(state, action)).toEqual({
+					byStream: {},
+					pending: [action.payload]
+				});
+			});
+		});
 	});
 });
 
-fdescribe("getPostsForStream selector", () => {
+describe("getPostsForStream selector", () => {
 	const stream1Post1 = { streamId: "1", id: "1-1", text: "text1", seqNum: 1 };
 	const stream1Post2 = { streamId: "1", id: "1-2", text: "text2", seqNum: 2 };
 	const stream2Post1 = { streamId: "2", id: "2-1", text: "text3", seqNum: 1 };

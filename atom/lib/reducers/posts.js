@@ -16,19 +16,18 @@ export default (state = initialState, { type, payload }) => {
 		case "ADD_POSTS":
 		case "BOOTSTRAP_POSTS": {
 			const nextState = {
-				...state,
+				pending: [...state.pending],
 				byStream: { ...state.byStream }
 			};
 			payload.forEach(post => {
-				const streamPosts = nextState.byStream[post.streamId] || {};
-				streamPosts[post.id] = post;
-				nextState.byStream[post.streamId] = streamPosts;
+				if (post.pending) nextState.pending.push(post);
+				else nextState.byStream = addPost(nextState.byStream, post);
 			});
 			return nextState;
 		}
 		case "ADD_POSTS_FOR_STREAM": {
 			const { streamId, posts } = payload;
-			const streamPosts = state.byStream[streamId] || {};
+			const streamPosts = { ...(state.byStream[streamId] || {}) };
 			posts.forEach(post => {
 				streamPosts[post.id] = post;
 			});
@@ -41,15 +40,10 @@ export default (state = initialState, { type, payload }) => {
 		case "POSTS-HISTORY_FROM_PUBNUB":
 		case "POSTS-UPDATE_FROM_PUBNUB":
 		case "ADD_POST":
-		case "PENDING_POST_FAILED": {
-			const { streamId, id } = payload;
-			const streamPosts = state.byStream[streamId] || {};
-			streamPosts[id] = payload;
 			return {
 				...state,
-				byStream: { ...state.byStream, [streamId]: streamPosts }
+				byStream: addPost(state.byStream, payload)
 			};
-		}
 		case "ADD_PENDING_POST": {
 			return { ...state, pending: [...state.pending, payload] };
 		}
@@ -60,13 +54,22 @@ export default (state = initialState, { type, payload }) => {
 				pending: state.pending.filter(post => post.id !== pendingId)
 			};
 		}
+		case "PENDING_POST_FAILED": {
+			return {
+				...state,
+				pending: state.pending.map(post => {
+					if (post.id === payload.id) return payload;
+					else post;
+				})
+			};
+		}
 		default:
 			return state;
 	}
 };
 
 // If stream for a pending post is created, the pending post will be lost (not displayed)
-// TODO: reconcile pending posts for a file with stream when it is created
+// TODO: reconcile pending posts for a file with stream when the stream is created
 export const getPostsForStream = ({ byStream, pending }, streamId = "") => {
 	if (streamId === "") return [];
 	const pendingForStream = pending.filter(it => {

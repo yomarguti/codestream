@@ -70,7 +70,7 @@ export const savePostsForStream = (streamId, attributes) => (dispatch, getState,
 };
 
 export const savePendingPost = attributes => (dispatch, getState, { db }) => {
-	return upsert(db, "posts", attributes).then(post => {
+	return upsert(db, "posts", { ...attributes, pending: true }).then(post => {
 		dispatch({
 			type: "ADD_PENDING_POST",
 			payload: post
@@ -108,7 +108,7 @@ export const createPost = (streamId, parentPostId, text, codeBlocks, mentions) =
 			repoId: context.currentRepoId
 		};
 
-	dispatch(savePendingPost(post));
+	dispatch(savePendingPost({ ...post }));
 
 	try {
 		const data = await http.post("/posts", post, session.accessToken);
@@ -121,6 +121,9 @@ export const createPost = (streamId, parentPostId, text, codeBlocks, mentions) =
 			})
 		);
 	} catch (error) {
+		Raven.captureException(error, {
+			logger: "actions/post"
+		});
 		// TODO: different types of errors?
 		dispatch(rejectPendingPost(pendingId, { ...post, error: true }));
 	}
