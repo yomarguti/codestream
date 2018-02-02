@@ -159,6 +159,12 @@ export const rejectPendingPost = pendingId => (dispatch, getState, { db }) => {
 	);
 };
 
+export const cancelPost = pendingId => async (dispatch, getState, { db }) => {
+	return db.posts
+		.delete(pendingId)
+		.then(() => dispatch({ type: "CANCEL_PENDING_POST", payload: pendingId }));
+};
+
 export const retryPost = pendingId => async (dispatch, getState, { db, http }) => {
 	const pendingPost = await db.posts.get(pendingId);
 	return http

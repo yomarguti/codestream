@@ -63,6 +63,12 @@ export default (state = initialState, { type, payload }) => {
 				})
 			};
 		}
+		case "CANCEL_PENDING_POST": {
+			return {
+				...state,
+				pending: state.pending.filter(post => post.id !== payload)
+			};
+		}
 		default:
 			return state;
 	}

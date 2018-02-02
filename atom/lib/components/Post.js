@@ -6,7 +6,7 @@ import Timestamp from "./Timestamp";
 import Menu from "./Menu";
 import PostDetails from "./PostDetails";
 import RetrySpinner from "./RetrySpinner";
-import { retryPost } from "../actions/post";
+import { retryPost, cancelPost } from "../actions/post";
 import rootLogger from "../util/Logger";
 
 const logger = rootLogger.forClass("components/Post");
@@ -43,7 +43,9 @@ class Post extends Component {
 		// atom.tooltips.add($icon.get(0), {'title': 'This block of code is different than your current copy.'});
 	}
 
-	reSubmit = () => this.props.retryPost(this.props.post.id);
+	resubmit = () => this.props.retryPost(this.props.post.id);
+
+	cancel = () => this.props.cancelPost(this.props.post.id);
 
 	render() {
 		const { post } = this.props;
@@ -100,7 +102,7 @@ class Post extends Component {
 					{post.author.username}
 				</span>
 				{post.error ? (
-					<RetrySpinner callback={this.reSubmit} />
+					<RetrySpinner callback={this.resubmit} cancel={this.cancel} />
 				) : (
 					<Timestamp time={post.createdAt} />
 				)}
@@ -151,4 +153,4 @@ class Post extends Component {
 	};
 }
 
-export default connect(null, { retryPost })(Post);
+export default connect(null, { cancelPost, retryPost })(Post);

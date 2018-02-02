@@ -119,6 +119,22 @@ describe("reducer for posts", () => {
 				});
 			});
 		});
+
+		describe("CANCEL_PENDING_POST", () => {
+			it("removes the pending post", () => {
+				const state = {
+					byStream: {},
+					pending: [post1]
+				};
+
+				const action = { type: "CANCEL_PENDING_POST", payload: post1.id };
+
+				expect(reduce(state, action)).toEqual({
+					byStream: {},
+					pending: []
+				});
+			});
+		});
 	});
 });
 
