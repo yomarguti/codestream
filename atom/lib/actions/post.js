@@ -100,7 +100,6 @@ export const createPost = (streamId, parentPostId, text, codeBlocks, mentions) =
 
 	if (streamId) {
 		post.streamId = streamId;
-		dispatch(savePendingPost(post));
 	} else
 		post.stream = {
 			teamId: context.currentTeamId,
@@ -108,6 +107,8 @@ export const createPost = (streamId, parentPostId, text, codeBlocks, mentions) =
 			file: context.currentFile,
 			repoId: context.currentRepoId
 		};
+
+	dispatch(savePendingPost(post));
 
 	try {
 		const data = await http.post("/posts", post, session.accessToken);
