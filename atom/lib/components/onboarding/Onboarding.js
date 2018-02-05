@@ -13,13 +13,13 @@ const mapStateToProps = ({ onboarding }) => ({ ...onboarding });
 export default connect(mapStateToProps)(({ step, props, configs }) => {
 	const nextProps = { configs, ...props };
 	const views = {
-		signUp: <SignupForm {...nextProps} />,
-		confirmEmail: <EmailConfirmationForm {...nextProps} />,
-		login: <LoginForm {...nextProps} />,
-		createTeam: <TeamCreationForm {...nextProps} />,
-		selectTeam: <TeamSelectionForm {...nextProps} />,
-		identifyMembers: <TeamMemberSelectionForm {...nextProps} />,
-		changeUsername: <ChangeUsernameForm {...nextProps} />
+		signUp: SignupForm,
+		confirmEmail: EmailConfirmationForm,
+		login: LoginForm,
+		createTeam: TeamCreationForm,
+		selectTeam: TeamSelectionForm,
+		identifyMembers: TeamMemberSelectionForm,
+		changeUsername: ChangeUsernameForm
 	};
-	return views[step];
+	return React.createElement(views[step], { ...nextProps, key: step });
 });
