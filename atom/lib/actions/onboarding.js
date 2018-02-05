@@ -5,6 +5,7 @@ import { saveUser, saveUsers } from "./user";
 import { saveRepo, saveRepos } from "./repo";
 import { fetchTeamMembers, saveTeam, saveTeams, joinTeam as _joinTeam } from "./team";
 import { fetchStreams, fetchLatestForStream } from "./stream";
+import UUID from "uuid/v1";
 
 const logError = (message, error) => {
 	Raven.captureException(error, { logger: "actions/onboarding" });
@@ -83,7 +84,8 @@ export const confirmEmail = attributes => (dispatch, getState, { http }) => {
 			await saveUser(user);
 			await dispatch(saveTeams(userTeams));
 			await dispatch(saveRepos(userRepos));
-			await dispatch(initializeSession({ userId: user.id, accessToken }));
+			const sessionId = UUID();
+			await dispatch(initializeSession({ userId: user.id, accessToken, sessionId }));
 
 			if (!teamIdForRepo && userTeams.length === 0)
 				dispatch({ type: "NEW_USER_CONFIRMED_IN_NEW_REPO" });
@@ -231,7 +233,8 @@ export const authenticate = params => (dispatch, getState, { http }) => {
 
 			const teamIdsForUser = user.teamIds || userTeams.map(team => team.id);
 
-			dispatch(initializeSession({ accessToken, userId: user.id }));
+			const sessionId = UUID();
+			dispatch(initializeSession({ accessToken, userId: user.id, sessionId }));
 
 			let teamIdForRepo = context.currentTeamId;
 			if (!teamIdForRepo) {

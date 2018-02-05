@@ -1,5 +1,6 @@
 import PubNubReceiver from "./pubnub-receiver";
 import { fetchCurrentUser } from "./actions/user";
+import { subscriptionFailure } from "./actions/messaging";
 
 let lastTick = null;
 let ticksInitiated = false;
@@ -34,7 +35,7 @@ const _initializePubnubAndSubscribe = async (store, receiver) => {
 
 	store.dispatch({ type: "CATCHING_UP" });
 
-	receiver.initialize(session.accessToken, session.userId);
+	receiver.initialize(session.accessToken, session.userId, session.sessionId);
 	receiver.subscribe(channels);
 	if (!ticksInitiated) {
 		_initiateTicks(store, receiver);

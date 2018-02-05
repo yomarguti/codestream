@@ -6,18 +6,19 @@ import { resolveFromPubnub } from "./actions/pubnub-event";
 import { saveMarkerLocations } from "./actions/marker-location";
 import { lastMessageReceived } from "./actions/messaging";
 import rootLogger from "./util/Logger";
+import PubnubSubscription from "./pubnub-subscription"
 
 const logger = rootLogger.forClass("pubnub-receiver");
 
 export default class PubNubReceiver {
-	subscribedChannels = [];
-	pubnub = null;
 
 	constructor(store) {
 		this.store = store;
+		this.subscriptions = {};
 	}
 
-	initialize(authKey, uuid) {
+	initialize(authKey, userId, sessionId) {
+		const uuid = `${userId}/${sessionId}`;
 		this.pubnub = new PubNub({
 			authKey,
 			uuid,
@@ -36,17 +37,39 @@ export default class PubNubReceiver {
 
 	setupListener() {
 		this.pubnub.addListener({
-			message: this.pubnubEvent.bind(this),
-			presence: event => {
-				// logger.debug(event.action); // online status events
-				// logger.debug(event.timestamp); // timestamp on the event is occurred
-				// logger.debug(event.uuid); // uuid of the user
-				logger.debug(`user ${event.uuid} ${event.action}. occupancy is ${event.occupancy}`); // uuid of the user
-			},
-			status: status => {
-				logger.debug("pubnub status", status);
+			status: this.pubnubStatus.bind(this),
+			presence: this.pubnubPresence.bind(this),
+			message: this.pubnubEvent.bind(this)
+		});
+	}
+
+	pubnubStatus(status) {
+		logger.debug("pubnub status", status);
+		if (status.error) {
+			// this sucks ... pubnub does not send us the channel that failed,
+			// meaning that if we try to subscribe to two channels around the same
+			// time, we can't know which one this is a status error for ...
+			// so we'll spit out the error here, but we'll have to rely on the 
+			// subscription timeout to actually handle the failure
+			console.warn('PUBNUB STATUS ERROR: ', status);
+			Raven.captureBreadcrumb({
+				message: `Pubnub status error: ${JSON.stringify(status)}`,
+				category: "pubnub",
+				level: "warn"
+			});
+			return;
+		}
+
+		const channels = status.affectedChannels || Object.keys(this.subscriptions);
+		channels.forEach(channel => {
+			if (this.subscriptions[channel]) {
+				this.subscriptions[channel].status(status);
 			}
 		});
+	}
+
+	pubnubPresence(event) {
+		logger.debug(`user ${event.uuid} ${event.action}. occupancy is ${event.occupancy}`); // uuid of the user
 	}
 
 	pubnubEvent(event) {
@@ -78,25 +101,24 @@ export default class PubNubReceiver {
 				"PubNubReceiver must be initialized with an authKey and userId before subscribing to channels"
 			);
 
-		const newChannels = _.difference(channels, this.subscribedChannels);
-		newChannels.forEach(channel => {
+		channels.forEach(channel => {
 			logger.debug("subscribing to", channel);
-			this.pubnub.subscribe({
-				channels: [channel],
-				withPresence: !channel.includes("user")
-			});
-			this.subscribedChannels.push(channel);
-			Raven.captureBreadcrumb({
-				message: `Subscribed to ${channel}`,
-				category: "pubnub",
-				level: "info"
-			});
+			if (!this.subscriptions[channel]) {
+				this.subscriptions[channel] = new PubnubSubscription({
+					pubnub: this.pubnub,
+					channel: channel,
+					store: this.store
+				});
+			}
+			this.subscriptions[channel].subscribe();
 		});
 	}
 
 	unsubscribeAll() {
-		this.subscribedChannels = [];
-		this.pubnub && this.pubnub.unsubscribeAll();
+		for (let channel in this.subscriptions) {
+			this.subscriptions[channel].unsubscribe();
+			delete this.subscriptions[channel];
+		}
 	}
 
 	getMessageHandler(type) {
@@ -134,9 +156,13 @@ export default class PubNubReceiver {
 				this.store.dispatch(resolveFromPubnub(tableName, normalize(data), isHistory));
 	}
 
+	getSubscribedChannels() {
+		return Object.keys(this.subscriptions).filter(channel => this.subscriptions[channel].isSubscribed());
+	}
+
 	async retrieveHistory(channels, messaging = {}) {
 		let retrieveSince;
-		channels = channels || this.subscribedChannels;
+		channels = channels || this.getSubscribedChannels();
 		if (messaging.lastMessageReceived) {
 			retrieveSince = messaging.lastMessageReceived;
 		} else {
@@ -151,12 +177,16 @@ export default class PubNubReceiver {
 	}
 
 	async retrieveHistorySince(channels, timeToken) {
+		// fetch the history for each subscribed channel individually...
 		let allMessages = [];
 		await Promise.all(
 			channels.map(channel => {
 				return this.retrieveChannelHistorySince(channel, timeToken, allMessages);
 			})
 		);
+
+		// now get numeric timestamps (from the stringified time tokens) and sort based on
+		// timestamp ... to ensure we process messages in order
 		allMessages.forEach(message => {
 			message.timestamp = parseInt(message.timetoken, 10) / 10000;
 		});
@@ -165,10 +195,14 @@ export default class PubNubReceiver {
 		});
 
 		if (allMessages.length > 0) {
+			// store the last message received, so we know where to start from next time
 			const lastMessage = allMessages[allMessages.length - 1];
 			this.lastHistoryTimeToken = lastMessage.timetoken;
 			this.store.dispatch(lastMessageReceived(lastMessage.timetoken));
-		} else this.store.dispatch({ type: "CAUGHT_UP" });
+		} 
+		else {
+			this.store.dispatch({ type: "CAUGHT_UP" });
+		}
 
 		for (var message of allMessages) {
 			this.pubnubMessage(message.timetoken, message.entry, { isHistory: true });
@@ -191,7 +225,7 @@ export default class PubNubReceiver {
 		}
 		allMessages.push(...response.messages);
 		if (response.messages.length < 100) {
-			return true;
+			return true; // resolves the promise
 		} else {
 			// FIXME: we can't let this go on too deep, there needs to be a limit
 			// once we reach that limit, we probably need to just clear the database and
