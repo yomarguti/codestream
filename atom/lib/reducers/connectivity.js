@@ -1,5 +1,5 @@
 const initialState = {
-	offline: false
+	offline: !navigator.onLine
 };
 
 export default (state = initialState, { type }) => {

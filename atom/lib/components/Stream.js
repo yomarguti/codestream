@@ -275,17 +275,6 @@ export class SimpleStream extends Component {
 		document.body.appendChild(node);
 	}
 
-	handleNewPost = () => {};
-
-	addDummyPost = () => {
-		logger.trace(".addDummyPost");
-		this.props.createPost(
-			this.props.id,
-			this.state.threadId,
-			"perhaps. blame isn't part of git-plus so I can't think of anything that stands out yet. there is a git-blame package that users wanted to see merged into git-plus. maybe there's some insight there"
-		);
-	};
-
 	resizeStream = () => {
 		logger.trace(".resizeStream");
 		if (!this._div || !this._compose) return;
@@ -817,7 +806,7 @@ export class SimpleStream extends Component {
 			this.slideThreadOut();
 		} else if (event.key === "Enter" && !event.shiftKey) {
 			event.preventDefault();
-			if (newPostText.trim().length > 0) {
+			if (newPostText.trim().length > 0 && this.props.online) {
 				this.submitPost(newPostText);
 			} else {
 				// don't submit blank posts
@@ -1054,6 +1043,7 @@ const getMarkersForStreamAndCommit = (locationsByCommit = {}, commitHash, marker
 };
 
 const mapStateToProps = ({
+	connectivity,
 	session,
 	context,
 	streams,
@@ -1103,6 +1093,7 @@ const mapStateToProps = ({
 		.replace(/\./g, "\\."); // that the regexp matches the literal chars
 
 	return {
+		online: !connectivity.offline,
 		id: stream.id,
 		teamId: stream.teamId,
 		firstTimeInAtom: onboarding.firstTimeInAtom,
