@@ -7,7 +7,7 @@ Button.defaultProps = {
 	disabled: false,
 	loading: false
 };
-function Button({ children, className, disabled, isOffline, loading, ...extras }) {
+export function Button({ children, className, disabled, isOffline, loading, ...extras }) {
 	return (
 		<button
 			className={createClassString("native-key-bindings btn inline-block-tight", className, {

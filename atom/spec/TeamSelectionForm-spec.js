@@ -18,6 +18,7 @@ const team1 = { id: "1", name: "The Foobars" };
 const team2 = { id: "2", name: "Cool Coders" };
 
 const store = createStore({
+	connectivity: { offline: false },
 	session: { userId: "userId" },
 	users: { userId: { id: "userId", teamIds: ["1", "2"] } },
 	teams: { "1": team1, "2": team2, "3": { id: "3", name: "Open Sourcerers" } },
@@ -84,12 +85,14 @@ describe("TeamSelectionForm", () => {
 			it("calls the addRepoForTeam function with the teamId", () => {
 				const addRepoForTeam = jasmine.createSpy("addRepoForTeam stub");
 				const view = mountWithIntl(
-					<SimpleTeamSelectionForm
-						addRepoForTeam={addRepoForTeam}
-						teams={[team1, team2]}
-						loading={false}
-						errors={{}}
-					/>
+					<Provider store={store}>
+						<SimpleTeamSelectionForm
+							addRepoForTeam={addRepoForTeam}
+							teams={[team1, team2]}
+							loading={false}
+							errors={{}}
+						/>
+					</Provider>
 				);
 
 				view
@@ -134,7 +137,9 @@ describe("TeamSelectionForm", () => {
 			it("calls the createTeam function with the provided name", () => {
 				const createTeam = jasmine.createSpy("createTeam stub").andReturn(Promise.resolve());
 				const view = mountWithIntl(
-					<SimpleTeamSelectionForm createTeam={createTeam} teams={[]} errors={{}} />
+					<Provider store={store}>
+						<SimpleTeamSelectionForm createTeam={createTeam} teams={[]} errors={{}} />
+					</Provider>
 				);
 				const newTeamName = "Bar Baz";
 
