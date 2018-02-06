@@ -16,15 +16,18 @@ export default class PubnubSubscription {
 	subscribe() {
 		this._numRetries = 0;
 		if (this._subscribed) {
+console.warn('ALREADY SUBSCRIBED TO ' + this.channel + ', CONFIRMING ACTIVE...');
 			// we're already subscribed, but we'll confirm that
 			return this.confirmSubscription();
 		}
 		if (this._confirmationTimeout) {
+console.warn('ALREADY TRYING TO SUBSCRIBE TO ' + this.channel);
 			// we're already trying to subscribe
 			return;
 		}
 		// time out after 5 seconds if we don't receive confirmation of the subscription
 		this._confirmationTimeout = setTimeout(this.subscriptionTimedOut.bind(this), 5000);
+console.warn('ATTEMPTING TO SUBSCRIBE TO ' + this.channel);
 		this.pubnub.subscribe({
 			channels: [this.channel],
 			withPresence: !this.channel.includes("user")
@@ -44,6 +47,7 @@ export default class PubnubSubscription {
             status.category === 'PNConnectedCategory' &&
             status.affectedChannels.includes(this.channel)
         ) {
+ console.warn('SUCCESSFULLY SUBSCRIBED TO ' + this.channel);
         	clearTimeout(this._confirmationTimeout);
         	delete this._confirmationTimeout;
         	this._subscribed = true;
@@ -82,6 +86,7 @@ export default class PubnubSubscription {
     	// now excuses now, try again, but give up completely after 10 tries
     	this._numRetries++;
     	if (this.numRetries < 10) {
+console.warn('TRYING AGAIN TO SUBSCRIBE TO ' + this.channel);
     		process.nextTick(this.subscribe.bind(this));
     	}
     	else {
@@ -125,6 +130,9 @@ export default class PubnubSubscription {
 						level: "warning"
 					});
 					return this.resubscribe();
+				}
+				else {
+console.warn('CONFIRMED SUBSCRIPTION TO ' + this.channel + ' IS STILL ACTIVE');
 				}
 			}
 		);
