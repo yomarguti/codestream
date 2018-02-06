@@ -120,8 +120,6 @@ export class SimpleStream extends Component {
 			}
 			logger.debug("Switch to: ", nextProps.id);
 		}
-
-		new AddCommentPopup({ handleClickAddComment: this.handleClickAddComment });
 	}
 
 	componentDidUpdate(prevProps, prevState) {
@@ -417,6 +415,7 @@ export class SimpleStream extends Component {
 			placeholderText = "Reply to " + threadPost.author.username;
 		}
 
+		new AddCommentPopup({ handleClickAddComment: this.handleClickAddComment });
 		return (
 			<div className={streamClass} ref={ref => (this._div = ref)}>
 				<UMIs />
