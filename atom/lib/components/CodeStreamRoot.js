@@ -1,6 +1,5 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
-import { FormattedMessage } from "react-intl";
 import { connect } from "react-redux";
 import Raven from "raven-js";
 import NoGit from "./NoGit";
@@ -8,6 +7,7 @@ import TooMuchGit from "./TooMuchGit";
 import Onboarding from "./onboarding/Onboarding";
 import Stream from "./Stream";
 import NoAccess from "./NoAccess";
+import OfflineBanner from "./OfflineBanner";
 
 const Loading = props => (
 	<div className="loading-page">
@@ -15,23 +15,6 @@ const Loading = props => (
 		<p>{props.message}</p>
 	</div>
 );
-
-const OfflineBanner = connect(state => state.connectivity)(props => (
-	<atom-panel id="offline-banner" class={`padded ${props.offline ? "" : "hidden"}`}>
-		<div className="content">
-			<p>
-				<FormattedMessage
-					id="OfflineBanner.main"
-					defaultMessage="You appear to be offline. We’ll try to reconnect you automatically, or you can "
-				/>
-				<a>
-					<FormattedMessage id="OfflineBanner.tryAgain" defaultMessage="try again now" />
-				</a>
-				.
-			</p>
-		</div>
-	</atom-panel>
-));
 
 class CodeStreamRoot extends Component {
 	static defaultProps = {
