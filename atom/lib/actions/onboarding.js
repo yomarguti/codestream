@@ -4,7 +4,7 @@ import { fetchRepoInfo, setCurrentRepo, setCurrentTeam, noAccess } from "./conte
 import { saveUser, saveUsers } from "./user";
 import { saveRepo, saveRepos } from "./repo";
 import { fetchTeamMembers, saveTeam, saveTeams, joinTeam as _joinTeam } from "./team";
-import { fetchStreams, fetchLatestForStream } from "./stream";
+import { fetchStreams, fetchLatestForCurrentStream } from "./stream";
 import UUID from "uuid/v1";
 
 const logError = (message, error) => {
@@ -250,7 +250,7 @@ export const authenticate = params => (dispatch, getState, { http }) => {
 				dispatch({ type: "EXISTING_USER_LOGGED_INTO_NEW_REPO" });
 			} else if (teamIdsForUser.includes(teamIdForRepo)) {
 				await dispatch(fetchTeamMembers(teamIdsForUser));
-				dispatch(fetchStreams());
+				dispatch(fetchLatestForCurrentStream());
 				dispatch(loggedIn());
 			} else await dispatch(joinTeam(loggedIn().type));
 		})

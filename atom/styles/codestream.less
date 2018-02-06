@@ -13,6 +13,30 @@
 	justify-content: center;
 }
 
+#offline-banner {
+	@dark-text-color: darken(@text-color, 40%);
+	&.hidden {
+		display: none;
+	}
+	width: 100%;
+	background-color: @text-color-warning;
+	color: @dark-text-color;
+	z-index: 999;
+	position: absolute;
+	.content {
+		display: flex;
+		flex-direction: row;
+		justify-content: center;
+
+		p {
+			margin: auto;
+		}
+		a {
+			color: @dark-text-color;
+		}
+	}
+}
+
 .item-views {
 	overflow: hidden;
 }

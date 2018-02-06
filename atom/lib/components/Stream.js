@@ -275,17 +275,6 @@ export class SimpleStream extends Component {
 		document.body.appendChild(node);
 	}
 
-	handleNewPost = () => {};
-
-	addDummyPost = () => {
-		logger.trace(".addDummyPost");
-		this.props.createPost(
-			this.props.id,
-			this.state.threadId,
-			"perhaps. blame isn't part of git-plus so I can't think of anything that stands out yet. there is a git-blame package that users wanted to see merged into git-plus. maybe there's some insight there"
-		);
-	};
-
 	resizeStream = () => {
 		logger.trace(".resizeStream");
 		if (!this._div || !this._compose) return;
@@ -794,8 +783,7 @@ export class SimpleStream extends Component {
 		this.setState({ newPostText: newPostText });
 	};
 
-	handleOnKeyPress = async event => {
-		logger.trace(".handleOnKeyPress");
+	handleOnKeyPress = event => {
 		var newPostText = this.state.newPostText;
 
 		// if we have the at-mentions popup open, then the keys
@@ -812,13 +800,13 @@ export class SimpleStream extends Component {
 				var text = match ? match[0].replace(/@/, "") : "";
 				// this.showAtMentionSelectors(text);
 			}
-		} else if (event.key == "@") {
+		} else if (event.key === "@") {
 			this.showAtMentionSelectors("");
-		} else if (event.key == "Escape") {
+		} else if (event.key === "Escape") {
 			this.slideThreadOut();
-		} else if (event.key == "Enter" && !event.shiftKey) {
+		} else if (event.key === "Enter" && !event.shiftKey) {
 			event.preventDefault();
-			if (newPostText.length > 0) {
+			if (newPostText.trim().length > 0 && this.props.online) {
 				this.submitPost(newPostText);
 			} else {
 				// don't submit blank posts
@@ -1055,6 +1043,7 @@ const getMarkersForStreamAndCommit = (locationsByCommit = {}, commitHash, marker
 };
 
 const mapStateToProps = ({
+	connectivity,
 	session,
 	context,
 	streams,
@@ -1104,6 +1093,7 @@ const mapStateToProps = ({
 		.replace(/\./g, "\\."); // that the regexp matches the literal chars
 
 	return {
+		online: !connectivity.offline,
 		id: stream.id,
 		teamId: stream.teamId,
 		firstTimeInAtom: onboarding.firstTimeInAtom,
