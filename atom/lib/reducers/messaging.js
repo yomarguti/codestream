@@ -1,9 +1,46 @@
-const initialState = { catchingUp: false };
+const initialState = {
+	catchingUp: false,
+	failedSubscriptions: [] 
+};
 
-export default (state = initialState, { type, payload }) => {
-	if (type === "RESET_MESSAGING") return initialState;
-	if (type === "LAST_MESSAGE_RECEIVED") return { ...state, lastMessageReceived: payload };
-	if (type === "CAUGHT_UP") return { ...state, catchingUp: false };
-	if (type === "CATCHING_UP") return { ...state, catchingUp: true };
+export default (state = { }, { type, payload }) => {
+	switch (type) {
+		
+		case 'RESET_MESSAGING':
+			return initialState;
+
+		case 'LAST_MESSAGE_RECEIVED':
+			return { ...state, lastMessageReceived: payload };
+
+		case 'CATCHING_UP':
+			return { ...state, catchingUp: true };
+
+		case 'CAUGHT_UP':
+			return { ...state, catchingUp: false };
+
+		case 'SUBSCRIPTION_FAILURE':
+			if (!state.failedSubscriptions || !state.failedSubscriptions.includes(payload)) {
+				const nextState = { 
+					...state,
+					failedSubscriptions: [...(state.failedSubscriptions || [])]
+				};
+				nextState.failedSubscriptions.push(payload);
+				return nextState;
+			}
+			break;
+
+		case 'SUBSCRIPTION_SUCCESS':
+			const index = (state.failedSubscriptions || []).indexOf(payload);
+			if (index !== -1) {
+				const nextState = {
+					...state,
+					failedSubscriptions: [...(state.failedSubscriptions || [])]
+				};
+				nextState.failedSubscriptions.splice(index, 1);
+				return nextState;
+			}
+			break;
+
+	}
 	return state;
 };
