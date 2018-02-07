@@ -4,7 +4,8 @@ import { fetchRepoInfo, setCurrentRepo, setCurrentTeam, noAccess } from "./conte
 import { saveUser, saveUsers } from "./user";
 import { saveRepo, saveRepos } from "./repo";
 import { fetchTeamMembers, saveTeam, saveTeams, joinTeam as _joinTeam } from "./team";
-import { fetchStreams, fetchLatestForCurrentStream } from "./stream";
+import { fetchStreams } from "./stream";
+import { fetchLatestForCurrentStream } from "./post";
 import UUID from "uuid/v1";
 
 const logError = (message, error) => {

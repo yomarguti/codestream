@@ -36,23 +36,3 @@ export const fetchStreams = sortId => async (dispatch, getState, { http }) => {
 		else return save;
 	});
 };
-
-export const fetchLatestForCurrentStream = sortId => async (dispatch, getState, { http }) => {
-	const { context, session } = getState();
-	let url = `/streams?teamId=${context.currentTeamId}&repoId=${context.currentRepoId}`;
-	if (sortId) url += `&lt=${sortId}`;
-
-	if (context.currentFile) {
-		return http.get(url, session.accessToken).then(({ streams, more }) => {
-			const normalizedStreams = normalize(streams);
-			dispatch(saveStreams(normalizedStreams));
-
-			const currentStream = normalizedStreams.find(stream => stream.file === context.currentFile);
-			if (currentStream) return dispatch(fetchLatestPosts([currentStream]));
-			else
-				return dispatch(
-					fetchLatestForCurrentStream(_.sortBy(normalizedStreams, "sortId")[0].sortId)
-				);
-		});
-	}
-};
