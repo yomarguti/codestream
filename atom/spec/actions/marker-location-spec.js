@@ -61,7 +61,8 @@ describe("marker-location action creators", () => {
 				teamId,
 				streamId,
 				commitHash,
-				locations: { [markerId]: location, [markerId2]: [1, 2, 3, 4] }
+				locations: { [markerId]: location, [markerId2]: [1, 2, 3, 4] },
+				dirty: {}
 			};
 			waitsForPromise(async () => {
 				await db.markerLocations.add({
