@@ -29,7 +29,7 @@ class Post extends Component {
 		// unless the post is mine, in which case we always scroll to bottom
 		// we check to see if it's below 100 because if you are scrolled
 		// almost to the bottom, we count that as being at the bottom for UX reasons
-		if (offBottom < 100 || this.props.post.username == "pez") {
+		if (offBottom < 100 || this.props.post.username === this.props.currentUsername) {
 			// big number to make sure we've scrolled all the way down
 			streamDiv.scrollTop = 100000;
 			// console.log("SCROLLING TO BOTTOM");
@@ -63,8 +63,6 @@ class Post extends Component {
 			codeBlock = <div className="code">{code}</div>;
 		}
 
-		// FIXME -- only replace the at-mentions of actual authors, rather than any
-		// string that starts with an @
 		let usernameRegExp = new RegExp("(@(?:" + this.props.usernames + ")\\b)");
 		let bodyParts = post.text.split(usernameRegExp);
 
