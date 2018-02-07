@@ -8,13 +8,14 @@ Button.defaultProps = {
 	loading: false
 };
 export function Button({ children, className, disabled, isOffline, loading, ...extras }) {
+	const { dispatch, ...extraProps } = extras; // remove non-html attributes
 	return (
 		<button
 			className={createClassString("native-key-bindings btn inline-block-tight", className, {
 				"btn-primary": !loading
 			})}
 			disabled={isOffline || loading || disabled}
-			{...extras}
+			{...extraProps}
 		>
 			{loading ? <span className="loading loading-spinner-tiny inline-block" /> : children}
 		</button>
