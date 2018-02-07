@@ -8,7 +8,7 @@ const _initiateTicks = (store, receiver) => {
 	// start a ticking clock, look for anything that misses a tick by more than a whole second
 	setInterval(() => {
 		const now = Date.now();
-		if (lastTick && now - lastTick > 3000) {
+		if (lastTick && now - lastTick > 2000) {
 			// we'll assume this is a laptop sleep event or something that otherwise
 			// stopped execution for longer than expected ... we'll make sure we're
 			// subscribed to the channels we need to be and fetch history to catch up,
@@ -36,7 +36,6 @@ const _initializePubnubAndSubscribe = async (store, receiver) => {
 	store.dispatch({ type: "CATCHING_UP" });
 
 	receiver.initialize(session.accessToken, session.userId, session.sessionId);
-console.warn('INITIALIZED PUBNUB, NOW SUBSCRIBING TO: ' + channels);
 	receiver.subscribe(channels);
 	if (!ticksInitiated) {
 		_initiateTicks(store, receiver);
@@ -57,7 +56,6 @@ export default store => {
 			const { session, onboarding } = store.getState();
 			if (onboarding.complete && session.accessToken) {
 				store.dispatch(fetchCurrentUser());
-console.warn('BOOTSTRAP COMPLETE...');
 				_initializePubnubAndSubscribe(store, receiver);
 			}
 		}
@@ -69,7 +67,6 @@ console.warn('BOOTSTRAP COMPLETE...');
 			action.type === "EXISTING_USER_LOGGED_INTO_NEW_REPO" ||
 			action.type === "NEW_USER_LOGGED_INTO_NEW_REPO"
 		) {
-console.warn('LOGGED IN OR CONFIRMED...');
 			_initializePubnubAndSubscribe(store, receiver);
 		}
 

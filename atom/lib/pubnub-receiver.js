@@ -44,7 +44,6 @@ export default class PubNubReceiver {
 	}
 
 	pubnubStatus(status) {
-console.warn('PUBNUB STATUS: ', status);
 		logger.debug("pubnub status", status);
 		if (status.error) {
 			// this sucks ... pubnub does not send us the channel that failed,
@@ -74,7 +73,6 @@ console.warn('PUBNUB STATUS: ', status);
 	}
 
 	pubnubEvent(event) {
-console.warn('PUBNUB EVENT', event);
 		this.store.dispatch(lastMessageReceived(event.timetoken));
 		this.pubnubMessage(event.timetoken, event.message);
 	}
@@ -98,7 +96,6 @@ console.warn('PUBNUB EVENT', event);
 	}
 
 	subscribe(channels) {
-console.warn('WANT TO SUBSCRIBE TO ' + channels);
 		if (this.pubnub === null)
 			throw new Error(
 				"PubNubReceiver must be initialized with an authKey and userId before subscribing to channels"
@@ -107,7 +104,6 @@ console.warn('WANT TO SUBSCRIBE TO ' + channels);
 		channels.forEach(channel => {
 			logger.debug("subscribing to", channel);
 			if (!this.subscriptions[channel]) {
-console.warn('DO A SUBSCRIBE TO ' + channel);
 				this.subscriptions[channel] = new PubnubSubscription({
 					pubnub: this.pubnub,
 					channel: channel,
@@ -216,7 +212,6 @@ console.warn('DO A SUBSCRIBE TO ' + channel);
 	async retrieveChannelHistorySince(channel, timeToken, allMessages) {
 		let response;
 		try {
-console.warn('RETREIVING HISTORY FOR ' + channel);
 			response = await this.pubnub.history({
 				channel: channel,
 				reverse: true, // oldest message first
