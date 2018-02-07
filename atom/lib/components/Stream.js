@@ -810,7 +810,7 @@ export class SimpleStream extends Component {
 			this.slideThreadOut();
 		} else if (event.key === "Enter" && !event.shiftKey) {
 			event.preventDefault();
-			if (newPostText.trim().length > 0 && this.props.online) {
+			if (newPostText.trim().length > 0 && this.props.isOnline) {
 				this.submitPost(newPostText);
 			} else {
 				// don't submit blank posts
@@ -1055,6 +1055,7 @@ const mapStateToProps = ({
 	posts,
 	markers,
 	markerLocations,
+	messaging,
 	onboarding
 }) => {
 	logger.trace(".mapStateToProps");
@@ -1096,8 +1097,10 @@ const mapStateToProps = ({
 		.replace(/\+/g, "\\+") // replace + and . with escaped versions so
 		.replace(/\./g, "\\."); // that the regexp matches the literal chars
 
+	const isOnline =
+		!connectivity.offline && messaging.failedSubscriptions.length === 0 && !messaging.timedOut;
 	return {
-		online: !connectivity.offline,
+		isOnline,
 		id: stream.id,
 		teamId: stream.teamId,
 		firstTimeInAtom: onboarding.firstTimeInAtom,
