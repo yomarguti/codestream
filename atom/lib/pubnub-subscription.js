@@ -85,7 +85,7 @@ export default class PubnubSubscription {
 		}
 		// now excuses now, try again, but give up completely after 10 tries
 		this._numRetries++;
-		if (this.numRetries < 10) {
+		if (this._numRetries < 10) {
 			process.nextTick(this.subscribe.bind(this));
 		} else {
 			this.store.dispatch(subscriptionTimedOut());

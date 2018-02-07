@@ -40,8 +40,12 @@ export default (state = initialState, { type, payload }) => {
 				return nextState;
 			}
 			break;
+
 		case "SUBSCRIPTION_TIMEOUT":
 			return { ...state, timedOut: true };
+
+		case "HISTORY_RETRIEVAL_FAILURE":
+			return { ...state, historyRetrievalFailure: true };
 	}
 	return state;
 };
