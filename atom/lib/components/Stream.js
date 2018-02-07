@@ -946,10 +946,11 @@ const getMarkersForStreamAndCommit = (locationsByCommit = {}, commitHash, marker
 				};
 			} else {
 				const message = `No marker for id ${markerId} but there are locations for it. commitHash: ${commitHash}`;
-				Raven.captureBreadcrumb({
-					message,
-					category: "Stream::mapStateToProps",
-					level: "warn"
+				Raven.captureMessage(message, {
+					logger: "Stream::mapStateToProps::getMarkersForStreamAndCommit",
+					extra: {
+						location: locations[markerId]
+					}
 				});
 				console.warn(message);
 				return false;
