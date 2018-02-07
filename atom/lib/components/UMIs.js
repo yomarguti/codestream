@@ -80,7 +80,7 @@ export class SimpleUMIs extends Component {
 		if (!li) return;
 
 		let path = li.getElementsByTagName("span")[0].getAttribute("data-path");
-		path = this.repo.relativize(path);
+		path = this.repo.relativize(path).replace(Path.sep, '/');
 		let prefPath = ["streamTreatments", this.props.repoId, path];
 		return getUserPreference(this.props.currentUser, prefPath);
 	};
@@ -116,7 +116,6 @@ export class SimpleUMIs extends Component {
 		}
 
 		let streamMap = swapHash(this.props.streams);
-
 		this.clearTreatments();
 
 		let totalUMICount = 0;
@@ -167,9 +166,9 @@ export class SimpleUMIs extends Component {
 		let treatment = this.getTreatment(path);
 		logger.debug("FOR: ", count, " treat ", treatment, " in ", path, " with mentions ", mentions);
 
-		let parts = path.split(Path.sep);
+		let parts = path.split('/');
 		while (parts.length) {
-			let pathPart = parts.join(Path.sep);
+			let pathPart = parts.join('/');
 			if (!this.treatments[pathPart]) this.treatments[pathPart] = {};
 			if (mentions) {
 				this.treatments[pathPart]["mentions"] =
@@ -197,27 +196,29 @@ export class SimpleUMIs extends Component {
 
 	treatMute(path, isMute) {
 		path = path.replace(/\*/g, ".");
-		let element = this.treeView.entryForPath(this.props.workingDirectory + Path.sep + path);
+		const fullPath = Path.join(this.props.workingDirectory, path).replace(/\//g, Path.sep);
+		let element = this.treeView.entryForPath(fullPath);
 		logger.debug("Treating element ", element, " with ", isMute);
 		if (!element) return;
 		// don't treat directories that are expanded
 		if (element.classList.contains("directory")) {
 			let liPath = element.getElementsByTagName("span")[0].getAttribute("data-path");
-			liPath = this.repo.relativize(liPath);
+			liPath = this.repo.relativize(liPath).replace(Path.sep, '/');
 			if (liPath !== path) return;
 		}
 		element.setAttribute("cs-umi-mute", isMute);
 	}
 
 	treatPath(path) {
-		let element = this.treeView.entryForPath(this.props.workingDirectory + Path.sep + path);
-		if (!element) return;
+		const fullPath = Path.join(this.props.workingDirectory, path).replace(/\//g, Path.sep);
+		let element = this.treeView.entryForPath(fullPath);
+		if (!element) { return; }
 
 		// don't treat directories that are expanded
 		if (element.classList.contains("directory") && element.classList.contains("expanded")) return;
 
 		let liPath = element.getElementsByTagName("span")[0].getAttribute("data-path");
-		liPath = this.repo.relativize(liPath);
+		liPath = this.repo.relativize(liPath).replace(Path.sep, '/');
 
 		// if the user wants a badge... set the appropriate class
 		let treatmentData = this.treatments[liPath];
@@ -251,10 +252,10 @@ export class SimpleUMIs extends Component {
 	}
 
 	getTreatment(path) {
-		let parts = path.split(Path.sep);
+		let parts = path.split('/');
 		let index = parts.length;
 		while (parts.length) {
-			let path = parts.join(Path.sep);
+			let path = parts.join('/');
 			let prefPath = ["streamTreatments", this.props.repoId, path];
 			let treatment = getUserPreference(this.props.currentUser, prefPath);
 			// logger.debug("GOT: ", treatment, " FOR ", ["streamTreatments", this.props.repoId, path]);
