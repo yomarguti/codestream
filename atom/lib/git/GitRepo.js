@@ -1,9 +1,7 @@
-'use strict';
+"use strict";
 
-import GitCommit from './GitCommit';
-import Git from 'nodegit';
-
-
+import GitCommit from "./GitCommit";
+import Git from "nodegit";
 
 export async function open(path) {
 	const git = await Git.Repository.open(path);
@@ -12,14 +10,12 @@ export async function open(path) {
 
 const HISTORY_WALK_FETCH_SIZE = 100;
 
-
 class DeltaBuilder {
-
 	constructor(cfg) {
 		this._oldFile = cfg.oldFile;
 		this._newFile = cfg.newFile;
 		this._edits = [];
-		this._state = 'sync';
+		this._state = "sync";
 		this._oldLine = 0;
 		this._newLine = 0;
 	}
@@ -36,7 +32,7 @@ class DeltaBuilder {
 	}
 
 	build() {
-		this._setState('sync');
+		this._setState("sync");
 
 		return {
 			oldFile: this._oldFile,
@@ -46,25 +42,25 @@ class DeltaBuilder {
 	}
 
 	_ctx(line) {
-		this._setState('sync');
+		this._setState("sync");
 		this._oldLine = line.oldLineno();
 		this._newLine = line.newLineno();
 	}
 
 	_add(line) {
-		this._setState('edit');
+		this._setState("edit");
 		this._adds.push(line.content());
 	}
 
 	_del(line) {
-		this._setState('edit');
+		this._setState("edit");
 		this._dels.push(line.content());
 	}
 
 	_setState(state) {
 		if (state !== this._state) {
 			this._state = state;
-			this['_' + state]();
+			this["_" + state]();
 		}
 	}
 
@@ -92,11 +88,9 @@ class DeltaBuilder {
 		this._adds = [];
 		this._dels = [];
 	}
-
 }
 
 class GitRepo {
-
 	constructor(git) {
 		this._git = git;
 		this._deltasBetweenCommits = {};
@@ -116,7 +110,7 @@ class GitRepo {
 		const oldTree = await oldCommit._commit.getTree();
 		const newTree = await newCommit._commit.getTree();
 		const opts = {
-			pathspec: [ filePath ]
+			pathspec: [filePath]
 		};
 		const diff = await Git.Diff.treeToTree(this._git, oldTree, newTree, opts);
 		return await this._buildDeltasFromDiffs([diff]);
@@ -126,7 +120,7 @@ class GitRepo {
 		const currentCommit = await this.getCurrentCommit();
 		const currentTree = await currentCommit._commit.getTree();
 		const opts = {
-			pathspec: [ filePath ]
+			pathspec: [filePath]
 		};
 		const diff = await Git.Diff.treeToWorkdir(this._git, currentTree, opts);
 		return await this._buildDeltasFromDiffs([diff]);
@@ -191,17 +185,14 @@ class GitRepo {
 		let lastSha;
 		if (commitHistory.length > 0) {
 			lastSha = commitHistory[commitHistory.length - 1].commit.sha();
-			if (
-				commitsToWalk.length == 1 &&
-				commitsToWalk[0].commit.sha() == lastSha
-			) {
+			if (commitsToWalk.length == 1 && commitsToWalk[0].commit.sha() == lastSha) {
 				return commitHistory;
 			}
 		}
 
 		const missingHistorySize = maxHistorySize - commitHistory.length;
 		commitHistory = commitHistory.concat(commitsToWalk.slice(0, missingHistorySize));
-		if (commitHistory.length === maxHistorySize) {
+		if (!commitHistory.length || commitHistory.length === maxHistorySize) {
 			return commitHistory;
 		}
 
@@ -214,7 +205,6 @@ class GitRepo {
 		commitsToWalk = await walker.fileHistoryWalk(filePath, HISTORY_WALK_FETCH_SIZE);
 		return await this._compileHistory(commitsToWalk, filePath, commitHistory, maxHistorySize);
 	}
-
 }
 
 export default GitRepo;
