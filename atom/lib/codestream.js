@@ -160,7 +160,12 @@ module.exports = {
 			context,
 			session,
 			repoAttributes,
-			messaging
+			messaging: {
+				...messaging,
+				failedSubscriptions: [],
+				timedOut: false,
+				historyRetrievalFailure: false
+			}
 		};
 	},
 

@@ -4,7 +4,7 @@ const initialState = {
 	failedSubscriptions: []
 };
 
-export default (state = {}, { type, payload }) => {
+export default (state = initialState, { type, payload }) => {
 	switch (type) {
 		case "RESET_MESSAGING":
 			return initialState;
