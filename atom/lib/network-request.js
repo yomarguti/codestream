@@ -1,3 +1,5 @@
+const PRODUCTION_URL = "https://api.codestream.com";
+
 // Babel doesn't support extending native Objects like Error, Array, etc.
 // so extending Error for custom errors is done the old fashioned way. https://github.com/chaijs/chai/issues/909
 export function ApiRequestError(message, data) {
@@ -12,7 +14,11 @@ function ApiUnreachableError(message) {
 export const isApiRequestError = error => error instanceof ApiRequestError;
 export const isApiUnreachableError = error => error instanceof ApiUnreachableError;
 
-const getPath = route => `${atom.config.get("codestream.url")}${route}`;
+const getPath = route => {
+	const url = atom.config.get("codestream.url") || PRODUCTION_URL;
+	return `${url}${route}`;
+};
+
 const getHeaders = () =>
 	new Headers({
 		Accept: "application/json",

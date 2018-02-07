@@ -141,6 +141,10 @@ module.exports = {
 					"codestream:point-to-local": () => {
 						atom.config.set("codestream.url", "https://localhost.codestream.us:12079");
 						atom.commands.dispatch(document.querySelector("atom-workspace"), "codestream:logout");
+					},
+					"codestream:point-to-qa": () => {
+						atom.config.set("codestream.url", "https://qa-api.codestream.us");
+						atom.commands.dispatch(document.querySelector("atom-workspace"), "codestream:logout");
 					}
 				})
 			);
