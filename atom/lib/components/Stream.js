@@ -9,7 +9,7 @@ import Post from "./Post";
 import UMIs from "./UMIs";
 import AtMentionsPopup from "./AtMentionsPopup";
 import BufferReferences from "./BufferReferences";
-import AddCommentPopup from "./AddCommentPopup";
+import AddCommentPopup from "./AddCommentPopup2";
 import createClassString from "classnames";
 import DateSeparator from "./DateSeparator";
 var Blamer = require("../util/blamer");
@@ -415,7 +415,6 @@ export class SimpleStream extends Component {
 			placeholderText = "Reply to " + threadPost.author.username;
 		}
 
-		new AddCommentPopup({ handleClickAddComment: this.handleClickAddComment });
 		return (
 			<div className={streamClass} ref={ref => (this._div = ref)}>
 				<UMIs />
@@ -515,6 +514,10 @@ export class SimpleStream extends Component {
 						onKeyPress={this.handleOnKeyPress}
 						ref={ref => (this._compose = ref)}
 					>
+						<AddCommentPopup
+							editor={atom.workspace.getActiveTextEditor()}
+							onClick={this.handleClickAddComment}
+						/>
 						{hasNewMessagesBelowFold && (
 							<div className="new-messages-below" onClick={this.handleClickScrollToNewMessages}>
 								&darr; Unread Messages &darr;
@@ -633,7 +636,9 @@ export class SimpleStream extends Component {
 		};
 
 		// remove any at-mentions that we have added manually
-		if (this.state.newPostText.replace(/&nbsp;/g, " ").trim() === this.insertedAuthors.trim()) {
+		if (
+			this.state.newPostText.replace(/&nbsp;/g, " ").trim() === (this.insertedAuthors || "").trim()
+		) {
 			this.insertedAuthors = "";
 			newState.newPostText = "";
 		}

@@ -1,16 +1,24 @@
 import React from "react";
+import { Provider } from "react-redux";
 import Enzyme from "enzyme";
 import Adapter from "enzyme-adapter-react-16";
 import { mountWithIntl } from "./intl-test-helper.js";
 import EmailConfirmationForm, {
 	SimpleEmailConfirmationForm
 } from "../lib/components/onboarding/EmailConfirmationForm";
+import createStore from "../lib/createStore";
 
 Enzyme.configure({ adapter: new Adapter() });
 
+const store = createStore({ connectivity: { offline: false } });
+
 describe("EmailConfirmationForm view", () => {
 	describe("input fields", () => {
-		const view = mountWithIntl(<SimpleEmailConfirmationForm errors={{}} />);
+		const view = mountWithIntl(
+			<Provider store={store}>
+				<SimpleEmailConfirmationForm errors={{}} />
+			</Provider>
+		);
 
 		it("they won't accept non-numerical values", () => {
 			view.find("input").forEach(input => input.simulate("change", { target: { value: "a" } }));
@@ -31,7 +39,9 @@ describe("EmailConfirmationForm view", () => {
 		it("calls the goToSignup function", () => {
 			const goToSignup = jasmine.createSpy();
 			const view = mountWithIntl(
-				<SimpleEmailConfirmationForm goToSignup={goToSignup} errors={{}} />
+				<Provider store={store}>
+					<SimpleEmailConfirmationForm goToSignup={goToSignup} errors={{}} />
+				</Provider>
 			);
 
 			view.find("#go-back").simulate("click");
@@ -41,7 +51,11 @@ describe("EmailConfirmationForm view", () => {
 	});
 
 	describe("Submit button", () => {
-		const view = mountWithIntl(<SimpleEmailConfirmationForm errors={{}} />);
+		const view = mountWithIntl(
+			<Provider store={store}>
+				<SimpleEmailConfirmationForm errors={{}} />
+			</Provider>
+		);
 
 		it("is disabled while the form is empty", () => {
 			expect(view.find("Button").prop("disabled")).toBe(true);
@@ -67,12 +81,14 @@ describe("EmailConfirmationForm view", () => {
 			const email = "foo@bar.com";
 			const userId = "12345";
 			const view = mountWithIntl(
-				<SimpleEmailConfirmationForm
-					confirmEmail={confirmEmail}
-					email={email}
-					userId={userId}
-					errors={{}}
-				/>
+				<Provider store={store}>
+					<SimpleEmailConfirmationForm
+						confirmEmail={confirmEmail}
+						email={email}
+						userId={userId}
+						errors={{}}
+					/>
+				</Provider>
 			);
 			view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }));
 			view.find("form").simulate("submit");
@@ -85,21 +101,33 @@ describe("EmailConfirmationForm view", () => {
 
 	describe("when the submitted code is invalid", () => {
 		it("shows an error message", () => {
-			const view = mountWithIntl(<SimpleEmailConfirmationForm errors={{ invalidCode: true }} />);
+			const view = mountWithIntl(
+				<Provider store={store}>
+					<SimpleEmailConfirmationForm errors={{ invalidCode: true }} />
+				</Provider>
+			);
 			expect(view.find(".error-message").text()).toBe("Uh oh. Invalid code.");
 		});
 	});
 
 	describe("when the submitted code has expired", () => {
 		it("shows an error message", () => {
-			const view = mountWithIntl(<SimpleEmailConfirmationForm errors={{ expiredCode: true }} />);
+			const view = mountWithIntl(
+				<Provider store={store}>
+					<SimpleEmailConfirmationForm errors={{ expiredCode: true }} />
+				</Provider>
+			);
 			expect(view.find(".error-message").text()).toBe("Sorry, that code has expired.");
 		});
 	});
 
 	describe("when there is an unexpected error from server", () => {
 		it("shows an error message", () => {
-			const view = mountWithIntl(<SimpleEmailConfirmationForm errors={{ unknown: true }} />);
+			const view = mountWithIntl(
+				<Provider store={store}>
+					<SimpleEmailConfirmationForm errors={{ unknown: true }} />
+				</Provider>
+			);
 			expect(view.find(".error-message").text()).toBe(
 				"Something went wrong! Please try again, or contact support."
 			);
@@ -113,13 +141,15 @@ describe("EmailConfirmationForm view", () => {
 			const username = "foobar";
 			const password = "foobar";
 			const view = mountWithIntl(
-				<SimpleEmailConfirmationForm
-					sendNewCode={sendNewCode}
-					email={email}
-					username={username}
-					password={password}
-					errors={{}}
-				/>
+				<Provider store={store}>
+					<SimpleEmailConfirmationForm
+						sendNewCode={sendNewCode}
+						email={email}
+						username={username}
+						password={password}
+						errors={{}}
+					/>
+				</Provider>
 			);
 			view.find("#send-new-code").simulate("click");
 			waitsFor(() => sendNewCode.callCount > 0);
