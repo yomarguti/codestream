@@ -19,6 +19,8 @@ export const subscriptionSuccess = channel => ({
 
 export const subscriptionTimedOut = () => ({ type: "SUBSCRIPTION_TIMEOUT" });
 
+export const historyRetrievalFailure = () => ({ type: 'HISTORY_RETRIEVAL_FAILURE' });
+
 export const grantAccess = channel => async (dispatch, getState, { db, http }) => {
 	return http.put(`/grant/${channel}`, {}, getState().session.accessToken);
 };

@@ -4,7 +4,7 @@ import _ from "underscore-plus";
 import { normalize } from "./actions/utils";
 import { resolveFromPubnub } from "./actions/pubnub-event";
 import { saveMarkerLocations } from "./actions/marker-location";
-import { lastMessageReceived } from "./actions/messaging";
+import { lastMessageReceived, historyRetrievalFailure } from "./actions/messaging";
 import rootLogger from "./util/Logger";
 import PubnubSubscription from "./pubnub-subscription"
 
@@ -210,18 +210,25 @@ export default class PubNubReceiver {
 	}
 
 	async retrieveChannelHistorySince(channel, timeToken, allMessages) {
-		let response;
-		try {
-			response = await this.pubnub.history({
-				channel: channel,
-				reverse: true, // oldest message first
-				start: timeToken,
-				stringifiedTimeToken: true
-			});
-		} catch (error) {
-			// FIXME: this should be fatal, or perhaps lead to a session refresh
-			console.warn("PubNub history failed: ", error);
-			return true;
+		let response = null;
+		let retries = 0;
+		while (!response) {
+			try {
+				response = await this.pubnub.history({
+					channel: channel,
+					reverse: true, // oldest message first
+					start: timeToken,
+					stringifiedTimeToken: true
+				});
+			} catch (error) {
+				console.warn(`PubNub history failed for ${channel}:`, error);
+				if (retries === 5) {
+					console.warn(`Giving up fetching history for ${channel}`);
+					this.store.dispatch(historyRetrievalFailure());
+					return true;
+				}
+				retries++;
+			}
 		}
 		allMessages.push(...response.messages);
 		if (response.messages.length < 100) {

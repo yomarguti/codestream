@@ -74,7 +74,7 @@ class OfflineBanner extends PureComponent {
 
 const mapStateToProps = ({ connectivity, messaging }) => ({
 	isOffline: connectivity.offline,
-	isDisconnectedFromPubnub: messaging.timedOut,
-	hasSubscriptionIssues: messaging.failedSubscriptions.length > 0
+	isDisconnectedFromPubnub: messaging.timedOut || messaging.historyRetrievalFailure,
+	hasSubscriptionIssues: messaging.failedSubscriptions && messaging.failedSubscriptions.length > 0
 });
 export default connect(mapStateToProps, { checkServerStatus })(OfflineBanner);
