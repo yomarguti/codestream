@@ -5,6 +5,7 @@ import { connect } from "react-redux";
 import ContentEditable from "react-contenteditable";
 import { FormattedMessage } from "react-intl";
 import _ from "underscore-plus";
+import Raven from "raven-js";
 import Post from "./Post";
 import UMIs from "./UMIs";
 import AtMentionsPopup from "./AtMentionsPopup";
@@ -926,20 +927,35 @@ const getLocationsByPost = (locationsByCommit = {}, commitHash, markers) => {
 	const locationsByPost = {};
 	Object.keys(locations).forEach(markerId => {
 		const marker = markers[markerId];
-		locationsByPost[marker.postId] = locations[markerId];
+		if (marker) {
+			locationsByPost[marker.postId] = locations[markerId];
+		}
 	});
 	return locationsByPost;
 };
 
 const getMarkersForStreamAndCommit = (locationsByCommit = {}, commitHash, markers) => {
 	const locations = locationsByCommit[commitHash] || {};
-	return Object.keys(locations).map(markerId => {
-		const marker = markers[markerId];
-		return {
-			...marker,
-			location: locations[markerId]
-		};
-	});
+	return Object.keys(locations)
+		.map(markerId => {
+			const marker = markers[markerId];
+			if (marker) {
+				return {
+					...marker,
+					location: locations[markerId]
+				};
+			} else {
+				const message = `No marker for id ${markerId} but there are locations for it. commitHash: ${commitHash}`;
+				Raven.captureBreadcrumb({
+					message,
+					category: "Stream::mapStateToProps",
+					level: "warn"
+				});
+				console.warn(message);
+				return false;
+			}
+		})
+		.filter(Boolean);
 };
 
 const mapStateToProps = ({
