@@ -17,6 +17,8 @@ export const subscriptionSuccess = channel => ({
 	payload: channel
 });
 
+export const subscriptionTimedOut = () => ({ type: "SUBSCRIPTION_TIMEOUT" });
+
 export const grantAccess = channel => async (dispatch, getState, { db, http }) => {
 	return http.put(`/grant/${channel}`, {}, getState().session.accessToken);
 };

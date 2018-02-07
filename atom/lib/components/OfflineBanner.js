@@ -1,3 +1,4 @@
+import { shell } from "electron";
 import React, { PureComponent } from "react";
 import { connect } from "react-redux";
 import { FormattedMessage } from "react-intl";
@@ -24,25 +25,46 @@ class OfflineBanner extends PureComponent {
 	}
 
 	render() {
-		if (!this.props.isOffline) return false;
-		return (
-			<atom-panel id="offline-banner" class="padded">
-				<div className="content">
-					<p>
-						<FormattedMessage
-							id="OfflineBanner.main"
-							defaultMessage="You appear to be offline. We’ll try to reconnect you automatically, or you can "
-						/>
-						<a onClick={this.props.checkServerStatus}>
-							<FormattedMessage id="OfflineBanner.tryAgain" defaultMessage="try again now" />
-						</a>
-						.
-					</p>
-				</div>
-			</atom-panel>
-		);
+		let content;
+		if (this.props.isDisconnectedFromPubnub)
+			content = (
+				<p>
+					<FormattedMessage
+						id="offlineBanner.pubnub.main"
+						defaultMessage="Oops...the stream isn't flowing."
+					/>{" "}
+					<a onClick={() => shell.openExternal("https://help.codestream.com")}>
+						<FormattedMessage id="offlineBanner.pubnub.contact" defaultMessage="Contact support." />
+					</a>
+				</p>
+			);
+		// being offline is the overriding error
+		if (this.props.isOffline)
+			content = (
+				<p>
+					<FormattedMessage
+						id="offlineBanner.offline.main"
+						defaultMessage="You appear to be offline. We’ll try to reconnect you automatically, or you can "
+					/>
+					<a onClick={this.props.checkServerStatus}>
+						<FormattedMessage id="offlineBanner.offline.tryAgain" defaultMessage="try again now" />
+					</a>
+					.
+				</p>
+			);
+
+		if (content)
+			return (
+				<atom-panel id="offline-banner" class="padded">
+					<div className="content">{content}</div>
+				</atom-panel>
+			);
+		else return false;
 	}
 }
 
-const mapStateToProps = ({ connectivity }) => ({ isOffline: connectivity.offline });
+const mapStateToProps = ({ connectivity, messaging }) => ({
+	isOffline: connectivity.offline,
+	isDisconnectedFromPubnub: messaging.timedOut
+});
 export default connect(mapStateToProps, { checkServerStatus })(OfflineBanner);

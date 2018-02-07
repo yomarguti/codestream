@@ -1,26 +1,26 @@
 const initialState = {
 	catchingUp: false,
-	failedSubscriptions: [] 
+	timedOut: false,
+	failedSubscriptions: []
 };
 
-export default (state = { }, { type, payload }) => {
+export default (state = {}, { type, payload }) => {
 	switch (type) {
-		
-		case 'RESET_MESSAGING':
+		case "RESET_MESSAGING":
 			return initialState;
 
-		case 'LAST_MESSAGE_RECEIVED':
+		case "LAST_MESSAGE_RECEIVED":
 			return { ...state, lastMessageReceived: payload };
 
-		case 'CATCHING_UP':
+		case "CATCHING_UP":
 			return { ...state, catchingUp: true };
 
-		case 'CAUGHT_UP':
+		case "CAUGHT_UP":
 			return { ...state, catchingUp: false };
 
-		case 'SUBSCRIPTION_FAILURE':
+		case "SUBSCRIPTION_FAILURE":
 			if (!state.failedSubscriptions || !state.failedSubscriptions.includes(payload)) {
-				const nextState = { 
+				const nextState = {
 					...state,
 					failedSubscriptions: [...(state.failedSubscriptions || [])]
 				};
@@ -29,7 +29,7 @@ export default (state = { }, { type, payload }) => {
 			}
 			break;
 
-		case 'SUBSCRIPTION_SUCCESS':
+		case "SUBSCRIPTION_SUCCESS":
 			const index = (state.failedSubscriptions || []).indexOf(payload);
 			if (index !== -1) {
 				const nextState = {
@@ -40,7 +40,8 @@ export default (state = { }, { type, payload }) => {
 				return nextState;
 			}
 			break;
-
+		case "SUBSCRIPTION_TIMEOUT":
+			return { ...state, timedOut: true };
 	}
 	return state;
 };
