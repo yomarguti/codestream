@@ -16,6 +16,7 @@ const fetchLatest = (mostRecentPost, streamId, teamId) => async (dispatch, getSt
 	if (mostRecentPost) url += `&gt=${mostRecentPost.id}`;
 	const { posts, more } = await http.get(url, getState().session.accessToken);
 	const normalizedPosts = normalize(posts);
+	dispatch(fetchMarkersAndLocations({ streamId, teamId }));
 	const save = dispatch(savePostsForStream(streamId, normalizedPosts));
 	// only take the first page if no mostRecentPost
 	if (more && mostRecentPost) return dispatch(fetchLatest(normalizedPosts[0].id, streamId, teamId));
