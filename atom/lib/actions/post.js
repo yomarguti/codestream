@@ -3,6 +3,8 @@ import { upsert } from "../local-cache";
 import { normalize } from "./utils";
 import { fetchMarkersAndLocations } from "./marker-location";
 import { saveStream } from "./stream";
+import { saveMarkers } from "./marker";
+import { saveMarkerLocations } from "./marker-location";
 
 const createTempId = (() => {
 	let count = 0;
@@ -12,11 +14,15 @@ const createTempId = (() => {
 const pendingPostFailed = post => ({ type: "PENDING_POST_FAILED", payload: post });
 
 const fetchLatest = (mostRecentPost, streamId, teamId) => async (dispatch, getState, { http }) => {
-	let url = `/posts?teamId=${teamId}&streamId=${streamId}`;
+	const { context } = getState();
+	let url = `/posts?teamId=${teamId}&streamId=${streamId}&withMarkers`;
+	if (context.currentCommit) url += `&commitHash=${context.currentCommit}`;
 	if (mostRecentPost) url += `&gt=${mostRecentPost.id}`;
-	const { posts, more } = await http.get(url, getState().session.accessToken);
+	const { posts, markers, markerLocations, more } = await http.get(url, getState().session.accessToken);
+	const normalizedMarkers = normalize(markers || []);
+	dispatch(saveMarkers(normalizedMarkers));
+	if (markerLocations) dispatch(saveMarkerLocations(markerLocations));
 	const normalizedPosts = normalize(posts);
-	dispatch(fetchMarkersAndLocations({ streamId, teamId }));
 	const save = dispatch(savePostsForStream(streamId, normalizedPosts));
 	// only take the first page if no mostRecentPost
 	if (more && mostRecentPost) return dispatch(fetchLatest(normalizedPosts[0].id, streamId, teamId));
