@@ -26,16 +26,25 @@ class OfflineBanner extends PureComponent {
 
 	render() {
 		let content;
+		if (this.props.hasSubscriptionIssues)
+			content = (
+				<p>
+					<FormattedMessage
+						id="offlineBanner.pubnub.struggling"
+						defaultMessage="We're having issues connecting to streams..."
+					/>
+				</p>
+			);
 		if (this.props.isDisconnectedFromPubnub)
 			content = (
 				<p>
 					<FormattedMessage
 						id="offlineBanner.pubnub.main"
-						defaultMessage="Oops...the stream isn't flowing."
+						defaultMessage="Oops...we couldn't connect to the streams."
 					/>{" "}
 					<a onClick={() => shell.openExternal("https://help.codestream.com")}>
-						<FormattedMessage id="offlineBanner.pubnub.contact" defaultMessage="Contact support." />
-					</a>
+						<FormattedMessage id="offlineBanner.pubnub.contact" defaultMessage="Contact support" />
+					</a>.
 				</p>
 			);
 		// being offline is the overriding error
@@ -65,6 +74,7 @@ class OfflineBanner extends PureComponent {
 
 const mapStateToProps = ({ connectivity, messaging }) => ({
 	isOffline: connectivity.offline,
-	isDisconnectedFromPubnub: messaging.timedOut
+	isDisconnectedFromPubnub: messaging.timedOut,
+	hasSubscriptionIssues: messaging.failedSubscriptions.length > 0
 });
 export default connect(mapStateToProps, { checkServerStatus })(OfflineBanner);
