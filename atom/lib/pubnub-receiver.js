@@ -55,7 +55,7 @@ export default class PubNubReceiver {
 			Raven.captureBreadcrumb({
 				message: `Pubnub status error: ${JSON.stringify(status)}`,
 				category: "pubnub",
-				level: "warn"
+				level: "warning"
 			});
 			return;
 		}

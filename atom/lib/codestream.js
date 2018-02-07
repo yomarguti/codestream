@@ -200,7 +200,11 @@ module.exports = {
 						);
 						if (directoryForFile) {
 							atom.project.repositoryForDirectory(directoryForFile).then(repo => {
-								store.dispatch(setCurrentFile(repo.relativize(editor.getPath())));
+								let path = repo.relativize(editor.getPath());
+								// note we always maintain the current file with a forward slash separator
+								// even if we are on a Windows machine using a backslash
+								path = path.replace('\\', '/'); 
+								store.dispatch(setCurrentFile(path));
 							});
 						}
 					} else {
