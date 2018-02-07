@@ -1,4 +1,4 @@
-const moment = require('moment');
+const moment = require("moment");
 
 /**
  * Parses the git commit revision from blame data for a line of code.
@@ -7,8 +7,8 @@ const moment = require('moment');
  * @return {string} - the git revision hash string.
  */
 function parseRevision(line) {
-  var revisionRegex = /^\w+/;
-  return line.match(revisionRegex)[0];
+	var revisionRegex = /^\w+/;
+	return line.match(revisionRegex)[0];
 }
 
 /**
@@ -18,8 +18,12 @@ function parseRevision(line) {
  * @return {string} - the author name for that line of code.
  */
 function parseAuthor(line) {
-  var committerMatcher = /^author\s(.*)$/m;
-  return line.match(committerMatcher)[1];
+	var committerMatcher = /^author\s(.*)$/m;
+	return line.match(committerMatcher)[1];
+}
+
+function parseEmail(line) {
+	return line.match(/^author-mail\s(.*)$/m)[1].replace(/[<>]/g, "");
 }
 
 /**
@@ -29,8 +33,8 @@ function parseAuthor(line) {
  * @return {string} - the committer name for that line of code.
  */
 function parseCommitter(line) {
-  var committerMatcher = /^committer\s(.*)$/m;
-  return line.match(committerMatcher)[1];
+	var committerMatcher = /^committer\s(.*)$/m;
+	return line.match(committerMatcher)[1];
 }
 
 /**
@@ -38,8 +42,8 @@ function parseCommitter(line) {
  * @param {object} date - a moment date object
  */
 function formatDate(date) {
-  var formatString = atom.config.get('git-blame.dateFormatString');
-  return date.format(formatString);
+	var formatString = atom.config.get("git-blame.dateFormatString");
+	return date.format(formatString);
 }
 
 /**
@@ -49,9 +53,9 @@ function formatDate(date) {
  * @return {string} - human readable date string of the lines author date
  */
 function parseAuthorDate(line) {
-  var dateMatcher = /^author-time\s(.*)$/m;
-  var dateStamp = line.match(dateMatcher)[1];
-  return formatDate(moment.unix(dateStamp));
+	var dateMatcher = /^author-time\s(.*)$/m;
+	var dateStamp = line.match(dateMatcher)[1];
+	return formatDate(moment.unix(dateStamp));
 }
 
 /**
@@ -61,9 +65,9 @@ function parseAuthorDate(line) {
  * @return {string} - human readable date string of the lines commit date
  */
 function parseCommitterDate(line) {
-  var dateMatcher = /^committer-time\s(.*)$/m;
-  var dateStamp = line.match(dateMatcher)[1];
-  return formatDate(moment.unix(dateStamp));
+	var dateMatcher = /^committer-time\s(.*)$/m;
+	var dateStamp = line.match(dateMatcher)[1];
+	return formatDate(moment.unix(dateStamp));
 }
 
 /**
@@ -73,8 +77,8 @@ function parseCommitterDate(line) {
  * @return {string} - the summary line for the last commit for a line of code
  */
 function parseSummary(line) {
-  var summaryMatcher = /^summary\s(.*)$/m;
-  return line.match(summaryMatcher)[1];
+	var summaryMatcher = /^summary\s(.*)$/m;
+	return line.match(summaryMatcher)[1];
 }
 
 /**
@@ -93,15 +97,16 @@ function parseSummary(line) {
  * @return {object} - an object with properties described above
  */
 function parseBlameLine(blameData, index) {
-  return markIfNoCommit({
-    hash: parseRevision(blameData),
-    line: index + 1,
-    author: parseAuthor(blameData),
-    date: parseAuthorDate(blameData),
-    committer: parseCommitter(blameData),
-    committerDate: parseCommitterDate(blameData),
-    summary: parseSummary(blameData)
-  });
+	return markIfNoCommit({
+		hash: parseRevision(blameData),
+		line: index + 1,
+		author: parseAuthor(blameData),
+		email: parseEmail(blameData),
+		date: parseAuthorDate(blameData),
+		committer: parseCommitter(blameData),
+		committerDate: parseCommitterDate(blameData),
+		summary: parseSummary(blameData)
+	});
 }
 
 /**
@@ -111,10 +116,10 @@ function parseBlameLine(blameData, index) {
  * @param {object} parsedBlame - parsed blame info for a line
  */
 function markIfNoCommit(parsedBlame) {
-   if (/^0*$/.test(parsedBlame.hash)) {
-     parsedBlame.noCommit = true;
-   }
-   return parsedBlame;
+	if (/^0*$/.test(parsedBlame.hash)) {
+		parsedBlame.noCommit = true;
+	}
+	return parsedBlame;
 }
 
 /**
@@ -123,18 +128,18 @@ function markIfNoCommit(parsedBlame) {
  * @param {string} blameOutput - output from 'git blame --porcelain <file>'
  */
 function parseBlameOutput(blameOut) {
-  // Matches new lines only when followed by a line with commit hash info that
-  // are followed by autor line. This is the 1st and 2nd line of the blame
-  // --porcelain output.
-  var singleLineDataSplitRegex = /\n(?=\w+\s(?:\d+\s)+\d+\nauthor)/g;
+	// Matches new lines only when followed by a line with commit hash info that
+	// are followed by autor line. This is the 1st and 2nd line of the blame
+	// --porcelain output.
+	var singleLineDataSplitRegex = /\n(?=\w+\s(?:\d+\s)+\d+\nauthor)/g;
 
-  // Split the blame output into data for each line and parse out desired
-  // data from each into an object.
-  return blameOut.split(singleLineDataSplitRegex).map(parseBlameLine);
+	// Split the blame output into data for each line and parse out desired
+	// data from each into an object.
+	return blameOut.split(singleLineDataSplitRegex).map(parseBlameLine);
 }
 
 // EXPORTS
 module.exports = {
-  parseBlame: parseBlameOutput,
-  formatDate: formatDate
+	parseBlame: parseBlameOutput,
+	formatDate: formatDate
 };

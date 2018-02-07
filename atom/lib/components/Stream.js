@@ -575,17 +575,15 @@ export class SimpleStream extends Component {
 		for (var lineNum = selectionRange.start.row; lineNum <= selectionRange.end.row; lineNum++) {
 			var lineData = gitData[lineNum - 1];
 			if (lineData) {
-				var author = lineData["author"];
-				if (author && author !== "Not Committed Yet") {
+				const authorEmail = lineData["email"];
+				if (authorEmail && authorEmail !== "not.committed.yet") {
 					// find the author -- FIXME this feels fragile
-					Object.keys(this.props.users).forEach(personId => {
-						let person = this.props.users[personId];
-						let fullName = person.firstName + " " + person.lastName;
-						if (fullName == author || person.username == author) {
-							if (person.username !== this.props.currentUser.username) {
+					Object.entries(this.props.users).forEach(([userId, user]) => {
+						if (user.email === authorEmail) {
+							if (userId !== this.props.currentUser.id) {
 								// skip if the input field already contains this user
-								if (postText.match("@" + person.username + "\\b")) return;
-								authors["@" + person.username] = true;
+								if (postText.match("@" + user.username + "\\b")) return;
+								authors["@" + user.username] = true;
 							}
 						}
 					});
@@ -634,16 +632,9 @@ export class SimpleStream extends Component {
 		let filePath = editor.getPath();
 		const directory = atom.project.getDirectories().find(directory => directory.contains(filePath));
 		atom.project.repositoryForDirectory(directory).then(function(projectRepo) {
-			// Ensure this project is backed by a git repository
-			if (!projectRepo) {
-				errorController.showError("error-not-backed-by-git");
-				return;
-			}
-
 			if (!(projectRepo.path in that.projectBlamers)) {
 				that.projectBlamers[projectRepo.path] = new Blamer(projectRepo);
 			}
-			// BlameViewController.toggleBlame(this.projectBlamers[projectRepo.path]);
 			var blamer = that.projectBlamers[projectRepo.path];
 
 			if (!that.blameData[filePath]) {
