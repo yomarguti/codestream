@@ -139,19 +139,19 @@ export class SimpleStream extends Component {
 		// FIXME -- switch to stream if code is from another buffer
 		const editor = atom.workspace.getActiveTextEditor();
 		const displayMarker = editor.displayMarkers[markerId];
-
 		if (displayMarker) {
 			const start = displayMarker.getBufferRange().start;
+
+			editor.setCursorBufferPosition(start);
+			editor.scrollToBufferPosition(start, {
+				center: true
+			});
 
 			this.displayMarkerDecoration = editor.decorateMarker(displayMarker, {
 				type: "highlight",
 				class: "codestream-highlight"
 			});
 
-			editor.setCursorBufferPosition(start);
-			editor.scrollToBufferPosition(start, {
-				center: true
-			});
 		}
 	}
 
