@@ -2,7 +2,7 @@ import Dexie from "dexie";
 
 Dexie.debug = true;
 
-const db = new Dexie("CodeStream");
+const db = (window.db = new Dexie("CodeStream"));
 db.version(1).stores({
 	streams: "id, teamId, repoId",
 	posts: "id, teamId, streamId, creatorId",
@@ -58,7 +58,10 @@ export const bootstrapStore = store => {
 				db.users.limit(1000).toArray(users => store.dispatch(bootstrapUsers(users)));
 				db.repos.limit(1000).toArray(repos => store.dispatch(bootstrapRepos(repos)));
 				db.teams.limit(1000).toArray(teams => store.dispatch(bootstrapTeams(teams)));
-				db.posts.limit(1000).reverse().sortBy('createdAt', posts => store.dispatch(bootstrapPosts(posts)));
+				db.posts
+					.limit(1000)
+					.reverse()
+					.sortBy("createdAt", posts => store.dispatch(bootstrapPosts(posts)));
 				db.streams.limit(1000).toArray(streams => store.dispatch(bootstrapStreams(streams)));
 				db.markers.limit(1000).toArray(markers => store.dispatch(bootstrapMarkers(markers)));
 				db.markerLocations
