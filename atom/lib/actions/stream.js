@@ -49,7 +49,10 @@ export const fetchLatestForCurrentStream = sortId => async (dispatch, getState, 
 
 			const currentStream = normalizedStreams.find(stream => stream.file === context.currentFile);
 			if (currentStream) return dispatch(fetchLatestPosts([currentStream]));
-			else return dispatch(fetchLatestForStream(_.sortBy(normalizedStreams, "sortId")[0].sortId));
+			else
+				return dispatch(
+					fetchLatestForCurrentStream(_.sortBy(normalizedStreams, "sortId")[0].sortId)
+				);
 		});
 	}
 };
