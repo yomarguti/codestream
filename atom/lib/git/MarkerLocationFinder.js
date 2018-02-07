@@ -53,6 +53,7 @@ export default class MarkerLocationFinder {
 				lastKnownLocationsLength,
 				"markers"
 			);
+			Object.assign(currentLocations, lastKnownLocations);
 
 			if (lastKnownLocationsLength && !commit.equals(currentCommit)) {
 				const deltas = await repo.getDeltasBetweenCommits(commit, currentCommit, filePath);

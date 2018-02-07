@@ -2,7 +2,6 @@ import { CompositeDisposable } from "atom";
 import React, { Component } from "react";
 import ReactDOM from "react-dom";
 import ReferenceBubble from "./ReferenceBubble";
-import { markerDirtied } from "../actions/marker-location";
 import { locationToRange } from "../util/Marker";
 import rootLogger from "../util/Logger";
 

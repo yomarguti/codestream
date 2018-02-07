@@ -21,6 +21,7 @@ import { setStreamUMITreatment } from "./actions/umi";
 import { commitNewMarkerLocations, refreshMarkersAndLocations } from "./actions/marker-location";
 import logger from "./util/Logger";
 import { online, offline } from "./actions/connectivity";
+import { open as openRepo } from "./git/GitRepo";
 
 Raven.config("https://46fd0a63e10340b585d895d333fec719@sentry.io/280733", {
 	captureUnhandledRejections: true,
@@ -213,14 +214,15 @@ module.exports = {
 				// Subscribe to git status changes in order to be aware of current commit hash.
 				repo.onDidChangeStatuses(async event => {
 					logger.trace("repo.onDidChangeStatuses");
-					const currentCommitHash = store.getState().context.currentCommit;
-					const commitHash = await getCurrentCommit(repo);
-					if (currentCommitHash !== commitHash) {
-						store.dispatch(commitHashChanged(commitHash));
-						// git(["status"], { cwd: repo.getWorkingDirectory() }).then(status => {
-						// 	if (!status.startsWith("HEAD detached"))
-						// 		store.dispatch(commitNewMarkerLocations(currentCommitHash, commitHash));
-						// });
+					const { context } = store.getState();
+					const lastCommitHash = context.currentCommit;
+
+					const gitRepo = await openRepo(repo.getWorkingDirectory());
+					const currentCommit = await gitRepo.getCurrentCommit();
+					const currentCommitHash = currentCommit.hash;
+
+					if (lastCommitHash !== currentCommitHash) {
+						store.dispatch(commitHashChanged(currentCommitHash));
 						store.dispatch(refreshMarkersAndLocations());
 					}
 				})

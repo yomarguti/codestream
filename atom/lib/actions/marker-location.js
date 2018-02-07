@@ -4,6 +4,7 @@ import { saveMarkers } from "./marker";
 import { getStreamsForRepo } from "../reducers/streams";
 import MarkerLocationFinder from "../git/MarkerLocationFinder";
 import { open as openRepo } from "../git/GitRepo";
+import { areEqualLocations } from "../util/Marker";
 import rootLogger from "../util/Logger";
 
 const logger = rootLogger.forClass("actions/marker-location");
@@ -21,7 +22,8 @@ export const saveMarkerLocations = attributes => (dispatch, getState, { db }) =>
 			if (record) {
 				await db.markerLocations.update(primaryKey, {
 					...record,
-					locations: { ...record.locations, ...locations }
+					locations: { ...record.locations, ...locations },
+					dirty: {}
 				});
 			} else {
 				await db.markerLocations.add(attributes);
@@ -95,8 +97,9 @@ const calculateLocations = ({ teamId, streamId }) => async (dispatch, getState, 
 	// TODO check if context.currentCommit is already updated at this point, so
 	// we don't need to ask the repo
 	const currentCommit = await gitRepo.getCurrentCommit();
+	const commitHash = currentCommit.hash;
 	const { markers, markerLocations } = await http.get(
-		`/markers?teamId=${teamId}&streamId=${streamId}&commitHash=${currentCommit.hash}`,
+		`/markers?teamId=${teamId}&streamId=${streamId}&commitHash=${commitHash}`,
 		session.accessToken
 	);
 	logger.debug("Found", markers.length, "markers");
@@ -110,24 +113,28 @@ const calculateLocations = ({ teamId, streamId }) => async (dispatch, getState, 
 		const calculatedLocations = await markerLocationFinder.findLocationsForCurrentCommit(
 			missingMarkers
 		);
-		logger.debug("locations", calculatedLocations);
 		Object.assign(locations, calculatedLocations);
 	}
 
 	await dispatch(saveMarkers(normalize(markers)));
-	await dispatch(saveMarkerLocations({ ...normalize(markerLocations), locations }));
+	await dispatch(saveMarkerLocations({ teamId, streamId, commitHash, locations }));
 
-	const calculatedLocations = await markerLocationFinder.findLocationsForPendingChanges(locations);
-	for (const markerId of Object.keys(calculatedLocations)) {
-		const location = calculatedLocations[markerId];
-		await dispatch(markerDirtied({ markerId, streamId }, location));
+	const dirtyLocations = await markerLocationFinder.findLocationsForPendingChanges(locations);
+	for (const markerId of Object.keys(dirtyLocations)) {
+		const dirtyLocation = dirtyLocations[markerId];
+		const lastCommitLocation = locations[markerId];
+		if (!areEqualLocations(dirtyLocation, lastCommitLocation)) {
+			await dispatch(markerDirtied({ markerId, streamId }, dirtyLocation));
+		}
 	}
+
+	return dirtyLocations;
 };
 
-export const fetchMarkersAndLocations = ({ teamId, streamId }) => (dispatch, getState) => {
+export const fetchMarkersAndLocations = ({ teamId, streamId }) => async (dispatch, getState) => {
 	logger.trace(".fetchMarkersAndLocations");
 	const { context, session, repoAttributes } = getState();
-	return dispatch(calculateLocations({ teamId, streamId }));
+	return await dispatch(calculateLocations({ teamId, streamId }));
 };
 
 export const refreshMarkersAndLocations = () => (dispatch, getState) => {

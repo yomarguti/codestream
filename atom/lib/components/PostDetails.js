@@ -10,20 +10,10 @@ export default class PostDetails extends Component {
 		this.diffMarkers = [];
 	}
 
-	makeRange(location) {
-		return [[location[0], location[1]], [location[2], location[3]]];
-	}
-
 	render() {
-		const post = this.props.post;
+		const { post } = this.props;
 
 		if (!post) return null;
-
-		const postClass = createClassString({
-			post: true
-		});
-		// console.log("RENDERING A POST DETAILS: " + postClass);
-		// console.log(post);
 
 		const applyPatchLabel = this.state.patchApplied ? "Revert" : "Apply Patch";
 		const showDiffLabel = this.state.diffShowing ? "Hide Diff" : "Show Diff";
@@ -34,14 +24,13 @@ export default class PostDetails extends Component {
 		// a diff
 		let showDiffButtons = this.state.patchApplied;
 		if (post.markerLocation) {
-			let code = post.codeBlocks[0].code;
+			const code = post.codeBlocks[0].code;
 			const editor = atom.workspace.getActiveTextEditor();
 			if (editor) {
-				let range = this.makeRange(post.markerLocation);
-				var existingCode = editor.getTextInBufferRange(range);
-				if (code !== existingCode) showDiffButtons = true;
-				if (code.length > 0 && post.markerLocation[4] && post.markerLocation[4].entirelyDeleted) {
-					alert = <span className="icon icon-alert" ref={ref => (this._alert = ref)} />;
+				const range = locationToRange(post.markerLocation);
+				const existingCode = editor.getTextInBufferRange(range);
+				if (code !== existingCode) {
+					showDiffButtons = true;
 				}
 			}
 		} else if (hasCodeBlock) {
@@ -49,7 +38,6 @@ export default class PostDetails extends Component {
 			alert = <span className="icon icon-alert" ref={ref => (this._alert = ref)} />;
 		}
 
-		// console.log(post.commitHashWhenPosted, " vs ", this.props.currentCommit);
 		let commitDiv = null;
 		if (hasCodeBlock) {
 			commitDiv = (
