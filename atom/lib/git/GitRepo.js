@@ -6,9 +6,7 @@ import Git from 'nodegit';
 
 
 export async function open(path) {
-console.warn('OPENING ' + path);
 	const git = await Git.Repository.open(path);
-console.warn('WORKED? ' + (git ? 'y' : 'n'));
 	return new GitRepo(git);
 }
 
@@ -120,9 +118,7 @@ class GitRepo {
 		const opts = {
 			pathspec: [ filePath ]
 		};
-console.warn('GETTING DELTAS BETWEEN COMMITS FOR ' + filePath);
 		const diff = await Git.Diff.treeToTree(this._git, oldTree, newTree, opts);
-console.warn('diff=', diff);
 		return await this._buildDeltasFromDiffs([diff]);
 	}
 
@@ -132,9 +128,7 @@ console.warn('diff=', diff);
 		const opts = {
 			pathspec: [ filePath ]
 		};
-console.warn('GETTING DELTAS FOR PENDING CHANGES FOR ' + filePath);
 		const diff = await Git.Diff.treeToWorkdir(this._git, currentTree, opts);
-console.warn('duff=', diff);
 		return await this._buildDeltasFromDiffs([diff]);
 	}
 
@@ -168,7 +162,6 @@ console.warn('duff=', diff);
 			}
 		}
 
-console.warn('THE DETLAS ARE: ', deltas);
 		return deltas;
 	}
 
@@ -180,11 +173,9 @@ console.warn('THE DETLAS ARE: ', deltas);
 		const walker = git.createRevWalk();
 		walker.push(headCommit.sha());
 		walker.sorting(Git.Revwalk.SORT.TIME);
-console.warn('GETTING COMMIT HISTORY FOR FILE ' + filePath);
 		const commitsToWalk = await walker.fileHistoryWalk(filePath, HISTORY_WALK_FETCH_SIZE);
-console.warn('COMMITS: ', commitsToWalk);
 		const commitHistory = await me._compileHistory(commitsToWalk, filePath, [], maxHistorySize);
-console.warn('COMMIT HISTORY IS', commitHistory);
+
 		const result = [];
 		for (const entry of commitHistory) {
 			const gitCommit = await me.getCommit(entry.commit.sha());
@@ -220,9 +211,7 @@ console.warn('COMMIT HISTORY IS', commitHistory);
 		walker.push(lastSha);
 		walker.sorting(Git.Revwalk.SORT.TIME);
 
-console.warn('COMPILE HISTORY FOR ' + filePath);
 		commitsToWalk = await walker.fileHistoryWalk(filePath, HISTORY_WALK_FETCH_SIZE);
-console.warn('COMMITS', commitsToWalk);
 		return await this._compileHistory(commitsToWalk, filePath, commitHistory, maxHistorySize);
 	}
 
