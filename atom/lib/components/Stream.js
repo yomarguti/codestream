@@ -686,8 +686,10 @@ export class SimpleStream extends Component {
 
 			if (!that.blameData[filePath]) {
 				blamer.blame(filePath, function(err, data) {
-					that.blameData[filePath] = data;
-					that.addBlameAtMention(range, data);
+					if (!err) {
+						that.blameData[filePath] = data;
+						that.addBlameAtMention(range, data);
+					}
 				});
 			} else {
 				that.addBlameAtMention(range, that.blameData[filePath]);
