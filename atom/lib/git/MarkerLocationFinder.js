@@ -1,3 +1,4 @@
+import Raven from "raven-js";
 import rootLogger from "../util/Logger";
 
 export default class MarkerLocationFinder {
@@ -123,19 +124,26 @@ export default class MarkerLocationFinder {
 	}
 
 	async _calculateLocations(locations, edits, originalCommitHash, newCommitHash) {
-		const result = await this._http.put(
-			"/calculate-locations?",
-			{
-				teamId: this._context.currentTeamId,
-				streamId: this._streamId,
-				originalCommitHash: originalCommitHash,
-				newCommitHash: newCommitHash,
-				edits: edits,
-				locations: locations
-			},
-			this._session.accessToken
-		);
-		return result.markerLocations.locations;
+		try {
+			const result = await this._http.put(
+				"/calculate-locations?",
+				{
+					teamId: this._context.currentTeamId,
+					streamId: this._streamId,
+					originalCommitHash: originalCommitHash,
+					newCommitHash: newCommitHash,
+					edits: edits,
+					locations: locations
+				},
+				this._session.accessToken
+			);
+			return result.markerLocations.locations;
+		} catch (error) {
+			Raven.captureException(error, {
+				logger: "MarkerLocationFinder._calculateLocations"
+			});
+			return {};
+		}
 	}
 
 	_getEdits(deltas) {
