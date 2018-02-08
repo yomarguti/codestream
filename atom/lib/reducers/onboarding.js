@@ -60,7 +60,7 @@ export default (state = initialState, { type, payload }) => {
 			return { ...state, step: "changeUsername", props: payload };
 		case "LOGGED_IN":
 		case "ONBOARDING_COMPLETE":
-			return { ...initialState, complete: true };
+			return { ...initialState, firstTimeInAtom: state.firstTimeInAtom, complete: true };
 		case "RESET_ONBOARDING":
 			return initialState;
 		case "ONBOARDING-SERVER_UNREACHABLE":
