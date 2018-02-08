@@ -8,6 +8,7 @@ import { getStreamForRepoAndFile } from "../reducers/streams";
 
 const isActiveEditor = editor => {
 	const result = editor === atom.workspace.getActiveTextEditor();
+
 	return result;
 };
 
@@ -42,15 +43,29 @@ class MarkerLocationTracker extends Component {
 		const editorsObserver = atom.workspace.observeTextEditors(this.editorOpened);
 		subscriptions.add(editorsObserver);
 
-		if (this.props.streamId) {
-			this.recalculateMarkers(atom.workspace.getActiveTextEditor());
+		const { editor, streamId } = this.props;
+		if (streamId) {
+			this.recalculateMarkers(editor);
 		}
 	};
 
+	componentWillReceiveProps(nextProps) {
+		const { editor, markers } = nextProps;
+
+		if (markers) {
+			for (const { id, location } of markers) {
+				this.createOrUpdateDisplayMarker(editor, {
+					id,
+					location
+				});
+			}
+		}
+	}
+
 	componentDidUpdate = (prevProps, prevState) => {
-		const { streamId } = this.props;
+		const { editor, streamId } = this.props;
 		if (streamId && streamId != prevProps.streamId) {
-			this.recalculateMarkers(atom.workspace.getActiveTextEditor());
+			this.recalculateMarkers(editor);
 		}
 	};
 
@@ -76,32 +91,18 @@ class MarkerLocationTracker extends Component {
 			currentFile,
 			teamId,
 			streamId,
-			fetchMarkersAndLocations,
+			calculateLocations,
 			updateLastCalculationForFile
 		} = this.props;
 		updateLastCalculationForFile(currentFile, editor.lastHash);
 
-		if (!editor.displayMarkers) {
-			editor.displayMarkers = {};
-		}
-
-		const locations = await fetchMarkersAndLocations({
-			teamId,
-			streamId
-		});
-		for (const markerId of Object.keys(locations)) {
-			const location = locations[markerId];
-			this.createOrUpdateDisplayMarker(editor, {
-				id: markerId,
-				location
-			});
-		}
+		calculateLocations({ teamId, streamId });
 
 		editor.isRecalculatingMarkers = false;
 	};
 
 	createOrUpdateDisplayMarker(editor, marker) {
-		const displayMarkers = editor.displayMarkers;
+		const displayMarkers = editor.displayMarkers || (editor.displayMarkers = {});
 		const markerId = marker.id;
 		const displayMarker = displayMarkers[markerId];
 		const range = locationToRange(marker.location);

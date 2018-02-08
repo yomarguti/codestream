@@ -90,7 +90,11 @@ export const commitNewMarkerLocations = (oldCommitHash, newCommitHash) => (
 	});
 };
 
-const calculateLocations = ({ teamId, streamId }) => async (dispatch, getState, { http }) => {
+export const calculateLocations = ({ teamId, streamId }) => async (
+	dispatch,
+	getState,
+	{ http }
+) => {
 	logger.trace(".calculateLocations");
 	const { context, repoAttributes, session } = getState();
 	const gitRepo = await openRepo(repoAttributes.workingDirectory);

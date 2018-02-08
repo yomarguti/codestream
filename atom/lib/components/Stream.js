@@ -291,6 +291,7 @@ export class SimpleStream extends Component {
 	// visible during the transition
 	render() {
 		const posts = this.props.posts;
+		const editor = atom.workspace.getActiveTextEditor();
 
 		const streamClass = createClassString({
 			stream: true,
@@ -355,7 +356,7 @@ export class SimpleStream extends Component {
 					references={this.props.markers}
 					onSelect={this.selectPost}
 				/>
-				<MarkerLocationTracker />
+				<MarkerLocationTracker editor={editor} markers={this.props.markers} />
 				<div
 					className={postsListClass}
 					ref={ref => (this._postslist = ref)}
@@ -447,10 +448,7 @@ export class SimpleStream extends Component {
 						onKeyPress={this.handleOnKeyPress}
 						ref={ref => (this._compose = ref)}
 					>
-						<AddCommentPopup
-							editor={atom.workspace.getActiveTextEditor()}
-							onClick={this.handleClickAddComment}
-						/>
+						<AddCommentPopup editor={editor} onClick={this.handleClickAddComment} />
 						{hasNewMessagesBelowFold && (
 							<div className="new-messages-below" onClick={this.handleClickScrollToNewMessages}>
 								&darr; Unread Messages &darr;
