@@ -50,7 +50,8 @@ export default class PubNubReceiver {
 			// time, we can't know which one this is a status error for ...
 			// so we'll spit out the error here, but we'll have to rely on the
 			// subscription timeout to actually handle the failure
-			console.warn("PUBNUB STATUS ERROR: ", status);
+			const now = new Date().toString();
+			console.warn(now + ": PUBNUB STATUS ERROR: ", status);
 			Raven.captureBreadcrumb({
 				message: `Pubnub status error: ${JSON.stringify(status)}`,
 				category: "pubnub",
@@ -68,7 +69,7 @@ export default class PubNubReceiver {
 	}
 
 	pubnubPresence(event) {
-		logger.debug(`user ${event.uuid} ${event.action}. occupancy is ${event.occupancy}`); // uuid of the user
+//		logger.debug(`user ${event.uuid} ${event.action}. occupancy is ${event.occupancy}`); // uuid of the user
 	}
 
 	pubnubEvent(event) {
@@ -78,7 +79,6 @@ export default class PubNubReceiver {
 
 	pubnubMessage(message, { isHistory = false } = {}) {
 		const { requestId, ...objects } = message;
-		// console.log(`pubnub event - ${requestId}`, message);
 		Raven.captureBreadcrumb({
 			message: "pubnub event",
 			category: "pubnub",
@@ -211,8 +211,15 @@ export default class PubNubReceiver {
 	async retrieveChannelHistorySince(channel, timeToken, allMessages) {
 		let response = null;
 		let retries = 0;
+		let delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 		while (!response) {
 			try {
+				Raven.captureBreadcrumb({
+					message: "retrieve history",
+					category: "pubnub",
+					data: { timeToken },
+					level: "debug"
+				});
 				response = await this.pubnub.history({
 					channel: channel,
 					reverse: true, // oldest message first
@@ -220,13 +227,26 @@ export default class PubNubReceiver {
 					stringifiedTimeToken: true
 				});
 			} catch (error) {
-				console.warn(`PubNub history failed for ${channel}:`, error);
+				const now = new Date().toString();
+				console.warn(`${now}: PubNub history failed for ${channel}:`, error);
+				Raven.captureBreadcrumb({
+					message: `retrieve history failed`,
+					category: "pubnub",
+					data: { error },
+					level: "debug"
+				});
 				if (retries === 5) {
-					console.warn(`Giving up fetching history for ${channel}`);
+					console.warn(`${now}: Giving up fetching history for ${channel}`);
+					Raven.captureBreadcrumb({
+						message: `gave up fetching history`,
+						category: "pubnub",
+						level: "warning"
+					});
 					this.store.dispatch(historyRetrievalFailure());
 					return true;
 				}
 				retries++;
+				await delay(1000);
 			}
 		}
 		allMessages.push(...response.messages);

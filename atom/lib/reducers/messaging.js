@@ -1,3 +1,5 @@
+import Raven from "raven-js";
+
 const initialState = {
 	catchingUp: false,
 	timedOut: false,
@@ -20,6 +22,7 @@ export default (state = initialState, { type, payload }) => {
 
 		case "SUBSCRIPTION_FAILURE":
 			if (!state.failedSubscriptions || !state.failedSubscriptions.includes(payload)) {
+				Raven.captureMessage(`subscription failure: ${payload}`);
 				const nextState = {
 					...state,
 					failedSubscriptions: [...(state.failedSubscriptions || [])]
@@ -45,6 +48,7 @@ export default (state = initialState, { type, payload }) => {
 			return { ...state, timedOut: true };
 
 		case "HISTORY_RETRIEVAL_FAILURE":
+			Raven.captureMessage(`history retrieval failure`);
 			return { ...state, historyRetrievalFailure: true };
 	}
 	return state;

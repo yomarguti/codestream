@@ -1,6 +1,7 @@
 import PubNubReceiver from "./pubnub-receiver";
 import { fetchCurrentUser } from "./actions/user";
 import { catchingUp, caughtUp, subscriptionFailure } from "./actions/messaging";
+import Raven from "raven-js";
 
 // TODO: this feels/is very fragile
 let historyCount = 0;
@@ -11,13 +12,28 @@ const _initiateTicks = (store, receiver) => {
 	// start a ticking clock, look for anything that misses a tick by more than 10 seconds.
 	// stuff like breakpoints, alerts, and context menu interactions will halt js processing and would cause ticking to stop, which could lead to false positives for wake events
 	setInterval(async () => {
+		if (!navigator.onLine) { 
+			// don't bother until we are online
+			Raven.captureBreadcrumb({
+				message: "not online yet",
+				category: "pubnub",
+				data: { lastTick, now },
+				level: "debug"
+			});
+			return; 
+		}	
 		const now = Date.now();
 		if (lastTick && now - lastTick > 10000) {
 			// we'll assume this is a laptop sleep event or something that otherwise
 			// stopped execution for longer than expected ... we'll make sure we're
 			// subscribed to the channels we need to be and fetch history to catch up,
 			// in case we missed any messages
-			// console.debug("WAKING FROM SLEEP");
+			Raven.captureBreadcrumb({
+				message: "waking from sleep",
+				category: "pubnub",
+				data: { lastTick, now },
+				level: "debug"
+			});
 			receiver.unsubscribeAll();
 			// restart the count for history processed
 			processedHistoryCount = 0;
@@ -63,7 +79,6 @@ export default store => {
 
 		if (action.isHistory) {
 			processedHistoryCount += 1;
-			// console.debug(`${processedHistoryCount} - processing history`, action);
 			if (processedHistoryCount === historyCount) {
 				next(caughtUp());
 				historyCount = processedHistoryCount = 0;

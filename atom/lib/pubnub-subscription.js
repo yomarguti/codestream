@@ -62,7 +62,8 @@ export default class PubnubSubscription {
 
 	// called when we time out trying to subscribe, in which case we need to enter a failure mode
 	async subscriptionTimedOut() {
-		console.warn(`SUBSCRIPTION TO ${this.channel} TIMED OUT`);
+		let now = new Date().toString();
+		console.warn(`${now}: SUBSCRIPTION TO ${this.channel} TIMED OUT`);
 		Raven.captureBreadcrumb({
 			message: `Subscription to ${this.channel} timed out`,
 			category: "pubnub",
@@ -81,7 +82,8 @@ export default class PubnubSubscription {
 				category: "pubnub",
 				level: "warning"
 			});
-			console.warn(`ERROR GETTING ACCESS TO ${this.channel}: ${JSON.stringify(error)}`);
+			now = new Date().toString();
+			console.warn(`${now}: ERROR GETTING ACCESS TO ${this.channel}: ${JSON.stringify(error)}`);
 		}
 		// now excuses now, try again, but give up completely after 10 tries
 		this._numRetries++;
@@ -89,7 +91,8 @@ export default class PubnubSubscription {
 			process.nextTick(this.subscribe.bind(this));
 		} else {
 			this.store.dispatch(subscriptionTimedOut());
-			console.warn(`GIVING UP SUBSCRIBING TO ${this.channel}, SOUND THE ALARMS`);
+			now = new Date().toString();
+			console.warn(`${now}: GIVING UP SUBSCRIBING TO ${this.channel}, SOUND THE ALARMS`);
 		}
 	}
 
@@ -122,7 +125,8 @@ export default class PubnubSubscription {
 					status.error ||
 					!response.channels[this.channel].occupants.find(occupant => occupant.uuid === uuid)
 				) {
-					console.warn(`UNABLE TO CONFIRM SUBSCRIPTION TO ${this.channel}`);
+					const now = new Date().toString();
+					console.warn(`${now}: UNABLE TO CONFIRM SUBSCRIPTION TO ${this.channel}`);
 					Raven.captureBreadcrumb({
 						message: `Unable to confirm subscription to ${this.channel}`,
 						category: "pubnub",
