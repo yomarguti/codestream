@@ -1,3 +1,4 @@
+import { shell } from "electron";
 import React, { Component } from "react";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
@@ -54,10 +55,11 @@ class CodeStreamRoot extends Component {
 
 		if (this.state.hasError)
 			return (
-				<div>
+				<div id="oops">
+					<p>An unexpected error has occurred and we've been notified. Please reload atom.</p>
 					<p>
-						Oops something went wrong. TODO: make this richer. For now, a reset is probably
-						required.
+						If the problem persists, please{" "}
+						<a onClick={() => shell.openExternal("https://help.codestream.com")}>contact support</a>.
 					</p>
 				</div>
 			);
