@@ -245,13 +245,13 @@ module.exports = {
 
 			const workDir = repo.repo.workingDirectory;
 			const repoUrl = repo.getOriginURL();
-			let firstCommitHash = await git(["rev-list", "--max-parents=0", "HEAD"], {
+			const noParentCommits = await git(["rev-list", "--max-parents=0", "--reverse", "HEAD"], {
 				cwd: repo.getWorkingDirectory()
 			});
 			const repoAttributes = {
 				workingDirectory: workDir,
 				url: repoUrl,
-				firstCommitHash: firstCommitHash.trim()
+				firstCommitHash: noParentCommits.split("\n")[0]
 			};
 			store.dispatch(setRepoAttributes(repoAttributes));
 			store.dispatch(fetchRepoInfo(repoAttributes));
