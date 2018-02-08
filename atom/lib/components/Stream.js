@@ -78,6 +78,10 @@ export class SimpleStream extends Component {
 		);
 	}
 
+	componentWillUnmount() {
+		this.subscriptions.dispose();
+	}
+
 	componentDidMount() {
 		const me = this;
 		// TODO: scroll to bottom
