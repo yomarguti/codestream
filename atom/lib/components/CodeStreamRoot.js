@@ -58,7 +58,8 @@ class CodeStreamRoot extends Component {
 				<div id="oops">
 					<p>An unexpected error has occurred and we've been notified.</p>
 					<p>
-						Please run the `Codestream: Logout` command from the command palette and reload atom.
+						Please run the `Codestream: Logout` command from the command palette and{" "}
+						<a onClick={atom.reload.bind(atom)}>reload</a> atom.
 					</p>
 					<p>
 						Sorry for the inconvenience. If the problem persists, please{" "}
