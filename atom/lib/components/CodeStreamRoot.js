@@ -53,12 +53,15 @@ class CodeStreamRoot extends Component {
 			noAccess
 		} = this.props;
 
-		if (this.state.hasError)
+		if (true)
 			return (
 				<div id="oops">
-					<p>An unexpected error has occurred and we've been notified. Please reload atom.</p>
+					<p>An unexpected error has occurred and we've been notified.</p>
 					<p>
-						If the problem persists, please{" "}
+						Please run the `Codestream: Logout` command from the command palette and reload atom.
+					</p>
+					<p>
+						Sorry for the inconvenience. If the problem persists, please{" "}
 						<a onClick={() => shell.openExternal("https://help.codestream.com")}>contact support</a>.
 					</p>
 				</div>
