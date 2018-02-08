@@ -42,8 +42,9 @@ class OfflineBanner extends PureComponent {
 						id="offlineBanner.pubnub.main"
 						defaultMessage="Oops...we couldn't connect to the streams."
 					/>{" "}
+					Try <a onClick={atom.reload.bind(atom)}>reloading</a>, or{" "}
 					<a onClick={() => shell.openExternal("https://help.codestream.com")}>
-						<FormattedMessage id="offlineBanner.pubnub.contact" defaultMessage="Contact support" />
+						<FormattedMessage id="offlineBanner.pubnub.contact" defaultMessage="contact support" />
 					</a>.
 				</p>
 			);
