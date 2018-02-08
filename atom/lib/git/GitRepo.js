@@ -102,8 +102,12 @@ class GitRepo {
 	}
 
 	async getCommit(hash) {
-		const commit = await this._git.getCommit(hash);
-		return new GitCommit(commit);
+		try {
+			const commit = await this._git.getCommit(hash);
+			return new GitCommit(commit);
+		} catch (err) {
+			console.warn(`Commit ${hash} not found`);
+		}
 	}
 
 	async getDeltasBetweenCommits(oldCommit, newCommit, filePath) {

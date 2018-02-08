@@ -118,7 +118,10 @@ export default class MarkerLocationFinder {
 		for (const marker of markers) {
 			const commitHashWhenCreated = marker.commitHashWhenCreated;
 			if (!commitsInHistory[commitHashWhenCreated]) {
-				commitHistory.push(await repo.getCommit(commitHashWhenCreated));
+				const commitWhenCreated = await repo.getCommit(commitHashWhenCreated);
+				if (commitWhenCreated) {
+					commitHistory.push(commitWhenCreated);
+				}
 			}
 		}
 	}
