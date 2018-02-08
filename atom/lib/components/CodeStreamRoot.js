@@ -53,7 +53,7 @@ class CodeStreamRoot extends Component {
 			noAccess
 		} = this.props;
 
-		if (true)
+		if (this.state.hasError)
 			return (
 				<div id="oops">
 					<p>An unexpected error has occurred and we've been notified.</p>
