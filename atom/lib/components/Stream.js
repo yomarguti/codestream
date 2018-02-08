@@ -32,14 +32,14 @@ const isBlankLine = (buffer, row) => {
 	const result = line.trim() === "";
 
 	return result;
-}
+};
 
 const lastColumn = (buffer, row) => {
 	const line = buffer.lineForRow(row);
 	const result = line.length;
 
 	return result;
-}
+};
 
 const trimSelection = editor => {
 	const range = editor.getSelectedBufferRange();
@@ -59,7 +59,7 @@ const trimSelection = editor => {
 	}
 
 	editor.setSelectedBufferRange(range);
-}
+};
 
 export class SimpleStream extends Component {
 	subscriptions = null;
@@ -156,6 +156,10 @@ export class SimpleStream extends Component {
 				this.postWithNewMessageIndicator = this.props.currentUser.lastReads[nextProps.id];
 			}
 			logger.debug("Switch to: ", nextProps.id);
+		}
+
+		if (nextProps.firstTimeInAtom && !Boolean(this.state.fileForIntro)) {
+			this.setState({ fileForIntro: nextProps.currentFile });
 		}
 	}
 
