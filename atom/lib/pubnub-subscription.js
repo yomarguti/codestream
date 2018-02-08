@@ -71,6 +71,7 @@ export default class PubnubSubscription {
 		});
 		delete this._confirmationTimeout;
 		// announce the failure, the UX should do something with this
+		Raven.captureMessage(`subscription failure: ${payload}`);
 		this.store.dispatch(subscriptionFailure(this.channel));
 		try {
 			// in case it's an access problem, force the API server to give us access to this channel

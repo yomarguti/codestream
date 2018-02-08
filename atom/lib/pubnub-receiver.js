@@ -242,6 +242,7 @@ export default class PubNubReceiver {
 						category: "pubnub",
 						level: "warning"
 					});
+					Raven.captureMessage(`history retrieval failure`);
 					this.store.dispatch(historyRetrievalFailure());
 					return true;
 				}
