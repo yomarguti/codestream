@@ -76,7 +76,7 @@ export class SimpleStream extends Component {
 			stream: {},
 			threadId: null,
 			posts: [],
-			fileForIntro: this.props.currentFile,
+			fileForIntro: props.currentFile,
 			newPostText: ""
 		};
 
