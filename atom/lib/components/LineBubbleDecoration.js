@@ -54,8 +54,7 @@ export default class LineBubbleDecoration extends Component {
 		const subscriptions = this.subscriptions;
 		const range = locationToRange([props.line, 1, this.maxLine + 1, 1]);
 		const marker = (this.marker = editor.markBufferRange(range, {
-			invalidate: "never",
-			maintainHistory: true
+			invalidate: "never"
 		}));
 		const decoration = (this.decoration = editor.decorateMarker(marker, options));
 
