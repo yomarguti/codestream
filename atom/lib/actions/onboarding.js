@@ -65,7 +65,7 @@ export const confirmEmail = attributes => (dispatch, getState, { http }) => {
 	dispatch(requestStarted());
 	return http
 		.post("/no-auth/confirm", attributes)
-		.then(async ({ accessToken, user, teams, repos }) => {
+		.then(async ({ accessToken, user, teams, repos, pubnubKey }) => {
 			dispatch(requestFinished());
 			user = normalize(user);
 
@@ -86,7 +86,7 @@ export const confirmEmail = attributes => (dispatch, getState, { http }) => {
 			await dispatch(saveTeams(userTeams));
 			await dispatch(saveRepos(userRepos));
 			const sessionId = UUID();
-			await dispatch(initializeSession({ userId: user.id, accessToken, sessionId }));
+			await dispatch(initializeSession({ userId: user.id, accessToken, sessionId, pubnubSubscribeKey: pubnubKey }));
 
 			if (!teamIdForRepo && userTeams.length === 0)
 				dispatch({ type: "NEW_USER_CONFIRMED_IN_NEW_REPO" });
@@ -208,7 +208,7 @@ export const authenticate = params => (dispatch, getState, { http }) => {
 	dispatch(requestStarted());
 	return http
 		.put("/no-auth/login", params)
-		.then(async ({ accessToken, user, teams, repos }) => {
+		.then(async ({ accessToken, user, teams, repos, pubnubKey }) => {
 			dispatch(requestFinished());
 			user = normalize(user);
 
@@ -235,7 +235,7 @@ export const authenticate = params => (dispatch, getState, { http }) => {
 			const teamIdsForUser = user.teamIds || userTeams.map(team => team.id);
 
 			const sessionId = UUID();
-			dispatch(initializeSession({ accessToken, userId: user.id, sessionId }));
+			dispatch(initializeSession({ accessToken, userId: user.id, sessionId, pubnubSubscribeKey: pubnubKey }));
 
 			let teamIdForRepo = context.currentTeamId;
 			if (!teamIdForRepo) {

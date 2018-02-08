@@ -17,13 +17,12 @@ export default class PubNubReceiver {
 		this.subscriptions = {};
 	}
 
-	initialize(authKey, userId, sessionId) {
+	initialize(authKey, userId, sessionId, subscribeKey) {
 		const uuid = `${userId}/${sessionId}`;
 		this.pubnub = new PubNub({
 			authKey,
 			uuid,
-			publishKey: "pub-c-8603fed4-39da-4feb-a82e-cf5311ddb4d6",
-			subscribeKey: "sub-c-e830d7da-fb14-11e6-9f57-02ee2ddab7fe",
+			subscribeKey: subscribeKey,
 			restore: true,
 			logVerbosity: false,
 			heartBeatInterval: 30

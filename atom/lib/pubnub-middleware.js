@@ -35,7 +35,7 @@ const _initializePubnubAndSubscribe = async (store, receiver) => {
 
 	store.dispatch({ type: "CATCHING_UP" });
 
-	receiver.initialize(session.accessToken, session.userId, session.sessionId);
+	receiver.initialize(session.accessToken, session.userId, session.sessionId, session.pubnubSubscribeKey);
 	receiver.subscribe(channels);
 	if (!ticksInitiated) {
 		_initiateTicks(store, receiver);
