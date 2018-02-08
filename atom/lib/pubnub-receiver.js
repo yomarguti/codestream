@@ -5,7 +5,7 @@ import { normalize } from "./actions/utils";
 import { resolveFromPubnub } from "./actions/pubnub-event";
 import { saveMarkerLocations } from "./actions/marker-location";
 import { fetchStreamsAndAllPosts } from "./actions/stream";
-import { lastMessageReceived, historyRetrievalFailure } from "./actions/messaging";
+import { caughtUp, lastMessageReceived, historyRetrievalFailure } from "./actions/messaging";
 import rootLogger from "./util/Logger";
 import PubnubSubscription from "./pubnub-subscription";
 
@@ -172,7 +172,7 @@ export default class PubNubReceiver {
 			// assuming there's nothing cached yet and this is a clean slate
 			return this.store
 				.dispatch(fetchStreamsAndAllPosts())
-				.then(() => this.store.dispatch({ type: "CAUGHT_UP" }));
+				.then(() => this.store.dispatch(caughtUp()));
 		}
 	}
 
@@ -199,7 +199,7 @@ export default class PubNubReceiver {
 			const lastMessage = allMessages[allMessages.length - 1];
 			this.store.dispatch(lastMessageReceived(lastMessage.timetoken));
 		} else {
-			this.store.dispatch({ type: "CAUGHT_UP" });
+			this.store.dispatch(caughtUp());
 		}
 
 		for (var message of allMessages) {

@@ -1,6 +1,6 @@
 import PubNubReceiver from "./pubnub-receiver";
 import { fetchCurrentUser } from "./actions/user";
-import { subscriptionFailure } from "./actions/messaging";
+import { catchingUp, caughtUp, subscriptionFailure } from "./actions/messaging";
 
 let lastTick = null;
 let ticksInitiated = false;
@@ -33,7 +33,7 @@ const _initializePubnubAndSubscribe = async (store, receiver) => {
 		channels.push(`repo-${context.currentRepoId}`);
 	}
 
-	store.dispatch({ type: "CATCHING_UP" });
+	store.dispatch(catchingUp());
 
 	receiver.initialize(session.accessToken, session.userId, session.sessionId, session.pubnubSubscribeKey);
 	receiver.subscribe(channels);
@@ -55,7 +55,7 @@ export default store => {
 			processedHistoryCount += 1;
 			// console.debug(`${processedHistoryCount} - processing history`, action);
 			if (processedHistoryCount === historyCount) {
-				next({ type: "CAUGHT_UP" });
+				next(caughtUp());
 				historyCount = processedHistoryCount = 0;
 			}
 		}
