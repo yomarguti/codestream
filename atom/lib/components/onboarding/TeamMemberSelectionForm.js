@@ -273,7 +273,7 @@ export class SimpleTeamMemberSelectionForm extends Component {
 				<div className="footer">
 					<FormattedMessage
 						id="teamMemberSelection.footer"
-						defaultMessage="Don't worry, we won't send out any invitation emails!"
+						defaultMessage="We'll only send emails when you post messages."
 					/>
 				</div>
 			</div>
