@@ -13,7 +13,8 @@ export const resolveFromPubnub = (tableName, changes, isHistory) => (
 		return upsert(db, tableName, changes).then(record =>
 			dispatch({
 				type: `${tableName.toUpperCase()}-${isHistory ? "HISTORY" : "UPDATE"}_FROM_PUBNUB`,
-				payload: record
+				payload: record,
+				isHistory
 			})
 		);
 };

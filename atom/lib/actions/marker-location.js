@@ -9,7 +9,11 @@ import rootLogger from "../util/Logger";
 
 const logger = rootLogger.forClass("actions/marker-location");
 
-export const saveMarkerLocations = attributes => (dispatch, getState, { db }) => {
+export const saveMarkerLocations = (attributes, isHistory = false) => (
+	dispatch,
+	getState,
+	{ db }
+) => {
 	logger.trace(".saveMarkerLocations");
 	const { streamId, teamId, commitHash, locations } = attributes;
 
@@ -30,7 +34,7 @@ export const saveMarkerLocations = attributes => (dispatch, getState, { db }) =>
 			}
 			return db.markerLocations.get(primaryKey);
 		})
-		.then(record => dispatch({ type: "ADD_MARKER_LOCATIONS", payload: record }));
+		.then(record => dispatch({ type: "ADD_MARKER_LOCATIONS", payload: record, isHistory }));
 };
 
 export const markerDirtied = ({ markerId, streamId }, location) => (dispatch, getState, { db }) => {

@@ -6,12 +6,11 @@ import { resolveFromPubnub } from "./actions/pubnub-event";
 import { saveMarkerLocations } from "./actions/marker-location";
 import { lastMessageReceived, historyRetrievalFailure } from "./actions/messaging";
 import rootLogger from "./util/Logger";
-import PubnubSubscription from "./pubnub-subscription"
+import PubnubSubscription from "./pubnub-subscription";
 
 const logger = rootLogger.forClass("pubnub-receiver");
 
 export default class PubNubReceiver {
-
 	constructor(store) {
 		this.store = store;
 		this.subscriptions = {};
@@ -48,9 +47,9 @@ export default class PubNubReceiver {
 			// this sucks ... pubnub does not send us the channel that failed,
 			// meaning that if we try to subscribe to two channels around the same
 			// time, we can't know which one this is a status error for ...
-			// so we'll spit out the error here, but we'll have to rely on the 
+			// so we'll spit out the error here, but we'll have to rely on the
 			// subscription timeout to actually handle the failure
-			console.warn('PUBNUB STATUS ERROR: ', status);
+			console.warn("PUBNUB STATUS ERROR: ", status);
 			Raven.captureBreadcrumb({
 				message: `Pubnub status error: ${JSON.stringify(status)}`,
 				category: "pubnub",
@@ -73,10 +72,10 @@ export default class PubNubReceiver {
 
 	pubnubEvent(event) {
 		this.store.dispatch(lastMessageReceived(event.timetoken));
-		this.pubnubMessage(event.timetoken, event.message);
+		this.pubnubMessage(event.message);
 	}
 
-	pubnubMessage(timetoken, message, { isHistory = false } = {}) {
+	pubnubMessage(message, { isHistory = false } = {}) {
 		const { requestId, ...objects } = message;
 		// console.log(`pubnub event - ${requestId}`, message);
 		Raven.captureBreadcrumb({
@@ -89,9 +88,6 @@ export default class PubNubReceiver {
 			const handler = this.getMessageHandler(key);
 			if (handler) handler(objects[key], isHistory);
 		});
-		if (isHistory) {
-			if (this.lastHistoryTimeToken === timetoken) this.store.dispatch({ type: "CAUGHT_UP" });
-		}
 	}
 
 	subscribe(channels) {
@@ -148,7 +144,8 @@ export default class PubNubReceiver {
 				tableName = "markers";
 				break;
 			case "markerLocations":
-				return data => this.store.dispatch(saveMarkerLocations(normalize(data)));
+				return (data, isHistory) =>
+					this.store.dispatch(saveMarkerLocations(normalize(data), isHistory));
 		}
 		if (tableName)
 			return (data, isHistory) =>
@@ -156,10 +153,12 @@ export default class PubNubReceiver {
 	}
 
 	getSubscribedChannels() {
-		return Object.keys(this.subscriptions).filter(channel => this.subscriptions[channel].isSubscribed());
+		return Object.keys(this.subscriptions).filter(channel =>
+			this.subscriptions[channel].isSubscribed()
+		);
 	}
 
-	async retrieveHistory(channels, messaging = {}) {
+	retrieveHistory(channels, messaging = {}) {
 		let retrieveSince;
 		channels = channels || this.getSubscribedChannels();
 		if (messaging.lastMessageReceived) {
@@ -172,7 +171,7 @@ export default class PubNubReceiver {
 		// FIXME: there probably needs to be a time limit here, where we assume it isn't
 		// worth replaying all the messages ... instead we just wipe the DB and refresh
 		// the session ... maybe a week?
-		return await this.retrieveHistorySince(channels, retrieveSince);
+		return this.retrieveHistorySince(channels, retrieveSince);
 	}
 
 	async retrieveHistorySince(channels, timeToken) {
@@ -196,16 +195,15 @@ export default class PubNubReceiver {
 		if (allMessages.length > 0) {
 			// store the last message received, so we know where to start from next time
 			const lastMessage = allMessages[allMessages.length - 1];
-			this.lastHistoryTimeToken = lastMessage.timetoken;
 			this.store.dispatch(lastMessageReceived(lastMessage.timetoken));
-		} 
-		else {
+		} else {
 			this.store.dispatch({ type: "CAUGHT_UP" });
 		}
 
 		for (var message of allMessages) {
-			this.pubnubMessage(message.timetoken, message.entry, { isHistory: true });
+			this.pubnubMessage(message.entry, { isHistory: true });
 		}
+		return allMessages.length;
 	}
 
 	async retrieveChannelHistorySince(channel, timeToken, allMessages) {

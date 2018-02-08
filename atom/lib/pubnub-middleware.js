@@ -46,9 +46,19 @@ const _initializePubnubAndSubscribe = async (store, receiver) => {
 export default store => {
 	const receiver = new PubNubReceiver(store);
 
-	return next => action => {
+	let historyCount;
+	let processedHistoryCount = 0;
+	return next => async action => {
 		const result = next(action);
 
+		if (action.isHistory) {
+			processedHistoryCount += 1;
+			// console.debug(`${processedHistoryCount} - processing history`, action);
+			if (processedHistoryCount === historyCount) {
+				next({ type: "CAUGHT_UP" });
+				historyCount = processedHistoryCount = 0;
+			}
+		}
 		// Once data has been loaded from indexedDB, if continuing a session,
 		// find current user and subscribe to channels
 		// fetch the latest version of the current user object
@@ -56,7 +66,7 @@ export default store => {
 			const { session, onboarding } = store.getState();
 			if (onboarding.complete && session.accessToken) {
 				store.dispatch(fetchCurrentUser());
-				_initializePubnubAndSubscribe(store, receiver);
+				historyCount = await _initializePubnubAndSubscribe(store, receiver);
 			}
 		}
 		// When starting a new session, subscribe to channels
@@ -67,7 +77,7 @@ export default store => {
 			action.type === "EXISTING_USER_LOGGED_INTO_NEW_REPO" ||
 			action.type === "NEW_USER_LOGGED_INTO_NEW_REPO"
 		) {
-			_initializePubnubAndSubscribe(store, receiver);
+			historyCount = await _initializePubnubAndSubscribe(store, receiver);
 		}
 
 		// As context changes, subscribe
@@ -86,7 +96,7 @@ export default store => {
 		// if we come online after a period of being offline, retrieve message history
 		if (action.type === "ONLINE") {
 			const { messaging } = store.getState();
-			receiver.retrieveHistory(null, messaging);
+			historyCount = await receiver.retrieveHistory(null, messaging);
 		}
 
 		return result;
