@@ -159,12 +159,20 @@ module.exports = {
 	},
 
 	serialize() {
-		const { session, onboarding, context, repoAttributes, messaging } = store.getState();
+		const {
+			session,
+			onboarding,
+			context,
+			repoAttributes,
+			messaging,
+			markerLocationRecalculation
+		} = store.getState();
 		return {
 			onboarding: { ...onboarding, errors: {} },
 			context,
 			session,
 			repoAttributes,
+			markerLocationRecalculation,
 			messaging: {
 				...messaging,
 				failedSubscriptions: [],
@@ -203,7 +211,7 @@ module.exports = {
 								let path = repo.relativize(editor.getPath());
 								// note we always maintain the current file with a forward slash separator
 								// even if we are on a Windows machine using a backslash
-								path = path.replace('\\', '/'); 
+								path = path.replace("\\", "/");
 								store.dispatch(setCurrentFile(path));
 							});
 						}

@@ -4,7 +4,7 @@ export default (state = initialState, { type, payload }) => {
 	switch (type) {
 		case "LOCATION_CALCULATED": {
 			return {
-				...state.lastCalculation,
+				...state,
 				[payload.path]: payload.hash
 			}
 		}

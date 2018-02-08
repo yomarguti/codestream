@@ -151,7 +151,6 @@ export class SimpleStream extends Component {
 				type: "highlight",
 				class: "codestream-highlight"
 			});
-
 		}
 	}
 
@@ -352,7 +351,7 @@ export class SimpleStream extends Component {
 					references={this.props.markers}
 					onSelect={this.selectPost}
 				/>
-				<MarkerLocationTracker teamId={this.props.teamId} streamId={this.props.id} />
+				<MarkerLocationTracker />
 				<div
 					className={postsListClass}
 					ref={ref => (this._postslist = ref)}
