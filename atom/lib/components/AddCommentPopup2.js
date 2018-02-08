@@ -49,7 +49,6 @@ export default class AddCommentPopup extends Component {
 			item.onclick = () => {
 				this.props.onClick();
 				this.destroyMarker();
-				this.tooltip.dispose();
 			};
 			editor.decorateMarker(this.marker, {
 				item,
@@ -63,13 +62,13 @@ export default class AddCommentPopup extends Component {
 	destroyMarker = () => {
 		this.marker && this.marker.destroy();
 		this.marker = null;
+		this.tooltip && this.tooltip.dispose();
 	};
 
 	reset = () => {
 		this.destroyMarker();
 		this.subscriptions.dispose();
 		this.subscriptions = new CompositeDisposable();
-		this.tooltip && this.tooltip.dispose();
 	};
 
 	render() {
