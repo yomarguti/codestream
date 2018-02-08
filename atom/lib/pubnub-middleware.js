@@ -22,7 +22,7 @@ const _initiateTicks = (store, receiver) => {
 	ticksInitiated = true;
 };
 
-const _initializePubnubAndSubscribe = async (store, receiver) => {
+const _initializePubnubAndSubscribe = async (store, receiver, catchup = true) => {
 	const { context, users, session, messaging } = store.getState();
 	const user = users[session.userId];
 	const teamChannels = (user.teamIds || []).map(id => `team-${id}`);
@@ -33,20 +33,26 @@ const _initializePubnubAndSubscribe = async (store, receiver) => {
 		channels.push(`repo-${context.currentRepoId}`);
 	}
 
-	store.dispatch(catchingUp());
-
-	receiver.initialize(session.accessToken, session.userId, session.sessionId, session.pubnubSubscribeKey);
+	receiver.initialize(
+		session.accessToken,
+		session.userId,
+		session.sessionId,
+		session.pubnubSubscribeKey
+	);
 	receiver.subscribe(channels);
 	if (!ticksInitiated) {
 		_initiateTicks(store, receiver);
 	}
-	return receiver.retrieveHistory(channels, messaging);
+	if (catchup) {
+		store.dispatch(catchingUp());
+		return receiver.retrieveHistory(channels, messaging);
+	} else return 0;
 };
 
 export default store => {
 	const receiver = new PubNubReceiver(store);
 
-	let historyCount;
+	let historyCount = 0;
 	let processedHistoryCount = 0;
 	return next => async action => {
 		const result = next(action);
@@ -70,15 +76,18 @@ export default store => {
 			}
 		}
 		// When starting a new session, subscribe to channels
-		if (
-			action.type === "LOGGED_IN" ||
-			action.type === "ONBOARDING_COMPLETE" ||
-			action.type === "USER_CONFIRMED" ||
-			action.type === "EXISTING_USER_LOGGED_INTO_NEW_REPO" ||
-			action.type === "NEW_USER_LOGGED_INTO_NEW_REPO"
-		) {
+		if (action.type === "LOGGED_IN" || action.type === "ONBOARDING_COMPLETE") {
 			historyCount = await _initializePubnubAndSubscribe(store, receiver);
 		}
+
+		// Don't try to catchup when user is doing first onboarding
+		if (
+			action.type === "USER_CONFIRMED" ||
+			action.type === "NEW_USER_LOGGED_INTO_NEW_REPO" ||
+			action.type === "NEW_USER_CONFIRMED_IN_NEW_REPO" ||
+			action.type === "EXISTING_USER_LOGGED_INTO_NEW_REPO"
+		)
+			_initializePubnubAndSubscribe(store, receiver, false);
 
 		// As context changes, subscribe
 		if (receiver.isInitialized()) {
