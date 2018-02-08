@@ -69,6 +69,7 @@ export default class AddCommentPopup extends Component {
 		this.destroyMarker();
 		this.subscriptions.dispose();
 		this.subscriptions = new CompositeDisposable();
+		this.tooltip.dispose();
 	};
 
 	render() {
