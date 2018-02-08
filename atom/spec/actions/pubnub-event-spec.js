@@ -55,7 +55,8 @@ describe("resolveFromPubnub action creator", () => {
 					expect(record).toEqual(expected);
 					expect(dispatch).toHaveBeenCalledWith({
 						type: "RECORDS-UPDATE_FROM_PUBNUB",
-						payload: expected
+						payload: expected,
+						isHistory: false
 					});
 				});
 			});
@@ -86,11 +87,13 @@ describe("resolveFromPubnub action creator", () => {
 					expect(records).toContain(expectedRecord2);
 					expect(dispatch).toHaveBeenCalledWith({
 						type: "RECORDS-UPDATE_FROM_PUBNUB",
-						payload: expectedRecord1
+						payload: expectedRecord1,
+						isHistory: false
 					});
 					expect(dispatch).toHaveBeenCalledWith({
 						type: "RECORDS-UPDATE_FROM_PUBNUB",
-						payload: expectedRecord2
+						payload: expectedRecord2,
+						isHistory: false
 					});
 				});
 			});
@@ -112,7 +115,8 @@ describe("resolveFromPubnub action creator", () => {
 					expect(record).toEqual(expected);
 					expect(dispatch).toHaveBeenCalledWith({
 						type: "RECORDS-HISTORY_FROM_PUBNUB",
-						payload: expected
+						payload: expected,
+						isHistory: true
 					});
 				});
 			});

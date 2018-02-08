@@ -1,6 +1,6 @@
 import { upsert } from "../local-cache";
 
-export const resolveFromPubnub = (tableName, changes, isHistory) => (
+export const resolveFromPubnub = (tableName, changes, isHistory = false) => (
 	dispatch,
 	getState,
 	{ db }

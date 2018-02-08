@@ -42,7 +42,8 @@ describe("marker-location action creators", () => {
 				await store.dispatch(saveMarkerLocations(markerLocations));
 				expect(store.getActions()).toContain({
 					type: "ADD_MARKER_LOCATIONS",
-					payload: markerLocations
+					payload: markerLocations,
+					isHistory: false
 				});
 				const record = await db.markerLocations.get({ streamId, teamId, commitHash });
 				expect(record).toEqual(markerLocations);
@@ -76,7 +77,8 @@ describe("marker-location action creators", () => {
 
 				expect(store.getActions()).toContain({
 					type: "ADD_MARKER_LOCATIONS",
-					payload: expectedRecord
+					payload: expectedRecord,
+					isHistory: false
 				});
 				const record = await db.markerLocations.get({ streamId, teamId, commitHash });
 				expect(record).toEqual(expectedRecord);
