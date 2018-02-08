@@ -8,16 +8,19 @@ let processedHistoryCount = 0;
 let lastTick = null;
 let ticksInitiated = false;
 const _initiateTicks = (store, receiver) => {
-	// start a ticking clock, look for anything that misses a tick by more than a whole second
+	// start a ticking clock, look for anything that misses a tick by more than 10 seconds.
+	// stuff like breakpoints, alerts, and context menu interactions will halt js processing and would cause ticking to stop, which could lead to false positives for wake events
 	setInterval(async () => {
 		const now = Date.now();
-		if (lastTick && now - lastTick > 3000) {
+		if (lastTick && now - lastTick > 10000) {
 			// we'll assume this is a laptop sleep event or something that otherwise
 			// stopped execution for longer than expected ... we'll make sure we're
 			// subscribed to the channels we need to be and fetch history to catch up,
 			// in case we missed any messages
 			// console.debug("WAKING FROM SLEEP");
 			receiver.unsubscribeAll();
+			// restart the count for history processed
+			processedHistoryCount = 0;
 			historyCount = await _initializePubnubAndSubscribe(store, receiver);
 		}
 		lastTick = now;
