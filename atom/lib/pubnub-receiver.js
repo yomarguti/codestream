@@ -4,6 +4,7 @@ import _ from "underscore-plus";
 import { normalize } from "./actions/utils";
 import { resolveFromPubnub } from "./actions/pubnub-event";
 import { saveMarkerLocations } from "./actions/marker-location";
+import { fetchStreamsAndAllPosts } from "./actions/stream";
 import { lastMessageReceived, historyRetrievalFailure } from "./actions/messaging";
 import rootLogger from "./util/Logger";
 import PubnubSubscription from "./pubnub-subscription";
@@ -163,15 +164,16 @@ export default class PubNubReceiver {
 		channels = channels || this.getSubscribedChannels();
 		if (messaging.lastMessageReceived) {
 			retrieveSince = messaging.lastMessageReceived;
+			// FIXME: there probably needs to be a time limit here, where we assume it isn't
+			// worth replaying all the messages ... instead we just wipe the DB and refresh
+			// the session ... maybe a week?
+			return this.retrieveHistorySince(channels, retrieveSince);
 		} else {
-			// once this mechanism is in operation this should never happen, but until then,
-			// we'll need to invent a beginning of time (like before codestream existed)
-			retrieveSince = (new Date("1/1/2018").getTime() * 10000).toString();
+			// assuming there's nothing cached yet and this is a clean slate
+			return this.store
+				.dispatch(fetchStreamsAndAllPosts())
+				.then(() => this.store.dispatch({ type: "CAUGHT_UP" }));
 		}
-		// FIXME: there probably needs to be a time limit here, where we assume it isn't
-		// worth replaying all the messages ... instead we just wipe the DB and refresh
-		// the session ... maybe a week?
-		return this.retrieveHistorySince(channels, retrieveSince);
 	}
 
 	async retrieveHistorySince(channels, timeToken) {

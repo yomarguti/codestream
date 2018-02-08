@@ -1,4 +1,5 @@
 import Raven from "raven-js";
+import _ from "underscore-plus";
 import { upsert } from "../local-cache";
 import { normalize } from "./utils";
 import { fetchMarkersAndLocations } from "./marker-location";
@@ -39,6 +40,37 @@ export const fetchLatestPosts = streams => (dispatch, getState, { db, http }) =>
 			const cachedPosts = await db.posts.where({ streamId: stream.id }).sortBy("seqNum");
 			const mostRecentCachedPost = cachedPosts[cachedPosts.length - 1];
 			return dispatch(fetchLatest(mostRecentCachedPost, stream.id, stream.teamId));
+		})
+	);
+};
+
+// FIXME: tech debt. these next two functions are only for use when starting with a clean local cache until
+// the streams support lazy loading and infinite lists
+const fetchOlderPosts = (mostRecentPost, streamId, teamId) => async (
+	dispatch,
+	getState,
+	{ http }
+) => {
+	const { context, session } = getState();
+	let url = `/posts?teamId=${teamId}&streamId=${streamId}&withMarkers&commitHash=${
+		context.currentCommit
+	}`;
+	if (mostRecentPost) url += `&lt=${mostRecentPost.id}`;
+	const { posts, markers, markerLocations, more } = await http.get(url, session.accessToken);
+	const normalizedMarkers = normalize(markers || []);
+	dispatch(saveMarkers(normalizedMarkers));
+	if (markerLocations) dispatch(saveMarkerLocations(markerLocations));
+	const normalizedPosts = normalize(posts);
+	const save = dispatch(savePostsForStream(streamId, normalizedPosts));
+	if (more)
+		return dispatch(fetchOlderPosts(normalizedPosts[normalizedPosts.length - 1], streamId, teamId));
+	else return save;
+};
+
+export const fetchAllPosts = streams => (dispatch, getState, {}) => {
+	return Promise.all(
+		streams.map(async stream => {
+			dispatch(fetchOlderPosts(null, stream.id, stream.teamId));
 		})
 	);
 };
