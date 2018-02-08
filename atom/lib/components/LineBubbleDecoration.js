@@ -13,7 +13,7 @@ export default class LineBubbleDecoration extends Component {
 		this.logger = rootLogger.forObject("components/LineBubbleDecoration");
 		this.item = document.createElement("div");
 		this.item.classList.add("codestream-comment-popup");
-		atom.tooltips.add(this.item, { title: "View comments" });
+		this.subscriptions.add(atom.tooltips.add(this.item, { title: "View comments" }));
 
 		// if (reference.location[2] > maxLine) maxLine = reference.location[2] * 1;
 		this.maxLine = props.references.reduce(
