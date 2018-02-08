@@ -27,6 +27,40 @@ import rootLogger from "../util/Logger";
 const Path = require("path");
 const logger = rootLogger.forClass("components/Stream");
 
+const isBlankLine = (buffer, row) => {
+	const line = buffer.lineForRow(row);
+	const result = line.trim() === "";
+
+	return result;
+}
+
+const lastColumn = (buffer, row) => {
+	const line = buffer.lineForRow(row);
+	const result = line.length;
+
+	return result;
+}
+
+const trimSelection = editor => {
+	const range = editor.getSelectedBufferRange();
+	const buffer = editor.getBuffer();
+	let { start, end } = range;
+
+	while (start.row < end.row) {
+		if (isBlankLine(buffer, start.row)) {
+			start.row++;
+			start.column = 0;
+		} else if (isBlankLine(buffer, end.row)) {
+			end.row--;
+			end.column = lastColumn(buffer, end.row);
+		} else {
+			break;
+		}
+	}
+
+	editor.setSelectedBufferRange(range);
+}
+
 export class SimpleStream extends Component {
 	subscriptions = null;
 
@@ -142,7 +176,13 @@ export class SimpleStream extends Component {
 	showDisplayMarker(markerId) {
 		// FIXME -- switch to stream if code is from another buffer
 		const editor = atom.workspace.getActiveTextEditor();
-		const displayMarker = editor.displayMarkers[markerId];
+		const displayMarkers = editor.displayMarkers;
+
+		if (!displayMarkers) {
+			return;
+		}
+
+		const displayMarker = displayMarkers[markerId];
 		if (displayMarker) {
 			const start = displayMarker.getBufferRange().start;
 
@@ -610,6 +650,7 @@ export class SimpleStream extends Component {
 		let editor = atom.workspace.getActiveTextEditor();
 		if (!editor) return;
 
+		trimSelection(editor);
 		var range = editor.getSelectedBufferRange();
 		let code = editor.getSelectedText();
 		// preContext is the 10 lines of code immediately preceeding the selection
