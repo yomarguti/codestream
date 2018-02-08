@@ -8,7 +8,8 @@ let processedHistoryCount = 0;
 let lastTick = null;
 let ticksInitiated = false;
 const _initiateTicks = (store, receiver) => {
-	// start a ticking clock, look for anything that misses a tick by more than a whole second
+	// start a ticking clock, look for anything that misses a tick by more than 10 seconds.
+	// stuff like breakpoints, alerts, and context menu interactions will halt js processing and would cause ticking to stop, which could lead to false positives for wake events
 	setInterval(async () => {
 		const now = Date.now();
 		if (lastTick && now - lastTick > 10000) {
