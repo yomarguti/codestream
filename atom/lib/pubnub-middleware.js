@@ -2,11 +2,14 @@ import PubNubReceiver from "./pubnub-receiver";
 import { fetchCurrentUser } from "./actions/user";
 import { catchingUp, caughtUp, subscriptionFailure } from "./actions/messaging";
 
+// TODO: this feels/is very fragile
+let historyCount = 0;
+let processedHistoryCount = 0;
 let lastTick = null;
 let ticksInitiated = false;
 const _initiateTicks = (store, receiver) => {
 	// start a ticking clock, look for anything that misses a tick by more than a whole second
-	setInterval(() => {
+	setInterval(async () => {
 		const now = Date.now();
 		if (lastTick && now - lastTick > 3000) {
 			// we'll assume this is a laptop sleep event or something that otherwise
@@ -15,7 +18,7 @@ const _initiateTicks = (store, receiver) => {
 			// in case we missed any messages
 			// console.debug("WAKING FROM SLEEP");
 			receiver.unsubscribeAll();
-			_initializePubnubAndSubscribe(store, receiver);
+			historyCount = await _initializePubnubAndSubscribe(store, receiver);
 		}
 		lastTick = now;
 	}, 1000);
@@ -52,8 +55,6 @@ const _initializePubnubAndSubscribe = async (store, receiver, catchup = true) =>
 export default store => {
 	const receiver = new PubNubReceiver(store);
 
-	let historyCount = 0;
-	let processedHistoryCount = 0;
 	return next => async action => {
 		const result = next(action);
 
