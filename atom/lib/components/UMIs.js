@@ -279,6 +279,12 @@ export class SimpleUMIs extends Component {
 		let scrollDiv = event
 			? event.target
 			: document.getElementsByClassName("tool-panel tree-view")[0];
+
+		if (!scrollDiv) {
+			console.log("Couldn't find scrollDiv for ", event);
+			return;
+		}
+
 		let scrollTop = scrollDiv.scrollTop;
 		let containerHeight = scrollDiv.parentNode.offsetHeight;
 
