@@ -675,25 +675,17 @@ export class SimpleStream extends Component {
 			code = editor.getTextInBufferRange(lineRange);
 		}
 
-		var that = this;
 		let filePath = editor.getPath();
 		const directory = atom.project.getDirectories().find(directory => directory.contains(filePath));
-		atom.project.repositoryForDirectory(directory).then(function(projectRepo) {
-			if (!(projectRepo.path in that.projectBlamers)) {
-				that.projectBlamers[projectRepo.path] = new Blamer(projectRepo);
+		atom.project.repositoryForDirectory(directory).then(projectRepo => {
+			if (!(projectRepo.path in this.projectBlamers)) {
+				this.projectBlamers[projectRepo.path] = new Blamer(projectRepo);
 			}
-			var blamer = that.projectBlamers[projectRepo.path];
+			const blamer = this.projectBlamers[projectRepo.path];
 
-			if (!that.blameData[filePath]) {
-				blamer.blame(filePath, function(err, data) {
-					if (!err) {
-						that.blameData[filePath] = data;
-						that.addBlameAtMention(range, data);
-					}
-				});
-			} else {
-				that.addBlameAtMention(range, that.blameData[filePath]);
-			}
+			blamer.blame(filePath, (err, data) => {
+				if (!err) this.addBlameAtMention(range, data);
+			});
 		});
 
 		// not very React-ish but not sure how to set focus otherwise
