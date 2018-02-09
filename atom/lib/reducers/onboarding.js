@@ -53,7 +53,11 @@ export default (state = initialState, { type, payload }) => {
 		case "INVALID_PERMISSION_FOR_TEAM":
 			return { ...state, errors: { noPermission: true } };
 		case "REPO_ADDED_FOR_TEAM":
-			return { ...initialState, step: "identifyMembers", props: { existingTeam: true } };
+			return {
+				...initialState,
+				step: "identifyMembers",
+				props: { existingTeam: true, teamName: payload }
+			};
 		case "INVALID_CREDENTIALS":
 			return { ...state, errors: { invalidCredentials: true } };
 		case "USERNAME_COLLISION_ON_TEAM":

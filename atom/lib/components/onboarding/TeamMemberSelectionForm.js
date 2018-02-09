@@ -56,7 +56,7 @@ export class SimpleTeamMemberSelectionForm extends Component {
 		const repository = this.context.repositories[0];
 		const cwd = repository.getWorkingDirectory();
 		const logFormat = "--format=%an<trim-this>%ae";
-		const cutoffDate = "12 months ago";
+		const cutoffDate = "6 months ago";
 		const recentCommitterData = await git(["log", logFormat, `--since="${cutoffDate}"`], { cwd });
 		const recentCommitters = parseCommitters(recentCommitterData.split("\n"), { selected: true });
 		const olderCommitterData = await git(["log", logFormat, `--before="${cutoffDate}"`], { cwd });
@@ -121,9 +121,18 @@ export class SimpleTeamMemberSelectionForm extends Component {
 			return (
 				<p>
 					<FormattedMessage
-						id="teamMemberSelection.addNewMembersToExistingTeam"
-						defaultMessage="We’ve found some people that you might want to add to the {teamName}."
+						id="teamMemberSelection.existingTeam.peopleToAdd"
+						defaultMessage="Here are some people that have committed to this repo that you might want to add to the {teamName}."
 						values={{ teamName: this.props.teamName }}
+					/>
+				</p>
+			);
+		else
+			return (
+				<p>
+					<FormattedMessage
+						id="teamMemberSelection.newTeam.peopleToAdd"
+						defaultMessage="Here are the people that have committed to this repo. Uncheck anyone no longer on the team."
 					/>
 				</p>
 			);

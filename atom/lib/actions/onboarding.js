@@ -86,7 +86,14 @@ export const confirmEmail = attributes => (dispatch, getState, { http }) => {
 			await dispatch(saveTeams(userTeams));
 			await dispatch(saveRepos(userRepos));
 			const sessionId = UUID();
-			await dispatch(initializeSession({ userId: user.id, accessToken, sessionId, pubnubSubscribeKey: pubnubKey }));
+			await dispatch(
+				initializeSession({
+					userId: user.id,
+					accessToken,
+					sessionId,
+					pubnubSubscribeKey: pubnubKey
+				})
+			);
 
 			if (!teamIdForRepo && userTeams.length === 0)
 				dispatch({ type: "NEW_USER_CONFIRMED_IN_NEW_REPO" });
@@ -158,7 +165,7 @@ export const createTeam = name => (dispatch, getState, { http }) => {
 };
 
 export const addRepoForTeam = teamId => (dispatch, getState, { http }) => {
-	const { repoAttributes, session } = getState();
+	const { repoAttributes, session, teams } = getState();
 	const params = { ...repoAttributes, teamId };
 	dispatch(requestStarted());
 	http
@@ -169,7 +176,7 @@ export const addRepoForTeam = teamId => (dispatch, getState, { http }) => {
 			await dispatch(saveRepo(repo));
 			dispatch(setCurrentRepo(repo.id));
 			dispatch(setCurrentTeam(teamId));
-			dispatch({ type: "REPO_ADDED_FOR_TEAM" });
+			dispatch({ type: "REPO_ADDED_FOR_TEAM", payload: teams[teamId].name });
 		})
 		.catch(error => {
 			dispatch(requestFinished());
@@ -235,7 +242,14 @@ export const authenticate = params => (dispatch, getState, { http }) => {
 			const teamIdsForUser = user.teamIds || userTeams.map(team => team.id);
 
 			const sessionId = UUID();
-			dispatch(initializeSession({ accessToken, userId: user.id, sessionId, pubnubSubscribeKey: pubnubKey }));
+			dispatch(
+				initializeSession({
+					accessToken,
+					userId: user.id,
+					sessionId,
+					pubnubSubscribeKey: pubnubKey
+				})
+			);
 
 			let teamIdForRepo = context.currentTeamId;
 			if (!teamIdForRepo) {
