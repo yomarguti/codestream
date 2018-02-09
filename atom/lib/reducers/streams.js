@@ -26,7 +26,6 @@ export default (state = initialState, { type, payload }) => {
 		case "ADD_STREAMS":
 		case "BOOTSTRAP_STREAMS":
 			return payload.reduce(addStream, state);
-		case "STREAMS-HISTORY_FROM_PUBNUB":
 		case "STREAMS-UPDATE_FROM_PUBNUB":
 		case "ADD_STREAM":
 			return addStream(state, payload);

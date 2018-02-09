@@ -6,7 +6,6 @@ export default (state = initialState, { type, payload }) => {
 	switch (type) {
 		case "BOOTSTRAP_USERS":
 			return toMapBy("id", payload);
-		case "USERS-HISTORY_FROM_PUBNUB":
 		case "USERS-UPDATE_FROM_PUBNUB":
 		case "ADD_USER":
 			return { ...state, [payload.id]: payload };

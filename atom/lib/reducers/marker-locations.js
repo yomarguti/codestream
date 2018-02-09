@@ -28,7 +28,6 @@ export default (state = initialState, { type, payload }) => {
 				initialState
 			);
 		}
-		case "MARKERLOCATIONS-HISTORY_FROM_PUBNUB":
 		case "MARKERLOCATIONS-UPDATE_FROM_PUBNUB":
 		case "MARKER_DIRTIED":
 		case "ADD_MARKER_LOCATIONS":

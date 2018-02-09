@@ -100,7 +100,7 @@ describe("resolveFromPubnub action creator", () => {
 		});
 
 		describe("historical updates", () => {
-			it("dispatches a 'HISTORY_FROM_PUBNUB' action", () => {
+			it("have isHistory as true", () => {
 				const id = "id1";
 				const changes = {
 					id,
@@ -114,7 +114,7 @@ describe("resolveFromPubnub action creator", () => {
 
 					expect(record).toEqual(expected);
 					expect(dispatch).toHaveBeenCalledWith({
-						type: "RECORDS-HISTORY_FROM_PUBNUB",
+						type: "RECORDS-UPDATE_FROM_PUBNUB",
 						payload: expected,
 						isHistory: true
 					});
