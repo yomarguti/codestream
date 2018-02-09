@@ -19,8 +19,8 @@ export default (initialState = {}) => {
 				pubnubMiddleWare,
 				umiMiddleWare,
 				createRavenMiddleware(Raven, {
-					stateTransformer: ({ context, session, repoAttributes }) => {
-						return { context, session: { ...session, accessToken: "" }, repoAttributes };
+					stateTransformer: ({ context, session, repoAttributes, messaging }) => {
+						return { context, session: { ...session, accessToken: "" }, repoAttributes, messaging };
 					},
 					getUserContext: ({ context, session, users }) => {
 						if (session.userId) return users[session.userId];
