@@ -13,28 +13,6 @@ Enzyme.configure({ adapter: new Adapter() });
 const store = createStore({ connectivity: { offline: false } });
 
 describe("EmailConfirmationForm view", () => {
-	describe("input fields", () => {
-		const view = mountWithIntl(
-			<Provider store={store}>
-				<SimpleEmailConfirmationForm errors={{}} />
-			</Provider>
-		);
-
-		it("they won't accept non-numerical values", () => {
-			view.find("input").forEach(input => input.simulate("change", { target: { value: "a" } }));
-			view.find("input").forEach(input => {
-				expect(input.prop("value")).toBe("");
-			});
-		});
-
-		it("they will accept numerical values", () => {
-			view.find("input").forEach(input => input.simulate("change", { target: { value: "1" } }));
-			view.find("input").forEach(input => {
-				expect(input.prop("value")).toBe("1");
-			});
-		});
-	});
-
 	describe("'Change it' link", () => {
 		it("calls the goToSignup function", () => {
 			const goToSignup = jasmine.createSpy();
