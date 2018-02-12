@@ -1,4 +1,4 @@
-const PRODUCTION_URL = "https://api.codestream.com";
+export const PRODUCTION_URL = "https://api.codestream.com";
 
 // Babel doesn't support extending native Objects like Error, Array, etc.
 // so extending Error for custom errors is done the old fashioned way. https://github.com/chaijs/chai/issues/909

@@ -22,6 +22,7 @@ import { commitNewMarkerLocations, refreshMarkersAndLocations } from "./actions/
 import logger from "./util/Logger";
 import { online, offline } from "./actions/connectivity";
 import { open as openRepo } from "./git/GitRepo";
+import { PRODUCTION_URL } from "./network-request";
 
 Raven.config("https://46fd0a63e10340b585d895d333fec719@sentry.io/280733", {
 	captureUnhandledRejections: true,
@@ -145,6 +146,10 @@ module.exports = {
 					},
 					"codestream:point-to-qa": () => {
 						atom.config.set("codestream.url", "https://qa-api.codestream.us");
+						atom.commands.dispatch(document.querySelector("atom-workspace"), "codestream:logout");
+					},
+					"codestream:point-to-production": () => {
+						atom.config.set("codestream.url", PRODUCTION_URL);
 						atom.commands.dispatch(document.querySelector("atom-workspace"), "codestream:logout");
 					}
 				})
