@@ -5,6 +5,7 @@ import { connect } from "react-redux";
 import PropTypes from "prop-types";
 import getSystemUser from "username";
 import Button from "./Button";
+import Tooltip from "../Tooltip";
 import UnexpectedErrorMessage from "./UnexpectedErrorMessage";
 import * as actions from "../../actions/onboarding";
 const { CompositeDisposable } = require("atom");
@@ -237,6 +238,14 @@ export class SimpleSignupForm extends Component {
 							onBlur={this.onBlurPassword}
 						/>
 						{this.renderPasswordHelp()}
+					</div>
+					<div id="invitation-code-controls" className="control-group">
+						<label>
+							<FormattedMessage id="invitationCode.label" defaultMessage="Invitation Code" />
+						</label>
+						<Tooltip title="Invitation code provided to your team" placement="left" delay="0">
+							<input className="native-key-bindings input-text" type="text" />
+						</Tooltip>
 					</div>
 					<Button
 						id="signup-button"
