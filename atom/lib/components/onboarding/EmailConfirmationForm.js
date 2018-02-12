@@ -15,7 +15,7 @@ export class SimpleEmailConfirmationForm extends Component {
 		this.setState(
 			state => {
 				const values = state.values.slice();
-				values[index] = value;
+				values[index] = Number(value);
 				return { values };
 			},
 			() => {
@@ -133,6 +133,7 @@ export class SimpleEmailConfirmationForm extends Component {
 							<input
 								className="native-key-bindings input-text"
 								type="number"
+								min="0"
 								maxLength="1"
 								tabIndex={index}
 								ref={element => (this[`input${index}`] = element)}
