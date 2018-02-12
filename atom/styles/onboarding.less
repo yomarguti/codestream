@@ -4,6 +4,10 @@
 .onboarding-screen {
 	max-width: 225px;
 	width: 75%;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	height: 100%;
 
 	h2 {
 		text-align: center;
@@ -36,10 +40,6 @@
 	#login-form,
 	#change-username-form {
 		.onboarding-screen;
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		height: 100%;
 
 		#controls {
 			label {
@@ -166,6 +166,7 @@
 
 		#submit-button {
 			width: 100%;
+			font-size: 1.15em;
 		}
 	}
 
@@ -178,6 +179,7 @@
 		}
 		#submit-button {
 			width: 100%;
+			font-size: 1.15em;
 		}
 
 		.control-group {
@@ -188,17 +190,17 @@
 	#team-member-selection {
 		.onboarding-screen;
 
-		height: inherit;
-		overflow-y: scroll;
+		// height: inherit;
 
 		ul {
 			padding: 0;
 			list-style-type: none;
-			max-height: 50%;
 		}
 
 		.select-members-form {
-			height: 100%;
+			// height: 100%;
+			overflow-y: scroll;
+			max-height: 50%;
 		}
 
 		.error-message {
@@ -218,6 +220,22 @@
 		}
 		.committer-name {
 			font-weight: bold;
+			color: @text-color-highlight;
+		}
+		.input-label {
+			position: relative;
+		}
+		.committer-info {
+			box-sizing: border-box;
+			padding-left: 2em;
+			width: 100%;
+			word-wrap: break-word;
+		}
+		input[type="checkbox"] {
+			margin-left: 0;
+			position: absolute;
+			top: 4px;
+			left: 0;
 		}
 
 		.help-text {
@@ -230,6 +248,7 @@
 
 		#submit-button {
 			width: 100%;
+			font-size: 1.15em;
 		}
 
 		.transforming-line {
