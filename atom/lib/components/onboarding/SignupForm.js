@@ -50,34 +50,18 @@ export class SimpleSignupForm extends Component {
 		const { repositories } = this.context;
 		const repository = repositories[0];
 		const gitDirectory = repository.getWorkingDirectory();
-		const defaultEmail = repository.getConfigValue("user.email", gitDirectory);
+		const defaultEmail = (this.defaultEmail = repository.getConfigValue(
+			"user.email",
+			gitDirectory
+		));
 		this.setState({
 			email: defaultEmail || "",
 			name: repository.getConfigValue("user.name", gitDirectory) || ""
 		});
-
-		this.addToolTip(
-			"onboard-input-username",
-			"Up to 21 characters. Valid special characters are (.-_)"
-		);
-		this.addToolTip("onboard-input-password", "6+ characters");
-		if (defaultEmail) this.addToolTip("onboard-input-email", "Defaulted from git");
 	}
 
 	componentWillUnmount() {
 		this.subscriptions.dispose();
-	}
-
-	addToolTip(elementId, key) {
-		let div = document.getElementById(elementId);
-		if (!div) return;
-		this.subscriptions.add(
-			atom.tooltips.add(div, {
-				title: key,
-				placement: "left",
-				delay: 0
-			})
-		);
 	}
 
 	onBlurUsername = () => {
@@ -191,52 +175,63 @@ export class SimpleSignupForm extends Component {
 						<label>
 							<FormattedMessage id="signUp.email.label" />
 						</label>
-						<input
-							id="onboard-input-email"
-							className="native-key-bindings input-text"
-							type="text"
-							name="email"
-							placeholder="Email Address"
-							tabIndex="0"
-							value={this.state.email}
-							onChange={e => this.setState({ email: e.target.value })}
-							onBlur={this.onBlurEmail}
-						/>
+						<Tooltip
+							title={`${this.defaultEmail ? "Defaulted from git" : ""}`}
+							delay="0"
+							placement="left"
+						>
+							<input
+								className="native-key-bindings input-text"
+								type="text"
+								name="email"
+								placeholder="Email Address"
+								tabIndex="0"
+								value={this.state.email}
+								onChange={e => this.setState({ email: e.target.value })}
+								onBlur={this.onBlurEmail}
+							/>
+						</Tooltip>
 						{this.renderEmailHelp()}
 					</div>
 					<div id="username-controls" className="control-group">
 						<label>
 							<FormattedMessage id="signUp.username.label" />
 						</label>
-						<input
-							id="onboard-input-username"
-							className="native-key-bindings input-text"
-							type="text"
-							name="username"
-							placeholder="Username"
-							minLength="1"
-							maxLength="21"
-							tabIndex="1"
-							value={this.state.username}
-							onChange={event => this.setState({ username: event.target.value })}
-							onBlur={this.onBlurUsername}
-						/>
+						<Tooltip
+							title="Up to 21 characters. Valid special characters are (.-_)"
+							delay="0"
+							placement="left"
+						>
+							<input
+								className="native-key-bindings input-text"
+								type="text"
+								name="username"
+								placeholder="Username"
+								minLength="1"
+								maxLength="21"
+								tabIndex="1"
+								value={this.state.username}
+								onChange={event => this.setState({ username: event.target.value })}
+								onBlur={this.onBlurUsername}
+							/>
+						</Tooltip>
 						{this.renderUsernameHelp()}
 					</div>
 					<div id="password-controls" className="control-group">
 						<label>
 							<FormattedMessage id="signUp.password.label" />
 						</label>
-						<input
-							id="onboard-input-password"
-							className="native-key-bindings input-text"
-							type="password"
-							name="password"
-							tabIndex="2"
-							value={this.state.password}
-							onChange={e => this.setState({ password: e.target.value })}
-							onBlur={this.onBlurPassword}
-						/>
+						<Tooltip title="6+ characters" delay="0" placement="left">
+							<input
+								className="native-key-bindings input-text"
+								type="password"
+								name="password"
+								tabIndex="2"
+								value={this.state.password}
+								onChange={e => this.setState({ password: e.target.value })}
+								onBlur={this.onBlurPassword}
+							/>
+						</Tooltip>
 						{this.renderPasswordHelp()}
 					</div>
 					<div id="invitation-code-controls" className="control-group">

@@ -10,7 +10,8 @@ export default class Tooltip extends React.Component {
 	}
 
 	componentDidUpdate(previousProps) {
-		if (!_.isEqual(tooltipOptions(previousProps), tooltipOptions(this.props))) {
+		const currentOptions = tooltipOptions(this.props);
+		if (!_.isEqual(tooltipOptions(previousProps), currentOptions)) {
 			this.tearDown();
 			this.configure(currentOptions);
 		}
