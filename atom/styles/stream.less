@@ -45,6 +45,38 @@
 			background-color: lighten(@background-color-info, 5%);
 		}
 
+		.edit-post {
+			.button-group {
+				// padding: 0px 10px 10px 56px;
+				margin-bottom: 5px;
+				margin-top: 10px;
+				button {
+					// this crazy escape syntax is required due to a bug in LESS
+					width: calc(~"50% - 5px");
+				}
+				button.cancel {
+					background: @background-color-error !important;
+				}
+				button:first-child {
+					margin-right: 10px;
+				}
+			}
+
+			div[contenteditable="true"] {
+				margin-top: 5px;
+				padding: 10px;
+				border-radius: 4px;
+				// background: #fff;
+				background: @base-background-color;
+				border: 1px solid @base-border-color;
+				resize: none;
+				// height: 20px;
+				max-width: 100%;
+				overflow: auto;
+				cursor: auto !important;
+			}
+		}
+
 		.compose {
 			display: block;
 			width: 100%;
@@ -411,6 +443,10 @@
 					font-weight: normal;
 				}
 			}
+		}
+
+		.post.editing {
+			background-color: @background-color-highlight !important;
 		}
 
 		.post.new-separator {

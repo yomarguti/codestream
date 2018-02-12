@@ -233,6 +233,22 @@ export const resolvePendingPost = (id, { post, markers, markerLocations, stream 
 		});
 };
 
+export const editPost = (postId, text, mentions) => async (dispatch, getState, { http }) => {
+	const { session, context } = getState();
+
+	const delta = {
+		text,
+		mentionedUserIds: mentions
+	};
+
+	try {
+		const data = await http.put("/posts/" + postId, delta, session.accessToken);
+	} catch (error) {
+		// TODO: different types of errors?
+		dispatch(rejectEditPost(postId, { ...delta, error: true }));
+	}
+};
+
 export const rejectPendingPost = pendingId => (dispatch, getState, { db }) => {
 	return upsert(db, "posts", { id: pendingId, error: true }).then(post =>
 		dispatch(pendingPostFailed(post))

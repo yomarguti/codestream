@@ -8,6 +8,17 @@ export default class Headshot extends Component {
 		this.state = {};
 	}
 
+	componentDidMount() {
+		let image = this._div.querySelector("img");
+		if (image) {
+			if (this.props.mine) {
+				atom.tooltips.add(image, { title: "Right click to change your headshot" });
+			} else if (this.props.person.fullName) {
+				atom.tooltips.add(image, { title: this.props.person.fullName });
+			}
+		}
+	}
+
 	render() {
 		const person = this.props.person;
 
@@ -22,7 +33,7 @@ export default class Headshot extends Component {
 		let classNameInitials = "headshot-initials color-" + person.color;
 
 		return (
-			<div className="headshot">
+			<div className="headshot" ref={ref => (this._div = ref)}>
 				<Gravatar
 					className="headshot-gravatar"
 					size={this.props.size}

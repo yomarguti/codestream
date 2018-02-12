@@ -8,6 +8,8 @@ import PostDetails from "./PostDetails";
 import RetrySpinner from "./RetrySpinner";
 import { retryPost, cancelPost } from "../actions/post";
 import rootLogger from "../util/Logger";
+import ContentEditable from "react-contenteditable";
+import Button from "./onboarding/Button";
 
 const logger = rootLogger.forClass("components/Post");
 
@@ -37,9 +39,6 @@ class Post extends Component {
 			// console.log("*********NOT SCROLLING TO BOTTOM");
 		}
 
-		if (this.props.post.author.fullName)
-			atom.tooltips.add(this._authorDiv, { title: this.props.post.author.fullName });
-
 		// atom.tooltips.add($icon.get(0), {'title': 'This block of code is different than your current copy.'});
 	}
 
@@ -50,8 +49,12 @@ class Post extends Component {
 	render() {
 		const { post } = this.props;
 
+		const mine = this.props.currentUsername === post.author.username;
+
 		const postClass = createClassString({
 			post: true,
+			mine: mine,
+			editing: this.props.editing,
 			"new-separator": this.props.newMessageIndicator,
 			[`thread-key-${this.props.threadKey}`]: true
 		});
@@ -62,9 +65,6 @@ class Post extends Component {
 			let code = post.codeBlocks[0].code;
 			codeBlock = <div className="code">{code}</div>;
 		}
-
-		let usernameRegExp = new RegExp("(@(?:" + this.props.usernames + ")\\b)");
-		let bodyParts = post.text.split(usernameRegExp);
 
 		logger.debug("UNR IS: ", this.props.usernames);
 		// let menuItems = [
@@ -87,7 +87,6 @@ class Post extends Component {
 		// <span className="icon icon-gear" onClick={this.handleMenuClick} />
 		// {menu}
 
-		let iterator = 0;
 		return (
 			<div
 				className={postClass}
@@ -95,7 +94,7 @@ class Post extends Component {
 				thread={post.parentPostId || post.id}
 				ref={ref => (this._div = ref)}
 			>
-				<Headshot size={36} person={post.author} />
+				<Headshot size={36} person={post.author} mine={mine} />
 				<span className="author" ref={ref => (this._authorDiv = ref)}>
 					{post.author.username}
 				</span>
@@ -115,27 +114,81 @@ class Post extends Component {
 						<PostDetails post={post} currentCommit={this.props.currentCommit} />
 					)}
 					{alertClass && <span className={alertClass} />}
-					{bodyParts.map(part => {
-						if (part.match(usernameRegExp)) {
-							if (part === "@" + this.props.currentUsername)
-								return (
-									<span key={iterator++} className="at-mention me">
-										{part}
-									</span>
-								);
-							else
-								return (
-									<span key={iterator++} className="at-mention">
-										{part}
-									</span>
-								);
-						} else {
-							return part;
-						}
-					})}
+					{this.props.editing ? this.renderEditingBody(post) : this.renderBody(post)}
 				</div>
 			</div>
 		);
+	}
+
+	renderBody = post => {
+		let usernameRegExp = new RegExp("(@(?:" + this.props.usernames + ")\\b)");
+		let bodyParts = post.text.split(usernameRegExp);
+		let iterator = 0;
+		return bodyParts.map(part => {
+			if (part.match(usernameRegExp)) {
+				if (part === "@" + this.props.currentUsername)
+					return (
+						<span key={iterator++} className="at-mention me">
+							{part}
+						</span>
+					);
+				else
+					return (
+						<span key={iterator++} className="at-mention">
+							{part}
+						</span>
+					);
+			} else {
+				return part;
+			}
+		});
+	};
+
+	renderEditingBody = post => {
+		const id = "input-div-" + post.id;
+
+		return (
+			<div className="edit-post">
+				<ContentEditable
+					className="native-key-bindings"
+					id={id}
+					rows="1"
+					tabIndex="-1"
+					onChange={this.handleOnChange}
+					onBlur={this.handleOnBlur}
+					html={post.text}
+					ref={ref => (this._contentEditable = ref)}
+				/>
+				<div className="button-group">
+					<Button
+						id="save-button"
+						className="control-button"
+						tabIndex="2"
+						type="submit"
+						loading={this.props.loading}
+						onClick={this.handleClickSave}
+					>
+						Save Changes
+					</Button>
+					<Button
+						id="discard-button"
+						className="control-button cancel"
+						tabIndex="2"
+						type="submit"
+						loading={this.props.loading}
+						onClick={this.handleClickDiscard}
+					>
+						Discard
+					</Button>
+				</div>
+			</div>
+		);
+	};
+
+	componentDidUpdate(prevProps, prevState) {
+		if (this.props.editing && !prevProps.editing) {
+			document.getElementById("input-div-" + this.props.post.id).focus();
+		}
 	}
 
 	handleMenuClick = async event => {

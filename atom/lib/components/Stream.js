@@ -17,7 +17,7 @@ import DateSeparator from "./DateSeparator";
 var Blamer = require("../util/blamer");
 import * as streamActions from "../actions/stream";
 import * as umiActions from "../actions/umi";
-import { createPost, fetchPosts } from "../actions/post";
+import { createPost, editPost, fetchPosts } from "../actions/post";
 import { toMapBy } from "../reducers/utils";
 import { locationToRange, rangeToLocation } from "../util/Marker";
 import { getStreamForRepoAndFile } from "../reducers/streams";
@@ -107,6 +107,13 @@ export class SimpleStream extends Component {
 			atom.commands.add("atom-workspace", {
 				"codestream:comment": event => this.handleClickAddComment(),
 				"codestream:focus-input": event => this.toggleFocusInput()
+			})
+		);
+		this.subscriptions.add(
+			atom.commands.add(".codestream .post.mine", {
+				"codestream:edit-headshot": event => this.handleEditHeadshot(event),
+				"codestream:edit-post": event => this.handleEditPost(event)
+				// "codestream:delete-post": event => this.deletePost(event)
 			})
 		);
 	}
@@ -422,6 +429,7 @@ export class SimpleStream extends Component {
 									currentUsername={this.props.currentUser.username}
 									replyingTo={parentPost}
 									newMessageIndicator={post.id === this.postWithNewMessageIndicator}
+									editing={post.id === this.state.editingPostId}
 								/>
 							</div>
 						);
@@ -446,6 +454,7 @@ export class SimpleStream extends Component {
 							key={threadPost.id}
 							showDetails="1"
 							currentCommit={this.props.currentCommit}
+							editing={threadPost.id === this.state.editingPostId}
 						/>
 					)}
 					{
@@ -467,6 +476,7 @@ export class SimpleStream extends Component {
 											currentUsername={this.props.currentUser.username}
 											showDetails="1"
 											currentCommit={this.props.currentCommit}
+											editing={post.id === this.state.editingPostId}
 										/>
 									</div>
 								);
@@ -534,11 +544,74 @@ export class SimpleStream extends Component {
 		this.setState({ threadId: null });
 	};
 
+	handleEditHeadshot = event => {
+		let email = this.props.currentUser.email;
+		atom.confirm({
+			message: "Edit Headshot",
+			detailedMessage:
+				"Until we have built-in CodeStream headshots, you can edit your headshot by setting it up on Gravatar.com for " +
+				email +
+				".\n\nNote that it might take a few minutes for your headshot to appear here.\n\n-Team CodeStream"
+		});
+	};
+
+	handleEditPost = event => {
+		var postDiv = event.target.closest(".post");
+		if (!postDiv) return;
+		this.setState({ editingPostId: postDiv.id });
+	};
+
+	// deletePost = event => {
+	// 	var postDiv = event.target.closest(".post");
+	// 	if (!postDiv) return;
+	// 	this.props.deletePost(postDiv.id);
+	// };
+
 	// by clicking on the post, we select it
 	handleClickPost = event => {
 		var postDiv = event.target.closest(".post");
 		if (!postDiv) return;
+
+		console.log(event.target.id);
+		if (event.target.id === "discard-button") {
+			// if the user clicked on the cancel changes button,
+			// presumably because she is editing a post, abort
+			this.setState({ editingPostId: null });
+			return;
+		} else if (event.target.id === "save-button") {
+			// if the user clicked on the save changes button,
+			// save the new post text
+			let newText = document
+				.getElementById("input-div-" + postDiv.id)
+				.innerHTML.replace(/<br>/g, "\n");
+
+			// convert the text to plaintext so there is no HTML
+			var doc = new DOMParser().parseFromString(newText, "text/html");
+			newText = doc.documentElement.textContent;
+			const mentionUserIds = this.findMentions(newText);
+
+			this.props.editPost(postDiv.id, newText, mentionUserIds);
+			this.setState({ editingPostId: null });
+			return;
+		} else if (postDiv.classList.contains("editing")) {
+			// otherwise, if we aren't currently editing the
+			// post, go to the thread for that post
+			return;
+		}
 		this.selectPost(postDiv.id);
+	};
+
+	findMentions = text => {
+		let mentionUserIds = [];
+		Object.keys(this.props.users).forEach(personId => {
+			let person = this.props.users[personId];
+			if (!person) return;
+			let matcher = person.username || person.email.replace(/@.*/, "");
+			if (text.match("@" + matcher + "\\b")) {
+				mentionUserIds.push(personId);
+			}
+		});
+		return mentionUserIds;
 	};
 
 	// show the thread related to the given post, and if there is
@@ -833,7 +906,9 @@ export class SimpleStream extends Component {
 
 	// close the at mention popup when the customer types ESC
 	handleEscape(event) {
-		if (this.state.atMentionsOn) this.setState({ atMentionsOn: false });
+		logger.trace(".handleEscape");
+		if (this.state.editingPostId) this.setState({ editingPostId: null });
+		else if (this.state.atMentionsOn) this.setState({ atMentionsOn: false });
 		else if (this.state.threadId) this.setState({ threadId: null });
 		else event.abortKeyBinding();
 	}
@@ -926,15 +1001,7 @@ export class SimpleStream extends Component {
 			});
 		}
 
-		let mentionUserIds = [];
-		Object.keys(this.props.users).forEach(personId => {
-			let person = this.props.users[personId];
-			if (!person) return;
-			let matcher = person.username.replace(/\+/g, "\\+").replace(/\./g, "\\.");
-			if (newText.match("@" + matcher + "\\b")) {
-				mentionUserIds.push(personId);
-			}
-		});
+		const mentionUserIds = this.findMentions(newText);
 
 		createPost(this.props.id, this.state.threadId, newText, codeBlocks, mentionUserIds);
 
@@ -1088,5 +1155,6 @@ export default connect(mapStateToProps, {
 	...streamActions,
 	...umiActions,
 	fetchPosts,
-	createPost
+	createPost,
+	editPost
 })(SimpleStream);
