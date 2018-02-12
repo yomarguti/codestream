@@ -101,6 +101,10 @@ export default class PostDetails extends Component {
 			});
 	};
 
+	componentWillUnmount() {
+		this.destroyDiffMarkers();
+	}
+
 	destroyDiffMarkers = () => {
 		for (var i = 0; i < this.diffMarkers.length; i++) {
 			this.diffMarkers[i].destroy();
