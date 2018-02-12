@@ -38,6 +38,7 @@ export class SimpleSignupForm extends Component {
 			username: getSystemUser.sync(),
 			password: "",
 			email: "",
+			invitationCode: "",
 			usernameTouched: false,
 			passwordTouched: false,
 			emailTouched: false,
@@ -137,7 +138,7 @@ export class SimpleSignupForm extends Component {
 		if (this.isFormInvalid()) return;
 		this.setState({ loading: true });
 		const { register } = this.props;
-		const { username, password, email, name, telemetryConsent } = this.state;
+		const { username, password, email, name, telemetryConsent, invitationCode } = this.state;
 		const preferences = { telemetryConsent };
 		register({ username, password, email, preferences, ...parseName(name) }).then(() =>
 			this.setState({ loading: false })
@@ -239,7 +240,12 @@ export class SimpleSignupForm extends Component {
 							<FormattedMessage id="invitationCode.label" defaultMessage="Invitation Code" />
 						</label>
 						<Tooltip title="Invitation code provided to your team" placement="left" delay="0">
-							<input className="native-key-bindings input-text" type="text" />
+							<input
+								className="native-key-bindings input-text"
+								type="text"
+								value={this.state.invitationCode}
+								onChange={event => this.setState({ invitationCode: event.target.value })}
+							/>
 						</Tooltip>
 					</div>
 					<Button
