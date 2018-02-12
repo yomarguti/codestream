@@ -6,40 +6,58 @@ import UnexpectedErrorMessage from "./UnexpectedErrorMessage";
 import * as actions from "../../actions/onboarding";
 
 export class SimpleEmailConfirmationForm extends Component {
-	constructor(props) {
-		super(props);
-		this.state = {
-			values: ["", "", "", "", "", ""]
-		};
-	}
+	state = { values: ["", "", "", "", "", ""] };
 
 	onChange = index => event => {
 		const value = event.target.value;
-		if (value === "" || isNaN(value)) return;
-		const values = this.state.values.slice();
-		values[index] = value;
+		if (value === "" || isNaN(value) || value < 0) return;
+
 		this.setState(
-			() => ({ values }),
+			state => {
+				const values = state.values.slice();
+				values[index] = value;
+				return { values };
+			},
 			() => {
 				const nextInput = this[`input${index + 1}`];
-				if (nextInput !== undefined) nextInput.focus();
+				if (nextInput) nextInput.focus();
 			}
 		);
 	};
 
 	onPaste = event => {
+		event.preventDefault();
 		const clipped = atom.clipboard.read().split("");
 		if (clipped.length === 6 && clipped.every(char => Number.isInteger(Number(char)))) {
-			this.setState({ values: clipped });
+			this.setState({ values: clipped }, () => {
+				clipped.forEach((digit, index) => {
+					this[`input${index}`].value = digit;
+				});
+			});
 		}
 	};
 
-	submitCode = () => {
+	submitCode = event => {
+		event.preventDefault();
 		const confirmationCode = this.state.values.join("");
 		const { email, userId, transition, confirmEmail, store } = this.props;
 		confirmEmail({ userId, email, confirmationCode });
-		this.setState({ values: this.state.values.fill("") });
-		this.input0.focus();
+		this.setState(
+			state => {
+				const values = state.values.slice();
+				values.fill("");
+				return { values };
+			},
+			() => {
+				this.input0.focus();
+				this.input0.value = "";
+				this.input1.value = "";
+				this.input2.value = "";
+				this.input3.value = "";
+				this.input4.value = "";
+				this.input5.value = "";
+			}
+		);
 	};
 
 	isFormInvalid = () => this.state.values.includes("");
@@ -73,7 +91,6 @@ export class SimpleEmailConfirmationForm extends Component {
 
 	render() {
 		const { email } = this.props;
-		const { values } = this.state;
 
 		return (
 			<form id="email-confirmation" onSubmit={this.submitCode}>
@@ -112,15 +129,14 @@ export class SimpleEmailConfirmationForm extends Component {
 				<div id="form">
 					{this.renderError()}
 					<div id="inputs">
-						{values.map((value, index) => (
+						{this.state.values.map((_, index) => (
 							<input
 								className="native-key-bindings input-text"
-								type="text"
+								type="number"
 								maxLength="1"
 								tabIndex={index}
 								ref={element => (this[`input${index}`] = element)}
 								key={index}
-								value={value}
 								onChange={this.onChange(index)}
 								onPaste={this.onPaste}
 							/>
