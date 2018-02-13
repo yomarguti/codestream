@@ -122,7 +122,7 @@ export class SimpleTeamMemberSelectionForm extends Component {
 				<p>
 					<FormattedMessage
 						id="teamMemberSelection.existingTeam.peopleToAdd"
-						defaultMessage="Here are some people that have committed to this repo that you might want to add to the {teamName}."
+						defaultMessage="Here are some people that have committed to this repo that you might want to add to {teamName}."
 						values={{ teamName: this.props.teamName }}
 					/>
 				</p>
