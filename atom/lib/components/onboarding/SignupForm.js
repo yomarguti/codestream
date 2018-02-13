@@ -38,7 +38,7 @@ export class SimpleSignupForm extends Component {
 			username: getSystemUser.sync(),
 			password: "",
 			email: "",
-			invitationCode: "",
+			betaCode: "",
 			usernameTouched: false,
 			passwordTouched: false,
 			emailTouched: false,
@@ -129,8 +129,13 @@ export class SimpleSignupForm extends Component {
 	};
 
 	isFormInvalid = () => {
-		const { username, password, email } = this.state;
-		return isUsernameInvalid(username) || isPasswordInvalid(password) || isEmailInvalid(email);
+		const { username, password, email, betaCode } = this.state;
+		return (
+			isUsernameInvalid(username) ||
+			isPasswordInvalid(password) ||
+			isEmailInvalid(email) ||
+			betaCode === ""
+		);
 	};
 
 	submitCredentials = event => {
@@ -138,11 +143,16 @@ export class SimpleSignupForm extends Component {
 		if (this.isFormInvalid()) return;
 		this.setState({ loading: true });
 		const { register } = this.props;
-		const { username, password, email, name, telemetryConsent, invitationCode } = this.state;
+		const { username, password, email, name, telemetryConsent, betaCode } = this.state;
 		const preferences = { telemetryConsent };
-		register({ username, password, email, preferences, ...parseName(name) }).then(() =>
-			this.setState({ loading: false })
-		);
+		register({
+			username,
+			password,
+			email,
+			preferences,
+			betaCode,
+			...parseName(name)
+		}).then(() => this.setState({ loading: false }));
 	};
 
 	handleTelemetryConsentChange = event => {
@@ -163,6 +173,8 @@ export class SimpleSignupForm extends Component {
 	renderPageErrors() {
 		if (this.props.errors.unknown)
 			return <UnexpectedErrorMessage classes="error-message page-error" />;
+		if (this.props.errors.invalidBetaCode)
+			return <span className="error-message page-error">That's an invalid invitation code.</span>;
 	}
 
 	render() {
@@ -243,15 +255,16 @@ export class SimpleSignupForm extends Component {
 							<input
 								className="native-key-bindings input-text"
 								type="text"
-								value={this.state.invitationCode}
-								onChange={event => this.setState({ invitationCode: event.target.value })}
+								tabIndex="3"
+								value={this.state.betaCode}
+								onChange={event => this.setState({ betaCode: event.target.value })}
 							/>
 						</Tooltip>
 					</div>
 					<Button
 						id="signup-button"
 						className="control-button"
-						tabIndex="3"
+						tabIndex="4"
 						type="submit"
 						loading={this.state.loading}
 					>
