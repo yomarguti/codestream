@@ -274,6 +274,7 @@ export const authenticate = params => (dispatch, getState, { http }) => {
 		.catch(error => {
 			dispatch(requestFinished());
 			if (http.isApiRequestError(error)) {
+				if (error.data.code === "USRC-1000") dispatch(serverUnreachable());
 				if (error.data.code === "USRC-1001") dispatch(invalidCredentials());
 				if (error.data.code === "RAPI-1003") dispatch(invalidCredentials());
 				if (error.data.code === "REPO-1000") dispatch(noAccess());
