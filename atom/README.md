@@ -34,6 +34,21 @@ Search for CodeStream in the Atom package manager, or from the command line:
 
 Once installed, toggle the CodeStream view via the Packages menu, or hit Cmd + Opt + O (Mac) / Ctrl + Alt + O (Windows). You can also click on the CodeStream logo that now appears in Atom’s statusbar.
 
+If there are issues installing the plugin dependencies:
+
+## OSX Users
+
+* Run `sudo xcode-select --install`
+* `cd ~/.atom/packages/codestream`
+* `apm install`
+* If there are still issues, you'll need to install libgcrypt. This can be done with homebrew via `brew install libgcrypt` or you by means of another package manager. Once installed, re-run `apm install`.
+
+## Linux Users
+
+* You need `libssl-dev`. On ubuntu, you can use `sudo apt install libssl-dev`.
+* `cd ~/.atom/packages/codestream`
+* `apm install`
+
 # Help
 
 Check out our [help site](https://help.codestream.com) for more information on getting started with CodeStream.
