@@ -34,12 +34,15 @@ const _initiateTicks = (store, receiver) => {
 				data: { lastTick, now },
 				level: "debug"
 			});
+			lastTick = now;
 			receiver.unsubscribeAll();
 			// restart the count for history processed
 			processedHistoryCount = 0;
 			historyCount = await _initializePubnubAndSubscribe(store, receiver);
 		}
-		lastTick = now;
+		else {
+			lastTick = now;
+		}
 	}, 1000);
 	ticksInitiated = true;
 };
