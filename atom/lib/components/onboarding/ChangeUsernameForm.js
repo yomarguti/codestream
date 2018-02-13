@@ -3,8 +3,8 @@ import { FormattedMessage } from "react-intl";
 import { connect } from "react-redux";
 import UnexpectedErrorMessage from "./UnexpectedErrorMessage";
 import Button from "./Button";
+import Tooltip from "../Tooltip";
 import * as onboardingActions from "../../actions/onboarding";
-const { CompositeDisposable } = require("atom");
 
 export class ChangeUsernameForm extends Component {
 	constructor(props) {
@@ -14,7 +14,6 @@ export class ChangeUsernameForm extends Component {
 			touched: false,
 			loading: false
 		};
-		this.subscriptions = new CompositeDisposable();
 	}
 
 	onBlur = () => this.setState({ touched: true });
@@ -24,29 +23,33 @@ export class ChangeUsernameForm extends Component {
 			return <UnexpectedErrorMessage classes="error-message page-error" />;
 	};
 
-	componentDidMount() {
-		this.addToolTip("change-username", "Up to 21 characters. Valid special characters are (.-_)");
-	}
-
-	addToolTip(elementId, key) {
-		let div = document.getElementById(elementId);
-		if (!div) return;
-		this.subscriptions.add(
-			atom.tooltips.add(div, {
-				title: key,
-				placement: "left",
-				delay: 0
-			})
-		);
+	isFormInvalid() {
+		return new RegExp("^[-a-z0-9_.]{1,21}$").test(this.state.username) === false;
 	}
 
 	onSubmit = async event => {
 		this.setState({ loading: true });
 		event.preventDefault();
-		if (this.state.username === "") return;
+		if (this.isFormInvalid()) return;
 		await this.props.changeUsername(this.state.username);
 		await this.props.joinTeam(this.props.nextAction);
 		this.setState({ loading: false });
+	};
+
+	renderUsernameHelp = () => {
+		const { username, touched } = this.state;
+		if (touched && username.length === 0)
+			return (
+				<small className="error-message">
+					<FormattedMessage id="changeUsername.empty" defaultMessage="Required" />
+				</small>
+			);
+		if (touched && this.isFormInvalid())
+			return (
+				<small className="error-message">
+					<FormattedMessage id="signUp.username.validCharacters" />
+				</small>
+			);
 	};
 
 	render() {
@@ -65,19 +68,26 @@ export class ChangeUsernameForm extends Component {
 				{this.renderError()}
 				<div id="controls">
 					<div id="username-controls" className="control-group">
-						<input
-							id="change-username"
-							className="native-key-bindings input-text control"
-							type="text"
-							name="username"
-							placeholder="Username"
-							minLength="1"
-							maxLength="21"
-							tabIndex="0"
-							value={this.state.username}
-							onBlur={this.onBlur}
-							onChange={event => this.setState({ username: event.target.value })}
-						/>
+						<Tooltip
+							title="Up to 21 characters. Valid special characters are (.-_)"
+							delay="0"
+							placement="left"
+						>
+							<input
+								id="change-username"
+								className="native-key-bindings input-text control"
+								type="text"
+								name="username"
+								placeholder="Username"
+								minLength="1"
+								maxLength="21"
+								tabIndex="0"
+								value={this.state.username}
+								onBlur={this.onBlur}
+								onChange={event => this.setState({ username: event.target.value })}
+							/>
+						</Tooltip>
+						{this.renderUsernameHelp()}
 					</div>
 					<Button
 						id="submit-button"
