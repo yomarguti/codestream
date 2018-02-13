@@ -32,38 +32,17 @@ otherwise to get emails sent to your email address for local development, set:
 export CS_API_EMAIL_TO=#your email here
 ```
 
-Now you can start the api server. Next, you'll need to tell the plugin where the server is by
-editing your atom configs. This can be done from atom or the command line.
+Now you can start the api server. Next, you'll need to tell the plugin where the server is. Make sure to open the repository you want to use in atom's dev mode with the `--dev` flag from the command line or through the header menu at `View > Developer > Open In Dev Mode`.
 
-### From Atom
+### In Atom
 
-1. Click on 'Atom' in the top left of the status bar
-2. Select 'Config'
-3. A new file should open
-
-### From the CLI
-
-1. Open `~/.atom/config.cson` wherever you choose
-
-## In your Atom config file
-
-CSON is like JSON just without the punctuation. Add a new entry to the top under the '\*' so it
-looks like
-
-```cson
-*
-  "codestream":
-    url: "https://localhost.codestream.us:12079"
-```
-
-## Other Environments you can point to
-
-Dev server - https://tca3.codestream.us:9443
-
-**Dev mode:** While running atom in dev mode, there will be commands to toggle which environment the
-plugin interacts with for server calls. The commands will be `Codestream: Point to [dev|local]`. A
-reload of atom is required after toggling. Additionally, the login and signup forms will display the
-configured url for easy identification.
+Use one of the `Point to...` commands in the command palette.
+The different endpoints are `local`, `Dev`, `QA`, and `Production`.
+The fallback without this explicit configuration is the production environment.
+These settings only persist per atom window.
+So different windows can point to different servers.
+The setting should also survive reloads until atom loses any serialized session for a window.
+There is also a command, `Codestream: Which Environment?`, which can be used to see what the current setting is.
 
 ## Resetting the database(s)
 

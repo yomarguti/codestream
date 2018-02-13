@@ -151,6 +151,12 @@ module.exports = {
 					"codestream:point-to-production": () => {
 						sessionStorage.setItem("codestream.url", PRODUCTION_URL);
 						atom.commands.dispatch(document.querySelector("atom-workspace"), "codestream:logout");
+					},
+					"codestream:which-environment?": () => {
+						const urlConfig = sessionStorage.getItem("codestream.url") || "production";
+						atom.notifications.addInfo(`CodeStream is pointed to ${urlConfig}`, {
+							dismissable: true
+						});
 					}
 				})
 			);
