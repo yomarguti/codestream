@@ -28,9 +28,9 @@ export class ChangeUsernameForm extends Component {
 	}
 
 	onSubmit = async event => {
-		this.setState({ loading: true });
 		event.preventDefault();
 		if (this.isFormInvalid()) return;
+		this.setState({ loading: true });
 		await this.props.changeUsername(this.state.username);
 		await this.props.joinTeam(this.props.nextAction);
 		this.setState({ loading: false });
