@@ -17,7 +17,7 @@ import DateSeparator from "./DateSeparator";
 var Blamer = require("../util/blamer");
 import * as streamActions from "../actions/stream";
 import * as umiActions from "../actions/umi";
-import { createPost, editPost, fetchPosts } from "../actions/post";
+import { createPost, editPost, deletePost, fetchPosts } from "../actions/post";
 import { toMapBy } from "../reducers/utils";
 import { locationToRange, rangeToLocation } from "../util/Marker";
 import { getStreamForRepoAndFile } from "../reducers/streams";
@@ -112,8 +112,8 @@ export class SimpleStream extends Component {
 		this.subscriptions.add(
 			atom.commands.add(".codestream .post.mine", {
 				"codestream:edit-headshot": event => this.handleEditHeadshot(event),
-				"codestream:edit-post": event => this.handleEditPost(event)
-				// "codestream:delete-post": event => this.deletePost(event)
+				"codestream:edit-post": event => this.handleEditPost(event),
+				"codestream:delete-post": event => this.handleDeletePost(event)
 			})
 		);
 	}
@@ -416,10 +416,13 @@ export class SimpleStream extends Component {
 						{this.renderIntro()}
 					</div>
 					{posts.map(post => {
+						if (post.deactivated) return null;
 						// this needs to be done by storing the return value of the render,
 						// then setting lastTimestamp, otherwise you wouldn't be able to
 						// compare the current one to the prior one.
-						const parentPost = posts.find(p => p.id === post.parentPostId);
+						const parentPost = post.parentPostId
+							? posts.find(p => p.id === post.parentPostId)
+							: null;
 						const returnValue = (
 							<div key={post.id}>
 								<DateSeparator timestamp1={lastTimestamp} timestamp2={post.createdAt} />
@@ -461,7 +464,8 @@ export class SimpleStream extends Component {
 						(lastTimestamp =
 							0 ||
 							posts.map(post => {
-								if (threadId && threadId != post.parentPostId) {
+								if (post.deactivated) return null;
+								if (threadId && threadId !== post.parentPostId) {
 									return null;
 								}
 								// this needs to be done by storing the return value of the render,
@@ -514,6 +518,7 @@ export class SimpleStream extends Component {
 							id="input-div"
 							rows="1"
 							tabIndex="-1"
+							style={{ contents: placeholderText }}
 							onChange={this.handleOnChange}
 							onBlur={this.handleOnBlur}
 							html={newPostText}
@@ -545,12 +550,11 @@ export class SimpleStream extends Component {
 	};
 
 	handleEditHeadshot = event => {
-		let email = this.props.currentUser.email;
 		atom.confirm({
 			message: "Edit Headshot",
 			detailedMessage:
 				"Until we have built-in CodeStream headshots, you can edit your headshot by setting it up on Gravatar.com for " +
-				email +
+				this.props.currentUser.email +
 				".\n\nNote that it might take a few minutes for your headshot to appear here.\n\n-Team CodeStream"
 		});
 	};
@@ -561,18 +565,27 @@ export class SimpleStream extends Component {
 		this.setState({ editingPostId: postDiv.id });
 	};
 
-	// deletePost = event => {
-	// 	var postDiv = event.target.closest(".post");
-	// 	if (!postDiv) return;
-	// 	this.props.deletePost(postDiv.id);
-	// };
+	handleDeletePost = event => {
+		var postDiv = event.target.closest(".post");
+		if (!postDiv || !postDiv.id) return;
+
+		const answer = atom.confirm({
+			message: "Are you sure?",
+			buttons: ["Delete Post", "Cancel"]
+		});
+
+		if (answer === 0) {
+			console.log("Calling delete post with: ", postDiv.id);
+			this.props.deletePost(postDiv.id);
+		}
+	};
 
 	// by clicking on the post, we select it
 	handleClickPost = event => {
 		var postDiv = event.target.closest(".post");
 		if (!postDiv) return;
 
-		console.log(event.target.id);
+		// console.log(event.target.id);
 		if (event.target.id === "discard-button") {
 			// if the user clicked on the cancel changes button,
 			// presumably because she is editing a post, abort
@@ -595,7 +608,8 @@ export class SimpleStream extends Component {
 			return;
 		} else if (postDiv.classList.contains("editing")) {
 			// otherwise, if we aren't currently editing the
-			// post, go to the thread for that post
+			// post, go to the thread for that post, but if
+			// we are editing, then do nothing.
 			return;
 		}
 		this.selectPost(postDiv.id);
@@ -1156,5 +1170,6 @@ export default connect(mapStateToProps, {
 	...umiActions,
 	fetchPosts,
 	createPost,
-	editPost
+	editPost,
+	deletePost
 })(SimpleStream);

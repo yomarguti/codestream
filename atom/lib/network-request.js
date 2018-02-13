@@ -70,4 +70,16 @@ export async function put(route, body, accessToken) {
 	});
 }
 
-export default { get, post, put, ApiRequestError };
+export async function deactivate(route, body, accessToken) {
+	const headers = getHeaders();
+	if (accessToken) {
+		headers.set("Authorization", `Bearer ${accessToken}`);
+	}
+	return tryFetch(getPath(route), {
+		headers,
+		method: "DELETE",
+		body: JSON.stringify(body)
+	});
+}
+
+export default { get, post, put, deactivate, ApiRequestError };
