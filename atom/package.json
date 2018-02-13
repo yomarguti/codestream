@@ -1,7 +1,7 @@
 {
 	"name": "CodeStream",
 	"main": "./lib/codestream",
-	"version": "0.0.4",
+	"version": "0.0.5",
 	"description": "Better teamwork. Better code.",
 	"keywords": ["git", "team", "chat"],
 	"activationCommands": {},
