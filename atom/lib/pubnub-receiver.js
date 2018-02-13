@@ -235,7 +235,7 @@ export default class PubNubReceiver {
 					data: { error },
 					level: "debug"
 				});
-				if (retries === 5) {
+				if (retries === 30) {
 					console.warn(`${now}: Giving up fetching history for ${channel}`);
 					Raven.captureBreadcrumb({
 						message: `gave up fetching history`,
