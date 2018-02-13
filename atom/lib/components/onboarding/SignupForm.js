@@ -6,7 +6,6 @@ import PropTypes from "prop-types";
 import getSystemUser from "username";
 import Button from "./Button";
 import UnexpectedErrorMessage from "./UnexpectedErrorMessage";
-import withConfigs from "../withConfigs";
 import * as actions from "../../actions/onboarding";
 const { CompositeDisposable } = require("atom");
 
@@ -171,7 +170,7 @@ export class SimpleSignupForm extends Component {
 	};
 
 	renderDebugInfo() {
-		const apiPath = this.props.configs.url;
+		const apiPath = sessionStorage.getItem("codestream.url");
 		if (atom.inDevMode() && apiPath) return <p>{apiPath}</p>;
 	}
 
@@ -299,4 +298,4 @@ export class SimpleSignupForm extends Component {
 const mapStateToProps = ({ onboarding }) => ({
 	errors: onboarding.errors
 });
-export default connect(mapStateToProps, actions)(withConfigs(SimpleSignupForm));
+export default connect(mapStateToProps, actions)(SimpleSignupForm);

@@ -4,7 +4,6 @@ import { connect } from "react-redux";
 import PropTypes from "prop-types";
 import UnexpectedErrorMessage from "./UnexpectedErrorMessage";
 import Button from "./Button";
-import withConfigs from "../withConfigs";
 import * as actions from "../../actions/onboarding";
 const { CompositeDisposable } = require("atom");
 
@@ -122,7 +121,7 @@ export class SimpleLoginForm extends Component {
 	};
 
 	renderDebugInfo() {
-		const apiPath = this.props.configs.url;
+		const apiPath = sessionStorage.getItem("codestream.url");
 		if (atom.inDevMode() && apiPath) return <p>{apiPath}</p>;
 	}
 
@@ -203,4 +202,4 @@ const mapStateToProps = ({ context, onboarding }) => ({
 	errors: onboarding.errors,
 	loading: onboarding.requestInProcess
 });
-export default connect(mapStateToProps, actions)(withConfigs(SimpleLoginForm));
+export default connect(mapStateToProps, actions)(SimpleLoginForm);

@@ -15,7 +15,7 @@ export const isApiRequestError = error => error instanceof ApiRequestError;
 export const isApiUnreachableError = error => error instanceof ApiUnreachableError;
 
 const getPath = route => {
-	const url = atom.config.get("codestream.url") || PRODUCTION_URL;
+	const url = sessionStorage.getItem("codestream.url") || PRODUCTION_URL;
 	return `${url}${route}`;
 };
 

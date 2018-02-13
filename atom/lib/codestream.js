@@ -137,19 +137,19 @@ module.exports = {
 					},
 					"codestream:wipe-cache": () => indexedDB.deleteDatabase("CodeStream"),
 					"codestream:point-to-dev": () => {
-						atom.config.set("codestream.url", "https://tca3.codestream.us:9443");
+						sessionStorage.setItem("codestream.url", "https://tca3.codestream.us:9443");
 						atom.commands.dispatch(document.querySelector("atom-workspace"), "codestream:logout");
 					},
 					"codestream:point-to-local": () => {
-						atom.config.set("codestream.url", "https://localhost.codestream.us:12079");
+						sessionStorage.setItem("codestream.url", "https://localhost.codestream.us:12079");
 						atom.commands.dispatch(document.querySelector("atom-workspace"), "codestream:logout");
 					},
 					"codestream:point-to-qa": () => {
-						atom.config.set("codestream.url", "https://qa-api.codestream.us");
+						sessionStorage.setItem("codestream.url", "https://qa-api.codestream.us");
 						atom.commands.dispatch(document.querySelector("atom-workspace"), "codestream:logout");
 					},
 					"codestream:point-to-production": () => {
-						atom.config.set("codestream.url", PRODUCTION_URL);
+						sessionStorage.setItem("codestream.url", PRODUCTION_URL);
 						atom.commands.dispatch(document.querySelector("atom-workspace"), "codestream:logout");
 					}
 				})
