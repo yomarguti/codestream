@@ -86,7 +86,8 @@ export class SimpleStream extends Component {
 		this.subscriptions.add(
 			atom.keymaps.add("codestream", {
 				"atom-workspace": {
-					escape: "codestream:escape"
+					escape: "codestream:escape",
+					"cmd-c": "codestream:copy"
 				}
 			})
 		);
@@ -100,7 +101,8 @@ export class SimpleStream extends Component {
 		);
 		this.subscriptions.add(
 			atom.commands.add("atom-workspace", {
-				"codestream:escape": event => this.handleEscape(event)
+				"codestream:escape": event => this.handleEscape(event),
+				"codestream:copy": event => this.copy(event)
 			})
 		);
 		this.subscriptions.add(
@@ -116,6 +118,12 @@ export class SimpleStream extends Component {
 				"codestream:delete-post": event => this.handleDeletePost(event)
 			})
 		);
+	}
+
+	copy(event) {
+		let selectedText = window.getSelection().toString();
+		atom.clipboard.write(selectedText);
+		event.abortKeyBinding();
 	}
 
 	componentWillUnmount() {
@@ -618,6 +626,10 @@ export class SimpleStream extends Component {
 			// otherwise, if we aren't currently editing the
 			// post, go to the thread for that post, but if
 			// we are editing, then do nothing.
+			return;
+		} else if (window.getSelection().toString().length > 0) {
+			// in this case the user has selected a string
+			// by dragging
 			return;
 		}
 		this.selectPost(postDiv.id);
