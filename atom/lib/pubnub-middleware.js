@@ -12,16 +12,10 @@ const _initiateTicks = (store, receiver) => {
 	// start a ticking clock, look for anything that misses a tick by more than 10 seconds.
 	// stuff like breakpoints, alerts, and context menu interactions will halt js processing and would cause ticking to stop, which could lead to false positives for wake events
 	setInterval(async () => {
-		if (!navigator.onLine) { 
+		if (!navigator.onLine) {
 			// don't bother until we are online
-			Raven.captureBreadcrumb({
-				message: "not online yet",
-				category: "pubnub",
-				data: { lastTick, now },
-				level: "debug"
-			});
-			return; 
-		}	
+			return;
+		}
 		const now = Date.now();
 		if (lastTick && now - lastTick > 10000) {
 			// we'll assume this is a laptop sleep event or something that otherwise
@@ -39,8 +33,7 @@ const _initiateTicks = (store, receiver) => {
 			// restart the count for history processed
 			processedHistoryCount = 0;
 			historyCount = await _initializePubnubAndSubscribe(store, receiver);
-		}
-		else {
+		} else {
 			lastTick = now;
 		}
 	}, 1000);
@@ -124,9 +117,11 @@ export default store => {
 			receiver.unsubscribeAll();
 		}
 
-		// if we come online after a period of being offline, retrieve message history
+		// if we come online after a period of being offline, make sure we're subscribed
+		// to pubnub channels and retrieve history
 		if (action.type === "ONLINE") {
 			const { messaging } = store.getState();
+			_initializePubnubAndSubscribe(store, receiver, true);
 			historyCount = await receiver.retrieveHistory(null, messaging);
 		}
 
