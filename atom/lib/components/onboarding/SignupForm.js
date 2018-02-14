@@ -10,7 +10,7 @@ import UnexpectedErrorMessage from "./UnexpectedErrorMessage";
 import * as actions from "../../actions/onboarding";
 const { CompositeDisposable } = require("atom");
 
-const isUsernameInvalid = username => new RegExp("^[-a-z0-9_.]{1,21}$").test(username) === false;
+const isUsernameInvalid = username => new RegExp("^[-a-zA-Z0-9_.]{1,21}$").test(username) === false;
 const isPasswordInvalid = password => password.length < 6;
 const isEmailInvalid = email => {
 	const emailRegex = new RegExp(

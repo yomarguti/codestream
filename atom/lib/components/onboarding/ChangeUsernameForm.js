@@ -24,7 +24,7 @@ export class ChangeUsernameForm extends Component {
 	};
 
 	isFormInvalid() {
-		return new RegExp("^[-a-z0-9_.]{1,21}$").test(this.state.username) === false;
+		return new RegExp("^[-a-zA-Z0-9_.]{1,21}$").test(this.state.username) === false;
 	}
 
 	onSubmit = async event => {

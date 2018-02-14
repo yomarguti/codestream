@@ -80,8 +80,8 @@ export class SimpleEmailConfirmationForm extends Component {
 	};
 
 	sendNewCode = () => {
-		const { intl, username, email, password, sendNewCode } = this.props;
-		sendNewCode({ username, email, password }).then(success => {
+		const { intl, username, email, password, sendNewCode, betaCode } = this.props;
+		sendNewCode({ username, email, password, betaCode }).then(success => {
 			if (success)
 				atom.notifications.addInfo(
 					intl.formatMessage({ id: "confirmation.emailSent", defaultMessage: "Email sent!" })
