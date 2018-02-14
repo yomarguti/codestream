@@ -464,7 +464,7 @@ export class SimpleStream extends Component {
 					onClick={this.handleClickPost}
 				>
 					<div id="close-thread" onClick={this.handleDismissThread}>
-						&larr; Back to stream
+						&larr; Back to stream (esc)
 					</div>
 					{threadPost && (
 						<Post
