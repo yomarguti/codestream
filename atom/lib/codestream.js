@@ -77,7 +77,7 @@ module.exports = {
 				"Note that you can override this setting on a per-file or per-directory basis by right-clicking the Tree View.",
 			title: "Files with Unread Messages",
 			type: "string",
-			default: "bold",
+			default: "badge",
 			enum: [
 				{ value: "badge", description: "Display a badge to the right of the file" },
 				{ value: "bold", description: "Bold the filename" }
