@@ -72,6 +72,14 @@ export default class PubnubSubscription {
 		delete this._confirmationTimeout;
 		// announce the failure, the UX should do something with this
 		Raven.captureMessage(`subscription failure: ${this.channel}`);
+		if (!navigator.onLine) {
+			// here we give up prematurely, we'll wait until the signal that we are
+			// online again to try
+			now = new Date().toString();
+			console.warn(`${now}: SUBSCRIPTION TO ${this.channel} FAILED BUT WE ARE OFFLINE`);
+			this._numRetries = 0;
+			return true;
+		}
 		this.store.dispatch(subscriptionFailure(this.channel));
 		try {
 			// in case it's an access problem, force the API server to give us access to this channel
@@ -93,7 +101,7 @@ export default class PubnubSubscription {
 		} else {
 			this.store.dispatch(subscriptionTimedOut());
 			now = new Date().toString();
-			console.warn(`${now}: GIVING UP SUBSCRIBING TO ${this.channel}, SOUND THE ALARMS`);
+			console.warn(`${now}: GIVING UP SUBSCRIBING TO ${this.channel}`);
 		}
 	}
 

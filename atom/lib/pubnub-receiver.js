@@ -69,7 +69,7 @@ export default class PubNubReceiver {
 	}
 
 	pubnubPresence(event) {
-//		logger.debug(`user ${event.uuid} ${event.action}. occupancy is ${event.occupancy}`); // uuid of the user
+		// logger.debug(`user ${event.uuid} ${event.action}. occupancy is ${event.occupancy}`); // uuid of the user
 	}
 
 	pubnubEvent(event) {
@@ -212,6 +212,7 @@ export default class PubNubReceiver {
 		let response = null;
 		let retries = 0;
 		let delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+		let delayTime = 1000;
 		while (!response) {
 			try {
 				Raven.captureBreadcrumb({
@@ -235,7 +236,16 @@ export default class PubNubReceiver {
 					data: { error },
 					level: "debug"
 				});
+				if (!navigator.onLine) {
+					// here we give up prematurely, we'll wait until the signal that we are
+					// online again to try
+					console.warn(`${now}: HISTORY RETRIEVAL FAILED BUT WE ARE OFFLINE`);
+					return true;
+				}
 				if (retries === 30) {
+					// increase throttle time, till we reach one minute, then give up
+					delayTime = 5000;
+				} else if (retries === 36) {
 					console.warn(`${now}: Giving up fetching history for ${channel}`);
 					Raven.captureBreadcrumb({
 						message: `gave up fetching history`,
@@ -247,9 +257,11 @@ export default class PubNubReceiver {
 					return true;
 				}
 				retries++;
-				await delay(1000);
+				await delay(delayTime);
 			}
 		}
+
+		// history was successfully retrieved for all channels
 		allMessages.push(...response.messages);
 		if (response.messages.length < 100) {
 			return true; // resolves the promise
