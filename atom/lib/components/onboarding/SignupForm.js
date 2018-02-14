@@ -42,6 +42,7 @@ export class SimpleSignupForm extends Component {
 			usernameTouched: false,
 			passwordTouched: false,
 			emailTouched: false,
+			betaCodeTouched: false,
 			telemetryConsent: true
 		};
 		this.subscriptions = new CompositeDisposable();
@@ -128,6 +129,17 @@ export class SimpleSignupForm extends Component {
 		else return <small>&nbsp;</small>;
 	};
 
+	onBlurBetaCode = () => {
+		if (this.state.betaCodeTouched) return;
+		this.setState({ betaCodeTouched: true });
+	};
+
+	renderBetaCodeHelp = () => {
+		const { betaCodeTouched, betaCode } = this.state;
+		if (betaCodeTouched && (this.props.errors.invalidBetaCode || betaCode === ""))
+			return <small className="error-message">Invalid Code</small>;
+	};
+
 	isFormInvalid = () => {
 		const { username, password, email, betaCode } = this.state;
 		return (
@@ -173,8 +185,6 @@ export class SimpleSignupForm extends Component {
 	renderPageErrors() {
 		if (this.props.errors.unknown)
 			return <UnexpectedErrorMessage classes="error-message page-error" />;
-		if (this.props.errors.invalidBetaCode)
-			return <span className="error-message page-error">That's an invalid invitation code.</span>;
 	}
 
 	render() {
@@ -255,11 +265,14 @@ export class SimpleSignupForm extends Component {
 							<input
 								className="native-key-bindings input-text"
 								type="text"
+								name="betaCode"
 								tabIndex="3"
 								value={this.state.betaCode}
 								onChange={event => this.setState({ betaCode: event.target.value })}
+								onBlur={this.onBlurBetaCode}
 							/>
 						</Tooltip>
+						{this.renderBetaCodeHelp()}
 					</div>
 					<Button
 						id="signup-button"
