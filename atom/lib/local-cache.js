@@ -2,7 +2,9 @@ import Dexie from "dexie";
 
 Dexie.debug = true;
 
-const db = (window.db = new Dexie("CodeStream"));
+const codestreamEnv = sessionStorage.getItem("codestream.env");
+const dbName = `CodeStream${codestreamEnv ? `-${codestreamEnv}` : ""}`;
+const db = new Dexie(dbName);
 db.version(1).stores({
 	streams: "id, teamId, repoId",
 	posts: "id, teamId, streamId, creatorId",
