@@ -98,13 +98,12 @@ class MarkerLocationTracker extends Component {
 }
 
 const mapStateToProps = state => {
-	const { streams, context, markerLocationRecalculation } = state;
+	const { streams, context } = state;
 	const stream = getStreamForRepoAndFile(streams, context.currentRepoId, context.currentFile) || {};
 	return {
 		teamId: context.currentTeamId,
 		streamId: stream.id,
-		currentFile: context.currentFile,
-		lastCalculation: markerLocationRecalculation
+		currentFile: context.currentFile
 	};
 };
 
