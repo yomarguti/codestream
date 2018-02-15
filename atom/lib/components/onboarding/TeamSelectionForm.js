@@ -10,7 +10,9 @@ export class SimpleTeamSelectionForm extends Component {
 		super(props);
 		this.state = {
 			selectedValue: "",
-			newTeamName: ""
+			newTeamName: "",
+			touched: false,
+			selectionRequired: false
 		};
 	}
 
@@ -32,12 +34,27 @@ export class SimpleTeamSelectionForm extends Component {
 	onChange = event =>
 		this.setState({ selectedValue: "createTeam", newTeamName: event.target.value });
 
-	onSubmit = () => {
-		if (this.isFormInvalid()) return;
-		const { selectedValue, newTeamName } = this.state;
+	onBlur = e => this.setState({ touched: true });
 
-		if (selectedValue === "createTeam") this.props.createTeam(newTeamName);
-		else this.props.addRepoForTeam(selectedValue);
+	onSubmit = () => {
+		this.setState(
+			state => {
+				const { selectedValue, newTeamName } = state;
+				const noSelection = selectedValue === "";
+				const noTeamName = selectedValue === "createTeam" && newTeamName === "";
+				return {
+					touched: true,
+					selectionRequired: noSelection || noTeamName
+				};
+			},
+			() => {
+				if (this.state.selectionRequired) return;
+				const { selectedValue, newTeamName } = this.state;
+
+				if (selectedValue === "createTeam") this.props.createTeam(newTeamName);
+				else this.props.addRepoForTeam(selectedValue);
+			}
+		);
 	};
 
 	renderError = () => {
@@ -54,6 +71,15 @@ export class SimpleTeamSelectionForm extends Component {
 				</p>
 			);
 		if (this.props.errors.unknown) return <UnexpectedErrorMessage classes="error-message" />;
+		if (this.state.touched && this.state.selectionRequired)
+			return (
+				<p className="error-message">
+					<FormattedMessage
+						id="teamSelection.error.noSelection"
+						defaultMessage="Please create or select a team."
+					/>
+				</p>
+			);
 	};
 
 	render() {
@@ -68,7 +94,7 @@ export class SimpleTeamSelectionForm extends Component {
 						defaultMessage="Which team owns this repo?"
 					/>
 				</p>
-				<form onSubmit={this.onSubmit}>
+				<form onBlur={this.onBlur} onSubmit={this.onSubmit}>
 					{this.renderError()}
 					<div className="control-group">
 						<label className="input-label">
@@ -87,7 +113,6 @@ export class SimpleTeamSelectionForm extends Component {
 							type="text"
 							className="native-key-bindings input-text"
 							placeholder="Team Name"
-							required={this.isSelected("createTeam") && this.state.newTeamName === ""}
 							value={this.state.newTeamName}
 							onChange={this.onChange}
 							ref={element => (this.nameInput = element)}
@@ -110,7 +135,7 @@ export class SimpleTeamSelectionForm extends Component {
 							</div>
 						);
 					})}
-					<Button id="submit-button" loading={this.props.loading}>
+					<Button id="submit-button" loading={this.props.loading} onClick={this.onSubmit}>
 						<FormattedMessage id="teamSelection.submitButton" defaultMessage="NEXT" />
 					</Button>
 				</form>
