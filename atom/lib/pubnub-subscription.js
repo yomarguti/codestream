@@ -44,6 +44,7 @@ export default class PubnubSubscription {
 	status(status) {
 		// check for a message indicating a successful subscription
 		if (
+			!status.error &&
 			status.operation === "PNSubscribeOperation" &&
 			status.category === "PNConnectedCategory" &&
 			status.affectedChannels.includes(this.channel)
@@ -57,6 +58,13 @@ export default class PubnubSubscription {
 				level: "info"
 			});
 			this.store.dispatch(subscriptionSuccess(this.channel));
+		} else if (
+			this._subscribed &&
+			status.error &&
+			(status.operation === "PNHeartbeatOperation" || status.operation === "PNSubscribeOperation")
+		) {
+			// assuming some kind of network error, let's make sure we're still subscribed
+			this.confirmSubscription();
 		}
 	}
 

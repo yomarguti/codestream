@@ -57,7 +57,6 @@ export default class PubNubReceiver {
 				category: "pubnub",
 				level: "warning"
 			});
-			return;
 		}
 
 		const channels = status.affectedChannels || Object.keys(this.subscriptions);
