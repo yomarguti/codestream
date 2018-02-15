@@ -18,13 +18,6 @@ export class SimpleTeamSelectionForm extends Component {
 
 	isSelected = value => this.state.selectedValue === value;
 
-	isFormInvalid = () => {
-		const { selectedValue, newTeamName } = this.state;
-		const noSelection = selectedValue === "";
-		const noTeamName = selectedValue === "createTeam" && newTeamName === "";
-		return noSelection || noTeamName;
-	};
-
 	onSelect = event => {
 		const { value } = event.target;
 		this.setState({ selectedValue: value });
