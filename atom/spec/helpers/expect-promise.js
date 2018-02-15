@@ -1,31 +1,29 @@
-'use strict';
+"use strict";
 
 class ExpectPromise {
-	constructor (promise) {
+	constructor(promise) {
 		this._promise = promise;
 	}
 
-	toResolve () {
+	toResolve() {
 		return this._promise;
 	}
 
-	toReject () {
+	toReject() {
 		var me = this;
 		return new Promise((res, rej) => {
 			me._promise.then(rej, res);
 		});
 	}
 
-	toThrow () {
+	toThrow() {
 		var me = this;
 		return new Promise((res, rej) => {
-			me._promise
-				.then(rej, rej)
-				.catch(err => res);
+			me._promise.then(rej, rej).catch(err => res);
 		});
 	}
 }
 
-export default function expectPromise (promise) {
+export default function expectPromise(promise) {
 	return new ExpectPromise(promise);
-};
+}

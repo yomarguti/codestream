@@ -1,43 +1,41 @@
-'use strict';
+"use strict";
 
 const _levels = {
-	'ERROR': 0,
-	'WARN':  1,
-	'INFO':  2,
-	'DEBUG': 3,
-	'TRACE': 4,
-	'TICK':  5
+	ERROR: 0,
+	WARN: 1,
+	INFO: 2,
+	DEBUG: 3,
+	TRACE: 4,
+	TICK: 5
 };
 
-const _tickLevel = _levels['TICK'];
+const _tickLevel = _levels["TICK"];
 
-let	_objectIdSeed = 0;
+let _objectIdSeed = 0;
 
-function _normalizeLevel (level) {
+function _normalizeLevel(level) {
 	const requestedLevel = level;
 
-	if (typeof level === 'string') {
+	if (typeof level === "string") {
 		level = level.toUpperCase();
 		level = _levels[level];
 	}
 
 	if (level == null) {
-		throw new Error('Unknown log level: ' + requestedLevel);
+		throw new Error("Unknown log level: " + requestedLevel);
 	}
 
 	return level;
 }
 
 class Tick {
-
-	constructor (logger) {
+	constructor(logger) {
 		const me = this;
 		me._logger = logger;
 		me._lastTick = +new Date();
 	}
 
-
-	tock (message) {
+	tock(message) {
 		const me = this;
 		const logger = me._logger;
 
@@ -54,8 +52,7 @@ class Tick {
 }
 
 class Logger {
-
-	constructor (className, level, handlers, parent) {
+	constructor(className, level, handlers, parent) {
 		const me = this;
 		me._className = className;
 		me._level = _normalizeLevel(level);
@@ -63,34 +60,34 @@ class Logger {
 		me._parent = parent;
 		me._childLoggers = [];
 		me._levelChangeListeners = [];
-		me._handlers = (handlers && handlers.slice) ? handlers.slice() : [];
+		me._handlers = handlers && handlers.slice ? handlers.slice() : [];
 	}
 
-	error () {
-		this._log('ERROR', arguments);
+	error() {
+		this._log("ERROR", arguments);
 	}
 
-	warn () {
-		this._log('WARN', arguments);
+	warn() {
+		this._log("WARN", arguments);
 	}
 
-	info () {
-		this._log('INFO', arguments);
+	info() {
+		this._log("INFO", arguments);
 	}
 
-	debug () {
-		this._log('DEBUG', arguments);
+	debug() {
+		this._log("DEBUG", arguments);
 	}
 
-	trace () {
-		this._log('TRACE', arguments);
+	trace() {
+		this._log("TRACE", arguments);
 	}
 
-	tick () {
+	tick() {
 		return new Tick(this);
 	}
 
-	_log (msgLevel, args) {
+	_log(msgLevel, args) {
 		const me = this;
 		const msgLevelName = msgLevel;
 
@@ -102,15 +99,15 @@ class Logger {
 			for (let i = 0; i < args.length; i++) {
 				let arg = args[i];
 				if (arg == null) {
-					arg = '' + arg;
-				} else if (typeof arg === 'object') {
-					arg = JSON.stringify(arg).substring(0, 32) + '...';
+					arg = "" + arg;
+				} else if (typeof arg === "object") {
+					arg = JSON.stringify(arg).substring(0, 32) + "...";
 				}
 				args[i] = arg;
 			}
-			msg = [].join.call(args, ' ');
+			msg = [].join.call(args, " ");
 			const className = me._className;
-			msg = (className ? '[' + className + '] ' : '') + msg;
+			msg = (className ? "[" + className + "] " : "") + msg;
 
 			me._handlers.forEach(handlerFn => {
 				try {
@@ -124,16 +121,14 @@ class Logger {
 		}
 	}
 
-
-
-	print (msg) {
+	print(msg) {
 		const me = this;
 		this._handlers.forEach(handlerFn => {
-			handlerFn.call(me, 'INFO', msg);
+			handlerFn.call(me, "INFO", msg);
 		});
 	}
 
-	forClass (className) {
+	forClass(className) {
 		const me = this;
 		const childLogger = new Logger(className, me._level, me._handlers, me);
 
@@ -142,15 +137,15 @@ class Logger {
 		return childLogger;
 	}
 
-	forObject (className, id) {
-		return this.forClass(className + '-' + (id || ++_objectIdSeed));
+	forObject(className, id) {
+		return this.forClass(className + "-" + (id || ++_objectIdSeed));
 	}
 
-	get level () {
+	get level() {
 		return this._level;
 	}
 
-	setLevel (level, path) {
+	setLevel(level, path) {
 		const me = this;
 		const className = me._className;
 
@@ -169,7 +164,7 @@ class Logger {
 		}
 	}
 
-	addHandler (handlerFn) {
+	addHandler(handlerFn) {
 		const me = this;
 		me._handlers.push(handlerFn);
 		for (const childLogger of me._childLoggers) {
@@ -177,16 +172,16 @@ class Logger {
 		}
 	}
 
-	onLevelChange (fn) {
+	onLevelChange(fn) {
 		this._levelChangeListeners.push(fn);
 	}
 
-	destroy () {
+	destroy() {
 		const me = this;
 		me._parent._removeChild(me);
 	}
 
-	_removeChild (child) {
+	_removeChild(child) {
 		const childLoggers = this._childLoggers;
 		const index = childLoggers.indexOf(child);
 
@@ -196,6 +191,6 @@ class Logger {
 	}
 }
 
-const _instance = new Logger(null, 'INFO');
+const _instance = new Logger(null, "INFO");
 
 export default _instance;
