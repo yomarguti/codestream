@@ -107,12 +107,15 @@ export const calculateLocations = ({ teamId, streamId, text }) => async (
 		Object.assign(locations, calculatedLocations);
 	}
 
-	const dirty = await locationFinder.findLocationsForUncommittedChanges(locations, text);
-	for (const markerId of Object.keys(dirty)) {
-		const dirtyLocation = dirty[markerId];
-		const lastCommitLocation = locations[markerId];
-		if (areEqualLocations(dirtyLocation, lastCommitLocation)) {
-			delete dirty[markerId];
+	let dirty = {};
+	if (text !== undefined) {
+		dirty = await locationFinder.findLocationsForUncommittedChanges(locations, text);
+		for (const markerId of Object.keys(dirty)) {
+			const dirtyLocation = dirty[markerId];
+			const lastCommitLocation = locations[markerId];
+			if (areEqualLocations(dirtyLocation, lastCommitLocation)) {
+				delete dirty[markerId];
+			}
 		}
 	}
 
