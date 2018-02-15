@@ -2,8 +2,7 @@ import { CompositeDisposable, File } from "atom";
 import { Component } from "react";
 import { connect } from "react-redux";
 import * as markerLocationActions from "../actions/marker-location";
-import * as markerLocationRecalculationActions from "../actions/marker-location-recalculation";
-import { locationToRange, rangeToLocation } from "../util/Marker";
+import { locationToRange } from "../util/Marker";
 import { getStreamForRepoAndFile } from "../reducers/streams";
 
 const isActiveEditor = editor => {
