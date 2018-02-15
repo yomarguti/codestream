@@ -123,31 +123,4 @@ describe("reducer for marker locations", () => {
 		});
 	});
 
-	describe("MARKER_DIRTIED", () => {
-		it("uses the dirty location over the original location", () => {
-			const state = {
-				byStream: {
-					[locations.streamId]: {
-						[locations.commitHash]: locations.locations
-					}
-				}
-			};
-
-			const payload = {
-				teamId: locations.teamId,
-				streamId: locations.streamId,
-				commitHash: locations.commitHash,
-				locations: { someMarker: [1, 2, 3, 4] }
-			};
-			const result = reduce(state, { type: "MARKER_DIRTIED", payload });
-
-			expect(result).toEqual({
-				byStream: {
-					[locations.streamId]: {
-						[locations.commitHash]: { ...locations.locations, someMarker: [1, 2, 3, 4] }
-					}
-				}
-			});
-		});
-	});
 });

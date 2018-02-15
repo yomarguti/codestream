@@ -30,7 +30,7 @@ Raven.config("https://46fd0a63e10340b585d895d333fec719@sentry.io/280733", {
 		platform: os.platform(),
 		platformRelease: os.release(),
 		atom: atom.getVersion(),
-		codestreamUrl: atom.config.get("codestream.url") || "production"
+		codestreamEnv: sessionStorage.getItem("codestream.env") || "production"
 	}
 }).install();
 window.addEventListener("unhandledrejection", function(event) {
@@ -181,20 +181,12 @@ module.exports = {
 	},
 
 	serialize() {
-		const {
-			session,
-			onboarding,
-			context,
-			repoAttributes,
-			messaging,
-			markerLocationRecalculation
-		} = store.getState();
+		const { session, onboarding, context, repoAttributes, messaging } = store.getState();
 		return {
 			onboarding: { ...onboarding, errors: {} },
 			context,
 			session,
 			repoAttributes,
-			markerLocationRecalculation,
 			messaging: {
 				...messaging,
 				failedSubscriptions: [],

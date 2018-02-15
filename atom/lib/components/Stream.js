@@ -1036,8 +1036,10 @@ export class SimpleStream extends Component {
 		}
 
 		const mentionUserIds = this.findMentions(newText);
+		const editor = atom.workspace.getActiveTextEditor();
+		const editorText = editor.getText();
 
-		createPost(this.props.id, this.state.threadId, newText, codeBlocks, mentionUserIds);
+		createPost(this.props.id, this.state.threadId, newText, codeBlocks, mentionUserIds, editorText);
 
 		// reset the input field to blank
 		this.resetCompose();

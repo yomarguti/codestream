@@ -7,6 +7,8 @@ import { saveStream } from "./stream";
 import { saveMarkers } from "./marker";
 import { saveMarkerLocations } from "./marker-location";
 import { getStreamForRepoAndFile } from "../reducers/streams";
+import MarkerLocationFinder from "../git/MarkerLocationFinder";
+import { open as openRepo } from "../git/GitRepo";
 
 const createTempId = (() => {
 	let count = 0;
@@ -158,14 +160,19 @@ export const savePendingPost = attributes => (dispatch, getState, { db }) => {
 	});
 };
 
-export const createPost = (streamId, parentPostId, text, codeBlocks, mentions) => async (
-	dispatch,
-	getState,
-	{ http }
-) => {
-	const { session, context } = getState();
+export const createPost = (
+	streamId,
+	parentPostId,
+	text,
+	codeBlocks,
+	mentions,
+	bufferText
+) => async (dispatch, getState, { http }) => {
+	const state = getState();
+	const { session, context } = state;
 	const pendingId = createTempId();
 
+	codeBlocks = await backtrackMarkerLocations(codeBlocks, bufferText, streamId, state, http);
 	const post = {
 		id: pendingId,
 		teamId: context.currentTeamId,
@@ -207,6 +214,35 @@ export const createPost = (streamId, parentPostId, text, codeBlocks, mentions) =
 		// TODO: different types of errors?
 		dispatch(rejectPendingPost(pendingId, { ...post, error: true }));
 	}
+};
+
+const backtrackMarkerLocations = async (codeBlocks, bufferText, streamId, state, http) => {
+	const { context, repoAttributes, session } = state;
+	const gitRepo = await openRepo(repoAttributes.workingDirectory);
+	const dirtyLocations = codeBlocks.map(codeBlock => codeBlock.location);
+	const locationFinder = new MarkerLocationFinder({
+		filePath: context.currentFile,
+		gitRepo,
+		http,
+		accessToken: session.accessToken,
+		teamId: context.currentTeamId,
+		streamId
+	});
+
+	const backtrackedLocations = await locationFinder.backtrackLocationsAtCurrentCommit(
+		dirtyLocations,
+		bufferText
+	);
+	const backtrackedCodeBlocks = [];
+
+	for (let i = 0; i < codeBlocks.length; i++) {
+		backtrackedCodeBlocks.push({
+			...codeBlocks[i],
+			location: backtrackedLocations[i]
+		});
+	}
+
+	return backtrackedCodeBlocks;
 };
 
 export const resolvePendingPost = (id, { post, markers, markerLocations, stream }) => (

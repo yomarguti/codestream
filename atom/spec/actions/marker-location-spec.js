@@ -1,7 +1,7 @@
 import Dexie from "dexie";
 import configureStore from "redux-mock-store";
 import thunk from "redux-thunk";
-import { markerDirtied, saveMarkerLocations } from "../../lib/actions/marker-location";
+import { saveMarkerLocations } from "../../lib/actions/marker-location";
 
 const dbName = "marker-location-spec";
 
@@ -82,35 +82,6 @@ describe("marker-location action creators", () => {
 				});
 				const record = await db.markerLocations.get({ streamId, teamId, commitHash });
 				expect(record).toEqual(expectedRecord);
-			});
-		});
-	});
-
-	describe("markerDirtied", () => {
-		it("saves the new location", () => {
-			const store = configureStore([thunk.withExtraArgument({ db })])({
-				context: { currentCommit: commitHash, currentTeamId: teamId }
-			});
-			const oldLocation = [1, 2, 3, 4];
-			const newLocation = [2, 3, 4, 5];
-			const expectedRecord = {
-				teamId,
-				streamId,
-				commitHash,
-				locations: { [markerId]: oldLocation },
-				dirty: { [markerId]: newLocation }
-			};
-			waitsForPromise(async () => {
-				await db.markerLocations.add({
-					teamId,
-					commitHash,
-					streamId,
-					locations: { [markerId]: oldLocation }
-				});
-				await store.dispatch(markerDirtied({ markerId, streamId }, newLocation));
-				expect(store.getActions()).toContain({ type: "MARKER_DIRTIED", payload: expectedRecord });
-				const locations = await db.markerLocations.get({ streamId, teamId, commitHash });
-				expect(locations).toEqual(expectedRecord);
 			});
 		});
 	});

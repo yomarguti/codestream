@@ -2,8 +2,7 @@ import { CompositeDisposable, File } from "atom";
 import { Component } from "react";
 import { connect } from "react-redux";
 import * as markerLocationActions from "../actions/marker-location";
-import * as markerLocationRecalculationActions from "../actions/marker-location-recalculation";
-import { locationToRange, rangeToLocation } from "../util/Marker";
+import { locationToRange } from "../util/Marker";
 import { getStreamForRepoAndFile } from "../reducers/streams";
 
 const isActiveEditor = editor => {
@@ -12,29 +11,15 @@ const isActiveEditor = editor => {
 	return result;
 };
 
-const isCalculationUpdated = async (path, editor, lastCalculation) => {
-	const hash = await getContentHash(path);
-	editor.lastHash = hash;
-	const result = editor.displayMarkers && lastCalculation[path] === hash;
+const shouldRecalculateMarkers = (editor, { streamId }) => {
+	if (!isActiveEditor(editor)) {
+		return false;
+	}
+	if (!streamId) {
+		return false;
+	}
 
-	return result;
-};
-
-const shouldRecalculateMarkers = async (editor, { currentFile, lastCalculation }) => {
-	const result =
-		!editor.isRecalculatingMarkers &&
-		isActiveEditor(editor) &&
-		!editor.getBuffer().isModified() &&
-		!await isCalculationUpdated(currentFile, editor, lastCalculation);
-
-	return result;
-};
-
-const getContentHash = async path => {
-	const file = new File(path);
-	const hash = await file.getDigest();
-
-	return hash;
+	return true;
 };
 
 class MarkerLocationTracker extends Component {
@@ -43,21 +28,24 @@ class MarkerLocationTracker extends Component {
 		const editorsObserver = atom.workspace.observeTextEditors(this.editorOpened);
 		subscriptions.add(editorsObserver);
 
-		const { editor, streamId } = this.props;
-		if (streamId) {
-			this.recalculateMarkers(editor);
-		}
+		const { editor } = this.props;
+		this.calculateLocations(editor);
 	};
 
 	componentWillReceiveProps(nextProps) {
 		const { editor, markers } = nextProps;
 
-		if (markers) {
+		if (editor && markers) {
+			editor.hasNewMarker = false;
 			for (const { id, location } of markers) {
 				this.createOrUpdateDisplayMarker(editor, {
 					id,
 					location
 				});
+			}
+
+			if (editor.hasNewMarker) {
+				this.calculateLocations(editor);
 			}
 		}
 	}
@@ -65,7 +53,7 @@ class MarkerLocationTracker extends Component {
 	componentDidUpdate = (prevProps, prevState) => {
 		const { editor, streamId } = this.props;
 		if (streamId && streamId != prevProps.streamId) {
-			this.recalculateMarkers(editor);
+			this.calculateLocations(editor);
 		}
 	};
 
@@ -75,30 +63,19 @@ class MarkerLocationTracker extends Component {
 
 	editorOpened = editor => {
 		this.subscriptions.add(
-			editor.getBuffer().onDidReload(() => this.recalculateMarkers(editor)),
-			editor.onDidStopChanging(() => this.saveDirtyMarkerLocations(editor))
+			editor.getBuffer().onDidReload(() => this.calculateLocations(editor)),
+			editor.onDidStopChanging(() => this.calculateLocations(editor))
 		);
 	};
 
-	recalculateMarkers = async editor => {
-		if (!await shouldRecalculateMarkers(editor, this.props)) {
+	calculateLocations = editor => {
+		if (!shouldRecalculateMarkers(editor, this.props)) {
 			return;
 		}
 
-		editor.isRecalculatingMarkers = true;
+		const { teamId, streamId, calculateLocations } = this.props;
 
-		const {
-			currentFile,
-			teamId,
-			streamId,
-			calculateLocations,
-			updateLastCalculationForFile
-		} = this.props;
-		updateLastCalculationForFile(currentFile, editor.lastHash);
-
-		calculateLocations({ teamId, streamId });
-
-		editor.isRecalculatingMarkers = false;
+		calculateLocations({ teamId, streamId, text: editor.getText() });
 	};
 
 	createOrUpdateDisplayMarker(editor, marker) {
@@ -111,21 +88,7 @@ class MarkerLocationTracker extends Component {
 			displayMarker.setBufferRange(range);
 		} else {
 			displayMarkers[markerId] = editor.markBufferRange(range);
-		}
-	}
-
-	saveDirtyMarkerLocations(editor) {
-		const { streamId, markerDirtied } = this.props;
-		const displayMarkers = editor.displayMarkers;
-
-		if (editor.isRecalculatingMarkers || !displayMarkers) {
-			return;
-		}
-
-		for (const markerId of Object.keys(displayMarkers)) {
-			const displayMarker = displayMarkers[markerId];
-			const location = rangeToLocation(displayMarker.getBufferRange());
-			markerDirtied({ markerId, streamId }, location);
+			editor.hasNewMarker = true;
 		}
 	}
 
@@ -135,17 +98,15 @@ class MarkerLocationTracker extends Component {
 }
 
 const mapStateToProps = state => {
-	const { streams, context, markerLocationRecalculation } = state;
+	const { streams, context } = state;
 	const stream = getStreamForRepoAndFile(streams, context.currentRepoId, context.currentFile) || {};
 	return {
 		teamId: context.currentTeamId,
 		streamId: stream.id,
-		currentFile: context.currentFile,
-		lastCalculation: markerLocationRecalculation
+		currentFile: context.currentFile
 	};
 };
 
 export default connect(mapStateToProps, {
-	...markerLocationActions,
-	...markerLocationRecalculationActions
+	...markerLocationActions
 })(MarkerLocationTracker);

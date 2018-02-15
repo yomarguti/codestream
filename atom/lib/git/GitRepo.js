@@ -93,7 +93,6 @@ class DeltaBuilder {
 class GitRepo {
 	constructor(git) {
 		this._git = git;
-		this._deltasBetweenCommits = {};
 	}
 
 	async getCurrentCommit() {
@@ -120,14 +119,28 @@ class GitRepo {
 		return await this._buildDeltasFromDiffs([diff]);
 	}
 
-	async getDeltasForPendingChanges(filePath) {
-		const currentCommit = await this.getCurrentCommit();
-		const currentTree = await currentCommit._commit.getTree();
-		const opts = {
-			pathspec: [filePath]
-		};
-		const diff = await Git.Diff.treeToWorkdir(this._git, currentTree, opts);
-		return await this._buildDeltasFromDiffs([diff]);
+	async getBlobForCommittedFile(filePath) {
+		const headCommit = await this.getCurrentCommit();
+		const tree = await headCommit.getTree();
+		const treeEntry = await tree.entryByPath(filePath);
+		const blob = await this._git.getBlob(treeEntry.sha());
+
+		return blob;
+	}
+
+	async getDeltaForUncommittedChanges(filePath, text) {
+		const committedBlob = await this.getBlobForCommittedFile(filePath);
+		const diffOptions = new Git.DiffOptions();
+		const patch = await Git.Patch.fromBlobAndBuffer(
+			committedBlob,
+			filePath,
+			text,
+			text.length,
+			filePath,
+			diffOptions
+		);
+
+		return await this._buildDeltaFromPatch(patch, filePath);
 	}
 
 	async getDeltas(commit) {
@@ -161,6 +174,24 @@ class GitRepo {
 		}
 
 		return deltas;
+	}
+
+	async _buildDeltaFromPatch(patch, filePath) {
+		const builder = new DeltaBuilder({
+			oldFile: filePath,
+			newFile: filePath
+		});
+
+		const numHunks = patch.numHunks();
+		for (let h = 0; h < numHunks; h++) {
+			const numLinesInHunk = patch.numLinesInHunk(h);
+			for (let l = 0; l < numLinesInHunk; l++) {
+				const line = await patch.getLineInHunk(h, l);
+				builder.processLine(line);
+			}
+		}
+
+		return builder.build();
 	}
 
 	async getCommitHistoryForFile(filePath, maxHistorySize) {

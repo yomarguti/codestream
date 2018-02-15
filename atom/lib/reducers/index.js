@@ -11,7 +11,6 @@ import markerLocations from "./marker-locations";
 import umis from "./umis";
 import messaging from "./messaging";
 import connectivity from "./connectivity";
-import markerLocationRecalculation from "./marker-location-recalculation";
 
 const session = (state = {}, { type, payload }) => {
 	if (type === "INIT_SESSION") return payload;
@@ -44,8 +43,7 @@ const appReducer = combineReducers({
 	markers,
 	markerLocations,
 	messaging,
-	connectivity,
-	markerLocationRecalculation
+	connectivity
 });
 
 export default (state, action) => {
