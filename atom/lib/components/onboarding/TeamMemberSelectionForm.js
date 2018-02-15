@@ -4,6 +4,7 @@ import { connect } from "react-redux";
 import PropTypes from "prop-types";
 import _ from "underscore-plus";
 import Button from "./Button";
+import Tooltip from "../Tooltip";
 import UnexpectedErrorMessage from "./UnexpectedErrorMessage";
 import git from "../../git";
 import * as actions from "../../actions/onboarding";
@@ -47,8 +48,9 @@ export class SimpleTeamMemberSelectionForm extends Component {
 			committers: [],
 			loadingCommitters: true,
 			addingMissingMember: false,
-			newMemberInputTouched: false,
-			newMemberEmail: ""
+			newMemberEmail: "",
+			newMemberInvalid: true,
+			newMemberInputTouched: false
 		};
 	}
 
@@ -189,11 +191,15 @@ export class SimpleTeamMemberSelectionForm extends Component {
 
 	onNewMemberChange = event => this.setState({ newMemberEmail: event.target.value });
 
-	onNewMemberBlur = () => this.setState({ newMemberInputTouched: true });
+	onNewMemberBlur = () =>
+		this.setState(state => ({
+			newMemberInputTouched: true,
+			newMemberInvalid: isEmailInvalid(state.newMemberEmail)
+		}));
 
 	renderNewMemberError() {
-		const { newMemberEmail, newMemberInputTouched } = this.state;
-		if (newMemberInputTouched && isEmailInvalid(newMemberEmail))
+		const { newMemberInvalid, newMemberInputTouched } = this.state;
+		if (newMemberInvalid && newMemberInputTouched)
 			return (
 				<span className="error-message">
 					<FormattedMessage id="signUp.email.invalid" />
@@ -201,44 +207,53 @@ export class SimpleTeamMemberSelectionForm extends Component {
 			);
 	}
 
-	addNewMember = () => {
+	addNewMember = event => {
+		event.preventDefault();
 		this.setState(state => {
-			const email = state.newMemberEmail;
-			let newCommitters;
-			if (_.findWhere(state.committers, { email })) {
-				newCommitters = state.committers.map(
-					committer => (committer.email === email ? { ...committer, selected: true } : committer)
-				);
-			} else {
-				newCommitters = [{ email, selected: true }, ...state.committers];
+			if (isEmailInvalid(state.newMemberEmail)) return { newMemberInvalid: true };
+			else {
+				const email = state.newMemberEmail;
+				let newCommitters;
+				if (_.findWhere(state.committers, { email })) {
+					newCommitters = state.committers.map(
+						committer => (committer.email === email ? { ...committer, selected: true } : committer)
+					);
+				} else {
+					newCommitters = [{ email, selected: true }, ...state.committers];
+				}
+				return {
+					committers: newCommitters,
+					newMemberEmail: "",
+					addingMissingMember: false,
+					newMemberInputTouched: false,
+					newMemberInvalid: true
+				};
 			}
-			return {
-				committers: newCommitters,
-				newMemberEmail: "",
-				addingMissingMember: false,
-				newMemberInputTouched: false
-			};
 		});
 	};
 
 	renderNewInput() {
-		const { newMemberEmail, newMemberInputTouched } = this.state;
+		const { newMemberEmail, newMemberInvalid, newMemberInputTouched } = this.state;
 		return (
 			<form className="add-member-form" onSubmit={this.addNewMember}>
 				<div className="errors">{this.renderNewMemberError()}</div>
 				<div className="control-group">
 					<div>
-						<input
-							className="native-key-bindings input-text"
-							type="email"
-							placeholder="Enter email address"
-							value={newMemberEmail}
-							onChange={this.onNewMemberChange}
-							onBlur={this.onNewMemberBlur}
-							required={newMemberEmail === "" && newMemberInputTouched}
-						/>
+						<Tooltip title="Team member's email address" placement="left" delay="0">
+							<input
+								id="new-member-input"
+								className="native-key-bindings input-text"
+								type="text"
+								placeholder="Enter email address"
+								value={newMemberEmail}
+								onChange={this.onNewMemberChange}
+								onBlur={this.onNewMemberBlur}
+								required={newMemberInvalid && newMemberInputTouched}
+								autoFocus
+							/>
+						</Tooltip>
 					</div>
-					<Button disabled={newMemberEmail === ""}>
+					<Button>
 						<FormattedMessage id="teamMemberSelection.add" defaultMessage="ADD" />
 					</Button>
 				</div>

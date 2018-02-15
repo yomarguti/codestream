@@ -11,7 +11,7 @@
 	"signUp.password.help": "6+ characters",
 	"signUp.password.tip": "6+ characters",
 	"signUp.email.label": "Email",
-	"signUp.email.invalid": "Looks invalid?",
+	"signUp.email.invalid": "That looks invalid",
 	"signUp.email.help": "We got this from Git",
 	"signUp.email.tip": "Defaulted from git",
 	"signUp.submitButton": "SIGN UP",
