@@ -186,15 +186,13 @@ module.exports = {
 			onboarding,
 			context,
 			repoAttributes,
-			messaging,
-			markerLocationRecalculation
+			messaging
 		} = store.getState();
 		return {
 			onboarding: { ...onboarding, errors: {} },
 			context,
 			session,
 			repoAttributes,
-			markerLocationRecalculation,
 			messaging: {
 				...messaging,
 				failedSubscriptions: [],
