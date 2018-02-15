@@ -30,6 +30,8 @@ export const incrementUMI = post => async (dispatch, getState, { db }) => {
 	const currentUser = users[session.userId];
 
 	// don't increment UMIs for posts you wrote yourself
+	// note that this is taken care of on the server as well,
+	// so we don't need to sync with the server in this case
 	if (post.creatorId === session.userId) return;
 
 	// don't increment the UMI of the current stream, presumably because you
@@ -40,7 +42,12 @@ export const incrementUMI = post => async (dispatch, getState, { db }) => {
 		context.currentRepoId,
 		context.currentFile
 	);
-	if (currentStream && currentStream.id === post.streamId) return;
+	if (currentStream && currentStream.id === post.streamId) {
+		// make sure we let the server know this post is read
+		// and return so that we do not increment the UMI
+		dispatch(markStreamRead(currentStream.id));
+		return;
+	}
 
 	var hasMention = post.text.match("@" + currentUser.username + "\\b");
 	let type = hasMention ? "INCREMENT_MENTION" : "INCREMENT_UMI";
