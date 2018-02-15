@@ -41,45 +41,6 @@ describe("TeamSelectionForm", () => {
 		expect(inputs.at(2).text()).toBe("Cool Coders");
 	});
 
-	describe("when the 'Create new team' option is selected", () => {
-		it("shows errors when the text field is left empty", () => {
-			const view = mountWithIntl(
-				<Provider store={store}>
-					<TeamSelectionForm />
-				</Provider>
-			);
-			view
-				.find('input[value="createTeam"]')
-				.simulate("change", { target: { value: "createTeam" } });
-			view.find("#name-input").simulate("blur");
-			expect(view.find("#name-input").prop("required")).toBe(true);
-		});
-	});
-
-	describe("submit button", () => {
-		it("is disabled while the form is invalid", () => {
-			const view = mountWithIntl(
-				<Provider store={store}>
-					<TeamSelectionForm />
-				</Provider>
-			);
-			expect(view.find("Button").prop("disabled")).toBe(true);
-		});
-
-		it("is enabled while the form is valid", () => {
-			const view = mountWithIntl(
-				<Provider store={store}>
-					<TeamSelectionForm />
-				</Provider>
-			);
-			view
-				.find('input[type="radio"]')
-				.at(1)
-				.simulate("change", { target: { value: "1" } });
-			expect(view.find("Button").prop("disabled")).toBe(false);
-		});
-	});
-
 	describe("when the form is submitted", () => {
 		describe("when the user selects an existing team", () => {
 			it("calls the addRepoForTeam function with the teamId", () => {
