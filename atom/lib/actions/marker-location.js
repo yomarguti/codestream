@@ -14,7 +14,7 @@ export const saveMarkerLocations = (attributes, isHistory = false) => (
 	getState,
 	{ db }
 ) => {
-	const { streamId, teamId, commitHash, locations, dirty } = attributes;
+	const { streamId, teamId, commitHash, locations, dirty = {} } = attributes;
 
 	if (!(streamId && teamId && commitHash)) return;
 
