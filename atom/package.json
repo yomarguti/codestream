@@ -56,6 +56,7 @@
 		"dexie": "^2.0.1",
 		"diff": "^3.4.0",
 		"eol": "^0.9.1",
+    "mixpanel-browser": "^2.17.1",
 		"moment": "^2.19.3",
 		"prop-types": "^15.6.0",
 		"pubnub": "^4.19.0",

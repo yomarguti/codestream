@@ -7,6 +7,7 @@ import reducer from "./reducers";
 import pubnubMiddleWare from "./pubnub-middleware";
 import umiMiddleWare from "./umi-middleware";
 import contextualCommands from "./contextual-commands-middleware";
+import analyticsMiddleware from "./analytics-middleware";
 import db from "./local-cache";
 import * as http from "./network-request";
 
@@ -20,6 +21,7 @@ export default (initialState = {}) => {
 				pubnubMiddleWare,
 				umiMiddleWare,
 				contextualCommands,
+				analyticsMiddleware,
 				createRavenMiddleware(Raven, {
 					stateTransformer: ({ context, session, repoAttributes, messaging }) => {
 						return { context, session: { ...session, accessToken: "" }, repoAttributes, messaging };
