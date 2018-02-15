@@ -35,7 +35,7 @@ class MarkerLocationTracker extends Component {
 	componentWillReceiveProps(nextProps) {
 		const { editor, markers } = nextProps;
 
-		if (markers) {
+		if (editor && markers) {
 			editor.hasNewMarker = false;
 			for (const { id, location } of markers) {
 				this.createOrUpdateDisplayMarker(editor, {
