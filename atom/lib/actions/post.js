@@ -236,7 +236,6 @@ const backtrackMarkerLocations = async (codeBlocks, bufferText, streamId, state,
 	const backtrackedCodeBlocks = [];
 
 	for (let i = 0; i < codeBlocks.length; i++) {
-		console.log("backtrack", codeBlocks[i].location, backtrackedLocations[i]);
 		backtrackedCodeBlocks.push({
 			...codeBlocks[i],
 			location: backtrackedLocations[i]
