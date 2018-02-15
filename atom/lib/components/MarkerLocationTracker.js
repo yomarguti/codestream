@@ -109,6 +109,5 @@ const mapStateToProps = state => {
 };
 
 export default connect(mapStateToProps, {
-	...markerLocationActions,
-	...markerLocationRecalculationActions
+	...markerLocationActions
 })(MarkerLocationTracker);
