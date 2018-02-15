@@ -110,7 +110,7 @@ export class SimpleTeamSelectionForm extends Component {
 							</div>
 						);
 					})}
-					<Button id="submit-button" disabled={this.isFormInvalid()} loading={this.props.loading}>
+					<Button id="submit-button" loading={this.props.loading}>
 						<FormattedMessage id="teamSelection.submitButton" defaultMessage="NEXT" />
 					</Button>
 				</form>
