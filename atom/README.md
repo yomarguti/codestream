@@ -6,17 +6,25 @@ CodeStream puts team chat into Atom (and other IDEs) so that developers can disc
 
 ![FullIDE](https://codestream.zendesk.com/hc/article_attachments/360000712271/CodeStream.png)
 
-Regardless of what chat service your team is using, talking about code in a meaningful way can be tedious. Copy a block of code in your IDE, head over to the appropriate chat channel, paste the code, provide some context (repo, file, line numbers), and maybe open a terminal and do a git blame to see who originally wrote the code so that you can @mention them. Then you can ask your question… finally!
+# Things to Try
 
-With CodeStream, each source file has its own chat stream. Just go to the appropriate file, select the code and type your question. Done. Context is built right in. Even the author of the code block is automatically mentioned!
+* Select a file in your source tree and you’ll see a chat stream in a new pane on the right. In fact, each source file has its own contextual chat stream.
 
-![PostCodeBlock](https://codestream.zendesk.com/hc/article_attachments/360000712411/PostCodeBlock.PNG)
+* To talk about a specific block of code, just select the code in your buffer and then click on the “+” button that appears.
 
-If you were lucky enough to get your question answered in the chat channel, chances are that once the discussion scrolls out of view it will effectively be lost forever. A new developer that takes over the code down the road will never benefit from that discussion.
+![PostCodeBlock](https://codestream.zendesk.com/hc/article_attachments/360000889751/PlusButton.png)
 
-With CodeStream, the discussion lives on with the source file forever, and is even associated with specific commits. You’re effectively building a knowledge base over time, with zero additional effort.
+* Click on any post in the chat stream to add a reply. If the post included a code block, you’ll automatically be scrolled to the appropriate location in the source file. If the code block doesn’t match what you have in your buffer, you’ll have options to view a diff or even apply the changes to your buffer.
 
-![ThreadMarker](https://codestream.zendesk.com/hc/article_attachments/360000704952/ThreadMarker.png)
+![ThreadView](https://codestream.zendesk.com/hc/article_attachments/360000885912/Screen_Shot_2018-02-08_at_4.59.26_PM.png)
+
+* When you post a message, everyone on your team will see an indicator of new messages appear next to the appropriate file in their source tree. The badge will be blue if you were mentioned in a post.
+
+![UMIs](https://codestream.zendesk.com/hc/article_attachments/360000890011/Badge.png)
+
+* If you see a marker on the border of your source file and the chat pane, that means that a discussion took place about that block of code. Click on the marker to view the discussion.
+
+![Markers](https://codestream.zendesk.com/hc/article_attachments/360000889931/Marker.png)
 
 # Requirements
 
@@ -36,14 +44,14 @@ Once installed, toggle the CodeStream view via the Packages menu, or hit Cmd + O
 
 If there are issues installing the plugin dependencies:
 
-## OSX Users
+**OSX Users**
 
 * Run `sudo xcode-select --install`
 * `cd ~/.atom/packages/codestream`
 * `apm install`
 * If there are still issues, you'll need to install libgcrypt. This can be done with homebrew via `brew install libgcrypt` or you by means of another package manager. Once installed, re-run `apm install`.
 
-## Linux Users
+**Linux Users**
 
 * You need `libssl-dev`. On ubuntu, you can use `sudo apt install libssl-dev`.
 * `cd ~/.atom/packages/codestream`
