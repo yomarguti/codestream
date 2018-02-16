@@ -60,7 +60,7 @@ export class SimpleTeamMemberSelectionForm extends Component {
 		const logFormat = "--format=%an<trim-this>%ae";
 		const cutoffDate = "6 months ago";
 		const recentCommitterData = await git(["log", logFormat, `--since="${cutoffDate}"`], { cwd });
-		const recentCommitters = parseCommitters(recentCommitterData.split("\n"), { selected: true });
+		const recentCommitters = parseCommitters(recentCommitterData.split("\n"), { selected: false });
 		const olderCommitterData = await git(["log", logFormat, `--before="${cutoffDate}"`], { cwd });
 		const olderCommitters = parseCommitters(olderCommitterData.split("\n"), {
 			selected: false
