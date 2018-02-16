@@ -118,7 +118,6 @@ describe("EmailConfirmationForm view", () => {
 			const email = "foo@bar.com";
 			const username = "foobar";
 			const password = "foobar";
-			const betaCode = "foobar";
 			const view = mountWithIntl(
 				<Provider store={store}>
 					<SimpleEmailConfirmationForm
@@ -126,14 +125,13 @@ describe("EmailConfirmationForm view", () => {
 						email={email}
 						username={username}
 						password={password}
-						betaCode={betaCode}
 						errors={{}}
 					/>
 				</Provider>
 			);
 			view.find("#send-new-code").simulate("click");
 			waitsFor(() => sendNewCode.callCount > 0);
-			runs(() => expect(sendNewCode).toHaveBeenCalledWith({ email, username, password, betaCode }));
+			runs(() => expect(sendNewCode).toHaveBeenCalledWith({ email, username, password }));
 		});
 	});
 });

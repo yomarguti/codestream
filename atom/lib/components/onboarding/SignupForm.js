@@ -38,11 +38,9 @@ export class SimpleSignupForm extends Component {
 			username: getSystemUser.sync(),
 			password: "",
 			email: "",
-			betaCode: "",
 			usernameTouched: false,
 			passwordTouched: false,
 			emailTouched: false,
-			betaCodeTouched: false,
 			telemetryConsent: true
 		};
 		this.subscriptions = new CompositeDisposable();
@@ -129,25 +127,9 @@ export class SimpleSignupForm extends Component {
 		else return <small>&nbsp;</small>;
 	};
 
-	onBlurBetaCode = () => {
-		if (this.state.betaCodeTouched) return;
-		this.setState({ betaCodeTouched: true });
-	};
-
-	renderBetaCodeHelp = () => {
-		const { betaCodeTouched, betaCode } = this.state;
-		if (betaCodeTouched && (this.props.errors.invalidBetaCode || betaCode === ""))
-			return <small className="error-message">Invalid Code</small>;
-	};
-
 	isFormInvalid = () => {
-		const { username, password, email, betaCode } = this.state;
-		return (
-			isUsernameInvalid(username) ||
-			isPasswordInvalid(password) ||
-			isEmailInvalid(email) ||
-			betaCode === ""
-		);
+		const { username, password, email } = this.state;
+		return isUsernameInvalid(username) || isPasswordInvalid(password) || isEmailInvalid(email);
 	};
 
 	submitCredentials = event => {
@@ -155,14 +137,13 @@ export class SimpleSignupForm extends Component {
 		if (this.isFormInvalid()) return;
 		this.setState({ loading: true });
 		const { register } = this.props;
-		const { username, password, email, name, telemetryConsent, betaCode } = this.state;
+		const { username, password, email, name, telemetryConsent } = this.state;
 		const preferences = { telemetryConsent };
 		register({
 			username,
 			password,
 			email,
 			preferences,
-			betaCode,
 			...parseName(name)
 		}).then(() => this.setState({ loading: false }));
 	};
@@ -256,23 +237,6 @@ export class SimpleSignupForm extends Component {
 							/>
 						</Tooltip>
 						{this.renderPasswordHelp()}
-					</div>
-					<div id="invitation-code-controls" className="control-group">
-						<label>
-							<FormattedMessage id="invitationCode.label" defaultMessage="Invitation Code" />
-						</label>
-						<Tooltip title="Invitation code provided to your team" placement="left" delay="0">
-							<input
-								className="native-key-bindings input-text"
-								type="text"
-								name="betaCode"
-								tabIndex="3"
-								value={this.state.betaCode}
-								onChange={event => this.setState({ betaCode: event.target.value })}
-								onBlur={this.onBlurBetaCode}
-							/>
-						</Tooltip>
-						{this.renderBetaCodeHelp()}
 					</div>
 					<Button
 						id="signup-button"
