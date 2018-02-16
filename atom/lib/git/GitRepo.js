@@ -2,6 +2,7 @@
 
 import GitCommit from "./GitCommit";
 import Git from "nodegit";
+import gitCmdLine from "../git";
 
 export async function open(path) {
 	const git = await Git.Repository.open(path);
@@ -105,7 +106,13 @@ class GitRepo {
 			const commit = await this._git.getCommit(hash);
 			return new GitCommit(commit);
 		} catch (err) {
-			console.warn(`Commit ${hash} not found`);
+			try {
+				await gitCmdLine(["fetch", "origin"]);
+				const commit = await this._git.getCommit(hash);
+				return new GitCommit(commit);
+			} catch (err) {
+				console.warn(`Commit ${hash} not found`);
+			}
 		}
 	}
 
