@@ -60,8 +60,6 @@ export default (state = initialState, { type, payload }) => {
 			};
 		case "INVALID_CREDENTIALS":
 			return { ...state, errors: { invalidCredentials: true } };
-		case "INVALID_BETA_CODE":
-			return { ...state, errors: { invalidBetaCode: true } };
 		case "USERNAME_COLLISION_ON_TEAM":
 			return { ...state, step: "changeUsername", props: payload };
 		case "LOGGED_IN":

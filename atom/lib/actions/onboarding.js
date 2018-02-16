@@ -17,7 +17,6 @@ const requestStarted = () => ({ type: "REQUEST_STARTED" });
 const requestFinished = () => ({ type: "REQUEST_FINISHED" });
 const serverUnreachable = () => ({ type: "ONBOARDING-SERVER_UNREACHABLE" });
 const invalidCredentials = () => ({ type: "INVALID_CREDENTIALS" });
-const invalidBetaCode = () => ({ type: "INVALID_BETA_CODE" });
 const loggedIn = () => ({ type: "LOGGED_IN" });
 const usernameCollision = (takenUsername, nextAction) => ({
 	type: "USERNAME_COLLISION_ON_TEAM",
@@ -57,7 +56,6 @@ export const register = attributes => async (dispatch, getState, { http }) => {
 		.catch(error => {
 			if (http.isApiRequestError(error)) {
 				if (error.data.code === "RAPI-1004") dispatch(userAlreadySignedUp(attributes.email));
-				if (error.data.code === "USRC-1009") dispatch(invalidBetaCode());
 			}
 			if (http.isApiUnreachableError(error)) dispatch(serverUnreachable());
 		});
