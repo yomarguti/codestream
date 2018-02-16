@@ -1,9 +1,8 @@
 import os from "os";
 import { CompositeDisposable } from "atom";
 import Raven from "raven-js";
-import Dexie from "dexie";
 import CodestreamView, { CODESTREAM_VIEW_URI } from "./codestream-view";
-import { bootstrapStore } from "./local-cache";
+import db, { bootstrapStore } from "./local-cache";
 import git from "./git";
 import createStore from "./createStore";
 import {
@@ -138,7 +137,7 @@ module.exports = {
 						store.dispatch({ type: "RESET" });
 						atom.reload();
 					},
-					"codestream:wipe-cache": () => indexedDB.deleteDatabase("CodeStream"),
+					"codestream:wipe-cache": () => db.delete(),
 					"codestream:point-to-dev": () => {
 						sessionStorage.setItem("codestream.env", "dev");
 						sessionStorage.setItem("codestream.url", "https://tca3.codestream.us:9443");
