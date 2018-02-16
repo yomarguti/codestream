@@ -1,8 +1,9 @@
 import Dexie from "dexie";
 
-Dexie.debug = true;
-
 const codestreamEnv = sessionStorage.getItem("codestream.env");
+
+Dexie.debug = Boolean(codestreamEnv);
+
 const dbName = `CodeStream${codestreamEnv ? `-${codestreamEnv}` : ""}`;
 const db = new Dexie(dbName);
 db.version(1).stores({
