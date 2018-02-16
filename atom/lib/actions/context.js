@@ -1,5 +1,7 @@
+import Raven from "raven-js";
+
 export const resetContext = data => ({ type: "RESET_CONTEXT" });
-import { offline } from "./connectivity";
+
 export const setContext = data => ({
 	type: "SET_CONTEXT",
 	payload: data
@@ -37,7 +39,13 @@ export const noAccess = () => ({ type: "NO_ACCESS" });
 export const noRemoteUrl = () => ({ type: "NO_ACCESS-MISSING_REMOTE_URL" });
 
 export const fetchRepoInfo = ({ url, firstCommitHash }) => async (dispatch, getState, { http }) => {
-	if (!url) return dispatch(noRemoteUrl());
+	if (!url) {
+		Raven.captureMessage("No url found while trying to fetch repository information.", {
+			logger: "actions/context",
+			extra: { url, firstCommitHash }
+		});
+		return dispatch(noRemoteUrl());
+	}
 	try {
 		const { repo, usernames } = await http.get(
 			`/no-auth/find-repo?url=${encodeURIComponent(url)}&firstCommitHash=${firstCommitHash}`
