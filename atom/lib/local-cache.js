@@ -15,6 +15,10 @@ db.version(1).stores({
 	markers: "id, streamId, postId",
 	markerLocations: "[streamId+teamId+commitHash]"
 });
+db.version(2).stores({
+	posts:
+		"id, teamId, streamId, creatorId, [creatorId+text+teamId+streamId+commitHashWhenPosted+parentPostId], [creatorId+text+teamId+streamId+commitHashWhenPosted]"
+});
 
 export default db;
 
