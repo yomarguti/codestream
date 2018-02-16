@@ -6,9 +6,13 @@ import { locationToRange } from "../util/Marker";
 import { getStreamForRepoAndFile } from "../reducers/streams";
 
 const isActiveEditor = editor => {
-	const result = editor === atom.workspace.getActiveTextEditor();
-
-	return result;
+	if (!editor) {
+		return false;
+	}
+	if (editor !== atom.workspace.getActiveTextEditor()) {
+		return false;
+	}
+	return true;
 };
 
 const shouldRecalculateMarkers = (editor, { streamId }) => {
@@ -18,7 +22,6 @@ const shouldRecalculateMarkers = (editor, { streamId }) => {
 	if (!streamId) {
 		return false;
 	}
-
 	return true;
 };
 
