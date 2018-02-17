@@ -107,7 +107,9 @@ class GitRepo {
 			return new GitCommit(commit);
 		} catch (err) {
 			try {
-				await gitCmdLine(["fetch", "origin"]);
+				await gitCmdLine(["fetch", "origin"], {
+					cwd: this._git.path()
+				});
 				const commit = await this._git.getCommit(hash);
 				return new GitCommit(commit);
 			} catch (err) {
