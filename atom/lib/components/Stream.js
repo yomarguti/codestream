@@ -19,7 +19,7 @@ import * as streamActions from "../actions/stream";
 import * as umiActions from "../actions/umi";
 import { createPost, editPost, deletePost, fetchPosts } from "../actions/post";
 import { toMapBy } from "../reducers/utils";
-import { locationToRange, rangeToLocation } from "../util/Marker";
+import { rangeToLocation } from "../util/Marker";
 import { getStreamForRepoAndFile } from "../reducers/streams";
 import { getPostsForStream } from "../reducers/posts";
 import rootLogger from "../util/Logger";
@@ -27,18 +27,19 @@ import rootLogger from "../util/Logger";
 const Path = require("path");
 const logger = rootLogger.forClass("components/Stream");
 
-const isBlankLine = (buffer, row) => {
+const isBlankContent = (buffer, row, startColumn, endColumn) => {
 	const line = buffer.lineForRow(row);
-	const result = line.trim() === "";
+	const content = line.substring(startColumn, endColumn);
+	const isBlank = content.trim() === "";
 
-	return result;
+	return isBlank;
 };
 
-const lastColumn = (buffer, row) => {
+const lastColumnInRow = (buffer, row) => {
 	const line = buffer.lineForRow(row);
-	const result = line.length;
+	const lastColumn = line.length;
 
-	return result;
+	return lastColumn;
 };
 
 const trimSelection = editor => {
@@ -47,12 +48,12 @@ const trimSelection = editor => {
 	let { start, end } = range;
 
 	while (start.row < end.row) {
-		if (isBlankLine(buffer, start.row)) {
+		if (isBlankContent(buffer, start.row, start.column)) {
 			start.row++;
 			start.column = 0;
-		} else if (isBlankLine(buffer, end.row)) {
+		} else if (isBlankContent(buffer, end.row, 0, end.column)) {
 			end.row--;
-			end.column = lastColumn(buffer, end.row);
+			end.column = lastColumnInRow(buffer, end.row);
 		} else {
 			break;
 		}
