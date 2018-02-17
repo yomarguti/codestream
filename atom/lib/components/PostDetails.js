@@ -172,14 +172,14 @@ export default class PostDetails extends Component {
 	};
 
 	handleClickApplyPatch = async event => {
-		let editor = atom.workspace.getActiveTextEditor();
+		const editor = atom.workspace.getActiveTextEditor();
 		const post = this.props.post;
+		const location = post.markerLocation;
 
-		let location = post.markerLocation;
 		if (location) {
-			let range = [[location[0], location[1]], [location[2], location[3]]];
+			const range = locationToRange(location);
 
-			this.scrollToLine(location[0]);
+			this.scrollToLine(range.start.row);
 
 			if (this.state.patchApplied) {
 				// revert
