@@ -5,7 +5,7 @@
 	"description": "Better teamwork. Better code.",
 	"keywords": ["git", "team", "chat"],
 	"activationCommands": {},
-	"repository": "",
+	"repository": "https://github.com/TeamCodeStream/atom-client",
 	"license": "",
 	"engines": {
 		"atom": ">=1.0.0 <2.0.0"
