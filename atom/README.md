@@ -8,7 +8,7 @@ CodeStream puts team chat into Atom (and other IDEs) so that developers can disc
 
 # Installation
 
-From the command line, type:
+Make sure you have the atom shell commands installed. From the atom command palette, run `Window: Install Shell Commands`. Then from the command line, type:
 
 `apm install codestream`
 
