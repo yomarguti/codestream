@@ -17,6 +17,7 @@ export default store => next => action => {
 			"First Time User?": false, // might need to move this to after the very first event is tracked
 			Plan: "Free"
 		});
+		mixpanel.track("Sign Up Success");
 	}
 	if (action.type === "LOGGED_IN") {
 		mixpanel.identify(store.getState().session.userId);
