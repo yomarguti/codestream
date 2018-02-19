@@ -27,7 +27,10 @@ export default (initialState = {}) => {
 						return { context, session: { ...session, accessToken: "" }, repoAttributes, messaging };
 					},
 					getUserContext: ({ context, session, users }) => {
-						if (session.userId) return users[session.userId];
+						if (session.userId) {
+							const user = users[session.userId];
+							if (user.preferences.telemetryConsent) return user;
+						}
 					}
 				})
 			)
