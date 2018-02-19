@@ -22,5 +22,9 @@ export default store => next => action => {
 	if (action.type === "LOGGED_IN") {
 		mixpanel.identify(store.getState().session.userId);
 	}
+
+	if (action.type.includes("USERNAME_COLLISION")) {
+		mixpanel.track("Username Collision");
+	}
 	return result;
 };
