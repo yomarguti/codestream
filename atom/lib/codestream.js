@@ -22,19 +22,22 @@ import logger from "./util/Logger";
 import { online, offline } from "./actions/connectivity";
 import { open as openRepo } from "./git/GitRepo";
 
-Raven.config("https://46fd0a63e10340b585d895d333fec719@sentry.io/280733", {
-	captureUnhandledRejections: true,
-	tags: {
-		process: process.type,
-		platform: os.platform(),
-		platformRelease: os.release(),
-		atom: atom.getVersion(),
-		codestreamEnv: sessionStorage.getItem("codestream.env") || "production"
-	}
-}).install();
-window.addEventListener("unhandledrejection", function(event) {
-	Raven.captureException(event.reason);
-});
+const env = sessionStorage.getItem("codestream.env") || "production";
+if (env === "production") {
+	Raven.config("https://46fd0a63e10340b585d895d333fec719@sentry.io/280733", {
+		captureUnhandledRejections: true,
+		tags: {
+			process: process.type,
+			platform: os.platform(),
+			platformRelease: os.release(),
+			atom: atom.getVersion(),
+			codestreamEnv: env
+		}
+	}).install();
+	window.addEventListener("unhandledrejection", function(event) {
+		Raven.captureException(event.reason);
+	});
+}
 
 logger.addHandler((level, msg) => {
 	console.log(`[${level}] ${msg}`);

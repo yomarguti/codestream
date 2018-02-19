@@ -1,12 +1,12 @@
 import { BufferedProcess } from "atom";
 
-export default (args, options = { env: process.env }) => {
+export default (args, options = {}) => {
 	return new Promise((resolve, reject) => {
 		let output = "";
 		const process = new BufferedProcess({
 			command: "git",
 			args,
-			options,
+			options: { env: process.env, ...options },
 			stdout: data => {
 				output += data.toString();
 			},
