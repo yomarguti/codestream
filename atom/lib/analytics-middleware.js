@@ -19,6 +19,12 @@ export default store => next => action => {
 		});
 		mixpanel.track("Sign Up Success");
 	}
+
+	if (action.type === "USER_CONFIRMED")
+		mixpanel.track("Email Confirmed", {
+			"SignUp Type": action.meta.alreadyOnTeam ? "Viral" : "Organic"
+		});
+
 	if (action.type === "LOGGED_IN") {
 		mixpanel.identify(store.getState().session.userId);
 	}

@@ -162,17 +162,21 @@ export const confirmEmail = attributes => (dispatch, getState, { http }) => {
 				})
 			);
 
-			if (!teamIdForRepo && userTeams.length === 0)
+			let alreadyOnTeam = false;
+
+			if (!teamIdForRepo && userTeams.length === 0) {
 				dispatch({ type: "NEW_USER_CONFIRMED_IN_NEW_REPO" });
-			else if (!teamIdForRepo && userTeams.length > 0) {
+			} else if (!teamIdForRepo && userTeams.length > 0) {
 				await dispatch(fetchTeamMembers(teamIdsForUser));
 				dispatch({ type: "EXISTING_USER_CONFIRMED_IN_NEW_REPO" });
 			} else if (teamIdsForUser.includes(teamIdForRepo)) {
+				alreadyOnTeam = true;
 				await dispatch(fetchTeamMembers(teamIdsForUser));
 				dispatch(fetchStreams());
 				dispatch({ type: "EXISTING_USER_CONFIRMED" });
 			} else await dispatch(joinTeam("EXISTING_USER_CONFIRMED"));
-			dispatch({ type: "USER_CONFIRMED" });
+
+			dispatch({ type: "USER_CONFIRMED", meta: { alreadyOnTeam } });
 		})
 		.catch(error => {
 			dispatch(requestFinished());
