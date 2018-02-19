@@ -78,8 +78,13 @@ export default class PubnubSubscription {
 			level: "warning"
 		});
 		delete this._confirmationTimeout;
-		// announce the failure, the UX should do something with this
-		Raven.captureMessage(`subscription failure: ${this.channel}`);
+		if (this._numRetries === 0) {
+			// Only send first failure and max retries exceeded to sentry
+			Raven.captureMessage(`subscription failure: ${this.channel}`, {
+				level: "warning",
+				category: "pubnub"
+			});
+		}
 		if (!navigator.onLine) {
 			// here we give up prematurely, we'll wait until the signal that we are
 			// online again to try
@@ -88,6 +93,7 @@ export default class PubnubSubscription {
 			this._numRetries = 0;
 			return true;
 		}
+		// announce the failure, the UX should do something with this
 		this.store.dispatch(subscriptionFailure(this.channel));
 		try {
 			// in case it's an access problem, force the API server to give us access to this channel
@@ -109,7 +115,9 @@ export default class PubnubSubscription {
 		} else {
 			this.store.dispatch(subscriptionTimedOut());
 			now = new Date().toString();
-			console.warn(`${now}: GIVING UP SUBSCRIBING TO ${this.channel}`);
+			const message = `${now}: GIVING UP SUBSCRIBING TO ${this.channel}`;
+			console.warn(message);
+			Raven.captureMessage(message, { level: "warning", category: "pubnub" });
 		}
 	}
 
