@@ -6,7 +6,17 @@ export default store => next => action => {
 	const result = next(action);
 
 	if (action.type === "SIGNUP_SUCCESS") {
-		mixpanel.alias(action.userId);
+		const user = action.meta;
+		mixpanel.alias(user.id);
+		mixpanel.register_once({
+			"Date Signed Up": new Date(user.createdAt).toISOString() // should actually be based on user.registeredAt
+		});
+		mixpanel.register({
+			"Email Address": user.email,
+			Endpoint: "Atom",
+			"First Time User?": false, // might need to move this to after the very first event is tracked
+			Plan: "Free"
+		});
 	}
 	if (action.type === "LOGGED_IN") {
 		mixpanel.identify(store.getState().session.userId);

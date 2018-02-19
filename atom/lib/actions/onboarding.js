@@ -110,8 +110,8 @@ export const register = attributes => async (dispatch, getState, { http }) => {
 		.post("/no-auth/register", attributes)
 		.then(async ({ user }) => {
 			user = normalize(user);
+			dispatch({ type: "SIGNUP_SUCCESS", payload: { ...attributes, userId: user.id }, meta: user });
 			await dispatch(saveUser(user));
-			dispatch({ type: "SIGNUP_SUCCESS", payload: { ...attributes, userId: user.id } });
 		})
 		.catch(error => {
 			if (http.isApiRequestError(error)) {
