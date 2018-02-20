@@ -256,7 +256,7 @@ export const resolveFromPubnub = (post, isHistory) => async (dispatch, getState,
 
 		const results = await db.posts.where(searchAttributes).toArray();
 		if (results.length === 1) dispatch(resolvePendingPost(results[0].id, post));
-		else dispatch(pubnubActions.resolveFromPubnub("posts", post, isHistory));
+		dispatch(pubnubActions.resolveFromPubnub("posts", post, isHistory));
 	} else dispatch(pubnubActions.resolveFromPubnub("posts", post, isHistory));
 };
 

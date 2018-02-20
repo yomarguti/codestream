@@ -16,9 +16,8 @@
 		background: @app-background-color;
 
 		#close-thread {
-			// float: right;
-			opacity: 0.5;
 			margin: 10px;
+			width: calc(~"100% - 20px");
 			cursor: pointer;
 		}
 		#close-thread:hover {
@@ -319,10 +318,26 @@
 			max-height: 100%;
 			overflow-y: auto;
 			position: relative;
+			transition: transform 0.2s, opacity 0.2s;
 		}
 
 		.postslist.inactive {
-			display: none;
+			transform: scale(0.9);
+			max-height: 100%;
+			overflow: hidden;
+		}
+
+		.threadlist {
+			position: absolute;
+			top: 0;
+			background-color: @app-background-color;
+			min-height: 100%;
+			animation: 0.4s slidein;
+		}
+		.threadlist.inactive {
+			transform: none;
+			left: 100%;
+			animation: 0.2s slideout;
 		}
 
 		.post-details {
@@ -579,5 +594,28 @@
 	}
 	.color-0 {
 		background-color: #666;
+	}
+}
+
+@keyframes slidein {
+	from {
+		left: 100%;
+	}
+
+	50% {
+		left: 100%;
+	}
+
+	to {
+		left: 0;
+	}
+}
+@keyframes slideout {
+	from {
+		left: 0;
+	}
+
+	to {
+		left: 100%;
 	}
 }

@@ -55,7 +55,10 @@ export default class AddCommentPopup extends Component {
 				type: "overlay",
 				class: "codestream-overlay"
 			});
-			this.tooltip = atom.tooltips.add(item, { title: "Add a comment" });
+			this.tooltip = atom.tooltips.add(item, {
+				title: "Add a comment"
+				// keyBindingCommand: "codestream:comment"
+			});
 		}
 	};
 

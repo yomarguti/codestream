@@ -23,6 +23,7 @@ import { rangeToLocation } from "../util/Marker";
 import { getStreamForRepoAndFile } from "../reducers/streams";
 import { getPostsForStream } from "../reducers/posts";
 import rootLogger from "../util/Logger";
+import Button from "./onboarding/Button";
 
 const Path = require("path");
 const logger = rootLogger.forClass("components/Stream");
@@ -76,6 +77,7 @@ export class SimpleStream extends Component {
 		this.state = {
 			stream: {},
 			threadId: null,
+			threadActive: false,
 			posts: [],
 			fileForIntro: props.currentFile,
 			newPostText: ""
@@ -362,12 +364,12 @@ export class SimpleStream extends Component {
 		});
 		const postsListClass = createClassString({
 			postslist: true,
-			inactive: this.state.threadId
+			inactive: this.state.threadActive
 		});
 		const threadPostsListClass = createClassString({
 			postslist: true,
 			threadlist: true,
-			inactive: !this.state.threadId
+			inactive: !this.state.threadActive
 		});
 
 		let newPostText = this.state.newPostText || "";
@@ -401,9 +403,9 @@ export class SimpleStream extends Component {
 		let hasNewMessagesBelowFold = false;
 
 		let fileAbbreviation = this.fileAbbreviation();
-		let placeholderText = "Message " + fileAbbreviation;
+		let placeholderText = "Add comment to " + fileAbbreviation;
 		// FIXME -- this doesn't update when it should for some reason
-		if (threadPost) {
+		if (this.state.threadActive && threadPost) {
 			placeholderText = "Reply to " + threadPost.author.username;
 		}
 
@@ -464,9 +466,9 @@ export class SimpleStream extends Component {
 					ref={ref => (this._threadpostslist = ref)}
 					onClick={this.handleClickPost}
 				>
-					<div id="close-thread" onClick={this.handleDismissThread}>
-						&larr; Back to stream (esc)
-					</div>
+					<Button id="close-thread" className="control-button" onClick={this.handleDismissThread}>
+						Back to stream (esc)
+					</Button>
 					{threadPost && (
 						<Post
 							post={threadPost}
@@ -483,7 +485,7 @@ export class SimpleStream extends Component {
 							0 ||
 							posts.map(post => {
 								if (post.deactivated) return null;
-								if (threadId && threadId !== post.parentPostId) {
+								if (!threadId || threadId !== post.parentPostId) {
 									return null;
 								}
 								// this needs to be done by storing the return value of the render,
@@ -563,7 +565,7 @@ export class SimpleStream extends Component {
 	// dismiss the thread stream and return to the main stream
 	handleDismissThread = () => {
 		this.hideDisplayMarker();
-		this.setState({ threadId: null });
+		this.setState({ threadActive: false });
 	};
 
 	handleEditHeadshot = event => {
@@ -658,7 +660,7 @@ export class SimpleStream extends Component {
 		// if it is a child in the thread, it'll have a parentPostId,
 		// otherwise use the id. any post can become the head of a thread
 		const threadId = post.parentPostId || post.id;
-		this.setState({ threadId: threadId });
+		this.setState({ threadId: threadId, threadActive: true });
 
 		if (post.codeBlocks && post.codeBlocks.length) {
 			const codeBlock = post.codeBlocks[0];
@@ -914,7 +916,7 @@ export class SimpleStream extends Component {
 	handleAtMentionKeyPress(event, eventType) {
 		if (eventType == "escape") {
 			if (this.state.atMentionsOn) this.setState({ atMentionsOn: false });
-			else this.setState({ threadId: null });
+			else this.setState({ threadActive: false });
 		} else {
 			let newIndex = 0;
 			if (eventType == "down") {
@@ -944,7 +946,7 @@ export class SimpleStream extends Component {
 		logger.trace(".handleEscape");
 		if (this.state.editingPostId) this.setState({ editingPostId: null });
 		else if (this.state.atMentionsOn) this.setState({ atMentionsOn: false });
-		else if (this.state.threadId) this.setState({ threadId: null });
+		else if (this.state.threadActive) this.setState({ threadActive: null });
 		else event.abortKeyBinding();
 	}
 
@@ -1020,8 +1022,10 @@ export class SimpleStream extends Component {
 		newText = doc.documentElement.textContent;
 
 		const codeBlocks = [];
-		const { quoteText, quoteRange, preContext, postContext, threadId } = this.state;
+		const { quoteText, quoteRange, preContext, postContext, threadActive } = this.state;
 		const { id, createPost } = this.props;
+
+		let threadId = threadActive ? this.state.threadId : null;
 
 		if (quoteText) {
 			codeBlocks.push({
@@ -1040,7 +1044,7 @@ export class SimpleStream extends Component {
 		const editor = atom.workspace.getActiveTextEditor();
 		const editorText = editor.getText();
 
-		createPost(this.props.id, this.state.threadId, newText, codeBlocks, mentionUserIds, editorText);
+		createPost(this.props.id, threadId, newText, codeBlocks, mentionUserIds, editorText);
 
 		// reset the input field to blank
 		this.resetCompose();
