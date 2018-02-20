@@ -266,7 +266,7 @@ export class SimpleUMIs extends Component {
 			if (treatment) return treatment;
 			parts.pop();
 		}
-		return atom.config.get("CodeStream.showUnread") || "bold";
+		return atom.config.get("CodeStream.showUnread") || "badge";
 	}
 
 	handleClick(event) {
