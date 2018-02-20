@@ -3,7 +3,7 @@ import { BufferedProcess } from "atom";
 export default (args, options = {}) => {
 	return new Promise((resolve, reject) => {
 		let output = "";
-		const process = new BufferedProcess({
+		const bufferedProcess = new BufferedProcess({
 			command: "git",
 			args,
 			options: { env: process.env, ...options },
@@ -15,7 +15,7 @@ export default (args, options = {}) => {
 			},
 			exit: code => (code === 0 ? resolve(output) : reject(output))
 		});
-		process.onWillThrowError(error => {
+		bufferedProcess.onWillThrowError(error => {
 			atom.notifications.addError(
 				//FIXME loc
 				"CodeStream is unable to locate the git command. Please ensure git is in your PATH."
