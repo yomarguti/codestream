@@ -354,7 +354,7 @@ export class SimpleStream extends Component {
 
 		const streamClass = createClassString({
 			stream: true,
-			"no-headshots": !atom.config.get("CodeStream.showHeadshots")
+			"no-headshots": !atom.config.get("codestream.showHeadshots")
 		});
 		const composeClass = createClassString({
 			compose: true,
