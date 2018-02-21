@@ -116,13 +116,10 @@ module.exports = {
 					store.dispatch({ type: "RESET" });
 					store.dispatch({ type: "BOOTSTRAP_COMPLETE" });
 					localStorage.setItem(resetFlag, true);
-					atom.notifications.addInfo(
-						`CodeStream has updated to v${version}, which requires Atom to restart, and for you to sign back in to CodeStream.`,
-						{
-							dismissable: true,
-							buttons: [{ text: "Restart", onDidClick: () => atom.restartApplication() }]
-						}
-					);
+					atom.confirm({
+						message: `CodeStream has updated to v${version}, which requires Atom to restart, and for you to sign back in to CodeStream.`,
+						buttons: { Restart: () => atom.restartApplication() }
+					});
 				}
 			})
 		);
