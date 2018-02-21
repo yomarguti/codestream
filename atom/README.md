@@ -21,6 +21,7 @@ If there are issues installing the plugin dependencies:
 * Run `sudo xcode-select --install`
 * `cd ~/.atom/packages/codestream`
 * `apm install`
+* Reload Atom.
 * If there are still issues, you'll need to install libgcrypt. This can be done with homebrew via `brew install libgcrypt` or you by means of another package manager. Once installed, re-run `apm install`.
 
 **Linux Users**
@@ -28,6 +29,7 @@ If there are issues installing the plugin dependencies:
 * You need `libssl-dev`. On ubuntu, you can use `sudo apt install libssl-dev`.
 * `cd ~/.atom/packages/codestream`
 * `apm install`
+* Reload Atom.
 
 # Requirements
 
