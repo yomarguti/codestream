@@ -242,7 +242,6 @@ const backtrackMarkerLocations = async (codeBlocks, bufferText, streamId, state,
 export const resolveFromPubnub = (post, isHistory) => async (dispatch, getState, { db }) => {
 	const { session } = getState();
 	if (post.creatorId === session.userId) {
-		const pendingPosts = getState().posts.pending;
 		const { creatorId, teamId, streamId, commitHashWhenPosted, text } = post;
 
 		const searchAttributes = {
@@ -261,16 +260,20 @@ export const resolveFromPubnub = (post, isHistory) => async (dispatch, getState,
 };
 
 const resolvePendingPost = (id, resolvedPost) => (dispatch, getState, { db }) => {
-	return db.transaction("rw", db.posts, async () => {
-		await db.posts.delete(id);
-		dispatch({
-			type: "RESOLVE_PENDING_POST",
-			payload: {
-				pendingId: id,
-				post: resolvedPost
-			}
-		});
-	});
+	return db
+		.transaction("rw", db.posts, () => {
+			db.posts.delete(id);
+			db.posts.add(resolvedPost);
+		})
+		.then(() =>
+			dispatch({
+				type: "RESOLVE_PENDING_POST",
+				payload: {
+					pendingId: id,
+					post: resolvedPost
+				}
+			})
+		);
 };
 
 export const rejectPendingPost = pendingId => (dispatch, getState, { db }) => {

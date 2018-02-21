@@ -8,11 +8,11 @@ CodeStream puts team chat into Atom (and other IDEs) so that developers can disc
 
 # Installation
 
-Make sure you have the atom shell commands installed. From the atom command palette, run `Window: Install Shell Commands`. Then from the command line, type:
+Make sure you have the atom shell commands installed. From the Atom command palette, run `Window: Install Shell Commands`. Then from the command line, type:
 
 `apm install codestream`
 
-Once installed, toggle the CodeStream view via the Packages menu, or hit Cmd + Opt + O (Mac) / Ctrl + Alt + O (Windows). You can also click on the CodeStream logo that now appears in Atom’s statusbar.
+Once installed, reload Atom. You can then toggle the CodeStream view via the Packages menu, or hit Cmd + Opt + O (Mac) / Ctrl + Alt + O (Windows). You can also click on the CodeStream logo that now appears in Atom’s statusbar.
 
 If there are issues installing the plugin dependencies:
 
@@ -21,6 +21,7 @@ If there are issues installing the plugin dependencies:
 * Run `sudo xcode-select --install`
 * `cd ~/.atom/packages/codestream`
 * `apm install`
+* Reload Atom.
 * If there are still issues, you'll need to install libgcrypt. This can be done with homebrew via `brew install libgcrypt` or you by means of another package manager. Once installed, re-run `apm install`.
 
 **Linux Users**
@@ -28,6 +29,7 @@ If there are issues installing the plugin dependencies:
 * You need `libssl-dev`. On ubuntu, you can use `sudo apt install libssl-dev`.
 * `cd ~/.atom/packages/codestream`
 * `apm install`
+* Reload Atom.
 
 # Requirements
 

@@ -266,7 +266,7 @@ export class SimpleUMIs extends Component {
 			if (treatment) return treatment;
 			parts.pop();
 		}
-		return atom.config.get("CodeStream.showUnread") || "bold";
+		return atom.config.get("CodeStream.showUnread") || "badge";
 	}
 
 	handleClick(event) {
@@ -294,25 +294,29 @@ export class SimpleUMIs extends Component {
 		let mentionsBelow = false;
 
 		let umiDivs = document.getElementsByClassName("cs-has-umi");
-		let index = umiDivs.length;
-		while (index--) {
+		let index = 0;
+		let umiDivsLength = umiDivs.length;
+		while (index < umiDivsLength) {
 			let umi = umiDivs[index];
 			let top = umi.offsetTop;
 			if (top - scrollTop + 10 < 0) {
-				unreadsAbove = true;
-				if (umi.getAttribute("cs-umi-mention") == "1") mentionsAbove = true;
+				unreadsAbove = umi;
+				if (umi.getAttribute("cs-umi-mention") == "1") mentionsAbove = umi;
 			}
 			if (top - scrollTop + 10 > containerHeight) {
-				unreadsBelow = true;
-				if (umi.getAttribute("cs-umi-mention") == "1") mentionsBelow = true;
+				if (!unreadsBelow) unreadsBelow = umi;
+				if (!mentionsBelow && umi.getAttribute("cs-umi-mention") == "1") mentionsBelow = umi;
 			}
+			index++;
 		}
 		this.setUnreadsAttributes(
+			"above",
 			document.getElementById("cs-unreads-above"),
 			unreadsAbove,
 			mentionsAbove
 		);
 		this.setUnreadsAttributes(
+			"below",
 			document.getElementById("cs-unreads-below"),
 			unreadsBelow,
 			mentionsBelow
@@ -334,11 +338,23 @@ export class SimpleUMIs extends Component {
 		document.body.appendChild(node);
 	}
 
-	setUnreadsAttributes(element, active, mentions) {
-		if (active) element.classList.add("active");
-		else element.classList.remove("active");
-		if (mentions) element.classList.add("mention");
-		else element.classList.remove("mention");
+	setUnreadsAttributes(type, element, active, mentions) {
+		let that = this;
+		let padding = type === "above" ? -40 : 40;
+		if (active) {
+			element.classList.add("active");
+			element.onclick = function(event) {
+				active.scrollIntoView(type === "above");
+				that.scrollDiv.scrollTop += padding;
+			};
+		} else element.classList.remove("active");
+		if (mentions) {
+			element.classList.add("mention");
+			element.onclick = function(event) {
+				mentions.scrollIntoView(type === "above");
+				that.scrollDiv.scrollTop += padding;
+			};
+		} else element.classList.remove("mention");
 	}
 
 	addUnreadsIndicatorDivs() {
@@ -357,10 +373,10 @@ export class SimpleUMIs extends Component {
 			element.classList.add("cs-unreads");
 			let indicator = type === "above" ? "&uarr;" : "&darr;";
 			element.innerHTML = indicator + " Unread Messages " + indicator;
-			element.onclick = function(event) {
-				if (type === "below") scrollDiv.scrollTop += scrollDiv.offsetHeight;
-				else scrollDiv.scrollTop -= scrollDiv.offsetHeight;
-			};
+			// element.onclick = function(event) {
+			// 	if (type === "below") scrollDiv.scrollTop += scrollDiv.offsetHeight;
+			// 	else scrollDiv.scrollTop -= scrollDiv.offsetHeight;
+			// };
 			scrollParent.prepend(element);
 		}
 	}

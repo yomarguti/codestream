@@ -115,6 +115,7 @@ class Post extends Component {
 					)}
 					{alertClass && <span className={alertClass} />}
 					{this.props.editing ? this.renderEditingBody(post) : this.renderBody(post)}
+					{!this.props.editng && post.hasBeenEdited && <span className="edited">(edited)</span>}
 				</div>
 			</div>
 		);

@@ -10,13 +10,13 @@ export default function withConfigs(Child) {
 	);
 }
 
-const getConfigs = () => atom.config.get("codestream") || {};
+const getConfigs = () => atom.config.get("CodeStream") || {};
 
 class ConfigProvider extends React.Component {
 	state = getConfigs();
 
 	componentDidMount() {
-		this.disposable = atom.config.onDidChange("codestream", event => {
+		this.disposable = atom.config.onDidChange("CodeStream", event => {
 			this.setState(getConfigs());
 		});
 	}
