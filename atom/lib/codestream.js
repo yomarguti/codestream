@@ -90,40 +90,51 @@ module.exports = {
 	initialize(state) {
 		this.subscriptions = new CompositeDisposable();
 		store = createStore(state);
+		bootstrapStore(store);
 
-		const hasExistingState = !_.isEmpty(state) && Boolean(state.messaging.lastMessageReceived);
-		const thisPackage = atom.packages.getLoadedPackage("CodeStream");
-		const resetFlag = "CodeStream.hasResetSincev0011";
-		const hasResetAlready = localStorage.getItem(resetFlag);
-		const [major, minor, patch] = thisPackage.metadata.version.split(".");
-		if (hasExistingState && Number(patch) >= 12 && !Boolean(hasResetAlready)) {
-			// 0.0.12 requires a reset to avoid seeing a bug
-			// this should be kept for a few versions to allow people to update
-			db.delete();
-			store.dispatch(logout()); // in case logged in to close pubnub connections
-			store.dispatch({ type: "RESET" });
-			store.dispatch({ type: "BOOTSTRAP_COMPLETE" });
-			localStorage.setItem(resetFlag, true);
-			atom.notifications.addInfo(
-				"Completing the latest update of CodeStream requires another restart of atom.",
-				{
-					dismissable: true,
-					buttons: [{ text: "Restart", onDidClick: () => atom.restartApplication() }]
+		this.subscriptions.add(
+			atom.packages.onDidActivateInitialPackages(() => {
+				const hasExistingState = !_.isEmpty(state) && Boolean(state.messaging.lastMessageReceived);
+				if (!hasExistingState) {
+					localStorage.setItem(resetFlag, true);
+					return;
 				}
-			);
-		} else {
-			bootstrapStore(store);
 
-			if (atom.project.getDirectories().length === 1) {
-				// if being initialized much later into atom's lifetime, i.e. just installed or re-enabled
-				if (atom.packages.hasActivatedInitialPackages()) this.setup();
-				else
-					// wait for atom workspace to be ready
-					this.subscriptions.add(atom.packages.onDidActivateInitialPackages(() => this.setup()));
-			}
-			// this isn't aded to this.subscriptions because it should always run
-			atom.project.onDidChangePaths(paths => reloadPlugin(this));
+				if (!atom.packages.isPackageLoaded("CodeStream")) return;
+
+				const thisPackage = atom.packages.getLoadedPackage("CodeStream");
+				const resetFlag = "CodeStream.didResetSincev0011";
+				const hasResetAlready = localStorage.getItem(resetFlag);
+				const version = thisPackage.metadata.version;
+				const [major, minor, patch] = version.split(".");
+				if (hasExistingState && Number(patch) >= 12 && !Boolean(hasResetAlready)) {
+					// 0.0.12 requires a reset to avoid seeing a bug
+					// this should be kept for a few versions to allow people to update
+					db.delete();
+					store.dispatch(logout()); // in case logged in to close pubnub connections
+					store.dispatch({ type: "RESET" });
+					store.dispatch({ type: "BOOTSTRAP_COMPLETE" });
+					localStorage.setItem(resetFlag, true);
+					atom.notifications.addInfo(
+						`CodeStream has updated to v${version}, which requires Atom to restart, and for you to sign back in to CodeStream.`,
+						{
+							dismissable: true,
+							buttons: [{ text: "Restart", onDidClick: () => atom.restartApplication() }]
+						}
+					);
+				}
+			})
+		);
+
+		if (atom.project.getDirectories().length === 1) {
+			// if being initialized much later into atom's lifetime, i.e. just installed or re-enabled
+			if (atom.packages.hasActivatedInitialPackages()) this.setup();
+			else
+				// wait for atom workspace to be ready
+				this.subscriptions.add(atom.packages.onDidActivateInitialPackages(() => this.setup()));
 		}
+		// this isn't aded to this.subscriptions because it should always run
+		atom.project.onDidChangePaths(paths => reloadPlugin(this));
 	},
 
 	activate(state) {
