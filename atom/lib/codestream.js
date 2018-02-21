@@ -117,8 +117,9 @@ module.exports = {
 					store.dispatch({ type: "BOOTSTRAP_COMPLETE" });
 					localStorage.setItem(resetFlag, true);
 					atom.confirm({
-						message: `CodeStream has updated to v${version}, which requires Atom to restart, and for you to sign back in to CodeStream.`,
-						buttons: { Restart: () => atom.restartApplication() }
+						message: `CodeStream has updated to v${version}, which requires a reload of your Atom windows, and for you to sign back in to CodeStream.`,
+						detailedMessage: "If you have other open windows, you'll need to manually reload them.",
+						buttons: { Reload: () => atom.reload() }
 					});
 				}
 			})
