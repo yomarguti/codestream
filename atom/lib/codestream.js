@@ -95,6 +95,8 @@ module.exports = {
 		this.subscriptions.add(
 			atom.packages.onDidActivateInitialPackages(() => {
 				const hasExistingState = !_.isEmpty(state) && Boolean(state.messaging.lastMessageReceived);
+
+				const resetFlag = "CodeStream.didResetSincev0011";
 				if (!hasExistingState) {
 					localStorage.setItem(resetFlag, true);
 					return;
@@ -103,7 +105,6 @@ module.exports = {
 				if (!atom.packages.isPackageLoaded("CodeStream")) return;
 
 				const thisPackage = atom.packages.getLoadedPackage("CodeStream");
-				const resetFlag = "CodeStream.didResetSincev0011";
 				const hasResetAlready = localStorage.getItem(resetFlag);
 				const version = thisPackage.metadata.version;
 				const [major, minor, patch] = version.split(".");
