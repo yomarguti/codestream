@@ -1,5 +1,6 @@
 import os from "os";
 import { CompositeDisposable } from "atom";
+import _ from "underscore-plus";
 import Raven from "raven-js";
 import CodestreamView, { CODESTREAM_VIEW_URI } from "./codestream-view";
 import db, { bootstrapStore } from "./local-cache";
@@ -91,6 +92,41 @@ module.exports = {
 		store = createStore(state);
 		bootstrapStore(store);
 
+		this.subscriptions.add(
+			atom.packages.onDidActivateInitialPackages(() => {
+				const hasExistingState = !_.isEmpty(state) && Boolean(state.messaging.lastMessageReceived);
+
+				const resetFlag = "CodeStream.didResetSincev0011";
+				if (!hasExistingState) {
+					localStorage.setItem(resetFlag, true);
+					return;
+				}
+
+				if (!atom.packages.isPackageLoaded("CodeStream")) return;
+
+				const thisPackage = atom.packages.getLoadedPackage("CodeStream");
+				const hasResetAlready = localStorage.getItem(resetFlag);
+				const version = thisPackage.metadata.version;
+				const [major, minor, patch] = version.split(".");
+				if (hasExistingState && Number(patch) >= 12 && !Boolean(hasResetAlready)) {
+					// 0.0.12 requires a reset to avoid seeing a bug
+					// this should be kept for a few versions to allow people to update
+					db.delete();
+					store.dispatch(logout()); // in case logged in to close pubnub connections
+					store.dispatch({ type: "RESET" });
+					store.dispatch({ type: "BOOTSTRAP_COMPLETE" });
+					localStorage.setItem(resetFlag, true);
+					atom.notifications.addInfo(
+						`CodeStream has updated to v${version}, which requires Atom to restart, and for you to sign back in to CodeStream.`,
+						{
+							dismissable: true,
+							buttons: [{ text: "Restart", onDidClick: () => atom.restartApplication() }]
+						}
+					);
+				}
+			})
+		);
+
 		if (atom.project.getDirectories().length === 1) {
 			// if being initialized much later into atom's lifetime, i.e. just installed or re-enabled
 			if (atom.packages.hasActivatedInitialPackages()) this.setup();
@@ -98,7 +134,6 @@ module.exports = {
 				// wait for atom workspace to be ready
 				this.subscriptions.add(atom.packages.onDidActivateInitialPackages(() => this.setup()));
 		}
-
 		// this isn't aded to this.subscriptions because it should always run
 		atom.project.onDidChangePaths(paths => reloadPlugin(this));
 	},
