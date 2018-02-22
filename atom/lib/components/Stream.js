@@ -66,6 +66,7 @@ const trimSelection = editor => {
 
 export class SimpleStream extends Component {
 	subscriptions = null;
+	insertedAuthors = "";
 
 	constructor(props) {
 		super(props);
@@ -82,7 +83,8 @@ export class SimpleStream extends Component {
 			posts: [],
 			fileForIntro: props.currentFile,
 			newPostText: "",
-			whoModified: {}
+			whoModified: {},
+			autoMentioning: []
 		};
 
 		this.savedComposeState = {};
@@ -817,6 +819,9 @@ export class SimpleStream extends Component {
 								// skip if the input field already contains this user
 								if (postText.match("@" + user.username + "\\b")) return;
 								authors["@" + user.username] = true;
+								this.setState(state => ({
+									autoMentioning: [...state.autoMentioning, `@${user.username}`]
+								}));
 							}
 						}
 					});
@@ -1134,7 +1139,9 @@ export class SimpleStream extends Component {
 		const editor = atom.workspace.getActiveTextEditor();
 		const editorText = editor.getText();
 
-		createPost(this.props.id, threadId, newText, codeBlocks, mentionUserIds, editorText);
+		createPost(this.props.id, threadId, newText, codeBlocks, mentionUserIds, editorText, {
+			autoMentions: this.state.autoMentioning
+		});
 
 		// reset the input field to blank
 		this.resetCompose();
@@ -1152,7 +1159,8 @@ export class SimpleStream extends Component {
 				quoteRange: null,
 				quoteText: "",
 				preContext: "",
-				postContext: ""
+				postContext: "",
+				autoMentioning: []
 			});
 			this.savedComposeState[this.id] = {};
 		}
