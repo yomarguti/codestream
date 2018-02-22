@@ -45,12 +45,17 @@ export default store => next => action => {
 		const { post, ...extra } = action.meta;
 		const currentUser = store.getState().users[post.creatorId];
 
+		let type;
+		if (post.codeBlocks.length === 0) type = "Chat";
+		else type = post.codeBlocks[0].code.length > 0 ? "Code Quote" : "Code Location";
+
 		mixpanel.track("Post Created", {
 			Endpoint: "Atom",
 			Thread: post.parentPostId ? "Reply" : "Parent",
 			Category: "Source File",
 			"Auto Mentions": extra.autoMentions.some(mention => post.text.includes(mention)),
-			"First Post?": Boolean(currentUser.totalPosts) === false
+			"First Post?": Boolean(currentUser.totalPosts) === false,
+			Type: type
 		});
 	}
 	return result;
