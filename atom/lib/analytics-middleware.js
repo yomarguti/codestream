@@ -35,7 +35,16 @@ export default store => next => action => {
 		});
 
 	if (action.type === "LOGGED_IN") {
-		mixpanel.identify(store.getState().session.userId);
+		const { session, users } = store.getState();
+		const currentUser = users[session.userId];
+		mixpanel.identify(session.userId);
+		mixpanel.register({
+			"Email Address": currentUser.email,
+			Endpoint: "Atom",
+			"First Time User?": false,
+			Plan: "Free"
+		});
+		mixpanel.track("Signed In");
 	}
 
 	if (action.type.includes("USERNAME_COLLISION")) {
