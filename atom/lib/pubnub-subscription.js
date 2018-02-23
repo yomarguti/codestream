@@ -139,7 +139,7 @@ export default class PubnubSubscription {
 	// confirm a subscription is still active by looking for this session in the occupants for the channel
 	confirmSubscription() {
 		const { session } = this.store.getState();
-		const uuid = `${session.userId}/${session.sessionId}`;
+		const uuid = `${session.userId}`;
 		this.pubnub.hereNow(
 			{
 				channels: [this.channel],
