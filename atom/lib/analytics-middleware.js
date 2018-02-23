@@ -18,12 +18,12 @@ export default store => next => action => {
 		const user = action.meta;
 		mixpanel.alias(user.id);
 		mixpanel.register_once({
-			"Date Signed Up": new Date(user.createdAt).toISOString() // should actually be based on user.registeredAt
+			"Date Signed Up": new Date(user.createdAt).toISOString()
 		});
 		mixpanel.register({
 			"Email Address": user.email,
 			Endpoint: "Atom",
-			// "First Time User?": false, // might need to move this to after the very first event is tracked
+			"First Time User?": true,
 			Plan: "Free"
 		});
 		mixpanel.track("Sign Up Success");
@@ -80,6 +80,30 @@ export default store => next => action => {
 				"Orginal Author?": currentUser.email === originalAuthorEmail
 			});
 		});
+	}
+
+	if (action.type === "USERS-UPDATE_FROM_PUBNUB") {
+		if (action.payload.joinMethod) mixpanel.register({ "Join Method": action.payload.joinMethod });
+	}
+
+	if (action.type === "SET_CONTEXT" && action.payload.currentTeamId) {
+		const { teams } = store.getState();
+		const currentTeam = teams[action.payload.currentTeamId];
+		if (currentTeam)
+			mixpanel.register({
+				"Team ID": action.payload.currentRepoId,
+				"Team Size": currentTeam.length
+			});
+	}
+	if (action.type === "TEAM_CREATED") {
+		const { teams } = store.getState();
+		const currentTeam = teams[action.payload.teamId];
+		mixpanel.register({ "Team ID": action.payload.teamId, "Team Size": currentTeam.length });
+	}
+	if (action.type === "SET_CURRENT_TEAM") {
+		const { teams } = store.getState();
+		const currentTeam = teams[action.payload];
+		mixpanel.register({ "Team ID": action.payload, "Team Size": currentTeam.length });
 	}
 
 	return result;
