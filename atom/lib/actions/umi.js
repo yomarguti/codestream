@@ -60,7 +60,7 @@ export const incrementUMI = post => async (dispatch, getState, { db }) => {
 	// to the first unread message in the stream, stored in lastReads
 	currentUser.lastReads = currentUser.lastReads || {};
 	if (!currentUser.lastReads[post.streamId]) {
-		currentUser.lastReads[post.streamId] = post.id;
+		currentUser.lastReads[post.streamId] = post.seqNum;
 
 		return upsert(db, "users", currentUser).then(user =>
 			dispatch({
@@ -88,22 +88,37 @@ export const recalculate = force => async (dispatch, getState, { http }) => {
 	Object.entries(lastReads).forEach(([streamId, lastRead]) => {
 		let unread = 0;
 		let mentions = 0;
-		if (lastRead) {
+		if (typeof lastRead === "string" || typeof lastRead === "number") {
 			// find the stream
 			// then calculate the unread Messages
 			let stream = streamsById[streamId];
 			const postsForStream = _.sortBy(posts.byStream[streamId], "seqNum");
-
-			if (!postsForStream) return;
-			let postIds = postsForStream.map(post => post.id);
-			let index = postIds.indexOf(lastRead);
-			let postsLength = postsForStream.length;
-			for (let i = index; i < postsLength; i++) {
-				unread++;
-				let post = postsForStream[i];
-				if (post && post.text && post.text.match(mentionRegExp)) {
-					mentions++;
+			if (!postsForStream || postsForStream.length === 0) return;
+			let index = postsForStream.findIndex(post => {
+				if (typeof lastRead === "string") {
+					return post.id === lastRead;
+				} else {
+					return post.seqNum === lastRead;
 				}
+			});
+			if (index === -1 && typeof lastRead === "number") {
+				// we'll go with the naive implementation, which is to simply
+				// calculate the difference between the most recent post and the
+				// last read post, by sequence number ... but we have the larger
+				// question of why the post wasn't found, and what to do about it
+				const lastPost = postsForStream[postsForStream.length - 1];
+				unread = lastPost.seqNum - lastRead;
+			} else if (index >= 0) {
+				const postsLength = postsForStream.length;
+				for (let i = index + 1; i < postsLength; i++) {
+					const post = postsForStream[i];
+					if (!post.deactivated) unread++;
+					if (post && post.text && post.text.match(mentionRegExp)) {
+						mentions++;
+					}
+				}
+			} else {
+				unread = 1; // at least we get this
 			}
 			if (unread) nextState.unread[streamId] = unread;
 			if (mentions) nextState.mentions[streamId] = mentions;

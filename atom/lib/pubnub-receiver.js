@@ -19,7 +19,7 @@ export default class PubNubReceiver {
 	}
 
 	initialize(authKey, userId, sessionId, subscribeKey) {
-		const uuid = `${userId}/${sessionId}`;
+		const uuid = `${userId}`;
 		this.pubnub = new PubNub({
 			authKey,
 			uuid,
@@ -36,11 +36,18 @@ export default class PubNubReceiver {
 	}
 
 	setupListener() {
-		this.pubnub.addListener({
+		this.listener = {
 			status: this.pubnubStatus.bind(this),
 			presence: this.pubnubPresence.bind(this),
 			message: this.pubnubEvent.bind(this)
-		});
+		};
+		this.pubnub.addListener(this.listener);
+	}
+
+	removeListener() {
+		if (this.pubnub && this.listener) {
+			this.pubnub.removeListener(this.listener);
+		}
 	}
 
 	pubnubStatus(status) {
@@ -115,6 +122,7 @@ export default class PubNubReceiver {
 			this.subscriptions[channel].unsubscribe();
 			delete this.subscriptions[channel];
 		}
+		this.removeListener();
 	}
 
 	getMessageHandler(type) {
