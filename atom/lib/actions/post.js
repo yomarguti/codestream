@@ -263,7 +263,7 @@ const resolvePendingPost = (id, resolvedPost) => (dispatch, getState, { db }) =>
 	return db
 		.transaction("rw", db.posts, () => {
 			db.posts.delete(id);
-			db.posts.add(resolvedPost);
+			upsert(db, "posts", resolvedPost);
 		})
 		.then(() =>
 			dispatch({
