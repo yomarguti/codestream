@@ -249,7 +249,7 @@ export const resolveFromPubnub = (post, isHistory) => async (dispatch, getState,
 			teamId,
 			streamId,
 			text,
-			commitHashWhenPosted
+			commitHashWhenPosted: commitHashWhenPosted || "" // posts from email won't have commit hashes
 		};
 		if (post.parentPostId) searchAttributes.parentPostId = post.parentPostId;
 
