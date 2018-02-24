@@ -1,7 +1,7 @@
 import Raven from "raven-js";
 import { normalize } from "./utils";
 import { fetchRepoInfo, setCurrentRepo, setCurrentTeam, noAccess } from "./context";
-import { saveUser, saveUsers } from "./user";
+import { saveUser, saveUsers, ensureCorrectTimeZone } from "./user";
 import { saveRepo, saveRepos } from "./repo";
 import { fetchTeamMembers, saveTeam, saveTeams, joinTeam as _joinTeam } from "./team";
 import { fetchStreams } from "./stream";
@@ -250,6 +250,9 @@ export const authenticate = params => (dispatch, getState, { http }) => {
 					pubnubSubscribeKey: pubnubKey
 				})
 			);
+			// ensure the user's timezone is correctly saved in case they have moved
+			// since last login
+			dispatch(ensureCorrectTimeZone());
 
 			let teamIdForRepo = context.currentTeamId;
 			if (!teamIdForRepo) {
