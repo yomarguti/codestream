@@ -19,9 +19,7 @@
 			margin: 10px;
 			width: calc(~"100% - 20px");
 			cursor: pointer;
-		}
-		#close-thread:hover {
-			opacity: 1;
+			padding: 3px 0;
 		}
 
 		.new-messages-below {
@@ -311,6 +309,39 @@
 				font-weight: 700;
 				padding-right: 5px;
 			}
+		}
+
+		.typing-indicator {
+			position: absolute;
+			top: 0;
+			width: 100%;
+			z-index: 12;
+			background: @app-background-color;
+			border-bottom: 1px solid @base-border-color;
+			border-top: 1px solid @base-border-color;
+			padding: 5px 0;
+			// box-shadow: 0 0 10px @app-background-color;
+			div {
+				width: calc(~"100% - 20px");
+				margin: 10px;
+
+				padding: 8px 0;
+				background-color: @background-color-warning;
+				color: white;
+				// color: @text-color-warning;
+				text-align: center;
+				width: auto;
+				top: 40px;
+				border-radius: 2px;
+			}
+			div.conflict {
+				background-color: @background-color-error;
+			}
+			transition: top 0.2s;
+		}
+
+		.typing-indicator.inactive {
+			top: -6em;
 		}
 
 		.postslist {

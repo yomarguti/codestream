@@ -24,6 +24,7 @@ import { getStreamForRepoAndFile } from "../reducers/streams";
 import { getPostsForStream } from "../reducers/posts";
 import rootLogger from "../util/Logger";
 import Button from "./onboarding/Button";
+import TypingIndicator from "./TypingIndicator";
 
 const Path = require("path");
 const logger = rootLogger.forClass("components/Stream");
@@ -427,6 +428,11 @@ export class SimpleStream extends Component {
 					onSelect={this.selectPost}
 				/>
 				<MarkerLocationTracker editor={editor} markers={this.props.markers} />
+				<TypingIndicator
+					editor={editor}
+					currentFile={this.props.currentFile}
+					inactive={this.state.threadActive}
+				/>
 				<div
 					className={postsListClass}
 					ref={ref => (this._postslist = ref)}
