@@ -81,7 +81,8 @@ export class SimpleStream extends Component {
 			threadActive: false,
 			posts: [],
 			fileForIntro: props.currentFile,
-			newPostText: ""
+			newPostText: "",
+			whoModified: {}
 		};
 
 		this.savedComposeState = {};
@@ -173,7 +174,17 @@ export class SimpleStream extends Component {
 			if (this.props.currentUser && this.props.currentUser.lastReads) {
 				this.postWithNewMessageIndicator = this.props.currentUser.lastReads[nextProps.id];
 			}
-			logger.debug("Switch to: ", nextProps.id);
+			// console.log("Switch to: ", nextProps.id);
+		}
+
+		const switchingFiles = nextProps.currentFile !== this.props.currentFile;
+		if (switchingFiles) {
+			const editor = atom.workspace.getActiveTextEditor();
+			if (editor) {
+				// console.log("NEXTPROPS FILE: ", nextProps.currentFile);
+				// console.log("EDITOR    FILE: ", editor.getPath());
+				this.checkModifiedGit(editor);
+			}
 		}
 
 		if (nextProps.firstTimeInAtom && !Boolean(this.state.fileForIntro)) {
@@ -233,18 +244,66 @@ export class SimpleStream extends Component {
 			return;
 		}
 
-		if (!editor.resizeHandler) {
+		if (!editor.codeStreamHandlers) {
 			let scrollViewDiv = editor.component.element.querySelector(".scroll-view");
 			if (scrollViewDiv) {
 				editor.resizeHandler = new ResizeObserver(() => {
 					this.handleResizeWindow(scrollViewDiv);
 				}).observe(scrollViewDiv);
 			}
+
+			this.subscriptions.add(
+				editor.onDidStopChanging(() => {
+					this.checkModifiedTyping(editor);
+				})
+			);
+			editor.codeStreamHandlers = true;
 		}
 
 		if (!editor.selectionHandler) {
 			this.selectionHandler = editor.onDidChangeSelectionRange(this.hideDisplayMarker.bind(this));
 		}
+	}
+
+	// setStateWhoModified(value) {
+	// 	let whoModified = this.state.whoModified || {};
+	// 	if (value) whoModified[this.props.currentUser.id] = true;
+	// 	else delete whoModified[this.props.currentUser.id];
+	// 	this.setState({ whoModified });
+	// }
+
+	checkModifiedTyping(editor) {
+		let isModified = editor.isModified();
+		// if there's no change, no need to set state
+		if (isModified != this.state.modifiedTyping) {
+			this.setState({ modifiedTyping: isModified });
+			// if git isn't modified, then our notion of modified has changed
+			if (!this.state.modifiedGit) {
+				this.setModified(isModified);
+			}
+		}
+	}
+
+	checkModifiedGit(editor) {
+		if (!editor) return;
+		let filePath = editor.getPath();
+		let repo = atom.project.getRepositories()[0];
+		let status = repo.getPathStatus(filePath);
+		let isNew = repo.isPathNew(filePath);
+		let isModified = repo.isPathModified(filePath);
+		// if there's no change, no need to set state
+		if (isModified != this.state.modifiedGit) {
+			this.setState({ modifiedGit: isModified });
+			// if typing isn't modified, then our notion of modified has changed
+			if (!this.state.modifiedTyping) {
+				this.setModified(isModified);
+			}
+		}
+	}
+
+	setModified(isModified) {
+		const { id, markStreamModified } = this.props;
+		markStreamModified(id, isModified);
 	}
 
 	handleResizeCompose = () => {
@@ -305,10 +364,10 @@ export class SimpleStream extends Component {
 			(this.props.firstTimeInAtom && this.props.currentFile === this.state.fileForIntro)
 		) {
 			return [
-				<label>
+				<label key="welcome">
 					<FormattedMessage id="stream.intro.welcome" defaultMessage="Welcome to CodeStream!" />
 				</label>,
-				<label>
+				<label key="info">
 					<ul>
 						<li>
 							<FormattedMessage
@@ -332,7 +391,7 @@ export class SimpleStream extends Component {
 						</li>
 					</ul>
 				</label>,
-				<label>
+				<label key="learn-more">
 					Learn more at{" "}
 					<a onClick={e => shell.openExternal("https://help.codestream.com")}>
 						help.codestream.com
@@ -405,7 +464,6 @@ export class SimpleStream extends Component {
 
 		let fileAbbreviation = this.fileAbbreviation();
 		let placeholderText = "Add comment to " + fileAbbreviation;
-		// FIXME -- this doesn't update when it should for some reason
 		if (this.state.threadActive && threadPost) {
 			placeholderText = "Reply to " + threadPost.author.username;
 		}
@@ -429,9 +487,13 @@ export class SimpleStream extends Component {
 				/>
 				<MarkerLocationTracker editor={editor} markers={this.props.markers} />
 				<TypingIndicator
-					editor={editor}
+					editingUsers={this.props.editingUsers}
+					modifiedTyping={this.state.modifiedTyping}
+					modifiedGit={this.state.modifiedGit}
 					currentFile={this.props.currentFile}
 					inactive={this.state.threadActive}
+					currentUser={this.props.currentUser}
+					users={this.props.users}
 				/>
 				<div
 					className={postsListClass}
@@ -473,7 +535,7 @@ export class SimpleStream extends Component {
 					onClick={this.handleClickPost}
 				>
 					<Button id="close-thread" className="control-button" onClick={this.handleDismissThread}>
-						Back to stream (esc)
+						Back to stream <span className="keystroke">escape</span>
 					</Button>
 					{threadPost && (
 						<Post
@@ -1098,7 +1160,9 @@ const getMarkersForStreamAndCommit = (locationsByCommit = {}, commitHash, marker
 					location: locations[markerId]
 				};
 			} else {
-				const message = `No marker for id ${markerId} but there are locations for it. commitHash: ${commitHash}`;
+				const message = `No marker for id ${markerId} but there are locations for it. commitHash: ${
+					commitHash
+				}`;
 				Raven.captureMessage(message, {
 					logger: "Stream::mapStateToProps::getMarkersForStreamAndCommit",
 					extra: {
@@ -1173,6 +1237,7 @@ const mapStateToProps = ({
 		currentCommit: context.currentCommit,
 		markers: markersForStreamAndCommit,
 		users: toMapBy("id", teamMembers),
+		editingUsers: stream.editingUsers,
 		usernamesRegexp: usernamesRegexp,
 		currentUser: users[session.userId],
 		posts: getPostsForStream(posts, stream.id || context.currentFile).map(post => {
