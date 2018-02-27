@@ -8,11 +8,13 @@ CodeStream puts team chat into Atom (and other IDEs) so that developers can disc
 
 # Installation
 
-Make sure you have the atom shell commands installed. From the Atom command palette, run `Window: Install Shell Commands`. Then from the command line, type:
+Unix users need to make sure they have the atom shell commands installed. To do so, open the Atom command palette and run `Window: Install Shell Commands`.
+
+To install CodeStream, go to the command line, and run:
 
 `apm install codestream`
 
-Once installed, reload Atom. You can then toggle the CodeStream view via the Packages menu, or hit Cmd + Opt + O (Mac) / Ctrl + Alt + O (Windows). You can also click on the CodeStream logo that now appears in Atom’s statusbar.
+Once installed, reload Atom. You can then toggle the CodeStream view via the Packages menu, or hit Cmd + Opt + O (Mac) / Ctrl + Alt + O (Windows). You can also click on the chat bubbles icon that now appears in Atom’s statusbar.
 
 If there are issues installing the plugin dependencies:
 
@@ -36,6 +38,7 @@ If there are issues installing the plugin dependencies:
 * CodeStream requires a current version of **[Atom](https://atom.io/)**.
 * Your repository must be managed by Git, or a Git hosting service like GitHub.
 * Forking workflows aren’t currently supported.
+* Windows users need to have `git` available in their PATH.
 * Make sure that you have just a single repository open in any one Atom window. Support for multiple repos is coming soon.
 * Make sure you open an actual repository, and not a directory containing repositories.
 
