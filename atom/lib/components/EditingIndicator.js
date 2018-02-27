@@ -2,17 +2,17 @@ import React from "react";
 import _ from "underscore-plus";
 import createClassString from "classnames";
 
-export default class TypingIndicator extends React.Component {
+export default class EditingIndicator extends React.Component {
 	makeNameList(names, hasConflict) {
 		let message = "";
 
 		if (hasConflict) {
-			if (names.length == 1) message = "Pending merge conflict with " + names[0];
+			if (names.length == 1) message = "Potential merge conflict with " + names[0];
 			else if (names.length == 2)
-				message = "Pending merge conflict with " + names[0] + " and " + names[1];
+				message = "Potential merge conflict with " + names[0] + " and " + names[1];
 			else if (names.length > 2) {
 				let last = names.pop();
-				message = "Pending merge conflict with " + names.join(", ") + ", and " + last;
+				message = "Potential merge conflict with " + names.join(", ") + ", and " + last;
 			}
 		} else {
 			if (names.length == 1) message = names[0] + " is editing this file";
@@ -34,18 +34,21 @@ export default class TypingIndicator extends React.Component {
 			return editingUsers[userId] ? users[userId].username : null;
 		});
 
+		// you can test what it looks like by hard-coding this
+		// names = ["larry", "fred"];
+
 		const modifiedByMe = this.props.modifiedGit || this.props.modifiedTyping;
 		const modifiedByOthers = names.length > 0;
 		const hasConflict = modifiedByMe && modifiedByOthers;
 
-		const typingIndicatorClass = createClassString({
-			"typing-indicator": true,
+		const editingIndicatorClass = createClassString({
+			"editing-indicator": true,
 			conflict: hasConflict,
 			inactive: this.props.inactive || !modifiedByOthers
 		});
 
 		return (
-			<div className={typingIndicatorClass}>
+			<div className={editingIndicatorClass}>
 				<div>{this.makeNameList(names, hasConflict)}</div>
 			</div>
 		);

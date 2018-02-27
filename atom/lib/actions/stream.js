@@ -64,26 +64,19 @@ export const markStreamModified = (streamId, isModified) => async (
 	// console.log("COMMENT THIS RETURN STATEMENT TO SAVE TO API SERVER");
 	// return;
 
-	let markModifiedData;
+	// in the future, consider passing the deltas in the "editing" object
 	let editing = isModified ? { commitHash: context.currentCommit } : false;
 
-	if (streamId) {
-		let payload = {
-			teamId: context.currentTeamId,
-			editing: editing
-		};
-		markModifiedData = await http.put("/streams/" + streamId, payload, session.accessToken);
-	} else {
-		let payload = {
-			teamId: context.currentTeamId,
-			repoId: context.currentRepoId,
-			file: context.currentFile,
-			type: "file",
-			editing: editing
-		};
-		markModifiedData = await http.post("/streams", payload, session.accessToken);
-	}
-	// not sure we have to dispatch any action here, as we don't intend to report on
+	let payload = {
+		teamId: context.currentTeamId,
+		repoId: context.currentRepoId,
+		file: context.currentFile,
+		streamId,
+		editing
+	};
+
+	let markModifiedData = await http.put("/editing", payload, session.accessToken);
+	// not sure we have to dispatch any action here, as we don’t intend to report on
 	// whether you yourself have modified the file (other mechanisms exist for that in
 	// the editor), so letting the API server know is all we need to do.
 	console.log("MODIFIED THE STREAM", markModifiedData, session);

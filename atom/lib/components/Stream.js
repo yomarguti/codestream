@@ -24,7 +24,7 @@ import { getStreamForRepoAndFile } from "../reducers/streams";
 import { getPostsForStream } from "../reducers/posts";
 import rootLogger from "../util/Logger";
 import Button from "./onboarding/Button";
-import TypingIndicator from "./TypingIndicator";
+import EditingIndicator from "./EditingIndicator";
 
 const Path = require("path");
 const logger = rootLogger.forClass("components/Stream");
@@ -486,7 +486,7 @@ export class SimpleStream extends Component {
 					onSelect={this.selectPost}
 				/>
 				<MarkerLocationTracker editor={editor} markers={this.props.markers} />
-				<TypingIndicator
+				<EditingIndicator
 					editingUsers={this.props.editingUsers}
 					modifiedTyping={this.state.modifiedTyping}
 					modifiedGit={this.state.modifiedGit}
@@ -1160,9 +1160,7 @@ const getMarkersForStreamAndCommit = (locationsByCommit = {}, commitHash, marker
 					location: locations[markerId]
 				};
 			} else {
-				const message = `No marker for id ${markerId} but there are locations for it. commitHash: ${
-					commitHash
-				}`;
+				const message = `No marker for id ${markerId} but there are locations for it. commitHash: ${commitHash}`;
 				Raven.captureMessage(message, {
 					logger: "Stream::mapStateToProps::getMarkersForStreamAndCommit",
 					extra: {
