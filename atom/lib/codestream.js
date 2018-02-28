@@ -326,7 +326,7 @@ module.exports = {
 				let isModified = repo.isPathModified(filePath) || editor.isModified();
 				edited[filePath] = isModified;
 			});
-		markPathsModified(edited);
+		store.dispatch(markPathsModified(edited));
 	},
 
 	markStreamMute(event) {
