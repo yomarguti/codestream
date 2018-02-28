@@ -324,7 +324,7 @@ module.exports = {
 			.forEach(editor => {
 				let filePath = editor.getPath();
 				let isModified = repo.isPathModified(filePath) || editor.isModified();
-				edited[filePath] = isModified;
+				if (isModified) edited[filePath] = isModified;
 			});
 		store.dispatch(markPathsModified(edited));
 	},
