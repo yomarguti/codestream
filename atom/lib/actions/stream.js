@@ -88,7 +88,7 @@ export const markPathsModified = modifiedPaths => async (dispatch, getState, { h
 	let payload = {
 		teamId: context.currentTeamId,
 		repoId: context.currentRepoId,
-		editing: modifiedPaths || {}
+		all: modifiedPaths || {}
 	};
 
 	console.log("Marking all paths modified: ", payload);
