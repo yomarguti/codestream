@@ -184,6 +184,7 @@ export class SimpleStream extends Component {
 				// console.log("NEXTPROPS FILE: ", nextProps.currentFile);
 				// console.log("EDITOR    FILE: ", editor.getPath());
 				this.checkModifiedGit(editor);
+				this.checkModifiedTyping(editor);
 			}
 		}
 
