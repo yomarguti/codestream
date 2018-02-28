@@ -18,6 +18,7 @@ import {
 	setCurrentCommit
 } from "./actions/context";
 import { setStreamUMITreatment } from "./actions/umi";
+import { markPathsModified } from "./actions/stream";
 import { commitNewMarkerLocations, refreshMarkersAndLocations } from "./actions/marker-location";
 import logger from "./util/Logger";
 import { online, offline } from "./actions/connectivity";
@@ -117,9 +118,7 @@ module.exports = {
 					store.dispatch({ type: "BOOTSTRAP_COMPLETE" });
 					localStorage.setItem(resetFlag, true);
 					atom.confirm({
-						message: `CodeStream has updated to v${
-							version
-						}, which requires a reload of your Atom windows, and for you to sign back in to CodeStream.`,
+						message: `CodeStream has updated to v${version}, which requires a reload of your Atom windows, and for you to sign back in to CodeStream.`,
 						detailedMessage: "If you have other open windows, you'll need to manually reload them.",
 						buttons: { Reload: () => atom.reload() }
 					});
@@ -306,10 +305,28 @@ module.exports = {
 			};
 			repo.onDidChangeStatus(event => {
 				console.log("GIT STATUS CHANGED: ", event);
+				this.checkEditorsForModification(repo);
+			});
+			repo.onDidChangeStatuses(() => {
+				console.log("MANY GIT STATUS CHANGED.");
+				this.checkEditorsForModification(repo);
 			});
 			store.dispatch(setRepoAttributes(repoAttributes));
 			store.dispatch(fetchRepoInfo(repoAttributes));
 		}
+	},
+
+	checkEditorsForModification(repo) {
+		let edited = {};
+		atom.workspace
+			.getCenter()
+			.getTextEditors()
+			.forEach(editor => {
+				let filePath = editor.getPath();
+				let isModified = repo.isPathModified(filePath) || editor.isModified();
+				edited[filePath] = isModified;
+			});
+		markPathsModified(edited);
 	},
 
 	markStreamMute(event) {

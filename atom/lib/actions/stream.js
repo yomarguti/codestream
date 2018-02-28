@@ -81,3 +81,17 @@ export const markStreamModified = (streamId, isModified) => async (
 	// the editor), so letting the API server know is all we need to do.
 	console.log("MODIFIED THE STREAM", markModifiedData, session);
 };
+
+export const markPathsModified = modifiedPaths => async (dispatch, getState, { http }) => {
+	const { context, session } = getState();
+
+	let payload = {
+		teamId: context.currentTeamId,
+		repoId: context.currentRepoId,
+		editing: modifiedPaths || {}
+	};
+
+	console.log("Marking paths modified");
+	let markModifiedData = await http.put("/editing", payload, session.accessToken);
+	console.log("MODIFIED ALL PATHS", markModifiedData, session);
+};
