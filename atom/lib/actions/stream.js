@@ -82,20 +82,25 @@ export const markStreamModified = (streamId, isModified) => async (
 	console.log("MODIFIED THE STREAM", markModifiedData, session);
 };
 
-export const markPathsModified = (modifiedPaths, commitHash) => async (
-	dispatch,
-	getState,
-	{ http }
-) => {
-	const { context, session } = getState();
+export const markPathsModified = modifiedPaths => async (dispatch, getState, { http }) => {
+	const { context, session, streams } = getState();
+
+	let paths = [];
+	let streamIds = [];
+	modifiedPaths.forEach(path => {
+		const stream = getStreamForRepoAndFile(streams, context.currentRepoId, path);
+		if (stream) streamIds.push(stream.id);
+		else paths.push(path);
+	});
 
 	let payload = {
 		teamId: context.currentTeamId,
 		repoId: context.currentRepoId,
 		editing: {
-			commitHash
+			commitHash: context.currentCommit
 		},
-		files: modifiedPaths || []
+		files: paths || [],
+		streamIds
 	};
 
 	console.log("Marking all paths modified: ", payload);

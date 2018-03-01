@@ -325,8 +325,7 @@ module.exports = {
 				let filePath = editor.getPath();
 				if (repo.isPathModified(filePath) || editor.isModified()) edited.push(filePath);
 			});
-		const currentCommit = await repo.getCurrentCommit();
-		store.dispatch(markPathsModified(edited, currentCommit.hash));
+		store.dispatch(markPathsModified(edited));
 	},
 
 	markStreamMute(event) {
