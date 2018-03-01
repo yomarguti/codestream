@@ -259,6 +259,7 @@ export class SimpleStream extends Component {
 		let width = scrollViewDiv.offsetWidth + rect.left;
 		let newStyle = ".codestream-comment-popup { left: " + width + "px; }";
 		this.addStyleString(newStyle);
+		this.resizeStream();
 	};
 
 	// add a style to the document, reusing a style node that we attach to the DOM
@@ -279,6 +280,7 @@ export class SimpleStream extends Component {
 			this._intro.style.height = newHeight + "px";
 		}
 		this._div.style.paddingBottom = composeHeight + "px";
+		this._threadpostslist.style.maxHeight = postslistHeight + "px";
 		// if (this._atMentionsPopup)
 		// this._atMentionsPopup.style.bottom = this._compose.offsetHeight + "px";
 		this._postslist.scrollTop = 100000;
