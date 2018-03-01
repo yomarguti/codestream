@@ -87,6 +87,7 @@ export const markPathsModified = modifiedPaths => async (dispatch, getState, { h
 
 	let paths = [];
 	let streamIds = [];
+
 	modifiedPaths.forEach(path => {
 		const stream = getStreamForRepoAndFile(streams, context.currentRepoId, path);
 		if (stream) streamIds.push(stream.id);
