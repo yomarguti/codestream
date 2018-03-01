@@ -316,17 +316,17 @@ module.exports = {
 		}
 	},
 
-	checkEditorsForModification(repo) {
-		let edited = {};
+	async checkEditorsForModification(repo) {
+		let edited = [];
 		atom.workspace
 			.getCenter()
 			.getTextEditors()
 			.forEach(editor => {
 				let filePath = editor.getPath();
-				let isModified = repo.isPathModified(filePath) || editor.isModified();
-				if (isModified) edited[filePath] = isModified;
+				if (repo.isPathModified(filePath) || editor.isModified()) edited.push(filePath);
 			});
-		store.dispatch(markPathsModified(edited));
+		const currentCommit = await repo.getCurrentCommit();
+		store.dispatch(markPathsModified(edited, currentCommit.hash));
 	},
 
 	markStreamMute(event) {
