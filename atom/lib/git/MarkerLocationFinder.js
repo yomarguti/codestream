@@ -34,7 +34,7 @@ export default class MarkerLocationFinder {
 			const locations = await this._getMarkerLocations(commitWhenCreated);
 			const locationsToCalculate = {};
 			for (const marker of markersForCommit) {
-				locationsToCalculate[marker.id] = locations[marker.id];
+				locationsToCalculate[marker._id] = locations[marker._id];
 			}
 
 			const delta = await gitRepo.getDeltaBetweenCommits(commitWhenCreated, currentCommit, filePath);
