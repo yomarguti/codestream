@@ -29,7 +29,7 @@ const _initiateTicks = (store, receiver) => {
 				level: "debug"
 			});
 			lastTick = now;
-			receiver.unsubscribeAll();
+			receiver.unsubscribeAll(); // This should fix COD-333
 			// restart the count for history processed
 			processedHistoryCount = 0;
 			historyCount = await _initializePubnubAndSubscribe(store, receiver);
