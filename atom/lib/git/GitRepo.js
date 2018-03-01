@@ -1,5 +1,6 @@
 "use strict";
 
+import Remote from "./Remote";
 import git from "../git";
 import eol from "eol";
 import stripEof from "strip-eof";
@@ -12,6 +13,8 @@ const OPERATIONS = {
 	"+": "ADD",
 	"-": "DEL"
 };
+
+const REMOTE_ORDER = ["origin", "upstream"]; // last is first
 
 export const open = path => {
 	return openRepos[path] || (openRepos[path] = new GitRepo(path));
@@ -203,6 +206,21 @@ class GitRepo {
 		);
 		return rawHistory.split("\n");
 	}
-}
 
-export default GitRepo;
+	async listRemoteReferences() {
+		let remotes = (await this.run("remote", "-v"))
+			.split("\n")
+			.map(line => line.split(/\s+/))
+			.map(Remote);
+
+		remotes.sort((a, b) => {
+			return REMOTE_ORDER.indexOf(b.name) - REMOTE_ORDER.indexOf(a.name);
+		});
+
+		for (const remote of remotes) {
+			console.log(remote.name);
+		}
+
+		return remotes;
+	}
+}
