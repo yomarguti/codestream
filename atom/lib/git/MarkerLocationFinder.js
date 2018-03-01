@@ -1,9 +1,7 @@
 import Raven from "raven-js";
-import rootLogger from "../util/Logger";
 
 export default class MarkerLocationFinder {
 	constructor({ gitRepo, accessToken, http, filePath, teamId, streamId }) {
-		this._logger = rootLogger.forObject("MarkerLocationFinder", streamId);
 		this._gitRepo = gitRepo;
 		this._accessToken = accessToken;
 		this._http = http;
@@ -14,67 +12,42 @@ export default class MarkerLocationFinder {
 
 	async findLocationsForCurrentCommit(markers) {
 		const me = this;
-		const logger = me._logger;
-		logger.trace(".findLocationsForCurrentCommit <=", markers);
-
 		const filePath = me._filePath;
 		const gitRepo = me._gitRepo;
 		const currentCommit = await gitRepo.getCurrentCommit();
-		const commitHistory = await gitRepo.getCommitHistoryForFile(filePath, 10);
-		await this._addMarkersFirstCommitToCommitHistory(commitHistory, markers);
-
 		const currentLocations = {};
-		const missingMarkerIds = {};
+		const markersByFirstCommit = {};
+
 		for (const marker of markers) {
-			missingMarkerIds[marker._id] = 1;
+			const commitWhenCreated = marker.commitHashWhenCreated;
+			const markersForCommit = markersByFirstCommit[commitWhenCreated] || (markersByFirstCommit[commitWhenCreated] = []);
+			markersForCommit.push(marker);
 		}
 
-		for (const commit of commitHistory) {
-			if (Object.keys(missingMarkerIds).length === 0) {
-				break;
+		for (const commitWhenCreated of Object.keys(markersByFirstCommit)) {
+			const exists = await gitRepo.ensureCommitExists(commitWhenCreated);
+			if (!exists) {
+				continue;
 			}
 
-			logger.debug("Getting marker locations for commit", commit);
-			const locations = await this._getMarkerLocations(commit);
-			const lastKnownLocations = {};
-
-			for (const markerId of Object.keys(locations)) {
-				if (missingMarkerIds[markerId]) {
-					lastKnownLocations[markerId] = locations[markerId];
-					delete missingMarkerIds[markerId];
-				}
+			const markersForCommit = markersByFirstCommit[commitWhenCreated];
+			const locations = await this._getMarkerLocations(commitWhenCreated);
+			const locationsToCalculate = {};
+			for (const marker of markersForCommit) {
+				locationsToCalculate[marker.id] = locations[marker.id];
 			}
 
-			const lastKnownLocationsLength = Object.keys(lastKnownLocations).length;
-			logger.debug(
-				"Commit",
-				commit,
-				"has location information for",
-				lastKnownLocationsLength,
-				"markers"
-			);
-			Object.assign(currentLocations, lastKnownLocations);
-
-			if (lastKnownLocationsLength && commit !== currentCommit) {
-				const delta = await gitRepo.getDeltaBetweenCommits(commit, currentCommit, filePath);
-				if (delta.edits.length) {
-					logger.debug(
-						"File has changed from",
-						commit,
-						"to",
-						currentCommit,
-						"- recalculating locations"
-					);
-					const calculatedLocations = await this._calculateLocations(
-						lastKnownLocations,
-						delta.edits,
-						commit,
-						currentCommit
-					);
-					Object.assign(currentLocations, calculatedLocations);
-				} else {
-					logger.debug("No changes in current file from", commit, "to", currentCommit);
-				}
+			const delta = await gitRepo.getDeltaBetweenCommits(commitWhenCreated, currentCommit, filePath);
+			if (delta.edits.length) {
+				const calculatedLocations = await this._calculateLocations(
+					locationsToCalculate,
+					delta.edits,
+					commitWhenCreated,
+					currentCommit
+				);
+				Object.assign(currentLocations, calculatedLocations);
+			} else {
+				Object.assign(currentLocations, locationsToCalculate);
 			}
 		}
 
@@ -83,19 +56,15 @@ export default class MarkerLocationFinder {
 
 	async findLocationsForUncommittedChanges(currentCommitLocations, bufferText) {
 		const me = this;
-		const logger = me._logger;
-		logger.trace(".findLocationsForUncommittedChanges <=", currentCommitLocations);
-
-		let locations = { ...currentCommitLocations };
-
 		const filePath = me._filePath;
 		const gitRepo = me._gitRepo;
 		const currentCommit = await gitRepo.getCurrentCommit();
-
 		const unsavedDelta = await gitRepo.getDeltaForUncommittedChanges(filePath, bufferText);
 		const unsavedEdits = unsavedDelta.edits;
+
+		let locations = { ...currentCommitLocations };
+
 		if (unsavedEdits.length) {
-			logger.debug("File has unsaved changes - recalculating locations");
 			const unsavedLocations = await this._calculateLocations(
 				locations,
 				unsavedEdits,
@@ -112,9 +81,6 @@ export default class MarkerLocationFinder {
 
 	async backtrackLocationsAtCurrentCommit(dirtyLocations, bufferText) {
 		const me = this;
-		const logger = me._logger;
-		logger.trace(".backtrackLocationsAtCurrentCommit <=", dirtyLocations);
-
 		const filePath = me._filePath;
 		const gitRepo = me._gitRepo;
 		const currentCommit = await gitRepo.getCurrentCommit();
@@ -123,7 +89,6 @@ export default class MarkerLocationFinder {
 		const reverseEdits = me._reverseEdits(unsavedDelta.edits);
 
 		if (reverseEdits.length) {
-			logger.debug("File has unsaved changes - backtracking locations");
 			const commitLocations = await this._calculateLocations(
 				dirtyLocations,
 				reverseEdits,
