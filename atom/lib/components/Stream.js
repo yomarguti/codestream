@@ -312,7 +312,7 @@ export class SimpleStream extends Component {
 						<li>
 							<FormattedMessage
 								id="stream.intro.eachFile"
-								defaultMessage="Every source file has its own chat stream. Just pick a file, post a message, and any of your teammates can contribute to the discussion."
+								defaultMessage="Pick a source file, post a message, and any of your teammates can join the discussion."
 							/>
 						</li>
 						<li>
