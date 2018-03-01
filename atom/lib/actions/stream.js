@@ -104,8 +104,6 @@ export const markPathsModified = modifiedPaths => async (dispatch, getState, { h
 	};
 
 	console.log("Marking all paths modified: ", payload);
-
 	let markModifiedData = await http.put("/editing", payload, session.accessToken);
-
 	console.log("MODIFIED ALL PATHS", markModifiedData, session);
 };
