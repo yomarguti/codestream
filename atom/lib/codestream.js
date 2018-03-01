@@ -323,7 +323,8 @@ module.exports = {
 			.getTextEditors()
 			.forEach(editor => {
 				let filePath = editor.getPath();
-				if (repo.isPathModified(filePath) || editor.isModified()) edited.push(filePath);
+				if (repo.isPathModified(filePath) || editor.isModified())
+					edited.push(repo.relativize(filePath));
 			});
 		store.dispatch(markPathsModified(edited));
 	},

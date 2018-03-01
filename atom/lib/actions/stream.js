@@ -87,7 +87,6 @@ export const markPathsModified = modifiedPaths => async (dispatch, getState, { h
 
 	let paths = [];
 	let streamIds = [];
-
 	modifiedPaths.forEach(path => {
 		const stream = getStreamForRepoAndFile(streams, context.currentRepoId, path);
 		if (stream) streamIds.push(stream.id);
@@ -105,6 +104,8 @@ export const markPathsModified = modifiedPaths => async (dispatch, getState, { h
 	};
 
 	console.log("Marking all paths modified: ", payload);
+
 	let markModifiedData = await http.put("/editing", payload, session.accessToken);
+
 	console.log("MODIFIED ALL PATHS", markModifiedData, session);
 };
