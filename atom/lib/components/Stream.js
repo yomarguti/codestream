@@ -426,7 +426,7 @@ export class SimpleStream extends Component {
 					references={this.props.markers}
 					onSelect={this.selectPost}
 				/>
-				<MarkerLocationTracker editor={editor} markers={this.props.markers} />
+				<MarkerLocationTracker editor={editor} />
 				<div
 					className={postsListClass}
 					ref={ref => (this._postslist = ref)}

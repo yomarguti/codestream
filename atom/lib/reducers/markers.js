@@ -9,6 +9,7 @@ export default (state = initialState, { type, payload }) => {
 		case "ADD_MARKERS":
 			return { ...state, ...toMapBy("id", payload) };
 		case "MARKERS-UPDATE_FROM_PUBNUB":
+			return { ...state, [payload.id]: payload };
 		case "ADD_MARKER":
 			return { ...state, [payload.id]: payload };
 		default:

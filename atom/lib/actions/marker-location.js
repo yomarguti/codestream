@@ -78,10 +78,7 @@ export const calculateLocations = ({ teamId, streamId, text }) => async (
 ) => {
 	const { context, repoAttributes, session } = getState();
 	const gitRepo = await openRepo(repoAttributes.workingDirectory);
-	// TODO check if context.currentCommit is already updated at this point, so
-	// we don't need to ask the repo
-	const currentCommit = await gitRepo.getCurrentCommit();
-	const commitHash = currentCommit.hash;
+	const commitHash = context.currentCommit;
 
 	// TODO we shouldn't have to ask the server every single time
 	const { markers, markerLocations } = await http.get(

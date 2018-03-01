@@ -53,8 +53,9 @@
 		"babel-preset-react": "^6.24.1",
 		"classnames": "^2.2.5",
 		"dexie": "^2.0.1",
+		"diff": "^3.4.0",
+		"eol": "^0.9.1",
 		"moment": "^2.19.3",
-		"nodegit": "^0.20.3",
 		"prop-types": "^15.6.0",
 		"pubnub": "^4.19.0",
 		"raven-for-redux": "^1.2.0",
@@ -68,8 +69,10 @@
 		"redux": "^3.7.2",
 		"redux-devtools-extension": "^2.13.2",
 		"redux-thunk": "^2.2.0",
+		"strip-eof": "^1.0.0",
 		"underscore-plus": "^1.6.6",
-		"username": "^3.0.0"
+		"username": "^3.0.0",
+		"uuid": "^3.2.1"
 	},
 	"devDependencies": {
 		"enzyme": "^3.1.0",
