@@ -292,13 +292,13 @@ export class SimpleStream extends Component {
 
 	checkModifiedGit(editor) {
 		if (!editor) return;
+		this.checkModifiedTyping(editor);
 		let filePath = editor.getPath();
 		let repo = atom.project.getRepositories()[0];
 		let status = repo.getPathStatus(filePath);
 		let isNew = repo.isPathNew(filePath);
 		let isModified = repo.isPathModified(filePath);
 		// if there's no change, no need to set state
-
 		if (isModified != this.state.modifiedGit) {
 			this.setState({ modifiedGit: isModified });
 			// if typing isn't modified, then our notion of modified has changed
