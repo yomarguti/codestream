@@ -18,7 +18,6 @@ import {
 	setCurrentCommit
 } from "./actions/context";
 import { setStreamUMITreatment } from "./actions/umi";
-import { commitNewMarkerLocations, refreshMarkersAndLocations } from "./actions/marker-location";
 import logger from "./util/Logger";
 import { online, offline } from "./actions/connectivity";
 
@@ -284,10 +283,10 @@ module.exports = {
 			window.addEventListener("online", e => store.dispatch(online()), false);
 			window.addEventListener("offline", e => store.dispatch(offline()), false);
 
-			const workDir = repo.repo.workingDirectory;
+			const workDir = repo.getWorkingDirectory();
 			const repoUrl = repo.getOriginURL();
 			const noParentCommits = await git(["rev-list", "--max-parents=0", "--reverse", "HEAD"], {
-				cwd: repo.getWorkingDirectory()
+				cwd: workDir
 			});
 			const repoAttributes = {
 				workingDirectory: workDir,
