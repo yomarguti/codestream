@@ -86,6 +86,7 @@ export class SimpleStream extends Component {
 		};
 
 		this.savedComposeState = {};
+		this.editorsWithHandlers = {};
 
 		this.subscriptions = new CompositeDisposable();
 		this.subscriptions.add(
@@ -132,6 +133,8 @@ export class SimpleStream extends Component {
 	}
 
 	componentWillUnmount() {
+		let editor = atom.workspace.getActiveTextEditor();
+		if (editor) delete this.editorsWithHandlers[editor.id];
 		this.subscriptions.dispose();
 	}
 
@@ -154,6 +157,7 @@ export class SimpleStream extends Component {
 			const text = e.clipboardData.getData("text/plain");
 			document.execCommand("insertHTML", false, text);
 		});
+		this.installEditorHandlers();
 	}
 
 	componentWillReceiveProps(nextProps) {
@@ -245,7 +249,7 @@ export class SimpleStream extends Component {
 			return;
 		}
 
-		if (!editor.codeStreamHandlers) {
+		if (!this.editorsWithHandlers[editor.id]) {
 			let scrollViewDiv = editor.component.element.querySelector(".scroll-view");
 			if (scrollViewDiv) {
 				editor.resizeHandler = new ResizeObserver(() => {
@@ -258,11 +262,8 @@ export class SimpleStream extends Component {
 					this.checkModifiedTyping(editor);
 				})
 			);
-			editor.codeStreamHandlers = true;
-		}
-
-		if (!editor.selectionHandler) {
 			this.selectionHandler = editor.onDidChangeSelectionRange(this.hideDisplayMarker.bind(this));
+			this.editorsWithHandlers[editor.id] = true;
 		}
 	}
 

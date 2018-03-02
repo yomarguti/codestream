@@ -79,7 +79,7 @@ export const markStreamModified = (streamId, isModified) => async (
 	// not sure we have to dispatch any action here, as we don’t intend to report on
 	// whether you yourself have modified the file (other mechanisms exist for that in
 	// the editor), so letting the API server know is all we need to do.
-	console.log("MODIFIED THE STREAM", markModifiedData, session);
+	// console.log("MODIFIED THE STREAM", markModifiedData, session);
 };
 
 export const markPathsModified = modifiedPaths => async (dispatch, getState, { http }) => {
