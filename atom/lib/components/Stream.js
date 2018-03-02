@@ -200,6 +200,7 @@ export class SimpleStream extends Component {
 		const { id, markStreamRead } = this.props;
 
 		this._postslist.scrollTop = 100000;
+
 		this.installEditorHandlers();
 
 		// if we just switched to a new stream, (eagerly) mark both old and new as read
