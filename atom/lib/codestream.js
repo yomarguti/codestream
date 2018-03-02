@@ -277,7 +277,6 @@ module.exports = {
 					const currentCommit = await getCurrentCommit(repo);
 					if (context.currentCommit !== currentCommit) {
 						store.dispatch(commitHashChanged(currentCommit));
-						store.dispatch(refreshMarkersAndLocations());
 					}
 				})
 			);
