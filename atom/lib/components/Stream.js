@@ -260,6 +260,10 @@ export class SimpleStream extends Component {
 			this.subscriptions.add(
 				editor.onDidStopChanging(() => {
 					this.checkModifiedTyping(editor);
+				}),
+				editor.onDidSave(() => {
+					this.checkModifiedTyping(editor);
+					this.checkModifiedGit(editor);
 				})
 			);
 			this.selectionHandler = editor.onDidChangeSelectionRange(this.hideDisplayMarker.bind(this));
@@ -305,6 +309,7 @@ export class SimpleStream extends Component {
 
 	setModified(isModified) {
 		const { id, markStreamModified } = this.props;
+		console.log("Markign this stream modified: " + isModified);
 		markStreamModified(id, isModified);
 	}
 
