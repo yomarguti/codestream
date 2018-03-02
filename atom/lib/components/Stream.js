@@ -309,7 +309,7 @@ export class SimpleStream extends Component {
 
 	setModified(isModified) {
 		const { id, markStreamModified } = this.props;
-		console.log("Markign this stream modified: " + isModified);
+		console.log("Marking this stream modified: " + id + " as " + isModified);
 		markStreamModified(id, isModified);
 	}
 
