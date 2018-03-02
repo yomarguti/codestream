@@ -21,7 +21,6 @@ import { setStreamUMITreatment } from "./actions/umi";
 import { commitNewMarkerLocations, refreshMarkersAndLocations } from "./actions/marker-location";
 import logger from "./util/Logger";
 import { online, offline } from "./actions/connectivity";
-import { open as openRepo } from "./git/GitRepo";
 
 const env = sessionStorage.getItem("codestream.env") || "production";
 if (env === "production") {
@@ -274,17 +273,10 @@ module.exports = {
 
 				// Subscribe to git status changes in order to be aware of current commit hash.
 				repo.onDidChangeStatuses(async event => {
-					logger.trace("repo.onDidChangeStatuses");
 					const { context } = store.getState();
-					const lastCommitHash = context.currentCommit;
-
-					const gitRepo = await openRepo(repo.getWorkingDirectory());
-					const currentCommit = await gitRepo.getCurrentCommit();
-					const currentCommitHash = currentCommit.hash;
-
-					if (lastCommitHash !== currentCommitHash) {
-						store.dispatch(commitHashChanged(currentCommitHash));
-						store.dispatch(refreshMarkersAndLocations());
+					const currentCommit = await getCurrentCommit(repo);
+					if (context.currentCommit !== currentCommit) {
+						store.dispatch(commitHashChanged(currentCommit));
 					}
 				})
 			);

@@ -15,6 +15,7 @@ export default (args, options = {}) => {
 			},
 			exit: code => (code === 0 ? resolve(output) : reject(output))
 		});
+
 		bufferedProcess.onWillThrowError(error => {
 			atom.notifications.addError(
 				//FIXME loc

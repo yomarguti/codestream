@@ -192,6 +192,9 @@ export class SimpleStream extends Component {
 			markStreamRead(prevProps.id);
 			this.resizeStream();
 		}
+		if (prevState.threadId !== this.state.threadId) {
+			this.resizeStream();
+		}
 	}
 
 	showDisplayMarker(markerId) {
@@ -259,6 +262,7 @@ export class SimpleStream extends Component {
 		let width = scrollViewDiv.offsetWidth + rect.left;
 		let newStyle = ".codestream-comment-popup { left: " + width + "px; }";
 		this.addStyleString(newStyle);
+		this.resizeStream();
 	};
 
 	// add a style to the document, reusing a style node that we attach to the DOM
@@ -279,6 +283,7 @@ export class SimpleStream extends Component {
 			this._intro.style.height = newHeight + "px";
 		}
 		this._div.style.paddingBottom = composeHeight + "px";
+		this._threadpostslist.style.height = postslistHeight + "px";
 		// if (this._atMentionsPopup)
 		// this._atMentionsPopup.style.bottom = this._compose.offsetHeight + "px";
 		this._postslist.scrollTop = 100000;
@@ -312,7 +317,7 @@ export class SimpleStream extends Component {
 						<li>
 							<FormattedMessage
 								id="stream.intro.eachFile"
-								defaultMessage="Every source file has its own chat stream. Just pick a file, post a message, and any of your teammates can contribute to the discussion."
+								defaultMessage="Pick a source file, post a message, and any of your teammates can join the discussion."
 							/>
 						</li>
 						<li>
@@ -426,7 +431,7 @@ export class SimpleStream extends Component {
 					references={this.props.markers}
 					onSelect={this.selectPost}
 				/>
-				<MarkerLocationTracker editor={editor} markers={this.props.markers} />
+				<MarkerLocationTracker editor={editor} />
 				<div
 					className={postsListClass}
 					ref={ref => (this._postslist = ref)}

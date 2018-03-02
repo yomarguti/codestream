@@ -1,5 +1,5 @@
 import PubNubReceiver from "./pubnub-receiver";
-import { fetchCurrentUser } from "./actions/user";
+import { fetchCurrentUser, ensureCorrectTimeZone } from "./actions/user";
 import { catchingUp, caughtUp, subscriptionFailure } from "./actions/messaging";
 import Raven from "raven-js";
 
@@ -29,10 +29,13 @@ const _initiateTicks = (store, receiver) => {
 				level: "debug"
 			});
 			lastTick = now;
-			receiver.unsubscribeAll();
+			receiver.unsubscribeAll(); // This should fix COD-333
 			// restart the count for history processed
 			processedHistoryCount = 0;
 			historyCount = await _initializePubnubAndSubscribe(store, receiver);
+			// ensure the user's timezone is properly saved, in case they moved
+			// with their laptop closed
+			store.dispatch(ensureCorrectTimeZone());
 		} else {
 			lastTick = now;
 		}
@@ -83,10 +86,12 @@ export default store => {
 		// Once data has been loaded from indexedDB, if continuing a session,
 		// find current user and subscribe to channels
 		// fetch the latest version of the current user object
+		// ensure the user's timezone is correctly saved in case they have moved
 		if (action.type === "BOOTSTRAP_COMPLETE") {
 			const { session, onboarding } = store.getState();
 			if (onboarding.complete && session.accessToken) {
 				store.dispatch(fetchCurrentUser());
+				store.dispatch(ensureCorrectTimeZone());
 				historyCount = await _initializePubnubAndSubscribe(store, receiver);
 			}
 		}

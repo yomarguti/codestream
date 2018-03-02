@@ -249,7 +249,7 @@ export const resolveFromPubnub = (post, isHistory) => async (dispatch, getState,
 			teamId,
 			streamId,
 			text,
-			commitHashWhenPosted
+			commitHashWhenPosted: commitHashWhenPosted || "" // posts from email won't have commit hashes
 		};
 		if (post.parentPostId) searchAttributes.parentPostId = post.parentPostId;
 
@@ -263,7 +263,7 @@ const resolvePendingPost = (id, resolvedPost) => (dispatch, getState, { db }) =>
 	return db
 		.transaction("rw", db.posts, () => {
 			db.posts.delete(id);
-			db.posts.add(resolvedPost);
+			upsert(db, "posts", resolvedPost);
 		})
 		.then(() =>
 			dispatch({

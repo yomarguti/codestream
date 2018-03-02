@@ -122,5 +122,4 @@ describe("reducer for marker locations", () => {
 			});
 		});
 	});
-
 });

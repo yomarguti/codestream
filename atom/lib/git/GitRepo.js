@@ -1,40 +1,47 @@
 "use strict";
 
-import GitCommit from "./GitCommit";
-import Git from "nodegit";
-import gitCmdLine from "../git";
+import Remote from "./Remote";
+import git from "../git";
+import eol from "eol";
+import stripEof from "strip-eof";
+import { structuredPatch, parsePatch } from "diff";
 
-export async function open(path) {
-	const git = await Git.Repository.open(path);
-	return new GitRepo(git);
-}
+const openRepos = {};
 
-const HISTORY_WALK_FETCH_SIZE = 100;
+const OPERATIONS = {
+	" ": "SYNC",
+	"+": "ADD",
+	"-": "DEL"
+};
+
+const REMOTE_ORDER = ["origin", "upstream"]; // last is first
+
+export const open = path => {
+	return openRepos[path] || (openRepos[path] = new GitRepo(path));
+};
+
+const emptyDelta = filePath => {
+	return {
+		oldFile: filePath,
+		newFile: filePath,
+		edits: []
+	};
+};
 
 class DeltaBuilder {
-	constructor(cfg) {
-		this._oldFile = cfg.oldFile;
-		this._newFile = cfg.newFile;
+	constructor(patch) {
+		this._oldFile = patch.oldFileName;
+		this._newFile = patch.newFileName;
+		this._hunks = patch.hunks;
 		this._edits = [];
 		this._state = "sync";
 		this._oldLine = 0;
 		this._newLine = 0;
 	}
 
-	processLine(line) {
-		const origin = line.origin();
-		if (origin === Git.Diff.LINE.CONTEXT) {
-			this._ctx(line);
-		} else if (origin === Git.Diff.LINE.ADDITION) {
-			this._add(line);
-		} else if (origin === Git.Diff.LINE.DELETION) {
-			this._del(line);
-		}
-	}
-
 	build() {
+		this._processHunks();
 		this._setState("sync");
-
 		return {
 			oldFile: this._oldFile,
 			newFile: this._newFile,
@@ -42,20 +49,58 @@ class DeltaBuilder {
 		};
 	}
 
+	_processHunks() {
+		for (const hunk of this._hunks) {
+			const { oldStart, newStart, lines } = hunk;
+			let oldLine = oldStart;
+			let newLine = newStart;
+			for (const rawLine of lines) {
+				const operation = OPERATIONS[rawLine.charAt(0)];
+				const content = rawLine.substr(1);
+
+				this._processLine({
+					operation,
+					content,
+					oldLine,
+					newLine
+				});
+
+				if (operation === "SYNC" || operation === "ADD") {
+					newLine++;
+				}
+				if (operation === "SYNC" || operation === "DEL") {
+					oldLine++;
+				}
+			}
+		}
+	}
+
+	_processLine(line) {
+		const operation = line.operation;
+		switch (operation) {
+			case "SYNC":
+				return this._ctx(line);
+			case "ADD":
+				return this._add(line);
+			case "DEL":
+				return this._del(line);
+		}
+	}
+
 	_ctx(line) {
 		this._setState("sync");
-		this._oldLine = line.oldLineno();
-		this._newLine = line.newLineno();
+		this._oldLine = line.oldLine;
+		this._newLine = line.newLine;
 	}
 
 	_add(line) {
 		this._setState("edit");
-		this._adds.push(line.content());
+		this._adds.push(line.content);
 	}
 
 	_del(line) {
 		this._setState("edit");
-		this._dels.push(line.content());
+		this._dels.push(line.content);
 	}
 
 	_setState(state) {
@@ -92,163 +137,90 @@ class DeltaBuilder {
 }
 
 class GitRepo {
-	constructor(git) {
-		this._git = git;
+	constructor(path) {
+		this._path = path;
+	}
+
+	async run(...args) {
+		const data = await git(args, {
+			cwd: this._path
+		});
+		return data.trim();
 	}
 
 	async getCurrentCommit() {
-		const headCommit = await this._git.getHeadCommit();
-		return new GitCommit(headCommit);
+		return await this.run("rev-parse", "--verify", "HEAD");
 	}
 
-	async getCommit(hash) {
+	async ensureCommitExists(hash) {
 		try {
-			const commit = await this._git.getCommit(hash);
-			return new GitCommit(commit);
+			const type = await this.run("cat-file", "-t", hash);
+			return type === "commit";
 		} catch (err) {
 			try {
-				await gitCmdLine(["fetch", "origin"], {
-					cwd: this._git.path()
-				});
-				const commit = await this._git.getCommit(hash);
-				return new GitCommit(commit);
+				await this.run("fetch", "origin");
 			} catch (err) {
-				console.warn(`Commit ${hash} not found`);
+				console.warn(err);
+				return false;
+			}
+			try {
+				const type = await this.run("cat-file", "-t", hash);
+				return type === "commit";
+			} catch (err) {
+				return false;
 			}
 		}
 	}
 
-	async getDeltasBetweenCommits(oldCommit, newCommit, filePath) {
-		const oldTree = await oldCommit._commit.getTree();
-		const newTree = await newCommit._commit.getTree();
-		const opts = {
-			pathspec: [filePath]
-		};
-		const diff = await Git.Diff.treeToTree(this._git, oldTree, newTree, opts);
-		return await this._buildDeltasFromDiffs([diff]);
-	}
-
-	async getBlobForCommittedFile(filePath) {
-		const headCommit = await this.getCurrentCommit();
-		const tree = await headCommit.getTree();
-		const treeEntry = await tree.entryByPath(filePath);
-		const blob = await this._git.getBlob(treeEntry.sha());
-
-		return blob;
+	async getDeltaBetweenCommits(oldCommit, newCommit, filePath) {
+		const rawDiff = await this.run("diff", oldCommit, newCommit, "--", filePath);
+		if (rawDiff) {
+			const patches = parsePatch(rawDiff);
+			if (patches.length > 1) {
+				console.warn("Parsed diff generated multiple patches");
+			}
+			return new DeltaBuilder(patches[0]).build();
+		} else {
+			return emptyDelta(filePath);
+		}
 	}
 
 	async getDeltaForUncommittedChanges(filePath, text) {
-		const committedBlob = await this.getBlobForCommittedFile(filePath);
-		const diffOptions = new Git.DiffOptions();
-		const patch = await Git.Patch.fromBlobAndBuffer(
-			committedBlob,
-			filePath,
-			text,
-			text.length,
-			filePath,
-			diffOptions
-		);
+		let committedText = await this.run("show", "HEAD:" + filePath);
 
-		return await this._buildDeltaFromPatch(patch, filePath);
-	}
+		text = stripEof(eol.auto(text));
+		committedText = stripEof(eol.auto(committedText));
 
-	async getDeltas(commit) {
-		const diffs = await commit._commit.getDiff();
-		const deltas = await this._buildDeltasFromDiffs(diffs);
-		return deltas;
-	}
-
-	async _buildDeltasFromDiffs(diffs) {
-		const deltas = [];
-
-		for (const diff of diffs) {
-			await diff.findSimilar({
-				flags: Git.Diff.FIND.RENAMES
-			});
-			const patches = await diff.patches();
-			for (const patch of patches) {
-				const builder = new DeltaBuilder({
-					oldFile: patch.oldFile().path(),
-					newFile: patch.newFile().path()
-				});
-				const hunks = await patch.hunks();
-				for (const hunk of hunks) {
-					const lines = await hunk.lines();
-					for (const line of lines) {
-						builder.processLine(line);
-					}
-				}
-				deltas.push(builder.build());
-			}
-		}
-
-		return deltas;
-	}
-
-	async _buildDeltaFromPatch(patch, filePath) {
-		const builder = new DeltaBuilder({
-			oldFile: filePath,
-			newFile: filePath
-		});
-
-		const numHunks = patch.numHunks();
-		for (let h = 0; h < numHunks; h++) {
-			const numLinesInHunk = patch.numLinesInHunk(h);
-			for (let l = 0; l < numLinesInHunk; l++) {
-				const line = await patch.getLineInHunk(h, l);
-				builder.processLine(line);
-			}
-		}
-
-		return builder.build();
+		const patch = structuredPatch(filePath, filePath, committedText, text);
+		return new DeltaBuilder(patch).build();
 	}
 
 	async getCommitHistoryForFile(filePath, maxHistorySize) {
-		const me = this;
-		const git = me._git;
-		const headCommit = await git.getHeadCommit();
-
-		const walker = git.createRevWalk();
-		walker.push(headCommit.sha());
-		walker.sorting(Git.Revwalk.SORT.TIME);
-		const commitsToWalk = await walker.fileHistoryWalk(filePath, HISTORY_WALK_FETCH_SIZE);
-		const commitHistory = await me._compileHistory(commitsToWalk, filePath, [], maxHistorySize);
-
-		const result = [];
-		for (const entry of commitHistory) {
-			const gitCommit = await me.getCommit(entry.commit.sha());
-			result.push(gitCommit);
-		}
-
-		return result;
+		const rawHistory = await this.run(
+			"log",
+			"--format=format:%H",
+			"-n",
+			maxHistorySize,
+			"--",
+			filePath
+		);
+		return rawHistory.split("\n");
 	}
 
-	async _compileHistory(commitsToWalk, filePath, commitHistory, maxHistorySize) {
-		const git = this._git;
+	async listRemoteReferences() {
+		let remotes = (await this.run("remote", "-v"))
+			.split("\n")
+			.map(line => line.split(/\s+/))
+			.map(Remote);
 
-		let lastSha;
-		if (commitHistory.length > 0) {
-			lastSha = commitHistory[commitHistory.length - 1].commit.sha();
-			if (commitsToWalk.length == 1 && commitsToWalk[0].commit.sha() == lastSha) {
-				return commitHistory;
-			}
+		remotes.sort((a, b) => {
+			return REMOTE_ORDER.indexOf(b.name) - REMOTE_ORDER.indexOf(a.name);
+		});
+
+		for (const remote of remotes) {
+			console.log(remote.name);
 		}
 
-		const missingHistorySize = maxHistorySize - commitHistory.length;
-		commitHistory = commitHistory.concat(commitsToWalk.slice(0, missingHistorySize));
-		if (!commitHistory.length || commitHistory.length === maxHistorySize) {
-			return commitHistory;
-		}
-
-		lastSha = commitHistory[commitHistory.length - 1].commit.sha();
-
-		const walker = git.createRevWalk();
-		walker.push(lastSha);
-		walker.sorting(Git.Revwalk.SORT.TIME);
-
-		commitsToWalk = await walker.fileHistoryWalk(filePath, HISTORY_WALK_FETCH_SIZE);
-		return await this._compileHistory(commitsToWalk, filePath, commitHistory, maxHistorySize);
+		return remotes;
 	}
 }
-
-export default GitRepo;

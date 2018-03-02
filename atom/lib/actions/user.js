@@ -60,3 +60,16 @@ export const getUserPreference = (user, prefPath) => {
 	}
 	return preferences;
 };
+
+export const ensureCorrectTimeZone = () => (dispatch, getState, { http }) => {
+	const { session, users } = getState();
+	const user = users[session.userId];
+	const currentTimeZone = Intl ? Intl.DateTimeFormat().resolvedOptions().timeZone : null;
+
+	if (currentTimeZone && user.timeZone !== currentTimeZone) {
+		const data = { timeZone: currentTimeZone };
+		http
+			.put("/users/me", data, session.accessToken)
+			.then(data => dispatch(saveUser(normalize(data.user))));
+	}
+};
