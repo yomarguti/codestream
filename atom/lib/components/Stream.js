@@ -182,13 +182,12 @@ export class SimpleStream extends Component {
 		}
 
 		const switchingFiles = nextProps.currentFile !== this.props.currentFile;
-		if (switchingFiles) {
+		if (switchingFiles || nextProps.currentCommit !== this.props.currentCommit) {
 			const editor = atom.workspace.getActiveTextEditor();
 			if (editor) {
 				// console.log("NEXTPROPS FILE: ", nextProps.currentFile);
 				// console.log("EDITOR    FILE: ", editor.getPath());
 				this.checkModifiedGit(editor);
-				this.checkModifiedTyping(editor);
 			}
 		}
 
@@ -262,11 +261,9 @@ export class SimpleStream extends Component {
 					this.checkModifiedTyping(editor);
 				}),
 				editor.onDidSave(() => {
-					this.checkModifiedTyping(editor);
 					this.checkModifiedGit(editor);
 				})
 			);
-			this.checkModifiedTyping(editor);
 			this.checkModifiedGit(editor);
 			this.selectionHandler = editor.onDidChangeSelectionRange(this.hideDisplayMarker.bind(this));
 			this.editorsWithHandlers[editor.id] = true;
