@@ -266,6 +266,8 @@ export class SimpleStream extends Component {
 					this.checkModifiedGit(editor);
 				})
 			);
+			this.checkModifiedTyping(editor);
+			this.checkModifiedGit(editor);
 			this.selectionHandler = editor.onDidChangeSelectionRange(this.hideDisplayMarker.bind(this));
 			this.editorsWithHandlers[editor.id] = true;
 		}
@@ -283,14 +285,12 @@ export class SimpleStream extends Component {
 		// if there's no change, no need to set state
 		if (isModified != this.state.modifiedTyping) {
 			this.setState({ modifiedTyping: isModified });
-			// if git isn't modified, then our notion of modified has changed
-			if (!this.state.modifiedGit) {
-				this.setModified(isModified);
-			}
+			this.checkModified();
 		}
 	}
 
 	checkModifiedGit(editor) {
+		console.log("Checking modified git");
 		if (!editor) return;
 		this.checkModifiedTyping(editor);
 		let filePath = editor.getPath();
@@ -301,15 +301,18 @@ export class SimpleStream extends Component {
 		// if there's no change, no need to set state
 		if (isModified != this.state.modifiedGit) {
 			this.setState({ modifiedGit: isModified });
-			// if typing isn't modified, then our notion of modified has changed
-			if (!this.state.modifiedTyping) {
-				this.setModified(isModified);
-			}
+			this.checkModified();
 		}
+	}
+
+	checkModified() {
+		let newIsModified = this.state.modifiedTyping || this.state.modifiedGit;
+		if (newIsModified !== this.state.isModified) this.setModified(newIsModified);
 	}
 
 	setModified(isModified) {
 		const { id, markStreamModified } = this.props;
+		this.setState({ isModified });
 		console.log("Marking this stream modified: " + id + " as " + isModified);
 		markStreamModified(id, isModified);
 	}
