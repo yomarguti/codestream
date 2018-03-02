@@ -192,6 +192,9 @@ export class SimpleStream extends Component {
 			markStreamRead(prevProps.id);
 			this.resizeStream();
 		}
+		if (prevState.threadId !== this.state.threadId) {
+			this.resizeStream();
+		}
 	}
 
 	showDisplayMarker(markerId) {
@@ -280,7 +283,7 @@ export class SimpleStream extends Component {
 			this._intro.style.height = newHeight + "px";
 		}
 		this._div.style.paddingBottom = composeHeight + "px";
-		this._threadpostslist.style.maxHeight = postslistHeight + "px";
+		this._threadpostslist.style.height = postslistHeight + "px";
 		// if (this._atMentionsPopup)
 		// this._atMentionsPopup.style.bottom = this._compose.offsetHeight + "px";
 		this._postslist.scrollTop = 100000;
