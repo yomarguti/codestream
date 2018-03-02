@@ -23,9 +23,9 @@ CodeStream is currently in beta. The core messaging functionality, which is the 
 
 # Installation
 
-To install CodeStream, visit the atom settings, select "Install" in the left rail, search for 'codestream', and when you find it in the results, click the 'Install' button.
+To install CodeStream, visit Atom settings, click on the "Install" tab in the left rail, and then search for 'codestream'. When you find it in the results, click the 'Install' button.
 
-Once installed, you can toggle the CodeStream view via the Packages menu, or hit Cmd + Opt + O (Mac) / Ctrl + Alt + O (Windows). You can also click on the chat bubbles icon that now appears in Atom’s statusbar.
+Once installed, you can toggle the CodeStream view via the Packages menu, or hit Cmd + Opt + O (Mac) / Ctrl + Alt + O (Windows). You can also click on the chat bubbles icon that now appears in Atom’s status bar.
 
 # Things to Try
 
@@ -52,6 +52,8 @@ Once installed, you can toggle the CodeStream view via the Packages menu, or hit
 #### Where are messages stored?
 
 Your team’s message history is stored in the cloud on CodeStream’s servers. Note that CodeStream does not store a copy of your source files. When a message includes a code block, a copy of that block is also stored in the cloud, but not the entirety of the source file.
+
+All of your team's messages are also stored locally on your computer, meaning that you'll even have access to the message history when you're offline.
 
 #### Who has access to my repo?
 
