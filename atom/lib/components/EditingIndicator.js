@@ -28,11 +28,14 @@ export default class EditingIndicator extends React.Component {
 
 	render() {
 		const users = this.props.users || [];
+		const currentUserId = this.props.currentUser.id;
 		const editingUsers = this.props.editingUsers || {};
 
-		let names = Object.keys(_.compactObject(editingUsers)).map(userId => {
-			return editingUsers[userId] ? users[userId].username : null;
-		});
+		let names = _.compact(
+			Object.keys(editingUsers).map(userId => {
+				return userId !== currentUserId && editingUsers[userId] ? users[userId].username : null;
+			})
+		);
 
 		// you can test what it looks like by hard-coding this
 		// names = ["larry", "fred"];
