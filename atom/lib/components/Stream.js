@@ -298,6 +298,7 @@ export class SimpleStream extends Component {
 		let isNew = repo.isPathNew(filePath);
 		let isModified = repo.isPathModified(filePath);
 		// if there's no change, no need to set state
+
 		if (isModified != this.state.modifiedGit) {
 			this.setState({ modifiedGit: isModified });
 			// if typing isn't modified, then our notion of modified has changed
