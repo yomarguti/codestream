@@ -1,4 +1,5 @@
 import Raven from "raven-js";
+import { isValidLocation } from "../util/Marker";
 
 export default class MarkerLocationFinder {
 	constructor({ gitRepo, accessToken, http, filePath, teamId, streamId }) {
@@ -20,7 +21,8 @@ export default class MarkerLocationFinder {
 
 		for (const marker of markers) {
 			const commitWhenCreated = marker.commitHashWhenCreated;
-			const markersForCommit = markersByFirstCommit[commitWhenCreated] || (markersByFirstCommit[commitWhenCreated] = []);
+			const markersForCommit =
+				markersByFirstCommit[commitWhenCreated] || (markersByFirstCommit[commitWhenCreated] = []);
 			markersForCommit.push(marker);
 		}
 
@@ -34,11 +36,18 @@ export default class MarkerLocationFinder {
 			const locations = await this._getMarkerLocations(commitWhenCreated);
 			const locationsToCalculate = {};
 			for (const marker of markersForCommit) {
-				locationsToCalculate[marker._id] = locations[marker._id];
+				const location = locations[marker._id];
+				if (isValidLocation(location)) {
+					locationsToCalculate[marker._id] = location;
+				}
 			}
 
-			const delta = await gitRepo.getDeltaBetweenCommits(commitWhenCreated, currentCommit, filePath);
-			if (delta.edits.length) {
+			const delta = await gitRepo.getDeltaBetweenCommits(
+				commitWhenCreated,
+				currentCommit,
+				filePath
+			);
+			if (delta.edits.length && Object.keys(locationsToCalculate).length) {
 				const calculatedLocations = await this._calculateLocations(
 					locationsToCalculate,
 					delta.edits,
