@@ -4,7 +4,10 @@ import { FormattedMessage } from "react-intl";
 export default ({ reason }) => (
 	<div id="no-access">
 		<h2>
-			<FormattedMessage id="noAccess.header" defaultMessage="Access Problem!" />
+			<FormattedMessage
+				id={reason.noUrl ? "noGit.header" : "noAccess.header"}
+				defaultMessage="Access Problem!"
+			/>
 		</h2>
 		{reason.noUrl && (
 			<h5>
