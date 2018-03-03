@@ -187,6 +187,7 @@ export class SimpleStream extends Component {
 			if (editor) {
 				// console.log("NEXTPROPS FILE: ", nextProps.currentFile);
 				// console.log("EDITOR    FILE: ", editor.getPath());
+				this.checkModifiedTyping(editor);
 				this.checkModifiedGit(editor);
 			}
 		}
@@ -197,7 +198,7 @@ export class SimpleStream extends Component {
 	}
 
 	componentDidUpdate(prevProps, prevState) {
-		const { id, markStreamRead } = this.props;
+		const { id, markStreamRead, markStreamModified } = this.props;
 
 		this._postslist.scrollTop = 100000;
 
@@ -206,8 +207,18 @@ export class SimpleStream extends Component {
 		// if we just switched to a new stream, (eagerly) mark both old and new as read
 		if (id !== prevProps.id) {
 			markStreamRead(id);
+
 			markStreamRead(prevProps.id);
 			this.resizeStream();
+		}
+
+		if (
+			prevState.modifiedGit != this.state.modifiedGit ||
+			prevState.modifiedTyping != this.state.modifiedTyping
+		) {
+			let isModified = this.state.modifiedGit || this.state.modifiedTyping;
+			console.log("Marking this stream modified: " + id + " as " + isModified);
+			markStreamModified(id, isModified);
 		}
 	}
 
@@ -262,9 +273,11 @@ export class SimpleStream extends Component {
 					this.checkModifiedTyping(editor);
 				}),
 				editor.onDidSave(() => {
+					this.checkModifiedTyping(editor);
 					this.checkModifiedGit(editor);
 				})
 			);
+			this.checkModifiedTyping(editor);
 			this.checkModifiedGit(editor);
 			this.selectionHandler = editor.onDidChangeSelectionRange(this.hideDisplayMarker.bind(this));
 			this.editorsWithHandlers[editor.id] = true;
@@ -281,38 +294,17 @@ export class SimpleStream extends Component {
 	checkModifiedTyping(editor) {
 		let isModified = editor.isModified();
 		// if there's no change, no need to set state
-		if (isModified != this.state.modifiedTyping) {
-			this.setState({ modifiedTyping: isModified });
-			this.checkModified();
-		}
+		console.log("Checking modified typing: " + isModified);
+		this.setState({ modifiedTyping: isModified });
 	}
 
 	checkModifiedGit(editor) {
-		console.log("Checking modified git");
 		if (!editor) return;
-		this.checkModifiedTyping(editor);
 		let filePath = editor.getPath();
 		let repo = atom.project.getRepositories()[0];
-		let status = repo.getPathStatus(filePath);
-		let isNew = repo.isPathNew(filePath);
 		let isModified = repo.isPathModified(filePath);
-		// if there's no change, no need to set state
-		if (isModified != this.state.modifiedGit) {
-			this.setState({ modifiedGit: isModified });
-			this.checkModified();
-		}
-	}
-
-	checkModified() {
-		let newIsModified = this.state.modifiedTyping || this.state.modifiedGit;
-		if (newIsModified !== this.state.isModified) this.setModified(newIsModified);
-	}
-
-	setModified(isModified) {
-		const { id, markStreamModified } = this.props;
-		this.setState({ isModified });
-		console.log("Marking this stream modified: " + id + " as " + isModified);
-		markStreamModified(id, isModified);
+		console.log("Checking modified git: " + isModified);
+		this.setState({ modifiedGit: isModified });
 	}
 
 	handleResizeCompose = () => {
