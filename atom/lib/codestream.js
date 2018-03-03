@@ -4,6 +4,7 @@ import _ from "underscore-plus";
 import Raven from "raven-js";
 import CodestreamView, { CODESTREAM_VIEW_URI } from "./codestream-view";
 import db, { bootstrapStore } from "./local-cache";
+import * as GitRepo from "./git/GitRepo";
 import git from "./git";
 import createStore from "./createStore";
 import {
@@ -17,6 +18,7 @@ import {
 	setCurrentFile,
 	setCurrentCommit
 } from "./actions/context";
+import { foundMultipleRemotes } from "./actions/onboarding";
 import { setStreamUMITreatment } from "./actions/umi";
 import logger from "./util/Logger";
 import { online, offline } from "./actions/connectivity";
@@ -284,17 +286,23 @@ module.exports = {
 			window.addEventListener("offline", e => store.dispatch(offline()), false);
 
 			const workDir = repo.getWorkingDirectory();
-			const repoUrl = repo.getOriginURL();
+			// const repoUrl = repo.getOriginURL();
 			const noParentCommits = await git(["rev-list", "--max-parents=0", "--reverse", "HEAD"], {
 				cwd: workDir
 			});
 			const repoAttributes = {
 				workingDirectory: workDir,
-				url: repoUrl,
+				// url: repoUrl,
 				firstCommitHash: noParentCommits.split("\n")[0]
 			};
+			GitRepo.open(workDir)
+				.listRemoteReferences()
+				.then(remotes => {
+					const uniqueRemotes = _.uniq(remotes, r => r.name);
+					if (uniqueRemotes.length > 1) store.dispatch(foundMultipleRemotes(uniqueRemotes));
+				});
 			store.dispatch(setRepoAttributes(repoAttributes));
-			store.dispatch(fetchRepoInfo(repoAttributes));
+			// store.dispatch(fetchRepoInfo(repoAttributes));
 		}
 	},
 

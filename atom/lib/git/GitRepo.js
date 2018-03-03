@@ -217,10 +217,6 @@ class GitRepo {
 			return REMOTE_ORDER.indexOf(b.name) - REMOTE_ORDER.indexOf(a.name);
 		});
 
-		for (const remote of remotes) {
-			console.log(remote.name);
-		}
-
 		return remotes;
 	}
 }

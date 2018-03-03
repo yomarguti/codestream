@@ -1,6 +1,6 @@
 import Raven from "raven-js";
 import { normalize } from "./utils";
-import { fetchRepoInfo, setCurrentRepo, setCurrentTeam, noAccess } from "./context";
+import { fetchRepoInfo, setCurrentRepo, setCurrentTeam, setRemote, noAccess } from "./context";
 import { saveUser, saveUsers, ensureCorrectTimeZone } from "./user";
 import { saveRepo, saveRepos } from "./repo";
 import { fetchTeamMembers, saveTeam, saveTeams, joinTeam as _joinTeam } from "./team";
@@ -37,6 +37,18 @@ export const completeOnboarding = () => ({ type: "ONBOARDING_COMPLETE" });
 export const goToSignup = () => ({ type: "GO_TO_SIGNUP" });
 export const goToLogin = () => ({ type: "GO_TO_LOGIN" });
 export const goToConfirmation = attributes => ({ type: "GO_TO_CONFIRMATION", payload: attributes });
+export const foundMultipleRemotes = remotes => ({
+	type: "FOUND_MULTIPLE_REMOTES",
+	payload: { remotes }
+});
+
+export const selectRemote = url => dispatch => {
+	dispatch({
+		type: "SET_REPO_URL",
+		payload: url
+	});
+	dispatch({ type: "SELECTED_REMOTE" });
+};
 
 export const register = attributes => async (dispatch, getState, { http }) => {
 	const { repoAttributes } = getState();
