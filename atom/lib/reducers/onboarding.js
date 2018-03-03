@@ -13,6 +13,10 @@ export default (state = initialState, { type, payload }) => {
 			return { ...state, requestInProcess: true };
 		case "REQUEST_FINISHED":
 			return { ...state, requestInProcess: false };
+		case "FOUND_MULTIPLE_REMOTES":
+			return { ...state, step: "selectRemote", props: payload };
+		case "SELECTED_REMOTE":
+			return { ...state, step: "signUp" };
 		case "GO_TO_CONFIRMATION":
 		case "SIGNUP_SUCCESS":
 			return { ...state, step: "confirmEmail", props: payload };
