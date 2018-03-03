@@ -217,7 +217,7 @@ export class SimpleStream extends Component {
 			prevState.modifiedTyping != this.state.modifiedTyping
 		) {
 			let isModified = this.state.modifiedGit || this.state.modifiedTyping;
-			console.log("Marking this stream modified: " + id + " as " + isModified);
+			// console.log("Marking this stream modified: " + id + " as " + isModified);
 			markStreamModified(id, isModified);
 		}
 	}
@@ -294,7 +294,7 @@ export class SimpleStream extends Component {
 	checkModifiedTyping(editor) {
 		let isModified = editor.isModified();
 		// if there's no change, no need to set state
-		console.log("Checking modified typing: " + isModified);
+		// console.log("Checking modified typing: " + isModified);
 		this.setState({ modifiedTyping: isModified });
 	}
 
@@ -303,7 +303,7 @@ export class SimpleStream extends Component {
 		let filePath = editor.getPath();
 		let repo = atom.project.getRepositories()[0];
 		let isModified = repo.isPathModified(filePath);
-		console.log("Checking modified git: " + isModified);
+		// console.log("Checking modified git: " + isModified);
 		this.setState({ modifiedGit: isModified });
 	}
 
