@@ -20,7 +20,7 @@ const session = (state = {}, { type, payload }) => {
 
 const repoAttributes = (state = {}, { type, payload }) => {
 	if (type === "SET_REPO_ATTRIBUTES") return payload;
-	if (type === "SET_REMOTE_URL") return { ...state, url: payload };
+	if (type === "SET_REPO_URL") return { ...state, url: payload };
 	return state;
 };
 

@@ -285,24 +285,25 @@ module.exports = {
 			window.addEventListener("online", e => store.dispatch(online()), false);
 			window.addEventListener("offline", e => store.dispatch(offline()), false);
 
-			const workDir = repo.getWorkingDirectory();
-			// const repoUrl = repo.getOriginURL();
-			const noParentCommits = await git(["rev-list", "--max-parents=0", "--reverse", "HEAD"], {
-				cwd: workDir
-			});
-			const repoAttributes = {
-				workingDirectory: workDir,
-				// url: repoUrl,
-				firstCommitHash: noParentCommits.split("\n")[0]
-			};
-			GitRepo.open(workDir)
-				.listRemoteReferences()
-				.then(remotes => {
-					const uniqueRemotes = _.uniq(remotes, r => r.name);
-					if (uniqueRemotes.length > 1) store.dispatch(foundMultipleRemotes(uniqueRemotes));
+			const repoAttributes = store.getState().repoAttributes;
+			if (_.isEmpty(repoAttributes) || !repoAttributes.url) {
+				const workDir = repo.getWorkingDirectory();
+				const noParentCommits = await git(["rev-list", "--max-parents=0", "--reverse", "HEAD"], {
+					cwd: workDir
 				});
-			store.dispatch(setRepoAttributes(repoAttributes));
-			// store.dispatch(fetchRepoInfo(repoAttributes));
+				const repoAttributes = {
+					workingDirectory: workDir,
+					firstCommitHash: noParentCommits.split("\n")[0]
+				};
+				store.dispatch(setRepoAttributes(repoAttributes));
+				GitRepo.open(workDir)
+					.listRemoteReferences()
+					.then(remotes => {
+						const uniqueRemotes = _.uniq(remotes, r => r.name);
+						if (uniqueRemotes.length > 1) store.dispatch(foundMultipleRemotes(uniqueRemotes));
+						else store.dispatch({ type: "SET_REPO_URL", payload: uniqueRemotes[0].url });
+					});
+			}
 		}
 	},
 
