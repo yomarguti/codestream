@@ -2,6 +2,7 @@ import Raven from "raven-js";
 
 export const resetContext = data => ({ type: "RESET_CONTEXT" });
 
+export const noGit = () => ({ type: "NO_GIT_IN_PATH" });
 export const setContext = data => ({
 	type: "SET_CONTEXT",
 	payload: data

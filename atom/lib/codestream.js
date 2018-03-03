@@ -10,6 +10,7 @@ import createStore from "./createStore";
 import {
 	commitHashChanged,
 	logout,
+	noGit,
 	noAccess,
 	setRepoAttributes,
 	resetContext,
@@ -47,10 +48,14 @@ logger.addHandler((level, msg) => {
 let store;
 
 const getCurrentCommit = async repo => {
-	const data = await git(["rev-parse", "--verify", "HEAD"], {
-		cwd: repo.getWorkingDirectory()
-	});
-	return data.trim();
+	try {
+		const data = await git(["rev-parse", "--verify", "HEAD"], {
+			cwd: repo.getWorkingDirectory()
+		});
+		return data.trim();
+	} catch (error) {
+		store.dispatch(noGit());
+	}
 };
 
 const reloadPlugin = codestream => {
@@ -296,13 +301,17 @@ module.exports = {
 			const repoAttributes = store.getState().repoAttributes;
 			if (_.isEmpty(repoAttributes) || !repoAttributes.url) {
 				const workDir = repo.getWorkingDirectory();
-				const noParentCommits = await git(["rev-list", "--max-parents=0", "--reverse", "HEAD"], {
-					cwd: workDir
-				});
-				const repoAttributes = {
-					workingDirectory: workDir,
-					firstCommitHash: noParentCommits.split("\n")[0]
-				};
+				try {
+					const noParentCommits = await git(["rev-list", "--max-parents=0", "--reverse", "HEAD"], {
+						cwd: workDir
+					});
+					const repoAttributes = {
+						workingDirectory: workDir,
+						firstCommitHash: noParentCommits.split("\n")[0]
+					};
+				} catch (error) {
+					store.dispatch(noGit());
+				}
 				store.dispatch(setRepoAttributes(repoAttributes));
 				GitRepo.open(workDir)
 					.listRemoteReferences()
