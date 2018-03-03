@@ -18,6 +18,7 @@ import {
 	setCurrentCommit
 } from "./actions/context";
 import { setStreamUMITreatment } from "./actions/umi";
+import { markPathsModified } from "./actions/stream";
 import { commitNewMarkerLocations, refreshMarkersAndLocations } from "./actions/marker-location";
 import logger from "./util/Logger";
 import { online, offline } from "./actions/connectivity";
@@ -294,9 +295,30 @@ module.exports = {
 				url: repoUrl,
 				firstCommitHash: noParentCommits.split("\n")[0]
 			};
+			repo.onDidChangeStatus(event => {
+				console.log("GIT STATUS CHANGED: ", event);
+				if (event && event.path) this.checkEditorsForModification(repo);
+			});
+			repo.onDidChangeStatuses(() => {
+				console.log("MANY GIT STATUS CHANGED.");
+				this.checkEditorsForModification(repo);
+			});
 			store.dispatch(setRepoAttributes(repoAttributes));
 			store.dispatch(fetchRepoInfo(repoAttributes));
 		}
+	},
+
+	async checkEditorsForModification(repo) {
+		let edited = [];
+		atom.workspace
+			.getCenter()
+			.getTextEditors()
+			.forEach(editor => {
+				let filePath = editor.getPath();
+				if (repo.isPathModified(filePath) || editor.isModified())
+					edited.push(repo.relativize(filePath));
+			});
+		store.dispatch(markPathsModified(edited));
 	},
 
 	markStreamMute(event) {
