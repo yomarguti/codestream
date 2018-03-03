@@ -217,7 +217,6 @@ export class SimpleStream extends Component {
 			prevState.modifiedTyping != this.state.modifiedTyping
 		) {
 			let isModified = this.state.modifiedGit || this.state.modifiedTyping;
-
 			console.log("Marking this stream modified: " + id + " as " + isModified);
 			markStreamModified(id, isModified);
 		}
