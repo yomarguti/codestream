@@ -9,7 +9,6 @@ import git from "./git";
 import createStore from "./createStore";
 import {
 	commitHashChanged,
-	fetchRepoInfo,
 	logout,
 	noAccess,
 	setRepoAttributes,
