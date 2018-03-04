@@ -305,14 +305,15 @@ module.exports = {
 					const noParentCommits = await git(["rev-list", "--max-parents=0", "--reverse", "HEAD"], {
 						cwd: workDir
 					});
-					const repoAttributes = {
-						workingDirectory: workDir,
-						firstCommitHash: noParentCommits.split("\n")[0]
-					};
+					store.dispatch(
+						setRepoAttributes({
+							workingDirectory: workDir,
+							firstCommitHash: noParentCommits.split("\n")[0]
+						})
+					);
 				} catch (error) {
 					store.dispatch(noGit());
 				}
-				store.dispatch(setRepoAttributes(repoAttributes));
 				GitRepo.open(workDir)
 					.listRemoteReferences()
 					.then(remotes => {
