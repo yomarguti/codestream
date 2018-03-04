@@ -19,7 +19,7 @@ export default (state = initialState, { type, payload }) => {
 			return { ...state, step: "signUp" };
 		case "GO_TO_CONFIRMATION":
 		case "SIGNUP_SUCCESS":
-			return { ...state, step: "confirmEmail", props: payload };
+			return { ...initialState, step: "confirmEmail", props: payload };
 		case "SIGNUP_EMAIL_EXISTS":
 			return { ...state, step: "login", props: payload };
 		case "GO_TO_LOGIN":
