@@ -859,6 +859,9 @@ export class SimpleStream extends Component {
 			code = editor.getTextInBufferRange(lineRange);
 		}
 
+		// not very React-ish but not sure how to set focus otherwise
+		this.focusInput();
+
 		let filePath = editor.getPath();
 		const directory = atom.project.getDirectories().find(directory => directory.contains(filePath));
 		if (directory) {
@@ -869,7 +872,7 @@ export class SimpleStream extends Component {
 					}
 					const blamer = this.projectBlamers[projectRepo.path];
 
-					if (bamer) {
+					if (blamer) {
 						blamer.blame(filePath, (err, data) => {
 							if (!err) this.addBlameAtMention(range, data);
 						});
@@ -877,9 +880,6 @@ export class SimpleStream extends Component {
 				}
 			});
 		}
-
-		// not very React-ish but not sure how to set focus otherwise
-		this.focusInput();
 
 		this.setState({
 			quoteRange: range,
@@ -1078,6 +1078,12 @@ export class SimpleStream extends Component {
 	insertTextAtCursor(text, toDelete) {
 		var sel, range, html;
 		sel = window.getSelection();
+
+		// if for some crazy reason we can't find a selection, return
+		// to avoid an error.
+		// https://stackoverflow.com/questions/22935320/uncaught-indexsizeerror-failed-to-execute-getrangeat-on-selection-0-is-not
+		if (sel.rangeCount == 0) return;
+
 		range = sel.getRangeAt(0);
 
 		// delete the X characters before the caret
