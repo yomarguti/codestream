@@ -861,16 +861,22 @@ export class SimpleStream extends Component {
 
 		let filePath = editor.getPath();
 		const directory = atom.project.getDirectories().find(directory => directory.contains(filePath));
-		atom.project.repositoryForDirectory(directory).then(projectRepo => {
-			if (!(projectRepo.path in this.projectBlamers)) {
-				this.projectBlamers[projectRepo.path] = new Blamer(projectRepo);
-			}
-			const blamer = this.projectBlamers[projectRepo.path];
+		if (directory) {
+			atom.project.repositoryForDirectory(directory).then(projectRepo => {
+				if (projectRepo) {
+					if (!(projectRepo.path in this.projectBlamers)) {
+						this.projectBlamers[projectRepo.path] = new Blamer(projectRepo);
+					}
+					const blamer = this.projectBlamers[projectRepo.path];
 
-			blamer.blame(filePath, (err, data) => {
-				if (!err) this.addBlameAtMention(range, data);
+					if (bamer) {
+						blamer.blame(filePath, (err, data) => {
+							if (!err) this.addBlameAtMention(range, data);
+						});
+					}
+				}
 			});
-		});
+		}
 
 		// not very React-ish but not sure how to set focus otherwise
 		this.focusInput();
@@ -1167,7 +1173,9 @@ const getMarkersForStreamAndCommit = (locationsByCommit = {}, commitHash, marker
 					location: locations[markerId]
 				};
 			} else {
-				const message = `No marker for id ${markerId} but there are locations for it. commitHash: ${commitHash}`;
+				const message = `No marker for id ${markerId} but there are locations for it. commitHash: ${
+					commitHash
+				}`;
 				Raven.captureMessage(message, {
 					logger: "Stream::mapStateToProps::getMarkersForStreamAndCommit",
 					extra: {
