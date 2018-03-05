@@ -1,6 +1,13 @@
 import Raven from "raven-js";
 import { normalize } from "./utils";
-import { fetchRepoInfo, setCurrentRepo, setCurrentTeam, noAccess } from "./context";
+import {
+	setContext,
+	setCurrentRepo,
+	setCurrentTeam,
+	setRemote,
+	noAccess,
+	noRemoteUrl
+} from "./context";
 import { saveUser, saveUsers, ensureCorrectTimeZone } from "./user";
 import { saveRepo, saveRepos } from "./repo";
 import { fetchTeamMembers, saveTeam, saveTeams, joinTeam as _joinTeam } from "./team";
@@ -8,8 +15,8 @@ import { fetchStreams } from "./stream";
 import { fetchLatestForCurrentStream } from "./post";
 import UUID from "uuid/v1";
 
-const logError = (message, error) => {
-	Raven.captureException(error, { logger: "actions/onboarding" });
+const logError = (message, error, extra = {}) => {
+	Raven.captureException(error, { logger: "actions/onboarding", extra });
 	console.error(message, error);
 };
 
@@ -33,18 +40,71 @@ const initializeSession = payload => ({
 	payload
 });
 
+const fetchRepoInfo = ({ url, firstCommitHash }) => async (dispatch, getState, { http }) => {
+	if (!url) {
+		Raven.captureMessage("No url found while trying to fetch repository information.", {
+			logger: "actions/onboarding",
+			extra: { url, firstCommitHash }
+		});
+		return dispatch(noRemoteUrl());
+	}
+	try {
+		const { repo, usernames } = await http.get(
+			`/no-auth/find-repo?url=${encodeURIComponent(url)}&firstCommitHash=${firstCommitHash}`
+		);
+
+		if (repo) {
+			return {
+				usernamesInTeam: usernames,
+				currentRepoId: repo._id,
+				currentTeamId: repo.teamId,
+				noAccess: false
+			};
+		}
+	} catch (error) {
+		if (http.isApiRequestError(error)) {
+			if (error.data.code === "REPO-1000") dispatch(noAccess());
+			if (error.data.code === "UNKNOWN") dispatch(noAccess());
+		} else if (http.isApiUnreachableError(error)) dispatch(serverUnreachable());
+		else
+			logError("encountered unexpected error while fetching repo information", error, {
+				url,
+				firstCommitHash
+			});
+		throw new Error("Unable to get repo information"); // TODO: tell the user exactly what's wrong
+	}
+};
+
 export const completeOnboarding = () => ({ type: "ONBOARDING_COMPLETE" });
 export const goToSignup = () => ({ type: "GO_TO_SIGNUP" });
 export const goToLogin = () => ({ type: "GO_TO_LOGIN" });
 export const goToConfirmation = attributes => ({ type: "GO_TO_CONFIRMATION", payload: attributes });
+export const foundMultipleRemotes = remotes => ({
+	type: "FOUND_MULTIPLE_REMOTES",
+	payload: { remotes }
+});
+
+export const selectRemote = url => dispatch => {
+	dispatch({
+		type: "SET_REPO_URL",
+		payload: url
+	});
+	dispatch({ type: "SELECTED_REMOTE" });
+};
 
 export const register = attributes => async (dispatch, getState, { http }) => {
 	const { repoAttributes } = getState();
 
-	const { payload } = await dispatch(fetchRepoInfo(repoAttributes));
-
-	if (payload.usernamesInTeam.includes(attributes.username))
-		return dispatch({ type: "SIGNUP-USERNAME_COLLISION" });
+	try {
+		const repoInfo = await dispatch(fetchRepoInfo(repoAttributes));
+		if (repoInfo) {
+			dispatch(setContext(repoInfo));
+			if (repoInfo.usernamesInTeam.includes(attributes.username))
+				return dispatch({ type: "SIGNUP-USERNAME_COLLISION" });
+		}
+	} catch (error) {
+		return;
+	}
 
 	return http
 		.post("/no-auth/register", attributes)
@@ -73,8 +133,15 @@ export const confirmEmail = attributes => (dispatch, getState, { http }) => {
 			let teamIdForRepo = context.currentTeamId;
 			if (!teamIdForRepo) {
 				// fetch repo info again just in case a team has been created since CS was initialized
-				const action = await dispatch(fetchRepoInfo(repoAttributes));
-				if (action && action.payload) teamIdForRepo = action.payload.currentTeamId;
+				try {
+					const repoInfo = await dispatch(fetchRepoInfo(repoAttributes));
+					if (repoInfo) {
+						dispatch(setContext(repoInfo));
+						teamIdForRepo = repoInfo.currentTeamId;
+					}
+				} catch (error) {
+					return;
+				}
 			}
 			const userTeams = normalize(teams);
 			const userRepos = normalize(repos);
@@ -216,7 +283,6 @@ export const authenticate = params => (dispatch, getState, { http }) => {
 	return http
 		.put("/no-auth/login", params)
 		.then(async ({ accessToken, user, teams, repos, pubnubKey }) => {
-			dispatch(requestFinished());
 			user = normalize(user);
 
 			if (!user.isRegistered)
@@ -257,8 +323,15 @@ export const authenticate = params => (dispatch, getState, { http }) => {
 			let teamIdForRepo = context.currentTeamId;
 			if (!teamIdForRepo) {
 				// fetch repo info again just in case a team has been created since CS was initialized
-				const action = await dispatch(fetchRepoInfo(repoAttributes));
-				if (action && action.payload) teamIdForRepo = action.payload.currentTeamId;
+				try {
+					const repoInfo = await dispatch(fetchRepoInfo(repoAttributes));
+					if (repoInfo) {
+						dispatch(setContext(repoInfo));
+						teamIdForRepo = repoInfo.currentTeamId;
+					}
+				} catch (error) {
+					return dispatch(requestFinished());
+				}
 			}
 
 			if (!teamIdForRepo && userTeams.length === 0)
@@ -271,6 +344,7 @@ export const authenticate = params => (dispatch, getState, { http }) => {
 				dispatch(fetchLatestForCurrentStream());
 				dispatch(loggedIn());
 			} else await dispatch(joinTeam(loggedIn().type));
+			dispatch(requestFinished());
 		})
 		.catch(error => {
 			dispatch(requestFinished());
