@@ -227,7 +227,10 @@ module.exports = {
 				onboarding.complete || onboarding.step === "login"
 					? { ...onboarding, errors: {} }
 					: undefined,
-			context,
+			context: {
+				...context,
+				noAccess: false
+			},
 			session,
 			repoAttributes,
 			messaging: {
