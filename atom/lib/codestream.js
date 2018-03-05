@@ -223,7 +223,10 @@ module.exports = {
 	serialize() {
 		const { session, onboarding, context, repoAttributes, messaging } = store.getState();
 		return {
-			onboarding: { ...onboarding, errors: {} },
+			onboarding:
+				onboarding.complete || onboarding.step === "login"
+					? { ...onboarding, errors: {} }
+					: undefined,
 			context,
 			session,
 			repoAttributes,
