@@ -27,6 +27,8 @@ export default store => next => action => {
 	if (action.type === "SIGNUP_SUCCESS") {
 		const user = action.meta;
 		if (isOptedIn(user)) {
+			const { teams, context } = store.getState();
+			const currentTeam = context.currentTeamId && teams[context.currentTeamId];
 			mixpanel.alias(user.id);
 			mixpanel.register_once({
 				"Date Signed Up": new Date(user.createdAt).toISOString()
@@ -35,7 +37,8 @@ export default store => next => action => {
 				"Email Address": user.email,
 				Endpoint: "Atom",
 				"First Time User?": true,
-				Plan: "Free"
+				Plan: "Free",
+				"Team Size": currentTeam ? currentTeam.memberIds.length : undefined
 			});
 			mixpanel.track("Sign Up Success");
 		}
@@ -48,14 +51,16 @@ export default store => next => action => {
 			});
 
 		if (action.type === "LOGGED_IN") {
-			const { session, users } = store.getState();
+			const { context, session, teams, users } = store.getState();
 			const currentUser = users[session.userId];
+			const currentTeam = context.currentTeamId && teams[context.currentTeamId];
 			mixpanel.identify(session.userId);
 			mixpanel.register({
 				"Email Address": currentUser.email,
 				Endpoint: "Atom",
 				"First Time User?": false,
-				Plan: "Free"
+				Plan: "Free",
+				"Team Size": currentTeam ? currentTeam.memberIds.length : undefined
 			});
 			mixpanel.track("Signed In");
 		}
@@ -112,12 +117,15 @@ export default store => next => action => {
 		if (action.type === "TEAM_CREATED") {
 			const { teams } = store.getState();
 			const currentTeam = teams[action.payload.teamId];
-			mixpanel.register({ "Team ID": action.payload.teamId, "Team Size": currentTeam.length });
+			mixpanel.register({
+				"Team ID": action.payload.teamId,
+				"Team Size": currentTeam.memberIds.length
+			});
 		}
 		if (action.type === "SET_CURRENT_TEAM") {
 			const { teams } = store.getState();
 			const currentTeam = teams[action.payload];
-			mixpanel.register({ "Team ID": action.payload, "Team Size": currentTeam.length });
+			mixpanel.register({ "Team ID": action.payload, "Team Size": currentTeam.memberIds.length });
 		}
 	}
 
