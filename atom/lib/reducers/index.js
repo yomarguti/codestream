@@ -1,4 +1,5 @@
 import { combineReducers } from "redux";
+import companies from "./companies";
 import onboarding from "./onboarding";
 import posts from "./posts";
 import context from "./context";
@@ -31,6 +32,7 @@ const bootstrapped = (state = false, { type }) => {
 
 const appReducer = combineReducers({
 	bootstrapped,
+	companies,
 	session,
 	streams,
 	umis,
