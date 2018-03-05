@@ -33,20 +33,20 @@ const bootstrapped = (state = false, { type }) => {
 const appReducer = combineReducers({
 	bootstrapped,
 	companies,
-	session,
-	streams,
-	umis,
-	users,
-	teams,
-	repos,
+	connectivity,
 	context,
-	repoAttributes,
+	markerLocations,
+	markers,
+	messaging,
 	onboarding,
 	posts,
-	markers,
-	markerLocations,
-	messaging,
-	connectivity
+	repoAttributes,
+	repos,
+	session,
+	streams,
+	teams,
+	umis,
+	users
 });
 
 export default (state, action) => {
