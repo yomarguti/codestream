@@ -297,11 +297,9 @@ module.exports = {
 					}
 				}),
 				repo.onDidChangeStatus(event => {
-					console.log("GIT STATUS CHANGED: ", event);
 					if (event && event.path) this.checkEditorsForModification(repo);
 				}),
 				repo.onDidChangeStatuses(() => {
-					console.log("MANY GIT STATUS CHANGED.");
 					this.checkEditorsForModification(repo);
 				})
 			);

@@ -59,7 +59,7 @@ export const markStreamModified = (streamId, isModified) => async (
 	{ http }
 ) => {
 	const { context, session } = getState();
-	if (context.currentFile === "") return;
+	if (context.currentFile === "" || !session.accessToken) return;
 
 	// console.log("COMMENT THIS RETURN STATEMENT TO SAVE TO API SERVER");
 	// return;
@@ -79,11 +79,13 @@ export const markStreamModified = (streamId, isModified) => async (
 	// not sure we have to dispatch any action here, as we don’t intend to report on
 	// whether you yourself have modified the file (other mechanisms exist for that in
 	// the editor), so letting the API server know is all we need to do.
-	console.log("MODIFIED THE STREAM", markModifiedData, session);
+	// console.log("MODIFIED THE STREAM", markModifiedData, session);
 };
 
 export const markPathsModified = modifiedPaths => async (dispatch, getState, { http }) => {
 	const { context, session, streams } = getState();
+
+	if (!session.accessToken) return;
 
 	let paths = [];
 	let streamIds = [];
@@ -103,7 +105,7 @@ export const markPathsModified = modifiedPaths => async (dispatch, getState, { h
 		streamIds
 	};
 
-	console.log("Marking all paths modified: ", payload);
+	// console.log("Marking all paths modified: ", payload);
 	let markModifiedData = await http.put("/editing", payload, session.accessToken);
-	console.log("MODIFIED ALL PATHS", markModifiedData, session);
+	// console.log("MODIFIED ALL PATHS", markModifiedData, session);
 };
