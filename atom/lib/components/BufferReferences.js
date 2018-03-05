@@ -19,7 +19,7 @@ export default class BufferReferences extends Component {
 
 	configureReferences(references) {
 		const referencesByLine = {};
-		references.forEach(reference => {
+		references.filter(reference => !reference.deactivated).forEach(reference => {
 			const line = reference.location[0];
 			const lineMarkers = referencesByLine[line] || [];
 			lineMarkers.push(reference);

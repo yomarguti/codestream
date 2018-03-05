@@ -4,12 +4,13 @@ import _ from "underscore-plus";
 import Raven from "raven-js";
 import CodestreamView, { CODESTREAM_VIEW_URI } from "./codestream-view";
 import db, { bootstrapStore } from "./local-cache";
+import * as GitRepo from "./git/GitRepo";
 import git from "./git";
 import createStore from "./createStore";
 import {
 	commitHashChanged,
-	fetchRepoInfo,
 	logout,
+	noGit,
 	noAccess,
 	setRepoAttributes,
 	resetContext,
@@ -17,8 +18,9 @@ import {
 	setCurrentFile,
 	setCurrentCommit
 } from "./actions/context";
+import { foundMultipleRemotes } from "./actions/onboarding";
 import { setStreamUMITreatment } from "./actions/umi";
-import { commitNewMarkerLocations, refreshMarkersAndLocations } from "./actions/marker-location";
+import { markPathsModified } from "./actions/stream";
 import logger from "./util/Logger";
 import { online, offline } from "./actions/connectivity";
 
@@ -46,10 +48,19 @@ logger.addHandler((level, msg) => {
 let store;
 
 const getCurrentCommit = async repo => {
-	const data = await git(["rev-parse", "--verify", "HEAD"], {
-		cwd: repo.getWorkingDirectory()
-	});
-	return data.trim();
+	try {
+		const data = await git(["rev-parse", "--verify", "HEAD"], {
+			cwd: repo.getWorkingDirectory()
+		});
+		return data.trim();
+	} catch ({ missingGit, message }) {
+		if (missingGit) store.dispatch(noGit());
+		else
+			Raven.captureMessage("There was an unexpected error trying to invoke the 'git' command.", {
+				level: "error",
+				extra: { message }
+			});
+	}
 };
 
 const reloadPlugin = codestream => {
@@ -217,8 +228,14 @@ module.exports = {
 	serialize() {
 		const { session, onboarding, context, repoAttributes, messaging } = store.getState();
 		return {
-			onboarding: { ...onboarding, errors: {} },
-			context,
+			onboarding:
+				onboarding.complete || onboarding.step === "login"
+					? { ...onboarding, errors: {} }
+					: undefined,
+			context: {
+				...context,
+				noAccess: false
+			},
 			session,
 			repoAttributes,
 			messaging: {
@@ -278,25 +295,64 @@ module.exports = {
 					if (context.currentCommit !== currentCommit) {
 						store.dispatch(commitHashChanged(currentCommit));
 					}
+				}),
+				repo.onDidChangeStatus(event => {
+					if (event && event.path) this.checkEditorsForModification(repo);
+				}),
+				repo.onDidChangeStatuses(() => {
+					this.checkEditorsForModification(repo);
 				})
 			);
 
 			window.addEventListener("online", e => store.dispatch(online()), false);
 			window.addEventListener("offline", e => store.dispatch(offline()), false);
 
-			const workDir = repo.repo.workingDirectory;
-			const repoUrl = repo.getOriginURL();
-			const noParentCommits = await git(["rev-list", "--max-parents=0", "--reverse", "HEAD"], {
-				cwd: repo.getWorkingDirectory()
-			});
-			const repoAttributes = {
-				workingDirectory: workDir,
-				url: repoUrl,
-				firstCommitHash: noParentCommits.split("\n")[0]
-			};
-			store.dispatch(setRepoAttributes(repoAttributes));
-			store.dispatch(fetchRepoInfo(repoAttributes));
+			const repoAttributes = store.getState().repoAttributes;
+			if (_.isEmpty(repoAttributes) || !repoAttributes.url) {
+				const workDir = repo.getWorkingDirectory();
+				try {
+					const noParentCommits = await git(["rev-list", "--max-parents=0", "--reverse", "HEAD"], {
+						cwd: workDir
+					});
+					store.dispatch(
+						setRepoAttributes({
+							workingDirectory: workDir,
+							firstCommitHash: noParentCommits.split("\n")[0]
+						})
+					);
+				} catch ({ missingGit, message }) {
+					if (missingGit) store.dispatch(noGit());
+					else
+						Raven.captureMessage(
+							"There was an unexpected error trying to invoke the 'git' command.",
+							{
+								level: "error",
+								extra: { message }
+							}
+						);
+				}
+				GitRepo.open(workDir)
+					.listRemoteReferences()
+					.then(remotes => {
+						const uniqueRemotes = _.uniq(remotes, r => r.name);
+						if (uniqueRemotes.length > 1) store.dispatch(foundMultipleRemotes(uniqueRemotes));
+						else store.dispatch({ type: "SET_REPO_URL", payload: uniqueRemotes[0].url });
+					});
+			}
 		}
+	},
+
+	async checkEditorsForModification(repo) {
+		let edited = [];
+		atom.workspace
+			.getCenter()
+			.getTextEditors()
+			.forEach(editor => {
+				let filePath = editor.getPath();
+				if (repo.isPathModified(filePath) || editor.isModified())
+					edited.push(repo.relativize(filePath));
+			});
+		store.dispatch(markPathsModified(edited));
 	},
 
 	markStreamMute(event) {

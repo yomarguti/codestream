@@ -89,11 +89,18 @@ class MarkerLocationTracker extends Component {
 		const displayMarker = displayMarkers[markerId];
 		const range = locationToRange(marker.location || EMPTY_LOCATION);
 
-		if (displayMarker) {
-			displayMarker.setBufferRange(range);
+		if (marker.deactivated) {
+			if (displayMarker) {
+				displayMarker.dispose();
+				delete displayMarkers[markerId];
+			}
 		} else {
-			displayMarkers[markerId] = editor.markBufferRange(range);
-			editor.hasNewMarker = true;
+			if (displayMarker) {
+				displayMarker.setBufferRange(range);
+			} else {
+				displayMarkers[markerId] = editor.markBufferRange(range);
+				editor.hasNewMarker = true;
+			}
 		}
 	}
 

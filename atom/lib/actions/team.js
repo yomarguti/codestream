@@ -19,6 +19,7 @@ export const saveTeams = attributes => (dispatch, getState, { db }) => {
 export const fetchTeamMembers = teamId => (dispatch, getState, { http }) => {
 	if (Array.isArray(teamId)) return Promise.all(teamId.map(id => dispatch(fetchTeamMembers(id))));
 	const { session } = getState();
+
 	return http
 		.get(`/users?teamId=${teamId}`, session.accessToken)
 		.then(({ users }) => dispatch(saveUsers(normalize(users))));

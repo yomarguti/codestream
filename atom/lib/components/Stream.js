@@ -24,6 +24,7 @@ import { getStreamForRepoAndFile } from "../reducers/streams";
 import { getPostsForStream } from "../reducers/posts";
 import rootLogger from "../util/Logger";
 import Button from "./onboarding/Button";
+import EditingIndicator from "./EditingIndicator";
 
 const Path = require("path");
 const logger = rootLogger.forClass("components/Stream");
@@ -80,10 +81,12 @@ export class SimpleStream extends Component {
 			threadActive: false,
 			posts: [],
 			fileForIntro: props.currentFile,
-			newPostText: ""
+			newPostText: "",
+			whoModified: {}
 		};
 
 		this.savedComposeState = {};
+		this.editorsWithHandlers = {};
 
 		this.subscriptions = new CompositeDisposable();
 		this.subscriptions.add(
@@ -130,6 +133,8 @@ export class SimpleStream extends Component {
 	}
 
 	componentWillUnmount() {
+		let editor = atom.workspace.getActiveTextEditor();
+		if (editor) delete this.editorsWithHandlers[editor.id];
 		this.subscriptions.dispose();
 	}
 
@@ -152,6 +157,7 @@ export class SimpleStream extends Component {
 			const text = e.clipboardData.getData("text/plain");
 			document.execCommand("insertHTML", false, text);
 		});
+		this.installEditorHandlers();
 	}
 
 	componentWillReceiveProps(nextProps) {
@@ -172,7 +178,18 @@ export class SimpleStream extends Component {
 			if (this.props.currentUser && this.props.currentUser.lastReads) {
 				this.postWithNewMessageIndicator = this.props.currentUser.lastReads[nextProps.id];
 			}
-			logger.debug("Switch to: ", nextProps.id);
+			// console.log("Switch to: ", nextProps.id);
+		}
+
+		const switchingFiles = nextProps.currentFile !== this.props.currentFile;
+		if (switchingFiles || nextProps.currentCommit !== this.props.currentCommit) {
+			const editor = atom.workspace.getActiveTextEditor();
+			if (editor) {
+				// console.log("NEXTPROPS FILE: ", nextProps.currentFile);
+				// console.log("EDITOR    FILE: ", editor.getPath());
+				this.checkModifiedTyping(editor);
+				this.checkModifiedGit(editor);
+			}
 		}
 
 		if (nextProps.firstTimeInAtom && !Boolean(this.state.fileForIntro)) {
@@ -181,19 +198,31 @@ export class SimpleStream extends Component {
 	}
 
 	componentDidUpdate(prevProps, prevState) {
-		const { id, markStreamRead } = this.props;
+		const { id, markStreamRead, markStreamModified } = this.props;
 
 		this._postslist.scrollTop = 100000;
+
 		this.installEditorHandlers();
 
 		// if we just switched to a new stream, (eagerly) mark both old and new as read
 		if (id !== prevProps.id) {
 			markStreamRead(id);
+
 			markStreamRead(prevProps.id);
 			this.resizeStream();
 		}
+
 		if (prevState.threadId !== this.state.threadId) {
 			this.resizeStream();
+		}
+
+		if (
+			prevState.modifiedGit != this.state.modifiedGit ||
+			prevState.modifiedTyping != this.state.modifiedTyping
+		) {
+			let isModified = this.state.modifiedGit || this.state.modifiedTyping;
+			// console.log("Marking this stream modified: " + id + " as " + isModified);
+			markStreamModified(id, isModified);
 		}
 	}
 
@@ -235,18 +264,51 @@ export class SimpleStream extends Component {
 			return;
 		}
 
-		if (!editor.resizeHandler) {
+		if (!this.editorsWithHandlers[editor.id]) {
 			let scrollViewDiv = editor.component.element.querySelector(".scroll-view");
 			if (scrollViewDiv) {
 				editor.resizeHandler = new ResizeObserver(() => {
 					this.handleResizeWindow(scrollViewDiv);
 				}).observe(scrollViewDiv);
 			}
-		}
 
-		if (!editor.selectionHandler) {
+			this.subscriptions.add(
+				editor.onDidStopChanging(() => {
+					this.checkModifiedTyping(editor);
+				}),
+				editor.onDidSave(() => {
+					this.checkModifiedTyping(editor);
+					this.checkModifiedGit(editor);
+				})
+			);
+			this.checkModifiedTyping(editor);
+			this.checkModifiedGit(editor);
 			this.selectionHandler = editor.onDidChangeSelectionRange(this.hideDisplayMarker.bind(this));
+			this.editorsWithHandlers[editor.id] = true;
 		}
+	}
+
+	// setStateWhoModified(value) {
+	// 	let whoModified = this.state.whoModified || {};
+	// 	if (value) whoModified[this.props.currentUser.id] = true;
+	// 	else delete whoModified[this.props.currentUser.id];
+	// 	this.setState({ whoModified });
+	// }
+
+	checkModifiedTyping(editor) {
+		let isModified = editor.isModified();
+		// if there's no change, no need to set state
+		// console.log("Checking modified typing: " + isModified);
+		this.setState({ modifiedTyping: isModified });
+	}
+
+	checkModifiedGit(editor) {
+		if (!editor) return;
+		let filePath = editor.getPath();
+		let repo = atom.project.getRepositories()[0];
+		let isModified = repo.isPathModified(filePath);
+		// console.log("Checking modified git: " + isModified);
+		this.setState({ modifiedGit: isModified });
 	}
 
 	handleResizeCompose = () => {
@@ -309,10 +371,10 @@ export class SimpleStream extends Component {
 			(this.props.firstTimeInAtom && this.props.currentFile === this.state.fileForIntro)
 		) {
 			return [
-				<label>
+				<label key="welcome">
 					<FormattedMessage id="stream.intro.welcome" defaultMessage="Welcome to CodeStream!" />
 				</label>,
-				<label>
+				<label key="info">
 					<ul>
 						<li>
 							<FormattedMessage
@@ -336,7 +398,7 @@ export class SimpleStream extends Component {
 						</li>
 					</ul>
 				</label>,
-				<label>
+				<label key="learn-more">
 					Learn more at{" "}
 					<a onClick={e => shell.openExternal("https://help.codestream.com")}>
 						help.codestream.com
@@ -409,7 +471,6 @@ export class SimpleStream extends Component {
 
 		let fileAbbreviation = this.fileAbbreviation();
 		let placeholderText = "Add comment to " + fileAbbreviation;
-		// FIXME -- this doesn't update when it should for some reason
 		if (this.state.threadActive && threadPost) {
 			placeholderText = "Reply to " + threadPost.author.username;
 		}
@@ -432,6 +493,15 @@ export class SimpleStream extends Component {
 					onSelect={this.selectPost}
 				/>
 				<MarkerLocationTracker editor={editor} />
+				<EditingIndicator
+					editingUsers={this.props.editingUsers}
+					modifiedTyping={this.state.modifiedTyping}
+					modifiedGit={this.state.modifiedGit}
+					currentFile={this.props.currentFile}
+					inactive={this.state.threadActive}
+					currentUser={this.props.currentUser}
+					users={this.props.users}
+				/>
 				<div
 					className={postsListClass}
 					ref={ref => (this._postslist = ref)}
@@ -456,7 +526,7 @@ export class SimpleStream extends Component {
 									usernames={this.props.usernamesRegexp}
 									currentUsername={this.props.currentUser.username}
 									replyingTo={parentPost}
-									newMessageIndicator={post.id === this.postWithNewMessageIndicator}
+									newMessageIndicator={post.seqNum === this.postWithNewMessageIndicator}
 									editing={post.id === this.state.editingPostId}
 								/>
 							</div>
@@ -472,7 +542,7 @@ export class SimpleStream extends Component {
 					onClick={this.handleClickPost}
 				>
 					<Button id="close-thread" className="control-button" onClick={this.handleDismissThread}>
-						Back to stream (esc)
+						Back to stream <span className="keystroke">escape</span>
 					</Button>
 					{threadPost && (
 						<Post
@@ -789,21 +859,27 @@ export class SimpleStream extends Component {
 			code = editor.getTextInBufferRange(lineRange);
 		}
 
-		let filePath = editor.getPath();
-		const directory = atom.project.getDirectories().find(directory => directory.contains(filePath));
-		atom.project.repositoryForDirectory(directory).then(projectRepo => {
-			if (!(projectRepo.path in this.projectBlamers)) {
-				this.projectBlamers[projectRepo.path] = new Blamer(projectRepo);
-			}
-			const blamer = this.projectBlamers[projectRepo.path];
-
-			blamer.blame(filePath, (err, data) => {
-				if (!err) this.addBlameAtMention(range, data);
-			});
-		});
-
 		// not very React-ish but not sure how to set focus otherwise
 		this.focusInput();
+
+		let filePath = editor.getPath();
+		const directory = atom.project.getDirectories().find(directory => directory.contains(filePath));
+		if (directory) {
+			atom.project.repositoryForDirectory(directory).then(projectRepo => {
+				if (projectRepo) {
+					if (!(projectRepo.path in this.projectBlamers)) {
+						this.projectBlamers[projectRepo.path] = new Blamer(projectRepo);
+					}
+					const blamer = this.projectBlamers[projectRepo.path];
+
+					if (blamer) {
+						blamer.blame(filePath, (err, data) => {
+							if (!err) this.addBlameAtMention(range, data);
+						});
+					}
+				}
+			});
+		}
 
 		this.setState({
 			quoteRange: range,
@@ -1002,6 +1078,12 @@ export class SimpleStream extends Component {
 	insertTextAtCursor(text, toDelete) {
 		var sel, range, html;
 		sel = window.getSelection();
+
+		// if for some crazy reason we can't find a selection, return
+		// to avoid an error.
+		// https://stackoverflow.com/questions/22935320/uncaught-indexsizeerror-failed-to-execute-getrangeat-on-selection-0-is-not
+		if (sel.rangeCount == 0) return;
+
 		range = sel.getRangeAt(0);
 
 		// delete the X characters before the caret
@@ -1172,6 +1254,7 @@ const mapStateToProps = ({
 		currentCommit: context.currentCommit,
 		markers: markersForStreamAndCommit,
 		users: toMapBy("id", teamMembers),
+		editingUsers: stream.editingUsers,
 		usernamesRegexp: usernamesRegexp,
 		currentUser: users[session.userId],
 		posts: getPostsForStream(posts, stream.id || context.currentFile).map(post => {
