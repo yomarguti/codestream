@@ -3,6 +3,8 @@ import git from "./git";
 
 mixpanel.init("4308967c7435e61d9697ce240bc68d02");
 
+const pluginVersion = atom.packages.getLoadedPackage("CodeStream").metadata.version;
+
 export default store => next => action => {
 	const result = next(action);
 
@@ -38,7 +40,8 @@ export default store => next => action => {
 				Endpoint: "Atom",
 				"First Time User?": true,
 				Plan: "Free",
-				"Team Size": currentTeam ? currentTeam.memberIds.length : undefined
+				"Team Size": currentTeam ? currentTeam.memberIds.length : undefined,
+				"Plugin Version": pluginVersion
 			});
 			mixpanel.track("Sign Up Success");
 		}
@@ -60,7 +63,8 @@ export default store => next => action => {
 				Endpoint: "Atom",
 				"First Time User?": false,
 				Plan: "Free",
-				"Team Size": currentTeam ? currentTeam.memberIds.length : undefined
+				"Team Size": currentTeam ? currentTeam.memberIds.length : undefined,
+				"Plugin Version": pluginVersion
 			});
 			mixpanel.track("Signed In");
 		}
