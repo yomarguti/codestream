@@ -526,7 +526,7 @@ export class SimpleStream extends Component {
 									usernames={this.props.usernamesRegexp}
 									currentUsername={this.props.currentUser.username}
 									replyingTo={parentPost}
-									newMessageIndicator={post.id === this.postWithNewMessageIndicator}
+									newMessageIndicator={post.seqNum === this.postWithNewMessageIndicator}
 									editing={post.id === this.state.editingPostId}
 								/>
 							</div>
@@ -1179,9 +1179,7 @@ const getMarkersForStreamAndCommit = (locationsByCommit = {}, commitHash, marker
 					location: locations[markerId]
 				};
 			} else {
-				const message = `No marker for id ${markerId} but there are locations for it. commitHash: ${
-					commitHash
-				}`;
+				const message = `No marker for id ${markerId} but there are locations for it. commitHash: ${commitHash}`;
 				Raven.captureMessage(message, {
 					logger: "Stream::mapStateToProps::getMarkersForStreamAndCommit",
 					extra: {
