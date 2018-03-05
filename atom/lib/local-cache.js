@@ -20,7 +20,7 @@ db.version(2).stores({
 		"id, teamId, streamId, creatorId, [creatorId+text+teamId+streamId+commitHashWhenPosted+parentPostId], [creatorId+text+teamId+streamId+commitHashWhenPosted]" // TODO: the composite indexes may not be needed anymore
 });
 db.version(3).stores({
-	companies: "id, teamId"
+	companies: "id"
 });
 
 export default db;

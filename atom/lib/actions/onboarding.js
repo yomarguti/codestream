@@ -10,6 +10,7 @@ import {
 } from "./context";
 import { saveUser, saveUsers, ensureCorrectTimeZone } from "./user";
 import { saveRepo, saveRepos } from "./repo";
+import { fetchCompanies, saveCompany } from "./company";
 import { fetchTeamMembers, saveTeam, saveTeams, joinTeam as _joinTeam } from "./team";
 import { fetchStreams } from "./stream";
 import { fetchLatestForCurrentStream } from "./post";
@@ -172,6 +173,7 @@ export const confirmEmail = attributes => (dispatch, getState, { http }) => {
 			} else if (teamIdsForUser.includes(teamIdForRepo)) {
 				alreadyOnTeam = true;
 				await dispatch(fetchTeamMembers(teamIdsForUser));
+				dispatch(fetchCompanies(userTeams.map(t => t.companyId)));
 				dispatch(fetchStreams());
 				dispatch({ type: "EXISTING_USER_CONFIRMED" });
 			} else await dispatch(joinTeam("EXISTING_USER_CONFIRMED"));
@@ -215,10 +217,12 @@ export const createTeam = name => (dispatch, getState, { http }) => {
 		.post("/repos", params, session.accessToken)
 		.then(async data => {
 			dispatch(requestFinished());
+			const company = normalize(data.company);
 			const team = normalize(data.team);
 			const repo = normalize(data.repo);
 			const users = normalize(data.users);
 
+			await dispatch(saveCompany(company));
 			await dispatch(saveRepo(repo));
 			await dispatch(saveTeam(team));
 			await dispatch(saveUsers(users));
@@ -346,6 +350,7 @@ export const authenticate = params => (dispatch, getState, { http }) => {
 				await dispatch(fetchTeamMembers(teamIdsForUser));
 				dispatch({ type: "EXISTING_USER_LOGGED_INTO_NEW_REPO" });
 			} else if (teamIdsForUser.includes(teamIdForRepo)) {
+				dispatch(fetchCompanies(userTeams.map(t => t.companyId)));
 				await dispatch(fetchTeamMembers(teamIdsForUser));
 				dispatch(fetchLatestForCurrentStream());
 				dispatch(loggedIn());
