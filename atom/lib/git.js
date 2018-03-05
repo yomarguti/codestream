@@ -1,6 +1,8 @@
 import { BufferedProcess } from "atom";
 
-const createError = message => message.includes("'git' is not recognized") ? {missingGit: true} : {message}
+const createError = message =>
+	message.includes("'git' is not recognized") ? { missingGit: true } : { message };
+
 export default (args, options = {}) => {
 	return new Promise((resolve, reject) => {
 		let output = "";

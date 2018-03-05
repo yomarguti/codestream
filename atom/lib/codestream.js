@@ -53,12 +53,13 @@ const getCurrentCommit = async repo => {
 			cwd: repo.getWorkingDirectory()
 		});
 		return data.trim();
-	} catch ({missingGit, message}) {
+	} catch ({ missingGit, message }) {
 		if (missingGit) store.dispatch(noGit());
-		else Raven.captureMessage("There was an unexpected error trying to invoke the 'git' command.", {
-			level: 'error',
-			extra: {message}
-		})
+		else
+			Raven.captureMessage("There was an unexpected error trying to invoke the 'git' command.", {
+				level: "error",
+				extra: { message }
+			});
 	}
 };
 
@@ -321,12 +322,16 @@ module.exports = {
 							firstCommitHash: noParentCommits.split("\n")[0]
 						})
 					);
-				} catch ({missingGit, message}) {
+				} catch ({ missingGit, message }) {
 					if (missingGit) store.dispatch(noGit());
-					else Raven.captureMessage("There was an unexpected error trying to invoke the 'git' command.", {
-						level: 'error',
-						extra: {message}
-					})
+					else
+						Raven.captureMessage(
+							"There was an unexpected error trying to invoke the 'git' command.",
+							{
+								level: "error",
+								extra: { message }
+							}
+						);
 				}
 				GitRepo.open(workDir)
 					.listRemoteReferences()
