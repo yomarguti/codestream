@@ -1,10 +1,8 @@
 import { CompositeDisposable } from "atom";
 import React, { Component } from "react";
 import { connect } from "react-redux";
-import _ from "underscore-plus";
 import * as actions from "../actions/marker-location";
 import { locationToRange } from "../util/Marker";
-import rootLogger from "../util/Logger";
 
 const isValid = location => {
 	const sameLine = location[0] === location[2];
@@ -20,11 +18,9 @@ class ReferenceBubble extends Component {
 		this.state = {
 			isVisible: isValid(props.location)
 		};
-		this.logger = rootLogger.forObject("components/ReferenceBubble");
 	}
 
 	componentDidMount() {
-		this.logger.trace(".componentDidMount");
 		const { location, editor } = this.props;
 		const subscriptions = this.subscriptions;
 		const range = locationToRange(location);
@@ -40,13 +36,11 @@ class ReferenceBubble extends Component {
 	}
 
 	componentWillUnmount() {
-		this.logger.trace(".componentWillUnmount");
 		this.marker.destroy();
 		this.subscriptions.dispose();
 	}
 
 	render() {
-		this.logger.trace(".render");
 		if (!this.state.isVisible) return false;
 
 		const { id, postId, onSelect, count, numComments } = this.props;
