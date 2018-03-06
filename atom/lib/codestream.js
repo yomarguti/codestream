@@ -117,6 +117,7 @@ module.exports = {
 				const thisPackage = atom.packages.getLoadedPackage("CodeStream");
 				const hasResetAlready = localStorage.getItem(resetFlag);
 				const version = thisPackage.metadata.version;
+				Raven.setTagsContext({ pluginVersion: version });
 				const [major, minor, patch] = version.split(".");
 				if (hasExistingState && Number(patch) >= 12 && !Boolean(hasResetAlready)) {
 					// 0.0.12 requires a reset to avoid seeing a bug
