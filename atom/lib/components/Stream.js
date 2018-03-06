@@ -526,7 +526,9 @@ export class SimpleStream extends Component {
 									usernames={this.props.usernamesRegexp}
 									currentUsername={this.props.currentUser.username}
 									replyingTo={parentPost}
-									newMessageIndicator={post.seqNum === this.postWithNewMessageIndicator}
+									newMessageIndicator={
+										post.seqNum && post.seqNum === Number(this.postWithNewMessageIndicator)
+									}
 									editing={post.id === this.state.editingPostId}
 								/>
 							</div>

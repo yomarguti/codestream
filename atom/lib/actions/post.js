@@ -253,8 +253,11 @@ export const resolveFromPubnub = (post, isHistory) => async (dispatch, getState,
 		};
 		if (post.parentPostId) searchAttributes.parentPostId = post.parentPostId;
 
-		const results = await db.posts.where(searchAttributes).toArray();
-		if (results.length === 1) dispatch(resolvePendingPost(results[0].id, post));
+		const pendingPost = await db.posts
+			.where(searchAttributes)
+			.filter(p => p.pending)
+			.first();
+		if (pendingPost) dispatch(resolvePendingPost(pendingPost.id, post));
 		else dispatch(pubnubActions.resolveFromPubnub("posts", post, isHistory));
 	} else dispatch(pubnubActions.resolveFromPubnub("posts", post, isHistory));
 };

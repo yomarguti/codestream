@@ -156,7 +156,7 @@ class GitRepo {
 			return type === "commit";
 		} catch (err) {
 			try {
-				await this.run("fetch", "origin");
+				await this.run("fetch", "--all");
 			} catch (err) {
 				console.warn(err);
 				return false;
