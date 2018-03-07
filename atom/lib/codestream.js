@@ -12,7 +12,9 @@ import {
 	logout,
 	noGit,
 	noAccess,
+	noRemoteUrl,
 	setRepoAttributes,
+	setRepoUrl,
 	resetContext,
 	setContext,
 	setCurrentFile,
@@ -336,8 +338,9 @@ module.exports = {
 					.listRemoteReferences()
 					.then(remotes => {
 						const uniqueRemotes = _.uniq(remotes, r => r.name);
-						if (uniqueRemotes.length > 1) store.dispatch(foundMultipleRemotes(uniqueRemotes));
-						else store.dispatch({ type: "SET_REPO_URL", payload: uniqueRemotes[0].url });
+						if (uniqueRemotes.length === 0) store.dispatch(noRemoteUrl());
+						if (uniqueRemotes.length === 1) store.dispatch(setRepoUrl(uniqueRemotes[0].url));
+						else store.dispatch(foundMultipleRemotes(uniqueRemotes));
 					});
 			}
 		}

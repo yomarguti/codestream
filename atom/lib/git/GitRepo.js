@@ -208,6 +208,7 @@ class GitRepo {
 	async listRemoteReferences() {
 		return (await this.run("remote", "-v"))
 			.split("\n")
+			.filter(Boolean)
 			.map(line => line.split(/\s+/))
 			.map(Remote);
 	}
