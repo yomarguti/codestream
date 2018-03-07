@@ -4,6 +4,7 @@ const initialState = {
 	currentRepoId: "",
 	currentCommit: "",
 	noAccess: false,
+	showSlackInfo: false,
 	usernamesInTeam: []
 };
 
@@ -18,5 +19,7 @@ export default (state = initialState, { type, payload }) => {
 	if (type === "NO_ACCESS") return { ...state, noAccess: { noAccess: true } };
 	if (type === "NO_ACCESS-MISSING_REMOTE_URL") return { ...state, noAccess: { noUrl: true } };
 	if (type === "NO_GIT_IN_PATH") return { ...state, noAccess: { noGit: true } };
+	if (type === "SHOW_SLACK_INFO") return { ...state, showSlackInfo: true };
+	if (type === "CANCEL_SLACK_INFO") return { ...state, showSlackInfo: false };
 	return state;
 };
