@@ -24,7 +24,7 @@ export class RemoteSelectionForm extends Component {
 				<p>
 					<FormattedMessage
 						id="remoteSelection.message"
-						defaultMessage="Which remote represents the common repository for your team?"
+						defaultMessage="Select the remote that everyone on your team has access to (i.e., not a fork) so that everyone can chat on CodeStream."
 					/>
 				</p>
 				{this.state.noSelection && (
