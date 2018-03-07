@@ -46,7 +46,7 @@
 	"login.footer.signUp": "Sign Up",
 	"login.password.label": "Password",
 	"noGit.header": "Git Issue",
-	"noGit.message": "Unfortunately, CodeStream only works with projects controlled by Git.",
+	"noGit.message": "CodeStream only works with projects controlled by Git and you don't appear to have any currently open.",
 	"createTeam.header": "Create a Team",
 	"createTeam.info":
 		"Each repository connected to CodeStream is owned by a development team. What's the name of your team?",

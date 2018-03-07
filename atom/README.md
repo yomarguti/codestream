@@ -16,16 +16,15 @@ CodeStream is currently in beta. The core messaging functionality, which is the 
 
 * CodeStream requires a current version of **[Atom](https://atom.io/)**.
 * Your repository must be managed by Git, or a Git hosting service like GitHub.
-* Forking workflows aren’t currently supported.
 * Windows users need to have `git` available in their PATH.
-* Make sure that you have just a single repository open in any one Atom window. Support for multiple repos is coming soon.
+* Make sure that you have just a single repository open in any one Atom window. Support for multiple repositories is coming soon.
 * Make sure you open an actual repository, and not a directory containing repositories.
 
 # Installation
 
 To install CodeStream, visit Atom settings, click on the "Install" tab in the left rail, and then search for 'codestream'. When you find it in the results, click the 'Install' button.
 
-Once installed, you can toggle the CodeStream view via the Packages menu, or hit Cmd + Opt + O (Mac) / Ctrl + Alt + O (Windows). You can also click on the chat bubbles icon that now appears in Atom’s status bar.
+Once installed, you can toggle the CodeStream view via the Packages menu, or hit Cmd + Opt + O (Mac) / Ctrl + Alt + O (Windows). You can also click on the chat bubbles icon that now appears in the status bar at the bottom of the Atom window.
 
 # Things to Try
 
