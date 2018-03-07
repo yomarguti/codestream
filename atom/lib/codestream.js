@@ -160,7 +160,13 @@ module.exports = {
 			}),
 			atom.commands.add("atom-workspace", {
 				"codestream:toggle": () => atom.workspace.toggle(CODESTREAM_VIEW_URI),
-				"codestream:logout": () => store.dispatch(logout())
+				"codestream:logout": () => store.dispatch(logout()),
+				"codestream:reset": () => {
+					db.delete();
+					atom.commands.dispatch(document.querySelector("atom-workspace"), "codestream:logout");
+					store.dispatch({ type: "RESET" });
+					atom.reload();
+				}
 			}),
 			atom.commands.add(".tree-view", {
 				"codestream:mute": target => this.markStreamMute(target),
@@ -177,15 +183,6 @@ module.exports = {
 		if (atom.inDevMode()) {
 			this.subscriptions.add(
 				atom.commands.add("atom-workspace", {
-					"codestream:reset": async () => {
-						atom.commands.dispatch(
-							document.querySelector("atom-workspace"),
-							"codestream:wipe-cache"
-						);
-						atom.commands.dispatch(document.querySelector("atom-workspace"), "codestream:logout");
-						store.dispatch({ type: "RESET" });
-						atom.reload();
-					},
 					"codestream:wipe-cache": () => db.delete(),
 					"codestream:point-to-dev": () => {
 						sessionStorage.setItem("codestream.env", "dev");
