@@ -240,8 +240,17 @@ const backtrackMarkerLocations = async (codeBlocks, bufferText, streamId, state,
 };
 
 export const resolveFromPubnub = (post, isHistory) => async (dispatch, getState, { db }) => {
+	Raven.captureBreadcrumb({
+		message: "Attempting to resolve a post from pubnub",
+		category: "action",
+		data: { post, isHistory }
+	});
 	const { session } = getState();
 	if (post.creatorId === session.userId) {
+		Raven.captureBreadcrumb({
+			message: "post from pubnub belongs to current user",
+			category: "action"
+		});
 		const { creatorId, teamId, streamId, commitHashWhenPosted, text } = post;
 
 		const searchAttributes = {
@@ -257,9 +266,23 @@ export const resolveFromPubnub = (post, isHistory) => async (dispatch, getState,
 			.where(searchAttributes)
 			.filter(p => p.pending)
 			.first();
-		if (pendingPost) dispatch(resolvePendingPost(pendingPost.id, post));
-		else dispatch(pubnubActions.resolveFromPubnub("posts", post, isHistory));
-	} else dispatch(pubnubActions.resolveFromPubnub("posts", post, isHistory));
+		if (pendingPost) {
+			dispatch(resolvePendingPost(pendingPost.id, post));
+		} else {
+			Raven.captureBreadcrumb({
+				message: "post from pubnub does not match a pending post",
+				category: "action",
+				data: { pendingPost, searchAttributes }
+			});
+			dispatch(pubnubActions.resolveFromPubnub("posts", post, isHistory));
+		}
+	} else {
+		Raven.captureBreadcrumb({
+			message: "post from pubnub does not belong to current user",
+			category: "action"
+		});
+		dispatch(pubnubActions.resolveFromPubnub("posts", post, isHistory));
+	}
 };
 
 const resolvePendingPost = (id, resolvedPost) => (dispatch, getState, { db }) => {
