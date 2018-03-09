@@ -121,7 +121,9 @@ export default store => {
 					Category: "Source File",
 					"Auto Mentions": extra.autoMentions.some(mention => post.text.includes(mention)),
 					"First Post?":
-						Boolean(currentUser.totalPosts) === false && new Date(post.createdAt).toISOString(),
+						Boolean(currentUser.totalPosts) === false
+							? new Date(post.createdAt).toISOString()
+							: null,
 					Type: type
 				});
 			}
