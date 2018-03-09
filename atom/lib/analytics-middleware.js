@@ -66,7 +66,10 @@ export default store => {
 			const currentUser = action.meta;
 			if (isOptedIn(currentUser)) {
 				const { context } = store.getState();
-				mixpanel.alias(currentUser.id);
+
+				if (currentUser.totalPosts && currentUser.totalPosts > 0) mixpanel.identify(currentUser.id);
+				else mixpanel.alias(currentUser.id);
+
 				mixpanel.register_once({
 					"Date Signed Up": new Date(currentUser.createdAt).toISOString()
 				});
