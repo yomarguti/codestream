@@ -10,7 +10,7 @@ CodeStream is currently in beta. The core messaging functionality, which is the 
 
 * Your primary interaction with CodeStream is in the IDE, but there will also be a web component to the service that will include settings, profile and administration. All of that is in the works.
 * Since we don’t have settings yet, you won’t have control over your email notifications. You can read our [guide to CodeStream notifications](https://help.codestream.com/hc/en-us/articles/360000327691-Guide-to-CodeStream-notifications), but the key thing is that if you want to turn emails off, just get in touch with us and we’ll take care of it for you.
-* Similarly, you don't yet have the ability to upload a headshot. For now, if you have a Gravatar we’ll pull that it, otherwise we just create a default headshot for you using your initials.
+* Similarly, you don't yet have the ability to upload a headshot. For now, if you have a [Gravatar](https://en.gravatar.com/) we’ll pull that in, otherwise we just create a default headshot for you using your initials.
 
 # Requirements
 
@@ -46,6 +46,10 @@ Once installed, you can toggle the CodeStream view via the Packages menu, or hit
 
 ![Markers](https://codestream.zendesk.com/hc/article_attachments/360000889931/Marker.png)
 
+* Head off problems before they even happen by looking out for the banners that indicate when another developer is editing the file you're looking at. Or if you both start to edit the file, we'll let you know there's a possibility of a merge conflict.
+
+![MergeConflict](https://help.codestream.com/hc/article_attachments/360001973651/Banner_MergeConflict.png)
+
 # Frequently Asked Questions
 
 #### Where are messages stored?
@@ -63,6 +67,10 @@ In addition to people that you explicitly add to your team on CodeStream, anyone
 On CodeStream, chat streams are associated with source files, and not with commits. This allows developers to easily leverage past discussions to get a better understanding of how the file evolved over time and why specific changes were made. A new developer inheriting one of your files a year from now will never go back and reference past commits or pull requests, but on CodeStream they’ll see both the entirety of the chat stream associated with the file as well as markers in the code indicating where discussions took place.
 
 CodeStream recognizes that developers on your team may be working on different branches, or may simply have local changes, that result in certain blocks of code being in different locations for each of them. If there are messages associated with those blocks of code, CodeStream ensures that each developer sees them in the correct location despite the variations in each of their local buffers.
+
+#### What access to Git does CodeStream require?
+
+You won’t need to provide CodeStream with any Git (or GitHub, Bitbucket, etc.) credentials, as the plugin simply leverages your IDE’s access to Git. CodeStream uses Git to do things like automatically mention the most recent author when you share a block of code in a post, and to maintain the connection between that block of code and where it’s located in the source file as the file evolves over time (and commits).
 
 # Help
 
