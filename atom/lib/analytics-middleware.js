@@ -60,7 +60,7 @@ export default store => {
 						currentTeam: context.currentTeamId
 					});
 				}
-			} else if (onboarding.step === "SignUp") {
+			} else if (onboarding.step === "signUp") {
 				mixpanel.track("Page Viewed", { "Page Name": "Sign Up" });
 			}
 		}

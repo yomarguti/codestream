@@ -6,6 +6,7 @@ import ContentEditable from "react-contenteditable";
 import { FormattedMessage } from "react-intl";
 import _ from "underscore-plus";
 import Raven from "raven-js";
+import mixpanel from "mixpanel-browser";
 import Post from "./Post";
 import UMIs from "./UMIs";
 import AtMentionsPopup from "./AtMentionsPopup";
@@ -141,6 +142,7 @@ export class SimpleStream extends Component {
 	}
 
 	componentDidMount() {
+		mixpanel.track("Page Viewed", { "Page Name": "Source Stream" });
 		const me = this;
 		// TODO: scroll to bottom
 
@@ -170,6 +172,7 @@ export class SimpleStream extends Component {
 		}
 
 		if (switchingStreams) {
+			mixpanel.track("Page Viewed", { "Page Name": "Source Stream" });
 			this.saveComposeState(nextProps.id);
 			this.handleDismissThread();
 
@@ -643,6 +646,7 @@ export class SimpleStream extends Component {
 
 	// dismiss the thread stream and return to the main stream
 	handleDismissThread = () => {
+		mixpanel.track("Page Viewed", { "Page Name": "Source Stream" });
 		this.hideDisplayMarker();
 		this.setState({ threadActive: false });
 	};
@@ -733,6 +737,7 @@ export class SimpleStream extends Component {
 	// show the thread related to the given post, and if there is
 	// a codeblock, scroll to it and select it
 	selectPost = id => {
+		mixpanel.track("Page Viewed", { "Page Name": "Thread View" });
 		const post = this.findPostById(id);
 		if (!post) return;
 
