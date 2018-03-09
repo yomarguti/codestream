@@ -48,9 +48,10 @@ export default store => {
 	return next => action => {
 		const result = next(action);
 
-		// Once data has been loaded from indexedDB, if continuing a session,
+		// Once data has been loaded from indexedDB
 		if (action.type === "BOOTSTRAP_COMPLETE") {
 			const { context, session, onboarding } = store.getState();
+			//if continuing a session,
 			if (onboarding.complete && session.accessToken) {
 				if (isOptedIn()) {
 					mixpanel.identify(session.userId);
@@ -59,8 +60,12 @@ export default store => {
 						currentTeam: context.currentTeamId
 					});
 				}
+			} else if (onboarding.step === "SignUp") {
+				mixpanel.track("Page Viewed", { "Page Name": "Sign Up" });
 			}
 		}
+
+		if (action.type === "GO_TO_SIGNUP") mixpanel.track("Page Viewed", { "Page Name": "Sign Up" });
 
 		if (action.type === "SIGNUP_SUCCESS") {
 			const currentUser = action.meta;
