@@ -274,8 +274,10 @@ export const addMembers = people => (dispatch, getState, { http }) => {
 	const params = { ...repoAttributes, teamId: currentTeamId, users: people };
 	return http
 		.post("/repos", params, session.accessToken)
-		.then(({ users }) => {
+		.then(({ users, team, repo, company }) => {
 			dispatch(saveUsers(normalize(users)));
+			dispatch(saveTeam(normalize(team)));
+			dispatch(saveRepo(normalize(repo)));
 			dispatch(completeOnboarding());
 		})
 		.catch(error => {
