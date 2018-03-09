@@ -278,6 +278,7 @@ export const addMembers = people => (dispatch, getState, { http }) => {
 			dispatch(saveUsers(normalize(users)));
 			dispatch(saveTeam(normalize(team)));
 			dispatch(saveRepo(normalize(repo)));
+			dispatch(saveCompany(normalize(company)));
 			dispatch(completeOnboarding());
 		})
 		.catch(error => {

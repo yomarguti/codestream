@@ -66,9 +66,9 @@ export const bootstrapStore = store => {
 			db.markers,
 			db.markerLocations,
 			() => {
-				// db.companies
-				// 	.limit(1000)
-				// 	.toArray(companies => store.dispatch(bootstrapCompanies(companies)));
+				db.companies
+					.limit(1000)
+					.toArray(companies => store.dispatch(bootstrapCompanies(companies)));
 				db.users.limit(1000).toArray(users => store.dispatch(bootstrapUsers(users)));
 				db.repos.limit(1000).toArray(repos => store.dispatch(bootstrapRepos(repos)));
 				db.teams.limit(1000).toArray(teams => store.dispatch(bootstrapTeams(teams)));
