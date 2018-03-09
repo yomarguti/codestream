@@ -2,7 +2,6 @@ import Raven from "raven-js";
 import _ from "underscore-plus";
 import { upsert } from "../local-cache";
 import { normalize } from "./utils";
-import * as pubnubActions from "./pubnub-event";
 import { fetchMarkersAndLocations } from "./marker-location";
 import { saveStream } from "./stream";
 import { saveMarkers } from "./marker";
@@ -201,6 +200,7 @@ export const createPost = (
 	try {
 		const data = await http.post("/posts", post, session.accessToken);
 		if (!streamId) dispatch(saveStream(normalize(data.stream)));
+		dispatch(resolvePendingPost(pendingId, normalize(data.post)));
 	} catch (error) {
 		Raven.captureException(error, {
 			logger: "actions/post"
@@ -237,52 +237,6 @@ const backtrackMarkerLocations = async (codeBlocks, bufferText, streamId, state,
 	}
 
 	return backtrackedCodeBlocks;
-};
-
-export const resolveFromPubnub = (post, isHistory) => async (dispatch, getState, { db }) => {
-	Raven.captureBreadcrumb({
-		message: "Attempting to resolve a post from pubnub",
-		category: "action",
-		data: { post, isHistory }
-	});
-	const { session } = getState();
-	if (post.creatorId === session.userId) {
-		Raven.captureBreadcrumb({
-			message: "post from pubnub belongs to current user",
-			category: "action"
-		});
-		const { creatorId, teamId, streamId, commitHashWhenPosted, text } = post;
-
-		const searchAttributes = {
-			creatorId,
-			teamId,
-			streamId,
-			text,
-			commitHashWhenPosted: commitHashWhenPosted || "" // posts from email won't have commit hashes
-		};
-		if (post.parentPostId) searchAttributes.parentPostId = post.parentPostId;
-
-		const pendingPost = await db.posts
-			.where(searchAttributes)
-			.filter(p => p.pending)
-			.first();
-		if (pendingPost) {
-			dispatch(resolvePendingPost(pendingPost.id, post));
-		} else {
-			Raven.captureBreadcrumb({
-				message: "post from pubnub does not match a pending post",
-				category: "action",
-				data: { pendingPost, searchAttributes }
-			});
-			dispatch(pubnubActions.resolveFromPubnub("posts", post, isHistory));
-		}
-	} else {
-		Raven.captureBreadcrumb({
-			message: "post from pubnub does not belong to current user",
-			category: "action"
-		});
-		dispatch(pubnubActions.resolveFromPubnub("posts", post, isHistory));
-	}
 };
 
 const resolvePendingPost = (id, resolvedPost) => (dispatch, getState, { db }) => {
