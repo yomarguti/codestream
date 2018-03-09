@@ -29,11 +29,11 @@ export const fetchTeamMembers = teamId => (dispatch, getState, { http }) => {
 export const joinTeam = () => (dispatch, getState, { http }) => {
 	const { repoAttributes, session } = getState();
 	return http.post("/repos", repoAttributes, session.accessToken).then(async data => {
-		dispatch(setCurrentTeam(data.repo.teamId));
-		dispatch(saveCompany(normalize(data.company)));
+		await dispatch(saveCompany(normalize(data.company)));
 		// FIXME:
 		if (data.users) await dispatch(saveUsers(normalize(data.users)));
 		await dispatch(fetchTeamMembers(data.repo.teamId));
-		return await dispatch(saveRepo(normalize(data.repo)));
+		await dispatch(saveRepo(normalize(data.repo)));
+		return dispatch(setCurrentTeam(data.repo.teamId));
 	});
 };
