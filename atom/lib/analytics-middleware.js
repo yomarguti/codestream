@@ -115,7 +115,8 @@ export default store => {
 					Thread: post.parentPostId ? "Reply" : "Parent",
 					Category: "Source File",
 					"Auto Mentions": extra.autoMentions.some(mention => post.text.includes(mention)),
-					"First Post?": Boolean(currentUser.totalPosts) === false,
+					"First Post?":
+						Boolean(currentUser.totalPosts) === false && new Date(post.createdAt).toISOString(),
 					Type: type
 				});
 			}
