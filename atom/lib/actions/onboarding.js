@@ -230,7 +230,10 @@ export const createTeam = name => (dispatch, getState, { http }) => {
 			dispatch(setCurrentTeam(team.id));
 			dispatch(setCurrentRepo(repo.id));
 
-			dispatch({ type: "TEAM_CREATED", payload: { teamId: team.id } });
+			dispatch({
+				type: "TEAM_CREATED",
+				payload: { teamId: team.id }
+			});
 		})
 		.catch(error => {
 			dispatch(requestFinished());
@@ -249,10 +252,10 @@ export const addRepoForTeam = teamId => (dispatch, getState, { http }) => {
 		.post("/repos", params, session.accessToken)
 		.then(async data => {
 			const repo = normalize(data.repo);
-			dispatch(requestFinished());
 			await dispatch(saveRepo(repo));
 			dispatch(setCurrentRepo(repo.id));
 			dispatch(setCurrentTeam(teamId));
+			dispatch(requestFinished());
 			dispatch({ type: "REPO_ADDED_FOR_TEAM", payload: teams[teamId].name });
 		})
 		.catch(error => {

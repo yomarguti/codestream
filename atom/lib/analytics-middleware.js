@@ -25,13 +25,14 @@ export default store => {
 	};
 
 	const registerSuperProperties = ({ currentUser, currentTeam, firstTimeUser = false }) => {
-		const { users, teams } = store.getState();
+		const { companies, users, teams } = store.getState();
 		if (typeof currentUser === "string") {
 			currentUser = users[currentUser];
 		}
 		if (typeof currentTeam === "string") {
 			currentTeam = teams[currentTeam];
 		}
+		const currentCompany = currentTeam && companies[currentTeam.companyId];
 		mixpanel.register({
 			"Email Address": currentUser.email,
 			Endpoint: "Atom",
@@ -39,6 +40,7 @@ export default store => {
 			Plan: "Free",
 			"Team ID": currentTeam ? currentTeam.id : undefined,
 			"Team Size": currentTeam ? currentTeam.memberIds.length : undefined,
+			Company: currentCompany ? currentCompany.name : undefined,
 			"Plugin Version": pluginVersion
 		});
 	};
@@ -153,16 +155,19 @@ export default store => {
 					});
 			}
 			if (action.type === "TEAM_CREATED") {
-				const { teams } = store.getState();
+				const { companies, teams } = store.getState();
 				const currentTeam = teams[action.payload.teamId];
+				const currentCompany = companies[currentTeam.companyId];
 				mixpanel.register({
 					"Team ID": action.payload.teamId,
-					"Team Size": currentTeam.memberIds.length
+					"Team Size": currentTeam.memberIds.length,
+					Company: currentCompany.name
 				});
 			}
 			if (action.type === "SET_CURRENT_TEAM") {
-				const { teams } = store.getState();
+				const { companies, teams } = store.getState();
 				const currentTeam = teams[action.payload];
+				const currentCompany = companies[currentTeam.companyId];
 				mixpanel.register({ "Team ID": action.payload, "Team Size": currentTeam.memberIds.length });
 			}
 		}
