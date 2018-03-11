@@ -10,7 +10,7 @@ CodeStream is currently in beta. The core messaging functionality, which is the 
 
 * Your primary interaction with CodeStream is in the IDE, but there will also be a web component to the service that will include settings, profile and administration. All of that is in the works.
 * Since we don’t have settings yet, you won’t have control over your email notifications. You can read our [guide to CodeStream notifications](https://help.codestream.com/hc/en-us/articles/360000327691-Guide-to-CodeStream-notifications), but the key thing is that if you want to turn emails off, just get in touch with us and we’ll take care of it for you.
-* Similarly, you don't yet have the ability to upload a headshot. For now, if you have a [Gravatar](https://en.gravatar.com/) we’ll pull that in, otherwise we just create a default headshot for you using your initials.
+* CodeStream currently uses [Gravatar](https://gravatar.com) for headshots. Upload a headshot there and associate it with the email address you use on CodeStream.
 
 # Requirements
 
