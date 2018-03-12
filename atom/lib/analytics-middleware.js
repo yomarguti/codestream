@@ -1,5 +1,5 @@
 import mixpanel from "mixpanel-browser";
-import git from "./git";
+import { getPost } from "./reducers/posts";
 
 mixpanel.init("4308967c7435e61d9697ce240bc68d02");
 
@@ -134,15 +134,10 @@ export default store => {
 			}
 
 			if (action.type === "MARKER_CLICKED") {
-				const { context, repoAttributes, session, users } = store.getState();
-				const currentUser = users[session.userId];
-				git(`log --reverse --format=%ae ${context.currentFile}`.split(" "), {
-					cwd: repoAttributes.workingDirectory
-				}).then(emails => {
-					const originalAuthorEmail = emails.split("\n")[0];
-					mixpanel.track("Marker Clicked", {
-						"Orginal Author?": currentUser.email === originalAuthorEmail
-					});
+				const { posts, session } = store.getState();
+				const { postId, streamId } = action.meta;
+				mixpanel.track("Marker Clicked", {
+					"Orginal Author?": getPost(posts, streamId, postId).creatorId === session.userId
 				});
 			}
 

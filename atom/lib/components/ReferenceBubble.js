@@ -42,7 +42,7 @@ class ReferenceBubble extends Component {
 
 	onClick = event => {
 		this.props.onSelect(this.props.postId);
-		this.props.onMarkerClicked();
+		this.props.onMarkerClicked(this.props);
 	};
 
 	render() {
@@ -59,6 +59,6 @@ class ReferenceBubble extends Component {
 
 const mapDispatchToProps = dispatch => ({
 	...actions,
-	onMarkerClicked: () => dispatch({ type: "MARKER_CLICKED" })
+	onMarkerClicked: props => dispatch({ type: "MARKER_CLICKED", meta: props })
 });
 export default connect(null, mapDispatchToProps)(ReferenceBubble);
