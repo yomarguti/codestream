@@ -770,7 +770,8 @@ export class SimpleStream extends Component {
 	};
 
 	focusInput = () => {
-		document.getElementById("input-div").focus();
+		const input = document.getElementById("input-div");
+		if (input) input.focus();
 	};
 
 	handleClickScrollToNewMessages = () => {
