@@ -3,10 +3,10 @@ import Raven from "raven-js";
 import _ from "underscore-plus";
 import { normalize } from "./actions/utils";
 import { resolveFromPubnub } from "./actions/pubnub-event";
+import { resolveFromPubnub as resolvePost } from "./actions/post";
 import { saveMarkerLocations } from "./actions/marker-location";
 import { fetchStreamsAndAllPosts } from "./actions/stream";
 import { caughtUp, lastMessageReceived, historyRetrievalFailure } from "./actions/messaging";
-import { resolveFromPubnub as resolvePostFromPubnub } from "./actions/post";
 import rootLogger from "./util/Logger";
 import PubnubSubscription from "./pubnub-subscription";
 
@@ -133,8 +133,7 @@ export default class PubNubReceiver {
 				tableName = "streams";
 				break;
 			case "post":
-				return (data, isHistory) =>
-					this.store.dispatch(resolvePostFromPubnub(normalize(data), isHistory));
+				return (data, isHistory) => this.store.dispatch(resolvePost(normalize(data), isHistory));
 			case "posts":
 				tableName = "posts";
 				break;

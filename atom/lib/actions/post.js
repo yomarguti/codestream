@@ -201,6 +201,7 @@ export const createPost = (
 	try {
 		const data = await http.post("/posts", post, session.accessToken);
 		if (!streamId) dispatch(saveStream(normalize(data.stream)));
+		dispatch(resolvePendingPost(pendingId, normalize(data.post)));
 	} catch (error) {
 		Raven.captureException(error, {
 			logger: "actions/post"
@@ -239,27 +240,24 @@ const backtrackMarkerLocations = async (codeBlocks, bufferText, streamId, state,
 	return backtrackedCodeBlocks;
 };
 
-export const resolveFromPubnub = (post, isHistory) => async (dispatch, getState, { db }) => {
+export const resolveFromPubnub = (post, isHistory) => async (dispatch, getState) => {
+	Raven.captureBreadcrumb({
+		message: "Attempting to resolve a post from pubnub.",
+		category: "action"
+	});
+
 	const { session } = getState();
-	if (post.creatorId === session.userId) {
-		const { creatorId, teamId, streamId, commitHashWhenPosted, text } = post;
+	const isNotFromCurrentUser = post.creatorId !== session.userId;
+	const isFromEmail = !Boolean(post.commitHashWhenPosted); // crude. right now posts from email won't ever have commit context
 
-		const searchAttributes = {
-			creatorId,
-			teamId,
-			streamId,
-			text,
-			commitHashWhenPosted: commitHashWhenPosted || "" // posts from email won't have commit hashes
-		};
-		if (post.parentPostId) searchAttributes.parentPostId = post.parentPostId;
-
-		const pendingPost = await db.posts
-			.where(searchAttributes)
-			.filter(p => p.pending)
-			.first();
-		if (pendingPost) dispatch(resolvePendingPost(pendingPost.id, post));
-		else dispatch(pubnubActions.resolveFromPubnub("posts", post, isHistory));
-	} else dispatch(pubnubActions.resolveFromPubnub("posts", post, isHistory));
+	if (isHistory || isNotFromCurrentUser || isFromEmail) {
+		Raven.captureBreadcrumb({
+			message: "Post is history, does not belong to current user, or it might be from email.",
+			category: "action",
+			data: { isHistory, isNotFromCurrentUser, isFromEmail }
+		});
+		return dispatch(pubnubActions.resolveFromPubnub("posts", post, isHistory));
+	}
 };
 
 const resolvePendingPost = (id, resolvedPost) => (dispatch, getState, { db }) => {

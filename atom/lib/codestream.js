@@ -12,7 +12,9 @@ import {
 	logout,
 	noGit,
 	noAccess,
+	noRemoteUrl,
 	setRepoAttributes,
+	setRepoUrl,
 	resetContext,
 	setContext,
 	setCurrentFile,
@@ -102,39 +104,6 @@ module.exports = {
 		store = createStore(state);
 		bootstrapStore(store);
 
-		this.subscriptions.add(
-			atom.packages.onDidActivateInitialPackages(() => {
-				const hasExistingState = !_.isEmpty(state) && Boolean(state.messaging.lastMessageReceived);
-
-				const resetFlag = "CodeStream.didResetSincev0011";
-				if (!hasExistingState) {
-					localStorage.setItem(resetFlag, true);
-					return;
-				}
-
-				if (!atom.packages.isPackageLoaded("CodeStream")) return;
-
-				const thisPackage = atom.packages.getLoadedPackage("CodeStream");
-				const hasResetAlready = localStorage.getItem(resetFlag);
-				const version = thisPackage.metadata.version;
-				const [major, minor, patch] = version.split(".");
-				if (hasExistingState && Number(patch) >= 12 && !Boolean(hasResetAlready)) {
-					// 0.0.12 requires a reset to avoid seeing a bug
-					// this should be kept for a few versions to allow people to update
-					db.delete();
-					store.dispatch(logout()); // in case logged in to close pubnub connections
-					store.dispatch({ type: "RESET" });
-					store.dispatch({ type: "BOOTSTRAP_COMPLETE" });
-					localStorage.setItem(resetFlag, true);
-					atom.confirm({
-						message: `CodeStream has updated to v${version}, which requires a reload of your Atom windows, and for you to sign back in to CodeStream.`,
-						detailedMessage: "If you have other open windows, you'll need to manually reload them.",
-						buttons: { Reload: () => atom.reload() }
-					});
-				}
-			})
-		);
-
 		if (atom.project.getDirectories().length === 1) {
 			// if being initialized much later into atom's lifetime, i.e. just installed or re-enabled
 			if (atom.packages.hasActivatedInitialPackages()) this.setup();
@@ -157,7 +126,13 @@ module.exports = {
 			}),
 			atom.commands.add("atom-workspace", {
 				"codestream:toggle": () => atom.workspace.toggle(CODESTREAM_VIEW_URI),
-				"codestream:logout": () => store.dispatch(logout())
+				"codestream:logout": () => store.dispatch(logout()),
+				"codestream:reset": () => {
+					db.delete();
+					atom.commands.dispatch(document.querySelector("atom-workspace"), "codestream:logout");
+					store.dispatch({ type: "RESET" });
+					atom.reload();
+				}
 			}),
 			atom.commands.add(".tree-view", {
 				"codestream:mute": target => this.markStreamMute(target),
@@ -174,15 +149,6 @@ module.exports = {
 		if (atom.inDevMode()) {
 			this.subscriptions.add(
 				atom.commands.add("atom-workspace", {
-					"codestream:reset": async () => {
-						atom.commands.dispatch(
-							document.querySelector("atom-workspace"),
-							"codestream:wipe-cache"
-						);
-						atom.commands.dispatch(document.querySelector("atom-workspace"), "codestream:logout");
-						store.dispatch({ type: "RESET" });
-						atom.reload();
-					},
 					"codestream:wipe-cache": () => db.delete(),
 					"codestream:point-to-dev": () => {
 						sessionStorage.setItem("codestream.env", "dev");
@@ -335,8 +301,9 @@ module.exports = {
 					.listRemoteReferences()
 					.then(remotes => {
 						const uniqueRemotes = _.uniq(remotes, r => r.name);
-						if (uniqueRemotes.length > 1) store.dispatch(foundMultipleRemotes(uniqueRemotes));
-						else store.dispatch({ type: "SET_REPO_URL", payload: uniqueRemotes[0].url });
+						if (uniqueRemotes.length === 0) store.dispatch(noRemoteUrl());
+						if (uniqueRemotes.length === 1) store.dispatch(setRepoUrl(uniqueRemotes[0].url));
+						else store.dispatch(foundMultipleRemotes(uniqueRemotes));
 					});
 			}
 		}

@@ -213,9 +213,11 @@ export const createTeam = name => (dispatch, getState, { http }) => {
 			dispatch(requestFinished());
 			const team = normalize(data.team);
 			const repo = normalize(data.repo);
+			const users = normalize(data.users);
 
 			await dispatch(saveRepo(repo));
 			await dispatch(saveTeam(team));
+			await dispatch(saveUsers(users));
 
 			dispatch(setCurrentTeam(team.id));
 			dispatch(setCurrentRepo(repo.id));

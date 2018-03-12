@@ -7,10 +7,14 @@ export const setContext = data => ({
 	type: "SET_CONTEXT",
 	payload: data
 });
+
+// TODO: move these into their own collection of repoAttribute actions
 export const setRepoAttributes = data => ({
 	type: "SET_REPO_ATTRIBUTES",
 	payload: data
 });
+export const setRepoUrl = url => ({ type: "SET_REPO_URL", payload: url });
+
 export const setCurrentTeam = id => ({
 	type: "SET_CURRENT_TEAM",
 	payload: id

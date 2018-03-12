@@ -10,6 +10,9 @@ export default () => {
 			<h5>
 				<FormattedMessage id="noGit.message" />
 			</h5>
+			<h5>
+				<FormattedMessage id="noGit.message2" />
+			</h5>
 		</div>
 	);
 };

@@ -306,7 +306,12 @@ export class SimpleTeamMemberSelectionForm extends Component {
 }
 const mapStateToProps = ({ session, onboarding, users, context, teams }) => {
 	return {
-		memberEmails: teams[context.currentTeamId].memberIds.map(id => users[id].email),
+		memberEmails: teams[context.currentTeamId].memberIds
+			.map(id => {
+				const user = users[id];
+				return user && user.email;
+			})
+			.filter(Boolean),
 		serverLoading: onboarding.requestInProcess,
 		errors: onboarding.errors
 	};
