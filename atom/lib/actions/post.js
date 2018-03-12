@@ -2,6 +2,7 @@ import Raven from "raven-js";
 import _ from "underscore-plus";
 import { upsert } from "../local-cache";
 import { normalize } from "./utils";
+import * as pubnubActions from "./pubnub-event";
 import { fetchMarkersAndLocations } from "./marker-location";
 import { saveStream } from "./stream";
 import { saveMarkers } from "./marker";
@@ -237,6 +238,26 @@ const backtrackMarkerLocations = async (codeBlocks, bufferText, streamId, state,
 	}
 
 	return backtrackedCodeBlocks;
+};
+
+export const resolveFromPubnub = (post, isHistory) => async (dispatch, getState) => {
+	Raven.captureBreadcrumb({
+		message: "Attempting to resolve a post from pubnub.",
+		category: "action"
+	});
+
+	const { session } = getState();
+	const isNotFromCurrentUser = post.creatorId !== session.userId;
+	const isFromEmail = !Boolean(post.commitHashWhenPosted); // crude. right now posts from email won't ever have commit context
+
+	if (isHistory || isNotFromCurrentUser || isFromEmail) {
+		Raven.captureBreadcrumb({
+			message: "Post is history, does not belong to current user, or it might be from email.",
+			category: "action",
+			data: { isHistory, isNotFromCurrentUser, isFromEmail }
+		});
+		return dispatch(pubnubActions.resolveFromPubnub("posts", post, isHistory));
+	}
 };
 
 const resolvePendingPost = (id, resolvedPost) => (dispatch, getState, { db }) => {
