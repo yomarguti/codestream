@@ -1,4 +1,5 @@
 import Raven from "raven-js";
+import { setPresence } from "./presence.js";
 
 export const resetContext = data => ({ type: "RESET_CONTEXT" });
 
@@ -36,6 +37,7 @@ export const commitHashChanged = hash => ({
 	payload: hash
 });
 export const logout = () => dispatch => {
+	dispatch(setPresence("offline"));
 	dispatch({ type: "CLEAR_SESSION" });
 	dispatch({ type: "RESET_ONBOARDING" });
 	dispatch({ type: "RESET_UMI" });
