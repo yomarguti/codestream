@@ -172,7 +172,7 @@ export class SimpleStream extends Component {
 
 		if (switchingStreams) {
 			this.saveComposeState(nextProps.id);
-			this.handleDismissThread();
+			this.handleDismissThread({ track: false });
 
 			// keep track of the new message indicator in "this" instead of looking
 			// directly at currentUser.lastReads, because that will change and trigger
@@ -643,10 +643,10 @@ export class SimpleStream extends Component {
 	}
 
 	// dismiss the thread stream and return to the main stream
-	handleDismissThread = () => {
-		mixpanel.track("Page Viewed", { "Page Name": "Source Stream" });
+	handleDismissThread = ({ track = true } = {}) => {
 		this.hideDisplayMarker();
 		this.setState({ threadActive: false });
+		if (track) mixpanel.track("Page Viewed", { "Page Name": "Source Stream" });
 	};
 
 	handleEditHeadshot = event => {
