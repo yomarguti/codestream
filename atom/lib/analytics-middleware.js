@@ -46,6 +46,7 @@ export default store => {
 	};
 
 	return next => action => {
+		const oldState = store.getState();
 		const result = next(action);
 
 		// Once data has been loaded from indexedDB
@@ -59,6 +60,7 @@ export default store => {
 						currentUser: session.userId,
 						currentTeam: context.currentTeamId
 					});
+					if (context.currentFile) mixpanel.track("Page Viewed", { "Page Name": "Source Stream" });
 				}
 			} else if (onboarding.step === "signUp") {
 				mixpanel.track("Page Viewed", { "Page Name": "Sign Up" });
@@ -174,6 +176,10 @@ export default store => {
 				const currentTeam = teams[action.payload];
 				const currentCompany = companies[currentTeam.companyId];
 				mixpanel.register({ "Team ID": action.payload, "Team Size": currentTeam.memberIds.length });
+			}
+			if (action.type === "SET_CURRENT_FILE") {
+				if (action.payload && action.payload !== oldState.context.currentFile)
+					mixpanel.track("Page Viewed", { "Page Name": "Source Stream" });
 			}
 		}
 

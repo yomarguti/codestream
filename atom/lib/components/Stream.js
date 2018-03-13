@@ -142,7 +142,6 @@ export class SimpleStream extends Component {
 	}
 
 	componentDidMount() {
-		mixpanel.track("Page Viewed", { "Page Name": "Source Stream" });
 		const me = this;
 		// TODO: scroll to bottom
 
@@ -172,7 +171,6 @@ export class SimpleStream extends Component {
 		}
 
 		if (switchingStreams) {
-			mixpanel.track("Page Viewed", { "Page Name": "Source Stream" });
 			this.saveComposeState(nextProps.id);
 			this.handleDismissThread();
 
