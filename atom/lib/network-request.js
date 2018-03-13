@@ -14,7 +14,7 @@ function ApiUnreachableError(message) {
 export const isApiRequestError = error => error instanceof ApiRequestError;
 export const isApiUnreachableError = error => error instanceof ApiUnreachableError;
 
-const getPath = route => {
+export const getPath = route => {
 	const url = sessionStorage.getItem("codestream.url") || PRODUCTION_URL;
 	return `${url}${route}`;
 };

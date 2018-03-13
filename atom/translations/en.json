@@ -46,13 +46,19 @@
 	"login.footer.signUp": "Sign Up",
 	"login.password.label": "Password",
 	"noGit.header": "Git Issue",
-	"noGit.message": "CodeStream only works with projects controlled by Git and you don't appear to have any currently open.",
-  "noGit.message2": "Make sure the root directory you have open is an actual Git repository, and not a directory containing repositories.",
+	"noGit.message":
+		"CodeStream only works with projects controlled by Git and you don't appear to have any currently open.",
+	"noGit.message2":
+		"Make sure the root directory you have open is an actual Git repository, and not a directory containing repositories.",
 	"createTeam.header": "Create a Team",
 	"createTeam.info":
 		"Each repository connected to CodeStream is owned by a development team. What's the name of your team?",
 	"createTeam.additionalInfo": "Note that a team can own multiple repositories.",
 	"createTeam.submitButton": "NEXT",
 	"teamSelection.error.noPermission": "You are not a member of the selected team.",
-	"teamSelection.error.teamNotFound": "The selected team doesn't exist."
+	"teamSelection.error.teamNotFound": "The selected team doesn't exist.",
+	"slackInfo.p1":
+		"Connect CodeStream to Slack and all of your team's messages on CodeStream will also get posted to a channel on Slack.",
+	"slackInfo.p2":
+		"This is a great option if you have developers that don't use Atom. They can even reply to messages directly from Slack!"
 }
