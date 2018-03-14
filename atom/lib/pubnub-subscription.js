@@ -78,13 +78,6 @@ export default class PubnubSubscription {
 			level: "warning"
 		});
 		delete this._confirmationTimeout;
-		if (this._numRetries === 0) {
-			// Only send first failure and max retries exceeded to sentry
-			Raven.captureMessage(`subscription failure: ${this.channel}`, {
-				level: "warning",
-				category: "pubnub"
-			});
-		}
 		if (!navigator.onLine) {
 			// here we give up prematurely, we'll wait until the signal that we are
 			// online again to try
