@@ -205,9 +205,12 @@ export const createPost = (
 		dispatch(resolvePendingPost(pendingId, normalize(data.post)));
 		dispatch({ type: "POST_CREATED", meta: { post: data.post, ...extra } });
 	} catch (error) {
-		Raven.captureException(error, {
-			logger: "actions/post"
-		});
+		if (http.isApiRequestError(error)) {
+			Raven.captureMessage(error.data.message, {
+				logger: "actions/post",
+				extra: { error: error.data }
+			});
+		}
 		// TODO: different types of errors?
 		dispatch(rejectPendingPost(pendingId, { ...post, error: true }));
 	}

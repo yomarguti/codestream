@@ -35,7 +35,8 @@ if (env === "production") {
 			platform: os.platform(),
 			platformRelease: os.release(),
 			atom: atom.getVersion(),
-			codestreamEnv: env
+			codestreamEnv: env,
+			pluginVersion: atom.packages.getLoadedPackage("CodeStream").metadata.version
 		}
 	}).install();
 	window.addEventListener("unhandledrejection", function(event) {
