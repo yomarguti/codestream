@@ -1,4 +1,5 @@
 import { combineReducers } from "redux";
+import companies from "./companies";
 import onboarding from "./onboarding";
 import posts from "./posts";
 import context from "./context";
@@ -31,20 +32,21 @@ const bootstrapped = (state = false, { type }) => {
 
 const appReducer = combineReducers({
 	bootstrapped,
-	session,
-	streams,
-	umis,
-	users,
-	teams,
-	repos,
+	companies,
+	connectivity,
 	context,
-	repoAttributes,
+	markerLocations,
+	markers,
+	messaging,
 	onboarding,
 	posts,
-	markers,
-	markerLocations,
-	messaging,
-	connectivity
+	repoAttributes,
+	repos,
+	session,
+	streams,
+	teams,
+	umis,
+	users
 });
 
 export default (state, action) => {

@@ -17,7 +17,11 @@ db.version(1).stores({
 });
 db.version(2).stores({
 	posts:
-		"id, teamId, streamId, creatorId, [creatorId+text+teamId+streamId+commitHashWhenPosted+parentPostId], [creatorId+text+teamId+streamId+commitHashWhenPosted]" // TODO: the composite indexes may not be needed anymore
+		"id, teamId, streamId, creatorId, [creatorId+text+teamId+streamId+commitHashWhenPosted+parentPostId], [creatorId+text+teamId+streamId+commitHashWhenPosted]"
+});
+db.version(3).stores({
+	companies: "id",
+	posts: "id, teamId, streamId, creatorId"
 });
 
 export default db;
@@ -54,6 +58,7 @@ export const bootstrapStore = store => {
 	db
 		.transaction(
 			"r",
+			db.companies,
 			db.posts,
 			db.users,
 			db.streams,
@@ -62,6 +67,9 @@ export const bootstrapStore = store => {
 			db.markers,
 			db.markerLocations,
 			() => {
+				db.companies
+					.limit(1000)
+					.toArray(companies => store.dispatch(bootstrapCompanies(companies)));
 				db.users.limit(1000).toArray(users => store.dispatch(bootstrapUsers(users)));
 				db.repos.limit(1000).toArray(repos => store.dispatch(bootstrapRepos(repos)));
 				db.teams.limit(1000).toArray(teams => store.dispatch(bootstrapTeams(teams)));
@@ -85,6 +93,7 @@ export const bootstrapStore = store => {
 		});
 };
 
+const bootstrapCompanies = payload => ({ type: "BOOTSTRAP_COMPANIES", payload });
 const bootstrapUsers = payload => ({ type: "BOOTSTRAP_USERS", payload });
 const bootstrapRepos = payload => ({ type: "BOOTSTRAP_REPOS", payload });
 const bootstrapTeams = payload => ({ type: "BOOTSTRAP_TEAMS", payload });

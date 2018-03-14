@@ -86,3 +86,7 @@ export const getPostsForStream = ({ byStream, pending }, streamId = "") => {
 	});
 	return [..._.sortBy(byStream[streamId], "seqNum"), ...pendingForStream];
 };
+
+export const getPost = ({ byStream }, streamId, postId) => {
+	return (byStream[streamId] || {})[postId];
+};
