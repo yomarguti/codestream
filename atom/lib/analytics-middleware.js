@@ -3,8 +3,6 @@ import { getPost } from "./reducers/posts";
 
 mixpanel.init("4308967c7435e61d9697ce240bc68d02");
 
-const pluginVersion = atom.packages.getLoadedPackage("CodeStream").metadata.version;
-
 const accessSafely = func => {
 	try {
 		return func();
@@ -33,6 +31,7 @@ export default store => {
 			currentTeam = teams[currentTeam];
 		}
 		const currentCompany = currentTeam && companies[currentTeam.companyId];
+
 		mixpanel.register({
 			"Email Address": currentUser.email,
 			Endpoint: "Atom",
@@ -41,7 +40,9 @@ export default store => {
 			"Team ID": currentTeam ? currentTeam.id : undefined,
 			"Team Size": currentTeam ? currentTeam.memberIds.length : undefined,
 			Company: currentCompany ? currentCompany.name : undefined,
-			"Plugin Version": pluginVersion
+			"Plugin Version": accessSafely(
+				() => atom.packages.getLoadedPackage("CodeStream").metadata.version
+			)
 		});
 	};
 
