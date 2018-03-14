@@ -134,12 +134,18 @@ export default class PostDetails extends Component {
 
 			const location = post.markerLocation;
 			if (location) {
+				const meta = location[4] || {};
 				const range = locationToRange(location);
 				this.scrollToLine(range.start.row);
 
-				const marker = editor.markBufferRange(range);
-				editor.decorateMarker(marker, { type: "line", class: "git-diff-details-old-highlighted" });
-				this.diffMarkers.push(marker);
+				if (!meta.entirelyDeleted) {
+					const marker = editor.markBufferRange(range);
+					editor.decorateMarker(marker, {
+						type: "line",
+						class: "git-diff-details-old-highlighted"
+					});
+					this.diffMarkers.push(marker);
+				}
 
 				this.diffEditor = atom.workspace.buildTextEditor({
 					lineNumberGutterVisible: false,
@@ -153,9 +159,10 @@ export default class PostDetails extends Component {
 				diffDiv.appendChild(atom.views.getView(this.diffEditor));
 
 				const marker2 = editor.markBufferRange(range);
+				const position = meta.entirelyDeleted ? "before" : "after";
 				editor.decorateMarker(marker2, {
 					type: "block",
-					position: "after",
+					position,
 					item: diffDiv
 				});
 				this.diffMarkers.push(marker2);

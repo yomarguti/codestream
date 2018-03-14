@@ -17,16 +17,6 @@ const isActiveEditor = editor => {
 	return true;
 };
 
-const shouldRecalculateMarkers = (editor, { streamId }) => {
-	if (!isActiveEditor(editor)) {
-		return false;
-	}
-	if (!streamId) {
-		return false;
-	}
-	return true;
-};
-
 class MarkerLocationTracker extends Component {
 	componentDidMount = () => {
 		const subscriptions = (this.subscriptions = new CompositeDisposable());
@@ -74,13 +64,10 @@ class MarkerLocationTracker extends Component {
 	};
 
 	calculateLocations = editor => {
-		if (!shouldRecalculateMarkers(editor, this.props)) {
-			return;
-		}
-
 		const { teamId, streamId, calculateLocations } = this.props;
-
-		calculateLocations({ teamId, streamId, text: editor.getText() });
+		if (streamId && isActiveEditor(editor)) {
+			calculateLocations({ teamId, streamId, text: editor.getText() });
+		}
 	};
 
 	createOrUpdateDisplayMarker(editor, marker) {

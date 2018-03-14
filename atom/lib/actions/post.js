@@ -3,7 +3,7 @@ import _ from "underscore-plus";
 import { upsert } from "../local-cache";
 import { normalize } from "./utils";
 import * as pubnubActions from "./pubnub-event";
-import { fetchMarkersAndLocations } from "./marker-location";
+import { calculateLocations, saveUncommittedLocations } from "./marker-location";
 import { saveStream } from "./stream";
 import { saveMarkers } from "./marker";
 import { saveMarkerLocations } from "./marker-location";
@@ -122,7 +122,7 @@ export const fetchPosts = ({ streamId, teamId }) => async (dispatch, getState, {
 		session.accessToken
 	);
 	dispatch(savePostsForStream(streamId, normalize(posts)));
-	return dispatch(fetchMarkersAndLocations({ streamId, teamId }));
+	return dispatch(calculateLocations({ streamId, teamId }));
 };
 
 export const savePost = attributes => (dispatch, getState, { db }) => {
@@ -171,10 +171,40 @@ export const createPost = (
 	extra
 ) => async (dispatch, getState, { http }) => {
 	const state = getState();
-	const { session, context } = state;
+	const { session, context, repoAttributes } = state;
 	const pendingId = createTempId();
 
-	codeBlocks = await backtrackMarkerLocations(codeBlocks, bufferText, streamId, state, http);
+	const gitRepo = await openRepo(repoAttributes.workingDirectory);
+	const filePath = context.currentFile;
+	const isTrackedFile = await gitRepo.isTracked(filePath);
+	const uncommittedLocations = [];
+	let hasUncommittedLocation = false;
+	if (isTrackedFile) {
+		const backtrackedLocations = await backtrackCodeBlockLocations(
+			codeBlocks,
+			bufferText,
+			streamId,
+			state,
+			http
+		);
+		for (let i = 0; i < codeBlocks.length; i++) {
+			const codeBlock = codeBlocks[i];
+			const lastCommitLocation = backtrackedLocations[i];
+			const meta = lastCommitLocation[4] || {};
+			if (meta.startWasDeleted || meta.endWasDeleted) {
+				hasUncommittedLocation = true;
+			}
+			uncommittedLocations.push(codeBlock.location);
+			codeBlock.location = lastCommitLocation;
+		}
+	} else {
+		for (const codeBlock of codeBlocks) {
+			hasUncommittedLocation = true;
+			uncommittedLocations.push(codeBlock.location);
+			delete codeBlock.location;
+		}
+	}
+
 	const post = {
 		id: pendingId,
 		teamId: context.currentTeamId,
@@ -193,7 +223,7 @@ export const createPost = (
 		post.stream = {
 			teamId: context.currentTeamId,
 			type: "file",
-			file: context.currentFile,
+			file: filePath,
 			repoId: context.currentRepoId
 		};
 
@@ -201,6 +231,16 @@ export const createPost = (
 
 	try {
 		const data = await http.post("/posts", post, session.accessToken);
+		if (hasUncommittedLocation) {
+			dispatch(
+				saveUncommittedLocations({
+					...data,
+					filePath,
+					bufferText,
+					uncommittedLocations
+				})
+			);
+		}
 		if (!streamId) dispatch(saveStream(normalize(data.stream)));
 		dispatch(resolvePendingPost(pendingId, normalize(data.post)));
 		dispatch({ type: "POST_CREATED", meta: { post: data.post, ...extra } });
@@ -216,10 +256,10 @@ export const createPost = (
 	}
 };
 
-const backtrackMarkerLocations = async (codeBlocks, bufferText, streamId, state, http) => {
+const backtrackCodeBlockLocations = async (codeBlocks, bufferText, streamId, state, http) => {
 	const { context, repoAttributes, session } = state;
 	const gitRepo = await openRepo(repoAttributes.workingDirectory);
-	const dirtyLocations = codeBlocks.map(codeBlock => codeBlock.location);
+	const locations = codeBlocks.map(codeBlock => codeBlock.location);
 	const locationFinder = new MarkerLocationFinder({
 		filePath: context.currentFile,
 		gitRepo,
@@ -230,19 +270,10 @@ const backtrackMarkerLocations = async (codeBlocks, bufferText, streamId, state,
 	});
 
 	const backtrackedLocations = await locationFinder.backtrackLocationsAtCurrentCommit(
-		dirtyLocations,
+		locations,
 		bufferText
 	);
-	const backtrackedCodeBlocks = [];
-
-	for (let i = 0; i < codeBlocks.length; i++) {
-		backtrackedCodeBlocks.push({
-			...codeBlocks[i],
-			location: backtrackedLocations[i]
-		});
-	}
-
-	return backtrackedCodeBlocks;
+	return backtrackedLocations;
 };
 
 export const resolveFromPubnub = (post, isHistory) => async (dispatch, getState) => {

@@ -25,6 +25,7 @@ import { setStreamUMITreatment } from "./actions/umi";
 import { markPathsModified } from "./actions/stream";
 import logger from "./util/Logger";
 import { online, offline } from "./actions/connectivity";
+import { calculateUncommittedMarkers } from "./actions/marker-location";
 import { setActive } from "./actions/presence";
 
 const env = sessionStorage.getItem("codestream.env") || "production";
@@ -279,6 +280,7 @@ module.exports = {
 					const currentCommit = await getCurrentCommit(repo);
 					if (context.currentCommit !== currentCommit) {
 						store.dispatch(commitHashChanged(currentCommit));
+						store.dispatch(calculateUncommittedMarkers());
 					}
 				}),
 				repo.onDidChangeStatus(event => {
