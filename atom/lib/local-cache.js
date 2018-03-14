@@ -17,10 +17,11 @@ db.version(1).stores({
 });
 db.version(2).stores({
 	posts:
-		"id, teamId, streamId, creatorId, [creatorId+text+teamId+streamId+commitHashWhenPosted+parentPostId], [creatorId+text+teamId+streamId+commitHashWhenPosted]" // TODO: the composite indexes may not be needed anymore
+		"id, teamId, streamId, creatorId, [creatorId+text+teamId+streamId+commitHashWhenPosted+parentPostId], [creatorId+text+teamId+streamId+commitHashWhenPosted]"
 });
 db.version(3).stores({
-	companies: "id"
+	companies: "id",
+	posts: "id, teamId, streamId, creatorId"
 });
 
 export default db;
