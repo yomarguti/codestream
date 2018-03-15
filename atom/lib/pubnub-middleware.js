@@ -29,13 +29,16 @@ const _initiateTicks = (store, receiver) => {
 				level: "debug"
 			});
 			lastTick = now;
-			receiver.unsubscribeAll(); // This should fix COD-333
-			// restart the count for history processed
-			processedHistoryCount = 0;
-			historyCount = await _initializePubnubAndSubscribe(store, receiver);
-			// ensure the user's timezone is properly saved, in case they moved
-			// with their laptop closed
-			store.dispatch(ensureCorrectTimeZone());
+			const { session } = store.getState();
+			if (session.accessToken && session.userId) {
+				receiver.unsubscribeAll();
+				// restart the count for history processed
+				processedHistoryCount = 0;
+				historyCount = await _initializePubnubAndSubscribe(store, receiver);
+				// ensure the user's timezone is properly saved, in case they moved
+				// with their laptop closed
+				store.dispatch(ensureCorrectTimeZone());
+			}
 		} else {
 			lastTick = now;
 		}

@@ -6,6 +6,7 @@ import ContentEditable from "react-contenteditable";
 import { FormattedMessage } from "react-intl";
 import _ from "underscore-plus";
 import Raven from "raven-js";
+import mixpanel from "mixpanel-browser";
 import Post from "./Post";
 import UMIs from "./UMIs";
 import AtMentionsPopup from "./AtMentionsPopup";
@@ -14,6 +15,7 @@ import AddCommentPopup from "./AddCommentPopup2";
 import MarkerLocationTracker from "./MarkerLocationTracker";
 import createClassString from "classnames";
 import DateSeparator from "./DateSeparator";
+import withRepositories from "./withRepositories";
 var Blamer = require("../util/blamer");
 import * as streamActions from "../actions/stream";
 import * as umiActions from "../actions/umi";
@@ -66,6 +68,7 @@ const trimSelection = editor => {
 
 export class SimpleStream extends Component {
 	subscriptions = null;
+	insertedAuthors = "";
 
 	constructor(props) {
 		super(props);
@@ -82,7 +85,8 @@ export class SimpleStream extends Component {
 			posts: [],
 			fileForIntro: props.currentFile,
 			newPostText: "",
-			whoModified: {}
+			whoModified: {},
+			autoMentioning: []
 		};
 
 		this.savedComposeState = {};
@@ -169,7 +173,7 @@ export class SimpleStream extends Component {
 
 		if (switchingStreams) {
 			this.saveComposeState(nextProps.id);
-			this.handleDismissThread();
+			this.handleDismissThread({ track: false });
 
 			// keep track of the new message indicator in "this" instead of looking
 			// directly at currentUser.lastReads, because that will change and trigger
@@ -305,7 +309,7 @@ export class SimpleStream extends Component {
 	checkModifiedGit(editor) {
 		if (!editor) return;
 		let filePath = editor.getPath();
-		let repo = atom.project.getRepositories()[0];
+		let repo = this.props.repositories[0];
 		let isModified = repo.isPathModified(filePath);
 		// console.log("Checking modified git: " + isModified);
 		this.setState({ modifiedGit: isModified });
@@ -640,9 +644,10 @@ export class SimpleStream extends Component {
 	}
 
 	// dismiss the thread stream and return to the main stream
-	handleDismissThread = () => {
+	handleDismissThread = ({ track = true } = {}) => {
 		this.hideDisplayMarker();
 		this.setState({ threadActive: false });
+		if (track) mixpanel.track("Page Viewed", { "Page Name": "Source Stream" });
 	};
 
 	handleEditHeadshot = event => {
@@ -731,6 +736,7 @@ export class SimpleStream extends Component {
 	// show the thread related to the given post, and if there is
 	// a codeblock, scroll to it and select it
 	selectPost = id => {
+		mixpanel.track("Page Viewed", { "Page Name": "Thread View" });
 		const post = this.findPostById(id);
 		if (!post) return;
 
@@ -817,6 +823,9 @@ export class SimpleStream extends Component {
 								// skip if the input field already contains this user
 								if (postText.match("@" + user.username + "\\b")) return;
 								authors["@" + user.username] = true;
+								this.setState(state => ({
+									autoMentioning: [...state.autoMentioning, `@${user.username}`]
+								}));
 							}
 						}
 					});
@@ -1134,7 +1143,9 @@ export class SimpleStream extends Component {
 		const editor = atom.workspace.getActiveTextEditor();
 		const editorText = editor.getText();
 
-		createPost(this.props.id, threadId, newText, codeBlocks, mentionUserIds, editorText);
+		createPost(this.props.id, threadId, newText, codeBlocks, mentionUserIds, editorText, {
+			autoMentions: this.state.autoMentioning
+		});
 
 		// reset the input field to blank
 		this.resetCompose();
@@ -1152,7 +1163,8 @@ export class SimpleStream extends Component {
 				quoteRange: null,
 				quoteText: "",
 				preContext: "",
-				postContext: ""
+				postContext: "",
+				autoMentioning: []
 			});
 			this.savedComposeState[this.id] = {};
 		}
@@ -1273,7 +1285,7 @@ const mapStateToProps = ({
 					lastName: ""
 				};
 			}
-			const { username, email, firstName, lastName, color } = user;
+			const { username, email, firstName = "", lastName = "", color } = user;
 			return {
 				...post,
 				markerLocation: locations[post.id],
@@ -1290,4 +1302,4 @@ export default connect(mapStateToProps, {
 	createPost,
 	editPost,
 	deletePost
-})(SimpleStream);
+})(withRepositories(SimpleStream));

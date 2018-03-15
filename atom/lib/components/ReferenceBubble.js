@@ -40,16 +40,25 @@ class ReferenceBubble extends Component {
 		this.subscriptions.dispose();
 	}
 
+	onClick = event => {
+		this.props.onSelect(this.props.postId);
+		this.props.onMarkerClicked(this.props);
+	};
+
 	render() {
 		if (!this.state.isVisible) return false;
 
-		const { id, postId, onSelect, count, numComments } = this.props;
+		const { id, count, numComments } = this.props;
 		return (
-			<div onClick={e => onSelect(postId)} key={id} className={`count-${count}`}>
+			<div onClick={this.onClick} key={id} className={`count-${count}`}>
 				{numComments > 9 ? "9+" : numComments}
 			</div>
 		);
 	}
 }
 
-export default connect(null, actions)(ReferenceBubble);
+const mapDispatchToProps = dispatch => ({
+	...actions,
+	onMarkerClicked: props => dispatch({ type: "MARKER_CLICKED", meta: props })
+});
+export default connect(null, mapDispatchToProps)(ReferenceBubble);

@@ -85,9 +85,8 @@ export const calculateLocations = ({ teamId, streamId, text }) => async (
 		`/markers?teamId=${teamId}&streamId=${streamId}&commitHash=${commitHash}`,
 		session.accessToken
 	);
-	logger.debug("Found", markers.length, "markers");
 
-	const locations = markerLocations.locations || {};
+	const locations = (markerLocations || {}).locations || {};
 	const locationFinder = new MarkerLocationFinder({
 		filePath: context.currentFile,
 		gitRepo,

@@ -35,7 +35,8 @@ if (env === "production") {
 			platform: os.platform(),
 			platformRelease: os.release(),
 			atom: atom.getVersion(),
-			codestreamEnv: env
+			codestreamEnv: env,
+			pluginVersion: atom.packages.getLoadedPackage("CodeStream").metadata.version
 		}
 	}).install();
 	window.addEventListener("unhandledrejection", function(event) {
@@ -51,15 +52,25 @@ let store;
 
 const getCurrentCommit = async repo => {
 	try {
-		const data = await git(["rev-parse", "--verify", "HEAD"], {
+		const data = await git(["show-ref", "--head", "HEAD"], {
 			cwd: repo.getWorkingDirectory()
 		});
-		return data.trim();
+		const head = data
+			.split("\n")
+			.map(record => {
+				const [hash, ref] = record.split(/\s/);
+				return { hash, ref };
+			})
+			.find(({ ref }) => ref === "HEAD");
+
+		if (head) return head.hash;
+		else throw { message: "No commit found for HEAD" }; // TODO: figure out what to tell user
 	} catch ({ missingGit, message }) {
 		if (missingGit) store.dispatch(noGit());
 		else
-			Raven.captureMessage("There was an unexpected error trying to invoke the 'git' command.", {
+			Raven.captureMessage("There was an unexpected error trying to retrieve the current commit.", {
 				level: "error",
+				logger: "codestream.js",
 				extra: { message }
 			});
 	}
@@ -103,14 +114,18 @@ module.exports = {
 		this.subscriptions = new CompositeDisposable();
 		store = createStore(state);
 		bootstrapStore(store);
-
-		if (atom.project.getDirectories().length === 1) {
-			// if being initialized much later into atom's lifetime, i.e. just installed or re-enabled
-			if (atom.packages.hasActivatedInitialPackages()) this.setup();
-			else
-				// wait for atom workspace to be ready
-				this.subscriptions.add(atom.packages.onDidActivateInitialPackages(() => this.setup()));
-		}
+		Promise.all(
+			atom.project.getDirectories().map(atom.project.repositoryForDirectory.bind(atom.project))
+		).then(repos => {
+			repos = repos.filter(Boolean);
+			if (repos.length === 1) {
+				// if being initialized much later into atom's lifetime, i.e. just installed or re-enabled
+				if (atom.packages.hasActivatedInitialPackages()) this.setup();
+				else
+					// wait for atom workspace to be ready
+					this.subscriptions.add(atom.packages.onDidActivateInitialPackages(() => this.setup()));
+			}
+		});
 		// this isn't aded to this.subscriptions because it should always run
 		atom.project.onDidChangePaths(paths => reloadPlugin(this));
 	},
@@ -120,6 +135,8 @@ module.exports = {
 		this.subscriptions.add(
 			atom.workspace.addOpener(uri => {
 				if (uri === CODESTREAM_VIEW_URI) {
+					if (this.view) return this.view;
+
 					this.view = new CodestreamView(store);
 					return this.view;
 				}
@@ -224,7 +241,7 @@ module.exports = {
 		const allRepos = await Promise.all(repoPromises);
 		const repos = allRepos.filter(Boolean);
 
-		if (repos.length > 0) {
+		if (repos.length === 1) {
 			const repo = repos[0];
 			getCurrentCommit(repo).then(commitHash => store.dispatch(setCurrentCommit(commitHash)));
 
@@ -239,11 +256,13 @@ module.exports = {
 						);
 						if (directoryForFile) {
 							atom.project.repositoryForDirectory(directoryForFile).then(repo => {
-								let path = repo.relativize(editor.getPath());
-								// note we always maintain the current file with a forward slash separator
-								// even if we are on a Windows machine using a backslash
-								path = path.replace("\\", "/");
-								store.dispatch(setCurrentFile(path));
+								if (repo) {
+									let path = repo.relativize(editor.getPath());
+									// note we always maintain the current file with a forward slash separator
+									// even if we are on a Windows machine using a backslash
+									path = path.replace("\\", "/");
+									store.dispatch(setCurrentFile(path));
+								} else store.dispatch(setCurrentFile(null));
 							});
 						}
 					} else {
@@ -283,16 +302,22 @@ module.exports = {
 					store.dispatch(
 						setRepoAttributes({
 							workingDirectory: workDir,
-							firstCommitHash: noParentCommits.split("\n")[0]
+							firstCommitHash: noParentCommits
+								.split("\n")
+								.filter(
+									string =>
+										Boolean(string) && !string.includes("warning: refname 'HEAD' is ambiguous")
+								)[0]
 						})
 					);
 				} catch ({ missingGit, message }) {
 					if (missingGit) store.dispatch(noGit());
 					else
 						Raven.captureMessage(
-							"There was an unexpected error trying to invoke the 'git' command.",
+							"There was an unexpected error trying to get the first commit hash.",
 							{
 								level: "error",
+								logger: "codestream.js",
 								extra: { message }
 							}
 						);

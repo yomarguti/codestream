@@ -15,14 +15,17 @@ export const markStreamRead = streamId => async (dispatch, getState, { http }) =
 	// console.log("READ THE STREAM", markReadData, session);
 };
 
-export const setStreamUMITreatment = (path, setting) => async (dispatch, getState) => {
-	const { session, context, users } = getState();
-	let repo = atom.project.getRepositories()[0];
-	let relativePath = repo.relativize(path);
-	let prefPath = ["streamTreatments", context.currentRepoId, relativePath];
-	dispatch(setUserPreference(prefPath, setting));
-	dispatch(recalculate(true));
-	return;
+export const setStreamUMITreatment = (path, setting) => (dispatch, getState) => {
+	const { context } = getState();
+	return Promise.all(
+		atom.project.getDirectories().map(atom.project.repositoryForDirectory.bind(atom.project))
+	).then(repos => {
+		const repo = repos.filter(Boolean)[0];
+		let relativePath = repo.relativize(path);
+		let prefPath = ["streamTreatments", context.currentRepoId, relativePath];
+		dispatch(setUserPreference(prefPath, setting));
+		dispatch(recalculate(true));
+	});
 };
 
 export const incrementUMI = post => async (dispatch, getState, { db }) => {

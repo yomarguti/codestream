@@ -1,13 +1,5 @@
 import Raven from "raven-js";
 
-export const resetContext = data => ({ type: "RESET_CONTEXT" });
-
-export const noGit = () => ({ type: "NO_GIT_IN_PATH" });
-export const setContext = data => ({
-	type: "SET_CONTEXT",
-	payload: data
-});
-
 // TODO: move these into their own collection of repoAttribute actions
 export const setRepoAttributes = data => ({
 	type: "SET_REPO_ATTRIBUTES",
@@ -15,6 +7,14 @@ export const setRepoAttributes = data => ({
 });
 export const setRepoUrl = url => ({ type: "SET_REPO_URL", payload: url });
 
+export const noGit = () => ({ type: "NO_GIT_IN_PATH" });
+export const showSlackInfo = () => ({ type: "SHOW_SLACK_INFO" });
+export const cancelSlackInfo = () => ({ type: "CANCEL_SLACK_INFO" });
+export const resetContext = data => ({ type: "RESET_CONTEXT" });
+export const setContext = data => ({
+	type: "SET_CONTEXT",
+	payload: data
+});
 export const setCurrentTeam = id => ({
 	type: "SET_CURRENT_TEAM",
 	payload: id

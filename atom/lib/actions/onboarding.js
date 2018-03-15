@@ -10,6 +10,7 @@ import {
 } from "./context";
 import { saveUser, saveUsers, ensureCorrectTimeZone } from "./user";
 import { saveRepo, saveRepos } from "./repo";
+import { fetchCompanies, saveCompany } from "./company";
 import { fetchTeamMembers, saveTeam, saveTeams, joinTeam as _joinTeam } from "./team";
 import { fetchStreams } from "./stream";
 import { fetchLatestForCurrentStream } from "./post";
@@ -110,8 +111,8 @@ export const register = attributes => async (dispatch, getState, { http }) => {
 		.post("/no-auth/register", attributes)
 		.then(async ({ user }) => {
 			user = normalize(user);
+			dispatch({ type: "SIGNUP_SUCCESS", payload: { ...attributes, userId: user.id }, meta: user });
 			await dispatch(saveUser(user));
-			dispatch({ type: "SIGNUP_SUCCESS", payload: { ...attributes, userId: user.id } });
 		})
 		.catch(error => {
 			if (http.isApiRequestError(error)) {
@@ -162,17 +163,22 @@ export const confirmEmail = attributes => (dispatch, getState, { http }) => {
 				})
 			);
 
-			if (!teamIdForRepo && userTeams.length === 0)
+			let alreadyOnTeam = false;
+
+			if (!teamIdForRepo && userTeams.length === 0) {
 				dispatch({ type: "NEW_USER_CONFIRMED_IN_NEW_REPO" });
-			else if (!teamIdForRepo && userTeams.length > 0) {
+			} else if (!teamIdForRepo && userTeams.length > 0) {
 				await dispatch(fetchTeamMembers(teamIdsForUser));
 				dispatch({ type: "EXISTING_USER_CONFIRMED_IN_NEW_REPO" });
 			} else if (teamIdsForUser.includes(teamIdForRepo)) {
+				alreadyOnTeam = true;
 				await dispatch(fetchTeamMembers(teamIdsForUser));
+				dispatch(fetchCompanies(userTeams.map(t => t.companyId)));
 				dispatch(fetchStreams());
 				dispatch({ type: "EXISTING_USER_CONFIRMED" });
 			} else await dispatch(joinTeam("EXISTING_USER_CONFIRMED"));
-			dispatch({ type: "USER_CONFIRMED" });
+
+			dispatch({ type: "USER_CONFIRMED", meta: { alreadyOnTeam } });
 		})
 		.catch(error => {
 			dispatch(requestFinished());
@@ -211,10 +217,12 @@ export const createTeam = name => (dispatch, getState, { http }) => {
 		.post("/repos", params, session.accessToken)
 		.then(async data => {
 			dispatch(requestFinished());
+			const company = normalize(data.company);
 			const team = normalize(data.team);
 			const repo = normalize(data.repo);
 			const users = normalize(data.users);
 
+			await dispatch(saveCompany(company));
 			await dispatch(saveRepo(repo));
 			await dispatch(saveTeam(team));
 			await dispatch(saveUsers(users));
@@ -222,7 +230,10 @@ export const createTeam = name => (dispatch, getState, { http }) => {
 			dispatch(setCurrentTeam(team.id));
 			dispatch(setCurrentRepo(repo.id));
 
-			dispatch({ type: "TEAM_CREATED", payload: { teamId: team.id } });
+			dispatch({
+				type: "TEAM_CREATED",
+				payload: { teamId: team.id }
+			});
 		})
 		.catch(error => {
 			dispatch(requestFinished());
@@ -241,10 +252,10 @@ export const addRepoForTeam = teamId => (dispatch, getState, { http }) => {
 		.post("/repos", params, session.accessToken)
 		.then(async data => {
 			const repo = normalize(data.repo);
-			dispatch(requestFinished());
 			await dispatch(saveRepo(repo));
 			dispatch(setCurrentRepo(repo.id));
 			dispatch(setCurrentTeam(teamId));
+			dispatch(requestFinished());
 			dispatch({ type: "REPO_ADDED_FOR_TEAM", payload: teams[teamId].name });
 		})
 		.catch(error => {
@@ -266,8 +277,11 @@ export const addMembers = people => (dispatch, getState, { http }) => {
 	const params = { ...repoAttributes, teamId: currentTeamId, users: people };
 	return http
 		.post("/repos", params, session.accessToken)
-		.then(({ users }) => {
+		.then(({ users, team, repo, company }) => {
 			dispatch(saveUsers(normalize(users)));
+			dispatch(saveTeam(normalize(team)));
+			dispatch(saveRepo(normalize(repo)));
+			dispatch(saveCompany(normalize(company)));
 			dispatch(completeOnboarding());
 		})
 		.catch(error => {
@@ -342,6 +356,7 @@ export const authenticate = params => (dispatch, getState, { http }) => {
 				await dispatch(fetchTeamMembers(teamIdsForUser));
 				dispatch({ type: "EXISTING_USER_LOGGED_INTO_NEW_REPO" });
 			} else if (teamIdsForUser.includes(teamIdForRepo)) {
+				dispatch(fetchCompanies(userTeams.map(t => t.companyId)));
 				await dispatch(fetchTeamMembers(teamIdsForUser));
 				dispatch(fetchLatestForCurrentStream());
 				dispatch(loggedIn());

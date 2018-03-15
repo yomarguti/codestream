@@ -6,6 +6,8 @@ import createRavenMiddleware from "raven-for-redux";
 import reducer from "./reducers";
 import pubnubMiddleWare from "./pubnub-middleware";
 import umiMiddleWare from "./umi-middleware";
+import contextualCommands from "./contextual-commands-middleware";
+import analyticsMiddleware from "./analytics-middleware";
 import db from "./local-cache";
 import * as http from "./network-request";
 
@@ -18,12 +20,23 @@ export default (initialState = {}) => {
 				thunkMiddleware.withExtraArgument({ db, http }),
 				pubnubMiddleWare,
 				umiMiddleWare,
+				contextualCommands,
+				analyticsMiddleware,
 				createRavenMiddleware(Raven, {
-					stateTransformer: ({ context, session, repoAttributes, messaging }) => {
-						return { context, session: { ...session, accessToken: "" }, repoAttributes, messaging };
+					stateTransformer: ({ context, session, repoAttributes, messaging, onboarding }) => {
+						return {
+							context,
+							messaging,
+							onboarding,
+							repoAttributes,
+							session: { ...session, accessToken: Boolean(session.accessToken) }
+						};
 					},
 					getUserContext: ({ context, session, users }) => {
-						if (session.userId) return users[session.userId];
+						if (session.userId) {
+							const user = users[session.userId];
+							if (user.preferences.telemetryConsent) return user;
+						}
 					}
 				})
 			)

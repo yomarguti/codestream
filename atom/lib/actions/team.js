@@ -2,6 +2,7 @@ import { upsert } from "../local-cache";
 import { setCurrentTeam } from "./context";
 import { saveUsers } from "./user";
 import { saveRepo } from "./repo";
+import { saveCompany } from "./company";
 import { normalize } from "./utils";
 
 export const saveTeam = attributes => (dispatch, getState, { db }) => {
@@ -28,10 +29,12 @@ export const fetchTeamMembers = teamId => (dispatch, getState, { http }) => {
 export const joinTeam = () => (dispatch, getState, { http }) => {
 	const { repoAttributes, session } = getState();
 	return http.post("/repos", repoAttributes, session.accessToken).then(async data => {
-		dispatch(setCurrentTeam(data.repo.teamId));
+		await dispatch(saveCompany(normalize(data.company)));
+		await dispatch(saveTeam(normalize(data.team)));
 		// FIXME:
 		if (data.users) await dispatch(saveUsers(normalize(data.users)));
 		await dispatch(fetchTeamMembers(data.repo.teamId));
-		return await dispatch(saveRepo(normalize(data.repo)));
+		await dispatch(saveRepo(normalize(data.repo)));
+		return dispatch(setCurrentTeam(data.repo.teamId));
 	});
 };

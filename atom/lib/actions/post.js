@@ -167,7 +167,8 @@ export const createPost = (
 	text,
 	codeBlocks,
 	mentions,
-	bufferText
+	bufferText,
+	extra
 ) => async (dispatch, getState, { http }) => {
 	const state = getState();
 	const { session, context } = state;
@@ -202,10 +203,14 @@ export const createPost = (
 		const data = await http.post("/posts", post, session.accessToken);
 		if (!streamId) dispatch(saveStream(normalize(data.stream)));
 		dispatch(resolvePendingPost(pendingId, normalize(data.post)));
+		dispatch({ type: "POST_CREATED", meta: { post: data.post, ...extra } });
 	} catch (error) {
-		Raven.captureException(error, {
-			logger: "actions/post"
-		});
+		if (http.isApiRequestError(error)) {
+			Raven.captureMessage(error.data.message, {
+				logger: "actions/post",
+				extra: { error: error.data }
+			});
+		}
 		// TODO: different types of errors?
 		dispatch(rejectPendingPost(pendingId, { ...post, error: true }));
 	}

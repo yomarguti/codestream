@@ -9,6 +9,7 @@ import Onboarding from "./onboarding/Onboarding";
 import Stream from "./Stream";
 import NoAccess from "./NoAccess";
 import OfflineBanner from "./OfflineBanner";
+import SlackInfo from "./SlackInfo";
 
 const Loading = props => (
 	<div className="loading-page">
@@ -50,7 +51,8 @@ class CodeStreamRoot extends Component {
 			bootstrapped,
 			repositories,
 			onboarding,
-			noAccess
+			noAccess,
+			showSlackInfo
 		} = this.props;
 
 		if (this.state.hasError)
@@ -72,6 +74,7 @@ class CodeStreamRoot extends Component {
 		if (noAccess) return <NoAccess reason={noAccess} />;
 		if (!bootstrapped) return <Loading message="CodeStream engage..." />;
 		if (catchingUp) return <Loading message="Hold on, we're catching you up" />;
+		if (showSlackInfo) return <SlackInfo />;
 		else if (onboarding.complete && accessToken)
 			return [<OfflineBanner key="offline-banner" />, <Stream key="stream" />];
 		else return [<OfflineBanner key="offline-banner" />, <Onboarding key="onboarding" />];
@@ -82,6 +85,7 @@ const mapStateToProps = ({ bootstrapped, session, onboarding, context, messaging
 	accessToken: session.accessToken,
 	noAccess: context.noAccess,
 	catchingUp: messaging.catchingUp,
+	showSlackInfo: context.showSlackInfo,
 	bootstrapped,
 	onboarding
 });
