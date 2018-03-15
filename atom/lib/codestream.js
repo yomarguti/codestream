@@ -52,10 +52,19 @@ let store;
 
 const getCurrentCommit = async repo => {
 	try {
-		const data = await git(["rev-parse", "--verify", "HEAD"], {
+		const data = await git(["show-ref", "--head", "HEAD"], {
 			cwd: repo.getWorkingDirectory()
 		});
-		return data.trim();
+		const head = data
+			.split("\n")
+			.map(record => {
+				const [hash, ref] = record.split(/\s/);
+				return { hash, ref };
+			})
+			.find(({ ref }) => ref === "HEAD");
+
+		if (head) return head.hash;
+		else throw { message: "No commit found for HEAD" }; // TODO: figure out what to tell user
 	} catch ({ missingGit, message }) {
 		if (missingGit) store.dispatch(noGit());
 		else
@@ -247,11 +256,13 @@ module.exports = {
 						);
 						if (directoryForFile) {
 							atom.project.repositoryForDirectory(directoryForFile).then(repo => {
-								let path = repo.relativize(editor.getPath());
-								// note we always maintain the current file with a forward slash separator
-								// even if we are on a Windows machine using a backslash
-								path = path.replace("\\", "/");
-								store.dispatch(setCurrentFile(path));
+								if (repo) {
+									let path = repo.relativize(editor.getPath());
+									// note we always maintain the current file with a forward slash separator
+									// even if we are on a Windows machine using a backslash
+									path = path.replace("\\", "/");
+									store.dispatch(setCurrentFile(path));
+								} else store.dispatch(setCurrentFile(null));
 							});
 						}
 					} else {
