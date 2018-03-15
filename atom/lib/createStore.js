@@ -8,6 +8,7 @@ import pubnubMiddleWare from "./pubnub-middleware";
 import umiMiddleWare from "./umi-middleware";
 import contextualCommands from "./contextual-commands-middleware";
 import analyticsMiddleware from "./analytics-middleware";
+import presenceMiddleWare from "./presence-middleware";
 import db from "./local-cache";
 import * as http from "./network-request";
 
@@ -22,6 +23,7 @@ export default (initialState = {}) => {
 				umiMiddleWare,
 				contextualCommands,
 				analyticsMiddleware,
+				presenceMiddleWare,
 				createRavenMiddleware(Raven, {
 					stateTransformer: ({ context, session, repoAttributes, messaging, onboarding }) => {
 						return {
