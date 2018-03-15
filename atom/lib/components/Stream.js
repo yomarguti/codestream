@@ -15,6 +15,7 @@ import AddCommentPopup from "./AddCommentPopup2";
 import MarkerLocationTracker from "./MarkerLocationTracker";
 import createClassString from "classnames";
 import DateSeparator from "./DateSeparator";
+import withRepositories from "./withRepositories";
 var Blamer = require("../util/blamer");
 import * as streamActions from "../actions/stream";
 import * as umiActions from "../actions/umi";
@@ -308,7 +309,7 @@ export class SimpleStream extends Component {
 	checkModifiedGit(editor) {
 		if (!editor) return;
 		let filePath = editor.getPath();
-		let repo = atom.project.getRepositories()[0];
+		let repo = this.props.repositories[0];
 		let isModified = repo.isPathModified(filePath);
 		// console.log("Checking modified git: " + isModified);
 		this.setState({ modifiedGit: isModified });
@@ -1301,4 +1302,4 @@ export default connect(mapStateToProps, {
 	createPost,
 	editPost,
 	deletePost
-})(SimpleStream);
+})(withRepositories(SimpleStream));

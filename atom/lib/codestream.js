@@ -104,14 +104,18 @@ module.exports = {
 		this.subscriptions = new CompositeDisposable();
 		store = createStore(state);
 		bootstrapStore(store);
-
-		if (atom.project.getDirectories().length === 1) {
-			// if being initialized much later into atom's lifetime, i.e. just installed or re-enabled
-			if (atom.packages.hasActivatedInitialPackages()) this.setup();
-			else
-				// wait for atom workspace to be ready
-				this.subscriptions.add(atom.packages.onDidActivateInitialPackages(() => this.setup()));
-		}
+		Promise.all(
+			atom.project.getDirectories().map(atom.project.repositoryForDirectory.bind(atom.project))
+		).then(repos => {
+			repos = repos.filter(Boolean);
+			if (repos.length === 1) {
+				// if being initialized much later into atom's lifetime, i.e. just installed or re-enabled
+				if (atom.packages.hasActivatedInitialPackages()) this.setup();
+				else
+					// wait for atom workspace to be ready
+					this.subscriptions.add(atom.packages.onDidActivateInitialPackages(() => this.setup()));
+			}
+		});
 		// this isn't aded to this.subscriptions because it should always run
 		atom.project.onDidChangePaths(paths => reloadPlugin(this));
 	},
@@ -121,6 +125,8 @@ module.exports = {
 		this.subscriptions.add(
 			atom.workspace.addOpener(uri => {
 				if (uri === CODESTREAM_VIEW_URI) {
+					if (this.view) return this.view
+
 					this.view = new CodestreamView(store);
 					return this.view;
 				}
@@ -225,7 +231,7 @@ module.exports = {
 		const allRepos = await Promise.all(repoPromises);
 		const repos = allRepos.filter(Boolean);
 
-		if (repos.length > 0) {
+		if (repos.length === 1) {
 			const repo = repos[0];
 			getCurrentCommit(repo).then(commitHash => store.dispatch(setCurrentCommit(commitHash)));
 
