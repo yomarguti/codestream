@@ -1,14 +1,6 @@
 import Raven from "raven-js";
 import { setPresence } from "./presence.js";
 
-export const resetContext = data => ({ type: "RESET_CONTEXT" });
-
-export const noGit = () => ({ type: "NO_GIT_IN_PATH" });
-export const setContext = data => ({
-	type: "SET_CONTEXT",
-	payload: data
-});
-
 // TODO: move these into their own collection of repoAttribute actions
 export const setRepoAttributes = data => ({
 	type: "SET_REPO_ATTRIBUTES",
