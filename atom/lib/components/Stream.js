@@ -1285,7 +1285,7 @@ const mapStateToProps = ({
 					lastName: ""
 				};
 			}
-			const { username, email, firstName, lastName, color } = user;
+			const { username, email, firstName = "", lastName = "", color } = user;
 			return {
 				...post,
 				markerLocation: locations[post.id],
