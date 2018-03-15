@@ -5,16 +5,13 @@ import { FormattedMessage } from "react-intl";
 export default ({ reason }) => (
 	<div id="no-access">
 		<h2>
-			<FormattedMessage
-				id="noGit.header"
-				defaultMessage="Git Issue"
-			/>
+			<FormattedMessage id="noGit.header" defaultMessage="Git Issue" />
 		</h2>
 		{reason.noUrl && (
 			<h5>
 				<FormattedMessage
 					id="noAccess.noUrl"
-					defaultMessage="Make sure that you have an remote URL configured for this repository."
+					defaultMessage="Make sure that you have a remote URL configured for this repository."
 				/>
 			</h5>
 		)}
@@ -35,7 +32,13 @@ export default ({ reason }) => (
 			</h5>
 		)}
 		<h5>
-			<a onClick={e => shell.openExternal("https://help.codestream.com/hc/en-us/articles/360001530571")}>More info.</a>
+			<a
+				onClick={e =>
+					shell.openExternal("https://help.codestream.com/hc/en-us/articles/360001530571")
+				}
+			>
+				More info.
+			</a>
 		</h5>
 	</div>
 );
