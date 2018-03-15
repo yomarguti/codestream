@@ -59,8 +59,9 @@ const getCurrentCommit = async repo => {
 	} catch ({ missingGit, message }) {
 		if (missingGit) store.dispatch(noGit());
 		else
-			Raven.captureMessage("There was an unexpected error trying to invoke the 'git' command.", {
+			Raven.captureMessage("There was an unexpected error trying to retrieve the current commit.", {
 				level: "error",
+				logger: "codestream.js",
 				extra: { message }
 			});
 	}
@@ -302,9 +303,10 @@ module.exports = {
 					if (missingGit) store.dispatch(noGit());
 					else
 						Raven.captureMessage(
-							"There was an unexpected error trying to invoke the 'git' command.",
+							"There was an unexpected error trying to get the first commit hash.",
 							{
 								level: "error",
+								logger: "codestream.js",
 								extra: { message }
 							}
 						);
