@@ -125,7 +125,7 @@ module.exports = {
 		this.subscriptions.add(
 			atom.workspace.addOpener(uri => {
 				if (uri === CODESTREAM_VIEW_URI) {
-					if (this.view) return this.view
+					if (this.view) return this.view;
 
 					this.view = new CodestreamView(store);
 					return this.view;
@@ -290,7 +290,12 @@ module.exports = {
 					store.dispatch(
 						setRepoAttributes({
 							workingDirectory: workDir,
-							firstCommitHash: noParentCommits.split("\n")[0]
+							firstCommitHash: noParentCommits
+								.split("\n")
+								.filter(
+									string =>
+										Boolean(string) && !string.includes("warning: refname 'HEAD' is ambiguous")
+								)[0]
 						})
 					);
 				} catch ({ missingGit, message }) {
