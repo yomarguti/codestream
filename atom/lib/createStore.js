@@ -23,8 +23,14 @@ export default (initialState = {}) => {
 				contextualCommands,
 				analyticsMiddleware,
 				createRavenMiddleware(Raven, {
-					stateTransformer: ({ context, session, repoAttributes, messaging }) => {
-						return { context, session: { ...session, accessToken: "" }, repoAttributes, messaging };
+					stateTransformer: ({ context, session, repoAttributes, messaging, onboarding }) => {
+						return {
+							context,
+							messaging,
+							onboarding,
+							repoAttributes,
+							session: { ...session, accessToken: Boolean(session.accessToken) }
+						};
 					},
 					getUserContext: ({ context, session, users }) => {
 						if (session.userId) {
