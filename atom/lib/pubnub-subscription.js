@@ -5,10 +5,12 @@ import {
 	grantAccess
 } from "./actions/messaging";
 import Raven from "raven-js";
+import { pollTillOnline } from "./actions/connectivity";
 
 export default class PubnubSubscription {
 	constructor(options) {
 		Object.assign(this, options);
+		this._numRetries = 0;
 	}
 
 	// are we subscribed (and confirmed subscribed) to this channel?
@@ -18,7 +20,6 @@ export default class PubnubSubscription {
 
 	// subscribe to a channel with error handling and retries if it doesn't succeed
 	subscribe() {
-		this._numRetries = 0;
 		if (this._subscribed) {
 			// we're already subscribed, but we'll confirm that
 			return this.confirmSubscription();
@@ -52,6 +53,7 @@ export default class PubnubSubscription {
 			clearTimeout(this._confirmationTimeout);
 			delete this._confirmationTimeout;
 			this._subscribed = true;
+			this._numRetries = 0;
 			Raven.captureBreadcrumb({
 				message: `Subscription to ${this.channel} successful`,
 				category: "pubnub",
@@ -83,6 +85,7 @@ export default class PubnubSubscription {
 			// online again to try
 			now = new Date().toString();
 			console.warn(`${now}: SUBSCRIPTION TO ${this.channel} FAILED BUT WE ARE OFFLINE`);
+			pollTillOnline();
 			this._numRetries = 0;
 			return true;
 		}

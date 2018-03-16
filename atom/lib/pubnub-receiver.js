@@ -9,6 +9,7 @@ import { fetchStreamsAndAllPosts } from "./actions/stream";
 import { caughtUp, lastMessageReceived, historyRetrievalFailure } from "./actions/messaging";
 import rootLogger from "./util/Logger";
 import PubnubSubscription from "./pubnub-subscription";
+import { pollTillOnline } from "./actions/connectivity";
 
 const logger = rootLogger.forClass("pubnub-receiver");
 
@@ -249,6 +250,7 @@ export default class PubNubReceiver {
 					// here we give up prematurely, we'll wait until the signal that we are
 					// online again to try
 					console.warn(`${now}: HISTORY RETRIEVAL FAILED BUT WE ARE OFFLINE`);
+					pollTillOnline();
 					return true;
 				}
 				if (retries === 30) {
