@@ -12,6 +12,7 @@ export const CODESTREAM_VIEW_URI = "atom://codestream";
 
 export default class CodestreamView {
 	constructor(store) {
+		this.alive = true;
 		this.store = store;
 		this.element = document.createElement("div");
 		this.element.classList.add("codestream");
@@ -56,6 +57,7 @@ export default class CodestreamView {
 	destroy() {
 		unmountComponentAtNode(this.element);
 		this.element.remove();
+		this.alive = false;
 	}
 
 	update(store) {

@@ -136,8 +136,7 @@ module.exports = {
 		this.subscriptions.add(
 			atom.workspace.addOpener(uri => {
 				if (uri === CODESTREAM_VIEW_URI) {
-					if (this.view) return this.view;
-
+					if (this.view && this.view.alive) return this.view;
 					this.view = new CodestreamView(store);
 					return this.view;
 				}
