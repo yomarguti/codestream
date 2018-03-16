@@ -3,6 +3,7 @@ import React, { Component } from "react";
 import { connect } from "react-redux";
 import * as actions from "../actions/marker-location";
 import { locationToRange } from "../util/Marker";
+import { CODESTREAM_VIEW_URI } from "../codestream-view";
 
 const isValid = location => {
 	const sameLine = location[0] === location[2];
@@ -41,6 +42,7 @@ class ReferenceBubble extends Component {
 	}
 
 	onClick = event => {
+		atom.workspace.open(CODESTREAM_VIEW_URI);
 		this.props.onSelect(this.props.postId);
 		this.props.onMarkerClicked(this.props);
 	};
