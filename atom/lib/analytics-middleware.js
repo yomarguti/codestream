@@ -15,10 +15,10 @@ export default store => {
 	const isOptedIn = currentUser => {
 		const { session, users } = store.getState();
 
-		if (currentUser) return accessSafely(() => currentUser.preferences.telemetryConsent);
+		if (currentUser) return accessSafely(() => currentUser.preferences.telemetryConsent) || true;
 		if (session.userId) {
 			const user = users[session.userId];
-			return accessSafely(() => user.preferences.telemetryConsent);
+			return accessSafely(() => user.preferences.telemetryConsent) || true;
 		} else return false;
 	};
 
