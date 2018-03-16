@@ -50,6 +50,10 @@ Once installed, you can toggle the CodeStream view via the Packages menu, or hit
 
 ![MergeConflict](https://help.codestream.com/hc/article_attachments/360001973651/Banner_MergeConflict.png)
 
+* Set up the Slack integration and all of your team’s messages on CodeStream will flow through to the channel of your choice on Slack. You can even reply to those messages right from Slack, and the replies will get posted to CodeStream.
+
+![SlackIntegration](https://help.codestream.com/hc/article_attachments/360002212591/SlackCSBot.png)
+
 # Frequently Asked Questions
 
 #### Where are messages stored?
