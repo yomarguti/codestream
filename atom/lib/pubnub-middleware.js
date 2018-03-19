@@ -49,12 +49,14 @@ const _initiateTicks = (store, receiver) => {
 const _initializePubnubAndSubscribe = async (store, receiver, catchup = true) => {
 	const { context, users, session, messaging } = store.getState();
 	const user = users[session.userId];
-	const teamChannels = (user.teamIds || []).map(id => `team-${id}`);
 
-	const channels = [`user-${user.id}`, ...teamChannels];
+	const channels = [`user-${user.id}`];
 
 	if (context.currentRepoId) {
 		channels.push(`repo-${context.currentRepoId}`);
+	}
+	if (context.currentTeamId) {
+		channels.push(`team-${context.currentTeamId}`);
 	}
 
 	receiver.initialize(
