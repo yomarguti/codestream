@@ -73,7 +73,7 @@ export default class PubnubSubscription {
 	// called when we time out trying to subscribe, in which case we need to enter a failure mode
 	async subscriptionTimedOut() {
 		let now = new Date().toString();
-		console.warn(`${now}: SUBSCRIPTION TO ${this.channel} TIMED OUT`);
+		// console.warn(`${now}: SUBSCRIPTION TO ${this.channel} TIMED OUT`);
 		Raven.captureBreadcrumb({
 			message: `Subscription to ${this.channel} timed out`,
 			category: "pubnub",
@@ -84,7 +84,7 @@ export default class PubnubSubscription {
 			// here we give up prematurely, we'll wait until the signal that we are
 			// online again to try
 			now = new Date().toString();
-			console.warn(`${now}: SUBSCRIPTION TO ${this.channel} FAILED BUT WE ARE OFFLINE`);
+			// console.warn(`${now}: SUBSCRIPTION TO ${this.channel} FAILED BUT WE ARE OFFLINE`);
 			pollTillOnline();
 			this._numRetries = 0;
 			return true;
@@ -102,7 +102,7 @@ export default class PubnubSubscription {
 				level: "warning"
 			});
 			now = new Date().toString();
-			console.warn(`${now}: ERROR GETTING ACCESS TO ${this.channel}: ${JSON.stringify(error)}`);
+			// console.warn(`${now}: ERROR GETTING ACCESS TO ${this.channel}: ${JSON.stringify(error)}`);
 		}
 		// now excuses now, try again, but give up completely after 10 tries
 		this._numRetries++;
@@ -147,7 +147,7 @@ export default class PubnubSubscription {
 					!response.channels[this.channel].occupants.find(occupant => occupant.uuid === uuid)
 				) {
 					const now = new Date().toString();
-					console.warn(`${now}: UNABLE TO CONFIRM SUBSCRIPTION TO ${this.channel}`);
+					// console.warn(`${now}: UNABLE TO CONFIRM SUBSCRIPTION TO ${this.channel}`);
 					Raven.captureBreadcrumb({
 						message: `Unable to confirm subscription to ${this.channel}`,
 						category: "pubnub",
