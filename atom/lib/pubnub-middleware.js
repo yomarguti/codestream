@@ -130,9 +130,11 @@ export default store => {
 		// if we come online after a period of being offline, make sure we're subscribed
 		// to pubnub channels and retrieve history
 		if (action.type === "ONLINE") {
-			const { messaging } = store.getState();
-			_initializePubnubAndSubscribe(store, receiver, true);
-			historyCount = await receiver.retrieveHistory(null, messaging);
+			const { messaging, session } = store.getState();
+			if (session.userId && session.accessToken) {
+				_initializePubnubAndSubscribe(store, receiver, true);
+				historyCount = await receiver.retrieveHistory(null, messaging);
+			}
 		}
 
 		return result;
