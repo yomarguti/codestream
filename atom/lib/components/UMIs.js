@@ -74,7 +74,8 @@ export class SimpleUMIs extends Component {
 	componentWillUnmount() {
 		this.clearTreatments();
 		this.subscriptions.dispose();
-		app.setBadgeCount(app.getBadgeCount() - this.totalCount);
+		const newCount = app.getBadgeCount() - this.totalCount;
+		app.setBadgeCount(newCount < 0 ? 0 : newCount);
 	}
 
 	getTreatmentFromEvent = event => {
