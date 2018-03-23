@@ -246,6 +246,21 @@ module.exports = {
 			const repo = repos[0];
 			getCurrentCommit(repo).then(commitHash => store.dispatch(setCurrentCommit(commitHash)));
 
+			const updateCommitHash = async () => {
+				const { context } = store.getState();
+				const currentCommit = await getCurrentCommit(repo);
+				if (context.currentCommit !== currentCommit) {
+					store.dispatch(commitHashChanged(currentCommit));
+					store.dispatch(calculateUncommittedMarkers());
+				}
+			};
+
+			const commitHashMonitor = async () => {
+				await updateCommitHash();
+				setTimeout(commitHashPoller, 5000);
+			};
+			commitHashMonitor();
+
 			this.subscriptions.add(
 				atom.workspace.observeActiveTextEditor(editor => {
 					// Only dispatch the action if there is a current file that belongs to the git repo
@@ -275,13 +290,8 @@ module.exports = {
 				}),
 
 				// Subscribe to git status changes in order to be aware of current commit hash.
-				repo.onDidChangeStatuses(async event => {
-					const { context } = store.getState();
-					const currentCommit = await getCurrentCommit(repo);
-					if (context.currentCommit !== currentCommit) {
-						store.dispatch(commitHashChanged(currentCommit));
-						store.dispatch(calculateUncommittedMarkers());
-					}
+				repo.onDidChangeStatuses(event => {
+					updateCommitHash();
 				}),
 				repo.onDidChangeStatus(event => {
 					if (event && event.path) this.checkEditorsForModification(repo);
