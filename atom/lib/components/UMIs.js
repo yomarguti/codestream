@@ -62,13 +62,15 @@ export class SimpleUMIs extends Component {
 
 	componentDidMount() {
 		this.props.recalculate();
-		this.scrollDiv = document.getElementsByClassName("tree-view")[0];
-		this.scrollDiv.addEventListener("scroll", this.handleScroll.bind(this));
-		this.scrollDiv.addEventListener("click", this.handleClick.bind(this));
-		let that = this;
-		new ResizeObserver(function() {
-			that.handleScroll();
-		}).observe(this.scrollDiv);
+		if (this.treeView) {
+			this.scrollDiv = document.getElementsByClassName("tree-view")[0];
+			this.scrollDiv.addEventListener("scroll", this.handleScroll.bind(this));
+			this.scrollDiv.addEventListener("click", this.handleClick.bind(this));
+			let that = this;
+			new ResizeObserver(function() {
+				that.handleScroll();
+			}).observe(this.scrollDiv);
+		}
 	}
 
 	componentWillUnmount() {
@@ -101,6 +103,7 @@ export class SimpleUMIs extends Component {
 	};
 
 	render() {
+		if (!this.treeView) return false;
 		const umis = this.props.umis;
 
 		this.addUnreadsIndicatorDivs();
