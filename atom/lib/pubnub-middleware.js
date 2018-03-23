@@ -49,12 +49,14 @@ const _initiateTicks = (store, receiver) => {
 const _initializePubnubAndSubscribe = async (store, receiver, catchup = true) => {
 	const { context, users, session, messaging } = store.getState();
 	const user = users[session.userId];
-	const teamChannels = (user.teamIds || []).map(id => `team-${id}`);
 
-	const channels = [`user-${user.id}`, ...teamChannels];
+	const channels = [`user-${user.id}`];
 
 	if (context.currentRepoId) {
 		channels.push(`repo-${context.currentRepoId}`);
+	}
+	if (context.currentTeamId) {
+		channels.push(`team-${context.currentTeamId}`);
 	}
 
 	receiver.initialize(
@@ -128,9 +130,11 @@ export default store => {
 		// if we come online after a period of being offline, make sure we're subscribed
 		// to pubnub channels and retrieve history
 		if (action.type === "ONLINE") {
-			const { messaging } = store.getState();
-			_initializePubnubAndSubscribe(store, receiver, true);
-			historyCount = await receiver.retrieveHistory(null, messaging);
+			const { messaging, session } = store.getState();
+			if (session.userId && session.accessToken) {
+				_initializePubnubAndSubscribe(store, receiver, true);
+				historyCount = await receiver.retrieveHistory(null, messaging);
+			}
 		}
 
 		return result;

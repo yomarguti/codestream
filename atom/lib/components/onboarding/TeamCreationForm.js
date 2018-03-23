@@ -40,9 +40,6 @@ export class SimpleTeamCreationForm extends Component {
 				<p>
 					<FormattedMessage id="createTeam.info" />
 				</p>
-				<p>
-					<FormattedMessage id="createTeam.additionalInfo" />
-				</p>
 				{this.renderErrors()}
 				<form onSubmit={this.onSubmit}>
 					<input

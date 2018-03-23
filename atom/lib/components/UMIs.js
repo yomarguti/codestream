@@ -74,6 +74,8 @@ export class SimpleUMIs extends Component {
 	componentWillUnmount() {
 		this.clearTreatments();
 		this.subscriptions.dispose();
+		const newCount = app.getBadgeCount() - this.totalCount;
+		app.setBadgeCount(newCount < 0 ? 0 : newCount);
 	}
 
 	getTreatmentFromEvent = event => {
@@ -128,7 +130,8 @@ export class SimpleUMIs extends Component {
 			// logger.debug("CALC: " + count + " FOR " + path + " w/key: " + key + " ment? " + mentions);
 			totalUMICount += this.calculateTreatment(path, count, mentions);
 		});
-		app.setBadgeCount(Math.floor(totalUMICount));
+		this.totalCount = totalUMICount;
+		app.setBadgeCount(Math.floor(totalUMICount)); // TODO: This needs to be smarter and it should add to the current badge count rather than replace it
 		Object.keys(umis.unread).map(key => {
 			let path = streamMap[key] || "";
 			this.treatPath(path);

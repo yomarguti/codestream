@@ -1,7 +1,11 @@
 import mixpanel from "mixpanel-browser";
+import { getEnv, PRODUCTION } from "./env-utils";
 import { getPost } from "./reducers/posts";
 
-mixpanel.init("4308967c7435e61d9697ce240bc68d02");
+const PROD_TOKEN = "2c92bfd963bfbaf680be2f1d10e48003";
+const DEV_TOKEN = "4308967c7435e61d9697ce240bc68d02";
+
+mixpanel.init(getEnv() === PRODUCTION ? PROD_TOKEN : DEV_TOKEN);
 
 const accessSafely = func => {
 	try {
@@ -15,10 +19,10 @@ export default store => {
 	const isOptedIn = currentUser => {
 		const { session, users } = store.getState();
 
-		if (currentUser) return accessSafely(() => currentUser.preferences.telemetryConsent);
+		if (currentUser) return accessSafely(() => currentUser.preferences.telemetryConsent) || true;
 		if (session.userId) {
 			const user = users[session.userId];
-			return accessSafely(() => user.preferences.telemetryConsent);
+			return accessSafely(() => user.preferences.telemetryConsent) || true;
 		} else return false;
 	};
 

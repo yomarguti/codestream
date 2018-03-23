@@ -25,6 +25,7 @@ import { setStreamUMITreatment } from "./actions/umi";
 import { markPathsModified } from "./actions/stream";
 import logger from "./util/Logger";
 import { online, offline } from "./actions/connectivity";
+import { setActive } from "./actions/presence";
 
 const env = sessionStorage.getItem("codestream.env") || "production";
 if (env === "production") {
@@ -135,8 +136,7 @@ module.exports = {
 		this.subscriptions.add(
 			atom.workspace.addOpener(uri => {
 				if (uri === CODESTREAM_VIEW_URI) {
-					if (this.view) return this.view;
-
+					if (this.view && this.view.alive) return this.view;
 					this.view = new CodestreamView(store);
 					return this.view;
 				}
@@ -291,6 +291,9 @@ module.exports = {
 
 			window.addEventListener("online", e => store.dispatch(online()), false);
 			window.addEventListener("offline", e => store.dispatch(offline()), false);
+			window.addEventListener("mousemove", e => store.dispatch(setActive()), false);
+			window.addEventListener("keypress", e => store.dispatch(setActive()), false);
+			window.addEventListener("focus", e => store.dispatch(setActive()), false);
 
 			const repoAttributes = store.getState().repoAttributes;
 			if (_.isEmpty(repoAttributes) || !repoAttributes.url) {

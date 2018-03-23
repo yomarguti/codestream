@@ -1,10 +1,12 @@
-const normalizeObject = ({ _id, ...rest }) => {
-	const result = { ...rest };
-	if (_id) result.id = _id;
-	return result;
+const dedasherizeKeys = object => {
+	return Object.entries(object).reduce((result, [key, value]) => {
+		if (key.startsWith("_")) result[key.substring(1)] = value;
+		else result[key] = value;
+		return result;
+	}, {});
 };
 
 export const normalize = data => {
-	if (Array.isArray(data)) return data.map(normalizeObject);
-	else return normalizeObject(data);
+	if (Array.isArray(data)) return data.map(dedasherizeKeys);
+	else return dedasherizeKeys(data);
 };

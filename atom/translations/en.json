@@ -52,7 +52,7 @@
 		"Make sure the root directory you have open is an actual Git repository, and not a directory containing repositories.",
 	"createTeam.header": "Create a Team",
 	"createTeam.info":
-		"Each repository connected to CodeStream is owned by a development team. What's the name of your team?",
+		"Your company or organization name would fit the bill here.",
 	"createTeam.additionalInfo": "Note that a team can own multiple repositories.",
 	"createTeam.submitButton": "NEXT",
 	"teamSelection.error.noPermission": "You are not a member of the selected team.",

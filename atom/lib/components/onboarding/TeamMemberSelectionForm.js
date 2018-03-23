@@ -124,7 +124,7 @@ export class SimpleTeamMemberSelectionForm extends Component {
 				<p>
 					<FormattedMessage
 						id="teamMemberSelection.existingTeam.peopleToAdd"
-						defaultMessage="Here are some people that have committed to this repo that you might want to add to {teamName}."
+						defaultMessage="Here are some people that have committed to this repo that you might want to add."
 						values={{ teamName: this.props.teamName }}
 					/>
 				</p>
@@ -134,7 +134,7 @@ export class SimpleTeamMemberSelectionForm extends Component {
 				<p>
 					<FormattedMessage
 						id="teamMemberSelection.newTeam.peopleToAdd"
-						defaultMessage="Here are the people that have committed to this repo. Uncheck anyone no longer on the team."
+						defaultMessage="Here are some suggestions pulled from the repo's commit history."
 					/>
 				</p>
 			);
@@ -297,7 +297,7 @@ export class SimpleTeamMemberSelectionForm extends Component {
 				<div className="footer">
 					<FormattedMessage
 						id="teamMemberSelection.footer"
-						defaultMessage="We'll only send emails when you post messages."
+						defaultMessage="CodeStream will only send emails when someone is @mentioned."
 					/>
 				</div>
 			</div>

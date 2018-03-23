@@ -1,7 +1,7 @@
 {
 	"name": "CodeStream",
 	"main": "./lib/codestream",
-	"version": "0.0.18",
+	"version": "0.0.19",
 	"description":
 		"CodeStream puts team chat into Atom so that developers can discuss code where they code. Conversation threads automatically become annotations that live with the codebase forever.",
 	"keywords": ["git", "team", "chat"],
