@@ -253,13 +253,13 @@ export const resolveFromPubnub = (post, isHistory) => async (dispatch, getState)
 
 	const { session } = getState();
 	const isNotFromCurrentUser = post.creatorId !== session.userId;
-	const isFromEmail = !Boolean(post.commitHashWhenPosted); // crude. right now posts from email won't ever have commit context
+	const isFromEmailOrSlack = !Boolean(post.commitHashWhenPosted); // crude. right now posts from email won't ever have commit context
 
-	if (isHistory || isNotFromCurrentUser || isFromEmail) {
+	if (isHistory || isNotFromCurrentUser || isFromEmailOrSlack) {
 		Raven.captureBreadcrumb({
 			message: "Post is history, does not belong to current user, or it might be from email.",
 			category: "action",
-			data: { isHistory, isNotFromCurrentUser, isFromEmail }
+			data: { isHistory, isNotFromCurrentUser, isFromEmailOrSlack }
 		});
 		return dispatch(pubnubActions.resolveFromPubnub("posts", post, isHistory));
 	}
