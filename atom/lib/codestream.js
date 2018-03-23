@@ -257,7 +257,7 @@ module.exports = {
 
 			const commitHashMonitor = async () => {
 				await updateCommitHash();
-				setTimeout(commitHashPoller, 5000);
+				setTimeout(commitHashMonitor, 5000);
 			};
 			commitHashMonitor();
 
