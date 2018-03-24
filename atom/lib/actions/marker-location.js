@@ -1,25 +1,12 @@
 import { upsert } from "../local-cache";
 import { normalize } from "./utils";
 import { saveMarkers } from "./marker";
-import { commitHashChanged } from "./context";
-import { getStreamsForRepo } from "../reducers/streams";
 import MarkerLocationFinder from "../git/MarkerLocationFinder";
 import { open as openRepo } from "../git/GitRepo";
 import { areEqualLocations } from "../util/Marker";
 import rootLogger from "../util/Logger";
 
 const logger = rootLogger.forClass("actions/marker-location");
-
-export const updateCommitHash = () => async (dispatch, getState) => {
-	const { context, repoAttributes } = getState();
-	const gitRepo = await openRepo(repoAttributes.workingDirectory);
-	const currentCommit = await gitRepo.getCurrentCommit();
-
-	if (currentCommit !== context.currentCommit) {
-		dispatch(commitHashChanged(currentCommit));
-		dispatch(calculateUncommittedMarkers());
-	}
-};
 
 export const saveMarkerLocations = (attributes, isHistory = false) => (
 	dispatch,
@@ -88,10 +75,9 @@ export const calculateLocations = ({ teamId, streamId, text }) => async (
 	getState,
 	{ http }
 ) => {
-	dispatch(updateCommitHash());
 	const { context, repoAttributes, session } = getState();
 	const gitRepo = await openRepo(repoAttributes.workingDirectory);
-	const commitHash = await gitRepo.getCurrentCommit();
+	const commitHash = context.currentCommit;
 	const filePath = context.currentFile;
 
 	if (!await gitRepo.isTracked(filePath)) {
@@ -201,8 +187,9 @@ export const saveUncommittedLocations = ({
 
 export const calculateUncommittedMarkers = () => async (dispatch, getState, { http, db }) => {
 	const { context, repoAttributes, session, markerLocations } = getState();
-	const { currentCommit, currentTeamId: teamId } = context;
+	const { currentTeamId: teamId } = context;
 	const gitRepo = await openRepo(repoAttributes.workingDirectory);
+	const currentCommit = await gitRepo.getCurrentCommit();
 
 	for (const streamId of Object.keys(markerLocations.byStream)) {
 		const uncommittedLocations = markerLocations.byStream[streamId].uncommitted || [];
@@ -248,13 +235,29 @@ export const calculateUncommittedMarkers = () => async (dispatch, getState, { ht
 					session.accessToken
 				);
 
-				dispatch({
-					type: "REMOVE_UNCOMMITTED_LOCATION",
-					payload: {
-						streamId,
-						markerId: marker._id
-					}
-				});
+				const primaryKey = Object.freeze({ streamId, teamId, commitHash: "uncommitted" });
+				await db
+					.transaction("rw", db.markerLocations, async () => {
+						const record = await db.markerLocations.get(primaryKey);
+						record.uncommitted = record.uncommitted.filter(
+							uncommitted => uncommitted.marker._id != marker._id
+						);
+						await db.markerLocations.update(primaryKey, {
+							...record,
+							uncommitted: record.uncommitted.filter(
+								uncommitted => uncommitted.marker._id != marker._id
+							)
+						});
+					})
+					.then(record =>
+						dispatch({
+							type: "REMOVE_UNCOMMITTED_LOCATION",
+							payload: {
+								streamId,
+								markerId: marker._id
+							}
+						})
+					);
 			}
 		}
 	}

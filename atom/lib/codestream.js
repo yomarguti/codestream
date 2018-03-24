@@ -250,16 +250,10 @@ module.exports = {
 				const { context } = store.getState();
 				const currentCommit = await getCurrentCommit(repo);
 				if (context.currentCommit !== currentCommit) {
+					await store.dispatch(calculateUncommittedMarkers());
 					store.dispatch(commitHashChanged(currentCommit));
-					store.dispatch(calculateUncommittedMarkers());
 				}
 			};
-
-			const commitHashMonitor = async () => {
-				await updateCommitHash();
-				setTimeout(commitHashMonitor, 5000);
-			};
-			commitHashMonitor();
 
 			this.subscriptions.add(
 				atom.workspace.observeActiveTextEditor(editor => {
