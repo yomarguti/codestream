@@ -13,6 +13,7 @@ export const locationToRange = location => {
 export const rangeToLocation = range => {
 	let location = [range.start.row, range.start.column, range.end.row, range.end.column];
 	location = location.map(index => (index != undefined ? index + 1 : index));
+	location.push({}); // meta
 	return location;
 };
 
