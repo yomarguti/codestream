@@ -170,7 +170,7 @@ module.exports = {
 					"codestream:wipe-cache": () => db.delete(),
 					"codestream:point-to-dev": () => {
 						sessionStorage.setItem("codestream.env", "dev");
-						sessionStorage.setItem("codestream.url", "https://tca3.codestream.us:9443");
+						sessionStorage.setItem("codestream.url", "https://pd-api.codestream.us:9443");
 						store.dispatch(logout());
 						atom.reload();
 					},
