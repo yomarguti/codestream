@@ -12,6 +12,7 @@ import markerLocations from "./marker-locations";
 import umis from "./umis";
 import messaging from "./messaging";
 import connectivity from "./connectivity";
+import currentPage from "./currentPage";
 
 const session = (state = {}, { type, payload }) => {
 	if (type === "INIT_SESSION") return payload;
@@ -35,6 +36,7 @@ const appReducer = combineReducers({
 	companies,
 	connectivity,
 	context,
+	currentPage,
 	markerLocations,
 	markers,
 	messaging,

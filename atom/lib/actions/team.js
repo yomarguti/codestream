@@ -1,6 +1,6 @@
 import { upsert } from "../local-cache";
 import { setCurrentTeam } from "./context";
-import { saveUsers } from "./user";
+import { saveUser, saveUsers } from "./user";
 import { saveRepo } from "./repo";
 import { saveCompany } from "./company";
 import { normalize } from "./utils";
@@ -37,4 +37,11 @@ export const joinTeam = () => (dispatch, getState, { http }) => {
 		await dispatch(saveRepo(normalize(data.repo)));
 		return dispatch(setCurrentTeam(data.repo.teamId));
 	});
+};
+
+export const invite = attributes => (dispatch, getState, { http }) => {
+	const { session } = getState();
+	return http
+		.post("/users", attributes, session.accessToken)
+		.then(data => dispatch(saveUser(normalize(data.user))));
 };

@@ -6,6 +6,7 @@ import Raven from "raven-js";
 import NoGit from "./NoGit";
 import TooMuchGit from "./TooMuchGit";
 import Onboarding from "./onboarding/Onboarding";
+import Pages from "./Pages";
 import Stream from "./Stream";
 import NoAccess from "./NoAccess";
 import OfflineBanner from "./OfflineBanner";
@@ -48,6 +49,7 @@ class CodeStreamRoot extends Component {
 		const {
 			catchingUp,
 			accessToken,
+			currentPage,
 			bootstrapped,
 			repositories,
 			onboarding,
@@ -75,17 +77,30 @@ class CodeStreamRoot extends Component {
 		if (!bootstrapped) return <Loading message="CodeStream engage..." />;
 		if (catchingUp) return <Loading message="Hold on, we're catching you up" />;
 		if (showSlackInfo) return <SlackInfo />;
-		else if (onboarding.complete && accessToken)
-			return [<OfflineBanner key="offline-banner" />, <Stream key="stream" />];
-		else return [<OfflineBanner key="offline-banner" />, <Onboarding key="onboarding" />];
+		else if (onboarding.complete && accessToken) {
+			if (currentPage)
+				return [
+					<OfflineBanner key="offline-banner" />,
+					<Pages key="onboarding" page={currentPage} />
+				];
+			else return [<OfflineBanner key="offline-banner" />, <Stream key="stream" />];
+		} else return [<OfflineBanner key="offline-banner" />, <Onboarding key="onboarding" />];
 	}
 }
 
-const mapStateToProps = ({ bootstrapped, session, onboarding, context, messaging }) => ({
+const mapStateToProps = ({
+	bootstrapped,
+	currentPage,
+	session,
+	onboarding,
+	context,
+	messaging
+}) => ({
 	accessToken: session.accessToken,
 	noAccess: context.noAccess,
 	catchingUp: messaging.catchingUp,
 	showSlackInfo: context.showSlackInfo,
+	currentPage,
 	bootstrapped,
 	onboarding
 });
