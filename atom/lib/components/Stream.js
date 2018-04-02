@@ -19,6 +19,7 @@ import withRepositories from "./withRepositories";
 var Blamer = require("../util/blamer");
 import * as streamActions from "../actions/stream";
 import * as umiActions from "../actions/umi";
+import * as routingActions from "../actions/routing";
 import { createPost, editPost, deletePost, fetchPosts } from "../actions/post";
 import { toMapBy } from "../reducers/utils";
 import { rangeToLocation } from "../util/Marker";
@@ -410,11 +411,14 @@ export class SimpleStream extends Component {
 				</label>
 			];
 		}
-		return (
+		return [
 			<label>
 				This is the start of your discussion about <b>{this.fileAbbreviation()}</b>.
+			</label>,
+			<label>
+				Need people to chat with? <a onClick={this.props.goToInvitePage}>Invite Someone!</a>
 			</label>
-		);
+		];
 	};
 
 	// we render both a main stream (postslist) plus also a postslist related
@@ -1301,5 +1305,6 @@ export default connect(mapStateToProps, {
 	fetchPosts,
 	createPost,
 	editPost,
-	deletePost
+	deletePost,
+	goToInvitePage: routingActions.goToInvitePage
 })(withRepositories(SimpleStream));
