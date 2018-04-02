@@ -25,6 +25,7 @@ import { setStreamUMITreatment } from "./actions/umi";
 import { markPathsModified } from "./actions/stream";
 import logger from "./util/Logger";
 import { online, offline } from "./actions/connectivity";
+import { calculateUncommittedMarkers } from "./actions/marker-location";
 import { setActive } from "./actions/presence";
 
 const env = sessionStorage.getItem("codestream.env") || "production";
@@ -169,7 +170,7 @@ module.exports = {
 					"codestream:wipe-cache": () => db.delete(),
 					"codestream:point-to-dev": () => {
 						sessionStorage.setItem("codestream.env", "dev");
-						sessionStorage.setItem("codestream.url", "https://tca3.codestream.us:9443");
+						sessionStorage.setItem("codestream.url", "https://pd-api.codestream.us:9443");
 						store.dispatch(logout());
 						atom.reload();
 					},
@@ -245,6 +246,15 @@ module.exports = {
 			const repo = repos[0];
 			getCurrentCommit(repo).then(commitHash => store.dispatch(setCurrentCommit(commitHash)));
 
+			const updateCommitHash = async () => {
+				const { context } = store.getState();
+				const currentCommit = await getCurrentCommit(repo);
+				if (context.currentCommit !== currentCommit) {
+					await store.dispatch(calculateUncommittedMarkers());
+					store.dispatch(commitHashChanged(currentCommit));
+				}
+			};
+
 			this.subscriptions.add(
 				atom.workspace.observeActiveTextEditor(editor => {
 					// Only dispatch the action if there is a current file that belongs to the git repo
@@ -274,12 +284,8 @@ module.exports = {
 				}),
 
 				// Subscribe to git status changes in order to be aware of current commit hash.
-				repo.onDidChangeStatuses(async event => {
-					const { context } = store.getState();
-					const currentCommit = await getCurrentCommit(repo);
-					if (context.currentCommit !== currentCommit) {
-						store.dispatch(commitHashChanged(currentCommit));
-					}
+				repo.onDidChangeStatuses(event => {
+					updateCommitHash();
 				}),
 				repo.onDidChangeStatus(event => {
 					if (event && event.path) this.checkEditorsForModification(repo);

@@ -17,16 +17,6 @@ const isActiveEditor = editor => {
 	return true;
 };
 
-const shouldRecalculateMarkers = (editor, { streamId }) => {
-	if (!isActiveEditor(editor)) {
-		return false;
-	}
-	if (!streamId) {
-		return false;
-	}
-	return true;
-};
-
 class MarkerLocationTracker extends Component {
 	componentDidMount = () => {
 		const subscriptions = (this.subscriptions = new CompositeDisposable());
@@ -34,11 +24,12 @@ class MarkerLocationTracker extends Component {
 		subscriptions.add(editorsObserver);
 
 		const { editor } = this.props;
+		// console.log("componenents/MarkerLocationTracker.js componentDidMount");
 		this.calculateLocations(editor);
 	};
 
 	componentWillReceiveProps(nextProps) {
-		const { editor, markers } = nextProps;
+		const { editor, markers, currentCommit } = nextProps;
 
 		if (editor && markers) {
 			editor.hasNewMarker = false;
@@ -48,17 +39,24 @@ class MarkerLocationTracker extends Component {
 					location
 				});
 			}
-
 			if (editor.hasNewMarker) {
+				// console.log(
+				// 	"componenents/MarkerLocationTracker.js componentWillReceiveProps has new marker"
+				// );
 				this.calculateLocations(editor);
 			}
 		}
 	}
 
 	componentDidUpdate = (prevProps, prevState) => {
-		const { editor, streamId } = this.props;
-		if (streamId && streamId != prevProps.streamId) {
-			this.calculateLocations(editor);
+		const { editor, streamId, currentCommit } = this.props;
+		if (editor && streamId) {
+			const shouldRecalculate =
+				streamId != prevProps.streamId || currentCommit != prevProps.currentCommit;
+			if (shouldRecalculate) {
+				// console.log("componenents/MarkerLocationTracker.js componentDidUpdate should recalculate");
+				this.calculateLocations(editor);
+			}
 		}
 	};
 
@@ -68,19 +66,25 @@ class MarkerLocationTracker extends Component {
 
 	editorOpened = editor => {
 		this.subscriptions.add(
-			editor.getBuffer().onDidReload(() => this.calculateLocations(editor)),
-			editor.onDidStopChanging(() => this.calculateLocations(editor))
+			editor.getBuffer().onDidReload(() => {
+				// console.log("componenents/MarkerLocationTracker.js buffer reloaded");
+				this.calculateLocations(editor);
+			}),
+			editor.onDidStopChanging(() => {
+				// console.log("componenents/MarkerLocationTracker.js editor stopped changing");
+				this.calculateLocations(editor);
+			})
 		);
 	};
 
 	calculateLocations = editor => {
-		if (!shouldRecalculateMarkers(editor, this.props)) {
-			return;
-		}
-
 		const { teamId, streamId, calculateLocations } = this.props;
-
-		calculateLocations({ teamId, streamId, text: editor.getText() });
+		if (streamId && isActiveEditor(editor)) {
+			// console.log(
+			// 	"components/MarkerLocationTracker.js calculateLocations will calculate locations"
+			// );
+			calculateLocations({ teamId, streamId, text: editor.getText() });
+		}
 	};
 
 	createOrUpdateDisplayMarker(editor, marker) {
@@ -135,6 +139,7 @@ const mapStateToProps = ({ context, streams, markers, markerLocations }) => {
 		teamId: context.currentTeamId,
 		streamId: stream.id,
 		currentFile: context.currentFile,
+		currentCommit: context.currentCommit,
 		markers: markersForStream
 	};
 };

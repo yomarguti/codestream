@@ -1,5 +1,9 @@
 import Raven from "raven-js";
+import DeltaBuilder from "./DeltaBuilder";
+import { structuredPatch } from "diff";
 import { isValidLocation } from "../util/Marker";
+import stripEof from "strip-eof";
+import eol from "eol";
 
 export default class MarkerLocationFinder {
 	constructor({ gitRepo, accessToken, http, filePath, teamId, streamId }) {
@@ -9,6 +13,20 @@ export default class MarkerLocationFinder {
 		this._filePath = filePath;
 		this._teamId = teamId;
 		this._streamId = streamId;
+	}
+
+	async findUpdatedLocations(locations, filePath, oldText, newText) {
+		oldText = stripEof(eol.auto(oldText));
+		newText = stripEof(eol.auto(newText));
+
+		const patch = structuredPatch(filePath, filePath, oldText, newText);
+		const delta = new DeltaBuilder(patch).build();
+
+		if (delta.edits.length) {
+			return await this._calculateLocations(locations, delta.edits);
+		} else {
+			return locations;
+		}
 	}
 
 	async findLocationsForCurrentCommit(markers) {
@@ -73,7 +91,7 @@ export default class MarkerLocationFinder {
 
 		let locations = { ...currentCommitLocations };
 
-		if (unsavedEdits.length) {
+		if (unsavedEdits.length && Object.keys(locations).length) {
 			const unsavedLocations = await this._calculateLocations(
 				locations,
 				unsavedEdits,
@@ -93,7 +111,6 @@ export default class MarkerLocationFinder {
 		const filePath = me._filePath;
 		const gitRepo = me._gitRepo;
 		const currentCommit = await gitRepo.getCurrentCommit();
-
 		const unsavedDelta = await gitRepo.getDeltaForUncommittedChanges(filePath, bufferText);
 		const reverseEdits = me._reverseEdits(unsavedDelta.edits);
 
@@ -109,26 +126,14 @@ export default class MarkerLocationFinder {
 		}
 	}
 
-	async _addMarkersFirstCommitToCommitHistory(commitHistory, markers) {
-		const repo = this._gitRepo;
-		const commitsInHistory = {};
-
-		for (const commit of commitHistory) {
-			commitsInHistory[commit] = 1;
-		}
-
-		for (const marker of markers) {
-			const commitHashWhenCreated = marker.commitHashWhenCreated;
-			if (!commitsInHistory[commitHashWhenCreated]) {
-				const exists = await repo.ensureCommitExists(commitHashWhenCreated);
-				if (exists) {
-					commitHistory.push(commitHashWhenCreated);
-				}
+	async _calculateLocations(locations, edits, originalCommitHash, newCommitHash) {
+		let hasUncommittedLocation = false;
+		for (const location of Object.values(locations)) {
+			const meta = location[4] || {};
+			if (meta.startWasDeleted || meta.endWasDeleted) {
+				hasUncommittedLocation = true;
 			}
 		}
-	}
-
-	async _calculateLocations(locations, edits, originalCommitHash, newCommitHash) {
 		try {
 			const result = await this._http.put(
 				"/calculate-locations?",
@@ -136,7 +141,7 @@ export default class MarkerLocationFinder {
 					teamId: this._teamId,
 					streamId: this._streamId,
 					originalCommitHash: originalCommitHash,
-					newCommitHash: newCommitHash,
+					newCommitHash: hasUncommittedLocation ? undefined : newCommitHash,
 					edits: edits,
 					locations: locations
 				},
