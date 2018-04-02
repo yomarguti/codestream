@@ -322,6 +322,18 @@
 			.committer-email {
 				display: flex;
 				justify-content: space-between;
+				.split:first-child {
+					width: 70%;
+					overflow: hidden;
+					white-space: nowrap;
+					text-overflow: ellipsis;
+				}
+				.split:nth-child(2) {
+					width: 25%;
+				}
+				.split:only-child {
+					width: 100%;
+				}
 			}
 		}
 	}

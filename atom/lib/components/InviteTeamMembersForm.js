@@ -90,7 +90,7 @@ export class InvitePage extends Component {
 			atom.notifications.addInfo(
 				this.props.intl.formatMessage({
 					id: "invitation.emailSent",
-					defaultMessage: "Invitation sent!"
+					defaultMessage: `Invitation sent to ${user.email}!`
 				})
 			);
 		});
@@ -100,7 +100,7 @@ export class InvitePage extends Component {
 		const { newMemberEmail, newMemberEmailInvalid, inputTouched } = this.state;
 		return (
 			<div id="invite-team-members">
-				<h2>{this.props.teamName}</h2>
+				<h2>{`Invite to ${this.props.teamName}`}</h2>
 				<form onSubmit={this.onSubmit}>
 					<div className="errors">
 						{inputTouched &&
@@ -136,9 +136,15 @@ export class InvitePage extends Component {
 								<div className="committer-info">
 									<div className="committer-name">{user.name}</div>
 									<div className="committer-email">
-										<div>{user.email}</div>
+										<Tooltip title={user.email} placement="left" delay={{ show: 1000 }}>
+											<div className="split">{user.email}</div>
+										</Tooltip>
 										{!user.isRegistered && (
-											<a onClick={() => this.onClickReinvite(user)}>reinvite</a>
+											<div className="split">
+												<a className="reinvite" onClick={() => this.onClickReinvite(user)}>
+													reinvite
+												</a>
+											</div>
 										)}
 									</div>
 								</div>
@@ -151,14 +157,6 @@ export class InvitePage extends Component {
 		);
 	}
 }
-
-const twentyMore = () =>
-	[...Array(20).keys()].map(i => ({
-		isRegistered: true,
-		firstName: "Tom",
-		lastName: "Haverford",
-		email: "tizzle@pawnee.in"
-	}));
 
 const mapStateToProps = ({ session, users, context, teams }) => {
 	const team = teams[context.currentTeamId];
