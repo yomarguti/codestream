@@ -398,7 +398,7 @@ export class SimpleStream extends Component {
 						<li>
 							<FormattedMessage
 								id="stream.intro.share"
-								defaultMessage="Share your wisdom by clicking on any post in the stream and adding a reply."
+								defaultMessage="Select &quot;Codestream: Invite&quot; from the command palette to invite your team."
 							/>
 						</li>
 					</ul>
