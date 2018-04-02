@@ -125,7 +125,7 @@ export class InvitePage extends Component {
 							</Tooltip>
 						</div>
 						<Button>
-							<FormattedMessage id="teamMemberSelection.add" defaultMessage="ADD" />
+							<FormattedMessage id="teamMemberSelection.add" defaultMessage="INVITE" />
 						</Button>
 					</div>
 				</form>
