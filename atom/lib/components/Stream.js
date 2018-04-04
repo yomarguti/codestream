@@ -399,7 +399,14 @@ export class SimpleStream extends Component {
 							<FormattedMessage
 								id="stream.intro.share"
 								defaultMessage="Select &quot;Codestream: Invite&quot; from the command palette to invite your team."
-							/>
+							>
+								{() => (
+									<React.Fragment>
+										Select <a onClick={this.props.goToInvitePage}>Codestream: Invite</a> from the
+										command palette to invite your team.
+									</React.Fragment>
+								)}
+							</FormattedMessage>
 						</li>
 					</ul>
 				</label>,
