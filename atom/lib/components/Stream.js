@@ -416,7 +416,7 @@ export class SimpleStream extends Component {
 				This is the start of your discussion about <b>{this.fileAbbreviation()}</b>.
 			</label>,
 			<label>
-				Need people to chat with? <a onClick={this.props.goToInvitePage}>Invite Someone!</a>
+				Need people to chat with? <a onClick={this.props.goToInvitePage}>Invite someone!</a>
 			</label>
 		];
 	};
