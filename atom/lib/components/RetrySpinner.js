@@ -1,22 +1,17 @@
 import { CompositeDisposable } from "atom";
-import React from "react";
+import React, { Fragment } from "react";
+import Tooltip from "./Tooltip";
 
 export default class RetrySpinner extends React.Component {
 	state = { loading: false };
 	mounted = false;
-	tooltips = new CompositeDisposable();
 
 	componentDidMount() {
 		this.mounted = true;
-		this.tooltips.add(
-			atom.tooltips.add(this.retryIcon, { title: "Retry" }),
-			atom.tooltips.add(this.cancelIcon, { title: "Cancel" })
-		);
 	}
 
 	componentWillUnmount() {
 		this.mounted = false;
-		this.tooltips.dispose();
 	}
 
 	onRetry = async event => {
@@ -39,20 +34,14 @@ export default class RetrySpinner extends React.Component {
 				{this.state.loading ? (
 					<span className="loading loading-spinner-tiny inline-block" />
 				) : (
-					[
-						<span
-							key="retry"
-							ref={element => (this.retryIcon = element)}
-							className="icon icon-sync text-error"
-							onClick={this.onRetry}
-						/>,
-						<span
-							key="cancel"
-							ref={element => (this.cancelIcon = element)}
-							className="icon icon-remove-close"
-							onClick={this.onCancel}
-						/>
-					]
+					<Fragment>
+						<Tooltip title="Retry" placement="top">
+							<span className="icon icon-sync text-error" onClick={this.onRetry} />
+						</Tooltip>
+						<Tooltip title="Cancel" placement="top">
+							<span className="icon icon-remove-close" onClick={this.onCancel} />
+						</Tooltip>
+					</Fragment>
 				)}
 			</div>
 		);
