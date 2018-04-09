@@ -1,0 +1,112 @@
+{
+    "name": "codestream",
+    "version": "0.0.1",
+    "author": "CodeStream",
+    "description": "CodeStream",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/TeamCodeStream/vscode"
+    },
+    "engines": {
+        "vscode": "^1.23.0"
+    },
+    "enableProposedApi": true,
+    "publisher": "CodeStream",
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "*"
+    ],
+    "main": "./out/src/extension",
+    "contributes": {
+        "configuration": {
+            "type": "object",
+            "title": "CodeStream configuration",
+            "properties": {
+                "codestream.serverUrl": {
+                    "type": "string",
+                    "default": "https://tca3.codestream.us:9443",
+                    "description": "Specifies the url to use to connect to the CodeStream service",
+                    "scope": "window"
+                },
+                "codestream.username": {
+                    "type": "string",
+                    "default": null,
+                    "description": "Specifies the username to use to connect to the CodeStream service",
+                    "scope": "window"
+                },
+                "codestream.password": {
+                    "type": "string",
+                    "default": null,
+                    "description": "Specifies the password to use to connect to the CodeStream service",
+                    "scope": "window"
+                },
+                "codestream.explorer.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Specifies whether to show the `CodeStream` explorer",
+                    "scope": "window"
+                }
+            }
+        },
+        "commands": [
+            {
+                "command": "codestream.open",
+                "title": "Open CodeStream",
+                "category": "CodeStream"
+            },
+            {
+                "command": "codestream.streams",
+                "title": "CodeStream Streams",
+                "category": "CodeStream"
+            },
+            {
+                "command": "codestream.users",
+                "title": "CodeStream Users",
+                "category": "CodeStream"
+            }
+        ],
+        "menus": {
+            "commandPalette": [
+                {
+                    "command": "codestream.open",
+                    "when": "codestream:enabled"
+                }
+            ]
+        },
+        "views": {
+            "explorer": [
+                {
+                    "id": "codestream",
+                    "name": "CodeStream",
+                    "when": "codestream:explorer"
+                }
+            ]
+        }
+    },
+    "scripts": {
+        "vscode:prepublish": "tsc -p ./",
+        "compile": "tsc -p ./",
+        "watch": "tsc -w -p ./",
+        "update-vscode": "node ./node_modules/vscode/bin/install",
+        "postinstall": "node ./node_modules/vscode/bin/install"
+    },
+    "dependencies": {
+        "inversify": "4.11.1",
+        "pubnub": "4.20.2",
+        "node-fetch": "2.1.2",
+        "reflect-metadata": "0.1.12",
+        "tslib": "1.9.0"
+    },
+    "devDependencies": {
+        "@types/node": "9.6.2",
+        "@types/node-fetch": "1.6.8",
+        "@types/pubnub": "4.0.2",
+        "tslint": "5.9.1",
+        "typescript": "2.8.1",
+        "vscode": "1.1.14",
+        "vscode-languageclient": "4.1.3"
+    }
+}
