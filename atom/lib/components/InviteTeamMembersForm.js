@@ -100,7 +100,7 @@ export class InvitePage extends Component {
 		const { newMemberEmail, newMemberEmailInvalid, inputTouched } = this.state;
 		return (
 			<div id="invite-team-members">
-				<h2>{`Invite to ${this.props.teamName}`}</h2>
+				<h2>{`Team ${this.props.teamName}`}</h2>
 				<form onSubmit={this.onSubmit}>
 					<div className="errors">
 						{inputTouched &&
