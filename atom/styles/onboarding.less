@@ -296,6 +296,7 @@
 
 	#invite-team-members {
 		.onboarding-screen;
+		min-width: 250px;
 		justify-content: flex-start;
 
 		& > * {
@@ -311,15 +312,29 @@
 				display: flex;
 				flex-direction: row;
 				justify-content: space-between;
+				> * {
+					margin: 2%;
+				}
+
+				input {
+					height: 100%;
+				}
 			}
 		}
 
 		ul {
-			padding: 0;
+			padding: 0 2%;
 			list-style-type: none;
 			max-height: 50%;
 			overflow-y: scroll;
 
+			li {
+				width: 100%;
+			}
+			.committer-name {
+				font-weight: bold;
+				color: @text-color-highlight;
+			}
 			.committer-email {
 				display: flex;
 				justify-content: space-between;
@@ -331,6 +346,7 @@
 				}
 				.split:nth-child(2) {
 					width: 25%;
+					text-align: right;
 				}
 				.split:only-child {
 					width: 100%;
