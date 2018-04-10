@@ -368,23 +368,36 @@ export class SimpleUMIs extends Component {
 		this.addUnreadsIndicatorDiv("below");
 	}
 
-	addUnreadsIndicatorDiv(type) {
-		let element = document.getElementById("cs-unreads-" + type);
-		if (!element) {
-			// assume there is only one of these
-			let scrollDiv = document.getElementsByClassName("tool-panel tree-view")[0];
-			let scrollParent = scrollDiv.parentNode;
-			element = document.createElement("div");
-			element.id = "cs-unreads-" + type;
-			element.classList.add("cs-unreads");
-			let indicator = type === "above" ? "&uarr;" : "&darr;";
-			element.innerHTML = indicator + " Unread Messages " + indicator;
-			// element.onclick = function(event) {
-			// 	if (type === "below") scrollDiv.scrollTop += scrollDiv.offsetHeight;
-			// 	else scrollDiv.scrollTop -= scrollDiv.offsetHeight;
-			// };
-			scrollParent.prepend(element);
-		}
+	addUnreadsIndicatorDiv(aboveOrBelow) {
+		let element = document.getElementById("cs-unreads-" + aboveOrBelow);
+
+		// if the element already exists, we don't need to add it
+		if (element) return;
+
+		// if there is no tree-view, we can't add elements to it! ;)
+		let scrollDivs = document.getElementsByClassName("tool-panel tree-view");
+		if (!scrollDivs.length) return;
+
+		// assume there is only one of these -- this might not always be true in future
+		let scrollDiv = scrollDivs[0];
+		if (!scrollDiv) return;
+
+		// we use the parent element to make the divs fixed to the top
+		// and bottom of the viewport of the tree-view
+		let scrollParent = scrollDiv.parentNode;
+		if (!scrollParent) return;
+
+		// create the element
+		element = document.createElement("div");
+		element.id = "cs-unreads-" + aboveOrBelow;
+		element.classList.add("cs-unreads");
+		let indicator = aboveOrBelow === "above" ? "&uarr;" : "&darr;";
+		element.innerHTML = indicator + " Unread Messages " + indicator;
+		// element.onclick = function(event) {
+		// 	if (aboveOrBelow === "below") scrollDiv.scrollTop += scrollDiv.offsetHeight;
+		// 	else scrollDiv.scrollTop -= scrollDiv.offsetHeight;
+		// };
+		scrollParent.prepend(element);
 	}
 }
 
