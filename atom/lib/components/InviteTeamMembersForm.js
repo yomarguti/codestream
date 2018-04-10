@@ -100,6 +100,8 @@ export class InvitePage extends Component {
 		const { newMemberEmail, newMemberEmailInvalid, inputTouched } = this.state;
 		return (
 			<div id="invite-team-members">
+				<Button onClick={this.props.goBack}>Back to stream</Button>
+				<br />
 				<h2>{`Team ${this.props.teamName}`}</h2>
 				<form onSubmit={this.onSubmit}>
 					<div className="errors">
@@ -152,7 +154,6 @@ export class InvitePage extends Component {
 						</li>
 					))}
 				</ul>
-				<Button onClick={this.props.goBack}>DONE</Button>
 			</div>
 		);
 	}
