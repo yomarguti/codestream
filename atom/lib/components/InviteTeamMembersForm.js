@@ -114,17 +114,15 @@ export class InvitePage extends Component {
 					</div>
 					<div className="add-member-form">
 						<div>
-							<Tooltip title="Team member's email address" placement="left" delay="0">
-								<input
-									className="native-key-bindings input-text"
-									type="text"
-									placeholder="Enter email address"
-									value={newMemberEmail}
-									onChange={this.onNewMemberChange}
-									onBlur={this.onNewMemberBlur}
-									autoFocus
-								/>
-							</Tooltip>
+							<input
+								className="native-key-bindings input-text"
+								type="text"
+								placeholder="Enter email address"
+								value={newMemberEmail}
+								onChange={this.onNewMemberChange}
+								onBlur={this.onNewMemberBlur}
+								autoFocus
+							/>
 						</div>
 						<Button>
 							<FormattedMessage id="teamMemberSelection.add" defaultMessage="INVITE" />
