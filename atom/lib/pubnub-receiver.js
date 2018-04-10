@@ -27,13 +27,13 @@ export default class PubNubReceiver {
 			subscribeKey: subscribeKey,
 			restore: true,
 			logVerbosity: false,
-			heartBeatInterval: 30
+			heartbeatInterval: 30
 		});
 		this.setupListener();
 	}
 
 	isInitialized() {
-		return Boolean(this.pubNub);
+		return Boolean(this.pubnub);
 	}
 
 	setupListener() {
