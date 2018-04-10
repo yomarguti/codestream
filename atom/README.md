@@ -1,6 +1,6 @@
 # CodeStream
 
-CodeStream puts team chat into Atom (and other IDEs) so that developers can discuss code where they code. Conversation threads automatically become annotations that live with the codebase forever, so your codebase gets smarter over time.
+Build a knowledge base for your codebase. CodeStream allows your development team to collaborate within Atom and conversation threads automatically become annotations that live with your codebase forever, so your codebase gets smarter over time.
 
 ![FullIDE](https://codestream.zendesk.com/hc/article_attachments/360000712271/CodeStream.png)
 
