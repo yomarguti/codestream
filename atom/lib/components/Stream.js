@@ -697,6 +697,9 @@ export class SimpleStream extends Component {
 		var postDiv = event.target.closest(".post");
 		if (!postDiv) return;
 
+		// if they clicked a link, follow the link rather than selecting the post
+		if (event && event.target && event.target.tagName === "A") return false;
+
 		// console.log(event.target.id);
 		if (event.target.id === "discard-button") {
 			// if the user clicked on the cancel changes button,
