@@ -24,7 +24,7 @@ import { createPost, editPost, deletePost, fetchPosts } from "../actions/post";
 import { toMapBy } from "../reducers/utils";
 import { rangeToLocation } from "../util/Marker";
 import { getStreamForRepoAndFile } from "../reducers/streams";
-import { getPostsForStream } from "../reducers/posts";
+import { getPostsForRepo } from "../reducers/posts";
 import rootLogger from "../util/Logger";
 import Button from "./onboarding/Button";
 import EditingIndicator from "./EditingIndicator";
@@ -1286,7 +1286,7 @@ const mapStateToProps = ({
 		editingUsers: stream.editingUsers,
 		usernamesRegexp: usernamesRegexp,
 		currentUser: users[session.userId],
-		posts: getPostsForStream(posts, stream.id || context.currentFile).map(post => {
+		posts: getPostsForRepo(posts, context.currentRepoId).map(post => {
 			let user = users[post.creatorId];
 			if (!user) {
 				console.warn(
