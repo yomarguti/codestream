@@ -7,6 +7,10 @@ import { UnreadDecorationProvider } from './decorationProvider';
 import { CodeStreamExplorer } from './views/explorer';
 import { Git } from './git/git';
 import { StreamWebViewProvider } from './streamWebViewProvider';
+import { CodeStreamCodeActionProvider } from './codeActionProvider';
+import { CodeStreamCodeLensProvider } from './codeLensProvider';
+import { CodeStreamMarkerDecorationProvider } from './markerDecorationProvider';
+import { StatusBarController } from './statusBarController';
 
 export class Container {
 
@@ -15,9 +19,14 @@ export class Container {
         this._config = config;
 
         context.subscriptions.push(this._git = new Git());
-        context.subscriptions.push(this._session = await CodeStreamSession.create(config.serverUrl));
+        context.subscriptions.push(this._session = new CodeStreamSession(config.serverUrl));
+
+        context.subscriptions.push(this._codeActions = new CodeStreamCodeActionProvider());
+        // context.subscriptions.push(this._codeLens = new CodeStreamCodeLensProvider());
+        // context.subscriptions.push(this._markerDecorations = new CodeStreamMarkerDecorationProvider());
+        context.subscriptions.push(this._statusBar = new StatusBarController());
         context.subscriptions.push(this._streamWebView = new StreamWebViewProvider());
-        context.subscriptions.push(this._unreadDecorator = new UnreadDecorationProvider());
+        // context.subscriptions.push(this._unreadDecorator = new UnreadDecorationProvider());
 
         if (config.explorer.enabled) {
             context.subscriptions.push(this._explorer = new CodeStreamExplorer());
@@ -31,6 +40,16 @@ export class Container {
                 }
             });
         }
+    }
+
+    private static _codeActions: CodeStreamCodeActionProvider;
+    static get codeActions() {
+        return this._codeActions;
+    }
+
+    private static _codeLens: CodeStreamCodeLensProvider;
+    static get codeLens() {
+        return this._codeLens;
     }
 
     private static _config: IConfig | undefined;
@@ -54,6 +73,16 @@ export class Container {
     private static _git: Git;
     static get git() {
         return this._git;
+    }
+
+    private static _markerDecorations: CodeStreamMarkerDecorationProvider;
+    static get markerDecorations() {
+        return this._markerDecorations;
+    }
+
+    private static _statusBar: StatusBarController;
+    static get statusBar() {
+        return this._statusBar;
     }
 
     private static _session: CodeStreamSession;

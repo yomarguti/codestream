@@ -3,6 +3,7 @@ import { Disposable, Event, EventEmitter, extensions, Uri, workspace, WorkspaceF
 import { GitRemote, GitRepository } from './models/models';
 import { CommandOptions, runCommand } from './shell';
 import { GitRemoteParser } from './parsers/remoteParser';
+import * as path from 'path';
 
 interface GitApi {
     getGitPath(): Promise<string>;
@@ -53,9 +54,14 @@ export class Git extends Disposable {
         return data.trim().split('\n');
     }
 
-    static async getRemoteUri(repo: GitRepository): Promise<Uri | undefined>;
-    static async getRemoteUri(repoPath: string): Promise<Uri | undefined>;
-    static async getRemoteUri(repoOrPath: GitRepository | string): Promise<Uri | undefined> {
+    static async getCurrentSha(uri: Uri) {
+        const dir = path.dirname(uri.fsPath);
+        return git({ cwd: dir }, 'log', '-n1', '--format="%h"', '--', path.relative(dir, uri.fsPath));
+    }
+
+    static async getNormalizedRemoteUrl(repo: GitRepository): Promise<string | undefined>;
+    static async getNormalizedRemoteUrl(repoPath: string): Promise<string | undefined>;
+    static async getNormalizedRemoteUrl(repoOrPath: GitRepository | string): Promise<string | undefined> {
         const path = (typeof repoOrPath === 'string') ? repoOrPath : repoOrPath.rootUri.fsPath;
 
         let data;
@@ -81,7 +87,9 @@ export class Git extends Disposable {
         }
 
         const remote = push || fetch;
-        return remote && Uri.parse(remote.url);
+        if (remote === undefined) return undefined;
+
+        return `${remote.domain}/${remote.path}`;
     }
 
     static async getRepositories(): Promise<GitRepository[]> {

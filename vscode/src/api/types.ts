@@ -8,6 +8,20 @@ export interface Entity {
     creatorId: string;
 }
 
+export interface Marker {
+    id: string;
+    teamId: string;
+    streamId: string;
+    postId: string;
+}
+
+export interface MarkerLocations {
+    teamId: string;
+    streamId: string;
+    commitHash: string;
+    locations: { [id: string]: [number, number, number, number] };
+}
+
 export interface Post extends Entity {
     streamId: string;
     text: string;
@@ -99,6 +113,15 @@ export interface CreateStreamResponse {
 export interface FindRepoResponse {
     repo?: Repository;
     usernames?: string[];
+}
+
+export interface GetMarkerLocationsResponse {
+    markerLocations: MarkerLocations;
+}
+
+export interface GetMarkersResponse {
+    markers: Marker[];
+    numMarkers: number;
 }
 
 export interface GetPostsResponse {

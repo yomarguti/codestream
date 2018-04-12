@@ -5,6 +5,7 @@ import {
     CreateRepoRequest, CreateRepoResponse,
     CreateStreamRequest, CreateStreamResponse,
     FindRepoResponse,
+    GetMarkerLocationsResponse, GetMarkersResponse,
     GetPostsResponse,
     GetRepoResponse, GetReposResponse,
     GetStreamResponse, GetStreamsResponse,
@@ -13,7 +14,7 @@ import {
     LoginRequest, LoginResponse
 } from './types';
 
-export * from './models';
+export * from './models/models';
 export * from './types';
 
 const responseCache = new Map<string, Promise<any>>();
@@ -47,6 +48,14 @@ export class CodeStreamApi {
     findRepo(url: string, firstCommitHashes: string[]) {
         // TODO: Send all
         return this.get<FindRepoResponse>(`/no-auth/find-repo?url=${encodeURIComponent(url)}&firstCommitHash=${firstCommitHashes[0]}`);
+    }
+
+    getMarkerLocations(token: string, teamId: string, streamId: string, commitHash: string): Promise<GetMarkerLocationsResponse> {
+        return this.get<GetMarkerLocationsResponse>(`/posts?teamId=${teamId}&streamId=${streamId}&commitHash=${commitHash}`, token);
+    }
+
+    getMarkers(token: string, teamId: string, streamId: string): Promise<GetMarkersResponse> {
+        return this.get<GetMarkersResponse>(`/markers?teamId=${teamId}&streamId=${streamId}`, token);
     }
 
     getPosts(token: string, teamId: string, streamId: string): Promise<GetPostsResponse> {

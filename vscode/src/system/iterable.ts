@@ -52,11 +52,11 @@ export namespace Iterables {
         }
     }
 
-    export function find<T>(source: Iterable<T> | IterableIterator<T>, predicate: (item: T) => boolean): T | null {
+    export function find<T>(source: Iterable<T> | IterableIterator<T>, predicate: (item: T) => boolean): T | undefined {
         for (const item of source) {
             if (predicate(item)) return item;
         }
-        return null;
+        return undefined;
     }
 
     export function first<T>(source: Iterable<T>): T {
@@ -99,8 +99,8 @@ export namespace Iterables {
         return value;
     }
 
-    export function last<T>(source: Iterable<T>): T | null {
-        let item: T | null = null;
+    export function last<T>(source: Iterable<T>): T | undefined {
+        let item: T | undefined;
         for (item of source) { /* noop */ }
         return item;
     }

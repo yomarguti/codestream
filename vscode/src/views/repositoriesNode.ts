@@ -1,33 +1,24 @@
 'use strict';
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
-import { CodeStreamSession, Team } from '../api/session';
+import { CodeStreamSession } from '../api/session';
 import { ExplorerNode, ResourceType } from './explorerNode';
 import { RepositoryNode } from './repositoryNode';
-import { Container } from '../container';
-import { Iterables } from '../system';
 
 export class RepositoriesNode extends ExplorerNode {
 
     constructor(
-        public readonly session: CodeStreamSession,
-        private readonly team: Team
+        public readonly session: CodeStreamSession
     ) {
         super();
     }
 
     get id() {
-        return `repositories:${this.team.id}`;
+        return `repositories:${this.session.id}`;
     }
 
     async getChildren(): Promise<ExplorerNode[]> {
-        return Array.from(this.session.getRepositories())
+        return Array.from(await this.session.repos.items)
             .map(r => new RepositoryNode(this.session, r));
-        // const repos = await this.session.getRepos(this.team.id);
-        // const gitRepos = await Container.git.getRepositories();
-
-        // return repos
-        //     .filter(r => gitRepos.find(gr => gr.rootUri.toString() === r.normalizedUrl))
-        //     .map(r => new RepositoryNode(this.session, r));
     }
 
     getTreeItem(): TreeItem {

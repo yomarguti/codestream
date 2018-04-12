@@ -6,11 +6,14 @@ import { IConfig } from './config';
 import { configuration, Configuration } from './configuration';
 import { Container } from './container';
 import { Context, setContext } from './context';
+import { SessionStatus, SessionStatusChangedEvent } from './api/session';
 
 export async function activate(context: ExtensionContext) {
     Configuration.configure(context);
     const cfg = configuration.get<IConfig>();
     await Container.initialize(context, cfg);
+
+    context.subscriptions.push(Container.session.onDidChangeStatus(onSessionStatusChanged));
 
     if (cfg.username && cfg.password) {
         attemptLogin(cfg.username, cfg.password);
@@ -44,10 +47,14 @@ export async function deactivate(): Promise<void> {
 async function attemptLogin(username: string, password: string) {
     try {
         await Container.session.login(username, password);
-        setContext(Context.Enabled, true);
-        setContext(Context.Explorer, Container.config.explorer.enabled);
     }
     catch (ex) {
         debugger;
     }
+}
+
+function onSessionStatusChanged(e: SessionStatusChangedEvent) {
+    const signedIn = e.getStatus() === SessionStatus.SignedIn;
+    setContext(Context.Enabled, signedIn);
+    setContext(Context.Explorer, signedIn && Container.config.explorer.enabled);
 }

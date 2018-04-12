@@ -53,6 +53,16 @@
         },
         "commands": [
             {
+                "command": "codestream.login",
+                "title": "Sign in to CodeStream...",
+                "category": "CodeStream"
+            },
+            {
+                "command": "codestream.openStream",
+                "title": "Open CodeStream",
+                "category": "CodeStream"
+            },
+            {
                 "command": "codestream.open",
                 "title": "Open CodeStream",
                 "category": "CodeStream"
@@ -66,13 +76,46 @@
                 "command": "codestream.users",
                 "title": "CodeStream Users",
                 "category": "CodeStream"
+            },
+            {
+                "command": "codestream.explorer.refresh",
+                "title": "Refresh",
+                "category": "CodeStream"
+            },
+            {
+                "command": "codestream.explorer.refreshNode",
+                "title": "Refresh",
+                "category": "CodeStream"
             }
         ],
         "menus": {
             "commandPalette": [
                 {
+                    "command": "codestream.login",
+                    "when": "!codestream:enabled"
+                },
+                {
+                    "command": "codestream.openStream",
+                    "when": "editorTextFocus && codestream:enabled"
+                },
+                {
                     "command": "codestream.open",
                     "when": "codestream:enabled"
+                },
+                {
+                    "command": "codestream.explorer.refresh",
+                    "when": "false"
+                },
+                {
+                    "command": "codestream.explorer.refreshNode",
+                    "when": "false"
+                }
+            ],
+            "view/item/context": [
+                {
+                    "command": "codestream.explorer.refreshNode",
+                    "when": "view == codestream",
+                    "group": "9_codestream@1"
                 }
             ]
         },

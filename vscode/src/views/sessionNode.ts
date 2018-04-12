@@ -2,7 +2,8 @@
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { CodeStreamSession } from '../api/session';
 import { ExplorerNode, ResourceType } from './explorerNode';
-import { TeamNode } from './teamNode';
+import { PeopleNode } from './peopleNode';
+import { RepositoriesNode } from './repositoriesNode';
 
 export class SessionNode extends ExplorerNode {
 
@@ -13,13 +14,10 @@ export class SessionNode extends ExplorerNode {
     }
 
     async getChildren(): Promise<ExplorerNode[]> {
-        const teams = await this.session.getTeams();
-        if (teams.length === 1) {
-            const node = new TeamNode(this.session, teams[0]);
-            return await node.getChildren();
-        }
-
-        return teams.map(t => new TeamNode(this.session, t));
+        return [
+            new RepositoriesNode(this.session),
+            new PeopleNode(this.session)
+        ];
     }
 
     async getTreeItem(): Promise<TreeItem> {

@@ -1,25 +1,27 @@
 'use strict';
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
-import { CodeStreamSession, Team } from '../api/session';
+import { CodeStreamSession } from '../api/session';
 import { ExplorerNode, ResourceType } from './explorerNode';
 import { UserNode } from './userNode';
 
 export class PeopleNode extends ExplorerNode {
 
     constructor(
-        public readonly session: CodeStreamSession,
-        private readonly team: Team
+        public readonly session: CodeStreamSession
     ) {
         super();
     }
 
     get id() {
-        return `people:${this.team.id}`;
+        return `people:${this.session.id}`;
     }
 
     async getChildren(): Promise<ExplorerNode[]> {
-        const users = await this.session.getUsers(this.team.id);
-        return users.map(u => new UserNode(this.session, this.team, u));
+        return Array.from(await this.session.users.items)
+            .map(u => new UserNode(this.session, u));
+
+        // const users = await this.session.getUsers(this.team.id);
+        // return users.map(u => new UserNode(this.session, this.team, u));
     }
 
     getTreeItem(): TreeItem {

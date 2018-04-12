@@ -56,7 +56,7 @@ export class CodeStreamExplorer extends Disposable implements TreeDataProvider<E
         if (!initializing && !configuration.changed(e, configuration.name('explorer').value)) return;
 
         if (!initializing && configuration.changed(e, configuration.name('explorer')('enabled').value)) {
-            setContext(Context.Explorer, Container.session.loggedIn && Container.config.explorer.enabled);
+            setContext(Context.Explorer, Container.session.signedIn && Container.config.explorer.enabled);
         }
 
         if (!initializing && this._roots.length !== 0) {
