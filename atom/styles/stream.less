@@ -487,12 +487,13 @@
 				// top: 50px;
 				// left: 30px;
 			}
-			.replying-to {
+			.replying-to, .code-reference span {
 				height: 1.4em;
 				overflow: hidden;
 				text-overflow: ellipsis;
 				white-space: pre;
 				color: @text-color-info;
+				display: block;
 				span {
 					opacity: 0.5;
 					color: @text-color;
@@ -500,6 +501,10 @@
 				b {
 					font-weight: normal;
 				}
+			}
+			.code-reference span {
+				direction: rtl;
+			    text-align: left;
 			}
 			a {
 				text-decoration: none;

@@ -64,7 +64,7 @@ class Post extends Component {
 		let alert = null;
 		if (post.codeBlocks && post.codeBlocks.length) {
 			let code = post.codeBlocks[0].code;
-			codeBlock = <div className="code">{code}</div>;
+			codeBlock = <div className="code-reference"><span>{post.file}</span><div className="code">{code}</div></div>;
 		}
 
 		logger.debug("UNR IS: ", this.props.usernames);

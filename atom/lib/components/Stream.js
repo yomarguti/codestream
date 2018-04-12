@@ -1306,6 +1306,7 @@ const mapStateToProps = ({
 			const { username, email, firstName = "", lastName = "", color } = user;
 			return {
 				...post,
+				file: context.currentFile,
 				markerLocation: locations[post.id],
 				author: { username, email, color, fullName: `${firstName} ${lastName}`.trim() }
 			};
