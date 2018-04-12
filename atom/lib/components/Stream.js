@@ -24,7 +24,7 @@ import { createPost, editPost, deletePost, fetchPosts } from "../actions/post";
 import { toMapBy } from "../reducers/utils";
 import { rangeToLocation } from "../util/Marker";
 import { getStreamForRepoAndFile } from "../reducers/streams";
-import { getPostsForRepo } from "../reducers/posts";
+import { getPostsForRepo, getPostsForStream } from "../reducers/posts";
 import rootLogger from "../util/Logger";
 import Button from "./onboarding/Button";
 import EditingIndicator from "./EditingIndicator";
@@ -1274,6 +1274,10 @@ const mapStateToProps = ({
 
 	const isOnline =
 		!connectivity.offline && messaging.failedSubscriptions.length === 0 && !messaging.timedOut;
+
+	const streamPosts = atom.config.get("CodeStream.streamPerFile")
+		? getPostsForStream(posts, stream.id || context.currentFile)
+		: getPostsForRepo(posts, context.currentRepoId);
 	return {
 		isOnline,
 		id: stream.id,
@@ -1286,7 +1290,7 @@ const mapStateToProps = ({
 		editingUsers: stream.editingUsers,
 		usernamesRegexp: usernamesRegexp,
 		currentUser: users[session.userId],
-		posts: getPostsForRepo(posts, context.currentRepoId).map(post => {
+		posts: streamPosts.map(post => {
 			let user = users[post.creatorId];
 			if (!user) {
 				console.warn(

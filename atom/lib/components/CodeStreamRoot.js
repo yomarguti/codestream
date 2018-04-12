@@ -11,6 +11,7 @@ import Stream from "./Stream";
 import NoAccess from "./NoAccess";
 import OfflineBanner from "./OfflineBanner";
 import SlackInfo from "./SlackInfo";
+import withConfigs from "./withConfigs";
 
 const Loading = props => (
 	<div className="loading-page">
@@ -104,4 +105,4 @@ const mapStateToProps = ({
 	bootstrapped,
 	onboarding
 });
-export default connect(mapStateToProps)(CodeStreamRoot);
+export default connect(mapStateToProps)(withConfigs(CodeStreamRoot));

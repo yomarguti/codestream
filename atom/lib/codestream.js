@@ -121,6 +121,11 @@ module.exports = {
 	view: null,
 	statusBar: null,
 	config: {
+		streamPerFile: {
+			description: "Display different streams for each file.",
+			type: "boolean",
+			default: false
+		},
 		showHeadshots: {
 			description: "Display headshots in the stream",
 			type: "boolean",
