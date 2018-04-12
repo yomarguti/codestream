@@ -67,6 +67,7 @@
 		"react-dom": "^16.2.0",
 		"react-gravatar": "^2.6.3",
 		"react-intl": "^2.4.0",
+		"react-linkify": "^0.2.2",
 		"react-redux": "^5.0.6",
 		"redux": "^3.7.2",
 		"redux-devtools-extension": "^2.13.2",

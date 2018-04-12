@@ -10,6 +10,7 @@ import { retryPost, cancelPost } from "../actions/post";
 import rootLogger from "../util/Logger";
 import ContentEditable from "react-contenteditable";
 import Button from "./onboarding/Button";
+import Linkify from "react-linkify";
 
 const logger = rootLogger.forClass("components/Post");
 
@@ -140,7 +141,7 @@ class Post extends Component {
 						</span>
 					);
 			} else {
-				return part;
+				return <Linkify>{part}</Linkify>;
 			}
 		});
 	};
