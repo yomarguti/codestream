@@ -108,8 +108,8 @@ export default store => {
 		// Don't try to catchup when user is doing first onboarding
 		if (
 			action.type === "USER_CONFIRMED" ||
+			action.type === "EXISTING_USER_CONFIRMED" ||
 			action.type === "NEW_USER_LOGGED_INTO_NEW_REPO" ||
-			action.type === "NEW_USER_CONFIRMED_IN_NEW_REPO" ||
 			action.type === "EXISTING_USER_LOGGED_INTO_NEW_REPO"
 		)
 			_initializePubnubAndSubscribe(store, receiver, false);

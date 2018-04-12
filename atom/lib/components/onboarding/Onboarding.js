@@ -8,6 +8,7 @@ import TeamCreationForm from "./TeamCreationForm";
 import TeamSelectionForm from "./TeamSelectionForm";
 import TeamMemberSelectionForm from "./TeamMemberSelectionForm";
 import ChangeUsernameForm from "./ChangeUsernameForm";
+import GetInvitedForm from "./GetInvitedForm";
 
 const views = {
 	selectRemote: RemoteSelectionForm,
@@ -16,6 +17,7 @@ const views = {
 	login: LoginForm,
 	createTeam: TeamCreationForm,
 	selectTeam: TeamSelectionForm,
+	getInvited: GetInvitedForm,
 	identifyMembers: TeamMemberSelectionForm,
 	changeUsername: ChangeUsernameForm
 };

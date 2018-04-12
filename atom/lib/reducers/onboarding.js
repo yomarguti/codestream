@@ -26,16 +26,29 @@ export default (state = initialState, { type, payload }) => {
 			return { ...initialState, step: "login" };
 		case "GO_TO_SIGNUP":
 			return { ...initialState, step: "signUp" };
+		case "GO_TO_CREATE_TEAM":
+			return { ...initialState, step: "createTeam" };
+		case "GO_TO_SELECT_TEAM":
+			return { ...initialState, step: "selectTeam" };
 		case "SIGNUP-USERNAME_COLLISION":
 			return { ...state, errors: { usernameInUse: true } };
 		case "NEW_USER_LOGGED_INTO_NEW_REPO":
-			return { ...initialState, step: "createTeam" };
-		case "NEW_USER_CONFIRMED_IN_NEW_REPO":
-			return { ...initialState, step: "createTeam", firstTimeInAtom: true };
+			return { ...initialState, step: "createTeam", firstTimeInAtom: payload.firstTimeInAtom };
+		case "NEW_USER_LOGGED_INTO_MATCHED_REPO":
+			return {
+				...initialState,
+				step: "getInvited",
+				...payload
+			};
 		case "EXISTING_USER_LOGGED_INTO_NEW_REPO":
-			return { ...initialState, step: "selectTeam" };
-		case "EXISTING_USER_CONFIRMED_IN_NEW_REPO":
-			return { ...initialState, step: "selectTeam", firstTimeInAtom: true };
+			return { ...initialState, step: "selectTeam", firstTimeInAtom: payload.firstTimeInAtom };
+		case "EXISTING_USER_LOGGED_INTO_MATCHED_REPO":
+			return {
+				...initialState,
+				step: "getInvited",
+				alreadyOnTeam: true,
+				...payload
+			};
 		case "LOGGED_INTO_FOREIGN_REPO":
 			return { ...initialState, step: "noAccess" };
 		case "EXISTING_USER_CONFIRMED_IN_FOREIGN_REPO":
@@ -59,6 +72,7 @@ export default (state = initialState, { type, payload }) => {
 		case "REPO_ADDED_FOR_TEAM":
 			return {
 				...initialState,
+				firstTimeInAtom: state.firstTimeInAtom,
 				step: "identifyMembers",
 				props: { existingTeam: true, teamName: payload }
 			};
