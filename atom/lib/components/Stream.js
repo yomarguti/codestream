@@ -23,7 +23,7 @@ import * as routingActions from "../actions/routing";
 import { createPost, editPost, deletePost, fetchPosts } from "../actions/post";
 import { toMapBy } from "../reducers/utils";
 import { rangeToLocation } from "../util/Marker";
-import { getStreamForRepoAndFile } from "../reducers/streams";
+import { getStreamForRepoAndFile, getStreamsForRepoById } from "../reducers/streams";
 import { getPostsForRepo, getPostsForStream } from "../reducers/posts";
 import rootLogger from "../util/Logger";
 import Button from "./onboarding/Button";
@@ -168,25 +168,27 @@ export class SimpleStream extends Component {
 	componentWillReceiveProps(nextProps) {
 		const switchingStreams = nextProps.id !== this.props.id;
 
-		if (nextProps.id && switchingStreams && nextProps.posts.length === 0) {
-			this.props.fetchPosts({ streamId: nextProps.id, teamId: nextProps.teamId });
-		}
-
-		if (switchingStreams) {
-			this.saveComposeState(nextProps.id);
-			this.handleDismissThread({ track: false });
-
-			// keep track of the new message indicator in "this" instead of looking
-			// directly at currentUser.lastReads, because that will change and trigger
-			// a re-render, which would remove the "new messages" line
-			this.postWithNewMessageIndicator = null;
-			if (this.props.currentUser && this.props.currentUser.lastReads) {
-				this.postWithNewMessageIndicator = this.props.currentUser.lastReads[nextProps.id];
+		if (atom.config.get("CodeStream.streamPerFile")) {
+			if (nextProps.id && switchingStreams && nextProps.posts.length === 0) {
+				this.props.fetchPosts({ streamId: nextProps.id, teamId: nextProps.teamId });
 			}
-			// console.log("Switch to: ", nextProps.id);
+
+			if (switchingStreams) {
+				this.saveComposeState(nextProps.id);
+				this.handleDismissThread({ track: false });
+
+				// keep track of the new message indicator in "this" instead of looking
+				// directly at currentUser.lastReads, because that will change and trigger
+				// a re-render, which would remove the "new messages" line
+				this.postWithNewMessageIndicator = null;
+				if (this.props.currentUser && this.props.currentUser.lastReads) {
+					this.postWithNewMessageIndicator = this.props.currentUser.lastReads[nextProps.id];
+				}
+				// console.log("Switch to: ", nextProps.id);
+			}
 		}
 
-		const switchingFiles = nextProps.currentFile !== this.props.currentFile;
+		let switchingFiles = nextProps.currentFile !== this.props.currentFile;
 		if (switchingFiles || nextProps.currentCommit !== this.props.currentCommit) {
 			const editor = atom.workspace.getActiveTextEditor();
 			if (editor) {
@@ -232,7 +234,6 @@ export class SimpleStream extends Component {
 	}
 
 	showDisplayMarker(markerId) {
-		// FIXME -- switch to stream if code is from another buffer
 		const editor = atom.workspace.getActiveTextEditor();
 		const displayMarkers = editor.displayMarkers;
 
@@ -749,7 +750,7 @@ export class SimpleStream extends Component {
 
 	// show the thread related to the given post, and if there is
 	// a codeblock, scroll to it and select it
-	selectPost = id => {
+	selectPost = async id => {
 		mixpanel.track("Page Viewed", { "Page Name": "Thread View" });
 		const post = this.findPostById(id);
 		if (!post) return;
@@ -760,6 +761,12 @@ export class SimpleStream extends Component {
 		this.setState({ threadId: threadId, threadActive: true });
 
 		if (post.codeBlocks && post.codeBlocks.length) {
+			if (!atom.config.get("CodeStream.streamPerFile")) {
+				if (this.props.currentFile !== post.file) {
+					await atom.workspace.open(post.file);
+				}
+			}
+
 			const codeBlock = post.codeBlocks[0];
 			this.hideDisplayMarker();
 			this.showDisplayMarker(codeBlock.markerId);
@@ -1234,6 +1241,7 @@ const mapStateToProps = ({
 	messaging,
 	onboarding
 }) => {
+	const repoStreams = getStreamsForRepoById(streams, context.currentRepoId) || {};
 	const stream = getStreamForRepoAndFile(streams, context.currentRepoId, context.currentFile) || {};
 	const markersForStreamAndCommit = getMarkersForStreamAndCommit(
 		markerLocations.byStream[stream.id],
@@ -1304,9 +1312,10 @@ const mapStateToProps = ({
 				};
 			}
 			const { username, email, firstName = "", lastName = "", color } = user;
+			const postStream = repoStreams[post.streamId] || {};
 			return {
 				...post,
-				file: context.currentFile,
+				file: postStream.file,
 				markerLocation: locations[post.id],
 				author: { username, email, color, fullName: `${firstName} ${lastName}`.trim() }
 			};

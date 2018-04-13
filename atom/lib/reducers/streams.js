@@ -15,6 +15,10 @@ const addStream = (state, stream) => {
 				byFile: {
 					...existingStreamsForRepo.byFile,
 					[stream.file]: stream
+				},
+				byId: {
+					...existingStreamsForRepo.byId,
+					[stream.id]: stream
 				}
 			}
 		}
@@ -42,4 +46,8 @@ export const getStreamForRepoAndFile = (state, repoId, file) => {
 
 export const getStreamsForRepo = (state, repoId) => {
 	return (state.byRepo[repoId] || {}).byFile;
+};
+
+export const getStreamsForRepoById = (state, repoId) => {
+	return (state.byRepo[repoId] || {}).byId;
 };

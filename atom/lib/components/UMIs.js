@@ -135,20 +135,25 @@ export class SimpleUMIs extends Component {
 		});
 		this.totalCount = totalUMICount;
 		app.setBadgeCount(Math.floor(totalUMICount)); // TODO: This needs to be smarter and it should add to the current badge count rather than replace it
-		Object.keys(umis.unread).map(key => {
-			let path = streamMap[key] || "";
-			this.treatPath(path);
-		});
 
-		let prefPath = ["streamTreatments", this.props.repoId];
-		let treatments = getUserPreference(this.props.currentUser, prefPath) || {};
-		Object.keys(treatments).map(path => {
-			// logger.debug("Treating ", path, " with ", treatments[path]);
-			let isMute = treatments[path] === "mute" ? 1 : 0;
-			this.treatMute(path, isMute);
-		});
+		if (atom.config.get("CodeStream.streamPerFile")) {
 
-		this.handleScroll();
+			Object.keys(umis.unread).map(key => {
+				let path = streamMap[key] || "";
+				this.treatPath(path);
+			});
+
+			let prefPath = ["streamTreatments", this.props.repoId];
+			let treatments = getUserPreference(this.props.currentUser, prefPath) || {};
+			Object.keys(treatments).map(path => {
+				// logger.debug("Treating ", path, " with ", treatments[path]);
+				let isMute = treatments[path] === "mute" ? 1 : 0;
+				this.treatMute(path, isMute);
+			});
+
+			this.handleScroll();
+		}
+
 		return null;
 	}
 
