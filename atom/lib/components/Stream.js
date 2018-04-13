@@ -487,6 +487,7 @@ export class SimpleStream extends Component {
 
 		let fileAbbreviation = this.fileAbbreviation();
 		let placeholderText = "Add comment to " + fileAbbreviation;
+		if (!atom.config.get("CodeStream.streamPerFile")) placeholderText = "Add comment";
 		if (this.state.threadActive && threadPost) {
 			placeholderText = "Reply to " + threadPost.author.username;
 		}
