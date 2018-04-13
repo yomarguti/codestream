@@ -1,15 +1,18 @@
 'use strict';
 import 'reflect-metadata';
 
-import { commands, ExtensionContext, window } from 'vscode';
-import { IConfig } from './config';
+import { commands, ExtensionContext, MessageItem, window } from 'vscode';
+import { IConfig, TraceLevel } from './config';
 import { configuration, Configuration } from './configuration';
 import { Container } from './container';
 import { Context, setContext } from './context';
 import { SessionStatus, SessionStatusChangedEvent } from './api/session';
+import { Logger } from './logger';
 
 export async function activate(context: ExtensionContext) {
     Configuration.configure(context);
+    Logger.configure(context);
+
     const cfg = configuration.get<IConfig>();
     await Container.initialize(context, cfg);
 
@@ -42,7 +45,24 @@ async function attemptLogin(username: string, password: string) {
         await Container.session.login(username, password);
     }
     catch (ex) {
-        debugger;
+        const actions: MessageItem[] = [
+            { title: 'Retry' }
+        ];
+
+        const tracing = Container.config.traceLevel !== TraceLevel.Silent;
+        if (tracing) {
+            actions.push({ title: 'Open Output Channel' });
+        }
+
+        const result = await window.showErrorMessage(`Unable to sign into CodeStream${!tracing ? '' : '\nSee the CodeStream output channel for more details'}`, ...actions);
+        if (result === undefined) throw ex;
+
+        if (result === actions[0]) {
+            setImmediate(() => attemptLogin(username, password));
+        }
+        else if (result === actions[1]) {
+            Logger.showOutputChannel();
+        }
     }
 }
 

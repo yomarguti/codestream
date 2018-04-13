@@ -1,7 +1,8 @@
 'use strict';
 import { Disposable, StatusBarAlignment, StatusBarItem, window } from 'vscode';
-import { SessionStatus, SessionStatusChangedEvent } from './api/session';
-import { Container } from './container';
+import { SessionStatus, SessionStatusChangedEvent } from '../api/session';
+import { Container } from '../container';
+import { UMIEvent } from './umiController';
 
 export class StatusBarController extends Disposable {
 
@@ -12,7 +13,8 @@ export class StatusBarController extends Disposable {
         super(() => this.dispose());
 
         this._disposable = Disposable.from(
-            Container.session.onDidChangeStatus(this.onSessionStatusChanged, this)
+            Container.session.onDidChangeStatus(this.onSessionStatusChanged, this),
+            Container.umis.onDidChange(this.onUMIChanged, this)
         );
 
         this.updateStatusBar(Container.session.status);
@@ -26,6 +28,10 @@ export class StatusBarController extends Disposable {
         this._disposable && this._disposable.dispose();
     }
 
+    private onUMIChanged(e: UMIEvent) {
+        this.updateStatusBar(Container.session.status, e.getCount());
+    }
+
     private onSessionStatusChanged(e: SessionStatusChangedEvent) {
         this.updateStatusBar(e.getStatus());
     }
@@ -36,7 +42,7 @@ export class StatusBarController extends Disposable {
         }
     }
 
-    private updateStatusBar(status: SessionStatus) {
+    private updateStatusBar(status: SessionStatus, count: number = 0) {
         if (this._statusBarItem === undefined) {
             this._statusBarItem = this._statusBarItem || window.createStatusBarItem(StatusBarAlignment.Right, 1000);
         }
@@ -53,7 +59,7 @@ export class StatusBarController extends Disposable {
                 this._statusBarItem.tooltip = 'Signing in to CodeStream, please wait';
                 break;
             case SessionStatus.SignedIn:
-                this._statusBarItem.text = ` $(comment-discussion) `;
+                this._statusBarItem.text = ` $(comment-discussion) ${count === 0 ? '' : `${count} `}`;
                 this._statusBarItem.command = 'codestream.openStream';
                 this._statusBarItem.tooltip = 'Open CodeStream';
                 break;

@@ -1,5 +1,5 @@
 'use strict';
-import { Disposable, Uri, workspace, WorkspaceFolder } from 'vscode';
+import { Uri, workspace, WorkspaceFolder } from 'vscode';
 import { CodeStreamCollection, CodeStreamItem } from './collection';
 import { Git } from '../../git/git';
 import { Markers } from './markers';
@@ -50,7 +50,7 @@ export class RepositoryCollection extends CodeStreamCollection<Repository, CSRep
     constructor(session: CodeStreamSession) {
         super(session);
 
-        this._disposable = Disposable.from(
+        this.disposables.push(
             session.onDidChange(this.onSessionChanged, this)
         );
     }

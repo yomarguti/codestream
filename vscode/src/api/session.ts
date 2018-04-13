@@ -1,16 +1,17 @@
 'use strict';
 import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, Uri } from 'vscode';
-import { Iterables, Strings } from '../system';
+import { Functions, Iterables, Strings } from '../system';
 import { configuration } from '../configuration';
 import {
     CodeStreamApi,
     LoginResponse,
-    Markers, Repository, RepositoryCollection, Stream, StreamCollection, UserCollection
+    Markers, Post, Repository, RepositoryCollection, Stream, StreamCollection, User, UserCollection
 } from './api';
 import { CodeStreamSessionApi } from './sessionApi';
 import { Git } from '../git/git';
-import { PubNubReceiver } from './pubnub';
+import { MessageReceivedEvent, MessageTypes, PubNubReceiver } from './pubnub';
 import { Container } from '../container';
+import { Logger } from '../logger';
 
 export { Markers, Post, Repository, Stream, User } from './api';
 
@@ -29,6 +30,12 @@ function signedIn(target: CodeStreamSession, propertyName: string, descriptor: T
             return get!.apply(this, arguments);
         };
     }
+}
+
+export interface PostsReceivedEvent {
+    count: number;
+    affects(type: 'team' | 'stream', id: string): boolean;
+    getPosts(): Post[];
 }
 
 export enum SessionStatus {
@@ -59,6 +66,11 @@ export class CodeStreamSession extends Disposable {
         return this._onDidChangeStatus.event;
     }
 
+    private _onDidReceivePosts = new EventEmitter<PostsReceivedEvent>();
+    get onDidReceivePosts(): Event<PostsReceivedEvent> {
+        return this._onDidReceivePosts.event;
+    }
+
     public email: string | undefined;
 
     private _disposable: Disposable | undefined;
@@ -79,6 +91,7 @@ export class CodeStreamSession extends Disposable {
 
         this._disposable = Disposable.from(
             this._git = new Git(),
+            this._pubnub.onDidReceiveMessage(this.onMessageReceived, this),
             configuration.onDidChange(this.onConfigurationChanged, this)
         );
     }
@@ -108,6 +121,39 @@ export class CodeStreamSession extends Disposable {
 
     private onGitRepositoriesChanged() {
         this._onDidChange.fire();
+    }
+
+    private onMessageReceived(e: MessageReceivedEvent) {
+        switch (e.type) {
+            case MessageTypes.Posts:
+                this.firePostsReceived({
+                    count: e.posts.length,
+                    affects: (type: 'stream' | 'team', id: string) => {
+                        let key: string;
+                        switch (type) {
+                            case 'stream':
+                                key = 'streamId';
+                                break;
+                            case 'team':
+                                key = 'teamId';
+                                break;
+                            default:
+                                return false;
+                        }
+                        return e.posts.some(p => (p as { [key: string]: any })[key] === id);
+                    },
+                    getPosts: () => e.posts.map(p => new Post(this, p))
+                });
+                break;
+        }
+    }
+
+    private _postsReceivedDebounced: ((e: PostsReceivedEvent) => void) | undefined;
+    protected firePostsReceived(e: PostsReceivedEvent) {
+        if (this._postsReceivedDebounced === undefined) {
+            this._postsReceivedDebounced = Functions.debounce((e: PostsReceivedEvent) => this._onDidReceivePosts.fire(e), 250);
+        }
+        this._postsReceivedDebounced(e);
     }
 
     @signedIn
@@ -160,6 +206,15 @@ export class CodeStreamSession extends Disposable {
         return this._streams;
     }
 
+    private _user: User | undefined;
+    @signedIn
+    get user() {
+        if (this._user === undefined) {
+            this._user = new User(this, this.data.user);
+        }
+        return this._user!;
+    }
+
     private _users: UserCollection | undefined;
     @signedIn
     get users() {
@@ -199,6 +254,8 @@ export class CodeStreamSession extends Disposable {
         session = this.loginCore(email, password, teamId);
         this._id = id;
         CodeStreamSession._sessions.set(id, session);
+
+        await session;
     }
 
     logout() {
@@ -208,7 +265,7 @@ export class CodeStreamSession extends Disposable {
 
         this._id = undefined;
         this._status = SessionStatus.SignedOut;
-        this._onDidChangeStatus.fire({ getStatus: () => this._status });
+        setImmediate(() => this._onDidChangeStatus.fire({ getStatus: () => this._status }));
 
         if (this._disposableSignedIn !== undefined) {
             this._disposableSignedIn.dispose();
@@ -251,6 +308,8 @@ export class CodeStreamSession extends Disposable {
     }
 
     private async loginCore(email: string, password: string, teamId?: string): Promise<CodeStreamSession> {
+        Logger.log(`Signing ${email} into CodeStream (${this.serverUrl})`);
+
         try {
             this._status = SessionStatus.SigningIn;
             const e = { getStatus: () => this._status };
@@ -275,12 +334,14 @@ export class CodeStreamSession extends Disposable {
 
             this._pubnub.subscribe(this.userId, this.teamId!, this._data.repos[0].id);
 
+            Logger.log(`${email} signed into CodeStream (${this.serverUrl})`);
             this._status = SessionStatus.SignedIn;
             this._onDidChangeStatus.fire(e);
 
             return this;
         }
         catch (ex) {
+            Logger.error(ex);
             this.logout();
 
             throw ex;

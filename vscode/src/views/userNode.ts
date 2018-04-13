@@ -7,7 +7,7 @@ export class UserNode extends ExplorerNode {
 
     constructor(
         public readonly session: CodeStreamSession,
-        private readonly user: User
+        public readonly user: User
     ) {
         super();
     }

@@ -1,4 +1,5 @@
 'use strict';
+export * from './config';
 const ExtensionKey = 'codestream';
 export { ExtensionKey };
 

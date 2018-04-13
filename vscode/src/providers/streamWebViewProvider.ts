@@ -1,6 +1,6 @@
 'use strict';
 import { commands, Disposable, Event, EventEmitter, TextDocumentContentProvider, Uri, ViewColumn, workspace } from 'vscode';
-import { Container } from './container';
+import { Container } from '../container';
 
 const streamUri = Uri.parse('codestream://authority/stream');
 

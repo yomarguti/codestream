@@ -1,6 +1,6 @@
 'use strict';
 import { CodeStreamCollection, CodeStreamItem  } from './collection';
-import { CodeStreamSession, Stream } from '../session';
+import { CodeStreamSession, PostsReceivedEvent, Stream } from '../session';
 import { CSPost } from '../types';
 
 export class Post extends CodeStreamItem<CSPost> {
@@ -43,6 +43,16 @@ export class PostCollection extends CodeStreamCollection<Post, CSPost> {
         public readonly stream: Stream
     ) {
         super(session);
+
+        this.disposables.push(
+            session.onDidReceivePosts(this.onPostsReceived, this)
+        );
+    }
+
+    private onPostsReceived(e: PostsReceivedEvent) {
+        if (e.affects('stream', this.stream.id)) {
+            this.invalidate();
+        }
     }
 
     protected async fetch() {

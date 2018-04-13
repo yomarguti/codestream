@@ -1,6 +1,6 @@
 'use strict';
 import { execFile } from 'child_process';
-// import { Logger } from '../logger';
+import { Logger } from '../logger';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -124,9 +124,9 @@ export function runCommand(command: string, args: any[], options: CommandOptions
             opts,
             (err: Error & { code?: string | number } | null, stdout, stderr) => {
                 if (!err) {
-                    // if (stderr) {
-                    //     Logger.warn(`Warning(${command} ${args.join(' ')}): ${stderr}`);
-                    // }
+                    if (stderr) {
+                        Logger.warn(`Warning(${command} ${args.join(' ')}): ${stderr}`);
+                    }
                     resolve(stdout);
 
                     return;
@@ -136,7 +136,7 @@ export function runCommand(command: string, args: any[], options: CommandOptions
                     reject(new Error(`Command output exceeded the allocated stdout buffer. Set 'options.maxBuffer' to a larger value than ${opts.maxBuffer} bytes`));
                 }
 
-                // Logger.warn(`Error(${opts.cwd}): ${command} ${args.join(' ')})\n    (${err.code}) ${err.message}\n${stderr}`);
+                Logger.warn(`Error(${opts.cwd}): ${command} ${args.join(' ')})\n    (${err.code}) ${err.message}\n${stderr}`);
                 reject(err);
             }
         );

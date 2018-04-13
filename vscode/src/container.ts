@@ -3,14 +3,16 @@ import { Disposable, ExtensionContext } from 'vscode';
 import { CodeStreamSession } from './api/session';
 import { IConfig } from './config';
 import { configuration } from './configuration';
-import { UnreadDecorationProvider } from './decorationProvider';
+// import { UnreadDecorationProvider } from './providers/decorationProvider';
 import { CodeStreamExplorer } from './views/explorer';
 import { Git } from './git/git';
-import { StreamWebViewProvider } from './streamWebViewProvider';
-import { CodeStreamCodeActionProvider } from './codeActionProvider';
-import { CodeStreamCodeLensProvider } from './codeLensProvider';
-import { CodeStreamMarkerDecorationProvider } from './markerDecorationProvider';
-import { StatusBarController } from './statusBarController';
+import { StreamWebViewProvider } from './providers/streamWebViewProvider';
+import { CodeStreamCodeActionProvider } from './providers/codeActionProvider';
+import { CodeStreamCodeLensProvider } from './providers/codeLensProvider';
+import { CodeStreamMarkerDecorationProvider } from './providers/markerDecorationProvider';
+import { StatusBarController } from './controllers/statusBarController';
+import { UMIController } from './controllers/umiController';
+import { LiveShareController } from './controllers/liveShareController';
 
 export class Container {
 
@@ -20,6 +22,11 @@ export class Container {
 
         context.subscriptions.push(this._git = new Git());
         context.subscriptions.push(this._session = new CodeStreamSession(config.serverUrl));
+        context.subscriptions.push(this._umis = new UMIController());
+
+        // if (extensions.getExtension('MS-vsliveshare.vsliveshare') !== undefined) {
+            context.subscriptions.push(this._liveShare = new LiveShareController());
+        // }
 
         context.subscriptions.push(this._codeActions = new CodeStreamCodeActionProvider());
         // context.subscriptions.push(this._codeLens = new CodeStreamCodeLensProvider());
@@ -75,6 +82,11 @@ export class Container {
         return this._git;
     }
 
+    private static _liveShare: LiveShareController;
+    static get liveShare() {
+        return this._liveShare;
+    }
+
     private static _markerDecorations: CodeStreamMarkerDecorationProvider;
     static get markerDecorations() {
         return this._markerDecorations;
@@ -95,10 +107,15 @@ export class Container {
         return this._streamWebView;
     }
 
-    private static _unreadDecorator: UnreadDecorationProvider;
-    static get unreadDecorator(): UnreadDecorationProvider {
-        return this._unreadDecorator;
+    private static _umis: UMIController;
+    static get umis() {
+        return this._umis;
     }
+
+    // private static _unreadDecorator: UnreadDecorationProvider;
+    // static get unreadDecorator(): UnreadDecorationProvider {
+    //     return this._unreadDecorator;
+    // }
 
     static resetConfig() {
         this._config = undefined;

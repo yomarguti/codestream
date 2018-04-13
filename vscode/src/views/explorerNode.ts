@@ -30,19 +30,22 @@ export abstract class ExplorerNode extends Disposable {
     maxCount: number | undefined;
 
     protected children: ExplorerNode[] | undefined;
-    protected disposable: Disposable | undefined;
 
     constructor() {
         super(() => this.dispose());
     }
 
     dispose() {
-        if (this.disposable !== undefined) {
-            this.disposable.dispose();
-            this.disposable = undefined;
-        }
-
+        this.unsubscribe();
         // this.resetChildren();
+    }
+
+    private _disposables: Disposable[] | undefined;
+    protected get subscriptions() {
+        if (this._disposables === undefined) {
+            this._disposables = [];
+        }
+        return this._disposables;
     }
 
     abstract getChildren(): ExplorerNode[] | Promise<ExplorerNode[]>;
@@ -60,6 +63,13 @@ export abstract class ExplorerNode extends Disposable {
     //         this.children = undefined;
     //     }
     // }
+
+    unsubscribe() {
+        if (this._disposables !== undefined) {
+            this._disposables.forEach(d => d.dispose());
+            this._disposables = undefined;
+        }
+    }
 }
 
 export class MessageNode extends ExplorerNode {

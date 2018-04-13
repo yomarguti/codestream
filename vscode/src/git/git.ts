@@ -1,5 +1,6 @@
 'use strict';
 import { Disposable, Event, EventEmitter, extensions, Uri, workspace, WorkspaceFoldersChangeEvent } from 'vscode';
+import { Logger } from '../logger';
 import { GitRemote, GitRepository } from './models/models';
 import { CommandOptions, runCommand } from './shell';
 import { GitRemoteParser } from './parsers/remoteParser';
@@ -119,7 +120,7 @@ export class Git extends Disposable {
 const pendingCommands: Map<string, Promise<string>> = new Map();
 
 async function git(options: CommandOptions & { readonly correlationKey?: string }, ...args: any[]): Promise<string> {
-    // const start = process.hrtime();
+    const start = process.hrtime();
 
     const { correlationKey, ...opts } = options;
 
@@ -137,7 +138,7 @@ async function git(options: CommandOptions & { readonly correlationKey?: string 
 
     let promise = pendingCommands.get(command);
     if (promise === undefined) {
-        // Logger.log(`Running${command}`);
+        Logger.log(`Running${command}`);
         // Fixes https://github.com/eamodio/vscode-gitlens/issues/73 & https://github.com/eamodio/vscode-gitlens/issues/161
         // See https://stackoverflow.com/questions/4144417/how-to-handle-asian-characters-in-file-names-in-git-on-os-x
         args.splice(0, 0, '-c', 'core.quotepath=false', '-c', 'color.ui=false');
@@ -153,9 +154,9 @@ async function git(options: CommandOptions & { readonly correlationKey?: string 
 
         pendingCommands.set(command, promise);
     }
-    // else {
-    //     Logger.log(`Awaiting${command}`);
-    // }
+    else {
+        Logger.log(`Awaiting${command}`);
+    }
 
     let data: string;
     try {
@@ -164,11 +165,11 @@ async function git(options: CommandOptions & { readonly correlationKey?: string 
     finally {
         pendingCommands.delete(command);
 
-        // const duration = process.hrtime(start);
-        // const completedIn = `in ${(duration[0] * 1000) + Math.floor(duration[1] / 1000000)} ms`;
+        const duration = process.hrtime(start);
+        const completedIn = `in ${(duration[0] * 1000) + Math.floor(duration[1] / 1000000)} ms`;
 
-        // Logger.log(`Completed${command} ${completedIn}`);
-        // Logger.logGitCommand(`${gitCommand} ${completedIn}`, runOpts.cwd!);
+        Logger.log(`Completed${command} ${completedIn}`);
+        Logger.logGitCommand(`${gitCommand} ${completedIn}`, runOpts.cwd!);
     }
 
     if (encoding === 'utf8' || encoding === 'binary') return data;

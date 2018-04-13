@@ -1,6 +1,6 @@
 'use strict';
-import { Disposable } from 'vscode';
-import { Iterables } from '../../system';
+import { Disposable, Event, EventEmitter } from 'vscode';
+import { Functions, Iterables } from '../../system';
 import { CodeStreamSession } from '../session';
 import { CSEntity } from '../types';
 
@@ -33,7 +33,10 @@ export abstract class CodeStreamItem<TEntity extends CSEntity> extends Disposabl
 
 export abstract class CodeStreamCollection<TItem extends ICollectionItem, TEntity extends CSEntity> extends Disposable {
 
-    protected _disposable: Disposable | undefined;
+    private _onDidChange = new EventEmitter<void>();
+    get onDidChange(): Event<void> {
+        return this._onDidChange.event;
+    }
 
     constructor(
         protected readonly session: CodeStreamSession
@@ -42,7 +45,18 @@ export abstract class CodeStreamCollection<TItem extends ICollectionItem, TEntit
     }
 
     dispose() {
-        this._disposable && this._disposable.dispose();
+        if (this._disposables !== undefined) {
+            this._disposables.forEach(d => d.dispose());
+            this._disposables = undefined;
+        }
+    }
+
+    private _disposables: Disposable[] | undefined;
+    protected get disposables() {
+        if (this._disposables === undefined) {
+            this._disposables = [];
+        }
+        return this._disposables;
     }
 
     protected abstract fetch(): Promise<(TEntity | TItem)[]>;
@@ -60,7 +74,7 @@ export abstract class CodeStreamCollection<TItem extends ICollectionItem, TEntit
 
     async get(key: string) {
         const collection = await this.ensureLoaded();
-        return collection.get(key);
+        return collection.get(key) as TItem;
     }
 
     async has(key: string) {
@@ -88,8 +102,17 @@ export abstract class CodeStreamCollection<TItem extends ICollectionItem, TEntit
         }
     }
 
+    private _changedDebounced: (() => void) | undefined;
+    protected fireChanged() {
+        if (this._changedDebounced === undefined) {
+            this._changedDebounced = Functions.debounce(() => this._onDidChange.fire(), 250);
+        }
+        this._changedDebounced();
+    }
+
     protected invalidate() {
         this._collection = undefined;
+        this.fireChanged();
     }
 
     protected async load() {

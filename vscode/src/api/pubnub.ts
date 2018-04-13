@@ -1,8 +1,31 @@
 'use strict';
-import { Disposable } from 'vscode';
+import { Disposable, Event, EventEmitter } from 'vscode';
 import Pubnub = require('pubnub');
+import { CSPost, CSStream } from './types';
+
+export enum MessageTypes {
+    Posts = 'posts',
+    Streams = 'streams'
+}
+
+export type MessageReceivedEvent = PostMessageReceivedEvent | StreamMessageReceivedEvent;
+
+export interface StreamMessageReceivedEvent {
+    type: MessageTypes.Streams;
+    streams: CSStream[];
+}
+
+export interface PostMessageReceivedEvent {
+    type: MessageTypes.Posts;
+    posts: CSPost[];
+}
 
 export class PubNubReceiver {
+
+    private _onDidReceiveMessage = new EventEmitter<MessageReceivedEvent>();
+    get onDidReceiveMessage(): Event<MessageReceivedEvent> {
+        return this._onDidReceiveMessage.event;
+    }
 
     private subscriptions = {};
     private pubnub: Pubnub | undefined;
@@ -64,18 +87,18 @@ export class PubNubReceiver {
     }
 
     onMessage(event: Pubnub.MessageEvent) {
-        debugger;
+        // debugger;
         // this.store.dispatch(lastMessageReceived(event.timetoken));
         this.processMessage(event.message);
     }
 
     onPresence(event: Pubnub.PresenceEvent) {
-        debugger;
+        // debugger;
         // logger.debug(`user ${event.uuid} ${event.action}. occupancy is ${event.occupancy}`); // uuid of the user
     }
 
     onStatus(status: Pubnub.StatusEvent) {
-        debugger;
+        // debugger;
         // if (status.error) {
         //     // this sucks ... pubnub does not send us the channel that failed,
         //     // meaning that if we try to subscribe to two channels around the same
@@ -100,10 +123,20 @@ export class PubNubReceiver {
         // }
     }
 
-    processMessage(message: any, { isHistory = false } = {}) {
-        const { requestId, ...objects } = message;
+    processMessage(data: { [key: string]: any }) {
+        const { requestId, ...messages } = data;
         requestId;
-        objects;
+
+        for (const [key, obj] of Object.entries(messages)) {
+            switch (key) {
+                case 'post':
+                    this._onDidReceiveMessage.fire({ type: MessageTypes.Posts, posts: [obj as CSPost] });
+                    break;
+                case 'posts':
+                    this._onDidReceiveMessage.fire({ type: MessageTypes.Posts, posts: obj as CSPost[] });
+                    break;
+            }
+        }
 
         // Raven.captureBreadcrumb({
         //     message: "pubnub event",

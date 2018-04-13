@@ -3,7 +3,7 @@ import { commands, ConfigurationChangeEvent, Disposable, Event, EventEmitter, Tr
 import { configuration } from '../configuration';
 import { Container } from '../container';
 import { Context, setContext } from '../context';
-import { ExplorerNode, RefreshReason, SessionNode } from './explorerNodes';
+import { ExplorerNode, RefreshReason, SessionNode, UserNode } from './explorerNodes';
 
 export * from './explorerNodes';
 
@@ -24,6 +24,9 @@ export class CodeStreamExplorer extends Disposable implements TreeDataProvider<E
         // Container.explorerCommands;
         commands.registerCommand('codestream.explorer.refresh', this.refresh, this);
         commands.registerCommand('codestream.explorer.refreshNode', this.refreshNode, this);
+
+        commands.registerCommand('codestream.explorer.inviteToLiveShare', this.inviteToLiveShare, this);
+
         // commands.registerCommand('gitlens.gitExplorer.setFilesLayoutToAuto', () => this.setFilesLayout(ExplorerFilesLayout.Auto), this);
         // commands.registerCommand('gitlens.gitExplorer.setFilesLayoutToList', () => this.setFilesLayout(ExplorerFilesLayout.List), this);
         // commands.registerCommand('gitlens.gitExplorer.setFilesLayoutToTree', () => this.setFilesLayout(ExplorerFilesLayout.Tree), this);
@@ -116,6 +119,12 @@ export class CodeStreamExplorer extends Disposable implements TreeDataProvider<E
 
     getQualifiedCommand(command: string) {
         return `codestream.explorer.${command}`;
+    }
+
+    inviteToLiveShare(node: UserNode) {
+        if (Container.liveShare === undefined) return;
+
+        return Container.liveShare.invite(node.user);
     }
 
     async refresh(reason?: RefreshReason, root?: ExplorerNode) {

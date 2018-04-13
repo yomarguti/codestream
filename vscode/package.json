@@ -25,9 +25,27 @@
             "type": "object",
             "title": "CodeStream configuration",
             "properties": {
+                "codestream.debug": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Specifies debug mode",
+                    "scope": "window"
+                },
+                "codestream.traceLevel": {
+                    "type": "string",
+                    "default": "silent",
+                    "enum": [
+                        "silent",
+                        "errors",
+                        "verbose",
+                        "debug"
+                    ],
+                    "description": "Specifies how much (if any) output will be sent to the CodeStream output channel",
+                    "scope": "window"
+                },
                 "codestream.serverUrl": {
                     "type": "string",
-                    "default": "https://tca3.codestream.us:9443",
+                    "default": "https://api.codestream.com",
                     "description": "Specifies the url to use to connect to the CodeStream service",
                     "scope": "window"
                 },
@@ -73,6 +91,11 @@
                 "category": "CodeStream"
             },
             {
+                "command": "codestream.explorer.inviteToLiveShare",
+                "title": "Invite to Live Share",
+                "category": "CodeStream"
+            },
+            {
                 "command": "codestream.explorer.refresh",
                 "title": "Refresh",
                 "category": "CodeStream"
@@ -102,6 +125,10 @@
                     "when": "codestream:enabled"
                 },
                 {
+                    "command": "codestream.explorer.inviteToLiveShare",
+                    "when": "false"
+                },
+                {
                     "command": "codestream.explorer.refresh",
                     "when": "false"
                 },
@@ -115,6 +142,11 @@
                     "command": "codestream.explorer.refreshNode",
                     "when": "view == codestream",
                     "group": "9_codestream@1"
+                },
+                {
+                    "command": "codestream.explorer.inviteToLiveShare",
+                    "when": "view == codestream && viewItem == codestream:user",
+                    "group": "2_codestream@1"
                 }
             ]
         },
@@ -132,18 +164,19 @@
         "vscode:prepublish": "tsc -p ./",
         "compile": "tsc -p ./",
         "watch": "tsc -w -p ./",
-        "update-vscode": "node ./node_modules/vscode/bin/install",
+        "pack": "vsce package",
         "postinstall": "node ./node_modules/vscode/bin/install"
     },
     "dependencies": {
         "inversify": "4.11.1",
+        "lodash.debounce": "4.0.8",
         "pubnub": "4.20.2",
         "node-fetch": "2.1.2",
         "reflect-metadata": "0.1.12",
         "tslib": "1.9.0"
     },
     "devDependencies": {
-        "@types/node": "9.6.2",
+        "@types/node": "9.6.5",
         "@types/node-fetch": "1.6.8",
         "@types/pubnub": "4.0.2",
         "tslint": "5.9.1",
