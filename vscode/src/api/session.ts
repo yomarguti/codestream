@@ -1,19 +1,18 @@
 'use strict';
-import { Disposable, Event, EventEmitter, Uri } from 'vscode';
+import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, Uri } from 'vscode';
+import { Iterables, Strings } from '../system';
+import { configuration } from '../configuration';
 import {
     CodeStreamApi,
-    CodeStreamRepositories, CodeStreamRepository, CodeStreamStreams, CodeStreamUsers,
     LoginResponse,
-    Marker, MarkerLocations, Post, Repository, Stream, Team, User
+    Markers, Repository, RepositoryCollection, Stream, StreamCollection, UserCollection
 } from './api';
+import { CodeStreamSessionApi } from './sessionApi';
 import { Git } from '../git/git';
 import { PubNubReceiver } from './pubnub';
-import { GitRemote } from '../git/models/remote';
-import { Server } from 'https';
-import { Strings } from '../system';
+import { Container } from '../container';
 
-// export { Post, Repository, Stream, Team, User } from './api';
-export { CodeStreamRepository, CodeStreamStream, CodeStreamUser } from './api';
+export { Markers, Post, Repository, Stream, User } from './api';
 
 function signedIn(target: CodeStreamSession, propertyName: string, descriptor: TypedPropertyDescriptor<any>) {
     if (typeof descriptor.value === 'function') {
@@ -62,28 +61,58 @@ export class CodeStreamSession extends Disposable {
 
     public email: string | undefined;
 
-    private readonly _api: CodeStreamApi;
     private _disposable: Disposable | undefined;
+    private _disposableSignedIn: Disposable | undefined;
+
+    private _api: CodeStreamApi;
+    private _sessionApi: CodeStreamSessionApi | undefined;
     private readonly _git: Git;
     private readonly _pubnub: PubNubReceiver;
 
     constructor(
-        public readonly serverUrl: string
+        private _serverUrl: string
     ) {
         super(() => this.dispose());
 
-        this._api = new CodeStreamApi(serverUrl);
+        this._api = new CodeStreamApi(_serverUrl);
+        this._pubnub = new PubNubReceiver(),
 
-        this._git = new Git();
-        this._pubnub = new PubNubReceiver();
+        this._disposable = Disposable.from(
+            this._git = new Git(),
+            configuration.onDidChange(this.onConfigurationChanged, this)
+        );
     }
 
     dispose() {
         this._disposable && this._disposable.dispose();
+        this._disposableSignedIn && this._disposableSignedIn.dispose();
+    }
+
+    private async onConfigurationChanged(e: ConfigurationChangeEvent) {
+        if (configuration.changed(e, configuration.name('serverUrl').value)) {
+            this._serverUrl = Container.config.serverUrl;
+            this._api.baseUrl = this._serverUrl;
+
+            if (this.signedIn) {
+                this.logout();
+            }
+        }
+
+        if (configuration.changed(e, configuration.name('username').value) ||
+            configuration.changed(e, configuration.name('password').value)) {
+            if (this.signedIn) {
+                this.logout();
+            }
+        }
     }
 
     private onGitRepositoriesChanged() {
         this._onDidChange.fire();
+    }
+
+    @signedIn
+    get api(): CodeStreamSessionApi {
+        return this._sessionApi!;
     }
 
     @signedIn
@@ -101,13 +130,21 @@ export class CodeStreamSession extends Disposable {
         return this._id;
     }
 
-    private _repos: CodeStreamRepositories | undefined;
+    private _repos: RepositoryCollection | undefined;
     @signedIn
     get repos() {
         if (this._repos === undefined) {
-            this._repos = new CodeStreamRepositories(this);
+            this._repos = new RepositoryCollection(this);
         }
         return this._repos;
+    }
+
+    get serverUrl() {
+        return this._serverUrl;
+    }
+
+    get signedIn() {
+        return this._status === SessionStatus.SignedIn;
     }
 
     private _status: SessionStatus = SessionStatus.SignedOut;
@@ -115,15 +152,19 @@ export class CodeStreamSession extends Disposable {
         return this._status;
     }
 
-    get signedIn() {
-        return this._status === SessionStatus.SignedIn;
+    private _streams: StreamCollection | undefined;
+    get streams() {
+        if (this._streams === undefined) {
+            this._streams = new StreamCollection(this);
+        }
+        return this._streams;
     }
 
-    private _users: CodeStreamUsers | undefined;
+    private _users: UserCollection | undefined;
     @signedIn
     get users() {
         if (this._users === undefined) {
-            this._users = new CodeStreamUsers(this);
+            this._users = new UserCollection(this);
         }
         return this._users;
     }
@@ -160,6 +201,55 @@ export class CodeStreamSession extends Disposable {
         CodeStreamSession._sessions.set(id, session);
     }
 
+    logout() {
+        if (this._id !== undefined) {
+            CodeStreamSession._sessions.delete(this._id);
+        }
+
+        this._id = undefined;
+        this._status = SessionStatus.SignedOut;
+        this._onDidChangeStatus.fire({ getStatus: () => this._status });
+
+        if (this._disposableSignedIn !== undefined) {
+            this._disposableSignedIn.dispose();
+            this._disposableSignedIn = undefined;
+        }
+    }
+
+    @signedIn
+    async getMarkers(uri: Uri): Promise<Markers | undefined> {
+        const repo = await this.getRepositoryByUri(uri);
+        if (repo === undefined) return undefined;
+
+        return repo.getMarkers(uri);
+    }
+
+    @signedIn
+    getRepositoryByUri(uri: Uri): Promise<Repository | undefined> {
+        return this.repos.getByUri(uri);
+    }
+
+    @signedIn
+    async post(text: string) {
+        // HACK: Pretend we have 1 stream for now
+        const streams = await this.streams.items;
+
+        let stream = Iterables.first(streams);
+        if (stream === undefined) {
+            const repos = await this.repos.items;
+            const repo = Iterables.first(repos);
+
+            if (repo === undefined) throw new Error(`No repositories!`);
+
+            const s = await this.api.createStream(Uri.parse(`repo://${repo.url}`), repo.id);
+            if (s === undefined) throw new Error(`Unable to create stream`);
+
+            stream = new Stream(this, s);
+        }
+
+        return stream.post(text);
+    }
+
     private async loginCore(email: string, password: string, teamId?: string): Promise<CodeStreamSession> {
         try {
             this._status = SessionStatus.SigningIn;
@@ -176,14 +266,18 @@ export class CodeStreamSession extends Disposable {
             if (team === undefined) throw new Error(`Unable to find team id ${teamId}`);
 
             this._teamId = team.id;
+            this._sessionApi = new CodeStreamSessionApi(this._api, this.token, this.teamId!);
 
-            this._disposable = Disposable.from(
+            this._disposableSignedIn = Disposable.from(
                 this._pubnub.initialize(this.token, this.userId, this.pubnubKey),
                 this._git.onDidChangeRepositories(this.onGitRepositoriesChanged, this)
             );
 
+            this._pubnub.subscribe(this.userId, this.teamId!, this._data.repos[0].id);
+
             this._status = SessionStatus.SignedIn;
             this._onDidChangeStatus.fire(e);
+
             return this;
         }
         catch (ex) {
@@ -191,166 +285,5 @@ export class CodeStreamSession extends Disposable {
 
             throw ex;
         }
-    }
-
-    logout() {
-        if (this._id !== undefined) {
-            CodeStreamSession._sessions.delete(this._id);
-        }
-
-        this._id = undefined;
-        this._status = SessionStatus.SignedOut;
-        this._onDidChangeStatus.fire({ getStatus: () => this._status });
-
-        if (this._disposable !== undefined) {
-            this._disposable.dispose();
-            this._disposable = undefined;
-        }
-    }
-
-    /// API Methods
-
-    @signedIn
-    async createPost(text: string, streamId: string, teamId?: string): Promise<Post | undefined> {
-        return (await this._api.createPost(this.token, {
-            teamId: teamId || this.teamId!,
-            streamId: streamId,
-            text: text
-        })).post;
-    }
-
-    @signedIn
-    async createRepo(uri: Uri, teamId?: string): Promise<Repository | undefined> {
-        return (await this._api.createRepo(this.token, {
-            teamId: teamId || this.teamId!,
-            url: uri.toString()
-        })).repo;
-    }
-
-    @signedIn
-    async createStream(uri: Uri, repoId: string, teamId?: string): Promise<Stream | undefined> {
-        return (await this._api.createStream(this.token, {
-            teamId: teamId || this.teamId!,
-            repoId: repoId,
-            type: 'file',
-            file: uri.toString()
-        })).stream;
-    }
-
-    async getMarkerLocations(commitHash: string, stream: Stream): Promise<MarkerLocations>;
-    async getMarkerLocations(commitHash: string, streamId: string, teamId?: string): Promise<MarkerLocations>;
-    @signedIn
-    async getMarkerLocations(commitHash: string, streamOrStreamId: Stream | string, teamId?: string) {
-        let streamId;
-        if (typeof streamOrStreamId === 'string') {
-            streamId = streamOrStreamId;
-            teamId = teamId || this.teamId;
-        }
-        else {
-            streamId = streamOrStreamId.id;
-            teamId = streamOrStreamId.teamId;
-        }
-        return (await this._api.getMarkerLocations(this.token, teamId!, streamId, commitHash)).markerLocations;
-    }
-
-    async getPosts(stream: Stream): Promise<Post[]>;
-    async getPosts(streamId: string, teamId?: string): Promise<Post[]>;
-    @signedIn
-    async getPosts(streamOrStreamId: Stream | string, teamId?: string): Promise<Post[]> {
-        let streamId;
-        if (typeof streamOrStreamId === 'string') {
-            streamId = streamOrStreamId;
-            teamId = teamId || this.teamId!;
-        }
-        else {
-            streamId = streamOrStreamId.id;
-            teamId = streamOrStreamId.teamId;
-        }
-        return (await this._api.getPosts(this.token, teamId, streamId)).posts;
-    }
-
-    async getRepo(repoId: string, team?: Team): Promise<Repository | undefined>;
-    async getRepo(repoId: string, teamId?: string): Promise<Repository | undefined>;
-    @signedIn
-    async getRepo(repoId: string, teamOrTeamId?: Team | string): Promise<Repository | undefined> {
-        let teamId;
-        if (teamOrTeamId === undefined) {
-            teamId = this.teamId!;
-        }
-        else if (typeof teamOrTeamId === 'string') {
-            teamId = teamOrTeamId;
-        }
-        else {
-            teamId = teamOrTeamId.id;
-        }
-        return (await this._api.getRepo(this.token, teamId, repoId)).repo;
-    }
-
-    async getRepos(team?: Team): Promise<Repository[]>;
-    async getRepos(teamId?: string): Promise<Repository[]>;
-    @signedIn
-    async getRepos(teamOrTeamId?: Team | string): Promise<Repository[]> {
-        let teamId;
-        if (teamOrTeamId === undefined) {
-            teamId = this.teamId!;
-        }
-        else if (typeof teamOrTeamId === 'string') {
-            teamId = teamOrTeamId;
-        }
-        else {
-            teamId = teamOrTeamId.id;
-        }
-        return (await this._api.getRepos(this.token, teamId)).repos;
-    }
-
-    async getStream(streamId: string, repo: Repository): Promise<Stream | undefined>;
-    async getStream(streamId: string, repoId: string, teamId?: string): Promise<Stream | undefined>;
-    @signedIn
-    async getStream(streamId: string, repoOrRepoId: Repository | string, teamId?: string): Promise<Stream | undefined> {
-        let repoId;
-        if (typeof repoOrRepoId === 'string') {
-            repoId = repoOrRepoId;
-            teamId = teamId || this.teamId!;
-        }
-        else {
-            repoId = repoOrRepoId.id;
-            teamId = repoOrRepoId.teamId;
-        }
-
-        return (await this._api.getStream(this.token, teamId, repoId, streamId)).stream;
-    }
-
-    async getStreams(repo: Repository): Promise<Stream[]>;
-    async getStreams(repoId: string, teamId?: string): Promise<Stream[]>;
-    @signedIn
-    async getStreams(repoOrRepoId: Repository | string, teamId?: string): Promise<Stream[]> {
-        let repoId;
-        if (typeof repoOrRepoId === 'string') {
-            repoId = repoOrRepoId;
-            teamId = teamId || this.teamId!;
-        }
-        else {
-            repoId = repoOrRepoId.id;
-            teamId = repoOrRepoId.teamId;
-        }
-        return (await this._api.getStreams(this.token, teamId, repoId!)).streams;
-    }
-
-    // async getTeam(teamId: string): Promise<Team | undefined> {
-    //     return (await this._api.getTeam(this.token, teamId)).team;
-    // }
-
-    // async getTeams(ids: string[]): Promise<Team[]> {
-    //     return (await this._api.getTeams(this.token, ids)).teams;
-    // }
-
-    @signedIn
-    async getUser(userId: string, teamId?: string): Promise<User | undefined> {
-        return (await this._api.getUser(this.token, teamId || this.teamId!, userId)).user;
-    }
-
-    @signedIn
-    async getUsers(teamId?: string): Promise<User[]> {
-        return (await this._api.getUsers(this.token, teamId || this.teamId!)).users;
     }
 }

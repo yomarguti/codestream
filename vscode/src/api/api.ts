@@ -17,11 +17,11 @@ import {
 export * from './models/models';
 export * from './types';
 
-const responseCache = new Map<string, Promise<any>>();
+// const responseCache = new Map<string, Promise<any>>();
 
 export class CodeStreamApi {
 
-    constructor(public readonly baseUrl: string) {
+    constructor(public baseUrl: string) {
     }
 
     async login(email: string, password: string): Promise<LoginResponse> {

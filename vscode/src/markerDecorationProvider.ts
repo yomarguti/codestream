@@ -1,5 +1,5 @@
 'use strict';
-import { CancellationToken, CodeActionContext, CodeActionProvider, Command, DecorationOptions, Disposable, DocumentSelector, ExtensionContext, languages, MarkdownString, Range, TextDocument, TextEditor, TextEditorDecorationType, Uri, window } from 'vscode';
+import { DecorationOptions, Disposable, DocumentSelector, MarkdownString, Range, TextEditor, TextEditorDecorationType, window } from 'vscode';
 
 export class CodeStreamMarkerDecorationProvider extends Disposable {
 

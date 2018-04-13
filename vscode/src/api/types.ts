@@ -1,28 +1,28 @@
 'use strict';
 
-export interface Entity {
-    deactivated: boolean;
+export interface CSEntity {
+    deactivated?: boolean;
     createdAt: Date;
     modifiedAt: Date;
     id: string;
     creatorId: string;
 }
 
-export interface Marker {
+export interface CSMarker {
     id: string;
     teamId: string;
     streamId: string;
     postId: string;
 }
 
-export interface MarkerLocations {
+export interface CSMarkerLocations {
     teamId: string;
     streamId: string;
     commitHash: string;
     locations: { [id: string]: [number, number, number, number] };
 }
 
-export interface Post extends Entity {
+export interface CSPost extends CSEntity {
     streamId: string;
     text: string;
     repoId: string;
@@ -30,7 +30,7 @@ export interface Post extends Entity {
     seqNum: number;
 }
 
-export interface Repository extends Entity {
+export interface CSRepository extends CSEntity {
     url: string;
     firstCommitHash: string;
     normalizedUrl: string;
@@ -38,7 +38,7 @@ export interface Repository extends Entity {
     companyId: string;
 }
 
-export interface Stream extends Entity {
+export interface CSStream extends CSEntity {
     teamId: string;
     type: 'file' | string;
     file: string;
@@ -46,7 +46,7 @@ export interface Stream extends Entity {
     sortId: string;
 }
 
-export interface Team extends Entity {
+export interface CSTeam extends CSEntity {
     name: string;
     primaryReferral: 'internal' | 'external';
     memberIds: string[];
@@ -54,7 +54,7 @@ export interface Team extends Entity {
     companyId: string;
 }
 
-export interface User extends Entity {
+export interface CSUser extends CSEntity {
     username: string;
     email: string;
     isRegistered: boolean;
@@ -72,11 +72,11 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-    user: User;
+    user: CSUser;
     accessToken: string;
     pubnubKey: string;
-    teams: Team[];
-    repos: Repository[];
+    teams: CSTeam[];
+    repos: CSRepository[];
 }
 
 export interface CreatePostRequest {
@@ -87,16 +87,17 @@ export interface CreatePostRequest {
 }
 
 export interface CreatePostResponse {
-    post: Post;
+    post: CSPost;
 }
 
 export interface CreateRepoRequest {
     teamId: string;
     url: string;
+    firstCommitHash: string;
 }
 
 export interface CreateRepoResponse {
-    repo: Repository;
+    repo: CSRepository;
 }
 
 export interface CreateStreamRequest {
@@ -107,55 +108,55 @@ export interface CreateStreamRequest {
 }
 
 export interface CreateStreamResponse {
-    stream: Stream;
+    stream: CSStream;
 }
 
 export interface FindRepoResponse {
-    repo?: Repository;
+    repo?: CSRepository;
     usernames?: string[];
 }
 
 export interface GetMarkerLocationsResponse {
-    markerLocations: MarkerLocations;
+    markerLocations: CSMarkerLocations;
 }
 
 export interface GetMarkersResponse {
-    markers: Marker[];
+    markers: CSMarker[];
     numMarkers: number;
 }
 
 export interface GetPostsResponse {
-    posts: Post[];
+    posts: CSPost[];
 }
 
 export interface GetRepoResponse {
-    repo: Repository;
+    repo: CSRepository;
 }
 
 export interface GetReposResponse {
-    repos: Repository[];
+    repos: CSRepository[];
 }
 
 export interface GetStreamResponse {
-    stream: Stream;
+    stream: CSStream;
 }
 
 export interface GetStreamsResponse {
-    streams: Stream[];
+    streams: CSStream[];
 }
 
 export interface GetTeamResponse {
-    team: Team;
+    team: CSTeam;
 }
 
 export interface GetTeamsResponse {
-    teams: Team[];
+    teams: CSTeam[];
 }
 
 export interface GetUserResponse {
-    user: User;
+    user: CSUser;
 }
 
 export interface GetUsersResponse {
-    users: User[];
+    users: CSUser[];
 }

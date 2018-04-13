@@ -1,38 +1,37 @@
 'use strict';
-import { Uri, Disposable } from 'vscode';
-import { CodeStreamCollection, CodeStreamItem  } from './collection';
-import { CodeStreamSession } from '../session';
-import { CodeStreamStreams } from './streams';
-import { Repository } from '../types';
-import { Iterables } from '../../system';
+import { Disposable, Uri, workspace, WorkspaceFolder } from 'vscode';
+import { CodeStreamCollection, CodeStreamItem } from './collection';
 import { Git } from '../../git/git';
+import { Markers } from './markers';
+import { CodeStreamSession } from '../session';
+import { StreamCollection } from './streams';
+import { CSRepository } from '../types';
 
-export class CodeStreamRepository extends CodeStreamItem<Repository> {
+export class Repository extends CodeStreamItem<CSRepository> {
 
     constructor(
         session: CodeStreamSession,
-        repo: Repository
+        repo: CSRepository,
+        private readonly _folder?: WorkspaceFolder
     ) {
         super(session, repo);
     }
 
-    // private _reposByUrl: Map<string, Repository> = new Map();
-    // @signedIn
-    // async getRepositories() {
-    //     return this._reposByUrl.values();
-    // }
+    async getMarkers(uri: Uri): Promise<Markers | undefined> {
+        if (workspace.getWorkspaceFolder(uri) !== this._folder) return undefined;
 
-    // @signedIn
-    // async getMarkersForUri(uri: Uri): Promise<MarkerLocations | undefined> {
-    //     const sha = await Git.getCurrentSha(uri);
-    //     return undefined;
-    //     // return this._api.getMarkerLocations(sha, stream);
-    // }
+        const stream = await this.streams.getByUri(uri);
+        if (stream === undefined) return undefined;
 
-    private _streams: CodeStreamStreams | undefined;
+        const sha = await Git.getCurrentSha(uri);
+        const markers = await this.session.api.getMarkerLocations(sha, stream.id);
+        return new Markers(this.session, markers);
+    }
+
+    private _streams: StreamCollection | undefined;
     get streams() {
         if (this._streams === undefined) {
-            this._streams = new CodeStreamStreams(this.session, this);
+            this._streams = new StreamCollection(this.session, this);
         }
         return this._streams;
     }
@@ -44,14 +43,9 @@ export class CodeStreamRepository extends CodeStreamItem<Repository> {
     get url() {
         return this.entity.normalizedUrl;
     }
-
-    is(uri: Uri): boolean {
-        const file = uri.fsPath;
-        return true;
-    }
 }
 
-export class CodeStreamRepositories extends CodeStreamCollection<CodeStreamRepository, Repository> {
+export class RepositoryCollection extends CodeStreamCollection<Repository, CSRepository> {
 
     constructor(session: CodeStreamSession) {
         super(session);
@@ -65,53 +59,79 @@ export class CodeStreamRepositories extends CodeStreamCollection<CodeStreamRepos
         this.invalidate();
     }
 
-    // async getMarkersForUri(uri: Uri): Promise<MarkerLocations | undefined> {
-    //     const sha = await Git.getCurrentSha(uri);
-    //     return undefined;
-    //     // return this._api.getMarkerLocations(sha, stream);
-    // }
+    async getByUri(uri: Uri): Promise<Repository | undefined> {
+        const folder = workspace.getWorkspaceFolder(uri);
+        if (folder === undefined) return undefined;
 
-    async getRepositoryForUri(uri: Uri): Promise<CodeStreamRepository | undefined> {
-        return Iterables.find(await this.items, r => r.is(uri));
+        return this._reposByWorkspaceFolder.get(folder);
     }
 
-    private _reposByUri: Map<Uri, CodeStreamRepository> = new Map();
+    private _reposByUri: Map<Uri, Repository> = new Map();
+    private _reposByWorkspaceFolder: Map<WorkspaceFolder, Repository> = new Map();
 
-    protected async getEntities() {
-        const repos = await this.session.getRepos();
+    protected async fetch() {
+        const repos = await this.session.api.findOrRegisterRepos();
 
-        const items = [];
-        try {
-            const gitRepos = await Git.getRepositories();
+        this._reposByUri.clear();
+        this._reposByWorkspaceFolder.clear();
 
-            this._reposByUri.clear();
+        const items: Repository[] = [];
 
-            let firsts;
-            let remoteUrl: string | undefined;
-            for (const gr of gitRepos) {
-                [firsts, remoteUrl] = await Promise.all([
-                    Git.getFirstCommits(gr),
-                    Git.getNormalizedRemoteUrl(gr)
-                ]);
+        let item;
+        for (const [uri, repo] of repos) {
+            const folder = workspace.getWorkspaceFolder(uri);
 
-                if (remoteUrl === undefined || firsts.length === 0) continue;
+            item = this.map(repo, folder);
+            items.push(item);
 
-                const repo = repos.find(r => r.normalizedUrl === remoteUrl);
-                if (repo === undefined) continue;
-
-                const item = this.mapEntity(repo);
-                this._reposByUri.set(gr.rootUri, item);
-                items.push(item);
+            this._reposByUri.set(uri, item);
+            if (folder !== undefined) {
+                this._reposByWorkspaceFolder.set(folder, item);
             }
-        }
-        catch (ex) {
-            debugger;
         }
 
         return items;
     }
 
-    protected mapper(e: Repository) {
-        return new CodeStreamRepository(this.session, e);
+    // protected async getEntitiesOrItems() {
+    //     const repos = await this.session.api.getRepos();
+
+    //     const items = [];
+    //     try {
+    //         const gitRepos = await Git.getRepositories();
+
+    //         this._reposByUri.clear();
+
+    //         let firsts;
+    //         let remote: GitRemote | undefined;
+    //         for (const gr of gitRepos) {
+    //             [firsts, remote] = await Promise.all([
+    //                 Git.getFirstCommits(gr.rootUri),
+    //                 Git.getRemote(gr.rootUri)
+    //             ]);
+
+    //             if (remote === undefined || firsts.length === 0) continue;
+
+    //             const remoteUrl = remote.normalizedUrl;
+    //             let repo = repos.find(r => r.normalizedUrl === remoteUrl);
+    //             if (repo === undefined) {
+    //                 repo = await this.session.api.createRepo(remote.uri, firsts);
+    //                 if (repo === undefined) continue;
+    //             }
+
+    //             const item = this.mapEntity(repo);
+    //             this._reposByUri.set(gr.rootUri, item);
+    //             items.push(item);
+    //         }
+    //     }
+    //     catch (ex) {
+    //         debugger;
+    //     }
+
+    //     return items;
+    // }
+
+    protected map(e: CSRepository, folder?: WorkspaceFolder) {
+        return new Repository(this.session, e, folder);
     }
 }

@@ -1,5 +1,5 @@
 'use strict';
-import { CancellationToken, CodeActionContext, CodeActionProvider, Command, Disposable, DocumentSelector, ExtensionContext, languages, Range, TextDocument, Uri, window } from 'vscode';
+import { CancellationToken, CodeActionContext, CodeActionProvider, Command, Disposable, DocumentSelector, languages, Range, TextDocument } from 'vscode';
 
 export class CodeStreamCodeActionProvider extends Disposable implements CodeActionProvider {
 

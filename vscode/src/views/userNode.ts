@@ -1,13 +1,13 @@
 'use strict';
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
-import { CodeStreamSession, CodeStreamUser } from '../api/session';
+import { CodeStreamSession, User } from '../api/session';
 import { ExplorerNode, ResourceType } from './explorerNode';
 
 export class UserNode extends ExplorerNode {
 
     constructor(
         public readonly session: CodeStreamSession,
-        private readonly user: CodeStreamUser
+        private readonly user: User
     ) {
         super();
     }

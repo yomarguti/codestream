@@ -25,16 +25,30 @@ export class PubNubReceiver {
 
         return {
             dispose: () => {
-                // TODO disconnect here
+                this.removeListener();
             }
         };
+    }
+
+    subscribe(userId: string, teamId: string, repoId: string) {
+        const channels = [
+            `user-${userId}`,
+            `team-${teamId}`,
+            `repo-${repoId}`
+        ];
+
+        this.pubnub!.subscribe({
+            channels: channels,
+            withPresence: false
+            // timetoken: number
+        });
     }
 
     isInitialized() {
         return Boolean(this.pubnub);
     }
 
-    setupListener() {
+    private setupListener() {
         this.listener = {
             presence: this.onPresence.bind(this),
             message: this.onMessage.bind(this),
@@ -43,22 +57,25 @@ export class PubNubReceiver {
         this.pubnub!.addListener(this.listener);
     }
 
-    removeListener() {
+    private removeListener() {
         if (this.pubnub && this.listener) {
             this.pubnub.removeListener(this.listener);
         }
     }
 
     onMessage(event: Pubnub.MessageEvent) {
+        debugger;
         // this.store.dispatch(lastMessageReceived(event.timetoken));
         this.processMessage(event.message);
     }
 
     onPresence(event: Pubnub.PresenceEvent) {
+        debugger;
         // logger.debug(`user ${event.uuid} ${event.action}. occupancy is ${event.occupancy}`); // uuid of the user
     }
 
     onStatus(status: Pubnub.StatusEvent) {
+        debugger;
         // if (status.error) {
         //     // this sucks ... pubnub does not send us the channel that failed,
         //     // meaning that if we try to subscribe to two channels around the same

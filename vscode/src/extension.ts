@@ -19,26 +19,19 @@ export async function activate(context: ExtensionContext) {
         attemptLogin(cfg.username, cfg.password);
     }
 
-    commands.registerCommand('codestream.login', () => {
+    commands.registerCommand('codestream.signIn', () => {
         const cfg = configuration.get<IConfig>();
         attemptLogin(cfg.username, cfg.password);
     });
 
-    // commands.registerCommand('codestream.post', async () => {
-    //     const message = await window.showInputBox({ prompt: 'Enter message', placeHolder: 'Message' });
-    //     Container.session.createPost(message);
-    // });
+    commands.registerCommand('codestream.signOut', () => Container.session.logout());
 
-    // commands.registerCommand('codestream.streams', async () => {
-    //     // session.
-    //     // const streams = await Container.server.sendRequest('streams', {});
-    //     // streams;
-    // });
+    commands.registerCommand('codestream.post', async () => {
+        const message = await window.showInputBox({ prompt: 'Enter message', placeHolder: 'Message' });
+        if (message === undefined) return;
 
-    // commands.registerCommand('codestream.users', async () => {
-    //     // const users = await Container.server.sendRequest('users', {});
-    //     // users;
-    // });
+        Container.session.post(message);
+    });
 }
 
 export async function deactivate(): Promise<void> {

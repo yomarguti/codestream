@@ -53,8 +53,13 @@
         },
         "commands": [
             {
-                "command": "codestream.login",
-                "title": "Sign in to CodeStream...",
+                "command": "codestream.signIn",
+                "title": "Sign In...",
+                "category": "CodeStream"
+            },
+            {
+                "command": "codestream.signOut",
+                "title": "Sign Out",
                 "category": "CodeStream"
             },
             {
@@ -63,18 +68,8 @@
                 "category": "CodeStream"
             },
             {
-                "command": "codestream.open",
-                "title": "Open CodeStream",
-                "category": "CodeStream"
-            },
-            {
-                "command": "codestream.streams",
-                "title": "CodeStream Streams",
-                "category": "CodeStream"
-            },
-            {
-                "command": "codestream.users",
-                "title": "CodeStream Users",
+                "command": "codestream.post",
+                "title": "Post Message",
                 "category": "CodeStream"
             },
             {
@@ -91,15 +86,19 @@
         "menus": {
             "commandPalette": [
                 {
-                    "command": "codestream.login",
+                    "command": "codestream.signIn",
                     "when": "!codestream:enabled"
+                },
+                {
+                    "command": "codestream.signOut",
+                    "when": "codestream:enabled"
                 },
                 {
                     "command": "codestream.openStream",
                     "when": "editorTextFocus && codestream:enabled"
                 },
                 {
-                    "command": "codestream.open",
+                    "command": "codestream.post",
                     "when": "codestream:enabled"
                 },
                 {

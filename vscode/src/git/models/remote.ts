@@ -1,3 +1,5 @@
+import { Uri } from 'vscode';
+
 'use strict';
 
 export enum GitRemoteType {
@@ -7,12 +9,20 @@ export enum GitRemoteType {
 
 export class GitRemote {
 
+    public readonly uri: Uri;
+
     constructor(
         public readonly repoPath: string,
         public readonly name: string,
-        public readonly url: string,
+        url: string,
         public readonly domain: string,
         public readonly path: string,
         public readonly types: { type: GitRemoteType, url: string }[]
-    ) { }
+    ) {
+        this.uri = Uri.parse(url);
+    }
+
+    get normalizedUrl(): string {
+        return `${this.domain}/${this.path}`;
+    }
 }

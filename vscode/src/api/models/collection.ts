@@ -1,17 +1,20 @@
 'use strict';
 import { Disposable } from 'vscode';
+import { Iterables } from '../../system';
 import { CodeStreamSession } from '../session';
-import { Entity } from '../types';
+import { CSEntity } from '../types';
 
-const mappedSymbol = Symbol('codestream-mapped');
+export const mappedSymbol = Symbol('codestream-mapped');
 
 interface ICollectionItem {
     // Marker as to whether or not the item has been mapped: entity -> item
-    [mappedSymbol]?: boolean;
+    [mappedSymbol]: boolean;
     readonly id: string;
 }
 
-export abstract class CodeStreamItem<TEntity extends Entity> extends Disposable implements ICollectionItem {
+export abstract class CodeStreamItem<TEntity extends CSEntity> extends Disposable implements ICollectionItem {
+
+    [mappedSymbol] = true;
 
     constructor(
         protected readonly session: CodeStreamSession,
@@ -28,7 +31,7 @@ export abstract class CodeStreamItem<TEntity extends Entity> extends Disposable 
     }
 }
 
-export abstract class CodeStreamCollection<TItem extends ICollectionItem, TEntity extends Entity> extends Disposable {
+export abstract class CodeStreamCollection<TItem extends ICollectionItem, TEntity extends CSEntity> extends Disposable {
 
     protected _disposable: Disposable | undefined;
 
@@ -42,12 +45,17 @@ export abstract class CodeStreamCollection<TItem extends ICollectionItem, TEntit
         this._disposable && this._disposable.dispose();
     }
 
-    protected abstract getEntities(): Promise<(TEntity | TItem)[]>;
-    protected abstract mapper(e: TEntity): TItem;
+    protected abstract fetch(): Promise<(TEntity | TItem)[]>;
+    protected abstract map(e: TEntity): TItem;
 
     private _collection: Promise<Map<string, TEntity | TItem>> | undefined;
     get items(): Promise<IterableIterator<TItem>> {
         return this.ensureLoaded().then(items => this.ensureMapped(items));
+    }
+
+    async find(predicate: (item: TItem) => boolean) {
+        const items = await this.items;
+        return Iterables.find(items, predicate);
     }
 
     async get(key: string) {
@@ -74,7 +82,7 @@ export abstract class CodeStreamCollection<TItem extends ICollectionItem, TEntit
                 continue;
             }
 
-            const mapped = this.mapEntity(value as TEntity);
+            const mapped = this.map(value as TEntity);
             items.set(key, mapped);
             yield mapped;
         }
@@ -85,13 +93,7 @@ export abstract class CodeStreamCollection<TItem extends ICollectionItem, TEntit
     }
 
     protected async load() {
-        const entities = await this.getEntities();
+        const entities = await this.fetch();
         return new Map(entities.map<[string, TEntity | TItem]>(e => [e.id, e]));
-    }
-
-    protected mapEntity(e: TEntity): TItem {
-        const item = this.mapper(e);
-        item[mappedSymbol] = true;
-        return item;
     }
 }

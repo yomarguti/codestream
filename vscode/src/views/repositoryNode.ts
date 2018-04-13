@@ -1,6 +1,7 @@
 'use strict';
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
-import { CodeStreamRepository, CodeStreamSession } from '../api/session';
+import { Iterables } from '../system';
+import { CodeStreamSession, Repository } from '../api/session';
 import { ExplorerNode, ResourceType } from './explorerNode';
 import { StreamNode } from './streamNode';
 
@@ -8,14 +9,14 @@ export class RepositoryNode extends ExplorerNode {
 
     constructor(
         public readonly session: CodeStreamSession,
-        private readonly repository: CodeStreamRepository
+        private readonly repository: Repository
     ) {
         super();
     }
 
     async getChildren(): Promise<ExplorerNode[]> {
-        return Array.from(await this.repository.streams.items)
-            .map(s => new StreamNode(this.session, s));
+        const streams = await this.repository.streams.items;
+        return Array.from(Iterables.map(streams, s => new StreamNode(this.session, s)));
     }
 
     getTreeItem(): TreeItem {

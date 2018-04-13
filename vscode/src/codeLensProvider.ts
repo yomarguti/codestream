@@ -1,6 +1,5 @@
 'use strict';
 import { CancellationToken, CodeLens, CodeLensProvider, Disposable, DocumentSelector, Event, EventEmitter, languages, Range, TextDocument, TextEditorSelectionChangeEvent, window, workspace } from 'vscode';
-import { Container } from './container';
 
 export class CodeStreamCodeLensProvider extends Disposable implements CodeLensProvider {
 

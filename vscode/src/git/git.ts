@@ -5,6 +5,8 @@ import { CommandOptions, runCommand } from './shell';
 import { GitRemoteParser } from './parsers/remoteParser';
 import * as path from 'path';
 
+export * from './models/models';
+
 interface GitApi {
     getGitPath(): Promise<string>;
     getRepositories(): Promise<GitRepository[]>;
@@ -33,10 +35,10 @@ export class Git extends Disposable {
         this._onDidChangeRepositories.fire();
     }
 
-    static async getFirstCommits(repo: GitRepository): Promise<string[]>;
+    static async getFirstCommits(repoUri: Uri): Promise<string[]>;
     static async getFirstCommits(repoPath: string): Promise<string[]>;
-    static async getFirstCommits(repoOrPath: GitRepository | string): Promise<string[]> {
-        const path = (typeof repoOrPath === 'string') ? repoOrPath : repoOrPath.rootUri.fsPath;
+    static async getFirstCommits(uriOrPath: Uri | string): Promise<string[]> {
+        const path = (typeof uriOrPath === 'string') ? uriOrPath : uriOrPath.fsPath;
 
         let data;
         try {
@@ -59,10 +61,10 @@ export class Git extends Disposable {
         return git({ cwd: dir }, 'log', '-n1', '--format="%h"', '--', path.relative(dir, uri.fsPath));
     }
 
-    static async getNormalizedRemoteUrl(repo: GitRepository): Promise<string | undefined>;
-    static async getNormalizedRemoteUrl(repoPath: string): Promise<string | undefined>;
-    static async getNormalizedRemoteUrl(repoOrPath: GitRepository | string): Promise<string | undefined> {
-        const path = (typeof repoOrPath === 'string') ? repoOrPath : repoOrPath.rootUri.fsPath;
+    static async getRemote(repoUri: Uri): Promise<GitRemote | undefined>;
+    static async getRemote(repoPath: string): Promise<GitRemote | undefined>;
+    static async getRemote(uriOrPath: Uri | string): Promise<GitRemote | undefined> {
+        const path = (typeof uriOrPath === 'string') ? uriOrPath : uriOrPath.fsPath;
 
         let data;
         try {
@@ -86,10 +88,7 @@ export class Git extends Disposable {
             }
         }
 
-        const remote = push || fetch;
-        if (remote === undefined) return undefined;
-
-        return `${remote.domain}/${remote.path}`;
+        return push || fetch;
     }
 
     static async getRepositories(): Promise<GitRepository[]> {
@@ -120,7 +119,7 @@ export class Git extends Disposable {
 const pendingCommands: Map<string, Promise<string>> = new Map();
 
 async function git(options: CommandOptions & { readonly correlationKey?: string }, ...args: any[]): Promise<string> {
-    const start = process.hrtime();
+    // const start = process.hrtime();
 
     const { correlationKey, ...opts } = options;
 

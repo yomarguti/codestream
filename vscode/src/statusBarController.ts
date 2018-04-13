@@ -1,7 +1,6 @@
 'use strict';
-import { ConfigurationChangeEvent, Disposable, StatusBarAlignment, StatusBarItem, TextEditor, window } from 'vscode';
+import { Disposable, StatusBarAlignment, StatusBarItem, window } from 'vscode';
 import { SessionStatus, SessionStatusChangedEvent } from './api/session';
-import { configuration } from './configuration';
 import { Container } from './container';
 
 export class StatusBarController extends Disposable {
@@ -45,7 +44,7 @@ export class StatusBarController extends Disposable {
         switch (status) {
             case SessionStatus.SignedOut:
                 this._statusBarItem.text = ` $(comment-discussion) Sign in... `;
-                this._statusBarItem.command = 'codestream.login';
+                this._statusBarItem.command = 'codestream.signIn';
                 this._statusBarItem.tooltip = 'Sign in to CodeStream...';
                 break;
             case SessionStatus.SigningIn:
