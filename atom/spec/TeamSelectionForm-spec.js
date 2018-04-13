@@ -11,7 +11,7 @@ import { teamNotFound, noPermission } from "../lib/actions/onboarding";
 
 Enzyme.configure({ adapter: new Adapter() });
 
-const firstCommitHash = "123ab";
+const knownCommitHashes = ["123ab"];
 const repoUrl = "https:repo.com/mine.git";
 
 const team1 = { id: "1", name: "The Foobars" };
@@ -24,7 +24,7 @@ const store = createStore({
 	teams: { "1": team1, "2": team2, "3": { id: "3", name: "Open Sourcerers" } },
 	repoAttributes: {
 		url: repoUrl,
-		firstCommitHash
+		knownCommitHashes
 	}
 });
 

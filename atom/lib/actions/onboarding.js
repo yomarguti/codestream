@@ -61,17 +61,18 @@ const existingUserLoggedIntoMatchedRepo = payload => ({
 	payload
 });
 
-const fetchRepoInfo = ({ url, firstCommitHash }) => async (dispatch, getState, { http }) => {
+const fetchRepoInfo = ({ url, knownCommitHashes }) => async (dispatch, getState, { http }) => {
 	if (!url) {
 		Raven.captureMessage("No url found while trying to fetch repository information.", {
 			logger: "actions/onboarding",
-			extra: { url, firstCommitHash }
+			extra: { url, knownCommitHashes }
 		});
 		return dispatch(noRemoteUrl());
 	}
 	try {
+		const hashes = knownCommitHashes.join(",");
 		const { repo, usernames } = await http.get(
-			`/no-auth/find-repo?url=${encodeURIComponent(url)}&firstCommitHash=${firstCommitHash}`
+			`/no-auth/find-repo?url=${encodeURIComponent(url)}&knownCommitHashes=${hashes}`
 		);
 
 		if (repo) {
@@ -90,23 +91,24 @@ const fetchRepoInfo = ({ url, firstCommitHash }) => async (dispatch, getState, {
 		else
 			logError("encountered unexpected error while fetching repo information", error, {
 				url,
-				firstCommitHash
+				knownCommitHashes
 			});
 		throw new Error("Unable to get repo information"); // TODO: tell the user exactly what's wrong
 	}
 };
 
-const matchRepoInfo = ({ url, firstCommitHash }) => async (dispatch, getState, { http }) => {
+const matchRepoInfo = ({ url, knownCommitHashes }) => async (dispatch, getState, { http }) => {
 	if (!url) {
 		Raven.captureMessage("No url found while trying to match repository information.", {
 			logger: "actions/onboarding",
-			extra: { url, firstCommitHash }
+			extra: { url, knownCommitHashes }
 		});
 		return dispatch(noRemoteUrl());
 	}
 	try {
+		const hashes = knownCommitHashes.join(",");
 		const { teams, teamCreators, repo, usernames, knownService, org, domain } = await http.get(
-			`/no-auth/match-repo?url=${encodeURIComponent(url)}&firstCommitHash=${firstCommitHash}`
+			`/no-auth/match-repo?url=${encodeURIComponent(url)}&knownCommitHashes=${hashes}`
 		);
 
 		if (repo) {
@@ -133,7 +135,7 @@ const matchRepoInfo = ({ url, firstCommitHash }) => async (dispatch, getState, {
 		else
 			logError("encountered unexpected error while matching repo information", error, {
 				url,
-				firstCommitHash
+				knownCommitHashes
 			});
 		throw new Error("Unable to get repo information"); // TODO: tell the user exactly what's wrong
 	}
@@ -343,7 +345,7 @@ export const createTeam = name => (dispatch, getState, { http }) => {
 	const { session, repoAttributes } = getState();
 	const params = {
 		url: repoAttributes.url,
-		firstCommitHash: repoAttributes.firstCommitHash,
+		knownCommitHashes: repoAttributes.knownCommitHashes,
 		team: { name }
 	};
 	dispatch(requestStarted());

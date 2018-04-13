@@ -48,9 +48,9 @@ describe("TeamCreationForm", () => {
 		it("calls the createTeam function", () => {
 			const name = "Foo Team";
 			const url = "foobar.com";
-			const firstCommitHash = "123ba3";
+			const knownCommitHashes = ["123ba3"];
 			const team = { name };
-			const store = { getState: () => ({ repoAttributes: { url, firstCommitHash } }) };
+			const store = { getState: () => ({ repoAttributes: { url, knownCommitHashes } }) };
 			const createTeam = jasmine.createSpy("createTeam stub").andReturn(Promise.resolve());
 			const view = mountWithIntl(
 				<Provider store={createStore({ connectivity: { offline: false } })}>
