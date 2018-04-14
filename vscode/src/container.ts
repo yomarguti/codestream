@@ -1,6 +1,7 @@
 'use strict';
 import { Disposable, ExtensionContext } from 'vscode';
 import { CodeStreamSession } from './api/session';
+import { Commands } from './commands';
 import { IConfig } from './config';
 import { configuration } from './configuration';
 // import { UnreadDecorationProvider } from './providers/decorationProvider';
@@ -23,11 +24,9 @@ export class Container {
         context.subscriptions.push(this._git = new Git());
         context.subscriptions.push(this._session = new CodeStreamSession(config.serverUrl));
         context.subscriptions.push(this._umis = new UMIController());
+        context.subscriptions.push(this._liveShare = new LiveShareController());
 
-        // if (extensions.getExtension('MS-vsliveshare.vsliveshare') !== undefined) {
-            context.subscriptions.push(this._liveShare = new LiveShareController());
-        // }
-
+        context.subscriptions.push(this._commands = new Commands());
         context.subscriptions.push(this._codeActions = new CodeStreamCodeActionProvider());
         // context.subscriptions.push(this._codeLens = new CodeStreamCodeLensProvider());
         // context.subscriptions.push(this._markerDecorations = new CodeStreamMarkerDecorationProvider());
@@ -57,6 +56,11 @@ export class Container {
     private static _codeLens: CodeStreamCodeLensProvider;
     static get codeLens() {
         return this._codeLens;
+    }
+
+    private static _commands: Commands;
+    static get commands() {
+        return this._commands;
     }
 
     private static _config: IConfig | undefined;

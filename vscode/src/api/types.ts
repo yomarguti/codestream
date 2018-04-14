@@ -8,6 +8,11 @@ export interface CSEntity {
     creatorId: string;
 }
 
+export interface CSCodeBlock {
+    code: string;
+    location: [number, number, number, number];
+}
+
 export interface CSMarker {
     id: string;
     teamId: string;
@@ -84,6 +89,8 @@ export interface CreatePostRequest {
     streamId: string;
     parentPostId?: string;
     text: string;
+    codeBlocks?: CSCodeBlock[];
+    commitHashWhenPosted?: string;
 }
 
 export interface CreatePostResponse {

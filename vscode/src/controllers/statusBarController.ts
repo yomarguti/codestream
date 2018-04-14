@@ -44,7 +44,7 @@ export class StatusBarController extends Disposable {
 
     private updateStatusBar(status: SessionStatus, count: number = 0) {
         if (this._statusBarItem === undefined) {
-            this._statusBarItem = this._statusBarItem || window.createStatusBarItem(StatusBarAlignment.Right, 1000);
+            this._statusBarItem = this._statusBarItem || window.createStatusBarItem(StatusBarAlignment.Right, -99);
         }
 
         switch (status) {

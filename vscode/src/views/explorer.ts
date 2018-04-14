@@ -2,7 +2,6 @@
 import { commands, ConfigurationChangeEvent, Disposable, Event, EventEmitter, TreeDataProvider, TreeItem, TreeView, window } from 'vscode';
 import { configuration } from '../configuration';
 import { Container } from '../container';
-import { Context, setContext } from '../context';
 import { ExplorerNode, RefreshReason, SessionNode, UserNode } from './explorerNodes';
 
 export * from './explorerNodes';
@@ -57,10 +56,6 @@ export class CodeStreamExplorer extends Disposable implements TreeDataProvider<E
         const initializing = configuration.initializing(e);
 
         if (!initializing && !configuration.changed(e, configuration.name('explorer').value)) return;
-
-        if (!initializing && configuration.changed(e, configuration.name('explorer')('enabled').value)) {
-            setContext(Context.Explorer, Container.session.signedIn && Container.config.explorer.enabled);
-        }
 
         if (!initializing && this._roots.length !== 0) {
             this.refresh(RefreshReason.ConfigurationChanged);

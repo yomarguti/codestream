@@ -1,5 +1,5 @@
 'use strict';
-import { Uri } from 'vscode';
+import { Range, Uri } from 'vscode';
 import { CodeStreamCollection, CodeStreamItem  } from './collection';
 import { Iterables } from '../../system';
 import { CodeStreamSession } from '../session';
@@ -39,6 +39,13 @@ export class Stream extends CodeStreamItem<CSStream> {
     async post(text: string) {
         const post = await this.session.api.createPost(text, this.entity.id, this.entity.teamId);
         if (post === undefined) throw new Error(`Unable to post to Stream(${this.entity.id})`);
+
+        return new Post(this.session, post);
+    }
+
+    async postCode(text: string, code: string, range: Range, commitHash: string) {
+        const post = await this.session.api.createPostWithCode(text, code, range, commitHash, this.entity.id, this.entity.teamId);
+        if (post === undefined) throw new Error(`Unable to post code to Stream(${this.entity.id})`);
 
         return new Post(this.session, post);
     }

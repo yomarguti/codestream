@@ -1,10 +1,10 @@
 'use strict';
-import { Uri } from 'vscode';
+import { Range, Uri } from 'vscode';
 import {
     CodeStreamApi,
     CSMarkerLocations, CSPost, CSRepository, CSStream, CSTeam, CSUser
 } from './api';
-import { Git } from '../git/git';
+import { Container } from '../container';
 
 export class CodeStreamSessionApi {
 
@@ -23,6 +23,24 @@ export class CodeStreamSessionApi {
         })).post;
     }
 
+    async createPostWithCode(text: string, code: string, range: Range, commitHash: string, streamId: string, teamId?: string): Promise<CSPost | undefined> {
+        return (await this._api.createPost(this.token, {
+            teamId: teamId || this.teamId!,
+            streamId: streamId,
+            text: text,
+            codeBlocks: [{
+                code: code,
+                location: [
+                    range.start.line,
+                    range.start.character,
+                    range.end.line,
+                    range.end.character
+                ]
+            }],
+            commitHashWhenPosted: commitHash
+        })).post;
+    }
+
     async createRepo(uri: Uri, firstCommitHashes: string[], teamId?: string): Promise<CSRepository | undefined> {
         return (await this._api.createRepo(this.token, {
             teamId: teamId || this.teamId!,
@@ -36,14 +54,14 @@ export class CodeStreamSessionApi {
             teamId: teamId || this.teamId!,
             repoId: repoId,
             type: 'file',
-            file: uri.toString()
+            file: uri.fsPath
         })).stream;
     }
 
     private async findOrRegisterRepo(registeredRepos: CSRepository[], uri: Uri) {
         const [firsts, remote] = await Promise.all([
-            Git.getFirstCommits(uri),
-            Git.getRemote(uri)
+            Container.git.getFirstCommits(uri),
+            Container.git.getRemote(uri)
         ]);
 
         if (remote === undefined || firsts.length === 0) return undefined;
@@ -58,7 +76,7 @@ export class CodeStreamSessionApi {
     async findOrRegisterRepos(): Promise<[Uri, CSRepository][]> {
         const [registeredRepos, repos] = await Promise.all([
             this.getRepos(),
-            Git.getRepositories()
+            Container.git.getRepositories()
         ]);
 
         const items: [Uri, CSRepository][] = [];

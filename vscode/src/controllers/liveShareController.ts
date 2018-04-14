@@ -1,26 +1,42 @@
 'use strict';
-import { commands, Disposable, MessageItem, window } from 'vscode';
+import { commands, Disposable, Extension, extensions, MessageItem, window } from 'vscode';
 import { PostsReceivedEvent, User } from '../api/session';
 import { Container } from '../container';
+import { ContextKeys, setContext } from '../context';
 
 // more 💩 code ahead
 
 const liveShareRegex = /https:\/\/(?:.*?)liveshare(?:.*?).visualstudio.com\/join\?(.*?)(?:\s|$)/;
+let liveShare: Extension<any> | undefined;
 
 export class LiveShareController extends Disposable {
 
-    private _disposable: Disposable;
+    static ensureLiveShare(): boolean {
+        if (liveShare === undefined) {
+            liveShare = extensions.getExtension('ms-vsliveshare.vsliveshare');
+        }
+        return liveShare !== undefined;
+    }
+
+    private readonly _disposable: Disposable | undefined;
 
     constructor() {
         super(() => this.dispose());
 
-        this._disposable = Disposable.from(
-            Container.session.onDidReceivePosts(this.onSessionPostsReceived, this)
-        );
+        if (LiveShareController.ensureLiveShare()) {
+            setContext(ContextKeys.LiveShareInstalled, true);
+            this._disposable = Disposable.from(
+                Container.session.onDidReceivePosts(this.onSessionPostsReceived, this)
+            );
+        }
     }
 
     dispose() {
         this._disposable && this._disposable.dispose();
+    }
+
+    get liveShareInstalled() {
+        return liveShare !== undefined;
     }
 
     private async onSessionPostsReceived(e: PostsReceivedEvent) {
@@ -34,20 +50,22 @@ export class LiveShareController extends Disposable {
                 const user = await users.get(post.senderId);
 
                 const actions: MessageItem[] = [
-                    { title: 'Join' },
+                    { title: 'Join Live Share' },
                     { title: 'Ignore', isCloseAffordance: true }
                 ];
 
-                const result = await window.showInformationMessage(`${user.name} would like you to join a Live Share session. Would you like to join?`, ...actions);
+                const result = await window.showInformationMessage(`${user.name} is inviting you to join a Live Share session`, ...actions);
                 if (result === undefined || result === actions[1]) return;
 
-                commands.executeCommand('liveshare.join', match[0]);
+                commands.executeCommand('liveshare.join', match[0], { newWindow: true });
             }
         }
     }
 
     async invite(user: User) {
-        const result = await commands.executeCommand('liveshare.start', true);
+        if (!this.liveShareInstalled) throw new Error('Live Share is not installed');
+
+        const result = await commands.executeCommand('liveshare.start', { suppressNotification: true });
         if (result !== undefined) {
             Container.session.post(`@${user.name} ${result}`);
         }

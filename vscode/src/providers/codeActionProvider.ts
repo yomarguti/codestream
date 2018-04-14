@@ -22,21 +22,21 @@ export class CodeStreamCodeActionProvider extends Disposable implements CodeActi
 
         return [
             {
-                title: `Add Comment`,
-                command: 'codestream.addMarker',
-                arguments: [
-                    document.uri,
-                    range
-                ]
-            } as Command,
-            {
-                title: `Reference Code`,
+                title: `Add a Comment`,
                 command: 'codestream.postCode',
                 arguments: [
                     document.uri,
                     range
                 ]
             } as Command
+            // {
+            //     title: `Reference Code`,
+            //     command: 'codestream.postCode',
+            //     arguments: [
+            //         document.uri,
+            //         range
+            //     ]
+            // } as Command
         ];
     }
 }

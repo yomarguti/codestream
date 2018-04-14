@@ -1,11 +1,13 @@
 'use strict';
 import { Uri, workspace, WorkspaceFolder } from 'vscode';
 import { CodeStreamCollection, CodeStreamItem } from './collection';
-import { Git } from '../../git/git';
+import { Container } from '../../container';
 import { Markers } from './markers';
 import { CodeStreamSession } from '../session';
 import { StreamCollection } from './streams';
 import { CSRepository } from '../types';
+import * as path from 'path';
+import { Strings } from '../../system';
 
 export class Repository extends CodeStreamItem<CSRepository> {
 
@@ -23,7 +25,7 @@ export class Repository extends CodeStreamItem<CSRepository> {
         const stream = await this.streams.getByUri(uri);
         if (stream === undefined) return undefined;
 
-        const sha = await Git.getCurrentSha(uri);
+        const sha = await Container.git.getCurrentSha(uri);
         const markers = await this.session.api.getMarkerLocations(sha, stream.id);
         return new Markers(this.session, markers);
     }
@@ -42,6 +44,10 @@ export class Repository extends CodeStreamItem<CSRepository> {
 
     get url() {
         return this.entity.normalizedUrl;
+    }
+
+    normalizeUri(uri: Uri) {
+        return Uri.file(Strings.normalizePath(path.relative(this._folder!.uri.fsPath, uri.fsPath)));
     }
 }
 

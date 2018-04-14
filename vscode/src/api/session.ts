@@ -1,5 +1,5 @@
 'use strict';
-import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, Uri } from 'vscode';
+import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, Range, Uri } from 'vscode';
 import { Functions, Iterables, Strings } from '../system';
 import { configuration } from '../configuration';
 import {
@@ -305,6 +305,22 @@ export class CodeStreamSession extends Disposable {
         }
 
         return stream.post(text);
+    }
+
+    @signedIn
+    async postCode(text: string, uri: Uri, code: string, range: Range, commitHash: string) {
+        let stream = await this.streams.getByUri(uri);
+        if (stream === undefined) {
+            const repo = await this.repos.getByUri(uri);
+            if (repo === undefined) throw new Error(`No repository could be found for Uri(${uri.toString()}`);
+
+            const s = await this._sessionApi!.createStream(repo.normalizeUri(uri), repo.id);
+            if (s === undefined) throw new Error(`Unable to create stream for Uri(${uri.toString()}`);
+
+            stream = new Stream(this, s);
+        }
+
+        return stream.postCode(text, code, range, commitHash);
     }
 
     private async loginCore(email: string, password: string, teamId?: string): Promise<CodeStreamSession> {

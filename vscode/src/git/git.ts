@@ -36,9 +36,9 @@ export class Git extends Disposable {
         this._onDidChangeRepositories.fire();
     }
 
-    static async getFirstCommits(repoUri: Uri): Promise<string[]>;
-    static async getFirstCommits(repoPath: string): Promise<string[]>;
-    static async getFirstCommits(uriOrPath: Uri | string): Promise<string[]> {
+    async getFirstCommits(repoUri: Uri): Promise<string[]>;
+    async getFirstCommits(repoPath: string): Promise<string[]>;
+    async getFirstCommits(uriOrPath: Uri | string): Promise<string[]> {
         const path = (typeof uriOrPath === 'string') ? uriOrPath : uriOrPath.fsPath;
 
         let data;
@@ -57,14 +57,15 @@ export class Git extends Disposable {
         return data.trim().split('\n');
     }
 
-    static async getCurrentSha(uri: Uri) {
+    async getCurrentSha(uri: Uri) {
         const dir = path.dirname(uri.fsPath);
-        return git({ cwd: dir }, 'log', '-n1', '--format="%h"', '--', path.relative(dir, uri.fsPath));
+        const data = await git({ cwd: dir }, 'log', '-n1', '--format=%H', '--', path.relative(dir, uri.fsPath));
+        return data.trim();
     }
 
-    static async getRemote(repoUri: Uri): Promise<GitRemote | undefined>;
-    static async getRemote(repoPath: string): Promise<GitRemote | undefined>;
-    static async getRemote(uriOrPath: Uri | string): Promise<GitRemote | undefined> {
+    async getRemote(repoUri: Uri): Promise<GitRemote | undefined>;
+    async getRemote(repoPath: string): Promise<GitRemote | undefined>;
+    async getRemote(uriOrPath: Uri | string): Promise<GitRemote | undefined> {
         const path = (typeof uriOrPath === 'string') ? uriOrPath : uriOrPath.fsPath;
 
         let data;
@@ -92,7 +93,7 @@ export class Git extends Disposable {
         return push || fetch;
     }
 
-    static async getRepositories(): Promise<GitRepository[]> {
+    async getRepositories(): Promise<GitRepository[]> {
         return Git.api!.getRepositories();
     }
 

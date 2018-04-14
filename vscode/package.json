@@ -91,6 +91,11 @@
                 "category": "CodeStream"
             },
             {
+                "command": "codestream.postCode",
+                "title": "Post Code",
+                "category": "CodeStream"
+            },
+            {
                 "command": "codestream.explorer.inviteToLiveShare",
                 "title": "Invite to Live Share",
                 "category": "CodeStream"
@@ -110,19 +115,23 @@
             "commandPalette": [
                 {
                     "command": "codestream.signIn",
-                    "when": "!codestream:enabled"
+                    "when": "codestream:status == signedOut"
                 },
                 {
                     "command": "codestream.signOut",
-                    "when": "codestream:enabled"
+                    "when": "codestream:status == signedIn"
                 },
                 {
                     "command": "codestream.openStream",
-                    "when": "editorTextFocus && codestream:enabled"
+                    "when": "editorTextFocus && codestream:status == signedIn"
                 },
                 {
                     "command": "codestream.post",
-                    "when": "codestream:enabled"
+                    "when": "codestream:status == signedIn"
+                },
+                {
+                    "command": "codestream.postCode",
+                    "when": "editorTextFocus && editorHasSelection && editor codestream:status == signedIn"
                 },
                 {
                     "command": "codestream.explorer.inviteToLiveShare",
@@ -145,7 +154,7 @@
                 },
                 {
                     "command": "codestream.explorer.inviteToLiveShare",
-                    "when": "view == codestream && viewItem == codestream:user",
+                    "when": "view == codestream && viewItem == codestream:user && codestream:liveShareInstalled",
                     "group": "2_codestream@1"
                 }
             ]
@@ -155,7 +164,7 @@
                 {
                     "id": "codestream",
                     "name": "CodeStream",
-                    "when": "codestream:explorer"
+                    "when": "codestream:status == signedIn && config.codestream.explorer.enabled"
                 }
             ]
         }
