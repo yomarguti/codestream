@@ -33,7 +33,7 @@ export default (state = initialState, { type, payload }) => {
 		case "SIGNUP-USERNAME_COLLISION":
 			return { ...state, errors: { usernameInUse: true } };
 		case "NEW_USER_LOGGED_INTO_NEW_REPO":
-			return { ...initialState, step: "createTeam", firstTimeInAtom: payload.firstTimeInAtom };
+			return { ...initialState, step: "createTeam", ...payload };
 		case "NEW_USER_LOGGED_INTO_MATCHED_REPO":
 			return {
 				...initialState,
@@ -41,7 +41,7 @@ export default (state = initialState, { type, payload }) => {
 				...payload
 			};
 		case "EXISTING_USER_LOGGED_INTO_NEW_REPO":
-			return { ...initialState, step: "selectTeam", firstTimeInAtom: payload.firstTimeInAtom };
+			return { ...initialState, step: "selectTeam", ...payload };
 		case "EXISTING_USER_LOGGED_INTO_MATCHED_REPO":
 			return {
 				...initialState,
