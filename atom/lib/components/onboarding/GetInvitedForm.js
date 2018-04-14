@@ -59,29 +59,14 @@ export class GetInvitedForm extends Component {
 	getCreateSelectTeamMessage() {
 		if (this.props.alreadyOnTeam) {
 			return (
-				<span>
-					<FormattedMessage id="getInvited.selectCreateTeam" defaultMessage="Otherwise, you can " />
-					<a onClick={this.props.goToSelectTeam}>
-						<FormattedMessage
-							id="getInvited.selectTeam"
-							defaultMessage="select one of your teams "
-						/>
-					</a>
-					or
-					<a onClick={this.props.goToCreateTeam}>
-						<FormattedMessage id="getInvited.createTeam" defaultMessage=" create a new one" />
-					</a>.
-				</span>
+				<FormattedMessage
+					id="getInvited.selectTeam"
+					defaultMessage="I don't want to join that team."
+				/>
 			);
 		} else {
 			return (
-				<span>
-					<FormattedMessage id="getInvited.createTeam" defaultMessage="Or, you can go ahead and " />
-					<a onClick={this.props.goToCreateTeam}>
-						<FormattedMessage id="getInvited.createOwnTeam" defaultMessage="create your own team" />
-					</a>
-					.
-				</span>
+				<FormattedMessage id="getInvited.createTeam" defaultMessage="I want to create a team." />
 			);
 		}
 	}
@@ -105,10 +90,19 @@ export class GetInvitedForm extends Component {
 				<br />
 				<p>
 					<a onClick={this.props.afterInvite}>
-						<FormattedMessage id="getInvited.signIn" defaultMessage="Sign in" />
+						<FormattedMessage
+							id="getInvited.afterInvite"
+							defaultMessage="Got my invitation. Let's go!"
+						/>
 					</a>
-					<FormattedMessage id="getInvited.signIn" defaultMessage=" once you've been invited. " />
-					{createSelectTeamMessage}
+				</p>
+				<br />
+				<p>
+					<FormattedMessage id="getInvited.or" defaultMessage="or" />
+				</p>
+				<br />
+				<p>
+					<a onClick={this.props.afterInvite}>{createSelectTeamMessage}</a>
 				</p>
 			</div>
 		);

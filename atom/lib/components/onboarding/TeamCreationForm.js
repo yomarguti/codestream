@@ -3,7 +3,7 @@ import { FormattedMessage } from "react-intl";
 import { connect } from "react-redux";
 import Button from "./Button";
 import UnexpectedErrorMessage from "./UnexpectedErrorMessage";
-import { createTeam } from "../../actions/onboarding";
+import { createTeam, backToInvite } from "../../actions/onboarding";
 
 export class SimpleTeamCreationForm extends Component {
 	constructor(props) {
@@ -32,6 +32,19 @@ export class SimpleTeamCreationForm extends Component {
 	};
 
 	render() {
+		let goBack = "";
+		if (this.props.showBackButton) {
+			goBack = (
+				<div className="footer">
+					<br />
+					<p>
+						<a onClick={this.props.backToInvite}>
+							<FormattedMessage id="createTeam.backToInvite" defaultMessage="Go Back" />
+						</a>
+					</p>
+				</div>
+			);
+		}
 		return (
 			<div id="team-creation">
 				<h2>
@@ -54,13 +67,15 @@ export class SimpleTeamCreationForm extends Component {
 						<FormattedMessage id="createTeam.submitButton" />
 					</Button>
 				</form>
+				{goBack}
 			</div>
 		);
 	}
 }
 
 const mapStateToProps = ({ onboarding }) => ({
+	showBackButton: onboarding.fromInvite,
 	loading: onboarding.requestInProcess,
 	errors: onboarding.errors
 });
-export default connect(mapStateToProps, { createTeam })(SimpleTeamCreationForm);
+export default connect(mapStateToProps, { createTeam, backToInvite })(SimpleTeamCreationForm);

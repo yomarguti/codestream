@@ -239,20 +239,6 @@ async function _handleUserLogin(options) {
 				// to decide which team the user wants to add the repo to
 				repoInfo = null;
 			}
-			/*
-			if (matchingTeams.length === 1) {
-				// in this case, we've logged in with a repo that matches a team
-				// we are already a member of ... we'll automatically add this repo
-				// to the team, assuming we were invited
-				await dispatch(addRepoForTeam(matchingTeams[0]._id));
-			} else if (matchingTeams.length > 1) {
-				// in this case, we've logged in with a repo that matches more
-				// than one team we are already a member of ... we'll go through
-				// a select team flow to figure out which team the user wants to
-				// add the repo to
-				repoInfo = null;
-			}
-*/
 		}
 	}
 
@@ -330,12 +316,26 @@ export const afterInvite = () => async (dispatch, getState) => {
 	const { users, session, onboarding } = getState();
 	const user = users[session.userId];
 	const teamIds = user.teamIds || [];
-	const { firstTimeInAtom } = onboarding;
+	const { firstTimeInAtom, teamsMatchingRepo, teamCreatorsMatchingRepo } = onboarding;
+	const inviteState = { firstTimeInAtom, teamsMatchingRepo, teamCreatorsMatchingRepo, fromInvite: true };
 	if (teamIds.length === 0) {
-		dispatch(newUserLoggedIntoNewRepo({ firstTimeInAtom }));
+		dispatch(newUserLoggedIntoNewRepo(inviteState));
 	} else {
 		await dispatch(fetchTeamMembers(teamIds));
-		dispatch(existingUserLoggedIntoNewRepo({ firstTimeInAtom }));
+		dispatch(existingUserLoggedIntoNewRepo(inviteState));
+	}
+};
+
+export const backToInvite = () => async (dispatch, getState) => {
+	const { users, session, onboarding } = getState();
+	const user = users[session.userId];
+	const teamIds = user.teamIds || [];
+	const { firstTimeInAtom, teamsMatchingRepo, teamCreatorsMatchingRepo } = onboarding;
+	const backState = { firstTimeInAtom, teamsMatchingRepo, teamCreatorsMatchingRepo };
+	if (teamIds.length === 0) {
+		dispatch(newUserLoggedIntoMatchedRepo(backState));
+	} else {
+		dispatch(existingUserLoggedIntoMatchedRepo(backState));
 	}
 };
 
