@@ -2,7 +2,7 @@
 import { Range, Uri } from 'vscode';
 import { CodeStreamCollection, CodeStreamItem  } from './collection';
 import { Iterables } from '../../system';
-import { CodeStreamSession } from '../session';
+import { CodeStreamSession, SessionChangedEvent, SessionChangedType } from '../session';
 import { Post, PostCollection } from './posts';
 import { Repository } from './repositories';
 import { CSStream } from '../types';
@@ -65,12 +65,24 @@ export class StreamCollection extends CodeStreamCollection<Stream, CSStream> {
         public readonly repo?: Repository
     ) {
         super(session);
+
+        this.disposables.push(
+            session.onDidChange(this.onSessionChanged, this)
+        );
+    }
+
+    private onSessionChanged(e: SessionChangedEvent) {
+        if (e.type !== SessionChangedType.Streams) return;
+
+        if (this.repo === undefined || e.affects(this.repo.id)) {
+            this.invalidate();
+        }
     }
 
     async getByUri(uri: Uri): Promise<Stream | undefined> {
         if (this.repo === undefined) throw new Error(`File streams only exist at the repository level`);
 
-        const path = uri.fsPath;
+        const path = this.repo.normalizeUri(uri).fsPath;
         return Iterables.find(await this.items, s => s.path === path);
     }
 
@@ -80,7 +92,7 @@ export class StreamCollection extends CodeStreamCollection<Stream, CSStream> {
         // HACK: If we have no repo "parent" then pretend we are "team-level", but for now hack it as the first repo
         const repos = await this.session.repos.items;
         const repo = Iterables.first(repos);
-        return Array.from(await repo.streams.items);
+        return [...await repo.streams.items];
 }
 
     protected map(e: CSStream) {

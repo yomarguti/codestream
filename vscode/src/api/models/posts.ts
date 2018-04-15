@@ -20,6 +20,10 @@ export class Post extends CodeStreamItem<CSPost> {
         return this.entity.creatorId;
     }
 
+    get streamId() {
+        return this.entity.streamId;
+    }
+
     get teamId() {
         return this.entity.teamId;
     }
@@ -50,7 +54,7 @@ export class PostCollection extends CodeStreamCollection<Post, CSPost> {
     }
 
     private onPostsReceived(e: PostsReceivedEvent) {
-        if (e.affects('stream', this.stream.id)) {
+        if (e.affects(this.stream.id)) {
             this.invalidate();
         }
     }

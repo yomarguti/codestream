@@ -51,7 +51,7 @@ export class CodeStreamApi {
     }
 
     getMarkerLocations(token: string, teamId: string, streamId: string, commitHash: string): Promise<GetMarkerLocationsResponse> {
-        return this.get<GetMarkerLocationsResponse>(`/posts?teamId=${teamId}&streamId=${streamId}&commitHash=${commitHash}`, token);
+        return this.get<GetMarkerLocationsResponse>(`/marker-locations?teamId=${teamId}&streamId=${streamId}&commitHash=${commitHash}`, token);
     }
 
     getMarkers(token: string, teamId: string, streamId: string): Promise<GetMarkersResponse> {

@@ -1,24 +1,31 @@
 'use strict';
 import { Disposable, Event, EventEmitter } from 'vscode';
+import { CSPost, CSRepository, CSStream } from './types';
+import { Logger } from '../logger';
 import Pubnub = require('pubnub');
-import { CSPost, CSStream } from './types';
 
-export enum MessageTypes {
+export enum MessageType {
     Posts = 'posts',
+    Repositories = 'repos',
     Streams = 'streams'
 }
 
-export type MessageReceivedEvent = PostMessageReceivedEvent | StreamMessageReceivedEvent;
+export interface PostsMessageReceivedEvent {
+    type: MessageType.Posts;
+    posts: CSPost[];
+}
 
-export interface StreamMessageReceivedEvent {
-    type: MessageTypes.Streams;
+export interface RepositoriesMessageReceivedEvent {
+    type: MessageType.Repositories;
+    repos: CSRepository[];
+}
+
+export interface StreamsMessageReceivedEvent {
+    type: MessageType.Streams;
     streams: CSStream[];
 }
 
-export interface PostMessageReceivedEvent {
-    type: MessageTypes.Posts;
-    posts: CSPost[];
-}
+export type MessageReceivedEvent = PostsMessageReceivedEvent | RepositoriesMessageReceivedEvent | StreamsMessageReceivedEvent;
 
 export class PubNubReceiver {
 
@@ -27,7 +34,7 @@ export class PubNubReceiver {
         return this._onDidReceiveMessage.event;
     }
 
-    private subscriptions = {};
+    // private subscriptions = {};
     private pubnub: Pubnub | undefined;
     private listener: Pubnub.ListenerParameters | undefined;
 
@@ -67,10 +74,6 @@ export class PubNubReceiver {
         });
     }
 
-    isInitialized() {
-        return Boolean(this.pubnub);
-    }
-
     private setupListener() {
         this.listener = {
             presence: this.onPresence.bind(this),
@@ -81,14 +84,12 @@ export class PubNubReceiver {
     }
 
     private removeListener() {
-        if (this.pubnub && this.listener) {
+        if (this.pubnub !== undefined && this.listener !== undefined) {
             this.pubnub.removeListener(this.listener);
         }
     }
 
     onMessage(event: Pubnub.MessageEvent) {
-        // debugger;
-        // this.store.dispatch(lastMessageReceived(event.timetoken));
         this.processMessage(event.message);
     }
 
@@ -114,8 +115,8 @@ export class PubNubReceiver {
         //     });
         // }
 
-        const channels = status.affectedChannels || Object.keys(this.subscriptions);
-        channels;
+        // const channels = status.affectedChannels || Object.keys(this.subscriptions);
+        // channels;
         // for (const channel of channels) {
         //     if (this.subscriptions[channel]) {
         //         this.subscriptions[channel].status(status);
@@ -127,13 +128,26 @@ export class PubNubReceiver {
         const { requestId, ...messages } = data;
         requestId;
 
-        for (const [key, obj] of Object.entries(messages)) {
+        for (let [key, obj] of Object.entries(messages)) {
+            Logger.log(`PubNub '${key}' message received\n${JSON.stringify(obj)}`);
+
             switch (key) {
                 case 'post':
-                    this._onDidReceiveMessage.fire({ type: MessageTypes.Posts, posts: [obj as CSPost] });
-                    break;
+                case 'repo':
+                case 'stream':
+                    key += 's';
+                    obj = [obj];
+            }
+
+            switch (key as MessageType) {
                 case 'posts':
-                    this._onDidReceiveMessage.fire({ type: MessageTypes.Posts, posts: obj as CSPost[] });
+                    this._onDidReceiveMessage.fire({ type: MessageType.Posts, posts: obj as CSPost[] });
+                    break;
+                case 'repos':
+                    this._onDidReceiveMessage.fire({ type: MessageType.Repositories, repos: obj as CSRepository[] });
+                    break;
+                case 'streams':
+                    this._onDidReceiveMessage.fire({ type: MessageType.Streams, streams: obj as CSStream[] });
                     break;
             }
         }

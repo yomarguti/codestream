@@ -1,6 +1,6 @@
 'use strict';
 import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, Range, Uri } from 'vscode';
-import { Functions, Iterables, Strings } from '../system';
+import { Functions, Iterables, memoize, Strings } from '../system';
 import { configuration } from '../configuration';
 import {
     CodeStreamApi,
@@ -9,34 +9,136 @@ import {
 } from './api';
 import { CodeStreamSessionApi } from './sessionApi';
 import { Git } from '../git/git';
-import { MessageReceivedEvent, MessageTypes, PubNubReceiver } from './pubnub';
+import { MessageReceivedEvent, MessageType, PostsMessageReceivedEvent, PubNubReceiver, RepositoriesMessageReceivedEvent, StreamsMessageReceivedEvent } from './pubnub';
 import { Container } from '../container';
 import { Logger } from '../logger';
 
 export { Markers, Post, Repository, Stream, User } from './api';
 
+function affects(data: { [key: string]: any }[], id: string, type: 'stream' | 'repo' | 'team') {
+    let key: string;
+    switch (type) {
+        case 'repo':
+            key = 'repoId';
+            break;
+        case 'stream':
+            key = 'streamId';
+            break;
+        case 'team':
+            key = 'teamId';
+            break;
+        default:
+            return false;
+    }
+    return data.some(i => (i as { [key: string]: any })[key] === id);
+}
+
 function signedIn(target: CodeStreamSession, propertyName: string, descriptor: TypedPropertyDescriptor<any>) {
     if (typeof descriptor.value === 'function') {
         const method = descriptor.value;
-        descriptor.value = function(this: CodeStreamSession) {
+        descriptor.value = function(this: CodeStreamSession, ...args: any[]) {
             if (!this.signedIn) throw new Error('Not Logged In');
-            return method!.apply(this, arguments);
+            return method!.apply(this, args);
         };
     }
     else if (typeof descriptor.get === 'function') {
         const get = descriptor.get;
-        descriptor.get = function(this: CodeStreamSession) {
+        descriptor.get = function(this: CodeStreamSession, ...args: any[]) {
             if (!this.signedIn) throw new Error('Not Logged In');
-            return get!.apply(this, arguments);
+            return get!.apply(this, args);
         };
     }
 }
 
-export interface PostsReceivedEvent {
-    count: number;
-    affects(type: 'team' | 'stream', id: string): boolean;
-    getPosts(): Post[];
+export class PostsReceivedEvent {
+
+    constructor(
+        private readonly session: CodeStreamSession,
+        private readonly _event: PostsMessageReceivedEvent
+    ) { }
+
+    get count() {
+        return this._event.posts.length;
+    }
+
+    affects(id: string, type: 'stream' | 'repo' | 'team' = 'stream') {
+        return affects(this._event.posts, id, type);
+    }
+
+    @memoize
+    getPosts() {
+        return this._event.posts.map(p => new Post(this.session, p));
+    }
+
+    merge(e: PostsReceivedEvent) {
+        this._event.posts.push(...e._event.posts);
+    }
 }
+
+export enum SessionChangedType {
+    Git = 'git',
+    Repositories = 'repos',
+    Streams = 'streams'
+}
+
+export interface GitChangedEvent {
+    readonly type: SessionChangedType.Git;
+    // affects(type: 'repo' | 'team', id: string): boolean;
+    // getStreams(): Stream[];
+    merge: (e: GitChangedEvent) => void;
+}
+
+export class RepositoriesAddedEvent {
+    readonly type = SessionChangedType.Repositories;
+
+    constructor(
+        private readonly session: CodeStreamSession,
+        private readonly _event: RepositoriesMessageReceivedEvent
+    ) { }
+
+    get count() {
+        return this._event.repos.length;
+    }
+
+    affects(id: string, type: 'team' = 'team'): boolean {
+        return affects(this._event.repos, id, type);
+    }
+
+    getRepositories(): Repository[] {
+        return this._event.repos.map(r => new Repository(this.session, r));
+    }
+
+    merge(e: RepositoriesAddedEvent) {
+        this._event.repos.push(...e._event.repos);
+    }
+}
+
+export class StreamsAddedEvent {
+    readonly type = SessionChangedType.Streams;
+
+    constructor(
+        private readonly session: CodeStreamSession,
+        private readonly _event: StreamsMessageReceivedEvent
+    ) { }
+
+    get count() {
+        return this._event.streams.length;
+    }
+
+    affects(id: string, type: 'repo' | 'team' = 'repo'): boolean {
+        return affects(this._event.streams, id, type);
+    }
+
+    getStreams(): Stream[] {
+        return this._event.streams.map(r => new Stream(this.session, r));
+    }
+
+    merge(e: StreamsAddedEvent) {
+        this._event.streams.push(...e._event.streams);
+    }
+}
+
+export type SessionChangedEvent = GitChangedEvent | RepositoriesAddedEvent | StreamsAddedEvent;
 
 export enum SessionStatus {
     SignedOut = 'signedOut',
@@ -56,8 +158,8 @@ export class CodeStreamSession extends Disposable {
         return new CodeStreamApi(serverUrl).findRepo(repoUrl, firstCommitHashes);
     }
 
-    private _onDidChange = new EventEmitter<void>();
-    get onDidChange(): Event<void> {
+    private _onDidChange = new EventEmitter<SessionChangedEvent>();
+    get onDidChange(): Event<SessionChangedEvent> {
         return this._onDidChange.event;
     }
 
@@ -120,38 +222,60 @@ export class CodeStreamSession extends Disposable {
     }
 
     private onGitRepositoriesChanged() {
+        this.fireChanged({
+
+        } as GitChangedEvent);
         this._onDidChange.fire();
     }
 
     private onMessageReceived(e: MessageReceivedEvent) {
         switch (e.type) {
-            case MessageTypes.Posts:
-                this.firePostsReceived({
-                    count: e.posts.length,
-                    affects: (type: 'stream' | 'team', id: string) => {
-                        let key: string;
-                        switch (type) {
-                            case 'stream':
-                                key = 'streamId';
-                                break;
-                            case 'team':
-                                key = 'teamId';
-                                break;
-                            default:
-                                return false;
-                        }
-                        return e.posts.some(p => (p as { [key: string]: any })[key] === id);
-                    },
-                    getPosts: () => e.posts.map(p => new Post(this, p))
-                });
+            case MessageType.Posts:
+                this.firePostsReceived(new PostsReceivedEvent(this, e));
+                break;
+            case MessageType.Repositories:
+                this.fireChanged(new RepositoriesAddedEvent(this, e));
+                break;
+            case MessageType.Streams:
+                this.fireChanged(new StreamsAddedEvent(this, e));
                 break;
         }
+    }
+
+    private _changedDebounced: ((e: SessionChangedEvent) => void) | undefined;
+    protected fireChanged(e: SessionChangedEvent) {
+        if (this._changedDebounced === undefined) {
+            this._changedDebounced = Functions.debounceMerge(
+                (e: SessionChangedEvent) => this._onDidChange.fire(e),
+                (combined: SessionChangedEvent[] | undefined, current: SessionChangedEvent) => {
+                    if (combined === undefined) return [current];
+
+                    const found = combined.find(_ => _.type === current.type);
+                    if (found === undefined) {
+                        combined.push(current);
+                    }
+                    else {
+                        (found as any).merge(current);
+                    }
+                    return combined;
+                },
+                250);
+        }
+        this._changedDebounced(e);
     }
 
     private _postsReceivedDebounced: ((e: PostsReceivedEvent) => void) | undefined;
     protected firePostsReceived(e: PostsReceivedEvent) {
         if (this._postsReceivedDebounced === undefined) {
-            this._postsReceivedDebounced = Functions.debounce((e: PostsReceivedEvent) => this._onDidReceivePosts.fire(e), 250);
+            this._postsReceivedDebounced = Functions.debounceMerge(
+                (e: PostsReceivedEvent) => this._onDidReceivePosts.fire(e),
+                (combined: PostsReceivedEvent[] | undefined, current: PostsReceivedEvent) => {
+                    if (combined === undefined) return [current];
+
+                    combined[0].merge(current);
+                    return combined;
+                },
+                250, { maxWait: 1000 });
         }
         this._postsReceivedDebounced(e);
     }
@@ -309,11 +433,11 @@ export class CodeStreamSession extends Disposable {
 
     @signedIn
     async postCode(text: string, uri: Uri, code: string, range: Range, commitHash: string) {
-        let stream = await this.streams.getByUri(uri);
-        if (stream === undefined) {
-            const repo = await this.repos.getByUri(uri);
-            if (repo === undefined) throw new Error(`No repository could be found for Uri(${uri.toString()}`);
+        const repo = await this.repos.getByUri(uri);
+        if (repo === undefined) throw new Error(`No repository could be found for Uri(${uri.toString()}`);
 
+        let stream = await repo.streams.getByUri(uri);
+        if (stream === undefined) {
             const s = await this._sessionApi!.createStream(repo.normalizeUri(uri), repo.id);
             if (s === undefined) throw new Error(`Unable to create stream for Uri(${uri.toString()}`);
 

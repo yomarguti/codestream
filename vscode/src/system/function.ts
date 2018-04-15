@@ -38,6 +38,62 @@ export namespace Functions {
         return tracked;
     }
 
+    export function debounceMerge<T extends Function>(fn: T, merger: (combined: any[] | undefined, current: any) => any[], wait?: number, options?: { leading?: boolean, maxWait?: number, trailing?: boolean }): T {
+        let combined: any[] | undefined;
+        let context: any;
+
+        const debounced = debounce<T>(function() {
+            if (combined === undefined) return fn.apply(context, [undefined]);
+
+            const args = combined;
+            combined = undefined;
+
+            for (const arg of args) {
+                fn.apply(context, [arg]);
+            }
+        } as any, wait, options);
+
+        return function(this: any, ...args: any[]) {
+            context = this;
+            combined = merger.apply(context, [combined, ...args]);
+            return debounced();
+        } as any;
+    }
+
+    // interface Data {
+    //     type: 'foo' | 'bar';
+    //     values: string[];
+    // }
+
+    // const foo = (data: Data) => console.log(data);
+    // const foodb = debounceMerge(foo, (combined: Data[] | undefined, current: Data) => {
+    //     if (combined === undefined) return [current];
+
+    //     const found = combined.find(_ => _.type === current.type);
+    //     if (found === undefined) {
+    //         combined.push(current);
+    //     }
+    //     else {
+    //         found.values.push(...current.values);
+    //     }
+    //     return combined;
+    // }, 1000);
+
+    // foodb({ type: 'foo', values: ['foo'] });
+    // foodb({ type: 'foo', values: ['bar'] });
+    // foodb({ type: 'bar', values: ['1', '2', '3'] });
+    // foodb({ type: 'foo', values: ['baz'] });
+
+    // setTimeout(() => {
+    //     foodb({ type: 'foo', values: ['baz'] });
+    // }, 2000);
+
+    // setTimeout(() => {
+    //     foodb({ type: 'foo', values: ['4'] });
+    //     foodb({ type: 'bar', values: ['5', '6'] });
+    //     foodb({ type: 'bar', values: ['7'] });
+    // }, 5000);
+
     export function decorate(decorator: (fn: Function, key: string) => Function): Function {
         return (target: any, key: string, descriptor: any) => {
             let fn;
@@ -52,7 +108,7 @@ export namespace Functions {
                 fnKey = 'get';
             }
 
-            if (!fn || !fnKey) throw new Error('not supported');
+            if (!fn || !fnKey) throw new Error('Not supported');
 
             descriptor[fnKey] = decorator(fn, key);
         };

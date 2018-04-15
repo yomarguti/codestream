@@ -1,9 +1,12 @@
 import { commands, Disposable, MessageItem, window } from 'vscode';
+import { Post } from './api/session';
 import { TraceLevel } from './config';
 import { Container } from './container';
 import { Logger } from './logger';
 
 interface CommandOptions {
+    customErrorHandling?: boolean;
+    showErrorMessage?: string;
 }
 
 interface Command {
@@ -19,10 +22,29 @@ function command(command: string, options: CommandOptions = {}): Function {
     return (target: any, key: string, descriptor: any) => {
         if (!(typeof descriptor.value === 'function')) throw new Error('not supported');
 
+        let method;
+        if (!options.customErrorHandling) {
+            method = async function(this: any, ...args: any[]) {
+                try {
+                    return await descriptor.value.apply(this, args);
+                }
+                catch (ex) {
+                    Logger.error(ex);
+
+                    if (options.showErrorMessage) {
+                        window.showErrorMessage(`${options.showErrorMessage} \u00a0\u2014\u00a0 ${ex.toString()}`);
+                    }
+                }
+            };
+        }
+        else {
+            method = descriptor.value;
+        }
+
         registry.push({
             name: `codestream.${command}`,
             key: key,
-            method: descriptor.value,
+            method: method,
             options: options
         });
     };
@@ -44,7 +66,15 @@ export class Commands extends Disposable {
         this._disposable && this._disposable.dispose();
     }
 
-    @command('post')
+    @command('openPost', { showErrorMessage: 'Unable to open post' })
+    async openPost(post?: Post) {
+        if (post === undefined) return;
+
+        // post.repoId
+        // return Container.session.post(message);
+    }
+
+    @command('post', { showErrorMessage: 'Unable to post message' })
     async post() {
         const message = await window.showInputBox({ prompt: 'Enter message', placeHolder: 'Message' });
         if (message === undefined) return;
@@ -52,7 +82,7 @@ export class Commands extends Disposable {
         return Container.session.post(message);
     }
 
-    @command('postCode')
+    @command('postCode', { showErrorMessage: 'Unable to add comment' })
     async postCode() {
         const editor = window.activeTextEditor;
         if (editor === undefined) return undefined;
@@ -62,18 +92,28 @@ export class Commands extends Disposable {
 
         const uri = editor.document.uri;
 
-        // TODO: Blame to get authors
+        const authors = await Container.git.getFileAuthors(uri, {
+            startLine: selection.start.line,
+            endLine: selection.end.line,
+            contents: editor.document.isDirty ? editor.document.getText() : undefined
+        });
 
-        const message = await window.showInputBox({ prompt: 'Enter Comment', placeHolder: 'Comment' });
+        const mentions = authors.map(a => `@${a.name}`).join(', ');
+
+        const message = await window.showInputBox({
+            prompt: 'Enter Comment',
+            placeHolder: 'Comment',
+            value: `${mentions ? `${mentions}: ` : ''}`
+        });
         if (message === undefined) return;
 
         const code = editor.document.getText(selection);
-        const commitHash = await Container.git.getCurrentSha(uri);
+        const commitHash = await Container.git.getFileCurrentSha(uri);
 
         return Container.session.postCode(message, uri, code, selection, commitHash);
     }
 
-    @command('signIn')
+    @command('signIn', { customErrorHandling: true })
     signIn() {
         return this.signInCore(Container.config.username, Container.config.password);
     }

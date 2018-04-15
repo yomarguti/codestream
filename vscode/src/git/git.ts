@@ -1,12 +1,15 @@
 'use strict';
 import { Disposable, Event, EventEmitter, extensions, Uri, workspace, WorkspaceFoldersChangeEvent } from 'vscode';
+import { Strings } from '../system';
 import { Logger } from '../logger';
-import { GitRemote, GitRepository } from './models/models';
+import { GitAuthor, GitRemote, GitRepository } from './models/models';
 import { CommandOptions, runCommand } from './shell';
+import { GitAuthorParser } from './parsers/authorParser';
 import { GitRemoteParser } from './parsers/remoteParser';
-import * as path from 'path';
 
 export * from './models/models';
+
+const uncommittedRegex = /^[0]{40}(\^[0-9]*?)??:??$/;
 
 interface GitApi {
     getGitPath(): Promise<string>;
@@ -36,18 +39,49 @@ export class Git extends Disposable {
         this._onDidChangeRepositories.fire();
     }
 
-    async getFirstCommits(repoUri: Uri): Promise<string[]>;
-    async getFirstCommits(repoPath: string): Promise<string[]>;
-    async getFirstCommits(uriOrPath: Uri | string): Promise<string[]> {
-        const path = (typeof uriOrPath === 'string') ? uriOrPath : uriOrPath.fsPath;
+    async getFileAuthors(uri: Uri, options?: { contents?: string, startLine?: number, endLine?: number }): Promise<GitAuthor[]>;
+    async getFileAuthors(path: string, options?: { contents?: string, startLine?: number, endLine?: number }): Promise<GitAuthor[]>;
+    async getFileAuthors(uriOrPath: Uri | string, options: { contents?: string, startLine?: number, endLine?: number } = {}): Promise<GitAuthor[]> {
+        const [dir, filename] = Strings.splitPath((typeof uriOrPath === 'string') ? uriOrPath : uriOrPath.fsPath);
+
+        const params = ['blame', '--root', '--incremental', '-w'];
+
+        if (options.startLine != null && options.endLine != null) {
+            params.push(`-L ${options.startLine + 1},${options.endLine + 1}`);
+        }
+
+        let stdin;
+        if (options.contents) {
+            params.push('--contents', '-');
+            // Pipe the blame contents to stdin
+            stdin = options.contents;
+        }
+
+        const data = await git({ cwd: dir, stdin: stdin }, ...params, '--', filename);
+        return GitAuthorParser.parse(data);
+    }
+
+    async getFileCurrentSha(uri: Uri): Promise<string>;
+    async getFileCurrentSha(path: string): Promise<string>;
+    async getFileCurrentSha(uriOrPath: Uri | string): Promise<string> {
+        const [dir, filename] = Strings.splitPath((typeof uriOrPath === 'string') ? uriOrPath : uriOrPath.fsPath);
+
+        const data = await git({ cwd: dir }, 'log', '-n1', '--format=%H', '--', filename);
+        return data.trim();
+    }
+
+    async getRepoFirstCommits(repoUri: Uri): Promise<string[]>;
+    async getRepoFirstCommits(repoPath: string): Promise<string[]>;
+    async getRepoFirstCommits(repoUriOrPath: Uri | string): Promise<string[]> {
+        const repoPath = (typeof repoUriOrPath === 'string') ? repoUriOrPath : repoUriOrPath.fsPath;
 
         let data;
         try {
-            data = await git({ cwd: path }, 'rev-list', '--max-parents=0', '--reverse', 'master');
+            data = await git({ cwd: repoPath }, 'rev-list', '--max-parents=0', '--reverse', 'master');
         }
         catch (ex) {
             try {
-                data = await git({ cwd: path }, 'rev-list', '--max-parents=0', '--reverse', 'HEAD');
+                data = await git({ cwd: repoPath }, 'rev-list', '--max-parents=0', '--reverse', 'HEAD');
             }
             catch (ex) {
                 return [];
@@ -57,26 +91,20 @@ export class Git extends Disposable {
         return data.trim().split('\n');
     }
 
-    async getCurrentSha(uri: Uri) {
-        const dir = path.dirname(uri.fsPath);
-        const data = await git({ cwd: dir }, 'log', '-n1', '--format=%H', '--', path.relative(dir, uri.fsPath));
-        return data.trim();
-    }
-
-    async getRemote(repoUri: Uri): Promise<GitRemote | undefined>;
-    async getRemote(repoPath: string): Promise<GitRemote | undefined>;
-    async getRemote(uriOrPath: Uri | string): Promise<GitRemote | undefined> {
-        const path = (typeof uriOrPath === 'string') ? uriOrPath : uriOrPath.fsPath;
+    async getRepoRemote(repoUri: Uri): Promise<GitRemote | undefined>;
+    async getRepoRemote(repoPath: string): Promise<GitRemote | undefined>;
+    async getRepoRemote(repoUriOrPath: Uri | string): Promise<GitRemote | undefined> {
+        const repoPath = (typeof repoUriOrPath === 'string') ? repoUriOrPath : repoUriOrPath.fsPath;
 
         let data;
         try {
-            data = await git({ cwd: path }, 'remote', '-v');
+            data = await git({ cwd: repoPath }, 'remote', '-v');
         }
         catch (ex) {
             return undefined;
         }
 
-        const remotes = GitRemoteParser.parse(data, path);
+        const remotes = GitRemoteParser.parse(data, repoPath);
         let fetch;
         let push;
         for (const r of remotes) {
@@ -114,6 +142,10 @@ export class Git extends Disposable {
             return Git.api!.getGitPath().then(p => Git._path = p);
         }
         return Git._path;
+    }
+
+    static isUncommitted(sha: string) {
+        return uncommittedRegex.test(sha);
     }
 }
 

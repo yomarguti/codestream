@@ -6,7 +6,7 @@ export class Markers {
 
     constructor(
         public readonly session: CodeStreamSession,
-        markers: CSMarkerLocations
+        public readonly markers: CSMarkerLocations
     ) {
     }
 }

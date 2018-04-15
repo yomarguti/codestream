@@ -13,15 +13,12 @@ export class PeopleNode extends ExplorerNode {
     }
 
     get id() {
-        return `people:${this.session.id}`;
+        return `${this.session.id}:${ResourceType.People}`;
     }
 
     async getChildren(): Promise<ExplorerNode[]> {
-        return Array.from(await this.session.users.items)
+        return [...await this.session.users.items]
             .map(u => new UserNode(this.session, u));
-
-        // const users = await this.session.getUsers(this.team.id);
-        // return users.map(u => new UserNode(this.session, this.team, u));
     }
 
     getTreeItem(): TreeItem {

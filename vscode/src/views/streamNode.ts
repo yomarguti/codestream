@@ -2,11 +2,11 @@
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { Iterables } from '../system';
 import { CodeStreamSession, Stream } from '../api/session';
-import { ExplorerNode, ResourceType } from './explorerNode';
-import { PostNode } from './postNode';
 import { Container } from '../container';
+import { ExplorerNode, ResourceType, SubscribableExplorerNode } from './explorerNode';
+import { PostNode } from './postNode';
 
-export class StreamNode extends ExplorerNode {
+export class StreamNode extends SubscribableExplorerNode {
 
     constructor(
         public readonly session: CodeStreamSession,
@@ -15,10 +15,15 @@ export class StreamNode extends ExplorerNode {
         super();
     }
 
+    get id() {
+        return `${this.session.id}:${ResourceType.Stream}:${this.stream.id}`;
+    }
+
     async getChildren(): Promise<ExplorerNode[]> {
         this.subscribe();
+
         const posts = await this.stream.posts.items;
-        return Array.from(Iterables.map(posts, p => new PostNode(this.session, p)));
+        return [...Iterables.map(posts, p => new PostNode(this.session, p))];
     }
 
     getTreeItem(): TreeItem {
@@ -31,7 +36,7 @@ export class StreamNode extends ExplorerNode {
         return item;
     }
 
-    private subscribe() {
+    protected subscribe() {
         this.subscriptions.push(this.stream.posts.onDidChange(this.onChanged, this));
     }
 

@@ -3,7 +3,7 @@ import { Uri, workspace, WorkspaceFolder } from 'vscode';
 import { CodeStreamCollection, CodeStreamItem } from './collection';
 import { Container } from '../../container';
 import { Markers } from './markers';
-import { CodeStreamSession } from '../session';
+import { CodeStreamSession, SessionChangedEvent, SessionChangedType } from '../session';
 import { StreamCollection } from './streams';
 import { CSRepository } from '../types';
 import * as path from 'path';
@@ -25,7 +25,7 @@ export class Repository extends CodeStreamItem<CSRepository> {
         const stream = await this.streams.getByUri(uri);
         if (stream === undefined) return undefined;
 
-        const sha = await Container.git.getCurrentSha(uri);
+        const sha = await Container.git.getFileCurrentSha(uri);
         const markers = await this.session.api.getMarkerLocations(sha, stream.id);
         return new Markers(this.session, markers);
     }
@@ -61,7 +61,9 @@ export class RepositoryCollection extends CodeStreamCollection<Repository, CSRep
         );
     }
 
-    private onSessionChanged() {
+    private onSessionChanged(e: SessionChangedEvent) {
+        if (e.type !== SessionChangedType.Git && e.type !== SessionChangedType.Repositories) return;
+
         this.invalidate();
     }
 

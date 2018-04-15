@@ -29,7 +29,7 @@ export class Container {
         context.subscriptions.push(this._commands = new Commands());
         context.subscriptions.push(this._codeActions = new CodeStreamCodeActionProvider());
         // context.subscriptions.push(this._codeLens = new CodeStreamCodeLensProvider());
-        // context.subscriptions.push(this._markerDecorations = new CodeStreamMarkerDecorationProvider());
+        context.subscriptions.push(this._markerDecorations = new CodeStreamMarkerDecorationProvider());
         context.subscriptions.push(this._statusBar = new StatusBarController());
         context.subscriptions.push(this._streamWebView = new StreamWebViewProvider());
         // context.subscriptions.push(this._unreadDecorator = new UnreadDecorationProvider());

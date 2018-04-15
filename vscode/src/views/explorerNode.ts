@@ -1,5 +1,5 @@
 'use strict';
-import { Command, Disposable, TreeItem, TreeItemCollapsibleState } from 'vscode';
+import { Disposable, TreeItem, TreeItemCollapsibleState } from 'vscode';
 
 export enum RefreshReason {
     ActiveEditorChanged = 'active-editor-changed',
@@ -26,49 +26,42 @@ export enum ResourceType {
 
 export abstract class ExplorerNode extends Disposable {
 
-    readonly supportsPaging: boolean = false;
-    maxCount: number | undefined;
-
-    protected children: ExplorerNode[] | undefined;
-
     constructor() {
         super(() => this.dispose());
     }
 
-    dispose() {
-        this.unsubscribe();
-        // this.resetChildren();
-    }
-
-    private _disposables: Disposable[] | undefined;
-    protected get subscriptions() {
-        if (this._disposables === undefined) {
-            this._disposables = [];
-        }
-        return this._disposables;
-    }
-
+    dispose() { }
     abstract getChildren(): ExplorerNode[] | Promise<ExplorerNode[]>;
     abstract getTreeItem(): TreeItem | Promise<TreeItem>;
+    refresh(): void {}
+}
 
-    getCommand(): Command | undefined {
-        return undefined;
+export abstract class SubscribableExplorerNode extends ExplorerNode {
+
+    constructor() {
+        super();
     }
 
-    refresh(): void { }
+    dispose() {
+        this.unsubscribe();
+    }
 
-    // resetChildren(): void {
-    //     if (this.children !== undefined) {
-    //         this.children.forEach(c => c.dispose());
-    //         this.children = undefined;
-    //     }
-    // }
+    abstract get id(): string;
 
-    unsubscribe() {
-        if (this._disposables !== undefined) {
-            this._disposables.forEach(d => d.dispose());
-            this._disposables = undefined;
+    protected abstract subscribe(): void;
+    protected unsubscribe() {
+        if (this._subscriptions !== undefined) {
+            this._subscriptions.forEach(d => d.dispose());
+            this._subscriptions = undefined;
         }
+    }
+
+    private _subscriptions: Disposable[] | undefined;
+    protected get subscriptions() {
+        if (this._subscriptions === undefined) {
+            this._subscriptions = [];
+        }
+        return this._subscriptions;
     }
 }
 
@@ -79,7 +72,7 @@ export class MessageNode extends ExplorerNode {
         private readonly tooltip?: string
     ) {
         super();
-    }
+     }
 
     getChildren(): ExplorerNode[] | Promise<ExplorerNode[]> {
         return [];

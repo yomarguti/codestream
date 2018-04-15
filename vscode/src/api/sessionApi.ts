@@ -60,8 +60,8 @@ export class CodeStreamSessionApi {
 
     private async findOrRegisterRepo(registeredRepos: CSRepository[], uri: Uri) {
         const [firsts, remote] = await Promise.all([
-            Container.git.getFirstCommits(uri),
-            Container.git.getRemote(uri)
+            Container.git.getRepoFirstCommits(uri),
+            Container.git.getRepoRemote(uri)
         ]);
 
         if (remote === undefined || firsts.length === 0) return undefined;

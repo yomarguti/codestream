@@ -13,7 +13,7 @@ export class UserNode extends ExplorerNode {
     }
 
     get id() {
-        return `${this.session.id}${this.user.id}`;
+        return `${this.session.id}:${ResourceType.User}:${this.user.id}`;
     }
 
     async getChildren(): Promise<ExplorerNode[]> {

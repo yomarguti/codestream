@@ -1,5 +1,6 @@
 'use strict';
 import { createHash, HexBase64Latin1Encoding } from 'crypto';
+import * as path from 'path';
 
 export namespace Strings {
     const TokenRegex = /\$\{([^|]*?)(?:\|(\d+)(\-|\?)?)?\}/g;
@@ -57,8 +58,8 @@ export namespace Strings {
         return createHash('md5').update(s).digest(encoding);
     }
 
-    export function normalizePath(fileName: string) {
-        const normalized = fileName && fileName.replace(/\\/g, '/');
+    export function normalizePath(filename: string) {
+        const normalized = filename && filename.replace(/\\/g, '/');
         // if (normalized && normalized.includes('..')) {
         //     debugger;
         // }
@@ -115,6 +116,11 @@ export namespace Strings {
 
     export function sha1(s: string, encoding: HexBase64Latin1Encoding = 'base64'): string {
         return createHash('sha1').update(s).digest(encoding);
+    }
+
+    export function splitPath(filename: string): [string, string] {
+        const dir = path.dirname(filename);
+        return [dir, path.relative(dir, filename)];
     }
 
     export function truncate(s: string, truncateTo: number, ellipsis: string = '\u2026') {

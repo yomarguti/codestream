@@ -3,7 +3,6 @@
 export * from './system/array';
 // export * from './system/asyncIterable';
 // export * from './system/date';
-export * from './system/decorators';
 // export * from './system/disposable';
 // export * from './system/element';
 // export * from './system/event';
@@ -16,3 +15,6 @@ export * from './system/object';
 export * from './system/searchTree';
 export * from './system/string';
 export * from './system/version';
+
+// Must keep this at the end, since it uses Functions
+export * from './system/decorators';
