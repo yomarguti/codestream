@@ -7,7 +7,7 @@ import { configuration } from './configuration';
 // import { UnreadDecorationProvider } from './providers/decorationProvider';
 import { CodeStreamExplorer } from './views/explorer';
 import { Git } from './git/git';
-import { StreamWebViewProvider } from './providers/streamWebViewProvider';
+import { StreamWebViewPanel } from './streamWebViewPanel';
 import { CodeStreamCodeActionProvider } from './providers/codeActionProvider';
 import { CodeStreamCodeLensProvider } from './providers/codeLensProvider';
 import { CodeStreamMarkerDecorationProvider } from './providers/markerDecorationProvider';
@@ -31,7 +31,7 @@ export class Container {
         // context.subscriptions.push(this._codeLens = new CodeStreamCodeLensProvider());
         context.subscriptions.push(this._markerDecorations = new CodeStreamMarkerDecorationProvider());
         context.subscriptions.push(this._statusBar = new StatusBarController());
-        context.subscriptions.push(this._streamWebView = new StreamWebViewProvider());
+        context.subscriptions.push(this._streamWebView = new StreamWebViewPanel(this._session));
         // context.subscriptions.push(this._unreadDecorator = new UnreadDecorationProvider());
 
         if (config.explorer.enabled) {
@@ -106,7 +106,7 @@ export class Container {
         return this._session;
     }
 
-    private static _streamWebView: StreamWebViewProvider;
+    private static _streamWebView: StreamWebViewPanel;
     static get streamWebView() {
         return this._streamWebView;
     }
