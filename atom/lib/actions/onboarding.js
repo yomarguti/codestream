@@ -319,7 +319,12 @@ export const afterInvite = () => async (dispatch, getState) => {
 	const user = users[session.userId];
 	const teamIds = user.teamIds || [];
 	const { firstTimeInAtom, teamsMatchingRepo, teamCreatorsMatchingRepo } = onboarding;
-	const inviteState = { firstTimeInAtom, teamsMatchingRepo, teamCreatorsMatchingRepo, fromInvite: true };
+	const inviteState = {
+		firstTimeInAtom,
+		teamsMatchingRepo,
+		teamCreatorsMatchingRepo,
+		fromInvite: true
+	};
 	if (teamIds.length === 0) {
 		dispatch(newUserLoggedIntoNewRepo(inviteState));
 	} else {

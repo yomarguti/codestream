@@ -89,7 +89,7 @@ const getKnownCommits = async (tag, dir) => {
 			cwd: dir
 		});
 	} catch (error) {
-		hashes = [];
+		hashes = "";
 	}
 	return hashes.split("\n").filter(isValidCommitHash);
 };
@@ -343,7 +343,7 @@ module.exports = {
 					if (missingGit) store.dispatch(noGit());
 					else
 						Raven.captureMessage(
-							"There was an unexpected error trying to get the first commit hash.",
+							"There was an unexpected error trying to get known commit hashes.",
 							{
 								level: "error",
 								logger: "codestream.js",
