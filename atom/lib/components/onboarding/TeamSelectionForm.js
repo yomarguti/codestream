@@ -76,6 +76,19 @@ export class SimpleTeamSelectionForm extends Component {
 	};
 
 	render() {
+		let goBack = "";
+		if (this.props.showBackButton) {
+			goBack = (
+				<div className="footer">
+					<br />
+					<p>
+						<a onClick={this.props.backToInvite}>
+							<FormattedMessage id="createTeam.backToInvite" defaultMessage="Go Back" />
+						</a>
+					</p>
+				</div>
+			);
+		}
 		return (
 			<div id="team-selection">
 				<h2>
@@ -132,6 +145,7 @@ export class SimpleTeamSelectionForm extends Component {
 						<FormattedMessage id="teamSelection.submitButton" defaultMessage="NEXT" />
 					</Button>
 				</form>
+				{goBack}
 			</div>
 		);
 	}
@@ -140,6 +154,7 @@ export class SimpleTeamSelectionForm extends Component {
 const mapStateToProps = ({ onboarding, session, teams, users }) => {
 	const currentUser = users[session.userId];
 	return {
+		showBackButton: onboarding.fromInvite,
 		teams: currentUser.teamIds.map(id => teams[id]),
 		loading: onboarding.requestInProcess,
 		errors: onboarding.errors
