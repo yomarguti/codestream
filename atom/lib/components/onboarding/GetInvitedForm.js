@@ -96,11 +96,9 @@ export class GetInvitedForm extends Component {
 						/>
 					</a>
 				</p>
-				<br />
 				<p>
 					<FormattedMessage id="getInvited.or" defaultMessage="or" />
 				</p>
-				<br />
 				<p>
 					<a onClick={this.props.afterInvite}>{createSelectTeamMessage}</a>
 				</p>
