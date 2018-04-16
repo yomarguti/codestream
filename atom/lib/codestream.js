@@ -78,6 +78,33 @@ const getCurrentCommit = async repo => {
 	}
 };
 
+const isValidCommitHash = string => {
+	return Boolean(string) && typeof string === "string" && string.match(/^[0-9A-Za-z]*$/);
+};
+
+const getKnownCommits = async (tag, dir) => {
+	let hashes;
+	try {
+		hashes = await git(["rev-list", "--max-parents=0", "--reverse", tag], {
+			cwd: dir
+		});
+	} catch (error) {
+		hashes = [];
+	}
+	return hashes.split("\n").filter(isValidCommitHash);
+};
+
+const getAllKnownCommits = async dir => {
+	const hashes = [
+		...(await getKnownCommits("HEAD", dir)),
+		...(await getKnownCommits("master", dir))
+	];
+	// unique-ify
+	return hashes.filter((elem, index) => {
+		return hashes.indexOf(elem) === index;
+	});
+};
+
 const reloadPlugin = codestream => {
 	store.dispatch({ type: "RESET" });
 	bootstrapStore(store);
@@ -305,18 +332,11 @@ module.exports = {
 			if (_.isEmpty(repoAttributes) || !repoAttributes.url) {
 				const workDir = repo.getWorkingDirectory();
 				try {
-					const noParentCommits = await git(["rev-list", "--max-parents=0", "--reverse", "HEAD"], {
-						cwd: workDir
-					});
+					let knownCommitHashes = await getAllKnownCommits(workDir);
 					store.dispatch(
 						setRepoAttributes({
 							workingDirectory: workDir,
-							firstCommitHash: noParentCommits
-								.split("\n")
-								.filter(
-									string =>
-										Boolean(string) && !string.includes("warning: refname 'HEAD' is ambiguous")
-								)[0]
+							knownCommitHashes
 						})
 					);
 				} catch ({ missingGit, message }) {
