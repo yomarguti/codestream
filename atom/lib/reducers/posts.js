@@ -39,7 +39,8 @@ export default (state = initialState, { type, payload }) => {
 		case "ADD_POSTS_FOR_STREAM": {
 			const { streamId, posts } = payload;
 			const streamPosts = { ...(state.byStream[streamId] || {}) };
-			const repoPosts = { ...(state.byRepo[posts[0].repoId] || {}) };
+			const repoId = posts.length > 0 && posts[0].repoId;
+			const repoPosts = repoId ? { ...(state.byRepo[repoId] || {}) } : {};
 			posts.forEach(post => {
 				streamPosts[post.id] = post;
 				repoPosts[post.id] = post;
@@ -48,7 +49,7 @@ export default (state = initialState, { type, payload }) => {
 			return {
 				...state,
 				byStream: { ...state.byStream, [streamId]: streamPosts },
-				byRepo: { ...state.byRepo, [posts[0].repoId]: repoPosts }
+				byRepo: { ...state.byRepo, ...(repoId && { [repoId]: repoPosts }) }
 			};
 		}
 		case "POSTS-UPDATE_FROM_PUBNUB":
