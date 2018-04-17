@@ -177,7 +177,6 @@
         "postinstall": "node ./node_modules/vscode/bin/install"
     },
     "dependencies": {
-        "inversify": "4.11.1",
         "lodash.debounce": "4.0.8",
         "pubnub": "4.20.2",
         "node-fetch": "2.1.2",

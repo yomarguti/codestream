@@ -4,8 +4,7 @@ import {
   Disposable,
   ViewColumn,
   WebviewPanel,
-  window,
-  Uri
+  window
 } from 'vscode';
 import { CodeStreamSession } from './api/session';
 import { Container } from './container';
@@ -13,7 +12,7 @@ import { Container } from './container';
 export class StreamWebViewPanel implements Disposable {
   private readonly _disposable: Disposable;
 
-  constructor(private session: CodeStreamSession) {
+  constructor(public readonly session: CodeStreamSession) {
     this._disposable = Disposable.from(
       commands.registerCommand('codestream.openStream', this.openStream, this)
     );

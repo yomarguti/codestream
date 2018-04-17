@@ -6,6 +6,7 @@
 // This is the place for API experiments and proposal.
 
 declare module 'vscode' {
+
   export namespace window {
     export function sampleFunction(): Thenable<any>;
   }
@@ -13,6 +14,7 @@ declare module 'vscode' {
   //#region Aeschli: folding
 
   export class FoldingRangeList {
+
     /**
      * The folding ranges.
      */
@@ -26,7 +28,9 @@ declare module 'vscode' {
     constructor(ranges: FoldingRange[]);
   }
 
+
   export class FoldingRange {
+
     /**
      * The start line number (zero-based) of the range to fold. The hidden area starts after the last character of that line.
      */
@@ -48,11 +52,7 @@ declare module 'vscode' {
      * @param startLineNumber The first line of the fold
      * @param type The last line of the fold
      */
-    constructor(
-      startLineNumber: number,
-      endLineNumber: number,
-      type?: FoldingRangeType | string
-    );
+    constructor(startLineNumber: number, endLineNumber: number, type?: FoldingRangeType | string);
   }
 
   export enum FoldingRangeType {
@@ -71,6 +71,7 @@ declare module 'vscode' {
   }
 
   export namespace languages {
+
     /**
      * Register a folding provider.
      *
@@ -82,10 +83,7 @@ declare module 'vscode' {
      * @param provider A folding provider.
      * @return A [disposable](#Disposable) that unregisters this provider when being disposed.
      */
-    export function registerFoldingProvider(
-      selector: DocumentSelector,
-      provider: FoldingProvider
-    ): Disposable;
+    export function registerFoldingProvider(selector: DocumentSelector, provider: FoldingProvider): Disposable;
   }
 
   export interface FoldingContext {
@@ -96,67 +94,12 @@ declare module 'vscode' {
     /**
      * Returns a list of folding ranges or null if the provider does not want to participate or was cancelled.
      */
-    provideFoldingRanges(
-      document: TextDocument,
-      context: FoldingContext,
-      token: CancellationToken
-    ): ProviderResult<FoldingRangeList>;
+    provideFoldingRanges(document: TextDocument, context: FoldingContext, token: CancellationToken): ProviderResult<FoldingRangeList>;
   }
 
   //#endregion
 
   //#region Joh: file system provider
-
-  // export enum FileErrorCodes {
-  // 	/**
-  // 	 * Not owner.
-  // 	 */
-  // 	EPERM = 1,
-  // 	/**
-  // 	 * No such file or directory.
-  // 	 */
-  // 	ENOENT = 2,
-  // 	/**
-  // 	 * I/O error.
-  // 	 */
-  // 	EIO = 5,
-  // 	/**
-  // 	 * Permission denied.
-  // 	 */
-  // 	EACCES = 13,
-  // 	/**
-  // 	 * File exists.
-  // 	 */
-  // 	EEXIST = 17,
-  // 	/**
-  // 	 * Not a directory.
-  // 	 */
-  // 	ENOTDIR = 20,
-  // 	/**
-  // 	 * Is a directory.
-  // 	 */
-  // 	EISDIR = 21,
-  // 	/**
-  // 	 *  File too large.
-  // 	 */
-  // 	EFBIG = 27,
-  // 	/**
-  // 	 * No space left on device.
-  // 	 */
-  // 	ENOSPC = 28,
-  // 	/**
-  // 	 * Directory is not empty.
-  // 	 */
-  // 	ENOTEMPTY = 66,
-  // 	/**
-  // 	 * Invalid file handle.
-  // 	 */
-  // 	ESTALE = 70,
-  // 	/**
-  // 	 * Illegal NFS file handle.
-  // 	 */
-  // 	EBADHANDLE = 10001,
-  // }
 
   export enum FileChangeType {
     Updated = 0,
@@ -187,6 +130,7 @@ declare module 'vscode' {
   // todo@joh CancellationToken everywhere
   // todo@joh add open/close calls?
   export interface FileSystemProvider {
+
     readonly onDidChange?: Event<FileChange[]>;
 
     // more...
@@ -195,12 +139,7 @@ declare module 'vscode' {
 
     stat(resource: Uri): Thenable<FileStat>;
 
-    read(
-      resource: Uri,
-      offset: number,
-      length: number,
-      progress: Progress<Uint8Array>
-    ): Thenable<number>;
+    read(resource: Uri, offset: number, length: number, progress: Progress<Uint8Array>): Thenable<number>;
 
     // todo@joh - have an option to create iff not exist
     // todo@remote
@@ -233,10 +172,37 @@ declare module 'vscode' {
     // create(resource: Uri): Thenable<FileStat>;
   }
 
+  export class FileError extends Error {
+
+    /**
+     * Entry already exists.
+     */
+    static readonly EEXIST: FileError;
+
+    /**
+     * Entry does not exist.
+     */
+    static readonly ENOENT: FileError;
+
+    /**
+     * Entry is not a directory.
+     */
+    static readonly ENOTDIR: FileError;
+
+    /**
+     * Entry is a directory.
+     */
+    static readonly EISDIR: FileError;
+
+    readonly code: string;
+
+    constructor(code: string, message?: string);
+  }
+
   export enum FileChangeType2 {
     Changed = 1,
     Created = 2,
-    Deleted = 3
+    Deleted = 3,
   }
 
   export interface FileChange2 {
@@ -247,7 +213,7 @@ declare module 'vscode' {
   export enum FileType2 {
     File = 0b001,
     Directory = 0b010,
-    SymbolicLink = 0b100
+    SymbolicLink = 0b100,
   }
 
   export interface FileStat2 {
@@ -256,10 +222,17 @@ declare module 'vscode' {
     size: number;
   }
 
-  // todo@joh discover files etc
+  export enum FileOpenFlags {
+    Read = 0b0001,
+    Write = 0b0010,
+    Create = 0b0100,
+    Exclusive = 0b1000
+  }
+
   // todo@joh add open/close calls?
   export interface FileSystemProvider2 {
-    _version: 4;
+
+    _version: 5;
 
     /**
      * An event to signal that a resource has been created, changed, or deleted.
@@ -267,13 +240,13 @@ declare module 'vscode' {
     readonly onDidChange: Event<FileChange2[]>;
 
     /**
-     * Retrieve meta data about a file.
+     * Retrieve metadata about a file. Must throw an [`ENOENT`](#FileError.ENOENT)-error
+     * when the file doesn't exist.
      *
      * @param uri The uri of the file to retrieve meta data about.
      * @param token A cancellation token.
+     * @return The file metadata about the file.
      */
-    // todo@remote
-    // ! throw error (ENOENT) when the file doesn't exist
     stat(uri: Uri, token: CancellationToken): FileStat2 | Thenable<FileStat2>;
 
     /**
@@ -283,10 +256,7 @@ declare module 'vscode' {
      * @param token A cancellation token.
      * @return A thenable that resolves to an array of tuples of file names and files stats.
      */
-    readDirectory(
-      uri: Uri,
-      token: CancellationToken
-    ): [string, FileStat2][] | Thenable<[string, FileStat2][]>;
+    readDirectory(uri: Uri, token: CancellationToken): [string, FileStat2][] | Thenable<[string, FileStat2][]>;
 
     /**
      * Read the entire contents of a file.
@@ -295,10 +265,7 @@ declare module 'vscode' {
      * @param token A cancellation token.
      * @return A thenable that resolves to an array of bytes.
      */
-    readFile(
-      uri: Uri,
-      token: CancellationToken
-    ): Uint8Array | Thenable<Uint8Array>;
+    readFile(uri: Uri, options: { flags: FileOpenFlags }, token: CancellationToken): Uint8Array | Thenable<Uint8Array>;
 
     /**
      * Write data to a file, replacing its entire contents.
@@ -307,11 +274,7 @@ declare module 'vscode' {
      * @param content The new content of the file.
      * @param token A cancellation token.
      */
-    writeFile(
-      uri: Uri,
-      content: Uint8Array,
-      token: CancellationToken
-    ): void | Thenable<void>;
+    writeFile(uri: Uri, content: Uint8Array, options: { flags: FileOpenFlags }, token: CancellationToken): void | Thenable<void>;
 
     /**
      * Rename a file or folder.
@@ -320,11 +283,7 @@ declare module 'vscode' {
      * @param newUri The target location
      * @param token A cancellation token.
      */
-    rename(
-      oldUri: Uri,
-      newUri: Uri,
-      token: CancellationToken
-    ): FileStat2 | Thenable<FileStat2>;
+    rename(oldUri: Uri, newUri: Uri, options: { flags: FileOpenFlags }, token: CancellationToken): FileStat2 | Thenable<FileStat2>;
 
     // todo@remote
     // helps with performance bigly
@@ -335,19 +294,11 @@ declare module 'vscode' {
     delete(uri: Uri, token: CancellationToken): void | Thenable<void>;
 
     // todo@remote
-    create(
-      uri: Uri,
-      options: { type: FileType2 },
-      token: CancellationToken
-    ): FileStat2 | Thenable<FileStat2>;
+    create(uri: Uri, options: { type: FileType2 }, token: CancellationToken): FileStat2 | Thenable<FileStat2>;
   }
 
   export namespace workspace {
-    export function registerFileSystemProvider(
-      scheme: string,
-      provider: FileSystemProvider,
-      newProvider?: FileSystemProvider2
-    ): Disposable;
+    export function registerFileSystemProvider(scheme: string, provider: FileSystemProvider, newProvider?: FileSystemProvider2): Disposable;
   }
 
   //#endregion
@@ -369,28 +320,16 @@ declare module 'vscode' {
   export interface TextSearchResult {
     uri: Uri;
     range: Range;
-    preview: { leading: string; matching: string; trailing: string };
+    preview: { leading: string, matching: string, trailing: string };
   }
 
   export interface SearchProvider {
-    provideFileSearchResults?(
-      query: string,
-      progress: Progress<Uri>,
-      token: CancellationToken
-    ): Thenable<void>;
-    provideTextSearchResults?(
-      query: TextSearchQuery,
-      options: TextSearchOptions,
-      progress: Progress<TextSearchResult>,
-      token: CancellationToken
-    ): Thenable<void>;
+    provideFileSearchResults?(query: string, progress: Progress<Uri>, token: CancellationToken): Thenable<void>;
+    provideTextSearchResults?(query: TextSearchQuery, options: TextSearchOptions, progress: Progress<TextSearchResult>, token: CancellationToken): Thenable<void>;
   }
 
   export namespace workspace {
-    export function registerSearchProvider(
-      scheme: string,
-      provider: SearchProvider
-    ): Disposable;
+    export function registerSearchProvider(scheme: string, provider: SearchProvider): Disposable;
   }
 
   //#endregion
@@ -408,6 +347,7 @@ declare module 'vscode' {
   }
 
   export namespace commands {
+
     /**
      * Registers a diff information command that can be invoked via a keyboard shortcut,
      * a menu item, an action, or directly.
@@ -422,11 +362,7 @@ declare module 'vscode' {
      * @param thisArg The `this` context used when invoking the handler function.
      * @return Disposable which unregisters this command on disposal.
      */
-    export function registerDiffInformationCommand(
-      command: string,
-      callback: (diff: LineChange[], ...args: any[]) => any,
-      thisArg?: any
-    ): Disposable;
+    export function registerDiffInformationCommand(command: string, callback: (diff: LineChange[], ...args: any[]) => any, thisArg?: any): Disposable;
   }
 
   //#endregion
@@ -451,16 +387,11 @@ declare module 'vscode' {
 
   export interface DecorationProvider {
     onDidChangeDecorations: Event<undefined | Uri | Uri[]>;
-    provideDecoration(
-      uri: Uri,
-      token: CancellationToken
-    ): ProviderResult<DecorationData>;
+    provideDecoration(uri: Uri, token: CancellationToken): ProviderResult<DecorationData>;
   }
 
   export namespace window {
-    export function registerDecorationProvider(
-      provider: DecorationProvider
-    ): Disposable;
+    export function registerDecorationProvider(provider: DecorationProvider): Disposable;
   }
 
   //#endregion
@@ -497,10 +428,7 @@ declare module 'vscode' {
      * @param token A cancellation token.
      * @return a [debug adapter's executable and optional arguments](#DebugAdapterExecutable) or undefined.
      */
-    debugAdapterExecutable?(
-      folder: WorkspaceFolder | undefined,
-      token?: CancellationToken
-    ): ProviderResult<DebugAdapterExecutable>;
+    debugAdapterExecutable?(folder: WorkspaceFolder | undefined, token?: CancellationToken): ProviderResult<DebugAdapterExecutable>;
   }
 
   //#endregion
@@ -560,6 +488,7 @@ declare module 'vscode' {
   //#region Joh: rename context
 
   export interface RenameProvider2 extends RenameProvider {
+
     /**
      * Optional function for resolving and validating a position at which rename is
      * being carried out.
@@ -569,11 +498,8 @@ declare module 'vscode' {
      * @param token A cancellation token.
      * @return The range of the identifier that is to be renamed. The lack of a result can signaled by returning `undefined` or `null`.
      */
-    resolveRenameLocation?(
-      document: TextDocument,
-      position: Position,
-      token: CancellationToken
-    ): ProviderResult<Range>;
+    resolveRenameLocation?(document: TextDocument, position: Position, token: CancellationToken): ProviderResult<Range>;
+
   }
 
   //#endregion
@@ -584,6 +510,7 @@ declare module 'vscode' {
    * Represents the validation type of the Source Control input.
    */
   export enum SourceControlInputBoxValidationType {
+
     /**
      * Something not allowed by the rules of a language or other means.
      */
@@ -601,6 +528,7 @@ declare module 'vscode' {
   }
 
   export interface SourceControlInputBoxValidation {
+
     /**
      * The validation message to display.
      */
@@ -616,14 +544,12 @@ declare module 'vscode' {
    * Represents the input box in the Source Control viewlet.
    */
   export interface SourceControlInputBox {
+
     /**
      * A validation function for the input box. It's possible to change
      * the validation provider simply by setting this property to a different function.
      */
-    validateInput?(
-      value: string,
-      cursorPosition: number
-    ): ProviderResult<SourceControlInputBoxValidation | undefined | null>;
+    validateInput?(value: string, cursorPosition: number): ProviderResult<SourceControlInputBoxValidation | undefined | null>;
   }
 
   //#endregion
@@ -820,10 +746,7 @@ declare module 'vscode' {
      *
      * @return Thanble indicating that the webview has been fully restored.
      */
-    deserializeWebviewPanel(
-      webviewPanel: WebviewPanel,
-      state: any
-    ): Thenable<void>;
+    deserializeWebviewPanel(webviewPanel: WebviewPanel, state: any): Thenable<void>;
   }
 
   namespace window {
@@ -837,12 +760,7 @@ declare module 'vscode' {
      *
      * @return New webview panel.
      */
-    export function createWebviewPanel(
-      viewType: string,
-      title: string,
-      position: ViewColumn,
-      options: WebviewPanelOptions & WebviewOptions
-    ): WebviewPanel;
+    export function createWebviewPanel(viewType: string, title: string, position: ViewColumn, options: WebviewPanelOptions & WebviewOptions): WebviewPanel;
 
     /**
      * Registers a webview panel serializer.
@@ -855,10 +773,7 @@ declare module 'vscode' {
      * @param viewType Type of the webview panel that can be serialized.
      * @param reviver Webview serializer.
      */
-    export function registerWebviewPanelSerializer(
-      viewType: string,
-      reviver: WebviewPanelSerializer
-    ): Disposable;
+    export function registerWebviewPanelSerializer(viewType: string, reviver: WebviewPanelSerializer): Disposable;
   }
 
   //#endregion
@@ -908,6 +823,7 @@ declare module 'vscode' {
   }
 
   export namespace workspace {
+
     /**
      * Fetches all task available in the systems. Thisweweb includes tasks
      * from `tasks.json` files as well as tasks from task providers
