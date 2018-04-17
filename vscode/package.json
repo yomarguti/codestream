@@ -81,6 +81,21 @@
                 "category": "CodeStream"
             },
             {
+                "command": "codestream.comparePostFileRevisionWithWorking",
+                "title": "Compare Revision with Working",
+                "category": "CodeStream"
+            },
+            {
+                "command": "codestream.openPostWorkingFile",
+                "title": "Open Working File",
+                "category": "CodeStream"
+            },
+            {
+                "command": "codestream.openPostFileRevision",
+                "title": "Open File Revision",
+                "category": "CodeStream"
+            },
+            {
                 "command": "codestream.openStream",
                 "title": "Open CodeStream",
                 "category": "CodeStream"
@@ -122,6 +137,18 @@
                     "when": "codestream:status == signedIn"
                 },
                 {
+                    "command": "codestream.comparePostFileRevisionWithWorking",
+                    "when": "false"
+                },
+                {
+                    "command": "codestream.openPostWorkingFile",
+                    "when": "false"
+                },
+                {
+                    "command": "codestream.openPostFileRevision",
+                    "when": "false"
+                },
+                {
                     "command": "codestream.openStream",
                     "when": "editorTextFocus && codestream:status == signedIn"
                 },
@@ -153,6 +180,21 @@
                     "group": "9_codestream@1"
                 },
                 {
+                    "command": "codestream.openPostWorkingFile",
+                    "when": "view == codestream && viewItem == codestream:post:code",
+                    "group": "1_codestream@1"
+                },
+                {
+                    "command": "codestream.openPostFileRevision",
+                    "when": "view == codestream && viewItem == codestream:post:code",
+                    "group": "1_codestream@2"
+                },
+                {
+                    "command": "codestream.comparePostFileRevisionWithWorking",
+                    "when": "view == codestream && viewItem == codestream:post:code",
+                    "group": "2_codestream@1"
+                },
+                {
                     "command": "codestream.explorer.inviteToLiveShare",
                     "when": "view == codestream && viewItem == codestream:user && codestream:liveShareInstalled",
                     "group": "2_codestream@1"
@@ -181,12 +223,14 @@
         "pubnub": "4.20.2",
         "node-fetch": "2.1.2",
         "reflect-metadata": "0.1.12",
+        "tmp": "0.0.33",
         "tslib": "1.9.0"
     },
     "devDependencies": {
         "@types/node": "9.6.5",
         "@types/node-fetch": "1.6.8",
         "@types/pubnub": "4.0.2",
+        "@types/tmp": "0.0.33",
         "tslint": "5.9.1",
         "typescript": "2.8.1",
         "vscode": "1.1.14",

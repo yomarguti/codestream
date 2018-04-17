@@ -6,6 +6,8 @@ import { GitAuthor, GitRemote, GitRepository } from './models/models';
 import { CommandOptions, runCommand } from './shell';
 import { GitAuthorParser } from './parsers/authorParser';
 import { GitRemoteParser } from './parsers/remoteParser';
+import * as fs from 'fs';
+import * as path from 'path';
 
 export * from './models/models';
 
@@ -15,6 +17,18 @@ interface GitApi {
     getGitPath(): Promise<string>;
     getRepositories(): Promise<GitRepository[]>;
 }
+
+const GitWarnings = {
+    notARepository: /Not a git repository/,
+    outsideRepository: /is outside repository/,
+    noPath: /no such path/,
+    noCommits: /does not have any commits/,
+    notFound: /Path \'.*?\' does not exist in/,
+    foundButNotInRevision: /Path \'.*?\' exists on disk, but not in/,
+    headNotABranch: /HEAD does not point to a branch/,
+    noUpstream: /no upstream configured for branch \'(.*?)\'/,
+    unknownRevision: /ambiguous argument \'.*?\': unknown revision or path not in the working tree/
+};
 
 export class Git extends Disposable {
 
@@ -70,6 +84,50 @@ export class Git extends Disposable {
         return data.trim();
     }
 
+    async getFileRevision(uri: Uri, ref: string): Promise<string | undefined>;
+    async getFileRevision(path: string, ref: string): Promise<string | undefined>;
+    async getFileRevision(uriOrPath: Uri | string, ref: string): Promise<string | undefined> {
+        const [dir, filename] = Strings.splitPath((typeof uriOrPath === 'string') ? uriOrPath : uriOrPath.fsPath);
+
+        let data: string | undefined;
+        try {
+            data = await git({ cwd: dir, encoding: 'binary' }, 'show', `${ref}:./${filename}`);
+        }
+        catch (ex) {
+            const msg = ex && ex.toString();
+            if (!GitWarnings.notFound.test(msg) && GitWarnings.foundButNotInRevision.test(msg)) throw ex;
+        }
+
+        if (!data) return undefined;
+
+        const suffix = Strings.sanitizeForFileSystem(ref.substr(0, 8)).substr(0, 50);
+        const ext = path.extname(filename);
+
+        const tmp = await import('tmp');
+        return new Promise<string>((resolve, reject) => {
+            tmp.file({ prefix: `${path.basename(filename, ext)}-${suffix}__`, postfix: ext },
+                (err, destination, fd, cleanupCallback) => {
+                    if (err) {
+                        reject(err);
+                        return;
+                    }
+
+                    Logger.log(`getFileRevision[${destination}]('${dir}', '${filename}', ${ref})`);
+                    fs.appendFile(destination, data, { encoding: 'binary' }, err => {
+                        if (err) {
+                            reject(err);
+                            return;
+                        }
+
+                        const ReadOnly = 0o100444; // 33060 0b1000000100100100
+                        fs.chmod(destination, ReadOnly, err => {
+                            resolve(destination);
+                        });
+                    });
+                });
+        });
+    }
+
     async getRepoFirstCommits(repoUri: Uri): Promise<string[]>;
     async getRepoFirstCommits(repoPath: string): Promise<string[]>;
     async getRepoFirstCommits(repoUriOrPath: Uri | string): Promise<string[]> {
@@ -79,14 +137,16 @@ export class Git extends Disposable {
         try {
             data = await git({ cwd: repoPath }, 'rev-list', '--max-parents=0', '--reverse', 'master');
         }
-        catch (ex) {
+        catch { }
+
+        if (!data) {
             try {
                 data = await git({ cwd: repoPath }, 'rev-list', '--max-parents=0', '--reverse', 'HEAD');
             }
-            catch (ex) {
-                return [];
-            }
+            catch { }
         }
+
+        if (!data) return [];
 
         return data.trim().split('\n');
     }
@@ -99,8 +159,9 @@ export class Git extends Disposable {
         let data;
         try {
             data = await git({ cwd: repoPath }, 'remote', '-v');
+            if (!data) return undefined;
         }
-        catch (ex) {
+        catch {
             return undefined;
         }
 
@@ -194,6 +255,20 @@ async function git(options: CommandOptions & { readonly correlationKey?: string 
     let data: string;
     try {
         data = await promise;
+    }
+    catch (ex) {
+        const msg = ex && ex.toString();
+        if (msg) {
+            for (const warning of Object.values(GitWarnings)) {
+                if (warning.test(msg)) {
+                    Logger.warn('git', ...args, `  cwd='${options.cwd}'\n\n  `, msg.replace(/\r?\n|\r/g, ' '));
+                    return '';
+                }
+            }
+        }
+
+        Logger.error(ex, 'git', ...args, `  cwd='${options.cwd}'\n\n  `);
+        throw ex;
     }
     finally {
         pendingCommands.delete(command);

@@ -1,10 +1,12 @@
-import { commands, Disposable, MessageItem, window } from 'vscode';
+import { commands, Disposable, MessageItem, Uri, window } from 'vscode';
 import { Post } from './api/session';
-import { openEditor } from './common';
+import { BuiltInCommands, openEditor } from './common';
 import { TraceLevel } from './config';
 import { Container } from './container';
 import { Logger } from './logger';
+import { PostNode } from './views/postNode';
 import { Iterables } from './system';
+import * as path from 'path';
 
 interface CommandOptions {
     customErrorHandling?: boolean;
@@ -68,14 +70,56 @@ export class Commands extends Disposable {
         this._disposable && this._disposable.dispose();
     }
 
-    @command('openPostCode', { showErrorMessage: 'Unable to open post' })
-    async openPostCode(post?: Post) {
+    @command('openPostWorkingFile', { showErrorMessage: 'Unable to open post' })
+    async openPostWorkingFile(post?: Post | PostNode) {
+        if (post instanceof PostNode) {
+            post = post.post;
+        }
         if (post === undefined) return;
 
         const block = await post.codeBlock;
         if (block === undefined) return;
 
+        // TODO: Need to follow marker to current sha
         return openEditor(block.uri, { selection: block.range });
+    }
+
+    @command('openPostFileRevision', { showErrorMessage: 'Unable to open post' })
+    async openPostFileRevision(post?: Post | PostNode) {
+        if (post instanceof PostNode) {
+            post = post.post;
+        }
+        if (post === undefined) return;
+
+        const block = await post.codeBlock;
+        if (block === undefined) return;
+
+        const file = await Container.git.getFileRevision(block.uri, block.hash);
+        if (file === undefined) return;
+
+        return openEditor(Uri.file(file), { selection: block.range });
+    }
+
+    @command('comparePostFileRevisionWithWorking', { showErrorMessage: 'Unable to open post' })
+    async comparePostFileRevisionWithWorking(post?: Post | PostNode) {
+        if (post instanceof PostNode) {
+            post = post.post;
+        }
+        if (post === undefined) return;
+
+        const block = await post.codeBlock;
+        if (block === undefined) return;
+
+        const file = await Container.git.getFileRevision(block.uri, block.hash);
+        if (file === undefined) return;
+
+        const filename = path.basename(block.uri.fsPath);
+
+        return commands.executeCommand(BuiltInCommands.Diff,
+            Uri.file(file),
+            block.uri,
+            `${filename} (${block.hash.substr(0, 8)}) \u00a0\u27F7\u00a0 ${filename}`,
+            { selection: block.range });
     }
 
     @command('post', { showErrorMessage: 'Unable to post message' })

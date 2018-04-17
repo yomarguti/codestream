@@ -10,7 +10,7 @@ export class StreamNode extends SubscribableExplorerNode {
 
     constructor(
         public readonly session: CodeStreamSession,
-        private readonly stream: Stream
+        public readonly stream: Stream
     ) {
         super();
     }

@@ -7,6 +7,7 @@ import { memoize } from '../../system';
 
 interface CodeBlock {
     readonly code: string;
+    readonly hash: string;
     readonly range: Range;
     readonly uri: Uri;
 }
@@ -26,27 +27,8 @@ export class Post extends CodeStreamItem<CSPost> {
         return this.getCodeBlock();
     }
 
-    async getCodeBlock(): Promise<CodeBlock | undefined> {
-        if (this.entity.codeBlocks === undefined || this.entity.codeBlocks.length === 0) return undefined;
-
-        const block = this.entity.codeBlocks[0];
-
-        const marker = await this.session.api.getMarker(block.markerId);
-        if (marker === undefined) throw new Error(`Unable to find code block for Post(${this.entity.id})`);
-
-        // TODO: Assuming the marker has the same repoId as the post -- probably not a great assumption
-        const uri = await (await this.getStream(marker.streamId, this.entity.repoId)).absoluteUri;
-
-        const locations = await this.session.api.getMarkerLocations(this.entity.commitHashWhenPosted!, this.entity.streamId);
-        if (locations === undefined) throw new Error(`Unable to find code block for Post(${this.entity.id})`);
-
-        const location = locations.locations[block.markerId];
-
-        return {
-            code: block.code,
-            range: new Range(location[0], location[1], location[2], location[3]),
-            uri: uri!
-        };
+    get hasCode() {
+        return this.entity.codeBlocks !== undefined && this.entity.codeBlocks.length !== 0;
     }
 
     get repo(): Promise<Repository | undefined> {
@@ -72,6 +54,30 @@ export class Post extends CodeStreamItem<CSPost> {
 
     get text() {
         return this.entity.text;
+    }
+
+    private async getCodeBlock(): Promise<CodeBlock | undefined> {
+        if (this.entity.codeBlocks === undefined || this.entity.codeBlocks.length === 0) return undefined;
+
+        const block = this.entity.codeBlocks[0];
+
+        const marker = await this.session.api.getMarker(block.markerId);
+        if (marker === undefined) throw new Error(`Unable to find code block for Post(${this.entity.id})`);
+
+        // TODO: Assuming the marker has the same repoId as the post -- probably not a great assumption
+        const uri = await (await this.getStream(marker.streamId, this.entity.repoId)).absoluteUri;
+
+        const locations = await this.session.api.getMarkerLocations(this.entity.commitHashWhenPosted!, this.entity.streamId);
+        if (locations === undefined) throw new Error(`Unable to find code block for Post(${this.entity.id})`);
+
+        const location = locations.locations[block.markerId];
+
+        return {
+            code: block.code,
+            range: new Range(location[0], location[1], location[2], location[3]),
+            hash: this.entity.commitHashWhenPosted!,
+            uri: uri!
+        };
     }
 
     private async getRepo() {

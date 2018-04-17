@@ -1,5 +1,5 @@
 'use strict';
-import { Command, TreeItem, TreeItemCollapsibleState } from 'vscode';
+import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { CodeStreamSession, Post } from '../api/session';
 import { ExplorerNode, ResourceType } from './explorerNode';
 
@@ -7,7 +7,7 @@ export class PostNode extends ExplorerNode {
 
     constructor(
         public readonly session: CodeStreamSession,
-        private readonly post: Post
+        public readonly post: Post
     ) {
         super();
     }
@@ -27,12 +27,12 @@ export class PostNode extends ExplorerNode {
         }
 
         const item = new TreeItem(label, TreeItemCollapsibleState.None);
-        item.contextValue = ResourceType.Post;
-        item.command = {
-            title: 'Open Comment',
-            command: 'codestream.openPostCode',
-            arguments: [this.post]
-        } as Command;
+        item.contextValue = this.post.hasCode ? ResourceType.PostWithCode : ResourceType.Post;
+        // item.command = {
+        //     title: 'Open Comment',
+        //     command: 'codestream.openPostWorkingFile',
+        //     arguments: [this.post]
+        // } as Command;
         return item;
     }
 }

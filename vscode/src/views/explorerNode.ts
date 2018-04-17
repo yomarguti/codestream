@@ -16,6 +16,7 @@ export enum ResourceType {
     Message = 'codestream:message',
     People = 'codestream:people',
     Post = 'codestream:post',
+    PostWithCode = 'codestream:post:code',
     Repositories = 'codestream:repositories',
     Repository = 'codestream:repository',
     Session = 'codestream:session',

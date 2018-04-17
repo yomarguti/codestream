@@ -10,7 +10,7 @@ export class RepositoryNode extends SubscribableExplorerNode {
 
     constructor(
         public readonly session: CodeStreamSession,
-        private readonly repository: Repository
+        public readonly repository: Repository
     ) {
         super();
     }
