@@ -4,6 +4,7 @@ import { Functions, Iterables, memoize, Strings } from '../system';
 import { configuration } from '../configuration';
 import {
     CodeStreamApi,
+    CSTeam,
     LoginResponse,
     Markers, Post, Repository, RepositoryCollection, Stream, StreamCollection, User, UserCollection
 } from './api';
@@ -348,6 +349,12 @@ export class CodeStreamSession extends Disposable {
         return this._users;
     }
 
+    @signedIn
+    get teams(): CSTeam[] {
+        if (this._data === undefined) return [];
+        return this._data.teams;
+    }
+
     private _data: LoginResponse | undefined;
     private get data(): LoginResponse {
         return this._data!;
@@ -366,7 +373,7 @@ export class CodeStreamSession extends Disposable {
         return this.data.accessToken;
     }
 
-    private get userId() {
+    public get userId() {
         return this._data!.user.id;
     }
 

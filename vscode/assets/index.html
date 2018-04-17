@@ -8,6 +8,7 @@
 </head>
 
 <body>
+  <div id='data' style="display: none;">{%%}</div>
   <div id='app'>codestream stuff goes here</div>
   <script>
 (function () {
@@ -44042,21 +44043,8 @@ var Headshot = function (_Component) {
 	inherits$1(Headshot, _Component);
 
 	function Headshot() {
-		var _ref;
-
-		var _temp, _this, _ret;
-
 		classCallCheck$1(this, Headshot);
-
-		for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-			args[_key] = arguments[_key];
-		}
-
-		return _ret = (_temp = (_this = possibleConstructorReturn$1(this, (_ref = Headshot.__proto__ || Object.getPrototypeOf(Headshot)).call.apply(_ref, [this].concat(args))), _this), Object.defineProperty(_this, "subscriptions", {
-			enumerable: true,
-			writable: true,
-			value: new CompositeDisposable()
-		}), _temp), possibleConstructorReturn$1(_this, _ret);
+		return possibleConstructorReturn$1(this, (Headshot.__proto__ || Object.getPrototypeOf(Headshot)).apply(this, arguments));
 	}
 
 	createClass$1(Headshot, [{
@@ -44099,8 +44087,8 @@ var Headshot = function (_Component) {
 
 			return react.createElement(
 				"div",
-				{ className: "headshot", ref: function ref(_ref2) {
-						return _this2._div = _ref2;
+				{ className: "headshot", ref: function ref(_ref) {
+						return _this2._div = _ref;
 					} },
 				react.createElement(Gravatar, {
 					className: "headshot-gravatar",
@@ -55774,14 +55762,6 @@ var withRepositories = (function (Child) {
 	};
 });
 
-var accessSafely = function accessSafely(func) {
-	try {
-		return func();
-	} catch (error) {
-		return undefined;
-	}
-};
-
 function withConfigs(Child) {
 	return function (props) {
 		return react.createElement(
@@ -55795,9 +55775,11 @@ function withConfigs(Child) {
 }
 
 var getConfigs = function getConfigs() {
-	return accessSafely(function () {
+	try {
 		return atom.config.get("CodeStream");
-	}) || {};
+	} catch (e) {
+		return {};
+	}
 };
 
 var ConfigProvider = function (_React$Component) {
@@ -56811,8 +56793,6 @@ var SimpleStream = function (_Component) {
 		key: "componentDidMount",
 		value: function componentDidMount() {
 			this.setupCommands();
-
-			var me = this;
 			// TODO: scroll to bottom
 
 			var inputDiv = document.querySelector('div[contenteditable="true"]');
@@ -56821,7 +56801,8 @@ var SimpleStream = function (_Component) {
 			// this listener pays attention to when the input field resizes,
 			// presumably because the user has typed more than one line of text
 			// in it, and calls a function to handle the new size
-			new ResizeObserver(me.handleResizeCompose).observe(me._compose);
+
+			// new ResizeObserver(me.handleResizeCompose).observe(me._compose);
 
 			// so that HTML doesn't get pasted into the input field. without this,
 			// HTML would be rendered as HTML when pasted
@@ -56830,7 +56811,7 @@ var SimpleStream = function (_Component) {
 				var text = e.clipboardData.getData("text/plain");
 				document.execCommand("insertHTML", false, text);
 			});
-			this.installEditorHandlers();
+			// this.installEditorHandlers();
 		}
 	}, {
 		key: "componentWillUnmount",
@@ -56890,7 +56871,7 @@ var SimpleStream = function (_Component) {
 
 			this._postslist.scrollTop = 100000;
 
-			this.installEditorHandlers();
+			// this.installEditorHandlers();
 
 			// if we just switched to a new stream, (eagerly) mark both old and new as read
 			if (id !== prevProps.id) {
@@ -57931,6 +57912,21 @@ var mapStateToProps$1 = function mapStateToProps(_ref2) {
 };
 connect(mapStateToProps$1, { checkServerStatus: checkServerStatus })(OfflineBanner);
 
+// import SlackInfo from "./SlackInfo";
+
+var Loading = function Loading(props) {
+	return react.createElement(
+		"div",
+		{ className: "loading-page" },
+		react.createElement("span", { className: "loading loading-spinner-large inline-block" }),
+		react.createElement(
+			"p",
+			null,
+			props.message
+		)
+	);
+};
+
 var CodeStreamRoot = function (_Component) {
 	inherits$1(CodeStreamRoot, _Component);
 
@@ -58006,7 +58002,8 @@ var CodeStreamRoot = function (_Component) {
 					),
 					"."
 				)
-			);else return react.createElement(Stream, null);
+			);
+			if (!bootstrapped) return react.createElement(Loading, { message: "CodeStream engage..." });else return react.createElement(Stream, null);
 		}
 	}]);
 	return CodeStreamRoot;
@@ -58875,7 +58872,7 @@ var createStore$1 = (function () {
 	)));
 });
 
-var CompositeDisposable$1 = function () {
+var CompositeDisposable = function () {
 	function CompositeDisposable() {
 		classCallCheck$1(this, CompositeDisposable);
 		Object.defineProperty(this, "disposables", {
@@ -58918,7 +58915,7 @@ var VSCodeAPI = {
 		return "";
 	},
 	createCompositeDisposable: function createCompositeDisposable() {
-		return new CompositeDisposable$1();
+		return new CompositeDisposable();
 	},
 	addKeyMapping: function addKeyMapping(source, bindings) {
 		return {
@@ -58951,7 +58948,29 @@ var VSCodeAPI = {
 
 addLocaleData([].concat(toConsumableArray$1(en)));
 
-var store$3 = window.store = createStore$1();
+var data$1 = JSON.parse(document.querySelector("#data").textContent);
+
+var store$3 = window.store = createStore$1({
+	context: {
+		currentTeamId: data$1.currentTeamId,
+		currentRepoId: data$1.currentRepoId,
+		currentFile: data$1.currentFile
+	},
+	session: {
+		userId: data$1.currentUserId
+	}
+});
+
+console.log("store", store$3.getState());
+
+store$3.dispatch({ type: "BOOTSTRAP_USERS", payload: data$1.users });
+store$3.dispatch({ type: "BOOTSTRAP_REPOS", payload: data$1.repos });
+store$3.dispatch({ type: "BOOTSTRAP_TEAMS", payload: data$1.teams });
+store$3.dispatch({ type: "BOOTSTRAP_POSTS", payload: data$1.posts });
+store$3.dispatch({ type: "BOOTSTRAP_STREAMS", payload: data$1.streams });
+store$3.dispatch({ type: "BOOTSTRAP_COMPLETE" });
+
+console.log("store", store$3.getState());
 
 reactDom.render(react.createElement(
 	IntlProvider,

@@ -7,7 +7,7 @@ import { configuration } from './configuration';
 // import { UnreadDecorationProvider } from './providers/decorationProvider';
 import { CodeStreamExplorer } from './views/explorer';
 import { Git } from './git/git';
-import { StreamWebViewPanel } from './streamWebViewPanel';
+import { StreamWebViewPanel } from './views/streamWebViewPanel';
 import { CodeStreamCodeActionProvider } from './providers/codeActionProvider';
 import { CodeStreamCodeLensProvider } from './providers/codeLensProvider';
 import { CodeStreamMarkerDecorationProvider } from './providers/markerDecorationProvider';
