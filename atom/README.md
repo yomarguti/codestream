@@ -1,6 +1,6 @@
 # CodeStream
 
-Build a knowledge base for your codebase. CodeStream allows your development team to collaborate within Atom and conversation threads automatically become annotations that live with your codebase forever, so your codebase gets smarter over time.
+Build the knowledge base behind your codebase. CodeStream allows your development team to communicate within Atom and conversation threads automatically become annotations that live with your codebase forever.
 
 ![FullIDE](https://codestream.zendesk.com/hc/article_attachments/360000712271/CodeStream.png)
 

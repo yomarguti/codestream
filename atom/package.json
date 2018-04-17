@@ -3,7 +3,7 @@
 	"main": "./lib/codestream",
 	"version": "0.0.20",
 	"description":
-		"Build a knowledge base for your codebase. CodeStream allows your development team to collaborate within Atom and conversation threads automatically become annotations that live with your codebase forever.",
+		"Build the knowledge base behind your codebase. CodeStream allows your development team to communicate within Atom and conversation threads automatically become annotations that live with your codebase forever.",
 	"keywords": ["git", "team", "chat"],
 	"activationCommands": {},
 	"repository": "https://github.com/TeamCodeStream/atom-client",
