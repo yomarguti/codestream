@@ -61,18 +61,24 @@ const existingUserLoggedIntoMatchedRepo = payload => ({
 	payload
 });
 
-const fetchRepoInfo = ({ url, knownCommitHashes }) => async (dispatch, getState, { http }) => {
+const fetchRepoInfo = ({ url, knownCommitHashes = [], firstCommitHash }) => async (
+	dispatch,
+	getState,
+	{ http }
+) => {
 	if (!url) {
 		Raven.captureMessage("No url found while trying to fetch repository information.", {
 			logger: "actions/onboarding",
-			extra: { url, knownCommitHashes }
+			extra: { url, knownCommitHashes, firstCommitHash }
 		});
 		return dispatch(noRemoteUrl());
 	}
 	try {
 		const hashes = knownCommitHashes.join(",");
 		const { repo, usernames } = await http.get(
-			`/no-auth/find-repo?url=${encodeURIComponent(url)}&knownCommitHashes=${hashes}`
+			`/no-auth/find-repo?url=${encodeURIComponent(
+				url
+			)}&knownCommitHashes=${hashes}&firstCommitHash=${firstCommitHash}`
 		);
 
 		if (repo) {
@@ -97,18 +103,24 @@ const fetchRepoInfo = ({ url, knownCommitHashes }) => async (dispatch, getState,
 	}
 };
 
-const matchRepoInfo = ({ url, knownCommitHashes }) => async (dispatch, getState, { http }) => {
+const matchRepoInfo = ({ url, knownCommitHashes = [], firstCommitHash }) => async (
+	dispatch,
+	getState,
+	{ http }
+) => {
 	if (!url) {
 		Raven.captureMessage("No url found while trying to match repository information.", {
 			logger: "actions/onboarding",
-			extra: { url, knownCommitHashes }
+			extra: { url, knownCommitHashes, firstCommitHash }
 		});
 		return dispatch(noRemoteUrl());
 	}
 	try {
 		const hashes = knownCommitHashes.join(",");
 		const { teams, teamCreators, repo, usernames, knownService, org, domain } = await http.get(
-			`/no-auth/match-repo?url=${encodeURIComponent(url)}&knownCommitHashes=${hashes}`
+			`/no-auth/match-repo?url=${encodeURIComponent(
+				url
+			)}&knownCommitHashes=${hashes}&firstCommitHash=${firstCommitHash}`
 		);
 
 		if (repo) {
