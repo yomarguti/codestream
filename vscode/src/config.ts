@@ -15,7 +15,8 @@ export interface IConfig {
     };
 
     password: string;
-    username: string;
     serverUrl: string;
+    teamId: string;
     traceLevel: TraceLevel;
+    username: string;
 }

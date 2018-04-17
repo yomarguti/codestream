@@ -174,7 +174,7 @@ export class Commands extends Disposable {
 
     @command('signIn', { customErrorHandling: true })
     signIn() {
-        return this.signInCore(Container.config.username, Container.config.password);
+        return this.signInCore(Container.config.username, Container.config.password, Container.config.teamId);
     }
 
     @command('signOut')
@@ -182,9 +182,9 @@ export class Commands extends Disposable {
         return Container.session.logout();
     }
 
-    private async signInCore(username: string, password: string) {
+    private async signInCore(username: string, password: string, teamId?: string) {
         try {
-            return await Container.session.login(username, password);
+            return await Container.session.login(username, password, teamId);
         }
         catch (ex) {
             const actions: MessageItem[] = [
