@@ -2,7 +2,7 @@
 import { Range, Uri } from 'vscode';
 import {
     CodeStreamApi,
-    CSMarkerLocations, CSPost, CSRepository, CSStream, CSTeam, CSUser
+    CSMarker, CSMarkerLocations, CSPost, CSRepository, CSStream, CSTeam, CSUser
 } from './api';
 import { Container } from '../container';
 
@@ -90,6 +90,25 @@ export class CodeStreamSessionApi {
         }
 
         return items;
+    }
+
+    async getMarker(markerId: string, teamId?: string): Promise<CSMarker> {
+        return (await this._api.getMarker(this.token, teamId!, markerId)).marker;
+    }
+
+    async getMarkers(commitHash: string, stream: CSStream): Promise<CSMarker[]>;
+    async getMarkers(commitHash: string, streamId: string, teamId?: string): Promise<CSMarker[]>;
+    async getMarkers(commitHash: string, streamOrStreamId: CSStream | string, teamId?: string) {
+        let streamId;
+        if (typeof streamOrStreamId === 'string') {
+            streamId = streamOrStreamId;
+            teamId = teamId || this.teamId;
+        }
+        else {
+            streamId = streamOrStreamId.id;
+            teamId = streamOrStreamId.teamId;
+        }
+        return (await this._api.getMarkers(this.token, teamId!, streamId)).markers;
     }
 
     async getMarkerLocations(commitHash: string, stream: CSStream): Promise<CSMarkerLocations>;

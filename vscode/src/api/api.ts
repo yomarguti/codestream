@@ -5,7 +5,7 @@ import {
     CreateRepoRequest, CreateRepoResponse,
     CreateStreamRequest, CreateStreamResponse,
     FindRepoResponse,
-    GetMarkerLocationsResponse, GetMarkersResponse,
+    GetMarkerLocationsResponse, GetMarkerResponse, GetMarkersResponse,
     GetPostsResponse,
     GetRepoResponse, GetReposResponse,
     GetStreamResponse, GetStreamsResponse,
@@ -48,6 +48,10 @@ export class CodeStreamApi {
     findRepo(url: string, firstCommitHashes: string[]) {
         // TODO: Send all
         return this.get<FindRepoResponse>(`/no-auth/find-repo?url=${encodeURIComponent(url)}&firstCommitHash=${firstCommitHashes[0]}`);
+    }
+
+    getMarker(token: string, teamId: string, markerId: string): Promise<GetMarkerResponse> {
+        return this.get<GetMarkerResponse>(`/markers/${markerId}?teamId=${teamId}`, token);
     }
 
     getMarkerLocations(token: string, teamId: string, streamId: string, commitHash: string): Promise<GetMarkerLocationsResponse> {

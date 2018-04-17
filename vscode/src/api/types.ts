@@ -131,6 +131,10 @@ export interface GetMarkerLocationsResponse {
     markerLocations: CSMarkerLocations;
 }
 
+export interface GetMarkerResponse {
+    marker: CSMarker;
+}
+
 export interface GetMarkersResponse {
     markers: CSMarker[];
     numMarkers: number;

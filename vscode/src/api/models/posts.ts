@@ -30,7 +30,12 @@ export class Post extends CodeStreamItem<CSPost> {
         if (this.entity.codeBlocks === undefined || this.entity.codeBlocks.length === 0) return undefined;
 
         const block = this.entity.codeBlocks[0];
-        const uri = await (await this.getStream()).absoluteUri;
+
+        const marker = await this.session.api.getMarker(block.markerId);
+        if (marker === undefined) throw new Error(`Unable to find code block for Post(${this.entity.id})`);
+
+        // TODO: Assuming the marker has the same repoId as the post -- probably not a great assumption
+        const uri = await (await this.getStream(marker.streamId, this.entity.repoId)).absoluteUri;
 
         const locations = await this.session.api.getMarkerLocations(this.entity.commitHashWhenPosted!, this.entity.streamId);
         if (locations === undefined) throw new Error(`Unable to find code block for Post(${this.entity.id})`);
@@ -58,7 +63,7 @@ export class Post extends CodeStreamItem<CSPost> {
     }
 
     get stream(): Promise<Stream>  {
-        return this.getStream();
+        return this.getStream(this.entity.streamId, this.entity.repoId);
     }
 
     get teamId() {
@@ -70,13 +75,13 @@ export class Post extends CodeStreamItem<CSPost> {
     }
 
     private async getRepo() {
-        return (await this.getStream()).repo;
+        return (await this.getStream(this.entity.streamId, this.entity.repoId)).repo;
     }
 
-    private async getStream(): Promise<Stream> {
+    private async getStream(streamId: string, repoId: string): Promise<Stream> {
         if (this._stream === undefined) {
-            const stream = await this.session.api.getStream(this.entity.streamId, this.entity.repoId);
-            if (stream === undefined) throw new Error(`Stream(${this.entity.streamId}) could not be found`);
+            const stream = await this.session.api.getStream(streamId, repoId);
+            if (stream === undefined) throw new Error(`Stream(${streamId}) could not be found`);
 
             this._stream = new Stream(this.session, stream!);
         }
