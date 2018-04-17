@@ -1,10 +1,11 @@
 'use strict';
 import { Range, Uri } from 'vscode';
 import { CodeStreamCollection, CodeStreamItem  } from './collection';
-import { Iterables } from '../../system';
+import { Iterables, memoize } from '../../system';
 import { CodeStreamSession, SessionChangedEvent, SessionChangedType } from '../session';
 import { Post, PostCollection } from './posts';
 import { Repository } from './repositories';
+import { Team } from './teams';
 import { CSStream } from '../types';
 
 export class Stream extends CodeStreamItem<CSStream> {
@@ -29,27 +30,32 @@ export class Stream extends CodeStreamItem<CSStream> {
         return this._posts;
     }
 
+    @memoize
     get repo(): Promise<Repository | undefined> {
         return this.getRepo();
     }
 
-    // get teamId() {
-    //     return this.entity.teamId;
-    // }
+    get repoId() {
+        return this.entity.repoId;
+    }
 
+    @memoize
+    get team(): Promise<Team> {
+        return this.getTeam();
+    }
+
+    get teamId() {
+        return this.entity.teamId;
+    }
+
+    @memoize
     get uri() {
         return Uri.file(this.entity.file);
     }
 
+    @memoize
     get absoluteUri() {
         return this.getAbsoluteUri();
-    }
-
-    private async getAbsoluteUri() {
-        const repo = await this.repo;
-        if (repo === undefined) return undefined;
-
-        return repo.normalizeUri(this.uri);
     }
 
     async post(text: string) {
@@ -66,6 +72,13 @@ export class Stream extends CodeStreamItem<CSStream> {
         return new Post(this.session, post);
     }
 
+    private async getAbsoluteUri() {
+        const repo = await this.repo;
+        if (repo === undefined) return undefined;
+
+        return repo.normalizeUri(this.uri);
+    }
+
     private async getRepo() {
         if (this._repo === undefined && this.entity.repoId !== undefined) {
             const repo = await this.session.repos.get(this.entity.repoId);
@@ -75,6 +88,13 @@ export class Stream extends CodeStreamItem<CSStream> {
         }
 
         return this._repo;
+    }
+
+    private async getTeam() {
+        const team = await this.session.teams.get(this.entity.teamId);
+        if (team === undefined) throw new Error(`Team(${this.entity.teamId}) could not be found`);
+
+        return team;
     }
 }
 

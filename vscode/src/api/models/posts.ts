@@ -116,7 +116,7 @@ export class PostCollection extends CodeStreamCollection<Post, CSPost> {
 
     protected async fetch() {
         return this.session.api.getPosts(this.stream.id);
-}
+    }
 
     protected map(e: CSPost) {
         return new Post(this.session, e, this.stream);

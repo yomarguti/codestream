@@ -1,10 +1,11 @@
 import { commands, Disposable, MessageItem, Uri, window } from 'vscode';
-import { Post } from './api/session';
+import { Post, Stream } from './api/session';
 import { BuiltInCommands, openEditor } from './common';
 import { TraceLevel } from './config';
 import { Container } from './container';
 import { Logger } from './logger';
 import { PostNode } from './views/postNode';
+import { StreamNode } from './views/streamNode';
 import { Iterables } from './system';
 import * as path from 'path';
 
@@ -70,6 +71,28 @@ export class Commands extends Disposable {
         this._disposable && this._disposable.dispose();
     }
 
+    @command('comparePostFileRevisionWithWorking', { showErrorMessage: 'Unable to open post' })
+    async comparePostFileRevisionWithWorking(post?: Post | PostNode) {
+        if (post instanceof PostNode) {
+            post = post.post;
+        }
+        if (post === undefined) return;
+
+        const block = await post.codeBlock;
+        if (block === undefined) return;
+
+        const file = await Container.git.getFileRevision(block.uri, block.hash);
+        if (file === undefined) return;
+
+        const filename = path.basename(block.uri.fsPath);
+
+        return commands.executeCommand(BuiltInCommands.Diff,
+            Uri.file(file),
+            block.uri,
+            `${filename} (${block.hash.substr(0, 8)}) \u00a0\u27F7\u00a0 ${filename}`,
+            { selection: block.range });
+    }
+
     @command('openPostWorkingFile', { showErrorMessage: 'Unable to open post' })
     async openPostWorkingFile(post?: Post | PostNode) {
         if (post instanceof PostNode) {
@@ -100,26 +123,13 @@ export class Commands extends Disposable {
         return openEditor(Uri.file(file), { selection: block.range });
     }
 
-    @command('comparePostFileRevisionWithWorking', { showErrorMessage: 'Unable to open post' })
-    async comparePostFileRevisionWithWorking(post?: Post | PostNode) {
-        if (post instanceof PostNode) {
-            post = post.post;
+    @command('openStream', { showErrorMessage: 'Unable to open stream' })
+    async openStream(stream?: Stream | StreamNode) {
+        if (stream instanceof StreamNode) {
+            stream = stream.stream;
         }
-        if (post === undefined) return;
-
-        const block = await post.codeBlock;
-        if (block === undefined) return;
-
-        const file = await Container.git.getFileRevision(block.uri, block.hash);
-        if (file === undefined) return;
-
-        const filename = path.basename(block.uri.fsPath);
-
-        return commands.executeCommand(BuiltInCommands.Diff,
-            Uri.file(file),
-            block.uri,
-            `${filename} (${block.hash.substr(0, 8)}) \u00a0\u27F7\u00a0 ${filename}`,
-            { selection: block.range });
+        if (stream === undefined) return;
+        return Container.streamWebView.openStream(stream);
     }
 
     @command('post', { showErrorMessage: 'Unable to post message' })

@@ -19,13 +19,15 @@ export class Team extends CodeStreamItem<CSTeam> {
 
 export class TeamCollection extends CodeStreamCollection<Team, CSTeam> {
 
-    constructor(session: CodeStreamSession) {
+    constructor(
+        session: CodeStreamSession,
+        private readonly _ids: string[]
+    ) {
         super(session);
     }
 
     protected fetch(): Promise<CSTeam[]> {
-        throw new Error('Not implemented');
-        // return this.session.getTeams();
+        return this.session.api.getTeams(this._ids);
     }
 
     protected map(e: CSTeam) {

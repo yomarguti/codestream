@@ -6,19 +6,20 @@ import { CSEntity } from '../types';
 
 export const mappedSymbol = Symbol('codestream-mapped');
 
-interface ICollectionItem {
+interface ICollectionItem<TEntity extends CSEntity> {
     // Marker as to whether or not the item has been mapped: entity -> item
     [mappedSymbol]: boolean;
     readonly id: string;
+    readonly entity: TEntity;
 }
 
-export abstract class CodeStreamItem<TEntity extends CSEntity> extends Disposable implements ICollectionItem {
+export abstract class CodeStreamItem<TEntity extends CSEntity> extends Disposable implements ICollectionItem<TEntity> {
 
     [mappedSymbol] = true;
 
     constructor(
         protected readonly session: CodeStreamSession,
-        protected readonly entity: TEntity
+        public readonly entity: TEntity
     ) {
         super(() => this.dispose());
     }
@@ -31,7 +32,7 @@ export abstract class CodeStreamItem<TEntity extends CSEntity> extends Disposabl
     }
 }
 
-export abstract class CodeStreamCollection<TItem extends ICollectionItem, TEntity extends CSEntity> extends Disposable {
+export abstract class CodeStreamCollection<TItem extends ICollectionItem<TEntity>, TEntity extends CSEntity> extends Disposable {
 
     private _onDidChange = new EventEmitter<void>();
     get onDidChange(): Event<void> {
@@ -67,6 +68,10 @@ export abstract class CodeStreamCollection<TItem extends ICollectionItem, TEntit
         return this.ensureLoaded().then(items => this.ensureMapped(items));
     }
 
+    get entities(): Promise<TEntity[]> {
+        return this.items.then(items => [...Iterables.map(items, i => i.entity)]);
+    }
+
     async find(predicate: (item: TItem) => boolean) {
         const items = await this.items;
         return Iterables.find(items, predicate);
@@ -91,7 +96,7 @@ export abstract class CodeStreamCollection<TItem extends ICollectionItem, TEntit
 
     private *ensureMapped(items: Map<string, TEntity | TItem>) {
         for (const [key, value] of items) {
-            if ((value as ICollectionItem)[mappedSymbol]) {
+            if ((value as ICollectionItem<TEntity>)[mappedSymbol]) {
                 yield value as TItem;
                 continue;
             }

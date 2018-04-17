@@ -31,8 +31,13 @@ export class StreamNode extends SubscribableExplorerNode {
 
         const item = new TreeItem(this.stream.path, TreeItemCollapsibleState.Collapsed);
         item.contextValue = ResourceType.Stream;
-        // item.command =
-        // item.resourceUri = Uri.file('C:\\Users\\Eric\\code\\eamodio.github.io\\index.html'); // this.stream.file);
+        item.command = {
+            title: 'Open Stream',
+            command: 'codestream.openStream',
+            arguments: [
+                this.stream
+            ]
+        };
         return item;
     }
 

@@ -4,9 +4,8 @@ import { Functions, Iterables, memoize, Strings } from '../system';
 import { configuration } from '../configuration';
 import {
     CodeStreamApi,
-    CSTeam,
     LoginResponse,
-    Markers, Post, Repository, RepositoryCollection, Stream, StreamCollection, User, UserCollection
+    Markers, Post, Repository, RepositoryCollection, Stream, StreamCollection, TeamCollection, User, UserCollection
 } from './api';
 import { CodeStreamSessionApi } from './sessionApi';
 import { Git } from '../git/git';
@@ -349,10 +348,13 @@ export class CodeStreamSession extends Disposable {
         return this._users;
     }
 
+    private _teams: TeamCollection | undefined;
     @signedIn
-    get teams(): CSTeam[] {
-        if (this._data === undefined) return [];
-        return this._data.teams;
+    get teams() {
+        if (this._teams === undefined) {
+            this._teams = new TeamCollection(this, this.data.teams.map(t => t.id));
+        }
+        return this._teams;
     }
 
     private _data: LoginResponse | undefined;

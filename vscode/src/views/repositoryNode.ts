@@ -26,11 +26,18 @@ export class RepositoryNode extends SubscribableExplorerNode {
         return [...Iterables.map(streams, s => new StreamNode(this.session, s))];
     }
 
-    getTreeItem(): TreeItem {
+    async getTreeItem(): Promise<TreeItem> {
         this.unsubscribe();
 
         const item = new TreeItem(this.repository.url, TreeItemCollapsibleState.Collapsed);
         item.contextValue = ResourceType.Repository;
+        // item.command = {
+        //     title: 'Open Stream',
+        //     command: 'codestream.openStream',
+        //     arguments: [
+        //         Iterables.first(await this.repository.streams.items)
+        //     ]
+        // };
         return item;
     }
 

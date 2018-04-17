@@ -208,13 +208,13 @@ export class CodeStreamSessionApi {
         return (await this._api.getStreams(this.token, teamId, repoId!)).streams;
     }
 
-    // async getTeam(teamId: string): Promise<CSTeam | undefined> {
-    //     return (await this._api.getTeam(this.token, teamId)).team;
-    // }
+    async getTeam(teamId: string): Promise<CSTeam | undefined> {
+        return (await this._api.getTeam(this.token, teamId)).team;
+    }
 
-    // async getTeams(ids: string[]): Promise<CSTeam[]> {
-    //     return (await this._api.getTeams(this.token, ids)).teams;
-    // }
+    async getTeams(ids: string[]): Promise<CSTeam[]> {
+        return (await this._api.getTeams(this.token, ids)).teams;
+    }
 
     async getUser(userId: string, teamId?: string): Promise<CSUser | undefined> {
         return (await this._api.getUser(this.token, teamId || this.teamId!, userId)).user;
