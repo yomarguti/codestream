@@ -1,8 +1,8 @@
 'use strict';
 import { commands, Disposable, Extension, extensions, MessageItem, window } from 'vscode';
 import { PostsReceivedEvent, User } from '../api/session';
+import { ContextKeys, setContext } from '../common';
 import { Container } from '../container';
-import { ContextKeys, setContext } from '../context';
 
 // more 💩 code ahead
 

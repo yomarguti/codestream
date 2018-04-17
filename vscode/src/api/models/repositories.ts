@@ -38,15 +38,19 @@ export class Repository extends CodeStreamItem<CSRepository> {
         return this._streams;
     }
 
-    get teamId() {
-        return this.entity.teamId;
-    }
+    // get teamId() {
+    //     return this.entity.teamId;
+    // }
 
     get url() {
         return this.entity.normalizedUrl;
     }
 
     normalizeUri(uri: Uri) {
+        return Uri.file(Strings.normalizePath(path.join(this._folder!.uri.fsPath, uri.fsPath)));
+    }
+
+    relativizeUri(uri: Uri) {
         return Uri.file(Strings.normalizePath(path.relative(this._folder!.uri.fsPath, uri.fsPath)));
     }
 }

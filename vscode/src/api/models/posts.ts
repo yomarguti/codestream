@@ -1,27 +1,64 @@
 'use strict';
+import { Range, Uri } from 'vscode';
 import { CodeStreamCollection, CodeStreamItem  } from './collection';
-import { CodeStreamSession, PostsReceivedEvent, Stream } from '../session';
+import { CodeStreamSession, PostsReceivedEvent, Repository, Stream, User } from '../session';
 import { CSPost } from '../types';
+import { memoize } from '../../system';
+
+interface CodeBlock {
+    readonly code: string;
+    readonly range: Range;
+    readonly uri: Uri;
+}
 
 export class Post extends CodeStreamItem<CSPost> {
 
     constructor(
         session: CodeStreamSession,
-        post: CSPost
+        post: CSPost,
+        private _stream?: Stream
     ) {
         super(session, post);
     }
 
-    get repoId() {
-        return this.entity.repoId;
+    @memoize
+    get codeBlock(): Promise<CodeBlock | undefined> {
+        return this.getCodeBlock();
+    }
+
+    async getCodeBlock(): Promise<CodeBlock | undefined> {
+        if (this.entity.codeBlocks === undefined || this.entity.codeBlocks.length === 0) return undefined;
+
+        const block = this.entity.codeBlocks[0];
+        const uri = await (await this.getStream()).absoluteUri;
+
+        const locations = await this.session.api.getMarkerLocations(this.entity.commitHashWhenPosted!, this.entity.streamId);
+        if (locations === undefined) throw new Error(`Unable to find code block for Post(${this.entity.id})`);
+
+        const location = locations.locations[block.markerId];
+
+        return {
+            code: block.code,
+            range: new Range(location[0], location[1], location[2], location[3]),
+            uri: uri!
+        };
+    }
+
+    get repo(): Promise<Repository | undefined> {
+        return this.getRepo();
+    }
+
+    @memoize
+    get sender(): Promise<User | undefined> {
+        return this.session.users.get(this.entity.creatorId);
     }
 
     get senderId() {
         return this.entity.creatorId;
     }
 
-    get streamId() {
-        return this.entity.streamId;
+    get stream(): Promise<Stream>  {
+        return this.getStream();
     }
 
     get teamId() {
@@ -32,12 +69,19 @@ export class Post extends CodeStreamItem<CSPost> {
         return this.entity.text;
     }
 
-    // async getRepo() {
-    //     const repo = await this.session.repos.get(this.entity.repoId);
-    //     if (repo === undefined) throw new Error(`Repository(${this.entity.repoId}) could not be found`);
+    private async getRepo() {
+        return (await this.getStream()).repo;
+    }
 
-    //     return repo;
-    // }
+    private async getStream(): Promise<Stream> {
+        if (this._stream === undefined) {
+            const stream = await this.session.api.getStream(this.entity.streamId, this.entity.repoId);
+            if (stream === undefined) throw new Error(`Stream(${this.entity.streamId}) could not be found`);
+
+            this._stream = new Stream(this.session, stream!);
+        }
+        return this._stream;
+    }
 }
 
 export class PostCollection extends CodeStreamCollection<Post, CSPost> {
@@ -64,6 +108,6 @@ export class PostCollection extends CodeStreamCollection<Post, CSPost> {
 }
 
     protected map(e: CSPost) {
-        return new Post(this.session, e);
+        return new Post(this.session, e, this.stream);
     }
 }

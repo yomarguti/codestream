@@ -1,5 +1,5 @@
 'use strict';
-import { DecorationOptions, Disposable, DocumentSelector, MarkdownString, Range, TextEditor, TextEditorDecorationType, window } from 'vscode';
+import { DecorationOptions, Disposable, DocumentSelector, Range, TextEditor, TextEditorDecorationType, window } from 'vscode';
 import { Container } from '../container';
 
 export class CodeStreamMarkerDecorationProvider extends Disposable {
@@ -44,17 +44,26 @@ export class CodeStreamMarkerDecorationProvider extends Disposable {
     async provideDecorations(editor: TextEditor /*, token: CancellationToken */): Promise<DecorationOptions[]> {
         const session = Container.session;
         const markers = await session.getMarkers(editor.document.uri);
-        markers;
-        // markers!.markers.locations.
+        if (markers === undefined) return [];
 
-        const message = new MarkdownString(`*CodeStream*\n\nAkonwi wrote:\n\n\`\`\`This is some awesome code\`\`\`\n\n[Open Stream](command:codestream.openStream)`);
-        message.isTrusted = true;
+        const decorations: DecorationOptions[] = [];
 
-        return [
-            {
-                range: new Range(editor.selection.active, editor.selection.active.with(undefined, 5)),
-                hoverMessage: message
-            } as DecorationOptions
-        ];
+        for (const location of Object.values(markers.markers.locations)) {
+            decorations.push({
+                range: new Range(location[0], 0, location[2], 10000000)
+            });
+        }
+
+        return decorations;
+
+        // const message = new MarkdownString(`*CodeStream*\n\nAkonwi wrote:\n\n\`\`\`This is some awesome code\`\`\`\n\n[Open Stream](command:codestream.openStream)`);
+        // message.isTrusted = true;
+
+        // return [
+        //     {
+        //         range: new Range(editor.selection.active, editor.selection.active.with(undefined, 5)),
+        //         hoverMessage: message
+        //     } as DecorationOptions
+        // ];
     }
 }

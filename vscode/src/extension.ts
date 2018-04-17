@@ -2,10 +2,10 @@
 import 'reflect-metadata';
 
 import { ExtensionContext } from 'vscode';
+import { ContextKeys, setContext } from './common';
 import { IConfig } from './config';
 import { configuration, Configuration } from './configuration';
 import { Container } from './container';
-import { ContextKeys, setContext } from './context';
 import { Logger } from './logger';
 import { SessionStatusChangedEvent } from './api/session';
 

@@ -1,6 +1,7 @@
 'use strict';
 import { CodeStreamCollection, CodeStreamItem  } from './collection';
 import { CodeStreamSession } from '../session';
+import { Iterables } from '../../system';
 import { CSUser } from '../types';
 
 export class User extends CodeStreamItem<CSUser> {
@@ -25,6 +26,14 @@ export class UserCollection extends CodeStreamCollection<User, CSUser> {
 
     constructor(session: CodeStreamSession) {
         super(session);
+    }
+
+    async getByEmail(email: string): Promise<User | undefined> {
+        return Iterables.find(await this.items, u => u.email === email);
+    }
+
+    async getByEmails(emails: string[]): Promise<Iterable<User>> {
+        return Iterables.filter(await this.items, u => emails.includes(u.email));
     }
 
     protected fetch() {

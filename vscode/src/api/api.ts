@@ -156,6 +156,7 @@ export class CodeStreamApi {
         for (const [key, value] of Object.entries(obj)) {
             if (key === '_id') {
                 obj['id'] = value;
+                // TODO: Delete `_id` ?
             }
 
             if (Array.isArray(value)) {
@@ -167,11 +168,6 @@ export class CodeStreamApi {
 
         }
 
-        // const id = obj['_id'];
-        // if (id !== undefined) {
-        //     obj['id'] = id;
-        //     // TODO: Delete `_id` ?
-        // }
         return obj as R;
 
         // return Object.entries(obj)

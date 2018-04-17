@@ -30,7 +30,7 @@ export class PostNode extends ExplorerNode {
         item.contextValue = ResourceType.Post;
         item.command = {
             title: 'Open Comment',
-            command: 'codestream.openPost',
+            command: 'codestream.openPostCode',
             arguments: [this.post]
         } as Command;
         return item;

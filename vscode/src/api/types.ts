@@ -8,11 +8,6 @@ export interface CSEntity {
     creatorId: string;
 }
 
-export interface CSCodeBlock {
-    code: string;
-    location: [number, number, number, number];
-}
-
 export interface CSMarker {
     id: string;
     teamId: string;
@@ -30,9 +25,15 @@ export interface CSMarkerLocations {
 export interface CSPost extends CSEntity {
     streamId: string;
     text: string;
+    codeBlocks?: {
+        code: string;
+        markerId: string;
+    }[];
+    commitHashWhenPosted?: string;
     repoId: string;
     teamId: string;
     seqNum: number;
+
 }
 
 export interface CSRepository extends CSEntity {
@@ -89,7 +90,10 @@ export interface CreatePostRequest {
     streamId: string;
     parentPostId?: string;
     text: string;
-    codeBlocks?: CSCodeBlock[];
+    codeBlocks?: {
+        code: string;
+        location: [number, number, number, number];
+    }[];
     commitHashWhenPosted?: string;
 }
 

@@ -425,7 +425,7 @@ export class CodeStreamSession extends Disposable {
             const s = await this.api.createStream(Uri.parse(`repo://${repo.url}`), repo.id);
             if (s === undefined) throw new Error(`Unable to create stream`);
 
-            stream = new Stream(this, s);
+            stream = new Stream(this, s, repo);
         }
 
         return stream.post(text);
@@ -438,7 +438,7 @@ export class CodeStreamSession extends Disposable {
 
         let stream = await repo.streams.getByUri(uri);
         if (stream === undefined) {
-            const s = await this._sessionApi!.createStream(repo.normalizeUri(uri), repo.id);
+            const s = await this._sessionApi!.createStream(repo.relativizeUri(uri), repo.id);
             if (s === undefined) throw new Error(`Unable to create stream for Uri(${uri.toString()}`);
 
             stream = new Stream(this, s);

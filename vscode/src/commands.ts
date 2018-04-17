@@ -1,8 +1,10 @@
 import { commands, Disposable, MessageItem, window } from 'vscode';
 import { Post } from './api/session';
+import { openEditor } from './common';
 import { TraceLevel } from './config';
 import { Container } from './container';
 import { Logger } from './logger';
+import { Iterables } from './system';
 
 interface CommandOptions {
     customErrorHandling?: boolean;
@@ -66,12 +68,14 @@ export class Commands extends Disposable {
         this._disposable && this._disposable.dispose();
     }
 
-    @command('openPost', { showErrorMessage: 'Unable to open post' })
-    async openPost(post?: Post) {
+    @command('openPostCode', { showErrorMessage: 'Unable to open post' })
+    async openPostCode(post?: Post) {
         if (post === undefined) return;
 
-        // post.repoId
-        // return Container.session.post(message);
+        const block = await post.codeBlock;
+        if (block === undefined) return;
+
+        return openEditor(block.uri, { selection: block.range });
     }
 
     @command('post', { showErrorMessage: 'Unable to post message' })
@@ -98,7 +102,8 @@ export class Commands extends Disposable {
             contents: editor.document.isDirty ? editor.document.getText() : undefined
         });
 
-        const mentions = authors.map(a => `@${a.name}`).join(', ');
+        const users = await Container.session.users.getByEmails(authors.map(a => a.email));
+        const mentions = Iterables.join(Iterables.map(users, u => `@${u.name}`), ', ');
 
         const message = await window.showInputBox({
             prompt: 'Enter Comment',

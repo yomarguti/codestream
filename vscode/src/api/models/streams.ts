@@ -11,17 +11,10 @@ export class Stream extends CodeStreamItem<CSStream> {
 
     constructor(
         session: CodeStreamSession,
-        stream: CSStream
+        stream: CSStream,
+        private _repo?: Repository
     ) {
         super(session, stream);
-    }
-
-    get repoId() {
-        return this.entity.repoId;
-    }
-
-    get teamId() {
-        return this.entity.teamId;
     }
 
     get path() {
@@ -34,6 +27,29 @@ export class Stream extends CodeStreamItem<CSStream> {
             this._posts = new PostCollection(this.session, this);
         }
         return this._posts;
+    }
+
+    get repo(): Promise<Repository | undefined> {
+        return this.getRepo();
+    }
+
+    // get teamId() {
+    //     return this.entity.teamId;
+    // }
+
+    get uri() {
+        return Uri.file(this.entity.file);
+    }
+
+    get absoluteUri() {
+        return this.getAbsoluteUri();
+    }
+
+    private async getAbsoluteUri() {
+        const repo = await this.repo;
+        if (repo === undefined) return undefined;
+
+        return repo.normalizeUri(this.uri);
     }
 
     async post(text: string) {
@@ -50,11 +66,15 @@ export class Stream extends CodeStreamItem<CSStream> {
         return new Post(this.session, post);
     }
 
-    async getRepo() {
-        const repo = await this.session.repos.get(this.entity.repoId);
-        if (repo === undefined) throw new Error(`Repository(${this.entity.repoId}) could not be found`);
+    private async getRepo() {
+        if (this._repo === undefined && this.entity.repoId !== undefined) {
+            const repo = await this.session.repos.get(this.entity.repoId);
+            if (repo === undefined) throw new Error(`Repository(${this.entity.repoId}) could not be found`);
 
-        return repo;
+            this._repo = repo;
+        }
+
+        return this._repo;
     }
 }
 
@@ -82,7 +102,7 @@ export class StreamCollection extends CodeStreamCollection<Stream, CSStream> {
     async getByUri(uri: Uri): Promise<Stream | undefined> {
         if (this.repo === undefined) throw new Error(`File streams only exist at the repository level`);
 
-        const path = this.repo.normalizeUri(uri).fsPath;
+        const path = this.repo.relativizeUri(uri).fsPath;
         return Iterables.find(await this.items, s => s.path === path);
     }
 
@@ -96,6 +116,6 @@ export class StreamCollection extends CodeStreamCollection<Stream, CSStream> {
 }
 
     protected map(e: CSStream) {
-        return new Stream(this.session, e);
+        return new Stream(this.session, e, this.repo);
     }
 }
