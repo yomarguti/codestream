@@ -44,13 +44,37 @@ export interface CSRepository extends CSEntity {
     companyId: string;
 }
 
-export interface CSStream extends CSEntity {
+export enum StreamType {
+    Channel = 'channel',
+    Direct = 'direct',
+    File = 'file'
+}
+
+export interface CSChannelStream extends CSEntity {
     teamId: string;
-    type: 'file' | string;
+    type: StreamType.Channel;
+    name: string;
+    memberIds?: string;
+    sortId: string;
+}
+
+export interface CSDirectStream extends CSEntity {
+    teamId: string;
+    type: StreamType.Direct;
+    name?: string;
+    memberIds: string;
+    sortId: string;
+}
+
+export interface CSFileStream extends CSEntity {
+    teamId: string;
+    type: StreamType.File;
     file: string;
     repoId: string;
     sortId: string;
 }
+
+export type CSStream = CSChannelStream | CSDirectStream | CSFileStream;
 
 export interface CSTeam extends CSEntity {
     name: string;
@@ -111,12 +135,29 @@ export interface CreateRepoResponse {
     repo: CSRepository;
 }
 
-export interface CreateStreamRequest {
+export interface CreateFileStreamRequest {
     teamId: string;
     repoId: string;
-    type: 'file' | string;
+    type: 'file';
     file: string;
 }
+
+export interface CreateDirectStreamRequest {
+    teamId: string;
+    type: 'direct';
+    name: string;
+    memberIds: string[];
+}
+
+export interface CreateChannelStreamRequest {
+    teamId: string;
+    type: 'channel';
+    name: string;
+    memberIds?: string[];
+    isTeamStream: boolean;
+}
+
+export type CreateStreamRequest = CreateFileStreamRequest | CreateDirectStreamRequest | CreateChannelStreamRequest;
 
 export interface CreateStreamResponse {
     stream: CSStream;
@@ -152,12 +193,12 @@ export interface GetReposResponse {
     repos: CSRepository[];
 }
 
-export interface GetStreamResponse {
-    stream: CSStream;
+export interface GetStreamResponse<T extends CSStream> {
+    stream: T;
 }
 
-export interface GetStreamsResponse {
-    streams: CSStream[];
+export interface GetStreamsResponse<T extends CSStream> {
+    streams: T[];
 }
 
 export interface GetTeamResponse {

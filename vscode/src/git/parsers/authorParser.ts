@@ -1,6 +1,6 @@
 'use strict';
 import { Strings } from '../../system';
-import { Git } from '../git';
+import { isUncommitted } from '../common';
 import { GitAuthor } from '../models/author';
 
 export interface AuthorEntry {
@@ -65,7 +65,7 @@ export class GitAuthorParser {
 
             switch (line.substring(0, index)) {
                 case 'author':
-                    if (!Git.isUncommitted(sha!)) {
+                    if (!isUncommitted(sha!)) {
                         author.name = line.substring(index).trim();
                     }
                     break;

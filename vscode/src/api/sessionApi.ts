@@ -2,6 +2,7 @@
 import { Range, Uri } from 'vscode';
 import {
     CodeStreamApi,
+    CSChannelStream, CSDirectStream, CSFileStream,
     CSMarker, CSMarkerLocations, CSPost, CSRepository, CSStream, CSTeam, CSUser
 } from './api';
 import { Container } from '../container';
@@ -49,13 +50,32 @@ export class CodeStreamSessionApi {
         })).repo;
     }
 
-    async createStream(uri: Uri, repoId: string, teamId?: string): Promise<CSStream | undefined> {
+    async createChannelStream(name: string, membership?: 'auto' | string[], teamId?: string): Promise<CSChannelStream | undefined> {
         return (await this._api.createStream(this.token, {
+            type: 'channel',
+            teamId: teamId || this.teamId!,
+            name: name,
+            memberIds: membership === 'auto' ? undefined : membership,
+            isTeamStream: membership === 'auto'
+        })).stream as CSChannelStream;
+    }
+
+    async createDirectStream(name: string, membership: string[], teamId?: string): Promise<CSDirectStream | undefined> {
+        return (await this._api.createStream(this.token, {
+            type: 'direct',
+            teamId: teamId || this.teamId!,
+            name: name,
+            memberIds: membership
+        })).stream as CSDirectStream;
+    }
+
+    async createFileStream(uri: Uri, repoId: string, teamId?: string): Promise<CSFileStream | undefined> {
+        return (await this._api.createStream(this.token, {
+            type: 'file',
             teamId: teamId || this.teamId!,
             repoId: repoId,
-            type: 'file',
-            file: uri.fsPath
-        })).stream;
+            file: uri.scheme === 'file' ? uri.fsPath : uri.toString()
+        })).stream as CSFileStream;
     }
 
     private async findOrRegisterRepo(registeredRepos: CSRepository[], uri: Uri) {
@@ -173,9 +193,21 @@ export class CodeStreamSessionApi {
         return (await this._api.getRepos(this.token, teamId)).repos;
     }
 
-    async getStream(streamId: string, repo: CSRepository): Promise<CSStream | undefined>;
-    async getStream(streamId: string, repoId: string, teamId?: string): Promise<CSStream | undefined>;
-    async getStream(streamId: string, repoOrRepoId: CSRepository | string, teamId?: string): Promise<CSStream | undefined> {
+    async getStream(streamId: string, teamId?: string): Promise<CSStream | undefined> {
+        return (await this._api.getStream(this.token, teamId || this.teamId, streamId)).stream;
+    }
+
+    async getChannelStreams(teamId?: string): Promise<CSChannelStream[]> {
+        return (await this._api.getStreams<CSChannelStream>(this.token, teamId || this.teamId)).streams;
+    }
+
+    async geDirectStreams(teamId?: string): Promise<CSDirectStream[]> {
+        return (await this._api.getStreams<CSDirectStream>(this.token, teamId || this.teamId)).streams;
+    }
+
+    async getFileStreams(repo: CSRepository): Promise<CSFileStream[]>;
+    async getFileStreams(repoId: string, teamId?: string): Promise<CSFileStream[]>;
+    async getFileStreams(repoOrRepoId: CSRepository | string, teamId?: string): Promise<CSFileStream[]> {
         let repoId;
         if (typeof repoOrRepoId === 'string') {
             repoId = repoOrRepoId;
@@ -185,27 +217,7 @@ export class CodeStreamSessionApi {
             repoId = repoOrRepoId.id;
             teamId = repoOrRepoId.teamId;
         }
-
-        return (await this._api.getStream(this.token, teamId, repoId, streamId)).stream;
-    }
-
-    async getStreams(repo?: CSRepository): Promise<CSStream[]>;
-    async getStreams(repoId?: string, teamId?: string): Promise<CSStream[]>;
-    async getStreams(repoOrRepoId?: CSRepository | string, teamId?: string): Promise<CSStream[]> {
-        let repoId;
-        if (repoOrRepoId === undefined) {
-            repoId = this.teamId!;
-            teamId = this.teamId!;
-        }
-        else if (typeof repoOrRepoId === 'string') {
-            repoId = repoOrRepoId;
-            teamId = teamId || this.teamId!;
-        }
-        else {
-            repoId = repoOrRepoId.id;
-            teamId = repoOrRepoId.teamId;
-        }
-        return (await this._api.getStreams(this.token, teamId, repoId!)).streams;
+        return (await this._api.getStreams<CSFileStream>(this.token, teamId, repoId)).streams;
     }
 
     async getTeam(teamId: string): Promise<CSTeam | undefined> {

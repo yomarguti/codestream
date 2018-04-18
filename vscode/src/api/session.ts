@@ -1,19 +1,21 @@
 'use strict';
 import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, Range, Uri } from 'vscode';
-import { Functions, Iterables, memoize, Strings } from '../system';
+import { CodeStreamApi, LoginResponse } from './api';
 import { configuration } from '../configuration';
-import {
-    CodeStreamApi,
-    LoginResponse,
-    Markers, Post, Repository, RepositoryCollection, Stream, StreamCollection, TeamCollection, User, UserCollection
-} from './api';
+import { Container } from '../container';
 import { CodeStreamSessionApi } from './sessionApi';
 import { Git } from '../git/git';
-import { MessageReceivedEvent, MessageType, PostsMessageReceivedEvent, PubNubReceiver, RepositoriesMessageReceivedEvent, StreamsMessageReceivedEvent } from './pubnub';
-import { Container } from '../container';
 import { Logger } from '../logger';
+import { Markers } from './models/markers';
+import { Post } from './models/posts';
+import { Repository, RepositoryCollection } from './models/repositories';
+import { ChannelStream, ChannelStreamCollection, DirectStream, DirectStreamCollection, FileStream, Stream, StreamType } from './models/streams';
+import { Team, TeamCollection } from './models/teams';
+import { User, UserCollection } from './models/users';
+import { MessageReceivedEvent, MessageType, PostsMessageReceivedEvent, PubNubReceiver, RepositoriesMessageReceivedEvent, StreamsMessageReceivedEvent } from './pubnub';
+import { Functions, memoize, Strings } from '../system';
 
-export { Markers, Post, Repository, Stream, User } from './api';
+export { ChannelStream, DirectStream, FileStream, Markers, Post, Repository, Stream, StreamType, Team, User };
 
 function affects(data: { [key: string]: any }[], id: string, type: 'stream' | 'repo' | 'team') {
     let key: string;
@@ -130,7 +132,16 @@ export class StreamsAddedEvent {
     }
 
     getStreams(): Stream[] {
-        return this._event.streams.map(r => new Stream(this.session, r));
+        return this._event.streams.map(s => {
+            switch (s.type) {
+                case StreamType.Channel:
+                    return new ChannelStream(this.session, s);
+                case StreamType.Direct:
+                    return new DirectStream(this.session, s);
+                case StreamType.File:
+                    return new FileStream(this.session, s);
+            }
+        });
     }
 
     merge(e: StreamsAddedEvent) {
@@ -304,7 +315,7 @@ export class CodeStreamSession extends Disposable {
     @signedIn
     get repos() {
         if (this._repos === undefined) {
-            this._repos = new RepositoryCollection(this);
+            this._repos = new RepositoryCollection(this, this.teamId!);
         }
         return this._repos;
     }
@@ -322,12 +333,20 @@ export class CodeStreamSession extends Disposable {
         return this._status;
     }
 
-    private _streams: StreamCollection | undefined;
-    get streams() {
-        if (this._streams === undefined) {
-            this._streams = new StreamCollection(this);
+    private _channels: ChannelStreamCollection | undefined;
+    get channels() {
+        if (this._channels === undefined) {
+            this._channels = new ChannelStreamCollection(this, this.teamId!);
         }
-        return this._streams;
+        return this._channels;
+    }
+
+    private _directMessages: DirectStreamCollection | undefined;
+    get directMessages() {
+        if (this._directMessages === undefined) {
+            this._directMessages = new DirectStreamCollection(this, this.teamId!);
+        }
+        return this._directMessages;
     }
 
     private _user: User | undefined;
@@ -343,9 +362,18 @@ export class CodeStreamSession extends Disposable {
     @signedIn
     get users() {
         if (this._users === undefined) {
-            this._users = new UserCollection(this);
+            this._users = new UserCollection(this, this.teamId!);
         }
         return this._users;
+    }
+
+    private _team: Team | undefined;
+    @signedIn
+    get team() {
+        if (this._team === undefined) {
+            this._team = new Team(this, this.data.teams.find(t => t.id === this.teamId)!);
+        }
+        return this._team!;
     }
 
     private _teams: TeamCollection | undefined;
@@ -407,6 +435,11 @@ export class CodeStreamSession extends Disposable {
     }
 
     @signedIn
+    getDefaultTeamChannel() {
+        return this.channels.getOrCreateByName('general');
+    }
+
+    @signedIn
     async getMarkers(uri: Uri): Promise<Markers | undefined> {
         const repo = await this.getRepositoryByUri(uri);
         if (repo === undefined) return undefined;
@@ -420,40 +453,25 @@ export class CodeStreamSession extends Disposable {
     }
 
     @signedIn
-    async post(text: string) {
-        // HACK: Pretend we have 1 stream for now
-        const streams = await this.streams.items;
-
-        let stream = Iterables.first(streams);
-        if (stream === undefined) {
-            const repos = await this.repos.items;
-            const repo = Iterables.first(repos);
-
-            if (repo === undefined) throw new Error(`No repositories!`);
-
-            const s = await this.api.createStream(Uri.parse(`repo://${repo.url}`), repo.id);
-            if (s === undefined) throw new Error(`Unable to create stream`);
-
-            stream = new Stream(this, s, repo);
-        }
-
+    async post(text: string, streamName?: string): Promise<Post> {
+        const stream = streamName === undefined
+            ? await this.getDefaultTeamChannel()
+            : await this.channels.getOrCreateByName(streamName);
         return stream.post(text);
     }
 
     @signedIn
-    async postCode(text: string, uri: Uri, code: string, range: Range, commitHash: string) {
+    async postCode(text: string, uri: Uri, code: string, range: Range, commitHash: string, streamName?: string) {
         const repo = await this.repos.getByUri(uri);
         if (repo === undefined) throw new Error(`No repository could be found for Uri(${uri.toString()}`);
 
-        let stream = await repo.streams.getByUri(uri);
-        if (stream === undefined) {
-            const s = await this._sessionApi!.createStream(repo.relativizeUri(uri), repo.id);
-            if (s === undefined) throw new Error(`Unable to create stream for Uri(${uri.toString()}`);
+        const markerStream = await repo.streams.getOrCreateByUri(uri);
 
-            stream = new Stream(this, s);
-        }
+        const stream = streamName === undefined
+        ? await this.getDefaultTeamChannel()
+        : await this.channels.getOrCreateByName(streamName);
 
-        return stream.postCode(text, code, range, commitHash);
+        return stream.postCode(text, code, range, commitHash, markerStream);
     }
 
     private async loginCore(email: string, password: string, teamId?: string): Promise<CodeStreamSession> {
@@ -466,7 +484,7 @@ export class CodeStreamSession extends Disposable {
 
             this._data = await this._api.login(email, password);
 
-            if (teamId === undefined) {
+            if (teamId == null) {
                 teamId = this._data.teams[0].id;
             }
 

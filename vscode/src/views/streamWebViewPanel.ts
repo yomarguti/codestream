@@ -1,5 +1,4 @@
 import {
-  commands,
   Disposable,
   ViewColumn,
   Webview,
@@ -7,7 +6,7 @@ import {
   window
 } from 'vscode';
 import { CSPost, CSRepository, CSStream, CSTeam, CSUser } from '../api/api';
-import { CodeStreamSession, Stream } from '../api/session';
+import { CodeStreamSession, Stream, StreamType } from '../api/session';
 import { Container } from '../container';
 import * as fs from 'fs';
 
@@ -64,10 +63,32 @@ export class StreamWebViewPanel implements Disposable {
     );
 
     const messageRelay = new MessageRelay(this.session, panel.webview);
+    messageRelay;
 
     const state: ViewData = Object.create(null);
-    state.currentRepoId = stream.repoId;
-    state.currentFile = stream.path;
+
+    let streamsFn: () => Promise<CSStream[]>;
+    switch (stream.type) {
+      case StreamType.Channel:
+        // Dunno what to pass here
+        state.currentRepoId = (await this.session.repos.first()).id;
+        state.currentFile = stream.name;
+        streamsFn = () => this.session.channels.entities;
+        break;
+      case StreamType.Direct:
+        // Dunno what to pass here
+        state.currentRepoId = (await this.session.repos.first()).id;
+        state.currentFile = stream.name;
+        streamsFn = () => this.session.directMessages.entities;
+        break;
+      case StreamType.File:
+        state.currentRepoId = stream.repoId;
+        state.currentFile = stream.path;
+        streamsFn = async () => (await stream.repo).streams.entities;
+        break;
+      default:
+        throw new Error('Invalid stream type');
+    }
     state.currentTeamId = stream.teamId;
     state.currentUserId = this.session.userId;
 
@@ -80,7 +101,7 @@ export class StreamWebViewPanel implements Disposable {
     ] = await Promise.all([
       stream.posts.entities,
       this.session.repos.entities,
-      this.session.streams.entities,
+      streamsFn(),
       this.session.teams.entities,
       this.session.users.entities
     ]);

@@ -30,7 +30,7 @@ export class TeamCollection extends CodeStreamCollection<Team, CSTeam> {
         return this.session.api.getTeams(this._ids);
     }
 
-    protected map(e: CSTeam) {
+    protected fetchMapper(e: CSTeam) {
         return new Team(this.session, e);
     }
 }

@@ -4,6 +4,7 @@ import {
     CreatePostRequest, CreatePostResponse,
     CreateRepoRequest, CreateRepoResponse,
     CreateStreamRequest, CreateStreamResponse,
+    CSStream,
     FindRepoResponse,
     GetMarkerLocationsResponse, GetMarkerResponse, GetMarkersResponse,
     GetPostsResponse,
@@ -14,7 +15,6 @@ import {
     LoginRequest, LoginResponse
 } from './types';
 
-export * from './models/models';
 export * from './types';
 
 // const responseCache = new Map<string, Promise<any>>();
@@ -75,13 +75,13 @@ export class CodeStreamApi {
         return this.get<GetReposResponse>(`/repos?teamId=${teamId}`, token);
     }
 
-    getStream(token: string, teamId: string, repoId: string, streamId: string): Promise<GetStreamResponse> {
+    getStream<T extends CSStream>(token: string, teamId: string, streamId: string): Promise<GetStreamResponse<T>> {
         // TODO: Check cache
-        return this.get<GetStreamResponse>(`/streams/${streamId}`, token);
+        return this.get<GetStreamResponse<T>>(`/streams/${streamId}`, token);
     }
 
-    getStreams(token: string, teamId: string, repoId: string): Promise<GetStreamsResponse> {
-        return this.get<GetStreamsResponse>(`/streams?teamId=${teamId}&repoId=${repoId}`, token);
+    getStreams<T extends CSStream>(token: string, teamId: string, repoId?: string): Promise<GetStreamsResponse<T>> {
+        return this.get<GetStreamsResponse<T>>(`/streams?teamId=${teamId}${repoId === undefined ? '' : `&repoId=${repoId}`}`, token);
     }
 
     getTeam(token: string, teamId: string): Promise<GetTeamResponse> {

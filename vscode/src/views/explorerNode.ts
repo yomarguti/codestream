@@ -13,6 +13,10 @@ export enum RefreshReason {
 }
 
 export enum ResourceType {
+    Channel = 'codestream:channel',
+    Channels = 'codestream:channels',
+    DirectMessage = 'codestream:directMessage',
+    FileStream = 'codestream:fileStream',
     Message = 'codestream:message',
     People = 'codestream:people',
     Post = 'codestream:post',
@@ -20,7 +24,6 @@ export enum ResourceType {
     Repositories = 'codestream:repositories',
     Repository = 'codestream:repository',
     Session = 'codestream:session',
-    Stream = 'codestream:stream',
     Team = 'codestream:team',
     User = 'codestream:user'
 }

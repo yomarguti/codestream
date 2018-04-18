@@ -1,10 +1,10 @@
 'use strict';
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
-import { Iterables } from '../system';
-import { CodeStreamSession, Stream } from '../api/session';
+import { CodeStreamSession, Stream, StreamType } from '../api/session';
 import { Container } from '../container';
 import { ExplorerNode, ResourceType, SubscribableExplorerNode } from './explorerNode';
 import { PostNode } from './postNode';
+import { Iterables } from '../system';
 
 export class StreamNode extends SubscribableExplorerNode {
 
@@ -16,21 +16,20 @@ export class StreamNode extends SubscribableExplorerNode {
     }
 
     get id() {
-        return `${this.session.id}:${ResourceType.Stream}:${this.stream.id}`;
+        return `${this.session.id}:${this.getContextValue()}:${this.stream.id}`;
     }
 
     async getChildren(): Promise<ExplorerNode[]> {
         this.subscribe();
 
-        const posts = await this.stream.posts.items;
-        return [...Iterables.map(posts, p => new PostNode(this.session, p))];
+        return [...await this.stream.posts.map(p => new PostNode(this.session, p))];
     }
 
-    getTreeItem(): TreeItem {
+    async getTreeItem(): Promise<TreeItem> {
         this.unsubscribe();
 
-        const item = new TreeItem(this.stream.path, TreeItemCollapsibleState.Collapsed);
-        item.contextValue = ResourceType.Stream;
+        const item = new TreeItem(await this.getLabel(), TreeItemCollapsibleState.Collapsed);
+        item.contextValue = this.getContextValue();
         item.command = {
             title: 'Open Stream',
             command: 'codestream.openStream',
@@ -40,12 +39,27 @@ export class StreamNode extends SubscribableExplorerNode {
         };
         return item;
     }
-
     protected subscribe() {
         this.subscriptions.push(this.stream.posts.onDidChange(this.onChanged, this));
     }
 
     private onChanged() {
         Container.explorer.refreshNode(this);
+    }
+
+    private getContextValue() {
+        switch (this.stream.type) {
+            case StreamType.Channel: return ResourceType.Channel;
+            case StreamType.Direct: return ResourceType.DirectMessage;
+            case StreamType.File: return ResourceType.FileStream;
+        }
+    }
+
+    private async getLabel() {
+        switch (this.stream.type) {
+            case StreamType.Channel: return this.stream.name;
+            case StreamType.Direct: return Iterables.join(Iterables.map(await this.stream.members, u => u.name), ', ');
+            case StreamType.File: return this.stream.path;
+        }
     }
 }

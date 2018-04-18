@@ -24,7 +24,10 @@ export class User extends CodeStreamItem<CSUser> {
 
 export class UserCollection extends CodeStreamCollection<User, CSUser> {
 
-    constructor(session: CodeStreamSession) {
+    constructor(
+        session: CodeStreamSession,
+        public readonly teamId: string
+    ) {
         super(session);
     }
 
@@ -40,7 +43,7 @@ export class UserCollection extends CodeStreamCollection<User, CSUser> {
         return this.session.api.getUsers();
     }
 
-    protected map(e: CSUser) {
+    protected fetchMapper(e: CSUser) {
         return new User(this.session, e);
     }
 }

@@ -1,7 +1,10 @@
 'use strict';
 import { Range, Uri } from 'vscode';
-import { CodeStreamCollection, CodeStreamItem  } from './collection';
-import { CodeStreamSession, PostsReceivedEvent, Repository, Stream, User } from '../session';
+import { CodeStreamCollection, CodeStreamItem } from './collection';
+import { CodeStreamSession, PostsReceivedEvent } from '../session';
+import { ChannelStream, DirectStream, FileStream, Stream, StreamType } from '../models/streams';
+import { Repository } from '../models/repositories';
+import { User } from '../models/users';
 import { CSPost } from '../types';
 import { memoize } from '../../system';
 
@@ -31,6 +34,7 @@ export class Post extends CodeStreamItem<CSPost> {
         return this.entity.codeBlocks !== undefined && this.entity.codeBlocks.length !== 0;
     }
 
+    @memoize
     get repo(): Promise<Repository | undefined> {
         return this.getRepo();
     }
@@ -44,8 +48,9 @@ export class Post extends CodeStreamItem<CSPost> {
         return this.entity.creatorId;
     }
 
+    @memoize
     get stream(): Promise<Stream>  {
-        return this.getStream(this.entity.streamId, this.entity.repoId);
+        return this.getStream(this.entity.streamId);
     }
 
     get teamId() {
@@ -65,7 +70,9 @@ export class Post extends CodeStreamItem<CSPost> {
         if (marker === undefined) throw new Error(`Unable to find code block for Post(${this.entity.id})`);
 
         // TODO: Assuming the marker has the same repoId as the post -- probably not a great assumption
-        const uri = await (await this.getStream(marker.streamId, this.entity.repoId)).absoluteUri;
+        const markerStream = await this.getStream(marker.streamId);
+        if (markerStream.type !== 'file') throw new Error(`Unable to find code block for Post(${this.entity.id})`);
+        const uri = await markerStream.absoluteUri;
 
         const locations = await this.session.api.getMarkerLocations(this.entity.commitHashWhenPosted!, this.entity.streamId);
         if (locations === undefined) throw new Error(`Unable to find code block for Post(${this.entity.id})`);
@@ -81,15 +88,30 @@ export class Post extends CodeStreamItem<CSPost> {
     }
 
     private async getRepo() {
-        return (await this.getStream(this.entity.streamId, this.entity.repoId)).repo;
+        const stream = await this.stream;
+        if (stream.type !== StreamType.File) return undefined;
+
+        return stream.repo;
     }
 
-    private async getStream(streamId: string, repoId: string): Promise<Stream> {
+    private async getStream(streamId: string): Promise<Stream> {
         if (this._stream === undefined) {
-            const stream = await this.session.api.getStream(streamId, repoId);
+            const stream = await this.session.api.getStream(streamId);
             if (stream === undefined) throw new Error(`Stream(${streamId}) could not be found`);
 
-            this._stream = new Stream(this.session, stream!);
+            switch (stream.type) {
+                case 'channel':
+                    this._stream = new ChannelStream(this.session, stream!);
+                    break;
+                case 'direct':
+                    this._stream = new DirectStream(this.session, stream!);
+                    break;
+                case 'file':
+                    this._stream = new FileStream(this.session, stream!);
+                    break;
+                default:
+                  throw new Error('Invalid stream type');
+            }
         }
         return this._stream;
     }
@@ -99,6 +121,7 @@ export class PostCollection extends CodeStreamCollection<Post, CSPost> {
 
     constructor(
         session: CodeStreamSession,
+        public readonly teamId: string,
         public readonly stream: Stream
     ) {
         super(session);
@@ -118,7 +141,7 @@ export class PostCollection extends CodeStreamCollection<Post, CSPost> {
         return this.session.api.getPosts(this.stream.id);
     }
 
-    protected map(e: CSPost) {
+    protected fetchMapper(e: CSPost) {
         return new Post(this.session, e, this.stream);
     }
 }

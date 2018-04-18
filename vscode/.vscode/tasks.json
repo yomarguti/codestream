@@ -2,6 +2,23 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "build",
+            "type": "npm",
+            "script": "build",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "panel": "dedicated",
+                "reveal": "always"
+            },
+            "problemMatcher": [
+                "$tsc",
+                "$tslint5"
+            ]
+        },
+        {
             "label": "compile",
             "type": "npm",
             "script": "compile",
@@ -11,7 +28,20 @@
                 "reveal": "always"
             },
             "problemMatcher": [
-                "$tsc"
+                "$tsc",
+            ]
+        },
+        {
+            "label": "lint",
+            "type": "npm",
+            "script": "lint",
+            "group": "build",
+            "presentation": {
+                "panel": "dedicated",
+                "reveal": "always"
+            },
+            "problemMatcher": [
+                "$tslint5"
             ]
         },
         {

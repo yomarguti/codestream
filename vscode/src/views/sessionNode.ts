@@ -1,6 +1,7 @@
 'use strict';
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { CodeStreamSession } from '../api/session';
+import { ChannelsNode } from './channelsNode';
 import { ExplorerNode, ResourceType } from './explorerNode';
 import { PeopleNode } from './peopleNode';
 import { RepositoriesNode } from './repositoriesNode';
@@ -15,6 +16,7 @@ export class SessionNode extends ExplorerNode {
 
     async getChildren(): Promise<ExplorerNode[]> {
         return [
+            new ChannelsNode(this.session),
             new RepositoriesNode(this.session),
             new PeopleNode(this.session)
         ];

@@ -124,12 +124,25 @@ export class Commands extends Disposable {
     }
 
     @command('openStream', { showErrorMessage: 'Unable to open stream' })
-    async openStream(stream?: Stream | StreamNode) {
-        if (stream instanceof StreamNode) {
-            stream = stream.stream;
+    async openStream(streamOrUriOrName?: Stream | StreamNode | Uri | string) {
+        if (typeof streamOrUriOrName === 'string') {
+            streamOrUriOrName = await Container.session.channels.getByName(streamOrUriOrName);
         }
-        if (stream === undefined) return;
-        return Container.streamWebView.openStream(stream);
+        else if (streamOrUriOrName instanceof StreamNode) {
+            streamOrUriOrName = streamOrUriOrName.stream;
+        }
+        else if (streamOrUriOrName instanceof Uri) {
+            const repo = await Container.session.repos.getByUri(streamOrUriOrName);
+            if (repo !== undefined) {
+                streamOrUriOrName = await repo.streams.getByUri(streamOrUriOrName);
+            }
+            else {
+                streamOrUriOrName = undefined;
+            }
+        }
+        if (streamOrUriOrName === undefined) return;
+
+        return Container.streamWebView.openStream(streamOrUriOrName);
     }
 
     @command('post', { showErrorMessage: 'Unable to post message' })

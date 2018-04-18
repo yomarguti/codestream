@@ -11,8 +11,6 @@ import * as path from 'path';
 
 export * from './models/models';
 
-const uncommittedRegex = /^[0]{40}(\^[0-9]*?)??:??$/;
-
 interface GitApi {
     getGitPath(): Promise<string>;
     getRepositories(): Promise<GitRepository[]>;
@@ -203,10 +201,6 @@ export class Git extends Disposable {
             return Git.api!.getGitPath().then(p => Git._path = p);
         }
         return Git._path;
-    }
-
-    static isUncommitted(sha: string) {
-        return uncommittedRegex.test(sha);
     }
 }
 

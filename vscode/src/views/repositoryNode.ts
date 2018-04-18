@@ -1,6 +1,5 @@
 'use strict';
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
-import { Iterables } from '../system';
 import { CodeStreamSession, Repository } from '../api/session';
 import { Container } from '../container';
 import { ExplorerNode, ResourceType, SubscribableExplorerNode } from './explorerNode';
@@ -22,8 +21,7 @@ export class RepositoryNode extends SubscribableExplorerNode {
     async getChildren(): Promise<ExplorerNode[]> {
         this.subscribe();
 
-        const streams = await this.repository.streams.items;
-        return [...Iterables.map(streams, s => new StreamNode(this.session, s))];
+        return [...await this.repository.streams.map(s => new StreamNode(this.session, s))];
     }
 
     async getTreeItem(): Promise<TreeItem> {

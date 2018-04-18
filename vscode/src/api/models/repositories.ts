@@ -4,7 +4,7 @@ import { CodeStreamCollection, CodeStreamItem } from './collection';
 import { Container } from '../../container';
 import { Markers } from './markers';
 import { CodeStreamSession, SessionChangedEvent, SessionChangedType } from '../session';
-import { StreamCollection } from './streams';
+import { FileStreamCollection } from './streams';
 import { CSRepository } from '../types';
 import * as path from 'path';
 import { Strings } from '../../system';
@@ -30,17 +30,13 @@ export class Repository extends CodeStreamItem<CSRepository> {
         return new Markers(this.session, markers);
     }
 
-    private _streams: StreamCollection | undefined;
+    private _streams: FileStreamCollection | undefined;
     get streams() {
         if (this._streams === undefined) {
-            this._streams = new StreamCollection(this.session, this);
+            this._streams = new FileStreamCollection(this.session, this.entity.teamId, this);
         }
         return this._streams;
     }
-
-    // get teamId() {
-    //     return this.entity.teamId;
-    // }
 
     get url() {
         return this.entity.normalizedUrl;
@@ -57,7 +53,10 @@ export class Repository extends CodeStreamItem<CSRepository> {
 
 export class RepositoryCollection extends CodeStreamCollection<Repository, CSRepository> {
 
-    constructor(session: CodeStreamSession) {
+    constructor(
+        session: CodeStreamSession,
+        public readonly teamId: string
+    ) {
         super(session);
 
         this.disposables.push(
@@ -93,7 +92,7 @@ export class RepositoryCollection extends CodeStreamCollection<Repository, CSRep
         for (const [uri, repo] of repos) {
             const folder = workspace.getWorkspaceFolder(uri);
 
-            item = this.map(repo, folder);
+            item = this.fetchMapper(repo, folder);
             items.push(item);
 
             this._reposByUri.set(uri, item);
@@ -143,7 +142,7 @@ export class RepositoryCollection extends CodeStreamCollection<Repository, CSRep
     //     return items;
     // }
 
-    protected map(e: CSRepository, folder?: WorkspaceFolder) {
+    protected fetchMapper(e: CSRepository, folder?: WorkspaceFolder) {
         return new Repository(this.session, e, folder);
     }
 }

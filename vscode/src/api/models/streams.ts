@@ -6,37 +6,26 @@ import { CodeStreamSession, SessionChangedEvent, SessionChangedType } from '../s
 import { Post, PostCollection } from './posts';
 import { Repository } from './repositories';
 import { Team } from './teams';
-import { CSStream } from '../types';
+import { User } from './users';
+import { CSChannelStream, CSDirectStream, CSFileStream, CSStream, StreamType } from '../types';
 
-export class Stream extends CodeStreamItem<CSStream> {
+export { StreamType } from '../types';
+
+abstract class StreamBase<T extends CSStream> extends CodeStreamItem<T> {
 
     constructor(
         session: CodeStreamSession,
-        stream: CSStream,
-        private _repo?: Repository
+        stream: T
     ) {
         super(session, stream);
-    }
-
-    get path() {
-        return this.entity.file;
     }
 
     private _posts: PostCollection | undefined;
     get posts() {
         if (this._posts === undefined) {
-            this._posts = new PostCollection(this.session, this);
+            this._posts = new PostCollection(this.session, this.entity.teamId, this as any);
         }
         return this._posts;
-    }
-
-    @memoize
-    get repo(): Promise<Repository | undefined> {
-        return this.getRepo();
-    }
-
-    get repoId() {
-        return this.entity.repoId;
     }
 
     @memoize
@@ -48,16 +37,6 @@ export class Stream extends CodeStreamItem<CSStream> {
         return this.entity.teamId;
     }
 
-    @memoize
-    get uri() {
-        return Uri.file(this.entity.file);
-    }
-
-    @memoize
-    get absoluteUri() {
-        return this.getAbsoluteUri();
-    }
-
     async post(text: string) {
         const post = await this.session.api.createPost(text, this.entity.id, this.entity.teamId);
         if (post === undefined) throw new Error(`Unable to post to Stream(${this.entity.id})`);
@@ -65,29 +44,13 @@ export class Stream extends CodeStreamItem<CSStream> {
         return new Post(this.session, post);
     }
 
-    async postCode(text: string, code: string, range: Range, commitHash: string) {
+    async postCode(text: string, code: string, range: Range, commitHash: string, markerStream?: FileStream) {
+        // TODO: Needs to be fixed to post to a stream, but associate the marker with a file
+
         const post = await this.session.api.createPostWithCode(text, code, range, commitHash, this.entity.id, this.entity.teamId);
         if (post === undefined) throw new Error(`Unable to post code to Stream(${this.entity.id})`);
 
         return new Post(this.session, post);
-    }
-
-    private async getAbsoluteUri() {
-        const repo = await this.repo;
-        if (repo === undefined) return undefined;
-
-        return repo.normalizeUri(this.uri);
-    }
-
-    private async getRepo() {
-        if (this._repo === undefined && this.entity.repoId !== undefined) {
-            const repo = await this.session.repos.get(this.entity.repoId);
-            if (repo === undefined) throw new Error(`Repository(${this.entity.repoId}) could not be found`);
-
-            this._repo = repo;
-        }
-
-        return this._repo;
     }
 
     private async getTeam() {
@@ -98,11 +61,123 @@ export class Stream extends CodeStreamItem<CSStream> {
     }
 }
 
-export class StreamCollection extends CodeStreamCollection<Stream, CSStream> {
+export class ChannelStream extends StreamBase<CSChannelStream> {
+
+    readonly type = StreamType.Channel;
 
     constructor(
         session: CodeStreamSession,
-        public readonly repo?: Repository
+        stream: CSChannelStream
+    ) {
+        super(session, stream);
+    }
+
+    get name() {
+        return this.entity.name;
+    }
+
+    get members(): Promise<Iterable<User> | undefined> {
+        return this.getMembers();
+    }
+
+    private async getMembers(): Promise<Iterable<User> | undefined> {
+        if (this.entity.memberIds === undefined) return undefined;
+
+        return await this.session.users.filter(u => this.entity.memberIds!.includes(u.id));
+    }
+}
+
+export class DirectStream extends StreamBase<CSDirectStream> {
+
+    readonly type = StreamType.Direct;
+
+    constructor(
+        session: CodeStreamSession,
+        stream: CSDirectStream
+    ) {
+        super(session, stream);
+    }
+
+    get name() {
+        return this.entity.name;
+    }
+
+    get members(): Promise<Iterable<User>> {
+        return this.getMembers(true);
+    }
+
+    private async getMembers(excludeSelf: boolean = true): Promise<Iterable<User>> {
+        return await this.session.users.filter(u => this.entity.memberIds.includes(u.id) && (!excludeSelf || u.id !== this.session.userId));
+    }
+}
+
+export class FileStream extends StreamBase<CSFileStream> {
+
+    readonly type = StreamType.File;
+
+    constructor(
+        session: CodeStreamSession,
+        stream: CSFileStream,
+        private _repo?: Repository
+    ) {
+        super(session, stream);
+    }
+
+    @memoize
+    get absoluteUri() {
+        return this.getAbsoluteUri();
+    }
+
+    get path() {
+        return this.entity.file;
+    }
+
+    @memoize
+    get repo(): Promise<Repository> {
+        return this.getRepo();
+    }
+
+    get repoId() {
+        return this.entity.repoId;
+    }
+
+    // @memoize
+    // get uri() {
+    //     const uri = Uri.parse(this.entity.file);
+    //     if (uri.scheme) return uri;
+
+    //     return Uri.file(this.entity.file);
+    // }
+
+    private async getAbsoluteUri() {
+        const repo = await this.repo;
+        if (repo === undefined) return undefined;
+
+        const uri = Uri.parse(this.path);
+        if (uri.scheme) return uri;
+
+        return repo.normalizeUri(Uri.file(this.path));
+    }
+
+    private async getRepo() {
+        if (this._repo === undefined) {
+            const repo = await this.session.repos.get(this.entity.repoId);
+            if (repo === undefined) throw new Error(`Repository(${this.entity.repoId}) could not be found`);
+
+            this._repo = repo;
+        }
+
+        return this._repo;
+    }
+}
+
+export type Stream = ChannelStream | DirectStream | FileStream;
+
+abstract class StreamCollectionBase<TItem extends StreamBase<TEnitity>, TEnitity extends CSStream> extends CodeStreamCollection<TItem, TEnitity> {
+
+    constructor(
+        session: CodeStreamSession,
+        public readonly teamId: string
     ) {
         super(session);
 
@@ -111,31 +186,130 @@ export class StreamCollection extends CodeStreamCollection<Stream, CSStream> {
         );
     }
 
-    private onSessionChanged(e: SessionChangedEvent) {
+    protected onSessionChanged(e: SessionChangedEvent) {
         if (e.type !== SessionChangedType.Streams) return;
 
-        if (this.repo === undefined || e.affects(this.repo.id)) {
+        if (e.affects(this.teamId, 'team')) {
+            this.invalidate();
+        }
+    }
+}
+
+export class ChannelStreamCollection extends StreamCollectionBase<ChannelStream, CSChannelStream> {
+
+    constructor(
+        session: CodeStreamSession,
+        teamId: string
+    ) {
+        super(session, teamId);
+    }
+
+    async getByName(name: string): Promise<ChannelStream | undefined> {
+        return Iterables.find(await this.items, s => s.name === name);
+    }
+
+    async getOrCreateByName(name: string, creationOptions: { membership?: 'auto' | string[] } = {}): Promise<ChannelStream> {
+        const stream = Iterables.find(await this.items, s => s.name === name);
+        if (stream !== undefined) return stream;
+
+        const s = await this.session.api.createChannelStream(name, creationOptions.membership, this.teamId);
+        if (s === undefined) throw new Error(`Unable to create stream`);
+
+        return new ChannelStream(this.session, s);
+    }
+
+    protected async fetch() {
+        return this.session.api.getChannelStreams();
+    }
+
+    protected fetchMapper(e: CSChannelStream) {
+        return new ChannelStream(this.session, e);
+    }
+}
+
+export class DirectStreamCollection extends StreamCollectionBase<DirectStream, CSDirectStream> {
+
+    constructor(
+        session: CodeStreamSession,
+        teamId: string
+    ) {
+        super(session, teamId);
+    }
+
+    async getByName(name: string): Promise<DirectStream | undefined> {
+        return Iterables.find(await this.items, s => s.name === name);
+    }
+
+    async getOrCreateByName(name: string, creationOptions: { membership: string[] }): Promise<DirectStream> {
+        const stream = Iterables.find(await this.items, s => s.name === name);
+        if (stream !== undefined) return stream;
+
+        const s = await this.session.api.createDirectStream(name, creationOptions.membership, this.teamId);
+        if (s === undefined) throw new Error(`Unable to create stream`);
+
+        return new DirectStream(this.session, s);
+    }
+
+    protected async fetch() {
+        return this.session.api.geDirectStreams();
+    }
+
+    protected fetchMapper(e: CSDirectStream) {
+        return new DirectStream(this.session, e);
+    }
+}
+
+export class FileStreamCollection extends StreamCollectionBase<FileStream, CSFileStream> {
+
+    constructor(
+        session: CodeStreamSession,
+        teamId: string,
+        public readonly repo: Repository
+    ) {
+        super(session, teamId);
+    }
+
+    protected onSessionChanged(e: SessionChangedEvent) {
+        if (e.type !== SessionChangedType.Streams) return;
+
+        if (e.affects(this.teamId, 'team') && e.affects(this.repo.id)) {
             this.invalidate();
         }
     }
 
-    async getByUri(uri: Uri): Promise<Stream | undefined> {
-        if (this.repo === undefined) throw new Error(`File streams only exist at the repository level`);
+    async getByUri(uri: Uri): Promise<FileStream | undefined> {
+        if (uri.scheme !== 'file') throw new Error(`Uri must be a file`);
 
-        const path = this.repo.relativizeUri(uri).fsPath;
+        let path = this.repo.relativizeUri(uri).fsPath;
+        if (path[0] === '/') {
+            path = path.substr(1);
+        }
+
         return Iterables.find(await this.items, s => s.path === path);
     }
 
+    async getOrCreateByUri(uri: Uri): Promise<FileStream> {
+        if (uri.scheme !== 'file') throw new Error(`Uri must be a file`);
+
+        let path = this.repo.relativizeUri(uri).fsPath;
+        if (path[0] === '/') {
+            path = path.substr(1);
+        }
+
+        const stream = Iterables.find(await this.items, s => s.path === path);
+        if (stream !== undefined) return stream;
+
+        const s = await this.session.api.createFileStream(uri, this.repo.id);
+        if (s === undefined) throw new Error(`Unable to create stream`);
+
+        return new FileStream(this.session, s, this.repo);
+    }
+
     protected async fetch() {
-        if (this.repo !== undefined) return this.session.api.getStreams(this.repo.id);
+        return this.session.api.getFileStreams(this.repo.id);
+    }
 
-        // HACK: If we have no repo "parent" then pretend we are "team-level", but for now hack it as the first repo
-        const repos = await this.session.repos.items;
-        const repo = Iterables.first(repos);
-        return [...await repo.streams.items];
-}
-
-    protected map(e: CSStream) {
-        return new Stream(this.session, e, this.repo);
+    protected fetchMapper(e: CSFileStream) {
+        return new FileStream(this.session, e, this.repo);
     }
 }
