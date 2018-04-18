@@ -44030,32 +44030,23 @@ var Headshot = function (_Component) {
 	inherits$1(Headshot, _Component);
 
 	function Headshot() {
-		var _ref;
-
-		var _temp, _this, _ret;
-
 		classCallCheck$1(this, Headshot);
-
-		for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-			args[_key] = arguments[_key];
-		}
-
-		return _ret = (_temp = (_this = possibleConstructorReturn$1(this, (_ref = Headshot.__proto__ || Object.getPrototypeOf(Headshot)).call.apply(_ref, [this].concat(args))), _this), Object.defineProperty(_this, "subscriptions", {
-			enumerable: true,
-			writable: true,
-			value: new atom$1.CompositeDisposable()
-		}), _temp), possibleConstructorReturn$1(_this, _ret);
+		return possibleConstructorReturn$1(this, (Headshot.__proto__ || Object.getPrototypeOf(Headshot)).apply(this, arguments));
 	}
 
 	createClass$1(Headshot, [{
 		key: "componentDidMount",
 		value: function componentDidMount() {
+			var platform = this.context.platform;
+
+			this.subscriptions = platform.createCompositeDisposable();
+
 			var image = this._div.querySelector("img");
-			if (image) {
+			if (image && platform.tooltips) {
 				if (this.props.mine) {
-					this.subscriptions.add(atom.tooltips.add(image, { title: "Right click to change your headshot" }));
+					this.subscriptions.add(platform.tooltips.add(image, { title: "Right click to change your headshot" }));
 				} else if (this.props.person.fullName) {
-					this.subscriptions.add(atom.tooltips.add(image, { title: this.props.person.fullName }));
+					this.subscriptions.add(platform.tooltips.add(image, { title: this.props.person.fullName }));
 				}
 			}
 		}
@@ -44083,8 +44074,8 @@ var Headshot = function (_Component) {
 
 			return react.createElement(
 				"div",
-				{ className: "headshot", ref: function ref(_ref2) {
-						return _this2._div = _ref2;
+				{ className: "headshot", ref: function ref(_ref) {
+						return _this2._div = _ref;
 					} },
 				react.createElement(Gravatar, {
 					className: "headshot-gravatar",
@@ -44104,7 +44095,4510 @@ var Headshot = function (_Component) {
 	return Headshot;
 }(react_1);
 
-var moment = require("moment");
+Object.defineProperty(Headshot, "contextTypes", {
+	enumerable: true,
+	writable: true,
+	value: {
+		platform: propTypes.object
+	}
+});
+
+var hookCallback;
+
+function hooks () {
+    return hookCallback.apply(null, arguments);
+}
+
+// This is done to register the method called with moment()
+// without creating circular dependencies.
+function setHookCallback (callback) {
+    hookCallback = callback;
+}
+
+function isArray$4(input) {
+    return input instanceof Array || Object.prototype.toString.call(input) === '[object Array]';
+}
+
+function isObject$3(input) {
+    // IE8 will treat undefined and null as object if it wasn't for
+    // input != null
+    return input != null && Object.prototype.toString.call(input) === '[object Object]';
+}
+
+function isObjectEmpty(obj) {
+    if (Object.getOwnPropertyNames) {
+        return (Object.getOwnPropertyNames(obj).length === 0);
+    } else {
+        var k;
+        for (k in obj) {
+            if (obj.hasOwnProperty(k)) {
+                return false;
+            }
+        }
+        return true;
+    }
+}
+
+function isUndefined$2(input) {
+    return input === void 0;
+}
+
+function isNumber(input) {
+    return typeof input === 'number' || Object.prototype.toString.call(input) === '[object Number]';
+}
+
+function isDate(input) {
+    return input instanceof Date || Object.prototype.toString.call(input) === '[object Date]';
+}
+
+function map(arr, fn) {
+    var res = [], i;
+    for (i = 0; i < arr.length; ++i) {
+        res.push(fn(arr[i], i));
+    }
+    return res;
+}
+
+function hasOwnProp(a, b) {
+    return Object.prototype.hasOwnProperty.call(a, b);
+}
+
+function extend$1(a, b) {
+    for (var i in b) {
+        if (hasOwnProp(b, i)) {
+            a[i] = b[i];
+        }
+    }
+
+    if (hasOwnProp(b, 'toString')) {
+        a.toString = b.toString;
+    }
+
+    if (hasOwnProp(b, 'valueOf')) {
+        a.valueOf = b.valueOf;
+    }
+
+    return a;
+}
+
+function createUTC (input, format, locale, strict) {
+    return createLocalOrUTC(input, format, locale, strict, true).utc();
+}
+
+function defaultParsingFlags() {
+    // We need to deep clone this object.
+    return {
+        empty           : false,
+        unusedTokens    : [],
+        unusedInput     : [],
+        overflow        : -2,
+        charsLeftOver   : 0,
+        nullInput       : false,
+        invalidMonth    : null,
+        invalidFormat   : false,
+        userInvalidated : false,
+        iso             : false,
+        parsedDateParts : [],
+        meridiem        : null,
+        rfc2822         : false,
+        weekdayMismatch : false
+    };
+}
+
+function getParsingFlags(m) {
+    if (m._pf == null) {
+        m._pf = defaultParsingFlags();
+    }
+    return m._pf;
+}
+
+var some;
+if (Array.prototype.some) {
+    some = Array.prototype.some;
+} else {
+    some = function (fun) {
+        var t = Object(this);
+        var len = t.length >>> 0;
+
+        for (var i = 0; i < len; i++) {
+            if (i in t && fun.call(this, t[i], i, t)) {
+                return true;
+            }
+        }
+
+        return false;
+    };
+}
+
+function isValid(m) {
+    if (m._isValid == null) {
+        var flags = getParsingFlags(m);
+        var parsedParts = some.call(flags.parsedDateParts, function (i) {
+            return i != null;
+        });
+        var isNowValid = !isNaN(m._d.getTime()) &&
+            flags.overflow < 0 &&
+            !flags.empty &&
+            !flags.invalidMonth &&
+            !flags.invalidWeekday &&
+            !flags.weekdayMismatch &&
+            !flags.nullInput &&
+            !flags.invalidFormat &&
+            !flags.userInvalidated &&
+            (!flags.meridiem || (flags.meridiem && parsedParts));
+
+        if (m._strict) {
+            isNowValid = isNowValid &&
+                flags.charsLeftOver === 0 &&
+                flags.unusedTokens.length === 0 &&
+                flags.bigHour === undefined;
+        }
+
+        if (Object.isFrozen == null || !Object.isFrozen(m)) {
+            m._isValid = isNowValid;
+        }
+        else {
+            return isNowValid;
+        }
+    }
+    return m._isValid;
+}
+
+function createInvalid (flags) {
+    var m = createUTC(NaN);
+    if (flags != null) {
+        extend$1(getParsingFlags(m), flags);
+    }
+    else {
+        getParsingFlags(m).userInvalidated = true;
+    }
+
+    return m;
+}
+
+// Plugins that add properties should also add the key here (null value),
+// so we can properly clone ourselves.
+var momentProperties = hooks.momentProperties = [];
+
+function copyConfig(to, from) {
+    var i, prop, val;
+
+    if (!isUndefined$2(from._isAMomentObject)) {
+        to._isAMomentObject = from._isAMomentObject;
+    }
+    if (!isUndefined$2(from._i)) {
+        to._i = from._i;
+    }
+    if (!isUndefined$2(from._f)) {
+        to._f = from._f;
+    }
+    if (!isUndefined$2(from._l)) {
+        to._l = from._l;
+    }
+    if (!isUndefined$2(from._strict)) {
+        to._strict = from._strict;
+    }
+    if (!isUndefined$2(from._tzm)) {
+        to._tzm = from._tzm;
+    }
+    if (!isUndefined$2(from._isUTC)) {
+        to._isUTC = from._isUTC;
+    }
+    if (!isUndefined$2(from._offset)) {
+        to._offset = from._offset;
+    }
+    if (!isUndefined$2(from._pf)) {
+        to._pf = getParsingFlags(from);
+    }
+    if (!isUndefined$2(from._locale)) {
+        to._locale = from._locale;
+    }
+
+    if (momentProperties.length > 0) {
+        for (i = 0; i < momentProperties.length; i++) {
+            prop = momentProperties[i];
+            val = from[prop];
+            if (!isUndefined$2(val)) {
+                to[prop] = val;
+            }
+        }
+    }
+
+    return to;
+}
+
+var updateInProgress = false;
+
+// Moment prototype object
+function Moment(config) {
+    copyConfig(this, config);
+    this._d = new Date(config._d != null ? config._d.getTime() : NaN);
+    if (!this.isValid()) {
+        this._d = new Date(NaN);
+    }
+    // Prevent infinite loop in case updateOffset creates new moment
+    // objects.
+    if (updateInProgress === false) {
+        updateInProgress = true;
+        hooks.updateOffset(this);
+        updateInProgress = false;
+    }
+}
+
+function isMoment (obj) {
+    return obj instanceof Moment || (obj != null && obj._isAMomentObject != null);
+}
+
+function absFloor (number) {
+    if (number < 0) {
+        // -0 -> 0
+        return Math.ceil(number) || 0;
+    } else {
+        return Math.floor(number);
+    }
+}
+
+function toInt(argumentForCoercion) {
+    var coercedNumber = +argumentForCoercion,
+        value = 0;
+
+    if (coercedNumber !== 0 && isFinite(coercedNumber)) {
+        value = absFloor(coercedNumber);
+    }
+
+    return value;
+}
+
+// compare two arrays, return the number of differences
+function compareArrays(array1, array2, dontConvert) {
+    var len = Math.min(array1.length, array2.length),
+        lengthDiff = Math.abs(array1.length - array2.length),
+        diffs = 0,
+        i;
+    for (i = 0; i < len; i++) {
+        if ((dontConvert && array1[i] !== array2[i]) ||
+            (!dontConvert && toInt(array1[i]) !== toInt(array2[i]))) {
+            diffs++;
+        }
+    }
+    return diffs + lengthDiff;
+}
+
+function warn(msg) {
+    if (hooks.suppressDeprecationWarnings === false &&
+            (typeof console !==  'undefined') && console.warn) {
+        console.warn('Deprecation warning: ' + msg);
+    }
+}
+
+function deprecate(msg, fn) {
+    var firstTime = true;
+
+    return extend$1(function () {
+        if (hooks.deprecationHandler != null) {
+            hooks.deprecationHandler(null, msg);
+        }
+        if (firstTime) {
+            var args = [];
+            var arg;
+            for (var i = 0; i < arguments.length; i++) {
+                arg = '';
+                if (typeof arguments[i] === 'object') {
+                    arg += '\n[' + i + '] ';
+                    for (var key in arguments[0]) {
+                        arg += key + ': ' + arguments[0][key] + ', ';
+                    }
+                    arg = arg.slice(0, -2); // Remove trailing comma and space
+                } else {
+                    arg = arguments[i];
+                }
+                args.push(arg);
+            }
+            warn(msg + '\nArguments: ' + Array.prototype.slice.call(args).join('') + '\n' + (new Error()).stack);
+            firstTime = false;
+        }
+        return fn.apply(this, arguments);
+    }, fn);
+}
+
+var deprecations = {};
+
+function deprecateSimple(name, msg) {
+    if (hooks.deprecationHandler != null) {
+        hooks.deprecationHandler(name, msg);
+    }
+    if (!deprecations[name]) {
+        warn(msg);
+        deprecations[name] = true;
+    }
+}
+
+hooks.suppressDeprecationWarnings = false;
+hooks.deprecationHandler = null;
+
+function isFunction$2(input) {
+    return input instanceof Function || Object.prototype.toString.call(input) === '[object Function]';
+}
+
+function set$2 (config) {
+    var prop, i;
+    for (i in config) {
+        prop = config[i];
+        if (isFunction$2(prop)) {
+            this[i] = prop;
+        } else {
+            this['_' + i] = prop;
+        }
+    }
+    this._config = config;
+    // Lenient ordinal parsing accepts just a number in addition to
+    // number + (possibly) stuff coming from _dayOfMonthOrdinalParse.
+    // TODO: Remove "ordinalParse" fallback in next major release.
+    this._dayOfMonthOrdinalParseLenient = new RegExp(
+        (this._dayOfMonthOrdinalParse.source || this._ordinalParse.source) +
+            '|' + (/\d{1,2}/).source);
+}
+
+function mergeConfigs(parentConfig, childConfig) {
+    var res = extend$1({}, parentConfig), prop;
+    for (prop in childConfig) {
+        if (hasOwnProp(childConfig, prop)) {
+            if (isObject$3(parentConfig[prop]) && isObject$3(childConfig[prop])) {
+                res[prop] = {};
+                extend$1(res[prop], parentConfig[prop]);
+                extend$1(res[prop], childConfig[prop]);
+            } else if (childConfig[prop] != null) {
+                res[prop] = childConfig[prop];
+            } else {
+                delete res[prop];
+            }
+        }
+    }
+    for (prop in parentConfig) {
+        if (hasOwnProp(parentConfig, prop) &&
+                !hasOwnProp(childConfig, prop) &&
+                isObject$3(parentConfig[prop])) {
+            // make sure changes to properties don't modify parent config
+            res[prop] = extend$1({}, res[prop]);
+        }
+    }
+    return res;
+}
+
+function Locale(config) {
+    if (config != null) {
+        this.set(config);
+    }
+}
+
+var keys$2;
+
+if (Object.keys) {
+    keys$2 = Object.keys;
+} else {
+    keys$2 = function (obj) {
+        var i, res = [];
+        for (i in obj) {
+            if (hasOwnProp(obj, i)) {
+                res.push(i);
+            }
+        }
+        return res;
+    };
+}
+
+var defaultCalendar = {
+    sameDay : '[Today at] LT',
+    nextDay : '[Tomorrow at] LT',
+    nextWeek : 'dddd [at] LT',
+    lastDay : '[Yesterday at] LT',
+    lastWeek : '[Last] dddd [at] LT',
+    sameElse : 'L'
+};
+
+function calendar (key, mom, now) {
+    var output = this._calendar[key] || this._calendar['sameElse'];
+    return isFunction$2(output) ? output.call(mom, now) : output;
+}
+
+var defaultLongDateFormat = {
+    LTS  : 'h:mm:ss A',
+    LT   : 'h:mm A',
+    L    : 'MM/DD/YYYY',
+    LL   : 'MMMM D, YYYY',
+    LLL  : 'MMMM D, YYYY h:mm A',
+    LLLL : 'dddd, MMMM D, YYYY h:mm A'
+};
+
+function longDateFormat (key) {
+    var format = this._longDateFormat[key],
+        formatUpper = this._longDateFormat[key.toUpperCase()];
+
+    if (format || !formatUpper) {
+        return format;
+    }
+
+    this._longDateFormat[key] = formatUpper.replace(/MMMM|MM|DD|dddd/g, function (val) {
+        return val.slice(1);
+    });
+
+    return this._longDateFormat[key];
+}
+
+var defaultInvalidDate = 'Invalid date';
+
+function invalidDate () {
+    return this._invalidDate;
+}
+
+var defaultOrdinal = '%d';
+var defaultDayOfMonthOrdinalParse = /\d{1,2}/;
+
+function ordinal (number) {
+    return this._ordinal.replace('%d', number);
+}
+
+var defaultRelativeTime = {
+    future : 'in %s',
+    past   : '%s ago',
+    s  : 'a few seconds',
+    ss : '%d seconds',
+    m  : 'a minute',
+    mm : '%d minutes',
+    h  : 'an hour',
+    hh : '%d hours',
+    d  : 'a day',
+    dd : '%d days',
+    M  : 'a month',
+    MM : '%d months',
+    y  : 'a year',
+    yy : '%d years'
+};
+
+function relativeTime (number, withoutSuffix, string, isFuture) {
+    var output = this._relativeTime[string];
+    return (isFunction$2(output)) ?
+        output(number, withoutSuffix, string, isFuture) :
+        output.replace(/%d/i, number);
+}
+
+function pastFuture (diff, output) {
+    var format = this._relativeTime[diff > 0 ? 'future' : 'past'];
+    return isFunction$2(format) ? format(output) : format.replace(/%s/i, output);
+}
+
+var aliases = {};
+
+function addUnitAlias (unit, shorthand) {
+    var lowerCase = unit.toLowerCase();
+    aliases[lowerCase] = aliases[lowerCase + 's'] = aliases[shorthand] = unit;
+}
+
+function normalizeUnits(units) {
+    return typeof units === 'string' ? aliases[units] || aliases[units.toLowerCase()] : undefined;
+}
+
+function normalizeObjectUnits(inputObject) {
+    var normalizedInput = {},
+        normalizedProp,
+        prop;
+
+    for (prop in inputObject) {
+        if (hasOwnProp(inputObject, prop)) {
+            normalizedProp = normalizeUnits(prop);
+            if (normalizedProp) {
+                normalizedInput[normalizedProp] = inputObject[prop];
+            }
+        }
+    }
+
+    return normalizedInput;
+}
+
+var priorities = {};
+
+function addUnitPriority(unit, priority) {
+    priorities[unit] = priority;
+}
+
+function getPrioritizedUnits(unitsObj) {
+    var units = [];
+    for (var u in unitsObj) {
+        units.push({unit: u, priority: priorities[u]});
+    }
+    units.sort(function (a, b) {
+        return a.priority - b.priority;
+    });
+    return units;
+}
+
+function zeroFill(number, targetLength, forceSign) {
+    var absNumber = '' + Math.abs(number),
+        zerosToFill = targetLength - absNumber.length,
+        sign = number >= 0;
+    return (sign ? (forceSign ? '+' : '') : '-') +
+        Math.pow(10, Math.max(0, zerosToFill)).toString().substr(1) + absNumber;
+}
+
+var formattingTokens = /(\[[^\[]*\])|(\\)?([Hh]mm(ss)?|Mo|MM?M?M?|Do|DDDo|DD?D?D?|ddd?d?|do?|w[o|w]?|W[o|W]?|Qo?|YYYYYY|YYYYY|YYYY|YY|gg(ggg?)?|GG(GGG?)?|e|E|a|A|hh?|HH?|kk?|mm?|ss?|S{1,9}|x|X|zz?|ZZ?|.)/g;
+
+var localFormattingTokens = /(\[[^\[]*\])|(\\)?(LTS|LT|LL?L?L?|l{1,4})/g;
+
+var formatFunctions = {};
+
+var formatTokenFunctions = {};
+
+// token:    'M'
+// padded:   ['MM', 2]
+// ordinal:  'Mo'
+// callback: function () { this.month() + 1 }
+function addFormatToken (token, padded, ordinal, callback) {
+    var func = callback;
+    if (typeof callback === 'string') {
+        func = function () {
+            return this[callback]();
+        };
+    }
+    if (token) {
+        formatTokenFunctions[token] = func;
+    }
+    if (padded) {
+        formatTokenFunctions[padded[0]] = function () {
+            return zeroFill(func.apply(this, arguments), padded[1], padded[2]);
+        };
+    }
+    if (ordinal) {
+        formatTokenFunctions[ordinal] = function () {
+            return this.localeData().ordinal(func.apply(this, arguments), token);
+        };
+    }
+}
+
+function removeFormattingTokens(input) {
+    if (input.match(/\[[\s\S]/)) {
+        return input.replace(/^\[|\]$/g, '');
+    }
+    return input.replace(/\\/g, '');
+}
+
+function makeFormatFunction(format) {
+    var array = format.match(formattingTokens), i, length;
+
+    for (i = 0, length = array.length; i < length; i++) {
+        if (formatTokenFunctions[array[i]]) {
+            array[i] = formatTokenFunctions[array[i]];
+        } else {
+            array[i] = removeFormattingTokens(array[i]);
+        }
+    }
+
+    return function (mom) {
+        var output = '', i;
+        for (i = 0; i < length; i++) {
+            output += isFunction$2(array[i]) ? array[i].call(mom, format) : array[i];
+        }
+        return output;
+    };
+}
+
+// format date using native date object
+function formatMoment(m, format) {
+    if (!m.isValid()) {
+        return m.localeData().invalidDate();
+    }
+
+    format = expandFormat(format, m.localeData());
+    formatFunctions[format] = formatFunctions[format] || makeFormatFunction(format);
+
+    return formatFunctions[format](m);
+}
+
+function expandFormat(format, locale) {
+    var i = 5;
+
+    function replaceLongDateFormatTokens(input) {
+        return locale.longDateFormat(input) || input;
+    }
+
+    localFormattingTokens.lastIndex = 0;
+    while (i >= 0 && localFormattingTokens.test(format)) {
+        format = format.replace(localFormattingTokens, replaceLongDateFormatTokens);
+        localFormattingTokens.lastIndex = 0;
+        i -= 1;
+    }
+
+    return format;
+}
+
+var match1         = /\d/;            //       0 - 9
+var match2         = /\d\d/;          //      00 - 99
+var match3         = /\d{3}/;         //     000 - 999
+var match4         = /\d{4}/;         //    0000 - 9999
+var match6         = /[+-]?\d{6}/;    // -999999 - 999999
+var match1to2      = /\d\d?/;         //       0 - 99
+var match3to4      = /\d\d\d\d?/;     //     999 - 9999
+var match5to6      = /\d\d\d\d\d\d?/; //   99999 - 999999
+var match1to3      = /\d{1,3}/;       //       0 - 999
+var match1to4      = /\d{1,4}/;       //       0 - 9999
+var match1to6      = /[+-]?\d{1,6}/;  // -999999 - 999999
+
+var matchUnsigned  = /\d+/;           //       0 - inf
+var matchSigned    = /[+-]?\d+/;      //    -inf - inf
+
+var matchOffset    = /Z|[+-]\d\d:?\d\d/gi; // +00:00 -00:00 +0000 -0000 or Z
+var matchShortOffset = /Z|[+-]\d\d(?::?\d\d)?/gi; // +00 -00 +00:00 -00:00 +0000 -0000 or Z
+
+var matchTimestamp = /[+-]?\d+(\.\d{1,3})?/; // 123456789 123456789.123
+
+// any word (or two) characters or numbers including two/three word month in arabic.
+// includes scottish gaelic two word and hyphenated months
+var matchWord = /[0-9]{0,256}['a-z\u00A0-\u05FF\u0700-\uD7FF\uF900-\uFDCF\uFDF0-\uFF07\uFF10-\uFFEF]{1,256}|[\u0600-\u06FF\/]{1,256}(\s*?[\u0600-\u06FF]{1,256}){1,2}/i;
+
+var regexes = {};
+
+function addRegexToken (token, regex, strictRegex) {
+    regexes[token] = isFunction$2(regex) ? regex : function (isStrict, localeData) {
+        return (isStrict && strictRegex) ? strictRegex : regex;
+    };
+}
+
+function getParseRegexForToken (token, config) {
+    if (!hasOwnProp(regexes, token)) {
+        return new RegExp(unescapeFormat(token));
+    }
+
+    return regexes[token](config._strict, config._locale);
+}
+
+// Code from http://stackoverflow.com/questions/3561493/is-there-a-regexp-escape-function-in-javascript
+function unescapeFormat(s) {
+    return regexEscape(s.replace('\\', '').replace(/\\(\[)|\\(\])|\[([^\]\[]*)\]|\\(.)/g, function (matched, p1, p2, p3, p4) {
+        return p1 || p2 || p3 || p4;
+    }));
+}
+
+function regexEscape(s) {
+    return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+}
+
+var tokens = {};
+
+function addParseToken (token, callback) {
+    var i, func = callback;
+    if (typeof token === 'string') {
+        token = [token];
+    }
+    if (isNumber(callback)) {
+        func = function (input, array) {
+            array[callback] = toInt(input);
+        };
+    }
+    for (i = 0; i < token.length; i++) {
+        tokens[token[i]] = func;
+    }
+}
+
+function addWeekParseToken (token, callback) {
+    addParseToken(token, function (input, array, config, token) {
+        config._w = config._w || {};
+        callback(input, config._w, config, token);
+    });
+}
+
+function addTimeToArrayFromToken(token, input, config) {
+    if (input != null && hasOwnProp(tokens, token)) {
+        tokens[token](input, config._a, config, token);
+    }
+}
+
+var YEAR = 0;
+var MONTH = 1;
+var DATE = 2;
+var HOUR$1 = 3;
+var MINUTE$1 = 4;
+var SECOND$1 = 5;
+var MILLISECOND = 6;
+var WEEK = 7;
+var WEEKDAY = 8;
+
+// FORMATTING
+
+addFormatToken('Y', 0, 0, function () {
+    var y = this.year();
+    return y <= 9999 ? '' + y : '+' + y;
+});
+
+addFormatToken(0, ['YY', 2], 0, function () {
+    return this.year() % 100;
+});
+
+addFormatToken(0, ['YYYY',   4],       0, 'year');
+addFormatToken(0, ['YYYYY',  5],       0, 'year');
+addFormatToken(0, ['YYYYYY', 6, true], 0, 'year');
+
+// ALIASES
+
+addUnitAlias('year', 'y');
+
+// PRIORITIES
+
+addUnitPriority('year', 1);
+
+// PARSING
+
+addRegexToken('Y',      matchSigned);
+addRegexToken('YY',     match1to2, match2);
+addRegexToken('YYYY',   match1to4, match4);
+addRegexToken('YYYYY',  match1to6, match6);
+addRegexToken('YYYYYY', match1to6, match6);
+
+addParseToken(['YYYYY', 'YYYYYY'], YEAR);
+addParseToken('YYYY', function (input, array) {
+    array[YEAR] = input.length === 2 ? hooks.parseTwoDigitYear(input) : toInt(input);
+});
+addParseToken('YY', function (input, array) {
+    array[YEAR] = hooks.parseTwoDigitYear(input);
+});
+addParseToken('Y', function (input, array) {
+    array[YEAR] = parseInt(input, 10);
+});
+
+// HELPERS
+
+function daysInYear(year) {
+    return isLeapYear(year) ? 366 : 365;
+}
+
+function isLeapYear(year) {
+    return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+}
+
+// HOOKS
+
+hooks.parseTwoDigitYear = function (input) {
+    return toInt(input) + (toInt(input) > 68 ? 1900 : 2000);
+};
+
+// MOMENTS
+
+var getSetYear = makeGetSet('FullYear', true);
+
+function getIsLeapYear () {
+    return isLeapYear(this.year());
+}
+
+function makeGetSet (unit, keepTime) {
+    return function (value) {
+        if (value != null) {
+            set$3(this, unit, value);
+            hooks.updateOffset(this, keepTime);
+            return this;
+        } else {
+            return get$2(this, unit);
+        }
+    };
+}
+
+function get$2 (mom, unit) {
+    return mom.isValid() ?
+        mom._d['get' + (mom._isUTC ? 'UTC' : '') + unit]() : NaN;
+}
+
+function set$3 (mom, unit, value) {
+    if (mom.isValid() && !isNaN(value)) {
+        if (unit === 'FullYear' && isLeapYear(mom.year()) && mom.month() === 1 && mom.date() === 29) {
+            mom._d['set' + (mom._isUTC ? 'UTC' : '') + unit](value, mom.month(), daysInMonth(value, mom.month()));
+        }
+        else {
+            mom._d['set' + (mom._isUTC ? 'UTC' : '') + unit](value);
+        }
+    }
+}
+
+// MOMENTS
+
+function stringGet (units) {
+    units = normalizeUnits(units);
+    if (isFunction$2(this[units])) {
+        return this[units]();
+    }
+    return this;
+}
+
+
+function stringSet (units, value) {
+    if (typeof units === 'object') {
+        units = normalizeObjectUnits(units);
+        var prioritized = getPrioritizedUnits(units);
+        for (var i = 0; i < prioritized.length; i++) {
+            this[prioritized[i].unit](units[prioritized[i].unit]);
+        }
+    } else {
+        units = normalizeUnits(units);
+        if (isFunction$2(this[units])) {
+            return this[units](value);
+        }
+    }
+    return this;
+}
+
+function mod(n, x) {
+    return ((n % x) + x) % x;
+}
+
+var indexOf;
+
+if (Array.prototype.indexOf) {
+    indexOf = Array.prototype.indexOf;
+} else {
+    indexOf = function (o) {
+        // I know
+        var i;
+        for (i = 0; i < this.length; ++i) {
+            if (this[i] === o) {
+                return i;
+            }
+        }
+        return -1;
+    };
+}
+
+function daysInMonth(year, month) {
+    if (isNaN(year) || isNaN(month)) {
+        return NaN;
+    }
+    var modMonth = mod(month, 12);
+    year += (month - modMonth) / 12;
+    return modMonth === 1 ? (isLeapYear(year) ? 29 : 28) : (31 - modMonth % 7 % 2);
+}
+
+// FORMATTING
+
+addFormatToken('M', ['MM', 2], 'Mo', function () {
+    return this.month() + 1;
+});
+
+addFormatToken('MMM', 0, 0, function (format) {
+    return this.localeData().monthsShort(this, format);
+});
+
+addFormatToken('MMMM', 0, 0, function (format) {
+    return this.localeData().months(this, format);
+});
+
+// ALIASES
+
+addUnitAlias('month', 'M');
+
+// PRIORITY
+
+addUnitPriority('month', 8);
+
+// PARSING
+
+addRegexToken('M',    match1to2);
+addRegexToken('MM',   match1to2, match2);
+addRegexToken('MMM',  function (isStrict, locale) {
+    return locale.monthsShortRegex(isStrict);
+});
+addRegexToken('MMMM', function (isStrict, locale) {
+    return locale.monthsRegex(isStrict);
+});
+
+addParseToken(['M', 'MM'], function (input, array) {
+    array[MONTH] = toInt(input) - 1;
+});
+
+addParseToken(['MMM', 'MMMM'], function (input, array, config, token) {
+    var month = config._locale.monthsParse(input, token, config._strict);
+    // if we didn't find a month name, mark the date as invalid.
+    if (month != null) {
+        array[MONTH] = month;
+    } else {
+        getParsingFlags(config).invalidMonth = input;
+    }
+});
+
+// LOCALES
+
+var MONTHS_IN_FORMAT = /D[oD]?(\[[^\[\]]*\]|\s)+MMMM?/;
+var defaultLocaleMonths = 'January_February_March_April_May_June_July_August_September_October_November_December'.split('_');
+function localeMonths (m, format) {
+    if (!m) {
+        return isArray$4(this._months) ? this._months :
+            this._months['standalone'];
+    }
+    return isArray$4(this._months) ? this._months[m.month()] :
+        this._months[(this._months.isFormat || MONTHS_IN_FORMAT).test(format) ? 'format' : 'standalone'][m.month()];
+}
+
+var defaultLocaleMonthsShort = 'Jan_Feb_Mar_Apr_May_Jun_Jul_Aug_Sep_Oct_Nov_Dec'.split('_');
+function localeMonthsShort (m, format) {
+    if (!m) {
+        return isArray$4(this._monthsShort) ? this._monthsShort :
+            this._monthsShort['standalone'];
+    }
+    return isArray$4(this._monthsShort) ? this._monthsShort[m.month()] :
+        this._monthsShort[MONTHS_IN_FORMAT.test(format) ? 'format' : 'standalone'][m.month()];
+}
+
+function handleStrictParse(monthName, format, strict) {
+    var i, ii, mom, llc = monthName.toLocaleLowerCase();
+    if (!this._monthsParse) {
+        // this is not used
+        this._monthsParse = [];
+        this._longMonthsParse = [];
+        this._shortMonthsParse = [];
+        for (i = 0; i < 12; ++i) {
+            mom = createUTC([2000, i]);
+            this._shortMonthsParse[i] = this.monthsShort(mom, '').toLocaleLowerCase();
+            this._longMonthsParse[i] = this.months(mom, '').toLocaleLowerCase();
+        }
+    }
+
+    if (strict) {
+        if (format === 'MMM') {
+            ii = indexOf.call(this._shortMonthsParse, llc);
+            return ii !== -1 ? ii : null;
+        } else {
+            ii = indexOf.call(this._longMonthsParse, llc);
+            return ii !== -1 ? ii : null;
+        }
+    } else {
+        if (format === 'MMM') {
+            ii = indexOf.call(this._shortMonthsParse, llc);
+            if (ii !== -1) {
+                return ii;
+            }
+            ii = indexOf.call(this._longMonthsParse, llc);
+            return ii !== -1 ? ii : null;
+        } else {
+            ii = indexOf.call(this._longMonthsParse, llc);
+            if (ii !== -1) {
+                return ii;
+            }
+            ii = indexOf.call(this._shortMonthsParse, llc);
+            return ii !== -1 ? ii : null;
+        }
+    }
+}
+
+function localeMonthsParse (monthName, format, strict) {
+    var i, mom, regex;
+
+    if (this._monthsParseExact) {
+        return handleStrictParse.call(this, monthName, format, strict);
+    }
+
+    if (!this._monthsParse) {
+        this._monthsParse = [];
+        this._longMonthsParse = [];
+        this._shortMonthsParse = [];
+    }
+
+    // TODO: add sorting
+    // Sorting makes sure if one month (or abbr) is a prefix of another
+    // see sorting in computeMonthsParse
+    for (i = 0; i < 12; i++) {
+        // make the regex if we don't have it already
+        mom = createUTC([2000, i]);
+        if (strict && !this._longMonthsParse[i]) {
+            this._longMonthsParse[i] = new RegExp('^' + this.months(mom, '').replace('.', '') + '$', 'i');
+            this._shortMonthsParse[i] = new RegExp('^' + this.monthsShort(mom, '').replace('.', '') + '$', 'i');
+        }
+        if (!strict && !this._monthsParse[i]) {
+            regex = '^' + this.months(mom, '') + '|^' + this.monthsShort(mom, '');
+            this._monthsParse[i] = new RegExp(regex.replace('.', ''), 'i');
+        }
+        // test the regex
+        if (strict && format === 'MMMM' && this._longMonthsParse[i].test(monthName)) {
+            return i;
+        } else if (strict && format === 'MMM' && this._shortMonthsParse[i].test(monthName)) {
+            return i;
+        } else if (!strict && this._monthsParse[i].test(monthName)) {
+            return i;
+        }
+    }
+}
+
+// MOMENTS
+
+function setMonth (mom, value) {
+    var dayOfMonth;
+
+    if (!mom.isValid()) {
+        // No op
+        return mom;
+    }
+
+    if (typeof value === 'string') {
+        if (/^\d+$/.test(value)) {
+            value = toInt(value);
+        } else {
+            value = mom.localeData().monthsParse(value);
+            // TODO: Another silent failure?
+            if (!isNumber(value)) {
+                return mom;
+            }
+        }
+    }
+
+    dayOfMonth = Math.min(mom.date(), daysInMonth(mom.year(), value));
+    mom._d['set' + (mom._isUTC ? 'UTC' : '') + 'Month'](value, dayOfMonth);
+    return mom;
+}
+
+function getSetMonth (value) {
+    if (value != null) {
+        setMonth(this, value);
+        hooks.updateOffset(this, true);
+        return this;
+    } else {
+        return get$2(this, 'Month');
+    }
+}
+
+function getDaysInMonth () {
+    return daysInMonth(this.year(), this.month());
+}
+
+var defaultMonthsShortRegex = matchWord;
+function monthsShortRegex (isStrict) {
+    if (this._monthsParseExact) {
+        if (!hasOwnProp(this, '_monthsRegex')) {
+            computeMonthsParse.call(this);
+        }
+        if (isStrict) {
+            return this._monthsShortStrictRegex;
+        } else {
+            return this._monthsShortRegex;
+        }
+    } else {
+        if (!hasOwnProp(this, '_monthsShortRegex')) {
+            this._monthsShortRegex = defaultMonthsShortRegex;
+        }
+        return this._monthsShortStrictRegex && isStrict ?
+            this._monthsShortStrictRegex : this._monthsShortRegex;
+    }
+}
+
+var defaultMonthsRegex = matchWord;
+function monthsRegex (isStrict) {
+    if (this._monthsParseExact) {
+        if (!hasOwnProp(this, '_monthsRegex')) {
+            computeMonthsParse.call(this);
+        }
+        if (isStrict) {
+            return this._monthsStrictRegex;
+        } else {
+            return this._monthsRegex;
+        }
+    } else {
+        if (!hasOwnProp(this, '_monthsRegex')) {
+            this._monthsRegex = defaultMonthsRegex;
+        }
+        return this._monthsStrictRegex && isStrict ?
+            this._monthsStrictRegex : this._monthsRegex;
+    }
+}
+
+function computeMonthsParse () {
+    function cmpLenRev(a, b) {
+        return b.length - a.length;
+    }
+
+    var shortPieces = [], longPieces = [], mixedPieces = [],
+        i, mom;
+    for (i = 0; i < 12; i++) {
+        // make the regex if we don't have it already
+        mom = createUTC([2000, i]);
+        shortPieces.push(this.monthsShort(mom, ''));
+        longPieces.push(this.months(mom, ''));
+        mixedPieces.push(this.months(mom, ''));
+        mixedPieces.push(this.monthsShort(mom, ''));
+    }
+    // Sorting makes sure if one month (or abbr) is a prefix of another it
+    // will match the longer piece.
+    shortPieces.sort(cmpLenRev);
+    longPieces.sort(cmpLenRev);
+    mixedPieces.sort(cmpLenRev);
+    for (i = 0; i < 12; i++) {
+        shortPieces[i] = regexEscape(shortPieces[i]);
+        longPieces[i] = regexEscape(longPieces[i]);
+    }
+    for (i = 0; i < 24; i++) {
+        mixedPieces[i] = regexEscape(mixedPieces[i]);
+    }
+
+    this._monthsRegex = new RegExp('^(' + mixedPieces.join('|') + ')', 'i');
+    this._monthsShortRegex = this._monthsRegex;
+    this._monthsStrictRegex = new RegExp('^(' + longPieces.join('|') + ')', 'i');
+    this._monthsShortStrictRegex = new RegExp('^(' + shortPieces.join('|') + ')', 'i');
+}
+
+function createDate (y, m, d, h, M, s, ms) {
+    // can't just apply() to create a date:
+    // https://stackoverflow.com/q/181348
+    var date = new Date(y, m, d, h, M, s, ms);
+
+    // the date constructor remaps years 0-99 to 1900-1999
+    if (y < 100 && y >= 0 && isFinite(date.getFullYear())) {
+        date.setFullYear(y);
+    }
+    return date;
+}
+
+function createUTCDate (y) {
+    var date = new Date(Date.UTC.apply(null, arguments));
+
+    // the Date.UTC function remaps years 0-99 to 1900-1999
+    if (y < 100 && y >= 0 && isFinite(date.getUTCFullYear())) {
+        date.setUTCFullYear(y);
+    }
+    return date;
+}
+
+// start-of-first-week - start-of-year
+function firstWeekOffset(year, dow, doy) {
+    var // first-week day -- which january is always in the first week (4 for iso, 1 for other)
+        fwd = 7 + dow - doy,
+        // first-week day local weekday -- which local weekday is fwd
+        fwdlw = (7 + createUTCDate(year, 0, fwd).getUTCDay() - dow) % 7;
+
+    return -fwdlw + fwd - 1;
+}
+
+// https://en.wikipedia.org/wiki/ISO_week_date#Calculating_a_date_given_the_year.2C_week_number_and_weekday
+function dayOfYearFromWeeks(year, week, weekday, dow, doy) {
+    var localWeekday = (7 + weekday - dow) % 7,
+        weekOffset = firstWeekOffset(year, dow, doy),
+        dayOfYear = 1 + 7 * (week - 1) + localWeekday + weekOffset,
+        resYear, resDayOfYear;
+
+    if (dayOfYear <= 0) {
+        resYear = year - 1;
+        resDayOfYear = daysInYear(resYear) + dayOfYear;
+    } else if (dayOfYear > daysInYear(year)) {
+        resYear = year + 1;
+        resDayOfYear = dayOfYear - daysInYear(year);
+    } else {
+        resYear = year;
+        resDayOfYear = dayOfYear;
+    }
+
+    return {
+        year: resYear,
+        dayOfYear: resDayOfYear
+    };
+}
+
+function weekOfYear(mom, dow, doy) {
+    var weekOffset = firstWeekOffset(mom.year(), dow, doy),
+        week = Math.floor((mom.dayOfYear() - weekOffset - 1) / 7) + 1,
+        resWeek, resYear;
+
+    if (week < 1) {
+        resYear = mom.year() - 1;
+        resWeek = week + weeksInYear(resYear, dow, doy);
+    } else if (week > weeksInYear(mom.year(), dow, doy)) {
+        resWeek = week - weeksInYear(mom.year(), dow, doy);
+        resYear = mom.year() + 1;
+    } else {
+        resYear = mom.year();
+        resWeek = week;
+    }
+
+    return {
+        week: resWeek,
+        year: resYear
+    };
+}
+
+function weeksInYear(year, dow, doy) {
+    var weekOffset = firstWeekOffset(year, dow, doy),
+        weekOffsetNext = firstWeekOffset(year + 1, dow, doy);
+    return (daysInYear(year) - weekOffset + weekOffsetNext) / 7;
+}
+
+// FORMATTING
+
+addFormatToken('w', ['ww', 2], 'wo', 'week');
+addFormatToken('W', ['WW', 2], 'Wo', 'isoWeek');
+
+// ALIASES
+
+addUnitAlias('week', 'w');
+addUnitAlias('isoWeek', 'W');
+
+// PRIORITIES
+
+addUnitPriority('week', 5);
+addUnitPriority('isoWeek', 5);
+
+// PARSING
+
+addRegexToken('w',  match1to2);
+addRegexToken('ww', match1to2, match2);
+addRegexToken('W',  match1to2);
+addRegexToken('WW', match1to2, match2);
+
+addWeekParseToken(['w', 'ww', 'W', 'WW'], function (input, week, config, token) {
+    week[token.substr(0, 1)] = toInt(input);
+});
+
+// HELPERS
+
+// LOCALES
+
+function localeWeek (mom) {
+    return weekOfYear(mom, this._week.dow, this._week.doy).week;
+}
+
+var defaultLocaleWeek = {
+    dow : 0, // Sunday is the first day of the week.
+    doy : 6  // The week that contains Jan 1st is the first week of the year.
+};
+
+function localeFirstDayOfWeek () {
+    return this._week.dow;
+}
+
+function localeFirstDayOfYear () {
+    return this._week.doy;
+}
+
+// MOMENTS
+
+function getSetWeek (input) {
+    var week = this.localeData().week(this);
+    return input == null ? week : this.add((input - week) * 7, 'd');
+}
+
+function getSetISOWeek (input) {
+    var week = weekOfYear(this, 1, 4).week;
+    return input == null ? week : this.add((input - week) * 7, 'd');
+}
+
+// FORMATTING
+
+addFormatToken('d', 0, 'do', 'day');
+
+addFormatToken('dd', 0, 0, function (format) {
+    return this.localeData().weekdaysMin(this, format);
+});
+
+addFormatToken('ddd', 0, 0, function (format) {
+    return this.localeData().weekdaysShort(this, format);
+});
+
+addFormatToken('dddd', 0, 0, function (format) {
+    return this.localeData().weekdays(this, format);
+});
+
+addFormatToken('e', 0, 0, 'weekday');
+addFormatToken('E', 0, 0, 'isoWeekday');
+
+// ALIASES
+
+addUnitAlias('day', 'd');
+addUnitAlias('weekday', 'e');
+addUnitAlias('isoWeekday', 'E');
+
+// PRIORITY
+addUnitPriority('day', 11);
+addUnitPriority('weekday', 11);
+addUnitPriority('isoWeekday', 11);
+
+// PARSING
+
+addRegexToken('d',    match1to2);
+addRegexToken('e',    match1to2);
+addRegexToken('E',    match1to2);
+addRegexToken('dd',   function (isStrict, locale) {
+    return locale.weekdaysMinRegex(isStrict);
+});
+addRegexToken('ddd',   function (isStrict, locale) {
+    return locale.weekdaysShortRegex(isStrict);
+});
+addRegexToken('dddd',   function (isStrict, locale) {
+    return locale.weekdaysRegex(isStrict);
+});
+
+addWeekParseToken(['dd', 'ddd', 'dddd'], function (input, week, config, token) {
+    var weekday = config._locale.weekdaysParse(input, token, config._strict);
+    // if we didn't get a weekday name, mark the date as invalid
+    if (weekday != null) {
+        week.d = weekday;
+    } else {
+        getParsingFlags(config).invalidWeekday = input;
+    }
+});
+
+addWeekParseToken(['d', 'e', 'E'], function (input, week, config, token) {
+    week[token] = toInt(input);
+});
+
+// HELPERS
+
+function parseWeekday(input, locale) {
+    if (typeof input !== 'string') {
+        return input;
+    }
+
+    if (!isNaN(input)) {
+        return parseInt(input, 10);
+    }
+
+    input = locale.weekdaysParse(input);
+    if (typeof input === 'number') {
+        return input;
+    }
+
+    return null;
+}
+
+function parseIsoWeekday(input, locale) {
+    if (typeof input === 'string') {
+        return locale.weekdaysParse(input) % 7 || 7;
+    }
+    return isNaN(input) ? null : input;
+}
+
+// LOCALES
+
+var defaultLocaleWeekdays = 'Sunday_Monday_Tuesday_Wednesday_Thursday_Friday_Saturday'.split('_');
+function localeWeekdays (m, format) {
+    if (!m) {
+        return isArray$4(this._weekdays) ? this._weekdays :
+            this._weekdays['standalone'];
+    }
+    return isArray$4(this._weekdays) ? this._weekdays[m.day()] :
+        this._weekdays[this._weekdays.isFormat.test(format) ? 'format' : 'standalone'][m.day()];
+}
+
+var defaultLocaleWeekdaysShort = 'Sun_Mon_Tue_Wed_Thu_Fri_Sat'.split('_');
+function localeWeekdaysShort (m) {
+    return (m) ? this._weekdaysShort[m.day()] : this._weekdaysShort;
+}
+
+var defaultLocaleWeekdaysMin = 'Su_Mo_Tu_We_Th_Fr_Sa'.split('_');
+function localeWeekdaysMin (m) {
+    return (m) ? this._weekdaysMin[m.day()] : this._weekdaysMin;
+}
+
+function handleStrictParse$1(weekdayName, format, strict) {
+    var i, ii, mom, llc = weekdayName.toLocaleLowerCase();
+    if (!this._weekdaysParse) {
+        this._weekdaysParse = [];
+        this._shortWeekdaysParse = [];
+        this._minWeekdaysParse = [];
+
+        for (i = 0; i < 7; ++i) {
+            mom = createUTC([2000, 1]).day(i);
+            this._minWeekdaysParse[i] = this.weekdaysMin(mom, '').toLocaleLowerCase();
+            this._shortWeekdaysParse[i] = this.weekdaysShort(mom, '').toLocaleLowerCase();
+            this._weekdaysParse[i] = this.weekdays(mom, '').toLocaleLowerCase();
+        }
+    }
+
+    if (strict) {
+        if (format === 'dddd') {
+            ii = indexOf.call(this._weekdaysParse, llc);
+            return ii !== -1 ? ii : null;
+        } else if (format === 'ddd') {
+            ii = indexOf.call(this._shortWeekdaysParse, llc);
+            return ii !== -1 ? ii : null;
+        } else {
+            ii = indexOf.call(this._minWeekdaysParse, llc);
+            return ii !== -1 ? ii : null;
+        }
+    } else {
+        if (format === 'dddd') {
+            ii = indexOf.call(this._weekdaysParse, llc);
+            if (ii !== -1) {
+                return ii;
+            }
+            ii = indexOf.call(this._shortWeekdaysParse, llc);
+            if (ii !== -1) {
+                return ii;
+            }
+            ii = indexOf.call(this._minWeekdaysParse, llc);
+            return ii !== -1 ? ii : null;
+        } else if (format === 'ddd') {
+            ii = indexOf.call(this._shortWeekdaysParse, llc);
+            if (ii !== -1) {
+                return ii;
+            }
+            ii = indexOf.call(this._weekdaysParse, llc);
+            if (ii !== -1) {
+                return ii;
+            }
+            ii = indexOf.call(this._minWeekdaysParse, llc);
+            return ii !== -1 ? ii : null;
+        } else {
+            ii = indexOf.call(this._minWeekdaysParse, llc);
+            if (ii !== -1) {
+                return ii;
+            }
+            ii = indexOf.call(this._weekdaysParse, llc);
+            if (ii !== -1) {
+                return ii;
+            }
+            ii = indexOf.call(this._shortWeekdaysParse, llc);
+            return ii !== -1 ? ii : null;
+        }
+    }
+}
+
+function localeWeekdaysParse (weekdayName, format, strict) {
+    var i, mom, regex;
+
+    if (this._weekdaysParseExact) {
+        return handleStrictParse$1.call(this, weekdayName, format, strict);
+    }
+
+    if (!this._weekdaysParse) {
+        this._weekdaysParse = [];
+        this._minWeekdaysParse = [];
+        this._shortWeekdaysParse = [];
+        this._fullWeekdaysParse = [];
+    }
+
+    for (i = 0; i < 7; i++) {
+        // make the regex if we don't have it already
+
+        mom = createUTC([2000, 1]).day(i);
+        if (strict && !this._fullWeekdaysParse[i]) {
+            this._fullWeekdaysParse[i] = new RegExp('^' + this.weekdays(mom, '').replace('.', '\.?') + '$', 'i');
+            this._shortWeekdaysParse[i] = new RegExp('^' + this.weekdaysShort(mom, '').replace('.', '\.?') + '$', 'i');
+            this._minWeekdaysParse[i] = new RegExp('^' + this.weekdaysMin(mom, '').replace('.', '\.?') + '$', 'i');
+        }
+        if (!this._weekdaysParse[i]) {
+            regex = '^' + this.weekdays(mom, '') + '|^' + this.weekdaysShort(mom, '') + '|^' + this.weekdaysMin(mom, '');
+            this._weekdaysParse[i] = new RegExp(regex.replace('.', ''), 'i');
+        }
+        // test the regex
+        if (strict && format === 'dddd' && this._fullWeekdaysParse[i].test(weekdayName)) {
+            return i;
+        } else if (strict && format === 'ddd' && this._shortWeekdaysParse[i].test(weekdayName)) {
+            return i;
+        } else if (strict && format === 'dd' && this._minWeekdaysParse[i].test(weekdayName)) {
+            return i;
+        } else if (!strict && this._weekdaysParse[i].test(weekdayName)) {
+            return i;
+        }
+    }
+}
+
+// MOMENTS
+
+function getSetDayOfWeek (input) {
+    if (!this.isValid()) {
+        return input != null ? this : NaN;
+    }
+    var day = this._isUTC ? this._d.getUTCDay() : this._d.getDay();
+    if (input != null) {
+        input = parseWeekday(input, this.localeData());
+        return this.add(input - day, 'd');
+    } else {
+        return day;
+    }
+}
+
+function getSetLocaleDayOfWeek (input) {
+    if (!this.isValid()) {
+        return input != null ? this : NaN;
+    }
+    var weekday = (this.day() + 7 - this.localeData()._week.dow) % 7;
+    return input == null ? weekday : this.add(input - weekday, 'd');
+}
+
+function getSetISODayOfWeek (input) {
+    if (!this.isValid()) {
+        return input != null ? this : NaN;
+    }
+
+    // behaves the same as moment#day except
+    // as a getter, returns 7 instead of 0 (1-7 range instead of 0-6)
+    // as a setter, sunday should belong to the previous week.
+
+    if (input != null) {
+        var weekday = parseIsoWeekday(input, this.localeData());
+        return this.day(this.day() % 7 ? weekday : weekday - 7);
+    } else {
+        return this.day() || 7;
+    }
+}
+
+var defaultWeekdaysRegex = matchWord;
+function weekdaysRegex (isStrict) {
+    if (this._weekdaysParseExact) {
+        if (!hasOwnProp(this, '_weekdaysRegex')) {
+            computeWeekdaysParse.call(this);
+        }
+        if (isStrict) {
+            return this._weekdaysStrictRegex;
+        } else {
+            return this._weekdaysRegex;
+        }
+    } else {
+        if (!hasOwnProp(this, '_weekdaysRegex')) {
+            this._weekdaysRegex = defaultWeekdaysRegex;
+        }
+        return this._weekdaysStrictRegex && isStrict ?
+            this._weekdaysStrictRegex : this._weekdaysRegex;
+    }
+}
+
+var defaultWeekdaysShortRegex = matchWord;
+function weekdaysShortRegex (isStrict) {
+    if (this._weekdaysParseExact) {
+        if (!hasOwnProp(this, '_weekdaysRegex')) {
+            computeWeekdaysParse.call(this);
+        }
+        if (isStrict) {
+            return this._weekdaysShortStrictRegex;
+        } else {
+            return this._weekdaysShortRegex;
+        }
+    } else {
+        if (!hasOwnProp(this, '_weekdaysShortRegex')) {
+            this._weekdaysShortRegex = defaultWeekdaysShortRegex;
+        }
+        return this._weekdaysShortStrictRegex && isStrict ?
+            this._weekdaysShortStrictRegex : this._weekdaysShortRegex;
+    }
+}
+
+var defaultWeekdaysMinRegex = matchWord;
+function weekdaysMinRegex (isStrict) {
+    if (this._weekdaysParseExact) {
+        if (!hasOwnProp(this, '_weekdaysRegex')) {
+            computeWeekdaysParse.call(this);
+        }
+        if (isStrict) {
+            return this._weekdaysMinStrictRegex;
+        } else {
+            return this._weekdaysMinRegex;
+        }
+    } else {
+        if (!hasOwnProp(this, '_weekdaysMinRegex')) {
+            this._weekdaysMinRegex = defaultWeekdaysMinRegex;
+        }
+        return this._weekdaysMinStrictRegex && isStrict ?
+            this._weekdaysMinStrictRegex : this._weekdaysMinRegex;
+    }
+}
+
+
+function computeWeekdaysParse () {
+    function cmpLenRev(a, b) {
+        return b.length - a.length;
+    }
+
+    var minPieces = [], shortPieces = [], longPieces = [], mixedPieces = [],
+        i, mom, minp, shortp, longp;
+    for (i = 0; i < 7; i++) {
+        // make the regex if we don't have it already
+        mom = createUTC([2000, 1]).day(i);
+        minp = this.weekdaysMin(mom, '');
+        shortp = this.weekdaysShort(mom, '');
+        longp = this.weekdays(mom, '');
+        minPieces.push(minp);
+        shortPieces.push(shortp);
+        longPieces.push(longp);
+        mixedPieces.push(minp);
+        mixedPieces.push(shortp);
+        mixedPieces.push(longp);
+    }
+    // Sorting makes sure if one weekday (or abbr) is a prefix of another it
+    // will match the longer piece.
+    minPieces.sort(cmpLenRev);
+    shortPieces.sort(cmpLenRev);
+    longPieces.sort(cmpLenRev);
+    mixedPieces.sort(cmpLenRev);
+    for (i = 0; i < 7; i++) {
+        shortPieces[i] = regexEscape(shortPieces[i]);
+        longPieces[i] = regexEscape(longPieces[i]);
+        mixedPieces[i] = regexEscape(mixedPieces[i]);
+    }
+
+    this._weekdaysRegex = new RegExp('^(' + mixedPieces.join('|') + ')', 'i');
+    this._weekdaysShortRegex = this._weekdaysRegex;
+    this._weekdaysMinRegex = this._weekdaysRegex;
+
+    this._weekdaysStrictRegex = new RegExp('^(' + longPieces.join('|') + ')', 'i');
+    this._weekdaysShortStrictRegex = new RegExp('^(' + shortPieces.join('|') + ')', 'i');
+    this._weekdaysMinStrictRegex = new RegExp('^(' + minPieces.join('|') + ')', 'i');
+}
+
+// FORMATTING
+
+function hFormat() {
+    return this.hours() % 12 || 12;
+}
+
+function kFormat() {
+    return this.hours() || 24;
+}
+
+addFormatToken('H', ['HH', 2], 0, 'hour');
+addFormatToken('h', ['hh', 2], 0, hFormat);
+addFormatToken('k', ['kk', 2], 0, kFormat);
+
+addFormatToken('hmm', 0, 0, function () {
+    return '' + hFormat.apply(this) + zeroFill(this.minutes(), 2);
+});
+
+addFormatToken('hmmss', 0, 0, function () {
+    return '' + hFormat.apply(this) + zeroFill(this.minutes(), 2) +
+        zeroFill(this.seconds(), 2);
+});
+
+addFormatToken('Hmm', 0, 0, function () {
+    return '' + this.hours() + zeroFill(this.minutes(), 2);
+});
+
+addFormatToken('Hmmss', 0, 0, function () {
+    return '' + this.hours() + zeroFill(this.minutes(), 2) +
+        zeroFill(this.seconds(), 2);
+});
+
+function meridiem (token, lowercase) {
+    addFormatToken(token, 0, 0, function () {
+        return this.localeData().meridiem(this.hours(), this.minutes(), lowercase);
+    });
+}
+
+meridiem('a', true);
+meridiem('A', false);
+
+// ALIASES
+
+addUnitAlias('hour', 'h');
+
+// PRIORITY
+addUnitPriority('hour', 13);
+
+// PARSING
+
+function matchMeridiem (isStrict, locale) {
+    return locale._meridiemParse;
+}
+
+addRegexToken('a',  matchMeridiem);
+addRegexToken('A',  matchMeridiem);
+addRegexToken('H',  match1to2);
+addRegexToken('h',  match1to2);
+addRegexToken('k',  match1to2);
+addRegexToken('HH', match1to2, match2);
+addRegexToken('hh', match1to2, match2);
+addRegexToken('kk', match1to2, match2);
+
+addRegexToken('hmm', match3to4);
+addRegexToken('hmmss', match5to6);
+addRegexToken('Hmm', match3to4);
+addRegexToken('Hmmss', match5to6);
+
+addParseToken(['H', 'HH'], HOUR$1);
+addParseToken(['k', 'kk'], function (input, array, config) {
+    var kInput = toInt(input);
+    array[HOUR$1] = kInput === 24 ? 0 : kInput;
+});
+addParseToken(['a', 'A'], function (input, array, config) {
+    config._isPm = config._locale.isPM(input);
+    config._meridiem = input;
+});
+addParseToken(['h', 'hh'], function (input, array, config) {
+    array[HOUR$1] = toInt(input);
+    getParsingFlags(config).bigHour = true;
+});
+addParseToken('hmm', function (input, array, config) {
+    var pos = input.length - 2;
+    array[HOUR$1] = toInt(input.substr(0, pos));
+    array[MINUTE$1] = toInt(input.substr(pos));
+    getParsingFlags(config).bigHour = true;
+});
+addParseToken('hmmss', function (input, array, config) {
+    var pos1 = input.length - 4;
+    var pos2 = input.length - 2;
+    array[HOUR$1] = toInt(input.substr(0, pos1));
+    array[MINUTE$1] = toInt(input.substr(pos1, 2));
+    array[SECOND$1] = toInt(input.substr(pos2));
+    getParsingFlags(config).bigHour = true;
+});
+addParseToken('Hmm', function (input, array, config) {
+    var pos = input.length - 2;
+    array[HOUR$1] = toInt(input.substr(0, pos));
+    array[MINUTE$1] = toInt(input.substr(pos));
+});
+addParseToken('Hmmss', function (input, array, config) {
+    var pos1 = input.length - 4;
+    var pos2 = input.length - 2;
+    array[HOUR$1] = toInt(input.substr(0, pos1));
+    array[MINUTE$1] = toInt(input.substr(pos1, 2));
+    array[SECOND$1] = toInt(input.substr(pos2));
+});
+
+// LOCALES
+
+function localeIsPM (input) {
+    // IE8 Quirks Mode & IE7 Standards Mode do not allow accessing strings like arrays
+    // Using charAt should be more compatible.
+    return ((input + '').toLowerCase().charAt(0) === 'p');
+}
+
+var defaultLocaleMeridiemParse = /[ap]\.?m?\.?/i;
+function localeMeridiem (hours, minutes, isLower) {
+    if (hours > 11) {
+        return isLower ? 'pm' : 'PM';
+    } else {
+        return isLower ? 'am' : 'AM';
+    }
+}
+
+
+// MOMENTS
+
+// Setting the hour should keep the time, because the user explicitly
+// specified which hour they want. So trying to maintain the same hour (in
+// a new timezone) makes sense. Adding/subtracting hours does not follow
+// this rule.
+var getSetHour = makeGetSet('Hours', true);
+
+var baseConfig = {
+    calendar: defaultCalendar,
+    longDateFormat: defaultLongDateFormat,
+    invalidDate: defaultInvalidDate,
+    ordinal: defaultOrdinal,
+    dayOfMonthOrdinalParse: defaultDayOfMonthOrdinalParse,
+    relativeTime: defaultRelativeTime,
+
+    months: defaultLocaleMonths,
+    monthsShort: defaultLocaleMonthsShort,
+
+    week: defaultLocaleWeek,
+
+    weekdays: defaultLocaleWeekdays,
+    weekdaysMin: defaultLocaleWeekdaysMin,
+    weekdaysShort: defaultLocaleWeekdaysShort,
+
+    meridiemParse: defaultLocaleMeridiemParse
+};
+
+// internal storage for locale config files
+var locales = {};
+var localeFamilies = {};
+var globalLocale;
+
+function normalizeLocale(key) {
+    return key ? key.toLowerCase().replace('_', '-') : key;
+}
+
+// pick the locale from the array
+// try ['en-au', 'en-gb'] as 'en-au', 'en-gb', 'en', as in move through the list trying each
+// substring from most specific to least, but move to the next array item if it's a more specific variant than the current root
+function chooseLocale(names) {
+    var i = 0, j, next, locale, split;
+
+    while (i < names.length) {
+        split = normalizeLocale(names[i]).split('-');
+        j = split.length;
+        next = normalizeLocale(names[i + 1]);
+        next = next ? next.split('-') : null;
+        while (j > 0) {
+            locale = loadLocale(split.slice(0, j).join('-'));
+            if (locale) {
+                return locale;
+            }
+            if (next && next.length >= j && compareArrays(split, next, true) >= j - 1) {
+                //the next array item is better than a shallower substring of this one
+                break;
+            }
+            j--;
+        }
+        i++;
+    }
+    return globalLocale;
+}
+
+function loadLocale(name) {
+    var oldLocale = null;
+    // TODO: Find a better way to register and load all the locales in Node
+    if (!locales[name] && (typeof module !== 'undefined') &&
+            module && module.exports) {
+        try {
+            oldLocale = globalLocale._abbr;
+            var aliasedRequire = require;
+            aliasedRequire('./locale/' + name);
+            getSetGlobalLocale(oldLocale);
+        } catch (e) {}
+    }
+    return locales[name];
+}
+
+// This function will load locale and then set the global locale.  If
+// no arguments are passed in, it will simply return the current global
+// locale key.
+function getSetGlobalLocale (key, values) {
+    var data;
+    if (key) {
+        if (isUndefined$2(values)) {
+            data = getLocale(key);
+        }
+        else {
+            data = defineLocale(key, values);
+        }
+
+        if (data) {
+            // moment.duration._locale = moment._locale = data;
+            globalLocale = data;
+        }
+        else {
+            if ((typeof console !==  'undefined') && console.warn) {
+                //warn user if arguments are passed but the locale could not be set
+                console.warn('Locale ' + key +  ' not found. Did you forget to load it?');
+            }
+        }
+    }
+
+    return globalLocale._abbr;
+}
+
+function defineLocale (name, config) {
+    if (config !== null) {
+        var locale, parentConfig = baseConfig;
+        config.abbr = name;
+        if (locales[name] != null) {
+            deprecateSimple('defineLocaleOverride',
+                    'use moment.updateLocale(localeName, config) to change ' +
+                    'an existing locale. moment.defineLocale(localeName, ' +
+                    'config) should only be used for creating a new locale ' +
+                    'See http://momentjs.com/guides/#/warnings/define-locale/ for more info.');
+            parentConfig = locales[name]._config;
+        } else if (config.parentLocale != null) {
+            if (locales[config.parentLocale] != null) {
+                parentConfig = locales[config.parentLocale]._config;
+            } else {
+                locale = loadLocale(config.parentLocale);
+                if (locale != null) {
+                    parentConfig = locale._config;
+                } else {
+                    if (!localeFamilies[config.parentLocale]) {
+                        localeFamilies[config.parentLocale] = [];
+                    }
+                    localeFamilies[config.parentLocale].push({
+                        name: name,
+                        config: config
+                    });
+                    return null;
+                }
+            }
+        }
+        locales[name] = new Locale(mergeConfigs(parentConfig, config));
+
+        if (localeFamilies[name]) {
+            localeFamilies[name].forEach(function (x) {
+                defineLocale(x.name, x.config);
+            });
+        }
+
+        // backwards compat for now: also set the locale
+        // make sure we set the locale AFTER all child locales have been
+        // created, so we won't end up with the child locale set.
+        getSetGlobalLocale(name);
+
+
+        return locales[name];
+    } else {
+        // useful for testing
+        delete locales[name];
+        return null;
+    }
+}
+
+function updateLocale(name, config) {
+    if (config != null) {
+        var locale, tmpLocale, parentConfig = baseConfig;
+        // MERGE
+        tmpLocale = loadLocale(name);
+        if (tmpLocale != null) {
+            parentConfig = tmpLocale._config;
+        }
+        config = mergeConfigs(parentConfig, config);
+        locale = new Locale(config);
+        locale.parentLocale = locales[name];
+        locales[name] = locale;
+
+        // backwards compat for now: also set the locale
+        getSetGlobalLocale(name);
+    } else {
+        // pass null for config to unupdate, useful for tests
+        if (locales[name] != null) {
+            if (locales[name].parentLocale != null) {
+                locales[name] = locales[name].parentLocale;
+            } else if (locales[name] != null) {
+                delete locales[name];
+            }
+        }
+    }
+    return locales[name];
+}
+
+// returns locale data
+function getLocale (key) {
+    var locale;
+
+    if (key && key._locale && key._locale._abbr) {
+        key = key._locale._abbr;
+    }
+
+    if (!key) {
+        return globalLocale;
+    }
+
+    if (!isArray$4(key)) {
+        //short-circuit everything else
+        locale = loadLocale(key);
+        if (locale) {
+            return locale;
+        }
+        key = [key];
+    }
+
+    return chooseLocale(key);
+}
+
+function listLocales() {
+    return keys$2(locales);
+}
+
+function checkOverflow (m) {
+    var overflow;
+    var a = m._a;
+
+    if (a && getParsingFlags(m).overflow === -2) {
+        overflow =
+            a[MONTH]       < 0 || a[MONTH]       > 11  ? MONTH :
+            a[DATE]        < 1 || a[DATE]        > daysInMonth(a[YEAR], a[MONTH]) ? DATE :
+            a[HOUR$1]        < 0 || a[HOUR$1]        > 24 || (a[HOUR$1] === 24 && (a[MINUTE$1] !== 0 || a[SECOND$1] !== 0 || a[MILLISECOND] !== 0)) ? HOUR$1 :
+            a[MINUTE$1]      < 0 || a[MINUTE$1]      > 59  ? MINUTE$1 :
+            a[SECOND$1]      < 0 || a[SECOND$1]      > 59  ? SECOND$1 :
+            a[MILLISECOND] < 0 || a[MILLISECOND] > 999 ? MILLISECOND :
+            -1;
+
+        if (getParsingFlags(m)._overflowDayOfYear && (overflow < YEAR || overflow > DATE)) {
+            overflow = DATE;
+        }
+        if (getParsingFlags(m)._overflowWeeks && overflow === -1) {
+            overflow = WEEK;
+        }
+        if (getParsingFlags(m)._overflowWeekday && overflow === -1) {
+            overflow = WEEKDAY;
+        }
+
+        getParsingFlags(m).overflow = overflow;
+    }
+
+    return m;
+}
+
+// Pick the first defined of two or three arguments.
+function defaults$1(a, b, c) {
+    if (a != null) {
+        return a;
+    }
+    if (b != null) {
+        return b;
+    }
+    return c;
+}
+
+function currentDateArray(config) {
+    // hooks is actually the exported moment object
+    var nowValue = new Date(hooks.now());
+    if (config._useUTC) {
+        return [nowValue.getUTCFullYear(), nowValue.getUTCMonth(), nowValue.getUTCDate()];
+    }
+    return [nowValue.getFullYear(), nowValue.getMonth(), nowValue.getDate()];
+}
+
+// convert an array to a date.
+// the array should mirror the parameters below
+// note: all values past the year are optional and will default to the lowest possible value.
+// [year, month, day , hour, minute, second, millisecond]
+function configFromArray (config) {
+    var i, date, input = [], currentDate, expectedWeekday, yearToUse;
+
+    if (config._d) {
+        return;
+    }
+
+    currentDate = currentDateArray(config);
+
+    //compute day of the year from weeks and weekdays
+    if (config._w && config._a[DATE] == null && config._a[MONTH] == null) {
+        dayOfYearFromWeekInfo(config);
+    }
+
+    //if the day of the year is set, figure out what it is
+    if (config._dayOfYear != null) {
+        yearToUse = defaults$1(config._a[YEAR], currentDate[YEAR]);
+
+        if (config._dayOfYear > daysInYear(yearToUse) || config._dayOfYear === 0) {
+            getParsingFlags(config)._overflowDayOfYear = true;
+        }
+
+        date = createUTCDate(yearToUse, 0, config._dayOfYear);
+        config._a[MONTH] = date.getUTCMonth();
+        config._a[DATE] = date.getUTCDate();
+    }
+
+    // Default to current date.
+    // * if no year, month, day of month are given, default to today
+    // * if day of month is given, default month and year
+    // * if month is given, default only year
+    // * if year is given, don't default anything
+    for (i = 0; i < 3 && config._a[i] == null; ++i) {
+        config._a[i] = input[i] = currentDate[i];
+    }
+
+    // Zero out whatever was not defaulted, including time
+    for (; i < 7; i++) {
+        config._a[i] = input[i] = (config._a[i] == null) ? (i === 2 ? 1 : 0) : config._a[i];
+    }
+
+    // Check for 24:00:00.000
+    if (config._a[HOUR$1] === 24 &&
+            config._a[MINUTE$1] === 0 &&
+            config._a[SECOND$1] === 0 &&
+            config._a[MILLISECOND] === 0) {
+        config._nextDay = true;
+        config._a[HOUR$1] = 0;
+    }
+
+    config._d = (config._useUTC ? createUTCDate : createDate).apply(null, input);
+    expectedWeekday = config._useUTC ? config._d.getUTCDay() : config._d.getDay();
+
+    // Apply timezone offset from input. The actual utcOffset can be changed
+    // with parseZone.
+    if (config._tzm != null) {
+        config._d.setUTCMinutes(config._d.getUTCMinutes() - config._tzm);
+    }
+
+    if (config._nextDay) {
+        config._a[HOUR$1] = 24;
+    }
+
+    // check for mismatching day of week
+    if (config._w && typeof config._w.d !== 'undefined' && config._w.d !== expectedWeekday) {
+        getParsingFlags(config).weekdayMismatch = true;
+    }
+}
+
+function dayOfYearFromWeekInfo(config) {
+    var w, weekYear, week, weekday, dow, doy, temp, weekdayOverflow;
+
+    w = config._w;
+    if (w.GG != null || w.W != null || w.E != null) {
+        dow = 1;
+        doy = 4;
+
+        // TODO: We need to take the current isoWeekYear, but that depends on
+        // how we interpret now (local, utc, fixed offset). So create
+        // a now version of current config (take local/utc/offset flags, and
+        // create now).
+        weekYear = defaults$1(w.GG, config._a[YEAR], weekOfYear(createLocal(), 1, 4).year);
+        week = defaults$1(w.W, 1);
+        weekday = defaults$1(w.E, 1);
+        if (weekday < 1 || weekday > 7) {
+            weekdayOverflow = true;
+        }
+    } else {
+        dow = config._locale._week.dow;
+        doy = config._locale._week.doy;
+
+        var curWeek = weekOfYear(createLocal(), dow, doy);
+
+        weekYear = defaults$1(w.gg, config._a[YEAR], curWeek.year);
+
+        // Default to current week.
+        week = defaults$1(w.w, curWeek.week);
+
+        if (w.d != null) {
+            // weekday -- low day numbers are considered next week
+            weekday = w.d;
+            if (weekday < 0 || weekday > 6) {
+                weekdayOverflow = true;
+            }
+        } else if (w.e != null) {
+            // local weekday -- counting starts from begining of week
+            weekday = w.e + dow;
+            if (w.e < 0 || w.e > 6) {
+                weekdayOverflow = true;
+            }
+        } else {
+            // default to begining of week
+            weekday = dow;
+        }
+    }
+    if (week < 1 || week > weeksInYear(weekYear, dow, doy)) {
+        getParsingFlags(config)._overflowWeeks = true;
+    } else if (weekdayOverflow != null) {
+        getParsingFlags(config)._overflowWeekday = true;
+    } else {
+        temp = dayOfYearFromWeeks(weekYear, week, weekday, dow, doy);
+        config._a[YEAR] = temp.year;
+        config._dayOfYear = temp.dayOfYear;
+    }
+}
+
+// iso 8601 regex
+// 0000-00-00 0000-W00 or 0000-W00-0 + T + 00 or 00:00 or 00:00:00 or 00:00:00.000 + +00:00 or +0000 or +00)
+var extendedIsoRegex = /^\s*((?:[+-]\d{6}|\d{4})-(?:\d\d-\d\d|W\d\d-\d|W\d\d|\d\d\d|\d\d))(?:(T| )(\d\d(?::\d\d(?::\d\d(?:[.,]\d+)?)?)?)([\+\-]\d\d(?::?\d\d)?|\s*Z)?)?$/;
+var basicIsoRegex = /^\s*((?:[+-]\d{6}|\d{4})(?:\d\d\d\d|W\d\d\d|W\d\d|\d\d\d|\d\d))(?:(T| )(\d\d(?:\d\d(?:\d\d(?:[.,]\d+)?)?)?)([\+\-]\d\d(?::?\d\d)?|\s*Z)?)?$/;
+
+var tzRegex = /Z|[+-]\d\d(?::?\d\d)?/;
+
+var isoDates = [
+    ['YYYYYY-MM-DD', /[+-]\d{6}-\d\d-\d\d/],
+    ['YYYY-MM-DD', /\d{4}-\d\d-\d\d/],
+    ['GGGG-[W]WW-E', /\d{4}-W\d\d-\d/],
+    ['GGGG-[W]WW', /\d{4}-W\d\d/, false],
+    ['YYYY-DDD', /\d{4}-\d{3}/],
+    ['YYYY-MM', /\d{4}-\d\d/, false],
+    ['YYYYYYMMDD', /[+-]\d{10}/],
+    ['YYYYMMDD', /\d{8}/],
+    // YYYYMM is NOT allowed by the standard
+    ['GGGG[W]WWE', /\d{4}W\d{3}/],
+    ['GGGG[W]WW', /\d{4}W\d{2}/, false],
+    ['YYYYDDD', /\d{7}/]
+];
+
+// iso time formats and regexes
+var isoTimes = [
+    ['HH:mm:ss.SSSS', /\d\d:\d\d:\d\d\.\d+/],
+    ['HH:mm:ss,SSSS', /\d\d:\d\d:\d\d,\d+/],
+    ['HH:mm:ss', /\d\d:\d\d:\d\d/],
+    ['HH:mm', /\d\d:\d\d/],
+    ['HHmmss.SSSS', /\d\d\d\d\d\d\.\d+/],
+    ['HHmmss,SSSS', /\d\d\d\d\d\d,\d+/],
+    ['HHmmss', /\d\d\d\d\d\d/],
+    ['HHmm', /\d\d\d\d/],
+    ['HH', /\d\d/]
+];
+
+var aspNetJsonRegex = /^\/?Date\((\-?\d+)/i;
+
+// date from iso format
+function configFromISO(config) {
+    var i, l,
+        string = config._i,
+        match = extendedIsoRegex.exec(string) || basicIsoRegex.exec(string),
+        allowTime, dateFormat, timeFormat, tzFormat;
+
+    if (match) {
+        getParsingFlags(config).iso = true;
+
+        for (i = 0, l = isoDates.length; i < l; i++) {
+            if (isoDates[i][1].exec(match[1])) {
+                dateFormat = isoDates[i][0];
+                allowTime = isoDates[i][2] !== false;
+                break;
+            }
+        }
+        if (dateFormat == null) {
+            config._isValid = false;
+            return;
+        }
+        if (match[3]) {
+            for (i = 0, l = isoTimes.length; i < l; i++) {
+                if (isoTimes[i][1].exec(match[3])) {
+                    // match[2] should be 'T' or space
+                    timeFormat = (match[2] || ' ') + isoTimes[i][0];
+                    break;
+                }
+            }
+            if (timeFormat == null) {
+                config._isValid = false;
+                return;
+            }
+        }
+        if (!allowTime && timeFormat != null) {
+            config._isValid = false;
+            return;
+        }
+        if (match[4]) {
+            if (tzRegex.exec(match[4])) {
+                tzFormat = 'Z';
+            } else {
+                config._isValid = false;
+                return;
+            }
+        }
+        config._f = dateFormat + (timeFormat || '') + (tzFormat || '');
+        configFromStringAndFormat(config);
+    } else {
+        config._isValid = false;
+    }
+}
+
+// RFC 2822 regex: For details see https://tools.ietf.org/html/rfc2822#section-3.3
+var rfc2822 = /^(?:(Mon|Tue|Wed|Thu|Fri|Sat|Sun),?\s)?(\d{1,2})\s(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s(\d{2,4})\s(\d\d):(\d\d)(?::(\d\d))?\s(?:(UT|GMT|[ECMP][SD]T)|([Zz])|([+-]\d{4}))$/;
+
+function extractFromRFC2822Strings(yearStr, monthStr, dayStr, hourStr, minuteStr, secondStr) {
+    var result = [
+        untruncateYear(yearStr),
+        defaultLocaleMonthsShort.indexOf(monthStr),
+        parseInt(dayStr, 10),
+        parseInt(hourStr, 10),
+        parseInt(minuteStr, 10)
+    ];
+
+    if (secondStr) {
+        result.push(parseInt(secondStr, 10));
+    }
+
+    return result;
+}
+
+function untruncateYear(yearStr) {
+    var year = parseInt(yearStr, 10);
+    if (year <= 49) {
+        return 2000 + year;
+    } else if (year <= 999) {
+        return 1900 + year;
+    }
+    return year;
+}
+
+function preprocessRFC2822(s) {
+    // Remove comments and folding whitespace and replace multiple-spaces with a single space
+    return s.replace(/\([^)]*\)|[\n\t]/g, ' ').replace(/(\s\s+)/g, ' ').trim();
+}
+
+function checkWeekday(weekdayStr, parsedInput, config) {
+    if (weekdayStr) {
+        // TODO: Replace the vanilla JS Date object with an indepentent day-of-week check.
+        var weekdayProvided = defaultLocaleWeekdaysShort.indexOf(weekdayStr),
+            weekdayActual = new Date(parsedInput[0], parsedInput[1], parsedInput[2]).getDay();
+        if (weekdayProvided !== weekdayActual) {
+            getParsingFlags(config).weekdayMismatch = true;
+            config._isValid = false;
+            return false;
+        }
+    }
+    return true;
+}
+
+var obsOffsets = {
+    UT: 0,
+    GMT: 0,
+    EDT: -4 * 60,
+    EST: -5 * 60,
+    CDT: -5 * 60,
+    CST: -6 * 60,
+    MDT: -6 * 60,
+    MST: -7 * 60,
+    PDT: -7 * 60,
+    PST: -8 * 60
+};
+
+function calculateOffset(obsOffset, militaryOffset, numOffset) {
+    if (obsOffset) {
+        return obsOffsets[obsOffset];
+    } else if (militaryOffset) {
+        // the only allowed military tz is Z
+        return 0;
+    } else {
+        var hm = parseInt(numOffset, 10);
+        var m = hm % 100, h = (hm - m) / 100;
+        return h * 60 + m;
+    }
+}
+
+// date and time from ref 2822 format
+function configFromRFC2822(config) {
+    var match = rfc2822.exec(preprocessRFC2822(config._i));
+    if (match) {
+        var parsedArray = extractFromRFC2822Strings(match[4], match[3], match[2], match[5], match[6], match[7]);
+        if (!checkWeekday(match[1], parsedArray, config)) {
+            return;
+        }
+
+        config._a = parsedArray;
+        config._tzm = calculateOffset(match[8], match[9], match[10]);
+
+        config._d = createUTCDate.apply(null, config._a);
+        config._d.setUTCMinutes(config._d.getUTCMinutes() - config._tzm);
+
+        getParsingFlags(config).rfc2822 = true;
+    } else {
+        config._isValid = false;
+    }
+}
+
+// date from iso format or fallback
+function configFromString(config) {
+    var matched = aspNetJsonRegex.exec(config._i);
+
+    if (matched !== null) {
+        config._d = new Date(+matched[1]);
+        return;
+    }
+
+    configFromISO(config);
+    if (config._isValid === false) {
+        delete config._isValid;
+    } else {
+        return;
+    }
+
+    configFromRFC2822(config);
+    if (config._isValid === false) {
+        delete config._isValid;
+    } else {
+        return;
+    }
+
+    // Final attempt, use Input Fallback
+    hooks.createFromInputFallback(config);
+}
+
+hooks.createFromInputFallback = deprecate(
+    'value provided is not in a recognized RFC2822 or ISO format. moment construction falls back to js Date(), ' +
+    'which is not reliable across all browsers and versions. Non RFC2822/ISO date formats are ' +
+    'discouraged and will be removed in an upcoming major release. Please refer to ' +
+    'http://momentjs.com/guides/#/warnings/js-date/ for more info.',
+    function (config) {
+        config._d = new Date(config._i + (config._useUTC ? ' UTC' : ''));
+    }
+);
+
+// constant that refers to the ISO standard
+hooks.ISO_8601 = function () {};
+
+// constant that refers to the RFC 2822 form
+hooks.RFC_2822 = function () {};
+
+// date from string and format string
+function configFromStringAndFormat(config) {
+    // TODO: Move this to another part of the creation flow to prevent circular deps
+    if (config._f === hooks.ISO_8601) {
+        configFromISO(config);
+        return;
+    }
+    if (config._f === hooks.RFC_2822) {
+        configFromRFC2822(config);
+        return;
+    }
+    config._a = [];
+    getParsingFlags(config).empty = true;
+
+    // This array is used to make a Date, either with `new Date` or `Date.UTC`
+    var string = '' + config._i,
+        i, parsedInput, tokens, token, skipped,
+        stringLength = string.length,
+        totalParsedInputLength = 0;
+
+    tokens = expandFormat(config._f, config._locale).match(formattingTokens) || [];
+
+    for (i = 0; i < tokens.length; i++) {
+        token = tokens[i];
+        parsedInput = (string.match(getParseRegexForToken(token, config)) || [])[0];
+        // console.log('token', token, 'parsedInput', parsedInput,
+        //         'regex', getParseRegexForToken(token, config));
+        if (parsedInput) {
+            skipped = string.substr(0, string.indexOf(parsedInput));
+            if (skipped.length > 0) {
+                getParsingFlags(config).unusedInput.push(skipped);
+            }
+            string = string.slice(string.indexOf(parsedInput) + parsedInput.length);
+            totalParsedInputLength += parsedInput.length;
+        }
+        // don't parse if it's not a known token
+        if (formatTokenFunctions[token]) {
+            if (parsedInput) {
+                getParsingFlags(config).empty = false;
+            }
+            else {
+                getParsingFlags(config).unusedTokens.push(token);
+            }
+            addTimeToArrayFromToken(token, parsedInput, config);
+        }
+        else if (config._strict && !parsedInput) {
+            getParsingFlags(config).unusedTokens.push(token);
+        }
+    }
+
+    // add remaining unparsed input length to the string
+    getParsingFlags(config).charsLeftOver = stringLength - totalParsedInputLength;
+    if (string.length > 0) {
+        getParsingFlags(config).unusedInput.push(string);
+    }
+
+    // clear _12h flag if hour is <= 12
+    if (config._a[HOUR$1] <= 12 &&
+        getParsingFlags(config).bigHour === true &&
+        config._a[HOUR$1] > 0) {
+        getParsingFlags(config).bigHour = undefined;
+    }
+
+    getParsingFlags(config).parsedDateParts = config._a.slice(0);
+    getParsingFlags(config).meridiem = config._meridiem;
+    // handle meridiem
+    config._a[HOUR$1] = meridiemFixWrap(config._locale, config._a[HOUR$1], config._meridiem);
+
+    configFromArray(config);
+    checkOverflow(config);
+}
+
+
+function meridiemFixWrap (locale, hour, meridiem) {
+    var isPm;
+
+    if (meridiem == null) {
+        // nothing to do
+        return hour;
+    }
+    if (locale.meridiemHour != null) {
+        return locale.meridiemHour(hour, meridiem);
+    } else if (locale.isPM != null) {
+        // Fallback
+        isPm = locale.isPM(meridiem);
+        if (isPm && hour < 12) {
+            hour += 12;
+        }
+        if (!isPm && hour === 12) {
+            hour = 0;
+        }
+        return hour;
+    } else {
+        // this is not supposed to happen
+        return hour;
+    }
+}
+
+// date from string and array of format strings
+function configFromStringAndArray(config) {
+    var tempConfig,
+        bestMoment,
+
+        scoreToBeat,
+        i,
+        currentScore;
+
+    if (config._f.length === 0) {
+        getParsingFlags(config).invalidFormat = true;
+        config._d = new Date(NaN);
+        return;
+    }
+
+    for (i = 0; i < config._f.length; i++) {
+        currentScore = 0;
+        tempConfig = copyConfig({}, config);
+        if (config._useUTC != null) {
+            tempConfig._useUTC = config._useUTC;
+        }
+        tempConfig._f = config._f[i];
+        configFromStringAndFormat(tempConfig);
+
+        if (!isValid(tempConfig)) {
+            continue;
+        }
+
+        // if there is any input that was not parsed add a penalty for that format
+        currentScore += getParsingFlags(tempConfig).charsLeftOver;
+
+        //or tokens
+        currentScore += getParsingFlags(tempConfig).unusedTokens.length * 10;
+
+        getParsingFlags(tempConfig).score = currentScore;
+
+        if (scoreToBeat == null || currentScore < scoreToBeat) {
+            scoreToBeat = currentScore;
+            bestMoment = tempConfig;
+        }
+    }
+
+    extend$1(config, bestMoment || tempConfig);
+}
+
+function configFromObject(config) {
+    if (config._d) {
+        return;
+    }
+
+    var i = normalizeObjectUnits(config._i);
+    config._a = map([i.year, i.month, i.day || i.date, i.hour, i.minute, i.second, i.millisecond], function (obj) {
+        return obj && parseInt(obj, 10);
+    });
+
+    configFromArray(config);
+}
+
+function createFromConfig (config) {
+    var res = new Moment(checkOverflow(prepareConfig(config)));
+    if (res._nextDay) {
+        // Adding is smart enough around DST
+        res.add(1, 'd');
+        res._nextDay = undefined;
+    }
+
+    return res;
+}
+
+function prepareConfig (config) {
+    var input = config._i,
+        format = config._f;
+
+    config._locale = config._locale || getLocale(config._l);
+
+    if (input === null || (format === undefined && input === '')) {
+        return createInvalid({nullInput: true});
+    }
+
+    if (typeof input === 'string') {
+        config._i = input = config._locale.preparse(input);
+    }
+
+    if (isMoment(input)) {
+        return new Moment(checkOverflow(input));
+    } else if (isDate(input)) {
+        config._d = input;
+    } else if (isArray$4(format)) {
+        configFromStringAndArray(config);
+    } else if (format) {
+        configFromStringAndFormat(config);
+    }  else {
+        configFromInput(config);
+    }
+
+    if (!isValid(config)) {
+        config._d = null;
+    }
+
+    return config;
+}
+
+function configFromInput(config) {
+    var input = config._i;
+    if (isUndefined$2(input)) {
+        config._d = new Date(hooks.now());
+    } else if (isDate(input)) {
+        config._d = new Date(input.valueOf());
+    } else if (typeof input === 'string') {
+        configFromString(config);
+    } else if (isArray$4(input)) {
+        config._a = map(input.slice(0), function (obj) {
+            return parseInt(obj, 10);
+        });
+        configFromArray(config);
+    } else if (isObject$3(input)) {
+        configFromObject(config);
+    } else if (isNumber(input)) {
+        // from milliseconds
+        config._d = new Date(input);
+    } else {
+        hooks.createFromInputFallback(config);
+    }
+}
+
+function createLocalOrUTC (input, format, locale, strict, isUTC) {
+    var c = {};
+
+    if (locale === true || locale === false) {
+        strict = locale;
+        locale = undefined;
+    }
+
+    if ((isObject$3(input) && isObjectEmpty(input)) ||
+            (isArray$4(input) && input.length === 0)) {
+        input = undefined;
+    }
+    // object construction must be done this way.
+    // https://github.com/moment/moment/issues/1423
+    c._isAMomentObject = true;
+    c._useUTC = c._isUTC = isUTC;
+    c._l = locale;
+    c._i = input;
+    c._f = format;
+    c._strict = strict;
+
+    return createFromConfig(c);
+}
+
+function createLocal (input, format, locale, strict) {
+    return createLocalOrUTC(input, format, locale, strict, false);
+}
+
+var prototypeMin = deprecate(
+    'moment().min is deprecated, use moment.max instead. http://momentjs.com/guides/#/warnings/min-max/',
+    function () {
+        var other = createLocal.apply(null, arguments);
+        if (this.isValid() && other.isValid()) {
+            return other < this ? this : other;
+        } else {
+            return createInvalid();
+        }
+    }
+);
+
+var prototypeMax = deprecate(
+    'moment().max is deprecated, use moment.min instead. http://momentjs.com/guides/#/warnings/min-max/',
+    function () {
+        var other = createLocal.apply(null, arguments);
+        if (this.isValid() && other.isValid()) {
+            return other > this ? this : other;
+        } else {
+            return createInvalid();
+        }
+    }
+);
+
+// Pick a moment m from moments so that m[fn](other) is true for all
+// other. This relies on the function fn to be transitive.
+//
+// moments should either be an array of moment objects or an array, whose
+// first element is an array of moment objects.
+function pickBy(fn, moments) {
+    var res, i;
+    if (moments.length === 1 && isArray$4(moments[0])) {
+        moments = moments[0];
+    }
+    if (!moments.length) {
+        return createLocal();
+    }
+    res = moments[0];
+    for (i = 1; i < moments.length; ++i) {
+        if (!moments[i].isValid() || moments[i][fn](res)) {
+            res = moments[i];
+        }
+    }
+    return res;
+}
+
+// TODO: Use [].sort instead?
+function min$2 () {
+    var args = [].slice.call(arguments, 0);
+
+    return pickBy('isBefore', args);
+}
+
+function max$1 () {
+    var args = [].slice.call(arguments, 0);
+
+    return pickBy('isAfter', args);
+}
+
+var now$1 = function () {
+    return Date.now ? Date.now() : +(new Date());
+};
+
+var ordering = ['year', 'quarter', 'month', 'week', 'day', 'hour', 'minute', 'second', 'millisecond'];
+
+function isDurationValid(m) {
+    for (var key in m) {
+        if (!(indexOf.call(ordering, key) !== -1 && (m[key] == null || !isNaN(m[key])))) {
+            return false;
+        }
+    }
+
+    var unitHasDecimal = false;
+    for (var i = 0; i < ordering.length; ++i) {
+        if (m[ordering[i]]) {
+            if (unitHasDecimal) {
+                return false; // only allow non-integers for smallest unit
+            }
+            if (parseFloat(m[ordering[i]]) !== toInt(m[ordering[i]])) {
+                unitHasDecimal = true;
+            }
+        }
+    }
+
+    return true;
+}
+
+function isValid$1() {
+    return this._isValid;
+}
+
+function createInvalid$1() {
+    return createDuration(NaN);
+}
+
+function Duration (duration) {
+    var normalizedInput = normalizeObjectUnits(duration),
+        years = normalizedInput.year || 0,
+        quarters = normalizedInput.quarter || 0,
+        months = normalizedInput.month || 0,
+        weeks = normalizedInput.week || 0,
+        days = normalizedInput.day || 0,
+        hours = normalizedInput.hour || 0,
+        minutes = normalizedInput.minute || 0,
+        seconds = normalizedInput.second || 0,
+        milliseconds = normalizedInput.millisecond || 0;
+
+    this._isValid = isDurationValid(normalizedInput);
+
+    // representation for dateAddRemove
+    this._milliseconds = +milliseconds +
+        seconds * 1e3 + // 1000
+        minutes * 6e4 + // 1000 * 60
+        hours * 1000 * 60 * 60; //using 1000 * 60 * 60 instead of 36e5 to avoid floating point rounding errors https://github.com/moment/moment/issues/2978
+    // Because of dateAddRemove treats 24 hours as different from a
+    // day when working around DST, we need to store them separately
+    this._days = +days +
+        weeks * 7;
+    // It is impossible to translate months into days without knowing
+    // which months you are are talking about, so we have to store
+    // it separately.
+    this._months = +months +
+        quarters * 3 +
+        years * 12;
+
+    this._data = {};
+
+    this._locale = getLocale();
+
+    this._bubble();
+}
+
+function isDuration (obj) {
+    return obj instanceof Duration;
+}
+
+function absRound (number) {
+    if (number < 0) {
+        return Math.round(-1 * number) * -1;
+    } else {
+        return Math.round(number);
+    }
+}
+
+// FORMATTING
+
+function offset (token, separator) {
+    addFormatToken(token, 0, 0, function () {
+        var offset = this.utcOffset();
+        var sign = '+';
+        if (offset < 0) {
+            offset = -offset;
+            sign = '-';
+        }
+        return sign + zeroFill(~~(offset / 60), 2) + separator + zeroFill(~~(offset) % 60, 2);
+    });
+}
+
+offset('Z', ':');
+offset('ZZ', '');
+
+// PARSING
+
+addRegexToken('Z',  matchShortOffset);
+addRegexToken('ZZ', matchShortOffset);
+addParseToken(['Z', 'ZZ'], function (input, array, config) {
+    config._useUTC = true;
+    config._tzm = offsetFromString(matchShortOffset, input);
+});
+
+// HELPERS
+
+// timezone chunker
+// '+10:00' > ['10',  '00']
+// '-1530'  > ['-15', '30']
+var chunkOffset = /([\+\-]|\d\d)/gi;
+
+function offsetFromString(matcher, string) {
+    var matches = (string || '').match(matcher);
+
+    if (matches === null) {
+        return null;
+    }
+
+    var chunk   = matches[matches.length - 1] || [];
+    var parts   = (chunk + '').match(chunkOffset) || ['-', 0, 0];
+    var minutes = +(parts[1] * 60) + toInt(parts[2]);
+
+    return minutes === 0 ?
+      0 :
+      parts[0] === '+' ? minutes : -minutes;
+}
+
+// Return a moment from input, that is local/utc/zone equivalent to model.
+function cloneWithOffset(input, model) {
+    var res, diff;
+    if (model._isUTC) {
+        res = model.clone();
+        diff = (isMoment(input) || isDate(input) ? input.valueOf() : createLocal(input).valueOf()) - res.valueOf();
+        // Use low-level api, because this fn is low-level api.
+        res._d.setTime(res._d.valueOf() + diff);
+        hooks.updateOffset(res, false);
+        return res;
+    } else {
+        return createLocal(input).local();
+    }
+}
+
+function getDateOffset (m) {
+    // On Firefox.24 Date#getTimezoneOffset returns a floating point.
+    // https://github.com/moment/moment/pull/1871
+    return -Math.round(m._d.getTimezoneOffset() / 15) * 15;
+}
+
+// HOOKS
+
+// This function will be called whenever a moment is mutated.
+// It is intended to keep the offset in sync with the timezone.
+hooks.updateOffset = function () {};
+
+// MOMENTS
+
+// keepLocalTime = true means only change the timezone, without
+// affecting the local hour. So 5:31:26 +0300 --[utcOffset(2, true)]-->
+// 5:31:26 +0200 It is possible that 5:31:26 doesn't exist with offset
+// +0200, so we adjust the time as needed, to be valid.
+//
+// Keeping the time actually adds/subtracts (one hour)
+// from the actual represented time. That is why we call updateOffset
+// a second time. In case it wants us to change the offset again
+// _changeInProgress == true case, then we have to adjust, because
+// there is no such time in the given timezone.
+function getSetOffset (input, keepLocalTime, keepMinutes) {
+    var offset = this._offset || 0,
+        localAdjust;
+    if (!this.isValid()) {
+        return input != null ? this : NaN;
+    }
+    if (input != null) {
+        if (typeof input === 'string') {
+            input = offsetFromString(matchShortOffset, input);
+            if (input === null) {
+                return this;
+            }
+        } else if (Math.abs(input) < 16 && !keepMinutes) {
+            input = input * 60;
+        }
+        if (!this._isUTC && keepLocalTime) {
+            localAdjust = getDateOffset(this);
+        }
+        this._offset = input;
+        this._isUTC = true;
+        if (localAdjust != null) {
+            this.add(localAdjust, 'm');
+        }
+        if (offset !== input) {
+            if (!keepLocalTime || this._changeInProgress) {
+                addSubtract(this, createDuration(input - offset, 'm'), 1, false);
+            } else if (!this._changeInProgress) {
+                this._changeInProgress = true;
+                hooks.updateOffset(this, true);
+                this._changeInProgress = null;
+            }
+        }
+        return this;
+    } else {
+        return this._isUTC ? offset : getDateOffset(this);
+    }
+}
+
+function getSetZone (input, keepLocalTime) {
+    if (input != null) {
+        if (typeof input !== 'string') {
+            input = -input;
+        }
+
+        this.utcOffset(input, keepLocalTime);
+
+        return this;
+    } else {
+        return -this.utcOffset();
+    }
+}
+
+function setOffsetToUTC (keepLocalTime) {
+    return this.utcOffset(0, keepLocalTime);
+}
+
+function setOffsetToLocal (keepLocalTime) {
+    if (this._isUTC) {
+        this.utcOffset(0, keepLocalTime);
+        this._isUTC = false;
+
+        if (keepLocalTime) {
+            this.subtract(getDateOffset(this), 'm');
+        }
+    }
+    return this;
+}
+
+function setOffsetToParsedOffset () {
+    if (this._tzm != null) {
+        this.utcOffset(this._tzm, false, true);
+    } else if (typeof this._i === 'string') {
+        var tZone = offsetFromString(matchOffset, this._i);
+        if (tZone != null) {
+            this.utcOffset(tZone);
+        }
+        else {
+            this.utcOffset(0, true);
+        }
+    }
+    return this;
+}
+
+function hasAlignedHourOffset (input) {
+    if (!this.isValid()) {
+        return false;
+    }
+    input = input ? createLocal(input).utcOffset() : 0;
+
+    return (this.utcOffset() - input) % 60 === 0;
+}
+
+function isDaylightSavingTime () {
+    return (
+        this.utcOffset() > this.clone().month(0).utcOffset() ||
+        this.utcOffset() > this.clone().month(5).utcOffset()
+    );
+}
+
+function isDaylightSavingTimeShifted () {
+    if (!isUndefined$2(this._isDSTShifted)) {
+        return this._isDSTShifted;
+    }
+
+    var c = {};
+
+    copyConfig(c, this);
+    c = prepareConfig(c);
+
+    if (c._a) {
+        var other = c._isUTC ? createUTC(c._a) : createLocal(c._a);
+        this._isDSTShifted = this.isValid() &&
+            compareArrays(c._a, other.toArray()) > 0;
+    } else {
+        this._isDSTShifted = false;
+    }
+
+    return this._isDSTShifted;
+}
+
+function isLocal () {
+    return this.isValid() ? !this._isUTC : false;
+}
+
+function isUtcOffset () {
+    return this.isValid() ? this._isUTC : false;
+}
+
+function isUtc () {
+    return this.isValid() ? this._isUTC && this._offset === 0 : false;
+}
+
+// ASP.NET json date format regex
+var aspNetRegex = /^(\-|\+)?(?:(\d*)[. ])?(\d+)\:(\d+)(?:\:(\d+)(\.\d*)?)?$/;
+
+// from http://docs.closure-library.googlecode.com/git/closure_goog_date_date.js.source.html
+// somewhat more in line with 4.4.3.2 2004 spec, but allows decimal anywhere
+// and further modified to allow for strings containing both week and day
+var isoRegex = /^(-|\+)?P(?:([-+]?[0-9,.]*)Y)?(?:([-+]?[0-9,.]*)M)?(?:([-+]?[0-9,.]*)W)?(?:([-+]?[0-9,.]*)D)?(?:T(?:([-+]?[0-9,.]*)H)?(?:([-+]?[0-9,.]*)M)?(?:([-+]?[0-9,.]*)S)?)?$/;
+
+function createDuration (input, key) {
+    var duration = input,
+        // matching against regexp is expensive, do it on demand
+        match = null,
+        sign,
+        ret,
+        diffRes;
+
+    if (isDuration(input)) {
+        duration = {
+            ms : input._milliseconds,
+            d  : input._days,
+            M  : input._months
+        };
+    } else if (isNumber(input)) {
+        duration = {};
+        if (key) {
+            duration[key] = input;
+        } else {
+            duration.milliseconds = input;
+        }
+    } else if (!!(match = aspNetRegex.exec(input))) {
+        sign = (match[1] === '-') ? -1 : 1;
+        duration = {
+            y  : 0,
+            d  : toInt(match[DATE])                         * sign,
+            h  : toInt(match[HOUR$1])                         * sign,
+            m  : toInt(match[MINUTE$1])                       * sign,
+            s  : toInt(match[SECOND$1])                       * sign,
+            ms : toInt(absRound(match[MILLISECOND] * 1000)) * sign // the millisecond decimal point is included in the match
+        };
+    } else if (!!(match = isoRegex.exec(input))) {
+        sign = (match[1] === '-') ? -1 : (match[1] === '+') ? 1 : 1;
+        duration = {
+            y : parseIso(match[2], sign),
+            M : parseIso(match[3], sign),
+            w : parseIso(match[4], sign),
+            d : parseIso(match[5], sign),
+            h : parseIso(match[6], sign),
+            m : parseIso(match[7], sign),
+            s : parseIso(match[8], sign)
+        };
+    } else if (duration == null) {// checks for null or undefined
+        duration = {};
+    } else if (typeof duration === 'object' && ('from' in duration || 'to' in duration)) {
+        diffRes = momentsDifference(createLocal(duration.from), createLocal(duration.to));
+
+        duration = {};
+        duration.ms = diffRes.milliseconds;
+        duration.M = diffRes.months;
+    }
+
+    ret = new Duration(duration);
+
+    if (isDuration(input) && hasOwnProp(input, '_locale')) {
+        ret._locale = input._locale;
+    }
+
+    return ret;
+}
+
+createDuration.fn = Duration.prototype;
+createDuration.invalid = createInvalid$1;
+
+function parseIso (inp, sign) {
+    // We'd normally use ~~inp for this, but unfortunately it also
+    // converts floats to ints.
+    // inp may be undefined, so careful calling replace on it.
+    var res = inp && parseFloat(inp.replace(',', '.'));
+    // apply sign while we're at it
+    return (isNaN(res) ? 0 : res) * sign;
+}
+
+function positiveMomentsDifference(base, other) {
+    var res = {milliseconds: 0, months: 0};
+
+    res.months = other.month() - base.month() +
+        (other.year() - base.year()) * 12;
+    if (base.clone().add(res.months, 'M').isAfter(other)) {
+        --res.months;
+    }
+
+    res.milliseconds = +other - +(base.clone().add(res.months, 'M'));
+
+    return res;
+}
+
+function momentsDifference(base, other) {
+    var res;
+    if (!(base.isValid() && other.isValid())) {
+        return {milliseconds: 0, months: 0};
+    }
+
+    other = cloneWithOffset(other, base);
+    if (base.isBefore(other)) {
+        res = positiveMomentsDifference(base, other);
+    } else {
+        res = positiveMomentsDifference(other, base);
+        res.milliseconds = -res.milliseconds;
+        res.months = -res.months;
+    }
+
+    return res;
+}
+
+// TODO: remove 'name' arg after deprecation is removed
+function createAdder(direction, name) {
+    return function (val, period) {
+        var dur, tmp;
+        //invert the arguments, but complain about it
+        if (period !== null && !isNaN(+period)) {
+            deprecateSimple(name, 'moment().' + name  + '(period, number) is deprecated. Please use moment().' + name + '(number, period). ' +
+            'See http://momentjs.com/guides/#/warnings/add-inverted-param/ for more info.');
+            tmp = val; val = period; period = tmp;
+        }
+
+        val = typeof val === 'string' ? +val : val;
+        dur = createDuration(val, period);
+        addSubtract(this, dur, direction);
+        return this;
+    };
+}
+
+function addSubtract (mom, duration, isAdding, updateOffset) {
+    var milliseconds = duration._milliseconds,
+        days = absRound(duration._days),
+        months = absRound(duration._months);
+
+    if (!mom.isValid()) {
+        // No op
+        return;
+    }
+
+    updateOffset = updateOffset == null ? true : updateOffset;
+
+    if (months) {
+        setMonth(mom, get$2(mom, 'Month') + months * isAdding);
+    }
+    if (days) {
+        set$3(mom, 'Date', get$2(mom, 'Date') + days * isAdding);
+    }
+    if (milliseconds) {
+        mom._d.setTime(mom._d.valueOf() + milliseconds * isAdding);
+    }
+    if (updateOffset) {
+        hooks.updateOffset(mom, days || months);
+    }
+}
+
+var add      = createAdder(1, 'add');
+var subtract = createAdder(-1, 'subtract');
+
+function getCalendarFormat(myMoment, now) {
+    var diff = myMoment.diff(now, 'days', true);
+    return diff < -6 ? 'sameElse' :
+            diff < -1 ? 'lastWeek' :
+            diff < 0 ? 'lastDay' :
+            diff < 1 ? 'sameDay' :
+            diff < 2 ? 'nextDay' :
+            diff < 7 ? 'nextWeek' : 'sameElse';
+}
+
+function calendar$1 (time, formats) {
+    // We want to compare the start of today, vs this.
+    // Getting start-of-today depends on whether we're local/utc/offset or not.
+    var now = time || createLocal(),
+        sod = cloneWithOffset(now, this).startOf('day'),
+        format = hooks.calendarFormat(this, sod) || 'sameElse';
+
+    var output = formats && (isFunction$2(formats[format]) ? formats[format].call(this, now) : formats[format]);
+
+    return this.format(output || this.localeData().calendar(format, this, createLocal(now)));
+}
+
+function clone () {
+    return new Moment(this);
+}
+
+function isAfter (input, units) {
+    var localInput = isMoment(input) ? input : createLocal(input);
+    if (!(this.isValid() && localInput.isValid())) {
+        return false;
+    }
+    units = normalizeUnits(!isUndefined$2(units) ? units : 'millisecond');
+    if (units === 'millisecond') {
+        return this.valueOf() > localInput.valueOf();
+    } else {
+        return localInput.valueOf() < this.clone().startOf(units).valueOf();
+    }
+}
+
+function isBefore (input, units) {
+    var localInput = isMoment(input) ? input : createLocal(input);
+    if (!(this.isValid() && localInput.isValid())) {
+        return false;
+    }
+    units = normalizeUnits(!isUndefined$2(units) ? units : 'millisecond');
+    if (units === 'millisecond') {
+        return this.valueOf() < localInput.valueOf();
+    } else {
+        return this.clone().endOf(units).valueOf() < localInput.valueOf();
+    }
+}
+
+function isBetween (from, to, units, inclusivity) {
+    inclusivity = inclusivity || '()';
+    return (inclusivity[0] === '(' ? this.isAfter(from, units) : !this.isBefore(from, units)) &&
+        (inclusivity[1] === ')' ? this.isBefore(to, units) : !this.isAfter(to, units));
+}
+
+function isSame (input, units) {
+    var localInput = isMoment(input) ? input : createLocal(input),
+        inputMs;
+    if (!(this.isValid() && localInput.isValid())) {
+        return false;
+    }
+    units = normalizeUnits(units || 'millisecond');
+    if (units === 'millisecond') {
+        return this.valueOf() === localInput.valueOf();
+    } else {
+        inputMs = localInput.valueOf();
+        return this.clone().startOf(units).valueOf() <= inputMs && inputMs <= this.clone().endOf(units).valueOf();
+    }
+}
+
+function isSameOrAfter (input, units) {
+    return this.isSame(input, units) || this.isAfter(input,units);
+}
+
+function isSameOrBefore (input, units) {
+    return this.isSame(input, units) || this.isBefore(input,units);
+}
+
+function diff$1 (input, units, asFloat) {
+    var that,
+        zoneDelta,
+        output;
+
+    if (!this.isValid()) {
+        return NaN;
+    }
+
+    that = cloneWithOffset(input, this);
+
+    if (!that.isValid()) {
+        return NaN;
+    }
+
+    zoneDelta = (that.utcOffset() - this.utcOffset()) * 6e4;
+
+    units = normalizeUnits(units);
+
+    switch (units) {
+        case 'year': output = monthDiff(this, that) / 12; break;
+        case 'month': output = monthDiff(this, that); break;
+        case 'quarter': output = monthDiff(this, that) / 3; break;
+        case 'second': output = (this - that) / 1e3; break; // 1000
+        case 'minute': output = (this - that) / 6e4; break; // 1000 * 60
+        case 'hour': output = (this - that) / 36e5; break; // 1000 * 60 * 60
+        case 'day': output = (this - that - zoneDelta) / 864e5; break; // 1000 * 60 * 60 * 24, negate dst
+        case 'week': output = (this - that - zoneDelta) / 6048e5; break; // 1000 * 60 * 60 * 24 * 7, negate dst
+        default: output = this - that;
+    }
+
+    return asFloat ? output : absFloor(output);
+}
+
+function monthDiff (a, b) {
+    // difference in months
+    var wholeMonthDiff = ((b.year() - a.year()) * 12) + (b.month() - a.month()),
+        // b is in (anchor - 1 month, anchor + 1 month)
+        anchor = a.clone().add(wholeMonthDiff, 'months'),
+        anchor2, adjust;
+
+    if (b - anchor < 0) {
+        anchor2 = a.clone().add(wholeMonthDiff - 1, 'months');
+        // linear across the month
+        adjust = (b - anchor) / (anchor - anchor2);
+    } else {
+        anchor2 = a.clone().add(wholeMonthDiff + 1, 'months');
+        // linear across the month
+        adjust = (b - anchor) / (anchor2 - anchor);
+    }
+
+    //check for negative zero, return zero if negative zero
+    return -(wholeMonthDiff + adjust) || 0;
+}
+
+hooks.defaultFormat = 'YYYY-MM-DDTHH:mm:ssZ';
+hooks.defaultFormatUtc = 'YYYY-MM-DDTHH:mm:ss[Z]';
+
+function toString$4 () {
+    return this.clone().locale('en').format('ddd MMM DD YYYY HH:mm:ss [GMT]ZZ');
+}
+
+function toISOString$1(keepOffset) {
+    if (!this.isValid()) {
+        return null;
+    }
+    var utc = keepOffset !== true;
+    var m = utc ? this.clone().utc() : this;
+    if (m.year() < 0 || m.year() > 9999) {
+        return formatMoment(m, utc ? 'YYYYYY-MM-DD[T]HH:mm:ss.SSS[Z]' : 'YYYYYY-MM-DD[T]HH:mm:ss.SSSZ');
+    }
+    if (isFunction$2(Date.prototype.toISOString)) {
+        // native implementation is ~50x faster, use it when we can
+        if (utc) {
+            return this.toDate().toISOString();
+        } else {
+            return new Date(this.valueOf() + this.utcOffset() * 60 * 1000).toISOString().replace('Z', formatMoment(m, 'Z'));
+        }
+    }
+    return formatMoment(m, utc ? 'YYYY-MM-DD[T]HH:mm:ss.SSS[Z]' : 'YYYY-MM-DD[T]HH:mm:ss.SSSZ');
+}
+
+/**
+ * Return a human readable representation of a moment that can
+ * also be evaluated to get a new moment which is the same
+ *
+ * @link https://nodejs.org/dist/latest/docs/api/util.html#util_custom_inspect_function_on_objects
+ */
+function inspect () {
+    if (!this.isValid()) {
+        return 'moment.invalid(/* ' + this._i + ' */)';
+    }
+    var func = 'moment';
+    var zone = '';
+    if (!this.isLocal()) {
+        func = this.utcOffset() === 0 ? 'moment.utc' : 'moment.parseZone';
+        zone = 'Z';
+    }
+    var prefix = '[' + func + '("]';
+    var year = (0 <= this.year() && this.year() <= 9999) ? 'YYYY' : 'YYYYYY';
+    var datetime = '-MM-DD[T]HH:mm:ss.SSS';
+    var suffix = zone + '[")]';
+
+    return this.format(prefix + year + datetime + suffix);
+}
+
+function format$1 (inputString) {
+    if (!inputString) {
+        inputString = this.isUtc() ? hooks.defaultFormatUtc : hooks.defaultFormat;
+    }
+    var output = formatMoment(this, inputString);
+    return this.localeData().postformat(output);
+}
+
+function from$1 (time, withoutSuffix) {
+    if (this.isValid() &&
+            ((isMoment(time) && time.isValid()) ||
+             createLocal(time).isValid())) {
+        return createDuration({to: this, from: time}).locale(this.locale()).humanize(!withoutSuffix);
+    } else {
+        return this.localeData().invalidDate();
+    }
+}
+
+function fromNow (withoutSuffix) {
+    return this.from(createLocal(), withoutSuffix);
+}
+
+function to (time, withoutSuffix) {
+    if (this.isValid() &&
+            ((isMoment(time) && time.isValid()) ||
+             createLocal(time).isValid())) {
+        return createDuration({from: this, to: time}).locale(this.locale()).humanize(!withoutSuffix);
+    } else {
+        return this.localeData().invalidDate();
+    }
+}
+
+function toNow (withoutSuffix) {
+    return this.to(createLocal(), withoutSuffix);
+}
+
+// If passed a locale key, it will set the locale for this
+// instance.  Otherwise, it will return the locale configuration
+// variables for this instance.
+function locale (key) {
+    var newLocaleData;
+
+    if (key === undefined) {
+        return this._locale._abbr;
+    } else {
+        newLocaleData = getLocale(key);
+        if (newLocaleData != null) {
+            this._locale = newLocaleData;
+        }
+        return this;
+    }
+}
+
+var lang = deprecate(
+    'moment().lang() is deprecated. Instead, use moment().localeData() to get the language configuration. Use moment().locale() to change languages.',
+    function (key) {
+        if (key === undefined) {
+            return this.localeData();
+        } else {
+            return this.locale(key);
+        }
+    }
+);
+
+function localeData () {
+    return this._locale;
+}
+
+function startOf (units) {
+    units = normalizeUnits(units);
+    // the following switch intentionally omits break keywords
+    // to utilize falling through the cases.
+    switch (units) {
+        case 'year':
+            this.month(0);
+            /* falls through */
+        case 'quarter':
+        case 'month':
+            this.date(1);
+            /* falls through */
+        case 'week':
+        case 'isoWeek':
+        case 'day':
+        case 'date':
+            this.hours(0);
+            /* falls through */
+        case 'hour':
+            this.minutes(0);
+            /* falls through */
+        case 'minute':
+            this.seconds(0);
+            /* falls through */
+        case 'second':
+            this.milliseconds(0);
+    }
+
+    // weeks are a special case
+    if (units === 'week') {
+        this.weekday(0);
+    }
+    if (units === 'isoWeek') {
+        this.isoWeekday(1);
+    }
+
+    // quarters are also special
+    if (units === 'quarter') {
+        this.month(Math.floor(this.month() / 3) * 3);
+    }
+
+    return this;
+}
+
+function endOf (units) {
+    units = normalizeUnits(units);
+    if (units === undefined || units === 'millisecond') {
+        return this;
+    }
+
+    // 'date' is an alias for 'day', so it should be considered as such.
+    if (units === 'date') {
+        units = 'day';
+    }
+
+    return this.startOf(units).add(1, (units === 'isoWeek' ? 'week' : units)).subtract(1, 'ms');
+}
+
+function valueOf () {
+    return this._d.valueOf() - ((this._offset || 0) * 60000);
+}
+
+function unix () {
+    return Math.floor(this.valueOf() / 1000);
+}
+
+function toDate () {
+    return new Date(this.valueOf());
+}
+
+function toArray$1 () {
+    var m = this;
+    return [m.year(), m.month(), m.date(), m.hour(), m.minute(), m.second(), m.millisecond()];
+}
+
+function toObject$2 () {
+    var m = this;
+    return {
+        years: m.year(),
+        months: m.month(),
+        date: m.date(),
+        hours: m.hours(),
+        minutes: m.minutes(),
+        seconds: m.seconds(),
+        milliseconds: m.milliseconds()
+    };
+}
+
+function toJSON () {
+    // new Date(NaN).toJSON() === null
+    return this.isValid() ? this.toISOString() : null;
+}
+
+function isValid$2 () {
+    return isValid(this);
+}
+
+function parsingFlags () {
+    return extend$1({}, getParsingFlags(this));
+}
+
+function invalidAt () {
+    return getParsingFlags(this).overflow;
+}
+
+function creationData() {
+    return {
+        input: this._i,
+        format: this._f,
+        locale: this._locale,
+        isUTC: this._isUTC,
+        strict: this._strict
+    };
+}
+
+// FORMATTING
+
+addFormatToken(0, ['gg', 2], 0, function () {
+    return this.weekYear() % 100;
+});
+
+addFormatToken(0, ['GG', 2], 0, function () {
+    return this.isoWeekYear() % 100;
+});
+
+function addWeekYearFormatToken (token, getter) {
+    addFormatToken(0, [token, token.length], 0, getter);
+}
+
+addWeekYearFormatToken('gggg',     'weekYear');
+addWeekYearFormatToken('ggggg',    'weekYear');
+addWeekYearFormatToken('GGGG',  'isoWeekYear');
+addWeekYearFormatToken('GGGGG', 'isoWeekYear');
+
+// ALIASES
+
+addUnitAlias('weekYear', 'gg');
+addUnitAlias('isoWeekYear', 'GG');
+
+// PRIORITY
+
+addUnitPriority('weekYear', 1);
+addUnitPriority('isoWeekYear', 1);
+
+
+// PARSING
+
+addRegexToken('G',      matchSigned);
+addRegexToken('g',      matchSigned);
+addRegexToken('GG',     match1to2, match2);
+addRegexToken('gg',     match1to2, match2);
+addRegexToken('GGGG',   match1to4, match4);
+addRegexToken('gggg',   match1to4, match4);
+addRegexToken('GGGGG',  match1to6, match6);
+addRegexToken('ggggg',  match1to6, match6);
+
+addWeekParseToken(['gggg', 'ggggg', 'GGGG', 'GGGGG'], function (input, week, config, token) {
+    week[token.substr(0, 2)] = toInt(input);
+});
+
+addWeekParseToken(['gg', 'GG'], function (input, week, config, token) {
+    week[token] = hooks.parseTwoDigitYear(input);
+});
+
+// MOMENTS
+
+function getSetWeekYear (input) {
+    return getSetWeekYearHelper.call(this,
+            input,
+            this.week(),
+            this.weekday(),
+            this.localeData()._week.dow,
+            this.localeData()._week.doy);
+}
+
+function getSetISOWeekYear (input) {
+    return getSetWeekYearHelper.call(this,
+            input, this.isoWeek(), this.isoWeekday(), 1, 4);
+}
+
+function getISOWeeksInYear () {
+    return weeksInYear(this.year(), 1, 4);
+}
+
+function getWeeksInYear () {
+    var weekInfo = this.localeData()._week;
+    return weeksInYear(this.year(), weekInfo.dow, weekInfo.doy);
+}
+
+function getSetWeekYearHelper(input, week, weekday, dow, doy) {
+    var weeksTarget;
+    if (input == null) {
+        return weekOfYear(this, dow, doy).year;
+    } else {
+        weeksTarget = weeksInYear(input, dow, doy);
+        if (week > weeksTarget) {
+            week = weeksTarget;
+        }
+        return setWeekAll.call(this, input, week, weekday, dow, doy);
+    }
+}
+
+function setWeekAll(weekYear, week, weekday, dow, doy) {
+    var dayOfYearData = dayOfYearFromWeeks(weekYear, week, weekday, dow, doy),
+        date = createUTCDate(dayOfYearData.year, 0, dayOfYearData.dayOfYear);
+
+    this.year(date.getUTCFullYear());
+    this.month(date.getUTCMonth());
+    this.date(date.getUTCDate());
+    return this;
+}
+
+// FORMATTING
+
+addFormatToken('Q', 0, 'Qo', 'quarter');
+
+// ALIASES
+
+addUnitAlias('quarter', 'Q');
+
+// PRIORITY
+
+addUnitPriority('quarter', 7);
+
+// PARSING
+
+addRegexToken('Q', match1);
+addParseToken('Q', function (input, array) {
+    array[MONTH] = (toInt(input) - 1) * 3;
+});
+
+// MOMENTS
+
+function getSetQuarter (input) {
+    return input == null ? Math.ceil((this.month() + 1) / 3) : this.month((input - 1) * 3 + this.month() % 3);
+}
+
+// FORMATTING
+
+addFormatToken('D', ['DD', 2], 'Do', 'date');
+
+// ALIASES
+
+addUnitAlias('date', 'D');
+
+// PRIOROITY
+addUnitPriority('date', 9);
+
+// PARSING
+
+addRegexToken('D',  match1to2);
+addRegexToken('DD', match1to2, match2);
+addRegexToken('Do', function (isStrict, locale) {
+    // TODO: Remove "ordinalParse" fallback in next major release.
+    return isStrict ?
+      (locale._dayOfMonthOrdinalParse || locale._ordinalParse) :
+      locale._dayOfMonthOrdinalParseLenient;
+});
+
+addParseToken(['D', 'DD'], DATE);
+addParseToken('Do', function (input, array) {
+    array[DATE] = toInt(input.match(match1to2)[0]);
+});
+
+// MOMENTS
+
+var getSetDayOfMonth = makeGetSet('Date', true);
+
+// FORMATTING
+
+addFormatToken('DDD', ['DDDD', 3], 'DDDo', 'dayOfYear');
+
+// ALIASES
+
+addUnitAlias('dayOfYear', 'DDD');
+
+// PRIORITY
+addUnitPriority('dayOfYear', 4);
+
+// PARSING
+
+addRegexToken('DDD',  match1to3);
+addRegexToken('DDDD', match3);
+addParseToken(['DDD', 'DDDD'], function (input, array, config) {
+    config._dayOfYear = toInt(input);
+});
+
+// HELPERS
+
+// MOMENTS
+
+function getSetDayOfYear (input) {
+    var dayOfYear = Math.round((this.clone().startOf('day') - this.clone().startOf('year')) / 864e5) + 1;
+    return input == null ? dayOfYear : this.add((input - dayOfYear), 'd');
+}
+
+// FORMATTING
+
+addFormatToken('m', ['mm', 2], 0, 'minute');
+
+// ALIASES
+
+addUnitAlias('minute', 'm');
+
+// PRIORITY
+
+addUnitPriority('minute', 14);
+
+// PARSING
+
+addRegexToken('m',  match1to2);
+addRegexToken('mm', match1to2, match2);
+addParseToken(['m', 'mm'], MINUTE$1);
+
+// MOMENTS
+
+var getSetMinute = makeGetSet('Minutes', false);
+
+// FORMATTING
+
+addFormatToken('s', ['ss', 2], 0, 'second');
+
+// ALIASES
+
+addUnitAlias('second', 's');
+
+// PRIORITY
+
+addUnitPriority('second', 15);
+
+// PARSING
+
+addRegexToken('s',  match1to2);
+addRegexToken('ss', match1to2, match2);
+addParseToken(['s', 'ss'], SECOND$1);
+
+// MOMENTS
+
+var getSetSecond = makeGetSet('Seconds', false);
+
+// FORMATTING
+
+addFormatToken('S', 0, 0, function () {
+    return ~~(this.millisecond() / 100);
+});
+
+addFormatToken(0, ['SS', 2], 0, function () {
+    return ~~(this.millisecond() / 10);
+});
+
+addFormatToken(0, ['SSS', 3], 0, 'millisecond');
+addFormatToken(0, ['SSSS', 4], 0, function () {
+    return this.millisecond() * 10;
+});
+addFormatToken(0, ['SSSSS', 5], 0, function () {
+    return this.millisecond() * 100;
+});
+addFormatToken(0, ['SSSSSS', 6], 0, function () {
+    return this.millisecond() * 1000;
+});
+addFormatToken(0, ['SSSSSSS', 7], 0, function () {
+    return this.millisecond() * 10000;
+});
+addFormatToken(0, ['SSSSSSSS', 8], 0, function () {
+    return this.millisecond() * 100000;
+});
+addFormatToken(0, ['SSSSSSSSS', 9], 0, function () {
+    return this.millisecond() * 1000000;
+});
+
+
+// ALIASES
+
+addUnitAlias('millisecond', 'ms');
+
+// PRIORITY
+
+addUnitPriority('millisecond', 16);
+
+// PARSING
+
+addRegexToken('S',    match1to3, match1);
+addRegexToken('SS',   match1to3, match2);
+addRegexToken('SSS',  match1to3, match3);
+
+var token;
+for (token = 'SSSS'; token.length <= 9; token += 'S') {
+    addRegexToken(token, matchUnsigned);
+}
+
+function parseMs(input, array) {
+    array[MILLISECOND] = toInt(('0.' + input) * 1000);
+}
+
+for (token = 'S'; token.length <= 9; token += 'S') {
+    addParseToken(token, parseMs);
+}
+// MOMENTS
+
+var getSetMillisecond = makeGetSet('Milliseconds', false);
+
+// FORMATTING
+
+addFormatToken('z',  0, 0, 'zoneAbbr');
+addFormatToken('zz', 0, 0, 'zoneName');
+
+// MOMENTS
+
+function getZoneAbbr () {
+    return this._isUTC ? 'UTC' : '';
+}
+
+function getZoneName () {
+    return this._isUTC ? 'Coordinated Universal Time' : '';
+}
+
+var proto$4 = Moment.prototype;
+
+proto$4.add               = add;
+proto$4.calendar          = calendar$1;
+proto$4.clone             = clone;
+proto$4.diff              = diff$1;
+proto$4.endOf             = endOf;
+proto$4.format            = format$1;
+proto$4.from              = from$1;
+proto$4.fromNow           = fromNow;
+proto$4.to                = to;
+proto$4.toNow             = toNow;
+proto$4.get               = stringGet;
+proto$4.invalidAt         = invalidAt;
+proto$4.isAfter           = isAfter;
+proto$4.isBefore          = isBefore;
+proto$4.isBetween         = isBetween;
+proto$4.isSame            = isSame;
+proto$4.isSameOrAfter     = isSameOrAfter;
+proto$4.isSameOrBefore    = isSameOrBefore;
+proto$4.isValid           = isValid$2;
+proto$4.lang              = lang;
+proto$4.locale            = locale;
+proto$4.localeData        = localeData;
+proto$4.max               = prototypeMax;
+proto$4.min               = prototypeMin;
+proto$4.parsingFlags      = parsingFlags;
+proto$4.set               = stringSet;
+proto$4.startOf           = startOf;
+proto$4.subtract          = subtract;
+proto$4.toArray           = toArray$1;
+proto$4.toObject          = toObject$2;
+proto$4.toDate            = toDate;
+proto$4.toISOString       = toISOString$1;
+proto$4.inspect           = inspect;
+proto$4.toJSON            = toJSON;
+proto$4.toString          = toString$4;
+proto$4.unix              = unix;
+proto$4.valueOf           = valueOf;
+proto$4.creationData      = creationData;
+proto$4.year       = getSetYear;
+proto$4.isLeapYear = getIsLeapYear;
+proto$4.weekYear    = getSetWeekYear;
+proto$4.isoWeekYear = getSetISOWeekYear;
+proto$4.quarter = proto$4.quarters = getSetQuarter;
+proto$4.month       = getSetMonth;
+proto$4.daysInMonth = getDaysInMonth;
+proto$4.week           = proto$4.weeks        = getSetWeek;
+proto$4.isoWeek        = proto$4.isoWeeks     = getSetISOWeek;
+proto$4.weeksInYear    = getWeeksInYear;
+proto$4.isoWeeksInYear = getISOWeeksInYear;
+proto$4.date       = getSetDayOfMonth;
+proto$4.day        = proto$4.days             = getSetDayOfWeek;
+proto$4.weekday    = getSetLocaleDayOfWeek;
+proto$4.isoWeekday = getSetISODayOfWeek;
+proto$4.dayOfYear  = getSetDayOfYear;
+proto$4.hour = proto$4.hours = getSetHour;
+proto$4.minute = proto$4.minutes = getSetMinute;
+proto$4.second = proto$4.seconds = getSetSecond;
+proto$4.millisecond = proto$4.milliseconds = getSetMillisecond;
+proto$4.utcOffset            = getSetOffset;
+proto$4.utc                  = setOffsetToUTC;
+proto$4.local                = setOffsetToLocal;
+proto$4.parseZone            = setOffsetToParsedOffset;
+proto$4.hasAlignedHourOffset = hasAlignedHourOffset;
+proto$4.isDST                = isDaylightSavingTime;
+proto$4.isLocal              = isLocal;
+proto$4.isUtcOffset          = isUtcOffset;
+proto$4.isUtc                = isUtc;
+proto$4.isUTC                = isUtc;
+proto$4.zoneAbbr = getZoneAbbr;
+proto$4.zoneName = getZoneName;
+proto$4.dates  = deprecate('dates accessor is deprecated. Use date instead.', getSetDayOfMonth);
+proto$4.months = deprecate('months accessor is deprecated. Use month instead', getSetMonth);
+proto$4.years  = deprecate('years accessor is deprecated. Use year instead', getSetYear);
+proto$4.zone   = deprecate('moment().zone is deprecated, use moment().utcOffset instead. http://momentjs.com/guides/#/warnings/zone/', getSetZone);
+proto$4.isDSTShifted = deprecate('isDSTShifted is deprecated. See http://momentjs.com/guides/#/warnings/dst-shifted/ for more information', isDaylightSavingTimeShifted);
+
+function createUnix (input) {
+    return createLocal(input * 1000);
+}
+
+function createInZone () {
+    return createLocal.apply(null, arguments).parseZone();
+}
+
+function preParsePostFormat (string) {
+    return string;
+}
+
+var proto$5 = Locale.prototype;
+
+proto$5.calendar        = calendar;
+proto$5.longDateFormat  = longDateFormat;
+proto$5.invalidDate     = invalidDate;
+proto$5.ordinal         = ordinal;
+proto$5.preparse        = preParsePostFormat;
+proto$5.postformat      = preParsePostFormat;
+proto$5.relativeTime    = relativeTime;
+proto$5.pastFuture      = pastFuture;
+proto$5.set             = set$2;
+
+proto$5.months            =        localeMonths;
+proto$5.monthsShort       =        localeMonthsShort;
+proto$5.monthsParse       =        localeMonthsParse;
+proto$5.monthsRegex       = monthsRegex;
+proto$5.monthsShortRegex  = monthsShortRegex;
+proto$5.week = localeWeek;
+proto$5.firstDayOfYear = localeFirstDayOfYear;
+proto$5.firstDayOfWeek = localeFirstDayOfWeek;
+
+proto$5.weekdays       =        localeWeekdays;
+proto$5.weekdaysMin    =        localeWeekdaysMin;
+proto$5.weekdaysShort  =        localeWeekdaysShort;
+proto$5.weekdaysParse  =        localeWeekdaysParse;
+
+proto$5.weekdaysRegex       =        weekdaysRegex;
+proto$5.weekdaysShortRegex  =        weekdaysShortRegex;
+proto$5.weekdaysMinRegex    =        weekdaysMinRegex;
+
+proto$5.isPM = localeIsPM;
+proto$5.meridiem = localeMeridiem;
+
+function get$3 (format, index, field, setter) {
+    var locale = getLocale();
+    var utc = createUTC().set(setter, index);
+    return locale[field](utc, format);
+}
+
+function listMonthsImpl (format, index, field) {
+    if (isNumber(format)) {
+        index = format;
+        format = undefined;
+    }
+
+    format = format || '';
+
+    if (index != null) {
+        return get$3(format, index, field, 'month');
+    }
+
+    var i;
+    var out = [];
+    for (i = 0; i < 12; i++) {
+        out[i] = get$3(format, i, field, 'month');
+    }
+    return out;
+}
+
+// ()
+// (5)
+// (fmt, 5)
+// (fmt)
+// (true)
+// (true, 5)
+// (true, fmt, 5)
+// (true, fmt)
+function listWeekdaysImpl (localeSorted, format, index, field) {
+    if (typeof localeSorted === 'boolean') {
+        if (isNumber(format)) {
+            index = format;
+            format = undefined;
+        }
+
+        format = format || '';
+    } else {
+        format = localeSorted;
+        index = format;
+        localeSorted = false;
+
+        if (isNumber(format)) {
+            index = format;
+            format = undefined;
+        }
+
+        format = format || '';
+    }
+
+    var locale = getLocale(),
+        shift = localeSorted ? locale._week.dow : 0;
+
+    if (index != null) {
+        return get$3(format, (index + shift) % 7, field, 'day');
+    }
+
+    var i;
+    var out = [];
+    for (i = 0; i < 7; i++) {
+        out[i] = get$3(format, (i + shift) % 7, field, 'day');
+    }
+    return out;
+}
+
+function listMonths (format, index) {
+    return listMonthsImpl(format, index, 'months');
+}
+
+function listMonthsShort (format, index) {
+    return listMonthsImpl(format, index, 'monthsShort');
+}
+
+function listWeekdays (localeSorted, format, index) {
+    return listWeekdaysImpl(localeSorted, format, index, 'weekdays');
+}
+
+function listWeekdaysShort (localeSorted, format, index) {
+    return listWeekdaysImpl(localeSorted, format, index, 'weekdaysShort');
+}
+
+function listWeekdaysMin (localeSorted, format, index) {
+    return listWeekdaysImpl(localeSorted, format, index, 'weekdaysMin');
+}
+
+getSetGlobalLocale('en', {
+    dayOfMonthOrdinalParse: /\d{1,2}(th|st|nd|rd)/,
+    ordinal : function (number) {
+        var b = number % 10,
+            output = (toInt(number % 100 / 10) === 1) ? 'th' :
+            (b === 1) ? 'st' :
+            (b === 2) ? 'nd' :
+            (b === 3) ? 'rd' : 'th';
+        return number + output;
+    }
+});
+
+// Side effect imports
+
+hooks.lang = deprecate('moment.lang is deprecated. Use moment.locale instead.', getSetGlobalLocale);
+hooks.langData = deprecate('moment.langData is deprecated. Use moment.localeData instead.', getLocale);
+
+var mathAbs = Math.abs;
+
+function abs$2 () {
+    var data           = this._data;
+
+    this._milliseconds = mathAbs(this._milliseconds);
+    this._days         = mathAbs(this._days);
+    this._months       = mathAbs(this._months);
+
+    data.milliseconds  = mathAbs(data.milliseconds);
+    data.seconds       = mathAbs(data.seconds);
+    data.minutes       = mathAbs(data.minutes);
+    data.hours         = mathAbs(data.hours);
+    data.months        = mathAbs(data.months);
+    data.years         = mathAbs(data.years);
+
+    return this;
+}
+
+function addSubtract$1 (duration, input, value, direction) {
+    var other = createDuration(input, value);
+
+    duration._milliseconds += direction * other._milliseconds;
+    duration._days         += direction * other._days;
+    duration._months       += direction * other._months;
+
+    return duration._bubble();
+}
+
+// supports only 2.0-style add(1, 's') or add(duration)
+function add$1 (input, value) {
+    return addSubtract$1(this, input, value, 1);
+}
+
+// supports only 2.0-style subtract(1, 's') or subtract(duration)
+function subtract$1 (input, value) {
+    return addSubtract$1(this, input, value, -1);
+}
+
+function absCeil (number) {
+    if (number < 0) {
+        return Math.floor(number);
+    } else {
+        return Math.ceil(number);
+    }
+}
+
+function bubble () {
+    var milliseconds = this._milliseconds;
+    var days         = this._days;
+    var months       = this._months;
+    var data         = this._data;
+    var seconds, minutes, hours, years, monthsFromDays;
+
+    // if we have a mix of positive and negative values, bubble down first
+    // check: https://github.com/moment/moment/issues/2166
+    if (!((milliseconds >= 0 && days >= 0 && months >= 0) ||
+            (milliseconds <= 0 && days <= 0 && months <= 0))) {
+        milliseconds += absCeil(monthsToDays(months) + days) * 864e5;
+        days = 0;
+        months = 0;
+    }
+
+    // The following code bubbles up values, see the tests for
+    // examples of what that means.
+    data.milliseconds = milliseconds % 1000;
+
+    seconds           = absFloor(milliseconds / 1000);
+    data.seconds      = seconds % 60;
+
+    minutes           = absFloor(seconds / 60);
+    data.minutes      = minutes % 60;
+
+    hours             = absFloor(minutes / 60);
+    data.hours        = hours % 24;
+
+    days += absFloor(hours / 24);
+
+    // convert days to months
+    monthsFromDays = absFloor(daysToMonths(days));
+    months += monthsFromDays;
+    days -= absCeil(monthsToDays(monthsFromDays));
+
+    // 12 months -> 1 year
+    years = absFloor(months / 12);
+    months %= 12;
+
+    data.days   = days;
+    data.months = months;
+    data.years  = years;
+
+    return this;
+}
+
+function daysToMonths (days) {
+    // 400 years have 146097 days (taking into account leap year rules)
+    // 400 years have 12 months === 4800
+    return days * 4800 / 146097;
+}
+
+function monthsToDays (months) {
+    // the reverse of daysToMonths
+    return months * 146097 / 4800;
+}
+
+function as (units) {
+    if (!this.isValid()) {
+        return NaN;
+    }
+    var days;
+    var months;
+    var milliseconds = this._milliseconds;
+
+    units = normalizeUnits(units);
+
+    if (units === 'month' || units === 'year') {
+        days   = this._days   + milliseconds / 864e5;
+        months = this._months + daysToMonths(days);
+        return units === 'month' ? months : months / 12;
+    } else {
+        // handle milliseconds separately because of floating point math errors (issue #1867)
+        days = this._days + Math.round(monthsToDays(this._months));
+        switch (units) {
+            case 'week'   : return days / 7     + milliseconds / 6048e5;
+            case 'day'    : return days         + milliseconds / 864e5;
+            case 'hour'   : return days * 24    + milliseconds / 36e5;
+            case 'minute' : return days * 1440  + milliseconds / 6e4;
+            case 'second' : return days * 86400 + milliseconds / 1000;
+            // Math.floor prevents floating point math errors here
+            case 'millisecond': return Math.floor(days * 864e5) + milliseconds;
+            default: throw new Error('Unknown unit ' + units);
+        }
+    }
+}
+
+// TODO: Use this.as('ms')?
+function valueOf$1 () {
+    if (!this.isValid()) {
+        return NaN;
+    }
+    return (
+        this._milliseconds +
+        this._days * 864e5 +
+        (this._months % 12) * 2592e6 +
+        toInt(this._months / 12) * 31536e6
+    );
+}
+
+function makeAs (alias) {
+    return function () {
+        return this.as(alias);
+    };
+}
+
+var asMilliseconds = makeAs('ms');
+var asSeconds      = makeAs('s');
+var asMinutes      = makeAs('m');
+var asHours        = makeAs('h');
+var asDays         = makeAs('d');
+var asWeeks        = makeAs('w');
+var asMonths       = makeAs('M');
+var asYears        = makeAs('y');
+
+function clone$1 () {
+    return createDuration(this);
+}
+
+function get$4 (units) {
+    units = normalizeUnits(units);
+    return this.isValid() ? this[units + 's']() : NaN;
+}
+
+function makeGetter(name) {
+    return function () {
+        return this.isValid() ? this._data[name] : NaN;
+    };
+}
+
+var milliseconds = makeGetter('milliseconds');
+var seconds      = makeGetter('seconds');
+var minutes      = makeGetter('minutes');
+var hours        = makeGetter('hours');
+var days         = makeGetter('days');
+var months       = makeGetter('months');
+var years        = makeGetter('years');
+
+function weeks () {
+    return absFloor(this.days() / 7);
+}
+
+var round$1 = Math.round;
+var thresholds = {
+    ss: 44,         // a few seconds to seconds
+    s : 45,         // seconds to minute
+    m : 45,         // minutes to hour
+    h : 22,         // hours to day
+    d : 26,         // days to month
+    M : 11          // months to year
+};
+
+// helper function for moment.fn.from, moment.fn.fromNow, and moment.duration.fn.humanize
+function substituteTimeAgo(string, number, withoutSuffix, isFuture, locale) {
+    return locale.relativeTime(number || 1, !!withoutSuffix, string, isFuture);
+}
+
+function relativeTime$1 (posNegDuration, withoutSuffix, locale) {
+    var duration = createDuration(posNegDuration).abs();
+    var seconds  = round$1(duration.as('s'));
+    var minutes  = round$1(duration.as('m'));
+    var hours    = round$1(duration.as('h'));
+    var days     = round$1(duration.as('d'));
+    var months   = round$1(duration.as('M'));
+    var years    = round$1(duration.as('y'));
+
+    var a = seconds <= thresholds.ss && ['s', seconds]  ||
+            seconds < thresholds.s   && ['ss', seconds] ||
+            minutes <= 1             && ['m']           ||
+            minutes < thresholds.m   && ['mm', minutes] ||
+            hours   <= 1             && ['h']           ||
+            hours   < thresholds.h   && ['hh', hours]   ||
+            days    <= 1             && ['d']           ||
+            days    < thresholds.d   && ['dd', days]    ||
+            months  <= 1             && ['M']           ||
+            months  < thresholds.M   && ['MM', months]  ||
+            years   <= 1             && ['y']           || ['yy', years];
+
+    a[2] = withoutSuffix;
+    a[3] = +posNegDuration > 0;
+    a[4] = locale;
+    return substituteTimeAgo.apply(null, a);
+}
+
+// This function allows you to set the rounding function for relative time strings
+function getSetRelativeTimeRounding (roundingFunction) {
+    if (roundingFunction === undefined) {
+        return round$1;
+    }
+    if (typeof(roundingFunction) === 'function') {
+        round$1 = roundingFunction;
+        return true;
+    }
+    return false;
+}
+
+// This function allows you to set a threshold for relative time strings
+function getSetRelativeTimeThreshold (threshold, limit) {
+    if (thresholds[threshold] === undefined) {
+        return false;
+    }
+    if (limit === undefined) {
+        return thresholds[threshold];
+    }
+    thresholds[threshold] = limit;
+    if (threshold === 's') {
+        thresholds.ss = limit - 1;
+    }
+    return true;
+}
+
+function humanize (withSuffix) {
+    if (!this.isValid()) {
+        return this.localeData().invalidDate();
+    }
+
+    var locale = this.localeData();
+    var output = relativeTime$1(this, !withSuffix, locale);
+
+    if (withSuffix) {
+        output = locale.pastFuture(+this, output);
+    }
+
+    return locale.postformat(output);
+}
+
+var abs$3 = Math.abs;
+
+function sign(x) {
+    return ((x > 0) - (x < 0)) || +x;
+}
+
+function toISOString$2() {
+    // for ISO strings we do not use the normal bubbling rules:
+    //  * milliseconds bubble up until they become hours
+    //  * days do not bubble at all
+    //  * months bubble up until they become years
+    // This is because there is no context-free conversion between hours and days
+    // (think of clock changes)
+    // and also not between days and months (28-31 days per month)
+    if (!this.isValid()) {
+        return this.localeData().invalidDate();
+    }
+
+    var seconds = abs$3(this._milliseconds) / 1000;
+    var days         = abs$3(this._days);
+    var months       = abs$3(this._months);
+    var minutes, hours, years;
+
+    // 3600 seconds -> 60 minutes -> 1 hour
+    minutes           = absFloor(seconds / 60);
+    hours             = absFloor(minutes / 60);
+    seconds %= 60;
+    minutes %= 60;
+
+    // 12 months -> 1 year
+    years  = absFloor(months / 12);
+    months %= 12;
+
+
+    // inspired by https://github.com/dordille/moment-isoduration/blob/master/moment.isoduration.js
+    var Y = years;
+    var M = months;
+    var D = days;
+    var h = hours;
+    var m = minutes;
+    var s = seconds ? seconds.toFixed(3).replace(/\.?0+$/, '') : '';
+    var total = this.asSeconds();
+
+    if (!total) {
+        // this is the same as C#'s (Noda) and python (isodate)...
+        // but not other JS (goog.date)
+        return 'P0D';
+    }
+
+    var totalSign = total < 0 ? '-' : '';
+    var ymSign = sign(this._months) !== sign(total) ? '-' : '';
+    var daysSign = sign(this._days) !== sign(total) ? '-' : '';
+    var hmsSign = sign(this._milliseconds) !== sign(total) ? '-' : '';
+
+    return totalSign + 'P' +
+        (Y ? ymSign + Y + 'Y' : '') +
+        (M ? ymSign + M + 'M' : '') +
+        (D ? daysSign + D + 'D' : '') +
+        ((h || m || s) ? 'T' : '') +
+        (h ? hmsSign + h + 'H' : '') +
+        (m ? hmsSign + m + 'M' : '') +
+        (s ? hmsSign + s + 'S' : '');
+}
+
+var proto$6 = Duration.prototype;
+
+proto$6.isValid        = isValid$1;
+proto$6.abs            = abs$2;
+proto$6.add            = add$1;
+proto$6.subtract       = subtract$1;
+proto$6.as             = as;
+proto$6.asMilliseconds = asMilliseconds;
+proto$6.asSeconds      = asSeconds;
+proto$6.asMinutes      = asMinutes;
+proto$6.asHours        = asHours;
+proto$6.asDays         = asDays;
+proto$6.asWeeks        = asWeeks;
+proto$6.asMonths       = asMonths;
+proto$6.asYears        = asYears;
+proto$6.valueOf        = valueOf$1;
+proto$6._bubble        = bubble;
+proto$6.clone          = clone$1;
+proto$6.get            = get$4;
+proto$6.milliseconds   = milliseconds;
+proto$6.seconds        = seconds;
+proto$6.minutes        = minutes;
+proto$6.hours          = hours;
+proto$6.days           = days;
+proto$6.weeks          = weeks;
+proto$6.months         = months;
+proto$6.years          = years;
+proto$6.humanize       = humanize;
+proto$6.toISOString    = toISOString$2;
+proto$6.toString       = toISOString$2;
+proto$6.toJSON         = toISOString$2;
+proto$6.locale         = locale;
+proto$6.localeData     = localeData;
+
+proto$6.toIsoString = deprecate('toIsoString() is deprecated. Please use toISOString() instead (notice the capitals)', toISOString$2);
+proto$6.lang = lang;
+
+// Side effect imports
+
+// FORMATTING
+
+addFormatToken('X', 0, 0, 'unix');
+addFormatToken('x', 0, 0, 'valueOf');
+
+// PARSING
+
+addRegexToken('x', matchSigned);
+addRegexToken('X', matchTimestamp);
+addParseToken('X', function (input, array, config) {
+    config._d = new Date(parseFloat(input, 10) * 1000);
+});
+addParseToken('x', function (input, array, config) {
+    config._d = new Date(toInt(input));
+});
+
+// Side effect imports
+
+//! moment.js
+
+hooks.version = '2.22.0';
+
+setHookCallback(createLocal);
+
+hooks.fn                    = proto$4;
+hooks.min                   = min$2;
+hooks.max                   = max$1;
+hooks.now                   = now$1;
+hooks.utc                   = createUTC;
+hooks.unix                  = createUnix;
+hooks.months                = listMonths;
+hooks.isDate                = isDate;
+hooks.locale                = getSetGlobalLocale;
+hooks.invalid               = createInvalid;
+hooks.duration              = createDuration;
+hooks.isMoment              = isMoment;
+hooks.weekdays              = listWeekdays;
+hooks.parseZone             = createInZone;
+hooks.localeData            = getLocale;
+hooks.isDuration            = isDuration;
+hooks.monthsShort           = listMonthsShort;
+hooks.weekdaysMin           = listWeekdaysMin;
+hooks.defineLocale          = defineLocale;
+hooks.updateLocale          = updateLocale;
+hooks.locales               = listLocales;
+hooks.weekdaysShort         = listWeekdaysShort;
+hooks.normalizeUnits        = normalizeUnits;
+hooks.relativeTimeRounding  = getSetRelativeTimeRounding;
+hooks.relativeTimeThreshold = getSetRelativeTimeThreshold;
+hooks.calendarFormat        = getCalendarFormat;
+hooks.prototype             = proto$4;
+
+// currently HTML5 input type only supports 24-hour formats
+hooks.HTML5_FMT = {
+    DATETIME_LOCAL: 'YYYY-MM-DDTHH:mm',             // <input type="datetime-local" />
+    DATETIME_LOCAL_SECONDS: 'YYYY-MM-DDTHH:mm:ss',  // <input type="datetime-local" step="1" />
+    DATETIME_LOCAL_MS: 'YYYY-MM-DDTHH:mm:ss.SSS',   // <input type="datetime-local" step="0.001" />
+    DATE: 'YYYY-MM-DD',                             // <input type="date" />
+    TIME: 'HH:mm',                                  // <input type="time" />
+    TIME_SECONDS: 'HH:mm:ss',                       // <input type="time" step="1" />
+    TIME_MS: 'HH:mm:ss.SSS',                        // <input type="time" step="0.001" />
+    WEEK: 'YYYY-[W]WW',                             // <input type="week" />
+    MONTH: 'YYYY-MM'                                // <input type="month" />
+};
+
 // var Moment_Timezone = require("moment-timezone");
 
 var Timestamp = function (_Component) {
@@ -44127,9 +48621,9 @@ var Timestamp = function (_Component) {
 				var today = new Date(now);
 				var timeDay = new Date(time);
 				if (timeDay.getFullYear() === today.getFullYear()) {
-					return moment(time).format("MMM D");
+					return hooks(time).format("MMM D");
 				}
-				return moment(time).format("MMM D, YYYY");
+				return hooks(time).format("MMM D, YYYY");
 			}
 		});
 		Object.defineProperty(_this, "prettyTime", {
@@ -44139,7 +48633,7 @@ var Timestamp = function (_Component) {
 				options = options || {};
 				var prettyTime;
 				// time = this.adjustedTime(time, options.timezone_info);
-				prettyTime = moment(time).format("h:mm A");
+				prettyTime = hooks(time).format("h:mm A");
 				prettyTime = prettyTime.replace(/^0:/, "12:");
 				return prettyTime;
 			}
@@ -44356,7 +48850,7 @@ var locationToRange = function locationToRange(location) {
 	});
 	var pointA = [location[0], location[1]];
 	var pointB = [location[2], location[3]];
-	var range = new atom$1.Range(pointA, pointB);
+	var range = [pointA, pointB];
 	return range;
 };
 
@@ -44368,14 +48862,6 @@ var rangeToLocation = function rangeToLocation(range) {
 	});
 	location.push({}); // meta
 	return location;
-};
-
-var areEqualLocations = function areEqualLocations(loc1, loc2) {
-	return loc1[0] === loc2[0] && loc1[1] === loc2[1] && loc1[2] === loc2[2] && loc1[3] === loc2[3];
-};
-
-var isValidLocation = function isValidLocation(location) {
-	return location && location[0] > 0;
 };
 
 var PostDetails = function (_Component) {
@@ -44651,6 +49137,7 @@ var PostDetails = function (_Component) {
 				// }
 			}
 
+			showDiffButtons = false;
 			return react.createElement(
 				"div",
 				{ className: "post-details", id: post.id, ref: function ref(_ref5) {
@@ -44889,15 +49376,15 @@ var RetrySpinner = function (_React$Component) {
  * Apache License Version 2.0, January 2004, http://www.apache.org/licenses/
  */
  
-var keys$2 = Object.keys;
-var isArray$4 = Array.isArray;
+var keys$3 = Object.keys;
+var isArray$5 = Array.isArray;
 var _global$2 = typeof self !== 'undefined' ? self :
     typeof window !== 'undefined' ? window :
         global;
-function extend$1(obj, extension) {
+function extend$2(obj, extension) {
     if (typeof extension !== 'object')
         return obj;
-    keys$2(extension).forEach(function (key) {
+    keys$3(extension).forEach(function (key) {
         obj[key] = extension[key];
     });
     return obj;
@@ -44910,13 +49397,13 @@ function hasOwn$1(obj, prop) {
 function props(proto, extension) {
     if (typeof extension === 'function')
         extension = extension(getProto(proto));
-    keys$2(extension).forEach(function (key) {
+    keys$3(extension).forEach(function (key) {
         setProp(proto, key, extension[key]);
     });
 }
 var defineProperty$6 = Object.defineProperty;
 function setProp(obj, prop, functionOrGetSet, options) {
-    defineProperty$6(obj, prop, extend$1(functionOrGetSet && hasOwn$1(functionOrGetSet, "get") && typeof functionOrGetSet.get === 'function' ?
+    defineProperty$6(obj, prop, extend$2(functionOrGetSet && hasOwn$1(functionOrGetSet, "get") && typeof functionOrGetSet.get === 'function' ?
         { get: functionOrGetSet.get, set: functionOrGetSet.set, configurable: true } :
         { value: functionOrGetSet, configurable: true, writable: true }, options));
 }
@@ -45069,7 +49556,7 @@ function deepClone(any) {
     if (!any || typeof any !== 'object')
         return any;
     var rv;
-    if (isArray$4(any)) {
+    if (isArray$5(any)) {
         rv = [];
         for (var i = 0, l = any.length; i < l; ++i) {
             rv.push(deepClone(any[i]));
@@ -45092,7 +49579,7 @@ function getObjectDiff(a, b, rv, prfx) {
     // Compares objects a and b and produces a diff object.
     rv = rv || {};
     prfx = prfx || '';
-    keys$2(a).forEach(function (prop) {
+    keys$3(a).forEach(function (prop) {
         if (!hasOwn$1(b, prop))
             rv[prfx + prop] = undefined; // Property removed
         else {
@@ -45107,7 +49594,7 @@ function getObjectDiff(a, b, rv, prfx) {
                 rv[prfx + prop] = b[prop]; // Primitive value changed
         }
     });
-    keys$2(b).forEach(function (prop) {
+    keys$3(b).forEach(function (prop) {
         if (!hasOwn$1(a, prop)) {
             rv[prfx + prop] = b[prop]; // Property added
         }
@@ -45132,7 +49619,7 @@ var NO_CHAR_ARRAY = {};
 function getArrayOf(arrayLike) {
     var i, a, x, it;
     if (arguments.length === 1) {
-        if (isArray$4(arrayLike))
+        if (isArray$5(arrayLike))
             return arrayLike.slice();
         if (this === NO_CHAR_ARRAY && typeof arrayLike === 'string')
             return [arrayLike];
@@ -45414,7 +49901,7 @@ function hookUpdatingChain(f1, f2) {
         return f2;
     return function (modifications) {
         var res = f1.apply(this, arguments);
-        extend$1(modifications, res); // If f1 returns new modifications, extend caller's modifications with the result before calling next in chain.
+        extend$2(modifications, res); // If f1 returns new modifications, extend caller's modifications with the result before calling next in chain.
         var onsuccess = this.onsuccess, // In case event listener has set this.onsuccess
         onerror = this.onerror; // In case event listener has set this.onerror
         this.onsuccess = null;
@@ -45426,7 +49913,7 @@ function hookUpdatingChain(f1, f2) {
             this.onerror = this.onerror ? callBoth(onerror, this.onerror) : onerror;
         return res === undefined ?
             (res2 === undefined ? undefined : res2) :
-            (extend$1(res, res2));
+            (extend$2(res, res2));
     };
 }
 function reverseStoppableEventChain(f1, f2) {
@@ -46075,7 +50562,7 @@ function newScope(fn, props$$1, a1, a2) {
         gthen: getPatchedPromiseThen(globalEnv.gthen, psd) // global then
     } : {};
     if (props$$1)
-        extend$1(psd, props$$1);
+        extend$2(psd, props$$1);
     // unhandleds and onunhandled should not be specifically set here.
     // Leave them on parent prototype.
     // unhandleds.push(err) will push to parent's prototype
@@ -46231,11 +50718,11 @@ function globalError(err, promise) {
             if (_global$2.document && document.createEvent) {
                 event = document.createEvent('Event');
                 event.initEvent(UNHANDLEDREJECTION, true, true);
-                extend$1(event, eventData);
+                extend$2(event, eventData);
             }
             else if (_global$2.CustomEvent) {
                 event = new CustomEvent(UNHANDLEDREJECTION, { detail: eventData });
-                extend$1(event, eventData);
+                extend$2(event, eventData);
             }
             if (event && _global$2.dispatchEvent) {
                 dispatchEvent(event);
@@ -46301,9 +50788,9 @@ function Events(ctx) {
     }
     function addConfiguredEvents(cfg) {
         // events(this, {reading: [functionChain, nop]});
-        keys$2(cfg).forEach(function (eventName) {
+        keys$3(cfg).forEach(function (eventName) {
             var args = cfg[eventName];
-            if (isArray$4(args)) {
+            if (isArray$5(args)) {
                 add(eventName, cfg[eventName][0], cfg[eventName][1]);
             }
             else if (args === 'asap') {
@@ -46364,7 +50851,7 @@ setDebug(debug, dexieStackFrameFilter);
 function Dexie(dbName, options) {
     /// <param name="options" type="Object" optional="true">Specify only if you wich to control which addons that should run on this instance</param>
     var deps = Dexie.dependencies;
-    var opts = extend$1({
+    var opts = extend$2({
         // Default Options
         addons: Dexie.addons,
         autoOpen: true,
@@ -46452,7 +50939,7 @@ function Dexie(dbName, options) {
         };
         this.stores({}); // Derive earlier schemas by default.
     }
-    extend$1(Version.prototype, {
+    extend$2(Version.prototype, {
         stores: function (stores) {
             /// <summary>
             ///   Defines the schema for a particular version
@@ -46468,11 +50955,11 @@ function Dexie(dbName, options) {
             ///  "*"  means value is multiEntry, <br/>
             ///  "++" means auto-increment and only applicable for primary key <br/>
             /// </param>
-            this._cfg.storesSource = this._cfg.storesSource ? extend$1(this._cfg.storesSource, stores) : stores;
+            this._cfg.storesSource = this._cfg.storesSource ? extend$2(this._cfg.storesSource, stores) : stores;
             // Derive stores from earlier versions if they are not explicitely specified as null or a new syntax.
             var storesSpec = {};
             versions.forEach(function (version) {
-                extend$1(storesSpec, version._cfg.storesSource);
+                extend$2(storesSpec, version._cfg.storesSource);
             });
             var dbschema = (this._cfg.dbschema = {});
             this._parseStoresSpec(storesSpec, dbschema);
@@ -46480,8 +50967,8 @@ function Dexie(dbName, options) {
             // Update API
             globalSchema = db._dbSchema = dbschema;
             removeTablesApi([allTables, db, Transaction.prototype]); // Keep Transaction.prototype even though it should be depr.
-            setApiOnPlace([allTables, db, Transaction.prototype, this._cfg.tables], keys$2(dbschema), dbschema);
-            dbStoreNames = keys$2(dbschema);
+            setApiOnPlace([allTables, db, Transaction.prototype, this._cfg.tables], keys$3(dbschema), dbschema);
+            dbStoreNames = keys$3(dbschema);
             return this;
         },
         upgrade: function (upgradeFunction) {
@@ -46489,7 +50976,7 @@ function Dexie(dbName, options) {
             return this;
         },
         _parseStoresSpec: function (stores, outSchema) {
-            keys$2(stores).forEach(function (tableName) {
+            keys$3(stores).forEach(function (tableName) {
                 if (stores[tableName] !== null) {
                     var instanceTemplate = {};
                     var indexes = parseIndexSyntax(stores[tableName]);
@@ -46519,7 +51006,7 @@ function Dexie(dbName, options) {
             PSD.trans = trans;
             if (oldVersion === 0) {
                 // Create tables:
-                keys$2(globalSchema).forEach(function (tableName) {
+                keys$3(globalSchema).forEach(function (tableName) {
                     createTable(idbtrans, tableName, globalSchema[tableName].primKey, globalSchema[tableName].indexes);
                 });
                 Promise$2.follow(function () { return db.on.populate.fire(trans); }).catch(rejectTransaction);
@@ -46656,7 +51143,7 @@ function Dexie(dbName, options) {
         return store;
     }
     function createMissingTables(newSchema, idbtrans) {
-        keys$2(newSchema).forEach(function (tableName) {
+        keys$3(newSchema).forEach(function (tableName) {
             if (!idbtrans.db.objectStoreNames.contains(tableName)) {
                 createTable(idbtrans, tableName, newSchema[tableName].primKey, newSchema[tableName].indexes);
             }
@@ -46923,7 +51410,7 @@ function Dexie(dbName, options) {
         tables: {
             get: function () {
                 /// <returns type="Array" elementType="Table" />
-                return keys$2(allTables).map(function (name) { return allTables[name]; });
+                return keys$3(allTables).map(function (name) { return allTables[name]; });
             }
         }
     });
@@ -47221,10 +51708,10 @@ function Dexie(dbName, options) {
         where: function (indexOrCrit) {
             if (typeof indexOrCrit === 'string')
                 return new WhereClause(this, indexOrCrit);
-            if (isArray$4(indexOrCrit))
+            if (isArray$5(indexOrCrit))
                 return new WhereClause(this, "[" + indexOrCrit.join('+') + "]");
             // indexOrCrit is an object map of {[keyPath]:value} 
-            var keyPaths = keys$2(indexOrCrit);
+            var keyPaths = keys$3(indexOrCrit);
             if (keyPaths.length === 1)
                 // Only one critera. This was the easy case:
                 return this
@@ -47287,7 +51774,7 @@ function Dexie(dbName, options) {
             return this.toCollection().toArray(cb);
         },
         orderBy: function (index) {
-            return new Collection(new WhereClause(this, isArray$4(index) ?
+            return new Collection(new WhereClause(this, isArray$5(index) ?
                 "[" + index.join('+') + "]" :
                 index));
         },
@@ -47622,11 +52109,11 @@ function Dexie(dbName, options) {
             }
         },
         update: function (keyOrObject, modifications) {
-            if (typeof modifications !== 'object' || isArray$4(modifications))
+            if (typeof modifications !== 'object' || isArray$5(modifications))
                 throw new exceptions.InvalidArgument("Modifications must be an object.");
-            if (typeof keyOrObject === 'object' && !isArray$4(keyOrObject)) {
+            if (typeof keyOrObject === 'object' && !isArray$5(keyOrObject)) {
                 // object to modify. Also modify given object with the modifications:
-                keys$2(modifications).forEach(function (keyPath) {
+                keys$3(modifications).forEach(function (keyPath) {
                     setByKeyPath(keyOrObject, keyPath, modifications[keyPath]);
                 });
                 var key = getByKeyPath(keyOrObject, this.schema.primKey.keyPath);
@@ -48357,7 +52844,7 @@ function Dexie(dbName, options) {
             clone: function (props$$1) {
                 var rv = Object.create(this.constructor.prototype), ctx = Object.create(this._ctx);
                 if (props$$1)
-                    extend$1(ctx, props$$1);
+                    extend$2(ctx, props$$1);
                 rv._ctx = ctx;
                 return rv;
             },
@@ -48632,7 +53119,7 @@ function Dexie(dbName, options) {
                                     if (additionalChanges) {
                                         // Hook want to apply additional modifications. Make sure to fullfill the will of the hook.
                                         item = this.value;
-                                        keys$2(additionalChanges).forEach(function (keyPath) {
+                                        keys$3(additionalChanges).forEach(function (keyPath) {
                                             setByKeyPath(item, keyPath, additionalChanges[keyPath]); // Adding {keyPath: undefined} means that the keyPath should be deleted. Handled by setByKeyPath
                                         });
                                     }
@@ -48642,7 +53129,7 @@ function Dexie(dbName, options) {
                     }
                     else if (updatingHook === nop) {
                         // changes is a set of {keyPath: value} and no one is listening to the updating hook.
-                        var keyPaths = keys$2(changes);
+                        var keyPaths = keys$3(changes);
                         var numKeys = keyPaths.length;
                         modifyer = function (item) {
                             var anythingModified = false;
@@ -48665,8 +53152,8 @@ function Dexie(dbName, options) {
                             var anythingModified = false;
                             var additionalChanges = updatingHook.call(this, changes, this.primKey, deepClone(item), trans);
                             if (additionalChanges)
-                                extend$1(changes, additionalChanges);
-                            keys$2(changes).forEach(function (keyPath) {
+                                extend$2(changes, additionalChanges);
+                            keys$3(changes).forEach(function (keyPath) {
                                 var val = changes[keyPath];
                                 if (getByKeyPath(item, keyPath) !== val) {
                                     setByKeyPath(item, keyPath, val);
@@ -48883,7 +53370,7 @@ function Dexie(dbName, options) {
             var name = index.replace(/([&*]|\+\+)/g, ""); // Remove "&", "++" and "*"
             // Let keyPath of "[a+b]" be ["a","b"]:
             var keyPath = /^\[/.test(name) ? name.match(/^\[(.*)\]$/)[1].split('+') : name;
-            rv.push(new IndexSpec(name, keyPath || null, /\&/.test(index), /\*/.test(index), /\+\+/.test(index), isArray$4(keyPath), /\./.test(index)));
+            rv.push(new IndexSpec(name, keyPath || null, /\&/.test(index), /\*/.test(index), /\+\+/.test(index), isArray$5(keyPath), /\./.test(index)));
         });
         return rv;
     }
@@ -48935,7 +53422,7 @@ function Dexie(dbName, options) {
             }
             globalSchema[storeName] = new TableSchema(storeName, primKey, indexes, {});
         });
-        setApiOnPlace([allTables], keys$2(globalSchema), globalSchema);
+        setApiOnPlace([allTables], keys$3(globalSchema), globalSchema);
     }
     function adjustToExistingIndexNames(schema, idbtrans) {
         /// <summary>
@@ -48974,7 +53461,7 @@ function Dexie(dbName, options) {
             .filter(function (c) { return c.name === db.name && c !== db && !c._vcFired; })
             .map(function (c) { return c.on("versionchange").fire(ev); });
     }
-    extend$1(this, {
+    extend$2(this, {
         Collection: Collection,
         Table: Table,
         Transaction: Transaction,
@@ -48990,7 +53477,7 @@ function parseType(type) {
     if (typeof type === 'function') {
         return new type();
     }
-    else if (isArray$4(type)) {
+    else if (isArray$5(type)) {
         return [parseType(type[0])];
     }
     else if (type && typeof type === 'object') {
@@ -49003,7 +53490,7 @@ function parseType(type) {
     }
 }
 function applyStructure(obj, structure) {
-    keys$2(structure).forEach(function (member) {
+    keys$3(structure).forEach(function (member) {
         var value = parseType(structure[member]);
         obj[member] = value;
     });
@@ -49063,7 +53550,7 @@ function awaitIterator(iterator) {
             var next = getNext(val), value = next.value;
             return next.done ? value :
                 (!value || typeof value.then !== 'function' ?
-                    isArray$4(value) ? Promise$2.all(value).then(onSuccess, onError) : onSuccess(value) :
+                    isArray$5(value) ? Promise$2.all(value).then(onSuccess, onError) : onSuccess(value) :
                     value.then(onSuccess, onError));
         };
     }
@@ -49163,7 +53650,7 @@ props(Dexie, {
             /// <param name="properties" type="Object" optional="true">Properties to initialize object with.
             /// </param>
             if (properties)
-                extend$1(this, properties);
+                extend$2(this, properties);
         }
         return Class;
     },
@@ -49258,7 +53745,7 @@ props(Dexie, {
     },
     // Export our derive/extend/override methodology
     derive: derive,
-    extend: extend$1,
+    extend: extend$2,
     props: props,
     override: override,
     // Export our Events() function - can be handy as a toolkit
@@ -49504,7 +53991,7 @@ var operations = {
 	}
 };
 
-var isObject$3 = function isObject(x) {
+var isObject$4 = function isObject(x) {
 	var prototype = void 0;
 	return Object.prototype.toString.call(x) === "[object Object]" && (prototype = Object.getPrototypeOf(x), prototype === null || prototype === Object.getPrototypeOf({}));
 };
@@ -49521,2991 +54008,897 @@ var dedasherizeKeys = function dedasherizeKeys(object) {
 };
 
 var normalize = function normalize(data) {
-	if (Array.isArray(data)) return data.map(dedasherizeKeys);else if (!isObject$3(data)) return data;else return dedasherizeKeys(data);
+	if (Array.isArray(data)) return data.map(dedasherizeKeys);else if (!isObject$4(data)) return data;else return dedasherizeKeys(data);
 };
+
+var saveUser = function saveUser(user) {
+	return function (dispatch, getState) {
+		// return upsert(db, "users", attributes).then(user =>
+		dispatch({
+			type: "ADD_USER",
+			payload: user
+		});
+		// );
+	};
+};
+
+var setUserPreference = function setUserPreference(prefPath, value) {
+	return function (dispatch, getState, _ref2) {
+		var http = _ref2.http;
+
+		var _getState2 = getState(),
+		    session = _getState2.session,
+		    context = _getState2.context,
+		    users = _getState2.users;
+
+		var user = users[session.userId];
+
+		if (!user.preferences) user.preferences = {};
+		var preferences = user.preferences;
+		var newPreference = {};
+		var newPreferencePointer = newPreference;
+		while (prefPath.length > 1) {
+			var part = prefPath.shift().replace(/\./g, "*");
+			if (!preferences[part]) preferences[part] = {};
+			preferences = preferences[part];
+			newPreferencePointer[part] = {};
+			newPreferencePointer = newPreferencePointer[part];
+		}
+		preferences[prefPath[0].replace(/\./g, "*")] = value;
+		newPreferencePointer[prefPath[0].replace(/\./g, "*")] = value;
+
+		console.log("Saving preferences: ", newPreference);
+		http.put("/preferences", newPreference, session.accessToken);
+		dispatch(saveUser(normalize(user)));
+	};
+};
+
+var toMapBy = function toMapBy(key, entities) {
+	return entities.reduce(function (result, entity) {
+		return _extends$5({}, result, defineProperty$5({}, entity[key], entity));
+	}, {});
+};
+
+var initialState = {
+	byRepo: {
+		//[repoId]: { byFile: {} }
+	}
+};
+
+var addStream = function addStream(state, stream) {
+	var existingStreamsForRepo = state.byRepo[stream.repoId] || { byFile: {} };
+	return {
+		byRepo: _extends$5({}, state.byRepo, defineProperty$5({}, stream.repoId, {
+			byFile: _extends$5({}, existingStreamsForRepo.byFile, defineProperty$5({}, stream.file, stream))
+		}))
+	};
+};
+
+var streams = (function () {
+	var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState;
+	var _ref = arguments[1];
+	var type = _ref.type,
+	    payload = _ref.payload;
+
+	switch (type) {
+		case "ADD_STREAMS":
+		case "BOOTSTRAP_STREAMS":
+			return payload.reduce(addStream, state);
+		case "STREAMS-UPDATE_FROM_PUBNUB":
+		case "ADD_STREAM":
+			return addStream(state, payload);
+		default:
+			return state;
+	}
+});
+
+// Selectors
+var getStreamForRepoAndFile = function getStreamForRepoAndFile(state, repoId, file) {
+	var filesForRepo = (state.byRepo[repoId] || {}).byFile;
+	if (filesForRepo) return filesForRepo[file];
+};
+
+var getStreamsForRepo = function getStreamsForRepo(state, repoId) {
+	return (state.byRepo[repoId] || {}).byFile;
+};
+
+var _this$1 = undefined;
+
+var saveStream = function saveStream(attributes) {
+	return function (dispatch, getState, _ref) {
+		var db$$1 = _ref.db;
+
+		return upsert$1(db$$1, "streams", attributes).then(function (stream) {
+			dispatch({
+				type: "ADD_STREAM",
+				payload: stream
+			});
+		});
+	};
+};
+
+var saveStreams = function saveStreams(streams$$1) {
+	return function (dispatch, getState, _ref2) {
+		var db$$1 = _ref2.db;
+
+		// return upsert(db, "streams", attributes).then(streams =>
+		return dispatch({
+			type: "ADD_STREAMS",
+			payload: streams$$1
+		});
+		// );
+	};
+};
+
+var fetchStreams = function fetchStreams(sortId) {
+	return function () {
+		var _ref4 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(dispatch, getState, _ref3) {
+			var http = _ref3.http;
+
+			var _getState, context, session, url;
+
+			return regeneratorRuntime.wrap(function _callee$(_context) {
+				while (1) {
+					switch (_context.prev = _context.next) {
+						case 0:
+							_getState = getState(), context = _getState.context, session = _getState.session;
+							url = "/streams?teamId=" + context.currentTeamId + "&repoId=" + context.currentRepoId;
+
+							if (sortId) url += "&lt=" + sortId;
+
+							return _context.abrupt("return", http.get(url, session.accessToken).then(function (_ref5) {
+								var streams$$1 = _ref5.streams,
+								    more = _ref5.more;
+
+								var normalizedStreams = normalize(streams$$1);
+								dispatch(fetchLatestPosts(normalizedStreams));
+								var save = dispatch(saveStreams(normalizedStreams));
+								if (more) return dispatch(fetchStreams(underscorePlus.sortBy(streams$$1, "sortId")[0].sortId));else return save;
+							}));
+
+						case 4:
+						case "end":
+							return _context.stop();
+					}
+				}
+			}, _callee, _this$1);
+		}));
+
+		return function (_x, _x2, _x3) {
+			return _ref4.apply(this, arguments);
+		};
+	}();
+};
+
+// FIXME: tech debt. this is only for use when starting with a clean local cache until
+// the streams support lazy loading and infinite lists
+var fetchStreamsAndAllPosts = function fetchStreamsAndAllPosts(sortId) {
+	return function () {
+		var _ref7 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(dispatch, getState, _ref6) {
+			var api = _ref6.api,
+			    http = _ref6.http;
+
+			var _getState2, context;
+
+			return regeneratorRuntime.wrap(function _callee2$(_context2) {
+				while (1) {
+					switch (_context2.prev = _context2.next) {
+						case 0:
+							_getState2 = getState(), context = _getState2.context;
+							return _context2.abrupt("return", api.fetchStreams(context.currentTeamId, context.currentRepoId, sortId).then(function (_ref8) {
+								var streams$$1 = _ref8.streams,
+								    more = _ref8.more;
+
+								dispatch(fetchAllPosts(streams$$1));
+								var save = dispatch(saveStreams(streams$$1));
+								if (more) return dispatch(fetchStreamsAndAllPosts(underscorePlus.sortBy(streams$$1, "sortId")[0].sortId));else return save;
+							}));
+
+						case 2:
+						case "end":
+							return _context2.stop();
+					}
+				}
+			}, _callee2, _this$1);
+		}));
+
+		return function (_x4, _x5, _x6) {
+			return _ref7.apply(this, arguments);
+		};
+	}();
+};
+
+var markStreamModified = function markStreamModified(streamId, isModified) {
+	return function () {
+		var _ref10 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(dispatch, getState, _ref9) {
+			var http = _ref9.http;
+
+			var _getState3, context, session, editing, payload, markModifiedData;
+
+			return regeneratorRuntime.wrap(function _callee3$(_context3) {
+				while (1) {
+					switch (_context3.prev = _context3.next) {
+						case 0:
+							_getState3 = getState(), context = _getState3.context, session = _getState3.session;
+
+							if (!(context.currentFile === "" || !session.accessToken)) {
+								_context3.next = 3;
+								break;
+							}
+
+							return _context3.abrupt("return");
+
+						case 3:
+
+							// console.log("COMMENT THIS RETURN STATEMENT TO SAVE TO API SERVER");
+							// return;
+
+							// in the future, consider passing the deltas in the "editing" object
+							editing = isModified ? { commitHash: context.currentCommit } : false;
+							payload = {
+								teamId: context.currentTeamId,
+								repoId: context.currentRepoId,
+								file: context.currentFile,
+								streamId: streamId,
+								editing: editing
+							};
+							_context3.next = 7;
+							return http.put("/editing", payload, session.accessToken);
+
+						case 7:
+							markModifiedData = _context3.sent;
+
+						case 8:
+						case "end":
+							return _context3.stop();
+					}
+				}
+			}, _callee3, _this$1);
+		}));
+
+		return function (_x7, _x8, _x9) {
+			return _ref10.apply(this, arguments);
+		};
+	}();
+};
+
+var markPathsModified = function markPathsModified(modifiedPaths) {
+	return function () {
+		var _ref12 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(dispatch, getState, _ref11) {
+			var http = _ref11.http;
+
+			var _getState4, context, session, streams$$1, paths, streamIds, payload, markModifiedData;
+
+			return regeneratorRuntime.wrap(function _callee4$(_context4) {
+				while (1) {
+					switch (_context4.prev = _context4.next) {
+						case 0:
+							_getState4 = getState(), context = _getState4.context, session = _getState4.session, streams$$1 = _getState4.streams;
+
+							if (session.accessToken) {
+								_context4.next = 3;
+								break;
+							}
+
+							return _context4.abrupt("return");
+
+						case 3:
+							paths = [];
+							streamIds = [];
+
+							modifiedPaths.forEach(function (path) {
+								var stream = getStreamForRepoAndFile(streams$$1, context.currentRepoId, path);
+								if (stream) streamIds.push(stream.id);else paths.push(path);
+							});
+
+							payload = {
+								teamId: context.currentTeamId,
+								repoId: context.currentRepoId,
+								editing: {
+									commitHash: context.currentCommit
+								},
+								files: paths || [],
+								streamIds: streamIds
+							};
+
+							// console.log("Marking all paths modified: ", payload);
+
+							_context4.next = 9;
+							return http.put("/editing", payload, session.accessToken);
+
+						case 9:
+							markModifiedData = _context4.sent;
+
+						case 10:
+						case "end":
+							return _context4.stop();
+					}
+				}
+			}, _callee4, _this$1);
+		}));
+
+		return function (_x10, _x11, _x12) {
+			return _ref12.apply(this, arguments);
+		};
+	}();
+};
+
+
+var streamActions = Object.freeze({
+	saveStream: saveStream,
+	saveStreams: saveStreams,
+	fetchStreams: fetchStreams,
+	fetchStreamsAndAllPosts: fetchStreamsAndAllPosts,
+	markStreamModified: markStreamModified,
+	markPathsModified: markPathsModified
+});
 
 var saveMarkers = function saveMarkers(markers) {
 	return { type: "ADD_MARKERS", payload: markers };
 };
 
-var OPERATIONS = {
-	" ": "SYNC",
-	"+": "ADD",
-	"-": "DEL"
-};
+var _this$2 = undefined;
+// import MarkerLocationFinder from "../git/MarkerLocationFinder";
+// import { open as openRepo } from "../git/GitRepo";
 
-var DeltaBuilder = function () {
-	function DeltaBuilder(patch) {
-		classCallCheck$1(this, DeltaBuilder);
-
-		this._oldFile = patch.oldFileName;
-		this._newFile = patch.newFileName;
-		this._hunks = patch.hunks;
-		this._edits = [];
-		this._state = "sync";
-		this._oldLine = 0;
-		this._newLine = 0;
-	}
-
-	createClass$1(DeltaBuilder, [{
-		key: "build",
-		value: function build() {
-			this._processHunks();
-			this._setState("sync");
-			return {
-				oldFile: this._oldFile,
-				newFile: this._newFile,
-				edits: this._edits
-			};
-		}
-	}, {
-		key: "_processHunks",
-		value: function _processHunks() {
-			var _iteratorNormalCompletion = true;
-			var _didIteratorError = false;
-			var _iteratorError = undefined;
-
-			try {
-				for (var _iterator = this._hunks[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-					var hunk = _step.value;
-					var oldStart = hunk.oldStart,
-					    newStart = hunk.newStart,
-					    lines = hunk.lines;
-
-					var oldLine = oldStart;
-					var newLine = newStart;
-					var _iteratorNormalCompletion2 = true;
-					var _didIteratorError2 = false;
-					var _iteratorError2 = undefined;
-
-					try {
-						for (var _iterator2 = lines[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-							var rawLine = _step2.value;
-
-							var operation = OPERATIONS[rawLine.charAt(0)];
-							var content = rawLine.substr(1);
-
-							this._processLine({
-								operation: operation,
-								content: content,
-								oldLine: oldLine,
-								newLine: newLine
-							});
-
-							if (operation === "SYNC" || operation === "ADD") {
-								newLine++;
-							}
-							if (operation === "SYNC" || operation === "DEL") {
-								oldLine++;
-							}
-						}
-					} catch (err) {
-						_didIteratorError2 = true;
-						_iteratorError2 = err;
-					} finally {
-						try {
-							if (!_iteratorNormalCompletion2 && _iterator2.return) {
-								_iterator2.return();
-							}
-						} finally {
-							if (_didIteratorError2) {
-								throw _iteratorError2;
-							}
-						}
-					}
-				}
-			} catch (err) {
-				_didIteratorError = true;
-				_iteratorError = err;
-			} finally {
-				try {
-					if (!_iteratorNormalCompletion && _iterator.return) {
-						_iterator.return();
-					}
-				} finally {
-					if (_didIteratorError) {
-						throw _iteratorError;
-					}
-				}
-			}
-		}
-	}, {
-		key: "_processLine",
-		value: function _processLine(line) {
-			var operation = line.operation;
-			switch (operation) {
-				case "SYNC":
-					return this._ctx(line);
-				case "ADD":
-					return this._add(line);
-				case "DEL":
-					return this._del(line);
-			}
-		}
-	}, {
-		key: "_ctx",
-		value: function _ctx(line) {
-			this._setState("sync");
-			this._oldLine = line.oldLine;
-			this._newLine = line.newLine;
-		}
-	}, {
-		key: "_add",
-		value: function _add(line) {
-			this._setState("edit");
-			this._adds.push(line.content);
-		}
-	}, {
-		key: "_del",
-		value: function _del(line) {
-			this._setState("edit");
-			this._dels.push(line.content);
-		}
-	}, {
-		key: "_setState",
-		value: function _setState(state) {
-			if (state !== this._state) {
-				this._state = state;
-				this["_" + state]();
-			}
-		}
-	}, {
-		key: "_sync",
-		value: function _sync() {
-			var dels = this._dels;
-			var adds = this._adds;
-			var delStart = this._delStart;
-			var addStart = this._addStart;
-			var delLength = dels.length;
-			var addLength = adds.length;
-
-			this._edits.push({
-				delStart: delStart,
-				addStart: addStart,
-				delLength: delLength,
-				addLength: addLength,
-				dels: dels,
-				adds: adds
-			});
-		}
-	}, {
-		key: "_edit",
-		value: function _edit() {
-			this._delStart = this._oldLine + 1;
-			this._addStart = this._newLine + 1;
-			this._adds = [];
-			this._dels = [];
-		}
-	}]);
-	return DeltaBuilder;
+var createTempId = function () {
+	var count = 0;
+	return function () {
+		return String(count++);
+	};
 }();
 
-var diff$1 = createCommonjsModule(function (module, exports) {
-/*!
-
- diff v3.5.0
-
-Software License Agreement (BSD License)
-
-Copyright (c) 2009-2015, Kevin Decker <kpdecker@gmail.com>
-
-All rights reserved.
-
-Redistribution and use of this software in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
-
-* Redistributions of source code must retain the above
-  copyright notice, this list of conditions and the
-  following disclaimer.
-
-* Redistributions in binary form must reproduce the above
-  copyright notice, this list of conditions and the
-  following disclaimer in the documentation and/or other
-  materials provided with the distribution.
-
-* Neither the name of Kevin Decker nor the names of its
-  contributors may be used to endorse or promote products
-  derived from this software without specific prior
-  written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR
-IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
-FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
-CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
-IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
-OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-@license
-*/
-(function webpackUniversalModuleDefinition(root, factory) {
-	module.exports = factory();
-})(commonjsGlobal, function() {
-return /******/ (function(modules) { // webpackBootstrap
-/******/ 	// The module cache
-/******/ 	var installedModules = {};
-
-/******/ 	// The require function
-/******/ 	function __webpack_require__(moduleId) {
-
-/******/ 		// Check if module is in cache
-/******/ 		if(installedModules[moduleId])
-/******/ 			return installedModules[moduleId].exports;
-
-/******/ 		// Create a new module (and put it into the cache)
-/******/ 		var module = installedModules[moduleId] = {
-/******/ 			exports: {},
-/******/ 			id: moduleId,
-/******/ 			loaded: false
-/******/ 		};
-
-/******/ 		// Execute the module function
-/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
-
-/******/ 		// Flag the module as loaded
-/******/ 		module.loaded = true;
-
-/******/ 		// Return the exports of the module
-/******/ 		return module.exports;
-/******/ 	}
-
-
-/******/ 	// expose the modules object (__webpack_modules__)
-/******/ 	__webpack_require__.m = modules;
-
-/******/ 	// expose the module cache
-/******/ 	__webpack_require__.c = installedModules;
-
-/******/ 	// __webpack_public_path__
-/******/ 	__webpack_require__.p = "";
-
-/******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(0);
-/******/ })
-/************************************************************************/
-/******/ ([
-/* 0 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	exports.__esModule = true;
-	exports.canonicalize = exports.convertChangesToXML = exports.convertChangesToDMP = exports.merge = exports.parsePatch = exports.applyPatches = exports.applyPatch = exports.createPatch = exports.createTwoFilesPatch = exports.structuredPatch = exports.diffArrays = exports.diffJson = exports.diffCss = exports.diffSentences = exports.diffTrimmedLines = exports.diffLines = exports.diffWordsWithSpace = exports.diffWords = exports.diffChars = exports.Diff = undefined;
-
-	/*istanbul ignore end*/var /*istanbul ignore start*/_base = __webpack_require__(1) /*istanbul ignore end*/;
-
-	/*istanbul ignore start*/var _base2 = _interopRequireDefault(_base);
-
-	/*istanbul ignore end*/var /*istanbul ignore start*/_character = __webpack_require__(2) /*istanbul ignore end*/;
-
-	var /*istanbul ignore start*/_word = __webpack_require__(3) /*istanbul ignore end*/;
-
-	var /*istanbul ignore start*/_line = __webpack_require__(5) /*istanbul ignore end*/;
-
-	var /*istanbul ignore start*/_sentence = __webpack_require__(6) /*istanbul ignore end*/;
-
-	var /*istanbul ignore start*/_css = __webpack_require__(7) /*istanbul ignore end*/;
-
-	var /*istanbul ignore start*/_json = __webpack_require__(8) /*istanbul ignore end*/;
-
-	var /*istanbul ignore start*/_array = __webpack_require__(9) /*istanbul ignore end*/;
-
-	var /*istanbul ignore start*/_apply = __webpack_require__(10) /*istanbul ignore end*/;
-
-	var /*istanbul ignore start*/_parse = __webpack_require__(11) /*istanbul ignore end*/;
-
-	var /*istanbul ignore start*/_merge = __webpack_require__(13) /*istanbul ignore end*/;
-
-	var /*istanbul ignore start*/_create = __webpack_require__(14) /*istanbul ignore end*/;
-
-	var /*istanbul ignore start*/_dmp = __webpack_require__(16) /*istanbul ignore end*/;
-
-	var /*istanbul ignore start*/_xml = __webpack_require__(17) /*istanbul ignore end*/;
-
-	/*istanbul ignore start*/function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-	/* See LICENSE file for terms of use */
-
-	/*
-	 * Text diff implementation.
-	 *
-	 * This library supports the following APIS:
-	 * JsDiff.diffChars: Character by character diff
-	 * JsDiff.diffWords: Word (as defined by \b regex) diff which ignores whitespace
-	 * JsDiff.diffLines: Line based diff
-	 *
-	 * JsDiff.diffCss: Diff targeted at CSS content
-	 *
-	 * These methods are based on the implementation proposed in
-	 * "An O(ND) Difference Algorithm and its Variations" (Myers, 1986).
-	 * http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.4.6927
-	 */
-	exports. /*istanbul ignore end*/Diff = _base2['default'];
-	/*istanbul ignore start*/exports. /*istanbul ignore end*/diffChars = _character.diffChars;
-	/*istanbul ignore start*/exports. /*istanbul ignore end*/diffWords = _word.diffWords;
-	/*istanbul ignore start*/exports. /*istanbul ignore end*/diffWordsWithSpace = _word.diffWordsWithSpace;
-	/*istanbul ignore start*/exports. /*istanbul ignore end*/diffLines = _line.diffLines;
-	/*istanbul ignore start*/exports. /*istanbul ignore end*/diffTrimmedLines = _line.diffTrimmedLines;
-	/*istanbul ignore start*/exports. /*istanbul ignore end*/diffSentences = _sentence.diffSentences;
-	/*istanbul ignore start*/exports. /*istanbul ignore end*/diffCss = _css.diffCss;
-	/*istanbul ignore start*/exports. /*istanbul ignore end*/diffJson = _json.diffJson;
-	/*istanbul ignore start*/exports. /*istanbul ignore end*/diffArrays = _array.diffArrays;
-	/*istanbul ignore start*/exports. /*istanbul ignore end*/structuredPatch = _create.structuredPatch;
-	/*istanbul ignore start*/exports. /*istanbul ignore end*/createTwoFilesPatch = _create.createTwoFilesPatch;
-	/*istanbul ignore start*/exports. /*istanbul ignore end*/createPatch = _create.createPatch;
-	/*istanbul ignore start*/exports. /*istanbul ignore end*/applyPatch = _apply.applyPatch;
-	/*istanbul ignore start*/exports. /*istanbul ignore end*/applyPatches = _apply.applyPatches;
-	/*istanbul ignore start*/exports. /*istanbul ignore end*/parsePatch = _parse.parsePatch;
-	/*istanbul ignore start*/exports. /*istanbul ignore end*/merge = _merge.merge;
-	/*istanbul ignore start*/exports. /*istanbul ignore end*/convertChangesToDMP = _dmp.convertChangesToDMP;
-	/*istanbul ignore start*/exports. /*istanbul ignore end*/convertChangesToXML = _xml.convertChangesToXML;
-	/*istanbul ignore start*/exports. /*istanbul ignore end*/canonicalize = _json.canonicalize;
-	
-
-
-/***/ }),
-/* 1 */
-/***/ (function(module, exports) {
-
-	exports.__esModule = true;
-	exports['default'] = /*istanbul ignore end*/Diff;
-	function Diff() {}
-
-	Diff.prototype = {
-	  /*istanbul ignore start*/ /*istanbul ignore end*/diff: function diff(oldString, newString) {
-	    /*istanbul ignore start*/var /*istanbul ignore end*/options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-
-	    var callback = options.callback;
-	    if (typeof options === 'function') {
-	      callback = options;
-	      options = {};
-	    }
-	    this.options = options;
-
-	    var self = this;
-
-	    function done(value) {
-	      if (callback) {
-	        setTimeout(function () {
-	          callback(undefined, value);
-	        }, 0);
-	        return true;
-	      } else {
-	        return value;
-	      }
-	    }
-
-	    // Allow subclasses to massage the input prior to running
-	    oldString = this.castInput(oldString);
-	    newString = this.castInput(newString);
-
-	    oldString = this.removeEmpty(this.tokenize(oldString));
-	    newString = this.removeEmpty(this.tokenize(newString));
-
-	    var newLen = newString.length,
-	        oldLen = oldString.length;
-	    var editLength = 1;
-	    var maxEditLength = newLen + oldLen;
-	    var bestPath = [{ newPos: -1, components: [] }];
-
-	    // Seed editLength = 0, i.e. the content starts with the same values
-	    var oldPos = this.extractCommon(bestPath[0], newString, oldString, 0);
-	    if (bestPath[0].newPos + 1 >= newLen && oldPos + 1 >= oldLen) {
-	      // Identity per the equality and tokenizer
-	      return done([{ value: this.join(newString), count: newString.length }]);
-	    }
-
-	    // Main worker method. checks all permutations of a given edit length for acceptance.
-	    function execEditLength() {
-	      for (var diagonalPath = -1 * editLength; diagonalPath <= editLength; diagonalPath += 2) {
-	        var basePath = /*istanbul ignore start*/void 0 /*istanbul ignore end*/;
-	        var addPath = bestPath[diagonalPath - 1],
-	            removePath = bestPath[diagonalPath + 1],
-	            _oldPos = (removePath ? removePath.newPos : 0) - diagonalPath;
-	        if (addPath) {
-	          // No one else is going to attempt to use this value, clear it
-	          bestPath[diagonalPath - 1] = undefined;
-	        }
-
-	        var canAdd = addPath && addPath.newPos + 1 < newLen,
-	            canRemove = removePath && 0 <= _oldPos && _oldPos < oldLen;
-	        if (!canAdd && !canRemove) {
-	          // If this path is a terminal then prune
-	          bestPath[diagonalPath] = undefined;
-	          continue;
-	        }
-
-	        // Select the diagonal that we want to branch from. We select the prior
-	        // path whose position in the new string is the farthest from the origin
-	        // and does not pass the bounds of the diff graph
-	        if (!canAdd || canRemove && addPath.newPos < removePath.newPos) {
-	          basePath = clonePath(removePath);
-	          self.pushComponent(basePath.components, undefined, true);
-	        } else {
-	          basePath = addPath; // No need to clone, we've pulled it from the list
-	          basePath.newPos++;
-	          self.pushComponent(basePath.components, true, undefined);
-	        }
-
-	        _oldPos = self.extractCommon(basePath, newString, oldString, diagonalPath);
-
-	        // If we have hit the end of both strings, then we are done
-	        if (basePath.newPos + 1 >= newLen && _oldPos + 1 >= oldLen) {
-	          return done(buildValues(self, basePath.components, newString, oldString, self.useLongestToken));
-	        } else {
-	          // Otherwise track this path as a potential candidate and continue.
-	          bestPath[diagonalPath] = basePath;
-	        }
-	      }
-
-	      editLength++;
-	    }
-
-	    // Performs the length of edit iteration. Is a bit fugly as this has to support the
-	    // sync and async mode which is never fun. Loops over execEditLength until a value
-	    // is produced.
-	    if (callback) {
-	      (function exec() {
-	        setTimeout(function () {
-	          // This should not happen, but we want to be safe.
-	          /* istanbul ignore next */
-	          if (editLength > maxEditLength) {
-	            return callback();
-	          }
-
-	          if (!execEditLength()) {
-	            exec();
-	          }
-	        }, 0);
-	      })();
-	    } else {
-	      while (editLength <= maxEditLength) {
-	        var ret = execEditLength();
-	        if (ret) {
-	          return ret;
-	        }
-	      }
-	    }
-	  },
-	  /*istanbul ignore start*/ /*istanbul ignore end*/pushComponent: function pushComponent(components, added, removed) {
-	    var last = components[components.length - 1];
-	    if (last && last.added === added && last.removed === removed) {
-	      // We need to clone here as the component clone operation is just
-	      // as shallow array clone
-	      components[components.length - 1] = { count: last.count + 1, added: added, removed: removed };
-	    } else {
-	      components.push({ count: 1, added: added, removed: removed });
-	    }
-	  },
-	  /*istanbul ignore start*/ /*istanbul ignore end*/extractCommon: function extractCommon(basePath, newString, oldString, diagonalPath) {
-	    var newLen = newString.length,
-	        oldLen = oldString.length,
-	        newPos = basePath.newPos,
-	        oldPos = newPos - diagonalPath,
-	        commonCount = 0;
-	    while (newPos + 1 < newLen && oldPos + 1 < oldLen && this.equals(newString[newPos + 1], oldString[oldPos + 1])) {
-	      newPos++;
-	      oldPos++;
-	      commonCount++;
-	    }
-
-	    if (commonCount) {
-	      basePath.components.push({ count: commonCount });
-	    }
-
-	    basePath.newPos = newPos;
-	    return oldPos;
-	  },
-	  /*istanbul ignore start*/ /*istanbul ignore end*/equals: function equals(left, right) {
-	    if (this.options.comparator) {
-	      return this.options.comparator(left, right);
-	    } else {
-	      return left === right || this.options.ignoreCase && left.toLowerCase() === right.toLowerCase();
-	    }
-	  },
-	  /*istanbul ignore start*/ /*istanbul ignore end*/removeEmpty: function removeEmpty(array) {
-	    var ret = [];
-	    for (var i = 0; i < array.length; i++) {
-	      if (array[i]) {
-	        ret.push(array[i]);
-	      }
-	    }
-	    return ret;
-	  },
-	  /*istanbul ignore start*/ /*istanbul ignore end*/castInput: function castInput(value) {
-	    return value;
-	  },
-	  /*istanbul ignore start*/ /*istanbul ignore end*/tokenize: function tokenize(value) {
-	    return value.split('');
-	  },
-	  /*istanbul ignore start*/ /*istanbul ignore end*/join: function join(chars) {
-	    return chars.join('');
-	  }
-	};
-
-	function buildValues(diff, components, newString, oldString, useLongestToken) {
-	  var componentPos = 0,
-	      componentLen = components.length,
-	      newPos = 0,
-	      oldPos = 0;
-
-	  for (; componentPos < componentLen; componentPos++) {
-	    var component = components[componentPos];
-	    if (!component.removed) {
-	      if (!component.added && useLongestToken) {
-	        var value = newString.slice(newPos, newPos + component.count);
-	        value = value.map(function (value, i) {
-	          var oldValue = oldString[oldPos + i];
-	          return oldValue.length > value.length ? oldValue : value;
-	        });
-
-	        component.value = diff.join(value);
-	      } else {
-	        component.value = diff.join(newString.slice(newPos, newPos + component.count));
-	      }
-	      newPos += component.count;
-
-	      // Common case
-	      if (!component.added) {
-	        oldPos += component.count;
-	      }
-	    } else {
-	      component.value = diff.join(oldString.slice(oldPos, oldPos + component.count));
-	      oldPos += component.count;
-
-	      // Reverse add and remove so removes are output first to match common convention
-	      // The diffing algorithm is tied to add then remove output and this is the simplest
-	      // route to get the desired output with minimal overhead.
-	      if (componentPos && components[componentPos - 1].added) {
-	        var tmp = components[componentPos - 1];
-	        components[componentPos - 1] = components[componentPos];
-	        components[componentPos] = tmp;
-	      }
-	    }
-	  }
-
-	  // Special case handle for when one terminal is ignored (i.e. whitespace).
-	  // For this case we merge the terminal into the prior string and drop the change.
-	  // This is only available for string mode.
-	  var lastComponent = components[componentLen - 1];
-	  if (componentLen > 1 && typeof lastComponent.value === 'string' && (lastComponent.added || lastComponent.removed) && diff.equals('', lastComponent.value)) {
-	    components[componentLen - 2].value += lastComponent.value;
-	    components.pop();
-	  }
-
-	  return components;
-	}
-
-	function clonePath(path) {
-	  return { newPos: path.newPos, components: path.components.slice(0) };
-	}
-	
-
-
-/***/ }),
-/* 2 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	exports.__esModule = true;
-	exports.characterDiff = undefined;
-	exports. /*istanbul ignore end*/diffChars = diffChars;
-
-	var /*istanbul ignore start*/_base = __webpack_require__(1) /*istanbul ignore end*/;
-
-	/*istanbul ignore start*/var _base2 = _interopRequireDefault(_base);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-	/*istanbul ignore end*/var characterDiff = /*istanbul ignore start*/exports. /*istanbul ignore end*/characterDiff = new /*istanbul ignore start*/_base2['default'] /*istanbul ignore end*/();
-	function diffChars(oldStr, newStr, options) {
-	  return characterDiff.diff(oldStr, newStr, options);
-	}
-	
-
-
-/***/ }),
-/* 3 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	exports.__esModule = true;
-	exports.wordDiff = undefined;
-	exports. /*istanbul ignore end*/diffWords = diffWords;
-	/*istanbul ignore start*/exports. /*istanbul ignore end*/diffWordsWithSpace = diffWordsWithSpace;
-
-	var /*istanbul ignore start*/_base = __webpack_require__(1) /*istanbul ignore end*/;
-
-	/*istanbul ignore start*/var _base2 = _interopRequireDefault(_base);
-
-	/*istanbul ignore end*/var /*istanbul ignore start*/_params = __webpack_require__(4) /*istanbul ignore end*/;
-
-	/*istanbul ignore start*/function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-	/*istanbul ignore end*/ // Based on https://en.wikipedia.org/wiki/Latin_script_in_Unicode
-	//
-	// Ranges and exceptions:
-	// Latin-1 Supplement, 0080–00FF
-	//  - U+00D7  × Multiplication sign
-	//  - U+00F7  ÷ Division sign
-	// Latin Extended-A, 0100–017F
-	// Latin Extended-B, 0180–024F
-	// IPA Extensions, 0250–02AF
-	// Spacing Modifier Letters, 02B0–02FF
-	//  - U+02C7  ˇ &#711;  Caron
-	//  - U+02D8  ˘ &#728;  Breve
-	//  - U+02D9  ˙ &#729;  Dot Above
-	//  - U+02DA  ˚ &#730;  Ring Above
-	//  - U+02DB  ˛ &#731;  Ogonek
-	//  - U+02DC  ˜ &#732;  Small Tilde
-	//  - U+02DD  ˝ &#733;  Double Acute Accent
-	// Latin Extended Additional, 1E00–1EFF
-	var extendedWordChars = /^[A-Za-z\xC0-\u02C6\u02C8-\u02D7\u02DE-\u02FF\u1E00-\u1EFF]+$/;
-
-	var reWhitespace = /\S/;
-
-	var wordDiff = /*istanbul ignore start*/exports. /*istanbul ignore end*/wordDiff = new /*istanbul ignore start*/_base2['default'] /*istanbul ignore end*/();
-	wordDiff.equals = function (left, right) {
-	  if (this.options.ignoreCase) {
-	    left = left.toLowerCase();
-	    right = right.toLowerCase();
-	  }
-	  return left === right || this.options.ignoreWhitespace && !reWhitespace.test(left) && !reWhitespace.test(right);
-	};
-	wordDiff.tokenize = function (value) {
-	  var tokens = value.split(/(\s+|\b)/);
-
-	  // Join the boundary splits that we do not consider to be boundaries. This is primarily the extended Latin character set.
-	  for (var i = 0; i < tokens.length - 1; i++) {
-	    // If we have an empty string in the next field and we have only word chars before and after, merge
-	    if (!tokens[i + 1] && tokens[i + 2] && extendedWordChars.test(tokens[i]) && extendedWordChars.test(tokens[i + 2])) {
-	      tokens[i] += tokens[i + 2];
-	      tokens.splice(i + 1, 2);
-	      i--;
-	    }
-	  }
-
-	  return tokens;
-	};
-
-	function diffWords(oldStr, newStr, options) {
-	  options = /*istanbul ignore start*/(0, _params.generateOptions) /*istanbul ignore end*/(options, { ignoreWhitespace: true });
-	  return wordDiff.diff(oldStr, newStr, options);
-	}
-
-	function diffWordsWithSpace(oldStr, newStr, options) {
-	  return wordDiff.diff(oldStr, newStr, options);
-	}
-	
-
-
-/***/ }),
-/* 4 */
-/***/ (function(module, exports) {
-
-	exports.__esModule = true;
-	exports. /*istanbul ignore end*/generateOptions = generateOptions;
-	function generateOptions(options, defaults) {
-	  if (typeof options === 'function') {
-	    defaults.callback = options;
-	  } else if (options) {
-	    for (var name in options) {
-	      /* istanbul ignore else */
-	      if (options.hasOwnProperty(name)) {
-	        defaults[name] = options[name];
-	      }
-	    }
-	  }
-	  return defaults;
-	}
-	
-
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	exports.__esModule = true;
-	exports.lineDiff = undefined;
-	exports. /*istanbul ignore end*/diffLines = diffLines;
-	/*istanbul ignore start*/exports. /*istanbul ignore end*/diffTrimmedLines = diffTrimmedLines;
-
-	var /*istanbul ignore start*/_base = __webpack_require__(1) /*istanbul ignore end*/;
-
-	/*istanbul ignore start*/var _base2 = _interopRequireDefault(_base);
-
-	/*istanbul ignore end*/var /*istanbul ignore start*/_params = __webpack_require__(4) /*istanbul ignore end*/;
-
-	/*istanbul ignore start*/function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-	/*istanbul ignore end*/var lineDiff = /*istanbul ignore start*/exports. /*istanbul ignore end*/lineDiff = new /*istanbul ignore start*/_base2['default'] /*istanbul ignore end*/();
-	lineDiff.tokenize = function (value) {
-	  var retLines = [],
-	      linesAndNewlines = value.split(/(\n|\r\n)/);
-
-	  // Ignore the final empty token that occurs if the string ends with a new line
-	  if (!linesAndNewlines[linesAndNewlines.length - 1]) {
-	    linesAndNewlines.pop();
-	  }
-
-	  // Merge the content and line separators into single tokens
-	  for (var i = 0; i < linesAndNewlines.length; i++) {
-	    var line = linesAndNewlines[i];
-
-	    if (i % 2 && !this.options.newlineIsToken) {
-	      retLines[retLines.length - 1] += line;
-	    } else {
-	      if (this.options.ignoreWhitespace) {
-	        line = line.trim();
-	      }
-	      retLines.push(line);
-	    }
-	  }
-
-	  return retLines;
-	};
-
-	function diffLines(oldStr, newStr, callback) {
-	  return lineDiff.diff(oldStr, newStr, callback);
-	}
-	function diffTrimmedLines(oldStr, newStr, callback) {
-	  var options = /*istanbul ignore start*/(0, _params.generateOptions) /*istanbul ignore end*/(callback, { ignoreWhitespace: true });
-	  return lineDiff.diff(oldStr, newStr, options);
-	}
-	
-
-
-/***/ }),
-/* 6 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	exports.__esModule = true;
-	exports.sentenceDiff = undefined;
-	exports. /*istanbul ignore end*/diffSentences = diffSentences;
-
-	var /*istanbul ignore start*/_base = __webpack_require__(1) /*istanbul ignore end*/;
-
-	/*istanbul ignore start*/var _base2 = _interopRequireDefault(_base);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-	/*istanbul ignore end*/var sentenceDiff = /*istanbul ignore start*/exports. /*istanbul ignore end*/sentenceDiff = new /*istanbul ignore start*/_base2['default'] /*istanbul ignore end*/();
-	sentenceDiff.tokenize = function (value) {
-	  return value.split(/(\S.+?[.!?])(?=\s+|$)/);
-	};
-
-	function diffSentences(oldStr, newStr, callback) {
-	  return sentenceDiff.diff(oldStr, newStr, callback);
-	}
-	
-
-
-/***/ }),
-/* 7 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	exports.__esModule = true;
-	exports.cssDiff = undefined;
-	exports. /*istanbul ignore end*/diffCss = diffCss;
-
-	var /*istanbul ignore start*/_base = __webpack_require__(1) /*istanbul ignore end*/;
-
-	/*istanbul ignore start*/var _base2 = _interopRequireDefault(_base);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-	/*istanbul ignore end*/var cssDiff = /*istanbul ignore start*/exports. /*istanbul ignore end*/cssDiff = new /*istanbul ignore start*/_base2['default'] /*istanbul ignore end*/();
-	cssDiff.tokenize = function (value) {
-	  return value.split(/([{}:;,]|\s+)/);
-	};
-
-	function diffCss(oldStr, newStr, callback) {
-	  return cssDiff.diff(oldStr, newStr, callback);
-	}
-	
-
-
-/***/ }),
-/* 8 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	exports.__esModule = true;
-	exports.jsonDiff = undefined;
-
-	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
-	exports. /*istanbul ignore end*/diffJson = diffJson;
-	/*istanbul ignore start*/exports. /*istanbul ignore end*/canonicalize = canonicalize;
-
-	var /*istanbul ignore start*/_base = __webpack_require__(1) /*istanbul ignore end*/;
-
-	/*istanbul ignore start*/var _base2 = _interopRequireDefault(_base);
-
-	/*istanbul ignore end*/var /*istanbul ignore start*/_line = __webpack_require__(5) /*istanbul ignore end*/;
-
-	/*istanbul ignore start*/function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-	/*istanbul ignore end*/var objectPrototypeToString = Object.prototype.toString;
-
-	var jsonDiff = /*istanbul ignore start*/exports. /*istanbul ignore end*/jsonDiff = new /*istanbul ignore start*/_base2['default'] /*istanbul ignore end*/();
-	// Discriminate between two lines of pretty-printed, serialized JSON where one of them has a
-	// dangling comma and the other doesn't. Turns out including the dangling comma yields the nicest output:
-	jsonDiff.useLongestToken = true;
-
-	jsonDiff.tokenize = /*istanbul ignore start*/_line.lineDiff /*istanbul ignore end*/.tokenize;
-	jsonDiff.castInput = function (value) {
-	  /*istanbul ignore start*/var _options = /*istanbul ignore end*/this.options,
-	      undefinedReplacement = _options.undefinedReplacement,
-	      _options$stringifyRep = _options.stringifyReplacer,
-	      stringifyReplacer = _options$stringifyRep === undefined ? function (k, v) /*istanbul ignore start*/{
-	    return (/*istanbul ignore end*/typeof v === 'undefined' ? undefinedReplacement : v
-	    );
-	  } : _options$stringifyRep;
-
-
-	  return typeof value === 'string' ? value : JSON.stringify(canonicalize(value, null, null, stringifyReplacer), stringifyReplacer, '  ');
-	};
-	jsonDiff.equals = function (left, right) {
-	  return (/*istanbul ignore start*/_base2['default'] /*istanbul ignore end*/.prototype.equals.call(jsonDiff, left.replace(/,([\r\n])/g, '$1'), right.replace(/,([\r\n])/g, '$1'))
-	  );
-	};
-
-	function diffJson(oldObj, newObj, options) {
-	  return jsonDiff.diff(oldObj, newObj, options);
-	}
-
-	// This function handles the presence of circular references by bailing out when encountering an
-	// object that is already on the "stack" of items being processed. Accepts an optional replacer
-	function canonicalize(obj, stack, replacementStack, replacer, key) {
-	  stack = stack || [];
-	  replacementStack = replacementStack || [];
-
-	  if (replacer) {
-	    obj = replacer(key, obj);
-	  }
-
-	  var i = /*istanbul ignore start*/void 0 /*istanbul ignore end*/;
-
-	  for (i = 0; i < stack.length; i += 1) {
-	    if (stack[i] === obj) {
-	      return replacementStack[i];
-	    }
-	  }
-
-	  var canonicalizedObj = /*istanbul ignore start*/void 0 /*istanbul ignore end*/;
-
-	  if ('[object Array]' === objectPrototypeToString.call(obj)) {
-	    stack.push(obj);
-	    canonicalizedObj = new Array(obj.length);
-	    replacementStack.push(canonicalizedObj);
-	    for (i = 0; i < obj.length; i += 1) {
-	      canonicalizedObj[i] = canonicalize(obj[i], stack, replacementStack, replacer, key);
-	    }
-	    stack.pop();
-	    replacementStack.pop();
-	    return canonicalizedObj;
-	  }
-
-	  if (obj && obj.toJSON) {
-	    obj = obj.toJSON();
-	  }
-
-	  if ( /*istanbul ignore start*/(typeof /*istanbul ignore end*/obj === 'undefined' ? 'undefined' : _typeof(obj)) === 'object' && obj !== null) {
-	    stack.push(obj);
-	    canonicalizedObj = {};
-	    replacementStack.push(canonicalizedObj);
-	    var sortedKeys = [],
-	        _key = /*istanbul ignore start*/void 0 /*istanbul ignore end*/;
-	    for (_key in obj) {
-	      /* istanbul ignore else */
-	      if (obj.hasOwnProperty(_key)) {
-	        sortedKeys.push(_key);
-	      }
-	    }
-	    sortedKeys.sort();
-	    for (i = 0; i < sortedKeys.length; i += 1) {
-	      _key = sortedKeys[i];
-	      canonicalizedObj[_key] = canonicalize(obj[_key], stack, replacementStack, replacer, _key);
-	    }
-	    stack.pop();
-	    replacementStack.pop();
-	  } else {
-	    canonicalizedObj = obj;
-	  }
-	  return canonicalizedObj;
-	}
-	
-
-
-/***/ }),
-/* 9 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	exports.__esModule = true;
-	exports.arrayDiff = undefined;
-	exports. /*istanbul ignore end*/diffArrays = diffArrays;
-
-	var /*istanbul ignore start*/_base = __webpack_require__(1) /*istanbul ignore end*/;
-
-	/*istanbul ignore start*/var _base2 = _interopRequireDefault(_base);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-	/*istanbul ignore end*/var arrayDiff = /*istanbul ignore start*/exports. /*istanbul ignore end*/arrayDiff = new /*istanbul ignore start*/_base2['default'] /*istanbul ignore end*/();
-	arrayDiff.tokenize = function (value) {
-	  return value.slice();
-	};
-	arrayDiff.join = arrayDiff.removeEmpty = function (value) {
-	  return value;
-	};
-
-	function diffArrays(oldArr, newArr, callback) {
-	  return arrayDiff.diff(oldArr, newArr, callback);
-	}
-	
-
-
-/***/ }),
-/* 10 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	exports.__esModule = true;
-	exports. /*istanbul ignore end*/applyPatch = applyPatch;
-	/*istanbul ignore start*/exports. /*istanbul ignore end*/applyPatches = applyPatches;
-
-	var /*istanbul ignore start*/_parse = __webpack_require__(11) /*istanbul ignore end*/;
-
-	var /*istanbul ignore start*/_distanceIterator = __webpack_require__(12) /*istanbul ignore end*/;
-
-	/*istanbul ignore start*/var _distanceIterator2 = _interopRequireDefault(_distanceIterator);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-	/*istanbul ignore end*/function applyPatch(source, uniDiff) {
-	  /*istanbul ignore start*/var /*istanbul ignore end*/options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-
-	  if (typeof uniDiff === 'string') {
-	    uniDiff = /*istanbul ignore start*/(0, _parse.parsePatch) /*istanbul ignore end*/(uniDiff);
-	  }
-
-	  if (Array.isArray(uniDiff)) {
-	    if (uniDiff.length > 1) {
-	      throw new Error('applyPatch only works with a single input.');
-	    }
-
-	    uniDiff = uniDiff[0];
-	  }
-
-	  // Apply the diff to the input
-	  var lines = source.split(/\r\n|[\n\v\f\r\x85]/),
-	      delimiters = source.match(/\r\n|[\n\v\f\r\x85]/g) || [],
-	      hunks = uniDiff.hunks,
-	      compareLine = options.compareLine || function (lineNumber, line, operation, patchContent) /*istanbul ignore start*/{
-	    return (/*istanbul ignore end*/line === patchContent
-	    );
-	  },
-	      errorCount = 0,
-	      fuzzFactor = options.fuzzFactor || 0,
-	      minLine = 0,
-	      offset = 0,
-	      removeEOFNL = /*istanbul ignore start*/void 0 /*istanbul ignore end*/,
-	      addEOFNL = /*istanbul ignore start*/void 0 /*istanbul ignore end*/;
-
-	  /**
-	   * Checks if the hunk exactly fits on the provided location
-	   */
-	  function hunkFits(hunk, toPos) {
-	    for (var j = 0; j < hunk.lines.length; j++) {
-	      var line = hunk.lines[j],
-	          operation = line.length > 0 ? line[0] : ' ',
-	          content = line.length > 0 ? line.substr(1) : line;
-
-	      if (operation === ' ' || operation === '-') {
-	        // Context sanity check
-	        if (!compareLine(toPos + 1, lines[toPos], operation, content)) {
-	          errorCount++;
-
-	          if (errorCount > fuzzFactor) {
-	            return false;
-	          }
-	        }
-	        toPos++;
-	      }
-	    }
-
-	    return true;
-	  }
-
-	  // Search best fit offsets for each hunk based on the previous ones
-	  for (var i = 0; i < hunks.length; i++) {
-	    var hunk = hunks[i],
-	        maxLine = lines.length - hunk.oldLines,
-	        localOffset = 0,
-	        toPos = offset + hunk.oldStart - 1;
-
-	    var iterator = /*istanbul ignore start*/(0, _distanceIterator2['default']) /*istanbul ignore end*/(toPos, minLine, maxLine);
-
-	    for (; localOffset !== undefined; localOffset = iterator()) {
-	      if (hunkFits(hunk, toPos + localOffset)) {
-	        hunk.offset = offset += localOffset;
-	        break;
-	      }
-	    }
-
-	    if (localOffset === undefined) {
-	      return false;
-	    }
-
-	    // Set lower text limit to end of the current hunk, so next ones don't try
-	    // to fit over already patched text
-	    minLine = hunk.offset + hunk.oldStart + hunk.oldLines;
-	  }
-
-	  // Apply patch hunks
-	  var diffOffset = 0;
-	  for (var _i = 0; _i < hunks.length; _i++) {
-	    var _hunk = hunks[_i],
-	        _toPos = _hunk.oldStart + _hunk.offset + diffOffset - 1;
-	    diffOffset += _hunk.newLines - _hunk.oldLines;
-
-	    if (_toPos < 0) {
-	      // Creating a new file
-	      _toPos = 0;
-	    }
-
-	    for (var j = 0; j < _hunk.lines.length; j++) {
-	      var line = _hunk.lines[j],
-	          operation = line.length > 0 ? line[0] : ' ',
-	          content = line.length > 0 ? line.substr(1) : line,
-	          delimiter = _hunk.linedelimiters[j];
-
-	      if (operation === ' ') {
-	        _toPos++;
-	      } else if (operation === '-') {
-	        lines.splice(_toPos, 1);
-	        delimiters.splice(_toPos, 1);
-	        /* istanbul ignore else */
-	      } else if (operation === '+') {
-	        lines.splice(_toPos, 0, content);
-	        delimiters.splice(_toPos, 0, delimiter);
-	        _toPos++;
-	      } else if (operation === '\\') {
-	        var previousOperation = _hunk.lines[j - 1] ? _hunk.lines[j - 1][0] : null;
-	        if (previousOperation === '+') {
-	          removeEOFNL = true;
-	        } else if (previousOperation === '-') {
-	          addEOFNL = true;
-	        }
-	      }
-	    }
-	  }
-
-	  // Handle EOFNL insertion/removal
-	  if (removeEOFNL) {
-	    while (!lines[lines.length - 1]) {
-	      lines.pop();
-	      delimiters.pop();
-	    }
-	  } else if (addEOFNL) {
-	    lines.push('');
-	    delimiters.push('\n');
-	  }
-	  for (var _k = 0; _k < lines.length - 1; _k++) {
-	    lines[_k] = lines[_k] + delimiters[_k];
-	  }
-	  return lines.join('');
-	}
-
-	// Wrapper that supports multiple file patches via callbacks.
-	function applyPatches(uniDiff, options) {
-	  if (typeof uniDiff === 'string') {
-	    uniDiff = /*istanbul ignore start*/(0, _parse.parsePatch) /*istanbul ignore end*/(uniDiff);
-	  }
-
-	  var currentIndex = 0;
-	  function processIndex() {
-	    var index = uniDiff[currentIndex++];
-	    if (!index) {
-	      return options.complete();
-	    }
-
-	    options.loadFile(index, function (err, data) {
-	      if (err) {
-	        return options.complete(err);
-	      }
-
-	      var updatedContent = applyPatch(data, index, options);
-	      options.patched(index, updatedContent, function (err) {
-	        if (err) {
-	          return options.complete(err);
-	        }
-
-	        processIndex();
-	      });
-	    });
-	  }
-	  processIndex();
-	}
-	
-
-
-/***/ }),
-/* 11 */
-/***/ (function(module, exports) {
-
-	exports.__esModule = true;
-	exports. /*istanbul ignore end*/parsePatch = parsePatch;
-	function parsePatch(uniDiff) {
-	  /*istanbul ignore start*/var /*istanbul ignore end*/options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
-	  var diffstr = uniDiff.split(/\r\n|[\n\v\f\r\x85]/),
-	      delimiters = uniDiff.match(/\r\n|[\n\v\f\r\x85]/g) || [],
-	      list = [],
-	      i = 0;
-
-	  function parseIndex() {
-	    var index = {};
-	    list.push(index);
-
-	    // Parse diff metadata
-	    while (i < diffstr.length) {
-	      var line = diffstr[i];
-
-	      // File header found, end parsing diff metadata
-	      if (/^(\-\-\-|\+\+\+|@@)\s/.test(line)) {
-	        break;
-	      }
-
-	      // Diff index
-	      var header = /^(?:Index:|diff(?: -r \w+)+)\s+(.+?)\s*$/.exec(line);
-	      if (header) {
-	        index.index = header[1];
-	      }
-
-	      i++;
-	    }
-
-	    // Parse file headers if they are defined. Unified diff requires them, but
-	    // there's no technical issues to have an isolated hunk without file header
-	    parseFileHeader(index);
-	    parseFileHeader(index);
-
-	    // Parse hunks
-	    index.hunks = [];
-
-	    while (i < diffstr.length) {
-	      var _line = diffstr[i];
-
-	      if (/^(Index:|diff|\-\-\-|\+\+\+)\s/.test(_line)) {
-	        break;
-	      } else if (/^@@/.test(_line)) {
-	        index.hunks.push(parseHunk());
-	      } else if (_line && options.strict) {
-	        // Ignore unexpected content unless in strict mode
-	        throw new Error('Unknown line ' + (i + 1) + ' ' + JSON.stringify(_line));
-	      } else {
-	        i++;
-	      }
-	    }
-	  }
-
-	  // Parses the --- and +++ headers, if none are found, no lines
-	  // are consumed.
-	  function parseFileHeader(index) {
-	    var fileHeader = /^(---|\+\+\+)\s+(.*)$/.exec(diffstr[i]);
-	    if (fileHeader) {
-	      var keyPrefix = fileHeader[1] === '---' ? 'old' : 'new';
-	      var data = fileHeader[2].split('\t', 2);
-	      var fileName = data[0].replace(/\\\\/g, '\\');
-	      if (/^".*"$/.test(fileName)) {
-	        fileName = fileName.substr(1, fileName.length - 2);
-	      }
-	      index[keyPrefix + 'FileName'] = fileName;
-	      index[keyPrefix + 'Header'] = (data[1] || '').trim();
-
-	      i++;
-	    }
-	  }
-
-	  // Parses a hunk
-	  // This assumes that we are at the start of a hunk.
-	  function parseHunk() {
-	    var chunkHeaderIndex = i,
-	        chunkHeaderLine = diffstr[i++],
-	        chunkHeader = chunkHeaderLine.split(/@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@/);
-
-	    var hunk = {
-	      oldStart: +chunkHeader[1],
-	      oldLines: +chunkHeader[2] || 1,
-	      newStart: +chunkHeader[3],
-	      newLines: +chunkHeader[4] || 1,
-	      lines: [],
-	      linedelimiters: []
-	    };
-
-	    var addCount = 0,
-	        removeCount = 0;
-	    for (; i < diffstr.length; i++) {
-	      // Lines starting with '---' could be mistaken for the "remove line" operation
-	      // But they could be the header for the next file. Therefore prune such cases out.
-	      if (diffstr[i].indexOf('--- ') === 0 && i + 2 < diffstr.length && diffstr[i + 1].indexOf('+++ ') === 0 && diffstr[i + 2].indexOf('@@') === 0) {
-	        break;
-	      }
-	      var operation = diffstr[i].length == 0 && i != diffstr.length - 1 ? ' ' : diffstr[i][0];
-
-	      if (operation === '+' || operation === '-' || operation === ' ' || operation === '\\') {
-	        hunk.lines.push(diffstr[i]);
-	        hunk.linedelimiters.push(delimiters[i] || '\n');
-
-	        if (operation === '+') {
-	          addCount++;
-	        } else if (operation === '-') {
-	          removeCount++;
-	        } else if (operation === ' ') {
-	          addCount++;
-	          removeCount++;
-	        }
-	      } else {
-	        break;
-	      }
-	    }
-
-	    // Handle the empty block count case
-	    if (!addCount && hunk.newLines === 1) {
-	      hunk.newLines = 0;
-	    }
-	    if (!removeCount && hunk.oldLines === 1) {
-	      hunk.oldLines = 0;
-	    }
-
-	    // Perform optional sanity checking
-	    if (options.strict) {
-	      if (addCount !== hunk.newLines) {
-	        throw new Error('Added line count did not match for hunk at line ' + (chunkHeaderIndex + 1));
-	      }
-	      if (removeCount !== hunk.oldLines) {
-	        throw new Error('Removed line count did not match for hunk at line ' + (chunkHeaderIndex + 1));
-	      }
-	    }
-
-	    return hunk;
-	  }
-
-	  while (i < diffstr.length) {
-	    parseIndex();
-	  }
-
-	  return list;
-	}
-	
-
-
-/***/ }),
-/* 12 */
-/***/ (function(module, exports) {
-
-	exports.__esModule = true;
-
-	exports["default"] = /*istanbul ignore end*/function (start, minLine, maxLine) {
-	  var wantForward = true,
-	      backwardExhausted = false,
-	      forwardExhausted = false,
-	      localOffset = 1;
-
-	  return function iterator() {
-	    if (wantForward && !forwardExhausted) {
-	      if (backwardExhausted) {
-	        localOffset++;
-	      } else {
-	        wantForward = false;
-	      }
-
-	      // Check if trying to fit beyond text length, and if not, check it fits
-	      // after offset location (or desired location on first iteration)
-	      if (start + localOffset <= maxLine) {
-	        return localOffset;
-	      }
-
-	      forwardExhausted = true;
-	    }
-
-	    if (!backwardExhausted) {
-	      if (!forwardExhausted) {
-	        wantForward = true;
-	      }
-
-	      // Check if trying to fit before text beginning, and if not, check it fits
-	      // before offset location
-	      if (minLine <= start - localOffset) {
-	        return -localOffset++;
-	      }
-
-	      backwardExhausted = true;
-	      return iterator();
-	    }
-
-	    // We tried to fit hunk before text beginning and beyond text length, then
-	    // hunk can't fit on the text. Return undefined
-	  };
-	};
-	
-
-
-/***/ }),
-/* 13 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	exports.__esModule = true;
-	exports. /*istanbul ignore end*/calcLineCount = calcLineCount;
-	/*istanbul ignore start*/exports. /*istanbul ignore end*/merge = merge;
-
-	var /*istanbul ignore start*/_create = __webpack_require__(14) /*istanbul ignore end*/;
-
-	var /*istanbul ignore start*/_parse = __webpack_require__(11) /*istanbul ignore end*/;
-
-	var /*istanbul ignore start*/_array = __webpack_require__(15) /*istanbul ignore end*/;
-
-	/*istanbul ignore start*/function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-
-	/*istanbul ignore end*/function calcLineCount(hunk) {
-	  /*istanbul ignore start*/var _calcOldNewLineCount = /*istanbul ignore end*/calcOldNewLineCount(hunk.lines),
-	      oldLines = _calcOldNewLineCount.oldLines,
-	      newLines = _calcOldNewLineCount.newLines;
-
-	  if (oldLines !== undefined) {
-	    hunk.oldLines = oldLines;
-	  } else {
-	    delete hunk.oldLines;
-	  }
-
-	  if (newLines !== undefined) {
-	    hunk.newLines = newLines;
-	  } else {
-	    delete hunk.newLines;
-	  }
-	}
-
-	function merge(mine, theirs, base) {
-	  mine = loadPatch(mine, base);
-	  theirs = loadPatch(theirs, base);
-
-	  var ret = {};
-
-	  // For index we just let it pass through as it doesn't have any necessary meaning.
-	  // Leaving sanity checks on this to the API consumer that may know more about the
-	  // meaning in their own context.
-	  if (mine.index || theirs.index) {
-	    ret.index = mine.index || theirs.index;
-	  }
-
-	  if (mine.newFileName || theirs.newFileName) {
-	    if (!fileNameChanged(mine)) {
-	      // No header or no change in ours, use theirs (and ours if theirs does not exist)
-	      ret.oldFileName = theirs.oldFileName || mine.oldFileName;
-	      ret.newFileName = theirs.newFileName || mine.newFileName;
-	      ret.oldHeader = theirs.oldHeader || mine.oldHeader;
-	      ret.newHeader = theirs.newHeader || mine.newHeader;
-	    } else if (!fileNameChanged(theirs)) {
-	      // No header or no change in theirs, use ours
-	      ret.oldFileName = mine.oldFileName;
-	      ret.newFileName = mine.newFileName;
-	      ret.oldHeader = mine.oldHeader;
-	      ret.newHeader = mine.newHeader;
-	    } else {
-	      // Both changed... figure it out
-	      ret.oldFileName = selectField(ret, mine.oldFileName, theirs.oldFileName);
-	      ret.newFileName = selectField(ret, mine.newFileName, theirs.newFileName);
-	      ret.oldHeader = selectField(ret, mine.oldHeader, theirs.oldHeader);
-	      ret.newHeader = selectField(ret, mine.newHeader, theirs.newHeader);
-	    }
-	  }
-
-	  ret.hunks = [];
-
-	  var mineIndex = 0,
-	      theirsIndex = 0,
-	      mineOffset = 0,
-	      theirsOffset = 0;
-
-	  while (mineIndex < mine.hunks.length || theirsIndex < theirs.hunks.length) {
-	    var mineCurrent = mine.hunks[mineIndex] || { oldStart: Infinity },
-	        theirsCurrent = theirs.hunks[theirsIndex] || { oldStart: Infinity };
-
-	    if (hunkBefore(mineCurrent, theirsCurrent)) {
-	      // This patch does not overlap with any of the others, yay.
-	      ret.hunks.push(cloneHunk(mineCurrent, mineOffset));
-	      mineIndex++;
-	      theirsOffset += mineCurrent.newLines - mineCurrent.oldLines;
-	    } else if (hunkBefore(theirsCurrent, mineCurrent)) {
-	      // This patch does not overlap with any of the others, yay.
-	      ret.hunks.push(cloneHunk(theirsCurrent, theirsOffset));
-	      theirsIndex++;
-	      mineOffset += theirsCurrent.newLines - theirsCurrent.oldLines;
-	    } else {
-	      // Overlap, merge as best we can
-	      var mergedHunk = {
-	        oldStart: Math.min(mineCurrent.oldStart, theirsCurrent.oldStart),
-	        oldLines: 0,
-	        newStart: Math.min(mineCurrent.newStart + mineOffset, theirsCurrent.oldStart + theirsOffset),
-	        newLines: 0,
-	        lines: []
-	      };
-	      mergeLines(mergedHunk, mineCurrent.oldStart, mineCurrent.lines, theirsCurrent.oldStart, theirsCurrent.lines);
-	      theirsIndex++;
-	      mineIndex++;
-
-	      ret.hunks.push(mergedHunk);
-	    }
-	  }
-
-	  return ret;
-	}
-
-	function loadPatch(param, base) {
-	  if (typeof param === 'string') {
-	    if (/^@@/m.test(param) || /^Index:/m.test(param)) {
-	      return (/*istanbul ignore start*/(0, _parse.parsePatch) /*istanbul ignore end*/(param)[0]
-	      );
-	    }
-
-	    if (!base) {
-	      throw new Error('Must provide a base reference or pass in a patch');
-	    }
-	    return (/*istanbul ignore start*/(0, _create.structuredPatch) /*istanbul ignore end*/(undefined, undefined, base, param)
-	    );
-	  }
-
-	  return param;
-	}
-
-	function fileNameChanged(patch) {
-	  return patch.newFileName && patch.newFileName !== patch.oldFileName;
-	}
-
-	function selectField(index, mine, theirs) {
-	  if (mine === theirs) {
-	    return mine;
-	  } else {
-	    index.conflict = true;
-	    return { mine: mine, theirs: theirs };
-	  }
-	}
-
-	function hunkBefore(test, check) {
-	  return test.oldStart < check.oldStart && test.oldStart + test.oldLines < check.oldStart;
-	}
-
-	function cloneHunk(hunk, offset) {
-	  return {
-	    oldStart: hunk.oldStart, oldLines: hunk.oldLines,
-	    newStart: hunk.newStart + offset, newLines: hunk.newLines,
-	    lines: hunk.lines
-	  };
-	}
-
-	function mergeLines(hunk, mineOffset, mineLines, theirOffset, theirLines) {
-	  // This will generally result in a conflicted hunk, but there are cases where the context
-	  // is the only overlap where we can successfully merge the content here.
-	  var mine = { offset: mineOffset, lines: mineLines, index: 0 },
-	      their = { offset: theirOffset, lines: theirLines, index: 0 };
-
-	  // Handle any leading content
-	  insertLeading(hunk, mine, their);
-	  insertLeading(hunk, their, mine);
-
-	  // Now in the overlap content. Scan through and select the best changes from each.
-	  while (mine.index < mine.lines.length && their.index < their.lines.length) {
-	    var mineCurrent = mine.lines[mine.index],
-	        theirCurrent = their.lines[their.index];
-
-	    if ((mineCurrent[0] === '-' || mineCurrent[0] === '+') && (theirCurrent[0] === '-' || theirCurrent[0] === '+')) {
-	      // Both modified ...
-	      mutualChange(hunk, mine, their);
-	    } else if (mineCurrent[0] === '+' && theirCurrent[0] === ' ') {
-	      /*istanbul ignore start*/var _hunk$lines;
-
-	      /*istanbul ignore end*/ // Mine inserted
-	      /*istanbul ignore start*/(_hunk$lines = /*istanbul ignore end*/hunk.lines).push. /*istanbul ignore start*/apply /*istanbul ignore end*/( /*istanbul ignore start*/_hunk$lines /*istanbul ignore end*/, /*istanbul ignore start*/_toConsumableArray( /*istanbul ignore end*/collectChange(mine)));
-	    } else if (theirCurrent[0] === '+' && mineCurrent[0] === ' ') {
-	      /*istanbul ignore start*/var _hunk$lines2;
-
-	      /*istanbul ignore end*/ // Theirs inserted
-	      /*istanbul ignore start*/(_hunk$lines2 = /*istanbul ignore end*/hunk.lines).push. /*istanbul ignore start*/apply /*istanbul ignore end*/( /*istanbul ignore start*/_hunk$lines2 /*istanbul ignore end*/, /*istanbul ignore start*/_toConsumableArray( /*istanbul ignore end*/collectChange(their)));
-	    } else if (mineCurrent[0] === '-' && theirCurrent[0] === ' ') {
-	      // Mine removed or edited
-	      removal(hunk, mine, their);
-	    } else if (theirCurrent[0] === '-' && mineCurrent[0] === ' ') {
-	      // Their removed or edited
-	      removal(hunk, their, mine, true);
-	    } else if (mineCurrent === theirCurrent) {
-	      // Context identity
-	      hunk.lines.push(mineCurrent);
-	      mine.index++;
-	      their.index++;
-	    } else {
-	      // Context mismatch
-	      conflict(hunk, collectChange(mine), collectChange(their));
-	    }
-	  }
-
-	  // Now push anything that may be remaining
-	  insertTrailing(hunk, mine);
-	  insertTrailing(hunk, their);
-
-	  calcLineCount(hunk);
-	}
-
-	function mutualChange(hunk, mine, their) {
-	  var myChanges = collectChange(mine),
-	      theirChanges = collectChange(their);
-
-	  if (allRemoves(myChanges) && allRemoves(theirChanges)) {
-	    // Special case for remove changes that are supersets of one another
-	    if ( /*istanbul ignore start*/(0, _array.arrayStartsWith) /*istanbul ignore end*/(myChanges, theirChanges) && skipRemoveSuperset(their, myChanges, myChanges.length - theirChanges.length)) {
-	      /*istanbul ignore start*/var _hunk$lines3;
-
-	      /*istanbul ignore end*/ /*istanbul ignore start*/(_hunk$lines3 = /*istanbul ignore end*/hunk.lines).push. /*istanbul ignore start*/apply /*istanbul ignore end*/( /*istanbul ignore start*/_hunk$lines3 /*istanbul ignore end*/, /*istanbul ignore start*/_toConsumableArray( /*istanbul ignore end*/myChanges));
-	      return;
-	    } else if ( /*istanbul ignore start*/(0, _array.arrayStartsWith) /*istanbul ignore end*/(theirChanges, myChanges) && skipRemoveSuperset(mine, theirChanges, theirChanges.length - myChanges.length)) {
-	      /*istanbul ignore start*/var _hunk$lines4;
-
-	      /*istanbul ignore end*/ /*istanbul ignore start*/(_hunk$lines4 = /*istanbul ignore end*/hunk.lines).push. /*istanbul ignore start*/apply /*istanbul ignore end*/( /*istanbul ignore start*/_hunk$lines4 /*istanbul ignore end*/, /*istanbul ignore start*/_toConsumableArray( /*istanbul ignore end*/theirChanges));
-	      return;
-	    }
-	  } else if ( /*istanbul ignore start*/(0, _array.arrayEqual) /*istanbul ignore end*/(myChanges, theirChanges)) {
-	    /*istanbul ignore start*/var _hunk$lines5;
-
-	    /*istanbul ignore end*/ /*istanbul ignore start*/(_hunk$lines5 = /*istanbul ignore end*/hunk.lines).push. /*istanbul ignore start*/apply /*istanbul ignore end*/( /*istanbul ignore start*/_hunk$lines5 /*istanbul ignore end*/, /*istanbul ignore start*/_toConsumableArray( /*istanbul ignore end*/myChanges));
-	    return;
-	  }
-
-	  conflict(hunk, myChanges, theirChanges);
-	}
-
-	function removal(hunk, mine, their, swap) {
-	  var myChanges = collectChange(mine),
-	      theirChanges = collectContext(their, myChanges);
-	  if (theirChanges.merged) {
-	    /*istanbul ignore start*/var _hunk$lines6;
-
-	    /*istanbul ignore end*/ /*istanbul ignore start*/(_hunk$lines6 = /*istanbul ignore end*/hunk.lines).push. /*istanbul ignore start*/apply /*istanbul ignore end*/( /*istanbul ignore start*/_hunk$lines6 /*istanbul ignore end*/, /*istanbul ignore start*/_toConsumableArray( /*istanbul ignore end*/theirChanges.merged));
-	  } else {
-	    conflict(hunk, swap ? theirChanges : myChanges, swap ? myChanges : theirChanges);
-	  }
-	}
-
-	function conflict(hunk, mine, their) {
-	  hunk.conflict = true;
-	  hunk.lines.push({
-	    conflict: true,
-	    mine: mine,
-	    theirs: their
-	  });
-	}
-
-	function insertLeading(hunk, insert, their) {
-	  while (insert.offset < their.offset && insert.index < insert.lines.length) {
-	    var line = insert.lines[insert.index++];
-	    hunk.lines.push(line);
-	    insert.offset++;
-	  }
-	}
-	function insertTrailing(hunk, insert) {
-	  while (insert.index < insert.lines.length) {
-	    var line = insert.lines[insert.index++];
-	    hunk.lines.push(line);
-	  }
-	}
-
-	function collectChange(state) {
-	  var ret = [],
-	      operation = state.lines[state.index][0];
-	  while (state.index < state.lines.length) {
-	    var line = state.lines[state.index];
-
-	    // Group additions that are immediately after subtractions and treat them as one "atomic" modify change.
-	    if (operation === '-' && line[0] === '+') {
-	      operation = '+';
-	    }
-
-	    if (operation === line[0]) {
-	      ret.push(line);
-	      state.index++;
-	    } else {
-	      break;
-	    }
-	  }
-
-	  return ret;
-	}
-	function collectContext(state, matchChanges) {
-	  var changes = [],
-	      merged = [],
-	      matchIndex = 0,
-	      contextChanges = false,
-	      conflicted = false;
-	  while (matchIndex < matchChanges.length && state.index < state.lines.length) {
-	    var change = state.lines[state.index],
-	        match = matchChanges[matchIndex];
-
-	    // Once we've hit our add, then we are done
-	    if (match[0] === '+') {
-	      break;
-	    }
-
-	    contextChanges = contextChanges || change[0] !== ' ';
-
-	    merged.push(match);
-	    matchIndex++;
-
-	    // Consume any additions in the other block as a conflict to attempt
-	    // to pull in the remaining context after this
-	    if (change[0] === '+') {
-	      conflicted = true;
-
-	      while (change[0] === '+') {
-	        changes.push(change);
-	        change = state.lines[++state.index];
-	      }
-	    }
-
-	    if (match.substr(1) === change.substr(1)) {
-	      changes.push(change);
-	      state.index++;
-	    } else {
-	      conflicted = true;
-	    }
-	  }
-
-	  if ((matchChanges[matchIndex] || '')[0] === '+' && contextChanges) {
-	    conflicted = true;
-	  }
-
-	  if (conflicted) {
-	    return changes;
-	  }
-
-	  while (matchIndex < matchChanges.length) {
-	    merged.push(matchChanges[matchIndex++]);
-	  }
-
-	  return {
-	    merged: merged,
-	    changes: changes
-	  };
-	}
-
-	function allRemoves(changes) {
-	  return changes.reduce(function (prev, change) {
-	    return prev && change[0] === '-';
-	  }, true);
-	}
-	function skipRemoveSuperset(state, removeChanges, delta) {
-	  for (var i = 0; i < delta; i++) {
-	    var changeContent = removeChanges[removeChanges.length - delta + i].substr(1);
-	    if (state.lines[state.index + i] !== ' ' + changeContent) {
-	      return false;
-	    }
-	  }
-
-	  state.index += delta;
-	  return true;
-	}
-
-	function calcOldNewLineCount(lines) {
-	  var oldLines = 0;
-	  var newLines = 0;
-
-	  lines.forEach(function (line) {
-	    if (typeof line !== 'string') {
-	      var myCount = calcOldNewLineCount(line.mine);
-	      var theirCount = calcOldNewLineCount(line.theirs);
-
-	      if (oldLines !== undefined) {
-	        if (myCount.oldLines === theirCount.oldLines) {
-	          oldLines += myCount.oldLines;
-	        } else {
-	          oldLines = undefined;
-	        }
-	      }
-
-	      if (newLines !== undefined) {
-	        if (myCount.newLines === theirCount.newLines) {
-	          newLines += myCount.newLines;
-	        } else {
-	          newLines = undefined;
-	        }
-	      }
-	    } else {
-	      if (newLines !== undefined && (line[0] === '+' || line[0] === ' ')) {
-	        newLines++;
-	      }
-	      if (oldLines !== undefined && (line[0] === '-' || line[0] === ' ')) {
-	        oldLines++;
-	      }
-	    }
-	  });
-
-	  return { oldLines: oldLines, newLines: newLines };
-	}
-	
-
-
-/***/ }),
-/* 14 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	exports.__esModule = true;
-	exports. /*istanbul ignore end*/structuredPatch = structuredPatch;
-	/*istanbul ignore start*/exports. /*istanbul ignore end*/createTwoFilesPatch = createTwoFilesPatch;
-	/*istanbul ignore start*/exports. /*istanbul ignore end*/createPatch = createPatch;
-
-	var /*istanbul ignore start*/_line = __webpack_require__(5) /*istanbul ignore end*/;
-
-	/*istanbul ignore start*/function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-
-	/*istanbul ignore end*/function structuredPatch(oldFileName, newFileName, oldStr, newStr, oldHeader, newHeader, options) {
-	  if (!options) {
-	    options = {};
-	  }
-	  if (typeof options.context === 'undefined') {
-	    options.context = 4;
-	  }
-
-	  var diff = /*istanbul ignore start*/(0, _line.diffLines) /*istanbul ignore end*/(oldStr, newStr, options);
-	  diff.push({ value: '', lines: [] }); // Append an empty value to make cleanup easier
-
-	  function contextLines(lines) {
-	    return lines.map(function (entry) {
-	      return ' ' + entry;
-	    });
-	  }
-
-	  var hunks = [];
-	  var oldRangeStart = 0,
-	      newRangeStart = 0,
-	      curRange = [],
-	      oldLine = 1,
-	      newLine = 1;
-
-	  /*istanbul ignore start*/var _loop = function _loop( /*istanbul ignore end*/i) {
-	    var current = diff[i],
-	        lines = current.lines || current.value.replace(/\n$/, '').split('\n');
-	    current.lines = lines;
-
-	    if (current.added || current.removed) {
-	      /*istanbul ignore start*/var _curRange;
-
-	      /*istanbul ignore end*/ // If we have previous context, start with that
-	      if (!oldRangeStart) {
-	        var prev = diff[i - 1];
-	        oldRangeStart = oldLine;
-	        newRangeStart = newLine;
-
-	        if (prev) {
-	          curRange = options.context > 0 ? contextLines(prev.lines.slice(-options.context)) : [];
-	          oldRangeStart -= curRange.length;
-	          newRangeStart -= curRange.length;
-	        }
-	      }
-
-	      // Output our changes
-	      /*istanbul ignore start*/(_curRange = /*istanbul ignore end*/curRange).push. /*istanbul ignore start*/apply /*istanbul ignore end*/( /*istanbul ignore start*/_curRange /*istanbul ignore end*/, /*istanbul ignore start*/_toConsumableArray( /*istanbul ignore end*/lines.map(function (entry) {
-	        return (current.added ? '+' : '-') + entry;
-	      })));
-
-	      // Track the updated file position
-	      if (current.added) {
-	        newLine += lines.length;
-	      } else {
-	        oldLine += lines.length;
-	      }
-	    } else {
-	      // Identical context lines. Track line changes
-	      if (oldRangeStart) {
-	        // Close out any changes that have been output (or join overlapping)
-	        if (lines.length <= options.context * 2 && i < diff.length - 2) {
-	          /*istanbul ignore start*/var _curRange2;
-
-	          /*istanbul ignore end*/ // Overlapping
-	          /*istanbul ignore start*/(_curRange2 = /*istanbul ignore end*/curRange).push. /*istanbul ignore start*/apply /*istanbul ignore end*/( /*istanbul ignore start*/_curRange2 /*istanbul ignore end*/, /*istanbul ignore start*/_toConsumableArray( /*istanbul ignore end*/contextLines(lines)));
-	        } else {
-	          /*istanbul ignore start*/var _curRange3;
-
-	          /*istanbul ignore end*/ // end the range and output
-	          var contextSize = Math.min(lines.length, options.context);
-	          /*istanbul ignore start*/(_curRange3 = /*istanbul ignore end*/curRange).push. /*istanbul ignore start*/apply /*istanbul ignore end*/( /*istanbul ignore start*/_curRange3 /*istanbul ignore end*/, /*istanbul ignore start*/_toConsumableArray( /*istanbul ignore end*/contextLines(lines.slice(0, contextSize))));
-
-	          var hunk = {
-	            oldStart: oldRangeStart,
-	            oldLines: oldLine - oldRangeStart + contextSize,
-	            newStart: newRangeStart,
-	            newLines: newLine - newRangeStart + contextSize,
-	            lines: curRange
-	          };
-	          if (i >= diff.length - 2 && lines.length <= options.context) {
-	            // EOF is inside this hunk
-	            var oldEOFNewline = /\n$/.test(oldStr);
-	            var newEOFNewline = /\n$/.test(newStr);
-	            if (lines.length == 0 && !oldEOFNewline) {
-	              // special case: old has no eol and no trailing context; no-nl can end up before adds
-	              curRange.splice(hunk.oldLines, 0, '\\ No newline at end of file');
-	            } else if (!oldEOFNewline || !newEOFNewline) {
-	              curRange.push('\\ No newline at end of file');
-	            }
-	          }
-	          hunks.push(hunk);
-
-	          oldRangeStart = 0;
-	          newRangeStart = 0;
-	          curRange = [];
-	        }
-	      }
-	      oldLine += lines.length;
-	      newLine += lines.length;
-	    }
-	  };
-
-	  for (var i = 0; i < diff.length; i++) {
-	    /*istanbul ignore start*/_loop( /*istanbul ignore end*/i);
-	  }
-
-	  return {
-	    oldFileName: oldFileName, newFileName: newFileName,
-	    oldHeader: oldHeader, newHeader: newHeader,
-	    hunks: hunks
-	  };
-	}
-
-	function createTwoFilesPatch(oldFileName, newFileName, oldStr, newStr, oldHeader, newHeader, options) {
-	  var diff = structuredPatch(oldFileName, newFileName, oldStr, newStr, oldHeader, newHeader, options);
-
-	  var ret = [];
-	  if (oldFileName == newFileName) {
-	    ret.push('Index: ' + oldFileName);
-	  }
-	  ret.push('===================================================================');
-	  ret.push('--- ' + diff.oldFileName + (typeof diff.oldHeader === 'undefined' ? '' : '\t' + diff.oldHeader));
-	  ret.push('+++ ' + diff.newFileName + (typeof diff.newHeader === 'undefined' ? '' : '\t' + diff.newHeader));
-
-	  for (var i = 0; i < diff.hunks.length; i++) {
-	    var hunk = diff.hunks[i];
-	    ret.push('@@ -' + hunk.oldStart + ',' + hunk.oldLines + ' +' + hunk.newStart + ',' + hunk.newLines + ' @@');
-	    ret.push.apply(ret, hunk.lines);
-	  }
-
-	  return ret.join('\n') + '\n';
-	}
-
-	function createPatch(fileName, oldStr, newStr, oldHeader, newHeader, options) {
-	  return createTwoFilesPatch(fileName, fileName, oldStr, newStr, oldHeader, newHeader, options);
-	}
-	
-
-
-/***/ }),
-/* 15 */
-/***/ (function(module, exports) {
-
-	exports.__esModule = true;
-	exports. /*istanbul ignore end*/arrayEqual = arrayEqual;
-	/*istanbul ignore start*/exports. /*istanbul ignore end*/arrayStartsWith = arrayStartsWith;
-	function arrayEqual(a, b) {
-	  if (a.length !== b.length) {
-	    return false;
-	  }
-
-	  return arrayStartsWith(a, b);
-	}
-
-	function arrayStartsWith(array, start) {
-	  if (start.length > array.length) {
-	    return false;
-	  }
-
-	  for (var i = 0; i < start.length; i++) {
-	    if (start[i] !== array[i]) {
-	      return false;
-	    }
-	  }
-
-	  return true;
-	}
-	
-
-
-/***/ }),
-/* 16 */
-/***/ (function(module, exports) {
-
-	exports.__esModule = true;
-	exports. /*istanbul ignore end*/convertChangesToDMP = convertChangesToDMP;
-	// See: http://code.google.com/p/google-diff-match-patch/wiki/API
-	function convertChangesToDMP(changes) {
-	  var ret = [],
-	      change = /*istanbul ignore start*/void 0 /*istanbul ignore end*/,
-	      operation = /*istanbul ignore start*/void 0 /*istanbul ignore end*/;
-	  for (var i = 0; i < changes.length; i++) {
-	    change = changes[i];
-	    if (change.added) {
-	      operation = 1;
-	    } else if (change.removed) {
-	      operation = -1;
-	    } else {
-	      operation = 0;
-	    }
-
-	    ret.push([operation, change.value]);
-	  }
-	  return ret;
-	}
-	
-
-
-/***/ }),
-/* 17 */
-/***/ (function(module, exports) {
-
-	exports.__esModule = true;
-	exports. /*istanbul ignore end*/convertChangesToXML = convertChangesToXML;
-	function convertChangesToXML(changes) {
-	  var ret = [];
-	  for (var i = 0; i < changes.length; i++) {
-	    var change = changes[i];
-	    if (change.added) {
-	      ret.push('<ins>');
-	    } else if (change.removed) {
-	      ret.push('<del>');
-	    }
-
-	    ret.push(escapeHTML(change.value));
-
-	    if (change.added) {
-	      ret.push('</ins>');
-	    } else if (change.removed) {
-	      ret.push('</del>');
-	    }
-	  }
-	  return ret.join('');
-	}
-
-	function escapeHTML(s) {
-	  var n = s;
-	  n = n.replace(/&/g, '&amp;');
-	  n = n.replace(/</g, '&lt;');
-	  n = n.replace(/>/g, '&gt;');
-	  n = n.replace(/"/g, '&quot;');
-
-	  return n;
-	}
-	
-
-
-/***/ })
-/******/ ])
-});
-});
-
-unwrapExports(diff$1);
-var diff_1 = diff$1.structuredPatch;
-var diff_2 = diff$1.parsePatch;
-
-var stripEof = function (x) {
-	var lf = typeof x === 'string' ? '\n' : '\n'.charCodeAt();
-	var cr = typeof x === 'string' ? '\r' : '\r'.charCodeAt();
-
-	if (x[x.length - 1] === lf) {
-		x = x.slice(0, x.length - 1);
-	}
-
-	if (x[x.length - 1] === cr) {
-		x = x.slice(0, x.length - 1);
-	}
-
-	return x;
+var pendingPostFailed = function pendingPostFailed(post) {
+	return { type: "PENDING_POST_FAILED", payload: post };
 };
 
-var eol = createCommonjsModule(function (module) {
-!function(root, name, make) {
-  if ('object' != 'undefined' && module.exports) module.exports = make();
-  else root[name] = make();
-}(commonjsGlobal, 'eol', function() {
+var fetchLatest = function fetchLatest(mostRecentPost, streamId, teamId) {
+	return function () {
+		var _ref2 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(dispatch, getState, _ref) {
+			var http = _ref.http;
 
-  var api = {};
-  var isWindows = typeof process != 'undefined' && 'win32' === process.platform;
-  var linebreak = isWindows ? '\r\n' : '\n';
-  var newline = /\r\n|\r|\n/g;
+			var _getState, context, url, _ref3, posts, markers, markerLocations, more, normalizedMarkers, normalizedPosts, save;
 
-  function before(text) {
-    return linebreak + text
-  }
+			return regeneratorRuntime.wrap(function _callee$(_context) {
+				while (1) {
+					switch (_context.prev = _context.next) {
+						case 0:
+							_getState = getState(), context = _getState.context;
+							url = "/posts?teamId=" + teamId + "&streamId=" + streamId + "&withMarkers";
 
-  function after(text) {
-    return text + linebreak
-  }
+							if (context.currentCommit) url += "&commitHash=" + context.currentCommit;
+							if (mostRecentPost) url += "&gt=" + mostRecentPost.id;
+							_context.next = 6;
+							return http.get(url, getState().session.accessToken);
 
-  function converts(to) {
-    function convert(text) {
-      return text.replace(newline, to)
-    }
-    convert.toString = function() {
-      return to
-    };
-    return convert 
-  }
+						case 6:
+							_ref3 = _context.sent;
+							posts = _ref3.posts;
+							markers = _ref3.markers;
+							markerLocations = _ref3.markerLocations;
+							more = _ref3.more;
+							normalizedMarkers = normalize(markers || []);
 
-  function split(text) {
-    return text.split(newline)
-  }
+							dispatch(saveMarkers(normalizedMarkers));
+							// if (markerLocations) dispatch(saveMarkerLocations(markerLocations));
+							normalizedPosts = normalize(posts);
+							save = dispatch(savePostsForStream(streamId, normalizedPosts));
+							// only take the first page if no mostRecentPost
 
-  api['lf'] = converts('\n');
-  api['cr'] = converts('\r');
-  api['crlf'] = converts('\r\n');
-  api['auto'] = converts(linebreak);
-  api['before'] = before;
-  api['after'] = after;
-  api['split'] = split;
-  return api
-});
-});
-
-var MarkerLocationFinder = function () {
-	function MarkerLocationFinder(_ref) {
-		var gitRepo = _ref.gitRepo,
-		    accessToken = _ref.accessToken,
-		    http = _ref.http,
-		    filePath = _ref.filePath,
-		    teamId = _ref.teamId,
-		    streamId = _ref.streamId;
-		classCallCheck$1(this, MarkerLocationFinder);
-
-		this._gitRepo = gitRepo;
-		this._accessToken = accessToken;
-		this._http = http;
-		this._filePath = filePath;
-		this._teamId = teamId;
-		this._streamId = streamId;
-	}
-
-	createClass$1(MarkerLocationFinder, [{
-		key: "findUpdatedLocations",
-		value: function () {
-			var _ref2 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(locations, filePath, oldText, newText) {
-				var patch, delta;
-				return regeneratorRuntime.wrap(function _callee$(_context) {
-					while (1) {
-						switch (_context.prev = _context.next) {
-							case 0:
-								oldText = stripEof(eol.auto(oldText));
-								newText = stripEof(eol.auto(newText));
-
-								patch = diff_1(filePath, filePath, oldText, newText);
-								delta = new DeltaBuilder(patch).build();
-
-								if (!delta.edits.length) {
-									_context.next = 10;
-									break;
-								}
-
-								_context.next = 7;
-								return this._calculateLocations(locations, delta.edits);
-
-							case 7:
-								return _context.abrupt("return", _context.sent);
-
-							case 10:
-								return _context.abrupt("return", locations);
-
-							case 11:
-							case "end":
-								return _context.stop();
-						}
-					}
-				}, _callee, this);
-			}));
-
-			function findUpdatedLocations(_x, _x2, _x3, _x4) {
-				return _ref2.apply(this, arguments);
-			}
-
-			return findUpdatedLocations;
-		}()
-	}, {
-		key: "findLocationsForCurrentCommit",
-		value: function () {
-			var _ref3 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(markers) {
-				var me, filePath, gitRepo, currentCommit, currentLocations, markersByFirstCommit, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, marker, commitWhenCreated, markersForCommit, _iteratorNormalCompletion2, _didIteratorError2, _iteratorError2, _iterator2, _step2, exists, locations, locationsToCalculate, _iteratorNormalCompletion3, _didIteratorError3, _iteratorError3, _iterator3, _step3, _marker, location, delta, calculatedLocations;
-
-				return regeneratorRuntime.wrap(function _callee2$(_context2) {
-					while (1) {
-						switch (_context2.prev = _context2.next) {
-							case 0:
-								me = this;
-								filePath = me._filePath;
-								gitRepo = me._gitRepo;
-								_context2.next = 5;
-								return gitRepo.getCurrentCommit();
-
-							case 5:
-								currentCommit = _context2.sent;
-								currentLocations = {};
-								markersByFirstCommit = {};
-								_iteratorNormalCompletion = true;
-								_didIteratorError = false;
-								_iteratorError = undefined;
-								_context2.prev = 11;
-
-
-								for (_iterator = markers[Symbol.iterator](); !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-									marker = _step.value;
-									commitWhenCreated = marker.commitHashWhenCreated;
-									markersForCommit = markersByFirstCommit[commitWhenCreated] || (markersByFirstCommit[commitWhenCreated] = []);
-
-									markersForCommit.push(marker);
-								}
-
-								_context2.next = 19;
+							if (!(more && mostRecentPost)) {
+								_context.next = 19;
 								break;
+							}
 
-							case 15:
-								_context2.prev = 15;
-								_context2.t0 = _context2["catch"](11);
-								_didIteratorError = true;
-								_iteratorError = _context2.t0;
+							return _context.abrupt("return", dispatch(fetchLatest(normalizedPosts[0].id, streamId, teamId)));
 
-							case 19:
-								_context2.prev = 19;
-								_context2.prev = 20;
+						case 19:
+							return _context.abrupt("return", save);
 
-								if (!_iteratorNormalCompletion && _iterator.return) {
-									_iterator.return();
-								}
-
-							case 22:
-								_context2.prev = 22;
-
-								if (!_didIteratorError) {
-									_context2.next = 25;
-									break;
-								}
-
-								throw _iteratorError;
-
-							case 25:
-								return _context2.finish(22);
-
-							case 26:
-								return _context2.finish(19);
-
-							case 27:
-								_iteratorNormalCompletion2 = true;
-								_didIteratorError2 = false;
-								_iteratorError2 = undefined;
-								_context2.prev = 30;
-								_iterator2 = Object.keys(markersByFirstCommit)[Symbol.iterator]();
-
-							case 32:
-								if (_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done) {
-									_context2.next = 77;
-									break;
-								}
-
-								commitWhenCreated = _step2.value;
-								_context2.next = 36;
-								return gitRepo.ensureCommitExists(commitWhenCreated);
-
-							case 36:
-								exists = _context2.sent;
-
-								if (exists) {
-									_context2.next = 39;
-									break;
-								}
-
-								return _context2.abrupt("continue", 74);
-
-							case 39:
-								markersForCommit = markersByFirstCommit[commitWhenCreated];
-								_context2.next = 42;
-								return this._getMarkerLocations(commitWhenCreated);
-
-							case 42:
-								locations = _context2.sent;
-								locationsToCalculate = {};
-								_iteratorNormalCompletion3 = true;
-								_didIteratorError3 = false;
-								_iteratorError3 = undefined;
-								_context2.prev = 47;
-
-								for (_iterator3 = markersForCommit[Symbol.iterator](); !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-									_marker = _step3.value;
-									location = locations[_marker._id];
-
-									if (isValidLocation(location)) {
-										locationsToCalculate[_marker._id] = location;
-									}
-								}
-
-								_context2.next = 55;
-								break;
-
-							case 51:
-								_context2.prev = 51;
-								_context2.t1 = _context2["catch"](47);
-								_didIteratorError3 = true;
-								_iteratorError3 = _context2.t1;
-
-							case 55:
-								_context2.prev = 55;
-								_context2.prev = 56;
-
-								if (!_iteratorNormalCompletion3 && _iterator3.return) {
-									_iterator3.return();
-								}
-
-							case 58:
-								_context2.prev = 58;
-
-								if (!_didIteratorError3) {
-									_context2.next = 61;
-									break;
-								}
-
-								throw _iteratorError3;
-
-							case 61:
-								return _context2.finish(58);
-
-							case 62:
-								return _context2.finish(55);
-
-							case 63:
-								_context2.next = 65;
-								return gitRepo.getDeltaBetweenCommits(commitWhenCreated, currentCommit, filePath);
-
-							case 65:
-								delta = _context2.sent;
-
-								if (!(delta.edits.length && Object.keys(locationsToCalculate).length)) {
-									_context2.next = 73;
-									break;
-								}
-
-								_context2.next = 69;
-								return this._calculateLocations(locationsToCalculate, delta.edits, commitWhenCreated, currentCommit);
-
-							case 69:
-								calculatedLocations = _context2.sent;
-
-								Object.assign(currentLocations, calculatedLocations);
-								_context2.next = 74;
-								break;
-
-							case 73:
-								Object.assign(currentLocations, locationsToCalculate);
-
-							case 74:
-								_iteratorNormalCompletion2 = true;
-								_context2.next = 32;
-								break;
-
-							case 77:
-								_context2.next = 83;
-								break;
-
-							case 79:
-								_context2.prev = 79;
-								_context2.t2 = _context2["catch"](30);
-								_didIteratorError2 = true;
-								_iteratorError2 = _context2.t2;
-
-							case 83:
-								_context2.prev = 83;
-								_context2.prev = 84;
-
-								if (!_iteratorNormalCompletion2 && _iterator2.return) {
-									_iterator2.return();
-								}
-
-							case 86:
-								_context2.prev = 86;
-
-								if (!_didIteratorError2) {
-									_context2.next = 89;
-									break;
-								}
-
-								throw _iteratorError2;
-
-							case 89:
-								return _context2.finish(86);
-
-							case 90:
-								return _context2.finish(83);
-
-							case 91:
-								return _context2.abrupt("return", currentLocations);
-
-							case 92:
-							case "end":
-								return _context2.stop();
-						}
-					}
-				}, _callee2, this, [[11, 15, 19, 27], [20,, 22, 26], [30, 79, 83, 91], [47, 51, 55, 63], [56,, 58, 62], [84,, 86, 90]]);
-			}));
-
-			function findLocationsForCurrentCommit(_x5) {
-				return _ref3.apply(this, arguments);
-			}
-
-			return findLocationsForCurrentCommit;
-		}()
-	}, {
-		key: "findLocationsForUncommittedChanges",
-		value: function () {
-			var _ref4 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(currentCommitLocations, bufferText) {
-				var me, filePath, gitRepo, currentCommit, unsavedDelta, unsavedEdits, locations, unsavedLocations;
-				return regeneratorRuntime.wrap(function _callee3$(_context3) {
-					while (1) {
-						switch (_context3.prev = _context3.next) {
-							case 0:
-								me = this;
-								filePath = me._filePath;
-								gitRepo = me._gitRepo;
-								_context3.next = 5;
-								return gitRepo.getCurrentCommit();
-
-							case 5:
-								currentCommit = _context3.sent;
-								_context3.next = 8;
-								return gitRepo.getDeltaForUncommittedChanges(filePath, bufferText);
-
-							case 8:
-								unsavedDelta = _context3.sent;
-								unsavedEdits = unsavedDelta.edits;
-								locations = _extends$5({}, currentCommitLocations);
-
-								if (!(unsavedEdits.length && Object.keys(locations).length)) {
-									_context3.next = 16;
-									break;
-								}
-
-								_context3.next = 14;
-								return this._calculateLocations(locations, unsavedEdits, currentCommit);
-
-							case 14:
-								unsavedLocations = _context3.sent;
-
-								locations = _extends$5({}, locations, unsavedLocations);
-
-							case 16:
-								return _context3.abrupt("return", locations);
-
-							case 17:
-							case "end":
-								return _context3.stop();
-						}
-					}
-				}, _callee3, this);
-			}));
-
-			function findLocationsForUncommittedChanges(_x6, _x7) {
-				return _ref4.apply(this, arguments);
-			}
-
-			return findLocationsForUncommittedChanges;
-		}()
-	}, {
-		key: "backtrackLocationsAtCurrentCommit",
-		value: function () {
-			var _ref5 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(dirtyLocations, bufferText) {
-				var me, filePath, gitRepo, currentCommit, unsavedDelta, reverseEdits, commitLocations;
-				return regeneratorRuntime.wrap(function _callee4$(_context4) {
-					while (1) {
-						switch (_context4.prev = _context4.next) {
-							case 0:
-								me = this;
-								filePath = me._filePath;
-								gitRepo = me._gitRepo;
-								_context4.next = 5;
-								return gitRepo.getCurrentCommit();
-
-							case 5:
-								currentCommit = _context4.sent;
-								_context4.next = 8;
-								return gitRepo.getDeltaForUncommittedChanges(filePath, bufferText);
-
-							case 8:
-								unsavedDelta = _context4.sent;
-								reverseEdits = me._reverseEdits(unsavedDelta.edits);
-
-								if (!reverseEdits.length) {
-									_context4.next = 17;
-									break;
-								}
-
-								_context4.next = 13;
-								return this._calculateLocations(dirtyLocations, reverseEdits, currentCommit);
-
-							case 13:
-								commitLocations = _context4.sent;
-								return _context4.abrupt("return", commitLocations);
-
-							case 17:
-								return _context4.abrupt("return", dirtyLocations);
-
-							case 18:
-							case "end":
-								return _context4.stop();
-						}
-					}
-				}, _callee4, this);
-			}));
-
-			function backtrackLocationsAtCurrentCommit(_x8, _x9) {
-				return _ref5.apply(this, arguments);
-			}
-
-			return backtrackLocationsAtCurrentCommit;
-		}()
-	}, {
-		key: "_calculateLocations",
-		value: function () {
-			var _ref6 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(locations, edits, originalCommitHash, newCommitHash) {
-				var hasUncommittedLocation, _iteratorNormalCompletion4, _didIteratorError4, _iteratorError4, _iterator4, _step4, location, meta, result;
-
-				return regeneratorRuntime.wrap(function _callee5$(_context5) {
-					while (1) {
-						switch (_context5.prev = _context5.next) {
-							case 0:
-								hasUncommittedLocation = false;
-								_iteratorNormalCompletion4 = true;
-								_didIteratorError4 = false;
-								_iteratorError4 = undefined;
-								_context5.prev = 4;
-
-								for (_iterator4 = Object.values(locations)[Symbol.iterator](); !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-									location = _step4.value;
-									meta = location[4] || {};
-
-									if (meta.startWasDeleted || meta.endWasDeleted) {
-										hasUncommittedLocation = true;
-									}
-								}
-								_context5.next = 12;
-								break;
-
-							case 8:
-								_context5.prev = 8;
-								_context5.t0 = _context5["catch"](4);
-								_didIteratorError4 = true;
-								_iteratorError4 = _context5.t0;
-
-							case 12:
-								_context5.prev = 12;
-								_context5.prev = 13;
-
-								if (!_iteratorNormalCompletion4 && _iterator4.return) {
-									_iterator4.return();
-								}
-
-							case 15:
-								_context5.prev = 15;
-
-								if (!_didIteratorError4) {
-									_context5.next = 18;
-									break;
-								}
-
-								throw _iteratorError4;
-
-							case 18:
-								return _context5.finish(15);
-
-							case 19:
-								return _context5.finish(12);
-
-							case 20:
-								_context5.prev = 20;
-								_context5.next = 23;
-								return this._http.put("/calculate-locations?", {
-									teamId: this._teamId,
-									streamId: this._streamId,
-									originalCommitHash: originalCommitHash,
-									newCommitHash: hasUncommittedLocation ? undefined : newCommitHash,
-									edits: edits,
-									locations: locations
-								}, this._accessToken);
-
-							case 23:
-								result = _context5.sent;
-								return _context5.abrupt("return", result.markerLocations.locations);
-
-							case 27:
-								_context5.prev = 27;
-								_context5.t1 = _context5["catch"](20);
-
-								singleton.captureException(_context5.t1, {
-									logger: "MarkerLocationFinder._calculateLocations"
-								});
-								return _context5.abrupt("return", {});
-
-							case 31:
-							case "end":
-								return _context5.stop();
-						}
-					}
-				}, _callee5, this, [[4, 8, 12, 20], [13,, 15, 19], [20, 27]]);
-			}));
-
-			function _calculateLocations(_x10, _x11, _x12, _x13) {
-				return _ref6.apply(this, arguments);
-			}
-
-			return _calculateLocations;
-		}()
-	}, {
-		key: "_reverseEdits",
-		value: function _reverseEdits(edits) {
-			var reversedEdits = [];
-
-			// swap all add/del operations
-			var _iteratorNormalCompletion5 = true;
-			var _didIteratorError5 = false;
-			var _iteratorError5 = undefined;
-
-			try {
-				for (var _iterator5 = edits[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
-					var edit = _step5.value;
-
-					reversedEdits.push({
-						delStart: edit.addStart,
-						addStart: edit.delStart,
-						delLength: edit.addLength,
-						addLength: edit.delLength,
-						dels: edit.adds,
-						adds: edit.dels
-					});
-				}
-			} catch (err) {
-				_didIteratorError5 = true;
-				_iteratorError5 = err;
-			} finally {
-				try {
-					if (!_iteratorNormalCompletion5 && _iterator5.return) {
-						_iterator5.return();
-					}
-				} finally {
-					if (_didIteratorError5) {
-						throw _iteratorError5;
+						case 20:
+						case "end":
+							return _context.stop();
 					}
 				}
-			}
+			}, _callee, _this$2);
+		}));
 
-			return reversedEdits;
-		}
-	}, {
-		key: "_getMarkerLocations",
-		value: function () {
-			var _ref7 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(commitHash) {
-				var _ref8, markerLocations, locations;
-
-				return regeneratorRuntime.wrap(function _callee6$(_context6) {
-					while (1) {
-						switch (_context6.prev = _context6.next) {
-							case 0:
-								_context6.next = 2;
-								return this._http.get("/marker-locations?" + ("teamId=" + this._teamId + "&") + ("streamId=" + this._streamId + "&") + ("commitHash=" + commitHash), this._accessToken);
-
-							case 2:
-								_ref8 = _context6.sent;
-								markerLocations = _ref8.markerLocations;
-								locations = markerLocations.locations || {};
-								return _context6.abrupt("return", locations);
-
-							case 6:
-							case "end":
-								return _context6.stop();
-						}
-					}
-				}, _callee6, this);
-			}));
-
-			function _getMarkerLocations(_x14) {
-				return _ref7.apply(this, arguments);
-			}
-
-			return _getMarkerLocations;
-		}()
-	}]);
-	return MarkerLocationFinder;
-}();
-
-var Remote = function Remote(descriptor) {
-	classCallCheck$1(this, Remote);
-
-	this.name = descriptor[0];
-	this.url = descriptor[1];
-	this.type = descriptor[2].replace(/[()]/g, "");
+		return function (_x, _x2, _x3) {
+			return _ref2.apply(this, arguments);
+		};
+	}();
 };
 
-function makeRemote(descriptor) {
-	return new Remote(descriptor);
-}
+var fetchLatestPosts = function fetchLatestPosts(streams$$1) {
+	return function (dispatch, getState, _ref4) {
+		var db$$1 = _ref4.db,
+		    http = _ref4.http;
 
-var createError = function createError(message) {
-	return message.includes("'git' is not recognized") ? { missingGit: true } : { message: message };
-};
-
-var git = (function (args) {
-	var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
-	return new Promise(function (resolve, reject) {
-		var output = "";
-		var bufferedProcess = new atom$1.BufferedProcess({
-			command: "git",
-			args: args,
-			options: _extends$5({ env: process.env }, options),
-			stdout: function stdout(data) {
-				output += data.toString();
-			},
-			stderr: function stderr(data) {
-				output += data.toString();
-			},
-			exit: function exit(code) {
-				return code === 0 ? resolve(output) : reject(createError(output));
-			}
-		});
-
-		bufferedProcess.onWillThrowError(function (error) {
-			reject();
-		});
-	});
-});
-
-var openRepos = {};
-
-var open = function open(path) {
-	return openRepos[path] || (openRepos[path] = new GitRepo(path));
-};
-
-var emptyDelta = function emptyDelta(filePath) {
-	return {
-		oldFile: filePath,
-		newFile: filePath,
-		edits: []
-	};
-};
-
-var GitRepo = function () {
-	function GitRepo(path) {
-		classCallCheck$1(this, GitRepo);
-
-		this._path = path;
-	}
-
-	createClass$1(GitRepo, [{
-		key: "run",
-		value: function () {
-			var _ref = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
-				for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-					args[_key] = arguments[_key];
-				}
-
-				var data;
-				return regeneratorRuntime.wrap(function _callee$(_context) {
-					while (1) {
-						switch (_context.prev = _context.next) {
-							case 0:
-								_context.next = 2;
-								return git(args, {
-									cwd: this._path
-								});
-
-							case 2:
-								data = _context.sent;
-								return _context.abrupt("return", data.trim());
-
-							case 4:
-							case "end":
-								return _context.stop();
-						}
-					}
-				}, _callee, this);
-			}));
-
-			function run() {
-				return _ref.apply(this, arguments);
-			}
-
-			return run;
-		}()
-	}, {
-		key: "getCurrentCommit",
-		value: function () {
-			var _ref2 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2() {
+		return Promise.all(streams$$1.map(function () {
+			var _ref5 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(stream) {
+				var cachedPosts, mostRecentCachedPost;
 				return regeneratorRuntime.wrap(function _callee2$(_context2) {
 					while (1) {
 						switch (_context2.prev = _context2.next) {
 							case 0:
 								_context2.next = 2;
-								return this.run("rev-parse", "--verify", "HEAD");
+								return db$$1.posts.where({ streamId: stream.id }).sortBy("seqNum");
 
 							case 2:
-								return _context2.abrupt("return", _context2.sent);
+								cachedPosts = _context2.sent;
+								mostRecentCachedPost = cachedPosts[cachedPosts.length - 1];
+								return _context2.abrupt("return", dispatch(fetchLatest(mostRecentCachedPost, stream.id, stream.teamId)));
 
-							case 3:
+							case 5:
 							case "end":
 								return _context2.stop();
 						}
 					}
-				}, _callee2, this);
+				}, _callee2, _this$2);
 			}));
 
-			function getCurrentCommit() {
-				return _ref2.apply(this, arguments);
-			}
+			return function (_x4) {
+				return _ref5.apply(this, arguments);
+			};
+		}()));
+	};
+};
 
-			return getCurrentCommit;
-		}()
-	}, {
-		key: "ensureCommitExists",
-		value: function () {
-			var _ref3 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(hash) {
-				var type, _type;
+// FIXME: tech debt. these next two functions are only for use when starting with a clean local cache until
+// the streams support lazy loading and infinite lists
+var fetchOlderPosts = function fetchOlderPosts(mostRecentPost, streamId, teamId) {
+	return function () {
+		var _ref7 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(dispatch, getState, _ref6) {
+			var http = _ref6.http;
 
-				return regeneratorRuntime.wrap(function _callee3$(_context3) {
-					while (1) {
-						switch (_context3.prev = _context3.next) {
-							case 0:
-								_context3.prev = 0;
-								_context3.next = 3;
-								return this.run("cat-file", "-t", hash);
+			var _getState2, context, session, url, _ref8, posts, markers, markerLocations, more, normalizedMarkers, normalizedPosts, save;
 
-							case 3:
-								type = _context3.sent;
-								return _context3.abrupt("return", type === "commit");
+			return regeneratorRuntime.wrap(function _callee3$(_context3) {
+				while (1) {
+					switch (_context3.prev = _context3.next) {
+						case 0:
+							_getState2 = getState(), context = _getState2.context, session = _getState2.session;
+							url = "/posts?teamId=" + teamId + "&streamId=" + streamId + "&withMarkers&commitHash=" + context.currentCommit;
 
-							case 7:
-								_context3.prev = 7;
-								_context3.t0 = _context3["catch"](0);
-								_context3.prev = 9;
-								_context3.next = 12;
-								return this.run("fetch", "--all");
+							if (mostRecentPost) url += "&lt=" + mostRecentPost.id;
+							_context3.next = 5;
+							return http.get(url, session.accessToken);
 
-							case 12:
+						case 5:
+							_ref8 = _context3.sent;
+							posts = _ref8.posts;
+							markers = _ref8.markers;
+							markerLocations = _ref8.markerLocations;
+							more = _ref8.more;
+							normalizedMarkers = normalize(markers || []);
+
+							dispatch(saveMarkers(normalizedMarkers));
+							// if (markerLocations) dispatch(saveMarkerLocations(markerLocations));
+							normalizedPosts = normalize(posts);
+							save = dispatch(savePostsForStream(streamId, normalizedPosts));
+
+							if (!more) {
 								_context3.next = 18;
 								break;
+							}
 
-							case 14:
-								_context3.prev = 14;
-								_context3.t1 = _context3["catch"](9);
+							return _context3.abrupt("return", dispatch(fetchOlderPosts(normalizedPosts[normalizedPosts.length - 1], streamId, teamId)));
 
-								console.warn(_context3.t1);
-								return _context3.abrupt("return", false);
+						case 18:
+							return _context3.abrupt("return", save);
 
-							case 18:
-								_context3.prev = 18;
-								_context3.next = 21;
-								return this.run("cat-file", "-t", hash);
-
-							case 21:
-								_type = _context3.sent;
-								return _context3.abrupt("return", _type === "commit");
-
-							case 25:
-								_context3.prev = 25;
-								_context3.t2 = _context3["catch"](18);
-								return _context3.abrupt("return", false);
-
-							case 28:
-							case "end":
-								return _context3.stop();
-						}
+						case 19:
+						case "end":
+							return _context3.stop();
 					}
-				}, _callee3, this, [[0, 7], [9, 14], [18, 25]]);
-			}));
+				}
+			}, _callee3, _this$2);
+		}));
 
-			function ensureCommitExists(_x) {
-				return _ref3.apply(this, arguments);
-			}
+		return function (_x5, _x6, _x7) {
+			return _ref7.apply(this, arguments);
+		};
+	}();
+};
 
-			return ensureCommitExists;
-		}()
-	}, {
-		key: "getDeltaBetweenCommits",
-		value: function () {
-			var _ref4 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(oldCommit, newCommit, filePath) {
-				var rawDiff, patches;
+var fetchAllPosts = function fetchAllPosts(streams$$1) {
+	return function (dispatch, getState, _ref9) {
+		objectDestructuringEmpty(_ref9);
+
+		return Promise.all(streams$$1.map(function () {
+			var _ref10 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(stream) {
 				return regeneratorRuntime.wrap(function _callee4$(_context4) {
 					while (1) {
 						switch (_context4.prev = _context4.next) {
 							case 0:
-								_context4.next = 2;
-								return this.run("diff", oldCommit, newCommit, "--", filePath);
+								dispatch(fetchOlderPosts(null, stream.id, stream.teamId));
 
-							case 2:
-								rawDiff = _context4.sent;
-
-								if (!rawDiff) {
-									_context4.next = 9;
-									break;
-								}
-
-								patches = diff_2(rawDiff);
-
-								if (patches.length > 1) {
-									console.warn("Parsed diff generated multiple patches");
-								}
-								return _context4.abrupt("return", new DeltaBuilder(patches[0]).build());
-
-							case 9:
-								return _context4.abrupt("return", emptyDelta(filePath));
-
-							case 10:
+							case 1:
 							case "end":
 								return _context4.stop();
 						}
 					}
-				}, _callee4, this);
+				}, _callee4, _this$2);
 			}));
 
-			function getDeltaBetweenCommits(_x2, _x3, _x4) {
-				return _ref4.apply(this, arguments);
-			}
+			return function (_x8) {
+				return _ref10.apply(this, arguments);
+			};
+		}()));
+	};
+};
 
-			return getDeltaBetweenCommits;
-		}()
-	}, {
-		key: "getDeltaForUncommittedChanges",
-		value: function () {
-			var _ref5 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(filePath, text) {
-				var committedText, patch;
-				return regeneratorRuntime.wrap(function _callee5$(_context5) {
-					while (1) {
-						switch (_context5.prev = _context5.next) {
-							case 0:
-								_context5.next = 2;
-								return this.run("show", "HEAD:" + filePath);
+var fetchPosts = function fetchPosts(_ref13) {
+	var streamId = _ref13.streamId,
+	    teamId = _ref13.teamId;
+	return function () {
+		var _ref15 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(dispatch, getState, _ref14) {
+			var db$$1 = _ref14.db,
+			    http = _ref14.http;
 
-							case 2:
-								committedText = _context5.sent;
+			var _getState4, session, _ref16, posts;
 
+			return regeneratorRuntime.wrap(function _callee6$(_context6) {
+				while (1) {
+					switch (_context6.prev = _context6.next) {
+						case 0:
+							_getState4 = getState(), session = _getState4.session;
+							_context6.next = 3;
+							return http.get("/posts?teamId=" + teamId + "&streamId=" + streamId, session.accessToken);
 
-								text = stripEof(eol.auto(text));
-								committedText = stripEof(eol.auto(committedText));
+						case 3:
+							_ref16 = _context6.sent;
+							posts = _ref16.posts;
 
-								patch = diff_1(filePath, filePath, committedText, text);
-								return _context5.abrupt("return", new DeltaBuilder(patch).build());
+							dispatch(savePostsForStream(streamId, normalize(posts)));
+							// return dispatch(calculateLocations({ streamId, teamId }));
 
-							case 7:
-							case "end":
-								return _context5.stop();
-						}
+						case 6:
+						case "end":
+							return _context6.stop();
 					}
-				}, _callee5, this);
-			}));
+				}
+			}, _callee6, _this$2);
+		}));
 
-			function getDeltaForUncommittedChanges(_x5, _x6) {
-				return _ref5.apply(this, arguments);
-			}
+		return function (_x12, _x13, _x14) {
+			return _ref15.apply(this, arguments);
+		};
+	}();
+};
 
-			return getDeltaForUncommittedChanges;
-		}()
-	}, {
-		key: "getCommitHistoryForFile",
-		value: function () {
-			var _ref6 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(filePath, maxHistorySize) {
-				var rawHistory;
-				return regeneratorRuntime.wrap(function _callee6$(_context6) {
-					while (1) {
-						switch (_context6.prev = _context6.next) {
-							case 0:
-								_context6.next = 2;
-								return this.run("log", "--format=format:%H", "-n", maxHistorySize, "--", filePath);
+var savePostsForStream = function savePostsForStream(streamId, posts) {
+	return function (dispatch, getState, _ref19) {
+		var db$$1 = _ref19.db;
 
-							case 2:
-								rawHistory = _context6.sent;
-								return _context6.abrupt("return", rawHistory.split("\n"));
+		// return upsert(db, "posts", attributes).then(posts =>
+		dispatch({
+			type: "ADD_POSTS_FOR_STREAM",
+			payload: { streamId: streamId, posts: posts }
+		});
+		// );
+	};
+};
 
-							case 4:
-							case "end":
-								return _context6.stop();
-						}
+var savePendingPost = function savePendingPost(attributes) {
+	return function (dispatch, getState, _ref20) {
+		var db$$1 = _ref20.db;
+
+		return upsert$1(db$$1, "posts", _extends$5({}, attributes, { pending: true })).then(function (post) {
+			dispatch({
+				type: "ADD_PENDING_POST",
+				payload: post
+			});
+		});
+	};
+};
+
+var createPost = function createPost(streamId, parentPostId, text, codeBlocks, mentions, bufferText, extra) {
+	return function () {
+		var _ref22 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7(dispatch, getState, _ref21) {
+			var http = _ref21.http;
+			var state, session, context, repoAttributes, pendingId, post, data;
+			return regeneratorRuntime.wrap(function _callee7$(_context7) {
+				while (1) {
+					switch (_context7.prev = _context7.next) {
+						case 0:
+							state = getState();
+							session = state.session, context = state.context, repoAttributes = state.repoAttributes;
+							pendingId = createTempId();
+
+							// const gitRepo = await openRepo(repoAttributes.workingDirectory);
+							// const filePath = context.currentFile;
+							// const isTrackedFile = await gitRepo.isTracked(filePath);
+							// const uncommittedLocations = [];
+							// let hasUncommittedLocation = false;
+							// if (isTrackedFile) {
+							// 	const backtrackedLocations = await backtrackCodeBlockLocations(
+							// 		codeBlocks,
+							// 		bufferText,
+							// 		streamId,
+							// 		state,
+							// 		http
+							// 	);
+							// 	for (let i = 0; i < codeBlocks.length; i++) {
+							// 		const codeBlock = codeBlocks[i];
+							// 		const lastCommitLocation = backtrackedLocations[i];
+							// 		const meta = lastCommitLocation[4] || {};
+							// 		if (meta.startWasDeleted || meta.endWasDeleted) {
+							// 			hasUncommittedLocation = true;
+							// 		}
+							// 		uncommittedLocations.push(codeBlock.location);
+							// 		codeBlock.location = lastCommitLocation;
+							// 	}
+							// } else {
+							// 	for (const codeBlock of codeBlocks) {
+							// 		hasUncommittedLocation = true;
+							// 		uncommittedLocations.push(codeBlock.location);
+							// 		delete codeBlock.location;
+							// 	}
+							// }
+
+							post = {
+								id: pendingId,
+								teamId: context.currentTeamId,
+								timestamp: new Date().getTime(),
+								creatorId: session.userId,
+								parentPostId: parentPostId,
+								codeBlocks: codeBlocks,
+								commitHashWhenPosted: context.currentCommit,
+								mentionedUserIds: mentions && mentions.length ? mentions : null,
+								text: text
+							};
+
+
+							if (streamId) {
+								post.streamId = streamId;
+							} else post.stream = {
+								teamId: context.currentTeamId,
+								type: "file",
+								file: filePath,
+								repoId: context.currentRepoId
+							};
+
+							dispatch(savePendingPost(_extends$5({}, post)));
+
+							_context7.prev = 6;
+							_context7.next = 9;
+							return http.post("/posts", post, session.accessToken);
+
+						case 9:
+							data = _context7.sent;
+
+							// if (hasUncommittedLocation) {
+							// 	dispatch(
+							// 		saveUncommittedLocations({
+							// 			...data,
+							// 			filePath,
+							// 			bufferText,
+							// 			uncommittedLocations
+							// 		})
+							// 	);
+							// }
+							if (!streamId) dispatch(saveStream(normalize(data.stream)));
+							dispatch(resolvePendingPost(pendingId, normalize(data.post)));
+							dispatch({ type: "POST_CREATED", meta: _extends$5({ post: data.post }, extra) });
+							_context7.next = 19;
+							break;
+
+						case 15:
+							_context7.prev = 15;
+							_context7.t0 = _context7["catch"](6);
+
+							if (http.isApiRequestError(_context7.t0)) {
+								singleton.captureMessage(_context7.t0.data.message, {
+									logger: "actions/post",
+									extra: { error: _context7.t0.data }
+								});
+							}
+							// TODO: different types of errors?
+							dispatch(rejectPendingPost(pendingId, _extends$5({}, post, { error: true })));
+
+						case 19:
+						case "end":
+							return _context7.stop();
 					}
-				}, _callee6, this);
-			}));
+				}
+			}, _callee7, _this$2, [[6, 15]]);
+		}));
 
-			function getCommitHistoryForFile(_x7, _x8) {
-				return _ref6.apply(this, arguments);
-			}
+		return function (_x15, _x16, _x17) {
+			return _ref22.apply(this, arguments);
+		};
+	}();
+};
 
-			return getCommitHistoryForFile;
-		}()
-	}, {
-		key: "listRemoteReferences",
-		value: function () {
-			var _ref7 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7() {
-				return regeneratorRuntime.wrap(function _callee7$(_context7) {
-					while (1) {
-						switch (_context7.prev = _context7.next) {
-							case 0:
-								_context7.next = 2;
-								return this.run("remote", "-v");
+var resolvePendingPost = function resolvePendingPost(id, resolvedPost) {
+	return function (dispatch, getState, _ref24) {
+		var db$$1 = _ref24.db;
 
-							case 2:
-								_context7.t0 = Boolean;
+		return db$$1.transaction("rw", db$$1.posts, function () {
+			db$$1.posts.delete(id);
+			upsert$1(db$$1, "posts", resolvedPost);
+		}).then(function () {
+			return dispatch({
+				type: "RESOLVE_PENDING_POST",
+				payload: {
+					pendingId: id,
+					post: resolvedPost
+				}
+			});
+		});
+	};
+};
 
-								_context7.t1 = function (line) {
-									return line.split(/\s+/);
-								};
+var rejectPendingPost = function rejectPendingPost(pendingId) {
+	return function (dispatch, getState, _ref25) {
+		var db$$1 = _ref25.db;
 
-								_context7.t2 = makeRemote;
-								return _context7.abrupt("return", _context7.sent.split("\n").filter(_context7.t0).map(_context7.t1).map(_context7.t2));
+		return upsert$1(db$$1, "posts", { id: pendingId, error: true }).then(function (post) {
+			return dispatch(pendingPostFailed(post));
+		});
+	};
+};
 
-							case 6:
-							case "end":
-								return _context7.stop();
-						}
+var cancelPost = function cancelPost(pendingId) {
+	return function () {
+		var _ref27 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(dispatch, getState, _ref26) {
+			var db$$1 = _ref26.db;
+			return regeneratorRuntime.wrap(function _callee9$(_context9) {
+				while (1) {
+					switch (_context9.prev = _context9.next) {
+						case 0:
+							return _context9.abrupt("return", db$$1.posts.delete(pendingId).then(function () {
+								return dispatch({ type: "CANCEL_PENDING_POST", payload: pendingId });
+							}));
+
+						case 1:
+						case "end":
+							return _context9.stop();
 					}
-				}, _callee7, this);
-			}));
+				}
+			}, _callee9, _this$2);
+		}));
 
-			function listRemoteReferences() {
-				return _ref7.apply(this, arguments);
-			}
+		return function (_x20, _x21, _x22) {
+			return _ref27.apply(this, arguments);
+		};
+	}();
+};
 
-			return listRemoteReferences;
-		}()
-	}, {
-		key: "isTracked",
-		value: function () {
-			var _ref8 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8(path) {
-				var result;
-				return regeneratorRuntime.wrap(function _callee8$(_context8) {
-					while (1) {
-						switch (_context8.prev = _context8.next) {
-							case 0:
-								_context8.next = 2;
-								return this.run("ls-files", path);
+var retryPost = function retryPost(pendingId) {
+	return function () {
+		var _ref29 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10(dispatch, getState, _ref28) {
+			var db$$1 = _ref28.db,
+			    http = _ref28.http;
+			var pendingPost;
+			return regeneratorRuntime.wrap(function _callee10$(_context10) {
+				while (1) {
+					switch (_context10.prev = _context10.next) {
+						case 0:
+							_context10.next = 2;
+							return db$$1.posts.get(pendingId);
 
-							case 2:
-								result = _context8.sent;
-								return _context8.abrupt("return", !!result);
+						case 2:
+							pendingPost = _context10.sent;
+							return _context10.abrupt("return", http.post("/posts", pendingPost, getState().session.accessToken).then(function (data) {
+								return dispatch(resolvePendingPost(pendingId, {
+									post: normalize(data.post),
+									markers: normalize(data.markers),
+									markerLocations: data.markerLocations,
+									stream: pendingPost.stream ? normalize(data.stream) : null
+								}));
+							}).catch(function (error) {
+								singleton.captureBreadcrumb({
+									message: "Failed to retry a post",
+									category: "action",
+									data: { error: error, pendingPost: pendingPost },
+									level: "error"
+								});
+								dispatch(pendingPostFailed(pendingPost));
+							}));
 
-							case 4:
-							case "end":
-								return _context8.stop();
-						}
+						case 4:
+						case "end":
+							return _context10.stop();
 					}
-				}, _callee8, this);
-			}));
+				}
+			}, _callee10, _this$2);
+		}));
 
-			function isTracked(_x9) {
-				return _ref8.apply(this, arguments);
-			}
+		return function (_x23, _x24, _x25) {
+			return _ref29.apply(this, arguments);
+		};
+	}();
+};
 
-			return isTracked;
-		}()
-	}]);
-	return GitRepo;
-}();
+var editPost = function editPost(postId, text, mentions) {
+	return function () {
+		var _ref31 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11(dispatch, getState, _ref30) {
+			var http = _ref30.http;
+
+			var _getState6, session, context, delta, data;
+
+			return regeneratorRuntime.wrap(function _callee11$(_context11) {
+				while (1) {
+					switch (_context11.prev = _context11.next) {
+						case 0:
+							_getState6 = getState(), session = _getState6.session, context = _getState6.context;
+							delta = {
+								text: text,
+								mentionedUserIds: mentions
+							};
+							_context11.prev = 2;
+							_context11.next = 5;
+							return http.put("/posts/" + postId, delta, session.accessToken);
+
+						case 5:
+							data = _context11.sent;
+							_context11.next = 11;
+							break;
+
+						case 8:
+							_context11.prev = 8;
+							_context11.t0 = _context11["catch"](2);
+
+							// TODO: different types of errors?
+							dispatch(rejectEditPost(postId, _extends$5({}, delta, { error: true })));
+
+						case 11:
+						case "end":
+							return _context11.stop();
+					}
+				}
+			}, _callee11, _this$2, [[2, 8]]);
+		}));
+
+		return function (_x26, _x27, _x28) {
+			return _ref31.apply(this, arguments);
+		};
+	}();
+};
+
+var deletePost = function deletePost(postId) {
+	return function () {
+		var _ref33 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee12(dispatch, getState, _ref32) {
+			var http = _ref32.http;
+
+			var _getState7, session, context, data;
+
+			return regeneratorRuntime.wrap(function _callee12$(_context12) {
+				while (1) {
+					switch (_context12.prev = _context12.next) {
+						case 0:
+							_getState7 = getState(), session = _getState7.session, context = _getState7.context;
+							_context12.prev = 1;
+							_context12.next = 4;
+							return http.deactivate("/posts/" + postId, {}, session.accessToken);
+
+						case 4:
+							data = _context12.sent;
+							_context12.next = 10;
+							break;
+
+						case 7:
+							_context12.prev = 7;
+							_context12.t0 = _context12["catch"](1);
+
+							// TODO: different types of errors?
+							dispatch(rejectDeletePost(postId, _extends$5({}, delta, { error: true })));
+
+						case 10:
+						case "end":
+							return _context12.stop();
+					}
+				}
+			}, _callee12, _this$2, [[1, 7]]);
+		}));
+
+		return function (_x29, _x30, _x31) {
+			return _ref33.apply(this, arguments);
+		};
+	}();
+};
 
 var _levels = {
 	ERROR: 0,
@@ -52790,1722 +55183,7 @@ var Logger = function () {
 
 var _instance = new Logger(null, "INFO");
 
-var _this$1 = undefined;
-
-var logger = _instance.forClass("actions/marker-location");
-
-var saveMarkerLocations = function saveMarkerLocations(record) {
-	var isHistory = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-	return function (dispatch, getState, _ref) {
-		var db$$1 = _ref.db;
-
-		// const { streamId, teamId, commitHash, locations, dirty = {} } = attributes;
-		//
-		// if (!(streamId && teamId && commitHash)) return;
-		//
-		// const primaryKey = Object.freeze({ streamId, teamId, commitHash });
-		// return db
-		// 	.transaction("rw", db.markerLocations, async () => {
-		// 		const record = await db.markerLocations.get(primaryKey);
-		// 		if (record) {
-		// 			await db.markerLocations.update(primaryKey, {
-		// 				...record,
-		// 				locations: { ...record.locations, ...locations },
-		// 				dirty
-		// 			});
-		// 		} else {
-		// 			await db.markerLocations.add(attributes);
-		// 		}
-		// 		return db.markerLocations.get(primaryKey);
-		// 	})
-		// .then(record =>
-		dispatch({
-			type: "ADD_MARKER_LOCATIONS",
-			payload: record,
-			isHistory: isHistory
-		});
-		// );
-	};
-};
-
-var cacheMarkerLocations$1 = function cacheMarkerLocations(db$$1, attributes) {
-	var streamId = attributes.streamId,
-	    teamId = attributes.teamId,
-	    commitHash = attributes.commitHash,
-	    locations = attributes.locations,
-	    _attributes$dirty = attributes.dirty,
-	    dirty = _attributes$dirty === undefined ? {} : _attributes$dirty;
-
-
-	if (!(streamId && teamId && commitHash)) return;
-
-	var primaryKey = Object.freeze({ streamId: streamId, teamId: teamId, commitHash: commitHash });
-	return db$$1.transaction("rw", db$$1.markerLocations, asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
-		var record;
-		return regeneratorRuntime.wrap(function _callee$(_context) {
-			while (1) {
-				switch (_context.prev = _context.next) {
-					case 0:
-						_context.next = 2;
-						return db$$1.markerLocations.get(primaryKey);
-
-					case 2:
-						record = _context.sent;
-
-						if (!record) {
-							_context.next = 8;
-							break;
-						}
-
-						_context.next = 6;
-						return db$$1.markerLocations.update(primaryKey, _extends$5({}, record, {
-							locations: _extends$5({}, record.locations, locations),
-							dirty: dirty
-						}));
-
-					case 6:
-						_context.next = 10;
-						break;
-
-					case 8:
-						_context.next = 10;
-						return db$$1.markerLocations.add(attributes);
-
-					case 10:
-						return _context.abrupt("return", db$$1.markerLocations.get(primaryKey));
-
-					case 11:
-					case "end":
-						return _context.stop();
-				}
-			}
-		}, _callee, _this$1);
-	})));
-};
-
-var commitNewMarkerLocations = function commitNewMarkerLocations(oldCommitHash, newCommitHash) {
-	return function (dispatch, getState, _ref3) {
-		var db$$1 = _ref3.db,
-		    http = _ref3.http;
-
-		var _getState = getState(),
-		    context = _getState.context,
-		    session = _getState.session;
-
-		return db$$1.transaction("rw", db$$1.streams, db$$1.markerLocations, function () {
-			db$$1.streams.where({ repoId: context.currentRepoId }).each(function () {
-				var _ref4 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(stream) {
-					var record, newRecord;
-					return regeneratorRuntime.wrap(function _callee2$(_context2) {
-						while (1) {
-							switch (_context2.prev = _context2.next) {
-								case 0:
-									_context2.next = 2;
-									return db$$1.markerLocations.get({
-										streamId: stream.id,
-										teamId: stream.teamId,
-										commitHash: oldCommitHash
-									});
-
-								case 2:
-									record = _context2.sent;
-
-									if (!record) {
-										_context2.next = 8;
-										break;
-									}
-
-									newRecord = _extends$5({}, record, {
-										commitHash: newCommitHash,
-										locations: _extends$5({}, record.locations, record.dirty),
-										dirty: undefined
-									});
-									_context2.next = 7;
-									return http.put("/marker-locations", newRecord, session.accessToken);
-
-								case 7:
-									return _context2.abrupt("return", upsert$1(db$$1, "markerLocations", newRecord));
-
-								case 8:
-								case "end":
-									return _context2.stop();
-							}
-						}
-					}, _callee2, _this$1);
-				}));
-
-				return function (_x2) {
-					return _ref4.apply(this, arguments);
-				};
-			}());
-		});
-	};
-};
-
-var calculateLocations = function calculateLocations(_ref5) {
-	var teamId = _ref5.teamId,
-	    streamId = _ref5.streamId,
-	    text = _ref5.text;
-	return function () {
-		var _ref7 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(dispatch, getState, _ref6) {
-			var http = _ref6.http;
-
-			var _getState2, context, repoAttributes, session, gitRepo, commitHash, filePath, _ref8, markers, markerLocations, locations, finder, missingMarkers, calculatedLocations, dirty, bufferLocations, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, markerId, bufferLocation, lastCommitLocation, streamLocations, uncommittedLocations, _iteratorNormalCompletion2, _didIteratorError2, _iteratorError2, _iterator2, _step2, uncommitted, _markerId, _bufferLocations;
-
-			return regeneratorRuntime.wrap(function _callee3$(_context3) {
-				while (1) {
-					switch (_context3.prev = _context3.next) {
-						case 0:
-							_getState2 = getState(), context = _getState2.context, repoAttributes = _getState2.repoAttributes, session = _getState2.session;
-							_context3.next = 3;
-							return open(repoAttributes.workingDirectory);
-
-						case 3:
-							gitRepo = _context3.sent;
-							commitHash = context.currentCommit;
-							filePath = context.currentFile;
-							_context3.next = 8;
-							return gitRepo.isTracked(filePath);
-
-						case 8:
-							if (_context3.sent) {
-								_context3.next = 10;
-								break;
-							}
-
-							return _context3.abrupt("return");
-
-						case 10:
-							_context3.next = 12;
-							return http.get("/markers?teamId=" + teamId + "&streamId=" + streamId + "&commitHash=" + commitHash, session.accessToken);
-
-						case 12:
-							_ref8 = _context3.sent;
-							markers = _ref8.markers;
-							markerLocations = _ref8.markerLocations;
-							locations = (markerLocations || {}).locations || {};
-							finder = new MarkerLocationFinder({
-								filePath: filePath,
-								gitRepo: gitRepo,
-								http: http,
-								accessToken: session.accessToken,
-								teamId: context.currentTeamId,
-								streamId: streamId
-							});
-							missingMarkers = markers.filter(function (marker) {
-								return !locations[marker._id];
-							});
-
-							if (!missingMarkers.length) {
-								_context3.next = 24;
-								break;
-							}
-
-							logger.debug("Recalculating locations for", missingMarkers.length, "missing markers");
-							_context3.next = 22;
-							return finder.findLocationsForCurrentCommit(missingMarkers);
-
-						case 22:
-							calculatedLocations = _context3.sent;
-
-							Object.assign(locations, calculatedLocations);
-
-						case 24:
-							dirty = {};
-
-							if (!(text !== undefined)) {
-								_context3.next = 79;
-								break;
-							}
-
-							_context3.next = 28;
-							return finder.findLocationsForUncommittedChanges(locations, text);
-
-						case 28:
-							bufferLocations = _context3.sent;
-							_iteratorNormalCompletion = true;
-							_didIteratorError = false;
-							_iteratorError = undefined;
-							_context3.prev = 32;
-
-							for (_iterator = Object.keys(bufferLocations)[Symbol.iterator](); !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-								markerId = _step.value;
-								bufferLocation = bufferLocations[markerId];
-								lastCommitLocation = locations[markerId];
-
-								if (!areEqualLocations(bufferLocation, lastCommitLocation)) {
-									dirty[markerId] = bufferLocation;
-								}
-							}
-
-							_context3.next = 40;
-							break;
-
-						case 36:
-							_context3.prev = 36;
-							_context3.t0 = _context3["catch"](32);
-							_didIteratorError = true;
-							_iteratorError = _context3.t0;
-
-						case 40:
-							_context3.prev = 40;
-							_context3.prev = 41;
-
-							if (!_iteratorNormalCompletion && _iterator.return) {
-								_iterator.return();
-							}
-
-						case 43:
-							_context3.prev = 43;
-
-							if (!_didIteratorError) {
-								_context3.next = 46;
-								break;
-							}
-
-							throw _iteratorError;
-
-						case 46:
-							return _context3.finish(43);
-
-						case 47:
-							return _context3.finish(40);
-
-						case 48:
-							streamLocations = getState().markerLocations.byStream[streamId] || {};
-							uncommittedLocations = streamLocations.uncommitted || [];
-							_iteratorNormalCompletion2 = true;
-							_didIteratorError2 = false;
-							_iteratorError2 = undefined;
-							_context3.prev = 53;
-							_iterator2 = uncommittedLocations[Symbol.iterator]();
-
-						case 55:
-							if (_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done) {
-								_context3.next = 65;
-								break;
-							}
-
-							uncommitted = _step2.value;
-							_markerId = uncommitted.marker._id;
-							_context3.next = 60;
-							return finder.findUpdatedLocations(defineProperty$5({}, _markerId, uncommitted.location), filePath, uncommitted.bufferText, text);
-
-						case 60:
-							_bufferLocations = _context3.sent;
-
-							dirty[_markerId] = _bufferLocations[_markerId];
-
-						case 62:
-							_iteratorNormalCompletion2 = true;
-							_context3.next = 55;
-							break;
-
-						case 65:
-							_context3.next = 71;
-							break;
-
-						case 67:
-							_context3.prev = 67;
-							_context3.t1 = _context3["catch"](53);
-							_didIteratorError2 = true;
-							_iteratorError2 = _context3.t1;
-
-						case 71:
-							_context3.prev = 71;
-							_context3.prev = 72;
-
-							if (!_iteratorNormalCompletion2 && _iterator2.return) {
-								_iterator2.return();
-							}
-
-						case 74:
-							_context3.prev = 74;
-
-							if (!_didIteratorError2) {
-								_context3.next = 77;
-								break;
-							}
-
-							throw _iteratorError2;
-
-						case 77:
-							return _context3.finish(74);
-
-						case 78:
-							return _context3.finish(71);
-
-						case 79:
-
-							dispatch(saveMarkers(normalize(markers)));
-							dispatch(saveMarkerLocations({ teamId: teamId, streamId: streamId, commitHash: commitHash, locations: locations, dirty: dirty }));
-
-						case 81:
-						case "end":
-							return _context3.stop();
-					}
-				}
-			}, _callee3, _this$1, [[32, 36, 40, 48], [41,, 43, 47], [53, 67, 71, 79], [72,, 74, 78]]);
-		}));
-
-		return function (_x3, _x4, _x5) {
-			return _ref7.apply(this, arguments);
-		};
-	}();
-};
-
-var saveUncommittedLocations = function saveUncommittedLocations(_ref9) {
-	var post = _ref9.post,
-	    markers = _ref9.markers,
-	    uncommittedLocations = _ref9.uncommittedLocations,
-	    filePath = _ref9.filePath,
-	    bufferText = _ref9.bufferText;
-	return function () {
-		var _ref11 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(dispatch, getState, _ref10) {
-			var db$$1 = _ref10.db;
-			var streamId, teamId, uncommitted, i, marker, uncommittedLocation, primaryKey;
-			return regeneratorRuntime.wrap(function _callee5$(_context5) {
-				while (1) {
-					switch (_context5.prev = _context5.next) {
-						case 0:
-							streamId = post.streamId, teamId = post.teamId;
-							uncommitted = [];
-
-							for (i = 0; i < markers.length; i++) {
-								marker = markers[i];
-								uncommittedLocation = uncommittedLocations[i];
-
-
-								uncommitted.push({
-									filePath: filePath,
-									bufferText: bufferText,
-									marker: marker,
-									location: uncommittedLocation
-								});
-							}
-
-							primaryKey = Object.freeze({ streamId: streamId, teamId: teamId, commitHash: "uncommitted" });
-							return _context5.abrupt("return", db$$1.transaction("rw", db$$1.markerLocations, asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4() {
-								var record;
-								return regeneratorRuntime.wrap(function _callee4$(_context4) {
-									while (1) {
-										switch (_context4.prev = _context4.next) {
-											case 0:
-												_context4.next = 2;
-												return db$$1.markerLocations.get(primaryKey);
-
-											case 2:
-												record = _context4.sent;
-
-												if (!record) {
-													_context4.next = 8;
-													break;
-												}
-
-												_context4.next = 6;
-												return db$$1.markerLocations.update(primaryKey, _extends$5({}, record, {
-													uncommitted: [].concat(toConsumableArray$1(record.uncommitted), uncommitted)
-												}));
-
-											case 6:
-												_context4.next = 10;
-												break;
-
-											case 8:
-												_context4.next = 10;
-												return db$$1.markerLocations.add(_extends$5({}, primaryKey, {
-													uncommitted: uncommitted
-												}));
-
-											case 10:
-												return _context4.abrupt("return", db$$1.markerLocations.get(primaryKey));
-
-											case 11:
-											case "end":
-												return _context4.stop();
-										}
-									}
-								}, _callee4, _this$1);
-							}))).then(function (record) {
-								return dispatch({
-									type: "ADD_UNCOMMITTED_LOCATIONS",
-									payload: {
-										streamId: streamId,
-										uncommitted: uncommitted
-									}
-								});
-							}));
-
-						case 5:
-						case "end":
-							return _context5.stop();
-					}
-				}
-			}, _callee5, _this$1);
-		}));
-
-		return function (_x6, _x7, _x8) {
-			return _ref11.apply(this, arguments);
-		};
-	}();
-};
-
-var calculateUncommittedMarkers = function calculateUncommittedMarkers() {
-	return function () {
-		var _ref14 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7(dispatch, getState, _ref13) {
-			var http = _ref13.http,
-			    db$$1 = _ref13.db;
-
-			var _getState3, context, repoAttributes, session, markerLocations, teamId, gitRepo, currentCommit, _loop, _iteratorNormalCompletion3, _didIteratorError3, _iteratorError3, _iterator3, _step3, streamId;
-
-			return regeneratorRuntime.wrap(function _callee7$(_context9) {
-				while (1) {
-					switch (_context9.prev = _context9.next) {
-						case 0:
-							_getState3 = getState(), context = _getState3.context, repoAttributes = _getState3.repoAttributes, session = _getState3.session, markerLocations = _getState3.markerLocations;
-							teamId = context.currentTeamId;
-							_context9.next = 4;
-							return open(repoAttributes.workingDirectory);
-
-						case 4:
-							gitRepo = _context9.sent;
-							_context9.next = 7;
-							return gitRepo.getCurrentCommit();
-
-						case 7:
-							currentCommit = _context9.sent;
-							_loop = /*#__PURE__*/regeneratorRuntime.mark(function _loop(streamId) {
-								var uncommittedLocations, _loop2, _iteratorNormalCompletion4, _didIteratorError4, _iteratorError4, _iterator4, _step4, uncommitted;
-
-								return regeneratorRuntime.wrap(function _loop$(_context8) {
-									while (1) {
-										switch (_context8.prev = _context8.next) {
-											case 0:
-												uncommittedLocations = markerLocations.byStream[streamId].uncommitted || [];
-												_loop2 = /*#__PURE__*/regeneratorRuntime.mark(function _loop2(uncommitted) {
-													var filePath, bufferText, marker, location, finder, commitLocations, commitLocation, meta, primaryKey;
-													return regeneratorRuntime.wrap(function _loop2$(_context7) {
-														while (1) {
-															switch (_context7.prev = _context7.next) {
-																case 0:
-																	filePath = uncommitted.filePath, bufferText = uncommitted.bufferText, marker = uncommitted.marker, location = uncommitted.location;
-																	finder = new MarkerLocationFinder({
-																		filePath: filePath,
-																		gitRepo: gitRepo,
-																		http: http,
-																		accessToken: session.accessToken,
-																		teamId: context.currentTeamId,
-																		streamId: streamId
-																	});
-																	_context7.next = 4;
-																	return finder.backtrackLocationsAtCurrentCommit(defineProperty$5({}, marker._id, location), bufferText);
-
-																case 4:
-																	commitLocations = _context7.sent;
-																	commitLocation = commitLocations[marker._id];
-																	meta = commitLocation[4] || {};
-
-																	// TODO implement cleanup policy to limit the number of old uncommitted locations
-
-																	if (!(!meta.startWasDeleted && !meta.endWasDeleted)) {
-																		_context7.next = 15;
-																		break;
-																	}
-
-																	_context7.next = 10;
-																	return http.put("/marker-locations", {
-																		teamId: teamId,
-																		streamId: streamId,
-																		commitHash: currentCommit,
-																		locations: defineProperty$5({}, marker._id, commitLocation)
-																	}, session.accessToken);
-
-																case 10:
-																	_context7.next = 12;
-																	return http.put("/markers/" + marker._id, {
-																		commitHashWhenCreated: currentCommit
-																	}, session.accessToken);
-
-																case 12:
-																	primaryKey = Object.freeze({ streamId: streamId, teamId: teamId, commitHash: "uncommitted" });
-																	_context7.next = 15;
-																	return db$$1.transaction("rw", db$$1.markerLocations, asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6() {
-																		var record;
-																		return regeneratorRuntime.wrap(function _callee6$(_context6) {
-																			while (1) {
-																				switch (_context6.prev = _context6.next) {
-																					case 0:
-																						_context6.next = 2;
-																						return db$$1.markerLocations.get(primaryKey);
-
-																					case 2:
-																						record = _context6.sent;
-
-																						record.uncommitted = record.uncommitted.filter(function (uncommitted) {
-																							return uncommitted.marker._id != marker._id;
-																						});
-																						_context6.next = 6;
-																						return db$$1.markerLocations.update(primaryKey, _extends$5({}, record, {
-																							uncommitted: record.uncommitted.filter(function (uncommitted) {
-																								return uncommitted.marker._id != marker._id;
-																							})
-																						}));
-
-																					case 6:
-																					case "end":
-																						return _context6.stop();
-																				}
-																			}
-																		}, _callee6, _this$1);
-																	}))).then(function (record) {
-																		return dispatch({
-																			type: "REMOVE_UNCOMMITTED_LOCATION",
-																			payload: {
-																				streamId: streamId,
-																				markerId: marker._id
-																			}
-																		});
-																	});
-
-																case 15:
-																case "end":
-																	return _context7.stop();
-															}
-														}
-													}, _loop2, _this$1);
-												});
-												_iteratorNormalCompletion4 = true;
-												_didIteratorError4 = false;
-												_iteratorError4 = undefined;
-												_context8.prev = 5;
-												_iterator4 = uncommittedLocations[Symbol.iterator]();
-
-											case 7:
-												if (_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done) {
-													_context8.next = 13;
-													break;
-												}
-
-												uncommitted = _step4.value;
-												return _context8.delegateYield(_loop2(uncommitted), "t0", 10);
-
-											case 10:
-												_iteratorNormalCompletion4 = true;
-												_context8.next = 7;
-												break;
-
-											case 13:
-												_context8.next = 19;
-												break;
-
-											case 15:
-												_context8.prev = 15;
-												_context8.t1 = _context8["catch"](5);
-												_didIteratorError4 = true;
-												_iteratorError4 = _context8.t1;
-
-											case 19:
-												_context8.prev = 19;
-												_context8.prev = 20;
-
-												if (!_iteratorNormalCompletion4 && _iterator4.return) {
-													_iterator4.return();
-												}
-
-											case 22:
-												_context8.prev = 22;
-
-												if (!_didIteratorError4) {
-													_context8.next = 25;
-													break;
-												}
-
-												throw _iteratorError4;
-
-											case 25:
-												return _context8.finish(22);
-
-											case 26:
-												return _context8.finish(19);
-
-											case 27:
-											case "end":
-												return _context8.stop();
-										}
-									}
-								}, _loop, _this$1, [[5, 15, 19, 27], [20,, 22, 26]]);
-							});
-							_iteratorNormalCompletion3 = true;
-							_didIteratorError3 = false;
-							_iteratorError3 = undefined;
-							_context9.prev = 12;
-							_iterator3 = Object.keys(markerLocations.byStream)[Symbol.iterator]();
-
-						case 14:
-							if (_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done) {
-								_context9.next = 20;
-								break;
-							}
-
-							streamId = _step3.value;
-							return _context9.delegateYield(_loop(streamId), "t0", 17);
-
-						case 17:
-							_iteratorNormalCompletion3 = true;
-							_context9.next = 14;
-							break;
-
-						case 20:
-							_context9.next = 26;
-							break;
-
-						case 22:
-							_context9.prev = 22;
-							_context9.t1 = _context9["catch"](12);
-							_didIteratorError3 = true;
-							_iteratorError3 = _context9.t1;
-
-						case 26:
-							_context9.prev = 26;
-							_context9.prev = 27;
-
-							if (!_iteratorNormalCompletion3 && _iterator3.return) {
-								_iterator3.return();
-							}
-
-						case 29:
-							_context9.prev = 29;
-
-							if (!_didIteratorError3) {
-								_context9.next = 32;
-								break;
-							}
-
-							throw _iteratorError3;
-
-						case 32:
-							return _context9.finish(29);
-
-						case 33:
-							return _context9.finish(26);
-
-						case 34:
-						case "end":
-							return _context9.stop();
-					}
-				}
-			}, _callee7, _this$1, [[12, 22, 26, 34], [27,, 29, 33]]);
-		}));
-
-		return function (_x9, _x10, _x11) {
-			return _ref14.apply(this, arguments);
-		};
-	}();
-};
-
-
-var markerLocationActions = Object.freeze({
-	saveMarkerLocations: saveMarkerLocations,
-	cacheMarkerLocations: cacheMarkerLocations$1,
-	commitNewMarkerLocations: commitNewMarkerLocations,
-	calculateLocations: calculateLocations,
-	saveUncommittedLocations: saveUncommittedLocations,
-	calculateUncommittedMarkers: calculateUncommittedMarkers
-});
-
-var saveUser = function saveUser(user) {
-	return function (dispatch, getState) {
-		// return upsert(db, "users", attributes).then(user =>
-		dispatch({
-			type: "ADD_USER",
-			payload: user
-		});
-		// );
-	};
-};
-
-var setUserPreference = function setUserPreference(prefPath, value) {
-	return function (dispatch, getState, _ref2) {
-		var http = _ref2.http;
-
-		var _getState2 = getState(),
-		    session = _getState2.session,
-		    context = _getState2.context,
-		    users = _getState2.users;
-
-		var user = users[session.userId];
-
-		if (!user.preferences) user.preferences = {};
-		var preferences = user.preferences;
-		var newPreference = {};
-		var newPreferencePointer = newPreference;
-		while (prefPath.length > 1) {
-			var part = prefPath.shift().replace(/\./g, "*");
-			if (!preferences[part]) preferences[part] = {};
-			preferences = preferences[part];
-			newPreferencePointer[part] = {};
-			newPreferencePointer = newPreferencePointer[part];
-		}
-		preferences[prefPath[0].replace(/\./g, "*")] = value;
-		newPreferencePointer[prefPath[0].replace(/\./g, "*")] = value;
-
-		console.log("Saving preferences: ", newPreference);
-		http.put("/preferences", newPreference, session.accessToken);
-		dispatch(saveUser(normalize(user)));
-	};
-};
-
-var getUserPreference = function getUserPreference(user, prefPath) {
-	if (!user) return null;
-	if (!user.preferences) user.preferences = {};
-	var preferences = user.preferences;
-	while (prefPath.length > 0) {
-		var part = prefPath.shift().replace(/\./g, "*");
-		if (!preferences[part]) return null;
-		preferences = preferences[part];
-	}
-	return preferences;
-};
-
-var toMapBy = function toMapBy(key, entities) {
-	return entities.reduce(function (result, entity) {
-		return _extends$5({}, result, defineProperty$5({}, entity[key], entity));
-	}, {});
-};
-
-var initialState = {
-	byRepo: {
-		//[repoId]: { byFile: {} }
-	}
-};
-
-var addStream = function addStream(state, stream) {
-	var existingStreamsForRepo = state.byRepo[stream.repoId] || { byFile: {} };
-	return {
-		byRepo: _extends$5({}, state.byRepo, defineProperty$5({}, stream.repoId, {
-			byFile: _extends$5({}, existingStreamsForRepo.byFile, defineProperty$5({}, stream.file, stream))
-		}))
-	};
-};
-
-var streams = (function () {
-	var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState;
-	var _ref = arguments[1];
-	var type = _ref.type,
-	    payload = _ref.payload;
-
-	switch (type) {
-		case "ADD_STREAMS":
-		case "BOOTSTRAP_STREAMS":
-			return payload.reduce(addStream, state);
-		case "STREAMS-UPDATE_FROM_PUBNUB":
-		case "ADD_STREAM":
-			return addStream(state, payload);
-		default:
-			return state;
-	}
-});
-
-// Selectors
-var getStreamForRepoAndFile = function getStreamForRepoAndFile(state, repoId, file) {
-	var filesForRepo = (state.byRepo[repoId] || {}).byFile;
-	if (filesForRepo) return filesForRepo[file];
-};
-
-var getStreamsForRepo = function getStreamsForRepo(state, repoId) {
-	return (state.byRepo[repoId] || {}).byFile;
-};
-
-var _this$2 = undefined;
-
-var saveStream = function saveStream(attributes) {
-	return function (dispatch, getState, _ref) {
-		var db$$1 = _ref.db;
-
-		return upsert$1(db$$1, "streams", attributes).then(function (stream) {
-			dispatch({
-				type: "ADD_STREAM",
-				payload: stream
-			});
-		});
-	};
-};
-
-var saveStreams = function saveStreams(streams$$1) {
-	return function (dispatch, getState, _ref2) {
-		var db$$1 = _ref2.db;
-
-		// return upsert(db, "streams", attributes).then(streams =>
-		return dispatch({
-			type: "ADD_STREAMS",
-			payload: streams$$1
-		});
-		// );
-	};
-};
-
-var fetchStreams = function fetchStreams(sortId) {
-	return function () {
-		var _ref4 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(dispatch, getState, _ref3) {
-			var http = _ref3.http;
-
-			var _getState, context, session, url;
-
-			return regeneratorRuntime.wrap(function _callee$(_context) {
-				while (1) {
-					switch (_context.prev = _context.next) {
-						case 0:
-							_getState = getState(), context = _getState.context, session = _getState.session;
-							url = "/streams?teamId=" + context.currentTeamId + "&repoId=" + context.currentRepoId;
-
-							if (sortId) url += "&lt=" + sortId;
-
-							return _context.abrupt("return", http.get(url, session.accessToken).then(function (_ref5) {
-								var streams$$1 = _ref5.streams,
-								    more = _ref5.more;
-
-								var normalizedStreams = normalize(streams$$1);
-								dispatch(fetchLatestPosts(normalizedStreams));
-								var save = dispatch(saveStreams(normalizedStreams));
-								if (more) return dispatch(fetchStreams(underscorePlus.sortBy(streams$$1, "sortId")[0].sortId));else return save;
-							}));
-
-						case 4:
-						case "end":
-							return _context.stop();
-					}
-				}
-			}, _callee, _this$2);
-		}));
-
-		return function (_x, _x2, _x3) {
-			return _ref4.apply(this, arguments);
-		};
-	}();
-};
-
-// FIXME: tech debt. this is only for use when starting with a clean local cache until
-// the streams support lazy loading and infinite lists
-var fetchStreamsAndAllPosts = function fetchStreamsAndAllPosts(sortId) {
-	return function () {
-		var _ref7 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(dispatch, getState, _ref6) {
-			var api = _ref6.api,
-			    http = _ref6.http;
-
-			var _getState2, context;
-
-			return regeneratorRuntime.wrap(function _callee2$(_context2) {
-				while (1) {
-					switch (_context2.prev = _context2.next) {
-						case 0:
-							_getState2 = getState(), context = _getState2.context;
-							return _context2.abrupt("return", api.fetchStreams(context.currentTeamId, context.currentRepoId, sortId).then(function (_ref8) {
-								var streams$$1 = _ref8.streams,
-								    more = _ref8.more;
-
-								dispatch(fetchAllPosts(streams$$1));
-								var save = dispatch(saveStreams(streams$$1));
-								if (more) return dispatch(fetchStreamsAndAllPosts(underscorePlus.sortBy(streams$$1, "sortId")[0].sortId));else return save;
-							}));
-
-						case 2:
-						case "end":
-							return _context2.stop();
-					}
-				}
-			}, _callee2, _this$2);
-		}));
-
-		return function (_x4, _x5, _x6) {
-			return _ref7.apply(this, arguments);
-		};
-	}();
-};
-
-var markStreamModified = function markStreamModified(streamId, isModified) {
-	return function () {
-		var _ref10 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(dispatch, getState, _ref9) {
-			var http = _ref9.http;
-
-			var _getState3, context, session, editing, payload, markModifiedData;
-
-			return regeneratorRuntime.wrap(function _callee3$(_context3) {
-				while (1) {
-					switch (_context3.prev = _context3.next) {
-						case 0:
-							_getState3 = getState(), context = _getState3.context, session = _getState3.session;
-
-							if (!(context.currentFile === "" || !session.accessToken)) {
-								_context3.next = 3;
-								break;
-							}
-
-							return _context3.abrupt("return");
-
-						case 3:
-
-							// console.log("COMMENT THIS RETURN STATEMENT TO SAVE TO API SERVER");
-							// return;
-
-							// in the future, consider passing the deltas in the "editing" object
-							editing = isModified ? { commitHash: context.currentCommit } : false;
-							payload = {
-								teamId: context.currentTeamId,
-								repoId: context.currentRepoId,
-								file: context.currentFile,
-								streamId: streamId,
-								editing: editing
-							};
-							_context3.next = 7;
-							return http.put("/editing", payload, session.accessToken);
-
-						case 7:
-							markModifiedData = _context3.sent;
-
-						case 8:
-						case "end":
-							return _context3.stop();
-					}
-				}
-			}, _callee3, _this$2);
-		}));
-
-		return function (_x7, _x8, _x9) {
-			return _ref10.apply(this, arguments);
-		};
-	}();
-};
-
-var markPathsModified = function markPathsModified(modifiedPaths) {
-	return function () {
-		var _ref12 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(dispatch, getState, _ref11) {
-			var http = _ref11.http;
-
-			var _getState4, context, session, streams$$1, paths, streamIds, payload, markModifiedData;
-
-			return regeneratorRuntime.wrap(function _callee4$(_context4) {
-				while (1) {
-					switch (_context4.prev = _context4.next) {
-						case 0:
-							_getState4 = getState(), context = _getState4.context, session = _getState4.session, streams$$1 = _getState4.streams;
-
-							if (session.accessToken) {
-								_context4.next = 3;
-								break;
-							}
-
-							return _context4.abrupt("return");
-
-						case 3:
-							paths = [];
-							streamIds = [];
-
-							modifiedPaths.forEach(function (path) {
-								var stream = getStreamForRepoAndFile(streams$$1, context.currentRepoId, path);
-								if (stream) streamIds.push(stream.id);else paths.push(path);
-							});
-
-							payload = {
-								teamId: context.currentTeamId,
-								repoId: context.currentRepoId,
-								editing: {
-									commitHash: context.currentCommit
-								},
-								files: paths || [],
-								streamIds: streamIds
-							};
-
-							// console.log("Marking all paths modified: ", payload);
-
-							_context4.next = 9;
-							return http.put("/editing", payload, session.accessToken);
-
-						case 9:
-							markModifiedData = _context4.sent;
-
-						case 10:
-						case "end":
-							return _context4.stop();
-					}
-				}
-			}, _callee4, _this$2);
-		}));
-
-		return function (_x10, _x11, _x12) {
-			return _ref12.apply(this, arguments);
-		};
-	}();
-};
-
-
-var streamActions = Object.freeze({
-	saveStream: saveStream,
-	saveStreams: saveStreams,
-	fetchStreams: fetchStreams,
-	fetchStreamsAndAllPosts: fetchStreamsAndAllPosts,
-	markStreamModified: markStreamModified,
-	markPathsModified: markPathsModified
-});
-
-var _this$3 = undefined;
-
-var createTempId = function () {
-	var count = 0;
-	return function () {
-		return String(count++);
-	};
-}();
-
-var pendingPostFailed = function pendingPostFailed(post) {
-	return { type: "PENDING_POST_FAILED", payload: post };
-};
-
-var fetchLatest = function fetchLatest(mostRecentPost, streamId, teamId) {
-	return function () {
-		var _ref2 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(dispatch, getState, _ref) {
-			var http = _ref.http;
-
-			var _getState, context, url, _ref3, posts, markers, markerLocations, more, normalizedMarkers, normalizedPosts, save;
-
-			return regeneratorRuntime.wrap(function _callee$(_context) {
-				while (1) {
-					switch (_context.prev = _context.next) {
-						case 0:
-							_getState = getState(), context = _getState.context;
-							url = "/posts?teamId=" + teamId + "&streamId=" + streamId + "&withMarkers";
-
-							if (context.currentCommit) url += "&commitHash=" + context.currentCommit;
-							if (mostRecentPost) url += "&gt=" + mostRecentPost.id;
-							_context.next = 6;
-							return http.get(url, getState().session.accessToken);
-
-						case 6:
-							_ref3 = _context.sent;
-							posts = _ref3.posts;
-							markers = _ref3.markers;
-							markerLocations = _ref3.markerLocations;
-							more = _ref3.more;
-							normalizedMarkers = normalize(markers || []);
-
-							dispatch(saveMarkers(normalizedMarkers));
-							if (markerLocations) dispatch(saveMarkerLocations(markerLocations));
-							normalizedPosts = normalize(posts);
-							save = dispatch(savePostsForStream(streamId, normalizedPosts));
-							// only take the first page if no mostRecentPost
-
-							if (!(more && mostRecentPost)) {
-								_context.next = 20;
-								break;
-							}
-
-							return _context.abrupt("return", dispatch(fetchLatest(normalizedPosts[0].id, streamId, teamId)));
-
-						case 20:
-							return _context.abrupt("return", save);
-
-						case 21:
-						case "end":
-							return _context.stop();
-					}
-				}
-			}, _callee, _this$3);
-		}));
-
-		return function (_x, _x2, _x3) {
-			return _ref2.apply(this, arguments);
-		};
-	}();
-};
-
-var fetchLatestPosts = function fetchLatestPosts(streams$$1) {
-	return function (dispatch, getState, _ref4) {
-		var db$$1 = _ref4.db,
-		    http = _ref4.http;
-
-		return Promise.all(streams$$1.map(function () {
-			var _ref5 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(stream) {
-				var cachedPosts, mostRecentCachedPost;
-				return regeneratorRuntime.wrap(function _callee2$(_context2) {
-					while (1) {
-						switch (_context2.prev = _context2.next) {
-							case 0:
-								_context2.next = 2;
-								return db$$1.posts.where({ streamId: stream.id }).sortBy("seqNum");
-
-							case 2:
-								cachedPosts = _context2.sent;
-								mostRecentCachedPost = cachedPosts[cachedPosts.length - 1];
-								return _context2.abrupt("return", dispatch(fetchLatest(mostRecentCachedPost, stream.id, stream.teamId)));
-
-							case 5:
-							case "end":
-								return _context2.stop();
-						}
-					}
-				}, _callee2, _this$3);
-			}));
-
-			return function (_x4) {
-				return _ref5.apply(this, arguments);
-			};
-		}()));
-	};
-};
-
-// FIXME: tech debt. these next two functions are only for use when starting with a clean local cache until
-// the streams support lazy loading and infinite lists
-var fetchOlderPosts = function fetchOlderPosts(mostRecentPost, streamId, teamId) {
-	return function () {
-		var _ref7 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(dispatch, getState, _ref6) {
-			var http = _ref6.http;
-
-			var _getState2, context, session, url, _ref8, posts, markers, markerLocations, more, normalizedMarkers, normalizedPosts, save;
-
-			return regeneratorRuntime.wrap(function _callee3$(_context3) {
-				while (1) {
-					switch (_context3.prev = _context3.next) {
-						case 0:
-							_getState2 = getState(), context = _getState2.context, session = _getState2.session;
-							url = "/posts?teamId=" + teamId + "&streamId=" + streamId + "&withMarkers&commitHash=" + context.currentCommit;
-
-							if (mostRecentPost) url += "&lt=" + mostRecentPost.id;
-							_context3.next = 5;
-							return http.get(url, session.accessToken);
-
-						case 5:
-							_ref8 = _context3.sent;
-							posts = _ref8.posts;
-							markers = _ref8.markers;
-							markerLocations = _ref8.markerLocations;
-							more = _ref8.more;
-							normalizedMarkers = normalize(markers || []);
-
-							dispatch(saveMarkers(normalizedMarkers));
-							if (markerLocations) dispatch(saveMarkerLocations(markerLocations));
-							normalizedPosts = normalize(posts);
-							save = dispatch(savePostsForStream(streamId, normalizedPosts));
-
-							if (!more) {
-								_context3.next = 19;
-								break;
-							}
-
-							return _context3.abrupt("return", dispatch(fetchOlderPosts(normalizedPosts[normalizedPosts.length - 1], streamId, teamId)));
-
-						case 19:
-							return _context3.abrupt("return", save);
-
-						case 20:
-						case "end":
-							return _context3.stop();
-					}
-				}
-			}, _callee3, _this$3);
-		}));
-
-		return function (_x5, _x6, _x7) {
-			return _ref7.apply(this, arguments);
-		};
-	}();
-};
-
-var fetchAllPosts = function fetchAllPosts(streams$$1) {
-	return function (dispatch, getState, _ref9) {
-		objectDestructuringEmpty(_ref9);
-
-		return Promise.all(streams$$1.map(function () {
-			var _ref10 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(stream) {
-				return regeneratorRuntime.wrap(function _callee4$(_context4) {
-					while (1) {
-						switch (_context4.prev = _context4.next) {
-							case 0:
-								dispatch(fetchOlderPosts(null, stream.id, stream.teamId));
-
-							case 1:
-							case "end":
-								return _context4.stop();
-						}
-					}
-				}, _callee4, _this$3);
-			}));
-
-			return function (_x8) {
-				return _ref10.apply(this, arguments);
-			};
-		}()));
-	};
-};
-
-var fetchPosts = function fetchPosts(_ref13) {
-	var streamId = _ref13.streamId,
-	    teamId = _ref13.teamId;
-	return function () {
-		var _ref15 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(dispatch, getState, _ref14) {
-			var db$$1 = _ref14.db,
-			    http = _ref14.http;
-
-			var _getState4, session, _ref16, posts;
-
-			return regeneratorRuntime.wrap(function _callee6$(_context6) {
-				while (1) {
-					switch (_context6.prev = _context6.next) {
-						case 0:
-							_getState4 = getState(), session = _getState4.session;
-							_context6.next = 3;
-							return http.get("/posts?teamId=" + teamId + "&streamId=" + streamId, session.accessToken);
-
-						case 3:
-							_ref16 = _context6.sent;
-							posts = _ref16.posts;
-
-							dispatch(savePostsForStream(streamId, normalize(posts)));
-							return _context6.abrupt("return", dispatch(calculateLocations({ streamId: streamId, teamId: teamId })));
-
-						case 7:
-						case "end":
-							return _context6.stop();
-					}
-				}
-			}, _callee6, _this$3);
-		}));
-
-		return function (_x12, _x13, _x14) {
-			return _ref15.apply(this, arguments);
-		};
-	}();
-};
-
-var savePostsForStream = function savePostsForStream(streamId, posts) {
-	return function (dispatch, getState, _ref19) {
-		var db$$1 = _ref19.db;
-
-		// return upsert(db, "posts", attributes).then(posts =>
-		dispatch({
-			type: "ADD_POSTS_FOR_STREAM",
-			payload: { streamId: streamId, posts: posts }
-		});
-		// );
-	};
-};
-
-var savePendingPost = function savePendingPost(attributes) {
-	return function (dispatch, getState, _ref20) {
-		var db$$1 = _ref20.db;
-
-		return upsert$1(db$$1, "posts", _extends$5({}, attributes, { pending: true })).then(function (post) {
-			dispatch({
-				type: "ADD_PENDING_POST",
-				payload: post
-			});
-		});
-	};
-};
-
-var createPost = function createPost(streamId, parentPostId, text, codeBlocks, mentions, bufferText, extra) {
-	return function () {
-		var _ref22 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7(dispatch, getState, _ref21) {
-			var http = _ref21.http;
-
-			var state, session, context, repoAttributes, pendingId, gitRepo, filePath, isTrackedFile, uncommittedLocations, hasUncommittedLocation, backtrackedLocations, i, codeBlock, lastCommitLocation, meta, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, _codeBlock, post, data;
-
-			return regeneratorRuntime.wrap(function _callee7$(_context7) {
-				while (1) {
-					switch (_context7.prev = _context7.next) {
-						case 0:
-							state = getState();
-							session = state.session, context = state.context, repoAttributes = state.repoAttributes;
-							pendingId = createTempId();
-							_context7.next = 5;
-							return open(repoAttributes.workingDirectory);
-
-						case 5:
-							gitRepo = _context7.sent;
-							filePath = context.currentFile;
-							_context7.next = 9;
-							return gitRepo.isTracked(filePath);
-
-						case 9:
-							isTrackedFile = _context7.sent;
-							uncommittedLocations = [];
-							hasUncommittedLocation = false;
-
-							if (!isTrackedFile) {
-								_context7.next = 19;
-								break;
-							}
-
-							_context7.next = 15;
-							return backtrackCodeBlockLocations(codeBlocks, bufferText, streamId, state, http);
-
-						case 15:
-							backtrackedLocations = _context7.sent;
-
-							for (i = 0; i < codeBlocks.length; i++) {
-								codeBlock = codeBlocks[i];
-								lastCommitLocation = backtrackedLocations[i];
-								meta = lastCommitLocation[4] || {};
-
-								if (meta.startWasDeleted || meta.endWasDeleted) {
-									hasUncommittedLocation = true;
-								}
-								uncommittedLocations.push(codeBlock.location);
-								codeBlock.location = lastCommitLocation;
-							}
-							_context7.next = 38;
-							break;
-
-						case 19:
-							_iteratorNormalCompletion = true;
-							_didIteratorError = false;
-							_iteratorError = undefined;
-							_context7.prev = 22;
-
-							for (_iterator = codeBlocks[Symbol.iterator](); !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-								_codeBlock = _step.value;
-
-								hasUncommittedLocation = true;
-								uncommittedLocations.push(_codeBlock.location);
-								delete _codeBlock.location;
-							}
-							_context7.next = 30;
-							break;
-
-						case 26:
-							_context7.prev = 26;
-							_context7.t0 = _context7["catch"](22);
-							_didIteratorError = true;
-							_iteratorError = _context7.t0;
-
-						case 30:
-							_context7.prev = 30;
-							_context7.prev = 31;
-
-							if (!_iteratorNormalCompletion && _iterator.return) {
-								_iterator.return();
-							}
-
-						case 33:
-							_context7.prev = 33;
-
-							if (!_didIteratorError) {
-								_context7.next = 36;
-								break;
-							}
-
-							throw _iteratorError;
-
-						case 36:
-							return _context7.finish(33);
-
-						case 37:
-							return _context7.finish(30);
-
-						case 38:
-							post = {
-								id: pendingId,
-								teamId: context.currentTeamId,
-								timestamp: new Date().getTime(),
-								creatorId: session.userId,
-								parentPostId: parentPostId,
-								codeBlocks: codeBlocks,
-								commitHashWhenPosted: context.currentCommit,
-								mentionedUserIds: mentions && mentions.length ? mentions : null,
-								text: text
-							};
-
-
-							if (streamId) {
-								post.streamId = streamId;
-							} else post.stream = {
-								teamId: context.currentTeamId,
-								type: "file",
-								file: filePath,
-								repoId: context.currentRepoId
-							};
-
-							dispatch(savePendingPost(_extends$5({}, post)));
-
-							_context7.prev = 41;
-							_context7.next = 44;
-							return http.post("/posts", post, session.accessToken);
-
-						case 44:
-							data = _context7.sent;
-
-							if (hasUncommittedLocation) {
-								dispatch(saveUncommittedLocations(_extends$5({}, data, {
-									filePath: filePath,
-									bufferText: bufferText,
-									uncommittedLocations: uncommittedLocations
-								})));
-							}
-							if (!streamId) dispatch(saveStream(normalize(data.stream)));
-							dispatch(resolvePendingPost(pendingId, normalize(data.post)));
-							dispatch({ type: "POST_CREATED", meta: _extends$5({ post: data.post }, extra) });
-							_context7.next = 55;
-							break;
-
-						case 51:
-							_context7.prev = 51;
-							_context7.t1 = _context7["catch"](41);
-
-							if (http.isApiRequestError(_context7.t1)) {
-								singleton.captureMessage(_context7.t1.data.message, {
-									logger: "actions/post",
-									extra: { error: _context7.t1.data }
-								});
-							}
-							// TODO: different types of errors?
-							dispatch(rejectPendingPost(pendingId, _extends$5({}, post, { error: true })));
-
-						case 55:
-						case "end":
-							return _context7.stop();
-					}
-				}
-			}, _callee7, _this$3, [[22, 26, 30, 38], [31,, 33, 37], [41, 51]]);
-		}));
-
-		return function (_x15, _x16, _x17) {
-			return _ref22.apply(this, arguments);
-		};
-	}();
-};
-
-var backtrackCodeBlockLocations = function () {
-	var _ref23 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8(codeBlocks, bufferText, streamId, state, http) {
-		var context, repoAttributes, session, gitRepo, locations, locationFinder, backtrackedLocations;
-		return regeneratorRuntime.wrap(function _callee8$(_context8) {
-			while (1) {
-				switch (_context8.prev = _context8.next) {
-					case 0:
-						context = state.context, repoAttributes = state.repoAttributes, session = state.session;
-						_context8.next = 3;
-						return open(repoAttributes.workingDirectory);
-
-					case 3:
-						gitRepo = _context8.sent;
-						locations = codeBlocks.map(function (codeBlock) {
-							return codeBlock.location;
-						});
-						locationFinder = new MarkerLocationFinder({
-							filePath: context.currentFile,
-							gitRepo: gitRepo,
-							http: http,
-							accessToken: session.accessToken,
-							teamId: context.currentTeamId,
-							streamId: streamId
-						});
-						_context8.next = 8;
-						return locationFinder.backtrackLocationsAtCurrentCommit(locations, bufferText);
-
-					case 8:
-						backtrackedLocations = _context8.sent;
-						return _context8.abrupt("return", backtrackedLocations);
-
-					case 10:
-					case "end":
-						return _context8.stop();
-				}
-			}
-		}, _callee8, _this$3);
-	}));
-
-	return function backtrackCodeBlockLocations(_x18, _x19, _x20, _x21, _x22) {
-		return _ref23.apply(this, arguments);
-	};
-}();
-
-var resolvePendingPost = function resolvePendingPost(id, resolvedPost) {
-	return function (dispatch, getState, _ref25) {
-		var db$$1 = _ref25.db;
-
-		return db$$1.transaction("rw", db$$1.posts, function () {
-			db$$1.posts.delete(id);
-			upsert$1(db$$1, "posts", resolvedPost);
-		}).then(function () {
-			return dispatch({
-				type: "RESOLVE_PENDING_POST",
-				payload: {
-					pendingId: id,
-					post: resolvedPost
-				}
-			});
-		});
-	};
-};
-
-var rejectPendingPost = function rejectPendingPost(pendingId) {
-	return function (dispatch, getState, _ref26) {
-		var db$$1 = _ref26.db;
-
-		return upsert$1(db$$1, "posts", { id: pendingId, error: true }).then(function (post) {
-			return dispatch(pendingPostFailed(post));
-		});
-	};
-};
-
-var cancelPost = function cancelPost(pendingId) {
-	return function () {
-		var _ref28 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10(dispatch, getState, _ref27) {
-			var db$$1 = _ref27.db;
-			return regeneratorRuntime.wrap(function _callee10$(_context10) {
-				while (1) {
-					switch (_context10.prev = _context10.next) {
-						case 0:
-							return _context10.abrupt("return", db$$1.posts.delete(pendingId).then(function () {
-								return dispatch({ type: "CANCEL_PENDING_POST", payload: pendingId });
-							}));
-
-						case 1:
-						case "end":
-							return _context10.stop();
-					}
-				}
-			}, _callee10, _this$3);
-		}));
-
-		return function (_x25, _x26, _x27) {
-			return _ref28.apply(this, arguments);
-		};
-	}();
-};
-
-var retryPost = function retryPost(pendingId) {
-	return function () {
-		var _ref30 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11(dispatch, getState, _ref29) {
-			var db$$1 = _ref29.db,
-			    http = _ref29.http;
-			var pendingPost;
-			return regeneratorRuntime.wrap(function _callee11$(_context11) {
-				while (1) {
-					switch (_context11.prev = _context11.next) {
-						case 0:
-							_context11.next = 2;
-							return db$$1.posts.get(pendingId);
-
-						case 2:
-							pendingPost = _context11.sent;
-							return _context11.abrupt("return", http.post("/posts", pendingPost, getState().session.accessToken).then(function (data) {
-								return dispatch(resolvePendingPost(pendingId, {
-									post: normalize(data.post),
-									markers: normalize(data.markers),
-									markerLocations: data.markerLocations,
-									stream: pendingPost.stream ? normalize(data.stream) : null
-								}));
-							}).catch(function (error) {
-								singleton.captureBreadcrumb({
-									message: "Failed to retry a post",
-									category: "action",
-									data: { error: error, pendingPost: pendingPost },
-									level: "error"
-								});
-								dispatch(pendingPostFailed(pendingPost));
-							}));
-
-						case 4:
-						case "end":
-							return _context11.stop();
-					}
-				}
-			}, _callee11, _this$3);
-		}));
-
-		return function (_x28, _x29, _x30) {
-			return _ref30.apply(this, arguments);
-		};
-	}();
-};
-
-var editPost = function editPost(postId, text, mentions) {
-	return function () {
-		var _ref32 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee12(dispatch, getState, _ref31) {
-			var http = _ref31.http;
-
-			var _getState6, session, context, delta, data;
-
-			return regeneratorRuntime.wrap(function _callee12$(_context12) {
-				while (1) {
-					switch (_context12.prev = _context12.next) {
-						case 0:
-							_getState6 = getState(), session = _getState6.session, context = _getState6.context;
-							delta = {
-								text: text,
-								mentionedUserIds: mentions
-							};
-							_context12.prev = 2;
-							_context12.next = 5;
-							return http.put("/posts/" + postId, delta, session.accessToken);
-
-						case 5:
-							data = _context12.sent;
-							_context12.next = 11;
-							break;
-
-						case 8:
-							_context12.prev = 8;
-							_context12.t0 = _context12["catch"](2);
-
-							// TODO: different types of errors?
-							dispatch(rejectEditPost(postId, _extends$5({}, delta, { error: true })));
-
-						case 11:
-						case "end":
-							return _context12.stop();
-					}
-				}
-			}, _callee12, _this$3, [[2, 8]]);
-		}));
-
-		return function (_x31, _x32, _x33) {
-			return _ref32.apply(this, arguments);
-		};
-	}();
-};
-
-var deletePost = function deletePost(postId) {
-	return function () {
-		var _ref34 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee13(dispatch, getState, _ref33) {
-			var http = _ref33.http;
-
-			var _getState7, session, context, data;
-
-			return regeneratorRuntime.wrap(function _callee13$(_context13) {
-				while (1) {
-					switch (_context13.prev = _context13.next) {
-						case 0:
-							_getState7 = getState(), session = _getState7.session, context = _getState7.context;
-							_context13.prev = 1;
-							_context13.next = 4;
-							return http.deactivate("/posts/" + postId, {}, session.accessToken);
-
-						case 4:
-							data = _context13.sent;
-							_context13.next = 10;
-							break;
-
-						case 7:
-							_context13.prev = 7;
-							_context13.t0 = _context13["catch"](1);
-
-							// TODO: different types of errors?
-							dispatch(rejectDeletePost(postId, _extends$5({}, delta, { error: true })));
-
-						case 10:
-						case "end":
-							return _context13.stop();
-					}
-				}
-			}, _callee13, _this$3, [[1, 7]]);
-		}));
-
-		return function (_x34, _x35, _x36) {
-			return _ref34.apply(this, arguments);
-		};
-	}();
-};
-
-var logger$1 = _instance.forClass("components/Post");
+var logger = _instance.forClass("components/Post");
 
 var Post = function (_Component) {
 	inherits$1(Post, _Component);
@@ -54700,7 +55378,7 @@ var Post = function (_Component) {
 				);
 			}
 
-			logger$1.debug("UNR IS: ", this.props.usernames);
+			logger.debug("UNR IS: ", this.props.usernames);
 			// let menuItems = [
 			// 	{ label: "Create Thread", key: "make-thread" },
 			// 	{ label: "Mark Unread", key: "mark-unread" },
@@ -54782,725 +55460,6 @@ var Post = function (_Component) {
 }(react_1);
 
 var Post$1 = connect(null, { cancelPost: cancelPost, retryPost: retryPost })(Post);
-
-var withRepositories = (function (Child) {
-	var RepositoryProvider = function (_React$Component) {
-		inherits$1(RepositoryProvider, _React$Component);
-
-		function RepositoryProvider() {
-			classCallCheck$1(this, RepositoryProvider);
-			return possibleConstructorReturn$1(this, (RepositoryProvider.__proto__ || Object.getPrototypeOf(RepositoryProvider)).apply(this, arguments));
-		}
-
-		createClass$1(RepositoryProvider, [{
-			key: "render",
-			value: function render() {
-				return react.cloneElement(react.Children.only(this.props.children), {
-					repositories: this.context.repositories
-				});
-			}
-		}]);
-		return RepositoryProvider;
-	}(react.Component);
-
-	Object.defineProperty(RepositoryProvider, "contextTypes", {
-		enumerable: true,
-		writable: true,
-		value: {
-			repositories: propTypes.array
-		}
-	});
-
-	return function (props) {
-		return react.createElement(
-			RepositoryProvider,
-			null,
-			react.createElement(Child, props)
-		);
-	};
-});
-
-var _this$4 = undefined;
-
-var markStreamRead = function markStreamRead(streamId) {
-	return function () {
-		var _ref2 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(dispatch, getState, _ref) {
-			var http = _ref.http;
-
-			var _getState, session, context, streams$$1, markReadData;
-
-			return regeneratorRuntime.wrap(function _callee$(_context) {
-				while (1) {
-					switch (_context.prev = _context.next) {
-						case 0:
-							_getState = getState(), session = _getState.session, context = _getState.context, streams$$1 = _getState.streams;
-
-							if (streamId) {
-								_context.next = 3;
-								break;
-							}
-
-							return _context.abrupt("return");
-
-						case 3:
-							if (!(context.currentFile === "")) {
-								_context.next = 5;
-								break;
-							}
-
-							return _context.abrupt("return");
-
-						case 5:
-							_context.next = 7;
-							return http.put("/read/" + streamId, {}, session.accessToken);
-
-						case 7:
-							markReadData = _context.sent;
-
-							dispatch({ type: "CLEAR_UMI", payload: streamId });
-							// console.log("READ THE STREAM", markReadData, session);
-
-						case 9:
-						case "end":
-							return _context.stop();
-					}
-				}
-			}, _callee, _this$4);
-		}));
-
-		return function (_x, _x2, _x3) {
-			return _ref2.apply(this, arguments);
-		};
-	}();
-};
-
-var setStreamUMITreatment = function setStreamUMITreatment(path, setting) {
-	return function (dispatch, getState) {
-		var _getState2 = getState(),
-		    context = _getState2.context;
-
-		return Promise.all(atom.project.getDirectories().map(atom.project.repositoryForDirectory.bind(atom.project))).then(function (repos) {
-			var repo = repos.filter(Boolean)[0];
-			var relativePath = repo.relativize(path);
-			var prefPath = ["streamTreatments", context.currentRepoId, relativePath];
-			dispatch(setUserPreference(prefPath, setting));
-			dispatch(recalculate(true));
-		});
-	};
-};
-
-var incrementUMI = function incrementUMI(post) {
-	return function () {
-		var _ref4 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(dispatch, getState, _ref3) {
-			var db$$1 = _ref3.db;
-
-			var _getState3, session, context, users, streams$$1, currentUser, currentStream, hasMention, type;
-
-			return regeneratorRuntime.wrap(function _callee2$(_context2) {
-				while (1) {
-					switch (_context2.prev = _context2.next) {
-						case 0:
-							_getState3 = getState(), session = _getState3.session, context = _getState3.context, users = _getState3.users, streams$$1 = _getState3.streams;
-							currentUser = users[session.userId];
-
-							// don't increment UMIs for posts you wrote yourself
-							// note that this is taken care of on the server as well,
-							// so we don't need to sync with the server in this case
-
-							if (!(post.creatorId === session.userId)) {
-								_context2.next = 4;
-								break;
-							}
-
-							return _context2.abrupt("return");
-
-						case 4:
-
-							// don't increment the UMI of the current stream, presumably because you
-							// see the post coming in. FIXME -- if we are not scrolled to the bottom,
-							// we should still increment the UMI
-							currentStream = getStreamForRepoAndFile(streams$$1, context.currentRepoId, context.currentFile);
-
-							if (!(currentStream && currentStream.id === post.streamId)) {
-								_context2.next = 8;
-								break;
-							}
-
-							// make sure we let the server know this post is read
-							// and return so that we do not increment the UMI
-							dispatch(markStreamRead(currentStream.id));
-							return _context2.abrupt("return");
-
-						case 8:
-							hasMention = post.text.match("@" + currentUser.username + "\\b");
-							type = hasMention ? "INCREMENT_MENTION" : "INCREMENT_UMI";
-
-							dispatch({
-								type: type,
-								payload: post.streamId
-							});
-
-							// if the user is up-to-date on this stream, then we need to create a pointer
-							// to the first unread message in the stream, stored in lastReads
-							currentUser.lastReads = currentUser.lastReads || {};
-
-							if (currentUser.lastReads[post.streamId]) {
-								_context2.next = 15;
-								break;
-							}
-
-							currentUser.lastReads[post.streamId] = post.seqNum;
-
-							return _context2.abrupt("return", upsert$1(db$$1, "users", currentUser).then(function (user) {
-								return dispatch({
-									type: "UPDATE_USER",
-									payload: user
-								});
-							}));
-
-						case 15:
-						case "end":
-							return _context2.stop();
-					}
-				}
-			}, _callee2, _this$4);
-		}));
-
-		return function (_x4, _x5, _x6) {
-			return _ref4.apply(this, arguments);
-		};
-	}();
-};
-
-var recalculate = function recalculate(force) {
-	return function () {
-		var _ref6 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(dispatch, getState, _ref5) {
-			var http = _ref5.http;
-
-			var _getState4, context, session, users, streams$$1, posts, currentUser, mentionRegExp, lastReads, nextState, streamsById, streamsByFile;
-
-			return regeneratorRuntime.wrap(function _callee3$(_context3) {
-				while (1) {
-					switch (_context3.prev = _context3.next) {
-						case 0:
-							_getState4 = getState(), context = _getState4.context, session = _getState4.session, users = _getState4.users, streams$$1 = _getState4.streams, posts = _getState4.posts;
-							currentUser = users[session.userId];
-							mentionRegExp = new RegExp("@" + currentUser.username + "\\b");
-							lastReads = currentUser.lastReads || {};
-							nextState = { mentions: {}, unread: {} };
-
-							if (force) nextState.count = new Date().getTime();
-							streamsById = {};
-							streamsByFile = getStreamsForRepo(streams$$1, context.currentRepoId) || {};
-
-							Object.entries(streamsByFile).forEach(function (_ref7) {
-								var _ref8 = slicedToArray(_ref7, 2),
-								    file = _ref8[0],
-								    stream = _ref8[1];
-
-								streamsById[stream.id] = stream;
-							});
-							Object.entries(lastReads).forEach(function (_ref9) {
-								var _ref10 = slicedToArray(_ref9, 2),
-								    streamId = _ref10[0],
-								    lastRead = _ref10[1];
-
-								var unread = 0;
-								var mentions = 0;
-								if (typeof lastRead === "string" || typeof lastRead === "number") {
-									// find the stream
-									// then calculate the unread Messages
-									var stream = streamsById[streamId];
-									var postsForStream = underscorePlus.sortBy(posts.byStream[streamId], "seqNum");
-									if (!postsForStream || postsForStream.length === 0) return;
-									var index = postsForStream.findIndex(function (post) {
-										if (typeof lastRead === "string") {
-											return post.id === lastRead;
-										} else {
-											return post.seqNum === lastRead;
-										}
-									});
-									if (index === -1 && typeof lastRead === "number") {
-										// we'll go with the naive implementation, which is to simply
-										// calculate the difference between the most recent post and the
-										// last read post, by sequence number ... but we have the larger
-										// question of why the post wasn't found, and what to do about it
-										var lastPost = postsForStream[postsForStream.length - 1];
-										unread = lastPost.seqNum - lastRead;
-									} else if (index >= 0) {
-										var postsLength = postsForStream.length;
-										for (var i = index + 1; i < postsLength; i++) {
-											var post = postsForStream[i];
-											if (!post.deactivated) unread++;
-											if (post && post.text && post.text.match(mentionRegExp)) {
-												mentions++;
-											}
-										}
-									} else {
-										unread = 1; // at least we get this
-									}
-									if (unread) nextState.unread[streamId] = unread;
-									if (mentions) nextState.mentions[streamId] = mentions;
-								}
-							});
-
-							dispatch({
-								type: "SET_UMI",
-								payload: nextState
-							});
-
-						case 11:
-						case "end":
-							return _context3.stop();
-					}
-				}
-			}, _callee3, _this$4);
-		}));
-
-		return function (_x7, _x8, _x9) {
-			return _ref6.apply(this, arguments);
-		};
-	}();
-};
-
-
-var actions = Object.freeze({
-	markStreamRead: markStreamRead,
-	setStreamUMITreatment: setStreamUMITreatment,
-	incrementUMI: incrementUMI,
-	recalculate: recalculate
-});
-
-var Path = require("path");
-var logger$2 = _instance.forClass("components/UMIs");
-
-var app = require("electron").remote.app;
-
-var SimpleUMIs = function (_Component) {
-	inherits$1(SimpleUMIs, _Component);
-
-	function SimpleUMIs(props) {
-		classCallCheck$1(this, SimpleUMIs);
-
-		var _this = possibleConstructorReturn$1(this, (SimpleUMIs.__proto__ || Object.getPrototypeOf(SimpleUMIs)).call(this, props));
-
-		Object.defineProperty(_this, "getTreatmentFromEvent", {
-			enumerable: true,
-			writable: true,
-			value: function value(event) {
-				var li = event.target.closest("li");
-				if (!li) return;
-
-				var path = li.getElementsByTagName("span")[0].getAttribute("data-path");
-				path = _this.repo.relativize(path).replace(Path.sep, "/");
-				var prefPath = ["streamTreatments", _this.props.repoId, path];
-				return getUserPreference(_this.props.currentUser, prefPath);
-			}
-		});
-		Object.defineProperty(_this, "muteLabel", {
-			enumerable: true,
-			writable: true,
-			value: function value(event) {
-				return _this.getTreatmentFromEvent(event) === "mute" ? "\u2713 Mute" : "    Mute";
-			}
-		});
-		Object.defineProperty(_this, "boldLabel", {
-			enumerable: true,
-			writable: true,
-			value: function value(event) {
-				return _this.getTreatmentFromEvent(event) === "bold" ? "\u2713 Bold" : "    Bold";
-			}
-		});
-		Object.defineProperty(_this, "badgeLabel", {
-			enumerable: true,
-			writable: true,
-			value: function value(event) {
-				return _this.getTreatmentFromEvent(event) === "badge" ? "\u2713 Badge" : "    Badge";
-			}
-		});
-
-		_this.state = {};
-		// if (atom.packages.isPackageLoaded("tree-view"))
-		var treeView = atom.packages.getLoadedPackage("tree-view");
-		if (treeView) _this.treeView = treeView.mainModule.getTreeViewInstance();
-
-		_this.repo = props.repositories[0];
-
-		var that = _this;
-		_this.subscriptions = new atom$1.CompositeDisposable();
-		_this.subscriptions.add(atom.contextMenu.add({
-			".tree-view [is='tree-view-file'], .tree-view [is='tree-view-directory']": [{
-				label: "Notifications",
-				submenu: [{
-					label: "Mute",
-					command: "codestream:mute",
-					created: function created(event) {
-						this.label = that.muteLabel(event);
-					}
-				}, {
-					label: "Bold",
-					command: "codestream:bold",
-					created: function created(event) {
-						this.label = that.boldLabel(event);
-					}
-				}, {
-					label: "Badge",
-					command: "codestream:badge",
-					created: function created(event) {
-						this.label = that.badgeLabel(event);
-					}
-				}]
-			}, { type: "separator" }]
-		}));
-		return _this;
-	}
-
-	createClass$1(SimpleUMIs, [{
-		key: "componentDidMount",
-		value: function componentDidMount() {
-			this.props.recalculate();
-			if (this.treeView) {
-				this.scrollDiv = document.getElementsByClassName("tree-view")[0];
-				this.scrollDiv.addEventListener("scroll", this.handleScroll.bind(this));
-				this.scrollDiv.addEventListener("click", this.handleClick.bind(this));
-				var that = this;
-				new ResizeObserver(function () {
-					that.handleScroll();
-				}).observe(this.scrollDiv);
-			}
-		}
-	}, {
-		key: "componentWillUnmount",
-		value: function componentWillUnmount() {
-			this.clearTreatments();
-			this.subscriptions.dispose();
-			var newCount = app.getBadgeCount() - this.totalCount;
-			app.setBadgeCount(newCount < 0 ? 0 : newCount);
-		}
-	}, {
-		key: "render",
-		value: function render() {
-			var _this2 = this;
-
-			if (!this.treeView) return false;
-			var umis = this.props.umis;
-
-			this.addUnreadsIndicatorDivs();
-			// logger.debug("TREE TRACKER IS: ", this.treeView);
-			// logger.debug("THE STREAMS ARE: ", this.props.streams);
-			// logger.debug("RENDERING UMIS", umis);
-			// logger.debug(this.cwd + "/marker_pseudo_code.js");
-			// logger.debug(this.treeView.entryForPath(this.cwd + "/marker_pseudo_code.js"));
-
-			function swapHash(json) {
-				var ret = {};
-				Object.keys(json).map(function (key) {
-					ret[json[key].id] = key;
-				});
-				return ret;
-			}
-
-			var streamMap = swapHash(this.props.streams);
-			this.clearTreatments();
-
-			var totalUMICount = 0;
-			Object.keys(umis.unread).map(function (key) {
-				var path = streamMap[key] || "";
-				if (!path) return;
-				var count = umis.unread[key] || 0;
-				var mentions = umis.mentions[key] || 0;
-				// logger.debug("CALC: " + count + " FOR " + path + " w/key: " + key + " ment? " + mentions);
-				totalUMICount += _this2.calculateTreatment(path, count, mentions);
-			});
-			this.totalCount = totalUMICount;
-			app.setBadgeCount(Math.floor(totalUMICount)); // TODO: This needs to be smarter and it should add to the current badge count rather than replace it
-			Object.keys(umis.unread).map(function (key) {
-				var path = streamMap[key] || "";
-				_this2.treatPath(path);
-			});
-
-			var prefPath = ["streamTreatments", this.props.repoId];
-			var treatments = getUserPreference(this.props.currentUser, prefPath) || {};
-			Object.keys(treatments).map(function (path) {
-				// logger.debug("Treating ", path, " with ", treatments[path]);
-				var isMute = treatments[path] === "mute" ? 1 : 0;
-				_this2.treatMute(path, isMute);
-			});
-
-			this.handleScroll();
-			return null;
-		}
-	}, {
-		key: "clearTreatments",
-		value: function clearTreatments() {
-			this.treatments = {};
-
-			var elements = document.getElementsByClassName("cs-has-umi");
-			var index = elements.length;
-			while (index--) {
-				var element = elements[index];
-
-				element.setAttribute("cs-umi-mention", 0);
-				element.setAttribute("cs-umi-badge", 0);
-				element.setAttribute("cs-umi-count", 0);
-				element.setAttribute("cs-umi-bold", 0);
-				element.setAttribute("cs-umi-mute", 0);
-				element.classList.remove("cs-has-umi");
-			}
-		}
-	}, {
-		key: "calculateTreatment",
-		value: function calculateTreatment(path, count, mentions) {
-			var treatment = this.getTreatment(path);
-			logger$2.debug("FOR: ", count, " treat ", treatment, " in ", path, " with mentions ", mentions);
-
-			var parts = path.split("/");
-			while (parts.length) {
-				var pathPart = parts.join("/");
-				if (!this.treatments[pathPart]) this.treatments[pathPart] = {};
-				if (mentions) {
-					this.treatments[pathPart]["mentions"] = (this.treatments[pathPart]["mentions"] || 0) + mentions;
-				}
-				if (mentions || treatment !== "mute") {
-					this.treatments[pathPart]["count"] = (this.treatments[pathPart]["count"] || 0) + count;
-				}
-				// if (treatment !== "mute") this.treatments[pathPart]["treatment"] += treatment;
-				parts.pop();
-			}
-
-			var totalUMICount = 0;
-			if (mentions || treatment === "badge") {
-				totalUMICount += count;
-			} else if (treatment === "mute") {
-				// do nothing if the user wants to mute
-			} else {
-				// this is bold; don't add to the app badge count
-				totalUMICount += 0.000001;
-			}
-			logger$2.debug("Returning: ", totalUMICount, " for ", path);
-			return totalUMICount;
-		}
-	}, {
-		key: "treatMute",
-		value: function treatMute(path, isMute) {
-			path = path.replace(/\*/g, ".");
-			var fullPath = Path.join(this.props.workingDirectory, path).replace(/\//g, Path.sep);
-			var element = this.treeView.entryForPath(fullPath);
-			logger$2.debug("Treating element ", element, " with ", isMute);
-			if (!element) return;
-			// don't treat directories that are expanded
-			if (element.classList.contains("directory")) {
-				var liPath = element.getElementsByTagName("span")[0].getAttribute("data-path");
-				liPath = this.repo.relativize(liPath).replace(Path.sep, "/");
-				if (liPath !== path) return;
-			}
-			element.setAttribute("cs-umi-mute", isMute);
-		}
-	}, {
-		key: "treatPath",
-		value: function treatPath(path) {
-			var fullPath = Path.join(this.props.workingDirectory, path).replace(/\//g, Path.sep);
-			var element = this.treeView.entryForPath(fullPath);
-			if (!element) {
-				return;
-			}
-
-			// don't treat directories that are expanded
-			if (element.classList.contains("directory") && element.classList.contains("expanded")) return;
-
-			var liPath = element.getElementsByTagName("span")[0].getAttribute("data-path");
-			liPath = this.repo.relativize(liPath).replace(Path.sep, "/");
-
-			// if the user wants a badge... set the appropriate class
-			var treatmentData = this.treatments[liPath];
-			if (!treatmentData) return;
-			var count = treatmentData["count"];
-			var mentions = treatmentData["mentions"];
-			var treatment = this.getTreatment(liPath);
-
-			if (mentions) {
-				element.setAttribute("cs-umi-mention", count > 0 ? 1 : 0);
-				element.setAttribute("cs-umi-badge", count > 0 ? 1 : 0);
-				element.setAttribute("cs-umi-count", mentions > 99 ? "99+" : mentions || 0);
-			} else if (treatment === "bold") {
-				element.setAttribute("cs-umi-bold", count > 0 ? 1 : 0);
-			} else if (treatment === "mute") {
-				// no need to do this here; we're doing mute treatment at the end
-				// in a separate pass, since muted directories impact subdirs and files
-				// element.setAttribute("cs-umi-mute", 1);
-			} else {
-				// default is to badge
-				element.setAttribute("cs-umi-badge", count > 0 ? 1 : 0);
-				element.setAttribute("cs-umi-count", count > 99 ? "99+" : count || 0);
-			}
-
-			// if we actually have a UMI that hasn't been muted....
-			if (mentions || count > 0 && treatment !== "mute") {
-				element.classList.add("cs-has-umi");
-			} else {
-				element.classList.remove("cs-has-umi");
-			}
-		}
-	}, {
-		key: "getTreatment",
-		value: function getTreatment(path) {
-			var parts = path.split("/");
-			var index = parts.length;
-			while (parts.length) {
-				var _path = parts.join("/");
-				var prefPath = ["streamTreatments", this.props.repoId, _path];
-				var treatment = getUserPreference(this.props.currentUser, prefPath);
-				// logger.debug("GOT: ", treatment, " FOR ", ["streamTreatments", this.props.repoId, path]);
-				// atom.config.get("CodeStream.showUnread-" + path);
-				if (treatment) return treatment;
-				parts.pop();
-			}
-			return atom.config.get("CodeStream.showUnread") || "badge";
-		}
-	}, {
-		key: "handleClick",
-		value: function handleClick(event) {
-			// rerender because there may be a directory open/close
-			this.render();
-		}
-	}, {
-		key: "handleScroll",
-		value: function handleScroll(event) {
-			// let elements = scrollDiv.getElementsByClassName("");
-			var scrollDiv = event ? event.target : document.getElementsByClassName("tool-panel tree-view")[0];
-
-			if (!scrollDiv) {
-				console.log("Couldn't find scrollDiv for ", event);
-				return;
-			}
-
-			var scrollTop = scrollDiv.scrollTop;
-			var containerHeight = scrollDiv.parentNode.offsetHeight;
-
-			var unreadsAbove = false;
-			var unreadsBelow = false;
-			var mentionsAbove = false;
-			var mentionsBelow = false;
-
-			var umiDivs = document.getElementsByClassName("cs-has-umi");
-			var index = 0;
-			var umiDivsLength = umiDivs.length;
-			while (index < umiDivsLength) {
-				var umi = umiDivs[index];
-				var top = umi.offsetTop;
-				if (top - scrollTop + 10 < 0) {
-					unreadsAbove = umi;
-					if (umi.getAttribute("cs-umi-mention") == "1") mentionsAbove = umi;
-				}
-				if (top - scrollTop + 10 > containerHeight) {
-					if (!unreadsBelow) unreadsBelow = umi;
-					if (!mentionsBelow && umi.getAttribute("cs-umi-mention") == "1") mentionsBelow = umi;
-				}
-				index++;
-			}
-			this.setUnreadsAttributes("above", document.getElementById("cs-unreads-above"), unreadsAbove, mentionsAbove);
-			this.setUnreadsAttributes("below", document.getElementById("cs-unreads-below"), unreadsBelow, mentionsBelow);
-
-			var childNode = scrollDiv.childNodes[0];
-			var right = childNode.offsetWidth - scrollDiv.offsetWidth - scrollDiv.scrollLeft;
-			var newStyle = ".tree-view li[cs-umi-badge='1']::after { right: " + right + "px; }";
-			logger$2.debug("Adding style string; " + newStyle);
-			this.addStyleString(newStyle, "umi");
-		}
-
-		// add a style to the document, reusing a style node that we attach to the DOM
-
-	}, {
-		key: "addStyleString",
-		value: function addStyleString(str, key) {
-			var id = "codestream-style-tag-" + key;
-			var node = document.getElementById(id) || document.createElement("style");
-			node.id = id;
-			node.innerHTML = str;
-			document.body.appendChild(node);
-		}
-	}, {
-		key: "setUnreadsAttributes",
-		value: function setUnreadsAttributes(type, element, active, mentions) {
-			var that = this;
-			var padding = type === "above" ? -40 : 40;
-			if (active) {
-				element.classList.add("active");
-				element.onclick = function (event) {
-					active.scrollIntoView(type === "above");
-					that.scrollDiv.scrollTop += padding;
-				};
-			} else element.classList.remove("active");
-			if (mentions) {
-				element.classList.add("mention");
-				element.onclick = function (event) {
-					mentions.scrollIntoView(type === "above");
-					that.scrollDiv.scrollTop += padding;
-				};
-			} else element.classList.remove("mention");
-		}
-	}, {
-		key: "addUnreadsIndicatorDivs",
-		value: function addUnreadsIndicatorDivs() {
-			this.addUnreadsIndicatorDiv("above");
-			this.addUnreadsIndicatorDiv("below");
-		}
-	}, {
-		key: "addUnreadsIndicatorDiv",
-		value: function addUnreadsIndicatorDiv(aboveOrBelow) {
-			var element = document.getElementById("cs-unreads-" + aboveOrBelow);
-
-			// if the element already exists, we don't need to add it
-			if (element) return;
-
-			// if there is no tree-view, we can't add elements to it! ;)
-			var scrollDivs = document.getElementsByClassName("tool-panel tree-view");
-			if (!scrollDivs.length) return;
-
-			// assume there is only one of these -- this might not always be true in future
-			var scrollDiv = scrollDivs[0];
-			if (!scrollDiv) return;
-
-			// we use the parent element to make the divs fixed to the top
-			// and bottom of the viewport of the tree-view
-			var scrollParent = scrollDiv.parentNode;
-			if (!scrollParent) return;
-
-			// create the element
-			element = document.createElement("div");
-			element.id = "cs-unreads-" + aboveOrBelow;
-			element.classList.add("cs-unreads");
-			var indicator = aboveOrBelow === "above" ? "&uarr;" : "&darr;";
-			element.innerHTML = indicator + " Unread Messages " + indicator;
-			// element.onclick = function(event) {
-			// 	if (aboveOrBelow === "below") scrollDiv.scrollTop += scrollDiv.offsetHeight;
-			// 	else scrollDiv.scrollTop -= scrollDiv.offsetHeight;
-			// };
-			scrollParent.prepend(element);
-		}
-	}]);
-	return SimpleUMIs;
-}(react_1);
-
-var mapStateToProps = function mapStateToProps(_ref) {
-	var repoAttributes = _ref.repoAttributes,
-	    context = _ref.context,
-	    session = _ref.session,
-	    streams$$1 = _ref.streams,
-	    users = _ref.users,
-	    umis = _ref.umis;
-
-	return {
-		users: users,
-		streams: getStreamsForRepo(streams$$1, context.currentRepoId) || {},
-		currentUser: users[session.userId],
-		workingDirectory: repoAttributes.workingDirectory,
-		repoId: context.currentRepoId,
-		umis: umis
-	};
-};
-
-var UMIs = connect(mapStateToProps, actions)(withRepositories(SimpleUMIs));
 
 // AtMentionsPopup expects an on/off switch determined by the on property
 // on = show the popup, off = hide the popup
@@ -55677,597 +55636,6 @@ var AtMentionsPopup = function (_Component) {
 	return AtMentionsPopup;
 }(react_1);
 
-var isValid = function isValid(location) {
-	var sameLine = location[0] === location[2];
-	var startOfLine = location[1] === 0 && location[3] === 0;
-	return !(sameLine && startOfLine);
-};
-
-var ReferenceBubble = function (_Component) {
-	inherits$1(ReferenceBubble, _Component);
-
-	function ReferenceBubble(props) {
-		classCallCheck$1(this, ReferenceBubble);
-
-		var _this = possibleConstructorReturn$1(this, (ReferenceBubble.__proto__ || Object.getPrototypeOf(ReferenceBubble)).call(this, props));
-
-		Object.defineProperty(_this, "subscriptions", {
-			enumerable: true,
-			writable: true,
-			value: new atom$1.CompositeDisposable()
-		});
-		Object.defineProperty(_this, "onClick", {
-			enumerable: true,
-			writable: true,
-			value: function value(event) {
-				_this.context.platform.focusView();
-				_this.props.onSelect(_this.props.postId);
-				_this.props.onMarkerClicked(_this.props);
-			}
-		});
-
-		_this.state = {
-			isVisible: isValid(props.location)
-		};
-		return _this;
-	}
-
-	createClass$1(ReferenceBubble, [{
-		key: "componentDidMount",
-		value: function componentDidMount() {
-			var _props = this.props,
-			    location = _props.location,
-			    editor = _props.editor;
-
-			var subscriptions = this.subscriptions;
-			var range = locationToRange(location);
-			var marker = this.marker = editor.markBufferRange(range, {
-				invalidate: "never"
-			});
-
-			subscriptions.add(marker.onDidDestroy(function () {
-				subscriptions.dispose();
-			}));
-		}
-	}, {
-		key: "componentWillUnmount",
-		value: function componentWillUnmount() {
-			this.marker.destroy();
-			this.subscriptions.dispose();
-		}
-	}, {
-		key: "render",
-		value: function render() {
-			if (!this.state.isVisible) return false;
-
-			var _props2 = this.props,
-			    id = _props2.id,
-			    count = _props2.count,
-			    numComments = _props2.numComments;
-
-			return react.createElement(
-				"div",
-				{ onClick: this.onClick, key: id, className: "count-" + count },
-				numComments > 9 ? "9+" : numComments
-			);
-		}
-	}]);
-	return ReferenceBubble;
-}(react_1);
-
-Object.defineProperty(ReferenceBubble, "contextTypes", {
-	enumerable: true,
-	writable: true,
-	value: {
-		platform: propTypes.object
-	}
-});
-
-
-var mapDispatchToProps = function mapDispatchToProps(dispatch) {
-	return _extends$5({}, markerLocationActions, {
-		onMarkerClicked: function onMarkerClicked(props) {
-			return dispatch({ type: "MARKER_CLICKED", meta: props });
-		}
-	});
-};
-var ReferenceBubble$1 = connect(null, mapDispatchToProps)(ReferenceBubble);
-
-var LineBubbleDecoration = function (_Component) {
-	inherits$1(LineBubbleDecoration, _Component);
-
-	function LineBubbleDecoration(props) {
-		classCallCheck$1(this, LineBubbleDecoration);
-
-		var _this = possibleConstructorReturn$1(this, (LineBubbleDecoration.__proto__ || Object.getPrototypeOf(LineBubbleDecoration)).call(this, props));
-
-		Object.defineProperty(_this, "subscriptions", {
-			enumerable: true,
-			writable: true,
-			value: new atom$1.CompositeDisposable()
-		});
-
-		_this.logger = _instance.forObject("components/LineBubbleDecoration");
-		_this.item = document.createElement("div");
-		_this.item.classList.add("codestream-comment-popup");
-		_this.subscriptions.add(atom.tooltips.add(_this.item, { title: "View comments" }));
-
-		// if (reference.location[2] > maxLine) maxLine = reference.location[2] * 1;
-		_this.maxLine = props.references.reduce(function (max, _ref) {
-			var location = _ref.location;
-			return location[2] > max ? location[2] * 1 : max;
-		}, props.line * 1);
-		return _this;
-	}
-
-	createClass$1(LineBubbleDecoration, [{
-		key: "componentDidMount",
-		value: function componentDidMount() {
-			this.decorate(this.props);
-		}
-	}, {
-		key: "componentWillReceiveProps",
-		value: function componentWillReceiveProps(nextProps) {
-			this.tearDown();
-			this.decorate(nextProps);
-		}
-	}, {
-		key: "componentWillUnmount",
-		value: function componentWillUnmount() {
-			this.tearDown();
-			this.subscriptions.dispose();
-		}
-	}, {
-		key: "tearDown",
-		value: function tearDown() {
-			this.decoration && this.decoration.destroy();
-			this.marker && this.marker.destroy();
-			this.logger.destroy();
-		}
-	}, {
-		key: "decorate",
-		value: function decorate(props) {
-			var options = {
-				type: "overlay",
-				position: props.position,
-				class: props.className,
-				item: this.item
-			};
-
-			var editor = this.props.editor;
-
-			var subscriptions = this.subscriptions;
-			var range = locationToRange([props.line, 1, this.maxLine + 1, 1]);
-			var marker = this.marker = editor.markBufferRange(range, {
-				invalidate: "never"
-			});
-			var decoration = this.decoration = editor.decorateMarker(marker, options);
-
-			subscriptions.add(editor.onDidDestroy(function () {
-				return marker.destroy();
-			}), decoration.onDidDestroy(this.tearDownAndDisposeSubscriptions.bind(this)), marker.onDidDestroy(this.tearDownAndDisposeSubscriptions.bind(this)));
-		}
-	}, {
-		key: "tearDownAndDisposeSubscriptions",
-		value: function tearDownAndDisposeSubscriptions() {
-			this.tearDown();
-			this.subscriptions.dispose();
-			this.subscriptions = new atom$1.CompositeDisposable();
-		}
-	}, {
-		key: "render",
-		value: function render() {
-			var _this2 = this;
-
-			return reactDom.createPortal(this.props.references.map(function (reference, index, group) {
-				return react.createElement(ReferenceBubble$1, _extends$5({
-					key: reference.id,
-					editor: _this2.props.editor,
-					onSelect: _this2.props.onSelect,
-					count: group.length - index - 1
-				}, reference));
-			}), this.item);
-		}
-	}]);
-	return LineBubbleDecoration;
-}(react_1);
-
-var BufferReferences = function (_Component) {
-	inherits$1(BufferReferences, _Component);
-
-	function BufferReferences() {
-		var _ref;
-
-		var _temp, _this, _ret;
-
-		classCallCheck$1(this, BufferReferences);
-
-		for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-			args[_key] = arguments[_key];
-		}
-
-		return _ret = (_temp = (_this = possibleConstructorReturn$1(this, (_ref = BufferReferences.__proto__ || Object.getPrototypeOf(BufferReferences)).call.apply(_ref, [this].concat(args))), _this), Object.defineProperty(_this, "state", {
-			enumerable: true,
-			writable: true,
-			value: { referencesByLine: {} }
-		}), _temp), possibleConstructorReturn$1(_this, _ret);
-	}
-
-	createClass$1(BufferReferences, [{
-		key: "componentDidMount",
-		value: function componentDidMount() {
-			this.configureReferences(this.props.references);
-		}
-	}, {
-		key: "componentWillReceiveProps",
-		value: function componentWillReceiveProps(nextProps) {
-			var _this2 = this;
-
-			if (nextProps.streamId !== this.props.streamId) {
-				this.setState(function () {
-					return { referencesByLine: {} };
-				}, function () {
-					return _this2.configureReferences(nextProps.references);
-				});
-			} else this.configureReferences(nextProps.references);
-		}
-	}, {
-		key: "configureReferences",
-		value: function configureReferences(references) {
-			var referencesByLine = {};
-			references.filter(function (reference) {
-				return !reference.deactivated;
-			}).forEach(function (reference) {
-				var line = reference.location[0];
-				var lineMarkers = referencesByLine[line] || [];
-				lineMarkers.push(reference);
-
-				referencesByLine[line] = lineMarkers;
-			});
-			this.setState({ referencesByLine: referencesByLine });
-		}
-	}, {
-		key: "render",
-		value: function render() {
-			var _this3 = this;
-
-			var editor = atom.workspace.getActiveTextEditor();
-			if (editor)
-				// TODO: rather find the editor?
-				return Object.keys(this.state.referencesByLine).map(function (line) {
-					return react.createElement(LineBubbleDecoration, {
-						key: line,
-						line: line,
-						editor: editor,
-						references: _this3.state.referencesByLine[line],
-						position: "tail",
-						className: "codestream-overlay",
-						onSelect: _this3.props.onSelect
-					});
-				});else return false;
-		}
-	}]);
-	return BufferReferences;
-}(react_1);
-
-var AddCommentPopup = function (_Component) {
-	inherits$1(AddCommentPopup, _Component);
-
-	function AddCommentPopup() {
-		var _ref;
-
-		var _temp, _this, _ret;
-
-		classCallCheck$1(this, AddCommentPopup);
-
-		for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-			args[_key] = arguments[_key];
-		}
-
-		return _ret = (_temp = (_this = possibleConstructorReturn$1(this, (_ref = AddCommentPopup.__proto__ || Object.getPrototypeOf(AddCommentPopup)).call.apply(_ref, [this].concat(args))), _this), Object.defineProperty(_this, "subscriptions", {
-			enumerable: true,
-			writable: true,
-			value: new atom$1.CompositeDisposable()
-		}), Object.defineProperty(_this, "handleSelectionChange", {
-			enumerable: true,
-			writable: true,
-			value: function value(event) {
-				var editor = _this.props.editor;
-
-				var selectedLength = editor.getSelectedText().length;
-
-				if (selectedLength === 0) return _this.destroyMarker();
-
-				var shouldAddMarker = !event.newBufferRange.isEqual(event.oldBufferRange);
-
-				if (shouldAddMarker) {
-					_this.destroyMarker();
-					var range = editor.getSelectedBufferRange();
-					var row = range.start.row > range.end.row ? range.end.row : range.start.row;
-					var startRange = [[row, 0], [row, 0]];
-					_this.marker = editor.markBufferRange(startRange, { invalidate: "touch" });
-					_this.marker.onDidChange(function (event) {
-						if (event.isValid === false) _this.destroyMarker();
-					});
-					var item = document.createElement("div");
-					item.className = "codestream-comment-popup";
-					var bubble = document.createElement("div");
-					bubble.innerHTML = "+";
-					item.appendChild(bubble);
-					item.onclick = function () {
-						_this.props.onClick();
-						_this.destroyMarker();
-					};
-					editor.decorateMarker(_this.marker, {
-						item: item,
-						type: "overlay",
-						class: "codestream-overlay"
-					});
-					_this.tooltip = atom.tooltips.add(item, {
-						// trigger: "manual",
-						// keyBindingCommand: "codestream:escape",
-						title: "Add a comment"
-					});
-				}
-			}
-		}), Object.defineProperty(_this, "destroyMarker", {
-			enumerable: true,
-			writable: true,
-			value: function value() {
-				_this.marker && _this.marker.destroy();
-				_this.marker = null;
-				_this.tooltip && _this.tooltip.dispose();
-			}
-		}), Object.defineProperty(_this, "reset", {
-			enumerable: true,
-			writable: true,
-			value: function value() {
-				_this.destroyMarker();
-				_this.subscriptions.dispose();
-				_this.subscriptions = new atom$1.CompositeDisposable();
-			}
-		}), _temp), possibleConstructorReturn$1(_this, _ret);
-	}
-
-	createClass$1(AddCommentPopup, [{
-		key: "componentDidMount",
-		value: function componentDidMount() {
-			this.configure(this.props);
-		}
-	}, {
-		key: "shouldComponentUpdate",
-		value: function shouldComponentUpdate(nextProps) {
-			return nextProps.editor.id !== this.props.editor.id;
-		}
-	}, {
-		key: "componentDidUpdate",
-		value: function componentDidUpdate() {
-			this.configure(this.props);
-		}
-	}, {
-		key: "componentWillUnmount",
-		value: function componentWillUnmount() {
-			this.reset();
-		}
-	}, {
-		key: "configure",
-		value: function configure(props) {
-			this.subscriptions.add(props.editor.onDidChangeSelectionRange(this.handleSelectionChange));
-		}
-	}, {
-		key: "render",
-		value: function render() {
-			return false;
-		}
-	}]);
-	return AddCommentPopup;
-}(react_1);
-
-var EMPTY_LOCATION = [1, 1, 1, 1];
-
-var isActiveEditor = function isActiveEditor(editor) {
-	if (!editor) {
-		return false;
-	}
-	if (editor !== atom.workspace.getActiveTextEditor()) {
-		return false;
-	}
-	return true;
-};
-
-var MarkerLocationTracker = function (_Component) {
-	inherits$1(MarkerLocationTracker, _Component);
-
-	function MarkerLocationTracker() {
-		var _ref;
-
-		var _temp, _this, _ret;
-
-		classCallCheck$1(this, MarkerLocationTracker);
-
-		for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-			args[_key] = arguments[_key];
-		}
-
-		return _ret = (_temp = (_this = possibleConstructorReturn$1(this, (_ref = MarkerLocationTracker.__proto__ || Object.getPrototypeOf(MarkerLocationTracker)).call.apply(_ref, [this].concat(args))), _this), Object.defineProperty(_this, "componentDidMount", {
-			enumerable: true,
-			writable: true,
-			value: function value() {
-				var subscriptions = _this.subscriptions = new atom$1.CompositeDisposable();
-				var editorsObserver = atom.workspace.observeTextEditors(_this.editorOpened);
-				subscriptions.add(editorsObserver);
-
-				var editor = _this.props.editor;
-				// console.log("componenents/MarkerLocationTracker.js componentDidMount");
-
-				_this.calculateLocations(editor);
-			}
-		}), Object.defineProperty(_this, "componentDidUpdate", {
-			enumerable: true,
-			writable: true,
-			value: function value(prevProps, prevState) {
-				var _this$props = _this.props,
-				    editor = _this$props.editor,
-				    streamId = _this$props.streamId,
-				    currentCommit = _this$props.currentCommit;
-
-				if (editor && streamId) {
-					var shouldRecalculate = streamId != prevProps.streamId || currentCommit != prevProps.currentCommit;
-					if (shouldRecalculate) {
-						// console.log("componenents/MarkerLocationTracker.js componentDidUpdate should recalculate");
-						_this.calculateLocations(editor);
-					}
-				}
-			}
-		}), Object.defineProperty(_this, "componentWillUnmount", {
-			enumerable: true,
-			writable: true,
-			value: function value() {
-				_this.subscriptions.dispose();
-			}
-		}), Object.defineProperty(_this, "editorOpened", {
-			enumerable: true,
-			writable: true,
-			value: function value(editor) {
-				_this.subscriptions.add(editor.getBuffer().onDidReload(function () {
-					// console.log("componenents/MarkerLocationTracker.js buffer reloaded");
-					_this.calculateLocations(editor);
-				}), editor.onDidStopChanging(function () {
-					// console.log("componenents/MarkerLocationTracker.js editor stopped changing");
-					_this.calculateLocations(editor);
-				}));
-			}
-		}), Object.defineProperty(_this, "calculateLocations", {
-			enumerable: true,
-			writable: true,
-			value: function value(editor) {
-				var _this$props2 = _this.props,
-				    teamId = _this$props2.teamId,
-				    streamId = _this$props2.streamId,
-				    calculateLocations$$1 = _this$props2.calculateLocations;
-
-				if (streamId && isActiveEditor(editor)) {
-					// console.log(
-					// 	"components/MarkerLocationTracker.js calculateLocations will calculate locations"
-					// );
-					calculateLocations$$1({ teamId: teamId, streamId: streamId, text: editor.getText() });
-				}
-			}
-		}), Object.defineProperty(_this, "render", {
-			enumerable: true,
-			writable: true,
-			value: function value() {
-				return false;
-			}
-		}), _temp), possibleConstructorReturn$1(_this, _ret);
-	}
-
-	createClass$1(MarkerLocationTracker, [{
-		key: "componentWillReceiveProps",
-		value: function componentWillReceiveProps(nextProps) {
-			var editor = nextProps.editor,
-			    markers = nextProps.markers,
-			    currentCommit = nextProps.currentCommit;
-
-
-			if (editor && markers) {
-				editor.hasNewMarker = false;
-				var _iteratorNormalCompletion = true;
-				var _didIteratorError = false;
-				var _iteratorError = undefined;
-
-				try {
-					for (var _iterator = markers[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-						var _ref2 = _step.value;
-						var id = _ref2.id,
-						    location = _ref2.location;
-
-						this.createOrUpdateDisplayMarker(editor, {
-							id: id,
-							location: location
-						});
-					}
-				} catch (err) {
-					_didIteratorError = true;
-					_iteratorError = err;
-				} finally {
-					try {
-						if (!_iteratorNormalCompletion && _iterator.return) {
-							_iterator.return();
-						}
-					} finally {
-						if (_didIteratorError) {
-							throw _iteratorError;
-						}
-					}
-				}
-
-				if (editor.hasNewMarker) {
-					// console.log(
-					// 	"componenents/MarkerLocationTracker.js componentWillReceiveProps has new marker"
-					// );
-					this.calculateLocations(editor);
-				}
-			}
-		}
-	}, {
-		key: "createOrUpdateDisplayMarker",
-		value: function createOrUpdateDisplayMarker(editor, marker) {
-			var displayMarkers = editor.displayMarkers || (editor.displayMarkers = {});
-			var markerId = marker.id;
-			var displayMarker = displayMarkers[markerId];
-			var range = locationToRange(marker.location || EMPTY_LOCATION);
-
-			if (marker.deactivated) {
-				if (displayMarker) {
-					displayMarker.dispose();
-					delete displayMarkers[markerId];
-				}
-			} else {
-				if (displayMarker) {
-					displayMarker.setBufferRange(range);
-				} else {
-					displayMarkers[markerId] = editor.markBufferRange(range);
-					editor.hasNewMarker = true;
-				}
-			}
-		}
-	}]);
-	return MarkerLocationTracker;
-}(react_1);
-
-var getMarkersForStream = function getMarkersForStream(streamId, markers, locations, commitHash) {
-	var locationsForStream = locations.byStream[streamId] || {};
-	var locationsForCommit = locationsForStream[commitHash] || {};
-	return Object.values(markers).filter(function (marker) {
-		return marker.streamId === streamId;
-	}).map(function (marker) {
-		return _extends$5({}, marker, {
-			location: locationsForCommit[marker.id]
-		});
-	}).filter(Boolean);
-};
-
-var mapStateToProps$1 = function mapStateToProps(_ref3) {
-	var context = _ref3.context,
-	    streams$$1 = _ref3.streams,
-	    markers = _ref3.markers,
-	    markerLocations = _ref3.markerLocations;
-
-	var stream = getStreamForRepoAndFile(streams$$1, context.currentRepoId, context.currentFile) || {};
-	var markersForStream = getMarkersForStream(stream.id, markers, markerLocations, context.currentCommit);
-	return {
-		teamId: context.currentTeamId,
-		streamId: stream.id,
-		currentFile: context.currentFile,
-		currentCommit: context.currentCommit,
-		markers: markersForStream
-	};
-};
-
-var MarkerLocationTracker$1 = connect(mapStateToProps$1, _extends$5({}, markerLocationActions))(MarkerLocationTracker);
-
-var moment$1 = require("moment");
 // var Moment_Timezone = require("moment-timezone");
 
 var DateSeparator = function (_Component) {
@@ -56299,9 +55667,9 @@ var DateSeparator = function (_Component) {
 				}
 
 				if (timeDay.getFullYear() === today.getFullYear()) {
-					return moment$1(time).format("dddd, MMMM Do");
+					return hooks(time).format("dddd, MMMM Do");
 				}
-				return moment$1(time).format("dddd, MMMM Do, YYYY");
+				return hooks(time).format("dddd, MMMM Do, YYYY");
 			}
 		});
 
@@ -56344,6 +55712,43 @@ var DateSeparator = function (_Component) {
 	return DateSeparator;
 }(react_1);
 
+var withRepositories = (function (Child) {
+	var RepositoryProvider = function (_React$Component) {
+		inherits$1(RepositoryProvider, _React$Component);
+
+		function RepositoryProvider() {
+			classCallCheck$1(this, RepositoryProvider);
+			return possibleConstructorReturn$1(this, (RepositoryProvider.__proto__ || Object.getPrototypeOf(RepositoryProvider)).apply(this, arguments));
+		}
+
+		createClass$1(RepositoryProvider, [{
+			key: "render",
+			value: function render() {
+				return react.cloneElement(react.Children.only(this.props.children), {
+					repositories: this.context.repositories
+				});
+			}
+		}]);
+		return RepositoryProvider;
+	}(react.Component);
+
+	Object.defineProperty(RepositoryProvider, "contextTypes", {
+		enumerable: true,
+		writable: true,
+		value: {
+			repositories: propTypes.array
+		}
+	});
+
+	return function (props) {
+		return react.createElement(
+			RepositoryProvider,
+			null,
+			react.createElement(Child, props)
+		);
+	};
+});
+
 function withConfigs(Child) {
 	return function (props) {
 		return react.createElement(
@@ -56357,7 +55762,11 @@ function withConfigs(Child) {
 }
 
 var getConfigs = function getConfigs() {
-	return atom.config.get("CodeStream") || {};
+	try {
+		return atom.config.get("CodeStream");
+	} catch (e) {
+		return {};
+	}
 };
 
 var ConfigProvider = function (_React$Component) {
@@ -56386,14 +55795,14 @@ var ConfigProvider = function (_React$Component) {
 		value: function componentDidMount() {
 			var _this2 = this;
 
-			this.disposable = atom.config.onDidChange("CodeStream", function (event) {
+			if (this.context.platform.isAtom) this.disposable = atom.config.onDidChange("CodeStream", function (event) {
 				_this2.setState(getConfigs());
 			});
 		}
 	}, {
 		key: "componentWillUnmount",
 		value: function componentWillUnmount() {
-			this.disposable.dispose();
+			this.disposable && this.disposable.dispose();
 		}
 	}, {
 		key: "render",
@@ -56403,6 +55812,265 @@ var ConfigProvider = function (_React$Component) {
 	}]);
 	return ConfigProvider;
 }(react.Component);
+
+Object.defineProperty(ConfigProvider, "contextTypes", {
+	enumerable: true,
+	writable: true,
+	value: {
+		platform: propTypes.object
+	}
+});
+
+var _this$3 = undefined;
+
+var markStreamRead = function markStreamRead(streamId) {
+	return function () {
+		var _ref2 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(dispatch, getState, _ref) {
+			var http = _ref.http;
+
+			var _getState, session, context, streams$$1, markReadData;
+
+			return regeneratorRuntime.wrap(function _callee$(_context) {
+				while (1) {
+					switch (_context.prev = _context.next) {
+						case 0:
+							_getState = getState(), session = _getState.session, context = _getState.context, streams$$1 = _getState.streams;
+
+							if (streamId) {
+								_context.next = 3;
+								break;
+							}
+
+							return _context.abrupt("return");
+
+						case 3:
+							if (!(context.currentFile === "")) {
+								_context.next = 5;
+								break;
+							}
+
+							return _context.abrupt("return");
+
+						case 5:
+							_context.next = 7;
+							return http.put("/read/" + streamId, {}, session.accessToken);
+
+						case 7:
+							markReadData = _context.sent;
+
+							dispatch({ type: "CLEAR_UMI", payload: streamId });
+							// console.log("READ THE STREAM", markReadData, session);
+
+						case 9:
+						case "end":
+							return _context.stop();
+					}
+				}
+			}, _callee, _this$3);
+		}));
+
+		return function (_x, _x2, _x3) {
+			return _ref2.apply(this, arguments);
+		};
+	}();
+};
+
+var setStreamUMITreatment = function setStreamUMITreatment(path, setting) {
+	return function (dispatch, getState) {
+		var _getState2 = getState(),
+		    context = _getState2.context;
+
+		return Promise.all(atom.project.getDirectories().map(atom.project.repositoryForDirectory.bind(atom.project))).then(function (repos) {
+			var repo = repos.filter(Boolean)[0];
+			var relativePath = repo.relativize(path);
+			var prefPath = ["streamTreatments", context.currentRepoId, relativePath];
+			dispatch(setUserPreference(prefPath, setting));
+			dispatch(recalculate(true));
+		});
+	};
+};
+
+var incrementUMI = function incrementUMI(post) {
+	return function () {
+		var _ref4 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(dispatch, getState, _ref3) {
+			var db$$1 = _ref3.db;
+
+			var _getState3, session, context, users, streams$$1, currentUser, currentStream, hasMention, type;
+
+			return regeneratorRuntime.wrap(function _callee2$(_context2) {
+				while (1) {
+					switch (_context2.prev = _context2.next) {
+						case 0:
+							_getState3 = getState(), session = _getState3.session, context = _getState3.context, users = _getState3.users, streams$$1 = _getState3.streams;
+							currentUser = users[session.userId];
+
+							// don't increment UMIs for posts you wrote yourself
+							// note that this is taken care of on the server as well,
+							// so we don't need to sync with the server in this case
+
+							if (!(post.creatorId === session.userId)) {
+								_context2.next = 4;
+								break;
+							}
+
+							return _context2.abrupt("return");
+
+						case 4:
+
+							// don't increment the UMI of the current stream, presumably because you
+							// see the post coming in. FIXME -- if we are not scrolled to the bottom,
+							// we should still increment the UMI
+							currentStream = getStreamForRepoAndFile(streams$$1, context.currentRepoId, context.currentFile);
+
+							if (!(currentStream && currentStream.id === post.streamId)) {
+								_context2.next = 8;
+								break;
+							}
+
+							// make sure we let the server know this post is read
+							// and return so that we do not increment the UMI
+							dispatch(markStreamRead(currentStream.id));
+							return _context2.abrupt("return");
+
+						case 8:
+							hasMention = post.text.match("@" + currentUser.username + "\\b");
+							type = hasMention ? "INCREMENT_MENTION" : "INCREMENT_UMI";
+
+							dispatch({
+								type: type,
+								payload: post.streamId
+							});
+
+							// if the user is up-to-date on this stream, then we need to create a pointer
+							// to the first unread message in the stream, stored in lastReads
+							currentUser.lastReads = currentUser.lastReads || {};
+
+							if (currentUser.lastReads[post.streamId]) {
+								_context2.next = 15;
+								break;
+							}
+
+							currentUser.lastReads[post.streamId] = post.seqNum;
+
+							return _context2.abrupt("return", upsert$1(db$$1, "users", currentUser).then(function (user) {
+								return dispatch({
+									type: "UPDATE_USER",
+									payload: user
+								});
+							}));
+
+						case 15:
+						case "end":
+							return _context2.stop();
+					}
+				}
+			}, _callee2, _this$3);
+		}));
+
+		return function (_x4, _x5, _x6) {
+			return _ref4.apply(this, arguments);
+		};
+	}();
+};
+
+var recalculate = function recalculate(force) {
+	return function () {
+		var _ref6 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(dispatch, getState, _ref5) {
+			var http = _ref5.http;
+
+			var _getState4, context, session, users, streams$$1, posts, currentUser, mentionRegExp, lastReads, nextState, streamsById, streamsByFile;
+
+			return regeneratorRuntime.wrap(function _callee3$(_context3) {
+				while (1) {
+					switch (_context3.prev = _context3.next) {
+						case 0:
+							_getState4 = getState(), context = _getState4.context, session = _getState4.session, users = _getState4.users, streams$$1 = _getState4.streams, posts = _getState4.posts;
+							currentUser = users[session.userId];
+							mentionRegExp = new RegExp("@" + currentUser.username + "\\b");
+							lastReads = currentUser.lastReads || {};
+							nextState = { mentions: {}, unread: {} };
+
+							if (force) nextState.count = new Date().getTime();
+							streamsById = {};
+							streamsByFile = getStreamsForRepo(streams$$1, context.currentRepoId) || {};
+
+							Object.entries(streamsByFile).forEach(function (_ref7) {
+								var _ref8 = slicedToArray(_ref7, 2),
+								    file = _ref8[0],
+								    stream = _ref8[1];
+
+								streamsById[stream.id] = stream;
+							});
+							Object.entries(lastReads).forEach(function (_ref9) {
+								var _ref10 = slicedToArray(_ref9, 2),
+								    streamId = _ref10[0],
+								    lastRead = _ref10[1];
+
+								var unread = 0;
+								var mentions = 0;
+								if (typeof lastRead === "string" || typeof lastRead === "number") {
+									// find the stream
+									// then calculate the unread Messages
+									var stream = streamsById[streamId];
+									var postsForStream = underscorePlus.sortBy(posts.byStream[streamId], "seqNum");
+									if (!postsForStream || postsForStream.length === 0) return;
+									var index = postsForStream.findIndex(function (post) {
+										if (typeof lastRead === "string") {
+											return post.id === lastRead;
+										} else {
+											return post.seqNum === lastRead;
+										}
+									});
+									if (index === -1 && typeof lastRead === "number") {
+										// we'll go with the naive implementation, which is to simply
+										// calculate the difference between the most recent post and the
+										// last read post, by sequence number ... but we have the larger
+										// question of why the post wasn't found, and what to do about it
+										var lastPost = postsForStream[postsForStream.length - 1];
+										unread = lastPost.seqNum - lastRead;
+									} else if (index >= 0) {
+										var postsLength = postsForStream.length;
+										for (var i = index + 1; i < postsLength; i++) {
+											var post = postsForStream[i];
+											if (!post.deactivated) unread++;
+											if (post && post.text && post.text.match(mentionRegExp)) {
+												mentions++;
+											}
+										}
+									} else {
+										unread = 1; // at least we get this
+									}
+									if (unread) nextState.unread[streamId] = unread;
+									if (mentions) nextState.mentions[streamId] = mentions;
+								}
+							});
+
+							dispatch({
+								type: "SET_UMI",
+								payload: nextState
+							});
+
+						case 11:
+						case "end":
+							return _context3.stop();
+					}
+				}
+			}, _callee3, _this$3);
+		}));
+
+		return function (_x7, _x8, _x9) {
+			return _ref6.apply(this, arguments);
+		};
+	}();
+};
+
+
+var umiActions = Object.freeze({
+	markStreamRead: markStreamRead,
+	setStreamUMITreatment: setStreamUMITreatment,
+	incrementUMI: incrementUMI,
+	recalculate: recalculate
+});
 
 var goToInvitePage = function goToInvitePage() {
   return { type: "GO_TO_INVITE_PAGE" };
@@ -56512,72 +56180,10 @@ var getPostsForStream = function getPostsForStream(_ref2) {
 	return [].concat(toConsumableArray$1(underscorePlus.sortBy(byStream[streamId], "seqNum")), toConsumableArray$1(pendingForStream));
 };
 
-var EditingIndicator = function (_React$Component) {
-	inherits$1(EditingIndicator, _React$Component);
+// import EditingIndicator from "./EditingIndicator";
 
-	function EditingIndicator() {
-		classCallCheck$1(this, EditingIndicator);
-		return possibleConstructorReturn$1(this, (EditingIndicator.__proto__ || Object.getPrototypeOf(EditingIndicator)).apply(this, arguments));
-	}
-
-	createClass$1(EditingIndicator, [{
-		key: "makeNameList",
-		value: function makeNameList(names, hasConflict) {
-			var message = "";
-
-			if (hasConflict) {
-				if (names.length == 1) message = "Potential merge conflict with " + names[0];else if (names.length == 2) message = "Potential merge conflict with " + names[0] + " and " + names[1];else if (names.length > 2) {
-					var last = names.pop();
-					message = "Potential merge conflict with " + names.join(", ") + ", and " + last;
-				}
-			} else {
-				if (names.length == 1) message = names[0] + " is editing this file";else if (names.length == 2) message = names[0] + " and " + names[1] + " are editing this file";else if (names.length > 2) {
-					var _last = names.pop();
-					message = names.join(", ") + ", and " + _last + " are editing this file";
-				}
-			}
-			return message;
-		}
-	}, {
-		key: "render",
-		value: function render() {
-			var users = this.props.users || [];
-			var currentUserId = this.props.currentUser.id;
-			var editingUsers = this.props.editingUsers || {};
-
-			var names = underscorePlus.compact(Object.keys(editingUsers).map(function (userId) {
-				return userId !== currentUserId && editingUsers[userId] ? users[userId].username : null;
-			}));
-
-			// you can test what it looks like by hard-coding this
-			// names = ["larry", "fred"];
-
-			var modifiedByMe = this.props.modifiedGit || this.props.modifiedTyping;
-			var modifiedByOthers = names.length > 0;
-			var hasConflict = modifiedByMe && modifiedByOthers;
-
-			var editingIndicatorClass = classnames({
-				"editing-indicator": true,
-				conflict: hasConflict,
-				inactive: this.props.inactive || !modifiedByOthers
-			});
-
-			return react.createElement(
-				"div",
-				{ className: editingIndicatorClass },
-				react.createElement(
-					"div",
-					null,
-					this.makeNameList(names, hasConflict)
-				)
-			);
-		}
-	}]);
-	return EditingIndicator;
-}(react.Component);
-
-var Path$1 = require("path");
-var logger$3 = _instance.forClass("components/Stream");
+// import Path from "path";
+var logger$1 = _instance.forClass("components/Stream");
 
 var isBlankContent = function isBlankContent(buffer, row, startColumn, endColumn) {
 	var line = buffer.lineForRow(row);
@@ -56974,9 +56580,11 @@ var SimpleStream = function (_Component) {
 				// not very React-ish but not sure how to set focus otherwise
 				_this.focusInput();
 
-				_this.context.platform.git.blame(editor.getPath()).then(function (data) {
-					return _this.addBlameAtMention(range, data);
-				});
+				// const platform = this.context;
+				// if (platform.isAtom)
+				// 	this.context.platform.git
+				// 		.blame(editor.getPath())
+				// 		.then(data => this.addBlameAtMention(range, data));
 
 				_this.setState({
 					quoteRange: range,
@@ -57172,8 +56780,6 @@ var SimpleStream = function (_Component) {
 		key: "componentDidMount",
 		value: function componentDidMount() {
 			this.setupCommands();
-
-			var me = this;
 			// TODO: scroll to bottom
 
 			var inputDiv = document.querySelector('div[contenteditable="true"]');
@@ -57182,7 +56788,8 @@ var SimpleStream = function (_Component) {
 			// this listener pays attention to when the input field resizes,
 			// presumably because the user has typed more than one line of text
 			// in it, and calls a function to handle the new size
-			new ResizeObserver(me.handleResizeCompose).observe(me._compose);
+
+			// new ResizeObserver(me.handleResizeCompose).observe(me._compose);
 
 			// so that HTML doesn't get pasted into the input field. without this,
 			// HTML would be rendered as HTML when pasted
@@ -57191,7 +56798,7 @@ var SimpleStream = function (_Component) {
 				var text = e.clipboardData.getData("text/plain");
 				document.execCommand("insertHTML", false, text);
 			});
-			this.installEditorHandlers();
+			// this.installEditorHandlers();
 		}
 	}, {
 		key: "componentWillUnmount",
@@ -57251,7 +56858,7 @@ var SimpleStream = function (_Component) {
 
 			this._postslist.scrollTop = 100000;
 
-			this.installEditorHandlers();
+			// this.installEditorHandlers();
 
 			// if we just switched to a new stream, (eagerly) mark both old and new as read
 			if (id !== prevProps.id) {
@@ -57456,7 +57063,7 @@ var SimpleStream = function (_Component) {
 		key: "fileAbbreviation",
 		value: function fileAbbreviation() {
 			if (!this.props.currentFile) return "";
-			return Path$1.basename(this.props.currentFile);
+			// return Path.basename(this.props.currentFile);
 		}
 	}, {
 		key: "render",
@@ -57542,22 +57149,6 @@ var SimpleStream = function (_Component) {
 				{ className: streamClass, ref: function ref(_ref9) {
 						return _this5._div = _ref9;
 					} },
-				this.context.platform.isAtom && react.createElement(UMIs, null),
-				react.createElement(BufferReferences, {
-					streamId: this.props.id,
-					references: this.props.markers,
-					onSelect: this.selectPost
-				}),
-				react.createElement(MarkerLocationTracker$1, { editor: editor }),
-				react.createElement(EditingIndicator, {
-					editingUsers: this.props.editingUsers,
-					modifiedTyping: this.state.modifiedTyping,
-					modifiedGit: this.state.modifiedGit,
-					currentFile: this.props.currentFile,
-					inactive: this.state.threadActive,
-					currentUser: this.props.currentUser,
-					users: this.props.users
-				}),
 				react.createElement(
 					"div",
 					{
@@ -57670,7 +57261,6 @@ var SimpleStream = function (_Component) {
 							return _this5._compose = _ref8;
 						}
 					},
-					react.createElement(AddCommentPopup, { editor: editor, onClick: this.handleClickAddComment }),
 					hasNewMessagesBelowFold && react.createElement(
 						"div",
 						{ className: "new-messages-below", onClick: this.handleClickScrollToNewMessages },
@@ -57881,7 +57471,7 @@ var SimpleStream = function (_Component) {
 	}, {
 		key: "handleEscape",
 		value: function handleEscape(event) {
-			logger$3.trace(".handleEscape");
+			logger$1.trace(".handleEscape");
 			if (this.state.editingPostId) this.setState({ editingPostId: null });else if (this.state.atMentionsOn) this.setState({ atMentionsOn: false });else if (this.state.threadActive) this.setState({ threadActive: null });else event.abortKeyBinding();
 		}
 
@@ -58043,7 +57633,7 @@ var getMarkersForStreamAndCommit = function getMarkersForStreamAndCommit() {
 	}).filter(Boolean);
 };
 
-var mapStateToProps$2 = function mapStateToProps(_ref12) {
+var mapStateToProps = function mapStateToProps(_ref12) {
 	var connectivity = _ref12.connectivity,
 	    session = _ref12.session,
 	    context = _ref12.context,
@@ -58124,7 +57714,7 @@ var mapStateToProps$2 = function mapStateToProps(_ref12) {
 	};
 };
 
-var Stream = connect(mapStateToProps$2, _extends$5({}, streamActions, actions, {
+var Stream = connect(mapStateToProps, _extends$5({}, streamActions, umiActions, {
 	fetchPosts: fetchPosts,
 	createPost: createPost,
 	editPost: editPost,
@@ -58132,7 +57722,7 @@ var Stream = connect(mapStateToProps$2, _extends$5({}, streamActions, actions, {
 	goToInvitePage: goToInvitePage
 }))(withRepositories(withConfigs(SimpleStream)));
 
-var _this$5 = undefined;
+var _this$4 = undefined;
 
 var OnlinePollTimer = void 0;
 var online = function online() {
@@ -58168,7 +57758,7 @@ var checkServerStatus = function checkServerStatus() {
 							return _context.stop();
 					}
 				}
-			}, _callee, _this$5, [[0, 6]]);
+			}, _callee, _this$4, [[0, 6]]);
 		}));
 
 		return function (_x, _x2, _x3) {
@@ -58298,7 +57888,7 @@ Object.defineProperty(OfflineBanner, "contextTypes", {
 });
 
 
-var mapStateToProps$3 = function mapStateToProps(_ref2) {
+var mapStateToProps$1 = function mapStateToProps(_ref2) {
 	var connectivity = _ref2.connectivity,
 	    messaging = _ref2.messaging;
 	return {
@@ -58307,7 +57897,22 @@ var mapStateToProps$3 = function mapStateToProps(_ref2) {
 		hasSubscriptionIssues: messaging.failedSubscriptions && messaging.failedSubscriptions.length > 0
 	};
 };
-connect(mapStateToProps$3, { checkServerStatus: checkServerStatus })(OfflineBanner);
+connect(mapStateToProps$1, { checkServerStatus: checkServerStatus })(OfflineBanner);
+
+// import SlackInfo from "./SlackInfo";
+
+var Loading = function Loading(props) {
+	return react.createElement(
+		"div",
+		{ className: "loading-page" },
+		react.createElement("span", { className: "loading loading-spinner-large inline-block" }),
+		react.createElement(
+			"p",
+			null,
+			props.message
+		)
+	);
+};
 
 var CodeStreamRoot = function (_Component) {
 	inherits$1(CodeStreamRoot, _Component);
@@ -58384,7 +57989,8 @@ var CodeStreamRoot = function (_Component) {
 					),
 					"."
 				)
-			);else return react.createElement(Stream, null);
+			);
+			if (!bootstrapped) return react.createElement(Loading, { message: "CodeStream engage..." });else return react.createElement(Stream, null);
 		}
 	}]);
 	return CodeStreamRoot;
@@ -58407,7 +58013,7 @@ Object.defineProperty(CodeStreamRoot, "childContextTypes", {
 });
 
 
-var mapStateToProps$4 = function mapStateToProps(_ref) {
+var mapStateToProps$2 = function mapStateToProps(_ref) {
 	var bootstrapped = _ref.bootstrapped,
 	    session = _ref.session,
 	    onboarding = _ref.onboarding,
@@ -58422,7 +58028,7 @@ var mapStateToProps$4 = function mapStateToProps(_ref) {
 		onboarding: onboarding
 	};
 };
-var CodeStreamRoot$1 = connect(mapStateToProps$4)(CodeStreamRoot);
+var CodeStreamRoot$1 = connect(mapStateToProps$2)(CodeStreamRoot);
 
 var copy = {
 	and: "and",
@@ -59020,6 +58626,23 @@ var reducer = (function (state, action) {
 	return appReducer(state, action);
 });
 
+var rpcMiddleWare = (function (store) {
+	window.addEventListener("message", function (event) {
+		console.log("received message from extension host", event.data);
+		var _event$data = event.data,
+		    type = _event$data.type,
+		    payload = _event$data.payload;
+
+		if (type && payload) store.dispatch({ type: "ADD_" + type.toUpperCase(), payload: payload });
+	}, false);
+
+	return function (next) {
+		return function (action) {
+			return next(action);
+		};
+	};
+});
+
 var normalizeResponse = function normalizeResponse(response) {
 	return Object.entries(response).reduce(function (result, _ref) {
 		var _ref2 = slicedToArray(_ref, 2),
@@ -59220,55 +58843,6 @@ var CodeStreamVSWebviewApi = function () {
 		value: function findPostsByStreamId(streamId) {
 			return this.db.posts.where({ streamId: streamId }).sortBy("seqNum");
 		}
-	}, {
-		key: "fetchPosts",
-		value: function () {
-			var _ref7 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(mostRecentPost, streamId, teamId, commitHash) {
-				var url, response, normalized, posts, _normalized$markers, markers, markerLocations, more;
-
-				return regeneratorRuntime.wrap(function _callee5$(_context5) {
-					while (1) {
-						switch (_context5.prev = _context5.next) {
-							case 0:
-								url = "/posts?teamId=" + teamId + "&streamId=" + streamId + "&withMarkers";
-
-								if (commitHash) url += "&commitHash=" + commitHash;
-								if (mostRecentPost) url += "&gt=" + mostRecentPost.id;
-								_context5.next = 5;
-								return this.http.get(url, this.accessToken);
-
-							case 5:
-								response = _context5.sent;
-								normalized = normalizeResponse(response);
-								posts = normalized.posts, _normalized$markers = normalized.markers, markers = _normalized$markers === undefined ? [] : _normalized$markers, markerLocations = normalized.markerLocations, more = normalized.more;
-								_context5.next = 10;
-								return upsert(this.db, "posts", posts);
-
-							case 10:
-								_context5.next = 12;
-								return upsert(this.db, "markers", markers);
-
-							case 12:
-								_context5.next = 14;
-								return cacheMarkerLocations(this.db, markerLocations);
-
-							case 14:
-								return _context5.abrupt("return", normalized);
-
-							case 15:
-							case "end":
-								return _context5.stop();
-						}
-					}
-				}, _callee5, this);
-			}));
-
-			function fetchPosts(_x8, _x9, _x10, _x11) {
-				return _ref7.apply(this, arguments);
-			}
-
-			return fetchPosts;
-		}()
 	}]);
 	return CodeStreamVSWebviewApi;
 }();
@@ -59276,8 +58850,7 @@ var CodeStreamVSWebviewApi = function () {
 var createStore$1 = (function () {
 	var initialState = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
-	return createStore(reducer, initialState, reduxDevtoolsExtension_1(applyMiddleware(thunk.withExtraArgument({ api: new CodeStreamVSWebviewApi() })
-	// 		pubnubMiddleWare,
+	return createStore(reducer, initialState, reduxDevtoolsExtension_1(applyMiddleware(thunk.withExtraArgument({ api: new CodeStreamVSWebviewApi() }), rpcMiddleWare
 	// 		umiMiddleWare,
 	// 		contextualCommands,
 	// 		analyticsMiddleware,
@@ -59302,6 +58875,40 @@ var createStore$1 = (function () {
 	)));
 });
 
+var CompositeDisposable = function () {
+	function CompositeDisposable() {
+		classCallCheck$1(this, CompositeDisposable);
+		Object.defineProperty(this, "disposables", {
+			enumerable: true,
+			writable: true,
+			value: []
+		});
+		Object.defineProperty(this, "isDisposed", {
+			enumerable: true,
+			writable: true,
+			value: false
+		});
+	}
+
+	createClass$1(CompositeDisposable, [{
+		key: "add",
+		value: function add() {
+			var _disposables;
+
+			(_disposables = this.disposables).push.apply(_disposables, arguments);
+		}
+	}, {
+		key: "dispose",
+		value: function dispose() {
+			this.disposables.forEach(function (disposable) {
+				return disposable.dispose();
+			});
+			this.isDisposed = true;
+		}
+	}]);
+	return CompositeDisposable;
+}();
+
 var VSCodeAPI = {
 	focusView: function focusView() {},
 	inDevMode: function inDevMode() {
@@ -59310,8 +58917,24 @@ var VSCodeAPI = {
 	readClipboard: function readClipboard() {
 		return "";
 	},
+	createCompositeDisposable: function createCompositeDisposable() {
+		return new CompositeDisposable();
+	},
+	addKeyMapping: function addKeyMapping(source, bindings) {
+		return {
+			dispose: function dispose() {}
+		};
+	},
+	addCommands: function addCommands(target, commands) {
+		return {
+			dispose: function dispose() {}
+		};
+	},
 	getRepositories: function getRepositories() {
 		return [];
+	},
+	getActiveEditor: function getActiveEditor() {
+		return null;
 	},
 	openInBrowser: function openInBrowser(url) {},
 	showNotification: function showNotification(message) {
@@ -59328,12 +58951,36 @@ var VSCodeAPI = {
 
 addLocaleData([].concat(toConsumableArray$1(en)));
 
+var data$1 = JSON.parse(document.querySelector("#data").textContent);
+
+var store$3 = window.store = createStore$1({
+	context: {
+		currentTeamId: data$1.currentTeamId,
+		currentRepoId: data$1.currentRepoId,
+		currentFile: data$1.currentFile
+	},
+	session: {
+		userId: data$1.currentUserId
+	}
+});
+
+console.log("store", store$3.getState());
+
+store$3.dispatch({ type: "BOOTSTRAP_USERS", payload: data$1.users });
+store$3.dispatch({ type: "BOOTSTRAP_REPOS", payload: data$1.repos });
+store$3.dispatch({ type: "BOOTSTRAP_TEAMS", payload: data$1.teams });
+store$3.dispatch({ type: "BOOTSTRAP_POSTS", payload: data$1.posts });
+store$3.dispatch({ type: "BOOTSTRAP_STREAMS", payload: data$1.streams });
+store$3.dispatch({ type: "BOOTSTRAP_COMPLETE" });
+
+console.log("store", store$3.getState());
+
 reactDom.render(react.createElement(
 	IntlProvider,
 	{ locale: "en", messages: copy },
 	react.createElement(
 		Provider,
-		{ store: createStore$1() },
+		{ store: store$3 },
 		react.createElement(CodeStreamRoot$1, { platform: VSCodeAPI, repositories: [] })
 	)
 ), document.querySelector("#app"));

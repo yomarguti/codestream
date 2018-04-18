@@ -34,8 +34,6 @@ class MessageRelay {
 
 export class StreamWebViewPanel implements Disposable {
   // private readonly _disposable: Disposable;
-  private panel?: WebviewPanel;
-  private messageRelay?: MessageRelay;
 
   constructor(private session: CodeStreamSession) {
     // this._disposable = Disposable.from(
@@ -60,7 +58,7 @@ export class StreamWebViewPanel implements Disposable {
       }
     );
 
-    this.messageRelay = new MessageRelay(this.session, panel.webview);
+    const messageRelay = new MessageRelay(this.session, panel.webview);
 
     const state: ViewData = Object.create(null);
     state.currentRepoId = stream.repoId;
@@ -82,10 +80,13 @@ export class StreamWebViewPanel implements Disposable {
       this.session.users.entities
     ]);
 
-    const filename = Container.context.asAbsolutePath('/assets/index.html');
-    const html: string = fs.readFileSync(filename, {
+    const htmlPath = Container.context.asAbsolutePath('/assets/index.html');
+    const scriptPath = Container.context.asAbsolutePath('/assets/app.js');
+    const html: string = fs.readFileSync(htmlPath, {
       encoding: 'utf-8'
-    }).replace('{%%}', JSON.stringify(state));
+    })
+    .replace('{% bootstrap-data %}', JSON.stringify(state))
+    .replace('{% script-path %}', scriptPath);
     panel.webview.html = html;
   }
 }
