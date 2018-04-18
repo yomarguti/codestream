@@ -1,6 +1,7 @@
 'use strict';
 import { Disposable, Event, EventEmitter } from 'vscode';
 import { CSPost, CSRepository, CSStream } from './types';
+import { CodeStreamApi } from './api';
 import { Logger } from '../logger';
 import Pubnub = require('pubnub');
 
@@ -141,13 +142,13 @@ export class PubNubReceiver {
 
             switch (key as MessageType) {
                 case 'posts':
-                    this._onDidReceiveMessage.fire({ type: MessageType.Posts, posts: obj as CSPost[] });
+                    this._onDidReceiveMessage.fire({ type: MessageType.Posts, posts: CodeStreamApi.normalizeResponse(obj) as CSPost[] });
                     break;
                 case 'repos':
-                    this._onDidReceiveMessage.fire({ type: MessageType.Repositories, repos: obj as CSRepository[] });
+                    this._onDidReceiveMessage.fire({ type: MessageType.Repositories, repos: CodeStreamApi.normalizeResponse(obj) as CSRepository[] });
                     break;
                 case 'streams':
-                    this._onDidReceiveMessage.fire({ type: MessageType.Streams, streams: obj as CSStream[] });
+                    this._onDidReceiveMessage.fire({ type: MessageType.Streams, streams: CodeStreamApi.normalizeResponse(obj) as CSStream[] });
                     break;
             }
         }

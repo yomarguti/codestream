@@ -24,7 +24,7 @@ interface ViewData {
 }
 
 class MessageRelay {
-  constructor(private readonly session: CodeStreamSession, private readonly view: Webview) {
+  constructor(public readonly session: CodeStreamSession, public readonly view: Webview) {
     session.onDidReceivePosts(event => {
       view.postMessage({
         type: 'posts',

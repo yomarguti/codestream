@@ -156,11 +156,10 @@ export class CodeStreamApi {
         return new Error(`${response.status}: ${response.statusText}\n\n${JSON.stringify(data)}`);
     }
 
-    private static normalizeResponse<R extends object>(obj: { [key: string]: any }): R {
+    static normalizeResponse<R extends object>(obj: { [key: string]: any }): R {
         for (const [key, value] of Object.entries(obj)) {
             if (key === '_id') {
                 obj['id'] = value;
-                // TODO: Delete `_id` ?
             }
 
             if (Array.isArray(value)) {
@@ -169,15 +168,8 @@ export class CodeStreamApi {
             else if (typeof value === 'object') {
                 obj[key] = this.normalizeResponse(value);
             }
-
         }
 
         return obj as R;
-
-        // return Object.entries(obj)
-        //     .reduce((result, [key, value]) => {
-        //         result[key.startsWith('_') ? key.substring(1) : key] = value;
-        //         return result;
-        //     }, Object.create(null) as { [key: string]: any }) as R;
     }
 }

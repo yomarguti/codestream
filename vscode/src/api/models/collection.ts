@@ -28,7 +28,7 @@ export abstract class CodeStreamItem<TEntity extends CSEntity> extends Disposabl
     }
 
     get id() {
-        return this.entity._id;
+        return this.entity.id;
     }
 }
 
