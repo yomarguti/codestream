@@ -26,8 +26,13 @@ interface ViewData {
 
 class MessageRelay {
   constructor(private readonly session: CodeStreamSession, private readonly view: Webview) {
-    session.onDidReceivePosts(posts => {
-      view.postMessage({type: 'posts', payload: posts.getPosts().map(p => p.entity)});
+    session.onDidReceivePosts(event => {
+      view.postMessage({
+        type: 'posts',
+        payload: event.getPosts().map(post => (
+          { ...post.entity, id: post.id }
+        ))
+      });
     });
   }
 }
@@ -82,11 +87,13 @@ export class StreamWebViewPanel implements Disposable {
 
     const htmlPath = Container.context.asAbsolutePath('/assets/index.html');
     const scriptPath = Container.context.asAbsolutePath('/assets/app.js');
+    const stylesPath = Container.context.asAbsolutePath('/assets/styles/stream.css');
     const html: string = fs.readFileSync(htmlPath, {
       encoding: 'utf-8'
     })
     .replace('{% bootstrap-data %}', JSON.stringify(state))
-    .replace('{% script-path %}', scriptPath);
+    .replace('{% script-path %}', scriptPath)
+    .replace('{% styles-path %}', stylesPath);
     panel.webview.html = html;
   }
 }
