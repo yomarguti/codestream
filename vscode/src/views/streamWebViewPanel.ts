@@ -2,6 +2,7 @@ import {
   commands,
   Disposable,
   ViewColumn,
+  Webview,
   WebviewPanel,
   window
 } from 'vscode';
@@ -23,8 +24,18 @@ interface ViewData {
   repos: CSRepository[];
 }
 
+class MessageRelay {
+  constructor(private readonly session: CodeStreamSession, private readonly view: Webview) {
+    session.onDidReceivePosts(posts => {
+      view.postMessage({type: 'posts', payload: posts.getPosts().map(p => p.entity)});
+    });
+  }
+}
+
 export class StreamWebViewPanel implements Disposable {
   // private readonly _disposable: Disposable;
+  private panel?: WebviewPanel;
+  private messageRelay?: MessageRelay;
 
   constructor(private session: CodeStreamSession) {
     // this._disposable = Disposable.from(
@@ -49,9 +60,11 @@ export class StreamWebViewPanel implements Disposable {
       }
     );
 
+    this.messageRelay = new MessageRelay(this.session, panel.webview);
+
     const state: ViewData = Object.create(null);
     state.currentRepoId = stream.repoId;
-    state.currentFile = stream.uri.fsPath;
+    state.currentFile = stream.path;
     state.currentTeamId = stream.teamId;
     state.currentUserId = this.session.userId;
 
@@ -69,13 +82,10 @@ export class StreamWebViewPanel implements Disposable {
       this.session.users.entities
     ]);
 
-    console.log(state);
     const filename = Container.context.asAbsolutePath('/assets/index.html');
     const html: string = fs.readFileSync(filename, {
       encoding: 'utf-8'
     }).replace('{%%}', JSON.stringify(state));
     panel.webview.html = html;
-
-    panel.reveal(ViewColumn.Three);
   }
 }

@@ -58639,6 +58639,23 @@ var reducer = (function (state, action) {
 	return appReducer(state, action);
 });
 
+var rpcMiddleWare = (function (store) {
+	window.addEventListener("message", function (event) {
+		console.log("received message from extension host", event.data);
+		var _event$data = event.data,
+		    type = _event$data.type,
+		    payload = _event$data.payload;
+
+		if (type && payload) store.dispatch({ type: "ADD_" + type.toUpperCase(), payload: payload });
+	}, false);
+
+	return function (next) {
+		return function (action) {
+			return next(action);
+		};
+	};
+});
+
 var normalizeResponse = function normalizeResponse(response) {
 	return Object.entries(response).reduce(function (result, _ref) {
 		var _ref2 = slicedToArray(_ref, 2),
@@ -58846,8 +58863,7 @@ var CodeStreamVSWebviewApi = function () {
 var createStore$1 = (function () {
 	var initialState = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
-	return createStore(reducer, initialState, reduxDevtoolsExtension_1(applyMiddleware(thunk.withExtraArgument({ api: new CodeStreamVSWebviewApi() })
-	// 		pubnubMiddleWare,
+	return createStore(reducer, initialState, reduxDevtoolsExtension_1(applyMiddleware(thunk.withExtraArgument({ api: new CodeStreamVSWebviewApi() }), rpcMiddleWare
 	// 		umiMiddleWare,
 	// 		contextualCommands,
 	// 		analyticsMiddleware,
