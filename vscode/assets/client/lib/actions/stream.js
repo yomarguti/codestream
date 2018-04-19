@@ -3,7 +3,6 @@ import { upsert } from "../local-cache";
 import { normalize } from "./utils";
 import { setUserPreference } from "./user";
 import { fetchAllPosts, fetchLatestPosts } from "./post";
-import { getStreamsForRepo, getStreamForRepoAndFile } from "../reducers/streams";
 
 export const saveStream = attributes => (dispatch, getState, { db }) => {
 	return upsert(db, "streams", attributes).then(stream => {
@@ -88,7 +87,7 @@ export const markPathsModified = modifiedPaths => async (dispatch, getState, { h
 	let paths = [];
 	let streamIds = [];
 	modifiedPaths.forEach(path => {
-		const stream = getStreamForRepoAndFile(streams, context.currentRepoId, path);
+		const stream = streams[context.currentStreamId];
 		if (stream) streamIds.push(stream.id);
 		else paths.push(path);
 	});

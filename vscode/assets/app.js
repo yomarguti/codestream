@@ -48353,97 +48353,6 @@ var normalize = function normalize(data) {
 	if (Array.isArray(data)) return data.map(dedasherizeKeys);else if (!isObject$4(data)) return data;else return dedasherizeKeys(data);
 };
 
-var saveUser = function saveUser(user) {
-	return function (dispatch, getState) {
-		// return upsert(db, "users", attributes).then(user =>
-		dispatch({
-			type: "ADD_USER",
-			payload: user
-		});
-		// );
-	};
-};
-
-var setUserPreference = function setUserPreference(prefPath, value) {
-	return function (dispatch, getState, _ref2) {
-		var http = _ref2.http;
-
-		var _getState2 = getState(),
-		    session = _getState2.session,
-		    context = _getState2.context,
-		    users = _getState2.users;
-
-		var user = users[session.userId];
-
-		if (!user.preferences) user.preferences = {};
-		var preferences = user.preferences;
-		var newPreference = {};
-		var newPreferencePointer = newPreference;
-		while (prefPath.length > 1) {
-			var part = prefPath.shift().replace(/\./g, "*");
-			if (!preferences[part]) preferences[part] = {};
-			preferences = preferences[part];
-			newPreferencePointer[part] = {};
-			newPreferencePointer = newPreferencePointer[part];
-		}
-		preferences[prefPath[0].replace(/\./g, "*")] = value;
-		newPreferencePointer[prefPath[0].replace(/\./g, "*")] = value;
-
-		console.log("Saving preferences: ", newPreference);
-		http.put("/preferences", newPreference, session.accessToken);
-		dispatch(saveUser(normalize(user)));
-	};
-};
-
-var toMapBy = function toMapBy(key, entities) {
-	return entities.reduce(function (result, entity) {
-		return _extends$5({}, result, defineProperty$5({}, entity[key], entity));
-	}, {});
-};
-
-var initialState = {
-	byRepo: {
-		//[repoId]: { byFile: {} }
-	}
-};
-
-var addStream = function addStream(state, stream) {
-	var existingStreamsForRepo = state.byRepo[stream.repoId] || { byFile: {} };
-	return {
-		byRepo: _extends$5({}, state.byRepo, defineProperty$5({}, stream.repoId, {
-			byFile: _extends$5({}, existingStreamsForRepo.byFile, defineProperty$5({}, stream.file, stream))
-		}))
-	};
-};
-
-var streams = (function () {
-	var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState;
-	var _ref = arguments[1];
-	var type = _ref.type,
-	    payload = _ref.payload;
-
-	switch (type) {
-		case "ADD_STREAMS":
-		case "BOOTSTRAP_STREAMS":
-			return payload.reduce(addStream, state);
-		case "STREAMS-UPDATE_FROM_PUBNUB":
-		case "ADD_STREAM":
-			return addStream(state, payload);
-		default:
-			return state;
-	}
-});
-
-// Selectors
-var getStreamForRepoAndFile = function getStreamForRepoAndFile(state, repoId, file) {
-	var filesForRepo = (state.byRepo[repoId] || {}).byFile;
-	if (filesForRepo) return filesForRepo[file];
-};
-
-var getStreamsForRepo = function getStreamsForRepo(state, repoId) {
-	return (state.byRepo[repoId] || {}).byFile;
-};
-
 var _this$1 = undefined;
 
 var saveStream = function saveStream(attributes) {
@@ -48459,14 +48368,14 @@ var saveStream = function saveStream(attributes) {
 	};
 };
 
-var saveStreams = function saveStreams(streams$$1) {
+var saveStreams = function saveStreams(streams) {
 	return function (dispatch, getState, _ref2) {
 		var db$$1 = _ref2.db;
 
 		// return upsert(db, "streams", attributes).then(streams =>
 		return dispatch({
 			type: "ADD_STREAMS",
-			payload: streams$$1
+			payload: streams
 		});
 		// );
 	};
@@ -48489,13 +48398,13 @@ var fetchStreams = function fetchStreams(sortId) {
 							if (sortId) url += "&lt=" + sortId;
 
 							return _context.abrupt("return", http.get(url, session.accessToken).then(function (_ref5) {
-								var streams$$1 = _ref5.streams,
+								var streams = _ref5.streams,
 								    more = _ref5.more;
 
-								var normalizedStreams = normalize(streams$$1);
+								var normalizedStreams = normalize(streams);
 								dispatch(fetchLatestPosts(normalizedStreams));
 								var save = dispatch(saveStreams(normalizedStreams));
-								if (more) return dispatch(fetchStreams(underscorePlus.sortBy(streams$$1, "sortId")[0].sortId));else return save;
+								if (more) return dispatch(fetchStreams(underscorePlus.sortBy(streams, "sortId")[0].sortId));else return save;
 							}));
 
 						case 4:
@@ -48528,12 +48437,12 @@ var fetchStreamsAndAllPosts = function fetchStreamsAndAllPosts(sortId) {
 						case 0:
 							_getState2 = getState(), context = _getState2.context;
 							return _context2.abrupt("return", api.fetchStreams(context.currentTeamId, context.currentRepoId, sortId).then(function (_ref8) {
-								var streams$$1 = _ref8.streams,
+								var streams = _ref8.streams,
 								    more = _ref8.more;
 
-								dispatch(fetchAllPosts(streams$$1));
-								var save = dispatch(saveStreams(streams$$1));
-								if (more) return dispatch(fetchStreamsAndAllPosts(underscorePlus.sortBy(streams$$1, "sortId")[0].sortId));else return save;
+								dispatch(fetchAllPosts(streams));
+								var save = dispatch(saveStreams(streams));
+								if (more) return dispatch(fetchStreamsAndAllPosts(underscorePlus.sortBy(streams, "sortId")[0].sortId));else return save;
 							}));
 
 						case 2:
@@ -48609,13 +48518,13 @@ var markPathsModified = function markPathsModified(modifiedPaths) {
 		var _ref12 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(dispatch, getState, _ref11) {
 			var http = _ref11.http;
 
-			var _getState4, context, session, streams$$1, paths, streamIds, payload, markModifiedData;
+			var _getState4, context, session, streams, paths, streamIds, payload, markModifiedData;
 
 			return regeneratorRuntime.wrap(function _callee4$(_context4) {
 				while (1) {
 					switch (_context4.prev = _context4.next) {
 						case 0:
-							_getState4 = getState(), context = _getState4.context, session = _getState4.session, streams$$1 = _getState4.streams;
+							_getState4 = getState(), context = _getState4.context, session = _getState4.session, streams = _getState4.streams;
 
 							if (session.accessToken) {
 								_context4.next = 3;
@@ -48629,7 +48538,7 @@ var markPathsModified = function markPathsModified(modifiedPaths) {
 							streamIds = [];
 
 							modifiedPaths.forEach(function (path) {
-								var stream = getStreamForRepoAndFile(streams$$1, context.currentRepoId, path);
+								var stream = streams[context.currentStreamId];
 								if (stream) streamIds.push(stream.id);else paths.push(path);
 							});
 
@@ -48680,6 +48589,7 @@ var saveMarkers = function saveMarkers(markers) {
 };
 
 var _this$2 = undefined;
+// import { saveMarkerLocations } from "./marker-location";
 // import MarkerLocationFinder from "../git/MarkerLocationFinder";
 // import { open as openRepo } from "../git/GitRepo";
 
@@ -48751,12 +48661,12 @@ var fetchLatest = function fetchLatest(mostRecentPost, streamId, teamId) {
 	}();
 };
 
-var fetchLatestPosts = function fetchLatestPosts(streams$$1) {
+var fetchLatestPosts = function fetchLatestPosts(streams) {
 	return function (dispatch, getState, _ref4) {
 		var db$$1 = _ref4.db,
 		    http = _ref4.http;
 
-		return Promise.all(streams$$1.map(function () {
+		return Promise.all(streams.map(function () {
 			var _ref5 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(stream) {
 				var cachedPosts, mostRecentCachedPost;
 				return regeneratorRuntime.wrap(function _callee2$(_context2) {
@@ -48843,11 +48753,11 @@ var fetchOlderPosts = function fetchOlderPosts(mostRecentPost, streamId, teamId)
 	}();
 };
 
-var fetchAllPosts = function fetchAllPosts(streams$$1) {
+var fetchAllPosts = function fetchAllPosts(streams) {
 	return function (dispatch, getState, _ref9) {
 		objectDestructuringEmpty(_ref9);
 
-		return Promise.all(streams$$1.map(function () {
+		return Promise.all(streams.map(function () {
 			var _ref10 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(stream) {
 				return regeneratorRuntime.wrap(function _callee4$(_context4) {
 					while (1) {
@@ -48870,48 +48780,85 @@ var fetchAllPosts = function fetchAllPosts(streams$$1) {
 	};
 };
 
-var fetchPosts = function fetchPosts(_ref13) {
-	var streamId = _ref13.streamId,
-	    teamId = _ref13.teamId;
+// export const fetchLatestForCurrentStream = () => async (dispatch, getState, { http }) => {
+// 	const { context, session, streams } = getState();
+
+// 	if (context.currentFile) {
+// 		const currentStream = getStreamForRepoAndFile(
+// 			streams,
+// 			context.currentRepoId,
+// 			context.currentFile
+// 		);
+// 		if (currentStream) return dispatch(fetchLatestPosts([currentStream]));
+// 		else {
+// 			const url = `/posts?teamId=${context.currentTeamId}&repoId=${context.currentRepoId}&path=${
+// 				context.currentFile
+// 			}`;
+// 			try {
+// 				const data = await http.get(url, session.accessToken);
+// 				const stream = normalize(data.stream);
+// 				dispatch(saveStream(stream));
+// 				const posts = normalize(data.posts);
+// 				const save = await dispatch(savePosts(posts));
+// 				if (posts.length > 0 && data.more)
+// 					return dispatch(fetchLatest(_.sortBy(posts, "seqNum")[0], stream.id, stream.teamId));
+// 				else return save;
+// 			} catch (error) {
+// 				if (http.isApiRequestError(error) && error.data.code === "RAPI-1003") {
+// 					/* No stream for this file */
+// 				} else {
+// 					console.error(`Unexpected error fetching latest posts for ${context.currentFile}`, error);
+// 					Raven.captureException(error, {
+// 						logger: "actions/post"
+// 					});
+// 				}
+// 			}
+// 		}
+// 	}
+// };
+
+var fetchPosts = function fetchPosts(_ref11) {
+	var streamId = _ref11.streamId,
+	    teamId = _ref11.teamId;
 	return function () {
-		var _ref15 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(dispatch, getState, _ref14) {
-			var db$$1 = _ref14.db,
-			    http = _ref14.http;
+		var _ref13 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(dispatch, getState, _ref12) {
+			var db$$1 = _ref12.db,
+			    http = _ref12.http;
 
-			var _getState4, session, _ref16, posts;
+			var _getState3, session, _ref14, posts;
 
-			return regeneratorRuntime.wrap(function _callee6$(_context6) {
+			return regeneratorRuntime.wrap(function _callee5$(_context5) {
 				while (1) {
-					switch (_context6.prev = _context6.next) {
+					switch (_context5.prev = _context5.next) {
 						case 0:
-							_getState4 = getState(), session = _getState4.session;
-							_context6.next = 3;
+							_getState3 = getState(), session = _getState3.session;
+							_context5.next = 3;
 							return http.get("/posts?teamId=" + teamId + "&streamId=" + streamId, session.accessToken);
 
 						case 3:
-							_ref16 = _context6.sent;
-							posts = _ref16.posts;
+							_ref14 = _context5.sent;
+							posts = _ref14.posts;
 
 							dispatch(savePostsForStream(streamId, normalize(posts)));
 							// return dispatch(calculateLocations({ streamId, teamId }));
 
 						case 6:
 						case "end":
-							return _context6.stop();
+							return _context5.stop();
 					}
 				}
-			}, _callee6, _this$2);
+			}, _callee5, _this$2);
 		}));
 
-		return function (_x12, _x13, _x14) {
-			return _ref15.apply(this, arguments);
+		return function (_x9, _x10, _x11) {
+			return _ref13.apply(this, arguments);
 		};
 	}();
 };
 
 var savePostsForStream = function savePostsForStream(streamId, posts) {
-	return function (dispatch, getState, _ref19) {
-		var db$$1 = _ref19.db;
+	return function (dispatch, getState, _ref17) {
+		var db$$1 = _ref17.db;
 
 		// return upsert(db, "posts", attributes).then(posts =>
 		dispatch({
@@ -48931,16 +48878,16 @@ var savePendingPost = function savePendingPost(attributes) {
 
 var createPost = function createPost(streamId, parentPostId, text, codeBlocks, mentions, bufferText, extra) {
 	return function () {
-		var _ref21 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7(dispatch, getState, _ref20) {
-			var api = _ref20.api;
+		var _ref19 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(dispatch, getState, _ref18) {
+			var api = _ref18.api;
 
-			var _getState5, context, session, pendingId, post, createdPost;
+			var _getState4, context, session, pendingId, post, createdPost;
 
-			return regeneratorRuntime.wrap(function _callee7$(_context7) {
+			return regeneratorRuntime.wrap(function _callee6$(_context6) {
 				while (1) {
-					switch (_context7.prev = _context7.next) {
+					switch (_context6.prev = _context6.next) {
 						case 0:
-							_getState5 = getState(), context = _getState5.context, session = _getState5.session;
+							_getState4 = getState(), context = _getState4.context, session = _getState4.session;
 							pendingId = createTempId();
 
 							// const gitRepo = await openRepo(repoAttributes.workingDirectory);
@@ -48999,12 +48946,12 @@ var createPost = function createPost(streamId, parentPostId, text, codeBlocks, m
 
 							dispatch(savePendingPost(_extends$5({}, post)));
 
-							_context7.prev = 5;
-							_context7.next = 8;
+							_context6.prev = 5;
+							_context6.next = 8;
 							return api.createPost(post);
 
 						case 8:
-							createdPost = _context7.sent;
+							createdPost = _context6.sent;
 
 							debugger;
 							// if (hasUncommittedLocation) {
@@ -49020,12 +48967,12 @@ var createPost = function createPost(streamId, parentPostId, text, codeBlocks, m
 							// if (!streamId) dispatch(saveStream(normalize(data.stream)));
 							dispatch(resolvePendingPost(pendingId, normalize(createdPost)));
 							// TODO: analytics dispatch({ type: "POST_CREATED", meta: { post: data.post, ...extra } });
-							_context7.next = 17;
+							_context6.next = 17;
 							break;
 
 						case 13:
-							_context7.prev = 13;
-							_context7.t0 = _context7["catch"](5);
+							_context6.prev = 13;
+							_context6.t0 = _context6["catch"](5);
 
 							debugger;
 							// TODO: different types of errors?
@@ -49033,14 +48980,14 @@ var createPost = function createPost(streamId, parentPostId, text, codeBlocks, m
 
 						case 17:
 						case "end":
-							return _context7.stop();
+							return _context6.stop();
 					}
 				}
-			}, _callee7, _this$2, [[5, 13]]);
+			}, _callee6, _this$2, [[5, 13]]);
 		}));
 
-		return function (_x15, _x16, _x17) {
-			return _ref21.apply(this, arguments);
+		return function (_x12, _x13, _x14) {
+			return _ref19.apply(this, arguments);
 		};
 	}();
 };
@@ -49056,8 +49003,8 @@ var resolvePendingPost = function resolvePendingPost(id, resolvedPost) {
 };
 
 var rejectPendingPost = function rejectPendingPost(pendingId) {
-	return function (dispatch, getState, _ref23) {
-		var db$$1 = _ref23.db;
+	return function (dispatch, getState, _ref21) {
+		var db$$1 = _ref21.db;
 
 		return upsert(db$$1, "posts", { id: pendingId, error: true }).then(function (post) {
 			return dispatch(pendingPostFailed(post));
@@ -49067,46 +49014,46 @@ var rejectPendingPost = function rejectPendingPost(pendingId) {
 
 var cancelPost = function cancelPost(pendingId) {
 	return function () {
-		var _ref25 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(dispatch, getState, _ref24) {
-			var db$$1 = _ref24.db;
-			return regeneratorRuntime.wrap(function _callee9$(_context9) {
+		var _ref23 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8(dispatch, getState, _ref22) {
+			var db$$1 = _ref22.db;
+			return regeneratorRuntime.wrap(function _callee8$(_context8) {
 				while (1) {
-					switch (_context9.prev = _context9.next) {
+					switch (_context8.prev = _context8.next) {
 						case 0:
-							return _context9.abrupt("return", db$$1.posts.delete(pendingId).then(function () {
+							return _context8.abrupt("return", db$$1.posts.delete(pendingId).then(function () {
 								return dispatch({ type: "CANCEL_PENDING_POST", payload: pendingId });
 							}));
 
 						case 1:
 						case "end":
-							return _context9.stop();
+							return _context8.stop();
 					}
 				}
-			}, _callee9, _this$2);
+			}, _callee8, _this$2);
 		}));
 
-		return function (_x20, _x21, _x22) {
-			return _ref25.apply(this, arguments);
+		return function (_x17, _x18, _x19) {
+			return _ref23.apply(this, arguments);
 		};
 	}();
 };
 
 var retryPost = function retryPost(pendingId) {
 	return function () {
-		var _ref27 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10(dispatch, getState, _ref26) {
-			var db$$1 = _ref26.db,
-			    http = _ref26.http;
+		var _ref25 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(dispatch, getState, _ref24) {
+			var db$$1 = _ref24.db,
+			    http = _ref24.http;
 			var pendingPost;
-			return regeneratorRuntime.wrap(function _callee10$(_context10) {
+			return regeneratorRuntime.wrap(function _callee9$(_context9) {
 				while (1) {
-					switch (_context10.prev = _context10.next) {
+					switch (_context9.prev = _context9.next) {
 						case 0:
-							_context10.next = 2;
+							_context9.next = 2;
 							return db$$1.posts.get(pendingId);
 
 						case 2:
-							pendingPost = _context10.sent;
-							return _context10.abrupt("return", http.post("/posts", pendingPost, getState().session.accessToken).then(function (data) {
+							pendingPost = _context9.sent;
+							return _context9.abrupt("return", http.post("/posts", pendingPost, getState().session.accessToken).then(function (data) {
 								return dispatch(resolvePendingPost(pendingId, {
 									post: normalize(data.post),
 									markers: normalize(data.markers),
@@ -49125,10 +49072,56 @@ var retryPost = function retryPost(pendingId) {
 
 						case 4:
 						case "end":
+							return _context9.stop();
+					}
+				}
+			}, _callee9, _this$2);
+		}));
+
+		return function (_x20, _x21, _x22) {
+			return _ref25.apply(this, arguments);
+		};
+	}();
+};
+
+var editPost = function editPost(postId, text, mentions) {
+	return function () {
+		var _ref27 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10(dispatch, getState, _ref26) {
+			var http = _ref26.http;
+
+			var _getState6, session, context, delta, data;
+
+			return regeneratorRuntime.wrap(function _callee10$(_context10) {
+				while (1) {
+					switch (_context10.prev = _context10.next) {
+						case 0:
+							_getState6 = getState(), session = _getState6.session, context = _getState6.context;
+							delta = {
+								text: text,
+								mentionedUserIds: mentions
+							};
+							_context10.prev = 2;
+							_context10.next = 5;
+							return http.put("/posts/" + postId, delta, session.accessToken);
+
+						case 5:
+							data = _context10.sent;
+							_context10.next = 11;
+							break;
+
+						case 8:
+							_context10.prev = 8;
+							_context10.t0 = _context10["catch"](2);
+
+							// TODO: different types of errors?
+							dispatch(rejectEditPost(postId, _extends$5({}, delta, { error: true })));
+
+						case 11:
+						case "end":
 							return _context10.stop();
 					}
 				}
-			}, _callee10, _this$2);
+			}, _callee10, _this$2, [[2, 8]]);
 		}));
 
 		return function (_x23, _x24, _x25) {
@@ -49137,90 +49130,44 @@ var retryPost = function retryPost(pendingId) {
 	}();
 };
 
-var editPost = function editPost(postId, text, mentions) {
+var deletePost = function deletePost(postId) {
 	return function () {
 		var _ref29 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11(dispatch, getState, _ref28) {
 			var http = _ref28.http;
 
-			var _getState7, session, context, delta, data;
+			var _getState7, session, context, data;
 
 			return regeneratorRuntime.wrap(function _callee11$(_context11) {
 				while (1) {
 					switch (_context11.prev = _context11.next) {
 						case 0:
 							_getState7 = getState(), session = _getState7.session, context = _getState7.context;
-							delta = {
-								text: text,
-								mentionedUserIds: mentions
-							};
-							_context11.prev = 2;
-							_context11.next = 5;
-							return http.put("/posts/" + postId, delta, session.accessToken);
-
-						case 5:
-							data = _context11.sent;
-							_context11.next = 11;
-							break;
-
-						case 8:
-							_context11.prev = 8;
-							_context11.t0 = _context11["catch"](2);
-
-							// TODO: different types of errors?
-							dispatch(rejectEditPost(postId, _extends$5({}, delta, { error: true })));
-
-						case 11:
-						case "end":
-							return _context11.stop();
-					}
-				}
-			}, _callee11, _this$2, [[2, 8]]);
-		}));
-
-		return function (_x26, _x27, _x28) {
-			return _ref29.apply(this, arguments);
-		};
-	}();
-};
-
-var deletePost = function deletePost(postId) {
-	return function () {
-		var _ref31 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee12(dispatch, getState, _ref30) {
-			var http = _ref30.http;
-
-			var _getState8, session, context, data;
-
-			return regeneratorRuntime.wrap(function _callee12$(_context12) {
-				while (1) {
-					switch (_context12.prev = _context12.next) {
-						case 0:
-							_getState8 = getState(), session = _getState8.session, context = _getState8.context;
-							_context12.prev = 1;
-							_context12.next = 4;
+							_context11.prev = 1;
+							_context11.next = 4;
 							return http.deactivate("/posts/" + postId, {}, session.accessToken);
 
 						case 4:
-							data = _context12.sent;
-							_context12.next = 10;
+							data = _context11.sent;
+							_context11.next = 10;
 							break;
 
 						case 7:
-							_context12.prev = 7;
-							_context12.t0 = _context12["catch"](1);
+							_context11.prev = 7;
+							_context11.t0 = _context11["catch"](1);
 
 							// TODO: different types of errors?
 							dispatch(rejectDeletePost(postId, _extends$5({}, delta, { error: true })));
 
 						case 10:
 						case "end":
-							return _context12.stop();
+							return _context11.stop();
 					}
 				}
-			}, _callee12, _this$2, [[1, 7]]);
+			}, _callee11, _this$2, [[1, 7]]);
 		}));
 
-		return function (_x29, _x30, _x31) {
-			return _ref31.apply(this, arguments);
+		return function (_x26, _x27, _x28) {
+			return _ref29.apply(this, arguments);
 		};
 	}();
 };
@@ -49974,262 +49921,17 @@ Object.defineProperty(ConfigProvider, "contextTypes", {
 	}
 });
 
-var _this$3 = undefined;
-
-var markStreamRead = function markStreamRead(streamId) {
-	return function () {
-		var _ref2 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(dispatch, getState, _ref) {
-			var http = _ref.http;
-
-			var _getState, session, context, streams$$1, markReadData;
-
-			return regeneratorRuntime.wrap(function _callee$(_context) {
-				while (1) {
-					switch (_context.prev = _context.next) {
-						case 0:
-							_getState = getState(), session = _getState.session, context = _getState.context, streams$$1 = _getState.streams;
-
-							if (streamId) {
-								_context.next = 3;
-								break;
-							}
-
-							return _context.abrupt("return");
-
-						case 3:
-							if (!(context.currentFile === "")) {
-								_context.next = 5;
-								break;
-							}
-
-							return _context.abrupt("return");
-
-						case 5:
-							_context.next = 7;
-							return http.put("/read/" + streamId, {}, session.accessToken);
-
-						case 7:
-							markReadData = _context.sent;
-
-							dispatch({ type: "CLEAR_UMI", payload: streamId });
-							// console.log("READ THE STREAM", markReadData, session);
-
-						case 9:
-						case "end":
-							return _context.stop();
-					}
-				}
-			}, _callee, _this$3);
-		}));
-
-		return function (_x, _x2, _x3) {
-			return _ref2.apply(this, arguments);
-		};
-	}();
-};
-
-var setStreamUMITreatment = function setStreamUMITreatment(path, setting) {
-	return function (dispatch, getState) {
-		var _getState2 = getState(),
-		    context = _getState2.context;
-
-		return Promise.all(atom.project.getDirectories().map(atom.project.repositoryForDirectory.bind(atom.project))).then(function (repos) {
-			var repo = repos.filter(Boolean)[0];
-			var relativePath = repo.relativize(path);
-			var prefPath = ["streamTreatments", context.currentRepoId, relativePath];
-			dispatch(setUserPreference(prefPath, setting));
-			dispatch(recalculate(true));
-		});
-	};
-};
-
-var incrementUMI = function incrementUMI(post) {
-	return function () {
-		var _ref4 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(dispatch, getState, _ref3) {
-			var db$$1 = _ref3.db;
-
-			var _getState3, session, context, users, streams$$1, currentUser, currentStream, hasMention, type;
-
-			return regeneratorRuntime.wrap(function _callee2$(_context2) {
-				while (1) {
-					switch (_context2.prev = _context2.next) {
-						case 0:
-							_getState3 = getState(), session = _getState3.session, context = _getState3.context, users = _getState3.users, streams$$1 = _getState3.streams;
-							currentUser = users[session.userId];
-
-							// don't increment UMIs for posts you wrote yourself
-							// note that this is taken care of on the server as well,
-							// so we don't need to sync with the server in this case
-
-							if (!(post.creatorId === session.userId)) {
-								_context2.next = 4;
-								break;
-							}
-
-							return _context2.abrupt("return");
-
-						case 4:
-
-							// don't increment the UMI of the current stream, presumably because you
-							// see the post coming in. FIXME -- if we are not scrolled to the bottom,
-							// we should still increment the UMI
-							currentStream = getStreamForRepoAndFile(streams$$1, context.currentRepoId, context.currentFile);
-
-							if (!(currentStream && currentStream.id === post.streamId)) {
-								_context2.next = 8;
-								break;
-							}
-
-							// make sure we let the server know this post is read
-							// and return so that we do not increment the UMI
-							dispatch(markStreamRead(currentStream.id));
-							return _context2.abrupt("return");
-
-						case 8:
-							hasMention = post.text.match("@" + currentUser.username + "\\b");
-							type = hasMention ? "INCREMENT_MENTION" : "INCREMENT_UMI";
-
-							dispatch({
-								type: type,
-								payload: post.streamId
-							});
-
-							// if the user is up-to-date on this stream, then we need to create a pointer
-							// to the first unread message in the stream, stored in lastReads
-							currentUser.lastReads = currentUser.lastReads || {};
-
-							if (currentUser.lastReads[post.streamId]) {
-								_context2.next = 15;
-								break;
-							}
-
-							currentUser.lastReads[post.streamId] = post.seqNum;
-
-							return _context2.abrupt("return", upsert(db$$1, "users", currentUser).then(function (user) {
-								return dispatch({
-									type: "UPDATE_USER",
-									payload: user
-								});
-							}));
-
-						case 15:
-						case "end":
-							return _context2.stop();
-					}
-				}
-			}, _callee2, _this$3);
-		}));
-
-		return function (_x4, _x5, _x6) {
-			return _ref4.apply(this, arguments);
-		};
-	}();
-};
-
-var recalculate = function recalculate(force) {
-	return function () {
-		var _ref6 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(dispatch, getState, _ref5) {
-			var http = _ref5.http;
-
-			var _getState4, context, session, users, streams$$1, posts, currentUser, mentionRegExp, lastReads, nextState, streamsById, streamsByFile;
-
-			return regeneratorRuntime.wrap(function _callee3$(_context3) {
-				while (1) {
-					switch (_context3.prev = _context3.next) {
-						case 0:
-							_getState4 = getState(), context = _getState4.context, session = _getState4.session, users = _getState4.users, streams$$1 = _getState4.streams, posts = _getState4.posts;
-							currentUser = users[session.userId];
-							mentionRegExp = new RegExp("@" + currentUser.username + "\\b");
-							lastReads = currentUser.lastReads || {};
-							nextState = { mentions: {}, unread: {} };
-
-							if (force) nextState.count = new Date().getTime();
-							streamsById = {};
-							streamsByFile = getStreamsForRepo(streams$$1, context.currentRepoId) || {};
-
-							Object.entries(streamsByFile).forEach(function (_ref7) {
-								var _ref8 = slicedToArray(_ref7, 2),
-								    file = _ref8[0],
-								    stream = _ref8[1];
-
-								streamsById[stream.id] = stream;
-							});
-							Object.entries(lastReads).forEach(function (_ref9) {
-								var _ref10 = slicedToArray(_ref9, 2),
-								    streamId = _ref10[0],
-								    lastRead = _ref10[1];
-
-								var unread = 0;
-								var mentions = 0;
-								if (typeof lastRead === "string" || typeof lastRead === "number") {
-									// find the stream
-									// then calculate the unread Messages
-									var stream = streamsById[streamId];
-									var postsForStream = underscorePlus.sortBy(posts.byStream[streamId], "seqNum");
-									if (!postsForStream || postsForStream.length === 0) return;
-									var index = postsForStream.findIndex(function (post) {
-										if (typeof lastRead === "string") {
-											return post.id === lastRead;
-										} else {
-											return post.seqNum === lastRead;
-										}
-									});
-									if (index === -1 && typeof lastRead === "number") {
-										// we'll go with the naive implementation, which is to simply
-										// calculate the difference between the most recent post and the
-										// last read post, by sequence number ... but we have the larger
-										// question of why the post wasn't found, and what to do about it
-										var lastPost = postsForStream[postsForStream.length - 1];
-										unread = lastPost.seqNum - lastRead;
-									} else if (index >= 0) {
-										var postsLength = postsForStream.length;
-										for (var i = index + 1; i < postsLength; i++) {
-											var post = postsForStream[i];
-											if (!post.deactivated) unread++;
-											if (post && post.text && post.text.match(mentionRegExp)) {
-												mentions++;
-											}
-										}
-									} else {
-										unread = 1; // at least we get this
-									}
-									if (unread) nextState.unread[streamId] = unread;
-									if (mentions) nextState.mentions[streamId] = mentions;
-								}
-							});
-
-							dispatch({
-								type: "SET_UMI",
-								payload: nextState
-							});
-
-						case 11:
-						case "end":
-							return _context3.stop();
-					}
-				}
-			}, _callee3, _this$3);
-		}));
-
-		return function (_x7, _x8, _x9) {
-			return _ref6.apply(this, arguments);
-		};
-	}();
-};
-
-
-var umiActions = Object.freeze({
-	markStreamRead: markStreamRead,
-	setStreamUMITreatment: setStreamUMITreatment,
-	incrementUMI: incrementUMI,
-	recalculate: recalculate
-});
-
 var goToInvitePage = function goToInvitePage() {
   return { type: "GO_TO_INVITE_PAGE" };
 };
 
-var initialState$1 = {
+var toMapBy = function toMapBy(key, entities) {
+	return entities.reduce(function (result, entity) {
+		return _extends$5({}, result, defineProperty$5({}, entity[key], entity));
+	}, {});
+};
+
+var initialState = {
 	byStream: {},
 	pending: []
 };
@@ -50241,7 +49943,7 @@ var addPost = function addPost(byStream, post) {
 };
 
 var posts = (function () {
-	var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState$1;
+	var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState;
 	var _ref = arguments[1];
 	var type = _ref.type,
 	    payload = _ref.payload;
@@ -51004,7 +50706,7 @@ var SimpleStream = function (_Component) {
 		value: function componentDidUpdate(prevProps, prevState) {
 			var _props = this.props,
 			    id = _props.id,
-			    markStreamRead$$1 = _props.markStreamRead,
+			    markStreamRead = _props.markStreamRead,
 			    markStreamModified$$1 = _props.markStreamModified;
 
 
@@ -51014,9 +50716,9 @@ var SimpleStream = function (_Component) {
 
 			// if we just switched to a new stream, (eagerly) mark both old and new as read
 			if (id !== prevProps.id) {
-				markStreamRead$$1(id);
+				markStreamRead(id);
 
-				markStreamRead$$1(prevProps.id);
+				markStreamRead(prevProps.id);
 				this.resizeStream();
 			}
 
@@ -51781,7 +51483,7 @@ var mapStateToProps = function mapStateToProps(_ref12) {
 	var connectivity = _ref12.connectivity,
 	    session = _ref12.session,
 	    context = _ref12.context,
-	    streams$$1 = _ref12.streams,
+	    streams = _ref12.streams,
 	    users = _ref12.users,
 	    posts$$1 = _ref12.posts,
 	    markers = _ref12.markers,
@@ -51789,7 +51491,7 @@ var mapStateToProps = function mapStateToProps(_ref12) {
 	    messaging = _ref12.messaging,
 	    onboarding = _ref12.onboarding;
 
-	var stream = getStreamForRepoAndFile(streams$$1, context.currentRepoId, context.currentFile) || {};
+	var stream = streams[context.currentStreamId] || {};
 	var markersForStreamAndCommit = getMarkersForStreamAndCommit(markerLocations.byStream[stream.id], context.currentCommit, markers);
 	var locations = getLocationsByPost(markerLocations.byStream[stream.id], context.currentCommit, toMapBy("id", markersForStreamAndCommit));
 
@@ -51858,7 +51560,8 @@ var mapStateToProps = function mapStateToProps(_ref12) {
 	};
 };
 
-var Stream = connect(mapStateToProps, _extends$5({}, streamActions, umiActions, {
+var Stream = connect(mapStateToProps, _extends$5({}, streamActions, {
+	// ...umiActions,
 	fetchPosts: fetchPosts,
 	createPost: createPost,
 	editPost: editPost,
@@ -51866,7 +51569,7 @@ var Stream = connect(mapStateToProps, _extends$5({}, streamActions, umiActions, 
 	goToInvitePage: goToInvitePage
 }))(withRepositories(withConfigs(SimpleStream)));
 
-var _this$4 = undefined;
+var _this$3 = undefined;
 
 var OnlinePollTimer = void 0;
 var online = function online() {
@@ -51902,7 +51605,7 @@ var checkServerStatus = function checkServerStatus() {
 							return _context.stop();
 					}
 				}
-			}, _callee, _this$4, [[0, 6]]);
+			}, _callee, _this$3, [[0, 6]]);
 		}));
 
 		return function (_x, _x2, _x3) {
@@ -52276,10 +51979,10 @@ unwrapExports(reduxDevtoolsExtension);
 var reduxDevtoolsExtension_1 = reduxDevtoolsExtension.composeWithDevTools;
 var reduxDevtoolsExtension_2 = reduxDevtoolsExtension.devToolsEnhancer;
 
-var initialState$2 = {};
+var initialState$1 = {};
 
 var companies = (function () {
-	var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState$2;
+	var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState$1;
 	var _ref = arguments[1];
 	var type = _ref.type,
 	    payload = _ref.payload;
@@ -52297,7 +52000,7 @@ var companies = (function () {
 	}
 });
 
-var initialState$3 = {
+var initialState$2 = {
 	complete: false,
 	requestInProcess: false,
 	firstTimeInAtom: false,
@@ -52308,7 +52011,7 @@ var initialState$3 = {
 };
 
 var onboarding = (function () {
-	var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState$3;
+	var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState$2;
 	var _ref = arguments[1];
 	var type = _ref.type,
 	    payload = _ref.payload;
@@ -52324,31 +52027,31 @@ var onboarding = (function () {
 			return _extends$5({}, state, { step: "signUp" });
 		case "GO_TO_CONFIRMATION":
 		case "SIGNUP_SUCCESS":
-			return _extends$5({}, initialState$3, { step: "confirmEmail", props: payload });
+			return _extends$5({}, initialState$2, { step: "confirmEmail", props: payload });
 		case "SIGNUP_EMAIL_EXISTS":
 			return _extends$5({}, state, { step: "login", props: payload });
 		case "GO_TO_LOGIN":
-			return _extends$5({}, initialState$3, { step: "login" });
+			return _extends$5({}, initialState$2, { step: "login" });
 		case "GO_TO_SIGNUP":
-			return _extends$5({}, initialState$3, { step: "signUp" });
+			return _extends$5({}, initialState$2, { step: "signUp" });
 		case "SIGNUP-USERNAME_COLLISION":
 			return _extends$5({}, state, { errors: { usernameInUse: true } });
 		case "NEW_USER_LOGGED_INTO_NEW_REPO":
-			return _extends$5({}, initialState$3, { step: "createTeam" });
+			return _extends$5({}, initialState$2, { step: "createTeam" });
 		case "NEW_USER_CONFIRMED_IN_NEW_REPO":
-			return _extends$5({}, initialState$3, { step: "createTeam", firstTimeInAtom: true });
+			return _extends$5({}, initialState$2, { step: "createTeam", firstTimeInAtom: true });
 		case "EXISTING_USER_LOGGED_INTO_NEW_REPO":
-			return _extends$5({}, initialState$3, { step: "selectTeam" });
+			return _extends$5({}, initialState$2, { step: "selectTeam" });
 		case "EXISTING_USER_CONFIRMED_IN_NEW_REPO":
-			return _extends$5({}, initialState$3, { step: "selectTeam", firstTimeInAtom: true });
+			return _extends$5({}, initialState$2, { step: "selectTeam", firstTimeInAtom: true });
 		case "LOGGED_INTO_FOREIGN_REPO":
-			return _extends$5({}, initialState$3, { step: "noAccess" });
+			return _extends$5({}, initialState$2, { step: "noAccess" });
 		case "EXISTING_USER_CONFIRMED_IN_FOREIGN_REPO":
-			return _extends$5({}, initialState$3, { step: "noAccess", firstTimeInAtom: true });
+			return _extends$5({}, initialState$2, { step: "noAccess", firstTimeInAtom: true });
 		case "USER_ALREADY_CONFIRMED":
-			return _extends$5({}, initialState$3, { step: "login", props: payload });
+			return _extends$5({}, initialState$2, { step: "login", props: payload });
 		case "EXISTING_USER_CONFIRMED":
-			return _extends$5({}, initialState$3, { complete: true, firstTimeInAtom: true });
+			return _extends$5({}, initialState$2, { complete: true, firstTimeInAtom: true });
 		case "INVALID_CONFIRMATION_CODE":
 			return _extends$5({}, state, { errors: { invalidCode: true } });
 		case "EXPIRED_CONFIRMATION_CODE":
@@ -52362,7 +52065,7 @@ var onboarding = (function () {
 		case "INVALID_PERMISSION_FOR_TEAM":
 			return _extends$5({}, state, { errors: { noPermission: true } });
 		case "REPO_ADDED_FOR_TEAM":
-			return _extends$5({}, initialState$3, {
+			return _extends$5({}, initialState$2, {
 				step: "identifyMembers",
 				props: { existingTeam: true, teamName: payload }
 			});
@@ -52372,9 +52075,9 @@ var onboarding = (function () {
 			return _extends$5({}, state, { step: "changeUsername", props: payload });
 		case "LOGGED_IN":
 		case "ONBOARDING_COMPLETE":
-			return _extends$5({}, initialState$3, { firstTimeInAtom: state.firstTimeInAtom, complete: true });
+			return _extends$5({}, initialState$2, { firstTimeInAtom: state.firstTimeInAtom, complete: true });
 		case "RESET_ONBOARDING":
-			return initialState$3;
+			return initialState$2;
 		case "ONBOARDING-SERVER_UNREACHABLE":
 			return _extends$5({}, state, { errors: { unknown: true } });
 		default:
@@ -52382,8 +52085,8 @@ var onboarding = (function () {
 	}
 });
 
-var initialState$4 = {
-	currentFile: "",
+var initialState$3 = {
+	currentStreamId: "",
 	currentTeamId: "",
 	currentRepoId: "",
 	currentCommit: "",
@@ -52393,14 +52096,13 @@ var initialState$4 = {
 };
 
 var context$1 = (function () {
-	var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState$4;
+	var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState$3;
 	var _ref = arguments[1];
 	var type = _ref.type,
 	    payload = _ref.payload;
 
-	if (type === "RESET_CONTEXT") return _extends$5({}, initialState$4, { currentFile: state.currentFile, currentCommit: state.currentCommit });
+	if (type === "RESET_CONTEXT") return _extends$5({}, initialState$3, { currentFile: state.currentFile, currentCommit: state.currentCommit });
 	if (type === "SET_CONTEXT") return _extends$5({}, state, payload);
-	if (type === "SET_CURRENT_FILE") return _extends$5({}, state, { currentFile: payload });
 	if (type === "SET_CURRENT_TEAM") return _extends$5({}, state, { currentTeamId: payload });
 	if (type === "SET_CURRENT_REPO") return _extends$5({}, state, { currentRepoId: payload });
 	if (type === "SET_CURRENT_COMMIT") return _extends$5({}, state, { currentCommit: payload });
@@ -52411,6 +52113,28 @@ var context$1 = (function () {
 	if (type === "SHOW_SLACK_INFO") return _extends$5({}, state, { showSlackInfo: true });
 	if (type === "CANCEL_SLACK_INFO") return _extends$5({}, state, { showSlackInfo: false });
 	return state;
+});
+
+var initialState$4 = {
+	// [id]: stream
+};
+
+var streams = (function () {
+	var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState$4;
+	var _ref = arguments[1];
+	var type = _ref.type,
+	    payload = _ref.payload;
+
+	switch (type) {
+		case "ADD_STREAMS":
+		case "BOOTSTRAP_STREAMS":
+			return _extends$5({}, state, toMapBy('id', payload));
+		case "STREAMS-UPDATE_FROM_PUBNUB":
+		case "ADD_STREAM":
+			return _extends$5({}, state, defineProperty$5({}, payload.id, payload));
+		default:
+			return state;
+	}
 });
 
 var initialState$5 = {};
@@ -52945,6 +52669,7 @@ var store$3 = window.store = createStore$1({
 	context: {
 		currentTeamId: data$1.currentTeamId,
 		currentRepoId: data$1.currentRepoId,
+		currentStreamId: data$1.currentStreamId,
 		currentFile: data$1.currentFile
 	},
 	session: {

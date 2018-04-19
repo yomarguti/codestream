@@ -7,7 +7,6 @@ import * as pubnubActions from "./pubnub-event";
 import { saveStream } from "./stream";
 import { saveMarkers } from "./marker";
 // import { saveMarkerLocations } from "./marker-location";
-import { getStreamForRepoAndFile } from "../reducers/streams";
 // import MarkerLocationFinder from "../git/MarkerLocationFinder";
 // import { open as openRepo } from "../git/GitRepo";
 
@@ -78,42 +77,42 @@ export const fetchAllPosts = streams => (dispatch, getState, {}) => {
 	);
 };
 
-export const fetchLatestForCurrentStream = () => async (dispatch, getState, { http }) => {
-	const { context, session, streams } = getState();
+// export const fetchLatestForCurrentStream = () => async (dispatch, getState, { http }) => {
+// 	const { context, session, streams } = getState();
 
-	if (context.currentFile) {
-		const currentStream = getStreamForRepoAndFile(
-			streams,
-			context.currentRepoId,
-			context.currentFile
-		);
-		if (currentStream) return dispatch(fetchLatestPosts([currentStream]));
-		else {
-			const url = `/posts?teamId=${context.currentTeamId}&repoId=${context.currentRepoId}&path=${
-				context.currentFile
-			}`;
-			try {
-				const data = await http.get(url, session.accessToken);
-				const stream = normalize(data.stream);
-				dispatch(saveStream(stream));
-				const posts = normalize(data.posts);
-				const save = await dispatch(savePosts(posts));
-				if (posts.length > 0 && data.more)
-					return dispatch(fetchLatest(_.sortBy(posts, "seqNum")[0], stream.id, stream.teamId));
-				else return save;
-			} catch (error) {
-				if (http.isApiRequestError(error) && error.data.code === "RAPI-1003") {
-					/* No stream for this file */
-				} else {
-					console.error(`Unexpected error fetching latest posts for ${context.currentFile}`, error);
-					Raven.captureException(error, {
-						logger: "actions/post"
-					});
-				}
-			}
-		}
-	}
-};
+// 	if (context.currentFile) {
+// 		const currentStream = getStreamForRepoAndFile(
+// 			streams,
+// 			context.currentRepoId,
+// 			context.currentFile
+// 		);
+// 		if (currentStream) return dispatch(fetchLatestPosts([currentStream]));
+// 		else {
+// 			const url = `/posts?teamId=${context.currentTeamId}&repoId=${context.currentRepoId}&path=${
+// 				context.currentFile
+// 			}`;
+// 			try {
+// 				const data = await http.get(url, session.accessToken);
+// 				const stream = normalize(data.stream);
+// 				dispatch(saveStream(stream));
+// 				const posts = normalize(data.posts);
+// 				const save = await dispatch(savePosts(posts));
+// 				if (posts.length > 0 && data.more)
+// 					return dispatch(fetchLatest(_.sortBy(posts, "seqNum")[0], stream.id, stream.teamId));
+// 				else return save;
+// 			} catch (error) {
+// 				if (http.isApiRequestError(error) && error.data.code === "RAPI-1003") {
+// 					/* No stream for this file */
+// 				} else {
+// 					console.error(`Unexpected error fetching latest posts for ${context.currentFile}`, error);
+// 					Raven.captureException(error, {
+// 						logger: "actions/post"
+// 					});
+// 				}
+// 			}
+// 		}
+// 	}
+// };
 
 export const fetchPosts = ({ streamId, teamId }) => async (dispatch, getState, { db, http }) => {
 	const { session } = getState();

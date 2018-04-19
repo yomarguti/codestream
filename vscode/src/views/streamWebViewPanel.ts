@@ -14,8 +14,9 @@ interface ViewData {
   currentTeamId: string;
   currentRepoId: string;
   currentUserId: string;
+  currentStreamId: string;
+  currentFileId?: string;
   currentCommit?: string;
-  currentFile?: string;
   posts: CSPost[];
   streams: CSStream[];
   teams: CSTeam[];
@@ -113,6 +114,7 @@ export class StreamWebViewPanel implements Disposable {
     }
     state.currentTeamId = stream.teamId;
     state.currentUserId = this.session.userId;
+    state.currentStreamId = stream.id;
 
     [
       state.posts,

@@ -17,12 +17,11 @@ import DateSeparator from "./DateSeparator";
 import withRepositories from "./withRepositories";
 import withConfigs from "./withConfigs";
 import * as streamActions from "../actions/stream";
-import * as umiActions from "../actions/umi";
+// import * as umiActions from "../actions/umi";
 import * as routingActions from "../actions/routing";
 import { createPost, editPost, deletePost, fetchPosts } from "../actions/post";
 import { toMapBy } from "../reducers/utils";
 import { rangeToLocation } from "../util/Marker";
-import { getStreamForRepoAndFile } from "../reducers/streams";
 import { getPostsForStream } from "../reducers/posts";
 import rootLogger from "../util/Logger";
 import Button from "./onboarding/Button";
@@ -1226,7 +1225,7 @@ const mapStateToProps = ({
 	messaging,
 	onboarding
 }) => {
-	const stream = getStreamForRepoAndFile(streams, context.currentRepoId, context.currentFile) || {};
+	const stream = streams[context.currentStreamId] || {};
 	const markersForStreamAndCommit = getMarkersForStreamAndCommit(
 		markerLocations.byStream[stream.id],
 		context.currentCommit,
@@ -1303,7 +1302,7 @@ const mapStateToProps = ({
 
 export default connect(mapStateToProps, {
 	...streamActions,
-	...umiActions,
+	// ...umiActions,
 	fetchPosts,
 	createPost,
 	editPost,

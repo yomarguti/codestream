@@ -17,6 +17,7 @@ const store = (window.store = createStore({
 	context: {
 		currentTeamId: data.currentTeamId,
 		currentRepoId: data.currentRepoId,
+		currentStreamId: data.currentStreamId,
 		currentFile: data.currentFile
 	},
 	session: {
