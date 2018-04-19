@@ -1,9 +1,3 @@
-#app {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-}
-
 [contenteditable='true']:empty:before {
     content: attr(placeholder);
     opacity: 0.5;
@@ -77,56 +71,54 @@
     display: block;
     width: 100%;
     border: none;
-    border-top: 1px solid @base-border-color;
+    border-top: 1px solid var(--color) /* TODO: @base-border-color */;
     /* // background-color: inherit; */
-    background-color: @app-background-color;
+    background-color: var(--background-color); /* TODO: @app-background-color; */
     /* position: absolute; */
     bottom: 0px;
     padding: 10px;
     box-sizing: border-box;
     z-index: 5;
+}
+.compose #input-div {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 10px;
+    border-radius: 4px;
+    /* // background: #fff; */
+    background: var(--background-color); /* TODO: @base-background-color; */
+    border: 1px solid var(--color); /* TODO: @base-border-color; */
+    resize: none;
+    /* // height: 20px; */
+    max-height: 300px;
+    max-width: 100%;
+    overflow: auto;
+}
+.compose #input-div:empty {
+    white-space: nowrap;
+}
 
-    #input-div {
-        box-sizing: border-box;
-        width: 100%;
-        padding: 10px;
-        border-radius: 4px;
-        // background: #fff;
-        background: @base-background-color;
-        border: 1px solid @base-border-color;
-        resize: none;
-        // height: 20px;
-        max-height: 300px;
-        max-width: 100%;
-        overflow: auto;
-    }
-    #input-div:empty {
-        white-space: nowrap;
-    }
-
-    .placeholder {
-        position: absolute;
-        bottom: 20px;
-        left: 20px;
-        opacity: 0.5;
-    }
-
-    .hint {
-        margin: 4px -5px 4px 2px;
-        font-size: 12px;
-        opacity: 0.5;
-        .icon {
-            cursor: pointer;
-            float: right;
-            transform: scale(0.8);
-        }
-        .icon:hover {
-            color: @text-color-error;
-        }
-    }
-    .code {
-        margin-top: 0;
-    }
+.compose .placeholder {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    opacity: 0.5;
+}
+.compose .hint {
+    margin: 4px -5px 4px 2px;
+    font-size: 12px;
+    opacity: 0.5;
+}
+.compose .hint .icon {
+    cursor: pointer;
+    float: right;
+    transform: scale(0.8);
+}
+.compose .hint .icon:hover {
+    color: red; /* TODO: @text-color-error;*/
+}
+.compose .code {
+    margin-top: 0;
 }
 
 .at-mention {

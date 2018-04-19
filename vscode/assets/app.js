@@ -43206,16 +43206,6 @@ var locationToRange = function locationToRange(location) {
 	return range;
 };
 
-// Convert Atom's 0-based Range into CodeStream 1-based flat-array location
-var rangeToLocation = function rangeToLocation(range) {
-	var location = [range.start.row, range.start.column, range.end.row, range.end.column];
-	location = location.map(function (index) {
-		return index != undefined ? index + 1 : index;
-	});
-	location.push({}); // meta
-	return location;
-};
-
 var PostDetails = function (_Component) {
 	inherits$1(PostDetails, _Component);
 
@@ -48181,7 +48171,7 @@ db.version(3).stores({
 	posts: "id, teamId, streamId, creatorId"
 });
 
-function upsert$1(db, tableName, changes) {
+function upsert(db, tableName, changes) {
 	return db.transaction("rw", tableName, function () {
 		var table = db.table(tableName);
 		var primaryKeySchema = table.schema.primKey;
@@ -48460,7 +48450,7 @@ var saveStream = function saveStream(attributes) {
 	return function (dispatch, getState, _ref) {
 		var db$$1 = _ref.db;
 
-		return upsert$1(db$$1, "streams", attributes).then(function (stream) {
+		return upsert(db$$1, "streams", attributes).then(function (stream) {
 			dispatch({
 				type: "ADD_STREAM",
 				payload: stream
@@ -48933,29 +48923,24 @@ var savePostsForStream = function savePostsForStream(streamId, posts) {
 };
 
 var savePendingPost = function savePendingPost(attributes) {
-	return function (dispatch, getState, _ref20) {
-		var db$$1 = _ref20.db;
-
-		return upsert$1(db$$1, "posts", _extends$5({}, attributes, { pending: true })).then(function (post) {
-			dispatch({
-				type: "ADD_PENDING_POST",
-				payload: post
-			});
-		});
+	return {
+		type: "ADD_PENDING_POST",
+		payload: attributes
 	};
 };
 
 var createPost = function createPost(streamId, parentPostId, text, codeBlocks, mentions, bufferText, extra) {
 	return function () {
-		var _ref22 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7(dispatch, getState, _ref21) {
-			var http = _ref21.http;
-			var state, session, context, repoAttributes, pendingId, post, data;
+		var _ref21 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7(dispatch, getState, _ref20) {
+			var api = _ref20.api;
+
+			var _getState5, context, session, pendingId, post, createdPost;
+
 			return regeneratorRuntime.wrap(function _callee7$(_context7) {
 				while (1) {
 					switch (_context7.prev = _context7.next) {
 						case 0:
-							state = getState();
-							session = state.session, context = state.context, repoAttributes = state.repoAttributes;
+							_getState5 = getState(), context = _getState5.context, session = _getState5.session;
 							pendingId = createTempId();
 
 							// const gitRepo = await openRepo(repoAttributes.workingDirectory);
@@ -49001,25 +48986,27 @@ var createPost = function createPost(streamId, parentPostId, text, codeBlocks, m
 								text: text
 							};
 
+							// if (streamId) {
 
-							if (streamId) {
-								post.streamId = streamId;
-							} else post.stream = {
-								teamId: context.currentTeamId,
-								type: "file",
-								file: filePath,
-								repoId: context.currentRepoId
-							};
+							post.streamId = streamId;
+							// } else
+							// post.stream = {
+							// 	teamid: context.currentteamid,
+							// 	type: "file",
+							// 	file: filepath,
+							// 	repoid: context.currentrepoid
+							// };
 
 							dispatch(savePendingPost(_extends$5({}, post)));
 
-							_context7.prev = 6;
-							_context7.next = 9;
-							return http.post("/posts", post, session.accessToken);
+							_context7.prev = 5;
+							_context7.next = 8;
+							return api.createPost(post);
 
-						case 9:
-							data = _context7.sent;
+						case 8:
+							createdPost = _context7.sent;
 
+							debugger;
 							// if (hasUncommittedLocation) {
 							// 	dispatch(
 							// 		saveUncommittedLocations({
@@ -49030,63 +49017,49 @@ var createPost = function createPost(streamId, parentPostId, text, codeBlocks, m
 							// 		})
 							// 	);
 							// }
-							if (!streamId) dispatch(saveStream(normalize(data.stream)));
-							dispatch(resolvePendingPost(pendingId, normalize(data.post)));
-							dispatch({ type: "POST_CREATED", meta: _extends$5({ post: data.post }, extra) });
-							_context7.next = 19;
+							// if (!streamId) dispatch(saveStream(normalize(data.stream)));
+							dispatch(resolvePendingPost(pendingId, normalize(createdPost)));
+							// TODO: analytics dispatch({ type: "POST_CREATED", meta: { post: data.post, ...extra } });
+							_context7.next = 17;
 							break;
 
-						case 15:
-							_context7.prev = 15;
-							_context7.t0 = _context7["catch"](6);
+						case 13:
+							_context7.prev = 13;
+							_context7.t0 = _context7["catch"](5);
 
-							if (http.isApiRequestError(_context7.t0)) {
-								singleton.captureMessage(_context7.t0.data.message, {
-									logger: "actions/post",
-									extra: { error: _context7.t0.data }
-								});
-							}
+							debugger;
 							// TODO: different types of errors?
 							dispatch(rejectPendingPost(pendingId, _extends$5({}, post, { error: true })));
 
-						case 19:
+						case 17:
 						case "end":
 							return _context7.stop();
 					}
 				}
-			}, _callee7, _this$2, [[6, 15]]);
+			}, _callee7, _this$2, [[5, 13]]);
 		}));
 
 		return function (_x15, _x16, _x17) {
-			return _ref22.apply(this, arguments);
+			return _ref21.apply(this, arguments);
 		};
 	}();
 };
 
 var resolvePendingPost = function resolvePendingPost(id, resolvedPost) {
-	return function (dispatch, getState, _ref24) {
-		var db$$1 = _ref24.db;
-
-		return db$$1.transaction("rw", db$$1.posts, function () {
-			db$$1.posts.delete(id);
-			upsert$1(db$$1, "posts", resolvedPost);
-		}).then(function () {
-			return dispatch({
-				type: "RESOLVE_PENDING_POST",
-				payload: {
-					pendingId: id,
-					post: resolvedPost
-				}
-			});
-		});
+	return {
+		type: "RESOLVE_PENDING_POST",
+		payload: {
+			pendingId: id,
+			post: resolvedPost
+		}
 	};
 };
 
 var rejectPendingPost = function rejectPendingPost(pendingId) {
-	return function (dispatch, getState, _ref25) {
-		var db$$1 = _ref25.db;
+	return function (dispatch, getState, _ref23) {
+		var db$$1 = _ref23.db;
 
-		return upsert$1(db$$1, "posts", { id: pendingId, error: true }).then(function (post) {
+		return upsert(db$$1, "posts", { id: pendingId, error: true }).then(function (post) {
 			return dispatch(pendingPostFailed(post));
 		});
 	};
@@ -49094,8 +49067,8 @@ var rejectPendingPost = function rejectPendingPost(pendingId) {
 
 var cancelPost = function cancelPost(pendingId) {
 	return function () {
-		var _ref27 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(dispatch, getState, _ref26) {
-			var db$$1 = _ref26.db;
+		var _ref25 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(dispatch, getState, _ref24) {
+			var db$$1 = _ref24.db;
 			return regeneratorRuntime.wrap(function _callee9$(_context9) {
 				while (1) {
 					switch (_context9.prev = _context9.next) {
@@ -49113,16 +49086,16 @@ var cancelPost = function cancelPost(pendingId) {
 		}));
 
 		return function (_x20, _x21, _x22) {
-			return _ref27.apply(this, arguments);
+			return _ref25.apply(this, arguments);
 		};
 	}();
 };
 
 var retryPost = function retryPost(pendingId) {
 	return function () {
-		var _ref29 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10(dispatch, getState, _ref28) {
-			var db$$1 = _ref28.db,
-			    http = _ref28.http;
+		var _ref27 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10(dispatch, getState, _ref26) {
+			var db$$1 = _ref26.db,
+			    http = _ref26.http;
 			var pendingPost;
 			return regeneratorRuntime.wrap(function _callee10$(_context10) {
 				while (1) {
@@ -49159,23 +49132,23 @@ var retryPost = function retryPost(pendingId) {
 		}));
 
 		return function (_x23, _x24, _x25) {
-			return _ref29.apply(this, arguments);
+			return _ref27.apply(this, arguments);
 		};
 	}();
 };
 
 var editPost = function editPost(postId, text, mentions) {
 	return function () {
-		var _ref31 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11(dispatch, getState, _ref30) {
-			var http = _ref30.http;
+		var _ref29 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11(dispatch, getState, _ref28) {
+			var http = _ref28.http;
 
-			var _getState6, session, context, delta, data;
+			var _getState7, session, context, delta, data;
 
 			return regeneratorRuntime.wrap(function _callee11$(_context11) {
 				while (1) {
 					switch (_context11.prev = _context11.next) {
 						case 0:
-							_getState6 = getState(), session = _getState6.session, context = _getState6.context;
+							_getState7 = getState(), session = _getState7.session, context = _getState7.context;
 							delta = {
 								text: text,
 								mentionedUserIds: mentions
@@ -49205,23 +49178,23 @@ var editPost = function editPost(postId, text, mentions) {
 		}));
 
 		return function (_x26, _x27, _x28) {
-			return _ref31.apply(this, arguments);
+			return _ref29.apply(this, arguments);
 		};
 	}();
 };
 
 var deletePost = function deletePost(postId) {
 	return function () {
-		var _ref33 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee12(dispatch, getState, _ref32) {
-			var http = _ref32.http;
+		var _ref31 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee12(dispatch, getState, _ref30) {
+			var http = _ref30.http;
 
-			var _getState7, session, context, data;
+			var _getState8, session, context, data;
 
 			return regeneratorRuntime.wrap(function _callee12$(_context12) {
 				while (1) {
 					switch (_context12.prev = _context12.next) {
 						case 0:
-							_getState7 = getState(), session = _getState7.session, context = _getState7.context;
+							_getState8 = getState(), session = _getState8.session, context = _getState8.context;
 							_context12.prev = 1;
 							_context12.next = 4;
 							return http.deactivate("/posts/" + postId, {}, session.accessToken);
@@ -49247,7 +49220,7 @@ var deletePost = function deletePost(postId) {
 		}));
 
 		return function (_x29, _x30, _x31) {
-			return _ref33.apply(this, arguments);
+			return _ref31.apply(this, arguments);
 		};
 	}();
 };
@@ -49813,181 +49786,6 @@ var Post = function (_Component) {
 
 var Post$1 = connect(null, { cancelPost: cancelPost, retryPost: retryPost })(Post);
 
-// AtMentionsPopup expects an on/off switch determined by the on property
-// on = show the popup, off = hide the popup
-// a people list, which is the possible list of people to at-mention
-// with the format:
-// [id, nickname, full name, email, headshot, presence]
-// and a prefix, which is used to filter/match against the list
-
-var AtMentionsPopup = function (_Component) {
-	inherits$1(AtMentionsPopup, _Component);
-
-	function AtMentionsPopup(props) {
-		var _this2 = this;
-
-		classCallCheck$1(this, AtMentionsPopup);
-
-		var _this = possibleConstructorReturn$1(this, (AtMentionsPopup.__proto__ || Object.getPrototypeOf(AtMentionsPopup)).call(this, props));
-
-		Object.defineProperty(_this, "handleClick", {
-			enumerable: true,
-			writable: true,
-			value: function () {
-				var _ref = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(event) {
-					return regeneratorRuntime.wrap(function _callee$(_context) {
-						while (1) {
-							switch (_context.prev = _context.next) {
-								case 0:
-									console.log("CLICK ON MENTION: " + event.target.innerHTML);
-
-								case 1:
-								case "end":
-									return _context.stop();
-							}
-						}
-					}, _callee, _this2);
-				}));
-
-				function value(_x) {
-					return _ref.apply(this, arguments);
-				}
-
-				return value;
-			}()
-		});
-
-		_this.state = {};
-		return _this;
-	}
-
-	createClass$1(AtMentionsPopup, [{
-		key: "componentDidMount",
-		value: function componentDidMount() {}
-	}, {
-		key: "render",
-		value: function render() {
-			var _this3 = this;
-
-			if (!this.props.on) return null;
-
-			var people = this.props.people;
-
-			return react.createElement(
-				"div",
-				{ className: "mentions-popup", ref: function ref(_ref2) {
-						return _this3._div = _ref2;
-					} },
-				react.createElement(
-					"div",
-					{ className: "body" },
-					react.createElement(
-						"div",
-						{ className: "instructions", onClick: function onClick(event) {
-								return _this3.handleClickInstructions();
-							} },
-						"People matching ",
-						react.createElement(
-							"b",
-							null,
-							"\"@",
-							this.props.prefix,
-							"\""
-						)
-					),
-					react.createElement(
-						"ul",
-						{ className: "compact at-mentions-list" },
-						this.props.people.map(function (person) {
-							var className = person.id == _this3.props.selected ? "hover" : "none";
-							var identifier = person.username || person.email;
-							// the handleClickPerson event needs to fire onMouseDown
-							// rather than onclick because there is a handleblur
-							// event on the parent element that will un-render
-							// this component
-							return react.createElement(
-								"li",
-								{
-									className: className,
-									key: person.id,
-									onMouseEnter: function onMouseEnter(event) {
-										return _this3.handleMouseEnter(person.id);
-									},
-									onMouseDown: function onMouseDown(event) {
-										return _this3.handleClickPerson(person.id);
-									}
-								},
-								react.createElement(Headshot, { size: 18, person: person }),
-								react.createElement(
-									"span",
-									{ className: "username" },
-									identifier
-								),
-								" ",
-								react.createElement(
-									"span",
-									{ className: "name" },
-									person.firstName,
-									" ",
-									person.lastName
-								)
-							);
-						})
-					),
-					react.createElement(
-						"table",
-						null,
-						react.createElement(
-							"tbody",
-							null,
-							react.createElement(
-								"tr",
-								null,
-								react.createElement(
-									"td",
-									null,
-									"\u2191 or \u2193 to navigate"
-								),
-								react.createElement(
-									"td",
-									null,
-									"\u21B5 to select"
-								),
-								react.createElement(
-									"td",
-									null,
-									"esc to dismiss"
-								)
-							)
-						)
-					)
-				)
-			);
-		}
-	}, {
-		key: "handleMouseEnter",
-		value: function handleMouseEnter(id) {
-			return this.props.handleHoverAtMention(id);
-		}
-	}, {
-		key: "handleClickPerson",
-		value: function handleClickPerson(id) {
-			return this.props.handleSelectAtMention(id);
-		}
-	}, {
-		key: "handleClickInstructions",
-		value: function handleClickInstructions() {
-			return this.props.handleSelectAtMention();
-		}
-	}, {
-		key: "selectFirstAtMention",
-		value: function selectFirstAtMention() {
-			// FIXME -- how to build this?
-		}
-	}]);
-	return AtMentionsPopup;
-}(react_1);
-
 // var Moment_Timezone = require("moment-timezone");
 
 var DateSeparator = function (_Component) {
@@ -50307,7 +50105,7 @@ var incrementUMI = function incrementUMI(post) {
 
 							currentUser.lastReads[post.streamId] = post.seqNum;
 
-							return _context2.abrupt("return", upsert$1(db$$1, "users", currentUser).then(function (user) {
+							return _context2.abrupt("return", upsert(db$$1, "users", currentUser).then(function (user) {
 								return dispatch({
 									type: "UPDATE_USER",
 									payload: user
@@ -51597,15 +51395,6 @@ var SimpleStream = function (_Component) {
 						return returnValue;
 					})
 				),
-				react.createElement(AtMentionsPopup, {
-					on: this.state.atMentionsOn,
-					people: this.state.atMentionsPeople,
-					usernames: this.usernameRegExp,
-					prefix: this.state.atMentionsPrefix,
-					selected: this.state.selectedAtMention,
-					handleHoverAtMention: this.handleHoverAtMention,
-					handleSelectAtMention: this.handleSelectAtMention
-				}),
 				this.props.currentFile && react.createElement(
 					"div",
 					{
@@ -51880,7 +51669,8 @@ var SimpleStream = function (_Component) {
 			    quoteRange = _state.quoteRange,
 			    preContext = _state.preContext,
 			    postContext = _state.postContext,
-			    threadActive = _state.threadActive;
+			    _state$threadActive = _state.threadActive,
+			    threadActive = _state$threadActive === undefined ? undefined : _state$threadActive;
 			var _props2 = this.props,
 			    id = _props2.id,
 			    createPost$$1 = _props2.createPost;
@@ -51888,22 +51678,22 @@ var SimpleStream = function (_Component) {
 
 			var threadId = threadActive ? this.state.threadId : null;
 
-			if (quoteText) {
-				codeBlocks.push({
-					code: quoteText,
-					location: rangeToLocation(quoteRange),
-					preContext: preContext,
-					postContext: postContext,
-					// for now, we assume this codeblock came from this buffer
-					// in the future we want to support commenting on codeBlocks
-					// from other files/buffers
-					streamId: id
-				});
-			}
+			// if (quoteText) {
+			// 	codeBlocks.push({
+			// 		code: quoteText,
+			// 		location: rangeToLocation(quoteRange),
+			// 		preContext,
+			// 		postContext,
+			// 		// for now, we assume this codeblock came from this buffer
+			// 		// in the future we want to support commenting on codeBlocks
+			// 		// from other files/buffers
+			// 		streamId: id
+			// 	});
+			// }
 
 			var mentionUserIds = this.findMentions(newText);
 			var editor = this.context.platform.getActiveEditor();
-			var editorText = editor.getText();
+			var editorText = editor ? editor.getText() : '';
 
 			createPost$$1(this.props.id, threadId, newText, codeBlocks, mentionUserIds, editorText, {
 				autoMentions: this.state.autoMentioning
@@ -51975,12 +51765,12 @@ var getMarkersForStreamAndCommit = function getMarkersForStreamAndCommit() {
 			});
 		} else {
 			var message = "No marker for id " + markerId + " but there are locations for it. commitHash: " + commitHash;
-			singleton.captureMessage(message, {
-				logger: "Stream::mapStateToProps::getMarkersForStreamAndCommit",
-				extra: {
-					location: locations[markerId]
-				}
-			});
+			// TODO: Raven.captureMessage(message, {
+			// 	logger: "Stream::mapStateToProps::getMarkersForStreamAndCommit",
+			// 	extra: {
+			// 		location: locations[markerId]
+			// 	}
+			// });
 			console.warn(message);
 			return false;
 		}
@@ -52985,9 +52775,11 @@ var rpcMiddleWare = (function (store) {
 		console.log("received message from extension host", event.data);
 		var _event$data = event.data,
 		    type = _event$data.type,
-		    payload = _event$data.payload;
+		    body = _event$data.body;
 
-		if (type && payload) store.dispatch({ type: "ADD_" + type.toUpperCase(), payload: payload });
+		if (type === 'push-data') {
+			store.dispatch({ type: "ADD_" + body.type.toUpperCase(), payload: normalize(body.payload) });
+		}
 	}, false);
 
 	return function (next) {
@@ -52996,17 +52788,6 @@ var rpcMiddleWare = (function (store) {
 		};
 	};
 });
-
-var normalizeResponse = function normalizeResponse(response) {
-	return Object.entries(response).reduce(function (result, _ref) {
-		var _ref2 = slicedToArray(_ref, 2),
-		    key = _ref2[0],
-		    value = _ref2[1];
-
-		result[key] = normalize(value);
-		return result;
-	}, {});
-};
 
 var CodeStreamVSWebviewApi = function () {
 	function CodeStreamVSWebviewApi() {
@@ -53020,8 +52801,18 @@ var CodeStreamVSWebviewApi = function () {
 		});
 
 		window.addEventListener("message", function (event) {
-			var resolve = _this.pendingRequests.get(event.data.action);
-			resolve && resolve(event.data.response);
+			var _event$data = event.data,
+			    type = _event$data.type,
+			    body = _event$data.body;
+
+			if (type === 'action-response') {
+				console.log('received action response', { type: type, body: body });
+				var resolve = _this.pendingRequests.get(body.action);
+				if (resolve) {
+					resolve(body.payload);
+					_this.pendingRequests.delete(body.action);
+				}
+			}
 		}, false);
 	}
 
@@ -53032,170 +52823,13 @@ var CodeStreamVSWebviewApi = function () {
 
 			return new Promise(function (resolve, reject) {
 				_this2.pendingRequests.set(message.action, resolve);
-				window.parent.postMessage(message, "*");
+				window.parent.postMessage({ type: "action-request", body: message }, "*");
 			});
 		}
 	}, {
-		key: "login",
-		value: function () {
-			var _ref3 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(email, password) {
-				return regeneratorRuntime.wrap(function _callee$(_context) {
-					while (1) {
-						switch (_context.prev = _context.next) {
-							case 0:
-								return _context.abrupt("return", this.postMessage({ action: "login", params: { email: email, password: password } }));
-
-							case 1:
-							case "end":
-								return _context.stop();
-						}
-					}
-				}, _callee, this);
-			}));
-
-			function login(_x, _x2) {
-				return _ref3.apply(this, arguments);
-			}
-
-			return login;
-		}()
-	}, {
-		key: "updateUserTimeZone",
-		value: function updateUserTimeZone(data) {
-			var _this3 = this;
-
-			return this.http.put("/users/me", data, this.accessToken).then(function (data) {
-				var normalizedResponse = normalizeResponse(data);
-				return upsert(_this3.db, "users", normalizedResponse.user);
-			});
-		}
-	}, {
-		key: "fetchTeamMembers",
-		value: function () {
-			var _ref4 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(teamId) {
-				var response, normalizedResponse;
-				return regeneratorRuntime.wrap(function _callee2$(_context2) {
-					while (1) {
-						switch (_context2.prev = _context2.next) {
-							case 0:
-								_context2.prev = 0;
-								_context2.next = 3;
-								return this.http.get("/users?teamId=" + teamId, this.accessToken);
-
-							case 3:
-								response = _context2.sent;
-								normalizedResponse = normalizeResponse(response);
-								_context2.next = 7;
-								return upsert(this.db, "users", normalizedResponse.users);
-
-							case 7:
-								return _context2.abrupt("return", normalizedResponse);
-
-							case 10:
-								_context2.prev = 10;
-								_context2.t0 = _context2["catch"](0);
-
-							case 12:
-							case "end":
-								return _context2.stop();
-						}
-					}
-				}, _callee2, this, [[0, 10]]);
-			}));
-
-			function fetchTeamMembers(_x3) {
-				return _ref4.apply(this, arguments);
-			}
-
-			return fetchTeamMembers;
-		}()
-	}, {
-		key: "fetchCompanies",
-		value: function () {
-			var _ref5 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(companyIds) {
-				var response, normalizedResponse;
-				return regeneratorRuntime.wrap(function _callee3$(_context3) {
-					while (1) {
-						switch (_context3.prev = _context3.next) {
-							case 0:
-								_context3.prev = 0;
-								_context3.next = 3;
-								return this.http.get("/companies?ids=" + companyIds.join(","), this.accessToken);
-
-							case 3:
-								response = _context3.sent;
-								normalizedResponse = normalizeResponse(response);
-								_context3.next = 7;
-								return upsert(this.db, "companies", normalizedResponse.companies);
-
-							case 7:
-								return _context3.abrupt("return", normalizedResponse);
-
-							case 10:
-								_context3.prev = 10;
-								_context3.t0 = _context3["catch"](0);
-
-							case 12:
-							case "end":
-								return _context3.stop();
-						}
-					}
-				}, _callee3, this, [[0, 10]]);
-			}));
-
-			function fetchCompanies(_x4) {
-				return _ref5.apply(this, arguments);
-			}
-
-			return fetchCompanies;
-		}()
-	}, {
-		key: "fetchStreams",
-		value: function () {
-			var _ref6 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(teamId, repoId, sortId) {
-				var url, response, normalized;
-				return regeneratorRuntime.wrap(function _callee4$(_context4) {
-					while (1) {
-						switch (_context4.prev = _context4.next) {
-							case 0:
-								url = "/streams?teamId=" + teamId + "&repoId=" + repoId;
-
-								if (sortId) url += "&lt=" + sortId;
-								_context4.prev = 2;
-								_context4.next = 5;
-								return this.http.get(url, this.accessToken);
-
-							case 5:
-								response = _context4.sent;
-								normalized = normalizeResponse(response);
-								_context4.next = 9;
-								return upsert(this.db, "streams", normalized.streams);
-
-							case 9:
-								return _context4.abrupt("return", normalized);
-
-							case 12:
-								_context4.prev = 12;
-								_context4.t0 = _context4["catch"](2);
-
-							case 14:
-							case "end":
-								return _context4.stop();
-						}
-					}
-				}, _callee4, this, [[2, 12]]);
-			}));
-
-			function fetchStreams(_x5, _x6, _x7) {
-				return _ref6.apply(this, arguments);
-			}
-
-			return fetchStreams;
-		}()
-	}, {
-		key: "findPostsByStreamId",
-		value: function findPostsByStreamId(streamId) {
-			return this.db.posts.where({ streamId: streamId }).sortBy("seqNum");
+		key: "createPost",
+		value: function createPost(post) {
+			return this.postMessage({ action: "post", params: post });
 		}
 	}]);
 	return CodeStreamVSWebviewApi;

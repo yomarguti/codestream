@@ -24,15 +24,35 @@ interface ViewData {
 }
 
 class MessageRelay {
-  constructor(public readonly session: CodeStreamSession, public readonly view: Webview) {
+  constructor(private readonly session: CodeStreamSession, private readonly view: Webview, private readonly stream: Stream) {
     session.onDidReceivePosts(event => {
       view.postMessage({
-        type: 'posts',
-        payload: event.getPosts().map(post => (
-          { ...post.entity, id: post.id }
-        ))
+        type: 'push-data',
+        body: {
+          type: 'posts',
+          payload: event.getPosts().map(post => (
+            { ...post.entity, id: post.id }
+          ))
+        }
       });
     });
+
+    view.onDidReceiveMessage(async event => {
+      const {type, body} = event;
+      if (type === 'action-request') {
+        if (body.action === 'post') {
+          this.session.api.createPost(body.params.text, this.stream.id).then((post?: CSPost) => {
+            post && this.view.postMessage({
+              type: 'action-response',
+              body: {
+                action: 'post',
+                payload: { ...post, id: post._id }
+              }
+            });
+          });
+        }
+      }
+    }, null);
   }
 }
 
@@ -62,8 +82,7 @@ export class StreamWebViewPanel implements Disposable {
       }
     );
 
-    const messageRelay = new MessageRelay(this.session, panel.webview);
-    messageRelay;
+    const messageRelay = new MessageRelay(this.session, panel.webview, stream);
 
     const state: ViewData = Object.create(null);
 
