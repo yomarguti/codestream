@@ -23,6 +23,14 @@ interface ViewData {
   repos: CSRepository[];
 }
 
+interface CSWebviewRequest {
+  type: string;
+  body: {
+    action: string;
+    params: object;
+  };
+}
+
 class MessageRelay {
   constructor(private readonly session: CodeStreamSession, private readonly view: Webview, private readonly stream: Stream) {
     session.onDidReceivePosts(event => {
@@ -31,13 +39,13 @@ class MessageRelay {
         body: {
           type: 'posts',
           payload: event.getPosts().map(post => (
-            { ...post.entity, id: post.id }
+            { ...post.entity }
           ))
         }
       });
     });
 
-    view.onDidReceiveMessage(async event => {
+    view.onDidReceiveMessage(async (event: CSWebviewRequest) => {
       const {type, body} = event;
       if (type === 'action-request') {
         if (body.action === 'post') {
@@ -45,8 +53,8 @@ class MessageRelay {
             post && this.view.postMessage({
               type: 'action-response',
               body: {
-                action: 'post',
-                payload: { ...post, id: post._id }
+                action: body.action,
+                payload: post
               }
             });
           });
@@ -57,16 +65,11 @@ class MessageRelay {
 }
 
 export class StreamWebViewPanel implements Disposable {
-  // private readonly _disposable: Disposable;
 
   constructor(private session: CodeStreamSession) {
-    // this._disposable = Disposable.from(
-    //   commands.registerCommand('codestream.openStream', this.openStream, this)
-    // );
   }
 
   dispose() {
-    // this._disposable.dispose();
   }
 
   async openStream(stream: Stream) {
