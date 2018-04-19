@@ -197,8 +197,8 @@ export class SimpleStream extends Component {
 			}
 			// console.log("Switch to: ", nextProps.postStreamId);
 		}
+		this.postWithNewMessageIndicator = 10;
 
-		this.postWithNewMessageIndicator = 35;
 		let switchingFiles = nextProps.currentFile !== this.props.currentFile;
 		if (switchingFiles || nextProps.currentCommit !== this.props.currentCommit) {
 			const editor = atom.workspace.getActiveTextEditor();
@@ -212,6 +212,10 @@ export class SimpleStream extends Component {
 
 		if (nextProps.firstTimeInAtom && !Boolean(this.state.fileForIntro)) {
 			this.setState({ fileForIntro: nextProps.currentFile });
+		}
+
+		if (nextProps.hasFocus && !this.props.hasFocus) {
+			this.postWithNewMessageIndicator = 0;
 		}
 	}
 
@@ -1224,7 +1228,6 @@ export class SimpleStream extends Component {
 			let codeBlock = {
 				code: quoteText,
 				location: rangeToLocation(quoteRange),
-				// file: currentFile,
 				preContext,
 				postContext
 			};
@@ -1237,7 +1240,6 @@ export class SimpleStream extends Component {
 		const editor = atom.workspace.getActiveTextEditor();
 		const editorText = editor ? editor.getText() : undefined;
 
-		console.log("CREATING A POST WITH: " + postStreamId, " and codeblocks ", codeBlocks);
 		createPost(postStreamId, threadId, newText, codeBlocks, mentionUserIds, editorText, {
 			autoMentions: this.state.autoMentioning
 		});
@@ -1368,6 +1370,7 @@ const mapStateToProps = ({
 		postStreamId: teamStream.id,
 		fileStreamId: fileStream.id,
 		teamId: context.currentTeamId,
+		hasFocus: context.hasFocus,
 		firstTimeInAtom: onboarding.firstTimeInAtom,
 		currentFile: context.currentFile,
 		currentCommit: context.currentCommit,
