@@ -222,7 +222,7 @@ export class SimpleStream extends Component {
 	componentDidUpdate(prevProps, prevState) {
 		const { postStreamId, markStreamRead, markStreamModified } = this.props;
 
-		this._postslist.scrollTop = 100000;
+		// this._postslist.scrollTop = 100000;
 
 		this.installEditorHandlers();
 
@@ -1220,7 +1220,7 @@ export class SimpleStream extends Component {
 
 		const codeBlocks = [];
 		const { quoteText, quoteRange, preContext, postContext, threadActive } = this.state;
-		const { postStreamId, fileStreamId, createPost, currentFile } = this.props;
+		const { postStreamId, fileStreamId, createPost, currentFile, repoId } = this.props;
 
 		let threadId = threadActive ? this.state.threadId : null;
 
@@ -1232,7 +1232,10 @@ export class SimpleStream extends Component {
 				postContext
 			};
 			if (fileStreamId) codeBlock.streamId = fileStreamId;
-			else codeBlock.stream = currentFile;
+			else {
+				codeBlock.file = currentFile;
+				codeBlock.repoId = repoId;
+			}
 			codeBlocks.push(codeBlock);
 		}
 
@@ -1370,6 +1373,7 @@ const mapStateToProps = ({
 		postStreamId: teamStream.id,
 		fileStreamId: fileStream.id,
 		teamId: context.currentTeamId,
+		repoId: context.currentRepoId,
 		hasFocus: context.hasFocus,
 		firstTimeInAtom: onboarding.firstTimeInAtom,
 		currentFile: context.currentFile,
