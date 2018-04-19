@@ -14,6 +14,7 @@ import {
     GetUserResponse, GetUsersResponse,
     LoginRequest, LoginResponse
 } from './types';
+import { Logger } from '../logger';
 
 export * from './types';
 
@@ -144,6 +145,8 @@ export class CodeStreamApi {
             }
         }
 
+        Logger.log(`${(init && init.method) || 'GET'} ${url} ${CodeStreamApi.sanitize(init && init.body)}`);
+
         const resp = await fetch(`${this.baseUrl}${url}`, init);
         if (resp.status !== 200) throw await this.handleErrorResponse(resp);
 
@@ -171,5 +174,11 @@ export class CodeStreamApi {
         }
 
         return obj as R;
+    }
+
+    static sanitize(body: string | ArrayBuffer | ArrayBufferView | NodeJS.ReadableStream | undefined) {
+        if (body === undefined || typeof body !== 'string') return '';
+
+        return body.replace(/("password":)".*?"/gi, '$1"<hidden>"');
     }
 }
