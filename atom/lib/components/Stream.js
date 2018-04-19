@@ -191,13 +191,9 @@ export class SimpleStream extends Component {
 			// keep track of the new message indicator in "this" instead of looking
 			// directly at currentUser.lastReads, because that will change and trigger
 			// a re-render, which would remove the "new messages" line
-			this.postWithNewMessageIndicator = null;
-			if (this.props.currentUser && this.props.currentUser.lastReads) {
-				this.postWithNewMessageIndicator = this.props.currentUser.lastReads[nextProps.postStreamId];
-			}
 			// console.log("Switch to: ", nextProps.postStreamId);
 		}
-		this.postWithNewMessageIndicator = 10;
+		// this.postWithNewMessageIndicator = 10;
 
 		let switchingFiles = nextProps.currentFile !== this.props.currentFile;
 		if (switchingFiles || nextProps.currentCommit !== this.props.currentCommit) {
@@ -215,7 +211,14 @@ export class SimpleStream extends Component {
 		}
 
 		if (nextProps.hasFocus && !this.props.hasFocus) {
-			this.postWithNewMessageIndicator = 0;
+			this.postWithNewMessageIndicator = null;
+		}
+		if (!nextProps.hasFocus && this.props.hasFocus) {
+			this.postWithNewMessageIndicator = null;
+			if (this.props.currentUser && this.props.currentUser.lastReads) {
+				this.postWithNewMessageIndicator = this.props.currentUser.lastReads[nextProps.postStreamId];
+			}
+			// this.postWithNewMessageIndicator = 10;
 		}
 	}
 
