@@ -61,12 +61,15 @@ export class PubNubReceiver {
         };
     }
 
-    subscribe(userId: string, teamId: string, repoId: string) {
+    subscribe(userId: string, teamId: string, repoIds: string[]) {
         const channels = [
             `user-${userId}`,
-            `team-${teamId}`,
-            `repo-${repoId}`
+            `team-${teamId}`
         ];
+
+        for (const repoId of repoIds) {
+            channels.push(`repo-${repoId}`);
+        }
 
         this.pubnub!.subscribe({
             channels: channels,

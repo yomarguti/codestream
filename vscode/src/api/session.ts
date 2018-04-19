@@ -436,7 +436,7 @@ export class CodeStreamSession extends Disposable {
 
     @signedIn
     getDefaultTeamChannel() {
-        return this.channels.getOrCreateByName('general');
+        return this.channels.getOrCreateByName('general', { membership: 'auto' });
     }
 
     @signedIn
@@ -468,8 +468,8 @@ export class CodeStreamSession extends Disposable {
         const markerStream = await repo.streams.getOrCreateByUri(uri);
 
         const stream = streamName === undefined
-        ? await this.getDefaultTeamChannel()
-        : await this.channels.getOrCreateByName(streamName);
+            ? await this.getDefaultTeamChannel()
+            : await this.channels.getOrCreateByName(streamName);
 
         return stream.postCode(text, code, range, commitHash, markerStream);
     }
@@ -499,7 +499,7 @@ export class CodeStreamSession extends Disposable {
                 this._git.onDidChangeRepositories(this.onGitRepositoriesChanged, this)
             );
 
-            this._pubnub.subscribe(this.userId, this.teamId!, this._data.repos[0].id);
+            this._pubnub.subscribe(this.userId, this.teamId!, this._data.repos.map(r => r.id));
 
             Logger.log(`${email} signed into CodeStream (${this.serverUrl})`);
             this._status = SessionStatus.SignedIn;
