@@ -4,7 +4,7 @@ import { upsert } from "../local-cache";
 import { normalize } from "./utils";
 import * as pubnubActions from "./pubnub-event";
 import { calculateLocations, saveUncommittedLocations } from "./marker-location";
-import { saveStream } from "./stream";
+import { saveStreams, saveStream } from "./stream";
 import { saveMarkers } from "./marker";
 import { saveMarkerLocations } from "./marker-location";
 import { getStreamForRepoAndFile } from "../reducers/streams";
@@ -243,7 +243,9 @@ export const createPost = (
 				})
 			);
 		}
-		if (!streamId) dispatch(saveStream(normalize(data.stream)));
+		let streams = data.streams || [];
+		if (data.stream) data.streams.push(data.stream);
+		if (streams.length > 0) dispatch(saveStreams(normalize(streams)));
 		dispatch(resolvePendingPost(pendingId, normalize(data.post)));
 		dispatch({ type: "POST_CREATED", meta: { post: data.post, ...extra } });
 	} catch (error) {
