@@ -18,9 +18,10 @@ export class PostNode extends ExplorerNode {
 
     async getTreeItem(): Promise<TreeItem> {
         let label = '';
-        const user = await this.session.api.getUser(this.post.senderId, this.post.teamId);
+
+        const user = await this.session.users.get(this.post.senderId);
         if (user !== undefined) {
-            label = `${user.username} - ${this.post.text}`;
+            label = `${user.name} - ${this.post.text}`;
         }
         else {
             label = this.post.text;
