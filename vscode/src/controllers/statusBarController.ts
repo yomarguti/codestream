@@ -52,16 +52,19 @@ export class StatusBarController extends Disposable {
                 this._statusBarItem.text = ` $(comment-discussion) Sign in... `;
                 this._statusBarItem.command = 'codestream.signIn';
                 this._statusBarItem.tooltip = 'Sign in to CodeStream...';
+                this._statusBarItem.color = undefined;
                 break;
             case SessionStatus.SigningIn:
                 this._statusBarItem.text = ` $(comment-discussion) Signing in... `;
                 this._statusBarItem.command = undefined;
                 this._statusBarItem.tooltip = 'Signing in to CodeStream, please wait';
+                this._statusBarItem.color = undefined;
                 break;
             case SessionStatus.SignedIn:
                 this._statusBarItem.text = ` $(comment-discussion) ${count === 0 ? '' : `${count} `}`;
                 this._statusBarItem.command = 'codestream.openStream';
                 this._statusBarItem.tooltip = 'Open CodeStream';
+                this._statusBarItem.color = count === 0 ? undefined : '#009aef';
                 break;
         }
 
