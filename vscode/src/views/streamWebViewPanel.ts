@@ -6,17 +6,17 @@ import {
   window
 } from 'vscode';
 import { CSPost, CSRepository, CSStream, CSTeam, CSUser } from '../api/api';
-import { CodeStreamSession, Stream, StreamType } from '../api/session';
+import { CodeStreamSession, Stream } from '../api/session';
 import { Container } from '../container';
 import * as fs from 'fs';
 
 interface ViewData {
   currentTeamId: string;
-  currentRepoId: string;
+  // currentRepoId: string;
   currentUserId: string;
   currentStreamId: string;
-  currentFileId?: string;
-  currentCommit?: string;
+  // currentFileId?: string;
+  // currentCommit?: string;
   posts: CSPost[];
   streams: CSStream[];
   teams: CSTeam[];
@@ -28,7 +28,7 @@ interface CSWebviewRequest {
   type: string;
   body: {
     action: string;
-    params: object;
+    params: any;
   };
 }
 
@@ -47,17 +47,16 @@ class MessageRelay {
     });
 
     view.onDidReceiveMessage(async (event: CSWebviewRequest) => {
-      const {type, body} = event;
+      const { type, body } = event;
       if (type === 'action-request') {
         if (body.action === 'post') {
-          this.session.api.createPost(body.params.text, this.stream.id).then((post?: CSPost) => {
-            post && this.view.postMessage({
-              type: 'action-response',
-              body: {
-                action: body.action,
-                payload: post
-              }
-            });
+          const post = await this.stream.post(body.params.text);
+          post && this.view.postMessage({
+            type: 'action-response',
+            body: {
+              action: body.action,
+              payload: post.entity
+            }
           });
         }
       }
@@ -89,43 +88,19 @@ export class StreamWebViewPanel implements Disposable {
     const messageRelay = new MessageRelay(this.session, panel.webview, stream);
 
     const state: ViewData = Object.create(null);
-
-    let streamsFn: () => Promise<CSStream[]>;
-    switch (stream.type) {
-      case StreamType.Channel:
-        // Dunno what to pass here
-        state.currentRepoId = (await this.session.repos.first()).id;
-        state.currentFile = stream.name;
-        streamsFn = () => this.session.channels.entities;
-        break;
-      case StreamType.Direct:
-        // Dunno what to pass here
-        state.currentRepoId = (await this.session.repos.first()).id;
-        state.currentFile = stream.name;
-        streamsFn = () => this.session.directMessages.entities;
-        break;
-      case StreamType.File:
-        state.currentRepoId = stream.repoId;
-        state.currentFile = stream.path;
-        streamsFn = async () => (await stream.repo).streams.entities;
-        break;
-      default:
-        throw new Error('Invalid stream type');
-    }
     state.currentTeamId = stream.teamId;
     state.currentUserId = this.session.userId;
     state.currentStreamId = stream.id;
+    state.streams = [stream.entity];
 
     [
       state.posts,
       state.repos,
-      state.streams,
       state.teams,
       state.users
     ] = await Promise.all([
       stream.posts.entities,
       this.session.repos.entities,
-      streamsFn(),
       this.session.teams.entities,
       this.session.users.entities
     ]);
