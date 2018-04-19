@@ -23,7 +23,11 @@ import * as routingActions from "../actions/routing";
 import { createPost, editPost, deletePost, fetchPosts } from "../actions/post";
 import { toMapBy } from "../reducers/utils";
 import { rangeToLocation } from "../util/Marker";
-import { getStreamForRepoAndFile, getStreamsForRepoById } from "../reducers/streams";
+import {
+	getStreamForTeam,
+	getStreamForRepoAndFile,
+	getStreamsForRepoById
+} from "../reducers/streams";
 import { getPostsForRepo, getPostsForStream } from "../reducers/posts";
 import rootLogger from "../util/Logger";
 import Button from "./onboarding/Button";
@@ -155,6 +159,13 @@ export class SimpleStream extends Component {
 		// in it, and calls a function to handle the new size
 		new ResizeObserver(me.handleResizeCompose).observe(me._compose);
 
+		if (this._postslist) {
+			this._postslist.addEventListener("scroll", this.handleScroll.bind(this));
+			new ResizeObserver(function() {
+				me.handleScroll();
+			}).observe(this._postslist);
+		}
+
 		// so that HTML doesn't get pasted into the input field. without this,
 		// HTML would be rendered as HTML when pasted
 		inputDiv.addEventListener("paste", function(e) {
@@ -166,28 +177,28 @@ export class SimpleStream extends Component {
 	}
 
 	componentWillReceiveProps(nextProps) {
-		const switchingStreams = nextProps.id !== this.props.id;
+		const switchingFileStreams = nextProps.fileStreamId !== this.props.fileStreamId;
+		const switchingPostStreams = nextProps.postStreamId !== this.props.postStreamId;
 
-		if (atom.config.get("CodeStream.streamPerFile")) {
-			if (nextProps.id && switchingStreams && nextProps.posts.length === 0) {
-				this.props.fetchPosts({ streamId: nextProps.id, teamId: nextProps.teamId });
-			}
-
-			if (switchingStreams) {
-				this.saveComposeState(nextProps.id);
-				this.handleDismissThread({ track: false });
-
-				// keep track of the new message indicator in "this" instead of looking
-				// directly at currentUser.lastReads, because that will change and trigger
-				// a re-render, which would remove the "new messages" line
-				this.postWithNewMessageIndicator = null;
-				if (this.props.currentUser && this.props.currentUser.lastReads) {
-					this.postWithNewMessageIndicator = this.props.currentUser.lastReads[nextProps.id];
-				}
-				// console.log("Switch to: ", nextProps.id);
-			}
+		if (nextProps.fileStreamId && switchingFileStreams && nextProps.posts.length === 0) {
+			this.props.fetchPosts({ streamId: nextProps.fileStreamId, teamId: nextProps.teamId });
 		}
 
+		if (switchingPostStreams) {
+			this.saveComposeState(nextProps.postStreamId);
+			this.handleDismissThread({ track: false });
+
+			// keep track of the new message indicator in "this" instead of looking
+			// directly at currentUser.lastReads, because that will change and trigger
+			// a re-render, which would remove the "new messages" line
+			this.postWithNewMessageIndicator = null;
+			if (this.props.currentUser && this.props.currentUser.lastReads) {
+				this.postWithNewMessageIndicator = this.props.currentUser.lastReads[nextProps.postStreamId];
+			}
+			// console.log("Switch to: ", nextProps.postStreamId);
+		}
+
+		this.postWithNewMessageIndicator = 35;
 		let switchingFiles = nextProps.currentFile !== this.props.currentFile;
 		if (switchingFiles || nextProps.currentCommit !== this.props.currentCommit) {
 			const editor = atom.workspace.getActiveTextEditor();
@@ -205,17 +216,17 @@ export class SimpleStream extends Component {
 	}
 
 	componentDidUpdate(prevProps, prevState) {
-		const { id, markStreamRead, markStreamModified } = this.props;
+		const { postStreamId, markStreamRead, markStreamModified } = this.props;
 
 		this._postslist.scrollTop = 100000;
 
 		this.installEditorHandlers();
 
 		// if we just switched to a new stream, (eagerly) mark both old and new as read
-		if (id !== prevProps.id) {
-			markStreamRead(id);
+		if (postStreamId !== prevProps.postStreamId) {
+			markStreamRead(postStreamId);
 
-			markStreamRead(prevProps.id);
+			markStreamRead(prevProps.postStreamId);
 			this.resizeStream();
 		}
 
@@ -229,7 +240,7 @@ export class SimpleStream extends Component {
 		) {
 			let isModified = this.state.modifiedGit || this.state.modifiedTyping;
 			// console.log("Marking this stream modified: " + id + " as " + isModified);
-			markStreamModified(id, isModified);
+			markStreamModified(postStreamId, isModified);
 		}
 	}
 
@@ -372,59 +383,44 @@ export class SimpleStream extends Component {
 	}
 
 	renderIntro = () => {
-		if (
-			!this.props.currentFile ||
-			(this.props.firstTimeInAtom && this.props.currentFile === this.state.fileForIntro)
-		) {
-			return [
-				<label key="welcome">
-					<FormattedMessage id="stream.intro.welcome" defaultMessage="Welcome to CodeStream!" />
-				</label>,
-				<label key="info">
-					<ul>
-						<li>
-							<FormattedMessage
-								id="stream.intro.eachFile"
-								defaultMessage="Pick a source file, post a message, and any of your teammates can join the discussion."
-							/>
-						</li>
-						<li>
-							<FormattedMessage
-								id="stream.intro.comment"
-								defaultMessage={
-									'Comment on a specific block of code by selecting it and then clicking the "+" button.'
-								}
-							/>
-						</li>
-						<li>
-							<FormattedMessage
-								id="stream.intro.share"
-								defaultMessage="Select &quot;Codestream: Invite&quot; from the command palette to invite your team."
-							>
-								{() => (
-									<React.Fragment>
-										Select <a onClick={this.props.goToInvitePage}>Codestream: Invite</a> from the
-										command palette to invite your team.
-									</React.Fragment>
-								)}
-							</FormattedMessage>
-						</li>
-					</ul>
-				</label>,
-				<label key="learn-more">
-					Learn more at{" "}
-					<a onClick={e => shell.openExternal("https://help.codestream.com")}>
-						help.codestream.com
-					</a>.
-				</label>
-			];
-		}
 		return [
-			<label>
-				This is the start of your discussion about <b>{this.fileAbbreviation()}</b>.
+			<label key="welcome">
+				<FormattedMessage id="stream.intro.welcome" defaultMessage="Welcome to CodeStream!" />
 			</label>,
-			<label>
-				Need people to chat with? <a onClick={this.props.goToInvitePage}>Invite someone!</a>
+			<label key="info">
+				<ul>
+					<li>
+						<FormattedMessage
+							id="stream.intro.eachFile"
+							defaultMessage="Pick a source file, post a message, and any of your teammates can join the discussion."
+						/>
+					</li>
+					<li>
+						<FormattedMessage
+							id="stream.intro.comment"
+							defaultMessage={
+								'Comment on a specific block of code by selecting it and then clicking the "+" button.'
+							}
+						/>
+					</li>
+					<li>
+						<FormattedMessage
+							id="stream.intro.share"
+							defaultMessage="Select &quot;Codestream: Invite&quot; from the command palette to invite your team."
+						>
+							{() => (
+								<React.Fragment>
+									Select <a onClick={this.props.goToInvitePage}>Codestream: Invite</a> from the
+									command palette to invite your team.
+								</React.Fragment>
+							)}
+						</FormattedMessage>
+					</li>
+				</ul>
+			</label>,
+			<label key="learn-more">
+				Learn more at{" "}
+				<a onClick={e => shell.openExternal("https://help.codestream.com")}>help.codestream.com</a>
 			</label>
 		];
 	};
@@ -501,11 +497,20 @@ export class SimpleStream extends Component {
 		// placeholder text
 		const contentEditableClass = "native-key-bindings " + btoa(placeholderText);
 
+		const streamDivId = "stream-" + this.props.postStreamId;
+		let unread = false;
+
+		const unreadsAbove = this.state.threadActive ? null : (
+			<div className="unreads" id="unreads-above">
+				&uarr; Unread Messages &uarr;
+			</div>
+		);
+
 		return (
 			<div className={streamClass} ref={ref => (this._div = ref)}>
 				<UMIs />
 				<BufferReferences
-					streamId={this.props.id}
+					streamId={this.props.postStreamId}
 					references={this.props.markers}
 					onSelect={this.selectPost}
 				/>
@@ -519,10 +524,12 @@ export class SimpleStream extends Component {
 					currentUser={this.props.currentUser}
 					users={this.props.users}
 				/>
+				{unreadsAbove}
 				<div
 					className={postsListClass}
 					ref={ref => (this._postslist = ref)}
 					onClick={this.handleClickPost}
+					id={streamDivId}
 				>
 					<div className="intro" ref={ref => (this._intro = ref)}>
 						{this.renderIntro()}
@@ -535,6 +542,9 @@ export class SimpleStream extends Component {
 						const parentPost = post.parentPostId
 							? posts.find(p => p.id === post.parentPostId)
 							: null;
+						const newMessageIndicator =
+							post.seqNum && post.seqNum === Number(this.postWithNewMessageIndicator);
+						unread = unread || newMessageIndicator;
 						const returnValue = (
 							<div key={post.id}>
 								<DateSeparator timestamp1={lastTimestamp} timestamp2={post.createdAt} />
@@ -543,9 +553,8 @@ export class SimpleStream extends Component {
 									usernames={this.props.usernamesRegexp}
 									currentUsername={this.props.currentUser.username}
 									replyingTo={parentPost}
-									newMessageIndicator={
-										post.seqNum && post.seqNum === Number(this.postWithNewMessageIndicator)
-									}
+									newMessageIndicator={newMessageIndicator}
+									unread={unread}
 									editing={post.id === this.state.editingPostId}
 								/>
 							</div>
@@ -604,6 +613,9 @@ export class SimpleStream extends Component {
 					}
 				</div>
 
+				<div className="unreads" id="unreads-below">
+					&darr; Unread Messages &darr;
+				</div>
 				<AtMentionsPopup
 					on={this.state.atMentionsOn}
 					people={this.state.atMentionsPeople}
@@ -613,39 +625,99 @@ export class SimpleStream extends Component {
 					handleHoverAtMention={this.handleHoverAtMention}
 					handleSelectAtMention={this.handleSelectAtMention}
 				/>
-				{this.props.currentFile && (
-					<div
-						className={composeClass}
-						onKeyPress={this.handleOnKeyPress}
-						ref={ref => (this._compose = ref)}
-					>
-						<AddCommentPopup editor={editor} onClick={this.handleClickAddComment} />
-						{hasNewMessagesBelowFold && (
-							<div className="new-messages-below" onClick={this.handleClickScrollToNewMessages}>
-								&darr; Unread Messages &darr;
-							</div>
-						)}
-						{quoteInfo}
-						{quoteHint}
-						<ContentEditable
-							className={contentEditableClass}
-							id="input-div"
-							rows="1"
-							tabIndex="-1"
-							onChange={this.handleOnChange}
-							onBlur={this.handleOnBlur}
-							html={newPostText}
-							placeholder={placeholderText}
-							ref={ref => (this._contentEditable = ref)}
-						/>
-					</div>
-				)}
+				<div
+					className={composeClass}
+					onKeyPress={this.handleOnKeyPress}
+					ref={ref => (this._compose = ref)}
+				>
+					<AddCommentPopup editor={editor} onClick={this.handleClickAddComment} />
+					{quoteInfo}
+					{quoteHint}
+					<ContentEditable
+						className={contentEditableClass}
+						id="input-div"
+						rows="1"
+						tabIndex="-1"
+						onChange={this.handleOnChange}
+						onBlur={this.handleOnBlur}
+						html={newPostText}
+						placeholder={placeholderText}
+						ref={ref => (this._contentEditable = ref)}
+					/>
+				</div>
 			</div>
 		);
 	}
 
+	handleScroll(event) {
+		let scrollDiv = this._postslist;
+
+		if (!scrollDiv) {
+			console.log("Couldn't find scrollDiv for ", event);
+			return;
+		}
+
+		let scrollTop = scrollDiv.scrollTop;
+		let containerHeight = scrollDiv.parentNode.offsetHeight;
+
+		let unreadsAbove = false;
+		let unreadsBelow = false;
+		let mentionsAbove = false;
+		let mentionsBelow = false;
+
+		let umiDivs = scrollDiv.getElementsByClassName("unread");
+		let index = 0;
+		let umiDivsLength = umiDivs.length;
+		while (index < umiDivsLength) {
+			let umi = umiDivs[index];
+			let top = umi.offsetTop;
+			if (top - scrollTop + 10 < 0) {
+				unreadsAbove = umi;
+				if (umi.getAttribute("cs-umi-mention") == "1") mentionsAbove = umi;
+			}
+			if (top - scrollTop + 60 + umi.offsetHeight > containerHeight) {
+				if (!unreadsBelow) unreadsBelow = umi;
+				if (!mentionsBelow && umi.getAttribute("cs-umi-mention") == "1") mentionsBelow = umi;
+			}
+			index++;
+		}
+		this.setUnreadsAttributes(
+			"above",
+			document.getElementById("unreads-above"),
+			unreadsAbove,
+			mentionsAbove
+		);
+		this.setUnreadsAttributes(
+			"below",
+			document.getElementById("unreads-below"),
+			unreadsBelow,
+			mentionsBelow
+		);
+	}
+
+	setUnreadsAttributes(type, element, active, mentions) {
+		if (!element) return;
+
+		let that = this;
+		let padding = type === "above" ? -40 : 40;
+		if (active) {
+			element.classList.add("active");
+			element.onclick = function(event) {
+				active.scrollIntoView(type === "above");
+				that._postslist.scrollTop += padding;
+			};
+		} else element.classList.remove("active");
+		if (mentions) {
+			element.classList.add("mention");
+			element.onclick = function(event) {
+				mentions.scrollIntoView(type === "above");
+				that._postslist.scrollTop += padding;
+			};
+		} else element.classList.remove("mention");
+	}
+
 	saveComposeState(nextId) {
-		this.savedComposeState[this.props.id] = {
+		this.savedComposeState[this.props.postStreamId] = {
 			newPostText: this.state.newPostText,
 			quoteRange: this.state.quoteRange,
 			quoteText: this.state.quoteText,
@@ -1144,28 +1216,29 @@ export class SimpleStream extends Component {
 
 		const codeBlocks = [];
 		const { quoteText, quoteRange, preContext, postContext, threadActive } = this.state;
-		const { id, createPost } = this.props;
+		const { postStreamId, fileStreamId, createPost, currentFile } = this.props;
 
 		let threadId = threadActive ? this.state.threadId : null;
 
 		if (quoteText) {
-			codeBlocks.push({
+			let codeBlock = {
 				code: quoteText,
 				location: rangeToLocation(quoteRange),
+				// file: currentFile,
 				preContext,
-				postContext,
-				// for now, we assume this codeblock came from this buffer
-				// in the future we want to support commenting on codeBlocks
-				// from other files/buffers
-				streamId: id
-			});
+				postContext
+			};
+			if (fileStreamId) codeBlock.streamId = fileStreamId;
+			else codeBlock.stream = currentFile;
+			codeBlocks.push(codeBlock);
 		}
 
 		const mentionUserIds = this.findMentions(newText);
 		const editor = atom.workspace.getActiveTextEditor();
-		const editorText = editor.getText();
+		const editorText = editor ? editor.getText() : undefined;
 
-		createPost(this.props.id, threadId, newText, codeBlocks, mentionUserIds, editorText, {
+		console.log("CREATING A POST WITH: " + postStreamId, " and codeblocks ", codeBlocks);
+		createPost(postStreamId, threadId, newText, codeBlocks, mentionUserIds, editorText, {
 			autoMentions: this.state.autoMentioning
 		});
 
@@ -1242,15 +1315,16 @@ const mapStateToProps = ({
 	messaging,
 	onboarding
 }) => {
-	const repoStreams = getStreamsForRepoById(streams, context.currentRepoId) || {};
-	const stream = getStreamForRepoAndFile(streams, context.currentRepoId, context.currentFile) || {};
+	const fileStream =
+		getStreamForRepoAndFile(streams, context.currentRepoId, context.currentFile) || {};
+
 	const markersForStreamAndCommit = getMarkersForStreamAndCommit(
-		markerLocations.byStream[stream.id],
+		markerLocations.byStream[fileStream.id],
 		context.currentCommit,
 		markers
 	);
 	const locations = getLocationsByPost(
-		markerLocations.byStream[stream.id],
+		markerLocations.byStream[fileStream.id],
 		context.currentCommit,
 		toMapBy("id", markersForStreamAndCommit)
 	);
@@ -1284,19 +1358,22 @@ const mapStateToProps = ({
 	const isOnline =
 		!connectivity.offline && messaging.failedSubscriptions.length === 0 && !messaging.timedOut;
 
-	const streamPosts = atom.config.get("CodeStream.streamPerFile")
-		? getPostsForStream(posts, stream.id || context.currentFile)
-		: getPostsForRepo(posts, context.currentRepoId);
+	// FIXME -- eventually we'll allow the user to switch to other streams, like DMs and channels
+	const teamStream = getStreamForTeam(streams, context.currentTeamId) || {};
+	const streamPosts = getPostsForStream(posts, teamStream.id);
+	const streamsById = getStreamsForRepoById(streams, context.currentRepoId);
+
 	return {
 		isOnline,
-		id: stream.id,
-		teamId: stream.teamId,
+		postStreamId: teamStream.id,
+		fileStreamId: fileStream.id,
+		teamId: context.currentTeamId,
 		firstTimeInAtom: onboarding.firstTimeInAtom,
 		currentFile: context.currentFile,
 		currentCommit: context.currentCommit,
 		markers: markersForStreamAndCommit,
 		users: toMapBy("id", teamMembers),
-		editingUsers: stream.editingUsers,
+		editingUsers: fileStream.editingUsers,
 		usernamesRegexp: usernamesRegexp,
 		currentUser: users[session.userId],
 		posts: streamPosts.map(post => {
@@ -1313,10 +1390,16 @@ const mapStateToProps = ({
 				};
 			}
 			const { username, email, firstName = "", lastName = "", color } = user;
-			const postStream = repoStreams[post.streamId] || {};
+			let codeBlockFile = null;
+			if (post.codeBlocks && post.codeBlocks.length) {
+				const codeBlock = post.codeBlocks[0];
+				const marker = markers[codeBlock.markerId] || {};
+				const codeBlockStream = streamsById[marker.streamId] || {};
+				codeBlockFile = codeBlockStream.file;
+			}
 			return {
 				...post,
-				file: postStream.file,
+				file: codeBlockFile,
 				markerLocation: locations[post.id],
 				author: { username, email, color, fullName: `${firstName} ${lastName}`.trim() }
 			};

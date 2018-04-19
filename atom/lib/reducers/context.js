@@ -17,6 +17,7 @@ export default (state = initialState, { type, payload }) => {
 	if (type === "SET_CURRENT_REPO") return { ...state, currentRepoId: payload };
 	if (type === "SET_CURRENT_COMMIT") return { ...state, currentCommit: payload };
 	if (type === "COMMIT_HASH_CHANGED") return { ...state, currentCommit: payload };
+	if (type === "SET_HAS_FOCUS") return { ...state, hasFocus: payload };
 	if (type === "NO_ACCESS") return { ...state, noAccess: { noAccess: true } };
 	if (type === "NO_ACCESS-MISSING_REMOTE_URL") return { ...state, noAccess: { noUrl: true } };
 	if (type === "NO_GIT_IN_PATH") return { ...state, noAccess: { noGit: true } };

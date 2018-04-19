@@ -12,7 +12,7 @@ import { saveUser, saveUsers, ensureCorrectTimeZone } from "./user";
 import { saveRepo, saveRepos } from "./repo";
 import { fetchCompanies, saveCompany } from "./company";
 import { fetchTeamMembers, saveTeam, saveTeams, joinTeam as _joinTeam } from "./team";
-import { fetchStreams } from "./stream";
+import { fetchTeamStreams } from "./stream";
 import { fetchLatestForCurrentStream } from "./post";
 import UUID from "uuid/v1";
 
@@ -498,7 +498,7 @@ export const joinTeam = nextAction => (dispatch, getState, { http }) => {
 	return dispatch(_joinTeam())
 		.then(() => {
 			dispatch({ type: nextAction });
-			dispatch(fetchStreams());
+			dispatch(fetchTeamStreams());
 		})
 		.catch(error => {
 			if (http.isApiRequestError(error)) {

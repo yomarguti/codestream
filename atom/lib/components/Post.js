@@ -56,6 +56,7 @@ class Post extends Component {
 			post: true,
 			mine: mine,
 			editing: this.props.editing,
+			unread: this.props.unread,
 			"new-separator": this.props.newMessageIndicator,
 			[`thread-key-${this.props.threadKey}`]: true
 		});
@@ -66,9 +67,13 @@ class Post extends Component {
 			let code = post.codeBlocks[0].code;
 			if (atom.config.get("CodeStream.streamPerFile")) {
 				codeBlock = <div className="code">{code}</div>;
-			}
-			else {
-				codeBlock = <div className="code-reference"><span>{post.file}</span><div className="code">{code}</div></div>;
+			} else {
+				codeBlock = (
+					<div className="code-reference">
+						<span>{post.file}</span>
+						<div className="code">{code}</div>
+					</div>
+				);
 			}
 		}
 
@@ -146,7 +151,7 @@ class Post extends Component {
 						</span>
 					);
 			} else {
-				return <Linkify>{part}</Linkify>;
+				return <Linkify key={iterator++}>{part}</Linkify>;
 			}
 		});
 	};

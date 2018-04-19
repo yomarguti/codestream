@@ -18,7 +18,8 @@ import {
 	resetContext,
 	setContext,
 	setCurrentFile,
-	setCurrentCommit
+	setCurrentCommit,
+	setHasFocus
 } from "./actions/context";
 import { foundMultipleRemotes } from "./actions/onboarding";
 import { setStreamUMITreatment } from "./actions/umi";
@@ -332,6 +333,8 @@ module.exports = {
 			window.addEventListener("mousemove", e => store.dispatch(setActive()), false);
 			window.addEventListener("keypress", e => store.dispatch(setActive()), false);
 			window.addEventListener("focus", e => store.dispatch(setActive()), false);
+			window.addEventListener("blur", e => store.dispatch(setHasFocus(false)), false);
+			window.addEventListener("focus", e => store.dispatch(setHasFocus(true)), false);
 
 			const repoAttributes = store.getState().repoAttributes;
 			if (_.isEmpty(repoAttributes) || !repoAttributes.url) {

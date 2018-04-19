@@ -7,8 +7,10 @@ const initialState = {
 };
 
 const addStream = (state, stream) => {
-	const existingStreamsForRepo = state.byRepo[stream.repoId] || { byFile: {} };
+	const existingStreamsForRepo = state.byRepo[stream.repoId] || { byFile: {}, byId: {} };
+	if (stream.isTeamStream) return { ...state, teamStream: stream };
 	return {
+		teamStream: state.teamStream,
 		byRepo: {
 			...state.byRepo,
 			[stream.repoId]: {
@@ -36,6 +38,10 @@ export default (state = initialState, { type, payload }) => {
 		default:
 			return state;
 	}
+};
+
+export const getStreamForTeam = state => {
+	return state.teamStream;
 };
 
 // Selectors

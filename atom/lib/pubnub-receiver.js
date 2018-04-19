@@ -5,7 +5,7 @@ import { normalize } from "./actions/utils";
 import { resolveFromPubnub } from "./actions/pubnub-event";
 import { resolveFromPubnub as resolvePost } from "./actions/post";
 import { saveMarkerLocations } from "./actions/marker-location";
-import { fetchStreamsAndAllPosts } from "./actions/stream";
+import { fetchTeamStreams } from "./actions/stream";
 import { caughtUp, lastMessageReceived, historyRetrievalFailure } from "./actions/messaging";
 import rootLogger from "./util/Logger";
 import PubnubSubscription from "./pubnub-subscription";
@@ -181,7 +181,7 @@ export default class PubNubReceiver {
 		} else {
 			// assuming there's nothing cached yet and this is a clean slate
 			return this.store
-				.dispatch(fetchStreamsAndAllPosts())
+				.dispatch(fetchTeamStreams(true))
 				.then(() => this.store.dispatch(caughtUp()));
 		}
 	}

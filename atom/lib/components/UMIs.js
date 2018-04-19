@@ -27,7 +27,7 @@ export class SimpleUMIs extends Component {
 		this.subscriptions = new CompositeDisposable();
 		this.subscriptions.add(
 			atom.contextMenu.add({
-				".tree-view [is='tree-view-file'], .tree-view [is='tree-view-directory']": [
+				".codestream li.stream-label": [
 					{
 						label: "Notifications",
 						submenu: [
@@ -138,7 +138,6 @@ export class SimpleUMIs extends Component {
 		app.setBadgeCount(Math.floor(totalUMICount)); // TODO: This needs to be smarter and it should add to the current badge count rather than replace it
 
 		if (atom.config.get("CodeStream.streamPerFile")) {
-
 			Object.keys(umis.unread).map(key => {
 				let path = streamMap[key] || "";
 				this.treatPath(path);
@@ -414,6 +413,7 @@ const mapStateToProps = ({ repoAttributes, context, session, streams, users, umi
 		currentUser: users[session.userId],
 		workingDirectory: repoAttributes.workingDirectory,
 		repoId: context.currentRepoId,
+		hasFocus: context.hasFocus,
 		umis: umis
 	};
 };

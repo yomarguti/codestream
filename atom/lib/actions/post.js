@@ -64,6 +64,7 @@ const fetchOlderPosts = (mostRecentPost, streamId, teamId) => async (
 	dispatch(saveMarkers(normalizedMarkers));
 	if (markerLocations) dispatch(saveMarkerLocations(markerLocations));
 	const normalizedPosts = normalize(posts);
+	console.log("OLDER NORMALIZED POSTS ARE: ", posts);
 	const save = dispatch(savePostsForStream(streamId, normalizedPosts));
 	if (more)
 		return dispatch(fetchOlderPosts(normalizedPosts[normalizedPosts.length - 1], streamId, teamId));
@@ -180,15 +181,15 @@ export const createPost = (
 	const uncommittedLocations = [];
 	let hasUncommittedLocation = false;
 	if (isTrackedFile) {
-		const backtrackedLocations = await backtrackCodeBlockLocations(
-			codeBlocks,
-			bufferText,
-			streamId,
-			state,
-			http
-		);
 		for (let i = 0; i < codeBlocks.length; i++) {
 			const codeBlock = codeBlocks[i];
+			const backtrackedLocations = await backtrackCodeBlockLocations(
+				codeBlocks,
+				bufferText,
+				codeBlock.streamId,
+				state,
+				http
+			);
 			const lastCommitLocation = backtrackedLocations[i];
 			const meta = lastCommitLocation[4] || {};
 			if (meta.startWasDeleted || meta.endWasDeleted) {
@@ -227,6 +228,7 @@ export const createPost = (
 			repoId: context.currentRepoId
 		};
 
+	console.log("SAVING PENDING POST", post);
 	dispatch(savePendingPost({ ...post }));
 
 	try {
@@ -260,6 +262,7 @@ const backtrackCodeBlockLocations = async (codeBlocks, bufferText, streamId, sta
 	const { context, repoAttributes, session } = state;
 	const gitRepo = await openRepo(repoAttributes.workingDirectory);
 	const locations = codeBlocks.map(codeBlock => codeBlock.location);
+	console.log("GETTING A FINDER WITH: ", streamId);
 	const locationFinder = new MarkerLocationFinder({
 		filePath: context.currentFile,
 		gitRepo,
@@ -268,6 +271,7 @@ const backtrackCodeBlockLocations = async (codeBlocks, bufferText, streamId, sta
 		teamId: context.currentTeamId,
 		streamId
 	});
+	console.log("DONE");
 
 	const backtrackedLocations = await locationFinder.backtrackLocationsAtCurrentCommit(
 		locations,

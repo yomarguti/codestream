@@ -15,6 +15,14 @@ export const markStreamRead = streamId => async (dispatch, getState, { http }) =
 	// console.log("READ THE STREAM", markReadData, session);
 };
 
+export const markRepoRead = repoId => async (dispatch, getState, { http }) => {
+	const { session, context } = getState();
+
+	const markReadData = await http.put("/read", { repoId: repoId }, session.accessToken);
+	dispatch({ type: "RESET_UMI" });
+	// console.log("READ THE STREAM", markReadData, session);
+};
+
 export const setStreamUMITreatment = (path, setting) => (dispatch, getState) => {
 	const { context } = getState();
 	return Promise.all(
@@ -28,6 +36,14 @@ export const setStreamUMITreatment = (path, setting) => (dispatch, getState) => 
 	});
 };
 
+const streamVisible = streamId => {
+	let div = document.getElementById("stream-" + streamId);
+	// if the div exists, and has an offsetParent, it's visible (not hidden)
+	console.log("IS it visible? ", div && div.offsetParent);
+
+	return div && div.offsetParent;
+};
+
 export const incrementUMI = post => async (dispatch, getState, { db }) => {
 	const { session, context, users, streams } = getState();
 	const currentUser = users[session.userId];
@@ -37,25 +53,33 @@ export const incrementUMI = post => async (dispatch, getState, { db }) => {
 	// so we don't need to sync with the server in this case
 	if (post.creatorId === session.userId) return;
 
-	// don't increment the UMI of the current stream, presumably because you
-	// see the post coming in. FIXME -- if we are not scrolled to the bottom,
-	// we should still increment the UMI
-	const currentStream = getStreamForRepoAndFile(
-		streams,
-		context.currentRepoId,
-		context.currentFile
-	);
-	if (currentStream && currentStream.id === post.streamId) {
-		// make sure we let the server know this post is read
-		// and return so that we do not increment the UMI
-		dispatch(markStreamRead(currentStream.id));
-		return;
+	// if the window has the focus, and the stream is visible
+	if (context.hasFocus && streamVisible(post.streamId)) {
+		if (atom.config.get("CodeStream.streamPerFile")) {
+			// don't increment the UMI of the current stream, presumably because you
+			// see the post coming in. FIXME -- if we are not scrolled to the bottom,
+			// we should still increment the UMI
+			const currentStream = getStreamForRepoAndFile(
+				streams,
+				context.currentRepoId,
+				context.currentFile
+			);
+			if (currentStream && currentStream.id === post.streamId) {
+				// make sure we let the server know this post is read
+				// and return so that we do not increment the UMI
+				dispatch(markStreamRead(currentStream.id));
+				return;
+			}
+		} else {
+			// if we have the focus, we mark the repo read
+			dispatch(markRepoRead(context.currentRepoId));
+			// return;
+		}
 	}
 
 	var hasMention = post.text.match("@" + currentUser.username + "\\b");
-	let type = hasMention ? "INCREMENT_MENTION" : "INCREMENT_UMI";
 	dispatch({
-		type: type,
+		type: hasMention ? "INCREMENT_MENTION" : "INCREMENT_UMI",
 		payload: post.streamId
 	});
 

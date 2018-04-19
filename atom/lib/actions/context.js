@@ -36,6 +36,10 @@ export const commitHashChanged = hash => ({
 	type: "COMMIT_HASH_CHANGED",
 	payload: hash
 });
+export const setHasFocus = focus => ({
+	type: "SET_HAS_FOCUS",
+	payload: focus
+});
 export const logout = () => dispatch => {
 	dispatch(setPresence("offline"));
 	dispatch({ type: "CLEAR_SESSION" });
