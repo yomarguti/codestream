@@ -736,6 +736,7 @@ export class SimpleStream extends Component {
 	handleDismissThread = ({ track = true } = {}) => {
 		this.hideDisplayMarker();
 		this.setState({ threadActive: false });
+		this.focusInput();
 		if (track) mixpanel.track("Page Viewed", { "Page Name": "Source Stream" });
 	};
 
@@ -848,6 +849,7 @@ export class SimpleStream extends Component {
 			this.hideDisplayMarker();
 			this.showDisplayMarker(codeBlock.markerId);
 		}
+		this.focusInput();
 	};
 
 	// not using a gutter for now
@@ -1107,7 +1109,7 @@ export class SimpleStream extends Component {
 	handleAtMentionKeyPress(event, eventType) {
 		if (eventType == "escape") {
 			if (this.state.atMentionsOn) this.setState({ atMentionsOn: false });
-			else this.setState({ threadActive: false });
+			else this.handleDismissThread();
 		} else {
 			let newIndex = 0;
 			if (eventType == "down") {
@@ -1137,7 +1139,7 @@ export class SimpleStream extends Component {
 		logger.trace(".handleEscape");
 		if (this.state.editingPostId) this.setState({ editingPostId: null });
 		else if (this.state.atMentionsOn) this.setState({ atMentionsOn: false });
-		else if (this.state.threadActive) this.setState({ threadActive: null });
+		else if (this.state.threadActive) this.handleDismissThread();
 		else event.abortKeyBinding();
 	}
 
