@@ -1240,13 +1240,16 @@ export class SimpleStream extends Component {
 				code: quoteText,
 				location: rangeToLocation(quoteRange),
 				preContext,
-				postContext
+				postContext,
+				file: currentFile
 			};
+
+			// if we have a streamId, send it. otherwise the
+			// API server will create one based on the file
+			// and the repoId.
 			if (fileStreamId) codeBlock.streamId = fileStreamId;
-			else {
-				codeBlock.file = currentFile;
-				codeBlock.repoId = repoId;
-			}
+			else codeBlock.repoId = repoId;
+
 			codeBlocks.push(codeBlock);
 		}
 
