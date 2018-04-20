@@ -50917,7 +50917,7 @@ var SimpleStream = function (_Component) {
 	}, {
 		key: "fileAbbreviation",
 		value: function fileAbbreviation() {
-			return this.props.currentFile || "";
+			return this.props.name || "";
 			// return Path.basename(this.props.currentFile);
 		}
 	}, {
@@ -51098,7 +51098,7 @@ var SimpleStream = function (_Component) {
 						return returnValue;
 					})
 				),
-				this.props.currentFile && react.createElement(
+				react.createElement(
 					"div",
 					{
 						className: composeClass,
@@ -51526,7 +51526,7 @@ var mapStateToProps = function mapStateToProps(_ref12) {
 		id: stream.id,
 		teamId: stream.teamId,
 		firstTimeInAtom: onboarding.firstTimeInAtom,
-		currentFile: context.currentFile,
+		name: stream.name || stream.file,
 		currentCommit: context.currentCommit,
 		markers: markersForStreamAndCommit,
 		users: toMapBy("id", teamMembers),

@@ -373,7 +373,7 @@ export class SimpleStream extends Component {
 	// FIXME -- this should be improved for systems that don't use "/"
 	// as a path delimiter
 	fileAbbreviation() {
-		return this.props.currentFile || "";
+		return this.props.name || "";
 		// return Path.basename(this.props.currentFile);
 	}
 
@@ -622,7 +622,7 @@ export class SimpleStream extends Component {
 					handleHoverAtMention={this.handleHoverAtMention}
 					handleSelectAtMention={this.handleSelectAtMention}
 				/> */}
-				{this.props.currentFile && (
+				{/* {this.props.currentFile && ( */}
 					<div
 						className={composeClass}
 						onKeyPress={this.handleOnKeyPress}
@@ -648,7 +648,7 @@ export class SimpleStream extends Component {
 							ref={ref => (this._contentEditable = ref)}
 						/>
 					</div>
-				)}
+				{/* )} */}
 			</div>
 		);
 	}
@@ -1271,7 +1271,7 @@ const mapStateToProps = ({
 		id: stream.id,
 		teamId: stream.teamId,
 		firstTimeInAtom: onboarding.firstTimeInAtom,
-		currentFile: context.currentFile,
+		name: stream.name || stream.file,
 		currentCommit: context.currentCommit,
 		markers: markersForStreamAndCommit,
 		users: toMapBy("id", teamMembers),
