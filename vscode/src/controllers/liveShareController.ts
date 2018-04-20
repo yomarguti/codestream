@@ -48,18 +48,22 @@ export class LiveShareController extends Disposable {
             const match = liveShareRegex.exec(post.text);
             if (match != null) {
                 const user = await users.get(post.senderId);
-
-                const actions: MessageItem[] = [
-                    { title: 'Join Live Share' },
-                    { title: 'Ignore', isCloseAffordance: true }
-                ];
-
-                const result = await window.showInformationMessage(`${user.name} is inviting you to join a Live Share session`, ...actions);
-                if (result === undefined || result === actions[1]) return;
-
-                commands.executeCommand('liveshare.join', match[0], { newWindow: true });
+                this.onRequestReceived(match[0], user);
             }
         }
+    }
+
+    private async onRequestReceived(liveShareId: string, user: User) {
+        const actions: MessageItem[] = [
+            { title: 'Join Live Share' },
+            { title: 'Ignore', isCloseAffordance: true }
+        ];
+
+        const result = await window.showInformationMessage(`${user.name} is inviting you to join a Live Share session`, ...actions);
+        if (result === undefined || result === actions[1]) return;
+
+        await commands.executeCommand('liveshare.join', liveShareId, { newWindow: true });
+        this.openStream(liveShareId, user, Container.session.user);
     }
 
     async invite(user: User) {
@@ -67,7 +71,19 @@ export class LiveShareController extends Disposable {
 
         const result = await commands.executeCommand('liveshare.start', { suppressNotification: true });
         if (result !== undefined) {
-            Container.session.post(`@${user.name} ${result}`);
+            await Container.session.post(`@${user.name} ${result}`);
+
+            const match = liveShareRegex.exec(result.toString());
+            if (match != null) {
+                this.openStream(match[1], Container.session.user, user);
+            }
         }
+    }
+
+    async openStream(liveShareId: string, inviter: User, invitee: User) {
+        const stream = await Container.session.directMessages.getOrCreateByName(`vsls://${liveShareId})`, { membership: [ inviter.id, invitee.id ]});
+        if (stream === undefined) throw new Error(`Failed to create live share stream`);
+
+        await commands.executeCommand('codestream.openStream', stream);
     }
 }
