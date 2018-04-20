@@ -228,7 +228,7 @@ export const createPost = (
 			repoId: context.currentRepoId
 		};
 
-	console.log("SAVING PENDING POST", post);
+	// console.log("SAVING PENDING POST", post);
 	dispatch(savePendingPost({ ...post }));
 
 	try {

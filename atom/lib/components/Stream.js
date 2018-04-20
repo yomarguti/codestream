@@ -375,7 +375,13 @@ export class SimpleStream extends Component {
 		this._threadpostslist.style.top = headerHeight + "px";
 		// if (this._atMentionsPopup)
 		// this._atMentionsPopup.style.bottom = this._compose.offsetHeight + "px";
-		this._postslist.scrollTop = 100000;
+
+		let scrollHeight = this._postslist.scrollHeight;
+		let currentScroll = this._postslist.scrollTop;
+		let offBottom = scrollHeight - currentScroll - streamHeight + composeHeight + headerHeight;
+		// if i am manually scrolling, don't programatically scroll to bottom
+		// offBottom is how far we've scrolled off the bottom of the posts list
+		if (offBottom < 100) this._postslist.scrollTop = 100000;
 	};
 
 	// return the post, if any, with the given ID
@@ -518,7 +524,6 @@ export class SimpleStream extends Component {
 
 		return (
 			<div className={streamClass} ref={ref => (this._div = ref)}>
-				<UMIs />
 				<BufferReferences
 					streamId={this.props.postStreamId}
 					references={this.props.markers}
@@ -536,7 +541,9 @@ export class SimpleStream extends Component {
 				/>
 				{unreadsAbove}
 				<div className="stream-header" ref={ref => (this._header = ref)}>
-					{this.props.team.name}
+					<UMIs />
+					<span>{this.props.team.name}</span>
+					<span onClick={this.handleClickTeamMenu} className="icon icon-grabber" />
 				</div>
 				<div
 					className={postsListClass}

@@ -34,6 +34,7 @@ class Post extends Component {
 		// almost to the bottom, we count that as being at the bottom for UX reasons
 		if (offBottom < 100 || this.props.post.author.username === this.props.currentUsername) {
 			// big number to make sure we've scrolled all the way down
+			console.log("WE BE SCROLLIGN!");
 			streamDiv.scrollTop = 100000;
 			// console.log("SCROLLING TO BOTTOM");
 		} else {

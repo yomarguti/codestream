@@ -16,13 +16,45 @@
 		background: @app-background-color;
 
 		.stream-header {
-			font-weight: 100;
+			position: relative;
 			text-align: center;
 			border-bottom: 1px solid @base-border-color;
-			padding: 0 0 10px 0;
-			font-size: 16px;
-			text-transform: uppercase;
-			letter-spacing: 3px;
+			padding: 0 35px 10px 35px;
+
+			span {
+				font-weight: 100;
+				font-size: 16px;
+				text-transform: uppercase;
+				letter-spacing: 3px;
+			}
+
+			.mentions-badge {
+				position: absolute;
+				top: 2px;
+				left: 10px;
+				background-color: @background-color-info;
+				border-radius: 20px;
+				color: white;
+				width: 20px;
+				height: 20px;
+				text-align: center;
+				font-size: 11px;
+				padding-top: 1px;
+			}
+
+			.icon {
+				position: absolute;
+				top: 2px;
+				right: 5px;
+				cursor: pointer;
+				padding: 0 0 0 6px;
+				text-align: center;
+				border-radius: 3px;
+			}
+			.icon:hover {
+				color: @text-color-highlight;
+				background-color: @base-background-color;
+			}
 		}
 
 		.unreads {

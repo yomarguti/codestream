@@ -62,19 +62,22 @@ export class SimpleUMIs extends Component {
 
 	componentDidMount() {
 		this.props.recalculate();
-		if (this.treeView) {
-			this.scrollDiv = document.getElementsByClassName("tree-view")[0];
-			this.scrollDiv.addEventListener("scroll", this.handleScroll.bind(this));
-			this.scrollDiv.addEventListener("click", this.handleClick.bind(this));
-			let that = this;
-			new ResizeObserver(function() {
-				that.handleScroll();
-			}).observe(this.scrollDiv);
-		}
+
+		// commented out for one-stream
+		// if (this.treeView) {
+		// 	this.scrollDiv = document.getElementsByClassName("tree-view")[0];
+		// 	this.scrollDiv.addEventListener("scroll", this.handleScroll.bind(this));
+		// 	this.scrollDiv.addEventListener("click", this.handleClick.bind(this));
+		// 	let that = this;
+		// 	new ResizeObserver(function() {
+		// 		that.handleScroll();
+		// 	}).observe(this.scrollDiv);
+		// }
 	}
 
 	componentWillUnmount() {
-		this.clearTreatments();
+		// commented out for one-stream
+		// this.clearTreatments();
 		this.subscriptions.dispose();
 		const newCount = app.getBadgeCount() - this.totalCount;
 		app.setBadgeCount(newCount < 0 ? 0 : newCount);
@@ -106,7 +109,9 @@ export class SimpleUMIs extends Component {
 		if (!this.treeView) return false;
 		const umis = this.props.umis;
 
-		this.addUnreadsIndicatorDivs();
+		// commented out for one-stream
+		// this.addUnreadsIndicatorDivs();
+
 		// logger.debug("TREE TRACKER IS: ", this.treeView);
 		// logger.debug("THE STREAMS ARE: ", this.props.streams);
 		// logger.debug("RENDERING UMIS", umis);
@@ -122,9 +127,12 @@ export class SimpleUMIs extends Component {
 		}
 
 		let streamMap = swapHash(this.props.streams);
-		this.clearTreatments();
+
+		// commented out for one-stream
+		// this.clearTreatments();
 
 		let totalUMICount = 0;
+		let totalMentionsCount = 0;
 		Object.keys(umis.unread).map(key => {
 			let path = streamMap[key] || "";
 			if (!path) return;
@@ -132,10 +140,11 @@ export class SimpleUMIs extends Component {
 			let mentions = umis.mentions[key] || 0;
 			// logger.debug("CALC: " + count + " FOR " + path + " w/key: " + key + " ment? " + mentions);
 			totalUMICount += this.calculateTreatment(path, count, mentions);
+			totalMentionsCount += mentions;
 			if (totalUMICount) console.log("COUNT IS: " + totalUMICount, " for ", path);
 		});
 		this.totalCount = totalUMICount;
-		app.setBadgeCount(Math.floor(totalUMICount)); // TODO: This needs to be smarter and it should add to the current badge count rather than replace it
+		app.setBadgeCount(Math.floor(totalUMICount + 12)); // TODO: This needs to be smarter and it should add to the current badge count rather than replace it
 
 		if (atom.config.get("CodeStream.streamPerFile")) {
 			Object.keys(umis.unread).map(key => {
@@ -154,7 +163,8 @@ export class SimpleUMIs extends Component {
 			this.handleScroll();
 		}
 
-		return null;
+		if (totalMentionsCount > 0) return <div className="mentions-badge">{totalMentionsCount}</div>;
+		else return null;
 	}
 
 	clearTreatments() {
