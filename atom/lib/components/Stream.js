@@ -364,12 +364,15 @@ export class SimpleStream extends Component {
 		const streamHeight = this._div.offsetHeight;
 		const postslistHeight = this._postslist.offsetHeight;
 		const composeHeight = this._compose.offsetHeight;
+		const headerHeight = this._header.offsetHeight;
 		if (postslistHeight < streamHeight) {
 			let newHeight = streamHeight - postslistHeight + this._intro.offsetHeight - composeHeight;
 			this._intro.style.height = newHeight + "px";
 		}
-		this._div.style.paddingBottom = composeHeight + "px";
+		const padding = composeHeight + headerHeight;
+		this._div.style.paddingBottom = padding + "px";
 		this._threadpostslist.style.height = postslistHeight + "px";
+		this._threadpostslist.style.top = headerHeight + "px";
 		// if (this._atMentionsPopup)
 		// this._atMentionsPopup.style.bottom = this._compose.offsetHeight + "px";
 		this._postslist.scrollTop = 100000;
@@ -532,6 +535,9 @@ export class SimpleStream extends Component {
 					users={this.props.users}
 				/>
 				{unreadsAbove}
+				<div className="stream-header" ref={ref => (this._header = ref)}>
+					{this.props.team.name}
+				</div>
 				<div
 					className={postsListClass}
 					ref={ref => (this._postslist = ref)}
@@ -1323,6 +1329,7 @@ const mapStateToProps = ({
 	markers,
 	markerLocations,
 	messaging,
+	teams,
 	onboarding
 }) => {
 	const fileStream =
@@ -1388,6 +1395,7 @@ const mapStateToProps = ({
 		editingUsers: fileStream.editingUsers,
 		usernamesRegexp: usernamesRegexp,
 		currentUser: users[session.userId],
+		team: teams[context.currentTeamId],
 		posts: streamPosts.map(post => {
 			let user = users[post.creatorId];
 			if (!user) {
