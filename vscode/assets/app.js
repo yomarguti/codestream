@@ -50635,6 +50635,7 @@ var SimpleStream = function (_Component) {
 		value: function componentDidMount() {
 			this.setupCommands();
 			// TODO: scroll to bottom
+			this._postslist.scrollTop = 100000;
 
 			var inputDiv = document.querySelector('div[contenteditable="true"]');
 			if (!inputDiv) return;
@@ -50916,7 +50917,7 @@ var SimpleStream = function (_Component) {
 	}, {
 		key: "fileAbbreviation",
 		value: function fileAbbreviation() {
-			if (!this.props.currentFile) return "";
+			return this.props.currentFile || "";
 			// return Path.basename(this.props.currentFile);
 		}
 	}, {

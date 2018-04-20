@@ -101,6 +101,7 @@ export class SimpleStream extends Component {
 
 		const me = this;
 		// TODO: scroll to bottom
+		this._postslist.scrollTop = 100000;
 
 		const inputDiv = document.querySelector('div[contenteditable="true"]');
 		if (!inputDiv) return;
@@ -372,7 +373,7 @@ export class SimpleStream extends Component {
 	// FIXME -- this should be improved for systems that don't use "/"
 	// as a path delimiter
 	fileAbbreviation() {
-		if (!this.props.currentFile) return "";
+		return this.props.currentFile || "";
 		// return Path.basename(this.props.currentFile);
 	}
 
