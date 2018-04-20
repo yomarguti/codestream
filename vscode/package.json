@@ -2,23 +2,35 @@
     "name": "codestream",
     "version": "0.0.1",
     "author": "CodeStream",
-    "description": "CodeStream",
-    "license": "MIT",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/TeamCodeStream/vscode"
-    },
+    "publisher": "CodeStream",
     "engines": {
         "vscode": "^1.23.0"
     },
-    "enableProposedApi": true,
-    "publisher": "CodeStream",
+    "license": "MIT",
+    "displayName": "CodeStream",
+    "description": "The knowledge base behind your codebase",
     "categories": [
         "Other"
     ],
-    "activationEvents": [
-        "*"
+    "keywords": [
+        "chat",
+        "comment",
+        "collaborate"
     ],
+    "galleryBanner": {
+        "color": "#009aef",
+        "theme": "dark"
+    },
+    "preview": true,
+    "homepage": "https://codestream.com",
+    "bugs": {
+        "url": "https://github.com/TeamCodeStream/vscode-codestream"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/TeamCodeStream/vscode-codestream"
+    },
+    "enableProposedApi": true,
     "main": "./out/src/extension",
     "contributes": {
         "configuration": {
@@ -217,6 +229,9 @@
             ]
         }
     },
+    "activationEvents": [
+        "*"
+    ],
     "scripts": {
         "build": "npm run lint && npm run compile",
         "compile": "tsc -p ./",
@@ -235,13 +250,13 @@
         "tslib": "1.9.0"
     },
     "devDependencies": {
-        "@types/node": "9.6.5",
+        "@types/node": "9.6.6",
         "@types/node-fetch": "1.6.8",
         "@types/pubnub": "4.0.2",
         "@types/tmp": "0.0.33",
         "tslint": "5.9.1",
         "tslint-no-circular-imports": "0.3.0",
-        "typescript": "2.8.1",
+        "typescript": "2.8.3",
         "vscode": "1.1.14"
     }
 }
