@@ -144,7 +144,7 @@ export class SimpleUMIs extends Component {
 			if (totalUMICount) console.log("COUNT IS: " + totalUMICount, " for ", path);
 		});
 		this.totalCount = totalUMICount;
-		app.setBadgeCount(Math.floor(totalUMICount + 12)); // TODO: This needs to be smarter and it should add to the current badge count rather than replace it
+		app.setBadgeCount(Math.floor(totalUMICount)); // TODO: This needs to be smarter and it should add to the current badge count rather than replace it
 
 		if (atom.config.get("CodeStream.streamPerFile")) {
 			Object.keys(umis.unread).map(key => {
