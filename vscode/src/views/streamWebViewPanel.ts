@@ -1,6 +1,6 @@
 import { Disposable, Event, EventEmitter, ViewColumn, Webview, WebviewPanel, WebviewPanelOnDidChangeViewStateEvent, window } from 'vscode';
 import { CSPost, CSRepository, CSStream, CSTeam, CSUser } from '../api/api';
-import { CodeStreamSession, Stream } from '../api/session';
+import { CodeStreamSession, PostsReceivedEvent, Stream } from '../api/session';
 import { Container } from '../container';
 import * as fs from 'fs';
 import { Logger } from '../logger';
@@ -27,29 +27,48 @@ interface CSWebviewRequest {
     };
 }
 
-class MessageRelay {
+class MessageRelay extends Disposable {
+
+    private readonly _disposable: Disposable;
+
     constructor(
         public readonly session: CodeStreamSession,
-        private readonly view: Webview,
-        private readonly stream: Stream
+        private readonly _webview: Webview,
+        private _stream: Stream
     ) {
-        session.onDidReceivePosts(event => {
-            view.postMessage({
-                type: 'push-data',
-                body: {
-                    type: 'posts',
-                    payload: event.getPosts().map(post => ({ ...post.entity }))
-                }
-            });
-        });
+        super(() => this.dispose());
 
-        view.onDidReceiveMessage(async (event: CSWebviewRequest) => {
-            const { type, body } = event;
-            if (type === 'action-request') {
-                if (body.action === 'post') {
-                    const post = await this.stream.post(body.params.text);
-                    post &&
-                        this.view.postMessage({
+        this._disposable = Disposable.from(
+            session.onDidReceivePosts(this.onPostsReceived, this),
+            _webview.onDidReceiveMessage(this.onWebViewMessageReceived, this)
+        );
+    }
+
+    dispose() {
+        this._disposable && this._disposable.dispose();
+    }
+
+    private onPostsReceived(e: PostsReceivedEvent) {
+        this._webview.postMessage({
+            type: 'push-data',
+            body: {
+                type: 'posts',
+                payload: e.getPosts().map(post => ({ ...post.entity }))
+            }
+        });
+    }
+
+    private async onWebViewMessageReceived(e: CSWebviewRequest) {
+        const { type, body } = e;
+
+        switch (type) {
+            case 'action-request':
+                switch (body.action) {
+                    case 'post':
+                        const post = await this._stream.post(body.params.text);
+                        if (post === undefined) return;
+
+                        this._webview.postMessage({
                             type: 'action-response',
                             body: {
                                 action: body.action,
@@ -57,8 +76,11 @@ class MessageRelay {
                             }
                         });
                 }
-            }
-        }, null);
+        }
+    }
+
+    setStream(stream: Stream) {
+        this._stream = stream;
     }
 }
 
@@ -104,6 +126,8 @@ export class StreamWebViewPanel extends Disposable {
 
     private readonly _disposable: Disposable;
     private readonly _panel: WebviewPanel;
+    private _relay: MessageRelay | undefined;
+    private _stream: Stream | undefined;
 
     constructor(private readonly session: CodeStreamSession) {
         super(() => this.dispose());
@@ -147,9 +171,6 @@ export class StreamWebViewPanel extends Disposable {
         this._onDidClose.fire();
     }
 
-    private _stream: Stream | undefined;
-    private _relay: MessageRelay | undefined;
-
     async setStream(stream: Stream) {
         if (this._stream && this._stream.id === stream.id) {
             this.show();
@@ -157,8 +178,15 @@ export class StreamWebViewPanel extends Disposable {
             return;
         }
 
+        this._panel.webview.title = `CodeStream \u2022 ${stream.name}`;
         this._stream = stream;
-        this._relay = new MessageRelay(this.session, this._panel.webview, stream);
+
+        if (this._relay === undefined) {
+            this._relay = new MessageRelay(this.session, this._panel.webview, stream);
+        }
+        else {
+            this._relay.setStream(stream);
+        }
 
         const state: ViewData = Object.create(null);
         state.currentTeamId = stream.teamId;

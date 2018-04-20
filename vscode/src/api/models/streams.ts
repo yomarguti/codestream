@@ -1,7 +1,7 @@
 'use strict';
 import { Range, Uri } from 'vscode';
 import { CodeStreamCollection, CodeStreamItem  } from './collection';
-import { Iterables, memoize } from '../../system';
+import { Iterables, memoize, Strings } from '../../system';
 import { CodeStreamSession, SessionChangedEvent, SessionChangedType } from '../session';
 import { Post, PostCollection } from './posts';
 import { Repository } from './repositories';
@@ -76,6 +76,7 @@ export class ChannelStream extends StreamBase<CSChannelStream> {
         return this.entity.name;
     }
 
+    @memoize
     get members(): Promise<Iterable<User> | undefined> {
         return this.getMembers();
     }
@@ -102,6 +103,7 @@ export class DirectStream extends StreamBase<CSDirectStream> {
         return this.entity.name;
     }
 
+    @memoize
     get members(): Promise<Iterable<User>> {
         return this.getMembers(true);
     }
@@ -126,6 +128,10 @@ export class FileStream extends StreamBase<CSFileStream> {
     @memoize
     get absoluteUri() {
         return this.getAbsoluteUri();
+    }
+
+    get name() {
+        return Strings.normalizePath(this.entity.file);
     }
 
     get path() {

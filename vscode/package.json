@@ -103,7 +103,7 @@
             },
             {
                 "command": "codestream.openStream",
-                "title": "Open CodeStream",
+                "title": "Open Stream",
                 "category": "CodeStream"
             },
             {
@@ -156,7 +156,7 @@
                 },
                 {
                     "command": "codestream.openStream",
-                    "when": "editorTextFocus && codestream:status == signedIn"
+                    "when": "false"
                 },
                 {
                     "command": "codestream.post",

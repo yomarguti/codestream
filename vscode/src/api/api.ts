@@ -46,9 +46,12 @@ export class CodeStreamApi {
         return this.post<CreateStreamRequest, CreateStreamResponse>(`/streams`, request, token);
     }
 
+    deleteStream(token: string, teamId: string, streamId: string) {
+        return this.delete<any /*DeleteStreamResponse*/>(`/streams/${streamId}`, token);
+    }
+
     findRepo(url: string, firstCommitHashes: string[]) {
-        // TODO: Send all
-        return this.get<FindRepoResponse>(`/no-auth/find-repo?url=${encodeURIComponent(url)}&firstCommitHash=${firstCommitHashes[0]}`);
+        return this.get<FindRepoResponse>(`/no-auth/find-repo?url=${encodeURIComponent(url)}&knownCommitHashes=${firstCommitHashes.join(',')}&firstCommitHash=${firstCommitHashes[0]}`);
     }
 
     getMarker(token: string, teamId: string, markerId: string): Promise<GetMarkerResponse> {
@@ -100,6 +103,14 @@ export class CodeStreamApi {
 
     getUsers(token: string, teamId: string): Promise<GetUsersResponse> {
         return this.get<GetUsersResponse>(`/users?teamId=${teamId}`, token);
+    }
+
+    private delete<R extends object>(url: string, token?: string): Promise<R> {
+        let resp = undefined;
+        if (resp === undefined) {
+            resp = this.fetch<R>(url, { method: 'DELETE' }, token) as Promise<R>;
+        }
+        return resp;
     }
 
     private get<R extends object>(url: string, token?: string): Promise<R> {
