@@ -1,12 +1,12 @@
 'use strict';
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { CodeStreamSession, Stream, StreamType } from '../api/session';
-import { Container } from '../container';
-import { ExplorerNode, ResourceType, SubscribableExplorerNode } from './explorerNode';
-import { PostNode } from './postNode';
+// import { Container } from '../container';
+import { ExplorerNode, ResourceType } from './explorerNode';
+// import { PostNode } from './postNode';
 import { Iterables } from '../system';
 
-export class StreamNode extends SubscribableExplorerNode {
+export class StreamNode extends ExplorerNode {
 
     constructor(
         public readonly session: CodeStreamSession,
@@ -20,15 +20,16 @@ export class StreamNode extends SubscribableExplorerNode {
     }
 
     async getChildren(): Promise<ExplorerNode[]> {
-        this.subscribe();
+        return [];
+        // this.subscribe();
 
-        return [...await this.stream.posts.map(p => new PostNode(this.session, p))];
+        // return [...await this.stream.posts.map(p => new PostNode(this.session, p))];
     }
 
     async getTreeItem(): Promise<TreeItem> {
-        this.unsubscribe();
+        // this.unsubscribe();
 
-        const item = new TreeItem(await this.getLabel(), TreeItemCollapsibleState.Collapsed);
+        const item = new TreeItem(await this.getLabel(), TreeItemCollapsibleState.None);
         item.contextValue = this.getContextValue();
         item.command = {
             title: 'Open Stream',
@@ -39,13 +40,13 @@ export class StreamNode extends SubscribableExplorerNode {
         };
         return item;
     }
-    protected subscribe() {
-        this.subscriptions.push(this.stream.posts.onDidChange(this.onChanged, this));
-    }
+    // protected subscribe() {
+    //     this.subscriptions.push(this.stream.posts.onDidChange(this.onChanged, this));
+    // }
 
-    private onChanged() {
-        Container.explorer.refreshNode(this);
-    }
+    // private onChanged() {
+    //     Container.explorer.refreshNode(this);
+    // }
 
     private getContextValue() {
         switch (this.stream.type) {
