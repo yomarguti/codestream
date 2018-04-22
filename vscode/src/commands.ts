@@ -125,6 +125,10 @@ export class Commands extends Disposable {
 
     @command('openStream', { showErrorMessage: 'Unable to open stream' })
     async openStream(streamOrUriOrName?: Stream | StreamNode | Uri | string) {
+        if (streamOrUriOrName === undefined) {
+            streamOrUriOrName = 'general';
+        }
+
         if (typeof streamOrUriOrName === 'string') {
             streamOrUriOrName = await Container.session.channels.getByName(streamOrUriOrName);
         }
@@ -140,8 +144,10 @@ export class Commands extends Disposable {
                 streamOrUriOrName = undefined;
             }
         }
+
         if (streamOrUriOrName === undefined) return;
 
+        Container.explorer.show();
         return Container.streamWebView.openStream(streamOrUriOrName);
     }
 

@@ -140,4 +140,8 @@ export class CodeStreamExplorer extends Disposable implements TreeDataProvider<E
 
         this._onDidChangeTreeData.fire();
     }
+
+    show() {
+        return commands.executeCommand('workbench.view.extension.codestream');
+    }
 }

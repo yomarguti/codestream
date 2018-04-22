@@ -3,6 +3,7 @@ import { createHash, HexBase64Latin1Encoding } from 'crypto';
 import * as path from 'path';
 
 export namespace Strings {
+    const pathNormalizer = /\\/g;
     const TokenRegex = /\$\{([^|]*?)(?:\|(\d+)(\-|\?)?)?\}/g;
     const TokenSanitizeRegex = /\$\{(\w*?)(?:\W|\d)*?\}/g;
 
@@ -59,10 +60,7 @@ export namespace Strings {
     }
 
     export function normalizePath(filename: string) {
-        const normalized = filename && filename.replace(/\\/g, '/');
-        // if (normalized && normalized.includes('..')) {
-        //     debugger;
-        // }
+        const normalized = filename && filename.replace(pathNormalizer, '/');
         return normalized;
     }
 

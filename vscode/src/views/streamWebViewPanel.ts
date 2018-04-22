@@ -178,7 +178,7 @@ export class StreamWebViewPanel extends Disposable {
             return;
         }
 
-        this._panel.webview.title = `CodeStream \u2022 ${stream.name}`;
+        this._panel.title = `CodeStream \u2022 ${stream.name}`;
         this._stream = stream;
 
         if (this._relay === undefined) {

@@ -21,6 +21,7 @@
         "color": "#009aef",
         "theme": "dark"
     },
+    "icon": "assets/images/codestream.png",
     "preview": true,
     "homepage": "https://codestream.com",
     "bugs": {
@@ -168,7 +169,7 @@
                 },
                 {
                     "command": "codestream.openStream",
-                    "when": "false"
+                    "when": "codestream:status == signedIn"
                 },
                 {
                     "command": "codestream.post",
@@ -220,11 +221,20 @@
             ]
         },
         "views": {
-            "explorer": [
+            "codestream": [
                 {
                     "id": "codestream",
                     "name": "CodeStream",
                     "when": "codestream:status == signedIn && config.codestream.explorer.enabled"
+                }
+            ]
+        },
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "codestream",
+                    "title": "CodeStream",
+                    "icon": "assets/images/codestream.svg"
                 }
             ]
         }
