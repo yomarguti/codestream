@@ -3,9 +3,9 @@ import { FormattedMessage, injectIntl } from "react-intl";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
 import _ from "underscore-plus";
-import Button from "./Onboarding/Button";
+import Button from "./onboarding/Button";
 import Tooltip from "./Tooltip";
-import UnexpectedErrorMessage from "./Onboarding/UnexpectedErrorMessage";
+import UnexpectedErrorMessage from "./onboarding/UnexpectedErrorMessage";
 import { exitInvitePage } from "../actions/routing";
 import * as teamActions from "../actions/team";
 
