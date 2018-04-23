@@ -602,7 +602,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 10% 0;
+    padding: 50% 0;
 
     label {
         text-align: center;
