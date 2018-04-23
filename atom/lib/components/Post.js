@@ -32,7 +32,7 @@ class Post extends Component {
 		// unless the post is mine, in which case we always scroll to bottom
 		// we check to see if it's below 100 because if you are scrolled
 		// almost to the bottom, we count that as being at the bottom for UX reasons
-		if (offBottom < 100 || this.props.post.username === this.props.currentUsername) {
+		if (offBottom < 100 || this.props.post.author.username === this.props.currentUsername) {
 			// big number to make sure we've scrolled all the way down
 			streamDiv.scrollTop = 100000;
 			// console.log("SCROLLING TO BOTTOM");
@@ -56,6 +56,7 @@ class Post extends Component {
 			post: true,
 			mine: mine,
 			editing: this.props.editing,
+			unread: this.props.unread,
 			"new-separator": this.props.newMessageIndicator,
 			[`thread-key-${this.props.threadKey}`]: true
 		});
@@ -64,7 +65,16 @@ class Post extends Component {
 		let alert = null;
 		if (post.codeBlocks && post.codeBlocks.length) {
 			let code = post.codeBlocks[0].code;
-			codeBlock = <div className="code">{code}</div>;
+			if (atom.config.get("CodeStream.streamPerFile")) {
+				codeBlock = <div className="code">{code}</div>;
+			} else {
+				codeBlock = (
+					<div className="code-reference">
+						<span>{post.file || "-"}</span>
+						<div className="code">{code}</div>
+					</div>
+				);
+			}
 		}
 
 		logger.debug("UNR IS: ", this.props.usernames);
@@ -141,7 +151,7 @@ class Post extends Component {
 						</span>
 					);
 			} else {
-				return <Linkify>{part}</Linkify>;
+				return <Linkify key={iterator++}>{part}</Linkify>;
 			}
 		});
 	};

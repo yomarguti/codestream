@@ -1,7 +1,7 @@
 import Dexie from "dexie";
 import configureStore from "redux-mock-store";
 import thunk from "redux-thunk";
-import { fetchStreams } from "../../lib/actions/stream";
+import { fetchTeamStreams } from "../../lib/actions/stream";
 
 const dbName = "stream-spec";
 Dexie.debug = true;
@@ -21,7 +21,7 @@ describe("stream action creators", () => {
 		Dexie.delete(dbName);
 	});
 
-	describe("fetchStreams", () => {
+	describe("fetchTeamStreams", () => {
 		it("will fetch all streams", () => {
 			waitsForPromise(async () => {
 				let count = 0;
@@ -50,7 +50,7 @@ describe("stream action creators", () => {
 				const id1 = "id1";
 				const id2 = "id2";
 
-				await store.dispatch(fetchStreams());
+				await store.dispatch(fetchTeamStreams());
 
 				const streams = await db.streams.toArray();
 				expect(streams.length).toBe(3);

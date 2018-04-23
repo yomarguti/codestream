@@ -65,6 +65,8 @@ export default class PostDetails extends Component {
 		return (
 			<div className="post-details" id={post.id} ref={ref => (this._div = ref)}>
 				{alert}
+				{!showDiffButtons &&
+					hasCodeBlock && <div className="no-diffs">This codeblock matches current</div>}
 				{commitDiv}
 				{showDiffButtons && (
 					<div className="button-group">

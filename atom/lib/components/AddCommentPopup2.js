@@ -9,6 +9,8 @@ export default class AddCommentPopup extends Component {
 	}
 
 	shouldComponentUpdate(nextProps) {
+		if (!nextProps.editor) return false;
+		if (nextProps.editor && !this.props.editor) return true;
 		return nextProps.editor.id !== this.props.editor.id;
 	}
 
@@ -21,7 +23,8 @@ export default class AddCommentPopup extends Component {
 	}
 
 	configure(props) {
-		this.subscriptions.add(props.editor.onDidChangeSelectionRange(this.handleSelectionChange));
+		if (props.editor)
+			this.subscriptions.add(props.editor.onDidChangeSelectionRange(this.handleSelectionChange));
 	}
 
 	handleSelectionChange = event => {

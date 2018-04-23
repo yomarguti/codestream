@@ -7,14 +7,20 @@ const initialState = {
 };
 
 const addStream = (state, stream) => {
-	const existingStreamsForRepo = state.byRepo[stream.repoId] || { byFile: {} };
+	const existingStreamsForRepo = state.byRepo[stream.repoId] || { byFile: {}, byId: {} };
+	if (stream.isTeamStream) return { ...state, teamStream: stream };
 	return {
+		teamStream: state.teamStream,
 		byRepo: {
 			...state.byRepo,
 			[stream.repoId]: {
 				byFile: {
 					...existingStreamsForRepo.byFile,
 					[stream.file]: stream
+				},
+				byId: {
+					...existingStreamsForRepo.byId,
+					[stream.id]: stream
 				}
 			}
 		}
@@ -34,6 +40,10 @@ export default (state = initialState, { type, payload }) => {
 	}
 };
 
+export const getStreamForTeam = state => {
+	return state.teamStream;
+};
+
 // Selectors
 export const getStreamForRepoAndFile = (state, repoId, file) => {
 	const filesForRepo = (state.byRepo[repoId] || {}).byFile;
@@ -42,4 +52,8 @@ export const getStreamForRepoAndFile = (state, repoId, file) => {
 
 export const getStreamsForRepo = (state, repoId) => {
 	return (state.byRepo[repoId] || {}).byFile;
+};
+
+export const getStreamsForRepoById = (state, repoId) => {
+	return (state.byRepo[repoId] || {}).byId;
 };

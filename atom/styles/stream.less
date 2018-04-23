@@ -15,6 +15,111 @@
 		height: 100%;
 		background: @app-background-color;
 
+		.stream-header {
+			position: relative;
+			text-align: center;
+			background-color: @app-background-color;
+			border-bottom: 1px solid @base-border-color;
+			padding: 0 35px 10px 35px;
+			z-index: 30;
+
+			span {
+				font-weight: 100;
+				font-size: 16px;
+				text-transform: uppercase;
+				letter-spacing: 3px;
+			}
+
+			.mentions-badge {
+				position: absolute;
+				top: 2px;
+				left: 10px;
+				background-color: @background-color-info;
+				border-radius: 20px;
+				color: white;
+				width: 20px;
+				height: 20px;
+				text-align: center;
+				font-size: 11px;
+				padding-top: 1px;
+			}
+
+			.icon {
+				position: absolute;
+				top: 2px;
+				right: 5px;
+				cursor: pointer;
+				padding: 0 0 0 6px;
+				text-align: center;
+				border-radius: 3px;
+			}
+			.icon:hover {
+				color: @text-color-highlight;
+				background-color: @base-background-color;
+			}
+		}
+
+		.unreads {
+			// position: absolute !important;
+			// background: @background-color-highlight;
+			// color: @text-color-highlight;
+
+			// these are the last known good-looking settings
+			// background: @base-background-color;
+			// color: @text-color-info;
+			// border: 1px solid @base-border-color;
+
+			color: @base-background-color;
+			background: @text-color;
+			border: 1px solid @base-border-color;
+
+			// font-weight: bold;
+			// color: white;
+			text-align: center;
+			padding: 5px 0;
+			width: 80%;
+			// left: 10% !important;
+			z-index: 10;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			height: 30px;
+			// margin: 0 10% 0 10%;
+			cursor: pointer !important;
+			transition: top 0.2s, bottom 0.2s, background-color 0.2s;
+		}
+		.unreads.active {
+			display: block;
+		}
+		.unreads {
+			background: @background-color-info;
+			border: none;
+			color: white;
+		}
+		#unreads-above {
+			top: 0px;
+			// margin-top: -3em;
+			border-radius: 0 0 5px 5px;
+			border-top: none;
+			// box-shadow: 0 1px 15px rgba(0, 0, 0, 0.5);
+		}
+		#unreads-above.active {
+			top: 30px;
+			// margin-top: 30px;
+		}
+		#unreads-below {
+			top: auto !important;
+			// bottom: -3em !important;
+			border-radius: 5px 5px 0 0;
+			border-bottom: none;
+			// box-shadow: 0 -1px 15px rgba(0, 0, 0, 0.25);
+			bottom: 30px !important;
+			z-index: 5;
+		}
+		#unreads-below.active {
+			bottom: 60px !important;
+		}
+
 		#close-thread {
 			margin: 10px;
 			width: calc(~"100% - 20px");
@@ -150,6 +255,10 @@
 			// color: @text-color-error;
 			// background-color: @background-color-highlight;
 			// box-shadow: 0 5px 10px #ccc;;
+
+			background-color: @background-color-info;
+			color: @text-color-highlight;
+			font-weight: normal;
 		}
 
 		.code {
@@ -160,10 +269,10 @@
 			font-size: 11px;
 			// background: #f6f6f6;
 			background: @base-background-color;
-			border-radius: 4px;
+			border-radius: 0 0 4px 4px;
 			padding: 10px;
 			border: 1px solid @base-border-color;
-			margin: 5px 0 5px 0;
+			margin: 0 0 5px 0;
 			overflow-x: auto;
 			overflow-y: auto;
 			line-height: 12px;
@@ -381,12 +490,16 @@
 		}
 
 		.post-details {
-			.posted-to {
+			.posted-to,
+			.no-diffs {
 				height: 1.5em;
 				overflow: hidden;
 				text-overflow: ellipsis;
 				white-space: nowrap;
-				opacity: 0.5;
+				color: @text-color-subtle;
+			}
+			.posted-to {
+				margin-bottom: 5px;
 			}
 			button {
 				overflow: hidden;
@@ -415,6 +528,8 @@
 			word-wrap: break-word;
 			position: relative;
 			max-width: 100%;
+			// this is to accomodate the new-message indicator line
+			border-top: 1px solid transparent;
 			// overflow-x: hidden;
 			.headshot-gravatar {
 				display: block;
@@ -487,12 +602,14 @@
 				// top: 50px;
 				// left: 30px;
 			}
-			.replying-to {
+			.replying-to,
+			.code-reference span {
 				height: 1.4em;
 				overflow: hidden;
 				text-overflow: ellipsis;
 				white-space: pre;
 				color: @text-color-info;
+				display: block;
 				span {
 					opacity: 0.5;
 					color: @text-color;
@@ -501,9 +618,24 @@
 					font-weight: normal;
 				}
 			}
+			.code-reference span {
+				direction: rtl;
+				text-align: center;
+				color: @text-color-subtle;
+				background-color: @base-border-color;
+				display: block;
+				padding: 2px 4px;
+				height: auto;
+				margin-top: 5px;
+				font-size: 10px;
+				border-radius: 5px 5px 0 0;
+			}
 			a {
 				text-decoration: none;
 				color: @text-color-info;
+			}
+			a:hover {
+				text-decoration: underline;
 			}
 		}
 
