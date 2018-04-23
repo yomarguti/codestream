@@ -17,7 +17,7 @@ export class ChannelsNode extends ExplorerNode {
     }
 
     async getChildren(): Promise<ExplorerNode[]> {
-        return [...await this.session.channels.items]
+        return [...await this.session.channels.items()]
             .map(c => new StreamNode(this.session, c));
     }
 

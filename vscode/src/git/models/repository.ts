@@ -8,23 +8,19 @@ export class GitRepository {
         public readonly uri: Uri
     ) { }
 
-    get normalizedUrl(): Promise<string | undefined> {
-        return this.getNormalizedUrl();
-    }
-
-    private async getNormalizedUrl() {
-        const remote = await this.getRemote();
-        if (remote === undefined) return undefined;
-
-        return remote.normalizedUrl;
-    }
-
     private _commits: string[] | undefined;
     async getFirstCommits() {
         if (this._commits === undefined) {
             this._commits = await Container.git.getRepoFirstCommits(this.uri);
         }
         return this._commits;
+    }
+
+    async getNormalizedUrl(): Promise<string | undefined> {
+        const remote = await this.getRemote();
+        if (remote === undefined) return undefined;
+
+        return remote.normalizedUrl;
     }
 
     private _remote: GitRemote | undefined;

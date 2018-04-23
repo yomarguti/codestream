@@ -59,7 +59,7 @@ export class StreamNode extends ExplorerNode {
     private async getLabel() {
         switch (this.stream.type) {
             case StreamType.Channel: return this.stream.name;
-            case StreamType.Direct: return Iterables.join(Iterables.map(await this.stream.members, u => u.name), ', ');
+            case StreamType.Direct: return Iterables.join(Iterables.map(await this.stream.members(), u => u.name), ', ');
             case StreamType.File: return this.stream.path;
         }
     }

@@ -25,32 +25,12 @@ export class Post extends CodeStreamItem<CSPost> {
         super(session, post);
     }
 
-    @memoize
-    get codeBlock(): Promise<CodeBlock | undefined> {
-        return this.getCodeBlock();
-    }
-
     get hasCode() {
         return this.entity.codeBlocks !== undefined && this.entity.codeBlocks.length !== 0;
     }
 
-    @memoize
-    get repo(): Promise<Repository | undefined> {
-        return this.getRepo();
-    }
-
-    @memoize
-    get sender(): Promise<User | undefined> {
-        return this.session.users.get(this.entity.creatorId);
-    }
-
     get senderId() {
         return this.entity.creatorId;
-    }
-
-    @memoize
-    get stream(): Promise<Stream>  {
-        return this.getStream(this.entity.streamId);
     }
 
     get teamId() {
@@ -61,7 +41,8 @@ export class Post extends CodeStreamItem<CSPost> {
         return this.entity.text;
     }
 
-    private async getCodeBlock(): Promise<CodeBlock | undefined> {
+    @memoize
+    async codeBlock(): Promise<CodeBlock | undefined> {
         if (this.entity.codeBlocks === undefined || this.entity.codeBlocks.length === 0) return undefined;
 
         const block = this.entity.codeBlocks[0];
@@ -72,7 +53,7 @@ export class Post extends CodeStreamItem<CSPost> {
         // TODO: Assuming the marker has the same repoId as the post -- probably not a great assumption
         const markerStream = await this.getStream(marker.streamId);
         if (markerStream.type !== 'file') throw new Error(`Unable to find code block for Post(${this.entity.id})`);
-        const uri = await markerStream.absoluteUri;
+        const uri = await markerStream.absoluteUri();
 
         const locations = await this.session.api.getMarkerLocations(this.entity.commitHashWhenPosted!, this.entity.streamId);
         if (locations === undefined) throw new Error(`Unable to find code block for Post(${this.entity.id})`);
@@ -87,11 +68,22 @@ export class Post extends CodeStreamItem<CSPost> {
         };
     }
 
-    private async getRepo() {
-        const stream = await this.stream;
+    @memoize
+    async repo(): Promise<Repository | undefined> {
+        const stream = await this.stream();
         if (stream.type !== StreamType.File) return undefined;
 
-        return stream.repo;
+        return stream.repo();
+    }
+
+    @memoize
+    sender(): Promise<User | undefined> {
+        return this.session.users.get(this.entity.creatorId);
+    }
+
+    @memoize
+    stream(): Promise<Stream>  {
+        return this.getStream(this.entity.streamId);
     }
 
     private async getStream(streamId: string): Promise<Stream> {

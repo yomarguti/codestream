@@ -18,7 +18,7 @@ export class PeopleNode extends ExplorerNode {
 
     async getChildren(): Promise<ExplorerNode[]> {
         const currentUserId = this.session.userId;
-        const users = [...await this.session.users.items];
+        const users = [...await this.session.users.items()];
 
         users.sort((a, b) => ((a.id === currentUserId ? -1 : 1) - (b.id === currentUserId ? -1 : 1)) ||
             a.name.localeCompare(b.name));

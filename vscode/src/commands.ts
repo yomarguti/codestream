@@ -78,7 +78,7 @@ export class Commands extends Disposable {
         }
         if (post === undefined) return;
 
-        const block = await post.codeBlock;
+        const block = await post.codeBlock();
         if (block === undefined) return;
 
         const file = await Container.git.getFileRevision(block.uri, block.hash);
@@ -100,7 +100,7 @@ export class Commands extends Disposable {
         }
         if (post === undefined) return;
 
-        const block = await post.codeBlock;
+        const block = await post.codeBlock();
         if (block === undefined) return;
 
         // TODO: Need to follow marker to current sha
@@ -114,7 +114,7 @@ export class Commands extends Disposable {
         }
         if (post === undefined) return;
 
-        const block = await post.codeBlock;
+        const block = await post.codeBlock();
         if (block === undefined) return;
 
         const file = await Container.git.getFileRevision(block.uri, block.hash);

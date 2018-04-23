@@ -195,10 +195,10 @@ export class StreamWebViewPanel extends Disposable {
         state.streams = [stream.entity];
 
         [state.posts, state.repos, state.teams, state.users] = await Promise.all([
-            stream.posts.entities,
-            this.session.repos.entities,
-            this.session.teams.entities,
-            this.session.users.entities
+            stream.posts.entities(),
+            this.session.repos.entities(),
+            this.session.teams.entities(),
+            this.session.users.entities()
         ]);
 
         const htmlPath = Container.context.asAbsolutePath('/assets/index.html');

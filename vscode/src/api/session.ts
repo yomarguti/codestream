@@ -300,16 +300,6 @@ export class CodeStreamSession extends Disposable {
         return this._sessionApi!;
     }
 
-    @signedIn
-    get hasSingleRepo(): Promise<boolean> {
-        return Promise.resolve(this._data!.repos.length === 1);
-    }
-
-    @signedIn
-    get hasSingleTeam(): Promise<boolean> {
-        return Promise.resolve(this._data!.teams.length === 1);
-    }
-
     private _id: string | undefined;
     get id() {
         return this._id;
@@ -457,6 +447,16 @@ export class CodeStreamSession extends Disposable {
     }
 
     @signedIn
+    hasSingleRepo(): Promise<boolean> {
+        return Promise.resolve(this._data!.repos.length === 1);
+    }
+
+    @signedIn
+    hasSingleTeam(): Promise<boolean> {
+        return Promise.resolve(this._data!.teams.length === 1);
+    }
+
+    @signedIn
     async post(text: string, streamName?: string): Promise<Post> {
         const stream = streamName === undefined
             ? await this.getDefaultTeamChannel()
@@ -491,7 +491,7 @@ export class CodeStreamSession extends Disposable {
             if (teamId == null) {
                 if (this.data.repos.length > 0) {
                     for (const repo of await this._git.getRepositories()) {
-                        const url = await repo.normalizedUrl;
+                        const url = await repo.getNormalizedUrl();
 
                         const found = this._data.repos.find(r => r.normalizedUrl === url);
                         if (found === undefined) continue;

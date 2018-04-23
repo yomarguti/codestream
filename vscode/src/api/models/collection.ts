@@ -63,25 +63,16 @@ export abstract class CodeStreamCollection<TItem extends ICollectionItem<TEntity
     protected abstract fetch(): Promise<(TEntity | TItem)[]>;
     protected abstract fetchMapper(e: TEntity): TItem;
 
-    private _collection: Promise<Map<string, TEntity | TItem>> | undefined;
-    get items(): Promise<IterableIterator<TItem>> {
-        return this.ensureLoaded().then(items => this.ensureMapped(items));
-    }
-
-    get entities(): Promise<TEntity[]> {
-        return this.map(i => i.entity).then(mapped => [...mapped]);
-    }
-
     async filter(predicate: (item: TItem) => boolean) {
-        return Iterables.filter(await this.items, predicate);
+        return Iterables.filter(await this.items(), predicate);
     }
 
     async find(predicate: (item: TItem) => boolean) {
-        return Iterables.find(await this.items, predicate);
+        return Iterables.find(await this.items(), predicate);
     }
 
     async first() {
-        return Iterables.first(await this.items);
+        return Iterables.first(await this.items());
     }
 
     async get(key: string) {
@@ -89,13 +80,23 @@ export abstract class CodeStreamCollection<TItem extends ICollectionItem<TEntity
         return collection.get(key) as TItem;
     }
 
+    async entities(): Promise<TEntity[]> {
+        return [...await this.map(i => i.entity)];
+    }
+
     async has(key: string) {
         const collection = await this.ensureLoaded();
         return collection.has(key);
     }
 
+    private _collection: Promise<Map<string, TEntity | TItem>> | undefined;
+    async items(): Promise<IterableIterator<TItem>> {
+        const items = await this.ensureLoaded();
+        return this.ensureMapped(items);
+    }
+
     async map<T>(mapper: (item: TItem) => T) {
-        return Iterables.map(await this.items, mapper);
+        return Iterables.map(await this.items(), mapper);
     }
 
     protected ensureLoaded() {

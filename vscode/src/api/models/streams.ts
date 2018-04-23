@@ -28,11 +28,6 @@ abstract class StreamBase<T extends CSStream> extends CodeStreamItem<T> {
         return this._posts;
     }
 
-    @memoize
-    get team(): Promise<Team> {
-        return this.getTeam();
-    }
-
     get teamId() {
         return this.entity.teamId;
     }
@@ -53,7 +48,8 @@ abstract class StreamBase<T extends CSStream> extends CodeStreamItem<T> {
         return new Post(this.session, post);
     }
 
-    private async getTeam() {
+    @memoize
+    async team(): Promise<Team> {
         const team = await this.session.teams.get(this.entity.teamId);
         if (team === undefined) throw new Error(`Team(${this.entity.teamId}) could not be found`);
 
@@ -77,11 +73,7 @@ export class ChannelStream extends StreamBase<CSChannelStream> {
     }
 
     @memoize
-    get members(): Promise<Iterable<User> | undefined> {
-        return this.getMembers();
-    }
-
-    private async getMembers(): Promise<Iterable<User> | undefined> {
+    async members(): Promise<Iterable<User> | undefined> {
         if (this.entity.memberIds === undefined) return undefined;
 
         return await this.session.users.filter(u => this.entity.memberIds!.includes(u.id));
@@ -104,12 +96,8 @@ export class DirectStream extends StreamBase<CSDirectStream> {
     }
 
     @memoize
-    get members(): Promise<Iterable<User>> {
-        return this.getMembers(true);
-    }
-
-    private async getMembers(excludeSelf: boolean = true): Promise<Iterable<User>> {
-        return await this.session.users.filter(u => this.entity.memberIds.includes(u.id) && (!excludeSelf || u.id !== this.session.userId));
+    async members(excludeSelf: boolean = true): Promise<Iterable<User>> {
+        return this.session.users.filter(u => this.entity.memberIds.includes(u.id) && (!excludeSelf || u.id !== this.session.userId));
     }
 }
 
@@ -125,22 +113,12 @@ export class FileStream extends StreamBase<CSFileStream> {
         super(session, stream);
     }
 
-    @memoize
-    get absoluteUri() {
-        return this.getAbsoluteUri();
-    }
-
     get name() {
         return Strings.normalizePath(this.entity.file);
     }
 
     get path() {
         return this.entity.file;
-    }
-
-    @memoize
-    get repo(): Promise<Repository> {
-        return this.getRepo();
     }
 
     get repoId() {
@@ -155,8 +133,9 @@ export class FileStream extends StreamBase<CSFileStream> {
     //     return Uri.file(this.entity.file);
     // }
 
-    private async getAbsoluteUri() {
-        const repo = await this.repo;
+    @memoize
+    async absoluteUri() {
+        const repo = await this.repo();
         if (repo === undefined) return undefined;
 
         const uri = Uri.parse(this.path);
@@ -165,7 +144,8 @@ export class FileStream extends StreamBase<CSFileStream> {
         return repo.normalizeUri(Uri.file(this.path));
     }
 
-    private async getRepo() {
+    @memoize
+    async repo(): Promise<Repository> {
         if (this._repo === undefined) {
             const repo = await this.session.repos.get(this.entity.repoId);
             if (repo === undefined) throw new Error(`Repository(${this.entity.repoId}) could not be found`);
@@ -211,11 +191,11 @@ export class ChannelStreamCollection extends StreamCollectionBase<ChannelStream,
     }
 
     async getByName(name: string): Promise<ChannelStream | undefined> {
-        return Iterables.find(await this.items, s => s.name === name);
+        return Iterables.find(await this.items(), s => s.name === name);
     }
 
     async getOrCreateByName(name: string, creationOptions: { membership?: 'auto' | string[] } = {}): Promise<ChannelStream> {
-        const stream = Iterables.find(await this.items, s => s.name === name);
+        const stream = Iterables.find(await this.items(), s => s.name === name);
         if (stream !== undefined) return stream;
 
         const s = await this.session.api.createChannelStream(name, creationOptions.membership, this.teamId);
@@ -243,11 +223,11 @@ export class DirectStreamCollection extends StreamCollectionBase<DirectStream, C
     }
 
     async getByName(name: string): Promise<DirectStream | undefined> {
-        return Iterables.find(await this.items, s => s.name === name);
+        return Iterables.find(await this.items(), s => s.name === name);
     }
 
     async getOrCreateByName(name: string, creationOptions: { membership: string[] }): Promise<DirectStream> {
-        const stream = Iterables.find(await this.items, s => s.name === name);
+        const stream = Iterables.find(await this.items(), s => s.name === name);
         if (stream !== undefined) return stream;
 
         const s = await this.session.api.createDirectStream(name, creationOptions.membership, this.teamId);
@@ -291,7 +271,7 @@ export class FileStreamCollection extends StreamCollectionBase<FileStream, CSFil
             path = path.substr(1);
         }
 
-        return Iterables.find(await this.items, s => s.path === path);
+        return Iterables.find(await this.items(), s => s.path === path);
     }
 
     async getOrCreateByUri(uri: Uri): Promise<FileStream> {
@@ -303,7 +283,7 @@ export class FileStreamCollection extends StreamCollectionBase<FileStream, CSFil
             path = path.substr(1);
         }
 
-        const stream = Iterables.find(await this.items, s => s.path === path);
+        const stream = Iterables.find(await this.items(), s => s.path === path);
         if (stream !== undefined) return stream;
 
         const s = await this.session.api.createFileStream(relativeUri, this.repo.id);

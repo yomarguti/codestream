@@ -32,11 +32,11 @@ export class UserCollection extends CodeStreamCollection<User, CSUser> {
     }
 
     async getByEmail(email: string): Promise<User | undefined> {
-        return Iterables.find(await this.items, u => u.email === email);
+        return Iterables.find(await this.items(), u => u.email === email);
     }
 
     async getByEmails(emails: string[]): Promise<Iterable<User>> {
-        return Iterables.filter(await this.items, u => emails.includes(u.email));
+        return Iterables.filter(await this.items(), u => emails.includes(u.email));
     }
 
     protected fetch() {

@@ -207,7 +207,7 @@ export class Git extends Disposable {
     }
 
     private static _path: string | undefined;
-    static get path(): Promise<string> | string {
+    static gitPath(): Promise<string> | string {
         if (Git._path === undefined) {
             return Git.api!.getGitPath().then(p => Git._path = p);
         }
@@ -242,14 +242,11 @@ async function git(options: CommandOptions & { readonly correlationKey?: string 
         // See https://stackoverflow.com/questions/4144417/how-to-handle-asian-characters-in-file-names-in-git-on-os-x
         args.splice(0, 0, '-c', 'core.quotepath=false', '-c', 'color.ui=false');
 
-        let path;
-        if (typeof Git.path !== 'string') {
-            path = await Git.path;
+        let gitPath = Git.gitPath();
+        if (typeof gitPath !== 'string') {
+            gitPath = await Git.gitPath();
         }
-        else {
-            path = Git.path;
-        }
-        promise = runCommand(path, args, runOpts);
+        promise = runCommand(gitPath, args, runOpts);
 
         pendingCommands.set(command, promise);
     }

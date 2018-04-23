@@ -20,7 +20,7 @@ export class RepositoriesNode extends SubscribableExplorerNode {
     async getChildren(): Promise<ExplorerNode[]> {
         this.subscribe();
 
-        return [...await this.session.repos.items]
+        return [...await this.session.repos.items()]
             .map(r => new RepositoryNode(this.session, r));
     }
 
