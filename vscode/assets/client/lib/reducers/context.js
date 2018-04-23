@@ -21,5 +21,7 @@ export default (state = initialState, { type, payload }) => {
 	if (type === "NO_GIT_IN_PATH") return { ...state, noAccess: { noGit: true } };
 	if (type === "SHOW_SLACK_INFO") return { ...state, showSlackInfo: true };
 	if (type === "CANCEL_SLACK_INFO") return { ...state, showSlackInfo: false };
+	if (type === "SELECTED_CODE") return { ...state, selectedCode: payload };
+	if (type === "CLEAR_SELECTED_CODE") return { ...state, selectedCode: null };
 	return state;
 };

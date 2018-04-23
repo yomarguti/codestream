@@ -65,6 +65,21 @@ const trimSelection = editor => {
 	editor.setSelectedBufferRange(range);
 };
 
+const Range = array => {
+	if (array)
+		return {
+			start: {
+				row: array[0][0],
+				col: array[0][1]
+			},
+			end: {
+				row: array[1][0],
+				col: array[1][1]
+			},
+		};
+	else return null;
+}
+
 export class SimpleStream extends Component {
 	static contextTypes = {
 		platform: PropTypes.object
@@ -469,9 +484,14 @@ export class SimpleStream extends Component {
 		// strip out the at-mention markup, and add it back.
 		// newPostText = newPostText.replace(/(@\w+)/g, '<span class="at-mention">$1</span> ');
 
-		let quoteInfo = this.state.quoteText ? <div className="code">{this.state.quoteText}</div> : "";
+		const {selectedCode} = this.props
+		if (selectedCode && selectedCode.mentions !== '') {
+			newPostText = `${selectedCode.mentions}: ${newPostText}`
+		}
+
+		let quoteInfo = this.props.selectedCode ? <div className="code">{this.props.selectedCode.content}</div> : "";
 		// FIXME loc
-		let range = this.state.quoteRange;
+		let range = Range(this.props.selectedCode && this.props.selectedCode.range);
 		let rangeText = null;
 		if (range) {
 			if (range.start.row == range.end.row) {
@@ -1134,29 +1154,29 @@ export class SimpleStream extends Component {
 		newText = doc.documentElement.textContent;
 
 		const codeBlocks = [];
-		const { quoteText, quoteRange, preContext, postContext, threadActive = undefined } = this.state;
-		const { id, createPost } = this.props;
+		const { preContext, postContext, threadActive = undefined } = this.state;
+		const { id, createPost, selectedCode } = this.props;
 
 		let threadId = threadActive ? this.state.threadId : null;
 
-		// if (quoteText) {
-		// 	codeBlocks.push({
-		// 		code: quoteText,
-		// 		location: rangeToLocation(quoteRange),
-		// 		preContext,
-		// 		postContext,
-		// 		// for now, we assume this codeblock came from this buffer
-		// 		// in the future we want to support commenting on codeBlocks
-		// 		// from other files/buffers
-		// 		streamId: id
-		// 	});
-		// }
+		if (selectedCode) {
+			codeBlocks.push({
+				code: selectedCode.content,
+				location: selectedCode.range, //rangeToLocation(quoteRange),
+				// preContext,
+				// postContext,
+				// for now, we assume this codeblock came from this buffer
+				// in the future we want to support commenting on codeBlocks
+				// from other files/buffers
+				streamId: id
+			});
+		}
 
 		const mentionUserIds = this.findMentions(newText);
 		const editor = this.context.platform.getActiveEditor();
 		const editorText = editor ? editor.getText() : '';
 
-		createPost(this.props.id, threadId, newText, codeBlocks, mentionUserIds, editorText, {
+		createPost(this.props.id, threadId, newText, codeBlocks, mentionUserIds, editorText, selectedCode.commitHash, {
 			autoMentions: this.state.autoMentioning
 		});
 
@@ -1285,6 +1305,7 @@ const mapStateToProps = ({
 		editingUsers: stream.editingUsers,
 		usernamesRegexp: usernamesRegexp,
 		currentUser: users[session.userId],
+		selectedCode: context.selectedCode,
 		posts: getPostsForStream(posts, stream.id || context.currentFile).map(post => {
 			let user = users[post.creatorId];
 			if (!user) {

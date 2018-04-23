@@ -7,7 +7,10 @@ export default store => {
 			console.log("received message from extension host", event.data);
 			const { type, body } = event.data;
 			if (type === 'push-data') {
-				store.dispatch({ type: `ADD_${body.type.toUpperCase()}`, payload: normalize(body.payload) });
+				return store.dispatch({ type: `ADD_${body.type.toUpperCase()}`, payload: normalize(body.payload) });
+			}
+			if (type === 'ui-data') {
+				return store.dispatch(body)
 			}
 		},
 		false

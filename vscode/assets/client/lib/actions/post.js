@@ -163,6 +163,7 @@ export const createPost = (
 	codeBlocks,
 	mentions,
 	bufferText,
+	commitHash,
 	extra
 ) => async (dispatch, getState, { api }) => {
 	const {context, session} = getState();
@@ -206,7 +207,7 @@ export const createPost = (
 		creatorId: session.userId,
 		parentPostId: parentPostId,
 		codeBlocks: codeBlocks,
-		commitHashWhenPosted: context.currentCommit,
+		commitHashWhenPosted: commitHash,
 		mentionedUserIds: mentions && mentions.length ? mentions : null,
 		text
 	};
@@ -225,7 +226,6 @@ export const createPost = (
 
 	try {
 		const createdPost = await api.createPost(post);
-		debugger
 		// if (hasUncommittedLocation) {
 		// 	dispatch(
 		// 		saveUncommittedLocations({
@@ -238,6 +238,7 @@ export const createPost = (
 		// }
 		// if (!streamId) dispatch(saveStream(normalize(data.stream)));
 		dispatch(resolvePendingPost(pendingId, normalize(createdPost)));
+		dispatch({type: 'CLEAR_SELECTED_CODE'})
 		// TODO: analytics dispatch({ type: "POST_CREATED", meta: { post: data.post, ...extra } });
 	} catch (error) {
 		debugger

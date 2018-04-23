@@ -1,4 +1,4 @@
-import { Disposable, Event, EventEmitter, ViewColumn, Webview, WebviewPanel, WebviewPanelOnDidChangeViewStateEvent, window } from 'vscode';
+import { Disposable, Event, EventEmitter, ViewColumn, Webview, WebviewPanel, WebviewPanelOnDidChangeViewStateEvent, window, Range } from 'vscode';
 import { CSPost, CSRepository, CSStream, CSTeam, CSUser } from '../api/api';
 import { CodeStreamSession, PostsReceivedEvent, Stream } from '../api/session';
 import { Container } from '../container';
@@ -62,13 +62,22 @@ class MessageRelay extends Disposable {
     private async onWebViewMessageReceived(e: CSWebviewRequest) {
         const { type, body } = e;
 
+        const createRange = (array: number[][]) => new Range(array[0][0], array[0][1], array[1][0], array[1][1]);
+
         switch (type) {
             case 'action-request':
                 switch (body.action) {
                     case 'post':
-                        const post = await this._stream.post(body.params.text);
-                        if (post === undefined) return;
+                        const {text, code, codeBlocks, commitHashWhenPosted} = body.params;
 
+                        let post;
+                        if (codeBlocks) {
+                            post = await this._stream.postCode(text, codeBlocks[0].code, createRange(codeBlocks[0].location), commitHashWhenPosted);
+                            if (post === undefined) return;
+                        } else {
+                            post = await this._stream.post(text);
+                            if (post === undefined) return;
+                        }
                         this._webview.postMessage({
                             type: 'action-response',
                             body: {
@@ -88,6 +97,15 @@ class MessageRelay extends Disposable {
 
     setStream(stream: Stream) {
         this._stream = stream;
+    }
+
+    commentOnCode(file: string, range: Range, content: string, mentions: string, commitHash: string) {
+        const normalize = (r: Range) => [[r.start.line, r.start.character], [r.end.line, r.end.character]];
+
+        this._webview.postMessage({
+            type: 'ui-data',
+            body: { type: 'SELECTED_CODE', payload: { range: normalize(range), content, mentions, file, commitHash } }
+        });
     }
 }
 

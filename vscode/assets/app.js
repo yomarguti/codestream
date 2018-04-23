@@ -48876,7 +48876,7 @@ var savePendingPost = function savePendingPost(attributes) {
 	};
 };
 
-var createPost = function createPost(streamId, parentPostId, text, codeBlocks, mentions, bufferText, extra) {
+var createPost = function createPost(streamId, parentPostId, text, codeBlocks, mentions, bufferText, commitHash, extra) {
 	return function () {
 		var _ref19 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(dispatch, getState, _ref18) {
 			var api = _ref18.api;
@@ -48928,7 +48928,7 @@ var createPost = function createPost(streamId, parentPostId, text, codeBlocks, m
 								creatorId: session.userId,
 								parentPostId: parentPostId,
 								codeBlocks: codeBlocks,
-								commitHashWhenPosted: context.currentCommit,
+								commitHashWhenPosted: commitHash,
 								mentionedUserIds: mentions && mentions.length ? mentions : null,
 								text: text
 							};
@@ -48953,7 +48953,6 @@ var createPost = function createPost(streamId, parentPostId, text, codeBlocks, m
 						case 8:
 							createdPost = _context6.sent;
 
-							debugger;
 							// if (hasUncommittedLocation) {
 							// 	dispatch(
 							// 		saveUncommittedLocations({
@@ -48966,6 +48965,7 @@ var createPost = function createPost(streamId, parentPostId, text, codeBlocks, m
 							// }
 							// if (!streamId) dispatch(saveStream(normalize(data.stream)));
 							dispatch(resolvePendingPost(pendingId, normalize(createdPost)));
+							dispatch({ type: 'CLEAR_SELECTED_CODE' });
 							// TODO: analytics dispatch({ type: "POST_CREATED", meta: { post: data.post, ...extra } });
 							_context6.next = 17;
 							break;
@@ -50077,6 +50077,19 @@ var trimSelection = function trimSelection(editor) {
 	editor.setSelectedBufferRange(range);
 };
 
+var Range = function Range(array) {
+	if (array) return {
+		start: {
+			row: array[0][0],
+			col: array[0][1]
+		},
+		end: {
+			row: array[1][0],
+			col: array[1][1]
+		}
+	};else return null;
+};
+
 var SimpleStream = function (_Component) {
 	inherits$1(SimpleStream, _Component);
 
@@ -50963,13 +50976,19 @@ var SimpleStream = function (_Component) {
 			// strip out the at-mention markup, and add it back.
 			// newPostText = newPostText.replace(/(@\w+)/g, '<span class="at-mention">$1</span> ');
 
-			var quoteInfo = this.state.quoteText ? react.createElement(
+			var selectedCode = this.props.selectedCode;
+
+			if (selectedCode && selectedCode.mentions !== '') {
+				newPostText = selectedCode.mentions + ": " + newPostText;
+			}
+
+			var quoteInfo = this.props.selectedCode ? react.createElement(
 				"div",
 				{ className: "code" },
-				this.state.quoteText
+				this.props.selectedCode.content
 			) : "";
 			// FIXME loc
-			var range = this.state.quoteRange;
+			var range = Range(this.props.selectedCode && this.props.selectedCode.range);
 			var rangeText = null;
 			if (range) {
 				if (range.start.row == range.end.row) {
@@ -51375,37 +51394,36 @@ var SimpleStream = function (_Component) {
 
 			var codeBlocks = [];
 			var _state = this.state,
-			    quoteText = _state.quoteText,
-			    quoteRange = _state.quoteRange,
 			    preContext = _state.preContext,
 			    postContext = _state.postContext,
 			    _state$threadActive = _state.threadActive,
 			    threadActive = _state$threadActive === undefined ? undefined : _state$threadActive;
 			var _props2 = this.props,
 			    id = _props2.id,
-			    createPost$$1 = _props2.createPost;
+			    createPost$$1 = _props2.createPost,
+			    selectedCode = _props2.selectedCode;
 
 
 			var threadId = threadActive ? this.state.threadId : null;
 
-			// if (quoteText) {
-			// 	codeBlocks.push({
-			// 		code: quoteText,
-			// 		location: rangeToLocation(quoteRange),
-			// 		preContext,
-			// 		postContext,
-			// 		// for now, we assume this codeblock came from this buffer
-			// 		// in the future we want to support commenting on codeBlocks
-			// 		// from other files/buffers
-			// 		streamId: id
-			// 	});
-			// }
+			if (selectedCode) {
+				codeBlocks.push({
+					code: selectedCode.content,
+					location: selectedCode.range, //rangeToLocation(quoteRange),
+					// preContext,
+					// postContext,
+					// for now, we assume this codeblock came from this buffer
+					// in the future we want to support commenting on codeBlocks
+					// from other files/buffers
+					streamId: id
+				});
+			}
 
 			var mentionUserIds = this.findMentions(newText);
 			var editor = this.context.platform.getActiveEditor();
 			var editorText = editor ? editor.getText() : '';
 
-			createPost$$1(this.props.id, threadId, newText, codeBlocks, mentionUserIds, editorText, {
+			createPost$$1(this.props.id, threadId, newText, codeBlocks, mentionUserIds, editorText, selectedCode.commitHash, {
 				autoMentions: this.state.autoMentioning
 			});
 
@@ -51540,6 +51558,7 @@ var mapStateToProps = function mapStateToProps(_ref12) {
 		editingUsers: stream.editingUsers,
 		usernamesRegexp: usernamesRegexp,
 		currentUser: users[session.userId],
+		selectedCode: context.selectedCode,
 		posts: getPostsForStream(posts$$1, stream.id || context.currentFile).map(function (post) {
 			var user = users[post.creatorId];
 			if (!user) {
@@ -52120,6 +52139,8 @@ var context$1 = (function () {
 	if (type === "NO_GIT_IN_PATH") return _extends$5({}, state, { noAccess: { noGit: true } });
 	if (type === "SHOW_SLACK_INFO") return _extends$5({}, state, { showSlackInfo: true });
 	if (type === "CANCEL_SLACK_INFO") return _extends$5({}, state, { showSlackInfo: false });
+	if (type === "SELECTED_CODE") return _extends$5({}, state, { selectedCode: payload });
+	if (type === "CLEAR_SELECTED_CODE") return _extends$5({}, state, { selectedCode: null });
 	return state;
 });
 
@@ -52510,7 +52531,10 @@ var rpcMiddleWare = (function (store) {
 		    body = _event$data.body;
 
 		if (type === 'push-data') {
-			store.dispatch({ type: "ADD_" + body.type.toUpperCase(), payload: normalize(body.payload) });
+			return store.dispatch({ type: "ADD_" + body.type.toUpperCase(), payload: normalize(body.payload) });
+		}
+		if (type === 'ui-data') {
+			return store.dispatch(body);
 		}
 	}, false);
 
