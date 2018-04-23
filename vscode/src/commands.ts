@@ -178,18 +178,18 @@ export class Commands extends Disposable {
         const users = await Container.session.users.getByEmails(authors.map(a => a.email));
         const mentions = Iterables.join(Iterables.map(users, u => `@${u.name}`), ', ');
 
-        // const message = await window.showInputBox({
-        //     prompt: 'Enter Comment',
-        //     placeHolder: 'Comment',
-        //     value: `${mentions ? `${mentions}: ` : ''}`
-        // });
-        // if (message === undefined) return;
+        const message = await window.showInputBox({
+            prompt: 'Enter Comment',
+            placeHolder: 'Comment',
+            value: `${mentions ? `${mentions}: ` : ''}`
+        });
+        if (message === undefined) return;
 
         const code = editor.document.getText(selection);
         const commitHash = await Container.git.getFileCurrentSha(uri);
 
-        Container.streamWebView._panel!._relay!.commentOnCode(uri.path, selection, code, mentions, commitHash);
-        // return Container.session.postCode(message, uri, code, selection, commitHash);
+        // Container.streamWebView._panel!._relay!.commentOnCode(uri.path, selection, code, mentions, commitHash);
+        return Container.session.postCode(message, uri, code, selection, commitHash);
     }
 
     @command('signIn', { customErrorHandling: true })
