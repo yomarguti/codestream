@@ -531,7 +531,7 @@ export class SimpleStream extends Component {
 				<div
 					className={postsListClass}
 					ref={ref => (this._postslist = ref)}
-					// onClick={this.handleClickPost}
+					onClick={this.handleClickPost}
 				>
 					<div className="intro" ref={ref => (this._intro = ref)}>
 						{this.renderIntro()}
@@ -759,16 +759,23 @@ export class SimpleStream extends Component {
 		const post = this.findPostById(id);
 		if (!post) return;
 
+		window.parent.postMessage({
+			type: 'event',
+			body: {
+				name: 'post-clicked',
+				payload: post
+			}
+		}, '*');
 		// if it is a child in the thread, it'll have a parentPostId,
 		// otherwise use the id. any post can become the head of a thread
-		const threadId = post.parentPostId || post.id;
-		this.setState({ threadId: threadId, threadActive: true });
+		// const threadId = post.parentPostId || post.id;
+		// this.setState({ threadId: threadId, threadActive: true });
 
-		if (post.codeBlocks && post.codeBlocks.length) {
-			const codeBlock = post.codeBlocks[0];
-			this.hideDisplayMarker();
-			this.showDisplayMarker(codeBlock.markerId);
-		}
+		// if (post.codeBlocks && post.codeBlocks.length) {
+		// 	const codeBlock = post.codeBlocks[0];
+		// 	this.hideDisplayMarker();
+		// 	this.showDisplayMarker(codeBlock.markerId);
+		// }
 	};
 
 	// not using a gutter for now

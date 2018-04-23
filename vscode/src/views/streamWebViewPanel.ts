@@ -22,13 +22,14 @@ interface ViewData {
 interface CSWebviewRequest {
     type: string;
     body: {
-        action: string;
-        params: any;
+        action?: string;
+        name?: string;
+        params?: any;
+        payload?: any;
     };
 }
 
 class MessageRelay extends Disposable {
-
     private readonly _disposable: Disposable;
 
     constructor(
@@ -76,6 +77,12 @@ class MessageRelay extends Disposable {
                             }
                         });
                 }
+            case 'event': {
+                switch (body.name) {
+                    case 'post-clicked':
+                        return console.log('post clicked', body.payload);
+                }
+            }
         }
     }
 

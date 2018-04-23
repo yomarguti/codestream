@@ -50352,16 +50352,23 @@ var SimpleStream = function (_Component) {
 				var post = _this.findPostById(id);
 				if (!post) return;
 
+				window.parent.postMessage({
+					type: 'event',
+					body: {
+						name: 'post-clicked',
+						payload: post
+					}
+				}, '*');
 				// if it is a child in the thread, it'll have a parentPostId,
 				// otherwise use the id. any post can become the head of a thread
-				var threadId = post.parentPostId || post.id;
-				_this.setState({ threadId: threadId, threadActive: true });
+				// const threadId = post.parentPostId || post.id;
+				// this.setState({ threadId: threadId, threadActive: true });
 
-				if (post.codeBlocks && post.codeBlocks.length) {
-					var codeBlock = post.codeBlocks[0];
-					_this.hideDisplayMarker();
-					_this.showDisplayMarker(codeBlock.markerId);
-				}
+				// if (post.codeBlocks && post.codeBlocks.length) {
+				// 	const codeBlock = post.codeBlocks[0];
+				// 	this.hideDisplayMarker();
+				// 	this.showDisplayMarker(codeBlock.markerId);
+				// }
 			}
 		});
 		Object.defineProperty(_this, "toggleFocusInput", {
@@ -51010,8 +51017,8 @@ var SimpleStream = function (_Component) {
 						className: postsListClass,
 						ref: function ref(_ref5) {
 							return _this5._postslist = _ref5;
-						}
-						// onClick={this.handleClickPost}
+						},
+						onClick: this.handleClickPost
 					},
 					react.createElement(
 						"div",
