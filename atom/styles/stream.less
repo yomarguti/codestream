@@ -18,8 +18,10 @@
 		.stream-header {
 			position: relative;
 			text-align: center;
+			background-color: @app-background-color;
 			border-bottom: 1px solid @base-border-color;
 			padding: 0 35px 10px 35px;
+			z-index: 30;
 
 			span {
 				font-weight: 100;
@@ -58,7 +60,7 @@
 		}
 
 		.unreads {
-			position: absolute !important;
+			// position: absolute !important;
 			// background: @background-color-highlight;
 			// color: @text-color-highlight;
 
@@ -76,12 +78,13 @@
 			text-align: center;
 			padding: 5px 0;
 			width: 80%;
-			left: 10% !important;
+			// left: 10% !important;
 			z-index: 10;
 			white-space: nowrap;
 			overflow: hidden;
 			text-overflow: ellipsis;
 			height: 30px;
+			// margin: 0 10% 0 10%;
 			cursor: pointer !important;
 			transition: top 0.2s, bottom 0.2s, background-color 0.2s;
 		}
@@ -94,17 +97,19 @@
 			color: white;
 		}
 		#unreads-above {
-			top: -3em;
+			top: 0px;
+			// margin-top: -3em;
 			border-radius: 0 0 5px 5px;
 			border-top: none;
 			// box-shadow: 0 1px 15px rgba(0, 0, 0, 0.5);
 		}
 		#unreads-above.active {
-			top: 0;
+			top: 30px;
+			// margin-top: 30px;
 		}
 		#unreads-below {
 			top: auto !important;
-			bottom: -3em !important;
+			// bottom: -3em !important;
 			border-radius: 5px 5px 0 0;
 			border-bottom: none;
 			// box-shadow: 0 -1px 15px rgba(0, 0, 0, 0.25);

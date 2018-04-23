@@ -218,7 +218,6 @@ export class SimpleStream extends Component {
 			if (this.props.currentUser && this.props.currentUser.lastReads) {
 				this.postWithNewMessageIndicator = this.props.currentUser.lastReads[nextProps.postStreamId];
 			}
-			// this.postWithNewMessageIndicator = 10;
 		}
 	}
 
@@ -249,6 +248,8 @@ export class SimpleStream extends Component {
 			// console.log("Marking this stream modified: " + id + " as " + isModified);
 			markStreamModified(postStreamId, isModified);
 		}
+
+		if (prevProps.hasFocus !== this.props.hasFocus) this.handleScroll();
 	}
 
 	showDisplayMarker(markerId) {
@@ -522,6 +523,8 @@ export class SimpleStream extends Component {
 			</div>
 		);
 
+		const teamName = this.props.team ? this.props.team.name : "";
+
 		return (
 			<div className={streamClass} ref={ref => (this._div = ref)}>
 				<BufferReferences
@@ -539,12 +542,12 @@ export class SimpleStream extends Component {
 					currentUser={this.props.currentUser}
 					users={this.props.users}
 				/>
-				{unreadsAbove}
 				<div className="stream-header" ref={ref => (this._header = ref)}>
 					<UMIs />
-					<span>{this.props.team.name}</span>
+					<span>{teamName}</span>
 					<span onClick={this.handleClickTeamMenu} className="icon icon-grabber" />
 				</div>
+				{unreadsAbove}
 				<div
 					className={postsListClass}
 					ref={ref => (this._postslist = ref)}
