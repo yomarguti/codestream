@@ -409,7 +409,7 @@ export class SimpleStream extends Component {
 					<li>
 						<FormattedMessage
 							id="stream.intro.eachFile"
-							defaultMessage="Pick a source file, post a message, and any of your teammates can join the discussion."
+							defaultMessage="Post a message, and any of your teammates can join the discussion."
 						/>
 					</li>
 					<li>
