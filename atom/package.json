@@ -1,7 +1,7 @@
 {
 	"name": "CodeStream",
 	"main": "./lib/codestream",
-	"version": "0.0.21",
+	"version": "0.0.22",
 	"description":
 		"Build the knowledge base behind your codebase. CodeStream allows your development team to communicate within Atom and conversation threads automatically become annotations that live with your codebase forever.",
 	"keywords": ["git", "team", "chat"],
