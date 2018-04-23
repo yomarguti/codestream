@@ -70,10 +70,11 @@ export class RepositoryCollection extends CodeStreamCollection<Repository, CSRep
         this.invalidate();
     }
 
-    async getByUri(uri: Uri): Promise<Repository | undefined> {
+    async getByFileUri(uri: Uri): Promise<Repository | undefined> {
         const folder = workspace.getWorkspaceFolder(uri);
         if (folder === undefined) return undefined;
 
+        await this.ensureLoaded();
         return this._reposByWorkspaceFolder.get(folder);
     }
 

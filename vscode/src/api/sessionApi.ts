@@ -6,6 +6,7 @@ import {
     CSMarker, CSMarkerLocations, CSPost, CSRepository, CSStream, CSTeam, CSUser
 } from './api';
 import { Container } from '../container';
+import { GitRepository } from '../git/git';
 
 export class CodeStreamSessionApi {
 
@@ -24,7 +25,7 @@ export class CodeStreamSessionApi {
         })).post;
     }
 
-    async createPostWithCode(text: string, code: string, range: Range, commitHash: string, streamId: string, teamId?: string): Promise<CSPost | undefined> {
+    async createPostWithCode(text: string, code: string, range: Range, commitHash: string, fileStreamId: string, streamId: string, teamId?: string): Promise<CSPost | undefined> {
         return (await this._api.createPost(this.token, {
             teamId: teamId || this.teamId!,
             streamId: streamId,
@@ -36,7 +37,8 @@ export class CodeStreamSessionApi {
                     range.start.character,
                     range.end.line,
                     range.end.character
-                ]
+                ],
+                streamId: fileStreamId
             }],
             commitHashWhenPosted: commitHash
         })).post;
@@ -70,25 +72,39 @@ export class CodeStreamSessionApi {
     }
 
     async createFileStream(uri: Uri, repoId: string, teamId?: string): Promise<CSFileStream | undefined> {
+        let url;
+        if (uri.scheme === 'file') {
+            url = uri.path;
+            if (url[0] === '/') {
+                url = url.substr(1);
+            }
+        }
+        else {
+            url = uri.toString();
+        }
+
         return (await this._api.createStream(this.token, {
             type: 'file',
             teamId: teamId || this.teamId!,
             repoId: repoId,
-            file: uri.scheme === 'file' ? uri.fsPath : uri.toString()
+            file: url
         })).stream as CSFileStream;
     }
 
-    private async findOrRegisterRepo(registeredRepos: CSRepository[], uri: Uri) {
+    private async findOrRegisterRepo(repo: GitRepository, registeredRepos: CSRepository[]) {
         const [firsts, remote] = await Promise.all([
-            Container.git.getRepoFirstCommits(uri),
-            Container.git.getRepoRemote(uri)
+            repo.getFirstCommits(),
+            repo.getRemote()
         ]);
 
         if (remote === undefined || firsts.length === 0) return undefined;
 
         const remoteUrl = remote.normalizedUrl;
-        const repo = await registeredRepos.find(r => r.normalizedUrl === remoteUrl);
-        if (repo !== undefined) return repo;
+        // TODO: What should we do if there are no remotes? skip?
+        if (remoteUrl === undefined) return undefined;
+
+        const found = await registeredRepos.find(r => r.normalizedUrl === remoteUrl);
+        if (found !== undefined) return found;
 
         return await this.createRepo(remote.uri, firsts);
     }
@@ -103,10 +119,10 @@ export class CodeStreamSessionApi {
 
         let found;
         for (const repo of repos) {
-            found = await this.findOrRegisterRepo(registeredRepos, repo.rootUri);
+            found = await this.findOrRegisterRepo(repo, registeredRepos);
             if (found === undefined) continue;
 
-            items.push([repo.rootUri, found]);
+            items.push([repo.uri, found]);
         }
 
         return items;

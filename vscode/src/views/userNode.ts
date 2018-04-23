@@ -22,7 +22,7 @@ export class UserNode extends ExplorerNode {
     }
 
     getTreeItem(): TreeItem {
-        const item = new TreeItem(this.user.name, TreeItemCollapsibleState.None);
+        const item = new TreeItem(`${this.user.name}${this.user.id === this.session.userId ? ' (you)' : ''}`, TreeItemCollapsibleState.None);
         item.id = this.id;
         item.contextValue = ResourceType.User;
         item.iconPath = Container.context.asAbsolutePath(`assets/images/presence-online.svg`);

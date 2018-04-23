@@ -13,7 +13,12 @@ export * from './models/models';
 
 interface GitApi {
     getGitPath(): Promise<string>;
-    getRepositories(): Promise<GitRepository[]>;
+    getRepositories(): Promise<GitApiRepository[]>;
+}
+
+export interface GitApiRepository {
+    readonly rootUri: Uri;
+    // readonly inputBox: InputBox;
 }
 
 const GitWarnings = {
@@ -48,6 +53,7 @@ export class Git extends Disposable {
     }
 
     private onWorkspaceFoldersChanged(e: WorkspaceFoldersChangeEvent) {
+        this._repositories = undefined;
         this._onDidChangeRepositories.fire();
     }
 
@@ -180,8 +186,13 @@ export class Git extends Disposable {
         return push || fetch;
     }
 
+    private _repositories: GitRepository[] | undefined;
     async getRepositories(): Promise<GitRepository[]> {
-        return Git.api!.getRepositories();
+        if (this._repositories === undefined) {
+            const repos = await Git.api!.getRepositories();
+            this._repositories = repos.map(r => new GitRepository(r.rootUri));
+        }
+        return this._repositories;
     }
 
     private static _api: GitApi | undefined;

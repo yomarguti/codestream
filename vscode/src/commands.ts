@@ -136,7 +136,7 @@ export class Commands extends Disposable {
             streamOrUriOrName = streamOrUriOrName.stream;
         }
         else if (streamOrUriOrName instanceof Uri) {
-            const repo = await Container.session.repos.getByUri(streamOrUriOrName);
+            const repo = await Container.session.repos.getByFileUri(streamOrUriOrName);
             if (repo !== undefined) {
                 streamOrUriOrName = await repo.streams.getByUri(streamOrUriOrName);
             }

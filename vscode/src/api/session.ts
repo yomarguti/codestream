@@ -52,6 +52,10 @@ function signedIn(target: CodeStreamSession, propertyName: string, descriptor: T
     }
 }
 
+interface IMergeableEvent<T> {
+    merge(e: T): void;
+}
+
 export class PostsReceivedEvent {
 
     constructor(
@@ -83,14 +87,14 @@ export enum SessionChangedType {
     Streams = 'streams'
 }
 
-export interface GitChangedEvent {
+export interface GitChangedEvent extends IMergeableEvent<GitChangedEvent> {
     readonly type: SessionChangedType.Git;
     // affects(type: 'repo' | 'team', id: string): boolean;
     // getStreams(): Stream[];
     merge: (e: GitChangedEvent) => void;
 }
 
-export class RepositoriesAddedEvent {
+export class RepositoriesAddedEvent implements IMergeableEvent<RepositoriesAddedEvent> {
     readonly type = SessionChangedType.Repositories;
 
     constructor(
@@ -115,7 +119,7 @@ export class RepositoriesAddedEvent {
     }
 }
 
-export class StreamsAddedEvent {
+export class StreamsAddedEvent implements IMergeableEvent<StreamsAddedEvent> {
     readonly type = SessionChangedType.Streams;
 
     constructor(
@@ -266,7 +270,7 @@ export class CodeStreamSession extends Disposable {
                         combined.push(current);
                     }
                     else {
-                        (found as any).merge(current);
+                        (found as IMergeableEvent<SessionChangedEvent>).merge(current);
                     }
                     return combined;
                 },
@@ -449,7 +453,7 @@ export class CodeStreamSession extends Disposable {
 
     @signedIn
     getRepositoryByUri(uri: Uri): Promise<Repository | undefined> {
-        return this.repos.getByUri(uri);
+        return this.repos.getByFileUri(uri);
     }
 
     @signedIn
@@ -462,7 +466,7 @@ export class CodeStreamSession extends Disposable {
 
     @signedIn
     async postCode(text: string, uri: Uri, code: string, range: Range, commitHash: string, streamName?: string) {
-        const repo = await this.repos.getByUri(uri);
+        const repo = await this.repos.getByFileUri(uri);
         if (repo === undefined) throw new Error(`No repository could be found for Uri(${uri.toString()}`);
 
         const markerStream = await repo.streams.getOrCreateByUri(uri);
@@ -485,7 +489,21 @@ export class CodeStreamSession extends Disposable {
             this._data = await this._api.login(email, password);
 
             if (teamId == null) {
-                teamId = this._data.teams[0].id;
+                if (this.data.repos.length > 0) {
+                    for (const repo of await this._git.getRepositories()) {
+                        const url = await repo.normalizedUrl;
+
+                        const found = this._data.repos.find(r => r.normalizedUrl === url);
+                        if (found === undefined) continue;
+
+                        teamId = found.teamId;
+                        break;
+                    }
+                }
+
+                if (teamId == null) {
+                    teamId = this._data.teams[0].id;
+                }
             }
 
             const team = this._data.teams.find(t => t.id === teamId);

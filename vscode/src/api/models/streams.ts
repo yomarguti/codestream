@@ -44,10 +44,10 @@ abstract class StreamBase<T extends CSStream> extends CodeStreamItem<T> {
         return new Post(this.session, post);
     }
 
-    async postCode(text: string, code: string, range: Range, commitHash: string, markerStream?: FileStream) {
+    async postCode(text: string, code: string, range: Range, commitHash: string, markerStream: FileStream) {
         // TODO: Needs to be fixed to post to a stream, but associate the marker with a file
 
-        const post = await this.session.api.createPostWithCode(text, code, range, commitHash, this.entity.id, this.entity.teamId);
+        const post = await this.session.api.createPostWithCode(text, code, range, commitHash, markerStream.id, this.entity.id, this.entity.teamId);
         if (post === undefined) throw new Error(`Unable to post code to Stream(${this.entity.id})`);
 
         return new Post(this.session, post);
@@ -286,7 +286,7 @@ export class FileStreamCollection extends StreamCollectionBase<FileStream, CSFil
     async getByUri(uri: Uri): Promise<FileStream | undefined> {
         if (uri.scheme !== 'file') throw new Error(`Uri must be a file`);
 
-        let path = this.repo.relativizeUri(uri).fsPath;
+        let path = this.repo.relativizeUri(uri).path;
         if (path[0] === '/') {
             path = path.substr(1);
         }
@@ -297,7 +297,8 @@ export class FileStreamCollection extends StreamCollectionBase<FileStream, CSFil
     async getOrCreateByUri(uri: Uri): Promise<FileStream> {
         if (uri.scheme !== 'file') throw new Error(`Uri must be a file`);
 
-        let path = this.repo.relativizeUri(uri).fsPath;
+        const relativeUri = this.repo.relativizeUri(uri);
+        let path = relativeUri.path;
         if (path[0] === '/') {
             path = path.substr(1);
         }
@@ -305,7 +306,7 @@ export class FileStreamCollection extends StreamCollectionBase<FileStream, CSFil
         const stream = Iterables.find(await this.items, s => s.path === path);
         if (stream !== undefined) return stream;
 
-        const s = await this.session.api.createFileStream(uri, this.repo.id);
+        const s = await this.session.api.createFileStream(relativeUri, this.repo.id);
         if (s === undefined) throw new Error(`Unable to create stream`);
 
         return new FileStream(this.session, s, this.repo);

@@ -117,6 +117,7 @@ export interface CreatePostRequest {
     codeBlocks?: {
         code: string;
         location: [number, number, number, number];
+        streamId?: string;
     }[];
     commitHashWhenPosted?: string;
 }
