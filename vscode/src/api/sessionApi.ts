@@ -2,8 +2,10 @@
 import { Range, Uri } from 'vscode';
 import {
     CodeStreamApi,
+    CreatePostRequestCodeBlock,
     CSChannelStream, CSDirectStream, CSFileStream,
-    CSMarker, CSMarkerLocations, CSPost, CSRepository, CSStream, CSTeam, CSUser
+    CSMarker, CSMarkerLocations,
+    CSPost, CSRepository, CSStream, CSTeam, CSUser
 } from './api';
 import { Container } from '../container';
 import { GitRepository } from '../git/git';
@@ -25,21 +27,30 @@ export class CodeStreamSessionApi {
         })).post;
     }
 
-    async createPostWithCode(text: string, code: string, range: Range, commitHash: string, fileStreamId: string, streamId: string, teamId?: string): Promise<CSPost | undefined> {
-        return (await this._api.createPost(this.token, {
-            teamId: teamId || this.teamId,
-            streamId: streamId,
-            text: text,
-            codeBlocks: [{
+    async createPostWithCode(text: string, code: string, range: Range, commitHash: string, fileStream: string | { file: string, repoId: string }, streamId: string, teamId?: string): Promise<CSPost | undefined> {
+        const codeBlock: CreatePostRequestCodeBlock = {
                 code: code,
                 location: [
                     range.start.line,
                     range.start.character,
                     range.end.line,
                     range.end.character
-                ],
-                streamId: fileStreamId
-            }],
+            ]
+        };
+
+        if (typeof fileStream === 'string') {
+            codeBlock.streamId = fileStream;
+        }
+        else {
+            codeBlock.file = fileStream.file;
+            codeBlock.repoId = fileStream.repoId;
+        }
+
+        return (await this._api.createPost(this.token, {
+            teamId: teamId || this.teamId,
+            streamId: streamId,
+            text: text,
+            codeBlocks: [codeBlock],
             commitHashWhenPosted: commitHash
         })).post;
     }

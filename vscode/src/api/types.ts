@@ -22,15 +22,18 @@ export interface CSMarkerLocations {
     locations: { [id: string]: [number, number, number, number] };
 }
 
-export interface CSPost extends CSEntity {
-    streamId: string;
-    text: string;
-    codeBlocks?: {
+export interface CSCodeBlock {
         code: string;
         markerId: string;
         file: string;
         repoId: string;
-    }[];
+    streamId?: string;
+}
+
+export interface CSPost extends CSEntity {
+    streamId: string;
+    text: string;
+    codeBlocks?: CSCodeBlock[];
     commitHashWhenPosted?: string;
     repoId: string;
     teamId: string;
@@ -56,7 +59,7 @@ export interface CSChannelStream extends CSEntity {
     teamId: string;
     type: StreamType.Channel;
     name: string;
-    memberIds?: string;
+    memberIds?: string[];
     sortId: string;
 }
 
@@ -64,7 +67,7 @@ export interface CSDirectStream extends CSEntity {
     teamId: string;
     type: StreamType.Direct;
     name?: string;
-    memberIds: string;
+    memberIds: string[];
     sortId: string;
 }
 
@@ -111,16 +114,20 @@ export interface LoginResponse {
     repos: CSRepository[];
 }
 
+export interface CreatePostRequestCodeBlock {
+    code: string;
+    location: [number, number, number, number];
+    streamId?: string;
+    file?: string;
+    repoId?: string;
+}
+
 export interface CreatePostRequest {
     teamId: string;
     streamId: string;
     parentPostId?: string;
     text: string;
-    codeBlocks?: {
-        code: string;
-        location: [number, number, number, number];
-        streamId?: string;
-    }[];
+    codeBlocks?: CreatePostRequestCodeBlock[];
     commitHashWhenPosted?: string;
 }
 

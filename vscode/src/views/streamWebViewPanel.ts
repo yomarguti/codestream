@@ -61,15 +61,27 @@ class MessageRelay extends Disposable {
                 switch (body.action) {
                     case 'post':
                         const { text, codeBlocks, commitHashWhenPosted } = body.params;
+                        const block = codeBlocks[0];
 
                         let post;
                         if (codeBlocks) {
-                            post = await this._stream.postCode(text, codeBlocks[0].code, createRange(codeBlocks[0].location), commitHashWhenPosted, codeBlocks[0].streamId);
-                            if (post === undefined) return;
-                        } else {
-                            post = await this._stream.post(text);
-                            if (post === undefined) return;
+                            let markerStream;
+                            if (block.streamId === undefined) {
+                                markerStream = {
+                                    file: block.file!,
+                                    repoId: block.repoId!
+                                };
+                            }
+                            else {
+                                markerStream = block.streamId;
+                            }
+
+                            post = await this._stream.postCode(text, block.code, createRange(block.location), commitHashWhenPosted, markerStream);
                         }
+                        else {
+                            post = await this._stream.post(text);
+                        }
+                            if (post === undefined) return;
 
                         this.postMessage({
                             type: 'action-response',
