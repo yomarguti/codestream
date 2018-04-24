@@ -243,7 +243,7 @@
         "*"
     ],
     "scripts": {
-        "build": "npm run lint && npm run compile",
+        "build": "npm run compile && npm run lint",
         "compile": "tsc -p ./",
         "lint": "tslint --project tsconfig.json",
         "watch": "tsc -w -p ./",

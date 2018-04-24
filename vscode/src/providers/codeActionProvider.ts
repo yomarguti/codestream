@@ -1,5 +1,6 @@
 'use strict';
 import { CancellationToken, CodeActionContext, CodeActionProvider, Command, Disposable, DocumentSelector, languages, Range, TextDocument } from 'vscode';
+import { PostCodeCommandArgs } from '../commands';
 
 export class CodeStreamCodeActionProvider extends Disposable implements CodeActionProvider {
 
@@ -25,8 +26,10 @@ export class CodeStreamCodeActionProvider extends Disposable implements CodeActi
                 title: `Add a Comment`,
                 command: 'codestream.postCode',
                 arguments: [
-                    document.uri,
-                    range
+                    {
+                        document,
+                        range
+                    } as PostCodeCommandArgs
                 ]
             } as Command
             // {

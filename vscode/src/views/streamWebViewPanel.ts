@@ -1,6 +1,7 @@
-import { Disposable, Event, EventEmitter, ViewColumn, Webview, WebviewPanel, WebviewPanelOnDidChangeViewStateEvent, window, Range } from 'vscode';
+'use strict';
+import { commands, Disposable, Event, EventEmitter, Range, ViewColumn, Webview, WebviewPanel, WebviewPanelOnDidChangeViewStateEvent, window } from 'vscode';
 import { CSPost, CSRepository, CSStream, CSTeam, CSUser } from '../api/api';
-import { CodeStreamSession, PostsReceivedEvent, Stream } from '../api/session';
+import { CodeStreamSession, Post, PostsReceivedEvent, Stream } from '../api/session';
 import { Container } from '../container';
 import * as fs from 'fs';
 import { Logger } from '../logger';
@@ -19,6 +20,7 @@ interface ViewData {
     repos: CSRepository[];
 }
 
+// TODO: Clean this up to be consistent with the structure
 interface CSWebviewRequest {
     type: string;
     body: {
@@ -26,6 +28,7 @@ interface CSWebviewRequest {
         name?: string;
         params?: any;
         payload?: any;
+        type?: string;
     };
 }
 
@@ -40,23 +43,12 @@ class MessageRelay extends Disposable {
         super(() => this.dispose());
 
         this._disposable = Disposable.from(
-            session.onDidReceivePosts(this.onPostsReceived, this),
             _webview.onDidReceiveMessage(this.onWebViewMessageReceived, this)
         );
     }
 
     dispose() {
         this._disposable && this._disposable.dispose();
-    }
-
-    private onPostsReceived(e: PostsReceivedEvent) {
-        this._webview.postMessage({
-            type: 'push-data',
-            body: {
-                type: 'posts',
-                payload: e.getPosts().map(post => ({ ...post.entity }))
-            }
-        });
     }
 
     private async onWebViewMessageReceived(e: CSWebviewRequest) {
@@ -68,17 +60,18 @@ class MessageRelay extends Disposable {
             case 'action-request':
                 switch (body.action) {
                     case 'post':
-                        const {text, code, codeBlocks, commitHashWhenPosted} = body.params;
+                        const { text, codeBlocks, commitHashWhenPosted } = body.params;
 
                         let post;
                         if (codeBlocks) {
-                            post = await this._stream.postCode(text, codeBlocks[0].code, createRange(codeBlocks[0].location), commitHashWhenPosted);
+                            post = await this._stream.postCode(text, codeBlocks[0].code, createRange(codeBlocks[0].location), commitHashWhenPosted, codeBlocks[0].streamId);
                             if (post === undefined) return;
                         } else {
                             post = await this._stream.post(text);
                             if (post === undefined) return;
                         }
-                        this._webview.postMessage({
+
+                        this.postMessage({
                             type: 'action-response',
                             body: {
                                 action: body.action,
@@ -86,63 +79,31 @@ class MessageRelay extends Disposable {
                             }
                         });
                 }
+                break;
+
             case 'event': {
                 switch (body.name) {
                     case 'post-clicked':
-                        return console.log('post clicked', body.payload);
+                        if (body.payload.codeBlocks === undefined) return;
+
+                        commands.executeCommand('codestream.openPostWorkingFile', new Post(this.session, body.payload, this._stream));
+                        return;
                 }
+                break;
             }
         }
+    }
+
+    postMessage(request: CSWebviewRequest) {
+        return this._webview.postMessage(request);
     }
 
     setStream(stream: Stream) {
         this._stream = stream;
     }
-
-    commentOnCode(file: string, range: Range, content: string, mentions: string, commitHash: string) {
-        const normalize = (r: Range) => [[r.start.line, r.start.character], [r.end.line, r.end.character]];
-
-        this._webview.postMessage({
-            type: 'ui-data',
-            body: { type: 'SELECTED_CODE', payload: { range: normalize(range), content, mentions, file, commitHash } }
-        });
-    }
 }
 
-export class StreamWebViewController extends Disposable {
-
-    private _disposable: Disposable | undefined;
-    private _panel: StreamWebViewPanel | undefined;
-
-    constructor(public readonly session: CodeStreamSession) {
-        super(() => this.dispose());
-    }
-
-    dispose() {
-        this._disposable && this._disposable.dispose();
-        this._disposable = undefined;
-        this._panel = undefined;
-     }
-
-    private onPanelClosed() {
-        this.dispose();
-    }
-
-    async openStream(stream: Stream) {
-        if (this._panel === undefined) {
-            this._panel = new StreamWebViewPanel(this.session);
-
-            this._disposable = Disposable.from(
-                this._panel,
-                this._panel.onDidClose(this.onPanelClosed, this)
-            );
-        }
-
-        this._panel.setStream(stream);
-    }
-}
-
-export class StreamWebViewPanel extends Disposable {
+export class StreamWebviewPanel extends Disposable {
 
     private _onDidClose = new EventEmitter<void>();
     get onDidClose(): Event<void> {
@@ -170,6 +131,7 @@ export class StreamWebViewPanel extends Disposable {
         );
 
         this._disposable = Disposable.from(
+            session.onDidReceivePosts(this.onPostsReceived, this),
             this._panel.onDidChangeViewState(this.onPanelViewStateChanged, this),
             this._panel.onDidDispose(this.onPanelDisposed, this)
         );
@@ -179,13 +141,46 @@ export class StreamWebViewPanel extends Disposable {
         this._disposable && this._disposable.dispose();
     }
 
+    private onPostsReceived(e: PostsReceivedEvent) {
+        if (this._relay === undefined) return;
+
+        this._relay.postMessage({
+            type: 'push-data',
+            body: {
+                type: 'posts',
+                payload: e.getPosts().map(post => ({ ...post.entity }))
+            }
+        });
+    }
+
     is(stream: Stream) {
         if (this._stream === undefined) return false;
         return this._stream.id === stream.id;
     }
 
+    postCode(repoId: string, relativePath: string, code: string, range: Range, commitHash: string, mentions: string = '') {
+        if (this._relay === undefined) throw new Error('No Webview relay');
+
+        const normalize = (r: Range) => [[r.start.line, r.start.character], [r.end.line, r.end.character]];
+
+        this._relay.postMessage({
+            type: 'ui-data',
+            body: {
+                type: 'SELECTED_CODE',
+                payload: {
+                    file: relativePath,
+                    repoId: repoId,
+                    content: code,
+                    range: normalize(range),
+                    commitHash: commitHash,
+                    mentions: mentions
+                }
+            }
+        });
+    }
+
     show() {
-        this._panel.reveal(ViewColumn.Three);
+        return this._panel.reveal(ViewColumn.Three);
     }
 
     private onPanelViewStateChanged(e: WebviewPanelOnDidChangeViewStateEvent) {
@@ -197,11 +192,7 @@ export class StreamWebViewPanel extends Disposable {
     }
 
     async setStream(stream: Stream) {
-        if (this._stream && this._stream.id === stream.id) {
-            this.show();
-
-            return;
-        }
+        if (this._stream && this._stream.id === stream.id) return this.show();
 
         this._panel.title = `CodeStream \u2022 ${stream.name}`;
         this._stream = stream;
@@ -239,6 +230,6 @@ export class StreamWebViewPanel extends Disposable {
             .replace('{% styles-path %}', stylesPath);
         this._panel.webview.html = html;
 
-        this.show();
+        return this.show();
     }
 }

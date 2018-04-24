@@ -4,16 +4,16 @@ import { CodeStreamSession } from './api/session';
 import { Commands } from './commands';
 import { IConfig } from './config';
 import { configuration } from './configuration';
-// import { UnreadDecorationProvider } from './providers/decorationProvider';
-import { CodeStreamExplorer } from './views/explorer';
-import { Git } from './git/git';
-import { StreamWebViewController } from './views/streamWebViewPanel';
 import { CodeStreamCodeActionProvider } from './providers/codeActionProvider';
 import { CodeStreamCodeLensProvider } from './providers/codeLensProvider';
+import { CodeStreamExplorer } from './views/explorer';
 import { CodeStreamMarkerDecorationProvider } from './providers/markerDecorationProvider';
-import { StatusBarController } from './controllers/statusBarController';
-import { UMIController } from './controllers/umiController';
+import { Git } from './git/git';
 import { LiveShareController } from './controllers/liveShareController';
+import { StatusBarController } from './controllers/statusBarController';
+import { StreamViewController } from './controllers/streamViewController';
+import { UMIController } from './controllers/umiController';
+// import { UnreadDecorationProvider } from './providers/decorationProvider';
 
 export class Container {
 
@@ -32,8 +32,7 @@ export class Container {
         context.subscriptions.push(this._markerDecorations = new CodeStreamMarkerDecorationProvider());
         context.subscriptions.push(this._statusBar = new StatusBarController());
 
-        context.subscriptions.push(this._streamWebView = new StreamWebViewController(this._session));
-        // context.subscriptions.push(this._streamWebView = new StreamWebViewPanel(this._session));
+        context.subscriptions.push(this._streamView = new StreamViewController(this._session));
         // context.subscriptions.push(this._unreadDecorator = new UnreadDecorationProvider());
 
         if (config.explorer.enabled) {
@@ -108,9 +107,9 @@ export class Container {
         return this._session;
     }
 
-    private static _streamWebView: StreamWebViewController;
-    static get streamWebView() {
-        return this._streamWebView;
+    private static _streamView: StreamViewController;
+    static get streamView() {
+        return this._streamView;
     }
 
     private static _umis: UMIController;

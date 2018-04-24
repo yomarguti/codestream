@@ -19,7 +19,7 @@ export class CodeStreamSessionApi {
 
     async createPost(text: string, streamId: string, teamId?: string): Promise<CSPost | undefined> {
         return (await this._api.createPost(this.token, {
-            teamId: teamId || this.teamId!,
+            teamId: teamId || this.teamId,
             streamId: streamId,
             text: text
         })).post;
@@ -27,7 +27,7 @@ export class CodeStreamSessionApi {
 
     async createPostWithCode(text: string, code: string, range: Range, commitHash: string, fileStreamId: string, streamId: string, teamId?: string): Promise<CSPost | undefined> {
         return (await this._api.createPost(this.token, {
-            teamId: teamId || this.teamId!,
+            teamId: teamId || this.teamId,
             streamId: streamId,
             text: text,
             codeBlocks: [{
@@ -46,7 +46,7 @@ export class CodeStreamSessionApi {
 
     async createRepo(uri: Uri, firstCommitHashes: string[], teamId?: string): Promise<CSRepository | undefined> {
         return (await this._api.createRepo(this.token, {
-            teamId: teamId || this.teamId!,
+            teamId: teamId || this.teamId,
             url: uri.toString(),
             firstCommitHash: firstCommitHashes[0]
         })).repo;
@@ -55,7 +55,7 @@ export class CodeStreamSessionApi {
     async createChannelStream(name: string, membership?: 'auto' | string[], teamId?: string): Promise<CSChannelStream | undefined> {
         return (await this._api.createStream(this.token, {
             type: 'channel',
-            teamId: teamId || this.teamId!,
+            teamId: teamId || this.teamId,
             name: name,
             memberIds: membership === 'auto' ? undefined : membership,
             isTeamStream: membership === 'auto'
@@ -65,29 +65,36 @@ export class CodeStreamSessionApi {
     async createDirectStream(name: string, membership: string[], teamId?: string): Promise<CSDirectStream | undefined> {
         return (await this._api.createStream(this.token, {
             type: 'direct',
-            teamId: teamId || this.teamId!,
+            teamId: teamId || this.teamId,
             name: name,
             memberIds: membership
         })).stream as CSDirectStream;
     }
 
-    async createFileStream(uri: Uri, repoId: string, teamId?: string): Promise<CSFileStream | undefined> {
-        let url;
-        if (uri.scheme === 'file') {
-            url = uri.path;
-            if (url[0] === '/') {
-                url = url.substr(1);
-            }
+    async createFileStream(relativeUri: Uri, repoId: string, teamId?: string): Promise<CSFileStream | undefined>;
+    async createFileStream(relativePath: string, repoId: string, teamId?: string): Promise<CSFileStream | undefined>;
+    async createFileStream(relativeUriOrPath: Uri | string, repoId: string, teamId?: string): Promise<CSFileStream | undefined> {
+        let relativePath;
+        if (typeof relativeUriOrPath === 'string') {
+            relativePath = relativeUriOrPath;
         }
         else {
-            url = uri.toString();
+            if (relativeUriOrPath.scheme === 'file') {
+                relativePath = relativeUriOrPath.path;
+                if (relativePath[0] === '/') {
+                    relativePath = relativePath.substr(1);
+                }
+            }
+            else {
+                relativePath = relativeUriOrPath.toString();
+            }
         }
 
         return (await this._api.createStream(this.token, {
             type: 'file',
-            teamId: teamId || this.teamId!,
+            teamId: teamId || this.teamId,
             repoId: repoId,
-            file: url
+            file: relativePath
         })).stream as CSFileStream;
     }
 
@@ -129,7 +136,7 @@ export class CodeStreamSessionApi {
     }
 
     async getMarker(markerId: string, teamId?: string): Promise<CSMarker> {
-        return (await this._api.getMarker(this.token, teamId!, markerId)).marker;
+        return (await this._api.getMarker(this.token, teamId || this.teamId, markerId)).marker;
     }
 
     async getMarkers(commitHash: string, stream: CSStream): Promise<CSMarker[]>;
@@ -144,7 +151,7 @@ export class CodeStreamSessionApi {
             streamId = streamOrStreamId.id;
             teamId = streamOrStreamId.teamId;
         }
-        return (await this._api.getMarkers(this.token, teamId!, streamId)).markers;
+        return (await this._api.getMarkers(this.token, teamId, streamId)).markers;
     }
 
     async getMarkerLocations(commitHash: string, stream: CSStream): Promise<CSMarkerLocations>;
@@ -159,7 +166,7 @@ export class CodeStreamSessionApi {
             streamId = streamOrStreamId.id;
             teamId = streamOrStreamId.teamId;
         }
-        return (await this._api.getMarkerLocations(this.token, teamId!, streamId, commitHash)).markerLocations;
+        return (await this._api.getMarkerLocations(this.token, teamId, streamId, commitHash)).markerLocations;
     }
 
     async getPosts(stream: CSStream): Promise<CSPost[]>;
@@ -168,7 +175,7 @@ export class CodeStreamSessionApi {
         let streamId;
         if (typeof streamOrStreamId === 'string') {
             streamId = streamOrStreamId;
-            teamId = teamId || this.teamId!;
+            teamId = teamId || this.teamId;
         }
         else {
             streamId = streamOrStreamId.id;
@@ -182,7 +189,7 @@ export class CodeStreamSessionApi {
     async getRepo(repoId: string, teamOrTeamId?: CSTeam | string): Promise<CSRepository | undefined> {
         let teamId;
         if (teamOrTeamId === undefined) {
-            teamId = this.teamId!;
+            teamId = this.teamId;
         }
         else if (typeof teamOrTeamId === 'string') {
             teamId = teamOrTeamId;
@@ -198,7 +205,7 @@ export class CodeStreamSessionApi {
     async getRepos(teamOrTeamId?: CSTeam | string): Promise<CSRepository[]> {
         let teamId;
         if (teamOrTeamId === undefined) {
-            teamId = this.teamId!;
+            teamId = this.teamId;
         }
         else if (typeof teamOrTeamId === 'string') {
             teamId = teamOrTeamId;
@@ -227,7 +234,7 @@ export class CodeStreamSessionApi {
         let repoId;
         if (typeof repoOrRepoId === 'string') {
             repoId = repoOrRepoId;
-            teamId = teamId || this.teamId!;
+            teamId = teamId || this.teamId;
         }
         else {
             repoId = repoOrRepoId.id;
@@ -245,10 +252,10 @@ export class CodeStreamSessionApi {
     }
 
     async getUser(userId: string, teamId?: string): Promise<CSUser | undefined> {
-        return (await this._api.getUser(this.token, teamId || this.teamId!, userId)).user;
+        return (await this._api.getUser(this.token, teamId || this.teamId, userId)).user;
     }
 
     async getUsers(teamId?: string): Promise<CSUser[]> {
-        return (await this._api.getUsers(this.token, teamId || this.teamId!)).users;
+        return (await this._api.getUsers(this.token, teamId || this.teamId)).users;
     }
 }

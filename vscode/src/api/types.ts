@@ -28,6 +28,8 @@ export interface CSPost extends CSEntity {
     codeBlocks?: {
         code: string;
         markerId: string;
+        file: string;
+        repoId: string;
     }[];
     commitHashWhenPosted?: string;
     repoId: string;

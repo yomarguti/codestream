@@ -47,15 +47,15 @@ export class Post extends CodeStreamItem<CSPost> {
 
         const block = this.entity.codeBlocks[0];
 
-        const marker = await this.session.api.getMarker(block.markerId);
-        if (marker === undefined) throw new Error(`Unable to find code block for Post(${this.entity.id})`);
+        const repo = await this.session.repos.get(block.repoId);
+        if (repo === undefined) throw new Error(`Unable to find code block for Post(${this.entity.id})`);
 
-        // TODO: Assuming the marker has the same repoId as the post -- probably not a great assumption
-        const markerStream = await this.getStream(marker.streamId);
-        if (markerStream.type !== 'file') throw new Error(`Unable to find code block for Post(${this.entity.id})`);
-        const uri = await markerStream.absoluteUri();
+        const uri = repo.normalizeUri(block.file);
 
-        const locations = await this.session.api.getMarkerLocations(this.entity.commitHashWhenPosted!, this.entity.streamId);
+        const markerStream = await repo.streams.getByUri(uri);
+        if (markerStream === undefined) throw new Error(`Unable to find code block for Post(${this.entity.id})`);
+
+        const locations = await this.session.api.getMarkerLocations(this.entity.commitHashWhenPosted!, markerStream.id);
         if (locations === undefined) throw new Error(`Unable to find code block for Post(${this.entity.id})`);
 
         const location = locations.locations[block.markerId];

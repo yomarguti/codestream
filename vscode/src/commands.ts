@@ -1,4 +1,4 @@
-import { commands, Disposable, MessageItem, Uri, window } from 'vscode';
+import { commands, Disposable, MessageItem, Range, TextDocument, Uri, window } from 'vscode';
 import { Post, Stream } from './api/session';
 import { BuiltInCommands, openEditor } from './common';
 import { TraceLevel } from './config';
@@ -53,6 +53,12 @@ function command(command: string, options: CommandOptions = {}): Function {
             options: options
         });
     };
+}
+
+export interface PostCodeCommandArgs {
+    document?: TextDocument;
+    range?: Range;
+    streamName?: string;
 }
 
 export class Commands extends Disposable {
@@ -148,7 +154,7 @@ export class Commands extends Disposable {
         if (streamOrUriOrName === undefined) return;
 
         Container.explorer.show();
-        return Container.streamWebView.openStream(streamOrUriOrName);
+        return Container.streamView.openStream(streamOrUriOrName);
     }
 
     @command('post', { showErrorMessage: 'Unable to post message' })
@@ -160,36 +166,45 @@ export class Commands extends Disposable {
     }
 
     @command('postCode', { showErrorMessage: 'Unable to add comment' })
-    async postCode() {
-        const editor = window.activeTextEditor;
-        if (editor === undefined) return undefined;
+    async postCode(args: PostCodeCommandArgs) {
+        let document;
+        let selection;
+        if (args.document === undefined || args.range === undefined) {
+            const editor = window.activeTextEditor;
+            if (editor === undefined) return undefined;
 
-        const selection = editor.selection;
-        if (selection.start.isEqual(selection.end)) return undefined;
+            document = editor.document;
+            selection = editor.selection;
+            if (selection.start.isEqual(selection.end)) return undefined;
+        }
+        else {
+            ({ document, range: selection } = args);
+        }
 
-        const uri = editor.document.uri;
+        if (document === undefined || selection === undefined) return undefined;
+
+        const uri = document.uri;
+
+        const repo = await Container.session.repos.getByFileUri(uri);
+        if (repo === undefined) throw new Error(`No repository could be found for Uri(${uri.toString()}`);
+
+        const stream = args.streamName === undefined
+            ? await Container.session.getDefaultTeamChannel()
+            : await Container.session.channels.getOrCreateByName(args.streamName);
 
         const authors = await Container.git.getFileAuthors(uri, {
             startLine: selection.start.line,
             endLine: selection.end.line,
-            contents: editor.document.isDirty ? editor.document.getText() : undefined
+            contents: document.isDirty ? document.getText() : undefined
         });
 
         const users = await Container.session.users.getByEmails(authors.map(a => a.email));
         const mentions = Iterables.join(Iterables.map(users, u => `@${u.name}`), ', ');
 
-        const message = await window.showInputBox({
-            prompt: 'Enter Comment',
-            placeHolder: 'Comment',
-            value: `${mentions ? `${mentions}: ` : ''}`
-        });
-        if (message === undefined) return;
+        const code = document.getText(selection);
+        const commitHash = await Container.git.getFileCurrentSha(document.uri);
 
-        const code = editor.document.getText(selection);
-        const commitHash = await Container.git.getFileCurrentSha(uri);
-
-        // Container.streamWebView._panel!._relay!.commentOnCode(uri.path, selection, code, mentions, commitHash);
-        return Container.session.postCode(message, uri, code, selection, commitHash);
+        return Container.streamView.postCode(stream, repo, repo.relativizeUri(uri), code, selection, commitHash, mentions);
     }
 
     @command('signIn', { customErrorHandling: true })

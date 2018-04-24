@@ -42,12 +42,26 @@ export class Repository extends CodeStreamItem<CSRepository> {
         return this.entity.normalizedUrl;
     }
 
-    normalizeUri(uri: Uri) {
-        return Uri.file(Strings.normalizePath(path.join(this._folder!.uri.fsPath, uri.fsPath)));
+    normalizeUri(relativeUri: Uri): Uri;
+    normalizeUri(relativePath: string): Uri;
+    normalizeUri(relativeUriOrPath: Uri | string) {
+        const relativePath = typeof relativeUriOrPath === 'string'
+            ? relativeUriOrPath
+            : relativeUriOrPath.fsPath;
+        return Uri.file(Strings.normalizePath(path.join(this._folder!.uri.fsPath, relativePath)));
     }
 
-    relativizeUri(uri: Uri) {
-        return Uri.file(Strings.normalizePath(path.relative(this._folder!.uri.fsPath, uri.fsPath)));
+    relativizeUri(absoluteUri: Uri): string;
+    relativizeUri(absolutePath: string): string;
+    relativizeUri(absoluteUriOrPath: Uri | string) {
+        const absolutePath = typeof absoluteUriOrPath === 'string'
+            ? absoluteUriOrPath
+            : absoluteUriOrPath.fsPath;
+        let relativePath = Strings.normalizePath(path.relative(this._folder!.uri.fsPath, absolutePath));
+        if (relativePath[0] === '/') {
+            relativePath = relativePath.substr(1);
+        }
+        return relativePath;
     }
 }
 
