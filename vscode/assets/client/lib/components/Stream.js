@@ -1168,7 +1168,8 @@ export class SimpleStream extends Component {
 				// for now, we assume this codeblock came from this buffer
 				// in the future we want to support commenting on codeBlocks
 				// from other files/buffers
-				streamId: id
+				file: selectedCode.file,
+				repoId: selectedCode.repoId
 			});
 		}
 
