@@ -17,6 +17,7 @@ export class SimpleUMIs extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {};
+		this.treatments = {};
 		// if (atom.packages.isPackageLoaded("tree-view"))
 		let treeView = atom.packages.getLoadedPackage("tree-view");
 		if (treeView) this.treeView = treeView.mainModule.getTreeViewInstance();
@@ -77,7 +78,7 @@ export class SimpleUMIs extends Component {
 
 	componentWillUnmount() {
 		// commented out for one-stream
-		// this.clearTreatments();
+		this.clearTreatments();
 		this.subscriptions.dispose();
 		const newCount = app.getBadgeCount() - this.totalCount;
 		app.setBadgeCount(newCount < 0 ? 0 : newCount);
@@ -129,7 +130,7 @@ export class SimpleUMIs extends Component {
 		let streamMap = swapHash(this.props.streams);
 
 		// commented out for one-stream
-		// this.clearTreatments();
+		this.clearTreatments();
 
 		let totalUMICount = 0;
 		let totalMentionsCount = 0;
