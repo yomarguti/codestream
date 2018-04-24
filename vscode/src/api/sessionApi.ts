@@ -5,7 +5,8 @@ import {
     CreatePostRequestCodeBlock,
     CSChannelStream, CSDirectStream, CSFileStream,
     CSMarker, CSMarkerLocations,
-    CSPost, CSRepository, CSStream, CSTeam, CSUser
+    CSPost, CSRepository, CSStream, CSTeam, CSUser,
+    StreamType
 } from './api';
 import { Container } from '../container';
 import { GitRepository } from '../git/git';
@@ -29,12 +30,12 @@ export class CodeStreamSessionApi {
 
     async createPostWithCode(text: string, code: string, range: Range, commitHash: string, fileStream: string | { file: string, repoId: string }, streamId: string, teamId?: string): Promise<CSPost | undefined> {
         const codeBlock: CreatePostRequestCodeBlock = {
-                code: code,
-                location: [
-                    range.start.line,
-                    range.start.character,
-                    range.end.line,
-                    range.end.character
+            code: code,
+            location: [
+                range.start.line,
+                range.start.character,
+                range.end.line,
+                range.end.character
             ]
         };
 
@@ -73,11 +74,10 @@ export class CodeStreamSessionApi {
         })).stream as CSChannelStream;
     }
 
-    async createDirectStream(name: string, membership: string[], teamId?: string): Promise<CSDirectStream | undefined> {
+    async createDirectStream(membership: string[], teamId?: string): Promise<CSDirectStream | undefined> {
         return (await this._api.createStream(this.token, {
             type: 'direct',
             teamId: teamId || this.teamId,
-            name: name,
             memberIds: membership
         })).stream as CSDirectStream;
     }
@@ -232,11 +232,11 @@ export class CodeStreamSessionApi {
     }
 
     async getChannelStreams(teamId?: string): Promise<CSChannelStream[]> {
-        return (await this._api.getStreams<CSChannelStream>(this.token, teamId || this.teamId)).streams;
+        return (await this._api.getStreams<CSChannelStream>(this.token, teamId || this.teamId)).streams.filter(s => s.type === StreamType.Channel);
     }
 
     async geDirectStreams(teamId?: string): Promise<CSDirectStream[]> {
-        return (await this._api.getStreams<CSDirectStream>(this.token, teamId || this.teamId)).streams;
+        return (await this._api.getStreams<CSDirectStream>(this.token, teamId || this.teamId)).streams.filter(s => s.type === StreamType.Direct);
     }
 
     async getFileStreams(repo: CSRepository): Promise<CSFileStream[]>;

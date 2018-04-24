@@ -42,8 +42,7 @@ export class CodeStreamMarkerDecorationProvider extends Disposable {
     }
 
     async provideDecorations(editor: TextEditor /*, token: CancellationToken */): Promise<DecorationOptions[]> {
-        const session = Container.session;
-        const markers = await session.getMarkers(editor.document.uri);
+        const markers = await Container.session.getMarkers(editor.document.uri);
         if (markers === undefined) return [];
 
         const decorations: DecorationOptions[] = [];

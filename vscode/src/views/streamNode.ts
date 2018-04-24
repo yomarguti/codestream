@@ -4,7 +4,6 @@ import { CodeStreamSession, Stream, StreamType } from '../api/session';
 // import { Container } from '../container';
 import { ExplorerNode, ResourceType } from './explorerNode';
 // import { PostNode } from './postNode';
-import { Iterables } from '../system';
 
 export class StreamNode extends ExplorerNode {
 
@@ -29,7 +28,7 @@ export class StreamNode extends ExplorerNode {
     async getTreeItem(): Promise<TreeItem> {
         // this.unsubscribe();
 
-        const item = new TreeItem(await this.getLabel(), TreeItemCollapsibleState.None);
+        const item = new TreeItem(await this.stream.label(), TreeItemCollapsibleState.None);
         item.contextValue = this.getContextValue();
         item.command = {
             title: 'Open Stream',
@@ -53,14 +52,6 @@ export class StreamNode extends ExplorerNode {
             case StreamType.Channel: return ResourceType.Channel;
             case StreamType.Direct: return ResourceType.DirectMessage;
             case StreamType.File: return ResourceType.FileStream;
-        }
-    }
-
-    private async getLabel() {
-        switch (this.stream.type) {
-            case StreamType.Channel: return this.stream.name;
-            case StreamType.Direct: return Iterables.join(Iterables.map(await this.stream.members(), u => u.name), ', ');
-            case StreamType.File: return this.stream.path;
         }
     }
 }

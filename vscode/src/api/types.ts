@@ -23,10 +23,10 @@ export interface CSMarkerLocations {
 }
 
 export interface CSCodeBlock {
-        code: string;
-        markerId: string;
-        file: string;
-        repoId: string;
+    code: string;
+    markerId: string;
+    file: string;
+    repoId: string;
     streamId?: string;
 }
 
@@ -155,7 +155,6 @@ export interface CreateFileStreamRequest {
 export interface CreateDirectStreamRequest {
     teamId: string;
     type: 'direct';
-    name: string;
     memberIds: string[];
 }
 

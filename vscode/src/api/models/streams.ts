@@ -77,6 +77,10 @@ export class ChannelStream extends StreamBase<CSChannelStream> {
         return this.entity.name;
     }
 
+    label() {
+        return this.entity.name;
+    }
+
     @memoize
     async members(): Promise<Iterable<User> | undefined> {
         if (this.entity.memberIds === undefined) return undefined;
@@ -96,8 +100,13 @@ export class DirectStream extends StreamBase<CSDirectStream> {
         super(session, stream);
     }
 
-    get name() {
-        return this.entity.name;
+    @memoize
+    async label() {
+        return Iterables.join(Iterables.map(await this.members(), u => u.name), ', ');
+    }
+
+    get memberIds(): string[] {
+        return this.entity.memberIds;
     }
 
     @memoize
@@ -147,6 +156,10 @@ export class FileStream extends StreamBase<CSFileStream> {
         if (uri.scheme) return uri;
 
         return repo.normalizeUri(Uri.file(this.path));
+    }
+
+    label() {
+        return this.entity.file;
     }
 
     @memoize
@@ -200,7 +213,7 @@ export class ChannelStreamCollection extends StreamCollectionBase<ChannelStream,
     }
 
     async getOrCreateByName(name: string, creationOptions: { membership?: 'auto' | string[] } = {}): Promise<ChannelStream> {
-        const stream = Iterables.find(await this.items(), s => s.name === name);
+        const stream = await this.getByName(name);
         if (stream !== undefined) return stream;
 
         const s = await this.session.api.createChannelStream(name, creationOptions.membership, this.teamId);
@@ -227,15 +240,16 @@ export class DirectStreamCollection extends StreamCollectionBase<DirectStream, C
         super(session, teamId);
     }
 
-    async getByName(name: string): Promise<DirectStream | undefined> {
-        return Iterables.find(await this.items(), s => s.name === name);
+    async getByMembers(memberIds: string[]): Promise<DirectStream | undefined> {
+        const members = new Set(memberIds);
+        return Iterables.find(await this.items(), s => s.memberIds.some(m => members.has(m)));
     }
 
-    async getOrCreateByName(name: string, creationOptions: { membership: string[] }): Promise<DirectStream> {
-        const stream = Iterables.find(await this.items(), s => s.name === name);
+    async getOrCreateByMembers(memberIds: string[]): Promise<DirectStream> {
+        const stream = await this.getByMembers(memberIds);
         if (stream !== undefined) return stream;
 
-        const s = await this.session.api.createDirectStream(name, creationOptions.membership, this.teamId);
+        const s = await this.session.api.createDirectStream(memberIds, this.teamId);
         if (s === undefined) throw new Error(`Unable to create stream`);
 
         return new DirectStream(this.session, s);
@@ -277,12 +291,10 @@ export class FileStreamCollection extends StreamCollectionBase<FileStream, CSFil
     }
 
     async getOrCreateByUri(uri: Uri): Promise<FileStream> {
-        if (uri.scheme !== 'file') throw new Error(`Uri must be a file`);
+        const stream = await this.getByUri(uri);
+        if (stream !== undefined) return stream;
 
         const relativePath = this.repo.relativizeUri(uri);
-
-        const stream = Iterables.find(await this.items(), s => s.path === relativePath);
-        if (stream !== undefined) return stream;
 
         const s = await this.session.api.createFileStream(relativePath, this.repo.id);
         if (s === undefined) throw new Error(`Unable to create stream`);
