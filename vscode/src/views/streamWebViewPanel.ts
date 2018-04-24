@@ -1,7 +1,7 @@
 'use strict';
 import { commands, Disposable, Event, EventEmitter, Range, ViewColumn, Webview, WebviewPanel, WebviewPanelOnDidChangeViewStateEvent, window } from 'vscode';
 import { CSPost, CSRepository, CSStream, CSTeam, CSUser } from '../api/api';
-import { CodeStreamSession, Post, PostsReceivedEvent, Stream } from '../api/session';
+import { CodeStreamSession, Post, PostsReceivedEvent, SessionChangedEvent, SessionChangedType, Stream } from '../api/session';
 import { Container } from '../container';
 import * as fs from 'fs';
 import { Logger } from '../logger';
@@ -81,7 +81,7 @@ class MessageRelay extends Disposable {
                         else {
                             post = await this._stream.post(text);
                         }
-                            if (post === undefined) return;
+                        if (post === undefined) return;
 
                         this.postMessage({
                             type: 'action-response',
@@ -144,6 +144,7 @@ export class StreamWebviewPanel extends Disposable {
 
         this._disposable = Disposable.from(
             session.onDidReceivePosts(this.onPostsReceived, this),
+            session.onDidChange(this.onDataChanged, this),
             this._panel.onDidChangeViewState(this.onPanelViewStateChanged, this),
             this._panel.onDidDispose(this.onPanelDisposed, this)
         );
@@ -161,6 +162,20 @@ export class StreamWebviewPanel extends Disposable {
             body: {
                 type: 'posts',
                 payload: e.getPosts().map(post => ({ ...post.entity }))
+            }
+        });
+    }
+
+    private onDataChanged(e: SessionChangedEvent) {
+        if (this._relay === undefined) return;
+
+        if (e.type !== SessionChangedType.Streams) return;
+
+        this._relay.postMessage({
+            type: 'push-data',
+            body: {
+                type: e.type,
+                payload: e.getStreams().map(s => ({ ...s.entity }))
             }
         });
     }
@@ -206,7 +221,8 @@ export class StreamWebviewPanel extends Disposable {
     async setStream(stream: Stream) {
         if (this._stream && this._stream.id === stream.id) return this.show();
 
-        this._panel.title = `CodeStream \u2022 ${stream.name}`;
+        const label = await stream.label();
+        this._panel.title = `CodeStream \u2022 ${label}`;
         this._stream = stream;
 
         if (this._relay === undefined) {
