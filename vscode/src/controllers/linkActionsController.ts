@@ -20,8 +20,7 @@ export class LinkActionsController extends Disposable {
     private async onSessionPostsReceived(e: PostsReceivedEvent) {
         // const currentUserId = Container.session.user.id;
 
-        for (const post of e.getPosts()) {
-            // if (post.senderId === currentUserId) continue;
+        for (const post of e.items()) {
 
             const match = codestreamRegex.exec(post.text);
             if (match == null) continue;

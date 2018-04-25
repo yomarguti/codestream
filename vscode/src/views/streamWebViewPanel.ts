@@ -144,7 +144,7 @@ export class StreamWebviewPanel extends Disposable {
 
         this._disposable = Disposable.from(
             session.onDidReceivePosts(this.onPostsReceived, this),
-            session.onDidChange(this.onDataChanged, this),
+            session.onDidChange(this.onSessionChanged, this),
             this._panel.onDidChangeViewState(this.onPanelViewStateChanged, this),
             this._panel.onDidDispose(this.onPanelDisposed, this)
         );
@@ -161,23 +161,26 @@ export class StreamWebviewPanel extends Disposable {
             type: 'push-data',
             body: {
                 type: 'posts',
-                payload: e.getPosts().map(post => ({ ...post.entity }))
+                payload: e.entities()
             }
         });
     }
 
-    private onDataChanged(e: SessionChangedEvent) {
+    private onSessionChanged(e: SessionChangedEvent) {
         if (this._relay === undefined) return;
 
-        if (e.type !== SessionChangedType.Streams) return;
-
-        this._relay.postMessage({
-            type: 'push-data',
-            body: {
-                type: e.type,
-                payload: e.getStreams().map(s => ({ ...s.entity }))
-            }
-        });
+        switch (e.type) {
+            case SessionChangedType.Streams:
+            case SessionChangedType.Repositories:
+                this._relay.postMessage({
+                    type: 'push-data',
+                    body: {
+                        type: e.type,
+                        payload: e.entities()
+                    }
+                });
+                break;
+        }
     }
 
     is(stream: Stream) {

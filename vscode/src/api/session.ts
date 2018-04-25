@@ -1,6 +1,6 @@
 'use strict';
 import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, Range, Uri } from 'vscode';
-import { CodeStreamApi, LoginResponse } from './api';
+import { CodeStreamApi, CSRepository, CSStream, LoginResponse } from './api';
 import { configuration } from '../configuration';
 import { Container } from '../container';
 import { CodeStreamSessionApi } from './sessionApi';
@@ -71,8 +71,12 @@ export class PostsReceivedEvent {
         return affects(this._event.posts, id, type);
     }
 
+    entities() {
+        return this._event.posts;
+    }
+
     @memoize
-    getPosts() {
+    items() {
         return this._event.posts.map(p => new Post(this.session, p));
     }
 
@@ -89,8 +93,6 @@ export enum SessionChangedType {
 
 export interface GitChangedEvent extends IMergeableEvent<GitChangedEvent> {
     readonly type: SessionChangedType.Git;
-    // affects(type: 'repo' | 'team', id: string): boolean;
-    // getStreams(): Stream[];
     merge: (e: GitChangedEvent) => void;
 }
 
@@ -110,7 +112,12 @@ export class RepositoriesAddedEvent implements IMergeableEvent<RepositoriesAdded
         return affects(this._event.repos, id, type);
     }
 
-    getRepositories(): Repository[] {
+    entities(): CSRepository[] {
+        return this._event.repos;
+    }
+
+    @memoize
+    items(): Repository[] {
         return this._event.repos.map(r => new Repository(this.session, r));
     }
 
@@ -135,7 +142,12 @@ export class StreamsAddedEvent implements IMergeableEvent<StreamsAddedEvent> {
         return affects(this._event.streams, id, type);
     }
 
-    getStreams(): Stream[] {
+    entities(): CSStream[] {
+        return this._event.streams;
+    }
+
+    @memoize
+    items(): Stream[] {
         return this._event.streams.map(s => {
             switch (s.type) {
                 case StreamType.Channel:
