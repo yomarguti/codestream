@@ -1,7 +1,4 @@
 {
-    // "extends": [
-    //     "tslint-no-circular-imports"
-    // ],
     "rules": {
         "adjacent-overload-signatures": true,
         "array-type": [

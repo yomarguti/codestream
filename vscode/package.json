@@ -257,8 +257,8 @@
         "lint": "tslint --project tsconfig.json",
         "watch": "tsc -w -p ./",
         "pack": "vsce package",
-        "webview-bundle":  "pushd \"./assets/client\" && npm install --no-save && npm run vscode-bundle && popd",
-        "webview-build-css":  "pushd \"./assets/client\" && npm run vscode-build-css && popd",
+        "webview-bundle": "pushd \"./assets/client\" && npm install --no-save && npm run vscode-bundle && popd",
+        "webview-build-css": "pushd \"./assets/client\" && npm run vscode-build-css && popd",
 
         "postinstall": "node ./node_modules/vscode/bin/install",
         "vscode:prepublish": "npm run build"
@@ -277,7 +277,6 @@
         "@types/pubnub": "4.0.2",
         "@types/tmp": "0.0.33",
         "tslint": "5.9.1",
-        "tslint-no-circular-imports": "0.3.0",
         "typescript": "2.8.3",
         "vscode": "1.1.14"
     }
