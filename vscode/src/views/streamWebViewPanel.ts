@@ -222,7 +222,7 @@ export class StreamWebviewPanel extends Disposable {
         if (this._stream && this._stream.id === stream.id) return this.show();
 
         const label = await stream.label();
-        this._panel.title = `CodeStream \u2022 ${label}`;
+        this._panel.title = `${label} \u00a0\u2022\u00a0 CodeStream`;
         this._stream = stream;
 
         if (this._relay === undefined) {
