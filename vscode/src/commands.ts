@@ -207,6 +207,11 @@ export class Commands extends Disposable {
         return Container.streamView.postCode(stream, repo, repo.relativizeUri(uri), code, selection, commitHash, mentions);
     }
 
+    @command('show')
+    show() {
+        return commands.executeCommand('workbench.view.extension.codestream');
+    }
+
     @command('signIn', { customErrorHandling: true })
     signIn() {
         return this.signInCore(Container.config.username, Container.config.password, Container.config.teamId);

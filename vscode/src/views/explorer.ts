@@ -142,6 +142,6 @@ export class CodeStreamExplorer extends Disposable implements TreeDataProvider<E
     }
 
     show() {
-        return commands.executeCommand('workbench.view.extension.codestream');
+        return commands.executeCommand('codestream.show');
     }
 }

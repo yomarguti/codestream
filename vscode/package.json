@@ -115,6 +115,11 @@
                 "category": "CodeStream"
             },
             {
+                "command": "codestream.show",
+                "title": "Show CodeStream",
+                "category": "CodeStream"
+            },
+            {
                 "command": "codestream.openStream",
                 "title": "Open Stream",
                 "category": "CodeStream"
@@ -166,6 +171,10 @@
                 {
                     "command": "codestream.openPostFileRevision",
                     "when": "false"
+                },
+                {
+                    "command": "codestream.show",
+                    "when": "codestream:status == signedIn"
                 },
                 {
                     "command": "codestream.openStream",
