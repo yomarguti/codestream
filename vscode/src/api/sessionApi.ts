@@ -235,7 +235,7 @@ export class CodeStreamSessionApi {
         return (await this._api.getStreams<CSChannelStream>(this.token, teamId || this.teamId)).streams.filter(s => s.type === StreamType.Channel);
     }
 
-    async geDirectStreams(teamId?: string): Promise<CSDirectStream[]> {
+    async getDirectStreams(teamId?: string): Promise<CSDirectStream[]> {
         return (await this._api.getStreams<CSDirectStream>(this.token, teamId || this.teamId)).streams.filter(s => s.type === StreamType.Direct);
     }
 

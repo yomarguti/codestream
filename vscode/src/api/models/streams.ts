@@ -256,7 +256,7 @@ export class DirectStreamCollection extends StreamCollectionBase<DirectStream, C
     }
 
     protected async fetch() {
-        return this.session.api.geDirectStreams();
+        return this.session.api.getDirectStreams();
     }
 
     protected fetchMapper(e: CSDirectStream) {
