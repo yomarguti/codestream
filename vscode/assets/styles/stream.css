@@ -1,3 +1,12 @@
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+#app {
+  height: inherit;
+  width: inherit;
+}
 .codestream [contenteditable="true"]:empty:before {
   content: attr(placeholder);
   opacity: 0.5;
@@ -569,15 +578,6 @@
     left: 100%;
   }
 }
-html,
-body {
-  height: 100%;
-  overflow: hidden;
-}
-#app {
-  height: inherit;
-  width: inherit;
-}
 .codestream .stream .compose {
   display: block;
   width: 100%;
@@ -606,6 +606,6 @@ body {
 .codestream .stream .post .headshot-gravatar {
   padding-top: 3px;
 }
-.codestream .stream .postlist {
+.codestream .stream .postslist {
   max-height: calc(100% - 5em);
 }

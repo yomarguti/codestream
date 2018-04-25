@@ -257,10 +257,11 @@
         "lint": "tslint --project tsconfig.json",
         "watch": "tsc -w -p ./",
         "pack": "vsce package",
+        "webview-bundle":  "pushd \"./assets/client\" && npm install --no-save && npm run vscode-bundle && popd",
+        "webview-build-css":  "pushd \"./assets/client\" && npm run vscode-build-css && popd",
+
         "postinstall": "node ./node_modules/vscode/bin/install",
-        "vscode:prepublish": "npm run build",
-        "build-client":  "pushd \"./assets/client\" && npm install --no-save && npm run bundle && popd",
-        "build-css":  "pushd \"./assets/client\" && npm run build-css && popd"
+        "vscode:prepublish": "npm run build"
     },
     "dependencies": {
         "lodash.debounce": "4.0.8",

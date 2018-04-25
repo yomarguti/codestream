@@ -12,8 +12,8 @@
 		"atom": ">=1.0.0 <2.0.0"
 	},
 	"scripts": {
-		"bundle":  "rollup -c",
-		"build-css": "lessc ./styles/stream.less ./../styles/stream.css",
+		"vscode-bundle":  "rollup -c && npm run vscode-build-css",
+		"vscode-build-css": "lessc ./styles/vscode-stream.less ./../styles/stream.css",
 		"prettify": "prettier --config .prettierrc --write ./{lib,spec}/*.js ./{lib,spec}/**/*.js ./package.json ./.prettierrc"
 	},
 	"deserializers": {
