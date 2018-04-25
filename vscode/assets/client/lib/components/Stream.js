@@ -1177,7 +1177,7 @@ export class SimpleStream extends Component {
 		const editor = this.context.platform.getActiveEditor();
 		const editorText = editor ? editor.getText() : '';
 
-		createPost(this.props.id, threadId, newText, codeBlocks, mentionUserIds, editorText, selectedCode.commitHash, {
+		createPost(this.props.id, threadId, newText, codeBlocks, mentionUserIds, editorText, selectedCode && selectedCode.commitHash, {
 			autoMentions: this.state.autoMentioning
 		});
 

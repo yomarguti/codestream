@@ -61,10 +61,13 @@ class MessageRelay extends Disposable {
                 switch (body.action) {
                     case 'post':
                         const { text, codeBlocks, commitHashWhenPosted } = body.params;
-                        const block = codeBlocks[0];
 
                         let post;
-                        if (codeBlocks) {
+                        if (codeBlocks === undefined || codeBlocks.length === 0) {
+                            post = await this._stream.post(text);
+                        }
+                        else {
+                            const block = codeBlocks[0];
                             let markerStream;
                             if (block.streamId === undefined) {
                                 markerStream = {
@@ -78,9 +81,7 @@ class MessageRelay extends Disposable {
 
                             post = await this._stream.postCode(text, block.code, createRange(block.location), commitHashWhenPosted, markerStream);
                         }
-                        else {
-                            post = await this._stream.post(text);
-                        }
+
                         if (post === undefined) return;
 
                         this.postMessage({
