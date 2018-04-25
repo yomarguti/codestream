@@ -29,6 +29,12 @@ export class RepositoryNode extends SubscribableExplorerNode {
 
         const item = new TreeItem(this.repository.url, TreeItemCollapsibleState.Collapsed);
         item.contextValue = ResourceType.Repository;
+
+        item.iconPath = {
+            dark: Container.context.asAbsolutePath(`assets/images/dark/repository.svg`),
+            light: Container.context.asAbsolutePath(`assets/images/light/repository.svg`)
+        };
+
         // item.command = {
         //     title: 'Open Stream',
         //     command: 'codestream.openStream',
@@ -36,6 +42,7 @@ export class RepositoryNode extends SubscribableExplorerNode {
         //         Iterables.first(await this.repository.streams.items)
         //     ]
         // };
+
         return item;
     }
 
