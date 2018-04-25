@@ -1,8 +1,9 @@
 'use strict';
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { CodeStreamSession, User } from '../api/session';
-import { ExplorerNode, ResourceType } from './explorerNode';
+import { OpenStreamCommandArgs } from '../commands';
 import { Container } from '../container';
+import { ExplorerNode, ResourceType } from './explorerNode';
 
 export class UserNode extends ExplorerNode {
 
@@ -26,6 +27,18 @@ export class UserNode extends ExplorerNode {
         item.id = this.id;
         item.contextValue = ResourceType.User;
         item.iconPath = Container.context.asAbsolutePath(`assets/images/presence-online.svg`);
+
+        item.command = {
+            title: 'Open Stream',
+            command: 'codestream.openStream',
+            arguments: [
+                {
+                    searchBy: [this.session.userId, this.user.id],
+                    autoCreate: true
+                } as OpenStreamCommandArgs
+            ]
+        };
+
         return item;
     }
 }
