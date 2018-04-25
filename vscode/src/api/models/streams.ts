@@ -78,7 +78,7 @@ export class ChannelStream extends StreamBase<CSChannelStream> {
     }
 
     label() {
-        return this.entity.name;
+        return `#${this.entity.name}`;
     }
 
     @memoize
@@ -102,7 +102,10 @@ export class DirectStream extends StreamBase<CSDirectStream> {
 
     @memoize
     async label() {
-        return Iterables.join(Iterables.map(await this.members(), u => u.name), ', ');
+        const label = Iterables.join(Iterables.map(await this.members(), u => u.name), ', ');
+        if (!label && this.entity.memberIds.includes(this.session.userId)) return `${this.session.user.name} (you)`;
+
+        return label;
     }
 
     get memberIds(): string[] {
@@ -111,7 +114,7 @@ export class DirectStream extends StreamBase<CSDirectStream> {
 
     @memoize
     async members(excludeSelf: boolean = true): Promise<Iterable<User>> {
-        return this.session.users.filter(u => this.entity.memberIds.includes(u.id) && (!excludeSelf || u.id !== this.session.userId));
+        return this.session.users.filter(u => !(excludeSelf && u.id === this.session.userId) && this.entity.memberIds.includes(u.id));
     }
 }
 
@@ -241,8 +244,12 @@ export class DirectStreamCollection extends StreamCollectionBase<DirectStream, C
     }
 
     async getByMembers(memberIds: string[]): Promise<DirectStream | undefined> {
-        const members = new Set(memberIds);
-        return Iterables.find(await this.items(), s => s.memberIds.some(m => members.has(m)));
+        const sortedMembers = memberIds.sort();
+        return Iterables.find(await this.items(), s => {
+            return s.memberIds.sort().every((value, index) => {
+                return value === sortedMembers[index];
+            });
+        });
     }
 
     async getOrCreateByMembers(memberIds: string[]): Promise<DirectStream> {
