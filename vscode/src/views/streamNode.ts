@@ -3,7 +3,7 @@ import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { CodeStreamSession, Stream, StreamType } from '../api/session';
 import { OpenStreamCommandArgs } from '../commands';
 import { ExplorerNode, ResourceType } from './explorerNode';
-// import { PostNode } from './postNode';
+import { Container } from '../container';
 
 export class StreamNode extends ExplorerNode {
 
@@ -20,15 +20,15 @@ export class StreamNode extends ExplorerNode {
 
     async getChildren(): Promise<ExplorerNode[]> {
         return [];
-        // this.subscribe();
-
-        // return [...await this.stream.posts.map(p => new PostNode(this.session, p))];
     }
 
     async getTreeItem(): Promise<TreeItem> {
-        // this.unsubscribe();
+        let label = await this.stream.label();
+        if (label[0] === '#') {
+            label = label.substr(1);
+        }
 
-        const item = new TreeItem(await this.stream.label(), TreeItemCollapsibleState.None);
+        const item = new TreeItem(label, TreeItemCollapsibleState.None);
         item.contextValue = this.getContextValue();
         item.command = {
             title: 'Open Stream',
@@ -39,15 +39,15 @@ export class StreamNode extends ExplorerNode {
                 } as OpenStreamCommandArgs
             ]
         };
+
+        if (this.stream.type === StreamType.Channel) {
+            item.iconPath = {
+                dark: Container.context.asAbsolutePath(`assets/images/dark/channel.svg`),
+                light: Container.context.asAbsolutePath(`assets/images/light/channel.svg`)
+            };
+        }
         return item;
     }
-    // protected subscribe() {
-    //     this.subscriptions.push(this.stream.posts.onDidChange(this.onChanged, this));
-    // }
-
-    // private onChanged() {
-    //     Container.explorer.refreshNode(this);
-    // }
 
     private getContextValue() {
         switch (this.stream.type) {
