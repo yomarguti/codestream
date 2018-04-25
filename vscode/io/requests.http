@@ -1,0 +1,62 @@
+# @name login
+PUT {{baseUrl}}/no-auth/login
+Content-Type: application/json
+
+{
+    "email": "{{user}}",
+    "password": "{{pwd}}"
+}
+
+### GET Teams
+# @name teams
+GET {{baseUrl}}/teams?ids={{login.response.body.$.teams[0]._id}},{{login.response.body.$.teams[1]._id}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+### GET Users
+# @name users
+GET {{baseUrl}}/users?teamId={{login.response.body.$.teams[1]._id}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+### GET Repos
+# @name repos
+GET {{baseUrl}}/repos?teamId={{login.response.body.$.teams[1]._id}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+### GET Team Streams
+# @name streams
+GET {{baseUrl}}/streams?teamId={{login.response.body.$.teams[1]._id}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+### GET Posts
+# @name posts
+GET {{baseUrl}}/posts?teamId={{login.response.body.$.teams[1]._id}}&streamId={{streams.response.body.$.streams[0]._id}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+### GET Repo Streams
+# @name repoStreams
+GET {{baseUrl}}/streams?teamId={{login.response.body.$.teams[1]._id}}&repoId={{repos.response.body.$.repos[0]._id}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+### GET Markers
+# @name markers
+GET {{baseUrl}}/markers?teamId={{login.response.body.$.teams[1]._id}}&streamId={{repoStreams.response.body.$.streams[0]._id}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+PUT ((baseUrl}}/editing
+
+{
+    file: string;
+    repoId: string;
+    streamId: string;
+    teamId: string;
+    editing: {
+        commitHash: string;
+    } | false;
+}

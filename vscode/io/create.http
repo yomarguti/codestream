@@ -1,0 +1,94 @@
+### POST Register Alice
+# @name alice
+POST {{baseUrl}}/no-auth/register
+Content-Type: application/json
+
+{
+	"username": "Alice",
+	"email": "eric+alice@codestream.com",
+	"password": "foobarbaz"
+}
+
+### POST Confirm Alice
+
+POST {{baseUrl}}/no-auth/confirm
+Content-Type: application/json
+
+{
+	"userId": "{{alice.response.body.user._id}}",
+	"email": "eric+alice@codestream.com",
+	"confirmationCode": "055872"
+}
+
+### POST Add Alice to Team
+@aliceToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI1YWRkZmEyYmUxNmUwNzMwZjQ2YmY0YzQiLCJpYXQiOjE1MjQ0OTcyMTV9.hB-CltMc9Y_iU0OpYI2wflno08yeoDUdLn8ttIN3fPo
+
+POST {{baseUrl}}/repos
+Content-Type: application/json
+Authorization: Bearer {{aliceToken}}
+
+{
+    "url": "https://github.com/eamodio/vscode-gitlens.git",
+    "firstCommitHash": "53bebc89f2523a56f28fc8aecea2a903beb27b5e"
+}
+
+### POST Register Bob
+# @name bob
+POST {{baseUrl}}/no-auth/register
+Content-Type: application/json
+
+{
+	"username": "Bob",
+	"email": "eric+bob@codestream.com",
+	"password": "foobarbaz"
+}
+
+### POST Confirm Bob
+
+POST {{baseUrl}}/no-auth/confirm
+Content-Type: application/json
+
+{
+	"userId": "{{bob.response.body.user._id}}",
+	"email": "eric+bob@codestream.com",
+	"confirmationCode": "253136"
+}
+
+### POST Add Bob to Team
+
+@bobToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI1YWRkZmUwYWUxNmUwNzMwZjQ2YmY0YzUiLCJpYXQiOjE1MjQ0OTc5NDd9.vxK1n2x6lW46Tq7Q5-VUzRgCsRk4ROGDu5RvMNArhx8
+
+POST {{baseUrl}}/repos
+Content-Type: application/json
+Authorization: Bearer {{bobToken}}
+
+{
+    "url": "https://github.com/eamodio/vscode-gitlens.git",
+    "firstCommitHash": "53bebc89f2523a56f28fc8aecea2a903beb27b5e"
+}
+
+### POST Repo & Team
+POST {{baseUrl}}/repos
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "url": "https://github.com/eamodio/vscode-gitlens.git",
+    "firstCommitHash": "53bebc89f2523a56f28fc8aecea2a903beb27b5e",
+    "team": {
+        "name": "GitLens"
+    }
+}
+
+### POST Add Members to Team
+POST {{baseUrl}}/repos
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "url": "https://github.com/eamodio/vscode-gitlens.git",
+    "firstCommitHash": "53bebc89f2523a56f28fc8aecea2a903beb27b5e",
+    "team": {
+        "name": "GitLens"
+    }
+}
