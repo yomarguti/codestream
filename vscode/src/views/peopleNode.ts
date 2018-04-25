@@ -2,7 +2,9 @@
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { CodeStreamSession } from '../api/session';
 import { ExplorerNode, ResourceType } from './explorerNode';
+import { StreamNode } from './streamNode';
 import { UserNode } from './userNode';
+import { Iterables } from '../system';
 
 export class PeopleNode extends ExplorerNode {
 
@@ -23,7 +25,12 @@ export class PeopleNode extends ExplorerNode {
         users.sort((a, b) => ((a.id === currentUserId ? -1 : 1) - (b.id === currentUserId ? -1 : 1)) ||
             a.name.localeCompare(b.name));
 
-        return users.map(u => new UserNode(this.session, u));
+        const children: (StreamNode | UserNode)[] = users.map(u => new UserNode(this.session, u));
+        // Add any group DMs to the "people" list
+        const groups = await this.session.directMessages.filter(dm => dm.memberIds.length > 2);
+        children.push(...Iterables.map(groups, dm => new StreamNode(this.session, dm)));
+
+        return children;
     }
 
     getTreeItem(): TreeItem {
