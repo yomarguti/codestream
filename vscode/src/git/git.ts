@@ -139,13 +139,13 @@ export class Git extends Disposable {
 
         let data;
         try {
-            data = await git({ cwd: repoPath }, 'rev-list', '--max-parents=0', '--reverse', 'master');
+            data = await git({ cwd: repoPath }, 'rev-list', '--max-parents=0', '--reverse', 'master', '--');
         }
         catch { }
 
         if (!data) {
             try {
-                data = await git({ cwd: repoPath }, 'rev-list', '--max-parents=0', '--reverse', 'HEAD');
+                data = await git({ cwd: repoPath }, 'rev-list', '--max-parents=0', '--reverse', 'HEAD', '--');
             }
             catch { }
         }
