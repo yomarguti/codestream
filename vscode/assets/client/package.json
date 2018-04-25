@@ -12,8 +12,8 @@
 		"atom": ">=1.0.0 <2.0.0"
 	},
 	"scripts": {
-		"prettify":
-			"prettier --config .prettierrc --write ./{lib,spec}/*.js ./{lib,spec}/**/*.js ./package.json ./.prettierrc"
+		"bundle":  "rollup -c",
+		"prettify": "prettier --config .prettierrc --write ./{lib,spec}/*.js ./{lib,spec}/**/*.js ./package.json ./.prettierrc"
 	},
 	"deserializers": {
 		"codestream/CodestreamView": "deserializeCodestreamView"
@@ -85,6 +85,7 @@
 		"enzyme-adapter-react-16": "^1.0.2",
 		"prettier": "^1.7.4",
 		"redux-mock-store": "^1.4.0",
+		"rollup": "0.58.2",
 		"rollup-plugin-babel": "^3.0.3",
 		"rollup-plugin-commonjs": "^9.1.0",
 		"rollup-plugin-node-resolve": "^3.3.0",
