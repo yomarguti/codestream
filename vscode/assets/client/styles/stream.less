@@ -38,7 +38,7 @@
 			color: #fff;
 		}
 		.new-messages-below:hover {
-			background-color: lighten(@background-color-info, 5%);
+			background-color: @background-color-info--lighten-05;
 		}
 
 		.edit-post {
@@ -551,7 +551,7 @@
 		}
 
 		.post:hover {
-			background: lighten(@app-background-color, 3%);
+			background: @app-background-color--lighten-03;
 			.icon-gear {
 				display: block;
 			}
@@ -599,7 +599,7 @@
 			}
 		}
 		.logo {
-			color: lighten(@text-color-subtle, 50%);
+			color: @text-color-subtle--lighten-50;
 			// color: #fff;
 			transform: perspective(600px) rotateX(60deg) rotateZ(30deg);
 			text-shadow: 5px 10px 30px rgba(127, 127, 127, 0.5);
@@ -678,3 +678,5 @@
 		left: 100%;
 	}
 }
+
+@import "vscode";

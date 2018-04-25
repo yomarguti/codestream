@@ -259,7 +259,8 @@
         "pack": "vsce package",
         "postinstall": "node ./node_modules/vscode/bin/install",
         "vscode:prepublish": "npm run build",
-        "build-client":  "pushd \"./assets/client\" && npm install --no-save && npm run bundle && popd"
+        "build-client":  "pushd \"./assets/client\" && npm install --no-save && npm run bundle && popd",
+        "build-css":  "pushd \"./assets/client\" && npm run build-css && popd"
     },
     "dependencies": {
         "lodash.debounce": "4.0.8",
