@@ -27,8 +27,8 @@ export class CodeStreamCodeActionProvider extends Disposable implements CodeActi
                 command: 'codestream.postCode',
                 arguments: [
                     {
-                        document,
-                        range
+                        document: document,
+                        range: range
                     } as PostCodeCommandArgs
                 ]
             } as Command

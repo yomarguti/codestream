@@ -4,18 +4,18 @@ import { Functions, Iterables } from '../../system';
 import { CodeStreamSession } from '../session';
 import { CSEntity } from '../types';
 
-export const mappedSymbol = Symbol('codestream-mapped');
+export const item = Symbol('codestream-item');
 
 interface ICollectionItem<TEntity extends CSEntity> {
-    // Marker as to whether or not the item has been mapped: entity -> item
-    [mappedSymbol]: boolean;
+    // Marker as to whether or not the item has been mapped to an item: entity -> item
+    [item]: boolean;
     readonly id: string;
     readonly entity: TEntity;
 }
 
 export abstract class CodeStreamItem<TEntity extends CSEntity> extends Disposable implements ICollectionItem<TEntity> {
 
-    [mappedSymbol] = true;
+    [item] = true;
 
     constructor(
         protected readonly session: CodeStreamSession,
@@ -108,7 +108,7 @@ export abstract class CodeStreamCollection<TItem extends ICollectionItem<TEntity
 
     private *ensureMapped(items: Map<string, TEntity | TItem>) {
         for (const [key, value] of items) {
-            if ((value as ICollectionItem<TEntity>)[mappedSymbol]) {
+            if ((value as ICollectionItem<TEntity>)[item]) {
                 yield value as TItem;
                 continue;
             }
