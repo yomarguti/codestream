@@ -6,7 +6,7 @@ import { ChannelStream, DirectStream, FileStream, Stream, StreamType } from '../
 import { Repository } from '../models/repositories';
 import { User } from '../models/users';
 import { CSPost } from '../types';
-import { memoize } from '../../system';
+import { Iterables, memoize } from '../../system';
 
 interface CodeBlock {
     readonly code: string;
@@ -66,6 +66,33 @@ export class Post extends CodeStreamItem<CSPost> {
             hash: this.entity.commitHashWhenPosted!,
             uri: uri!
         };
+    }
+
+    mentioned(name: string): boolean {
+        name = name.toLocaleUpperCase();
+        return Iterables.some(this.mentions(), m => m.toLocaleUpperCase() === name);
+    }
+
+    // async *mentionedUsers() {
+    //     for (const mention of this.mentions()) {
+    //         const user = await this.session.users.getByName(mention);
+    //         if (user !== undefined) yield user;
+    //     }
+    // }
+
+    *mentions() {
+        // Recreate this each call, because this iterable can be stopped and never finished
+        // and the regex can end up trying to continue incorrectly
+        const mentionsRegex = /(?:^|\s)@(\w+)(?:\b(?!@|[\(\{\[\<\-])|$)/g;
+
+        let match: RegExpExecArray | null = null;
+        do {
+            match = mentionsRegex.exec(this.entity.text);
+            if (match == null) break;
+
+            const [, mention] = match;
+            yield mention;
+        } while (match != null);
     }
 
     @memoize

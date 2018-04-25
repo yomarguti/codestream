@@ -1,6 +1,6 @@
 'use strict';
 import { commands, Disposable, Extension, extensions, MessageItem, window, workspace } from 'vscode';
-import { User } from '../api/session';
+import { Post, User } from '../api/session';
 import { OpenStreamCommandArgs } from '../commands';
 import { ContextKeys, setContext } from '../common';
 import { Container } from '../container';
@@ -66,22 +66,29 @@ export class LiveShareController extends Disposable {
         return workspace.getConfiguration('vsliveshare').get<string>('join.reload.worskspaceId');
     }
 
-    private async onRequestReceived(senderId: string, e: LiveShareActionData) {
+    private async onRequestReceived(post: Post, e: LiveShareActionData) {
         const match = liveShareRegex.exec(e.url);
         if (match == null) return;
 
         const [, sessionId] = match;
-        const user = await Container.session.users.get(senderId);
+        const sender = await post.sender();
+        if (sender === undefined) {
+            debugger;
+            return;
+        }
+
+        // Only notify if we've been mentioned
+        if (!post.mentioned(Container.session.user.name)) return;
 
         const actions: MessageItem[] = [
             { title: 'Join Live Share' },
             { title: 'Ignore', isCloseAffordance: true }
         ];
 
-        const result = await window.showInformationMessage(`${user.name} is inviting you to join a Live Share session`, ...actions);
+        const result = await window.showInformationMessage(`${sender.name} is inviting you to join a Live Share session`, ...actions);
         if (result === undefined || result === actions[1]) return;
 
-        await Container.context.globalState.update(`vsls:${sessionId}`, { senderId: senderId, data: e } as LiveShareContext);
+        await Container.context.globalState.update(`vsls:${sessionId}`, { senderId: post.senderId, data: e } as LiveShareContext);
         await commands.executeCommand('liveshare.join', e.url); // , { newWindow: true });
         // this.openStream(sessionId, e.memberIds);
     }

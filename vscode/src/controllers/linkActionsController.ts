@@ -1,6 +1,6 @@
 'use strict';
 import { Disposable } from 'vscode';
-import { PostsReceivedEvent } from '../api/session';
+import { Post, PostsReceivedEvent } from '../api/session';
 import { Container } from '../container';
 
 const codestreamRegex = /codestream:\/\/(.*?)\?d=(.*?)(?:\s|$)/; // codestream://service/action?d={data}
@@ -18,9 +18,10 @@ export class LinkActionsController extends Disposable {
     }
 
     private async onSessionPostsReceived(e: PostsReceivedEvent) {
-        // const currentUserId = Container.session.user.id;
+        const currentUserId = Container.session.user.id;
 
         for (const post of e.items()) {
+            if (post.senderId === currentUserId) continue;
 
             const match = codestreamRegex.exec(post.text);
             if (match == null) continue;
@@ -30,12 +31,12 @@ export class LinkActionsController extends Disposable {
             const callback = this._registrationMap.get(path);
             if (callback === undefined) continue;
 
-            callback(post.senderId, JSON.parse(decodeURIComponent(qs)));
+            callback(post, JSON.parse(decodeURIComponent(qs)));
         }
     }
 
-    private _registrationMap = new Map<string, ((senderId: string, actionData: any) => any)>();
-    register<T>(service: string, action: string, callback: (senderId: string, actionData: T) => any, thisArg?: any): Disposable {
+    private _registrationMap = new Map<string, ((post: Post, actionData: any) => any)>();
+    register<T>(service: string, action: string, callback: (post: Post, actionData: T) => any, thisArg?: any): Disposable {
         const key = `${service}/${action}`;
         this._registrationMap.set(key, thisArg !== undefined ? callback.bind(thisArg) : callback);
         this.ensureRegistrations();

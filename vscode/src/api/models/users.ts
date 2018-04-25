@@ -31,12 +31,25 @@ export class UserCollection extends CodeStreamCollection<User, CSUser> {
         super(session);
     }
 
-    async getByEmail(email: string): Promise<User | undefined> {
-        return Iterables.find(await this.items(), u => u.email === email);
+    async getByEmail(email: string, options: { ignoreCase?: boolean } = { ignoreCase: true }): Promise<User | undefined> {
+        if (options.ignoreCase) {
+            email = email.toLocaleUpperCase();
+        }
+        return Iterables.find(await this.items(), u => (options.ignoreCase ? u.email.toLocaleUpperCase() : u.email) === email);
     }
 
-    async getByEmails(emails: string[]): Promise<Iterable<User>> {
-        return Iterables.filter(await this.items(), u => emails.includes(u.email));
+    async getByEmails(emails: string[], options: { ignoreCase?: boolean } = { ignoreCase: true }): Promise<Iterable<User>> {
+        if (options.ignoreCase) {
+            emails = emails.map(email => email.toLocaleUpperCase());
+        }
+        return Iterables.filter(await this.items(), u => emails.includes((options.ignoreCase ? u.email.toLocaleUpperCase() : u.email)));
+    }
+
+    async getByName(name: string, options: { ignoreCase?: boolean } = { ignoreCase: true }): Promise<User | undefined> {
+        if (options.ignoreCase) {
+            name = name.toLocaleUpperCase();
+        }
+        return Iterables.find(await this.items(), u => (options.ignoreCase ? u.name.toLocaleUpperCase() : u.name) === name);
     }
 
     protected fetch() {

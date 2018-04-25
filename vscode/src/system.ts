@@ -1,5 +1,8 @@
 'use strict';
 
+// // Polyfill for asyncIterator
+// (Symbol as any).asyncIterator = Symbol.asyncIterator || Symbol.for('Symbol.asyncIterator');
+
 export * from './system/array';
 // export * from './system/asyncIterable';
 // export * from './system/date';
