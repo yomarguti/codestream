@@ -55,6 +55,12 @@ function command(command: string, options: CommandOptions = {}): Function {
     };
 }
 
+export interface OpenStreamCommandArgs {
+    stream?: Stream | StreamNode;
+    searchBy?: Uri | string | string[];
+    autoCreate: boolean;
+}
+
 export interface PostCodeCommandArgs {
     document?: TextDocument;
     range?: Range;
@@ -130,31 +136,48 @@ export class Commands extends Disposable {
     }
 
     @command('openStream', { showErrorMessage: 'Unable to open stream' })
-    async openStream(streamOrUriOrName?: Stream | StreamNode | Uri | string) {
-        if (streamOrUriOrName === undefined) {
-            streamOrUriOrName = 'general';
-        }
-
-        if (typeof streamOrUriOrName === 'string') {
-            streamOrUriOrName = await Container.session.channels.getByName(streamOrUriOrName);
-        }
-        else if (streamOrUriOrName instanceof StreamNode) {
-            streamOrUriOrName = streamOrUriOrName.stream;
-        }
-        else if (streamOrUriOrName instanceof Uri) {
-            const repo = await Container.session.repos.getByFileUri(streamOrUriOrName);
-            if (repo !== undefined) {
-                streamOrUriOrName = await repo.streams.getByUri(streamOrUriOrName);
+    async openStream(args: OpenStreamCommandArgs) {
+        let stream;
+        if (args !== undefined) {
+            if (args.stream !== undefined) {
+                stream = args.stream instanceof StreamNode ? args.stream.stream : args.stream;
             }
-            else {
-                streamOrUriOrName = undefined;
+            else if (args.searchBy !== undefined) {
+                if (typeof args.searchBy === 'string') {
+                    if (args.autoCreate) throw new Error(`Auto-create isn't supported on Channels`);
+
+                    stream = await Container.session.channels.getByName(args.searchBy);
+                }
+                else if (args.searchBy instanceof Uri) {
+                    const repo = await Container.session.repos.getByFileUri(args.searchBy);
+                    if (repo !== undefined) {
+                        if (args.autoCreate) {
+                            stream = await repo.streams.getOrCreateByUri(args.searchBy);
+                        }
+                        else {
+                            stream = await repo.streams.getByUri(args.searchBy);
+                        }
+                    }
+                    else {
+                        stream = undefined;
+                    }
+                }
+                else {
+                    if (args.autoCreate) {
+                        stream = await Container.session.directMessages.getOrCreateByMembers(args.searchBy);
+                    }
+                    else {
+                        stream = await Container.session.directMessages.getByMembers(args.searchBy);
+                    }
+                }
             }
         }
 
-        if (streamOrUriOrName === undefined) return;
+        if (stream === undefined) return;
 
+        // TODO: Switch to codestream view?
         Container.explorer.show();
-        return Container.streamView.openStream(streamOrUriOrName);
+        return Container.streamView.openStream(stream);
     }
 
     @command('post', { showErrorMessage: 'Unable to post message' })

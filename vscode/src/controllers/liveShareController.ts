@@ -1,6 +1,7 @@
 'use strict';
 import { commands, Disposable, Extension, extensions, MessageItem, window, workspace } from 'vscode';
 import { User } from '../api/session';
+import { OpenStreamCommandArgs } from '../commands';
 import { ContextKeys, setContext } from '../common';
 import { Container } from '../container';
 
@@ -103,9 +104,9 @@ export class LiveShareController extends Disposable {
     }
 
     async openStream(sessionId: string, memberIds: string[]) {
-        const stream = await Container.session.directMessages.getOrCreateByMembers(memberIds);
-        if (stream === undefined) throw new Error(`Failed to create live share stream`);
-
-        await commands.executeCommand('codestream.openStream', stream);
+        await commands.executeCommand('codestream.openStream', {
+            searchBy: memberIds,
+            autoCreate: true
+        } as OpenStreamCommandArgs);
     }
 }

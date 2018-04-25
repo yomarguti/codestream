@@ -1,7 +1,7 @@
 'use strict';
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { CodeStreamSession, Stream, StreamType } from '../api/session';
-// import { Container } from '../container';
+import { OpenStreamCommandArgs } from '../commands';
 import { ExplorerNode, ResourceType } from './explorerNode';
 // import { PostNode } from './postNode';
 
@@ -34,7 +34,9 @@ export class StreamNode extends ExplorerNode {
             title: 'Open Stream',
             command: 'codestream.openStream',
             arguments: [
-                this.stream
+                {
+                    stream: this.stream
+                } as OpenStreamCommandArgs
             ]
         };
         return item;
