@@ -5,7 +5,7 @@ import { Commands } from './commands';
 import { IConfig } from './config';
 import { configuration } from './configuration';
 import { CodeStreamCodeActionProvider } from './providers/codeActionProvider';
-import { CodeStreamCodeLensProvider } from './providers/codeLensProvider';
+// import { CodeStreamCodeLensProvider } from './providers/codeLensProvider';
 import { CodeStreamExplorer } from './views/explorer';
 import { CodeStreamMarkerDecorationProvider } from './providers/markerDecorationProvider';
 import { Git } from './git/git';
@@ -56,10 +56,10 @@ export class Container {
         return this._codeActions;
     }
 
-    private static _codeLens: CodeStreamCodeLensProvider;
-    static get codeLens() {
-        return this._codeLens;
-    }
+    // private static _codeLens: CodeStreamCodeLensProvider;
+    // static get codeLens() {
+    //     return this._codeLens;
+    // }
 
     private static _commands: Commands;
     static get commands() {
