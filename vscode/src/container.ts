@@ -9,6 +9,7 @@ import { CodeStreamCodeLensProvider } from './providers/codeLensProvider';
 import { CodeStreamExplorer } from './views/explorer';
 import { CodeStreamMarkerDecorationProvider } from './providers/markerDecorationProvider';
 import { Git } from './git/git';
+import { LinkActionsController } from './controllers/linkActionsController';
 import { LiveShareController } from './controllers/liveShareController';
 import { StatusBarController } from './controllers/statusBarController';
 import { StreamViewController } from './controllers/streamViewController';
@@ -24,6 +25,7 @@ export class Container {
         context.subscriptions.push(this._git = new Git());
         context.subscriptions.push(this._session = new CodeStreamSession(config.serverUrl));
         context.subscriptions.push(this._umis = new UMIController());
+        context.subscriptions.push(this._linkActions = new LinkActionsController());
         context.subscriptions.push(this._liveShare = new LiveShareController());
 
         context.subscriptions.push(this._commands = new Commands());
@@ -85,6 +87,11 @@ export class Container {
     private static _git: Git;
     static get git() {
         return this._git;
+    }
+
+    private static _linkActions: LinkActionsController;
+    static get linkActions() {
+        return this._linkActions;
     }
 
     private static _liveShare: LiveShareController;

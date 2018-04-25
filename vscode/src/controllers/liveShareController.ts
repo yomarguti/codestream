@@ -1,13 +1,22 @@
 'use strict';
-import { commands, Disposable, Extension, extensions, MessageItem, window } from 'vscode';
-import { PostsReceivedEvent, User } from '../api/session';
+import { commands, Disposable, Extension, extensions, MessageItem, window, workspace } from 'vscode';
+import { User } from '../api/session';
 import { ContextKeys, setContext } from '../common';
 import { Container } from '../container';
 
-// more 💩 code ahead
-
 const liveShareRegex = /https:\/\/(?:.*?)liveshare(?:.*?).visualstudio.com\/join\?(.*?)(?:\s|$)/;
 let liveShare: Extension<any> | undefined;
+
+interface LiveShareActionData {
+    url: string;
+    sessionId: string;
+    memberIds: string[];
+}
+
+interface LiveShareContext {
+    senderId: string;
+    data: LiveShareActionData;
+}
 
 export class LiveShareController extends Disposable {
 
@@ -23,11 +32,20 @@ export class LiveShareController extends Disposable {
     constructor() {
         super(() => this.dispose());
 
-        if (LiveShareController.ensureLiveShare()) {
-            setContext(ContextKeys.LiveShareInstalled, true);
-            this._disposable = Disposable.from(
-                Container.session.onDidReceivePosts(this.onSessionPostsReceived, this)
-            );
+        if (!LiveShareController.ensureLiveShare()) return;
+
+        setContext(ContextKeys.LiveShareInstalled, true);
+
+        this._disposable = Disposable.from(
+            Container.linkActions.register<LiveShareActionData>('vsls', 'join', this.onRequestReceived, this)
+        );
+
+        const sessionId = this.sessionId;
+        if (sessionId !== undefined) {
+            const context = Container.context.globalState.get<LiveShareContext>(`vsls:${sessionId}`);
+            if (context !== undefined) {
+                this.openStream(sessionId, context.data.memberIds);
+            }
         }
     }
 
@@ -35,25 +53,25 @@ export class LiveShareController extends Disposable {
         this._disposable && this._disposable.dispose();
     }
 
-    get liveShareInstalled() {
+    get isInstalled() {
         return liveShare !== undefined;
     }
 
-    private async onSessionPostsReceived(e: PostsReceivedEvent) {
-        const session = Container.session;
-        const users = session.users;
-        for (const post of e.getPosts()) {
-            // if (post.senderId === session.user.id) continue;
+    // get inRemoteSession() {
+    //     return this.sessionId !== undefined;
+    // }
 
-            const match = liveShareRegex.exec(post.text);
-            if (match != null) {
-                const user = await users.get(post.senderId);
-                this.onRequestReceived(match[0], user);
-            }
-        }
+    get sessionId() {
+        return workspace.getConfiguration('vsliveshare').get<string>('join.reload.worskspaceId');
     }
 
-    private async onRequestReceived(liveShareId: string, user: User) {
+    private async onRequestReceived(senderId: string, e: LiveShareActionData) {
+        const match = liveShareRegex.exec(e.url);
+        if (match == null) return;
+
+        const [, sessionId] = match;
+        const user = await Container.session.users.get(senderId);
+
         const actions: MessageItem[] = [
             { title: 'Join Live Share' },
             { title: 'Ignore', isCloseAffordance: true }
@@ -62,26 +80,30 @@ export class LiveShareController extends Disposable {
         const result = await window.showInformationMessage(`${user.name} is inviting you to join a Live Share session`, ...actions);
         if (result === undefined || result === actions[1]) return;
 
-        await commands.executeCommand('liveshare.join', liveShareId, { newWindow: true });
-        this.openStream(liveShareId, user, Container.session.user);
+        await Container.context.globalState.update(`vsls:${sessionId}`, { senderId: senderId, data: e } as LiveShareContext);
+        await commands.executeCommand('liveshare.join', e.url); // , { newWindow: true });
+        // this.openStream(sessionId, e.memberIds);
     }
 
     async invite(user: User) {
-        if (!this.liveShareInstalled) throw new Error('Live Share is not installed');
+        if (!this.isInstalled) throw new Error('Live Share is not installed');
 
         const result = await commands.executeCommand('liveshare.start', { suppressNotification: true });
-        if (result !== undefined) {
-            await Container.session.post(`@${user.name} ${result}`);
+        if (result === undefined) return;
 
-            const match = liveShareRegex.exec(result.toString());
-            if (match != null) {
-                this.openStream(match[1], Container.session.user, user);
-            }
-        }
+        const match = liveShareRegex.exec(result.toString());
+        if (match == null) return;
+
+        const [url, sessionId] = match;
+        const memberIds = [Container.session.userId, user.id];
+        this.openStream(sessionId, memberIds);
+
+        const link = Container.linkActions.toLinkAction<LiveShareActionData>('vsls', 'join', { url: url, sessionId: sessionId, memberIds: memberIds });
+        await Container.session.post(`@${user.name} ${link}`);
     }
 
-    async openStream(liveShareId: string, inviter: User, invitee: User) {
-        const stream = await Container.session.directMessages.getOrCreateByName(`vsls://${liveShareId})`, { membership: [ inviter.id, invitee.id ]});
+    async openStream(sessionId: string, memberIds: string[]) {
+        const stream = await Container.session.directMessages.getOrCreateByMembers(memberIds);
         if (stream === undefined) throw new Error(`Failed to create live share stream`);
 
         await commands.executeCommand('codestream.openStream', stream);
