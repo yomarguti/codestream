@@ -1,13 +1,30 @@
 import { commands, Disposable, MessageItem, Range, TextDocument, Uri, window } from 'vscode';
 import { Post, Stream } from './api/session';
-import { BuiltInCommands, openEditor } from './common';
+import { openEditor } from './common';
 import { TraceLevel } from './config';
 import { Container } from './container';
+import { ExtensionId } from './extension';
 import { Logger } from './logger';
 import { PostNode } from './views/postNode';
 import { StreamNode } from './views/streamNode';
 import { Iterables } from './system';
 import * as path from 'path';
+
+export enum BuiltInCommands {
+    CloseActiveEditor = 'workbench.action.closeActiveEditor',
+    CloseAllEditors = 'workbench.action.closeAllEditors',
+    CursorMove = 'cursorMove',
+    Diff = 'vscode.diff',
+    EditorScroll = 'editorScroll',
+    ExecuteDocumentSymbolProvider = 'vscode.executeDocumentSymbolProvider',
+    ExecuteCodeLensProvider = 'vscode.executeCodeLensProvider',
+    Open = 'vscode.open',
+    NextEditor = 'workbench.action.nextEditor',
+    PreviewHtml = 'vscode.previewHtml',
+    RevealLine = 'revealLine',
+    SetContext = 'setContext',
+    ShowReferences = 'editor.action.showReferences'
+}
 
 interface CommandOptions {
     customErrorHandling?: boolean;
@@ -47,7 +64,7 @@ function command(command: string, options: CommandOptions = {}): Function {
         }
 
         registry.push({
-            name: `codestream.${command}`,
+            name: `${ExtensionId}.${command}`,
             key: key,
             method: method,
             options: options

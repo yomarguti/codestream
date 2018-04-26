@@ -1,5 +1,7 @@
 'use strict';
-import fetch, { Headers, RequestInit, Response } from 'node-fetch';
+import { version as vscodeVersion } from 'vscode';
+import { extensionVersion } from '../extension';
+import { Logger } from '../logger';
 import {
     CreatePostRequest, CreatePostResponse,
     CreateRepoRequest, CreateRepoResponse,
@@ -14,7 +16,7 @@ import {
     GetUserResponse, GetUsersResponse,
     LoginRequest, LoginResponse
 } from './types';
-import { Logger } from '../logger';
+import fetch, { Headers, RequestInit, Response } from 'node-fetch';
 
 export * from './types';
 
@@ -153,6 +155,10 @@ export class CodeStreamApi {
                 if (token !== undefined) {
                     init.headers.append('Authorization', `Bearer ${token}`);
                 }
+
+                init.headers.append('X-CS-Plugin-IDE', 'VS Code');
+                init.headers.append('X-CS-Plugin-Version', extensionVersion);
+                init.headers.append('X-CS-IDE-Version', vscodeVersion);
             }
         }
 
