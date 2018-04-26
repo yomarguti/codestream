@@ -1,10 +1,8 @@
 'use strict';
-import { DecorationOptions, Disposable, DocumentSelector, Range, TextEditor, TextEditorDecorationType, window } from 'vscode';
+import { DecorationOptions, Disposable, Range, TextEditor, TextEditorDecorationType, window } from 'vscode';
 import { Container } from '../container';
 
-export class CodeStreamMarkerDecorationProvider extends Disposable {
-
-    static selector: DocumentSelector = { scheme: 'file' };
+export class MarkerDecorationProvider extends Disposable {
 
     private readonly _disposable: Disposable | undefined;
     private readonly _decorationType: TextEditorDecorationType;

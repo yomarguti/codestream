@@ -11,6 +11,7 @@ import { CodeStreamMarkerDecorationProvider } from './providers/markerDecoration
 import { Git } from './git/git';
 import { LinkActionsController } from './controllers/linkActionsController';
 import { LiveShareController } from './controllers/liveShareController';
+import { MarkerDecorationProvider } from './providers/markerDecorationProvider';
 import { StatusBarController } from './controllers/statusBarController';
 import { StreamViewController } from './controllers/streamViewController';
 import { UMIController } from './controllers/umiController';
@@ -24,6 +25,7 @@ export class Container {
 
         context.subscriptions.push(this._git = new Git());
         context.subscriptions.push(this._session = new CodeStreamSession(config.serverUrl));
+
         context.subscriptions.push(this._umis = new UMIController());
         context.subscriptions.push(this._linkActions = new LinkActionsController());
         context.subscriptions.push(this._liveShare = new LiveShareController());
@@ -31,11 +33,11 @@ export class Container {
         context.subscriptions.push(this._commands = new Commands());
         context.subscriptions.push(this._codeActions = new CodeStreamCodeActionProvider());
         // context.subscriptions.push(this._codeLens = new CodeStreamCodeLensProvider());
-        context.subscriptions.push(this._markerDecorations = new CodeStreamMarkerDecorationProvider());
+        context.subscriptions.push(this._markerDecorations = new MarkerDecorationProvider());
         context.subscriptions.push(this._statusBar = new StatusBarController());
+        // context.subscriptions.push(this._unreadDecorator = new UnreadDecorationProvider());
 
         context.subscriptions.push(this._streamView = new StreamViewController(this._session));
-        // context.subscriptions.push(this._unreadDecorator = new UnreadDecorationProvider());
 
         if (config.explorer.enabled) {
             context.subscriptions.push(this._explorer = new CodeStreamExplorer());
@@ -99,7 +101,7 @@ export class Container {
         return this._liveShare;
     }
 
-    private static _markerDecorations: CodeStreamMarkerDecorationProvider;
+    private static _markerDecorations: MarkerDecorationProvider;
     static get markerDecorations() {
         return this._markerDecorations;
     }
