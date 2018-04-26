@@ -1,9 +1,10 @@
 'use strict';
 import { Disposable, Event, EventEmitter } from 'vscode';
-import { CSPost, CSRepository, CSStream } from './types';
+import { CSPost, CSRepository, CSStream, StreamType } from './types';
 import { CodeStreamApi } from './api';
 import { Logger } from '../logger';
 import Pubnub = require('pubnub');
+import { Iterables } from '../system';
 
 export enum MessageType {
     Posts = 'posts',
@@ -35,16 +36,15 @@ export class PubNubReceiver {
         return this._onDidReceiveMessage.event;
     }
 
-    // private subscriptions = {};
-    private pubnub: Pubnub | undefined;
-    private listener: Pubnub.ListenerParameters | undefined;
+    private _pubnub: Pubnub | undefined;
+    private _listener: Pubnub.ListenerParameters | undefined;
 
     constructor() {
     }
 
     initialize(authKey: string, userId: string, subscribeKey: string): Disposable {
         const uuid = `${userId}`;
-        this.pubnub = new Pubnub({
+        this._pubnub = new Pubnub({
             authKey: authKey,
             uuid: uuid,
             subscribeKey: subscribeKey,
@@ -52,16 +52,18 @@ export class PubNubReceiver {
             logVerbosity: false,
             heartbeatInterval: 30
         });
-        this.setupListener();
+
+        this.addListener();
 
         return {
             dispose: () => {
                 this.removeListener();
+                this._pubnub && this._pubnub.unsubscribeAll();
             }
         };
     }
 
-    subscribe(userId: string, teamId: string, repoIds: string[]) {
+    subscribe(userId: string, teamId: string, repoIds: string[], streamIds: string[]) {
         const channels = [
             `user-${userId}`,
             `team-${teamId}`
@@ -71,25 +73,33 @@ export class PubNubReceiver {
             channels.push(`repo-${repoId}`);
         }
 
-        this.pubnub!.subscribe({
+        for (const streamId of streamIds) {
+            channels.push(`stream-${streamId}`);
+        }
+
+        this.subscribeCore(channels);
+    }
+
+    private subscribeCore(channels: string[]) {
+        this._pubnub!.subscribe({
             channels: channels,
             withPresence: false
             // timetoken: number
         });
     }
 
-    private setupListener() {
-        this.listener = {
+    private addListener() {
+        this._listener = {
             presence: this.onPresence.bind(this),
             message: this.onMessage.bind(this),
             status: this.onStatus.bind(this)
         } as Pubnub.ListenerParameters;
-        this.pubnub!.addListener(this.listener);
+        this._pubnub!.addListener(this._listener);
     }
 
     private removeListener() {
-        if (this.pubnub !== undefined && this.listener !== undefined) {
-            this.pubnub.removeListener(this.listener);
+        if (this._pubnub !== undefined && this._listener !== undefined) {
+            this._pubnub.removeListener(this._listener);
         }
     }
 
@@ -151,7 +161,11 @@ export class PubNubReceiver {
                     this._onDidReceiveMessage.fire({ type: MessageType.Repositories, repos: CodeStreamApi.normalizeResponse(obj) as CSRepository[] });
                     break;
                 case 'streams':
-                    this._onDidReceiveMessage.fire({ type: MessageType.Streams, streams: CodeStreamApi.normalizeResponse(obj) as CSStream[] });
+                    const streams = CodeStreamApi.normalizeResponse(obj) as CSStream[];
+                    // Subscribe to any new direct message streams
+                    this.subscribeCore([...Iterables.filterMap(streams, s => s.type === StreamType.Direct ? `stream-${s.id}` : undefined)]);
+
+                    this._onDidReceiveMessage.fire({ type: MessageType.Streams, streams: streams });
                     break;
             }
         }

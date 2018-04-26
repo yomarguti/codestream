@@ -521,15 +521,16 @@ export class CodeStreamSession extends Disposable {
             const team = this._data.teams.find(t => t.id === teamId);
             if (team === undefined) throw new Error(`Unable to find team id ${teamId}`);
 
-            this._teamId = team.id;
-            this._sessionApi = new CodeStreamSessionApi(this._api, this.token, this.teamId!);
+            this._teamId = teamId;
+            this._sessionApi = new CodeStreamSessionApi(this._api, this.token, teamId);
 
             this._disposableSignedIn = Disposable.from(
                 this._pubnub.initialize(this.token, this.userId, this.pubnubKey),
                 this._git.onDidChangeRepositories(this.onGitRepositoriesChanged, this)
             );
 
-            this._pubnub.subscribe(this.userId, this.teamId!, this._data.repos.map(r => r.id));
+            const dms = await this._sessionApi.getDirectStreams(teamId);
+            this._pubnub.subscribe(this.userId, teamId, this._data.repos.map(r => r.id), dms.map(s => s.id));
 
             Logger.log(`${email} signed into CodeStream (${this.serverUrl})`);
             this._status = SessionStatus.SignedIn;
