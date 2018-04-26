@@ -24,7 +24,10 @@ export const getPath = route => {
 const getHeaders = () =>
 	new Headers({
 		Accept: "application/json",
-		"Content-Type": "application/json"
+		"Content-Type": "application/json",
+		"X-CS-Plugin-IDE": "Atom",
+		"X-CS-Plugin-Version": atom.packages.getLoadedPackage("CodeStream").metadata.version,
+		"X-CS-IDE-Version": atom.getVersion()
 	});
 
 const tryFetch = async (url, config) => {
