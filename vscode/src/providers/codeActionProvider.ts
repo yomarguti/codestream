@@ -4,7 +4,7 @@ import { PostCodeCommandArgs } from '../commands';
 
 export class CodeStreamCodeActionProvider extends Disposable implements CodeActionProvider {
 
-    static selector: DocumentSelector = { scheme: 'file' };
+    static selector: DocumentSelector = [{ scheme: 'file' }, { scheme: 'vsls' }];
 
     private readonly _disposable: Disposable | undefined;
 

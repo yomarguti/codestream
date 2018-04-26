@@ -1,9 +1,12 @@
 'use strict';
 import { commands, Disposable, Extension, extensions, MessageItem, window, workspace } from 'vscode';
-import { Post, User } from '../api/session';
+import { Post, SessionStatus, SessionStatusChangedEvent, User } from '../api/session';
 import { OpenStreamCommandArgs } from '../commands';
 import { ContextKeys, setContext } from '../common';
 import { Container } from '../container';
+import { Iterables } from '../system';
+import { RemoteGitService, RemoteRepository } from '../git/remoteGitService';
+import { Logger } from '../logger';
 
 const liveShareRegex = /https:\/\/(?:.*?)liveshare(?:.*?).visualstudio.com\/join\?(.*?)(?:\s|$)/;
 let liveShare: Extension<any> | undefined;
@@ -12,6 +15,7 @@ interface LiveShareActionData {
     url: string;
     sessionId: string;
     memberIds: string[];
+    repos: RemoteRepository[];
 }
 
 interface LiveShareContext {
@@ -38,16 +42,9 @@ export class LiveShareController extends Disposable {
         setContext(ContextKeys.LiveShareInstalled, true);
 
         this._disposable = Disposable.from(
+            Container.session.onDidChangeStatus(this.onSessionStatusChanged, this),
             Container.linkActions.register<LiveShareActionData>('vsls', 'join', this.onRequestReceived, this)
         );
-
-        const sessionId = this.sessionId;
-        if (sessionId !== undefined) {
-            const context = Container.context.globalState.get<LiveShareContext>(`vsls:${sessionId}`);
-            if (context !== undefined) {
-                this.openStream(sessionId, context.data.memberIds);
-            }
-        }
     }
 
     dispose() {
@@ -63,7 +60,7 @@ export class LiveShareController extends Disposable {
     // }
 
     get sessionId() {
-        return workspace.getConfiguration('vsliveshare').get<string>('join.reload.worskspaceId');
+        return workspace.getConfiguration('vsliveshare').get<string>('join.reload.workspaceId');
     }
 
     private async onRequestReceived(post: Post, e: LiveShareActionData) {
@@ -93,6 +90,33 @@ export class LiveShareController extends Disposable {
         // this.openStream(sessionId, e.memberIds);
     }
 
+    private onSessionStatusChanged(e: SessionStatusChangedEvent) {
+        const sessionId = this.sessionId;
+        // If we aren't in an active (remote) live share session kick out
+        if (sessionId === undefined) return;
+
+        const status = e.getStatus();
+        if (status === SessionStatus.SignedOut) return;
+
+        const context = Container.context.globalState.get<LiveShareContext>(`vsls:${sessionId}`);
+        if (context === undefined) {
+            Logger.warn('Unable to find live share context');
+            return;
+        }
+
+        switch (status) {
+            case SessionStatus.SigningIn:
+                // Since we are in a live share session, swap out our git service
+                Container.overrideGit(new RemoteGitService(context.data.repos));
+                break;
+
+            case SessionStatus.SignedIn:
+                // When we are signed in, open a channel for the liveshare
+                this.openStream(sessionId, context.data.memberIds);
+                break;
+        }
+    }
+
     async invite(user: User) {
         if (!this.isInstalled) throw new Error('Live Share is not installed');
 
@@ -106,11 +130,13 @@ export class LiveShareController extends Disposable {
         const memberIds = [Container.session.userId, user.id];
         this.openStream(sessionId, memberIds);
 
-        const link = Container.linkActions.toLinkAction<LiveShareActionData>('vsls', 'join', { url: url, sessionId: sessionId, memberIds: memberIds });
+        const repos = Iterables.map(await Container.session.repos.items(), r => ({ id: r.id, hash: r.hash, normalizedUrl: r.normalizedUrl, url: r.url } as RemoteRepository));
+
+        const link = Container.linkActions.toLinkAction<LiveShareActionData>('vsls', 'join', { url: url, sessionId: sessionId, memberIds: memberIds, repos: [...repos] });
         await Container.session.post(`@${user.name} ${link}`);
     }
 
-    async openStream(sessionId: string, memberIds: string[]) {
+    private async openStream(sessionId: string, memberIds: string[]) {
         await commands.executeCommand('codestream.openStream', {
             searchBy: memberIds,
             autoCreate: true

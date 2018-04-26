@@ -26,8 +26,20 @@ export class Repository extends CodeStreamItem<CSRepository> {
         if (stream === undefined) return undefined;
 
         const sha = await Container.git.getFileCurrentSha(uri);
-        const markers = await this.session.api.getMarkerLocations(sha, stream.id);
+        const markers = await this.session.api.getMarkerLocations(sha!, stream.id);
         return new Markers(this.session, markers);
+    }
+
+    get hash() {
+        return this.entity.firstCommitHash;
+    }
+
+    get name() {
+        return this.entity.normalizedUrl;
+    }
+
+    get normalizedUrl() {
+        return this.entity.normalizedUrl;
     }
 
     private _streams: FileStreamCollection | undefined;
@@ -39,7 +51,7 @@ export class Repository extends CodeStreamItem<CSRepository> {
     }
 
     get url() {
-        return this.entity.normalizedUrl;
+        return this.entity.url;
     }
 
     normalizeUri(relativeUri: Uri): Uri;
@@ -57,7 +69,9 @@ export class Repository extends CodeStreamItem<CSRepository> {
         const absolutePath = typeof absoluteUriOrPath === 'string'
             ? absoluteUriOrPath
             : absoluteUriOrPath.fsPath;
-        let relativePath = Strings.normalizePath(path.relative(this._folder!.uri.fsPath, absolutePath));
+
+        const root = this._folder!.uri.fsPath;
+        let relativePath = Strings.normalizePath(root ? path.relative(root, absolutePath) : absolutePath);
         if (relativePath[0] === '/') {
             relativePath = relativePath.substr(1);
         }

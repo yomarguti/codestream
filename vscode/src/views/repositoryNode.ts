@@ -27,7 +27,7 @@ export class RepositoryNode extends SubscribableExplorerNode {
     async getTreeItem(): Promise<TreeItem> {
         this.unsubscribe();
 
-        const item = new TreeItem(this.repository.url, TreeItemCollapsibleState.Collapsed);
+        const item = new TreeItem(this.repository.name, TreeItemCollapsibleState.Collapsed);
         item.contextValue = ResourceType.Repository;
 
         item.iconPath = {

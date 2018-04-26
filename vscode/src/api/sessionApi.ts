@@ -90,7 +90,7 @@ export class CodeStreamSessionApi {
             relativePath = relativeUriOrPath;
         }
         else {
-            if (relativeUriOrPath.scheme === 'file') {
+            if (relativeUriOrPath.scheme === 'file' || relativeUriOrPath.scheme === 'vsls') {
                 relativePath = relativeUriOrPath.path;
                 if (relativePath[0] === '/') {
                     relativePath = relativePath.substr(1);

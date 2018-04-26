@@ -90,6 +90,10 @@ export class Container {
         return this._git;
     }
 
+    static overrideGit(git: IGitService) {
+        this._git = git;
+    }
+
     private static _linkActions: LinkActionsController;
     static get linkActions() {
         return this._linkActions;

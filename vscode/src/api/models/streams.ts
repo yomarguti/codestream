@@ -290,7 +290,7 @@ export class FileStreamCollection extends StreamCollectionBase<FileStream, CSFil
     }
 
     async getByUri(uri: Uri): Promise<FileStream | undefined> {
-        if (uri.scheme !== 'file') throw new Error(`Uri must be a file`);
+        if (uri.scheme !== 'file' && uri.scheme !== 'vsls') throw new Error(`Uri must be a file`);
 
         const relativePath = this.repo.relativizeUri(uri);
 
