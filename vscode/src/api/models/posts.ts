@@ -119,13 +119,13 @@ export class Post extends CodeStreamItem<CSPost> {
             if (stream === undefined) throw new Error(`Stream(${streamId}) could not be found`);
 
             switch (stream.type) {
-                case 'channel':
+                case StreamType.Channel:
                     this._stream = new ChannelStream(this.session, stream!);
                     break;
-                case 'direct':
+                case StreamType.Direct:
                     this._stream = new DirectStream(this.session, stream!);
                     break;
-                case 'file':
+                case StreamType.File:
                     this._stream = new FileStream(this.session, stream!);
                     break;
                 default:

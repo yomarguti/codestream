@@ -145,28 +145,28 @@ export interface CreateRepoResponse {
     repo: CSRepository;
 }
 
-export interface CreateFileStreamRequest {
-    teamId: string;
-    repoId: string;
-    type: 'file';
-    file: string;
-}
-
-export interface CreateDirectStreamRequest {
-    teamId: string;
-    type: 'direct';
-    memberIds: string[];
-}
-
 export interface CreateChannelStreamRequest {
     teamId: string;
-    type: 'channel';
+    type: StreamType.Channel;
     name: string;
     memberIds?: string[];
     isTeamStream: boolean;
 }
 
-export type CreateStreamRequest = CreateFileStreamRequest | CreateDirectStreamRequest | CreateChannelStreamRequest;
+export interface CreateDirectStreamRequest {
+    teamId: string;
+    type: StreamType.Direct;
+    memberIds: string[];
+}
+
+export interface CreateFileStreamRequest {
+    teamId: string;
+    repoId: string;
+    type: StreamType.File;
+    file: string;
+}
+
+export type CreateStreamRequest =  CreateChannelStreamRequest | CreateDirectStreamRequest | CreateFileStreamRequest;
 
 export interface CreateStreamResponse {
     stream: CSStream;

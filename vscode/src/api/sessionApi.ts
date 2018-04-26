@@ -66,7 +66,7 @@ export class CodeStreamSessionApi {
 
     async createChannelStream(name: string, membership?: 'auto' | string[], teamId?: string): Promise<CSChannelStream | undefined> {
         return (await this._api.createStream(this.token, {
-            type: 'channel',
+            type: StreamType.Channel,
             teamId: teamId || this.teamId,
             name: name,
             memberIds: membership === 'auto' ? undefined : membership,
@@ -76,7 +76,7 @@ export class CodeStreamSessionApi {
 
     async createDirectStream(membership: string[], teamId?: string): Promise<CSDirectStream | undefined> {
         return (await this._api.createStream(this.token, {
-            type: 'direct',
+            type: StreamType.Direct,
             teamId: teamId || this.teamId,
             memberIds: membership
         })).stream as CSDirectStream;
@@ -102,7 +102,7 @@ export class CodeStreamSessionApi {
         }
 
         return (await this._api.createStream(this.token, {
-            type: 'file',
+            type: StreamType.File,
             teamId: teamId || this.teamId,
             repoId: repoId,
             file: relativePath
