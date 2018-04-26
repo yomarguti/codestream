@@ -7,8 +7,7 @@ import { configuration } from './configuration';
 import { CodeStreamCodeActionProvider } from './providers/codeActionProvider';
 // import { CodeStreamCodeLensProvider } from './providers/codeLensProvider';
 import { CodeStreamExplorer } from './views/explorer';
-import { CodeStreamMarkerDecorationProvider } from './providers/markerDecorationProvider';
-import { Git } from './git/git';
+import { GitService, IGitService } from './git/gitService';
 import { LinkActionsController } from './controllers/linkActionsController';
 import { LiveShareController } from './controllers/liveShareController';
 import { MarkerDecorationProvider } from './providers/markerDecorationProvider';
@@ -23,7 +22,7 @@ export class Container {
         this._context = context;
         this._config = config;
 
-        context.subscriptions.push(this._git = new Git());
+        context.subscriptions.push(this._git = new GitService());
         context.subscriptions.push(this._session = new CodeStreamSession(config.serverUrl));
 
         context.subscriptions.push(this._umis = new UMIController());
@@ -86,7 +85,7 @@ export class Container {
         return this._explorer;
     }
 
-    private static _git: Git;
+    private static _git: IGitService;
     static get git() {
         return this._git;
     }

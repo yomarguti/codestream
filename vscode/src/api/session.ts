@@ -4,7 +4,6 @@ import { CodeStreamApi, CSRepository, CSStream, LoginResponse } from './api';
 import { configuration } from '../configuration';
 import { Container } from '../container';
 import { CodeStreamSessionApi } from './sessionApi';
-import { Git } from '../git/git';
 import { Logger } from '../logger';
 import { Markers } from './models/markers';
 import { Post } from './models/posts';
@@ -207,7 +206,6 @@ export class CodeStreamSession extends Disposable {
 
     private _api: CodeStreamApi;
     private _sessionApi: CodeStreamSessionApi | undefined;
-    private readonly _git: Git;
     private readonly _pubnub: PubNubReceiver;
 
     constructor(
@@ -219,7 +217,6 @@ export class CodeStreamSession extends Disposable {
         this._pubnub = new PubNubReceiver(),
 
         this._disposable = Disposable.from(
-            this._git = new Git(),
             this._pubnub.onDidReceiveMessage(this.onMessageReceived, this),
             configuration.onDidChange(this.onConfigurationChanged, this)
         );
@@ -502,7 +499,7 @@ export class CodeStreamSession extends Disposable {
 
             if (teamId == null) {
                 if (this.data.repos.length > 0) {
-                    for (const repo of await this._git.getRepositories()) {
+                    for (const repo of await Container.git.getRepositories()) {
                         const url = await repo.getNormalizedUrl();
 
                         const found = this._data.repos.find(r => r.normalizedUrl === url);
@@ -526,7 +523,7 @@ export class CodeStreamSession extends Disposable {
 
             this._disposableSignedIn = Disposable.from(
                 this._pubnub.initialize(this.token, this.userId, this.pubnubKey),
-                this._git.onDidChangeRepositories(this.onGitRepositoriesChanged, this)
+                Container.git.onDidChangeRepositories(this.onGitRepositoriesChanged, this)
             );
 
             const dms = await this._sessionApi.getDirectStreams(teamId);

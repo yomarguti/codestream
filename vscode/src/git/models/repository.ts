@@ -1,6 +1,6 @@
 'use strict';
 import { Uri } from 'vscode';
-import { GitRemote } from '../git';
+import { GitRemote } from '../gitService';
 import { Container } from '../../container';
 
 export class GitRepository {

@@ -227,7 +227,7 @@ export class Commands extends Disposable {
         const code = document.getText(selection);
         const commitHash = await Container.git.getFileCurrentSha(document.uri);
 
-        return Container.streamView.postCode(stream, repo, repo.relativizeUri(uri), code, selection, commitHash, mentions);
+        return Container.streamView.postCode(stream, repo, repo.relativizeUri(uri), code, selection, commitHash!, mentions);
     }
 
     @command('show')

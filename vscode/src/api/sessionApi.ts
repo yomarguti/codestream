@@ -9,7 +9,7 @@ import {
     StreamType
 } from './api';
 import { Container } from '../container';
-import { GitRepository } from '../git/git';
+import { GitRepository } from '../git/gitService';
 
 export class CodeStreamSessionApi {
 
