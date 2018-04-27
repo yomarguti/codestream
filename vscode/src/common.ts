@@ -35,5 +35,5 @@ export enum ContextKeys {
 }
 
 export function setContext(key: ContextKeys | string, value: any) {
-    return commands.executeCommand('setContext', key, value);
+    return commands.executeCommand(BuiltInCommands.SetContext, key, value);
 }

@@ -134,8 +134,13 @@
                 "category": "CodeStream"
             },
             {
-                "command": "codestream.explorer.inviteToLiveShare",
+                "command": "codestream.vsls.invite",
                 "title": "Invite to Live Share",
+                "category": "CodeStream"
+            },
+            {
+                "command": "codestream.vsls.join",
+                "title": "Join Live Share",
                 "category": "CodeStream"
             },
             {
@@ -188,7 +193,11 @@
                     "when": "editorTextFocus && editorHasSelection && editor codestream:status == signedIn"
                 },
                 {
-                    "command": "codestream.explorer.inviteToLiveShare",
+                    "command": "codestream.vsls.invite",
+                    "when": "false"
+                },
+                {
+                    "command": "codestream.vsls.join",
                     "when": "false"
                 },
                 {
@@ -222,7 +231,7 @@
                     "group": "2_codestream@1"
                 },
                 {
-                    "command": "codestream.explorer.inviteToLiveShare",
+                    "command": "codestream.vsls.invite",
                     "when": "view == codestream && viewItem == codestream:user && codestream:liveShareInstalled",
                     "group": "2_codestream@1"
                 }

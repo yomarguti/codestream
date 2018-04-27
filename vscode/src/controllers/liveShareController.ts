@@ -1,12 +1,14 @@
 'use strict';
 import { commands, Disposable, Extension, extensions, MessageItem, window, workspace } from 'vscode';
-import { Post, SessionStatus, SessionStatusChangedEvent, User } from '../api/session';
-import { OpenStreamCommandArgs } from '../commands';
+import { Post, SessionStatus, SessionStatusChangedEvent } from '../api/session';
+import { Command, CommandOptions } from '../commands';
 import { ContextKeys, setContext } from '../common';
 import { Container } from '../container';
-import { Iterables } from '../system';
-import { RemoteGitService, RemoteRepository } from '../git/remoteGitService';
+import { ExtensionId } from '../extension';
+import { UserNode } from '../views/explorer';
 import { Logger } from '../logger';
+import { RemoteGitService, RemoteRepository } from '../git/remoteGitService';
+import { Iterables } from '../system';
 
 const liveShareRegex = /https:\/\/(?:.*?)liveshare(?:.*?).visualstudio.com\/join\?(.*?)(?:\s|$)/;
 let liveShare: Extension<any> | undefined;
@@ -22,6 +24,18 @@ interface LiveShareContext {
     senderId: string;
     data: LiveShareActionData;
 }
+
+interface InviteCommandArgs {
+    userIds: string | string[];
+}
+
+interface JoinCommandArgs {
+    context: LiveShareContext;
+    sessionId: string;
+    url: string;
+}
+
+const commandRegistry: Command[] = [];
 
 export class LiveShareController extends Disposable {
 
@@ -42,6 +56,7 @@ export class LiveShareController extends Disposable {
         setContext(ContextKeys.LiveShareInstalled, true);
 
         this._disposable = Disposable.from(
+            ...commandRegistry.map(({ name, key, method }) => commands.registerCommand(name, (...args: any[]) => method.apply(this, args))),
             Container.session.onDidChangeStatus(this.onSessionStatusChanged, this),
             Container.linkActions.register<LiveShareActionData>('vsls', 'join', this.onRequestReceived, this)
         );
@@ -85,9 +100,11 @@ export class LiveShareController extends Disposable {
         const result = await window.showInformationMessage(`${sender.name} is inviting you to join a Live Share session`, ...actions);
         if (result === undefined || result === actions[1]) return;
 
-        await Container.context.globalState.update(`vsls:${sessionId}`, { senderId: post.senderId, data: e } as LiveShareContext);
-        await commands.executeCommand('liveshare.join', e.url); // , { newWindow: true });
-        // this.openStream(sessionId, e.memberIds);
+        this.join({
+            context: { senderId: post.senderId, data: e },
+            sessionId: sessionId,
+            url: e.url
+        });
     }
 
     private onSessionStatusChanged(e: SessionStatusChangedEvent) {
@@ -117,8 +134,22 @@ export class LiveShareController extends Disposable {
         }
     }
 
-    async invite(user: User) {
+    @command('invite')
+    async invite(args: UserNode | InviteCommandArgs) {
         if (!this.isInstalled) throw new Error('Live Share is not installed');
+
+        const users = [];
+        if (args instanceof UserNode) {
+            users.push(args.user);
+        }
+        else if (typeof args.userIds === 'string') {
+            users.push(await Container.session.users.get(args.userIds));
+        }
+        else {
+            for (const id of args.userIds) {
+                users.push(await Container.session.users.get(id));
+            }
+        }
 
         const result = await commands.executeCommand('liveshare.start', { suppressNotification: true });
         if (result === undefined) return;
@@ -127,19 +158,62 @@ export class LiveShareController extends Disposable {
         if (match == null) return;
 
         const [url, sessionId] = match;
-        const memberIds = [Container.session.userId, user.id];
+        const memberIds = [Container.session.userId, ...users.map(u => u.id)];
         this.openStream(sessionId, memberIds);
 
         const repos = Iterables.map(await Container.session.repos.items(), r => ({ id: r.id, hash: r.hash, normalizedUrl: r.normalizedUrl, url: r.url } as RemoteRepository));
 
         const link = Container.linkActions.toLinkAction<LiveShareActionData>('vsls', 'join', { url: url, sessionId: sessionId, memberIds: memberIds, repos: [...repos] });
-        await Container.session.post(`@${user.name} ${link}`);
+        return await Container.commands.post({
+            text: `${users.map(u => `@${u.name}`).join(', ')} ${link}`,
+            send: true,
+            autoCreate: false
+        });
+    }
+
+    @command('join')
+    async join(args: JoinCommandArgs) {
+        await Container.context.globalState.update(`vsls:${args.sessionId}`, args.context);
+        await commands.executeCommand('liveshare.join', args.url); // , { newWindow: true });
+        // this.openStream(sessionId, e.memberIds);
     }
 
     private async openStream(sessionId: string, memberIds: string[]) {
-        await commands.executeCommand('codestream.openStream', {
+        return await Container.commands.openStream({
             searchBy: memberIds,
             autoCreate: true
-        } as OpenStreamCommandArgs);
+        });
     }
+}
+
+function command(command: string, options: CommandOptions = {}): Function {
+    return (target: any, key: string, descriptor: any) => {
+        if (!(typeof descriptor.value === 'function')) throw new Error('not supported');
+
+        let method;
+        if (!options.customErrorHandling) {
+            method = async function(this: any, ...args: any[]) {
+                try {
+                    return await descriptor.value.apply(this, args);
+                }
+                catch (ex) {
+                    Logger.error(ex);
+
+                    if (options.showErrorMessage) {
+                        window.showErrorMessage(`${options.showErrorMessage} \u00a0\u2014\u00a0 ${ex.toString()}`);
+                    }
+                }
+            };
+        }
+        else {
+            method = descriptor.value;
+        }
+
+        commandRegistry.push({
+            name: `${ExtensionId}.vsls.${command}`,
+            key: key,
+            method: method,
+            options: options
+        });
+    };
 }

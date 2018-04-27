@@ -26,12 +26,12 @@ export enum BuiltInCommands {
     ShowReferences = 'editor.action.showReferences'
 }
 
-interface CommandOptions {
+export interface CommandOptions {
     customErrorHandling?: boolean;
     showErrorMessage?: string;
 }
 
-interface Command {
+export interface Command {
     name: string;
     key: string;
     method: Function;

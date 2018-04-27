@@ -2,7 +2,7 @@
 import { commands, ConfigurationChangeEvent, Disposable, Event, EventEmitter, TreeDataProvider, TreeItem, TreeView, window } from 'vscode';
 import { configuration } from '../configuration';
 import { Container } from '../container';
-import { ExplorerNode, RefreshReason, SessionNode, UserNode } from './explorerNodes';
+import { ExplorerNode, RefreshReason, SessionNode } from './explorerNodes';
 
 export * from './explorerNodes';
 
@@ -23,8 +23,6 @@ export class CodeStreamExplorer extends Disposable implements TreeDataProvider<E
         // Container.explorerCommands;
         commands.registerCommand('codestream.explorer.refresh', this.refresh, this);
         commands.registerCommand('codestream.explorer.refreshNode', this.refreshNode, this);
-
-        commands.registerCommand('codestream.explorer.inviteToLiveShare', this.inviteToLiveShare, this);
 
         // commands.registerCommand('gitlens.gitExplorer.setFilesLayoutToAuto', () => this.setFilesLayout(ExplorerFilesLayout.Auto), this);
         // commands.registerCommand('gitlens.gitExplorer.setFilesLayoutToList', () => this.setFilesLayout(ExplorerFilesLayout.List), this);
@@ -116,12 +114,6 @@ export class CodeStreamExplorer extends Disposable implements TreeDataProvider<E
         return `codestream.explorer.${command}`;
     }
 
-    inviteToLiveShare(node: UserNode) {
-        if (Container.liveShare === undefined) return;
-
-        return Container.liveShare.invite(node.user);
-    }
-
     async refresh(reason?: RefreshReason, root?: ExplorerNode) {
         if (reason === undefined) {
             reason = RefreshReason.Command;
@@ -142,6 +134,6 @@ export class CodeStreamExplorer extends Disposable implements TreeDataProvider<E
     }
 
     show() {
-        return commands.executeCommand('codestream.show');
+        return Container.commands.show();
     }
 }
