@@ -594,6 +594,17 @@ body.preload * {
 .codestream .stream .compose {
   position: unset;
 }
+.codestream .stream .compose .hint {
+  display: flex;
+  justify-content: space-between;
+}
+.codestream .stream .compose .hint .icon {
+  transform: none;
+  float: none;
+}
+.codestream .stream .compose .hint .icon:before {
+  content: "x";
+}
 .codestream .stream .at-mention.me {
   padding: 0px 6px 1px 4px;
   margin: 1px 0px -1px 0px;
@@ -601,7 +612,10 @@ body.preload * {
   background-color: rgba(127, 127, 127, 0.15);
 }
 .codestream .stream .post .headshot-gravatar {
-  padding-top: 3px;
+  padding-top: 0;
+}
+.codestream .stream .post .headshot-initials {
+  padding-top: 0;
 }
 .codestream .stream .postslist {
   flex: 1 1 auto;

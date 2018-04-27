@@ -30,6 +30,17 @@ body.preload * {
 
         .compose {
             position: unset;
+            .hint {
+                display: flex;
+                justify-content: space-between;
+                .icon {
+                    transform: none;
+                    float: none;
+                    &:before {
+                        content: "x";
+                    }
+                }
+            }
         }
 
         .at-mention.me {
@@ -41,7 +52,10 @@ body.preload * {
 
         .post {
             .headshot-gravatar {
-                padding-top: 3px;
+                padding-top: 0;
+            }
+            .headshot-initials {
+                padding-top: 0;
             }
         }
 
