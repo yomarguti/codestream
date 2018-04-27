@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="vscode-resource:{% styles-path %}"/>
 </head>
 
-<body class="codestream">
+<body class="codestream preload">
   <div id='data' style="display: none;">{% bootstrap-data %}</div>
   <div id='app'>codestream stuff goes here</div>
   <script src="vscode-resource:{% script-path %}"></script>
@@ -138,7 +138,11 @@
     }
 
     initializeColorPalette();
-  </script>
+
+    setTimeout(() => {
+        document.body.classList.remove('preload');
+    }, 1000); // Wait for animations to complete
+</script>
 </body>
 
 </html>
