@@ -1,6 +1,7 @@
 'use strict';
 import { DecorationOptions, Disposable, Range, TextEditor, TextEditorDecorationType, window } from 'vscode';
 import { Container } from '../container';
+import { SessionStatus, SessionStatusChangedEvent } from '../api/session';
 
 export class MarkerDecorationProvider extends Disposable {
 
@@ -22,21 +23,52 @@ export class MarkerDecorationProvider extends Disposable {
             } as any,
             borderRadius: '10px'
         });
+
         this._disposable = Disposable.from(
             this._decorationType,
-            window.onDidChangeActiveTextEditor(this.onEditorChanged, this)
+            window.onDidChangeActiveTextEditor(this.onEditorChanged, this),
+            Container.session.onDidChangeStatus(this.onSessionStatusChanged, this)
         );
+
+        if (Container.session.status === SessionStatus.SignedIn) {
+            this.apply();
+        }
     }
 
     dispose() {
+        this.clear();
         this._disposable && this._disposable.dispose();
     }
 
     private async onEditorChanged(e: TextEditor | undefined) {
         if (e === undefined) return;
 
-        const decorations = await this.provideDecorations(e);
-        e.setDecorations(this._decorationType, decorations);
+        this.apply();
+    }
+
+    private onSessionStatusChanged(e: SessionStatusChangedEvent) {
+        switch (e.getStatus()) {
+            case SessionStatus.SignedOut:
+                this.clear();
+                break;
+
+            case SessionStatus.SignedIn:
+                this.apply();
+                break;
+        }
+    }
+
+    async apply(editor: TextEditor | undefined = window.activeTextEditor) {
+        if (editor === undefined) return;
+
+        const decorations = await this.provideDecorations(editor);
+        editor.setDecorations(this._decorationType, decorations);
+    }
+
+    clear(editor: TextEditor | undefined = window.activeTextEditor) {
+        if (editor === undefined) return;
+
+        editor.setDecorations(this._decorationType, []);
     }
 
     async provideDecorations(editor: TextEditor /*, token: CancellationToken */): Promise<DecorationOptions[]> {
@@ -53,7 +85,7 @@ export class MarkerDecorationProvider extends Disposable {
 
         return decorations;
 
-        // const message = new MarkdownString(`*CodeStream*\n\nAkonwi wrote:\n\n\`\`\`This is some awesome code\`\`\`\n\n[Open Stream](command:codestream.openStream)`);
+        // const message = new MarkdownString(`Akonwi wrote:\n\n\`\`\`This is some awesome code\`\`\`\n\n[Open Stream](command:codestream.openStream)`);
         // message.isTrusted = true;
 
         // return [
