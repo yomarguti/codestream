@@ -7917,7 +7917,7 @@
 
 	var objectAssign$2 = ( objectAssign$1 && objectAssign ) || objectAssign$1;
 
-	var require$$10 = ( emptyObject$1 && emptyObject_1 ) || emptyObject$1;
+	var require$$2$5 = ( emptyObject$1 && emptyObject_1 ) || emptyObject$1;
 
 	var checkPropTypes$2 = ( checkPropTypes$1 && checkPropTypes_1 ) || checkPropTypes$1;
 
@@ -7930,7 +7930,7 @@
 
 	var _assign = objectAssign$2;
 	var invariant = require$$0$29;
-	var emptyObject = require$$10;
+	var emptyObject = require$$2$5;
 	var warning = require$$1$7;
 	var emptyFunction = emptyFunction$2;
 	var checkPropTypes = checkPropTypes$2;
@@ -9747,7 +9747,7 @@
 	var getActiveElement = require$$7;
 	var shallowEqual = require$$8$1;
 	var containsNode = require$$9;
-	var emptyObject = require$$10;
+	var emptyObject = require$$2$5;
 	var hyphenateStyleName = require$$11$1;
 	var camelizeStyleName = require$$12;
 
@@ -38906,13 +38906,13 @@
 
 	var require$$1$8 = ( charenc$1 && charenc_1 ) || charenc$1;
 
-	var require$$2$5 = ( isBuffer$1 && isBuffer_1 ) || isBuffer$1;
+	var require$$2$6 = ( isBuffer$1 && isBuffer_1 ) || isBuffer$1;
 
 	var md5$3 = createCommonjsModule(function (module) {
 	(function(){
 	  var crypt = require$$0$35,
 	      utf8 = require$$1$8.utf8,
-	      isBuffer = require$$2$5,
+	      isBuffer = require$$2$6,
 	      bin = require$$1$8.bin,
 
 	  // The core
@@ -44710,22 +44710,20 @@
 				// if a patch has been applied, we treat it as if there is
 				// a diff
 				var showDiffButtons = this.state.patchApplied;
-				if (post.markerLocation) {
-					var code = post.codeBlocks[0].code;
-					var editor = atom.workspace.getActiveTextEditor();
-					if (editor) {
-						var range = locationToRange(post.markerLocation);
-						var existingCode = editor.getTextInBufferRange(range);
-						if (code !== existingCode) {
-							showDiffButtons = true;
-						}
-					}
-				} else if (hasCodeBlock) {
-					// this is the case where we have a codeblock but no marker location
-					alert = react.createElement("span", { className: "icon icon-alert", ref: function ref(_ref4) {
-							return _this3._alert = _ref4;
-						} });
-				}
+				// if (post.markerLocation) {
+				// 	const code = post.codeBlocks[0].code;
+				// 	const editor = atom.workspace.getActiveTextEditor();
+				// 	if (editor) {
+				// 		const range = locationToRange(post.markerLocation);
+				// 		const existingCode = editor.getTextInBufferRange(range);
+				// 		if (code !== existingCode) {
+				// 			showDiffButtons = true;
+				// 		}
+				// 	}
+				// } else if (hasCodeBlock) {
+				// 	// this is the case where we have a codeblock but no marker location
+				// 	alert = <span className="icon icon-alert" ref={ref => (this._alert = ref)} />;
+				// }
 
 				var commitDiv = null;
 				if (hasCodeBlock) {
@@ -44764,8 +44762,8 @@
 				showDiffButtons = false;
 				return react.createElement(
 					"div",
-					{ className: "post-details", id: post.id, ref: function ref(_ref5) {
-							return _this3._div = _ref5;
+					{ className: "post-details", id: post.id, ref: function ref(_ref4) {
+							return _this3._div = _ref4;
 						} },
 					alert,
 					commitDiv,
