@@ -32,17 +32,16 @@ abstract class StreamBase<T extends CSStream> extends CodeStreamItem<T> {
         return this.entity.teamId;
     }
 
-    async post(text: string, parentPostId: string | undefined) {
+    async post(text: string, parentPostId?: string) {
         const post = await this.session.api.createPost(text, parentPostId, this.entity.id, this.entity.teamId);
         if (post === undefined) throw new Error(`Unable to post to Stream(${this.entity.id})`);
 
         return new Post(this.session, post);
     }
 
-    async postCode(text: string, parentPostId: string | undefined, code: string, range: Range, commitHash: string, markerStream: FileStream): Promise<Post>;
-    async postCode(text: string, parentPostId: string | undefined, code: string, range: Range, commitHash: string, markerStream: { file: string, repoId: string } | string): Promise<Post>;
-    async postCode(text: string, parentPostId: string | undefined, code: string, range: Range, commitHash: string, markerStreamId: string): Promise<Post>;
-    async postCode(text: string, parentPostId: string | undefined, code: string, range: Range, commitHash: string, markerStreamOrId: FileStream | { file: string, repoId: string } | string) {
+    async postCode(text: string, code: string, range: Range, commitHash: string, markerStream: FileStream, parentPostId?: string): Promise<Post>;
+    async postCode(text: string, code: string, range: Range, commitHash: string, markerStream: string | { file: string, repoId: string }, parentPostId?: string): Promise<Post>;
+    async postCode(text: string, code: string, range: Range, commitHash: string, markerStreamOrId: FileStream | string | { file: string, repoId: string }, parentPostId?: string) {
         const markerStream = markerStreamOrId instanceof FileStream
             ? markerStreamOrId.id
             : markerStreamOrId;
@@ -308,6 +307,16 @@ export class FileStreamCollection extends StreamCollectionBase<FileStream, CSFil
 
         return new FileStream(this.session, s, this.repo);
     }
+
+    async toIdOrArgs(uri: Uri) {
+        const markerStream = await this.repo.streams.getByUri(uri);
+        return markerStream !== undefined
+            ? markerStream.id
+            : {
+                file: this.repo.relativizeUri(uri),
+                repoId: this.repo.id
+            };
+}
 
     protected async fetch() {
         return this.session.api.getFileStreams(this.repo.id);

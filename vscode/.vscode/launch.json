@@ -14,6 +14,14 @@
       "preLaunchTask": "watch"
     },
     {
+      "name": "Attach to Extension",
+      "type": "node",
+      "request": "attach",
+      "protocol": "inspector",
+      "port": 5870,
+      "outFiles": [ "${workspaceRoot}/out/src/**/*.js" ]
+    },
+    {
       "name": "Debug Extension (Akonwi)",
       "type": "extensionHost",
       "request": "launch",

@@ -26,63 +26,29 @@ export enum BuiltInCommands {
     ShowReferences = 'editor.action.showReferences'
 }
 
-export interface CommandOptions {
-    customErrorHandling?: boolean;
-    showErrorMessage?: string;
-}
-
-export interface Command {
-    name: string;
-    key: string;
-    method: Function;
-    options: CommandOptions;
-}
-
-const registry: Command[] = [];
-
-function command(command: string, options: CommandOptions = {}): Function {
-    return (target: any, key: string, descriptor: any) => {
-        if (!(typeof descriptor.value === 'function')) throw new Error('not supported');
-
-        let method;
-        if (!options.customErrorHandling) {
-            method = async function(this: any, ...args: any[]) {
-                try {
-                    return await descriptor.value.apply(this, args);
-                }
-                catch (ex) {
-                    Logger.error(ex);
-
-                    if (options.showErrorMessage) {
-                        window.showErrorMessage(`${options.showErrorMessage} \u00a0\u2014\u00a0 ${ex.toString()}`);
-                    }
-                }
-            };
-        }
-        else {
-            method = descriptor.value;
-        }
-
-        registry.push({
-            name: `${ExtensionId}.${command}`,
-            key: key,
-            method: method,
-            options: options
-        });
-    };
-}
-
-export interface OpenStreamCommandArgs {
+interface IStreamLocator {
     stream?: Stream | StreamNode;
     searchBy?: Uri | string | string[];
-    autoCreate: boolean;
+    parentPostId?: string;
+    autoCreate?: boolean;
 }
 
-export interface PostCodeCommandArgs {
+export interface OpenStreamCommandArgs extends IStreamLocator {
+}
+
+export interface PostCommandArgs extends IStreamLocator {
+    text?: string;
+    send?: boolean;
+}
+
+export interface PostCodeCommandArgs extends IStreamLocator {
     document?: TextDocument;
     range?: Range;
-    streamName?: string;
+    text?: string;
+    send?: boolean;
 }
+
+const commandRegistry: Command[] = [];
 
 export class Commands extends Disposable {
 
@@ -92,7 +58,7 @@ export class Commands extends Disposable {
         super(() => this.dispose);
 
         this._disposable = Disposable.from(
-            ...registry.map(({ name, key, method }) => commands.registerCommand(name, (...args: any[]) => method.apply(this, args)))
+            ...commandRegistry.map(({ name, key, method }) => commands.registerCommand(name, (...args: any[]) => method.apply(this, args)))
         );
     }
 
@@ -154,55 +120,27 @@ export class Commands extends Disposable {
 
     @command('openStream', { showErrorMessage: 'Unable to open stream' })
     async openStream(args: OpenStreamCommandArgs) {
-        let stream;
-        if (args !== undefined) {
-            if (args.stream !== undefined) {
-                stream = args.stream instanceof StreamNode ? args.stream.stream : args.stream;
-            }
-            else if (args.searchBy !== undefined) {
-                if (typeof args.searchBy === 'string') {
-                    if (args.autoCreate) throw new Error(`Auto-create isn't supported on Channels`);
-
-                    stream = await Container.session.channels.getByName(args.searchBy);
-                }
-                else if (args.searchBy instanceof Uri) {
-                    const repo = await Container.session.repos.getByFileUri(args.searchBy);
-                    if (repo !== undefined) {
-                        if (args.autoCreate) {
-                            stream = await repo.streams.getOrCreateByUri(args.searchBy);
-                        }
-                        else {
-                            stream = await repo.streams.getByUri(args.searchBy);
-                        }
-                    }
-                    else {
-                        stream = undefined;
-                    }
-                }
-                else {
-                    if (args.autoCreate) {
-                        stream = await Container.session.directMessages.getOrCreateByMembers(args.searchBy);
-                    }
-                    else {
-                        stream = await Container.session.directMessages.getByMembers(args.searchBy);
-                    }
-                }
-            }
-        }
-
+        const stream = await this.findStream(args, { includeActive: true, includeDefault: true });
         if (stream === undefined) return;
 
-        // TODO: Switch to codestream view?
-        Container.explorer.show();
         return Container.streamView.openStream(stream);
     }
 
     @command('post', { showErrorMessage: 'Unable to post message' })
-    async post() {
-        const message = await window.showInputBox({ prompt: 'Enter message', placeHolder: 'Message' });
-        if (message === undefined) return;
+    async post(args: PostCommandArgs) {
+        const stream = await this.findStream(args, { includeActive: true, includeDefault: !args.send });
+        if (stream === undefined) throw new Error(`No stream could be found`);
 
-        return Container.session.post(message);
+        if (args.send && args.text) {
+            await Container.streamView.openStream(stream);
+            return stream.post(args.text, args.parentPostId);
+        }
+
+        if (args.text) {
+            return Container.streamView.post(stream, args.text);
+        }
+
+        return await Container.streamView.openStream(stream);
     }
 
     @command('postCode', { showErrorMessage: 'Unable to add comment' })
@@ -223,14 +161,13 @@ export class Commands extends Disposable {
 
         if (document === undefined || selection === undefined) return undefined;
 
+        const stream = await this.findStream(args, { includeActive: true, includeDefault: !args.send });
+        if (stream === undefined) throw new Error(`No stream could be found`);
+
         const uri = document.uri;
 
         const repo = await Container.session.repos.getByFileUri(uri);
         if (repo === undefined) throw new Error(`No repository could be found for Uri(${uri.toString()}`);
-
-        const stream = args.streamName === undefined
-            ? await Container.session.getDefaultTeamChannel()
-            : await Container.session.channels.getOrCreateByName(args.streamName);
 
         const authors = await Container.git.getFileAuthors(uri, {
             startLine: selection.start.line,
@@ -244,7 +181,13 @@ export class Commands extends Disposable {
         const code = document.getText(selection);
         const commitHash = await Container.git.getFileCurrentSha(document.uri);
 
-        return Container.streamView.postCode(stream, repo, repo.relativizeUri(uri), code, selection, commitHash!, mentions);
+        if (args.send && args.text) {
+            // Get the file/marker stream to post to
+            const markerStream = await repo.streams.toIdOrArgs(uri);
+            return stream.postCode(args.text, code, selection, commitHash!, markerStream, args.parentPostId);
+        }
+
+        return Container.streamView.postCode(stream, repo, repo.relativizeUri(uri), code, selection, commitHash!, args.text, mentions);
     }
 
     @command('show')
@@ -260,6 +203,54 @@ export class Commands extends Disposable {
     @command('signOut')
     signOut() {
         return Container.session.logout();
+    }
+
+    private async findStream(locator: IStreamLocator, options: { includeActive?: boolean, includeDefault?: boolean } = {}) {
+        let stream;
+        if (locator !== undefined) {
+            if (locator.stream !== undefined) {
+                stream = locator.stream instanceof StreamNode ? locator.stream.stream : locator.stream;
+            }
+            else if (locator.searchBy !== undefined) {
+                if (typeof locator.searchBy === 'string') {
+                    if (locator.autoCreate) throw new Error(`Auto-create isn't supported on Channels`);
+
+                    stream = await Container.session.channels.getByName(locator.searchBy);
+                }
+                else if (locator.searchBy instanceof Uri) {
+                    const repo = await Container.session.repos.getByFileUri(locator.searchBy);
+                    if (repo !== undefined) {
+                        if (locator.autoCreate) {
+                            stream = await repo.streams.getOrCreateByUri(locator.searchBy);
+                        }
+                        else {
+                            stream = await repo.streams.getByUri(locator.searchBy);
+                        }
+                    }
+                    else {
+                        stream = undefined;
+                    }
+                }
+                else {
+                    if (locator.autoCreate) {
+                        stream = await Container.session.directMessages.getOrCreateByMembers(locator.searchBy);
+                    }
+                    else {
+                        stream = await Container.session.directMessages.getByMembers(locator.searchBy);
+                    }
+                }
+            }
+        }
+
+        if (stream === undefined && options.includeActive) {
+            stream = Container.streamView.activeStream;
+        }
+
+        if (stream === undefined && options.includeDefault) {
+            stream = await Container.session.getDefaultTeamChannel();
+        }
+
+        return stream;
     }
 
     private async signInCore(username: string, password: string, teamId?: string) {
@@ -287,4 +278,48 @@ export class Commands extends Disposable {
             }
         }
     }
+}
+
+export interface CommandOptions {
+    customErrorHandling?: boolean;
+    showErrorMessage?: string;
+}
+
+export interface Command {
+    name: string;
+    key: string;
+    method: Function;
+    options: CommandOptions;
+}
+
+function command(command: string, options: CommandOptions = {}): Function {
+    return (target: any, key: string, descriptor: any) => {
+        if (!(typeof descriptor.value === 'function')) throw new Error('not supported');
+
+        let method;
+        if (!options.customErrorHandling) {
+            method = async function(this: any, ...args: any[]) {
+                try {
+                    return await descriptor.value.apply(this, args);
+                }
+                catch (ex) {
+                    Logger.error(ex);
+
+                    if (options.showErrorMessage) {
+                        window.showErrorMessage(`${options.showErrorMessage} \u00a0\u2014\u00a0 ${ex.toString()}`);
+                    }
+                }
+            };
+        }
+        else {
+            method = descriptor.value;
+        }
+
+        commandRegistry.push({
+            name: `${ExtensionId}.${command}`,
+            key: key,
+            method: method,
+            options: options
+        });
+    };
 }

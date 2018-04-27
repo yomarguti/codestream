@@ -1,5 +1,5 @@
 'use strict';
-import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, Range, Uri } from 'vscode';
+import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { CodeStreamApi, CSRepository, CSStream, LoginResponse } from './api';
 import { configuration } from '../configuration';
 import { Container } from '../container';
@@ -463,28 +463,6 @@ export class CodeStreamSession extends Disposable {
     @signedIn
     hasSingleTeam(): Promise<boolean> {
         return Promise.resolve(this._data!.teams.length === 1);
-    }
-
-    @signedIn
-    async post(text: string, streamName?: string): Promise<Post> {
-        const stream = streamName === undefined
-            ? await this.getDefaultTeamChannel()
-            : await this.channels.getOrCreateByName(streamName);
-        return stream.post(text);
-    }
-
-    @signedIn
-    async postCode(text: string, uri: Uri, code: string, range: Range, commitHash: string, streamName?: string) {
-        const repo = await this.repos.getByFileUri(uri);
-        if (repo === undefined) throw new Error(`No repository could be found for Uri(${uri.toString()}`);
-
-        const markerStream = await repo.streams.getOrCreateByUri(uri);
-
-        const stream = streamName === undefined
-            ? await this.getDefaultTeamChannel()
-            : await this.channels.getOrCreateByName(streamName);
-
-        return stream.postCode(text, code, range, commitHash, markerStream);
     }
 
     private async loginCore(email: string, password: string, teamId?: string): Promise<CodeStreamSession> {
