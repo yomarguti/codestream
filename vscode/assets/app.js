@@ -51195,10 +51195,6 @@
 		}
 	});
 
-	var goToInvitePage = function goToInvitePage() {
-	  return { type: "GO_TO_INVITE_PAGE" };
-	};
-
 	var toMapBy = function toMapBy(key, entities) {
 		return entities.reduce(function (result, entity) {
 			return _extends$5({}, result, defineProperty$5({}, entity[key], entity));
@@ -51740,10 +51736,10 @@
 					_this.focusInput();
 
 					var newState = {
-						quoteText: "",
-						preContext: "",
-						postContext: "",
-						quoteRange: null
+						// 	quoteText: "",
+						// 	preContext: "",
+						// 	postContext: "",
+						// 	quoteRange: null
 					};
 
 					// remove any at-mentions that we have added manually
@@ -51753,6 +51749,7 @@
 					}
 
 					_this.setState(newState);
+					_this.props.clearSelectedCode();
 				}
 			});
 			Object.defineProperty(_this, "handleClickAddComment", {
@@ -52896,7 +52893,10 @@
 		createPost: createPost,
 		editPost: editPost,
 		deletePost: deletePost,
-		goToInvitePage: goToInvitePage
+		clearSelectedCode: function clearSelectedCode() {
+			return { type: 'CLEAR_SELECTED_CODE' };
+		}
+		// goToInvitePage: routingActions.goToInvitePage
 	}))(withRepositories(withConfigs(SimpleStream)));
 
 	var _this$3 = undefined;

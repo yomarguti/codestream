@@ -841,10 +841,10 @@ export class SimpleStream extends Component {
 		this.focusInput();
 
 		let newState = {
-			quoteText: "",
-			preContext: "",
-			postContext: "",
-			quoteRange: null
+		// 	quoteText: "",
+		// 	preContext: "",
+		// 	postContext: "",
+		// 	quoteRange: null
 		};
 
 		// remove any at-mentions that we have added manually
@@ -856,6 +856,7 @@ export class SimpleStream extends Component {
 		}
 
 		this.setState(newState);
+		this.props.clearSelectedCode();
 	};
 
 	// figure out who to at-mention based on the git blame data.
@@ -1343,5 +1344,6 @@ export default connect(mapStateToProps, {
 	createPost,
 	editPost,
 	deletePost,
-	goToInvitePage: routingActions.goToInvitePage
+	clearSelectedCode: () => ({type: 'CLEAR_SELECTED_CODE' })
+	// goToInvitePage: routingActions.goToInvitePage
 })(withRepositories(withConfigs(SimpleStream)));
