@@ -20,15 +20,16 @@ export class CodeStreamSessionApi {
     ) {
     }
 
-    async createPost(text: string, streamId: string, teamId?: string): Promise<CSPost | undefined> {
+    async createPost(text: string, parentPostId: string | undefined, streamId: string, teamId?: string): Promise<CSPost | undefined> {
         return (await this._api.createPost(this.token, {
             teamId: teamId || this.teamId,
             streamId: streamId,
-            text: text
+            text: text,
+            parentPostId
         })).post;
     }
 
-    async createPostWithCode(text: string, code: string, range: Range, commitHash: string, fileStream: string | { file: string, repoId: string }, streamId: string, teamId?: string): Promise<CSPost | undefined> {
+    async createPostWithCode(text: string, parentPostId: string | undefined, code: string, range: Range, commitHash: string, fileStream: string | { file: string, repoId: string }, streamId: string, teamId?: string): Promise<CSPost | undefined> {
         const codeBlock: CreatePostRequestCodeBlock = {
             code: code,
             location: [
@@ -51,6 +52,7 @@ export class CodeStreamSessionApi {
             teamId: teamId || this.teamId,
             streamId: streamId,
             text: text,
+            parentPostId,
             codeBlocks: [codeBlock],
             commitHashWhenPosted: commitHash
         })).post;

@@ -60,11 +60,11 @@ class MessageRelay extends Disposable {
             case 'action-request':
                 switch (body.action) {
                     case 'post':
-                        const { text, codeBlocks, commitHashWhenPosted } = body.params;
+                        const { text, codeBlocks, commitHashWhenPosted, parentPostId } = body.params;
 
                         let post;
                         if (codeBlocks === undefined || codeBlocks.length === 0) {
-                            post = await this._stream.post(text);
+                            post = await this._stream.post(text, parentPostId);
                         }
                         else {
                             const block = codeBlocks[0];
@@ -79,7 +79,7 @@ class MessageRelay extends Disposable {
                                 markerStream = block.streamId;
                             }
 
-                            post = await this._stream.postCode(text, block.code, createRange(block.location), commitHashWhenPosted, markerStream);
+                            post = await this._stream.postCode(text, parentPostId, block.code, createRange(block.location), commitHashWhenPosted, markerStream);
                         }
 
                         if (post === undefined) return;

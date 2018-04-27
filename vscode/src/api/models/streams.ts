@@ -32,22 +32,22 @@ abstract class StreamBase<T extends CSStream> extends CodeStreamItem<T> {
         return this.entity.teamId;
     }
 
-    async post(text: string) {
-        const post = await this.session.api.createPost(text, this.entity.id, this.entity.teamId);
+    async post(text: string, parentPostId: string | undefined) {
+        const post = await this.session.api.createPost(text, parentPostId, this.entity.id, this.entity.teamId);
         if (post === undefined) throw new Error(`Unable to post to Stream(${this.entity.id})`);
 
         return new Post(this.session, post);
     }
 
-    async postCode(text: string, code: string, range: Range, commitHash: string, markerStream: FileStream): Promise<Post>;
-    async postCode(text: string, code: string, range: Range, commitHash: string, markerStream: { file: string, repoId: string } | string): Promise<Post>;
-    async postCode(text: string, code: string, range: Range, commitHash: string, markerStreamId: string): Promise<Post>;
-    async postCode(text: string, code: string, range: Range, commitHash: string, markerStreamOrId: FileStream | { file: string, repoId: string } | string) {
+    async postCode(text: string, parentPostId: string | undefined, code: string, range: Range, commitHash: string, markerStream: FileStream): Promise<Post>;
+    async postCode(text: string, parentPostId: string | undefined, code: string, range: Range, commitHash: string, markerStream: { file: string, repoId: string } | string): Promise<Post>;
+    async postCode(text: string, parentPostId: string | undefined, code: string, range: Range, commitHash: string, markerStreamId: string): Promise<Post>;
+    async postCode(text: string, parentPostId: string | undefined, code: string, range: Range, commitHash: string, markerStreamOrId: FileStream | { file: string, repoId: string } | string) {
         const markerStream = markerStreamOrId instanceof FileStream
             ? markerStreamOrId.id
             : markerStreamOrId;
 
-        const post = await this.session.api.createPostWithCode(text, code, range, commitHash, markerStream, this.entity.id, this.entity.teamId);
+        const post = await this.session.api.createPostWithCode(text, parentPostId, code, range, commitHash, markerStream, this.entity.id, this.entity.teamId);
         if (post === undefined) throw new Error(`Unable to post code to Stream(${this.entity.id})`);
 
         return new Post(this.session, post);

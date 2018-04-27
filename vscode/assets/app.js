@@ -52260,15 +52260,46 @@
 				// return Path.basename(this.props.currentFile);
 			}
 		}, {
-			key: "render",
+			key: "renderThreadPosts",
+			value: function renderThreadPosts(threadId) {
+				var _this5 = this;
 
+				var lastTimestamp = 0;
 
+				return this.props.posts.map(function (post) {
+					if (post.deactivated) return null;
+					if (!threadId || threadId !== post.parentPostId) {
+						return null;
+					}
+					// this needs to be done by storing the return value of the render,
+					// then setting lastTimestamp, otherwise you wouldn't be able to
+					// compare the current one to the prior one.
+					var returnValue = react.createElement(
+						"div",
+						{ key: post.id },
+						react.createElement(DateSeparator, { timestamp1: lastTimestamp, timestamp2: post.createdAt }),
+						react.createElement(Post$1, {
+							post: post,
+							usernames: _this5.props.usernamesRegexp,
+							currentUsername: _this5.props.currentUser.username,
+							showDetails: "1",
+							currentCommit: _this5.props.currentCommit,
+							editing: post.id === _this5.state.editingPostId
+						})
+					);
+					lastTimestamp = post.createdAt;
+					return returnValue;
+				});
+			}
 			// we render both a main stream (postslist) plus also a postslist related
 			// to the currently selected thread (if it exists). the reason for this is
 			// to be able to animate between the two streams, since they will both be
 			// visible during the transition
+
+		}, {
+			key: "render",
 			value: function render() {
-				var _this5 = this;
+				var _this6 = this;
 
 				var posts$$1 = this.props.posts;
 
@@ -52347,21 +52378,21 @@
 				return react.createElement(
 					"div",
 					{ className: streamClass, ref: function ref(_ref9) {
-							return _this5._div = _ref9;
+							return _this6._div = _ref9;
 						} },
 					react.createElement(
 						"div",
 						{
 							className: postsListClass,
 							ref: function ref(_ref5) {
-								return _this5._postslist = _ref5;
+								return _this6._postslist = _ref5;
 							},
 							onClick: this.handleClickPost
 						},
 						react.createElement(
 							"div",
 							{ className: "intro", ref: function ref(_ref4) {
-									return _this5._intro = _ref4;
+									return _this6._intro = _ref4;
 								} },
 							this.renderIntro()
 						),
@@ -52379,11 +52410,11 @@
 								react.createElement(DateSeparator, { timestamp1: lastTimestamp, timestamp2: post.createdAt }),
 								react.createElement(Post$1, {
 									post: post,
-									usernames: _this5.props.usernamesRegexp,
-									currentUsername: _this5.props.currentUser.username,
+									usernames: _this6.props.usernamesRegexp,
+									currentUsername: _this6.props.currentUser.username,
 									replyingTo: parentPost,
-									newMessageIndicator: post.seqNum && post.seqNum === Number(_this5.postWithNewMessageIndicator),
-									editing: post.id === _this5.state.editingPostId
+									newMessageIndicator: post.seqNum && post.seqNum === Number(_this6.postWithNewMessageIndicator),
+									editing: post.id === _this6.state.editingPostId
 								})
 							);
 							lastTimestamp = post.createdAt;
@@ -52395,7 +52426,7 @@
 						{
 							className: threadPostsListClass,
 							ref: function ref(_ref6) {
-								return _this5._threadpostslist = _ref6;
+								return _this6._threadpostslist = _ref6;
 							},
 							onClick: this.handleClickPost
 						},
@@ -52418,8 +52449,7 @@
 							currentCommit: this.props.currentCommit,
 							editing: threadPost.id === this.state.editingPostId
 						}),
-						lastTimestamp = posts$$1.map(function (post) {
-						})
+						this.renderThreadPosts(threadId)
 					),
 					react.createElement(
 						"div",
@@ -52427,7 +52457,7 @@
 							className: composeClass,
 							onKeyPress: this.handleOnKeyPress,
 							ref: function ref(_ref8) {
-								return _this5._compose = _ref8;
+								return _this6._compose = _ref8;
 							}
 						},
 						hasNewMessagesBelowFold && react.createElement(
@@ -52447,7 +52477,7 @@
 							html: newPostText,
 							placeholder: placeholderText,
 							ref: function ref(_ref7) {
-								return _this5._contentEditable = _ref7;
+								return _this6._contentEditable = _ref7;
 							}
 						})
 					)
@@ -52505,7 +52535,7 @@
 			// figure out who to at-mention based on the git blame data.
 			// insert the text into the compose field
 			value: function addBlameAtMention(selectionRange, gitData) {
-				var _this6 = this;
+				var _this7 = this;
 
 				var postText = this.state.newPostText || "";
 				var authors = {};
@@ -52516,17 +52546,17 @@
 							var authorEmail = lineData["email"];
 							if (authorEmail && authorEmail !== "not.committed.yet") {
 								// find the author -- FIXME this feels fragile
-								Object.entries(_this6.props.users).forEach(function (_ref10) {
+								Object.entries(_this7.props.users).forEach(function (_ref10) {
 									var _ref11 = slicedToArray(_ref10, 2),
 									    userId = _ref11[0],
 									    user = _ref11[1];
 
 									if (user.email === authorEmail) {
-										if (userId !== _this6.props.currentUser.id) {
+										if (userId !== _this7.props.currentUser.id) {
 											// skip if the input field already contains this user
 											if (postText.match("@" + user.username + "\\b")) return;
 											authors["@" + user.username] = true;
-											_this6.setState(function (state) {
+											_this7.setState(function (state) {
 												return {
 													autoMentioning: [].concat(toConsumableArray$1(state.autoMentioning), ["@" + user.username])
 												};
@@ -52572,13 +52602,13 @@
 		}, {
 			key: "showAtMentionSelectors",
 			value: function showAtMentionSelectors(prefix) {
-				var _this7 = this;
+				var _this8 = this;
 
 				var peopleToShow = [];
 
 				Object.keys(this.props.users).forEach(function (personId) {
-					if (personId === _this7.props.currentUser.id) return;
-					var person = _this7.props.users[personId];
+					if (personId === _this8.props.currentUser.id) return;
+					var person = _this8.props.users[personId];
 					var toMatch = person.firstName + " " + person.lastName + "*" + person.username; // + "*" + person.email;
 					var lowered = toMatch.toLowerCase();
 					if (lowered.indexOf(prefix) !== -1) {
