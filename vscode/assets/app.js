@@ -51697,6 +51697,16 @@
 					var threadId = post.parentPostId || post.id;
 					_this.setState({ threadId: threadId, threadActive: true });
 
+					vscode.postMessage({
+						type: 'event',
+						body: {
+							name: 'thread-selected',
+							payload: {
+								threadId: threadId,
+								streamId: post.streamId
+							}
+						}
+					}, '*');
 					// if (post.codeBlocks && post.codeBlocks.length) {
 					// 	const codeBlock = post.codeBlocks[0];
 					// 	this.hideDisplayMarker();

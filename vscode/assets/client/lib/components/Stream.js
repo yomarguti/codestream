@@ -798,6 +798,16 @@ export class SimpleStream extends Component {
 		const threadId = post.parentPostId || post.id;
 		this.setState({ threadId: threadId, threadActive: true });
 
+		vscode.postMessage({
+			type: 'event',
+			body: {
+				name: 'thread-selected',
+				payload: {
+					threadId,
+					streamId: post.streamId
+				}
+			}
+		}, '*')
 		// if (post.codeBlocks && post.codeBlocks.length) {
 		// 	const codeBlock = post.codeBlocks[0];
 		// 	this.hideDisplayMarker();

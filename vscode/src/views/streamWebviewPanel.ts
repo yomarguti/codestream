@@ -101,6 +101,9 @@ class MessageRelay extends Disposable {
 
                         commands.executeCommand('codestream.openPostWorkingFile', new Post(this.session, body.payload, this._stream));
                         return;
+                    case 'thread-selected':
+                        const { threadId, streamId } = body.payload;
+                        return;
                 }
                 break;
             }
