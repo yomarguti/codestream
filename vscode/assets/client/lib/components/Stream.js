@@ -26,6 +26,7 @@ import { getPostsForStream } from "../reducers/posts";
 import rootLogger from "../util/Logger";
 import Button from "./onboarding/Button";
 // import EditingIndicator from "./EditingIndicator";
+import { vscode } from '../codestream-api-vs-webview';
 
 // import Path from "path";
 const logger = rootLogger.forClass("components/Stream");
@@ -756,7 +757,7 @@ export class SimpleStream extends Component {
 			// by dragging
 			return;
 		}
-		this.selectPost(postDiv.id);
+		this.selectPost(postDiv.id, event.target.matches('.code'));
 	};
 
 	findMentions = text => {
@@ -774,22 +775,27 @@ export class SimpleStream extends Component {
 
 	// show the thread related to the given post, and if there is
 	// a codeblock, scroll to it and select it
-	selectPost = id => {
+	selectPost = (id, codeClicked) => {
 		// TODO: mixpanel.track("Page Viewed", { "Page Name": "Thread View" });
 		const post = this.findPostById(id);
 		if (!post) return;
 
-		window.parent.postMessage({
-			type: 'event',
-			body: {
-				name: 'post-clicked',
-				payload: post
-			}
-		}, '*');
+		if (codeClicked) {
+			vscode.postMessage({
+				type: 'event',
+				body: {
+					name: 'post-clicked',
+					payload: post
+				}
+			}, '*');
+
+			return;
+		}
+
 		// if it is a child in the thread, it'll have a parentPostId,
 		// otherwise use the id. any post can become the head of a thread
-		// const threadId = post.parentPostId || post.id;
-		// this.setState({ threadId: threadId, threadActive: true });
+		const threadId = post.parentPostId || post.id;
+		this.setState({ threadId: threadId, threadActive: true });
 
 		// if (post.codeBlocks && post.codeBlocks.length) {
 		// 	const codeBlock = post.codeBlocks[0];

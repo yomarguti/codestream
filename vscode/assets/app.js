@@ -888,11 +888,11 @@
 
 	var $export$1 = ( _export$1 && _export ) || _export$1;
 
-	var meta = ( _meta$1 && _meta ) || _meta$1;
+	var require$$0$8 = ( _meta$1 && _meta ) || _meta$1;
 
 	var setToStringTag = ( _setToStringTag$1 && _setToStringTag ) || _setToStringTag$1;
 
-	var require$$0$8 = ( _wksDefine$1 && _wksDefine ) || _wksDefine$1;
+	var require$$0$9 = ( _wksDefine$1 && _wksDefine ) || _wksDefine$1;
 
 	var enumKeys = ( _enumKeys$1 && _enumKeys ) || _enumKeys$1;
 
@@ -910,7 +910,7 @@
 
 
 
-	var META = meta.KEY;
+	var META = require$$0$8.KEY;
 
 
 
@@ -1072,7 +1072,7 @@
 	  'hasInstance,isConcatSpreadable,iterator,match,replace,search,species,split,toPrimitive,toStringTag,unscopables'
 	).split(','), j = 0; es6Symbols.length > j;)require$$0$3(es6Symbols[j++]);
 
-	for (var wellKnownSymbols = getKeys(require$$0$3.store), k = 0; wellKnownSymbols.length > k;) require$$0$8(wellKnownSymbols[k++]);
+	for (var wellKnownSymbols = getKeys(require$$0$3.store), k = 0; wellKnownSymbols.length > k;) require$$0$9(wellKnownSymbols[k++]);
 
 	$export$1($export$1.S + $export$1.F * !USE_NATIVE, 'Symbol', {
 	  // 19.4.2.1 Symbol.for(key)
@@ -1163,13 +1163,13 @@
 		__moduleExports: _objectSap
 	});
 
-	var require$$0$9 = ( _objectSap$1 && _objectSap ) || _objectSap$1;
+	var require$$0$10 = ( _objectSap$1 && _objectSap ) || _objectSap$1;
 
 	// 19.1.2.6 Object.getOwnPropertyDescriptor(O, P)
 
 	var $getOwnPropertyDescriptor$1 = require$$38.f;
 
-	require$$0$9('getOwnPropertyDescriptor', function () {
+	require$$0$10('getOwnPropertyDescriptor', function () {
 	  return function getOwnPropertyDescriptor(it, key) {
 	    return $getOwnPropertyDescriptor$1(toIObject(it), key);
 	  };
@@ -1213,7 +1213,7 @@
 
 
 
-	require$$0$9('getPrototypeOf', function () {
+	require$$0$10('getPrototypeOf', function () {
 	  return function getPrototypeOf(it) {
 	    return require$$23(require$$20(it));
 	  };
@@ -1223,51 +1223,51 @@
 
 
 
-	require$$0$9('keys', function () {
+	require$$0$10('keys', function () {
 	  return function keys(it) {
 	    return getKeys(require$$20(it));
 	  };
 	});
 
 	// 19.1.2.7 Object.getOwnPropertyNames(O)
-	require$$0$9('getOwnPropertyNames', function () {
+	require$$0$10('getOwnPropertyNames', function () {
 	  return require$$1$4.f;
 	});
 
 	// 19.1.2.5 Object.freeze(O)
 
-	var meta$1 = meta.onFreeze;
+	var meta = require$$0$8.onFreeze;
 
-	require$$0$9('freeze', function ($freeze) {
+	require$$0$10('freeze', function ($freeze) {
 	  return function freeze(it) {
-	    return $freeze && isObject(it) ? $freeze(meta$1(it)) : it;
+	    return $freeze && isObject(it) ? $freeze(meta(it)) : it;
 	  };
 	});
 
 	// 19.1.2.17 Object.seal(O)
 
-	var meta$2 = meta.onFreeze;
+	var meta$1 = require$$0$8.onFreeze;
 
-	require$$0$9('seal', function ($seal) {
+	require$$0$10('seal', function ($seal) {
 	  return function seal(it) {
-	    return $seal && isObject(it) ? $seal(meta$2(it)) : it;
+	    return $seal && isObject(it) ? $seal(meta$1(it)) : it;
 	  };
 	});
 
 	// 19.1.2.15 Object.preventExtensions(O)
 
-	var meta$3 = meta.onFreeze;
+	var meta$2 = require$$0$8.onFreeze;
 
-	require$$0$9('preventExtensions', function ($preventExtensions) {
+	require$$0$10('preventExtensions', function ($preventExtensions) {
 	  return function preventExtensions(it) {
-	    return $preventExtensions && isObject(it) ? $preventExtensions(meta$3(it)) : it;
+	    return $preventExtensions && isObject(it) ? $preventExtensions(meta$2(it)) : it;
 	  };
 	});
 
 	// 19.1.2.12 Object.isFrozen(O)
 
 
-	require$$0$9('isFrozen', function ($isFrozen) {
+	require$$0$10('isFrozen', function ($isFrozen) {
 	  return function isFrozen(it) {
 	    return isObject(it) ? $isFrozen ? $isFrozen(it) : false : true;
 	  };
@@ -1276,7 +1276,7 @@
 	// 19.1.2.13 Object.isSealed(O)
 
 
-	require$$0$9('isSealed', function ($isSealed) {
+	require$$0$10('isSealed', function ($isSealed) {
 	  return function isSealed(it) {
 	    return isObject(it) ? $isSealed ? $isSealed(it) : false : true;
 	  };
@@ -1285,7 +1285,7 @@
 	// 19.1.2.11 Object.isExtensible(O)
 
 
-	require$$0$9('isExtensible', function ($isExtensible) {
+	require$$0$10('isExtensible', function ($isExtensible) {
 	  return function isExtensible(it) {
 	    return isObject(it) ? $isExtensible ? $isExtensible(it) : true : false;
 	  };
@@ -1348,11 +1348,11 @@
 		__moduleExports: _sameValue
 	});
 
-	var require$$0$10 = ( _sameValue$1 && _sameValue ) || _sameValue$1;
+	var require$$0$11 = ( _sameValue$1 && _sameValue ) || _sameValue$1;
 
 	// 19.1.3.10 Object.is(value1, value2)
 
-	$export$1($export$1.S, 'Object', { is: require$$0$10 });
+	$export$1($export$1.S, 'Object', { is: require$$0$11 });
 
 	// Works with __proto__ only. Old v8 can't work with null proto objects.
 	/* eslint-disable no-proto */
@@ -1389,11 +1389,11 @@
 		check: _setProto_2
 	});
 
-	var require$$0$11 = ( _setProto$1 && _setProto ) || _setProto$1;
+	var require$$0$12 = ( _setProto$1 && _setProto ) || _setProto$1;
 
 	// 19.1.3.19 Object.setPrototypeOf(O, proto)
 
-	$export$1($export$1.S, 'Object', { setPrototypeOf: require$$0$11.set });
+	$export$1($export$1.S, 'Object', { setPrototypeOf: require$$0$12.set });
 
 	// getting tag from 19.1.3.6 Object.prototype.toString()
 
@@ -1605,7 +1605,7 @@
 	// 18.2.4 parseFloat(string)
 	$export$1($export$1.G + $export$1.F * (parseFloat != $parseFloat$1), { parseFloat: $parseFloat$1 });
 
-	var setPrototypeOf = require$$0$11.set;
+	var setPrototypeOf = require$$0$12.set;
 	var _inheritIfRequired = function (that, target, C) {
 	  var S = target.constructor;
 	  var P;
@@ -1918,7 +1918,7 @@
 		__moduleExports: _mathLog1p
 	});
 
-	var require$$0$12 = ( _mathLog1p$1 && _mathLog1p ) || _mathLog1p$1;
+	var require$$0$13 = ( _mathLog1p$1 && _mathLog1p ) || _mathLog1p$1;
 
 	// 20.2.2.3 Math.acosh(x)
 
@@ -1935,7 +1935,7 @@
 	  acosh: function acosh(x) {
 	    return (x = +x) < 1 ? NaN : x > 94906265.62425156
 	      ? Math.log(x) + Math.LN2
-	      : require$$0$12(x - 1 + sqrt(x - 1) * sqrt(x + 1));
+	      : require$$0$13(x - 1 + sqrt(x - 1) * sqrt(x + 1));
 	  }
 	});
 
@@ -2119,7 +2119,7 @@
 	// 20.2.2.20 Math.log1p(x)
 
 
-	$export$1($export$1.S, 'Math', { log1p: require$$0$12 });
+	$export$1($export$1.S, 'Math', { log1p: require$$0$13 });
 
 	// 20.2.2.22 Math.log2(x)
 
@@ -2330,11 +2330,11 @@
 		__moduleExports: _iterDefine
 	});
 
-	var require$$0$13 = ( _stringAt$1 && _stringAt ) || _stringAt$1;
+	var require$$0$14 = ( _stringAt$1 && _stringAt ) || _stringAt$1;
 
 	var $iterDefine = ( _iterDefine$1 && _iterDefine ) || _iterDefine$1;
 
-	var $at = require$$0$13(true);
+	var $at = require$$0$14(true);
 
 	// 21.1.3.27 String.prototype[@@iterator]()
 	$iterDefine(String, 'String', function (iterated) {
@@ -2351,7 +2351,7 @@
 	  return { value: point, done: false };
 	});
 
-	var $at$1 = require$$0$13(false);
+	var $at$1 = require$$0$14(false);
 	$export$1($export$1.P, 'String', {
 	  // 21.1.3.3 String.prototype.codePointAt(pos)
 	  codePointAt: function codePointAt(pos) {
@@ -2409,12 +2409,12 @@
 
 	var context = ( _stringContext$1 && _stringContext ) || _stringContext$1;
 
-	var require$$0$14 = ( _failsIsRegexp$1 && _failsIsRegexp ) || _failsIsRegexp$1;
+	var require$$0$15 = ( _failsIsRegexp$1 && _failsIsRegexp ) || _failsIsRegexp$1;
 
 	var ENDS_WITH = 'endsWith';
 	var $endsWith = ''[ENDS_WITH];
 
-	$export$1($export$1.P + $export$1.F * require$$0$14(ENDS_WITH), 'String', {
+	$export$1($export$1.P + $export$1.F * require$$0$15(ENDS_WITH), 'String', {
 	  endsWith: function endsWith(searchString /* , endPosition = @length */) {
 	    var that = context(this, searchString, ENDS_WITH);
 	    var endPosition = arguments.length > 1 ? arguments[1] : undefined;
@@ -2429,7 +2429,7 @@
 
 	var INCLUDES = 'includes';
 
-	$export$1($export$1.P + $export$1.F * require$$0$14(INCLUDES), 'String', {
+	$export$1($export$1.P + $export$1.F * require$$0$15(INCLUDES), 'String', {
 	  includes: function includes(searchString /* , position = 0 */) {
 	    return !!~context(this, searchString, INCLUDES)
 	      .indexOf(searchString, arguments.length > 1 ? arguments[1] : undefined);
@@ -2444,7 +2444,7 @@
 	var STARTS_WITH = 'startsWith';
 	var $startsWith = ''[STARTS_WITH];
 
-	$export$1($export$1.P + $export$1.F * require$$0$14(STARTS_WITH), 'String', {
+	$export$1($export$1.P + $export$1.F * require$$0$15(STARTS_WITH), 'String', {
 	  startsWith: function startsWith(searchString /* , position = 0 */) {
 	    var that = context(this, searchString, STARTS_WITH);
 	    var index = toLength(Math.min(arguments.length > 1 ? arguments[1] : undefined, that.length));
@@ -2477,94 +2477,94 @@
 		__moduleExports: _stringHtml
 	});
 
-	var require$$0$15 = ( _stringHtml$1 && _stringHtml ) || _stringHtml$1;
+	var require$$0$16 = ( _stringHtml$1 && _stringHtml ) || _stringHtml$1;
 
 	// B.2.3.2 String.prototype.anchor(name)
-	require$$0$15('anchor', function (createHTML) {
+	require$$0$16('anchor', function (createHTML) {
 	  return function anchor(name) {
 	    return createHTML(this, 'a', 'name', name);
 	  };
 	});
 
 	// B.2.3.3 String.prototype.big()
-	require$$0$15('big', function (createHTML) {
+	require$$0$16('big', function (createHTML) {
 	  return function big() {
 	    return createHTML(this, 'big', '', '');
 	  };
 	});
 
 	// B.2.3.4 String.prototype.blink()
-	require$$0$15('blink', function (createHTML) {
+	require$$0$16('blink', function (createHTML) {
 	  return function blink() {
 	    return createHTML(this, 'blink', '', '');
 	  };
 	});
 
 	// B.2.3.5 String.prototype.bold()
-	require$$0$15('bold', function (createHTML) {
+	require$$0$16('bold', function (createHTML) {
 	  return function bold() {
 	    return createHTML(this, 'b', '', '');
 	  };
 	});
 
 	// B.2.3.6 String.prototype.fixed()
-	require$$0$15('fixed', function (createHTML) {
+	require$$0$16('fixed', function (createHTML) {
 	  return function fixed() {
 	    return createHTML(this, 'tt', '', '');
 	  };
 	});
 
 	// B.2.3.7 String.prototype.fontcolor(color)
-	require$$0$15('fontcolor', function (createHTML) {
+	require$$0$16('fontcolor', function (createHTML) {
 	  return function fontcolor(color) {
 	    return createHTML(this, 'font', 'color', color);
 	  };
 	});
 
 	// B.2.3.8 String.prototype.fontsize(size)
-	require$$0$15('fontsize', function (createHTML) {
+	require$$0$16('fontsize', function (createHTML) {
 	  return function fontsize(size) {
 	    return createHTML(this, 'font', 'size', size);
 	  };
 	});
 
 	// B.2.3.9 String.prototype.italics()
-	require$$0$15('italics', function (createHTML) {
+	require$$0$16('italics', function (createHTML) {
 	  return function italics() {
 	    return createHTML(this, 'i', '', '');
 	  };
 	});
 
 	// B.2.3.10 String.prototype.link(url)
-	require$$0$15('link', function (createHTML) {
+	require$$0$16('link', function (createHTML) {
 	  return function link(url) {
 	    return createHTML(this, 'a', 'href', url);
 	  };
 	});
 
 	// B.2.3.11 String.prototype.small()
-	require$$0$15('small', function (createHTML) {
+	require$$0$16('small', function (createHTML) {
 	  return function small() {
 	    return createHTML(this, 'small', '', '');
 	  };
 	});
 
 	// B.2.3.12 String.prototype.strike()
-	require$$0$15('strike', function (createHTML) {
+	require$$0$16('strike', function (createHTML) {
 	  return function strike() {
 	    return createHTML(this, 'strike', '', '');
 	  };
 	});
 
 	// B.2.3.13 String.prototype.sub()
-	require$$0$15('sub', function (createHTML) {
+	require$$0$16('sub', function (createHTML) {
 	  return function sub() {
 	    return createHTML(this, 'sub', '', '');
 	  };
 	});
 
 	// B.2.3.14 String.prototype.sup()
-	require$$0$15('sup', function (createHTML) {
+	require$$0$16('sup', function (createHTML) {
 	  return function sup() {
 	    return createHTML(this, 'sup', '', '');
 	  };
@@ -2813,7 +2813,7 @@
 		__moduleExports: _strictMethod
 	});
 
-	var require$$0$16 = ( _strictMethod$1 && _strictMethod ) || _strictMethod$1;
+	var require$$0$17 = ( _strictMethod$1 && _strictMethod ) || _strictMethod$1;
 
 	// 22.1.3.13 Array.prototype.join(separator)
 
@@ -2821,7 +2821,7 @@
 	var arrayJoin = [].join;
 
 	// fallback for not array-like strings
-	$export$1($export$1.P + $export$1.F * (IObject != Object || !require$$0$16(arrayJoin)), 'Array', {
+	$export$1($export$1.P + $export$1.F * (IObject != Object || !require$$0$17(arrayJoin)), 'Array', {
 	  join: function join(separator) {
 	    return arrayJoin.call(toIObject(this), separator === undefined ? ',' : separator);
 	  }
@@ -2860,7 +2860,7 @@
 	  // V8 bug
 	  test$1.sort(null);
 	  // Old WebKit
-	}) || !require$$0$16($sort)), 'Array', {
+	}) || !require$$0$17($sort)), 'Array', {
 	  // 22.1.3.25 Array.prototype.sort(comparefn)
 	  sort: function sort(comparefn) {
 	    return comparefn === undefined
@@ -2958,7 +2958,7 @@
 	var require$$28 = ( _arrayMethods$1 && _arrayMethods ) || _arrayMethods$1;
 
 	var $forEach = require$$28(0);
-	var STRICT = require$$0$16([].forEach, true);
+	var STRICT = require$$0$17([].forEach, true);
 
 	$export$1($export$1.P + $export$1.F * !STRICT, 'Array', {
 	  // 22.1.3.10 / 15.4.4.18 Array.prototype.forEach(callbackfn [, thisArg])
@@ -2969,7 +2969,7 @@
 
 	var $map = require$$28(1);
 
-	$export$1($export$1.P + $export$1.F * !require$$0$16([].map, true), 'Array', {
+	$export$1($export$1.P + $export$1.F * !require$$0$17([].map, true), 'Array', {
 	  // 22.1.3.15 / 15.4.4.19 Array.prototype.map(callbackfn [, thisArg])
 	  map: function map(callbackfn /* , thisArg */) {
 	    return $map(this, callbackfn, arguments[1]);
@@ -2978,7 +2978,7 @@
 
 	var $filter = require$$28(2);
 
-	$export$1($export$1.P + $export$1.F * !require$$0$16([].filter, true), 'Array', {
+	$export$1($export$1.P + $export$1.F * !require$$0$17([].filter, true), 'Array', {
 	  // 22.1.3.7 / 15.4.4.20 Array.prototype.filter(callbackfn [, thisArg])
 	  filter: function filter(callbackfn /* , thisArg */) {
 	    return $filter(this, callbackfn, arguments[1]);
@@ -2987,7 +2987,7 @@
 
 	var $some = require$$28(3);
 
-	$export$1($export$1.P + $export$1.F * !require$$0$16([].some, true), 'Array', {
+	$export$1($export$1.P + $export$1.F * !require$$0$17([].some, true), 'Array', {
 	  // 22.1.3.23 / 15.4.4.17 Array.prototype.some(callbackfn [, thisArg])
 	  some: function some(callbackfn /* , thisArg */) {
 	    return $some(this, callbackfn, arguments[1]);
@@ -2996,7 +2996,7 @@
 
 	var $every = require$$28(4);
 
-	$export$1($export$1.P + $export$1.F * !require$$0$16([].every, true), 'Array', {
+	$export$1($export$1.P + $export$1.F * !require$$0$17([].every, true), 'Array', {
 	  // 22.1.3.5 / 15.4.4.16 Array.prototype.every(callbackfn [, thisArg])
 	  every: function every(callbackfn /* , thisArg */) {
 	    return $every(this, callbackfn, arguments[1]);
@@ -3034,14 +3034,14 @@
 
 	var $reduce = ( _arrayReduce$1 && _arrayReduce ) || _arrayReduce$1;
 
-	$export$1($export$1.P + $export$1.F * !require$$0$16([].reduce, true), 'Array', {
+	$export$1($export$1.P + $export$1.F * !require$$0$17([].reduce, true), 'Array', {
 	  // 22.1.3.18 / 15.4.4.21 Array.prototype.reduce(callbackfn [, initialValue])
 	  reduce: function reduce(callbackfn /* , initialValue */) {
 	    return $reduce(this, callbackfn, arguments.length, arguments[1], false);
 	  }
 	});
 
-	$export$1($export$1.P + $export$1.F * !require$$0$16([].reduceRight, true), 'Array', {
+	$export$1($export$1.P + $export$1.F * !require$$0$17([].reduceRight, true), 'Array', {
 	  // 22.1.3.19 / 15.4.4.22 Array.prototype.reduceRight(callbackfn [, initialValue])
 	  reduceRight: function reduceRight(callbackfn /* , initialValue */) {
 	    return $reduce(this, callbackfn, arguments.length, arguments[1], true);
@@ -3052,7 +3052,7 @@
 	var $native = [].indexOf;
 	var NEGATIVE_ZERO = !!$native && 1 / [1].indexOf(1, -0) < 0;
 
-	$export$1($export$1.P + $export$1.F * (NEGATIVE_ZERO || !require$$0$16($native)), 'Array', {
+	$export$1($export$1.P + $export$1.F * (NEGATIVE_ZERO || !require$$0$17($native)), 'Array', {
 	  // 22.1.3.11 / 15.4.4.14 Array.prototype.indexOf(searchElement [, fromIndex])
 	  indexOf: function indexOf(searchElement /* , fromIndex = 0 */) {
 	    return NEGATIVE_ZERO
@@ -3065,7 +3065,7 @@
 	var $native$1 = [].lastIndexOf;
 	var NEGATIVE_ZERO$1 = !!$native$1 && 1 / [1].lastIndexOf(1, -0) < 0;
 
-	$export$1($export$1.P + $export$1.F * (NEGATIVE_ZERO$1 || !require$$0$16($native$1)), 'Array', {
+	$export$1($export$1.P + $export$1.F * (NEGATIVE_ZERO$1 || !require$$0$17($native$1)), 'Array', {
 	  // 22.1.3.14 / 15.4.4.15 Array.prototype.lastIndexOf(searchElement [, fromIndex])
 	  lastIndexOf: function lastIndexOf(searchElement /* , fromIndex = @[*-1] */) {
 	    // convert -0 to +0
@@ -3121,14 +3121,14 @@
 
 	var require$$36 = ( _arrayCopyWithin$1 && _arrayCopyWithin ) || _arrayCopyWithin$1;
 
-	var require$$0$17 = ( _addToUnscopables$1 && _addToUnscopables ) || _addToUnscopables$1;
+	var require$$0$18 = ( _addToUnscopables$1 && _addToUnscopables ) || _addToUnscopables$1;
 
 	// 22.1.3.3 Array.prototype.copyWithin(target, start, end = this.length)
 
 
 	$export$1($export$1.P, 'Array', { copyWithin: require$$36 });
 
-	require$$0$17('copyWithin');
+	require$$0$18('copyWithin');
 
 	var _arrayFill = function fill(value /* , start = 0, end = @length */) {
 	  var O = require$$20(this);
@@ -3153,7 +3153,7 @@
 
 	$export$1($export$1.P, 'Array', { fill: require$$35 });
 
-	require$$0$17('fill');
+	require$$0$18('fill');
 
 	// 22.1.3.8 Array.prototype.find(predicate, thisArg = undefined)
 
@@ -3167,7 +3167,7 @@
 	    return $find(this, callbackfn, arguments.length > 1 ? arguments[1] : undefined);
 	  }
 	});
-	require$$0$17(KEY);
+	require$$0$18(KEY);
 
 	// 22.1.3.9 Array.prototype.findIndex(predicate, thisArg = undefined)
 
@@ -3181,7 +3181,7 @@
 	    return $find$1(this, callbackfn, arguments.length > 1 ? arguments[1] : undefined);
 	  }
 	});
-	require$$0$17(KEY$1);
+	require$$0$18(KEY$1);
 
 	var SPECIES$1 = require$$0$3('species');
 
@@ -3238,9 +3238,9 @@
 	// argumentsList[@@iterator] is %ArrayProto_values% (9.4.4.6, 9.4.4.7)
 	require$$32.Arguments = require$$32.Array;
 
-	require$$0$17('keys');
-	require$$0$17('values');
-	require$$0$17('entries');
+	require$$0$18('keys');
+	require$$0$18('values');
+	require$$0$18('entries');
 
 	var es6_array_iterator$1 = /*#__PURE__*/Object.freeze({
 		default: es6_array_iterator,
@@ -3363,10 +3363,10 @@
 		__moduleExports: _fixReWks
 	});
 
-	var require$$0$18 = ( _fixReWks$1 && _fixReWks ) || _fixReWks$1;
+	var require$$0$19 = ( _fixReWks$1 && _fixReWks ) || _fixReWks$1;
 
 	// @@match logic
-	require$$0$18('match', 1, function (defined, MATCH, $match) {
+	require$$0$19('match', 1, function (defined, MATCH, $match) {
 	  // 21.1.3.11 String.prototype.match(regexp)
 	  return [function match(regexp) {
 	    var O = defined(this);
@@ -3376,7 +3376,7 @@
 	});
 
 	// @@replace logic
-	require$$0$18('replace', 2, function (defined, REPLACE, $replace) {
+	require$$0$19('replace', 2, function (defined, REPLACE, $replace) {
 	  // 21.1.3.14 String.prototype.replace(searchValue, replaceValue)
 	  return [function replace(searchValue, replaceValue) {
 	    var O = defined(this);
@@ -3388,7 +3388,7 @@
 	});
 
 	// @@search logic
-	require$$0$18('search', 1, function (defined, SEARCH, $search) {
+	require$$0$19('search', 1, function (defined, SEARCH, $search) {
 	  // 21.1.3.15 String.prototype.search(regexp)
 	  return [function search(regexp) {
 	    var O = defined(this);
@@ -3398,7 +3398,7 @@
 	});
 
 	// @@split logic
-	require$$0$18('split', 2, function (defined, SPLIT, $split) {
+	require$$0$19('split', 2, function (defined, SPLIT, $split) {
 	  var isRegExp$$1 = isRegExp;
 	  var _split = $split;
 	  var $push = [].push;
@@ -3610,9 +3610,9 @@
 		clear: _task_2
 	});
 
-	var require$$0$19 = ( _task$1 && _task ) || _task$1;
+	var require$$0$20 = ( _task$1 && _task ) || _task$1;
 
-	var macrotask = require$$0$19.set;
+	var macrotask = require$$0$20.set;
 	var Observer = require$$2.MutationObserver || require$$2.WebKitMutationObserver;
 	var process$2 = require$$2.process;
 	var Promise$1 = require$$2.Promise;
@@ -3758,7 +3758,7 @@
 
 	var require$$30 = ( _speciesConstructor$1 && _speciesConstructor ) || _speciesConstructor$1;
 
-	var require$$0$20 = ( _microtask$1 && _microtask ) || _microtask$1;
+	var require$$0$21 = ( _microtask$1 && _microtask ) || _microtask$1;
 
 	var perform = ( _perform$1 && _perform ) || _perform$1;
 
@@ -3766,8 +3766,8 @@
 
 	var require$$11 = ( _redefineAll$1 && _redefineAll ) || _redefineAll$1;
 
-	var task = require$$0$19.set;
-	var microtask = require$$0$20();
+	var task = require$$0$20.set;
+	var microtask = require$$0$21();
 
 
 
@@ -4055,7 +4055,7 @@
 
 
 
-	var fastKey = meta.fastKey;
+	var fastKey = require$$0$8.fastKey;
 
 	var SIZE = require$$0 ? '_s' : 'size';
 
@@ -4227,7 +4227,7 @@
 	    // create collection constructor
 	    C = common.getConstructor(wrapper, NAME, IS_MAP, ADDER);
 	    require$$11(C.prototype, methods);
-	    meta.NEED = true;
+	    require$$0$8.NEED = true;
 	  } else {
 	    var instance = new C();
 	    // early implementations not supports chaining
@@ -4281,12 +4281,12 @@
 
 	var strong = ( _collectionStrong$1 && _collectionStrong ) || _collectionStrong$1;
 
-	var require$$0$21 = ( _collection$1 && _collection ) || _collection$1;
+	var require$$0$22 = ( _collection$1 && _collection ) || _collection$1;
 
 	var MAP = 'Map';
 
 	// 23.1 Map Objects
-	var es6_map = require$$0$21(MAP, function (get) {
+	var es6_map = require$$0$22(MAP, function (get) {
 	  return function Map() { return get(this, arguments.length > 0 ? arguments[0] : undefined); };
 	}, {
 	  // 23.1.3.6 Map.prototype.get(key)
@@ -4308,7 +4308,7 @@
 	var SET = 'Set';
 
 	// 23.2 Set Objects
-	var es6_set = require$$0$21(SET, function (get) {
+	var es6_set = require$$0$22(SET, function (get) {
 	  return function Set() { return get(this, arguments.length > 0 ? arguments[0] : undefined); };
 	}, {
 	  // 23.2.3.1 Set.prototype.add(value)
@@ -4322,7 +4322,7 @@
 		__moduleExports: es6_set
 	});
 
-	var getWeak = meta.getWeak;
+	var getWeak = require$$0$8.getWeak;
 
 
 
@@ -4429,7 +4429,7 @@
 
 
 	var WEAK_MAP = 'WeakMap';
-	var getWeak = meta.getWeak;
+	var getWeak = require$$0$8.getWeak;
 	var isExtensible = Object.isExtensible;
 	var uncaughtFrozenStore = weak.ufstore;
 	var tmp = {};
@@ -4457,13 +4457,13 @@
 	};
 
 	// 23.3 WeakMap Objects
-	var $WeakMap = module.exports = require$$0$21(WEAK_MAP, wrapper, methods, weak, true, true);
+	var $WeakMap = module.exports = require$$0$22(WEAK_MAP, wrapper, methods, weak, true, true);
 
 	// IE11 WeakMap frozen keys fix
 	if (require$$1(function () { return new $WeakMap().set((Object.freeze || Object)(tmp), 7).get(tmp) != 7; })) {
 	  InternalMap = weak.getConstructor(wrapper, WEAK_MAP);
 	  assign(InternalMap.prototype, methods);
-	  meta.NEED = true;
+	  require$$0$8.NEED = true;
 	  each(['delete', 'has', 'get', 'set'], function (key) {
 	    var proto = $WeakMap.prototype;
 	    var method = proto[key];
@@ -4488,7 +4488,7 @@
 	var WEAK_SET = 'WeakSet';
 
 	// 23.4 WeakSet Objects
-	require$$0$21(WEAK_SET, function (get) {
+	require$$0$22(WEAK_SET, function (get) {
 	  return function WeakSet() { return get(this, arguments.length > 0 ? arguments[0] : undefined); };
 	}, {
 	  // 23.4.3.1 WeakSet.prototype.add(value)
@@ -5373,57 +5373,57 @@
 		__moduleExports: _typedArray
 	});
 
-	var require$$0$22 = ( _typedArray$1 && _typedArray ) || _typedArray$1;
+	var require$$0$23 = ( _typedArray$1 && _typedArray ) || _typedArray$1;
 
-	require$$0$22('Int8', 1, function (init) {
+	require$$0$23('Int8', 1, function (init) {
 	  return function Int8Array(data, byteOffset, length) {
 	    return init(this, data, byteOffset, length);
 	  };
 	});
 
-	require$$0$22('Uint8', 1, function (init) {
+	require$$0$23('Uint8', 1, function (init) {
 	  return function Uint8Array(data, byteOffset, length) {
 	    return init(this, data, byteOffset, length);
 	  };
 	});
 
-	require$$0$22('Uint8', 1, function (init) {
+	require$$0$23('Uint8', 1, function (init) {
 	  return function Uint8ClampedArray(data, byteOffset, length) {
 	    return init(this, data, byteOffset, length);
 	  };
 	}, true);
 
-	require$$0$22('Int16', 2, function (init) {
+	require$$0$23('Int16', 2, function (init) {
 	  return function Int16Array(data, byteOffset, length) {
 	    return init(this, data, byteOffset, length);
 	  };
 	});
 
-	require$$0$22('Uint16', 2, function (init) {
+	require$$0$23('Uint16', 2, function (init) {
 	  return function Uint16Array(data, byteOffset, length) {
 	    return init(this, data, byteOffset, length);
 	  };
 	});
 
-	require$$0$22('Int32', 4, function (init) {
+	require$$0$23('Int32', 4, function (init) {
 	  return function Int32Array(data, byteOffset, length) {
 	    return init(this, data, byteOffset, length);
 	  };
 	});
 
-	require$$0$22('Uint32', 4, function (init) {
+	require$$0$23('Uint32', 4, function (init) {
 	  return function Uint32Array(data, byteOffset, length) {
 	    return init(this, data, byteOffset, length);
 	  };
 	});
 
-	require$$0$22('Float32', 4, function (init) {
+	require$$0$23('Float32', 4, function (init) {
 	  return function Float32Array(data, byteOffset, length) {
 	    return init(this, data, byteOffset, length);
 	  };
 	});
 
-	require$$0$22('Float64', 8, function (init) {
+	require$$0$23('Float64', 8, function (init) {
 	  return function Float64Array(data, byteOffset, length) {
 	    return init(this, data, byteOffset, length);
 	  };
@@ -5699,11 +5699,11 @@
 
 
 
-	if (require$$0$11) $export$1($export$1.S, 'Reflect', {
+	if (require$$0$12) $export$1($export$1.S, 'Reflect', {
 	  setPrototypeOf: function setPrototypeOf(target, proto) {
-	    require$$0$11.check(target, proto);
+	    require$$0$12.check(target, proto);
 	    try {
-	      require$$0$11.set(target, proto);
+	      require$$0$12.set(target, proto);
 	      return true;
 	    } catch (e) {
 	      return false;
@@ -5721,7 +5721,7 @@
 	  }
 	});
 
-	require$$0$17('includes');
+	require$$0$18('includes');
 
 	// https://tc39.github.io/proposal-flatMap/#sec-FlattenIntoArray
 
@@ -5789,7 +5789,7 @@
 	  }
 	});
 
-	require$$0$17('flatMap');
+	require$$0$18('flatMap');
 
 	// https://tc39.github.io/proposal-flatMap/#sec-Array.prototype.flatten
 
@@ -5810,11 +5810,11 @@
 	  }
 	});
 
-	require$$0$17('flatten');
+	require$$0$18('flatten');
 
 	// https://github.com/mathiasbynens/String.prototype.at
 
-	var $at$2 = require$$0$13(true);
+	var $at$2 = require$$0$14(true);
 
 	$export$1($export$1.P, 'String', {
 	  at: function at(pos) {
@@ -5925,9 +5925,9 @@
 	  }
 	});
 
-	require$$0$8('asyncIterator');
+	require$$0$9('asyncIterator');
 
-	require$$0$8('observable');
+	require$$0$9('observable');
 
 	// https://github.com/tc39/proposal-object-getownpropertydescriptors
 
@@ -5972,11 +5972,11 @@
 		__moduleExports: _objectToArray
 	});
 
-	var require$$0$23 = ( _objectToArray$1 && _objectToArray ) || _objectToArray$1;
+	var require$$0$24 = ( _objectToArray$1 && _objectToArray ) || _objectToArray$1;
 
 	// https://github.com/tc39/proposal-object-values-entries
 
-	var $values = require$$0$23(false);
+	var $values = require$$0$24(false);
 
 	$export$1($export$1.S, 'Object', {
 	  values: function values(it) {
@@ -5986,7 +5986,7 @@
 
 	// https://github.com/tc39/proposal-object-values-entries
 
-	var $entries = require$$0$23(true);
+	var $entries = require$$0$24(true);
 
 	$export$1($export$1.S, 'Object', {
 	  entries: function entries(it) {
@@ -6080,17 +6080,17 @@
 		__moduleExports: _collectionToJson
 	});
 
-	var require$$0$24 = ( _collectionToJson$1 && _collectionToJson ) || _collectionToJson$1;
+	var require$$0$25 = ( _collectionToJson$1 && _collectionToJson ) || _collectionToJson$1;
 
 	// https://github.com/DavidBruant/Map-Set.prototype.toJSON
 
 
-	$export$1($export$1.P + $export$1.R, 'Map', { toJSON: require$$0$24('Map') });
+	$export$1($export$1.P + $export$1.R, 'Map', { toJSON: require$$0$25('Map') });
 
 	// https://github.com/DavidBruant/Map-Set.prototype.toJSON
 
 
-	$export$1($export$1.P + $export$1.R, 'Set', { toJSON: require$$0$24('Set') });
+	$export$1($export$1.P + $export$1.R, 'Set', { toJSON: require$$0$25('Set') });
 
 	// https://tc39.github.io/proposal-setmap-offrom/
 
@@ -6109,19 +6109,19 @@
 		__moduleExports: _setCollectionOf
 	});
 
-	var require$$0$25 = ( _setCollectionOf$1 && _setCollectionOf ) || _setCollectionOf$1;
+	var require$$0$26 = ( _setCollectionOf$1 && _setCollectionOf ) || _setCollectionOf$1;
 
 	// https://tc39.github.io/proposal-setmap-offrom/#sec-map.of
-	require$$0$25('Map');
+	require$$0$26('Map');
 
 	// https://tc39.github.io/proposal-setmap-offrom/#sec-set.of
-	require$$0$25('Set');
+	require$$0$26('Set');
 
 	// https://tc39.github.io/proposal-setmap-offrom/#sec-weakmap.of
-	require$$0$25('WeakMap');
+	require$$0$26('WeakMap');
 
 	// https://tc39.github.io/proposal-setmap-offrom/#sec-weakset.of
-	require$$0$25('WeakSet');
+	require$$0$26('WeakSet');
 
 	// https://tc39.github.io/proposal-setmap-offrom/
 
@@ -6156,19 +6156,19 @@
 		__moduleExports: _setCollectionFrom
 	});
 
-	var require$$0$26 = ( _setCollectionFrom$1 && _setCollectionFrom ) || _setCollectionFrom$1;
+	var require$$0$27 = ( _setCollectionFrom$1 && _setCollectionFrom ) || _setCollectionFrom$1;
 
 	// https://tc39.github.io/proposal-setmap-offrom/#sec-map.from
-	require$$0$26('Map');
+	require$$0$27('Map');
 
 	// https://tc39.github.io/proposal-setmap-offrom/#sec-set.from
-	require$$0$26('Set');
+	require$$0$27('Set');
 
 	// https://tc39.github.io/proposal-setmap-offrom/#sec-weakmap.from
-	require$$0$26('WeakMap');
+	require$$0$27('WeakMap');
 
 	// https://tc39.github.io/proposal-setmap-offrom/#sec-weakset.from
-	require$$0$26('WeakSet');
+	require$$0$27('WeakSet');
 
 	// https://github.com/tc39/proposal-global
 
@@ -6238,7 +6238,7 @@
 		__moduleExports: _mathScale
 	});
 
-	var require$$0$27 = ( _mathScale$1 && _mathScale ) || _mathScale$1;
+	var require$$0$28 = ( _mathScale$1 && _mathScale ) || _mathScale$1;
 
 	// https://rwaldron.github.io/proposal-math-extensions/
 
@@ -6247,7 +6247,7 @@
 
 	$export$1($export$1.S, 'Math', {
 	  fscale: function fscale(x, inLow, inHigh, outLow, outHigh) {
-	    return fround(require$$0$27(x, inLow, inHigh, outLow, outHigh));
+	    return fround(require$$0$28(x, inLow, inHigh, outLow, outHigh));
 	  }
 	});
 
@@ -6310,7 +6310,7 @@
 	// https://rwaldron.github.io/proposal-math-extensions/
 
 
-	$export$1($export$1.S, 'Math', { scale: require$$0$27 });
+	$export$1($export$1.S, 'Math', { scale: require$$0$28 });
 
 	// https://gist.github.com/BrendanEich/4294d5c212a6d2254703
 
@@ -6544,7 +6544,7 @@
 
 	// https://github.com/rwaldron/tc39-notes/blob/master/es6/2014-09/sept-25.md#510-globalasap-for-enqueuing-a-microtask
 
-	var microtask$1 = require$$0$20();
+	var microtask$1 = require$$0$21();
 	var process$4 = require$$2.process;
 	var isNode$2 = require$$1$2(process$4) == 'process';
 
@@ -6559,7 +6559,7 @@
 
 
 
-	var microtask$2 = require$$0$20();
+	var microtask$2 = require$$0$21();
 	var OBSERVABLE = require$$0$3('observable');
 
 
@@ -6776,8 +6776,8 @@
 	});
 
 	$export$1($export$1.G + $export$1.B, {
-	  setImmediate: require$$0$19.set,
-	  clearImmediate: require$$0$19.clear
+	  setImmediate: require$$0$20.set,
+	  clearImmediate: require$$0$20.clear
 	});
 
 	var ITERATOR$4 = require$$0$3('iterator');
@@ -7853,14 +7853,14 @@
 		__moduleExports: ReactPropTypesSecret_1
 	});
 
-	var require$$0$28 = ( invariant$1 && invariant_1 ) || invariant$1;
+	var require$$0$29 = ( invariant$1 && invariant_1 ) || invariant$1;
 
 	var require$$1$7 = ( warning$1 && warning_1 ) || warning$1;
 
 	var require$$2$4 = ( ReactPropTypesSecret$1 && ReactPropTypesSecret_1 ) || ReactPropTypesSecret$1;
 
 	{
-	  var invariant$2 = require$$0$28;
+	  var invariant$2 = require$$0$29;
 	  var warning$2 = require$$1$7;
 	  var ReactPropTypesSecret$2 = require$$2$4;
 	  var loggedTypeFailures = {};
@@ -7917,7 +7917,7 @@
 
 	var objectAssign$2 = ( objectAssign$1 && objectAssign ) || objectAssign$1;
 
-	var require$$2$5 = ( emptyObject$1 && emptyObject_1 ) || emptyObject$1;
+	var require$$10 = ( emptyObject$1 && emptyObject_1 ) || emptyObject$1;
 
 	var checkPropTypes$2 = ( checkPropTypes$1 && checkPropTypes_1 ) || checkPropTypes$1;
 
@@ -7929,8 +7929,8 @@
 	  (function() {
 
 	var _assign = objectAssign$2;
-	var invariant = require$$0$28;
-	var emptyObject = require$$2$5;
+	var invariant = require$$0$29;
+	var emptyObject = require$$10;
 	var warning = require$$1$7;
 	var emptyFunction = emptyFunction$2;
 	var checkPropTypes = checkPropTypes$2;
@@ -9332,12 +9332,12 @@
 		__moduleExports: react_development
 	});
 
-	var require$$0$29 = ( react_development$1 && react_development ) || react_development$1;
+	var require$$0$30 = ( react_development$1 && react_development ) || react_development$1;
 
 	var react = createCommonjsModule(function (module) {
 
 	{
-	  module.exports = require$$0$29;
+	  module.exports = require$$0$30;
 	}
 	});
 	var react_1 = react.Component;
@@ -9737,7 +9737,7 @@
 	{
 	  (function() {
 
-	var invariant = require$$0$28;
+	var invariant = require$$0$29;
 	var React = react;
 	var warning = require$$1$7;
 	var ExecutionEnvironment = require$$3;
@@ -9747,7 +9747,7 @@
 	var getActiveElement = require$$7;
 	var shallowEqual = require$$8$1;
 	var containsNode = require$$9;
-	var emptyObject = require$$2$5;
+	var emptyObject = require$$10;
 	var hyphenateStyleName = require$$11$1;
 	var camelizeStyleName = require$$12;
 
@@ -26321,12 +26321,12 @@
 		__moduleExports: reactDom_development
 	});
 
-	var require$$0$30 = ( reactDom_development$1 && reactDom_development ) || reactDom_development$1;
+	var require$$0$31 = ( reactDom_development$1 && reactDom_development ) || reactDom_development$1;
 
 	var reactDom = createCommonjsModule(function (module) {
 
 	{
-	  module.exports = require$$0$30;
+	  module.exports = require$$0$31;
 	}
 	});
 
@@ -28823,7 +28823,7 @@
 	      if (secret !== require$$2$4) {
 	        if (throwOnDirectAccess) {
 	          // New behavior only for users of `prop-types` package
-	          require$$0$28(
+	          require$$0$29(
 	            false,
 	            'Calling PropTypes validators directly is not supported by the `prop-types` package. ' +
 	            'Use `PropTypes.checkPropTypes()` to call them. ' +
@@ -29212,7 +29212,7 @@
 		__moduleExports: factoryWithTypeCheckers
 	});
 
-	var require$$0$31 = ( factoryWithTypeCheckers$1 && factoryWithTypeCheckers ) || factoryWithTypeCheckers$1;
+	var require$$0$32 = ( factoryWithTypeCheckers$1 && factoryWithTypeCheckers ) || factoryWithTypeCheckers$1;
 
 	var propTypes = createCommonjsModule(function (module) {
 	/**
@@ -29237,7 +29237,7 @@
 	  // By explicitly using `prop-types` you are opting into new development behavior.
 	  // http://fb.me/prop-types-in-prod
 	  var throwOnDirectAccess = true;
-	  module.exports = require$$0$31(isValidElement, throwOnDirectAccess);
+	  module.exports = require$$0$32(isValidElement, throwOnDirectAccess);
 	}
 	});
 
@@ -34446,7 +34446,7 @@
 
 	var RavenConfigError$1 = ( configError$1 && configError ) || configError$1;
 
-	var require$$0$32 = ( console$2 && console$1 ) || console$2;
+	var require$$0$33 = ( console$2 && console$1 ) || console$2;
 
 	/*global XDomainRequest:false */
 
@@ -34484,7 +34484,7 @@
 	var serializeException$1 = utils$2.serializeException;
 	var sanitize$1 = utils$2.sanitize;
 
-	var wrapConsoleMethod = require$$0$32.wrapMethod;
+	var wrapConsoleMethod = require$$0$33.wrapMethod;
 
 	var dsnKeys = 'source protocol user pass host port path'.split(' '),
 	  dsnPattern = /^(?:(\w+):)?\/\/(?:(\w+)(:\w+)?@)?([\w\.-]+)(?::(\d+))?(\/.*)/;
@@ -38155,14 +38155,14 @@
 		_: underscore_1
 	});
 
-	var require$$0$33 = ( underscore$1 && underscore ) || underscore$1;
+	var require$$0$34 = ( underscore$1 && underscore ) || underscore$1;
 
 	var underscorePlus = createCommonjsModule(function (module) {
 	(function() {
 	  var isEqual, isPlainObject, macModifierKeyMap, nonMacModifierKeyMap, plus, shiftKeyMap, splitKeyPath, _,
 	    __slice = [].slice;
 
-	  _ = require$$0$33;
+	  _ = require$$0$34;
 
 	  macModifierKeyMap = {
 	    cmd: '\u2318',
@@ -38902,17 +38902,17 @@
 		__moduleExports: isBuffer_1
 	});
 
-	var require$$0$34 = ( crypt$1 && crypt ) || crypt$1;
+	var require$$0$35 = ( crypt$1 && crypt ) || crypt$1;
 
 	var require$$1$8 = ( charenc$1 && charenc_1 ) || charenc$1;
 
-	var require$$2$6 = ( isBuffer$1 && isBuffer_1 ) || isBuffer$1;
+	var require$$2$5 = ( isBuffer$1 && isBuffer_1 ) || isBuffer$1;
 
 	var md5$3 = createCommonjsModule(function (module) {
 	(function(){
-	  var crypt = require$$0$34,
+	  var crypt = require$$0$35,
 	      utf8 = require$$1$8.utf8,
-	      isBuffer = require$$2$6,
+	      isBuffer = require$$2$5,
 	      bin = require$$1$8.bin,
 
 	  // The core
@@ -48599,7 +48599,6 @@
 	                return this;
 	            },
 	            until: function (filterFunction, bIncludeStopEntry) {
-	                var ctx = this._ctx;
 	                addFilter(this._ctx, function (cursor, advance, resolve) {
 	                    if (filterFunction(cursor.value)) {
 	                        advance(resolve);
@@ -49262,13 +49261,7 @@
 	            req.onerror = eventRejectHandler(reject);
 	        }).then(cb) : dbNamesDB.dbnames.toCollection().primaryKeys(cb);
 	    },
-	    defineClass: function (structure) {
-	        /// <summary>
-	        ///     Create a javascript constructor based on given template for which properties to expect in the class.
-	        ///     Any property that is a constructor function will act as a type. So {name: String} will be equal to {name: new String()}.
-	        /// </summary>
-	        /// <param name="structure">Helps IDE code completion by knowing the members that objects contain and not just the indexes. Also
-	        /// know what type each member has. Example: {name: String, emailAddresses: [String], properties: {shoeSize: Number}}</param>
+	    defineClass: function () {
 	        // Default constructor able to copy given properties into this object.
 	        function Class(properties) {
 	            /// <param name="properties" type="Object" optional="true">Properties to initialize object with.
@@ -51316,7 +51309,54 @@
 		return [].concat(toConsumableArray$1(underscorePlus.sortBy(byStream[streamId], "seqNum")), toConsumableArray$1(pendingForStream));
 	};
 
-	// import EditingIndicator from "./EditingIndicator";
+	var vscode = acquireVsCodeApi();
+
+	var CodeStreamVSWebviewApi = function () {
+		function CodeStreamVSWebviewApi() {
+			var _this = this;
+
+			classCallCheck$1(this, CodeStreamVSWebviewApi);
+			Object.defineProperty(this, "pendingRequests", {
+				enumerable: true,
+				writable: true,
+				value: new Map()
+			});
+
+			window.addEventListener("message", function (event) {
+				var _event$data = event.data,
+				    type = _event$data.type,
+				    body = _event$data.body;
+
+				if (type === 'action-response') {
+					console.log('received action response', { type: type, body: body });
+					var resolve = _this.pendingRequests.get(body.action);
+					if (resolve) {
+						resolve(body.payload);
+						_this.pendingRequests.delete(body.action);
+					}
+				}
+			}, false);
+		}
+
+		createClass$1(CodeStreamVSWebviewApi, [{
+			key: "postMessage",
+			value: function postMessage(message) {
+				var _this2 = this;
+
+				return new Promise(function (resolve, reject) {
+					_this2.pendingRequests.set(message.action, resolve);
+					debugger;
+					vscode.postMessage({ type: "action-request", body: message }, "*");
+				});
+			}
+		}, {
+			key: "createPost",
+			value: function createPost(post) {
+				return this.postMessage({ action: "post", params: post });
+			}
+		}]);
+		return CodeStreamVSWebviewApi;
+	}();
 
 	// import Path from "path";
 	var logger$1 = _instance.forClass("components/Stream");
@@ -51619,7 +51659,7 @@
 						// by dragging
 						return;
 					}
-					_this.selectPost(postDiv.id);
+					_this.selectPost(postDiv.id, event.target.matches('.code'));
 				}
 			});
 			Object.defineProperty(_this, "findMentions", {
@@ -51641,22 +51681,27 @@
 			Object.defineProperty(_this, "selectPost", {
 				enumerable: true,
 				writable: true,
-				value: function value(id) {
+				value: function value(id, codeClicked) {
 					// TODO: mixpanel.track("Page Viewed", { "Page Name": "Thread View" });
 					var post = _this.findPostById(id);
 					if (!post) return;
 
-					window.parent.postMessage({
-						type: 'event',
-						body: {
-							name: 'post-clicked',
-							payload: post
-						}
-					}, '*');
+					if (codeClicked) {
+						vscode.postMessage({
+							type: 'event',
+							body: {
+								name: 'post-clicked',
+								payload: post
+							}
+						}, '*');
+
+						return;
+					}
+
 					// if it is a child in the thread, it'll have a parentPostId,
 					// otherwise use the id. any post can become the head of a thread
-					// const threadId = post.parentPostId || post.id;
-					// this.setState({ threadId: threadId, threadActive: true });
+					var threadId = post.parentPostId || post.id;
+					_this.setState({ threadId: threadId, threadActive: true });
 
 					// if (post.codeBlocks && post.codeBlocks.length) {
 					// 	const codeBlock = post.codeBlocks[0];
@@ -53802,52 +53847,6 @@
 			};
 		};
 	});
-
-	var CodeStreamVSWebviewApi = function () {
-		function CodeStreamVSWebviewApi() {
-			var _this = this;
-
-			classCallCheck$1(this, CodeStreamVSWebviewApi);
-			Object.defineProperty(this, "pendingRequests", {
-				enumerable: true,
-				writable: true,
-				value: new Map()
-			});
-
-			window.addEventListener("message", function (event) {
-				var _event$data = event.data,
-				    type = _event$data.type,
-				    body = _event$data.body;
-
-				if (type === 'action-response') {
-					console.log('received action response', { type: type, body: body });
-					var resolve = _this.pendingRequests.get(body.action);
-					if (resolve) {
-						resolve(body.payload);
-						_this.pendingRequests.delete(body.action);
-					}
-				}
-			}, false);
-		}
-
-		createClass$1(CodeStreamVSWebviewApi, [{
-			key: "postMessage",
-			value: function postMessage(message) {
-				var _this2 = this;
-
-				return new Promise(function (resolve, reject) {
-					_this2.pendingRequests.set(message.action, resolve);
-					window.parent.postMessage({ type: "action-request", body: message }, "*");
-				});
-			}
-		}, {
-			key: "createPost",
-			value: function createPost(post) {
-				return this.postMessage({ action: "post", params: post });
-			}
-		}]);
-		return CodeStreamVSWebviewApi;
-	}();
 
 	var createStore$1 = (function () {
 		var initialState = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};

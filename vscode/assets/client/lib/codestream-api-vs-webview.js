@@ -7,6 +7,8 @@ const normalizeResponse = response => {
 	}, {});
 };
 
+export const vscode = acquireVsCodeApi();
+
 export default class CodeStreamVSWebviewApi {
 	pendingRequests = new Map();
 
@@ -31,7 +33,8 @@ export default class CodeStreamVSWebviewApi {
 	postMessage(message) {
 		return new Promise((resolve, reject) => {
 			this.pendingRequests.set(message.action, resolve);
-			window.parent.postMessage({ type: "action-request", body: message }, "*");
+			debugger;
+			vscode.postMessage({ type: "action-request", body: message }, "*");
 		});
 	}
 
