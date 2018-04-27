@@ -130,7 +130,7 @@ export default store => {
 				mixpanel.track("Post Created", {
 					Endpoint: "Atom",
 					Thread: post.parentPostId ? "Reply" : "Parent",
-					Category: "Source File",
+					Category: "Channel",
 					"Auto Mentions": extra.autoMentions.some(mention => post.text.includes(mention)),
 					"First Post?":
 						Boolean(currentUser.totalPosts) === false
