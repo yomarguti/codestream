@@ -31,7 +31,6 @@
         "type": "git",
         "url": "https://github.com/TeamCodeStream/vscode-codestream"
     },
-    "enableProposedApi": true,
     "main": "./out/src/extension",
     "contributes": {
         "configuration": {
