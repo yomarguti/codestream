@@ -83,7 +83,7 @@ export class SimpleTeamSelectionForm extends Component {
 					<br />
 					<p>
 						<a onClick={this.props.backToInvite}>
-							<FormattedMessage id="createTeam.backToInvite" defaultMessage="Go Back" />
+							<FormattedMessage id="teamSelection.backToInvite" defaultMessage="Go Back" />
 						</a>
 					</p>
 				</div>

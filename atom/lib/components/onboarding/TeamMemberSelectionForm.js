@@ -99,6 +99,10 @@ export class SimpleTeamMemberSelectionForm extends Component {
 		else this.props.addMembers(newMembers);
 	};
 
+	onSkip = () => {
+		this.props.completeOnboarding();
+	};
+
 	toggleNewMemberInput = () =>
 		this.setState(state => ({ addingMissingMember: !state.addingMissingMember }));
 
@@ -295,10 +299,9 @@ export class SimpleTeamMemberSelectionForm extends Component {
 				</h2>
 				{this.renderContent()}
 				<div className="footer">
-					<FormattedMessage
-						id="teamMemberSelection.footer"
-						defaultMessage="CodeStream will only send emails when someone is @mentioned."
-					/>
+					<a onClick={this.onSkip}>
+						<FormattedMessage id="teamMemberSelection.skip" defaultMessage="Skip This" />
+					</a>
 				</div>
 			</div>
 		);

@@ -51,14 +51,36 @@
 	"noGit.message2":
 		"Make sure the root directory you have open is an actual Git repository, and not a directory containing repositories.",
 	"createTeam.header": "Create a Team",
-	"createTeam.info":
-		"Your company or organization name would fit the bill here.",
+	"createTeam.info": "Your company or organization name would fit the bill here.",
 	"createTeam.additionalInfo": "Note that a team can own multiple repositories.",
 	"createTeam.submitButton": "NEXT",
+	"createTeam.backToInvite": "Go Back",
 	"teamSelection.error.noPermission": "You are not a member of the selected team.",
 	"teamSelection.error.teamNotFound": "The selected team doesn't exist.",
+	"teamSelection.backToInvite": "Go Back",
 	"slackInfo.p1":
 		"Connect CodeStream to Slack and all of your team's messages on CodeStream will also get posted to a channel on Slack.",
 	"slackInfo.p2":
-		"This is a great option if you have developers that don't use Atom. They can even reply to messages directly from Slack!"
+		"This is a great option if you have developers that don't use Atom. They can even reply to messages directly from Slack!",
+	"getInvited.header": "Get Invited?",
+	"getInvited.text":
+		"Looks like there are already repos from the {fromWhat} connected to CodeStream. ",
+	"getInvited.afterInvite": "Got my invitation. Let's go!",
+	"getInvited.or": "or",
+	"getInvited.contact.oneTeam":
+		"If this repo should be connected to the {teamName} team as well, contact {creatorName} to get invited.",
+	"getInvited.contact.multipleTeams":
+		"If this repo should be connected to one of the following teams, please ask to be invited: {teams}.",
+	"getInvited.selectTeam": "I don't want to join that team.",
+	"getInvited.createTeam": "I want to create a team.",
+	"teamMemberSelection.submitButton": "GET STARTED",
+	"teamMemberSelection.header": "Who's on the team?",
+	"teamMemberSelection.skip": "Skip This",
+	"teamMemberSelection.existingTeam.peopleToAdd":
+		"Here are some people that have committed to this repo that you might want to add.",
+	"teamMemberSelection.newTeam.peopleToAdd":
+		"Here are some suggestions pulled from the repo's commit history.",
+	"teamMemberSelection.anyoneMissing": "Anyone missing?",
+	"teamMemberSelection.addThem": "Add them!",
+	"teamMemberSelection.add": "ADD"
 }
