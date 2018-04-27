@@ -1,12 +1,14 @@
 // Colors
 
-@text-color: var(--color);
-@text-color-subtle: #555;
-@text-color-subtle--lighten-50: lighten(@text-color-subtle, 50%);
-@text-color-highlight: #fff;
-@text-color-selected: @text-color-highlight;
+@text-color: var(--text-color);
+@text-color-subtle: var(--text-color-subtle);
+@text-color-subtle--lighten-50: var(--text-color-subtle--lighten-50);
 
-@text-color-info: #5293d8;
+// @text-color-highlight: #fff;
+// @text-color-selected: @text-color-highlight;
+
+@text-color-info: #6494ed;
+
 @text-color-success: #2BDA77;
 @text-color-warning: #ff982d;
 @text-color-error: #c00;
@@ -17,19 +19,20 @@
 @text-color-modified: @text-color-warning;
 @text-color-removed: @text-color-error;
 
-@background-color-info: #0098ff;
+@background-color-info: rgba(127, 127, 127, 0.2);
 @background-color-info--lighten-05: lighten(@background-color-info, 5%);
+
 @background-color-success: #17ca65;
 @background-color-warning: #ffaa2c;
 @background-color-error: #c00;
 @background-color-highlight: rgba(255, 255, 255, 0.07);
 @background-color-selected: #4182C4;
 
-@app-background-color: var(--background-color);
-@app-background-color--lighten-03: var(--background-color--lighten-03);
+@app-background-color: var(--app-background-color);
+@app-background-color--lighten-03: var(--app-background-color--lighten-03);
 
-@base-background-color: var(--background-color--lighten-15); // lighten(@tool-panel-background-color, 5%);
-@base-border-color: rgba(0, 0, 0, 0.5);
+@base-background-color: var(--base-background-color);
+@base-border-color: rgba(0, 0, 0, 0.3);
 
 @pane-item-background-color: @base-background-color;
 @pane-item-border-color: rgba(0, 0, 0, 0.5);
@@ -37,7 +40,7 @@
 @input-background-color: #212224;
 @input-border-color: @base-border-color;
 
-@tool-panel-background-color: var(--background-color--lighten-10); //#1d1f21;
+@tool-panel-background-color: var(--tool-panel-background-color);
 @tool-panel-border-color: @base-border-color;
 
 @inset-panel-background-color: #161719;

@@ -2,6 +2,7 @@ html,
 body {
     height: 100%;
     overflow: hidden;
+    padding: 0 !important;
 }
 
 #app {
@@ -12,45 +13,25 @@ body {
 @import "vscode-ui-variables";
 @import "stream";
 
+body {
+    background-color: var(--app-background-color);
+    color: var(--text-color);
+}
+
 .codestream {
     .stream {
+        display: flex;
+        flex-direction: column;
+
         .compose {
-            display: block;
-            width: 100%;
-            border: none;
-            border-top: 1px solid @base-border-color;
-            // background-color: inherit;
-            background-color: @app-background-color;
-            position: absolute;
-            bottom: 0px;
-            padding: 10px;
-            box-sizing: border-box;
-            z-index: 5;
+            position: unset;
+        }
 
-            // display: flex;
-            // flex-direction: column;
-            // justify-content: center;
-            // border: none;
-            // border-top: 1px solid @base-border-color;
-            // /* // background-color: inherit; */
-            // background-color: @app-background-color;
-
-            padding-right: 3em;
-
-            #input-div {
-                box-sizing: border-box;
-                width: 100%;
-                padding: 10px;
-                border-radius: 4px;
-                // background: #fff;
-                background: @base-background-color;
-                border: 1px solid @base-border-color;
-                resize: none;
-                // height: 20px;
-                max-height: 300px;
-                max-width: 100%;
-                overflow: auto;
-            }
+        .at-mention.me {
+            padding: 0px 6px 1px 4px;
+            margin: 1px 0px -1px 0px;
+            border-radius: 6px;
+            background-color: rgba(127, 127, 127, 0.15);
         }
 
         .post {
@@ -60,7 +41,8 @@ body {
         }
 
         .postslist {
-            max-height: calc(100% - 5em);
+            flex: 1 1 auto;
+            min-height: 0px;
         }
     }
 }
