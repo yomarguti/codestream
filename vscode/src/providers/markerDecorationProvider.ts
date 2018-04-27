@@ -1,5 +1,5 @@
 'use strict';
-import { DecorationOptions, Disposable, Range, TextEditor, TextEditorDecorationType, window } from 'vscode';
+import { DecorationOptions, Disposable, OverviewRulerLane, Range, TextEditor, TextEditorDecorationType, window } from 'vscode';
 import { Container } from '../container';
 import { SessionStatus, SessionStatusChangedEvent } from '../api/session';
 
@@ -19,8 +19,10 @@ export class MarkerDecorationProvider extends Disposable {
                 width: '0.75em',
                 margin: '0 0.5em',
                 borderRadius: '25%'
-                // textDecoration: 'none; vertical-align: baseline'
+                // textDecoration: 'none; right: calc(100% - 1em); position: absolute'
             } as any,
+            overviewRulerColor: '#3193f1',
+            overviewRulerLane: OverviewRulerLane.Center,
             borderRadius: '10px'
         });
 
@@ -77,10 +79,15 @@ export class MarkerDecorationProvider extends Disposable {
 
         const decorations: DecorationOptions[] = [];
 
+        const starts = new Set();
         for (const location of Object.values(markers.markers.locations)) {
+            const start = location[0];
+            if (starts.has(start)) continue;
+
             decorations.push({
-                range: new Range(location[0], 0, location[2], 10000000)
+                range: new Range(start, 0, start, 0) // location[2], 10000000)
             });
+            starts.add(start);
         }
 
         return decorations;
