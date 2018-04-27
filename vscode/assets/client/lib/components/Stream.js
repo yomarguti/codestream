@@ -473,7 +473,7 @@ export class SimpleStream extends Component {
 						post={post}
 						usernames={this.props.usernamesRegexp}
 						currentUsername={this.props.currentUser.username}
-						showDetails="1"
+						showDetails={false}
 						currentCommit={this.props.currentCommit}
 						editing={post.id === this.state.editingPostId}
 					/>
@@ -627,7 +627,7 @@ export class SimpleStream extends Component {
 							usernames={this.props.usernamesRegexp}
 							currentUsername={this.props.currentUser.username}
 							key={threadPost.id}
-							showDetails="1"
+							showDetails={true}
 							currentCommit={this.props.currentCommit}
 							editing={threadPost.id === this.state.editingPostId}
 						/>
