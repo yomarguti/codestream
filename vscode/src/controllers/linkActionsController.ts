@@ -3,7 +3,12 @@ import { Disposable } from 'vscode';
 import { Post, PostsReceivedEvent } from '../api/session';
 import { Container } from '../container';
 
-const codestreamRegex = /codestream:\/\/(.*?)\?d=(.*?)(?:\s|$)/; // codestream://service/action?d={data}
+const codestreamRegex = /codestream:\/\/(.*?)\?d=(.*?)(?:&ui=.*?)?(?=\s|$)/; // codestream://service/action?d={data}
+
+interface LinkActionCallbacks {
+    onMatch: (post: Post, context: any) => any;
+    onAction?: (context: any) => any;
+}
 
 export class LinkActionsController extends Disposable {
 
@@ -28,17 +33,40 @@ export class LinkActionsController extends Disposable {
 
             const [, path, qs] = match;
 
-            const callback = this._registrationMap.get(path);
-            if (callback === undefined) continue;
+            const callbacks = this._registrationMap.get(path);
+            if (callbacks === undefined || callbacks.onMatch === undefined) continue;
 
-            callback(post, JSON.parse(decodeURIComponent(qs)));
+            callbacks.onMatch(post, JSON.parse(decodeURIComponent(qs)));
         }
     }
 
-    private _registrationMap = new Map<string, ((post: Post, context: any) => any)>();
-    register<T>(service: string, action: string, callback: (post: Post, context: T) => any, thisArg?: any): Disposable {
+    execute(commandUri: string) {
+        const match = codestreamRegex.exec(commandUri);
+        if (match == null) return;
+
+        const [, path, qs] = match;
+
+        const callbacks = this._registrationMap.get(path);
+        if (callbacks === undefined || callbacks.onAction === undefined) return;
+
+        callbacks.onAction(JSON.parse(decodeURIComponent(qs)));
+    }
+
+    private _registrationMap = new Map<string, LinkActionCallbacks | undefined>();
+    register<T>(service: string, action: string, callbacks: LinkActionCallbacks, thisArg?: any): Disposable {
         const key = `${service}/${action}`;
-        this._registrationMap.set(key, thisArg !== undefined ? callback.bind(thisArg) : callback);
+
+        if (thisArg !== undefined) {
+            callbacks = {
+                onMatch: callbacks.onMatch.bind(thisArg),
+                onAction: callbacks.onAction !== undefined ? callbacks.onAction.bind(thisArg) : undefined
+            };
+        }
+        else {
+            callbacks = { ...callbacks };
+        }
+
+        this._registrationMap.set(key, callbacks);
         this.ensureRegistrations();
 
         return new Disposable(() => {
@@ -47,8 +75,8 @@ export class LinkActionsController extends Disposable {
         });
     }
 
-    toLinkAction<T>(service: string, action: string, context: T) {
-        return `codestream://${service}/${action}?d=${encodeURIComponent(JSON.stringify(context))}`;
+    toLinkAction<T>(service: string, action: string, context: T, ui: { type: 'button' | 'link', label: string }) {
+        return `codestream://${service}/${action}?d=${encodeURIComponent(JSON.stringify(context))}&ui=${encodeURIComponent(JSON.stringify(ui))}`;
     }
 
     private ensureRegistrations() {

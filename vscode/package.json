@@ -152,6 +152,11 @@
                 "command": "codestream.explorer.refreshNode",
                 "title": "Refresh",
                 "category": "CodeStream"
+            },
+            {
+                "command": "codestream.runServiceAction",
+                "title": "Run Service Action",
+                "category": "CodeStream"
             }
         ],
         "menus": {
@@ -206,6 +211,10 @@
                 },
                 {
                     "command": "codestream.explorer.refreshNode",
+                    "when": "false"
+                },
+                {
+                    "command": "codestream.runServiceAction",
                     "when": "false"
                 }
             ],

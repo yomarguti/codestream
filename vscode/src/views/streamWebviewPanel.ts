@@ -1,10 +1,11 @@
 'use strict';
 import { Disposable, Event, EventEmitter, Range, ViewColumn, WebviewPanel, WebviewPanelOnDidChangeViewStateEvent, window } from 'vscode';
 import { CSPost, CSRepository, CSStream, CSTeam, CSUser } from '../api/api';
-import { CodeStreamSession, Post, PostsReceivedEvent, SessionChangedEvent, SessionChangedType, Stream } from '../api/session';
+import { CodeStreamSession, Post, PostsReceivedEvent, SessionChangedEvent, SessionChangedType, Stream, StreamThread } from '../api/session';
+import { isStreamThread } from '../commands';
 import { Container } from '../container';
-import * as fs from 'fs';
 import { Logger } from '../logger';
+import * as fs from 'fs';
 
 interface BootstrapState {
     currentTeamId: string;
@@ -41,8 +42,7 @@ export class StreamWebviewPanel extends Disposable {
 
     private readonly _disposable: Disposable;
     private readonly _panel: WebviewPanel;
-    private _stream: Stream | undefined;
-    private _streamThreadId: string | undefined;
+    private _streamThread: StreamThread | undefined;
 
     constructor(private readonly session: CodeStreamSession) {
         super(() => this.dispose());
@@ -81,7 +81,7 @@ export class StreamWebviewPanel extends Disposable {
     }
 
     private async onPanelWebViewMessageReceived(e: CSWebviewRequest) {
-        if (this._stream === undefined) return;
+        if (this._streamThread === undefined) return;
 
         const { type, body } = e;
 
@@ -95,7 +95,7 @@ export class StreamWebviewPanel extends Disposable {
 
                         let post;
                         if (codeBlocks === undefined || codeBlocks.length === 0) {
-                            post = await this._stream.post(text, parentPostId);
+                            post = await this._streamThread.stream.post(text, parentPostId);
                         }
                         else {
                             const block = codeBlocks[0];
@@ -110,7 +110,7 @@ export class StreamWebviewPanel extends Disposable {
                                 markerStream = block.streamId;
                             }
 
-                            post = await this._stream.postCode(text, block.code, createRange(block.location), commitHashWhenPosted, markerStream, parentPostId);
+                            post = await this._streamThread.stream.postCode(text, block.code, createRange(block.location), commitHashWhenPosted, markerStream, parentPostId);
                         }
 
                         if (post === undefined) return;
@@ -130,13 +130,13 @@ export class StreamWebviewPanel extends Disposable {
                     case 'post-clicked':
                         if (body.payload.codeBlocks === undefined) return;
 
-                        Container.commands.openPostWorkingFile(new Post(this.session, body.payload, this._stream));
+                        Container.commands.openPostWorkingFile(new Post(this.session, body.payload, this._streamThread.stream));
                         return;
 
                     case 'thread-selected':
                         const { threadId, streamId } = body.payload;
-                        if (this._stream !== undefined && this._stream.id === streamId) {
-                            this._streamThreadId = threadId;
+                        if (this._streamThread !== undefined && this._streamThread.stream.id === streamId) {
+                            this._streamThread.id = threadId;
                         }
                         return;
                 }
@@ -146,7 +146,7 @@ export class StreamWebviewPanel extends Disposable {
     }
 
     private onPostsReceived(e: PostsReceivedEvent) {
-        if (this._stream === undefined) return;
+        if (this._streamThread === undefined) return;
 
         this.postMessage({
             type: 'push-data',
@@ -158,7 +158,7 @@ export class StreamWebviewPanel extends Disposable {
     }
 
     private onSessionChanged(e: SessionChangedEvent) {
-        if (this._stream === undefined) return;
+        if (this._streamThread === undefined) return;
 
         switch (e.type) {
             case SessionChangedType.Streams:
@@ -174,18 +174,20 @@ export class StreamWebviewPanel extends Disposable {
         }
     }
 
-    get stream() {
-        return this._stream;
+    get streamThread() {
+        return this._streamThread;
     }
 
-    get streamThreadId() {
-        return this._stream && this._streamThreadId;
-    }
+    is(stream: Stream): boolean;
+    is(streamThread: StreamThread): boolean;
+    is(streamOrThread: Stream | StreamThread) {
+        if (this._streamThread === undefined) return false;
 
-    is(stream: Stream) {
-        if (this._stream === undefined) return false;
+        if (isStreamThread(streamOrThread)) {
+            return this._streamThread.stream.id === streamOrThread.stream.id && this._streamThread.id === streamOrThread.id;
+        }
 
-        return this._stream.id === stream.id;
+        return this._streamThread.stream.id === streamOrThread.id;
     }
 
     post(text: string) {
@@ -220,27 +222,26 @@ export class StreamWebviewPanel extends Disposable {
         });
     }
 
-    async setStream(stream: Stream, threadId?: string): Promise<Stream> {
+    async setStream(streamThread: StreamThread): Promise<StreamThread> {
         // TODO: Consider threadId when showing streams (allow to jumping right into a thread)
-        if (this._stream && this._stream.id === stream.id) {
+        if (this._streamThread && this._streamThread.id === streamThread.stream.id) {
             this.show();
 
-            return this._stream;
+            return this._streamThread;
         }
 
-        const label = await stream.label();
+        const label = await streamThread.stream.label();
         this._panel.title = `${label} \u00a0\u2022\u00a0 CodeStream`;
-        this._stream = stream;
-        this._streamThreadId = undefined; // threadId;
+        this._streamThread = streamThread;
 
         const state: BootstrapState = Object.create(null);
-        state.currentTeamId = stream.teamId;
+        state.currentTeamId = streamThread.stream.teamId;
         state.currentUserId = this.session.userId;
-        state.currentStreamId = stream.id;
-        state.streams = [stream.entity];
+        state.currentStreamId = streamThread.stream.id;
+        state.streams = [streamThread.stream.entity];
 
         [state.posts, state.repos, state.teams, state.users] = await Promise.all([
-            stream.posts.entities(),
+            streamThread.stream.posts.entities(),
             this.session.repos.entities(),
             this.session.teams.entities(),
             this.session.users.entities()
@@ -261,7 +262,7 @@ export class StreamWebviewPanel extends Disposable {
 
         this.show();
 
-        return this._stream;
+        return this._streamThread;
     }
 
     show() {

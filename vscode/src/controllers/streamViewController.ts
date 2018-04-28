@@ -1,6 +1,6 @@
 'use strict';
 import { Disposable, Range } from 'vscode';
-import { CodeStreamSession, Repository, Stream } from '../api/session';
+import { CodeStreamSession, Repository, StreamThread } from '../api/session';
 import { Container } from '../container';
 import { StreamWebviewPanel } from '../views/streamWebviewPanel';
 
@@ -23,12 +23,13 @@ export class StreamViewController extends Disposable {
         this.dispose();
     }
 
-    get activeStream() {
-        if (this._panel === undefined) return;
-        return this._panel.stream;
+    get activeStreamThread() {
+        if (this._panel === undefined) return undefined;
+
+        return this._panel.streamThread;
     }
 
-    async openStream(stream: Stream): Promise<Stream> {
+    async openStreamThread(streamThread: StreamThread): Promise<StreamThread> {
         if (this._panel === undefined) {
             this._panel = new StreamWebviewPanel(this.session);
 
@@ -40,16 +41,16 @@ export class StreamViewController extends Disposable {
 
         // TODO: Switch to codestream view?
         Container.commands.show();
-        return this._panel.setStream(stream);
+        return this._panel.setStream(streamThread);
     }
 
-    async post(stream: Stream, text: string) {
-        await this.openStream(stream);
+    async post(streamThread: StreamThread, text: string) {
+        await this.openStreamThread(streamThread);
         return this._panel!.post(text);
     }
 
-    async postCode(stream: Stream, repo: Repository, relativePath: string, code: string, range: Range, commitHash: string, text?: string, mentions: string = '') {
-        await this.openStream(stream);
+    async postCode(streamThread: StreamThread, repo: Repository, relativePath: string, code: string, range: Range, commitHash: string, text?: string, mentions: string = '') {
+        await this.openStreamThread(streamThread);
         return this._panel!.postCode(repo.id, relativePath, code, range, commitHash, text, mentions);
     }
 }

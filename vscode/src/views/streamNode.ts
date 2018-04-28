@@ -36,7 +36,7 @@ export class StreamNode extends ExplorerNode {
             command: 'codestream.openStream',
             arguments: [
                 {
-                    stream: this.stream
+                    streamThread: { id: undefined, stream: this.stream }
                 } as OpenStreamCommandArgs
             ]
         };

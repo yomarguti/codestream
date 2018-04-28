@@ -7917,7 +7917,7 @@
 
 	var objectAssign$2 = ( objectAssign$1 && objectAssign ) || objectAssign$1;
 
-	var require$$2$5 = ( emptyObject$1 && emptyObject_1 ) || emptyObject$1;
+	var require$$10 = ( emptyObject$1 && emptyObject_1 ) || emptyObject$1;
 
 	var checkPropTypes$2 = ( checkPropTypes$1 && checkPropTypes_1 ) || checkPropTypes$1;
 
@@ -7930,7 +7930,7 @@
 
 	var _assign = objectAssign$2;
 	var invariant = require$$0$29;
-	var emptyObject = require$$2$5;
+	var emptyObject = require$$10;
 	var warning = require$$1$7;
 	var emptyFunction = emptyFunction$2;
 	var checkPropTypes = checkPropTypes$2;
@@ -9747,7 +9747,7 @@
 	var getActiveElement = require$$7;
 	var shallowEqual = require$$8$1;
 	var containsNode = require$$9;
-	var emptyObject = require$$2$5;
+	var emptyObject = require$$10;
 	var hyphenateStyleName = require$$11$1;
 	var camelizeStyleName = require$$12;
 
@@ -38906,13 +38906,13 @@
 
 	var require$$1$8 = ( charenc$1 && charenc_1 ) || charenc$1;
 
-	var require$$2$6 = ( isBuffer$1 && isBuffer_1 ) || isBuffer$1;
+	var require$$2$5 = ( isBuffer$1 && isBuffer_1 ) || isBuffer$1;
 
 	var md5$3 = createCommonjsModule(function (module) {
 	(function(){
 	  var crypt = require$$0$35,
 	      utf8 = require$$1$8.utf8,
-	      isBuffer = require$$2$6,
+	      isBuffer = require$$2$5,
 	      bin = require$$1$8.bin,
 
 	  // The core
@@ -50742,6 +50742,10 @@
 
 	var logger = _instance.forClass("components/Post");
 
+	// codestream://service/action?d={<data>}&ui={ type: 'button' | 'link', label: string } }
+	var linkActionRegex = /codestream:\/\/(.*?)\/(.*?)\?d=(.*?)(?:&ui=(.*?))?(?=\s|$)/;
+	var linkActionMatchRegex = /(codestream:\/\/.*?\?d=.*?(?:&ui=.*?)?(?=\s|$))/;
+
 	var Post = function (_Component) {
 		inherits$1(Post, _Component);
 
@@ -50771,23 +50775,104 @@
 				writable: true,
 				value: function value(post) {
 					var usernameRegExp = new RegExp("(@(?:" + _this.props.usernames + ")\\b)");
-					var bodyParts = post.text.split(usernameRegExp);
+
+					// FIXME: This is really ugly :(
+
+					var currentUser = "@" + _this.props.currentUsername;
+					var body = [];
 					var iterator = 0;
-					return bodyParts.map(function (part) {
-						if (part.match(usernameRegExp)) {
-							if (part === "@" + _this.props.currentUsername) return react.createElement(
-								"span",
-								{ key: iterator++, className: "at-mention me" },
-								part
-							);else return react.createElement(
-								"span",
-								{ key: iterator++, className: "at-mention" },
-								part
-							);
-						} else {
-							return part;
+					var bodyParts = post.text.split(usernameRegExp);
+					var _iteratorNormalCompletion = true;
+					var _didIteratorError = false;
+					var _iteratorError = undefined;
+
+					try {
+						for (var _iterator = bodyParts[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+							var part = _step.value;
+
+							if (!part) continue;
+
+							if (part.match(usernameRegExp)) {
+								body.push(react.createElement(
+									"span",
+									{ key: iterator++, className: part === currentUser ? "at-mention me" : 'at-mention' },
+									part
+								));
+							} else {
+								var _iteratorNormalCompletion2 = true;
+								var _didIteratorError2 = false;
+								var _iteratorError2 = undefined;
+
+								try {
+									for (var _iterator2 = part.split(linkActionMatchRegex)[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+										var subpart = _step2.value;
+
+										if (!subpart) continue;
+
+										var match = linkActionRegex.exec(subpart);
+										if (match == null) {
+											body.push(subpart);
+											continue;
+										}
+
+										var _match = slicedToArray(match, 5),
+										    command = _match[0],
+										    service = _match[1],
+										    action = _match[2],
+										    data = _match[3],
+										    desiredUI = _match[4];
+
+										var ui = void 0;
+										if (desiredUI != null) {
+											ui = JSON.parse(decodeURIComponent(desiredUI));
+										} else {
+											var label = void 0;
+											if (service === 'vsls' && action === 'join') {
+												label = ' join my Live Share session';
+											} else {
+												label = " " + action + " " + service;
+											}
+											ui = { type: 'link', label: label };
+										}
+
+										body.push(react.createElement(
+											"a",
+											{ key: iterator++, href: "command:codestream.runServiceAction?" + encodeURI(JSON.stringify({ commandUri: command })), className: ui.type === 'button' ? 'post--action-button' : 'post--action-link' },
+											ui.label
+										));
+									}
+								} catch (err) {
+									_didIteratorError2 = true;
+									_iteratorError2 = err;
+								} finally {
+									try {
+										if (!_iteratorNormalCompletion2 && _iterator2.return) {
+											_iterator2.return();
+										}
+									} finally {
+										if (_didIteratorError2) {
+											throw _iteratorError2;
+										}
+									}
+								}
+							}
 						}
-					});
+					} catch (err) {
+						_didIteratorError = true;
+						_iteratorError = err;
+					} finally {
+						try {
+							if (!_iteratorNormalCompletion && _iterator.return) {
+								_iterator.return();
+							}
+						} finally {
+							if (_didIteratorError) {
+								throw _iteratorError;
+							}
+						}
+					}
+
+					return body;
 				}
 			});
 			Object.defineProperty(_this, "renderEditingBody", {
@@ -51593,6 +51678,18 @@
 
 					_this.hideDisplayMarker();
 					_this.setState({ threadActive: false });
+
+					vscode.postMessage({
+						type: 'event',
+						body: {
+							name: 'thread-selected',
+							payload: {
+								threadId: undefined,
+								streamId: _this.props.id
+							}
+						}
+					}, '*');
+
 					// if (track) TODO: mixpanel.track("Page Viewed", { "Page Name": "Source Stream" });
 				}
 			});

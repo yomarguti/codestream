@@ -1,12 +1,11 @@
 import { commands, Disposable, MessageItem, Range, TextDocument, Uri, window } from 'vscode';
-import { Post, Stream, StreamType } from './api/session';
+import { Post, Stream, StreamThread, StreamType } from './api/session';
 import { openEditor } from './common';
 import { TraceLevel } from './config';
 import { Container } from './container';
 import { ExtensionId } from './extension';
 import { Logger } from './logger';
 import { PostNode } from './views/postNode';
-import { StreamNode } from './views/streamNode';
 import { Iterables } from './system';
 import * as path from 'path';
 
@@ -26,23 +25,27 @@ export enum BuiltInCommands {
     ShowReferences = 'editor.action.showReferences'
 }
 
-interface IStreamLocator {
-    stream?: Stream | StreamNode;
-    parentPostId?: string;
-    search?: { type: StreamType.Channel, name: string, create?: { membership?: 'auto' | string[] } } |
+type StreamLocator =
+    { type: StreamType.Channel, name: string, create?: { membership?: 'auto' | string[] } } |
     { type: StreamType.Direct, members: string[], create?: boolean } |
     { type: StreamType.File, uri: Uri, create?: boolean };
+
+interface IRequiresStream {
+    streamThread: StreamThread | StreamLocator | undefined;
 }
 
-export interface OpenStreamCommandArgs extends IStreamLocator {
+export function isStreamThread(streamOrThreadOrLocator: Stream | StreamThread | StreamLocator): streamOrThreadOrLocator is StreamThread {
+    return (streamOrThreadOrLocator as any).stream !== undefined;
 }
 
-export interface PostCommandArgs extends IStreamLocator {
+export interface OpenStreamCommandArgs extends IRequiresStream { }
+
+export interface PostCommandArgs extends IRequiresStream {
     text?: string;
     send?: boolean;
 }
 
-export interface PostCodeCommandArgs extends IStreamLocator {
+export interface PostCodeCommandArgs extends IRequiresStream {
     document?: TextDocument;
     range?: Range;
     text?: string;
@@ -120,29 +123,29 @@ export class Commands extends Disposable {
     }
 
     @command('openStream', { showErrorMessage: 'Unable to open stream' })
-    async openStream(args: OpenStreamCommandArgs): Promise<Stream | undefined> {
-        const stream = await this.findStream(args, { includeActive: true, includeDefault: true });
-        if (stream === undefined) return undefined;
+    async openStream(args: OpenStreamCommandArgs): Promise<StreamThread | undefined> {
+        const streamThread = await this.findStreamThread(args, { includeActive: true, includeDefault: true });
+        if (streamThread === undefined) return undefined;
 
-        return Container.streamView.openStream(stream);
+        return Container.streamView.openStreamThread(streamThread);
     }
 
     @command('post', { showErrorMessage: 'Unable to post message' })
-    async post(args: PostCommandArgs): Promise<Post | Stream> {
-        const stream = await this.findStream(args, { includeActive: true, includeDefault: true /*!args.send*/ });
-        if (stream === undefined) throw new Error(`No stream could be found`);
+    async post(args: PostCommandArgs): Promise<Post | StreamThread> {
+        const streamThread = await this.findStreamThread(args, { includeActive: true, includeDefault: true /*!args.send*/ });
+        if (streamThread === undefined) throw new Error(`No stream could be found`);
 
         if (args.send && args.text) {
-            await Container.streamView.openStream(stream);
-            return stream.post(args.text, args.parentPostId);
+            await Container.streamView.openStreamThread(streamThread);
+            return streamThread.stream.post(args.text, streamThread.id);
         }
 
         if (args.text) {
-            await Container.streamView.post(stream, args.text);
-            return stream;
+            await Container.streamView.post(streamThread, args.text);
+            return streamThread;
         }
 
-        return await Container.streamView.openStream(stream);
+        return await Container.streamView.openStreamThread(streamThread);
     }
 
     @command('postCode', { showErrorMessage: 'Unable to add comment' })
@@ -163,8 +166,8 @@ export class Commands extends Disposable {
 
         if (document === undefined || selection === undefined) return undefined;
 
-        const stream = await this.findStream(args, { includeActive: true, includeDefault: true });
-        if (stream === undefined) throw new Error(`No stream could be found`);
+        const streamThread = await this.findStreamThread(args, { includeActive: true, includeDefault: true });
+        if (streamThread === undefined) throw new Error(`No stream could be found`);
 
         const uri = document.uri;
 
@@ -186,11 +189,16 @@ export class Commands extends Disposable {
         if (args.send && args.text) {
             // Get the file/marker stream to post to
             const markerStream = await repo.streams.toIdOrArgs(uri);
-            return stream.postCode(args.text, code, selection, commitHash!, markerStream, args.parentPostId);
+            return streamThread.stream.postCode(args.text, code, selection, commitHash!, markerStream, streamThread.id);
         }
 
-        await Container.streamView.postCode(stream, repo, repo.relativizeUri(uri), code, selection, commitHash!, args.text, mentions);
-        return stream;
+        await Container.streamView.postCode(streamThread, repo, repo.relativizeUri(uri), code, selection, commitHash!, args.text, mentions);
+        return streamThread.stream;
+    }
+
+    @command('runServiceAction')
+    runServiceAction(args: { commandUri: string }) {
+        return Container.linkActions.execute(args.commandUri);
     }
 
     @command('show')
@@ -208,56 +216,55 @@ export class Commands extends Disposable {
         return Container.session.logout();
     }
 
-    private async findStream(locator: IStreamLocator, options: { includeActive?: boolean, includeDefault?: boolean } = {}) {
-        let stream;
-        if (locator !== undefined) {
-            if (locator.stream !== undefined) {
-                return locator.stream instanceof StreamNode
-                    ? locator.stream.stream
-                    : locator.stream;
+    private async findStreamThread(threadOrLocator: IRequiresStream, options: { includeActive?: boolean, includeDefault?: boolean } = {}): Promise < StreamThread | undefined > {
+        if (threadOrLocator !== undefined && threadOrLocator.streamThread !== undefined) {
+            if (isStreamThread(threadOrLocator.streamThread)) return threadOrLocator.streamThread;
+
+            const locator = threadOrLocator.streamThread;
+
+            let stream;
+            switch (locator.type) {
+                case StreamType.Channel:
+                    if (locator.create) {
+                        return { id: undefined, stream: await Container.session.channels.getOrCreateByName(locator.name, locator.create) };
+                    }
+
+                    stream = await Container.session.channels.getByName(locator.name);
+                    break;
+
+                case StreamType.Direct:
+                    if (locator.create) {
+                        return { id: undefined, stream: await Container.session.directMessages.getOrCreateByMembers(locator.members) };
+                    }
+
+                    stream = await Container.session.directMessages.getByMembers(locator.members);
+                    break;
+
+                case StreamType.File:
+                    const repo = await Container.session.repos.getByFileUri(locator.uri);
+                    if (repo !== undefined) {
+                        if (locator.create) {
+                            return { id: undefined, stream: await repo.streams.getOrCreateByUri(locator.uri) };
+                        }
+
+                        stream = await repo.streams.getByUri(locator.uri);
+                        break;
+                    }
             }
 
-            if (locator.search !== undefined) {
-                switch (locator.search.type) {
-                    case StreamType.Channel:
-                        if (locator.search.create) {
-                            return await Container.session.channels.getOrCreateByName(locator.search.name, locator.search.create);
-                        }
-
-                        stream = await Container.session.channels.getByName(locator.search.name);
-                        break;
-
-                    case StreamType.Direct:
-                        if (locator.search.create) {
-                            return await Container.session.directMessages.getOrCreateByMembers(locator.search.members);
-                        }
-
-                        stream = await Container.session.directMessages.getByMembers(locator.search.members);
-                        break;
-
-                    case StreamType.File:
-                        const repo = await Container.session.repos.getByFileUri(locator.search.uri);
-                        if (repo !== undefined) {
-                            if (locator.search.create) {
-                                return await repo.streams.getOrCreateByUri(locator.search.uri);
-                            }
-
-                            stream = await repo.streams.getByUri(locator.search.uri);
-                            break;
-                        }
-                }
-            }
+            if (stream !== undefined) return { id: undefined, stream: stream };
         }
 
-        if (stream === undefined && options.includeActive) {
-            stream = Container.streamView.activeStream;
+        let streamThread;
+        if (options.includeActive) {
+            streamThread = Container.streamView.activeStreamThread;
         }
 
-        if (stream === undefined && options.includeDefault) {
-            stream = await Container.session.getDefaultTeamChannel();
+        if (streamThread === undefined && options.includeDefault) {
+            streamThread = { id: undefined, stream: await Container.session.getDefaultTeamChannel() };
         }
 
-        return stream;
+        return streamThread;
     }
 
     private async signInCore(username: string, password: string, teamId?: string) {

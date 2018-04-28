@@ -193,6 +193,11 @@ export class FileStream extends StreamBase<CSFileStream> {
 
 export type Stream = ChannelStream | DirectStream | FileStream;
 
+export interface StreamThread {
+    id: string | undefined;
+    stream: Stream;
+}
+
 abstract class StreamCollectionBase<TItem extends StreamBase<TEnitity>, TEnitity extends CSStream> extends CodeStreamCollection<TItem, TEnitity> {
 
     constructor(

@@ -53,7 +53,7 @@ export class LiveShareController extends Disposable {
         this._disposable = Disposable.from(
             ...commandRegistry.map(({ name, key, method }) => commands.registerCommand(name, (...args: any[]) => method.apply(this, args))),
             Container.session.onDidChangeStatus(this.onSessionStatusChanged, this),
-            Container.linkActions.register<LiveShareContext>('vsls', 'join', this.onRequestReceived, this)
+            Container.linkActions.register<LiveShareContext>('vsls', 'join', { onMatch: this.onJoinMatch, onAction: this.onJoinAction }, this)
         );
     }
 
@@ -69,7 +69,14 @@ export class LiveShareController extends Disposable {
         return workspace.getConfiguration('vsliveshare').get<string>('join.reload.workspaceId');
     }
 
-    private async onRequestReceived(post: Post, e: LiveShareContext) {
+    private onJoinAction(e: LiveShareContext) {
+        return this.join({
+            context: e,
+            url: e.url
+        });
+    }
+
+    private async onJoinMatch(post: Post, e: LiveShareContext) {
         // const match = liveShareRegex.exec(e.url);
         // if (match == null) return;
 
@@ -96,10 +103,7 @@ export class LiveShareController extends Disposable {
         const result = await window.showInformationMessage(`${host.name} is inviting you to join a Live Share session`, ...actions);
         if (result === undefined || result === actions[1]) return;
 
-        this.join({
-            context: e,
-            url: e.url
-        });
+        this.onJoinAction(e);
     }
 
     private onSessionStatusChanged(e: SessionStatusChangedEvent) {
@@ -133,11 +137,11 @@ export class LiveShareController extends Disposable {
     async invite(args: UserNode | InviteCommandArgs) {
         if (!this.isInstalled) throw new Error('Live Share is not installed');
 
-        let stream;
+        let streamThread;
         const users = [];
         if (args instanceof UserNode) {
             users.push(args.user);
-            stream = await Container.session.directMessages.getOrCreateByMembers([Container.session.userId, args.user.id]);
+            streamThread = { id: undefined, stream: await Container.session.directMessages.getOrCreateByMembers([Container.session.userId, args.user.id]) };
         }
         else {
             if (typeof args.userIds === 'string') {
@@ -148,7 +152,7 @@ export class LiveShareController extends Disposable {
                     users.push(await Container.session.users.get(id));
                 }
             }
-            stream = Container.streamView.activeStream;
+            streamThread = Container.streamView.activeStreamThread;
         }
 
         Logger.log('LiveShareController.invite: ', `Users=${JSON.stringify(users.map(u => ({ id: u.id, name: u.name })))}`);
@@ -169,17 +173,24 @@ export class LiveShareController extends Disposable {
 
         const repos = Iterables.map(await Container.session.repos.items(), r => ({ id: r.id, hash: r.hash, normalizedUrl: r.normalizedUrl, url: r.url } as RemoteRepository));
 
-        const link = Container.linkActions.toLinkAction<LiveShareContext>('vsls', 'join', {
-            url: url,
-            sessionId: sessionId,
-            sessionUserId: Container.session.userId,
-            memberIds: memberIds,
-            repos: [...repos]
-        });
+        const link = Container.linkActions.toLinkAction<LiveShareContext>(
+            'vsls',
+            'join',
+            {
+                url: url,
+                sessionId: sessionId,
+                sessionUserId: Container.session.userId,
+                memberIds: memberIds,
+                repos: [...repos]
+            },
+            {
+                type: 'link',
+                label: ` join my Live Share session`
+            });
 
         return await Container.commands.post({
-            stream: stream,
-            text: `${users.map(u => `@${u.name}`).join(', ')} ${link}`,
+            streamThread: streamThread,
+            text: `${users.map(u => `@${u.name}`).join(', ')} please ${link}`,
             send: true
         });
     }
@@ -194,7 +205,7 @@ export class LiveShareController extends Disposable {
 
     private async openStream(sessionId: string, sessionUserId: string, memberIds: string[]) {
         const stream = await Container.session.channels.getOrCreateByName(`ls:${sessionUserId}:${sessionId}`, { membership: memberIds });
-        return await Container.commands.openStream({ stream: stream });
+        return await Container.commands.openStream({ streamThread: { id: undefined, stream: stream } });
     }
 }
 

@@ -691,6 +691,18 @@ export class SimpleStream extends Component {
 	handleDismissThread = ({ track = true } = {}) => {
 		this.hideDisplayMarker();
 		this.setState({ threadActive: false });
+
+		vscode.postMessage({
+			type: 'event',
+			body: {
+				name: 'thread-selected',
+				payload: {
+					threadId: undefined,
+					streamId: this.props.id
+				}
+			}
+		}, '*')
+
 		// if (track) TODO: mixpanel.track("Page Viewed", { "Page Name": "Source Stream" });
 	};
 

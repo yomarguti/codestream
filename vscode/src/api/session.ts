@@ -8,13 +8,13 @@ import { Logger } from '../logger';
 import { Markers } from './models/markers';
 import { Post } from './models/posts';
 import { Repository, RepositoryCollection } from './models/repositories';
-import { ChannelStream, ChannelStreamCollection, DirectStream, DirectStreamCollection, FileStream, Stream, StreamType } from './models/streams';
+import { ChannelStream, ChannelStreamCollection, DirectStream, DirectStreamCollection, FileStream, Stream, StreamThread, StreamType } from './models/streams';
 import { Team, TeamCollection } from './models/teams';
 import { User, UserCollection } from './models/users';
 import { MessageReceivedEvent, MessageType, PostsMessageReceivedEvent, PubNubReceiver, RepositoriesMessageReceivedEvent, StreamsMessageReceivedEvent } from './pubnub';
 import { Functions, memoize, Strings } from '../system';
 
-export { ChannelStream, DirectStream, FileStream, Markers, Post, Repository, Stream, StreamType, Team, User };
+export { ChannelStream, DirectStream, FileStream, Markers, Post, Repository, Stream, StreamThread, StreamType, Team, User };
 
 function affects(data: { [key: string]: any }[], id: string, type: 'stream' | 'repo' | 'team') {
     let key: string;

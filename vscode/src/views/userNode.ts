@@ -33,13 +33,13 @@ export class UserNode extends ExplorerNode {
             command: 'codestream.openStream',
             arguments: [
                 {
-                    search: {
+                    streamThread: {
                         type: StreamType.Direct,
                         members: [this.session.userId, this.user.id],
                         create: true
                     }
-                }
-            ] as OpenStreamCommandArgs[]
+                } as OpenStreamCommandArgs
+            ]
         };
 
         return item;

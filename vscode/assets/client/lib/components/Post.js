@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { Component, Fragment } from "react";
 import { connect } from "react-redux";
 import createClassString from "classnames";
 import Headshot from "./Headshot";
@@ -12,6 +12,10 @@ import ContentEditable from "react-contenteditable";
 import Button from "./onboarding/Button";
 
 const logger = rootLogger.forClass("components/Post");
+
+// codestream://service/action?d={<data>}&ui={ type: 'button' | 'link', label: string } }
+const linkActionRegex = /codestream:\/\/(.*?)\/(.*?)\?d=(.*?)(?:&ui=(.*?))?(?=\s|$)/;
+const linkActionMatchRegex = /(codestream:\/\/.*?\?d=.*?(?:&ui=.*?)?(?=\s|$))/;
 
 class Post extends Component {
 	constructor(props) {
@@ -123,26 +127,58 @@ class Post extends Component {
 
 	renderBody = post => {
 		let usernameRegExp = new RegExp("(@(?:" + this.props.usernames + ")\\b)");
-		let bodyParts = post.text.split(usernameRegExp);
+
+		// FIXME: This is really ugly :(
+
+		const currentUser = "@" + this.props.currentUsername;
+		const body = [];
 		let iterator = 0;
-		return bodyParts.map(part => {
+		let bodyParts = post.text.split(usernameRegExp);
+		for (const part of bodyParts) {
+			if (!part) continue;
+
 			if (part.match(usernameRegExp)) {
-				if (part === "@" + this.props.currentUsername)
-					return (
-						<span key={iterator++} className="at-mention me">
-							{part}
-						</span>
-					);
-				else
-					return (
-						<span key={iterator++} className="at-mention">
-							{part}
-						</span>
-					);
+				body.push(
+					<span key={iterator++} className={part === currentUser ? "at-mention me" : 'at-mention'}>
+						{part}
+					</span>
+				);
 			} else {
-				return part;
+				for (const subpart of part.split(linkActionMatchRegex)) {
+					if (!subpart) continue;
+
+					const match = linkActionRegex.exec(subpart);
+					if (match == null) {
+						body.push(subpart);
+						continue;
+					}
+
+					const [command, service, action, data, desiredUI] = match;
+					let ui;
+					if (desiredUI != null) {
+						ui = JSON.parse(decodeURIComponent(desiredUI));
+					}
+					else {
+						let label;
+						if (service === 'vsls' && action === 'join') {
+							label = ' join my Live Share session';
+						}
+						else {
+							label = ` ${action} ${service}`;
+						}
+						ui = { type: 'link', label: label };
+					}
+
+					body.push(
+						<a key={iterator++} href={`command:codestream.runServiceAction?${encodeURI(JSON.stringify({ commandUri: command }))}`} className={ui.type === 'button' ? 'post--action-button' : 'post--action-link'}>
+							{ui.label}
+						</a>
+					);
+				}
 			}
-		});
+		}
+
+		return body;
 	};
 
 	renderEditingBody = post => {
