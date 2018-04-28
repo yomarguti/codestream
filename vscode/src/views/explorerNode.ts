@@ -15,6 +15,8 @@ export enum RefreshReason {
 export enum ResourceType {
     Channel = 'codestream:channel',
     Channels = 'codestream:channels',
+    ServiceChannel = 'codestream:channel:service',
+    ServiceChannels = 'codestream:channels:service',
     DirectMessage = 'codestream:directMessage',
     FileStream = 'codestream:fileStream',
     Message = 'codestream:message',

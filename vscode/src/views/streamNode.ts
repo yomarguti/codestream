@@ -9,7 +9,8 @@ export class StreamNode extends ExplorerNode {
 
     constructor(
         public readonly session: CodeStreamSession,
-        public readonly stream: Stream
+        public readonly stream: Stream,
+        private readonly _resourceType?: ResourceType
     ) {
         super();
     }
@@ -50,6 +51,8 @@ export class StreamNode extends ExplorerNode {
     }
 
     private getContextValue() {
+        if (this._resourceType !== undefined) return this._resourceType;
+
         switch (this.stream.type) {
             case StreamType.Channel: return ResourceType.Channel;
             case StreamType.Direct: return ResourceType.DirectMessage;

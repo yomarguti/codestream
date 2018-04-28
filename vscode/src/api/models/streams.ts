@@ -61,6 +61,9 @@ abstract class StreamBase<T extends CSStream> extends CodeStreamItem<T> {
     }
 }
 
+// TODO: Using this format, because channel names can only be 64 characters
+const liveShareServiceChannelRegex = /^ls:(.*?):(.*)$/;
+
 export class ChannelStream extends StreamBase<CSChannelStream> {
 
     readonly type = StreamType.Channel;
@@ -76,8 +79,21 @@ export class ChannelStream extends StreamBase<CSChannelStream> {
         return this.entity.name;
     }
 
-    label() {
-        return `#${this.entity.name}`;
+    @memoize
+    async label() {
+        // ls:<userId>:<sessionId>
+        const match = liveShareServiceChannelRegex.exec(this.entity.name);
+        if (match == null) return `#${this.entity.name}`;
+
+        const [, userId] = match;
+
+        let members = '';
+        if (this.entity.memberIds !== undefined) {
+            members = ` (${Iterables.join(Iterables.map((await this.members(userId))!, u => u.name), ', ')})`;
+        }
+
+        const user = await this.session.users.get(userId);
+        return `${user !== undefined ? `${user.name}'s ` : ''}Session${members}`;
     }
 
     async members(...excludes: string[]): Promise<Iterable<User> | undefined> {

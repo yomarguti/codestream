@@ -35,8 +35,8 @@ export class LinkActionsController extends Disposable {
         }
     }
 
-    private _registrationMap = new Map<string, ((post: Post, actionData: any) => any)>();
-    register<T>(service: string, action: string, callback: (post: Post, actionData: T) => any, thisArg?: any): Disposable {
+    private _registrationMap = new Map<string, ((post: Post, context: any) => any)>();
+    register<T>(service: string, action: string, callback: (post: Post, context: T) => any, thisArg?: any): Disposable {
         const key = `${service}/${action}`;
         this._registrationMap.set(key, thisArg !== undefined ? callback.bind(thisArg) : callback);
         this.ensureRegistrations();
@@ -47,8 +47,8 @@ export class LinkActionsController extends Disposable {
         });
     }
 
-    toLinkAction<T>(service: string, action: string, actionData: T) {
-        return `codestream://${service}/${action}?d=${encodeURIComponent(JSON.stringify(actionData))}`;
+    toLinkAction<T>(service: string, action: string, context: T) {
+        return `codestream://${service}/${action}?d=${encodeURIComponent(JSON.stringify(context))}`;
     }
 
     private ensureRegistrations() {

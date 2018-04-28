@@ -1,6 +1,6 @@
 'use strict';
 import { commands, Disposable, Extension, extensions, MessageItem, window, workspace } from 'vscode';
-import { Post, SessionStatus, SessionStatusChangedEvent, StreamType } from '../api/session';
+import { Post, SessionStatus, SessionStatusChangedEvent } from '../api/session';
 import { Command, CommandOptions } from '../commands';
 import { ContextKeys, setContext } from '../common';
 import { Container } from '../container';
@@ -13,16 +13,12 @@ import { Iterables } from '../system';
 const liveShareRegex = /https:\/\/(?:.*?)liveshare(?:.*?).visualstudio.com\/join\?(.*?)(?:\s|$)/;
 let liveShare: Extension<any> | undefined;
 
-interface LiveShareActionData {
+interface LiveShareContext {
     url: string;
     sessionId: string;
+    sessionUserId: string;
     memberIds: string[];
     repos: RemoteRepository[];
-}
-
-interface LiveShareContext {
-    senderId: string;
-    data: LiveShareActionData;
 }
 
 interface InviteCommandArgs {
@@ -31,7 +27,6 @@ interface InviteCommandArgs {
 
 interface JoinCommandArgs {
     context: LiveShareContext;
-    sessionId: string;
     url: string;
 }
 
@@ -58,7 +53,7 @@ export class LiveShareController extends Disposable {
         this._disposable = Disposable.from(
             ...commandRegistry.map(({ name, key, method }) => commands.registerCommand(name, (...args: any[]) => method.apply(this, args))),
             Container.session.onDidChangeStatus(this.onSessionStatusChanged, this),
-            Container.linkActions.register<LiveShareActionData>('vsls', 'join', this.onRequestReceived, this)
+            Container.linkActions.register<LiveShareContext>('vsls', 'join', this.onRequestReceived, this)
         );
     }
 
@@ -70,24 +65,25 @@ export class LiveShareController extends Disposable {
         return liveShare !== undefined;
     }
 
-    // get inRemoteSession() {
-    //     return this.sessionId !== undefined;
-    // }
-
     get sessionId() {
         return workspace.getConfiguration('vsliveshare').get<string>('join.reload.workspaceId');
     }
 
-    private async onRequestReceived(post: Post, e: LiveShareActionData) {
-        const match = liveShareRegex.exec(e.url);
-        if (match == null) return;
+    private async onRequestReceived(post: Post, e: LiveShareContext) {
+        // const match = liveShareRegex.exec(e.url);
+        // if (match == null) return;
 
-        const [, sessionId] = match;
-        const sender = await post.sender();
-        if (sender === undefined) {
+        Logger.log('LiveShareController.onRequestReceived: ', `data=${JSON.stringify(e)}`);
+
+        const host = await Container.session.users.get(e.sessionUserId);
+
+        if (host === undefined) {
+            Logger.log('LiveShareController.onRequestReceived: ', `Could not find host User(${e.sessionUserId})`);
             debugger;
             return;
         }
+
+        Logger.log('LiveShareController.onRequestReceived: ', `Host(${host.name}) User(${host.id}) found`);
 
         // Only notify if we've been mentioned
         if (!post.mentioned(Container.session.user.name)) return;
@@ -97,12 +93,11 @@ export class LiveShareController extends Disposable {
             { title: 'Ignore', isCloseAffordance: true }
         ];
 
-        const result = await window.showInformationMessage(`${sender.name} is inviting you to join a Live Share session`, ...actions);
+        const result = await window.showInformationMessage(`${host.name} is inviting you to join a Live Share session`, ...actions);
         if (result === undefined || result === actions[1]) return;
 
         this.join({
-            context: { senderId: post.senderId, data: e },
-            sessionId: sessionId,
+            context: e,
             url: e.url
         });
     }
@@ -124,12 +119,12 @@ export class LiveShareController extends Disposable {
         switch (status) {
             case SessionStatus.SigningIn:
                 // Since we are in a live share session, swap out our git service
-                Container.overrideGit(new RemoteGitService(context.data.repos));
+                Container.overrideGit(new RemoteGitService(context.repos));
                 break;
 
             case SessionStatus.SignedIn:
                 // When we are signed in, open a channel for the liveshare
-                this.openStream(sessionId, context.data.memberIds);
+                this.openStream(sessionId, context.sessionUserId, context.memberIds);
                 break;
         }
     }
@@ -138,11 +133,14 @@ export class LiveShareController extends Disposable {
     async invite(args: UserNode | InviteCommandArgs) {
         if (!this.isInstalled) throw new Error('Live Share is not installed');
 
+        let stream;
         const users = [];
         if (args instanceof UserNode) {
             users.push(args.user);
+            stream = await Container.session.directMessages.getOrCreateByMembers([Container.session.userId, args.user.id]);
         }
-        else if (typeof args.userIds === 'string') {
+        else {
+            if (typeof args.userIds === 'string') {
             users.push(await Container.session.users.get(args.userIds));
         }
         else {
@@ -150,6 +148,10 @@ export class LiveShareController extends Disposable {
                 users.push(await Container.session.users.get(id));
             }
         }
+            stream = Container.streamView.activeStream;
+        }
+
+        Logger.log('LiveShareController.invite: ', `Users=${JSON.stringify(users.map(u => ({ id: u.id, name: u.name })))}`);
 
         const result = await commands.executeCommand('liveshare.start', { suppressNotification: true });
         if (result === undefined) return;
@@ -159,12 +161,20 @@ export class LiveShareController extends Disposable {
 
         const [url, sessionId] = match;
         const memberIds = [Container.session.userId, ...users.map(u => u.id)];
-        this.openStream(sessionId, memberIds);
+        await this.openStream(sessionId, Container.session.userId, memberIds);
 
         const repos = Iterables.map(await Container.session.repos.items(), r => ({ id: r.id, hash: r.hash, normalizedUrl: r.normalizedUrl, url: r.url } as RemoteRepository));
 
-        const link = Container.linkActions.toLinkAction<LiveShareActionData>('vsls', 'join', { url: url, sessionId: sessionId, memberIds: memberIds, repos: [...repos] });
+        const link = Container.linkActions.toLinkAction<LiveShareContext>('vsls', 'join', {
+            url: url,
+            sessionId: sessionId,
+            sessionUserId: Container.session.userId,
+            memberIds: memberIds,
+            repos: [...repos]
+        });
+
         return await Container.commands.post({
+            stream: stream,
             text: `${users.map(u => `@${u.name}`).join(', ')} ${link}`,
             send: true
         });
@@ -172,19 +182,15 @@ export class LiveShareController extends Disposable {
 
     @command('join')
     async join(args: JoinCommandArgs) {
-        await Container.context.globalState.update(`vsls:${args.sessionId}`, args.context);
+        await Container.context.globalState.update(`vsls:${args.context.sessionId}`, args.context);
         await commands.executeCommand('liveshare.join', args.url); // , { newWindow: true });
-        // this.openStream(sessionId, e.memberIds);
+
+        this.openStream(args.context.sessionId, args.context.sessionUserId, args.context.memberIds);
     }
 
-    private async openStream(sessionId: string, memberIds: string[]) {
-        return await Container.commands.openStream({
-            search: {
-                type: StreamType.Direct,
-                members: memberIds,
-                create: true
-            }
-        });
+    private async openStream(sessionId: string, sessionUserId: string, memberIds: string[]) {
+        const stream = await Container.session.channels.getOrCreateByName(`ls:${sessionUserId}:${sessionId}`, { membership: memberIds });
+        return await Container.commands.openStream({ stream: stream });
     }
 }
 

@@ -16,7 +16,8 @@ export class SessionNode extends ExplorerNode {
 
     async getChildren(): Promise<ExplorerNode[]> {
         return [
-            new ChannelsNode(this.session),
+            new ChannelsNode(this.session, 'channels'),
+            new ChannelsNode(this.session, 'services'),
             new RepositoriesNode(this.session),
             new PeopleNode(this.session)
         ];
