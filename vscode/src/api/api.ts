@@ -14,7 +14,7 @@ import {
     GetStreamResponse, GetStreamsResponse,
     GetTeamResponse, GetTeamsResponse,
     GetUserResponse, GetUsersResponse,
-    LoginRequest, LoginResponse
+    LoginRequest, LoginResponse, StreamType
 } from './types';
 import fetch, { Headers, RequestInit, Response } from 'node-fetch';
 
@@ -175,6 +175,14 @@ export class CodeStreamApi {
         const data = await response.json();
         return new Error(`${response.status}: ${response.statusText}\n\n${JSON.stringify(data)}`);
     }
+
+    static isStreamSubscriptionRequired(stream: CSStream): boolean {
+        if (stream.type === StreamType.File) return false;
+        if (stream.type === StreamType.Channel) {
+            if (stream.memberIds === undefined) return false;
+        }
+        return true;
+}
 
     static normalizeResponse<R extends object>(obj: { [key: string]: any }): R {
         for (const [key, value] of Object.entries(obj)) {

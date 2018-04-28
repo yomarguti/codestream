@@ -504,8 +504,8 @@ export class CodeStreamSession extends Disposable {
                 Container.git.onDidChangeRepositories(this.onGitRepositoriesChanged, this)
             );
 
-            const dms = await this._sessionApi.getDirectStreams(teamId);
-            this._pubnub.subscribe(this.userId, teamId, this._data.repos.map(r => r.id), dms.map(s => s.id));
+            const streams = await this._sessionApi.getSubscribeableStreams(teamId);
+            this._pubnub.subscribe(this.userId, teamId, this._data.repos.map(r => r.id), streams.map(s => s.id));
 
             Logger.log(`${email} signed into CodeStream (${this.serverUrl})`);
             this._status = SessionStatus.SignedIn;

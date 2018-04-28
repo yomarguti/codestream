@@ -1,6 +1,6 @@
 'use strict';
 import { Disposable, Event, EventEmitter } from 'vscode';
-import { CSPost, CSRepository, CSStream, StreamType } from './types';
+import { CSPost, CSRepository, CSStream } from './types';
 import { CodeStreamApi } from './api';
 import { Logger } from '../logger';
 import Pubnub = require('pubnub');
@@ -81,6 +81,8 @@ export class PubNubReceiver {
     }
 
     private subscribeCore(channels: string[]) {
+        if (channels.length === 0) return;
+
         this._pubnub!.subscribe({
             channels: channels,
             withPresence: false
@@ -162,8 +164,8 @@ export class PubNubReceiver {
                     break;
                 case 'streams':
                     const streams = CodeStreamApi.normalizeResponse(obj) as CSStream[];
-                    // Subscribe to any new direct message streams
-                    this.subscribeCore([...Iterables.filterMap(streams, s => s.type === StreamType.Direct ? `stream-${s.id}` : undefined)]);
+                    // Subscribe to any new non-file, non-team streams
+                    this.subscribeCore([...Iterables.filterMap(streams, s => CodeStreamApi.isStreamSubscriptionRequired(s) ? `stream-${s.id}` : undefined)]);
 
                     this._onDidReceiveMessage.fire({ type: MessageType.Streams, streams: streams });
                     break;
