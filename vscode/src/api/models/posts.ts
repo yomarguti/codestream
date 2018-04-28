@@ -6,7 +6,7 @@ import { ChannelStream, DirectStream, FileStream, Stream, StreamType } from '../
 import { Repository } from '../models/repositories';
 import { User } from '../models/users';
 import { CSPost } from '../types';
-import { Iterables, memoize } from '../../system';
+import { Iterables } from '../../system';
 
 interface CodeBlock {
     readonly code: string;
@@ -41,7 +41,7 @@ export class Post extends CodeStreamItem<CSPost> {
         return this.entity.text;
     }
 
-    @memoize
+    // @memoize
     async codeBlock(): Promise<CodeBlock | undefined> {
         if (this.entity.codeBlocks === undefined || this.entity.codeBlocks.length === 0) return undefined;
 
@@ -95,7 +95,7 @@ export class Post extends CodeStreamItem<CSPost> {
         } while (match != null);
     }
 
-    @memoize
+    // @memoize
     async repo(): Promise<Repository | undefined> {
         const stream = await this.stream();
         if (stream.type !== StreamType.File) return undefined;
@@ -103,12 +103,12 @@ export class Post extends CodeStreamItem<CSPost> {
         return stream.repo();
     }
 
-    @memoize
+    // @memoize
     sender(): Promise<User | undefined> {
         return this.session.users.get(this.entity.creatorId);
     }
 
-    @memoize
+    // @memoize
     stream(): Promise<Stream>  {
         return this.getStream(this.entity.streamId);
     }

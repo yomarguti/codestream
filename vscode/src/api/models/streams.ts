@@ -52,7 +52,7 @@ abstract class StreamBase<T extends CSStream> extends CodeStreamItem<T> {
         return new Post(this.session, post);
     }
 
-    @memoize
+    // @memoize
     async team(): Promise<Team> {
         const team = await this.session.teams.get(this.entity.teamId);
         if (team === undefined) throw new Error(`Team(${this.entity.teamId}) could not be found`);
@@ -80,7 +80,6 @@ export class ChannelStream extends StreamBase<CSChannelStream> {
         return `#${this.entity.name}`;
     }
 
-    @memoize
     async members(): Promise<Iterable<User> | undefined> {
         if (this.entity.memberIds === undefined) return undefined;
 
@@ -111,7 +110,6 @@ export class DirectStream extends StreamBase<CSDirectStream> {
         return this.entity.memberIds;
     }
 
-    @memoize
     async members(excludeSelf: boolean = true): Promise<Iterable<User>> {
         return this.session.users.filter(u => !(excludeSelf && u.id === this.session.userId) && this.entity.memberIds.includes(u.id));
     }
@@ -164,7 +162,7 @@ export class FileStream extends StreamBase<CSFileStream> {
         return this.entity.file;
     }
 
-    @memoize
+    // @memoize
     async repo(): Promise<Repository> {
         if (this._repo === undefined) {
             const repo = await this.session.repos.get(this.entity.repoId);
