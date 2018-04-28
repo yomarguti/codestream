@@ -184,6 +184,7 @@ export class StreamWebviewPanel extends Disposable {
 
     is(stream: Stream) {
         if (this._stream === undefined) return false;
+
         return this._stream.id === stream.id;
     }
 
@@ -219,9 +220,13 @@ export class StreamWebviewPanel extends Disposable {
         });
     }
 
-    async setStream(stream: Stream, threadId?: string) {
+    async setStream(stream: Stream, threadId?: string): Promise<Stream> {
         // TODO: Consider threadId when showing streams (allow to jumping right into a thread)
-        if (this._stream && this._stream.id === stream.id) return this.show();
+        if (this._stream && this._stream.id === stream.id) {
+            this.show();
+
+            return this._stream;
+        }
 
         const label = await stream.label();
         this._panel.title = `${label} \u00a0\u2022\u00a0 CodeStream`;
@@ -254,11 +259,13 @@ export class StreamWebviewPanel extends Disposable {
             .replace('{% styles-path %}', stylesPath);
         this._panel.webview.html = html;
 
-        return this.show();
+        this.show();
+
+        return this._stream;
     }
 
     show() {
-        return this._panel.reveal(ViewColumn.Three);
+        this._panel.reveal(ViewColumn.Three);
     }
 
     private postMessage(request: CSWebviewRequest) {

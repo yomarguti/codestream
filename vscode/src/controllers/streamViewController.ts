@@ -28,7 +28,7 @@ export class StreamViewController extends Disposable {
         return this._panel.stream;
     }
 
-    async openStream(stream: Stream) {
+    async openStream(stream: Stream): Promise<Stream> {
         if (this._panel === undefined) {
             this._panel = new StreamWebviewPanel(this.session);
 

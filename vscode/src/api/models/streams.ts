@@ -80,10 +80,10 @@ export class ChannelStream extends StreamBase<CSChannelStream> {
         return `#${this.entity.name}`;
     }
 
-    async members(): Promise<Iterable<User> | undefined> {
+    async members(...excludes: string[]): Promise<Iterable<User> | undefined> {
         if (this.entity.memberIds === undefined) return undefined;
 
-        return await this.session.users.filter(u => this.entity.memberIds!.includes(u.id));
+        return this.session.users.filter(u => !excludes.includes(u.id) && this.entity.memberIds!.includes(u.id));
     }
 }
 
@@ -100,7 +100,7 @@ export class DirectStream extends StreamBase<CSDirectStream> {
 
     @memoize
     async label() {
-        const label = Iterables.join(Iterables.map(await this.members(), u => u.name), ', ');
+        const label = Iterables.join(Iterables.map(await this.members(this.session.userId), u => u.name), ', ');
         if (!label && this.entity.memberIds.includes(this.session.userId)) return `${this.session.user.name} (you)`;
 
         return label;
@@ -110,8 +110,8 @@ export class DirectStream extends StreamBase<CSDirectStream> {
         return this.entity.memberIds;
     }
 
-    async members(excludeSelf: boolean = true): Promise<Iterable<User>> {
-        return this.session.users.filter(u => !(excludeSelf && u.id === this.session.userId) && this.entity.memberIds.includes(u.id));
+    async members(...excludes: string[]): Promise<Iterable<User>> {
+        return this.session.users.filter(u => !excludes.includes(u.id) && this.entity.memberIds.includes(u.id));
     }
 }
 

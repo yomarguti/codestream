@@ -1,5 +1,5 @@
 import { commands, Disposable, MessageItem, Range, TextDocument, Uri, window } from 'vscode';
-import { Post, Stream } from './api/session';
+import { Post, Stream, StreamType } from './api/session';
 import { openEditor } from './common';
 import { TraceLevel } from './config';
 import { Container } from './container';
@@ -28,9 +28,10 @@ export enum BuiltInCommands {
 
 interface IStreamLocator {
     stream?: Stream | StreamNode;
-    searchBy?: Uri | string | string[];
     parentPostId?: string;
-    autoCreate?: boolean;
+    search?: { type: StreamType.Channel, name: string, create?: { membership?: 'auto' | string[] } } |
+    { type: StreamType.Direct, members: string[], create?: boolean } |
+    { type: StreamType.File, uri: Uri, create?: boolean };
 }
 
 export interface OpenStreamCommandArgs extends IStreamLocator {
@@ -119,16 +120,16 @@ export class Commands extends Disposable {
     }
 
     @command('openStream', { showErrorMessage: 'Unable to open stream' })
-    async openStream(args: OpenStreamCommandArgs) {
+    async openStream(args: OpenStreamCommandArgs): Promise<Stream | undefined> {
         const stream = await this.findStream(args, { includeActive: true, includeDefault: true });
-        if (stream === undefined) return;
+        if (stream === undefined) return undefined;
 
         return Container.streamView.openStream(stream);
     }
 
     @command('post', { showErrorMessage: 'Unable to post message' })
-    async post(args: PostCommandArgs) {
-        const stream = await this.findStream(args, { includeActive: true, includeDefault: !args.send });
+    async post(args: PostCommandArgs): Promise<Post | Stream> {
+        const stream = await this.findStream(args, { includeActive: true, includeDefault: true /*!args.send*/ });
         if (stream === undefined) throw new Error(`No stream could be found`);
 
         if (args.send && args.text) {
@@ -137,14 +138,15 @@ export class Commands extends Disposable {
         }
 
         if (args.text) {
-            return Container.streamView.post(stream, args.text);
+            await Container.streamView.post(stream, args.text);
+            return stream;
         }
 
         return await Container.streamView.openStream(stream);
     }
 
     @command('postCode', { showErrorMessage: 'Unable to add comment' })
-    async postCode(args: PostCodeCommandArgs) {
+    async postCode(args: PostCodeCommandArgs): Promise<Post | Stream | undefined> {
         let document;
         let selection;
         if (args.document === undefined || args.range === undefined) {
@@ -161,7 +163,7 @@ export class Commands extends Disposable {
 
         if (document === undefined || selection === undefined) return undefined;
 
-        const stream = await this.findStream(args, { includeActive: true, includeDefault: !args.send });
+        const stream = await this.findStream(args, { includeActive: true, includeDefault: true });
         if (stream === undefined) throw new Error(`No stream could be found`);
 
         const uri = document.uri;
@@ -187,7 +189,8 @@ export class Commands extends Disposable {
             return stream.postCode(args.text, code, selection, commitHash!, markerStream, args.parentPostId);
         }
 
-        return Container.streamView.postCode(stream, repo, repo.relativizeUri(uri), code, selection, commitHash!, args.text, mentions);
+        await Container.streamView.postCode(stream, repo, repo.relativizeUri(uri), code, selection, commitHash!, args.text, mentions);
+        return stream;
     }
 
     @command('show')
@@ -209,35 +212,39 @@ export class Commands extends Disposable {
         let stream;
         if (locator !== undefined) {
             if (locator.stream !== undefined) {
-                stream = locator.stream instanceof StreamNode ? locator.stream.stream : locator.stream;
+                return locator.stream instanceof StreamNode
+                    ? locator.stream.stream
+                    : locator.stream;
             }
-            else if (locator.searchBy !== undefined) {
-                if (typeof locator.searchBy === 'string') {
-                    if (locator.autoCreate) throw new Error(`Auto-create isn't supported on Channels`);
 
-                    stream = await Container.session.channels.getByName(locator.searchBy);
-                }
-                else if (locator.searchBy instanceof Uri) {
-                    const repo = await Container.session.repos.getByFileUri(locator.searchBy);
-                    if (repo !== undefined) {
-                        if (locator.autoCreate) {
-                            stream = await repo.streams.getOrCreateByUri(locator.searchBy);
+            if (locator.search !== undefined) {
+                switch (locator.search.type) {
+                    case StreamType.Channel:
+                        if (locator.search.create) {
+                            return await Container.session.channels.getOrCreateByName(locator.search.name, locator.search.create);
                         }
-                        else {
-                            stream = await repo.streams.getByUri(locator.searchBy);
+
+                        stream = await Container.session.channels.getByName(locator.search.name);
+                        break;
+
+                    case StreamType.Direct:
+                        if (locator.search.create) {
+                            return await Container.session.directMessages.getOrCreateByMembers(locator.search.members);
                         }
-                    }
-                    else {
-                        stream = undefined;
-                    }
-                }
-                else {
-                    if (locator.autoCreate) {
-                        stream = await Container.session.directMessages.getOrCreateByMembers(locator.searchBy);
-                    }
-                    else {
-                        stream = await Container.session.directMessages.getByMembers(locator.searchBy);
-                    }
+
+                        stream = await Container.session.directMessages.getByMembers(locator.search.members);
+                        break;
+
+                    case StreamType.File:
+                        const repo = await Container.session.repos.getByFileUri(locator.search.uri);
+                        if (repo !== undefined) {
+                            if (locator.search.create) {
+                                return await repo.streams.getOrCreateByUri(locator.search.uri);
+                            }
+
+                            stream = await repo.streams.getByUri(locator.search.uri);
+                            break;
+                        }
                 }
             }
         }

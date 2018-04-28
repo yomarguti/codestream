@@ -1,6 +1,6 @@
 'use strict';
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
-import { CodeStreamSession, User } from '../api/session';
+import { CodeStreamSession, StreamType, User } from '../api/session';
 import { OpenStreamCommandArgs } from '../commands';
 import { Container } from '../container';
 import { ExplorerNode, ResourceType } from './explorerNode';
@@ -33,10 +33,13 @@ export class UserNode extends ExplorerNode {
             command: 'codestream.openStream',
             arguments: [
                 {
-                    searchBy: [this.session.userId, this.user.id],
-                    autoCreate: true
-                } as OpenStreamCommandArgs
-            ]
+                    search: {
+                        type: StreamType.Direct,
+                        members: [this.session.userId, this.user.id],
+                        create: true
+                    }
+                }
+            ] as OpenStreamCommandArgs[]
         };
 
         return item;

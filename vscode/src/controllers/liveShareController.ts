@@ -1,6 +1,6 @@
 'use strict';
 import { commands, Disposable, Extension, extensions, MessageItem, window, workspace } from 'vscode';
-import { Post, SessionStatus, SessionStatusChangedEvent } from '../api/session';
+import { Post, SessionStatus, SessionStatusChangedEvent, StreamType } from '../api/session';
 import { Command, CommandOptions } from '../commands';
 import { ContextKeys, setContext } from '../common';
 import { Container } from '../container';
@@ -166,8 +166,7 @@ export class LiveShareController extends Disposable {
         const link = Container.linkActions.toLinkAction<LiveShareActionData>('vsls', 'join', { url: url, sessionId: sessionId, memberIds: memberIds, repos: [...repos] });
         return await Container.commands.post({
             text: `${users.map(u => `@${u.name}`).join(', ')} ${link}`,
-            send: true,
-            autoCreate: false
+            send: true
         });
     }
 
@@ -180,8 +179,11 @@ export class LiveShareController extends Disposable {
 
     private async openStream(sessionId: string, memberIds: string[]) {
         return await Container.commands.openStream({
-            searchBy: memberIds,
-            autoCreate: true
+            search: {
+                type: StreamType.Direct,
+                members: memberIds,
+                create: true
+            }
         });
     }
 }
