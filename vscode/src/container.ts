@@ -6,7 +6,7 @@ import { IConfig } from './config';
 import { configuration } from './configuration';
 import { CodeStreamCodeActionProvider } from './providers/codeActionProvider';
 // import { CodeStreamCodeLensProvider } from './providers/codeLensProvider';
-import { CodeStreamExplorer } from './views/explorer';
+import { ChannelsExplorer, LiveShareExplorer, PeopleExplorer, RepositoriesExplorer } from './views/explorer';
 import { GitService, IGitService } from './git/gitService';
 import { LinkActionsController } from './controllers/linkActionsController';
 import { LiveShareController } from './controllers/liveShareController';
@@ -39,14 +39,20 @@ export class Container {
         context.subscriptions.push(this._streamView = new StreamViewController(this._session));
 
         if (config.explorer.enabled) {
-            context.subscriptions.push(this._explorer = new CodeStreamExplorer());
+            context.subscriptions.push(this._channelsExplorer = new ChannelsExplorer());
+            context.subscriptions.push(this._liveShareExplorer = new LiveShareExplorer());
+            context.subscriptions.push(this._peopleExplorer = new PeopleExplorer());
+            context.subscriptions.push(this._repositoriesExplorer = new RepositoriesExplorer());
         }
         else {
             let disposable: Disposable;
             disposable = configuration.onDidChange(e => {
                 if (configuration.changed(e, configuration.name('explorer')('enabled').value)) {
                     disposable.dispose();
-                    context.subscriptions.push(this._explorer = new CodeStreamExplorer());
+                    context.subscriptions.push(this._channelsExplorer = new ChannelsExplorer());
+                    context.subscriptions.push(this._liveShareExplorer = new LiveShareExplorer());
+                    context.subscriptions.push(this._peopleExplorer = new PeopleExplorer());
+                    context.subscriptions.push(this._repositoriesExplorer = new RepositoriesExplorer());
                 }
             });
         }
@@ -80,9 +86,24 @@ export class Container {
         return this._context;
     }
 
-    private static _explorer: CodeStreamExplorer;
-    static get explorer() {
-        return this._explorer;
+    private static _channelsExplorer: ChannelsExplorer;
+    static get channelsExplorer() {
+        return this._channelsExplorer;
+    }
+
+    private static _liveShareExplorer: LiveShareExplorer;
+    static get liveShareExplorer() {
+        return this._liveShareExplorer;
+    }
+
+    private static _peopleExplorer: PeopleExplorer;
+    static get peopleExplorer() {
+        return this._peopleExplorer;
+    }
+
+    private static _repositoriesExplorer: RepositoriesExplorer;
+    static get repositoriesExplorer() {
+        return this._repositoriesExplorer;
     }
 
     private static _git: IGitService;

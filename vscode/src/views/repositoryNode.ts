@@ -51,6 +51,6 @@ export class RepositoryNode extends SubscribableExplorerNode {
     }
 
     private onChanged() {
-        Container.explorer.refreshNode(this);
+        Container.repositoriesExplorer.refreshNode(this);
     }
 }

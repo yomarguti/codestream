@@ -39,7 +39,7 @@ export class StreamViewController extends Disposable {
         }
 
         // TODO: Switch to codestream view?
-        Container.explorer.show();
+        Container.commands.show();
         return this._panel.setStream(stream);
     }
 

@@ -212,7 +212,7 @@
             "view/item/context": [
                 {
                     "command": "codestream.explorer.refreshNode",
-                    "when": "view == codestream",
+                    "when": "view =~ /^codestream/",
                     "group": "9_codestream@1"
                 },
                 {
@@ -240,8 +240,23 @@
         "views": {
             "codestream": [
                 {
-                    "id": "codestream",
-                    "name": "CodeStream",
+                    "id": "codestream.channels",
+                    "name": "Channels",
+                    "when": "codestream:status == signedIn && config.codestream.explorer.enabled"
+                },
+                {
+                    "id": "codestream.people",
+                    "name": "People",
+                    "when": "codestream:status == signedIn && config.codestream.explorer.enabled"
+                },
+                {
+                    "id": "codestream.repositories",
+                    "name": "Repositories",
+                    "when": "codestream:status == signedIn && config.codestream.explorer.enabled"
+                },
+                {
+                    "id": "codestream.liveshare",
+                    "name": "Live Share Sessions",
                     "when": "codestream:status == signedIn && config.codestream.explorer.enabled"
                 }
             ]

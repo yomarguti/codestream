@@ -92,7 +92,7 @@ export default class PostDetails extends Component {
 					</div>
 				)}
 				<div className="button-group">
-					<a href={`command:codestream.vsls.invite?${JSON.stringify({userIds: post.creatorId})}`}><Button>Start LiveShare</Button></a>
+					<a href={`command:codestream.vsls.invite?${JSON.stringify({userIds: post.creatorId})}`}><Button>Start Live Share</Button></a>
 				</div>
 			</div>
 		);

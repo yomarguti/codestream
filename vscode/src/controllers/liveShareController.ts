@@ -141,13 +141,13 @@ export class LiveShareController extends Disposable {
         }
         else {
             if (typeof args.userIds === 'string') {
-            users.push(await Container.session.users.get(args.userIds));
-        }
-        else {
-            for (const id of args.userIds) {
-                users.push(await Container.session.users.get(id));
+                users.push(await Container.session.users.get(args.userIds));
             }
-        }
+            else {
+                for (const id of args.userIds) {
+                    users.push(await Container.session.users.get(id));
+                }
+            }
             stream = Container.streamView.activeStream;
         }
 
@@ -160,6 +160,10 @@ export class LiveShareController extends Disposable {
         if (match == null) return;
 
         const [url, sessionId] = match;
+
+        // const sessionId = '0DB8D25C44D5B0BD7980F65EE16A1BDED80B';
+        // const url = `https://insiders.liveshare.vsengsaas.visualstudio.com/join?${sessionId}`;
+
         const memberIds = [Container.session.userId, ...users.map(u => u.id)];
         await this.openStream(sessionId, Container.session.userId, memberIds);
 

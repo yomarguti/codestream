@@ -2,11 +2,12 @@
 import { commands, ConfigurationChangeEvent, Disposable, Event, EventEmitter, TreeDataProvider, TreeItem, TreeView, window } from 'vscode';
 import { configuration } from '../configuration';
 import { Container } from '../container';
-import { ExplorerNode, RefreshReason, SessionNode } from './explorerNodes';
+import { ExplorerNode, PeopleNode, RefreshReason, RepositoriesNode } from './explorerNodes';
+import { ChannelsNode } from './channelsNode';
 
 export * from './explorerNodes';
 
-export class CodeStreamExplorer extends Disposable implements TreeDataProvider<ExplorerNode> {
+export abstract class CodeStreamExplorer extends Disposable implements TreeDataProvider<ExplorerNode> {
 
     private _disposable: Disposable | undefined;
     private _roots: ExplorerNode[] = [];
@@ -20,22 +21,8 @@ export class CodeStreamExplorer extends Disposable implements TreeDataProvider<E
     constructor() {
         super(() => this.dispose());
 
-        // Container.explorerCommands;
-        commands.registerCommand('codestream.explorer.refresh', this.refresh, this);
-        commands.registerCommand('codestream.explorer.refreshNode', this.refreshNode, this);
-
-        // commands.registerCommand('gitlens.gitExplorer.setFilesLayoutToAuto', () => this.setFilesLayout(ExplorerFilesLayout.Auto), this);
-        // commands.registerCommand('gitlens.gitExplorer.setFilesLayoutToList', () => this.setFilesLayout(ExplorerFilesLayout.List), this);
-        // commands.registerCommand('gitlens.gitExplorer.setFilesLayoutToTree', () => this.setFilesLayout(ExplorerFilesLayout.Tree), this);
-
-        // commands.registerCommand('gitlens.gitExplorer.setAutoRefreshToOn', () => this.setAutoRefresh(Container.config.gitExplorer.autoRefresh, true), this);
-        // commands.registerCommand('gitlens.gitExplorer.setAutoRefreshToOff', () => this.setAutoRefresh(Container.config.gitExplorer.autoRefresh, false), this);
-        // commands.registerCommand('gitlens.gitExplorer.setRenameFollowingOn', () => GitExplorer.setRenameFollowing(true), this);
-        // commands.registerCommand('gitlens.gitExplorer.setRenameFollowingOff', () => GitExplorer.setRenameFollowing(false), this);
-        // commands.registerCommand('gitlens.gitExplorer.switchToHistoryView', () => this.switchTo(GitExplorerView.History), this);
-        // commands.registerCommand('gitlens.gitExplorer.switchToRepositoryView', () => this.switchTo(GitExplorerView.Repository), this);
-
-        // commands.registerCommand('gitlens.gitExplorer.undockHistory', this.undockHistory, this);
+        commands.registerCommand(this.getQualifiedCommand('refresh'), this.refresh, this);
+        commands.registerCommand(this.getQualifiedCommand('refreshNode'), this.refreshNode, this);
 
         Container.context.subscriptions.push(
             // window.onDidChangeActiveTextEditor(Functions.debounce(this.onActiveEditorChanged, 500), this),
@@ -60,7 +47,7 @@ export class CodeStreamExplorer extends Disposable implements TreeDataProvider<E
         }
 
         if (initializing) {
-            this._view = window.createTreeView('codestream', { treeDataProvider: this });
+            this._view = window.createTreeView(this.id, { treeDataProvider: this });
             this._disposable = this._view;
         }
     }
@@ -80,6 +67,13 @@ export class CodeStreamExplorer extends Disposable implements TreeDataProvider<E
     //     }
     // }
 
+    abstract get id(): string;
+    abstract getRoot(): ExplorerNode;
+
+    getQualifiedCommand(command: string) {
+        return `${this.id}.${command}`;
+    }
+
     private _loading: Promise<void> | undefined;
 
     async getChildren(node?: ExplorerNode): Promise<ExplorerNode[]> {
@@ -93,25 +87,14 @@ export class CodeStreamExplorer extends Disposable implements TreeDataProvider<E
         const session = await Container.session;
         if (session === undefined) return [];
 
-        const root = new SessionNode(session);
+        const root = this.getRoot(); // new SessionNode(session);
         this._roots = await root.getChildren();
-        // if (session.hasSingleTeam) {
-        //     const child = (await root.getChildren())[0];
-        //     this._roots = await child.getChildren();
-        // }
-        // else {
-        //     this._roots = [root];
-        // }
 
         return this._roots;
     }
 
     async getTreeItem(node: ExplorerNode): Promise<TreeItem> {
         return node.getTreeItem();
-    }
-
-    getQualifiedCommand(command: string) {
-        return `codestream.explorer.${command}`;
     }
 
     async refresh(reason?: RefreshReason, root?: ExplorerNode) {
@@ -135,5 +118,49 @@ export class CodeStreamExplorer extends Disposable implements TreeDataProvider<E
 
     show() {
         return Container.commands.show();
+    }
+}
+
+export class ChannelsExplorer extends CodeStreamExplorer {
+
+    get id() {
+        return 'codestream.channels';
+    }
+
+    getRoot() {
+        return new ChannelsNode(Container.session, 'channels');
+    }
+}
+
+export class LiveShareExplorer extends CodeStreamExplorer {
+
+    get id() {
+        return 'codestream.liveshare';
+    }
+
+    getRoot() {
+        return new ChannelsNode(Container.session, 'services');
+    }
+}
+
+export class PeopleExplorer extends CodeStreamExplorer {
+
+    get id() {
+        return 'codestream.people';
+    }
+
+    getRoot() {
+        return new PeopleNode(Container.session);
+    }
+}
+
+export class RepositoriesExplorer extends CodeStreamExplorer {
+
+    get id() {
+        return 'codestream.repositories';
+    }
+
+    getRoot() {
+        return new RepositoriesNode(Container.session);
     }
 }
