@@ -62,7 +62,7 @@ export class CodeStreamSessionApi {
         return (await this._api.createRepo(this.token, {
             teamId: teamId || this.teamId,
             url: uri.toString(),
-            firstCommitHash: firstCommitHashes[0]
+            knownCommitHashes: firstCommitHashes
         })).repo;
     }
 

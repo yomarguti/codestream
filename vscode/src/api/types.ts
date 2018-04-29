@@ -138,7 +138,7 @@ export interface CreatePostResponse {
 export interface CreateRepoRequest {
     teamId: string;
     url: string;
-    firstCommitHash: string;
+    knownCommitHashes: string[];
 }
 
 export interface CreateRepoResponse {
