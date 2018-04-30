@@ -14,17 +14,44 @@ import {
     GetStreamResponse, GetStreamsResponse,
     GetTeamResponse, GetTeamsResponse,
     GetUserResponse, GetUsersResponse,
-    LoginRequest, LoginResponse, StreamType
+    LoginRequest, LoginResponse, StreamType, UpdatePresenceRequest, UpdatePresenceResponse
 } from './types';
 import fetch, { Headers, RequestInit, Response } from 'node-fetch';
 
 export * from './types';
 
-// const responseCache = new Map<string, Promise<any>>();
+export interface ApiMiddlewareContext {
+    readonly url: string;
+    readonly method: string;
+    readonly request: RequestInit | undefined;
+}
+
+export interface ApiMiddleware {
+    readonly name: string;
+    onRequest?(context: ApiMiddlewareContext): Promise<void>;
+    onProvideResponse?(context: ApiMiddlewareContext): Promise<any | undefined>;
+    onResponse?(context: ApiMiddlewareContext, response: Promise<any>): Promise<void>;
+}
 
 export class CodeStreamApi {
 
+    private readonly _middleware: ApiMiddleware[] = [];
+    // private responseCache = new Map<string, Promise<any>>();
+
     constructor(public baseUrl: string) {
+        // this.useMiddleware({
+        //     name: 'ResponseCaching',
+        //     onProvideResponse: async context => {
+        //         if (context.method !== 'GET') return undefined;
+
+        //         return this.responseCache.get(context.url);
+        //     },
+        //     onResponse: async (context, response) => {
+        //         if (context.method !== 'GET') return;
+
+        //         this.responseCache.set(context.url, response);
+        //     }
+        // });
     }
 
     async login(email: string, password: string): Promise<LoginResponse> {
@@ -34,6 +61,16 @@ export class CodeStreamApi {
         });
 
         return resp;
+    }
+
+    useMiddleware(middleware: ApiMiddleware) {
+        this._middleware.push(middleware);
+        return {
+            dispose: () => {
+                const i = this._middleware.indexOf(middleware);
+                this._middleware.splice(i, 1);
+            }
+        };
     }
 
     createPost(token: string, request: CreatePostRequest): Promise<CreatePostResponse> {
@@ -73,7 +110,6 @@ export class CodeStreamApi {
     }
 
     getRepo(token: string, teamId: string, repoId: string): Promise<GetRepoResponse> {
-        // TODO: Check cache
         return this.get<GetRepoResponse>(`/repos/${repoId}`, token);
     }
 
@@ -82,7 +118,6 @@ export class CodeStreamApi {
     }
 
     getStream<T extends CSStream>(token: string, teamId: string, streamId: string): Promise<GetStreamResponse<T>> {
-        // TODO: Check cache
         return this.get<GetStreamResponse<T>>(`/streams/${streamId}`, token);
     }
 
@@ -91,7 +126,6 @@ export class CodeStreamApi {
     }
 
     getTeam(token: string, teamId: string): Promise<GetTeamResponse> {
-        // TODO: Check cache
         return this.get<GetTeamResponse>(`/teams/${teamId}`, token);
     }
 
@@ -107,6 +141,10 @@ export class CodeStreamApi {
         return this.get<GetUsersResponse>(`/users?teamId=${teamId}`, token);
     }
 
+    updatePresence(token: string, request: UpdatePresenceRequest) {
+        return this.put<UpdatePresenceRequest, UpdatePresenceResponse>(`/presence`, request, token);
+    }
+
     private delete<R extends object>(url: string, token?: string): Promise<R> {
         let resp = undefined;
         if (resp === undefined) {
@@ -116,12 +154,7 @@ export class CodeStreamApi {
     }
 
     private get<R extends object>(url: string, token?: string): Promise<R> {
-        let resp = undefined; // responseCache.get(url) as Promise<R>;
-        if (resp === undefined) {
-            resp = this.fetch<R>(url, { method: 'GET' }, token) as Promise<R>;
-            // responseCache.set(url, resp);
-        }
-        return resp;
+        return this.fetch<R>(url, { method: 'GET' }, token) as Promise<R>;
     }
 
     private post<RQ extends object, R extends object>(url: string, body: RQ, token?: string): Promise<R> {
@@ -162,12 +195,68 @@ export class CodeStreamApi {
             }
         }
 
-        Logger.log(`${(init && init.method) || 'GET'} ${url} ${CodeStreamApi.sanitize(init && init.body)}`);
+        const method = (init && init.method) || 'GET';
+        const absoluteUrl = `${this.baseUrl}${url}`;
 
-        const resp = await fetch(`${this.baseUrl}${url}`, init);
-        if (resp.status !== 200) throw await this.handleErrorResponse(resp);
+        Logger.log(`${method} ${url} ${CodeStreamApi.sanitize(init && init.body)}`);
 
-        return CodeStreamApi.normalizeResponse(await resp.json<R>());
+        const hasMiddleware = this._middleware.length > 0;
+
+        let context: ApiMiddlewareContext;
+        if (hasMiddleware) {
+            context = {
+                url: absoluteUrl,
+                method: method,
+                request: init
+            };
+
+            for (const mw of this._middleware) {
+                if (mw.onRequest === undefined) continue;
+
+                try {
+                    await mw.onRequest(context);
+                }
+                catch (ex) {
+                    Logger.error(ex, `${method} ${url}: Middleware(${mw.name}).onRequest FAILED`);
+                }
+            }
+        }
+
+        let json: Promise<any> | undefined;
+        if (hasMiddleware) {
+            for (const mw of this._middleware) {
+                if (mw.onProvideResponse === undefined) continue;
+
+                try {
+                    json = await mw.onProvideResponse(context!);
+                    if (json !== undefined) break;
+                }
+                catch (ex) {
+                    Logger.error(ex, `${method} ${url}: Middleware(${mw.name}).onProvideResponse FAILED`);
+                }
+            }
+        }
+
+        if (json === undefined) {
+            const resp = await fetch(absoluteUrl, init);
+            if (resp.status !== 200) throw await this.handleErrorResponse(resp);
+            json = resp.json<R>();
+        }
+
+        if (hasMiddleware) {
+            for (const mw of this._middleware) {
+                if (mw.onResponse === undefined) continue;
+
+                try {
+                    await mw.onResponse(context!, json);
+                }
+                catch (ex) {
+                    Logger.error(ex, `${method} ${url}: Middleware(${mw.name}).onResponse FAILED`);
+                }
+            }
+        }
+
+        return CodeStreamApi.normalizeResponse(await json);
     }
 
     private async handleErrorResponse(response: Response): Promise<Error> {
@@ -182,7 +271,7 @@ export class CodeStreamApi {
             if (stream.memberIds === undefined) return false;
         }
         return true;
-}
+    }
 
     static normalizeResponse<R extends object>(obj: { [key: string]: any }): R {
         for (const [key, value] of Object.entries(obj)) {

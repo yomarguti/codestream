@@ -225,3 +225,17 @@ export interface GetUserResponse {
 export interface GetUsersResponse {
     users: CSUser[];
 }
+
+export enum PresenceStatus {
+    Online = 'online',
+    Away = 'away'
+}
+
+export interface UpdatePresenceRequest {
+    sessionId: string;
+    status: PresenceStatus;
+}
+
+export interface UpdatePresenceResponse {
+    awayTimeout: number;
+}

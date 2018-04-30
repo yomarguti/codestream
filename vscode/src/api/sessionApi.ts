@@ -6,7 +6,7 @@ import {
     CSChannelStream, CSDirectStream, CSFileStream,
     CSMarker, CSMarkerLocations,
     CSPost, CSRepository, CSStream, CSTeam, CSUser,
-    StreamType
+    PresenceStatus, StreamType
 } from './api';
 import { Container } from '../container';
 import { GitRepository } from '../git/gitService';
@@ -274,5 +274,12 @@ export class CodeStreamSessionApi {
 
     async getUsers(teamId?: string): Promise<CSUser[]> {
         return (await this._api.getUsers(this.token, teamId || this.teamId)).users;
+    }
+
+    async updatePresence(status: PresenceStatus, sessionId: string) {
+        return (await this._api.updatePresence(this.token, {
+            sessionId: sessionId,
+            status: status
+        })).awayTimeout;
     }
 }
