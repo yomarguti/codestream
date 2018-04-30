@@ -224,8 +224,9 @@ export class StreamWebviewPanel extends Disposable {
     }
 
     async setStream(streamThread: StreamThread): Promise<StreamThread> {
-        // TODO: Consider threadId when showing streams (allow to jumping right into a thread)
-        if (this._streamThread && this._streamThread.id === streamThread.stream.id) {
+        if (this._streamThread &&
+            this._streamThread.id === streamThread.id &&
+            this._streamThread.stream.id === streamThread.stream.id) {
             this.show();
 
             return this._streamThread;
@@ -239,7 +240,7 @@ export class StreamWebviewPanel extends Disposable {
         state.currentTeamId = streamThread.stream.teamId;
         state.currentUserId = this.session.userId;
         state.currentStreamId = streamThread.stream.id;
-        state.selectedPostId = undefined;
+        state.selectedPostId = streamThread.id;
         state.streams = [streamThread.stream.entity];
 
         [state.posts, state.repos, state.teams, state.users] = await Promise.all([

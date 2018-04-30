@@ -1,13 +1,13 @@
 'use strict';
 import { Disposable, Range } from 'vscode';
 import { CodeStreamSession, Repository, StreamThread } from '../api/session';
-import { Container } from '../container';
 import { StreamWebviewPanel } from '../views/streamWebviewPanel';
 
 export class StreamViewController extends Disposable {
 
     private _disposable: Disposable | undefined;
     private _panel: StreamWebviewPanel | undefined;
+    private _lastStreamThread: StreamThread | undefined;
 
     constructor(public readonly session: CodeStreamSession) {
         super(() => this.dispose());
@@ -20,6 +20,7 @@ export class StreamViewController extends Disposable {
      }
 
     private onPanelClosed() {
+        this._lastStreamThread = this.activeStreamThread;
         this.dispose();
     }
 
@@ -39,8 +40,6 @@ export class StreamViewController extends Disposable {
             );
         }
 
-        // TODO: Switch to codestream view?
-        Container.commands.show();
         return this._panel.setStream(streamThread);
     }
 
@@ -52,5 +51,16 @@ export class StreamViewController extends Disposable {
     async postCode(streamThread: StreamThread, repo: Repository, relativePath: string, code: string, range: Range, commitHash: string, text?: string, mentions: string = '') {
         await this.openStreamThread(streamThread);
         return this._panel!.postCode(repo.id, relativePath, code, range, commitHash, text, mentions);
+    }
+
+    async show() {
+        if (this._panel !== undefined) return this._panel.show();
+
+        let streamThread = this._lastStreamThread;
+        if (streamThread === undefined) {
+            streamThread = { id: undefined, stream: await this.session.getDefaultTeamChannel() };
+        }
+
+        return this.openStreamThread(streamThread);
     }
 }

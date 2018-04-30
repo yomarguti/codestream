@@ -212,6 +212,10 @@ export class Commands extends Disposable {
 
     @command('show')
     show() {
+        return Container.streamView.show();
+    }
+
+    showActivity() {
         return commands.executeCommand('workbench.view.extension.codestream');
     }
 

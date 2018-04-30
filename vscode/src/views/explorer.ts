@@ -126,7 +126,7 @@ export abstract class CodeStreamExplorer extends Disposable implements TreeDataP
     }
 
     show() {
-        return Container.commands.show();
+        return Container.commands.showActivity();
     }
 }
 
