@@ -621,6 +621,14 @@ body.preload * {
   flex: 1 1 auto;
   min-height: 0px;
 }
+.codestream a.post--action-link {
+  text-decoration: none;
+  font-weight: 600;
+}
+.codestream a.post--action-link:hover {
+  text-decoration: underline;
+  text-decoration-skip: ink;
+}
 .btn {
   background-color: #353b45;
   background-image: linear-gradient(#3a3f4b, #353b45);
