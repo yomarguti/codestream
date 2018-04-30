@@ -2,12 +2,12 @@
 import { Range, Uri } from 'vscode';
 import { CodeStreamCollection, CodeStreamItem  } from './collection';
 import { Iterables, memoize, Strings } from '../../system';
-import { CodeStreamSession, SessionChangedEvent, SessionChangedType } from '../session';
 import { Post, PostCollection } from './posts';
 import { Repository } from './repositories';
+import { CodeStreamSession, SessionChangedEvent, SessionChangedType } from '../session';
 import { Team } from './teams';
-import { User } from './users';
 import { CSChannelStream, CSDirectStream, CSFileStream, CSStream, StreamType } from '../types';
+import { User } from './users';
 
 export { StreamType } from '../types';
 
@@ -20,6 +20,10 @@ abstract class StreamBase<T extends CSStream> extends CodeStreamItem<T> {
         super(session, stream);
     }
 
+    get hidden() {
+        return this.session.streamVisibility.isHidden(this.entity.id);
+    }
+
     private _posts: PostCollection | undefined;
     get posts() {
         if (this._posts === undefined) {
@@ -30,6 +34,10 @@ abstract class StreamBase<T extends CSStream> extends CodeStreamItem<T> {
 
     get teamId() {
         return this.entity.teamId;
+    }
+
+    hide() {
+        return this.session.streamVisibility.hide(this.entity.id);
     }
 
     async post(text: string, parentPostId?: string) {

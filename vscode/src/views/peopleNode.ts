@@ -1,7 +1,7 @@
 'use strict';
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { CodeStreamSession } from '../api/session';
-import { ExplorerNode, ResourceType } from './explorerNode';
+import { ContextValue, ExplorerNode } from './explorerNode';
 import { StreamNode } from './streamNode';
 import { UserNode } from './userNode';
 import { Iterables } from '../system';
@@ -15,7 +15,7 @@ export class PeopleNode extends ExplorerNode {
     }
 
     get id() {
-        return `${this.session.id}:${ResourceType.People}`;
+        return `${this.session.id}:${ContextValue.People}`;
     }
 
     async getChildren(): Promise<ExplorerNode[]> {
@@ -27,7 +27,7 @@ export class PeopleNode extends ExplorerNode {
 
         const children: (StreamNode | UserNode)[] = users.map(u => new UserNode(this.session, u));
         // Add any group DMs to the "people" list
-        const groups = await this.session.directMessages.filter(dm => dm.memberIds.length > 2);
+        const groups = await this.session.directMessages.filter(dm => !dm.hidden && dm.memberIds.length > 2);
         children.push(...Iterables.map(groups, dm => new StreamNode(this.session, dm)));
 
         return children;
@@ -35,7 +35,7 @@ export class PeopleNode extends ExplorerNode {
 
     getTreeItem(): TreeItem {
         const item = new TreeItem('People', TreeItemCollapsibleState.Expanded);
-        item.contextValue = ResourceType.People;
+        item.contextValue = ContextValue.People;
         return item;
     }
 }

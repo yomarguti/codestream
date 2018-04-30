@@ -2,7 +2,7 @@
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { CodeStreamSession } from '../api/session';
 import { Container } from '../container';
-import { ExplorerNode, ResourceType, SubscribableExplorerNode } from './explorerNode';
+import { ContextValue, ExplorerNode, SubscribableExplorerNode } from './explorerNode';
 import { RepositoryNode } from './repositoryNode';
 
 export class RepositoriesNode extends SubscribableExplorerNode {
@@ -14,7 +14,7 @@ export class RepositoriesNode extends SubscribableExplorerNode {
     }
 
     get id() {
-        return `${this.session.id}:${ResourceType.Repositories}`;
+        return `${this.session.id}:${ContextValue.Repositories}`;
     }
 
     async getChildren(): Promise<ExplorerNode[]> {
@@ -28,7 +28,7 @@ export class RepositoriesNode extends SubscribableExplorerNode {
         this.unsubscribe();
 
         const item = new TreeItem('Repositories', TreeItemCollapsibleState.Expanded);
-        item.contextValue = ResourceType.Repositories;
+        item.contextValue = ContextValue.Repositories;
         return item;
     }
 

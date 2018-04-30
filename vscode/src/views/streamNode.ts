@@ -2,7 +2,7 @@
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { CodeStreamSession, Stream, StreamType } from '../api/session';
 import { OpenStreamCommandArgs } from '../commands';
-import { ExplorerNode, ResourceType } from './explorerNode';
+import { ContextValue, ExplorerNode } from './explorerNode';
 import { Container } from '../container';
 
 export class StreamNode extends ExplorerNode {
@@ -10,7 +10,7 @@ export class StreamNode extends ExplorerNode {
     constructor(
         public readonly session: CodeStreamSession,
         public readonly stream: Stream,
-        private readonly _resourceType?: ResourceType
+        private readonly _resourceType?: ContextValue
     ) {
         super();
     }
@@ -54,9 +54,9 @@ export class StreamNode extends ExplorerNode {
         if (this._resourceType !== undefined) return this._resourceType;
 
         switch (this.stream.type) {
-            case StreamType.Channel: return ResourceType.Channel;
-            case StreamType.Direct: return ResourceType.DirectMessage;
-            case StreamType.File: return ResourceType.FileStream;
+            case StreamType.Channel: return ContextValue.Channel;
+            case StreamType.Direct: return ContextValue.DirectMessage;
+            case StreamType.File: return ContextValue.FileStream;
         }
     }
 }

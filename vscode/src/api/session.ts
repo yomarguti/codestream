@@ -199,7 +199,7 @@ export class CodeStreamSession extends Disposable {
         return this._onDidReceivePosts.event;
     }
 
-    public email: string | undefined;
+    email: string | undefined;
 
     private _disposable: Disposable | undefined;
     private _disposableSignedIn: Disposable | undefined;
@@ -207,6 +207,7 @@ export class CodeStreamSession extends Disposable {
     private _api: CodeStreamApi;
     private _sessionApi: CodeStreamSessionApi | undefined;
     private readonly _pubnub: PubNubReceiver;
+    private _streamVisibilityManager: StreamVisibilityManager | undefined;
 
     constructor(
         private _serverUrl: string
@@ -290,6 +291,11 @@ export class CodeStreamSession extends Disposable {
 
     private _postsReceivedDebounced: ((e: PostsReceivedEvent) => void) | undefined;
     protected firePostsReceived(e: PostsReceivedEvent) {
+        // HACK: If we get a message in a hidden stream, show it again
+        for (const p of e.entities()) {
+            this.streamVisibility.show(p.streamId);
+        }
+
         if (this._postsReceivedDebounced === undefined) {
             this._postsReceivedDebounced = Functions.debounceMerge(
                 (e: PostsReceivedEvent) => this._onDidReceivePosts.fire(e),
@@ -406,8 +412,13 @@ export class CodeStreamSession extends Disposable {
         return this.data.accessToken;
     }
 
-    public get userId() {
+    get userId() {
         return this._data!.user.id;
+    }
+
+    @signedIn
+    get streamVisibility() {
+        return this._streamVisibilityManager!;
     }
 
     async login(email: string, password: string, teamId?: string): Promise<void> {
@@ -499,6 +510,8 @@ export class CodeStreamSession extends Disposable {
             this._teamId = teamId;
             this._sessionApi = new CodeStreamSessionApi(this._api, this.token, teamId);
 
+            this._streamVisibilityManager = new StreamVisibilityManager(this.data.user.id);
+
             this._disposableSignedIn = Disposable.from(
                 this._pubnub.initialize(this.token, this.userId, this.pubnubKey),
                 Container.git.onDidChangeRepositories(this.onGitRepositoriesChanged, this)
@@ -519,5 +532,41 @@ export class CodeStreamSession extends Disposable {
 
             throw ex;
         }
+    }
+}
+
+class StreamVisibilityManager {
+
+    private readonly _hiddenStreams: Set<string>;
+
+    constructor(public userId: string) {
+        this._hiddenStreams = new Set(Container.context.globalState.get<string[]>(`user:${Container.session.userId}:streams:hidden`) || []);
+    }
+
+    clear() {
+        this._hiddenStreams.clear();
+        return this.save();
+    }
+
+    hide(streamId: string) {
+        if (this._hiddenStreams.has(streamId)) return;
+
+        this._hiddenStreams.add(streamId);
+        return this.save();
+    }
+
+    isHidden(streamId: string) {
+        return this._hiddenStreams.has(streamId);
+    }
+
+    show(streamId: string) {
+        if (!this._hiddenStreams.has(streamId)) return;
+
+        this._hiddenStreams.delete(streamId);
+        return this.save();
+    }
+
+    private save() {
+        return Container.context.globalState.update(`user:${this.userId}:streams:hidden`, [...this._hiddenStreams.values()]);
     }
 }

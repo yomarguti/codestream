@@ -3,7 +3,7 @@ import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { CodeStreamSession, StreamType, User } from '../api/session';
 import { OpenStreamCommandArgs } from '../commands';
 import { Container } from '../container';
-import { ExplorerNode, ResourceType } from './explorerNode';
+import { ContextValue, ExplorerNode } from './explorerNode';
 
 export class UserNode extends ExplorerNode {
 
@@ -15,7 +15,7 @@ export class UserNode extends ExplorerNode {
     }
 
     get id() {
-        return `${this.session.id}:${ResourceType.User}:${this.user.id}`;
+        return `${this.session.id}:${ContextValue.User}:${this.user.id}`;
     }
 
     async getChildren(): Promise<ExplorerNode[]> {
@@ -25,7 +25,7 @@ export class UserNode extends ExplorerNode {
     getTreeItem(): TreeItem {
         const item = new TreeItem(`${this.user.name}${this.user.id === this.session.userId ? ' (you)' : ''}`, TreeItemCollapsibleState.None);
         item.id = this.id;
-        item.contextValue = ResourceType.User;
+        item.contextValue = ContextValue.User;
         item.iconPath = Container.context.asAbsolutePath(`assets/images/presence-online.svg`);
 
         item.command = {

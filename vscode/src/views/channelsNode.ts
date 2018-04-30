@@ -1,16 +1,16 @@
 'use strict';
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { ChannelStream, CodeStreamSession } from '../api/session';
-import { ExplorerNode, ResourceType } from './explorerNode';
+import { ContextValue, ExplorerNode } from './explorerNode';
 import { StreamNode } from './streamNode';
 import { Iterables } from '../system';
 
 export class ChannelsNode extends ExplorerNode {
 
-    private readonly _childrenResourceType: ResourceType;
+    private readonly _childrenResourceType: ContextValue;
     private readonly _filter: (c: ChannelStream) => boolean;
     private readonly _name: string;
-    private readonly _resourceType: ResourceType;
+    private readonly _resourceType: ContextValue;
 
     constructor(
         public readonly session: CodeStreamSession,
@@ -22,15 +22,15 @@ export class ChannelsNode extends ExplorerNode {
             case 'services':
                 this._name = 'Live Share Sessions';
                 this._filter = c => c.name.startsWith('ls:');
-                this._resourceType = ResourceType.ServiceChannels;
-                this._childrenResourceType = ResourceType.ServiceChannel;
+                this._resourceType = ContextValue.ServiceChannels;
+                this._childrenResourceType = ContextValue.ServiceChannel;
                 break;
 
             default:
                 this._name = 'Channels';
                 this._filter = c => !c.name.startsWith('vsls:') && !c.name.startsWith('ls:');
-                this._resourceType = ResourceType.Channels;
-                this._childrenResourceType = ResourceType.Channels;
+                this._resourceType = ContextValue.Channels;
+                this._childrenResourceType = ContextValue.Channel;
                 break;
         }
     }
@@ -40,13 +40,13 @@ export class ChannelsNode extends ExplorerNode {
     }
 
     async getChildren(): Promise<ExplorerNode[]> {
-        const channels = await this.session.channels.filter(this._filter);
+        const channels = Iterables.filter(await this.session.channels.filter(this._filter), s => !s.hidden);
         return [...Iterables.map(channels, c => new StreamNode(this.session, c, this._childrenResourceType))];
     }
 
     getTreeItem(): TreeItem {
         const item = new TreeItem(this._name, TreeItemCollapsibleState.Expanded);
-        item.contextValue = ResourceType.Channels;
+        item.contextValue = ContextValue.Channels;
         return item;
     }
 }

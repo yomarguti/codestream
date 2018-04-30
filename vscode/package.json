@@ -114,6 +114,11 @@
                 "category": "CodeStream"
             },
             {
+                "command": "codestream.reset",
+                "title": "Reset",
+                "category": "CodeStream"
+            },
+            {
                 "command": "codestream.show",
                 "title": "Show CodeStream",
                 "category": "CodeStream"
@@ -144,12 +149,78 @@
                 "category": "CodeStream"
             },
             {
-                "command": "codestream.explorer.refresh",
+                "command": "codestream.channels.hideStream",
+                "title": "Close",
+                "category": "CodeStream",
+                "icon": {
+                    "dark": "assets/images/dark/close-small.svg",
+                    "light": "assets/images/light/close-small.svg"
+                }
+            },
+            {
+                "command": "codestream.people.hideStream",
+                "title": "Close",
+                "category": "CodeStream",
+                "icon": {
+                    "dark": "assets/images/dark/close-small.svg",
+                    "light": "assets/images/light/close-small.svg"
+                }
+            },
+            {
+                "command": "codestream.repositories.hideStream",
+                "title": "Close",
+                "category": "CodeStream",
+                "icon": {
+                    "dark": "assets/images/dark/close-small.svg",
+                    "light": "assets/images/light/close-small.svg"
+                }
+            },
+            {
+                "command": "codestream.liveshare.hideStream",
+                "title": "Close",
+                "category": "CodeStream",
+                "icon": {
+                    "dark": "assets/images/dark/close-small.svg",
+                    "light": "assets/images/light/close-small.svg"
+                }
+            },
+            {
+                "command": "codestream.channels.refresh",
                 "title": "Refresh",
                 "category": "CodeStream"
             },
             {
-                "command": "codestream.explorer.refreshNode",
+                "command": "codestream.people.refresh",
+                "title": "Refresh",
+                "category": "CodeStream"
+            },
+            {
+                "command": "codestream.repositories.refresh",
+                "title": "Refresh",
+                "category": "CodeStream"
+            },
+            {
+                "command": "codestream.liveshare.refresh",
+                "title": "Refresh",
+                "category": "CodeStream"
+            },
+            {
+                "command": "codestream.channels.refreshNode",
+                "title": "Refresh",
+                "category": "CodeStream"
+            },
+            {
+                "command": "codestream.people.refreshNode",
+                "title": "Refresh",
+                "category": "CodeStream"
+            },
+            {
+                "command": "codestream.repositories.refreshNode",
+                "title": "Refresh",
+                "category": "CodeStream"
+            },
+            {
+                "command": "codestream.liveshare.refreshNode",
                 "title": "Refresh",
                 "category": "CodeStream"
             },
@@ -182,6 +253,10 @@
                     "when": "false"
                 },
                 {
+                    "command": "codestream.reset",
+                    "when": "codestream:status == signedIn"
+                },
+                {
                     "command": "codestream.show",
                     "when": "codestream:status == signedIn"
                 },
@@ -206,11 +281,51 @@
                     "when": "false"
                 },
                 {
-                    "command": "codestream.explorer.refresh",
+                    "command": "codestream.channels.hideStream",
                     "when": "false"
                 },
                 {
-                    "command": "codestream.explorer.refreshNode",
+                    "command": "codestream.people.hideStream",
+                    "when": "false"
+                },
+                {
+                    "command": "codestream.repositories.hideStream",
+                    "when": "false"
+                },
+                {
+                    "command": "codestream.liveshare.hideStream",
+                    "when": "false"
+                },
+                {
+                    "command": "codestream.channels.refresh",
+                    "when": "false"
+                },
+                {
+                    "command": "codestream.people.refresh",
+                    "when": "false"
+                },
+                {
+                    "command": "codestream.repositories.refresh",
+                    "when": "false"
+                },
+                {
+                    "command": "codestream.liveshare.refresh",
+                    "when": "false"
+                },
+                {
+                    "command": "codestream.channels.refreshNode",
+                    "when": "false"
+                },
+                {
+                    "command": "codestream.people.refreshNode",
+                    "when": "false"
+                },
+                {
+                    "command": "codestream.repositories.refreshNode",
+                    "when": "false"
+                },
+                {
+                    "command": "codestream.liveshare.refreshNode",
                     "when": "false"
                 },
                 {
@@ -220,28 +335,48 @@
             ],
             "view/item/context": [
                 {
-                    "command": "codestream.explorer.refreshNode",
-                    "when": "view =~ /^codestream/",
+                    "command": "codestream.channels.hideStream",
+                    "when": "view == codestream.channels && viewItem =~ /codestream:(channel|directMessage|fileStream)\\b/",
+                    "group": "inline@1"
+                },
+                {
+                    "command": "codestream.people.hideStream",
+                    "when": "view == codestream.people && viewItem =~ /codestream:(channel|directMessage|fileStream)\\b/",
+                    "group": "inline@1"
+                },
+                {
+                    "command": "codestream.repositories.hideStream",
+                    "when": "view == codestream.repositories && viewItem =~ /codestream:(channel|directMessage|fileStream)\\b/",
+                    "group": "inline@1"
+                },
+                {
+                    "command": "codestream.liveshare.hideStream",
+                    "when": "view == codestream.liveshare && viewItem =~ /codestream:(channel|directMessage|fileStream)\\b/",
+                    "group": "inline@1"
+                },
+                {
+                    "command": "codestream.channels.refreshNode",
+                    "when": "view == codestream.channels",
                     "group": "9_codestream@1"
                 },
                 {
-                    "command": "codestream.openPostWorkingFile",
-                    "when": "view == codestream && viewItem == codestream:post:code",
-                    "group": "1_codestream@1"
+                    "command": "codestream.people.refreshNode",
+                    "when": "view == codestream.people",
+                    "group": "9_codestream@1"
                 },
                 {
-                    "command": "codestream.openPostFileRevision",
-                    "when": "view == codestream && viewItem == codestream:post:code",
-                    "group": "1_codestream@2"
+                    "command": "codestream.repositories.refreshNode",
+                    "when": "view == codestream.repositories",
+                    "group": "9_codestream@1"
                 },
                 {
-                    "command": "codestream.comparePostFileRevisionWithWorking",
-                    "when": "view == codestream && viewItem == codestream:post:code",
-                    "group": "2_codestream@1"
+                    "command": "codestream.liveshare.refreshNode",
+                    "when": "view == codestream.liveshare",
+                    "group": "9_codestream@1"
                 },
                 {
                     "command": "codestream.vsls.invite",
-                    "when": "view == codestream && viewItem == codestream:user && codestream:liveShareInstalled",
+                    "when": "view == codestream.liveshare && viewItem == codestream:user && codestream:liveShareInstalled",
                     "group": "2_codestream@1"
                 }
             ]

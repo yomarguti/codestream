@@ -2,7 +2,7 @@
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { CodeStreamSession } from '../api/session';
 import { ChannelsNode } from './channelsNode';
-import { ExplorerNode, ResourceType } from './explorerNode';
+import { ContextValue, ExplorerNode } from './explorerNode';
 import { PeopleNode } from './peopleNode';
 import { RepositoriesNode } from './repositoriesNode';
 
@@ -25,7 +25,7 @@ export class SessionNode extends ExplorerNode {
 
     async getTreeItem(): Promise<TreeItem> {
         const item = new TreeItem('Session', TreeItemCollapsibleState.Expanded);
-        item.contextValue = ResourceType.Session;
+        item.contextValue = ContextValue.Session;
         return item;
     }
 }

@@ -1,7 +1,7 @@
 'use strict';
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { CodeStreamSession, Post } from '../api/session';
-import { ExplorerNode, ResourceType } from './explorerNode';
+import { ContextValue, ExplorerNode } from './explorerNode';
 
 export class PostNode extends ExplorerNode {
 
@@ -28,7 +28,7 @@ export class PostNode extends ExplorerNode {
         }
 
         const item = new TreeItem(label, TreeItemCollapsibleState.None);
-        item.contextValue = this.post.hasCode ? ResourceType.PostWithCode : ResourceType.Post;
+        item.contextValue = this.post.hasCode ? ContextValue.PostWithCode : ContextValue.Post;
         // item.command = {
         //     title: 'Open Comment',
         //     command: 'codestream.openPostWorkingFile',

@@ -2,7 +2,7 @@
 import { commands, ConfigurationChangeEvent, Disposable, Event, EventEmitter, TreeDataProvider, TreeItem, TreeView, window } from 'vscode';
 import { configuration } from '../configuration';
 import { Container } from '../container';
-import { ExplorerNode, PeopleNode, RefreshReason, RepositoriesNode } from './explorerNodes';
+import { ExplorerNode, PeopleNode, RefreshReason, RepositoriesNode, StreamNode } from './explorerNodes';
 import { ChannelsNode } from './channelsNode';
 
 export * from './explorerNodes';
@@ -23,6 +23,8 @@ export abstract class CodeStreamExplorer extends Disposable implements TreeDataP
 
         commands.registerCommand(this.getQualifiedCommand('refresh'), this.refresh, this);
         commands.registerCommand(this.getQualifiedCommand('refreshNode'), this.refreshNode, this);
+
+        commands.registerCommand(this.getQualifiedCommand('hideStream'), this.hideStream, this);
 
         Container.context.subscriptions.push(
             // window.onDidChangeActiveTextEditor(Functions.debounce(this.onActiveEditorChanged, 500), this),
@@ -97,7 +99,14 @@ export abstract class CodeStreamExplorer extends Disposable implements TreeDataP
         return node.getTreeItem();
     }
 
-    async refresh(reason?: RefreshReason, root?: ExplorerNode) {
+    hideStream(node: StreamNode) {
+        if (!(node instanceof StreamNode)) return;
+
+        node.stream.hide();
+        this.refresh();
+    }
+
+    refresh(reason?: RefreshReason, root?: ExplorerNode) {
         if (reason === undefined) {
             reason = RefreshReason.Command;
         }

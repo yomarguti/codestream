@@ -12,7 +12,7 @@ export enum RefreshReason {
     VisibleEditorsChanged = 'visible-editors-changed'
 }
 
-export enum ResourceType {
+export enum ContextValue {
     Channel = 'codestream:channel',
     Channels = 'codestream:channels',
     ServiceChannel = 'codestream:channel:service',
@@ -86,7 +86,7 @@ export class MessageNode extends ExplorerNode {
 
     getTreeItem(): TreeItem | Promise<TreeItem> {
         const item = new TreeItem(this.message, TreeItemCollapsibleState.None);
-        item.contextValue = ResourceType.Message;
+        item.contextValue = ContextValue.Message;
         item.tooltip = this.tooltip;
         return item;
     }

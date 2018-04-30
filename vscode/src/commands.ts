@@ -196,6 +196,15 @@ export class Commands extends Disposable {
         return streamThread.stream;
     }
 
+    @command('reset')
+    async reset() {
+        await Container.session.streamVisibility.clear();
+        Container.channelsExplorer.refresh();
+        Container.peopleExplorer.refresh();
+        Container.repositoriesExplorer.refresh();
+        Container.liveShareExplorer.refresh();
+    }
+
     @command('runServiceAction')
     runServiceAction(args: { commandUri: string }) {
         return Container.linkActions.execute(args.commandUri);

@@ -2,8 +2,9 @@
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { CodeStreamSession, Repository } from '../api/session';
 import { Container } from '../container';
-import { ExplorerNode, ResourceType, SubscribableExplorerNode } from './explorerNode';
+import { ContextValue, ExplorerNode, SubscribableExplorerNode } from './explorerNode';
 import { StreamNode } from './streamNode';
+import { Iterables } from '../system';
 
 export class RepositoryNode extends SubscribableExplorerNode {
 
@@ -15,20 +16,21 @@ export class RepositoryNode extends SubscribableExplorerNode {
     }
 
     get id() {
-        return `${this.session.id}:${ResourceType.Repository}:${this.repository.id}`;
+        return `${this.session.id}:${ContextValue.Repository}:${this.repository.id}`;
     }
 
     async getChildren(): Promise<ExplorerNode[]> {
         this.subscribe();
 
-        return [...await this.repository.streams.map(s => new StreamNode(this.session, s))];
+        const streams = await this.repository.streams.filter(s => !s.hidden);
+        return [...Iterables.map(streams, s => new StreamNode(this.session, s))];
     }
 
     async getTreeItem(): Promise<TreeItem> {
         this.unsubscribe();
 
         const item = new TreeItem(this.repository.name, TreeItemCollapsibleState.Collapsed);
-        item.contextValue = ResourceType.Repository;
+        item.contextValue = ContextValue.Repository;
 
         item.iconPath = {
             dark: Container.context.asAbsolutePath(`assets/images/dark/repository.svg`),
