@@ -14,7 +14,7 @@ interface BootstrapState {
     currentStreamId: string;
     // currentFileId?: string;
     // currentCommit?: string;
-    selectedMarker?: object;
+    selectedMarker?: { postId: string };
     posts: CSPost[];
     streams: CSStream[];
     teams: CSTeam[];
