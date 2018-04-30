@@ -18,14 +18,15 @@ const store = (window.store = createStore({
 		currentTeamId: data.currentTeamId,
 		currentRepoId: data.currentRepoId,
 		currentStreamId: data.currentStreamId,
-		currentFile: data.currentFile
+		currentFile: data.currentFile,
+	},
+	ipcInteractions: {
+		selectedMarker: data.selectedMarker
 	},
 	session: {
 		userId: data.currentUserId
 	}
 }));
-
-console.log("store", store.getState());
 
 store.dispatch({ type: "BOOTSTRAP_USERS", payload: data.users });
 store.dispatch({ type: "BOOTSTRAP_REPOS", payload: data.repos });

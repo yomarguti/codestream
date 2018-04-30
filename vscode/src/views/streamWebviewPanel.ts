@@ -14,6 +14,7 @@ interface BootstrapState {
     currentStreamId: string;
     // currentFileId?: string;
     // currentCommit?: string;
+    selectedMarker?: object;
     posts: CSPost[];
     streams: CSStream[];
     teams: CSTeam[];
@@ -238,6 +239,7 @@ export class StreamWebviewPanel extends Disposable {
         state.currentTeamId = streamThread.stream.teamId;
         state.currentUserId = this.session.userId;
         state.currentStreamId = streamThread.stream.id;
+        state.selectedMarker = undefined; // { postId: '5ae34c8d50835847496a406b' };  // used to display thread
         state.streams = [streamThread.stream.entity];
 
         [state.posts, state.repos, state.teams, state.users] = await Promise.all([

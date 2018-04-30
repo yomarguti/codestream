@@ -31,12 +31,23 @@ const bootstrapped = (state = false, { type }) => {
 	return state;
 };
 
+const ipcInteractions = (state = {}, { type, payload }) => {
+	switch (type) {
+		case "SELECTED_MARKER": return {
+			...state,
+			selectedMarker: payload
+		}
+		default: return state;
+	}
+}
+
 const appReducer = combineReducers({
 	bootstrapped,
 	companies,
 	connectivity,
 	context,
 	currentPage,
+	ipcInteractions,
 	markerLocations,
 	markers,
 	messaging,

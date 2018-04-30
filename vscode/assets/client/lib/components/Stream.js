@@ -97,10 +97,14 @@ export class SimpleStream extends Component {
 		this.blameData = {};
 		// end FIXME
 
+		const selectedMarkerPostId = props.selectedMarker && props.selectedMarker.postId
+		let selectedMarkerPost;
+		if (selectedMarkerPostId) 
+			selectedMarkerPost = props.posts.find(post => post.id === selectedMarkerPostId);
 		this.state = {
 			stream: {},
-			threadId: null,
-			threadActive: false,
+			threadId: selectedMarkerPost && (selectedMarkerPost.parentPostId || selectedMarkerPostId),
+			threadActive: Boolean(selectedMarkerPost),
 			posts: [],
 			fileForIntro: props.currentFile,
 			newPostText: "",
@@ -137,6 +141,18 @@ export class SimpleStream extends Component {
 		});
 		// this.installEditorHandlers();
 	}
+
+	// static getDerivedStateFromProps(nextProps, prevState) {
+	// 	const {posts, selectedMarker} = nextProps;
+	// 	const selectedMarkerPostId = selectedMarker && selectedMarker.postId
+	// 	let selectedMarkerPost;
+	// 	if (selectedMarkerPostId) 
+	// 		selectedMarkerPost = posts.find(post => post.id === selectedMarkerPostId);
+	// 	return {
+	// 		threadId: selectedMarkerPost && (selectedMarkerPost.parentPostId || selectedMarkerPostId),
+	// 		threadActive: Boolean(selectedMarker)
+	// 	}
+	// }
 
 	componentWillUnmount() {
 		if (this.context.platform.isAtom) {
@@ -1274,6 +1290,7 @@ const getMarkersForStreamAndCommit = (locationsByCommit = {}, commitHash, marker
 
 const mapStateToProps = ({
 	connectivity,
+	ipcInteractions,
 	session,
 	context,
 	streams,
@@ -1337,6 +1354,7 @@ const mapStateToProps = ({
 		usernamesRegexp: usernamesRegexp,
 		currentUser: users[session.userId],
 		selectedCode: context.selectedCode,
+		selectedMarker: ipcInteractions.selectedMarker,
 		posts: getPostsForStream(posts, stream.id || context.currentFile).map(post => {
 			let user = users[post.creatorId];
 			if (!user) {
