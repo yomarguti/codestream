@@ -900,7 +900,7 @@
 
 	var create = ( _objectCreate$1 && _objectCreate ) || _objectCreate$1;
 
-	var gOPNExt = ( _objectGopnExt$1 && _objectGopnExt ) || _objectGopnExt$1;
+	var require$$1$4 = ( _objectGopnExt$1 && _objectGopnExt ) || _objectGopnExt$1;
 
 	var require$$38 = ( _objectGopd$1 && _objectGopd ) || _objectGopd$1;
 
@@ -932,7 +932,7 @@
 
 	var gOPD$1 = require$$38.f;
 	var dP$1 = require$$37.f;
-	var gOPN$2 = gOPNExt.f;
+	var gOPN$2 = require$$1$4.f;
 	var $Symbol = require$$2.Symbol;
 	var $JSON = require$$2.JSON;
 	var _stringify = $JSON && $JSON.stringify;
@@ -1052,7 +1052,7 @@
 
 	  require$$38.f = $getOwnPropertyDescriptor;
 	  require$$37.f = $defineProperty;
-	  gOPN.f = gOPNExt.f = $getOwnPropertyNames;
+	  gOPN.f = require$$1$4.f = $getOwnPropertyNames;
 	  require$$0$7.f = $propertyIsEnumerable;
 	  gOPS.f = $getOwnPropertySymbols;
 
@@ -1231,7 +1231,7 @@
 
 	// 19.1.2.7 Object.getOwnPropertyNames(O)
 	require$$0$10('getOwnPropertyNames', function () {
-	  return gOPNExt.f;
+	  return require$$1$4.f;
 	});
 
 	// 19.1.2.5 Object.freeze(O)
@@ -1564,10 +1564,10 @@
 		__moduleExports: _stringTrim
 	});
 
-	var require$$1$4 = ( _stringTrim$1 && _stringTrim ) || _stringTrim$1;
+	var require$$1$5 = ( _stringTrim$1 && _stringTrim ) || _stringTrim$1;
 
 	var $parseInt = require$$2.parseInt;
-	var $trim = require$$1$4.trim;
+	var $trim = require$$1$5.trim;
 
 	var hex = /^[-+]?0[xX]/;
 
@@ -1587,7 +1587,7 @@
 	$export$1($export$1.G + $export$1.F * (parseInt != $parseInt$1), { parseInt: $parseInt$1 });
 
 	var $parseFloat = require$$2.parseFloat;
-	var $trim$1 = require$$1$4.trim;
+	var $trim$1 = require$$1$5.trim;
 
 	var _parseFloat = 1 / $parseFloat(spaces + '-0') !== -Infinity ? function parseFloat(str) {
 	  var string = $trim$1(String(str), 3);
@@ -1624,7 +1624,7 @@
 	var gOPN$3 = gOPN.f;
 	var gOPD$2 = require$$38.f;
 	var dP$3 = require$$37.f;
-	var $trim$2 = require$$1$4.trim;
+	var $trim$2 = require$$1$5.trim;
 	var NUMBER = 'Number';
 	var $Number = require$$2[NUMBER];
 	var Base = $Number;
@@ -2211,7 +2211,7 @@
 	});
 
 	// 21.1.3.25 String.prototype.trim()
-	require$$1$4('trim', function ($trim) {
+	require$$1$5('trim', function ($trim) {
 	  return function trim() {
 	    return $trim(this, 3);
 	  };
@@ -5882,14 +5882,14 @@
 	});
 
 	// https://github.com/sebmarkbage/ecmascript-string-left-right-trim
-	require$$1$4('trimLeft', function ($trim) {
+	require$$1$5('trimLeft', function ($trim) {
 	  return function trimLeft() {
 	    return $trim(this, 1);
 	  };
 	}, 'trimStart');
 
 	// https://github.com/sebmarkbage/ecmascript-string-left-right-trim
-	require$$1$4('trimRight', function ($trim) {
+	require$$1$5('trimRight', function ($trim) {
 	  return function trimRight() {
 	    return $trim(this, 2);
 	  };
@@ -6364,10 +6364,10 @@
 
 	var Map$1 = ( es6_map$1 && es6_map ) || es6_map$1;
 
-	var require$$1$5 = ( es6_weakMap$1 && es6_weakMap ) || es6_weakMap$1;
+	var require$$1$6 = ( es6_weakMap$1 && es6_weakMap ) || es6_weakMap$1;
 
 	var shared$1 = require$$0$2('metadata');
-	var store$1 = shared$1.store || (shared$1.store = new (require$$1$5)());
+	var store$1 = shared$1.store || (shared$1.store = new (require$$1$6)());
 
 	var getOrCreateMetadataMap = function (target, targetKey, create) {
 	  var targetMetadata = store$1.get(target);
@@ -6437,20 +6437,20 @@
 		exp: _metadata_8
 	});
 
-	var metadata = ( _metadata$1 && _metadata ) || _metadata$1;
+	var $metadata = ( _metadata$1 && _metadata ) || _metadata$1;
 
-	var toMetaKey$1 = metadata.key;
-	var ordinaryDefineOwnMetadata$1 = metadata.set;
+	var toMetaKey$1 = $metadata.key;
+	var ordinaryDefineOwnMetadata$1 = $metadata.set;
 
-	metadata.exp({ defineMetadata: function defineMetadata(metadataKey, metadataValue, target, targetKey) {
+	$metadata.exp({ defineMetadata: function defineMetadata(metadataKey, metadataValue, target, targetKey) {
 	  ordinaryDefineOwnMetadata$1(metadataKey, metadataValue, anObject(target), toMetaKey$1(targetKey));
 	} });
 
-	var toMetaKey$2 = metadata.key;
-	var getOrCreateMetadataMap$1 = metadata.map;
-	var store$2 = metadata.store;
+	var toMetaKey$2 = $metadata.key;
+	var getOrCreateMetadataMap$1 = $metadata.map;
+	var store$2 = $metadata.store;
 
-	metadata.exp({ deleteMetadata: function deleteMetadata(metadataKey, target /* , targetKey */) {
+	$metadata.exp({ deleteMetadata: function deleteMetadata(metadataKey, target /* , targetKey */) {
 	  var targetKey = arguments.length < 3 ? undefined : toMetaKey$2(arguments[2]);
 	  var metadataMap = getOrCreateMetadataMap$1(anObject(target), targetKey, false);
 	  if (metadataMap === undefined || !metadataMap['delete'](metadataKey)) return false;
@@ -6460,9 +6460,9 @@
 	  return !!targetMetadata.size || store$2['delete'](target);
 	} });
 
-	var ordinaryHasOwnMetadata$1 = metadata.has;
-	var ordinaryGetOwnMetadata$1 = metadata.get;
-	var toMetaKey$3 = metadata.key;
+	var ordinaryHasOwnMetadata$1 = $metadata.has;
+	var ordinaryGetOwnMetadata$1 = $metadata.get;
+	var toMetaKey$3 = $metadata.key;
 
 	var ordinaryGetMetadata = function (MetadataKey, O, P) {
 	  var hasOwn = ordinaryHasOwnMetadata$1(MetadataKey, O, P);
@@ -6471,14 +6471,14 @@
 	  return parent !== null ? ordinaryGetMetadata(MetadataKey, parent, P) : undefined;
 	};
 
-	metadata.exp({ getMetadata: function getMetadata(metadataKey, target /* , targetKey */) {
+	$metadata.exp({ getMetadata: function getMetadata(metadataKey, target /* , targetKey */) {
 	  return ordinaryGetMetadata(metadataKey, anObject(target), arguments.length < 3 ? undefined : toMetaKey$3(arguments[2]));
 	} });
 
 	var Set$1 = ( es6_set$1 && es6_set ) || es6_set$1;
 
-	var ordinaryOwnMetadataKeys$1 = metadata.keys;
-	var toMetaKey$4 = metadata.key;
+	var ordinaryOwnMetadataKeys$1 = $metadata.keys;
+	var toMetaKey$4 = $metadata.key;
 
 	var ordinaryMetadataKeys = function (O, P) {
 	  var oKeys = ordinaryOwnMetadataKeys$1(O, P);
@@ -6488,27 +6488,27 @@
 	  return pKeys.length ? oKeys.length ? from(new Set$1(oKeys.concat(pKeys))) : pKeys : oKeys;
 	};
 
-	metadata.exp({ getMetadataKeys: function getMetadataKeys(target /* , targetKey */) {
+	$metadata.exp({ getMetadataKeys: function getMetadataKeys(target /* , targetKey */) {
 	  return ordinaryMetadataKeys(anObject(target), arguments.length < 2 ? undefined : toMetaKey$4(arguments[1]));
 	} });
 
-	var ordinaryGetOwnMetadata$2 = metadata.get;
-	var toMetaKey$5 = metadata.key;
+	var ordinaryGetOwnMetadata$2 = $metadata.get;
+	var toMetaKey$5 = $metadata.key;
 
-	metadata.exp({ getOwnMetadata: function getOwnMetadata(metadataKey, target /* , targetKey */) {
+	$metadata.exp({ getOwnMetadata: function getOwnMetadata(metadataKey, target /* , targetKey */) {
 	  return ordinaryGetOwnMetadata$2(metadataKey, anObject(target)
 	    , arguments.length < 3 ? undefined : toMetaKey$5(arguments[2]));
 	} });
 
-	var ordinaryOwnMetadataKeys$2 = metadata.keys;
-	var toMetaKey$6 = metadata.key;
+	var ordinaryOwnMetadataKeys$2 = $metadata.keys;
+	var toMetaKey$6 = $metadata.key;
 
-	metadata.exp({ getOwnMetadataKeys: function getOwnMetadataKeys(target /* , targetKey */) {
+	$metadata.exp({ getOwnMetadataKeys: function getOwnMetadataKeys(target /* , targetKey */) {
 	  return ordinaryOwnMetadataKeys$2(anObject(target), arguments.length < 2 ? undefined : toMetaKey$6(arguments[1]));
 	} });
 
-	var ordinaryHasOwnMetadata$2 = metadata.has;
-	var toMetaKey$7 = metadata.key;
+	var ordinaryHasOwnMetadata$2 = $metadata.has;
+	var toMetaKey$7 = $metadata.key;
 
 	var ordinaryHasMetadata = function (MetadataKey, O, P) {
 	  var hasOwn = ordinaryHasOwnMetadata$2(MetadataKey, O, P);
@@ -6517,22 +6517,22 @@
 	  return parent !== null ? ordinaryHasMetadata(MetadataKey, parent, P) : false;
 	};
 
-	metadata.exp({ hasMetadata: function hasMetadata(metadataKey, target /* , targetKey */) {
+	$metadata.exp({ hasMetadata: function hasMetadata(metadataKey, target /* , targetKey */) {
 	  return ordinaryHasMetadata(metadataKey, anObject(target), arguments.length < 3 ? undefined : toMetaKey$7(arguments[2]));
 	} });
 
-	var ordinaryHasOwnMetadata$3 = metadata.has;
-	var toMetaKey$8 = metadata.key;
+	var ordinaryHasOwnMetadata$3 = $metadata.has;
+	var toMetaKey$8 = $metadata.key;
 
-	metadata.exp({ hasOwnMetadata: function hasOwnMetadata(metadataKey, target /* , targetKey */) {
+	$metadata.exp({ hasOwnMetadata: function hasOwnMetadata(metadataKey, target /* , targetKey */) {
 	  return ordinaryHasOwnMetadata$3(metadataKey, anObject(target)
 	    , arguments.length < 3 ? undefined : toMetaKey$8(arguments[2]));
 	} });
 
-	var toMetaKey$9 = metadata.key;
-	var ordinaryDefineOwnMetadata$2 = metadata.set;
+	var toMetaKey$9 = $metadata.key;
+	var ordinaryDefineOwnMetadata$2 = $metadata.set;
 
-	metadata.exp({ metadata: function metadata$$1(metadataKey, metadataValue) {
+	$metadata.exp({ metadata: function metadata(metadataKey, metadataValue) {
 	  return function decorator(target, targetKey) {
 	    ordinaryDefineOwnMetadata$2(
 	      metadataKey, metadataValue,
@@ -7855,13 +7855,13 @@
 
 	var require$$0$29 = ( invariant$1 && invariant_1 ) || invariant$1;
 
-	var require$$1$6 = ( warning$1 && warning_1 ) || warning$1;
+	var require$$1$7 = ( warning$1 && warning_1 ) || warning$1;
 
 	var require$$2$4 = ( ReactPropTypesSecret$1 && ReactPropTypesSecret_1 ) || ReactPropTypesSecret$1;
 
 	{
 	  var invariant$2 = require$$0$29;
-	  var warning$2 = require$$1$6;
+	  var warning$2 = require$$1$7;
 	  var ReactPropTypesSecret$2 = require$$2$4;
 	  var loggedTypeFailures = {};
 	}
@@ -7931,7 +7931,7 @@
 	var _assign = objectAssign$2;
 	var invariant = require$$0$29;
 	var emptyObject = require$$2$5;
-	var warning = require$$1$6;
+	var warning = require$$1$7;
 	var emptyFunction = emptyFunction$2;
 	var checkPropTypes = checkPropTypes$2;
 
@@ -9739,7 +9739,7 @@
 
 	var invariant = require$$0$29;
 	var React = react;
-	var warning = require$$1$6;
+	var warning = require$$1$7;
 	var ExecutionEnvironment = require$$3;
 	var _assign = objectAssign$2;
 	var emptyFunction = emptyFunction$2;
@@ -28837,7 +28837,7 @@
 	            // Avoid spamming the console because they are often not actionable except for lib authors
 	            manualPropTypeWarningCount < 3
 	          ) {
-	            require$$1$6(
+	            require$$1$7(
 	              false,
 	              'You are manually calling a React.PropTypes validation ' +
 	              'function for the `%s` prop on `%s`. This is deprecated ' +
@@ -28939,7 +28939,7 @@
 
 	  function createEnumTypeChecker(expectedValues) {
 	    if (!Array.isArray(expectedValues)) {
-	      require$$1$6(false, 'Invalid argument supplied to oneOf, expected an instance of array.');
+	      require$$1$7(false, 'Invalid argument supplied to oneOf, expected an instance of array.');
 	      return emptyFunction$2.thatReturnsNull;
 	    }
 
@@ -28982,14 +28982,14 @@
 
 	  function createUnionTypeChecker(arrayOfTypeCheckers) {
 	    if (!Array.isArray(arrayOfTypeCheckers)) {
-	      require$$1$6(false, 'Invalid argument supplied to oneOfType, expected an instance of array.');
+	      require$$1$7(false, 'Invalid argument supplied to oneOfType, expected an instance of array.');
 	      return emptyFunction$2.thatReturnsNull;
 	    }
 
 	    for (var i = 0; i < arrayOfTypeCheckers.length; i++) {
 	      var checker = arrayOfTypeCheckers[i];
 	      if (typeof checker !== 'function') {
-	        require$$1$6(
+	        require$$1$7(
 	          false,
 	          'Invalid argument supplied to oneOfType. Expected an array of check functions, but ' +
 	          'received %s at index %s.',
@@ -38904,16 +38904,16 @@
 
 	var require$$0$35 = ( crypt$1 && crypt ) || crypt$1;
 
-	var require$$1$7 = ( charenc$1 && charenc_1 ) || charenc$1;
+	var require$$1$8 = ( charenc$1 && charenc_1 ) || charenc$1;
 
 	var require$$2$6 = ( isBuffer$1 && isBuffer_1 ) || isBuffer$1;
 
 	var md5$3 = createCommonjsModule(function (module) {
 	(function(){
 	  var crypt = require$$0$35,
-	      utf8 = require$$1$7.utf8,
+	      utf8 = require$$1$8.utf8,
 	      isBuffer = require$$2$6,
-	      bin = require$$1$7.bin,
+	      bin = require$$1$8.bin,
 
 	  // The core
 	  md5 = function (message, options) {
@@ -52073,15 +52073,10 @@
 			_this.blameData = {};
 			// end FIXME
 
-			var selectedMarkerPostId = props.selectedMarker && props.selectedMarker.postId;
-			var selectedMarkerPost = void 0;
-			if (selectedMarkerPostId) selectedMarkerPost = props.posts.find(function (post) {
-				return post.id === selectedMarkerPostId;
-			});
 			_this.state = {
 				stream: {},
-				threadId: selectedMarkerPost && (selectedMarkerPost.parentPostId || selectedMarkerPostId),
-				threadActive: Boolean(selectedMarkerPost),
+				threadId: props.threadId,
+				threadActive: Boolean(props.threadId),
 				posts: [],
 				fileForIntro: props.currentFile,
 				newPostText: "",
@@ -52119,6 +52114,19 @@
 				});
 				// this.installEditorHandlers();
 			}
+
+			// static getDerivedStateFromProps(nextProps, prevState) {
+			// 	const {posts, selectedMarker} = nextProps;
+			// 	const selectedMarkerPostId = selectedMarker && selectedMarker.postId
+			// 	let selectedMarkerPost;
+			// 	if (selectedMarkerPostId) 
+			// 		selectedMarkerPost = posts.find(post => post.id === selectedMarkerPostId);
+			// 	return {
+			// 		threadId: selectedMarkerPost && (selectedMarkerPost.parentPostId || selectedMarkerPostId),
+			// 		threadActive: Boolean(selectedMarker)
+			// 	}
+			// }
+
 		}, {
 			key: "componentWillUnmount",
 			value: function componentWillUnmount() {
@@ -52905,22 +52913,6 @@
 					this.savedComposeState[this.id] = {};
 				}
 			}
-		}], [{
-			key: "getDerivedStateFromProps",
-			value: function getDerivedStateFromProps(nextProps, prevState) {
-				var posts$$1 = nextProps.posts,
-				    selectedMarker = nextProps.selectedMarker;
-
-				var selectedMarkerPostId = selectedMarker && selectedMarker.postId;
-				var selectedMarkerPost = void 0;
-				if (selectedMarkerPostId) selectedMarkerPost = posts$$1.find(function (post) {
-					return post.id === selectedMarkerPostId;
-				});
-				return {
-					threadId: selectedMarkerPost && (selectedMarkerPost.parentPostId || selectedMarkerPostId),
-					threadActive: Boolean(selectedMarker)
-				};
-			}
 		}]);
 		return SimpleStream;
 	}(react_1);
@@ -53016,6 +53008,37 @@
 		.replace(/\./g, "\\."); // that the regexp matches the literal chars
 
 		var isOnline = !connectivity.offline && messaging.failedSubscriptions.length === 0 && !messaging.timedOut;
+
+		var postsForStream = getPostsForStream(posts$$1, stream.id || context.currentFile).map(function (post) {
+			var user = users[post.creatorId];
+			if (!user) {
+				console.warn("Redux store doesn't have a user with id " + post.creatorId + " for post with id " + post.id);
+				user = {
+					username: "Unknown user",
+					email: "",
+					firstName: "",
+					lastName: ""
+				};
+			}
+			var _user = user,
+			    username = _user.username,
+			    email = _user.email,
+			    _user$firstName = _user.firstName,
+			    firstName = _user$firstName === undefined ? "" : _user$firstName,
+			    _user$lastName = _user.lastName,
+			    lastName = _user$lastName === undefined ? "" : _user$lastName,
+			    color = _user.color;
+
+			return _extends$5({}, post, {
+				markerLocation: locations[post.id],
+				author: { username: username, email: email, color: color, fullName: (firstName + " " + lastName).trim() }
+			});
+		});
+
+		var selectedPost = postsForStream.find(function (post) {
+			return post.id === ipcInteractions.selectedPostId;
+		});
+
 		return {
 			isOnline: isOnline,
 			id: stream.id,
@@ -53029,32 +53052,8 @@
 			usernamesRegexp: usernamesRegexp,
 			currentUser: users[session.userId],
 			selectedCode: context.selectedCode,
-			selectedMarker: ipcInteractions.selectedMarker,
-			posts: getPostsForStream(posts$$1, stream.id || context.currentFile).map(function (post) {
-				var user = users[post.creatorId];
-				if (!user) {
-					console.warn("Redux store doesn't have a user with id " + post.creatorId + " for post with id " + post.id);
-					user = {
-						username: "Unknown user",
-						email: "",
-						firstName: "",
-						lastName: ""
-					};
-				}
-				var _user = user,
-				    username = _user.username,
-				    email = _user.email,
-				    _user$firstName = _user.firstName,
-				    firstName = _user$firstName === undefined ? "" : _user$firstName,
-				    _user$lastName = _user.lastName,
-				    lastName = _user$lastName === undefined ? "" : _user$lastName,
-				    color = _user.color;
-
-				return _extends$5({}, post, {
-					markerLocation: locations[post.id],
-					author: { username: username, email: email, color: color, fullName: (firstName + " " + lastName).trim() }
-				});
-			})
+			threadId: selectedPost && (selectedPost.parentPostId || selectedPost.id),
+			posts: postsForStream
 		};
 	};
 
@@ -54150,7 +54149,7 @@
 			currentFile: data$1.currentFile
 		},
 		ipcInteractions: {
-			selectedMarker: data$1.selectedMarker
+			selectedPostId: data$1.selectedPostId
 		},
 		session: {
 			userId: data$1.currentUserId

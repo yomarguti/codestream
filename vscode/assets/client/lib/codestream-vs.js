@@ -21,7 +21,7 @@ const store = (window.store = createStore({
 		currentFile: data.currentFile,
 	},
 	ipcInteractions: {
-		selectedMarker: data.selectedMarker
+		selectedPostId: data.selectedPostId
 	},
 	session: {
 		userId: data.currentUserId

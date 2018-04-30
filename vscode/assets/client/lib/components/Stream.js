@@ -97,14 +97,10 @@ export class SimpleStream extends Component {
 		this.blameData = {};
 		// end FIXME
 
-		const selectedMarkerPostId = props.selectedMarker && props.selectedMarker.postId
-		let selectedMarkerPost;
-		if (selectedMarkerPostId) 
-			selectedMarkerPost = props.posts.find(post => post.id === selectedMarkerPostId);
 		this.state = {
 			stream: {},
-			threadId: selectedMarkerPost && (selectedMarkerPost.parentPostId || selectedMarkerPostId),
-			threadActive: Boolean(selectedMarkerPost),
+			threadId: props.threadId,
+			threadActive: Boolean(props.threadId),
 			posts: [],
 			fileForIntro: props.currentFile,
 			newPostText: "",
@@ -1341,6 +1337,30 @@ const mapStateToProps = ({
 
 	const isOnline =
 		!connectivity.offline && messaging.failedSubscriptions.length === 0 && !messaging.timedOut;
+
+	const postsForStream = getPostsForStream(posts, stream.id || context.currentFile).map(post => {
+		let user = users[post.creatorId];
+		if (!user) {
+			console.warn(
+				`Redux store doesn't have a user with id ${post.creatorId} for post with id ${post.id}`
+			);
+			user = {
+				username: "Unknown user",
+				email: "",
+				firstName: "",
+				lastName: ""
+			};
+		}
+		const { username, email, firstName = "", lastName = "", color } = user;
+		return {
+			...post,
+			markerLocation: locations[post.id],
+			author: { username, email, color, fullName: `${firstName} ${lastName}`.trim() }
+		};
+	})
+
+	const selectedPost = postsForStream.find(post => post.id === ipcInteractions.selectedPostId)
+
 	return {
 		isOnline,
 		id: stream.id,
@@ -1354,27 +1374,8 @@ const mapStateToProps = ({
 		usernamesRegexp: usernamesRegexp,
 		currentUser: users[session.userId],
 		selectedCode: context.selectedCode,
-		selectedMarker: ipcInteractions.selectedMarker,
-		posts: getPostsForStream(posts, stream.id || context.currentFile).map(post => {
-			let user = users[post.creatorId];
-			if (!user) {
-				console.warn(
-					`Redux store doesn't have a user with id ${post.creatorId} for post with id ${post.id}`
-				);
-				user = {
-					username: "Unknown user",
-					email: "",
-					firstName: "",
-					lastName: ""
-				};
-			}
-			const { username, email, firstName = "", lastName = "", color } = user;
-			return {
-				...post,
-				markerLocation: locations[post.id],
-				author: { username, email, color, fullName: `${firstName} ${lastName}`.trim() }
-			};
-		})
+		threadId: selectedPost && (selectedPost.parentPostId || selectedPost.id),
+		posts: postsForStream,
 	};
 };
 
