@@ -52,11 +52,11 @@ export class UserCollection extends CodeStreamCollection<User, CSUser> {
         return Iterables.find(await this.items(), u => (options.ignoreCase ? u.name.toLocaleUpperCase() : u.name) === name);
     }
 
-    protected fetch() {
-        return this.session.api.getUsers();
+    protected entityMapper(e: CSUser) {
+        return new User(this.session, e);
     }
 
-    protected fetchMapper(e: CSUser) {
-        return new User(this.session, e);
+    protected fetch() {
+        return this.session.api.getUsers();
     }
 }

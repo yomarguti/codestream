@@ -156,11 +156,11 @@ export class PostCollection extends CodeStreamCollection<Post, CSPost> {
         }
     }
 
-    protected async fetch() {
-        return this.session.api.getPosts(this.stream.id);
+    protected entityMapper(e: CSPost) {
+        return new Post(this.session, e, this.stream);
     }
 
-    protected fetchMapper(e: CSPost) {
-        return new Post(this.session, e, this.stream);
+    protected async fetch() {
+        return this.session.api.getPosts(this.stream.id);
     }
 }

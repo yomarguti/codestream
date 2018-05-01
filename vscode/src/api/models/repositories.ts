@@ -106,6 +106,10 @@ export class RepositoryCollection extends CodeStreamCollection<Repository, CSRep
     private _reposByUri: Map<Uri, Repository> = new Map();
     private _reposByWorkspaceFolder: Map<WorkspaceFolder, Repository> = new Map();
 
+    protected entityMapper(e: CSRepository, folder?: WorkspaceFolder) {
+        return new Repository(this.session, e, folder);
+    }
+
     protected async fetch() {
         const repos = await this.session.api.findOrRegisterRepos();
 
@@ -118,7 +122,7 @@ export class RepositoryCollection extends CodeStreamCollection<Repository, CSRep
         for (const [uri, repo] of repos) {
             const folder = workspace.getWorkspaceFolder(uri);
 
-            item = this.fetchMapper(repo, folder);
+            item = this.entityMapper(repo, folder);
             items.push(item);
 
             this._reposByUri.set(uri, item);
@@ -128,47 +132,5 @@ export class RepositoryCollection extends CodeStreamCollection<Repository, CSRep
         }
 
         return items;
-    }
-
-    // protected async getEntitiesOrItems() {
-    //     const repos = await this.session.api.getRepos();
-
-    //     const items = [];
-    //     try {
-    //         const gitRepos = await Git.getRepositories();
-
-    //         this._reposByUri.clear();
-
-    //         let firsts;
-    //         let remote: GitRemote | undefined;
-    //         for (const gr of gitRepos) {
-    //             [firsts, remote] = await Promise.all([
-    //                 Git.getFirstCommits(gr.rootUri),
-    //                 Git.getRemote(gr.rootUri)
-    //             ]);
-
-    //             if (remote === undefined || firsts.length === 0) continue;
-
-    //             const remoteUrl = remote.normalizedUrl;
-    //             let repo = repos.find(r => r.normalizedUrl === remoteUrl);
-    //             if (repo === undefined) {
-    //                 repo = await this.session.api.createRepo(remote.uri, firsts);
-    //                 if (repo === undefined) continue;
-    //             }
-
-    //             const item = this.mapEntity(repo);
-    //             this._reposByUri.set(gr.rootUri, item);
-    //             items.push(item);
-    //         }
-    //     }
-    //     catch (ex) {
-    //         debugger;
-    //     }
-
-    //     return items;
-    // }
-
-    protected fetchMapper(e: CSRepository, folder?: WorkspaceFolder) {
-        return new Repository(this.session, e, folder);
     }
 }

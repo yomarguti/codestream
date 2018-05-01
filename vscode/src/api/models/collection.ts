@@ -60,8 +60,8 @@ export abstract class CodeStreamCollection<TItem extends ICollectionItem<TEntity
         return this._disposables;
     }
 
+    protected abstract entityMapper(e: TEntity): TItem;
     protected abstract fetch(): Promise<(TEntity | TItem)[]>;
-    protected abstract fetchMapper(e: TEntity): TItem;
 
     async filter(predicate: (item: TItem) => boolean) {
         return Iterables.filter(await this.items(), predicate);
@@ -77,11 +77,11 @@ export abstract class CodeStreamCollection<TItem extends ICollectionItem<TEntity
 
     async get(key: string) {
         const collection = await this.ensureLoaded();
+
         const item = collection.get(key) as TItem;
-        if (item !== undefined && item[CollectionItem] !== true) {
-            debugger;
-        }
-        return item;
+        if (item === undefined) return undefined;
+
+        return this.ensureItem(collection, key, item);
     }
 
     async entities(): Promise<TEntity[]> {
@@ -96,11 +96,25 @@ export abstract class CodeStreamCollection<TItem extends ICollectionItem<TEntity
     private _collection: Promise<Map<string, TEntity | TItem>> | undefined;
     async items(): Promise<IterableIterator<TItem>> {
         const items = await this.ensureLoaded();
-        return this.ensureMapped(items);
+        return this.ensureItems(items);
     }
 
     async map<T>(mapper: (item: TItem) => T) {
         return Iterables.map(await this.items(), mapper);
+    }
+
+    private *ensureItems(items: Map<string, TEntity | TItem>) {
+        for (const [key, value] of items) {
+            yield this.ensureItem(items, key, value);
+        }
+    }
+
+    private ensureItem(items: Map<string, TEntity | TItem>, key: string, item: TEntity | TItem) {
+        if ((item as ICollectionItem<TEntity>)[CollectionItem]) return item as TItem;
+
+        const mapped = this.entityMapper(item as TEntity);
+        items.set(key, mapped);
+        return mapped;
     }
 
     protected ensureLoaded() {
@@ -108,19 +122,6 @@ export abstract class CodeStreamCollection<TItem extends ICollectionItem<TEntity
             this._collection = this.load();
         }
         return this._collection;
-    }
-
-    private *ensureMapped(items: Map<string, TEntity | TItem>) {
-        for (const [key, value] of items) {
-            if ((value as ICollectionItem<TEntity>)[CollectionItem]) {
-                yield value as TItem;
-                continue;
-            }
-
-            const mapped = this.fetchMapper(value as TEntity);
-            items.set(key, mapped);
-            yield mapped;
-        }
     }
 
     private _changedDebounced: (() => void) | undefined;

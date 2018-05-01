@@ -251,12 +251,12 @@ export class ChannelStreamCollection extends StreamCollectionBase<ChannelStream,
         return new ChannelStream(this.session, s);
     }
 
-    protected async fetch() {
-        return this.session.api.getChannelStreams();
+    protected entityMapper(e: CSChannelStream) {
+        return new ChannelStream(this.session, e);
     }
 
-    protected fetchMapper(e: CSChannelStream) {
-        return new ChannelStream(this.session, e);
+    protected async fetch() {
+        return this.session.api.getChannelStreams();
     }
 }
 
@@ -288,12 +288,12 @@ export class DirectStreamCollection extends StreamCollectionBase<DirectStream, C
         return new DirectStream(this.session, s);
     }
 
-    protected async fetch() {
-        return this.session.api.getDirectStreams();
+    protected entityMapper(e: CSDirectStream) {
+        return new DirectStream(this.session, e);
     }
 
-    protected fetchMapper(e: CSDirectStream) {
-        return new DirectStream(this.session, e);
+    protected async fetch() {
+        return this.session.api.getDirectStreams();
     }
 }
 
@@ -343,13 +343,13 @@ export class FileStreamCollection extends StreamCollectionBase<FileStream, CSFil
                 file: this.repo.relativizeUri(uri),
                 repoId: this.repo.id
             };
-}
+    }
+
+    protected entityMapper(e: CSFileStream) {
+        return new FileStream(this.session, e, this.repo);
+    }
 
     protected async fetch() {
         return this.session.api.getFileStreams(this.repo.id);
-    }
-
-    protected fetchMapper(e: CSFileStream) {
-        return new FileStream(this.session, e, this.repo);
     }
 }

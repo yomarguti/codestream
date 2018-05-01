@@ -26,11 +26,11 @@ export class TeamCollection extends CodeStreamCollection<Team, CSTeam> {
         super(session);
     }
 
-    protected fetch(): Promise<CSTeam[]> {
-        return this.session.api.getTeams(this._ids);
+    protected entityMapper(e: CSTeam) {
+        return new Team(this.session, e);
     }
 
-    protected fetchMapper(e: CSTeam) {
-        return new Team(this.session, e);
+    protected fetch(): Promise<CSTeam[]> {
+        return this.session.api.getTeams(this._ids);
     }
 }
