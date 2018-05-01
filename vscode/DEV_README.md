@@ -59,7 +59,7 @@ To connect to the Production environment, use the following settings
 |`codestream.bot.enabled`|Specifies whether to enable the CodeStream demo bot
 |`codestream.bot.username`|Specifies the demo bot's username to use to connect to the CodeStream service
 |`codestream.bot.password`|Specifies the demo bot's password to use to connect to the CodeStream service
-|`codestream.bot.triggers`|Specifies the demo bot's triggers
+|`codestream.bot.triggers`|Specifies the demo bot's triggers<br/><br/>Example<br/>```"codestream.bot.triggers": [```<br/>&nbsp;&nbsp;&nbsp;&nbsp;```{ "message": "\\bhi\\b", "response": { "location": "channel", "message": "Hiya!" } },```<br/>&nbsp;&nbsp;&nbsp;&nbsp;```{ "message": "\\bhelp me\\b", "response": { "location": "thread", "message": "Sure! Would you like to start a Live Share session?" } }```<br/>```]```
 
 ### Debugging
 
