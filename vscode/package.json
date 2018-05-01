@@ -217,7 +217,7 @@
             },
             {
                 "command": "codestream.postCode",
-                "title": "Add a Comment",
+                "title": "Add CodeStream Comment",
                 "category": "CodeStream"
             },
             {

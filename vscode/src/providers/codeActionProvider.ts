@@ -23,7 +23,7 @@ export class CodeStreamCodeActionProvider extends Disposable implements CodeActi
 
         return [
             {
-                title: `Add a Comment`,
+                title: `Add CodeStream Comment`,
                 command: 'codestream.postCode',
                 arguments: [
                     {
