@@ -619,7 +619,7 @@ body.preload * {
 }
 .codestream .stream .postslist {
   flex: 1 1 auto;
-  min-height: 0px;
+  height: 100%;
 }
 .codestream a.post--action-link {
   text-decoration: none;
