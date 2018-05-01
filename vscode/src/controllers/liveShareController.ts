@@ -145,11 +145,17 @@ export class LiveShareController extends Disposable {
         }
         else {
             if (typeof args.userIds === 'string') {
-                users.push(await Container.session.users.get(args.userIds));
+                const user = await Container.session.users.get(args.userIds);
+                if (user !== undefined) {
+                    users.push();
+                }
             }
             else {
                 for (const id of args.userIds) {
-                    users.push(await Container.session.users.get(id));
+                    const user = await Container.session.users.get(id);
+                    if (user !== undefined) {
+                        users.push();
+                    }
                 }
             }
             streamThread = Container.streamView.activeStreamThread;
