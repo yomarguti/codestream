@@ -2,11 +2,11 @@
 import { Range, Uri } from 'vscode';
 import { CodeStreamCollection, CodeStreamItem } from './collection';
 import { CodeStreamSession, PostsReceivedEvent } from '../session';
-import { ChannelStream, DirectStream, FileStream, Stream, StreamType } from '../models/streams';
+import { Stream, StreamType } from '../models/streams';
 import { Repository } from '../models/repositories';
 import { User } from '../models/users';
 import { CSPost } from '../types';
-import { Iterables } from '../../system';
+import { Dates, Iterables, memoize } from '../../system';
 
 interface CodeBlock {
     readonly code: string;
@@ -25,12 +25,20 @@ export class Post extends CodeStreamItem<CSPost> {
         super(session, post);
     }
 
+    get date() {
+        return this.entity.createdAt;
+    }
+
     get hasCode() {
         return this.entity.codeBlocks !== undefined && this.entity.codeBlocks.length !== 0;
     }
 
     get senderId() {
         return this.entity.creatorId;
+    }
+
+    get streamId() {
+        return this.entity.streamId;
     }
 
     get teamId() {
@@ -41,7 +49,7 @@ export class Post extends CodeStreamItem<CSPost> {
         return this.entity.text;
     }
 
-    // @memoize
+    @memoize
     async codeBlock(): Promise<CodeBlock | undefined> {
         if (this.entity.codeBlocks === undefined || this.entity.codeBlocks.length === 0) return undefined;
 
@@ -66,6 +74,26 @@ export class Post extends CodeStreamItem<CSPost> {
             hash: this.entity.commitHashWhenPosted!,
             uri: uri!
         };
+    }
+
+    private _dateFormatter?: Dates.IDateFormatter;
+
+    formatDate(format?: string | null) {
+        if (format == null) {
+            format = 'MMMM Do, YYYY h:mma';
+        }
+
+        if (this._dateFormatter === undefined) {
+            this._dateFormatter = Dates.toFormatter(this.entity.createdAt);
+        }
+        return this._dateFormatter.format(format);
+    }
+
+    fromNow() {
+        if (this._dateFormatter === undefined) {
+            this._dateFormatter = Dates.toFormatter(this.entity.createdAt);
+        }
+        return this._dateFormatter.fromNow();
     }
 
     mentioned(name: string): boolean {
@@ -95,7 +123,7 @@ export class Post extends CodeStreamItem<CSPost> {
         } while (match != null);
     }
 
-    // @memoize
+    @memoize
     async repo(): Promise<Repository | undefined> {
         const stream = await this.stream();
         if (stream.type !== StreamType.File) return undefined;
@@ -103,34 +131,20 @@ export class Post extends CodeStreamItem<CSPost> {
         return stream.repo();
     }
 
-    // @memoize
+    @memoize
     sender(): Promise<User | undefined> {
         return this.session.users.get(this.entity.creatorId);
     }
 
-    // @memoize
+    @memoize
     stream(): Promise<Stream>  {
         return this.getStream(this.entity.streamId);
     }
 
     private async getStream(streamId: string): Promise<Stream> {
         if (this._stream === undefined) {
-            const stream = await this.session.api.getStream(streamId);
-            if (stream === undefined) throw new Error(`Stream(${streamId}) could not be found`);
-
-            switch (stream.type) {
-                case StreamType.Channel:
-                    this._stream = new ChannelStream(this.session, stream!);
-                    break;
-                case StreamType.Direct:
-                    this._stream = new DirectStream(this.session, stream!);
-                    break;
-                case StreamType.File:
-                    this._stream = new FileStream(this.session, stream!);
-                    break;
-                default:
-                  throw new Error('Invalid stream type');
-            }
+            this._stream = await this.session.getStream(streamId);
+            if (this._stream === undefined) throw new Error(`Stream(${streamId}) could not be found`);
         }
         return this._stream;
     }

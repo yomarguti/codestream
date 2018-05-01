@@ -2,6 +2,8 @@
 import { DecorationOptions, Disposable, MarkdownString, OverviewRulerLane, Range, TextEditor, TextEditorDecorationType, window } from 'vscode';
 import { Container } from '../container';
 import { SessionStatus, SessionStatusChangedEvent } from '../api/session';
+import { Logger } from '../logger';
+import { OpenStreamCommandArgs } from '../commands';
 
 export class MarkerDecorationProvider extends Disposable {
 
@@ -74,31 +76,47 @@ export class MarkerDecorationProvider extends Disposable {
     }
 
     async provideDecorations(editor: TextEditor /*, token: CancellationToken */): Promise<DecorationOptions[]> {
-        const markers = await Container.session.getMarkers(editor.document.uri);
-        if (markers === undefined) return [];
+        // TODO: Rework this to separate markers from hovers
+        try {
+            const markers = await Container.session.getMarkers(editor.document.uri);
+            if (markers === undefined) return [];
 
-        const decorations: DecorationOptions[] = [];
+            const decorations: DecorationOptions[] = [];
 
-        const starts = new Set();
-        for (const marker of await markers.items()) {
-            const start = marker.range.start.line;
-            if (starts.has(start)) continue;
+            const starts = new Set();
+            for (const marker of await markers.items()) {
+                const start = marker.range.start.line;
+                if (starts.has(start)) continue;
 
-            let message = undefined;
-            const post = await marker.post();
-            if (post !== undefined) {
-                const sender = await post.sender();
-                message = new MarkdownString(`${sender!.name} wrote:\n\n\`\`\`${post.text}\`\`\`\n\n[Open](command:codestream.openStream)`);
-                message.isTrusted = true;
+                let message = undefined;
+                const post = await marker.post();
+                if (post !== undefined) {
+                    const sender = await post.sender();
+
+                    const args = {
+                        streamThread: {
+                            id: post.id,
+                            streamId: post.streamId
+                        }
+                    } as OpenStreamCommandArgs;
+
+                    message = new MarkdownString(`__${sender!.name}__, ${post.fromNow()} &nbsp; _(${post.formatDate()})_\n\n>${post.text}\n\n[__Open Comment \u2197__](command:codestream.openStream?${JSON.stringify(args)} "Open Comment")`);
+                    message.isTrusted = true;
+                }
+
+                decorations.push({
+                    range: new Range(start, 0, start, 0), // location[2], 10000000)
+                    hoverMessage: message
+                });
+                starts.add(start);
             }
 
-            decorations.push({
-                range: new Range(start, 0, start, 0), // location[2], 10000000)
-                hoverMessage: message
-            });
-            starts.add(start);
+            return decorations;
         }
-
-        return decorations;
+        catch (ex) {
+            debugger;
+            Logger.error(ex);
+            return [];
+        }
     }
 }

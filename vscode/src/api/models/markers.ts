@@ -1,7 +1,7 @@
 'use strict';
 import { Range, Uri } from 'vscode';
 import { Container } from '../../container';
-import { ChannelStream, CodeStreamSession, DirectStream, FileStream, Repository } from '../session';
+import { ChannelStream, CodeStreamSession, DirectStream, FileStream, Post, Repository } from '../session';
 import { Iterables } from '../../system';
 import { CSMarker } from '../types';
 
@@ -29,7 +29,10 @@ export class Marker {
 
     async post() {
         const stream = await this.stream();
-        if (stream === undefined) return undefined;
+        if (stream === undefined) {
+            const post = await this.session.api.getPost(this.entity.postId);
+            return new Post(this.session, post);
+        }
 
         return stream.posts.get(this.entity.postId);
     }

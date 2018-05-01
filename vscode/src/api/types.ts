@@ -197,6 +197,10 @@ export interface GetMarkersResponse {
     numMarkers: number;
 }
 
+export interface GetPostResponse {
+    post: CSPost;
+}
+
 export interface GetPostsResponse {
     posts: CSPost[];
 }

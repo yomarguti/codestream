@@ -9,7 +9,7 @@ import {
     CSStream,
     FindRepoResponse,
     GetMarkerLocationsResponse, GetMarkerResponse, GetMarkersResponse,
-    GetPostsResponse,
+    GetPostResponse, GetPostsResponse,
     GetRepoResponse, GetReposResponse,
     GetStreamResponse, GetStreamsResponse,
     GetTeamResponse, GetTeamsResponse,
@@ -103,6 +103,10 @@ export class CodeStreamApi {
 
     getMarkers(token: string, teamId: string, streamId: string): Promise<GetMarkersResponse> {
         return this.get<GetMarkersResponse>(`/markers?teamId=${teamId}&streamId=${streamId}`, token);
+    }
+
+    getPost(token: string, teamId: string, postId: string): Promise<GetPostResponse> {
+        return this.get<GetPostResponse>(`/posts/${postId}?teamId=${teamId}`, token);
     }
 
     getPosts(token: string, teamId: string, streamId: string): Promise<GetPostsResponse> {

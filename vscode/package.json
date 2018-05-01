@@ -448,6 +448,7 @@
         "vscode:prepublish": "npm run build"
     },
     "dependencies": {
+        "date-fns": "1.29.0",
         "lodash.debounce": "4.0.8",
         "pubnub": "4.20.3",
         "node-fetch": "2.1.2",
@@ -456,7 +457,7 @@
         "tslib": "1.9.0"
     },
     "devDependencies": {
-        "@types/node": "10.0.0",
+        "@types/node": "10.0.2",
         "@types/node-fetch": "1.6.9",
         "@types/pubnub": "4.0.2",
         "@types/tmp": "0.0.33",

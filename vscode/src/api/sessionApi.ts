@@ -182,6 +182,10 @@ export class CodeStreamSessionApi {
         return (await this._api.getMarkerLocations(this.token, teamId, streamId, commitHash)).markerLocations;
     }
 
+    async getPost(postId: string, teamId?: string): Promise<CSPost> {
+        return (await this._api.getPost(this.token, teamId || this.teamId, postId)).post;
+    }
+
     async getPosts(stream: CSStream): Promise<CSPost[]>;
     async getPosts(streamId: string, teamId?: string): Promise<CSPost[]>;
     async getPosts(streamOrStreamId: CSStream | string, teamId?: string): Promise<CSPost[]> {

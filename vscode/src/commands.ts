@@ -30,12 +30,21 @@ type StreamLocator =
     { type: StreamType.Direct, members: string[], create?: boolean } |
     { type: StreamType.File, uri: Uri, create?: boolean };
 
-interface IRequiresStream {
-    streamThread: StreamThread | StreamLocator | undefined;
+interface StreamThreadId {
+    id: string;
+    streamId: string;
 }
 
-export function isStreamThread(streamOrThreadOrLocator: Stream | StreamThread | StreamLocator): streamOrThreadOrLocator is StreamThread {
+interface IRequiresStream {
+    streamThread: StreamThread | StreamThreadId | StreamLocator | undefined;
+}
+
+export function isStreamThread(streamOrThreadOrLocator: Stream | StreamThread | StreamThreadId | StreamLocator): streamOrThreadOrLocator is StreamThread {
     return (streamOrThreadOrLocator as any).stream !== undefined;
+}
+
+export function isStreamThreadId(streamOrThreadOrLocator: Stream | StreamThread | StreamThreadId | StreamLocator): streamOrThreadOrLocator is StreamThreadId {
+    return (streamOrThreadOrLocator as any).streamId !== undefined;
 }
 
 export interface OpenStreamCommandArgs extends IRequiresStream { }
@@ -234,6 +243,13 @@ export class Commands extends Disposable {
     private async findStreamThread(threadOrLocator: IRequiresStream, options: { includeActive?: boolean, includeDefault?: boolean } = {}): Promise < StreamThread | undefined > {
         if (threadOrLocator !== undefined && threadOrLocator.streamThread !== undefined) {
             if (isStreamThread(threadOrLocator.streamThread)) return threadOrLocator.streamThread;
+
+            if (isStreamThreadId(threadOrLocator.streamThread)) {
+                const stream = await Container.session.getStream(threadOrLocator.streamThread.streamId);
+                return stream !== undefined
+                    ? { id: threadOrLocator.streamThread.id, stream: stream }
+                    : undefined;
+            }
 
             const locator = threadOrLocator.streamThread;
 

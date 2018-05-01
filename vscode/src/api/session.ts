@@ -317,6 +317,19 @@ export class CodeStreamSession extends Disposable {
     }
 
     @signedIn
+    async getStream(streamId: string): Promise<Stream | undefined> {
+        const stream = await this.api.getStream(streamId);
+        if (stream === undefined) return undefined;
+
+        switch (stream.type) {
+            case StreamType.Channel: return new ChannelStream(this, stream);
+            case StreamType.Direct: return new DirectStream(this, stream);
+            case StreamType.File: return new FileStream(this, stream);
+            default: throw new Error('Invalid stream type');
+        }
+    }
+
+    @signedIn
     hasSingleRepo(): Promise<boolean> {
         return Promise.resolve(this._data!.repos.length === 1);
     }
