@@ -98,7 +98,7 @@ class Post extends Component {
 				thread={post.parentPostId || post.id}
 				ref={ref => (this._div = ref)}
 			>
-				<Headshot size={36} person={post.author} mine={mine} />
+				<Headshot size={36} person={post.author} mine={mine} withDetails={this.props.showDetails} />
 				<span className="author" ref={ref => (this._authorDiv = ref)}>
 					{post.author.username}
 				</span>
@@ -139,7 +139,7 @@ class Post extends Component {
 
 			if (part.match(usernameRegExp)) {
 				body.push(
-					<span key={iterator++} className={part === currentUser ? "at-mention me" : 'at-mention'}>
+					<span key={iterator++} className={part === currentUser ? "at-mention me" : "at-mention"}>
 						{part}
 					</span>
 				);
@@ -157,20 +157,24 @@ class Post extends Component {
 					let ui;
 					if (desiredUI != null) {
 						ui = JSON.parse(decodeURIComponent(desiredUI));
-					}
-					else {
+					} else {
 						let label;
-						if (service === 'vsls' && action === 'join') {
-							label = ' join my Live Share session';
-						}
-						else {
+						if (service === "vsls" && action === "join") {
+							label = " join my Live Share session";
+						} else {
 							label = ` ${action} ${service}`;
 						}
-						ui = { type: 'link', label: label };
+						ui = { type: "link", label: label };
 					}
 
 					body.push(
-						<a key={iterator++} href={`command:codestream.runServiceAction?${encodeURI(JSON.stringify({ commandUri: command }))}`} className={ui.type === 'button' ? 'post--action-button' : 'post--action-link'}>
+						<a
+							key={iterator++}
+							href={`command:codestream.runServiceAction?${encodeURI(
+								JSON.stringify({ commandUri: command })
+							)}`}
+							className={ui.type === "button" ? "post--action-button" : "post--action-link"}
+						>
 							{ui.label}
 						</a>
 					);

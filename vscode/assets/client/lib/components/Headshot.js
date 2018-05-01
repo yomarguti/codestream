@@ -3,10 +3,23 @@ import PropTypes from "prop-types";
 import Gravatar from "react-gravatar";
 import createClassString from "classnames";
 
+const PopupButton = ({ visible, label, command }) =>
+	visible ? (
+		<div className="popup-button">
+			<div>
+				<a href={command}>{label}</a>
+			</div>
+		</div>
+	) : (
+		false
+	);
+
 export default class Headshot extends Component {
 	static contextTypes = {
 		platform: PropTypes.object
 	};
+
+	state = { showButton: false };
 
 	componentDidMount() {
 		const { platform } = this.context;
@@ -44,7 +57,24 @@ export default class Headshot extends Component {
 		let classNameInitials = "headshot-initials color-" + person.color;
 
 		return (
-			<div className="headshot" ref={ref => (this._div = ref)}>
+			<div
+				className="headshot"
+				ref={ref => (this._div = ref)}
+				onMouseEnter={e => {
+					clearTimeout(this.closeTimeout);
+					this.setState({ showButton: true });
+				}}
+				onMouseLeave={e => {
+					this.closeTimeout = setTimeout(() => this.setState({ showButton: false }), 200);
+				}}
+			>
+				{this.props.withDetails && (
+					<PopupButton
+						visible={this.state.showButton}
+						label="Start LiveShare"
+						command={`command:codestream.vsls.invite?${JSON.stringify({ userIds: person.id })}`}
+					/>
+				)}
 				<Gravatar
 					className="headshot-gravatar"
 					size={this.props.size}

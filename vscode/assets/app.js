@@ -39660,12 +39660,44 @@
 	  }
 	};
 
+	var PopupButton = function PopupButton(_ref) {
+		var visible = _ref.visible,
+		    label = _ref.label,
+		    command = _ref.command;
+		return visible ? react.createElement(
+			"div",
+			{ className: "popup-button" },
+			react.createElement(
+				"div",
+				null,
+				react.createElement(
+					"a",
+					{ href: command },
+					label
+				)
+			)
+		) : false;
+	};
+
 	var Headshot = function (_Component) {
 		inherits$1(Headshot, _Component);
 
 		function Headshot() {
+			var _ref2;
+
+			var _temp, _this, _ret;
+
 			classCallCheck$1(this, Headshot);
-			return possibleConstructorReturn$1(this, (Headshot.__proto__ || Object.getPrototypeOf(Headshot)).apply(this, arguments));
+
+			for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+				args[_key] = arguments[_key];
+			}
+
+			return _ret = (_temp = (_this = possibleConstructorReturn$1(this, (_ref2 = Headshot.__proto__ || Object.getPrototypeOf(Headshot)).call.apply(_ref2, [this].concat(args))), _this), Object.defineProperty(_this, "state", {
+				enumerable: true,
+				writable: true,
+				value: { showButton: false }
+			}), _temp), possibleConstructorReturn$1(_this, _ret);
 		}
 
 		createClass$1(Headshot, [{
@@ -39708,9 +39740,26 @@
 
 				return react.createElement(
 					"div",
-					{ className: "headshot", ref: function ref(_ref) {
-							return _this2._div = _ref;
-						} },
+					{
+						className: "headshot",
+						ref: function ref(_ref3) {
+							return _this2._div = _ref3;
+						},
+						onMouseEnter: function onMouseEnter(e) {
+							clearTimeout(_this2.closeTimeout);
+							_this2.setState({ showButton: true });
+						},
+						onMouseLeave: function onMouseLeave(e) {
+							_this2.closeTimeout = setTimeout(function () {
+								return _this2.setState({ showButton: false });
+							}, 200);
+						}
+					},
+					this.props.withDetails && react.createElement(PopupButton, {
+						visible: this.state.showButton,
+						label: "Start LiveShare",
+						command: "command:codestream.vsls.invite?" + JSON.stringify({ userIds: person.id })
+					}),
 					react.createElement(Gravatar, {
 						className: "headshot-gravatar",
 						size: this.props.size,
@@ -44793,19 +44842,6 @@
 								// onClick={this.handleClickApplyPatch}
 							},
 							applyPatchLabel
-						)
-					),
-					react.createElement(
-						"div",
-						{ className: "button-group" },
-						react.createElement(
-							"a",
-							{ href: "command:codestream.vsls.invite?" + JSON.stringify({ userIds: post.creatorId }) },
-							react.createElement(
-								Button$1,
-								null,
-								"Start Live Share"
-							)
 						)
 					)
 				);
@@ -50795,7 +50831,7 @@
 							if (part.match(usernameRegExp)) {
 								body.push(react.createElement(
 									"span",
-									{ key: iterator++, className: part === currentUser ? "at-mention me" : 'at-mention' },
+									{ key: iterator++, className: part === currentUser ? "at-mention me" : "at-mention" },
 									part
 								));
 							} else {
@@ -50827,17 +50863,21 @@
 											ui = JSON.parse(decodeURIComponent(desiredUI));
 										} else {
 											var label = void 0;
-											if (service === 'vsls' && action === 'join') {
-												label = ' join my Live Share session';
+											if (service === "vsls" && action === "join") {
+												label = " join my Live Share session";
 											} else {
 												label = " " + action + " " + service;
 											}
-											ui = { type: 'link', label: label };
+											ui = { type: "link", label: label };
 										}
 
 										body.push(react.createElement(
 											"a",
-											{ key: iterator++, href: "command:codestream.runServiceAction?" + encodeURI(JSON.stringify({ commandUri: command })), className: ui.type === 'button' ? 'post--action-button' : 'post--action-link' },
+											{
+												key: iterator++,
+												href: "command:codestream.runServiceAction?" + encodeURI(JSON.stringify({ commandUri: command })),
+												className: ui.type === "button" ? "post--action-button" : "post--action-link"
+											},
 											ui.label
 										));
 									}
@@ -51051,7 +51091,7 @@
 							return _this3._div = _ref4;
 						}
 					},
-					react.createElement(Headshot, { size: 36, person: post.author, mine: mine }),
+					react.createElement(Headshot, { size: 36, person: post.author, mine: mine, withDetails: this.props.showDetails }),
 					react.createElement(
 						"span",
 						{ className: "author", ref: function ref(_ref3) {
@@ -51680,15 +51720,15 @@
 					_this.setState({ threadActive: false });
 
 					vscode.postMessage({
-						type: 'event',
+						type: "event",
 						body: {
-							name: 'thread-selected',
+							name: "thread-selected",
 							payload: {
 								threadId: undefined,
 								streamId: _this.props.id
 							}
 						}
-					}, '*');
+					}, "*");
 
 					// if (track) TODO: mixpanel.track("Page Viewed", { "Page Name": "Source Stream" });
 				}
@@ -51763,7 +51803,7 @@
 						// by dragging
 						return;
 					}
-					_this.selectPost(postDiv.id, event.target.matches('.code'));
+					_this.selectPost(postDiv.id, event.target.matches(".code"));
 				}
 			});
 			Object.defineProperty(_this, "findMentions", {
@@ -51792,12 +51832,12 @@
 
 					if (codeClicked) {
 						return vscode.postMessage({
-							type: 'event',
+							type: "event",
 							body: {
-								name: 'post-clicked',
+								name: "post-clicked",
 								payload: post
 							}
-						}, '*');
+						}, "*");
 					}
 
 					// if it is a child in the thread, it'll have a parentPostId,
@@ -51806,15 +51846,15 @@
 					_this.setState({ threadId: threadId, threadActive: true });
 
 					vscode.postMessage({
-						type: 'event',
+						type: "event",
 						body: {
-							name: 'thread-selected',
+							name: "thread-selected",
 							payload: {
 								threadId: threadId,
 								streamId: post.streamId
 							}
 						}
-					}, '*');
+					}, "*");
 					// if (post.codeBlocks && post.codeBlocks.length) {
 					// 	const codeBlock = post.codeBlocks[0];
 					// 	this.hideDisplayMarker();
@@ -52117,7 +52157,7 @@
 			// 	const {posts, selectedMarker} = nextProps;
 			// 	const selectedMarkerPostId = selectedMarker && selectedMarker.postId
 			// 	let selectedMarkerPost;
-			// 	if (selectedMarkerPostId) 
+			// 	if (selectedMarkerPostId)
 			// 		selectedMarkerPost = posts.find(post => post.id === selectedMarkerPostId);
 			// 	return {
 			// 		threadId: selectedMarkerPost && (selectedMarkerPost.parentPostId || selectedMarkerPostId),
@@ -52459,7 +52499,7 @@
 
 				var selectedCode = this.props.selectedCode;
 
-				if (selectedCode && selectedCode.mentions !== '') {
+				if (selectedCode && selectedCode.mentions !== "") {
 					newPostText = selectedCode.mentions + ": " + newPostText;
 				}
 
@@ -52880,7 +52920,7 @@
 
 				var mentionUserIds = this.findMentions(newText);
 				var editor = this.context.platform.getActiveEditor();
-				var editorText = editor ? editor.getText() : '';
+				var editorText = editor ? editor.getText() : "";
 
 				createPost$$1(this.props.id, threadId, newText, codeBlocks, mentionUserIds, editorText, selectedCode && selectedCode.commitHash, {
 					autoMentions: this.state.autoMentioning
@@ -53019,6 +53059,7 @@
 				};
 			}
 			var _user = user,
+			    id = _user.id,
 			    username = _user.username,
 			    email = _user.email,
 			    _user$firstName = _user.firstName,
@@ -53029,7 +53070,7 @@
 
 			return _extends$5({}, post, {
 				markerLocation: locations[post.id],
-				author: { username: username, email: email, color: color, fullName: (firstName + " " + lastName).trim() }
+				author: { id: id, username: username, email: email, color: color, fullName: (firstName + " " + lastName).trim() }
 			});
 		});
 
@@ -53062,7 +53103,7 @@
 		editPost: editPost,
 		deletePost: deletePost,
 		clearSelectedCode: function clearSelectedCode() {
-			return { type: 'CLEAR_SELECTED_CODE' };
+			return { type: "CLEAR_SELECTED_CODE" };
 		}
 		// goToInvitePage: routingActions.goToInvitePage
 	}))(withRepositories(withConfigs(SimpleStream)));

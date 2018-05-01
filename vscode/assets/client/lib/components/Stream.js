@@ -26,7 +26,7 @@ import { getPostsForStream } from "../reducers/posts";
 import rootLogger from "../util/Logger";
 import Button from "./onboarding/Button";
 // import EditingIndicator from "./EditingIndicator";
-import { vscode } from '../codestream-api-vs-webview';
+import { vscode } from "../codestream-api-vs-webview";
 
 // import Path from "path";
 const logger = rootLogger.forClass("components/Stream");
@@ -76,10 +76,10 @@ const Range = array => {
 			end: {
 				row: array[1][0],
 				col: array[1][1]
-			},
+			}
 		};
 	else return null;
-}
+};
 
 export class SimpleStream extends Component {
 	static contextTypes = {
@@ -142,7 +142,7 @@ export class SimpleStream extends Component {
 	// 	const {posts, selectedMarker} = nextProps;
 	// 	const selectedMarkerPostId = selectedMarker && selectedMarker.postId
 	// 	let selectedMarkerPost;
-	// 	if (selectedMarkerPostId) 
+	// 	if (selectedMarkerPostId)
 	// 		selectedMarkerPost = posts.find(post => post.id === selectedMarkerPostId);
 	// 	return {
 	// 		threadId: selectedMarkerPost && (selectedMarkerPost.parentPostId || selectedMarkerPostId),
@@ -493,7 +493,7 @@ export class SimpleStream extends Component {
 			);
 			lastTimestamp = post.createdAt;
 			return returnValue;
-		})
+		});
 	}
 	// we render both a main stream (postslist) plus also a postslist related
 	// to the currently selected thread (if it exists). the reason for this is
@@ -525,12 +525,16 @@ export class SimpleStream extends Component {
 		// strip out the at-mention markup, and add it back.
 		// newPostText = newPostText.replace(/(@\w+)/g, '<span class="at-mention">$1</span> ');
 
-		const {selectedCode} = this.props
-		if (selectedCode && selectedCode.mentions !== '') {
-			newPostText = `${selectedCode.mentions}: ${newPostText}`
+		const { selectedCode } = this.props;
+		if (selectedCode && selectedCode.mentions !== "") {
+			newPostText = `${selectedCode.mentions}: ${newPostText}`;
 		}
 
-		let quoteInfo = this.props.selectedCode ? <div className="code">{this.props.selectedCode.content}</div> : "";
+		let quoteInfo = this.props.selectedCode ? (
+			<div className="code">{this.props.selectedCode.content}</div>
+		) : (
+			""
+		);
 		// FIXME loc
 		let range = Range(this.props.selectedCode && this.props.selectedCode.range);
 		let rangeText = null;
@@ -657,31 +661,31 @@ export class SimpleStream extends Component {
 					handleSelectAtMention={this.handleSelectAtMention}
 				/> */}
 				{/* {this.props.currentFile && ( */}
-					<div
-						className={composeClass}
-						onKeyPress={this.handleOnKeyPress}
-						ref={ref => (this._compose = ref)}
-					>
-						{/* <AddCommentPopup editor={editor} onClick={this.handleClickAddComment} /> */}
-						{hasNewMessagesBelowFold && (
-							<div className="new-messages-below" onClick={this.handleClickScrollToNewMessages}>
-								&darr; Unread Messages &darr;
-							</div>
-						)}
-						{quoteInfo}
-						{quoteHint}
-						<ContentEditable
-							className={contentEditableClass}
-							id="input-div"
-							rows="1"
-							tabIndex="-1"
-							onChange={this.handleOnChange}
-							onBlur={this.handleOnBlur}
-							html={newPostText}
-							placeholder={placeholderText}
-							ref={ref => (this._contentEditable = ref)}
-						/>
-					</div>
+				<div
+					className={composeClass}
+					onKeyPress={this.handleOnKeyPress}
+					ref={ref => (this._compose = ref)}
+				>
+					{/* <AddCommentPopup editor={editor} onClick={this.handleClickAddComment} /> */}
+					{hasNewMessagesBelowFold && (
+						<div className="new-messages-below" onClick={this.handleClickScrollToNewMessages}>
+							&darr; Unread Messages &darr;
+						</div>
+					)}
+					{quoteInfo}
+					{quoteHint}
+					<ContentEditable
+						className={contentEditableClass}
+						id="input-div"
+						rows="1"
+						tabIndex="-1"
+						onChange={this.handleOnChange}
+						onBlur={this.handleOnBlur}
+						html={newPostText}
+						placeholder={placeholderText}
+						ref={ref => (this._contentEditable = ref)}
+					/>
+				</div>
 				{/* )} */}
 			</div>
 		);
@@ -704,16 +708,19 @@ export class SimpleStream extends Component {
 		this.hideDisplayMarker();
 		this.setState({ threadActive: false });
 
-		vscode.postMessage({
-			type: 'event',
-			body: {
-				name: 'thread-selected',
-				payload: {
-					threadId: undefined,
-					streamId: this.props.id
+		vscode.postMessage(
+			{
+				type: "event",
+				body: {
+					name: "thread-selected",
+					payload: {
+						threadId: undefined,
+						streamId: this.props.id
+					}
 				}
-			}
-		}, '*')
+			},
+			"*"
+		);
 
 		// if (track) TODO: mixpanel.track("Page Viewed", { "Page Name": "Source Stream" });
 	};
@@ -782,7 +789,7 @@ export class SimpleStream extends Component {
 			// by dragging
 			return;
 		}
-		this.selectPost(postDiv.id, event.target.matches('.code'));
+		this.selectPost(postDiv.id, event.target.matches(".code"));
 	};
 
 	findMentions = text => {
@@ -806,13 +813,16 @@ export class SimpleStream extends Component {
 		if (!post) return;
 
 		if (codeClicked) {
-			return vscode.postMessage({
-				type: 'event',
-				body: {
-					name: 'post-clicked',
-					payload: post
-				}
-			}, '*');
+			return vscode.postMessage(
+				{
+					type: "event",
+					body: {
+						name: "post-clicked",
+						payload: post
+					}
+				},
+				"*"
+			);
 		}
 
 		// if it is a child in the thread, it'll have a parentPostId,
@@ -820,16 +830,19 @@ export class SimpleStream extends Component {
 		const threadId = post.parentPostId || post.id;
 		this.setState({ threadId: threadId, threadActive: true });
 
-		vscode.postMessage({
-			type: 'event',
-			body: {
-				name: 'thread-selected',
-				payload: {
-					threadId,
-					streamId: post.streamId
+		vscode.postMessage(
+			{
+				type: "event",
+				body: {
+					name: "thread-selected",
+					payload: {
+						threadId,
+						streamId: post.streamId
+					}
 				}
-			}
-		}, '*')
+			},
+			"*"
+		);
 		// if (post.codeBlocks && post.codeBlocks.length) {
 		// 	const codeBlock = post.codeBlocks[0];
 		// 	this.hideDisplayMarker();
@@ -874,10 +887,10 @@ export class SimpleStream extends Component {
 		this.focusInput();
 
 		let newState = {
-		// 	quoteText: "",
-		// 	preContext: "",
-		// 	postContext: "",
-		// 	quoteRange: null
+			// 	quoteText: "",
+			// 	preContext: "",
+			// 	postContext: "",
+			// 	quoteRange: null
 		};
 
 		// remove any at-mentions that we have added manually
@@ -1215,11 +1228,20 @@ export class SimpleStream extends Component {
 
 		const mentionUserIds = this.findMentions(newText);
 		const editor = this.context.platform.getActiveEditor();
-		const editorText = editor ? editor.getText() : '';
+		const editorText = editor ? editor.getText() : "";
 
-		createPost(this.props.id, threadId, newText, codeBlocks, mentionUserIds, editorText, selectedCode && selectedCode.commitHash, {
-			autoMentions: this.state.autoMentioning
-		});
+		createPost(
+			this.props.id,
+			threadId,
+			newText,
+			codeBlocks,
+			mentionUserIds,
+			editorText,
+			selectedCode && selectedCode.commitHash,
+			{
+				autoMentions: this.state.autoMentioning
+			}
+		);
 
 		// reset the input field to blank
 		this.resetCompose();
@@ -1349,15 +1371,15 @@ const mapStateToProps = ({
 				lastName: ""
 			};
 		}
-		const { username, email, firstName = "", lastName = "", color } = user;
+		const { id, username, email, firstName = "", lastName = "", color } = user;
 		return {
 			...post,
 			markerLocation: locations[post.id],
-			author: { username, email, color, fullName: `${firstName} ${lastName}`.trim() }
+			author: { id, username, email, color, fullName: `${firstName} ${lastName}`.trim() }
 		};
-	})
+	});
 
-	const selectedPost = postsForStream.find(post => post.id === ipcInteractions.selectedPostId)
+	const selectedPost = postsForStream.find(post => post.id === ipcInteractions.selectedPostId);
 
 	return {
 		isOnline,
@@ -1373,7 +1395,7 @@ const mapStateToProps = ({
 		currentUser: users[session.userId],
 		selectedCode: context.selectedCode,
 		threadId: selectedPost && (selectedPost.parentPostId || selectedPost.id),
-		posts: postsForStream,
+		posts: postsForStream
 	};
 };
 
@@ -1384,6 +1406,6 @@ export default connect(mapStateToProps, {
 	createPost,
 	editPost,
 	deletePost,
-	clearSelectedCode: () => ({type: 'CLEAR_SELECTED_CODE' })
+	clearSelectedCode: () => ({ type: "CLEAR_SELECTED_CODE" })
 	// goToInvitePage: routingActions.goToInvitePage
 })(withRepositories(withConfigs(SimpleStream)));
