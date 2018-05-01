@@ -6,7 +6,7 @@ import { Container } from '../container';
 
 export class StreamViewController extends Disposable {
 
-    private _disposable: Disposable | undefined;
+    private _disposablePanel: Disposable | undefined;
     private _panel: StreamWebviewPanel | undefined;
     private _lastStreamThread: StreamThread | undefined;
 
@@ -15,14 +15,11 @@ export class StreamViewController extends Disposable {
     }
 
     dispose() {
-        this._disposable && this._disposable.dispose();
-        this._disposable = undefined;
-        this._panel = undefined;
-     }
+        this.closePanel();
+    }
 
     private onPanelClosed() {
-        this._lastStreamThread = this.activeStreamThread;
-        this.dispose();
+        this.closePanel();
     }
 
     get activeStreamThread() {
@@ -35,11 +32,17 @@ export class StreamViewController extends Disposable {
         return this._panel === undefined ? false : this._panel.visible;
     }
 
+    hide() {
+        if (this._panel === undefined) return;
+
+        this._panel.hide();
+    }
+
     async openStreamThread(streamThread: StreamThread): Promise<StreamThread> {
         if (this._panel === undefined) {
             this._panel = new StreamWebviewPanel(this.session);
 
-            this._disposable = Disposable.from(
+            this._disposablePanel = Disposable.from(
                 this._panel,
                 this._panel.onDidClose(this.onPanelClosed, this)
             );
@@ -70,5 +73,19 @@ export class StreamViewController extends Disposable {
         }
 
         return this.openStreamThread(streamThread);
+    }
+
+    toggle() {
+        return this.visible
+            ? this.hide()
+            : this.show();
+    }
+
+    private closePanel() {
+        this._lastStreamThread = this.activeStreamThread;
+
+        this._disposablePanel && this._disposablePanel.dispose();
+        this._disposablePanel = undefined;
+        this._panel = undefined;
     }
 }

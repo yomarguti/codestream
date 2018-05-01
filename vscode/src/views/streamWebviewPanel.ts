@@ -63,6 +63,7 @@ export class StreamWebviewPanel extends Disposable {
         this._disposable = Disposable.from(
             session.onDidReceivePosts(this.onPostsReceived, this),
             session.onDidChange(this.onSessionChanged, this),
+            this._panel,
             this._panel.onDidDispose(this.onPanelDisposed, this),
             this._panel.onDidChangeViewState(this.onPanelViewStateChanged, this),
             this._panel.webview.onDidReceiveMessage(this.onPanelWebViewMessageReceived, this)
@@ -77,10 +78,12 @@ export class StreamWebviewPanel extends Disposable {
         this._onDidClose.fire();
     }
 
+    private _invalidateOnVisible: boolean = false;
     private onPanelViewStateChanged(e: WebviewPanelOnDidChangeViewStateEvent) {
         Logger.log('WebView.ViewStateChanged', e.webviewPanel.visible);
-        // HACK: Because messages aren't sent to the webview when hidden
-        if (this.streamThread !== undefined && e.webviewPanel.visible) {
+        // HACK: Because messages aren't sent to the webview when hidden, we need to reset the whole view if we are invalid
+        if (this._invalidateOnVisible && this.streamThread !== undefined && e.webviewPanel.visible) {
+            this._invalidateOnVisible = false;
             this.setStream(this.streamThread, true);
         }
     }
@@ -187,6 +190,12 @@ export class StreamWebviewPanel extends Disposable {
         return this._panel === undefined ? false : this._panel.visible;
     }
 
+    hide() {
+        if (this._panel === undefined) return;
+
+        this._panel.dispose();
+    }
+
     is(stream: Stream): boolean;
     is(streamThread: StreamThread): boolean;
     is(streamOrThread: Stream | StreamThread) {
@@ -276,10 +285,13 @@ export class StreamWebviewPanel extends Disposable {
     }
 
     show() {
-        this._panel.reveal(ViewColumn.Three);
+        this._panel.reveal(undefined, false);
     }
 
-    private postMessage(request: CSWebviewRequest) {
-        return this._panel.webview.postMessage(request);
+    private async postMessage(request: CSWebviewRequest) {
+        const success = await this._panel.webview.postMessage(request);
+        if (!success) {
+            this._invalidateOnVisible = true;
+        }
     }
 }

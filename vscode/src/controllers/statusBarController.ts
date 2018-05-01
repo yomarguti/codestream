@@ -62,8 +62,8 @@ export class StatusBarController extends Disposable {
                 break;
             case SessionStatus.SignedIn:
                 this._statusBarItem.text = ` $(comment-discussion) ${count === 0 ? Container.session.user.name : count} `;
-                this._statusBarItem.command = 'codestream.show';
-                this._statusBarItem.tooltip = 'Show CodeStream';
+                this._statusBarItem.command = 'codestream.toggle';
+                this._statusBarItem.tooltip = 'Toggle CodeStream';
                 this._statusBarItem.color = count === 0 ? undefined : '#009aef';
                 break;
         }

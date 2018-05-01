@@ -247,7 +247,12 @@ export class Commands extends Disposable {
         return Container.session.logout();
     }
 
-    private async findStreamThread(threadOrLocator: IRequiresStream, options: { includeActive?: boolean, includeDefault?: boolean } = {}): Promise < StreamThread | undefined > {
+    @command('toggle')
+    toggle() {
+        return Container.streamView.toggle();
+    }
+
+    private async findStreamThread(threadOrLocator: IRequiresStream, options: { includeActive?: boolean, includeDefault?: boolean } = {}): Promise<StreamThread | undefined> {
         if (threadOrLocator !== undefined && threadOrLocator.streamThread !== undefined) {
             if (isStreamThread(threadOrLocator.streamThread)) return threadOrLocator.streamThread;
 

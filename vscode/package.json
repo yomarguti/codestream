@@ -196,16 +196,6 @@
                 "category": "CodeStream"
             },
             {
-                "command": "codestream.reset",
-                "title": "Reset",
-                "category": "CodeStream"
-            },
-            {
-                "command": "codestream.show",
-                "title": "Show CodeStream",
-                "category": "CodeStream"
-            },
-            {
                 "command": "codestream.openStream",
                 "title": "Open Stream",
                 "category": "CodeStream"
@@ -218,6 +208,21 @@
             {
                 "command": "codestream.postCode",
                 "title": "Add CodeStream Comment",
+                "category": "CodeStream"
+            },
+            {
+                "command": "codestream.reset",
+                "title": "Reset",
+                "category": "CodeStream"
+            },
+            {
+                "command": "codestream.show",
+                "title": "Show CodeStream",
+                "category": "CodeStream"
+            },
+            {
+                "command": "codestream.toggle",
+                "title": "Toggle CodeStream",
                 "category": "CodeStream"
             },
             {
@@ -355,14 +360,6 @@
                     "when": "false"
                 },
                 {
-                    "command": "codestream.reset",
-                    "when": "codestream:status == signedIn"
-                },
-                {
-                    "command": "codestream.show",
-                    "when": "codestream:status == signedIn"
-                },
-                {
                     "command": "codestream.openStream",
                     "when": "codestream:status == signedIn"
                 },
@@ -373,6 +370,18 @@
                 {
                     "command": "codestream.postCode",
                     "when": "editorTextFocus && editorHasSelection && codestream:status == signedIn"
+                },
+                {
+                    "command": "codestream.reset",
+                    "when": "codestream:status == signedIn"
+                },
+                {
+                    "command": "codestream.show",
+                    "when": "codestream:status == signedIn"
+                },
+                {
+                    "command": "codestream.toggle",
+                    "when": "codestream:status == signedIn"
                 },
                 {
                     "command": "codestream.vsls.invite",
