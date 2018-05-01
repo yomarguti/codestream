@@ -212,6 +212,8 @@ export class Commands extends Disposable {
 
     @command('show')
     show() {
+        // HACK: 💩
+        Container.notifications.clearUnreadCount();
         return Container.streamView.show();
     }
 

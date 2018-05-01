@@ -11,9 +11,9 @@ import { GitService, IGitService } from './git/gitService';
 import { LinkActionsController } from './controllers/linkActionsController';
 import { LiveShareController } from './controllers/liveShareController';
 import { MarkerDecorationProvider } from './providers/markerDecorationProvider';
+import { NotificationsController } from './controllers/notificationsController';
 import { StatusBarController } from './controllers/statusBarController';
 import { StreamViewController } from './controllers/streamViewController';
-import { UMIController } from './controllers/umiController';
 // import { UnreadDecorationProvider } from './providers/decorationProvider';
 
 export class Container {
@@ -25,7 +25,7 @@ export class Container {
         context.subscriptions.push(this._git = new GitService());
         context.subscriptions.push(this._session = new CodeStreamSession(config.serverUrl));
 
-        context.subscriptions.push(this._umis = new UMIController());
+        context.subscriptions.push(this._notifications = new NotificationsController());
         context.subscriptions.push(this._linkActions = new LinkActionsController());
         context.subscriptions.push(this._liveShare = new LiveShareController());
 
@@ -130,6 +130,11 @@ export class Container {
         return this._markerDecorations;
     }
 
+    private static _notifications: NotificationsController;
+    static get notifications() {
+        return this._notifications;
+    }
+
     private static _statusBar: StatusBarController;
     static get statusBar() {
         return this._statusBar;
@@ -143,11 +148,6 @@ export class Container {
     private static _streamView: StreamViewController;
     static get streamView() {
         return this._streamView;
-    }
-
-    private static _umis: UMIController;
-    static get umis() {
-        return this._umis;
     }
 
     // private static _unreadDecorator: UnreadDecorationProvider;

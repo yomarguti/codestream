@@ -84,6 +84,17 @@
                     "default": true,
                     "description": "Specifies whether to show the `CodeStream` explorer",
                     "scope": "window"
+                },
+                "codestream.notifications": {
+                    "type": "string",
+                    "default": "all",
+                    "enum": [
+                        "all",
+                        "mentions",
+                        "none"
+                    ],
+                    "description": "Specifies when to show notifications for incoming messages",
+                    "scope": "window"
                 }
             }
         },

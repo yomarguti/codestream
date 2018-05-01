@@ -2,7 +2,7 @@
 import { Disposable, StatusBarAlignment, StatusBarItem, window } from 'vscode';
 import { SessionStatus, SessionStatusChangedEvent } from '../api/session';
 import { Container } from '../container';
-import { UMIEvent } from './umiController';
+import { UnreadCountChangedEvent } from './notificationsController';
 
 export class StatusBarController extends Disposable {
 
@@ -14,7 +14,7 @@ export class StatusBarController extends Disposable {
 
         this._disposable = Disposable.from(
             Container.session.onDidChangeStatus(this.onSessionStatusChanged, this),
-            Container.umis.onDidChange(this.onUMIChanged, this)
+            Container.notifications.onDidChangeUnreadCount(this.onUnreadCountChanged, this)
         );
 
         this.updateStatusBar(Container.session.status);
@@ -28,7 +28,7 @@ export class StatusBarController extends Disposable {
         this._disposable && this._disposable.dispose();
     }
 
-    private onUMIChanged(e: UMIEvent) {
+    private onUnreadCountChanged(e: UnreadCountChangedEvent) {
         this.updateStatusBar(Container.session.status, e.getCount());
     }
 
