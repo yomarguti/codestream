@@ -2,6 +2,10 @@
 import { Objects } from './object';
 
 export namespace Arrays {
+    export function count<T>(source: T[], predicate: (item: T) => boolean): number {
+        return source.reduce((count, item) => predicate(item) ? count + 1 : count, 0);
+    }
+
     export function countUniques<T>(source: T[], accessor: (item: T) => string): { [key: string]: number } {
         const uniqueCounts = Object.create(null);
         for (const item of source) {

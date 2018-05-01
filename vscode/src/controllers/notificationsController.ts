@@ -3,7 +3,7 @@ import { Disposable, Event, EventEmitter, window } from 'vscode';
 import { Post, PostsReceivedEvent, StreamType } from '../api/session';
 import { Notifications } from '../config';
 import { Container } from '../container';
-import { Functions } from '../system';
+import { Arrays, Functions } from '../system';
 
 // total 💩 code ahead
 
@@ -34,24 +34,34 @@ export class NotificationsController extends Disposable {
     }
 
     private async onSessionPostsReceived(e: PostsReceivedEvent) {
+        const currentUserId = Container.session.userId;
         const currentUsername = Container.session.user.name;
 
-        for (const post of e.items()) {
-            switch (Container.config.notifications) {
-                case Notifications.All:
-                    this.showNotification(post);
-                    break;
+        let count = 0;
+        if (Container.config.notifications !== Notifications.None) {
+            for (const post of e.items()) {
+                if (post.senderId === currentUserId) continue;
 
-                case Notifications.Mentions:
-                    if (post.mentioned(currentUsername) || (await post.stream()).type === StreamType.Direct) {
+                count++;
+                switch (Container.config.notifications) {
+                    case Notifications.All:
                         this.showNotification(post);
-                    }
-                    break;
+                        break;
+
+                    case Notifications.Mentions:
+                        if (post.mentioned(currentUsername) || (await post.stream()).type === StreamType.Direct) {
+                            this.showNotification(post);
+                        }
+                        break;
+                }
             }
+        }
+        else {
+            count = Arrays.count(e.items(), p => p.senderId !== currentUserId);
         }
 
         // 💩💩💩 need to keep track of a lot more
-        this._count += e.count;
+        this._count += count;
         this.fireUnreadCountChanged({
             getCount: () => this._count
         });
