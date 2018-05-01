@@ -782,7 +782,7 @@ export class SimpleStream extends Component {
 			// by dragging
 			return;
 		}
-		this.selectPost(postDiv.id);
+		this.selectPost(postDiv.id, event.target.matches('.code'));
 	};
 
 	findMentions = text => {
@@ -800,13 +800,13 @@ export class SimpleStream extends Component {
 
 	// show the thread related to the given post, and if there is
 	// a codeblock, scroll to it and select it
-	selectPost = (id) => {
+	selectPost = (id, codeClicked) => {
 		// TODO: mixpanel.track("Page Viewed", { "Page Name": "Thread View" });
 		const post = this.findPostById(id);
 		if (!post) return;
 
-		if (post.codeBlocks.length > 0) {
-			vscode.postMessage({
+		if (codeClicked) {
+			return vscode.postMessage({
 				type: 'event',
 				body: {
 					name: 'post-clicked',
