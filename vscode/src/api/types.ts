@@ -61,6 +61,9 @@ export interface CSChannelStream extends CSEntity {
     name: string;
     memberIds?: string[];
     sortId: string;
+    isTeamStream: boolean;
+    mostRecentPostId?: string;
+    privacy: 'public' | 'private';
 }
 
 export interface CSDirectStream extends CSEntity {
@@ -69,6 +72,8 @@ export interface CSDirectStream extends CSEntity {
     name?: string;
     memberIds: string[];
     sortId: string;
+    mostRecentPostId?: string;
+    privacy: 'public' | 'private';
 }
 
 export interface CSFileStream extends CSEntity {
@@ -77,6 +82,8 @@ export interface CSFileStream extends CSEntity {
     file: string;
     repoId: string;
     sortId: string;
+    mostRecentPostId?: string;
+    privacy: 'public' | 'private';
 }
 
 export type CSStream = CSChannelStream | CSDirectStream | CSFileStream;

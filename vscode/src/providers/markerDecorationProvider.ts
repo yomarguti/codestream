@@ -1,5 +1,5 @@
 'use strict';
-import { DecorationOptions, Disposable, OverviewRulerLane, Range, TextEditor, TextEditorDecorationType, window } from 'vscode';
+import { DecorationOptions, Disposable, MarkdownString, OverviewRulerLane, Range, TextEditor, TextEditorDecorationType, window } from 'vscode';
 import { Container } from '../container';
 import { SessionStatus, SessionStatusChangedEvent } from '../api/session';
 
@@ -80,26 +80,25 @@ export class MarkerDecorationProvider extends Disposable {
         const decorations: DecorationOptions[] = [];
 
         const starts = new Set();
-        for (const location of Object.values(markers.markers.locations)) {
-            const start = location[0];
+        for (const marker of await markers.items()) {
+            const start = marker.range.start.line;
             if (starts.has(start)) continue;
 
+            let message = undefined;
+            const post = await marker.post();
+            if (post !== undefined) {
+                const sender = await post.sender();
+                message = new MarkdownString(`${sender!.name} wrote:\n\n\`\`\`${post.text}\`\`\`\n\n[Open](command:codestream.openStream)`);
+                message.isTrusted = true;
+            }
+
             decorations.push({
-                range: new Range(start, 0, start, 0) // location[2], 10000000)
+                range: new Range(start, 0, start, 0), // location[2], 10000000)
+                hoverMessage: message
             });
             starts.add(start);
         }
 
         return decorations;
-
-        // const message = new MarkdownString(`Akonwi wrote:\n\n\`\`\`This is some awesome code\`\`\`\n\n[Open Stream](command:codestream.openStream)`);
-        // message.isTrusted = true;
-
-        // return [
-        //     {
-        //         range: new Range(editor.selection.active, editor.selection.active.with(undefined, 5)),
-        //         hoverMessage: message
-        //     } as DecorationOptions
-        // ];
     }
 }

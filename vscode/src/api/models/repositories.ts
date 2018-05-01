@@ -1,13 +1,12 @@
 'use strict';
 import { Uri, workspace, WorkspaceFolder } from 'vscode';
 import { CodeStreamCollection, CodeStreamItem } from './collection';
-import { Container } from '../../container';
-import { Markers } from './markers';
+import { MarkerCollection } from './markers';
 import { CodeStreamSession, SessionChangedEvent, SessionChangedType } from '../session';
 import { FileStreamCollection } from './streams';
+import { Strings } from '../../system';
 import { CSRepository } from '../types';
 import * as path from 'path';
-import { Strings } from '../../system';
 
 export class Repository extends CodeStreamItem<CSRepository> {
 
@@ -19,15 +18,13 @@ export class Repository extends CodeStreamItem<CSRepository> {
         super(session, repo);
     }
 
-    async getMarkers(uri: Uri): Promise<Markers | undefined> {
+    async getMarkers(uri: Uri): Promise<MarkerCollection | undefined> {
         if (workspace.getWorkspaceFolder(uri) !== this._folder) return undefined;
 
         const stream = await this.streams.getByUri(uri);
         if (stream === undefined) return undefined;
 
-        const sha = await Container.git.getFileCurrentSha(uri);
-        const markers = await this.session.api.getMarkerLocations(sha!, stream.id);
-        return new Markers(this.session, markers);
+        return new MarkerCollection(this.session, this, stream, uri, this.entity.teamId);
     }
 
     get hash() {

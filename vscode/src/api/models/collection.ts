@@ -78,7 +78,7 @@ export abstract class CodeStreamCollection<TItem extends ICollectionItem<TEntity
     async get(key: string) {
         const collection = await this.ensureLoaded();
         const item = collection.get(key) as TItem;
-        if (item[CollectionItem] !== true) {
+        if (item !== undefined && item[CollectionItem] !== true) {
             debugger;
         }
         return item;

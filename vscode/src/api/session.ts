@@ -5,7 +5,7 @@ import { configuration } from '../configuration';
 import { Container } from '../container';
 import { CodeStreamSessionApi } from './sessionApi';
 import { Logger } from '../logger';
-import { Markers } from './models/markers';
+import { Marker, MarkerCollection } from './models/markers';
 import { Post } from './models/posts';
 import { PresenceManager } from './presence';
 import { PresenceMiddleware } from './presenceMiddleware';
@@ -17,7 +17,7 @@ import { Functions, memoize, Strings } from '../system';
 import { Team, TeamCollection } from './models/teams';
 import { User, UserCollection } from './models/users';
 
-export { ChannelStream, DirectStream, FileStream, Markers, Post, PresenceStatus, Repository, Stream, StreamThread, StreamType, Team, User };
+export { ChannelStream, DirectStream, FileStream, Marker, MarkerCollection, Post, PresenceStatus, Repository, Stream, StreamThread, StreamType, Team, User };
 
 export class CodeStreamSession extends Disposable {
 
@@ -304,7 +304,7 @@ export class CodeStreamSession extends Disposable {
     }
 
     @signedIn
-    async getMarkers(uri: Uri): Promise<Markers | undefined> {
+    async getMarkers(uri: Uri): Promise<MarkerCollection | undefined> {
         const repo = await this.getRepositoryByUri(uri);
         if (repo === undefined) return undefined;
 
