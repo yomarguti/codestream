@@ -532,7 +532,7 @@
                 {
                     "id": "codestream.repositories",
                     "name": "Repositories",
-                    "when": "codestream:status == signedIn && config.codestream.explorer.enabled"
+                    "when": "codestream:status == signedIn && config.codestream.explorer.enabled && false"
                 },
                 {
                     "id": "codestream.liveshare",
