@@ -37,19 +37,31 @@ export class NotificationsController extends Disposable {
         const currentUserId = Container.session.userId;
         const currentUsername = Container.session.user.name;
 
+        const activeStream = Container.streamView.activeStreamThread;
+        const streamVisible = Container.streamView.visible;
+
         let count = 0;
         if (Container.config.notifications !== Notifications.None) {
             for (const post of e.items()) {
                 if (post.senderId === currentUserId) continue;
 
-                count++;
+                const isPostStreamVisible = streamVisible && !(activeStream === undefined || activeStream.stream.id !== post.streamId);
+                if (!isPostStreamVisible) {
+                    count++;
+                }
+
                 switch (Container.config.notifications) {
                     case Notifications.All:
-                        this.showNotification(post);
+                        if (!isPostStreamVisible) {
+                            this.showNotification(post);
+                        }
+                        else if (post.mentioned(currentUsername) || ((await post.stream()).type === StreamType.Direct && !isPostStreamVisible)) {
+                            this.showNotification(post);
+                        }
                         break;
 
                     case Notifications.Mentions:
-                        if (post.mentioned(currentUsername) || (await post.stream()).type === StreamType.Direct) {
+                        if (post.mentioned(currentUsername) || ((await post.stream()).type === StreamType.Direct && !isPostStreamVisible)) {
                             this.showNotification(post);
                         }
                         break;
@@ -57,8 +69,10 @@ export class NotificationsController extends Disposable {
             }
         }
         else {
-            count = Arrays.count(e.items(), p => p.senderId !== currentUserId);
+            count = Arrays.count(e.items(), p => p.senderId !== currentUserId && (!streamVisible || activeStream === undefined || activeStream.stream.id !== p.streamId));
         }
+
+        if (count === 0) return;
 
         // 💩💩💩 need to keep track of a lot more
         this._count += count;

@@ -2,6 +2,7 @@
 import { Disposable, Range } from 'vscode';
 import { CodeStreamSession, Repository, StreamThread } from '../api/session';
 import { StreamWebviewPanel } from '../views/streamWebviewPanel';
+import { Container } from '../container';
 
 export class StreamViewController extends Disposable {
 
@@ -30,6 +31,10 @@ export class StreamViewController extends Disposable {
         return this._panel.streamThread;
     }
 
+    get visible() {
+        return this._panel === undefined ? false : this._panel.visible;
+    }
+
     async openStreamThread(streamThread: StreamThread): Promise<StreamThread> {
         if (this._panel === undefined) {
             this._panel = new StreamWebviewPanel(this.session);
@@ -54,6 +59,9 @@ export class StreamViewController extends Disposable {
     }
 
     async show() {
+        // HACK: 💩
+        Container.notifications.clearUnreadCount();
+
         if (this._panel !== undefined) return this._panel.show();
 
         let streamThread = this._lastStreamThread;

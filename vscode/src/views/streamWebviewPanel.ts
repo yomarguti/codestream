@@ -78,7 +78,11 @@ export class StreamWebviewPanel extends Disposable {
     }
 
     private onPanelViewStateChanged(e: WebviewPanelOnDidChangeViewStateEvent) {
-        Logger.log('WebView.ViewStateChanged', e);
+        Logger.log('WebView.ViewStateChanged', e.webviewPanel.visible);
+        // HACK: Because messages aren't sent to the webview when hidden
+        if (this.streamThread !== undefined && e.webviewPanel.visible) {
+            this.setStream(this.streamThread, true);
+        }
     }
 
     private async onPanelWebViewMessageReceived(e: CSWebviewRequest) {
@@ -179,6 +183,10 @@ export class StreamWebviewPanel extends Disposable {
         return this._streamThread;
     }
 
+    get visible() {
+        return this._panel === undefined ? false : this._panel.visible;
+    }
+
     is(stream: Stream): boolean;
     is(streamThread: StreamThread): boolean;
     is(streamOrThread: Stream | StreamThread) {
@@ -223,9 +231,8 @@ export class StreamWebviewPanel extends Disposable {
         });
     }
 
-    async setStream(streamThread: StreamThread): Promise<StreamThread> {
-        if (this._streamThread &&
-            this._streamThread.id === streamThread.id &&
+    async setStream(streamThread: StreamThread, force: boolean = false): Promise<StreamThread> {
+        if (!force && this._streamThread && this._streamThread.id === streamThread.id &&
             this._streamThread.stream.id === streamThread.stream.id) {
             this.show();
 
