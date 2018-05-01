@@ -14,6 +14,7 @@ import { MarkerDecorationProvider } from './providers/markerDecorationProvider';
 import { NotificationsController } from './controllers/notificationsController';
 import { StatusBarController } from './controllers/statusBarController';
 import { StreamViewController } from './controllers/streamViewController';
+import { CodeStreamBot } from './codestreamBot';
 // import { UnreadDecorationProvider } from './providers/decorationProvider';
 
 export class Container {
@@ -56,6 +57,13 @@ export class Container {
                 }
             });
         }
+
+        context.subscriptions.push(this._bot = new CodeStreamBot());
+    }
+
+    private static _bot: CodeStreamBot;
+    static get bot() {
+        return this._bot;
     }
 
     private static _codeActions: CodeStreamCodeActionProvider;

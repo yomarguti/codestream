@@ -1,12 +1,16 @@
 'use strict';
 import { Container } from '../container';
+import { CodeStreamSession } from './session';
 
 export class StreamVisibilityManager {
 
     private readonly _hiddenStreams: Set<string>;
 
-    constructor(public userId: string) {
-        this._hiddenStreams = new Set(Container.context.globalState.get<string[]>(`user:${Container.session.userId}:streams:hidden`) || []);
+    constructor(
+        public readonly session: CodeStreamSession,
+        public userId: string
+    ) {
+        this._hiddenStreams = new Set(Container.context.globalState.get<string[]>(`user:${session.userId}:streams:hidden`) || []);
     }
 
     clear() {

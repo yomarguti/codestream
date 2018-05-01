@@ -1,5 +1,10 @@
 'use strict';
 
+export interface BotResponse {
+    message: string;
+    location: 'channel' | 'thread';
+}
+
 export enum Notifications {
     All = 'all',
     Mentions = 'mentions',
@@ -15,6 +20,13 @@ export enum TraceLevel {
 
 export interface IConfig {
     debug: boolean;
+
+    bot: {
+        enabled: boolean;
+        username: string;
+        password: string;
+        triggers: { message: string, response: BotResponse }[];
+    };
 
     explorer: {
         enabled: boolean;

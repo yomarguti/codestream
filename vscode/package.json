@@ -95,6 +95,68 @@
                     ],
                     "description": "Specifies when to show notifications for incoming messages",
                     "scope": "window"
+                },
+                "codestream.bot.enabled": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Specifies whether to enable the CodeStream bot",
+                    "scope": "window"
+                },
+                "codestream.bot.username": {
+                    "type": "string",
+                    "default": null,
+                    "description": "Specifies the bot's username to use to connect to the CodeStream service",
+                    "scope": "window"
+                },
+                "codestream.bot.password": {
+                    "type": "string",
+                    "default": null,
+                    "description": "Specifies the bot's password to use to connect to the CodeStream service",
+                    "scope": "window"
+                },
+                "codestream.bot.triggers": {
+                    "type": "array",
+                    "default": [],
+                    "items": {
+                        "type": "object",
+                        "required": [
+                            "message",
+                            "response"
+                        ],
+                        "properties": {
+                            "message": {
+                                "type": "string",
+                                "description": "Specifies the bot's trigger message regular expression"
+                            },
+                            "response": {
+                                "type": "object",
+                                "required": [
+                                    "message",
+                                    "location"
+                                ],
+                                "properties": {
+                                    "message": {
+                                        "type": "string",
+                                        "description": "Specifies the bot's response message"
+                                    },
+                                    "location": {
+                                        "type": "string",
+                                        "default": "channel",
+                                        "enum": [
+                                            "channel",
+                                            "thread"
+                                        ],
+                                        "description": "Specifies where the bot's response should be posted"
+                                    }
+                                },
+                                "description": "Specifies the bot's response"
+
+                            }
+                        }
+                    },
+                    "uniqueItems": true,
+                    "description": "Specifies the bot's triggers",
+                    "scope": "resource"
                 }
             }
         },
