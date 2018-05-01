@@ -62,7 +62,7 @@ export default class PostDetails extends Component {
 			// }
 		}
 
-		showDiffButtons = false;
+		showDiffButtons = post.codeBlocks && post.codeBlocks.length > 0;
 		return (
 			<div className="post-details" id={post.id} ref={ref => (this._div = ref)}>
 				{alert}
@@ -74,8 +74,8 @@ export default class PostDetails extends Component {
 							className="control-button"
 							tabIndex="2"
 							type="submit"
-							loading={this.props.loading}
-							onClick={this.handleClickShowDiff}
+							// loading={this.props.loading}
+							// onClick={this.handleClickShowDiff}
 						>
 							{showDiffLabel}
 						</Button>
@@ -84,8 +84,8 @@ export default class PostDetails extends Component {
 							className="control-button"
 							tabIndex="2"
 							type="submit"
-							loading={this.props.loading}
-							onClick={this.handleClickApplyPatch}
+							// loading={this.props.loading}
+							// onClick={this.handleClickApplyPatch}
 						>
 							{applyPatchLabel}
 						</Button>
