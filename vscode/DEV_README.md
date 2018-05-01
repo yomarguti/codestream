@@ -28,7 +28,7 @@ It will do an initial full build and then watch for file changes, compiling thos
 
 ### Configuration
 
-### Connecting to a CodeStream environment
+#### Connecting to a CodeStream environment
 
 To connect to the PD environment, use the following settings
 ```json
@@ -44,6 +44,22 @@ To connect to the Production environment, use the following settings
 "codestream.password": "<password>",
 "codestream.teamId": "<teamId>", // Only needed if you belong to more than 1 team
 ```
+
+#### Settings
+|Name | Description
+|-----|------------
+|`codestream.debug`|Specifies debug mode
+|`codestream.traceLevel`|Specifies how much (if any) output will be sent to the CodeStream output channel
+|`codestream.serverUrl`|Specifies the url to use to connect to the CodeStream service
+|`codestream.username`|Specifies the username to use to connect to the CodeStream service
+|`codestream.password`|Specifies the password to use to connect to the CodeStream service
+|`codestream.teamId`|Specifies the optional team to use to connect to the CodeStream service
+|`codestream.explorers.enabled`|Specifies whether to show the `CodeStream` explorers
+|`codestream.notifications`|Specifies when to show notifications for incoming messages
+|`codestream.bot.enabled`|Specifies whether to enable the CodeStream demo bot
+|`codestream.bot.username`|Specifies the demo bot's username to use to connect to the CodeStream service
+|`codestream.bot.password`|Specifies the demo bot's password to use to connect to the CodeStream service
+|`codestream.bot.triggers`|Specifies the demo bot's triggers
 
 ### Debugging
 

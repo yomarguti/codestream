@@ -79,10 +79,10 @@
                     "description": "Specifies the optional team to use to connect to the CodeStream service",
                     "scope": "window"
                 },
-                "codestream.explorer.enabled": {
+                "codestream.explorers.enabled": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Specifies whether to show the `CodeStream` explorer",
+                    "description": "Specifies whether to show the `CodeStream` explorers",
                     "scope": "window"
                 },
                 "codestream.notifications": {
@@ -99,19 +99,19 @@
                 "codestream.bot.enabled": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Specifies whether to enable the CodeStream bot",
+                    "description": "Specifies whether to enable the CodeStream demo bot",
                     "scope": "window"
                 },
                 "codestream.bot.username": {
                     "type": "string",
                     "default": null,
-                    "description": "Specifies the bot's username to use to connect to the CodeStream service",
+                    "description": "Specifies the demo bot's username to use to connect to the CodeStream service",
                     "scope": "window"
                 },
                 "codestream.bot.password": {
                     "type": "string",
                     "default": null,
-                    "description": "Specifies the bot's password to use to connect to the CodeStream service",
+                    "description": "Specifies the demo bot's password to use to connect to the CodeStream service",
                     "scope": "window"
                 },
                 "codestream.bot.triggers": {
@@ -126,7 +126,7 @@
                         "properties": {
                             "message": {
                                 "type": "string",
-                                "description": "Specifies the bot's trigger message regular expression"
+                                "description": "Specifies the demo bot's trigger message regular expression"
                             },
                             "response": {
                                 "type": "object",
@@ -137,7 +137,7 @@
                                 "properties": {
                                     "message": {
                                         "type": "string",
-                                        "description": "Specifies the bot's response message"
+                                        "description": "Specifies the demo bot's response message"
                                     },
                                     "location": {
                                         "type": "string",
@@ -146,17 +146,17 @@
                                             "channel",
                                             "thread"
                                         ],
-                                        "description": "Specifies where the bot's response should be posted"
+                                        "description": "Specifies where the demo bot's response should be posted"
                                     }
                                 },
-                                "description": "Specifies the bot's response"
+                                "description": "Specifies the demo bot's response"
 
                             }
                         }
                     },
                     "uniqueItems": true,
-                    "description": "Specifies the bot's triggers",
-                    "scope": "resource"
+                    "description": "Specifies the demo bot's triggers",
+                    "scope": "window"
                 }
             }
         },
@@ -522,22 +522,22 @@
                 {
                     "id": "codestream.channels",
                     "name": "Channels",
-                    "when": "codestream:status == signedIn && config.codestream.explorer.enabled"
+                    "when": "codestream:status == signedIn && config.codestream.explorers.enabled"
                 },
                 {
                     "id": "codestream.people",
                     "name": "People",
-                    "when": "codestream:status == signedIn && config.codestream.explorer.enabled"
+                    "when": "codestream:status == signedIn && config.codestream.explorers.enabled"
                 },
                 {
                     "id": "codestream.repositories",
                     "name": "Repositories",
-                    "when": "codestream:status == signedIn && config.codestream.explorer.enabled && false"
+                    "when": "codestream:status == signedIn && config.codestream.explorers.enabled && false"
                 },
                 {
                     "id": "codestream.liveshare",
                     "name": "Live Share Sessions",
-                    "when": "codestream:status == signedIn && config.codestream.explorer.enabled"
+                    "when": "codestream:status == signedIn && config.codestream.explorers.enabled"
                 }
             ]
         },

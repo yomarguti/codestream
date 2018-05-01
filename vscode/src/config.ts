@@ -28,7 +28,7 @@ export interface IConfig {
         triggers: { message: string, response: BotResponse }[];
     };
 
-    explorer: {
+    explorers: {
         enabled: boolean;
     };
 

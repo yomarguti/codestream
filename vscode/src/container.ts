@@ -39,7 +39,7 @@ export class Container {
 
         context.subscriptions.push(this._streamView = new StreamViewController(this._session));
 
-        if (config.explorer.enabled) {
+        if (config.explorers.enabled) {
             context.subscriptions.push(this._channelsExplorer = new ChannelsExplorer());
             context.subscriptions.push(this._liveShareExplorer = new LiveShareExplorer());
             context.subscriptions.push(this._peopleExplorer = new PeopleExplorer());
@@ -48,7 +48,7 @@ export class Container {
         else {
             let disposable: Disposable;
             disposable = configuration.onDidChange(e => {
-                if (configuration.changed(e, configuration.name('explorer')('enabled').value)) {
+                if (configuration.changed(e, configuration.name('explorers')('enabled').value)) {
                     disposable.dispose();
                     context.subscriptions.push(this._channelsExplorer = new ChannelsExplorer());
                     context.subscriptions.push(this._liveShareExplorer = new LiveShareExplorer());

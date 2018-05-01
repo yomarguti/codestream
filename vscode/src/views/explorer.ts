@@ -42,7 +42,7 @@ export abstract class CodeStreamExplorer extends Disposable implements TreeDataP
     private async onConfigurationChanged(e: ConfigurationChangeEvent) {
         const initializing = configuration.initializing(e);
 
-        if (!initializing && !configuration.changed(e, configuration.name('explorer').value)) return;
+        if (!initializing && !configuration.changed(e, configuration.name('explorers').value)) return;
 
         if (!initializing && this._roots.length !== 0) {
             this.refresh(RefreshReason.ConfigurationChanged);
