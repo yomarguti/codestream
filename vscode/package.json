@@ -110,6 +110,15 @@
                 "category": "CodeStream"
             },
             {
+                "command": "codestream.addChannel",
+                "title": "Add Channel",
+                "category": "CodeStream",
+                "icon": {
+                    "dark": "assets/images/dark/add.svg",
+                    "light": "assets/images/light/add.svg"
+                }
+            },
+            {
                 "command": "codestream.comparePostFileRevisionWithWorking",
                 "title": "Compare Revision with Working",
                 "category": "CodeStream"
@@ -198,22 +207,38 @@
             {
                 "command": "codestream.channels.refresh",
                 "title": "Refresh",
-                "category": "CodeStream"
+                "category": "CodeStream",
+                "icon": {
+                    "dark": "assets/images/dark/refresh.svg",
+                    "light": "assets/images/light/refresh.svg"
+                }
             },
             {
                 "command": "codestream.people.refresh",
                 "title": "Refresh",
-                "category": "CodeStream"
+                "category": "CodeStream",
+                "icon": {
+                    "dark": "assets/images/dark/refresh.svg",
+                    "light": "assets/images/light/refresh.svg"
+                }
             },
             {
                 "command": "codestream.repositories.refresh",
                 "title": "Refresh",
-                "category": "CodeStream"
+                "category": "CodeStream",
+                "icon": {
+                    "dark": "assets/images/dark/refresh.svg",
+                    "light": "assets/images/light/refresh.svg"
+                }
             },
             {
                 "command": "codestream.liveshare.refresh",
                 "title": "Refresh",
-                "category": "CodeStream"
+                "category": "CodeStream",
+                "icon": {
+                    "dark": "assets/images/dark/refresh.svg",
+                    "light": "assets/images/light/refresh.svg"
+                }
             },
             {
                 "command": "codestream.channels.refreshNode",
@@ -249,6 +274,10 @@
                 },
                 {
                     "command": "codestream.signOut",
+                    "when": "codestream:status == signedIn"
+                },
+                {
+                    "command": "codestream.addChannel",
                     "when": "codestream:status == signedIn"
                 },
                 {
@@ -349,6 +378,33 @@
                     "command": "codestream.postCode",
                     "when": "editorTextFocus && editorHasSelection && codestream:status == signedIn",
                     "group": "1_codestream@1"
+                }
+            ],
+            "view/title": [
+                {
+                    "command": "codestream.channels.refresh",
+                    "when": "view == codestream.channels",
+                    "group": "navigation@99"
+                },
+                {
+                    "command": "codestream.addChannel",
+                    "when": "view == codestream.channels",
+                    "group": "navigation@1"
+                },
+                {
+                    "command": "codestream.people.refresh",
+                    "when": "view == codestream.people",
+                    "group": "navigation@99"
+                },
+                {
+                    "command": "codestream.repositories.refresh",
+                    "when": "view == codestream.repositories",
+                    "group": "navigation@99"
+                },
+                {
+                    "command": "codestream.liveshare.refresh",
+                    "when": "view == codestream.liveshare",
+                    "group": "navigation@99"
                 }
             ],
             "view/item/context": [

@@ -79,6 +79,15 @@ export class Commands extends Disposable {
         this._disposable && this._disposable.dispose();
     }
 
+    @command('addChannel', { showErrorMessage: 'Unable to add channel' })
+    async addChannel() {
+        const name = await window.showInputBox({ prompt: 'Enter channel name', placeHolder: 'e.g. awesome-feature' });
+        if (name === undefined) return;
+
+        const channel = await Container.session.addChannel(name);
+        return await this.openStream({ streamThread: { id: undefined, stream: channel } });
+    }
+
     @command('comparePostFileRevisionWithWorking', { showErrorMessage: 'Unable to open post' })
     async comparePostFileRevisionWithWorking(post?: Post | PostNode) {
         if (post instanceof PostNode) {

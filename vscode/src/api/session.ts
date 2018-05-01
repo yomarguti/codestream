@@ -299,6 +299,11 @@ export class CodeStreamSession extends Disposable {
     }
 
     @signedIn
+    addChannel(name: string, options: { membership?: 'auto' | string[] } = { membership: 'auto' }) {
+        return this.channels.getOrCreateByName(name, options);
+    }
+
+    @signedIn
     getDefaultTeamChannel() {
         return this.channels.getOrCreateByName('general', { membership: 'auto' });
     }

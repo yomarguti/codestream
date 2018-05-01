@@ -40,8 +40,11 @@ export class ChannelsNode extends ExplorerNode {
     }
 
     async getChildren(): Promise<ExplorerNode[]> {
-        const channels = Iterables.filter(await this.session.channels.filter(this._filter), s => !s.hidden);
-        return [...Iterables.map(channels, c => new StreamNode(this.session, c, this._childrenResourceType))];
+        const channels = [...Iterables.filter(await this.session.channels.filter(this._filter), s => !s.hidden)];
+
+        channels.sort((a, b) => a.name.localeCompare(b.name));
+
+        return channels.map(c => new StreamNode(this.session, c, this._childrenResourceType));
     }
 
     getTreeItem(): TreeItem {
