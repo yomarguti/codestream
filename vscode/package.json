@@ -146,7 +146,7 @@
             },
             {
                 "command": "codestream.postCode",
-                "title": "Post Code",
+                "title": "Add a Comment",
                 "category": "CodeStream"
             },
             {
@@ -281,7 +281,7 @@
                 },
                 {
                     "command": "codestream.postCode",
-                    "when": "editorTextFocus && editorHasSelection && editor codestream:status == signedIn"
+                    "when": "editorTextFocus && editorHasSelection && codestream:status == signedIn"
                 },
                 {
                     "command": "codestream.vsls.invite",
@@ -342,6 +342,13 @@
                 {
                     "command": "codestream.runServiceAction",
                     "when": "false"
+                }
+            ],
+            "editor/context": [
+                {
+                    "command": "codestream.postCode",
+                    "when": "editorTextFocus && editorHasSelection && codestream:status == signedIn",
+                    "group": "1_codestream@1"
                 }
             ],
             "view/item/context": [
