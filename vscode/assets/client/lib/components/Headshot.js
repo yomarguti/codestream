@@ -68,13 +68,11 @@ export default class Headshot extends Component {
 					this.closeTimeout = setTimeout(() => this.setState({ showButton: false }), 200);
 				}}
 			>
-				{this.props.withDetails && (
-					<PopupButton
-						visible={this.state.showButton}
-						label="Start LiveShare"
-						command={`command:codestream.vsls.invite?${JSON.stringify({ userIds: person.id })}`}
-					/>
-				)}
+				<PopupButton
+					visible={this.state.showButton}
+					label="Start LiveShare"
+					command={`command:codestream.vsls.invite?${JSON.stringify({ userIds: person.id })}`}
+				/>
 				<Gravatar
 					className="headshot-gravatar"
 					size={this.props.size}

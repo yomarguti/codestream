@@ -98,7 +98,7 @@ class Post extends Component {
 				thread={post.parentPostId || post.id}
 				ref={ref => (this._div = ref)}
 			>
-				<Headshot size={36} person={post.author} mine={mine} withDetails={this.props.showDetails} />
+				<Headshot size={36} person={post.author} mine={mine} />
 				<span className="author" ref={ref => (this._authorDiv = ref)}>
 					{post.author.username}
 				</span>

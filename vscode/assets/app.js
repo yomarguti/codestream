@@ -7917,7 +7917,7 @@
 
 	var objectAssign$2 = ( objectAssign$1 && objectAssign ) || objectAssign$1;
 
-	var require$$10 = ( emptyObject$1 && emptyObject_1 ) || emptyObject$1;
+	var require$$2$5 = ( emptyObject$1 && emptyObject_1 ) || emptyObject$1;
 
 	var checkPropTypes$2 = ( checkPropTypes$1 && checkPropTypes_1 ) || checkPropTypes$1;
 
@@ -7930,7 +7930,7 @@
 
 	var _assign = objectAssign$2;
 	var invariant = require$$0$29;
-	var emptyObject = require$$10;
+	var emptyObject = require$$2$5;
 	var warning = require$$1$7;
 	var emptyFunction = emptyFunction$2;
 	var checkPropTypes = checkPropTypes$2;
@@ -9747,7 +9747,7 @@
 	var getActiveElement = require$$7;
 	var shallowEqual = require$$8$1;
 	var containsNode = require$$9;
-	var emptyObject = require$$10;
+	var emptyObject = require$$2$5;
 	var hyphenateStyleName = require$$11$1;
 	var camelizeStyleName = require$$12;
 
@@ -38906,13 +38906,13 @@
 
 	var require$$1$8 = ( charenc$1 && charenc_1 ) || charenc$1;
 
-	var require$$2$5 = ( isBuffer$1 && isBuffer_1 ) || isBuffer$1;
+	var require$$2$6 = ( isBuffer$1 && isBuffer_1 ) || isBuffer$1;
 
 	var md5$3 = createCommonjsModule(function (module) {
 	(function(){
 	  var crypt = require$$0$35,
 	      utf8 = require$$1$8.utf8,
-	      isBuffer = require$$2$5,
+	      isBuffer = require$$2$6,
 	      bin = require$$1$8.bin,
 
 	  // The core
@@ -39755,7 +39755,7 @@
 							}, 200);
 						}
 					},
-					this.props.withDetails && react.createElement(PopupButton, {
+					react.createElement(PopupButton, {
 						visible: this.state.showButton,
 						label: "Start LiveShare",
 						command: "command:codestream.vsls.invite?" + JSON.stringify({ userIds: person.id })
@@ -51090,7 +51090,7 @@
 							return _this3._div = _ref4;
 						}
 					},
-					react.createElement(Headshot, { size: 36, person: post.author, mine: mine, withDetails: this.props.showDetails }),
+					react.createElement(Headshot, { size: 36, person: post.author, mine: mine }),
 					react.createElement(
 						"span",
 						{ className: "author", ref: function ref(_ref3) {
@@ -52162,7 +52162,11 @@
 						_this3.setState(function (state) {
 							var next = { selectedCode: body.payload };
 							if (body.payload.mentions !== "") {
-								next.newPostText = body.payload.mentions + ": " + state.newPostText;
+								// next.newPostText = `${body.payload.mentions}: ${state.newPostText}`;
+								var newText = body.payload.mentions + ":\xA0";
+								_this3.insertedAuthors = newText;
+								_this3.insertTextAtCursor(newText);
+								_this3.focusInput();
 							}
 							return next;
 						});
