@@ -138,20 +138,26 @@ export class StreamWebviewPanel extends Disposable {
                         if (body.payload.codeBlocks === undefined) return;
 
                         await Container.commands.openPostWorkingFile(new Post(this.session, body.payload, this._streamThread.stream));
-                        return;
+                        break;
+
+                    case 'post-diff-clicked':
+                        if (body.payload === undefined) return;
+
+                        await Container.commands.comparePostFileRevisionWithWorking(new Post(this.session, body.payload, this._streamThread.stream));
+                        break;
 
                     case 'post-deleted':
                         if (body.payload === undefined) return;
 
                         await Container.session.api.deletePost(body.payload.id);
-                        return;
+                        break;
 
                     case 'thread-selected':
                         const { threadId, streamId } = body.payload;
                         if (this._streamThread !== undefined && this._streamThread.stream.id === streamId) {
                             this._streamThread.id = threadId;
                         }
-                        return;
+                        break;
                 }
                 break;
             }
