@@ -209,7 +209,7 @@ export class StreamWebviewPanel extends Disposable {
 
     post(text: string) {
         return this.postMessage({
-            type: 'ui-data',
+            type: 'interaction',
             body: {
                 type: 'SELECTED_CODE',
                 payload: {
