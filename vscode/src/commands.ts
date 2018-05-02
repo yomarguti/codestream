@@ -1,4 +1,4 @@
-import { commands, ConfigurationTarget, Disposable, MessageItem, Range, TextDocument, Uri, window } from 'vscode';
+import { commands, ConfigurationTarget, Disposable, MessageItem, Range, TextDocument, Uri, ViewColumn, window } from 'vscode';
 import { CodeStreamSession, Post, Stream, StreamThread, StreamType } from './api/session';
 import { openEditor } from './common';
 import { configuration, TraceLevel } from './configuration';
@@ -121,7 +121,7 @@ export class Commands extends Disposable {
             Uri.file(file),
             block.uri,
             `${filename} (${block.hash.substr(0, 8)}) \u00a0\u27F7\u00a0 ${filename}`,
-            { selection: block.range });
+            { preview: true, viewColumn: ViewColumn.One, selection: block.range });
     }
 
     @command('openPostWorkingFile', { showErrorMessage: 'Unable to open post' })
@@ -135,7 +135,7 @@ export class Commands extends Disposable {
         if (block === undefined) return;
 
         // TODO: Need to follow marker to current sha
-        return openEditor(block.uri, { selection: block.range });
+        return openEditor(block.uri, { preview: true, viewColumn: ViewColumn.One, selection: block.range });
     }
 
     @command('openPostFileRevision', { showErrorMessage: 'Unable to open post' })
@@ -151,7 +151,7 @@ export class Commands extends Disposable {
         const file = await Container.git.getFileRevision(block.uri, block.hash);
         if (file === undefined) return;
 
-        return openEditor(Uri.file(file), { selection: block.range });
+        return openEditor(Uri.file(file), { preview: true, viewColumn: ViewColumn.One, selection: block.range });
     }
 
     @command('openStream', { showErrorMessage: 'Unable to open stream' })
