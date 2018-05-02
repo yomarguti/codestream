@@ -1,9 +1,11 @@
 'use strict';
 import 'reflect-metadata';
 
-export const ExtensionId = 'codestream';
-export const ExtensionOutputChannelName = 'CodeStream';
-export const QualifiedExtensionId = `CodeStream.${ExtensionId}`;
+export const extensionId = 'codestream';
+export const extensionOutputChannelName = 'CodeStream';
+export const qualifiedExtensionId = `CodeStream.${extensionId}`;
+// HACK: THIS IS SOOOO BAD
+export const encryptionKey = '3d7e8d4f-63c9-44ee-a1e9-9530c243447e';
 
 import { ExtensionContext, extensions } from 'vscode';
 import { ContextKeys, setContext } from './common';
@@ -12,7 +14,7 @@ import { Container } from './container';
 import { Logger } from './logger';
 import { SessionStatusChangedEvent } from './api/session';
 
-const extension = extensions.getExtension(QualifiedExtensionId)!;
+const extension = extensions.getExtension(qualifiedExtensionId)!;
 export const extensionVersion = extension.packageJSON.version;
 
 export async function activate(context: ExtensionContext) {

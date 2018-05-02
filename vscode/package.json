@@ -120,10 +120,20 @@
                     "items": {
                         "type": "object",
                         "required": [
+                            "type",
                             "message",
                             "response"
                         ],
                         "properties": {
+                            "type": {
+                                "default": "immediate",
+                                "enum": [
+                                    "immediate",
+                                    "delayed",
+                                    "hotkey"
+                                ],
+                                "description": "Specifies the demo bot's trigger type"
+                            },
                             "message": {
                                 "type": "string",
                                 "description": "Specifies the demo bot's trigger message regular expression"
@@ -147,6 +157,10 @@
                                             "thread"
                                         ],
                                         "description": "Specifies where the demo bot's response should be posted"
+                                    },
+                                    "codeBlock": {
+                                        "type": "string",
+                                        "description": "Specifies the demo bot's optional response code block e.g. \"start,end:filename\""
                                     }
                                 },
                                 "description": "Specifies the demo bot's response"
@@ -330,6 +344,11 @@
                 "command": "codestream.runServiceAction",
                 "title": "Run Service Action",
                 "category": "CodeStream"
+            },
+            {
+                "command": "codestream.bot.trigger",
+                "title": "Trigger Pending Bot Response",
+                "category": "CodeStream"
             }
         ],
         "menus": {
@@ -441,6 +460,10 @@
                 {
                     "command": "codestream.runServiceAction",
                     "when": "false"
+                },
+                {
+                    "command": "codestream.bot.trigger",
+                    "when": "codestream:status == signedIn && config.codestream.bot.enabled"
                 }
             ],
             "editor/context": [
@@ -525,6 +548,13 @@
                 }
             ]
         },
+        "keybindings": [
+            {
+                "command": "codestream.bot.trigger",
+                "key": "ctrl+alt+r",
+                "when": "codestream:status == signedIn && config.codestream.bot.enabled"
+            }
+        ],
         "views": {
             "codestream": [
                 {

@@ -1,15 +1,15 @@
 'use strict';
 import { commands, Disposable, Extension, extensions, MessageItem, window, workspace } from 'vscode';
 import { Post, SessionStatus, SessionStatusChangedEvent } from '../api/session';
-import { Command, CommandOptions } from '../commands';
 import { ContextKeys, setContext } from '../common';
-import { TraceLevel } from '../configuration';
 import { Container } from '../container';
-import { ExtensionId } from '../extension';
 import { UserNode } from '../views/explorer';
 import { Logger } from '../logger';
 import { RemoteGitService, RemoteRepository } from '../git/remoteGitService';
-import { Iterables } from '../system';
+import { Command, createCommandDecorator, Iterables } from '../system';
+
+const commandRegistry: Command[] = [];
+const command = createCommandDecorator(commandRegistry);
 
 const liveShareRegex = /https:\/\/(?:.*?)liveshare(?:.*?).visualstudio.com\/join\?(.*?)(?:\s|$)/;
 let liveShare: Extension<any> | undefined;
@@ -30,8 +30,6 @@ interface JoinCommandArgs {
     context: LiveShareContext;
     url: string;
 }
-
-const commandRegistry: Command[] = [];
 
 export class LiveShareController extends Disposable {
 
@@ -135,7 +133,7 @@ export class LiveShareController extends Disposable {
         }
     }
 
-    @command('invite')
+    @command('vsls.invite')
     async invite(args: UserNode | InviteCommandArgs) {
         if (!this.isInstalled) throw new Error('Live Share is not installed');
 
@@ -201,7 +199,7 @@ export class LiveShareController extends Disposable {
         });
     }
 
-    @command('join')
+    @command('vsls.join')
     async join(args: JoinCommandArgs) {
         await Container.context.globalState.update(`vsls:${args.context.sessionId}`, args.context);
         await commands.executeCommand('liveshare.join', args.url); // , { newWindow: true });
@@ -213,48 +211,4 @@ export class LiveShareController extends Disposable {
         const stream = await Container.session.channels.getOrCreateByName(`ls:${sessionUserId}:${sessionId}`, { membership: memberIds });
         return await Container.commands.openStream({ streamThread: { id: undefined, stream: stream } });
     }
-}
-
-function command(command: string, options: CommandOptions = {}): Function {
-    return (target: any, key: string, descriptor: any) => {
-        if (!(typeof descriptor.value === 'function')) throw new Error('not supported');
-
-        let method;
-        if (!options.customErrorHandling) {
-            method = async function(this: any, ...args: any[]) {
-                try {
-                    return await descriptor.value.apply(this, args);
-                }
-                catch (ex) {
-                    Logger.error(ex);
-
-                    if (options.showErrorMessage) {
-                        if (Container.config.traceLevel !== TraceLevel.Silent) {
-                            const actions: MessageItem[] = [
-                                { title: 'Open Output Channel' }
-                            ];
-
-                            const result = await window.showErrorMessage(`${options.showErrorMessage} \u00a0\u2014\u00a0 ${ex.toString()}`, ...actions);
-                            if (result === actions[0]) {
-                                Logger.showOutputChannel();
-                            }
-                        }
-                        else {
-                            window.showErrorMessage(`${options.showErrorMessage} \u00a0\u2014\u00a0 ${ex.toString()}`);
-                        }
-                    }
-                }
-            };
-        }
-        else {
-            method = descriptor.value;
-        }
-
-        commandRegistry.push({
-            name: `${ExtensionId}.vsls.${command}`,
-            key: key,
-            method: method,
-            options: options
-        });
-    };
 }

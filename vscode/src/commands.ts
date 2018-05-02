@@ -1,16 +1,16 @@
 import { commands, ConfigurationTarget, Disposable, MessageItem, Range, TextDocument, Uri, window } from 'vscode';
-import { Post, Stream, StreamThread, StreamType } from './api/session';
+import { CodeStreamSession, Post, Stream, StreamThread, StreamType } from './api/session';
 import { openEditor } from './common';
 import { configuration, TraceLevel } from './configuration';
 import { Container } from './container';
-import { ExtensionId } from './extension';
+import { encryptionKey } from './extension';
 import { Logger } from './logger';
 import { PostNode } from './views/postNode';
-import { Crypto, Iterables } from './system';
+import { Command, createCommandDecorator, Crypto, Iterables } from './system';
 import * as path from 'path';
 
-// HACK: THIS IS SOOOO BAD
-const encryptionKey = '3d7e8d4f-63c9-44ee-a1e9-9530c243447e';
+const commandRegistry: Command[] = [];
+const command = createCommandDecorator(commandRegistry);
 
 export enum BuiltInCommands {
     CloseActiveEditor = 'workbench.action.closeActiveEditor',
@@ -50,12 +50,15 @@ export function isStreamThreadId(streamOrThreadOrLocator: Stream | StreamThread 
     return (streamOrThreadOrLocator as any).streamId !== undefined;
 }
 
-export interface OpenStreamCommandArgs extends IRequiresStream { }
+export interface OpenStreamCommandArgs extends IRequiresStream {
+    session?: CodeStreamSession;
+}
 
 export interface PostCommandArgs extends IRequiresStream {
     text?: string;
     send?: boolean;
     silent?: boolean;
+    session?: CodeStreamSession;
 }
 
 export interface PostCodeCommandArgs extends IRequiresStream {
@@ -63,9 +66,8 @@ export interface PostCodeCommandArgs extends IRequiresStream {
     range?: Range;
     text?: string;
     send?: boolean;
+    session?: CodeStreamSession;
 }
-
-const commandRegistry: Command[] = [];
 
 export class Commands extends Disposable {
 
@@ -154,7 +156,7 @@ export class Commands extends Disposable {
 
     @command('openStream', { showErrorMessage: 'Unable to open stream' })
     async openStream(args: OpenStreamCommandArgs): Promise<StreamThread | undefined> {
-        const streamThread = await this.findStreamThread(args, { includeActive: true, includeDefault: true });
+        const streamThread = await this.findStreamThread(args.session || Container.session, args, { includeActive: true, includeDefault: true });
         if (streamThread === undefined) return undefined;
 
         return Container.streamView.show(streamThread);
@@ -162,7 +164,7 @@ export class Commands extends Disposable {
 
     @command('post', { showErrorMessage: 'Unable to post message' })
     async post(args: PostCommandArgs): Promise<Post | StreamThread> {
-        const streamThread = await this.findStreamThread(args, { includeActive: true, includeDefault: true /*!args.send*/ });
+        const streamThread = await this.findStreamThread(args.session || Container.session, args, { includeActive: true, includeDefault: true /*!args.send*/ });
         if (streamThread === undefined) throw new Error(`No stream could be found`);
 
         if (args.send && args.text) {
@@ -198,12 +200,12 @@ export class Commands extends Disposable {
 
         if (document === undefined || selection === undefined) return undefined;
 
-        const streamThread = await this.findStreamThread(args, { includeActive: true, includeDefault: true });
+        const streamThread = await this.findStreamThread(args.session || Container.session, args, { includeActive: true, includeDefault: true });
         if (streamThread === undefined) throw new Error(`No stream could be found`);
 
         const uri = document.uri;
 
-        const repo = await Container.session.repos.getByFileUri(uri);
+        const repo = await (args.session || Container.session).repos.getByFileUri(uri);
         if (repo === undefined) throw new Error(`No repository could be found for Uri(${uri.toString()}`);
 
         const authors = await Container.git.getFileAuthors(uri, {
@@ -212,7 +214,7 @@ export class Commands extends Disposable {
             contents: document.isDirty ? document.getText() : undefined
         });
 
-        const users = await Container.session.users.getByEmails(authors.map(a => a.email));
+        const users = await (args.session || Container.session).users.getByEmails(authors.map(a => a.email));
         const mentions = Iterables.join(Iterables.map(users, u => `@${u.name}`), ', ');
 
         const code = document.getText(selection);
@@ -266,12 +268,12 @@ export class Commands extends Disposable {
         return Container.streamView.toggle();
     }
 
-    private async findStreamThread(threadOrLocator: IRequiresStream, options: { includeActive?: boolean, includeDefault?: boolean } = {}): Promise<StreamThread | undefined> {
+    private async findStreamThread(session: CodeStreamSession, threadOrLocator: IRequiresStream, options: { includeActive?: boolean, includeDefault?: boolean } = {}): Promise<StreamThread | undefined> {
         if (threadOrLocator !== undefined && threadOrLocator.streamThread !== undefined) {
             if (isStreamThread(threadOrLocator.streamThread)) return threadOrLocator.streamThread;
 
             if (isStreamThreadId(threadOrLocator.streamThread)) {
-                const stream = await Container.session.getStream(threadOrLocator.streamThread.streamId);
+                const stream = await session.getStream(threadOrLocator.streamThread.streamId);
                 return stream !== undefined
                     ? { id: threadOrLocator.streamThread.id, stream: stream }
                     : undefined;
@@ -283,22 +285,22 @@ export class Commands extends Disposable {
             switch (locator.type) {
                 case StreamType.Channel:
                     if (locator.create) {
-                        return { id: undefined, stream: await Container.session.channels.getOrCreateByName(locator.name, locator.create) };
+                        return { id: undefined, stream: await session.channels.getOrCreateByName(locator.name, locator.create) };
                     }
 
-                    stream = await Container.session.channels.getByName(locator.name);
+                    stream = await session.channels.getByName(locator.name);
                     break;
 
                 case StreamType.Direct:
                     if (locator.create) {
-                        return { id: undefined, stream: await Container.session.directMessages.getOrCreateByMembers(locator.members) };
+                        return { id: undefined, stream: await session.directMessages.getOrCreateByMembers(locator.members) };
                     }
 
-                    stream = await Container.session.directMessages.getByMembers(locator.members);
+                    stream = await session.directMessages.getByMembers(locator.members);
                     break;
 
                 case StreamType.File:
-                    const repo = await Container.session.repos.getByFileUri(locator.uri);
+                    const repo = await session.repos.getByFileUri(locator.uri);
                     if (repo !== undefined) {
                         if (locator.create) {
                             return { id: undefined, stream: await repo.streams.getOrCreateByUri(locator.uri) };
@@ -318,7 +320,7 @@ export class Commands extends Disposable {
         }
 
         if (streamThread === undefined && options.includeDefault) {
-            streamThread = { id: undefined, stream: await Container.session.getDefaultTeamChannel() };
+            streamThread = { id: undefined, stream: await session.getDefaultTeamChannel() };
         }
 
         return streamThread;
@@ -349,7 +351,7 @@ export class Commands extends Disposable {
             if (!password) {
                 password = await window.showInputBox({
                     prompt: 'Enter your CodeStream password',
-                    placeHolder: 'shhh',
+                    placeHolder: 'password',
                     password: true
                 });
                 if (password === undefined) return;
@@ -382,60 +384,4 @@ export class Commands extends Disposable {
             }
         }
     }
-}
-
-export interface CommandOptions {
-    customErrorHandling?: boolean;
-    showErrorMessage?: string;
-}
-
-export interface Command {
-    name: string;
-    key: string;
-    method: Function;
-    options: CommandOptions;
-}
-
-function command(command: string, options: CommandOptions = {}): Function {
-    return (target: any, key: string, descriptor: any) => {
-        if (!(typeof descriptor.value === 'function')) throw new Error('not supported');
-
-        let method;
-        if (!options.customErrorHandling) {
-            method = async function(this: any, ...args: any[]) {
-                try {
-                    return await descriptor.value.apply(this, args);
-                }
-                catch (ex) {
-                    Logger.error(ex);
-
-                    if (options.showErrorMessage) {
-                        if (Container.config.traceLevel !== TraceLevel.Silent) {
-                            const actions: MessageItem[] = [
-                                { title: 'Open Output Channel' }
-                            ];
-
-                            const result = await window.showErrorMessage(`${options.showErrorMessage} \u00a0\u2014\u00a0 ${ex.toString()}`, ...actions);
-                            if (result === actions[0]) {
-                                Logger.showOutputChannel();
-                            }
-                        }
-                        else {
-                            window.showErrorMessage(`${options.showErrorMessage} \u00a0\u2014\u00a0 ${ex.toString()}`);
-                        }
-                    }
-                }
-            };
-        }
-        else {
-            method = descriptor.value;
-        }
-
-        commandRegistry.push({
-            name: `${ExtensionId}.${command}`,
-            key: key,
-            method: method,
-            options: options
-        });
-    };
 }

@@ -3,6 +3,13 @@
 export interface BotResponse {
     message: string;
     location: 'channel' | 'thread';
+    codeBlock?: string;
+}
+
+export interface BotTrigger {
+    type: 'immediate' | 'delayed' | 'hotkey';
+    message: string;
+    response: BotResponse;
 }
 
 export enum Notifications {
@@ -23,7 +30,7 @@ export interface IConfig {
         email: string;
         enabled: boolean;
         password: string;
-        triggers: { message: string, response: BotResponse }[];
+        triggers: BotTrigger[];
     };
 
     debug: boolean;

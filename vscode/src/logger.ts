@@ -1,10 +1,10 @@
 'use strict';
 import { ConfigurationChangeEvent, ExtensionContext, OutputChannel, window } from 'vscode';
 import { configuration, TraceLevel } from './configuration';
-import { ExtensionOutputChannelName } from './extension';
+import { extensionOutputChannelName } from './extension';
 // import { Telemetry } from './telemetry';
 
-const ConsolePrefix = `[${ExtensionOutputChannelName}]`;
+const ConsolePrefix = `[${extensionOutputChannelName}]`;
 
 export class Logger {
 
