@@ -27,7 +27,8 @@ export enum ContextValue {
     Repository = 'codestream:repository',
     Session = 'codestream:session',
     Team = 'codestream:team',
-    User = 'codestream:user'
+    User = 'codestream:user',
+    CurrentUser = 'codestream:user:current'
 }
 
 export abstract class ExplorerNode extends Disposable {

@@ -38,6 +38,7 @@ export class LiveShareController extends Disposable {
         if (liveShare === undefined) {
             liveShare = extensions.getExtension('ms-vsliveshare.vsliveshare');
         }
+
         return liveShare !== undefined;
     }
 
@@ -101,9 +102,9 @@ export class LiveShareController extends Disposable {
         ];
 
         const result = await window.showInformationMessage(`${host.name} is inviting you to join a Live Share session`, ...actions);
-        if (result === undefined || result === actions[1]) return;
-
-        this.onJoinAction(e);
+        if (result === actions[0]) {
+            this.onJoinAction(e);
+        }
     }
 
     private onSessionStatusChanged(e: SessionStatusChangedEvent) {
@@ -171,9 +172,6 @@ export class LiveShareController extends Disposable {
 
         const [url, sessionId] = match;
 
-        // const sessionId = '0DB8D25C44D5B0BD7980F65EE16A1BDED80B';
-        // const url = `https://insiders.liveshare.vsengsaas.visualstudio.com/join?${sessionId}`;
-
         const memberIds = [Container.session.userId, ...users.map(u => u.id)];
         await this.openStream(sessionId, Container.session.userId, memberIds);
 
@@ -197,7 +195,8 @@ export class LiveShareController extends Disposable {
         return await Container.commands.post({
             streamThread: streamThread,
             text: `${users.map(u => `@${u.name}`).join(', ')} please ${link}`,
-            send: true
+            send: true,
+            silent: true
         });
     }
 

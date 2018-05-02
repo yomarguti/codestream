@@ -23,9 +23,10 @@ export class UserNode extends ExplorerNode {
     }
 
     getTreeItem(): TreeItem {
-        const item = new TreeItem(`${this.user.name}${this.user.id === this.session.userId ? ' (you)' : ''}`, TreeItemCollapsibleState.None);
+        const current = this.user.id === this.session.userId;
+        const item = new TreeItem(`${this.user.name}${current ? ' (you)' : ''}`, TreeItemCollapsibleState.None);
         item.id = this.id;
-        item.contextValue = ContextValue.User;
+        item.contextValue = current ? ContextValue.CurrentUser : ContextValue.User;
         item.iconPath = Container.context.asAbsolutePath(`assets/images/presence-online.svg`);
 
         item.command = {

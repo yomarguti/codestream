@@ -521,7 +521,7 @@
                 },
                 {
                     "command": "codestream.vsls.invite",
-                    "when": "view == codestream.liveshare && viewItem == codestream:user && codestream:liveShareInstalled",
+                    "when": "codestream:liveShareInstalled && view == codestream.people && viewItem =~ /codestream:user\\b(?!:)/",
                     "group": "2_codestream@1"
                 }
             ]

@@ -52,6 +52,7 @@ export interface OpenStreamCommandArgs extends IRequiresStream { }
 export interface PostCommandArgs extends IRequiresStream {
     text?: string;
     send?: boolean;
+    silent?: boolean;
 }
 
 export interface PostCodeCommandArgs extends IRequiresStream {
@@ -154,7 +155,9 @@ export class Commands extends Disposable {
         if (streamThread === undefined) throw new Error(`No stream could be found`);
 
         if (args.send && args.text) {
-            await Container.streamView.openStreamThread(streamThread);
+            if (!args.silent) {
+                await Container.streamView.openStreamThread(streamThread);
+            }
             return streamThread.stream.post(args.text, streamThread.id);
         }
 
