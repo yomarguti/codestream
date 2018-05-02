@@ -144,7 +144,11 @@ export class SimpleStream extends Component {
 					this.setState(state => {
 						const next = { selectedCode: body.payload };
 						if (body.payload.mentions !== "") {
-							next.newPostText = `${body.payload.mentions}: ${state.newPostText}`;
+							// next.newPostText = `${body.payload.mentions}: ${state.newPostText}`;
+							let newText = `${body.payload.mentions}:\u00A0`;
+							this.insertedAuthors = newText;
+							this.insertTextAtCursor(newText);
+							this.focusInput();
 						}
 						return next;
 					});
