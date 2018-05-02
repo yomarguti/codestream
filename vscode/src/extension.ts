@@ -7,8 +7,7 @@ export const QualifiedExtensionId = `CodeStream.${ExtensionId}`;
 
 import { ExtensionContext, extensions } from 'vscode';
 import { ContextKeys, setContext } from './common';
-import { IConfig } from './config';
-import { configuration, Configuration } from './configuration';
+import { configuration, Configuration, IConfig } from './configuration';
 import { Container } from './container';
 import { Logger } from './logger';
 import { SessionStatusChangedEvent } from './api/session';

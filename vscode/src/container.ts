@@ -2,8 +2,7 @@
 import { Disposable, ExtensionContext } from 'vscode';
 import { CodeStreamSession } from './api/session';
 import { Commands } from './commands';
-import { IConfig } from './config';
-import { configuration } from './configuration';
+import { configuration, IConfig } from './configuration';
 import { CodeStreamCodeActionProvider } from './providers/codeActionProvider';
 // import { CodeStreamCodeLensProvider } from './providers/codeLensProvider';
 import { ChannelsExplorer, LiveShareExplorer, PeopleExplorer, RepositoriesExplorer } from './views/explorer';

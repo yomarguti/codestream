@@ -3,6 +3,7 @@ import { commands, Disposable, Extension, extensions, MessageItem, window, works
 import { Post, SessionStatus, SessionStatusChangedEvent } from '../api/session';
 import { Command, CommandOptions } from '../commands';
 import { ContextKeys, setContext } from '../common';
+import { TraceLevel } from '../configuration';
 import { Container } from '../container';
 import { ExtensionId } from '../extension';
 import { UserNode } from '../views/explorer';
@@ -228,7 +229,19 @@ function command(command: string, options: CommandOptions = {}): Function {
                     Logger.error(ex);
 
                     if (options.showErrorMessage) {
-                        window.showErrorMessage(`${options.showErrorMessage} \u00a0\u2014\u00a0 ${ex.toString()}`);
+                        if (Container.config.traceLevel !== TraceLevel.Silent) {
+                            const actions: MessageItem[] = [
+                                { title: 'Open Output Channel' }
+                            ];
+
+                            const result = await window.showErrorMessage(`${options.showErrorMessage} \u00a0\u2014\u00a0 ${ex.toString()}`, ...actions);
+                            if (result === actions[0]) {
+                                Logger.showOutputChannel();
+                            }
+                        }
+                        else {
+                            window.showErrorMessage(`${options.showErrorMessage} \u00a0\u2014\u00a0 ${ex.toString()}`);
+                        }
                     }
                 }
             };

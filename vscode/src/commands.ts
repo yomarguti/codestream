@@ -1,7 +1,7 @@
 import { commands, Disposable, MessageItem, Range, TextDocument, Uri, window } from 'vscode';
 import { Post, Stream, StreamThread, StreamType } from './api/session';
 import { openEditor } from './common';
-import { TraceLevel } from './config';
+import { TraceLevel } from './configuration';
 import { Container } from './container';
 import { ExtensionId } from './extension';
 import { Logger } from './logger';
@@ -366,7 +366,19 @@ function command(command: string, options: CommandOptions = {}): Function {
                     Logger.error(ex);
 
                     if (options.showErrorMessage) {
-                        window.showErrorMessage(`${options.showErrorMessage} \u00a0\u2014\u00a0 ${ex.toString()}`);
+                        if (Container.config.traceLevel !== TraceLevel.Silent) {
+                            const actions: MessageItem[] = [
+                                { title: 'Open Output Channel' }
+                            ];
+
+                            const result = await window.showErrorMessage(`${options.showErrorMessage} \u00a0\u2014\u00a0 ${ex.toString()}`, ...actions);
+                            if (result === actions[0]) {
+                                Logger.showOutputChannel();
+                            }
+                        }
+                        else {
+                            window.showErrorMessage(`${options.showErrorMessage} \u00a0\u2014\u00a0 ${ex.toString()}`);
+                        }
                     }
                 }
             };

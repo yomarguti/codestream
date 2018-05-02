@@ -45,7 +45,7 @@
                 },
                 "codestream.traceLevel": {
                     "type": "string",
-                    "default": "silent",
+                    "default": "debug",
                     "enum": [
                         "silent",
                         "errors",

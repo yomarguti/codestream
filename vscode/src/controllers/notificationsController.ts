@@ -1,7 +1,7 @@
 'use strict';
 import { Disposable, Event, EventEmitter, MessageItem, window } from 'vscode';
 import { Post, PostsReceivedEvent, StreamType } from '../api/session';
-import { Notifications } from '../config';
+import { Notifications } from '../configuration';
 import { Container } from '../container';
 import { Arrays, Functions } from '../system';
 
