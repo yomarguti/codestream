@@ -7,6 +7,7 @@ import {
     CreateRepoRequest, CreateRepoResponse,
     CreateStreamRequest, CreateStreamResponse,
     CSStream,
+    DeletePostResponse,
     FindRepoResponse,
     GetMarkerLocationsResponse, GetMarkerResponse, GetMarkersResponse,
     GetPostResponse, GetPostsResponse,
@@ -83,6 +84,10 @@ export class CodeStreamApi {
 
     createStream(token: string, request: CreateStreamRequest): Promise<CreateStreamResponse> {
         return this.post<CreateStreamRequest, CreateStreamResponse>(`/streams`, request, token);
+    }
+
+    deletePost(token: string, teamId: string, postId: string) {
+        return this.delete<DeletePostResponse>(`/posts/${postId}`, token);
     }
 
     deleteStream(token: string, teamId: string, streamId: string) {

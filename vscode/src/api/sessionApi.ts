@@ -111,6 +111,10 @@ export class CodeStreamSessionApi {
         })).stream as CSFileStream;
     }
 
+    async deletePost(postId: string, teamId?: string) {
+        return (await this._api.deletePost(this.token, teamId || this.teamId, postId)).post;
+    }
+
     private async findOrRegisterRepo(repo: GitRepository, registeredRepos: CSRepository[]) {
         const [firsts, remote] = await Promise.all([
             repo.getFirstCommits(),

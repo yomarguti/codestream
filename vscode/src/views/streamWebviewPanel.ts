@@ -137,7 +137,13 @@ export class StreamWebviewPanel extends Disposable {
                     case 'post-clicked':
                         if (body.payload.codeBlocks === undefined) return;
 
-                        Container.commands.openPostWorkingFile(new Post(this.session, body.payload, this._streamThread.stream));
+                        await Container.commands.openPostWorkingFile(new Post(this.session, body.payload, this._streamThread.stream));
+                        return;
+
+                    case 'post-deleted':
+                        if (body.payload === undefined) return;
+
+                        await Container.session.api.deletePost(body.payload.id);
                         return;
 
                     case 'thread-selected':

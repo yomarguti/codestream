@@ -29,6 +29,10 @@ export class Post extends CodeStreamItem<CSPost> {
         return this.entity.createdAt;
     }
 
+    get deleted() {
+        return this.entity.deactivated;
+    }
+
     get hasCode() {
         return this.entity.codeBlocks !== undefined && this.entity.codeBlocks.length !== 0;
     }

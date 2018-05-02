@@ -26,7 +26,7 @@ export class LinkActionsController extends Disposable {
         const currentUserId = Container.session.user.id;
 
         for (const post of e.items()) {
-            if (post.senderId === currentUserId) continue;
+            if (post.deleted || post.senderId === currentUserId) continue;
 
             const match = codestreamRegex.exec(post.text);
             if (match == null) continue;

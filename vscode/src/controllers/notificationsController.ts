@@ -43,7 +43,7 @@ export class NotificationsController extends Disposable {
         let count = 0;
         if (Container.config.notifications !== Notifications.None) {
             for (const post of e.items()) {
-                if (post.senderId === currentUserId) continue;
+                if (post.deleted || post.senderId === currentUserId) continue;
 
                 const isPostStreamVisible = streamVisible && !(activeStream === undefined || activeStream.stream.id !== post.streamId);
                 if (!isPostStreamVisible) {
@@ -69,7 +69,7 @@ export class NotificationsController extends Disposable {
             }
         }
         else {
-            count = Arrays.count(e.items(), p => p.senderId !== currentUserId && (!streamVisible || activeStream === undefined || activeStream.stream.id !== p.streamId));
+            count = Arrays.count(e.items(), p => !p.deleted && p.senderId !== currentUserId && (!streamVisible || activeStream === undefined || activeStream.stream.id !== p.streamId));
         }
 
         if (count === 0) return;

@@ -179,6 +179,10 @@ export interface CreateStreamResponse {
     stream: CSStream;
 }
 
+export interface DeletePostResponse {
+    post: CSPost;
+}
+
 export interface FindRepoResponse {
     repo?: CSRepository;
     usernames?: string[];
