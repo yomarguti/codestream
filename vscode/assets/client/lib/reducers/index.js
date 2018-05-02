@@ -33,13 +33,15 @@ const bootstrapped = (state = false, { type }) => {
 
 const ipcInteractions = (state = {}, { type, payload }) => {
 	switch (type) {
-		case "SELECTED_MARKER": return {
-			...state,
-			selectedMarker: payload
-		}
-		default: return state;
+		case "SELECTED_POST":
+			return {
+				...state,
+				selectedPostId: payload
+			};
+		default:
+			return state;
 	}
-}
+};
 
 const appReducer = combineReducers({
 	bootstrapped,

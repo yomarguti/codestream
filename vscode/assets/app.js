@@ -50286,25 +50286,24 @@
 								// }
 								// if (!streamId) dispatch(saveStream(normalize(data.stream)));
 								dispatch(resolvePendingPost(pendingId, normalize(createdPost)));
-								dispatch({ type: 'CLEAR_SELECTED_CODE' });
 								// TODO: analytics dispatch({ type: "POST_CREATED", meta: { post: data.post, ...extra } });
-								_context6.next = 17;
+								_context6.next = 16;
 								break;
 
-							case 13:
-								_context6.prev = 13;
+							case 12:
+								_context6.prev = 12;
 								_context6.t0 = _context6["catch"](5);
 
 								debugger;
 								// TODO: different types of errors?
 								dispatch(rejectPendingPost(pendingId, _extends$5({}, post, { error: true })));
 
-							case 17:
+							case 16:
 							case "end":
 								return _context6.stop();
 						}
 					}
-				}, _callee6, _this$2, [[5, 13]]);
+				}, _callee6, _this$2, [[5, 12]]);
 			}));
 
 			return function (_x12, _x13, _x14) {
@@ -51637,7 +51636,7 @@
 										null,
 										react.createElement(FormattedMessage, {
 											id: "stream.intro.comment",
-											defaultMessage: 'Comment on a specific block of code by selecting it and then clicking the "+" button.'
+											defaultMessage: "Comment on a specific block of code by selecting it, clicking the light bulb button, and select 'Add CodeStream Comment'."
 										})
 									),
 									react.createElement(
@@ -51892,6 +51891,8 @@
 					_this.focusInput();
 
 					var newState = {
+						selectedCode: null,
+						newPostText: ""
 						// 	quoteText: "",
 						// 	preContext: "",
 						// 	postContext: "",
@@ -51905,7 +51906,6 @@
 					}
 
 					_this.setState(newState);
-					_this.props.clearSelectedCode();
 				}
 			});
 			Object.defineProperty(_this, "handleClickAddComment", {
@@ -52130,6 +52130,8 @@
 		createClass$1(SimpleStream, [{
 			key: "componentDidMount",
 			value: function componentDidMount() {
+				var _this3 = this;
+
 				this.setupCommands();
 				// TODO: scroll to bottom
 				this._postslist.scrollTop = 100000;
@@ -52151,20 +52153,22 @@
 					document.execCommand("insertHTML", false, text);
 				});
 				// this.installEditorHandlers();
+				window.addEventListener("message", function (event) {
+					var _event$data = event.data,
+					    type = _event$data.type,
+					    body = _event$data.body;
+
+					if (type === "interaction") {
+						_this3.setState(function (state) {
+							var next = { selectedCode: body.payload };
+							if (body.payload.mentions !== "") {
+								next.newPostText = body.payload.mentions + ": " + state.newPostText;
+							}
+							return next;
+						});
+					}
+				}, false);
 			}
-
-			// static getDerivedStateFromProps(nextProps, prevState) {
-			// 	const {posts, selectedMarker} = nextProps;
-			// 	const selectedMarkerPostId = selectedMarker && selectedMarker.postId
-			// 	let selectedMarkerPost;
-			// 	if (selectedMarkerPostId)
-			// 		selectedMarkerPost = posts.find(post => post.id === selectedMarkerPostId);
-			// 	return {
-			// 		threadId: selectedMarkerPost && (selectedMarkerPost.parentPostId || selectedMarkerPostId),
-			// 		threadActive: Boolean(selectedMarker)
-			// 	}
-			// }
-
 		}, {
 			key: "componentWillUnmount",
 			value: function componentWillUnmount() {
@@ -52246,7 +52250,7 @@
 		}, {
 			key: "setupCommands",
 			value: function setupCommands() {
-				var _this3 = this;
+				var _this4 = this;
 
 				var platform = this.context.platform;
 
@@ -52260,39 +52264,39 @@
 					}
 				}), platform.addCommands(".codestream .compose.mentions-on", {
 					"codestream:at-mention-move-up": function codestreamAtMentionMoveUp(event) {
-						return _this3.handleAtMentionKeyPress(event, "up");
+						return _this4.handleAtMentionKeyPress(event, "up");
 					},
 					"codestream:at-mention-move-down": function codestreamAtMentionMoveDown(event) {
-						return _this3.handleAtMentionKeyPress(event, "down");
+						return _this4.handleAtMentionKeyPress(event, "down");
 					},
 					"codestream:at-mention-tab": function codestreamAtMentionTab(event) {
-						return _this3.handleAtMentionKeyPress(event, "tab");
+						return _this4.handleAtMentionKeyPress(event, "tab");
 					},
 					"codestream:at-mention-escape": function codestreamAtMentionEscape(event) {
-						return _this3.handleAtMentionKeyPress(event, "escape");
+						return _this4.handleAtMentionKeyPress(event, "escape");
 					}
 				}), platform.addCommands("atom-workspace", {
 					"codestream:escape": function codestreamEscape(event) {
-						return _this3.handleEscape(event);
+						return _this4.handleEscape(event);
 					},
 					"codestream:copy": function codestreamCopy(event) {
-						return _this3.copy(event);
+						return _this4.copy(event);
 					},
 					"codestream:comment": function codestreamComment(event) {
-						return _this3.handleClickAddComment();
+						return _this4.handleClickAddComment();
 					},
 					"codestream:focus-input": function codestreamFocusInput(event) {
-						return _this3.toggleFocusInput();
+						return _this4.toggleFocusInput();
 					}
 				}), platform.addCommands(".codestream .post.mine", {
 					"codestream:edit-headshot": function codestreamEditHeadshot(event) {
-						return _this3.handleEditHeadshot(event);
+						return _this4.handleEditHeadshot(event);
 					},
 					"codestream:edit-post": function codestreamEditPost(event) {
-						return _this3.handleEditPost(event);
+						return _this4.handleEditPost(event);
 					},
 					"codestream:delete-post": function codestreamDeletePost(event) {
-						return _this3.handleDeletePost(event);
+						return _this4.handleDeletePost(event);
 					}
 				}));
 			}
@@ -52342,7 +52346,7 @@
 		}, {
 			key: "installEditorHandlers",
 			value: function installEditorHandlers() {
-				var _this4 = this;
+				var _this5 = this;
 
 				if (this.context.platform.isAtom) {
 					var editor = atom.workspace.getActiveTextEditor();
@@ -52354,15 +52358,15 @@
 						var scrollViewDiv = editor.component.element.querySelector(".scroll-view");
 						if (scrollViewDiv) {
 							editor.resizeHandler = new ResizeObserver(function () {
-								_this4.handleResizeWindow(scrollViewDiv);
+								_this5.handleResizeWindow(scrollViewDiv);
 							}).observe(scrollViewDiv);
 						}
 
 						this.subscriptions.add(editor.onDidStopChanging(function () {
-							_this4.checkModifiedTyping(editor);
+							_this5.checkModifiedTyping(editor);
 						}), editor.onDidSave(function () {
-							_this4.checkModifiedTyping(editor);
-							_this4.checkModifiedGit(editor);
+							_this5.checkModifiedTyping(editor);
+							_this5.checkModifiedGit(editor);
 						}));
 						this.checkModifiedTyping(editor);
 						this.checkModifiedGit(editor);
@@ -52433,7 +52437,7 @@
 		}, {
 			key: "renderThreadPosts",
 			value: function renderThreadPosts(threadId) {
-				var _this5 = this;
+				var _this6 = this;
 
 				var lastTimestamp = 0;
 
@@ -52451,11 +52455,11 @@
 						react.createElement(DateSeparator, { timestamp1: lastTimestamp, timestamp2: post.createdAt }),
 						react.createElement(Post$1, {
 							post: post,
-							usernames: _this5.props.usernamesRegexp,
-							currentUsername: _this5.props.currentUser.username,
+							usernames: _this6.props.usernamesRegexp,
+							currentUsername: _this6.props.currentUser.username,
 							showDetails: false,
-							currentCommit: _this5.props.currentCommit,
-							editing: post.id === _this5.state.editingPostId
+							currentCommit: _this6.props.currentCommit,
+							editing: post.id === _this6.state.editingPostId
 						})
 					);
 					lastTimestamp = post.createdAt;
@@ -52470,7 +52474,7 @@
 		}, {
 			key: "render",
 			value: function render() {
-				var _this6 = this;
+				var _this7 = this;
 
 				var posts$$1 = this.props.posts;
 
@@ -52497,19 +52501,13 @@
 				// strip out the at-mention markup, and add it back.
 				// newPostText = newPostText.replace(/(@\w+)/g, '<span class="at-mention">$1</span> ');
 
-				var selectedCode = this.props.selectedCode;
-
-				if (selectedCode && selectedCode.mentions !== "") {
-					newPostText = selectedCode.mentions + ": " + newPostText;
-				}
-
-				var quoteInfo = this.props.selectedCode ? react.createElement(
+				var quoteInfo = this.state.selectedCode ? react.createElement(
 					"div",
 					{ className: "code" },
-					this.props.selectedCode.content
+					this.state.selectedCode.content
 				) : "";
 				// FIXME loc
-				var range = Range(this.props.selectedCode && this.props.selectedCode.range);
+				var range = Range(this.state.selectedCode && this.state.selectedCode.range);
 				var rangeText = null;
 				if (range) {
 					if (range.start.row == range.end.row) {
@@ -52549,21 +52547,21 @@
 				return react.createElement(
 					"div",
 					{ className: streamClass, ref: function ref(_ref9) {
-							return _this6._div = _ref9;
+							return _this7._div = _ref9;
 						} },
 					react.createElement(
 						"div",
 						{
 							className: postsListClass,
 							ref: function ref(_ref5) {
-								return _this6._postslist = _ref5;
+								return _this7._postslist = _ref5;
 							},
 							onClick: this.handleClickPost
 						},
 						react.createElement(
 							"div",
 							{ className: "intro", ref: function ref(_ref4) {
-									return _this6._intro = _ref4;
+									return _this7._intro = _ref4;
 								} },
 							this.renderIntro()
 						),
@@ -52581,11 +52579,11 @@
 								react.createElement(DateSeparator, { timestamp1: lastTimestamp, timestamp2: post.createdAt }),
 								react.createElement(Post$1, {
 									post: post,
-									usernames: _this6.props.usernamesRegexp,
-									currentUsername: _this6.props.currentUser.username,
+									usernames: _this7.props.usernamesRegexp,
+									currentUsername: _this7.props.currentUser.username,
 									replyingTo: parentPost,
-									newMessageIndicator: post.seqNum && post.seqNum === Number(_this6.postWithNewMessageIndicator),
-									editing: post.id === _this6.state.editingPostId
+									newMessageIndicator: post.seqNum && post.seqNum === Number(_this7.postWithNewMessageIndicator),
+									editing: post.id === _this7.state.editingPostId
 								})
 							);
 							lastTimestamp = post.createdAt;
@@ -52597,7 +52595,7 @@
 						{
 							className: threadPostsListClass,
 							ref: function ref(_ref6) {
-								return _this6._threadpostslist = _ref6;
+								return _this7._threadpostslist = _ref6;
 							},
 							onClick: this.handleClickPost
 						},
@@ -52628,7 +52626,7 @@
 							className: composeClass,
 							onKeyPress: this.handleOnKeyPress,
 							ref: function ref(_ref8) {
-								return _this6._compose = _ref8;
+								return _this7._compose = _ref8;
 							}
 						},
 						hasNewMessagesBelowFold && react.createElement(
@@ -52648,7 +52646,7 @@
 							html: newPostText,
 							placeholder: placeholderText,
 							ref: function ref(_ref7) {
-								return _this6._contentEditable = _ref7;
+								return _this7._contentEditable = _ref7;
 							}
 						})
 					)
@@ -52706,7 +52704,7 @@
 			// figure out who to at-mention based on the git blame data.
 			// insert the text into the compose field
 			value: function addBlameAtMention(selectionRange, gitData) {
-				var _this7 = this;
+				var _this8 = this;
 
 				var postText = this.state.newPostText || "";
 				var authors = {};
@@ -52717,17 +52715,17 @@
 							var authorEmail = lineData["email"];
 							if (authorEmail && authorEmail !== "not.committed.yet") {
 								// find the author -- FIXME this feels fragile
-								Object.entries(_this7.props.users).forEach(function (_ref10) {
+								Object.entries(_this8.props.users).forEach(function (_ref10) {
 									var _ref11 = slicedToArray(_ref10, 2),
 									    userId = _ref11[0],
 									    user = _ref11[1];
 
 									if (user.email === authorEmail) {
-										if (userId !== _this7.props.currentUser.id) {
+										if (userId !== _this8.props.currentUser.id) {
 											// skip if the input field already contains this user
 											if (postText.match("@" + user.username + "\\b")) return;
 											authors["@" + user.username] = true;
-											_this7.setState(function (state) {
+											_this8.setState(function (state) {
 												return {
 													autoMentioning: [].concat(toConsumableArray$1(state.autoMentioning), ["@" + user.username])
 												};
@@ -52773,13 +52771,13 @@
 		}, {
 			key: "showAtMentionSelectors",
 			value: function showAtMentionSelectors(prefix) {
-				var _this8 = this;
+				var _this9 = this;
 
 				var peopleToShow = [];
 
 				Object.keys(this.props.users).forEach(function (personId) {
-					if (personId === _this8.props.currentUser.id) return;
-					var person = _this8.props.users[personId];
+					if (personId === _this9.props.currentUser.id) return;
+					var person = _this9.props.users[personId];
 					var toMatch = person.firstName + " " + person.lastName + "*" + person.username; // + "*" + person.email;
 					var lowered = toMatch.toLowerCase();
 					if (lowered.indexOf(prefix) !== -1) {
@@ -52894,12 +52892,12 @@
 				var _state = this.state,
 				    preContext = _state.preContext,
 				    postContext = _state.postContext,
+				    selectedCode = _state.selectedCode,
 				    _state$threadActive = _state.threadActive,
 				    threadActive = _state$threadActive === undefined ? undefined : _state$threadActive;
 				var _props2 = this.props,
 				    id = _props2.id,
-				    createPost$$1 = _props2.createPost,
-				    selectedCode = _props2.selectedCode;
+				    createPost$$1 = _props2.createPost;
 
 
 				var threadId = threadActive ? this.state.threadId : null;
@@ -52946,6 +52944,7 @@
 						quoteText: "",
 						preContext: "",
 						postContext: "",
+						selectedCode: null,
 						autoMentioning: []
 					});
 					this.savedComposeState[this.id] = {};
@@ -53090,7 +53089,6 @@
 			editingUsers: stream.editingUsers,
 			usernamesRegexp: usernamesRegexp,
 			currentUser: users[session.userId],
-			selectedCode: context.selectedCode,
 			threadId: selectedPost && (selectedPost.parentPostId || selectedPost.id),
 			posts: postsForStream
 		};
@@ -53101,10 +53099,7 @@
 		fetchPosts: fetchPosts,
 		createPost: createPost,
 		editPost: editPost,
-		deletePost: deletePost,
-		clearSelectedCode: function clearSelectedCode() {
-			return { type: "CLEAR_SELECTED_CODE" };
-		}
+		deletePost: deletePost
 		// goToInvitePage: routingActions.goToInvitePage
 	}))(withRepositories(withConfigs(SimpleStream)));
 
@@ -53651,8 +53646,6 @@
 		if (type === "NO_GIT_IN_PATH") return _extends$5({}, state, { noAccess: { noGit: true } });
 		if (type === "SHOW_SLACK_INFO") return _extends$5({}, state, { showSlackInfo: true });
 		if (type === "CANCEL_SLACK_INFO") return _extends$5({}, state, { showSlackInfo: false });
-		if (type === "SELECTED_CODE") return _extends$5({}, state, { selectedCode: payload });
-		if (type === "CLEAR_SELECTED_CODE") return _extends$5({}, state, { selectedCode: null });
 		return state;
 	});
 
@@ -54017,9 +54010,9 @@
 		    payload = _ref4.payload;
 
 		switch (type) {
-			case "SELECTED_MARKER":
+			case "SELECTED_POST":
 				return _extends$5({}, state, {
-					selectedMarker: payload
+					selectedPostId: payload
 				});
 			default:
 				return state;

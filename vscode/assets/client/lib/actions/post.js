@@ -166,7 +166,7 @@ export const createPost = (
 	commitHash,
 	extra
 ) => async (dispatch, getState, { api }) => {
-	const {context, session} = getState();
+	const { context, session } = getState();
 	const pendingId = createTempId();
 
 	// const gitRepo = await openRepo(repoAttributes.workingDirectory);
@@ -213,14 +213,14 @@ export const createPost = (
 	};
 
 	// if (streamId) {
-		post.streamId = streamId;
+	post.streamId = streamId;
 	// } else
-		// post.stream = {
-		// 	teamid: context.currentteamid,
-		// 	type: "file",
-		// 	file: filepath,
-		// 	repoid: context.currentrepoid
-		// };
+	// post.stream = {
+	// 	teamid: context.currentteamid,
+	// 	type: "file",
+	// 	file: filepath,
+	// 	repoid: context.currentrepoid
+	// };
 
 	dispatch(savePendingPost({ ...post }));
 
@@ -238,10 +238,9 @@ export const createPost = (
 		// }
 		// if (!streamId) dispatch(saveStream(normalize(data.stream)));
 		dispatch(resolvePendingPost(pendingId, normalize(createdPost)));
-		dispatch({type: 'CLEAR_SELECTED_CODE'})
 		// TODO: analytics dispatch({ type: "POST_CREATED", meta: { post: data.post, ...extra } });
 	} catch (error) {
-		debugger
+		debugger;
 		// TODO: different types of errors?
 		dispatch(rejectPendingPost(pendingId, { ...post, error: true }));
 	}

@@ -136,19 +136,23 @@ export class SimpleStream extends Component {
 			document.execCommand("insertHTML", false, text);
 		});
 		// this.installEditorHandlers();
+		window.addEventListener(
+			"message",
+			event => {
+				const { type, body } = event.data;
+				if (type === "interaction") {
+					this.setState(state => {
+						const next = { selectedCode: body.payload };
+						if (body.payload.mentions !== "") {
+							next.newPostText = `${body.payload.mentions}: ${state.newPostText}`;
+						}
+						return next;
+					});
+				}
+			},
+			false
+		);
 	}
-
-	// static getDerivedStateFromProps(nextProps, prevState) {
-	// 	const {posts, selectedMarker} = nextProps;
-	// 	const selectedMarkerPostId = selectedMarker && selectedMarker.postId
-	// 	let selectedMarkerPost;
-	// 	if (selectedMarkerPostId)
-	// 		selectedMarkerPost = posts.find(post => post.id === selectedMarkerPostId);
-	// 	return {
-	// 		threadId: selectedMarkerPost && (selectedMarkerPost.parentPostId || selectedMarkerPostId),
-	// 		threadActive: Boolean(selectedMarker)
-	// 	}
-	// }
 
 	componentWillUnmount() {
 		if (this.context.platform.isAtom) {
@@ -525,18 +529,13 @@ export class SimpleStream extends Component {
 		// strip out the at-mention markup, and add it back.
 		// newPostText = newPostText.replace(/(@\w+)/g, '<span class="at-mention">$1</span> ');
 
-		const { selectedCode } = this.props;
-		if (selectedCode && selectedCode.mentions !== "") {
-			newPostText = `${selectedCode.mentions}: ${newPostText}`;
-		}
-
-		let quoteInfo = this.props.selectedCode ? (
-			<div className="code">{this.props.selectedCode.content}</div>
+		let quoteInfo = this.state.selectedCode ? (
+			<div className="code">{this.state.selectedCode.content}</div>
 		) : (
 			""
 		);
 		// FIXME loc
-		let range = Range(this.props.selectedCode && this.props.selectedCode.range);
+		let range = Range(this.state.selectedCode && this.state.selectedCode.range);
 		let rangeText = null;
 		if (range) {
 			if (range.start.row == range.end.row) {
@@ -887,6 +886,8 @@ export class SimpleStream extends Component {
 		this.focusInput();
 
 		let newState = {
+			selectedCode: null,
+			newPostText: ""
 			// 	quoteText: "",
 			// 	preContext: "",
 			// 	postContext: "",
@@ -902,7 +903,6 @@ export class SimpleStream extends Component {
 		}
 
 		this.setState(newState);
-		this.props.clearSelectedCode();
 	};
 
 	// figure out who to at-mention based on the git blame data.
@@ -1207,8 +1207,8 @@ export class SimpleStream extends Component {
 		newText = doc.documentElement.textContent;
 
 		const codeBlocks = [];
-		const { preContext, postContext, threadActive = undefined } = this.state;
-		const { id, createPost, selectedCode } = this.props;
+		const { preContext, postContext, selectedCode, threadActive = undefined } = this.state;
+		const { id, createPost } = this.props;
 
 		let threadId = threadActive ? this.state.threadId : null;
 
@@ -1260,6 +1260,7 @@ export class SimpleStream extends Component {
 				quoteText: "",
 				preContext: "",
 				postContext: "",
+				selectedCode: null,
 				autoMentioning: []
 			});
 			this.savedComposeState[this.id] = {};
@@ -1393,7 +1394,6 @@ const mapStateToProps = ({
 		editingUsers: stream.editingUsers,
 		usernamesRegexp: usernamesRegexp,
 		currentUser: users[session.userId],
-		selectedCode: context.selectedCode,
 		threadId: selectedPost && (selectedPost.parentPostId || selectedPost.id),
 		posts: postsForStream
 	};
@@ -1405,7 +1405,6 @@ export default connect(mapStateToProps, {
 	fetchPosts,
 	createPost,
 	editPost,
-	deletePost,
-	clearSelectedCode: () => ({ type: "CLEAR_SELECTED_CODE" })
+	deletePost
 	// goToInvitePage: routingActions.goToInvitePage
 })(withRepositories(withConfigs(SimpleStream)));

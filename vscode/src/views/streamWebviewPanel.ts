@@ -211,7 +211,7 @@ export class StreamWebviewPanel extends Disposable {
         const normalize = (r: Range) => [[r.start.line, r.start.character], [r.end.line, r.end.character]];
 
         return this.postMessage({
-            type: 'ui-data',
+            type: 'interaction',
             body: {
                 type: 'SELECTED_CODE',
                 payload: {
