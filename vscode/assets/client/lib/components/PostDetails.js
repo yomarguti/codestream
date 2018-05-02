@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import createClassString from "classnames";
 import Button from "./onboarding/Button";
 import { locationToRange } from "../util/Marker";
+import { vscode } from "../codestream-api-vs-webview";
 
 export default class PostDetails extends Component {
 	constructor(props) {
@@ -75,7 +76,12 @@ export default class PostDetails extends Component {
 							tabIndex="2"
 							type="submit"
 							// loading={this.props.loading}
-							// onClick={this.handleClickShowDiff}
+							onClick={e =>
+								vscode.postMessage({
+									type: "event",
+									body: { name: "post-diff-clicked", payload: post }
+								})
+							}
 						>
 							{showDiffLabel}
 						</Button>
