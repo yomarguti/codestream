@@ -1,7 +1,7 @@
 'use strict';
 import { Disposable, Event, EventEmitter, Range, ViewColumn, WebviewPanel, WebviewPanelOnDidChangeViewStateEvent, window } from 'vscode';
 import { CSPost, CSRepository, CSStream, CSTeam, CSUser } from '../api/api';
-import { CodeStreamSession, Post, PostsReceivedEvent, SessionChangedEvent, SessionChangedType, StreamThread } from '../api/session';
+import { CodeStreamSession, Post, PostsReceivedEvent, SessionChangedEvent, SessionChangedType, StreamThread, StreamType } from '../api/session';
 import { Container } from '../container';
 import { Logger } from '../logger';
 import * as fs from 'fs';
@@ -13,6 +13,8 @@ interface BootstrapState {
     currentStreamId: string;
     // currentFileId?: string;
     // currentCommit?: string;
+    currentStreamLabel: string;
+    currentStreamServiceType: 'liveshare';
     selectedPostId?: string;
     posts: CSPost[];
     streams: CSStream[];
@@ -267,6 +269,12 @@ export class StreamWebviewPanel extends Disposable {
         state.currentTeamId = streamThread.stream.teamId;
         state.currentUserId = this.session.userId;
         state.currentStreamId = streamThread.stream.id;
+        if (streamThread.stream.type === StreamType.Channel) {
+            if (streamThread.stream.isLiveShareChannel) {
+                state.currentStreamLabel = await streamThread.stream.label();
+                state.currentStreamServiceType = 'liveshare';
+            }
+        }
         state.selectedPostId = streamThread.id;
         state.streams = [streamThread.stream.entity];
 
