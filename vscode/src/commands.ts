@@ -325,6 +325,14 @@ export class Commands extends Disposable {
     }
 
     private async signInCore(email: string | undefined, password: string | undefined, teamId?: string) {
+        if (password) {
+            try {
+                password = Crypto.decrypt(password, 'aes-256-ctr', encryptionKey);
+            } catch {
+                password = undefined;
+            }
+        }
+
         if (!email || !password) {
             if (!email) {
                 password = undefined;
@@ -348,9 +356,6 @@ export class Commands extends Disposable {
 
                 await configuration.update(configuration.name('password').value, Crypto.encrypt(password, 'aes-256-ctr', encryptionKey), ConfigurationTarget.Global);
             }
-        }
-        else {
-            password = Crypto.decrypt(password, 'aes-256-ctr', encryptionKey);
         }
 
         try {
