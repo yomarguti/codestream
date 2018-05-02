@@ -153,7 +153,12 @@ export class CodeStreamBot extends Disposable {
             if (match != null) {
                 const [, start, end, filename] = match;
 
-                const doc = await workspace.openTextDocument(Uri.parse(path.join(workspace.workspaceFolders![0].uri.fsPath, filename)));
+                let doc;
+                try {
+                    doc = await workspace.openTextDocument(Uri.file(path.join(workspace.workspaceFolders![0].uri.fsPath, filename)));
+                }
+                catch { }
+
                 if (doc !== undefined) {
                     const range = new Range(parseInt(start, 10), 0, parseInt(end, 10), Number.MAX_VALUE);
 
