@@ -141,17 +141,18 @@ export class SimpleStream extends Component {
 			event => {
 				const { type, body } = event.data;
 				if (type === "interaction") {
-					this.setState(state => {
-						const next = { selectedCode: body.payload };
-						if (body.payload.mentions !== "") {
-							// next.newPostText = `${body.payload.mentions}: ${state.newPostText}`;
-							let newText = `${body.payload.mentions}:\u00A0`;
-							this.insertedAuthors = newText;
-							this.insertTextAtCursor(newText);
+					this.setState(
+						state => {
+							const next = { selectedCode: body.payload };
+							if (body.payload.mentions !== "") {
+								next.newPostText = `${body.payload.mentions}:\u00A0${state.newPostText}`;
+							}
+							return next;
+						},
+						() => {
 							this.focusInput();
 						}
-						return next;
-					});
+					);
 				}
 			},
 			false
@@ -428,7 +429,7 @@ export class SimpleStream extends Component {
 							<li>
 								<FormattedMessage
 									id="stream.intro.eachFile"
-									defaultMessage="Pick a source file, post a message, and any of your teammates can join the discussion."
+									defaultMessage="Post a message and any of your teammates can join the discussion."
 								/>
 							</li>
 							<li>
@@ -878,7 +879,15 @@ export class SimpleStream extends Component {
 
 	focusInput = () => {
 		const input = document.getElementById("input-div");
-		if (input) input.focus();
+		if (input) {
+			const range = document.createRange();
+			const sel = window.getSelection();
+			range.setStart(input.childNodes[0], input.childNodes[0].length);
+			range.collapse(true);
+			sel.removeAllRanges();
+			sel.addRange(range);
+			input.focus();
+		}
 	};
 
 	handleClickScrollToNewMessages = () => {

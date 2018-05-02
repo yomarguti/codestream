@@ -51628,7 +51628,7 @@
 										null,
 										react.createElement(FormattedMessage, {
 											id: "stream.intro.eachFile",
-											defaultMessage: "Pick a source file, post a message, and any of your teammates can join the discussion."
+											defaultMessage: "Post a message and any of your teammates can join the discussion."
 										})
 									),
 									react.createElement(
@@ -51873,7 +51873,15 @@
 				writable: true,
 				value: function value() {
 					var input = document.getElementById("input-div");
-					if (input) input.focus();
+					if (input) {
+						var range = document.createRange();
+						var sel = window.getSelection();
+						range.setStart(input.childNodes[0], input.childNodes[0].length);
+						range.collapse(true);
+						sel.removeAllRanges();
+						sel.addRange(range);
+						input.focus();
+					}
 				}
 			});
 			Object.defineProperty(_this, "handleClickScrollToNewMessages", {
@@ -52162,13 +52170,11 @@
 						_this3.setState(function (state) {
 							var next = { selectedCode: body.payload };
 							if (body.payload.mentions !== "") {
-								// next.newPostText = `${body.payload.mentions}: ${state.newPostText}`;
-								var newText = body.payload.mentions + ":\xA0";
-								_this3.insertedAuthors = newText;
-								_this3.insertTextAtCursor(newText);
-								_this3.focusInput();
+								next.newPostText = body.payload.mentions + ":\xA0" + state.newPostText;
 							}
 							return next;
+						}, function () {
+							_this3.focusInput();
 						});
 					}
 				}, false);
