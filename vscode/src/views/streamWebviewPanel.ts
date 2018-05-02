@@ -1,8 +1,7 @@
 'use strict';
 import { Disposable, Event, EventEmitter, Range, ViewColumn, WebviewPanel, WebviewPanelOnDidChangeViewStateEvent, window } from 'vscode';
 import { CSPost, CSRepository, CSStream, CSTeam, CSUser } from '../api/api';
-import { CodeStreamSession, Post, PostsReceivedEvent, SessionChangedEvent, SessionChangedType, Stream, StreamThread } from '../api/session';
-import { isStreamThread } from '../commands';
+import { CodeStreamSession, Post, PostsReceivedEvent, SessionChangedEvent, SessionChangedType, StreamThread } from '../api/session';
 import { Container } from '../container';
 import { Logger } from '../logger';
 import * as fs from 'fs';
@@ -84,7 +83,7 @@ export class StreamWebviewPanel extends Disposable {
         // HACK: Because messages aren't sent to the webview when hidden, we need to reset the whole view if we are invalid
         if (this._invalidateOnVisible && this.streamThread !== undefined && e.webviewPanel.visible) {
             this._invalidateOnVisible = false;
-            this.setStream(this.streamThread, true);
+            this.setStream(this.streamThread);
         }
     }
 
@@ -196,18 +195,6 @@ export class StreamWebviewPanel extends Disposable {
         this._panel.dispose();
     }
 
-    is(stream: Stream): boolean;
-    is(streamThread: StreamThread): boolean;
-    is(streamOrThread: Stream | StreamThread) {
-        if (this._streamThread === undefined) return false;
-
-        if (isStreamThread(streamOrThread)) {
-            return this._streamThread.stream.id === streamOrThread.stream.id && this._streamThread.id === streamOrThread.id;
-        }
-
-        return this._streamThread.stream.id === streamOrThread.id;
-    }
-
     post(text: string) {
         return this.postMessage({
             type: 'ui-data',
@@ -240,14 +227,26 @@ export class StreamWebviewPanel extends Disposable {
         });
     }
 
-    async setStream(streamThread: StreamThread, force: boolean = false): Promise<StreamThread> {
-        if (!force && this._streamThread && this._streamThread.id === streamThread.id &&
-            this._streamThread.stream.id === streamThread.stream.id) {
-            this.show();
+    show(streamThread?: StreamThread) {
+        if (streamThread === undefined ||
+            (this._streamThread && this._streamThread.id === streamThread.id &&
+            this._streamThread.stream.id === streamThread.stream.id)) {
+            this._panel.reveal(undefined, false);
 
             return this._streamThread;
         }
 
+        return this.setStream(streamThread);
+    }
+
+    private async postMessage(request: CSWebviewRequest) {
+        const success = await this._panel.webview.postMessage(request);
+        if (!success) {
+            this._invalidateOnVisible = true;
+        }
+    }
+
+    private async setStream(streamThread: StreamThread): Promise<StreamThread> {
         const label = await streamThread.stream.label();
         this._panel.title = `${label} \u00a0\u2022\u00a0 CodeStream`;
         this._streamThread = streamThread;
@@ -279,19 +278,8 @@ export class StreamWebviewPanel extends Disposable {
             .replace('{% styles-path %}', stylesPath);
         this._panel.webview.html = html;
 
-        this.show();
+        this._panel.reveal(ViewColumn.Three, false);
 
         return this._streamThread;
-    }
-
-    show() {
-        this._panel.reveal(undefined, false);
-    }
-
-    private async postMessage(request: CSWebviewRequest) {
-        const success = await this._panel.webview.postMessage(request);
-        if (!success) {
-            this._invalidateOnVisible = true;
-        }
     }
 }

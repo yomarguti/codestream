@@ -31,7 +31,7 @@ type StreamLocator =
     { type: StreamType.File, uri: Uri, create?: boolean };
 
 interface StreamThreadId {
-    id: string;
+    id: string | undefined;
     streamId: string;
 }
 
@@ -146,7 +146,7 @@ export class Commands extends Disposable {
         const streamThread = await this.findStreamThread(args, { includeActive: true, includeDefault: true });
         if (streamThread === undefined) return undefined;
 
-        return Container.streamView.openStreamThread(streamThread);
+        return Container.streamView.show(streamThread);
     }
 
     @command('post', { showErrorMessage: 'Unable to post message' })
@@ -156,7 +156,7 @@ export class Commands extends Disposable {
 
         if (args.send && args.text) {
             if (!args.silent) {
-                await Container.streamView.openStreamThread(streamThread);
+                await this.openStream({ streamThread: streamThread });
             }
             return streamThread.stream.post(args.text, streamThread.id);
         }
@@ -166,7 +166,7 @@ export class Commands extends Disposable {
             return streamThread;
         }
 
-        return await Container.streamView.openStreamThread(streamThread);
+        return (await this.openStream({ streamThread: streamThread }))!;
     }
 
     @command('postCode', { showErrorMessage: 'Unable to add comment' })

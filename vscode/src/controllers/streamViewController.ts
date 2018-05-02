@@ -38,8 +38,25 @@ export class StreamViewController extends Disposable {
         this._panel.hide();
     }
 
-    async openStreamThread(streamThread: StreamThread): Promise<StreamThread> {
+    async post(streamThread: StreamThread, text: string) {
+        await this.show(streamThread);
+        return this._panel!.post(text);
+    }
+
+    async postCode(streamThread: StreamThread, repo: Repository, relativePath: string, code: string, range: Range, commitHash: string, text?: string, mentions: string = '') {
+        await this.show(streamThread);
+        return this._panel!.postCode(repo.id, relativePath, code, range, commitHash, text, mentions);
+    }
+
+    async show(streamThread?: StreamThread) {
+        // HACK: 💩
+        Container.notifications.clearUnreadCount();
+
         if (this._panel === undefined) {
+            if (streamThread === undefined) {
+                streamThread = this._lastStreamThread || { id: undefined, stream: await this.session.getDefaultTeamChannel() };
+            }
+
             this._panel = new StreamWebviewPanel(this.session);
 
             this._disposablePanel = Disposable.from(
@@ -48,31 +65,7 @@ export class StreamViewController extends Disposable {
             );
         }
 
-        return this._panel.setStream(streamThread);
-    }
-
-    async post(streamThread: StreamThread, text: string) {
-        await this.openStreamThread(streamThread);
-        return this._panel!.post(text);
-    }
-
-    async postCode(streamThread: StreamThread, repo: Repository, relativePath: string, code: string, range: Range, commitHash: string, text?: string, mentions: string = '') {
-        await this.openStreamThread(streamThread);
-        return this._panel!.postCode(repo.id, relativePath, code, range, commitHash, text, mentions);
-    }
-
-    async show() {
-        // HACK: 💩
-        Container.notifications.clearUnreadCount();
-
-        if (this._panel !== undefined) return this._panel.show();
-
-        let streamThread = this._lastStreamThread;
-        if (streamThread === undefined) {
-            streamThread = { id: undefined, stream: await this.session.getDefaultTeamChannel() };
-        }
-
-        return this.openStreamThread(streamThread);
+        return this._panel.show(streamThread);
     }
 
     toggle() {

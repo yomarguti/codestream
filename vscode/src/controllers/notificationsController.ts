@@ -1,5 +1,5 @@
 'use strict';
-import { Disposable, Event, EventEmitter, window } from 'vscode';
+import { Disposable, Event, EventEmitter, MessageItem, window } from 'vscode';
 import { Post, PostsReceivedEvent, StreamType } from '../api/session';
 import { Notifications } from '../config';
 import { Container } from '../container';
@@ -90,7 +90,15 @@ export class NotificationsController extends Disposable {
 
     async showNotification(post: Post) {
         const sender = await post.sender();
-        await window.showInformationMessage(`${sender !== undefined ? sender.name : 'Someone'}: ${post.text}`);
+
+        const actions: MessageItem[] = [
+            { title: 'Open' }
+        ];
+
+        const result = await window.showInformationMessage(`${sender !== undefined ? sender.name : 'Someone'}: ${post.text}`, ...actions);
+        if (result === actions[0]) {
+            Container.commands.openStream({ streamThread: { id: undefined, streamId: post.streamId } });
+        }
     }
 
     private _unreadCountChangedDebounced: ((e: UnreadCountChangedEvent) => void) | undefined;
