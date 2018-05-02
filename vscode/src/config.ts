@@ -19,14 +19,15 @@ export enum TraceLevel {
 }
 
 export interface IConfig {
-    debug: boolean;
-
     bot: {
+        email: string;
         enabled: boolean;
-        username: string;
         password: string;
         triggers: { message: string, response: BotResponse }[];
     };
+
+    debug: boolean;
+    email: string;
 
     explorers: {
         enabled: boolean;
@@ -37,5 +38,4 @@ export interface IConfig {
     serverUrl: string;
     teamId: string;
     traceLevel: TraceLevel;
-    username: string;
 }

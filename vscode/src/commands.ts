@@ -1,13 +1,16 @@
-import { commands, Disposable, MessageItem, Range, TextDocument, Uri, window } from 'vscode';
+import { commands, ConfigurationTarget, Disposable, MessageItem, Range, TextDocument, Uri, window } from 'vscode';
 import { Post, Stream, StreamThread, StreamType } from './api/session';
 import { openEditor } from './common';
-import { TraceLevel } from './configuration';
+import { configuration, TraceLevel } from './configuration';
 import { Container } from './container';
 import { ExtensionId } from './extension';
 import { Logger } from './logger';
 import { PostNode } from './views/postNode';
-import { Iterables } from './system';
+import { Crypto, Iterables } from './system';
 import * as path from 'path';
+
+// HACK: THIS IS SOOOO BAD
+const encryptionKey = '3d7e8d4f-63c9-44ee-a1e9-9530c243447e';
 
 export enum BuiltInCommands {
     CloseActiveEditor = 'workbench.action.closeActiveEditor',
@@ -82,7 +85,15 @@ export class Commands extends Disposable {
 
     @command('addChannel', { showErrorMessage: 'Unable to add channel' })
     async addChannel() {
-        const name = await window.showInputBox({ prompt: 'Enter channel name', placeHolder: 'e.g. awesome-feature' });
+        const name = await window.showInputBox({
+            prompt: 'Enter channel name',
+            placeHolder: 'e.g. awesome-feature',
+            validateInput: v => {
+                if (v.includes(' ')) return 'Channel names cannot contain spaces';
+                if (v.length > 64) return 'Channel names cannot be longer than 64 characters';
+                return undefined;
+            }
+        });
         if (name === undefined) return;
 
         const channel = await Container.session.addChannel(name);
@@ -242,7 +253,7 @@ export class Commands extends Disposable {
 
     @command('signIn', { customErrorHandling: true })
     signIn() {
-        return this.signInCore(Container.config.username, Container.config.password, Container.config.teamId);
+        return this.signInCore(Container.config.email, Container.config.password, Container.config.teamId);
     }
 
     @command('signOut')
@@ -313,9 +324,37 @@ export class Commands extends Disposable {
         return streamThread;
     }
 
-    private async signInCore(username: string, password: string, teamId?: string) {
+    private async signInCore(email: string | undefined, password: string | undefined, teamId?: string) {
+        if (!email || !password) {
+            if (!email) {
+                password = undefined;
+
+                email = await window.showInputBox({
+                    prompt: 'Enter your CodeStream email address',
+                    placeHolder: 'e.g. @company.com'
+                });
+                if (email === undefined) return;
+
+                await configuration.update(configuration.name('email').value, email, ConfigurationTarget.Global);
+            }
+
+            if (!password) {
+                password = await window.showInputBox({
+                    prompt: 'Enter your CodeStream password',
+                    placeHolder: 'shhh',
+                    password: true
+                });
+                if (password === undefined) return;
+
+                await configuration.update(configuration.name('password').value, Crypto.encrypt(password, 'aes-256-ctr', encryptionKey), ConfigurationTarget.Global);
+            }
+        }
+        else {
+            password = Crypto.decrypt(password, 'aes-256-ctr', encryptionKey);
+        }
+
         try {
-            return await Container.session.login(username, password, teamId);
+            return await Container.session.login(email, password, teamId);
         }
         catch (ex) {
             const actions: MessageItem[] = [
@@ -331,7 +370,7 @@ export class Commands extends Disposable {
             if (result === undefined) throw ex;
 
             if (result === actions[0]) {
-                setImmediate(() => this.signInCore(username, password));
+                setImmediate(() => this.signInCore(email, password));
             }
             else if (result === actions[1]) {
                 Logger.showOutputChannel();

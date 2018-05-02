@@ -83,7 +83,7 @@ export class CodeStreamSession extends Disposable {
             }
         }
 
-        if (configuration.changed(e, configuration.name('username').value) ||
+        if (configuration.changed(e, configuration.name('email').value) ||
             configuration.changed(e, configuration.name('password').value)) {
             if (this.signedIn) {
                 this.logout();

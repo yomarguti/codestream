@@ -38,7 +38,7 @@ export class CodeStreamBot extends Disposable {
 
         if (initializing ||
             configuration.changed(e, configuration.name('bot')('enabled').value) ||
-            configuration.changed(e, configuration.name('bot')('username').value) ||
+            configuration.changed(e, configuration.name('bot')('email').value) ||
             configuration.changed(e, configuration.name('bot')('password').value)) {
             this.signOut();
             if (Container.config.bot.enabled) {
@@ -48,7 +48,7 @@ export class CodeStreamBot extends Disposable {
     }
 
     async signIn() {
-        if (this._session !== undefined || !Container.config.bot.username || !Container.config.bot.password) return;
+        if (this._session !== undefined || !Container.config.bot.email || !Container.config.bot.password) return;
 
         try {
             this._session = new CodeStreamSession(Container.config.serverUrl);
@@ -58,7 +58,7 @@ export class CodeStreamBot extends Disposable {
                 this._session.onDidReceivePosts(this.onPostsReceived, this)
             );
 
-            await this._session.login(Container.config.bot.username, Container.config.bot.password, Container.config.teamId);
+            await this._session.login(Container.config.bot.email, Container.config.bot.password, Container.config.teamId);
         }
         catch (ex) {
             Logger.error(ex);

@@ -61,10 +61,10 @@
                     "description": "Specifies the url to use to connect to the CodeStream service",
                     "scope": "window"
                 },
-                "codestream.username": {
+                "codestream.email": {
                     "type": "string",
                     "default": null,
-                    "description": "Specifies the username to use to connect to the CodeStream service",
+                    "description": "Specifies the email address to use to connect to the CodeStream service",
                     "scope": "window"
                 },
                 "codestream.password": {
@@ -102,10 +102,10 @@
                     "description": "Specifies whether to enable the CodeStream demo bot",
                     "scope": "window"
                 },
-                "codestream.bot.username": {
+                "codestream.bot.email": {
                     "type": "string",
                     "default": null,
-                    "description": "Specifies the demo bot's username to use to connect to the CodeStream service",
+                    "description": "Specifies the demo bot's email address to use to connect to the CodeStream service",
                     "scope": "window"
                 },
                 "codestream.bot.password": {
