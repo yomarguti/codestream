@@ -882,7 +882,9 @@ export class SimpleStream extends Component {
 		if (input) {
 			const range = document.createRange();
 			const sel = window.getSelection();
-			range.setStart(input.childNodes[0], input.childNodes[0].length);
+			if (input.childNodes && input.childNodes.length) {
+				range.setStart(input.childNodes[0], input.childNodes[0].length);
+			}
 			range.collapse(true);
 			sel.removeAllRanges();
 			sel.addRange(range);
