@@ -427,7 +427,7 @@ export class SimpleStream extends Component {
 								<FormattedMessage
 									id="stream.intro.comment"
 									defaultMessage={
-										'Comment on a specific block of code by selecting it and then clicking the "+" button.'
+										"Comment on a specific block of code by selecting it, clicking the light bulb button, and select 'Add CodeStream Comment'."
 									}
 								/>
 							</li>
