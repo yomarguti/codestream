@@ -587,6 +587,9 @@ body.preload * {
   animation-duration: 0s !important;
   transition-duration: 0s !important;
 }
+.codestream a:focus {
+  outline: none;
+}
 .codestream .stream {
   display: flex;
   flex-direction: column;
