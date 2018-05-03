@@ -222,7 +222,7 @@ export class SimpleStream extends Component {
 	}
 
 	componentDidUpdate(prevProps, prevState) {
-		const { postStreamId, markStreamRead, markStreamModified } = this.props;
+		const { postStreamId, fileStreamId, markStreamRead, markStreamModified } = this.props;
 
 		// this._postslist.scrollTop = 100000;
 
@@ -245,8 +245,8 @@ export class SimpleStream extends Component {
 			prevState.modifiedTyping != this.state.modifiedTyping
 		) {
 			let isModified = this.state.modifiedGit || this.state.modifiedTyping;
-			// console.log("Marking this stream modified: " + id + " as " + isModified);
-			markStreamModified(postStreamId, isModified);
+			console.log("Marking this stream modified: " + fileStreamId + " as " + isModified);
+			markStreamModified(fileStreamId, isModified);
 		}
 
 		if (prevProps.hasFocus !== this.props.hasFocus) this.handleScroll();

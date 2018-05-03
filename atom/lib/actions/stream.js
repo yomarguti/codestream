@@ -78,6 +78,7 @@ export const markStreamModified = (streamId, isModified) => async (
 	// return;
 
 	// in the future, consider passing the deltas in the "editing" object
+	// also, pass what branch i'm on, and any other info like editor
 	let editing = isModified ? { commitHash: context.currentCommit } : false;
 
 	let payload = {
