@@ -219,6 +219,17 @@ export class SimpleStream extends Component {
 				this.postWithNewMessageIndicator = this.props.currentUser.lastReads[nextProps.postStreamId];
 			}
 		}
+		this.postWithNewMessageIndicator = this.props.currentUser.lastReads[nextProps.postStreamId];
+	}
+
+	checkMarkStreamRead(postStreamId) {
+		// if we have focus, and there are no unread indicators which would mean an
+		// unread is out of view, we assume the entire thread has been observed
+		// and we mark the stream read
+		if (this.props.hasFocus && !this.state.unreadsAbove && !this.state.unreadsBelow) {
+			console.log("Marking stream read for focus");
+			this.props.markStreamRead(this.props.postStreamId);
+		}
 	}
 
 	componentDidUpdate(prevProps, prevState) {
@@ -234,6 +245,11 @@ export class SimpleStream extends Component {
 
 			markStreamRead(prevProps.postStreamId);
 			this.resizeStream();
+		}
+
+		// if we just got the focus, mark the new stream read
+		if (this.props.hasFocus && !prevProps.hasFocus) {
+			this.checkMarkStreamRead();
 		}
 
 		if (prevState.threadId !== this.state.threadId) {
@@ -384,6 +400,8 @@ export class SimpleStream extends Component {
 		// offBottom is how far we've scrolled off the bottom of the posts list
 		if (offBottom < 100) this._postslist.scrollTop = 100000;
 	};
+
+	calculateScrolledOffBottom = () => {};
 
 	// return the post, if any, with the given ID
 	findPostById(id) {
@@ -737,6 +755,15 @@ export class SimpleStream extends Component {
 				that._postslist.scrollTop += padding;
 			};
 		} else element.classList.remove("mention");
+
+		// key will be "unreadsAbove" or "unreadsBelow"
+		const key = "unreads" + type.charAt(0).toUpperCase() + type.slice(1);
+		// if we are turning off the unreads indicator, check to see if
+		// we should also mark the stream read
+		if (!active && this.state[key]) {
+			this.checkMarkStreamRead();
+		}
+		this.setState({ [key]: active });
 	}
 
 	saveComposeState(nextId) {

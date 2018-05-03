@@ -8,7 +8,6 @@ import { getStreamsForRepo, getStreamForRepoAndFile } from "../reducers/streams"
 export const markStreamRead = streamId => async (dispatch, getState, { http }) => {
 	const { session, context, streams } = getState();
 	if (!streamId) return;
-	if (context.currentFile === "") return;
 
 	const markReadData = await http.put("/read/" + streamId, {}, session.accessToken);
 	dispatch({ type: "CLEAR_UMI", payload: streamId });

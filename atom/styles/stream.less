@@ -273,6 +273,7 @@
 			border-radius: 0 0 4px 4px;
 			padding: 10px;
 			border: 1px solid @base-border-color;
+			border-top: none;
 			margin: 0 0 5px 0;
 			overflow-x: auto;
 			overflow-y: auto;
@@ -624,12 +625,16 @@
 				text-align: center;
 				color: @text-color-subtle;
 				background-color: @base-border-color;
+				background: @base-background-color;
 				display: block;
 				padding: 2px 4px;
 				height: auto;
 				margin-top: 5px;
 				font-size: 10px;
 				border-radius: 5px 5px 0 0;
+				border: 1px solid @base-border-color;
+				border-bottom: none;
+				border-bottom: 1px dashed @base-border-color;
 			}
 			a {
 				text-decoration: none;
