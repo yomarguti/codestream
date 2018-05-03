@@ -6,9 +6,9 @@ import createClassString from "classnames";
 const PopupButton = ({ visible, label, command }) =>
 	visible ? (
 		<div className="popup-button">
-			<div>
-				<a href={command}>{label}</a>
-			</div>
+			<a className="menu-item" href={command}>
+				{label}
+			</a>
 		</div>
 	) : (
 		false

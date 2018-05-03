@@ -764,6 +764,7 @@ export class SimpleStream extends Component {
 		var postDiv = event.target.closest(".post");
 		if (!postDiv) return;
 
+		if (event.target.classList.contains("menu-item")) return;
 		// console.log(event.target.id);
 		if (event.target.id === "discard-button") {
 			// if the user clicked on the cancel changes button,
