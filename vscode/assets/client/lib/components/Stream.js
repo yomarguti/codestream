@@ -415,6 +415,8 @@ export class SimpleStream extends Component {
 	}
 
 	renderIntro = () => {
+		if (this.props.type === "liveshare")
+			return <label>This is the chat stream for your LiveShare session.</label>;
 		if (
 			!this.props.currentFile ||
 			(this.props.firstTimeInAtom && this.props.currentFile === this.state.fileForIntro)
@@ -440,7 +442,7 @@ export class SimpleStream extends Component {
 									}
 								/>
 							</li>
-							<li>
+							{/* <li>
 								<FormattedMessage
 									id="stream.intro.share"
 									defaultMessage="Select &quot;Codestream: Invite&quot; from the command palette to invite your team."
@@ -452,7 +454,7 @@ export class SimpleStream extends Component {
 										</Fragment>
 									)}
 								</FormattedMessage>
-							</li>
+							</li> */}
 						</ul>
 					</label>
 					<label>
@@ -469,9 +471,9 @@ export class SimpleStream extends Component {
 				<label>
 					This is the start of your discussion about <b>{this.fileAbbreviation()}</b>.
 				</label>
-				<label>
+				{/* <label>
 					Need people to chat with? <a onClick={this.props.goToInvitePage}>Invite someone!</a>
-				</label>
+				</label> */}
 			</Fragment>
 		);
 	};
@@ -1402,7 +1404,8 @@ const mapStateToProps = ({
 		id: stream.id,
 		teamId: stream.teamId,
 		firstTimeInAtom: onboarding.firstTimeInAtom,
-		name: stream.name || stream.file,
+		name: context.currentStreamLabel || stream.name || stream.file,
+		type: context.currentStreamServiceType,
 		currentCommit: context.currentCommit,
 		markers: markersForStreamAndCommit,
 		users: toMapBy("id", teamMembers),

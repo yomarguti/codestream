@@ -18,7 +18,9 @@ const store = (window.store = createStore({
 		currentTeamId: data.currentTeamId,
 		currentRepoId: data.currentRepoId,
 		currentStreamId: data.currentStreamId,
-		currentFile: data.currentFile
+		currentFile: data.currentFile,
+		currentStreamLabel: data.currentStreamLabel,
+		currentStreamServiceType: data.currentStreamServiceType
 	},
 	ipcInteractions: {
 		selectedPostId: data.selectedPostId
