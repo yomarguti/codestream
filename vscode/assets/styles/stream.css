@@ -608,6 +608,9 @@ body.preload * {
 .codestream .stream .compose .hint .icon:before {
   content: "x";
 }
+.codestream .stream .compose .code::-webkit-scrollbar-corner {
+  background-color: rgba(0, 0, 0, 0);
+}
 .codestream .stream .at-mention.me {
   padding: 0px 6px 1px 4px;
   margin: 1px 0px -1px 0px;
