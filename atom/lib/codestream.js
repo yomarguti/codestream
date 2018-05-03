@@ -28,6 +28,7 @@ import logger from "./util/Logger";
 import { online, offline } from "./actions/connectivity";
 import { calculateUncommittedMarkers } from "./actions/marker-location";
 import { setActive } from "./actions/presence";
+import { setUserPreference } from "./actions/user";
 
 const env = sessionStorage.getItem("codestream.env") || "production";
 if (env === "production") {
@@ -122,26 +123,32 @@ module.exports = {
 	view: null,
 	statusBar: null,
 	config: {
-		streamPerFile: {
-			description: "Display different streams for each file.",
-			type: "boolean",
-			default: false
-		},
+		// streamPerFile: {
+		// 	description: "Display different streams for each file.",
+		// 	type: "boolean",
+		// 	default: false
+		// },
 		showHeadshots: {
 			description: "Display headshots in the stream",
 			type: "boolean",
 			default: true
 		},
-		showUnread: {
+		// showUnread: {
+		// 	description:
+		// 		"Note that you can override this setting on a per-file or per-directory basis by right-clicking the Tree View.",
+		// 	title: "Files with Unread Messages",
+		// 	type: "string",
+		// 	default: "badge",
+		// 	enum: [
+		// 		{ value: "badge", description: "Display a badge to the right of the file" },
+		// 		{ value: "bold", description: "Bold the filename" }
+		// 	]
+		// },
+		emailNotifications: {
 			description:
-				"Note that you can override this setting on a per-file or per-directory basis by right-clicking the Tree View.",
-			title: "Files with Unread Messages",
-			type: "string",
-			default: "badge",
-			enum: [
-				{ value: "badge", description: "Display a badge to the right of the file" },
-				{ value: "bold", description: "Bold the filename" }
-			]
+				"Send email notifications for new messages when Atom is closed, or I've been idle.",
+			type: "boolean",
+			default: true
 		}
 	},
 
@@ -156,9 +163,8 @@ module.exports = {
 			if (repos.length === 1) {
 				// if being initialized much later into atom's lifetime, i.e. just installed or re-enabled
 				if (atom.packages.hasActivatedInitialPackages()) this.setup();
-				else
-					// wait for atom workspace to be ready
-					this.subscriptions.add(atom.packages.onDidActivateInitialPackages(() => this.setup()));
+				// wait for atom workspace to be ready
+				else this.subscriptions.add(atom.packages.onDidActivateInitialPackages(() => this.setup()));
 			}
 		});
 		// this isn't aded to this.subscriptions because it should always run
@@ -189,12 +195,15 @@ module.exports = {
 				"codestream:mute": target => this.markStreamMute(target),
 				"codestream:bold": target => this.markStreamBold(target),
 				"codestream:badge": target => this.markStreamBadge(target)
-			})
+			}),
 			// atom.commands.add(".codestream .compose.mentions-on", {
 			// 	"codestream:at-mention-move-up": event => this.handleAtMentionKeyPress(event, "up"),
 			// 	"codestream:at-mention-move-down": event => this.handleAtMentionKeyPress(event, "down"),
 			// 	"codestream:at-mention-escape": event => this.handleAtMentionKeyPress(event, "escape")
 			// })
+			atom.config.observe("CodeStream.emailNotifications", setting => {
+				store.dispatch(setUserPreference(["emailNotifications"], setting ? "on" : "off"));
+			})
 		);
 		// Dev mode goodies
 		if (atom.inDevMode()) {

@@ -29,6 +29,7 @@ export const fetchCurrentUser = () => (dispatch, getState, { http }) => {
 export const setUserPreference = (prefPath, value) => (dispatch, getState, { http }) => {
 	const { session, context, users } = getState();
 	let user = users[session.userId];
+	if (!user) return;
 
 	if (!user.preferences) user.preferences = {};
 	let preferences = user.preferences;
