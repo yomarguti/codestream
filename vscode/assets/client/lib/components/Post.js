@@ -13,9 +13,9 @@ import Button from "./onboarding/Button";
 
 const logger = rootLogger.forClass("components/Post");
 
-// codestream://service/action?d={<data>}&ui={ type: 'button' | 'link', label: string } }
-const linkActionRegex = /codestream:\/\/(.*?)\/(.*?)\?d=(.*?)(?:&ui=(.*?))?(?=\s|$)/;
-const linkActionMatchRegex = /(codestream:\/\/.*?\?d=.*?(?:&ui=.*?)?(?=\s|$))/;
+// codestream://service/action?d={<data>}&tt={ type: 'button' | 'link', replacement: string } }
+const linkActionRegex = /codestream:\/\/(.*?)\/(.*?)\?d=(.*?)(?:&tt=(.*?))?(?=\s|$)/;
+const linkActionMatchRegex = /(codestream:\/\/.*?\?d=.*?(?:&tt=.*?)?(?=\s|$))/;
 
 class Post extends Component {
 	constructor(props) {
@@ -153,29 +153,23 @@ class Post extends Component {
 						continue;
 					}
 
-					const [command, service, action, data, desiredUI] = match;
-					let ui;
-					if (desiredUI != null) {
-						ui = JSON.parse(decodeURIComponent(desiredUI));
-					} else {
-						let label;
-						if (service === "vsls" && action === "join") {
-							label = " join my Live Share session";
-						} else {
-							label = ` ${action} ${service}`;
-						}
-						ui = { type: "link", label: label };
+					const [command, service, action, data, tt] = match;
+
+					if (tt == null) {
+						body.push(subpart);
+						continue;
 					}
 
+					const transform = JSON.parse(decodeURIComponent(tt));
 					body.push(
 						<a
 							key={iterator++}
 							href={`command:codestream.runServiceAction?${encodeURI(
 								JSON.stringify({ commandUri: command })
 							)}`}
-							className={ui.type === "button" ? "post--action-button" : "post--action-link"}
+							className={transform.type === "button" ? "post--action-button" : "post--action-link"}
 						>
-							{ui.label}
+							{transform.replacement}
 						</a>
 					);
 				}

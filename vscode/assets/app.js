@@ -49569,9 +49569,9 @@
 
 	var logger = _instance.forClass("components/Post");
 
-	// codestream://service/action?d={<data>}&ui={ type: 'button' | 'link', label: string } }
-	var linkActionRegex = /codestream:\/\/(.*?)\/(.*?)\?d=(.*?)(?:&ui=(.*?))?(?=\s|$)/;
-	var linkActionMatchRegex = /(codestream:\/\/.*?\?d=.*?(?:&ui=.*?)?(?=\s|$))/;
+	// codestream://service/action?d={<data>}&tt={ type: 'button' | 'link', replacement: string } }
+	var linkActionRegex = /codestream:\/\/(.*?)\/(.*?)\?d=(.*?)(?:&tt=(.*?))?(?=\s|$)/;
+	var linkActionMatchRegex = /(codestream:\/\/.*?\?d=.*?(?:&tt=.*?)?(?=\s|$))/;
 
 	var Post = function (_Component) {
 		inherits$1(Post, _Component);
@@ -49647,29 +49647,22 @@
 										    service = _match[1],
 										    action = _match[2],
 										    data = _match[3],
-										    desiredUI = _match[4];
+										    tt = _match[4];
 
-										var ui = void 0;
-										if (desiredUI != null) {
-											ui = JSON.parse(decodeURIComponent(desiredUI));
-										} else {
-											var label = void 0;
-											if (service === "vsls" && action === "join") {
-												label = " join my Live Share session";
-											} else {
-												label = " " + action + " " + service;
-											}
-											ui = { type: "link", label: label };
+										if (tt == null) {
+											body.push(subpart);
+											continue;
 										}
 
+										var transform = JSON.parse(decodeURIComponent(tt));
 										body.push(react.createElement(
 											"a",
 											{
 												key: iterator++,
 												href: "command:codestream.runServiceAction?" + encodeURI(JSON.stringify({ commandUri: command })),
-												className: ui.type === "button" ? "post--action-button" : "post--action-link"
+												className: transform.type === "button" ? "post--action-button" : "post--action-link"
 											},
-											ui.label
+											transform.replacement
 										));
 									}
 								} catch (err) {

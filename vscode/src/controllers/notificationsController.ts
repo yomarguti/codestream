@@ -95,7 +95,8 @@ export class NotificationsController extends Disposable {
             { title: 'Open' }
         ];
 
-        const result = await window.showInformationMessage(`${sender !== undefined ? sender.name : 'Someone'}: ${post.text}`, ...actions);
+        const text = Container.linkActions.resolveTextTransformations(post.text);
+        const result = await window.showInformationMessage(`${sender !== undefined ? sender.name : 'Someone'}: ${text}`, ...actions);
         if (result === actions[0]) {
             Container.commands.openStream({ streamThread: { id: undefined, streamId: post.streamId } });
         }
