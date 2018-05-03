@@ -88,27 +88,32 @@ export class MarkerDecorationProvider extends Disposable {
                 const start = marker.range.start.line;
                 if (starts.has(start)) continue;
 
-                let message = undefined;
-                const post = await marker.post();
-                if (post !== undefined) {
-                    const sender = await post.sender();
+                try {
+                    let message = undefined;
+                    const post = await marker.post();
+                    if (post !== undefined) {
+                        const sender = await post.sender();
 
-                    const args = {
-                        streamThread: {
-                            id: post.id,
-                            streamId: post.streamId
-                        }
-                    } as OpenStreamCommandArgs;
+                        const args = {
+                            streamThread: {
+                                id: post.id,
+                                streamId: post.streamId
+                            }
+                        } as OpenStreamCommandArgs;
 
-                    message = new MarkdownString(`__${sender!.name}__, ${post.fromNow()} &nbsp; _(${post.formatDate()})_\n\n>${post.text}\n\n[__Open Comment \u2197__](command:codestream.openStream?${JSON.stringify(args)} "Open Comment")`);
-                    message.isTrusted = true;
+                        message = new MarkdownString(`__${sender!.name}__, ${post.fromNow()} &nbsp; _(${post.formatDate()})_\n\n>${post.text}\n\n[__Open Comment \u2197__](command:codestream.openStream?${JSON.stringify(args)} "Open Comment")`);
+                        message.isTrusted = true;
+                    }
+
+                    decorations.push({
+                        range: new Range(start, 0, start, 0), // location[2], 10000000)
+                        hoverMessage: message
+                    });
+                    starts.add(start);
                 }
-
-                decorations.push({
-                    range: new Range(start, 0, start, 0), // location[2], 10000000)
-                    hoverMessage: message
-                });
-                starts.add(start);
+                catch (ex) {
+                    Logger.error(ex);
+                }
             }
 
             return decorations;
