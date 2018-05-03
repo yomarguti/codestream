@@ -18,6 +18,7 @@ interface LiveShareContext {
     url: string;
     sessionId: string;
     sessionUserId: string;
+    streamId: string;
     memberIds: string[];
     repos: RemoteRepository[];
 }
@@ -77,9 +78,6 @@ export class LiveShareController extends Disposable {
     }
 
     private async onJoinMatch(post: Post, e: LiveShareContext) {
-        // const match = liveShareRegex.exec(e.url);
-        // if (match == null) return;
-
         Logger.log('LiveShareController.onRequestReceived: ', `data=${JSON.stringify(e)}`);
 
         const host = await Container.session.users.get(e.sessionUserId);
@@ -128,7 +126,7 @@ export class LiveShareController extends Disposable {
 
             case SessionStatus.SignedIn:
                 // When we are signed in, open a channel for the liveshare
-                this.openStream(sessionId, context.sessionUserId, context.memberIds);
+                Container.commands.openStream({ streamThread: { id: undefined, streamId: context.streamId } });
                 break;
         }
     }
@@ -171,10 +169,12 @@ export class LiveShareController extends Disposable {
 
         const [url, sessionId] = match;
 
-        const memberIds = [Container.session.userId, ...users.map(u => u.id)];
-        await this.openStream(sessionId, Container.session.userId, memberIds);
-
+        const currentUserId = Container.session.userId;
+        const memberIds = [currentUserId, ...users.map(u => u.id)];
         const repos = Iterables.map(await Container.session.repos.items(), r => ({ id: r.id, hash: r.hash, normalizedUrl: r.normalizedUrl, url: r.url } as RemoteRepository));
+
+        // Create a new channel specifically for this live share session
+        const liveShareStream = await Container.session.channels.getOrCreateByName(`ls:${currentUserId}:${sessionId}`, { membership: memberIds, privacy: 'public' });
 
         const link = Container.linkActions.toLinkAction<LiveShareContext>(
             'vsls',
@@ -182,21 +182,24 @@ export class LiveShareController extends Disposable {
             {
                 url: url,
                 sessionId: sessionId,
-                sessionUserId: Container.session.userId,
+                sessionUserId: currentUserId,
+                streamId: liveShareStream.id,
                 memberIds: memberIds,
                 repos: [...repos]
             },
             {
                 type: 'link',
-                label: ` join my Live Share session`
+                replacement: `join my Live Share session`
             });
 
-        return await Container.commands.post({
+        await Container.commands.post({
             streamThread: streamThread,
             text: `${users.map(u => `@${u.name}`).join(', ')} please ${link}`,
             send: true,
             silent: true
         });
+
+        return await Container.commands.openStream({ streamThread: { id: undefined, stream: liveShareStream } });
     }
 
     @command('vsls.join')
@@ -204,11 +207,11 @@ export class LiveShareController extends Disposable {
         await Container.context.globalState.update(`vsls:${args.context.sessionId}`, args.context);
         await commands.executeCommand('liveshare.join', args.url); // , { newWindow: true });
 
-        this.openStream(args.context.sessionId, args.context.sessionUserId, args.context.memberIds);
-    }
+        // If we aren't already a member of the channel, join it
+        if (!args.context.memberIds.includes(Container.session.userId)) {
+            await Container.session.api.joinStream(args.context.streamId);
+        }
 
-    private async openStream(sessionId: string, sessionUserId: string, memberIds: string[]) {
-        const stream = await Container.session.channels.getOrCreateByName(`ls:${sessionUserId}:${sessionId}`, { membership: memberIds });
-        return await Container.commands.openStream({ streamThread: { id: undefined, stream: stream } });
+        return await Container.commands.openStream({ streamThread: { id: undefined, streamId: args.context.streamId } });
     }
 }

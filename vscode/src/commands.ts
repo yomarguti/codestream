@@ -1,5 +1,5 @@
 import { commands, ConfigurationTarget, Disposable, MessageItem, Range, TextDocument, Uri, ViewColumn, window } from 'vscode';
-import { CodeStreamSession, Post, Stream, StreamThread, StreamType } from './api/session';
+import { ChannelStreamCreationOptions, CodeStreamSession, Post, Stream, StreamThread, StreamType } from './api/session';
 import { openEditor } from './common';
 import { configuration, TraceLevel } from './configuration';
 import { Container } from './container';
@@ -29,7 +29,7 @@ export enum BuiltInCommands {
 }
 
 type StreamLocator =
-    { type: StreamType.Channel, name: string, create?: { membership?: 'auto' | string[] } } |
+    { type: StreamType.Channel, name: string, create?: ChannelStreamCreationOptions } |
     { type: StreamType.Direct, members: string[], create?: boolean } |
     { type: StreamType.File, uri: Uri, create?: boolean };
 

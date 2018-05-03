@@ -15,7 +15,12 @@ import {
     GetStreamResponse, GetStreamsResponse,
     GetTeamResponse, GetTeamsResponse,
     GetUserResponse, GetUsersResponse,
-    LoginRequest, LoginResponse, StreamType, UpdatePresenceRequest, UpdatePresenceResponse
+    JoinStreamRequest, JoinStreamResponse,
+    LoginRequest, LoginResponse,
+    ResetTeamRequest, ResetTeamResponse,
+    StreamType,
+    UpdatePresenceRequest, UpdatePresenceResponse,
+    UpdateStreamMembershipRequest, UpdateStreamMembershipResponse
 } from './types';
 import fetch, { Headers, RequestInit, Response } from 'node-fetch';
 
@@ -150,8 +155,20 @@ export class CodeStreamApi {
         return this.get<GetUsersResponse>(`/users?teamId=${teamId}`, token);
     }
 
+    joinStream(token: string, teamId: string, streamId: string, request: JoinStreamRequest) {
+        return this.put<JoinStreamRequest, JoinStreamResponse>(`/join/${streamId}`, request, token);
+    }
+
+    resetTeam(token: string, request: ResetTeamRequest) {
+        return this.put<ResetTeamRequest, ResetTeamResponse>(`/delete-content`, request, token);
+    }
+
     updatePresence(token: string, request: UpdatePresenceRequest) {
         return this.put<UpdatePresenceRequest, UpdatePresenceResponse>(`/presence`, request, token);
+    }
+
+    updateStreamMembership(token: string, teamId: string, streamId: string, request: UpdateStreamMembershipRequest) {
+        return this.put<UpdateStreamMembershipRequest, UpdateStreamMembershipResponse>(`/streams/${streamId}`, request, token);
     }
 
     private delete<R extends object>(url: string, token?: string): Promise<R> {
@@ -274,7 +291,7 @@ export class CodeStreamApi {
     }
 
     static isStreamSubscriptionRequired(stream: CSStream): boolean {
-        if (stream.type === StreamType.File) return false;
+        if (stream.deactivated || stream.type === StreamType.File) return false;
         if (stream.type === StreamType.Channel) {
             if (stream.memberIds === undefined) return false;
         }

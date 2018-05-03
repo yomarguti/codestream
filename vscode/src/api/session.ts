@@ -11,13 +11,13 @@ import { PresenceManager } from './presence';
 import { PresenceMiddleware } from './presenceMiddleware';
 import { MessageReceivedEvent, MessageType, PostsMessageReceivedEvent, PubNubReceiver, RepositoriesMessageReceivedEvent, StreamsMessageReceivedEvent } from './pubnub';
 import { Repository, RepositoryCollection } from './models/repositories';
-import { ChannelStream, ChannelStreamCollection, DirectStream, DirectStreamCollection, FileStream, Stream, StreamThread, StreamType } from './models/streams';
+import { ChannelStream, ChannelStreamCollection, ChannelStreamCreationOptions, DirectStream, DirectStreamCollection, FileStream, Stream, StreamThread, StreamType } from './models/streams';
 import { StreamVisibilityManager } from './streamVisibility';
 import { Functions, memoize, Strings } from '../system';
 import { Team, TeamCollection } from './models/teams';
 import { User, UserCollection } from './models/users';
 
-export { ChannelStream, DirectStream, FileStream, Marker, MarkerCollection, Post, PresenceStatus, Repository, Stream, StreamThread, StreamType, Team, User };
+export { ChannelStream, ChannelStreamCreationOptions, DirectStream, FileStream, Marker, MarkerCollection, Post, PresenceStatus, Repository, Stream, StreamThread, StreamType, Team, User };
 
 export class CodeStreamSession extends Disposable {
 
@@ -299,13 +299,13 @@ export class CodeStreamSession extends Disposable {
     }
 
     @signedIn
-    addChannel(name: string, options: { membership?: 'auto' | string[] } = { membership: 'auto' }) {
+    addChannel(name: string, options: ChannelStreamCreationOptions = { membership: 'auto', privacy: 'public' }) {
         return this.channels.getOrCreateByName(name, options);
     }
 
     @signedIn
     getDefaultTeamChannel() {
-        return this.channels.getOrCreateByName('general', { membership: 'auto' });
+        return this.channels.getOrCreateByName('general', { membership: 'auto', privacy: 'public' });
     }
 
     @signedIn

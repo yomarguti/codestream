@@ -92,3 +92,14 @@ Authorization: Bearer {{token}}
         "name": "GitLens"
     }
 }
+
+### PUT Wipe team
+PUT {{baseUrl}}/delete-content
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "teamId": "5addf904e16e0730f46bf4c1",
+    "includeStreams": true
+//    "newerThan": 0
+}

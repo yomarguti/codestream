@@ -158,6 +158,7 @@ export interface CreateChannelStreamRequest {
     name: string;
     memberIds?: string[];
     isTeamStream: boolean;
+    privacy: 'public' | 'private';
 }
 
 export interface CreateDirectStreamRequest {
@@ -241,9 +242,25 @@ export interface GetUsersResponse {
     users: CSUser[];
 }
 
+export interface JoinStreamRequest {
+}
+
+export interface JoinStreamResponse {
+    stream: CSStream;
+}
+
 export enum PresenceStatus {
     Online = 'online',
     Away = 'away'
+}
+
+export interface ResetTeamRequest {
+    teamId: string;
+    includeStreams?: boolean;
+    newerThan?: number;
+}
+
+export interface ResetTeamResponse {
 }
 
 export interface UpdatePresenceRequest {
@@ -253,4 +270,12 @@ export interface UpdatePresenceRequest {
 
 export interface UpdatePresenceResponse {
     awayTimeout: number;
+}
+
+export interface UpdateStreamMembershipRequest {
+    $push: string;
+}
+
+export interface UpdateStreamMembershipResponse {
+    stream: CSStream;
 }

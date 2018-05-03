@@ -233,6 +233,11 @@ abstract class StreamCollectionBase<TItem extends StreamBase<TEnitity>, TEnitity
     }
 }
 
+export interface ChannelStreamCreationOptions {
+    membership?: 'auto' | string[];
+    privacy?: 'public' | 'private';
+}
+
 export class ChannelStreamCollection extends StreamCollectionBase<ChannelStream, CSChannelStream> {
 
     constructor(
@@ -246,11 +251,11 @@ export class ChannelStreamCollection extends StreamCollectionBase<ChannelStream,
         return Iterables.find(await this.items(), s => s.name === name);
     }
 
-    async getOrCreateByName(name: string, creationOptions: { membership?: 'auto' | string[] } = {}): Promise<ChannelStream> {
+    async getOrCreateByName(name: string, creationOptions: ChannelStreamCreationOptions = {}): Promise<ChannelStream> {
         const stream = await this.getByName(name);
         if (stream !== undefined) return stream;
 
-        const s = await this.session.api.createChannelStream(name, creationOptions.membership, this.teamId);
+        const s = await this.session.api.createChannelStream(name, creationOptions.membership, creationOptions.privacy, this.teamId);
         if (s === undefined) throw new Error(`Unable to create stream`);
 
         return new ChannelStream(this.session, s);

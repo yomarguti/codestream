@@ -20,6 +20,12 @@ export class CodeStreamSessionApi {
     ) {
     }
 
+    async addUserToStream(streamId: string, userId: string, teamId?: string) {
+        return (await this._api.updateStreamMembership(this.token, teamId || this.teamId, streamId, {
+            $push: userId
+        })).stream;
+    }
+
     async createPost(text: string, parentPostId: string | undefined, streamId: string, teamId?: string): Promise<CSPost | undefined> {
         return (await this._api.createPost(this.token, {
             teamId: teamId || this.teamId,
@@ -66,13 +72,14 @@ export class CodeStreamSessionApi {
         })).repo;
     }
 
-    async createChannelStream(name: string, membership?: 'auto' | string[], teamId?: string): Promise<CSChannelStream | undefined> {
+    async createChannelStream(name: string, membership?: 'auto' | string[], privacy: 'public' | 'private' = membership === 'auto' ? 'public' : 'private', teamId?: string): Promise<CSChannelStream | undefined> {
         return (await this._api.createStream(this.token, {
             type: StreamType.Channel,
             teamId: teamId || this.teamId,
             name: name,
             memberIds: membership === 'auto' ? undefined : membership,
-            isTeamStream: membership === 'auto'
+            isTeamStream: membership === 'auto',
+            privacy: membership === 'auto' ? 'public' : privacy
         })).stream as CSChannelStream;
     }
 
@@ -282,6 +289,18 @@ export class CodeStreamSessionApi {
 
     async getUsers(teamId?: string): Promise<CSUser[]> {
         return (await this._api.getUsers(this.token, teamId || this.teamId)).users;
+    }
+
+    async joinStream(streamId: string, teamId?: string) {
+        return (await this._api.joinStream(this.token, streamId, teamId || this.teamId, {})).stream;
+    }
+
+    resetTeam(newerThan: number | undefined, includeStreams: boolean = false, teamId?: string) {
+        return this._api.resetTeam(this.token, {
+            teamId: teamId || this.teamId,
+            newerThan: newerThan,
+            includeStreams: includeStreams
+        });
     }
 
     async updatePresence(status: PresenceStatus, sessionId: string) {
