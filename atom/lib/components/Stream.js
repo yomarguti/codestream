@@ -578,7 +578,7 @@ export class SimpleStream extends Component {
 									replyingTo={parentPost}
 									newMessageIndicator={newMessageIndicator}
 									unread={unread}
-									editing={post.id === this.state.editingPostId}
+									editing={!this.state.threadActive && post.id === this.state.editingPostId}
 								/>
 							</div>
 						);
@@ -603,7 +603,7 @@ export class SimpleStream extends Component {
 							key={threadPost.id}
 							showDetails="1"
 							currentCommit={this.props.currentCommit}
-							editing={threadPost.id === this.state.editingPostId}
+							editing={this.state.threadActive && threadPost.id === this.state.editingPostId}
 						/>
 					)}
 					{
