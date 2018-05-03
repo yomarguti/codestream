@@ -102,16 +102,32 @@ body.preload * {
 }
 
 .popup-button {
-	border: 1px solid @pane-item-border-color;
 	border-radius: 5px;
 	background-color: @app-background-color;
-	z-index: 100;
-	padding: 2%;
-	position: absolute;
-	bottom: 96%;
-	&:hover {
-		background-color: @tool-panel-background-color;
+    z-index: 100;
+    padding: 0.5em 0.75em;
+    position: absolute;
+    top: 40px;
+	left: 15px;
+
+	.vscode-dark & {
+		border: 1px solid @pane-item-border-color-dark;
 	}
+
+	.vscode-light & {
+		border: 1px solid @pane-item-border-color-light;
+	}
+
+	&:hover {
+		.vscode-dark & {
+			background-color: @tool-panel-background-color-dark;
+		}
+
+		.vscode-light & {
+			background-color: @tool-panel-background-color-light;
+		}
+	}
+
 	a {
 		text-decoration: none;
 		color: @text-color;

@@ -416,7 +416,7 @@ export class SimpleStream extends Component {
 
 	renderIntro = () => {
 		if (this.props.type === "liveshare")
-			return <label>This is the chat stream for your LiveShare session.</label>;
+			return <label>This is the chat stream for your Live Share session.</label>;
 		if (
 			!this.props.currentFile ||
 			(this.props.firstTimeInAtom && this.props.currentFile === this.state.fileForIntro)

@@ -652,16 +652,25 @@ body.preload * {
   background-image: linear-gradient(#557ecf, #4d78cc);
 }
 .popup-button {
-  border: 1px solid rgba(0, 0, 0, 0.5);
   border-radius: 5px;
   background-color: var(--app-background-color);
   z-index: 100;
-  padding: 2%;
+  padding: 0.5em 0.75em;
   position: absolute;
-  bottom: 96%;
+  top: 40px;
+  left: 15px;
 }
-.popup-button:hover {
-  background-color: var(--tool-panel-background-color);
+.vscode-dark .popup-button {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.vscode-light .popup-button {
+  border: 1px solid rgba(0, 0, 0, 0.5);
+}
+.vscode-dark .popup-button:hover {
+  background-color: var(--tool-panel-background-color-dark);
+}
+.vscode-light .popup-button:hover {
+  background-color: var(--tool-panel-background-color-light);
 }
 .popup-button a {
   text-decoration: none;

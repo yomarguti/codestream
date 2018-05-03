@@ -70,7 +70,7 @@ export default class Headshot extends Component {
 			>
 				<PopupButton
 					visible={this.state.showButton}
-					label="Start LiveShare"
+					label="Start Live Share"
 					command={`command:codestream.vsls.invite?${JSON.stringify({ userIds: person.id })}`}
 				/>
 				<Gravatar
