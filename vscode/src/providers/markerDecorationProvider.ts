@@ -114,7 +114,6 @@ export class MarkerDecorationProvider extends Disposable {
             return decorations;
         }
         catch (ex) {
-            debugger;
             Logger.error(ex);
             return [];
         }

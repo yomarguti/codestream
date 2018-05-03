@@ -269,7 +269,6 @@ export class CodeStreamApi {
     }
 
     private async handleErrorResponse(response: Response): Promise<Error> {
-        debugger;
         const data = await response.json();
         return new Error(`${response.status}: ${response.statusText}\n\n${JSON.stringify(data)}`);
     }

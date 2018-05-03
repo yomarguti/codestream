@@ -104,7 +104,6 @@ export class CodeStreamBot extends Disposable {
         }
         catch (ex) {
             Logger.error(ex);
-            debugger;
         }
     }
 

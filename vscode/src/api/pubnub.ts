@@ -110,12 +110,12 @@ export class PubNubReceiver {
     }
 
     onPresence(event: Pubnub.PresenceEvent) {
-        // debugger;
+        Logger.log(`PubNub.onPresence: event=${JSON.stringify(event)}`);
         // logger.debug(`user ${event.uuid} ${event.action}. occupancy is ${event.occupancy}`); // uuid of the user
     }
 
     onStatus(status: Pubnub.StatusEvent) {
-        // debugger;
+        Logger.log(`PubNub.onStatus: event=${JSON.stringify(status)}`);
         // if (status.error) {
         //     // this sucks ... pubnub does not send us the channel that failed,
         //     // meaning that if we try to subscribe to two channels around the same
