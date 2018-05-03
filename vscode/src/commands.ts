@@ -6,7 +6,7 @@ import { Container } from './container';
 import { encryptionKey } from './extension';
 import { Logger } from './logger';
 import { PostNode } from './views/postNode';
-import { Command, createCommandDecorator, Crypto, Iterables } from './system';
+import { Command, createCommandDecorator, Crypto, Dates, Iterables } from './system';
 import * as path from 'path';
 
 const commandRegistry: Command[] = [];
@@ -24,7 +24,9 @@ export enum BuiltInCommands {
     NextEditor = 'workbench.action.nextEditor',
     PreviewHtml = 'vscode.previewHtml',
     RevealLine = 'revealLine',
+    ReloadWindow = 'workbench.action.reloadWindow',
     SetContext = 'setContext',
+    ShowCodeStream = 'workbench.view.extension.codestream',
     ShowReferences = 'editor.action.showReferences'
 }
 
@@ -233,10 +235,38 @@ export class Commands extends Disposable {
     @command('reset')
     async reset() {
         await Container.session.streamVisibility.clear();
-        Container.channelsExplorer.refresh();
-        Container.peopleExplorer.refresh();
-        Container.repositoriesExplorer.refresh();
-        Container.liveShareExplorer.refresh();
+
+        const regex = /(\d+)([d|h|m])/;
+        const value = await window.showInputBox({
+            prompt: 'Enter the number of days, hours, or minutes to reset back to',
+            placeHolder: 'e.g. 5d or 6h or 10m',
+            validateInput: v => regex.test(v) ? undefined : 'Invalid input'
+        });
+        if (value === undefined) return;
+
+        const match = regex.exec(value);
+        if (match == null) return;
+
+        const [, num, unit] = match;
+
+        let milliseconds;
+        switch (unit) {
+            case 'd':
+                milliseconds = parseInt(num, 10) * 24 * 60 * 60000;
+                break;
+            case 'h':
+                milliseconds = parseInt(num, 10) * 60 * 60000;
+                break;
+            case 'm':
+                milliseconds = parseInt(num, 10) * 60000;
+                break;
+            default:
+                return;
+        }
+
+        Logger.log(`Reset data back to ${Dates.toFormatter(new Date(new Date().getTime() - milliseconds)).format('MMMM Do, YYYY h:mma')}`);
+        Container.session.api.resetTeam(new Date().getTime() - milliseconds);
+        commands.executeCommand(BuiltInCommands.ReloadWindow);
     }
 
     @command('runServiceAction')
@@ -250,7 +280,7 @@ export class Commands extends Disposable {
     }
 
     showActivity() {
-        return commands.executeCommand('workbench.view.extension.codestream');
+        return commands.executeCommand(BuiltInCommands.ShowCodeStream);
     }
 
     @command('signIn', { customErrorHandling: true })
