@@ -12,6 +12,10 @@ export class Team extends CodeStreamItem<CSTeam> {
         super(session, team);
     }
 
+    get name() {
+        return this.entity.name;
+    }
+
     // get repos() {
     //     return this.session.repo;
     // }

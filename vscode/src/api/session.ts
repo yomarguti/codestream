@@ -377,6 +377,7 @@ export class CodeStreamSession extends Disposable {
                 }
 
                 if (teamId == null) {
+                    // TODO: Pick team?
                     teamId = this._data.teams[0].id;
                 }
             }

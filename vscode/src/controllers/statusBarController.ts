@@ -42,7 +42,7 @@ export class StatusBarController extends Disposable {
         }
     }
 
-    private updateStatusBar(status: SessionStatus, count: number = 0) {
+    private async updateStatusBar(status: SessionStatus, count: number = 0) {
         if (this._statusBarItem === undefined) {
             this._statusBarItem = this._statusBarItem || window.createStatusBarItem(StatusBarAlignment.Right, -99);
         }
@@ -61,7 +61,18 @@ export class StatusBarController extends Disposable {
                 this._statusBarItem.color = undefined;
                 break;
             case SessionStatus.SignedIn:
-                this._statusBarItem.text = ` $(comment-discussion) ${count === 0 ? Container.session.user.name : count} `;
+                let label;
+                if (count === 0) {
+                    label = Container.session.user.name;
+                    if (!(await Container.session.hasSingleTeam())) {
+                        label += ` (${Container.session.team.name})`;
+                    }
+                }
+                else {
+                    label = `${count}`;
+                }
+
+                this._statusBarItem.text = ` $(comment-discussion) ${label} `;
                 this._statusBarItem.command = 'codestream.toggle';
                 this._statusBarItem.tooltip = 'Toggle CodeStream';
                 this._statusBarItem.color = count === 0 ? undefined : '#009aef';
