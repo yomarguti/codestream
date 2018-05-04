@@ -4,6 +4,9 @@ body {
   overflow: hidden;
   padding: 0 !important;
 }
+* {
+  box-sizing: border-box;
+}
 #app {
   height: inherit;
   width: inherit;
@@ -113,10 +116,10 @@ body {
 }
 .codestream .stream .at-mention {
   display: inline-block;
-  color: #6494ed;
+  color: var(--link-color);
 }
 .codestream .stream .at-mention.me {
-  color: #6494ed;
+  color: var(--link-color);
   font-weight: bold;
   padding: 0px 3px 2px 3px;
   margin: 0px 0px -2px 0px;
@@ -420,7 +423,7 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: pre;
-  color: #6494ed;
+  color: var(--link-color);
 }
 .codestream .stream .post .replying-to span {
   opacity: 0.5;
@@ -433,7 +436,7 @@ body {
   background-color: rgba(255, 255, 255, 0.07) !important;
 }
 .codestream .stream .post.new-separator {
-  border-top: 1px solid #6494ed;
+  border-top: 1px solid var(--link-color);
   position: relative;
 }
 .codestream .stream .post.new-separator::before {
@@ -441,7 +444,7 @@ body {
   display: block;
   right: 10px;
   top: -13px;
-  color: #6494ed;
+  color: var(--link-color);
   background: var(--app-background-color);
   padding: 2px 5px;
   position: absolute;
@@ -462,7 +465,7 @@ body {
   color: var(--text-color-subtle);
 }
 .codestream .stream .post:hover {
-  background: var(--app-background-color--lighten-03);
+  background: var(--app-background-color-hover);
 }
 .codestream .stream .post:hover .icon-gear {
   display: block;
@@ -508,7 +511,7 @@ body {
   margin: 5% 0;
 }
 .codestream .intro .logo {
-  color: var(--text-color-subtle--lighten-50);
+  color: var(--text-color-subtle-extra);
   transform: perspective(600px) rotateX(60deg) rotateZ(30deg);
   text-shadow: 5px 10px 30px rgba(127, 127, 127, 0.5);
   text-shadow: 5px 10px 30px rgba(0, 0, 0, 0.2);
@@ -547,7 +550,7 @@ body {
   background-color: #666;
 }
 .codestream .keystroke {
-  color: #6494ed;
+  color: var(--link-color);
   background-color: white;
   border-radius: 2px;
   padding: 0.1em 0.4em 0.2em 0.4em;
@@ -594,6 +597,12 @@ body.preload * {
   display: flex;
   flex-direction: column;
 }
+.vscode-dark.codestream .stream .new-messages-below:hover {
+  background-color: rgba(140, 140, 140, 0.2);
+}
+.vscode-light.codestream .stream .new-messages-below:hover {
+  background-color: rgba(114, 114, 114, 0.2);
+}
 .codestream .stream .compose {
   position: unset;
 }
@@ -608,24 +617,43 @@ body.preload * {
 .codestream .stream .compose .hint .icon:before {
   content: "x";
 }
+.codestream .stream .compose #input-div:focus {
+  outline: none;
+}
+.vscode-dark.codestream .stream .compose #input-div:focus {
+  box-shadow: inset 0 0 0px 1px rgba(255, 255, 255, 0.05);
+}
+.vscode-light.codestream .stream .compose #input-div:focus {
+  box-shadow: inset 0 0 0px 1px rgba(0, 0, 0, 0.05);
+}
 .codestream .stream .compose .code::-webkit-scrollbar-corner {
   background-color: rgba(0, 0, 0, 0);
 }
 .codestream .stream .at-mention.me {
-  padding: 0px 6px 1px 4px;
+  background-color: var(--text-color-info-muted);
+  color: #fff;
+  font-weight: 600;
   margin: 1px 0px -1px 0px;
-  border-radius: 6px;
-  background-color: rgba(127, 127, 127, 0.15);
+  padding: 0px 7px 2px 4px;
 }
-.codestream .stream .post .headshot-gravatar {
-  padding-top: 0;
+.codestream .stream .post {
+  min-height: 36px;
 }
-.codestream .stream .post .headshot-initials {
-  padding-top: 0;
+.vscode-dark.codestream .stream .post.editing {
+  background-color: rgba(255, 255, 255, 0.07) !important;
+}
+.vscode-light.codestream .stream .post.editing {
+  background-color: rgba(0, 0, 0, 0.07) !important;
 }
 .codestream .stream .postslist {
   flex: 1 1 auto;
   height: 100%;
+}
+.codestream .stream .postslist::-webkit-scrollbar-thumb {
+  visibility: hidden;
+}
+.codestream .stream .postslist:hover::-webkit-scrollbar-thumb {
+  visibility: visible;
 }
 .codestream a.post--action-link {
   text-decoration: none;
@@ -669,11 +697,8 @@ body.preload * {
 .vscode-light .popup-button {
   border: 1px solid rgba(0, 0, 0, 0.5);
 }
-.vscode-dark .popup-button:hover {
-  background-color: var(--tool-panel-background-color-dark);
-}
-.vscode-light .popup-button:hover {
-  background-color: var(--tool-panel-background-color-light);
+.popup-button:hover {
+  background-color: var(--tool-panel-background-color);
 }
 .popup-button a {
   text-decoration: none;

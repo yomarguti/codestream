@@ -97,21 +97,57 @@
             const body = document.body;
             const computedStyle = getComputedStyle(body);
 
+            let theme = 'dark';
+            if (body.classList.contains('vscode-light')) {
+                theme = 'light';
+            }
+            else if (body.classList.contains('vscode-highcontrast')) {
+                // TODO
+                // theme = 'highcontrast';
+            }
+
             const bodyStyle = body.style;
             let color = computedStyle.getPropertyValue('--color').trim();
             bodyStyle.setProperty('--text-color', opacity(color, 80));
             bodyStyle.setProperty('--text-color-subtle', opacity(color, 60));
-            bodyStyle.setProperty('--text-color-subtle--lighten-50', lighten(opacity(color, 60), 50));
+            switch (theme) {
+                case 'dark':
+                    bodyStyle.setProperty('--text-color-subtle-extra', lighten(opacity(color, 60), 50));
+                    break;
+
+                case 'light':
+                    bodyStyle.setProperty('--text-color-subtle-extra', darken(opacity(color, 60), 50));
+                    break;
+            }
 
             color = computedStyle.getPropertyValue('--background-color').trim();
-            bodyStyle.setProperty('--app-background-color', lighten(color, 4));
-            bodyStyle.setProperty('--app-background-color--lighten-03', lighten(color, 7));
-            bodyStyle.setProperty('--base-background-color', opacity(lighten(color, 15), 40));
-            bodyStyle.setProperty('--tool-panel-background-color-dark', lighten(color, 10));
-            bodyStyle.setProperty('--tool-panel-background-color-light', darken(color, 10));
+            switch (theme) {
+                case 'dark':
+                    bodyStyle.setProperty('--app-background-color', lighten(color, 4));
+                    bodyStyle.setProperty('--app-background-color-hover', lighten(color, 7));
 
-            // color = computedStyle.getPropertyValue('--link-color').trim();
-            // bodyStyle.setProperty('--link-color--darken-20', darken(color, 20));
+                    bodyStyle.setProperty('--base-background-color', opacity(lighten(color, 15), 40));
+                    bodyStyle.setProperty('--tool-panel-background-color', lighten(color, 10));
+                    break;
+
+                case 'light':
+                    bodyStyle.setProperty('--app-background-color', darken(color, 4));
+                    bodyStyle.setProperty('--app-background-color-hover', darken(color, 7));
+
+                    bodyStyle.setProperty('--base-background-color', opacity(darken(color, 15), 40));
+                    bodyStyle.setProperty('--tool-panel-background-color', darken(color, 10));
+                    break;
+            }
+
+            color = computedStyle.getPropertyValue('--link-color').trim();
+            switch (theme) {
+                case 'dark':
+                    bodyStyle.setProperty('--text-color-info-muted', darken(color, 10));
+                    break;
+                case 'light':
+                    bodyStyle.setProperty('--text-color-info-muted', color);
+                    break;
+            }
         };
 
         const observer = new MutationObserver(onColorThemeChanged);
