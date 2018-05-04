@@ -360,17 +360,17 @@ export class Commands extends Disposable {
     }
 
     private async signInCore(email: string | undefined, password: string | undefined, teamId?: string) {
+        let decryptedPassword;
         if (password) {
             try {
-                password = Crypto.decrypt(password, 'aes-256-ctr', encryptionKey);
-            } catch {
-                password = undefined;
+                decryptedPassword = Crypto.decrypt(password, 'aes-256-ctr', encryptionKey);
             }
+            catch { }
         }
 
-        if (!email || !password) {
+        if (!email || !decryptedPassword) {
             if (!email) {
-                password = undefined;
+                decryptedPassword = undefined;
 
                 email = await window.showInputBox({
                     prompt: 'Enter your CodeStream email address',
@@ -381,20 +381,21 @@ export class Commands extends Disposable {
                 await configuration.update(configuration.name('email').value, email, ConfigurationTarget.Global);
             }
 
-            if (!password) {
-                password = await window.showInputBox({
+            if (!decryptedPassword) {
+                decryptedPassword = await window.showInputBox({
                     prompt: 'Enter your CodeStream password',
                     placeHolder: 'password',
                     password: true
                 });
-                if (password === undefined) return;
+                if (decryptedPassword === undefined) return;
 
-                await configuration.update(configuration.name('password').value, Crypto.encrypt(password, 'aes-256-ctr', encryptionKey), ConfigurationTarget.Global);
+                password = Crypto.encrypt(decryptedPassword, 'aes-256-ctr', encryptionKey);
+                await configuration.update(configuration.name('password').value, password, ConfigurationTarget.Global);
             }
         }
 
         try {
-            return await Container.session.login(email, password, teamId);
+            return await Container.session.login(email, decryptedPassword, teamId);
         }
         catch (ex) {
             const actions: MessageItem[] = [
