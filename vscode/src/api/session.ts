@@ -288,7 +288,16 @@ export class CodeStreamSession extends Disposable {
             CodeStreamSession._sessions.delete(this._id);
         }
 
+        // Clean up saved state -- don't like this -- should change these vars into a map or something
         this._id = undefined;
+        this._channels = undefined;
+        this._directMessages = undefined;
+        this._repos = undefined;
+        this._team = undefined;
+        this._teams = undefined;
+        this._user = undefined;
+        this._users = undefined;
+
         this._status = SessionStatus.SignedOut;
         setImmediate(() => this._onDidChangeStatus.fire({ getStatus: () => this._status }));
 
