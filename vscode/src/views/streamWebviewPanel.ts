@@ -1,10 +1,9 @@
 'use strict';
-import { Disposable, Event, EventEmitter, Range, ViewColumn, WebviewPanel, WebviewPanelOnDidChangeViewStateEvent, window } from 'vscode';
+import { Disposable, Event, EventEmitter, Range, Uri, ViewColumn, WebviewPanel, WebviewPanelOnDidChangeViewStateEvent, window, workspace } from 'vscode';
 import { CSPost, CSRepository, CSStream, CSTeam, CSUser } from '../api/api';
 import { CodeStreamSession, Post, PostsReceivedEvent, SessionChangedEvent, SessionChangedType, StreamThread, StreamType } from '../api/session';
 import { Container } from '../container';
 import { Logger } from '../logger';
-import * as fs from 'fs';
 
 interface BootstrapState {
     currentTeamId: string;
@@ -42,33 +41,14 @@ export class StreamWebviewPanel extends Disposable {
         return this._onDidClose.event;
     }
 
-    private readonly _disposable: Disposable;
-    private readonly _panel: WebviewPanel;
+    private _disposable: Disposable | undefined;
+    private _panel: WebviewPanel | undefined;
     private _streamThread: StreamThread | undefined;
 
-    constructor(private readonly session: CodeStreamSession) {
+    constructor(
+        public readonly session: CodeStreamSession
+    ) {
         super(() => this.dispose());
-
-        this._panel = window.createWebviewPanel(
-            'CodeStream.stream',
-            'CodeStream',
-            ViewColumn.Three,
-            {
-                retainContextWhenHidden: true,
-                enableFindWidget: true,
-                enableCommandUris: true,
-                enableScripts: true
-            }
-        );
-
-        this._disposable = Disposable.from(
-            session.onDidReceivePosts(this.onPostsReceived, this),
-            session.onDidChange(this.onSessionChanged, this),
-            this._panel,
-            this._panel.onDidDispose(this.onPanelDisposed, this),
-            this._panel.onDidChangeViewState(this.onPanelViewStateChanged, this),
-            this._panel.webview.onDidReceiveMessage(this.onPanelWebViewMessageReceived, this)
-        );
     }
 
     dispose() {
@@ -245,7 +225,7 @@ export class StreamWebviewPanel extends Disposable {
         if (streamThread === undefined ||
             (this._streamThread && this._streamThread.id === streamThread.id &&
             this._streamThread.stream.id === streamThread.stream.id)) {
-            this._panel.reveal(undefined, false);
+            this._panel!.reveal(undefined, false);
 
             return this._streamThread;
         }
@@ -254,16 +234,23 @@ export class StreamWebviewPanel extends Disposable {
     }
 
     private async postMessage(request: CSWebviewRequest) {
-        const success = await this._panel.webview.postMessage(request);
+        const success = await this._panel!.webview.postMessage(request);
         if (!success) {
             this._invalidateOnVisible = true;
         }
     }
 
     private async setStream(streamThread: StreamThread): Promise<StreamThread> {
-        const label = await streamThread.stream.label();
-        this._panel.title = `${label} \u00a0\u2022\u00a0 CodeStream`;
         this._streamThread = streamThread;
+
+        const [label, document, posts, repos, teams, users] = await Promise.all([
+            streamThread.stream.label(),
+            workspace.openTextDocument(Uri.file(Container.context.asAbsolutePath('/assets/index.html'))),
+            streamThread.stream.posts.entities(),
+            this.session.repos.entities(),
+            this.session.teams.entities(),
+            this.session.users.entities()
+        ]);
 
         const state: BootstrapState = Object.create(null);
         state.currentTeamId = streamThread.stream.teamId;
@@ -271,34 +258,52 @@ export class StreamWebviewPanel extends Disposable {
         state.currentStreamId = streamThread.stream.id;
         if (streamThread.stream.type === StreamType.Channel) {
             if (streamThread.stream.isLiveShareChannel) {
-                state.currentStreamLabel = await streamThread.stream.label();
+                state.currentStreamLabel = label;
                 state.currentStreamServiceType = 'liveshare';
             }
         }
         state.selectedPostId = streamThread.id;
+
+        state.posts = posts;
+        state.repos = repos;
         state.streams = [streamThread.stream.entity];
+        state.teams = teams;
+        state.users = users;
 
-        [state.posts, state.repos, state.teams, state.users] = await Promise.all([
-            streamThread.stream.posts.entities(),
-            this.session.repos.entities(),
-            this.session.teams.entities(),
-            this.session.users.entities()
-        ]);
-
-        const htmlPath = Container.context.asAbsolutePath('/assets/index.html');
-        const scriptPath = Container.context.asAbsolutePath('/assets/app.js');
-        const stylesPath = Container.context.asAbsolutePath('/assets/styles/stream.css');
-
-        const html = fs
-            .readFileSync(htmlPath, {
-                encoding: 'utf-8'
-            })
+        const html = document.getText()
             .replace('{% bootstrap-data %}', JSON.stringify(state))
-            .replace('{% script-path %}', scriptPath)
-            .replace('{% styles-path %}', stylesPath);
-        this._panel.webview.html = html;
+            .replace('{% script-path %}', Container.context.asAbsolutePath('/assets/app.js'))
+            .replace('{% styles-path %}', Container.context.asAbsolutePath('/assets/styles/stream.css'));
 
-        this._panel.reveal(ViewColumn.Three, false);
+        if (this._panel === undefined) {
+            this._panel = window.createWebviewPanel(
+                'CodeStream.stream',
+                `${label} \u00a0\u2022\u00a0 CodeStream`,
+                { viewColumn: ViewColumn.Three, preserveFocus: false },
+                {
+                    retainContextWhenHidden: true,
+                    enableFindWidget: true,
+                    enableCommandUris: true,
+                    enableScripts: true
+                }
+            );
+
+            this._disposable = Disposable.from(
+                this.session.onDidReceivePosts(this.onPostsReceived, this),
+                this.session.onDidChange(this.onSessionChanged, this),
+                this._panel,
+                this._panel.onDidDispose(this.onPanelDisposed, this),
+                this._panel.onDidChangeViewState(this.onPanelViewStateChanged, this),
+                this._panel.webview.onDidReceiveMessage(this.onPanelWebViewMessageReceived, this)
+            );
+
+            this._panel.webview.html = html;
+        }
+        else {
+            this._panel.title = `${label} \u00a0\u2022\u00a0 CodeStream`;
+            this._panel.webview.html = html;
+            this._panel.reveal(ViewColumn.Three, false);
+        }
 
         return this._streamThread;
     }
