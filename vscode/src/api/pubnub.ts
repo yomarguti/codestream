@@ -126,7 +126,12 @@ export class PubNubReceiver {
 
     onStatus(status: Pubnub.StatusEvent) {
         try {
-            Logger.log(`PubNub.onStatus: event=${JSON.stringify(status)}`);
+            if ((status as any).error) {
+                Logger.warn(`PubNub.onStatus: ERROR event=${JSON.stringify(status)}`);
+            }
+            else {
+                Logger.log(`PubNub.onStatus: event=${JSON.stringify(status)}`);
+            }
         }
         catch (ex) {
             Logger.error(ex);
