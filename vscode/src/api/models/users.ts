@@ -26,7 +26,7 @@ export class User extends CodeStreamItem<CSUser> {
     }
 
     get fullName() {
-        return `${this.entity.firstName} ${this.entity.lastName}`.trim();
+        return `${this.entity.firstName || ''} ${this.entity.lastName || ''}`.trim();
     }
 
     get name() {
