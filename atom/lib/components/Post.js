@@ -49,7 +49,7 @@ class Post extends Component {
 			} else {
 				codeBlock = (
 					<div className="code-reference">
-						<span>{post.file || "-"}</span>
+						<span>{post.codeBlocks[0].file || "-"}</span>
 						<div className="code">{code}</div>
 					</div>
 				);

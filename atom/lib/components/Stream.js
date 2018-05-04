@@ -1273,6 +1273,7 @@ export class SimpleStream extends Component {
 				location: rangeToLocation(quoteRange),
 				preContext,
 				postContext,
+				repoId,
 				file: currentFile
 			};
 
@@ -1280,7 +1281,6 @@ export class SimpleStream extends Component {
 			// API server will create one based on the file
 			// and the repoId.
 			if (fileStreamId) codeBlock.streamId = fileStreamId;
-			else codeBlock.repoId = repoId;
 
 			codeBlocks.push(codeBlock);
 		}
