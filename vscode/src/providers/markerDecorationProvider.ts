@@ -101,7 +101,7 @@ export class MarkerDecorationProvider extends Disposable {
                             }
                         } as OpenStreamCommandArgs;
 
-                        message = new MarkdownString(`__${sender!.name}__, ${post.fromNow()} &nbsp; _(${post.formatDate()})_\n\n>${post.text}\n\n[__Open Comment \u2197__](command:codestream.openStream?${JSON.stringify(args)} "Open Comment")`);
+                        message = new MarkdownString(`__${sender!.name}__, ${post.fromNow()} &nbsp; _(${post.formatDate()})_\n\n>${post.text}\n\n[__Open Comment \u2197__](command:codestream.openStream?${encodeURIComponent(JSON.stringify(args))} "Open Comment")`);
                         message.isTrusted = true;
                     }
 
