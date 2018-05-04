@@ -99,8 +99,11 @@ export interface CSTeam extends CSEntity {
 export interface CSUser extends CSEntity {
     username: string;
     email: string;
+    firstName: string;
+    lastName: string;
     isRegistered: boolean;
     registeredAt: Date;
+    timeZone: string;
     joinMethod: string; // 'Create Team'
     primaryReferral: 'internal' | 'external';
     originTeamId: string;
