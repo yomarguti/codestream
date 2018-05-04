@@ -18,7 +18,7 @@ export class CodeStreamBot extends Disposable {
     private readonly _disposable: Disposable;
     private _disposableSignedIn: Disposable | undefined;
     private _session: CodeStreamSession | undefined;
-    private _triggers: (BotTrigger & { regex: RegExp })[] = [];
+    private _triggers: (BotTrigger & { regex?: RegExp })[] = [];
 
     constructor() {
         super(() => this.dispose());
@@ -46,10 +46,15 @@ export class CodeStreamBot extends Disposable {
             try {
                 for (const t of Container.config.bot.triggers) {
                     try {
-                        this._triggers.push({ ...t, regex: new RegExp(t.message, 'i') });
+                        const trigger = { ...t, regex: t.pattern == null ? undefined : new RegExp(t.pattern, 'i') };
+                        // hotkey's can only post to the active thread/stream
+                        if (trigger.type === 'hotkey') {
+                            trigger.response.location = undefined;
+                        }
+                        this._triggers.push(trigger);
                     }
                     catch (ex) {
-                        Logger.error(ex, `Bad bot trigger: ${t.type}, ${t.message}`);
+                        Logger.error(ex, `Bad bot trigger: ${t.type}, ${t.pattern}`);
                     }
                 }
             }
@@ -127,19 +132,35 @@ export class CodeStreamBot extends Disposable {
         this._session === undefined;
     }
 
-    private _pending: { response: BotResponse, post: CSPost } | undefined;
+    private _pending: BotResponse | undefined;
 
     @command('bot.trigger')
-    trigger() {
-        if (this._pending === undefined) return;
+    async trigger() {
+        let response;
+        if (this._pending === undefined) {
+            const trigger = this._triggers.find(t => t.type === 'hotkey' && t.pattern == null);
+            if (trigger === undefined) return;
 
-        return this.postResponse(this._pending.response, this._pending.post);
+            // const streamThread = Container.streamView.activeStreamThread;
+            // if (streamThread === undefined || streamThread.stream === undefined) return;
+
+            // const mostRecentPost = await streamThread.stream.posts.mostRecent();
+            // if (mostRecentPost === undefined) return;
+
+            response = trigger.response;
+        }
+        else {
+            response = this._pending;
+            this._pending = undefined;
+        }
+
+        return this.postResponse(response);
     }
 
     private async onPostsReceived(e: PostsReceivedEvent) {
         for (const p of e.entities()) {
             for (const trigger of this._triggers) {
-                if (!trigger.regex.test(p.text)) continue;
+                if (trigger.regex === undefined || !trigger.regex.test(p.text)) continue;
 
                 switch (trigger.type) {
                     case 'immediate':
@@ -152,14 +173,33 @@ export class CodeStreamBot extends Disposable {
                         break;
 
                     case 'hotkey':
-                        this._pending = { response: trigger.response, post: p };
+                        this._pending = trigger.response;
                         break;
                 }
             }
         }
     }
 
-    private async postResponse(response: BotResponse, post: CSPost) {
+    private async postResponse(response: BotResponse, post?: CSPost) {
+        let streamThread;
+        if (response.location == null) {
+            const active = Container.streamView.activeStreamThread;
+            if (active === undefined) return;
+
+            streamThread = {
+                id: active.id,
+                streamId: active.stream.id
+            };
+        }
+        else {
+            if (post === undefined) return;
+
+            streamThread = {
+                id: response.location === 'thread' ? post.id : undefined,
+                streamId: post.streamId
+            };
+        }
+
         if (response.codeBlock !== undefined) {
             const match = responseCodeBlockRegex.exec(response.codeBlock);
             if (match != null) {
@@ -175,10 +215,7 @@ export class CodeStreamBot extends Disposable {
                     const range = new Range(parseInt(start, 10), 0, parseInt(end, 10), Number.MAX_VALUE);
 
                     return Container.commands.postCode({
-                        streamThread: {
-                            id: response.location === 'thread' ? post.id : undefined,
-                            streamId: post.streamId
-                        },
+                        streamThread: streamThread,
                         text: response.message,
                         send: true,
                         document: doc,
@@ -190,10 +227,7 @@ export class CodeStreamBot extends Disposable {
         }
 
         return Container.commands.post({
-            streamThread: {
-                id: response.location === 'thread' ? post.id : undefined,
-                streamId: post.streamId
-            },
+            streamThread: streamThread,
             text: response.message,
             send: true,
             silent: true,

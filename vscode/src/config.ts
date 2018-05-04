@@ -2,13 +2,13 @@
 
 export interface BotResponse {
     message: string;
-    location: 'channel' | 'thread';
+    location?: 'channel' | 'thread';
     codeBlock?: string;
 }
 
 export interface BotTrigger {
     type: 'immediate' | 'delayed' | 'hotkey';
-    message: string;
+    pattern?: string;
     response: BotResponse;
 }
 

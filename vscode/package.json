@@ -121,7 +121,6 @@
                         "type": "object",
                         "required": [
                             "type",
-                            "message",
                             "response"
                         ],
                         "properties": {
@@ -134,15 +133,14 @@
                                 ],
                                 "description": "Specifies the demo bot's trigger type"
                             },
-                            "message": {
+                            "pattern": {
                                 "type": "string",
-                                "description": "Specifies the demo bot's trigger message regular expression"
+                                "description": "Specifies the demo bot's trigger message regular expression pattern"
                             },
                             "response": {
                                 "type": "object",
                                 "required": [
-                                    "message",
-                                    "location"
+                                    "message"
                                 ],
                                 "properties": {
                                     "message": {
