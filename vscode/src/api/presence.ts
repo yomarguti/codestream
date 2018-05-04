@@ -63,7 +63,6 @@ export class PresenceManager extends Disposable {
 
         try {
             this._timeout = await this._promise;
-            this._timeout = 5000;
         }
         catch (ex) {
             Logger.error(ex);
