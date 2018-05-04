@@ -91,15 +91,16 @@ export class NotificationsController extends Disposable {
     async showNotification(post: Post) {
         const sender = await post.sender();
 
-        const actions: MessageItem[] = [
-            { title: 'Open' }
-        ];
+        // const actions: MessageItem[] = [
+        //     { title: 'Open' }
+        // ];
 
         const text = Container.linkActions.resolveTextTransformations(post.text);
-        const result = await window.showInformationMessage(`${sender !== undefined ? sender.name : 'Someone'}: ${text}`, ...actions);
-        if (result === actions[0]) {
-            Container.commands.openStream({ streamThread: { id: undefined, streamId: post.streamId } });
-        }
+        window.showInformationMessage(`${sender !== undefined ? sender.name : 'Someone'}: ${text}`);
+        // const result = await window.showInformationMessage(`${sender !== undefined ? sender.name : 'Someone'}: ${text}`, ...actions);
+        // if (result === actions[0]) {
+        //     Container.commands.openStream({ streamThread: { id: undefined, streamId: post.streamId } });
+        // }
     }
 
     private _unreadCountChangedDebounced: ((e: UnreadCountChangedEvent) => void) | undefined;

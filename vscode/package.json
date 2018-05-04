@@ -87,7 +87,7 @@
                 },
                 "codestream.notifications": {
                     "type": "string",
-                    "default": "all",
+                    "default": "mentions",
                     "enum": [
                         "all",
                         "mentions",
