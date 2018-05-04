@@ -24,9 +24,8 @@ export class GitAuthorParser {
         let prevSha;
         let process = false;
 
-        for (line of Strings.lines(data)) {
+        for (line of Strings.lines(data + '\n')) {
             index = line.indexOf(' ');
-            if (index === -1) continue;
 
             if (author === undefined || process) {
                 if (process) {
@@ -43,6 +42,8 @@ export class GitAuthorParser {
                         }
                     }
                 }
+
+                if (index === -1) continue;
 
                 prevSha = sha;
                 sha = line.substring(0, index);
@@ -62,6 +63,8 @@ export class GitAuthorParser {
 
                 continue;
             }
+
+            if (index === -1) continue;
 
             switch (line.substring(0, index)) {
                 case 'author':
