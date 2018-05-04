@@ -92,7 +92,6 @@ export class ChannelStream extends StreamBase<CSChannelStream> {
         return liveShareServiceChannelRegex.test(this.entity.name);
     }
 
-    @memoize
     async label() {
         // ls:<userId>:<sessionId>
         const match = liveShareServiceChannelRegex.exec(this.entity.name);
