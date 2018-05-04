@@ -476,6 +476,34 @@ export class SimpleStream extends Component {
 		];
 	};
 
+	renderThreadPosts = threadId => {
+		let lastTimestamp = 0;
+		return this.props.posts.map(post => {
+			if (post.deactivated) return null;
+			if (!threadId || threadId !== post.parentPostId) {
+				return null;
+			}
+			// this needs to be done by storing the return value of the render,
+			// then setting lastTimestamp, otherwise you wouldn't be able to
+			// compare the current one to the prior one.
+			const returnValue = (
+				<div key={post.id}>
+					<DateSeparator timestamp1={lastTimestamp} timestamp2={post.createdAt} />
+					<Post
+						post={post}
+						usernames={this.props.usernamesRegexp}
+						currentUsername={this.props.currentUser.username}
+						showDetails="1"
+						currentCommit={this.props.currentCommit}
+						editing={post.id === this.state.editingPostId}
+					/>
+				</div>
+			);
+			lastTimestamp = post.createdAt;
+			return returnValue;
+		});
+	};
+
 	// we render both a main stream (postslist) plus also a postslist related
 	// to the currently selected thread (if it exists). the reason for this is
 	// to be able to animate between the two streams, since they will both be
@@ -648,34 +676,7 @@ export class SimpleStream extends Component {
 							editing={this.state.threadActive && threadPost.id === this.state.editingPostId}
 						/>
 					)}
-					{
-						(lastTimestamp =
-							0 ||
-							posts.map(post => {
-								if (post.deactivated) return null;
-								if (!threadId || threadId !== post.parentPostId) {
-									return null;
-								}
-								// this needs to be done by storing the return value of the render,
-								// then setting lastTimestamp, otherwise you wouldn't be able to
-								// compare the current one to the prior one.
-								const returnValue = (
-									<div key={post.id}>
-										<DateSeparator timestamp1={lastTimestamp} timestamp2={post.createdAt} />
-										<Post
-											post={post}
-											usernames={this.props.usernamesRegexp}
-											currentUsername={this.props.currentUser.username}
-											showDetails="1"
-											currentCommit={this.props.currentCommit}
-											editing={post.id === this.state.editingPostId}
-										/>
-									</div>
-								);
-								lastTimestamp = post.createdAt;
-								return returnValue;
-							}))
-					}
+					{this.renderThreadPosts(threadId)}
 				</div>
 
 				<div className={unreadsBelowClass} type="below" onClick={this.handleClickUnreads}>
