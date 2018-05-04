@@ -290,10 +290,11 @@ export class CodeStreamApi {
         return new Error(`${response.status}: ${response.statusText}\n\n${JSON.stringify(data)}`);
     }
 
-    static isStreamSubscriptionRequired(stream: CSStream): boolean {
+    static isStreamSubscriptionRequired(stream: CSStream, userId: string): boolean {
         if (stream.deactivated || stream.type === StreamType.File) return false;
         if (stream.type === StreamType.Channel) {
             if (stream.memberIds === undefined) return false;
+            if (!stream.memberIds.includes(userId)) return false;
         }
         return true;
     }

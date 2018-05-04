@@ -38,11 +38,11 @@ export class PubNubReceiver {
 
     private _pubnub: Pubnub | undefined;
     private _listener: Pubnub.ListenerParameters | undefined;
-
-    constructor() {
-    }
+    private _userId: string | undefined;
 
     initialize(authKey: string, userId: string, subscribeKey: string): Disposable {
+        this._userId = userId;
+
         const uuid = `${userId}`;
         this._pubnub = new Pubnub({
             authKey: authKey,
@@ -106,16 +106,32 @@ export class PubNubReceiver {
     }
 
     onMessage(event: Pubnub.MessageEvent) {
-        this.processMessage(event.message);
+        try {
+            this.processMessage(event.message);
+        }
+        catch (ex) {
+            Logger.error(ex);
+        }
     }
 
     onPresence(event: Pubnub.PresenceEvent) {
-        Logger.log(`PubNub.onPresence: event=${JSON.stringify(event)}`);
+        try {
+            Logger.log(`PubNub.onPresence: event=${JSON.stringify(event)}`);
+        }
+        catch (ex) {
+            Logger.error(ex);
+        }
         // logger.debug(`user ${event.uuid} ${event.action}. occupancy is ${event.occupancy}`); // uuid of the user
     }
 
     onStatus(status: Pubnub.StatusEvent) {
-        Logger.log(`PubNub.onStatus: event=${JSON.stringify(status)}`);
+        try {
+            Logger.log(`PubNub.onStatus: event=${JSON.stringify(status)}`);
+        }
+        catch (ex) {
+            Logger.error(ex);
+        }
+
         // if (status.error) {
         //     // this sucks ... pubnub does not send us the channel that failed,
         //     // meaning that if we try to subscribe to two channels around the same
@@ -147,28 +163,38 @@ export class PubNubReceiver {
         for (let [key, obj] of Object.entries(messages)) {
             Logger.log(`PubNub '${key}' message received\n${JSON.stringify(obj)}`);
 
-            switch (key) {
-                case 'post':
-                case 'repo':
-                case 'stream':
-                    key += 's';
-                    obj = [obj];
+            if (Object.keys(obj).some(k => k.startsWith('$'))) {
+                Logger.log(`PubNub '${key}' message with directive received\n${JSON.stringify(obj)}`);
+                continue;
             }
 
-            switch (key as MessageType) {
-                case 'posts':
-                    this._onDidReceiveMessage.fire({ type: MessageType.Posts, posts: CodeStreamApi.normalizeResponse(obj) as CSPost[] });
-                    break;
-                case 'repos':
-                    this._onDidReceiveMessage.fire({ type: MessageType.Repositories, repos: CodeStreamApi.normalizeResponse(obj) as CSRepository[] });
-                    break;
-                case 'streams':
-                    const streams = CodeStreamApi.normalizeResponse(obj) as CSStream[];
-                    // Subscribe to any new non-file, non-team streams
-                    this.subscribeCore([...Iterables.filterMap(streams, s => CodeStreamApi.isStreamSubscriptionRequired(s) ? `stream-${s.id}` : undefined)]);
+            try {
+                switch (key) {
+                    case 'post':
+                    case 'repo':
+                    case 'stream':
+                        key += 's';
+                        obj = [obj];
+                }
 
-                    this._onDidReceiveMessage.fire({ type: MessageType.Streams, streams: streams });
-                    break;
+                switch (key as MessageType) {
+                    case 'posts':
+                        this._onDidReceiveMessage.fire({ type: MessageType.Posts, posts: CodeStreamApi.normalizeResponse(obj) as CSPost[] });
+                        break;
+                    case 'repos':
+                        this._onDidReceiveMessage.fire({ type: MessageType.Repositories, repos: CodeStreamApi.normalizeResponse(obj) as CSRepository[] });
+                        break;
+                    case 'streams':
+                        const streams = CodeStreamApi.normalizeResponse(obj) as CSStream[];
+                        // Subscribe to any new non-file, non-team streams
+                        this.subscribeCore([...Iterables.filterMap(streams, s => CodeStreamApi.isStreamSubscriptionRequired(s, this._userId!) ? `stream-${s.id}` : undefined)]);
+
+                        this._onDidReceiveMessage.fire({ type: MessageType.Streams, streams: streams });
+                        break;
+                }
+            }
+            catch (ex) {
+                Logger.error(ex, `PubNub '${key}' FAILED`);
             }
         }
 

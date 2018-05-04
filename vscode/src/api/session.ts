@@ -385,7 +385,7 @@ export class CodeStreamSession extends Disposable {
                 Container.git.onDidChangeRepositories(this.onGitRepositoriesChanged, this)
             ];
 
-            const streams = await this._sessionApi.getSubscribeableStreams(teamId);
+            const streams = await this._sessionApi.getSubscribeableStreams(this.userId, teamId);
             this._pubnub.subscribe(this.userId, teamId, this._data.repos.map(r => r.id), streams.map(s => s.id));
 
             this._presenceManager = new PresenceManager(this._sessionApi, this.id!);
