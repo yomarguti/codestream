@@ -109,7 +109,7 @@ export class Commands extends Disposable {
         if (post instanceof PostNode) {
             post = post.post;
         }
-        if (post === undefined) return;
+        if (post == null) return;
 
         const block = await post.codeBlock();
         if (block === undefined) return;
@@ -131,7 +131,7 @@ export class Commands extends Disposable {
         if (post instanceof PostNode) {
             post = post.post;
         }
-        if (post === undefined) return;
+        if (post == null) return;
 
         const block = await post.codeBlock();
         if (block === undefined) return;
@@ -145,7 +145,7 @@ export class Commands extends Disposable {
         if (post instanceof PostNode) {
             post = post.post;
         }
-        if (post === undefined) return;
+        if (post == null) return;
 
         const block = await post.codeBlock();
         if (block === undefined) return;
@@ -158,6 +158,8 @@ export class Commands extends Disposable {
 
     @command('openStream', { showErrorMessage: 'Unable to open stream' })
     async openStream(args: OpenStreamCommandArgs): Promise<StreamThread | undefined> {
+        if (args == null) return undefined;
+
         const streamThread = await this.findStreamThread(args.session || Container.session, args, { includeActive: true, includeDefault: true });
         if (streamThread === undefined) return undefined;
 
@@ -166,6 +168,10 @@ export class Commands extends Disposable {
 
     @command('post', { showErrorMessage: 'Unable to post message' })
     async post(args: PostCommandArgs): Promise<Post | StreamThread> {
+        if (args == null) {
+            args = {} as PostCommandArgs;
+        }
+
         const streamThread = await this.findStreamThread(args.session || Container.session, args, { includeActive: true, includeDefault: true /*!args.send*/ });
         if (streamThread === undefined) throw new Error(`No stream could be found`);
 
@@ -186,6 +192,10 @@ export class Commands extends Disposable {
 
     @command('postCode', { showErrorMessage: 'Unable to add comment' })
     async postCode(args: PostCodeCommandArgs): Promise<Post | Stream | undefined> {
+        if (args == null) {
+            args = {} as PostCodeCommandArgs;
+        }
+
         let document;
         let selection;
         if (args.document === undefined || args.range === undefined) {
@@ -274,6 +284,8 @@ export class Commands extends Disposable {
 
     @command('runServiceAction')
     runServiceAction(args: { commandUri: string }) {
+        if (args == null) return;
+
         return Container.linkActions.execute(args.commandUri);
     }
 
