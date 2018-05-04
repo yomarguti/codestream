@@ -280,10 +280,14 @@ export class SimpleStream extends Component {
 
 		if (this.props.posts.length !== prevProps.posts.length) {
 			const lastPost = this.props.posts[this.props.posts.length - 1];
+
+			// if the latest post is mine, scroll to the bottom always
+			// otherwise, if we've scrolled up, then just call
+			// handleScroll to make sure new message indicators
+			// appear as appropriate.
 			const mine = this.props.currentUser.username === lastPost.author.username;
-			if (mine) this._postslist.scrollTop = 100000;
-			if (this.state.scrolledOffBottom) this.handleScroll();
-			else this.resizeStream();
+			if (mine || !this.state.scrolledOffBottom) this._postslist.scrollTop = 100000;
+			else this.handleScroll();
 		}
 	}
 
@@ -417,6 +421,7 @@ export class SimpleStream extends Component {
 		let offBottom = scrollHeight - currentScroll - streamHeight + composeHeight + headerHeight;
 		// if i am manually scrolling, don't programatically scroll to bottom
 		// offBottom is how far we've scrolled off the bottom of the posts list
+		console.log("OFF BOTTOM IS: ", offBottom);
 		if (offBottom < 100) this._postslist.scrollTop = 100000;
 	};
 
