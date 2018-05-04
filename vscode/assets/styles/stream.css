@@ -645,6 +645,42 @@ body.preload * {
 .vscode-light.codestream .stream .post.editing {
   background-color: rgba(0, 0, 0, 0.07) !important;
 }
+.codestream .stream .post .code-reference span {
+  height: 1.4em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: pre;
+  color: var(--link-color);
+  display: block;
+}
+.codestream .stream .post .code-reference span span {
+  opacity: 0.5;
+  color: var(--text-color);
+}
+.codestream .stream .post .code-reference span b {
+  font-weight: normal;
+}
+.codestream .stream .post .code-reference span {
+  direction: rtl;
+  text-align: center;
+  color: var(--text-color-subtle);
+  background-color: rgba(0, 0, 0, 0.3);
+  background: var(--base-background-color);
+  display: block;
+  padding: 2px 4px;
+  height: auto;
+  margin-top: 5px;
+  font-size: 10px;
+  border-radius: 5px 5px 0 0;
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  border-bottom: none;
+  border-bottom: 1px dashed rgba(0, 0, 0, 0.3);
+}
+.codestream .stream .post .code-reference .code {
+  margin-top: 0;
+  margin-bottom: 5px;
+  border-top: 0;
+}
 .codestream .stream .postslist {
   flex: 1 1 auto;
   height: 100%;

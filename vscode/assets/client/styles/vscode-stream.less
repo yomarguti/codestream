@@ -99,6 +99,42 @@ body.preload * {
 					background-color: @background-color-highlight-light !important;
 				}
 			}
+			.code-reference span {
+				height: 1.4em;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: pre;
+				color: @text-color-info;
+				display: block;
+				span {
+					opacity: 0.5;
+					color: @text-color;
+				}
+				b {
+					font-weight: normal;
+				}
+			}
+			.code-reference span {
+				direction: rtl;
+				text-align: center;
+				color: @text-color-subtle;
+				background-color: @base-border-color;
+				background: @base-background-color;
+				display: block;
+				padding: 2px 4px;
+				height: auto;
+				margin-top: 5px;
+				font-size: 10px;
+				border-radius: 5px 5px 0 0;
+				border: 1px solid @base-border-color;
+				border-bottom: none;
+				border-bottom: 1px dashed @base-border-color;
+			}
+			.code-reference .code {
+				margin-top: 0;
+				margin-bottom: 5px;
+				border-top: 0;
+			}
 		}
 
 		.postslist {
@@ -152,10 +188,10 @@ body.preload * {
 .popup-button {
 	border-radius: 5px;
 	background-color: @app-background-color;
-    z-index: 100;
-    padding: 0.5em 0.75em;
-    position: absolute;
-    top: 40px;
+	z-index: 100;
+	padding: 0.5em 0.75em;
+	position: absolute;
+	top: 40px;
 	left: 15px;
 
 	.vscode-dark & {

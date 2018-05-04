@@ -1391,6 +1391,7 @@ const mapStateToProps = ({
 			};
 		}
 		const { id, username, email, firstName = "", lastName = "", color } = user;
+
 		return {
 			...post,
 			markerLocation: locations[post.id],
