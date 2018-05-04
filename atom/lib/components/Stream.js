@@ -713,12 +713,12 @@ export class SimpleStream extends Component {
 			let umi = umiDivs[index];
 			let top = umi.offsetTop;
 			if (top - scrollTop + 10 < 0) {
-				unreadsAbove = umi;
-				if (umi.getAttribute("cs-umi-mention") == "1") mentionsAbove = umi;
+				if (!unreadsAbove) unreadsAbove = umi;
+				// if (umi.getAttribute("cs-umi-mention") == "1") mentionsAbove = umi;
 			}
 			if (top - scrollTop + 60 + umi.offsetHeight > containerHeight) {
-				if (!unreadsBelow) unreadsBelow = umi;
-				if (!mentionsBelow && umi.getAttribute("cs-umi-mention") == "1") mentionsBelow = umi;
+				unreadsBelow = umi;
+				// if (!mentionsBelow && umi.getAttribute("cs-umi-mention") == "1") mentionsBelow = umi;
 			}
 			index++;
 		}
@@ -740,7 +740,7 @@ export class SimpleStream extends Component {
 		if (!element) return;
 
 		let that = this;
-		let padding = type === "above" ? -40 : 40;
+		let padding = type === "above" ? -10 : 10;
 		if (active) {
 			element.classList.add("active");
 			element.onclick = function(event) {
@@ -1065,7 +1065,7 @@ export class SimpleStream extends Component {
 		let node = range.commonAncestorContainer;
 		let nodeText = node.textContent || "";
 		let upToCursor = nodeText.substring(0, range.startOffset);
-		var match = upToCursor.match(/@([a-zA-Z_.+]*)$/);
+		var match = upToCursor.match(/@([a-zA-Z0-9_.+]*)$/);
 		if (this.state.atMentionsOn) {
 			if (match) {
 				var text = match[0].replace(/@/, "");
@@ -1097,7 +1097,7 @@ export class SimpleStream extends Component {
 				event.preventDefault();
 				this.selectFirstAtMention();
 			} else {
-				var match = newPostText.match(/@([a-zA-Z]*)$/);
+				var match = newPostText.match(/@([a-zA-Z0-9_.]*)$/);
 				var text = match ? match[0].replace(/@/, "") : "";
 				// this.showAtMentionSelectors(text);
 			}
@@ -1418,7 +1418,7 @@ const mapStateToProps = ({
 	// FIXME -- eventually we'll allow the user to switch to other streams, like DMs and channels
 	const teamStream = getStreamForTeam(streams, context.currentTeamId) || {};
 	const streamPosts = getPostsForStream(posts, teamStream.id);
-	const streamsById = getStreamsForRepoById(streams, context.currentRepoId);
+	const streamsById = getStreamsForRepoById(streams, context.currentRepoId) || {};
 
 	return {
 		isOnline,
