@@ -49,7 +49,7 @@ export default class Headshot extends Component {
 		let defaultImage = encodeURI(
 			"https://images.codestream.com/misc/nothing_transparent-36x36.gif"
 		);
-		let authorInitials = person.email.charAt(0);
+		let authorInitials = person.username ? person.username.charAt(0) : person.email.charAt(0);
 		if (person.fullName) {
 			authorInitials = person.fullName.replace(/(\w)\w*/g, "$1").replace(/\s/g, "");
 			if (authorInitials.length > 2) authorInitials = authorInitials.substring(0, 2);
