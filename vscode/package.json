@@ -551,7 +551,7 @@
         "keybindings": [
             {
                 "command": "codestream.bot.trigger",
-                "key": "ctrl+alt+r",
+                "key": "alt+z",
                 "when": "codestream:status == signedIn && config.codestream.bot.enabled"
             }
         ],
