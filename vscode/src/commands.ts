@@ -216,7 +216,10 @@ export class Commands extends Disposable {
             contents: document.isDirty ? document.getText() : undefined
         });
 
-        const users = await (args.session || Container.session).users.getByEmails(authors.map(a => a.email));
+        const authorEmails = authors.map(a => a.email);
+        Logger.log(`Commands.postCode: authors found: ${authorEmails.join(', ')}`);
+
+        const users = await (args.session || Container.session).users.getByEmails(authorEmails);
         const mentions = Iterables.join(Iterables.map(users, u => `@${u.name}`), ', ');
 
         const code = document.getText(selection);
