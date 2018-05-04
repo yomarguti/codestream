@@ -23,7 +23,7 @@ export class PeopleNode extends ExplorerNode {
         const users = [...await this.session.users.items()];
 
         users.sort((a, b) => ((a.id === currentUserId ? -1 : 1) - (b.id === currentUserId ? -1 : 1)) ||
-            a.name.localeCompare(b.name));
+            (a.name || '').localeCompare(b.name || ''));
 
         const children: (StreamNode | UserNode)[] = users.map(u => new UserNode(this.session, u));
         // Add any group DMs to the "people" list

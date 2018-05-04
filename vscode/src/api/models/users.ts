@@ -30,7 +30,7 @@ export class User extends CodeStreamItem<CSUser> {
     }
 
     get name() {
-        return this.entity.username;
+        return this.entity.username || this.fullName;
     }
 }
 
