@@ -393,7 +393,7 @@ export class SimpleStream extends Component {
 			let newHeight = streamHeight - postslistHeight + this._intro.offsetHeight - composeHeight;
 			this._intro.style.height = newHeight + "px";
 		}
-		this._div.style.paddingBottom = composeHeight + "px";
+		// this._div.style.paddingBottom = composeHeight + "px";
 		this._threadpostslist.style.height = postslistHeight + "px";
 		// if (this._atMentionsPopup)
 		// this._atMentionsPopup.style.bottom = this._compose.offsetHeight + "px";
