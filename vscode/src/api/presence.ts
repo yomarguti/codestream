@@ -1,7 +1,9 @@
 'use strict';
-import { Disposable, Event, EventEmitter  } from 'vscode';
+import { Disposable, Event, EventEmitter, MessageItem, window  } from 'vscode';
 import { PresenceStatus } from './api';
 import { CodeStreamSessionApi } from './sessionApi';
+import { Container } from '../container';
+import { Logger } from '../logger';
 
 export class PresenceManager extends Disposable {
 
@@ -59,7 +61,28 @@ export class PresenceManager extends Disposable {
         this._promise = this.sessionApi.updatePresence(status, this.sessionId);
         this._promiseStatus = status;
 
-        this._timeout = await this._promise;
+        try {
+            this._timeout = await this._promise;
+            this._timeout = 5000;
+        }
+        catch (ex) {
+            Logger.error(ex);
+
+            this.dispose();
+            Container.session.logout();
+
+            const actions: MessageItem[] = [
+                { title: 'Reconnect' }
+            ];
+
+            const result = await window.showErrorMessage(`CodeStream's connection was interrupted`, ...actions);
+            if (result === actions[0]) {
+                setImmediate(() => Container.commands.signIn());
+            }
+
+            return;
+        }
+
         this._promise = undefined;
         this._promiseStatus = undefined;
 
