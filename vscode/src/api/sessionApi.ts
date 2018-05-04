@@ -273,7 +273,7 @@ export class CodeStreamSessionApi {
 
     async getSubscribeableStreams(userId: string, teamId?: string): Promise<CSStream[]> {
         return (await this._api.getStreams<CSStream>(this.token, teamId || this.teamId)).streams.filter(s => CodeStreamApi.isStreamSubscriptionRequired(s, userId));
-}
+    }
 
     async getTeam(teamId: string): Promise<CSTeam | undefined> {
         return (await this._api.getTeam(this.token, teamId)).team;

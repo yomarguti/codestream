@@ -179,12 +179,18 @@ export class PubNubReceiver {
 
                 switch (key as MessageType) {
                     case 'posts':
+                        if (!obj || !obj.length) continue;
+
                         this._onDidReceiveMessage.fire({ type: MessageType.Posts, posts: CodeStreamApi.normalizeResponse(obj) as CSPost[] });
                         break;
                     case 'repos':
+                        if (!obj || !obj.length) continue;
+
                         this._onDidReceiveMessage.fire({ type: MessageType.Repositories, repos: CodeStreamApi.normalizeResponse(obj) as CSRepository[] });
                         break;
                     case 'streams':
+                        if (!obj || !obj.length) continue;
+
                         const streams = CodeStreamApi.normalizeResponse(obj) as CSStream[];
                         // Subscribe to any new non-file, non-team streams
                         this.subscribeCore([...Iterables.filterMap(streams, s => CodeStreamApi.isStreamSubscriptionRequired(s, this._userId!) ? `stream-${s.id}` : undefined)]);
