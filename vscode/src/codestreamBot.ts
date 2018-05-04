@@ -42,7 +42,20 @@ export class CodeStreamBot extends Disposable {
         if (!initializing && !configuration.changed(e, configuration.name('bot').value)) return;
 
         if (initializing || configuration.changed(e, configuration.name('bot')('triggers').value)) {
-            this._triggers = Container.config.bot.triggers.map(t => ({ ...t, regex: new RegExp(t.message, 'i') }));
+            this._triggers = [];
+            try {
+                for (const t of Container.config.bot.triggers) {
+                    try {
+                        this._triggers.push({ ...t, regex: new RegExp(t.message, 'i') });
+                    }
+                    catch (ex) {
+                        Logger.error(ex, `Bad bot trigger: ${t.type}, ${t.message}`);
+                    }
+                }
+            }
+            catch (ex) {
+                Logger.error(ex, `Bad bot triggers`);
+            }
         }
 
         if (initializing ||
