@@ -279,6 +279,9 @@ export class SimpleStream extends Component {
 		if (prevProps.hasFocus !== this.props.hasFocus) this.handleScroll();
 
 		if (this.props.posts.length !== prevProps.posts.length) {
+			const lastPost = this.props.posts[this.props.posts.length - 1];
+			const mine = this.props.currentUser.username === lastPost.author.username;
+			if (mine) this._postslist.scrollTop = 100000;
 			if (this.state.scrolledOffBottom) this.handleScroll();
 			else this.resizeStream();
 		}
@@ -716,19 +719,18 @@ export class SimpleStream extends Component {
 	}
 
 	handleScroll(event) {
-		let scrollDiv = this._postslist;
+		const scrollDiv = this._postslist;
 
 		if (!scrollDiv) {
 			console.log("Couldn't find scrollDiv for ", event);
 			return;
 		}
 
-		let scrollTop = scrollDiv.scrollTop;
-		let containerHeight = scrollDiv.parentNode.offsetHeight;
-
-		let scrollHeight = scrollDiv.scrollHeight;
-		let offBottom = scrollHeight - scrollTop - scrollDiv.offsetHeight;
-		let scrolledOffBottom = offBottom > 100;
+		const scrollTop = scrollDiv.scrollTop;
+		const containerHeight = scrollDiv.parentNode.offsetHeight;
+		const scrollHeight = scrollDiv.scrollHeight;
+		const offBottom = scrollHeight - scrollTop - scrollDiv.offsetHeight;
+		const scrolledOffBottom = offBottom > 100;
 		if (scrolledOffBottom !== this.state.scrolledOffBottom)
 			this.setState({ scrolledOffBottom: scrolledOffBottom });
 
