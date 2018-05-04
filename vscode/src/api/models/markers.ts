@@ -1,6 +1,7 @@
 'use strict';
 import { Range, Uri } from 'vscode';
 import { Container } from '../../container';
+import { Logger } from '../../logger';
 import { ChannelStream, CodeStreamSession, DirectStream, FileStream, Post, Repository } from '../session';
 import { Iterables } from '../../system';
 import { CSMarker } from '../types';
@@ -108,19 +109,28 @@ export class MarkerCollection {
     }
 
     protected async load() {
-        const sha = await Container.git.getFileCurrentSha(this._uri);
-        const markers = new Map<string, CSMarker>((await this.session.api.getMarkers(sha!, this.fileStream.id)).map<[string, CSMarker]>(m => [m.id, m]));
-        const markerLocations = await this.session.api.getMarkerLocations(sha!, this.fileStream.id);
+        try {
+            const sha = await Container.git.getFileCurrentSha(this._uri);
+            const markers = new Map<string, CSMarker>((await this.session.api.getMarkers(sha!, this.fileStream.id)).map<[string, CSMarker]>(m => [m.id, m]));
+            const markerLocations = await this.session.api.getMarkerLocations(sha!, this.fileStream.id);
 
-        const entities = new Map<string, Marker>();
+            const entities = new Map<string, Marker>();
 
-        for (const id of Object.keys(markerLocations.locations)) {
-            const marker = markers.get(id);
-            if (marker === undefined) continue;
+            if (markers.size === 0 || !markerLocations.locations) return entities;
 
-            entities.set(id, new Marker(this.session, this.fileStream, marker, markerLocations.commitHash, markerLocations.locations[id]));
+            for (const id of Object.keys(markerLocations.locations)) {
+                const marker = markers.get(id);
+                if (marker === undefined) continue;
+
+                entities.set(id, new Marker(this.session, this.fileStream, marker, markerLocations.commitHash, markerLocations.locations[id]));
+            }
+
+            return entities;
         }
-
-        return entities;
+        catch (ex) {
+            Logger.error(ex);
+            debugger;
+            throw ex;
+        }
     }
 }

@@ -3,6 +3,7 @@ import { Disposable, Event, EventEmitter } from 'vscode';
 import { Functions, Iterables } from '../../system';
 import { CodeStreamSession } from '../session';
 import { CSEntity } from '../types';
+import { Logger } from '../../logger';
 
 export const CollectionItem = Symbol('codestream-item');
 
@@ -138,7 +139,14 @@ export abstract class CodeStreamCollection<TItem extends ICollectionItem<TEntity
     }
 
     protected async load() {
-        const entities = await this.fetch();
-        return new Map(entities.map<[string, TEntity | TItem]>(e => [e.id, e]));
+        try {
+            const entities = await this.fetch();
+            return new Map(entities.map<[string, TEntity | TItem]>(e => [e.id, e]));
+        }
+        catch (ex) {
+            Logger.error(ex);
+            debugger;
+            throw ex;
+        }
     }
 }
