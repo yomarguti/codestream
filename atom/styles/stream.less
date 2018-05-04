@@ -97,18 +97,18 @@
 			border: none;
 			color: white;
 		}
-		#unreads-above {
+		.unreads[type="above"] {
 			top: 0px;
 			// margin-top: -3em;
 			border-radius: 0 0 5px 5px;
 			border-top: none;
 			// box-shadow: 0 1px 15px rgba(0, 0, 0, 0.5);
 		}
-		#unreads-above.active {
+		.unreads[type="above"].active {
 			top: 30px;
 			// margin-top: 30px;
 		}
-		#unreads-below {
+		.unreads[type="below"] {
 			top: auto !important;
 			// bottom: -3em !important;
 			border-radius: 5px 5px 0 0;
@@ -117,7 +117,7 @@
 			bottom: 30px !important;
 			z-index: 5;
 		}
-		#unreads-below.active {
+		.unreads[type="below"].active {
 			bottom: 60px !important;
 		}
 
@@ -523,8 +523,12 @@
 			}
 		}
 
+		.post.unread {
+			border-left: 1px solid @background-color-info;
+			border-right: 1px solid @background-color-info;
+		}
 		.post {
-			padding: 10px;
+			padding: 10px 9px; // 1px left and right for border
 			cursor: pointer;
 			min-height: 56px;
 			white-space: pre-wrap;
@@ -533,6 +537,7 @@
 			max-width: 100%;
 			// this is to accomodate the new-message indicator line
 			border-top: 1px solid transparent;
+			border-left: 1px solid transparent;
 			// overflow-x: hidden;
 			.headshot-gravatar {
 				display: block;

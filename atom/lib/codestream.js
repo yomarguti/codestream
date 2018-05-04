@@ -344,6 +344,7 @@ module.exports = {
 			window.addEventListener("focus", e => store.dispatch(setActive()), false);
 			window.addEventListener("blur", e => store.dispatch(setHasFocus(false)), false);
 			window.addEventListener("focus", e => store.dispatch(setHasFocus(true)), false);
+			store.dispatch(setHasFocus(true));
 
 			const repoAttributes = store.getState().repoAttributes;
 			if (_.isEmpty(repoAttributes) || !repoAttributes.url) {

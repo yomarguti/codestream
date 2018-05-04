@@ -22,27 +22,6 @@ class Post extends Component {
 		};
 	}
 
-	componentDidMount() {
-		// FIXME -- probably don't want to be doing something to parent here
-		let streamDiv = this._div.parentNode.parentNode;
-		let currentScroll = streamDiv.scrollTop;
-		let scrollHeight = streamDiv.scrollHeight;
-		let offBottom = scrollHeight - currentScroll - streamDiv.offsetHeight - this._div.offsetHeight;
-		// if i am manually scrolling, don't programatically scroll to bottom
-		// unless the post is mine, in which case we always scroll to bottom
-		// we check to see if it's below 100 because if you are scrolled
-		// almost to the bottom, we count that as being at the bottom for UX reasons
-		if (offBottom < 100 || this.props.post.author.username === this.props.currentUsername) {
-			// big number to make sure we've scrolled all the way down
-			streamDiv.scrollTop = 100000;
-			// console.log("SCROLLING TO BOTTOM");
-		} else {
-			// console.log("*********NOT SCROLLING TO BOTTOM");
-		}
-
-		// atom.tooltips.add($icon.get(0), {'title': 'This block of code is different than your current copy.'});
-	}
-
 	resubmit = () => this.props.retryPost(this.props.post.id);
 
 	cancel = () => this.props.cancelPost(this.props.post.id);

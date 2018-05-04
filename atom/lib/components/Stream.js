@@ -149,7 +149,6 @@ export class SimpleStream extends Component {
 
 	componentDidMount() {
 		const me = this;
-		// TODO: scroll to bottom
 
 		const inputDiv = document.querySelector('div[contenteditable="true"]');
 		if (!inputDiv) return;
@@ -174,6 +173,7 @@ export class SimpleStream extends Component {
 			document.execCommand("insertHTML", false, text);
 		});
 		this.installEditorHandlers();
+		this._postslist.scrollTop = 100000;
 	}
 
 	componentWillReceiveProps(nextProps) {
@@ -222,13 +222,15 @@ export class SimpleStream extends Component {
 		this.postWithNewMessageIndicator = this.props.currentUser.lastReads[nextProps.postStreamId];
 	}
 
-	checkMarkStreamRead(postStreamId) {
+	checkMarkStreamRead() {
 		// if we have focus, and there are no unread indicators which would mean an
 		// unread is out of view, we assume the entire thread has been observed
 		// and we mark the stream read
 		if (this.props.hasFocus && !this.state.unreadsAbove && !this.state.unreadsBelow) {
-			console.log("Marking stream read for focus");
-			this.props.markStreamRead(this.props.postStreamId);
+			if (this.props.currentUser.lastReads[this.props.postStreamId]) {
+				console.log("Marking stream read for focus");
+				this.props.markStreamRead(this.props.postStreamId);
+			}
 		}
 	}
 
@@ -252,6 +254,15 @@ export class SimpleStream extends Component {
 			this.checkMarkStreamRead();
 		}
 
+		if (
+			!this.state.unreadsAbove &&
+			!this.state.unreadsBelow &&
+			(prevState.unreadsAbove || prevState.unreadsBelow)
+		) {
+			console.log("CDU: cmsr");
+			this.checkMarkStreamRead();
+		}
+
 		if (prevState.threadId !== this.state.threadId) {
 			this.resizeStream();
 		}
@@ -266,6 +277,11 @@ export class SimpleStream extends Component {
 		}
 
 		if (prevProps.hasFocus !== this.props.hasFocus) this.handleScroll();
+
+		if (this.props.posts.length !== prevProps.posts.length) {
+			if (this.state.scrolledOffBottom) this.handleScroll();
+			else this.resizeStream();
+		}
 	}
 
 	showDisplayMarker(markerId) {
@@ -535,8 +551,16 @@ export class SimpleStream extends Component {
 		const streamDivId = "stream-" + this.props.postStreamId;
 		let unread = false;
 
+		const unreadsAboveClass = createClassString({
+			unreads: true,
+			active: this.state.unreadsAbove
+		});
+		const unreadsBelowClass = createClassString({
+			unreads: true,
+			active: this.state.unreadsBelow
+		});
 		const unreadsAbove = this.state.threadActive ? null : (
-			<div className="unreads" id="unreads-above">
+			<div className={unreadsAboveClass} type="above" onClick={this.handleClickUnreads}>
 				&uarr; Unread Messages &uarr;
 			</div>
 		);
@@ -654,7 +678,7 @@ export class SimpleStream extends Component {
 					}
 				</div>
 
-				<div className="unreads" id="unreads-below">
+				<div className={unreadsBelowClass} type="below" onClick={this.handleClickUnreads}>
 					&darr; Unread Messages &darr;
 				</div>
 				<AtMentionsPopup
@@ -701,72 +725,40 @@ export class SimpleStream extends Component {
 		let scrollTop = scrollDiv.scrollTop;
 		let containerHeight = scrollDiv.parentNode.offsetHeight;
 
+		let scrollHeight = scrollDiv.scrollHeight;
+		let offBottom = scrollHeight - scrollTop - scrollDiv.offsetHeight;
+		let scrolledOffBottom = offBottom > 100;
+		if (scrolledOffBottom !== this.state.scrolledOffBottom)
+			this.setState({ scrolledOffBottom: scrolledOffBottom });
+
 		let unreadsAbove = false;
 		let unreadsBelow = false;
-		let mentionsAbove = false;
-		let mentionsBelow = false;
 
 		let umiDivs = scrollDiv.getElementsByClassName("unread");
-		let index = 0;
-		let umiDivsLength = umiDivs.length;
-		while (index < umiDivsLength) {
-			let umi = umiDivs[index];
+		Array.from(umiDivs).forEach(umi => {
 			let top = umi.offsetTop;
 			if (top - scrollTop + 10 < 0) {
 				if (!unreadsAbove) unreadsAbove = umi;
-				// if (umi.getAttribute("cs-umi-mention") == "1") mentionsAbove = umi;
-			}
-			if (top - scrollTop + 60 + umi.offsetHeight > containerHeight) {
+			} else if (top - scrollTop + 60 + umi.offsetHeight > containerHeight) {
 				unreadsBelow = umi;
-				// if (!mentionsBelow && umi.getAttribute("cs-umi-mention") == "1") mentionsBelow = umi;
+			} else if (this.props.hasFocus) {
+				umi.classList.remove("unread");
 			}
-			index++;
-		}
-		this.setUnreadsAttributes(
-			"above",
-			document.getElementById("unreads-above"),
-			unreadsAbove,
-			mentionsAbove
-		);
-		this.setUnreadsAttributes(
-			"below",
-			document.getElementById("unreads-below"),
-			unreadsBelow,
-			mentionsBelow
-		);
+		});
+		if (this.state.unreadsAbove != unreadsAbove) this.setState({ unreadsAbove: unreadsAbove });
+		if (this.state.unreadsBelow != unreadsBelow) this.setState({ unreadsBelow: unreadsBelow });
 	}
 
-	setUnreadsAttributes(type, element, active, mentions) {
-		if (!element) return;
-
-		let that = this;
-		let padding = type === "above" ? -10 : 10;
-		if (active) {
-			element.classList.add("active");
-			element.onclick = function(event) {
-				// scroll it into view....
-				active.scrollIntoView(type === "above");
-				// ...and then a little more, so it is off the border
-				that._postslist.scrollTop += padding;
-			};
-		} else element.classList.remove("active");
-		if (mentions) {
-			element.classList.add("mention");
-			element.onclick = function(event) {
-				mentions.scrollIntoView(type === "above");
-				that._postslist.scrollTop += padding;
-			};
-		} else element.classList.remove("mention");
-
-		// key will be "unreadsAbove" or "unreadsBelow"
-		const key = "unreads" + type.charAt(0).toUpperCase() + type.slice(1);
-		// if we are turning off the unreads indicator, check to see if
-		// we should also mark the stream read
-		if (!active && this.state[key]) {
-			this.checkMarkStreamRead();
-		}
-		this.setState({ [key]: active });
-	}
+	handleClickUnreads = event => {
+		let scrollDiv = this._postslist;
+		let umiDivs = scrollDiv.getElementsByClassName("unread");
+		let type = event.target.getAttribute("type");
+		console.log("TYPE IS: ", type);
+		let active = type === "above" ? umiDivs[0] : umiDivs[umiDivs.length - 1];
+		if (active) active.scrollIntoView(type === "above");
+		// ...and then a little more, so it is off the border
+		scrollDiv.scrollTop += type === "above" ? -10 : 10;
+	};
 
 	saveComposeState(nextId) {
 		this.savedComposeState[this.props.postStreamId] = {
