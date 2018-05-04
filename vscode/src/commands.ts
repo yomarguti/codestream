@@ -245,13 +245,13 @@ export class Commands extends Disposable {
         return streamThread.stream;
     }
 
-    @command('reset')
-    async reset() {
+    @command('wipe')
+    async wipe() {
         await Container.session.streamVisibility.clear();
 
         const regex = /(\d+)([d|h|m])/;
         const value = await window.showInputBox({
-            prompt: 'Enter the number of days, hours, or minutes to reset back to',
+            prompt: 'Enter the number of days, hours, or minutes after which all content (channels, posts, markers, etc) will be deleted',
             placeHolder: 'e.g. 5d or 6h or 10m',
             validateInput: v => regex.test(v) ? undefined : 'Invalid input'
         });
@@ -277,8 +277,8 @@ export class Commands extends Disposable {
                 return;
         }
 
-        Logger.log(`Reset data back to ${Dates.toFormatter(new Date(new Date().getTime() - milliseconds)).format('MMMM Do, YYYY h:mma')}`);
-        Container.session.api.resetTeam(new Date().getTime() - milliseconds);
+        Logger.log(`Delete all data after ${Dates.toFormatter(new Date(new Date().getTime() - milliseconds)).format('MMMM Do, YYYY h:mma')}`);
+        Container.session.api.deleteTeamContent(new Date().getTime() - milliseconds);
         commands.executeCommand(BuiltInCommands.ReloadWindow);
     }
 

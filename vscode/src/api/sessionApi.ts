@@ -122,6 +122,14 @@ export class CodeStreamSessionApi {
         return (await this._api.deletePost(this.token, teamId || this.teamId, postId)).post;
     }
 
+    deleteTeamContent(newerThan: number | undefined, includeStreams: boolean = false, teamId?: string) {
+        return this._api.deleteTeamContent(this.token, {
+            teamId: teamId || this.teamId,
+            newerThan: newerThan,
+            includeStreams: includeStreams
+        });
+    }
+
     private async findOrRegisterRepo(repo: GitRepository, registeredRepos: CSRepository[]) {
         const [firsts, remote] = await Promise.all([
             repo.getFirstCommits(),
@@ -293,14 +301,6 @@ export class CodeStreamSessionApi {
 
     async joinStream(streamId: string, teamId?: string) {
         return (await this._api.joinStream(this.token, streamId, teamId || this.teamId, {})).stream;
-    }
-
-    resetTeam(newerThan: number | undefined, includeStreams: boolean = false, teamId?: string) {
-        return this._api.resetTeam(this.token, {
-            teamId: teamId || this.teamId,
-            newerThan: newerThan,
-            includeStreams: includeStreams
-        });
     }
 
     async updatePresence(status: PresenceStatus, sessionId: string) {

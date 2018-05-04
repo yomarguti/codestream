@@ -222,8 +222,8 @@
                 "category": "CodeStream"
             },
             {
-                "command": "codestream.reset",
-                "title": "Reset",
+                "command": "codestream.wipe",
+                "title": "Wipe",
                 "category": "CodeStream"
             },
             {
@@ -388,7 +388,7 @@
                     "when": "editorTextFocus && editorHasSelection && codestream:status == signedIn"
                 },
                 {
-                    "command": "codestream.reset",
+                    "command": "codestream.wipe",
                     "when": "codestream:status == signedIn"
                 },
                 {

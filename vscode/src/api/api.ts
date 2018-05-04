@@ -8,6 +8,7 @@ import {
     CreateStreamRequest, CreateStreamResponse,
     CSStream,
     DeletePostResponse,
+    DeleteTeamContentRequest, DeleteTeamContentResponse,
     FindRepoResponse,
     GetMarkerLocationsResponse, GetMarkerResponse, GetMarkersResponse,
     GetPostResponse, GetPostsResponse,
@@ -17,7 +18,6 @@ import {
     GetUserResponse, GetUsersResponse,
     JoinStreamRequest, JoinStreamResponse,
     LoginRequest, LoginResponse,
-    ResetTeamRequest, ResetTeamResponse,
     StreamType,
     UpdatePresenceRequest, UpdatePresenceResponse,
     UpdateStreamMembershipRequest, UpdateStreamMembershipResponse
@@ -99,6 +99,10 @@ export class CodeStreamApi {
         return this.delete<any /*DeleteStreamResponse*/>(`/streams/${streamId}`, token);
     }
 
+    deleteTeamContent(token: string, request: DeleteTeamContentRequest) {
+        return this.put<DeleteTeamContentRequest, DeleteTeamContentResponse>(`/delete-content`, request, token);
+    }
+
     findRepo(url: string, firstCommitHashes: string[]) {
         return this.get<FindRepoResponse>(`/no-auth/find-repo?url=${encodeURIComponent(url)}&knownCommitHashes=${firstCommitHashes.join(',')}&firstCommitHash=${firstCommitHashes[0]}`);
     }
@@ -157,10 +161,6 @@ export class CodeStreamApi {
 
     joinStream(token: string, teamId: string, streamId: string, request: JoinStreamRequest) {
         return this.put<JoinStreamRequest, JoinStreamResponse>(`/join/${streamId}`, request, token);
-    }
-
-    resetTeam(token: string, request: ResetTeamRequest) {
-        return this.put<ResetTeamRequest, ResetTeamResponse>(`/delete-content`, request, token);
     }
 
     updatePresence(token: string, request: UpdatePresenceRequest) {

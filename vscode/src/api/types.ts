@@ -187,6 +187,15 @@ export interface DeletePostResponse {
     post: CSPost;
 }
 
+export interface DeleteTeamContentRequest {
+    teamId: string;
+    includeStreams?: boolean;
+    newerThan?: number;
+}
+
+export interface DeleteTeamContentResponse {
+}
+
 export interface FindRepoResponse {
     repo?: CSRepository;
     usernames?: string[];
@@ -255,15 +264,6 @@ export interface JoinStreamResponse {
 export enum PresenceStatus {
     Online = 'online',
     Away = 'away'
-}
-
-export interface ResetTeamRequest {
-    teamId: string;
-    includeStreams?: boolean;
-    newerThan?: number;
-}
-
-export interface ResetTeamResponse {
 }
 
 export interface UpdatePresenceRequest {
