@@ -2,7 +2,7 @@
 
 export interface CSEntity {
     deactivated?: boolean;
-    createdAt: Date;
+    createdAt: number;
     modifiedAt: Date;
     id: string;
     creatorId: string;

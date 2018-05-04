@@ -94,7 +94,7 @@ export abstract class CodeStreamCollection<TItem extends ICollectionItem<TEntity
         return collection.has(key);
     }
 
-    private _collection: Promise<Map<string, TEntity | TItem>> | undefined;
+    protected _collection: Promise<Map<string, TEntity | TItem>> | undefined;
     async items(): Promise<IterableIterator<TItem>> {
         const items = await this.ensureLoaded();
         return this.ensureItems(items);
@@ -110,8 +110,8 @@ export abstract class CodeStreamCollection<TItem extends ICollectionItem<TEntity
         }
     }
 
-    private ensureItem(items: Map<string, TEntity | TItem>, key: string, item: TEntity | TItem) {
-        if ((item as ICollectionItem<TEntity>)[CollectionItem]) return item as TItem;
+    protected ensureItem(items: Map<string, TEntity | TItem>, key: string, item: TEntity | TItem) {
+        if (this.isItem(item)) return item;
 
         const mapped = this.entityMapper(item as TEntity);
         items.set(key, mapped);
@@ -136,6 +136,10 @@ export abstract class CodeStreamCollection<TItem extends ICollectionItem<TEntity
     protected invalidate() {
         this._collection = undefined;
         this.fireChanged();
+    }
+
+    protected isItem(item: TEntity | TItem): item is TItem {
+        return (item as ICollectionItem<TEntity>)[CollectionItem];
     }
 
     protected async load() {

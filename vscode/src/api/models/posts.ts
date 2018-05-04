@@ -25,8 +25,9 @@ export class Post extends CodeStreamItem<CSPost> {
         super(session, post);
     }
 
+    @memoize
     get date() {
-        return this.entity.createdAt;
+        return new Date(this.entity.createdAt);
     }
 
     get deleted() {
@@ -88,14 +89,14 @@ export class Post extends CodeStreamItem<CSPost> {
         }
 
         if (this._dateFormatter === undefined) {
-            this._dateFormatter = Dates.toFormatter(this.entity.createdAt);
+            this._dateFormatter = Dates.toFormatter(this.date);
         }
         return this._dateFormatter.format(format);
     }
 
     fromNow() {
         if (this._dateFormatter === undefined) {
-            this._dateFormatter = Dates.toFormatter(this.entity.createdAt);
+            this._dateFormatter = Dates.toFormatter(this.date);
         }
         return this._dateFormatter.fromNow();
     }
@@ -172,6 +173,17 @@ export class PostCollection extends CodeStreamCollection<Post, CSPost> {
         if (e.affects(this.stream.id)) {
             this.invalidate();
         }
+    }
+
+    async mostRecent() {
+        const collection = await this.ensureLoaded();
+        if (collection.size === 0) return undefined;
+
+        const posts = [...collection.values()];
+        posts.sort((a, b) => (this.isItem(a) ? a.date.getTime() : a.createdAt) - (this.isItem(b) ? b.date.getTime() : b.createdAt));
+
+        const post = posts[posts.length - 1];
+        return this.ensureItem(collection, post.id, post);
     }
 
     protected entityMapper(e: CSPost) {
