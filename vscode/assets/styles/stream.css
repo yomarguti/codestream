@@ -689,6 +689,8 @@ body.preload * {
   margin-top: 0;
   margin-bottom: 5px;
   border-top: 0;
+  border-top-left-radius: 0px;
+  border-top-right-radius: 0px;
 }
 .codestream .stream .postslist {
   flex: 1 1 auto;
