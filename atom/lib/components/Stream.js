@@ -744,7 +744,9 @@ export class SimpleStream extends Component {
 		if (active) {
 			element.classList.add("active");
 			element.onclick = function(event) {
+				// scroll it into view....
 				active.scrollIntoView(type === "above");
+				// ...and then a little more, so it is off the border
 				that._postslist.scrollTop += padding;
 			};
 		} else element.classList.remove("active");
