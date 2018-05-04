@@ -163,8 +163,9 @@ module.exports = {
 			if (repos.length === 1) {
 				// if being initialized much later into atom's lifetime, i.e. just installed or re-enabled
 				if (atom.packages.hasActivatedInitialPackages()) this.setup();
-				// wait for atom workspace to be ready
-				else this.subscriptions.add(atom.packages.onDidActivateInitialPackages(() => this.setup()));
+				else
+					// wait for atom workspace to be ready
+					this.subscriptions.add(atom.packages.onDidActivateInitialPackages(() => this.setup()));
 			}
 		});
 		// this isn't aded to this.subscriptions because it should always run
@@ -205,44 +206,60 @@ module.exports = {
 				store.dispatch(setUserPreference(["emailNotifications"], setting ? "on" : "off"));
 			})
 		);
+
 		// Dev mode goodies
-		if (atom.inDevMode()) {
-			this.subscriptions.add(
-				atom.commands.add("atom-workspace", {
-					"codestream:wipe-cache": () => db.delete(),
-					"codestream:point-to-dev": () => {
-						sessionStorage.setItem("codestream.env", "dev");
-						sessionStorage.setItem("codestream.url", "https://pd-api.codestream.us:9443");
-						store.dispatch(logout());
-						atom.reload();
-					},
-					"codestream:point-to-local": () => {
-						sessionStorage.setItem("codestream.env", "local");
-						sessionStorage.setItem("codestream.url", "https://localhost.codestream.us:12079");
-						store.dispatch(logout());
-						atom.reload();
-					},
-					"codestream:point-to-qa": () => {
-						sessionStorage.setItem("codestream.env", "qa");
-						sessionStorage.setItem("codestream.url", "https://qa-api.codestream.us");
-						store.dispatch(logout());
-						atom.reload();
-					},
-					"codestream:point-to-production": () => {
-						sessionStorage.removeItem("codestream.env");
-						sessionStorage.removeItem("codestream.url");
-						store.dispatch(logout());
-						atom.reload();
-					},
-					"codestream:which-environment?": () => {
-						const urlConfig = sessionStorage.getItem("codestream.url") || "production";
-						atom.notifications.addInfo(`CodeStream is pointed to ${urlConfig}`, {
-							dismissable: true
-						});
-					}
-				})
-			);
-		}
+		const hiddenInCommandPalette = !atom.inDevMode();
+		this.subscriptions.add(
+			atom.commands.add("atom-workspace", "codestream:wipe-cache", {
+				didDispatch: () => db.delete(),
+				hiddenInCommandPalette
+			}),
+			atom.commands.add("atom-workspace", "codestream:point-to-dev", {
+				didDispatch: () => {
+					sessionStorage.setItem("codestream.env", "dev");
+					sessionStorage.setItem("codestream.url", "https://pd-api.codestream.us:9443");
+					store.dispatch(logout());
+					atom.reload();
+				},
+				hiddenInCommandPalette
+			}),
+			atom.commands.add("atom-workspace", "codestream:point-to-local", {
+				didDispatch: () => {
+					sessionStorage.setItem("codestream.env", "local");
+					sessionStorage.setItem("codestream.url", "https://localhost.codestream.us:12079");
+					store.dispatch(logout());
+					atom.reload();
+				},
+				hiddenInCommandPalette
+			}),
+			atom.commands.add("atom-workspace", "codestream:point-to-qa", {
+				didDispatch: () => {
+					sessionStorage.setItem("codestream.env", "qa");
+					sessionStorage.setItem("codestream.url", "https://qa-api.codestream.us");
+					store.dispatch(logout());
+					atom.reload();
+				},
+				hiddenInCommandPalette
+			}),
+			atom.commands.add("atom-workspace", "codestream:point-to-production", {
+				didDispatch: () => {
+					sessionStorage.removeItem("codestream.env");
+					sessionStorage.removeItem("codestream.url");
+					store.dispatch(logout());
+					atom.reload();
+				},
+				hiddenInCommandPalette
+			}),
+			atom.commands.add("atom-workspace", "codestream:which-environment?", {
+				didDispatch: () => {
+					const urlConfig = sessionStorage.getItem("codestream.url") || "production";
+					atom.notifications.addInfo(`CodeStream is pointed to ${urlConfig}`, {
+						dismissable: true
+					});
+				},
+				hiddenInCommandPalette
+			})
+		);
 	},
 
 	deactivate() {
