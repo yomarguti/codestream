@@ -33,16 +33,16 @@ It will do an initial full build and then watch for file changes, compiling thos
 To connect to the PD environment, use the following settings
 ```json
 "codestream.serverUrl": "https://pd-api.codestream.us:9443",
-"codestream.username": "<username>",
+"codestream.email": "<email>",
 "codestream.password": "<password>",
-"codestream.teamId": "<teamId>", // Only needed if you belong to more than 1 team
+"codestream.teamId": "<teamId>", // Shouldn't really be needed unless there are issues and you belong to more than 1 team
 ```
 
 To connect to the Production environment, use the following settings
 ```json
-"codestream.username": "<username>",
+"codestream.email": "<email>",
 "codestream.password": "<password>",
-"codestream.teamId": "<teamId>", // Only needed if you belong to more than 1 team
+"codestream.teamId": "<teamId>", // Shouldn't really be needed unless there are issues and you belong to more than 1 team
 ```
 
 #### Settings
@@ -51,15 +51,15 @@ To connect to the Production environment, use the following settings
 |`codestream.debug`|Specifies debug mode
 |`codestream.traceLevel`|Specifies how much (if any) output will be sent to the CodeStream output channel
 |`codestream.serverUrl`|Specifies the url to use to connect to the CodeStream service
-|`codestream.username`|Specifies the username to use to connect to the CodeStream service
+|`codestream.email`|Specifies the email to use to connect to the CodeStream service
 |`codestream.password`|Specifies the password to use to connect to the CodeStream service
 |`codestream.teamId`|Specifies the optional team to use to connect to the CodeStream service
 |`codestream.explorers.enabled`|Specifies whether to show the `CodeStream` explorers
 |`codestream.notifications`|Specifies when to show notifications for incoming messages
 |`codestream.bot.enabled`|Specifies whether to enable the CodeStream demo bot
-|`codestream.bot.username`|Specifies the demo bot's username to use to connect to the CodeStream service
+|`codestream.bot.email`|Specifies the demo bot's email to use to connect to the CodeStream service
 |`codestream.bot.password`|Specifies the demo bot's password to use to connect to the CodeStream service
-|`codestream.bot.triggers`|Specifies the demo bot's triggers<br/><br/>Example<br/>```"codestream.bot.triggers": [```<br/>&nbsp;&nbsp;&nbsp;&nbsp;```{ "message": "\\bhi\\b", "response": { "location": "channel", "message": "Hiya!" } },```<br/>&nbsp;&nbsp;&nbsp;&nbsp;```{ "message": "\\bhelp me\\b", "response": { "location": "thread", "message": "Sure! Would you like to start a Live Share session?" } }```<br/>```]```
+|`codestream.bot.triggers`|Specifies the demo bot's triggers<br/><br/>Example<br/>```"codestream.bot.triggers": [```<br/>&nbsp;&nbsp;&nbsp;&nbsp;```{ "type": "immediate", "pattern": "\\bhi\\b", "response": { "location": "channel", "message": "Hiya!" } },```<br/>&nbsp;&nbsp;&nbsp;&nbsp;```{ "type": "delayed", "pattern": "\\bhelp me\\b", "response": { "location": "thread", "message": "Sure! Would you like to start a Live Share session?" } }```<br/>```]```
 
 ### Debugging
 
