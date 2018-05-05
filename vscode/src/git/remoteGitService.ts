@@ -26,7 +26,7 @@ export class RemoteGitService extends Disposable implements IGitService {
     dispose() {
     }
 
-    async getFileAuthors(uriOrPath: Uri | string, options: { contents?: string, startLine?: number, endLine?: number } = {}): Promise<GitAuthor[]> {
+    async getFileAuthors(uriOrPath: Uri | string, options: { ref?: string, contents?: string, startLine?: number, endLine?: number } = {}): Promise<GitAuthor[]> {
         return [];
     }
 
@@ -35,6 +35,10 @@ export class RemoteGitService extends Disposable implements IGitService {
     }
 
     async getFileRevision(uriOrPath: Uri | string, ref: string): Promise<string | undefined> {
+        return undefined;
+    }
+
+    async getFileRevisionContent(uriOrPath: Uri | string, ref: string): Promise<string | undefined> {
         return undefined;
     }
 
@@ -64,5 +68,11 @@ export class RemoteGitService extends Disposable implements IGitService {
             this._repositories = this._repos.map(r => new GitRepository(Uri.parse(r.url).with({ scheme: 'vsls' })));
         }
         return this._repositories;
+    }
+
+    async resolveRef(uri: Uri, ref: string): Promise<string | undefined>;
+    async resolveRef(path: string, ref: string): Promise<string | undefined>;
+    async resolveRef(uriOrPath: Uri | string, ref: string): Promise<string | undefined> {
+        return ref;
     }
 }

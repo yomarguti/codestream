@@ -1,7 +1,7 @@
 'use strict';
 import { Disposable, Event, EventEmitter, Uri, workspace, WorkspaceFoldersChangeEvent } from 'vscode';
 import { GitAuthorParser } from './parsers/authorParser';
-import { getRepositories, git, GitWarnings } from './git';
+import { getRepositories, git, GitErrors, GitWarnings } from './git';
 import { Logger } from '../logger';
 import { GitAuthor, GitRemote, GitRepository } from './models/models';
 import { GitRemoteParser } from './parsers/remoteParser';
@@ -15,9 +15,9 @@ export interface IGitService extends Disposable {
 
     onDidChangeRepositories: Event<void>;
 
-    getFileAuthors(uri: Uri, options?: { contents?: string, startLine?: number, endLine?: number }): Promise<GitAuthor[]>;
-    getFileAuthors(path: string, options?: { contents?: string, startLine?: number, endLine?: number }): Promise<GitAuthor[]>;
-    // getFileAuthors(uriOrPath: Uri | string, options?: { contents?: string, startLine?: number, endLine?: number }): Promise<GitAuthor[]>;
+    getFileAuthors(uri: Uri, options?: { ref?: string, contents?: string, startLine?: number, endLine?: number }): Promise<GitAuthor[]>;
+    getFileAuthors(path: string, options?: { ref?: string, contents?: string, startLine?: number, endLine?: number }): Promise<GitAuthor[]>;
+    // getFileAuthors(uriOrPath: Uri | string, options?: { ref?: string, contents?: string, startLine?: number, endLine?: number }): Promise<GitAuthor[]>;
 
     getFileCurrentSha(uri: Uri): Promise<string | undefined>;
     getFileCurrentSha(path: string): Promise<string | undefined>;
@@ -26,6 +26,10 @@ export interface IGitService extends Disposable {
     getFileRevision(uri: Uri, ref: string): Promise<string | undefined>;
     getFileRevision(path: string, ref: string): Promise<string | undefined>;
     // getFileRevision(uriOrPath: Uri | string, ref: string): Promise<string | undefined>;
+
+    getFileRevisionContent(uri: Uri, ref: string): Promise<string | undefined>;
+    getFileRevisionContent(path: string, ref: string): Promise<string | undefined>;
+    // getFileRevisionContent(uriOrPath: Uri | string, ref: string): Promise<string | undefined>;
 
     getRepoFirstCommits(repoUri: Uri): Promise<string[]>;
     getRepoFirstCommits(repoPath: string): Promise<string[]>;
@@ -36,6 +40,10 @@ export interface IGitService extends Disposable {
     // getRepoRemote(repoUriOrPath: Uri | string): Promise<GitRemote | undefined>;
 
     getRepositories(): Promise<GitRepository[]>;
+
+    resolveRef(uri: Uri, ref: string): Promise<string | undefined>;
+    resolveRef(path: string, ref: string): Promise<string | undefined>;
+    //   resolveRef(uriOrPath: Uri | string, ref: string): Promise<string | undefined> {
 }
 
 export class GitService extends Disposable implements IGitService {
@@ -62,9 +70,9 @@ export class GitService extends Disposable implements IGitService {
         this._onDidChangeRepositories.fire();
     }
 
-    async getFileAuthors(uri: Uri, options?: { contents?: string, startLine?: number, endLine?: number }): Promise<GitAuthor[]>;
-    async getFileAuthors(path: string, options?: { contents?: string, startLine?: number, endLine?: number }): Promise<GitAuthor[]>;
-    async getFileAuthors(uriOrPath: Uri | string, options: { contents?: string, startLine?: number, endLine?: number } = {}): Promise<GitAuthor[]> {
+    async getFileAuthors(uri: Uri, options?: { ref?: string, contents?: string, startLine?: number, endLine?: number }): Promise<GitAuthor[]>;
+    async getFileAuthors(path: string, options?: { ref?: string, contents?: string, startLine?: number, endLine?: number }): Promise<GitAuthor[]>;
+    async getFileAuthors(uriOrPath: Uri | string, options: { ref?: string, contents?: string, startLine?: number, endLine?: number } = {}): Promise<GitAuthor[]> {
         const [dir, filename] = Strings.splitPath((typeof uriOrPath === 'string') ? uriOrPath : uriOrPath.fsPath);
 
         const params = ['blame', '--root', '--incremental', '-w'];
@@ -74,7 +82,10 @@ export class GitService extends Disposable implements IGitService {
         }
 
         let stdin;
-        if (options.contents) {
+        if (options.ref) {
+            params.push(options.ref);
+        }
+        else if (options.contents) {
             params.push('--contents', '-');
             // Pipe the blame contents to stdin
             stdin = options.contents;
@@ -135,6 +146,25 @@ export class GitService extends Disposable implements IGitService {
                     });
                 });
         });
+    }
+
+    async getFileRevisionContent(uri: Uri, ref: string): Promise<string | undefined>;
+    async getFileRevisionContent(path: string, ref: string): Promise<string | undefined>;
+    async getFileRevisionContent(uriOrPath: Uri | string, ref: string): Promise<string | undefined> {
+        const [dir, filename] = Strings.splitPath((typeof uriOrPath === 'string') ? uriOrPath : uriOrPath.fsPath);
+
+        try {
+            const data = await git({ cwd: dir, encoding: 'utf8' }, 'show', `${ref}:./${filename}`, '--');
+            return data;
+        }
+        catch (ex) {
+            const msg = ex && ex.toString();
+            if (GitErrors.badRevision.test(msg) ||
+                GitWarnings.notFound.test(msg) ||
+                GitWarnings.foundButNotInRevision.test(msg)) return undefined;
+
+            throw ex;
+        }
     }
 
     async getRepoFirstCommits(repoUri: Uri): Promise<string[]>;
@@ -198,5 +228,19 @@ export class GitService extends Disposable implements IGitService {
             this._repositories = repos.map(r => new GitRepository(r.rootUri));
         }
         return this._repositories;
+    }
+
+    async resolveRef(uri: Uri, ref: string): Promise<string | undefined>;
+    async resolveRef(path: string, ref: string): Promise<string | undefined>;
+    async resolveRef(uriOrPath: Uri | string, ref: string): Promise<string | undefined> {
+        const [dir, filename] = Strings.splitPath((typeof uriOrPath === 'string') ? uriOrPath : uriOrPath.fsPath);
+
+        try {
+            const data = await git({ cwd: dir }, 'log', '-M', '-n1', '--format=%H', ref, '--', filename);
+            return data.trim();
+        }
+        catch {
+            return undefined;
+        }
     }
 }

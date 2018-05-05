@@ -1,4 +1,4 @@
-import { commands, ConfigurationTarget, Disposable, MessageItem, Range, TextDocument, Uri, ViewColumn, window } from 'vscode';
+import { commands, ConfigurationTarget, Disposable, MessageItem, Range, TextDocument, Uri, ViewColumn, window, workspace } from 'vscode';
 import { ChannelStreamCreationOptions, CodeStreamSession, Post, Stream, StreamThread, StreamType } from './api/session';
 import { openEditor } from './common';
 import { configuration, TraceLevel } from './configuration';
@@ -66,6 +66,7 @@ export interface PostCommandArgs extends IRequiresStream {
 export interface PostCodeCommandArgs extends IRequiresStream {
     document?: TextDocument;
     range?: Range;
+    ref?: string;
     text?: string;
     send?: boolean;
     session?: CodeStreamSession;
@@ -221,6 +222,7 @@ export class Commands extends Disposable {
         if (repo === undefined) throw new Error(`No repository could be found for Uri(${uri.toString()}`);
 
         const authors = await Container.git.getFileAuthors(uri, {
+            ref: args.ref,
             startLine: selection.start.line,
             endLine: selection.end.line,
             contents: document.isDirty ? document.getText() : undefined
@@ -232,8 +234,20 @@ export class Commands extends Disposable {
         const users = await (args.session || Container.session).users.getByEmails(authorEmails);
         const mentions = Iterables.join(Iterables.map(users, u => `@${u.name}`), ', ');
 
-        const code = document.getText(selection);
-        const commitHash = await Container.git.getFileCurrentSha(document.uri);
+        let code;
+        let commitHash;
+        if (args.ref == null) {
+            code = document.getText(selection);
+            commitHash = await Container.git.getFileCurrentSha(document.uri);
+        }
+        else {
+            const content = await Container.git.getFileRevisionContent(document.uri, args.ref);
+            if (content == null) throw new Error(`Unable to load file revision contents for Uri(${uri.toString()}`);
+
+            const revision = await workspace.openTextDocument({ content: content });
+            code = revision.getText(selection);
+            commitHash = await Container.git.resolveRef(document.uri, args.ref);
+        }
 
         if (args.send && args.text) {
             // Get the file/marker stream to post to

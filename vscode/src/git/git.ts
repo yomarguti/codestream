@@ -3,6 +3,10 @@ import { extensions, Uri } from 'vscode';
 import { Logger } from '../logger';
 import { CommandOptions, runCommand } from './shell';
 
+export const GitErrors = {
+    badRevision: /bad revision \'.*?\'/i
+};
+
 export const GitWarnings = {
     notARepository: /Not a git repository/,
     outsideRepository: /is outside repository/,

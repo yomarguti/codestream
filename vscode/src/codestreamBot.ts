@@ -11,7 +11,7 @@ import * as path from 'path';
 const commandRegistry: Command[] = [];
 const command = createCommandDecorator(commandRegistry);
 
-const responseCodeBlockRegex = /(\d+),(\d+):(.+)/;
+const responseCodeBlockRegex = /(\d+),(\d+)(?::(.+))?:(.+)/;
 
 export class CodeStreamBot extends Disposable {
 
@@ -141,12 +141,6 @@ export class CodeStreamBot extends Disposable {
             const trigger = this._triggers.find(t => t.type === 'hotkey' && t.pattern == null);
             if (trigger === undefined) return;
 
-            // const streamThread = Container.streamView.activeStreamThread;
-            // if (streamThread === undefined || streamThread.stream === undefined) return;
-
-            // const mostRecentPost = await streamThread.stream.posts.mostRecent();
-            // if (mostRecentPost === undefined) return;
-
             response = trigger.response;
         }
         else {
@@ -203,7 +197,7 @@ export class CodeStreamBot extends Disposable {
         if (response.codeBlock !== undefined) {
             const match = responseCodeBlockRegex.exec(response.codeBlock);
             if (match != null) {
-                const [, start, end, filename] = match;
+                const [, start, end, ref, filename] = match;
 
                 let doc;
                 try {
@@ -220,6 +214,7 @@ export class CodeStreamBot extends Disposable {
                         send: true,
                         document: doc,
                         range: range,
+                        ref: ref,
                         session: this._session
                     });
                 }
