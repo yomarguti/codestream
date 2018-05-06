@@ -696,6 +696,7 @@ export class SimpleStream extends Component {
 					teammates={this.props.teammates}
 					ref={this._compose}
 					disabled={this.props.isOffline}
+					onSubmit={this.submitPost}
 				/>
 				{/* <div
 				// className={composeClass}
@@ -1260,7 +1261,7 @@ export class SimpleStream extends Component {
 	// }
 
 	// create a new post
-	submitPost(newText) {
+	submitPost = newText => {
 		// convert the text to plaintext so there is no HTML
 		newText = newText.replace(/<br>/g, "\n");
 		const doc = new DOMParser().parseFromString(newText, "text/html");
@@ -1300,7 +1301,7 @@ export class SimpleStream extends Component {
 
 		// reset the input field to blank
 		this.resetCompose();
-	}
+	};
 
 	// if we receive newState as an argument, set the compose state
 	// to that state. otherwise reset it (clear it out)

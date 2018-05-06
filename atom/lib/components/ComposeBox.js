@@ -228,7 +228,8 @@ class ComposeBox extends React.Component {
 		} else if (event.key === "Enter" && !event.shiftKey) {
 			event.preventDefault();
 			if (newPostText.trim().length > 0 && !this.props.disabled) {
-				this.submitPost(newPostText);
+				this.props.onSubmit(newPostText);
+				this.setState({ newPostText: "" });
 			} else {
 				// don't submit blank posts
 			}
