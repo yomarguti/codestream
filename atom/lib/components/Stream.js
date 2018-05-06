@@ -90,10 +90,11 @@ export class SimpleStream extends Component {
 			threadActive: false,
 			posts: [],
 			fileForIntro: props.currentFile,
-			newPostText: "",
-			whoModified: {},
-			autoMentioning: []
+			// newPostText: "",
+			whoModified: {}
+			// autoMentioning: []
 		};
+		this._compose = React.createRef();
 
 		this.savedComposeState = {};
 		this.editorsWithHandlers = {};
@@ -149,7 +150,7 @@ export class SimpleStream extends Component {
 		// this listener pays attention to when the input field resizes,
 		// presumably because the user has typed more than one line of text
 		// in it, and calls a function to handle the new size
-		new ResizeObserver(me.handleResizeCompose).observe(me._compose);
+		new ResizeObserver(me.handleResizeCompose).observe(me._compose.current);
 
 		if (this._postslist) {
 			this._postslist.addEventListener("scroll", this.handleScroll.bind(this));
@@ -396,7 +397,7 @@ export class SimpleStream extends Component {
 		if (!this._div || !this._compose) return;
 		const streamHeight = this._div.offsetHeight;
 		const postslistHeight = this._postslist.offsetHeight;
-		const composeHeight = this._compose.offsetHeight;
+		const composeHeight = this._compose.current.offsetHeight;
 		const headerHeight = this._header.offsetHeight;
 		if (postslistHeight < streamHeight) {
 			let newHeight = streamHeight - postslistHeight + this._intro.offsetHeight - composeHeight;
@@ -657,7 +658,6 @@ export class SimpleStream extends Component {
 						return returnValue;
 					})}
 				</div>
-
 				<div
 					className={threadPostsListClass}
 					ref={ref => (this._threadpostslist = ref)}
@@ -679,7 +679,6 @@ export class SimpleStream extends Component {
 					)}
 					{this.renderThreadPosts(threadId)}
 				</div>
-
 				<div className={unreadsBelowClass} type="below" onClick={this.handleClickUnreads}>
 					&darr; Unread Messages &darr;
 				</div>
@@ -692,13 +691,17 @@ export class SimpleStream extends Component {
 					handleHoverAtMention={this.handleHoverAtMention}
 					handleSelectAtMention={this.handleSelectAtMention}
 				/> */}
-				<ComposeBox placeholder={placeholderText} teammates={this.props.teammates} />
-				<div
-					// className={composeClass}
-					// onKeyPress={this.handleOnKeyPress}
-					ref={ref => (this._compose = ref)}
-				>
-					<AddCommentPopup editor={editor} onClick={this.handleClickAddComment} />
+				<ComposeBox
+					placeholder={placeholderText}
+					teammates={this.props.teammates}
+					ref={this._compose}
+					disabled={this.props.isOffline}
+				/>
+				{/* <div
+				// className={composeClass}
+				// onKeyPress={this.handleOnKeyPress}
+				> */}
+				{/* <AddCommentPopup editor={editor} onClick={this.handleClickAddComment} />
 					{quoteInfo}
 					{quoteHint}
 					{/* <ContentEditable
@@ -711,8 +714,9 @@ export class SimpleStream extends Component {
 						html={newPostText}
 						placeholder={placeholderText}
 						ref={ref => (this._contentEditable = ref)}
-					/> */}
-				</div>
+					/> */}{" "}
+				*/}
+				{/* </div> */}
 			</div>
 		);
 	}
@@ -1411,8 +1415,8 @@ const mapStateToProps = ({
 		.replace(/\+/g, "\\+") // replace + and . with escaped versions so
 		.replace(/\./g, "\\."); // that the regexp matches the literal chars
 
-	const isOnline =
-		!connectivity.offline && messaging.failedSubscriptions.length === 0 && !messaging.timedOut;
+	const isOffline =
+		connectivity.offline || messaging.failedSubscriptions.length > 0 || messaging.timedOut;
 
 	// FIXME -- eventually we'll allow the user to switch to other streams, like DMs and channels
 	const teamStream = getStreamForTeam(streams, context.currentTeamId) || {};
@@ -1420,7 +1424,7 @@ const mapStateToProps = ({
 	const streamsById = getStreamsForRepoById(streams, context.currentRepoId) || {};
 
 	return {
-		isOnline,
+		isOffline,
 		teammates: toMapBy("id", teammates),
 		postStreamId: teamStream.id,
 		fileStreamId: fileStream.id,

@@ -227,7 +227,7 @@ class ComposeBox extends React.Component {
 			this.showAtMentionSelectors("");
 		} else if (event.key === "Enter" && !event.shiftKey) {
 			event.preventDefault();
-			if (newPostText.trim().length > 0 && this.props.isOnline) {
+			if (newPostText.trim().length > 0 && !this.props.disabled) {
 				this.submitPost(newPostText);
 			} else {
 				// don't submit blank posts
@@ -236,10 +236,11 @@ class ComposeBox extends React.Component {
 	};
 
 	render() {
-		const { placeholder } = this.props;
+		const { forwardedRef, placeholder } = this.props;
 
 		return (
 			<div
+				ref={forwardedRef}
 				onKeyPress={this.handleKeyPress}
 				onKeyDown={this.handleKeyDown}
 				className={createClassString("compose", {
@@ -271,4 +272,4 @@ class ComposeBox extends React.Component {
 	}
 }
 
-export default ComposeBox;
+export default React.forwardRef((props, ref) => <ComposeBox {...props} forwardedRef={ref} />);
