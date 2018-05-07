@@ -17,7 +17,7 @@ module.exports = {
 	globals: { atom: false },
 	plugins: ["react"],
 	rules: {
-		indent: ["error", "tab"],
+		indent: "off",
 		"linebreak-style": ["error", "unix"],
 		quotes: ["error", "double", { avoidEscape: true }],
 		semi: ["error", "always"],

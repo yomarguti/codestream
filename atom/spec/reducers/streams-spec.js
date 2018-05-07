@@ -5,7 +5,7 @@ const stream2 = { id: "s2", repoId: "r1", file: "s2.file" };
 const stream3 = { id: "s3", repoId: "r2", file: "s3.file" };
 
 describe("reducer for .streams", () => {
-	it("bootstraps data", () => {
+	xit("bootstraps data", () => {
 		const result = reduce(undefined, {
 			type: "BOOTSTRAP_STREAMS",
 			payload: [stream1, stream2, stream3]
@@ -28,7 +28,7 @@ describe("reducer for .streams", () => {
 		});
 	});
 
-	it("adds a stream", () => {
+	xit("adds a stream", () => {
 		const state = {
 			byRepo: {
 				[stream1.repoId]: {

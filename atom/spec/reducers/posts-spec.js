@@ -7,7 +7,7 @@ const pendingPost = { streamId: "2", id: "2-1", text: "text4", pending: true };
 
 describe("reducer for posts", () => {
 	describe("BOOTSTRAP_POSTS", () => {
-		it("saves posts and pending posts", () => {
+		xit("saves posts and pending posts", () => {
 			const postsFromDb = [post1, post2, post3, pendingPost];
 
 			const bootstrapResult = reduce(undefined, { type: "BOOTSTRAP_POSTS", payload: postsFromDb });
@@ -23,7 +23,7 @@ describe("reducer for posts", () => {
 	});
 
 	describe("ADD_POSTS", () => {
-		it("saves posts", () => {
+		xit("saves posts", () => {
 			const addResult = reduce(undefined, { type: "ADD_POSTS", payload: [post1, post2, post3] });
 
 			expect(addResult).toEqual({
@@ -37,7 +37,7 @@ describe("reducer for posts", () => {
 	});
 
 	describe("adding posts in bulk", () => {
-		it("updates the existing ones", () => {
+		xit("updates the existing ones", () => {
 			const state = {
 				byStream: {
 					"1": { [post1.id]: post1, [post2.id]: post2 },
@@ -67,7 +67,7 @@ describe("reducer for posts", () => {
 
 	describe("pending posts", () => {
 		describe("ADD_PENDING_POST", () => {
-			it("adds pending posts for non-existent streams", () => {
+			xit("adds pending posts for non-existent streams", () => {
 				const state = { byStream: {}, pending: [] };
 				const pendingPost = { id: post2.id };
 				const action = {
@@ -79,7 +79,7 @@ describe("reducer for posts", () => {
 		});
 
 		describe("RESOLVE_PENDING_POST", () => {
-			it("removes pending post and adds to appropriate stream", () => {
+			xit("removes pending post and adds to appropriate stream", () => {
 				const state = {
 					byStream: {
 						"1": { [post1.id]: post1 }
