@@ -532,7 +532,7 @@ export class SimpleStream extends Component {
 			inactive: !this.state.threadActive
 		});
 
-		let newPostText = this.state.newPostText || "";
+		// let newPostText = this.state.newPostText || "";
 
 		// strip out the at-mention markup, and add it back.
 		// newPostText = newPostText.replace(/(@\w+)/g, '<span class="at-mention">$1</span> ');
@@ -691,6 +691,7 @@ export class SimpleStream extends Component {
 					handleHoverAtMention={this.handleHoverAtMention}
 					handleSelectAtMention={this.handleSelectAtMention}
 				/> */}
+				<AddCommentPopup editor={editor} onClick={this.handleClickAddComment} />
 				<ComposeBox
 					placeholder={placeholderText}
 					teammates={this.props.teammates}
@@ -702,7 +703,7 @@ export class SimpleStream extends Component {
 				// className={composeClass}
 				// onKeyPress={this.handleOnKeyPress}
 				> */}
-				{/* <AddCommentPopup editor={editor} onClick={this.handleClickAddComment} />
+				{/*
 					{quoteInfo}
 					{quoteHint}
 					{/* <ContentEditable
@@ -931,33 +932,33 @@ export class SimpleStream extends Component {
 		this._postslist.scrollTop = 100000;
 	};
 
-	handleClickDismissQuote = () => {
-		// not very React-ish but not sure how to set focus otherwise
-		this.focusInput();
-
-		let newState = {
-			quoteText: "",
-			preContext: "",
-			postContext: "",
-			quoteRange: null
-		};
-
-		// remove any at-mentions that we have added manually
-		if (
-			this.state.newPostText.replace(/&nbsp;/g, " ").trim() === (this.insertedAuthors || "").trim()
-		) {
-			this.insertedAuthors = "";
-			newState.newPostText = "";
-		}
-
-		this.setState(newState);
-	};
+	// handleClickDismissQuote = () => {
+	// 	// not very React-ish but not sure how to set focus otherwise
+	// 	this.focusInput();
+	//
+	// 	let newState = {
+	// 		quoteText: "",
+	// 		preContext: "",
+	// 		postContext: "",
+	// 		quoteRange: null
+	// 	};
+	//
+	// 	// remove any at-mentions that we have added manually
+	// 	if (
+	// 		this.state.newPostText.replace(/&nbsp;/g, " ").trim() === (this.insertedAuthors || "").trim()
+	// 	) {
+	// 		this.insertedAuthors = "";
+	// 		newState.newPostText = "";
+	// 	}
+	//
+	// 	this.setState(newState);
+	// };
 
 	// figure out who to at-mention based on the git blame data.
 	// insert the text into the compose field
 	addBlameAtMention(selectionRange, gitData) {
 		let postText = this.state.newPostText || "";
-		var authors = {};
+		var authors = [];
 		for (var lineNum = selectionRange.start.row; lineNum <= selectionRange.end.row; lineNum++) {
 			var lineData = gitData[lineNum - 1];
 			if (lineData) {
@@ -969,10 +970,10 @@ export class SimpleStream extends Component {
 							if (userId !== this.props.currentUser.id) {
 								// skip if the input field already contains this user
 								if (postText.match("@" + user.username + "\\b")) return;
-								authors["@" + user.username] = true;
-								this.setState(state => ({
-									autoMentioning: [...state.autoMentioning, `@${user.username}`]
-								}));
+								authors.push(authorEmail);
+								// this.setState(state => ({
+								// 	autoMentioning: [...state.autoMentioning, `@${user.username}`]
+								// }));
 							}
 						}
 					});
@@ -980,15 +981,16 @@ export class SimpleStream extends Component {
 			}
 		}
 
-		if (Object.keys(authors).length > 0) {
-			// the reason for this unicode space is that chrome will
-			// not render a space at the end of a contenteditable div
-			// unless it is a &nbsp;, which is difficult to insert
-			// so we insert this unicode character instead
-			var newText = Object.keys(authors).join(", ") + ":\u00A0";
-			this.insertedAuthors = newText;
-			this.insertTextAtCursor(newText);
-		}
+		return authors;
+		// if (Object.keys(authors).length > 0) {
+		// 	// the reason for this unicode space is that chrome will
+		// 	// not render a space at the end of a contenteditable div
+		// 	// unless it is a &nbsp;, which is difficult to insert
+		// 	// so we insert this unicode character instead
+		// 	var newText = Object.keys(authors).join(", ") + ":\u00A0";
+		// 	this.insertedAuthors = newText;
+		// 	this.insertTextAtCursor(newText);
+		// }
 	}
 
 	// configure the compose field in preparation for a comment on a codeBlock
@@ -1033,19 +1035,33 @@ export class SimpleStream extends Component {
 
 					if (blamer) {
 						blamer.blame(filePath, (err, data) => {
-							if (!err) this.addBlameAtMention(range, data);
+							if (!err) {
+								window.parent.postMessage(
+									{
+										type: "codestream:interaction:code-highlighted",
+										body: {
+											quoteRange: range,
+											quoteText: code,
+											preContext: preContext,
+											postContext: postContext,
+											authors: this.addBlameAtMention(range, data)
+										}
+									},
+									"*"
+								);
+							}
 						});
 					}
 				}
 			});
 		}
 
-		this.setState({
-			quoteRange: range,
-			quoteText: code,
-			preContext: preContext,
-			postContext: postContext
-		});
+		// this.setState({
+		// 	quoteRange: range,
+		// 	quoteText: code,
+		// 	preContext: preContext,
+		// 	postContext: postContext
+		// });
 	};
 
 	// when the input field loses focus, one thing we want to do is
@@ -1291,7 +1307,7 @@ export class SimpleStream extends Component {
 			codeBlocks.push(codeBlock);
 		}
 
-		const mentionUserIds = this.findMentions(newText);
+		const mentionUserIds = this.findMentions(newText); // TODO: receive this as an argument from ComposeBox
 		const editor = atom.workspace.getActiveTextEditor();
 		const editorText = editor ? editor.getText() : undefined;
 

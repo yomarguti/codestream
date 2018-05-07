@@ -1,3 +1,4 @@
+import _ from "underscore-plus";
 import React from "react";
 import ContentEditable from "react-contenteditable";
 import createClassString from "classnames";
@@ -8,6 +9,7 @@ class ComposeBox extends React.Component {
 	disposables = [];
 
 	componentDidMount() {
+		this.eventListener = window.addEventListener("message", this.handleInteractionEvent, true);
 		// because atom hijacks most keystroke events
 		if (global.atom) {
 			const { CompositeDisposable } = require("atom");
@@ -27,7 +29,24 @@ class ComposeBox extends React.Component {
 
 	componentWillUnmount() {
 		this.disposables.forEach(d => d.dispose());
+		window.removeEventListener("message", this.handleInteractionEvent, true);
 	}
+
+	handleInteractionEvent = ({ data }) => {
+		if (data.type === "codestream:interaction:code-highlighted") {
+			console.log("event data", data.body);
+			const { authors, ...state } = data.body;
+			this.setState(state);
+
+			const teammates = Object.values(this.props.teammates);
+			const toAtmention = authors.map(email => _.findWhere(teammates, { email })).filter(Boolean);
+			if (toAtmention.length > 0) {
+				// TODO handle users with no username
+				const newText = toAtmention.map(user => user.username).join(", ") + ":\u00A0";
+				this.insertTextAtCursor(newText);
+			}
+		}
+	};
 
 	focus = () => {
 		this._contentEditable.htmlEl.focus();
@@ -236,8 +255,38 @@ class ComposeBox extends React.Component {
 		}
 	};
 
+	handleClickDismissQuote = () => {
+		this.focus();
+		this.setState({
+			quoteText: "",
+			preContext: "",
+			postContext: "",
+			quoteRange: null,
+			newPostText: ""
+		});
+	};
+
 	render() {
 		const { forwardedRef, placeholder } = this.props;
+
+		let quoteInfo = this.state.quoteText ? <div className="code">{this.state.quoteText}</div> : "";
+		let range = this.state.quoteRange;
+		let rangeText = null;
+		if (range) {
+			if (range.start.row === range.end.row) {
+				rangeText = "Commenting on line " + (range.start.row + 1);
+			} else {
+				rangeText = "Commenting on lines " + (range.start.row + 1) + "-" + (range.end.row + 1);
+			}
+		}
+		let quoteHint = rangeText ? (
+			<div className="hint">
+				{rangeText}
+				<span onClick={this.handleClickDismissQuote} className="icon icon-x" />
+			</div>
+		) : (
+			""
+		);
 
 		return (
 			<div
@@ -257,6 +306,8 @@ class ComposeBox extends React.Component {
 					handleHoverAtMention={this.handleHoverAtMention}
 					handleSelectAtMention={this.handleSelectAtMention}
 				/>
+				{quoteInfo}
+				{quoteHint}
 				<ContentEditable
 					className={createClassString("native-key-bindings", btoa(placeholder))}
 					id="input-div"
