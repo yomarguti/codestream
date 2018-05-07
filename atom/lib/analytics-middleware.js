@@ -143,9 +143,12 @@ export default store => {
 			if (action.type === "MARKER_CLICKED") {
 				const { posts, session } = store.getState();
 				const { postId, streamId } = action.meta;
-				mixpanel.track("Marker Clicked", {
-					"Orginal Author?": getPost(posts, streamId, postId).creatorId === session.userId
-				});
+				// FIXME: this is broken because of one-stream
+				const post = getPost(posts, streamId, postId);
+				if (post)
+					mixpanel.track("Marker Clicked", {
+						"Orginal Author?": post.creatorId === session.userId
+					});
 			}
 
 			if (action.type === "USERS-UPDATE_FROM_PUBNUB") {
@@ -177,9 +180,8 @@ export default store => {
 				});
 			}
 			if (action.type === "SET_CURRENT_TEAM") {
-				const { companies, teams } = store.getState();
+				const { teams } = store.getState();
 				const currentTeam = teams[action.payload];
-				const currentCompany = companies[currentTeam.companyId];
 				mixpanel.register({ "Team ID": action.payload, "Team Size": currentTeam.memberIds.length });
 			}
 			if (action.type === "SET_CURRENT_FILE") {
