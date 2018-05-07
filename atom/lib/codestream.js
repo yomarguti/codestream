@@ -197,11 +197,6 @@ module.exports = {
 				"codestream:bold": target => this.markStreamBold(target),
 				"codestream:badge": target => this.markStreamBadge(target)
 			}),
-			// atom.commands.add(".codestream .compose.mentions-on", {
-			// 	"codestream:at-mention-move-up": event => this.handleAtMentionKeyPress(event, "up"),
-			// 	"codestream:at-mention-move-down": event => this.handleAtMentionKeyPress(event, "down"),
-			// 	"codestream:at-mention-escape": event => this.handleAtMentionKeyPress(event, "escape")
-			// })
 			atom.config.observe("CodeStream.emailNotifications", setting => {
 				store.dispatch(setUserPreference(["emailNotifications"], setting ? "on" : "off"));
 			})

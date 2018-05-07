@@ -2,11 +2,11 @@ import { shell } from "electron";
 import { CompositeDisposable } from "atom";
 import React, { Component } from "react";
 import { connect } from "react-redux";
-import ContentEditable from "react-contenteditable";
 import { FormattedMessage } from "react-intl";
 import _ from "underscore-plus";
 import Raven from "raven-js";
 import mixpanel from "mixpanel-browser";
+import ComposeBox from "./ComposeBox";
 import Post from "./Post";
 import UMIs from "./UMIs";
 import AtMentionsPopup from "./AtMentionsPopup";
@@ -73,7 +73,6 @@ const trimSelection = editor => {
 
 export class SimpleStream extends Component {
 	subscriptions = null;
-	insertedAuthors = "";
 
 	constructor(props) {
 		super(props);
@@ -89,12 +88,10 @@ export class SimpleStream extends Component {
 			threadActive: false,
 			posts: [],
 			fileForIntro: props.currentFile,
-			newPostText: "",
-			whoModified: {},
-			autoMentioning: []
+			whoModified: {}
 		};
+		this._compose = React.createRef();
 
-		this.savedComposeState = {};
 		this.editorsWithHandlers = {};
 
 		this.subscriptions = new CompositeDisposable();
@@ -104,14 +101,6 @@ export class SimpleStream extends Component {
 					escape: "codestream:escape",
 					"cmd-c": "codestream:copy"
 				}
-			})
-		);
-		this.subscriptions.add(
-			atom.commands.add(".codestream .compose.mentions-on", {
-				"codestream:at-mention-move-up": event => this.handleAtMentionKeyPress(event, "up"),
-				"codestream:at-mention-move-down": event => this.handleAtMentionKeyPress(event, "down"),
-				"codestream:at-mention-tab": event => this.handleAtMentionKeyPress(event, "tab"),
-				"codestream:at-mention-escape": event => this.handleAtMentionKeyPress(event, "escape")
 			})
 		);
 		this.subscriptions.add(
@@ -150,13 +139,10 @@ export class SimpleStream extends Component {
 	componentDidMount() {
 		const me = this;
 
-		const inputDiv = document.querySelector('div[contenteditable="true"]');
-		if (!inputDiv) return;
-
 		// this listener pays attention to when the input field resizes,
 		// presumably because the user has typed more than one line of text
 		// in it, and calls a function to handle the new size
-		new ResizeObserver(me.handleResizeCompose).observe(me._compose);
+		new ResizeObserver(me.handleResizeCompose).observe(me._compose.current);
 
 		if (this._postslist) {
 			this._postslist.addEventListener("scroll", this.handleScroll.bind(this));
@@ -165,13 +151,6 @@ export class SimpleStream extends Component {
 			}).observe(this._postslist);
 		}
 
-		// so that HTML doesn't get pasted into the input field. without this,
-		// HTML would be rendered as HTML when pasted
-		inputDiv.addEventListener("paste", function(e) {
-			e.preventDefault();
-			const text = e.clipboardData.getData("text/plain");
-			document.execCommand("insertHTML", false, text);
-		});
 		this.installEditorHandlers();
 		this._postslist.scrollTop = 100000;
 	}
@@ -403,7 +382,7 @@ export class SimpleStream extends Component {
 		if (!this._div || !this._compose) return;
 		const streamHeight = this._div.offsetHeight;
 		const postslistHeight = this._postslist.offsetHeight;
-		const composeHeight = this._compose.offsetHeight;
+		const composeHeight = this._compose.current.offsetHeight;
 		const headerHeight = this._header.offsetHeight;
 		if (postslistHeight < streamHeight) {
 			let newHeight = streamHeight - postslistHeight + this._intro.offsetHeight - composeHeight;
@@ -524,10 +503,6 @@ export class SimpleStream extends Component {
 			stream: true,
 			"no-headshots": !atom.config.get("CodeStream.showHeadshots")
 		});
-		const composeClass = createClassString({
-			compose: true,
-			"mentions-on": this.state.atMentionsOn
-		});
 		const postsListClass = createClassString({
 			postslist: true,
 			inactive: this.state.threadActive
@@ -537,31 +512,6 @@ export class SimpleStream extends Component {
 			threadlist: true,
 			inactive: !this.state.threadActive
 		});
-
-		let newPostText = this.state.newPostText || "";
-
-		// strip out the at-mention markup, and add it back.
-		// newPostText = newPostText.replace(/(@\w+)/g, '<span class="at-mention">$1</span> ');
-
-		let quoteInfo = this.state.quoteText ? <div className="code">{this.state.quoteText}</div> : "";
-		// FIXME loc
-		let range = this.state.quoteRange;
-		let rangeText = null;
-		if (range) {
-			if (range.start.row == range.end.row) {
-				rangeText = "Commenting on line " + (range.start.row + 1);
-			} else {
-				rangeText = "Commenting on lines " + (range.start.row + 1) + "-" + (range.end.row + 1);
-			}
-		}
-		let quoteHint = rangeText ? (
-			<div className="hint">
-				{rangeText}
-				<span onClick={this.handleClickDismissQuote} className="icon icon-x" />
-			</div>
-		) : (
-			""
-		);
 
 		let lastTimestamp = null;
 		let threadId = this.state.threadId;
@@ -574,15 +524,6 @@ export class SimpleStream extends Component {
 		if (this.state.threadActive && threadPost) {
 			placeholderText = "Reply to " + threadPost.author.username;
 		}
-
-		// this is a hack to create a unique class name for each stream
-		// (based on the placeholder) which serves to re-render the
-		// contenteditable div whenever the placeholder text changes
-		// (i.e. you switch streams, or view a thread)
-		// the bogus string created by btoa is just a one-way function
-		// which will always create the same string for the same
-		// placeholder text
-		const contentEditableClass = "native-key-bindings " + btoa(placeholderText);
 
 		const streamDivId = "stream-" + this.props.postStreamId;
 		let unread = false;
@@ -664,7 +605,6 @@ export class SimpleStream extends Component {
 						return returnValue;
 					})}
 				</div>
-
 				<div
 					className={threadPostsListClass}
 					ref={ref => (this._threadpostslist = ref)}
@@ -686,39 +626,17 @@ export class SimpleStream extends Component {
 					)}
 					{this.renderThreadPosts(threadId)}
 				</div>
-
 				<div className={unreadsBelowClass} type="below" onClick={this.handleClickUnreads}>
 					&darr; Unread Messages &darr;
 				</div>
-				<AtMentionsPopup
-					on={this.state.atMentionsOn}
-					people={this.state.atMentionsPeople}
-					usernames={this.usernameRegExp}
-					prefix={this.state.atMentionsPrefix}
-					selected={this.state.selectedAtMention}
-					handleHoverAtMention={this.handleHoverAtMention}
-					handleSelectAtMention={this.handleSelectAtMention}
+				<AddCommentPopup editor={editor} onClick={this.handleClickAddComment} />
+				<ComposeBox
+					placeholder={placeholderText}
+					teammates={this.props.teammates}
+					ref={this._compose}
+					disabled={this.props.isOffline}
+					onSubmit={this.submitPost}
 				/>
-				<div
-					className={composeClass}
-					onKeyPress={this.handleOnKeyPress}
-					ref={ref => (this._compose = ref)}
-				>
-					<AddCommentPopup editor={editor} onClick={this.handleClickAddComment} />
-					{quoteInfo}
-					{quoteHint}
-					<ContentEditable
-						className={contentEditableClass}
-						id="input-div"
-						rows="1"
-						tabIndex="-1"
-						onChange={this.handleOnChange}
-						onBlur={this.handleOnBlur}
-						html={newPostText}
-						placeholder={placeholderText}
-						ref={ref => (this._contentEditable = ref)}
-					/>
-				</div>
 			</div>
 		);
 	}
@@ -861,19 +779,6 @@ export class SimpleStream extends Component {
 		this.selectPost(postDiv.id);
 	};
 
-	findMentions = text => {
-		let mentionUserIds = [];
-		Object.keys(this.props.users).forEach(personId => {
-			let person = this.props.users[personId];
-			if (!person) return;
-			let matcher = person.username.replace(/\+/g, "\\+").replace(/\./g, "\\.");
-			if (text.match("@" + matcher + "\\b")) {
-				mentionUserIds.push(personId);
-			}
-		});
-		return mentionUserIds;
-	};
-
 	// show the thread related to the given post, and if there is
 	// a codeblock, scroll to it and select it
 	selectPost = async id => {
@@ -908,14 +813,6 @@ export class SimpleStream extends Component {
 	// 	}
 	// }
 
-	// programatically set the text in the composition box
-	setNewPostText(text) {
-		// text = text.replace(/<span class="at-mention">(@\w+)<\/span> /g, "$1");
-		// text = text.replace(/(@\w+)/g, <span class="at-mention">$1</span>);
-		// this._contentEditable.htmlEl.innerHTML = text;
-		this.setState({ newPostText: text });
-	}
-
 	// toggle focus between the buffer and the compose input field
 	toggleFocusInput = () => {
 		if (document.activeElement && document.activeElement.id == "input-div")
@@ -932,33 +829,11 @@ export class SimpleStream extends Component {
 		this._postslist.scrollTop = 100000;
 	};
 
-	handleClickDismissQuote = () => {
-		// not very React-ish but not sure how to set focus otherwise
-		this.focusInput();
-
-		let newState = {
-			quoteText: "",
-			preContext: "",
-			postContext: "",
-			quoteRange: null
-		};
-
-		// remove any at-mentions that we have added manually
-		if (
-			this.state.newPostText.replace(/&nbsp;/g, " ").trim() === (this.insertedAuthors || "").trim()
-		) {
-			this.insertedAuthors = "";
-			newState.newPostText = "";
-		}
-
-		this.setState(newState);
-	};
-
 	// figure out who to at-mention based on the git blame data.
 	// insert the text into the compose field
 	addBlameAtMention(selectionRange, gitData) {
 		let postText = this.state.newPostText || "";
-		var authors = {};
+		var authors = [];
 		for (var lineNum = selectionRange.start.row; lineNum <= selectionRange.end.row; lineNum++) {
 			var lineData = gitData[lineNum - 1];
 			if (lineData) {
@@ -970,10 +845,10 @@ export class SimpleStream extends Component {
 							if (userId !== this.props.currentUser.id) {
 								// skip if the input field already contains this user
 								if (postText.match("@" + user.username + "\\b")) return;
-								authors["@" + user.username] = true;
-								this.setState(state => ({
-									autoMentioning: [...state.autoMentioning, `@${user.username}`]
-								}));
+								if (!authors.includes(authorEmail)) authors.push(authorEmail);
+								// this.setState(state => ({
+								// 	autoMentioning: [...state.autoMentioning, `@${user.username}`]
+								// }));
 							}
 						}
 					});
@@ -981,15 +856,7 @@ export class SimpleStream extends Component {
 			}
 		}
 
-		if (Object.keys(authors).length > 0) {
-			// the reason for this unicode space is that chrome will
-			// not render a space at the end of a contenteditable div
-			// unless it is a &nbsp;, which is difficult to insert
-			// so we insert this unicode character instead
-			var newText = Object.keys(authors).join(", ") + ":\u00A0";
-			this.insertedAuthors = newText;
-			this.insertTextAtCursor(newText);
-		}
+		return authors;
 	}
 
 	// configure the compose field in preparation for a comment on a codeBlock
@@ -1034,252 +901,49 @@ export class SimpleStream extends Component {
 
 					if (blamer) {
 						blamer.blame(filePath, (err, data) => {
-							if (!err) this.addBlameAtMention(range, data);
+							if (!err) {
+								window.parent.postMessage(
+									{
+										type: "codestream:interaction:code-highlighted",
+										body: {
+											quoteRange: range,
+											quoteText: code,
+											preContext: preContext,
+											postContext: postContext,
+											authors: this.addBlameAtMention(range, data)
+										}
+									},
+									"*"
+								);
+							}
 						});
 					}
 				}
 			});
 		}
-
-		this.setState({
-			quoteRange: range,
-			quoteText: code,
-			preContext: preContext,
-			postContext: postContext
-		});
 	};
 
-	// when the input field loses focus, one thing we want to do is
-	// to hide the at-mention popup
-	handleOnBlur = async event => {
-		this.setState({
-			atMentionsOn: false
-		});
-	};
-
-	// depending on the contents of the input field, if the user
-	// types a "@" then open the at-mention popup
-	handleOnChange = async event => {
-		var newPostText = event.target.value;
-
-		let selection = window.getSelection();
-		let range = selection.getRangeAt(0);
-		let node = range.commonAncestorContainer;
-		let nodeText = node.textContent || "";
-		let upToCursor = nodeText.substring(0, range.startOffset);
-		var match = upToCursor.match(/@([a-zA-Z0-9_.+]*)$/);
-		if (this.state.atMentionsOn) {
-			if (match) {
-				var text = match[0].replace(/@/, "");
-				this.showAtMentionSelectors(text);
-			} else {
-				// if the line doesn't end with @word, then hide the popup
-				this.setState({ atMentionsOn: false });
-			}
-		} else {
-			if (match) {
-				var text = match[0].replace(/@/, "");
-				this.showAtMentionSelectors(text);
-			}
-		}
-		// track newPostText as the user types
-		this.setState({ newPostText: newPostText });
-	};
-
-	handleOnKeyPress = event => {
-		var newPostText = this.state.newPostText;
-
-		// if we have the at-mentions popup open, then the keys
-		// do something different than if we have the focus in
-		// the textarea
-		if (this.state.atMentionsOn) {
-			if (event.key == "Escape") {
-				this.hideAtMentionSelectors();
-			} else if (event.key == "Enter" && !event.shiftKey) {
-				event.preventDefault();
-				this.selectFirstAtMention();
-			} else {
-				var match = newPostText.match(/@([a-zA-Z0-9_.]*)$/);
-				var text = match ? match[0].replace(/@/, "") : "";
-				// this.showAtMentionSelectors(text);
-			}
-		} else if (event.key === "@") {
-			this.showAtMentionSelectors("");
-		} else if (event.key === "Escape") {
-			this.slideThreadOut();
-		} else if (event.key === "Enter" && !event.shiftKey) {
-			event.preventDefault();
-			if (newPostText.trim().length > 0 && this.props.isOnline) {
-				this.submitPost(newPostText);
-			} else {
-				// don't submit blank posts
-			}
-		}
-	};
-
-	selectFirstAtMention() {
-		this.handleSelectAtMention();
-	}
-
-	// set up the parameters to pass to the at mention popup
-	showAtMentionSelectors(prefix) {
-		let peopleToShow = [];
-
-		Object.keys(this.props.users).forEach(personId => {
-			if (personId === this.props.currentUser.id) return;
-			let person = this.props.users[personId];
-			let toMatch = person.firstName + " " + person.lastName + "*" + person.username; // + "*" + person.email;
-			let lowered = toMatch.toLowerCase();
-			if (lowered.indexOf(prefix) !== -1) {
-				peopleToShow.push(person);
-			}
-		});
-
-		if (peopleToShow.length == 0) {
-			this.setState({
-				atMentionsOn: false
-			});
-		} else {
-			let selected = peopleToShow[0].id;
-
-			this.setState({
-				atMentionsOn: true,
-				atMentionsPrefix: prefix,
-				atMentionsPeople: peopleToShow,
-				atMentionsIndex: 0,
-				selectedAtMention: selected
-			});
-		}
-	}
-
-	// the keypress handler for tracking up and down arrow
-	// and enter, while the at mention popup is open
-	handleAtMentionKeyPress(event, eventType) {
-		if (eventType == "escape") {
-			if (this.state.atMentionsOn) this.setState({ atMentionsOn: false });
-			else this.handleDismissThread();
-		} else {
-			let newIndex = 0;
-			if (eventType == "down") {
-				if (this.state.atMentionsIndex < this.state.atMentionsPeople.length - 1) {
-					newIndex = this.state.atMentionsIndex + 1;
-				} else {
-					newIndex = 0;
-				}
-			} else if (eventType == "up") {
-				if (this.state.atMentionsIndex == 0) {
-					newIndex = this.state.atMentionsPeople.length - 1;
-				} else {
-					newIndex = this.state.atMentionsIndex - 1;
-				}
-			} else if (eventType == "tab") {
-				this.selectFirstAtMention();
-			}
-			this.setState({
-				atMentionsIndex: newIndex,
-				selectedAtMention: this.state.atMentionsPeople[newIndex].id
-			});
-		}
-	}
-
-	// close the at mention popup when the customer types ESC
 	handleEscape(event) {
 		logger.trace(".handleEscape");
 		if (this.state.editingPostId) this.setState({ editingPostId: null });
-		else if (this.state.atMentionsOn) this.setState({ atMentionsOn: false });
 		else if (this.state.threadActive) this.handleDismissThread();
 		else event.abortKeyBinding();
 	}
 
-	// when the user hovers over an at-mention list item, change the
-	// state to represent a hovered state
-	handleHoverAtMention = id => {
-		let index = this.state.atMentionsPeople.findIndex(x => x.id == id);
-
-		this.setState({
-			atMentionsIndex: index,
-			selectedAtMention: id
-		});
-	};
-
-	handleSelectAtMention = id => {
-		// if no id is passed, we assume that we're selecting
-		// the currently-selected at mention
-		if (!id) {
-			id = this.state.selectedAtMention;
-		}
-
-		let user = this.props.users[id];
-		if (!user) return;
-		let username = user.username;
-		// otherwise explicitly use the one passed in
-		// FIXME -- this should anchor at the carat, not end-of-line
-		var re = new RegExp("@" + this.state.atMentionsPrefix + "$");
-		// var re = new RegExp("@" + this.state.atMentionsPrefix);
-		let text = this.state.newPostText.replace(re, "@" + username);
-		this.setState({
-			atMentionsOn: false
-		});
-		// the reason for this unicode space is that chrome will
-		// not render a space at the end of a contenteditable div
-		// unless it is a &nbsp;, which is difficult to insert
-		// so we insert this unicode character instead
-		let toInsert = username + "\u00A0";
-		let that = this;
-		setTimeout(function() {
-			that.focusInput();
-		}, 20);
-		this.insertTextAtCursor(toInsert, this.state.atMentionsPrefix);
-		// this.setNewPostText(text);
-	};
-
-	// insert the given text at the cursor of the input field
-	// after first deleting the text in toDelete
-	insertTextAtCursor(text, toDelete) {
-		var sel, range, html;
-		sel = window.getSelection();
-
-		// if for some crazy reason we can't find a selection, return
-		// to avoid an error.
-		// https://stackoverflow.com/questions/22935320/uncaught-indexsizeerror-failed-to-execute-getrangeat-on-selection-0-is-not
-		if (sel.rangeCount == 0) return;
-
-		range = sel.getRangeAt(0);
-
-		// delete the X characters before the caret
-		range.setStart(range.commonAncestorContainer, range.startOffset - (toDelete || "").length);
-		// range.moveEnd("character", toDelete.length);
-
-		range.deleteContents();
-		var textNode = document.createTextNode(text);
-		range.insertNode(textNode);
-		range.setStartAfter(textNode);
-		sel.removeAllRanges();
-		sel.addRange(range);
-		this._contentEditable.htmlEl.normalize();
-
-		this.setState({ newPostText: this._contentEditable.htmlEl.innerHTML });
-	}
-
 	// create a new post
-	submitPost(newText) {
-		// convert the text to plaintext so there is no HTML
-		newText = newText.replace(/<br>/g, "\n");
-		const doc = new DOMParser().parseFromString(newText, "text/html");
-		newText = doc.documentElement.textContent;
-
+	submitPost = ({ text, quote, mentionedUserIds, autoMentions }) => {
 		const codeBlocks = [];
-		const { quoteText, quoteRange, preContext, postContext, threadActive } = this.state;
+		const { threadActive } = this.state;
 		const { postStreamId, fileStreamId, createPost, currentFile, repoId } = this.props;
 
 		let threadId = threadActive ? this.state.threadId : null;
 
-		if (quoteText) {
+		if (quote) {
 			let codeBlock = {
-				code: quoteText,
-				location: rangeToLocation(quoteRange),
-				preContext,
-				postContext,
+				code: quote.quoteText,
+				location: rangeToLocation(quote.quoteRange),
+				preContext: quote.preContext,
+				postContext: quote.postContext,
 				repoId,
 				file: currentFile
 			};
@@ -1292,36 +956,13 @@ export class SimpleStream extends Component {
 			codeBlocks.push(codeBlock);
 		}
 
-		const mentionUserIds = this.findMentions(newText);
 		const editor = atom.workspace.getActiveTextEditor();
 		const editorText = editor ? editor.getText() : undefined;
 
-		createPost(postStreamId, threadId, newText, codeBlocks, mentionUserIds, editorText, {
-			autoMentions: this.state.autoMentioning
+		createPost(postStreamId, threadId, text, codeBlocks, mentionedUserIds, editorText, {
+			autoMentions
 		});
-
-		// reset the input field to blank
-		this.resetCompose();
-	}
-
-	// if we receive newState as an argument, set the compose state
-	// to that state. otherwise reset it (clear it out)
-	resetCompose(newState) {
-		this.insertedAuthors = "";
-		if (newState) {
-			this.setState(newState);
-		} else {
-			this.setState({
-				newPostText: "",
-				quoteRange: null,
-				quoteText: "",
-				preContext: "",
-				postContext: "",
-				autoMentioning: []
-			});
-			this.savedComposeState[this.id] = {};
-		}
-	}
+	};
 }
 
 const getLocationsByPost = (locationsByCommit = {}, commitHash, markers) => {
@@ -1397,6 +1038,9 @@ const mapStateToProps = ({
 	});
 
 	const teamMembers = _.filter(users, user => (user.teamIds || []).includes(context.currentTeamId));
+	const teammates = teams[context.currentTeamId].memberIds
+		.filter(id => id !== session.userId)
+		.map(id => users[id]);
 
 	// this usenames regexp is a pipe-separated list of
 	// either usernames or if no username exists for the
@@ -1414,8 +1058,8 @@ const mapStateToProps = ({
 		.replace(/\+/g, "\\+") // replace + and . with escaped versions so
 		.replace(/\./g, "\\."); // that the regexp matches the literal chars
 
-	const isOnline =
-		!connectivity.offline && messaging.failedSubscriptions.length === 0 && !messaging.timedOut;
+	const isOffline =
+		connectivity.offline || messaging.failedSubscriptions.length > 0 || messaging.timedOut;
 
 	// FIXME -- eventually we'll allow the user to switch to other streams, like DMs and channels
 	const teamStream = getStreamForTeam(streams, context.currentTeamId) || {};
@@ -1423,7 +1067,8 @@ const mapStateToProps = ({
 	const streamsById = getStreamsForRepoById(streams, context.currentRepoId) || {};
 
 	return {
-		isOnline,
+		isOffline,
+		teammates: toMapBy("id", teammates),
 		postStreamId: teamStream.id,
 		fileStreamId: fileStream.id,
 		teamId: context.currentTeamId,

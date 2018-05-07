@@ -131,7 +131,7 @@ export default store => {
 					Endpoint: "Atom",
 					Thread: post.parentPostId ? "Reply" : "Parent",
 					Category: "Channel",
-					"Auto Mentions": extra.autoMentions.some(mention => post.text.includes(mention)),
+					"Auto Mentions": extra.autoMentions,
 					"First Post?":
 						Boolean(currentUser.totalPosts) === false
 							? new Date(post.createdAt).toISOString()
