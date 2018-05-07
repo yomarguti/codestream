@@ -253,7 +253,7 @@ class ComposeBox extends React.Component {
 				text = doc.documentElement.textContent;
 
 				this.props.onSubmit({ text, quote: this.state.quote });
-				this.setState({ newPostText: "" });
+				this.reset();
 			} else {
 				// don't submit blank posts
 			}
@@ -262,11 +262,12 @@ class ComposeBox extends React.Component {
 
 	handleClickDismissQuote = () => {
 		this.focus();
-		this.setState({
-			newPostText: "",
-			quote: null
-		});
+		this.reset();
 	};
+
+	reset() {
+		this.setState({ newPostText: "", quote: null });
+	}
 
 	render() {
 		const { forwardedRef, placeholder } = this.props;

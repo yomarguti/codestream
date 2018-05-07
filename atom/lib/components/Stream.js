@@ -970,7 +970,7 @@ export class SimpleStream extends Component {
 							if (userId !== this.props.currentUser.id) {
 								// skip if the input field already contains this user
 								if (postText.match("@" + user.username + "\\b")) return;
-								authors.push(authorEmail);
+								if (!authors.includes(authorEmail)) authors.push(authorEmail);
 								// this.setState(state => ({
 								// 	autoMentioning: [...state.autoMentioning, `@${user.username}`]
 								// }));
@@ -1279,17 +1279,17 @@ export class SimpleStream extends Component {
 	// create a new post
 	submitPost = ({ text, quote }) => {
 		const codeBlocks = [];
-		const { quoteText, quoteRange, preContext, postContext, threadActive } = this.state;
+		const { threadActive } = this.state;
 		const { postStreamId, fileStreamId, createPost, currentFile, repoId } = this.props;
 
 		let threadId = threadActive ? this.state.threadId : null;
 
-		if (quoteText) {
+		if (quote) {
 			let codeBlock = {
-				code: quoteText,
-				location: rangeToLocation(quoteRange),
-				preContext,
-				postContext,
+				code: quote.quoteText,
+				location: rangeToLocation(quote.quoteRange),
+				preContext: quote.preContext,
+				postContext: quote.postContext,
 				repoId,
 				file: currentFile
 			};
@@ -1302,11 +1302,11 @@ export class SimpleStream extends Component {
 			codeBlocks.push(codeBlock);
 		}
 
-		const mentionUserIds = this.findMentions(newText); // TODO: receive this as an argument from ComposeBox
+		const mentionUserIds = this.findMentions(text); // TODO: receive this as an argument from ComposeBox
 		const editor = atom.workspace.getActiveTextEditor();
 		const editorText = editor ? editor.getText() : undefined;
 
-		createPost(postStreamId, threadId, newText, codeBlocks, mentionUserIds, editorText, {
+		createPost(postStreamId, threadId, text, codeBlocks, mentionUserIds, editorText, {
 			autoMentions: this.state.autoMentioning
 		});
 
