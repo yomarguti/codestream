@@ -9,7 +9,6 @@ import mixpanel from "mixpanel-browser";
 import ComposeBox from "./ComposeBox";
 import Post from "./Post";
 import UMIs from "./UMIs";
-import AtMentionsPopup from "./AtMentionsPopup";
 import BufferReferences from "./BufferReferences";
 import AddCommentPopup from "./AddCommentPopup2";
 import MarkerLocationTracker from "./MarkerLocationTracker";
@@ -28,7 +27,7 @@ import {
 	getStreamForRepoAndFile,
 	getStreamsForRepoById
 } from "../reducers/streams";
-import { getPostsForRepo, getPostsForStream } from "../reducers/posts";
+import { getPostsForStream } from "../reducers/posts";
 import rootLogger from "../util/Logger";
 import Button from "./onboarding/Button";
 import EditingIndicator from "./EditingIndicator";
@@ -111,8 +110,8 @@ export class SimpleStream extends Component {
 		);
 		this.subscriptions.add(
 			atom.commands.add("atom-workspace", {
-				"codestream:comment": event => this.handleClickAddComment(),
-				"codestream:focus-input": event => this.toggleFocusInput()
+				"codestream:comment": _event => this.handleClickAddComment(),
+				"codestream:focus-input": _event => this.toggleFocusInput()
 			})
 		);
 		this.subscriptions.add(
@@ -185,7 +184,7 @@ export class SimpleStream extends Component {
 			}
 		}
 
-		if (nextProps.firstTimeInAtom && !Boolean(this.state.fileForIntro)) {
+		if (nextProps.firstTimeInAtom && !this.state.fileForIntro) {
 			this.setState({ fileForIntro: nextProps.currentFile });
 		}
 
@@ -458,7 +457,7 @@ export class SimpleStream extends Component {
 			</label>,
 			<label key="learn-more">
 				Learn more at{" "}
-				<a onClick={e => shell.openExternal("https://help.codestream.com")}>help.codestream.com</a>
+				<a onClick={_e => shell.openExternal("https://help.codestream.com")}>help.codestream.com</a>
 			</label>
 		];
 	};
@@ -516,7 +515,6 @@ export class SimpleStream extends Component {
 		let lastTimestamp = null;
 		let threadId = this.state.threadId;
 		let threadPost = this.findPostById(threadId);
-		let hasNewMessagesBelowFold = false;
 
 		let fileAbbreviation = this.fileAbbreviation();
 		let placeholderText = "Add comment to " + fileAbbreviation;
@@ -706,7 +704,7 @@ export class SimpleStream extends Component {
 		if (track) mixpanel.track("Page Viewed", { "Page Name": "Source Stream" });
 	};
 
-	handleEditHeadshot = event => {
+	handleEditHeadshot = _event => {
 		atom.confirm({
 			message: "Edit Headshot",
 			detailedMessage:
