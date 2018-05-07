@@ -139,9 +139,6 @@ export class SimpleStream extends Component {
 	componentDidMount() {
 		const me = this;
 
-		const inputDiv = document.querySelector('div[contenteditable="true"]');
-		if (!inputDiv) return;
-
 		// this listener pays attention to when the input field resizes,
 		// presumably because the user has typed more than one line of text
 		// in it, and calls a function to handle the new size
@@ -154,13 +151,6 @@ export class SimpleStream extends Component {
 			}).observe(this._postslist);
 		}
 
-		// so that HTML doesn't get pasted into the input field. without this,
-		// HTML would be rendered as HTML when pasted
-		inputDiv.addEventListener("paste", function(e) {
-			e.preventDefault();
-			const text = e.clipboardData.getData("text/plain");
-			document.execCommand("insertHTML", false, text);
-		});
 		this.installEditorHandlers();
 		this._postslist.scrollTop = 100000;
 	}

@@ -10,6 +10,15 @@ class ComposeBox extends React.Component {
 
 	componentDidMount() {
 		this.eventListener = window.addEventListener("message", this.handleInteractionEvent, true);
+
+		// so that HTML doesn't get pasted into the input field. without this,
+		// HTML would be rendered as HTML when pasted
+		this._contentEditable.htmlEl.addEventListener("paste", function(e) {
+			e.preventDefault();
+			const text = e.clipboardData.getData("text/plain");
+			document.execCommand("insertHTML", false, text);
+		});
+
 		// because atom hijacks most keystroke events
 		if (global.atom) {
 			const { CompositeDisposable } = require("atom");
