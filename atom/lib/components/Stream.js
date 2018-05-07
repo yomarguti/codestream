@@ -1277,12 +1277,7 @@ export class SimpleStream extends Component {
 	// }
 
 	// create a new post
-	submitPost = newText => {
-		// convert the text to plaintext so there is no HTML
-		newText = newText.replace(/<br>/g, "\n");
-		const doc = new DOMParser().parseFromString(newText, "text/html");
-		newText = doc.documentElement.textContent;
-
+	submitPost = ({ text, quote }) => {
 		const codeBlocks = [];
 		const { quoteText, quoteRange, preContext, postContext, threadActive } = this.state;
 		const { postStreamId, fileStreamId, createPost, currentFile, repoId } = this.props;

@@ -5,7 +5,7 @@ import createClassString from "classnames";
 import AtMentionsPopup from "./AtMentionsPopup";
 
 class ComposeBox extends React.Component {
-	state = { newPostText: "" };
+	state = { newPostText: "", quote: null };
 	disposables = [];
 
 	componentDidMount() {
@@ -36,7 +36,7 @@ class ComposeBox extends React.Component {
 		if (data.type === "codestream:interaction:code-highlighted") {
 			console.log("event data", data.body);
 			const { authors, ...state } = data.body;
-			this.setState(state);
+			this.setState({ quote: state });
 
 			const teammates = Object.values(this.props.teammates);
 			const toAtmention = authors.map(email => _.findWhere(teammates, { email })).filter(Boolean);
@@ -247,7 +247,12 @@ class ComposeBox extends React.Component {
 		} else if (event.key === "Enter" && !event.shiftKey) {
 			event.preventDefault();
 			if (newPostText.trim().length > 0 && !this.props.disabled) {
-				this.props.onSubmit(newPostText);
+				// convert the text to plaintext so there is no HTML
+				let text = newPostText.replace(/<br>/g, "\n");
+				const doc = new DOMParser().parseFromString(text, "text/html");
+				text = doc.documentElement.textContent;
+
+				this.props.onSubmit({ text, quote: this.state.quote });
 				this.setState({ newPostText: "" });
 			} else {
 				// don't submit blank posts
@@ -258,35 +263,35 @@ class ComposeBox extends React.Component {
 	handleClickDismissQuote = () => {
 		this.focus();
 		this.setState({
-			quoteText: "",
-			preContext: "",
-			postContext: "",
-			quoteRange: null,
-			newPostText: ""
+			newPostText: "",
+			quote: null
 		});
 	};
 
 	render() {
 		const { forwardedRef, placeholder } = this.props;
+		const { quote } = this.state;
 
-		let quoteInfo = this.state.quoteText ? <div className="code">{this.state.quoteText}</div> : "";
-		let range = this.state.quoteRange;
-		let rangeText = null;
-		if (range) {
-			if (range.start.row === range.end.row) {
-				rangeText = "Commenting on line " + (range.start.row + 1);
-			} else {
-				rangeText = "Commenting on lines " + (range.start.row + 1) + "-" + (range.end.row + 1);
+		let quoteInfo;
+		let quoteHint;
+		if (quote) {
+			quoteInfo = quote ? <div className="code">{quote.quoteText}</div> : "";
+			let range = quote.quoteRange;
+			let rangeText = null;
+			if (range) {
+				if (range.start.row === range.end.row) {
+					rangeText = "Commenting on line " + (range.start.row + 1);
+				} else {
+					rangeText = "Commenting on lines " + (range.start.row + 1) + "-" + (range.end.row + 1);
+				}
 			}
+			quoteHint = (
+				<div className="hint">
+					{rangeText}
+					<span onClick={this.handleClickDismissQuote} className="icon icon-x" />
+				</div>
+			);
 		}
-		let quoteHint = rangeText ? (
-			<div className="hint">
-				{rangeText}
-				<span onClick={this.handleClickDismissQuote} className="icon icon-x" />
-			</div>
-		) : (
-			""
-		);
 
 		return (
 			<div
