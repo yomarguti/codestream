@@ -44,6 +44,10 @@ class ComposeBox extends React.Component {
 				// TODO handle users with no username
 				const usernames = toAtmention.map(user => `@${user.username}`);
 				this.setState({ autoMentions: usernames });
+				// the reason for this unicode space is that chrome will
+				// not render a space at the end of a contenteditable div
+				// unless it is a &nbsp;, which is difficult to insert
+				// so we insert this unicode character instead
 				const newText = usernames.join(", ") + ":\u00A0";
 				this.insertTextAtCursor(newText);
 			}
