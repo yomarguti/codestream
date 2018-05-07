@@ -61,7 +61,7 @@ class CodeStreamRoot extends Component {
 		if (this.state.hasError)
 			return (
 				<div id="oops">
-					<p>An unexpected error has occurred and we've been notified.</p>
+					<p>{"An unexpected error has occurred and we've been notified."}</p>
 					<p>
 						Please run the `Codestream: Logout` command from the command palette and{" "}
 						<a onClick={atom.reload.bind(atom)}>reload</a> atom.

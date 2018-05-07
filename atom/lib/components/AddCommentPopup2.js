@@ -1,7 +1,7 @@
 import { CompositeDisposable } from "atom";
-import React, { Component } from "react";
+import React from "react";
 
-export default class AddCommentPopup extends Component {
+export default class AddCommentPopup extends React.Component {
 	subscriptions = new CompositeDisposable();
 
 	componentDidMount() {
