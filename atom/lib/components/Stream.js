@@ -861,18 +861,18 @@ export class SimpleStream extends Component {
 		this.selectPost(postDiv.id);
 	};
 
-	findMentions = text => {
-		let mentionUserIds = [];
-		Object.keys(this.props.users).forEach(personId => {
-			let person = this.props.users[personId];
-			if (!person) return;
-			let matcher = person.username.replace(/\+/g, "\\+").replace(/\./g, "\\.");
-			if (text.match("@" + matcher + "\\b")) {
-				mentionUserIds.push(personId);
-			}
-		});
-		return mentionUserIds;
-	};
+	// findMentions = text => {
+	// 	let mentionUserIds = [];
+	// 	Object.keys(this.props.users).forEach(personId => {
+	// 		let person = this.props.users[personId];
+	// 		if (!person) return;
+	// 		let matcher = person.username.replace(/\+/g, "\\+").replace(/\./g, "\\.");
+	// 		if (text.match("@" + matcher + "\\b")) {
+	// 			mentionUserIds.push(personId);
+	// 		}
+	// 	});
+	// 	return mentionUserIds;
+	// };
 
 	// show the thread related to the given post, and if there is
 	// a codeblock, scroll to it and select it
@@ -1277,7 +1277,7 @@ export class SimpleStream extends Component {
 	// }
 
 	// create a new post
-	submitPost = ({ text, quote, autoMentions }) => {
+	submitPost = ({ text, quote, mentionedUserIds, autoMentions }) => {
 		const codeBlocks = [];
 		const { threadActive } = this.state;
 		const { postStreamId, fileStreamId, createPost, currentFile, repoId } = this.props;
@@ -1302,11 +1302,10 @@ export class SimpleStream extends Component {
 			codeBlocks.push(codeBlock);
 		}
 
-		const mentionUserIds = this.findMentions(text); // TODO: receive this as an argument from ComposeBox
 		const editor = atom.workspace.getActiveTextEditor();
 		const editorText = editor ? editor.getText() : undefined;
 
-		createPost(postStreamId, threadId, text, codeBlocks, mentionUserIds, editorText, {
+		createPost(postStreamId, threadId, text, codeBlocks, mentionedUserIds, editorText, {
 			autoMentions
 		});
 
@@ -1316,22 +1315,22 @@ export class SimpleStream extends Component {
 
 	// if we receive newState as an argument, set the compose state
 	// to that state. otherwise reset it (clear it out)
-	resetCompose(newState) {
-		this.insertedAuthors = "";
-		if (newState) {
-			this.setState(newState);
-		} else {
-			this.setState({
-				newPostText: "",
-				quoteRange: null,
-				quoteText: "",
-				preContext: "",
-				postContext: "",
-				autoMentioning: []
-			});
-			this.savedComposeState[this.id] = {};
-		}
-	}
+	// resetCompose(newState) {
+	// 	this.insertedAuthors = "";
+	// 	if (newState) {
+	// 		this.setState(newState);
+	// 	} else {
+	// 		this.setState({
+	// 			newPostText: "",
+	// 			quoteRange: null,
+	// 			quoteText: "",
+	// 			preContext: "",
+	// 			postContext: "",
+	// 			autoMentioning: []
+	// 		});
+	// 		this.savedComposeState[this.id] = {};
+	// 	}
+	// }
 }
 
 const getLocationsByPost = (locationsByCommit = {}, commitHash, markers) => {
