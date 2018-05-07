@@ -1277,7 +1277,7 @@ export class SimpleStream extends Component {
 	// }
 
 	// create a new post
-	submitPost = ({ text, quote }) => {
+	submitPost = ({ text, quote, autoMentions }) => {
 		const codeBlocks = [];
 		const { threadActive } = this.state;
 		const { postStreamId, fileStreamId, createPost, currentFile, repoId } = this.props;
@@ -1307,7 +1307,7 @@ export class SimpleStream extends Component {
 		const editorText = editor ? editor.getText() : undefined;
 
 		createPost(postStreamId, threadId, text, codeBlocks, mentionUserIds, editorText, {
-			autoMentions: this.state.autoMentioning
+			autoMentions
 		});
 
 		// reset the input field to blank

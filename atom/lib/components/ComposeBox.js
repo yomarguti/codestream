@@ -5,7 +5,7 @@ import createClassString from "classnames";
 import AtMentionsPopup from "./AtMentionsPopup";
 
 class ComposeBox extends React.Component {
-	state = { newPostText: "", quote: null };
+	state = { newPostText: "", quote: null, autoMentions: [] };
 	disposables = [];
 
 	componentDidMount() {
@@ -42,7 +42,9 @@ class ComposeBox extends React.Component {
 			const toAtmention = authors.map(email => _.findWhere(teammates, { email })).filter(Boolean);
 			if (toAtmention.length > 0) {
 				// TODO handle users with no username
-				const newText = toAtmention.map(user => user.username).join(", ") + ":\u00A0";
+				const usernames = toAtmention.map(user => `@${user.username}`);
+				this.setState({ autoMentions: usernames });
+				const newText = usernames.join(", ") + ":\u00A0";
 				this.insertTextAtCursor(newText);
 			}
 		}
@@ -214,7 +216,10 @@ class ComposeBox extends React.Component {
 			}
 		}
 		// track newPostText as the user types
-		this.setState({ newPostText });
+		this.setState({
+			newPostText,
+			autoMentions: this.state.autoMentions.filter(mention => newPostText.includes(mention))
+		});
 	};
 
 	// when the input field loses focus, one thing we want to do is
@@ -252,7 +257,11 @@ class ComposeBox extends React.Component {
 				const doc = new DOMParser().parseFromString(text, "text/html");
 				text = doc.documentElement.textContent;
 
-				this.props.onSubmit({ text, quote: this.state.quote });
+				this.props.onSubmit({
+					text,
+					quote: this.state.quote,
+					autoMentions: this.state.autoMentions
+				});
 				this.reset();
 			} else {
 				// don't submit blank posts
@@ -266,7 +275,7 @@ class ComposeBox extends React.Component {
 	};
 
 	reset() {
-		this.setState({ newPostText: "", quote: null });
+		this.setState({ newPostText: "", quote: null, autoMentions: [] });
 	}
 
 	render() {
