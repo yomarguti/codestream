@@ -164,7 +164,7 @@ export class SimpleStream extends Component {
 		}
 
 		if (switchingPostStreams) {
-			this.saveComposeState(nextProps.postStreamId);
+			// this.saveComposeState(nextProps.postStreamId);
 			this.handleDismissThread({ track: false });
 
 			// keep track of the new message indicator in "this" instead of looking
@@ -686,17 +686,17 @@ export class SimpleStream extends Component {
 		scrollDiv.scrollTop += type === "above" ? -10 : 10;
 	};
 
-	saveComposeState(nextId) {
-		this.savedComposeState[this.props.postStreamId] = {
-			newPostText: this.state.newPostText,
-			quoteRange: this.state.quoteRange,
-			quoteText: this.state.quoteText,
-			preContext: this.state.preContext,
-			postContext: this.state.postContext
-		};
-		this.resetCompose(this.savedComposeState[nextId]);
-		delete this.savedComposeState[nextId];
-	}
+	// saveComposeState(nextId) {
+	// 	this.savedComposeState[this.props.postStreamId] = {
+	// 		newPostText: this.state.newPostText,
+	// 		quoteRange: this.state.quoteRange,
+	// 		quoteText: this.state.quoteText,
+	// 		preContext: this.state.preContext,
+	// 		postContext: this.state.postContext
+	// 	};
+	// 	this.resetCompose(this.savedComposeState[nextId]);
+	// 	delete this.savedComposeState[nextId];
+	// }
 
 	// dismiss the thread stream and return to the main stream
 	handleDismissThread = ({ track = true } = {}) => {
