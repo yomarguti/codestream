@@ -9,14 +9,10 @@ import git from "./git";
 import createStore from "./createStore";
 import {
 	commitHashChanged,
-	logout,
 	noGit,
-	noAccess,
 	noRemoteUrl,
 	setRepoAttributes,
 	setRepoUrl,
-	resetContext,
-	setContext,
 	setCurrentFile,
 	setCurrentCommit,
 	setHasFocus
@@ -184,7 +180,6 @@ module.exports = {
 			}),
 			atom.commands.add("atom-workspace", {
 				"codestream:toggle": () => atom.workspace.toggle(CODESTREAM_VIEW_URI),
-				"codestream:logout": () => store.dispatch(logout()),
 				"codestream:reset": () => {
 					db.delete();
 					atom.commands.dispatch(document.querySelector("atom-workspace"), "codestream:logout");
