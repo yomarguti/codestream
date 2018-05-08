@@ -36,7 +36,6 @@ const trimSelection = editor => {
 };
 
 export default class AddCommentPopupManager {
-	editors = new Map();
 	markers = new Map();
 	subscriptions = new CompositeDisposable();
 
@@ -47,19 +46,22 @@ export default class AddCommentPopupManager {
 			atom.workspace.observeActiveTextEditor(editor => {
 				if (
 					editor &&
-					!this.editors.has(editor.id) &&
+					!this.markers.has(editor.id) &&
 					this.repoDirectory.contains(editor.getPath())
 				) {
-					this.editors.set(editor.id, editor);
-
 					const marker = this.createMarker(editor);
-					this.markers.set(editor.id, marker);
+					this.markers.set(editor.id, { marker });
 
 					this.subscriptions.add(
-						editor.onDidDestroy(() => this.editors.delete(editor.id)),
+						editor.onDidDestroy(() => this.markers.delete(editor.id)),
 						editor.onDidChangeSelectionRange(event =>
 							this.handleChangeSelection(editor, marker, event)
-						)
+						),
+						marker.onDidDestroy(() => {
+							// decoration will be destroyed automatically
+							const { tooltip } = marker.getProperties();
+							tooltip && tooltip.dispose();
+						})
 					);
 				}
 			})
@@ -73,25 +75,24 @@ export default class AddCommentPopupManager {
 		const bubble = document.createElement("div");
 		bubble.innerHTML = "+";
 		item.appendChild(bubble);
-		let tooltip = atom.tooltips.add(item, {
+		const tooltipOptions = {
 			title: "Add a comment"
-		});
+		};
+		let tooltip = atom.tooltips.add(item, tooltipOptions);
 		item.onclick = () => {
 			this.publishSelection(editor);
-			marker.getProperties().decoration.destroy();
+			this.hideMarker(marker);
+			// destroying the decoration leaks the tooltip, so it needs to be destroyed and recreated
 			tooltip.dispose();
-			tooltip = atom.tooltips.add(item, {
-				title: "Add a comment"
-			});
+			tooltip = atom.tooltips.add(item, tooltipOptions);
+			marker.setProperties({ tooltip });
 		};
-		marker.setProperties({ item });
+		marker.setProperties({ item, tooltip });
 		return marker;
 	}
 
 	handleChangeSelection(editor, marker, event) {
 		const selectedLength = editor.getSelectedText().length;
-
-		console.debug("selection", editor.getSelectedText());
 
 		const shouldShowMarker =
 			selectedLength > 0 && !event.newBufferRange.isEqual(event.oldBufferRange);
@@ -106,15 +107,16 @@ export default class AddCommentPopupManager {
 				type: "overlay",
 				class: "codestream-overlay"
 			});
-			console.debug("SHOWING MARKER");
-
 			marker.setBufferRange(startRange);
 			marker.setProperties({ decoration });
 		} else {
-			const { decoration } = marker.getProperties();
-			decoration && decoration.destroy();
-			console.log("HIDING MARKER");
+			this.hideMarker(marker);
 		}
+	}
+
+	hideMarker(marker) {
+		const { decoration } = marker.getProperties();
+		decoration && decoration.destroy();
 	}
 
 	publishSelection(editor) {
@@ -179,7 +181,6 @@ export default class AddCommentPopupManager {
 
 	destroy() {
 		this.subscriptions.dispose();
-		this.editors.clear();
-		this.markers.clear();
+		this.markers.forEach(marker => marker.destroy());
 	}
 }
