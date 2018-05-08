@@ -1,15 +1,16 @@
-import { CompositeDisposable } from "atom";
+import { CompositeDisposable, Directory } from "atom";
 
-export class AddCommentPopupManager {
+export default class AddCommentPopupManager {
 	editors = new Map();
 	markers = new Map();
 	subscriptions = new CompositeDisposable();
 
-	constructor() {
+	constructor(repoPath) {
+		const repoDirectory = new Directory(repoPath);
+
 		this.subscriptions.add(
 			atom.workspace.observeActiveTextEditor(editor => {
-				// TODO: is editor file path part of the repo?
-				if (editor && !this.editors.has(editor.id)) {
+				if (editor && !this.editors.has(editor.id) && repoDirectory.contains(editor.getPath())) {
 					this.editors.set(editor.id, editor);
 
 					const marker = this.createMarker(editor);

@@ -11,7 +11,8 @@ class CodeStreamSession {
 	}
 
 	initialize() {
-		this.popupManager = new AddCommentPopupManager();
+		const { repoAttributes } = this.store.getState();
+		this.popupManager = new AddCommentPopupManager(repoAttributes.workingDirectory);
 	}
 
 	destroy() {
