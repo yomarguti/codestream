@@ -10,12 +10,10 @@ import ComposeBox from "./ComposeBox";
 import Post from "./Post";
 import UMIs from "./UMIs";
 import BufferReferences from "./BufferReferences";
-import AddCommentPopup from "./AddCommentPopup2";
 import MarkerLocationTracker from "./MarkerLocationTracker";
 import createClassString from "classnames";
 import DateSeparator from "./DateSeparator";
 import withRepositories from "./withRepositories";
-var Blamer = require("../util/blamer");
 import * as streamActions from "../actions/stream";
 import * as umiActions from "../actions/umi";
 import * as routingActions from "../actions/routing";
@@ -35,51 +33,11 @@ import EditingIndicator from "./EditingIndicator";
 const Path = require("path");
 const logger = rootLogger.forClass("components/Stream");
 
-const isBlankContent = (buffer, row, startColumn, endColumn) => {
-	const line = buffer.lineForRow(row);
-	const content = line.substring(startColumn, endColumn);
-	const isBlank = content.trim() === "";
-
-	return isBlank;
-};
-
-const lastColumnInRow = (buffer, row) => {
-	const line = buffer.lineForRow(row);
-	const lastColumn = line.length;
-
-	return lastColumn;
-};
-
-const trimSelection = editor => {
-	const range = editor.getSelectedBufferRange();
-	const buffer = editor.getBuffer();
-	let { start, end } = range;
-
-	while (start.row < end.row) {
-		if (isBlankContent(buffer, start.row, start.column)) {
-			start.row++;
-			start.column = 0;
-		} else if (isBlankContent(buffer, end.row, 0, end.column)) {
-			end.row--;
-			end.column = lastColumnInRow(buffer, end.row);
-		} else {
-			break;
-		}
-	}
-
-	editor.setSelectedBufferRange(range);
-};
-
 export class SimpleStream extends Component {
 	subscriptions = null;
 
 	constructor(props) {
 		super(props);
-
-		// FIXME -- this stuff shouldn't be stored here
-		this.projectBlamers = {};
-		this.blameData = {};
-		// end FIXME
 
 		this.state = {
 			stream: {},
@@ -110,7 +68,6 @@ export class SimpleStream extends Component {
 		);
 		this.subscriptions.add(
 			atom.commands.add("atom-workspace", {
-				"codestream:comment": _event => this.handleClickAddComment(),
 				"codestream:focus-input": _event => this.toggleFocusInput()
 			})
 		);
@@ -626,7 +583,6 @@ export class SimpleStream extends Component {
 				<div className={unreadsBelowClass} type="below" onClick={this.handleClickUnreads}>
 					&darr; Unread Messages &darr;
 				</div>
-				<AddCommentPopup editor={editor} onClick={this.handleClickAddComment} />
 				<ComposeBox
 					placeholder={placeholderText}
 					teammates={this.props.teammates}
@@ -812,100 +768,6 @@ export class SimpleStream extends Component {
 
 	handleClickScrollToNewMessages = () => {
 		this._postslist.scrollTop = 100000;
-	};
-
-	// figure out who to at-mention based on the git blame data.
-	// insert the text into the compose field
-	addBlameAtMention(selectionRange, gitData) {
-		let postText = this.state.newPostText || "";
-		var authors = [];
-		for (var lineNum = selectionRange.start.row; lineNum <= selectionRange.end.row; lineNum++) {
-			var lineData = gitData[lineNum - 1];
-			if (lineData) {
-				const authorEmail = lineData["email"];
-				if (authorEmail && authorEmail !== "not.committed.yet") {
-					// find the author -- FIXME this feels fragile
-					Object.entries(this.props.users).forEach(([userId, user]) => {
-						if (user.email === authorEmail) {
-							if (userId !== this.props.currentUser.id) {
-								// skip if the input field already contains this user
-								if (postText.match("@" + user.username + "\\b")) return;
-								if (!authors.includes(authorEmail)) authors.push(authorEmail);
-								// this.setState(state => ({
-								// 	autoMentioning: [...state.autoMentioning, `@${user.username}`]
-								// }));
-							}
-						}
-					});
-				}
-			}
-		}
-
-		return authors;
-	}
-
-	// configure the compose field in preparation for a comment on a codeBlock
-	// this is what happens when someone clicks the floating (+) popup
-	handleClickAddComment = () => {
-		let editor = atom.workspace.getActiveTextEditor();
-		if (!editor) return;
-
-		trimSelection(editor);
-		var range = editor.getSelectedBufferRange();
-		let code = editor.getSelectedText();
-		// preContext is the 10 lines of code immediately preceeding the selection
-		let preContext = editor.getTextInBufferRange([
-			[range.start.row - 10, 0],
-			[range.start.row, range.start.column]
-		]);
-		// postContext is the 10 lines of code immediately following the selection
-		let postContext = editor.getTextInBufferRange([
-			[range.end.row, range.end.column],
-			[range.end.row + 10, 0]
-		]);
-
-		// if there is no selected text, i.e. it is a 0-width range,
-		// then grab the current line of code that the cursor is on
-		if (code.length == 0 && range.start.row == range.end.row) {
-			let lineRange = [[range.start.row, 0], [range.start.row, 10000]];
-			code = editor.getTextInBufferRange(lineRange);
-		}
-
-		// not very React-ish but not sure how to set focus otherwise
-		this.focusInput();
-
-		let filePath = editor.getPath();
-		const directory = atom.project.getDirectories().find(directory => directory.contains(filePath));
-		if (directory) {
-			atom.project.repositoryForDirectory(directory).then(projectRepo => {
-				if (projectRepo) {
-					if (!(projectRepo.path in this.projectBlamers)) {
-						this.projectBlamers[projectRepo.path] = new Blamer(projectRepo);
-					}
-					const blamer = this.projectBlamers[projectRepo.path];
-
-					if (blamer) {
-						blamer.blame(filePath, (err, data) => {
-							if (!err) {
-								window.parent.postMessage(
-									{
-										type: "codestream:interaction:code-highlighted",
-										body: {
-											quoteRange: range,
-											quoteText: code,
-											preContext: preContext,
-											postContext: postContext,
-											authors: this.addBlameAtMention(range, data)
-										}
-									},
-									"*"
-								);
-							}
-						});
-					}
-				}
-			});
-		}
 	};
 
 	handleEscape(event) {

@@ -21,7 +21,6 @@ class ComposeBox extends React.Component {
 
 		// because atom hijacks most keystroke events
 		if (global.atom) {
-			const { CompositeDisposable } = require("atom");
 			this.disposables.push(
 				atom.commands.add(".codestream", {
 					"codestream:escape": event => this.handleAtMentionKeyPress(event, "escape")
@@ -44,6 +43,7 @@ class ComposeBox extends React.Component {
 	handleInteractionEvent = ({ data }) => {
 		if (data.type === "codestream:interaction:code-highlighted") {
 			console.log("event data", data.body);
+			this.focus();
 			const { authors, ...state } = data.body;
 			this.setState({ quote: state });
 
