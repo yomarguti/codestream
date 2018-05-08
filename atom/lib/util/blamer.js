@@ -123,4 +123,4 @@ _.extend(Blamer.prototype, {
 // Exports
 // ================
 
-module.exports = Blamer;
+export default Blamer;
