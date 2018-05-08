@@ -154,43 +154,31 @@ export default class AddCommentPopupManager {
 			code = editor.getTextInBufferRange(lineRange);
 		}
 
-		atom.project.repositoryForDirectory(this.repoDirectory).then(repo => {
+		atom.project.repositoryForDirectory(this.repoDirectory).then(async repo => {
 			if (repo) {
-				// TODO: refactor Blamer and tune it to return authors for a range
-				new Blamer(repo).blame(editor.getPath(), (err, data) => {
-					if (!err) {
-						window.parent.postMessage(
-							{
-								type: "codestream:interaction:code-highlighted",
-								body: {
-									quoteRange: range,
-									quoteText: code,
-									preContext: preContext,
-									postContext: postContext,
-									authors: this.getAuthors(range, data)
-								}
-							},
-							"*"
-						);
-					}
-				});
-			}
-		});
-	}
-
-	getAuthors(selectionRange, gitData) {
-		const authors = [];
-		for (var lineNum = selectionRange.start.row; lineNum <= selectionRange.end.row; lineNum++) {
-			var lineData = gitData[lineNum - 1];
-			if (lineData) {
-				const authorEmail = lineData["email"];
-				if (authorEmail && authorEmail !== "not.committed.yet") {
-					if (!authors.includes(authorEmail)) authors.push(authorEmail);
+				let authors = [];
+				try {
+					let blamer = this.blamer || (this.blamer = new Blamer(repo));
+					authors = await blamer.blame(editor.getPath(), range);
+				} catch (e) {
+					console.error("Unable to blame", e);
+				} finally {
+					window.parent.postMessage(
+						{
+							type: "codestream:interaction:code-highlighted",
+							body: {
+								authors,
+								quoteRange: range,
+								quoteText: code,
+								preContext: preContext,
+								postContext: postContext
+							}
+						},
+						"*"
+					);
 				}
 			}
-		}
-
-		return authors;
+		});
 	}
 
 	destroy() {
