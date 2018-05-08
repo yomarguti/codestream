@@ -626,7 +626,7 @@ export class SimpleStream extends Component {
 				<div className={unreadsBelowClass} type="below" onClick={this.handleClickUnreads}>
 					&darr; Unread Messages &darr;
 				</div>
-				<AddCommentPopup editor={editor} onClick={this.handleClickAddComment} />
+				{/* <AddCommentPopup editor={editor} onClick={this.handleClickAddComment} /> */}
 				<ComposeBox
 					placeholder={placeholderText}
 					teammates={this.props.teammates}

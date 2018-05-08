@@ -1,9 +1,27 @@
 import { CompositeDisposable } from "atom";
 import { logout, showSlackInfo } from "./actions/context";
 import { goToInvitePage } from "./actions/routing";
+import AddCommentPopupManager from "./workspace/add-comment-popup-manager";
+
+class CodeStreamSession {
+	popupManager = null;
+
+	constructor(store) {
+		this.store = store;
+	}
+
+	initialize() {
+		this.popupManager = new AddCommentPopupManager();
+	}
+
+	destroy() {
+		this.popupManager.destroy();
+	}
+}
 
 export default store => {
 	const subscriptions = new CompositeDisposable();
+	const csSession = new CodeStreamSession(store);
 
 	const registerCommands = () => {
 		subscriptions.add(
@@ -21,16 +39,21 @@ export default store => {
 		if (action.type === "BOOTSTRAP_COMPLETE") {
 			const { session, onboarding } = store.getState();
 			if (onboarding.complete && session.accessToken) {
+				csSession.initialize();
 				registerCommands();
 			}
 		}
 
 		// When starting a new session, subscribe to channels
 		if (action.type === "LOGGED_IN" || action.type === "ONBOARDING_COMPLETE") {
+			csSession.initialize();
 			registerCommands();
 		}
 
-		if (action.type === "CLEAR_SESSION") subscriptions.dispose();
+		if (action.type === "CLEAR_SESSION") {
+			subscriptions.dispose();
+			csSession.destroy();
+		}
 
 		return result;
 	};
