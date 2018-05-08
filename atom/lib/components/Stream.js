@@ -68,7 +68,6 @@ export class SimpleStream extends Component {
 		);
 		this.subscriptions.add(
 			atom.commands.add("atom-workspace", {
-				"codestream:comment": _event => this.handleClickAddComment(),
 				"codestream:focus-input": _event => this.toggleFocusInput()
 			})
 		);

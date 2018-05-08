@@ -35,6 +35,10 @@ const trimSelection = editor => {
 	return range;
 };
 
+const tooltipOptions = {
+	title: "Add a comment"
+};
+
 export default class AddCommentPopupManager {
 	markers = new Map();
 	subscriptions = new CompositeDisposable();
@@ -43,6 +47,10 @@ export default class AddCommentPopupManager {
 		this.repoDirectory = new Directory(repoPath);
 
 		this.subscriptions.add(
+			atom.commands.add("atom-workspace", "codestream:comment", {
+				didDispatch: () => this.onSelected(),
+				hiddenInCommandPalette: true
+			}),
 			atom.workspace.observeActiveTextEditor(editor => {
 				if (
 					editor &&
@@ -50,7 +58,7 @@ export default class AddCommentPopupManager {
 					this.repoDirectory.contains(editor.getPath())
 				) {
 					const marker = this.createMarker(editor);
-					this.markers.set(editor.id, { marker });
+					this.markers.set(editor.id, marker);
 
 					this.subscriptions.add(
 						editor.onDidDestroy(() => this.markers.delete(editor.id)),
@@ -75,18 +83,8 @@ export default class AddCommentPopupManager {
 		const bubble = document.createElement("div");
 		bubble.innerHTML = "+";
 		item.appendChild(bubble);
-		const tooltipOptions = {
-			title: "Add a comment"
-		};
 		let tooltip = atom.tooltips.add(item, tooltipOptions);
-		item.onclick = () => {
-			this.publishSelection(editor);
-			this.hideMarker(marker);
-			// destroying the decoration leaks the tooltip, so it needs to be destroyed and recreated
-			tooltip.dispose();
-			tooltip = atom.tooltips.add(item, tooltipOptions);
-			marker.setProperties({ tooltip });
-		};
+		item.onclick = this.onSelected;
 		marker.setProperties({ item, tooltip });
 		return marker;
 	}
@@ -119,8 +117,24 @@ export default class AddCommentPopupManager {
 		decoration && decoration.destroy();
 	}
 
+	onSelected = () => {
+		const editor = atom.workspace.getActiveTextEditor();
+		// if a marker doesn't exist for this editor, assume it's not valid
+		if (!editor || !this.markers.has(editor.id)) return;
+
+		this.publishSelection(editor);
+
+		const marker = this.markers.get(editor.id);
+		this.hideMarker(marker);
+
+		const { item, tooltip } = marker.getProperties();
+		// destroying the decoration leaks the tooltip, so it needs to be destroyed and recreated
+		tooltip.dispose();
+		marker.setProperties({ tooltip: atom.tooltips.add(item, tooltipOptions) });
+	};
+
 	publishSelection(editor) {
-		var range = trimSelection(editor);
+		const range = trimSelection(editor);
 		let code = editor.getTextInBufferRange(range);
 		// preContext is the 10 lines of code immediately preceeding the selection
 		let preContext = editor.getTextInBufferRange([
