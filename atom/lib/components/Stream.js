@@ -9,7 +9,6 @@ import mixpanel from "mixpanel-browser";
 import ComposeBox from "./ComposeBox";
 import Post from "./Post";
 import UMIs from "./UMIs";
-import BufferReferences from "./BufferReferences";
 import MarkerLocationTracker from "./MarkerLocationTracker";
 import createClassString from "classnames";
 import DateSeparator from "./DateSeparator";
@@ -86,13 +85,8 @@ export class SimpleStream extends Component {
 		event.abortKeyBinding();
 	}
 
-	componentWillUnmount() {
-		let editor = atom.workspace.getActiveTextEditor();
-		if (editor) delete this.editorsWithHandlers[editor.id];
-		this.subscriptions.dispose();
-	}
-
 	componentDidMount() {
+		this.eventListener = window.addEventListener("message", this.handleInteractionEvent, true);
 		const me = this;
 
 		// this listener pays attention to when the input field resizes,
@@ -160,6 +154,19 @@ export class SimpleStream extends Component {
 			this.postWithNewMessageIndicator = this.props.currentUser.lastReads[nextProps.postStreamId];
 		}
 	}
+
+	componentWillUnmount() {
+		window.removeEventListener("message", this.handleInteractionEvent, true);
+		let editor = atom.workspace.getActiveTextEditor();
+		if (editor) delete this.editorsWithHandlers[editor.id];
+		this.subscriptions.dispose();
+	}
+
+	handleInteractionEvent = ({ data }) => {
+		if (data.type === "codestream:interaction:marker-selected") {
+			this.selectPost(data.body.postId);
+		}
+	};
 
 	checkMarkStreamRead() {
 		// if we have focus, and there are no unread indicators which would mean an
@@ -515,11 +522,6 @@ export class SimpleStream extends Component {
 
 		return (
 			<div className={streamClass} ref={ref => (this._div = ref)}>
-				<BufferReferences
-					streamId={this.props.postStreamId}
-					references={this.props.markers}
-					onSelect={this.selectPost}
-				/>
 				<MarkerLocationTracker editor={editor} />
 				<EditingIndicator
 					editingUsers={this.props.editingUsers}
@@ -901,6 +903,7 @@ const mapStateToProps = ({
 	const fileStream =
 		getStreamForRepoAndFile(streams, context.currentRepoId, context.currentFile) || {};
 
+	// TODO get rid of this. setup message listeners to highlight the code
 	const markersForStreamAndCommit = getMarkersForStreamAndCommit(
 		markerLocations.byStream[fileStream.id],
 		context.currentCommit,
@@ -960,7 +963,6 @@ const mapStateToProps = ({
 		firstTimeInAtom: onboarding.firstTimeInAtom,
 		currentFile: context.currentFile,
 		currentCommit: context.currentCommit,
-		markers: markersForStreamAndCommit,
 		users: toMapBy("id", teamMembers),
 		editingUsers: fileStream.editingUsers,
 		usernamesRegexp: usernamesRegexp,

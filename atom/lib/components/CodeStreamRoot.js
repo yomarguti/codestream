@@ -12,6 +12,7 @@ import NoAccess from "./NoAccess";
 import OfflineBanner from "./OfflineBanner";
 import SlackInfo from "./SlackInfo";
 import withConfigs from "./withConfigs";
+import BufferReferenceManager from "./atom/BufferReferenceManager";
 
 const Loading = props => (
 	<div className="loading-page">
@@ -79,12 +80,16 @@ class CodeStreamRoot extends Component {
 		if (catchingUp) return <Loading message="Hold on, we're catching you up" />;
 		if (showSlackInfo) return <SlackInfo />;
 		else if (onboarding.complete && accessToken) {
-			if (currentPage)
-				return [
-					<OfflineBanner key="offline-banner" />,
-					<Pages key="onboarding" page={currentPage} />
-				];
-			else return [<OfflineBanner key="offline-banner" />, <Stream key="stream" />];
+			const children = [
+				<OfflineBanner key="offline-banner" />,
+				<BufferReferenceManager
+					key="buffer-references"
+					workingDirectory={this.props.workingDirectory}
+					repo={repositories[0]}
+				/>
+			];
+			if (currentPage) return [...children, <Pages key="onboarding" page={currentPage} />];
+			else return [...children, <Stream key="stream" />];
 		} else return [<OfflineBanner key="offline-banner" />, <Onboarding key="onboarding" />];
 	}
 }
@@ -95,7 +100,8 @@ const mapStateToProps = ({
 	session,
 	onboarding,
 	context,
-	messaging
+	messaging,
+	repoAttributes
 }) => ({
 	accessToken: session.accessToken,
 	noAccess: context.noAccess,
@@ -103,6 +109,7 @@ const mapStateToProps = ({
 	showSlackInfo: context.showSlackInfo,
 	currentPage,
 	bootstrapped,
-	onboarding
+	onboarding,
+	workingDirectory: repoAttributes.workingDirectory
 });
 export default connect(mapStateToProps)(withConfigs(CodeStreamRoot));

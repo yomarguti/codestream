@@ -1,5 +1,3 @@
-import { toMapBy } from "./utils";
-
 const initialState = {
 	byRepo: {
 		//[repoId]: { byFile: {} }

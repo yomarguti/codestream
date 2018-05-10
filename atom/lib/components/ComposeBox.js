@@ -9,7 +9,7 @@ class ComposeBox extends React.Component {
 	disposables = [];
 
 	componentDidMount() {
-		this.eventListener = window.addEventListener("message", this.handleInteractionEvent, true);
+		window.addEventListener("message", this.handleInteractionEvent, true);
 
 		// so that HTML doesn't get pasted into the input field. without this,
 		// HTML would be rendered as HTML when pasted

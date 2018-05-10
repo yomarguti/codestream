@@ -1,9 +1,8 @@
 import { CompositeDisposable } from "atom";
 import React, { Component } from "react";
 import { connect } from "react-redux";
-import * as actions from "../actions/marker-location";
-import { locationToRange } from "../util/Marker";
-import { CODESTREAM_VIEW_URI } from "../codestream-view";
+import { locationToRange } from "../../util/Marker";
+import { CODESTREAM_VIEW_URI } from "../../codestream-view";
 
 const isValid = location => {
 	const sameLine = location[0] === location[2];
@@ -41,10 +40,16 @@ class ReferenceBubble extends Component {
 		this.subscriptions.dispose();
 	}
 
-	onClick = event => {
+	onClick = _event => {
 		atom.workspace.open(CODESTREAM_VIEW_URI);
-		this.props.onSelect(this.props.postId);
 		this.props.onMarkerClicked(this.props);
+		window.parent.postMessage(
+			{
+				type: "codestream:interaction:marker-selected",
+				body: { postId: this.props.postId }
+			},
+			"*"
+		);
 	};
 
 	render() {
@@ -60,7 +65,6 @@ class ReferenceBubble extends Component {
 }
 
 const mapDispatchToProps = dispatch => ({
-	...actions,
 	onMarkerClicked: props => dispatch({ type: "MARKER_CLICKED", meta: props })
 });
 export default connect(null, mapDispatchToProps)(ReferenceBubble);
