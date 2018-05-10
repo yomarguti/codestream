@@ -23,7 +23,7 @@ import { rangeToLocation } from "../util/Marker";
 import {
 	getStreamForTeam,
 	getStreamForRepoAndFile,
-	getStreamsForRepoById
+	getStreamsByIdForRepo
 } from "../reducers/streams";
 import { getPostsForStream } from "../reducers/posts";
 import rootLogger from "../util/Logger";
@@ -947,7 +947,7 @@ const mapStateToProps = ({
 	// FIXME -- eventually we'll allow the user to switch to other streams, like DMs and channels
 	const teamStream = getStreamForTeam(streams, context.currentTeamId) || {};
 	const streamPosts = getPostsForStream(posts, teamStream.id);
-	const streamsById = getStreamsForRepoById(streams, context.currentRepoId) || {};
+	const streamsById = getStreamsByIdForRepo(streams, context.currentRepoId) || {};
 
 	return {
 		isOffline,

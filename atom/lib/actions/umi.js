@@ -3,7 +3,7 @@ import { upsert } from "../local-cache";
 import { normalize } from "./utils";
 import { setUserPreference } from "./user";
 import { fetchLatestPosts } from "./post";
-import { getStreamsForRepo, getStreamForRepoAndFile } from "../reducers/streams";
+import { getStreamsByFileForRepo, getStreamForRepoAndFile } from "../reducers/streams";
 
 export const markStreamRead = streamId => async (dispatch, getState, { http }) => {
 	const { session, context, streams } = getState();
@@ -107,7 +107,7 @@ export const recalculate = force => async (dispatch, getState, { http }) => {
 	let nextState = { mentions: {}, unread: {} };
 	if (force) nextState.count = new Date().getTime();
 	let streamsById = {};
-	const streamsByFile = getStreamsForRepo(streams, context.currentRepoId) || {};
+	const streamsByFile = getStreamsByFileForRepo(streams, context.currentRepoId) || {};
 	Object.entries(streamsByFile).forEach(([file, stream]) => {
 		streamsById[stream.id] = stream;
 	});
