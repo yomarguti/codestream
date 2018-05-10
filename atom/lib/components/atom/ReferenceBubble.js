@@ -31,6 +31,9 @@ class ReferenceBubble extends Component {
 		subscriptions.add(
 			marker.onDidDestroy(() => {
 				subscriptions.dispose();
+			}),
+			editor.onDidChangeSelectionRange(() => {
+				this.bufferHighlight && this.bufferHighlight.destroy();
 			})
 		);
 	}
@@ -42,15 +45,31 @@ class ReferenceBubble extends Component {
 
 	onClick = _event => {
 		atom.workspace.open(CODESTREAM_VIEW_URI);
-		this.props.onMarkerClicked(this.props);
+		const { onMarkerClicked, postId } = this.props;
+		onMarkerClicked(this.props);
 		window.parent.postMessage(
 			{
 				type: "codestream:interaction:marker-selected",
-				body: { postId: this.props.postId }
+				body: { postId }
 			},
 			"*"
 		);
+		this.highlightContent();
 	};
+
+	highlightContent() {
+		const { editor, location } = this.props;
+		const range = locationToRange(location);
+		editor.setCursorBufferPosition(range.start);
+		editor.scrollToBufferPosition(range.start, {
+			center: true
+		});
+
+		this.bufferHighlight = editor.decorateMarker(this.marker, {
+			type: "highlight",
+			class: "codestream-highlight"
+		});
+	}
 
 	render() {
 		if (!this.state.isVisible) return false;

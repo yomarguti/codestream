@@ -246,36 +246,36 @@ export class SimpleStream extends Component {
 		}
 	}
 
-	showDisplayMarker(markerId) {
-		const editor = atom.workspace.getActiveTextEditor();
-		const displayMarkers = editor.displayMarkers;
+	// showDisplayMarker(markerId) {
+	// 	const editor = atom.workspace.getActiveTextEditor();
+	// 	const displayMarkers = editor.displayMarkers;
+	//
+	// 	if (!displayMarkers) {
+	// 		return;
+	// 	}
+	//
+	// 	const displayMarker = displayMarkers[markerId];
+	// 	if (displayMarker) {
+	// 		const start = displayMarker.getBufferRange().start;
+	//
+	// 		editor.setCursorBufferPosition(start);
+	// 		editor.scrollToBufferPosition(start, {
+	// 			center: true
+	// 		});
+	//
+	// 		this.displayMarkerDecoration = editor.decorateMarker(displayMarker, {
+	// 			type: "highlight",
+	// 			class: "codestream-highlight"
+	// 		});
+	// 	}
+	// }
 
-		if (!displayMarkers) {
-			return;
-		}
-
-		const displayMarker = displayMarkers[markerId];
-		if (displayMarker) {
-			const start = displayMarker.getBufferRange().start;
-
-			editor.setCursorBufferPosition(start);
-			editor.scrollToBufferPosition(start, {
-				center: true
-			});
-
-			this.displayMarkerDecoration = editor.decorateMarker(displayMarker, {
-				type: "highlight",
-				class: "codestream-highlight"
-			});
-		}
-	}
-
-	hideDisplayMarker() {
-		const decoration = this.displayMarkerDecoration;
-		if (decoration) {
-			decoration.destroy();
-		}
-	}
+	// hideDisplayMarker() {
+	// 	const decoration = this.displayMarkerDecoration;
+	// 	if (decoration) {
+	// 		decoration.destroy();
+	// 	}
+	// }
 
 	installEditorHandlers() {
 		const editor = atom.workspace.getActiveTextEditor();
@@ -770,17 +770,17 @@ export class SimpleStream extends Component {
 		const threadId = post.parentPostId || post.id;
 		this.setState({ threadId: threadId, threadActive: true });
 
-		if (post.codeBlocks && post.codeBlocks.length) {
-			if (!atom.config.get("CodeStream.streamPerFile")) {
-				if (this.props.currentFile !== post.file) {
-					await atom.workspace.open(post.file);
-				}
-			}
-
-			const codeBlock = post.codeBlocks[0];
-			this.hideDisplayMarker();
-			this.showDisplayMarker(codeBlock.markerId);
-		}
+		// if (post.codeBlocks && post.codeBlocks.length) {
+		// 	if (!atom.config.get("CodeStream.streamPerFile")) {
+		// 		if (this.props.currentFile !== post.file) {
+		// 			await atom.workspace.open(post.file);
+		// 		}
+		// 	}
+		//
+		// 	const codeBlock = post.codeBlocks[0];
+		// 	this.hideDisplayMarker();
+		// 	this.showDisplayMarker(codeBlock.markerId);
+		// }
 		this.focusInput();
 	};
 
