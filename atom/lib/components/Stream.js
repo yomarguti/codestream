@@ -115,6 +115,11 @@ export class SimpleStream extends Component {
 			})
 		);
 		this.subscriptions.add(
+			atom.commands.add(".codestream .native-key-bindings", {
+				"codestream:move-up": event => this.handleNonCapturedKeyPress(event, "up")
+			})
+		);
+		this.subscriptions.add(
 			atom.commands.add("atom-workspace", {
 				"codestream:escape": event => this.handleEscape(event),
 				"codestream:copy": event => this.copy(event)
@@ -289,6 +294,11 @@ export class SimpleStream extends Component {
 			if (mine || !this.state.scrolledOffBottom) this._postslist.scrollTop = 100000;
 			else this.handleScroll();
 		}
+
+		// FIXME this doesn't seem to always scroll to the bottom when it should
+		if (this.props.editingPostId !== prevProps.editingPost) {
+			if (!this.state.scrolledOffBottom) this._postslist.scrollTop = 100000;
+		}
 	}
 
 	showDisplayMarker(markerId) {
@@ -410,8 +420,9 @@ export class SimpleStream extends Component {
 			this._intro.style.height = newHeight + "px";
 		}
 		const padding = composeHeight + headerHeight;
+		const threadHeight = postslistHeight + composeHeight;
 		this._div.style.paddingBottom = padding + "px";
-		this._threadpostslist.style.height = postslistHeight + "px";
+		this._threadpostslist.style.height = threadHeight + "px";
 		this._threadpostslist.style.top = headerHeight + "px";
 		// if (this._atMentionsPopup)
 		// this._atMentionsPopup.style.bottom = this._compose.offsetHeight + "px";
@@ -1150,6 +1161,32 @@ export class SimpleStream extends Component {
 				selectedAtMention: selected
 			});
 		}
+	}
+
+	findMyPostBeforeSeqNum(seqNum) {
+		const me = this.props.currentUser.username;
+		return _.chain(this.props.posts)
+			.filter(post => {
+				return post.author.username === me && post.seqNum < seqNum;
+			})
+			.last()
+			.value();
+	}
+
+	// for keypresses that we can't capture with standard
+	// javascript events
+	handleNonCapturedKeyPress(event, eventType) {
+		if (eventType == "up") {
+			if (this.state.newPostText === "") {
+				// find the most recent post I authored
+				console.log("up! ", event);
+				const postDiv = event.target.closest(".post");
+				const seqNum = postDiv ? postDiv.getAttribute("seqNum") : 9999999999;
+				const editingPost = this.findMyPostBeforeSeqNum(seqNum);
+				if (editingPost) this.setState({ editingPostId: editingPost.id });
+			}
+		}
+		event.abortKeyBinding();
 	}
 
 	// the keypress handler for tracking up and down arrow

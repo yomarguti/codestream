@@ -81,6 +81,7 @@ class Post extends Component {
 			<div
 				className={postClass}
 				id={post.id}
+				seqNum={post.seqNum}
 				thread={post.parentPostId || post.id}
 				ref={ref => (this._div = ref)}
 			>

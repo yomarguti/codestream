@@ -15,5 +15,8 @@
 		"down": "codestream:at-mention-move-down",
 		"up": "codestream:at-mention-move-up",
 		"tab": "codestream:at-mention-tab"
+	},
+	".codestream .native-key-bindings": {
+		"up": "codestream:move-up"
 	}
 }
