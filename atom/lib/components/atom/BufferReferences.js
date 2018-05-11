@@ -71,15 +71,17 @@ const getMarkersForStreamAndCommit = (locationsByCommit = {}, commitHash, marker
 };
 
 const mapStateToProps = ({ context, markerLocations, markers, streams }, props) => {
-	const streamsForRepo = getStreamsByFileForRepo(streams, context.currentRepoId);
-	const stream = streamsForRepo[props.repo.relativize(props.editor.getPath())];
 	let references = [];
-	if (stream) {
-		references = getMarkersForStreamAndCommit(
-			markerLocations.byStream[stream.id],
-			context.currentCommit,
-			markers
-		);
+	const streamsForRepo = getStreamsByFileForRepo(streams, context.currentRepoId);
+	if (streamsForRepo) {
+		const stream = streamsForRepo[props.repo.relativize(props.editor.getPath())];
+		if (stream) {
+			references = getMarkersForStreamAndCommit(
+				markerLocations.byStream[stream.id],
+				context.currentCommit,
+				markers
+			);
+		}
 	}
 	return { references };
 };

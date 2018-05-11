@@ -1,5 +1,4 @@
 import React, { Component } from "react";
-import createClassString from "classnames";
 import Button from "./onboarding/Button";
 import { locationToRange } from "../util/Marker";
 
@@ -9,6 +8,41 @@ export default class PostDetails extends Component {
 		this.state = {};
 		this.diffMarkers = [];
 	}
+
+	componentDidMount() {
+		window.addEventListener("message", this.handleInteractionEvent, true);
+
+		this.props.post.codeBlocks.forEach(block => {
+			window.parent.postMessage(
+				{
+					type: "codestream:subscription:file-changed",
+					body: block
+				},
+				"*"
+			);
+		});
+		if (this._alert)
+			atom.tooltips.add(this._alert, {
+				title: "Unknown codeblock location."
+			});
+	}
+
+	componentWillUnmount() {
+		// TODO: end subscription to file-change
+		window.removeEventListener("message", this.handleInteractionEvent, true);
+		this.destroyDiffMarkers();
+	}
+
+	handleInteractionEvent = ({ data }) => {
+		// foobar always lives with view code.
+		// will translate postMessages into events to the views
+		// this.foobar.on(, () => {});
+		if (data.type === "codestream:publish:file-changed") {
+			this.props.post.codeBlocks.forEach(block => {
+				if (block.file === data.body.file) this.setState({ showDiffButtons: data.body.hasDiff });
+			});
+		}
+	};
 
 	render() {
 		const { post } = this.props;
@@ -23,20 +57,20 @@ export default class PostDetails extends Component {
 		// if a patch has been applied, we treat it as if there is
 		// a diff
 		let showDiffButtons = this.state.patchApplied;
-		if (post.markerLocation) {
-			const code = post.codeBlocks[0].code;
-			const editor = atom.workspace.getActiveTextEditor();
-			if (editor) {
-				const range = locationToRange(post.markerLocation);
-				const existingCode = editor.getTextInBufferRange(range);
-				if (code !== existingCode) {
-					showDiffButtons = true;
-				}
-			}
-		} else if (hasCodeBlock) {
-			// this is the case where we have a codeblock but no marker location
-			alert = <span className="icon icon-alert" ref={ref => (this._alert = ref)} />;
-		}
+		// if (post.markerLocation) {
+		// 	const code = post.codeBlocks[0].code;
+		// 	const editor = atom.workspace.getActiveTextEditor();
+		// 	if (editor) {
+		// 		const range = locationToRange(post.markerLocation);
+		// 		const existingCode = editor.getTextInBufferRange(range);
+		// 		if (code !== existingCode) {
+		// 			showDiffButtons = true;
+		// 		}
+		// 	}
+		// } else if (hasCodeBlock) {
+		// 	// this is the case where we have a codeblock but no marker location
+		// 	alert = <span className="icon icon-alert" ref={ref => (this._alert = ref)} />;
+		// }
 
 		let commitDiv = null;
 		if (hasCodeBlock) {
@@ -65,10 +99,10 @@ export default class PostDetails extends Component {
 		return (
 			<div className="post-details" id={post.id} ref={ref => (this._div = ref)}>
 				{alert}
-				{!showDiffButtons &&
+				{!this.state.showDiffButtons &&
 					hasCodeBlock && <div className="no-diffs">This codeblock matches current</div>}
 				{commitDiv}
-				{showDiffButtons && (
+				{this.state.showDiffButtons && (
 					<div className="button-group">
 						<Button
 							id="show-diff-button"
@@ -94,17 +128,6 @@ export default class PostDetails extends Component {
 				)}
 			</div>
 		);
-	}
-
-	componentDidMount = () => {
-		if (this._alert)
-			atom.tooltips.add(this._alert, {
-				title: "Unknown codeblock location."
-			});
-	};
-
-	componentWillUnmount() {
-		this.destroyDiffMarkers();
 	}
 
 	destroyDiffMarkers = () => {

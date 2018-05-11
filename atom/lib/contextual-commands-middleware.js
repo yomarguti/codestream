@@ -2,6 +2,7 @@ import { CompositeDisposable } from "atom";
 import { logout, showSlackInfo } from "./actions/context";
 import { goToInvitePage } from "./actions/routing";
 import AddCommentPopupManager from "./workspace/add-comment-popup-manager";
+import BufferChangeTracker from "./workspace/buffer-change-tracker";
 
 class CodeStreamSession {
 	popupManager = null;
@@ -13,6 +14,7 @@ class CodeStreamSession {
 	initialize() {
 		const { repoAttributes } = this.store.getState();
 		this.popupManager = new AddCommentPopupManager(repoAttributes.workingDirectory);
+		this.bufferChangeTracker = new BufferChangeTracker(this.store, repoAttributes.workingDirectory);
 	}
 
 	destroy() {
