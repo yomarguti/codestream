@@ -21,6 +21,7 @@ class ReferenceBubble extends Component {
 	}
 
 	componentDidMount() {
+		window.addEventListener("message", this.handleInteractionEvent, true);
 		const { location, editor } = this.props;
 		const subscriptions = this.subscriptions;
 		const range = locationToRange(location);
@@ -33,15 +34,29 @@ class ReferenceBubble extends Component {
 				subscriptions.dispose();
 			}),
 			editor.onDidChangeSelectionRange(() => {
-				this.bufferHighlight && this.bufferHighlight.destroy();
+				this.removeContentHighlight();
 			})
 		);
 	}
 
 	componentWillUnmount() {
+		window.removeEventListener("message", this.handleInteractionEvent, true);
 		this.marker.destroy();
 		this.subscriptions.dispose();
 	}
+
+	handleInteractionEvent = ({ data }) => {
+		if (data.type === "codestream:interaction:thread-selected") {
+			if (this.props.postId === data.body.id) {
+				this.highlightContent();
+			}
+		}
+		if (data.type === "codestream:interaction:thread-closed") {
+			if (this.props.postId === data.body) {
+				this.removeContentHighlight();
+			}
+		}
+	};
 
 	onClick = _event => {
 		atom.workspace.open(CODESTREAM_VIEW_URI);
@@ -70,6 +85,8 @@ class ReferenceBubble extends Component {
 			class: "codestream-highlight"
 		});
 	}
+
+	removeContentHighlight = () => this.bufferHighlight && this.bufferHighlight.destroy();
 
 	render() {
 		if (!this.state.isVisible) return false;
