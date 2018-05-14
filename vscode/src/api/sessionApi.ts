@@ -1,5 +1,5 @@
 'use strict';
-import { Range, Uri } from 'vscode';
+import { MessageItem, Range, Uri, window } from 'vscode';
 import {
     CodeStreamApi,
     CreatePostRequestCodeBlock,
@@ -145,7 +145,17 @@ export class CodeStreamSessionApi {
         const found = await registeredRepos.find(r => r.normalizedUrl === remoteUrl);
         if (found !== undefined) return found;
 
-        return await this.createRepo(remote.uri, firsts);
+        const actions: MessageItem[] = [
+            { title: 'Add Repository' },
+            { title: 'Skip', isCloseAffordance: true }
+        ];
+
+        const result = await window.showInformationMessage(`The repository with url \`${remote.uri.toString()}\` isn't currently part of your team. Should we add it?`, ...actions);
+        if (result === actions[0]) {
+            return await this.createRepo(remote.uri, firsts);
+        }
+
+        return undefined;
     }
 
     async findOrRegisterRepos(): Promise<[Uri, CSRepository][]> {
