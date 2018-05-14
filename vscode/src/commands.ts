@@ -314,7 +314,7 @@ export class Commands extends Disposable {
 
     @command('signIn', { customErrorHandling: true })
     signIn() {
-        return this.signInCore(Container.config.email, Container.config.password, Container.config.teamId);
+        return this.signInCore(Container.config.email, Container.config.password);
     }
 
     @command('signOut')

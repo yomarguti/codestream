@@ -118,7 +118,7 @@ export class CodeStreamBot extends Disposable {
                 this._session.onDidReceivePosts(this.onPostsReceived, this)
             );
 
-            await this._session.login(email, password, Container.config.teamId);
+            await this._session.login(email, password);
         }
         catch (ex) {
             Logger.error(ex);

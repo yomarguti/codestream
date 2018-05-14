@@ -45,6 +45,6 @@ export interface IConfig {
     notifications: Notifications;
     password: string;
     serverUrl: string;
-    teamId: string;
+    team: string;
     traceLevel: TraceLevel;
 }

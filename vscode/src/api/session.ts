@@ -1,5 +1,5 @@
 'use strict';
-import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, Uri, window } from 'vscode';
+import { ConfigurationChangeEvent, ConfigurationTarget, Disposable, Event, EventEmitter, Uri, window } from 'vscode';
 import { CodeStreamApi, CSRepository, CSStream, LoginResponse, PresenceStatus } from './api';
 import { configuration } from '../configuration';
 import { Container } from '../container';
@@ -364,30 +364,41 @@ export class CodeStreamSession extends Disposable {
             this._data = await this._api.login(email, password);
 
             if (teamId == null) {
-                if (this.data.repos.length > 0) {
-                    for (const repo of await Container.git.getRepositories()) {
-                        const url = await repo.getNormalizedUrl();
-
-                        const found = this._data.repos.find(r => r.normalizedUrl === url);
-                        if (found === undefined) continue;
-
-                        teamId = found.teamId;
-                        break;
+                if (Container.config.team) {
+                    const normalizedTeamName = Container.config.team.toLocaleUpperCase();
+                    const team = this._data.teams.find(t => t.name.toLocaleUpperCase() === normalizedTeamName);
+                    if (team != null) {
+                        teamId = team.id;
                     }
                 }
 
                 if (teamId == null) {
-                    let teamName = await window.showInputBox({
+                    if (this.data.repos.length > 0) {
+                        for (const repo of await Container.git.getRepositories()) {
+                            const url = await repo.getNormalizedUrl();
+
+                            const found = this._data.repos.find(r => r.normalizedUrl === url);
+                            if (found === undefined) continue;
+
+                            teamId = found.teamId;
+                            break;
+                        }
+                    }
+                }
+
+                if (teamId == null) {
+                    const teamName = await window.showInputBox({
                         prompt: 'Enter team name',
                         placeHolder: 'e.g. team codestream'
                     });
                     if (!teamName) throw new Error(`You must enter a valid team name`);
 
-                    teamName = teamName.toLocaleUpperCase();
+                    const normalizedTeamName = teamName.toLocaleUpperCase();
 
-                    const team = this._data.teams.find(t => t.name.toLocaleUpperCase() === teamName);
+                    const team = this._data.teams.find(t => t.name.toLocaleUpperCase() === normalizedTeamName);
                     if (team == null) throw new Error(`Unable to find team; You must enter a valid team name`);
 
+                    await configuration.update('team', team.name, ConfigurationTarget.Workspace);
                     teamId = team.id;
                 }
             }

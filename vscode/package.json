@@ -79,7 +79,7 @@
                     "description": "Specifies the password to use to connect to the CodeStream service",
                     "scope": "window"
                 },
-                "codestream.teamId": {
+                "codestream.team": {
                     "type": "string",
                     "default": null,
                     "description": "Specifies the optional team to use to connect to the CodeStream service",
