@@ -1,5 +1,5 @@
 'use strict';
-import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, Uri } from 'vscode';
+import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, Uri, window } from 'vscode';
 import { CodeStreamApi, CSRepository, CSStream, LoginResponse, PresenceStatus } from './api';
 import { configuration } from '../configuration';
 import { Container } from '../container';
@@ -377,8 +377,18 @@ export class CodeStreamSession extends Disposable {
                 }
 
                 if (teamId == null) {
-                    // TODO: Pick team?
-                    teamId = this._data.teams[0].id;
+                    let teamName = await window.showInputBox({
+                        prompt: 'Enter team name',
+                        placeHolder: 'e.g. team codestream'
+                    });
+                    if (!teamName) throw new Error(`You must enter a valid team name`);
+
+                    teamName = teamName.toLocaleUpperCase();
+
+                    const team = this._data.teams.find(t => t.name.toLocaleUpperCase() === teamName);
+                    if (team == null) throw new Error(`Unable to find team; You must enter a valid team name`);
+
+                    teamId = team.id;
                 }
             }
 
