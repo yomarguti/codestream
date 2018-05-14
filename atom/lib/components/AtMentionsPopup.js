@@ -8,13 +8,6 @@ import Headshot from "./Headshot";
 // [id, nickname, full name, email, headshot, presence]
 // and a prefix, which is used to filter/match against the list
 export default class AtMentionsPopup extends Component {
-	constructor(props) {
-		super(props);
-		this.state = {};
-	}
-
-	componentDidMount() {}
-
 	render() {
 		if (!this.props.on) return null;
 

@@ -62,9 +62,9 @@
 		"pubnub": "^4.19.0",
 		"raven-for-redux": "^1.2.0",
 		"raven-js": "^3.22.1",
-		"react": "^16.2.0",
+		"react": "^16.3.2",
 		"react-contenteditable": "^2.0.5",
-		"react-dom": "^16.2.0",
+		"react-dom": "^16.3.2",
 		"react-gravatar": "^2.6.3",
 		"react-intl": "^2.4.0",
 		"react-linkify": "^0.2.2",
@@ -78,8 +78,11 @@
 		"uuid": "^3.2.1"
 	},
 	"devDependencies": {
+		"babel-eslint": "^8.2.3",
 		"enzyme": "^3.1.0",
 		"enzyme-adapter-react-16": "^1.0.2",
+		"eslint": "^4.19.1",
+		"eslint-plugin-react": "^7.7.0",
 		"prettier": "^1.7.4",
 		"redux-mock-store": "^1.4.0",
 		"sinon": "^4.1.3"

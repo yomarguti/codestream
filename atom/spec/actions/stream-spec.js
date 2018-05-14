@@ -8,8 +8,6 @@ Dexie.debug = true;
 let db;
 
 describe("stream action creators", () => {
-	const getState = () => ({ session: { accessToken: "someToken" } });
-
 	beforeEach(() => {
 		db = new Dexie(dbName);
 		db.version(1).stores({
@@ -22,7 +20,7 @@ describe("stream action creators", () => {
 	});
 
 	describe("fetchTeamStreams", () => {
-		it("will fetch all streams", () => {
+		xit("will fetch all streams", () => {
 			waitsForPromise(async () => {
 				let count = 0;
 				const http = {};
@@ -47,8 +45,6 @@ describe("stream action creators", () => {
 					session: { accessToken: accessToken }
 				};
 				const store = configureStore([thunk.withExtraArgument({ db, http })])(state);
-				const id1 = "id1";
-				const id2 = "id2";
 
 				await store.dispatch(fetchTeamStreams());
 

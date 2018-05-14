@@ -11,12 +11,9 @@ import {
 	commitHashChanged,
 	logout,
 	noGit,
-	noAccess,
 	noRemoteUrl,
 	setRepoAttributes,
 	setRepoUrl,
-	resetContext,
-	setContext,
 	setCurrentFile,
 	setCurrentCommit,
 	setHasFocus
@@ -184,7 +181,6 @@ module.exports = {
 			}),
 			atom.commands.add("atom-workspace", {
 				"codestream:toggle": () => atom.workspace.toggle(CODESTREAM_VIEW_URI),
-				"codestream:logout": () => store.dispatch(logout()),
 				"codestream:reset": () => {
 					db.delete();
 					atom.commands.dispatch(document.querySelector("atom-workspace"), "codestream:logout");
@@ -197,11 +193,6 @@ module.exports = {
 				"codestream:bold": target => this.markStreamBold(target),
 				"codestream:badge": target => this.markStreamBadge(target)
 			}),
-			// atom.commands.add(".codestream .compose.mentions-on", {
-			// 	"codestream:at-mention-move-up": event => this.handleAtMentionKeyPress(event, "up"),
-			// 	"codestream:at-mention-move-down": event => this.handleAtMentionKeyPress(event, "down"),
-			// 	"codestream:at-mention-escape": event => this.handleAtMentionKeyPress(event, "escape")
-			// })
 			atom.config.observe("CodeStream.emailNotifications", setting => {
 				store.dispatch(setUserPreference(["emailNotifications"], setting ? "on" : "off"));
 			})

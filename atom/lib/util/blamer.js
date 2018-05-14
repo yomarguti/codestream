@@ -1,34 +1,15 @@
-const _ = require("underscore-plus");
 const GitCommander = require("./gitCommander");
 
-/**
- * @module Blamer
- *
- * Blamer is a Class that should be instantiated with an atom 'Git' object
- * for the root repository in the project.
- *
- * @param {Git} repo - an instance of 'Git' class from atom workspace. See
- *   https://atom.io/docs/api/v0.92.0/api/ for more info.
- */
-var Blamer = function(repo) {
-	if (!repo) {
-		throw new Error("Cannot create a Blamer without a repository.");
+export default class Blamer {
+	constructor(repo) {
+		if (!repo) {
+			throw new Error("Cannot create a Blamer without a repository.");
+		}
+		this.repo = repo;
+		this.initialize();
 	}
 
-	this.repo = repo;
-	this.initialize();
-};
-
-// ================
-// Instance Methods
-// ================
-
-_.extend(Blamer.prototype, {
-	/**
-	 * Initializes this Blamer instance, by creating git-tools repos for the root
-	 * repository and submodules.
-	 */
-	initialize: function() {
+	initialize() {
 		this.tools = {};
 		this.tools.root = new GitCommander(this.repo.getWorkingDirectory());
 
@@ -40,7 +21,7 @@ _.extend(Blamer.prototype, {
 				);
 			}
 		}
-	},
+	}
 
 	/**
 	 * Blames the given filePath and calls callback with blame lines or error.
@@ -48,33 +29,37 @@ _.extend(Blamer.prototype, {
 	 * @param {string} filePath - filePath to blame
 	 * @param {function} callback - callback to call back with blame data
 	 */
-	blame: function(filePath, callback) {
+	blame(filePath, range) {
 		// Ensure file path is relative to root repo
 		filePath = this.repo.relativize(filePath);
-		var repoUtil = this.repoUtilForPath(filePath);
+		const repoUtil = this.repoUtilForPath(filePath);
 
 		// Ensure that if this file is in a submodule, we remove the submodule dir
 		// from the path
 		filePath = this.removeSubmodulePrefix(filePath);
 
-		if (!_.isFunction(callback)) {
-			throw new Error("Must be called with a callback function");
-		}
-
 		// Make the async blame call on the git repo
-		repoUtil.blame(filePath, function(err, blame) {
-			callback(err, blame);
-		});
-	},
+		return new Promise((resolve, reject) => {
+			repoUtil.blame(filePath, function(err, blame) {
+				if (err) return reject(err);
 
-	/**
-	 * Utility to get the GitCommander repository for the given filePath. Takes into
-	 * account whether the file is part of a submodule and returns that repository
-	 * if necessary.
-	 *
-	 * @param {string} filePath - the path to the file in question.
-	 */
-	repoUtilForPath: function(filePath) {
+				const authors = [];
+				for (var lineNum = range.start.row; lineNum <= range.end.row; lineNum++) {
+					var lineData = blame[lineNum - 1];
+					if (lineData) {
+						const authorEmail = lineData["email"];
+						if (authorEmail && authorEmail !== "not.committed.yet") {
+							if (!authors.includes(authorEmail)) authors.push(authorEmail);
+						}
+					}
+				}
+
+				resolve(authors);
+			});
+		});
+	}
+
+	repoUtilForPath(filePath) {
 		var submodules = this.repo.submodules;
 
 		// By default, we return the root GitCommander repository.
@@ -93,16 +78,9 @@ _.extend(Blamer.prototype, {
 		}
 
 		return repoUtil;
-	},
+	}
 
-	/**
-	 * If the file path given is inside a submodule, removes the submodule
-	 * directory prefix.
-	 *
-	 * @param {string} filePath - path to file to relativize
-	 * @param {Repo} toolsRepo - git-tools Repo
-	 */
-	removeSubmodulePrefix: function(filePath) {
+	removeSubmodulePrefix(filePath) {
 		var submodules = this.repo.submodules;
 		if (submodules) {
 			for (var submodulePath in submodules) {
@@ -117,10 +95,4 @@ _.extend(Blamer.prototype, {
 		filePath = filePath.replace(/^\//, "");
 		return filePath;
 	}
-});
-
-// ================
-// Exports
-// ================
-
-module.exports = Blamer;
+}

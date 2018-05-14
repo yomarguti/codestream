@@ -34,10 +34,14 @@ export default (initialState = {}) => {
 							session: { ...session, accessToken: Boolean(session.accessToken) }
 						};
 					},
-					getUserContext: ({ context, session, users }) => {
+					getUserContext: ({ session, users }) => {
 						if (session.userId) {
 							const user = users[session.userId];
-							if (user && user.preferences.telemetryConsent) return user;
+							try {
+								if (user && user.preferences.telemetryConsent) return user;
+							} catch (e) {
+								return undefined;
+							}
 						}
 					}
 				})
