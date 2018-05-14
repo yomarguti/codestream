@@ -425,7 +425,8 @@ export class Commands extends Disposable {
         }
         catch (ex) {
             const actions: MessageItem[] = [
-                { title: 'Retry' }
+                { title: 'Retry' },
+                { title: 'Retry with Credential Reset' }
             ];
 
             const tracing = Container.config.traceLevel !== TraceLevel.Silent;
@@ -433,13 +434,16 @@ export class Commands extends Disposable {
                 actions.push({ title: 'Open Output Channel' });
             }
 
-            const result = await window.showErrorMessage(`Unable to sign into CodeStream${!tracing ? '' : '\nSee the CodeStream output channel for more details'}`, ...actions);
+            const result = await window.showErrorMessage(`Unable to sign into CodeStream${!tracing ? '' : `. ${ex.message}. See the CodeStream output channel for more details`}`, ...actions);
             if (result === undefined) throw ex;
 
             if (result === actions[0]) {
                 setImmediate(() => this.signInCore(email, password));
             }
             else if (result === actions[1]) {
+                setImmediate(() => this.signInCore(undefined, undefined));
+            }
+            else if (result === actions[2]) {
                 Logger.showOutputChannel();
             }
         }
