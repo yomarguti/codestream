@@ -221,7 +221,7 @@ export class SimpleStream extends Component {
 			// otherwise, if we've scrolled up, then just call
 			// handleScroll to make sure new message indicators
 			// appear as appropriate.
-			const mine = this.props.currentUser.username === lastPost.author.username;
+			const mine = lastPost && this.props.currentUser.username === lastPost.author.username;
 			if (mine || !this.state.scrolledOffBottom) this._postslist.scrollTop = 100000;
 			else this.handleScroll();
 		}
