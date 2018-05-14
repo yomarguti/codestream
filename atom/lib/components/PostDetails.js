@@ -28,7 +28,13 @@ export default class PostDetails extends Component {
 	}
 
 	componentWillUnmount() {
-		// TODO: end subscription to file-change
+		window.parent.postMessage(
+			{
+				type: "codestream:unsubscribe:file-changed",
+				body: block
+			},
+			"*"
+		);
 		window.removeEventListener("message", this.handleInteractionEvent, true);
 		this.destroyDiffMarkers();
 	}

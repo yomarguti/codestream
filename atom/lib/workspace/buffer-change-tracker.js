@@ -30,7 +30,10 @@ export default class BufferChangeTracker {
 			const codeBlock = data.body;
 			const listenersForFile = this.listeners.get(codeBlock.file) || [];
 			this.listeners.set(codeBlock.file, [...listenersForFile, codeBlock]);
-			this.publish(atom.workspace.getActiveTextEditor()); // Publish the current status
+			return this.publish(atom.workspace.getActiveTextEditor()); // Publish the current status
+		}
+		if (data.type === "codestream:unsubscribe:file-changed") {
+			this.listeners.delete(codeBlock.file);
 		}
 	};
 
