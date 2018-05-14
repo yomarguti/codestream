@@ -142,7 +142,7 @@ export class SimpleUMIs extends Component {
 			// logger.debug("CALC: " + count + " FOR " + path + " w/key: " + key + " ment? " + mentions);
 			totalUMICount += this.calculateTreatment(path, count, mentions);
 			totalMentionsCount += mentions;
-			if (totalUMICount) console.log("COUNT IS: " + totalUMICount, " for ", path);
+			// if (totalUMICount) console.log("COUNT IS: " + totalUMICount, " for ", path);
 		});
 		this.totalCount = totalUMICount;
 		app.setBadgeCount(Math.floor(totalUMICount)); // TODO: This needs to be smarter and it should add to the current badge count rather than replace it

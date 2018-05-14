@@ -155,7 +155,9 @@ export class SimpleStream extends Component {
 	componentDidMount() {
 		const me = this;
 
+		console.log("COMPONENT DID MOUNT");
 		const inputDiv = document.querySelector('div[contenteditable="true"]');
+		console.log("DID WE GET AN INPUT DIV?", inputDiv);
 		if (!inputDiv) return;
 
 		// this listener pays attention to when the input field resizes,
@@ -164,9 +166,12 @@ export class SimpleStream extends Component {
 		new ResizeObserver(me.handleResizeCompose).observe(me._compose);
 
 		if (this._postslist) {
+			console.log("ADDING HANDLERS");
 			this._postslist.addEventListener("scroll", this.handleScroll.bind(this));
 			new ResizeObserver(function() {
 				me.handleScroll();
+				console.log("WE OBSERVED A RESIZE OF STREAM");
+				if (!me.state.scrolledOffBottom) me._postslist.scrollTop = 100000;
 			}).observe(this._postslist);
 		}
 
@@ -286,13 +291,17 @@ export class SimpleStream extends Component {
 		if (this.props.posts.length !== prevProps.posts.length) {
 			const lastPost = this.props.posts[this.props.posts.length - 1];
 
-			// if the latest post is mine, scroll to the bottom always
-			// otherwise, if we've scrolled up, then just call
-			// handleScroll to make sure new message indicators
-			// appear as appropriate.
-			const mine = this.props.currentUser.username === lastPost.author.username;
-			if (mine || !this.state.scrolledOffBottom) this._postslist.scrollTop = 100000;
-			else this.handleScroll();
+			if (lastPost) {
+				// if the latest post is mine, scroll to the bottom always
+				// otherwise, if we've scrolled up, then just call
+				// handleScroll to make sure new message indicators
+				// appear as appropriate.
+				const mine = this.props.currentUser.username === lastPost.author.username;
+				if (mine || !this.state.scrolledOffBottom) this._postslist.scrollTop = 100000;
+				else this.handleScroll();
+			} else {
+				console.log("Could not find lastPost for ", this.props.posts);
+			}
 		}
 
 		// FIXME this doesn't seem to always scroll to the bottom when it should
@@ -747,6 +756,7 @@ export class SimpleStream extends Component {
 		const scrollHeight = scrollDiv.scrollHeight;
 		const offBottom = scrollHeight - scrollTop - scrollDiv.offsetHeight;
 		const scrolledOffBottom = offBottom > 100;
+		console.log("OB IS: ", offBottom);
 		if (scrolledOffBottom !== this.state.scrolledOffBottom)
 			this.setState({ scrolledOffBottom: scrolledOffBottom });
 
