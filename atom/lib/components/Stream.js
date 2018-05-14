@@ -153,7 +153,9 @@ export class SimpleStream extends Component {
 				this.postWithNewMessageIndicator = this.props.currentUser.lastReads[nextProps.postStreamId];
 			}
 		}
-		this.postWithNewMessageIndicator = this.props.currentUser.lastReads[nextProps.postStreamId];
+		if (this.props.currentUser && this.props.currentUser.lastReads) {
+			this.postWithNewMessageIndicator = this.props.currentUser.lastReads[nextProps.postStreamId];
+		}
 	}
 
 	checkMarkStreamRead() {
