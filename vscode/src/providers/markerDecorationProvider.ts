@@ -63,7 +63,7 @@ export class MarkerDecorationProvider extends Disposable {
     }
 
     async apply(editor: TextEditor | undefined = window.activeTextEditor) {
-        if (editor === undefined) return;
+        if (editor === undefined || !Container.session.signedIn) return;
 
         const decorations = await this.provideDecorations(editor);
         editor.setDecorations(this._decorationType, decorations);
