@@ -26,6 +26,8 @@ export enum TraceLevel {
 }
 
 export interface IConfig {
+    autoSignIn: boolean;
+
     bot: {
         email: string;
         enabled: boolean;

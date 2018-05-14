@@ -37,6 +37,12 @@
             "type": "object",
             "title": "CodeStream configuration",
             "properties": {
+                "codestream.autoSignIn": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Specifies whether to automatically sign in to CodeStream",
+                    "scope": "window"
+                },
                 "codestream.debug": {
                     "type": "boolean",
                     "default": false,

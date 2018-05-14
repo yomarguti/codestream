@@ -26,7 +26,7 @@ export async function activate(context: ExtensionContext) {
 
     context.subscriptions.push(Container.session.onDidChangeStatus(onSessionStatusChanged));
 
-    if (cfg.email && cfg.password) {
+    if (cfg.autoSignIn) {
         Container.commands.signIn();
     }
 }
