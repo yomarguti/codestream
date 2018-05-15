@@ -1,5 +1,3 @@
-import { toMapBy } from "./utils";
-
 const initialState = {
 	byRepo: {
 		//[repoId]: { byFile: {} }
@@ -40,20 +38,20 @@ export default (state = initialState, { type, payload }) => {
 	}
 };
 
+// Selectors
 export const getStreamForTeam = state => {
 	return state.teamStream;
 };
 
-// Selectors
 export const getStreamForRepoAndFile = (state, repoId, file) => {
 	const filesForRepo = (state.byRepo[repoId] || {}).byFile;
 	if (filesForRepo) return filesForRepo[file];
 };
 
-export const getStreamsForRepo = (state, repoId) => {
+export const getStreamsByFileForRepo = (state, repoId) => {
 	return (state.byRepo[repoId] || {}).byFile;
 };
 
-export const getStreamsForRepoById = (state, repoId) => {
+export const getStreamsByIdForRepo = (state, repoId) => {
 	return (state.byRepo[repoId] || {}).byId;
 };

@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 import createClassString from "classnames";
 import Headshot from "./Headshot";
 import Timestamp from "./Timestamp";
-import Menu from "./Menu";
+// import Menu from "./Menu";
 import PostDetails from "./PostDetails";
 import RetrySpinner from "./RetrySpinner";
 import { retryPost, cancelPost } from "../actions/post";
@@ -41,7 +41,6 @@ class Post extends Component {
 		});
 
 		let codeBlock = null;
-		let alert = null;
 		if (post.codeBlocks && post.codeBlocks.length) {
 			let code = post.codeBlocks[0].code;
 			if (atom.config.get("CodeStream.streamPerFile")) {
@@ -190,7 +189,7 @@ class Post extends Component {
 		);
 	};
 
-	componentDidUpdate(prevProps, prevState) {
+	componentDidUpdate(prevProps, _prevState) {
 		if (this.props.editing && !prevProps.editing) {
 			document.getElementById("input-div-" + this.props.post.id).focus();
 		}

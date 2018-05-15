@@ -9,7 +9,6 @@ import mixpanel from "mixpanel-browser";
 import ComposeBox from "./ComposeBox";
 import Post from "./Post";
 import UMIs from "./UMIs";
-import BufferReferences from "./BufferReferences";
 import MarkerLocationTracker from "./MarkerLocationTracker";
 import createClassString from "classnames";
 import DateSeparator from "./DateSeparator";
@@ -23,7 +22,7 @@ import { rangeToLocation } from "../util/Marker";
 import {
 	getStreamForTeam,
 	getStreamForRepoAndFile,
-	getStreamsForRepoById
+	getStreamsByIdForRepo
 } from "../reducers/streams";
 import { getPostsForStream } from "../reducers/posts";
 import rootLogger from "../util/Logger";
@@ -86,13 +85,8 @@ export class SimpleStream extends Component {
 		event.abortKeyBinding();
 	}
 
-	componentWillUnmount() {
-		let editor = atom.workspace.getActiveTextEditor();
-		if (editor) delete this.editorsWithHandlers[editor.id];
-		this.subscriptions.dispose();
-	}
-
 	componentDidMount() {
+		this.eventListener = window.addEventListener("message", this.handleInteractionEvent, true);
 		const me = this;
 
 		// this listener pays attention to when the input field resizes,
@@ -160,6 +154,19 @@ export class SimpleStream extends Component {
 			this.postWithNewMessageIndicator = this.props.currentUser.lastReads[nextProps.postStreamId];
 		}
 	}
+
+	componentWillUnmount() {
+		window.removeEventListener("message", this.handleInteractionEvent, true);
+		let editor = atom.workspace.getActiveTextEditor();
+		if (editor) delete this.editorsWithHandlers[editor.id];
+		this.subscriptions.dispose();
+	}
+
+	handleInteractionEvent = ({ data }) => {
+		if (data.type === "codestream:interaction:marker-selected") {
+			this.selectPost(data.body.postId);
+		}
+	};
 
 	checkMarkStreamRead() {
 		// if we have focus, and there are no unread indicators which would mean an
@@ -239,37 +246,6 @@ export class SimpleStream extends Component {
 		}
 	}
 
-	showDisplayMarker(markerId) {
-		const editor = atom.workspace.getActiveTextEditor();
-		const displayMarkers = editor.displayMarkers;
-
-		if (!displayMarkers) {
-			return;
-		}
-
-		const displayMarker = displayMarkers[markerId];
-		if (displayMarker) {
-			const start = displayMarker.getBufferRange().start;
-
-			editor.setCursorBufferPosition(start);
-			editor.scrollToBufferPosition(start, {
-				center: true
-			});
-
-			this.displayMarkerDecoration = editor.decorateMarker(displayMarker, {
-				type: "highlight",
-				class: "codestream-highlight"
-			});
-		}
-	}
-
-	hideDisplayMarker() {
-		const decoration = this.displayMarkerDecoration;
-		if (decoration) {
-			decoration.destroy();
-		}
-	}
-
 	installEditorHandlers() {
 		const editor = atom.workspace.getActiveTextEditor();
 		if (!editor) {
@@ -295,7 +271,6 @@ export class SimpleStream extends Component {
 			);
 			this.checkModifiedTyping(editor);
 			this.checkModifiedGit(editor);
-			this.selectionHandler = editor.onDidChangeSelectionRange(this.hideDisplayMarker.bind(this));
 			this.editorsWithHandlers[editor.id] = true;
 		}
 	}
@@ -515,11 +490,6 @@ export class SimpleStream extends Component {
 
 		return (
 			<div className={streamClass} ref={ref => (this._div = ref)}>
-				<BufferReferences
-					streamId={this.props.postStreamId}
-					references={this.props.markers}
-					onSelect={this.selectPost}
-				/>
 				<MarkerLocationTracker editor={editor} />
 				<EditingIndicator
 					editingUsers={this.props.editingUsers}
@@ -677,7 +647,13 @@ export class SimpleStream extends Component {
 
 	// dismiss the thread stream and return to the main stream
 	handleDismissThread = ({ track = true } = {}) => {
-		this.hideDisplayMarker();
+		window.parent.postMessage(
+			{
+				type: "codestream:interaction:thread-closed",
+				body: this.findPostById(this.state.threadId)
+			},
+			"*"
+		);
 		this.setState({ threadActive: false });
 		this.focusInput();
 		if (track) mixpanel.track("Page Viewed", { "Page Name": "Source Stream" });
@@ -753,12 +729,12 @@ export class SimpleStream extends Component {
 			// by dragging
 			return;
 		}
-		this.selectPost(postDiv.id);
+		this.selectPost(postDiv.id, true);
 	};
 
 	// show the thread related to the given post, and if there is
 	// a codeblock, scroll to it and select it
-	selectPost = async id => {
+	selectPost = (id, wasClicked = false) => {
 		mixpanel.track("Page Viewed", { "Page Name": "Thread View" });
 		const post = this.findPostById(id);
 		if (!post) return;
@@ -768,18 +744,13 @@ export class SimpleStream extends Component {
 		const threadId = post.parentPostId || post.id;
 		this.setState({ threadId: threadId, threadActive: true });
 
-		if (post.codeBlocks && post.codeBlocks.length) {
-			if (!atom.config.get("CodeStream.streamPerFile")) {
-				if (this.props.currentFile !== post.file) {
-					await atom.workspace.open(post.file);
-				}
-			}
-
-			const codeBlock = post.codeBlocks[0];
-			this.hideDisplayMarker();
-			this.showDisplayMarker(codeBlock.markerId);
-		}
 		this.focusInput();
+		if (wasClicked) {
+			window.parent.postMessage(
+				{ type: "codestream:interaction:thread-selected", body: post },
+				"*"
+			);
+		}
 	};
 
 	// not using a gutter for now
@@ -901,6 +872,7 @@ const mapStateToProps = ({
 	const fileStream =
 		getStreamForRepoAndFile(streams, context.currentRepoId, context.currentFile) || {};
 
+	// TODO get rid of this. setup message listeners to highlight the code
 	const markersForStreamAndCommit = getMarkersForStreamAndCommit(
 		markerLocations.byStream[fileStream.id],
 		context.currentCommit,
@@ -947,7 +919,7 @@ const mapStateToProps = ({
 	// FIXME -- eventually we'll allow the user to switch to other streams, like DMs and channels
 	const teamStream = getStreamForTeam(streams, context.currentTeamId) || {};
 	const streamPosts = getPostsForStream(posts, teamStream.id);
-	const streamsById = getStreamsForRepoById(streams, context.currentRepoId) || {};
+	const streamsById = getStreamsByIdForRepo(streams, context.currentRepoId) || {};
 
 	return {
 		isOffline,
@@ -960,7 +932,6 @@ const mapStateToProps = ({
 		firstTimeInAtom: onboarding.firstTimeInAtom,
 		currentFile: context.currentFile,
 		currentCommit: context.currentCommit,
-		markers: markersForStreamAndCommit,
 		users: toMapBy("id", teamMembers),
 		editingUsers: fileStream.editingUsers,
 		usernamesRegexp: usernamesRegexp,

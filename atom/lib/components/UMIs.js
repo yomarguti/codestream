@@ -1,12 +1,11 @@
 import { CompositeDisposable } from "atom";
 import React, { Component } from "react";
 import { connect } from "react-redux";
-import createClassString from "classnames";
 import withRepositories from "./withRepositories";
 import { getUserPreference } from "../actions/user";
 import * as actions from "../actions/umi";
 import rootLogger from "../util/Logger";
-import { getStreamsForRepo } from "../reducers/streams";
+import { getStreamsByFileForRepo } from "../reducers/streams";
 
 const Path = require("path");
 const logger = rootLogger.forClass("components/UMIs");
@@ -420,7 +419,7 @@ export class SimpleUMIs extends Component {
 const mapStateToProps = ({ repoAttributes, context, session, streams, users, umis }) => {
 	return {
 		users: users,
-		streams: getStreamsForRepo(streams, context.currentRepoId) || {},
+		streams: getStreamsByFileForRepo(streams, context.currentRepoId) || {},
 		currentUser: users[session.userId],
 		workingDirectory: repoAttributes.workingDirectory,
 		repoId: context.currentRepoId,

@@ -22,6 +22,14 @@ const addCommittedLocation = (state, payload) => {
 					...payload.dirty
 				}
 			}
+		},
+		byCommit: {
+			...byCommit,
+			[payload.commitHash]: {
+				...existingLocations,
+				...payload.locations,
+				...payload.dirty
+			}
 		}
 	};
 };
