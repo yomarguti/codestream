@@ -648,7 +648,10 @@ export class SimpleStream extends Component {
 	// dismiss the thread stream and return to the main stream
 	handleDismissThread = ({ track = true } = {}) => {
 		window.parent.postMessage(
-			{ type: "codestream:interaction:thread-closed", body: this.state.threadId },
+			{
+				type: "codestream:interaction:thread-closed",
+				body: this.findPostById(this.state.threadId)
+			},
 			"*"
 		);
 		this.setState({ threadActive: false });
