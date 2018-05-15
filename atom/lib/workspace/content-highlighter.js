@@ -21,7 +21,7 @@ export default class ContentHighlighter {
 		}
 		if (data.type === "codestream:interaction:thread-closed") {
 			const post = data.body;
-			if (post.codeBlocks && post.codeBlocks.length > 0) {
+			if (post && post.codeBlocks && post.codeBlocks.length > 0) {
 				this.removeContentHighlight(post.codeBlocks[0].markerId);
 			}
 		}
