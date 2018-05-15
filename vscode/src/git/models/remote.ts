@@ -24,6 +24,6 @@ export class GitRemote {
     }
 
     get normalizedUrl(): string {
-        return `${this.domain}/${this.path}`;
+        return `${this.domain}/${this.path}`.toLocaleLowerCase();
     }
 }
