@@ -86,21 +86,20 @@ export class SimpleStream extends Component {
 	}
 
 	componentDidMount() {
-		this.eventListener = window.addEventListener("message", this.handleInteractionEvent, true);
-		const me = this;
+		window.addEventListener("message", this.handleInteractionEvent, true);
 
 		// this listener pays attention to when the input field resizes,
 		// presumably because the user has typed more than one line of text
 		// in it, and calls a function to handle the new size
-		new ResizeObserver(me.handleResizeCompose).observe(me._compose.current);
+		new ResizeObserver(this.handleResizeCompose).observe(this._compose.current);
 
 		if (this._postslist) {
 			console.log("ADDING HANDLERS");
 			this._postslist.addEventListener("scroll", this.handleScroll.bind(this));
-			new ResizeObserver(function() {
-				me.handleScroll();
+			new ResizeObserver(() => {
+				this.handleScroll();
 				console.log("WE OBSERVED A RESIZE OF STREAM");
-				if (!me.state.scrolledOffBottom) me._postslist.scrollTop = 100000;
+				if (!this.state.scrolledOffBottom && this._postslist) this._postslist.scrollTop = 100000;
 			}).observe(this._postslist);
 		}
 
