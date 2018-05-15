@@ -529,7 +529,7 @@
 			border-right: 1px solid @background-color-info;
 		}
 		.post {
-			padding: 10px 9px; // 1px left and right for border
+			padding: 10px 9px 10px 55px; // 1px left and right for border
 			cursor: pointer;
 			min-height: 56px;
 			white-space: pre-wrap;
@@ -548,6 +548,7 @@
 				border-radius: 4px;
 				background: none;
 				z-index: 2;
+				left: 10px;
 			}
 			.headshot-initials {
 				display: block;
@@ -561,12 +562,17 @@
 				border-radius: 4px;
 				color: @app-background-color;
 				z-index: 1;
+				left: 10px;
 			}
 			.author {
 				font-size: 13px;
 				padding: 0px 3px 3px 0;
-				margin-left: 46px;
+				// margin-left: 46px;
 				font-weight: 700;
+				.emote {
+					font-weight: normal;
+					padding-left: 4px;
+				}
 			}
 			time {
 				// color: @text-color-subtle;
@@ -583,7 +589,7 @@
 				float: right;
 			}
 			.body {
-				padding-left: 46px;
+				// padding-left: 46px;
 			}
 			.icon-gear {
 				color: @text-color-subtle;

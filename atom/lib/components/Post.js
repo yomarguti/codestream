@@ -88,6 +88,7 @@ class Post extends Component {
 				<Headshot size={36} person={post.author} mine={mine} />
 				<span className="author" ref={ref => (this._authorDiv = ref)}>
 					{post.author.username}
+					{this.renderEmote(post)}
 				</span>
 				{post.error ? (
 					<RetrySpinner callback={this.resubmit} cancel={this.cancel} />
@@ -105,14 +106,26 @@ class Post extends Component {
 						<PostDetails post={post} currentCommit={this.props.currentCommit} />
 					)}
 					{alertClass && <span className={alertClass} />}
-					{this.props.editing ? this.renderEditingBody(post) : this.renderBody(post)}
+					{this.renderBody(post)}
 					{!this.props.editng && post.hasBeenEdited && <span className="edited">(edited)</span>}
 				</div>
 			</div>
 		);
 	}
 
+	renderEmote = post => {
+		let matches = post.text.match(/^\/me\s+(.*)/);
+		if (matches) return <span className="emote">{matches[1]}</span>;
+		else return null;
+	}
+
 	renderBody = post => {
+		if (this.props.editing) return this.renderBodyEditing(post);
+		else if (post.text.match(/^\/me\s/)) return null;
+		else return this.renderBodyLinkified(post);
+	}
+
+	renderBodyLinkified = post => {
 		let usernameRegExp = new RegExp("(@(?:" + this.props.usernames + ")\\b)");
 		let bodyParts = post.text.split(usernameRegExp);
 		let iterator = 0;
@@ -136,7 +149,7 @@ class Post extends Component {
 		});
 	};
 
-	renderEditingBody = post => {
+	renderBodyEditing = post => {
 		const id = "input-div-" + post.id;
 
 		return (
