@@ -28,13 +28,15 @@ export default class PostDetails extends Component {
 	}
 
 	componentWillUnmount() {
-		window.parent.postMessage(
-			{
-				type: "codestream:unsubscribe:file-changed",
-				body: block
-			},
-			"*"
-		);
+		this.props.post.codeBlocks.forEach(block => {
+			window.parent.postMessage(
+				{
+					type: "codestream:unsubscribe:file-changed",
+					body: block
+				},
+				"*"
+			);
+		});
 		window.removeEventListener("message", this.handleInteractionEvent, true);
 		this.destroyDiffMarkers();
 	}
@@ -155,57 +157,15 @@ export default class PostDetails extends Component {
 		console.log("Showing version...");
 	};
 
-	handleClickShowDiff = async event => {
-		if (this.state.diffShowing) {
-			this.destroyDiffMarkers();
-		} else {
-			const editor = atom.workspace.getActiveTextEditor();
-			const post = this.props.post;
-			const codeBlock = post.codeBlocks[0];
-
-			const location = post.markerLocation;
-			if (location) {
-				const meta = location[4] || {};
-				const range = locationToRange(location);
-				this.scrollToLine(range.start.row);
-
-				if (!meta.entirelyDeleted) {
-					const marker = editor.markBufferRange(range);
-					editor.decorateMarker(marker, {
-						type: "line",
-						class: "git-diff-details-old-highlighted"
-					});
-					this.diffMarkers.push(marker);
-				}
-
-				this.diffEditor = atom.workspace.buildTextEditor({
-					lineNumberGutterVisible: false,
-					scrollPastEnd: false
-				});
-
-				this.diffEditor.setGrammar(editor.getGrammar());
-				this.diffEditor.setText(codeBlock.code.replace(/[\r\n]+$/g, ""));
-
-				const diffDiv = document.createElement("div");
-				diffDiv.appendChild(atom.views.getView(this.diffEditor));
-
-				const marker2 = editor.markBufferRange(range);
-				const position = meta.entirelyDeleted ? "before" : "after";
-				editor.decorateMarker(marker2, {
-					type: "block",
-					position,
-					item: diffDiv
-				});
-				this.diffMarkers.push(marker2);
-
-				const marker3 = this.diffEditor.markBufferRange([[0, 0], [200, 0]]);
-				this.diffEditor.decorateMarker(marker3, {
-					type: "line",
-					class: "git-diff-details-new-highlighted"
-				});
-				this.diffMarkers.push(marker3);
-			}
-		}
+	handleClickShowDiff = event => {
+		event.preventDefault();
+		window.parent.postMessage(
+			{
+				type: "codestream:interaction:show-diff",
+				body: this.props.post.codeBlocks[0]
+			},
+			"*"
+		);
 		this.setState({ diffShowing: !this.state.diffShowing });
 	};
 
