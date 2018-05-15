@@ -174,7 +174,6 @@ export class SimpleStream extends Component {
 		if (this.props.hasFocus && !this.state.unreadsAbove && !this.state.unreadsBelow) {
 			try {
 				if (this.props.currentUser.lastReads[this.props.postStreamId]) {
-					console.log("Marking stream read for focus");
 					this.props.markStreamRead(this.props.postStreamId);
 				}
 			} catch (e) {
