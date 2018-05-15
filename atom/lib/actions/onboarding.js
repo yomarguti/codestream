@@ -288,11 +288,12 @@ export const confirmEmail = params => async (dispatch, getState, { http }) => {
 			if (alreadyOnTeam) {
 				dispatch(fetchTeamStreams());
 				dispatch({ type: "EXISTING_USER_CONFIRMED" });
+				dispatch(completeOnboarding());
 			} else if (teamIdForRepo) {
 				await dispatch(joinTeam("EXISTING_USER_CONFIRMED"));
+				dispatch(completeOnboarding());
 			}
 			dispatch({ type: "USER_CONFIRMED", meta: { alreadyOnTeam } });
-			dispatch(completeOnboarding());
 			dispatch(requestFinished());
 		})
 		.catch(error => {
