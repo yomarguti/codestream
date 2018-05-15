@@ -292,6 +292,7 @@ export const confirmEmail = params => async (dispatch, getState, { http }) => {
 				await dispatch(joinTeam("EXISTING_USER_CONFIRMED"));
 			}
 			dispatch({ type: "USER_CONFIRMED", meta: { alreadyOnTeam } });
+			dispatch(completeOnboarding());
 			dispatch(requestFinished());
 		})
 		.catch(error => {
