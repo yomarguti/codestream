@@ -106,7 +106,9 @@ export class SimpleStream extends Component {
 			new ResizeObserver(function() {
 				me.handleScroll();
 				console.log("WE OBSERVED A RESIZE OF STREAM");
-				if (!me.state.scrolledOffBottom) me._postslist.scrollTop = 100000;
+				if (!me.state.scrolledOffBottom)
+					if (me._postslist) me._postslist.scrollTop = 100000;
+					else console.log("COULD NOT FIND POSTSLIST TO SCROLL");
 			}).observe(this._postslist);
 		}
 
