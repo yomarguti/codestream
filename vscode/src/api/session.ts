@@ -409,7 +409,7 @@ export class CodeStreamSession extends Disposable {
             this._teamId = teamId;
             this._sessionApi = new CodeStreamSessionApi(this._api, this.token, teamId);
 
-            this._streamVisibilityManager = new StreamVisibilityManager(this, this.data.user.id);
+            this._streamVisibilityManager = new StreamVisibilityManager(this, this.userId);
 
             const disposables = [
                 this._pubnub.initialize(this.token, this.userId, this.pubnubKey),
@@ -429,7 +429,7 @@ export class CodeStreamSession extends Disposable {
 
             this._presenceManager.online();
 
-            Logger.log(`${email} signed into CodeStream (${this.serverUrl})`);
+            Logger.log(`${email} signed into CodeStream (${this.serverUrl}); userId=${this.userId}, teamId=${teamId}`);
             this._status = SessionStatus.SignedIn;
             this._onDidChangeStatus.fire(e);
 
