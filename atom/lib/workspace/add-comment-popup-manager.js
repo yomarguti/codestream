@@ -69,6 +69,7 @@ export default class AddCommentPopupManager {
 							// decoration will be destroyed automatically
 							const { tooltip } = marker.getProperties();
 							tooltip && tooltip.dispose();
+							this.markers.delete(editor.id);
 						})
 					);
 				}
@@ -183,6 +184,11 @@ export default class AddCommentPopupManager {
 
 	destroy() {
 		this.subscriptions.dispose();
-		this.markers.forEach(marker => marker.destroy());
+		this.markers.forEach(marker => {
+			const { tooltip } = marker.getProperties;
+			tooltip && tooltip.dispose();
+			marker.destroy();
+		});
+		this.markers.clear();
 	}
 }

@@ -2,9 +2,15 @@ import { CompositeDisposable } from "atom";
 import { logout, showSlackInfo } from "./actions/context";
 import { goToInvitePage } from "./actions/routing";
 import AddCommentPopupManager from "./workspace/add-comment-popup-manager";
+import BufferChangeTracker from "./workspace/buffer-change-tracker";
+import DiffManager from "./workspace/diff-manager";
+import ContentHighlighter from "./workspace/content-highlighter";
 
-class CodeStreamSession {
+class CodeStreamApi {
 	popupManager = null;
+	bufferChangeTracker = null;
+	diffManager = null;
+	contentHighlighter = null;
 
 	constructor(store) {
 		this.store = store;
@@ -13,16 +19,22 @@ class CodeStreamSession {
 	initialize() {
 		const { repoAttributes } = this.store.getState();
 		this.popupManager = new AddCommentPopupManager(repoAttributes.workingDirectory);
+		this.bufferChangeTracker = new BufferChangeTracker(this.store, repoAttributes.workingDirectory);
+		this.diffManager = new DiffManager(this.store);
+		this.contentHighlighter = new ContentHighlighter(this.store);
 	}
 
 	destroy() {
 		this.popupManager.destroy();
+		this.bufferChangeTracker.destroy();
+		this.diffManager.destroy();
+		this.contentHighlighter.destroy();
 	}
 }
 
 export default store => {
 	const subscriptions = new CompositeDisposable();
-	const csSession = new CodeStreamSession(store);
+	const api = new CodeStreamApi(store);
 
 	const registerCommands = () => {
 		subscriptions.add(
@@ -40,20 +52,20 @@ export default store => {
 		if (action.type === "BOOTSTRAP_COMPLETE") {
 			const { session, onboarding } = store.getState();
 			if (onboarding.complete && session.accessToken) {
-				csSession.initialize();
+				api.initialize();
 				registerCommands();
 			}
 		}
 
 		// When starting a new session, subscribe to channels
 		if (action.type === "LOGGED_IN" || action.type === "ONBOARDING_COMPLETE") {
-			csSession.initialize();
+			api.initialize();
 			registerCommands();
 		}
 
 		if (action.type === "CLEAR_SESSION") {
 			subscriptions.dispose();
-			csSession.destroy();
+			api.destroy();
 		}
 
 		return result;

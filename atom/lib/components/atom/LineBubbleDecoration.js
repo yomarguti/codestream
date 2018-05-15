@@ -2,8 +2,8 @@ import { CompositeDisposable } from "atom";
 import React, { Component } from "react";
 import ReactDOM from "react-dom";
 import ReferenceBubble from "./ReferenceBubble";
-import { locationToRange } from "../util/Marker";
-import rootLogger from "../util/Logger";
+import { locationToRange } from "../../util/Marker";
+import rootLogger from "../../util/Logger";
 
 export default class LineBubbleDecoration extends Component {
 	subscriptions = new CompositeDisposable();
@@ -77,7 +77,6 @@ export default class LineBubbleDecoration extends Component {
 				<ReferenceBubble
 					key={reference.id}
 					editor={this.props.editor}
-					onSelect={this.props.onSelect}
 					count={group.length - index - 1}
 					{...reference}
 				/>

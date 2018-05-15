@@ -1,9 +1,8 @@
 import _ from "underscore-plus";
 import { upsert } from "../local-cache";
 import { normalize } from "./utils";
-import { setUserPreference } from "./user";
 import { fetchAllPosts, fetchLatestPosts } from "./post";
-import { getStreamsForRepo, getStreamForRepoAndFile } from "../reducers/streams";
+import { getStreamForRepoAndFile } from "../reducers/streams";
 
 export const saveStream = attributes => (dispatch, getState, { db }) => {
 	return upsert(db, "streams", attributes).then(stream => {
@@ -23,7 +22,7 @@ export const saveStreams = attributes => (dispatch, getState, { db }) => {
 	);
 };
 
-export const fetchTeamStreams = allPosts => async (dispatch, getState, { http }) => {
+export const fetchTeamStreams = (allPosts = false) => async (dispatch, getState) => {
 	const { context } = getState();
 
 	// fetch the file streams for this repo
@@ -53,9 +52,8 @@ const fetchStreams = (repoId, allPosts, sortId) => async (dispatch, getState, { 
 // FIXME: tech debt. this is only for use when starting with a clean local cache until
 // the streams support lazy loading and infinite lists
 export const fetchTeamStreamsAndAllPosts = () => async (dispatch, getState, { http }) => {
-	const { context } = getState();
+	const { context, session } = getState();
 	let url = `/streams?teamId=${context.currentTeamId}&repoId=${context.currentRepoId}`;
-	if (sortId) url += `&lt=${sortId}`;
 
 	return http.get(url, session.accessToken).then(({ streams, more }) => {
 		const normalizedStreams = normalize(streams);

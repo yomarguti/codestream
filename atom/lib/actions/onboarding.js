@@ -1,19 +1,12 @@
 import Raven from "raven-js";
 import { normalize } from "./utils";
-import {
-	setContext,
-	setCurrentRepo,
-	setCurrentTeam,
-	setRemote,
-	noAccess,
-	noRemoteUrl
-} from "./context";
+import { setContext, setCurrentRepo, setCurrentTeam, noAccess, noRemoteUrl } from "./context";
 import { saveUser, saveUsers, ensureCorrectTimeZone } from "./user";
 import { saveRepo, saveRepos } from "./repo";
 import { fetchCompanies, saveCompany } from "./company";
 import { fetchTeamMembers, saveTeam, saveTeams, joinTeam as _joinTeam } from "./team";
 import { fetchTeamStreams } from "./stream";
-import { fetchLatestForCurrentStream } from "./post";
+import { fetchLatestForTeamStream } from "./post";
 import UUID from "uuid/v1";
 
 const logError = (message, error, extra = {}) => {
@@ -203,7 +196,7 @@ export const register = attributes => async (dispatch, getState, { http }) => {
 
 // common helper for after a user has logged in or confirmed
 async function _handleUserLogin(options) {
-	const { loginData, params, dispatch, getState, firstTimeInAtom } = options;
+	const { loginData, dispatch, getState, firstTimeInAtom } = options;
 	const { accessToken, teams, repos, pubnubKey } = loginData;
 
 	let { user } = loginData;
@@ -293,10 +286,12 @@ export const confirmEmail = params => async (dispatch, getState, { http }) => {
 			});
 
 			if (alreadyOnTeam) {
-				dispatch(fetchStreams());
+				dispatch(fetchTeamStreams());
 				dispatch({ type: "EXISTING_USER_CONFIRMED" });
+				dispatch(completeOnboarding());
 			} else if (teamIdForRepo) {
 				await dispatch(joinTeam("EXISTING_USER_CONFIRMED"));
+				dispatch(completeOnboarding());
 			}
 			dispatch({ type: "USER_CONFIRMED", meta: { alreadyOnTeam } });
 			dispatch(requestFinished());
@@ -474,7 +469,7 @@ export const authenticate = params => async (dispatch, getState, { http }) => {
 			});
 
 			if (alreadyOnTeam) {
-				dispatch(fetchLatestForCurrentStream());
+				dispatch(fetchLatestForTeamStream());
 				dispatch(loggedIn());
 			} else if (teamIdForRepo) {
 				await dispatch(joinTeam(loggedIn().type));
