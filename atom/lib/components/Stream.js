@@ -96,17 +96,18 @@ export class SimpleStream extends Component {
 		if (this._postslist) {
 			console.log("ADDING HANDLERS");
 			this._postslist.addEventListener("scroll", this.handleScroll.bind(this));
+			// this resize observer fires when the height of the
+			// postslist changes, when the window resizes in width
+			// or height, but notably not when new posts are added
+			// this is because the height of the HTML element is
+			// set explicitly
 			new ResizeObserver(() => {
 				this.handleScroll();
-				console.log("WE OBSERVED A RESIZE OF STREAM");
-				if (!this.state.scrolledOffBottom)
-					if (this._postslist) this._postslist.scrollTop = 100000;
-					else console.log("COULD NOT FIND POSTSLIST TO SCROLL");
 			}).observe(this._postslist);
 		}
 
 		this.installEditorHandlers();
-		this._postslist.scrollTop = 100000;
+		this.scrollToBottom();
 	}
 
 	componentWillReceiveProps(nextProps) {
@@ -187,7 +188,7 @@ export class SimpleStream extends Component {
 	componentDidUpdate(prevProps, prevState) {
 		const { postStreamId, fileStreamId, markStreamRead, markStreamModified } = this.props;
 
-		// this._postslist.scrollTop = 100000;
+		// this.scrollToBottom();
 
 		this.installEditorHandlers();
 
@@ -237,7 +238,7 @@ export class SimpleStream extends Component {
 				// handleScroll to make sure new message indicators
 				// appear as appropriate.
 				const mine = this.props.currentUser.username === lastPost.author.username;
-				if (mine || !this.state.scrolledOffBottom) this._postslist.scrollTop = 100000;
+				if (mine || !this.state.scrolledOffBottom) this.scrollToBottom();
 				else this.handleScroll();
 			} else {
 				console.log("Could not find lastPost for ", this.props.posts);
@@ -245,8 +246,13 @@ export class SimpleStream extends Component {
 		}
 
 		// FIXME this doesn't seem to always scroll to the bottom when it should
-		if (this.props.editingPostId !== prevProps.editingPost) {
-			if (!this.state.scrolledOffBottom) this._postslist.scrollTop = 100000;
+		if (this.state.editingPostId !== prevState.editingPostId) {
+			// special-case the editing of the bottom-most post...
+			// scroll it into view. in all other cases we let the
+			// focus of the input field make sure the post is focused
+			const lastPost = this.props.posts[this.props.posts.length - 1];
+			if (this.state.editingPostId == lastPost.id)
+				this.scrollToBottom(true);
 		}
 	}
 
@@ -350,8 +356,15 @@ export class SimpleStream extends Component {
 		// if i am manually scrolling, don't programatically scroll to bottom
 		// offBottom is how far we've scrolled off the bottom of the posts list
 		console.log("OFF BOTTOM IS: ", offBottom);
-		if (offBottom < 100) this._postslist.scrollTop = 100000;
+		if (offBottom < 100) this.scrollToBottom();
 	};
+
+	scrollToBottom = (force) => {
+		// don't scroll to bottom if we're in the middle of an edit,
+		// unless the force parameter is called
+		if (this.state.editingPostId && !force) return;
+		if (this._postslist) this._postslist.scrollTop = 100000;
+	}
 
 	calculateScrolledOffBottom = () => {};
 
@@ -778,14 +791,19 @@ export class SimpleStream extends Component {
 	};
 
 	handleClickScrollToNewMessages = () => {
-		this._postslist.scrollTop = 100000;
+		this.scrollToBottom();
 	};
 
 	handleEscape(event) {
 		logger.trace(".handleEscape");
-		if (this.state.editingPostId) this.setState({ editingPostId: null });
+		if (this.state.editingPostId) this.handleDismissEdit();
 		else if (this.state.threadActive) this.handleDismissThread();
 		else event.abortKeyBinding();
+	}
+
+	handleDismissEdit() {
+		this.setState({ editingPostId: null });
+		this.focusInput();
 	}
 
 	// create a new post
