@@ -33,7 +33,7 @@ export default class BufferChangeTracker {
 			return this.publish(atom.workspace.getActiveTextEditor()); // Publish the current status
 		}
 		if (data.type === "codestream:unsubscribe:file-changed") {
-			this.listeners.delete(codeBlock.file);
+			this.listeners.delete(data.body.file);
 		}
 	};
 
@@ -43,16 +43,19 @@ export default class BufferChangeTracker {
 			const { context, markerLocations } = this.store.getState();
 			const locationsByMarkerId = markerLocations.byCommit[context.currentCommit] || {};
 			listeners.forEach(codeBlock => {
-				const existingCode = editor.getTextInBufferRange(
-					locationToRange(locationsByMarkerId[codeBlock.markerId])
-				);
-				window.parent.postMessage(
-					{
-						type: "codestream:publish:file-changed",
-						body: { file: codeBlock.file, hasDiff: existingCode !== codeBlock.code }
-					},
-					"*"
-				);
+				const location = locationsByMarkerId[codeBlock.markerId];
+				if (location) {
+					const existingCode = editor.getTextInBufferRange(locationToRange(location));
+					window.parent.postMessage(
+						{
+							type: "codestream:publish:file-changed",
+							body: { file: codeBlock.file, hasDiff: existingCode !== codeBlock.code }
+						},
+						"*"
+					);
+				} else {
+					// TODO: find the location?
+				}
 			});
 		}
 	};

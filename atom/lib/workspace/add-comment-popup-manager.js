@@ -183,6 +183,10 @@ export default class AddCommentPopupManager {
 
 	destroy() {
 		this.subscriptions.dispose();
-		this.markers.forEach(marker => marker.destroy());
+		this.markers.forEach(marker => {
+			const { tooltip } = marker.getProperties;
+			tooltip && tooltip.dispose();
+			marker.destroy();
+		});
 	}
 }
