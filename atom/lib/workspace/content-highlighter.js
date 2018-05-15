@@ -12,13 +12,18 @@ export default class ContentHighlighter {
 	handleInteractionEvent = ({ data }) => {
 		if (data.type === "codestream:interaction:thread-selected") {
 			const post = data.body;
-			const { context, markerLocations } = this.store.getState();
-			const locationsByMarkerId = markerLocations.byCommit[context.currentCommit] || {};
-			const codeBlock = post.codeBlocks[0];
-			this.highlightContent(codeBlock, locationsByMarkerId[codeBlock.markerId]);
+			if (post.codeBlocks && post.codeBlocks.length > 0) {
+				const { context, markerLocations } = this.store.getState();
+				const locationsByMarkerId = markerLocations.byCommit[context.currentCommit] || {};
+				const codeBlock = post.codeBlocks[0];
+				this.highlightContent(codeBlock, locationsByMarkerId[codeBlock.markerId]);
+			}
 		}
 		if (data.type === "codestream:interaction:thread-closed") {
-			this.removeContentHighlight(data.body.codeBlocks[0].markerId);
+			const post = data.body;
+			if (post.codeBlocks && post.codeBlocks.length > 0) {
+				this.removeContentHighlight(post.codeBlocks[0].markerId);
+			}
 		}
 		if (data.type === "codestream:interaction:marker-selected") {
 			const codeBlock = data.body;

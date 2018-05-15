@@ -74,6 +74,10 @@ export default class PostDetails extends Component {
 		this.setState({ patchApplied: !this.state.patchApplied });
 	};
 
+	// handleShowVersion = async event => {
+	// 	console.log("Showing version...");
+	// };
+
 	render() {
 		const { post } = this.props;
 
@@ -87,16 +91,6 @@ export default class PostDetails extends Component {
 		// if a patch has been applied, we treat it as if there is
 		// a diff
 		let showDiffButtons = this.state.showDiffButtons || this.state.patchApplied;
-		// if (post.markerLocation) {
-		// 	const code = post.codeBlocks[0].code;
-		// 	const editor = atom.workspace.getActiveTextEditor();
-		// 	if (editor) {
-		// 		const range = locationToRange(post.markerLocation);
-		// 		const existingCode = editor.getTextInBufferRange(range);
-		// 		if (code !== existingCode) {
-		// 			showDiffButtons = true;
-		// 		}
-		// 	}
 		// } else if (hasCodeBlock) {
 		// 	// this is the case where we have a codeblock but no marker location
 		// 	alert = <span className="icon icon-alert" ref={ref => (this._alert = ref)} />;
@@ -125,10 +119,6 @@ export default class PostDetails extends Component {
 			// 	);
 			// }
 		}
-
-		// handleShowVersion = async event => {
-		// 	console.log("Showing version...");
-		// };
 
 		return (
 			<div className="post-details" id={post.id} ref={ref => (this._div = ref)}>

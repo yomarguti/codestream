@@ -25,6 +25,7 @@ class ReferenceBubble extends Component {
 			},
 			"*"
 		);
+		// TODO: this takes 200ms on average
 		onMarkerClicked(this.props);
 	};
 
@@ -40,7 +41,6 @@ class ReferenceBubble extends Component {
 	}
 }
 
-const mapDispatchToProps = dispatch => ({
-	onMarkerClicked: props => dispatch({ type: "MARKER_CLICKED", meta: props })
-});
-export default connect(null, mapDispatchToProps)(ReferenceBubble);
+export default connect(null, {
+	onMarkerClicked: props => ({ type: "MARKER_CLICKED", meta: props })
+})(ReferenceBubble);
