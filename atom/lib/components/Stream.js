@@ -172,9 +172,13 @@ export class SimpleStream extends Component {
 		// unread is out of view, we assume the entire thread has been observed
 		// and we mark the stream read
 		if (this.props.hasFocus && !this.state.unreadsAbove && !this.state.unreadsBelow) {
-			if (this.props.currentUser.lastReads[this.props.postStreamId]) {
-				console.log("Marking stream read for focus");
-				this.props.markStreamRead(this.props.postStreamId);
+			try {
+				if (this.props.currentUser.lastReads[this.props.postStreamId]) {
+					console.log("Marking stream read for focus");
+					this.props.markStreamRead(this.props.postStreamId);
+				}
+			} catch (e) {
+				/* lastReads is probably undefined */
 			}
 		}
 	}
