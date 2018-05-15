@@ -8,6 +8,7 @@ import DiffManager from "./workspace/diff-manager";
 class CodeStreamApi {
 	popupManager = null;
 	bufferChangeTracker = null;
+	diffManager = null;
 
 	constructor(store) {
 		this.store = store;

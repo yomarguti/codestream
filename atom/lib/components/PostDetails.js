@@ -1,13 +1,12 @@
 import React, { Component } from "react";
 import Button from "./onboarding/Button";
-import { locationToRange } from "../util/Marker";
 
 export default class PostDetails extends Component {
-	constructor(props) {
-		super(props);
-		this.state = {};
-		this.diffMarkers = [];
-	}
+	state = {
+		patchApplied: false,
+		diffShowing: false,
+		showDiffButtons: false
+	};
 
 	componentDidMount() {
 		window.addEventListener("message", this.handleInteractionEvent, true);
@@ -38,7 +37,6 @@ export default class PostDetails extends Component {
 			);
 		});
 		window.removeEventListener("message", this.handleInteractionEvent, true);
-		this.destroyDiffMarkers();
 	}
 
 	handleInteractionEvent = ({ data }) => {
@@ -50,6 +48,30 @@ export default class PostDetails extends Component {
 				if (block.file === data.body.file) this.setState({ showDiffButtons: data.body.hasDiff });
 			});
 		}
+	};
+
+	handleClickShowDiff = event => {
+		event.preventDefault();
+		window.parent.postMessage(
+			{
+				type: "codestream:interaction:show-diff",
+				body: this.props.post.codeBlocks[0]
+			},
+			"*"
+		);
+		this.setState({ diffShowing: !this.state.diffShowing });
+	};
+
+	handleClickApplyPatch = event => {
+		event.preventDefault();
+		window.parent.postMessage(
+			{
+				type: "codestream:interaction:apply-patch",
+				body: this.props.post.codeBlocks[0]
+			},
+			"*"
+		);
+		this.setState({ patchApplied: !this.state.patchApplied });
 	};
 
 	render() {
@@ -64,7 +86,7 @@ export default class PostDetails extends Component {
 		let alert = null;
 		// if a patch has been applied, we treat it as if there is
 		// a diff
-		let showDiffButtons = this.state.patchApplied;
+		let showDiffButtons = this.state.showDiffButtons || this.state.patchApplied;
 		// if (post.markerLocation) {
 		// 	const code = post.codeBlocks[0].code;
 		// 	const editor = atom.workspace.getActiveTextEditor();
@@ -104,13 +126,17 @@ export default class PostDetails extends Component {
 			// }
 		}
 
+		// handleShowVersion = async event => {
+		// 	console.log("Showing version...");
+		// };
+
 		return (
 			<div className="post-details" id={post.id} ref={ref => (this._div = ref)}>
 				{alert}
-				{!this.state.showDiffButtons &&
+				{!showDiffButtons &&
 					hasCodeBlock && <div className="no-diffs">This codeblock matches current</div>}
 				{commitDiv}
-				{this.state.showDiffButtons && (
+				{showDiffButtons && (
 					<div className="button-group">
 						<Button
 							id="show-diff-button"
@@ -137,59 +163,4 @@ export default class PostDetails extends Component {
 			</div>
 		);
 	}
-
-	destroyDiffMarkers = () => {
-		for (var i = 0; i < this.diffMarkers.length; i++) {
-			this.diffMarkers[i].destroy();
-		}
-		this.diffMarkers = [];
-	};
-
-	scrollToLine = line => {
-		const editor = atom.workspace.getActiveTextEditor();
-		editor.setCursorBufferPosition([line, 0]);
-		editor.scrollToBufferPosition([line, 0], {
-			center: true
-		});
-	};
-
-	handleShowVersion = async event => {
-		console.log("Showing version...");
-	};
-
-	handleClickShowDiff = event => {
-		event.preventDefault();
-		window.parent.postMessage(
-			{
-				type: "codestream:interaction:show-diff",
-				body: this.props.post.codeBlocks[0]
-			},
-			"*"
-		);
-		this.setState({ diffShowing: !this.state.diffShowing });
-	};
-
-	handleClickApplyPatch = async event => {
-		const editor = atom.workspace.getActiveTextEditor();
-		const post = this.props.post;
-		const location = post.markerLocation;
-
-		if (location) {
-			const range = locationToRange(location);
-
-			this.scrollToLine(range.start.row);
-
-			if (this.state.patchApplied) {
-				// revert
-				editor.setTextInBufferRange(this.state.oldRange, this.state.oldCode);
-			} else {
-				// apply patch
-				const codeBlock = post.codeBlocks[0];
-				var currentCode = editor.getTextInBufferRange(range);
-				let oldRange = editor.setTextInBufferRange(range, codeBlock.code);
-				this.setState({ oldCode: currentCode, oldRange: oldRange });
-			}
-			this.setState({ patchApplied: !this.state.patchApplied });
-		}
-	};
 }
