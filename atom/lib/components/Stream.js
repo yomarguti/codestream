@@ -719,6 +719,26 @@ export class SimpleStream extends Component {
 		}
 	};
 
+	findMentionedUserIds = text => {
+		const mentionedUserIds = [];
+		Object.values(this.props.teammates).forEach(user => {
+			const matcher = user.username.replace(/\+/g, "\\+").replace(/\./g, "\\.");
+			if (text.match("@" + matcher + "\\b")) {
+				mentionedUserIds.push(user.id);
+			}
+		});
+		return mentionedUserIds;
+	};
+
+	replacePostText = (postId, newText) => {
+		// convert the text to plaintext so there is no HTML
+		const doc = new DOMParser().parseFromString(newText, "text/html");
+		const replaceText = doc.documentElement.textContent;
+		const mentionUserIds = this.findMentionedUserIds(replaceText);
+
+		this.props.editPost(postId, replaceText, mentionUserIds);
+	};
+
 	// by clicking on the post, we select it
 	handleClickPost = event => {
 		var postDiv = event.target.closest(".post");
@@ -740,12 +760,7 @@ export class SimpleStream extends Component {
 				.getElementById("input-div-" + postDiv.id)
 				.innerHTML.replace(/<br>/g, "\n");
 
-			// convert the text to plaintext so there is no HTML
-			var doc = new DOMParser().parseFromString(newText, "text/html");
-			newText = doc.documentElement.textContent;
-			const mentionUserIds = this.findMentions(newText);
-
-			this.props.editPost(postDiv.id, newText, mentionUserIds);
+			this.replacePostText(postDiv.id, newText);
 			this.setState({ editingPostId: null });
 			return;
 		} else if (postDiv.classList.contains("editing")) {
@@ -818,11 +833,36 @@ export class SimpleStream extends Component {
 		this.focusInput();
 	}
 
+	// return true if we are able to use substitute
+	// to edit the text of my last post
+	substituteLastPost(substitute) {
+		// nothing to substitute? return false
+		if (!substitute) return false;
+
+		// if we can't find my last post in the stream, return false
+		const myLastPost = this.findMyPostBeforeSeqNum(9999999999);
+		if (!myLastPost) return false;
+
+		const find = substitute[1];
+		const replace = substitute[2];
+		const modifier = substitute[3]; // not used yet
+		const newText = myLastPost.text.replace(find, replace);
+		if (newText !== myLastPost.text) {
+			this.replacePostText(myLastPost.id, newText);
+			return true;
+		}
+		else return false;
+	}
+
 	// create a new post
 	submitPost = ({ text, quote, mentionedUserIds, autoMentions }) => {
 		const codeBlocks = [];
 		const { threadActive } = this.state;
 		const { postStreamId, fileStreamId, createPost, currentFile, repoId } = this.props;
+
+		const substitute = text.match(/^s\/(.+)\/(.*)\/$/);
+		if (this.substituteLastPost(substitute)) return;
+		else console.log("did not substitute");
 
 		let threadId = threadActive ? this.state.threadId : null;
 
