@@ -1,4 +1,4 @@
-const initialState = { byStream: {} };
+const initialState = { byStream: {}, byCommit: {} };
 
 const addLocation = (state, payload) => {
 	if (payload.commitHash === "uncommitted") {
@@ -6,6 +6,18 @@ const addLocation = (state, payload) => {
 	} else {
 		return addCommittedLocation(state, payload);
 	}
+};
+
+const addLocationForCommit = (byCommit, payload) => {
+	const existingLocations = byCommit[payload.commitHash] || {};
+	return {
+		...byCommit,
+		[payload.commitHash]: {
+			...existingLocations,
+			...payload.locations,
+			...payload.dirty
+		}
+	};
 };
 
 const addCommittedLocation = (state, payload) => {
@@ -23,14 +35,7 @@ const addCommittedLocation = (state, payload) => {
 				}
 			}
 		},
-		byCommit: {
-			...byCommit,
-			[payload.commitHash]: {
-				...existingLocations,
-				...payload.locations,
-				...payload.dirty
-			}
-		}
+		byCommit: addLocationForCommit(state.byCommit, payload)
 	};
 };
 
