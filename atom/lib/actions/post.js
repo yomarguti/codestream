@@ -79,9 +79,9 @@ export const fetchAllPosts = streams => dispatch => {
 };
 
 export const fetchLatestForTeamStream = () => async (dispatch, getState) => {
-	const { streams } = getState();
+	const { streams, context } = getState();
 
-	const teamStream = getStreamForTeam(streams);
+	const teamStream = getStreamForTeam(streams, context.currentTeamId);
 	if (teamStream) return dispatch(fetchLatestPosts([teamStream]));
 	else {
 		return dispatch(fetchTeamStreams(true));

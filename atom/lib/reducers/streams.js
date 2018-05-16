@@ -1,14 +1,25 @@
 const initialState = {
+	byTeam: {
+		//[teamId]: { [streamId]: {} }
+	},
 	byRepo: {
 		//[repoId]: { byFile: {} }
 	}
 };
 
+const addStreamForTeam = (state, stream) => {
+	const teamId = stream.teamId;
+	const teamStreams = state[teamId] || {};
+	return {
+		...state,
+		[teamId]: { ...teamStreams, [stream.id]: stream }
+	};
+};
+
 const addStream = (state, stream) => {
 	const existingStreamsForRepo = state.byRepo[stream.repoId] || { byFile: {}, byId: {} };
-	if (stream.isTeamStream) return { ...state, teamStream: stream };
 	return {
-		teamStream: state.teamStream,
+		byTeam: addStreamForTeam(state.byTeam, stream),
 		byRepo: {
 			...state.byRepo,
 			[stream.repoId]: {
@@ -39,8 +50,9 @@ export default (state = initialState, { type, payload }) => {
 };
 
 // Selectors
-export const getStreamForTeam = state => {
-	return state.teamStream;
+export const getStreamForTeam = (state, teamId) => {
+	const streams = state.byTeam[teamId] || {};
+	return Object.values(streams).find(stream => stream.isTeamStream && stream.name === "general");
 };
 
 export const getStreamForRepoAndFile = (state, repoId, file) => {
