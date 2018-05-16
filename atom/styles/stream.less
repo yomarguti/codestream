@@ -28,7 +28,7 @@
 				font-weight: 100;
 				font-size: 16px;
 				text-transform: uppercase;
-				letter-spacing: 3px;
+				letter-spacing: 1px;
 			}
 
 			.mentions-badge {
@@ -123,10 +123,25 @@
 		}
 
 		#close-thread {
-			margin: 10px;
-			width: calc(~"100% - 20px");
+			// margin: 0 10px 5px 10px;
+			// width: calc(~"100% - 20px");
+			// width: 100%;
+			// margin: 0;
+			padding-left: 0;
+			padding-right: 0;
 			cursor: pointer;
-			padding: 3px 0;
+			// padding: 1px 0;
+			// z-index: 10;
+			// height: 30px;
+			color: @text-color-info;
+			.keybinding {
+				color: @text-color;
+				// display: none;
+				// padding: 2px;
+			}
+		}
+		#close-thread:hover {
+			background: lighten(@app-background-color, 3%);
 		}
 
 		.new-messages-below {
@@ -458,9 +473,12 @@
 		}
 
 		.editing-indicator.inactive {
-			top: -1em;
+			top: -2em;
 		}
 
+		.main-panel {
+			height: 100%;
+		}
 		.postslist {
 			width: 100%;
 			max-height: 100%;
@@ -469,7 +487,7 @@
 			transition: transform 0.2s, opacity 0.2s;
 		}
 
-		.postslist.inactive {
+		.inactive-panel {
 			transform: scale(0.9);
 			max-height: 100%;
 			overflow: hidden;
@@ -480,7 +498,8 @@
 			}
 		}
 
-		.threadlist {
+		.thread-panel {
+			width: 100%;
 			position: absolute;
 			top: 0;
 			background-color: @app-background-color;
@@ -488,7 +507,7 @@
 			animation: 0.4s slidein;
 			// box-sizing: border-box;
 		}
-		.threadlist.inactive {
+		.thread-panel.inactive-panel {
 			transform: none;
 			left: 100%;
 			animation: 0.2s slideout;

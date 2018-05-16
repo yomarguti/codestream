@@ -343,10 +343,12 @@ export class SimpleStream extends Component {
 			this._intro.style.height = newHeight + "px";
 		}
 		const padding = composeHeight + headerHeight;
-		const threadHeight = postslistHeight + composeHeight;
-		this._div.style.paddingBottom = padding + "px";
+		const threadHeight = postslistHeight;// + composeHeight;
+		// this._div.style.paddingBottom = padding + "px";
+		this._mainPanel.style.paddingBottom = padding + "px";
+		console.log("setting height to: ", threadHeight, " because PLH ", postslistHeight, " CH ", composeHeight);
 		this._threadpostslist.style.height = threadHeight + "px";
-		this._threadpostslist.style.top = headerHeight + "px";
+		// this._threadpostslist.style.top = headerHeight + "px";
 		// if (this._atMentionsPopup)
 		// this._atMentionsPopup.style.bottom = this._compose.offsetHeight + "px";
 
@@ -466,13 +468,19 @@ export class SimpleStream extends Component {
 			"no-headshots": !atom.config.get("CodeStream.showHeadshots")
 		});
 		const postsListClass = createClassString({
-			postslist: true,
-			inactive: this.state.threadActive
+			postslist: true
 		});
 		const threadPostsListClass = createClassString({
 			postslist: true,
-			threadlist: true,
-			inactive: !this.state.threadActive
+			threadlist: true
+		});
+		const mainPanelClass = createClassString({
+			"main-panel": true,
+			"inactive-panel": this.state.threadActive
+		});
+		const threadPanelClass = createClassString({
+			"thread-panel": true,
+			"inactive-panel": !this.state.threadActive
 		});
 
 		let lastTimestamp = null;
@@ -517,6 +525,7 @@ export class SimpleStream extends Component {
 					currentUser={this.props.currentUser}
 					users={this.props.users}
 				/>
+				<div className={mainPanelClass} ref={ref => (this._mainPanel = ref)}>
 				<div className="stream-header" ref={ref => (this._header = ref)}>
 					<UMIs />
 					<span>{teamName}</span>
@@ -561,14 +570,16 @@ export class SimpleStream extends Component {
 						return returnValue;
 					})}
 				</div>
+				</div>
+				<div className={threadPanelClass}>
+				<div id="close-thread" className="stream-header" onClick={this.handleDismissThread}>
+					<span>&lt; Back to Stream </span><span className="keybinding">[esc]</span>
+				</div>
 				<div
 					className={threadPostsListClass}
 					ref={ref => (this._threadpostslist = ref)}
 					onClick={this.handleClickPost}
 				>
-					<Button id="close-thread" className="control-button" onClick={this.handleDismissThread}>
-						Back to stream <span className="keystroke">escape</span>
-					</Button>
 					{threadPost && (
 						<Post
 							post={threadPost}
@@ -581,6 +592,7 @@ export class SimpleStream extends Component {
 						/>
 					)}
 					{this.renderThreadPosts(threadId)}
+				</div>
 				</div>
 				<div className={unreadsBelowClass} type="below" onClick={this.handleClickUnreads}>
 					&darr; Unread Messages &darr;
