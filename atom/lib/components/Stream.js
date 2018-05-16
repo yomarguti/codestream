@@ -716,7 +716,7 @@ export class SimpleStream extends Component {
 
 	findMentionedUserIds = (text, users) => {
 		const mentionedUserIds = [];
-		Object.values(users).forEach(user => {
+		users.forEach(user => {
 			const matcher = user.username.replace(/\+/g, "\\+").replace(/\./g, "\\.");
 			if (text.match("@" + matcher + "\\b")) {
 				mentionedUserIds.push(user.id);
@@ -904,26 +904,23 @@ const mapStateToProps = ({
 	const fileStream =
 		getStreamForRepoAndFile(streams, context.currentRepoId, context.currentFile) || {};
 
-	Object.keys(users).forEach(function(key, index) {
-		users[key].color = index % 10;
-		if (!users[key].username) {
-			let email = users[key].email;
-			if (email) users[key].username = email.replace(/@.*/, "");
+	const teamMembers = teams[context.currentTeamId].memberIds.map((id, index) => {
+		const user = users[id];
+		user.color = index % 10;
+		if (!user.username) {
+			let email = user.email;
+			if (email) user.username = email.replace(/@.*/, "");
 		}
+		return user;
 	});
-
-	const teamMembers = _.filter(users, user => (user.teamIds || []).includes(context.currentTeamId));
-	const teammates = teams[context.currentTeamId].memberIds
-		.filter(id => id !== session.userId)
-		.map(id => users[id]);
 
 	// this usenames regexp is a pipe-separated list of
 	// either usernames or if no username exists for the
 	// user then his email address. it is sorted by length
 	// so that the longest possible match will be made.
-	const usernamesRegexp = Object.keys(teamMembers)
-		.map(key => {
-			return teamMembers[key].username || "";
+	const usernamesRegexp = teamMembers
+		.map(user => {
+			return user.username || "";
 		})
 		.sort(function(a, b) {
 			return b.length - a.length;
@@ -942,7 +939,7 @@ const mapStateToProps = ({
 
 	return {
 		isOffline,
-		teammates: toMapBy("id", teammates),
+		teammates: teamMembers.filter(({ id }) => id !== session.userId),
 		postStreamId: teamStream.id,
 		fileStreamId: fileStream.id,
 		teamId: context.currentTeamId,

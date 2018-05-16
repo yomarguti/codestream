@@ -50,8 +50,9 @@ class ComposeBox extends React.Component {
 			const { authors, ...state } = data.body;
 			this.setState({ quote: state });
 
-			const teammates = Object.values(this.props.teammates);
-			const toAtmention = authors.map(email => _.findWhere(teammates, { email })).filter(Boolean);
+			const toAtmention = authors
+				.map(email => _.findWhere(this.props.teammates, { email }))
+				.filter(Boolean);
 			if (toAtmention.length > 0) {
 				// TODO handle users with no username
 				const usernames = toAtmention.map(user => `@${user.username}`);
