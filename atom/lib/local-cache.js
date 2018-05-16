@@ -55,6 +55,7 @@ export function resolve({ id, ...object }, changes) {
 }
 
 export const bootstrapStore = store => {
+	const { context } = store.getState();
 	db
 		.transaction(
 			"r",
@@ -70,18 +71,36 @@ export const bootstrapStore = store => {
 				db.companies
 					.limit(1000)
 					.toArray(companies => store.dispatch(bootstrapCompanies(companies)));
-				db.users.limit(1000).toArray(users => store.dispatch(bootstrapUsers(users)));
-				db.repos.limit(1000).toArray(repos => store.dispatch(bootstrapRepos(repos)));
-				db.teams.limit(1000).toArray(teams => store.dispatch(bootstrapTeams(teams)));
-				db.posts
-					.limit(1000)
-					.reverse()
-					.sortBy("createdAt", posts => store.dispatch(bootstrapPosts(posts)));
-				db.streams.limit(1000).toArray(streams => store.dispatch(bootstrapStreams(streams)));
 				db.markers.limit(1000).toArray(markers => store.dispatch(bootstrapMarkers(markers)));
 				db.markerLocations
 					.limit(1000)
 					.toArray(locations => store.dispatch(bootstrapMarkerLocations(locations)));
+				if (context.currentTeamId) {
+					db.users
+						.where({ teamIds: context.currentTeamId })
+						.toArray(users => store.dispatch(bootstrapUsers(users)));
+					db.repos
+						.where({ teamId: context.currentTeamId })
+						.toArray(repos => store.dispatch(bootstrapRepos(repos)));
+					db.teams.get(context.currentTeamId).then(team => store.dispatch(bootstrapTeams([team])));
+					db.posts
+						.where({ teamId: context.currentTeamId })
+						.limit(1000)
+						.reverse()
+						.sortBy("createdAt", posts => store.dispatch(bootstrapPosts(posts)));
+					db.streams
+						.where({ teamId: context.currentTeamId })
+						.toArray(streams => store.dispatch(bootstrapStreams(streams)));
+				} else {
+					db.users.limit(1000).toArray(users => store.dispatch(bootstrapUsers(users)));
+					db.repos.limit(1000).toArray(repos => store.dispatch(bootstrapRepos(repos)));
+					db.teams.limit(1000).toArray(teams => store.dispatch(bootstrapTeams(teams)));
+					db.streams.limit(1000).toArray(streams => store.dispatch(bootstrapStreams(streams)));
+					db.posts
+						.limit(1000)
+						.reverse()
+						.sortBy("createdAt", posts => store.dispatch(bootstrapPosts(posts)));
+				}
 			}
 		)
 		.then(() => {
