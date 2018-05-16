@@ -343,11 +343,11 @@ export class SimpleStream extends Component {
 			this._intro.style.height = newHeight + "px";
 		}
 		const padding = composeHeight + headerHeight;
-		const threadHeight = postslistHeight;// + composeHeight;
 		// this._div.style.paddingBottom = padding + "px";
 		this._mainPanel.style.paddingBottom = padding + "px";
-		console.log("setting height to: ", threadHeight, " because PLH ", postslistHeight, " CH ", composeHeight);
-		this._threadpostslist.style.height = threadHeight + "px";
+		// we re-measure the height of postslist here because we just changed
+		// it with the style declaration immediately above
+		this._threadpostslist.style.height = this._postslist.offsetHeight + "px";
 		// this._threadpostslist.style.top = headerHeight + "px";
 		// if (this._atMentionsPopup)
 		// this._atMentionsPopup.style.bottom = this._compose.offsetHeight + "px";
