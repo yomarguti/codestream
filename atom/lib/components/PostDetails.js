@@ -21,10 +21,10 @@ export default class PostDetails extends Component {
 				"*"
 			);
 		});
-		if (this._alert)
-			atom.tooltips.add(this._alert, {
-				title: "Unknown codeblock location."
-			});
+		// if (this._alert)
+		// 	atom.tooltips.add(this._alert, {
+		// 		title: "Unknown codeblock location."
+		// 	});
 	}
 
 	componentWillUnmount() {
@@ -89,12 +89,12 @@ export default class PostDetails extends Component {
 		const showDiffLabel = this.state.diffShowing ? "Hide Diff" : "Show Diff";
 		const hasCodeBlock = post.codeBlocks && post.codeBlocks.length ? true : null;
 
-		let alert = null;
 		// if a patch has been applied, we treat it as if there is
 		// a diff
 		let showDiffButtons = this.state.showDiffButtons || this.state.patchApplied;
+		let alert = null;
 		// } else if (hasCodeBlock) {
-		// 	// this is the case where we have a codeblock but no marker location
+		// 	// TODO: this is the case where we have a codeblock but no marker location
 		// 	alert = <span className="icon icon-alert" ref={ref => (this._alert = ref)} />;
 		// }
 
