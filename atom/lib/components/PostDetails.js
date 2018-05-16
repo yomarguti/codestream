@@ -11,7 +11,8 @@ export default class PostDetails extends Component {
 	componentDidMount() {
 		window.addEventListener("message", this.handleInteractionEvent, true);
 
-		this.props.post.codeBlocks.forEach(block => {
+		const codeBlocks = this.props.post.codeBlocks || [];
+		codeBlocks.forEach(block => {
 			window.parent.postMessage(
 				{
 					type: "codestream:subscription:file-changed",
@@ -27,7 +28,8 @@ export default class PostDetails extends Component {
 	}
 
 	componentWillUnmount() {
-		this.props.post.codeBlocks.forEach(block => {
+		const codeBlocks = this.props.post.codeBlocks || [];
+		codeBlocks.forEach(block => {
 			window.parent.postMessage(
 				{
 					type: "codestream:unsubscribe:file-changed",
