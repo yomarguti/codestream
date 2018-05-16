@@ -4,7 +4,6 @@ import React, { Component } from "react";
 import { connect } from "react-redux";
 import { FormattedMessage } from "react-intl";
 import _ from "underscore-plus";
-import Raven from "raven-js";
 import mixpanel from "mixpanel-browser";
 import ComposeBox from "./ComposeBox";
 import Post from "./Post";
@@ -19,11 +18,7 @@ import * as routingActions from "../actions/routing";
 import { createPost, editPost, deletePost, fetchPosts } from "../actions/post";
 import { toMapBy } from "../reducers/utils";
 import { rangeToLocation } from "../util/Marker";
-import {
-	getStreamForTeam,
-	getStreamForRepoAndFile,
-	getStreamsByIdForRepo
-} from "../reducers/streams";
+import { getStreamForTeam, getStreamForRepoAndFile } from "../reducers/streams";
 import { getPostsForStream } from "../reducers/posts";
 import rootLogger from "../util/Logger";
 import EditingIndicator from "./EditingIndicator";
@@ -895,43 +890,6 @@ export class SimpleStream extends Component {
 	};
 }
 
-const getLocationsByPost = (locationsByCommit = {}, commitHash, markers) => {
-	const locations = locationsByCommit[commitHash] || {};
-	const locationsByPost = {};
-	Object.keys(locations).forEach(markerId => {
-		const marker = markers[markerId];
-		if (marker) {
-			locationsByPost[marker.postId] = locations[markerId];
-		}
-	});
-	return locationsByPost;
-};
-
-const getMarkersForStreamAndCommit = (locationsByCommit = {}, commitHash, markers) => {
-	const locations = locationsByCommit[commitHash] || {};
-	return Object.keys(locations)
-		.map(markerId => {
-			const marker = markers[markerId];
-			if (marker) {
-				return {
-					...marker,
-					location: locations[markerId]
-				};
-			} else {
-				const message = `No marker for id ${markerId} but there are locations for it. commitHash: ${commitHash}`;
-				Raven.captureMessage(message, {
-					logger: "Stream::mapStateToProps::getMarkersForStreamAndCommit",
-					extra: {
-						location: locations[markerId]
-					}
-				});
-				console.warn(message);
-				return false;
-			}
-		})
-		.filter(Boolean);
-};
-
 const mapStateToProps = ({
 	connectivity,
 	session,
@@ -939,26 +897,12 @@ const mapStateToProps = ({
 	streams,
 	users,
 	posts,
-	markers,
-	markerLocations,
 	messaging,
 	teams,
 	onboarding
 }) => {
 	const fileStream =
 		getStreamForRepoAndFile(streams, context.currentRepoId, context.currentFile) || {};
-
-	// TODO get rid of this. setup message listeners to highlight the code
-	const markersForStreamAndCommit = getMarkersForStreamAndCommit(
-		markerLocations.byStream[fileStream.id],
-		context.currentCommit,
-		markers
-	);
-	const locations = getLocationsByPost(
-		markerLocations.byStream[fileStream.id],
-		context.currentCommit,
-		toMapBy("id", markersForStreamAndCommit)
-	);
 
 	Object.keys(users).forEach(function(key, index) {
 		users[key].color = index % 10;
@@ -995,7 +939,6 @@ const mapStateToProps = ({
 	// FIXME -- eventually we'll allow the user to switch to other streams, like DMs and channels
 	const teamStream = getStreamForTeam(streams, context.currentTeamId) || {};
 	const streamPosts = getPostsForStream(posts, teamStream.id);
-	const streamsById = getStreamsByIdForRepo(streams, context.currentRepoId) || {};
 
 	return {
 		isOffline,
@@ -1027,17 +970,8 @@ const mapStateToProps = ({
 				};
 			}
 			const { username, email, firstName = "", lastName = "", color } = user;
-			let codeBlockFile = null;
-			if (post.codeBlocks && post.codeBlocks.length) {
-				const codeBlock = post.codeBlocks[0];
-				const marker = markers[codeBlock.markerId] || {};
-				const codeBlockStream = streamsById[marker.streamId] || {};
-				codeBlockFile = codeBlockStream.file;
-			}
 			return {
 				...post,
-				file: codeBlockFile,
-				markerLocation: locations[post.id],
 				author: { username, email, color, fullName: `${firstName} ${lastName}`.trim() }
 			};
 		})
