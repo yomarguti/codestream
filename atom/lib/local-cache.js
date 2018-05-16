@@ -36,7 +36,9 @@ export function upsert(db, tableName, changes) {
 	});
 }
 
+/* eslint-disable no-unused-vars */
 export function resolve({ id, ...object }, changes) {
+	/* eslint-enable no-unused-vars */
 	let result = { ...object };
 	Object.keys(changes).forEach(change => {
 		const operation = operations[change];
@@ -137,8 +139,10 @@ const singleUpsert = (table, primaryKeySchema, changes) => {
 
 	return table.get(primaryKey).then(async entity => {
 		if (entity) {
+			/* eslint-disable no-unused-vars */
 			const updated = await table.update(primaryKey, resolve(entity, changes));
 			// TODO?: only return an object if there is an update
+			/* eslint-enable */
 		} else {
 			await table.add(changes);
 		}

@@ -26,7 +26,6 @@ import {
 } from "../reducers/streams";
 import { getPostsForStream } from "../reducers/posts";
 import rootLogger from "../util/Logger";
-import Button from "./onboarding/Button";
 import EditingIndicator from "./EditingIndicator";
 
 const Path = require("path");
@@ -251,8 +250,7 @@ export class SimpleStream extends Component {
 			// scroll it into view. in all other cases we let the
 			// focus of the input field make sure the post is focused
 			const lastPost = this.props.posts[this.props.posts.length - 1];
-			if (this.state.editingPostId == lastPost.id)
-				this.scrollToBottom(true);
+			if (this.state.editingPostId == lastPost.id) this.scrollToBottom(true);
 		}
 	}
 
@@ -361,12 +359,12 @@ export class SimpleStream extends Component {
 		if (offBottom < 100) this.scrollToBottom();
 	};
 
-	scrollToBottom = (force) => {
+	scrollToBottom = force => {
 		// don't scroll to bottom if we're in the middle of an edit,
 		// unless the force parameter is called
 		if (this.state.editingPostId && !force) return;
 		if (this._postslist) this._postslist.scrollTop = 100000;
-	}
+	};
 
 	calculateScrolledOffBottom = () => {};
 
@@ -526,73 +524,74 @@ export class SimpleStream extends Component {
 					users={this.props.users}
 				/>
 				<div className={mainPanelClass} ref={ref => (this._mainPanel = ref)}>
-				<div className="stream-header" ref={ref => (this._header = ref)}>
-					<UMIs />
-					<span>{teamName}</span>
-					<span onClick={this.handleClickTeamMenu} className="icon icon-grabber" />
-				</div>
-				{unreadsAbove}
-				<div
-					className={postsListClass}
-					ref={ref => (this._postslist = ref)}
-					onClick={this.handleClickPost}
-					id={streamDivId}
-				>
-					<div className="intro" ref={ref => (this._intro = ref)}>
-						{this.renderIntro()}
+					<div className="stream-header" ref={ref => (this._header = ref)}>
+						<UMIs />
+						<span>{teamName}</span>
+						<span onClick={this.handleClickTeamMenu} className="icon icon-grabber" />
 					</div>
-					{posts.map(post => {
-						if (post.deactivated) return null;
-						// this needs to be done by storing the return value of the render,
-						// then setting lastTimestamp, otherwise you wouldn't be able to
-						// compare the current one to the prior one.
-						const parentPost = post.parentPostId
-							? posts.find(p => p.id === post.parentPostId)
-							: null;
-						const newMessageIndicator =
-							post.seqNum && post.seqNum === Number(this.postWithNewMessageIndicator);
-						unread = unread || newMessageIndicator;
-						const returnValue = (
-							<div key={post.id}>
-								<DateSeparator timestamp1={lastTimestamp} timestamp2={post.createdAt} />
-								<Post
-									post={post}
-									usernames={this.props.usernamesRegexp}
-									currentUsername={this.props.currentUser.username}
-									replyingTo={parentPost}
-									newMessageIndicator={newMessageIndicator}
-									unread={unread}
-									editing={!this.state.threadActive && post.id === this.state.editingPostId}
-								/>
-							</div>
-						);
-						lastTimestamp = post.createdAt;
-						return returnValue;
-					})}
-				</div>
+					{unreadsAbove}
+					<div
+						className={postsListClass}
+						ref={ref => (this._postslist = ref)}
+						onClick={this.handleClickPost}
+						id={streamDivId}
+					>
+						<div className="intro" ref={ref => (this._intro = ref)}>
+							{this.renderIntro()}
+						</div>
+						{posts.map(post => {
+							if (post.deactivated) return null;
+							// this needs to be done by storing the return value of the render,
+							// then setting lastTimestamp, otherwise you wouldn't be able to
+							// compare the current one to the prior one.
+							const parentPost = post.parentPostId
+								? posts.find(p => p.id === post.parentPostId)
+								: null;
+							const newMessageIndicator =
+								post.seqNum && post.seqNum === Number(this.postWithNewMessageIndicator);
+							unread = unread || newMessageIndicator;
+							const returnValue = (
+								<div key={post.id}>
+									<DateSeparator timestamp1={lastTimestamp} timestamp2={post.createdAt} />
+									<Post
+										post={post}
+										usernames={this.props.usernamesRegexp}
+										currentUsername={this.props.currentUser.username}
+										replyingTo={parentPost}
+										newMessageIndicator={newMessageIndicator}
+										unread={unread}
+										editing={!this.state.threadActive && post.id === this.state.editingPostId}
+									/>
+								</div>
+							);
+							lastTimestamp = post.createdAt;
+							return returnValue;
+						})}
+					</div>
 				</div>
 				<div className={threadPanelClass}>
-				<div id="close-thread" className="stream-header" onClick={this.handleDismissThread}>
-					<span>&lt; Back to Stream </span><span className="keybinding">[esc]</span>
-				</div>
-				<div
-					className={threadPostsListClass}
-					ref={ref => (this._threadpostslist = ref)}
-					onClick={this.handleClickPost}
-				>
-					{threadPost && (
-						<Post
-							post={threadPost}
-							usernames={this.props.usernamesRegexp}
-							currentUsername={this.props.currentUser.username}
-							key={threadPost.id}
-							showDetails="1"
-							currentCommit={this.props.currentCommit}
-							editing={this.state.threadActive && threadPost.id === this.state.editingPostId}
-						/>
-					)}
-					{this.renderThreadPosts(threadId)}
-				</div>
+					<div id="close-thread" className="stream-header" onClick={this.handleDismissThread}>
+						<span>&lt; Back to Stream </span>
+						<span className="keybinding">[esc]</span>
+					</div>
+					<div
+						className={threadPostsListClass}
+						ref={ref => (this._threadpostslist = ref)}
+						onClick={this.handleClickPost}
+					>
+						{threadPost && (
+							<Post
+								post={threadPost}
+								usernames={this.props.usernamesRegexp}
+								currentUsername={this.props.currentUser.username}
+								key={threadPost.id}
+								showDetails="1"
+								currentCommit={this.props.currentCommit}
+								editing={this.state.threadActive && threadPost.id === this.state.editingPostId}
+							/>
+						)}
+						{this.renderThreadPosts(threadId)}
+					</div>
 				</div>
 				<div className={unreadsBelowClass} type="below" onClick={this.handleClickUnreads}>
 					&darr; Unread Messages &darr;
