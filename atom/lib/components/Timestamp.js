@@ -22,8 +22,7 @@ export default class Timestamp extends Component {
 		);
 	}
 
-	prettyDateDay = function(time, options) {
-		options = options || {};
+	prettyDateDay = function(time) {
 		if (time === 0 || time === null || time === undefined) return "";
 		var now = new Date().getTime();
 		// now = this.adjustedTime(now, options.timezone_info);
@@ -36,8 +35,7 @@ export default class Timestamp extends Component {
 		return moment(time).format("MMM D, YYYY");
 	};
 
-	prettyTime = function(time, options) {
-		options = options || {};
+	prettyTime = function(time) {
 		var prettyTime;
 		// time = this.adjustedTime(time, options.timezone_info);
 		prettyTime = moment(time).format("h:mm A");

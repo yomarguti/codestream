@@ -1,4 +1,3 @@
-import { CompositeDisposable } from "atom";
 import React, { Fragment } from "react";
 import Tooltip from "./Tooltip";
 
