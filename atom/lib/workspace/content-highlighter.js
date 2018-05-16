@@ -1,8 +1,20 @@
+// @flow
 import { locationToRange } from "../util/Marker";
 import { CODESTREAM_VIEW_URI } from "../codestream-view";
+import type { DisplayMarker, Disposable } from "../types/atom";
+
+type ReferenceElements = {
+	marker: DisplayMarker,
+	disposable: Disposable
+};
+type CodeBlock = {
+	markerId: string,
+	file: string
+};
 
 export default class ContentHighlighter {
-	displayMarkers = new Map();
+	elements: Map<string, ReferenceElements> = new Map();
+	store;
 
 	constructor(store) {
 		this.store = store;
@@ -31,9 +43,9 @@ export default class ContentHighlighter {
 		}
 	};
 
-	async highlightContent(codeBlock, location) {
+	async highlightContent(codeBlock: CodeBlock, location) {
 		atom.workspace.open(CODESTREAM_VIEW_URI);
-		if (!this.displayMarkers.has(codeBlock.markerId)) {
+		if (!this.elements.has(codeBlock.markerId)) {
 			const editor = await atom.workspace.open(codeBlock.file);
 			const range = locationToRange(location);
 			editor.setCursorBufferPosition(range.start);
@@ -49,25 +61,25 @@ export default class ContentHighlighter {
 			const disposable = editor.onDidChangeSelectionRange(() => {
 				this.removeContentHighlight(codeBlock.markerId);
 			});
-			this.displayMarkers.set(codeBlock.markerId, { marker, disposable });
+			this.elements.set(codeBlock.markerId, { marker, disposable });
 		}
 	}
 
-	removeContentHighlight = markerId => {
-		const displayMarker = this.displayMarkers.get(markerId);
-		if (displayMarker) {
-			displayMarker.marker.destroy();
-			displayMarker.disposable.dispose();
-			this.displayMarkers.delete(markerId);
+	removeContentHighlight = (markerId: string) => {
+		const referenceElements = this.elements.get(markerId);
+		if (referenceElements) {
+			referenceElements.marker.destroy();
+			referenceElements.disposable.dispose();
+			this.elements.delete(markerId);
 		}
 	};
 
 	destroy() {
 		window.removeEventListener("message", this.handleInteractionEvent, true);
-		this.displayMarkers.forEach((_markerId, { marker, disposable }) => {
+		this.elements.forEach(({ marker, disposable }) => {
 			marker.destroy();
 			disposable.dispose();
 		});
-		this.displayMarkers.clear();
+		this.elements.clear();
 	}
 }
