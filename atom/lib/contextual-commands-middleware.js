@@ -1,36 +1,7 @@
 import { CompositeDisposable } from "atom";
 import { logout, showSlackInfo } from "./actions/context";
 import { goToInvitePage } from "./actions/routing";
-import AddCommentPopupManager from "./workspace/add-comment-popup-manager";
-import BufferChangeTracker from "./workspace/buffer-change-tracker";
-import DiffManager from "./workspace/diff-manager";
-import ContentHighlighter from "./workspace/content-highlighter";
-
-class CodeStreamApi {
-	popupManager = null;
-	bufferChangeTracker = null;
-	diffManager = null;
-	contentHighlighter = null;
-
-	constructor(store) {
-		this.store = store;
-	}
-
-	initialize() {
-		const { repoAttributes } = this.store.getState();
-		this.popupManager = new AddCommentPopupManager(repoAttributes.workingDirectory);
-		this.bufferChangeTracker = new BufferChangeTracker(this.store, repoAttributes.workingDirectory);
-		this.diffManager = new DiffManager(this.store);
-		this.contentHighlighter = new ContentHighlighter(this.store);
-	}
-
-	destroy() {
-		this.popupManager.destroy();
-		this.bufferChangeTracker.destroy();
-		this.diffManager.destroy();
-		this.contentHighlighter.destroy();
-	}
-}
+import CodeStreamApi from "./workspace/codestream-api";
 
 export default store => {
 	const subscriptions = new CompositeDisposable();
