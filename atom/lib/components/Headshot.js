@@ -1,26 +1,14 @@
-import { CompositeDisposable } from "atom";
 import React, { Component } from "react";
 import Gravatar from "react-gravatar";
-import createClassString from "classnames";
+import Tooltip from "./Tooltip";
 
 export default class Headshot extends Component {
-	subscriptions = new CompositeDisposable();
+	state = { img: null };
+	_div = React.createRef();
 
 	componentDidMount() {
-		let image = this._div.querySelector("img");
-		if (image) {
-			if (this.props.mine) {
-				this.subscriptions.add(
-					atom.tooltips.add(image, { title: "Right click to change your headshot" })
-				);
-			} else if (this.props.person.fullName) {
-				this.subscriptions.add(atom.tooltips.add(image, { title: this.props.person.fullName }));
-			}
-		}
-	}
-
-	componentWillUnmount() {
-		this.subscriptions.dispose();
+		const img = this._div.current.querySelector("img");
+		if (img) this.setState({ img });
 	}
 
 	render() {
@@ -41,7 +29,16 @@ export default class Headshot extends Component {
 		let classNameInitials = "headshot-initials color-" + person.color;
 
 		return (
-			<div className="headshot" ref={ref => (this._div = ref)}>
+			<div className="headshot" ref={this._div}>
+				{this.state.img && (
+					<Tooltip
+						title={
+							this.props.mine ? "Right click to change your headshot" : this.props.person.fullName
+						}
+						delay="0"
+						target={this.state.img}
+					/>
+				)}
 				<Gravatar
 					className="headshot-gravatar"
 					size={this.props.size}
