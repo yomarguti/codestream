@@ -2,6 +2,7 @@
 import { locationToRange } from "../util/Marker";
 import { CODESTREAM_VIEW_URI } from "../codestream-view";
 import type { DisplayMarker, Disposable } from "../types/atom";
+import { getPost } from "../reducers/posts";
 
 type ReferenceElements = {
 	marker: DisplayMarker,
@@ -23,7 +24,8 @@ export default class ContentHighlighter {
 
 	handleInteractionEvent = ({ data }) => {
 		if (data.type === "codestream:interaction:thread-selected") {
-			const post = data.body;
+			const { streamId, threadId } = data.body;
+			const post = getPost(this.store.getState().posts, streamId, threadId);
 			if (post.codeBlocks && post.codeBlocks.length > 0) {
 				const { context, markerLocations } = this.store.getState();
 				const locationsByMarkerId = markerLocations.byCommit[context.currentCommit] || {};

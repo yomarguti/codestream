@@ -791,7 +791,10 @@ export class SimpleStream extends Component {
 		this.focusInput();
 		if (wasClicked) {
 			window.parent.postMessage(
-				{ type: "codestream:interaction:thread-selected", body: post },
+				{
+					type: "codestream:interaction:thread-selected",
+					body: { threadId, streamId: this.props.postStreamId }
+				},
 				"*"
 			);
 		}
