@@ -7,12 +7,9 @@ import Timestamp from "./Timestamp";
 import PostDetails from "./PostDetails";
 import RetrySpinner from "./RetrySpinner";
 import { retryPost, cancelPost } from "../actions/post";
-import rootLogger from "../util/Logger";
 import ContentEditable from "react-contenteditable";
 import Button from "./onboarding/Button";
 import Linkify from "react-linkify";
-
-const logger = rootLogger.forClass("components/Post");
 
 class Post extends Component {
 	constructor(props) {
@@ -43,19 +40,14 @@ class Post extends Component {
 		let codeBlock = null;
 		if (post.codeBlocks && post.codeBlocks.length) {
 			let code = post.codeBlocks[0].code;
-			if (atom.config.get("CodeStream.streamPerFile")) {
-				codeBlock = <div className="code">{code}</div>;
-			} else {
-				codeBlock = (
-					<div className="code-reference">
-						<span>{post.codeBlocks[0].file || "-"}</span>
-						<div className="code">{code}</div>
-					</div>
-				);
-			}
+			codeBlock = (
+				<div className="code-reference">
+					<span>{post.codeBlocks[0].file || "-"}</span>
+					<div className="code">{code}</div>
+				</div>
+			);
 		}
 
-		logger.debug("UNR IS: ", this.props.usernames);
 		// let menuItems = [
 		// 	{ label: "Create Thread", key: "make-thread" },
 		// 	{ label: "Mark Unread", key: "mark-unread" },
@@ -116,13 +108,13 @@ class Post extends Component {
 		let matches = post.text.match(/^\/me\s+(.*)/);
 		if (matches) return <span className="emote">{matches[1]}</span>;
 		else return null;
-	}
+	};
 
 	renderBody = post => {
 		if (this.props.editing) return this.renderBodyEditing(post);
 		else if (post.text.match(/^\/me\s/)) return null;
 		else return this.renderBodyLinkified(post);
-	}
+	};
 
 	renderBodyLinkified = post => {
 		let usernameRegExp = new RegExp("(@(?:" + this.props.usernames + ")\\b)");
