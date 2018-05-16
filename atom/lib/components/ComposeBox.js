@@ -135,17 +135,6 @@ class ComposeBox extends React.Component {
 		this.setState({ newPostText: this._contentEditable.htmlEl.innerHTML });
 	}
 
-	findMentionedUserIds = text => {
-		const mentionedUserIds = [];
-		Object.values(this.props.teammates).forEach(user => {
-			const matcher = user.username.replace(/\+/g, "\\+").replace(/\./g, "\\.");
-			if (text.match("@" + matcher + "\\b")) {
-				mentionedUserIds.push(user.id);
-			}
-		});
-		return mentionedUserIds;
-	};
-
 	// the keypress handler for tracking up and down arrow
 	// and enter, while the at mention popup is open
 	handleAtMentionKeyPress(event, eventType) {
@@ -298,7 +287,7 @@ class ComposeBox extends React.Component {
 				this.props.onSubmit({
 					text,
 					quote: this.state.quote,
-					mentionedUserIds: this.findMentionedUserIds(text),
+					mentionedUserIds: this.props.findMentionedUserIds(text, this.props.teammates),
 					autoMentions: this.state.autoMentions
 				});
 				this.reset();

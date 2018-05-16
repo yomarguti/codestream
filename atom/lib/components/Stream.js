@@ -603,6 +603,7 @@ export class SimpleStream extends Component {
 					disabled={this.props.isOffline}
 					onSubmit={this.submitPost}
 					onEmptyUpArrow={this.editLastPost}
+					findMentionedUserIds={this.findMentionedUserIds}
 				/>
 			</div>
 		);
@@ -718,9 +719,9 @@ export class SimpleStream extends Component {
 		}
 	};
 
-	findMentionedUserIds = text => {
+	findMentionedUserIds = (text, users) => {
 		const mentionedUserIds = [];
-		Object.values(this.props.teammates).forEach(user => {
+		Object.values(users).forEach(user => {
 			const matcher = user.username.replace(/\+/g, "\\+").replace(/\./g, "\\.");
 			if (text.match("@" + matcher + "\\b")) {
 				mentionedUserIds.push(user.id);
@@ -733,7 +734,7 @@ export class SimpleStream extends Component {
 		// convert the text to plaintext so there is no HTML
 		const doc = new DOMParser().parseFromString(newText, "text/html");
 		const replaceText = doc.documentElement.textContent;
-		const mentionUserIds = this.findMentionedUserIds(replaceText);
+		const mentionUserIds = this.findMentionedUserIds(replaceText, this.props.teammates);
 
 		this.props.editPost(postId, replaceText, mentionUserIds);
 	};
@@ -849,8 +850,7 @@ export class SimpleStream extends Component {
 		if (newText !== myLastPost.text) {
 			this.replacePostText(myLastPost.id, newText);
 			return true;
-		}
-		else return false;
+		} else return false;
 	}
 
 	// create a new post
