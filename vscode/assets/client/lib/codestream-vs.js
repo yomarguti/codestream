@@ -11,7 +11,7 @@ import VSCodeAPI from "./VSCodeAPI";
 
 addLocaleData([...en]);
 
-const data = JSON.parse(document.querySelector("#data").textContent);
+const data = window.bootstrap;
 
 const store = (window.store = createStore({
 	context: {

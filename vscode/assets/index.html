@@ -4,11 +4,11 @@
 <head>
     <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
     <title>CodeStream</title>
-    <link rel="stylesheet" href="vscode-resource:{% styles-path %}" />
+    <link rel="stylesheet" href="{{root}}/assets/styles/stream.css" />
 </head>
 
 <body class="codestream preload">
-    <script>
+    <script type="text/javascript">
         const cssColorRegEx = /^(?:(#?)([0-9a-f]{3}|[0-9a-f]{6})|((?:rgb|hsl)a?)\((-?\d+%?)[,\s]+(-?\d+%?)[,\s]+(-?\d+%?)[,\s]*(-?[\d\.]+%?)?\))$/i;
 
         function adjustLight(color, amount) {
@@ -160,9 +160,11 @@
             document.body.classList.remove('preload');
         }, 1000); // Wait for animations to complete
     </script>
-    <div id='app'></div>
-    <div id='data' style="display: none;">{% bootstrap-data %}</div>
-    <script defer src="vscode-resource:{% script-path %}"></script>
+    <div id="app"></div>
+    <script type="text/javascript">
+        window.bootstrap = '{{bootstrap}}';
+    </script>
+    <script defer src="{{root}}/assets/app.js"></script>
 </body>
 
 </html>

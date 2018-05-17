@@ -4,6 +4,7 @@ import { CSPost, CSRepository, CSStream, CSTeam, CSUser } from '../api/api';
 import { CodeStreamSession, Post, PostsReceivedEvent, SessionChangedEvent, SessionChangedType, StreamThread, StreamType } from '../api/session';
 import { Container } from '../container';
 import { Logger } from '../logger';
+import * as fs from 'fs';
 
 interface BootstrapState {
     currentTeamId: string;
@@ -233,6 +234,24 @@ export class StreamWebviewPanel extends Disposable {
         return this.setStream(streamThread);
     }
 
+    private async getHtml(): Promise<string> {
+        if (Logger.isDebugging) {
+            return new Promise<string>((resolve, reject) => {
+                fs.readFile(Container.context.asAbsolutePath('/assets/index.html'), 'utf8', (err, data) => {
+                    if (err) {
+                        reject(err);
+                    }
+                    else {
+                        resolve(data);
+                    }
+                });
+            });
+        }
+
+        const doc = await workspace.openTextDocument(Container.context.asAbsolutePath('/assets/index.html'));
+        return doc.getText();
+    }
+
     private async postMessage(request: CSWebviewRequest) {
         const success = await this._panel!.webview.postMessage(request);
         if (!success) {
@@ -243,9 +262,9 @@ export class StreamWebviewPanel extends Disposable {
     private async setStream(streamThread: StreamThread): Promise<StreamThread> {
         this._streamThread = streamThread;
 
-        const [label, document, posts, repos, teams, users] = await Promise.all([
+        const [label, content, posts, repos, teams, users] = await Promise.all([
             streamThread.stream.label(),
-            workspace.openTextDocument(Uri.file(Container.context.asAbsolutePath('/assets/index.html'))),
+            this.getHtml(),
             streamThread.stream.posts.entities(),
             this.session.repos.entities(),
             this.session.teams.entities(),
@@ -270,10 +289,9 @@ export class StreamWebviewPanel extends Disposable {
         state.teams = teams;
         state.users = users;
 
-        const html = document.getText()
-            .replace('{% bootstrap-data %}', JSON.stringify(state))
-            .replace('{% script-path %}', Container.context.asAbsolutePath('/assets/app.js'))
-            .replace('{% styles-path %}', Container.context.asAbsolutePath('/assets/styles/stream.css'));
+        const html = content
+            .replace(/{{root}}/g, Uri.file(Container.context.asAbsolutePath('.')).with({ scheme: 'vscode-resource' }).toString())
+            .replace('\'{{bootstrap}}\'', JSON.stringify(state));
 
         if (this._panel === undefined) {
             this._panel = window.createWebviewPanel(

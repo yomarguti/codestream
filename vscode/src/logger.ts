@@ -6,6 +6,8 @@ import { extensionOutputChannelName } from './extension';
 
 const ConsolePrefix = `[${extensionOutputChannelName}]`;
 
+const isDebuggingRegex = /^--inspect(-brk)?=?/;
+
 export class Logger {
 
     static debug = false;
@@ -93,5 +95,18 @@ export class Logger {
             this.gitOutput = window.createOutputChannel(`CodeStream (Git)`);
         }
         this.gitOutput.appendLine(`${this.timestamp} ${command} (${cwd})${ex === undefined ? '' : `\n\n${ex.toString()}`}`);
+    }
+
+    private static _isDebugging: boolean | undefined;
+    static get isDebugging() {
+        if (this._isDebugging === undefined) {
+            const args = process.execArgv;
+
+            this._isDebugging = args
+                ? args.some(arg => isDebuggingRegex.test(arg))
+                : false;
+        }
+
+        return this._isDebugging;
     }
 }
