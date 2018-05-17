@@ -9,6 +9,10 @@ Content-Type: application/json
     "password": "{{pwd}}"
 }
 
+### Find Repo
+GET {{baseUrl}}/no-auth/find-repo&url={{}}&firstCommitHash={{}}
+Content-Type: application/json
+
 ### GET Teams
 # @name teams
 GET {{baseUrl}}/teams?ids={{login.response.body.$.teams[0]._id}},{{login.response.body.$.teams[1]._id}}
