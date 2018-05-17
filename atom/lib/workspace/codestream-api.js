@@ -4,14 +4,16 @@ import BufferChangeTracker from "./buffer-change-tracker";
 import DiffManager from "./diff-manager";
 import ContentHighlighter from "./content-highlighter";
 import MarkerLocationTracker from "./marker-location-tracker";
-import type { Resource, Store } from "../types/codestream";
+import EditTracker from "./edit-tracker";
+import type { Resource, Store } from "../types";
 
-export default class CodeStreamApi {
+export default class CodeStreamApi implements Resource {
 	popupManager: Resource;
 	bufferChangeTracker: Resource;
 	diffManager: Resource;
 	contentHighlighter: Resource;
 	markerLocationTracker: Resource;
+	editTracker: Resource;
 	store: Store;
 
 	constructor(store: Store) {
@@ -25,6 +27,7 @@ export default class CodeStreamApi {
 		this.diffManager = new DiffManager(this.store);
 		this.contentHighlighter = new ContentHighlighter(this.store);
 		this.markerLocationTracker = new MarkerLocationTracker(this.store);
+		this.editTracker = new EditTracker(this.store);
 	}
 
 	destroy() {
@@ -33,5 +36,6 @@ export default class CodeStreamApi {
 		this.diffManager.destroy();
 		this.contentHighlighter.destroy();
 		this.markerLocationTracker.destroy();
+		this.editTracker.destroy();
 	}
 }

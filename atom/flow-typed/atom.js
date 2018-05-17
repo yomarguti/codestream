@@ -21,6 +21,7 @@ declare module "atom" {
 	declare export class TextEditor {
 		id: number;
 		getBuffer(): TextBuffer;
+		onDidChangeModified(callback: (isModified: boolean) => any): Disposable;
 		onDidStopChanging(callback: Function): Disposable;
 		onDidDestroy(callback: Function): Disposable;
 	}
@@ -30,6 +31,9 @@ declare module "atom" {
 		destroy(): void;
 		isDestroyed(): boolean;
 		relativize(path: string): string;
+		isStatusModified(number): boolean;
+		isPathModified(string): boolean;
+		onDidChangeStatus((event: { path: string, pathStatus: number }) => any): Disposable;
 	}
 
 	declare export class Directory {

@@ -9,7 +9,8 @@ type State = {
 	context: {
 		currentRepoId: string,
 		currentTeamId: string,
-		currentCommit: string
+		currentCommit: string,
+		currentFile: string
 	},
 	markerLocations: {
 		byStream: {

@@ -1,6 +1,6 @@
 // @flow
 import { CompositeDisposable, Directory, TextEditor } from "atom";
-import type { Resource, Store } from "../types/codestream";
+import type { Resource, Store } from "../types";
 import { open as openRepo } from "../git/GitRepo";
 import * as http from "../network-request";
 import { getStreamForRepoAndFile } from "../reducers/streams";

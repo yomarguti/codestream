@@ -1,10 +1,14 @@
 // @flow
 /* eslint-disable */
-import { Disposable, TextEditor } from "atom";
+import { Directory, Disposable, GitRepository, TextEditor } from "atom";
 
 type Atom = {
+	project: {
+		repositoryForDirectory(Directory): Promise<GitRepository>
+	},
 	workspace: {
-		observeActiveTextEditor(callback: (editor: TextEditor | void) => void): Disposable
+		getTextEditors(): TextEditor[],
+		observeActiveTextEditor(callback: (editor: TextEditor | void) => any): Disposable
 	}
 };
 
