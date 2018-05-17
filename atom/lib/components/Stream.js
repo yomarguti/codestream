@@ -788,7 +788,7 @@ export class SimpleStream extends Component {
 			window.parent.postMessage(
 				{
 					type: "codestream:interaction:thread-selected",
-					body: { threadId, streamId: this.props.postStreamId }
+					body: { threadId, streamId: this.props.postStreamId, post }
 				},
 				"*"
 			);

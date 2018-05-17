@@ -1,19 +1,12 @@
 import mixpanel from "mixpanel-browser";
 import { getEnv, PRODUCTION } from "./env-utils";
 import { getPost } from "./reducers/posts";
+import { accessSafely } from "./utils";
 
 const PROD_TOKEN = "2c92bfd963bfbaf680be2f1d10e48003";
 const DEV_TOKEN = "4308967c7435e61d9697ce240bc68d02";
 
 mixpanel.init(getEnv() === PRODUCTION ? PROD_TOKEN : DEV_TOKEN);
-
-const accessSafely = func => {
-	try {
-		return func();
-	} catch (error) {
-		return undefined;
-	}
-};
 
 export default store => {
 	const isOptedIn = currentUser => {
