@@ -46,7 +46,8 @@ export default class PostDetails extends Component {
 		// will translate postMessages into events to the views
 		// this.foobar.on(, () => {});
 		if (data.type === "codestream:publish:file-changed") {
-			this.props.post.codeBlocks.forEach(block => {
+			const codeBlocks = this.props.post.codeBlocks || [];
+			codeBlocks.forEach(block => {
 				if (block.file === data.body.file) this.setState({ showDiffButtons: data.body.hasDiff });
 			});
 		}

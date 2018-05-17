@@ -104,4 +104,13 @@ class GitRepo {
 		const result = await this.run("ls-files", path);
 		return !!result;
 	}
+
+	async relativize(path) {
+		try {
+			return await this.run("ls-files", path);
+		} catch (e) {
+			// path probably isn't in this repo
+			return null;
+		}
+	}
 }

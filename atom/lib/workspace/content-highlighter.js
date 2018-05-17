@@ -1,8 +1,10 @@
 // @flow
 import { locationToRange } from "../util/Marker";
 import { CODESTREAM_VIEW_URI } from "../codestream-view";
-import type { DisplayMarker, Disposable } from "../types/atom";
+import type { DisplayMarker } from "../types/atom";
+import type { Disposable } from "atom";
 import { getPost } from "../reducers/posts";
+import { accessSafely } from "../utils";
 
 type ReferenceElements = {
 	marker: DisplayMarker,
@@ -24,18 +26,26 @@ export default class ContentHighlighter {
 
 	handleInteractionEvent = ({ data }) => {
 		if (data.type === "codestream:interaction:thread-selected") {
-			const { streamId, threadId } = data.body;
-			const post = getPost(this.store.getState().posts, streamId, threadId);
-			if (post.codeBlocks && post.codeBlocks.length > 0) {
+			const { streamId, threadId, post } = data.body;
+			const threadPost = getPost(this.store.getState().posts, streamId, threadId);
+
+			const codeBlockToHighlight: CodeBlock | void = accessSafely(
+				() => post.codeBlocks[0] || threadPost.codeBlocks[0] // clicked post takes precedence
+			);
+			if (codeBlockToHighlight) {
 				const { context, markerLocations } = this.store.getState();
 				const locationsByMarkerId = markerLocations.byCommit[context.currentCommit] || {};
-				const codeBlock = post.codeBlocks[0];
-				this.highlightContent(codeBlock, locationsByMarkerId[codeBlock.markerId]);
+				const location = locationsByMarkerId[codeBlockToHighlight.markerId];
+				if (location) this.highlightContent(codeBlockToHighlight, location);
+				else {
+					/* still open the file and get location asyncly then highlight? */
+				}
 			}
 		}
 		if (data.type === "codestream:interaction:thread-closed") {
 			const post = data.body;
 			if (post && post.codeBlocks && post.codeBlocks.length > 0) {
+				// if the thread was opened via another post with code, it's highlight won't be removed here
 				this.removeContentHighlight(post.codeBlocks[0].markerId);
 			}
 		}

@@ -8,7 +8,6 @@ import mixpanel from "mixpanel-browser";
 import ComposeBox from "./ComposeBox";
 import Post from "./Post";
 import UMIs from "./UMIs";
-import MarkerLocationTracker from "./MarkerLocationTracker";
 import createClassString from "classnames";
 import DateSeparator from "./DateSeparator";
 import withRepositories from "./withRepositories";
@@ -454,7 +453,6 @@ export class SimpleStream extends Component {
 	// visible during the transition
 	render() {
 		const posts = this.props.posts;
-		const editor = atom.workspace.getActiveTextEditor();
 
 		const streamClass = createClassString({
 			stream: true,
@@ -508,7 +506,6 @@ export class SimpleStream extends Component {
 
 		return (
 			<div className={streamClass} ref={ref => (this._div = ref)}>
-				<MarkerLocationTracker editor={editor} />
 				<EditingIndicator
 					editingUsers={this.props.editingUsers}
 					modifiedTyping={this.state.modifiedTyping}
@@ -788,7 +785,7 @@ export class SimpleStream extends Component {
 			window.parent.postMessage(
 				{
 					type: "codestream:interaction:thread-selected",
-					body: { threadId, streamId: this.props.postStreamId }
+					body: { threadId, streamId: this.props.postStreamId, post }
 				},
 				"*"
 			);
@@ -843,7 +840,7 @@ export class SimpleStream extends Component {
 
 		const find = substitute[1];
 		const replace = substitute[2];
-		const modifier = substitute[3]; // not used yet
+		// const modifier = substitute[3]; // not used yet
 		const newText = myLastPost.text.replace(find, replace);
 		if (newText !== myLastPost.text) {
 			this.replacePostText(myLastPost.id, newText);
