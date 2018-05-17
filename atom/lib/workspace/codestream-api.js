@@ -24,7 +24,7 @@ export default class CodeStreamApi {
 		this.bufferChangeTracker = new BufferChangeTracker(this.store, repoAttributes.workingDirectory);
 		this.diffManager = new DiffManager(this.store);
 		this.contentHighlighter = new ContentHighlighter(this.store);
-		this.markerLocationTracker = new MarkerLocationTracker();
+		this.markerLocationTracker = new MarkerLocationTracker(this.store);
 	}
 
 	destroy() {

@@ -24,4 +24,15 @@ declare module "atom" {
 		onDidStopChanging(callback: Function): Disposable;
 		onDidDestroy(callback: Function): Disposable;
 	}
+
+	declare export class GitRepository {
+		static open(path: string, options?: { refreshOnWindowFocus: boolean }): GitRepository | null;
+		destroy(): void;
+		isDestroyed(): boolean;
+		relativize(path: string): string;
+	}
+
+	declare export class Directory {
+		constructor(path: string, symlink?: boolean): Directory;
+	}
 }

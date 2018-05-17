@@ -8,7 +8,6 @@ import mixpanel from "mixpanel-browser";
 import ComposeBox from "./ComposeBox";
 import Post from "./Post";
 import UMIs from "./UMIs";
-import MarkerLocationTracker from "./MarkerLocationTracker";
 import createClassString from "classnames";
 import DateSeparator from "./DateSeparator";
 import withRepositories from "./withRepositories";
@@ -454,7 +453,6 @@ export class SimpleStream extends Component {
 	// visible during the transition
 	render() {
 		const posts = this.props.posts;
-		const editor = atom.workspace.getActiveTextEditor();
 
 		const streamClass = createClassString({
 			stream: true,
@@ -508,7 +506,6 @@ export class SimpleStream extends Component {
 
 		return (
 			<div className={streamClass} ref={ref => (this._div = ref)}>
-				<MarkerLocationTracker editor={editor} />
 				<EditingIndicator
 					editingUsers={this.props.editingUsers}
 					modifiedTyping={this.state.modifiedTyping}
