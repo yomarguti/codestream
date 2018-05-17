@@ -7,10 +7,10 @@ import MarkerLocationTracker from "./marker-location-tracker";
 import type { Resource, Store } from "../types/codestream";
 
 export default class CodeStreamApi {
-	popupManager = null;
-	bufferChangeTracker = null;
-	diffManager = null;
-	contentHighlighter = null;
+	popupManager: Resource;
+	bufferChangeTracker: Resource;
+	diffManager: Resource;
+	contentHighlighter: Resource;
 	markerLocationTracker: Resource;
 	store: Store;
 

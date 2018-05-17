@@ -35,10 +35,11 @@ export default class ContentHighlighter {
 			if (codeBlockToHighlight) {
 				const { context, markerLocations } = this.store.getState();
 				const locationsByMarkerId = markerLocations.byCommit[context.currentCommit] || {};
-				this.highlightContent(
-					codeBlockToHighlight,
-					locationsByMarkerId[codeBlockToHighlight.markerId]
-				);
+				const location = locationsByMarkerId[codeBlockToHighlight.markerId];
+				if (location) this.highlightContent(codeBlockToHighlight, location);
+				else {
+					/* still open the file and get location asyncly then highlight? */
+				}
 			}
 		}
 		if (data.type === "codestream:interaction:thread-closed") {
