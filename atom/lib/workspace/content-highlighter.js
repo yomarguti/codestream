@@ -1,7 +1,8 @@
 // @flow
 import { locationToRange } from "../util/Marker";
 import { CODESTREAM_VIEW_URI } from "../codestream-view";
-import type { DisplayMarker, Disposable } from "../types/atom";
+import type { DisplayMarker } from "../types/atom";
+import type { Disposable } from "atom";
 import { getPost } from "../reducers/posts";
 import { accessSafely } from "../utils";
 

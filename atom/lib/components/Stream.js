@@ -843,7 +843,7 @@ export class SimpleStream extends Component {
 
 		const find = substitute[1];
 		const replace = substitute[2];
-		const modifier = substitute[3]; // not used yet
+		// const modifier = substitute[3]; // not used yet
 		const newText = myLastPost.text.replace(find, replace);
 		if (newText !== myLastPost.text) {
 			this.replacePostText(myLastPost.id, newText);
