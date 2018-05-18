@@ -121,18 +121,6 @@ export class SimpleStream extends Component {
 		}
 		// this.postWithNewMessageIndicator = 10;
 
-		// TODO: DELETE
-		// let switchingFiles = nextProps.currentFile !== this.props.currentFile;
-		// if (switchingFiles || nextProps.currentCommit !== this.props.currentCommit) {
-		// 	const editor = atom.workspace.getActiveTextEditor();
-		// 	if (editor) {
-		// 		// console.log("NEXTPROPS FILE: ", nextProps.currentFile);
-		// 		// console.log("EDITOR    FILE: ", editor.getPath());
-		// 		// this.checkModifiedTyping(editor);
-		// 		// this.checkModifiedGit(editor);
-		// 	}
-		// }
-
 		if (nextProps.firstTimeInAtom && !this.state.fileForIntro) {
 			this.setState({ fileForIntro: nextProps.currentFile });
 		}
@@ -212,16 +200,6 @@ export class SimpleStream extends Component {
 			this.resizeStream();
 		}
 
-		// TODO: DELETE
-		// if (
-		// 	prevState.modifiedGit != this.state.modifiedGit ||
-		// 	prevState.modifiedTyping != this.state.modifiedTyping
-		// ) {
-		// 	let isModified = this.state.modifiedGit || this.state.modifiedTyping;
-		// 	console.log("Marking this stream modified: " + fileStreamId + " as " + isModified);
-		// 	// markStreamModified(fileStreamId, isModified);
-		// }
-
 		if (prevProps.hasFocus !== this.props.hasFocus) this.handleScroll();
 
 		if (this.props.posts.length !== prevProps.posts.length) {
@@ -264,46 +242,9 @@ export class SimpleStream extends Component {
 				}).observe(scrollViewDiv);
 			}
 
-			// TODO: DELETE
-			// this.subscriptions.add(
-			// 	editor.onDidStopChanging(() => {
-			// 		this.checkModifiedTyping(editor);
-			// 	}),
-			// 	editor.onDidSave(() => {
-			// 		this.checkModifiedTyping(editor);
-			// 		this.checkModifiedGit(editor);
-			// 	})
-			// );
-			// this.checkModifiedTyping(editor);
-			// this.checkModifiedGit(editor);
 			this.editorsWithHandlers[editor.id] = true;
 		}
 	}
-
-	// setStateWhoModified(value) {
-	// 	let whoModified = this.state.whoModified || {};
-	// 	if (value) whoModified[this.props.currentUser.id] = true;
-	// 	else delete whoModified[this.props.currentUser.id];
-	// 	this.setState({ whoModified });
-	// }
-
-	// TODO: DELETE
-	// checkModifiedTyping(editor) {
-	// 	let isModified = editor.isModified();
-	// 	// if there's no change, no need to set state
-	// 	// console.log("Checking modified typing: " + isModified);
-	// 	this.setState({ modifiedTyping: isModified });
-	// }
-
-	// TODO: DELETE
-	// checkModifiedGit(editor) {
-	// 	if (!editor) return;
-	// 	let filePath = editor.getPath();
-	// 	let repo = this.props.repositories[0];
-	// 	let isModified = repo.isPathModified(filePath);
-	// 	// console.log("Checking modified git: " + isModified);
-	// 	this.setState({ modifiedGit: isModified });
-	// }
 
 	handleResizeCompose = () => {
 		this.resizeStream();

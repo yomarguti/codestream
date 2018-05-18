@@ -341,13 +341,6 @@ module.exports = {
 				repo.onDidChangeStatuses(event => {
 					updateCommitHash();
 				})
-				// TODO: DELETE
-				// repo.onDidChangeStatus(event => {
-				// 	if (event && event.path) this.checkEditorsForModification(repo);
-				// }),
-				// repo.onDidChangeStatuses(() => {
-				// 	this.checkEditorsForModification(repo);
-				// })
 			);
 
 			window.addEventListener("online", e => store.dispatch(online()), false);
@@ -393,20 +386,6 @@ module.exports = {
 			}
 		}
 	},
-
-	// TODO: DELETE
-	// async checkEditorsForModification(repo) {
-	// 	let edited = [];
-	// 	atom.workspace
-	// 		.getCenter()
-	// 		.getTextEditors()
-	// 		.forEach(editor => {
-	// 			let filePath = editor.getPath();
-	// 			if (repo.isPathModified(filePath) || editor.isModified())
-	// 				edited.push(repo.relativize(filePath));
-	// 		});
-	// 	store.dispatch(markPathsModified(edited));
-	// },
 
 	markStreamMute(event) {
 		this.markStreamTreatment(event, "mute");
