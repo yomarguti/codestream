@@ -18,11 +18,7 @@ import { toMapBy } from "../reducers/utils";
 import { rangeToLocation } from "../util/Marker";
 import { getStreamForTeam, getStreamForRepoAndFile } from "../reducers/streams";
 import { getPostsForStream } from "../reducers/posts";
-import rootLogger from "../util/Logger";
 import EditingIndicator from "./EditingIndicator";
-
-const Path = require("path");
-const logger = rootLogger.forClass("components/Stream");
 
 export class SimpleStream extends Component {
 	subscriptions = null;
@@ -318,7 +314,7 @@ export class SimpleStream extends Component {
 	// as a path delimiter
 	fileAbbreviation() {
 		if (!this.props.currentFile) return "";
-		return Path.basename(this.props.currentFile);
+		return this.props.currentFile;
 	}
 
 	renderIntro = () => {
@@ -759,7 +755,6 @@ export class SimpleStream extends Component {
 	};
 
 	handleEscape(event) {
-		logger.trace(".handleEscape");
 		if (this.state.editingPostId) this.handleDismissEdit();
 		else if (this.state.threadActive) this.handleDismissThread();
 		else event.abortKeyBinding();
