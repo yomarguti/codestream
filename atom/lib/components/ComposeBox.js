@@ -111,7 +111,7 @@ class ComposeBox extends React.Component {
 	// insert the given text at the cursor of the input field
 	// after first deleting the text in toDelete
 	insertTextAtCursor(text, toDelete) {
-		var sel, range, html;
+		var sel, range;
 		sel = window.getSelection();
 
 		// if for some crazy reason we can't find a selection, return
@@ -195,14 +195,12 @@ class ComposeBox extends React.Component {
 			id = this.state.selectedAtMention;
 		}
 
-		let user = this.props.teammates[id];
+		let user = this.props.teammates.find(t => t.id === id);
 		if (!user) return;
 		let username = user.username;
 		// otherwise explicitly use the one passed in
 		// FIXME -- this should anchor at the carat, not end-of-line
-		var re = new RegExp("@" + this.state.atMentionsPrefix + "$");
 		// var re = new RegExp("@" + this.state.atMentionsPrefix);
-		let text = this.state.newPostText.replace(re, "@" + username);
 		this.setState({
 			atMentionsOn: false
 		});
@@ -231,16 +229,14 @@ class ComposeBox extends React.Component {
 		var match = upToCursor.match(/@([a-zA-Z0-9_.+]*)$/);
 		if (this.state.atMentionsOn) {
 			if (match) {
-				var text = match[0].replace(/@/, "");
-				this.showAtMentionSelectors(text);
+				this.showAtMentionSelectors(match[0].replace(/@/, ""));
 			} else {
 				// if the line doesn't end with @word, then hide the popup
 				this.setState({ atMentionsOn: false });
 			}
 		} else {
 			if (match) {
-				var text = match[0].replace(/@/, "");
-				this.showAtMentionSelectors(text);
+				this.showAtMentionSelectors(match[0].replace(/@/, ""));
 			}
 		}
 		// track newPostText as the user types
@@ -253,6 +249,7 @@ class ComposeBox extends React.Component {
 	// when the input field loses focus, one thing we want to do is
 	// to hide the at-mention popup
 	handleBlur = event => {
+		event.preventDefault();
 		this.setState({
 			atMentionsOn: false
 		});
