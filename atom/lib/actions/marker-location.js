@@ -13,6 +13,14 @@ export const saveMarkerLocations = (attributes, isHistory = false) => (
 	getState,
 	{ db }
 ) => {
+	if (Array.isArray(attributes)) {
+		return Promise.all(
+			attributes.map(object => {
+				return dispatch(saveMarkerLocations(object, isHistory));
+			})
+		);
+	}
+
 	const { streamId, teamId, commitHash, locations, dirty = {} } = attributes;
 
 	if (!(streamId && teamId && commitHash)) return;
