@@ -7,7 +7,6 @@ import _ from "underscore-plus";
 import mixpanel from "mixpanel-browser";
 import ComposeBox from "./ComposeBox";
 import Post from "./Post";
-import UMIs from "./UMIs";
 import createClassString from "classnames";
 import DateSeparator from "./DateSeparator";
 import withRepositories from "./withRepositories";
@@ -461,7 +460,6 @@ export class SimpleStream extends Component {
 				/>
 				<div className={mainPanelClass} ref={ref => (this._mainPanel = ref)}>
 					<div className="stream-header" ref={ref => (this._header = ref)}>
-						<UMIs />
 						<span>{teamName}</span>
 						<span onClick={this.handleClickTeamMenu} className="icon icon-grabber" />
 					</div>
