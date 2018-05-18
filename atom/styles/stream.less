@@ -754,6 +754,30 @@
 			}
 		}
 	}
+	.stream.reduced-motion {
+		.inactive-panel {
+			transform: none;
+			z-index: -1 !important;
+			.stream-header {
+				z-index: -1 !important;
+			}
+			opacity: 0;
+			transition: opacity 0.25s;
+		}
+		.thread-panel.inactive-panel {
+			animation: none;
+		}
+		.thread-panel {
+			left: 0;
+			animation: none;
+			display: block;
+			z-index: 2;
+			transition: opacity 0.25s;
+		}
+		.main-panel {
+			transition: opacity 0.25s;
+		}
+	}
 	.intro {
 		margin: 0 40px;
 		min-height: 300px;
@@ -835,6 +859,7 @@
 	}
 }
 
+// these are animations to slide the thread panel in and out of view
 @keyframes slidein {
 	from {
 		left: 100%;

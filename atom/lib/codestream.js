@@ -126,9 +126,14 @@ module.exports = {
 		// 	default: false
 		// },
 		showHeadshots: {
-			description: "Display headshots in the stream",
+			description: "Display headshots in the stream.",
 			type: "boolean",
 			default: true
+		},
+		reducedMotion: {
+			description: "Reduce the animations when transitioning between streams.",
+			type: "boolean",
+			default: false
 		},
 		// showUnread: {
 		// 	description:
@@ -160,9 +165,8 @@ module.exports = {
 			if (repos.length === 1) {
 				// if being initialized much later into atom's lifetime, i.e. just installed or re-enabled
 				if (atom.packages.hasActivatedInitialPackages()) this.setup();
-				else
-					// wait for atom workspace to be ready
-					this.subscriptions.add(atom.packages.onDidActivateInitialPackages(() => this.setup()));
+				// wait for atom workspace to be ready
+				else this.subscriptions.add(atom.packages.onDidActivateInitialPackages(() => this.setup()));
 			}
 		});
 		// this isn't aded to this.subscriptions because it should always run
