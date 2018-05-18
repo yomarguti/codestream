@@ -50,12 +50,14 @@ export default class EditTracker implements Resource {
 	}
 
 	onGitChange = () => {
-		atom.workspace.getTextEditors().forEach((editor: TextEditor) => {
-			this.setModificationStatus(
-				editor,
-				this.repo.isPathModified(editor.getPath()) || editor.isModified()
-			);
-		});
+		this.markAsModified(
+			atom.workspace
+				.getTextEditors()
+				.filter(editor => {
+					return this.repo.isPathModified(editor.getPath()) || editor.isModified();
+				})
+				.map(editor => this.repo.relativize(editor.getPath()))
+		);
 	};
 
 	onFileModified(editor: TextEditor, modified: boolean) {
@@ -63,7 +65,6 @@ export default class EditTracker implements Resource {
 	}
 
 	setModificationStatus(editor: TextEditor, isModified: boolean) {
-		console.debug(`is ${editor.getPath()} modified? ---> ${String(isModified)}`);
 		const { context, session, streams } = this.store.getState();
 		const file = this.repo.relativize(editor.getPath());
 		const fileStream = getStreamForRepoAndFile(streams, context.currentRepoId, file);
@@ -75,6 +76,30 @@ export default class EditTracker implements Resource {
 			streamId: fileStream.id,
 			file,
 			editing
+		};
+
+		http.put("/editing", payload, session.accessToken);
+	}
+
+	markAsModified(paths: string[]) {
+		const { context, session, streams } = this.store.getState();
+
+		let modifiedPaths = [];
+		let streamIds = [];
+		paths.forEach(path => {
+			const stream = getStreamForRepoAndFile(streams, context.currentRepoId, path);
+			if (stream) streamIds.push(stream.id);
+			else paths.push(path);
+		});
+
+		let payload = {
+			teamId: context.currentTeamId,
+			repoId: context.currentRepoId,
+			editing: {
+				commitHash: context.currentCommit
+			},
+			files: modifiedPaths || [],
+			streamIds
 		};
 
 		http.put("/editing", payload, session.accessToken);
