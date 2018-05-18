@@ -599,6 +599,11 @@
 				opacity: 0.4;
 				font-size: 11px;
 				padding: 3px 3px 3px 5px;
+				.details {
+					padding-left: 8px;
+					opacity: 0;
+					transition: opacity 0.4s;
+				}
 			}
 			.edited {
 				opacity: 0.4;
@@ -732,6 +737,11 @@
 			}
 			.icon-gear:hover {
 				color: #aaa;
+			}
+			time {
+				.details {
+					opacity: 1;
+				}
 			}
 		}
 	}
