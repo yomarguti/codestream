@@ -8,6 +8,7 @@ import EditTracker from "./edit-tracker";
 import type { Resource, Store } from "../types";
 
 export default class CodeStreamApi implements Resource {
+	initialized: boolean = false;
 	popupManager: Resource;
 	bufferChangeTracker: Resource;
 	diffManager: Resource;
@@ -28,14 +29,17 @@ export default class CodeStreamApi implements Resource {
 		this.contentHighlighter = new ContentHighlighter(this.store);
 		this.markerLocationTracker = new MarkerLocationTracker(this.store);
 		this.editTracker = new EditTracker(this.store);
+		this.initialized = true;
 	}
 
 	destroy() {
-		this.popupManager.destroy();
-		this.bufferChangeTracker.destroy();
-		this.diffManager.destroy();
-		this.contentHighlighter.destroy();
-		this.markerLocationTracker.destroy();
-		this.editTracker.destroy();
+		if (this.initialized) {
+			this.popupManager.destroy();
+			this.bufferChangeTracker.destroy();
+			this.diffManager.destroy();
+			this.contentHighlighter.destroy();
+			this.markerLocationTracker.destroy();
+			this.editTracker.destroy();
+		}
 	}
 }
