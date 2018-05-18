@@ -2,7 +2,6 @@ import _ from "underscore-plus";
 import { upsert } from "../local-cache";
 import { normalize } from "./utils";
 import { fetchAllPosts, fetchLatestPosts } from "./post";
-import { getStreamForRepoAndFile } from "../reducers/streams";
 
 export const saveStream = attributes => (dispatch, getState, { db }) => {
 	return upsert(db, "streams", attributes).then(stream => {

@@ -168,7 +168,7 @@ export class SimpleStream extends Component {
 	}
 
 	componentDidUpdate(prevProps, prevState) {
-		const { postStreamId, fileStreamId, markStreamRead } = this.props;
+		const { postStreamId, markStreamRead } = this.props;
 
 		// this.scrollToBottom();
 
