@@ -130,7 +130,7 @@ module.exports = {
 			type: "boolean",
 			default: true
 		},
-		reducedMotion: {
+		reduceMotion: {
 			description: "Reduce the animations when transitioning between streams.",
 			type: "boolean",
 			default: false

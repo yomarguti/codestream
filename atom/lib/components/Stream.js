@@ -457,7 +457,7 @@ export class SimpleStream extends Component {
 		const streamClass = createClassString({
 			stream: true,
 			"no-headshots": !atom.config.get("CodeStream.showHeadshots"),
-			"reduced-motion": atom.config.get("CodeStream.reducedMotion")
+			"reduced-motion": atom.config.get("CodeStream.reduceMotion")
 		});
 		const postsListClass = createClassString({
 			postslist: true
