@@ -557,7 +557,7 @@ export class SimpleStream extends Component {
 		// find the most recent post I authored
 		console.log("up! ", event);
 		const postDiv = event.target.closest(".post");
-		const seqNum = postDiv ? postDiv.getAttribute("seqNum") : 9999999999;
+		const seqNum = postDiv ? postDiv.dataset.seqNum : 9999999999;
 		const editingPost = this.findMyPostBeforeSeqNum(seqNum);
 		if (editingPost) this.setState({ editingPostId: editingPost.id });
 	};

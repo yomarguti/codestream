@@ -15,7 +15,7 @@ export default class Timestamp extends Component {
 		return (
 			<time>
 				{timeText}
-				<span class="details">{timeDetails}</span>
+				<span className="details">{timeDetails}</span>
 			</time>
 		);
 	}
