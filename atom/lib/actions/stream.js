@@ -64,60 +64,62 @@ export const fetchTeamStreamsAndAllPosts = () => async (dispatch, getState, { ht
 	});
 };
 
-export const markStreamModified = (streamId, isModified) => async (
-	dispatch,
-	getState,
-	{ http }
-) => {
-	const { context, session } = getState();
-	if (context.currentFile === "" || !session.accessToken) return;
+// TODO: DELETE
+// export const markStreamModified = (streamId, isModified) => async (
+// 	dispatch,
+// 	getState,
+// 	{ http }
+// ) => {
+// 	const { context, session } = getState();
+// 	if (context.currentFile === "" || !session.accessToken) return;
+//
+// 	// console.log("COMMENT THIS RETURN STATEMENT TO SAVE TO API SERVER");
+// 	// return;
+//
+// 	// in the future, consider passing the deltas in the "editing" object
+// 	// also, pass what branch i'm on, and any other info like editor
+// 	let editing = isModified ? { commitHash: context.currentCommit } : false;
+//
+// 	let payload = {
+// 		teamId: context.currentTeamId,
+// 		repoId: context.currentRepoId,
+// 		file: context.currentFile,
+// 		streamId,
+// 		editing
+// 	};
+//
+// 	let markModifiedData = await http.put("/editing", payload, session.accessToken);
+// 	// not sure we have to dispatch any action here, as we don’t intend to report on
+// 	// whether you yourself have modified the file (other mechanisms exist for that in
+// 	// the editor), so letting the API server know is all we need to do.
+// 	// console.log("MODIFIED THE STREAM", markModifiedData, session);
+// };
 
-	// console.log("COMMENT THIS RETURN STATEMENT TO SAVE TO API SERVER");
-	// return;
-
-	// in the future, consider passing the deltas in the "editing" object
-	// also, pass what branch i'm on, and any other info like editor
-	let editing = isModified ? { commitHash: context.currentCommit } : false;
-
-	let payload = {
-		teamId: context.currentTeamId,
-		repoId: context.currentRepoId,
-		file: context.currentFile,
-		streamId,
-		editing
-	};
-
-	let markModifiedData = await http.put("/editing", payload, session.accessToken);
-	// not sure we have to dispatch any action here, as we don’t intend to report on
-	// whether you yourself have modified the file (other mechanisms exist for that in
-	// the editor), so letting the API server know is all we need to do.
-	// console.log("MODIFIED THE STREAM", markModifiedData, session);
-};
-
-export const markPathsModified = modifiedPaths => async (dispatch, getState, { http }) => {
-	const { context, session, streams } = getState();
-
-	if (!session.accessToken) return;
-
-	let paths = [];
-	let streamIds = [];
-	modifiedPaths.forEach(path => {
-		const stream = getStreamForRepoAndFile(streams, context.currentRepoId, path);
-		if (stream) streamIds.push(stream.id);
-		else paths.push(path);
-	});
-
-	let payload = {
-		teamId: context.currentTeamId,
-		repoId: context.currentRepoId,
-		editing: {
-			commitHash: context.currentCommit
-		},
-		files: paths || [],
-		streamIds
-	};
-
-	// console.log("Marking all paths modified: ", payload);
-	let markModifiedData = await http.put("/editing", payload, session.accessToken);
-	// console.log("MODIFIED ALL PATHS", markModifiedData, session);
-};
+// TODO: DELETE
+// export const markPathsModified = modifiedPaths => async (dispatch, getState, { http }) => {
+// 	const { context, session, streams } = getState();
+//
+// 	if (!session.accessToken) return;
+//
+// 	let paths = [];
+// 	let streamIds = [];
+// 	modifiedPaths.forEach(path => {
+// 		const stream = getStreamForRepoAndFile(streams, context.currentRepoId, path);
+// 		if (stream) streamIds.push(stream.id);
+// 		else paths.push(path);
+// 	});
+//
+// 	let payload = {
+// 		teamId: context.currentTeamId,
+// 		repoId: context.currentRepoId,
+// 		editing: {
+// 			commitHash: context.currentCommit
+// 		},
+// 		files: paths || [],
+// 		streamIds
+// 	};
+//
+// 	// console.log("Marking all paths modified: ", payload);
+// 	let markModifiedData = await http.put("/editing", payload, session.accessToken);
+// 	// console.log("MODIFIED ALL PATHS", markModifiedData, session);
+// };

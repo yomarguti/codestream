@@ -27,20 +27,20 @@ export default class EditingIndicator extends React.Component {
 	}
 
 	render() {
-		const users = this.props.users || [];
-		const currentUserId = this.props.currentUser.id;
-		const editingUsers = this.props.editingUsers || {};
+		const { teamMembers, currentUser, editingUsers = {} } = this.props;
 
 		let names = _.compact(
 			Object.keys(editingUsers).map(userId => {
-				return userId !== currentUserId && editingUsers[userId] ? users[userId].username : null;
+				return userId !== currentUser.id && editingUsers[userId]
+					? teamMembers[userId].username
+					: null;
 			})
 		);
 
 		// you can test what it looks like by hard-coding this
 		// names = ["larry", "fred"];
 
-		const modifiedByMe = this.props.modifiedGit || this.props.modifiedTyping;
+		const modifiedByMe = Boolean(editingUsers[currentUser.id]);
 		const modifiedByOthers = names.length > 0;
 		const hasConflict = modifiedByMe && modifiedByOthers;
 

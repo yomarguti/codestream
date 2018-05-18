@@ -514,12 +514,9 @@ export class SimpleStream extends Component {
 			<div className={streamClass} ref={ref => (this._div = ref)}>
 				<EditingIndicator
 					editingUsers={this.props.editingUsers}
-					modifiedTyping={this.state.modifiedTyping}
-					modifiedGit={this.state.modifiedGit}
-					currentFile={this.props.currentFile}
-					inactive={this.state.threadActive}
+					inactive={this.state.threadActive} // or if no fileStream
 					currentUser={this.props.currentUser}
-					users={this.props.users}
+					teamMembers={this.props.teamMembersById}
 				/>
 				<div className={mainPanelClass} ref={ref => (this._mainPanel = ref)}>
 					<div className="stream-header" ref={ref => (this._header = ref)}>
@@ -942,6 +939,7 @@ const mapStateToProps = ({
 
 	return {
 		isOffline,
+		teamMembersById: toMapBy("id", teamMembers),
 		teammates: teamMembers.filter(({ id }) => id !== session.userId),
 		postStreamId: teamStream.id,
 		fileStreamId: fileStream.id,
