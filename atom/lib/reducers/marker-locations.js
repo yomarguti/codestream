@@ -49,7 +49,8 @@ const addUncommittedLocation = (state, { streamId, uncommitted }) => {
 				...byCommit,
 				uncommitted: [...existingUncommitted, ...uncommitted]
 			}
-		}
+		},
+		byCommit: state.byCommit
 	};
 };
 
