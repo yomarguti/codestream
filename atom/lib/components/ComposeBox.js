@@ -16,7 +16,7 @@ class ComposeBox extends React.Component {
 		this._contentEditable.htmlEl.addEventListener("paste", function(e) {
 			e.preventDefault();
 			const text = e.clipboardData.getData("text/plain");
-			document.execCommand("insertHTML", false, text);
+			document.execCommand("insertHTML", false, text.replace(/\n/g, "<br>"));
 		});
 
 		// because atom hijacks most keystroke events
