@@ -3,6 +3,7 @@ import companies from "./companies";
 import onboarding from "./onboarding";
 import posts from "./posts";
 import context from "./context";
+import configs from "./configs";
 import streams from "./streams";
 import users from "./users";
 import repos from "./repos";
@@ -34,6 +35,7 @@ const bootstrapped = (state = false, { type }) => {
 const appReducer = combineReducers({
 	bootstrapped,
 	companies,
+	configs,
 	connectivity,
 	context,
 	currentPage,
