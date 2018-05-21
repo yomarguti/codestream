@@ -26,12 +26,9 @@ export class SimpleStream extends Component {
 		super(props);
 
 		this.state = {
-			stream: {},
 			threadId: null,
 			threadActive: false,
-			posts: [],
-			fileForIntro: props.currentFile,
-			whoModified: {}
+			fileForIntro: props.currentFile
 		};
 		this._compose = React.createRef();
 	}
@@ -682,13 +679,6 @@ export class SimpleStream extends Component {
 	// 	}
 	// }
 
-	// toggle focus between the buffer and the compose input field
-	toggleFocusInput = () => {
-		if (document.activeElement && document.activeElement.id == "input-div")
-			atom.workspace.getCenter().activate();
-		else this.focusInput();
-	};
-
 	focusInput = () => {
 		const input = document.getElementById("input-div");
 		if (input) input.focus();
@@ -829,7 +819,6 @@ const mapStateToProps = ({
 		firstTimeInAtom: onboarding.firstTimeInAtom,
 		currentFile: context.currentFile,
 		currentCommit: context.currentCommit,
-		users: toMapBy("id", teamMembers),
 		editingUsers: fileStream.editingUsers,
 		usernamesRegexp: usernamesRegexp,
 		currentUser: users[session.userId],
