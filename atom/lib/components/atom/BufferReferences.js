@@ -5,18 +5,26 @@ import { getStreamsByFileForRepo } from "../../reducers/streams";
 
 class BufferReferences extends Component {
 	state = { referencesByLine: {} };
+	resizeObserver;
 
 	componentDidMount() {
 		this.configureReferences(this.props.references);
+		this.configureResizeObserver(this.props.editor);
 	}
 
 	componentWillReceiveProps(nextProps) {
-		if (nextProps.streamId !== this.props.streamId) {
+		if (nextProps.editor.id !== this.props.editor.id) {
+			if (this.resizeObserver) this.resizeObserver.disconnect();
+			this.configureResizeObserver(nextProps.editor);
 			this.setState(
 				() => ({ referencesByLine: {} }),
 				() => this.configureReferences(nextProps.references)
 			);
 		} else this.configureReferences(nextProps.references);
+	}
+
+	componentWillUnmount() {
+		if (this.resizeObserver) this.resizeObserver.disconnect();
 	}
 
 	configureReferences(references) {
@@ -29,6 +37,37 @@ class BufferReferences extends Component {
 			referencesByLine[line] = lineRefs;
 		});
 		this.setState({ referencesByLine });
+	}
+
+	configureResizeObserver(editor) {
+		let scrollViewDiv = editor.component.element.querySelector(".scroll-view");
+		if (scrollViewDiv && !this.resizeObserver) {
+			this.resizeObserver = new ResizeObserver(() => {
+				this.handleResizeWindow(scrollViewDiv);
+			});
+			this.resizeObserver.observe(scrollViewDiv);
+		}
+	}
+
+	handleResizeWindow = scrollViewDiv => {
+		// if the div has display: none then there will be no width
+		if (!scrollViewDiv || !scrollViewDiv.offsetWidth) return;
+
+		let rect = scrollViewDiv.getBoundingClientRect();
+		// FIXME -- if there is panel is on the right, then subtract 20 more
+		let width = scrollViewDiv.offsetWidth + rect.left;
+		console.debug("width should now be ", width);
+		let newStyle = ".codestream-comment-popup { left: " + width + "px; }";
+		this.addStyleString(newStyle);
+		// this.resizeStream();
+	};
+
+	// add a style to the document, reusing a style node that we attach to the DOM
+	addStyleString(str) {
+		let node = document.getElementById("codestream-style-tag") || document.createElement("style");
+		node.id = "codestream-style-tag";
+		node.innerHTML = str;
+		document.body.appendChild(node);
 	}
 
 	render() {
