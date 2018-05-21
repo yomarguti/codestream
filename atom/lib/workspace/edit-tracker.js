@@ -73,7 +73,7 @@ export default class EditTracker implements Resource {
 		let payload = {
 			teamId: context.currentTeamId,
 			repoId: context.currentRepoId,
-			streamId: fileStream.id,
+			...(fileStream ? { streamId: fileStream.id } : {}),
 			file,
 			editing
 		};
