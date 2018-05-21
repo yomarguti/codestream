@@ -8,13 +8,6 @@ class BufferReferences extends Component {
 
 	componentDidMount() {
 		this.configureReferences(this.props.references);
-		const { editor } = this.props;
-		let scrollViewDiv = editor.component.element.querySelector(".scroll-view");
-		if (scrollViewDiv) {
-			editor.resizeHandler = new ResizeObserver(() => {
-				this.handleResizeWindow(scrollViewDiv);
-			}).observe(scrollViewDiv);
-		}
 	}
 
 	componentWillReceiveProps(nextProps) {
@@ -36,26 +29,6 @@ class BufferReferences extends Component {
 			referencesByLine[line] = lineRefs;
 		});
 		this.setState({ referencesByLine });
-	}
-
-	handleResizeWindow = scrollViewDiv => {
-		// if the div has display: none then there will be no width
-		if (!scrollViewDiv || !scrollViewDiv.offsetWidth) return;
-
-		let rect = scrollViewDiv.getBoundingClientRect();
-		// FIXME -- if there is panel is on the right, then subtract 20 more
-		let width = scrollViewDiv.offsetWidth + rect.left;
-		let newStyle = ".codestream-comment-popup { left: " + width + "px; }";
-		this.addStyleString(newStyle);
-		// this.resizeStream();
-	};
-
-	// add a style to the document, reusing a style node that we attach to the DOM
-	addStyleString(str) {
-		let node = document.getElementById("codestream-style-tag") || document.createElement("style");
-		node.id = "codestream-style-tag";
-		node.innerHTML = str;
-		document.body.appendChild(node);
 	}
 
 	render() {

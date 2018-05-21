@@ -67,6 +67,12 @@ export class SimpleStream extends Component {
 		);
 	}
 
+	copy(event) {
+		let selectedText = window.getSelection().toString();
+		atom.clipboard.write(selectedText);
+		event.abortKeyBinding();
+	}
+
 	componentDidMount() {
 		window.addEventListener("message", this.handleInteractionEvent, true);
 
@@ -76,6 +82,7 @@ export class SimpleStream extends Component {
 		new ResizeObserver(this.handleResizeCompose).observe(this._compose.current);
 
 		if (this._postslist) {
+			console.log("ADDING HANDLERS");
 			this._postslist.addEventListener("scroll", this.handleScroll.bind(this));
 			// this resize observer fires when the height of the
 			// postslist changes, when the window resizes in width
@@ -87,6 +94,7 @@ export class SimpleStream extends Component {
 			}).observe(this._postslist);
 		}
 
+		this.installEditorHandlers();
 		this.scrollToBottom();
 	}
 
@@ -139,12 +147,6 @@ export class SimpleStream extends Component {
 		}
 	};
 
-	copy(event) {
-		let selectedText = window.getSelection().toString();
-		atom.clipboard.write(selectedText);
-		event.abortKeyBinding();
-	}
-
 	checkMarkStreamRead() {
 		// if we have focus, and there are no unread indicators which would mean an
 		// unread is out of view, we assume the entire thread has been observed
@@ -164,6 +166,8 @@ export class SimpleStream extends Component {
 		const { postStreamId, markStreamRead } = this.props;
 
 		// this.scrollToBottom();
+
+		this.installEditorHandlers();
 
 		// if we just switched to a new stream, (eagerly) mark both old and new as read
 		if (postStreamId !== prevProps.postStreamId) {
@@ -219,9 +223,47 @@ export class SimpleStream extends Component {
 		}
 	}
 
+	installEditorHandlers() {
+		const editor = atom.workspace.getActiveTextEditor();
+		if (!editor) {
+			return;
+		}
+
+		if (!this.editorsWithHandlers[editor.id]) {
+			let scrollViewDiv = editor.component.element.querySelector(".scroll-view");
+			if (scrollViewDiv) {
+				editor.resizeHandler = new ResizeObserver(() => {
+					this.handleResizeWindow(scrollViewDiv);
+				}).observe(scrollViewDiv);
+			}
+
+			this.editorsWithHandlers[editor.id] = true;
+		}
+	}
+
 	handleResizeCompose = () => {
 		this.resizeStream();
 	};
+
+	handleResizeWindow = scrollViewDiv => {
+		// if the div has display: none then there will be no width
+		if (!scrollViewDiv || !scrollViewDiv.offsetWidth) return;
+
+		let rect = scrollViewDiv.getBoundingClientRect();
+		// FIXME -- if there is panel is on the right, then subtract 20 more
+		let width = scrollViewDiv.offsetWidth + rect.left;
+		let newStyle = ".codestream-comment-popup { left: " + width + "px; }";
+		this.addStyleString(newStyle);
+		this.resizeStream();
+	};
+
+	// add a style to the document, reusing a style node that we attach to the DOM
+	addStyleString(str) {
+		let node = document.getElementById("codestream-style-tag") || document.createElement("style");
+		node.id = "codestream-style-tag";
+		node.innerHTML = str;
+		document.body.appendChild(node);
+	}
 
 	resizeStream = () => {
 		if (!this._div || !this._compose) return;
