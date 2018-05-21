@@ -461,7 +461,7 @@ export class SimpleStream extends Component {
 				<div className={mainPanelClass} ref={ref => (this._mainPanel = ref)}>
 					<div className="stream-header" ref={ref => (this._header = ref)}>
 						<span>{teamName}</span>
-						<span onClick={this.handleClickTeamMenu} className="icon icon-grabber" />
+						<span onClick={this.props.goToInvitePage} className="icon icon-organization" />
 					</div>
 					{unreadsAbove}
 					<div

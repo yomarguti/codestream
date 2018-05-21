@@ -102,7 +102,7 @@ export class InvitePage extends Component {
 			<div id="invite-team-members">
 				<Button onClick={this.props.goBack}>Back to stream</Button>
 				<br />
-				<h2>{`Team ${this.props.teamName}`}</h2>
+				<h2>{this.props.teamName}</h2>
 				<form onSubmit={this.onSubmit}>
 					<div className="errors">
 						{inputTouched &&
