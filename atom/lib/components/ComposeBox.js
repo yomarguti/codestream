@@ -22,6 +22,9 @@ class ComposeBox extends React.Component {
 		// because atom hijacks most keystroke events
 		if (global.atom) {
 			this.disposables.push(
+				atom.commands.add("atom-workspace", {
+					"codestream:focus-input": _event => this.focus()
+				}),
 				atom.commands.add(".codestream", {
 					"codestream:escape": event => this.handleAtMentionKeyPress(event, "escape")
 				}),

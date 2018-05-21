@@ -1,5 +1,4 @@
 import { shell } from "electron";
-import { CompositeDisposable } from "atom";
 import React, { Component } from "react";
 import { connect } from "react-redux";
 import { FormattedMessage } from "react-intl";
@@ -21,7 +20,7 @@ import { getPostsForStream } from "../reducers/posts";
 import EditingIndicator from "./EditingIndicator";
 
 export class SimpleStream extends Component {
-	subscriptions = null;
+	disposables = [];
 
 	constructor(props) {
 		super(props);
@@ -35,36 +34,6 @@ export class SimpleStream extends Component {
 			whoModified: {}
 		};
 		this._compose = React.createRef();
-
-		this.editorsWithHandlers = {};
-
-		this.subscriptions = new CompositeDisposable();
-		this.subscriptions.add(
-			atom.keymaps.add("codestream", {
-				"atom-workspace": {
-					escape: "codestream:escape",
-					"cmd-c": "codestream:copy"
-				}
-			})
-		);
-		this.subscriptions.add(
-			atom.commands.add("atom-workspace", {
-				"codestream:escape": event => this.handleEscape(event),
-				"codestream:copy": event => this.copy(event)
-			})
-		);
-		this.subscriptions.add(
-			atom.commands.add("atom-workspace", {
-				"codestream:focus-input": _event => this.toggleFocusInput()
-			})
-		);
-		this.subscriptions.add(
-			atom.commands.add(".codestream .post.mine", {
-				"codestream:edit-headshot": event => this.handleEditHeadshot(event),
-				"codestream:edit-post": event => this.handleEditPost(event),
-				"codestream:delete-post": event => this.handleDeletePost(event)
-			})
-		);
 	}
 
 	componentDidMount() {
@@ -88,6 +57,36 @@ export class SimpleStream extends Component {
 		}
 
 		this.scrollToBottom();
+		if (global.atom) {
+			this.disposables.push(
+				atom.keymaps.add("codestream", {
+					"atom-workspace": {
+						escape: "codestream:escape",
+						"cmd-c": "codestream:copy"
+					}
+				}),
+				atom.commands.add("atom-workspace", "codestream:escape", {
+					didDispatch: event => this.handleEscape(event),
+					hiddenInCommandPalette: true
+				}),
+				atom.commands.add("atom-workspace", "codestream:copy", {
+					didDispatch: event => this.copy(event),
+					hiddenInCommandPalette: true
+				}),
+				atom.commands.add(".codestream .post.mine", "codestream:edit-headshot", {
+					didDispatch: event => this.handleEditHeadshot(event),
+					hiddenInCommandPalette: true
+				}),
+				atom.commands.add(".codestream .post.mine", "codestream:edit-post", {
+					didDispatch: event => this.handleEditPost(event),
+					hiddenInCommandPalette: true
+				}),
+				atom.commands.add(".codestream .post.mine", "codestream:delete-post", {
+					didDispatch: event => this.handleDeletePost(event),
+					hiddenInCommandPalette: true
+				})
+			);
+		}
 	}
 
 	componentWillReceiveProps(nextProps) {
@@ -128,9 +127,7 @@ export class SimpleStream extends Component {
 
 	componentWillUnmount() {
 		window.removeEventListener("message", this.handleInteractionEvent, true);
-		let editor = atom.workspace.getActiveTextEditor();
-		if (editor) delete this.editorsWithHandlers[editor.id];
-		this.subscriptions.dispose();
+		this.disposables.forEach(d => d.dispose());
 	}
 
 	handleInteractionEvent = ({ data }) => {
