@@ -6,8 +6,8 @@ const initialState = {
 export default (state = initialState, { type, payload }) => {
 	switch (type) {
 		case "UPDATE_CONFIGS":
-			return { ...state, ...payload };
+			return { ...initialState, ...state, ...payload };
 		default:
-			return { ...initialState, state };
+			return state;
 	}
 };
