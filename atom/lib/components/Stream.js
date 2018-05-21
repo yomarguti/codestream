@@ -505,11 +505,11 @@ export class SimpleStream extends Component {
 		if (editingPost) this.setState({ editingPostId: editingPost.id });
 	};
 
-	handleScroll(event) {
+	handleScroll(_event) {
 		const scrollDiv = this._postslist;
 
 		if (!scrollDiv) {
-			console.log("Couldn't find scrollDiv for ", event);
+			// console.log("Couldn't find scrollDiv for ", event);
 			return;
 		}
 
@@ -518,7 +518,7 @@ export class SimpleStream extends Component {
 		const scrollHeight = scrollDiv.scrollHeight;
 		const offBottom = scrollHeight - scrollTop - scrollDiv.offsetHeight;
 		const scrolledOffBottom = offBottom > 100;
-		console.log("OB IS: ", offBottom);
+		// console.log("OB IS: ", offBottom);
 		if (scrolledOffBottom !== this.state.scrolledOffBottom)
 			this.setState({ scrolledOffBottom: scrolledOffBottom });
 

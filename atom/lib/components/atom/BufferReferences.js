@@ -56,7 +56,6 @@ class BufferReferences extends Component {
 		let rect = scrollViewDiv.getBoundingClientRect();
 		// FIXME -- if there is panel is on the right, then subtract 20 more
 		let width = scrollViewDiv.offsetWidth + rect.left;
-		console.debug("width should now be ", width);
 		let newStyle = ".codestream-comment-popup { left: " + width + "px; }";
 		this.addStyleString(newStyle);
 		// this.resizeStream();
