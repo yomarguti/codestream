@@ -397,12 +397,12 @@ export class SimpleStream extends Component {
 	// to be able to animate between the two streams, since they will both be
 	// visible during the transition
 	render() {
-		const posts = this.props.posts;
+		const { configs, posts } = this.props;
 
 		const streamClass = createClassString({
 			stream: true,
-			"no-headshots": !atom.config.get("CodeStream.showHeadshots"),
-			"reduced-motion": atom.config.get("CodeStream.reduceMotion")
+			"no-headshots": !configs.showHeadshots,
+			"reduced-motion": configs.reduceMotion
 		});
 		const postsListClass = createClassString({
 			postslist: true
@@ -830,6 +830,7 @@ export class SimpleStream extends Component {
 }
 
 const mapStateToProps = ({
+	configs,
 	connectivity,
 	session,
 	context,
@@ -877,6 +878,7 @@ const mapStateToProps = ({
 	const streamPosts = getPostsForStream(posts, teamStream.id);
 
 	return {
+		configs,
 		isOffline,
 		teamMembersById: toMapBy("id", teamMembers),
 		teammates: teamMembers.filter(({ id }) => id !== session.userId),

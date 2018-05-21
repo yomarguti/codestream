@@ -18,9 +18,9 @@ import {
 	setCurrentCommit,
 	setHasFocus
 } from "./actions/context";
+import { updateConfigs } from "./actions/configs";
 import { foundMultipleRemotes } from "./actions/onboarding";
 import { setStreamUMITreatment } from "./actions/umi";
-import { markPathsModified } from "./actions/stream";
 import logger from "./util/Logger";
 import { online, offline } from "./actions/connectivity";
 import { calculateUncommittedMarkers } from "./actions/marker-location";
@@ -156,7 +156,7 @@ module.exports = {
 
 	initialize(state) {
 		this.subscriptions = new CompositeDisposable();
-		store = createStore(state);
+		store = createStore({ ...state, configs: atom.config.get("CodeStream") });
 		bootstrapStore(store);
 		Promise.all(
 			atom.project.getDirectories().map(atom.project.repositoryForDirectory.bind(atom.project))
@@ -196,6 +196,9 @@ module.exports = {
 				"codestream:mute": target => this.markStreamMute(target),
 				"codestream:bold": target => this.markStreamBold(target),
 				"codestream:badge": target => this.markStreamBadge(target)
+			}),
+			atom.config.observe("CodeStream", configs => {
+				store.dispatch(updateConfigs(configs));
 			}),
 			atom.config.observe("CodeStream.emailNotifications", setting => {
 				store.dispatch(setUserPreference(["emailNotifications"], setting ? "on" : "off"));
