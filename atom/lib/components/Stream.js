@@ -308,15 +308,6 @@ export class SimpleStream extends Component {
 		return this.props.posts.find(post => id === post.id);
 	}
 
-	// return a simple identifying string to represent the current path.
-	// example is /path/to/foo.bar would just return "foo.bar"
-	// FIXME -- this should be improved for systems that don't use "/"
-	// as a path delimiter
-	fileAbbreviation() {
-		if (!this.props.currentFile) return "";
-		return this.props.currentFile;
-	}
-
 	renderIntro = () => {
 		return [
 			<label key="welcome">
@@ -420,9 +411,7 @@ export class SimpleStream extends Component {
 		let threadId = this.state.threadId;
 		let threadPost = this.findPostById(threadId);
 
-		let fileAbbreviation = this.fileAbbreviation();
-		let placeholderText = "Add comment to " + fileAbbreviation;
-		if (!atom.config.get("CodeStream.streamPerFile")) placeholderText = "Add comment";
+		let placeholderText = "Add comment";
 		if (this.state.threadActive && threadPost) {
 			placeholderText = "Reply to " + threadPost.author.username;
 		}
