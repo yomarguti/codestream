@@ -25,17 +25,25 @@ class ComposeBox extends React.Component {
 				atom.commands.add("atom-workspace", {
 					"codestream:focus-input": _event => this.focus()
 				}),
-				atom.commands.add(".codestream", {
-					"codestream:escape": event => this.handleAtMentionKeyPress(event, "escape")
+				atom.commands.add(".codestream", "codestream:escape", {
+					didDispatch: event => this.handleAtMentionKeyPress(event, "escape"),
+					hiddenInCommandPalette: true
 				}),
-				atom.commands.add(".codestream .compose.mentions-on", {
-					"codestream:at-mention-move-up": event => this.handleAtMentionKeyPress(event, "up"),
-					"codestream:at-mention-move-down": event => this.handleAtMentionKeyPress(event, "down"),
-					"codestream:at-mention-tab": event => this.handleAtMentionKeyPress(event, "tab")
-					// "codestream:at-mention-escape": event => this.handleAtMentionKeyPress(event, "escape")
+				atom.commands.add(".codestream .compose.mentions-on", "codestream:at-mention-move-up", {
+					didDispatch: event => this.handleAtMentionKeyPress(event, "up"),
+					hiddenInCommandPalette: true
 				}),
-				atom.commands.add(".codestream .native-key-bindings", {
-					"codestream:move-up": event => this.handleNonCapturedKeyPress(event, "up")
+				atom.commands.add(".codestream .compose.mentions-on", "codestream:at-mention-move-down", {
+					didDispatch: event => this.handleAtMentionKeyPress(event, "down"),
+					hiddenInCommandPalette: true
+				}),
+				atom.commands.add(".codestream .compose.mentions-on", "codestream:at-mention-tab", {
+					didDispatch: event => this.handleAtMentionKeyPress(event, "tab"),
+					hiddenInCommandPalette: true
+				}),
+				atom.commands.add(".codestream .native-key-bindings", "codestream:move-up", {
+					didDispatch: event => this.handleNonCapturedKeyPress(event, "up"),
+					hiddenInCommandPalette: true
 				})
 			);
 		}
