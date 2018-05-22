@@ -17045,9 +17045,77 @@ var DateSeparator = function (_Component) {
 	return DateSeparator;
 }(react_1);
 
+var EditingIndicator = function (_React$Component) {
+	inherits(EditingIndicator, _React$Component);
+
+	function EditingIndicator() {
+		classCallCheck(this, EditingIndicator);
+		return possibleConstructorReturn(this, (EditingIndicator.__proto__ || Object.getPrototypeOf(EditingIndicator)).apply(this, arguments));
+	}
+
+	createClass(EditingIndicator, [{
+		key: "makeNameList",
+		value: function makeNameList(names, hasConflict) {
+			var message = "";
+
+			if (hasConflict) {
+				if (names.length == 1) message = "Potential merge conflict with " + names[0];else if (names.length == 2) message = "Potential merge conflict with " + names[0] + " and " + names[1];else if (names.length > 2) {
+					var last = names.pop();
+					message = "Potential merge conflict with " + names.join(", ") + ", and " + last;
+				}
+			} else {
+				if (names.length == 1) message = names[0] + " is editing this file";else if (names.length == 2) message = names[0] + " and " + names[1] + " are editing this file";else if (names.length > 2) {
+					var _last = names.pop();
+					message = names.join(", ") + ", and " + _last + " are editing this file";
+				}
+			}
+			return message;
+		}
+	}, {
+		key: "render",
+		value: function render() {
+			var _props = this.props,
+			    teamMembers = _props.teamMembers,
+			    currentUser = _props.currentUser,
+			    _props$editingUsers = _props.editingUsers,
+			    editingUsers = _props$editingUsers === undefined ? {} : _props$editingUsers;
+
+
+			var names = underscore.compact(Object.keys(editingUsers).map(function (userId) {
+				return userId !== currentUser.id && editingUsers[userId] ? teamMembers[userId].username : null;
+			}));
+
+			// you can test what it looks like by hard-coding this
+			// names = ["larry", "fred"];
+
+			var modifiedByMe = Boolean(editingUsers[currentUser.id]);
+			var modifiedByOthers = names.length > 0;
+			var hasConflict = modifiedByMe && modifiedByOthers;
+
+			var editingIndicatorClass = classnames({
+				"editing-indicator": true,
+				conflict: hasConflict,
+				inactive: this.props.inactive || !modifiedByOthers
+			});
+
+			return react.createElement(
+				"div",
+				{ className: editingIndicatorClass },
+				react.createElement(
+					"div",
+					null,
+					this.makeNameList(names, hasConflict)
+				)
+			);
+		}
+	}]);
+	return EditingIndicator;
+}(react.Component);
+
 var index = {
   ComposeBox: ComposeBox$1,
   DateSeparator: DateSeparator,
+  EditingIndicator: EditingIndicator,
   Post: Post$1
 };
 
