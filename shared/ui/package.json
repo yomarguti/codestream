@@ -14,7 +14,7 @@
       [
         "env",
         {
-          "debug": true,
+          "debug": false,
           "modules": false,
           "useBuiltIns": true
         }
@@ -28,9 +28,7 @@
           "spec": true
         }
       ],
-      [
-        "transform-object-rest-spread"
-      ],
+      ["transform-object-rest-spread"],
       "external-helpers"
     ]
   },
@@ -45,6 +43,7 @@
     "react-linkify": "^0.2.2",
     "react-redux": "^5.0.7",
     "redux": "^4.0.0",
+    "rollup": "^0.59.2",
     "underscore": "^1.9.0"
   },
   "devDependencies": {

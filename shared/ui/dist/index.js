@@ -283,7 +283,7 @@ var store = _global[SHARED] || (_global[SHARED] = {});
   return store[key] || (store[key] = value !== undefined ? value : {});
 })('versions', []).push({
   version: _core.version,
-  mode: _library ? 'pure' : 'global',
+  mode: 'global',
   copyright: '© 2018 Denis Pushkarev (zloirock.ru)'
 });
 });
@@ -531,7 +531,7 @@ var _objectGopn = {
 
 // fallback for IE11 buggy Object.getOwnPropertyNames with iframe and window
 
-var gOPN$1 = _objectGopn.f;
+var gOPN = _objectGopn.f;
 var toString$1 = {}.toString;
 
 var windowNames = typeof window == 'object' && window && Object.getOwnPropertyNames
@@ -539,14 +539,14 @@ var windowNames = typeof window == 'object' && window && Object.getOwnPropertyNa
 
 var getWindowNames = function (it) {
   try {
-    return gOPN$1(it);
+    return gOPN(it);
   } catch (e) {
     return windowNames.slice();
   }
 };
 
 var f$5 = function getOwnPropertyNames(it) {
-  return windowNames && toString$1.call(it) == '[object Window]' ? getWindowNames(it) : gOPN$1(_toIobject(it));
+  return windowNames && toString$1.call(it) == '[object Window]' ? getWindowNames(it) : gOPN(_toIobject(it));
 };
 
 var _objectGopnExt = {
@@ -596,7 +596,7 @@ var META = _meta.KEY;
 
 var gOPD$1 = _objectGopd.f;
 var dP$1 = _objectDp.f;
-var gOPN$2 = _objectGopnExt.f;
+var gOPN$1 = _objectGopnExt.f;
 var $Symbol = _global.Symbol;
 var $JSON = _global.JSON;
 var _stringify = $JSON && $JSON.stringify;
@@ -637,8 +637,8 @@ var isSymbol = USE_NATIVE && typeof $Symbol.iterator == 'symbol' ? function (it)
   return it instanceof $Symbol;
 };
 
-var $defineProperty$1 = function defineProperty(it, key, D) {
-  if (it === ObjectProto) $defineProperty$1(OPSymbols, key, D);
+var $defineProperty = function defineProperty(it, key, D) {
+  if (it === ObjectProto) $defineProperty(OPSymbols, key, D);
   _anObject(it);
   key = _toPrimitive(key, true);
   _anObject(D);
@@ -658,7 +658,7 @@ var $defineProperties = function defineProperties(it, P) {
   var i = 0;
   var l = keys.length;
   var key;
-  while (l > i) $defineProperty$1(it, key = keys[i++], P[key]);
+  while (l > i) $defineProperty(it, key = keys[i++], P[key]);
   return it;
 };
 var $create = function create(it, P) {
@@ -678,7 +678,7 @@ var $getOwnPropertyDescriptor = function getOwnPropertyDescriptor(it, key) {
   return D;
 };
 var $getOwnPropertyNames = function getOwnPropertyNames(it) {
-  var names = gOPN$2(_toIobject(it));
+  var names = gOPN$1(_toIobject(it));
   var result = [];
   var i = 0;
   var key;
@@ -688,7 +688,7 @@ var $getOwnPropertyNames = function getOwnPropertyNames(it) {
 };
 var $getOwnPropertySymbols = function getOwnPropertySymbols(it) {
   var IS_OP = it === ObjectProto;
-  var names = gOPN$2(IS_OP ? OPSymbols : _toIobject(it));
+  var names = gOPN$1(IS_OP ? OPSymbols : _toIobject(it));
   var result = [];
   var i = 0;
   var key;
@@ -715,7 +715,7 @@ if (!USE_NATIVE) {
   });
 
   _objectGopd.f = $getOwnPropertyDescriptor;
-  _objectDp.f = $defineProperty$1;
+  _objectDp.f = $defineProperty;
   _objectGopn.f = _objectGopnExt.f = $getOwnPropertyNames;
   _objectPie.f = $propertyIsEnumerable;
   _objectGops.f = $getOwnPropertySymbols;
@@ -758,7 +758,7 @@ _export(_export.S + _export.F * !USE_NATIVE, 'Object', {
   // 19.1.2.2 Object.create(O [, Properties])
   create: $create,
   // 19.1.2.4 Object.defineProperty(O, P, Attributes)
-  defineProperty: $defineProperty$1,
+  defineProperty: $defineProperty,
   // 19.1.2.3 Object.defineProperties(O, Properties)
   defineProperties: $defineProperties,
   // 19.1.2.6 Object.getOwnPropertyDescriptor(O, P)
@@ -1183,7 +1183,7 @@ var _inheritIfRequired = function (that, target, C) {
   } return that;
 };
 
-var gOPN$3 = _objectGopn.f;
+var gOPN$2 = _objectGopn.f;
 var gOPD$2 = _objectGopd.f;
 var dP$3 = _objectDp.f;
 var $trim$2 = _stringTrim.trim;
@@ -1230,7 +1230,7 @@ if (!$Number(' 0o1') || !$Number('0b1') || $Number('+0x1')) {
       && (BROKEN_COF ? _fails(function () { proto.valueOf.call(that); }) : _cof(that) != NUMBER)
         ? _inheritIfRequired(new Base(toNumber(it)), that, $Number) : toNumber(it);
   };
-  for (var keys = _descriptors ? gOPN$3(Base) : (
+  for (var keys = _descriptors ? gOPN$2(Base) : (
     // ES3:
     'MAX_VALUE,MIN_VALUE,NaN,NEGATIVE_INFINITY,POSITIVE_INFINITY,' +
     // ES6 (in case, if modules with ES6 Number statics required before):
@@ -1791,7 +1791,7 @@ var _iterDefine = function (Base, NAME, Constructor, next, DEFAULT, IS_SET, FORC
       // Set @@toStringTag to native iterators
       _setToStringTag(IteratorPrototype, TAG, true);
       // fix for some old engines
-      if (!_library && typeof IteratorPrototype[ITERATOR] != 'function') _hide(IteratorPrototype, ITERATOR, returnThis);
+      if (typeof IteratorPrototype[ITERATOR] != 'function') _hide(IteratorPrototype, ITERATOR, returnThis);
     }
   }
   // fix Array#{values, @@iterator}.name in V8 / FF
@@ -1800,7 +1800,7 @@ var _iterDefine = function (Base, NAME, Constructor, next, DEFAULT, IS_SET, FORC
     $default = function values() { return $native.call(this); };
   }
   // Define iterator
-  if ((!_library || FORCED) && (BUGGY || VALUES_BUG || !proto[ITERATOR])) {
+  if (BUGGY || VALUES_BUG || !proto[ITERATOR]) {
     _hide(proto, ITERATOR, $default);
   }
   // Plug for library
@@ -2594,7 +2594,7 @@ var _flags = function () {
 };
 
 var dP$4 = _objectDp.f;
-var gOPN$4 = _objectGopn.f;
+var gOPN$3 = _objectGopn.f;
 
 
 var $RegExp = _global.RegExp;
@@ -2627,7 +2627,7 @@ if (_descriptors && (!CORRECT_NEW || _fails(function () {
       set: function (it) { Base$1[key] = it; }
     });
   };
-  for (var keys$1 = gOPN$4(Base$1), i = 0; keys$1.length > i;) proxy(keys$1[i++]);
+  for (var keys$1 = gOPN$3(Base$1), i = 0; keys$1.length > i;) proxy(keys$1[i++]);
   proto$2.constructor = $RegExp;
   $RegExp.prototype = proto$2;
   _redefine(_global, 'RegExp', $RegExp);
@@ -3037,7 +3037,7 @@ var $Promise = _global[PROMISE];
 var isNode$1 = _classof(process$3) == 'process';
 var empty = function () { /* empty */ };
 var Internal, newGenericPromiseCapability, OwnPromiseCapability, Wrapper;
-var newPromiseCapability$1 = newGenericPromiseCapability = _newPromiseCapability.f;
+var newPromiseCapability = newGenericPromiseCapability = _newPromiseCapability.f;
 
 var USE_NATIVE$1 = !!function () {
   try {
@@ -3205,7 +3205,7 @@ if (!USE_NATIVE$1) {
   Internal.prototype = _redefineAll($Promise.prototype, {
     // 25.4.5.3 Promise.prototype.then(onFulfilled, onRejected)
     then: function then(onFulfilled, onRejected) {
-      var reaction = newPromiseCapability$1(_speciesConstructor(this, $Promise));
+      var reaction = newPromiseCapability(_speciesConstructor(this, $Promise));
       reaction.ok = typeof onFulfilled == 'function' ? onFulfilled : true;
       reaction.fail = typeof onRejected == 'function' && onRejected;
       reaction.domain = isNode$1 ? process$3.domain : undefined;
@@ -3225,7 +3225,7 @@ if (!USE_NATIVE$1) {
     this.resolve = _ctx($resolve, promise, 1);
     this.reject = _ctx($reject, promise, 1);
   };
-  _newPromiseCapability.f = newPromiseCapability$1 = function (C) {
+  _newPromiseCapability.f = newPromiseCapability = function (C) {
     return C === $Promise || C === Wrapper
       ? new OwnPromiseCapability(C)
       : newGenericPromiseCapability(C);
@@ -3241,13 +3241,13 @@ Wrapper = _core[PROMISE];
 _export(_export.S + _export.F * !USE_NATIVE$1, PROMISE, {
   // 25.4.4.5 Promise.reject(r)
   reject: function reject(r) {
-    var capability = newPromiseCapability$1(this);
+    var capability = newPromiseCapability(this);
     var $$reject = capability.reject;
     $$reject(r);
     return capability.promise;
   }
 });
-_export(_export.S + _export.F * (_library || !USE_NATIVE$1), PROMISE, {
+_export(_export.S + _export.F * (!USE_NATIVE$1), PROMISE, {
   // 25.4.4.6 Promise.resolve(x)
   resolve: function resolve(x) {
     return _promiseResolve(_library && this === Wrapper ? $Promise : this, x);
@@ -3259,7 +3259,7 @@ _export(_export.S + _export.F * !(USE_NATIVE$1 && _iterDetect(function (iter) {
   // 25.4.4.1 Promise.all(iterable)
   all: function all(iterable) {
     var C = this;
-    var capability = newPromiseCapability$1(C);
+    var capability = newPromiseCapability(C);
     var resolve = capability.resolve;
     var reject = capability.reject;
     var result = _perform(function () {
@@ -3286,7 +3286,7 @@ _export(_export.S + _export.F * !(USE_NATIVE$1 && _iterDetect(function (iter) {
   // 25.4.4.4 Promise.race(iterable)
   race: function race(iterable) {
     var C = this;
-    var capability = newPromiseCapability$1(C);
+    var capability = newPromiseCapability(C);
     var reject = capability.reject;
     var result = _perform(function () {
       _forOf(iterable, false, function (promise) {
@@ -3997,7 +3997,7 @@ if (!_typed.ABV) {
     for (var keys = gOPN(BaseBuffer), j = 0, key; keys.length > j;) {
       if (!((key = keys[j++]) in $ArrayBuffer)) _hide($ArrayBuffer, key, BaseBuffer[key]);
     }
-    if (!_library) ArrayBufferProto.constructor = $ArrayBuffer;
+    ArrayBufferProto.constructor = $ArrayBuffer;
   }
   // iOS Safari 7.x bug
   var view = new $DataView(new $ArrayBuffer(2));
@@ -4065,7 +4065,6 @@ _export(_export.G + _export.W + _export.F * !_typed.ABV, {
 
 var _typedArray = createCommonjsModule(function (module) {
 if (_descriptors) {
-  var LIBRARY = _library;
   var global = _global;
   var fails = _fails;
   var $export = _export;
@@ -4487,7 +4486,7 @@ if (_descriptors) {
         if (!(key in TypedArray)) hide(TypedArray, key, Base[key]);
       });
       TypedArray[PROTOTYPE] = TypedArrayPrototype;
-      if (!LIBRARY) TypedArrayPrototype.constructor = TypedArray;
+      TypedArrayPrototype.constructor = TypedArray;
     }
     var $nativeIterator = TypedArrayPrototype[ITERATOR];
     var CORRECT_ITER_NAME = !!$nativeIterator
@@ -4527,7 +4526,7 @@ if (_descriptors) {
 
     $export($export.P + $export.F * !CORRECT_ITER_NAME, NAME, $iterators);
 
-    if (!LIBRARY && TypedArrayPrototype.toString != arrayToString) TypedArrayPrototype.toString = arrayToString;
+    if (TypedArrayPrototype.toString != arrayToString) TypedArrayPrototype.toString = arrayToString;
 
     $export($export.P + $export.F * fails(function () {
       new TypedArray(1).slice();
@@ -4540,7 +4539,7 @@ if (_descriptors) {
     })), NAME, { toLocaleString: $toLocaleString });
 
     Iterators[NAME] = CORRECT_ITER_NAME ? $nativeIterator : $iterator;
-    if (!LIBRARY && !CORRECT_ITER_NAME) hide(TypedArrayPrototype, ITERATOR, $iterator);
+    if (!CORRECT_ITER_NAME) hide(TypedArrayPrototype, ITERATOR, $iterator);
   };
 } else module.exports = function () { /* empty */ };
 });
@@ -5126,7 +5125,7 @@ _export(_export.S, 'Object', {
 });
 
 // Forced replacement prototype accessors methods
-var _objectForcedPam = _library || !_fails(function () {
+var _objectForcedPam = !_fails(function () {
   var K = Math.random();
   // In FF throws only define methods
   // eslint-disable-next-line no-undef, no-useless-call
@@ -5909,11 +5908,9 @@ var runtime = createCommonjsModule(function (module) {
   var iteratorSymbol = $Symbol.iterator || "@@iterator";
   var asyncIteratorSymbol = $Symbol.asyncIterator || "@@asyncIterator";
   var toStringTagSymbol = $Symbol.toStringTag || "@@toStringTag";
-
-  var inModule = 'object' === "object";
   var runtime = global.regeneratorRuntime;
   if (runtime) {
-    if (inModule) {
+    {
       // If regeneratorRuntime is defined globally and we're in a module,
       // make the exports object identical to regeneratorRuntime.
       module.exports = runtime;
@@ -5925,7 +5922,7 @@ var runtime = createCommonjsModule(function (module) {
 
   // Define the runtime globally (as expected by generated code) as either
   // module.exports (if we're in a module) or a new, empty object.
-  runtime = global.regeneratorRuntime = inModule ? module.exports : {};
+  runtime = global.regeneratorRuntime = module.exports;
 
   function wrap(innerFn, outerFn, self, tryLocsList) {
     // If outerFn provided and outerFn.prototype is a Generator, then outerFn.prototype instanceof Generator.
@@ -6637,7 +6634,7 @@ var getOwnPropertySymbols = Object.getOwnPropertySymbols;
 var hasOwnProperty$1 = Object.prototype.hasOwnProperty;
 var propIsEnumerable = Object.prototype.propertyIsEnumerable;
 
-function toObject$1(val) {
+function toObject(val) {
 	if (val === null || val === undefined) {
 		throw new TypeError('Object.assign cannot be called with null or undefined');
 	}
@@ -6691,7 +6688,7 @@ function shouldUseNative() {
 
 var objectAssign = shouldUseNative() ? Object.assign : function (target, source) {
 	var from;
-	var to = toObject$1(target);
+	var to = toObject(target);
 	var symbols;
 
 	for (var s = 1; s < arguments.length; s++) {
@@ -6820,16 +6817,17 @@ emptyFunction.thatReturnsArgument = function (arg) {
 var emptyFunction_1 = emptyFunction;
 
 var r="function"===typeof Symbol&&Symbol["for"],t=r?Symbol["for"]("react.element"):60103,u=r?Symbol["for"]("react.portal"):60106,v=r?Symbol["for"]("react.fragment"):60107,w=r?Symbol["for"]("react.strict_mode"):60108,x=r?Symbol["for"]("react.provider"):60109,y=r?Symbol["for"]("react.context"):60110,z=r?Symbol["for"]("react.async_mode"):60111,A=r?Symbol["for"]("react.forward_ref"):
-60112,B="function"===typeof Symbol&&Symbol.iterator;function C(a){for(var b=arguments.length-1,e="http://reactjs.org/docs/error-decoder.html?invariant\x3d"+a,c=0;c<b;c++)e+="\x26args[]\x3d"+encodeURIComponent(arguments[c+1]);invariant_1(!1,"Minified React error #"+a+"; visit %s for the full message or use the non-minified dev environment for full errors and additional helpful warnings. ",e);}var D={isMounted:function(){return!1},enqueueForceUpdate:function(){},enqueueReplaceState:function(){},enqueueSetState:function(){}};
+60112,B="function"===typeof Symbol&&Symbol.iterator;function C(a){for(var b=arguments.length-1,e="http://reactjs.org/docs/error-decoder.html?invariant\x3d"+a,c=0;c<b;c++)e+="\x26args[]\x3d"+encodeURIComponent(arguments[c+1]);invariant_1(!1,"Minified React error #"+a+"; visit %s for the full message or use the non-minified dev environment for full errors and additional helpful warnings. ",e);}var D={isMounted:function(){return !1},enqueueForceUpdate:function(){},enqueueReplaceState:function(){},enqueueSetState:function(){}};
 function E(a,b,e){this.props=a;this.context=b;this.refs=emptyObject_1;this.updater=e||D;}E.prototype.isReactComponent={};E.prototype.setState=function(a,b){"object"!==typeof a&&"function"!==typeof a&&null!=a?C("85"):void 0;this.updater.enqueueSetState(this,a,b,"setState");};E.prototype.forceUpdate=function(a){this.updater.enqueueForceUpdate(this,a,"forceUpdate");};function F(){}F.prototype=E.prototype;function G(a,b,e){this.props=a;this.context=b;this.refs=emptyObject_1;this.updater=e||D;}var H=G.prototype=new F;
 H.constructor=G;objectAssign(H,E.prototype);H.isPureReactComponent=!0;var I={current:null},J=Object.prototype.hasOwnProperty,K={key:!0,ref:!0,__self:!0,__source:!0};
-function L(a,b,e){var c=void 0,d={},g=null,h=null;if(null!=b)for(c in void 0!==b.ref&&(h=b.ref), void 0!==b.key&&(g=""+b.key), b)J.call(b,c)&&!K.hasOwnProperty(c)&&(d[c]=b[c]);var f=arguments.length-2;if(1===f)d.children=e;else if(1<f){for(var k=Array(f),l=0;l<f;l++)k[l]=arguments[l+2];d.children=k;}if(a&&a.defaultProps)for(c in f=a.defaultProps, f)void 0===d[c]&&(d[c]=f[c]);return{$$typeof:t,type:a,key:g,ref:h,props:d,_owner:I.current}}
-function M(a){return"object"===typeof a&&null!==a&&a.$$typeof===t}function escape$1(a){var b={"\x3d":"\x3d0",":":"\x3d2"};return"$"+(""+a).replace(/[=:]/g,function(a){return b[a]})}var N=/\/+/g,O=[];function P(a,b,e,c){if(O.length){var d=O.pop();d.result=a;d.keyPrefix=b;d.func=e;d.context=c;d.count=0;return d}return{result:a,keyPrefix:b,func:e,context:c,count:0}}function Q(a){a.result=null;a.keyPrefix=null;a.func=null;a.context=null;a.count=0;10>O.length&&O.push(a);}
-function R(a,b,e,c){var d=typeof a;if("undefined"===d||"boolean"===d)a=null;var g=!1;if(null===a)g=!0;else switch(d){case "string":case "number":g=!0;break;case "object":switch(a.$$typeof){case t:case u:g=!0;}}if(g)return e(c,a,""===b?"."+S(a,0):b), 1;g=0;b=""===b?".":b+":";if(Array.isArray(a))for(var h=0;h<a.length;h++){d=a[h];var f=b+S(d,h);g+=R(d,f,e,c);}else if(null===a||"undefined"===typeof a?f=null:(f=B&&a[B]||a["@@iterator"], f="function"===typeof f?f:null), "function"===typeof f)for(a=f.call(a), h=0;!(d=a.next()).done;)d=d.value, f=b+S(d,h++), g+=R(d,f,e,c);else"object"===d&&(e=""+a, C("31","[object Object]"===e?"object with keys {"+Object.keys(a).join(", ")+"}":e,""));return g}function S(a,b){return"object"===typeof a&&null!==a&&null!=a.key?escape$1(a.key):b.toString(36)}function T(a,b){a.func.call(a.context,b,a.count++);}
-function U(a,b,e){var c=a.result,d=a.keyPrefix;a=a.func.call(a.context,b,a.count++);Array.isArray(a)?V(a,c,e,emptyFunction_1.thatReturnsArgument):null!=a&&(M(a)&&(b=d+(!a.key||b&&b.key===a.key?"":(""+a.key).replace(N,"$\x26/")+"/")+e, a={$$typeof:t,type:a.type,key:b,ref:a.ref,props:a.props,_owner:a._owner}), c.push(a));}function V(a,b,e,c,d){var g="";null!=e&&(g=(""+e).replace(N,"$\x26/")+"/");b=P(b,g,c,d);null==a||R(a,"",U,b);Q(b);}
-var W={Children:{map:function(a,b,e){if(null==a)return a;var c=[];V(a,c,null,b,e);return c},forEach:function(a,b,e){if(null==a)return a;b=P(null,null,b,e);null==a||R(a,"",T,b);Q(b);},count:function(a){return null==a?0:R(a,"",emptyFunction_1.thatReturnsNull,null)},toArray:function(a){var b=[];V(a,b,null,emptyFunction_1.thatReturnsArgument);return b},only:function(a){M(a)?void 0:C("143");return a}},createRef:function(){return{current:null}},Component:E,PureComponent:G,createContext:function(a,b){void 0===b&&(b=null);a={$$typeof:y,
-_calculateChangedBits:b,_defaultValue:a,_currentValue:a,_changedBits:0,Provider:null,Consumer:null};a.Provider={$$typeof:x,_context:a};return a.Consumer=a},forwardRef:function(a){return{$$typeof:A,render:a}},Fragment:v,StrictMode:w,unstable_AsyncMode:z,createElement:L,cloneElement:function(a,b,e){null===a||void 0===a?C("267",a):void 0;var c=void 0,d=objectAssign({},a.props),g=a.key,h=a.ref,f=a._owner;if(null!=b){void 0!==b.ref&&(h=b.ref, f=I.current);void 0!==b.key&&(g=""+b.key);var k=void 0;a.type&&a.type.defaultProps&&
-(k=a.type.defaultProps);for(c in b)J.call(b,c)&&!K.hasOwnProperty(c)&&(d[c]=void 0===b[c]&&void 0!==k?k[c]:b[c]);}c=arguments.length-2;if(1===c)d.children=e;else if(1<c){k=Array(c);for(var l=0;l<c;l++)k[l]=arguments[l+2];d.children=k;}return{$$typeof:t,type:a.type,key:g,ref:h,props:d,_owner:f}},createFactory:function(a){var b=L.bind(null,a);b.type=a;return b},isValidElement:M,version:"16.3.2",__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED:{ReactCurrentOwner:I,assign:objectAssign}},X=Object.freeze({default:W}),
+function L(a,b,e){var c=void 0,d={},g=null,h=null;if(null!=b)for(c in void 0!==b.ref&&(h=b.ref),void 0!==b.key&&(g=""+b.key),b)J.call(b,c)&&!K.hasOwnProperty(c)&&(d[c]=b[c]);var f=arguments.length-2;if(1===f)d.children=e;else if(1<f){for(var k=Array(f),l=0;l<f;l++)k[l]=arguments[l+2];d.children=k;}if(a&&a.defaultProps)for(c in f=a.defaultProps,f)void 0===d[c]&&(d[c]=f[c]);return {$$typeof:t,type:a,key:g,ref:h,props:d,_owner:I.current}}
+function M(a){return "object"===typeof a&&null!==a&&a.$$typeof===t}function escape$1(a){var b={"\x3d":"\x3d0",":":"\x3d2"};return "$"+(""+a).replace(/[=:]/g,function(a){return b[a]})}var N=/\/+/g,O=[];function P(a,b,e,c){if(O.length){var d=O.pop();d.result=a;d.keyPrefix=b;d.func=e;d.context=c;d.count=0;return d}return {result:a,keyPrefix:b,func:e,context:c,count:0}}function Q(a){a.result=null;a.keyPrefix=null;a.func=null;a.context=null;a.count=0;10>O.length&&O.push(a);}
+function R(a,b,e,c){var d=typeof a;if("undefined"===d||"boolean"===d)a=null;var g=!1;if(null===a)g=!0;else switch(d){case "string":case "number":g=!0;break;case "object":switch(a.$$typeof){case t:case u:g=!0;}}if(g)return e(c,a,""===b?"."+S(a,0):b),1;g=0;b=""===b?".":b+":";if(Array.isArray(a))for(var h=0;h<a.length;h++){d=a[h];var f=b+S(d,h);g+=R(d,f,e,c);}else if(null===a||"undefined"===typeof a?f=null:(f=B&&a[B]||a["@@iterator"],f="function"===typeof f?f:null),"function"===typeof f)for(a=f.call(a),
+h=0;!(d=a.next()).done;)d=d.value,f=b+S(d,h++),g+=R(d,f,e,c);else"object"===d&&(e=""+a,C("31","[object Object]"===e?"object with keys {"+Object.keys(a).join(", ")+"}":e,""));return g}function S(a,b){return "object"===typeof a&&null!==a&&null!=a.key?escape$1(a.key):b.toString(36)}function T(a,b){a.func.call(a.context,b,a.count++);}
+function U(a,b,e){var c=a.result,d=a.keyPrefix;a=a.func.call(a.context,b,a.count++);Array.isArray(a)?V(a,c,e,emptyFunction_1.thatReturnsArgument):null!=a&&(M(a)&&(b=d+(!a.key||b&&b.key===a.key?"":(""+a.key).replace(N,"$\x26/")+"/")+e,a={$$typeof:t,type:a.type,key:b,ref:a.ref,props:a.props,_owner:a._owner}),c.push(a));}function V(a,b,e,c,d){var g="";null!=e&&(g=(""+e).replace(N,"$\x26/")+"/");b=P(b,g,c,d);null==a||R(a,"",U,b);Q(b);}
+var W={Children:{map:function(a,b,e){if(null==a)return a;var c=[];V(a,c,null,b,e);return c},forEach:function(a,b,e){if(null==a)return a;b=P(null,null,b,e);null==a||R(a,"",T,b);Q(b);},count:function(a){return null==a?0:R(a,"",emptyFunction_1.thatReturnsNull,null)},toArray:function(a){var b=[];V(a,b,null,emptyFunction_1.thatReturnsArgument);return b},only:function(a){M(a)?void 0:C("143");return a}},createRef:function(){return {current:null}},Component:E,PureComponent:G,createContext:function(a,b){void 0===b&&(b=null);a={$$typeof:y,
+_calculateChangedBits:b,_defaultValue:a,_currentValue:a,_changedBits:0,Provider:null,Consumer:null};a.Provider={$$typeof:x,_context:a};return a.Consumer=a},forwardRef:function(a){return {$$typeof:A,render:a}},Fragment:v,StrictMode:w,unstable_AsyncMode:z,createElement:L,cloneElement:function(a,b,e){null===a||void 0===a?C("267",a):void 0;var c=void 0,d=objectAssign({},a.props),g=a.key,h=a.ref,f=a._owner;if(null!=b){void 0!==b.ref&&(h=b.ref,f=I.current);void 0!==b.key&&(g=""+b.key);var k=void 0;a.type&&a.type.defaultProps&&
+(k=a.type.defaultProps);for(c in b)J.call(b,c)&&!K.hasOwnProperty(c)&&(d[c]=void 0===b[c]&&void 0!==k?k[c]:b[c]);}c=arguments.length-2;if(1===c)d.children=e;else if(1<c){k=Array(c);for(var l=0;l<c;l++)k[l]=arguments[l+2];d.children=k;}return {$$typeof:t,type:a.type,key:g,ref:h,props:d,_owner:f}},createFactory:function(a){var b=L.bind(null,a);b.type=a;return b},isValidElement:M,version:"16.3.2",__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED:{ReactCurrentOwner:I,assign:objectAssign}},X=Object.freeze({default:W}),
 Y=X&&W||X;var react_production_min=Y["default"]?Y["default"]:Y;
 
 /**
@@ -6895,9 +6893,9 @@ var ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
 var ReactPropTypesSecret_1 = ReactPropTypesSecret;
 
 if (process.env.NODE_ENV !== 'production') {
-  var invariant$2 = invariant_1;
-  var warning$2 = warning_1;
-  var ReactPropTypesSecret$2 = ReactPropTypesSecret_1;
+  var invariant$1 = invariant_1;
+  var warning$1 = warning_1;
+  var ReactPropTypesSecret$1 = ReactPropTypesSecret_1;
   var loggedTypeFailures = {};
 }
 
@@ -6923,12 +6921,12 @@ function checkPropTypes(typeSpecs, values, location, componentName, getStack) {
         try {
           // This is intentionally an invariant that gets caught. It's the same
           // behavior as without this statement except with a better message.
-          invariant$2(typeof typeSpecs[typeSpecName] === 'function', '%s: %s type `%s` is invalid; it must be a function, usually from ' + 'the `prop-types` package, but received `%s`.', componentName || 'React class', location, typeSpecName, typeof typeSpecs[typeSpecName]);
-          error = typeSpecs[typeSpecName](values, typeSpecName, componentName, location, null, ReactPropTypesSecret$2);
+          invariant$1(typeof typeSpecs[typeSpecName] === 'function', '%s: %s type `%s` is invalid; it must be a function, usually from ' + 'the `prop-types` package, but received `%s`.', componentName || 'React class', location, typeSpecName, typeof typeSpecs[typeSpecName]);
+          error = typeSpecs[typeSpecName](values, typeSpecName, componentName, location, null, ReactPropTypesSecret$1);
         } catch (ex) {
           error = ex;
         }
-        warning$2(!error || error instanceof Error, '%s: type specification of %s `%s` is invalid; the type checker ' + 'function must return `null` or an `Error` but returned a %s. ' + 'You may have forgotten to pass an argument to the type checker ' + 'creator (arrayOf, instanceOf, objectOf, oneOf, oneOfType, and ' + 'shape all require an argument).', componentName || 'React class', location, typeSpecName, typeof error);
+        warning$1(!error || error instanceof Error, '%s: type specification of %s `%s` is invalid; the type checker ' + 'function must return `null` or an `Error` but returned a %s. ' + 'You may have forgotten to pass an argument to the type checker ' + 'creator (arrayOf, instanceOf, objectOf, oneOf, oneOfType, and ' + 'shape all require an argument).', componentName || 'React class', location, typeSpecName, typeof error);
         if (error instanceof Error && !(error.message in loggedTypeFailures)) {
           // Only monitor this failure once because there tends to be a lot of the
           // same error.
@@ -6936,7 +6934,7 @@ function checkPropTypes(typeSpecs, values, location, componentName, getStack) {
 
           var stack = getStack ? getStack() : '';
 
-          warning$2(false, 'Failed %s type: %s%s', location, error.message, stack != null ? stack : '');
+          warning$1(false, 'Failed %s type: %s%s', location, error.message, stack != null ? stack : '');
         }
       }
     }
@@ -8032,12 +8030,6 @@ var getStackAddendum = function () {};
 }
 
 function getDeclarationErrorAddendum() {
-  if (ReactCurrentOwner.current) {
-    var name = getComponentName(ReactCurrentOwner.current);
-    if (name) {
-      return '\n\nCheck the render method of `' + name + '`.';
-    }
-  }
   return '';
 }
 
@@ -8986,7 +8978,7 @@ var storeShape = propTypes.shape({
  * @param {String} message The warning message.
  * @returns {void}
  */
-function warning$3(message) {
+function warning$2(message) {
   /* eslint-disable no-console */
   if (typeof console !== 'undefined' && typeof console.error === 'function') {
     console.error(message);
@@ -9015,7 +9007,7 @@ function warnAboutReceivingStore() {
   }
   didWarnAboutReceivingStore = true;
 
-  warning$3('<Provider> does not support changing `store` on the fly. ' + 'It is most likely that you see this error because you updated to ' + 'Redux 2.x and React Redux 2.x which no longer hot reload reducers ' + 'automatically. See https://github.com/reactjs/react-redux/releases/' + 'tag/v2.0.0 for the migration instructions.');
+  warning$2('<Provider> does not support changing `store` on the fly. ' + 'It is most likely that you see this error because you updated to ' + 'Redux 2.x and React Redux 2.x which no longer hot reload reducers ' + 'automatically. See https://github.com/reactjs/react-redux/releases/' + 'tag/v2.0.0 for the migration instructions.');
 }
 
 function createProvider() {
@@ -9162,7 +9154,7 @@ var hoistNonReactStatics = createCommonjsModule(function (module, exports) {
 
 var NODE_ENV = process.env.NODE_ENV;
 
-var invariant$3 = function(condition, format, a, b, c, d, e, f) {
+var invariant$2 = function(condition, format, a, b, c, d, e, f) {
   if (NODE_ENV !== 'production') {
     if (format === undefined) {
       throw new Error('invariant requires an error message argument');
@@ -9190,7 +9182,7 @@ var invariant$3 = function(condition, format, a, b, c, d, e, f) {
   }
 };
 
-var invariant_1$2 = invariant$3;
+var invariant_1$1 = invariant$2;
 
 function _classCallCheck$1(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -9359,7 +9351,7 @@ selectorFactory) {
   var childContextTypes = (_childContextTypes = {}, _childContextTypes[subscriptionKey] = subscriptionShape, _childContextTypes);
 
   return function wrapWithConnect(WrappedComponent) {
-    invariant_1$2(typeof WrappedComponent == 'function', 'You must pass a component to the function returned by ' + (methodName + '. Instead received ' + JSON.stringify(WrappedComponent)));
+    invariant_1$1(typeof WrappedComponent == 'function', 'You must pass a component to the function returned by ' + (methodName + '. Instead received ' + JSON.stringify(WrappedComponent)));
 
     var wrappedComponentName = WrappedComponent.displayName || WrappedComponent.name || 'Component';
 
@@ -9392,7 +9384,7 @@ selectorFactory) {
         _this.propsMode = Boolean(props[storeKey]);
         _this.setWrappedInstance = _this.setWrappedInstance.bind(_this);
 
-        invariant_1$2(_this.store, 'Could not find "' + storeKey + '" in either the context or props of ' + ('"' + displayName + '". Either wrap the root component in a <Provider>, ') + ('or explicitly pass "' + storeKey + '" as a prop to "' + displayName + '".'));
+        invariant_1$1(_this.store, 'Could not find "' + storeKey + '" in either the context or props of ' + ('"' + displayName + '". Either wrap the root component in a <Provider>, ') + ('or explicitly pass "' + storeKey + '" as a prop to "' + displayName + '".'));
 
         _this.initSelector();
         _this.initSubscription();
@@ -9442,7 +9434,7 @@ selectorFactory) {
       };
 
       Connect.prototype.getWrappedInstance = function getWrappedInstance() {
-        invariant_1$2(withRef, 'To access the wrapped instance, you need to specify ' + ('{ withRef: true } in the options argument of the ' + methodName + '() call.'));
+        invariant_1$1(withRef, 'To access the wrapped instance, you need to specify ' + ('{ withRef: true } in the options argument of the ' + methodName + '() call.'));
         return this.wrappedInstance;
       };
 
@@ -9656,7 +9648,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
  * @param {String} message The warning message.
  * @returns {void}
  */
-function warning$4(message) {
+function warning$3(message) {
   /* eslint-disable no-console */
   if (typeof console !== 'undefined' && typeof console.error === 'function') {
     console.error(message);
@@ -9725,7 +9717,7 @@ function bindActionCreators(actionCreators, dispatch) {
 function isCrushed() {}
 
 if (process.env.NODE_ENV !== 'production' && typeof isCrushed.name === 'string' && isCrushed.name !== 'isCrushed') {
-  warning$4("You are currently using minified code outside of NODE_ENV === 'production'. " + 'This means that you are running a slower development build of Redux. ' + 'You can use loose-envify (https://github.com/zertosh/loose-envify) for browserify ' + 'or DefinePlugin for webpack (http://stackoverflow.com/questions/30030031) ' + 'to ensure you have the correct code for your production build.');
+  warning$3("You are currently using minified code outside of NODE_ENV === 'production'. " + 'This means that you are running a slower development build of Redux. ' + 'You can use loose-envify (https://github.com/zertosh/loose-envify) for browserify ' + 'or DefinePlugin for webpack (http://stackoverflow.com/questions/30030031) ' + 'to ensure you have the correct code for your production build.');
 }
 
 /** Detect free variable `global` from Node.js. */
@@ -9769,11 +9761,10 @@ function getRawTag(value) {
 
   try {
     value[symToStringTag] = undefined;
-    var unmasked = true;
   } catch (e) {}
 
   var result = nativeObjectToString.call(value);
-  if (unmasked) {
+  {
     if (isOwn) {
       value[symToStringTag] = tag;
     } else {
@@ -9931,7 +9922,7 @@ function isPlainObject$1(value) {
 
 function verifyPlainObject(value, displayName, methodName) {
   if (!isPlainObject$1(value)) {
-    warning$3(methodName + '() in ' + displayName + ' must return a plain object. Instead received ' + value + '.');
+    warning$2(methodName + '() in ' + displayName + ' must return a plain object. Instead received ' + value + '.');
   }
 }
 
@@ -10080,7 +10071,7 @@ function verify(selector, methodName, displayName) {
     throw new Error('Unexpected value for ' + methodName + ' in ' + displayName + '.');
   } else if (methodName === 'mapStateToProps' || methodName === 'mapDispatchToProps') {
     if (!selector.hasOwnProperty('dependsOnOwnProps')) {
-      warning$3('The selector for ' + methodName + ' of ' + displayName + ' did not specify a value for dependsOnOwnProps.');
+      warning$2('The selector for ' + methodName + ' of ' + displayName + ' did not specify a value for dependsOnOwnProps.');
     }
   }
 }
@@ -10326,7 +10317,7 @@ var classnames = createCommonjsModule(function (module) {
 		return classes.join(' ');
 	}
 
-	if ('object' !== 'undefined' && module.exports) {
+	if (module.exports) {
 		module.exports = classNames;
 	} else if (typeof undefined === 'function' && typeof undefined.amd === 'object' && undefined.amd) {
 		// register as 'classnames', consistent with npm package name
@@ -11092,8 +11083,8 @@ var underscore = createCommonjsModule(function (module, exports) {
   // the browser, add `_` as a global object.
   // (`nodeType` is checked to ensure that `module`
   // and `exports` are not HTML elements.)
-  if ('object' != 'undefined' && !exports.nodeType) {
-    if ('object' != 'undefined' && !module.nodeType && module.exports) {
+  if (!exports.nodeType) {
+    if (!module.nodeType && module.exports) {
       exports = module.exports = _;
     }
     exports._ = _;
@@ -12378,7 +12369,7 @@ var underscore = createCommonjsModule(function (module, exports) {
   // Optimize `isFunction` if appropriate. Work around some typeof bugs in old v8,
   // IE 11 (#1621), Safari 8 (#1929), and PhantomJS (#2236).
   var nodelist = root.document && root.document.childNodes;
-  if (typeof /./ != 'function' && typeof Int8Array != 'object' && typeof nodelist != 'function') {
+  if (typeof Int8Array != 'object' && typeof nodelist != 'function') {
     _.isFunction = function(obj) {
       return typeof obj == 'function' || false;
     };
@@ -13528,20 +13519,20 @@ var ContentEditable = unwrapExports(reactContenteditable);
 
 var regex=/[\0-\uD7FF\uE000-\uFFFF]|[\uD800-\uDBFF][\uDC00-\uDFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF]/;
 
-var regex$2=/[\0-\x1F\x7F-\x9F]/;
+var regex$1=/[\0-\x1F\x7F-\x9F]/;
 
-var regex$4=/[ \xA0\u1680\u2000-\u200A\u202F\u205F\u3000]/;
+var regex$2=/[ \xA0\u1680\u2000-\u200A\u202F\u205F\u3000]/;
 
-var regex$6=/[!-#%-\*,-/:;\?@\[-\]_\{\}\xA1\xA7\xAB\xB6\xB7\xBB\xBF\u037E\u0387\u055A-\u055F\u0589\u058A\u05BE\u05C0\u05C3\u05C6\u05F3\u05F4\u0609\u060A\u060C\u060D\u061B\u061E\u061F\u066A-\u066D\u06D4\u0700-\u070D\u07F7-\u07F9\u0830-\u083E\u085E\u0964\u0965\u0970\u09FD\u0AF0\u0DF4\u0E4F\u0E5A\u0E5B\u0F04-\u0F12\u0F14\u0F3A-\u0F3D\u0F85\u0FD0-\u0FD4\u0FD9\u0FDA\u104A-\u104F\u10FB\u1360-\u1368\u1400\u166D\u166E\u169B\u169C\u16EB-\u16ED\u1735\u1736\u17D4-\u17D6\u17D8-\u17DA\u1800-\u180A\u1944\u1945\u1A1E\u1A1F\u1AA0-\u1AA6\u1AA8-\u1AAD\u1B5A-\u1B60\u1BFC-\u1BFF\u1C3B-\u1C3F\u1C7E\u1C7F\u1CC0-\u1CC7\u1CD3\u2010-\u2027\u2030-\u2043\u2045-\u2051\u2053-\u205E\u207D\u207E\u208D\u208E\u2308-\u230B\u2329\u232A\u2768-\u2775\u27C5\u27C6\u27E6-\u27EF\u2983-\u2998\u29D8-\u29DB\u29FC\u29FD\u2CF9-\u2CFC\u2CFE\u2CFF\u2D70\u2E00-\u2E2E\u2E30-\u2E49\u3001-\u3003\u3008-\u3011\u3014-\u301F\u3030\u303D\u30A0\u30FB\uA4FE\uA4FF\uA60D-\uA60F\uA673\uA67E\uA6F2-\uA6F7\uA874-\uA877\uA8CE\uA8CF\uA8F8-\uA8FA\uA8FC\uA92E\uA92F\uA95F\uA9C1-\uA9CD\uA9DE\uA9DF\uAA5C-\uAA5F\uAADE\uAADF\uAAF0\uAAF1\uABEB\uFD3E\uFD3F\uFE10-\uFE19\uFE30-\uFE52\uFE54-\uFE61\uFE63\uFE68\uFE6A\uFE6B\uFF01-\uFF03\uFF05-\uFF0A\uFF0C-\uFF0F\uFF1A\uFF1B\uFF1F\uFF20\uFF3B-\uFF3D\uFF3F\uFF5B\uFF5D\uFF5F-\uFF65]|\uD800[\uDD00-\uDD02\uDF9F\uDFD0]|\uD801\uDD6F|\uD802[\uDC57\uDD1F\uDD3F\uDE50-\uDE58\uDE7F\uDEF0-\uDEF6\uDF39-\uDF3F\uDF99-\uDF9C]|\uD804[\uDC47-\uDC4D\uDCBB\uDCBC\uDCBE-\uDCC1\uDD40-\uDD43\uDD74\uDD75\uDDC5-\uDDC9\uDDCD\uDDDB\uDDDD-\uDDDF\uDE38-\uDE3D\uDEA9]|\uD805[\uDC4B-\uDC4F\uDC5B\uDC5D\uDCC6\uDDC1-\uDDD7\uDE41-\uDE43\uDE60-\uDE6C\uDF3C-\uDF3E]|\uD806[\uDE3F-\uDE46\uDE9A-\uDE9C\uDE9E-\uDEA2]|\uD807[\uDC41-\uDC45\uDC70\uDC71]|\uD809[\uDC70-\uDC74]|\uD81A[\uDE6E\uDE6F\uDEF5\uDF37-\uDF3B\uDF44]|\uD82F\uDC9F|\uD836[\uDE87-\uDE8B]|\uD83A[\uDD5E\uDD5F]/;
+var regex$3=/[!-#%-\*,-/:;\?@\[-\]_\{\}\xA1\xA7\xAB\xB6\xB7\xBB\xBF\u037E\u0387\u055A-\u055F\u0589\u058A\u05BE\u05C0\u05C3\u05C6\u05F3\u05F4\u0609\u060A\u060C\u060D\u061B\u061E\u061F\u066A-\u066D\u06D4\u0700-\u070D\u07F7-\u07F9\u0830-\u083E\u085E\u0964\u0965\u0970\u09FD\u0AF0\u0DF4\u0E4F\u0E5A\u0E5B\u0F04-\u0F12\u0F14\u0F3A-\u0F3D\u0F85\u0FD0-\u0FD4\u0FD9\u0FDA\u104A-\u104F\u10FB\u1360-\u1368\u1400\u166D\u166E\u169B\u169C\u16EB-\u16ED\u1735\u1736\u17D4-\u17D6\u17D8-\u17DA\u1800-\u180A\u1944\u1945\u1A1E\u1A1F\u1AA0-\u1AA6\u1AA8-\u1AAD\u1B5A-\u1B60\u1BFC-\u1BFF\u1C3B-\u1C3F\u1C7E\u1C7F\u1CC0-\u1CC7\u1CD3\u2010-\u2027\u2030-\u2043\u2045-\u2051\u2053-\u205E\u207D\u207E\u208D\u208E\u2308-\u230B\u2329\u232A\u2768-\u2775\u27C5\u27C6\u27E6-\u27EF\u2983-\u2998\u29D8-\u29DB\u29FC\u29FD\u2CF9-\u2CFC\u2CFE\u2CFF\u2D70\u2E00-\u2E2E\u2E30-\u2E49\u3001-\u3003\u3008-\u3011\u3014-\u301F\u3030\u303D\u30A0\u30FB\uA4FE\uA4FF\uA60D-\uA60F\uA673\uA67E\uA6F2-\uA6F7\uA874-\uA877\uA8CE\uA8CF\uA8F8-\uA8FA\uA8FC\uA92E\uA92F\uA95F\uA9C1-\uA9CD\uA9DE\uA9DF\uAA5C-\uAA5F\uAADE\uAADF\uAAF0\uAAF1\uABEB\uFD3E\uFD3F\uFE10-\uFE19\uFE30-\uFE52\uFE54-\uFE61\uFE63\uFE68\uFE6A\uFE6B\uFF01-\uFF03\uFF05-\uFF0A\uFF0C-\uFF0F\uFF1A\uFF1B\uFF1F\uFF20\uFF3B-\uFF3D\uFF3F\uFF5B\uFF5D\uFF5F-\uFF65]|\uD800[\uDD00-\uDD02\uDF9F\uDFD0]|\uD801\uDD6F|\uD802[\uDC57\uDD1F\uDD3F\uDE50-\uDE58\uDE7F\uDEF0-\uDEF6\uDF39-\uDF3F\uDF99-\uDF9C]|\uD804[\uDC47-\uDC4D\uDCBB\uDCBC\uDCBE-\uDCC1\uDD40-\uDD43\uDD74\uDD75\uDDC5-\uDDC9\uDDCD\uDDDB\uDDDD-\uDDDF\uDE38-\uDE3D\uDEA9]|\uD805[\uDC4B-\uDC4F\uDC5B\uDC5D\uDCC6\uDDC1-\uDDD7\uDE41-\uDE43\uDE60-\uDE6C\uDF3C-\uDF3E]|\uD806[\uDE3F-\uDE46\uDE9A-\uDE9C\uDE9E-\uDEA2]|\uD807[\uDC41-\uDC45\uDC70\uDC71]|\uD809[\uDC70-\uDC74]|\uD81A[\uDE6E\uDE6F\uDEF5\uDF37-\uDF3B\uDF44]|\uD82F\uDC9F|\uD836[\uDE87-\uDE8B]|\uD83A[\uDD5E\uDD5F]/;
 
 var re = function (opts) {
   var re = {};
 
   // Use direct extract instead of `regenerate` to reduse browserified size
   re.src_Any = regex.source;
-  re.src_Cc  = regex$2.source;
-  re.src_Z   = regex$4.source;
-  re.src_P   = regex$6.source;
+  re.src_Cc  = regex$1.source;
+  re.src_Z   = regex$2.source;
+  re.src_P   = regex$3.source;
 
   // \p{\Z\P\Cc\CF} (white spaces + control + format + punctuation)
   re.src_ZPCc = [ re.src_Z, re.src_P, re.src_Cc ].join('|');
@@ -13714,7 +13705,7 @@ var re = function (opts) {
 
 // Merge objects
 //
-function assign$1(obj /*from1, from2, from3, ...*/) {
+function assign(obj /*from1, from2, from3, ...*/) {
   var sources = Array.prototype.slice.call(arguments, 1);
 
   sources.forEach(function (source) {
@@ -13730,8 +13721,8 @@ function assign$1(obj /*from1, from2, from3, ...*/) {
 
 function _class(obj) { return Object.prototype.toString.call(obj); }
 function isString(obj) { return _class(obj) === '[object String]'; }
-function isObject$1(obj) { return _class(obj) === '[object Object]'; }
-function isRegExp$1(obj) { return _class(obj) === '[object RegExp]'; }
+function isObject(obj) { return _class(obj) === '[object Object]'; }
+function isRegExp(obj) { return _class(obj) === '[object RegExp]'; }
 function isFunction(obj) { return _class(obj) === '[object Function]'; }
 
 
@@ -13901,8 +13892,8 @@ function compile(self) {
 
     self.__compiled__[name] = compiled;
 
-    if (isObject$1(val)) {
-      if (isRegExp$1(val.validate)) {
+    if (isObject(val)) {
+      if (isRegExp(val.validate)) {
         compiled.validate = createValidator(val.validate);
       } else if (isFunction(val.validate)) {
         compiled.validate = val.validate;
@@ -14085,7 +14076,7 @@ function LinkifyIt(schemas, options) {
     }
   }
 
-  this.__opts__           = assign$1({}, defaultOptions, options);
+  this.__opts__           = assign({}, defaultOptions, options);
 
   // Cache last tested result. Used to skip repeating steps on next `match` call.
   this.__index__          = -1;
@@ -14093,7 +14084,7 @@ function LinkifyIt(schemas, options) {
   this.__schema__         = '';
   this.__text_cache__     = '';
 
-  this.__schemas__        = assign$1({}, defaultSchemas, schemas);
+  this.__schemas__        = assign({}, defaultSchemas, schemas);
   this.__compiled__       = {};
 
   this.__tlds__           = tlds_default;
@@ -14126,7 +14117,7 @@ LinkifyIt.prototype.add = function add(schema, definition) {
  * Set recognition options for links without schema.
  **/
 LinkifyIt.prototype.set = function set(options) {
-  this.__opts__ = assign$1(this.__opts__, options);
+  this.__opts__ = assign(this.__opts__, options);
   return this;
 };
 
@@ -16332,7 +16323,731 @@ var Post = function (_Component) {
 
 var Post$1 = connect(null, { cancelPost: cancelPost, retryPost: retryPost })(Post);
 
+// AtMentionsPopup expects an on/off switch determined by the on property
+// on = show the popup, off = hide the popup
+// a people list, which is the possible list of people to at-mention
+// with the format:
+// [id, nickname, full name, email, headshot, presence]
+// and a prefix, which is used to filter/match against the list
+
+var AtMentionsPopup = function (_Component) {
+	inherits(AtMentionsPopup, _Component);
+
+	function AtMentionsPopup() {
+		var _ref,
+		    _this2 = this;
+
+		var _temp, _this, _ret;
+
+		classCallCheck(this, AtMentionsPopup);
+
+		for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+			args[_key] = arguments[_key];
+		}
+
+		return _ret = (_temp = (_this = possibleConstructorReturn(this, (_ref = AtMentionsPopup.__proto__ || Object.getPrototypeOf(AtMentionsPopup)).call.apply(_ref, [this].concat(args))), _this), Object.defineProperty(_this, "handleClick", {
+			enumerable: true,
+			writable: true,
+			value: function () {
+				var _ref2 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(event) {
+					return regeneratorRuntime.wrap(function _callee$(_context) {
+						while (1) {
+							switch (_context.prev = _context.next) {
+								case 0:
+									console.log("CLICK ON MENTION: " + event.target.innerHTML);
+
+								case 1:
+								case "end":
+									return _context.stop();
+							}
+						}
+					}, _callee, _this2);
+				}));
+
+				function value(_x) {
+					return _ref2.apply(this, arguments);
+				}
+
+				return value;
+			}()
+		}), _temp), possibleConstructorReturn(_this, _ret);
+	}
+
+	createClass(AtMentionsPopup, [{
+		key: "render",
+		value: function render() {
+			var _this3 = this;
+
+			if (!this.props.on) return null;
+
+			var people = this.props.people;
+
+			return react.createElement(
+				"div",
+				{ className: "mentions-popup", ref: function ref(_ref3) {
+						return _this3._div = _ref3;
+					} },
+				react.createElement(
+					"div",
+					{ className: "body" },
+					react.createElement(
+						"div",
+						{ className: "instructions", onClick: function onClick(event) {
+								return _this3.handleClickInstructions();
+							} },
+						"People matching ",
+						react.createElement(
+							"b",
+							null,
+							"\"@",
+							this.props.prefix,
+							"\""
+						)
+					),
+					react.createElement(
+						"ul",
+						{ className: "compact at-mentions-list" },
+						this.props.people.map(function (person) {
+							var className = person.id == _this3.props.selected ? "hover" : "none";
+							var identifier = person.username || person.email;
+							// the handleClickPerson event needs to fire onMouseDown
+							// rather than onclick because there is a handleblur
+							// event on the parent element that will un-render
+							// this component
+							return react.createElement(
+								"li",
+								{
+									className: className,
+									key: person.id,
+									onMouseEnter: function onMouseEnter(event) {
+										return _this3.handleMouseEnter(person.id);
+									},
+									onMouseDown: function onMouseDown(event) {
+										return _this3.handleClickPerson(person.id);
+									}
+								},
+								react.createElement(Headshot, { size: 18, person: person }),
+								react.createElement(
+									"span",
+									{ className: "username" },
+									identifier
+								),
+								" ",
+								react.createElement(
+									"span",
+									{ className: "name" },
+									person.firstName,
+									" ",
+									person.lastName
+								)
+							);
+						})
+					),
+					react.createElement(
+						"table",
+						null,
+						react.createElement(
+							"tbody",
+							null,
+							react.createElement(
+								"tr",
+								null,
+								react.createElement(
+									"td",
+									null,
+									"\u2191 or \u2193 to navigate"
+								),
+								react.createElement(
+									"td",
+									null,
+									"\u21B5 to select"
+								),
+								react.createElement(
+									"td",
+									null,
+									"esc to dismiss"
+								)
+							)
+						)
+					)
+				)
+			);
+		}
+	}, {
+		key: "handleMouseEnter",
+		value: function handleMouseEnter(id) {
+			return this.props.handleHoverAtMention(id);
+		}
+	}, {
+		key: "handleClickPerson",
+		value: function handleClickPerson(id) {
+			return this.props.handleSelectAtMention(id);
+		}
+	}, {
+		key: "handleClickInstructions",
+		value: function handleClickInstructions() {
+			return this.props.handleSelectAtMention();
+		}
+	}, {
+		key: "selectFirstAtMention",
+		value: function selectFirstAtMention() {
+			// FIXME -- how to build this?
+		}
+	}]);
+	return AtMentionsPopup;
+}(react_1);
+
+var ComposeBox = function (_React$Component) {
+	inherits(ComposeBox, _React$Component);
+
+	function ComposeBox() {
+		var _ref;
+
+		var _temp, _this, _ret;
+
+		classCallCheck(this, ComposeBox);
+
+		for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+			args[_key] = arguments[_key];
+		}
+
+		return _ret = (_temp = (_this = possibleConstructorReturn(this, (_ref = ComposeBox.__proto__ || Object.getPrototypeOf(ComposeBox)).call.apply(_ref, [this].concat(args))), _this), Object.defineProperty(_this, "state", {
+			enumerable: true,
+			writable: true,
+			value: { newPostText: "", quote: null, autoMentions: [] }
+		}), Object.defineProperty(_this, "disposables", {
+			enumerable: true,
+			writable: true,
+			value: []
+		}), Object.defineProperty(_this, "handleInteractionEvent", {
+			enumerable: true,
+			writable: true,
+			value: function value(_ref2) {
+				var data = _ref2.data;
+
+				if (data.type === "codestream:interaction:code-highlighted") {
+					console.log("event data", data.body);
+					_this.focus();
+					var _data$body = data.body,
+					    authors = _data$body.authors,
+					    state = objectWithoutProperties(_data$body, ["authors"]);
+
+					_this.setState({ quote: state });
+
+					var toAtmention = authors.map(function (email) {
+						return underscore.findWhere(_this.props.teammates, { email: email });
+					}).filter(Boolean);
+					if (toAtmention.length > 0) {
+						// TODO handle users with no username
+						var usernames = toAtmention.map(function (user) {
+							return "@" + user.username;
+						});
+						_this.setState({ autoMentions: usernames });
+						// the reason for this unicode space is that chrome will
+						// not render a space at the end of a contenteditable div
+						// unless it is a &nbsp;, which is difficult to insert
+						// so we insert this unicode character instead
+						var newText = usernames.join(", ") + ":\xA0";
+						_this.insertTextAtCursor(newText);
+					}
+				}
+			}
+		}), Object.defineProperty(_this, "focus", {
+			enumerable: true,
+			writable: true,
+			value: function value() {
+				_this._contentEditable.htmlEl.focus();
+			}
+		}), Object.defineProperty(_this, "handleHoverAtMention", {
+			enumerable: true,
+			writable: true,
+			value: function value(id) {
+				var index = _this.state.atMentionsPeople.findIndex(function (x) {
+					return x.id == id;
+				});
+
+				_this.setState({
+					atMentionsIndex: index,
+					selectedAtMention: id
+				});
+			}
+		}), Object.defineProperty(_this, "handleSelectAtMention", {
+			enumerable: true,
+			writable: true,
+			value: function value(id) {
+				// if no id is passed, we assume that we're selecting
+				// the currently-selected at mention
+				if (!id) {
+					id = _this.state.selectedAtMention;
+				}
+
+				var user = _this.props.teammates.find(function (t) {
+					return t.id === id;
+				});
+				if (!user) return;
+				var username = user.username;
+				// otherwise explicitly use the one passed in
+				// FIXME -- this should anchor at the carat, not end-of-line
+				// var re = new RegExp("@" + this.state.atMentionsPrefix);
+				_this.setState({
+					atMentionsOn: false
+				});
+				// the reason for this unicode space is that chrome will
+				// not render a space at the end of a contenteditable div
+				// unless it is a &nbsp;, which is difficult to insert
+				// so we insert this unicode character instead
+				var toInsert = username + "\xA0";
+				setTimeout(function () {
+					_this.focus();
+				}, 20);
+				_this.insertTextAtCursor(toInsert, _this.state.atMentionsPrefix);
+				// this.setNewPostText(text);
+			}
+		}), Object.defineProperty(_this, "handleChange", {
+			enumerable: true,
+			writable: true,
+			value: function value(event) {
+				var newPostText = event.target.value;
+
+				var selection = window.getSelection();
+				var range = selection.getRangeAt(0);
+				var node = range.commonAncestorContainer;
+				var nodeText = node.textContent || "";
+				var upToCursor = nodeText.substring(0, range.startOffset);
+				var match = upToCursor.match(/@([a-zA-Z0-9_.+]*)$/);
+				if (_this.state.atMentionsOn) {
+					if (match) {
+						_this.showAtMentionSelectors(match[0].replace(/@/, ""));
+					} else {
+						// if the line doesn't end with @word, then hide the popup
+						_this.setState({ atMentionsOn: false });
+					}
+				} else {
+					if (match) {
+						_this.showAtMentionSelectors(match[0].replace(/@/, ""));
+					}
+				}
+				// track newPostText as the user types
+				_this.setState({
+					newPostText: newPostText,
+					autoMentions: _this.state.autoMentions.filter(function (mention) {
+						return newPostText.includes(mention);
+					})
+				});
+			}
+		}), Object.defineProperty(_this, "handleBlur", {
+			enumerable: true,
+			writable: true,
+			value: function value(event) {
+				event.preventDefault();
+				_this.setState({
+					atMentionsOn: false
+				});
+			}
+		}), Object.defineProperty(_this, "handleKeyPress", {
+			enumerable: true,
+			writable: true,
+			value: function value(event) {
+				var newPostText = _this.state.newPostText;
+
+				// if we have the at-mentions popup open, then the keys
+				// do something different than if we have the focus in
+				// the textarea
+				if (_this.state.atMentionsOn) {
+					if (event.key == "Escape") {
+						_this.hideAtMentionSelectors();
+					} else if (event.key == "Enter" && !event.shiftKey) {
+						event.preventDefault();
+						_this.selectFirstAtMention();
+					} else {
+						var match = newPostText.match(/@([a-zA-Z0-9_.]*)$/);
+						var text = match ? match[0].replace(/@/, "") : "";
+						// this.showAtMentionSelectors(text);
+					}
+				} else if (event.key === "@") {
+					_this.showAtMentionSelectors("");
+				} else if (event.key === "Enter" && !event.shiftKey) {
+					event.preventDefault();
+					if (newPostText.trim().length > 0 && !_this.props.disabled) {
+						// convert the text to plaintext so there is no HTML
+						var _text = newPostText.replace(/<br>/g, "\n");
+						var doc = new DOMParser().parseFromString(_text, "text/html");
+						_text = doc.documentElement.textContent;
+
+						_this.props.onSubmit({
+							text: _text,
+							quote: _this.state.quote,
+							mentionedUserIds: _this.props.findMentionedUserIds(_text, _this.props.teammates),
+							autoMentions: _this.state.autoMentions
+						});
+						_this.reset();
+					}
+				}
+			}
+		}), Object.defineProperty(_this, "handleClickDismissQuote", {
+			enumerable: true,
+			writable: true,
+			value: function value() {
+				_this.focus();
+				_this.reset();
+			}
+		}), _temp), possibleConstructorReturn(_this, _ret);
+	}
+
+	createClass(ComposeBox, [{
+		key: "componentDidMount",
+		value: function componentDidMount() {
+			var _this2 = this;
+
+			window.addEventListener("message", this.handleInteractionEvent, true);
+
+			// so that HTML doesn't get pasted into the input field. without this,
+			// HTML would be rendered as HTML when pasted
+			this._contentEditable.htmlEl.addEventListener("paste", function (e) {
+				e.preventDefault();
+				var text = e.clipboardData.getData("text/plain");
+				document.execCommand("insertHTML", false, text.replace(/\n/g, "<br>"));
+			});
+
+			// because atom hijacks most keystroke events
+			if (global.atom) {
+				this.disposables.push(atom.commands.add("atom-workspace", {
+					"codestream:focus-input": function codestreamFocusInput(_event) {
+						return _this2.focus();
+					}
+				}), atom.commands.add(".codestream", "codestream:escape", {
+					didDispatch: function didDispatch(event) {
+						return _this2.handleAtMentionKeyPress(event, "escape");
+					},
+					hiddenInCommandPalette: true
+				}), atom.commands.add(".codestream .compose.mentions-on", "codestream:at-mention-move-up", {
+					didDispatch: function didDispatch(event) {
+						return _this2.handleAtMentionKeyPress(event, "up");
+					},
+					hiddenInCommandPalette: true
+				}), atom.commands.add(".codestream .compose.mentions-on", "codestream:at-mention-move-down", {
+					didDispatch: function didDispatch(event) {
+						return _this2.handleAtMentionKeyPress(event, "down");
+					},
+					hiddenInCommandPalette: true
+				}), atom.commands.add(".codestream .compose.mentions-on", "codestream:at-mention-tab", {
+					didDispatch: function didDispatch(event) {
+						return _this2.handleAtMentionKeyPress(event, "tab");
+					},
+					hiddenInCommandPalette: true
+				}), atom.commands.add(".codestream .native-key-bindings", "codestream:move-up", {
+					didDispatch: function didDispatch(event) {
+						return _this2.handleNonCapturedKeyPress(event, "up");
+					},
+					hiddenInCommandPalette: true
+				}));
+			}
+		}
+	}, {
+		key: "componentWillUnmount",
+		value: function componentWillUnmount() {
+			this.disposables.forEach(function (d) {
+				return d.dispose();
+			});
+			window.removeEventListener("message", this.handleInteractionEvent, true);
+		}
+	}, {
+		key: "showAtMentionSelectors",
+
+
+		// set up the parameters to pass to the at mention popup
+		value: function showAtMentionSelectors(prefix) {
+			var peopleToShow = [];
+
+			Object.values(this.props.teammates).forEach(function (person) {
+				var toMatch = person.firstName + " " + person.lastName + "*" + person.username; // + "*" + person.email;
+				var lowered = toMatch.toLowerCase();
+				if (lowered.indexOf(prefix) !== -1) {
+					peopleToShow.push(person);
+				}
+			});
+
+			if (peopleToShow.length == 0) {
+				this.setState({
+					atMentionsOn: false
+				});
+			} else {
+				var selected = peopleToShow[0].id;
+
+				this.setState({
+					atMentionsOn: true,
+					atMentionsPrefix: prefix,
+					atMentionsPeople: peopleToShow,
+					atMentionsIndex: 0,
+					selectedAtMention: selected
+				});
+			}
+		}
+	}, {
+		key: "hideAtMentionSelectors",
+		value: function hideAtMentionSelectors() {
+			this.setState({ atMentionsOn: false });
+		}
+	}, {
+		key: "selectFirstAtMention",
+		value: function selectFirstAtMention() {
+			this.handleSelectAtMention();
+		}
+
+		// insert the given text at the cursor of the input field
+		// after first deleting the text in toDelete
+
+	}, {
+		key: "insertTextAtCursor",
+		value: function insertTextAtCursor(text, toDelete) {
+			var sel, range;
+			sel = window.getSelection();
+
+			// if for some crazy reason we can't find a selection, return
+			// to avoid an error.
+			// https://stackoverflow.com/questions/22935320/uncaught-indexsizeerror-failed-to-execute-getrangeat-on-selection-0-is-not
+			if (sel.rangeCount == 0) return;
+
+			range = sel.getRangeAt(0);
+
+			// delete the X characters before the caret
+			range.setStart(range.commonAncestorContainer, range.startOffset - (toDelete || "").length);
+			// range.moveEnd("character", toDelete.length);
+
+			range.deleteContents();
+			var textNode = document.createTextNode(text);
+			range.insertNode(textNode);
+			range.setStartAfter(textNode);
+			sel.removeAllRanges();
+			sel.addRange(range);
+			this._contentEditable.htmlEl.normalize();
+
+			this.setState({ newPostText: this._contentEditable.htmlEl.innerHTML });
+		}
+
+		// the keypress handler for tracking up and down arrow
+		// and enter, while the at mention popup is open
+
+	}, {
+		key: "handleAtMentionKeyPress",
+		value: function handleAtMentionKeyPress(event, eventType) {
+			if (eventType == "escape") {
+				if (this.state.atMentionsOn) this.hideAtMentionSelectors();
+				// else this.handleDismissThread();
+			} else {
+				var newIndex = 0;
+				if (eventType == "down") {
+					if (this.state.atMentionsIndex < this.state.atMentionsPeople.length - 1) {
+						newIndex = this.state.atMentionsIndex + 1;
+					} else {
+						newIndex = 0;
+					}
+				} else if (eventType == "up") {
+					if (this.state.atMentionsIndex == 0) {
+						newIndex = this.state.atMentionsPeople.length - 1;
+					} else {
+						newIndex = this.state.atMentionsIndex - 1;
+					}
+				} else if (eventType == "tab") {
+					this.selectFirstAtMention();
+				}
+				this.setState({
+					atMentionsIndex: newIndex,
+					selectedAtMention: this.state.atMentionsPeople[newIndex].id
+				});
+			}
+		}
+
+		// for keypresses that we can't capture with standard
+		// javascript events
+
+	}, {
+		key: "handleNonCapturedKeyPress",
+		value: function handleNonCapturedKeyPress(event, eventType) {
+			if (eventType == "up") {
+				if (this.state.newPostText === "") {
+					this.props.onEmptyUpArrow(event);
+				}
+			}
+			event.abortKeyBinding();
+		}
+
+		// when the user hovers over an at-mention list item, change the
+		// state to represent a hovered state
+
+
+		// depending on the contents of the input field, if the user
+		// types a "@" then open the at-mention popup
+
+
+		// when the input field loses focus, one thing we want to do is
+		// to hide the at-mention popup
+
+	}, {
+		key: "reset",
+		value: function reset() {
+			this.setState({ newPostText: "", quote: null, autoMentions: [] });
+		}
+	}, {
+		key: "render",
+		value: function render() {
+			var _this3 = this;
+
+			var _props = this.props,
+			    forwardedRef = _props.forwardedRef,
+			    placeholder = _props.placeholder;
+			var quote = this.state.quote;
+
+
+			var quoteInfo = void 0;
+			var quoteHint = void 0;
+			if (quote) {
+				quoteInfo = quote ? react.createElement(
+					"div",
+					{ className: "code" },
+					quote.quoteText
+				) : "";
+				var range = quote.quoteRange;
+				var rangeText = null;
+				if (range) {
+					if (range.start.row === range.end.row) {
+						rangeText = "Commenting on line " + (range.start.row + 1);
+					} else {
+						rangeText = "Commenting on lines " + (range.start.row + 1) + "-" + (range.end.row + 1);
+					}
+				}
+				quoteHint = react.createElement(
+					"div",
+					{ className: "hint" },
+					rangeText,
+					react.createElement("span", { onClick: this.handleClickDismissQuote, className: "icon icon-x" })
+				);
+			}
+
+			return react.createElement(
+				"div",
+				{
+					ref: forwardedRef,
+					onKeyPress: this.handleKeyPress,
+					onKeyDown: this.handleKeyDown,
+					className: classnames("compose", {
+						"mentions-on": this.state.atMentionsOn
+					})
+				},
+				react.createElement(AtMentionsPopup, {
+					on: this.state.atMentionsOn,
+					people: this.state.atMentionsPeople,
+					usernames: this.usernameRegExp,
+					prefix: this.state.atMentionsPrefix,
+					selected: this.state.selectedAtMention,
+					handleHoverAtMention: this.handleHoverAtMention,
+					handleSelectAtMention: this.handleSelectAtMention
+				}),
+				quoteInfo,
+				quoteHint,
+				react.createElement(ContentEditable, {
+					className: classnames("native-key-bindings", btoa(placeholder)),
+					id: "input-div",
+					rows: "1",
+					tabIndex: "-1",
+					onChange: this.handleChange,
+					onBlur: this.handleBlur,
+					html: this.state.newPostText,
+					placeholder: placeholder,
+					ref: function ref(_ref3) {
+						return _this3._contentEditable = _ref3;
+					}
+				})
+			);
+		}
+	}]);
+	return ComposeBox;
+}(react.Component);
+
+var ComposeBox$1 = react.forwardRef(function (props, ref) {
+	return react.createElement(ComposeBox, _extends$4({}, props, { forwardedRef: ref }));
+});
+
+var moment$1 = require("moment");
+// var Moment_Timezone = require("moment-timezone");
+
+var DateSeparator = function (_Component) {
+	inherits(DateSeparator, _Component);
+
+	function DateSeparator(props) {
+		classCallCheck(this, DateSeparator);
+
+		var _this = possibleConstructorReturn(this, (DateSeparator.__proto__ || Object.getPrototypeOf(DateSeparator)).call(this, props));
+
+		Object.defineProperty(_this, "prettyDateDay", {
+			enumerable: true,
+			writable: true,
+			value: function value(time, options) {
+				options = options || {};
+				if (time === 0 || time === null || time === undefined) return "";
+				var now = new Date().getTime();
+				// now = this.adjustedTime(now, options.timezone_info);
+				// time = this.adjustedTime(time, options.timezone_info);
+				var today = new Date(now);
+				var timeDay = new Date(time);
+
+				if (this.sameDateAs(timeDay, today)) {
+					return "Today";
+				}
+				var nextDay = this.addDays(new Date(timeDay.getTime()), 1);
+				if (this.sameDateAs(nextDay, today)) {
+					return "Yesterday";
+				}
+
+				if (timeDay.getFullYear() === today.getFullYear()) {
+					return moment$1(time).format("dddd, MMMM Do");
+				}
+				return moment$1(time).format("dddd, MMMM Do, YYYY");
+			}
+		});
+
+		_this.state = {};
+		return _this;
+	}
+
+	createClass(DateSeparator, [{
+		key: "render",
+		value: function render() {
+			// don't show a separator if the day of this post is the same
+			// as the day of the last post
+			if (this.sameDateAs(this.props.timestamp1, this.props.timestamp2)) return null;
+			if (!this.props.timestamp1 || !this.props.timestamp2) return null;
+
+			return react.createElement(
+				"div",
+				{ className: "date-separator" },
+				react.createElement(
+					"span",
+					null,
+					this.prettyDateDay(this.props.timestamp2)
+				)
+			);
+		}
+	}, {
+		key: "sameDateAs",
+		value: function sameDateAs(time1, time2) {
+			var date1 = new Date(time1);
+			var date2 = new Date(time2);
+			return date1.getFullYear() == date2.getFullYear() && date1.getMonth() == date2.getMonth() && date1.getDate() == date2.getDate();
+		}
+	}, {
+		key: "addDays",
+		value: function addDays(date, days) {
+			date.setDate(date.getDate() + days);
+			return date;
+		}
+	}]);
+	return DateSeparator;
+}(react_1);
+
 var index = {
+  ComposeBox: ComposeBox$1,
+  DateSeparator: DateSeparator,
   Post: Post$1
 };
 
