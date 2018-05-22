@@ -1,7 +1,7 @@
 'use strict';
 import { Disposable, Range } from 'vscode';
 import { CodeStreamSession, Repository, StreamThread } from '../api/session';
-import { StreamWebviewPanel } from '../views/streamWebviewPanel';
+import { StreamWebviewPanel } from '../webviews/streamWebviewPanel';
 import { Container } from '../container';
 
 export class StreamViewController extends Disposable {

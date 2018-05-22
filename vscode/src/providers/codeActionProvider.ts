@@ -32,14 +32,6 @@ export class CodeStreamCodeActionProvider extends Disposable implements CodeActi
                     } as PostCodeCommandArgs
                 ]
             } as Command
-            // {
-            //     title: `Reference Code`,
-            //     command: 'codestream.postCode',
-            //     arguments: [
-            //         document.uri,
-            //         range
-            //     ]
-            // } as Command
         ];
     }
 }

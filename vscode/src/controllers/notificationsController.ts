@@ -5,8 +5,6 @@ import { Notifications } from '../configuration';
 import { Container } from '../container';
 import { Arrays, Functions } from '../system';
 
-// total 💩 code ahead
-
 export interface UnreadCountChangedEvent {
     getCount(): number;
 }

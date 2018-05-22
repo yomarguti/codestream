@@ -1,5 +1,6 @@
 'use strict';
 export * from './config';
+
 const ExtensionKey = 'codestream';
 export { ExtensionKey };
 
@@ -29,9 +30,6 @@ export class Configuration {
         if (!e.affectsConfiguration(ExtensionKey, null!)) return;
 
         Container.resetConfig();
-        // if (Container.pages !== undefined) {
-        //     Container.pages.refresh();
-        // }
 
         this._onDidChange.fire(e);
     }

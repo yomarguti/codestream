@@ -2,6 +2,8 @@
 import { Container } from '../container';
 import { CodeStreamSession } from './session';
 
+// HACK: Total hack for demo -- if we need this functionality we need to figure out where/how it should be implemented
+
 export class StreamVisibilityManager {
 
     private readonly _hiddenStreams: Set<string>;

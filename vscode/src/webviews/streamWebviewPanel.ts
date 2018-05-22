@@ -8,13 +8,10 @@ import * as fs from 'fs';
 
 interface BootstrapState {
     currentTeamId: string;
-    // currentRepoId: string;
     currentUserId: string;
     currentStreamId: string;
-    // currentFileId?: string;
-    // currentCommit?: string;
-    currentStreamLabel: string;
-    currentStreamServiceType: 'liveshare';
+    currentStreamLabel?: string;
+    currentStreamServiceType?: 'liveshare';
     selectedPostId?: string;
     posts: CSPost[];
     streams: CSStream[];
@@ -79,6 +76,8 @@ export class StreamWebviewPanel extends Disposable {
 
         switch (type) {
             case 'action-request':
+                // TODO: Add sequence ids to ensure correct matching
+                // TODO: Add exception handling for failed requests
                 switch (body.action) {
                     case 'post':
                         const { text, codeBlocks, commitHashWhenPosted, parentPostId } = body.params;

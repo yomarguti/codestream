@@ -38,7 +38,7 @@ export class Logger {
                 }
             }
             else {
-                this.output = this.output || window.createOutputChannel(`CodeStream`);
+                this.output = this.output || window.createOutputChannel(extensionOutputChannelName);
             }
         }
     }
@@ -92,7 +92,7 @@ export class Logger {
         if (this.level !== TraceLevel.Debug) return;
 
         if (this.gitOutput === undefined) {
-            this.gitOutput = window.createOutputChannel(`CodeStream (Git)`);
+            this.gitOutput = window.createOutputChannel(`${extensionOutputChannelName} (Git)`);
         }
         this.gitOutput.appendLine(`${this.timestamp} ${command} (${cwd})${ex === undefined ? '' : `\n\n${ex.toString()}`}`);
     }
