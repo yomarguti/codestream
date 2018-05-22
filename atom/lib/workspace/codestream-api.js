@@ -1,4 +1,5 @@
 // @flow
+import { shell } from "electron";
 import AddCommentPopupManager from "./add-comment-popup-manager";
 import BufferChangeTracker from "./buffer-change-tracker";
 import DiffManager from "./diff-manager";
@@ -29,11 +30,19 @@ export default class CodeStreamApi implements Resource {
 		this.contentHighlighter = new ContentHighlighter(this.store);
 		this.markerLocationTracker = new MarkerLocationTracker(this.store);
 		this.editTracker = new EditTracker(this.store);
+		window.addEventListener("message", this.handleInteractionEvent, true);
 		this.initialized = true;
 	}
 
+	handleInteractionEvent = ({ data }) => {
+		if (data.type === "codestream:interaction:clicked-link") {
+			shell.openExternal(data.body);
+		}
+	};
+
 	destroy() {
 		if (this.initialized) {
+		window.removeEventListener("message", this.handleInteractionEvent, true);
 			this.popupManager.destroy();
 			this.bufferChangeTracker.destroy();
 			this.diffManager.destroy();

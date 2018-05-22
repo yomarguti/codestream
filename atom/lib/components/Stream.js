@@ -1,4 +1,3 @@
-import { shell } from "electron";
 import React, { Component } from "react";
 import { connect } from "react-redux";
 import { FormattedMessage } from "react-intl";
@@ -260,6 +259,14 @@ export class SimpleStream extends Component {
 		return this.props.posts.find(post => id === post.id);
 	}
 
+	handleClickHelpLink = event => {
+		event.preventDefault();
+		window.parent.postMessage(
+			{ type: "codestream:interaction:clicked-link", body: "https://help.codestream.com" },
+			"*"
+		);
+	};
+
 	renderIntro = () => {
 		return [
 			<label key="welcome">
@@ -297,8 +304,7 @@ export class SimpleStream extends Component {
 				</ul>
 			</label>,
 			<label key="learn-more">
-				Learn more at{" "}
-				<a onClick={_e => shell.openExternal("https://help.codestream.com")}>help.codestream.com</a>
+				Learn more at <a onClick={this.handleClickHelpLink}>help.codestream.com</a>
 			</label>
 		];
 	};
