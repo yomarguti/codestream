@@ -4,7 +4,7 @@ import { FormattedMessage } from "react-intl";
 import _ from "underscore-plus";
 import createClassString from "classnames";
 import mixpanel from "mixpanel-browser";
-import { ComposeBox, DateSeparator, Post } from "codestream-components";
+import { ComposeBox, DateSeparator, EditingIndicator, Post } from "codestream-components";
 import * as streamActions from "../actions/stream";
 import * as umiActions from "../actions/umi";
 import * as routingActions from "../actions/routing";
@@ -13,7 +13,6 @@ import { toMapBy } from "../reducers/utils";
 import { rangeToLocation } from "../util/Marker";
 import { getStreamForTeam, getStreamForRepoAndFile } from "../reducers/streams";
 import { getPostsForStream } from "../reducers/posts";
-import EditingIndicator from "./EditingIndicator";
 
 export class SimpleStream extends Component {
 	disposables = [];
