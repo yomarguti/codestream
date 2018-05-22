@@ -5,7 +5,6 @@ import _ from "underscore-plus";
 import createClassString from "classnames";
 import mixpanel from "mixpanel-browser";
 import { ComposeBox, DateSeparator, Post } from "codestream-components";
-import withRepositories from "./withRepositories";
 import * as streamActions from "../actions/stream";
 import * as umiActions from "../actions/umi";
 import * as routingActions from "../actions/routing";
@@ -858,4 +857,4 @@ export default connect(mapStateToProps, {
 	editPost,
 	deletePost,
 	goToInvitePage: routingActions.goToInvitePage
-})(withRepositories(SimpleStream));
+})(SimpleStream);
