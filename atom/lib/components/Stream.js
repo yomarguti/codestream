@@ -770,18 +770,19 @@ const mapStateToProps = ({
 	teams,
 	onboarding
 }) => {
+	// TODO: figure out a way to do this elsewhere
+	Object.keys(users).forEach(function(key, index) {
+		users[key].color = index % 10;
+		if (!users[key].username) {
+			let email = users[key].email;
+			if (email) users[key].username = email.replace(/@.*/, "");
+		}
+	});
+
 	const fileStream =
 		getStreamForRepoAndFile(streams, context.currentRepoId, context.currentFile) || {};
 
-	const teamMembers = teams[context.currentTeamId].memberIds.map((id, index) => {
-		const user = users[id];
-		user.color = index % 10;
-		if (!user.username) {
-			let email = user.email;
-			if (email) user.username = email.replace(/@.*/, "");
-		}
-		return user;
-	});
+	const teamMembers = teams[context.currentTeamId].memberIds.map(id => users[id]).filter(Boolean);
 
 	// this usenames regexp is a pipe-separated list of
 	// either usernames or if no username exists for the
