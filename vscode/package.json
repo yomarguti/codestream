@@ -4,7 +4,7 @@
     "author": "CodeStream",
     "publisher": "CodeStream",
     "engines": {
-        "vscode": "^1.23.0"
+        "vscode": "^1.24.0"
     },
     "license": "MIT",
     "displayName": "CodeStream",
@@ -614,14 +614,15 @@
         "node-fetch": "2.1.2",
         "reflect-metadata": "0.1.12",
         "tmp": "0.0.33",
-        "tslib": "1.9.0"
+        "tslib": "1.9.1",
+        "vscode-languageclient": "4.1.4"
     },
     "devDependencies": {
-        "@types/node": "10.0.2",
+        "@types/node": "10.1.2",
         "@types/node-fetch": "1.6.9",
         "@types/pubnub": "4.0.2",
         "@types/tmp": "0.0.33",
-        "tslint": "5.9.1",
+        "tslint": "5.10.0",
         "typescript": "2.8.3",
         "vscode": "1.1.17"
     }
