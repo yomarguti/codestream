@@ -249,7 +249,7 @@ export class SimpleSignupForm extends Component {
 					</Button>
 					<small className="fine-print">
 						<FormattedMessage id="signUp.legal.start" />{" "}
-						<a onClick={() => shell.openExternal("https://codestream.com/tos")}>
+						<a onClick={() => shell.openExternal("https://codestream.com/terms")}>
 							<FormattedMessage id="signUp.legal.termsOfService" />
 						</a>{" "}
 						<FormattedMessage id="and" />{" "}
