@@ -5,6 +5,108 @@ import { CodeStreamSession, Post, PostsReceivedEvent, SessionChangedEvent, Sessi
 import { Container } from '../container';
 import { Logger } from '../logger';
 import * as fs from 'fs';
+import { Functions } from '../system/function';
+
+const loadingHtml = `
+<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+        <title>CodeStream</title>
+        <style>
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            padding: 0 !important;
+        }
+
+        .loading:before {
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: contain;
+            content: '';
+            height: 100%;
+            opacity: 0.05;
+            position: absolute;
+            width: 100%;
+            z-index: -1;
+        }
+
+        .vscode-dark.loading:before {
+            background-image: url('data:image/svg+xml;utf8,<svg width="50" height="40" xmlns="http://www.w3.org/2000/svg"><path fill="#fff" d="M26.92 6.35c-.1.1-.17.24-.17.38v5.43a7.9 7.9 0 0 1 0 15.36v5.53a.53.53 0 0 0 .92.36l11.48-12.17c.71-.76.71-1.94 0-2.7L27.67 6.38a.53.53 0 0 0-.75-.02zm-4.64.02L10.8 18.55a1.96 1.96 0 0 0 0 2.69L22.28 33.4a.53.53 0 0 0 .91-.36v-5.53a7.9 7.9 0 0 1 0-15.36V6.73a.53.53 0 0 0-.53-.52.53.53 0 0 0-.38.16z"/></svg>');
+        }
+
+        .vscode-light.loading:before {
+            background-image: url('data:image/svg+xml;utf8,<svg width="50" height="40" xmlns="http://www.w3.org/2000/svg"><path fill="#000" d="M26.92 6.35c-.1.1-.17.24-.17.38v5.43a7.9 7.9 0 0 1 0 15.36v5.53a.53.53 0 0 0 .92.36l11.48-12.17c.71-.76.71-1.94 0-2.7L27.67 6.38a.53.53 0 0 0-.75-.02zm-4.64.02L10.8 18.55a1.96 1.96 0 0 0 0 2.69L22.28 33.4a.53.53 0 0 0 .91-.36v-5.53a7.9 7.9 0 0 1 0-15.36V6.73a.53.53 0 0 0-.53-.52.53.53 0 0 0-.38.16z"/></svg>');
+        }
+
+        .loading:after {
+            animation: loading-pulse 1.5s infinite cubic-bezier(0.5, 0, 0.5, 1);
+            background-color: currentColor;
+            border-radius: 100%;
+            content: '';
+            display: inline-block;
+            height: 144px;
+            left: calc(50% - 72px);
+            opacity: 0.05;
+            position: absolute;
+            top: calc(50% - 72px);
+            width: 144px;
+            z-index: -1;
+        }
+
+        @keyframes loading-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(0); }
+        }
+
+        .loader-ring {
+            left: calc(50% - 96px);
+            position: absolute;
+            top: calc(50% - 96px);
+            opacity: 0.5;
+        }
+
+        .loader-ring__segment {
+            animation: loader-ring-spin 1.5s infinite cubic-bezier(0.5, 0, 0.5, 1);
+            border: 6px solid #009AEF;
+            border-color: #009AEF transparent transparent transparent;
+            border-radius: 50%;
+            height: 180px;
+            position: absolute;
+            width: 180px;
+        }
+
+        .loader-ring__segment:nth-child(1) {
+            animation-delay: 0.05s;
+        }
+
+        .loader-ring__segment:nth-child(2) {
+            animation-direction: reverse;
+        }
+
+        .loader-ring__segment:nth-child(3) {
+            animation-delay: 0.05s;
+            animation-direction: reverse;
+        }
+
+        @keyframes loader-ring-spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        </style>
+    </head>
+    <body class="loading">
+        <!-- <div class="loader-dot"></div> -->
+        <div class="loader-ring">
+            <div class="loader-ring__segment"></div>
+            <div class="loader-ring__segment"></div>
+            <div class="loader-ring__segment"></div>
+            <div class="loader-ring__segment"></div>
+        </div>
+    </body>
+</html>
+`;
 
 interface BootstrapState {
     currentTeamId: string;
@@ -259,39 +361,9 @@ export class StreamWebviewPanel extends Disposable {
     }
 
     private async setStream(streamThread: StreamThread): Promise<StreamThread> {
-        this._streamThread = streamThread;
+        const label = await streamThread.stream.label();
 
-        const [label, content, posts, repos, teams, users] = await Promise.all([
-            streamThread.stream.label(),
-            this.getHtml(),
-            streamThread.stream.posts.entities(),
-            this.session.repos.entities(),
-            this.session.teams.entities(),
-            this.session.users.entities()
-        ]);
-
-        const state: BootstrapState = Object.create(null);
-        state.currentTeamId = streamThread.stream.teamId;
-        state.currentUserId = this.session.userId;
-        state.currentStreamId = streamThread.stream.id;
-        if (streamThread.stream.type === StreamType.Channel) {
-            if (streamThread.stream.isLiveShareChannel) {
-                state.currentStreamLabel = label;
-                state.currentStreamServiceType = 'liveshare';
-            }
-        }
-        state.selectedPostId = streamThread.id;
-
-        state.posts = posts;
-        state.repos = repos;
-        state.streams = [streamThread.stream.entity];
-        state.teams = teams;
-        state.users = users;
-
-        const html = content
-            .replace(/{{root}}/g, Uri.file(Container.context.asAbsolutePath('.')).with({ scheme: 'vscode-resource' }).toString())
-            .replace('\'{{bootstrap}}\'', JSON.stringify(state));
-
+        let html = loadingHtml;
         if (this._panel === undefined) {
             this._panel = window.createWebviewPanel(
                 'CodeStream.stream',
@@ -321,6 +393,42 @@ export class StreamWebviewPanel extends Disposable {
             this._panel.webview.html = html;
             this._panel.reveal(ViewColumn.Three, false);
         }
+
+        this._streamThread = streamThread;
+
+        const [content, posts, repos, teams, users] = await Promise.all([
+            this.getHtml(),
+            streamThread.stream.posts.entities(),
+            this.session.repos.entities(),
+            this.session.teams.entities(),
+            this.session.users.entities(),
+            Functions.wait(2000)
+        ]);
+
+        const state: BootstrapState = Object.create(null);
+        state.currentTeamId = streamThread.stream.teamId;
+        state.currentUserId = this.session.userId;
+        state.currentStreamId = streamThread.stream.id;
+        if (streamThread.stream.type === StreamType.Channel) {
+            if (streamThread.stream.isLiveShareChannel) {
+                state.currentStreamLabel = label;
+                state.currentStreamServiceType = 'liveshare';
+            }
+        }
+        state.selectedPostId = streamThread.id;
+
+        state.posts = posts;
+        state.repos = repos;
+        state.streams = [streamThread.stream.entity];
+        state.teams = teams;
+        state.users = users;
+
+        html = content
+            .replace(/{{root}}/g, Uri.file(Container.context.asAbsolutePath('.')).with({ scheme: 'vscode-resource' }).toString())
+            .replace('\'{{bootstrap}}\'', JSON.stringify(state));
+
+        this._panel.webview.html = html;
+        this._panel.reveal(ViewColumn.Three, false);
 
         return this._streamThread;
     }
