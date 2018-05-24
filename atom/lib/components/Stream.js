@@ -9,9 +9,15 @@ import * as umiActions from "../actions/umi";
 import * as routingActions from "../actions/routing";
 import { createPost, editPost, deletePost, fetchPosts } from "../actions/post";
 import { toMapBy } from "../reducers/utils";
-import { rangeToLocation } from "../util/Marker";
 import { getStreamForTeam, getStreamForRepoAndFile } from "../reducers/streams";
 import { getPostsForStream } from "../reducers/posts";
+
+const rangeToLocation = range => {
+	let location = [range.start.row, range.start.column, range.end.row, range.end.column];
+	location = location.map(index => (index != undefined ? index + 1 : index));
+	location.push({}); // meta
+	return location;
+};
 
 export class SimpleStream extends Component {
 	disposables = [];
