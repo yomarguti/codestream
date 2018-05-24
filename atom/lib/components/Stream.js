@@ -3,7 +3,6 @@ import { connect } from "react-redux";
 import { FormattedMessage } from "react-intl";
 import _ from "underscore-plus";
 import createClassString from "classnames";
-import mixpanel from "mixpanel-browser";
 import { ComposeBox, DateSeparator, EditingIndicator, Post } from "codestream-components";
 import * as streamActions from "../actions/stream";
 import * as umiActions from "../actions/umi";
@@ -558,7 +557,14 @@ export class SimpleStream extends Component {
 		);
 		this.setState({ threadActive: false });
 		this.focusInput();
-		if (track) mixpanel.track("Page Viewed", { "Page Name": "Source Stream" });
+		if (track)
+			window.parent.postMessage(
+				{
+					type: "codestream:analytics",
+					body: { label: "Page Viewed", payload: { "Page Name": "Source Stream" } }
+				},
+				"*"
+			);
 	};
 
 	handleEditHeadshot = _event => {
@@ -652,7 +658,13 @@ export class SimpleStream extends Component {
 	// show the thread related to the given post, and if there is
 	// a codeblock, scroll to it and select it
 	selectPost = (id, wasClicked = false) => {
-		mixpanel.track("Page Viewed", { "Page Name": "Thread View" });
+		window.parent.postMessage(
+			{
+				type: "codestream:analytics",
+				body: { label: "Page Viewed", payload: { "Page Name": "Thread View" } }
+			},
+			"*"
+		);
 		const post = this.findPostById(id);
 		if (!post) return;
 

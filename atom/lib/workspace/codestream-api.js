@@ -1,5 +1,6 @@
 // @flow
 import { shell } from "electron";
+import mixpanel from "mixpanel-browser";
 import AddCommentPopupManager from "./add-comment-popup-manager";
 import BufferChangeTracker from "./buffer-change-tracker";
 import DiffManager from "./diff-manager";
@@ -38,11 +39,15 @@ export default class CodeStreamApi implements Resource {
 		if (data.type === "codestream:interaction:clicked-link") {
 			shell.openExternal(data.body);
 		}
+		if (data.type === "codestream:analytics") {
+			const { label, payload } = data.body;
+			mixpanel.track(label, payload);
+		}
 	};
 
 	destroy() {
 		if (this.initialized) {
-		window.removeEventListener("message", this.handleInteractionEvent, true);
+			window.removeEventListener("message", this.handleInteractionEvent, true);
 			this.popupManager.destroy();
 			this.bufferChangeTracker.destroy();
 			this.diffManager.destroy();
