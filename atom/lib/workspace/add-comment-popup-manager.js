@@ -1,4 +1,6 @@
-import { CompositeDisposable, Directory } from "atom";
+// @flow
+import { CompositeDisposable, Directory, TextEditor } from "atom";
+import type { DisplayMarker } from "../types/atom";
 import Blamer from "../util/blamer";
 
 const trimSelection = editor => {
@@ -40,10 +42,11 @@ const tooltipOptions = {
 };
 
 export default class AddCommentPopupManager {
-	markers = new Map();
+	markers: Map<number, DisplayMarker> = new Map();
 	subscriptions = new CompositeDisposable();
+	repoDirectory: Directory;
 
-	constructor(repoPath) {
+	constructor(repoPath: string) {
 		this.repoDirectory = new Directory(repoPath);
 
 		this.subscriptions.add(
@@ -57,19 +60,20 @@ export default class AddCommentPopupManager {
 					!this.markers.has(editor.id) &&
 					this.repoDirectory.contains(editor.getPath())
 				) {
+					const id = editor.id;
 					const marker = this.createMarker(editor);
-					this.markers.set(editor.id, marker);
+					this.markers.set(id, marker);
 
 					this.subscriptions.add(
-						editor.onDidDestroy(() => this.markers.delete(editor.id)),
+						editor.onDidDestroy(() => this.markers.delete(id)),
 						editor.onDidChangeSelectionRange(event =>
-							this.handleChangeSelection(editor, marker, event)
+							this.handleChangeSelection(id, marker, event)
 						),
 						marker.onDidDestroy(() => {
 							// decoration will be destroyed automatically
 							const { tooltip } = marker.getProperties();
 							tooltip && tooltip.dispose();
-							this.markers.delete(editor.id);
+							this.markers.delete(id);
 						})
 					);
 				}
@@ -77,8 +81,8 @@ export default class AddCommentPopupManager {
 		);
 	}
 
-	createMarker(editor) {
-		const marker = editor.markBufferRange([[0, 0], [0, 0]], { invalidate: "touch" });
+	createMarker(editor: TextEditor) {
+		const marker = editor.markBufferRange([[0, 0], [0, 0]], { invalidate: "never" });
 		const item = document.createElement("div");
 		item.className = "codestream-comment-popup";
 		const bubble = document.createElement("div");
@@ -90,30 +94,33 @@ export default class AddCommentPopupManager {
 		return marker;
 	}
 
-	handleChangeSelection(editor, marker, event) {
-		const selectedLength = editor.getSelectedText().length;
+	handleChangeSelection(editorId: number, marker: DisplayMarker, event) {
+		const editor = atom.workspace.getTextEditors().find(editor => editor.id === editorId);
+		if (editor) {
+			const selectedLength = editor.getSelectedText().length;
 
-		const shouldShowMarker =
-			selectedLength > 0 && !event.newBufferRange.isEqual(event.oldBufferRange);
+			const shouldShowMarker =
+				selectedLength > 0 && !event.newBufferRange.isEqual(event.oldBufferRange);
 
-		if (shouldShowMarker) {
-			const range = editor.getSelectedBufferRange();
-			let row = range.start.row > range.end.row ? range.end.row : range.start.row;
-			let startRange = [[row, 0], [row, 0]];
+			if (shouldShowMarker) {
+				const range = editor.getSelectedBufferRange();
+				let row = range.start.row > range.end.row ? range.end.row : range.start.row;
+				let startRange = [[row, 0], [row, 0]];
 
-			const decoration = editor.decorateMarker(marker, {
-				item: marker.getProperties().item,
-				type: "overlay",
-				class: "codestream-overlay"
-			});
-			marker.setBufferRange(startRange);
-			marker.setProperties({ decoration });
-		} else {
-			this.hideMarker(marker);
+				const decoration = editor.decorateMarker(marker, {
+					item: marker.getProperties().item,
+					type: "overlay",
+					class: "codestream-overlay"
+				});
+				marker.setBufferRange(startRange);
+				marker.setProperties({ decoration });
+			} else {
+				this.hideMarker(marker);
+			}
 		}
 	}
 
-	hideMarker(marker) {
+	hideMarker(marker: DisplayMarker) {
 		const { decoration } = marker.getProperties();
 		decoration && decoration.destroy();
 	}
@@ -126,15 +133,17 @@ export default class AddCommentPopupManager {
 		this.publishSelection(editor);
 
 		const marker = this.markers.get(editor.id);
-		this.hideMarker(marker);
+		if (marker) {
+			this.hideMarker(marker);
 
-		const { item, tooltip } = marker.getProperties();
-		// destroying the decoration leaks the tooltip, so it needs to be destroyed and recreated
-		tooltip.dispose();
-		marker.setProperties({ tooltip: atom.tooltips.add(item, tooltipOptions) });
+			const { item, tooltip } = marker.getProperties();
+			// destroying the decoration leaks the tooltip, so it needs to be destroyed and recreated
+			tooltip.dispose();
+			marker.setProperties({ tooltip: atom.tooltips.add(item, tooltipOptions) });
+		}
 	};
 
-	publishSelection(editor) {
+	publishSelection(editor: TextEditor) {
 		const range = trimSelection(editor);
 		let code = editor.getTextInBufferRange(range);
 		// preContext is the 10 lines of code immediately preceeding the selection
