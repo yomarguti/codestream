@@ -39,4 +39,20 @@ declare module "atom" {
 	declare export class Directory {
 		constructor(path: string, symlink?: boolean): Directory;
 	}
+
+	declare type PointArray = [number, number]
+
+	declare type PointThing = Point | PointArray
+
+	declare export class Point {
+		row: number;
+		column: number;
+		constructor(row: number, column: number): Point;
+	}
+
+	declare export class Range {
+		start: Point;
+		end: Point;
+		constructor(a: PointThing, b: PointThing): Range;
+	}
 }
