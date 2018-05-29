@@ -7,7 +7,7 @@ import NoGit from "./NoGit";
 import TooMuchGit from "./TooMuchGit";
 import Onboarding from "./onboarding/Onboarding";
 import Pages from "./Pages";
-import Stream from "./Stream";
+import { Stream } from "codestream-components";
 import NoAccess from "./NoAccess";
 import OfflineBanner from "./OfflineBanner";
 import SlackInfo from "./SlackInfo";
