@@ -3004,9 +3004,9 @@ var _perform = function (exec) {
   }
 };
 
-var navigator = _global.navigator;
+var navigator$1 = _global.navigator;
 
-var _userAgent = navigator && navigator.userAgent || '';
+var _userAgent = navigator$1 && navigator$1.userAgent || '';
 
 var _promiseResolve = function (C, x) {
   _anObject(C);
@@ -6624,6 +6624,681 @@ if (commonjsGlobal._babelPolyfill && typeof console !== "undefined" && console.w
 
 commonjsGlobal._babelPolyfill = true;
 
+function symbolObservablePonyfill(root) {
+	var result;
+	var Symbol = root.Symbol;
+
+	if (typeof Symbol === 'function') {
+		if (Symbol.observable) {
+			result = Symbol.observable;
+		} else {
+			result = Symbol('observable');
+			Symbol.observable = result;
+		}
+	} else {
+		result = '@@observable';
+	}
+
+	return result;
+}
+
+/* global window */
+
+var root;
+
+if (typeof self !== 'undefined') {
+  root = self;
+} else if (typeof window !== 'undefined') {
+  root = window;
+} else if (typeof global !== 'undefined') {
+  root = global;
+} else if (typeof module !== 'undefined') {
+  root = module;
+} else {
+  root = Function('return this')();
+}
+
+var result = symbolObservablePonyfill(root);
+
+/**
+ * These are private action types reserved by Redux.
+ * For any unknown actions, you must return the current state.
+ * If the current state is undefined, you must return the initial state.
+ * Do not reference these action types directly in your code.
+ */
+var ActionTypes = {
+  INIT: '@@redux/INIT' + Math.random().toString(36).substring(7).split('').join('.'),
+  REPLACE: '@@redux/REPLACE' + Math.random().toString(36).substring(7).split('').join('.')
+};
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
+  return typeof obj;
+} : function (obj) {
+  return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+};
+
+var _extends = Object.assign || function (target) {
+  for (var i = 1; i < arguments.length; i++) {
+    var source = arguments[i];
+
+    for (var key in source) {
+      if (Object.prototype.hasOwnProperty.call(source, key)) {
+        target[key] = source[key];
+      }
+    }
+  }
+
+  return target;
+};
+
+/**
+ * @param {any} obj The object to inspect.
+ * @returns {boolean} True if the argument appears to be a plain object.
+ */
+function isPlainObject(obj) {
+  if ((typeof obj === 'undefined' ? 'undefined' : _typeof(obj)) !== 'object' || obj === null) return false;
+
+  var proto = obj;
+  while (Object.getPrototypeOf(proto) !== null) {
+    proto = Object.getPrototypeOf(proto);
+  }
+
+  return Object.getPrototypeOf(obj) === proto;
+}
+
+/**
+ * Creates a Redux store that holds the state tree.
+ * The only way to change the data in the store is to call `dispatch()` on it.
+ *
+ * There should only be a single store in your app. To specify how different
+ * parts of the state tree respond to actions, you may combine several reducers
+ * into a single reducer function by using `combineReducers`.
+ *
+ * @param {Function} reducer A function that returns the next state tree, given
+ * the current state tree and the action to handle.
+ *
+ * @param {any} [preloadedState] The initial state. You may optionally specify it
+ * to hydrate the state from the server in universal apps, or to restore a
+ * previously serialized user session.
+ * If you use `combineReducers` to produce the root reducer function, this must be
+ * an object with the same shape as `combineReducers` keys.
+ *
+ * @param {Function} [enhancer] The store enhancer. You may optionally specify it
+ * to enhance the store with third-party capabilities such as middleware,
+ * time travel, persistence, etc. The only store enhancer that ships with Redux
+ * is `applyMiddleware()`.
+ *
+ * @returns {Store} A Redux store that lets you read the state, dispatch actions
+ * and subscribe to changes.
+ */
+function createStore(reducer, preloadedState, enhancer) {
+  var _ref2;
+
+  if (typeof preloadedState === 'function' && typeof enhancer === 'undefined') {
+    enhancer = preloadedState;
+    preloadedState = undefined;
+  }
+
+  if (typeof enhancer !== 'undefined') {
+    if (typeof enhancer !== 'function') {
+      throw new Error('Expected the enhancer to be a function.');
+    }
+
+    return enhancer(createStore)(reducer, preloadedState);
+  }
+
+  if (typeof reducer !== 'function') {
+    throw new Error('Expected the reducer to be a function.');
+  }
+
+  var currentReducer = reducer;
+  var currentState = preloadedState;
+  var currentListeners = [];
+  var nextListeners = currentListeners;
+  var isDispatching = false;
+
+  function ensureCanMutateNextListeners() {
+    if (nextListeners === currentListeners) {
+      nextListeners = currentListeners.slice();
+    }
+  }
+
+  /**
+   * Reads the state tree managed by the store.
+   *
+   * @returns {any} The current state tree of your application.
+   */
+  function getState() {
+    if (isDispatching) {
+      throw new Error('You may not call store.getState() while the reducer is executing. ' + 'The reducer has already received the state as an argument. ' + 'Pass it down from the top reducer instead of reading it from the store.');
+    }
+
+    return currentState;
+  }
+
+  /**
+   * Adds a change listener. It will be called any time an action is dispatched,
+   * and some part of the state tree may potentially have changed. You may then
+   * call `getState()` to read the current state tree inside the callback.
+   *
+   * You may call `dispatch()` from a change listener, with the following
+   * caveats:
+   *
+   * 1. The subscriptions are snapshotted just before every `dispatch()` call.
+   * If you subscribe or unsubscribe while the listeners are being invoked, this
+   * will not have any effect on the `dispatch()` that is currently in progress.
+   * However, the next `dispatch()` call, whether nested or not, will use a more
+   * recent snapshot of the subscription list.
+   *
+   * 2. The listener should not expect to see all state changes, as the state
+   * might have been updated multiple times during a nested `dispatch()` before
+   * the listener is called. It is, however, guaranteed that all subscribers
+   * registered before the `dispatch()` started will be called with the latest
+   * state by the time it exits.
+   *
+   * @param {Function} listener A callback to be invoked on every dispatch.
+   * @returns {Function} A function to remove this change listener.
+   */
+  function subscribe(listener) {
+    if (typeof listener !== 'function') {
+      throw new Error('Expected the listener to be a function.');
+    }
+
+    if (isDispatching) {
+      throw new Error('You may not call store.subscribe() while the reducer is executing. ' + 'If you would like to be notified after the store has been updated, subscribe from a ' + 'component and invoke store.getState() in the callback to access the latest state. ' + 'See https://redux.js.org/api-reference/store#subscribe(listener) for more details.');
+    }
+
+    var isSubscribed = true;
+
+    ensureCanMutateNextListeners();
+    nextListeners.push(listener);
+
+    return function unsubscribe() {
+      if (!isSubscribed) {
+        return;
+      }
+
+      if (isDispatching) {
+        throw new Error('You may not unsubscribe from a store listener while the reducer is executing. ' + 'See https://redux.js.org/api-reference/store#subscribe(listener) for more details.');
+      }
+
+      isSubscribed = false;
+
+      ensureCanMutateNextListeners();
+      var index = nextListeners.indexOf(listener);
+      nextListeners.splice(index, 1);
+    };
+  }
+
+  /**
+   * Dispatches an action. It is the only way to trigger a state change.
+   *
+   * The `reducer` function, used to create the store, will be called with the
+   * current state tree and the given `action`. Its return value will
+   * be considered the **next** state of the tree, and the change listeners
+   * will be notified.
+   *
+   * The base implementation only supports plain object actions. If you want to
+   * dispatch a Promise, an Observable, a thunk, or something else, you need to
+   * wrap your store creating function into the corresponding middleware. For
+   * example, see the documentation for the `redux-thunk` package. Even the
+   * middleware will eventually dispatch plain object actions using this method.
+   *
+   * @param {Object} action A plain object representing “what changed”. It is
+   * a good idea to keep actions serializable so you can record and replay user
+   * sessions, or use the time travelling `redux-devtools`. An action must have
+   * a `type` property which may not be `undefined`. It is a good idea to use
+   * string constants for action types.
+   *
+   * @returns {Object} For convenience, the same action object you dispatched.
+   *
+   * Note that, if you use a custom middleware, it may wrap `dispatch()` to
+   * return something else (for example, a Promise you can await).
+   */
+  function dispatch(action) {
+    if (!isPlainObject(action)) {
+      throw new Error('Actions must be plain objects. ' + 'Use custom middleware for async actions.');
+    }
+
+    if (typeof action.type === 'undefined') {
+      throw new Error('Actions may not have an undefined "type" property. ' + 'Have you misspelled a constant?');
+    }
+
+    if (isDispatching) {
+      throw new Error('Reducers may not dispatch actions.');
+    }
+
+    try {
+      isDispatching = true;
+      currentState = currentReducer(currentState, action);
+    } finally {
+      isDispatching = false;
+    }
+
+    var listeners = currentListeners = nextListeners;
+    for (var i = 0; i < listeners.length; i++) {
+      var listener = listeners[i];
+      listener();
+    }
+
+    return action;
+  }
+
+  /**
+   * Replaces the reducer currently used by the store to calculate the state.
+   *
+   * You might need this if your app implements code splitting and you want to
+   * load some of the reducers dynamically. You might also need this if you
+   * implement a hot reloading mechanism for Redux.
+   *
+   * @param {Function} nextReducer The reducer for the store to use instead.
+   * @returns {void}
+   */
+  function replaceReducer(nextReducer) {
+    if (typeof nextReducer !== 'function') {
+      throw new Error('Expected the nextReducer to be a function.');
+    }
+
+    currentReducer = nextReducer;
+    dispatch({ type: ActionTypes.REPLACE });
+  }
+
+  /**
+   * Interoperability point for observable/reactive libraries.
+   * @returns {observable} A minimal observable of state changes.
+   * For more information, see the observable proposal:
+   * https://github.com/tc39/proposal-observable
+   */
+  function observable() {
+    var _ref;
+
+    var outerSubscribe = subscribe;
+    return _ref = {
+      /**
+       * The minimal observable subscription method.
+       * @param {Object} observer Any object that can be used as an observer.
+       * The observer object should have a `next` method.
+       * @returns {subscription} An object with an `unsubscribe` method that can
+       * be used to unsubscribe the observable from the store, and prevent further
+       * emission of values from the observable.
+       */
+      subscribe: function subscribe(observer) {
+        if ((typeof observer === 'undefined' ? 'undefined' : _typeof(observer)) !== 'object' || observer === null) {
+          throw new TypeError('Expected the observer to be an object.');
+        }
+
+        function observeState() {
+          if (observer.next) {
+            observer.next(getState());
+          }
+        }
+
+        observeState();
+        var unsubscribe = outerSubscribe(observeState);
+        return { unsubscribe: unsubscribe };
+      }
+    }, _ref[result] = function () {
+      return this;
+    }, _ref;
+  }
+
+  // When a store is created, an "INIT" action is dispatched so that every
+  // reducer returns their initial state. This effectively populates
+  // the initial state tree.
+  dispatch({ type: ActionTypes.INIT });
+
+  return _ref2 = {
+    dispatch: dispatch,
+    subscribe: subscribe,
+    getState: getState,
+    replaceReducer: replaceReducer
+  }, _ref2[result] = observable, _ref2;
+}
+
+/**
+ * Prints a warning in the console if it exists.
+ *
+ * @param {String} message The warning message.
+ * @returns {void}
+ */
+function warning(message) {
+  /* eslint-disable no-console */
+  if (typeof console !== 'undefined' && typeof console.error === 'function') {
+    console.error(message);
+  }
+  /* eslint-enable no-console */
+  try {
+    // This error was thrown as a convenience so that if you enable
+    // "break on all exceptions" in your console,
+    // it would pause the execution at this line.
+    throw new Error(message);
+  } catch (e) {} // eslint-disable-line no-empty
+}
+
+function getUndefinedStateErrorMessage(key, action) {
+  var actionType = action && action.type;
+  var actionDescription = actionType && 'action "' + String(actionType) + '"' || 'an action';
+
+  return 'Given ' + actionDescription + ', reducer "' + key + '" returned undefined. ' + 'To ignore an action, you must explicitly return the previous state. ' + 'If you want this reducer to hold no value, you can return null instead of undefined.';
+}
+
+function getUnexpectedStateShapeWarningMessage(inputState, reducers, action, unexpectedKeyCache) {
+  var reducerKeys = Object.keys(reducers);
+  var argumentName = action && action.type === ActionTypes.INIT ? 'preloadedState argument passed to createStore' : 'previous state received by the reducer';
+
+  if (reducerKeys.length === 0) {
+    return 'Store does not have a valid reducer. Make sure the argument passed ' + 'to combineReducers is an object whose values are reducers.';
+  }
+
+  if (!isPlainObject(inputState)) {
+    return 'The ' + argumentName + ' has unexpected type of "' + {}.toString.call(inputState).match(/\s([a-z|A-Z]+)/)[1] + '". Expected argument to be an object with the following ' + ('keys: "' + reducerKeys.join('", "') + '"');
+  }
+
+  var unexpectedKeys = Object.keys(inputState).filter(function (key) {
+    return !reducers.hasOwnProperty(key) && !unexpectedKeyCache[key];
+  });
+
+  unexpectedKeys.forEach(function (key) {
+    unexpectedKeyCache[key] = true;
+  });
+
+  if (action && action.type === ActionTypes.REPLACE) return;
+
+  if (unexpectedKeys.length > 0) {
+    return 'Unexpected ' + (unexpectedKeys.length > 1 ? 'keys' : 'key') + ' ' + ('"' + unexpectedKeys.join('", "') + '" found in ' + argumentName + '. ') + 'Expected to find one of the known reducer keys instead: ' + ('"' + reducerKeys.join('", "') + '". Unexpected keys will be ignored.');
+  }
+}
+
+function assertReducerShape(reducers) {
+  Object.keys(reducers).forEach(function (key) {
+    var reducer = reducers[key];
+    var initialState = reducer(undefined, { type: ActionTypes.INIT });
+
+    if (typeof initialState === 'undefined') {
+      throw new Error('Reducer "' + key + '" returned undefined during initialization. ' + 'If the state passed to the reducer is undefined, you must ' + 'explicitly return the initial state. The initial state may ' + 'not be undefined. If you don\'t want to set a value for this reducer, ' + 'you can use null instead of undefined.');
+    }
+
+    var type = '@@redux/PROBE_UNKNOWN_ACTION_' + Math.random().toString(36).substring(7).split('').join('.');
+    if (typeof reducer(undefined, { type: type }) === 'undefined') {
+      throw new Error('Reducer "' + key + '" returned undefined when probed with a random type. ' + ('Don\'t try to handle ' + ActionTypes.INIT + ' or other actions in "redux/*" ') + 'namespace. They are considered private. Instead, you must return the ' + 'current state for any unknown actions, unless it is undefined, ' + 'in which case you must return the initial state, regardless of the ' + 'action type. The initial state may not be undefined, but can be null.');
+    }
+  });
+}
+
+/**
+ * Turns an object whose values are different reducer functions, into a single
+ * reducer function. It will call every child reducer, and gather their results
+ * into a single state object, whose keys correspond to the keys of the passed
+ * reducer functions.
+ *
+ * @param {Object} reducers An object whose values correspond to different
+ * reducer functions that need to be combined into one. One handy way to obtain
+ * it is to use ES6 `import * as reducers` syntax. The reducers may never return
+ * undefined for any action. Instead, they should return their initial state
+ * if the state passed to them was undefined, and the current state for any
+ * unrecognized action.
+ *
+ * @returns {Function} A reducer function that invokes every reducer inside the
+ * passed object, and builds a state object with the same shape.
+ */
+function combineReducers(reducers) {
+  var reducerKeys = Object.keys(reducers);
+  var finalReducers = {};
+  for (var i = 0; i < reducerKeys.length; i++) {
+    var key = reducerKeys[i];
+
+    if (process.env.NODE_ENV !== 'production') {
+      if (typeof reducers[key] === 'undefined') {
+        warning('No reducer provided for key "' + key + '"');
+      }
+    }
+
+    if (typeof reducers[key] === 'function') {
+      finalReducers[key] = reducers[key];
+    }
+  }
+  var finalReducerKeys = Object.keys(finalReducers);
+
+  var unexpectedKeyCache = void 0;
+  if (process.env.NODE_ENV !== 'production') {
+    unexpectedKeyCache = {};
+  }
+
+  var shapeAssertionError = void 0;
+  try {
+    assertReducerShape(finalReducers);
+  } catch (e) {
+    shapeAssertionError = e;
+  }
+
+  return function combination() {
+    var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    var action = arguments[1];
+
+    if (shapeAssertionError) {
+      throw shapeAssertionError;
+    }
+
+    if (process.env.NODE_ENV !== 'production') {
+      var warningMessage = getUnexpectedStateShapeWarningMessage(state, finalReducers, action, unexpectedKeyCache);
+      if (warningMessage) {
+        warning(warningMessage);
+      }
+    }
+
+    var hasChanged = false;
+    var nextState = {};
+    for (var _i = 0; _i < finalReducerKeys.length; _i++) {
+      var _key = finalReducerKeys[_i];
+      var reducer = finalReducers[_key];
+      var previousStateForKey = state[_key];
+      var nextStateForKey = reducer(previousStateForKey, action);
+      if (typeof nextStateForKey === 'undefined') {
+        var errorMessage = getUndefinedStateErrorMessage(_key, action);
+        throw new Error(errorMessage);
+      }
+      nextState[_key] = nextStateForKey;
+      hasChanged = hasChanged || nextStateForKey !== previousStateForKey;
+    }
+    return hasChanged ? nextState : state;
+  };
+}
+
+function bindActionCreator(actionCreator, dispatch) {
+  return function () {
+    return dispatch(actionCreator.apply(this, arguments));
+  };
+}
+
+/**
+ * Turns an object whose values are action creators, into an object with the
+ * same keys, but with every function wrapped into a `dispatch` call so they
+ * may be invoked directly. This is just a convenience method, as you can call
+ * `store.dispatch(MyActionCreators.doSomething())` yourself just fine.
+ *
+ * For convenience, you can also pass a single function as the first argument,
+ * and get a function in return.
+ *
+ * @param {Function|Object} actionCreators An object whose values are action
+ * creator functions. One handy way to obtain it is to use ES6 `import * as`
+ * syntax. You may also pass a single function.
+ *
+ * @param {Function} dispatch The `dispatch` function available on your Redux
+ * store.
+ *
+ * @returns {Function|Object} The object mimicking the original object, but with
+ * every action creator wrapped into the `dispatch` call. If you passed a
+ * function as `actionCreators`, the return value will also be a single
+ * function.
+ */
+function bindActionCreators(actionCreators, dispatch) {
+  if (typeof actionCreators === 'function') {
+    return bindActionCreator(actionCreators, dispatch);
+  }
+
+  if ((typeof actionCreators === 'undefined' ? 'undefined' : _typeof(actionCreators)) !== 'object' || actionCreators === null) {
+    throw new Error('bindActionCreators expected an object or a function, instead received ' + (actionCreators === null ? 'null' : typeof actionCreators === 'undefined' ? 'undefined' : _typeof(actionCreators)) + '. ' + 'Did you write "import ActionCreators from" instead of "import * as ActionCreators from"?');
+  }
+
+  var keys = Object.keys(actionCreators);
+  var boundActionCreators = {};
+  for (var i = 0; i < keys.length; i++) {
+    var key = keys[i];
+    var actionCreator = actionCreators[key];
+    if (typeof actionCreator === 'function') {
+      boundActionCreators[key] = bindActionCreator(actionCreator, dispatch);
+    }
+  }
+  return boundActionCreators;
+}
+
+/**
+ * Composes single-argument functions from right to left. The rightmost
+ * function can take multiple arguments as it provides the signature for
+ * the resulting composite function.
+ *
+ * @param {...Function} funcs The functions to compose.
+ * @returns {Function} A function obtained by composing the argument functions
+ * from right to left. For example, compose(f, g, h) is identical to doing
+ * (...args) => f(g(h(...args))).
+ */
+
+function compose() {
+  for (var _len = arguments.length, funcs = Array(_len), _key = 0; _key < _len; _key++) {
+    funcs[_key] = arguments[_key];
+  }
+
+  if (funcs.length === 0) {
+    return function (arg) {
+      return arg;
+    };
+  }
+
+  if (funcs.length === 1) {
+    return funcs[0];
+  }
+
+  return funcs.reduce(function (a, b) {
+    return function () {
+      return a(b.apply(undefined, arguments));
+    };
+  });
+}
+
+/**
+ * Creates a store enhancer that applies middleware to the dispatch method
+ * of the Redux store. This is handy for a variety of tasks, such as expressing
+ * asynchronous actions in a concise manner, or logging every action payload.
+ *
+ * See `redux-thunk` package as an example of the Redux middleware.
+ *
+ * Because middleware is potentially asynchronous, this should be the first
+ * store enhancer in the composition chain.
+ *
+ * Note that each middleware will be given the `dispatch` and `getState` functions
+ * as named arguments.
+ *
+ * @param {...Function} middlewares The middleware chain to be applied.
+ * @returns {Function} A store enhancer applying the middleware.
+ */
+function applyMiddleware() {
+  for (var _len = arguments.length, middlewares = Array(_len), _key = 0; _key < _len; _key++) {
+    middlewares[_key] = arguments[_key];
+  }
+
+  return function (createStore) {
+    return function () {
+      for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+        args[_key2] = arguments[_key2];
+      }
+
+      var store = createStore.apply(undefined, args);
+      var _dispatch = function dispatch() {
+        throw new Error('Dispatching while constructing your middleware is not allowed. ' + 'Other middleware would not be applied to this dispatch.');
+      };
+
+      var middlewareAPI = {
+        getState: store.getState,
+        dispatch: function dispatch() {
+          return _dispatch.apply(undefined, arguments);
+        }
+      };
+      var chain = middlewares.map(function (middleware) {
+        return middleware(middlewareAPI);
+      });
+      _dispatch = compose.apply(undefined, chain)(store.dispatch);
+
+      return _extends({}, store, {
+        dispatch: _dispatch
+      });
+    };
+  };
+}
+
+/*
+ * This is a dummy function to check if the function name has been altered by minification.
+ * If the function has been minified and NODE_ENV !== 'production', warn the user.
+ */
+function isCrushed() {}
+
+if (process.env.NODE_ENV !== 'production' && typeof isCrushed.name === 'string' && isCrushed.name !== 'isCrushed') {
+  warning("You are currently using minified code outside of NODE_ENV === 'production'. " + 'This means that you are running a slower development build of Redux. ' + 'You can use loose-envify (https://github.com/zertosh/loose-envify) for browserify ' + 'or DefinePlugin for webpack (http://stackoverflow.com/questions/30030031) ' + 'to ensure you have the correct code for your production build.');
+}
+
+var redux = /*#__PURE__*/Object.freeze({
+	createStore: createStore,
+	combineReducers: combineReducers,
+	bindActionCreators: bindActionCreators,
+	applyMiddleware: applyMiddleware,
+	compose: compose,
+	__DO_NOT_USE__ActionTypes: ActionTypes
+});
+
+var reduxDevtoolsExtension = createCommonjsModule(function (module, exports) {
+
+var compose = redux.compose;
+
+exports.__esModule = true;
+exports.composeWithDevTools = (
+  typeof window !== 'undefined' && window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ ?
+    window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ :
+    function() {
+      if (arguments.length === 0) return undefined;
+      if (typeof arguments[0] === 'object') return compose;
+      return compose.apply(null, arguments);
+    }
+);
+
+exports.devToolsEnhancer = (
+  typeof window !== 'undefined' && window.__REDUX_DEVTOOLS_EXTENSION__ ?
+    window.__REDUX_DEVTOOLS_EXTENSION__ :
+    function() { return function(noop) { return noop; } }
+);
+});
+
+unwrapExports(reduxDevtoolsExtension);
+var reduxDevtoolsExtension_1 = reduxDevtoolsExtension.composeWithDevTools;
+var reduxDevtoolsExtension_2 = reduxDevtoolsExtension.devToolsEnhancer;
+
+function createThunkMiddleware(extraArgument) {
+  return function (_ref) {
+    var dispatch = _ref.dispatch,
+        getState = _ref.getState;
+    return function (next) {
+      return function (action) {
+        if (typeof action === 'function') {
+          return action(dispatch, getState, extraArgument);
+        }
+
+        return next(action);
+      };
+    };
+  };
+}
+
+var thunk = createThunkMiddleware();
+thunk.withExtraArgument = createThunkMiddleware;
+
 /*
 object-assign
 (c) Sindre Sorhus
@@ -6837,7 +7512,7 @@ Y=X&&W||X;var react_production_min=Y["default"]?Y["default"]:Y;
  * same logic and follow the same code paths.
  */
 
-var warning = emptyFunction_1;
+var warning$1 = emptyFunction_1;
 
 if (process.env.NODE_ENV !== 'production') {
   var printWarning = function printWarning(format) {
@@ -6860,7 +7535,7 @@ if (process.env.NODE_ENV !== 'production') {
     } catch (x) {}
   };
 
-  warning = function warning(condition, format) {
+  warning$1 = function warning(condition, format) {
     if (format === undefined) {
       throw new Error('`warning(condition, format, ...args)` requires a warning ' + 'message argument');
     }
@@ -6879,7 +7554,7 @@ if (process.env.NODE_ENV !== 'production') {
   };
 }
 
-var warning_1 = warning;
+var warning_1 = warning$1;
 
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -6894,7 +7569,7 @@ var ReactPropTypesSecret_1 = ReactPropTypesSecret;
 
 if (process.env.NODE_ENV !== 'production') {
   var invariant$1 = invariant_1;
-  var warning$1 = warning_1;
+  var warning$2 = warning_1;
   var ReactPropTypesSecret$1 = ReactPropTypesSecret_1;
   var loggedTypeFailures = {};
 }
@@ -6926,7 +7601,7 @@ function checkPropTypes(typeSpecs, values, location, componentName, getStack) {
         } catch (ex) {
           error = ex;
         }
-        warning$1(!error || error instanceof Error, '%s: type specification of %s `%s` is invalid; the type checker ' + 'function must return `null` or an `Error` but returned a %s. ' + 'You may have forgotten to pass an argument to the type checker ' + 'creator (arrayOf, instanceOf, objectOf, oneOf, oneOfType, and ' + 'shape all require an argument).', componentName || 'React class', location, typeSpecName, typeof error);
+        warning$2(!error || error instanceof Error, '%s: type specification of %s `%s` is invalid; the type checker ' + 'function must return `null` or an `Error` but returned a %s. ' + 'You may have forgotten to pass an argument to the type checker ' + 'creator (arrayOf, instanceOf, objectOf, oneOf, oneOfType, and ' + 'shape all require an argument).', componentName || 'React class', location, typeSpecName, typeof error);
         if (error instanceof Error && !(error.message in loggedTypeFailures)) {
           // Only monitor this failure once because there tends to be a lot of the
           // same error.
@@ -6934,7 +7609,7 @@ function checkPropTypes(typeSpecs, values, location, componentName, getStack) {
 
           var stack = getStack ? getStack() : '';
 
-          warning$1(false, 'Failed %s type: %s%s', location, error.message, stack != null ? stack : '');
+          warning$2(false, 'Failed %s type: %s%s', location, error.message, stack != null ? stack : '');
         }
       }
     }
@@ -8978,7 +9653,7 @@ var storeShape = propTypes.shape({
  * @param {String} message The warning message.
  * @returns {void}
  */
-function warning$2(message) {
+function warning$3(message) {
   /* eslint-disable no-console */
   if (typeof console !== 'undefined' && typeof console.error === 'function') {
     console.error(message);
@@ -9007,7 +9682,7 @@ function warnAboutReceivingStore() {
   }
   didWarnAboutReceivingStore = true;
 
-  warning$2('<Provider> does not support changing `store` on the fly. ' + 'It is most likely that you see this error because you updated to ' + 'Redux 2.x and React Redux 2.x which no longer hot reload reducers ' + 'automatically. See https://github.com/reactjs/react-redux/releases/' + 'tag/v2.0.0 for the migration instructions.');
+  warning$3('<Provider> does not support changing `store` on the fly. ' + 'It is most likely that you see this error because you updated to ' + 'Redux 2.x and React Redux 2.x which no longer hot reload reducers ' + 'automatically. See https://github.com/reactjs/react-redux/releases/' + 'tag/v2.0.0 for the migration instructions.');
 }
 
 function createProvider() {
@@ -9275,7 +9950,7 @@ var Subscription$1 = function () {
   return Subscription;
 }();
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+var _extends$1 = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 function _classCallCheck$2(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -9357,7 +10032,7 @@ selectorFactory) {
 
     var displayName = getDisplayName(wrappedComponentName);
 
-    var selectorFactoryOptions = _extends({}, connectOptions, {
+    var selectorFactoryOptions = _extends$1({}, connectOptions, {
       getDisplayName: getDisplayName,
       methodName: methodName,
       renderCountProp: renderCountProp,
@@ -9496,7 +10171,7 @@ selectorFactory) {
         // this is especially important for 'ref' since that's a reference back to the component
         // instance. a singleton memoized selector would then be holding a reference to the
         // instance, preventing the instance from being garbage collected, and that would be bad
-        var withExtras = _extends({}, props);
+        var withExtras = _extends$1({}, props);
         if (withRef) withExtras.ref = this.setWrappedInstance;
         if (renderCountProp) withExtras[renderCountProp] = this.renderCount++;
         if (this.propsMode && this.subscription) withExtras[subscriptionKey] = this.subscription;
@@ -9587,137 +10262,6 @@ function shallowEqual(objA, objB) {
   }
 
   return true;
-}
-
-function symbolObservablePonyfill(root) {
-	var result;
-	var Symbol = root.Symbol;
-
-	if (typeof Symbol === 'function') {
-		if (Symbol.observable) {
-			result = Symbol.observable;
-		} else {
-			result = Symbol('observable');
-			Symbol.observable = result;
-		}
-	} else {
-		result = '@@observable';
-	}
-
-	return result;
-}
-
-/* global window */
-
-var root;
-
-if (typeof self !== 'undefined') {
-  root = self;
-} else if (typeof window !== 'undefined') {
-  root = window;
-} else if (typeof global !== 'undefined') {
-  root = global;
-} else if (typeof module !== 'undefined') {
-  root = module;
-} else {
-  root = Function('return this')();
-}
-
-var result = symbolObservablePonyfill(root);
-
-/**
- * These are private action types reserved by Redux.
- * For any unknown actions, you must return the current state.
- * If the current state is undefined, you must return the initial state.
- * Do not reference these action types directly in your code.
- */
-var ActionTypes = {
-  INIT: '@@redux/INIT' + Math.random().toString(36).substring(7).split('').join('.'),
-  REPLACE: '@@redux/REPLACE' + Math.random().toString(36).substring(7).split('').join('.')
-};
-
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
-  return typeof obj;
-} : function (obj) {
-  return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
-};
-
-/**
- * Prints a warning in the console if it exists.
- *
- * @param {String} message The warning message.
- * @returns {void}
- */
-function warning$3(message) {
-  /* eslint-disable no-console */
-  if (typeof console !== 'undefined' && typeof console.error === 'function') {
-    console.error(message);
-  }
-  /* eslint-enable no-console */
-  try {
-    // This error was thrown as a convenience so that if you enable
-    // "break on all exceptions" in your console,
-    // it would pause the execution at this line.
-    throw new Error(message);
-  } catch (e) {} // eslint-disable-line no-empty
-}
-
-function bindActionCreator(actionCreator, dispatch) {
-  return function () {
-    return dispatch(actionCreator.apply(this, arguments));
-  };
-}
-
-/**
- * Turns an object whose values are action creators, into an object with the
- * same keys, but with every function wrapped into a `dispatch` call so they
- * may be invoked directly. This is just a convenience method, as you can call
- * `store.dispatch(MyActionCreators.doSomething())` yourself just fine.
- *
- * For convenience, you can also pass a single function as the first argument,
- * and get a function in return.
- *
- * @param {Function|Object} actionCreators An object whose values are action
- * creator functions. One handy way to obtain it is to use ES6 `import * as`
- * syntax. You may also pass a single function.
- *
- * @param {Function} dispatch The `dispatch` function available on your Redux
- * store.
- *
- * @returns {Function|Object} The object mimicking the original object, but with
- * every action creator wrapped into the `dispatch` call. If you passed a
- * function as `actionCreators`, the return value will also be a single
- * function.
- */
-function bindActionCreators(actionCreators, dispatch) {
-  if (typeof actionCreators === 'function') {
-    return bindActionCreator(actionCreators, dispatch);
-  }
-
-  if ((typeof actionCreators === 'undefined' ? 'undefined' : _typeof(actionCreators)) !== 'object' || actionCreators === null) {
-    throw new Error('bindActionCreators expected an object or a function, instead received ' + (actionCreators === null ? 'null' : typeof actionCreators === 'undefined' ? 'undefined' : _typeof(actionCreators)) + '. ' + 'Did you write "import ActionCreators from" instead of "import * as ActionCreators from"?');
-  }
-
-  var keys = Object.keys(actionCreators);
-  var boundActionCreators = {};
-  for (var i = 0; i < keys.length; i++) {
-    var key = keys[i];
-    var actionCreator = actionCreators[key];
-    if (typeof actionCreator === 'function') {
-      boundActionCreators[key] = bindActionCreator(actionCreator, dispatch);
-    }
-  }
-  return boundActionCreators;
-}
-
-/*
- * This is a dummy function to check if the function name has been altered by minification.
- * If the function has been minified and NODE_ENV !== 'production', warn the user.
- */
-function isCrushed() {}
-
-if (process.env.NODE_ENV !== 'production' && typeof isCrushed.name === 'string' && isCrushed.name !== 'isCrushed') {
-  warning$3("You are currently using minified code outside of NODE_ENV === 'production'. " + 'This means that you are running a slower development build of Redux. ' + 'You can use loose-envify (https://github.com/zertosh/loose-envify) for browserify ' + 'or DefinePlugin for webpack (http://stackoverflow.com/questions/30030031) ' + 'to ensure you have the correct code for your production build.');
 }
 
 /** Detect free variable `global` from Node.js. */
@@ -9922,7 +10466,7 @@ function isPlainObject$1(value) {
 
 function verifyPlainObject(value, displayName, methodName) {
   if (!isPlainObject$1(value)) {
-    warning$2(methodName + '() in ' + displayName + ' must return a plain object. Instead received ' + value + '.');
+    warning$3(methodName + '() in ' + displayName + ' must return a plain object. Instead received ' + value + '.');
   }
 }
 
@@ -10071,7 +10615,7 @@ function verify(selector, methodName, displayName) {
     throw new Error('Unexpected value for ' + methodName + ' in ' + displayName + '.');
   } else if (methodName === 'mapStateToProps' || methodName === 'mapDispatchToProps') {
     if (!selector.hasOwnProperty('dependsOnOwnProps')) {
-      warning$2('The selector for ' + methodName + ' of ' + displayName + ' did not specify a value for dependsOnOwnProps.');
+      warning$3('The selector for ' + methodName + ' of ' + displayName + ' did not specify a value for dependsOnOwnProps.');
     }
   }
 }
@@ -21184,16 +21728,6 @@ var markStreamRead = function markStreamRead(streamId) {
               return _context.abrupt("return");
 
             case 2:
-
-              window.parent.postMessage({ type: "codestream:action:mark-stream-read", body: streamId }, "*");
-              // const markReadData = await http.put(
-              //   "/read/" + streamId,
-              //   {},
-              //   session.accessToken
-              // );
-              // dispatch({ type: "CLEAR_UMI", payload: streamId });
-
-            case 3:
             case "end":
               return _context.stop();
           }
@@ -21227,9 +21761,13 @@ var createPost = function createPost(streamId, parentPostId, text, codeBlocks, m
   }();
 };
 
-var editPost = function editPost() {};
+var editPost = function editPost() {
+  // TODO
+};
 
-var deletePost = function deletePost() {};
+var deletePost = function deletePost() {
+  // TODO
+};
 
 var actions = /*#__PURE__*/Object.freeze({
 	markStreamRead: markStreamRead,
@@ -21238,11 +21776,59 @@ var actions = /*#__PURE__*/Object.freeze({
 	deletePost: deletePost
 });
 
+var goToInvitePage = function goToInvitePage() {
+  return { type: "GO_TO_INVITE_PAGE" };
+};
+
 var toMapBy = function toMapBy(key, entities) {
 	return entities.reduce(function (result, entity) {
 		return _extends$4({}, result, defineProperty$1({}, entity[key], entity));
 	}, {});
 };
+
+var initialState = {
+	byTeam: {
+		//[teamId]: { [streamId]: {} }
+	},
+	byRepo: {
+		//[repoId]: { byFile: {} }
+	}
+};
+
+var addStreamForTeam = function addStreamForTeam(state, stream) {
+	var teamId = stream.teamId;
+	var teamStreams = state[teamId] || {};
+	return _extends$4({}, state, defineProperty$1({}, teamId, _extends$4({}, teamStreams, defineProperty$1({}, stream.id, stream))));
+};
+
+var addStream = function addStream(state, stream) {
+	var existingStreamsForRepo = state.byRepo[stream.repoId] || { byFile: {}, byId: {} };
+	return {
+		byTeam: addStreamForTeam(state.byTeam, stream),
+		byRepo: _extends$4({}, state.byRepo, defineProperty$1({}, stream.repoId, {
+			byFile: _extends$4({}, existingStreamsForRepo.byFile, defineProperty$1({}, stream.file, stream)),
+			byId: _extends$4({}, existingStreamsForRepo.byId, defineProperty$1({}, stream.id, stream))
+		}))
+	};
+};
+
+var streams = (function () {
+	var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState;
+	var _ref = arguments[1];
+	var type = _ref.type,
+	    payload = _ref.payload;
+
+	switch (type) {
+		case "ADD_STREAMS":
+		case "BOOTSTRAP_STREAMS":
+			return payload.reduce(addStream, state);
+		case "STREAMS-UPDATE_FROM_PUBNUB":
+		case "ADD_STREAM":
+			return addStream(state, payload);
+		default:
+			return state;
+	}
+});
 
 // Selectors
 var getStreamForTeam = function getStreamForTeam(state, teamId) {
@@ -21276,1081 +21862,1703 @@ var getPostsForStream = function getPostsForStream(_ref2) {
 };
 
 var rangeToLocation = function rangeToLocation(range) {
-  var location = [range.start.row, range.start.column, range.end.row, range.end.column];
-  location = location.map(function (index) {
-    return index != undefined ? index + 1 : index;
-  });
-  location.push({}); // meta
-  return location;
+	var location = [range.start.row, range.start.column, range.end.row, range.end.column];
+	location = location.map(function (index) {
+		return index != undefined ? index + 1 : index;
+	});
+	location.push({}); // meta
+	return location;
 };
 
 var SimpleStream = function (_Component) {
-  inherits(SimpleStream, _Component);
-
-  function SimpleStream(props) {
-    classCallCheck(this, SimpleStream);
-
-    var _this = possibleConstructorReturn(this, (SimpleStream.__proto__ || Object.getPrototypeOf(SimpleStream)).call(this, props));
-
-    Object.defineProperty(_this, "disposables", {
-      enumerable: true,
-      writable: true,
-      value: []
-    });
-    Object.defineProperty(_this, "handleInteractionEvent", {
-      enumerable: true,
-      writable: true,
-      value: function value(_ref) {
-        var data = _ref.data;
-
-        if (data.type === "codestream:interaction:marker-selected") {
-          _this.selectPost(data.body.postId);
-        }
-      }
-    });
-    Object.defineProperty(_this, "handleResizeCompose", {
-      enumerable: true,
-      writable: true,
-      value: function value() {
-        _this.resizeStream();
-      }
-    });
-    Object.defineProperty(_this, "resizeStream", {
-      enumerable: true,
-      writable: true,
-      value: function value() {
-        if (!_this._div || !_this._compose) return;
-        var streamHeight = _this._div.offsetHeight;
-        var postslistHeight = _this._postslist.offsetHeight;
-        var composeHeight = _this._compose.current.offsetHeight;
-        var headerHeight = _this._header.offsetHeight;
-        if (postslistHeight < streamHeight) {
-          var newHeight = streamHeight - postslistHeight + _this._intro.offsetHeight - composeHeight;
-          _this._intro.style.height = newHeight + "px";
-        }
-        var padding = composeHeight + headerHeight;
-        // this._div.style.paddingBottom = padding + "px";
-        _this._mainPanel.style.paddingBottom = padding + "px";
-        // we re-measure the height of postslist here because we just changed
-        // it with the style declaration immediately above
-        _this._threadpostslist.style.height = _this._postslist.offsetHeight + "px";
-        // this._threadpostslist.style.top = headerHeight + "px";
-        // if (this._atMentionsPopup)
-        // this._atMentionsPopup.style.bottom = this._compose.offsetHeight + "px";
-
-        var scrollHeight = _this._postslist.scrollHeight;
-        var currentScroll = _this._postslist.scrollTop;
-        var offBottom = scrollHeight - currentScroll - streamHeight + composeHeight + headerHeight;
-        // if i am manually scrolling, don't programatically scroll to bottom
-        // offBottom is how far we've scrolled off the bottom of the posts list
-        console.log("OFF BOTTOM IS: ", offBottom);
-        if (offBottom < 100) _this.scrollToBottom();
-      }
-    });
-    Object.defineProperty(_this, "scrollToBottom", {
-      enumerable: true,
-      writable: true,
-      value: function value(force) {
-        // don't scroll to bottom if we're in the middle of an edit,
-        // unless the force parameter is called
-        if (_this.state.editingPostId && !force) return;
-        if (_this._postslist) _this._postslist.scrollTop = 100000;
-      }
-    });
-    Object.defineProperty(_this, "calculateScrolledOffBottom", {
-      enumerable: true,
-      writable: true,
-      value: function value() {}
-    });
-    Object.defineProperty(_this, "handleClickHelpLink", {
-      enumerable: true,
-      writable: true,
-      value: function value(event) {
-        event.preventDefault();
-        window.parent.postMessage({
-          type: "codestream:interaction:clicked-link",
-          body: "https://help.codestream.com"
-        }, "*");
-      }
-    });
-    Object.defineProperty(_this, "renderIntro", {
-      enumerable: true,
-      writable: true,
-      value: function value() {
-        return [react.createElement(
-          "label",
-          { key: "welcome" },
-          react.createElement(FormattedMessage, {
-            id: "stream.intro.welcome",
-            defaultMessage: "Welcome to CodeStream!"
-          })
-        ), react.createElement(
-          "label",
-          { key: "info" },
-          react.createElement(
-            "ul",
-            null,
-            react.createElement(
-              "li",
-              null,
-              react.createElement(FormattedMessage, {
-                id: "stream.intro.eachFile",
-                defaultMessage: "Post a message and any of your teammates can join the discussion."
-              })
-            ),
-            react.createElement(
-              "li",
-              null,
-              react.createElement(FormattedMessage, {
-                id: "stream.intro.comment",
-                defaultMessage: 'Comment on a specific block of code by selecting it and then clicking the "+" button.'
-              })
-            ),
-            react.createElement(
-              "li",
-              null,
-              react.createElement(
-                FormattedMessage,
-                {
-                  id: "stream.intro.share",
-                  defaultMessage: "Select \"Codestream: Invite\" from the command palette to invite your team."
-                },
-                function () {
-                  return react.createElement(
-                    react.Fragment,
-                    null,
-                    "Select",
-                    " ",
-                    react.createElement(
-                      "a",
-                      { onClick: _this.props.goToInvitePage },
-                      "Codestream: Invite"
-                    ),
-                    " ",
-                    "from the command palette to invite your team."
-                  );
-                }
-              )
-            )
-          )
-        ), react.createElement(
-          "label",
-          { key: "learn-more" },
-          "Learn more at",
-          " ",
-          react.createElement(
-            "a",
-            { onClick: _this.handleClickHelpLink },
-            "help.codestream.com"
-          )
-        )];
-      }
-    });
-    Object.defineProperty(_this, "renderThreadPosts", {
-      enumerable: true,
-      writable: true,
-      value: function value(threadId) {
-        var lastTimestamp = 0;
-        return _this.props.posts.map(function (post) {
-          if (post.deactivated) return null;
-          if (!threadId || threadId !== post.parentPostId) {
-            return null;
-          }
-          // this needs to be done by storing the return value of the render,
-          // then setting lastTimestamp, otherwise you wouldn't be able to
-          // compare the current one to the prior one.
-          var returnValue = react.createElement(
-            "div",
-            { key: post.id },
-            react.createElement(DateSeparator, {
-              timestamp1: lastTimestamp,
-              timestamp2: post.createdAt
-            }),
-            react.createElement(Post$1, {
-              post: post,
-              usernames: _this.props.usernamesRegexp,
-              currentUsername: _this.props.currentUser.username,
-              showDetails: "1",
-              currentCommit: _this.props.currentCommit,
-              editing: post.id === _this.state.editingPostId
-            })
-          );
-          lastTimestamp = post.createdAt;
-          return returnValue;
-        });
-      }
-    });
-    Object.defineProperty(_this, "editLastPost", {
-      enumerable: true,
-      writable: true,
-      value: function value(event) {
-        // find the most recent post I authored
-        console.log("up! ", event);
-        var postDiv = event.target.closest(".post");
-        var seqNum = postDiv ? postDiv.dataset.seqNum : 9999999999;
-        var editingPost = _this.findMyPostBeforeSeqNum(seqNum);
-        if (editingPost) _this.setState({ editingPostId: editingPost.id });
-      }
-    });
-    Object.defineProperty(_this, "handleClickUnreads", {
-      enumerable: true,
-      writable: true,
-      value: function value(event) {
-        var scrollDiv = _this._postslist;
-        var umiDivs = scrollDiv.getElementsByClassName("unread");
-        var type = event.target.getAttribute("type");
-        console.log("TYPE IS: ", type);
-        var active = type === "above" ? umiDivs[0] : umiDivs[umiDivs.length - 1];
-        if (active) active.scrollIntoView(type === "above");
-        // ...and then a little more, so it is off the border
-        scrollDiv.scrollTop += type === "above" ? -10 : 10;
-      }
-    });
-    Object.defineProperty(_this, "handleDismissThread", {
-      enumerable: true,
-      writable: true,
-      value: function value() {
-        var _ref2 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-            _ref2$track = _ref2.track,
-            track = _ref2$track === undefined ? true : _ref2$track;
-
-        window.parent.postMessage({
-          type: "codestream:interaction:thread-closed",
-          body: _this.findPostById(_this.state.threadId)
-        }, "*");
-        _this.setState({ threadActive: false });
-        _this.focusInput();
-        if (track) window.parent.postMessage({
-          type: "codestream:analytics",
-          body: {
-            label: "Page Viewed",
-            payload: { "Page Name": "Source Stream" }
-          }
-        }, "*");
-      }
-    });
-    Object.defineProperty(_this, "handleEditHeadshot", {
-      enumerable: true,
-      writable: true,
-      value: function value(_event) {
-        atom.confirm({
-          message: "Edit Headshot",
-          detailedMessage: "Until we have built-in CodeStream headshots, you can edit your headshot by setting it up on Gravatar.com for " + _this.props.currentUser.email + ".\n\nNote that it might take a few minutes for your headshot to appear here.\n\n-Team CodeStream"
-        });
-      }
-    });
-    Object.defineProperty(_this, "handleEditPost", {
-      enumerable: true,
-      writable: true,
-      value: function value(event) {
-        var postDiv = event.target.closest(".post");
-        if (!postDiv) return;
-        _this.setState({ editingPostId: postDiv.id });
-      }
-    });
-    Object.defineProperty(_this, "handleDeletePost", {
-      enumerable: true,
-      writable: true,
-      value: function value(event) {
-        var postDiv = event.target.closest(".post");
-        if (!postDiv || !postDiv.id) return;
-
-        var answer = atom.confirm({
-          message: "Are you sure?",
-          buttons: ["Delete Post", "Cancel"]
-        });
-
-        if (answer === 0) {
-          console.log("Calling delete post with: ", postDiv.id);
-          _this.props.deletePost(postDiv.id);
-        }
-      }
-    });
-    Object.defineProperty(_this, "findMentionedUserIds", {
-      enumerable: true,
-      writable: true,
-      value: function value(text, users) {
-        var mentionedUserIds = [];
-        users.forEach(function (user) {
-          var matcher = user.username.replace(/\+/g, "\\+").replace(/\./g, "\\.");
-          if (text.match("@" + matcher + "\\b")) {
-            mentionedUserIds.push(user.id);
-          }
-        });
-        return mentionedUserIds;
-      }
-    });
-    Object.defineProperty(_this, "replacePostText", {
-      enumerable: true,
-      writable: true,
-      value: function value(postId, newText) {
-        // convert the text to plaintext so there is no HTML
-        var doc = new DOMParser().parseFromString(newText, "text/html");
-        var replaceText = doc.documentElement.textContent;
-        var mentionUserIds = _this.findMentionedUserIds(replaceText, _this.props.teammates);
-
-        _this.props.editPost(postId, replaceText, mentionUserIds);
-      }
-    });
-    Object.defineProperty(_this, "handleClickPost", {
-      enumerable: true,
-      writable: true,
-      value: function value(event) {
-        var postDiv = event.target.closest(".post");
-        if (!postDiv) return;
-
-        // if they clicked a link, follow the link rather than selecting the post
-        if (event && event.target && event.target.tagName === "A") return false;
-
-        // console.log(event.target.id);
-        if (event.target.id === "discard-button") {
-          // if the user clicked on the cancel changes button,
-          // presumably because she is editing a post, abort
-          _this.setState({ editingPostId: null });
-          return;
-        } else if (event.target.id === "save-button") {
-          // if the user clicked on the save changes button,
-          // save the new post text
-          var newText = document.getElementById("input-div-" + postDiv.id).innerHTML.replace(/<br>/g, "\n");
-
-          _this.replacePostText(postDiv.id, newText);
-          _this.setState({ editingPostId: null });
-          return;
-        } else if (postDiv.classList.contains("editing")) {
-          // otherwise, if we aren't currently editing the
-          // post, go to the thread for that post, but if
-          // we are editing, then do nothing.
-          return;
-        } else if (window.getSelection().toString().length > 0) {
-          // in this case the user has selected a string
-          // by dragging
-          return;
-        }
-        _this.selectPost(postDiv.id, true);
-      }
-    });
-    Object.defineProperty(_this, "selectPost", {
-      enumerable: true,
-      writable: true,
-      value: function value(id) {
-        var wasClicked = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-
-        window.parent.postMessage({
-          type: "codestream:analytics",
-          body: { label: "Page Viewed", payload: { "Page Name": "Thread View" } }
-        }, "*");
-        var post = _this.findPostById(id);
-        if (!post) return;
-
-        // if it is a child in the thread, it'll have a parentPostId,
-        // otherwise use the id. any post can become the head of a thread
-        var threadId = post.parentPostId || post.id;
-        _this.setState({ threadId: threadId, threadActive: true });
-
-        _this.focusInput();
-        if (wasClicked) {
-          window.parent.postMessage({
-            type: "codestream:interaction:thread-selected",
-            body: { threadId: threadId, streamId: _this.props.postStreamId, post: post }
-          }, "*");
-        }
-      }
-    });
-    Object.defineProperty(_this, "focusInput", {
-      enumerable: true,
-      writable: true,
-      value: function value() {
-        var input = document.getElementById("input-div");
-        if (input) input.focus();
-      }
-    });
-    Object.defineProperty(_this, "handleClickScrollToNewMessages", {
-      enumerable: true,
-      writable: true,
-      value: function value() {
-        _this.scrollToBottom();
-      }
-    });
-    Object.defineProperty(_this, "submitPost", {
-      enumerable: true,
-      writable: true,
-      value: function value(_ref3) {
-        var text = _ref3.text,
-            quote = _ref3.quote,
-            mentionedUserIds = _ref3.mentionedUserIds,
-            autoMentions = _ref3.autoMentions;
-
-        var codeBlocks = [];
-        var threadActive = _this.state.threadActive;
-        var _this$props = _this.props,
-            postStreamId = _this$props.postStreamId,
-            fileStreamId = _this$props.fileStreamId,
-            createPost$$1 = _this$props.createPost,
-            currentFile = _this$props.currentFile,
-            repoId = _this$props.repoId;
-
-
-        var substitute = text.match(/^s\/(.+)\/(.*)\/$/);
-        if (_this.substituteLastPost(substitute)) return;else console.log("did not substitute");
-
-        var threadId = threadActive ? _this.state.threadId : null;
-
-        if (quote) {
-          var codeBlock = {
-            code: quote.quoteText,
-            location: rangeToLocation(quote.quoteRange),
-            preContext: quote.preContext,
-            postContext: quote.postContext,
-            repoId: repoId,
-            file: currentFile
-          };
-
-          // if we have a streamId, send it. otherwise the
-          // API server will create one based on the file
-          // and the repoId.
-          if (fileStreamId) codeBlock.streamId = fileStreamId;
-
-          codeBlocks.push(codeBlock);
-        }
-
-        // FIXME: can't and shouldn't do this here
-        // const editor = atom.workspace.getActiveTextEditor();
-        // const editorText = editor ? editor.getText() : undefined;
-
-        createPost$$1(postStreamId, threadId, text, codeBlocks, mentionedUserIds, {
-          autoMentions: autoMentions
-        });
-      }
-    });
-
-
-    _this.state = {
-      threadId: null,
-      threadActive: false,
-      fileForIntro: props.currentFile
-    };
-    _this._compose = react.createRef();
-    return _this;
-  }
-
-  createClass(SimpleStream, [{
-    key: "componentDidMount",
-    value: function componentDidMount() {
-      var _this2 = this;
-
-      window.addEventListener("message", this.handleInteractionEvent, true);
-
-      // this listener pays attention to when the input field resizes,
-      // presumably because the user has typed more than one line of text
-      // in it, and calls a function to handle the new size
-      new ResizeObserver(this.handleResizeCompose).observe(this._compose.current);
-
-      if (this._postslist) {
-        this._postslist.addEventListener("scroll", this.handleScroll.bind(this));
-        // this resize observer fires when the height of the
-        // postslist changes, when the window resizes in width
-        // or height, but notably not when new posts are added
-        // this is because the height of the HTML element is
-        // set explicitly
-        new ResizeObserver(function () {
-          _this2.handleScroll();
-        }).observe(this._postslist);
-      }
-
-      this.scrollToBottom();
-      if (global.atom) {
-        this.disposables.push(atom.keymaps.add("codestream", {
-          "atom-workspace": {
-            escape: "codestream:escape",
-            "cmd-c": "codestream:copy"
-          }
-        }), atom.commands.add("atom-workspace", "codestream:escape", {
-          didDispatch: function didDispatch(event) {
-            return _this2.handleEscape(event);
-          },
-          hiddenInCommandPalette: true
-        }), atom.commands.add("atom-workspace", "codestream:copy", {
-          didDispatch: function didDispatch(event) {
-            return _this2.copy(event);
-          },
-          hiddenInCommandPalette: true
-        }), atom.commands.add(".codestream .post.mine", "codestream:edit-headshot", {
-          didDispatch: function didDispatch(event) {
-            return _this2.handleEditHeadshot(event);
-          },
-          hiddenInCommandPalette: true
-        }), atom.commands.add(".codestream .post.mine", "codestream:edit-post", {
-          didDispatch: function didDispatch(event) {
-            return _this2.handleEditPost(event);
-          },
-          hiddenInCommandPalette: true
-        }), atom.commands.add(".codestream .post.mine", "codestream:delete-post", {
-          didDispatch: function didDispatch(event) {
-            return _this2.handleDeletePost(event);
-          },
-          hiddenInCommandPalette: true
-        }));
-      }
-    }
-  }, {
-    key: "componentWillReceiveProps",
-    value: function componentWillReceiveProps(nextProps) {
-      var switchingFileStreams = nextProps.fileStreamId !== this.props.fileStreamId;
-      var switchingPostStreams = nextProps.postStreamId !== this.props.postStreamId;
-
-      if (nextProps.fileStreamId && switchingFileStreams && nextProps.posts.length === 0) ;
-
-      if (switchingPostStreams) {
-        this.handleDismissThread({ track: false });
-
-        // keep track of the new message indicator in "this" instead of looking
-        // directly at currentUser.lastReads, because that will change and trigger
-        // a re-render, which would remove the "new messages" line
-        // console.log("Switch to: ", nextProps.postStreamId);
-      }
-      // this.postWithNewMessageIndicator = 10;
-
-      // TODO: DELETE
-      if (nextProps.firstTimeInAtom && !this.state.fileForIntro) {
-        this.setState({ fileForIntro: nextProps.currentFile });
-      }
-
-      if (nextProps.hasFocus && !this.props.hasFocus) {
-        this.postWithNewMessageIndicator = null;
-      }
-      if (!nextProps.hasFocus && this.props.hasFocus) {
-        this.postWithNewMessageIndicator = null;
-        if (this.props.currentUser && this.props.currentUser.lastReads) {
-          this.postWithNewMessageIndicator = this.props.currentUser.lastReads[nextProps.postStreamId];
-        }
-      }
-      if (this.props.currentUser && this.props.currentUser.lastReads) {
-        this.postWithNewMessageIndicator = this.props.currentUser.lastReads[nextProps.postStreamId];
-      }
-    }
-  }, {
-    key: "componentWillUnmount",
-    value: function componentWillUnmount() {
-      window.removeEventListener("message", this.handleInteractionEvent, true);
-      this.disposables.forEach(function (d) {
-        return d.dispose();
-      });
-    }
-  }, {
-    key: "copy",
-    value: function copy(event) {
-      var selectedText = window.getSelection().toString();
-      atom.clipboard.write(selectedText);
-      event.abortKeyBinding();
-    }
-  }, {
-    key: "checkMarkStreamRead",
-    value: function checkMarkStreamRead() {
-      // if we have focus, and there are no unread indicators which would mean an
-      // unread is out of view, we assume the entire thread has been observed
-      // and we mark the stream read
-      if (this.props.hasFocus && !this.state.unreadsAbove && !this.state.unreadsBelow) {
-        try {
-          if (this.props.currentUser.lastReads[this.props.postStreamId]) {
-            this.props.markStreamRead(this.props.postStreamId);
-          }
-        } catch (e) {
-          /* lastReads is probably undefined */
-        }
-      }
-    }
-  }, {
-    key: "componentDidUpdate",
-    value: function componentDidUpdate(prevProps, prevState) {
-      var _props = this.props,
-          postStreamId = _props.postStreamId,
-          markStreamRead$$1 = _props.markStreamRead;
-
-      // this.scrollToBottom();
-
-      // if we just switched to a new stream, (eagerly) mark both old and new as read
-
-      if (postStreamId !== prevProps.postStreamId) {
-        markStreamRead$$1(postStreamId);
-
-        markStreamRead$$1(prevProps.postStreamId);
-        this.resizeStream();
-      }
-
-      // if we just got the focus, mark the new stream read
-      if (this.props.hasFocus && !prevProps.hasFocus) {
-        this.checkMarkStreamRead();
-      }
-
-      if (!this.state.unreadsAbove && !this.state.unreadsBelow && (prevState.unreadsAbove || prevState.unreadsBelow)) {
-        console.log("CDU: cmsr");
-        this.checkMarkStreamRead();
-      }
-
-      if (prevState.threadId !== this.state.threadId) {
-        this.resizeStream();
-      }
-
-      if (prevProps.hasFocus !== this.props.hasFocus) this.handleScroll();
-
-      if (this.props.posts.length !== prevProps.posts.length) {
-        var lastPost = this.props.posts[this.props.posts.length - 1];
-
-        if (lastPost) {
-          // if the latest post is mine, scroll to the bottom always
-          // otherwise, if we've scrolled up, then just call
-          // handleScroll to make sure new message indicators
-          // appear as appropriate.
-          var mine = this.props.currentUser.username === lastPost.author.username;
-          if (mine || !this.state.scrolledOffBottom) this.scrollToBottom();else this.handleScroll();
-        } else {
-          console.log("Could not find lastPost for ", this.props.posts);
-        }
-      }
-
-      // FIXME this doesn't seem to always scroll to the bottom when it should
-      if (this.state.editingPostId !== prevState.editingPostId) {
-        // special-case the editing of the bottom-most post...
-        // scroll it into view. in all other cases we let the
-        // focus of the input field make sure the post is focused
-        var _lastPost = this.props.posts[this.props.posts.length - 1];
-        if (this.state.editingPostId == _lastPost.id) this.scrollToBottom(true);
-      }
-    }
-  }, {
-    key: "findPostById",
-
-
-    // return the post, if any, with the given ID
-    value: function findPostById(id) {
-      return this.props.posts.find(function (post) {
-        return id === post.id;
-      });
-    }
-  }, {
-    key: "render",
-
-
-    // we render both a main stream (postslist) plus also a postslist related
-    // to the currently selected thread (if it exists). the reason for this is
-    // to be able to animate between the two streams, since they will both be
-    // visible during the transition
-    value: function render() {
-      var _this3 = this;
-
-      var _props2 = this.props,
-          configs = _props2.configs,
-          posts = _props2.posts;
-
-
-      var streamClass = classnames({
-        stream: true,
-        "no-headshots": !configs.showHeadshots,
-        "reduced-motion": configs.reduceMotion
-      });
-      var postsListClass = classnames({
-        postslist: true
-      });
-      var threadPostsListClass = classnames({
-        postslist: true,
-        threadlist: true
-      });
-      var mainPanelClass = classnames({
-        "main-panel": true,
-        "inactive-panel": this.state.threadActive
-      });
-      var threadPanelClass = classnames({
-        "thread-panel": true,
-        "inactive-panel": !this.state.threadActive
-      });
-
-      var lastTimestamp = null;
-      var threadId = this.state.threadId;
-      var threadPost = this.findPostById(threadId);
-
-      var placeholderText = "Add comment";
-      if (this.state.threadActive && threadPost) {
-        placeholderText = "Reply to " + threadPost.author.username;
-      }
-
-      var streamDivId = "stream-" + this.props.postStreamId;
-      var unread = false;
-
-      var unreadsAboveClass = classnames({
-        unreads: true,
-        active: this.state.unreadsAbove
-      });
-      var unreadsBelowClass = classnames({
-        unreads: true,
-        active: this.state.unreadsBelow
-      });
-      var unreadsAbove = this.state.threadActive ? null : react.createElement(
-        "div",
-        {
-          className: unreadsAboveClass,
-          type: "above",
-          onClick: this.handleClickUnreads
-        },
-        "\u2191 Unread Messages \u2191"
-      );
-
-      var teamName = this.props.team ? this.props.team.name : "";
-
-      return react.createElement(
-        "div",
-        { className: streamClass, ref: function ref(_ref9) {
-            return _this3._div = _ref9;
-          } },
-        react.createElement(EditingIndicator, {
-          editingUsers: this.props.editingUsers,
-          inactive: this.state.threadActive // or if no fileStream
-          , currentUser: this.props.currentUser,
-          teamMembers: this.props.teamMembersById
-        }),
-        react.createElement(
-          "div",
-          { className: mainPanelClass, ref: function ref(_ref7) {
-              return _this3._mainPanel = _ref7;
-            } },
-          react.createElement(
-            "div",
-            { className: "stream-header", ref: function ref(_ref4) {
-                return _this3._header = _ref4;
-              } },
-            react.createElement(
-              "span",
-              null,
-              teamName
-            ),
-            react.createElement("span", {
-              onClick: this.props.goToInvitePage,
-              className: "icon icon-organization"
-            })
-          ),
-          unreadsAbove,
-          react.createElement(
-            "div",
-            {
-              className: postsListClass,
-              ref: function ref(_ref6) {
-                return _this3._postslist = _ref6;
-              },
-              onClick: this.handleClickPost,
-              id: streamDivId
-            },
-            react.createElement(
-              "div",
-              { className: "intro", ref: function ref(_ref5) {
-                  return _this3._intro = _ref5;
-                } },
-              this.renderIntro()
-            ),
-            posts.map(function (post) {
-              if (post.deactivated) return null;
-              // this needs to be done by storing the return value of the render,
-              // then setting lastTimestamp, otherwise you wouldn't be able to
-              // compare the current one to the prior one.
-              var parentPost = post.parentPostId ? posts.find(function (p) {
-                return p.id === post.parentPostId;
-              }) : null;
-              var newMessageIndicator = post.seqNum && post.seqNum === Number(_this3.postWithNewMessageIndicator);
-              unread = unread || newMessageIndicator;
-              var returnValue = react.createElement(
-                "div",
-                { key: post.id },
-                react.createElement(DateSeparator, {
-                  timestamp1: lastTimestamp,
-                  timestamp2: post.createdAt
-                }),
-                react.createElement(Post$1, {
-                  post: post,
-                  usernames: _this3.props.usernamesRegexp,
-                  currentUsername: _this3.props.currentUser.username,
-                  replyingTo: parentPost,
-                  newMessageIndicator: newMessageIndicator,
-                  unread: unread,
-                  editing: !_this3.state.threadActive && post.id === _this3.state.editingPostId
-                })
-              );
-              lastTimestamp = post.createdAt;
-              return returnValue;
-            })
-          )
-        ),
-        react.createElement(
-          "div",
-          { className: threadPanelClass },
-          react.createElement(
-            "div",
-            {
-              id: "close-thread",
-              className: "stream-header",
-              onClick: this.handleDismissThread
-            },
-            react.createElement(
-              "span",
-              null,
-              "< Back to Stream "
-            ),
-            react.createElement(
-              "span",
-              { className: "keybinding" },
-              "[esc]"
-            )
-          ),
-          react.createElement(
-            "div",
-            {
-              className: threadPostsListClass,
-              ref: function ref(_ref8) {
-                return _this3._threadpostslist = _ref8;
-              },
-              onClick: this.handleClickPost
-            },
-            threadPost && react.createElement(Post$1, {
-              post: threadPost,
-              usernames: this.props.usernamesRegexp,
-              currentUsername: this.props.currentUser.username,
-              key: threadPost.id,
-              showDetails: "1",
-              currentCommit: this.props.currentCommit,
-              editing: this.state.threadActive && threadPost.id === this.state.editingPostId
-            }),
-            this.renderThreadPosts(threadId)
-          )
-        ),
-        react.createElement(
-          "div",
-          {
-            className: unreadsBelowClass,
-            type: "below",
-            onClick: this.handleClickUnreads
-          },
-          "\u2193 Unread Messages \u2193"
-        ),
-        react.createElement(ComposeBox$1, {
-          placeholder: placeholderText,
-          teammates: this.props.teammates,
-          ref: this._compose,
-          disabled: this.props.isOffline,
-          onSubmit: this.submitPost,
-          onEmptyUpArrow: this.editLastPost,
-          findMentionedUserIds: this.findMentionedUserIds
-        })
-      );
-    }
-  }, {
-    key: "findMyPostBeforeSeqNum",
-    value: function findMyPostBeforeSeqNum(seqNum) {
-      var me = this.props.currentUser.username;
-      return underscore.chain(this.props.posts).filter(function (post) {
-        return post.author.username === me && post.seqNum < seqNum;
-      }).last().value();
-    }
-  }, {
-    key: "handleScroll",
-    value: function handleScroll(_event) {
-      var _this4 = this;
-
-      var scrollDiv = this._postslist;
-
-      if (!scrollDiv) {
-        // console.log("Couldn't find scrollDiv for ", event);
-        return;
-      }
-
-      var scrollTop = scrollDiv.scrollTop;
-      var containerHeight = scrollDiv.parentNode.offsetHeight;
-      var scrollHeight = scrollDiv.scrollHeight;
-      var offBottom = scrollHeight - scrollTop - scrollDiv.offsetHeight;
-      var scrolledOffBottom = offBottom > 100;
-      // console.log("OB IS: ", offBottom);
-      if (scrolledOffBottom !== this.state.scrolledOffBottom) this.setState({ scrolledOffBottom: scrolledOffBottom });
-
-      var unreadsAbove = false;
-      var unreadsBelow = false;
-
-      var umiDivs = scrollDiv.getElementsByClassName("unread");
-      Array.from(umiDivs).forEach(function (umi) {
-        var top = umi.offsetTop;
-        if (top - scrollTop + 10 < 0) {
-          if (!unreadsAbove) unreadsAbove = umi;
-        } else if (top - scrollTop + 60 + umi.offsetHeight > containerHeight) {
-          unreadsBelow = umi;
-        } else if (_this4.props.hasFocus) {
-          umi.classList.remove("unread");
-        }
-      });
-      if (this.state.unreadsAbove != unreadsAbove) this.setState({ unreadsAbove: unreadsAbove });
-      if (this.state.unreadsBelow != unreadsBelow) this.setState({ unreadsBelow: unreadsBelow });
-    }
-
-    // dismiss the thread stream and return to the main stream
-
-
-    // by clicking on the post, we select it
-
-
-    // show the thread related to the given post, and if there is
-    // a codeblock, scroll to it and select it
-
-
-    // not using a gutter for now
-    // installGutter() {
-    // 	let editor = atom.workspace.getActiveTextEditor();
-    // 	if (editor && !editor.gutterWithName("CodeStream")) {
-    // 		editor.addGutter({ name: "CodeStream", priority: 150 });
-    // 	}
-    // }
-
-  }, {
-    key: "handleEscape",
-    value: function handleEscape(event) {
-      if (this.state.editingPostId) this.handleDismissEdit();else if (this.state.threadActive) this.handleDismissThread();else event.abortKeyBinding();
-    }
-  }, {
-    key: "handleDismissEdit",
-    value: function handleDismissEdit() {
-      this.setState({ editingPostId: null });
-      this.focusInput();
-    }
-
-    // return true if we are able to use substitute
-    // to edit the text of my last post
-
-  }, {
-    key: "substituteLastPost",
-    value: function substituteLastPost(substitute) {
-      // nothing to substitute? return false
-      if (!substitute) return false;
-
-      // if we can't find my last post in the stream, return false
-      var myLastPost = this.findMyPostBeforeSeqNum(9999999999);
-      if (!myLastPost) return false;
-
-      var find = substitute[1];
-      var replace = substitute[2];
-      // const modifier = substitute[3]; // not used yet
-      var newText = myLastPost.text.replace(find, replace);
-      if (newText !== myLastPost.text) {
-        this.replacePostText(myLastPost.id, newText);
-        return true;
-      } else return false;
-    }
-
-    // create a new post
-
-  }]);
-  return SimpleStream;
+	inherits(SimpleStream, _Component);
+
+	function SimpleStream(props) {
+		classCallCheck(this, SimpleStream);
+
+		var _this = possibleConstructorReturn(this, (SimpleStream.__proto__ || Object.getPrototypeOf(SimpleStream)).call(this, props));
+
+		Object.defineProperty(_this, "disposables", {
+			enumerable: true,
+			writable: true,
+			value: []
+		});
+		Object.defineProperty(_this, "handleInteractionEvent", {
+			enumerable: true,
+			writable: true,
+			value: function value(_ref) {
+				var data = _ref.data;
+
+				if (data.type === "codestream:interaction:marker-selected") {
+					_this.selectPost(data.body.postId);
+				}
+			}
+		});
+		Object.defineProperty(_this, "handleResizeCompose", {
+			enumerable: true,
+			writable: true,
+			value: function value() {
+				_this.resizeStream();
+			}
+		});
+		Object.defineProperty(_this, "resizeStream", {
+			enumerable: true,
+			writable: true,
+			value: function value() {
+				if (!_this._div || !_this._compose) return;
+				var streamHeight = _this._div.offsetHeight;
+				var postslistHeight = _this._postslist.offsetHeight;
+				var composeHeight = _this._compose.current.offsetHeight;
+				var headerHeight = _this._header.offsetHeight;
+				if (postslistHeight < streamHeight) {
+					var newHeight = streamHeight - postslistHeight + _this._intro.offsetHeight - composeHeight;
+					_this._intro.style.height = newHeight + "px";
+				}
+				var padding = composeHeight + headerHeight;
+				// this._div.style.paddingBottom = padding + "px";
+				_this._mainPanel.style.paddingBottom = padding + "px";
+				// we re-measure the height of postslist here because we just changed
+				// it with the style declaration immediately above
+				_this._threadpostslist.style.height = _this._postslist.offsetHeight + "px";
+				// this._threadpostslist.style.top = headerHeight + "px";
+				// if (this._atMentionsPopup)
+				// this._atMentionsPopup.style.bottom = this._compose.offsetHeight + "px";
+
+				var scrollHeight = _this._postslist.scrollHeight;
+				var currentScroll = _this._postslist.scrollTop;
+				var offBottom = scrollHeight - currentScroll - streamHeight + composeHeight + headerHeight;
+				// if i am manually scrolling, don't programatically scroll to bottom
+				// offBottom is how far we've scrolled off the bottom of the posts list
+				console.log("OFF BOTTOM IS: ", offBottom);
+				if (offBottom < 100) _this.scrollToBottom();
+			}
+		});
+		Object.defineProperty(_this, "scrollToBottom", {
+			enumerable: true,
+			writable: true,
+			value: function value(force) {
+				// don't scroll to bottom if we're in the middle of an edit,
+				// unless the force parameter is called
+				if (_this.state.editingPostId && !force) return;
+				if (_this._postslist) _this._postslist.scrollTop = 100000;
+			}
+		});
+		Object.defineProperty(_this, "calculateScrolledOffBottom", {
+			enumerable: true,
+			writable: true,
+			value: function value() {}
+		});
+		Object.defineProperty(_this, "handleClickHelpLink", {
+			enumerable: true,
+			writable: true,
+			value: function value(event) {
+				event.preventDefault();
+				window.parent.postMessage({
+					type: "codestream:interaction:clicked-link",
+					body: "https://help.codestream.com"
+				}, "*");
+			}
+		});
+		Object.defineProperty(_this, "renderIntro", {
+			enumerable: true,
+			writable: true,
+			value: function value() {
+				return [react.createElement(
+					"label",
+					{ key: "welcome" },
+					react.createElement(FormattedMessage, { id: "stream.intro.welcome", defaultMessage: "Welcome to CodeStream!" })
+				), react.createElement(
+					"label",
+					{ key: "info" },
+					react.createElement(
+						"ul",
+						null,
+						react.createElement(
+							"li",
+							null,
+							react.createElement(FormattedMessage, {
+								id: "stream.intro.eachFile",
+								defaultMessage: "Post a message and any of your teammates can join the discussion."
+							})
+						),
+						react.createElement(
+							"li",
+							null,
+							react.createElement(FormattedMessage, {
+								id: "stream.intro.comment",
+								defaultMessage: 'Comment on a specific block of code by selecting it and then clicking the "+" button.'
+							})
+						),
+						react.createElement(
+							"li",
+							null,
+							react.createElement(
+								FormattedMessage,
+								{
+									id: "stream.intro.share",
+									defaultMessage: "Select \"Codestream: Invite\" from the command palette to invite your team."
+								},
+								function () {
+									return react.createElement(
+										react.Fragment,
+										null,
+										"Select ",
+										react.createElement(
+											"a",
+											{ onClick: _this.props.goToInvitePage },
+											"Codestream: Invite"
+										),
+										" from the command palette to invite your team."
+									);
+								}
+							)
+						)
+					)
+				), react.createElement(
+					"label",
+					{ key: "learn-more" },
+					"Learn more at ",
+					react.createElement(
+						"a",
+						{ onClick: _this.handleClickHelpLink },
+						"help.codestream.com"
+					)
+				)];
+			}
+		});
+		Object.defineProperty(_this, "renderThreadPosts", {
+			enumerable: true,
+			writable: true,
+			value: function value(threadId) {
+				var lastTimestamp = 0;
+				return _this.props.posts.map(function (post) {
+					if (post.deactivated) return null;
+					if (!threadId || threadId !== post.parentPostId) {
+						return null;
+					}
+					// this needs to be done by storing the return value of the render,
+					// then setting lastTimestamp, otherwise you wouldn't be able to
+					// compare the current one to the prior one.
+					var returnValue = react.createElement(
+						"div",
+						{ key: post.id },
+						react.createElement(DateSeparator, { timestamp1: lastTimestamp, timestamp2: post.createdAt }),
+						react.createElement(Post$1, {
+							post: post,
+							usernames: _this.props.usernamesRegexp,
+							currentUsername: _this.props.currentUser.username,
+							showDetails: "1",
+							currentCommit: _this.props.currentCommit,
+							editing: post.id === _this.state.editingPostId
+						})
+					);
+					lastTimestamp = post.createdAt;
+					return returnValue;
+				});
+			}
+		});
+		Object.defineProperty(_this, "editLastPost", {
+			enumerable: true,
+			writable: true,
+			value: function value(event) {
+				// find the most recent post I authored
+				console.log("up! ", event);
+				var postDiv = event.target.closest(".post");
+				var seqNum = postDiv ? postDiv.dataset.seqNum : 9999999999;
+				var editingPost = _this.findMyPostBeforeSeqNum(seqNum);
+				if (editingPost) _this.setState({ editingPostId: editingPost.id });
+			}
+		});
+		Object.defineProperty(_this, "handleClickUnreads", {
+			enumerable: true,
+			writable: true,
+			value: function value(event) {
+				var scrollDiv = _this._postslist;
+				var umiDivs = scrollDiv.getElementsByClassName("unread");
+				var type = event.target.getAttribute("type");
+				console.log("TYPE IS: ", type);
+				var active = type === "above" ? umiDivs[0] : umiDivs[umiDivs.length - 1];
+				if (active) active.scrollIntoView(type === "above");
+				// ...and then a little more, so it is off the border
+				scrollDiv.scrollTop += type === "above" ? -10 : 10;
+			}
+		});
+		Object.defineProperty(_this, "handleDismissThread", {
+			enumerable: true,
+			writable: true,
+			value: function value() {
+				var _ref2 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+				    _ref2$track = _ref2.track,
+				    track = _ref2$track === undefined ? true : _ref2$track;
+
+				window.parent.postMessage({
+					type: "codestream:interaction:thread-closed",
+					body: _this.findPostById(_this.state.threadId)
+				}, "*");
+				_this.setState({ threadActive: false });
+				_this.focusInput();
+				if (track) window.parent.postMessage({
+					type: "codestream:analytics",
+					body: {
+						label: "Page Viewed",
+						payload: { "Page Name": "Source Stream" }
+					}
+				}, "*");
+			}
+		});
+		Object.defineProperty(_this, "handleEditHeadshot", {
+			enumerable: true,
+			writable: true,
+			value: function value(_event) {
+				atom.confirm({
+					message: "Edit Headshot",
+					detailedMessage: "Until we have built-in CodeStream headshots, you can edit your headshot by setting it up on Gravatar.com for " + _this.props.currentUser.email + ".\n\nNote that it might take a few minutes for your headshot to appear here.\n\n-Team CodeStream"
+				});
+			}
+		});
+		Object.defineProperty(_this, "handleEditPost", {
+			enumerable: true,
+			writable: true,
+			value: function value(event) {
+				var postDiv = event.target.closest(".post");
+				if (!postDiv) return;
+				_this.setState({ editingPostId: postDiv.id });
+			}
+		});
+		Object.defineProperty(_this, "handleDeletePost", {
+			enumerable: true,
+			writable: true,
+			value: function value(event) {
+				var postDiv = event.target.closest(".post");
+				if (!postDiv || !postDiv.id) return;
+
+				var answer = atom.confirm({
+					message: "Are you sure?",
+					buttons: ["Delete Post", "Cancel"]
+				});
+
+				if (answer === 0) {
+					console.log("Calling delete post with: ", postDiv.id);
+					_this.props.deletePost(postDiv.id);
+				}
+			}
+		});
+		Object.defineProperty(_this, "findMentionedUserIds", {
+			enumerable: true,
+			writable: true,
+			value: function value(text, users) {
+				var mentionedUserIds = [];
+				users.forEach(function (user) {
+					var matcher = user.username.replace(/\+/g, "\\+").replace(/\./g, "\\.");
+					if (text.match("@" + matcher + "\\b")) {
+						mentionedUserIds.push(user.id);
+					}
+				});
+				return mentionedUserIds;
+			}
+		});
+		Object.defineProperty(_this, "replacePostText", {
+			enumerable: true,
+			writable: true,
+			value: function value(postId, newText) {
+				// convert the text to plaintext so there is no HTML
+				var doc = new DOMParser().parseFromString(newText, "text/html");
+				var replaceText = doc.documentElement.textContent;
+				var mentionUserIds = _this.findMentionedUserIds(replaceText, _this.props.teammates);
+
+				_this.props.editPost(postId, replaceText, mentionUserIds);
+			}
+		});
+		Object.defineProperty(_this, "handleClickPost", {
+			enumerable: true,
+			writable: true,
+			value: function value(event) {
+				var postDiv = event.target.closest(".post");
+				if (!postDiv) return;
+
+				// if they clicked a link, follow the link rather than selecting the post
+				if (event && event.target && event.target.tagName === "A") return false;
+
+				// console.log(event.target.id);
+				if (event.target.id === "discard-button") {
+					// if the user clicked on the cancel changes button,
+					// presumably because she is editing a post, abort
+					_this.setState({ editingPostId: null });
+					return;
+				} else if (event.target.id === "save-button") {
+					// if the user clicked on the save changes button,
+					// save the new post text
+					var newText = document.getElementById("input-div-" + postDiv.id).innerHTML.replace(/<br>/g, "\n");
+
+					_this.replacePostText(postDiv.id, newText);
+					_this.setState({ editingPostId: null });
+					return;
+				} else if (postDiv.classList.contains("editing")) {
+					// otherwise, if we aren't currently editing the
+					// post, go to the thread for that post, but if
+					// we are editing, then do nothing.
+					return;
+				} else if (window.getSelection().toString().length > 0) {
+					// in this case the user has selected a string
+					// by dragging
+					return;
+				}
+				_this.selectPost(postDiv.id, true);
+			}
+		});
+		Object.defineProperty(_this, "selectPost", {
+			enumerable: true,
+			writable: true,
+			value: function value(id) {
+				var wasClicked = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
+				window.parent.postMessage({
+					type: "codestream:analytics",
+					body: { label: "Page Viewed", payload: { "Page Name": "Thread View" } }
+				}, "*");
+				var post = _this.findPostById(id);
+				if (!post) return;
+
+				// if it is a child in the thread, it'll have a parentPostId,
+				// otherwise use the id. any post can become the head of a thread
+				var threadId = post.parentPostId || post.id;
+				_this.setState({ threadId: threadId, threadActive: true });
+
+				_this.focusInput();
+				if (wasClicked) {
+					window.parent.postMessage({
+						type: "codestream:interaction:thread-selected",
+						body: { threadId: threadId, streamId: _this.props.postStreamId, post: post }
+					}, "*");
+				}
+			}
+		});
+		Object.defineProperty(_this, "focusInput", {
+			enumerable: true,
+			writable: true,
+			value: function value() {
+				var input = document.getElementById("input-div");
+				if (input) input.focus();
+			}
+		});
+		Object.defineProperty(_this, "handleClickScrollToNewMessages", {
+			enumerable: true,
+			writable: true,
+			value: function value() {
+				_this.scrollToBottom();
+			}
+		});
+		Object.defineProperty(_this, "submitPost", {
+			enumerable: true,
+			writable: true,
+			value: function value(_ref3) {
+				var text = _ref3.text,
+				    quote = _ref3.quote,
+				    mentionedUserIds = _ref3.mentionedUserIds,
+				    autoMentions = _ref3.autoMentions;
+
+				var codeBlocks = [];
+				var threadActive = _this.state.threadActive;
+				var _this$props = _this.props,
+				    postStreamId = _this$props.postStreamId,
+				    fileStreamId = _this$props.fileStreamId,
+				    createPost$$1 = _this$props.createPost,
+				    currentFile = _this$props.currentFile,
+				    repoId = _this$props.repoId;
+
+
+				var substitute = text.match(/^s\/(.+)\/(.*)\/$/);
+				if (_this.substituteLastPost(substitute)) return;else console.log("did not substitute");
+
+				var threadId = threadActive ? _this.state.threadId : null;
+
+				if (quote) {
+					var codeBlock = {
+						code: quote.quoteText,
+						location: rangeToLocation(quote.quoteRange),
+						preContext: quote.preContext,
+						postContext: quote.postContext,
+						repoId: repoId,
+						file: currentFile
+					};
+
+					// if we have a streamId, send it. otherwise the
+					// API server will create one based on the file
+					// and the repoId.
+					if (fileStreamId) codeBlock.streamId = fileStreamId;
+
+					codeBlocks.push(codeBlock);
+				}
+
+				// FIXME: can't and shouldn't do this here
+				// const editor = atom.workspace.getActiveTextEditor();
+				// const editorText = editor ? editor.getText() : undefined;
+
+				createPost$$1(postStreamId, threadId, text, codeBlocks, mentionedUserIds, {
+					autoMentions: autoMentions
+				});
+			}
+		});
+
+
+		_this.state = {
+			threadId: null,
+			threadActive: false,
+			fileForIntro: props.currentFile
+		};
+		_this._compose = react.createRef();
+		return _this;
+	}
+
+	createClass(SimpleStream, [{
+		key: "componentDidMount",
+		value: function componentDidMount() {
+			var _this2 = this;
+
+			window.addEventListener("message", this.handleInteractionEvent, true);
+
+			// this listener pays attention to when the input field resizes,
+			// presumably because the user has typed more than one line of text
+			// in it, and calls a function to handle the new size
+			new ResizeObserver(this.handleResizeCompose).observe(this._compose.current);
+
+			if (this._postslist) {
+				this._postslist.addEventListener("scroll", this.handleScroll.bind(this));
+				// this resize observer fires when the height of the
+				// postslist changes, when the window resizes in width
+				// or height, but notably not when new posts are added
+				// this is because the height of the HTML element is
+				// set explicitly
+				new ResizeObserver(function () {
+					_this2.handleScroll();
+				}).observe(this._postslist);
+			}
+
+			this.scrollToBottom();
+			if (global.atom) {
+				this.disposables.push(atom.keymaps.add("codestream", {
+					"atom-workspace": {
+						escape: "codestream:escape",
+						"cmd-c": "codestream:copy"
+					}
+				}), atom.commands.add("atom-workspace", "codestream:escape", {
+					didDispatch: function didDispatch(event) {
+						return _this2.handleEscape(event);
+					},
+					hiddenInCommandPalette: true
+				}), atom.commands.add("atom-workspace", "codestream:copy", {
+					didDispatch: function didDispatch(event) {
+						return _this2.copy(event);
+					},
+					hiddenInCommandPalette: true
+				}), atom.commands.add(".codestream .post.mine", "codestream:edit-headshot", {
+					didDispatch: function didDispatch(event) {
+						return _this2.handleEditHeadshot(event);
+					},
+					hiddenInCommandPalette: true
+				}), atom.commands.add(".codestream .post.mine", "codestream:edit-post", {
+					didDispatch: function didDispatch(event) {
+						return _this2.handleEditPost(event);
+					},
+					hiddenInCommandPalette: true
+				}), atom.commands.add(".codestream .post.mine", "codestream:delete-post", {
+					didDispatch: function didDispatch(event) {
+						return _this2.handleDeletePost(event);
+					},
+					hiddenInCommandPalette: true
+				}));
+			}
+		}
+	}, {
+		key: "componentWillReceiveProps",
+		value: function componentWillReceiveProps(nextProps) {
+			var switchingFileStreams = nextProps.fileStreamId !== this.props.fileStreamId;
+			var switchingPostStreams = nextProps.postStreamId !== this.props.postStreamId;
+
+			if (nextProps.fileStreamId && switchingFileStreams && nextProps.posts.length === 0) ;
+
+			if (switchingPostStreams) {
+				this.handleDismissThread({ track: false });
+
+				// keep track of the new message indicator in "this" instead of looking
+				// directly at currentUser.lastReads, because that will change and trigger
+				// a re-render, which would remove the "new messages" line
+				// console.log("Switch to: ", nextProps.postStreamId);
+			}
+			// this.postWithNewMessageIndicator = 10;
+
+			// TODO: DELETE
+			if (nextProps.firstTimeInAtom && !this.state.fileForIntro) {
+				this.setState({ fileForIntro: nextProps.currentFile });
+			}
+
+			if (nextProps.hasFocus && !this.props.hasFocus) {
+				this.postWithNewMessageIndicator = null;
+			}
+			if (!nextProps.hasFocus && this.props.hasFocus) {
+				this.postWithNewMessageIndicator = null;
+				if (this.props.currentUser && this.props.currentUser.lastReads) {
+					this.postWithNewMessageIndicator = this.props.currentUser.lastReads[nextProps.postStreamId];
+				}
+			}
+			if (this.props.currentUser && this.props.currentUser.lastReads) {
+				this.postWithNewMessageIndicator = this.props.currentUser.lastReads[nextProps.postStreamId];
+			}
+		}
+	}, {
+		key: "componentWillUnmount",
+		value: function componentWillUnmount() {
+			window.removeEventListener("message", this.handleInteractionEvent, true);
+			this.disposables.forEach(function (d) {
+				return d.dispose();
+			});
+		}
+	}, {
+		key: "copy",
+		value: function copy(event) {
+			var selectedText = window.getSelection().toString();
+			atom.clipboard.write(selectedText);
+			event.abortKeyBinding();
+		}
+	}, {
+		key: "checkMarkStreamRead",
+		value: function checkMarkStreamRead() {
+			// if we have focus, and there are no unread indicators which would mean an
+			// unread is out of view, we assume the entire thread has been observed
+			// and we mark the stream read
+			if (this.props.hasFocus && !this.state.unreadsAbove && !this.state.unreadsBelow) {
+				try {
+					if (this.props.currentUser.lastReads[this.props.postStreamId]) {
+						this.props.markStreamRead(this.props.postStreamId);
+					}
+				} catch (e) {
+					/* lastReads is probably undefined */
+				}
+			}
+		}
+	}, {
+		key: "componentDidUpdate",
+		value: function componentDidUpdate(prevProps, prevState) {
+			var _props = this.props,
+			    postStreamId = _props.postStreamId,
+			    markStreamRead$$1 = _props.markStreamRead;
+
+			// this.scrollToBottom();
+
+			// if we just switched to a new stream, (eagerly) mark both old and new as read
+
+			if (postStreamId !== prevProps.postStreamId) {
+				markStreamRead$$1(postStreamId);
+
+				markStreamRead$$1(prevProps.postStreamId);
+				this.resizeStream();
+			}
+
+			// if we just got the focus, mark the new stream read
+			if (this.props.hasFocus && !prevProps.hasFocus) {
+				this.checkMarkStreamRead();
+			}
+
+			if (!this.state.unreadsAbove && !this.state.unreadsBelow && (prevState.unreadsAbove || prevState.unreadsBelow)) {
+				console.log("CDU: cmsr");
+				this.checkMarkStreamRead();
+			}
+
+			if (prevState.threadId !== this.state.threadId) {
+				this.resizeStream();
+			}
+
+			if (prevProps.hasFocus !== this.props.hasFocus) this.handleScroll();
+
+			if (this.props.posts.length !== prevProps.posts.length) {
+				var lastPost = this.props.posts[this.props.posts.length - 1];
+
+				if (lastPost) {
+					// if the latest post is mine, scroll to the bottom always
+					// otherwise, if we've scrolled up, then just call
+					// handleScroll to make sure new message indicators
+					// appear as appropriate.
+					var mine = this.props.currentUser.username === lastPost.author.username;
+					if (mine || !this.state.scrolledOffBottom) this.scrollToBottom();else this.handleScroll();
+				} else {
+					console.log("Could not find lastPost for ", this.props.posts);
+				}
+			}
+
+			// FIXME this doesn't seem to always scroll to the bottom when it should
+			if (this.state.editingPostId !== prevState.editingPostId) {
+				// special-case the editing of the bottom-most post...
+				// scroll it into view. in all other cases we let the
+				// focus of the input field make sure the post is focused
+				var _lastPost = this.props.posts[this.props.posts.length - 1];
+				if (this.state.editingPostId == _lastPost.id) this.scrollToBottom(true);
+			}
+		}
+	}, {
+		key: "findPostById",
+
+
+		// return the post, if any, with the given ID
+		value: function findPostById(id) {
+			return this.props.posts.find(function (post) {
+				return id === post.id;
+			});
+		}
+	}, {
+		key: "render",
+
+
+		// we render both a main stream (postslist) plus also a postslist related
+		// to the currently selected thread (if it exists). the reason for this is
+		// to be able to animate between the two streams, since they will both be
+		// visible during the transition
+		value: function render() {
+			var _this3 = this;
+
+			var _props2 = this.props,
+			    configs = _props2.configs,
+			    posts = _props2.posts;
+
+
+			var streamClass = classnames({
+				stream: true,
+				"no-headshots": !configs.showHeadshots,
+				"reduced-motion": configs.reduceMotion
+			});
+			var postsListClass = classnames({
+				postslist: true
+			});
+			var threadPostsListClass = classnames({
+				postslist: true,
+				threadlist: true
+			});
+			var mainPanelClass = classnames({
+				"main-panel": true,
+				"inactive-panel": this.state.threadActive
+			});
+			var threadPanelClass = classnames({
+				"thread-panel": true,
+				"inactive-panel": !this.state.threadActive
+			});
+
+			var lastTimestamp = null;
+			var threadId = this.state.threadId;
+			var threadPost = this.findPostById(threadId);
+
+			var placeholderText = "Add comment";
+			if (this.state.threadActive && threadPost) {
+				placeholderText = "Reply to " + threadPost.author.username;
+			}
+
+			var streamDivId = "stream-" + this.props.postStreamId;
+			var unread = false;
+
+			var unreadsAboveClass = classnames({
+				unreads: true,
+				active: this.state.unreadsAbove
+			});
+			var unreadsBelowClass = classnames({
+				unreads: true,
+				active: this.state.unreadsBelow
+			});
+			var unreadsAbove = this.state.threadActive ? null : react.createElement(
+				"div",
+				{ className: unreadsAboveClass, type: "above", onClick: this.handleClickUnreads },
+				"\u2191 Unread Messages \u2191"
+			);
+
+			var teamName = this.props.team ? this.props.team.name : "";
+
+			return react.createElement(
+				"div",
+				{ className: streamClass, ref: function ref(_ref9) {
+						return _this3._div = _ref9;
+					} },
+				react.createElement(EditingIndicator, {
+					editingUsers: this.props.editingUsers,
+					inactive: this.state.threadActive // or if no fileStream
+					, currentUser: this.props.currentUser,
+					teamMembers: this.props.teamMembersById
+				}),
+				react.createElement(
+					"div",
+					{ className: mainPanelClass, ref: function ref(_ref7) {
+							return _this3._mainPanel = _ref7;
+						} },
+					react.createElement(
+						"div",
+						{ className: "stream-header", ref: function ref(_ref4) {
+								return _this3._header = _ref4;
+							} },
+						react.createElement(
+							"span",
+							null,
+							teamName
+						),
+						react.createElement("span", { onClick: this.props.goToInvitePage, className: "icon icon-organization" })
+					),
+					unreadsAbove,
+					react.createElement(
+						"div",
+						{
+							className: postsListClass,
+							ref: function ref(_ref6) {
+								return _this3._postslist = _ref6;
+							},
+							onClick: this.handleClickPost,
+							id: streamDivId
+						},
+						react.createElement(
+							"div",
+							{ className: "intro", ref: function ref(_ref5) {
+									return _this3._intro = _ref5;
+								} },
+							this.renderIntro()
+						),
+						posts.map(function (post) {
+							if (post.deactivated) return null;
+							// this needs to be done by storing the return value of the render,
+							// then setting lastTimestamp, otherwise you wouldn't be able to
+							// compare the current one to the prior one.
+							var parentPost = post.parentPostId ? posts.find(function (p) {
+								return p.id === post.parentPostId;
+							}) : null;
+							var newMessageIndicator = post.seqNum && post.seqNum === Number(_this3.postWithNewMessageIndicator);
+							unread = unread || newMessageIndicator;
+							var returnValue = react.createElement(
+								"div",
+								{ key: post.id },
+								react.createElement(DateSeparator, { timestamp1: lastTimestamp, timestamp2: post.createdAt }),
+								react.createElement(Post$1, {
+									post: post,
+									usernames: _this3.props.usernamesRegexp,
+									currentUsername: _this3.props.currentUser.username,
+									replyingTo: parentPost,
+									newMessageIndicator: newMessageIndicator,
+									unread: unread,
+									editing: !_this3.state.threadActive && post.id === _this3.state.editingPostId
+								})
+							);
+							lastTimestamp = post.createdAt;
+							return returnValue;
+						})
+					)
+				),
+				react.createElement(
+					"div",
+					{ className: threadPanelClass },
+					react.createElement(
+						"div",
+						{ id: "close-thread", className: "stream-header", onClick: this.handleDismissThread },
+						react.createElement(
+							"span",
+							null,
+							"< Back to Stream "
+						),
+						react.createElement(
+							"span",
+							{ className: "keybinding" },
+							"[esc]"
+						)
+					),
+					react.createElement(
+						"div",
+						{
+							className: threadPostsListClass,
+							ref: function ref(_ref8) {
+								return _this3._threadpostslist = _ref8;
+							},
+							onClick: this.handleClickPost
+						},
+						threadPost && react.createElement(Post$1, {
+							post: threadPost,
+							usernames: this.props.usernamesRegexp,
+							currentUsername: this.props.currentUser.username,
+							key: threadPost.id,
+							showDetails: "1",
+							currentCommit: this.props.currentCommit,
+							editing: this.state.threadActive && threadPost.id === this.state.editingPostId
+						}),
+						this.renderThreadPosts(threadId)
+					)
+				),
+				react.createElement(
+					"div",
+					{ className: unreadsBelowClass, type: "below", onClick: this.handleClickUnreads },
+					"\u2193 Unread Messages \u2193"
+				),
+				react.createElement(ComposeBox$1, {
+					placeholder: placeholderText,
+					teammates: this.props.teammates,
+					ref: this._compose,
+					disabled: this.props.isOffline,
+					onSubmit: this.submitPost,
+					onEmptyUpArrow: this.editLastPost,
+					findMentionedUserIds: this.findMentionedUserIds
+				})
+			);
+		}
+	}, {
+		key: "findMyPostBeforeSeqNum",
+		value: function findMyPostBeforeSeqNum(seqNum) {
+			var me = this.props.currentUser.username;
+			return underscore.chain(this.props.posts).filter(function (post) {
+				return post.author.username === me && post.seqNum < seqNum;
+			}).last().value();
+		}
+	}, {
+		key: "handleScroll",
+		value: function handleScroll(_event) {
+			var _this4 = this;
+
+			var scrollDiv = this._postslist;
+
+			if (!scrollDiv) {
+				// console.log("Couldn't find scrollDiv for ", event);
+				return;
+			}
+
+			var scrollTop = scrollDiv.scrollTop;
+			var containerHeight = scrollDiv.parentNode.offsetHeight;
+			var scrollHeight = scrollDiv.scrollHeight;
+			var offBottom = scrollHeight - scrollTop - scrollDiv.offsetHeight;
+			var scrolledOffBottom = offBottom > 100;
+			// console.log("OB IS: ", offBottom);
+			if (scrolledOffBottom !== this.state.scrolledOffBottom) this.setState({ scrolledOffBottom: scrolledOffBottom });
+
+			var unreadsAbove = false;
+			var unreadsBelow = false;
+
+			var umiDivs = scrollDiv.getElementsByClassName("unread");
+			Array.from(umiDivs).forEach(function (umi) {
+				var top = umi.offsetTop;
+				if (top - scrollTop + 10 < 0) {
+					if (!unreadsAbove) unreadsAbove = umi;
+				} else if (top - scrollTop + 60 + umi.offsetHeight > containerHeight) {
+					unreadsBelow = umi;
+				} else if (_this4.props.hasFocus) {
+					umi.classList.remove("unread");
+				}
+			});
+			if (this.state.unreadsAbove != unreadsAbove) this.setState({ unreadsAbove: unreadsAbove });
+			if (this.state.unreadsBelow != unreadsBelow) this.setState({ unreadsBelow: unreadsBelow });
+		}
+
+		// dismiss the thread stream and return to the main stream
+
+
+		// by clicking on the post, we select it
+
+
+		// show the thread related to the given post, and if there is
+		// a codeblock, scroll to it and select it
+
+
+		// not using a gutter for now
+		// installGutter() {
+		// 	let editor = atom.workspace.getActiveTextEditor();
+		// 	if (editor && !editor.gutterWithName("CodeStream")) {
+		// 		editor.addGutter({ name: "CodeStream", priority: 150 });
+		// 	}
+		// }
+
+	}, {
+		key: "handleEscape",
+		value: function handleEscape(event) {
+			if (this.state.editingPostId) this.handleDismissEdit();else if (this.state.threadActive) this.handleDismissThread();else event.abortKeyBinding();
+		}
+	}, {
+		key: "handleDismissEdit",
+		value: function handleDismissEdit() {
+			this.setState({ editingPostId: null });
+			this.focusInput();
+		}
+
+		// return true if we are able to use substitute
+		// to edit the text of my last post
+
+	}, {
+		key: "substituteLastPost",
+		value: function substituteLastPost(substitute) {
+			// nothing to substitute? return false
+			if (!substitute) return false;
+
+			// if we can't find my last post in the stream, return false
+			var myLastPost = this.findMyPostBeforeSeqNum(9999999999);
+			if (!myLastPost) return false;
+
+			var find = substitute[1];
+			var replace = substitute[2];
+			// const modifier = substitute[3]; // not used yet
+			var newText = myLastPost.text.replace(find, replace);
+			if (newText !== myLastPost.text) {
+				this.replacePostText(myLastPost.id, newText);
+				return true;
+			} else return false;
+		}
+
+		// create a new post
+
+	}]);
+	return SimpleStream;
 }(react_1);
 
 var mapStateToProps = function mapStateToProps(_ref10) {
-  var configs = _ref10.configs,
-      connectivity = _ref10.connectivity,
-      session = _ref10.session,
-      context = _ref10.context,
-      streams = _ref10.streams,
-      users = _ref10.users,
-      posts = _ref10.posts,
-      messaging = _ref10.messaging,
-      teams = _ref10.teams,
-      onboarding = _ref10.onboarding;
+	var configs = _ref10.configs,
+	    connectivity = _ref10.connectivity,
+	    session = _ref10.session,
+	    context = _ref10.context,
+	    streams$$1 = _ref10.streams,
+	    users = _ref10.users,
+	    posts = _ref10.posts,
+	    messaging = _ref10.messaging,
+	    teams = _ref10.teams,
+	    onboarding = _ref10.onboarding;
 
-  // TODO: figure out a way to do this elsewhere
-  Object.keys(users).forEach(function (key, index) {
-    users[key].color = index % 10;
-    if (!users[key].username) {
-      var email = users[key].email;
-      if (email) users[key].username = email.replace(/@.*/, "");
-    }
-  });
+	// TODO: figure out a way to do this elsewhere
+	Object.keys(users).forEach(function (key, index) {
+		users[key].color = index % 10;
+		if (!users[key].username) {
+			var email = users[key].email;
+			if (email) users[key].username = email.replace(/@.*/, "");
+		}
+	});
 
-  var fileStream = getStreamForRepoAndFile(streams, context.currentRepoId, context.currentFile) || {};
+	var fileStream = getStreamForRepoAndFile(streams$$1, context.currentRepoId, context.currentFile) || {};
 
-  var teamMembers = teams[context.currentTeamId].memberIds.map(function (id) {
-    return users[id];
-  }).filter(Boolean);
+	var teamMembers = teams[context.currentTeamId].memberIds.map(function (id) {
+		return users[id];
+	}).filter(Boolean);
 
-  // this usenames regexp is a pipe-separated list of
-  // either usernames or if no username exists for the
-  // user then his email address. it is sorted by length
-  // so that the longest possible match will be made.
-  var usernamesRegexp = teamMembers.map(function (user) {
-    return user.username || "";
-  }).sort(function (a, b) {
-    return b.length - a.length;
-  }).join("|").replace(/\|\|+/g, "|") // remove blank identifiers
-  .replace(/\+/g, "\\+") // replace + and . with escaped versions so
-  .replace(/\./g, "\\."); // that the regexp matches the literal chars
+	// this usenames regexp is a pipe-separated list of
+	// either usernames or if no username exists for the
+	// user then his email address. it is sorted by length
+	// so that the longest possible match will be made.
+	var usernamesRegexp = teamMembers.map(function (user) {
+		return user.username || "";
+	}).sort(function (a, b) {
+		return b.length - a.length;
+	}).join("|").replace(/\|\|+/g, "|") // remove blank identifiers
+	.replace(/\+/g, "\\+") // replace + and . with escaped versions so
+	.replace(/\./g, "\\."); // that the regexp matches the literal chars
 
-  var isOffline = connectivity.offline || messaging.failedSubscriptions.length > 0 || messaging.timedOut;
+	var isOffline = connectivity.offline || messaging.failedSubscriptions.length > 0 || messaging.timedOut;
 
-  // FIXME -- eventually we'll allow the user to switch to other streams, like DMs and channels
-  var teamStream = getStreamForTeam(streams, context.currentTeamId) || {};
-  var streamPosts = getPostsForStream(posts, teamStream.id);
+	// FIXME -- eventually we'll allow the user to switch to other streams, like DMs and channels
+	var teamStream = getStreamForTeam(streams$$1, context.currentTeamId) || {};
+	var streamPosts = getPostsForStream(posts, teamStream.id);
 
-  return {
-    configs: configs,
-    isOffline: isOffline,
-    teamMembersById: toMapBy("id", teamMembers),
-    teammates: teamMembers.filter(function (_ref11) {
-      var id = _ref11.id;
-      return id !== session.userId;
-    }),
-    postStreamId: teamStream.id,
-    fileStreamId: fileStream.id,
-    teamId: context.currentTeamId,
-    repoId: context.currentRepoId,
-    hasFocus: context.hasFocus,
-    firstTimeInAtom: onboarding.firstTimeInAtom,
-    currentFile: context.currentFile,
-    currentCommit: context.currentCommit,
-    editingUsers: fileStream.editingUsers,
-    usernamesRegexp: usernamesRegexp,
-    currentUser: users[session.userId],
-    team: teams[context.currentTeamId],
-    posts: streamPosts.map(function (post) {
-      var user = users[post.creatorId];
-      if (!user) {
-        console.warn("Redux store doesn't have a user with id " + post.creatorId + " for post with id " + post.id);
-        user = {
-          username: "Unknown user",
-          email: "",
-          firstName: "",
-          lastName: ""
-        };
-      }
-      var _user = user,
-          username = _user.username,
-          email = _user.email,
-          _user$firstName = _user.firstName,
-          firstName = _user$firstName === undefined ? "" : _user$firstName,
-          _user$lastName = _user.lastName,
-          lastName = _user$lastName === undefined ? "" : _user$lastName,
-          color = _user.color;
+	return {
+		configs: configs,
+		isOffline: isOffline,
+		teamMembersById: toMapBy("id", teamMembers),
+		teammates: teamMembers.filter(function (_ref11) {
+			var id = _ref11.id;
+			return id !== session.userId;
+		}),
+		postStreamId: teamStream.id,
+		fileStreamId: fileStream.id,
+		teamId: context.currentTeamId,
+		repoId: context.currentRepoId,
+		hasFocus: context.hasFocus,
+		firstTimeInAtom: onboarding.firstTimeInAtom,
+		currentFile: context.currentFile,
+		currentCommit: context.currentCommit,
+		editingUsers: fileStream.editingUsers,
+		usernamesRegexp: usernamesRegexp,
+		currentUser: users[session.userId],
+		team: teams[context.currentTeamId],
+		posts: streamPosts.map(function (post) {
+			var user = users[post.creatorId];
+			if (!user) {
+				console.warn("Redux store doesn't have a user with id " + post.creatorId + " for post with id " + post.id);
+				user = {
+					username: "Unknown user",
+					email: "",
+					firstName: "",
+					lastName: ""
+				};
+			}
+			var _user = user,
+			    username = _user.username,
+			    email = _user.email,
+			    _user$firstName = _user.firstName,
+			    firstName = _user$firstName === undefined ? "" : _user$firstName,
+			    _user$lastName = _user.lastName,
+			    lastName = _user$lastName === undefined ? "" : _user$lastName,
+			    color = _user.color;
 
-      return _extends$4({}, post, {
-        author: {
-          username: username,
-          email: email,
-          color: color,
-          fullName: (firstName + " " + lastName).trim()
-        }
-      });
-    })
-  };
+			return _extends$4({}, post, {
+				author: {
+					username: username,
+					email: email,
+					color: color,
+					fullName: (firstName + " " + lastName).trim()
+				}
+			});
+		})
+	};
 };
 
 var Stream = connect(mapStateToProps, _extends$4({}, actions, {
-  goToInvitePage: function goToInvitePage() {} // FIXME: routingActions.goToInvitePage
+	goToInvitePage: goToInvitePage
 }))(SimpleStream);
 
-var index = {
-  ComposeBox: ComposeBox$1,
-  DateSeparator: DateSeparator,
-  EditingIndicator: EditingIndicator,
-  Post: Post$1,
-  Stream: Stream
+var toMapBy$1 = function toMapBy(key, entities) {
+	return entities.reduce(function (result, entity) {
+		return _extends$4({}, result, defineProperty$1({}, entity[key], entity));
+	}, {});
 };
 
-module.exports = index;
+var initialState$1 = {};
+
+var companies = (function () {
+	var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState$1;
+	var _ref = arguments[1];
+	var type = _ref.type,
+	    payload = _ref.payload;
+
+	switch (type) {
+		case "BOOTSTRAP_COMPANIES":
+			return toMapBy$1("id", payload);
+		case "COMPANIES-UPDATE_FROM_PUBNUB":
+		case "ADD_COMPANY":
+			return _extends$4({}, state, defineProperty$1({}, payload.id, payload));
+		case "ADD_COMPANIES":
+			return _extends$4({}, state, toMapBy$1("id", payload));
+		default:
+			return state;
+	}
+});
+
+var initialState$2 = {
+	complete: false,
+	requestInProcess: false,
+	firstTimeInAtom: false,
+	step: "signUp",
+	props: {},
+	errors: {}
+};
+
+var onboarding = (function () {
+	var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState$2;
+	var _ref = arguments[1];
+	var type = _ref.type,
+	    payload = _ref.payload;
+
+	switch (type) {
+		case "REQUEST_STARTED":
+			return _extends$4({}, state, { requestInProcess: true });
+		case "REQUEST_FINISHED":
+			return _extends$4({}, state, { requestInProcess: false });
+		case "FOUND_MULTIPLE_REMOTES":
+			return _extends$4({}, state, { step: "selectRemote", props: payload });
+		case "SELECTED_REMOTE":
+			return _extends$4({}, state, { step: "signUp" });
+		case "GO_TO_CONFIRMATION":
+		case "SIGNUP_SUCCESS":
+			return _extends$4({}, initialState$2, { step: "confirmEmail", props: payload });
+		case "SIGNUP_EMAIL_EXISTS":
+			return _extends$4({}, state, { step: "login", props: payload });
+		case "GO_TO_LOGIN":
+			return _extends$4({}, initialState$2, { step: "login" });
+		case "GO_TO_SIGNUP":
+			return _extends$4({}, initialState$2, { step: "signUp" });
+		case "GO_TO_CREATE_TEAM":
+			return _extends$4({}, initialState$2, { step: "createTeam" });
+		case "GO_TO_SELECT_TEAM":
+			return _extends$4({}, initialState$2, { step: "selectTeam" });
+		case "SIGNUP-USERNAME_COLLISION":
+			return _extends$4({}, state, { errors: { usernameInUse: true } });
+		case "NEW_USER_LOGGED_INTO_NEW_REPO":
+			return _extends$4({}, initialState$2, { step: "createTeam" }, payload);
+		case "NEW_USER_LOGGED_INTO_MATCHED_REPO":
+			return _extends$4({}, initialState$2, {
+				step: "getInvited"
+			}, payload);
+		case "EXISTING_USER_LOGGED_INTO_NEW_REPO":
+			return _extends$4({}, initialState$2, { step: "selectTeam" }, payload);
+		case "EXISTING_USER_LOGGED_INTO_MATCHED_REPO":
+			return _extends$4({}, initialState$2, {
+				step: "getInvited",
+				alreadyOnTeam: true
+			}, payload);
+		case "LOGGED_INTO_FOREIGN_REPO":
+			return _extends$4({}, initialState$2, { step: "noAccess" });
+		case "EXISTING_USER_CONFIRMED_IN_FOREIGN_REPO":
+			return _extends$4({}, initialState$2, { step: "noAccess", firstTimeInAtom: true });
+		case "USER_ALREADY_CONFIRMED":
+			return _extends$4({}, initialState$2, { step: "login", props: payload });
+		case "EXISTING_USER_CONFIRMED":
+			return _extends$4({}, initialState$2, { complete: true, firstTimeInAtom: true });
+		case "INVALID_CONFIRMATION_CODE":
+			return _extends$4({}, state, { errors: { invalidCode: true } });
+		case "EXPIRED_CONFIRMATION_CODE":
+			return _extends$4({}, state, { errors: { expiredCode: true } });
+		case "CREATE_TEAM-INVALID_REPO_URL":
+			return _extends$4({}, state, { errors: { invalidRepoUrl: true } });
+		case "TEAM_CREATED":
+			return _extends$4({}, state, { step: "identifyMembers", props: payload });
+		case "TEAM_NOT_FOUND":
+			return _extends$4({}, state, { errors: { teamNotFound: true } });
+		case "INVALID_PERMISSION_FOR_TEAM":
+			return _extends$4({}, state, { errors: { noPermission: true } });
+		case "REPO_ADDED_FOR_TEAM":
+			return _extends$4({}, initialState$2, {
+				firstTimeInAtom: state.firstTimeInAtom,
+				step: "identifyMembers",
+				props: { existingTeam: true, teamName: payload }
+			});
+		case "INVALID_CREDENTIALS":
+			return _extends$4({}, state, { errors: { invalidCredentials: true } });
+		case "USERNAME_COLLISION_ON_TEAM":
+			return _extends$4({}, state, { step: "changeUsername", props: payload });
+		case "LOGGED_IN":
+		case "ONBOARDING_COMPLETE":
+			return _extends$4({}, initialState$2, { firstTimeInAtom: state.firstTimeInAtom, complete: true });
+		case "RESET_ONBOARDING":
+			return initialState$2;
+		case "ONBOARDING-SERVER_UNREACHABLE":
+			return _extends$4({}, state, { errors: { unknown: true } });
+		default:
+			return state;
+	}
+});
+
+var initialState$3 = {
+	byStream: {},
+	pending: [],
+	byRepo: {}
+};
+
+var addPost = function addPost(byStream, post) {
+	var streamId = post.streamId;
+	var streamPosts = byStream[streamId] || {};
+	return _extends$4({}, byStream, defineProperty$1({}, streamId, _extends$4({}, streamPosts, defineProperty$1({}, post.id, post))));
+};
+
+var addPostByRepo = function addPostByRepo(byRepo, post) {
+	var repoId = post.repoId;
+	var repoPosts = byRepo[repoId] || {};
+	return _extends$4({}, byRepo, defineProperty$1({}, repoId, _extends$4({}, repoPosts, defineProperty$1({}, post.id, post))));
+};
+
+var posts = (function () {
+	var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState$3;
+	var _ref = arguments[1];
+	var type = _ref.type,
+	    payload = _ref.payload;
+
+	switch (type) {
+		case "ADD_POSTS":
+		case "BOOTSTRAP_POSTS":
+			{
+				var nextState = {
+					pending: [].concat(toConsumableArray(state.pending)),
+					byStream: _extends$4({}, state.byStream),
+					byRepo: _extends$4({}, state.byRepo)
+				};
+				payload.forEach(function (post) {
+					if (post.pending) ;else {
+						nextState.byStream = addPost(nextState.byStream, post);
+						nextState.byRepo = addPostByRepo(nextState.byRepo, post);
+					}
+				});
+				return nextState;
+			}
+		case "ADD_POSTS_FOR_STREAM":
+			{
+				var streamId = payload.streamId,
+				    posts = payload.posts;
+
+				var streamPosts = _extends$4({}, state.byStream[streamId] || {});
+				var repoId = posts.length > 0 && posts[0].repoId;
+				var repoPosts = repoId ? _extends$4({}, state.byRepo[repoId] || {}) : {};
+				posts.forEach(function (post) {
+					streamPosts[post.id] = post;
+					repoPosts[post.id] = post;
+				});
+
+				return _extends$4({}, state, {
+					byStream: _extends$4({}, state.byStream, defineProperty$1({}, streamId, streamPosts)),
+					byRepo: _extends$4({}, state.byRepo, repoId && defineProperty$1({}, repoId, repoPosts))
+				});
+			}
+		case "POSTS-UPDATE_FROM_PUBNUB":
+		case "ADD_POST":
+			return _extends$4({}, state, {
+				byStream: addPost(state.byStream, payload),
+				byRepo: addPostByRepo(state.byRepo, payload)
+			});
+		case "ADD_PENDING_POST":
+			{
+				return _extends$4({}, state, { pending: [].concat(toConsumableArray(state.pending), [payload]) });
+			}
+		case "RESOLVE_PENDING_POST":
+			{
+				var pendingId = payload.pendingId,
+				    post = payload.post;
+
+				return {
+					byStream: addPost(state.byStream, post),
+					byRepo: addPostByRepo(state.byRepo, post),
+					pending: state.pending.filter(function (post) {
+						return post.id !== pendingId;
+					})
+				};
+			}
+		case "PENDING_POST_FAILED":
+			{
+				return _extends$4({}, state, {
+					pending: state.pending.map(function (post) {
+						if (post.id === payload.id) return payload;
+					})
+				});
+			}
+		case "CANCEL_PENDING_POST":
+			{
+				return _extends$4({}, state, {
+					pending: state.pending.filter(function (post) {
+						return post.id !== payload;
+					})
+				});
+			}
+		default:
+			return state;
+	}
+});
+
+var initialState$4 = {
+	currentFile: "",
+	currentTeamId: "",
+	currentRepoId: "",
+	currentCommit: "",
+	noAccess: false,
+	showSlackInfo: false,
+	usernamesInTeam: []
+};
+
+var context = (function () {
+	var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState$4;
+	var _ref = arguments[1];
+	var type = _ref.type,
+	    payload = _ref.payload;
+
+	if (type === "RESET_CONTEXT") return _extends$4({}, initialState$4, { currentFile: state.currentFile, currentCommit: state.currentCommit });
+	if (type === "SET_CONTEXT") return _extends$4({}, state, payload);
+	if (type === "SET_CURRENT_FILE") return _extends$4({}, state, { currentFile: payload });
+	if (type === "SET_CURRENT_TEAM") return _extends$4({}, state, { currentTeamId: payload });
+	if (type === "SET_CURRENT_REPO") return _extends$4({}, state, { currentRepoId: payload });
+	if (type === "SET_CURRENT_COMMIT") return _extends$4({}, state, { currentCommit: payload });
+	if (type === "COMMIT_HASH_CHANGED") return _extends$4({}, state, { currentCommit: payload });
+	if (type === "SET_HAS_FOCUS") return _extends$4({}, state, { hasFocus: payload });
+	if (type === "NO_ACCESS") return _extends$4({}, state, { noAccess: { noAccess: true } });
+	if (type === "NO_ACCESS-MISSING_REMOTE_URL") return _extends$4({}, state, { noAccess: { noUrl: true } });
+	if (type === "NO_GIT_IN_PATH") return _extends$4({}, state, { noAccess: { noGit: true } });
+	if (type === "SHOW_SLACK_INFO") return _extends$4({}, state, { showSlackInfo: true });
+	if (type === "CANCEL_SLACK_INFO") return _extends$4({}, state, { showSlackInfo: false });
+	return state;
+});
+
+var initialState$5 = {
+	showHeadshots: true,
+	reduceMotion: false
+};
+
+var configs = (function () {
+	var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState$5;
+	var _ref = arguments[1];
+	var type = _ref.type,
+	    payload = _ref.payload;
+
+	switch (type) {
+		case "UPDATE_CONFIGS":
+			return _extends$4({}, initialState$5, state, payload);
+		default:
+			return state;
+	}
+});
+
+var initialState$6 = {};
+
+var users = (function () {
+	var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState$6;
+	var _ref = arguments[1];
+	var type = _ref.type,
+	    payload = _ref.payload;
+
+	switch (type) {
+		case "BOOTSTRAP_USERS":
+			return toMapBy$1("id", payload);
+		case "USERS-UPDATE_FROM_PUBNUB":
+		case "ADD_USER":
+			return _extends$4({}, state, defineProperty$1({}, payload.id, payload));
+		case "ADD_USERS":
+			return _extends$4({}, state, toMapBy$1("id", payload));
+		case "UPDATE_USER":
+			return _extends$4({}, state, defineProperty$1({}, payload.id, payload));
+		default:
+			return state;
+	}
+	return state;
+});
+
+var initialState$7 = {};
+
+var repos = (function () {
+	var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState$7;
+	var _ref = arguments[1];
+	var type = _ref.type,
+	    payload = _ref.payload;
+
+	switch (type) {
+		case "BOOTSTRAP_REPOS":
+			return toMapBy$1("id", payload);
+		case "ADD_REPOS":
+			return _extends$4({}, state, toMapBy$1("id", payload));
+		case "REPOS-UPDATE_FROM_PUBNUB":
+		case "ADD_REPO":
+			return _extends$4({}, state, defineProperty$1({}, payload.id, payload));
+		default:
+			return state;
+	}
+});
+
+var initialState$8 = {};
+
+var teams = (function () {
+	var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState$8;
+	var _ref = arguments[1];
+	var type = _ref.type,
+	    payload = _ref.payload;
+
+	switch (type) {
+		case "BOOTSTRAP_TEAMS":
+			return toMapBy$1("id", payload);
+		case "ADD_TEAMS":
+			return _extends$4({}, state, toMapBy$1("id", payload));
+		case "TEAMS-UPDATE_FROM_PUBNUB":
+		case "ADD_TEAM":
+			return _extends$4({}, state, defineProperty$1({}, payload.id, payload));
+		default:
+			return state;
+	}
+});
+
+var initialState$9 = {};
+
+var markers = (function () {
+	var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState$9;
+	var _ref = arguments[1];
+	var type = _ref.type,
+	    payload = _ref.payload;
+
+	switch (type) {
+		case "BOOTSTRAP_MARKERS":
+			return toMapBy$1("id", payload);
+		case "ADD_MARKERS":
+			return _extends$4({}, state, toMapBy$1("id", payload));
+		case "MARKERS-UPDATE_FROM_PUBNUB":
+		case "ADD_MARKER":
+			return _extends$4({}, state, defineProperty$1({}, payload.id, payload));
+		default:
+			return state;
+	}
+});
+
+var initialState$a = { byStream: {}, byCommit: {} };
+
+var addLocation = function addLocation(state, payload) {
+	if (payload.commitHash === "uncommitted") {
+		return addUncommittedLocation(state, payload);
+	} else {
+		return addCommittedLocation(state, payload);
+	}
+};
+
+var addLocationForCommit = function addLocationForCommit(byCommit, payload) {
+	var existingLocations = byCommit[payload.commitHash] || {};
+	return _extends$4({}, byCommit, defineProperty$1({}, payload.commitHash, _extends$4({}, existingLocations, payload.locations, payload.dirty)));
+};
+
+var addCommittedLocation = function addCommittedLocation(state, payload) {
+	var byCommit = state.byStream[payload.streamId] || {};
+	var existingLocations = byCommit[payload.commitHash] || {};
+	return {
+		byStream: _extends$4({}, state.byStream, defineProperty$1({}, payload.streamId, _extends$4({}, byCommit, defineProperty$1({}, payload.commitHash, _extends$4({}, existingLocations, payload.locations, payload.dirty))))),
+		byCommit: addLocationForCommit(state.byCommit, payload)
+	};
+};
+
+var addUncommittedLocation = function addUncommittedLocation(state, _ref) {
+	var streamId = _ref.streamId,
+	    uncommitted = _ref.uncommitted;
+
+	var byCommit = state.byStream[streamId] || {};
+	var existingUncommitted = byCommit.uncommitted || [];
+	return {
+		byStream: _extends$4({}, state.byStream, defineProperty$1({}, streamId, _extends$4({}, byCommit, {
+			uncommitted: [].concat(toConsumableArray(existingUncommitted), toConsumableArray(uncommitted))
+		}))),
+		byCommit: state.byCommit
+	};
+};
+
+var removeUncommittedLocation = function removeUncommittedLocation(state, _ref2) {
+	var streamId = _ref2.streamId,
+	    markerId = _ref2.markerId;
+
+	var byCommit = state.byStream[streamId] || {};
+	var uncommitted = byCommit.uncommitted || [];
+	return {
+		byStream: _extends$4({}, state.byStream, defineProperty$1({}, streamId, _extends$4({}, byCommit, {
+			uncommitted: uncommitted.filter(function (uncommittedLocation) {
+				return uncommittedLocation.marker._id != markerId;
+			})
+		})))
+	};
+};
+
+var markerLocations = (function () {
+	var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState$a;
+	var _ref3 = arguments[1];
+	var type = _ref3.type,
+	    payload = _ref3.payload;
+
+	switch (type) {
+		case "BOOTSTRAP_MARKER_LOCATIONS":
+			{
+				return payload.reduce(function (nextState, location) {
+					return addLocation(nextState, location);
+				}, initialState$a);
+			}
+		case "MARKERLOCATIONS-UPDATE_FROM_PUBNUB":
+		case "ADD_MARKER_LOCATIONS":
+			return addCommittedLocation(state, payload);
+		case "ADD_UNCOMMITTED_LOCATIONS":
+			return addUncommittedLocation(state, payload);
+		case "REMOVE_UNCOMMITTED_LOCATION":
+			return removeUncommittedLocation(state, payload);
+		default:
+			return state;
+	}
+});
+
+var initialState$b = { mentions: {}, unread: {} };
+
+var umis = (function () {
+	var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState$b;
+	var _ref = arguments[1];
+	var type = _ref.type,
+	    payload = _ref.payload;
+
+	switch (type) {
+		case "INCREMENT_UMI":
+			{
+				// console.log("incrementint umis in the reducer: ", payload);
+				var nextState = _extends$4({}, state);
+				nextState.unread[payload] = (nextState.unread[payload] || 0) + 1;
+				// console.log("STATE IS: ", nextState);
+				return nextState;
+			}
+		case "INCREMENT_MENTION":
+			{
+				// console.log("incrementing mention in the reducer: ", payload);
+				// payload is a streamId
+				var _nextState = _extends$4({}, state);
+				_nextState.mentions[payload] = (_nextState.mentions[payload] || 0) + 1;
+				_nextState.unread[payload] = (_nextState.unread[payload] || 0) + 1;
+				return _nextState;
+			}
+		case "CLEAR_UMI":
+			{
+				// console.log("clear umis in the reducer: ", payload);
+				var _nextState2 = _extends$4({}, state);
+				// instead of deleting it, we set it to zero
+				// instead of deleting it, we set it to zero
+				// so that when we loop through the keys we can
+				// still reference the fact that this div needs to be cleared
+				if (_nextState2.mentions[payload]) _nextState2.mentions[payload] = 0;
+				if (_nextState2.unread[payload]) _nextState2.unread[payload] = 0;
+				return _nextState2;
+			}
+		case "SET_UMI":
+			{
+				return payload;
+			}
+		case "RESET_UMI":
+			{
+				var _nextState3 = _extends$4({}, initialState$b);
+				return _nextState3;
+			}
+		default:
+			return state;
+	}
+	return state;
+});
+
+var initialState$c = {
+	catchingUp: false,
+	timedOut: false,
+	failedSubscriptions: []
+};
+
+var messaging = (function () {
+	var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState$c;
+	var _ref = arguments[1];
+	var type = _ref.type,
+	    payload = _ref.payload;
+
+	switch (type) {
+		case "RESET_MESSAGING":
+			return initialState$c;
+
+		case "LAST_MESSAGE_RECEIVED":
+			return _extends$4({}, state, { lastMessageReceived: payload });
+
+		case "CATCHING_UP":
+			return _extends$4({}, state, { catchingUp: true });
+
+		case "CAUGHT_UP":
+			return _extends$4({}, state, { catchingUp: false });
+
+		case "SUBSCRIPTION_FAILURE":
+			if (!state.failedSubscriptions || !state.failedSubscriptions.includes(payload)) {
+				var nextState = _extends$4({}, state, {
+					failedSubscriptions: [].concat(toConsumableArray(state.failedSubscriptions || []))
+				});
+				nextState.failedSubscriptions.push(payload);
+				return nextState;
+			}
+			break;
+
+		case "SUBSCRIPTION_SUCCESS":
+			var index = (state.failedSubscriptions || []).indexOf(payload);
+			if (index !== -1) {
+				var _nextState = _extends$4({}, state, {
+					failedSubscriptions: [].concat(toConsumableArray(state.failedSubscriptions || []))
+				});
+				_nextState.failedSubscriptions.splice(index, 1);
+				return _nextState;
+			}
+			break;
+
+		case "SUBSCRIPTION_TIMEOUT":
+			return _extends$4({}, state, { timedOut: true });
+
+		case "HISTORY_RETRIEVAL_FAILURE":
+			return _extends$4({}, state, { historyRetrievalFailure: true });
+	}
+	return state;
+});
+
+var initialState$d = {
+	offline: !navigator.onLine
+};
+
+var connectivity = (function () {
+	var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState$d;
+	var _ref = arguments[1];
+	var type = _ref.type;
+
+	switch (type) {
+		case "OFFLINE":
+			return _extends$4({}, state, { offline: true });
+		case "ONLINE":
+			return _extends$4({}, state, { offline: false });
+		default:
+			return state;
+	}
+	return state;
+});
+
+var currentPage = (function () {
+	var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+	var _ref = arguments[1];
+	var type = _ref.type,
+	    payload = _ref.payload;
+
+	switch (type) {
+		case "GO_TO_INVITE_PAGE":
+			return "invite";
+		case "EXIT_INVITE_PAGE":
+			return null;
+		default:
+			return state;
+	}
+});
+
+var session = function session() {
+	var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+	var _ref = arguments[1];
+	var type = _ref.type,
+	    payload = _ref.payload;
+
+	if (type === "INIT_SESSION") return payload;
+	if (type === "CLEAR_SESSION") return {};else return state;
+};
+
+var repoAttributes = function repoAttributes() {
+	var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+	var _ref2 = arguments[1];
+	var type = _ref2.type,
+	    payload = _ref2.payload;
+
+	if (type === "SET_REPO_ATTRIBUTES") return payload;
+	if (type === "SET_REPO_URL") return _extends$4({}, state, { url: payload });
+	return state;
+};
+
+var bootstrapped = function bootstrapped() {
+	var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+	var _ref3 = arguments[1];
+	var type = _ref3.type;
+
+	if (type === "BOOTSTRAP_COMPLETE") return true;
+	return state;
+};
+
+var appReducer = combineReducers({
+	bootstrapped: bootstrapped,
+	companies: companies,
+	configs: configs,
+	connectivity: connectivity,
+	context: context,
+	currentPage: currentPage,
+	markerLocations: markerLocations,
+	markers: markers,
+	messaging: messaging,
+	onboarding: onboarding,
+	posts: posts,
+	repoAttributes: repoAttributes,
+	repos: repos,
+	session: session,
+	streams: streams,
+	teams: teams,
+	umis: umis,
+	users: users
+});
+
+var reducer = (function (state, action) {
+	if (action.type === "RESET") state = undefined;
+	return appReducer(state, action);
+});
+
+var createCodeStreamStore = function createCodeStreamStore() {
+	var initialState = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+	var thunkArg = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+	var middleware = arguments[2];
+
+	return createStore(reducer, initialState, reduxDevtoolsExtension_1(applyMiddleware.apply(undefined, [thunk.withExtraArgument(thunkArg)].concat(toConsumableArray(middleware)))));
+};
+
+var index$1 = {
+	createStore: createCodeStreamStore,
+	ComposeBox: ComposeBox$1,
+	DateSeparator: DateSeparator,
+	EditingIndicator: EditingIndicator,
+	Post: Post$1,
+	Stream: Stream
+};
+
+module.exports = index$1;
