@@ -38,6 +38,8 @@ export default class BufferChangeTracker {
 	};
 
 	publish = editor => {
+		if (!editor) return;
+		
 		const listeners = this.listeners.get(this.repo.relativize(editor.getPath()));
 		if (listeners) {
 			const { context, markerLocations } = this.store.getState();
