@@ -1,0 +1,881 @@
+// any variables used here should be provided by the consumer of this stylesheet
+// @import "ui-variables";
+
+.codestream {
+	[contenteditable="true"]:empty:before {
+		content: attr(placeholder);
+		opacity: 0.5;
+	}
+
+	.stream {
+		width: 100%;
+		height: 100%;
+		background: @app-background-color;
+
+		.stream-header {
+			position: relative;
+			text-align: center;
+			background-color: @app-background-color;
+			border-bottom: 1px solid @base-border-color;
+			padding: 0 35px 10px 35px;
+			z-index: 30;
+			user-select: none;
+
+			span {
+				font-weight: 100;
+				font-size: 16px;
+				text-transform: uppercase;
+				letter-spacing: 1px;
+			}
+
+			.mentions-badge {
+				position: absolute;
+				top: 2px;
+				left: 10px;
+				background-color: @background-color-info;
+				border-radius: 20px;
+				color: white;
+				width: 20px;
+				height: 20px;
+				text-align: center;
+				font-size: 11px;
+				padding-top: 1px;
+			}
+
+			.icon {
+				position: absolute;
+				top: 2px;
+				right: 5px;
+				cursor: pointer;
+				padding: 0 0 0 6px;
+				text-align: center;
+				border-radius: 3px;
+			}
+			.icon:hover {
+				color: @text-color-highlight;
+				background-color: @base-background-color;
+			}
+		}
+
+		.unreads {
+			// position: absolute !important;
+			// background: @background-color-highlight;
+			// color: @text-color-highlight;
+
+			// these are the last known good-looking settings
+			// background: @base-background-color;
+			// color: @text-color-info;
+			// border: 1px solid @base-border-color;
+
+			color: @base-background-color;
+			background: @text-color;
+			border: 1px solid @base-border-color;
+
+			// font-weight: bold;
+			// color: white;
+			text-align: center;
+			padding: 5px 0;
+			width: 80%;
+			// left: 10% !important;
+			z-index: 10;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			height: 30px;
+			// margin: 0 10% 0 10%;
+			cursor: pointer !important;
+			user-select: none;
+			transition: top 0.2s, bottom 0.2s, background-color 0.2s;
+		}
+		.unreads.active {
+			display: block;
+		}
+		.unreads {
+			background: @background-color-info;
+			border: none;
+			color: white;
+		}
+		.unreads[type="above"] {
+			top: 0px;
+			// margin-top: -3em;
+			border-radius: 0 0 5px 5px;
+			border-top: none;
+			// box-shadow: 0 1px 15px rgba(0, 0, 0, 0.5);
+		}
+		.unreads[type="above"].active {
+			top: 30px;
+			// margin-top: 30px;
+		}
+		.unreads[type="below"] {
+			top: auto !important;
+			// bottom: -3em !important;
+			border-radius: 5px 5px 0 0;
+			border-bottom: none;
+			// box-shadow: 0 -1px 15px rgba(0, 0, 0, 0.25);
+			bottom: 30px !important;
+			z-index: 5;
+		}
+		.unreads[type="below"].active {
+			bottom: 60px !important;
+		}
+
+		#close-thread {
+			// margin: 0 10px 5px 10px;
+			// width: calc(~"100% - 20px");
+			// width: 100%;
+			// margin: 0;
+			padding-left: 0;
+			padding-right: 0;
+			cursor: pointer;
+			// padding: 1px 0;
+			// z-index: 10;
+			// height: 30px;
+			color: @text-color-info;
+			.keybinding {
+				color: @text-color;
+				// display: none;
+				// padding: 2px;
+			}
+		}
+		#close-thread:hover {
+			background: @app-background-color-hover;
+		}
+
+		.new-messages-below {
+			cursor: pointer;
+			box-sizing: border-box;
+			// position: absolute;
+			width: 100%;
+			margin: -41px 0 11px 0;
+			padding-top: 5px;
+			// top: -30px;
+			// color: @text-color-info;
+			background-color: @background-color-info;
+			border-radius: 8px 8px 0 0;
+			text-align: center;
+			height: 30px;
+			color: #fff;
+		}
+		.new-messages-below:hover {
+			background-color: lighten(@background-color-info, 5%);
+		}
+
+		.edit-post {
+			.button-group {
+				// padding: 0px 10px 10px 56px;
+				margin-bottom: 5px;
+				margin-top: 10px;
+				button {
+					// this crazy escape syntax is required due to a bug in LESS
+					width: calc(~"50% - 5px");
+				}
+				button.cancel {
+					background: @background-color-error !important;
+				}
+				button:first-child {
+					margin-right: 10px;
+				}
+			}
+
+			div[contenteditable="true"] {
+				margin-top: 5px;
+				padding: 10px;
+				border-radius: 4px;
+				// background: #fff;
+				background: @base-background-color;
+				border: 1px solid @base-border-color;
+				resize: none;
+				// height: 20px;
+				max-width: 100%;
+				overflow: auto;
+				cursor: auto !important;
+			}
+		}
+
+		.compose {
+			display: block;
+			width: 100%;
+			border: none;
+			border-top: 1px solid @base-border-color;
+			// background-color: inherit;
+			background-color: @app-background-color;
+			position: absolute;
+			bottom: 0px;
+			padding: 10px;
+			box-sizing: border-box;
+			z-index: 5;
+
+			#input-div {
+				box-sizing: border-box;
+				width: 100%;
+				padding: 10px;
+				border-radius: 4px;
+				// background: #fff;
+				background: @base-background-color;
+				border: 1px solid @base-border-color;
+				resize: none;
+				// height: 20px;
+				max-height: 300px;
+				max-width: 100%;
+				overflow: auto;
+			}
+			#input-div:empty {
+				white-space: nowrap;
+			}
+
+			.placeholder {
+				position: absolute;
+				bottom: 20px;
+				left: 20px;
+				opacity: 0.5;
+			}
+
+			.hint {
+				margin: 4px -5px 4px 2px;
+				font-size: 12px;
+				opacity: 0.5;
+				.icon {
+					cursor: pointer;
+					float: right;
+					transform: scale(0.8);
+				}
+				.icon:hover {
+					color: @text-color-error;
+				}
+			}
+			.code {
+				margin-top: 0;
+			}
+		}
+
+		.at-mention {
+			display: inline-block;
+			// background-color: @background-color-info;
+			color: @text-color-info;
+		}
+		.at-mention.me {
+			color: @text-color-info;
+			font-weight: bold;
+			padding: 0px 3px 2px 3px;
+			margin: 0px 0px -2px 0px;
+			border-radius: 12px;
+
+			// take the app background color, and shade it towards
+			// a neutral grey by 25%
+			// background-color: mix(@app-background-color, #808080, 75%);
+			background-color: rgba(127, 127, 127, 0.2);
+
+			// filter: brightness(90%);
+			// color: @text-color-error;
+			// background-color: @background-color-highlight;
+			// box-shadow: 0 5px 10px #ccc;;
+
+			background-color: @background-color-info;
+			// color: @text-color-highlight;
+			color: white;
+			font-weight: normal;
+		}
+
+		.code {
+			max-width: 100%;
+			max-height: 200px;
+			white-space: pre;
+			font-family: Menlo, Consolas, "DejaVu Sans Mono", monospace;
+			font-size: 11px;
+			// background: #f6f6f6;
+			background: @base-background-color;
+			border-radius: 0 0 4px 4px;
+			padding: 10px;
+			border: 1px solid @base-border-color;
+			border-top: none;
+			margin: 0 0 5px 0;
+			overflow-x: auto;
+			overflow-y: auto;
+			line-height: 12px;
+			tab-size: 2;
+			position: relative;
+		}
+
+		.mentions-popup {
+			width: 100%;
+			// height: 500px;
+			position: absolute;
+			bottom: 50px;
+			right: 0px;
+			z-index: 50;
+			padding: 0 10px 0 10px;
+			padding-bottom: inherit;
+			user-select: none;
+			cursor: pointer;
+			border-radius: 5px;
+
+			.body {
+				width: 100%;
+				// box-shadow: 0 5px 10px #ccc;
+				box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+				border-radius: 5px;
+				border: 1px solid @base-border-color;
+				// background: #eee;
+				background: @base-background-color;
+			}
+			.instructions {
+				font-size: 11px;
+				padding: 10px;
+				border-radius: 5px 5px 0 0;
+				opacity: 0.5;
+				background: #eee;
+				background: @base-background-color;
+			}
+			table {
+				// temporarily not displayed for aesthetic reasons
+				display: none;
+				font-size: 11px;
+				width: 100%;
+				border-collapse: collapse;
+				border-spacing: 0;
+				opacity: 0.5;
+				td:nth-child(2) {
+					text-align: center;
+				}
+				td:last-child {
+					text-align: right;
+				}
+			}
+			ul {
+				// border-bottom: 1px solid @base-border-color;
+				border-top: 1px solid @base-border-color;
+				// background: #fff;
+				background: @base-background-color;
+				padding: 5px 0;
+				border-radius: 0 0 5px 5px;
+			}
+			li {
+				padding: 5px 10px;
+				.headshot {
+					display: inline-block;
+					position: relative;
+					width: 18px;
+					height: 18px;
+					margin-right: 6px;
+					vertical-align: -4px;
+				}
+				.headshot-gravatar {
+					position: absolute;
+					width: 18px;
+					height: 18px;
+					border-radius: 3px;
+					z-index: 2;
+				}
+				.headshot-initials {
+					position: absolute;
+					width: 18px;
+					height: 18px;
+					border-radius: 3px;
+					text-align: center;
+					font-size: 11px;
+					text-transform: capitalize;
+					padding-top: 1px;
+					z-index: 1;
+					color: @app-background-color;
+				}
+			}
+			// li:hover,
+			li.hover {
+				color: #fff;
+				background: #4979f1;
+			}
+			.username {
+				font-weight: 700;
+				padding-right: 5px;
+			}
+		}
+
+		.post .menu-popup {
+			right: 20px;
+			margin-top: -10px;
+		}
+		.menu-popup {
+			// height: 500px;
+			position: absolute;
+			z-index: 50;
+			padding: 0 10px 0 10px;
+			user-select: none;
+			cursor: pointer;
+			border-radius: 5px;
+
+			.body {
+				width: 100%;
+				// box-shadow: 0 5px 10px #ccc;
+				box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+				border-radius: 5px;
+				border: 1px solid @base-border-color;
+				background: #eee;
+			}
+			ul {
+				// border-top: 1px solid @base-border-color;
+				background: #fff;
+				padding: 5px 0;
+				border-radius: 0 5px 5px 0;
+			}
+			li {
+				padding: 5px 10px;
+				.headshot-gravatar {
+					width: 18px;
+					height: 18px;
+					border-radius: 3px;
+					margin-right: 6px;
+				}
+			}
+			// li:hover,
+			li.hover {
+				color: #fff;
+				background: #4979f1;
+			}
+			.username {
+				font-weight: 700;
+				padding-right: 5px;
+			}
+		}
+
+		.editing-indicator {
+			position: absolute;
+			top: 30px;
+			width: 100%;
+			z-index: 12;
+			// background: @app-background-color;
+			// border-bottom: 1px solid @base-border-color;
+			border-top: 1px solid @base-border-color;
+			padding: 0;
+			// box-shadow: 0 0 10px @app-background-color;
+			div {
+				width: calc(~"100% - 20px");
+				margin: 0 10px;
+
+				padding: 8px 15px;
+				background-color: @background-color-warning;
+				color: white;
+				// color: @text-color-warning;
+				text-align: center;
+				width: auto;
+				top: 40px;
+				border-radius: 0 0 5px 5px;
+				// border: 1px solid @base-border-color;
+			}
+			transition: top 0.2s;
+		}
+		.editing-indicator.conflict {
+			div {
+				background-color: @background-color-error;
+			}
+		}
+
+		.editing-indicator.inactive {
+			top: -2em;
+		}
+
+		.main-panel {
+			height: 100%;
+		}
+		.postslist {
+			width: 100%;
+			max-height: 100%;
+			overflow-y: auto;
+			position: relative;
+			transition: transform 0.2s, opacity 0.2s;
+		}
+
+		.inactive-panel {
+			transform: scale(0.9);
+			max-height: 100%;
+			overflow: hidden;
+
+			.code {
+				overflow-x: hidden;
+				overflow-y: hidden;
+			}
+		}
+
+		.thread-panel {
+			width: 100%;
+			position: absolute;
+			top: 0;
+			background-color: @app-background-color;
+			// min-height: 100%;
+			animation: 0.4s slidein;
+			// box-sizing: border-box;
+		}
+		.thread-panel.inactive-panel {
+			transform: none;
+			left: 100%;
+			animation: 0.2s slideout;
+		}
+
+		.post-details {
+			.posted-to,
+			.no-diffs {
+				height: 1.5em;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+				color: @text-color-subtle;
+			}
+			.posted-to {
+				margin-bottom: 5px;
+			}
+			button {
+				overflow: hidden;
+				text-overflow: ellipsis;
+				margin: 5px 0 5px 0;
+				width: 100%;
+			}
+			.button-group {
+				// padding: 0px 10px 10px 56px;
+				margin-bottom: 5px;
+				button {
+					// this crazy escape syntax is required due to a bug in LESS
+					width: calc(~"50% - 5px");
+				}
+				button:first-child {
+					margin-right: 10px;
+				}
+			}
+		}
+
+		.post.unread {
+			// border-left: 1px solid @background-color-info;
+			// border-right: 1px solid @background-color-info;
+		}
+		.post {
+			padding: 10px 9px 10px 55px; // 1px left and right for border
+			cursor: pointer;
+			min-height: 56px;
+			white-space: pre-wrap;
+			word-wrap: break-word;
+			position: relative;
+			max-width: 100%;
+			// this is to accomodate the new-message indicator line
+			border-top: 1px solid transparent;
+			border-left: 1px solid transparent;
+			// overflow-x: hidden;
+			.headshot-gravatar {
+				display: block;
+				position: absolute;
+				width: 36px;
+				height: 36px;
+				border-radius: 4px;
+				background: none;
+				z-index: 2;
+				left: 10px;
+			}
+			.headshot-initials {
+				display: block;
+				position: absolute;
+				width: 36px;
+				height: 36px;
+				font-size: 18px;
+				text-transform: capitalize;
+				text-align: center;
+				padding-top: 6px;
+				border-radius: 4px;
+				color: @app-background-color;
+				z-index: 1;
+				left: 10px;
+			}
+			.author {
+				font-size: 13px;
+				padding: 0px 3px 3px 0;
+				// margin-left: 46px;
+				font-weight: 700;
+				.emote {
+					font-weight: normal;
+					padding-left: 4px;
+				}
+			}
+			time {
+				// color: @text-color-subtle;
+				opacity: 0.4;
+				font-size: 11px;
+				padding: 3px 3px 3px 5px;
+				.details {
+					padding-left: 8px;
+					opacity: 0;
+					transition: opacity 0.4s;
+				}
+			}
+			.edited {
+				opacity: 0.4;
+				padding-left: 4px;
+			}
+			.retry-spinner {
+				display: inline-block;
+				float: right;
+			}
+			.body {
+				// padding-left: 46px;
+			}
+			.icon-gear {
+				color: @text-color-subtle;
+				opacity: 0.5;
+				display: none;
+				float: right;
+				margin: -3px -10px 0 0;
+			}
+			.icon-alert,
+			.icon-question {
+				color: @background-color-error;
+				position: relative;
+				float: right;
+				margin-top: -30px;
+				margin-right: 2px;
+				bottom: 3px;
+				right: 5px;
+				z-index: 10;
+				&:before {
+					font-size: 22px;
+					// font-size: 36px;
+				}
+
+				// right: auto;
+				// top: 50px;
+				// left: 30px;
+			}
+			.replying-to,
+			.code-reference span {
+				height: 1.4em;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: pre;
+				color: @text-color-info;
+				display: block;
+				span {
+					opacity: 0.5;
+					color: @text-color;
+				}
+				b {
+					font-weight: normal;
+				}
+			}
+			.code-reference span {
+				direction: rtl;
+				text-align: center;
+				color: @text-color-subtle;
+				background-color: @base-border-color;
+				background: @base-background-color;
+				display: block;
+				padding: 2px 4px;
+				height: auto;
+				margin-top: 5px;
+				font-size: 10px;
+				border-radius: 5px 5px 0 0;
+				border: 1px solid @base-border-color;
+				border-bottom: none;
+				border-bottom: 1px dashed @base-border-color;
+			}
+			a {
+				text-decoration: none;
+				color: @text-color-info;
+			}
+			a:hover {
+				text-decoration: underline;
+			}
+		}
+
+		.post.editing {
+			background-color: @background-color-highlight !important;
+		}
+
+		.post.new-separator {
+			border-top: 1px solid @text-color-info;
+			position: relative;
+		}
+		.post.new-separator::before {
+			content: "new";
+			display: block;
+			right: 10px;
+			top: -13px;
+			color: @text-color-info;
+			background: @app-background-color;
+			padding: 2px 5px;
+			position: absolute;
+			border-radius: 10px;
+
+			// font-size: 11px;
+			// padding: 6px 0 0 0;
+			// top: -16px;
+			// border-radius: 15px;
+			// background: @app-background-color;
+			// border: 1px solid @background-color-highlight;
+			// width: 30px;
+			// height: 30px;
+			// text-align: center;
+		}
+
+		.date-separator {
+			// font-size: 13px;
+			text-align: center;
+			margin: 25px 0 8px 0;
+			border-top: 1px solid @base-border-color;
+			span {
+				position: relative;
+				padding: 0 8px;
+				// font-weight: 600;
+				background-color: @app-background-color;
+				display: inline-block;
+				width: auto;
+				top: -11px;
+				color: @text-color-subtle;
+			}
+		}
+
+		.post:hover {
+			background: @app-background-color-hover;
+			.icon-gear {
+				display: block;
+			}
+			.icon-gear:hover {
+				color: #aaa;
+			}
+			time {
+				.details {
+					opacity: 1;
+				}
+			}
+		}
+	}
+	.stream.no-headshots {
+		.post {
+			min-height: 40px;
+			padding-left: 10px;
+			.headshot {
+				display: none;
+			}
+		}
+	}
+	.stream.reduced-motion {
+		.inactive-panel {
+			transform: none;
+			z-index: -1 !important;
+			.stream-header {
+				z-index: -1 !important;
+			}
+			opacity: 0;
+			transition: opacity 0.25s;
+		}
+		.thread-panel.inactive-panel {
+			animation: none;
+		}
+		.thread-panel {
+			left: 0;
+			animation: none;
+			display: block;
+			z-index: 2;
+			transition: opacity 0.25s;
+		}
+		.main-panel {
+			transition: opacity 0.25s;
+		}
+	}
+	.intro {
+		margin: 0 40px;
+		min-height: 300px;
+		box-sizing: border-box;
+		display: flex;
+		flex-direction: column;
+		justify-content: flex-end;
+		padding-bottom: 25%;
+		label {
+			text-align: center;
+			padding-top: 5%;
+			color: @text-color-subtle;
+			font-size: 18px;
+			width: 100%;
+			word-wrap: break-word;
+			ul {
+				text-align: left;
+				padding: 0;
+				li {
+					margin: 5% 0;
+				}
+			}
+		}
+		.logo {
+			color: @text-color-subtle-extra;
+			// color: #fff;
+			transform: perspective(600px) rotateX(60deg) rotateZ(30deg);
+			text-shadow: 5px 10px 30px rgba(127, 127, 127, 0.5);
+			text-shadow: 5px 10px 30px rgba(0, 0, 0, 0.2);
+			font-size: 135px;
+			display: block;
+			opacity: 0.75;
+		}
+	}
+	.color-1 {
+		background-color: #678;
+	}
+	.color-2 {
+		background-color: #687;
+	}
+	.color-3 {
+		background-color: #768;
+	}
+	.color-4 {
+		background-color: #786;
+	}
+	.color-5 {
+		background-color: #867;
+	}
+	.color-6 {
+		background-color: #876;
+	}
+	.color-7 {
+		background-color: #886;
+	}
+	.color-8 {
+		background-color: #868;
+	}
+	.color-9 {
+		background-color: #688;
+	}
+	.color-0 {
+		background-color: #666;
+	}
+
+	.keystroke {
+		color: @text-color-info;
+		background-color: white;
+		border-radius: 2px;
+		padding: 0.1em 0.4em 0.2em 0.4em;
+		margin: 0 0.375em;
+		line-height: 1em;
+		text-align: center;
+		box-sizing: border-box;
+		vertical-align: 1px;
+	}
+	button {
+		font-size: 1.05em;
+	}
+}
+
+// these are animations to slide the thread panel in and out of view
+@keyframes slidein {
+	from {
+		left: 100%;
+	}
+
+	50% {
+		left: 100%;
+	}
+
+	to {
+		left: 0;
+	}
+}
+@keyframes slideout {
+	from {
+		left: 0;
+	}
+
+	to {
+		left: 100%;
+	}
+}
