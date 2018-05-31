@@ -1,4 +1,4 @@
-import { createStore, WebviewIpc } from "codestream-components";
+import { createStore, WebviewApi } from "codestream-components";
 import Raven from "raven-js";
 import createRavenMiddleware from "raven-for-redux";
 import pubnubMiddleWare from "./pubnub-middleware";
@@ -10,7 +10,7 @@ import db from "./local-cache";
 import * as http from "./network-request";
 
 export default (initialState = {}) => {
-	return createStore(initialState, { db, http, api: new WebviewIpc(window.parent) }, [
+	return createStore(initialState, { db, http, api: new WebviewApi(window.parent) }, [
 		pubnubMiddleWare,
 		umiMiddleWare,
 		contextualCommands,
