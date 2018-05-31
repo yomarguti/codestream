@@ -74,8 +74,7 @@ export default (state = initialState, { type, payload }) => {
 			return {
 				...state,
 				pending: state.pending.map(post => {
-					if (post.id === payload.id) return payload;
-					else post;
+					return post.id === payload ? { ...post, error: true } : post;
 				})
 			};
 		}
