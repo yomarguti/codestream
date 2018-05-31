@@ -7,9 +7,10 @@ import DiffManager from "./diff-manager";
 import ContentHighlighter from "./content-highlighter";
 import MarkerLocationTracker from "./marker-location-tracker";
 import EditTracker from "./edit-tracker";
+import CodeStreamApi from "../codestream-api";
 import type { Resource, Store } from "../types";
 
-export default class CodeStreamApi implements Resource {
+export default class WorkspaceApi implements Resource {
 	initialized: boolean = false;
 	popupManager: Resource;
 	bufferChangeTracker: Resource;
@@ -18,6 +19,7 @@ export default class CodeStreamApi implements Resource {
 	markerLocationTracker: Resource;
 	editTracker: Resource;
 	store: Store;
+	api: CodeStreamApi;
 
 	constructor(store: Store) {
 		this.store = store;
@@ -25,6 +27,7 @@ export default class CodeStreamApi implements Resource {
 
 	initialize() {
 		const { repoAttributes } = this.store.getState();
+		this.api = new CodeStreamApi(this.store);
 		this.popupManager = new AddCommentPopupManager(repoAttributes.workingDirectory);
 		this.bufferChangeTracker = new BufferChangeTracker(this.store, repoAttributes.workingDirectory);
 		this.diffManager = new DiffManager(this.store);
@@ -36,12 +39,41 @@ export default class CodeStreamApi implements Resource {
 	}
 
 	handleInteractionEvent = ({ data }) => {
+		if (data.type.startsWith("codestream"))
+			console.debug("event", { type: data.type, body: data.body });
 		if (data.type === "codestream:interaction:clicked-link") {
 			shell.openExternal(data.body);
 		}
 		if (data.type === "codestream:analytics") {
 			const { label, payload } = data.body;
 			mixpanel.track(label, payload);
+		}
+		if (data.type === "codestream:request") {
+			const { action, params } = data.body;
+			if (action === "create-post") {
+				this.api
+					.createPost(
+						params.id,
+						params.streamId,
+						params.parentPostId,
+						params.text,
+						params.codeBlocks,
+						params.mentions,
+						params.extra
+					)
+					.then(post => {
+						window.parent.postMessage(
+							{ type: "codestream:response", body: { action, payload: post } },
+							"*"
+						);
+					})
+					.catch(error => {
+						window.parent.postMessage(
+							{ type: "codestream:response", body: { action, error } },
+							"*"
+						);
+					});
+			}
 		}
 	};
 
