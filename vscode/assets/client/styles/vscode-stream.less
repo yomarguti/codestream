@@ -93,8 +93,8 @@ body {
 	}
 }
 
-@import "vscode-ui-variables";
-@import "stream";
+@import "ui-variables";
+@import "../node_modules/codestream-components/styles/stream";
 
 body {
 	background-color: var(--app-background-color);
@@ -112,8 +112,8 @@ body.preload * {
 	}
 
 	.stream {
-		display: flex;
-		flex-direction: column;
+		// display: flex;
+		// flex-direction: column;
 
 		.new-messages-below {
 			&:hover {
@@ -128,7 +128,7 @@ body.preload * {
 		}
 
 		.compose {
-			position: unset;
+			// position: unset;
 			.hint {
 				display: flex;
 				justify-content: space-between;
