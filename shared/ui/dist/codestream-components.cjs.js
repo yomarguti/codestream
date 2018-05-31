@@ -26223,7 +26223,7 @@ addLocaleData(localeData$1);
 
 var _this = undefined;
 
-// taken from: https://gist.github.com/jed/982883
+// uuid generator taken from: https://gist.github.com/jed/982883
 var createTempId = function createTempId(a) {
 	return a ? (a ^ Math.random() * 16 >> a / 4).toString(16) : ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, createTempId);
 };
@@ -28114,11 +28114,11 @@ var reducer = (function (state, action) {
 	return appReducer(state, action);
 });
 
-var WebviewIpc = function () {
-	function WebviewIpc(host) {
+var WebviewApi = function () {
+	function WebviewApi(host) {
 		var _this = this;
 
-		classCallCheck(this, WebviewIpc);
+		classCallCheck(this, WebviewApi);
 		Object.defineProperty(this, "pendingRequests", {
 			enumerable: true,
 			writable: true,
@@ -28150,7 +28150,7 @@ var WebviewIpc = function () {
 		}, false);
 	}
 
-	createClass(WebviewIpc, [{
+	createClass(WebviewApi, [{
 		key: "postMessage",
 		value: function postMessage(message) {
 			var _this2 = this;
@@ -28166,7 +28166,7 @@ var WebviewIpc = function () {
 			return this.postMessage({ action: "create-post", params: post });
 		}
 	}]);
-	return WebviewIpc;
+	return WebviewApi;
 }();
 
 var createCodeStreamStore = function createCodeStreamStore() {
@@ -28183,5 +28183,5 @@ exports.DateSeparator = DateSeparator;
 exports.EditingIndicator = EditingIndicator;
 exports.ComposeBox = ComposeBox$1;
 exports.Stream = index$1;
-exports.WebviewIpc = WebviewIpc;
+exports.WebviewApi = WebviewApi;
 exports.createStore = createCodeStreamStore;

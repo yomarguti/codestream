@@ -1,4 +1,4 @@
-export default class WebviewIpc {
+export default class WebviewApi {
 	pendingRequests = new Map();
 
 	constructor(host) {

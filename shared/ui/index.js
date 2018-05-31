@@ -8,7 +8,7 @@ import DateSeparator from "./components/DateSeparator";
 import EditingIndicator from "./components/EditingIndicator";
 import Stream from "./stream";
 import reducer from "./reducers";
-import WebviewIpc from "./webview-ipc";
+import WebviewApi from "./webview-api";
 
 export const createCodeStreamStore = (initialState = {}, thunkArg = {}, middleware) => {
 	return createStore(
@@ -24,6 +24,6 @@ export {
 	EditingIndicator,
 	ComposeBox,
 	Stream,
-	WebviewIpc,
+	WebviewApi,
 	createCodeStreamStore as createStore
 };

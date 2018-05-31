@@ -28110,11 +28110,11 @@ var reducer = (function (state, action) {
 	return appReducer(state, action);
 });
 
-var WebviewIpc = function () {
-	function WebviewIpc(host) {
+var WebviewApi = function () {
+	function WebviewApi(host) {
 		var _this = this;
 
-		classCallCheck(this, WebviewIpc);
+		classCallCheck(this, WebviewApi);
 		Object.defineProperty(this, "pendingRequests", {
 			enumerable: true,
 			writable: true,
@@ -28146,7 +28146,7 @@ var WebviewIpc = function () {
 		}, false);
 	}
 
-	createClass(WebviewIpc, [{
+	createClass(WebviewApi, [{
 		key: "postMessage",
 		value: function postMessage(message) {
 			var _this2 = this;
@@ -28162,7 +28162,7 @@ var WebviewIpc = function () {
 			return this.postMessage({ action: "create-post", params: post });
 		}
 	}]);
-	return WebviewIpc;
+	return WebviewApi;
 }();
 
 var createCodeStreamStore = function createCodeStreamStore() {
@@ -28173,4 +28173,4 @@ var createCodeStreamStore = function createCodeStreamStore() {
 	return createStore(reducer, initialState, reduxDevtoolsExtension_1(applyMiddleware.apply(undefined, [thunk.withExtraArgument(thunkArg)].concat(toConsumableArray(middleware)))));
 };
 
-export { createCodeStreamStore, Post$1 as Post, DateSeparator, EditingIndicator, ComposeBox$1 as ComposeBox, index$1 as Stream, WebviewIpc, createCodeStreamStore as createStore };
+export { createCodeStreamStore, Post$1 as Post, DateSeparator, EditingIndicator, ComposeBox$1 as ComposeBox, index$1 as Stream, WebviewApi, createCodeStreamStore as createStore };
