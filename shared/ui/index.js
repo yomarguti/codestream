@@ -9,7 +9,7 @@ import EditingIndicator from "./components/EditingIndicator";
 import Stream from "./stream";
 import reducer from "./reducers";
 
-const createCodeStreamStore = (initialState = {}, thunkArg = {}, middleware) => {
+export const createCodeStreamStore = (initialState = {}, thunkArg = {}, middleware) => {
 	return createStore(
 		reducer,
 		initialState,
@@ -17,11 +17,11 @@ const createCodeStreamStore = (initialState = {}, thunkArg = {}, middleware) => 
 	);
 };
 
-export default {
-	createStore: createCodeStreamStore,
-	ComposeBox,
+export {
+	Post,
 	DateSeparator,
 	EditingIndicator,
-	Post,
-	Stream
+	ComposeBox,
+	Stream,
+	createCodeStreamStore as createStore
 };

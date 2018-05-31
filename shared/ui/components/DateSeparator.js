@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-var moment = require("moment");
+import moment from "moment";
 // var Moment_Timezone = require("moment-timezone");
 
 export default class DateSeparator extends Component {
