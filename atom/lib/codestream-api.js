@@ -7,6 +7,7 @@ import MarkerLocationFinder from "./git/MarkerLocationFinder";
 import db, { upsert } from "./local-cache";
 // import { saveUncommittedLocations } from "./actions/marker-location";
 import { normalize } from "./actions/utils";
+import { saveStreams } from "./actions/stream";
 import type { Store } from "./types";
 
 export default class CodeStreamApi {
@@ -86,10 +87,9 @@ export default class CodeStreamApi {
 			// 	// 	})
 			// 	// );
 			// }
-			// let streams = data.streams || [];
-			// if (data.stream) data.streams.push(data.stream);
-			// if (streams.length > 0) dispatch(saveStreams(normalize(streams)));
-			// dispatch(resolvePendingPost(pendingId, normalize(data.post)));
+			let streams = data.streams || [];
+			if (data.stream) data.streams.push(data.stream);
+			if (streams.length > 0) this.store.dispatch(saveStreams(normalize(streams)));
 			const savedPost = normalize(data.post);
 			upsert(db, "posts", savedPost);
 			return savedPost;
