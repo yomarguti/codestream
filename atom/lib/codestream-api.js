@@ -5,7 +5,7 @@ import { open as openRepo } from "./git/GitRepo";
 import * as http from "./network-request";
 import MarkerLocationFinder from "./git/MarkerLocationFinder";
 import db, { upsert } from "./local-cache";
-// import { saveUncommittedLocations } from "./actions/marker-location";
+import { saveUncommittedLocations } from "./actions/marker-location";
 import { normalize } from "./actions/utils";
 import { saveStreams } from "./actions/stream";
 import type { Store } from "./types";
@@ -24,42 +24,45 @@ export default class CodeStreamApi {
 		text: string,
 		codeBlocks: any[],
 		mentions: string[],
-		extra: any
+		_extra: any // for analytics
 	) {
 		const { session, context, repoAttributes } = this.store.getState();
 
-		// const gitRepo = await openRepo(repoAttributes.workingDirectory);
-		// const editor: TextEditor = atom.workspace.getActiveTextEditor();
-		// let hasUncommittedLocation = false;
-		// if (editor) {
-		// 	const isTrackedFile = await gitRepo.isTracked(editor.getPath());
-		// 	const uncommittedLocations = [];
-		// 	if (isTrackedFile) {
-		// 		for (let i = 0; i < codeBlocks.length; i++) {
-		// 			const codeBlock = codeBlocks[i];
-		// 			const backtrackedLocations = await backtrackCodeBlockLocations(
-		// 				codeBlocks,
-		// 				editor.getText(),
-		// 				codeBlock.streamId,
-		// 				this.store.getState(),
-		// 				http
-		// 			);
-		// 			const lastCommitLocation = backtrackedLocations[i];
-		// 			const meta = lastCommitLocation[4] || {};
-		// 			if (meta.startWasDeleted || meta.endWasDeleted) {
-		// 				hasUncommittedLocation = true;
-		// 			}
-		// 			uncommittedLocations.push(codeBlock.location);
-		// 			codeBlock.location = lastCommitLocation;
-		// 		}
-		// 	} else {
-		// 		for (const codeBlock of codeBlocks) {
-		// 			hasUncommittedLocation = true;
-		// 			uncommittedLocations.push(codeBlock.location);
-		// 			delete codeBlock.location;
-		// 		}
-		// 	}
-		// }
+		const gitRepo = await openRepo(repoAttributes.workingDirectory);
+		const editor: TextEditor = atom.workspace.getActiveTextEditor();
+		let repoFilePath;
+		let bufferText;
+		let hasUncommittedLocation = false;
+		const uncommittedLocations = [];
+		if (editor) {
+			repoFilePath = await gitRepo.relativize(editor.getPath());
+			bufferText = editor.getText();
+			if (repoFilePath) {
+				for (let i = 0; i < codeBlocks.length; i++) {
+					const codeBlock = codeBlocks[i];
+					const backtrackedLocations = await backtrackCodeBlockLocations(
+						codeBlocks,
+						bufferText,
+						codeBlock.streamId,
+						this.store.getState(),
+						http
+					);
+					const lastCommitLocation = backtrackedLocations[i];
+					const meta = lastCommitLocation[4] || {};
+					if (meta.startWasDeleted || meta.endWasDeleted) {
+						hasUncommittedLocation = true;
+					}
+					uncommittedLocations.push(codeBlock.location);
+					codeBlock.location = lastCommitLocation;
+				}
+			} else {
+				for (const codeBlock of codeBlocks) {
+					hasUncommittedLocation = true;
+					uncommittedLocations.push(codeBlock.location);
+					delete codeBlock.location;
+				}
+			}
+		}
 
 		const post = {
 			id,
@@ -77,16 +80,16 @@ export default class CodeStreamApi {
 		try {
 			const data = await http.post("/posts", post, session.accessToken);
 
-			// if (hasUncommittedLocation) {
-			// 	// this.store.dispatch(
-			// 	// 	saveUncommittedLocations({
-			// 	// 		...data,
-			// 	// 		filePath,
-			// 	// 		bufferText,
-			// 	// 		uncommittedLocations
-			// 	// 	})
-			// 	// );
-			// }
+			if (hasUncommittedLocation) {
+				this.store.dispatch(
+					saveUncommittedLocations({
+						...data,
+						repoFilePath,
+						bufferText,
+						uncommittedLocations
+					})
+				);
+			}
 			let streams = data.streams || [];
 			if (data.stream) data.streams.push(data.stream);
 			if (streams.length > 0) this.store.dispatch(saveStreams(normalize(streams)));
