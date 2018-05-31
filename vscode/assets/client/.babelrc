@@ -1,5 +1,5 @@
 {
-	"presets": [["env", { "modules": false, "useBuiltIns": "entry" }], "react"],
+	"presets": [["env", { "modules": false, "useBuiltIns": true }], "react"],
 	"plugins": [
 		"external-helpers",
 		"transform-object-rest-spread",

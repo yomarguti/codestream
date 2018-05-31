@@ -14,23 +14,19 @@ export default {
 	plugins: [
 		replace({
 			"process.env.NODE_ENV": JSON.stringify("development"),
-			'sessionStorage.getItem("codestream.env")': JSON.stringify("dev"),
-			'sessionStorage.getItem("codestream.url")': JSON.stringify(
-				"https://pd-api.codestream.us:9443"
-			),
-			"typeof localStorage !== undefined": JSON.stringify(false),
 			delimiters: ["", ""]
 		}),
 		resolve({
 			module: true,
 			jsnext: true,
-			browser: true,
 			main: true,
 			extensions: [".js", ".json"],
-			preferBuiltins: true
+			preferBuiltins: false
+		}),
+		babel({
+			exclude: "node_modules/**"
 		}),
 		commonjs({
-			include: "node_modules/**",
 			extensions: [".js", ".json"],
 			namedExports: {
 				"node_modules/react/index.js": [
@@ -40,12 +36,8 @@ export default {
 					"Fragment",
 					"isValidElement",
 					"PureComponent"
-				],
-				"node_modules/diff/dist/diff.js": ["structuredPatch", "parsePatch"]
+				]
 			}
-		}),
-		babel({
-			exclude: "node_modules/**"
 		})
 	]
 };

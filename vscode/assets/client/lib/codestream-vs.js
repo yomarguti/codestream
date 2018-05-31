@@ -1,34 +1,38 @@
-import "@babel/polyfill";
 import React from "react";
 import ReactDOM from "react-dom";
 import { addLocaleData, IntlProvider } from "react-intl";
+import { createStore } from "codestream-components";
 import { Provider } from "react-redux";
 import en from "react-intl/locale-data/en";
 import CodeStreamRoot from "./components/VSCodeStreamRoot";
 import copy from "../translations/en.js";
-import createStore from "./createStore-vs";
-import VSCodeAPI from "./VSCodeAPI";
+import rpcMiddleWare from "./rpc-middleware";
+// import VSCodeAPI from "./VSCodeAPI";
 
 addLocaleData([...en]);
 
 const data = window.bootstrap;
 
-const store = (window.store = createStore({
-	context: {
-		currentTeamId: data.currentTeamId,
-		currentRepoId: data.currentRepoId,
-		currentStreamId: data.currentStreamId,
-		currentFile: data.currentFile,
-		currentStreamLabel: data.currentStreamLabel,
-		currentStreamServiceType: data.currentStreamServiceType
+const store = createStore(
+	{
+		context: {
+			currentTeamId: data.currentTeamId,
+			currentRepoId: data.currentRepoId,
+			currentStreamId: data.currentStreamId,
+			currentFile: data.currentFile,
+			currentStreamLabel: data.currentStreamLabel,
+			currentStreamServiceType: data.currentStreamServiceType
+		},
+		// ipcInteractions: {
+		// 	selectedPostId: data.selectedPostId
+		// },
+		session: {
+			userId: data.currentUserId
+		}
 	},
-	ipcInteractions: {
-		selectedPostId: data.selectedPostId
-	},
-	session: {
-		userId: data.currentUserId
-	}
-}));
+	undefined,
+	[rpcMiddleWare]
+);
 
 store.dispatch({ type: "BOOTSTRAP_USERS", payload: data.users });
 store.dispatch({ type: "BOOTSTRAP_REPOS", payload: data.repos });
@@ -42,7 +46,7 @@ console.log("store", store.getState());
 ReactDOM.render(
 	<IntlProvider locale="en" messages={copy}>
 		<Provider store={store}>
-			<CodeStreamRoot platform={VSCodeAPI} repositories={[]} />
+			<CodeStreamRoot />
 		</Provider>
 	</IntlProvider>,
 	document.querySelector("#app")
