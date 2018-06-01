@@ -2,6 +2,7 @@ import _ from "underscore";
 import React from "react";
 import ContentEditable from "react-contenteditable";
 import createClassString from "classnames";
+import EventEmitter from "../event-emitter";
 import AtMentionsPopup from "./AtMentionsPopup";
 
 class ComposeBox extends React.Component {
@@ -9,7 +10,9 @@ class ComposeBox extends React.Component {
 	disposables = [];
 
 	componentDidMount() {
-		window.addEventListener("message", this.handleInteractionEvent, true);
+		this.disposables.push(
+			EventEmitter.subscribe("interaction:code-highlighted", this.handleCodeHighlightEvent)
+		);
 
 		// so that HTML doesn't get pasted into the input field. without this,
 		// HTML would be rendered as HTML when pasted
@@ -51,30 +54,25 @@ class ComposeBox extends React.Component {
 
 	componentWillUnmount() {
 		this.disposables.forEach(d => d.dispose());
-		window.removeEventListener("message", this.handleInteractionEvent, true);
 	}
 
-	handleInteractionEvent = ({ data }) => {
-		if (data.type === "codestream:interaction:code-highlighted") {
-			console.log("event data", data.body);
-			this.focus();
-			const { authors, ...state } = data.body;
-			this.setState({ quote: state });
+	handleCodeHighlightEvent = ({ authors, ...state }) => {
+		this.focus();
+		this.setState({ quote: state });
 
-			const toAtmention = authors
-				.map(email => _.findWhere(this.props.teammates, { email }))
-				.filter(Boolean);
-			if (toAtmention.length > 0) {
-				// TODO handle users with no username
-				const usernames = toAtmention.map(user => `@${user.username}`);
-				this.setState({ autoMentions: usernames });
-				// the reason for this unicode space is that chrome will
-				// not render a space at the end of a contenteditable div
-				// unless it is a &nbsp;, which is difficult to insert
-				// so we insert this unicode character instead
-				const newText = usernames.join(", ") + ":\u00A0";
-				this.insertTextAtCursor(newText);
-			}
+		const toAtmention = authors
+			.map(email => _.findWhere(this.props.teammates, { email }))
+			.filter(Boolean);
+		if (toAtmention.length > 0) {
+			// TODO handle users with no username
+			const usernames = toAtmention.map(user => `@${user.username}`);
+			this.setState({ autoMentions: usernames });
+			// the reason for this unicode space is that chrome will
+			// not render a space at the end of a contenteditable div
+			// unless it is a &nbsp;, which is difficult to insert
+			// so we insert this unicode character instead
+			const newText = usernames.join(", ") + ":\u00A0";
+			this.insertTextAtCursor(newText);
 		}
 	};
 

@@ -21382,6 +21382,56 @@ var Post = function (_Component) {
 
 var Post$1 = connect(null, { cancelPost: cancelPost, retryPost: retryPost })(Post);
 
+var EventEmitter = function () {
+	function EventEmitter() {
+		var _this = this;
+
+		classCallCheck(this, EventEmitter);
+		Object.defineProperty(this, "listenersByEvent", {
+			enumerable: true,
+			writable: true,
+			value: new Map()
+		});
+		Object.defineProperty(this, "handler", {
+			enumerable: true,
+			writable: true,
+			value: function value(_ref) {
+				var data = _ref.data;
+
+				if (data.type.startsWith("codestream")) {
+					var event = data.type.replace("codestream:", "");
+					var listeners = _this.listenersByEvent.get(event) || [];
+					listeners.forEach(function (l) {
+						return l(data.body);
+					});
+				}
+			}
+		});
+
+		window.parent.addEventListener("message", this.handler, false);
+	}
+
+	createClass(EventEmitter, [{
+		key: "subscribe",
+		value: function subscribe(thing, listener) {
+			var _this2 = this;
+
+			var listeners = this.listenersByEvent.get(thing) || [];
+			listeners.push(listener);
+			this.listenersByEvent.set(thing, listeners);
+			return function () {
+				var listeners = _this2.listenersByEvent.get(thing).filter(function (l) {
+					return l !== listener;
+				});
+				_this2.listenersByEvent.set(thing, listeners);
+			};
+		}
+	}]);
+	return EventEmitter;
+}();
+
+var emmitter = new EventEmitter();
+
 // AtMentionsPopup expects an on/off switch determined by the on property
 // on = show the popup, off = hide the popup
 // a people list, which is the possible list of people to at-mention
@@ -21578,37 +21628,31 @@ var ComposeBox = function (_React$Component) {
 			enumerable: true,
 			writable: true,
 			value: []
-		}), Object.defineProperty(_this, "handleInteractionEvent", {
+		}), Object.defineProperty(_this, "handleCodeHighlightEvent", {
 			enumerable: true,
 			writable: true,
 			value: function value(_ref2) {
-				var data = _ref2.data;
+				var authors = _ref2.authors,
+				    state = objectWithoutProperties(_ref2, ["authors"]);
 
-				if (data.type === "codestream:interaction:code-highlighted") {
-					console.log("event data", data.body);
-					_this.focus();
-					var _data$body = data.body,
-					    authors = _data$body.authors,
-					    state = objectWithoutProperties(_data$body, ["authors"]);
+				_this.focus();
+				_this.setState({ quote: state });
 
-					_this.setState({ quote: state });
-
-					var toAtmention = authors.map(function (email) {
-						return underscore.findWhere(_this.props.teammates, { email: email });
-					}).filter(Boolean);
-					if (toAtmention.length > 0) {
-						// TODO handle users with no username
-						var usernames = toAtmention.map(function (user) {
-							return "@" + user.username;
-						});
-						_this.setState({ autoMentions: usernames });
-						// the reason for this unicode space is that chrome will
-						// not render a space at the end of a contenteditable div
-						// unless it is a &nbsp;, which is difficult to insert
-						// so we insert this unicode character instead
-						var newText = usernames.join(", ") + ":\xA0";
-						_this.insertTextAtCursor(newText);
-					}
+				var toAtmention = authors.map(function (email) {
+					return underscore.findWhere(_this.props.teammates, { email: email });
+				}).filter(Boolean);
+				if (toAtmention.length > 0) {
+					// TODO handle users with no username
+					var usernames = toAtmention.map(function (user) {
+						return "@" + user.username;
+					});
+					_this.setState({ autoMentions: usernames });
+					// the reason for this unicode space is that chrome will
+					// not render a space at the end of a contenteditable div
+					// unless it is a &nbsp;, which is difficult to insert
+					// so we insert this unicode character instead
+					var newText = usernames.join(", ") + ":\xA0";
+					_this.insertTextAtCursor(newText);
 				}
 			}
 		}), Object.defineProperty(_this, "focus", {
@@ -21760,7 +21804,7 @@ var ComposeBox = function (_React$Component) {
 		value: function componentDidMount() {
 			var _this2 = this;
 
-			window.addEventListener("message", this.handleInteractionEvent, true);
+			this.removeSubscription = emmitter.subscribe("interaction:code-highlighted", this.handleCodeHighlightEvent);
 
 			// so that HTML doesn't get pasted into the input field. without this,
 			// HTML would be rendered as HTML when pasted
@@ -21810,7 +21854,7 @@ var ComposeBox = function (_React$Component) {
 			this.disposables.forEach(function (d) {
 				return d.dispose();
 			});
-			window.removeEventListener("message", this.handleInteractionEvent, true);
+			this.removeSubscription();
 		}
 	}, {
 		key: "showAtMentionSelectors",
