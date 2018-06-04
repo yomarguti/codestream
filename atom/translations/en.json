@@ -62,7 +62,7 @@
 	"slackInfo.p1":
 		"Connect CodeStream to Slack and all of your team's messages on CodeStream will also get posted to a channel on Slack.",
 	"slackInfo.p2":
-		"This is a great option if you have developers that don't use Atom. They can even reply to messages directly from Slack!",
+		"This is a great option if you have developers that use an IDE not currently supported by CodeStream. They can even reply to messages directly from Slack!",
 	"getInvited.header": "Get Invited?",
 	"getInvited.text":
 		"Looks like there are already repos from the {fromWhat} connected to CodeStream. ",
