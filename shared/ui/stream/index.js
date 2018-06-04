@@ -7,6 +7,7 @@ import ComposeBox from "../components/ComposeBox";
 import DateSeparator from "../components/DateSeparator";
 import EditingIndicator from "../components/EditingIndicator";
 import Post from "../components/Post";
+import EventEmitter from "../event-emitter";
 import * as actions from "./actions";
 import { goToInvitePage } from "../actions/routing";
 import { toMapBy } from "../utils";
@@ -34,7 +35,9 @@ export class SimpleStream extends Component {
 	}
 
 	componentDidMount() {
-		window.addEventListener("message", this.handleInteractionEvent, true);
+		this.disposables.push(
+			EventEmitter.subscribe("interaction:marker-selected", this.handleMarkerSelected)
+		);
 
 		// this listener pays attention to when the input field resizes,
 		// presumably because the user has typed more than one line of text
@@ -125,14 +128,11 @@ export class SimpleStream extends Component {
 	}
 
 	componentWillUnmount() {
-		window.removeEventListener("message", this.handleInteractionEvent, true);
 		this.disposables.forEach(d => d.dispose());
 	}
 
-	handleInteractionEvent = ({ data }) => {
-		if (data.type === "codestream:interaction:marker-selected") {
-			this.selectPost(data.body.postId);
-		}
+	handleMarkerSelected = ({ postId }) => {
+		this.selectPost(postId);
 	};
 
 	copy(event) {
@@ -264,13 +264,7 @@ export class SimpleStream extends Component {
 
 	handleClickHelpLink = event => {
 		event.preventDefault();
-		window.parent.postMessage(
-			{
-				type: "codestream:interaction:clicked-link",
-				body: "https://help.codestream.com"
-			},
-			"*"
-		);
+		EventEmitter.emit("interaction:clicked-link", "https://help.codestream.com");
 	};
 
 	renderIntro = () => {
@@ -559,26 +553,14 @@ export class SimpleStream extends Component {
 
 	// dismiss the thread stream and return to the main stream
 	handleDismissThread = ({ track = true } = {}) => {
-		window.parent.postMessage(
-			{
-				type: "codestream:interaction:thread-closed",
-				body: this.findPostById(this.state.threadId)
-			},
-			"*"
-		);
+		EventEmitter.emit("interaction:thread-closed", this.findPostById(this.state.threadId));
 		this.setState({ threadActive: false });
 		this.focusInput();
 		if (track)
-			window.parent.postMessage(
-				{
-					type: "codestream:analytics",
-					body: {
-						label: "Page Viewed",
-						payload: { "Page Name": "Source Stream" }
-					}
-				},
-				"*"
-			);
+			EventEmitter.emit("analytics", {
+				label: "Page Viewed",
+				payload: { "Page Name": "Source Stream" }
+			});
 	};
 
 	handleEditHeadshot = _event => {
@@ -672,13 +654,10 @@ export class SimpleStream extends Component {
 	// show the thread related to the given post, and if there is
 	// a codeblock, scroll to it and select it
 	selectPost = (id, wasClicked = false) => {
-		window.parent.postMessage(
-			{
-				type: "codestream:analytics",
-				body: { label: "Page Viewed", payload: { "Page Name": "Thread View" } }
-			},
-			"*"
-		);
+		EventEmitter.emit("analytics", {
+			label: "Page Viewed",
+			payload: { "Page Name": "Thread View" }
+		});
 		const post = this.findPostById(id);
 		if (!post) return;
 
@@ -689,13 +668,11 @@ export class SimpleStream extends Component {
 
 		this.focusInput();
 		if (wasClicked) {
-			window.parent.postMessage(
-				{
-					type: "codestream:interaction:thread-selected",
-					body: { threadId, streamId: this.props.postStreamId, post }
-				},
-				"*"
-			);
+			EventEmitter.emit("interaction:thread-selected", {
+				threadId,
+				streamId: this.props.postStreamId,
+				post
+			});
 		}
 	};
 

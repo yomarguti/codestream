@@ -21419,12 +21419,22 @@ var EventEmitter = function () {
 			var listeners = this.listenersByEvent.get(thing) || [];
 			listeners.push(listener);
 			this.listenersByEvent.set(thing, listeners);
-			return function () {
-				var listeners = _this2.listenersByEvent.get(thing).filter(function (l) {
-					return l !== listener;
-				});
-				_this2.listenersByEvent.set(thing, listeners);
+			return {
+				dispose: function dispose() {
+					var listeners = _this2.listenersByEvent.get(thing).filter(function (l) {
+						return l !== listener;
+					});
+					_this2.listenersByEvent.set(thing, listeners);
+				}
 			};
+		}
+	}, {
+		key: "emit",
+		value: function emit(event, body) {
+			window.parent.postMessage({
+				type: "codestream:" + event,
+				body: body
+			}, "*");
 		}
 	}]);
 	return EventEmitter;
@@ -21804,7 +21814,7 @@ var ComposeBox = function (_React$Component) {
 		value: function componentDidMount() {
 			var _this2 = this;
 
-			this.removeSubscription = emmitter.subscribe("interaction:code-highlighted", this.handleCodeHighlightEvent);
+			this.disposables.push(emmitter.subscribe("interaction:code-highlighted", this.handleCodeHighlightEvent));
 
 			// so that HTML doesn't get pasted into the input field. without this,
 			// HTML would be rendered as HTML when pasted
@@ -21854,7 +21864,6 @@ var ComposeBox = function (_React$Component) {
 			this.disposables.forEach(function (d) {
 				return d.dispose();
 			});
-			this.removeSubscription();
 		}
 	}, {
 		key: "showAtMentionSelectors",
@@ -26490,15 +26499,13 @@ var SimpleStream = function (_Component) {
 			writable: true,
 			value: []
 		});
-		Object.defineProperty(_this, "handleInteractionEvent", {
+		Object.defineProperty(_this, "handleMarkerSelected", {
 			enumerable: true,
 			writable: true,
 			value: function value(_ref) {
-				var data = _ref.data;
+				var postId = _ref.postId;
 
-				if (data.type === "codestream:interaction:marker-selected") {
-					_this.selectPost(data.body.postId);
-				}
+				_this.selectPost(postId);
 			}
 		});
 		Object.defineProperty(_this, "handleResizeCompose", {
@@ -26560,10 +26567,7 @@ var SimpleStream = function (_Component) {
 			writable: true,
 			value: function value(event) {
 				event.preventDefault();
-				window.parent.postMessage({
-					type: "codestream:interaction:clicked-link",
-					body: "https://help.codestream.com"
-				}, "*");
+				emmitter.emit("interaction:clicked-link", "https://help.codestream.com");
 			}
 		});
 		Object.defineProperty(_this, "renderIntro", {
@@ -26698,19 +26702,13 @@ var SimpleStream = function (_Component) {
 				    _ref2$track = _ref2.track,
 				    track = _ref2$track === undefined ? true : _ref2$track;
 
-				window.parent.postMessage({
-					type: "codestream:interaction:thread-closed",
-					body: _this.findPostById(_this.state.threadId)
-				}, "*");
+				emmitter.emit("interaction:thread-closed", _this.findPostById(_this.state.threadId));
 				_this.setState({ threadActive: false });
 				_this.focusInput();
-				if (track) window.parent.postMessage({
-					type: "codestream:analytics",
-					body: {
-						label: "Page Viewed",
-						payload: { "Page Name": "Source Stream" }
-					}
-				}, "*");
+				if (track) emmitter.emit("analytics", {
+					label: "Page Viewed",
+					payload: { "Page Name": "Source Stream" }
+				});
 			}
 		});
 		Object.defineProperty(_this, "handleEditHeadshot", {
@@ -26819,10 +26817,10 @@ var SimpleStream = function (_Component) {
 			value: function value(id) {
 				var wasClicked = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
 
-				window.parent.postMessage({
-					type: "codestream:analytics",
-					body: { label: "Page Viewed", payload: { "Page Name": "Thread View" } }
-				}, "*");
+				emmitter.emit("analytics", {
+					label: "Page Viewed",
+					payload: { "Page Name": "Thread View" }
+				});
 				var post = _this.findPostById(id);
 				if (!post) return;
 
@@ -26833,10 +26831,11 @@ var SimpleStream = function (_Component) {
 
 				_this.focusInput();
 				if (wasClicked) {
-					window.parent.postMessage({
-						type: "codestream:interaction:thread-selected",
-						body: { threadId: threadId, streamId: _this.props.postStreamId, post: post }
-					}, "*");
+					emmitter.emit("interaction:thread-selected", {
+						threadId: threadId,
+						streamId: _this.props.postStreamId,
+						post: post
+					});
 				}
 			}
 		});
@@ -26922,7 +26921,7 @@ var SimpleStream = function (_Component) {
 		value: function componentDidMount() {
 			var _this2 = this;
 
-			window.addEventListener("message", this.handleInteractionEvent, true);
+			this.disposables.push(emmitter.subscribe("interaction:marker-selected", this.handleMarkerSelected));
 
 			// this listener pays attention to when the input field resizes,
 			// presumably because the user has typed more than one line of text
@@ -27018,7 +27017,6 @@ var SimpleStream = function (_Component) {
 	}, {
 		key: "componentWillUnmount",
 		value: function componentWillUnmount() {
-			window.removeEventListener("message", this.handleInteractionEvent, true);
 			this.disposables.forEach(function (d) {
 				return d.dispose();
 			});

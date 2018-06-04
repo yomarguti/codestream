@@ -24,6 +24,16 @@ class EventEmitter {
 			}
 		};
 	}
+
+	emit(event, body) {
+		window.parent.postMessage(
+			{
+				type: `codestream:${event}`,
+				body
+			},
+			"*"
+		);
+	}
 }
 
 const emmitter = new EventEmitter();
