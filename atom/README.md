@@ -28,8 +28,6 @@ Once installed, you can toggle the CodeStream view via the Packages menu, or hit
 
 # Things to Try
 
-* Select a file in your source tree and you’ll see a chat stream in a new pane on the right. In fact, each source file has its own contextual chat stream.
-
 * To talk about a specific block of code, just select the code in your buffer and then click on the “+” button that appears.
 
 ![PostCodeBlock](https://codestream.zendesk.com/hc/article_attachments/360000889751/PlusButton.png)
@@ -37,10 +35,6 @@ Once installed, you can toggle the CodeStream view via the Packages menu, or hit
 * Click on any post in the chat stream to add a reply. If the post included a code block, you’ll automatically be scrolled to the appropriate location in the source file. If the code block doesn’t match what you have in your buffer, you’ll have options to view a diff or even apply the changes to your buffer.
 
 ![ThreadView](https://codestream.zendesk.com/hc/article_attachments/360000885912/Screen_Shot_2018-02-08_at_4.59.26_PM.png)
-
-* When you post a message, everyone on your team will see an indicator of new messages appear next to the appropriate file in their source tree. The badge will be blue if you were mentioned in a post.
-
-![UMIs](https://codestream.zendesk.com/hc/article_attachments/360000890011/Badge.png)
 
 * If you see a marker on the border of your source file and the chat pane, that means that a discussion took place about that block of code. Click on the marker to view the discussion.
 
@@ -50,7 +44,7 @@ Once installed, you can toggle the CodeStream view via the Packages menu, or hit
 
 ![MergeConflict](https://help.codestream.com/hc/article_attachments/360001973651/Banner_MergeConflict.png)
 
-* Set up the Slack integration and all of your team’s messages on CodeStream will flow through to the channel of your choice on Slack. You can even reply to those messages right from Slack, and the replies will get posted to CodeStream.
+* Set up the Slack integration (search for "Codestream: Slack Integration" in Atom's command palette) and all of your team’s messages on CodeStream will flow through to the channel of your choice on Slack. You can even reply to those messages right from Slack, and the replies will get posted to CodeStream.
 
 ![SlackIntegration](https://help.codestream.com/hc/article_attachments/360002212591/SlackCSBot.png)
 
