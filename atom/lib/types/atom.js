@@ -1,7 +1,7 @@
 // @flow
 import { Range } from "atom";
 
-type RangeArray = [[number, number], [number, number]];
+export type RangeArray = [[number, number], [number, number]];
 
 type RangeThing = Range | RangeArray;
 
