@@ -27641,20 +27641,13 @@ var onboarding = (function () {
 
 var initialState$3 = {
 	byStream: {},
-	pending: [],
-	byRepo: {}
+	pending: []
 };
 
 var addPost = function addPost(byStream, post) {
 	var streamId = post.streamId;
 	var streamPosts = byStream[streamId] || {};
 	return _extends$4({}, byStream, defineProperty$1({}, streamId, _extends$4({}, streamPosts, defineProperty$1({}, post.id, post))));
-};
-
-var addPostByRepo = function addPostByRepo(byRepo, post) {
-	var repoId = post.repoId;
-	var repoPosts = byRepo[repoId] || {};
-	return _extends$4({}, byRepo, defineProperty$1({}, repoId, _extends$4({}, repoPosts, defineProperty$1({}, post.id, post))));
 };
 
 var posts = (function () {
@@ -27669,13 +27662,11 @@ var posts = (function () {
 			{
 				var nextState = {
 					pending: [].concat(toConsumableArray(state.pending)),
-					byStream: _extends$4({}, state.byStream),
-					byRepo: _extends$4({}, state.byRepo)
+					byStream: _extends$4({}, state.byStream)
 				};
 				payload.forEach(function (post) {
 					if (post.pending) nextState.pending.push(post);else {
 						nextState.byStream = addPost(nextState.byStream, post);
-						nextState.byRepo = addPostByRepo(nextState.byRepo, post);
 					}
 				});
 				return nextState;
@@ -27687,22 +27678,18 @@ var posts = (function () {
 
 				var streamPosts = _extends$4({}, state.byStream[streamId] || {});
 				var repoId = posts.length > 0 && posts[0].repoId;
-				var repoPosts = repoId ? _extends$4({}, state.byRepo[repoId] || {}) : {};
 				posts.forEach(function (post) {
 					streamPosts[post.id] = post;
-					repoPosts[post.id] = post;
 				});
 
 				return _extends$4({}, state, {
-					byStream: _extends$4({}, state.byStream, defineProperty$1({}, streamId, streamPosts)),
-					byRepo: _extends$4({}, state.byRepo, repoId && defineProperty$1({}, repoId, repoPosts))
+					byStream: _extends$4({}, state.byStream, defineProperty$1({}, streamId, streamPosts))
 				});
 			}
 		case "POSTS-UPDATE_FROM_PUBNUB":
 		case "ADD_POST":
 			return _extends$4({}, state, {
-				byStream: addPost(state.byStream, payload),
-				byRepo: addPostByRepo(state.byRepo, payload)
+				byStream: addPost(state.byStream, payload)
 			});
 		case "ADD_PENDING_POST":
 			{
@@ -27715,7 +27702,6 @@ var posts = (function () {
 
 				return {
 					byStream: addPost(state.byStream, post),
-					byRepo: addPostByRepo(state.byRepo, post),
 					pending: state.pending.filter(function (post) {
 						return post.id !== pendingId;
 					})
