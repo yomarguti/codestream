@@ -213,6 +213,12 @@ export class StreamWebviewPanel extends Disposable {
 								payload: post.entity
 							}
 						});
+					case "mark-stream-read":
+						const response = await this._streamThread.stream.markRead();
+						this.postMessage({
+							type: "codestream:response",
+							body: response
+						});
 				}
 				break;
 

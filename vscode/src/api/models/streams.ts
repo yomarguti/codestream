@@ -97,6 +97,10 @@ abstract class StreamBase<T extends CSStream> extends CodeStreamItem<T> {
 
 		return team;
 	}
+
+	async markRead(): Promise<any> {
+		return this.session.api.markStreamRead(this.id);
+	}
 }
 
 // TODO: Using this format, because channel names can only be 64 characters

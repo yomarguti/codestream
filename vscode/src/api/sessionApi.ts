@@ -371,4 +371,8 @@ export class CodeStreamSessionApi {
 			status: status
 		})).awayTimeout;
 	}
+
+	async markStreamRead(streamId: string) {
+		return await this._api.markStreamRead(this.token, streamId);
+	}
 }

@@ -220,6 +220,10 @@ export class CodeStreamApi {
 		);
 	}
 
+	markStreamRead(token: string, streamId: string) {
+		return this.put(`/read/${streamId}`, {}, token);
+	}
+
 	private delete<R extends object>(url: string, token?: string): Promise<R> {
 		let resp = undefined;
 		if (resp === undefined) {
