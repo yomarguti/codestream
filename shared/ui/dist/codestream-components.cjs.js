@@ -26354,43 +26354,25 @@ var createTempId = function createTempId(a) {
 };
 
 var markStreamRead = function markStreamRead(streamId) {
-	return function () {
-		var _ref = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(dispatch) {
-			return regeneratorRuntime.wrap(function _callee$(_context) {
-				while (1) {
-					switch (_context.prev = _context.next) {
-						case 0:
-							if (streamId) {
-								_context.next = 2;
-								break;
-							}
+	return function (dispatch, getState, _ref) {
+		var api = _ref.api;
 
-							return _context.abrupt("return");
-
-						case 2:
-						case "end":
-							return _context.stop();
-					}
-				}
-			}, _callee, _this);
-		}));
-
-		return function (_x) {
-			return _ref.apply(this, arguments);
-		};
-	}();
+		if (!streamId) return;
+		api.markStreamRead(streamId);
+		return dispatch({ type: "CLEAR_UMI", payload: streamId });
+	};
 };
 
 var createPost = function createPost(streamId, parentPostId, text, codeBlocks, mentions, extra) {
 	return function () {
-		var _ref3 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(dispatch, getState, _ref2) {
+		var _ref3 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(dispatch, getState, _ref2) {
 			var api = _ref2.api;
 
 			var _getState, context, session, pendingId, post;
 
-			return regeneratorRuntime.wrap(function _callee2$(_context2) {
+			return regeneratorRuntime.wrap(function _callee$(_context) {
 				while (1) {
-					switch (_context2.prev = _context2.next) {
+					switch (_context.prev = _context.next) {
 						case 0:
 							_getState = getState(), context = _getState.context, session = _getState.session;
 							pendingId = createTempId();
@@ -26408,8 +26390,8 @@ var createPost = function createPost(streamId, parentPostId, text, codeBlocks, m
 									pending: true
 								}
 							});
-							_context2.prev = 3;
-							_context2.next = 6;
+							_context.prev = 3;
+							_context.next = 6;
 							return api.createPost({
 								id: pendingId,
 								parentPostId: parentPostId,
@@ -26421,32 +26403,29 @@ var createPost = function createPost(streamId, parentPostId, text, codeBlocks, m
 							});
 
 						case 6:
-							post = _context2.sent;
+							post = _context.sent;
 
-							dispatch({
-								type: "RESOLVE_PENDING_POST",
-								payload: { pendingId: pendingId, post: post }
-							});
 							// FIXME: this is for analytics purposes and the extension host should probably send the event
 							dispatch({ type: "POST_CREATED", meta: _extends$5({ post: post }, extra) });
-							_context2.next = 14;
-							break;
+							return _context.abrupt("return", dispatch({
+								type: "RESOLVE_PENDING_POST",
+								payload: { pendingId: pendingId, post: post }
+							}));
 
 						case 11:
-							_context2.prev = 11;
-							_context2.t0 = _context2["catch"](3);
-
-							dispatch({ type: "PENDING_POST_FAILED", payload: pendingId });
+							_context.prev = 11;
+							_context.t0 = _context["catch"](3);
+							return _context.abrupt("return", dispatch({ type: "PENDING_POST_FAILED", payload: pendingId }));
 
 						case 14:
 						case "end":
-							return _context2.stop();
+							return _context.stop();
 					}
 				}
-			}, _callee2, _this, [[3, 11]]);
+			}, _callee, _this, [[3, 11]]);
 		}));
 
-		return function (_x2, _x3, _x4) {
+		return function (_x, _x2, _x3) {
 			return _ref3.apply(this, arguments);
 		};
 	}();
@@ -28255,6 +28234,11 @@ var WebviewApi = function () {
 		key: "createPost",
 		value: function createPost(post) {
 			return this.postMessage({ action: "create-post", params: post });
+		}
+	}, {
+		key: "markStreamRead",
+		value: function markStreamRead(streamId) {
+			return this.postMessage({ action: "mark-stream-read", params: streamId });
 		}
 	}]);
 	return WebviewApi;
