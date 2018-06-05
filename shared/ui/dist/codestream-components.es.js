@@ -21408,7 +21408,7 @@ var EventEmitter = function () {
 			}
 		});
 
-		this.host = acquireVsCodeApi ? acquireVsCodeApi() : window.parent;
+		this.host = window.acquireVsCodeApi ? window.acquireVsCodeApi() : window.parent;
 		window.addEventListener("message", this.handler, false);
 	}
 
