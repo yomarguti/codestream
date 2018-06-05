@@ -5,7 +5,7 @@ import createClassString from "classnames";
 import EventEmitter from "../event-emitter";
 import AtMentionsPopup from "./AtMentionsPopup";
 
-const arrayToRange = ([[startRow, startCol], [endRow, endCol]]) => {
+const arrayToRange = ([startRow, startCol, endRow, endCol]) => {
 	return {
 		start: {
 			row: startRow,

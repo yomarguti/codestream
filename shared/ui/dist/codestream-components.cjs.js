@@ -18007,13 +18007,11 @@ var AtMentionsPopup = function (_Component) {
 }(react_1);
 
 var arrayToRange = function arrayToRange(_ref) {
-	var _ref2 = slicedToArray(_ref, 2),
-	    _ref2$ = slicedToArray(_ref2[0], 2),
-	    startRow = _ref2$[0],
-	    startCol = _ref2$[1],
-	    _ref2$2 = slicedToArray(_ref2[1], 2),
-	    endRow = _ref2$2[0],
-	    endCol = _ref2$2[1];
+	var _ref2 = slicedToArray(_ref, 4),
+	    startRow = _ref2[0],
+	    startCol = _ref2[1],
+	    endRow = _ref2[2],
+	    endCol = _ref2[3];
 
 	return {
 		start: {
@@ -26555,15 +26553,6 @@ var getPostsForStream = function getPostsForStream(_ref2) {
 	return [].concat(toConsumableArray$1(underscore.sortBy(byStream[streamId], "seqNum")), toConsumableArray$1(pendingForStream));
 };
 
-var rangeToLocation = function rangeToLocation(range) {
-	var location = [range.start.row, range.start.column, range.end.row, range.end.column];
-	location = location.map(function (index) {
-		return index != undefined ? index + 1 : index;
-	});
-	location.push({}); // meta
-	return location;
-};
-
 var SimpleStream = function (_Component) {
 	inherits$1(SimpleStream, _Component);
 
@@ -26959,7 +26948,7 @@ var SimpleStream = function (_Component) {
 				if (quote) {
 					var codeBlock = {
 						code: quote.quoteText,
-						location: rangeToLocation(quote.quoteRange),
+						location: quote.quoteRange,
 						preContext: quote.preContext,
 						postContext: quote.postContext,
 						repoId: repoId,
