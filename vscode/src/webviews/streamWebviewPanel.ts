@@ -128,13 +128,7 @@ interface BootstrapState {
 // TODO: Clean this up to be consistent with the structure
 interface CSWebviewRequest {
 	type: string;
-	body: {
-		action?: string;
-		name?: string;
-		params?: any;
-		payload?: any;
-		type?: string;
-	};
+	body: any;
 }
 
 export class StreamWebviewPanel extends Disposable {
@@ -328,18 +322,11 @@ export class StreamWebviewPanel extends Disposable {
 		];
 
 		return this.postMessage({
-			type: "interaction",
+			type: "codestream:interaction:code-highlighted",
 			body: {
-				type: "SELECTED_CODE",
-				payload: {
-					file: relativePath,
-					repoId: repoId,
-					content: code,
-					range: normalize(range),
-					commitHash: commitHash,
-					text: text,
-					mentions: mentions
-				}
+				quoteRange: normalize(range),
+				quoteText: code,
+				authors: mentions.split(" ")
 			}
 		});
 	}
