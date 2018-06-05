@@ -50,29 +50,34 @@ export default class WorkspaceApi implements Resource {
 		}
 		if (data.type === "codestream:request") {
 			const { action, params } = data.body;
-			if (action === "create-post") {
-				this.api
-					.createPost(
-						params.id,
-						params.streamId,
-						params.parentPostId,
-						params.text,
-						params.codeBlocks,
-						params.mentions,
-						params.extra
-					)
-					.then(post => {
-						window.parent.postMessage(
-							{ type: "codestream:response", body: { action, payload: post } },
-							"*"
-						);
-					})
-					.catch(error => {
-						window.parent.postMessage(
-							{ type: "codestream:response", body: { action, error } },
-							"*"
-						);
-					});
+			switch (action) {
+				case "create-post": {
+					return this.api
+						.createPost(
+							params.id,
+							params.streamId,
+							params.parentPostId,
+							params.text,
+							params.codeBlocks,
+							params.mentions,
+							params.extra
+						)
+						.then(post => {
+							window.parent.postMessage(
+								{ type: "codestream:response", body: { action, payload: post } },
+								"*"
+							);
+						})
+						.catch(error => {
+							window.parent.postMessage(
+								{ type: "codestream:response", body: { action, error } },
+								"*"
+							);
+						});
+				}
+				case "mark-stream-read": {
+					return this.api.markStreamRead(params);
+				}
 			}
 		}
 	};

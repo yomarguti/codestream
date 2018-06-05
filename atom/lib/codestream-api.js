@@ -107,6 +107,11 @@ export default class CodeStreamApi {
 			throw error;
 		}
 	}
+
+	async markStreamRead(streamId: string) {
+		const { session } = this.store.getState();
+		return http.put(`/read/${streamId}`, {}, session.accessToken);
+	}
 }
 
 const backtrackCodeBlockLocations = async (codeBlocks, bufferText, streamId, state, http) => {
