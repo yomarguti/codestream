@@ -177,12 +177,12 @@ export class StreamWebviewPanel extends Disposable {
 		const createRange = (array: number[][]) =>
 			new Range(array[0][0], array[0][1], array[1][0], array[1][1]);
 
-		switch (type) {
-			case "action-request":
+		switch (type.replace("codestream:", "")) {
+			case "request":
 				// TODO: Add sequence ids to ensure correct matching
 				// TODO: Add exception handling for failed requests
 				switch (body.action) {
-					case "post":
+					case "create-post":
 						const { text, codeBlocks, commitHashWhenPosted, parentPostId } = body.params;
 
 						let post;

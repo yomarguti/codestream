@@ -1,13 +1,12 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { addLocaleData, IntlProvider } from "react-intl";
-import { createStore } from "codestream-components";
+import { createStore, WebviewApi } from "codestream-components";
 import { Provider } from "react-redux";
 import en from "react-intl/locale-data/en";
 import CodeStreamRoot from "./components/VSCodeStreamRoot";
 import copy from "../translations/en.js";
 import rpcMiddleWare from "./rpc-middleware";
-// import VSCodeAPI from "./VSCodeAPI";
 
 addLocaleData([...en]);
 
@@ -30,7 +29,7 @@ const store = createStore(
 			userId: data.currentUserId
 		}
 	},
-	undefined,
+	{ api: new WebviewApi() },
 	[rpcMiddleWare]
 );
 
