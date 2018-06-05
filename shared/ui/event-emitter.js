@@ -1,8 +1,17 @@
+const findHost = () => {
+	try {
+		return acquireVsCodeApi();
+	} catch (e) {
+		/* probably not in vscode */
+		return window.parent;
+	}
+};
+
 class EventEmitter {
 	listenersByEvent = new Map();
 
 	constructor() {
-		this.host = window.acquireVsCodeApi ? window.acquireVsCodeApi() : window.parent;
+		this.host = findHost();
 		window.addEventListener("message", this.handler, false);
 	}
 

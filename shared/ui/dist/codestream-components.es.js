@@ -21420,6 +21420,15 @@ var Post = function (_Component) {
 
 var Post$1 = connect(null, { cancelPost: cancelPost, retryPost: retryPost })(Post);
 
+var findHost = function findHost() {
+	try {
+		return acquireVsCodeApi();
+	} catch (e) {
+		/* probably not in vscode */
+		return window.parent;
+	}
+};
+
 var EventEmitter = function () {
 	function EventEmitter() {
 		var _this = this;
@@ -21446,7 +21455,7 @@ var EventEmitter = function () {
 			}
 		});
 
-		this.host = window.acquireVsCodeApi ? window.acquireVsCodeApi() : window.parent;
+		this.host = findHost();
 		window.addEventListener("message", this.handler, false);
 	}
 
