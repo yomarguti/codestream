@@ -2,7 +2,12 @@ class EventEmitter {
 	listenersByEvent = new Map();
 
 	constructor() {
-		window.parent.addEventListener("message", this.handler, false);
+		this.host = acquireVsCodeApi ? acquireVsCodeApi() : window.parent;
+		window.addEventListener("message", this.handler, false);
+	}
+
+	getHost() {
+		return this.host;
 	}
 
 	handler = ({ data }) => {
@@ -26,7 +31,7 @@ class EventEmitter {
 	}
 
 	emit(event, body) {
-		window.parent.postMessage(
+		this.host.postMessage(
 			{
 				type: `codestream:${event}`,
 				body
@@ -36,5 +41,5 @@ class EventEmitter {
 	}
 }
 
-const emmitter = new EventEmitter();
-export default emmitter;
+const emitter = new EventEmitter();
+export default emitter;

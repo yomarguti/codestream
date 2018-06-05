@@ -21412,10 +21412,16 @@ var EventEmitter = function () {
 			}
 		});
 
-		window.parent.addEventListener("message", this.handler, false);
+		this.host = acquireVsCodeApi ? acquireVsCodeApi() : window.parent;
+		window.addEventListener("message", this.handler, false);
 	}
 
 	createClass(EventEmitter, [{
+		key: "getHost",
+		value: function getHost() {
+			return this.host;
+		}
+	}, {
 		key: "subscribe",
 		value: function subscribe(thing, listener) {
 			var _this2 = this;
@@ -21435,7 +21441,7 @@ var EventEmitter = function () {
 	}, {
 		key: "emit",
 		value: function emit(event, body) {
-			window.parent.postMessage({
+			this.host.postMessage({
 				type: "codestream:" + event,
 				body: body
 			}, "*");
@@ -21444,7 +21450,7 @@ var EventEmitter = function () {
 	return EventEmitter;
 }();
 
-var emmitter = new EventEmitter();
+var emitter = new EventEmitter();
 
 // AtMentionsPopup expects an on/off switch determined by the on property
 // on = show the popup, off = hide the popup
@@ -21818,7 +21824,7 @@ var ComposeBox = function (_React$Component) {
 		value: function componentDidMount() {
 			var _this2 = this;
 
-			this.disposables.push(emmitter.subscribe("interaction:code-highlighted", this.handleCodeHighlightEvent));
+			this.disposables.push(emitter.subscribe("interaction:code-highlighted", this.handleCodeHighlightEvent));
 
 			// so that HTML doesn't get pasted into the input field. without this,
 			// HTML would be rendered as HTML when pasted
@@ -26571,7 +26577,7 @@ var SimpleStream = function (_Component) {
 			writable: true,
 			value: function value(event) {
 				event.preventDefault();
-				emmitter.emit("interaction:clicked-link", "https://help.codestream.com");
+				emitter.emit("interaction:clicked-link", "https://help.codestream.com");
 			}
 		});
 		Object.defineProperty(_this, "renderIntro", {
@@ -26706,10 +26712,10 @@ var SimpleStream = function (_Component) {
 				    _ref2$track = _ref2.track,
 				    track = _ref2$track === undefined ? true : _ref2$track;
 
-				emmitter.emit("interaction:thread-closed", _this.findPostById(_this.state.threadId));
+				emitter.emit("interaction:thread-closed", _this.findPostById(_this.state.threadId));
 				_this.setState({ threadActive: false });
 				_this.focusInput();
-				if (track) emmitter.emit("analytics", {
+				if (track) emitter.emit("analytics", {
 					label: "Page Viewed",
 					payload: { "Page Name": "Source Stream" }
 				});
@@ -26821,7 +26827,7 @@ var SimpleStream = function (_Component) {
 			value: function value(id) {
 				var wasClicked = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
 
-				emmitter.emit("analytics", {
+				emitter.emit("analytics", {
 					label: "Page Viewed",
 					payload: { "Page Name": "Thread View" }
 				});
@@ -26835,7 +26841,7 @@ var SimpleStream = function (_Component) {
 
 				_this.focusInput();
 				if (wasClicked) {
-					emmitter.emit("interaction:thread-selected", {
+					emitter.emit("interaction:thread-selected", {
 						threadId: threadId,
 						streamId: _this.props.postStreamId,
 						post: post
@@ -26925,7 +26931,7 @@ var SimpleStream = function (_Component) {
 		value: function componentDidMount() {
 			var _this2 = this;
 
-			this.disposables.push(emmitter.subscribe("interaction:marker-selected", this.handleMarkerSelected));
+			this.disposables.push(emitter.subscribe("interaction:marker-selected", this.handleMarkerSelected));
 
 			// this listener pays attention to when the input field resizes,
 			// presumably because the user has typed more than one line of text
@@ -28157,7 +28163,7 @@ var reducer = (function (state, action) {
 });
 
 var WebviewApi = function () {
-	function WebviewApi(host) {
+	function WebviewApi() {
 		var _this = this;
 
 		classCallCheck(this, WebviewApi);
@@ -28167,7 +28173,7 @@ var WebviewApi = function () {
 			value: new Map()
 		});
 
-		this.host = host;
+		this.host = emitter.getHost();
 		window.addEventListener("message", function (event) {
 			var _event$data = event.data,
 			    type = _event$data.type,

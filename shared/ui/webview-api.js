@@ -1,8 +1,10 @@
+import EventEmitter from "./event-emitter";
+
 export default class WebviewApi {
 	pendingRequests = new Map();
 
-	constructor(host) {
-		this.host = host;
+	constructor() {
+		this.host = EventEmitter.getHost();
 		window.addEventListener(
 			"message",
 			event => {
