@@ -10,7 +10,7 @@ import db from "./local-cache";
 import * as http from "./network-request";
 
 export default (initialState = {}) => {
-	return createStore(initialState, { db, http, api: new WebviewApi(window.parent) }, [
+	return createStore(initialState, { db, http, api: new WebviewApi() }, [
 		pubnubMiddleWare,
 		umiMiddleWare,
 		contextualCommands,
