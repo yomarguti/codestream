@@ -316,15 +316,10 @@ export class StreamWebviewPanel extends Disposable {
 		text?: string,
 		mentions: string = ""
 	) {
-		const normalize = (r: Range) => [
-			[r.start.line, r.start.character],
-			[r.end.line, r.end.character]
-		];
-
 		return this.postMessage({
 			type: "codestream:interaction:code-highlighted",
 			body: {
-				quoteRange: normalize(range),
+				quoteRange: [range.start.line, range.start.character, range.end.line, range.end.character],
 				quoteText: code,
 				authors: mentions.split(" ")
 			}
