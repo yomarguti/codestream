@@ -5,6 +5,19 @@ import createClassString from "classnames";
 import EventEmitter from "../event-emitter";
 import AtMentionsPopup from "./AtMentionsPopup";
 
+const arrayToRange = ([[startRow, startCol], [endRow, endCol]]) => {
+	return {
+		start: {
+			row: startRow,
+			col: startCol
+		},
+		end: {
+			row: endRow,
+			col: endCol
+		}
+	};
+};
+
 class ComposeBox extends React.Component {
 	state = { newPostText: "", quote: null, autoMentions: [] };
 	disposables = [];
@@ -321,7 +334,7 @@ class ComposeBox extends React.Component {
 		let quoteHint;
 		if (quote) {
 			quoteInfo = quote ? <div className="code">{quote.quoteText}</div> : "";
-			let range = quote.quoteRange;
+			let range = arrayToRange(quote.quoteRange);
 			let rangeText = null;
 			if (range) {
 				if (range.start.row === range.end.row) {

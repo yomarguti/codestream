@@ -13392,6 +13392,44 @@ var possibleConstructorReturn = function (self, call) {
   return call && (typeof call === "object" || typeof call === "function") ? call : self;
 };
 
+var slicedToArray = function () {
+  function sliceIterator(arr, i) {
+    var _arr = [];
+    var _n = true;
+    var _d = false;
+    var _e = undefined;
+
+    try {
+      for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
+        _arr.push(_s.value);
+
+        if (i && _arr.length === i) break;
+      }
+    } catch (err) {
+      _d = true;
+      _e = err;
+    } finally {
+      try {
+        if (!_n && _i["return"]) _i["return"]();
+      } finally {
+        if (_d) throw _e;
+      }
+    }
+
+    return _arr;
+  }
+
+  return function (arr, i) {
+    if (Array.isArray(arr)) {
+      return arr;
+    } else if (Symbol.iterator in Object(arr)) {
+      return sliceIterator(arr, i);
+    } else {
+      throw new TypeError("Invalid attempt to destructure non-iterable instance");
+    }
+  };
+}();
+
 var toConsumableArray = function (arr) {
   if (Array.isArray(arr)) {
     for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i];
@@ -21622,11 +21660,32 @@ var AtMentionsPopup = function (_Component) {
 	return AtMentionsPopup;
 }(react_1);
 
+var arrayToRange = function arrayToRange(_ref) {
+	var _ref2 = slicedToArray(_ref, 2),
+	    _ref2$ = slicedToArray(_ref2[0], 2),
+	    startRow = _ref2$[0],
+	    startCol = _ref2$[1],
+	    _ref2$2 = slicedToArray(_ref2[1], 2),
+	    endRow = _ref2$2[0],
+	    endCol = _ref2$2[1];
+
+	return {
+		start: {
+			row: startRow,
+			col: startCol
+		},
+		end: {
+			row: endRow,
+			col: endCol
+		}
+	};
+};
+
 var ComposeBox = function (_React$Component) {
 	inherits(ComposeBox, _React$Component);
 
 	function ComposeBox() {
-		var _ref;
+		var _ref3;
 
 		var _temp, _this, _ret;
 
@@ -21636,7 +21695,7 @@ var ComposeBox = function (_React$Component) {
 			args[_key] = arguments[_key];
 		}
 
-		return _ret = (_temp = (_this = possibleConstructorReturn(this, (_ref = ComposeBox.__proto__ || Object.getPrototypeOf(ComposeBox)).call.apply(_ref, [this].concat(args))), _this), Object.defineProperty(_this, "state", {
+		return _ret = (_temp = (_this = possibleConstructorReturn(this, (_ref3 = ComposeBox.__proto__ || Object.getPrototypeOf(ComposeBox)).call.apply(_ref3, [this].concat(args))), _this), Object.defineProperty(_this, "state", {
 			enumerable: true,
 			writable: true,
 			value: { newPostText: "", quote: null, autoMentions: [] }
@@ -21647,9 +21706,9 @@ var ComposeBox = function (_React$Component) {
 		}), Object.defineProperty(_this, "handleCodeHighlightEvent", {
 			enumerable: true,
 			writable: true,
-			value: function value(_ref2) {
-				var authors = _ref2.authors,
-				    state = objectWithoutProperties(_ref2, ["authors"]);
+			value: function value(_ref4) {
+				var authors = _ref4.authors,
+				    state = objectWithoutProperties(_ref4, ["authors"]);
 
 				_this.focus();
 				_this.setState({ quote: state });
@@ -22027,7 +22086,7 @@ var ComposeBox = function (_React$Component) {
 					{ className: "code" },
 					quote.quoteText
 				) : "";
-				var range = quote.quoteRange;
+				var range = arrayToRange(quote.quoteRange);
 				var rangeText = null;
 				if (range) {
 					if (range.start.row === range.end.row) {
@@ -22074,8 +22133,8 @@ var ComposeBox = function (_React$Component) {
 					onBlur: this.handleBlur,
 					html: this.state.newPostText,
 					placeholder: placeholder,
-					ref: function ref(_ref3) {
-						return _this3._contentEditable = _ref3;
+					ref: function ref(_ref5) {
+						return _this3._contentEditable = _ref5;
 					}
 				})
 			);
