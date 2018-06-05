@@ -1,6 +1,6 @@
 // @flow
 import { CompositeDisposable, Directory, Range, TextEditor } from "atom";
-import type { DisplayMarker, RangeArray } from "../types/atom";
+import type { DisplayMarker } from "../types/atom";
 import Blamer from "../util/blamer";
 
 const trimSelection = editor => {
@@ -37,8 +37,8 @@ const trimSelection = editor => {
 	return range;
 };
 
-const rangeToArray = (range: Range): RangeArray => {
-	return [[range.start.row, range.start.column], [range.end.row, range.end.column]];
+const rangeToArray = (range: Range): [number, number, number, number] => {
+	return [range.start.row, range.start.column, range.end.row, range.end.column];
 };
 
 const tooltipOptions = {
