@@ -2,11 +2,7 @@ import "@babel/polyfill";
 import { createStore, applyMiddleware } from "redux";
 import { composeWithDevTools } from "redux-devtools-extension";
 import thunk from "redux-thunk";
-import Post from "./components/Post";
-import ComposeBox from "./components/ComposeBox";
-import DateSeparator from "./components/DateSeparator";
-import EditingIndicator from "./components/EditingIndicator";
-import Stream from "./stream";
+import Stream from "./Stream";
 import reducer from "./reducers";
 import WebviewApi from "./webview-api";
 
@@ -18,12 +14,4 @@ export const createCodeStreamStore = (initialState = {}, thunkArg = {}, middlewa
 	);
 };
 
-export {
-	Post,
-	DateSeparator,
-	EditingIndicator,
-	ComposeBox,
-	Stream,
-	WebviewApi,
-	createCodeStreamStore as createStore
-};
+export { Stream, WebviewApi, createCodeStreamStore as createStore };
