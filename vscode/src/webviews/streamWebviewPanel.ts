@@ -213,7 +213,7 @@ export class StreamWebviewPanel extends Disposable {
 						if (post === undefined) return;
 
 						this.postMessage({
-							type: "action-response",
+							type: "codestream:response",
 							body: {
 								action: body.action,
 								payload: post.entity
