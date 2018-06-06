@@ -5,13 +5,19 @@ import _ from "underscore";
 import createClassString from "classnames";
 import ComposeBox from "./ComposeBox";
 import DateSeparator from "./DateSeparator";
+import ChannelPanel from "./ChannelPanel";
+import PublicChannelPanel from "./PublicChannelPanel";
+import CreateChannelPanel from "./CreateChannelPanel";
+import CreateDMPanel from "./CreateDMPanel";
 import EditingIndicator from "./EditingIndicator";
+import ChannelMenu from "./ChannelMenu";
 import Post from "./Post";
 import EventEmitter from "../event-emitter";
 import * as actions from "./actions";
 import { goToInvitePage } from "../actions/routing";
 import { toMapBy } from "../utils";
-import { getPostsForStream, getStreamForTeam, getStreamForRepoAndFile } from "../reducers/streams";
+import { getPostsForStream, getStreamForId, getStreamForTeam, getStreamForRepoAndFile } from "../reducers/streams";
+import { createPost, createSystemPost, editPost, deletePost, fetchPosts } from "../actions/post";
 
 export class SimpleStream extends Component {
 	disposables = [];
@@ -21,7 +27,7 @@ export class SimpleStream extends Component {
 
 		this.state = {
 			threadId: null,
-			threadActive: false,
+			activePanel: "channels",
 			fileForIntro: props.currentFile
 		};
 		this._compose = React.createRef();
@@ -162,6 +168,12 @@ export class SimpleStream extends Component {
 			this.resizeStream();
 		}
 
+		if (this.state.activePanel === "main" && prevState.activePanel === "channels") {
+			setTimeout(() => {
+				this.focusInput();
+			}, 500);
+		}
+
 		// if we just got the focus, mark the new stream read
 		if (this.props.hasFocus && !prevProps.hasFocus) {
 			this.checkMarkStreamRead();
@@ -198,13 +210,18 @@ export class SimpleStream extends Component {
 			}
 		}
 
-		// FIXME this doesn't seem to always scroll to the bottom when it should
 		if (this.state.editingPostId !== prevState.editingPostId) {
 			// special-case the editing of the bottom-most post...
 			// scroll it into view. in all other cases we let the
 			// focus of the input field make sure the post is focused
 			const lastPost = this.props.posts[this.props.posts.length - 1];
-			if (this.state.editingPostId == lastPost.id) this.scrollToBottom(true);
+			if (lastPost && this.state.editingPostId == lastPost.id) this.scrollToBottom(true);
+		}
+
+		// if we're switching from the channel list to a stream,
+		// then check to see if we should scroll to the bottom
+		if (this.state.activePanel === "main" && prevState.activePanel !== "main") {
+			if (!this.state.scrolledOffBottom) this.scrollToBottom();
 		}
 	}
 
@@ -336,6 +353,7 @@ export class SimpleStream extends Component {
 	// visible during the transition
 	render() {
 		const { configs, posts } = this.props;
+		const { activePanel } = this.state;
 
 		const streamClass = createClassString({
 			stream: true,
@@ -350,12 +368,19 @@ export class SimpleStream extends Component {
 			threadlist: true
 		});
 		const mainPanelClass = createClassString({
+			panel: true,
 			"main-panel": true,
-			"inactive-panel": this.state.threadActive
+			shrink: activePanel === "thread",
+			"off-right":
+				activePanel === "channels" ||
+				activePanel === "create-channel" ||
+				activePanel === "create-dm" ||
+				activePanel === "public-channels"
 		});
 		const threadPanelClass = createClassString({
+			panel: true,
 			"thread-panel": true,
-			"inactive-panel": !this.state.threadActive
+			"off-right": activePanel !== "thread"
 		});
 
 		let lastTimestamp = null;
@@ -363,7 +388,7 @@ export class SimpleStream extends Component {
 		let threadPost = this.findPostById(threadId);
 
 		let placeholderText = "Add comment";
-		if (this.state.threadActive && threadPost) {
+		if (activePanel === "thread" && threadPost) {
 			placeholderText = "Reply to " + threadPost.author.username;
 		}
 
@@ -376,28 +401,71 @@ export class SimpleStream extends Component {
 		});
 		const unreadsBelowClass = createClassString({
 			unreads: true,
+			offscreen: activePanel !== "main",
 			active: this.state.unreadsBelow
 		});
-		const unreadsAbove = this.state.threadActive ? null : (
-			<div className={unreadsAboveClass} type="above" onClick={this.handleClickUnreads}>
-				&uarr; Unread Messages &uarr;
-			</div>
-		);
+		const unreadsAbove =
+			activePanel === "thread" ? null : (
+				<div className={unreadsAboveClass} type="above" onClick={this.handleClickUnreads}>
+					&uarr; Unread Messages &uarr;
+				</div>
+			);
 
-		const teamName = this.props.team ? this.props.team.name : "";
+		const channelName =
+			this.props.postStreamType === "direct" ? (
+				<span className="icon icon-organization">{this.props.postStreamName}</span>
+			) : this.props.isPrivate ? (
+				<span className="icon icon-lock">{this.props.postStreamName}</span>
+			) : (
+				"#" + this.props.postStreamName
+			);
+		const menuActive = this.state.openMenu === this.props.postStreamId;
+		const totalUMICount = ""; // FIXME total UMI count here
 
 		return (
 			<div className={streamClass} ref={ref => (this._div = ref)}>
+				<div id="modal-root" />
 				<EditingIndicator
 					editingUsers={this.props.editingUsers}
-					inactive={this.state.threadActive} // or if no fileStream
+					inactive={activePanel !== "main"} // or if no fileStream
 					currentUser={this.props.currentUser}
 					teamMembers={this.props.teamMembersById}
 				/>
+				<ChannelPanel
+					activePanel={activePanel}
+					setActivePanel={this.setActivePanel}
+					postSystemMessage={this.postSystemMessage}
+				/>
+				<PublicChannelPanel activePanel={activePanel} setActivePanel={this.setActivePanel} />
+				<CreateChannelPanel activePanel={activePanel} setActivePanel={this.setActivePanel} />
+				<CreateDMPanel activePanel={activePanel} setActivePanel={this.setActivePanel} />
 				<div className={mainPanelClass} ref={ref => (this._mainPanel = ref)}>
-					<div className="stream-header" ref={ref => (this._header = ref)}>
-						<span>{teamName}</span>
-						<span onClick={this.props.goToInvitePage} className="icon icon-organization" />
+					<div className="panel-header" ref={ref => (this._header = ref)}>
+						<span
+							onClick={this.showChannels}
+							className="icon icon-chevron-left show-channels-icon align-left"
+						>
+							{totalUMICount}
+						</span>
+						<span>{channelName}</span>
+						{this.props.postStreamType !== "direct" && (
+							<span
+								onClick={this.handleClickStreamSettings}
+								className="icon icon-gear show-settings align-right"
+							>
+								{menuActive && (
+									<ChannelMenu
+										stream={this.props.postStream}
+										target={this.state.menuTarget}
+										umiCount={0}
+										isMuted={this.props.mutedStreams[this.props.postStreamId]}
+										setActivePanel={this.setActivePanel}
+										postSystemMessage={this.postSystemMessage}
+										closeMenu={this.closeMenu}
+									/>
+								)}
+							</span>
+						)}
 					</div>
 					{unreadsAbove}
 					<div
@@ -430,7 +498,7 @@ export class SimpleStream extends Component {
 										replyingTo={parentPost}
 										newMessageIndicator={newMessageIndicator}
 										unread={unread}
-										editing={!this.state.threadActive && post.id === this.state.editingPostId}
+										editing={activePanel === "main" && post.id === this.state.editingPostId}
 									/>
 								</div>
 							);
@@ -440,9 +508,13 @@ export class SimpleStream extends Component {
 					</div>
 				</div>
 				<div className={threadPanelClass}>
-					<div id="close-thread" className="stream-header" onClick={this.handleDismissThread}>
-						<span>&lt; Back to Stream </span>
-						<span className="keybinding">[esc]</span>
+					<div id="close-thread" className="panel-header" onClick={this.handleDismissThread}>
+						<span
+							onClick={this.showChannels}
+							className="icon icon-chevron-left show-channels-icon align-left"
+						>
+							Back <span className="keybinding">(esc)</span>
+						</span>
 					</div>
 					<div
 						className={threadPostsListClass}
@@ -457,7 +529,7 @@ export class SimpleStream extends Component {
 								key={threadPost.id}
 								showDetails="1"
 								currentCommit={this.props.currentCommit}
-								editing={this.state.threadActive && threadPost.id === this.state.editingPostId}
+								editing={activePanel === "thread" && threadPost.id === this.state.editingPostId}
 							/>
 						)}
 						{this.renderThreadPosts(threadId)}
@@ -471,6 +543,7 @@ export class SimpleStream extends Component {
 					teammates={this.props.teammates}
 					ref={this._compose}
 					disabled={this.props.isOffline}
+					offscreen={activePanel !== "main" && activePanel !== "thread"}
 					onSubmit={this.submitPost}
 					onEmptyUpArrow={this.editLastPost}
 					findMentionedUserIds={this.findMentionedUserIds}
@@ -479,9 +552,20 @@ export class SimpleStream extends Component {
 		);
 	}
 
+	handleClickStreamSettings = event => {
+		this.setState({ openMenu: this.props.postStreamId, menuTarget: event.target });
+		event.stopPropagation();
+		return true;
+	};
+
+	closeMenu = () => {
+		this.setState({ openMenu: null });
+	};
+
 	findMyPostBeforeSeqNum(seqNum) {
 		const me = this.props.currentUser.username;
-		return _.chain(this.props.posts)
+		return _
+			.chain(this.props.posts)
 			.filter(post => {
 				return post.author.username === me && post.seqNum < seqNum;
 			})
@@ -496,6 +580,14 @@ export class SimpleStream extends Component {
 		const seqNum = postDiv ? postDiv.dataset.seqNum : 9999999999;
 		const editingPost = this.findMyPostBeforeSeqNum(seqNum);
 		if (editingPost) this.setState({ editingPostId: editingPost.id });
+	};
+
+	showChannels = event => {
+		this.setState({ activePanel: "channels" });
+	};
+
+	setActivePanel = panel => {
+		this.setState({ activePanel: panel });
 	};
 
 	handleScroll(_event) {
@@ -547,7 +639,7 @@ export class SimpleStream extends Component {
 	// dismiss the thread stream and return to the main stream
 	handleDismissThread = ({ track = true } = {}) => {
 		EventEmitter.emit("interaction:thread-closed", this.findPostById(this.state.threadId));
-		this.setState({ threadActive: false });
+		this.setState({ activePanel: "main" });
 		this.focusInput();
 		if (track)
 			EventEmitter.emit("analytics", {
@@ -636,6 +728,11 @@ export class SimpleStream extends Component {
 			// post, go to the thread for that post, but if
 			// we are editing, then do nothing.
 			return;
+		} else if (postDiv.classList.contains("system-post")) {
+			// otherwise, if we aren't currently editing the
+			// post, go to the thread for that post, but if
+			// we are editing, then do nothing.
+			return;
 		} else if (window.getSelection().toString().length > 0) {
 			// in this case the user has selected a string
 			// by dragging
@@ -657,7 +754,7 @@ export class SimpleStream extends Component {
 		// if it is a child in the thread, it'll have a parentPostId,
 		// otherwise use the id. any post can become the head of a thread
 		const threadId = post.parentPostId || post.id;
-		this.setState({ threadId: threadId, threadActive: true });
+		this.setState({ threadId: threadId, activePanel: "thread" });
 
 		this.focusInput();
 		if (wasClicked) {
@@ -688,7 +785,7 @@ export class SimpleStream extends Component {
 
 	handleEscape(event) {
 		if (this.state.editingPostId) this.handleDismissEdit();
-		else if (this.state.threadActive) this.handleDismissThread();
+		else if (this.state.activePanel === "thread") this.handleDismissThread();
 		else event.abortKeyBinding();
 	}
 
@@ -717,17 +814,92 @@ export class SimpleStream extends Component {
 		} else return false;
 	}
 
+	// not implemented yet
+	toggleMute = () => {};
+
+	postSystemMessage = type => {
+		console.log("Posting a system message...", type);
+		if (type === "view-members") return this.showMembers();
+		if (type === "add-member-instructions") return this.addMembersInstructions();
+		if (type === "rename-channel-instructions") return this.renameChannelInstructions();
+	};
+
+	showMembers = () => {
+		const memberIds = this.props.postStreamMemberIds;
+		const streamName = this.props.postStreamName;
+		let names = [];
+		if (this.props.postStreamIsTeamStream) {
+			this.props.teammates.map(user => {
+				names.push(user.username);
+			});
+		} else {
+			this.props.teammates.map(user => {
+				if (_.contains(memberIds, user.id)) names.push(user.username);
+			});
+		}
+		names = _.sortBy(names, name => name.toLowerCase());
+
+		let text;
+		if (names.length === 0) text = "You are the only member in " + streamName;
+		else if (names.length === 1)
+			text = "Members in " + streamName + " are you and @" + names[0] + ".";
+		else {
+			text = "Members in " + streamName + " are @" + names.join(", @") + " and you.";
+		}
+
+		if (this.props.postStreamIsTeamStream) {
+			text +=
+				"\n\nThis is an all-hands channel, so every member of your team is automatically added.";
+		}
+
+		this.submitSystemPost(text);
+	};
+
+	addMembersToStream = matches => {
+		if (!matches) return false;
+		this.submitSystemPost("Add members: Not implemented yet.");
+		return true;
+	};
+
+	addMembersInstructions = () => {
+		const text = "Add members to this channel by typing `/add @nickname`";
+		this.submitSystemPost(text);
+	};
+
+	renameChannelInstructions = () => {
+		const text = "Add members to this channel by typing `/rename [new name]`";
+		this.submitSystemPost(text);
+	};
+
+	submitSystemPost = text => {
+		const { activePanel } = this.state;
+		const { postStreamId, createSystemPost, posts } = this.props;
+		const threadId = activePanel === "thread" ? this.state.threadId : null;
+		const lastPost = _.last(posts);
+		const seqNum = lastPost ? lastPost.seqNum + 0.001 : 99999999;
+
+		createSystemPost(postStreamId, threadId, text, seqNum);
+	};
+
 	// create a new post
 	submitPost = ({ text, quote, mentionedUserIds, autoMentions }) => {
 		const codeBlocks = [];
-		const { threadActive } = this.state;
+		const { activePanel } = this.state;
 		const { postStreamId, fileStreamId, createPost, currentFile, repoId } = this.props;
 
 		const substitute = text.match(/^s\/(.+)\/(.*)\/$/);
 		if (this.substituteLastPost(substitute)) return;
 		else console.log("did not substitute");
 
-		let threadId = threadActive ? this.state.threadId : null;
+		if (text === "/members" || text === "/who") return this.showMembers();
+
+		if (text === "/mute") return this.toggleMute();
+
+		let addMembersRegExp = new RegExp("^/add\\s+(@(?:" + this.props.usernamesRegexp + ")\\b)");
+		const addMembers = text.match(addMembersRegExp);
+		if (this.addMembersToStream(addMembers)) return;
+
+		let threadId = activePanel === "thread" ? this.state.threadId : null;
 
 		if (quote) {
 			let codeBlock = {
@@ -767,7 +939,8 @@ const mapStateToProps = ({
 	posts,
 	messaging,
 	teams,
-	onboarding
+	onboarding,
+	umis
 }) => {
 	// TODO: figure out a way to do this elsewhere
 	Object.keys(users).forEach(function(key, index) {
@@ -804,14 +977,26 @@ const mapStateToProps = ({
 
 	// FIXME -- eventually we'll allow the user to switch to other streams, like DMs and channels
 	const teamStream = getStreamForTeam(streams, context.currentTeamId) || {};
-	const streamPosts = getPostsForStream(posts, teamStream.id);
+	const postStream =
+		getStreamForId(streams, context.currentTeamId, context.currentStreamId) || teamStream;
+	const streamPosts = getPostsForStream(posts, postStream.id);
+
+	const user = users[session.userId];
+	const mutedStreams = (user && user.preferences && user.preferences.mutedStreams) || {};
 
 	return {
+		umis,
 		configs,
 		isOffline,
 		teamMembersById: toMapBy("id", teamMembers),
 		teammates: teamMembers.filter(({ id }) => id !== session.userId),
-		postStreamId: teamStream.id,
+		postStream,
+		postStreamId: postStream.id,
+		postStreamName: postStream.name,
+		postStreamType: postStream.type,
+		postStreamIsTeamStream: postStream.isTeamStream,
+		postStreamMemberIds: postStream.memberIds,
+		isPrivate: postStream.privacy === "private",
 		fileStreamId: fileStream.id,
 		teamId: context.currentTeamId,
 		repoId: context.currentRepoId,
@@ -821,20 +1006,30 @@ const mapStateToProps = ({
 		currentCommit: context.currentCommit,
 		editingUsers: fileStream.editingUsers,
 		usernamesRegexp: usernamesRegexp,
-		currentUser: users[session.userId],
+		currentUser: user,
+		mutedStreams,
 		team: teams[context.currentTeamId],
 		posts: streamPosts.map(post => {
 			let user = users[post.creatorId];
 			if (!user) {
-				console.warn(
-					`Redux store doesn't have a user with id ${post.creatorId} for post with id ${post.id}`
-				);
-				user = {
-					username: "Unknown user",
-					email: "",
-					firstName: "",
-					lastName: ""
-				};
+				if (post.creatorId === "codestream") {
+					user = {
+						username: "CodeStream",
+						email: "",
+						firstName: "",
+						lastName: ""
+					};
+				} else {
+					console.warn(
+						`Redux store doesn't have a user with id ${post.creatorId} for post with id ${post.id}`
+					);
+					user = {
+						username: "Unknown user",
+						email: "",
+						firstName: "",
+						lastName: ""
+					};
+				}
 			}
 			const { username, email, firstName = "", lastName = "", color } = user;
 			return {

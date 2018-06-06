@@ -357,6 +357,7 @@ class ComposeBox extends React.Component {
 				onKeyPress={this.handleKeyPress}
 				onKeyDown={this.handleKeyDown}
 				className={createClassString("compose", {
+					offscreen: this.props.offscreen,
 					"mentions-on": this.state.atMentionsOn
 				})}
 			>

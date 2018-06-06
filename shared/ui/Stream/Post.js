@@ -32,6 +32,7 @@ class Post extends Component {
 			post: true,
 			mine: mine,
 			editing: this.props.editing,
+			"system-post": post.creatorId === "codestream",
 			unread: this.props.unread,
 			"new-separator": this.props.newMessageIndicator,
 			[`thread-key-${this.props.threadKey}`]: true
@@ -90,6 +91,11 @@ class Post extends Component {
 					{parentPost && (
 						<div className="replying-to">
 							<span>reply to</span> <b>{parentPost.text.substr(0, 80)}</b>
+						</div>
+					)}
+					{post.creatorId === "codestream" && (
+						<div className="replying-to">
+							<span>only visible to you</span>
 						</div>
 					)}
 					{codeBlock}
@@ -200,4 +206,7 @@ class Post extends Component {
 	};
 }
 
-export default connect(null, { cancelPost, retryPost })(Post);
+export default connect(
+	null,
+	{ cancelPost, retryPost }
+)(Post);

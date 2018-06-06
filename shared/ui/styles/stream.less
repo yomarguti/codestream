@@ -1,5 +1,5 @@
 // any variables used here should be provided by the consumer of this stylesheet
-// @import "ui-variables";
+//@import "ui-variables";
 
 .codestream {
 	[contenteditable="true"]:empty:before {
@@ -11,8 +11,9 @@
 		width: 100%;
 		height: 100%;
 		background: @app-background-color;
+		overflow-x: hidden;
 
-		.stream-header {
+		.panel-header {
 			position: relative;
 			text-align: center;
 			background-color: @app-background-color;
@@ -21,11 +22,25 @@
 			z-index: 30;
 			user-select: none;
 
+			height: 2em;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: pre;
+			padding: 0 35px 10px 35px;
+			font-size: 16px;
+			color: @text-color-highlight;
+
 			span {
-				font-weight: 100;
-				font-size: 16px;
-				text-transform: uppercase;
-				letter-spacing: 1px;
+				font-weight: 600;
+				text-overflow: ellipsis;
+				// text-transform: uppercase;
+				// letter-spacing: 1px;
+				text-align: center;
+				// color: @text-color-subtle;
+				// display: block;
+				height: auto;
+				// margin-top: 5px;
+				// font-size: 10px;
 			}
 
 			.mentions-badge {
@@ -42,10 +57,20 @@
 				padding-top: 1px;
 			}
 
-			.icon {
+			.icon.align-left {
 				position: absolute;
+				left: 5px;
+				right: auto;
+				padding: 0 8px 0 3px;
+			}
+			.icon.show-channels-icon.mentions {
+				background-color: @background-color-info;
+			}
+			.icon.show-channels-icon::before {
+				margin-right: 0;
+			}
+			.icon {
 				top: 2px;
-				right: 5px;
 				cursor: pointer;
 				padding: 0 0 0 6px;
 				text-align: center;
@@ -55,9 +80,19 @@
 				color: @text-color-highlight;
 				background-color: @base-background-color;
 			}
+			.icon.align-right {
+				position: absolute;
+				right: 5px;
+			}
+			.icon-lock::before {
+				font-size: 0.8em;
+				margin-right: 0;
+			}
 		}
 
 		.unreads {
+			animation: 0.4s slidein;
+			left: 0;
 			// position: absolute !important;
 			// background: @background-color-highlight;
 			// color: @text-color-highlight;
@@ -89,6 +124,9 @@
 		}
 		.unreads.active {
 			display: block;
+		}
+		.unreads.hidden {
+			display: none;
 		}
 		.unreads {
 			background: @background-color-info;
@@ -130,15 +168,20 @@
 			// padding: 1px 0;
 			// z-index: 10;
 			// height: 30px;
-			color: @text-color-info;
+			// color: @text-color-info;
 			.keybinding {
-				color: @text-color;
+				color: @text-color-subtle;
+				font-weight: normal;
 				// display: none;
 				// padding: 2px;
+				padding-right: 5px;
+			}
+			.show-channels-icon::before {
+				margin: 0;
 			}
 		}
 		#close-thread:hover {
-			background: @app-background-color-hover;
+			// background: @app-background-color-hover;
 		}
 
 		.new-messages-below {
@@ -160,7 +203,80 @@
 			background-color: lighten(@background-color-info, 5%);
 		}
 
-		.edit-post {
+		#create-channel-form,
+		#create-dm-form {
+			.button-group {
+				margin-top: 30px;
+			}
+		}
+
+		.standard-form {
+			.form-body {
+				padding: 20px;
+			}
+			.explainer {
+				color: @text-color-subtle;
+			}
+			#controls {
+				label {
+					font-size: 1.2em;
+					margin: 0 0 2px 3px;
+					.optional {
+						opacity: 0.5;
+					}
+				}
+				.control-group {
+					margin: 3% 0;
+
+					&:first-child,
+					&:last-child {
+						margin: 0;
+					}
+
+					.help-link {
+						text-align: right;
+					}
+					position: relative;
+
+					small {
+						display: block;
+						margin: 2px 0 0 3px;
+						position: absolute;
+						top: 3px;
+						right: 3px;
+					}
+				}
+				.radio-group {
+					background-color: darken(@app-background-color, 2%);
+					padding: 5px 10px;
+					border-radius: 3px;
+				}
+
+				input[type="text"],
+				input[type="password"],
+				.radio-group label {
+					font-family: Menlo, Consolas, "DejaVu Sans Mono", monospace;
+					font-size: 1.15em;
+					padding: 4px 8px;
+					opacity: 0.6;
+				}
+				input[type="text"]:focus,
+				input[type="password"]:focus {
+					opacity: 1;
+					color: @text-color-highlight;
+				}
+				input + .tip {
+					display: none;
+				}
+				.radio-group label {
+					padding: 0 20px 0 5px;
+					vertical-align: -2px;
+				}
+			}
+		}
+
+		.edit-post,
+		.standard-form {
 			.button-group {
 				// padding: 0px 10px 10px 56px;
 				margin-bottom: 5px;
@@ -170,11 +286,13 @@
 					width: calc(~"50% - 5px");
 				}
 				button.cancel {
-					background: @background-color-error !important;
+					color: @text-color;
+					background: @background-color-highlight !important;
 				}
 				button:first-child {
 					margin-right: 10px;
 				}
+				font-size: 1.15em;
 			}
 
 			div[contenteditable="true"] {
@@ -192,7 +310,18 @@
 			}
 		}
 
+		.compose.offscreen,
+		.unreads.offscreen {
+			// left: 100% !important;
+			pointer-events: none;
+			opacity: 0;
+			animation: 0.2s slideout;
+			// transition: bottom 0.4s;
+		}
 		.compose {
+			left: 0;
+			// transition: left 0.2s;
+			animation: 0.4s slidein;
 			display: block;
 			width: 100%;
 			border: none;
@@ -396,28 +525,32 @@
 		}
 		.menu-popup {
 			// height: 500px;
-			position: absolute;
+			position: fixed;
 			z-index: 50;
 			padding: 0 10px 0 10px;
 			user-select: none;
 			cursor: pointer;
 			border-radius: 5px;
 
-			.body {
+			.menu-popup-body {
 				width: 100%;
 				// box-shadow: 0 5px 10px #ccc;
 				box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
 				border-radius: 5px;
 				border: 1px solid @base-border-color;
-				background: #eee;
+				background: @base-background-color;
+			}
+			hr {
+				margin: 5px 0;
+				border: none;
+				border-top: 1px solid @base-border-color;
 			}
 			ul {
 				// border-top: 1px solid @base-border-color;
-				background: #fff;
 				padding: 5px 0;
 				border-radius: 0 5px 5px 0;
 			}
-			li {
+			li.menu-item {
 				padding: 5px 10px;
 				.headshot-gravatar {
 					width: 18px;
@@ -427,9 +560,21 @@
 				}
 			}
 			// li:hover,
-			li.hover {
-				color: #fff;
-				background: #4979f1;
+			li.menu-item.hover {
+				color: white;
+				background: @background-color-info;
+			}
+			li.menu-item.disabled {
+				color: @text-color-subtle;
+			}
+			li.menu-item.disabled.hover {
+				background: @base-background-color;
+				color: @text-color-subtle;
+			}
+			li.menu-item span.disabled {
+				font-size: smaller;
+				display: block;
+				opacity: 0.5;
 			}
 			.username {
 				font-weight: 700;
@@ -438,6 +583,7 @@
 		}
 
 		.editing-indicator {
+			display: none;
 			position: absolute;
 			top: 30px;
 			width: 100%;
@@ -473,8 +619,150 @@
 			top: -2em;
 		}
 
-		.main-panel {
+		.channel-list {
+			max-height: 100%;
+			overflow-y: auto;
+			user-select: none;
+			.section {
+				padding: 10px 0;
+				font-size: 15px;
+
+				.header {
+					text-transform: uppercase;
+					font-weight: normal;
+					opacity: 0.5;
+					padding: 2px 10px;
+					// color: @text-color-info;
+					color: @text-color-subtle;
+					cursor: pointer;
+					position: relative;
+				}
+				.header:hover {
+					opacity: 1;
+					background: @app-background-color-hover;
+				}
+				.latest-post {
+					position: absolute;
+					right: 9px;
+					top: 2px;
+					color: @text-color-subtle;
+				}
+				.icon.align-right {
+					position: absolute;
+					right: 9px;
+					top: 2px;
+					cursor: pointer;
+					z-index: 1;
+					// opacity: 0.5;
+				}
+				.icon.align-right:hover {
+					color: @text-color-highlight;
+				}
+				ul {
+					margin: 0;
+					padding: 0;
+					li.unread {
+						font-weight: 800;
+						opacity: 1;
+						color: @text-color-highlight;
+					}
+					li:hover,
+					li.active {
+						opacity: 1;
+						color: @text-color-highlight;
+						background: @app-background-color-hover;
+					}
+					.invite {
+						color: @text-color-info;
+					}
+					.invite .icon::before {
+						width: 8px !important;
+						padding-left: 1px;
+					}
+					li {
+						position: relative;
+						// opacity: 0.9;
+						font-weight: 100;
+						padding: 2px 10px;
+						cursor: pointer;
+						list-style: none;
+						overflow: hidden;
+						text-overflow: ellipsis;
+						xspan.name {
+							padding-left: 5px;
+							color: @text-color-subtle;
+						}
+						.icon {
+							margin-right: 5px;
+						}
+						.icon.align-right {
+							margin: 0;
+							display: none;
+							// visibility: hidden;
+							opacity: 0.6;
+						}
+						.icon.align-right:hover {
+							opacity: 1;
+						}
+						.icon-lock::before,
+						.icon-mute::before {
+							font-size: 12px;
+							padding-right: 0;
+							margin-right: 0;
+							width: 10px;
+						}
+						.presence {
+							display: inline-block;
+							width: 8px;
+							height: 8px;
+							border-radius: 4px;
+							background: green;
+							margin: 0 5px 1px 0;
+						}
+						.umi {
+							position: absolute;
+							text-align: center;
+							border-radius: 3px;
+							font-size: 12px;
+							padding-top: 0;
+							top: 3px;
+							right: 10px;
+							width: 25px;
+							height: 18px;
+							background: @background-color-info;
+							color: white;
+							font-weight: normal;
+							z-index: 2;
+						}
+					}
+					li:hover .icon.align-right {
+						display: block;
+					}
+					li.muted {
+						opacity: 0.5;
+					}
+				}
+			}
+		}
+		.standard-form {
+			.header {
+				padding: 2px 20px !important;
+			}
+			li {
+				padding: 2px 40px 2px 20px !important;
+			}
+			span.latest-post {
+				right: 20px !important;
+			}
+		}
+
+		.panel {
+			width: 100%;
+			position: absolute;
+			top: 0;
+			left: 0;
 			height: 100%;
+			transition: transform 0.2s, opacity 0.2s;
 		}
 		.postslist {
 			width: 100%;
@@ -484,10 +772,13 @@
 			transition: transform 0.2s, opacity 0.2s;
 		}
 
-		.inactive-panel {
-			transform: scale(0.9);
+		.panel.shrink {
 			max-height: 100%;
 			overflow: hidden;
+
+			.postslist {
+				transform: scale(0.9);
+			}
 
 			.code {
 				overflow-x: hidden;
@@ -495,16 +786,36 @@
 			}
 		}
 
-		.thread-panel {
-			width: 100%;
-			position: absolute;
-			top: 0;
-			background-color: @app-background-color;
+		// .thread-panel {
+		// 	background-color: darken(@app-background-color, 3%);
+		// }
+		// .channel-panel {
+		// 	background-color: @app-background-color-hover;
+		// }
+		.channel-panel .postslist {
+			padding-bottom: 50px;
+		}
+		.thread-panel,
+		.main-panel,
+		.create-channel-panel,
+		.create-dm-panel,
+		.public-channel-panel {
 			// min-height: 100%;
 			animation: 0.4s slidein;
 			// box-sizing: border-box;
 		}
-		.thread-panel.inactive-panel {
+		.public-channel-panel .explainer {
+			padding: 10px;
+		}
+		.public-channel-panel li .explainer {
+			color: @text-color-subtle;
+			padding: 0 15px 5px 15px;
+		}
+		#create-channel-form,
+		#create-dm-form {
+			height: 100%;
+		}
+		.panel.off-right {
 			transform: none;
 			left: 100%;
 			animation: 0.2s slideout;
@@ -557,7 +868,8 @@
 			border-top: 1px solid transparent;
 			border-left: 1px solid transparent;
 			// overflow-x: hidden;
-			.headshot-gravatar {
+			.headshot-gravatar,
+			.headshot-system {
 				display: block;
 				position: absolute;
 				width: 36px;
@@ -752,27 +1064,34 @@
 		}
 	}
 	.stream.reduced-motion {
-		.inactive-panel {
-			transform: none;
+		.shrink,
+		.off-right {
 			z-index: -1 !important;
-			.stream-header {
+			.panel-header {
 				z-index: -1 !important;
 			}
 			opacity: 0;
-			transition: opacity 0.25s;
-		}
-		.thread-panel.inactive-panel {
 			animation: none;
+			transition: opacity 0.25s;
+			.postslist {
+				transform: none;
+			}
 		}
-		.thread-panel {
-			left: 0;
+		.panel {
+			left: 0 !important;
 			animation: none;
 			display: block;
 			z-index: 2;
 			transition: opacity 0.25s;
 		}
-		.main-panel {
+		.compose.offscreen,
+		.unreads.offscreen {
+			opacity: 0;
 			transition: opacity 0.25s;
+			animation: none !important;
+		}
+		.compose {
+			animation: none !important;
 		}
 	}
 	.intro {
@@ -853,6 +1172,78 @@
 	}
 	button {
 		font-size: 1.05em;
+	}
+	.react-select__control {
+		border-color: @base-border-color;
+		border: none;
+		border: 2px solid transparent;
+		background-color: lighten(@base-border-color, 2%);
+		margin: 0;
+		font-family: Menlo, Consolas, "DejaVu Sans Mono", monospace;
+		font-size: 1.15em;
+		color: @text-color;
+		min-height: 20px;
+	}
+	.react-select__control-is-focused {
+		box-shadow: none;
+		border: 2px solid @background-color-info;
+		.react-select__multi-value__label {
+			opacity: 1;
+			color: @text-color-highlight;
+		}
+	}
+	.react-select__input {
+		font-family: Menlo, Consolas, "DejaVu Sans Mono", monospace;
+		font-size: 1.15em;
+		font-size: 0.9em;
+		color: @text-color;
+		// padding: 4px 8px;
+		opacity: 0.6;
+	}
+	.react-select__input:focus {
+		opacity: 1;
+		color: @text-color-highlight;
+	}
+	.react-select__multi-value {
+		font-size: 0.9em;
+		background: @background-color-highlight;
+	}
+	.react-select__value-container {
+		padding: 0 5px;
+	}
+	.react-select__multi-value__label {
+		color: @text-color;
+	}
+	.react-select__multi-value__remove:hover {
+		background: @background-color-error;
+		color: white;
+	}
+	.react-select__menu-list {
+		background: @base-background-color;
+		border-radius: 3px;
+	}
+	.react-select__option {
+		padding: 5px 10px;
+		cursor: pointer;
+	}
+	.react-select__option:hover {
+		background: @background-color-info;
+		color: white;
+	}
+	.react-select__option--is-focused {
+		background: inherit;
+		color: inherit;
+	}
+	.react-select.input-text {
+		padding: 0;
+	}
+	.react-select__dropdown-indicator {
+		opacity: 0.6;
+		padding: 6px;
+	}
+	.react-select__indicator-separator {
+		opacity: 0.5;
+		margin: 8px 0;
 	}
 }
 

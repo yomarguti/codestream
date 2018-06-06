@@ -16,6 +16,8 @@ export default class Headshot extends Component {
 
 		if (!person) return null;
 
+		if (person.username === "CodeStream") return this.renderCodeStream();
+
 		let defaultImage = encodeURI(
 			"https://images.codestream.com/misc/nothing_transparent-36x36.gif"
 		);
@@ -47,6 +49,17 @@ export default class Headshot extends Component {
 					email={person.email}
 				/>
 				<div className={classNameInitials}>{authorInitials}</div>
+			</div>
+		);
+	}
+
+	renderCodeStream() {
+		return (
+			<div className="headshot" ref={this._div}>
+				<img
+					className="headshot-system"
+					src="https://images.codestream.com/logos/grey_blue_transparent-400x400.png"
+				/>
 			</div>
 		);
 	}
