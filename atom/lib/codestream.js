@@ -192,11 +192,6 @@ module.exports = {
 					atom.reload();
 				}
 			}),
-			atom.commands.add(".tree-view", {
-				"codestream:mute": target => this.markStreamMute(target),
-				"codestream:bold": target => this.markStreamBold(target),
-				"codestream:badge": target => this.markStreamBadge(target)
-			}),
 			atom.config.observe("CodeStream", configs => {
 				store.dispatch(updateConfigs(configs));
 			}),
@@ -388,29 +383,6 @@ module.exports = {
 					});
 			}
 		}
-	},
-
-	markStreamMute(event) {
-		this.markStreamTreatment(event, "mute");
-	},
-	markStreamBold(event) {
-		this.markStreamTreatment(event, "bold");
-	},
-	markStreamBadge(event) {
-		this.markStreamTreatment(event, "badge");
-	},
-	// set a preference for the treatment of a given stream
-	// to either mute, bold, or badge
-	markStreamTreatment(event, setting) {
-		let li = event.target.closest("li");
-
-		// TODO if there isn't a click event, use the active li from tree-veiw
-		if (!li) return;
-
-		let type = li.classList.contains("directory") ? "directory" : "file";
-		let path = li.getElementsByTagName("span")[0].getAttribute("data-path");
-		// setStreamUMITreatment(path, setting);
-		store.dispatch(setStreamUMITreatment(path, setting));
 	},
 
 	consumeStatusBar(statusBar) {

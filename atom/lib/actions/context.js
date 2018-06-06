@@ -20,6 +20,9 @@ export const setCurrentTeam = id => ({
 	type: "SET_CURRENT_TEAM",
 	payload: id
 });
+export const setCurrentStream = streamId => async dispatch => {
+	dispatch({ type: "SET_CURRENT_STREAM", payload: streamId });
+};
 export const setCurrentRepo = id => ({
 	type: "SET_CURRENT_REPO",
 	payload: id

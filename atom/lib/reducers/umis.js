@@ -24,7 +24,6 @@ export default (state = initialState, { type, payload }) => {
 			// console.log("clear umis in the reducer: ", payload);
 			let nextState = { ...state };
 			// instead of deleting it, we set it to zero
-			// instead of deleting it, we set it to zero
 			// so that when we loop through the keys we can
 			// still reference the fact that this div needs to be cleared
 			if (nextState.mentions[payload]) nextState.mentions[payload] = 0;

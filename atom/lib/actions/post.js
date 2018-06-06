@@ -11,7 +11,7 @@ import MarkerLocationFinder from "../git/MarkerLocationFinder";
 import { open as openRepo } from "../git/GitRepo";
 
 const createTempId = (() => {
-	let count = 0;
+	let count = new Date().getTime();
 	return () => String(count++);
 })();
 
@@ -230,6 +230,36 @@ export const createPost = (
 		// TODO: different types of errors?
 		dispatch(rejectPendingPost(pendingId, { ...post, error: true }));
 	}
+};
+
+export const createSystemPost = (streamId, parentPostId, text, seqNum) => async (
+	dispatch,
+	getState,
+	{ http }
+) => {
+	const state = getState();
+	const { session, context, repoAttributes } = state;
+	const pendingId = createTempId();
+
+	const post = {
+		id: pendingId,
+		teamId: context.currentTeamId,
+		timestamp: new Date().getTime(),
+		createdAt: new Date().getTime(),
+		creatorId: "codestream",
+		parentPostId: parentPostId,
+		streamId,
+		seqNum,
+		text
+	};
+
+	// dispatch(savePendingPost({ ...post }));
+	dispatch({
+		type: "ADD_POST",
+		payload: post
+	});
+
+	// dispatch(resolvePendingPost(pendingId, normalize(data.post)));
 };
 
 const backtrackCodeBlockLocations = async (codeBlocks, bufferText, streamId, state, http) => {

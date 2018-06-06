@@ -107,6 +107,8 @@ export const recalculate = force => async (dispatch, getState, { http }) => {
 	let nextState = { mentions: {}, unread: {} };
 	if (force) nextState.count = new Date().getTime();
 	let streamsById = {};
+	let totalUnread = 0;
+	let totalMentions = 0;
 	const streamsByFile = getStreamsByFileForRepo(streams, context.currentRepoId) || {};
 	Object.entries(streamsByFile).forEach(([file, stream]) => {
 		streamsById[stream.id] = stream;
@@ -146,9 +148,13 @@ export const recalculate = force => async (dispatch, getState, { http }) => {
 			} else {
 				unread = 1; // at least we get this
 			}
+			totalUnread += unread;
+			totalMentions += mentions;
 			if (unread) nextState.unread[streamId] = unread;
 			if (mentions) nextState.mentions[streamId] = mentions;
 		}
+		nextState.totalUnread = totalUnread;
+		nextState.totalMentions = totalMentions;
 	});
 
 	dispatch({
