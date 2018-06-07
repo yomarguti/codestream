@@ -5,8 +5,8 @@ import { createStream } from "./actions";
 import createClassString from "classnames";
 import { getChannelStreamsForTeam } from "../reducers/streams";
 import Button from "./Button";
+import Tooltip from "./Tooltip";
 import { FormattedMessage } from "react-intl";
-const { CompositeDisposable } = require("atom");
 import Select from "react-select";
 
 const isNameInvalid = name => {
@@ -19,27 +19,7 @@ export class SimpleCreateChannelPanel extends Component {
 		super(props);
 
 		this.state = { privacy: "public", name: "" };
-		this.subscriptions = new CompositeDisposable();
 		this._createChannelPanel = React.createRef();
-	}
-
-	componentDidMount() {
-		this.addToolTip("input-privacy", "Private channels are only visible to people you invite");
-		this.addToolTip("input-name", "Names must match [a-zA-Z0-9._-]+");
-	}
-
-	componentWillUnmount() {
-		this.subscriptions.dispose();
-	}
-
-	addToolTip(elementId, key) {
-		let div = document.getElementById(elementId);
-		this.subscriptions.add(
-			atom.tooltips.add(div, {
-				title: key,
-				placement: "left"
-			})
-		);
 	}
 
 	render() {
@@ -64,38 +44,44 @@ export class SimpleCreateChannelPanel extends Component {
 						<div id="controls">
 							<div id="privacy-controls" className="control-group">
 								<label>Privacy</label>
-								<div className="radio-group" id="input-privacy">
-									<input
-										id="radio-privacy-public"
-										type="radio"
-										name="privacy"
-										checked={this.state.privacy === "public"}
-										onChange={e => this.setState({ privacy: "public" })}
-									/>
-									<label htmlFor="radio-privacy-public">Public</label>
-									<input
-										id="radio-privacy-private"
-										type="radio"
-										name="privacy"
-										checked={this.state.privacy === "private"}
-										onChange={e => this.setState({ privacy: "private" })}
-									/>
-									<label htmlFor="radio-privacy-private">Private</label>
-								</div>
+								<Tooltip
+									title="Private channels are only visible to people you invite"
+									placement="left"
+								>
+									<div className="radio-group">
+										<input
+											id="radio-privacy-public"
+											type="radio"
+											name="privacy"
+											checked={this.state.privacy === "public"}
+											onChange={e => this.setState({ privacy: "public" })}
+										/>
+										<label htmlFor="radio-privacy-public">Public</label>
+										<input
+											id="radio-privacy-private"
+											type="radio"
+											name="privacy"
+											checked={this.state.privacy === "private"}
+											onChange={e => this.setState({ privacy: "private" })}
+										/>
+										<label htmlFor="radio-privacy-private">Private</label>
+									</div>
+								</Tooltip>
 							</div>
 							<div id="name-controls" className="control-group">
 								<label>Channel Name</label>
-								<input
-									id="input-name"
-									className="native-key-bindings input-text control"
-									type="text"
-									name="name"
-									tabIndex="0"
-									value={this.state.name}
-									onChange={e => this.setState({ name: e.target.value })}
-									onBlur={this.onBlurName}
-									required={this.state.nameTouched || this.state.formTouched}
-								/>
+								<Tooltip title="Names must match [a-zA-Z0-9._-]+" placement="left">
+									<input
+										className="native-key-bindings input-text control"
+										type="text"
+										name="name"
+										tabIndex="0"
+										value={this.state.name}
+										onChange={e => this.setState({ name: e.target.value })}
+										onBlur={this.onBlurName}
+										required={this.state.nameTouched || this.state.formTouched}
+									/>
+								</Tooltip>
 								{this.renderNameHelp()}
 							</div>
 							<div id="purpose-controls" className="control-group">
@@ -103,7 +89,6 @@ export class SimpleCreateChannelPanel extends Component {
 									Purpose <span className="optional">(optional)</span>
 								</label>
 								<input
-									id="input-name"
 									className="native-key-bindings input-text control"
 									type="text"
 									name="purpose"
@@ -244,10 +229,7 @@ const mapStateToProps = ({ context, streams, users, teams }) => {
 	};
 };
 
-export default connect(
-	mapStateToProps,
-	{
-		...contextActions,
-		createStream
-	}
-)(SimpleCreateChannelPanel);
+export default connect(mapStateToProps, {
+	...contextActions,
+	createStream
+})(SimpleCreateChannelPanel);

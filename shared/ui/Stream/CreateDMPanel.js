@@ -7,7 +7,6 @@ import createClassString from "classnames";
 import { getDirectMessageStreamsForTeam } from "../reducers/streams";
 import Button from "./Button";
 import { FormattedMessage } from "react-intl";
-const { CompositeDisposable } = require("atom");
 import Select from "react-select";
 
 const isNameInvalid = name => {
@@ -20,24 +19,7 @@ export class SimpleCreateDMPanel extends Component {
 		super(props);
 
 		this.state = {};
-		this.subscriptions = new CompositeDisposable();
 		this._createDMPanel = React.createRef();
-	}
-
-	componentDidMount() {}
-
-	componentWillUnmount() {
-		this.subscriptions.dispose();
-	}
-
-	addToolTip(elementId, key) {
-		let div = document.getElementById(elementId);
-		this.subscriptions.add(
-			atom.tooltips.add(div, {
-				title: key,
-				placement: "left"
-			})
-		);
 	}
 
 	render() {
@@ -214,10 +196,7 @@ const mapStateToProps = ({ context, streams, users, teams, session, umis }) => {
 	};
 };
 
-export default connect(
-	mapStateToProps,
-	{
-		...contextActions,
-		createStream
-	}
-)(SimpleCreateDMPanel);
+export default connect(mapStateToProps, {
+	...contextActions,
+	createStream
+})(SimpleCreateDMPanel);
