@@ -61,8 +61,34 @@ export const retryPost = () => {
 
 export const cancelPost = id => ({ type: "CANCEL_PENDING_POST", payload: id });
 
-export const createSystemPost = () => {
-	// TODO
+export const createSystemPost = (streamId, parentPostId, text, seqNum) => async (
+	dispatch,
+	getState,
+	{ http }
+) => {
+	const state = getState();
+	const { session, context } = state;
+	const pendingId = createTempId();
+
+	const post = {
+		id: pendingId,
+		teamId: context.currentTeamId,
+		timestamp: new Date().getTime(),
+		createdAt: new Date().getTime(),
+		creatorId: "codestream",
+		parentPostId: parentPostId,
+		streamId,
+		seqNum,
+		text
+	};
+
+	// dispatch(savePendingPost({ ...post }));
+	dispatch({
+		type: "ADD_POST",
+		payload: post
+	});
+
+	// dispatch(resolvePendingPost(pendingId, normalize(data.post)));
 };
 
 export const editPost = () => {
