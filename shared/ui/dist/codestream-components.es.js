@@ -23151,6 +23151,14 @@ var createPost = function createPost(streamId, parentPostId, text, codeBlocks, m
 	}();
 };
 
+var retryPost = function retryPost() {
+	// TODO
+};
+
+var cancelPost = function cancelPost(id) {
+	return { type: "CANCEL_PENDING_POST", payload: id };
+};
+
 var createSystemPost = function createSystemPost() {
 	// TODO
 };
@@ -23174,6 +23182,8 @@ var createStream = function createStream() {
 var streamActions = /*#__PURE__*/Object.freeze({
 	markStreamRead: markStreamRead,
 	createPost: createPost,
+	retryPost: retryPost,
+	cancelPost: cancelPost,
 	createSystemPost: createSystemPost,
 	editPost: editPost,
 	deletePost: deletePost,
@@ -48088,12 +48098,6 @@ var RetrySpinner = function (_React$Component) {
 	}]);
 	return RetrySpinner;
 }(react.Component);
-
-var retryPost = function retryPost() {};
-
-var cancelPost = function cancelPost(id) {
-  return { type: "CANCEL_PENDING_POST", payload: id };
-};
 
 var regex=/[\0-\uD7FF\uE000-\uFFFF]|[\uD800-\uDBFF][\uDC00-\uDFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF]/;
 

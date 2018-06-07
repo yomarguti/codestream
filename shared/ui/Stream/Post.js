@@ -6,7 +6,7 @@ import Timestamp from "./Timestamp";
 // import Menu from "./Menu";
 import PostDetails from "./PostDetails";
 import RetrySpinner from "./RetrySpinner";
-import { retryPost, cancelPost } from "../actions/posts";
+import { retryPost, cancelPost } from "./actions";
 import ContentEditable from "react-contenteditable";
 import Button from "./Button";
 import Linkify from "react-linkify";
@@ -206,7 +206,4 @@ class Post extends Component {
 	};
 }
 
-export default connect(
-	null,
-	{ cancelPost, retryPost }
-)(Post);
+export default connect(null, { cancelPost, retryPost })(Post);

@@ -51,6 +51,12 @@ export const createPost = (streamId, parentPostId, text, codeBlocks, mentions, e
 	}
 };
 
+export const retryPost = () => {
+	// TODO
+};
+
+export const cancelPost = id => ({ type: "CANCEL_PENDING_POST", payload: id });
+
 export const createSystemPost = () => {
 	// TODO
 };
