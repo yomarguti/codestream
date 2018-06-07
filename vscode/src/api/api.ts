@@ -23,7 +23,7 @@ import {
     UpdateStreamMembershipRequest, UpdateStreamMembershipResponse
 } from './types';
 import fetch, { Headers, RequestInit, Response } from 'node-fetch';
-
+import { URLSearchParams } from 'url';
 export * from './types';
 
 export interface ApiMiddlewareContext {
@@ -266,7 +266,7 @@ export class CodeStreamApi {
         if (json === undefined) {
             const resp = await fetch(absoluteUrl, init);
             if (resp.status !== 200) throw await this.handleErrorResponse(resp);
-            json = resp.json<R>();
+            json = resp.json() as Promise<R>;
         }
 
         if (hasMiddleware) {
@@ -316,7 +316,7 @@ export class CodeStreamApi {
         return obj as R;
     }
 
-    static sanitize(body: string | ArrayBuffer | ArrayBufferView | NodeJS.ReadableStream | undefined) {
+    static sanitize(body: ArrayBuffer | ArrayBufferView | NodeJS.ReadableStream | string | URLSearchParams | undefined) {
         if (body === undefined || typeof body !== 'string') return '';
 
         return body.replace(/("password":)".*?"/gi, '$1"<hidden>"');

@@ -35,7 +35,6 @@ export interface IConfig {
         triggers: BotTrigger[];
     };
 
-    debug: boolean;
     email: string;
 
     explorers: {

@@ -2,8 +2,8 @@ import { commands, ConfigurationChangeEvent, ConfigurationTarget, Disposable, Ra
 import { CSPost } from './api/api';
 import { CodeStreamSession, PostsReceivedEvent } from './api/session';
 import { BotResponse, BotTrigger, configuration } from './configuration';
+import { encryptionKey } from './constants';
 import { Container } from './container';
-import { encryptionKey } from './extension';
 import { Logger } from './logger';
 import { Command, createCommandDecorator, Crypto, Functions } from './system';
 import * as path from 'path';

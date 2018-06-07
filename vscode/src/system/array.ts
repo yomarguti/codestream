@@ -22,7 +22,7 @@ export namespace Arrays {
                 accumulator.push(mapped);
             }
             return accumulator;
-        }, [] as any);
+        }, [] as TMapped[]);
     }
 
     export async function filterMapAsync<T, TMapped>(source: T[], predicateMapper: (item: T) => Promise<TMapped | null | undefined>): Promise<TMapped[]> {

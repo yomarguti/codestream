@@ -2,8 +2,8 @@ import { commands, ConfigurationTarget, Disposable, MessageItem, Range, TextDocu
 import { ChannelStreamCreationOptions, CodeStreamSession, Post, Stream, StreamThread, StreamType } from './api/session';
 import { openEditor } from './common';
 import { configuration, TraceLevel } from './configuration';
+import { encryptionKey } from './constants';
 import { Container } from './container';
-import { encryptionKey } from './extension';
 import { Logger } from './logger';
 import { PostNode } from './views/postNode';
 import { Command, createCommandDecorator, Crypto, Dates, Iterables } from './system';
@@ -45,11 +45,11 @@ interface IRequiresStream {
 }
 
 export function isStreamThread(streamOrThreadOrLocator: Stream | StreamThread | StreamThreadId | StreamLocator): streamOrThreadOrLocator is StreamThread {
-    return (streamOrThreadOrLocator as any).stream !== undefined;
+    return (streamOrThreadOrLocator as StreamThread).stream !== undefined;
 }
 
 export function isStreamThreadId(streamOrThreadOrLocator: Stream | StreamThread | StreamThreadId | StreamLocator): streamOrThreadOrLocator is StreamThreadId {
-    return (streamOrThreadOrLocator as any).streamId !== undefined;
+    return (streamOrThreadOrLocator as StreamThreadId).streamId !== undefined;
 }
 
 export interface OpenStreamCommandArgs extends IRequiresStream {

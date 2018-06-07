@@ -43,12 +43,6 @@
                     "description": "Specifies whether to automatically sign in to CodeStream",
                     "scope": "window"
                 },
-                "codestream.debug": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Specifies debug mode",
-                    "scope": "window"
-                },
                 "codestream.traceLevel": {
                     "type": "string",
                     "default": "debug",
@@ -610,20 +604,20 @@
     "dependencies": {
         "date-fns": "1.29.0",
         "lodash.debounce": "4.0.8",
-        "pubnub": "4.20.3",
+        "pubnub": "4.21.0",
         "node-fetch": "2.1.2",
         "reflect-metadata": "0.1.12",
         "tmp": "0.0.33",
-        "tslib": "1.9.1",
-        "vscode-languageclient": "4.1.4"
+        "tslib": "1.9.2",
+        "vscode-languageclient": "4.2.1"
     },
     "devDependencies": {
-        "@types/node": "10.1.2",
-        "@types/node-fetch": "1.6.9",
+        "@types/node": "7.0.65",
+        "@types/node-fetch": "2.1.1",
         "@types/pubnub": "4.0.2",
         "@types/tmp": "0.0.33",
         "tslint": "5.10.0",
-        "typescript": "2.8.3",
-        "vscode": "1.1.17"
+        "typescript": "2.9.1",
+        "vscode": "1.1.18"
     }
 }
