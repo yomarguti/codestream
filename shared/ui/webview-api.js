@@ -41,4 +41,8 @@ export default class WebviewApi {
 	markStreamRead(streamId) {
 		return this.postMessage({ action: "mark-stream-read", params: streamId });
 	}
+
+	saveUserPreference(newPreference) {
+		return this.postMessage({ action: "save-user-preference", params: newPreference });
+	}
 }

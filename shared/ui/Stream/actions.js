@@ -51,10 +51,6 @@ export const createPost = (streamId, parentPostId, text, codeBlocks, mentions, e
 	}
 };
 
-export const setCurrentStream = streamId => async dispatch => {
-	dispatch({ type: "SET_CURRENT_STREAM", payload: streamId });
-};
-
 export const retryPost = () => {
 	// TODO
 };
@@ -82,13 +78,7 @@ export const createSystemPost = (streamId, parentPostId, text, seqNum) => async 
 		text
 	};
 
-	// dispatch(savePendingPost({ ...post }));
-	dispatch({
-		type: "ADD_POST",
-		payload: post
-	});
-
-	// dispatch(resolvePendingPost(pendingId, normalize(data.post)));
+	dispatch({ type: "ADD_POST", payload: post });
 };
 
 export const editPost = () => {
@@ -99,10 +89,39 @@ export const deletePost = () => {
 	// TODO
 };
 
-export const setUserPreference = () => {
-	// TODO
+// usage: setUserPreference(["favorites", "shoes", "wedges"], "red")
+export const setUserPreference = (prefPath, value) => (dispatch, getState, { api }) => {
+	const { session, context, users } = getState();
+	let user = users[session.userId];
+	if (!user) return;
+
+	if (!user.preferences) user.preferences = {};
+
+	// we walk down the existing user preference to set the value
+	// and simultaneously create a new preference object to pass
+	// to the API server
+	let preferences = user.preferences;
+	let newPreference = {};
+	let newPreferencePointer = newPreference;
+	while (prefPath.length > 1) {
+		let part = prefPath.shift().replace(/\./g, "*");
+		if (!preferences[part]) preferences[part] = {};
+		preferences = preferences[part];
+		newPreferencePointer[part] = {};
+		newPreferencePointer = newPreferencePointer[part];
+	}
+	preferences[prefPath[0].replace(/\./g, "*")] = value;
+	newPreferencePointer[prefPath[0].replace(/\./g, "*")] = value;
+
+	console.log("Saving preferences: ", newPreference);
+	api.saveUserPreference(newPreference);
+	// dispatch(saveUser(normalize(user)));
 };
 
 export const createStream = () => {
 	// TODO
+};
+
+export const setCurrentStream = streamId => async dispatch => {
+	dispatch({ type: "SET_CURRENT_STREAM", payload: streamId });
 };
