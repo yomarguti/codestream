@@ -55,8 +55,7 @@ export default class AddCommentPopupManager {
 
 		this.subscriptions.add(
 			atom.commands.add("atom-workspace", "codestream:comment", {
-				didDispatch: () => this.onSelected(),
-				hiddenInCommandPalette: true
+				didDispatch: _event => this.onSelected()
 			}),
 			atom.workspace.observeActiveTextEditor(editor => {
 				if (

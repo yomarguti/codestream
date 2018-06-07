@@ -2,7 +2,19 @@
 /* eslint-disable */
 import { Directory, Disposable, GitRepository, TextEditor } from "atom";
 
+type CommandListenerFunction = (event: any) => void;
+type CommandListenerDescriptor = {
+	didDispatch: CommandListenerFunction,
+	description?: string,
+	displayName?: string,
+	hiddenInCommandPalette?: boolean
+};
+type CommandListener = CommandListenerFunction | CommandListenerDescriptor;
+
 type Atom = {
+	commands: {
+		add(target: string, commandName: string, listener: CommandListener): Disposable
+	},
 	project: {
 		repositoryForDirectory(Directory): Promise<GitRepository>
 	},
