@@ -252,7 +252,7 @@ const mapStateToProps = ({ context, streams, users, teams, umis, session }) => {
 };
 
 export default connect(mapStateToProps, {
-	...contextActions,
+	// ...contextActions,
 	createStream,
 	setUserPreference,
 	goToInvitePage: routingActions.goToInvitePage
