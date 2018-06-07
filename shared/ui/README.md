@@ -5,8 +5,8 @@
 3.  run `npm link`
 4.  run `yarn` (if you don't have that, you can install it from [here](https://yarnpkg.com/en/docs/install#mac-stable))
 5.  in your other repositories that will use this as dependency, run `npm link codestream-components`.
-    * In the `vscode-codestream` repo, you'll need to run this from within `/assets/client`.
-6.  before you start developing, run `yarn build-watch` to have the bundle generated automatically after you make changes
+    - In the `vscode-codestream` repo, you'll need to run this from within `/assets/client`.
+6.  before you start developing, run `yarn build-watch` in the root directory of the codestream-components repository to have the bundle generated automatically after you make changes
 
 ## In VS Code
 

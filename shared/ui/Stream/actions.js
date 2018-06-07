@@ -51,6 +51,10 @@ export const createPost = (streamId, parentPostId, text, codeBlocks, mentions, e
 	}
 };
 
+export const setCurrentStream = streamId => async dispatch => {
+	dispatch({ type: "SET_CURRENT_STREAM", payload: streamId });
+};
+
 export const createSystemPost = () => {
 	// TODO
 };
