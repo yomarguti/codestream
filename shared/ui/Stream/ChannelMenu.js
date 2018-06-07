@@ -85,11 +85,8 @@ export class SimpleChannelMenu extends Component {
 }
 
 const mapStateToProps = ({ users, session }) => ({ session });
-export default connect(
-	mapStateToProps,
-	{
-		...contextActions,
-		...streamActions,
-		...userActions
-	}
-)(SimpleChannelMenu);
+export default connect(mapStateToProps, {
+	...contextActions,
+	...streamActions
+	// ...userActions
+})(SimpleChannelMenu);
