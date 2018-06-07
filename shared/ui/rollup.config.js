@@ -33,7 +33,8 @@ export default {
 					"Fragment",
 					"isValidElement",
 					"PureComponent"
-				]
+				],
+				"node_modules/react-dom/index.js": ["findDOMNode", "createPortal"]
 			}
 		}),
 		babel({
