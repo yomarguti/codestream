@@ -8,7 +8,8 @@ const moment = require("moment");
  */
 function parseRevision(line) {
 	var revisionRegex = /^\w+/;
-	return line.match(revisionRegex)[0];
+	const matchResult = line.match(revisionRegex);
+	return matchResult ? matchResult[0] : "";
 }
 
 /**
