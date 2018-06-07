@@ -16,8 +16,13 @@ import EventEmitter from "../event-emitter";
 import * as actions from "./actions";
 import { goToInvitePage } from "../actions/routing";
 import { toMapBy } from "../utils";
-import { getPostsForStream, getStreamForId, getStreamForTeam, getStreamForRepoAndFile } from "../reducers/streams";
-import { createPost, createSystemPost, editPost, deletePost, fetchPosts } from "../actions/post";
+import {
+	getPostsForStream,
+	getStreamForId,
+	getStreamForTeam,
+	getStreamForRepoAndFile
+} from "../reducers/streams";
+import { createPost, createSystemPost, editPost, deletePost } from "./actions";
 
 export class SimpleStream extends Component {
 	disposables = [];
@@ -564,8 +569,7 @@ export class SimpleStream extends Component {
 
 	findMyPostBeforeSeqNum(seqNum) {
 		const me = this.props.currentUser.username;
-		return _
-			.chain(this.props.posts)
+		return _.chain(this.props.posts)
 			.filter(post => {
 				return post.author.username === me && post.seqNum < seqNum;
 			})

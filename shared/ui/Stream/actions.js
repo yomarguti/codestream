@@ -51,6 +51,10 @@ export const createPost = (streamId, parentPostId, text, codeBlocks, mentions, e
 	}
 };
 
+export const createSystemPost = () => {
+	// TODO
+};
+
 export const editPost = () => {
 	// TODO
 };
