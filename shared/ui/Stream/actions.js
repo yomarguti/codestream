@@ -51,19 +51,16 @@ export const createPost = (streamId, parentPostId, text, codeBlocks, mentions, e
 	}
 };
 
-<<<<<<< HEAD
 export const setCurrentStream = streamId => async dispatch => {
 	dispatch({ type: "SET_CURRENT_STREAM", payload: streamId });
 };
 
-=======
 export const retryPost = () => {
 	// TODO
 };
 
 export const cancelPost = id => ({ type: "CANCEL_PENDING_POST", payload: id });
 
->>>>>>> 148ad81e5b36d83d70d5a22835ce148ef7970b21
 export const createSystemPost = () => {
 	// TODO
 };

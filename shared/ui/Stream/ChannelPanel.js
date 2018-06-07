@@ -4,8 +4,7 @@ import createClassString from "classnames";
 import _ from "underscore";
 // import * as contextActions from "../actions/context";
 import * as routingActions from "../actions/routing";
-import { createStream } from "./actions";
-import { setUserPreference } from "./actions";
+import { createStream, setCurrentStream, setUserPreference } from "./actions";
 import { getChannelStreamsForTeam, getDirectMessageStreamsForTeam } from "../reducers/streams";
 import Menu from "./Menu";
 import ChannelMenu from "./ChannelMenu";
@@ -251,9 +250,13 @@ const mapStateToProps = ({ context, streams, users, teams, umis, session }) => {
 	};
 };
 
-export default connect(mapStateToProps, {
-	// ...contextActions,
-	createStream,
-	setUserPreference,
-	goToInvitePage: routingActions.goToInvitePage
-})(SimpleChannelPanel);
+export default connect(
+	mapStateToProps,
+	{
+		// ...contextActions,
+		createStream,
+		setUserPreference,
+		setCurrentStream,
+		goToInvitePage: routingActions.goToInvitePage
+	}
+)(SimpleChannelPanel);
