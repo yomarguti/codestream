@@ -112,6 +112,11 @@ export default class CodeStreamApi {
 		const { session } = this.store.getState();
 		return http.put(`/read/${streamId}`, {}, session.accessToken);
 	}
+
+	async saveUserPreference(newPreference) {
+		const { session } = this.store.getState();
+		return http.put("/preferences", newPreference, session.accessToken);
+	}
 }
 
 const backtrackCodeBlockLocations = async (codeBlocks, bufferText, streamId, state, http) => {

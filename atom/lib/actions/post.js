@@ -53,6 +53,8 @@ const fetchOlderPosts = (mostRecentPost, streamId, teamId) => async (
 	getState,
 	{ http }
 ) => {
+	return;
+
 	const { context, session } = getState();
 	let url = `/posts?teamId=${teamId}&streamId=${streamId}&withMarkers&commitHash=${
 		context.currentCommit

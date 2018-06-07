@@ -78,6 +78,9 @@ export default class WorkspaceApi implements Resource {
 				case "mark-stream-read": {
 					return this.api.markStreamRead(params);
 				}
+				case "save-user-preference": {
+					return this.api.saveUserPreference(params);
+				}
 			}
 		}
 	};
