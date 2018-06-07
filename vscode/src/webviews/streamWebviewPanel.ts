@@ -401,8 +401,7 @@ export class StreamWebviewPanel extends Disposable {
             streamThread.stream.posts.entities(),
             this.session.repos.entities(),
             this.session.teams.entities(),
-            this.session.users.entities(),
-            Functions.wait(2000)
+            this.session.users.entities()
         ]);
 
         const state: BootstrapState = Object.create(null);
