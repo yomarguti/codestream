@@ -1,14 +1,12 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
-import withRepositories from "./withRepositories";
 import * as contextActions from "../actions/context";
-import _ from "underscore-plus";
-import { createStream } from "../actions/stream";
+import _ from "underscore";
+import { createStream } from "./actions";
 import createClassString from "classnames";
 import { getDirectMessageStreamsForTeam } from "../reducers/streams";
-import Button from "./onboarding/Button";
+import Button from "./Button";
 import { FormattedMessage } from "react-intl";
-import UnexpectedErrorMessage from "./onboarding/UnexpectedErrorMessage";
 const { CompositeDisposable } = require("atom");
 import Select from "react-select";
 
@@ -148,8 +146,8 @@ export class SimpleCreateDMPanel extends Component {
 					<FormattedMessage id="login.invalid" />
 				</span>
 			);
-		if (this.props.errors.unknown)
-			return <UnexpectedErrorMessage classes="error-message page-error" />;
+		// if (this.props.errors.unknown)
+		// return <UnexpectedErrorMessage classes="error-message page-error" />;
 	};
 
 	resetForm = () => {

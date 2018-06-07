@@ -2,8 +2,8 @@ import React, { Component } from "react";
 import { connect } from "react-redux";
 import Menu from "./Menu";
 import * as contextActions from "../actions/context";
-import * as userActions from "../actions/user";
-import * as streamActions from "../actions/stream";
+// import * as userActions from "../actions/user";
+import * as streamActions from "./actions";
 
 export class SimpleChannelMenu extends Component {
 	constructor(props) {

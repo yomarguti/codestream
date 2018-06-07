@@ -569,7 +569,8 @@ export class SimpleStream extends Component {
 
 	findMyPostBeforeSeqNum(seqNum) {
 		const me = this.props.currentUser.username;
-		return _.chain(this.props.posts)
+		return _
+			.chain(this.props.posts)
 			.filter(post => {
 				return post.author.username === me && post.seqNum < seqNum;
 			})
@@ -1049,7 +1050,10 @@ const mapStateToProps = ({
 	};
 };
 
-export default connect(mapStateToProps, {
-	...actions,
-	goToInvitePage
-})(SimpleStream);
+export default connect(
+	mapStateToProps,
+	{
+		...actions,
+		goToInvitePage
+	}
+)(SimpleStream);

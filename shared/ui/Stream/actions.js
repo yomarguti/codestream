@@ -66,3 +66,7 @@ export const deletePost = () => {
 export const setUserPreference = () => {
 	// TODO
 };
+
+export const createStream = () => {
+	// TODO
+};

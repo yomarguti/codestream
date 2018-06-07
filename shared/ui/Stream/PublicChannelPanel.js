@@ -1,16 +1,13 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
-import withRepositories from "./withRepositories";
 import * as contextActions from "../actions/context";
-import * as streamActions from "../actions/stream";
+import * as streamActions from "./actions";
 import createClassString from "classnames";
 import { getChannelStreamsForTeam, getPublicChannelStreamsForTeam } from "../reducers/streams";
-import Button from "./onboarding/Button";
+import Button from "./Button";
 import { FormattedMessage } from "react-intl";
-import UnexpectedErrorMessage from "./onboarding/UnexpectedErrorMessage";
-const { CompositeDisposable } = require("atom");
 import * as routingActions from "../actions/routing";
-import _ from "underscore-plus";
+import _ from "underscore";
 
 export class SimplePublicChannelPanel extends Component {
 	constructor(props) {
