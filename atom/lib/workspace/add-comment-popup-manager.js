@@ -57,7 +57,7 @@ export default class AddCommentPopupManager {
 			atom.commands.add("atom-workspace", "codestream:comment", {
 				didDispatch: _event => this.onSelected()
 			}),
-			atom.workspace.observeActiveTextEditor(editor => {
+			atom.workspace.observeActiveTextEditor((editor?: TextEditor) => {
 				if (
 					editor &&
 					!this.markers.has(editor.id) &&
@@ -69,9 +69,7 @@ export default class AddCommentPopupManager {
 
 					this.subscriptions.add(
 						editor.onDidDestroy(() => this.markers.delete(id)),
-						editor.onDidChangeSelectionRange(event =>
-							this.handleChangeSelection(id, marker, event)
-						),
+						editor.onDidChangeSelectionRange(event => this.handleChangeSelection(id, event)),
 						marker.onDidDestroy(() => {
 							// decoration will be destroyed automatically
 							const { tooltip } = marker.getProperties();
@@ -84,7 +82,7 @@ export default class AddCommentPopupManager {
 		);
 	}
 
-	createMarker(editor: TextEditor) {
+	createMarker(editor: TextEditor): DisplayMarker {
 		const marker = editor.markBufferRange([[0, 0], [0, 0]], { invalidate: "never" });
 		const item = document.createElement("div");
 		item.className = "codestream-comment-popup";
@@ -97,7 +95,7 @@ export default class AddCommentPopupManager {
 		return marker;
 	}
 
-	handleChangeSelection(editorId: number, marker: DisplayMarker, event) {
+	handleChangeSelection(editorId: number, event) {
 		const editor = atom.workspace.getTextEditors().find(editor => editor.id === editorId);
 		if (editor) {
 			const selectedLength = editor.getSelectedText().length;
@@ -110,6 +108,11 @@ export default class AddCommentPopupManager {
 				let row = range.start.row > range.end.row ? range.end.row : range.start.row;
 				let startRange = [[row, 0], [row, 0]];
 
+				let marker = this.markers.get(editorId);
+				if (!marker) {
+					marker = this.createMarker(editor);
+					this.markers.set(editorId, marker);
+				}
 				const decoration = editor.decorateMarker(marker, {
 					item: marker.getProperties().item,
 					type: "overlay",
@@ -118,7 +121,8 @@ export default class AddCommentPopupManager {
 				marker.setBufferRange(startRange);
 				marker.setProperties({ decoration });
 			} else {
-				this.hideMarker(marker);
+				const marker = this.markers.get(editorId);
+				if (marker) this.hideMarker(marker);
 			}
 		}
 	}
