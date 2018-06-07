@@ -58,3 +58,7 @@ export const editPost = () => {
 export const deletePost = () => {
 	// TODO
 };
+
+export const setUserPreference = () => {
+	// TODO
+};
