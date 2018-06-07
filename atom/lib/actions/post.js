@@ -2,18 +2,11 @@ import Raven from "raven-js";
 import { upsert } from "../local-cache";
 import { normalize } from "./utils";
 import * as pubnubActions from "./pubnub-event";
-import { calculateLocations, saveUncommittedLocations } from "./marker-location";
-import { fetchTeamStreams, saveStreams } from "./stream";
+import { calculateLocations } from "./marker-location";
+import { fetchTeamStreams } from "./stream";
 import { saveMarkers } from "./marker";
 import { saveMarkerLocations } from "./marker-location";
 import { getStreamForTeam } from "../reducers/streams";
-import MarkerLocationFinder from "../git/MarkerLocationFinder";
-import { open as openRepo } from "../git/GitRepo";
-
-const createTempId = (() => {
-	let count = new Date().getTime();
-	return () => String(count++);
-})();
 
 const pendingPostFailed = post => ({ type: "PENDING_POST_FAILED", payload: post });
 
@@ -125,165 +118,6 @@ export const savePostsForStream = (streamId, attributes) => (dispatch, getState,
 	);
 };
 
-export const savePendingPost = attributes => (dispatch, getState, { db }) => {
-	return upsert(db, "posts", { ...attributes, pending: true }).then(post => {
-		dispatch({
-			type: "ADD_PENDING_POST",
-			payload: post
-		});
-	});
-};
-
-export const createPost = (
-	streamId,
-	parentPostId,
-	text,
-	codeBlocks,
-	mentions,
-	bufferText,
-	extra
-) => async (dispatch, getState, { http }) => {
-	const state = getState();
-	const { session, context, repoAttributes } = state;
-	const pendingId = createTempId();
-
-	const gitRepo = await openRepo(repoAttributes.workingDirectory);
-	const filePath = context.currentFile;
-	const isTrackedFile = await gitRepo.isTracked(filePath);
-	const uncommittedLocations = [];
-	let hasUncommittedLocation = false;
-	if (isTrackedFile) {
-		for (let i = 0; i < codeBlocks.length; i++) {
-			const codeBlock = codeBlocks[i];
-			const backtrackedLocations = await backtrackCodeBlockLocations(
-				codeBlocks,
-				bufferText,
-				codeBlock.streamId,
-				state,
-				http
-			);
-			const lastCommitLocation = backtrackedLocations[i];
-			const meta = lastCommitLocation[4] || {};
-			if (meta.startWasDeleted || meta.endWasDeleted) {
-				hasUncommittedLocation = true;
-			}
-			uncommittedLocations.push(codeBlock.location);
-			codeBlock.location = lastCommitLocation;
-		}
-	} else {
-		for (const codeBlock of codeBlocks) {
-			hasUncommittedLocation = true;
-			uncommittedLocations.push(codeBlock.location);
-			delete codeBlock.location;
-		}
-	}
-
-	const post = {
-		id: pendingId,
-		teamId: context.currentTeamId,
-		timestamp: new Date().getTime(),
-		creatorId: session.userId,
-		parentPostId: parentPostId,
-		codeBlocks: codeBlocks,
-		commitHashWhenPosted: context.currentCommit,
-		mentionedUserIds: mentions && mentions.length ? mentions : null,
-		text
-	};
-
-	if (streamId) {
-		post.streamId = streamId;
-	} else
-		post.stream = {
-			teamId: context.currentTeamId,
-			type: "file",
-			file: filePath,
-			repoId: context.currentRepoId
-		};
-
-	// console.log("SAVING PENDING POST", post);
-	dispatch(savePendingPost({ ...post }));
-
-	try {
-		const data = await http.post("/posts", post, session.accessToken);
-		if (hasUncommittedLocation) {
-			dispatch(
-				saveUncommittedLocations({
-					...data,
-					filePath,
-					bufferText,
-					uncommittedLocations
-				})
-			);
-		}
-		let streams = data.streams || [];
-		if (data.stream) data.streams.push(data.stream);
-		if (streams.length > 0) dispatch(saveStreams(normalize(streams)));
-		dispatch(resolvePendingPost(pendingId, normalize(data.post)));
-		dispatch({ type: "POST_CREATED", meta: { post: data.post, ...extra } });
-	} catch (error) {
-		if (http.isApiRequestError(error)) {
-			Raven.captureMessage(error.data.message, {
-				logger: "actions/post",
-				extra: { error: error.data }
-			});
-		}
-		// TODO: different types of errors?
-		dispatch(rejectPendingPost(pendingId, { ...post, error: true }));
-	}
-};
-
-export const createSystemPost = (streamId, parentPostId, text, seqNum) => async (
-	dispatch,
-	getState,
-	{ http }
-) => {
-	const state = getState();
-	const { session, context, repoAttributes } = state;
-	const pendingId = createTempId();
-
-	const post = {
-		id: pendingId,
-		teamId: context.currentTeamId,
-		timestamp: new Date().getTime(),
-		createdAt: new Date().getTime(),
-		creatorId: "codestream",
-		parentPostId: parentPostId,
-		streamId,
-		seqNum,
-		text
-	};
-
-	// dispatch(savePendingPost({ ...post }));
-	dispatch({
-		type: "ADD_POST",
-		payload: post
-	});
-
-	// dispatch(resolvePendingPost(pendingId, normalize(data.post)));
-};
-
-const backtrackCodeBlockLocations = async (codeBlocks, bufferText, streamId, state, http) => {
-	const { context, repoAttributes, session } = state;
-	const gitRepo = await openRepo(repoAttributes.workingDirectory);
-	const locations = codeBlocks.map(codeBlock => codeBlock.location);
-	console.log("GETTING A FINDER WITH: ", streamId);
-	const locationFinder = new MarkerLocationFinder({
-		filePath: context.currentFile,
-		gitRepo,
-		http,
-		accessToken: session.accessToken,
-		teamId: context.currentTeamId,
-		streamId
-	});
-	console.log("DONE");
-
-	const backtrackedLocations = await locationFinder.backtrackLocationsAtCurrentCommit(
-		locations,
-		bufferText
-	);
-	return backtrackedLocations;
-};
-
 export const resolveFromPubnub = (post, isHistory) => async (dispatch, getState) => {
 	Raven.captureBreadcrumb({
 		message: "Attempting to resolve a post from pubnub.",
@@ -292,7 +126,7 @@ export const resolveFromPubnub = (post, isHistory) => async (dispatch, getState)
 
 	const { session } = getState();
 	const isNotFromCurrentUser = post.creatorId !== session.userId;
-	const isFromEmailOrSlack = !Boolean(post.commitHashWhenPosted); // crude. right now posts from email won't ever have commit context
+	const isFromEmailOrSlack = !post.commitHashWhenPosted; // crude. right now posts from email won't ever have commit context
 
 	if (isHistory || isNotFromCurrentUser || isFromEmailOrSlack) {
 		Raven.captureBreadcrumb({
@@ -321,18 +155,6 @@ const resolvePendingPost = (id, resolvedPost) => (dispatch, getState, { db }) =>
 		);
 };
 
-export const rejectPendingPost = pendingId => (dispatch, getState, { db }) => {
-	return upsert(db, "posts", { id: pendingId, error: true }).then(post =>
-		dispatch(pendingPostFailed(post))
-	);
-};
-
-export const cancelPost = pendingId => async (dispatch, getState, { db }) => {
-	return db.posts
-		.delete(pendingId)
-		.then(() => dispatch({ type: "CANCEL_PENDING_POST", payload: pendingId }));
-};
-
 export const retryPost = pendingId => async (dispatch, getState, { db, http }) => {
 	const pendingPost = await db.posts.get(pendingId);
 	return http
@@ -359,7 +181,7 @@ export const retryPost = pendingId => async (dispatch, getState, { db, http }) =
 };
 
 export const editPost = (postId, text, mentions) => async (dispatch, getState, { http }) => {
-	const { session, context } = getState();
+	const { session } = getState();
 
 	const delta = {
 		text,
@@ -375,7 +197,7 @@ export const editPost = (postId, text, mentions) => async (dispatch, getState, {
 };
 
 export const deletePost = postId => async (dispatch, getState, { http }) => {
-	const { session, context } = getState();
+	const { session } = getState();
 	try {
 		const data = await http.deactivate("/posts/" + postId, {}, session.accessToken);
 	} catch (error) {
