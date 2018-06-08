@@ -1,17 +1,23 @@
 'use strict';
 
 import {
-    ClientCapabilities, Connection, createConnection,
-    DidChangeConfigurationNotification, DidChangeConfigurationParams, DidChangeWatchedFilesParams, Disposable,
-    InitializeParams, InitializeResult,
+    ClientCapabilities,
+    Connection,
+    createConnection,
+    DidChangeConfigurationNotification,
+    DidChangeConfigurationParams,
+    DidChangeWatchedFilesParams,
+    Disposable,
+    InitializeParams,
+    InitializeResult,
     ProposedFeatures,
-    TextDocumentPositionParams, TextDocuments,
+    TextDocumentPositionParams,
+    TextDocuments,
     WorkspaceFoldersChangeEvent
 } from 'vscode-languageserver';
 import { memoize } from './system';
 
 class Server implements Disposable {
-
     private readonly _connection: Connection;
     private _disposables: Disposable[] | undefined;
     private _clientCapabilities: ClientCapabilities | undefined;
@@ -55,11 +61,21 @@ class Server implements Disposable {
 
         if (this.supportsConfiguration) {
             // Register for all configuration changes
-            subscriptions.push(await this._connection.client.register(DidChangeConfigurationNotification.type, undefined));
+            subscriptions.push(
+                await this._connection.client.register(
+                    DidChangeConfigurationNotification.type,
+                    undefined
+                )
+            );
         }
 
         if (this.supportsWorkspaces) {
-            subscriptions.push(this._connection.workspace.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this));
+            subscriptions.push(
+                this._connection.workspace.onDidChangeWorkspaceFolders(
+                    this.onWorkspaceFoldersChanged,
+                    this
+                )
+            );
         }
 
         this._disposables = subscriptions;
@@ -90,12 +106,22 @@ class Server implements Disposable {
 
     @memoize
     get supportsConfiguration() {
-        return (this._clientCapabilities && this._clientCapabilities.workspace && !!this._clientCapabilities.workspace.configuration) || false;
+        return (
+            (this._clientCapabilities &&
+                this._clientCapabilities.workspace &&
+                !!this._clientCapabilities.workspace.configuration) ||
+            false
+        );
     }
 
     @memoize
     get supportsWorkspaces() {
-        return (this._clientCapabilities && this._clientCapabilities.workspace && !!this._clientCapabilities.workspace.workspaceFolders) || false;
+        return (
+            (this._clientCapabilities &&
+                this._clientCapabilities.workspace &&
+                !!this._clientCapabilities.workspace.workspaceFolders) ||
+            false
+        );
     }
 
     listen() {
