@@ -19,12 +19,14 @@ import { NotificationsController } from "./controllers/notificationsController";
 import { StatusBarController } from "./controllers/statusBarController";
 import { StreamViewController } from "./controllers/streamViewController";
 import { CodeStreamBot } from "./codestreamBot";
+import { LanguageClient } from "vscode-languageclient";
 // import { UnreadDecorationProvider } from './providers/decorationProvider';
 
 export class Container {
-	static async initialize(context: ExtensionContext, config: Config) {
+	static async initialize(context: ExtensionContext, config: Config, agent: LanguageClient) {
 		this._context = context;
 		this._config = config;
+		this._agent = agent;
 
 		context.subscriptions.push((this._git = new GitService()));
 		context.subscriptions.push((this._session = new CodeStreamSession(config.serverUrl)));
@@ -61,6 +63,11 @@ export class Container {
 		}
 
 		context.subscriptions.push((this._bot = new CodeStreamBot()));
+	}
+
+	private static _agent: LanguageClient;
+	static get agent() {
+		return this._agent;
 	}
 
 	private static _bot: CodeStreamBot;
