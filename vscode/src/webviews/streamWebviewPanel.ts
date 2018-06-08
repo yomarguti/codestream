@@ -129,7 +129,7 @@ interface BootstrapState {
 interface CSWebviewRequest {
 	type: string;
 	body: any;
-	id: string;
+	id?: string;
 }
 
 export class StreamWebviewPanel extends Disposable {
@@ -215,6 +215,8 @@ export class StreamWebviewPanel extends Disposable {
 								payload: post.entity
 							}
 						});
+						break;
+
 					case "mark-stream-read":
 						const response = await this._streamThread.stream.markRead();
 						this.postMessage({
@@ -222,6 +224,7 @@ export class StreamWebviewPanel extends Disposable {
 							type: "codestream:response",
 							body: response
 						});
+						break;
 				}
 				break;
 
