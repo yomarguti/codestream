@@ -86,8 +86,4 @@ export default class Menu extends Component {
 		this.props.action(item.disabled ? null : item.action);
 		event.stopPropagation();
 	};
-
-	handleClick = async event => {
-		console.log("CLICK ON MENU: " + event.target.innerHTML);
-	};
 }

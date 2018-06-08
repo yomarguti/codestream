@@ -129,9 +129,10 @@ export const createStream = attributes => async (dispatch, getState, { api }) =>
 		stream.name = attributes.name;
 		stream.privacy = attributes.privacy;
 	}
-	if (attributes.memberIds) {
-		stream.memberIds = attributes.memberIds;
-	}
+	if (attributes.memberIds) stream.memberIds = attributes.memberIds;
+	if (attributes.purpose) stream.purpose = attributes.purpose;
+
+	console.log("Creating a stream: ", stream);
 	try {
 		const returnStream = await api.createStream(stream);
 		dispatch(setCurrentStream(returnStream._id));

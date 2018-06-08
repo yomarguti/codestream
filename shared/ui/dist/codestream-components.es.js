@@ -23314,30 +23314,31 @@ var createStream = function createStream(attributes) {
 								stream.name = attributes.name;
 								stream.privacy = attributes.privacy;
 							}
-							if (attributes.memberIds) {
-								stream.memberIds = attributes.memberIds;
-							}
-							_context3.prev = 4;
-							_context3.next = 7;
+							if (attributes.memberIds) stream.memberIds = attributes.memberIds;
+							if (attributes.purpose) stream.purpose = attributes.purpose;
+
+							console.log("Creating a stream: ", stream);
+							_context3.prev = 6;
+							_context3.next = 9;
 							return api.createStream(stream);
 
-						case 7:
+						case 9:
 							returnStream = _context3.sent;
 
 							dispatch(setCurrentStream(returnStream._id));
-							_context3.next = 13;
+							_context3.next = 15;
 							break;
 
-						case 11:
-							_context3.prev = 11;
-							_context3.t0 = _context3["catch"](4);
-
 						case 13:
+							_context3.prev = 13;
+							_context3.t0 = _context3["catch"](6);
+
+						case 15:
 						case "end":
 							return _context3.stop();
 					}
 				}
-			}, _callee3, _this, [[4, 11]]);
+			}, _callee3, _this, [[6, 13]]);
 		}));
 
 		return function (_x7, _x8, _x9) {
@@ -40759,32 +40760,6 @@ var Menu = function (_Component) {
 				return value;
 			}()
 		});
-		Object.defineProperty(_this, "handleClick", {
-			enumerable: true,
-			writable: true,
-			value: function () {
-				var _ref2 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(event) {
-					return regeneratorRuntime.wrap(function _callee2$(_context2) {
-						while (1) {
-							switch (_context2.prev = _context2.next) {
-								case 0:
-									console.log("CLICK ON MENU: " + event.target.innerHTML);
-
-								case 1:
-								case "end":
-									return _context2.stop();
-							}
-						}
-					}, _callee2, _this2);
-				}));
-
-				function value(_x3) {
-					return _ref2.apply(this, arguments);
-				}
-
-				return value;
-			}()
-		});
 
 		_this.state = { selected: props.selected };
 		_this.el = document.createElement("div");
@@ -40841,8 +40816,8 @@ var Menu = function (_Component) {
 			var count = 0;
 			return reactDom.createPortal(react.createElement(
 				"div",
-				{ className: "menu-popup", ref: function ref(_ref3) {
-						return _this4._div = _ref3;
+				{ className: "menu-popup", ref: function ref(_ref2) {
+						return _this4._div = _ref2;
 					} },
 				react.createElement(
 					"div",
@@ -47269,6 +47244,7 @@ var SimpleCreateChannelPanel = function (_Component) {
 				_this.setState({
 					privacy: "public",
 					name: "",
+					purpose: "",
 					members: [],
 					nameTouched: false,
 					formTouched: false
@@ -47300,13 +47276,14 @@ var SimpleCreateChannelPanel = function (_Component) {
 				var _this$state2 = _this.state,
 				    privacy = _this$state2.privacy,
 				    name = _this$state2.name,
-				    members = _this$state2.members;
+				    members = _this$state2.members,
+				    purpose = _this$state2.purpose;
 
 				var memberIds = (members || []).map(function (member) {
 					return member.value;
 				});
 
-				_this.props.createStream({ type: "channel", privacy: privacy, name: name, memberIds: memberIds });
+				_this.props.createStream({ type: "channel", privacy: privacy, name: name, memberIds: memberIds, purpose: purpose });
 				_this.resetForm();
 				// this.props.setActivePanel("channels");
 			}
@@ -47489,7 +47466,7 @@ var SimpleCreateChannelPanel = function (_Component) {
 									{
 										id: "save-button",
 										className: "control-button",
-										tabIndex: "2",
+										tabIndex: "4",
 										type: "submit",
 										loading: this.props.loading,
 										onClick: this.handleClickCreateChannel
@@ -47501,7 +47478,7 @@ var SimpleCreateChannelPanel = function (_Component) {
 									{
 										id: "discard-button",
 										className: "control-button cancel",
-										tabIndex: "2",
+										tabIndex: "5",
 										type: "submit",
 										loading: this.props.loading,
 										onClick: this.handleClickCancel

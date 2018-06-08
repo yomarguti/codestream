@@ -122,7 +122,7 @@ export class SimpleCreateChannelPanel extends Component {
 								<Button
 									id="save-button"
 									className="control-button"
-									tabIndex="2"
+									tabIndex="4"
 									type="submit"
 									loading={this.props.loading}
 									onClick={this.handleClickCreateChannel}
@@ -132,7 +132,7 @@ export class SimpleCreateChannelPanel extends Component {
 								<Button
 									id="discard-button"
 									className="control-button cancel"
-									tabIndex="2"
+									tabIndex="5"
 									type="submit"
 									loading={this.props.loading}
 									onClick={this.handleClickCancel}
@@ -181,6 +181,7 @@ export class SimpleCreateChannelPanel extends Component {
 		this.setState({
 			privacy: "public",
 			name: "",
+			purpose: "",
 			members: [],
 			nameTouched: false,
 			formTouched: false
@@ -200,12 +201,12 @@ export class SimpleCreateChannelPanel extends Component {
 		this.setState({ formTouched: true });
 		if (this.isFormInvalid()) return;
 
-		const { privacy, name, members } = this.state;
+		const { privacy, name, members, purpose } = this.state;
 		const memberIds = (members || []).map(member => {
 			return member.value;
 		});
 
-		this.props.createStream({ type: "channel", privacy, name, memberIds });
+		this.props.createStream({ type: "channel", privacy, name, memberIds, purpose });
 		this.resetForm();
 		// this.props.setActivePanel("channels");
 	};
@@ -229,7 +230,10 @@ const mapStateToProps = ({ context, streams, users, teams }) => {
 	};
 };
 
-export default connect(mapStateToProps, {
-	...contextActions,
-	createStream
-})(SimpleCreateChannelPanel);
+export default connect(
+	mapStateToProps,
+	{
+		...contextActions,
+		createStream
+	}
+)(SimpleCreateChannelPanel);
