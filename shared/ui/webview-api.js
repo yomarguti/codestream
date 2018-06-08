@@ -38,6 +38,11 @@ export default class WebviewApi {
 		return this.postMessage({ action: "create-post", params: post });
 	}
 
+	createStream(stream) {
+		console.log("sent the stream request");
+		return this.postMessage({ action: "create-stream", params: stream });
+	}
+
 	markStreamRead(streamId) {
 		return this.postMessage({ action: "mark-stream-read", params: streamId });
 	}

@@ -118,8 +118,24 @@ export const setUserPreference = (prefPath, value) => (dispatch, getState, { api
 	// dispatch(saveUser(normalize(user)));
 };
 
-export const createStream = () => {
-	// TODO
+export const createStream = attributes => async (dispatch, getState, { api }) => {
+	const { context, session } = getState();
+
+	const stream = {
+		teamId: context.currentTeamId,
+		type: attributes.type
+	};
+	if (attributes.type === "channel") {
+		stream.name = attributes.name;
+		stream.privacy = attributes.privacy;
+	}
+	if (attributes.memberIds) {
+		stream.memberIds = attributes.memberIds;
+	}
+	try {
+		const returnStream = await api.createStream(stream);
+		dispatch(setCurrentStream(returnStream._id));
+	} catch (error) {}
 };
 
 export const setCurrentStream = streamId => async dispatch => {

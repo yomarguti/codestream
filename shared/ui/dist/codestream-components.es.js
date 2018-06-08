@@ -36,7 +36,7 @@ var _descriptors = !_fails(function () {
 });
 
 var _core = createCommonjsModule(function (module) {
-var core = module.exports = { version: '2.5.6' };
+var core = module.exports = { version: '2.5.7' };
 if (typeof __e == 'number') __e = core; // eslint-disable-line no-undef
 });
 var _core_1 = _core.version;
@@ -4044,12 +4044,12 @@ _export(_export.P + _export.U + _export.F * _fails(function () {
     if ($slice !== undefined && end === undefined) return $slice.call(_anObject(this), start); // FF fix
     var len = _anObject(this).byteLength;
     var first = _toAbsoluteIndex(start, len);
-    var final = _toAbsoluteIndex(end === undefined ? len : end, len);
-    var result = new (_speciesConstructor(this, $ArrayBuffer))(_toLength(final - first));
+    var fin = _toAbsoluteIndex(end === undefined ? len : end, len);
+    var result = new (_speciesConstructor(this, $ArrayBuffer))(_toLength(fin - first));
     var viewS = new $DataView(this);
     var viewT = new $DataView(result);
     var index = 0;
-    while (first < final) {
+    while (first < fin) {
       viewT.setUint8(index++, viewS.getUint8(first++));
     } return result;
   }
@@ -7489,19 +7489,19 @@ emptyFunction.thatReturnsArgument = function (arg) {
 
 var emptyFunction_1 = emptyFunction;
 
-var r="function"===typeof Symbol&&Symbol["for"],t=r?Symbol["for"]("react.element"):60103,u=r?Symbol["for"]("react.portal"):60106,v=r?Symbol["for"]("react.fragment"):60107,w=r?Symbol["for"]("react.strict_mode"):60108,x=r?Symbol["for"]("react.provider"):60109,y=r?Symbol["for"]("react.context"):60110,z=r?Symbol["for"]("react.async_mode"):60111,A=r?Symbol["for"]("react.forward_ref"):
-60112,B="function"===typeof Symbol&&Symbol.iterator;function C(a){for(var b=arguments.length-1,e="http://reactjs.org/docs/error-decoder.html?invariant\x3d"+a,c=0;c<b;c++)e+="\x26args[]\x3d"+encodeURIComponent(arguments[c+1]);invariant_1(!1,"Minified React error #"+a+"; visit %s for the full message or use the non-minified dev environment for full errors and additional helpful warnings. ",e);}var D={isMounted:function(){return !1},enqueueForceUpdate:function(){},enqueueReplaceState:function(){},enqueueSetState:function(){}};
-function E(a,b,e){this.props=a;this.context=b;this.refs=emptyObject_1;this.updater=e||D;}E.prototype.isReactComponent={};E.prototype.setState=function(a,b){"object"!==typeof a&&"function"!==typeof a&&null!=a?C("85"):void 0;this.updater.enqueueSetState(this,a,b,"setState");};E.prototype.forceUpdate=function(a){this.updater.enqueueForceUpdate(this,a,"forceUpdate");};function F(){}F.prototype=E.prototype;function G(a,b,e){this.props=a;this.context=b;this.refs=emptyObject_1;this.updater=e||D;}var H=G.prototype=new F;
-H.constructor=G;objectAssign(H,E.prototype);H.isPureReactComponent=!0;var I={current:null},J=Object.prototype.hasOwnProperty,K={key:!0,ref:!0,__self:!0,__source:!0};
-function L(a,b,e){var c=void 0,d={},g=null,h=null;if(null!=b)for(c in void 0!==b.ref&&(h=b.ref),void 0!==b.key&&(g=""+b.key),b)J.call(b,c)&&!K.hasOwnProperty(c)&&(d[c]=b[c]);var f=arguments.length-2;if(1===f)d.children=e;else if(1<f){for(var k=Array(f),l=0;l<f;l++)k[l]=arguments[l+2];d.children=k;}if(a&&a.defaultProps)for(c in f=a.defaultProps,f)void 0===d[c]&&(d[c]=f[c]);return {$$typeof:t,type:a,key:g,ref:h,props:d,_owner:I.current}}
-function M(a){return "object"===typeof a&&null!==a&&a.$$typeof===t}function escape$1(a){var b={"\x3d":"\x3d0",":":"\x3d2"};return "$"+(""+a).replace(/[=:]/g,function(a){return b[a]})}var N=/\/+/g,O=[];function P(a,b,e,c){if(O.length){var d=O.pop();d.result=a;d.keyPrefix=b;d.func=e;d.context=c;d.count=0;return d}return {result:a,keyPrefix:b,func:e,context:c,count:0}}function Q(a){a.result=null;a.keyPrefix=null;a.func=null;a.context=null;a.count=0;10>O.length&&O.push(a);}
-function R(a,b,e,c){var d=typeof a;if("undefined"===d||"boolean"===d)a=null;var g=!1;if(null===a)g=!0;else switch(d){case "string":case "number":g=!0;break;case "object":switch(a.$$typeof){case t:case u:g=!0;}}if(g)return e(c,a,""===b?"."+S(a,0):b),1;g=0;b=""===b?".":b+":";if(Array.isArray(a))for(var h=0;h<a.length;h++){d=a[h];var f=b+S(d,h);g+=R(d,f,e,c);}else if(null===a||"undefined"===typeof a?f=null:(f=B&&a[B]||a["@@iterator"],f="function"===typeof f?f:null),"function"===typeof f)for(a=f.call(a),
-h=0;!(d=a.next()).done;)d=d.value,f=b+S(d,h++),g+=R(d,f,e,c);else"object"===d&&(e=""+a,C("31","[object Object]"===e?"object with keys {"+Object.keys(a).join(", ")+"}":e,""));return g}function S(a,b){return "object"===typeof a&&null!==a&&null!=a.key?escape$1(a.key):b.toString(36)}function T(a,b){a.func.call(a.context,b,a.count++);}
-function U(a,b,e){var c=a.result,d=a.keyPrefix;a=a.func.call(a.context,b,a.count++);Array.isArray(a)?V(a,c,e,emptyFunction_1.thatReturnsArgument):null!=a&&(M(a)&&(b=d+(!a.key||b&&b.key===a.key?"":(""+a.key).replace(N,"$\x26/")+"/")+e,a={$$typeof:t,type:a.type,key:b,ref:a.ref,props:a.props,_owner:a._owner}),c.push(a));}function V(a,b,e,c,d){var g="";null!=e&&(g=(""+e).replace(N,"$\x26/")+"/");b=P(b,g,c,d);null==a||R(a,"",U,b);Q(b);}
-var W={Children:{map:function(a,b,e){if(null==a)return a;var c=[];V(a,c,null,b,e);return c},forEach:function(a,b,e){if(null==a)return a;b=P(null,null,b,e);null==a||R(a,"",T,b);Q(b);},count:function(a){return null==a?0:R(a,"",emptyFunction_1.thatReturnsNull,null)},toArray:function(a){var b=[];V(a,b,null,emptyFunction_1.thatReturnsArgument);return b},only:function(a){M(a)?void 0:C("143");return a}},createRef:function(){return {current:null}},Component:E,PureComponent:G,createContext:function(a,b){void 0===b&&(b=null);a={$$typeof:y,
-_calculateChangedBits:b,_defaultValue:a,_currentValue:a,_changedBits:0,Provider:null,Consumer:null};a.Provider={$$typeof:x,_context:a};return a.Consumer=a},forwardRef:function(a){return {$$typeof:A,render:a}},Fragment:v,StrictMode:w,unstable_AsyncMode:z,createElement:L,cloneElement:function(a,b,e){null===a||void 0===a?C("267",a):void 0;var c=void 0,d=objectAssign({},a.props),g=a.key,h=a.ref,f=a._owner;if(null!=b){void 0!==b.ref&&(h=b.ref,f=I.current);void 0!==b.key&&(g=""+b.key);var k=void 0;a.type&&a.type.defaultProps&&
-(k=a.type.defaultProps);for(c in b)J.call(b,c)&&!K.hasOwnProperty(c)&&(d[c]=void 0===b[c]&&void 0!==k?k[c]:b[c]);}c=arguments.length-2;if(1===c)d.children=e;else if(1<c){k=Array(c);for(var l=0;l<c;l++)k[l]=arguments[l+2];d.children=k;}return {$$typeof:t,type:a.type,key:g,ref:h,props:d,_owner:f}},createFactory:function(a){var b=L.bind(null,a);b.type=a;return b},isValidElement:M,version:"16.3.2",__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED:{ReactCurrentOwner:I,assign:objectAssign}},X=Object.freeze({default:W}),
-Y=X&&W||X;var react_production_min=Y["default"]?Y["default"]:Y;
+var r="function"===typeof Symbol&&Symbol.for,t=r?Symbol.for("react.element"):60103,u=r?Symbol.for("react.portal"):60106,v=r?Symbol.for("react.fragment"):60107,w=r?Symbol.for("react.strict_mode"):60108,x=r?Symbol.for("react.profiler"):60114,y=r?Symbol.for("react.provider"):60109,z=r?Symbol.for("react.context"):60110,A=r?Symbol.for("react.async_mode"):60111,B=
+r?Symbol.for("react.forward_ref"):60112;var C="function"===typeof Symbol&&Symbol.iterator;function D(a){for(var b=arguments.length-1,e="https://reactjs.org/docs/error-decoder.html?invariant="+a,c=0;c<b;c++)e+="&args[]="+encodeURIComponent(arguments[c+1]);invariant_1(!1,"Minified React error #"+a+"; visit %s for the full message or use the non-minified dev environment for full errors and additional helpful warnings. ",e);}
+var E={isMounted:function(){return !1},enqueueForceUpdate:function(){},enqueueReplaceState:function(){},enqueueSetState:function(){}};function F(a,b,e){this.props=a;this.context=b;this.refs=emptyObject_1;this.updater=e||E;}F.prototype.isReactComponent={};F.prototype.setState=function(a,b){"object"!==typeof a&&"function"!==typeof a&&null!=a?D("85"):void 0;this.updater.enqueueSetState(this,a,b,"setState");};F.prototype.forceUpdate=function(a){this.updater.enqueueForceUpdate(this,a,"forceUpdate");};function G(){}
+G.prototype=F.prototype;function H(a,b,e){this.props=a;this.context=b;this.refs=emptyObject_1;this.updater=e||E;}var I=H.prototype=new G;I.constructor=H;objectAssign(I,F.prototype);I.isPureReactComponent=!0;var J={current:null},K=Object.prototype.hasOwnProperty,L={key:!0,ref:!0,__self:!0,__source:!0};
+function M(a,b,e){var c=void 0,d={},g=null,h=null;if(null!=b)for(c in void 0!==b.ref&&(h=b.ref),void 0!==b.key&&(g=""+b.key),b)K.call(b,c)&&!L.hasOwnProperty(c)&&(d[c]=b[c]);var f=arguments.length-2;if(1===f)d.children=e;else if(1<f){for(var l=Array(f),m=0;m<f;m++)l[m]=arguments[m+2];d.children=l;}if(a&&a.defaultProps)for(c in f=a.defaultProps,f)void 0===d[c]&&(d[c]=f[c]);return {$$typeof:t,type:a,key:g,ref:h,props:d,_owner:J.current}}
+function N(a){return "object"===typeof a&&null!==a&&a.$$typeof===t}function escape$1(a){var b={"=":"=0",":":"=2"};return "$"+(""+a).replace(/[=:]/g,function(a){return b[a]})}var O=/\/+/g,P=[];function Q(a,b,e,c){if(P.length){var d=P.pop();d.result=a;d.keyPrefix=b;d.func=e;d.context=c;d.count=0;return d}return {result:a,keyPrefix:b,func:e,context:c,count:0}}function R(a){a.result=null;a.keyPrefix=null;a.func=null;a.context=null;a.count=0;10>P.length&&P.push(a);}
+function S(a,b,e,c){var d=typeof a;if("undefined"===d||"boolean"===d)a=null;var g=!1;if(null===a)g=!0;else switch(d){case "string":case "number":g=!0;break;case "object":switch(a.$$typeof){case t:case u:g=!0;}}if(g)return e(c,a,""===b?"."+T(a,0):b),1;g=0;b=""===b?".":b+":";if(Array.isArray(a))for(var h=0;h<a.length;h++){d=a[h];var f=b+T(d,h);g+=S(d,f,e,c);}else if(null===a||"undefined"===typeof a?f=null:(f=C&&a[C]||a["@@iterator"],f="function"===typeof f?f:null),"function"===typeof f)for(a=f.call(a),
+h=0;!(d=a.next()).done;)d=d.value,f=b+T(d,h++),g+=S(d,f,e,c);else"object"===d&&(e=""+a,D("31","[object Object]"===e?"object with keys {"+Object.keys(a).join(", ")+"}":e,""));return g}function T(a,b){return "object"===typeof a&&null!==a&&null!=a.key?escape$1(a.key):b.toString(36)}function U(a,b){a.func.call(a.context,b,a.count++);}
+function V(a,b,e){var c=a.result,d=a.keyPrefix;a=a.func.call(a.context,b,a.count++);Array.isArray(a)?W(a,c,e,emptyFunction_1.thatReturnsArgument):null!=a&&(N(a)&&(b=d+(!a.key||b&&b.key===a.key?"":(""+a.key).replace(O,"$&/")+"/")+e,a={$$typeof:t,type:a.type,key:b,ref:a.ref,props:a.props,_owner:a._owner}),c.push(a));}function W(a,b,e,c,d){var g="";null!=e&&(g=(""+e).replace(O,"$&/")+"/");b=Q(b,g,c,d);null==a||S(a,"",V,b);R(b);}
+var X={Children:{map:function(a,b,e){if(null==a)return a;var c=[];W(a,c,null,b,e);return c},forEach:function(a,b,e){if(null==a)return a;b=Q(null,null,b,e);null==a||S(a,"",U,b);R(b);},count:function(a){return null==a?0:S(a,"",emptyFunction_1.thatReturnsNull,null)},toArray:function(a){var b=[];W(a,b,null,emptyFunction_1.thatReturnsArgument);return b},only:function(a){N(a)?void 0:D("143");return a}},createRef:function(){return {current:null}},Component:F,PureComponent:H,createContext:function(a,b){void 0===b&&(b=null);a={$$typeof:z,
+_calculateChangedBits:b,_defaultValue:a,_currentValue:a,_currentValue2:a,_changedBits:0,_changedBits2:0,Provider:null,Consumer:null};a.Provider={$$typeof:y,_context:a};return a.Consumer=a},forwardRef:function(a){return {$$typeof:B,render:a}},Fragment:v,StrictMode:w,unstable_AsyncMode:A,unstable_Profiler:x,createElement:M,cloneElement:function(a,b,e){null===a||void 0===a?D("267",a):void 0;var c=void 0,d=objectAssign({},a.props),g=a.key,h=a.ref,f=a._owner;if(null!=b){void 0!==b.ref&&(h=b.ref,f=J.current);void 0!==
+b.key&&(g=""+b.key);var l=void 0;a.type&&a.type.defaultProps&&(l=a.type.defaultProps);for(c in b)K.call(b,c)&&!L.hasOwnProperty(c)&&(d[c]=void 0===b[c]&&void 0!==l?l[c]:b[c]);}c=arguments.length-2;if(1===c)d.children=e;else if(1<c){l=Array(c);for(var m=0;m<c;m++)l[m]=arguments[m+2];d.children=l;}return {$$typeof:t,type:a.type,key:g,ref:h,props:d,_owner:f}},createFactory:function(a){var b=M.bind(null,a);b.type=a;return b},isValidElement:N,version:"16.4.0",__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED:{ReactCurrentOwner:J,
+assign:objectAssign}},Y={default:X},Z=Y&&X||Y;var react_production_min=Z.default?Z.default:Z;
 
 /**
  * Similar to invariant but only logs a warning if the condition is not met.
@@ -7632,22 +7632,22 @@ var checkPropTypes = checkPropTypes_1;
 
 // TODO: this is special because it gets imported during build.
 
-var ReactVersion = '16.3.2';
+var ReactVersion = '16.4.0';
 
 // The Symbol used to tag the ReactElement-like types. If there is no native Symbol
 // nor polyfill, then a plain number is used for performance.
-var hasSymbol = typeof Symbol === 'function' && Symbol['for'];
+var hasSymbol = typeof Symbol === 'function' && Symbol.for;
 
-var REACT_ELEMENT_TYPE = hasSymbol ? Symbol['for']('react.element') : 0xeac7;
-var REACT_CALL_TYPE = hasSymbol ? Symbol['for']('react.call') : 0xeac8;
-var REACT_RETURN_TYPE = hasSymbol ? Symbol['for']('react.return') : 0xeac9;
-var REACT_PORTAL_TYPE = hasSymbol ? Symbol['for']('react.portal') : 0xeaca;
-var REACT_FRAGMENT_TYPE = hasSymbol ? Symbol['for']('react.fragment') : 0xeacb;
-var REACT_STRICT_MODE_TYPE = hasSymbol ? Symbol['for']('react.strict_mode') : 0xeacc;
-var REACT_PROVIDER_TYPE = hasSymbol ? Symbol['for']('react.provider') : 0xeacd;
-var REACT_CONTEXT_TYPE = hasSymbol ? Symbol['for']('react.context') : 0xeace;
-var REACT_ASYNC_MODE_TYPE = hasSymbol ? Symbol['for']('react.async_mode') : 0xeacf;
-var REACT_FORWARD_REF_TYPE = hasSymbol ? Symbol['for']('react.forward_ref') : 0xead0;
+var REACT_ELEMENT_TYPE = hasSymbol ? Symbol.for('react.element') : 0xeac7;
+var REACT_PORTAL_TYPE = hasSymbol ? Symbol.for('react.portal') : 0xeaca;
+var REACT_FRAGMENT_TYPE = hasSymbol ? Symbol.for('react.fragment') : 0xeacb;
+var REACT_STRICT_MODE_TYPE = hasSymbol ? Symbol.for('react.strict_mode') : 0xeacc;
+var REACT_PROFILER_TYPE = hasSymbol ? Symbol.for('react.profiler') : 0xead2;
+var REACT_PROVIDER_TYPE = hasSymbol ? Symbol.for('react.provider') : 0xeacd;
+var REACT_CONTEXT_TYPE = hasSymbol ? Symbol.for('react.context') : 0xeace;
+var REACT_ASYNC_MODE_TYPE = hasSymbol ? Symbol.for('react.async_mode') : 0xeacf;
+var REACT_FORWARD_REF_TYPE = hasSymbol ? Symbol.for('react.forward_ref') : 0xead0;
+var REACT_TIMEOUT_TYPE = hasSymbol ? Symbol.for('react.timeout') : 0xead1;
 
 var MAYBE_ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
 var FAUX_ITERATOR_SYMBOL = '@@iterator';
@@ -7662,9 +7662,32 @@ function getIteratorFn(maybeIterable) {
   }
   return null;
 }
+// Helps identify side effects in begin-phase lifecycle hooks and setState reducers:
 
-// Relying on the `invariant()` implementation lets us
-// have preserve the format and params in the www builds.
+
+// In some cases, StrictMode should also double-render lifecycles.
+// This can be confusing for tests though,
+// And it can be bad for performance in production.
+// This feature flag can be used to control the behavior:
+
+
+// To preserve the "Pause on caught exceptions" behavior of the debugger, we
+// replay the begin phase of a failed component inside invokeGuardedCallback.
+
+
+// Warn about deprecated, async-unsafe lifecycles; relates to RFC #6:
+
+
+// Warn about legacy context API
+
+
+// Gather advanced timing metrics for Profiler subtrees.
+
+
+// Fires getDerivedStateFromProps for state *or* props changes
+
+
+// Only used in www builds.
 
 /**
  * Forked from fbjs/warning:
@@ -8540,7 +8563,7 @@ function mapChildren(children, func, context) {
  * @param {?*} children Children tree container.
  * @return {number} The number of children.
  */
-function countChildren(children, context) {
+function countChildren(children) {
   return traverseAllChildren(children, emptyFunction.thatReturnsNull, null);
 }
 
@@ -8589,7 +8612,14 @@ function createContext(defaultValue, calculateChangedBits) {
     _calculateChangedBits: calculateChangedBits,
     _defaultValue: defaultValue,
     _currentValue: defaultValue,
+    // As a workaround to support multiple concurrent renderers, we categorize
+    // some renderers as primary and others as secondary. We only expect
+    // there to be two concurrent renderers at most: React Native (primary) and
+    // Fabric (secondary); React DOM (primary) and React ART (secondary).
+    // Secondary renderers store their context values on separate fields.
+    _currentValue2: defaultValue,
     _changedBits: 0,
+    _changedBits2: 0,
     // These are circular
     Provider: null,
     Consumer: null
@@ -8603,6 +8633,7 @@ function createContext(defaultValue, calculateChangedBits) {
 
   {
     context._currentRenderer = null;
+    context._currentRenderer2 = null;
   }
 
   return context;
@@ -8611,6 +8642,10 @@ function createContext(defaultValue, calculateChangedBits) {
 function forwardRef(render) {
   {
     !(typeof render === 'function') ? warning(false, 'forwardRef requires a render function but was given %s.', render === null ? 'null' : typeof render) : void 0;
+
+    if (render != null) {
+      !(render.defaultProps == null && render.propTypes == null) ? warning(false, 'forwardRef render functions do not support propTypes or defaultProps. ' + 'Did you accidentally pass a React component?') : void 0;
+    }
   }
 
   return {
@@ -8626,7 +8661,7 @@ var describeComponentFrame = function (name, source, ownerName) {
 function isValidElementType(type) {
   return typeof type === 'string' || typeof type === 'function' ||
   // Note: its typeof might be other than 'symbol' or 'number' if it's a polyfill.
-  type === REACT_FRAGMENT_TYPE || type === REACT_ASYNC_MODE_TYPE || type === REACT_STRICT_MODE_TYPE || typeof type === 'object' && type !== null && (type.$$typeof === REACT_PROVIDER_TYPE || type.$$typeof === REACT_CONTEXT_TYPE || type.$$typeof === REACT_FORWARD_REF_TYPE);
+  type === REACT_FRAGMENT_TYPE || type === REACT_ASYNC_MODE_TYPE || type === REACT_PROFILER_TYPE || type === REACT_STRICT_MODE_TYPE || type === REACT_TIMEOUT_TYPE || typeof type === 'object' && type !== null && (type.$$typeof === REACT_PROVIDER_TYPE || type.$$typeof === REACT_CONTEXT_TYPE || type.$$typeof === REACT_FORWARD_REF_TYPE);
 }
 
 function getComponentName(fiber) {
@@ -8639,14 +8674,22 @@ function getComponentName(fiber) {
     return type;
   }
   switch (type) {
+    case REACT_ASYNC_MODE_TYPE:
+      return 'AsyncMode';
+    case REACT_CONTEXT_TYPE:
+      return 'Context.Consumer';
     case REACT_FRAGMENT_TYPE:
       return 'ReactFragment';
     case REACT_PORTAL_TYPE:
       return 'ReactPortal';
-    case REACT_CALL_TYPE:
-      return 'ReactCall';
-    case REACT_RETURN_TYPE:
-      return 'ReactReturn';
+    case REACT_PROFILER_TYPE:
+      return 'Profiler(' + fiber.pendingProps.id + ')';
+    case REACT_PROVIDER_TYPE:
+      return 'Context.Provider';
+    case REACT_STRICT_MODE_TYPE:
+      return 'StrictMode';
+    case REACT_TIMEOUT_TYPE:
+      return 'Timeout';
   }
   if (typeof type === 'object' && type !== null) {
     switch (type.$$typeof) {
@@ -8974,6 +9017,7 @@ var React = {
   Fragment: REACT_FRAGMENT_TYPE,
   StrictMode: REACT_STRICT_MODE_TYPE,
   unstable_AsyncMode: REACT_ASYNC_MODE_TYPE,
+  unstable_Profiler: REACT_PROFILER_TYPE,
 
   createElement: createElementWithValidation,
   cloneElement: cloneElementWithValidation,
@@ -9009,7 +9053,7 @@ var React$3 = ( React$2 && React ) || React$2;
 
 // TODO: decide on the top-level export form.
 // This is hacky but makes it work with both Rollup and Jest.
-var react = React$3['default'] ? React$3['default'] : React$3;
+var react = React$3.default ? React$3.default : React$3;
 
 module.exports = react;
   })();
@@ -14868,7 +14912,7 @@ addLocaleData(defaultLocaleData);
 addLocaleData(localeData);
 
 var underscore = createCommonjsModule(function (module, exports) {
-//     Underscore.js 1.9.0
+//     Underscore.js 1.9.1
 //     http://underscorejs.org
 //     (c) 2009-2018 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
 //     Underscore may be freely distributed under the MIT license.
@@ -14930,7 +14974,7 @@ var underscore = createCommonjsModule(function (module, exports) {
   }
 
   // Current version.
-  _.VERSION = '1.9.0';
+  _.VERSION = '1.9.1';
 
   // Internal function that returns an efficient (for current engines) version
   // of the passed-in callback, to be repeatedly applied in other Underscore
@@ -15016,6 +15060,10 @@ var underscore = createCommonjsModule(function (module, exports) {
     return function(obj) {
       return obj == null ? void 0 : obj[key];
     };
+  };
+
+  var has = function(obj, path) {
+    return obj != null && hasOwnProperty.call(obj, path);
   };
 
   var deepGet = function(obj, path) {
@@ -15315,7 +15363,7 @@ var underscore = createCommonjsModule(function (module, exports) {
   // Groups the object's values by a criterion. Pass either a string attribute
   // to group by, or a function that returns the criterion.
   _.groupBy = group(function(result, value, key) {
-    if (_.has(result, key)) result[key].push(value); else result[key] = [value];
+    if (has(result, key)) result[key].push(value); else result[key] = [value];
   });
 
   // Indexes the object's values by a criterion, similar to `groupBy`, but for
@@ -15328,7 +15376,7 @@ var underscore = createCommonjsModule(function (module, exports) {
   // either a string attribute to count by, or a function that returns the
   // criterion.
   _.countBy = group(function(result, value, key) {
-    if (_.has(result, key)) result[key]++; else result[key] = 1;
+    if (has(result, key)) result[key]++; else result[key] = 1;
   });
 
   var reStrSymbol = /[^\ud800-\udfff]|[\ud800-\udbff][\udc00-\udfff]|[\ud800-\udfff]/g;
@@ -15363,7 +15411,7 @@ var underscore = createCommonjsModule(function (module, exports) {
   // values in the array. Aliased as `head` and `take`. The **guard** check
   // allows it to work with `_.map`.
   _.first = _.head = _.take = function(array, n, guard) {
-    if (array == null || array.length < 1) return void 0;
+    if (array == null || array.length < 1) return n == null ? void 0 : [];
     if (n == null || guard) return array[0];
     return _.initial(array, array.length - n);
   };
@@ -15378,7 +15426,7 @@ var underscore = createCommonjsModule(function (module, exports) {
   // Get the last element of an array. Passing **n** will return the last N
   // values in the array.
   _.last = function(array, n, guard) {
-    if (array == null || array.length < 1) return void 0;
+    if (array == null || array.length < 1) return n == null ? void 0 : [];
     if (n == null || guard) return array[array.length - 1];
     return _.rest(array, Math.max(0, array.length - n));
   };
@@ -15681,7 +15729,7 @@ var underscore = createCommonjsModule(function (module, exports) {
     var memoize = function(key) {
       var cache = memoize.cache;
       var address = '' + (hasher ? hasher.apply(this, arguments) : key);
-      if (!_.has(cache, address)) cache[address] = func.apply(this, arguments);
+      if (!has(cache, address)) cache[address] = func.apply(this, arguments);
       return cache[address];
     };
     memoize.cache = {};
@@ -15848,7 +15896,7 @@ var underscore = createCommonjsModule(function (module, exports) {
 
     // Constructor is a special case.
     var prop = 'constructor';
-    if (_.has(obj, prop) && !_.contains(keys, prop)) keys.push(prop);
+    if (has(obj, prop) && !_.contains(keys, prop)) keys.push(prop);
 
     while (nonEnumIdx--) {
       prop = nonEnumerableProps[nonEnumIdx];
@@ -15864,7 +15912,7 @@ var underscore = createCommonjsModule(function (module, exports) {
     if (!_.isObject(obj)) return [];
     if (nativeKeys) return nativeKeys(obj);
     var keys = [];
-    for (var key in obj) if (_.has(obj, key)) keys.push(key);
+    for (var key in obj) if (has(obj, key)) keys.push(key);
     // Ahem, IE < 9.
     if (hasEnumBug) collectNonEnumProps(obj, keys);
     return keys;
@@ -16149,7 +16197,7 @@ var underscore = createCommonjsModule(function (module, exports) {
       while (length--) {
         // Deep compare each member
         key = keys[length];
-        if (!(_.has(b, key) && eq(a[key], b[key], aStack, bStack))) return false;
+        if (!(has(b, key) && eq(a[key], b[key], aStack, bStack))) return false;
       }
     }
     // Remove the first object from the stack of traversed objects.
@@ -16199,7 +16247,7 @@ var underscore = createCommonjsModule(function (module, exports) {
   // there isn't any inspectable "Arguments" type.
   if (!_.isArguments(arguments)) {
     _.isArguments = function(obj) {
-      return _.has(obj, 'callee');
+      return has(obj, 'callee');
     };
   }
 
@@ -16241,7 +16289,7 @@ var underscore = createCommonjsModule(function (module, exports) {
   // on itself (in other words, not on a prototype).
   _.has = function(obj, path) {
     if (!_.isArray(path)) {
-      return obj != null && hasOwnProperty.call(obj, path);
+      return has(obj, path);
     }
     var length = path.length;
     for (var i = 0; i < length; i++) {
@@ -19956,9 +20004,9 @@ function localeWeekdaysParse (weekdayName, format, strict) {
 
         mom = createUTC([2000, 1]).day(i);
         if (strict && !this._fullWeekdaysParse[i]) {
-            this._fullWeekdaysParse[i] = new RegExp('^' + this.weekdays(mom, '').replace('.', '\.?') + '$', 'i');
-            this._shortWeekdaysParse[i] = new RegExp('^' + this.weekdaysShort(mom, '').replace('.', '\.?') + '$', 'i');
-            this._minWeekdaysParse[i] = new RegExp('^' + this.weekdaysMin(mom, '').replace('.', '\.?') + '$', 'i');
+            this._fullWeekdaysParse[i] = new RegExp('^' + this.weekdays(mom, '').replace('.', '\\.?') + '$', 'i');
+            this._shortWeekdaysParse[i] = new RegExp('^' + this.weekdaysShort(mom, '').replace('.', '\\.?') + '$', 'i');
+            this._minWeekdaysParse[i] = new RegExp('^' + this.weekdaysMin(mom, '').replace('.', '\\.?') + '$', 'i');
         }
         if (!this._weekdaysParse[i]) {
             regex = '^' + this.weekdays(mom, '') + '|^' + this.weekdaysShort(mom, '') + '|^' + this.weekdaysMin(mom, '');
@@ -20761,7 +20809,7 @@ function untruncateYear(yearStr) {
 
 function preprocessRFC2822(s) {
     // Remove comments and folding whitespace and replace multiple-spaces with a single space
-    return s.replace(/\([^)]*\)|[\n\t]/g, ' ').replace(/(\s\s+)/g, ' ').trim();
+    return s.replace(/\([^)]*\)|[\n\t]/g, ' ').replace(/(\s\s+)/g, ' ').replace(/^\s\s*/, '').replace(/\s\s*$/, '');
 }
 
 function checkWeekday(weekdayStr, parsedInput, config) {
@@ -22941,7 +22989,7 @@ addParseToken('x', function (input, array, config) {
 
 //! moment.js
 
-hooks.version = '2.22.1';
+hooks.version = '2.22.2';
 
 setHookCallback(createLocal);
 
@@ -23151,29 +23199,6 @@ var createPost = function createPost(streamId, parentPostId, text, codeBlocks, m
 	}();
 };
 
-var setCurrentStream = function setCurrentStream(streamId) {
-	return function () {
-		var _ref4 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(dispatch) {
-			return regeneratorRuntime.wrap(function _callee2$(_context2) {
-				while (1) {
-					switch (_context2.prev = _context2.next) {
-						case 0:
-							dispatch({ type: "SET_CURRENT_STREAM", payload: streamId });
-
-						case 1:
-						case "end":
-							return _context2.stop();
-					}
-				}
-			}, _callee2, _this);
-		}));
-
-		return function (_x4) {
-			return _ref4.apply(this, arguments);
-		};
-	}();
-};
-
 var retryPost = function retryPost() {
 	// TODO
 };
@@ -23184,12 +23209,12 @@ var cancelPost = function cancelPost(id) {
 
 var createSystemPost = function createSystemPost(streamId, parentPostId, text, seqNum) {
 	return function () {
-		var _ref6 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(dispatch, getState, _ref5) {
-			var http = _ref5.http;
+		var _ref5 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(dispatch, getState, _ref4) {
+			var http = _ref4.http;
 			var state, session, context, pendingId, post;
-			return regeneratorRuntime.wrap(function _callee3$(_context3) {
+			return regeneratorRuntime.wrap(function _callee2$(_context2) {
 				while (1) {
-					switch (_context3.prev = _context3.next) {
+					switch (_context2.prev = _context2.next) {
 						case 0:
 							state = getState();
 							session = state.session, context = state.context;
@@ -23206,25 +23231,19 @@ var createSystemPost = function createSystemPost(streamId, parentPostId, text, s
 								text: text
 							};
 
-							// dispatch(savePendingPost({ ...post }));
 
-							dispatch({
-								type: "ADD_POST",
-								payload: post
-							});
-
-							// dispatch(resolvePendingPost(pendingId, normalize(data.post)));
+							dispatch({ type: "ADD_POST", payload: post });
 
 						case 5:
 						case "end":
-							return _context3.stop();
+							return _context2.stop();
 					}
 				}
-			}, _callee3, _this);
+			}, _callee2, _this);
 		}));
 
-		return function (_x5, _x6, _x7) {
-			return _ref6.apply(this, arguments);
+		return function (_x4, _x5, _x6) {
+			return _ref5.apply(this, arguments);
 		};
 	}();
 };
@@ -23237,25 +23256,130 @@ var deletePost = function deletePost() {
 	// TODO
 };
 
-var setUserPreference = function setUserPreference() {
-	// TODO
+// usage: setUserPreference(["favorites", "shoes", "wedges"], "red")
+var setUserPreference = function setUserPreference(prefPath, value) {
+	return function (dispatch, getState, _ref6) {
+		var api = _ref6.api;
+
+		var _getState2 = getState(),
+		    session = _getState2.session,
+		    context = _getState2.context,
+		    users = _getState2.users;
+
+		var user = users[session.userId];
+		if (!user) return;
+
+		if (!user.preferences) user.preferences = {};
+
+		// we walk down the existing user preference to set the value
+		// and simultaneously create a new preference object to pass
+		// to the API server
+		var preferences = user.preferences;
+		var newPreference = {};
+		var newPreferencePointer = newPreference;
+		while (prefPath.length > 1) {
+			var part = prefPath.shift().replace(/\./g, "*");
+			if (!preferences[part]) preferences[part] = {};
+			preferences = preferences[part];
+			newPreferencePointer[part] = {};
+			newPreferencePointer = newPreferencePointer[part];
+		}
+		preferences[prefPath[0].replace(/\./g, "*")] = value;
+		newPreferencePointer[prefPath[0].replace(/\./g, "*")] = value;
+
+		console.log("Saving preferences: ", newPreference);
+		api.saveUserPreference(newPreference);
+		// dispatch(saveUser(normalize(user)));
+	};
 };
 
-var createStream = function createStream() {
-	// TODO
+var createStream = function createStream(attributes) {
+	return function () {
+		var _ref8 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(dispatch, getState, _ref7) {
+			var api = _ref7.api;
+
+			var _getState3, context, session, stream, returnStream;
+
+			return regeneratorRuntime.wrap(function _callee3$(_context3) {
+				while (1) {
+					switch (_context3.prev = _context3.next) {
+						case 0:
+							_getState3 = getState(), context = _getState3.context, session = _getState3.session;
+							stream = {
+								teamId: context.currentTeamId,
+								type: attributes.type
+							};
+
+							if (attributes.type === "channel") {
+								stream.name = attributes.name;
+								stream.privacy = attributes.privacy;
+							}
+							if (attributes.memberIds) {
+								stream.memberIds = attributes.memberIds;
+							}
+							_context3.prev = 4;
+							_context3.next = 7;
+							return api.createStream(stream);
+
+						case 7:
+							returnStream = _context3.sent;
+
+							dispatch(setCurrentStream(returnStream._id));
+							_context3.next = 13;
+							break;
+
+						case 11:
+							_context3.prev = 11;
+							_context3.t0 = _context3["catch"](4);
+
+						case 13:
+						case "end":
+							return _context3.stop();
+					}
+				}
+			}, _callee3, _this, [[4, 11]]);
+		}));
+
+		return function (_x7, _x8, _x9) {
+			return _ref8.apply(this, arguments);
+		};
+	}();
+};
+
+var setCurrentStream = function setCurrentStream(streamId) {
+	return function () {
+		var _ref9 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(dispatch) {
+			return regeneratorRuntime.wrap(function _callee4$(_context4) {
+				while (1) {
+					switch (_context4.prev = _context4.next) {
+						case 0:
+							dispatch({ type: "SET_CURRENT_STREAM", payload: streamId });
+
+						case 1:
+						case "end":
+							return _context4.stop();
+					}
+				}
+			}, _callee4, _this);
+		}));
+
+		return function (_x10) {
+			return _ref9.apply(this, arguments);
+		};
+	}();
 };
 
 var streamActions = /*#__PURE__*/Object.freeze({
 	markStreamRead: markStreamRead,
 	createPost: createPost,
-	setCurrentStream: setCurrentStream,
 	retryPost: retryPost,
 	cancelPost: cancelPost,
 	createSystemPost: createSystemPost,
 	editPost: editPost,
 	deletePost: deletePost,
 	setUserPreference: setUserPreference,
-	createStream: createStream
+	createStream: createStream,
+	setCurrentStream: setCurrentStream
 });
 
 var initialState = {
@@ -23793,8 +23917,8 @@ void 0;0<=nh&&setTimeout(function(){var b=a.current.expirationTime;0!==b&&(0===a
 function Vg(a,b){var c;a:{lh&&!ph?A$1("263"):void 0;for(c=a.return;null!==c;){switch(c.tag){case 2:var d=c.stateNode;if("function"===typeof c.type.getDerivedStateFromCatch||"function"===typeof d.componentDidCatch&&(null===dh||!dh.has(d))){a=Tf(b,a);a=ch(c,a,1);Mf(c,a,1);kg(c,1);c=void 0;break a}break;case 3:a=Tf(b,a);a=ah(c,a,1);Mf(c,a,1);kg(c,1);c=void 0;break a}c=c.return;}3===a.tag&&(c=Tf(b,a),c=ah(a,c,1),Mf(a,c,1),kg(a,1));c=void 0;}return c}
 function yh(){var a=2+25*(((ig()-2+500)/25|0)+1);a<=jh&&(a=jh+1);return jh=a}function jg(a,b){a=0!==kh?kh:lh?ph?1:T$1:b.mode&1?zh?2+10*(((a-2+15)/10|0)+1):2+25*(((a-2+500)/25|0)+1):1;zh&&(0===Ah||a>Ah)&&(Ah=a);return a}
 function kg(a,b){for(;null!==a;){if(0===a.expirationTime||a.expirationTime>b)a.expirationTime=b;null!==a.alternate&&(0===a.alternate.expirationTime||a.alternate.expirationTime>b)&&(a.alternate.expirationTime=b);if(null===a.return)if(3===a.tag){var c=a.stateNode;!lh&&0!==T$1&&b<T$1&&rh();var d=c.current.expirationTime;lh&&!ph&&mh===c||wh(c,d);Bh>Ch&&A$1("185");}else break;a=a.return;}}function ig(){ih=af()-gh;return hh=(ih/10|0)+2}
-function Dh(a){var b=kh;kh=2+25*(((ig()-2+500)/25|0)+1);try{return a()}finally{kh=b;}}function Eh(a,b,c,d,e){var f=kh;kh=1;try{return a(b,c,d,e)}finally{kh=f;}}var Fh=null,V$1=null,Gh=0,Hh=-1,W$1=!1,X$1=null,Y$1=0,Ah=0,Ih=!1,Jh=!1,Kh=null,Lh=null,Z=!1,Mh=!1,zh=!1,Nh=null,Ch=1E3,Bh=0,Oh=1;function Ph(a){if(0!==Gh){if(a>Gh)return;cf(Hh);}var b=af()-gh;Gh=a;Hh=bf(Qh,{timeout:10*(a-2)-b});}
-function wh(a,b){if(null===a.nextScheduledRoot)a.remainingExpirationTime=b,null===V$1?(Fh=V$1=a,a.nextScheduledRoot=a):(V$1=V$1.nextScheduledRoot=a,V$1.nextScheduledRoot=Fh);else{var c=a.remainingExpirationTime;if(0===c||b<c)a.remainingExpirationTime=b;}W$1||(Z?Mh&&(X$1=a,Y$1=1,Rh(a,1,!1)):1===b?Sh():Ph(b));}
+function Dh(a){var b=kh;kh=2+25*(((ig()-2+500)/25|0)+1);try{return a()}finally{kh=b;}}function Eh(a,b,c,d,e){var f=kh;kh=1;try{return a(b,c,d,e)}finally{kh=f;}}var Fh=null,V$1=null,Gh=0,Hh=-1,W$1=!1,X$1=null,Y$1=0,Ah=0,Ih=!1,Jh=!1,Kh=null,Lh=null,Z$1=!1,Mh=!1,zh=!1,Nh=null,Ch=1E3,Bh=0,Oh=1;function Ph(a){if(0!==Gh){if(a>Gh)return;cf(Hh);}var b=af()-gh;Gh=a;Hh=bf(Qh,{timeout:10*(a-2)-b});}
+function wh(a,b){if(null===a.nextScheduledRoot)a.remainingExpirationTime=b,null===V$1?(Fh=V$1=a,a.nextScheduledRoot=a):(V$1=V$1.nextScheduledRoot=a,V$1.nextScheduledRoot=Fh);else{var c=a.remainingExpirationTime;if(0===c||b<c)a.remainingExpirationTime=b;}W$1||(Z$1?Mh&&(X$1=a,Y$1=1,Rh(a,1,!1)):1===b?Sh():Ph(b));}
 function Th(){var a=0,b=null;if(null!==V$1)for(var c=V$1,d=Fh;null!==d;){var e=d.remainingExpirationTime;if(0===e){null===c||null===V$1?A$1("244"):void 0;if(d===d.nextScheduledRoot){Fh=V$1=d.nextScheduledRoot=null;break}else if(d===Fh)Fh=e=d.nextScheduledRoot,V$1.nextScheduledRoot=e,d.nextScheduledRoot=null;else if(d===V$1){V$1=c;V$1.nextScheduledRoot=Fh;d.nextScheduledRoot=null;break}else c.nextScheduledRoot=d.nextScheduledRoot,d.nextScheduledRoot=null;d=c.nextScheduledRoot;}else{if(0===a||e<a)a=e,b=d;if(d===V$1)break;
 c=d;d=d.nextScheduledRoot;}}c=X$1;null!==c&&c===b&&1===a?Bh++:Bh=0;X$1=b;Y$1=a;}function Qh(a){Uh(0,!0,a);}function Sh(){Uh(1,!1,null);}function Uh(a,b,c){Lh=c;Th();if(b)for(;null!==X$1&&0!==Y$1&&(0===a||a>=Y$1)&&(!Ih||ig()>=Y$1);)ig(),Rh(X$1,Y$1,!Ih),Th();else for(;null!==X$1&&0!==Y$1&&(0===a||a>=Y$1);)Rh(X$1,Y$1,!1),Th();null!==Lh&&(Gh=0,Hh=-1);0!==Y$1&&Ph(Y$1);Lh=null;Ih=!1;Vh();}function Wh(a,b){W$1?A$1("253"):void 0;X$1=a;Y$1=b;Rh(a,b,!1);Sh();Vh();}
 function Vh(){Bh=0;if(null!==Nh){var a=Nh;Nh=null;for(var b=0;b<a.length;b++){var c=a[b];try{c._onComplete();}catch(d){Jh||(Jh=!0,Kh=d);}}}if(Jh)throw a=Kh,Kh=null,Jh=!1,a;}function Rh(a,b,c){W$1?A$1("245"):void 0;W$1=!0;c?(c=a.finishedWork,null!==c?Xh(a,c,b):(a.finishedWork=null,c=uh(a,b,!0),null!==c&&(vh()?a.finishedWork=c:Xh(a,c,b)))):(c=a.finishedWork,null!==c?Xh(a,c,b):(a.finishedWork=null,c=uh(a,b,!1),null!==c&&Xh(a,c,b)));W$1=!1;}
@@ -23807,11 +23931,11 @@ y=q[lb()].length,l=Math.min(u.start,y),u=void 0===u.end?l:Math.min(u.end,y),!z.e
 top:l.scrollTop});q.focus();for(q=0;q<z.length;q++)l=z[q],l.element.scrollLeft=l.left,l.element.scrollTop=l.top;}Ye=null;Id(Xe);Xe=null;c.current=b;for(U$1=e;null!==U$1;){e=!1;q=void 0;try{for(z=d;null!==U$1;){var gg=U$1.effectTag;if(gg&36){var lc=U$1.alternate;l=U$1;u=z;switch(l.tag){case 2:var ba=l.stateNode;if(l.effectTag&4)if(null===lc)ba.props=l.memoizedProps,ba.state=l.memoizedState,ba.componentDidMount();else{var ri=lc.memoizedProps,si=lc.memoizedState;ba.props=l.memoizedProps;ba.state=l.memoizedState;
 ba.componentDidUpdate(ri,si,ba.__reactInternalSnapshotBeforeUpdate);}var Mg=l.updateQueue;null!==Mg&&(ba.props=l.memoizedProps,ba.state=l.memoizedState,Sf(l,Mg,ba,u));break;case 3:var Ng=l.updateQueue;if(null!==Ng){y=null;if(null!==l.child)switch(l.child.tag){case 5:y=l.child.stateNode;break;case 2:y=l.child.stateNode;}Sf(l,Ng,y,u);}break;case 5:var ti=l.stateNode;null===lc&&l.effectTag&4&&Ze(l.type,l.memoizedProps)&&ti.focus();break;case 6:break;case 4:break;case 15:break;case 16:break;default:A$1("163");}}if(gg&
 128){l=void 0;var uc=U$1.ref;if(null!==uc){var Og=U$1.stateNode;switch(U$1.tag){case 5:l=Og;break;default:l=Og;}"function"===typeof uc?uc(l):uc.current=l;}}var ui=U$1.nextEffect;U$1.nextEffect=null;U$1=ui;}}catch(Wa){e=!0,q=Wa;}e&&(null===U$1?A$1("178"):void 0,Vg(U$1,q),null!==U$1&&(U$1=U$1.nextEffect));}lh=ph=!1;"function"===typeof Ff&&Ff(b.stateNode);b=c.current.expirationTime;0===b&&(dh=null);a.remainingExpirationTime=b;}function vh(){return null===Lh||Lh.timeRemaining()>Oh?!1:Ih=!0}
-function bh(a){null===X$1?A$1("246"):void 0;X$1.remainingExpirationTime=0;Jh||(Jh=!0,Kh=a);}function xh(a){null===X$1?A$1("246"):void 0;X$1.remainingExpirationTime=a;}function Yh(a,b){var c=Z;Z=!0;try{return a(b)}finally{(Z=c)||W$1||Sh();}}function Zh(a,b){if(Z&&!Mh){Mh=!0;try{return a(b)}finally{Mh=!1;}}return a(b)}function $h(a,b){W$1?A$1("187"):void 0;var c=Z;Z=!0;try{return Eh(a,b)}finally{Z=c,Sh();}}function ai(a){var b=Z;Z=!0;try{Eh(a);}finally{(Z=b)||W$1||Uh(1,!1,null);}}
+function bh(a){null===X$1?A$1("246"):void 0;X$1.remainingExpirationTime=0;Jh||(Jh=!0,Kh=a);}function xh(a){null===X$1?A$1("246"):void 0;X$1.remainingExpirationTime=a;}function Yh(a,b){var c=Z$1;Z$1=!0;try{return a(b)}finally{(Z$1=c)||W$1||Sh();}}function Zh(a,b){if(Z$1&&!Mh){Mh=!0;try{return a(b)}finally{Mh=!1;}}return a(b)}function $h(a,b){W$1?A$1("187"):void 0;var c=Z$1;Z$1=!0;try{return Eh(a,b)}finally{Z$1=c,Sh();}}function ai(a){var b=Z$1;Z$1=!0;try{Eh(a);}finally{(Z$1=b)||W$1||Uh(1,!1,null);}}
 function bi(a,b,c,d,e){var f=b.current;if(c){c=c._reactInternalFiber;var g;b:{2===id$2(c)&&2===c.tag?void 0:A$1("170");for(g=c;3!==g.tag;){if(mf(g)){g=g.stateNode.__reactInternalMemoizedMergedChildContext;break b}(g=g.return)?void 0:A$1("171");}g=g.stateNode.context;}c=mf(c)?rf(c,g):g;}else c=emptyObject_1;null===b.context?b.context=c:b.pendingContext=c;b=e;e=Kf(d);e.payload={element:a};b=void 0===b?null:b;null!==b&&(e.callback=b);Mf(f,e,d);kg(f,d);return d}
 function ci(a){var b=a._reactInternalFiber;void 0===b&&("function"===typeof a.render?A$1("188"):A$1("268",Object.keys(a)));a=ld(b);return null===a?null:a.stateNode}function di(a,b,c,d){var e=b.current,f=ig();e=jg(f,e);return bi(a,b,c,e,d)}function ei(a){a=a.current;if(!a.child)return null;switch(a.child.tag){case 5:return a.child.stateNode;default:return a.child.stateNode}}
 function fi(a){var b=a.findFiberByHostInstance;return Ef(objectAssign({},a,{findHostInstanceByFiber:function(a){a=ld(a);return null===a?null:a.stateNode},findFiberByHostInstance:function(a){return b?b(a):null}}))}
-var gi={updateContainerAtExpirationTime:bi,createContainer:function(a,b,c){return Af(a,b,c)},updateContainer:di,flushRoot:Wh,requestWork:wh,computeUniqueAsyncExpiration:yh,batchedUpdates:Yh,unbatchedUpdates:Zh,deferredUpdates:Dh,syncUpdates:Eh,interactiveUpdates:function(a,b,c){if(zh)return a(b,c);Z||W$1||0===Ah||(Uh(Ah,!1,null),Ah=0);var d=zh,e=Z;Z=zh=!0;try{return a(b,c)}finally{zh=d,(Z=e)||W$1||Sh();}},flushInteractiveUpdates:function(){W$1||0===Ah||(Uh(Ah,!1,null),Ah=0);},flushControlled:ai,flushSync:$h,
+var gi={updateContainerAtExpirationTime:bi,createContainer:function(a,b,c){return Af(a,b,c)},updateContainer:di,flushRoot:Wh,requestWork:wh,computeUniqueAsyncExpiration:yh,batchedUpdates:Yh,unbatchedUpdates:Zh,deferredUpdates:Dh,syncUpdates:Eh,interactiveUpdates:function(a,b,c){if(zh)return a(b,c);Z$1||W$1||0===Ah||(Uh(Ah,!1,null),Ah=0);var d=zh,e=Z$1;Z$1=zh=!0;try{return a(b,c)}finally{zh=d,(Z$1=e)||W$1||Sh();}},flushInteractiveUpdates:function(){W$1||0===Ah||(Uh(Ah,!1,null),Ah=0);},flushControlled:ai,flushSync:$h,
 getPublicRootInstance:ei,findHostInstance:ci,findHostInstanceWithNoPortals:function(a){a=md(a);return null===a?null:a.stateNode},injectIntoDevTools:fi};function ii(a,b,c){var d=3<arguments.length&&void 0!==arguments[3]?arguments[3]:null;return {$$typeof:gc,key:null==d?null:""+d,children:a,containerInfo:b,implementation:c}}Kb.injectFiberControlledHostComponent(We);
 function ji(a){this._expirationTime=yh();this._root=a;this._callbacks=this._next=null;this._hasChildren=this._didComplete=!1;this._children=null;this._defer=!0;}ji.prototype.render=function(a){this._defer?void 0:A$1("250");this._hasChildren=!0;this._children=a;var b=this._root._internalRoot,c=this._expirationTime,d=new ki;bi(a,b,null,c,d._onCommit);return d};ji.prototype.then=function(a){if(this._didComplete)a();else{var b=this._callbacks;null===b&&(b=this._callbacks=[]);b.push(a);}};
 ji.prototype.commit=function(){var a=this._root._internalRoot,b=a.firstBatch;this._defer&&null!==b?void 0:A$1("251");if(this._hasChildren){var c=this._expirationTime;if(b!==this){this._hasChildren&&(c=this._expirationTime=b._expirationTime,this.render(this._children));for(var d=null,e=b;e!==this;)d=e,e=e._next;null===d?A$1("251"):void 0;d._next=e._next;this._next=b;a.firstBatch=this;}this._defer=!1;Wh(a,c);b=this._next;this._next=null;b=a.firstBatch=b;null!==b&&b._hasChildren&&b.render(b._children);}else this._next=
@@ -52875,9 +52999,20 @@ var WebviewApi = function () {
 			return this.postMessage({ action: "create-post", params: post });
 		}
 	}, {
+		key: "createStream",
+		value: function createStream(stream) {
+			console.log("sent the stream request");
+			return this.postMessage({ action: "create-stream", params: stream });
+		}
+	}, {
 		key: "markStreamRead",
 		value: function markStreamRead(streamId) {
 			return this.postMessage({ action: "mark-stream-read", params: streamId });
+		}
+	}, {
+		key: "saveUserPreference",
+		value: function saveUserPreference(newPreference) {
+			return this.postMessage({ action: "save-user-preference", params: newPreference });
 		}
 	}]);
 	return WebviewApi;
