@@ -5,7 +5,6 @@ import { CodeStreamSession, Post, PostsReceivedEvent, SessionChangedEvent, Sessi
 import { Container } from '../container';
 import { Logger } from '../logger';
 import * as fs from 'fs';
-import { Functions } from '../system/function';
 
 const loadingHtml = `
 <!DOCTYPE html>

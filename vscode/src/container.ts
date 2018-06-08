@@ -2,7 +2,7 @@
 import { Disposable, ExtensionContext } from 'vscode';
 import { CodeStreamSession } from './api/session';
 import { Commands } from './commands';
-import { configuration, IConfig } from './configuration';
+import { Config, configuration } from './configuration';
 import { CodeStreamCodeActionProvider } from './providers/codeActionProvider';
 // import { CodeStreamCodeLensProvider } from './providers/codeLensProvider';
 import { ChannelsExplorer, LiveShareExplorer, PeopleExplorer, RepositoriesExplorer } from './views/explorer';
@@ -18,7 +18,7 @@ import { CodeStreamBot } from './codestreamBot';
 
 export class Container {
 
-    static async initialize(context: ExtensionContext, config: IConfig, session?: CodeStreamSession) {
+    static async initialize(context: ExtensionContext, config: Config) {
         this._context = context;
         this._config = config;
 
@@ -80,10 +80,10 @@ export class Container {
         return this._commands;
     }
 
-    private static _config: IConfig | undefined;
+    private static _config: Config | undefined;
     static get config() {
         if (this._config === undefined) {
-            this._config = configuration.get<IConfig>();
+            this._config = configuration.get<Config>();
         }
         return this._config;
     }

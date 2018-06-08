@@ -1,25 +1,26 @@
 {
   "version": "0.2.0",
-  // List of configurations. Add new configurations or edit existing ones.
   "configurations": [
     {
-      "name": "Launch Extension",
+      "name": "Launch CodeStream",
       "type": "extensionHost",
       "request": "launch",
       "runtimeExecutable": "${execPath}",
       "args": ["--extensionDevelopmentPath=${workspaceRoot}" ],
       "stopOnEntry": false,
       "sourceMaps": true,
-      "outFiles": [ "${workspaceRoot}/out/src/**/*.js" ],
-      "preLaunchTask": "watch"
+      "outFiles": [ "${workspaceRoot}/out/**/*.js" ]
     },
     {
-      "name": "Attach to Extension",
-      "type": "node",
-      "request": "attach",
-      "protocol": "inspector",
-      "port": 5870,
-      "outFiles": [ "${workspaceRoot}/out/src/**/*.js" ]
+      "name": "Watch & Launch CodeStream",
+      "type": "extensionHost",
+      "request": "launch",
+      "runtimeExecutable": "${execPath}",
+      "args": ["--extensionDevelopmentPath=${workspaceRoot}" ],
+      "stopOnEntry": false,
+      "sourceMaps": true,
+      "outFiles": [ "${workspaceRoot}/out/**/*.js" ],
+      "preLaunchTask": "npm: watch"
     },
     {
       "name": "Debug Extension (Akonwi)",
@@ -27,15 +28,15 @@
       "request": "launch",
       "runtimeExecutable": "${execPath}",
       "args": [
-        "--extensionDevelopmentPath=${workspaceFolder}",
+        "--extensionDevelopmentPath=${workspaceRoot}",
         "--enable-proposed-api",
         "akonwi.codestream",
         "/Users/akonwi/projects/bundles/"
       ],
       "stopOnEntry": false,
       "sourceMaps": true,
-      "outFiles": ["${workspaceRoot}/out/src/**/*.js"],
-      "preLaunchTask": "watch"
+      "outFiles": ["${workspaceRoot}/out/**/*.js"],
+      "preLaunchTask": "npm: watch"
     }
   ]
 }

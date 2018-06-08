@@ -1,28 +1,11 @@
 {
     "name": "codestream",
+    "displayName": "CodeStream",
+    "description": "The knowledge base behind your codebase",
     "version": "0.0.4",
     "author": "CodeStream",
     "publisher": "CodeStream",
-    "engines": {
-        "vscode": "^1.24.0"
-    },
     "license": "MIT",
-    "displayName": "CodeStream",
-    "description": "The knowledge base behind your codebase",
-    "categories": [
-        "Other"
-    ],
-    "keywords": [
-        "chat",
-        "comment",
-        "collaborate"
-    ],
-    "galleryBanner": {
-        "color": "#009aef",
-        "theme": "dark"
-    },
-    "icon": "assets/images/codestream.png",
-    "preview": true,
     "homepage": "https://codestream.com",
     "bugs": {
         "url": "https://github.com/TeamCodeStream/vscode-codestream"
@@ -31,7 +14,24 @@
         "type": "git",
         "url": "https://github.com/TeamCodeStream/vscode-codestream"
     },
-    "main": "./out/src/extension",
+    "engines": {
+        "vscode": "^1.24.0"
+    },
+    "main": "./out/extension",
+    "icon": "assets/images/codestream.png",
+    "preview": true,
+    "categories": [
+        "Other"
+    ],
+    "galleryBanner": {
+        "color": "#009aef",
+        "theme": "dark"
+    },
+    "keywords": [
+        "chat",
+        "comment",
+        "collaborate"
+    ],
     "contributes": {
         "configuration": {
             "type": "object",

@@ -25,7 +25,7 @@ export enum TraceLevel {
     Debug = 'debug'
 }
 
-export interface IConfig {
+export interface Config {
     autoSignIn: boolean;
 
     bot: {
