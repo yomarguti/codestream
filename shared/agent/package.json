@@ -1,0 +1,43 @@
+{
+    "name": "codestream-lsp-agent",
+    "displayName": "CodeStream Agent",
+    "description": "The knowledge base behind your codebase",
+    "version": "0.0.1",
+    "author": "CodeStream",
+    "publisher": "CodeStream",
+    "license": "MIT",
+    "homepage": "https://codestream.com",
+    "bugs": {
+        "url": "https://github.com/TeamCodeStream/codestream-lsp-agent"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/TeamCodeStream/codestream-lsp-agent"
+    },
+    "engines": {
+        "node": "*"
+    },
+    "scripts": {
+        "build": "npm run compile && npm run lint",
+        "compile": "tsc -p ./",
+        "lint": "tslint --project tsconfig.json",
+        "watch": "tsc -w -p ./"
+    },
+    "dependencies": {
+        "lodash.debounce": "4.0.8",
+        "pubnub": "4.21.0",
+        "node-fetch": "2.1.2",
+        "reflect-metadata": "0.1.12",
+        "tmp": "0.0.33",
+        "tslib": "1.9.2",
+        "vscode-languageserver": "^4.2.1"
+    },
+    "devDependencies": {
+        "@types/node": "7.0.65",
+        "@types/node-fetch": "2.1.1",
+        "@types/pubnub": "4.0.2",
+        "@types/tmp": "0.0.33",
+        "tslint": "5.10.0",
+        "typescript": "2.9.1"
+    }
+}

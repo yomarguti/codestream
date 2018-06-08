@@ -1,0 +1,15 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "attach",
+            "name": "Attach to LSP Agent",
+            "address": "localhost",
+            "protocol": "inspector",
+            "port": 6009,
+            "sourceMaps": true,
+            "outFiles": ["${workspaceRoot}/out/**/*.js"]
+        }
+    ]
+}
