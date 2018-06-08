@@ -4,6 +4,14 @@ const createTempId = a =>
 		? (a ^ ((Math.random() * 16) >> (a / 4))).toString(16)
 		: ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, createTempId);
 
+// FIXME: this is for analytics purposes and the extension host should probably send the event
+const postCreated = meta => ({ type: "POST_CREATED", meta });
+
+const resolvePendingPost = (pendingId, post) => ({
+	type: "RESOLVE_PENDING_POST",
+	payload: { pendingId, post }
+});
+
 export const markStreamRead = streamId => (dispatch, getState, { api }) => {
 	if (!streamId) return;
 	api.markStreamRead(streamId);
@@ -47,19 +55,24 @@ export const createPost = (streamId, parentPostId, text, codeBlocks, mentions, e
 			mentions,
 			extra
 		});
-		// FIXME: this is for analytics purposes and the extension host should probably send the event
-		dispatch({ type: "POST_CREATED", meta: { post, ...extra } });
-		return dispatch({
-			type: "RESOLVE_PENDING_POST",
-			payload: { pendingId, post }
-		});
+		dispatch(postCreated({ post, ...extra }));
+		return dispatch(resolvePendingPost(pendingId, post));
 	} catch (e) {
 		return dispatch({ type: "PENDING_POST_FAILED", payload: pendingId });
 	}
 };
 
-export const retryPost = () => {
-	// TODO
+export const retryPost = pendingId => async (dispatch, getState, { api }) => {
+	const { posts } = getState();
+	const pendingPost = posts.pending.find(post => post.id === pendingId);
+	if (pendingPost) {
+		const post = await api.createPost(pendingPost);
+		dispatch(postCreated({ post })); // FIXME: analytics metadata is lost
+		return dispatch(resolvePendingPost(pendingId, post));
+		// if it fails then what?
+	} else {
+		// what happened to the pending post?
+	}
 };
 
 export const cancelPost = id => ({ type: "CANCEL_PENDING_POST", payload: id });
