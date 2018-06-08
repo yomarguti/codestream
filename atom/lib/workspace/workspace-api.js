@@ -75,6 +75,22 @@ export default class WorkspaceApi implements Resource {
 							);
 						});
 				}
+				case "create-stream": {
+					return this.api
+						.createStream(params)
+						.then(stream => {
+							window.parent.postMessage(
+								{ type: "codestream:response", body: { action, payload: stream } },
+								"*"
+							);
+						})
+						.catch(error => {
+							window.parent.postMessage(
+								{ type: "codestream:response", body: { action, error } },
+								"*"
+							);
+						});
+				}
 				case "mark-stream-read": {
 					return this.api.markStreamRead(params);
 				}
