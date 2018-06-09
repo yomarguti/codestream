@@ -893,6 +893,11 @@ export class SimpleStream extends Component {
 
 	addMembersToStream = async args => {
 		const { users, usernames, rest } = this.extractUsersFromArgs(args);
+		if (this.props.postStreamIsTeamStream) {
+			const text =
+				"This is an all-hands channel, so every member of your team is automatically added. To invite somone new to the team use the /invite command.";
+			return this.submitSystemPost(text);
+		}
 		if (users.length === 0) {
 			this.submitSystemPost("Add members to this channel by typing `/add @nickname`");
 		} else {
@@ -1033,9 +1038,6 @@ export class SimpleStream extends Component {
 		const { postStreamId, fileStreamId, createPost, currentFile, repoId } = this.props;
 
 		if (this.checkForSlashCommands(text)) return;
-
-		console.log("Was going to post: ", text);
-		return;
 
 		let threadId = activePanel === "thread" ? this.state.threadId : null;
 

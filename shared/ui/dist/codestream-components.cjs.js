@@ -51217,13 +51217,11 @@ var toMapBy = function toMapBy(key, entities) {
 	}, {});
 };
 
-var slashCommands = [{ id: "help", help: "get help", action: showHelp }, { id: "add", help: "add member to channel", description: "[@user]" }, { id: "msg", help: "message member", description: "[@user]" }, { id: "leave", help: "leave channel" }, { id: "me", help: "emote" }, { id: "mute", help: "mute channel" },
+var slashCommands = [{ id: "help", help: "get help" }, { id: "add", help: "add member to channel", description: "[@user]" }, { id: "invite", help: "add to your team", description: "[email]" }, { id: "leave", help: "leave channel" }, { id: "me", help: "emote" }, { id: "msg", help: "message member", description: "[@user]" }, { id: "mute", help: "mute channel" },
 // { id: "muteall", help: "mute codestream" },
 // { id: "open", help: "open channel" },
 // { id: "prefs", help: "open preferences" },
 { id: "rename", help: "rename channel", description: "[newname]" }, { id: "remove", help: "remove from channel", description: "[@user]" }, { id: "who", help: "show channel members" }];
-
-var showHelp = function showHelp() {};
 
 var SimpleStream = function (_Component) {
 	inherits$1(SimpleStream, _Component);
@@ -51710,7 +51708,7 @@ var SimpleStream = function (_Component) {
 			writable: true,
 			value: function () {
 				var _ref3 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(args) {
-					var _this$extractUsersFro, users, usernames, rest;
+					var _this$extractUsersFro, users, usernames, rest, text;
 
 					return regeneratorRuntime.wrap(function _callee$(_context) {
 						while (1) {
@@ -51718,26 +51716,35 @@ var SimpleStream = function (_Component) {
 								case 0:
 									_this$extractUsersFro = _this.extractUsersFromArgs(args), users = _this$extractUsersFro.users, usernames = _this$extractUsersFro.usernames, rest = _this$extractUsersFro.rest;
 
+									if (!_this.props.postStreamIsTeamStream) {
+										_context.next = 4;
+										break;
+									}
+
+									text = "This is an all-hands channel, so every member of your team is automatically added. To invite somone new to the team use the /invite command.";
+									return _context.abrupt("return", _this.submitSystemPost(text));
+
+								case 4:
 									if (!(users.length === 0)) {
-										_context.next = 5;
+										_context.next = 8;
 										break;
 									}
 
 									_this.submitSystemPost("Add members to this channel by typing `/add @nickname`");
-									_context.next = 8;
+									_context.next = 11;
 									break;
 
-								case 5:
-									_context.next = 7;
+								case 8:
+									_context.next = 10;
 									return _this.props.addUsersToStream(_this.props.postStreamId, users);
 
-								case 7:
+								case 10:
 									_this.submitPost({ text: "/me added " + usernames });
 
-								case 8:
+								case 11:
 									return _context.abrupt("return", true);
 
-								case 9:
+								case 12:
 								case "end":
 									return _context.stop();
 							}
@@ -52026,9 +52033,6 @@ var SimpleStream = function (_Component) {
 
 
 				if (_this.checkForSlashCommands(text)) return;
-
-				console.log("Was going to post: ", text);
-				return;
 
 				var threadId = activePanel === "thread" ? _this.state.threadId : null;
 
@@ -53181,6 +53185,16 @@ var markerLocations = (function () {
 
 var initialState$b = { mentions: {}, unread: {} };
 
+function getSum(total, num) {
+	return total + Math.round(num);
+}
+
+function calcTotals(state) {
+	state.totalUnread = Object.values(state.unread).reduce(getSum, 0);
+	state.totalMentions = Object.values(state.mentions).reduce(getSum, 0);
+	return state;
+}
+
 var umis = (function () {
 	var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState$b;
 	var _ref = arguments[1];
@@ -53194,7 +53208,7 @@ var umis = (function () {
 				var nextState = _extends$5({}, state);
 				nextState.unread[payload] = (nextState.unread[payload] || 0) + 1;
 				// console.log("STATE IS: ", nextState);
-				return nextState;
+				return calcTotals(nextState);
 			}
 		case "INCREMENT_MENTION":
 			{
@@ -53203,7 +53217,7 @@ var umis = (function () {
 				var _nextState = _extends$5({}, state);
 				_nextState.mentions[payload] = (_nextState.mentions[payload] || 0) + 1;
 				_nextState.unread[payload] = (_nextState.unread[payload] || 0) + 1;
-				return _nextState;
+				return calcTotals(_nextState);
 			}
 		case "CLEAR_UMI":
 			{
@@ -53214,16 +53228,16 @@ var umis = (function () {
 				// still reference the fact that this div needs to be cleared
 				if (_nextState2.mentions[payload]) _nextState2.mentions[payload] = 0;
 				if (_nextState2.unread[payload]) _nextState2.unread[payload] = 0;
-				return _nextState2;
+				return calcTotals(_nextState2);
 			}
 		case "SET_UMI":
 			{
-				return payload;
+				return calcTotals(payload);
 			}
 		case "RESET_UMI":
 			{
 				var _nextState3 = _extends$5({}, initialState$b);
-				return _nextState3;
+				return calcTotals(_nextState3);
 			}
 		default:
 			return state;

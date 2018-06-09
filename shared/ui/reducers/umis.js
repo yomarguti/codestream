@@ -3,6 +3,16 @@ import _ from "underscore";
 
 const initialState = { mentions: {}, unread: {} };
 
+function getSum(total, num) {
+	return total + Math.round(num);
+}
+
+function calcTotals(state) {
+	state.totalUnread = Object.values(state.unread).reduce(getSum, 0);
+	state.totalMentions = Object.values(state.mentions).reduce(getSum, 0);
+	return state;
+}
+
 export default (state = initialState, { type, payload }) => {
 	switch (type) {
 		case "INCREMENT_UMI": {
@@ -10,7 +20,7 @@ export default (state = initialState, { type, payload }) => {
 			let nextState = { ...state };
 			nextState.unread[payload] = (nextState.unread[payload] || 0) + 1;
 			// console.log("STATE IS: ", nextState);
-			return nextState;
+			return calcTotals(nextState);
 		}
 		case "INCREMENT_MENTION": {
 			// console.log("incrementing mention in the reducer: ", payload);
@@ -18,7 +28,7 @@ export default (state = initialState, { type, payload }) => {
 			let nextState = { ...state };
 			nextState.mentions[payload] = (nextState.mentions[payload] || 0) + 1;
 			nextState.unread[payload] = (nextState.unread[payload] || 0) + 1;
-			return nextState;
+			return calcTotals(nextState);
 		}
 		case "CLEAR_UMI": {
 			// console.log("clear umis in the reducer: ", payload);
@@ -28,14 +38,14 @@ export default (state = initialState, { type, payload }) => {
 			// still reference the fact that this div needs to be cleared
 			if (nextState.mentions[payload]) nextState.mentions[payload] = 0;
 			if (nextState.unread[payload]) nextState.unread[payload] = 0;
-			return nextState;
+			return calcTotals(nextState);
 		}
 		case "SET_UMI": {
-			return payload;
+			return calcTotals(payload);
 		}
 		case "RESET_UMI": {
 			let nextState = { ...initialState };
-			return nextState;
+			return calcTotals(nextState);
 		}
 		default:
 			return state;
