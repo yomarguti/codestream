@@ -11,10 +11,10 @@
 	".codestream": {
 		"escape": "codestream:escape"
 	},
-	".codestream .compose.mentions-on .native-key-bindings": {
-		"down": "codestream:at-mention-move-down",
-		"up": "codestream:at-mention-move-up",
-		"tab": "codestream:at-mention-tab"
+	".codestream .compose.popup-open .native-key-bindings": {
+		"down": "codestream:popup-move-down",
+		"up": "codestream:popup-move-up",
+		"tab": "codestream:popup-tab"
 	},
 	".codestream .native-key-bindings": {
 		"up": "codestream:move-up"
