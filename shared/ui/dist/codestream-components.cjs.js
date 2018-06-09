@@ -41514,7 +41514,7 @@ var SimplePublicChannelPanel = function (_Component) {
 						react.createElement(
 							"div",
 							{ className: "explainer" },
-							stream.purpose || "the stream purpose goes here"
+							stream.purpose
 						)
 					);
 				})];
@@ -51677,7 +51677,8 @@ var SimpleStream = function (_Component) {
 		Object.defineProperty(_this, "extractUsersFromArgs", {
 			enumerable: true,
 			writable: true,
-			value: function value(args) {
+			value: function value() {
+				var args = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "";
 				var teamMembersById = _this.props.teamMembersById;
 
 				var users = [];
@@ -51752,7 +51753,7 @@ var SimpleStream = function (_Component) {
 					}, _callee, _this2);
 				}));
 
-				function value(_x3) {
+				function value(_x4) {
 					return _ref3.apply(this, arguments);
 				}
 
@@ -51804,7 +51805,7 @@ var SimpleStream = function (_Component) {
 					}, _callee2, _this2);
 				}));
 
-				function value(_x4) {
+				function value(_x5) {
 					return _ref4.apply(this, arguments);
 				}
 
@@ -51873,7 +51874,7 @@ var SimpleStream = function (_Component) {
 					}, _callee3, _this2);
 				}));
 
-				function value(_x5) {
+				function value(_x6) {
 					return _ref5.apply(this, arguments);
 				}
 
@@ -51932,7 +51933,7 @@ var SimpleStream = function (_Component) {
 					}, _callee4, _this2);
 				}));
 
-				function value(_x6) {
+				function value(_x7) {
 					return _ref6.apply(this, arguments);
 				}
 
@@ -52293,7 +52294,8 @@ var SimpleStream = function (_Component) {
 
 			var _props2 = this.props,
 			    configs = _props2.configs,
-			    posts = _props2.posts;
+			    posts = _props2.posts,
+			    umis = _props2.umis;
 			var activePanel = this.state.activePanel;
 
 
@@ -52348,6 +52350,15 @@ var SimpleStream = function (_Component) {
 				"\u2191 Unread Messages \u2191"
 			);
 
+			var umisClass = classnames({
+				icon: true,
+				"icon-chevron-left": true,
+				"show-channels-icon": true,
+				"align-left": true,
+				mentions: umis.totalMentions > 0,
+				unread: umis.totalMentions == 0 && umis.totalUnread > 0
+			});
+
 			var channelName = this.props.postStreamType === "direct" ? react.createElement(
 				"span",
 				{ className: "icon icon-organization" },
@@ -52358,7 +52369,8 @@ var SimpleStream = function (_Component) {
 				this.props.postStreamName
 			) : "#" + this.props.postStreamName;
 			var menuActive = this.state.openMenu === this.props.postStreamId;
-			var totalUMICount = ""; // FIXME total UMI count here
+			var totalUMICount = umis.totalMentions || umis.totalUnread || "";
+			// const totalUMICount = umis.totalMentions || umis.totalUnread ? "&middot;" : "\u25C9";
 
 			return react.createElement(
 				"div",
@@ -52392,10 +52404,7 @@ var SimpleStream = function (_Component) {
 							} },
 						react.createElement(
 							"span",
-							{
-								onClick: this.showChannels,
-								className: "icon icon-chevron-left show-channels-icon align-left"
-							},
+							{ onClick: this.showChannels, className: umisClass },
 							totalUMICount
 						),
 						react.createElement(

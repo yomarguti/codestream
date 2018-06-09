@@ -358,7 +358,7 @@ export class SimpleStream extends Component {
 	// to be able to animate between the two streams, since they will both be
 	// visible during the transition
 	render() {
-		const { configs, posts } = this.props;
+		const { configs, posts, umis } = this.props;
 		const { activePanel } = this.state;
 
 		const streamClass = createClassString({
@@ -417,6 +417,15 @@ export class SimpleStream extends Component {
 				</div>
 			);
 
+		const umisClass = createClassString({
+			icon: true,
+			"icon-chevron-left": true,
+			"show-channels-icon": true,
+			"align-left": true,
+			mentions: umis.totalMentions > 0,
+			unread: umis.totalMentions == 0 && umis.totalUnread > 0
+		});
+
 		const channelName =
 			this.props.postStreamType === "direct" ? (
 				<span className="icon icon-organization">{this.props.postStreamName}</span>
@@ -426,7 +435,8 @@ export class SimpleStream extends Component {
 				"#" + this.props.postStreamName
 			);
 		const menuActive = this.state.openMenu === this.props.postStreamId;
-		const totalUMICount = ""; // FIXME total UMI count here
+		const totalUMICount = umis.totalMentions || umis.totalUnread || "";
+		// const totalUMICount = umis.totalMentions || umis.totalUnread ? "&middot;" : "\u25C9";
 
 		return (
 			<div className={streamClass} ref={ref => (this._div = ref)}>
@@ -447,10 +457,7 @@ export class SimpleStream extends Component {
 				<CreateDMPanel activePanel={activePanel} setActivePanel={this.setActivePanel} />
 				<div className={mainPanelClass} ref={ref => (this._mainPanel = ref)}>
 					<div className="panel-header" ref={ref => (this._header = ref)}>
-						<span
-							onClick={this.showChannels}
-							className="icon icon-chevron-left show-channels-icon align-left"
-						>
+						<span onClick={this.showChannels} className={umisClass}>
 							{totalUMICount}
 						</span>
 						<span>{channelName}</span>
@@ -862,7 +869,7 @@ export class SimpleStream extends Component {
 		return true;
 	};
 
-	extractUsersFromArgs = args => {
+	extractUsersFromArgs = (args = "") => {
 		const { teamMembersById } = this.props;
 		let users = [];
 		let usernamesArray = [];

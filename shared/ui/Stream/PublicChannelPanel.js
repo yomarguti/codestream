@@ -71,7 +71,7 @@ export class SimplePublicChannelPanel extends Component {
 					<li key={stream.id} id={stream.id}>
 						{icon}
 						{stream.name}
-						<div className="explainer">{stream.purpose || "the stream purpose goes here"}</div>
+						<div className="explainer">{stream.purpose}</div>
 					</li>
 				);
 			})
