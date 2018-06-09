@@ -16,6 +16,7 @@ import EventEmitter from "../event-emitter";
 import * as actions from "./actions";
 import { goToInvitePage } from "../actions/routing";
 import { toMapBy } from "../utils";
+import { slashCommands } from "./SlashCommands";
 import {
 	getPostsForStream,
 	getStreamForId,
@@ -439,7 +440,7 @@ export class SimpleStream extends Component {
 				<ChannelPanel
 					activePanel={activePanel}
 					setActivePanel={this.setActivePanel}
-					postSystemMessage={this.postSystemMessage}
+					runSlashCommand={this.runSlashCommand}
 				/>
 				<PublicChannelPanel activePanel={activePanel} setActivePanel={this.setActivePanel} />
 				<CreateChannelPanel activePanel={activePanel} setActivePanel={this.setActivePanel} />
@@ -465,7 +466,7 @@ export class SimpleStream extends Component {
 										umiCount={0}
 										isMuted={this.props.mutedStreams[this.props.postStreamId]}
 										setActivePanel={this.setActivePanel}
-										postSystemMessage={this.postSystemMessage}
+										runSlashCommand={this.runSlashCommand}
 										closeMenu={this.closeMenu}
 									/>
 								)}
@@ -546,6 +547,7 @@ export class SimpleStream extends Component {
 				<ComposeBox
 					placeholder={placeholderText}
 					teammates={this.props.teammates}
+					slashCommands={this.props.slashCommands}
 					ref={this._compose}
 					disabled={this.props.isOffline}
 					offscreen={activePanel !== "main" && activePanel !== "thread"}
@@ -819,14 +821,13 @@ export class SimpleStream extends Component {
 		} else return false;
 	}
 
-	// not implemented yet
-	toggleMute = () => {};
-
-	postSystemMessage = type => {
-		console.log("Posting a system message...", type);
-		if (type === "view-members") return this.showMembers();
-		if (type === "add-member-instructions") return this.addMembersInstructions();
-		if (type === "rename-channel-instructions") return this.renameChannelInstructions();
+	toggleMute = () => {
+		const { postStreamId } = this.props;
+		const isMuted = this.props.mutedStreams[postStreamId];
+		this.props.setUserPreference(["mutedStreams", postStreamId], !isMuted);
+		const text = isMuted ? "This stream has been unmuted." : "This stream has been muted.";
+		this.submitSystemPost(text);
+		return true;
 	};
 
 	showMembers = () => {
@@ -858,22 +859,113 @@ export class SimpleStream extends Component {
 		}
 
 		this.submitSystemPost(text);
-	};
-
-	addMembersToStream = matches => {
-		if (!matches) return false;
-		this.submitSystemPost("Add members: Not implemented yet.");
 		return true;
 	};
 
-	addMembersInstructions = () => {
-		const text = "Add members to this channel by typing `/add @nickname`";
-		this.submitSystemPost(text);
+	extractUsersFromArgs = args => {
+		const { teamMembersById } = this.props;
+		let users = [];
+		let usernamesArray = [];
+		let rest = "";
+		args
+			.toLowerCase()
+			.split(/(\s+)/)
+			.map(token => {
+				let found = false;
+				Object.keys(teamMembersById).map(userId => {
+					const username = teamMembersById[userId].username.toLowerCase();
+					if (token === username || token === "@" + username) {
+						users.push(userId);
+						usernamesArray.push("@" + username);
+						found = true;
+					}
+				});
+				if (!found) rest += token;
+			});
+		let usernames = "";
+		if (usernamesArray.length === 1) usernames = usernamesArray[0];
+		else if (usernamesArray.length > 1) {
+			const lastOne = usernamesArray.pop();
+			usernames = usernamesArray.join(", ") + " and " + lastOne;
+		}
+		return { users, usernames, rest };
 	};
 
-	renameChannelInstructions = () => {
-		const text = "Add members to this channel by typing `/rename [new name]`";
-		this.submitSystemPost(text);
+	addMembersToStream = async args => {
+		const { users, usernames, rest } = this.extractUsersFromArgs(args);
+		if (users.length === 0) {
+			this.submitSystemPost("Add members to this channel by typing `/add @nickname`");
+		} else {
+			await this.props.addUsersToStream(this.props.postStreamId, users);
+			this.submitPost({ text: "/me added " + usernames });
+		}
+		return true;
+	};
+
+	renameChannel = async args => {
+		if (args) {
+			const newStream = await this.props.renameStream(this.props.postStreamId, args);
+			if (newStream.name === args) {
+				this.submitPost({ text: "/me renamed the channel to " + args });
+			} else {
+				console.log("NS: ", newStream);
+				this.submitSystemPost("Unable to rename channel.");
+			}
+		} else {
+			this.submitSystemPost("Rename a channel by typing `/rename [new name]`");
+			// this._compose.current.insertIfEmpty("/rename");
+		}
+		return true;
+	};
+
+	leaveChannel = () => {
+		if (this.props.postStreamIsTeamStream) {
+			const text = "You cannot leave all-hands channels.";
+			return this.submitSystemPost(text);
+		}
+		this.props.removeUsersFromStream(this.props.postStreamId, [this.props.currentUser.id]);
+		this.setActivePanel("channels");
+		return true;
+	};
+
+	removeFromStream = async args => {
+		if (this.props.postStreamIsTeamStream) {
+			const text = "You cannot remove people from all-hands channels.";
+			return this.submitSystemPost(text);
+		}
+		const { users, usernames, rest } = this.extractUsersFromArgs(args);
+		if (users.length === 0) {
+			this.submitSystemPost("Usage: /remove @user");
+		} else {
+			await this.props.removeUsersFromStream(this.props.postStreamId, users);
+			this.submitPost({ text: "/me removed " + usernames });
+		}
+		return true;
+	};
+
+	openStream = args => {
+		// getChannelStreamsForTeam(streams, context.currentTeamId, session.userId) || [],
+	};
+
+	sendDirectMessage = async args => {
+		const { teamMembersById } = this.props;
+
+		let tokens = args.split(/(\s+)/);
+		const id = tokens.shift();
+
+		let user = Object.keys(teamMembersById).find(userId => {
+			const username = teamMembersById[userId].username;
+			return id === username || id === "@" + username;
+		});
+
+		if (!user) return this.submitSystemPost("Usage: /msg @user message");
+
+		// find or create the stream, then select it, then post the message
+		const stream = await this.props.createStream({ type: "direct", memberIds: [user] });
+		if (stream && stream._id) {
+			this.submitPost({ text: tokens.join(" ") });
+		}
+		return true;
 	};
 
 	submitSystemPost = text => {
@@ -882,8 +974,56 @@ export class SimpleStream extends Component {
 		const threadId = activePanel === "thread" ? this.state.threadId : null;
 		const lastPost = _.last(posts);
 		const seqNum = lastPost ? lastPost.seqNum + 0.001 : 99999999;
-
 		createSystemPost(postStreamId, threadId, text, seqNum);
+	};
+
+	postHelp = () => {
+		const text = "Help message goes here.";
+		this.submitSystemPost(text);
+		return true;
+	};
+
+	runSlashCommand = (command, args) => {
+		switch (command) {
+			case "help":
+				return this.postHelp();
+			case "add":
+				return this.addMembersToStream(args);
+			case "who":
+				return this.showMembers();
+			case "mute":
+				return this.toggleMute();
+			case "muteall":
+				return this.toggleMuteAll();
+			case "msg":
+				return this.sendDirectMessage(args);
+			case "open":
+				return this.openStream(args);
+			case "prefs":
+				return this.openPrefs(args);
+			case "rename":
+				return this.renameChannel(args);
+			case "remove":
+				return this.removeFromStream(args);
+			case "leave":
+				return this.leaveChannel(args);
+			case "me":
+				return false;
+		}
+	};
+
+	checkForSlashCommands = text => {
+		const substitute = text.match(/^s\/(.+)\/(.*)\/$/);
+		if (substitute && this.substituteLastPost(substitute)) return true;
+
+		const commandMatch = text.match(/^\/(\w+)\b\s*(.*)/);
+		if (commandMatch) {
+			const command = commandMatch[1];
+			const args = commandMatch[2];
+			return this.runSlashCommand(command, args);
+		}
+
+		return false;
 	};
 
 	// create a new post
@@ -892,17 +1032,10 @@ export class SimpleStream extends Component {
 		const { activePanel } = this.state;
 		const { postStreamId, fileStreamId, createPost, currentFile, repoId } = this.props;
 
-		const substitute = text.match(/^s\/(.+)\/(.*)\/$/);
-		if (this.substituteLastPost(substitute)) return;
-		else console.log("did not substitute");
+		if (this.checkForSlashCommands(text)) return;
 
-		if (text === "/members" || text === "/who") return this.showMembers();
-
-		if (text === "/mute") return this.toggleMute();
-
-		let addMembersRegExp = new RegExp("^/add\\s+(@(?:" + this.props.usernamesRegexp + ")\\b)");
-		const addMembers = text.match(addMembersRegExp);
-		if (this.addMembersToStream(addMembers)) return;
+		console.log("Was going to post: ", text);
+		return;
 
 		let threadId = activePanel === "thread" ? this.state.threadId : null;
 
@@ -1013,6 +1146,7 @@ const mapStateToProps = ({
 		usernamesRegexp: usernamesRegexp,
 		currentUser: user,
 		mutedStreams,
+		slashCommands,
 		team: teams[context.currentTeamId],
 		posts: streamPosts.map(post => {
 			let user = users[post.creatorId];

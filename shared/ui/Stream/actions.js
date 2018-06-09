@@ -132,13 +132,54 @@ export const createStream = attributes => async (dispatch, getState, { api }) =>
 	if (attributes.memberIds) stream.memberIds = attributes.memberIds;
 	if (attributes.purpose) stream.purpose = attributes.purpose;
 
-	console.log("Creating a stream: ", stream);
 	try {
 		const returnStream = await api.createStream(stream);
 		dispatch(setCurrentStream(returnStream._id));
+		return returnStream;
 	} catch (error) {}
 };
 
 export const setCurrentStream = streamId => async dispatch => {
 	dispatch({ type: "SET_CURRENT_STREAM", payload: streamId });
+};
+
+export const removeUsersFromStream = (streamId, userIds) => async (dispatch, getState, { api }) => {
+	const update = {
+		$pull: { memberIds: userIds }
+	};
+
+	try {
+		const returnStream = await api.updateStream(streamId, update);
+		console.log("return stream: ", returnStream);
+		// if (streams.length > 0) dispatch(saveStreams(normalize(streams)));
+	} catch (error) {
+		console.log("Error: ", error);
+	}
+};
+
+export const addUsersToStream = (streamId, userIds) => async (dispatch, getState, { api }) => {
+	const update = {
+		$push: { memberIds: userIds }
+	};
+
+	try {
+		const returnStream = await api.updateStream(streamId, update);
+		console.log("return stream: ", returnStream);
+		// if (streams.length > 0) dispatch(saveStreams(normalize(streams)));
+	} catch (error) {
+		console.log("Error: ", error);
+	}
+};
+
+export const renameStream = (streamId, name) => async (dispatch, getState, { api }) => {
+	const update = { name };
+
+	try {
+		const returnStream = await api.updateStream(streamId, update);
+		console.log("return stream: ", returnStream);
+		return returnStream;
+		// if (streams.length > 0) dispatch(saveStreams(normalize(streams)));
+	} catch (error) {
+		console.log("Error: ", error);
+	}
 };

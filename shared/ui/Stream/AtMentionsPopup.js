@@ -11,7 +11,7 @@ export default class AtMentionsPopup extends Component {
 	render() {
 		if (!this.props.on) return null;
 
-		const people = this.props.people;
+		const items = this.props.items;
 
 		return (
 			<div className="mentions-popup" ref={ref => (this._div = ref)}>
@@ -20,9 +20,8 @@ export default class AtMentionsPopup extends Component {
 						People matching <b>"@{this.props.prefix}"</b>
 					</div>
 					<ul className="compact at-mentions-list">
-						{this.props.people.map(person => {
-							let className = person.id == this.props.selected ? "hover" : "none";
-							let identifier = person.username || person.email;
+						{items.map(item => {
+							let className = item.id == this.props.selected ? "hover" : "none";
 							// the handleClickPerson event needs to fire onMouseDown
 							// rather than onclick because there is a handleblur
 							// event on the parent element that will un-render
@@ -30,15 +29,14 @@ export default class AtMentionsPopup extends Component {
 							return (
 								<li
 									className={className}
-									key={person.id}
-									onMouseEnter={event => this.handleMouseEnter(person.id)}
-									onMouseDown={event => this.handleClickPerson(person.id)}
+									key={item.id}
+									onMouseEnter={event => this.handleMouseEnter(item.id)}
+									onMouseDown={event => this.handleClickItem(item.id)}
 								>
-									<Headshot size={18} person={person} />
-									<span className="username">{identifier}</span>{" "}
-									<span className="name">
-										{person.firstName} {person.lastName}
-									</span>
+									{item.headshot && <Headshot size={18} person={item.headshot} />}
+									<span className="username">{item.identifier}</span>{" "}
+									{item.description && <span className="name">{item.description}</span>}
+									{item.help && <span className="help">{item.help}</span>}
 								</li>
 							);
 						})}
@@ -61,7 +59,7 @@ export default class AtMentionsPopup extends Component {
 		return this.props.handleHoverAtMention(id);
 	}
 
-	handleClickPerson(id) {
+	handleClickItem(id) {
 		return this.props.handleSelectAtMention(id);
 	}
 

@@ -39,8 +39,18 @@ export default class WebviewApi {
 	}
 
 	createStream(stream) {
-		console.log("sent the stream request");
 		return this.postMessage({ action: "create-stream", params: stream });
+	}
+
+	updateStream(streamId, update) {
+		console.log("posting message...");
+		return this.postMessage({
+			action: "update-stream",
+			params: {
+				streamId,
+				update
+			}
+		});
 	}
 
 	markStreamRead(streamId) {

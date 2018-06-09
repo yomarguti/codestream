@@ -46,24 +46,24 @@ export class SimpleChannelMenu extends Component {
 			this.props.setActivePanel("main");
 			this.props.setCurrentStream(streamId);
 			setTimeout(() => {
-				this.props.postSystemMessage("view-members");
+				this.props.runSlashCommand("who");
 			}, 500);
 		} else if (action === "mute-channel") {
-			console.log("MUTING CHANNEL: ", this.props.isMuted);
 			this.props.setUserPreference(["mutedStreams", streamId], !this.props.isMuted);
 		} else if (action === "add-members") {
 			this.props.setActivePanel("main");
 			this.props.setCurrentStream(streamId);
 			setTimeout(() => {
-				this.props.postSystemMessage("add-members-instructions");
+				this.props.runSlashCommand("add");
 			}, 500);
 		} else if (action === "rename-channel") {
 			this.props.setActivePanel("main");
 			this.props.setCurrentStream(streamId);
 			setTimeout(() => {
-				this.props.postSystemMessage("rename-channel-instructions");
+				this.props.runSlashCommand("rename");
 			}, 500);
 		} else if (action === "leave-channel") {
+			// this.props.runSlashCommand("leave");
 			atom.confirm(
 				{
 					message: "Are you sure you want to leave this channel?",
@@ -85,8 +85,11 @@ export class SimpleChannelMenu extends Component {
 }
 
 const mapStateToProps = ({ users, session }) => ({ session });
-export default connect(mapStateToProps, {
-	...contextActions,
-	...streamActions
-	// ...userActions
-})(SimpleChannelMenu);
+export default connect(
+	mapStateToProps,
+	{
+		...contextActions,
+		...streamActions
+		// ...userActions
+	}
+)(SimpleChannelMenu);

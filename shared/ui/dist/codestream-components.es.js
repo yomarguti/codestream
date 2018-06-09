@@ -17937,7 +17937,7 @@ var AtMentionsPopup = function (_Component) {
 
 			if (!this.props.on) return null;
 
-			var people = this.props.people;
+			var items = this.props.items;
 
 			return react.createElement(
 				"div",
@@ -17964,9 +17964,8 @@ var AtMentionsPopup = function (_Component) {
 					react.createElement(
 						"ul",
 						{ className: "compact at-mentions-list" },
-						this.props.people.map(function (person) {
-							var className = person.id == _this3.props.selected ? "hover" : "none";
-							var identifier = person.username || person.email;
+						items.map(function (item) {
+							var className = item.id == _this3.props.selected ? "hover" : "none";
 							// the handleClickPerson event needs to fire onMouseDown
 							// rather than onclick because there is a handleblur
 							// event on the parent element that will un-render
@@ -17975,27 +17974,30 @@ var AtMentionsPopup = function (_Component) {
 								"li",
 								{
 									className: className,
-									key: person.id,
+									key: item.id,
 									onMouseEnter: function onMouseEnter(event) {
-										return _this3.handleMouseEnter(person.id);
+										return _this3.handleMouseEnter(item.id);
 									},
 									onMouseDown: function onMouseDown(event) {
-										return _this3.handleClickPerson(person.id);
+										return _this3.handleClickItem(item.id);
 									}
 								},
-								react.createElement(Headshot, { size: 18, person: person }),
+								item.headshot && react.createElement(Headshot, { size: 18, person: item.headshot }),
 								react.createElement(
 									"span",
 									{ className: "username" },
-									identifier
+									item.identifier
 								),
 								" ",
-								react.createElement(
+								item.description && react.createElement(
 									"span",
 									{ className: "name" },
-									person.firstName,
-									" ",
-									person.lastName
+									item.description
+								),
+								item.help && react.createElement(
+									"span",
+									{ className: "help" },
+									item.help
 								)
 							);
 						})
@@ -18036,8 +18038,8 @@ var AtMentionsPopup = function (_Component) {
 			return this.props.handleHoverAtMention(id);
 		}
 	}, {
-		key: "handleClickPerson",
-		value: function handleClickPerson(id) {
+		key: "handleClickItem",
+		value: function handleClickItem(id) {
 			return this.props.handleSelectAtMention(id);
 		}
 	}, {
@@ -18132,13 +18134,13 @@ var ComposeBox = function (_React$Component) {
 			enumerable: true,
 			writable: true,
 			value: function value(id) {
-				var index = _this.state.atMentionsPeople.findIndex(function (x) {
+				var index = _this.state.popupItems.findIndex(function (x) {
 					return x.id == id;
 				});
 
 				_this.setState({
-					atMentionsIndex: index,
-					selectedAtMention: id
+					popupIndex: index,
+					selectedPopupItem: id
 				});
 			}
 		}), Object.defineProperty(_this, "handleSelectAtMention", {
@@ -18147,30 +18149,28 @@ var ComposeBox = function (_React$Component) {
 			value: function value(id) {
 				// if no id is passed, we assume that we're selecting
 				// the currently-selected at mention
-				if (!id) {
-					id = _this.state.selectedAtMention;
-				}
+				if (!id) id = _this.state.selectedPopupItem;
 
-				var user = _this.props.teammates.find(function (t) {
-					return t.id === id;
-				});
-				if (!user) return;
-				var username = user.username;
-				// otherwise explicitly use the one passed in
-				// FIXME -- this should anchor at the carat, not end-of-line
-				// var re = new RegExp("@" + this.state.atMentionsPrefix);
-				_this.setState({
-					atMentionsOn: false
-				});
+				var toInsert = void 0;
+
+				if (_this.state.popupOpen === "slash-commands") {
+					toInsert = id;
+				} else {
+					var user = _this.props.teammates.find(function (t) {
+						return t.id === id;
+					});
+					if (!user) return;
+					toInsert = user.username;
+				}
+				_this.hidePopup();
+				setTimeout(function () {
+					_this.focus();
+				}, 20);
 				// the reason for this unicode space is that chrome will
 				// not render a space at the end of a contenteditable div
 				// unless it is a &nbsp;, which is difficult to insert
 				// so we insert this unicode character instead
-				var toInsert = username + "\xA0";
-				setTimeout(function () {
-					_this.focus();
-				}, 20);
-				_this.insertTextAtCursor(toInsert, _this.state.atMentionsPrefix);
+				_this.insertTextAtCursor(toInsert + "\xA0", _this.state.popupPrefix);
 				// this.setNewPostText(text);
 			}
 		}), Object.defineProperty(_this, "handleChange", {
@@ -18184,17 +18184,28 @@ var ComposeBox = function (_React$Component) {
 				var node = range.commonAncestorContainer;
 				var nodeText = node.textContent || "";
 				var upToCursor = nodeText.substring(0, range.startOffset);
-				var match = upToCursor.match(/@([a-zA-Z0-9_.+]*)$/);
-				if (_this.state.atMentionsOn) {
-					if (match) {
-						_this.showAtMentionSelectors(match[0].replace(/@/, ""));
+				var peopleMatch = upToCursor.match(/@([a-zA-Z0-9_.+]*)$/);
+				var slashMatch = newPostText.match(/^\/([a-zA-Z0-9+]*)$/);
+				if (_this.state.popupOpen === "at-mentions") {
+					if (peopleMatch) {
+						_this.showPopupSelectors(peopleMatch[0].replace(/@/, ""), "at-mentions");
 					} else {
 						// if the line doesn't end with @word, then hide the popup
-						_this.setState({ atMentionsOn: false });
+						_this.hidePopup();
+					}
+				} else if (_this.state.popupOpen === "slash-commands") {
+					if (slashMatch) {
+						_this.showPopupSelectors(slashMatch[0].replace(/\//, ""), "slash-commands");
+					} else {
+						// if the line doesn't start with /word, then hide the popup
+						_this.hidePopup();
 					}
 				} else {
-					if (match) {
-						_this.showAtMentionSelectors(match[0].replace(/@/, ""));
+					if (peopleMatch) {
+						_this.showPopupSelectors(peopleMatch[0].replace(/@/, ""), "at-mentions");
+					}
+					if (slashMatch) {
+						_this.showPopupSelectors(slashMatch[0].replace(/\//, ""), "slash-commands");
 					}
 				}
 				// track newPostText as the user types
@@ -18210,9 +18221,7 @@ var ComposeBox = function (_React$Component) {
 			writable: true,
 			value: function value(event) {
 				event.preventDefault();
-				_this.setState({
-					atMentionsOn: false
-				});
+				_this.hidePopup();
 			}
 		}), Object.defineProperty(_this, "handleKeyPress", {
 			enumerable: true,
@@ -18223,31 +18232,29 @@ var ComposeBox = function (_React$Component) {
 				// if we have the at-mentions popup open, then the keys
 				// do something different than if we have the focus in
 				// the textarea
-				if (_this.state.atMentionsOn) {
+				if (_this.state.popupOpen) {
 					if (event.key == "Escape") {
-						_this.hideAtMentionSelectors();
+						_this.hidePopup();
 					} else if (event.key == "Enter" && !event.shiftKey) {
 						event.preventDefault();
-						_this.selectFirstAtMention();
-					} else {
-						var match = newPostText.match(/@([a-zA-Z0-9_.]*)$/);
-						var text = match ? match[0].replace(/@/, "") : "";
-						// this.showAtMentionSelectors(text);
+						_this.selectFirst();
 					}
 				} else if (event.key === "@") {
-					_this.showAtMentionSelectors("");
+					_this.showPopupSelectors("", "at-mentions");
+				} else if (event.key === "/" && newPostText.length === 0) {
+					_this.showPopupSelectors("", "slash-commands");
 				} else if (event.key === "Enter" && !event.shiftKey) {
 					event.preventDefault();
 					if (newPostText.trim().length > 0 && !_this.props.disabled) {
 						// convert the text to plaintext so there is no HTML
-						var _text = newPostText.replace(/<br>/g, "\n");
-						var doc = new DOMParser().parseFromString(_text, "text/html");
-						_text = doc.documentElement.textContent;
+						var text = newPostText.replace(/<br>/g, "\n");
+						var doc = new DOMParser().parseFromString(text, "text/html");
+						text = doc.documentElement.textContent;
 
 						_this.props.onSubmit({
-							text: _text,
+							text: text,
 							quote: _this.state.quote,
-							mentionedUserIds: _this.props.findMentionedUserIds(_text, _this.props.teammates),
+							mentionedUserIds: _this.props.findMentionedUserIds(text, _this.props.teammates),
 							autoMentions: _this.state.autoMentions
 						});
 						_this.reset();
@@ -18290,17 +18297,17 @@ var ComposeBox = function (_React$Component) {
 						return _this2.handleAtMentionKeyPress(event, "escape");
 					},
 					hiddenInCommandPalette: true
-				}), atom.commands.add(".codestream .compose.mentions-on", "codestream:at-mention-move-up", {
+				}), atom.commands.add(".codestream .compose.popup-open", "codestream:popup-move-up", {
 					didDispatch: function didDispatch(event) {
 						return _this2.handleAtMentionKeyPress(event, "up");
 					},
 					hiddenInCommandPalette: true
-				}), atom.commands.add(".codestream .compose.mentions-on", "codestream:at-mention-move-down", {
+				}), atom.commands.add(".codestream .compose.popup-open", "codestream:popup-move-down", {
 					didDispatch: function didDispatch(event) {
 						return _this2.handleAtMentionKeyPress(event, "down");
 					},
 					hiddenInCommandPalette: true
-				}), atom.commands.add(".codestream .compose.mentions-on", "codestream:at-mention-tab", {
+				}), atom.commands.add(".codestream .compose.popup-open", "codestream:popup-tab", {
 					didDispatch: function didDispatch(event) {
 						return _this2.handleAtMentionKeyPress(event, "tab");
 					},
@@ -18321,45 +18328,69 @@ var ComposeBox = function (_React$Component) {
 			});
 		}
 	}, {
-		key: "showAtMentionSelectors",
+		key: "insertIfEmpty",
+		value: function insertIfEmpty(newText) {
+			// if there's text in the compose area, return without
+			// adding the suggestion
+			if (this.state.newPostText && this.state.newPostText.length > 0) return;
+			// the reason for this unicode space is that chrome will
+			// not render a space at the end of a contenteditable div
+			// unless it is a &nbsp;, which is difficult to insert
+			// so we insert this unicode character instead
+			this.insertTextAtCursor(newText + ":\xA0");
+		}
+	}, {
+		key: "showPopupSelectors",
 
 
 		// set up the parameters to pass to the at mention popup
-		value: function showAtMentionSelectors(prefix) {
-			var peopleToShow = [];
+		value: function showPopupSelectors(prefix, type) {
+			var itemsToShow = [];
 
-			Object.values(this.props.teammates).forEach(function (person) {
-				var toMatch = person.firstName + " " + person.lastName + "*" + person.username; // + "*" + person.email;
-				var lowered = toMatch.toLowerCase();
-				if (lowered.indexOf(prefix) !== -1) {
-					peopleToShow.push(person);
-				}
-			});
-
-			if (peopleToShow.length == 0) {
-				this.setState({
-					atMentionsOn: false
+			if (type === "at-mentions") {
+				Object.values(this.props.teammates).forEach(function (person) {
+					var toMatch = person.firstName + " " + person.lastName + "*" + person.username;
+					if (toMatch.toLowerCase().indexOf(prefix) !== -1) {
+						itemsToShow.push({
+							id: person.id,
+							headshot: person,
+							identifier: person.username || person.email,
+							description: person.firstName + " " + person.lastName
+						});
+					}
 				});
+			} else if (type === "slash-commands") {
+				this.props.slashCommands.map(function (command) {
+					var lowered = command.id.toLowerCase();
+					if (lowered.indexOf(prefix) !== -1) {
+						command.identifier = command.id;
+						itemsToShow.push(command);
+					}
+				});
+			}
+
+			if (itemsToShow.length == 0) {
+				this.hidePopup();
 			} else {
-				var selected = peopleToShow[0].id;
+				var selected = itemsToShow[0].id;
 
 				this.setState({
-					atMentionsOn: true,
-					atMentionsPrefix: prefix,
-					atMentionsPeople: peopleToShow,
-					atMentionsIndex: 0,
-					selectedAtMention: selected
+					popupOpen: type,
+					popupPrefix: prefix,
+					popupItems: itemsToShow,
+					popupIndex: 0,
+					selectedPopupItem: selected
 				});
 			}
 		}
 	}, {
-		key: "hideAtMentionSelectors",
-		value: function hideAtMentionSelectors() {
-			this.setState({ atMentionsOn: false });
+		key: "hidePopup",
+		value: function hidePopup() {
+			this.setState({ popupOpen: false });
 		}
 	}, {
-		key: "selectFirstAtMention",
-		value: function selectFirstAtMention() {
+		key: "selectFirst",
+		value: function selectFirst() {
 			this.handleSelectAtMention();
 		}
 
@@ -18401,28 +18432,28 @@ var ComposeBox = function (_React$Component) {
 		key: "handleAtMentionKeyPress",
 		value: function handleAtMentionKeyPress(event, eventType) {
 			if (eventType == "escape") {
-				if (this.state.atMentionsOn) this.hideAtMentionSelectors();
+				if (this.state.popupOpen) this.hidePopup();
 				// else this.handleDismissThread();
 			} else {
 				var newIndex = 0;
 				if (eventType == "down") {
-					if (this.state.atMentionsIndex < this.state.atMentionsPeople.length - 1) {
-						newIndex = this.state.atMentionsIndex + 1;
+					if (this.state.popupIndex < this.state.popupItems.length - 1) {
+						newIndex = this.state.popupIndex + 1;
 					} else {
 						newIndex = 0;
 					}
 				} else if (eventType == "up") {
-					if (this.state.atMentionsIndex == 0) {
-						newIndex = this.state.atMentionsPeople.length - 1;
+					if (this.state.popupIndex == 0) {
+						newIndex = this.state.popupItems.length - 1;
 					} else {
-						newIndex = this.state.atMentionsIndex - 1;
+						newIndex = this.state.popupIndex - 1;
 					}
 				} else if (eventType == "tab") {
-					this.selectFirstAtMention();
+					this.selectFirst();
 				}
 				this.setState({
-					atMentionsIndex: newIndex,
-					selectedAtMention: this.state.atMentionsPeople[newIndex].id
+					popupIndex: newIndex,
+					selectedPopupItem: this.state.popupItems[newIndex].id
 				});
 			}
 		}
@@ -18501,15 +18532,14 @@ var ComposeBox = function (_React$Component) {
 					onKeyDown: this.handleKeyDown,
 					className: classnames("compose", {
 						offscreen: this.props.offscreen,
-						"mentions-on": this.state.atMentionsOn
+						"popup-open": this.state.popupOpen
 					})
 				},
 				react.createElement(AtMentionsPopup, {
-					on: this.state.atMentionsOn,
-					people: this.state.atMentionsPeople,
-					usernames: this.usernameRegExp,
-					prefix: this.state.atMentionsPrefix,
-					selected: this.state.selectedAtMention,
+					on: this.state.popupOpen,
+					items: this.state.popupItems,
+					prefix: this.state.popupPrefix,
+					selected: this.state.selectedPopupItem,
 					handleHoverAtMention: this.handleHoverAtMention,
 					handleSelectAtMention: this.handleSelectAtMention
 				}),
@@ -23317,28 +23347,26 @@ var createStream = function createStream(attributes) {
 							if (attributes.memberIds) stream.memberIds = attributes.memberIds;
 							if (attributes.purpose) stream.purpose = attributes.purpose;
 
-							console.log("Creating a stream: ", stream);
-							_context3.prev = 6;
-							_context3.next = 9;
+							_context3.prev = 5;
+							_context3.next = 8;
 							return api.createStream(stream);
 
-						case 9:
+						case 8:
 							returnStream = _context3.sent;
 
 							dispatch(setCurrentStream(returnStream._id));
-							_context3.next = 15;
-							break;
+							return _context3.abrupt("return", returnStream);
 
 						case 13:
 							_context3.prev = 13;
-							_context3.t0 = _context3["catch"](6);
+							_context3.t0 = _context3["catch"](5);
 
 						case 15:
 						case "end":
 							return _context3.stop();
 					}
 				}
-			}, _callee3, _this, [[6, 13]]);
+			}, _callee3, _this, [[5, 13]]);
 		}));
 
 		return function (_x7, _x8, _x9) {
@@ -23370,6 +23398,134 @@ var setCurrentStream = function setCurrentStream(streamId) {
 	}();
 };
 
+var removeUsersFromStream = function removeUsersFromStream(streamId, userIds) {
+	return function () {
+		var _ref11 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(dispatch, getState, _ref10) {
+			var api = _ref10.api;
+			var update, returnStream;
+			return regeneratorRuntime.wrap(function _callee5$(_context5) {
+				while (1) {
+					switch (_context5.prev = _context5.next) {
+						case 0:
+							update = {
+								$pull: { memberIds: userIds }
+							};
+							_context5.prev = 1;
+							_context5.next = 4;
+							return api.updateStream(streamId, update);
+
+						case 4:
+							returnStream = _context5.sent;
+
+							console.log("return stream: ", returnStream);
+							// if (streams.length > 0) dispatch(saveStreams(normalize(streams)));
+							_context5.next = 11;
+							break;
+
+						case 8:
+							_context5.prev = 8;
+							_context5.t0 = _context5["catch"](1);
+
+							console.log("Error: ", _context5.t0);
+
+						case 11:
+						case "end":
+							return _context5.stop();
+					}
+				}
+			}, _callee5, _this, [[1, 8]]);
+		}));
+
+		return function (_x11, _x12, _x13) {
+			return _ref11.apply(this, arguments);
+		};
+	}();
+};
+
+var addUsersToStream = function addUsersToStream(streamId, userIds) {
+	return function () {
+		var _ref13 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(dispatch, getState, _ref12) {
+			var api = _ref12.api;
+			var update, returnStream;
+			return regeneratorRuntime.wrap(function _callee6$(_context6) {
+				while (1) {
+					switch (_context6.prev = _context6.next) {
+						case 0:
+							update = {
+								$push: { memberIds: userIds }
+							};
+							_context6.prev = 1;
+							_context6.next = 4;
+							return api.updateStream(streamId, update);
+
+						case 4:
+							returnStream = _context6.sent;
+
+							console.log("return stream: ", returnStream);
+							// if (streams.length > 0) dispatch(saveStreams(normalize(streams)));
+							_context6.next = 11;
+							break;
+
+						case 8:
+							_context6.prev = 8;
+							_context6.t0 = _context6["catch"](1);
+
+							console.log("Error: ", _context6.t0);
+
+						case 11:
+						case "end":
+							return _context6.stop();
+					}
+				}
+			}, _callee6, _this, [[1, 8]]);
+		}));
+
+		return function (_x14, _x15, _x16) {
+			return _ref13.apply(this, arguments);
+		};
+	}();
+};
+
+var renameStream = function renameStream(streamId, name) {
+	return function () {
+		var _ref15 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7(dispatch, getState, _ref14) {
+			var api = _ref14.api;
+			var update, returnStream;
+			return regeneratorRuntime.wrap(function _callee7$(_context7) {
+				while (1) {
+					switch (_context7.prev = _context7.next) {
+						case 0:
+							update = { name: name };
+							_context7.prev = 1;
+							_context7.next = 4;
+							return api.updateStream(streamId, update);
+
+						case 4:
+							returnStream = _context7.sent;
+
+							console.log("return stream: ", returnStream);
+							return _context7.abrupt("return", returnStream);
+
+						case 9:
+							_context7.prev = 9;
+							_context7.t0 = _context7["catch"](1);
+
+							console.log("Error: ", _context7.t0);
+
+						case 12:
+						case "end":
+							return _context7.stop();
+					}
+				}
+			}, _callee7, _this, [[1, 9]]);
+		}));
+
+		return function (_x17, _x18, _x19) {
+			return _ref15.apply(this, arguments);
+		};
+	}();
+};
+
 var streamActions = /*#__PURE__*/Object.freeze({
 	markStreamRead: markStreamRead,
 	createPost: createPost,
@@ -23380,7 +23536,10 @@ var streamActions = /*#__PURE__*/Object.freeze({
 	deletePost: deletePost,
 	setUserPreference: setUserPreference,
 	createStream: createStream,
-	setCurrentStream: setCurrentStream
+	setCurrentStream: setCurrentStream,
+	removeUsersFromStream: removeUsersFromStream,
+	addUsersToStream: addUsersToStream,
+	renameStream: renameStream
 });
 
 var initialState = {
@@ -40897,24 +41056,24 @@ var SimpleChannelMenu = function (_Component) {
 					_this.props.setActivePanel("main");
 					_this.props.setCurrentStream(streamId);
 					setTimeout(function () {
-						_this.props.postSystemMessage("view-members");
+						_this.props.runSlashCommand("who");
 					}, 500);
 				} else if (action === "mute-channel") {
-					console.log("MUTING CHANNEL: ", _this.props.isMuted);
 					_this.props.setUserPreference(["mutedStreams", streamId], !_this.props.isMuted);
 				} else if (action === "add-members") {
 					_this.props.setActivePanel("main");
 					_this.props.setCurrentStream(streamId);
 					setTimeout(function () {
-						_this.props.postSystemMessage("add-members-instructions");
+						_this.props.runSlashCommand("add");
 					}, 500);
 				} else if (action === "rename-channel") {
 					_this.props.setActivePanel("main");
 					_this.props.setCurrentStream(streamId);
 					setTimeout(function () {
-						_this.props.postSystemMessage("rename-channel-instructions");
+						_this.props.runSlashCommand("rename");
 					}, 500);
 				} else if (action === "leave-channel") {
+					// this.props.runSlashCommand("leave");
 					atom.confirm({
 						message: "Are you sure you want to leave this channel?",
 						buttons: ["Leave Channel", "Cancel"]
@@ -41038,7 +41197,7 @@ var SimpleChannelPanel = function (_Component) {
 										umiCount: count,
 										isMuted: _this.props.mutedStreams[stream.id],
 										setActivePanel: _this.props.setActivePanel,
-										postSystemMessage: _this.props.postSystemMessage,
+										runSlashCommand: _this.props.runSlashCommand,
 										closeMenu: _this.closeMenu
 									})
 								)
@@ -51054,10 +51213,20 @@ var toMapBy = function toMapBy(key, entities) {
 	}, {});
 };
 
+var slashCommands = [{ id: "help", help: "get help", action: showHelp }, { id: "add", help: "add member to channel", description: "[@user]" }, { id: "msg", help: "message member", description: "[@user]" }, { id: "leave", help: "leave channel" }, { id: "me", help: "emote" }, { id: "mute", help: "mute channel" },
+// { id: "muteall", help: "mute codestream" },
+// { id: "open", help: "open channel" },
+// { id: "prefs", help: "open preferences" },
+{ id: "rename", help: "rename channel", description: "[newname]" }, { id: "remove", help: "remove from channel", description: "[@user]" }, { id: "who", help: "show channel members" }];
+
+var showHelp = function showHelp() {};
+
 var SimpleStream = function (_Component) {
 	inherits$1(SimpleStream, _Component);
 
 	function SimpleStream(props) {
+		var _this2 = this;
+
 		classCallCheck$1(this, SimpleStream);
 
 		var _this = possibleConstructorReturn$1(this, (SimpleStream.__proto__ || Object.getPrototypeOf(SimpleStream)).call(this, props));
@@ -51460,16 +51629,14 @@ var SimpleStream = function (_Component) {
 		Object.defineProperty(_this, "toggleMute", {
 			enumerable: true,
 			writable: true,
-			value: function value() {}
-		});
-		Object.defineProperty(_this, "postSystemMessage", {
-			enumerable: true,
-			writable: true,
-			value: function value(type) {
-				console.log("Posting a system message...", type);
-				if (type === "view-members") return _this.showMembers();
-				if (type === "add-member-instructions") return _this.addMembersInstructions();
-				if (type === "rename-channel-instructions") return _this.renameChannelInstructions();
+			value: function value() {
+				var postStreamId = _this.props.postStreamId;
+
+				var isMuted = _this.props.mutedStreams[postStreamId];
+				_this.props.setUserPreference(["mutedStreams", postStreamId], !isMuted);
+				var text = isMuted ? "This stream has been unmuted." : "This stream has been muted.";
+				_this.submitSystemPost(text);
+				return true;
 			}
 		});
 		Object.defineProperty(_this, "showMembers", {
@@ -51502,32 +51669,264 @@ var SimpleStream = function (_Component) {
 				}
 
 				_this.submitSystemPost(text);
+				return true;
+			}
+		});
+		Object.defineProperty(_this, "extractUsersFromArgs", {
+			enumerable: true,
+			writable: true,
+			value: function value(args) {
+				var teamMembersById = _this.props.teamMembersById;
+
+				var users = [];
+				var usernamesArray = [];
+				var rest = "";
+				args.toLowerCase().split(/(\s+)/).map(function (token) {
+					var found = false;
+					Object.keys(teamMembersById).map(function (userId) {
+						var username = teamMembersById[userId].username.toLowerCase();
+						if (token === username || token === "@" + username) {
+							users.push(userId);
+							usernamesArray.push("@" + username);
+							found = true;
+						}
+					});
+					if (!found) rest += token;
+				});
+				var usernames = "";
+				if (usernamesArray.length === 1) usernames = usernamesArray[0];else if (usernamesArray.length > 1) {
+					var lastOne = usernamesArray.pop();
+					usernames = usernamesArray.join(", ") + " and " + lastOne;
+				}
+				return { users: users, usernames: usernames, rest: rest };
 			}
 		});
 		Object.defineProperty(_this, "addMembersToStream", {
 			enumerable: true,
 			writable: true,
-			value: function value(matches) {
-				if (!matches) return false;
-				_this.submitSystemPost("Add members: Not implemented yet.");
+			value: function () {
+				var _ref3 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(args) {
+					var _this$extractUsersFro, users, usernames, rest;
+
+					return regeneratorRuntime.wrap(function _callee$(_context) {
+						while (1) {
+							switch (_context.prev = _context.next) {
+								case 0:
+									_this$extractUsersFro = _this.extractUsersFromArgs(args), users = _this$extractUsersFro.users, usernames = _this$extractUsersFro.usernames, rest = _this$extractUsersFro.rest;
+
+									if (!(users.length === 0)) {
+										_context.next = 5;
+										break;
+									}
+
+									_this.submitSystemPost("Add members to this channel by typing `/add @nickname`");
+									_context.next = 8;
+									break;
+
+								case 5:
+									_context.next = 7;
+									return _this.props.addUsersToStream(_this.props.postStreamId, users);
+
+								case 7:
+									_this.submitPost({ text: "/me added " + usernames });
+
+								case 8:
+									return _context.abrupt("return", true);
+
+								case 9:
+								case "end":
+									return _context.stop();
+							}
+						}
+					}, _callee, _this2);
+				}));
+
+				function value(_x3) {
+					return _ref3.apply(this, arguments);
+				}
+
+				return value;
+			}()
+		});
+		Object.defineProperty(_this, "renameChannel", {
+			enumerable: true,
+			writable: true,
+			value: function () {
+				var _ref4 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(args) {
+					var newStream;
+					return regeneratorRuntime.wrap(function _callee2$(_context2) {
+						while (1) {
+							switch (_context2.prev = _context2.next) {
+								case 0:
+									if (!args) {
+										_context2.next = 7;
+										break;
+									}
+
+									_context2.next = 3;
+									return _this.props.renameStream(_this.props.postStreamId, args);
+
+								case 3:
+									newStream = _context2.sent;
+
+									if (newStream.name === args) {
+										_this.submitPost({ text: "/me renamed the channel to " + args });
+									} else {
+										console.log("NS: ", newStream);
+										_this.submitSystemPost("Unable to rename channel.");
+									}
+									_context2.next = 8;
+									break;
+
+								case 7:
+									_this.submitSystemPost("Rename a channel by typing `/rename [new name]`");
+									// this._compose.current.insertIfEmpty("/rename");
+
+								case 8:
+									return _context2.abrupt("return", true);
+
+								case 9:
+								case "end":
+									return _context2.stop();
+							}
+						}
+					}, _callee2, _this2);
+				}));
+
+				function value(_x4) {
+					return _ref4.apply(this, arguments);
+				}
+
+				return value;
+			}()
+		});
+		Object.defineProperty(_this, "leaveChannel", {
+			enumerable: true,
+			writable: true,
+			value: function value() {
+				if (_this.props.postStreamIsTeamStream) {
+					var text = "You cannot leave all-hands channels.";
+					return _this.submitSystemPost(text);
+				}
+				_this.props.removeUsersFromStream(_this.props.postStreamId, [_this.props.currentUser.id]);
+				_this.setActivePanel("channels");
 				return true;
 			}
 		});
-		Object.defineProperty(_this, "addMembersInstructions", {
+		Object.defineProperty(_this, "removeFromStream", {
 			enumerable: true,
 			writable: true,
-			value: function value() {
-				var text = "Add members to this channel by typing `/add @nickname`";
-				_this.submitSystemPost(text);
+			value: function () {
+				var _ref5 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(args) {
+					var text, _this$extractUsersFro2, users, usernames, rest;
+
+					return regeneratorRuntime.wrap(function _callee3$(_context3) {
+						while (1) {
+							switch (_context3.prev = _context3.next) {
+								case 0:
+									if (!_this.props.postStreamIsTeamStream) {
+										_context3.next = 3;
+										break;
+									}
+
+									text = "You cannot remove people from all-hands channels.";
+									return _context3.abrupt("return", _this.submitSystemPost(text));
+
+								case 3:
+									_this$extractUsersFro2 = _this.extractUsersFromArgs(args), users = _this$extractUsersFro2.users, usernames = _this$extractUsersFro2.usernames, rest = _this$extractUsersFro2.rest;
+
+									if (!(users.length === 0)) {
+										_context3.next = 8;
+										break;
+									}
+
+									_this.submitSystemPost("Usage: /remove @user");
+									_context3.next = 11;
+									break;
+
+								case 8:
+									_context3.next = 10;
+									return _this.props.removeUsersFromStream(_this.props.postStreamId, users);
+
+								case 10:
+									_this.submitPost({ text: "/me removed " + usernames });
+
+								case 11:
+									return _context3.abrupt("return", true);
+
+								case 12:
+								case "end":
+									return _context3.stop();
+							}
+						}
+					}, _callee3, _this2);
+				}));
+
+				function value(_x5) {
+					return _ref5.apply(this, arguments);
+				}
+
+				return value;
+			}()
+		});
+		Object.defineProperty(_this, "openStream", {
+			enumerable: true,
+			writable: true,
+			value: function value(args) {
+				// getChannelStreamsForTeam(streams, context.currentTeamId, session.userId) || [],
 			}
 		});
-		Object.defineProperty(_this, "renameChannelInstructions", {
+		Object.defineProperty(_this, "sendDirectMessage", {
 			enumerable: true,
 			writable: true,
-			value: function value() {
-				var text = "Add members to this channel by typing `/rename [new name]`";
-				_this.submitSystemPost(text);
-			}
+			value: function () {
+				var _ref6 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(args) {
+					var teamMembersById, tokens, id, user, stream;
+					return regeneratorRuntime.wrap(function _callee4$(_context4) {
+						while (1) {
+							switch (_context4.prev = _context4.next) {
+								case 0:
+									teamMembersById = _this.props.teamMembersById;
+									tokens = args.split(/(\s+)/);
+									id = tokens.shift();
+									user = Object.keys(teamMembersById).find(function (userId) {
+										var username = teamMembersById[userId].username;
+										return id === username || id === "@" + username;
+									});
+
+									if (user) {
+										_context4.next = 6;
+										break;
+									}
+
+									return _context4.abrupt("return", _this.submitSystemPost("Usage: /msg @user message"));
+
+								case 6:
+									_context4.next = 8;
+									return _this.props.createStream({ type: "direct", memberIds: [user] });
+
+								case 8:
+									stream = _context4.sent;
+
+									if (stream && stream._id) {
+										_this.submitPost({ text: tokens.join(" ") });
+									}
+									return _context4.abrupt("return", true);
+
+								case 11:
+								case "end":
+									return _context4.stop();
+							}
+						}
+					}, _callee4, _this2);
+				}));
+
+				function value(_x6) {
+					return _ref6.apply(this, arguments);
+				}
+
+				return value;
+			}()
 		});
 		Object.defineProperty(_this, "submitSystemPost", {
 			enumerable: true,
@@ -51542,18 +51941,75 @@ var SimpleStream = function (_Component) {
 				var threadId = activePanel === "thread" ? _this.state.threadId : null;
 				var lastPost = underscore.last(posts);
 				var seqNum = lastPost ? lastPost.seqNum + 0.001 : 99999999;
-
 				createSystemPost$$1(postStreamId, threadId, text, seqNum);
+			}
+		});
+		Object.defineProperty(_this, "postHelp", {
+			enumerable: true,
+			writable: true,
+			value: function value() {
+				var text = "Help message goes here.";
+				_this.submitSystemPost(text);
+				return true;
+			}
+		});
+		Object.defineProperty(_this, "runSlashCommand", {
+			enumerable: true,
+			writable: true,
+			value: function value(command, args) {
+				switch (command) {
+					case "help":
+						return _this.postHelp();
+					case "add":
+						return _this.addMembersToStream(args);
+					case "who":
+						return _this.showMembers();
+					case "mute":
+						return _this.toggleMute();
+					case "muteall":
+						return _this.toggleMuteAll();
+					case "msg":
+						return _this.sendDirectMessage(args);
+					case "open":
+						return _this.openStream(args);
+					case "prefs":
+						return _this.openPrefs(args);
+					case "rename":
+						return _this.renameChannel(args);
+					case "remove":
+						return _this.removeFromStream(args);
+					case "leave":
+						return _this.leaveChannel(args);
+					case "me":
+						return false;
+				}
+			}
+		});
+		Object.defineProperty(_this, "checkForSlashCommands", {
+			enumerable: true,
+			writable: true,
+			value: function value(text) {
+				var substitute = text.match(/^s\/(.+)\/(.*)\/$/);
+				if (substitute && _this.substituteLastPost(substitute)) return true;
+
+				var commandMatch = text.match(/^\/(\w+)\b\s*(.*)/);
+				if (commandMatch) {
+					var command = commandMatch[1];
+					var args = commandMatch[2];
+					return _this.runSlashCommand(command, args);
+				}
+
+				return false;
 			}
 		});
 		Object.defineProperty(_this, "submitPost", {
 			enumerable: true,
 			writable: true,
-			value: function value(_ref3) {
-				var text = _ref3.text,
-				    quote = _ref3.quote,
-				    mentionedUserIds = _ref3.mentionedUserIds,
-				    autoMentions = _ref3.autoMentions;
+			value: function value(_ref7) {
+				var text = _ref7.text,
+				    quote = _ref7.quote,
+				    mentionedUserIds = _ref7.mentionedUserIds,
+				    autoMentions = _ref7.autoMentions;
 
 				var codeBlocks = [];
 				var activePanel = _this.state.activePanel;
@@ -51565,16 +52021,10 @@ var SimpleStream = function (_Component) {
 				    repoId = _this$props2.repoId;
 
 
-				var substitute = text.match(/^s\/(.+)\/(.*)\/$/);
-				if (_this.substituteLastPost(substitute)) return;else console.log("did not substitute");
+				if (_this.checkForSlashCommands(text)) return;
 
-				if (text === "/members" || text === "/who") return _this.showMembers();
-
-				if (text === "/mute") return _this.toggleMute();
-
-				var addMembersRegExp = new RegExp("^/add\\s+(@(?:" + _this.props.usernamesRegexp + ")\\b)");
-				var addMembers = text.match(addMembersRegExp);
-				if (_this.addMembersToStream(addMembers)) return;
+				console.log("Was going to post: ", text);
+				return;
 
 				var threadId = activePanel === "thread" ? _this.state.threadId : null;
 
@@ -51619,7 +52069,7 @@ var SimpleStream = function (_Component) {
 	createClass$1(SimpleStream, [{
 		key: "componentDidMount",
 		value: function componentDidMount() {
-			var _this2 = this;
+			var _this3 = this;
 
 			this.disposables.push(emitter.subscribe("interaction:marker-selected", this.handleMarkerSelected));
 
@@ -51636,7 +52086,7 @@ var SimpleStream = function (_Component) {
 				// this is because the height of the HTML element is
 				// set explicitly
 				new ResizeObserver(function () {
-					_this2.handleScroll();
+					_this3.handleScroll();
 				}).observe(this._postslist);
 			}
 
@@ -51649,27 +52099,27 @@ var SimpleStream = function (_Component) {
 					}
 				}), atom.commands.add("atom-workspace", "codestream:escape", {
 					didDispatch: function didDispatch(event) {
-						return _this2.handleEscape(event);
+						return _this3.handleEscape(event);
 					},
 					hiddenInCommandPalette: true
 				}), atom.commands.add("atom-workspace", "codestream:copy", {
 					didDispatch: function didDispatch(event) {
-						return _this2.copy(event);
+						return _this3.copy(event);
 					},
 					hiddenInCommandPalette: true
 				}), atom.commands.add(".codestream .post.mine", "codestream:edit-headshot", {
 					didDispatch: function didDispatch(event) {
-						return _this2.handleEditHeadshot(event);
+						return _this3.handleEditHeadshot(event);
 					},
 					hiddenInCommandPalette: true
 				}), atom.commands.add(".codestream .post.mine", "codestream:edit-post", {
 					didDispatch: function didDispatch(event) {
-						return _this2.handleEditPost(event);
+						return _this3.handleEditPost(event);
 					},
 					hiddenInCommandPalette: true
 				}), atom.commands.add(".codestream .post.mine", "codestream:delete-post", {
 					didDispatch: function didDispatch(event) {
-						return _this2.handleDeletePost(event);
+						return _this3.handleDeletePost(event);
 					},
 					hiddenInCommandPalette: true
 				}));
@@ -51744,7 +52194,7 @@ var SimpleStream = function (_Component) {
 	}, {
 		key: "componentDidUpdate",
 		value: function componentDidUpdate(prevProps, prevState) {
-			var _this3 = this;
+			var _this4 = this;
 
 			var _props = this.props,
 			    postStreamId = _props.postStreamId,
@@ -51763,7 +52213,7 @@ var SimpleStream = function (_Component) {
 
 			if (this.state.activePanel === "main" && prevState.activePanel === "channels") {
 				setTimeout(function () {
-					_this3.focusInput();
+					_this4.focusInput();
 				}, 500);
 			}
 
@@ -51831,7 +52281,7 @@ var SimpleStream = function (_Component) {
 		// to be able to animate between the two streams, since they will both be
 		// visible during the transition
 		value: function render() {
-			var _this4 = this;
+			var _this5 = this;
 
 			var _props2 = this.props,
 			    configs = _props2.configs,
@@ -51904,8 +52354,8 @@ var SimpleStream = function (_Component) {
 
 			return react.createElement(
 				"div",
-				{ className: streamClass, ref: function ref(_ref9) {
-						return _this4._div = _ref9;
+				{ className: streamClass, ref: function ref(_ref13) {
+						return _this5._div = _ref13;
 					} },
 				react.createElement("div", { id: "modal-root" }),
 				react.createElement(EditingIndicator, {
@@ -51917,20 +52367,20 @@ var SimpleStream = function (_Component) {
 				react.createElement(ChannelPanel, {
 					activePanel: activePanel,
 					setActivePanel: this.setActivePanel,
-					postSystemMessage: this.postSystemMessage
+					runSlashCommand: this.runSlashCommand
 				}),
 				react.createElement(PublicChannelPanel, { activePanel: activePanel, setActivePanel: this.setActivePanel }),
 				react.createElement(CreateChannelPanel, { activePanel: activePanel, setActivePanel: this.setActivePanel }),
 				react.createElement(CreateDMPanel, { activePanel: activePanel, setActivePanel: this.setActivePanel }),
 				react.createElement(
 					"div",
-					{ className: mainPanelClass, ref: function ref(_ref7) {
-							return _this4._mainPanel = _ref7;
+					{ className: mainPanelClass, ref: function ref(_ref11) {
+							return _this5._mainPanel = _ref11;
 						} },
 					react.createElement(
 						"div",
-						{ className: "panel-header", ref: function ref(_ref4) {
-								return _this4._header = _ref4;
+						{ className: "panel-header", ref: function ref(_ref8) {
+								return _this5._header = _ref8;
 							} },
 						react.createElement(
 							"span",
@@ -51957,7 +52407,7 @@ var SimpleStream = function (_Component) {
 								umiCount: 0,
 								isMuted: this.props.mutedStreams[this.props.postStreamId],
 								setActivePanel: this.setActivePanel,
-								postSystemMessage: this.postSystemMessage,
+								runSlashCommand: this.runSlashCommand,
 								closeMenu: this.closeMenu
 							})
 						)
@@ -51967,16 +52417,16 @@ var SimpleStream = function (_Component) {
 						"div",
 						{
 							className: postsListClass,
-							ref: function ref(_ref6) {
-								return _this4._postslist = _ref6;
+							ref: function ref(_ref10) {
+								return _this5._postslist = _ref10;
 							},
 							onClick: this.handleClickPost,
 							id: streamDivId
 						},
 						react.createElement(
 							"div",
-							{ className: "intro", ref: function ref(_ref5) {
-									return _this4._intro = _ref5;
+							{ className: "intro", ref: function ref(_ref9) {
+									return _this5._intro = _ref9;
 								} },
 							this.renderIntro()
 						),
@@ -51988,7 +52438,7 @@ var SimpleStream = function (_Component) {
 							var parentPost = post.parentPostId ? posts.find(function (p) {
 								return p.id === post.parentPostId;
 							}) : null;
-							var newMessageIndicator = post.seqNum && post.seqNum === Number(_this4.postWithNewMessageIndicator);
+							var newMessageIndicator = post.seqNum && post.seqNum === Number(_this5.postWithNewMessageIndicator);
 							unread = unread || newMessageIndicator;
 							var returnValue = react.createElement(
 								"div",
@@ -51996,12 +52446,12 @@ var SimpleStream = function (_Component) {
 								react.createElement(DateSeparator, { timestamp1: lastTimestamp, timestamp2: post.createdAt }),
 								react.createElement(Post$1, {
 									post: post,
-									usernames: _this4.props.usernamesRegexp,
-									currentUsername: _this4.props.currentUser.username,
+									usernames: _this5.props.usernamesRegexp,
+									currentUsername: _this5.props.currentUser.username,
 									replyingTo: parentPost,
 									newMessageIndicator: newMessageIndicator,
 									unread: unread,
-									editing: activePanel === "main" && post.id === _this4.state.editingPostId
+									editing: activePanel === "main" && post.id === _this5.state.editingPostId
 								})
 							);
 							lastTimestamp = post.createdAt;
@@ -52033,8 +52483,8 @@ var SimpleStream = function (_Component) {
 						"div",
 						{
 							className: threadPostsListClass,
-							ref: function ref(_ref8) {
-								return _this4._threadpostslist = _ref8;
+							ref: function ref(_ref12) {
+								return _this5._threadpostslist = _ref12;
 							},
 							onClick: this.handleClickPost
 						},
@@ -52058,6 +52508,7 @@ var SimpleStream = function (_Component) {
 				react.createElement(ComposeBox$1, {
 					placeholder: placeholderText,
 					teammates: this.props.teammates,
+					slashCommands: this.props.slashCommands,
 					ref: this._compose,
 					disabled: this.props.isOffline,
 					offscreen: activePanel !== "main" && activePanel !== "thread",
@@ -52078,7 +52529,7 @@ var SimpleStream = function (_Component) {
 	}, {
 		key: "handleScroll",
 		value: function handleScroll(_event) {
-			var _this5 = this;
+			var _this6 = this;
 
 			var scrollDiv = this._postslist;
 
@@ -52105,7 +52556,7 @@ var SimpleStream = function (_Component) {
 					if (!unreadsAbove) unreadsAbove = umi;
 				} else if (top - scrollTop + 60 + umi.offsetHeight > containerHeight) {
 					unreadsBelow = umi;
-				} else if (_this5.props.hasFocus) {
+				} else if (_this6.props.hasFocus) {
 					umi.classList.remove("unread");
 				}
 			});
@@ -52166,27 +52617,24 @@ var SimpleStream = function (_Component) {
 			} else return false;
 		}
 
-		// not implemented yet
-
-
 		// create a new post
 
 	}]);
 	return SimpleStream;
 }(react_1);
 
-var mapStateToProps$5 = function mapStateToProps(_ref10) {
-	var configs = _ref10.configs,
-	    connectivity = _ref10.connectivity,
-	    session = _ref10.session,
-	    context = _ref10.context,
-	    streams$$1 = _ref10.streams,
-	    users = _ref10.users,
-	    posts = _ref10.posts,
-	    messaging = _ref10.messaging,
-	    teams = _ref10.teams,
-	    onboarding = _ref10.onboarding,
-	    umis = _ref10.umis;
+var mapStateToProps$5 = function mapStateToProps(_ref14) {
+	var configs = _ref14.configs,
+	    connectivity = _ref14.connectivity,
+	    session = _ref14.session,
+	    context = _ref14.context,
+	    streams$$1 = _ref14.streams,
+	    users = _ref14.users,
+	    posts = _ref14.posts,
+	    messaging = _ref14.messaging,
+	    teams = _ref14.teams,
+	    onboarding = _ref14.onboarding,
+	    umis = _ref14.umis;
 
 	// TODO: figure out a way to do this elsewhere
 	Object.keys(users).forEach(function (key, index) {
@@ -52230,8 +52678,8 @@ var mapStateToProps$5 = function mapStateToProps(_ref10) {
 		configs: configs,
 		isOffline: isOffline,
 		teamMembersById: toMapBy("id", teamMembers),
-		teammates: teamMembers.filter(function (_ref11) {
-			var id = _ref11.id;
+		teammates: teamMembers.filter(function (_ref15) {
+			var id = _ref15.id;
 			return id !== session.userId;
 		}),
 		postStream: postStream,
@@ -52252,6 +52700,7 @@ var mapStateToProps$5 = function mapStateToProps(_ref10) {
 		usernamesRegexp: usernamesRegexp,
 		currentUser: user,
 		mutedStreams: mutedStreams,
+		slashCommands: slashCommands,
 		team: teams[context.currentTeamId],
 		posts: streamPosts.map(function (post) {
 			var user = users[post.creatorId];
@@ -52468,6 +52917,7 @@ var posts = (function () {
 			}
 		case "POSTS-UPDATE_FROM_PUBNUB":
 		case "ADD_POST":
+			console.log("Adding a pst with payload", payload);
 			return _extends$5({}, state, {
 				byStream: addPost(state.byStream, payload)
 			});
@@ -52978,8 +53428,19 @@ var WebviewApi = function () {
 	}, {
 		key: "createStream",
 		value: function createStream(stream) {
-			console.log("sent the stream request");
 			return this.postMessage({ action: "create-stream", params: stream });
+		}
+	}, {
+		key: "updateStream",
+		value: function updateStream(streamId, update) {
+			console.log("posting message...");
+			return this.postMessage({
+				action: "update-stream",
+				params: {
+					streamId: streamId,
+					update: update
+				}
+			});
 		}
 	}, {
 		key: "markStreamRead",

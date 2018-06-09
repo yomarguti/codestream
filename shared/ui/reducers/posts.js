@@ -42,6 +42,7 @@ export default (state = initialState, { type, payload }) => {
 		}
 		case "POSTS-UPDATE_FROM_PUBNUB":
 		case "ADD_POST":
+			console.log("Adding a pst with payload", payload);
 			return {
 				...state,
 				byStream: addPost(state.byStream, payload)

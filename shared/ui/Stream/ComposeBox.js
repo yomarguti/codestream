@@ -45,15 +45,15 @@ class ComposeBox extends React.Component {
 					didDispatch: event => this.handleAtMentionKeyPress(event, "escape"),
 					hiddenInCommandPalette: true
 				}),
-				atom.commands.add(".codestream .compose.mentions-on", "codestream:at-mention-move-up", {
+				atom.commands.add(".codestream .compose.popup-open", "codestream:popup-move-up", {
 					didDispatch: event => this.handleAtMentionKeyPress(event, "up"),
 					hiddenInCommandPalette: true
 				}),
-				atom.commands.add(".codestream .compose.mentions-on", "codestream:at-mention-move-down", {
+				atom.commands.add(".codestream .compose.popup-open", "codestream:popup-move-down", {
 					didDispatch: event => this.handleAtMentionKeyPress(event, "down"),
 					hiddenInCommandPalette: true
 				}),
-				atom.commands.add(".codestream .compose.mentions-on", "codestream:at-mention-tab", {
+				atom.commands.add(".codestream .compose.popup-open", "codestream:popup-tab", {
 					didDispatch: event => this.handleAtMentionKeyPress(event, "tab"),
 					hiddenInCommandPalette: true
 				}),
@@ -89,44 +89,67 @@ class ComposeBox extends React.Component {
 		}
 	};
 
+	insertIfEmpty(newText) {
+		// if there's text in the compose area, return without
+		// adding the suggestion
+		if (this.state.newPostText && this.state.newPostText.length > 0) return;
+		// the reason for this unicode space is that chrome will
+		// not render a space at the end of a contenteditable div
+		// unless it is a &nbsp;, which is difficult to insert
+		// so we insert this unicode character instead
+		this.insertTextAtCursor(newText + ":\u00A0");
+	}
+
 	focus = () => {
 		this._contentEditable.htmlEl.focus();
 	};
 
 	// set up the parameters to pass to the at mention popup
-	showAtMentionSelectors(prefix) {
-		let peopleToShow = [];
+	showPopupSelectors(prefix, type) {
+		let itemsToShow = [];
 
-		Object.values(this.props.teammates).forEach(person => {
-			let toMatch = person.firstName + " " + person.lastName + "*" + person.username; // + "*" + person.email;
-			let lowered = toMatch.toLowerCase();
-			if (lowered.indexOf(prefix) !== -1) {
-				peopleToShow.push(person);
-			}
-		});
-
-		if (peopleToShow.length == 0) {
-			this.setState({
-				atMentionsOn: false
+		if (type === "at-mentions") {
+			Object.values(this.props.teammates).forEach(person => {
+				let toMatch = person.firstName + " " + person.lastName + "*" + person.username;
+				if (toMatch.toLowerCase().indexOf(prefix) !== -1) {
+					itemsToShow.push({
+						id: person.id,
+						headshot: person,
+						identifier: person.username || person.email,
+						description: person.firstName + " " + person.lastName
+					});
+				}
 			});
+		} else if (type === "slash-commands") {
+			this.props.slashCommands.map(command => {
+				let lowered = command.id.toLowerCase();
+				if (lowered.indexOf(prefix) !== -1) {
+					command.identifier = command.id;
+					itemsToShow.push(command);
+				}
+			});
+		}
+
+		if (itemsToShow.length == 0) {
+			this.hidePopup();
 		} else {
-			let selected = peopleToShow[0].id;
+			let selected = itemsToShow[0].id;
 
 			this.setState({
-				atMentionsOn: true,
-				atMentionsPrefix: prefix,
-				atMentionsPeople: peopleToShow,
-				atMentionsIndex: 0,
-				selectedAtMention: selected
+				popupOpen: type,
+				popupPrefix: prefix,
+				popupItems: itemsToShow,
+				popupIndex: 0,
+				selectedPopupItem: selected
 			});
 		}
 	}
 
-	hideAtMentionSelectors() {
-		this.setState({ atMentionsOn: false });
+	hidePopup() {
+		this.setState({ popupOpen: false });
 	}
 
-	selectFirstAtMention() {
+	selectFirst() {
 		this.handleSelectAtMention();
 	}
 
@@ -162,28 +185,28 @@ class ComposeBox extends React.Component {
 	// and enter, while the at mention popup is open
 	handleAtMentionKeyPress(event, eventType) {
 		if (eventType == "escape") {
-			if (this.state.atMentionsOn) this.hideAtMentionSelectors();
+			if (this.state.popupOpen) this.hidePopup();
 			// else this.handleDismissThread();
 		} else {
 			let newIndex = 0;
 			if (eventType == "down") {
-				if (this.state.atMentionsIndex < this.state.atMentionsPeople.length - 1) {
-					newIndex = this.state.atMentionsIndex + 1;
+				if (this.state.popupIndex < this.state.popupItems.length - 1) {
+					newIndex = this.state.popupIndex + 1;
 				} else {
 					newIndex = 0;
 				}
 			} else if (eventType == "up") {
-				if (this.state.atMentionsIndex == 0) {
-					newIndex = this.state.atMentionsPeople.length - 1;
+				if (this.state.popupIndex == 0) {
+					newIndex = this.state.popupItems.length - 1;
 				} else {
-					newIndex = this.state.atMentionsIndex - 1;
+					newIndex = this.state.popupIndex - 1;
 				}
 			} else if (eventType == "tab") {
-				this.selectFirstAtMention();
+				this.selectFirst();
 			}
 			this.setState({
-				atMentionsIndex: newIndex,
-				selectedAtMention: this.state.atMentionsPeople[newIndex].id
+				popupIndex: newIndex,
+				selectedPopupItem: this.state.popupItems[newIndex].id
 			});
 		}
 	}
@@ -202,63 +225,72 @@ class ComposeBox extends React.Component {
 	// when the user hovers over an at-mention list item, change the
 	// state to represent a hovered state
 	handleHoverAtMention = id => {
-		let index = this.state.atMentionsPeople.findIndex(x => x.id == id);
+		let index = this.state.popupItems.findIndex(x => x.id == id);
 
 		this.setState({
-			atMentionsIndex: index,
-			selectedAtMention: id
+			popupIndex: index,
+			selectedPopupItem: id
 		});
 	};
 
 	handleSelectAtMention = id => {
 		// if no id is passed, we assume that we're selecting
 		// the currently-selected at mention
-		if (!id) {
-			id = this.state.selectedAtMention;
-		}
+		if (!id) id = this.state.selectedPopupItem;
 
-		let user = this.props.teammates.find(t => t.id === id);
-		if (!user) return;
-		let username = user.username;
-		// otherwise explicitly use the one passed in
-		// FIXME -- this should anchor at the carat, not end-of-line
-		// var re = new RegExp("@" + this.state.atMentionsPrefix);
-		this.setState({
-			atMentionsOn: false
-		});
+		let toInsert;
+
+		if (this.state.popupOpen === "slash-commands") {
+			toInsert = id;
+		} else {
+			let user = this.props.teammates.find(t => t.id === id);
+			if (!user) return;
+			toInsert = user.username;
+		}
+		this.hidePopup();
+		setTimeout(() => {
+			this.focus();
+		}, 20);
 		// the reason for this unicode space is that chrome will
 		// not render a space at the end of a contenteditable div
 		// unless it is a &nbsp;, which is difficult to insert
 		// so we insert this unicode character instead
-		let toInsert = username + "\u00A0";
-		setTimeout(() => {
-			this.focus();
-		}, 20);
-		this.insertTextAtCursor(toInsert, this.state.atMentionsPrefix);
+		this.insertTextAtCursor(toInsert + "\u00A0", this.state.popupPrefix);
 		// this.setNewPostText(text);
 	};
 
 	// depending on the contents of the input field, if the user
 	// types a "@" then open the at-mention popup
 	handleChange = event => {
-		var newPostText = event.target.value;
+		const newPostText = event.target.value;
 
-		let selection = window.getSelection();
-		let range = selection.getRangeAt(0);
-		let node = range.commonAncestorContainer;
-		let nodeText = node.textContent || "";
-		let upToCursor = nodeText.substring(0, range.startOffset);
-		var match = upToCursor.match(/@([a-zA-Z0-9_.+]*)$/);
-		if (this.state.atMentionsOn) {
-			if (match) {
-				this.showAtMentionSelectors(match[0].replace(/@/, ""));
+		const selection = window.getSelection();
+		const range = selection.getRangeAt(0);
+		const node = range.commonAncestorContainer;
+		const nodeText = node.textContent || "";
+		const upToCursor = nodeText.substring(0, range.startOffset);
+		const peopleMatch = upToCursor.match(/@([a-zA-Z0-9_.+]*)$/);
+		const slashMatch = newPostText.match(/^\/([a-zA-Z0-9+]*)$/);
+		if (this.state.popupOpen === "at-mentions") {
+			if (peopleMatch) {
+				this.showPopupSelectors(peopleMatch[0].replace(/@/, ""), "at-mentions");
 			} else {
 				// if the line doesn't end with @word, then hide the popup
-				this.setState({ atMentionsOn: false });
+				this.hidePopup();
+			}
+		} else if (this.state.popupOpen === "slash-commands") {
+			if (slashMatch) {
+				this.showPopupSelectors(slashMatch[0].replace(/\//, ""), "slash-commands");
+			} else {
+				// if the line doesn't start with /word, then hide the popup
+				this.hidePopup();
 			}
 		} else {
-			if (match) {
-				this.showAtMentionSelectors(match[0].replace(/@/, ""));
+			if (peopleMatch) {
+				this.showPopupSelectors(peopleMatch[0].replace(/@/, ""), "at-mentions");
+			}
+			if (slashMatch) {
+				this.showPopupSelectors(slashMatch[0].replace(/\//, ""), "slash-commands");
 			}
 		}
 		// track newPostText as the user types
@@ -272,9 +304,7 @@ class ComposeBox extends React.Component {
 	// to hide the at-mention popup
 	handleBlur = event => {
 		event.preventDefault();
-		this.setState({
-			atMentionsOn: false
-		});
+		this.hidePopup();
 	};
 
 	handleKeyPress = event => {
@@ -283,19 +313,17 @@ class ComposeBox extends React.Component {
 		// if we have the at-mentions popup open, then the keys
 		// do something different than if we have the focus in
 		// the textarea
-		if (this.state.atMentionsOn) {
+		if (this.state.popupOpen) {
 			if (event.key == "Escape") {
-				this.hideAtMentionSelectors();
+				this.hidePopup();
 			} else if (event.key == "Enter" && !event.shiftKey) {
 				event.preventDefault();
-				this.selectFirstAtMention();
-			} else {
-				var match = newPostText.match(/@([a-zA-Z0-9_.]*)$/);
-				var text = match ? match[0].replace(/@/, "") : "";
-				// this.showAtMentionSelectors(text);
+				this.selectFirst();
 			}
 		} else if (event.key === "@") {
-			this.showAtMentionSelectors("");
+			this.showPopupSelectors("", "at-mentions");
+		} else if (event.key === "/" && newPostText.length === 0) {
+			this.showPopupSelectors("", "slash-commands");
 		} else if (event.key === "Enter" && !event.shiftKey) {
 			event.preventDefault();
 			if (newPostText.trim().length > 0 && !this.props.disabled) {
@@ -358,15 +386,14 @@ class ComposeBox extends React.Component {
 				onKeyDown={this.handleKeyDown}
 				className={createClassString("compose", {
 					offscreen: this.props.offscreen,
-					"mentions-on": this.state.atMentionsOn
+					"popup-open": this.state.popupOpen
 				})}
 			>
 				<AtMentionsPopup
-					on={this.state.atMentionsOn}
-					people={this.state.atMentionsPeople}
-					usernames={this.usernameRegExp}
-					prefix={this.state.atMentionsPrefix}
-					selected={this.state.selectedAtMention}
+					on={this.state.popupOpen}
+					items={this.state.popupItems}
+					prefix={this.state.popupPrefix}
+					selected={this.state.selectedPopupItem}
 					handleHoverAtMention={this.handleHoverAtMention}
 					handleSelectAtMention={this.handleSelectAtMention}
 				/>

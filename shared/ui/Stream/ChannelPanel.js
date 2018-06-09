@@ -88,7 +88,7 @@ export class SimpleChannelPanel extends Component {
 											umiCount={count}
 											isMuted={this.props.mutedStreams[stream.id]}
 											setActivePanel={this.props.setActivePanel}
-											postSystemMessage={this.props.postSystemMessage}
+											runSlashCommand={this.props.runSlashCommand}
 											closeMenu={this.closeMenu}
 										/>
 									)}
