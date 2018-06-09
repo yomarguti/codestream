@@ -23365,7 +23365,9 @@ var createStream = function createStream(attributes) {
 							_context3.prev = 13;
 							_context3.t0 = _context3["catch"](5);
 
-						case 15:
+							console.log("Error: ", _context3.t0);
+
+						case 16:
 						case "end":
 							return _context3.stop();
 					}
@@ -47446,7 +47448,8 @@ var SimpleCreateChannelPanel = function (_Component) {
 					return member.value;
 				});
 
-				_this.props.createStream({ type: "channel", privacy: privacy, name: name, memberIds: memberIds, purpose: purpose });
+				var result = _this.props.createStream({ type: "channel", privacy: privacy, name: name, memberIds: memberIds, purpose: purpose });
+				console.log("RESULT IS: ", result);
 				_this.resetForm();
 				// this.props.setActivePanel("channels");
 			}

@@ -136,7 +136,9 @@ export const createStream = attributes => async (dispatch, getState, { api }) =>
 		const returnStream = await api.createStream(stream);
 		dispatch(setCurrentStream(returnStream._id));
 		return returnStream;
-	} catch (error) {}
+	} catch (error) {
+		console.log("Error: ", error);
+	}
 };
 
 export const setCurrentStream = streamId => async dispatch => {
