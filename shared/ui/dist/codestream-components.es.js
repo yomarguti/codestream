@@ -18119,8 +18119,8 @@ var ComposeBox = function (_React$Component) {
 				var authors = _ref4.authors,
 				    state = objectWithoutProperties$1(_ref4, ["authors"]);
 
-				_this.props.setActivePanel("main");
-				_this.focus();
+				// make sure we have a compose box to type into
+				_this.props.ensureStreamIsActive();
 				_this.setState({ quote: state });
 
 				var toAtmention = authors.map(function (email) {
@@ -51545,6 +51545,15 @@ var SimpleStream = function (_Component) {
 				_this.setState({ activePanel: "channels" });
 			}
 		});
+		Object.defineProperty(_this, "ensureStreamIsActive", {
+			enumerable: true,
+			writable: true,
+			value: function value() {
+				var activePanel = _this.state.activePanel;
+
+				if (activePanel === "main" || activePanel === "thread") _this.focusInput();else _this.setState({ activePanel: "main" });
+			}
+		});
 		Object.defineProperty(_this, "setActivePanel", {
 			enumerable: true,
 			writable: true,
@@ -52414,7 +52423,7 @@ var SimpleStream = function (_Component) {
 				this.resizeStream();
 			}
 
-			if (this.state.activePanel === "main" && prevState.activePanel === "channels") {
+			if (this.state.activePanel === "main" && prevState.activePanel !== "thread") {
 				setTimeout(function () {
 					_this4.focusInput();
 				}, 500);
@@ -52722,7 +52731,7 @@ var SimpleStream = function (_Component) {
 					placeholder: placeholderText,
 					teammates: this.props.teammates,
 					slashCommands: this.props.slashCommands,
-					setActivePanel: this.setActivePanel,
+					ensureStreamIsActive: this.ensureStreamIsActive,
 					ref: this._compose,
 					disabled: this.props.isOffline,
 					offscreen: activePanel !== "main" && activePanel !== "thread",

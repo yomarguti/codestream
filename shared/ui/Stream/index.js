@@ -174,7 +174,7 @@ export class SimpleStream extends Component {
 			this.resizeStream();
 		}
 
-		if (this.state.activePanel === "main" && prevState.activePanel === "channels") {
+		if (this.state.activePanel === "main" && prevState.activePanel !== "thread") {
 			setTimeout(() => {
 				this.focusInput();
 			}, 500);
@@ -558,7 +558,7 @@ export class SimpleStream extends Component {
 					placeholder={placeholderText}
 					teammates={this.props.teammates}
 					slashCommands={this.props.slashCommands}
-					setActivePanel={this.setActivePanel}
+					ensureStreamIsActive={this.ensureStreamIsActive}
 					ref={this._compose}
 					disabled={this.props.isOffline}
 					offscreen={activePanel !== "main" && activePanel !== "thread"}
@@ -602,6 +602,12 @@ export class SimpleStream extends Component {
 
 	showChannels = event => {
 		this.setState({ activePanel: "channels" });
+	};
+
+	ensureStreamIsActive = () => {
+		const { activePanel } = this.state;
+		if (activePanel === "main" || activePanel === "thread") this.focusInput();
+		else this.setState({ activePanel: "main" });
 	};
 
 	setActivePanel = panel => {

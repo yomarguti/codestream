@@ -70,8 +70,8 @@ class ComposeBox extends React.Component {
 	}
 
 	handleCodeHighlightEvent = ({ authors, ...state }) => {
-		this.props.setActivePanel("main");
-		this.focus();
+		// make sure we have a compose box to type into
+		this.props.ensureStreamIsActive();
 		this.setState({ quote: state });
 
 		const toAtmention = authors
