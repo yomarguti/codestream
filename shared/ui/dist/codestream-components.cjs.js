@@ -23532,6 +23532,46 @@ var renameStream = function renameStream(streamId, name) {
 	}();
 };
 
+var archiveStream = function archiveStream(streamId, value) {
+	return function () {
+		var _ref17 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8(dispatch, getState, _ref16) {
+			var api = _ref16.api;
+			var update, returnStream;
+			return regeneratorRuntime.wrap(function _callee8$(_context8) {
+				while (1) {
+					switch (_context8.prev = _context8.next) {
+						case 0:
+							update = { isArchived: value };
+							_context8.prev = 1;
+							_context8.next = 4;
+							return api.updateStream(streamId, update);
+
+						case 4:
+							returnStream = _context8.sent;
+
+							console.log("return stream: ", returnStream);
+							return _context8.abrupt("return", returnStream);
+
+						case 9:
+							_context8.prev = 9;
+							_context8.t0 = _context8["catch"](1);
+
+							console.log("Error: ", _context8.t0);
+
+						case 12:
+						case "end":
+							return _context8.stop();
+					}
+				}
+			}, _callee8, _this, [[1, 9]]);
+		}));
+
+		return function (_x20, _x21, _x22) {
+			return _ref17.apply(this, arguments);
+		};
+	}();
+};
+
 var streamActions = /*#__PURE__*/Object.freeze({
 	markStreamRead: markStreamRead,
 	createPost: createPost,
@@ -23545,7 +23585,8 @@ var streamActions = /*#__PURE__*/Object.freeze({
 	setCurrentStream: setCurrentStream,
 	removeUsersFromStream: removeUsersFromStream,
 	addUsersToStream: addUsersToStream,
-	renameStream: renameStream
+	renameStream: renameStream,
+	archiveStream: archiveStream
 });
 
 var initialState = {
@@ -23603,14 +23644,21 @@ var getStreamForTeam = function getStreamForTeam(state, teamId) {
 var getChannelStreamsForTeam = function getChannelStreamsForTeam(state, teamId, userId) {
 	var streams = state.byTeam[teamId] || {};
 	return Object.values(streams).filter(function (stream) {
-		return stream.type === "channel" && (stream.isTeamStream || underscore.contains(stream.memberIds, userId));
+		return stream.type === "channel" && !stream.isArchived && (stream.isTeamStream || underscore.contains(stream.memberIds, userId));
 	});
 };
 
 var getPublicChannelStreamsForTeam = function getPublicChannelStreamsForTeam(state, teamId, userId) {
 	var streams = state.byTeam[teamId] || {};
 	return Object.values(streams).filter(function (stream) {
-		return stream.type === "channel" && !stream.isTeamStream && !underscore.contains(stream.memberIds, userId);
+		return stream.type === "channel" && !stream.isArchived && !stream.isTeamStream && !underscore.contains(stream.memberIds, userId);
+	});
+};
+
+var getArchivedChannelStreamsForTeam = function getArchivedChannelStreamsForTeam(state, teamId, userId) {
+	var streams = state.byTeam[teamId] || {};
+	return Object.values(streams).filter(function (stream) {
+		return stream.type === "channel" && stream.isArchived;
 	});
 };
 
@@ -41164,6 +41212,7 @@ var SimpleChannelPanel = function (_Component) {
 						"ul",
 						{ onClick: _this.handleClickSelectStream },
 						_this.props.channelStreams.map(function (stream) {
+							if (stream.isArchived) return null;
 							var icon = _this.props.mutedStreams[stream.id] ? react.createElement("span", { className: "icon icon-mute" }) : stream.privacy === "private" ? react.createElement("span", { className: "icon icon-lock" }) : react.createElement(
 								"span",
 								{ className: "icon" },
@@ -41628,6 +41677,20 @@ var SimplePublicChannelPanel = function (_Component) {
 							{ onClick: this.handleClickSelectStream },
 							this.renderChannels(this.props.channelStreams)
 						)
+					),
+					react.createElement(
+						"div",
+						{ className: "section" },
+						react.createElement(
+							"div",
+							{ className: "header" },
+							"Archived Channels"
+						),
+						react.createElement(
+							"ul",
+							{ onClick: this.handleClickUnArchive },
+							this.renderChannels(this.props.archivedStreams)
+						)
 					)
 				)
 			);
@@ -41656,11 +41719,16 @@ var mapStateToProps$2 = function mapStateToProps(_ref) {
 		return stream.name.toLowerCase();
 	});
 
+	var archivedStreams = underscore.sortBy(getArchivedChannelStreamsForTeam(streams$$1, context.currentTeamId, session.userId) || [], function (stream) {
+		return stream.name.toLowerCase();
+	});
+
 	return {
 		umis: umis,
 		session: session,
 		channelStreams: channelStreams,
 		publicStreams: publicStreams,
+		archivedStreams: archivedStreams,
 		teammates: teamMembers,
 		team: teams[context.currentTeamId]
 	};
@@ -51220,7 +51288,9 @@ var toMapBy = function toMapBy(key, entities) {
 	}, {});
 };
 
-var slashCommands = [{ id: "help", help: "get help" }, { id: "add", help: "add member to channel", description: "[@user]" }, { id: "invite", help: "add to your team", description: "[email]" }, { id: "leave", help: "leave channel" }, { id: "me", help: "emote" }, { id: "msg", help: "message member", description: "[@user]" }, { id: "mute", help: "mute channel" },
+var slashCommands = [{ id: "help", help: "get help" }, { id: "add", help: "add member to channel", description: "[@user]" }, { id: "archive", help: "archive channel" },
+// { id: "delete", help: "delete channel" },
+{ id: "invite", help: "add to your team", description: "[email]" }, { id: "leave", help: "leave channel" }, { id: "me", help: "emote" }, { id: "msg", help: "message member", description: "[@user]" }, { id: "mute", help: "mute channel" },
 // { id: "muteall", help: "mute codestream" },
 // { id: "open", help: "open channel" },
 // { id: "prefs", help: "open preferences" },
@@ -51828,6 +51898,42 @@ var SimpleStream = function (_Component) {
 				return true;
 			}
 		});
+		Object.defineProperty(_this, "deleteChannel", {
+			enumerable: true,
+			writable: true,
+			value: function value() {
+				_this.setActivePanel("channels");
+				return true;
+			}
+		});
+		Object.defineProperty(_this, "archiveChannel", {
+			enumerable: true,
+			writable: true,
+			value: function value() {
+				var _this$props = _this.props,
+				    postStream = _this$props.postStream,
+				    currentUser = _this$props.currentUser;
+
+				console.log(postStream);
+				if (postStream.creatorId !== currentUser.id) {
+					var text = "You may only archive channels that you created.";
+					if (postStream.creatorId) text += " This channel was created by " + postStream.creatorId;
+					_this.submitSystemPost(text);
+					return;
+				}
+				var answer = atom.confirm({
+					message: "Are you sure?",
+					buttons: ["Archive Channel", "Cancel"]
+				});
+
+				if (answer === 0) {
+					console.log("Calling archive channel with: ", postStream.id);
+					_this.props.archiveStream(postStream.id, true);
+					_this.setActivePanel("channels");
+				}
+				return true;
+			}
+		});
 		Object.defineProperty(_this, "removeFromStream", {
 			enumerable: true,
 			writable: true,
@@ -51948,14 +52054,14 @@ var SimpleStream = function (_Component) {
 			writable: true,
 			value: function value(text) {
 				var activePanel = _this.state.activePanel;
-				var _this$props = _this.props,
-				    postStreamId = _this$props.postStreamId,
-				    createSystemPost$$1 = _this$props.createSystemPost,
-				    posts = _this$props.posts;
+				var _this$props2 = _this.props,
+				    postStreamId = _this$props2.postStreamId,
+				    createSystemPost$$1 = _this$props2.createSystemPost,
+				    posts = _this$props2.posts;
 
 				var threadId = activePanel === "thread" ? _this.state.threadId : null;
 				var lastPost = underscore.last(posts);
-				var seqNum = lastPost ? lastPost.seqNum + 0.001 : 99999999;
+				var seqNum = lastPost ? lastPost.seqNum + 0.001 : 0.001;
 				createSystemPost$$1(postStreamId, threadId, text, seqNum);
 			}
 		});
@@ -51995,6 +52101,10 @@ var SimpleStream = function (_Component) {
 						return _this.removeFromStream(args);
 					case "leave":
 						return _this.leaveChannel(args);
+					case "delete":
+						return _this.deleteChannel(args);
+					case "archive":
+						return _this.archiveChannel(args);
 					case "me":
 						return false;
 				}
@@ -52028,12 +52138,12 @@ var SimpleStream = function (_Component) {
 
 				var codeBlocks = [];
 				var activePanel = _this.state.activePanel;
-				var _this$props2 = _this.props,
-				    postStreamId = _this$props2.postStreamId,
-				    fileStreamId = _this$props2.fileStreamId,
-				    createPost$$1 = _this$props2.createPost,
-				    currentFile = _this$props2.currentFile,
-				    repoId = _this$props2.repoId;
+				var _this$props3 = _this.props,
+				    postStreamId = _this$props3.postStreamId,
+				    fileStreamId = _this$props3.fileStreamId,
+				    createPost$$1 = _this$props3.createPost,
+				    currentFile = _this$props3.currentFile,
+				    repoId = _this$props3.repoId;
 
 
 				if (_this.checkForSlashCommands(text)) return;
@@ -52937,7 +53047,6 @@ var posts = (function () {
 			}
 		case "POSTS-UPDATE_FROM_PUBNUB":
 		case "ADD_POST":
-			console.log("Adding a pst with payload", payload);
 			return _extends$5({}, state, {
 				byStream: addPost(state.byStream, payload)
 			});

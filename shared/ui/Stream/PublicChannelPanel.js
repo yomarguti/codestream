@@ -3,7 +3,11 @@ import { connect } from "react-redux";
 import * as contextActions from "../actions/context";
 import * as streamActions from "./actions";
 import createClassString from "classnames";
-import { getChannelStreamsForTeam, getPublicChannelStreamsForTeam } from "../reducers/streams";
+import {
+	getChannelStreamsForTeam,
+	getPublicChannelStreamsForTeam,
+	getArchivedChannelStreamsForTeam
+} from "../reducers/streams";
 import Button from "./Button";
 import { FormattedMessage } from "react-intl";
 import * as routingActions from "../actions/routing";
@@ -51,6 +55,12 @@ export class SimplePublicChannelPanel extends Component {
 						<div className="header">Channels you are in</div>
 						<ul onClick={this.handleClickSelectStream}>
 							{this.renderChannels(this.props.channelStreams)}
+						</ul>
+					</div>
+					<div className="section">
+						<div className="header">Archived Channels</div>
+						<ul onClick={this.handleClickUnArchive}>
+							{this.renderChannels(this.props.archivedStreams)}
 						</ul>
 					</div>
 				</div>
@@ -116,11 +126,17 @@ const mapStateToProps = ({ context, streams, users, teams, umis, session }) => {
 		stream => stream.name.toLowerCase()
 	);
 
+	const archivedStreams = _.sortBy(
+		getArchivedChannelStreamsForTeam(streams, context.currentTeamId, session.userId) || [],
+		stream => stream.name.toLowerCase()
+	);
+
 	return {
 		umis,
 		session,
 		channelStreams,
 		publicStreams,
+		archivedStreams,
 		teammates: teamMembers,
 		team: teams[context.currentTeamId]
 	};

@@ -1,4 +1,4 @@
-import _ from 'underscore'
+import _ from "underscore";
 
 const initialState = {
 	byTeam: {
@@ -61,7 +61,9 @@ export const getChannelStreamsForTeam = (state, teamId, userId) => {
 	const streams = state.byTeam[teamId] || {};
 	return Object.values(streams).filter(
 		stream =>
-			stream.type === "channel" && (stream.isTeamStream || _.contains(stream.memberIds, userId))
+			stream.type === "channel" &&
+			!stream.isArchived &&
+			(stream.isTeamStream || _.contains(stream.memberIds, userId))
 	);
 };
 
@@ -69,8 +71,16 @@ export const getPublicChannelStreamsForTeam = (state, teamId, userId) => {
 	const streams = state.byTeam[teamId] || {};
 	return Object.values(streams).filter(
 		stream =>
-			stream.type === "channel" && !stream.isTeamStream && !_.contains(stream.memberIds, userId)
+			stream.type === "channel" &&
+			!stream.isArchived &&
+			!stream.isTeamStream &&
+			!_.contains(stream.memberIds, userId)
 	);
+};
+
+export const getArchivedChannelStreamsForTeam = (state, teamId, userId) => {
+	const streams = state.byTeam[teamId] || {};
+	return Object.values(streams).filter(stream => stream.type === "channel" && stream.isArchived);
 };
 
 const makeName = user => {

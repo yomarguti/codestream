@@ -940,6 +940,33 @@ export class SimpleStream extends Component {
 		return true;
 	};
 
+	deleteChannel = () => {
+		this.setActivePanel("channels");
+		return true;
+	};
+
+	archiveChannel = () => {
+		const { postStream, currentUser } = this.props;
+		console.log(postStream);
+		if (postStream.creatorId !== currentUser.id) {
+			let text = "You may only archive channels that you created.";
+			if (postStream.creatorId) text += " This channel was created by " + postStream.creatorId;
+			this.submitSystemPost(text);
+			return;
+		}
+		const answer = atom.confirm({
+			message: "Are you sure?",
+			buttons: ["Archive Channel", "Cancel"]
+		});
+
+		if (answer === 0) {
+			console.log("Calling archive channel with: ", postStream.id);
+			this.props.archiveStream(postStream.id, true);
+			this.setActivePanel("channels");
+		}
+		return true;
+	};
+
 	removeFromStream = async args => {
 		if (this.props.postStreamIsTeamStream) {
 			const text = "You cannot remove people from all-hands channels.";
@@ -985,7 +1012,7 @@ export class SimpleStream extends Component {
 		const { postStreamId, createSystemPost, posts } = this.props;
 		const threadId = activePanel === "thread" ? this.state.threadId : null;
 		const lastPost = _.last(posts);
-		const seqNum = lastPost ? lastPost.seqNum + 0.001 : 99999999;
+		const seqNum = lastPost ? lastPost.seqNum + 0.001 : 0.001;
 		createSystemPost(postStreamId, threadId, text, seqNum);
 	};
 
@@ -1019,6 +1046,10 @@ export class SimpleStream extends Component {
 				return this.removeFromStream(args);
 			case "leave":
 				return this.leaveChannel(args);
+			case "delete":
+				return this.deleteChannel(args);
+			case "archive":
+				return this.archiveChannel(args);
 			case "me":
 				return false;
 		}

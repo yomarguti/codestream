@@ -185,3 +185,16 @@ export const renameStream = (streamId, name) => async (dispatch, getState, { api
 		console.log("Error: ", error);
 	}
 };
+
+export const archiveStream = (streamId, value) => async (dispatch, getState, { api }) => {
+	const update = { isArchived: value };
+
+	try {
+		const returnStream = await api.updateStream(streamId, update);
+		console.log("return stream: ", returnStream);
+		return returnStream;
+		// if (streams.length > 0) dispatch(saveStreams(normalize(streams)));
+	} catch (error) {
+		console.log("Error: ", error);
+	}
+};
