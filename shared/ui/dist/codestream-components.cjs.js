@@ -47871,11 +47871,7 @@ var SimpleCreateDMPanel = function (_Component) {
 								id: stream.id
 							},
 							stream.name,
-							react.createElement(
-								"span",
-								{ className: "latest-post" },
-								"1d"
-							)
+							react.createElement(Timestamp, { time: stream.mostRecentPostCreatedAt })
 						);
 					})
 				);
@@ -48087,9 +48083,10 @@ var mapStateToProps$4 = function mapStateToProps(_ref) {
 		};
 	});
 
+	// the integer 528593114636 is simply a number far, far in the past
 	var directMessageStreams = underscore.sortBy(getDirectMessageStreamsForTeam(streams$$1, context.currentTeamId, session.userId, users) || [], function (stream) {
-		return stream.name.toLowerCase();
-	});
+		return stream.mostRecentPostCreatedAt || 528593114636;
+	}).reverse();
 
 	return {
 		umis: umis,
@@ -48100,7 +48097,8 @@ var mapStateToProps$4 = function mapStateToProps(_ref) {
 };
 
 var CreateDMPanel = connect(mapStateToProps$4, _extends$5({}, contextActions, {
-	createStream: createStream
+	createStream: createStream,
+	setCurrentStream: setCurrentStream
 }))(SimpleCreateDMPanel);
 
 var EditingIndicator = function (_React$Component) {

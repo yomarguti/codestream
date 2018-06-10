@@ -2,12 +2,13 @@ import React, { Component } from "react";
 import { connect } from "react-redux";
 import * as contextActions from "../actions/context";
 import _ from "underscore";
-import { createStream } from "./actions";
+import { createStream, setCurrentStream } from "./actions";
 import createClassString from "classnames";
 import { getDirectMessageStreamsForTeam } from "../reducers/streams";
 import Button from "./Button";
 import { FormattedMessage } from "react-intl";
 import Select from "react-select";
+import Timestamp from "./Timestamp";
 
 const isNameInvalid = name => {
 	const nameRegex = new RegExp("^[a-zA-Z0-9_-]+$");
@@ -112,7 +113,7 @@ export class SimpleCreateDMPanel extends Component {
 							id={stream.id}
 						>
 							{stream.name}
-							<span className="latest-post">1d</span>
+							<Timestamp time={stream.mostRecentPostCreatedAt} />
 						</li>
 					);
 				})}
@@ -183,10 +184,13 @@ const mapStateToProps = ({ context, streams, users, teams, session, umis }) => {
 		};
 	});
 
-	const directMessageStreams = _.sortBy(
-		getDirectMessageStreamsForTeam(streams, context.currentTeamId, session.userId, users) || [],
-		stream => stream.name.toLowerCase()
-	);
+	// the integer 528593114636 is simply a number far, far in the past
+	const directMessageStreams = _
+		.sortBy(
+			getDirectMessageStreamsForTeam(streams, context.currentTeamId, session.userId, users) || [],
+			stream => stream.mostRecentPostCreatedAt || 528593114636
+		)
+		.reverse();
 
 	return {
 		umis,
@@ -196,7 +200,11 @@ const mapStateToProps = ({ context, streams, users, teams, session, umis }) => {
 	};
 };
 
-export default connect(mapStateToProps, {
-	...contextActions,
-	createStream
-})(SimpleCreateDMPanel);
+export default connect(
+	mapStateToProps,
+	{
+		...contextActions,
+		createStream,
+		setCurrentStream
+	}
+)(SimpleCreateDMPanel);
