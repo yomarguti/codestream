@@ -174,7 +174,8 @@ export class SimpleStream extends Component {
 			this.resizeStream();
 		}
 
-		if (this.state.activePanel === "main" && prevState.activePanel !== "thread") {
+		// if we are switching from a non-thread panel
+		if (this.state.activePanel === "main" && prevState.activePanel !== "main") {
 			setTimeout(() => {
 				this.focusInput();
 			}, 500);

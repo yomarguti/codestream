@@ -41016,6 +41016,13 @@ var Menu = function (_Component) {
 				this._div.style.top = rect.top + "px";
 				var left = rect.right - this._div.offsetWidth + 5;
 				this._div.style.left = left + "px";
+
+				// check to make sure the menu doesn't display
+				// off the bottom of the screen
+				var tooFar = rect.top + this._div.offsetHeight + 5 - window.innerHeight;
+				if (tooFar > 0) {
+					this._div.style.top = rect.top - tooFar + "px";
+				}
 			}
 		}
 	}, {
@@ -51317,9 +51324,7 @@ var toMapBy = function toMapBy(key, entities) {
 	}, {});
 };
 
-var slashCommands = [{ id: "help", help: "get help" }, { id: "add", help: "add member to channel", description: "@user" }, { id: "archive", help: "archive channel" },
-// { id: "delete", help: "delete channel" },
-{ id: "invite", help: "add to your team", description: "email" }, { id: "leave", help: "leave channel" }, { id: "me", help: "emote" }, { id: "msg", help: "message member", description: "@user" }, { id: "mute", help: "mute channel" },
+var slashCommands = [{ id: "help", help: "get help" }, { id: "add", help: "add member to channel", description: "@user" }, { id: "archive", help: "archive channel" }, { id: "invite", help: "add to your team", description: "email" }, { id: "leave", help: "leave channel" }, { id: "me", help: "emote" }, { id: "msg", help: "message member", description: "@user" }, { id: "mute", help: "mute channel" },
 // { id: "muteall", help: "mute codestream" },
 // { id: "open", help: "open channel" },
 // { id: "prefs", help: "open preferences" },
@@ -52423,7 +52428,8 @@ var SimpleStream = function (_Component) {
 				this.resizeStream();
 			}
 
-			if (this.state.activePanel === "main" && prevState.activePanel !== "thread") {
+			// if we are switching from a non-thread panel
+			if (this.state.activePanel === "main" && prevState.activePanel !== "main") {
 				setTimeout(function () {
 					_this4.focusInput();
 				}, 500);
