@@ -17,7 +17,15 @@ export default class AtMentionsPopup extends Component {
 			<div className="mentions-popup" ref={ref => (this._div = ref)}>
 				<div className="body">
 					<div className="instructions" onClick={event => this.handleClickInstructions()}>
-						People matching <b>"@{this.props.prefix}"</b>
+						{this.props.on === "slash-commands" ? (
+							<span>
+								Commands matching <b>"/{this.props.prefix}"</b>
+							</span>
+						) : (
+							<span>
+								People matching <b>"@{this.props.prefix}"</b>
+							</span>
+						)}
 					</div>
 					<ul className="compact at-mentions-list">
 						{items.map(item => {

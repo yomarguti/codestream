@@ -1022,6 +1022,12 @@ export class SimpleStream extends Component {
 		return true;
 	};
 
+	postHelp = () => {
+		const text = "Version info goes here.";
+		this.submitSystemPost(text);
+		return true;
+	};
+
 	runSlashCommand = (command, args) => {
 		switch (command) {
 			case "help":
@@ -1050,6 +1056,8 @@ export class SimpleStream extends Component {
 				return this.deleteChannel(args);
 			case "archive":
 				return this.archiveChannel(args);
+			case "version":
+				return this.postVersion(args);
 			case "me":
 				return false;
 		}

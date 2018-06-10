@@ -17956,13 +17956,28 @@ var AtMentionsPopup = function (_Component) {
 						{ className: "instructions", onClick: function onClick(event) {
 								return _this3.handleClickInstructions();
 							} },
-						"People matching ",
-						react.createElement(
-							"b",
+						this.props.on === "slash-commands" ? react.createElement(
+							"span",
 							null,
-							"\"@",
-							this.props.prefix,
-							"\""
+							"Commands matching ",
+							react.createElement(
+								"b",
+								null,
+								"\"/",
+								this.props.prefix,
+								"\""
+							)
+						) : react.createElement(
+							"span",
+							null,
+							"People matching ",
+							react.createElement(
+								"b",
+								null,
+								"\"@",
+								this.props.prefix,
+								"\""
+							)
 						)
 					),
 					react.createElement(
@@ -51305,13 +51320,13 @@ var toMapBy = function toMapBy(key, entities) {
 	}, {});
 };
 
-var slashCommands = [{ id: "help", help: "get help" }, { id: "add", help: "add member to channel", description: "[@user]" }, { id: "archive", help: "archive channel" },
+var slashCommands = [{ id: "help", help: "get help" }, { id: "add", help: "add member to channel", description: "@user" }, { id: "archive", help: "archive channel" },
 // { id: "delete", help: "delete channel" },
-{ id: "invite", help: "add to your team", description: "[email]" }, { id: "leave", help: "leave channel" }, { id: "me", help: "emote" }, { id: "msg", help: "message member", description: "[@user]" }, { id: "mute", help: "mute channel" },
+{ id: "invite", help: "add to your team", description: "email" }, { id: "leave", help: "leave channel" }, { id: "me", help: "emote" }, { id: "msg", help: "message member", description: "@user" }, { id: "mute", help: "mute channel" },
 // { id: "muteall", help: "mute codestream" },
 // { id: "open", help: "open channel" },
 // { id: "prefs", help: "open preferences" },
-{ id: "rename", help: "rename channel", description: "[newname]" }, { id: "remove", help: "remove from channel", description: "[@user]" }, { id: "who", help: "show channel members" }];
+{ id: "rename", help: "rename channel", description: "newname" }, { id: "remove", help: "remove from channel", description: "@user" }, { id: "version", help: "" }, { id: "who", help: "show channel members" }];
 
 var SimpleStream = function (_Component) {
 	inherits$1(SimpleStream, _Component);
@@ -52091,6 +52106,15 @@ var SimpleStream = function (_Component) {
 				return true;
 			}
 		});
+		Object.defineProperty(_this, "postHelp", {
+			enumerable: true,
+			writable: true,
+			value: function value() {
+				var text = "Version info goes here.";
+				_this.submitSystemPost(text);
+				return true;
+			}
+		});
 		Object.defineProperty(_this, "runSlashCommand", {
 			enumerable: true,
 			writable: true,
@@ -52122,6 +52146,8 @@ var SimpleStream = function (_Component) {
 						return _this.deleteChannel(args);
 					case "archive":
 						return _this.archiveChannel(args);
+					case "version":
+						return _this.postVersion(args);
 					case "me":
 						return false;
 				}
