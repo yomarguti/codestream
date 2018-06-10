@@ -558,6 +558,7 @@ export class SimpleStream extends Component {
 					placeholder={placeholderText}
 					teammates={this.props.teammates}
 					slashCommands={this.props.slashCommands}
+					setActivePanel={this.setActivePanel}
 					ref={this._compose}
 					disabled={this.props.isOffline}
 					offscreen={activePanel !== "main" && activePanel !== "thread"}

@@ -70,6 +70,7 @@ class ComposeBox extends React.Component {
 	}
 
 	handleCodeHighlightEvent = ({ authors, ...state }) => {
+		this.props.setActivePanel("main");
 		this.focus();
 		this.setState({ quote: state });
 
@@ -123,7 +124,7 @@ class ComposeBox extends React.Component {
 		} else if (type === "slash-commands") {
 			this.props.slashCommands.map(command => {
 				let lowered = command.id.toLowerCase();
-				if (lowered.indexOf(prefix) !== -1) {
+				if (lowered.indexOf(prefix) === 0) {
 					command.identifier = command.id;
 					itemsToShow.push(command);
 				}

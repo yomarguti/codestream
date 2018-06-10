@@ -18123,6 +18123,7 @@ var ComposeBox = function (_React$Component) {
 				var authors = _ref4.authors,
 				    state = objectWithoutProperties$1(_ref4, ["authors"]);
 
+				_this.props.setActivePanel("main");
 				_this.focus();
 				_this.setState({ quote: state });
 
@@ -18381,7 +18382,7 @@ var ComposeBox = function (_React$Component) {
 			} else if (type === "slash-commands") {
 				this.props.slashCommands.map(function (command) {
 					var lowered = command.id.toLowerCase();
-					if (lowered.indexOf(prefix) !== -1) {
+					if (lowered.indexOf(prefix) === 0) {
 						command.identifier = command.id;
 						itemsToShow.push(command);
 					}
@@ -52725,6 +52726,7 @@ var SimpleStream = function (_Component) {
 					placeholder: placeholderText,
 					teammates: this.props.teammates,
 					slashCommands: this.props.slashCommands,
+					setActivePanel: this.setActivePanel,
 					ref: this._compose,
 					disabled: this.props.isOffline,
 					offscreen: activePanel !== "main" && activePanel !== "thread",
