@@ -41539,6 +41539,78 @@ function Button(_ref) {
 	);
 }
 
+// var Moment_Timezone = require("moment-timezone");
+
+var Timestamp = function (_Component) {
+	inherits$1(Timestamp, _Component);
+
+	function Timestamp(props) {
+		classCallCheck$1(this, Timestamp);
+
+		var _this = possibleConstructorReturn$1(this, (Timestamp.__proto__ || Object.getPrototypeOf(Timestamp)).call(this, props));
+
+		Object.defineProperty(_this, "prettyDateDay", {
+			enumerable: true,
+			writable: true,
+			value: function value(time, options) {
+				options = options || {};
+				if (time === 0 || time === null || time === undefined) return "";
+				var now = new Date().getTime();
+				// now = this.adjustedTime(now, options.timezone_info);
+				// time = this.adjustedTime(time, options.timezone_info);
+				var today = new Date(now);
+				var timeDay = new Date(time);
+				if (timeDay.getFullYear() === today.getFullYear()) {
+					return hooks(time).format("MMM D");
+				}
+				return hooks(time).format("MMM D, YYYY");
+			}
+		});
+		Object.defineProperty(_this, "prettyTime", {
+			enumerable: true,
+			writable: true,
+			value: function value(time, options) {
+				options = options || {};
+				var prettyTime;
+				// time = this.adjustedTime(time, options.timezone_info);
+				prettyTime = hooks(time).format("h:mm A");
+				prettyTime = prettyTime.replace(/^0:/, "12:");
+				return prettyTime;
+			}
+		});
+
+		_this.state = {};
+		return _this;
+	}
+
+	createClass$1(Timestamp, [{
+		key: "render",
+		value: function render() {
+			var timeText = this.prettyTime(this.props.time);
+			var timeDetails = this.prettyDateDay(this.props.time);
+
+			if (!this.props.time) return null;
+
+			return react.createElement(
+				"time",
+				null,
+				timeText,
+				react.createElement(
+					"span",
+					{ className: "details" },
+					timeDetails
+				)
+			);
+		}
+	}, {
+		key: "sameDateAs",
+		value: function sameDateAs(date1, date2) {
+			return date1.getFullYear() == date2.getFullYear() && date1.getMonth() == date2.getMonth() && date1.getDate() == date2.getDate();
+		}
+	}]);
+	return Timestamp;
+}(react_1);
+
 var SimplePublicChannelPanel = function (_Component) {
 	inherits$1(SimplePublicChannelPanel, _Component);
 
@@ -41551,6 +41623,14 @@ var SimplePublicChannelPanel = function (_Component) {
 			enumerable: true,
 			writable: true,
 			value: function value(streams$$1) {
+				console.log(streams$$1);
+				if (streams$$1.length === 0) {
+					return react.createElement(
+						"div",
+						{ className: "no-matches" },
+						"No channels match this type"
+					);
+				}
 				return [streams$$1.map(function (stream) {
 					var icon = stream.privacy === "private" ? react.createElement("span", { className: "icon icon-lock" }) : react.createElement(
 						"span",
@@ -41562,6 +41642,7 @@ var SimplePublicChannelPanel = function (_Component) {
 						{ key: stream.id, id: stream.id },
 						icon,
 						stream.name,
+						react.createElement(Timestamp, { time: stream.mostRecentPostCreatedAt }),
 						react.createElement(
 							"div",
 							{ className: "explainer" },
@@ -48088,76 +48169,6 @@ var EditingIndicator = function (_React$Component) {
 	}]);
 	return EditingIndicator;
 }(react.Component);
-
-// var Moment_Timezone = require("moment-timezone");
-
-var Timestamp = function (_Component) {
-	inherits$1(Timestamp, _Component);
-
-	function Timestamp(props) {
-		classCallCheck$1(this, Timestamp);
-
-		var _this = possibleConstructorReturn$1(this, (Timestamp.__proto__ || Object.getPrototypeOf(Timestamp)).call(this, props));
-
-		Object.defineProperty(_this, "prettyDateDay", {
-			enumerable: true,
-			writable: true,
-			value: function value(time, options) {
-				options = options || {};
-				if (time === 0 || time === null || time === undefined) return "";
-				var now = new Date().getTime();
-				// now = this.adjustedTime(now, options.timezone_info);
-				// time = this.adjustedTime(time, options.timezone_info);
-				var today = new Date(now);
-				var timeDay = new Date(time);
-				if (timeDay.getFullYear() === today.getFullYear()) {
-					return hooks(time).format("MMM D");
-				}
-				return hooks(time).format("MMM D, YYYY");
-			}
-		});
-		Object.defineProperty(_this, "prettyTime", {
-			enumerable: true,
-			writable: true,
-			value: function value(time, options) {
-				options = options || {};
-				var prettyTime;
-				// time = this.adjustedTime(time, options.timezone_info);
-				prettyTime = hooks(time).format("h:mm A");
-				prettyTime = prettyTime.replace(/^0:/, "12:");
-				return prettyTime;
-			}
-		});
-
-		_this.state = {};
-		return _this;
-	}
-
-	createClass$1(Timestamp, [{
-		key: "render",
-		value: function render() {
-			var timeText = this.prettyTime(this.props.time);
-			var timeDetails = this.prettyDateDay(this.props.time);
-
-			return react.createElement(
-				"time",
-				null,
-				timeText,
-				react.createElement(
-					"span",
-					{ className: "details" },
-					timeDetails
-				)
-			);
-		}
-	}, {
-		key: "sameDateAs",
-		value: function sameDateAs(date1, date2) {
-			return date1.getFullYear() == date2.getFullYear() && date1.getMonth() == date2.getMonth() && date1.getDate() == date2.getDate();
-		}
-	}]);
-	return Timestamp;
-}(react_1);
 
 var PostDetails = function (_Component) {
 	inherits$1(PostDetails, _Component);

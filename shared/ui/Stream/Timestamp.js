@@ -12,6 +12,8 @@ export default class Timestamp extends Component {
 		const timeText = this.prettyTime(this.props.time);
 		const timeDetails = this.prettyDateDay(this.props.time);
 
+		if (!this.props.time) return null;
+
 		return (
 			<time>
 				{timeText}

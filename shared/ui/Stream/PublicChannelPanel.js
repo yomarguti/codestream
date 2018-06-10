@@ -12,6 +12,7 @@ import Button from "./Button";
 import { FormattedMessage } from "react-intl";
 import * as routingActions from "../actions/routing";
 import _ from "underscore";
+import Timestamp from "./Timestamp";
 
 export class SimplePublicChannelPanel extends Component {
 	constructor(props) {
@@ -69,6 +70,10 @@ export class SimplePublicChannelPanel extends Component {
 	}
 
 	renderChannels = streams => {
+		console.log(streams);
+		if (streams.length === 0) {
+			return <div className="no-matches">No channels match this type</div>;
+		}
 		return [
 			streams.map(stream => {
 				const icon =
@@ -81,6 +86,7 @@ export class SimplePublicChannelPanel extends Component {
 					<li key={stream.id} id={stream.id}>
 						{icon}
 						{stream.name}
+						<Timestamp time={stream.mostRecentPostCreatedAt} />
 						<div className="explainer">{stream.purpose}</div>
 					</li>
 				);

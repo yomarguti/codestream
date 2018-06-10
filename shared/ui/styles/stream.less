@@ -635,6 +635,11 @@
 			user-select: none;
 			box-sizing: border-box;
 			padding-bottom: 50px;
+			.no-matches {
+				font-style: italic;
+				// text-align: center;
+				padding: 5px 10px;
+			}
 			.section {
 				padding: 10px 0;
 				font-size: 15px;
@@ -745,6 +750,14 @@
 							color: white;
 							font-weight: normal;
 							z-index: 2;
+						}
+						time {
+							float: right;
+							opacity: 0.5;
+							color: @app-background-color;
+							.details {
+								color: @text-color;
+							}
 						}
 					}
 					li:hover .icon.align-right {
