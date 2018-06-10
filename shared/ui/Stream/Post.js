@@ -9,6 +9,7 @@ import RetrySpinner from "./RetrySpinner";
 import { retryPost, cancelPost } from "./actions";
 import ContentEditable from "react-contenteditable";
 import Button from "./Button";
+import Menu from "./Menu";
 import Linkify from "react-linkify";
 
 class Post extends Component {
@@ -49,18 +50,19 @@ class Post extends Component {
 			);
 		}
 
-		// let menuItems = [
-		// 	{ label: "Create Thread", key: "make-thread" },
-		// 	{ label: "Mark Unread", key: "mark-unread" },
-		// 	// { label: "Add Reaction", key: "add-reaction" },
-		// 	// { label: "Pin to Stream", key: "pin-to-stream" },
-		// 	{ label: "Edit Message", key: "edit-message" },
-		// 	{ label: "Delete Message", key: "delete-message" }
-		// ];
-
-		// let menu = this.state.menuOpen ? (
-		// <Menu items={menuItems} handleSelectMenu={this.handleSelectMenu} />
-		// ) : null;
+		let menuItems = [
+			{ label: "Create Thread", action: "make-thread" },
+			{ label: "Mark Unread", action: "mark-unread" },
+			{ label: "Add Reaction", action: "add-reaction" },
+			{ label: "Pin to Stream", action: "pin-to-stream" }
+		];
+		if (mine) {
+			menuItems.push(
+				{ label: "-" },
+				{ label: "Edit Comment", action: "edit-post" },
+				{ label: "Delete Comment", action: "delete-post" }
+			);
+		}
 
 		let parentPost = this.props.replyingTo;
 		let alertClass = this.props.alert ? "icon icon-" + this.props.alert : null;
@@ -77,6 +79,10 @@ class Post extends Component {
 				thread={post.parentPostId || post.id}
 				ref={ref => (this._div = ref)}
 			>
+				<span className="icon icon-gear" onClick={this.handleMenuClick} />
+				{this.state.menuOpen && (
+					<Menu items={menuItems} target={this.state.menuTarget} action={this.handleSelectMenu} />
+				)}
 				<Headshot size={36} person={post.author} mine={mine} />
 				<span className="author" ref={ref => (this._authorDiv = ref)}>
 					{post.author.username}
@@ -170,7 +176,7 @@ class Post extends Component {
 						loading={this.props.loading}
 						onClick={this.handleClickSave}
 					>
-						Save Changes
+						Save
 					</Button>
 					<Button
 						id="discard-button"
@@ -195,15 +201,18 @@ class Post extends Component {
 
 	handleMenuClick = async event => {
 		event.stopPropagation();
-		this.setState({ menuOpen: !this.state.menuOpen });
+		this.setState({ menuOpen: !this.state.menuOpen, menuTarget: event.target });
 		console.log("CLICK ON MENU: ");
 	};
 
-	handleSelectMenu = (event, id) => {
-		console.log("Clicked: " + id);
-		event.stopPropagation();
+	handleSelectMenu = action => {
+		console.log("Clicked: " + action);
+		this.props.action(action, this.props.post);
 		this.setState({ menuOpen: false });
 	};
 }
 
-export default connect(null, { cancelPost, retryPost })(Post);
+export default connect(
+	null,
+	{ cancelPost, retryPost }
+)(Post);

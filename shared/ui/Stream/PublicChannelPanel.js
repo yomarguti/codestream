@@ -70,7 +70,6 @@ export class SimplePublicChannelPanel extends Component {
 	}
 
 	renderChannels = streams => {
-		console.log(streams);
 		if (streams.length === 0) {
 			return <div className="no-matches">No channels match this type</div>;
 		}

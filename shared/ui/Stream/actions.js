@@ -10,6 +10,12 @@ export const markStreamRead = streamId => (dispatch, getState, { api }) => {
 	return dispatch({ type: "CLEAR_UMI", payload: streamId });
 };
 
+// export const markPostUnRead = (streamId, postId) => (dispatch, getState, { api }) => {
+// if (!streamId) return;
+// api.markPostUnread(streamId, postId);
+// return dispatch({ type: "CLEAR_UMI", payload: streamId });
+// };
+
 export const createPost = (streamId, parentPostId, text, codeBlocks, mentions, extra) => async (
 	dispatch,
 	getState,
@@ -27,6 +33,7 @@ export const createPost = (streamId, parentPostId, text, codeBlocks, mentions, e
 			text,
 			commitHashWhenPosted: context.currentCommit,
 			creatorId: session.userId,
+			createdAt: new Date().getTime(),
 			pending: true
 		}
 	});

@@ -23180,6 +23180,12 @@ var markStreamRead = function markStreamRead(streamId) {
 	};
 };
 
+// export const markPostUnRead = (streamId, postId) => (dispatch, getState, { api }) => {
+// if (!streamId) return;
+// api.markPostUnread(streamId, postId);
+// return dispatch({ type: "CLEAR_UMI", payload: streamId });
+// };
+
 var createPost = function createPost(streamId, parentPostId, text, codeBlocks, mentions, extra) {
 	return function () {
 		var _ref3 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(dispatch, getState, _ref2) {
@@ -23204,6 +23210,7 @@ var createPost = function createPost(streamId, parentPostId, text, codeBlocks, m
 									text: text,
 									commitHashWhenPosted: context.currentCommit,
 									creatorId: session.userId,
+									createdAt: new Date().getTime(),
 									pending: true
 								}
 							});
@@ -41646,7 +41653,6 @@ var SimplePublicChannelPanel = function (_Component) {
 			enumerable: true,
 			writable: true,
 			value: function value(streams$$1) {
-				console.log(streams$$1);
 				if (streams$$1.length === 0) {
 					return react.createElement(
 						"div",
@@ -51121,7 +51127,7 @@ var Post = function (_Component) {
 								loading: _this.props.loading,
 								onClick: _this.handleClickSave
 							},
-							"Save Changes"
+							"Save"
 						),
 						react.createElement(
 							Button,
@@ -51149,7 +51155,7 @@ var Post = function (_Component) {
 							switch (_context.prev = _context.next) {
 								case 0:
 									event.stopPropagation();
-									_this.setState({ menuOpen: !_this.state.menuOpen });
+									_this.setState({ menuOpen: !_this.state.menuOpen, menuTarget: event.target });
 									console.log("CLICK ON MENU: ");
 
 								case 3:
@@ -51170,9 +51176,9 @@ var Post = function (_Component) {
 		Object.defineProperty(_this, "handleSelectMenu", {
 			enumerable: true,
 			writable: true,
-			value: function value(event, id) {
-				console.log("Clicked: " + id);
-				event.stopPropagation();
+			value: function value(action) {
+				console.log("Clicked: " + action);
+				_this.props.action(action, _this.props.post);
 				_this.setState({ menuOpen: false });
 			}
 		});
@@ -51221,18 +51227,10 @@ var Post = function (_Component) {
 				);
 			}
 
-			// let menuItems = [
-			// 	{ label: "Create Thread", key: "make-thread" },
-			// 	{ label: "Mark Unread", key: "mark-unread" },
-			// 	// { label: "Add Reaction", key: "add-reaction" },
-			// 	// { label: "Pin to Stream", key: "pin-to-stream" },
-			// 	{ label: "Edit Message", key: "edit-message" },
-			// 	{ label: "Delete Message", key: "delete-message" }
-			// ];
-
-			// let menu = this.state.menuOpen ? (
-			// <Menu items={menuItems} handleSelectMenu={this.handleSelectMenu} />
-			// ) : null;
+			var menuItems = [{ label: "Create Thread", action: "make-thread" }, { label: "Mark Unread", action: "mark-unread" }, { label: "Add Reaction", action: "add-reaction" }, { label: "Pin to Stream", action: "pin-to-stream" }];
+			if (mine) {
+				menuItems.push({ label: "-" }, { label: "Edit Comment", action: "edit-post" }, { label: "Delete Comment", action: "delete-post" });
+			}
 
 			var parentPost = this.props.replyingTo;
 			var alertClass = this.props.alert ? "icon icon-" + this.props.alert : null;
@@ -51252,6 +51250,8 @@ var Post = function (_Component) {
 						return _this3._div = _ref4;
 					}
 				},
+				react.createElement("span", { className: "icon icon-gear", onClick: this.handleMenuClick }),
+				this.state.menuOpen && react.createElement(Menu, { items: menuItems, target: this.state.menuTarget, action: this.handleSelectMenu }),
 				react.createElement(Headshot, { size: 36, person: post.author, mine: mine }),
 				react.createElement(
 					"span",
@@ -51504,7 +51504,8 @@ var SimpleStream = function (_Component) {
 							currentUsername: _this.props.currentUser.username,
 							showDetails: "1",
 							currentCommit: _this.props.currentCommit,
-							editing: post.id === _this.state.editingPostId
+							editing: post.id === _this.state.editingPostId,
+							action: _this.postAction
 						})
 					);
 					lastTimestamp = post.createdAt;
@@ -51610,15 +51611,55 @@ var SimpleStream = function (_Component) {
 			value: function value(event) {
 				var postDiv = event.target.closest(".post");
 				if (!postDiv || !postDiv.id) return;
-
+				_this.confirmDeletePost(postDiv.id);
+			}
+		});
+		Object.defineProperty(_this, "confirmDeletePost", {
+			enumerable: true,
+			writable: true,
+			value: function value(postId) {
 				var answer = atom.confirm({
 					message: "Are you sure?",
 					buttons: ["Delete Post", "Cancel"]
 				});
 
 				if (answer === 0) {
-					console.log("Calling delete post with: ", postDiv.id);
-					_this.props.deletePost(postDiv.id);
+					console.log("Calling delete post with: ", postId);
+					_this.props.deletePost(postId);
+				}
+			}
+		});
+		Object.defineProperty(_this, "notImplementedYet", {
+			enumerable: true,
+			writable: true,
+			value: function value() {
+				_this.submitSystemPost("Not implemented yet");
+			}
+		});
+		Object.defineProperty(_this, "markUnread", {
+			enumerable: true,
+			writable: true,
+			value: function value() {
+				_this.submitSystemPost("Not implemented yet");
+			}
+		});
+		Object.defineProperty(_this, "postAction", {
+			enumerable: true,
+			writable: true,
+			value: function value(action, post) {
+				switch (action) {
+					case "make-thread":
+						return _this.selectPost(post.id, true);
+					case "edit-post":
+						return _this.setState({ editingPostId: post.id });
+					case "delete-post":
+						return _this.confirmDeletePost(post.id);
+					case "mark-unread":
+						return _this.markUnread(post.id);
+					case "add-reaction":
+						return _this.notImplementedYet();
+					case "pin-to-stream":
+						return _this.notImplementedYet();
 				}
 			}
 		});
@@ -52536,7 +52577,7 @@ var SimpleStream = function (_Component) {
 				react.createElement("div", { id: "modal-root" }),
 				react.createElement(EditingIndicator, {
 					editingUsers: this.props.editingUsers,
-					inactive: activePanel !== "main" // or if no fileStream
+					inactive: activePanel === "xmain" // or if no fileStream
 					, currentUser: this.props.currentUser,
 					teamMembers: this.props.teamMembersById
 				}),
@@ -52624,7 +52665,8 @@ var SimpleStream = function (_Component) {
 									replyingTo: parentPost,
 									newMessageIndicator: newMessageIndicator,
 									unread: unread,
-									editing: activePanel === "main" && post.id === _this5.state.editingPostId
+									editing: activePanel === "main" && post.id === _this5.state.editingPostId,
+									action: _this5.postAction
 								})
 							);
 							lastTimestamp = post.createdAt;
@@ -52668,7 +52710,8 @@ var SimpleStream = function (_Component) {
 							key: threadPost.id,
 							showDetails: "1",
 							currentCommit: this.props.currentCommit,
-							editing: activePanel === "thread" && threadPost.id === this.state.editingPostId
+							editing: activePanel === "thread" && threadPost.id === this.state.editingPostId,
+							action: this.postAction
 						}),
 						this.renderThreadPosts(threadId)
 					)

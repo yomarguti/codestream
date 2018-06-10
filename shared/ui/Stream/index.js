@@ -345,6 +345,7 @@ export class SimpleStream extends Component {
 						showDetails="1"
 						currentCommit={this.props.currentCommit}
 						editing={post.id === this.state.editingPostId}
+						action={this.postAction}
 					/>
 				</div>
 			);
@@ -443,7 +444,7 @@ export class SimpleStream extends Component {
 				<div id="modal-root" />
 				<EditingIndicator
 					editingUsers={this.props.editingUsers}
-					inactive={activePanel !== "main"} // or if no fileStream
+					inactive={activePanel === "xmain"} // or if no fileStream
 					currentUser={this.props.currentUser}
 					teamMembers={this.props.teamMembersById}
 				/>
@@ -512,6 +513,7 @@ export class SimpleStream extends Component {
 										newMessageIndicator={newMessageIndicator}
 										unread={unread}
 										editing={activePanel === "main" && post.id === this.state.editingPostId}
+										action={this.postAction}
 									/>
 								</div>
 							);
@@ -543,6 +545,7 @@ export class SimpleStream extends Component {
 								showDetails="1"
 								currentCommit={this.props.currentCommit}
 								editing={activePanel === "thread" && threadPost.id === this.state.editingPostId}
+								action={this.postAction}
 							/>
 						)}
 						{this.renderThreadPosts(threadId)}
@@ -681,15 +684,43 @@ export class SimpleStream extends Component {
 	handleDeletePost = event => {
 		var postDiv = event.target.closest(".post");
 		if (!postDiv || !postDiv.id) return;
+		this.confirmDeletePost(postDiv.id);
+	};
 
+	confirmDeletePost = postId => {
 		const answer = atom.confirm({
 			message: "Are you sure?",
 			buttons: ["Delete Post", "Cancel"]
 		});
 
 		if (answer === 0) {
-			console.log("Calling delete post with: ", postDiv.id);
-			this.props.deletePost(postDiv.id);
+			console.log("Calling delete post with: ", postId);
+			this.props.deletePost(postId);
+		}
+	};
+
+	notImplementedYet = () => {
+		this.submitSystemPost("Not implemented yet");
+	};
+
+	markUnread = () => {
+		this.submitSystemPost("Not implemented yet");
+	};
+
+	postAction = (action, post) => {
+		switch (action) {
+			case "make-thread":
+				return this.selectPost(post.id, true);
+			case "edit-post":
+				return this.setState({ editingPostId: post.id });
+			case "delete-post":
+				return this.confirmDeletePost(post.id);
+			case "mark-unread":
+				return this.markUnread(post.id);
+			case "add-reaction":
+				return this.notImplementedYet();
+			case "pin-to-stream":
+				return this.notImplementedYet();
 		}
 	};
 
