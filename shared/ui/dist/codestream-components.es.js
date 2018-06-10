@@ -41198,7 +41198,11 @@ var SimpleChannelPanel = function (_Component) {
 					react.createElement(
 						"div",
 						{ className: "header", onClick: _this.handleClickShowPublicChannels },
-						"Team Channels",
+						react.createElement(
+							"span",
+							{ className: "clickable" },
+							"Team Channels"
+						),
 						react.createElement("span", {
 							className: "icon icon-diff-added align-right",
 							onClick: _this.handleClickCreateChannel
@@ -41267,8 +41271,12 @@ var SimpleChannelPanel = function (_Component) {
 					{ className: "section" },
 					react.createElement(
 						"div",
-						{ className: "header", onClick: _this.handleClickCreateDirectMessage },
-						"Direct Messages",
+						{ className: "header clickable", onClick: _this.handleClickCreateDirectMessage },
+						react.createElement(
+							"span",
+							{ className: "clickable" },
+							"Direct Messages"
+						),
 						react.createElement("span", { className: "icon icon-diff-added align-right" })
 					),
 					react.createElement(

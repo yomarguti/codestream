@@ -45,7 +45,7 @@ export class SimpleChannelPanel extends Component {
 		return (
 			<div className="section">
 				<div className="header" onClick={this.handleClickShowPublicChannels}>
-					Team Channels
+					<span className="clickable">Team Channels</span>
 					<span
 						className="icon icon-diff-added align-right"
 						onClick={this.handleClickCreateChannel}
@@ -105,8 +105,9 @@ export class SimpleChannelPanel extends Component {
 	renderDirectMessages = () => {
 		return (
 			<div className="section">
-				<div className="header" onClick={this.handleClickCreateDirectMessage}>
-					Direct Messages<span className="icon icon-diff-added align-right" />
+				<div className="header clickable" onClick={this.handleClickCreateDirectMessage}>
+					<span className="clickable">Direct Messages</span>
+					<span className="icon icon-diff-added align-right" />
 				</div>
 				<ul onClick={this.handleClickSelectStream}>
 					{this.props.directMessageStreams.map(stream => {

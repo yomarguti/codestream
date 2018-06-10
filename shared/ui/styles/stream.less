@@ -643,18 +643,25 @@
 			.section {
 				padding: 10px 0;
 				font-size: 15px;
+				.clickable {
+					cursor: pointer;
+				}
 
 				.header {
 					text-transform: uppercase;
 					font-weight: normal;
-					opacity: 0.5;
 					padding: 2px 10px;
 					// color: @text-color-info;
 					color: @text-color-subtle;
-					cursor: pointer;
 					position: relative;
+					span {
+						opacity: 0.5;
+					}
+					span.clickable:hover {
+						opacity: 1;
+					}
 				}
-				.header:hover {
+				.header.clickable:hover {
 					opacity: 1;
 					background: @app-background-color-hover;
 				}
