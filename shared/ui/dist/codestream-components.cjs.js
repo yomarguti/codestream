@@ -51128,7 +51128,7 @@ var Post = function (_Component) {
 				if (matches) return react.createElement(
 					"span",
 					{ className: "emote" },
-					matches[1]
+					_this.renderTextLinkified(matches[1])
 				);else return null;
 			}
 		});
@@ -51136,15 +51136,15 @@ var Post = function (_Component) {
 			enumerable: true,
 			writable: true,
 			value: function value(post) {
-				if (_this.props.editing) return _this.renderBodyEditing(post);else if (post.text.match(/^\/me\s/)) return null;else return _this.renderBodyLinkified(post);
+				if (_this.props.editing) return _this.renderBodyEditing(post);else if (post.text.match(/^\/me\s/)) return null;else return _this.renderTextLinkified(post.text);
 			}
 		});
-		Object.defineProperty(_this, "renderBodyLinkified", {
+		Object.defineProperty(_this, "renderTextLinkified", {
 			enumerable: true,
 			writable: true,
-			value: function value(post) {
+			value: function value(text) {
 				var usernameRegExp = new RegExp("(@(?:" + _this.props.usernames + ")\\b)");
-				var bodyParts = post.text.split(usernameRegExp);
+				var bodyParts = text.split(usernameRegExp);
 				var iterator = 0;
 				return bodyParts.map(function (part) {
 					if (part.match(usernameRegExp)) {

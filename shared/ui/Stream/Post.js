@@ -120,19 +120,19 @@ class Post extends Component {
 
 	renderEmote = post => {
 		let matches = post.text.match(/^\/me\s+(.*)/);
-		if (matches) return <span className="emote">{matches[1]}</span>;
+		if (matches) return <span className="emote">{this.renderTextLinkified(matches[1])}</span>;
 		else return null;
 	};
 
 	renderBody = post => {
 		if (this.props.editing) return this.renderBodyEditing(post);
 		else if (post.text.match(/^\/me\s/)) return null;
-		else return this.renderBodyLinkified(post);
+		else return this.renderTextLinkified(post.text);
 	};
 
-	renderBodyLinkified = post => {
+	renderTextLinkified = text => {
 		let usernameRegExp = new RegExp("(@(?:" + this.props.usernames + ")\\b)");
-		let bodyParts = post.text.split(usernameRegExp);
+		let bodyParts = text.split(usernameRegExp);
 		let iterator = 0;
 		return bodyParts.map(part => {
 			if (part.match(usernameRegExp)) {
