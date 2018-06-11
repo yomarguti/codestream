@@ -41,6 +41,7 @@ export default (state = initialState, { type, payload }) => {
 			};
 		}
 		case "POSTS-UPDATE_FROM_PUBNUB":
+		case "UPDATE_POST":
 		case "ADD_POST":
 			return {
 				...state,
@@ -68,6 +69,15 @@ export default (state = initialState, { type, payload }) => {
 			return {
 				...state,
 				pending: state.pending.filter(post => post.id !== payload)
+			};
+		}
+		case "DELETE_POST": {
+			const { id, streamId } = payload;
+			const streamPosts = { ...(state.byStream[streamId] || {}) };
+			delete streamPosts[id];
+			return {
+				...state,
+				byStream: { ...state.byStream, [streamId]: streamPosts }
 			};
 		}
 		default:

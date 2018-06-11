@@ -101,12 +101,22 @@ export const createSystemPost = (streamId, parentPostId, text, seqNum) => async 
 	dispatch({ type: "ADD_POST", payload: post });
 };
 
-export const editPost = () => {
-	// TODO
+export const editPost = (id, text, mentions) => async (dispatch, getState, { api }) => {
+	try {
+		const post = await api.editPost({ id, text, mentions });
+		return dispatch({ type: "UPDATE_POST", payload: post });
+	} catch (e) {
+		// TODO:
+	}
 };
 
-export const deletePost = () => {
-	// TODO
+export const deletePost = id => async (dispatch, getState, { api }) => {
+	try {
+		const post = await api.deletePost(id);
+		return dispatch({ type: "DELETE_POST", payload: post });
+	} catch (e) {
+		// TODO
+	}
 };
 
 // usage: setUserPreference(["favorites", "shoes", "wedges"], "red")
