@@ -129,6 +129,7 @@ interface BootstrapState {
 interface CSWebviewRequest {
 	type: string;
 	body: any;
+	id: string;
 }
 
 export class StreamWebviewPanel extends Disposable {
@@ -166,7 +167,7 @@ export class StreamWebviewPanel extends Disposable {
 	private async onPanelWebViewMessageReceived(e: CSWebviewRequest) {
 		if (this._streamThread === undefined) return;
 
-		const { type, body } = e;
+		const { type, body, id } = e;
 
 		const createRange = (array: number[][]) =>
 			new Range(array[0][0], array[0][1], array[1][0], array[1][1]);
@@ -207,6 +208,7 @@ export class StreamWebviewPanel extends Disposable {
 						if (post === undefined) return;
 
 						this.postMessage({
+							id,
 							type: "codestream:response",
 							body: {
 								action: body.action,
@@ -216,6 +218,7 @@ export class StreamWebviewPanel extends Disposable {
 					case "mark-stream-read":
 						const response = await this._streamThread.stream.markRead();
 						this.postMessage({
+							id,
 							type: "codestream:response",
 							body: response
 						});
