@@ -17,6 +17,7 @@ import * as actions from "./actions";
 import { goToInvitePage } from "../actions/routing";
 import { toMapBy } from "../utils";
 import { slashCommands } from "./SlashCommands";
+import { confirmPopup } from "./Confirm";
 import {
 	getPostsForStream,
 	getStreamForId,
@@ -76,18 +77,6 @@ export class SimpleStream extends Component {
 				}),
 				atom.commands.add("atom-workspace", "codestream:copy", {
 					didDispatch: event => this.copy(event),
-					hiddenInCommandPalette: true
-				}),
-				atom.commands.add(".codestream .post.mine", "codestream:edit-headshot", {
-					didDispatch: event => this.handleEditHeadshot(event),
-					hiddenInCommandPalette: true
-				}),
-				atom.commands.add(".codestream .post.mine", "codestream:edit-post", {
-					didDispatch: event => this.handleEditPost(event),
-					hiddenInCommandPalette: true
-				}),
-				atom.commands.add(".codestream .post.mine", "codestream:delete-post", {
-					didDispatch: event => this.handleDeletePost(event),
 					hiddenInCommandPalette: true
 				})
 			);
@@ -443,6 +432,7 @@ export class SimpleStream extends Component {
 		return (
 			<div className={streamClass} ref={ref => (this._div = ref)}>
 				<div id="modal-root" />
+				<div id="confirm-root" />
 				<EditingIndicator
 					editingUsers={this.props.editingUsers}
 					inactive={activePanel === "xmain"} // or if no fileStream
@@ -583,8 +573,7 @@ export class SimpleStream extends Component {
 
 	findMyPostBeforeSeqNum(seqNum) {
 		const me = this.props.currentUser.username;
-		return _
-			.chain(this.props.posts)
+		return _.chain(this.props.posts)
 			.filter(post => {
 				return post.author.username === me && post.seqNum < seqNum;
 			})
@@ -673,16 +662,6 @@ export class SimpleStream extends Component {
 			});
 	};
 
-	handleEditHeadshot = _event => {
-		atom.confirm({
-			message: "Edit Headshot",
-			detailedMessage:
-				"Until we have built-in CodeStream headshots, you can edit your headshot by setting it up on Gravatar.com for " +
-				this.props.currentUser.email +
-				".\n\nNote that it might take a few minutes for your headshot to appear here.\n\n-Team CodeStream"
-		});
-	};
-
 	handleEditPost = event => {
 		var postDiv = event.target.closest(".post");
 		if (!postDiv) return;
@@ -696,15 +675,18 @@ export class SimpleStream extends Component {
 	};
 
 	confirmDeletePost = postId => {
-		const answer = atom.confirm({
-			message: "Are you sure?",
-			buttons: ["Delete Post", "Cancel"]
+		confirmPopup({
+			title: "Are you sure?",
+			message: "Deleting a post cannot be undone.",
+			centered: true,
+			buttons: [
+				{
+					label: "Delete Post",
+					action: () => this.props.deletePost(postId)
+				},
+				{ label: "Cancel" }
+			]
 		});
-
-		if (answer === 0) {
-			console.log("Calling delete post with: ", postId);
-			this.props.deletePost(postId);
-		}
 	};
 
 	notImplementedYet = () => {
@@ -974,6 +956,21 @@ export class SimpleStream extends Component {
 			const text = "You cannot leave all-hands channels.";
 			return this.submitSystemPost(text);
 		}
+		confirmPopup({
+			title: "Are you sure?",
+			message: "Public channels can be found on the channels list under TEAM CHANNELS.",
+			buttons: [
+				{
+					label: "Leave",
+					action: this.executeLeaveChannel
+				},
+				{ label: "Cancel" }
+			]
+		});
+		return true;
+	};
+
+	executeLeaveChannel = () => {
 		this.props.removeUsersFromStream(this.props.postStreamId, [this.props.currentUser.id]);
 		this.setActivePanel("channels");
 		return true;
@@ -991,19 +988,28 @@ export class SimpleStream extends Component {
 			let text = "You may only archive channels that you created.";
 			if (postStream.creatorId) text += " This channel was created by " + postStream.creatorId;
 			this.submitSystemPost(text);
-			return;
+			return true;
 		}
-		const answer = atom.confirm({
-			message: "Are you sure?",
-			buttons: ["Archive Channel", "Cancel"]
+		confirmPopup({
+			title: "Are you sure?",
+			message: "Archived channels can be found on the channels list under TEAM CHANNELS.",
+			buttons: [
+				{
+					label: "Archive",
+					action: this.executeArchiveChannel
+				},
+				{ label: "Cancel" }
+			]
 		});
 
-		if (answer === 0) {
-			console.log("Calling archive channel with: ", postStream.id);
-			this.props.archiveStream(postStream.id, true);
-			this.setActivePanel("channels");
-		}
 		return true;
+	};
+
+	executeArchiveChannel = () => {
+		const { postStream, currentUser } = this.props;
+		console.log("Calling archive channel with: ", postStream.id);
+		this.props.archiveStream(postStream.id, true);
+		this.setActivePanel("channels");
 	};
 
 	removeFromStream = async args => {
@@ -1271,10 +1277,7 @@ const mapStateToProps = ({
 	};
 };
 
-export default connect(
-	mapStateToProps,
-	{
-		...actions,
-		goToInvitePage
-	}
-)(SimpleStream);
+export default connect(mapStateToProps, {
+	...actions,
+	goToInvitePage
+})(SimpleStream);

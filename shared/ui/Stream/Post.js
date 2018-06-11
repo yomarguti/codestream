@@ -11,6 +11,8 @@ import ContentEditable from "react-contenteditable";
 import Button from "./Button";
 import Menu from "./Menu";
 import Linkify from "react-linkify";
+// import "emoji-mart/css/emoji-mart.css";
+// import { Picker } from "emoji-mart";
 
 class Post extends Component {
 	constructor(props) {
@@ -202,17 +204,12 @@ class Post extends Component {
 	handleMenuClick = async event => {
 		event.stopPropagation();
 		this.setState({ menuOpen: !this.state.menuOpen, menuTarget: event.target });
-		console.log("CLICK ON MENU: ");
 	};
 
 	handleSelectMenu = action => {
-		console.log("Clicked: " + action);
 		this.props.action(action, this.props.post);
 		this.setState({ menuOpen: false });
 	};
 }
 
-export default connect(
-	null,
-	{ cancelPost, retryPost }
-)(Post);
+export default connect(null, { cancelPost, retryPost })(Post);

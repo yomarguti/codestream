@@ -1,10 +1,29 @@
 // any variables used here should be provided by the consumer of this stylesheet
 //@import "ui-variables";
+// @import "emoji-mart/css/emoji-mart.css";
 
 .codestream {
 	[contenteditable="true"]:empty:before {
 		content: attr(placeholder);
 		opacity: 0.5;
+	}
+
+	#modal-root.active,
+	#confirm-root.active {
+		width: 100%;
+		height: 100%;
+		position: absolute;
+		z-index: 3000;
+	}
+	#confirm-root {
+		animation: 0.2s slideout;
+	}
+	#confirm-root.active {
+		background: @app-background-color;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		animation: 0.2s slidein;
 	}
 
 	.stream {
@@ -289,14 +308,9 @@
 					// this crazy escape syntax is required due to a bug in LESS
 					width: calc(~"50% - 5px");
 				}
-				button.cancel {
-					color: @text-color;
-					background: @background-color-highlight !important;
-				}
 				button:first-child {
 					margin-right: 10px;
 				}
-				font-size: 1.15em;
 			}
 
 			div[contenteditable="true"] {
@@ -529,6 +543,37 @@
 			}
 		}
 
+		.confirm-popup {
+			width: 100%;
+			height: 100%;
+			.centered {
+				text-align: center;
+			}
+			.confirm-popup-body {
+				margin: 20px;
+				white-space: pre-wrap;
+				.confirm-title {
+					font-size: 24px;
+					text-align: center;
+					padding-bottom: 20px;
+				}
+				.confirm-message {
+					font-size: 16px;
+					padding-bottom: 30px;
+				}
+				.button-group {
+					// padding: 0px 10px 10px 56px;
+					margin-bottom: 5px;
+					button {
+						// this crazy escape syntax is required due to a bug in LESS
+						width: calc(~"50% - 5px");
+					}
+					button:first-child {
+						margin-right: 10px;
+					}
+				}
+			}
+		}
 		.menu-popup {
 			// height: 500px;
 			position: fixed;
@@ -1202,7 +1247,11 @@
 		vertical-align: 1px;
 	}
 	button {
-		font-size: 1.05em;
+		font-size: 1.15em;
+	}
+	button.cancel {
+		color: @text-color;
+		background: @background-color-highlight !important;
 	}
 	.react-select__control {
 		border-color: @base-border-color;

@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import Gravatar from "react-gravatar";
 import Tooltip from "./Tooltip";
+import { confirmPopup } from "./Confirm";
 
 export default class Headshot extends Component {
 	state = { img: null };
@@ -28,15 +29,14 @@ export default class Headshot extends Component {
 		} else if (person.username) {
 			authorInitials = person.username.charAt(0);
 		}
-		let classNameInitials = "headshot-initials color-" + person.color;
+		const classNameInitials = "headshot-initials color-" + person.color;
+		const onClick = this.props.mine ? this.handleEditHeadshot : null;
 
 		return (
-			<div className="headshot" ref={this._div}>
+			<div className="headshot" ref={this._div} onClick={onClick}>
 				{this.state.img && (
 					<Tooltip
-						title={
-							this.props.mine ? "Right click to change your headshot" : this.props.person.fullName
-						}
+						title={this.props.mine ? "Click for headshot instructions" : this.props.person.fullName}
 						delay="0"
 						target={this.state.img}
 					/>
@@ -52,6 +52,18 @@ export default class Headshot extends Component {
 			</div>
 		);
 	}
+
+	handleEditHeadshot = event => {
+		event.stopPropagation();
+		confirmPopup({
+			title: "Edit Headshot",
+			message:
+				"Until we have built-in CodeStream headshots, you can edit your headshot by setting it up on Gravatar.com for " +
+				this.props.person.email +
+				".\n\nNote that it might take a few minutes for your headshot to appear here.\n\n-Team CodeStream",
+			buttons: [{ label: "OK" }]
+		});
+	};
 
 	renderCodeStream() {
 		return (

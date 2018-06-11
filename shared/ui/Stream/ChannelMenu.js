@@ -63,21 +63,11 @@ export class SimpleChannelMenu extends Component {
 				this.props.runSlashCommand("rename");
 			}, 500);
 		} else if (action === "leave-channel") {
-			// this.props.runSlashCommand("leave");
-			atom.confirm(
-				{
-					message: "Are you sure you want to leave this channel?",
-					buttons: ["Leave Channel", "Cancel"]
-				},
-				response => {
-					if (response === 0) {
-						console.log("leaving!: ", streamId);
-						this.props.removeUserFromStream(streamId, this.props.session.userId);
-					} else {
-						console.log("stay");
-					}
-				}
-			);
+			this.props.setActivePanel("main");
+			this.props.setCurrentStream(streamId);
+			setTimeout(() => {
+				this.props.runSlashCommand("leave");
+			}, 100);
 		}
 		this.props.closeMenu();
 		// this.setState({ openMenu: null });
@@ -85,11 +75,8 @@ export class SimpleChannelMenu extends Component {
 }
 
 const mapStateToProps = ({ users, session }) => ({ session });
-export default connect(
-	mapStateToProps,
-	{
-		...contextActions,
-		...streamActions
-		// ...userActions
-	}
-)(SimpleChannelMenu);
+export default connect(mapStateToProps, {
+	...contextActions,
+	...streamActions
+	// ...userActions
+})(SimpleChannelMenu);
