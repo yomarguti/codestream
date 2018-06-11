@@ -40,6 +40,10 @@ export default class WebviewApi {
 		return this.postMessage({ action: "create-post", params: post });
 	}
 
+	editPost(params) {
+		return this.postMessage({ action: "edit-post", params });
+	}
+
 	createStream(stream) {
 		return this.postMessage({ action: "create-stream", params: stream });
 	}

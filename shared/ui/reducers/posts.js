@@ -41,6 +41,7 @@ export default (state = initialState, { type, payload }) => {
 			};
 		}
 		case "POSTS-UPDATE_FROM_PUBNUB":
+		case "UPDATE_POST":
 		case "ADD_POST":
 			return {
 				...state,
