@@ -49,6 +49,7 @@ export default class WorkspaceApi implements Resource {
 			mixpanel.track(label, payload);
 		}
 		if (data.type === "codestream:request") {
+			const requestId = data.id;
 			const { action, params } = data.body;
 			switch (action) {
 				case "create-post": {
@@ -64,7 +65,7 @@ export default class WorkspaceApi implements Resource {
 						)
 						.then(post => {
 							window.parent.postMessage(
-								{ type: "codestream:response", body: { action, payload: post } },
+								{ type: "codestream:response", id: requestId, body: { action, payload: post } },
 								"*"
 							);
 						})
@@ -109,7 +110,15 @@ export default class WorkspaceApi implements Resource {
 						});
 				}
 				case "mark-stream-read": {
-					return this.api.markStreamRead(params);
+					return this.api.markStreamRead(params).then(() => {
+						window.parent.postMessage(
+							{ type: "codestream:response", id: requestId, body: {} },
+							"*"
+						);
+					});
+					// .catch(e => {
+					// /* doesn't really matter */
+					// });
 				}
 				case "save-user-preference": {
 					return this.api.saveUserPreference(params);
