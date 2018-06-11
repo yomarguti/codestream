@@ -71,6 +71,15 @@ export default (state = initialState, { type, payload }) => {
 				pending: state.pending.filter(post => post.id !== payload)
 			};
 		}
+		case "DELETE_POST": {
+			const { id, streamId } = payload;
+			const streamPosts = { ...(state.byStream[streamId] || {}) };
+			delete streamPosts[id];
+			return {
+				...state,
+				byStream: { ...state.byStream, [streamId]: streamPosts }
+			};
+		}
 		default:
 			return state;
 	}

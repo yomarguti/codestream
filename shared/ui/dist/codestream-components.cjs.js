@@ -40685,14 +40685,45 @@ var editPost = function editPost(id, text, mentions) {
 	}();
 };
 
-var deletePost = function deletePost() {
-	// TODO
+var deletePost = function deletePost(id) {
+	return function () {
+		var _ref11 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(dispatch, getState, _ref10) {
+			var api = _ref10.api;
+			var post;
+			return regeneratorRuntime.wrap(function _callee5$(_context5) {
+				while (1) {
+					switch (_context5.prev = _context5.next) {
+						case 0:
+							_context5.prev = 0;
+							_context5.next = 3;
+							return api.deletePost(id);
+
+						case 3:
+							post = _context5.sent;
+							return _context5.abrupt("return", dispatch({ type: "DELETE_POST", payload: post }));
+
+						case 7:
+							_context5.prev = 7;
+							_context5.t0 = _context5["catch"](0);
+
+						case 9:
+						case "end":
+							return _context5.stop();
+					}
+				}
+			}, _callee5, _this, [[0, 7]]);
+		}));
+
+		return function (_x13, _x14, _x15) {
+			return _ref11.apply(this, arguments);
+		};
+	}();
 };
 
 // usage: setUserPreference(["favorites", "shoes", "wedges"], "red")
 var setUserPreference = function setUserPreference(prefPath, value) {
-	return function (dispatch, getState, _ref10) {
-		var api = _ref10.api;
+	return function (dispatch, getState, _ref12) {
+		var api = _ref12.api;
 
 		var _getState3 = getState(),
 		    session = _getState3.session,
@@ -40728,14 +40759,14 @@ var setUserPreference = function setUserPreference(prefPath, value) {
 
 var createStream = function createStream(attributes) {
 	return function () {
-		var _ref12 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(dispatch, getState, _ref11) {
-			var api = _ref11.api;
+		var _ref14 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(dispatch, getState, _ref13) {
+			var api = _ref13.api;
 
 			var _getState4, context, session, stream, returnStream;
 
-			return regeneratorRuntime.wrap(function _callee5$(_context5) {
+			return regeneratorRuntime.wrap(function _callee6$(_context6) {
 				while (1) {
-					switch (_context5.prev = _context5.next) {
+					switch (_context6.prev = _context6.next) {
 						case 0:
 							_getState4 = getState(), context = _getState4.context, session = _getState4.session;
 							stream = {
@@ -40750,104 +40781,60 @@ var createStream = function createStream(attributes) {
 							if (attributes.memberIds) stream.memberIds = attributes.memberIds;
 							if (attributes.purpose) stream.purpose = attributes.purpose;
 
-							_context5.prev = 5;
-							_context5.next = 8;
+							_context6.prev = 5;
+							_context6.next = 8;
 							return api.createStream(stream);
 
 						case 8:
-							returnStream = _context5.sent;
+							returnStream = _context6.sent;
 
 							dispatch(setCurrentStream(returnStream._id));
-							return _context5.abrupt("return", returnStream);
+							return _context6.abrupt("return", returnStream);
 
 						case 13:
-							_context5.prev = 13;
-							_context5.t0 = _context5["catch"](5);
+							_context6.prev = 13;
+							_context6.t0 = _context6["catch"](5);
 
-							console.log("Error: ", _context5.t0);
+							console.log("Error: ", _context6.t0);
 
 						case 16:
 						case "end":
-							return _context5.stop();
+							return _context6.stop();
 					}
 				}
-			}, _callee5, _this, [[5, 13]]);
+			}, _callee6, _this, [[5, 13]]);
 		}));
 
-		return function (_x13, _x14, _x15) {
-			return _ref12.apply(this, arguments);
+		return function (_x16, _x17, _x18) {
+			return _ref14.apply(this, arguments);
 		};
 	}();
 };
 
 var setCurrentStream = function setCurrentStream(streamId) {
 	return function () {
-		var _ref13 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(dispatch) {
-			return regeneratorRuntime.wrap(function _callee6$(_context6) {
+		var _ref15 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7(dispatch) {
+			return regeneratorRuntime.wrap(function _callee7$(_context7) {
 				while (1) {
-					switch (_context6.prev = _context6.next) {
+					switch (_context7.prev = _context7.next) {
 						case 0:
 							dispatch({ type: "SET_CURRENT_STREAM", payload: streamId });
 
 						case 1:
 						case "end":
-							return _context6.stop();
-					}
-				}
-			}, _callee6, _this);
-		}));
-
-		return function (_x16) {
-			return _ref13.apply(this, arguments);
-		};
-	}();
-};
-
-var removeUsersFromStream = function removeUsersFromStream(streamId, userIds) {
-	return function () {
-		var _ref15 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7(dispatch, getState, _ref14) {
-			var api = _ref14.api;
-			var update, returnStream;
-			return regeneratorRuntime.wrap(function _callee7$(_context7) {
-				while (1) {
-					switch (_context7.prev = _context7.next) {
-						case 0:
-							update = {
-								$pull: { memberIds: userIds }
-							};
-							_context7.prev = 1;
-							_context7.next = 4;
-							return api.updateStream(streamId, update);
-
-						case 4:
-							returnStream = _context7.sent;
-
-							console.log("return stream: ", returnStream);
-							// if (streams.length > 0) dispatch(saveStreams(normalize(streams)));
-							_context7.next = 11;
-							break;
-
-						case 8:
-							_context7.prev = 8;
-							_context7.t0 = _context7["catch"](1);
-
-							console.log("Error: ", _context7.t0);
-
-						case 11:
-						case "end":
 							return _context7.stop();
 					}
 				}
-			}, _callee7, _this, [[1, 8]]);
+			}, _callee7, _this);
 		}));
 
-		return function (_x17, _x18, _x19) {
+		return function (_x19) {
 			return _ref15.apply(this, arguments);
 		};
 	}();
 };
 
-var addUsersToStream = function addUsersToStream(streamId, userIds) {
+var removeUsersFromStream = function removeUsersFromStream(streamId, userIds) {
 	return function () {
 		var _ref17 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8(dispatch, getState, _ref16) {
 			var api = _ref16.api;
@@ -40857,7 +40844,7 @@ var addUsersToStream = function addUsersToStream(streamId, userIds) {
 					switch (_context8.prev = _context8.next) {
 						case 0:
 							update = {
-								$push: { memberIds: userIds }
+								$pull: { memberIds: userIds }
 							};
 							_context8.prev = 1;
 							_context8.next = 4;
@@ -40891,7 +40878,7 @@ var addUsersToStream = function addUsersToStream(streamId, userIds) {
 	}();
 };
 
-var renameStream = function renameStream(streamId, name) {
+var addUsersToStream = function addUsersToStream(streamId, userIds) {
 	return function () {
 		var _ref19 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(dispatch, getState, _ref18) {
 			var api = _ref18.api;
@@ -40900,7 +40887,9 @@ var renameStream = function renameStream(streamId, name) {
 				while (1) {
 					switch (_context9.prev = _context9.next) {
 						case 0:
-							update = { name: name };
+							update = {
+								$push: { memberIds: userIds }
+							};
 							_context9.prev = 1;
 							_context9.next = 4;
 							return api.updateStream(streamId, update);
@@ -40909,20 +40898,22 @@ var renameStream = function renameStream(streamId, name) {
 							returnStream = _context9.sent;
 
 							console.log("return stream: ", returnStream);
-							return _context9.abrupt("return", returnStream);
+							// if (streams.length > 0) dispatch(saveStreams(normalize(streams)));
+							_context9.next = 11;
+							break;
 
-						case 9:
-							_context9.prev = 9;
+						case 8:
+							_context9.prev = 8;
 							_context9.t0 = _context9["catch"](1);
 
 							console.log("Error: ", _context9.t0);
 
-						case 12:
+						case 11:
 						case "end":
 							return _context9.stop();
 					}
 				}
-			}, _callee9, _this, [[1, 9]]);
+			}, _callee9, _this, [[1, 8]]);
 		}));
 
 		return function (_x23, _x24, _x25) {
@@ -40931,7 +40922,7 @@ var renameStream = function renameStream(streamId, name) {
 	}();
 };
 
-var archiveStream = function archiveStream(streamId, value) {
+var renameStream = function renameStream(streamId, name) {
 	return function () {
 		var _ref21 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10(dispatch, getState, _ref20) {
 			var api = _ref20.api;
@@ -40940,7 +40931,7 @@ var archiveStream = function archiveStream(streamId, value) {
 				while (1) {
 					switch (_context10.prev = _context10.next) {
 						case 0:
-							update = { isArchived: value };
+							update = { name: name };
 							_context10.prev = 1;
 							_context10.next = 4;
 							return api.updateStream(streamId, update);
@@ -40967,6 +40958,46 @@ var archiveStream = function archiveStream(streamId, value) {
 
 		return function (_x26, _x27, _x28) {
 			return _ref21.apply(this, arguments);
+		};
+	}();
+};
+
+var archiveStream = function archiveStream(streamId, value) {
+	return function () {
+		var _ref23 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11(dispatch, getState, _ref22) {
+			var api = _ref22.api;
+			var update, returnStream;
+			return regeneratorRuntime.wrap(function _callee11$(_context11) {
+				while (1) {
+					switch (_context11.prev = _context11.next) {
+						case 0:
+							update = { isArchived: value };
+							_context11.prev = 1;
+							_context11.next = 4;
+							return api.updateStream(streamId, update);
+
+						case 4:
+							returnStream = _context11.sent;
+
+							console.log("return stream: ", returnStream);
+							return _context11.abrupt("return", returnStream);
+
+						case 9:
+							_context11.prev = 9;
+							_context11.t0 = _context11["catch"](1);
+
+							console.log("Error: ", _context11.t0);
+
+						case 12:
+						case "end":
+							return _context11.stop();
+					}
+				}
+			}, _callee11, _this, [[1, 9]]);
+		}));
+
+		return function (_x29, _x30, _x31) {
+			return _ref23.apply(this, arguments);
 		};
 	}();
 };
@@ -53339,6 +53370,17 @@ var posts = (function () {
 					})
 				});
 			}
+		case "DELETE_POST":
+			{
+				var id = payload.id,
+				    _streamId = payload.streamId;
+
+				var _streamPosts = _extends$5({}, state.byStream[_streamId] || {});
+				delete _streamPosts[id];
+				return _extends$5({}, state, {
+					byStream: _extends$5({}, state.byStream, defineProperty$5({}, _streamId, _streamPosts))
+				});
+			}
 		default:
 			return state;
 	}
@@ -53827,6 +53869,11 @@ var WebviewApi = function () {
 		key: "editPost",
 		value: function editPost(params) {
 			return this.postMessage({ action: "edit-post", params: params });
+		}
+	}, {
+		key: "deletePost",
+		value: function deletePost(params) {
+			return this.postMessage({ action: "delete-post", params: params });
 		}
 	}, {
 		key: "createStream",
