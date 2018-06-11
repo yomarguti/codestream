@@ -104,27 +104,51 @@ body {
   content: attr(placeholder);
   opacity: 0.5;
 }
+.codestream #modal-root.active,
+.codestream #confirm-root.active {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  z-index: 3000;
+}
+.codestream #confirm-root {
+  animation: 0.2s slideout;
+}
+.codestream #confirm-root.active {
+  background: var(--app-background-color);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  animation: 0.2s slidein;
+}
 .codestream .stream {
   width: 100%;
   height: 100%;
   background: var(--app-background-color);
+  overflow-x: hidden;
 }
-.codestream .stream .stream-header {
+.codestream .stream .panel-header {
   position: relative;
   text-align: center;
   background-color: var(--app-background-color);
   border-bottom: 1px solid rgba(0, 0, 0, 0.3);
-  padding: 0 35px 10px 35px;
   z-index: 30;
   user-select: none;
-}
-.codestream .stream .stream-header span {
-  font-weight: 100;
+  height: 2em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: pre;
+  padding: 0 35px 10px 35px;
   font-size: 16px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  color: var(--text-color-subtle);
 }
-.codestream .stream .stream-header .mentions-badge {
+.codestream .stream .panel-header span {
+  font-weight: 600;
+  text-overflow: ellipsis;
+  text-align: center;
+  height: auto;
+}
+.codestream .stream .panel-header .mentions-badge {
   position: absolute;
   top: 2px;
   left: 10px;
@@ -137,20 +161,44 @@ body {
   font-size: 11px;
   padding-top: 1px;
 }
-.codestream .stream .stream-header .icon {
+.codestream .stream .panel-header .icon.align-left {
   position: absolute;
+  left: 5px;
+  right: auto;
+  padding: 0 8px 0 3px;
+}
+.codestream .stream .panel-header .icon.show-channels-icon.unread {
+  background-color: var(--text-color);
+  color: var(--base-background-color);
+}
+.codestream .stream .panel-header .icon.show-channels-icon.mentions {
+  background-color: rgba(127, 127, 127, 0.2);
+}
+.codestream .stream .panel-header .icon.show-channels-icon::before {
+  margin-right: 0;
+}
+.codestream .stream .panel-header .icon {
   top: 2px;
-  right: 5px;
   cursor: pointer;
   padding: 0 0 0 6px;
   text-align: center;
   border-radius: 3px;
 }
-.codestream .stream .stream-header .icon:hover {
+.codestream .stream .panel-header .icon:hover {
   color: var(--text-color-subtle);
   background-color: var(--base-background-color);
 }
+.codestream .stream .panel-header .icon.align-right {
+  position: absolute;
+  right: 5px;
+}
+.codestream .stream .panel-header .icon-lock::before {
+  font-size: 0.8em;
+  margin-right: 0;
+}
 .codestream .stream .unreads {
+  animation: 0.4s slidein;
+  left: 0;
   color: var(--base-background-color);
   background: var(--text-color);
   border: 1px solid rgba(0, 0, 0, 0.3);
@@ -168,6 +216,9 @@ body {
 }
 .codestream .stream .unreads.active {
   display: block;
+}
+.codestream .stream .unreads.hidden {
+  display: none;
 }
 .codestream .stream .unreads {
   background: rgba(127, 127, 127, 0.2);
@@ -196,13 +247,14 @@ body {
   padding-left: 0;
   padding-right: 0;
   cursor: pointer;
-  color: var(--link-color);
 }
 .codestream .stream #close-thread .keybinding {
-  color: var(--text-color);
+  color: var(--text-color-subtle);
+  font-weight: normal;
+  padding-right: 5px;
 }
-.codestream .stream #close-thread:hover {
-  background: var(--app-background-color-hover);
+.codestream .stream #close-thread .show-channels-icon::before {
+  margin: 0;
 }
 .codestream .stream .new-messages-below {
   cursor: pointer;
@@ -219,20 +271,81 @@ body {
 .codestream .stream .new-messages-below:hover {
   background-color: rgba(140, 140, 140, 0.2);
 }
-.codestream .stream .edit-post .button-group {
+.codestream .stream #create-channel-form .button-group,
+.codestream .stream #create-dm-form .button-group {
+  margin-top: 30px;
+}
+.codestream .stream .standard-form .form-body {
+  padding: 20px;
+}
+.codestream .stream .standard-form .explainer {
+  color: var(--text-color-subtle);
+}
+.codestream .stream .standard-form #controls label {
+  font-size: 1.2em;
+  margin: 0 0 2px 3px;
+}
+.codestream .stream .standard-form #controls label .optional {
+  opacity: 0.5;
+}
+.codestream .stream .standard-form #controls .control-group {
+  margin: 3% 0;
+  position: relative;
+}
+.codestream .stream .standard-form #controls .control-group:first-child,
+.codestream .stream .standard-form #controls .control-group:last-child {
+  margin: 0;
+}
+.codestream .stream .standard-form #controls .control-group .help-link {
+  text-align: right;
+}
+.codestream .stream .standard-form #controls .control-group small {
+  display: block;
+  margin: 2px 0 0 3px;
+  position: absolute;
+  top: 3px;
+  right: 3px;
+}
+.codestream .stream .standard-form #controls .radio-group {
+  background-color: var(--app-background-color-darker);
+  padding: 5px 10px;
+  border-radius: 3px;
+}
+.codestream .stream .standard-form #controls input[type="text"],
+.codestream .stream .standard-form #controls input[type="password"],
+.codestream .stream .standard-form #controls .radio-group label {
+  font-family: Menlo, Consolas, "DejaVu Sans Mono", monospace;
+  font-size: 1.15em;
+  padding: 4px 8px;
+  opacity: 0.6;
+}
+.codestream .stream .standard-form #controls input[type="text"]:focus,
+.codestream .stream .standard-form #controls input[type="password"]:focus {
+  opacity: 1;
+  color: var(--text-color-subtle);
+}
+.codestream .stream .standard-form #controls input + .tip {
+  display: none;
+}
+.codestream .stream .standard-form #controls .radio-group label {
+  padding: 0 20px 0 5px;
+  vertical-align: -2px;
+}
+.codestream .stream .edit-post .button-group,
+.codestream .stream .standard-form .button-group {
   margin-bottom: 5px;
   margin-top: 10px;
 }
-.codestream .stream .edit-post .button-group button {
+.codestream .stream .edit-post .button-group button,
+.codestream .stream .standard-form .button-group button {
   width: calc(50% - 5px);
 }
-.codestream .stream .edit-post .button-group button.cancel {
-  background: #c00 !important;
-}
-.codestream .stream .edit-post .button-group button:first-child {
+.codestream .stream .edit-post .button-group button:first-child,
+.codestream .stream .standard-form .button-group button:first-child {
   margin-right: 10px;
 }
-.codestream .stream .edit-post div[contenteditable="true"] {
+.codestream .stream .edit-post div[contenteditable="true"],
+.codestream .stream .standard-form div[contenteditable="true"] {
   margin-top: 5px;
   padding: 10px;
   border-radius: 4px;
@@ -243,7 +356,15 @@ body {
   overflow: auto;
   cursor: auto !important;
 }
+.codestream .stream .compose.offscreen,
+.codestream .stream .unreads.offscreen {
+  pointer-events: none;
+  opacity: 0;
+  animation: 0.2s slideout;
+}
 .codestream .stream .compose {
+  left: 0;
+  animation: 0.4s slidein;
   display: block;
   width: 100%;
   border: none;
@@ -409,48 +530,99 @@ body {
   font-weight: 700;
   padding-right: 5px;
 }
-.codestream .stream .post .menu-popup {
-  right: 20px;
-  margin-top: -10px;
+.codestream .stream .mentions-popup .help {
+  float: right;
+}
+.codestream .stream .mentions-popup .name {
+  opacity: 0.6;
+}
+.codestream .stream .confirm-popup {
+  width: 100%;
+  height: 100%;
+}
+.codestream .stream .confirm-popup .centered {
+  text-align: center;
+}
+.codestream .stream .confirm-popup .confirm-popup-body {
+  margin: 20px;
+  white-space: pre-wrap;
+}
+.codestream .stream .confirm-popup .confirm-popup-body .confirm-title {
+  font-size: 24px;
+  text-align: center;
+  padding-bottom: 20px;
+}
+.codestream .stream .confirm-popup .confirm-popup-body .confirm-message {
+  font-size: 16px;
+  padding-bottom: 30px;
+}
+.codestream .stream .confirm-popup .confirm-popup-body .button-group {
+  margin-bottom: 5px;
+}
+.codestream .stream .confirm-popup .confirm-popup-body .button-group button {
+  width: calc(50% - 5px);
+}
+.codestream .stream .confirm-popup .confirm-popup-body .button-group button:first-child {
+  margin-right: 10px;
 }
 .codestream .stream .menu-popup {
-  position: absolute;
+  position: fixed;
   z-index: 50;
   padding: 0 10px 0 10px;
   user-select: none;
   cursor: pointer;
   border-radius: 5px;
 }
-.codestream .stream .menu-popup .body {
+.codestream .stream .menu-popup .menu-popup-body {
   width: 100%;
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
   border-radius: 5px;
   border: 1px solid rgba(0, 0, 0, 0.3);
-  background: #eee;
+  background: var(--base-background-color);
+}
+.codestream .stream .menu-popup hr {
+  margin: 5px 0;
+  border: none;
+  border-top: 1px solid rgba(0, 0, 0, 0.3);
 }
 .codestream .stream .menu-popup ul {
-  background: #fff;
   padding: 5px 0;
   border-radius: 0 5px 5px 0;
 }
-.codestream .stream .menu-popup li {
+.codestream .stream .menu-popup li.menu-item {
   padding: 5px 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.codestream .stream .menu-popup li .headshot-gravatar {
+.codestream .stream .menu-popup li.menu-item .headshot-gravatar {
   width: 18px;
   height: 18px;
   border-radius: 3px;
   margin-right: 6px;
 }
-.codestream .stream .menu-popup li.hover {
-  color: #fff;
-  background: #4979f1;
+.codestream .stream .menu-popup li.menu-item.hover {
+  color: white;
+  background: rgba(127, 127, 127, 0.2);
+}
+.codestream .stream .menu-popup li.menu-item.disabled {
+  color: var(--text-color-subtle);
+}
+.codestream .stream .menu-popup li.menu-item.disabled.hover {
+  background: var(--base-background-color);
+  color: var(--text-color-subtle);
+}
+.codestream .stream .menu-popup li.menu-item span.disabled {
+  font-size: smaller;
+  display: block;
+  opacity: 0.5;
 }
 .codestream .stream .menu-popup .username {
   font-weight: 700;
   padding-right: 5px;
 }
 .codestream .stream .editing-indicator {
+  display: none;
   position: absolute;
   top: 30px;
   width: 100%;
@@ -476,8 +648,163 @@ body {
 .codestream .stream .editing-indicator.inactive {
   top: -2em;
 }
-.codestream .stream .main-panel {
+.codestream .stream .channel-list {
+  max-height: 100%;
+  overflow-y: auto;
+  user-select: none;
+  box-sizing: border-box;
+  padding-bottom: 50px;
+}
+.codestream .stream .channel-list .no-matches {
+  font-style: italic;
+  padding: 5px 10px;
+}
+.codestream .stream .channel-list .section {
+  padding: 10px 0;
+  font-size: 15px;
+}
+.codestream .stream .channel-list .section .clickable {
+  cursor: pointer;
+}
+.codestream .stream .channel-list .section .header {
+  text-transform: uppercase;
+  font-weight: normal;
+  padding: 2px 10px;
+  color: var(--text-color-subtle);
+  position: relative;
+}
+.codestream .stream .channel-list .section .header span {
+  opacity: 0.5;
+}
+.codestream .stream .channel-list .section .header span.clickable:hover {
+  opacity: 1;
+}
+.codestream .stream .channel-list .section .header.clickable:hover {
+  opacity: 1;
+  background: var(--app-background-color-hover);
+}
+.codestream .stream .channel-list .section .latest-post {
+  position: absolute;
+  right: 9px;
+  top: 2px;
+  color: var(--text-color-subtle);
+}
+.codestream .stream .channel-list .section .icon.align-right {
+  position: absolute;
+  right: 9px;
+  top: 2px;
+  cursor: pointer;
+  z-index: 1;
+}
+.codestream .stream .channel-list .section .icon.align-right:hover {
+  color: var(--text-color-subtle);
+}
+.codestream .stream .channel-list .section ul {
+  margin: 0;
+  padding: 0;
+}
+.codestream .stream .channel-list .section ul li.unread {
+  font-weight: 800;
+  opacity: 1;
+  color: var(--text-color-subtle);
+}
+.codestream .stream .channel-list .section ul li:hover,
+.codestream .stream .channel-list .section ul li.active {
+  opacity: 1;
+  color: var(--text-color-subtle);
+  background: var(--app-background-color-hover);
+}
+.codestream .stream .channel-list .section ul .invite {
+  color: var(--link-color);
+}
+.codestream .stream .channel-list .section ul .invite .icon::before {
+  width: 8px !important;
+  padding-left: 1px;
+}
+.codestream .stream .channel-list .section ul li {
+  position: relative;
+  font-weight: 100;
+  padding: 2px 10px;
+  cursor: pointer;
+  list-style: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.codestream .stream .channel-list .section ul li xspan.name {
+  padding-left: 5px;
+  color: var(--text-color-subtle);
+}
+.codestream .stream .channel-list .section ul li .icon {
+  margin-right: 5px;
+}
+.codestream .stream .channel-list .section ul li .icon.align-right {
+  margin: 0;
+  display: none;
+  opacity: 0.6;
+}
+.codestream .stream .channel-list .section ul li .icon.align-right:hover {
+  opacity: 1;
+}
+.codestream .stream .channel-list .section ul li .icon-lock::before,
+.codestream .stream .channel-list .section ul li .icon-mute::before {
+  font-size: 12px;
+  padding-right: 0;
+  margin-right: 0;
+  width: 10px;
+}
+.codestream .stream .channel-list .section ul li .presence {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  background: green;
+  margin: 0 5px 1px 0;
+}
+.codestream .stream .channel-list .section ul li .umi {
+  position: absolute;
+  text-align: center;
+  border-radius: 3px;
+  font-size: 12px;
+  padding-top: 0;
+  top: 3px;
+  right: 10px;
+  width: 25px;
+  height: 18px;
+  background: rgba(127, 127, 127, 0.2);
+  color: white;
+  font-weight: normal;
+  z-index: 2;
+}
+.codestream .stream .channel-list .section ul li time {
+  float: right;
+  opacity: 0.5;
+  color: var(--app-background-color);
+}
+.codestream .stream .channel-list .section ul li time .details {
+  color: var(--text-color);
+}
+.codestream .stream .channel-list .section ul li:hover .icon.align-right {
+  display: block;
+}
+.codestream .stream .channel-list .section ul li.muted {
+  opacity: 0.5;
+}
+.codestream .stream .standard-form .header {
+  padding: 2px 20px !important;
+}
+.codestream .stream .standard-form li {
+  padding: 2px 20px 2px 20px !important;
+}
+.codestream .stream .standard-form span.latest-post {
+  right: 20px !important;
+}
+.codestream .stream .panel {
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
   height: 100%;
+  transition: transform 0.2s, opacity 0.2s;
 }
 .codestream .stream .postslist {
   width: 100%;
@@ -486,23 +813,40 @@ body {
   position: relative;
   transition: transform 0.2s, opacity 0.2s;
 }
-.codestream .stream .inactive-panel {
-  transform: scale(0.9);
+.codestream .stream .panel.shrink {
   max-height: 100%;
   overflow: hidden;
 }
-.codestream .stream .inactive-panel .code {
+.codestream .stream .panel.shrink .postslist {
+  transform: scale(0.9);
+}
+.codestream .stream .panel.shrink .code {
   overflow-x: hidden;
   overflow-y: hidden;
 }
-.codestream .stream .thread-panel {
-  width: 100%;
-  position: absolute;
-  top: 0;
-  background-color: var(--app-background-color);
-  animation: 0.4s slidein;
+.codestream .stream .channel-panel .postslist {
+  padding-bottom: 50px;
 }
-.codestream .stream .thread-panel.inactive-panel {
+.codestream .stream .thread-panel,
+.codestream .stream .main-panel,
+.codestream .stream .create-channel-panel,
+.codestream .stream .create-dm-panel,
+.codestream .stream .public-channel-panel {
+  animation: 0.4s slidein;
+  background-color: var(--app-background-color);
+}
+.codestream .stream .public-channel-panel .explainer {
+  padding: 10px;
+}
+.codestream .stream .public-channel-panel li .explainer {
+  color: var(--text-color-subtle);
+  padding: 0 15px 5px 15px;
+}
+.codestream .stream #create-channel-form,
+.codestream .stream #create-dm-form {
+  height: 100%;
+}
+.codestream .stream .panel.off-right {
   transform: none;
   left: 100%;
   animation: 0.2s slideout;
@@ -544,7 +888,8 @@ body {
   border-top: 1px solid transparent;
   border-left: 1px solid transparent;
 }
-.codestream .stream .post .headshot-gravatar {
+.codestream .stream .post .headshot-gravatar,
+.codestream .stream .post .headshot-system {
   display: block;
   position: absolute;
   width: 36px;
@@ -709,27 +1054,36 @@ body {
 .codestream .stream.no-headshots .post .headshot {
   display: none;
 }
-.codestream .stream.reduced-motion .inactive-panel {
-  transform: none;
+.codestream .stream.reduced-motion .shrink,
+.codestream .stream.reduced-motion .off-right {
   z-index: -1 !important;
   opacity: 0;
+  animation: none;
   transition: opacity 0.25s;
 }
-.codestream .stream.reduced-motion .inactive-panel .stream-header {
+.codestream .stream.reduced-motion .shrink .panel-header,
+.codestream .stream.reduced-motion .off-right .panel-header {
   z-index: -1 !important;
 }
-.codestream .stream.reduced-motion .thread-panel.inactive-panel {
-  animation: none;
+.codestream .stream.reduced-motion .shrink .postslist,
+.codestream .stream.reduced-motion .off-right .postslist {
+  transform: none;
 }
-.codestream .stream.reduced-motion .thread-panel {
-  left: 0;
+.codestream .stream.reduced-motion .panel {
+  left: 0 !important;
   animation: none;
   display: block;
   z-index: 2;
   transition: opacity 0.25s;
 }
-.codestream .stream.reduced-motion .main-panel {
+.codestream .stream.reduced-motion .compose.offscreen,
+.codestream .stream.reduced-motion .unreads.offscreen {
+  opacity: 0;
   transition: opacity 0.25s;
+  animation: none !important;
+}
+.codestream .stream.reduced-motion .compose {
+  animation: none !important;
 }
 .codestream .intro {
   margin: 0 40px;
@@ -806,7 +1160,82 @@ body {
   vertical-align: 1px;
 }
 .codestream button {
-  font-size: 1.05em;
+  font-size: 1.15em;
+}
+.codestream button.cancel {
+  color: var(--text-color);
+  background: rgba(255, 255, 255, 0.07) !important;
+}
+.codestream .react-select__control {
+  border-color: rgba(0, 0, 0, 0.3);
+  border: none;
+  border: 2px solid transparent;
+  background-color: rgba(5, 5, 5, 0.3);
+  margin: 0;
+  font-family: Menlo, Consolas, "DejaVu Sans Mono", monospace;
+  font-size: 1.15em;
+  color: var(--text-color);
+  min-height: 20px;
+}
+.codestream .react-select__control-is-focused {
+  box-shadow: none;
+  border: 2px solid rgba(127, 127, 127, 0.2);
+}
+.codestream .react-select__control-is-focused .react-select__multi-value__label {
+  opacity: 1;
+  color: var(--text-color-subtle);
+}
+.codestream .react-select__input {
+  font-family: Menlo, Consolas, "DejaVu Sans Mono", monospace;
+  font-size: 1.15em;
+  font-size: 0.9em;
+  color: var(--text-color);
+  opacity: 0.6;
+}
+.codestream .react-select__input:focus {
+  opacity: 1;
+  color: var(--text-color-subtle);
+}
+.codestream .react-select__multi-value {
+  font-size: 0.9em;
+  background: rgba(255, 255, 255, 0.07);
+}
+.codestream .react-select__value-container {
+  padding: 0 5px;
+}
+.codestream .react-select__multi-value__label {
+  color: var(--text-color);
+}
+.codestream .react-select__multi-value__remove:hover {
+  background: #c00;
+  color: white;
+}
+.codestream .react-select__menu-list {
+  background: var(--base-background-color);
+  border-radius: 3px;
+}
+.codestream .react-select__option {
+  padding: 5px 10px;
+  cursor: pointer;
+}
+.codestream .react-select__option:hover {
+  background: rgba(127, 127, 127, 0.2);
+  color: white;
+}
+.codestream .react-select__option--is-focused {
+  background: inherit;
+  color: inherit;
+}
+.codestream .react-select.input-text {
+  padding: 0;
+}
+.codestream .react-select__dropdown-indicator {
+  opacity: 0.6;
+  padding: 6px;
+}
+.codestream .react-select__indicator-separator {
+  opacity: 0.5;
+  margin: 8px 0;
 }
 @keyframes slidein {
   from {
@@ -838,18 +1267,11 @@ body.preload * {
 .codestream a:focus {
   outline: none;
 }
-.codestream .stream {
-  display: flex;
-  flex-direction: column;
-}
 .vscode-dark.codestream .stream .new-messages-below:hover {
   background-color: rgba(140, 140, 140, 0.2);
 }
 .vscode-light.codestream .stream .new-messages-below:hover {
   background-color: rgba(114, 114, 114, 0.2);
-}
-.codestream .stream .compose {
-  position: unset;
 }
 .codestream .stream .compose .hint {
   display: flex;

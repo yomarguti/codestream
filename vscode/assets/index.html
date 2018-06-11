@@ -121,6 +121,7 @@
                 switch (theme) {
                     case 'dark':
                         bodyStyle.setProperty('--app-background-color', lighten(color, 4));
+                        bodyStyle.setProperty('--app-background-color-darker', darken(color, 4));
                         bodyStyle.setProperty('--app-background-color-hover', lighten(color, 7));
 
                         bodyStyle.setProperty('--base-background-color', opacity(lighten(color, 15), 40));
