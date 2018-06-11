@@ -8,8 +8,6 @@ import { saveMarkers } from "./marker";
 import { saveMarkerLocations } from "./marker-location";
 import { getStreamForTeam } from "../reducers/streams";
 
-const pendingPostFailed = post => ({ type: "PENDING_POST_FAILED", payload: post });
-
 const fetchLatest = (mostRecentPost, streamId, teamId) => async (dispatch, getState, { http }) => {
 	const { context } = getState();
 	let url = `/posts?teamId=${teamId}&streamId=${streamId}&withMarkers`;
@@ -135,57 +133,5 @@ export const resolveFromPubnub = (post, isHistory) => async (dispatch, getState)
 			data: { isHistory, isNotFromCurrentUser, isFromEmailOrSlack }
 		});
 		return dispatch(pubnubActions.resolveFromPubnub("posts", post, isHistory));
-	}
-};
-
-const resolvePendingPost = (id, resolvedPost) => (dispatch, getState, { db }) => {
-	return db
-		.transaction("rw", db.posts, () => {
-			db.posts.delete(id);
-			upsert(db, "posts", resolvedPost);
-		})
-		.then(() =>
-			dispatch({
-				type: "RESOLVE_PENDING_POST",
-				payload: {
-					pendingId: id,
-					post: resolvedPost
-				}
-			})
-		);
-};
-
-export const retryPost = pendingId => async (dispatch, getState, { db, http }) => {
-	const pendingPost = await db.posts.get(pendingId);
-	return http
-		.post("/posts", pendingPost, getState().session.accessToken)
-		.then(data =>
-			dispatch(
-				resolvePendingPost(pendingId, {
-					post: normalize(data.post),
-					markers: normalize(data.markers),
-					markerLocations: data.markerLocations,
-					stream: pendingPost.stream ? normalize(data.stream) : null
-				})
-			)
-		)
-		.catch(error => {
-			Raven.captureBreadcrumb({
-				message: "Failed to retry a post",
-				category: "action",
-				data: { error, pendingPost },
-				level: "error"
-			});
-			dispatch(pendingPostFailed(pendingPost));
-		});
-};
-
-export const deletePost = postId => async (dispatch, getState, { http }) => {
-	const { session } = getState();
-	try {
-		const data = await http.deactivate("/posts/" + postId, {}, session.accessToken);
-	} catch (error) {
-		// TODO: different types of errors?
-		dispatch(rejectDeletePost(postId, { ...delta, error: true }));
 	}
 };
