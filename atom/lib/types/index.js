@@ -20,6 +20,13 @@ type State = {
 			}
 		}
 	},
+	posts: {
+		byStream: {
+			[string]: {
+				[string]: {}
+			}
+		}
+	},
 	repoAttributes: {
 		workingDirectory: string
 	},

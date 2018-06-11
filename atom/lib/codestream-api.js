@@ -8,6 +8,7 @@ import db, { upsert } from "./local-cache";
 import { saveUncommittedLocations } from "./actions/marker-location";
 import { normalize } from "./actions/utils";
 import { saveStreams } from "./actions/stream";
+import { getPostById } from "./reducers/posts";
 import type { Store } from "./types";
 
 export default class CodeStreamApi {
@@ -105,6 +106,29 @@ export default class CodeStreamApi {
 			}
 			// TODO: different types of errors?
 			throw error;
+		}
+	}
+
+	async editPost(id: string, text: string, mentions: string[]) {
+		const { session, posts } = this.store.getState();
+		const post = getPostById(posts, id);
+
+		const delta = {
+			text,
+			mentionedUserIds: mentions
+		};
+
+		try {
+			const data = await http.put(`/posts/${id}`, delta, session.accessToken);
+			return { ...post, ...normalize(data.post) };
+		} catch (error) {
+			if (http.isApiRequestError(error)) {
+				Raven.captureMessage(error.data.message, {
+					logger: "actions/stream",
+					extra: { error: error.data }
+				});
+				throw error.data;
+			}
 		}
 	}
 
