@@ -85,7 +85,23 @@ export default class WorkspaceApi implements Resource {
 								"*"
 							);
 						})
-						.then(error => {
+						.catch(error => {
+							window.parent.postMessage(
+								{ type: "codestream:response", id: requestId, body: { action, error } },
+								"*"
+							);
+						});
+				}
+				case "delete-post": {
+					return this.api
+						.deletePost(params)
+						.then(post => {
+							window.parent.postMessage(
+								{ type: "codestream:response", id: requestId, body: { action, payload: post } },
+								"*"
+							);
+						})
+						.catch(error => {
 							window.parent.postMessage(
 								{ type: "codestream:response", id: requestId, body: { action, error } },
 								"*"

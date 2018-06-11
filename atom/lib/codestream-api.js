@@ -111,8 +111,6 @@ export default class CodeStreamApi {
 
 	async editPost(id: string, text: string, mentions: string[]) {
 		const { session, posts } = this.store.getState();
-		const post = getPostById(posts, id);
-
 		const delta = {
 			text,
 			mentionedUserIds: mentions
@@ -120,7 +118,23 @@ export default class CodeStreamApi {
 
 		try {
 			const data = await http.put(`/posts/${id}`, delta, session.accessToken);
-			return { ...post, ...normalize(data.post) };
+			return { ...getPostById(posts, id), ...normalize(data.post) };
+		} catch (error) {
+			if (http.isApiRequestError(error)) {
+				Raven.captureMessage(error.data.message, {
+					logger: "actions/stream",
+					extra: { error: error.data }
+				});
+				throw error.data;
+			}
+		}
+	}
+
+	async deletePost(id: string) {
+		const { session, posts } = this.store.getState();
+		try {
+			const data = await http.deactivate(`/posts/${id}`, {}, session.accessToken);
+			return { ...getPostById(posts, id), ...normalize(data.post) };
 		} catch (error) {
 			if (http.isApiRequestError(error)) {
 				Raven.captureMessage(error.data.message, {
