@@ -113,30 +113,29 @@ export default class WorkspaceApi implements Resource {
 						.createStream(params)
 						.then(stream => {
 							window.parent.postMessage(
-								{ type: "codestream:response", body: { action, payload: stream } },
+								{ type: "codestream:response", id: requestId, body: { action, payload: stream } },
 								"*"
 							);
 						})
 						.catch(error => {
 							window.parent.postMessage(
-								{ type: "codestream:response", body: { action, error } },
+								{ type: "codestream:response", id: requestId, body: { action, error } },
 								"*"
 							);
 						});
 				}
 				case "update-stream": {
-					console.log("in workspace-api...");
 					return this.api
 						.updateStream(params)
 						.then(stream => {
 							window.parent.postMessage(
-								{ type: "codestream:response", body: { action, payload: stream } },
+								{ type: "codestream:response", id: requestId, body: { action, payload: stream } },
 								"*"
 							);
 						})
 						.catch(error => {
 							window.parent.postMessage(
-								{ type: "codestream:response", body: { action, error } },
+								{ type: "codestream:response", id: requestId, body: { action, error } },
 								"*"
 							);
 						});
