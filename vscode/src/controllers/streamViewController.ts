@@ -1,25 +1,41 @@
 'use strict';
 import { Disposable, Range } from 'vscode';
-import { CodeStreamSession, Repository, StreamThread } from '../api/session';
+import {
+    CodeStreamSession,
+    Repository,
+    SessionStatus,
+    SessionStatusChangedEvent,
+    StreamThread
+} from '../api/session';
 import { StreamWebviewPanel } from '../webviews/streamWebviewPanel';
 import { Container } from '../container';
 
-export class StreamViewController extends Disposable {
+export class StreamViewController implements Disposable {
 
+    private _disposable: Disposable | undefined;
     private _disposablePanel: Disposable | undefined;
     private _panel: StreamWebviewPanel | undefined;
     private _lastStreamThread: StreamThread | undefined;
 
     constructor(public readonly session: CodeStreamSession) {
-        super(() => this.dispose());
+        this._disposable = Disposable.from(
+            Container.session.onDidChangeStatus(this.onSessionStatusChanged, this)
+        );
     }
 
     dispose() {
+        this._disposable && this._disposable.dispose();
         this.closePanel();
     }
 
     private onPanelClosed() {
         this.closePanel();
+    }
+
+    private onSessionStatusChanged(e: SessionStatusChangedEvent) {
+        if (e.getStatus() === SessionStatus.SignedOut) {
+            this.closePanel();
+        }
     }
 
     get activeStreamThread() {
