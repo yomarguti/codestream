@@ -51308,313 +51308,6 @@ var EditingIndicator = function (_React$Component) {
 	return EditingIndicator;
 }(react.Component);
 
-var PostDetails = function (_Component) {
-	inherits$1(PostDetails, _Component);
-
-	function PostDetails() {
-		var _ref;
-
-		var _temp, _this, _ret;
-
-		classCallCheck$1(this, PostDetails);
-
-		for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-			args[_key] = arguments[_key];
-		}
-
-		return _ret = (_temp = (_this = possibleConstructorReturn$1(this, (_ref = PostDetails.__proto__ || Object.getPrototypeOf(PostDetails)).call.apply(_ref, [this].concat(args))), _this), Object.defineProperty(_this, "state", {
-			enumerable: true,
-			writable: true,
-			value: {
-				patchApplied: false,
-				diffShowing: false,
-				showDiffButtons: false
-			}
-		}), Object.defineProperty(_this, "handleInteractionEvent", {
-			enumerable: true,
-			writable: true,
-			value: function value(_ref2) {
-				var data = _ref2.data;
-
-				// foobar always lives with view code.
-				// will translate postMessages into events to the views
-				// this.foobar.on(, () => {});
-				if (data.type === "codestream:publish:file-changed") {
-					var codeBlocks = _this.props.post.codeBlocks || [];
-					codeBlocks.forEach(function (block) {
-						if (block.file === data.body.file) _this.setState({ showDiffButtons: data.body.hasDiff });
-					});
-				}
-			}
-		}), Object.defineProperty(_this, "handleClickShowDiff", {
-			enumerable: true,
-			writable: true,
-			value: function value(event) {
-				event.preventDefault();
-				window.parent.postMessage({
-					type: "codestream:interaction:show-diff",
-					body: _this.props.post.codeBlocks[0]
-				}, "*");
-				_this.setState({ diffShowing: !_this.state.diffShowing });
-			}
-		}), Object.defineProperty(_this, "handleClickApplyPatch", {
-			enumerable: true,
-			writable: true,
-			value: function value(event) {
-				event.preventDefault();
-				window.parent.postMessage({
-					type: "codestream:interaction:apply-patch",
-					body: _this.props.post.codeBlocks[0]
-				}, "*");
-				_this.setState({ patchApplied: !_this.state.patchApplied });
-			}
-		}), _temp), possibleConstructorReturn$1(_this, _ret);
-	}
-
-	createClass$1(PostDetails, [{
-		key: "componentDidMount",
-		value: function componentDidMount() {
-			window.addEventListener("message", this.handleInteractionEvent, true);
-
-			var codeBlocks = this.props.post.codeBlocks || [];
-			codeBlocks.forEach(function (block) {
-				window.parent.postMessage({
-					type: "codestream:subscription:file-changed",
-					body: block
-				}, "*");
-			});
-			// if (this._alert)
-			// 	atom.tooltips.add(this._alert, {
-			// 		title: "Unknown codeblock location."
-			// 	});
-		}
-	}, {
-		key: "componentWillUnmount",
-		value: function componentWillUnmount() {
-			var codeBlocks = this.props.post.codeBlocks || [];
-			codeBlocks.forEach(function (block) {
-				window.parent.postMessage({
-					type: "codestream:unsubscribe:file-changed",
-					body: block
-				}, "*");
-			});
-			window.removeEventListener("message", this.handleInteractionEvent, true);
-		}
-	}, {
-		key: "render",
-
-
-		// handleShowVersion = async event => {
-		// 	console.log("Showing version...");
-		// };
-
-		value: function render() {
-			var _this2 = this;
-
-			var post = this.props.post;
-
-
-			if (!post) return null;
-
-			var applyPatchLabel = this.state.patchApplied ? "Revert" : "Apply Patch";
-			var showDiffLabel = this.state.diffShowing ? "Hide Diff" : "Show Diff";
-			var hasCodeBlock = post.codeBlocks && post.codeBlocks.length ? true : null;
-
-			// if a patch has been applied, we treat it as if there is
-			// a diff
-			var showDiffButtons = this.state.showDiffButtons || this.state.patchApplied;
-			var alert = null;
-			// } else if (hasCodeBlock) {
-			// 	// TODO: this is the case where we have a codeblock but no marker location
-			// 	alert = <span className="icon icon-alert" ref={ref => (this._alert = ref)} />;
-			// }
-
-			var commitDiv = null;
-			if (hasCodeBlock) {
-				commitDiv = react.createElement(
-					"div",
-					{ className: "posted-to" },
-					react.createElement(
-						"label",
-						null,
-						"Posted to:"
-					),
-					" ",
-					react.createElement(
-						"span",
-						null,
-						post.commitHashWhenPosted
-					)
-				);
-				// if (post.commitHashWhenPosted == this.props.currentCommit) {
-				// 	commitDiv = <span />;
-				// } else {
-				// 	commitDiv = (
-				// 		<Button
-				// 			id="show-version-button"
-				// 			className="control-button"
-				// 			tabIndex="2"
-				// 			type="submit"
-				// 			onClick={this.handleShowVersion}
-				// 		>
-				// 			Warp to {post.commitHashWhenPosted}
-				// 		</Button>
-				// 	);
-				// }
-			}
-
-			return react.createElement(
-				"div",
-				{ className: "post-details", id: post.id, ref: function ref(_ref3) {
-						return _this2._div = _ref3;
-					} },
-				alert,
-				!showDiffButtons && hasCodeBlock && react.createElement(
-					"div",
-					{ className: "no-diffs" },
-					"This codeblock matches current"
-				),
-				commitDiv,
-				showDiffButtons && react.createElement(
-					"div",
-					{ className: "button-group" },
-					react.createElement(
-						Button,
-						{
-							id: "show-diff-button",
-							className: "control-button",
-							tabIndex: "2",
-							type: "submit",
-							loading: this.props.loading,
-							onClick: this.handleClickShowDiff
-						},
-						showDiffLabel
-					),
-					react.createElement(
-						Button,
-						{
-							id: "show-diff-button",
-							className: "control-button",
-							tabIndex: "2",
-							type: "submit",
-							loading: this.props.loading,
-							onClick: this.handleClickApplyPatch
-						},
-						applyPatchLabel
-					)
-				)
-			);
-		}
-	}]);
-	return PostDetails;
-}(react_1);
-
-var RetrySpinner = function (_React$Component) {
-	inherits$1(RetrySpinner, _React$Component);
-
-	function RetrySpinner() {
-		var _ref,
-		    _this2 = this;
-
-		var _temp, _this, _ret;
-
-		classCallCheck$1(this, RetrySpinner);
-
-		for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-			args[_key] = arguments[_key];
-		}
-
-		return _ret = (_temp = (_this = possibleConstructorReturn$1(this, (_ref = RetrySpinner.__proto__ || Object.getPrototypeOf(RetrySpinner)).call.apply(_ref, [this].concat(args))), _this), Object.defineProperty(_this, "state", {
-			enumerable: true,
-			writable: true,
-			value: { loading: false }
-		}), Object.defineProperty(_this, "mounted", {
-			enumerable: true,
-			writable: true,
-			value: false
-		}), Object.defineProperty(_this, "onRetry", {
-			enumerable: true,
-			writable: true,
-			value: function () {
-				var _ref2 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(event) {
-					return regeneratorRuntime.wrap(function _callee$(_context) {
-						while (1) {
-							switch (_context.prev = _context.next) {
-								case 0:
-									event.stopPropagation();
-
-									if (!(_this.state.loading === false)) {
-										_context.next = 6;
-										break;
-									}
-
-									_this.setState({ loading: true });
-									_context.next = 5;
-									return _this.props.callback();
-
-								case 5:
-									if (_this.mounted) _this.setState({ loading: false });
-
-								case 6:
-								case "end":
-									return _context.stop();
-							}
-						}
-					}, _callee, _this2);
-				}));
-
-				function value(_x) {
-					return _ref2.apply(this, arguments);
-				}
-
-				return value;
-			}()
-		}), Object.defineProperty(_this, "onCancel", {
-			enumerable: true,
-			writable: true,
-			value: function value(event) {
-				event.stopPropagation();
-				_this.props.cancel();
-			}
-		}), _temp), possibleConstructorReturn$1(_this, _ret);
-	}
-
-	createClass$1(RetrySpinner, [{
-		key: "componentDidMount",
-		value: function componentDidMount() {
-			this.mounted = true;
-		}
-	}, {
-		key: "componentWillUnmount",
-		value: function componentWillUnmount() {
-			this.mounted = false;
-		}
-	}, {
-		key: "render",
-		value: function render() {
-			return react.createElement(
-				"div",
-				{ className: "retry-spinner" },
-				this.state.loading ? react.createElement("span", { className: "loading loading-spinner-tiny inline-block" }) : react.createElement(
-					react_4,
-					null,
-					react.createElement(
-						Tooltip,
-						{ title: "Retry", placement: "top" },
-						react.createElement("span", { className: "icon icon-sync text-error", onClick: this.onRetry })
-					),
-					react.createElement(
-						Tooltip,
-						{ title: "Cancel", placement: "top" },
-						react.createElement("span", { className: "icon icon-remove-close", onClick: this.onCancel })
-					)
-				)
-			);
-		}
-	}]);
-	return RetrySpinner;
-}(react.Component);
-
 var regex=/[\0-\uD7FF\uE000-\uFFFF]|[\uD800-\uDBFF][\uDC00-\uDFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF]/;
 
 var regex$1=/[\0-\x1F\x7F-\x9F]/;
@@ -54133,6 +53826,313 @@ exports.default = Linkify;
 var Linkify = unwrapExports(Linkify_1);
 var Linkify_2 = Linkify_1.linkify;
 
+var PostDetails = function (_Component) {
+	inherits$1(PostDetails, _Component);
+
+	function PostDetails() {
+		var _ref;
+
+		var _temp, _this, _ret;
+
+		classCallCheck$1(this, PostDetails);
+
+		for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+			args[_key] = arguments[_key];
+		}
+
+		return _ret = (_temp = (_this = possibleConstructorReturn$1(this, (_ref = PostDetails.__proto__ || Object.getPrototypeOf(PostDetails)).call.apply(_ref, [this].concat(args))), _this), Object.defineProperty(_this, "state", {
+			enumerable: true,
+			writable: true,
+			value: {
+				patchApplied: false,
+				diffShowing: false,
+				showDiffButtons: false
+			}
+		}), Object.defineProperty(_this, "handleInteractionEvent", {
+			enumerable: true,
+			writable: true,
+			value: function value(_ref2) {
+				var data = _ref2.data;
+
+				// foobar always lives with view code.
+				// will translate postMessages into events to the views
+				// this.foobar.on(, () => {});
+				if (data.type === "codestream:publish:file-changed") {
+					var codeBlocks = _this.props.post.codeBlocks || [];
+					codeBlocks.forEach(function (block) {
+						if (block.file === data.body.file) _this.setState({ showDiffButtons: data.body.hasDiff });
+					});
+				}
+			}
+		}), Object.defineProperty(_this, "handleClickShowDiff", {
+			enumerable: true,
+			writable: true,
+			value: function value(event) {
+				event.preventDefault();
+				window.parent.postMessage({
+					type: "codestream:interaction:show-diff",
+					body: _this.props.post.codeBlocks[0]
+				}, "*");
+				_this.setState({ diffShowing: !_this.state.diffShowing });
+			}
+		}), Object.defineProperty(_this, "handleClickApplyPatch", {
+			enumerable: true,
+			writable: true,
+			value: function value(event) {
+				event.preventDefault();
+				window.parent.postMessage({
+					type: "codestream:interaction:apply-patch",
+					body: _this.props.post.codeBlocks[0]
+				}, "*");
+				_this.setState({ patchApplied: !_this.state.patchApplied });
+			}
+		}), _temp), possibleConstructorReturn$1(_this, _ret);
+	}
+
+	createClass$1(PostDetails, [{
+		key: "componentDidMount",
+		value: function componentDidMount() {
+			window.addEventListener("message", this.handleInteractionEvent, true);
+
+			var codeBlocks = this.props.post.codeBlocks || [];
+			codeBlocks.forEach(function (block) {
+				window.parent.postMessage({
+					type: "codestream:subscription:file-changed",
+					body: block
+				}, "*");
+			});
+			// if (this._alert)
+			// 	atom.tooltips.add(this._alert, {
+			// 		title: "Unknown codeblock location."
+			// 	});
+		}
+	}, {
+		key: "componentWillUnmount",
+		value: function componentWillUnmount() {
+			var codeBlocks = this.props.post.codeBlocks || [];
+			codeBlocks.forEach(function (block) {
+				window.parent.postMessage({
+					type: "codestream:unsubscribe:file-changed",
+					body: block
+				}, "*");
+			});
+			window.removeEventListener("message", this.handleInteractionEvent, true);
+		}
+	}, {
+		key: "render",
+
+
+		// handleShowVersion = async event => {
+		// 	console.log("Showing version...");
+		// };
+
+		value: function render() {
+			var _this2 = this;
+
+			var post = this.props.post;
+
+
+			if (!post) return null;
+
+			var applyPatchLabel = this.state.patchApplied ? "Revert" : "Apply Patch";
+			var showDiffLabel = this.state.diffShowing ? "Hide Diff" : "Show Diff";
+			var hasCodeBlock = post.codeBlocks && post.codeBlocks.length ? true : null;
+
+			// if a patch has been applied, we treat it as if there is
+			// a diff
+			var showDiffButtons = this.state.showDiffButtons || this.state.patchApplied;
+			var alert = null;
+			// } else if (hasCodeBlock) {
+			// 	// TODO: this is the case where we have a codeblock but no marker location
+			// 	alert = <span className="icon icon-alert" ref={ref => (this._alert = ref)} />;
+			// }
+
+			var commitDiv = null;
+			if (hasCodeBlock) {
+				commitDiv = react.createElement(
+					"div",
+					{ className: "posted-to" },
+					react.createElement(
+						"label",
+						null,
+						"Posted to:"
+					),
+					" ",
+					react.createElement(
+						"span",
+						null,
+						post.commitHashWhenPosted
+					)
+				);
+				// if (post.commitHashWhenPosted == this.props.currentCommit) {
+				// 	commitDiv = <span />;
+				// } else {
+				// 	commitDiv = (
+				// 		<Button
+				// 			id="show-version-button"
+				// 			className="control-button"
+				// 			tabIndex="2"
+				// 			type="submit"
+				// 			onClick={this.handleShowVersion}
+				// 		>
+				// 			Warp to {post.commitHashWhenPosted}
+				// 		</Button>
+				// 	);
+				// }
+			}
+
+			return react.createElement(
+				"div",
+				{ className: "post-details", id: post.id, ref: function ref(_ref3) {
+						return _this2._div = _ref3;
+					} },
+				alert,
+				!showDiffButtons && hasCodeBlock && react.createElement(
+					"div",
+					{ className: "no-diffs" },
+					"This codeblock matches current"
+				),
+				commitDiv,
+				showDiffButtons && react.createElement(
+					"div",
+					{ className: "button-group" },
+					react.createElement(
+						Button,
+						{
+							id: "show-diff-button",
+							className: "control-button",
+							tabIndex: "2",
+							type: "submit",
+							loading: this.props.loading,
+							onClick: this.handleClickShowDiff
+						},
+						showDiffLabel
+					),
+					react.createElement(
+						Button,
+						{
+							id: "show-diff-button",
+							className: "control-button",
+							tabIndex: "2",
+							type: "submit",
+							loading: this.props.loading,
+							onClick: this.handleClickApplyPatch
+						},
+						applyPatchLabel
+					)
+				)
+			);
+		}
+	}]);
+	return PostDetails;
+}(react_1);
+
+var RetrySpinner = function (_React$Component) {
+	inherits$1(RetrySpinner, _React$Component);
+
+	function RetrySpinner() {
+		var _ref,
+		    _this2 = this;
+
+		var _temp, _this, _ret;
+
+		classCallCheck$1(this, RetrySpinner);
+
+		for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+			args[_key] = arguments[_key];
+		}
+
+		return _ret = (_temp = (_this = possibleConstructorReturn$1(this, (_ref = RetrySpinner.__proto__ || Object.getPrototypeOf(RetrySpinner)).call.apply(_ref, [this].concat(args))), _this), Object.defineProperty(_this, "state", {
+			enumerable: true,
+			writable: true,
+			value: { loading: false }
+		}), Object.defineProperty(_this, "mounted", {
+			enumerable: true,
+			writable: true,
+			value: false
+		}), Object.defineProperty(_this, "onRetry", {
+			enumerable: true,
+			writable: true,
+			value: function () {
+				var _ref2 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(event) {
+					return regeneratorRuntime.wrap(function _callee$(_context) {
+						while (1) {
+							switch (_context.prev = _context.next) {
+								case 0:
+									event.stopPropagation();
+
+									if (!(_this.state.loading === false)) {
+										_context.next = 6;
+										break;
+									}
+
+									_this.setState({ loading: true });
+									_context.next = 5;
+									return _this.props.callback();
+
+								case 5:
+									if (_this.mounted) _this.setState({ loading: false });
+
+								case 6:
+								case "end":
+									return _context.stop();
+							}
+						}
+					}, _callee, _this2);
+				}));
+
+				function value(_x) {
+					return _ref2.apply(this, arguments);
+				}
+
+				return value;
+			}()
+		}), Object.defineProperty(_this, "onCancel", {
+			enumerable: true,
+			writable: true,
+			value: function value(event) {
+				event.stopPropagation();
+				_this.props.cancel();
+			}
+		}), _temp), possibleConstructorReturn$1(_this, _ret);
+	}
+
+	createClass$1(RetrySpinner, [{
+		key: "componentDidMount",
+		value: function componentDidMount() {
+			this.mounted = true;
+		}
+	}, {
+		key: "componentWillUnmount",
+		value: function componentWillUnmount() {
+			this.mounted = false;
+		}
+	}, {
+		key: "render",
+		value: function render() {
+			return react.createElement(
+				"div",
+				{ className: "retry-spinner" },
+				this.state.loading ? react.createElement("span", { className: "loading loading-spinner-tiny inline-block" }) : react.createElement(
+					react_4,
+					null,
+					react.createElement(
+						Tooltip,
+						{ title: "Retry", placement: "top" },
+						react.createElement("span", { className: "icon icon-sync text-error", onClick: this.onRetry })
+					),
+					react.createElement(
+						Tooltip,
+						{ title: "Cancel", placement: "top" },
+						react.createElement("span", { className: "icon icon-remove-close", onClick: this.onCancel })
+					)
+				)
+			);
+		}
+	}]);
+	return RetrySpinner;
+}(react.Component);
+
 // import "emoji-mart/css/emoji-mart.css";
 // import { Picker } from "emoji-mart";
 
@@ -54345,7 +54345,7 @@ var Post = function (_Component) {
 			}
 
 			var parentPost = this.props.replyingTo;
-			var alertClass = this.props.alert ? "icon icon-" + this.props.alert : null;
+			// let alertClass = this.props.alert ? "icon icon-" + this.props.alert : null;
 
 			// this was above Headshot
 			// <span className="icon icon-gear" onClick={this.handleMenuClick} />
@@ -54362,7 +54362,7 @@ var Post = function (_Component) {
 						return _this3._div = _ref4;
 					}
 				},
-				react.createElement("span", { className: "icon icon-gear", onClick: this.handleMenuClick }),
+				react.createElement(Icon, { name: "gear", className: "gear align-right", onClick: this.handleMenuClick }),
 				this.state.menuOpen && react.createElement(Menu, { items: menuItems, target: this.state.menuTarget, action: this.handleSelectMenu }),
 				react.createElement(Headshot, { size: 36, person: post.author, mine: mine }),
 				react.createElement(
@@ -54403,7 +54403,6 @@ var Post = function (_Component) {
 					),
 					codeBlock,
 					this.props.showDetails && react.createElement(PostDetails, { post: post, currentCommit: this.props.currentCommit }),
-					alertClass && react.createElement("span", { className: alertClass }),
 					this.renderBody(post),
 					!this.props.editng && post.hasBeenEdited && react.createElement(
 						"span",
