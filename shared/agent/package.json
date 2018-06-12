@@ -25,7 +25,7 @@
     },
     "dependencies": {
         "lodash.debounce": "4.0.8",
-        "pubnub": "4.21.0",
+        "pubnub": "4.21.1",
         "node-fetch": "2.1.2",
         "reflect-metadata": "0.1.12",
         "tmp": "0.0.33",
