@@ -46,7 +46,7 @@ export class SimpleChannelPanel extends Component {
 			<div className="section">
 				<div className="header" onClick={this.handleClickShowPublicChannels}>
 					<span className="clickable">Team Channels</span>
-					<Icon className="align-right" name="diff-added" onClick={this.handleClickCreateChannel} />
+					<Icon className="align-right" name="plus" onClick={this.handleClickCreateChannel} />
 				</div>
 				<ul onClick={this.handleClickSelectStream}>
 					{this.props.channelStreams.map(stream => {
@@ -106,7 +106,7 @@ export class SimpleChannelPanel extends Component {
 			<div className="section">
 				<div className="header clickable" onClick={this.handleClickCreateDirectMessage}>
 					<span className="clickable">Direct Messages</span>
-					<Icon name="diff-added" className="align-right" />
+					<Icon name="plus" className="align-right" />
 				</div>
 				<ul onClick={this.handleClickSelectStream}>
 					{this.props.directMessageStreams.map(stream => {
@@ -125,11 +125,7 @@ export class SimpleChannelPanel extends Component {
 								<span className="presence" />
 								{stream.name}
 								{mentions > 0 ? <span className="umi">{mentions}</span> : null}
-								<Icon
-									name="diff-removed"
-									onClick={this.handleClickMuteStream}
-									className="align-right"
-								/>
+								<Icon name="x" onClick={this.handleClickMuteStream} className="align-right" />
 							</li>
 						);
 					})}
@@ -144,11 +140,7 @@ export class SimpleChannelPanel extends Component {
 										? teammate.firstName + " " + teammate.lastName
 										: teammate.username}
 								</span>
-								<Icon
-									name="diff-removed"
-									onClick={this.handleClickMuteStream}
-									className="align-right"
-								/>
+								<Icon name="x" onClick={this.handleClickMuteStream} className="align-right" />
 							</li>
 						);
 					})}
