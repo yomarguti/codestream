@@ -4,6 +4,7 @@ import ContentEditable from "react-contenteditable";
 import createClassString from "classnames";
 import EventEmitter from "../event-emitter";
 import AtMentionsPopup from "./AtMentionsPopup";
+import Icon from "./Icon";
 
 const arrayToRange = ([startRow, startCol, endRow, endCol]) => {
 	return {
@@ -375,7 +376,7 @@ class ComposeBox extends React.Component {
 			quoteHint = (
 				<div className="hint">
 					{rangeText}
-					<span onClick={this.handleClickDismissQuote} className="icon icon-x" />
+					<Icon name="x" onClick={this.handleClickDismissQuote} />
 				</div>
 			);
 		}
