@@ -1,6 +1,8 @@
 // @flow
 import { shell } from "electron";
+import { CompositeDisposable } from "atom";
 import mixpanel from "mixpanel-browser";
+import { EventEmitter } from "codestream-components";
 import AddCommentPopupManager from "./add-comment-popup-manager";
 import BufferChangeTracker from "./buffer-change-tracker";
 import DiffManager from "./diff-manager";
@@ -12,6 +14,7 @@ import type { Resource, Store } from "../types";
 
 export default class WorkspaceApi implements Resource {
 	initialized: boolean = false;
+	subscriptions = new CompositeDisposable();
 	popupManager: Resource;
 	bufferChangeTracker: Resource;
 	diffManager: Resource;
@@ -34,133 +37,125 @@ export default class WorkspaceApi implements Resource {
 		this.contentHighlighter = new ContentHighlighter(this.store);
 		this.markerLocationTracker = new MarkerLocationTracker(this.store);
 		this.editTracker = new EditTracker(this.store);
-		window.addEventListener("message", this.handleInteractionEvent, true);
+		this.setupListeners();
 		this.initialized = true;
 	}
 
-	handleInteractionEvent = ({ data }) => {
-		if (data.type.startsWith("codestream"))
-			console.debug("event", { type: data.type, body: data.body });
-		if (data.type === "codestream:interaction:clicked-link") {
-			shell.openExternal(data.body);
-		}
-		if (data.type === "codestream:analytics") {
-			const { label, payload } = data.body;
-			mixpanel.track(label, payload);
-		}
-		if (data.type === "codestream:request") {
-			const requestId = data.id;
-			const { action, params } = data.body;
-			switch (action) {
-				case "create-post": {
-					return this.api
-						.createPost(
-							params.id,
-							params.streamId,
-							params.parentPostId,
-							params.text,
-							params.codeBlocks,
-							params.mentions,
-							params.extra
-						)
-						.then(post => {
-							window.parent.postMessage(
-								{ type: "codestream:response", id: requestId, body: { action, payload: post } },
-								"*"
-							);
-						})
-						.catch(error => {
-							window.parent.postMessage(
-								{ type: "codestream:response", body: { action, error } },
-								"*"
-							);
-						});
-				}
-				case "edit-post": {
-					return this.api
-						.editPost(params.id, params.text, params.mentions)
-						.then(post => {
-							window.parent.postMessage(
-								{ type: "codestream:response", id: requestId, body: { action, payload: post } },
-								"*"
-							);
-						})
-						.catch(error => {
-							window.parent.postMessage(
-								{ type: "codestream:response", id: requestId, body: { action, error } },
-								"*"
-							);
-						});
-				}
-				case "delete-post": {
-					return this.api
-						.deletePost(params)
-						.then(post => {
-							window.parent.postMessage(
-								{ type: "codestream:response", id: requestId, body: { action, payload: post } },
-								"*"
-							);
-						})
-						.catch(error => {
-							window.parent.postMessage(
-								{ type: "codestream:response", id: requestId, body: { action, error } },
-								"*"
-							);
-						});
-				}
-				case "create-stream": {
-					return this.api
-						.createStream(params)
-						.then(stream => {
-							window.parent.postMessage(
-								{ type: "codestream:response", id: requestId, body: { action, payload: stream } },
-								"*"
-							);
-						})
-						.catch(error => {
-							window.parent.postMessage(
-								{ type: "codestream:response", id: requestId, body: { action, error } },
-								"*"
-							);
-						});
-				}
-				case "update-stream": {
-					return this.api
-						.updateStream(params)
-						.then(stream => {
-							window.parent.postMessage(
-								{ type: "codestream:response", id: requestId, body: { action, payload: stream } },
-								"*"
-							);
-						})
-						.catch(error => {
-							window.parent.postMessage(
-								{ type: "codestream:response", id: requestId, body: { action, error } },
-								"*"
-							);
-						});
-				}
-				case "mark-stream-read": {
-					return this.api.markStreamRead(params).then(() => {
+	setupListeners() {
+		this.subscriptions.add(
+			EventEmitter.on("interaction:clicked-link", link => shell.openExternal(link)),
+			EventEmitter.on("analytics", ({ label, payload }) => mixpanel.track(label, payload)),
+			EventEmitter.on("request", this.handleWebviewRequest)
+		);
+	}
+
+	handleWebviewRequest = ({ id, action, params }) => {
+		switch (action) {
+			case "create-post": {
+				return this.api
+					.createPost(
+						params.id,
+						params.streamId,
+						params.parentPostId,
+						params.text,
+						params.codeBlocks,
+						params.mentions,
+						params.extra
+					)
+					.then(post => {
 						window.parent.postMessage(
-							{ type: "codestream:response", id: requestId, body: {} },
+							{ type: "codestream:response", id, body: { action, payload: post } },
+							"*"
+						);
+					})
+					.catch(error => {
+						window.parent.postMessage(
+							{ type: "codestream:response", body: { action, error } },
 							"*"
 						);
 					});
-					// .catch(e => {
-					// /* doesn't really matter */
-					// });
-				}
-				case "save-user-preference": {
-					return this.api.saveUserPreference(params);
-				}
+			}
+			case "edit-post": {
+				return this.api
+					.editPost(params.id, params.text, params.mentions)
+					.then(post => {
+						window.parent.postMessage(
+							{ type: "codestream:response", id, body: { action, payload: post } },
+							"*"
+						);
+					})
+					.catch(error => {
+						window.parent.postMessage(
+							{ type: "codestream:response", id, body: { action, error } },
+							"*"
+						);
+					});
+			}
+			case "delete-post": {
+				return this.api
+					.deletePost(params)
+					.then(post => {
+						window.parent.postMessage(
+							{ type: "codestream:response", id, body: { action, payload: post } },
+							"*"
+						);
+					})
+					.catch(error => {
+						window.parent.postMessage(
+							{ type: "codestream:response", id, body: { action, error } },
+							"*"
+						);
+					});
+			}
+			case "create-stream": {
+				return this.api
+					.createStream(params)
+					.then(stream => {
+						window.parent.postMessage(
+							{ type: "codestream:response", id, body: { action, payload: stream } },
+							"*"
+						);
+					})
+					.catch(error => {
+						window.parent.postMessage(
+							{ type: "codestream:response", id, body: { action, error } },
+							"*"
+						);
+					});
+			}
+			case "update-stream": {
+				return this.api
+					.updateStream(params)
+					.then(stream => {
+						window.parent.postMessage(
+							{ type: "codestream:response", id, body: { action, payload: stream } },
+							"*"
+						);
+					})
+					.catch(error => {
+						window.parent.postMessage(
+							{ type: "codestream:response", id, body: { action, error } },
+							"*"
+						);
+					});
+			}
+			case "mark-stream-read": {
+				return this.api.markStreamRead(params).then(() => {
+					window.parent.postMessage({ type: "codestream:response", id, body: {} }, "*");
+				});
+				// .catch(e => {
+				// /* doesn't really matter */
+				// });
+			}
+			case "save-user-preference": {
+				return this.api.saveUserPreference(params);
 			}
 		}
 	};
 
 	destroy() {
 		if (this.initialized) {
-			window.removeEventListener("message", this.handleInteractionEvent, true);
+			this.subscriptions.dispose();
 			this.popupManager.destroy();
 			this.bufferChangeTracker.destroy();
 			this.diffManager.destroy();
