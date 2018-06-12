@@ -6,23 +6,13 @@ const Icon = props => {
 	const octicon = octicons[props.name];
 	if (!octicon) throw new Error(`No icon found for '${props.name}'`);
 
-	const icon = (
+	return (
 		<span
 			className={createClassString("icon", props.className)}
 			onClick={props.onClick}
 			dangerouslySetInnerHTML={{ __html: octicon.toSVG() }}
 		/>
 	);
-
-	if (props.label) {
-		return (
-			<span>
-				{props.label} {icon}
-			</span>
-		);
-	}
-
-	return icon;
 };
 
 Icon.defaultProps = {
