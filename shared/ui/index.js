@@ -5,6 +5,7 @@ import thunk from "redux-thunk";
 import Stream from "./Stream";
 import reducer from "./reducers";
 import WebviewApi from "./webview-api";
+import EventEmitter from "./event-emitter";
 
 export const createCodeStreamStore = (initialState = {}, thunkArg = {}, middleware) => {
 	return createStore(
@@ -14,4 +15,4 @@ export const createCodeStreamStore = (initialState = {}, thunkArg = {}, middlewa
 	);
 };
 
-export { Stream, WebviewApi, createCodeStreamStore as createStore };
+export { EventEmitter, Stream, WebviewApi, createCodeStreamStore as createStore };

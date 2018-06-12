@@ -9,8 +9,9 @@ export default class WebviewApi {
 		window.addEventListener(
 			"message",
 			event => {
-				const { type, body, id } = event.data;
+				const { type, body } = event.data;
 				if (type === "codestream:response") {
+					const { id } = body;
 					const { resolve, reject } = this.pendingRequests.get(id);
 					if (body.payload) {
 						if (resolve) {
@@ -32,7 +33,7 @@ export default class WebviewApi {
 		const id = uuid();
 		return new Promise((resolve, reject) => {
 			this.pendingRequests.set(id, { resolve, reject });
-			this.host.postMessage({ type: "codestream:request", body: message, id }, "*");
+			this.host.postMessage({ type: "codestream:request", body: { id, ...message } }, "*");
 		});
 	}
 
