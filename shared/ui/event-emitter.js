@@ -27,6 +27,10 @@ class EventEmitter {
 		}
 	};
 
+	on(thing, listener) {
+		return this.subscribe(thing, listener);
+	}
+
 	subscribe(thing, listener) {
 		const listeners = this.listenersByEvent.get(thing) || [];
 		listeners.push(listener);

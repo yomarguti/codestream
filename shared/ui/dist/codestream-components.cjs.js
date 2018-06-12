@@ -16948,6 +16948,11 @@ var EventEmitter = function () {
 			return this.host;
 		}
 	}, {
+		key: "on",
+		value: function on(thing, listener) {
+			return this.subscribe(thing, listener);
+		}
+	}, {
 		key: "subscribe",
 		value: function subscribe(thing, listener) {
 			var _this2 = this;
@@ -53827,10 +53832,11 @@ var WebviewApi = function () {
 		window.addEventListener("message", function (event) {
 			var _event$data = event.data,
 			    type = _event$data.type,
-			    body = _event$data.body,
-			    id = _event$data.id;
+			    body = _event$data.body;
 
 			if (type === "codestream:response") {
+				var id = body.id;
+
 				var _pendingRequests$get = _this.pendingRequests.get(id),
 				    resolve = _pendingRequests$get.resolve,
 				    reject = _pendingRequests$get.reject;
@@ -53857,7 +53863,7 @@ var WebviewApi = function () {
 			var id = uuid();
 			return new Promise(function (resolve, reject) {
 				_this2.pendingRequests.set(id, { resolve: resolve, reject: reject });
-				_this2.host.postMessage({ type: "codestream:request", body: message, id: id }, "*");
+				_this2.host.postMessage({ type: "codestream:request", body: _extends$5({ id: id }, message) }, "*");
 			});
 		}
 	}, {
@@ -53915,6 +53921,7 @@ var createCodeStreamStore = function createCodeStreamStore() {
 };
 
 exports.createCodeStreamStore = createCodeStreamStore;
+exports.EventEmitter = emitter;
 exports.Stream = index$3;
 exports.WebviewApi = WebviewApi;
 exports.createStore = createCodeStreamStore;
