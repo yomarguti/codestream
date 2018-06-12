@@ -60,6 +60,7 @@
     "babel-preset-es2015": "^6.24.1",
     "babel-preset-react": "^6.24.1",
     "classnames": "^2.2.5",
+    "codestream-components": "github:teamcodestream/codestream-components",
     "dexie": "^2.0.1",
     "diff": "^3.4.0",
     "eol": "^0.9.1",

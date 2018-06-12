@@ -64,13 +64,13 @@ export default class WorkspaceApi implements Resource {
 					)
 					.then(post => {
 						window.parent.postMessage(
-							{ type: "codestream:response", id, body: { action, payload: post } },
+							{ type: "codestream:response", body: { id, action, payload: post } },
 							"*"
 						);
 					})
 					.catch(error => {
 						window.parent.postMessage(
-							{ type: "codestream:response", body: { action, error } },
+							{ type: "codestream:response", body: { id, action, error } },
 							"*"
 						);
 					});
@@ -80,13 +80,13 @@ export default class WorkspaceApi implements Resource {
 					.editPost(params.id, params.text, params.mentions)
 					.then(post => {
 						window.parent.postMessage(
-							{ type: "codestream:response", id, body: { action, payload: post } },
+							{ type: "codestream:response", body: { id, action, payload: post } },
 							"*"
 						);
 					})
 					.catch(error => {
 						window.parent.postMessage(
-							{ type: "codestream:response", id, body: { action, error } },
+							{ type: "codestream:response", body: { id, action, error } },
 							"*"
 						);
 					});
@@ -96,13 +96,13 @@ export default class WorkspaceApi implements Resource {
 					.deletePost(params)
 					.then(post => {
 						window.parent.postMessage(
-							{ type: "codestream:response", id, body: { action, payload: post } },
+							{ type: "codestream:response", body: { id, action, payload: post } },
 							"*"
 						);
 					})
 					.catch(error => {
 						window.parent.postMessage(
-							{ type: "codestream:response", id, body: { action, error } },
+							{ type: "codestream:response", body: { id, action, error } },
 							"*"
 						);
 					});
@@ -112,13 +112,13 @@ export default class WorkspaceApi implements Resource {
 					.createStream(params)
 					.then(stream => {
 						window.parent.postMessage(
-							{ type: "codestream:response", id, body: { action, payload: stream } },
+							{ type: "codestream:response", body: { id, action, payload: stream } },
 							"*"
 						);
 					})
 					.catch(error => {
 						window.parent.postMessage(
-							{ type: "codestream:response", id, body: { action, error } },
+							{ type: "codestream:response", body: { id, action, error } },
 							"*"
 						);
 					});
@@ -128,27 +128,35 @@ export default class WorkspaceApi implements Resource {
 					.updateStream(params)
 					.then(stream => {
 						window.parent.postMessage(
-							{ type: "codestream:response", id, body: { action, payload: stream } },
+							{ type: "codestream:response", body: { id, action, payload: stream } },
 							"*"
 						);
 					})
 					.catch(error => {
 						window.parent.postMessage(
-							{ type: "codestream:response", id, body: { action, error } },
+							{ type: "codestream:response", body: { id, action, error } },
 							"*"
 						);
 					});
 			}
 			case "mark-stream-read": {
 				return this.api.markStreamRead(params).then(() => {
-					window.parent.postMessage({ type: "codestream:response", id, body: {} }, "*");
+					window.parent.postMessage(
+						{ type: "codestream:response", body: { id, action, payload: {} } },
+						"*"
+					);
 				});
 				// .catch(e => {
 				// /* doesn't really matter */
 				// });
 			}
 			case "save-user-preference": {
-				return this.api.saveUserPreference(params);
+				return this.api.saveUserPreference(params).then(() => {
+					window.parent.postMessage(
+						{ type: "codestream:response", body: { id, action, payload: {} } },
+						"*"
+					);
+				});
 			}
 		}
 	};
