@@ -1,29 +1,28 @@
-import { Uri } from 'vscode';
+import { Uri } from "vscode";
 
-'use strict';
+"use strict";
 
 export enum GitRemoteType {
-    Fetch = 'fetch',
-    Push = 'push'
+	Fetch = "fetch",
+	Push = "push"
 }
 
 export class GitRemote {
+	public readonly uri: Uri;
 
-    public readonly uri: Uri;
+	constructor(
+		public readonly repoPath: string,
+		public readonly name: string,
+		url: string,
+		public readonly scheme: string,
+		public readonly domain: string,
+		public readonly path: string,
+		public readonly types: { type: GitRemoteType; url: string }[]
+	) {
+		this.uri = Uri.parse(scheme ? url : `ssh://${url}`);
+	}
 
-    constructor(
-        public readonly repoPath: string,
-        public readonly name: string,
-        url: string,
-        public readonly scheme: string,
-        public readonly domain: string,
-        public readonly path: string,
-        public readonly types: { type: GitRemoteType, url: string }[]
-    ) {
-        this.uri = Uri.parse(scheme ? url : `ssh://${url}`);
-    }
-
-    get normalizedUrl(): string {
-        return `${this.domain}/${this.path}`.toLocaleLowerCase();
-    }
+	get normalizedUrl(): string {
+		return `${this.domain}/${this.path}`.toLocaleLowerCase();
+	}
 }

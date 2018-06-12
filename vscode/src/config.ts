@@ -1,49 +1,49 @@
-'use strict';
+"use strict";
 
 export interface BotResponse {
-    message: string;
-    location?: 'channel' | 'thread';
-    codeBlock?: string;
+	message: string;
+	location?: "channel" | "thread";
+	codeBlock?: string;
 }
 
 export interface BotTrigger {
-    type: 'immediate' | 'delayed' | 'hotkey';
-    pattern?: string;
-    response: BotResponse;
+	type: "immediate" | "delayed" | "hotkey";
+	pattern?: string;
+	response: BotResponse;
 }
 
 export enum Notifications {
-    All = 'all',
-    Mentions = 'mentions',
-    None = 'none'
+	All = "all",
+	Mentions = "mentions",
+	None = "none"
 }
 
 export enum TraceLevel {
-    Silent = 'silent',
-    Errors = 'errors',
-    Verbose = 'verbose',
-    Debug = 'debug'
+	Silent = "silent",
+	Errors = "errors",
+	Verbose = "verbose",
+	Debug = "debug"
 }
 
 export interface Config {
-    autoSignIn: boolean;
+	autoSignIn: boolean;
 
-    bot: {
-        email: string;
-        enabled: boolean;
-        password: string;
-        triggers: BotTrigger[];
-    };
+	bot: {
+		email: string;
+		enabled: boolean;
+		password: string;
+		triggers: BotTrigger[];
+	};
 
-    email: string;
+	email: string;
 
-    explorers: {
-        enabled: boolean;
-    };
+	explorers: {
+		enabled: boolean;
+	};
 
-    notifications: Notifications;
-    password: string;
-    serverUrl: string;
-    team: string;
-    traceLevel: TraceLevel;
+	notifications: Notifications;
+	password: string;
+	serverUrl: string;
+	team: string;
+	traceLevel: TraceLevel;
 }

@@ -1,284 +1,284 @@
-'use strict';
+"use strict";
 
 export interface CSEntity {
-    deactivated?: boolean;
-    createdAt: number;
-    modifiedAt: Date;
-    id: string;
-    creatorId: string;
+	deactivated?: boolean;
+	createdAt: number;
+	modifiedAt: Date;
+	id: string;
+	creatorId: string;
 }
 
 export interface CSMarker {
-    id: string;
-    teamId: string;
-    streamId: string;
-    postId: string;
+	id: string;
+	teamId: string;
+	streamId: string;
+	postId: string;
 }
 
 export interface CSMarkerLocations {
-    teamId: string;
-    streamId: string;
-    commitHash: string;
-    locations: { [id: string]: [number, number, number, number] };
+	teamId: string;
+	streamId: string;
+	commitHash: string;
+	locations: { [id: string]: [number, number, number, number] };
 }
 
 export interface CSCodeBlock {
-    code: string;
-    markerId: string;
-    file: string;
-    repoId: string;
-    streamId?: string;
+	code: string;
+	markerId: string;
+	file: string;
+	repoId: string;
+	streamId?: string;
 }
 
 export interface CSPost extends CSEntity {
-    streamId: string;
-    text: string;
-    codeBlocks?: CSCodeBlock[];
-    commitHashWhenPosted?: string;
-    repoId: string;
-    teamId: string;
-    seqNum: number;
-
+	streamId: string;
+	text: string;
+	codeBlocks?: CSCodeBlock[];
+	commitHashWhenPosted?: string;
+	repoId: string;
+	teamId: string;
+	seqNum: number;
 }
 
 export interface CSRepository extends CSEntity {
-    url: string;
-    firstCommitHash: string;
-    normalizedUrl: string;
-    teamId: string;
-    companyId: string;
+	url: string;
+	firstCommitHash: string;
+	normalizedUrl: string;
+	teamId: string;
+	companyId: string;
 }
 
 export enum StreamType {
-    Channel = 'channel',
-    Direct = 'direct',
-    File = 'file'
+	Channel = "channel",
+	Direct = "direct",
+	File = "file"
 }
 
 export interface CSChannelStream extends CSEntity {
-    teamId: string;
-    type: StreamType.Channel;
-    name: string;
-    memberIds?: string[];
-    sortId: string;
-    isTeamStream: boolean;
-    mostRecentPostId?: string;
-    privacy: 'public' | 'private';
+	teamId: string;
+	type: StreamType.Channel;
+	name: string;
+	memberIds?: string[];
+	sortId: string;
+	isTeamStream: boolean;
+	mostRecentPostId?: string;
+	privacy: "public" | "private";
 }
 
 export interface CSDirectStream extends CSEntity {
-    teamId: string;
-    type: StreamType.Direct;
-    name?: string;
-    memberIds: string[];
-    sortId: string;
-    mostRecentPostId?: string;
-    privacy: 'public' | 'private';
+	teamId: string;
+	type: StreamType.Direct;
+	name?: string;
+	memberIds: string[];
+	sortId: string;
+	mostRecentPostId?: string;
+	privacy: "public" | "private";
 }
 
 export interface CSFileStream extends CSEntity {
-    teamId: string;
-    type: StreamType.File;
-    file: string;
-    repoId: string;
-    sortId: string;
-    mostRecentPostId?: string;
-    privacy: 'public' | 'private';
+	teamId: string;
+	type: StreamType.File;
+	file: string;
+	repoId: string;
+	sortId: string;
+	mostRecentPostId?: string;
+	privacy: "public" | "private";
 }
 
 export type CSStream = CSChannelStream | CSDirectStream | CSFileStream;
 
 export interface CSTeam extends CSEntity {
-    name: string;
-    primaryReferral: 'internal' | 'external';
-    memberIds: string[];
-    creatorId: string;
-    companyId: string;
+	name: string;
+	primaryReferral: "internal" | "external";
+	memberIds: string[];
+	creatorId: string;
+	companyId: string;
 }
 
 export interface CSUser extends CSEntity {
-    username: string;
-    email: string;
-    firstName: string;
-    lastName: string;
-    isRegistered: boolean;
-    registeredAt: Date;
-    timeZone: string;
-    joinMethod: string; // 'Create Team'
-    primaryReferral: 'internal' | 'external';
-    originTeamId: string;
-    companyIds: string[];
-    teamIds: string[];
+	username: string;
+	email: string;
+	firstName: string;
+	lastName: string;
+	isRegistered: boolean;
+	registeredAt: Date;
+	timeZone: string;
+	joinMethod: string; // 'Create Team'
+	primaryReferral: "internal" | "external";
+	originTeamId: string;
+	companyIds: string[];
+	teamIds: string[];
 }
 
 export interface LoginRequest {
-    email: string;
-    password: string;
+	email: string;
+	password: string;
 }
 
 export interface LoginResponse {
-    user: CSUser;
-    accessToken: string;
-    pubnubKey: string;
-    teams: CSTeam[];
-    repos: CSRepository[];
+	user: CSUser;
+	accessToken: string;
+	pubnubKey: string;
+	teams: CSTeam[];
+	repos: CSRepository[];
 }
 
 export interface CreatePostRequestCodeBlock {
-    code: string;
-    location: [number, number, number, number];
-    streamId?: string;
-    file?: string;
-    repoId?: string;
+	code: string;
+	location: [number, number, number, number];
+	streamId?: string;
+	file?: string;
+	repoId?: string;
 }
 
 export interface CreatePostRequest {
-    teamId: string;
-    streamId: string;
-    parentPostId?: string;
-    text: string;
-    codeBlocks?: CreatePostRequestCodeBlock[];
-    commitHashWhenPosted?: string;
+	teamId: string;
+	streamId: string;
+	parentPostId?: string;
+	text: string;
+	codeBlocks?: CreatePostRequestCodeBlock[];
+	commitHashWhenPosted?: string;
 }
 
 export interface CreatePostResponse {
-    post: CSPost;
+	post: CSPost;
 }
 
 export interface CreateRepoRequest {
-    teamId: string;
-    url: string;
-    knownCommitHashes: string[];
+	teamId: string;
+	url: string;
+	knownCommitHashes: string[];
 }
 
 export interface CreateRepoResponse {
-    repo: CSRepository;
+	repo: CSRepository;
 }
 
 export interface CreateChannelStreamRequest {
-    teamId: string;
-    type: StreamType.Channel;
-    name: string;
-    memberIds?: string[];
-    isTeamStream: boolean;
-    privacy: 'public' | 'private';
+	teamId: string;
+	type: StreamType.Channel;
+	name: string;
+	memberIds?: string[];
+	isTeamStream: boolean;
+	privacy: "public" | "private";
 }
 
 export interface CreateDirectStreamRequest {
-    teamId: string;
-    type: StreamType.Direct;
-    memberIds: string[];
+	teamId: string;
+	type: StreamType.Direct;
+	memberIds: string[];
 }
 
 export interface CreateFileStreamRequest {
-    teamId: string;
-    repoId: string;
-    type: StreamType.File;
-    file: string;
+	teamId: string;
+	repoId: string;
+	type: StreamType.File;
+	file: string;
 }
 
-export type CreateStreamRequest =  CreateChannelStreamRequest | CreateDirectStreamRequest | CreateFileStreamRequest;
+export type CreateStreamRequest =
+	| CreateChannelStreamRequest
+	| CreateDirectStreamRequest
+	| CreateFileStreamRequest;
 
 export interface CreateStreamResponse {
-    stream: CSStream;
+	stream: CSStream;
 }
 
 export interface DeletePostResponse {
-    post: CSPost;
+	post: CSPost;
 }
 
 export interface DeleteTeamContentRequest {
-    teamId: string;
-    includeStreams?: boolean;
-    newerThan?: number;
+	teamId: string;
+	includeStreams?: boolean;
+	newerThan?: number;
 }
 
-export interface DeleteTeamContentResponse {
-}
+export interface DeleteTeamContentResponse {}
 
 export interface FindRepoResponse {
-    repo?: CSRepository;
-    usernames?: string[];
+	repo?: CSRepository;
+	usernames?: string[];
 }
 
 export interface GetMarkerLocationsResponse {
-    markerLocations: CSMarkerLocations;
+	markerLocations: CSMarkerLocations;
 }
 
 export interface GetMarkerResponse {
-    marker: CSMarker;
+	marker: CSMarker;
 }
 
 export interface GetMarkersResponse {
-    markers: CSMarker[];
-    numMarkers: number;
+	markers: CSMarker[];
+	numMarkers: number;
 }
 
 export interface GetPostResponse {
-    post: CSPost;
+	post: CSPost;
 }
 
 export interface GetPostsResponse {
-    posts: CSPost[];
+	posts: CSPost[];
 }
 
 export interface GetRepoResponse {
-    repo: CSRepository;
+	repo: CSRepository;
 }
 
 export interface GetReposResponse {
-    repos: CSRepository[];
+	repos: CSRepository[];
 }
 
 export interface GetStreamResponse<T extends CSStream> {
-    stream: T;
+	stream: T;
 }
 
 export interface GetStreamsResponse<T extends CSStream> {
-    streams: T[];
+	streams: T[];
 }
 
 export interface GetTeamResponse {
-    team: CSTeam;
+	team: CSTeam;
 }
 
 export interface GetTeamsResponse {
-    teams: CSTeam[];
+	teams: CSTeam[];
 }
 
 export interface GetUserResponse {
-    user: CSUser;
+	user: CSUser;
 }
 
 export interface GetUsersResponse {
-    users: CSUser[];
+	users: CSUser[];
 }
 
-export interface JoinStreamRequest {
-}
+export interface JoinStreamRequest {}
 
 export interface JoinStreamResponse {
-    stream: CSStream;
+	stream: CSStream;
 }
 
 export enum PresenceStatus {
-    Online = 'online',
-    Away = 'away'
+	Online = "online",
+	Away = "away"
 }
 
 export interface UpdatePresenceRequest {
-    sessionId: string;
-    status: PresenceStatus;
+	sessionId: string;
+	status: PresenceStatus;
 }
 
 export interface UpdatePresenceResponse {
-    awayTimeout: number;
+	awayTimeout: number;
 }
 
 export interface UpdateStreamMembershipRequest {
-    $push: string;
+	$push: string;
 }
 
 export interface UpdateStreamMembershipResponse {
-    stream: CSStream;
+	stream: CSStream;
 }

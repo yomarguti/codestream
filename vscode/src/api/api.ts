@@ -1,324 +1,396 @@
-'use strict';
-import { version as vscodeVersion } from 'vscode';
-import { extensionVersion } from '../extension';
-import { Logger } from '../logger';
+"use strict";
+import { version as vscodeVersion } from "vscode";
+import { extensionVersion } from "../extension";
+import { Logger } from "../logger";
 import {
-    CreatePostRequest, CreatePostResponse,
-    CreateRepoRequest, CreateRepoResponse,
-    CreateStreamRequest, CreateStreamResponse,
-    CSStream,
-    DeletePostResponse,
-    DeleteTeamContentRequest, DeleteTeamContentResponse,
-    FindRepoResponse,
-    GetMarkerLocationsResponse, GetMarkerResponse, GetMarkersResponse,
-    GetPostResponse, GetPostsResponse,
-    GetRepoResponse, GetReposResponse,
-    GetStreamResponse, GetStreamsResponse,
-    GetTeamResponse, GetTeamsResponse,
-    GetUserResponse, GetUsersResponse,
-    JoinStreamRequest, JoinStreamResponse,
-    LoginRequest, LoginResponse,
-    StreamType,
-    UpdatePresenceRequest, UpdatePresenceResponse,
-    UpdateStreamMembershipRequest, UpdateStreamMembershipResponse
-} from './types';
-import fetch, { Headers, RequestInit, Response } from 'node-fetch';
-import { URLSearchParams } from 'url';
-export * from './types';
+	CreatePostRequest,
+	CreatePostResponse,
+	CreateRepoRequest,
+	CreateRepoResponse,
+	CreateStreamRequest,
+	CreateStreamResponse,
+	CSStream,
+	DeletePostResponse,
+	DeleteTeamContentRequest,
+	DeleteTeamContentResponse,
+	FindRepoResponse,
+	GetMarkerLocationsResponse,
+	GetMarkerResponse,
+	GetMarkersResponse,
+	GetPostResponse,
+	GetPostsResponse,
+	GetRepoResponse,
+	GetReposResponse,
+	GetStreamResponse,
+	GetStreamsResponse,
+	GetTeamResponse,
+	GetTeamsResponse,
+	GetUserResponse,
+	GetUsersResponse,
+	JoinStreamRequest,
+	JoinStreamResponse,
+	LoginRequest,
+	LoginResponse,
+	StreamType,
+	UpdatePresenceRequest,
+	UpdatePresenceResponse,
+	UpdateStreamMembershipRequest,
+	UpdateStreamMembershipResponse
+} from "./types";
+import fetch, { Headers, RequestInit, Response } from "node-fetch";
+import { URLSearchParams } from "url";
+export * from "./types";
 
 export interface ApiMiddlewareContext {
-    readonly url: string;
-    readonly method: string;
-    readonly request: RequestInit | undefined;
+	readonly url: string;
+	readonly method: string;
+	readonly request: RequestInit | undefined;
 }
 
 export interface ApiMiddleware {
-    readonly name: string;
-    onRequest?(context: ApiMiddlewareContext): Promise<void>;
-    onProvideResponse?(context: ApiMiddlewareContext): Promise<any | undefined>;
-    onResponse?(context: ApiMiddlewareContext, response: Promise<any>): Promise<void>;
+	readonly name: string;
+	onRequest?(context: ApiMiddlewareContext): Promise<void>;
+	onProvideResponse?(context: ApiMiddlewareContext): Promise<any | undefined>;
+	onResponse?(context: ApiMiddlewareContext, response: Promise<any>): Promise<void>;
 }
 
 export class CodeStreamApi {
+	private readonly _middleware: ApiMiddleware[] = [];
+	// private responseCache = new Map<string, Promise<any>>();
 
-    private readonly _middleware: ApiMiddleware[] = [];
-    // private responseCache = new Map<string, Promise<any>>();
+	constructor(public baseUrl: string) {
+		// this.useMiddleware({
+		//     name: 'ResponseCaching',
+		//     onProvideResponse: async context => {
+		//         if (context.method !== 'GET') return undefined;
+		//         return this.responseCache.get(context.url);
+		//     },
+		//     onResponse: async (context, response) => {
+		//         if (context.method !== 'GET') return;
+		//         this.responseCache.set(context.url, response);
+		//     }
+		// });
+	}
 
-    constructor(public baseUrl: string) {
-        // this.useMiddleware({
-        //     name: 'ResponseCaching',
-        //     onProvideResponse: async context => {
-        //         if (context.method !== 'GET') return undefined;
+	async login(email: string, password: string): Promise<LoginResponse> {
+		const resp = await this.put<LoginRequest, LoginResponse>("/no-auth/login", {
+			email: email,
+			password: password
+		});
 
-        //         return this.responseCache.get(context.url);
-        //     },
-        //     onResponse: async (context, response) => {
-        //         if (context.method !== 'GET') return;
+		return resp;
+	}
 
-        //         this.responseCache.set(context.url, response);
-        //     }
-        // });
-    }
+	useMiddleware(middleware: ApiMiddleware) {
+		this._middleware.push(middleware);
+		return {
+			dispose: () => {
+				const i = this._middleware.indexOf(middleware);
+				this._middleware.splice(i, 1);
+			}
+		};
+	}
 
-    async login(email: string, password: string): Promise<LoginResponse> {
-        const resp = await this.put<LoginRequest, LoginResponse>('/no-auth/login', {
-            email: email,
-            password: password
-        });
+	createPost(token: string, request: CreatePostRequest): Promise<CreatePostResponse> {
+		return this.post<CreatePostRequest, CreatePostResponse>(`/posts`, request, token);
+	}
 
-        return resp;
-    }
+	createRepo(token: string, request: CreateRepoRequest): Promise<CreateRepoResponse> {
+		return this.post<CreateRepoRequest, CreateRepoResponse>(`/repos`, request, token);
+	}
 
-    useMiddleware(middleware: ApiMiddleware) {
-        this._middleware.push(middleware);
-        return {
-            dispose: () => {
-                const i = this._middleware.indexOf(middleware);
-                this._middleware.splice(i, 1);
-            }
-        };
-    }
+	createStream(token: string, request: CreateStreamRequest): Promise<CreateStreamResponse> {
+		return this.post<CreateStreamRequest, CreateStreamResponse>(`/streams`, request, token);
+	}
 
-    createPost(token: string, request: CreatePostRequest): Promise<CreatePostResponse> {
-        return this.post<CreatePostRequest, CreatePostResponse>(`/posts`, request, token);
-    }
+	deletePost(token: string, teamId: string, postId: string) {
+		return this.delete<DeletePostResponse>(`/posts/${postId}`, token);
+	}
 
-    createRepo(token: string, request: CreateRepoRequest): Promise<CreateRepoResponse> {
-        return this.post<CreateRepoRequest, CreateRepoResponse>(`/repos`, request, token);
-    }
+	deleteStream(token: string, teamId: string, streamId: string) {
+		return this.delete<any /*DeleteStreamResponse*/>(`/streams/${streamId}`, token);
+	}
 
-    createStream(token: string, request: CreateStreamRequest): Promise<CreateStreamResponse> {
-        return this.post<CreateStreamRequest, CreateStreamResponse>(`/streams`, request, token);
-    }
+	deleteTeamContent(token: string, request: DeleteTeamContentRequest) {
+		return this.put<DeleteTeamContentRequest, DeleteTeamContentResponse>(
+			`/delete-content`,
+			request,
+			token
+		);
+	}
 
-    deletePost(token: string, teamId: string, postId: string) {
-        return this.delete<DeletePostResponse>(`/posts/${postId}`, token);
-    }
+	findRepo(url: string, firstCommitHashes: string[]) {
+		return this.get<FindRepoResponse>(
+			`/no-auth/find-repo?url=${encodeURIComponent(url)}&knownCommitHashes=${firstCommitHashes.join(
+				","
+			)}&firstCommitHash=${firstCommitHashes[0]}`
+		);
+	}
 
-    deleteStream(token: string, teamId: string, streamId: string) {
-        return this.delete<any /*DeleteStreamResponse*/>(`/streams/${streamId}`, token);
-    }
+	getMarker(token: string, teamId: string, markerId: string): Promise<GetMarkerResponse> {
+		return this.get<GetMarkerResponse>(`/markers/${markerId}?teamId=${teamId}`, token);
+	}
 
-    deleteTeamContent(token: string, request: DeleteTeamContentRequest) {
-        return this.put<DeleteTeamContentRequest, DeleteTeamContentResponse>(`/delete-content`, request, token);
-    }
+	getMarkerLocations(
+		token: string,
+		teamId: string,
+		streamId: string,
+		commitHash: string
+	): Promise<GetMarkerLocationsResponse> {
+		return this.get<GetMarkerLocationsResponse>(
+			`/marker-locations?teamId=${teamId}&streamId=${streamId}&commitHash=${commitHash}`,
+			token
+		);
+	}
 
-    findRepo(url: string, firstCommitHashes: string[]) {
-        return this.get<FindRepoResponse>(`/no-auth/find-repo?url=${encodeURIComponent(url)}&knownCommitHashes=${firstCommitHashes.join(',')}&firstCommitHash=${firstCommitHashes[0]}`);
-    }
+	getMarkers(token: string, teamId: string, streamId: string): Promise<GetMarkersResponse> {
+		return this.get<GetMarkersResponse>(`/markers?teamId=${teamId}&streamId=${streamId}`, token);
+	}
 
-    getMarker(token: string, teamId: string, markerId: string): Promise<GetMarkerResponse> {
-        return this.get<GetMarkerResponse>(`/markers/${markerId}?teamId=${teamId}`, token);
-    }
+	getPost(token: string, teamId: string, postId: string): Promise<GetPostResponse> {
+		return this.get<GetPostResponse>(`/posts/${postId}?teamId=${teamId}`, token);
+	}
 
-    getMarkerLocations(token: string, teamId: string, streamId: string, commitHash: string): Promise<GetMarkerLocationsResponse> {
-        return this.get<GetMarkerLocationsResponse>(`/marker-locations?teamId=${teamId}&streamId=${streamId}&commitHash=${commitHash}`, token);
-    }
+	getPosts(token: string, teamId: string, streamId: string): Promise<GetPostsResponse> {
+		return this.get<GetPostsResponse>(`/posts?teamId=${teamId}&streamId=${streamId}`, token);
+	}
 
-    getMarkers(token: string, teamId: string, streamId: string): Promise<GetMarkersResponse> {
-        return this.get<GetMarkersResponse>(`/markers?teamId=${teamId}&streamId=${streamId}`, token);
-    }
+	getRepo(token: string, teamId: string, repoId: string): Promise<GetRepoResponse> {
+		return this.get<GetRepoResponse>(`/repos/${repoId}`, token);
+	}
 
-    getPost(token: string, teamId: string, postId: string): Promise<GetPostResponse> {
-        return this.get<GetPostResponse>(`/posts/${postId}?teamId=${teamId}`, token);
-    }
+	getRepos(token: string, teamId: string): Promise<GetReposResponse> {
+		return this.get<GetReposResponse>(`/repos?teamId=${teamId}`, token);
+	}
 
-    getPosts(token: string, teamId: string, streamId: string): Promise<GetPostsResponse> {
-        return this.get<GetPostsResponse>(`/posts?teamId=${teamId}&streamId=${streamId}`, token);
-    }
+	getStream<T extends CSStream>(
+		token: string,
+		teamId: string,
+		streamId: string
+	): Promise<GetStreamResponse<T>> {
+		return this.get<GetStreamResponse<T>>(`/streams/${streamId}`, token);
+	}
 
-    getRepo(token: string, teamId: string, repoId: string): Promise<GetRepoResponse> {
-        return this.get<GetRepoResponse>(`/repos/${repoId}`, token);
-    }
+	getStreams<T extends CSStream>(
+		token: string,
+		teamId: string,
+		repoId?: string
+	): Promise<GetStreamsResponse<T>> {
+		return this.get<GetStreamsResponse<T>>(
+			`/streams?teamId=${teamId}${repoId === undefined ? "" : `&repoId=${repoId}`}`,
+			token
+		);
+	}
 
-    getRepos(token: string, teamId: string): Promise<GetReposResponse> {
-        return this.get<GetReposResponse>(`/repos?teamId=${teamId}`, token);
-    }
+	getTeam(token: string, teamId: string): Promise<GetTeamResponse> {
+		return this.get<GetTeamResponse>(`/teams/${teamId}`, token);
+	}
 
-    getStream<T extends CSStream>(token: string, teamId: string, streamId: string): Promise<GetStreamResponse<T>> {
-        return this.get<GetStreamResponse<T>>(`/streams/${streamId}`, token);
-    }
+	getTeams(token: string, teamIds: string[]): Promise<GetTeamsResponse> {
+		return this.get<GetTeamsResponse>(`/teams?ids=${teamIds.join(",")}`, token);
+	}
 
-    getStreams<T extends CSStream>(token: string, teamId: string, repoId?: string): Promise<GetStreamsResponse<T>> {
-        return this.get<GetStreamsResponse<T>>(`/streams?teamId=${teamId}${repoId === undefined ? '' : `&repoId=${repoId}`}`, token);
-    }
+	getUser(token: string, teamId: string, userId: string): Promise<GetUserResponse> {
+		return this.get<GetUserResponse>(`/users/${userId}`, token);
+	}
 
-    getTeam(token: string, teamId: string): Promise<GetTeamResponse> {
-        return this.get<GetTeamResponse>(`/teams/${teamId}`, token);
-    }
+	getUsers(token: string, teamId: string): Promise<GetUsersResponse> {
+		return this.get<GetUsersResponse>(`/users?teamId=${teamId}`, token);
+	}
 
-    getTeams(token: string, teamIds: string[]): Promise<GetTeamsResponse> {
-        return this.get<GetTeamsResponse>(`/teams?ids=${teamIds.join(',')}`, token);
-    }
+	joinStream(token: string, teamId: string, streamId: string, request: JoinStreamRequest) {
+		return this.put<JoinStreamRequest, JoinStreamResponse>(`/join/${streamId}`, request, token);
+	}
 
-    getUser(token: string, teamId: string, userId: string): Promise<GetUserResponse> {
-        return this.get<GetUserResponse>(`/users/${userId}`, token);
-    }
+	updatePresence(token: string, request: UpdatePresenceRequest) {
+		return this.put<UpdatePresenceRequest, UpdatePresenceResponse>(`/presence`, request, token);
+	}
 
-    getUsers(token: string, teamId: string): Promise<GetUsersResponse> {
-        return this.get<GetUsersResponse>(`/users?teamId=${teamId}`, token);
-    }
+	updateStreamMembership(
+		token: string,
+		teamId: string,
+		streamId: string,
+		request: UpdateStreamMembershipRequest
+	) {
+		return this.put<UpdateStreamMembershipRequest, UpdateStreamMembershipResponse>(
+			`/streams/${streamId}`,
+			request,
+			token
+		);
+	}
 
-    joinStream(token: string, teamId: string, streamId: string, request: JoinStreamRequest) {
-        return this.put<JoinStreamRequest, JoinStreamResponse>(`/join/${streamId}`, request, token);
-    }
+	private delete<R extends object>(url: string, token?: string): Promise<R> {
+		let resp = undefined;
+		if (resp === undefined) {
+			resp = this.fetch<R>(url, { method: "DELETE" }, token) as Promise<R>;
+		}
+		return resp;
+	}
 
-    updatePresence(token: string, request: UpdatePresenceRequest) {
-        return this.put<UpdatePresenceRequest, UpdatePresenceResponse>(`/presence`, request, token);
-    }
+	private get<R extends object>(url: string, token?: string): Promise<R> {
+		return this.fetch<R>(url, { method: "GET" }, token) as Promise<R>;
+	}
 
-    updateStreamMembership(token: string, teamId: string, streamId: string, request: UpdateStreamMembershipRequest) {
-        return this.put<UpdateStreamMembershipRequest, UpdateStreamMembershipResponse>(`/streams/${streamId}`, request, token);
-    }
+	private post<RQ extends object, R extends object>(
+		url: string,
+		body: RQ,
+		token?: string
+	): Promise<R> {
+		return this.fetch<R>(
+			url,
+			{
+				method: "POST",
+				body: JSON.stringify(body)
+			},
+			token
+		);
+	}
 
-    private delete<R extends object>(url: string, token?: string): Promise<R> {
-        let resp = undefined;
-        if (resp === undefined) {
-            resp = this.fetch<R>(url, { method: 'DELETE' }, token) as Promise<R>;
-        }
-        return resp;
-    }
+	private put<RQ extends object, R extends object>(
+		url: string,
+		body: RQ,
+		token?: string
+	): Promise<R> {
+		return this.fetch<R>(
+			url,
+			{
+				method: "PUT",
+				body: JSON.stringify(body)
+			},
+			token
+		);
+	}
 
-    private get<R extends object>(url: string, token?: string): Promise<R> {
-        return this.fetch<R>(url, { method: 'GET' }, token) as Promise<R>;
-    }
+	private async fetch<R extends object>(
+		url: string,
+		init?: RequestInit,
+		token?: string
+	): Promise<R> {
+		if (init !== undefined || token !== undefined) {
+			if (init === undefined) {
+				init = {};
+			}
 
-    private post<RQ extends object, R extends object>(url: string, body: RQ, token?: string): Promise<R> {
-        return this.fetch<R>(url, {
-            method: 'POST',
-            body: JSON.stringify(body)
-        }, token);
-    }
+			if (init.headers === undefined) {
+				init.headers = new Headers();
+			}
 
-    private put<RQ extends object, R extends object>(url: string, body: RQ, token?: string): Promise<R> {
-        return this.fetch<R>(url, {
-            method: 'PUT',
-            body: JSON.stringify(body)
-        }, token);
-    }
+			if (init.headers instanceof Headers) {
+				init.headers.append("Accept", "application/json");
+				init.headers.append("Content-Type", "application/json");
 
-    private async fetch<R extends object>(url: string, init?: RequestInit, token?: string): Promise<R> {
-        if (init !== undefined || token !== undefined) {
-            if (init === undefined) {
-                init = {};
-            }
+				if (token !== undefined) {
+					init.headers.append("Authorization", `Bearer ${token}`);
+				}
 
-            if (init.headers === undefined) {
-                init.headers = new Headers();
-            }
+				init.headers.append("X-CS-Plugin-IDE", "VS Code");
+				init.headers.append("X-CS-Plugin-Version", extensionVersion);
+				init.headers.append("X-CS-IDE-Version", vscodeVersion);
+			}
+		}
 
-            if (init.headers instanceof Headers) {
-                init.headers.append('Accept', 'application/json');
-                init.headers.append('Content-Type', 'application/json');
+		const method = (init && init.method) || "GET";
+		const absoluteUrl = `${this.baseUrl}${url}`;
 
-                if (token !== undefined) {
-                    init.headers.append('Authorization', `Bearer ${token}`);
-                }
+		Logger.log(`${method} ${url} ${CodeStreamApi.sanitize(init && init.body)}`);
 
-                init.headers.append('X-CS-Plugin-IDE', 'VS Code');
-                init.headers.append('X-CS-Plugin-Version', extensionVersion);
-                init.headers.append('X-CS-IDE-Version', vscodeVersion);
-            }
-        }
+		const hasMiddleware = this._middleware.length > 0;
 
-        const method = (init && init.method) || 'GET';
-        const absoluteUrl = `${this.baseUrl}${url}`;
+		let context: ApiMiddlewareContext;
+		if (hasMiddleware) {
+			context = {
+				url: absoluteUrl,
+				method: method,
+				request: init
+			};
 
-        Logger.log(`${method} ${url} ${CodeStreamApi.sanitize(init && init.body)}`);
+			for (const mw of this._middleware) {
+				if (mw.onRequest === undefined) continue;
 
-        const hasMiddleware = this._middleware.length > 0;
+				try {
+					await mw.onRequest(context);
+				} catch (ex) {
+					Logger.error(ex, `${method} ${url}: Middleware(${mw.name}).onRequest FAILED`);
+				}
+			}
+		}
 
-        let context: ApiMiddlewareContext;
-        if (hasMiddleware) {
-            context = {
-                url: absoluteUrl,
-                method: method,
-                request: init
-            };
+		let json: Promise<any> | undefined;
+		if (hasMiddleware) {
+			for (const mw of this._middleware) {
+				if (mw.onProvideResponse === undefined) continue;
 
-            for (const mw of this._middleware) {
-                if (mw.onRequest === undefined) continue;
+				try {
+					json = await mw.onProvideResponse(context!);
+					if (json !== undefined) break;
+				} catch (ex) {
+					Logger.error(ex, `${method} ${url}: Middleware(${mw.name}).onProvideResponse FAILED`);
+				}
+			}
+		}
 
-                try {
-                    await mw.onRequest(context);
-                }
-                catch (ex) {
-                    Logger.error(ex, `${method} ${url}: Middleware(${mw.name}).onRequest FAILED`);
-                }
-            }
-        }
+		if (json === undefined) {
+			const resp = await fetch(absoluteUrl, init);
+			if (resp.status !== 200) throw await this.handleErrorResponse(resp);
+			json = resp.json() as Promise<R>;
+		}
 
-        let json: Promise<any> | undefined;
-        if (hasMiddleware) {
-            for (const mw of this._middleware) {
-                if (mw.onProvideResponse === undefined) continue;
+		if (hasMiddleware) {
+			for (const mw of this._middleware) {
+				if (mw.onResponse === undefined) continue;
 
-                try {
-                    json = await mw.onProvideResponse(context!);
-                    if (json !== undefined) break;
-                }
-                catch (ex) {
-                    Logger.error(ex, `${method} ${url}: Middleware(${mw.name}).onProvideResponse FAILED`);
-                }
-            }
-        }
+				try {
+					await mw.onResponse(context!, json);
+				} catch (ex) {
+					Logger.error(ex, `${method} ${url}: Middleware(${mw.name}).onResponse FAILED`);
+				}
+			}
+		}
 
-        if (json === undefined) {
-            const resp = await fetch(absoluteUrl, init);
-            if (resp.status !== 200) throw await this.handleErrorResponse(resp);
-            json = resp.json() as Promise<R>;
-        }
+		return CodeStreamApi.normalizeResponse(await json);
+	}
 
-        if (hasMiddleware) {
-            for (const mw of this._middleware) {
-                if (mw.onResponse === undefined) continue;
+	private async handleErrorResponse(response: Response): Promise<Error> {
+		const data = await response.json();
+		return new Error(`${response.status}: ${response.statusText}\n\n${JSON.stringify(data)}`);
+	}
 
-                try {
-                    await mw.onResponse(context!, json);
-                }
-                catch (ex) {
-                    Logger.error(ex, `${method} ${url}: Middleware(${mw.name}).onResponse FAILED`);
-                }
-            }
-        }
+	static isStreamSubscriptionRequired(stream: CSStream, userId: string): boolean {
+		if (stream.deactivated || stream.type === StreamType.File) return false;
+		if (stream.type === StreamType.Channel) {
+			if (stream.memberIds === undefined) return false;
+			if (!stream.memberIds.includes(userId)) return false;
+		}
+		return true;
+	}
 
-        return CodeStreamApi.normalizeResponse(await json);
-    }
+	static normalizeResponse<R extends object>(obj: { [key: string]: any }): R {
+		for (const [key, value] of Object.entries(obj)) {
+			if (key === "_id") {
+				obj["id"] = value;
+			}
 
-    private async handleErrorResponse(response: Response): Promise<Error> {
-        const data = await response.json();
-        return new Error(`${response.status}: ${response.statusText}\n\n${JSON.stringify(data)}`);
-    }
+			if (Array.isArray(value)) {
+				obj[key] = value.map(v => this.normalizeResponse(v));
+			} else if (typeof value === "object") {
+				obj[key] = this.normalizeResponse(value);
+			}
+		}
 
-    static isStreamSubscriptionRequired(stream: CSStream, userId: string): boolean {
-        if (stream.deactivated || stream.type === StreamType.File) return false;
-        if (stream.type === StreamType.Channel) {
-            if (stream.memberIds === undefined) return false;
-            if (!stream.memberIds.includes(userId)) return false;
-        }
-        return true;
-    }
+		return obj as R;
+	}
 
-    static normalizeResponse<R extends object>(obj: { [key: string]: any }): R {
-        for (const [key, value] of Object.entries(obj)) {
-            if (key === '_id') {
-                obj['id'] = value;
-            }
+	static sanitize(
+		body:
+			| ArrayBuffer
+			| ArrayBufferView
+			| NodeJS.ReadableStream
+			| string
+			| URLSearchParams
+			| undefined
+	) {
+		if (body === undefined || typeof body !== "string") return "";
 
-            if (Array.isArray(value)) {
-                obj[key] = value.map(v => this.normalizeResponse(v));
-            }
-            else if (typeof value === 'object') {
-                obj[key] = this.normalizeResponse(value);
-            }
-        }
-
-        return obj as R;
-    }
-
-    static sanitize(body: ArrayBuffer | ArrayBufferView | NodeJS.ReadableStream | string | URLSearchParams | undefined) {
-        if (body === undefined || typeof body !== 'string') return '';
-
-        return body.replace(/("password":)".*?"/gi, '$1"<hidden>"');
-    }
+		return body.replace(/("password":)".*?"/gi, '$1"<hidden>"');
+	}
 }

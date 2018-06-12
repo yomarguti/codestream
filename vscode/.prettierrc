@@ -1,12 +1,11 @@
 {
-    "printWidth": 100,
-    "singleQuote": true,
-    "tabWidth": 4,
-    "useTabs": false,
-    "overrides": [
-        {
-            "files": ".prettierrc",
-            "options": { "parser": "json" }
-        }
-    ]
+	"printWidth": 100,
+	"tabWidth": 2,
+	"useTabs": true,
+	"overrides": [
+		{
+			"files": ".prettierrc",
+			"options": { "parser": "json" }
+		}
+	]
 }

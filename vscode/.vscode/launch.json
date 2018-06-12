@@ -1,42 +1,42 @@
 {
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "name": "Launch CodeStream",
-      "type": "extensionHost",
-      "request": "launch",
-      "runtimeExecutable": "${execPath}",
-      "args": ["--extensionDevelopmentPath=${workspaceRoot}" ],
-      "stopOnEntry": false,
-      "sourceMaps": true,
-      "outFiles": [ "${workspaceRoot}/out/**/*.js" ]
-    },
-    {
-      "name": "Watch & Launch CodeStream",
-      "type": "extensionHost",
-      "request": "launch",
-      "runtimeExecutable": "${execPath}",
-      "args": ["--extensionDevelopmentPath=${workspaceRoot}" ],
-      "stopOnEntry": false,
-      "sourceMaps": true,
-      "outFiles": [ "${workspaceRoot}/out/**/*.js" ],
-      "preLaunchTask": "npm: watch"
-    },
-    {
-      "name": "Debug Extension (Akonwi)",
-      "type": "extensionHost",
-      "request": "launch",
-      "runtimeExecutable": "${execPath}",
-      "args": [
-        "--extensionDevelopmentPath=${workspaceRoot}",
-        "--enable-proposed-api",
-        "akonwi.codestream",
-        "/Users/akonwi/projects/bundles/"
-      ],
-      "stopOnEntry": false,
-      "sourceMaps": true,
-      "outFiles": ["${workspaceRoot}/out/**/*.js"],
-      "preLaunchTask": "npm: watch"
-    }
-  ]
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "Launch CodeStream",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": ["--extensionDevelopmentPath=${workspaceRoot}"],
+			"stopOnEntry": false,
+			"sourceMaps": true,
+			"outFiles": ["${workspaceRoot}/out/**/*.js"]
+		},
+		{
+			"name": "Watch & Launch CodeStream",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": ["--extensionDevelopmentPath=${workspaceRoot}"],
+			"stopOnEntry": false,
+			"sourceMaps": true,
+			"outFiles": ["${workspaceRoot}/out/**/*.js"],
+			"preLaunchTask": "npm: watch"
+		},
+		{
+			"name": "Debug Extension (Akonwi)",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceRoot}",
+				"--enable-proposed-api",
+				"akonwi.codestream",
+				"/Users/akonwi/projects/bundles/"
+			],
+			"stopOnEntry": false,
+			"sourceMaps": true,
+			"outFiles": ["${workspaceRoot}/out/**/*.js"],
+			"preLaunchTask": "npm: watch"
+		}
+	]
 }
