@@ -1,14 +1,12 @@
 {
-  "editor.detectIndentation": false,
-  "editor.insertSpaces": false,
-  "editor.tabSize": 2,
-  "files.exclude": {
-    "**/node_modules": true,
-    "**/out": true
-  },
-  "search.exclude": {
-    "**/out": true
-  },
-  "typescript.tsdk": "./node_modules/typescript/lib",
-  "typescript.tsc.autoDetect": "off"
+	"editor.insertSpaces": false,
+	"files.exclude": {
+		"**/node_modules": true,
+		"**/out": true
+	},
+	"search.exclude": {
+		"**/out": true
+	},
+	"typescript.tsdk": "./node_modules/typescript/lib",
+	"typescript.tsc.autoDetect": "off"
 }

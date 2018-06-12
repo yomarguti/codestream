@@ -604,7 +604,7 @@
     "dependencies": {
         "date-fns": "1.29.0",
         "lodash.debounce": "4.0.8",
-        "pubnub": "4.21.0",
+        "pubnub": "4.21.1",
         "node-fetch": "2.1.2",
         "reflect-metadata": "0.1.12",
         "tmp": "0.0.33",
@@ -616,6 +616,7 @@
         "@types/node-fetch": "2.1.1",
         "@types/pubnub": "4.0.2",
         "@types/tmp": "0.0.33",
+        "prettier": "1.13.5",
         "tslint": "5.10.0",
         "typescript": "2.9.1",
         "vscode": "1.1.18"
