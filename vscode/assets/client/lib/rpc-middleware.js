@@ -15,7 +15,7 @@ export default store => {
 	);
 
 	return next => action => {
-		console.debug(action.type, action.payload)
+		console.debug(action.type, action.payload);
 		return next(action);
 	};
 };

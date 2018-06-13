@@ -126,10 +126,15 @@ interface BootstrapState {
 }
 
 // TODO: Clean this up to be consistent with the structure
-interface CSWebviewRequest {
+interface CSWebviewMessage {
 	type: string;
 	body: any;
-	id?: string;
+}
+
+interface CSWebviewRequest {
+	id: string;
+	action: string;
+	params: any;
 }
 
 export class StreamWebviewPanel extends Disposable {
@@ -164,16 +169,17 @@ export class StreamWebviewPanel extends Disposable {
 		}
 	}
 
-	private async onPanelWebViewMessageReceived(e: CSWebviewRequest) {
+	private async onPanelWebViewMessageReceived(e: CSWebviewMessage) {
 		if (this._streamThread === undefined) return;
 
-		const { type, body, id } = e;
+		const { type } = e;
 
 		const createRange = (array: number[][]) =>
 			new Range(array[0][0], array[0][1], array[1][0], array[1][1]);
 
 		switch (type.replace("codestream:", "")) {
 			case "request":
+				const body = e.body as CSWebviewRequest;
 				// TODO: Add sequence ids to ensure correct matching
 				// TODO: Add exception handling for failed requests
 				switch (body.action) {
@@ -208,9 +214,9 @@ export class StreamWebviewPanel extends Disposable {
 						if (post === undefined) return;
 
 						this.postMessage({
-							id,
 							type: "codestream:response",
 							body: {
+								id: body.id,
 								action: body.action,
 								payload: post.entity
 							}
@@ -220,47 +226,47 @@ export class StreamWebviewPanel extends Disposable {
 					case "mark-stream-read":
 						const response = await this._streamThread.stream.markRead();
 						this.postMessage({
-							id,
 							type: "codestream:response",
-							body: response
+							body: { id: body.id, ...response }
 						});
 						break;
 				}
 				break;
 
-			case "event": {
-				switch (body.name) {
-					case "post-clicked":
-						if (body.payload.codeBlocks === undefined) return;
-
-						await Container.commands.openPostWorkingFile(
-							new Post(this.session, body.payload, this._streamThread.stream)
-						);
-						break;
-
-					case "post-diff-clicked":
-						if (body.payload === undefined) return;
-
-						await Container.commands.comparePostFileRevisionWithWorking(
-							new Post(this.session, body.payload, this._streamThread.stream)
-						);
-						break;
-
-					case "post-deleted":
-						if (body.payload === undefined) return;
-
-						await Container.session.api.deletePost(body.payload.id);
-						break;
-
-					case "thread-selected":
-						const { threadId, streamId } = body.payload;
-						if (this._streamThread !== undefined && this._streamThread.stream.id === streamId) {
-							this._streamThread.id = threadId;
-						}
-						break;
+			case "interaction:thread-selected": {
+				const { threadId, streamId, post } = e.body;
+				if (this._streamThread !== undefined && this._streamThread.stream.id === streamId) {
+					this._streamThread.id = threadId;
 				}
+
+				if (post.codeBlocks === undefined) return;
+				await Container.commands.openPostWorkingFile(
+					new Post(this.session, post, this._streamThread.stream)
+				);
 				break;
 			}
+			// switch (body.name) {
+			// 	case "post-clicked":
+			// 		if (body.payload.codeBlocks === undefined) return;
+
+			// 		await Container.commands.openPostWorkingFile(
+			// 			new Post(this.session, body.payload, this._streamThread.stream)
+			// 		);
+			// 		break;
+
+			// 	case "post-diff-clicked":
+			// 		if (body.payload === undefined) return;
+
+			// 		await Container.commands.comparePostFileRevisionWithWorking(
+			// 			new Post(this.session, body.payload, this._streamThread.stream)
+			// 		);
+			// 		break;
+
+			// 	case "post-deleted":
+			// 		if (body.payload === undefined) return;
+
+			// 		await Container.session.api.deletePost(body.payload.id);
+			// 		break;
 		}
 	}
 
@@ -372,7 +378,7 @@ export class StreamWebviewPanel extends Disposable {
 		return doc.getText();
 	}
 
-	private async postMessage(request: CSWebviewRequest) {
+	private async postMessage(request: CSWebviewMessage) {
 		const success = await this._panel!.webview.postMessage(request);
 		if (!success) {
 			this._invalidateOnVisible = true;

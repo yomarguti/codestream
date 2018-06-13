@@ -357,7 +357,7 @@
 
 	var assign = ( objectAssign$1 && objectAssign ) || objectAssign$1;
 
-	var require$$10 = ( emptyObject$1 && emptyObject_1 ) || emptyObject$1;
+	var require$$2 = ( emptyObject$1 && emptyObject_1 ) || emptyObject$1;
 
 	var checkPropTypes$2 = ( checkPropTypes$1 && checkPropTypes_1 ) || checkPropTypes$1;
 
@@ -370,7 +370,7 @@
 
 	var _assign = assign;
 	var invariant = invariant$2;
-	var emptyObject = require$$10;
+	var emptyObject = require$$2;
 	var warning = warning$2;
 	var emptyFunction = emptyFunction$2;
 	var checkPropTypes = checkPropTypes$2;
@@ -2187,7 +2187,7 @@
 	var getActiveElement = require$$7;
 	var shallowEqual = require$$8;
 	var containsNode = require$$9;
-	var emptyObject = require$$10;
+	var emptyObject = require$$2;
 	var hyphenateStyleName = require$$11;
 	var camelizeStyleName = require$$12;
 
@@ -30092,7 +30092,7 @@
 	// this was above Headshot
 	// <span className="icon icon-gear" onClick={this.handleMenuClick} />
 	// {menu}
-	return react$1.createElement("div",{className:postClass,id:post.id,"data-seq-num":post.seqNum,thread:post.parentPostId||post.id},react$1.createElement(Icon,{name:"gear",onClick:this.handleMenuClick}),this.state.menuOpen&&react$1.createElement(Menu,{items:menuItems,target:this.state.menuTarget,action:this.handleSelectMenu}),react$1.createElement(Headshot,{size:36,person:post.author,mine:mine}),react$1.createElement("span",{className:"author",ref:function ref(_ref3){return _this3._authorDiv=_ref3;}},post.author.username,this.renderEmote(post)),post.error?react$1.createElement(RetrySpinner,{callback:this.resubmit,cancel:this.cancel}):react$1.createElement(Timestamp,{time:post.createdAt}),react$1.createElement("div",{className:"body"},parentPost&&react$1.createElement("div",{className:"replying-to"},react$1.createElement("span",null,"reply to")," ",react$1.createElement("b",null,parentPost.text.substr(0,80))),post.creatorId==="codestream"&&react$1.createElement("div",{className:"replying-to"},react$1.createElement("span",null,"only visible to you")),codeBlock,this.props.showDetails&&react$1.createElement(PostDetails,{post:post,currentCommit:this.props.currentCommit}),this.renderBody(post),!this.props.editng&&post.hasBeenEdited&&react$1.createElement("span",{className:"edited"},"(edited)")));}},{key:"componentDidUpdate",value:function componentDidUpdate(prevProps,_prevState){if(this.props.editing&&!prevProps.editing){document.getElementById("input-div-"+this.props.post.id).focus();}}}]);return Post;}(react_1$1);var Post$1=connect(null,{cancelPost:cancelPost,retryPost:retryPost})(Post);var toMapBy=function toMapBy(key,entities){return entities.reduce(function(result,entity){return _extends$5({},result,defineProperty$5$1({},entity[key],entity));},{});};// uuid generator taken from: https://gist.github.com/jed/982883
+	return react$1.createElement("div",{className:postClass,id:post.id,"data-seq-num":post.seqNum,thread:post.parentPostId||post.id,ref:function ref(_ref4){return _this3._div=_ref4;}},react$1.createElement(Icon,{name:"gear",className:"gear align-right",onClick:this.handleMenuClick}),this.state.menuOpen&&react$1.createElement(Menu,{items:menuItems,target:this.state.menuTarget,action:this.handleSelectMenu}),react$1.createElement(Headshot,{size:36,person:post.author,mine:mine}),react$1.createElement("span",{className:"author",ref:function ref(_ref3){return _this3._authorDiv=_ref3;}},post.author.username,this.renderEmote(post)),post.error?react$1.createElement(RetrySpinner,{callback:this.resubmit,cancel:this.cancel}):react$1.createElement(Timestamp,{time:post.createdAt}),react$1.createElement("div",{className:"body"},parentPost&&react$1.createElement("div",{className:"replying-to"},react$1.createElement("span",null,"reply to")," ",react$1.createElement("b",null,parentPost.text.substr(0,80))),post.creatorId==="codestream"&&react$1.createElement("div",{className:"replying-to"},react$1.createElement("span",null,"only visible to you")),codeBlock,this.props.showDetails&&react$1.createElement(PostDetails,{post:post,currentCommit:this.props.currentCommit}),this.renderBody(post),!this.props.editng&&post.hasBeenEdited&&react$1.createElement("span",{className:"edited"},"(edited)")));}},{key:"componentDidUpdate",value:function componentDidUpdate(prevProps,_prevState){if(this.props.editing&&!prevProps.editing){document.getElementById("input-div-"+this.props.post.id).focus();}}}]);return Post;}(react_1$1);var Post$1=connect(null,{cancelPost:cancelPost,retryPost:retryPost})(Post);var toMapBy=function toMapBy(key,entities){return entities.reduce(function(result,entity){return _extends$5({},result,defineProperty$5$1({},entity[key],entity));},{});};// uuid generator taken from: https://gist.github.com/jed/982883
 	var uuid=function uuid(a){return a?(a^Math.random()*16>>a/4).toString(16):([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,uuid);};var slashCommands=[{id:"help",help:"get help"},{id:"add",help:"add member to channel",description:"@user"},{id:"archive",help:"archive channel"},{id:"invite",help:"add to your team",description:"email"},{id:"leave",help:"leave channel"},{id:"me",help:"emote"},{id:"msg",help:"message member",description:"@user"},{id:"mute",help:"mute channel"},// { id: "muteall", help: "mute codestream" },
 	// { id: "open", help: "open channel" },
 	// { id: "prefs", help: "open preferences" },

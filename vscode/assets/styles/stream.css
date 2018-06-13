@@ -950,12 +950,11 @@ body {
   display: inline-block;
   float: right;
 }
-.codestream .stream .post .icon-gear {
+.codestream .stream .post .align-right {
   color: var(--text-color-subtle);
   opacity: 0.5;
   display: none;
   float: right;
-  margin: -3px -10px 0 0;
 }
 .codestream .stream .post .icon-alert,
 .codestream .stream .post .icon-question {
@@ -1048,10 +1047,10 @@ body {
 .codestream .stream .post:hover {
   background: var(--app-background-color-hover);
 }
-.codestream .stream .post:hover .icon-gear {
+.codestream .stream .post:hover .gear {
   display: block;
 }
-.codestream .stream .post:hover .icon-gear:hover {
+.codestream .stream .post:hover .gear:hover {
   color: #aaa;
 }
 .codestream .stream .post:hover time .details {

@@ -596,6 +596,7 @@
         "build": "npm run compile && npm run lint",
         "compile": "tsc -p ./",
         "lint": "tslint --fix --project tsconfig.json",
+        "prettify": "prettier --config .prettierrc --write ./src/**/*.ts ./assets/client/**/*.js ./package.json ./.prettierrc",
         "watch": "tsc -w -p ./",
         "pack": "vsce package",
         "webview-bundle": "pushd \"./assets/client\" && npm install --no-save && npm run vscode-bundle && popd",
