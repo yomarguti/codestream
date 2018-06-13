@@ -100,6 +100,12 @@ body {
     transform: rotate(360deg);
   }
 }
+.octicon {
+  display: inline-block;
+  vertical-align: text-top;
+  fill: currentColor;
+}
+
 .codestream [contenteditable="true"]:empty:before {
   content: attr(placeholder);
   opacity: 0.5;
@@ -647,6 +653,10 @@ body {
 }
 .codestream .stream .editing-indicator.inactive {
   top: -2em;
+}
+.codestream .stream .icon {
+  position: relative;
+  top: 2px;
 }
 .codestream .stream .channel-list {
   max-height: 100%;
@@ -1278,11 +1288,7 @@ body.preload * {
   justify-content: space-between;
 }
 .codestream .stream .compose .hint .icon {
-  transform: none;
   float: none;
-}
-.codestream .stream .compose .hint .icon:before {
-  content: "x";
 }
 .codestream .stream .compose #input-div:focus {
   outline: none;
