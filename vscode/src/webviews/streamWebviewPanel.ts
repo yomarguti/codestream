@@ -11,7 +11,7 @@ import {
 	window,
 	workspace
 } from "vscode";
-import { CSPost, CSRepository, CSStream, CSTeam, CSUser } from "../api/api";
+import { CSPost, CSRepository, CSStream, CSTeam, CSUser, CSCodeBlock } from "../api/api";
 import {
 	CodeStreamSession,
 	Post,
@@ -137,7 +137,33 @@ interface CSWebviewRequest {
 	params: any;
 }
 
+// TODO: Make this work
+class BufferChangeTracker {
+	private _listeners: Map<string, Function[]>;
+
+	constructor() {
+		this._listeners = new Map();
+	}
+
+	observe(codeBlock: CSCodeBlock, listener: (hasDiff: boolean) => void) {
+		const listenersForFile = this._listeners.get(codeBlock.file) || [];
+		listenersForFile.push(listener);
+
+		listener(this._hasDiff(codeBlock));
+	}
+
+	unsubscribe(codeBlock: CSCodeBlock): void {
+		this._listeners.delete(codeBlock.file);
+	}
+
+	private _hasDiff(codeBlock: CSCodeBlock): boolean {
+		// TODO: actually check if file has a diff against the content of codeblock
+		return false;
+	}
+}
+
 export class StreamWebviewPanel extends Disposable {
+	private _bufferChangeTracker = new BufferChangeTracker();
 	private _onDidClose = new EventEmitter<void>();
 	get onDidClose(): Event<void> {
 		return this._onDidClose.event;
@@ -243,6 +269,25 @@ export class StreamWebviewPanel extends Disposable {
 				await Container.commands.openPostWorkingFile(
 					new Post(this.session, post, this._streamThread.stream)
 				);
+				break;
+			}
+			case "subscription:file-changed": {
+				const codeBlock = e.body as CSCodeBlock;
+
+				this._bufferChangeTracker.observe(codeBlock, hasDiff => {
+					this.postMessage({
+						type: "codestream:publish:file-changed",
+						body: {
+							file: codeBlock.file,
+							hasDiff
+						}
+					});
+				});
+				break;
+			}
+			case "unsubscribe:file-changed": {
+				const codeblock = e.body as CSCodeBlock;
+				this._bufferChangeTracker.unsubscribe(codeblock);
 				break;
 			}
 			// switch (body.name) {
