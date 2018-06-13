@@ -11,7 +11,7 @@ import {
 	window,
 	workspace
 } from "vscode";
-import { CSPost, CSRepository, CSStream, CSTeam, CSUser, CSCodeBlock } from "../api/api";
+import { CSCodeBlock, CSPost, CSRepository, CSStream, CSTeam, CSUser } from "../api/api";
 import {
 	CodeStreamSession,
 	Post,
@@ -243,7 +243,6 @@ export class StreamWebviewPanel extends Disposable {
 							type: "codestream:response",
 							body: {
 								id: body.id,
-								action: body.action,
 								payload: post.entity
 							}
 						});
@@ -251,6 +250,16 @@ export class StreamWebviewPanel extends Disposable {
 					case "delete-post": {
 						const post = await Container.session.api.getPost(body.params);
 						const updates = await Container.session.api.deletePost(body.params);
+						this.postMessage({
+							type: "codestream:response",
+							body: { id: body.id, payload: { ...post, ...updates } }
+						});
+						break;
+					}
+					case "edit-post": {
+						const { id, text, mentions } = body.params;
+						const post = await Container.session.api.getPost(id);
+						const updates = await Container.session.api.editPost(id, text, mentions);
 						this.postMessage({
 							type: "codestream:response",
 							body: { id: body.id, payload: { ...post, ...updates } }

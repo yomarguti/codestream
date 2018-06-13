@@ -158,6 +158,10 @@ export class CodeStreamSessionApi {
 		return (await this._api.deletePost(this.token, teamId || this.teamId, postId)).post;
 	}
 
+	async editPost(postId: string, text: string, mentionedUserIds: string[]) {
+		return (await this._api.editPost(this.token, { id: postId, text, mentionedUserIds })).post;
+	}
+
 	deleteTeamContent(
 		newerThan: number | undefined,
 		includeStreams: boolean = false,

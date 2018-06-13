@@ -144,6 +144,14 @@ export interface CreatePostResponse {
 	post: CSPost;
 }
 
+export interface EditPostRequest {
+	id: string;
+	text: string;
+	mentionedUserIds: string[];
+}
+
+export interface EditPostResponse extends DeletePostResponse {}
+
 export interface CreateRepoRequest {
 	teamId: string;
 	url: string;

@@ -13,6 +13,8 @@ import {
 	DeletePostResponse,
 	DeleteTeamContentRequest,
 	DeleteTeamContentResponse,
+	EditPostRequest,
+	EditPostResponse,
 	FindRepoResponse,
 	GetMarkerLocationsResponse,
 	GetMarkerResponse,
@@ -106,6 +108,10 @@ export class CodeStreamApi {
 
 	deletePost(token: string, teamId: string, postId: string) {
 		return this.delete<DeletePostResponse>(`/posts/${postId}`, token);
+	}
+
+	editPost(token: string, request: EditPostRequest) {
+		return this.put<EditPostRequest, EditPostResponse>(`/posts/${request.id}`, request, token);
 	}
 
 	deleteStream(token: string, teamId: string, streamId: string) {
