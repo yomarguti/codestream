@@ -52,6 +52,17 @@ class EventEmitter {
 			"*"
 		);
 	}
+
+	onFileChanged(block, listener) {
+		this.emit("subscription:file-changed", block);
+		const disposable = this.on("publish:file-changed", listener);
+		return {
+			dispose: () => {
+				disposable.dispose()
+				this.emit('unsubscribe:file-changed', body)
+			}
+		};
+	}
 }
 
 const emitter = new EventEmitter();

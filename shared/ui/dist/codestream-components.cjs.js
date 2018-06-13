@@ -16977,6 +16977,20 @@ var EventEmitter = function () {
 				body: body
 			}, "*");
 		}
+	}, {
+		key: "onFileChanged",
+		value: function onFileChanged(block, listener) {
+			var _this3 = this;
+
+			this.emit("subscription:file-changed", block);
+			var disposable = this.on("publish:file-changed", listener);
+			return {
+				dispose: function dispose() {
+					disposable.dispose();
+					_this3.emit('unsubscribe:file-changed', body);
+				}
+			};
+		}
 	}]);
 	return EventEmitter;
 }();
@@ -53852,21 +53866,21 @@ var PostDetails = function (_Component) {
 				diffShowing: false,
 				showDiffButtons: false
 			}
-		}), Object.defineProperty(_this, "handleInteractionEvent", {
+		}), Object.defineProperty(_this, "disposables", {
+			enumerable: true,
+			writable: true,
+			value: []
+		}), Object.defineProperty(_this, "onFileChanged", {
 			enumerable: true,
 			writable: true,
 			value: function value(_ref2) {
-				var data = _ref2.data;
+				var file = _ref2.file,
+				    hasDiff = _ref2.hasDiff;
 
-				// foobar always lives with view code.
-				// will translate postMessages into events to the views
-				// this.foobar.on(, () => {});
-				if (data.type === "codestream:publish:file-changed") {
-					var codeBlocks = _this.props.post.codeBlocks || [];
-					codeBlocks.forEach(function (block) {
-						if (block.file === data.body.file) _this.setState({ showDiffButtons: data.body.hasDiff });
-					});
-				}
+				var codeBlocks = _this.props.post.codeBlocks || [];
+				codeBlocks.forEach(function (block) {
+					if (block.file === file) _this.setState({ showDiffButtons: hasDiff });
+				});
 			}
 		}), Object.defineProperty(_this, "handleClickShowDiff", {
 			enumerable: true,
@@ -53896,14 +53910,11 @@ var PostDetails = function (_Component) {
 	createClass$1(PostDetails, [{
 		key: "componentDidMount",
 		value: function componentDidMount() {
-			window.addEventListener("message", this.handleInteractionEvent, true);
+			var _this2 = this;
 
 			var codeBlocks = this.props.post.codeBlocks || [];
 			codeBlocks.forEach(function (block) {
-				window.parent.postMessage({
-					type: "codestream:subscription:file-changed",
-					body: block
-				}, "*");
+				_this2.disposables.push(emitter.onFileChanged(block, _this2.onFileChanged));
 			});
 			// if (this._alert)
 			// 	atom.tooltips.add(this._alert, {
@@ -53913,14 +53924,9 @@ var PostDetails = function (_Component) {
 	}, {
 		key: "componentWillUnmount",
 		value: function componentWillUnmount() {
-			var codeBlocks = this.props.post.codeBlocks || [];
-			codeBlocks.forEach(function (block) {
-				window.parent.postMessage({
-					type: "codestream:unsubscribe:file-changed",
-					body: block
-				}, "*");
+			this.disposables.forEach(function (d) {
+				return d.dispose();
 			});
-			window.removeEventListener("message", this.handleInteractionEvent, true);
 		}
 	}, {
 		key: "render",
@@ -53931,7 +53937,7 @@ var PostDetails = function (_Component) {
 		// };
 
 		value: function render() {
-			var _this2 = this;
+			var _this3 = this;
 
 			var post = this.props.post;
 
@@ -53988,7 +53994,7 @@ var PostDetails = function (_Component) {
 			return react.createElement(
 				"div",
 				{ className: "post-details", id: post.id, ref: function ref(_ref3) {
-						return _this2._div = _ref3;
+						return _this3._div = _ref3;
 					} },
 				alert,
 				!showDiffButtons && hasCodeBlock && react.createElement(
