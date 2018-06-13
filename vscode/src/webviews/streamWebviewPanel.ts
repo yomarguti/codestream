@@ -248,7 +248,15 @@ export class StreamWebviewPanel extends Disposable {
 							}
 						});
 						break;
-
+					case "delete-post": {
+						const post = await Container.session.api.getPost(body.params);
+						const updates = await Container.session.api.deletePost(body.params);
+						this.postMessage({
+							type: "codestream:response",
+							body: { id: body.id, payload: { ...post, ...updates } }
+						});
+						break;
+					}
 					case "mark-stream-read":
 						const response = await this._streamThread.stream.markRead();
 						this.postMessage({
@@ -305,12 +313,6 @@ export class StreamWebviewPanel extends Disposable {
 			// 		await Container.commands.comparePostFileRevisionWithWorking(
 			// 			new Post(this.session, body.payload, this._streamThread.stream)
 			// 		);
-			// 		break;
-
-			// 	case "post-deleted":
-			// 		if (body.payload === undefined) return;
-
-			// 		await Container.session.api.deletePost(body.payload.id);
 			// 		break;
 		}
 	}
