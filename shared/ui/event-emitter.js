@@ -59,7 +59,7 @@ class EventEmitter {
 		return {
 			dispose: () => {
 				disposable.dispose()
-				this.emit('unsubscribe:file-changed', body)
+				this.emit('unsubscribe:file-changed', block)
 			}
 		};
 	}

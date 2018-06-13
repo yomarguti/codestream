@@ -34,25 +34,13 @@ export default class PostDetails extends Component {
 
 	handleClickShowDiff = event => {
 		event.preventDefault();
-		window.parent.postMessage(
-			{
-				type: "codestream:interaction:show-diff",
-				body: this.props.post.codeBlocks[0]
-			},
-			"*"
-		);
+		EventEmitter.emit("interaction:show-diff", this.props.post.codeBlocks[0]);
 		this.setState({ diffShowing: !this.state.diffShowing });
 	};
 
 	handleClickApplyPatch = event => {
 		event.preventDefault();
-		window.parent.postMessage(
-			{
-				type: "codestream:interaction:apply-patch",
-				body: this.props.post.codeBlocks[0]
-			},
-			"*"
-		);
+		EventEmitter.emit("interaction:apply-patch", this.props.post.codeBlocks[0]);
 		this.setState({ patchApplied: !this.state.patchApplied });
 	};
 
