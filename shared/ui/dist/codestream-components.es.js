@@ -56767,7 +56767,7 @@ var WebviewApi = function () {
 						reject(body.error);
 					}
 				}
-				_this.pendingRequests.delete(body.action);
+				_this.pendingRequests.delete(id);
 			}
 		}, false);
 	}

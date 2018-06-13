@@ -22,7 +22,7 @@ export default class WebviewApi {
 							reject(body.error);
 						}
 					}
-					this.pendingRequests.delete(body.action);
+					this.pendingRequests.delete(id);
 				}
 			},
 			false
