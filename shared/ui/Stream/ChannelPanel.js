@@ -155,6 +155,7 @@ export class SimpleChannelPanel extends Component {
 	};
 
 	handleClickSelectStream = event => {
+		event.preventDefault();
 		var liDiv = event.target.closest("li");
 		if (!liDiv) return; // FIXME throw error
 		if (liDiv.id) {

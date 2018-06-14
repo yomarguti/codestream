@@ -174,6 +174,7 @@ export class SimpleCreateChannelPanel extends Component {
 	onBlurName = () => this.setState({ nameTouched: true });
 
 	handleClick = event => {
+		event.preventDefault();
 		this.props.setActivePanel("channels");
 	};
 
@@ -189,6 +190,7 @@ export class SimpleCreateChannelPanel extends Component {
 	};
 
 	handleClickCancel = event => {
+		event.preventDefault();
 		this.resetForm();
 		this.props.setActivePanel("channels");
 	};
@@ -198,6 +200,7 @@ export class SimpleCreateChannelPanel extends Component {
 	};
 
 	handleClickCreateChannel = event => {
+		event.preventDefault();
 		this.setState({ formTouched: true });
 		if (this.isFormInvalid()) return;
 
@@ -206,8 +209,7 @@ export class SimpleCreateChannelPanel extends Component {
 			return member.value;
 		});
 
-		const result = this.props.createStream({ type: "channel", privacy, name, memberIds, purpose });
-		console.log("RESULT IS: ", result);
+		this.props.createStream({ type: "channel", privacy, name, memberIds, purpose });
 		this.resetForm();
 		// this.props.setActivePanel("channels");
 	};
@@ -231,10 +233,7 @@ const mapStateToProps = ({ context, streams, users, teams }) => {
 	};
 };
 
-export default connect(
-	mapStateToProps,
-	{
-		...contextActions,
-		createStream
-	}
-)(SimpleCreateChannelPanel);
+export default connect(mapStateToProps, {
+	...contextActions,
+	createStream
+})(SimpleCreateChannelPanel);
