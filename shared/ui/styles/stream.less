@@ -1,7 +1,13 @@
 // any variables used here should be provided by the consumer of this stylesheet
 //@import "ui-variables";
 // @import "emoji-mart/css/emoji-mart.css";
-@import (inline) "../node_modules/octicons/build/build.css";
+
+// for the octicons
+.octicon {
+	display: inline-block;
+	vertical-align: text-top;
+	fill: currentColor;
+}
 
 .codestream {
 	[contenteditable="true"]:empty:before {
