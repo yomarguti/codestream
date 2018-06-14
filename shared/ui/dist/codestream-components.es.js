@@ -56756,23 +56756,19 @@ var WebviewApi = function () {
 		});
 
 		this.host = emitter.getHost();
-		window.addEventListener("message", function (event) {
-			var _event$data = event.data,
-			    type = _event$data.type,
-			    body = _event$data.body;
+		emitter.on("response", function (_ref) {
+			var id = _ref.id,
+			    payload = _ref.payload,
+			    error = _ref.error;
 
-			if (type === "codestream:response") {
-				var id = body.id;
-
-				var request = _this.pendingRequests.get(id);
-				if (request) {
-					if (body.payload) request.resolve(body.payload);else {
-						request.reject(body.error || "No error provided by host process in response to " + request.action);
-					}
-					_this.pendingRequests.delete(id);
+			var request = _this.pendingRequests.get(id);
+			if (request) {
+				if (payload) request.resolve(payload);else {
+					request.reject(error || "No error provided by host process in response to " + request.action);
 				}
+				_this.pendingRequests.delete(id);
 			}
-		}, false);
+		});
 	}
 
 	createClass$1(WebviewApi, [{

@@ -6,26 +6,18 @@ export default class WebviewApi {
 
 	constructor() {
 		this.host = EventEmitter.getHost();
-		window.addEventListener(
-			"message",
-			event => {
-				const { type, body } = event.data;
-				if (type === "codestream:response") {
-					const { id } = body;
-					const request = this.pendingRequests.get(id);
-					if (request) {
-						if (body.payload) request.resolve(body.payload);
-						else {
-							request.reject(
-								body.error || `No error provided by host process in response to ${request.action}`
-							);
-						}
-						this.pendingRequests.delete(id);
-					}
+		EventEmitter.on("response", ({ id, payload, error }) => {
+			const request = this.pendingRequests.get(id);
+			if (request) {
+				if (payload) request.resolve(payload);
+				else {
+					request.reject(
+						error || `No error provided by host process in response to ${request.action}`
+					);
 				}
-			},
-			false
-		);
+				this.pendingRequests.delete(id);
+			}
+		});
 	}
 
 	postMessage(message) {
