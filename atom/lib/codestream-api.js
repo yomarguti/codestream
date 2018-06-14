@@ -7,7 +7,7 @@ import MarkerLocationFinder from "./git/MarkerLocationFinder";
 import db, { upsert } from "./local-cache";
 import { saveUncommittedLocations } from "./actions/marker-location";
 import { normalize } from "./actions/utils";
-import { saveStreams } from "./actions/stream";
+import { saveStream } from "./actions/stream";
 import { getPostById } from "./reducers/posts";
 import type { Store } from "./types";
 
@@ -156,18 +156,13 @@ export default class CodeStreamApi {
 		return http.put("/preferences", newPreference, session.accessToken);
 	}
 
-	async createStream(stream) {
+	async createStream(params) {
 		const { session } = this.store.getState();
 		try {
-			const data = await http.post("/streams", stream, session.accessToken);
-			let streams = data.streams || [];
-			if (data.stream) {
-				streams.push(data.stream);
-			}
-			if (streams.length > 0) {
-				this.store.dispatch(saveStreams(normalize(streams)));
-			}
-			return data.stream;
+			const data = await http.post("/streams", params, session.accessToken);
+			const stream = normalize(data.stream);
+			this.store.dispatch(saveStream(stream));
+			return stream;
 		} catch (error) {
 			console.log("Error: ", error);
 			if (http.isApiRequestError(error)) {
