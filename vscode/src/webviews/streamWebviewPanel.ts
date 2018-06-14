@@ -270,9 +270,27 @@ export class StreamWebviewPanel extends Disposable {
 						const response = await this._streamThread.stream.markRead();
 						this.postMessage({
 							type: "codestream:response",
-							body: { id: body.id, ...response }
+							body: { id: body.id, payload: response }
 						});
 						break;
+					case "create-stream": {
+						const { type, teamId, name, privacy, memberIds } = body.params;
+						let stream;
+						if (type === "channel") {
+							stream = await Container.session.api.createChannelStream(
+								name,
+								memberIds,
+								privacy,
+								teamId
+							);
+						} else if (type === "direct") {
+							stream = await Container.session.api.createDirectStream(memberIds);
+						}
+						this.postMessage({
+							type: "codestream:response",
+							body: { id: body.id, payload: stream }
+						});
+					}
 				}
 				break;
 
@@ -476,10 +494,11 @@ export class StreamWebviewPanel extends Disposable {
 
 		this._streamThread = streamThread;
 
-		const [content, posts, repos, teams, users] = await Promise.all([
+		const [content, posts, repos, streams, teams, users] = await Promise.all([
 			this.getHtml(),
 			streamThread.stream.posts.entities(),
 			this.session.repos.entities(),
+			Container.session.channels.entities(),
 			this.session.teams.entities(),
 			this.session.users.entities()
 		]);
@@ -498,7 +517,7 @@ export class StreamWebviewPanel extends Disposable {
 
 		state.posts = posts;
 		state.repos = repos;
-		state.streams = [streamThread.stream.entity];
+		state.streams = streams;
 		state.teams = teams;
 		state.users = users;
 
