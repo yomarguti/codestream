@@ -164,7 +164,8 @@ export const createStream = attributes => async (dispatch, getState, { api }) =>
 
 	try {
 		const returnStream = await api.createStream(stream);
-		dispatch(setCurrentStream(returnStream._id));
+		dispatch({ type: "ADD_STREAM", payload: returnStream });
+		dispatch(setCurrentStream(returnStream.id));
 		return returnStream;
 	} catch (error) {
 		console.log("Error: ", error);

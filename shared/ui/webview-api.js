@@ -12,17 +12,16 @@ export default class WebviewApi {
 				const { type, body } = event.data;
 				if (type === "codestream:response") {
 					const { id } = body;
-					const { resolve, reject } = this.pendingRequests.get(id);
-					if (body.payload) {
-						if (resolve) {
-							resolve(body.payload);
+					const request = this.pendingRequests.get(id);
+					if (request) {
+						if (body.payload) request.resolve(body.payload);
+						else {
+							request.reject(
+								body.error || `No error provided by host process in response to ${request.action}`
+							);
 						}
-					} else {
-						if (reject) {
-							reject(body.error);
-						}
+						this.pendingRequests.delete(id);
 					}
-					this.pendingRequests.delete(id);
 				}
 			},
 			false
@@ -32,7 +31,7 @@ export default class WebviewApi {
 	postMessage(message) {
 		const id = uuid();
 		return new Promise((resolve, reject) => {
-			this.pendingRequests.set(id, { resolve, reject });
+			this.pendingRequests.set(id, { resolve, reject, action: message.action });
 			this.host.postMessage({ type: "codestream:request", body: { id, ...message } }, "*");
 		});
 	}
