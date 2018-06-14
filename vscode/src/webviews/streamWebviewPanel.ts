@@ -286,9 +286,16 @@ export class StreamWebviewPanel extends Disposable {
 						} else if (type === "direct") {
 							stream = await Container.session.api.createDirectStream(memberIds);
 						}
-						this.postMessage({
+						return this.postMessage({
 							type: "codestream:response",
 							body: { id: body.id, payload: stream }
+						});
+					}
+					case "save-user-preference": {
+						const response = await Container.session.api.savePreferences(body.params);
+						return this.postMessage({
+							type: "codestream:response",
+							body: { id: body.id, payload: response }
 						});
 					}
 				}

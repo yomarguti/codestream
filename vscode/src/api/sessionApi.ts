@@ -26,6 +26,10 @@ export class CodeStreamSessionApi {
 		private readonly teamId: string
 	) {}
 
+	savePreferences(preferences: {}) {
+		return this._api.savePreferences(this.token, preferences);
+	}
+
 	async addUserToStream(streamId: string, userId: string, teamId?: string) {
 		return (await this._api.updateStreamMembership(this.token, teamId || this.teamId, streamId, {
 			$push: userId

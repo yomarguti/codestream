@@ -230,6 +230,10 @@ export class CodeStreamApi {
 		return this.put(`/read/${streamId}`, {}, token);
 	}
 
+	savePreferences(token: string, preferences: {}) {
+		return this.put("/preferences", preferences, token);
+	}
+
 	private delete<R extends object>(url: string, token?: string): Promise<R> {
 		let resp = undefined;
 		if (resp === undefined) {
