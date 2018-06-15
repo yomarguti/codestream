@@ -54,7 +54,13 @@ export class RemoteGitService extends Disposable implements IGitService {
 		const repoPath = typeof repoUriOrPath === "string" ? repoUriOrPath : repoUriOrPath.fsPath;
 
 		const repo = this._repos[0]; // .find(r => r.url === repoPath))
-		const uri = Uri.parse(repo.url);
+		let uri;
+		try {
+			uri = Uri.parse(repo.url);
+		}
+		catch {
+			uri = Uri.parse(repo.normalizedUrl);
+		}
 
 		let urlPath = uri.path[0] === "/" ? uri.path.substr(1) : uri.path;
 		if (urlPath.endsWith(".git")) {
@@ -74,8 +80,16 @@ export class RemoteGitService extends Disposable implements IGitService {
 	protected _repositories: GitRepository[] | undefined;
 	async getRepositories(): Promise<GitRepository[]> {
 		if (this._repositories === undefined) {
-			this._repositories = this._repos.map(
-				r => new GitRepository(Uri.parse(r.url).with({ scheme: "vsls" }))
+			this._repositories = this._repos.map(r => {
+				let uri;
+				try {
+					uri = Uri.parse(r.url);
+				}
+				catch {
+					uri = Uri.parse(r.normalizedUrl);
+				}
+				return new GitRepository(uri.with({ scheme: "vsls" }));
+			}
 			);
 		}
 		return this._repositories;
