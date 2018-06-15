@@ -435,12 +435,12 @@ export class SimpleStream extends Component {
 			<div className={streamClass} ref={ref => (this._div = ref)}>
 				<div id="modal-root" />
 				<div id="confirm-root" />
-				<EditingIndicator
+				{/* <EditingIndicator
 					editingUsers={this.props.editingUsers}
 					inactive={activePanel === "xmain"} // or if no fileStream
 					currentUser={this.props.currentUser}
 					teamMembers={this.props.teamMembersById}
-				/>
+				/> */}
 				<ChannelPanel
 					activePanel={activePanel}
 					setActivePanel={this.setActivePanel}
