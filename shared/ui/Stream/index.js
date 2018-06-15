@@ -25,7 +25,6 @@ import {
 	getStreamForTeam,
 	getStreamForRepoAndFile
 } from "../reducers/streams";
-import { createPost, createSystemPost, editPost, deletePost } from "./actions";
 
 export class SimpleStream extends Component {
 	disposables = [];
