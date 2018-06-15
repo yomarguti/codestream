@@ -24,7 +24,7 @@ export async function activate(context: ExtensionContext) {
 
 	// If the extension is launched in debug mode then the debug server options are used
 	// Otherwise the run options are used
-	const serverModule = context.asAbsolutePath("../codestream-lsp-agent/out/server.js");
+	const serverModule = context.asAbsolutePath("../codestream-lsp-agent/out/agent.js");
 	const serverOptions: ServerOptions = {
 		run: {
 			module: serverModule,

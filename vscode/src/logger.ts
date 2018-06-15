@@ -36,14 +36,13 @@ export class Logger {
 	}
 
 	static log(message?: any, ...params: any[]): void {
+		if (this.level !== TraceLevel.Verbose && this.level !== TraceLevel.Debug) return;
+
 		if (Logger.isDebugging) {
 			console.log(this.timestamp, ConsolePrefix, message, ...params);
 		}
 
-		if (
-			this.output !== undefined &&
-			(this.level === TraceLevel.Verbose || this.level === TraceLevel.Debug)
-		) {
+		if (this.output !== undefined) {
 			this.output.appendLine(
 				(Logger.isDebugging ? [this.timestamp, message, ...params] : [message, ...params]).join(" ")
 			);
@@ -51,11 +50,13 @@ export class Logger {
 	}
 
 	static error(ex: Error, classOrMethod?: string, ...params: any[]): void {
+		if (this.level === TraceLevel.Silent) return;
+
 		if (Logger.isDebugging) {
 			console.error(this.timestamp, ConsolePrefix, classOrMethod, ...params, ex);
 		}
 
-		if (this.output !== undefined && this.level !== TraceLevel.Silent) {
+		if (this.output !== undefined) {
 			this.output.appendLine(
 				(Logger.isDebugging
 					? [this.timestamp, classOrMethod, ...params, ex]
@@ -68,11 +69,13 @@ export class Logger {
 	}
 
 	static warn(message?: any, ...params: any[]): void {
+		if (this.level === TraceLevel.Silent) return;
+
 		if (Logger.isDebugging) {
 			console.warn(this.timestamp, ConsolePrefix, message, ...params);
 		}
 
-		if (this.output !== undefined && this.level !== TraceLevel.Silent) {
+		if (this.output !== undefined) {
 			this.output.appendLine(
 				(Logger.isDebugging ? [this.timestamp, message, ...params] : [message, ...params]).join(" ")
 			);
