@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import Button from "./Button";
+import EventEmitter from "../event-emitter";
 
 export default class PostDetails extends Component {
 	state = {
@@ -7,20 +8,13 @@ export default class PostDetails extends Component {
 		diffShowing: false,
 		showDiffButtons: false
 	};
+	disposables = [];
 
 	componentDidMount() {
-		window.addEventListener("message", this.handleInteractionEvent, true);
-
 		const codeBlocks = this.props.post.codeBlocks || [];
-		codeBlocks.forEach(block => {
-			window.parent.postMessage(
-				{
-					type: "codestream:subscription:file-changed",
-					body: block
-				},
-				"*"
-			);
-		});
+		codeBlocks.forEach(block =>
+			this.disposables.push(EventEmitter.onFileChanged(block, this.onFileChanged))
+		);
 		// if (this._alert)
 		// 	atom.tooltips.add(this._alert, {
 		// 		title: "Unknown codeblock location."
@@ -28,52 +22,25 @@ export default class PostDetails extends Component {
 	}
 
 	componentWillUnmount() {
-		const codeBlocks = this.props.post.codeBlocks || [];
-		codeBlocks.forEach(block => {
-			window.parent.postMessage(
-				{
-					type: "codestream:unsubscribe:file-changed",
-					body: block
-				},
-				"*"
-			);
-		});
-		window.removeEventListener("message", this.handleInteractionEvent, true);
+		this.disposables.forEach(d => d.dispose());
 	}
 
-	handleInteractionEvent = ({ data }) => {
-		// foobar always lives with view code.
-		// will translate postMessages into events to the views
-		// this.foobar.on(, () => {});
-		if (data.type === "codestream:publish:file-changed") {
-			const codeBlocks = this.props.post.codeBlocks || [];
-			codeBlocks.forEach(block => {
-				if (block.file === data.body.file) this.setState({ showDiffButtons: data.body.hasDiff });
-			});
-		}
+	onFileChanged = ({ file, hasDiff }) => {
+		const codeBlocks = this.props.post.codeBlocks || [];
+		codeBlocks.forEach(block => {
+			if (block.file === file) this.setState({ showDiffButtons: hasDiff });
+		});
 	};
 
 	handleClickShowDiff = event => {
 		event.preventDefault();
-		window.parent.postMessage(
-			{
-				type: "codestream:interaction:show-diff",
-				body: this.props.post.codeBlocks[0]
-			},
-			"*"
-		);
+		EventEmitter.emit("interaction:show-diff", this.props.post.codeBlocks[0]);
 		this.setState({ diffShowing: !this.state.diffShowing });
 	};
 
 	handleClickApplyPatch = event => {
 		event.preventDefault();
-		window.parent.postMessage(
-			{
-				type: "codestream:interaction:apply-patch",
-				body: this.props.post.codeBlocks[0]
-			},
-			"*"
-		);
+		EventEmitter.emit("interaction:apply-patch", this.props.post.codeBlocks[0]);
 		this.setState({ patchApplied: !this.state.patchApplied });
 	};
 

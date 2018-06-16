@@ -1,7 +1,9 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
 import createClassString from "classnames";
+import Linkify from "react-linkify";
 import Headshot from "./Headshot";
+import Icon from "./Icon";
 import Timestamp from "./Timestamp";
 // import Menu from "./Menu";
 import PostDetails from "./PostDetails";
@@ -10,7 +12,6 @@ import { retryPost, cancelPost } from "./actions";
 import ContentEditable from "react-contenteditable";
 import Button from "./Button";
 import Menu from "./Menu";
-import Linkify from "react-linkify";
 // import "emoji-mart/css/emoji-mart.css";
 import { Picker } from "emoji-mart";
 
@@ -67,7 +68,7 @@ class Post extends Component {
 		}
 
 		let parentPost = this.props.replyingTo;
-		let alertClass = this.props.alert ? "icon icon-" + this.props.alert : null;
+		// let alertClass = this.props.alert ? "icon icon-" + this.props.alert : null;
 
 		// this was above Headshot
 		// <span className="icon icon-gear" onClick={this.handleMenuClick} />
@@ -81,7 +82,7 @@ class Post extends Component {
 				thread={post.parentPostId || post.id}
 				ref={ref => (this._div = ref)}
 			>
-				<span className="icon icon-gear" onClick={this.handleMenuClick} />
+				<Icon name="gear" className="gear align-right" onClick={this.handleMenuClick} />
 				{this.state.menuOpen && (
 					<Menu items={menuItems} target={this.state.menuTarget} action={this.handleSelectMenu} />
 				)}
@@ -110,7 +111,7 @@ class Post extends Component {
 					{this.props.showDetails && (
 						<PostDetails post={post} currentCommit={this.props.currentCommit} />
 					)}
-					{alertClass && <span className={alertClass} />}
+					{/* {alertClass && <span className={alertClass} />} */}
 					{this.renderBody(post)}
 					{!this.props.editng && post.hasBeenEdited && <span className="edited">(edited)</span>}
 				</div>

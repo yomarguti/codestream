@@ -12,6 +12,7 @@ import CreateDMPanel from "./CreateDMPanel";
 import EditingIndicator from "./EditingIndicator";
 import ChannelMenu from "./ChannelMenu";
 import Post from "./Post";
+import Icon from "./Icon";
 import EventEmitter from "../event-emitter";
 import * as actions from "./actions";
 import { goToInvitePage } from "../actions/routing";
@@ -409,19 +410,21 @@ export class SimpleStream extends Component {
 			);
 
 		const umisClass = createClassString({
-			icon: true,
-			"icon-chevron-left": true,
-			"show-channels-icon": true,
-			"align-left": true,
 			mentions: umis.totalMentions > 0,
 			unread: umis.totalMentions == 0 && umis.totalUnread > 0
 		});
 
 		const channelName =
 			this.props.postStreamType === "direct" ? (
-				<span className="icon icon-organization">{this.props.postStreamName}</span>
+				<span>
+					<Icon name="organization" />
+					{this.props.postStreamName}
+				</span>
 			) : this.props.isPrivate ? (
-				<span className="icon icon-lock">{this.props.postStreamName}</span>
+				<span>
+					<Icon name="lock" />
+					{this.props.postStreamName}
+				</span>
 			) : (
 				"#" + this.props.postStreamName
 			);
@@ -450,14 +453,13 @@ export class SimpleStream extends Component {
 				<div className={mainPanelClass} ref={ref => (this._mainPanel = ref)}>
 					<div className="panel-header" ref={ref => (this._header = ref)}>
 						<span onClick={this.showChannels} className={umisClass}>
+							<Icon name="chevron-left" className="show-channels-icon align-left" />
 							{totalUMICount}
 						</span>
 						<span>{channelName}</span>
 						{this.props.postStreamType !== "direct" && (
-							<span
-								onClick={this.handleClickStreamSettings}
-								className="icon icon-gear show-settings align-right"
-							>
+							<span onClick={this.handleClickStreamSettings}>
+								<Icon name="gear" className="show-settings align-right" />
 								{menuActive && (
 									<ChannelMenu
 										stream={this.props.postStream}
@@ -515,10 +517,12 @@ export class SimpleStream extends Component {
 				</div>
 				<div className={threadPanelClass}>
 					<div id="close-thread" className="panel-header" onClick={this.handleDismissThread}>
-						<span
-							onClick={this.showChannels}
-							className="icon icon-chevron-left show-channels-icon align-left"
-						>
+						<span>
+							<Icon
+								name="chevron-left"
+								onClick={this.showChannels}
+								className="show-channels-icon align-left"
+							/>
 							Back <span className="keybinding">(esc)</span>
 						</span>
 					</div>

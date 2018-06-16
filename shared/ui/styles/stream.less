@@ -2,6 +2,13 @@
 //@import "ui-variables";
 // @import "emoji-mart/css/emoji-mart.css";
 
+// for the octicons
+.octicon {
+	display: inline-block;
+	vertical-align: text-top;
+	fill: currentColor;
+}
+
 .codestream {
 	[contenteditable="true"]:empty:before {
 		content: attr(placeholder);
@@ -673,6 +680,11 @@
 			top: -2em;
 		}
 
+		.icon {
+			position: relative;
+			top: 2px;
+		}
+
 		.channel-list {
 			max-height: 100%;
 			overflow-y: auto;
@@ -715,16 +727,18 @@
 					top: 2px;
 					color: @text-color-subtle;
 				}
-				.icon.align-right {
-					position: absolute;
-					right: 9px;
-					top: 2px;
-					cursor: pointer;
-					z-index: 1;
-					// opacity: 0.5;
-				}
-				.icon.align-right:hover {
-					color: @text-color-highlight;
+				.icon {
+					&.align-right {
+						position: absolute;
+						right: 9px;
+						top: 2px;
+						cursor: pointer;
+						z-index: 1;
+						// opacity: 0.5;
+						&:hover {
+							color: @text-color-highlight;
+						}
+					}
 				}
 				ul {
 					margin: 0;
@@ -1002,12 +1016,11 @@
 			.body {
 				// padding-left: 46px;
 			}
-			.icon-gear {
+			.align-right {
 				color: @text-color-subtle;
 				opacity: 0.5;
 				display: none;
 				float: right;
-				margin: -3px -10px 0 0;
 			}
 			.icon-alert,
 			.icon-question {
@@ -1118,10 +1131,10 @@
 
 		.post:hover {
 			background: @app-background-color-hover;
-			.icon-gear {
+			.gear {
 				display: block;
 			}
-			.icon-gear:hover {
+			.gear:hover {
 				color: #aaa;
 			}
 			time {

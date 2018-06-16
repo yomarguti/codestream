@@ -2,10 +2,10 @@ import React, { Component } from "react";
 import { connect } from "react-redux";
 import createClassString from "classnames";
 import _ from "underscore";
-// import * as contextActions from "../actions/context";
 import * as routingActions from "../actions/routing";
 import { createStream, setCurrentStream, setUserPreference } from "./actions";
 import { getChannelStreamsForTeam, getDirectMessageStreamsForTeam } from "../reducers/streams";
+import Icon from "./Icon";
 import Menu from "./Menu";
 import ChannelMenu from "./ChannelMenu";
 
@@ -46,18 +46,15 @@ export class SimpleChannelPanel extends Component {
 			<div className="section">
 				<div className="header" onClick={this.handleClickShowPublicChannels}>
 					<span className="clickable">Team Channels</span>
-					<span
-						className="icon icon-diff-added align-right"
-						onClick={this.handleClickCreateChannel}
-					/>
+					<Icon className="align-right" name="plus" onClick={this.handleClickCreateChannel} />
 				</div>
 				<ul onClick={this.handleClickSelectStream}>
 					{this.props.channelStreams.map(stream => {
 						if (stream.isArchived) return null;
 						const icon = this.props.mutedStreams[stream.id] ? (
-							<span className="icon icon-mute" />
+							<Icon name="mute" />
 						) : stream.privacy === "private" ? (
-							<span className="icon icon-lock" />
+							<Icon name="lock" />
 						) : (
 							<span className="icon">#</span>
 						);
@@ -78,10 +75,12 @@ export class SimpleChannelPanel extends Component {
 								{icon}
 								{stream.name}
 								{mentions > 0 ? <span className="umi">{mentions}</span> : null}
-								<span
-									onClick={this.handleClickStreamSettings}
-									className="icon icon-gear align-right"
-								>
+								<span>
+									<Icon
+										name="gear"
+										className="align-right"
+										onClick={this.handleClickStreamSettings}
+									/>
 									{menuActive && (
 										<ChannelMenu
 											stream={stream}
@@ -107,7 +106,7 @@ export class SimpleChannelPanel extends Component {
 			<div className="section">
 				<div className="header clickable" onClick={this.handleClickCreateDirectMessage}>
 					<span className="clickable">Direct Messages</span>
-					<span className="icon icon-diff-added align-right" />
+					<Icon name="plus" className="align-right" />
 				</div>
 				<ul onClick={this.handleClickSelectStream}>
 					{this.props.directMessageStreams.map(stream => {
@@ -126,10 +125,7 @@ export class SimpleChannelPanel extends Component {
 								<span className="presence" />
 								{stream.name}
 								{mentions > 0 ? <span className="umi">{mentions}</span> : null}
-								<span
-									onClick={this.handleClickMuteStream}
-									className="icon icon-diff-removed align-right"
-								/>
+								<Icon name="x" onClick={this.handleClickMuteStream} className="align-right" />
 							</li>
 						);
 					})}
@@ -144,15 +140,14 @@ export class SimpleChannelPanel extends Component {
 										? teammate.firstName + " " + teammate.lastName
 										: teammate.username}
 								</span>
-								<span
-									onClick={this.handleClickMuteStream}
-									className="icon icon-diff-removed align-right"
-								/>
+								<Icon name="x" onClick={this.handleClickMuteStream} className="align-right" />
 							</li>
 						);
 					})}
 					<li className="invite" onClick={this.props.goToInvitePage}>
-						<span className="icon icon-plus-small">Invite People</span>
+						<span>
+							<Icon name="plus-small" />Invite People
+						</span>
 					</li>
 				</ul>
 			</div>
@@ -160,6 +155,7 @@ export class SimpleChannelPanel extends Component {
 	};
 
 	handleClickSelectStream = event => {
+		event.preventDefault();
 		var liDiv = event.target.closest("li");
 		if (!liDiv) return; // FIXME throw error
 		if (liDiv.id) {
@@ -252,13 +248,9 @@ const mapStateToProps = ({ context, streams, users, teams, umis, session }) => {
 	};
 };
 
-export default connect(
-	mapStateToProps,
-	{
-		// ...contextActions,
-		createStream,
-		setUserPreference,
-		setCurrentStream,
-		goToInvitePage: routingActions.goToInvitePage
-	}
-)(SimpleChannelPanel);
+export default connect(mapStateToProps, {
+	createStream,
+	setUserPreference,
+	setCurrentStream,
+	goToInvitePage: routingActions.goToInvitePage
+})(SimpleChannelPanel);
