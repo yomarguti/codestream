@@ -1,7 +1,9 @@
 export const slashCommands = [
 	{ id: "help", help: "get help" },
 	{ id: "add", help: "add member to channel", description: "@user" },
+	// { id: "apply", help: "apply patch last post" },
 	{ id: "archive", help: "archive channel" },
+	// { id: "diff", help: "diff last post" },
 	{ id: "invite", help: "add to your team", description: "email" },
 	{ id: "leave", help: "leave channel" },
 	{ id: "me", help: "emote" },

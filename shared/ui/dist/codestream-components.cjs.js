@@ -40,7 +40,7 @@ var _descriptors = !_fails(function () {
 });
 
 var _core = createCommonjsModule(function (module) {
-var core = module.exports = { version: '2.5.6' };
+var core = module.exports = { version: '2.5.7' };
 if (typeof __e == 'number') __e = core; // eslint-disable-line no-undef
 });
 var _core_1 = _core.version;
@@ -51208,7 +51208,6 @@ exports.default = Linkify;
 var Linkify = unwrapExports(Linkify_1);
 var Linkify_2 = Linkify_1.linkify;
 
-// import "emoji-mart/css/emoji-mart.css";
 // import { Picker } from "emoji-mart";
 
 var Post = function (_Component) {
@@ -51512,7 +51511,11 @@ var uuid = function uuid(a) {
 	return a ? (a ^ Math.random() * 16 >> a / 4).toString(16) : ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, uuid);
 };
 
-var slashCommands = [{ id: "help", help: "get help" }, { id: "add", help: "add member to channel", description: "@user" }, { id: "archive", help: "archive channel" }, { id: "invite", help: "add to your team", description: "email" }, { id: "leave", help: "leave channel" }, { id: "me", help: "emote" }, { id: "msg", help: "message member", description: "@user" }, { id: "mute", help: "mute channel" },
+var slashCommands = [{ id: "help", help: "get help" }, { id: "add", help: "add member to channel", description: "@user" },
+// { id: "apply", help: "apply patch last post" },
+{ id: "archive", help: "archive channel" },
+// { id: "diff", help: "diff last post" },
+{ id: "invite", help: "add to your team", description: "email" }, { id: "leave", help: "leave channel" }, { id: "me", help: "emote" }, { id: "msg", help: "message member", description: "@user" }, { id: "mute", help: "mute channel" },
 // { id: "muteall", help: "mute codestream" },
 // { id: "open", help: "open channel" },
 // { id: "prefs", help: "open preferences" },
