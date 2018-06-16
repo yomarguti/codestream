@@ -259,7 +259,7 @@ export class SimpleStream extends Component {
 		// don't scroll to bottom if we're in the middle of an edit,
 		// unless the force parameter is called
 		if (this.state.editingPostId && !force) return;
-		if (this._postslist) this._postslist.scrollTop = 100000;
+		if (this._postslist) this._postslist.scrollTop = 1000000;
 	};
 
 	calculateScrolledOffBottom = () => {};
@@ -605,7 +605,7 @@ export class SimpleStream extends Component {
 	};
 
 	setActivePanel = panel => {
-		this.setState({ activePanel: panel });
+		if (panel !== this.state.activePanel) this.setState({ activePanel: panel });
 	};
 
 	handleScroll(_event) {
@@ -620,13 +620,13 @@ export class SimpleStream extends Component {
 		const containerHeight = scrollDiv.parentNode.offsetHeight;
 		const scrollHeight = scrollDiv.scrollHeight;
 		const offBottom = scrollHeight - scrollTop - scrollDiv.offsetHeight;
-		const scrolledOffBottom = offBottom > 100;
+		const scrolledOffBottom = offBottom > 100 ? true : null;
 		// console.log("OB IS: ", offBottom);
-		if (scrolledOffBottom !== this.state.scrolledOffBottom)
+		if (scrolledOffBottom != this.state.scrolledOffBottom)
 			this.setState({ scrolledOffBottom: scrolledOffBottom });
 
-		let unreadsAbove = false;
-		let unreadsBelow = false;
+		let unreadsAbove = null;
+		let unreadsBelow = null;
 
 		let umiDivs = scrollDiv.getElementsByClassName("unread");
 		Array.from(umiDivs).forEach(umi => {

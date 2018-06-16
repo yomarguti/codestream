@@ -172,8 +172,11 @@ export const createStream = attributes => async (dispatch, getState, { api }) =>
 	}
 };
 
-export const setCurrentStream = streamId => async dispatch => {
-	dispatch({ type: "SET_CURRENT_STREAM", payload: streamId });
+export const setCurrentStream = streamId => async (dispatch, getState) => {
+	const { context } = getState();
+	// don't set the stream ID unless it actually changed
+	if (context.currentStreamId !== streamId)
+		dispatch({ type: "SET_CURRENT_STREAM", payload: streamId });
 };
 
 export const removeUsersFromStream = (streamId, userIds) => async (dispatch, getState, { api }) => {
