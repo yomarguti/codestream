@@ -54395,6 +54395,14 @@ var Stream = function (_React$Component) {
 			var _this2 = this;
 
 			this.disposables.push(emitter.on("interaction:marker-selected", this.handleMarkerSelected));
+
+			this.scrollToBottom();
+
+			// this listener pays attention to when the input field resizes,
+			// presumably because the user has typed more than one line of text
+			// in it, and calls a function to handle the new size
+			new ResizeObserver(this.scrollToBottom).observe(this._compose.current);
+
 			if (global.atom) {
 				this.disposables.push(atom.keymaps.add("codestream", {
 					"atom-workspace": {
@@ -54496,10 +54504,13 @@ var Stream = function (_React$Component) {
 
 			return react.createElement(
 				"div",
-				{ className: classnames("panel", "main-panel", "posts-panel", className) },
+				{
+					className: classnames("panel", "main-panel", "posts-panel", className),
+					ref: this._root
+				},
 				react.createElement(
 					"div",
-					{ className: "panel-header" },
+					{ className: "panel-header", ref: this._header },
 					react.createElement(
 						"span",
 						{ onClick: this.handleClickGoBack, className: umisClass },
@@ -54543,7 +54554,8 @@ var Stream = function (_React$Component) {
 					{
 						className: classnames("postslist", { shrink: inThread }),
 						onClick: this.handleClickPost,
-						id: "stream-" + this.props.stream.id
+						id: "stream-" + this.props.stream.id,
+						ref: this._postList
 					},
 					react.createElement(
 						"div",
@@ -54620,6 +54632,35 @@ var _initialiseProps$1 = function _initialiseProps() {
 		enumerable: true,
 		writable: true,
 		value: []
+	});
+	Object.defineProperty(this, "_postList", {
+		enumerable: true,
+		writable: true,
+		value: react.createRef()
+	});
+	Object.defineProperty(this, "_compose", {
+		enumerable: true,
+		writable: true,
+		value: react.createRef()
+	});
+	Object.defineProperty(this, "_header", {
+		enumerable: true,
+		writable: true,
+		value: react.createRef()
+	});
+	Object.defineProperty(this, "_root", {
+		enumerable: true,
+		writable: true,
+		value: react.createRef()
+	});
+	Object.defineProperty(this, "scrollToBottom", {
+		enumerable: true,
+		writable: true,
+		value: function value(force) {
+			// don't scroll to bottom if we're in the middle of an edit,
+			if (_this4.state.editingPostId && !force) return;
+			_this4._postList.current.scrollTop = 100000;
+		}
 	});
 	Object.defineProperty(this, "findPostById", {
 		enumerable: true,
@@ -55136,12 +55177,7 @@ var SimpleStream = function (_Component) {
 		Object.defineProperty(_this, "scrollToBottom", {
 			enumerable: true,
 			writable: true,
-			value: function value(force) {
-				// don't scroll to bottom if we're in the middle of an edit,
-				// unless the force parameter is called
-				if (_this.state.editingPostId && !force) return;
-				if (_this._postslist) _this._postslist.scrollTop = 100000;
-			}
+			value: function value() {}
 		});
 		Object.defineProperty(_this, "calculateScrolledOffBottom", {
 			enumerable: true,
@@ -55696,11 +55732,6 @@ var SimpleStream = function (_Component) {
 		value: function componentDidMount() {
 			var _this3 = this;
 
-			// this listener pays attention to when the input field resizes,
-			// presumably because the user has typed more than one line of text
-			// in it, and calls a function to handle the new size
-			// new ResizeObserver(this.handleResizeCompose).observe(this._compose.current);
-
 			if (this._postslist) {
 				this._postslist.addEventListener("scroll", this.handleScroll.bind(this));
 				// this resize observer fires when the height of the
@@ -55712,8 +55743,6 @@ var SimpleStream = function (_Component) {
 					_this3.handleScroll();
 				}).observe(this._postslist);
 			}
-
-			this.scrollToBottom();
 		}
 	}, {
 		key: "UNSAFE__componentWillReceiveProps",

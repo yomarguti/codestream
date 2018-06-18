@@ -21,11 +21,23 @@ class Stream extends React.Component {
 		threadId: null
 	};
 	disposables = [];
+	_postList = React.createRef();
+	_compose = React.createRef();
+	_header = React.createRef();
+	_root = React.createRef();
 
 	componentDidMount() {
 		this.disposables.push(
 			EventEmitter.on("interaction:marker-selected", this.handleMarkerSelected)
 		);
+
+		this.scrollToBottom();
+
+		// this listener pays attention to when the input field resizes,
+		// presumably because the user has typed more than one line of text
+		// in it, and calls a function to handle the new size
+		new ResizeObserver(this.scrollToBottom).observe(this._compose.current);
+
 		if (global.atom) {
 			this.disposables.push(
 				atom.keymaps.add("codestream", {
@@ -49,6 +61,12 @@ class Stream extends React.Component {
 	componentWillUnmount() {
 		this.disposables.forEach(d => d.dispose());
 	}
+
+	scrollToBottom = force => {
+		// don't scroll to bottom if we're in the middle of an edit,
+		if (this.state.editingPostId && !force) return;
+		this._postList.current.scrollTop = 100000;
+	};
 
 	findPostById = id => this.props.posts.find(post => post.id === id);
 
@@ -410,8 +428,11 @@ class Stream extends React.Component {
 			);
 
 		return (
-			<div className={createClassString("panel", "main-panel", "posts-panel", className)}>
-				<div className="panel-header">
+			<div
+				className={createClassString("panel", "main-panel", "posts-panel", className)}
+				ref={this._root}
+			>
+				<div className="panel-header" ref={this._header}>
 					<span onClick={this.handleClickGoBack} className={umisClass}>
 						<Icon name="chevron-left" className="show-channels-icon align-left" />
 						{totalUMICount}
@@ -450,6 +471,7 @@ class Stream extends React.Component {
 					className={createClassString("postslist", { shrink: inThread })}
 					onClick={this.handleClickPost}
 					id={`stream-${this.props.stream.id}`}
+					ref={this._postList}
 				>
 					<div className="intro" ref={ref => (this._intro = ref)}>
 						{this.renderIntro()}

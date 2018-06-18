@@ -35,11 +35,6 @@ export class SimpleStream extends Component {
 	}
 
 	componentDidMount() {
-		// this listener pays attention to when the input field resizes,
-		// presumably because the user has typed more than one line of text
-		// in it, and calls a function to handle the new size
-		// new ResizeObserver(this.handleResizeCompose).observe(this._compose.current);
-
 		if (this._postslist) {
 			this._postslist.addEventListener("scroll", this.handleScroll.bind(this));
 			// this resize observer fires when the height of the
@@ -51,8 +46,6 @@ export class SimpleStream extends Component {
 				this.handleScroll();
 			}).observe(this._postslist);
 		}
-
-		this.scrollToBottom();
 	}
 
 	UNSAFE__componentWillReceiveProps(nextProps) {
@@ -222,12 +215,7 @@ export class SimpleStream extends Component {
 		if (offBottom < 100) this.scrollToBottom();
 	};
 
-	scrollToBottom = force => {
-		// don't scroll to bottom if we're in the middle of an edit,
-		// unless the force parameter is called
-		if (this.state.editingPostId && !force) return;
-		if (this._postslist) this._postslist.scrollTop = 100000;
-	};
+	scrollToBottom = () => {};
 
 	calculateScrolledOffBottom = () => {};
 
