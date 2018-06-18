@@ -55524,9 +55524,7 @@ var SimpleStream = function (_Component) {
 			enumerable: true,
 			writable: true,
 			value: function value() {
-				var _this$props2 = _this.props,
-				    postStream = _this$props2.postStream,
-				    currentUser = _this$props2.currentUser;
+				var postStream = _this.props.postStream;
 
 				console.log("Calling archive channel with: ", postStream.id);
 				_this.props.archiveStream(postStream.id, true);
@@ -55653,10 +55651,10 @@ var SimpleStream = function (_Component) {
 			writable: true,
 			value: function value(text) {
 				var activePanel = _this.state.activePanel;
-				var _this$props3 = _this.props,
-				    postStreamId = _this$props3.postStreamId,
-				    createSystemPost$$1 = _this$props3.createSystemPost,
-				    posts = _this$props3.posts;
+				var _this$props2 = _this.props,
+				    postStreamId = _this$props2.postStreamId,
+				    createSystemPost$$1 = _this$props2.createSystemPost,
+				    posts = _this$props2.posts;
 
 				var threadId = activePanel === "thread" ? _this.state.threadId : null;
 				var lastPost = underscore.last(posts);

@@ -7,7 +7,6 @@ import PublicChannelPanel from "./PublicChannelPanel";
 import CreateChannelPanel from "./CreateChannelPanel";
 import CreateDMPanel from "./CreateDMPanel";
 import PostsPanel from "./PostsPanel";
-import Icon from "./Icon";
 import EventEmitter from "../event-emitter";
 import * as actions from "./actions";
 import { goToInvitePage } from "../actions/routing";
@@ -583,7 +582,7 @@ export class SimpleStream extends Component {
 	};
 
 	executeArchiveChannel = () => {
-		const { postStream, currentUser } = this.props;
+		const { postStream } = this.props;
 		console.log("Calling archive channel with: ", postStream.id);
 		this.props.archiveStream(postStream.id, true);
 		this.setActivePanel("channels");
