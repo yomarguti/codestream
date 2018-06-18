@@ -2,6 +2,7 @@ import React from "react";
 import { connect } from "react-redux";
 import createClassString from "classnames";
 import { FormattedMessage } from "react-intl";
+import { confirmPopup } from "./Confirm";
 import EventEmitter from "../event-emitter";
 import ChannelMenu from "./ChannelMenu";
 import ComposeBox from "./ComposeBox";
@@ -269,6 +270,21 @@ class Stream extends React.Component {
 				post
 			});
 		}
+	};
+
+	confirmDeletePost = postId => {
+		confirmPopup({
+			title: "Are you sure?",
+			message: "Deleting a post cannot be undone.",
+			centered: true,
+			buttons: [
+				{
+					label: "Delete Post",
+					action: () => this.props.deletePost(postId)
+				},
+				{ label: "Cancel" }
+			]
+		});
 	};
 
 	handleClickHelpLink = event => {

@@ -49353,6 +49353,114 @@ var CreateDMPanel = connect(mapStateToProps$4, _extends$4({}, contextActions, {
 	setCurrentStream: setCurrentStream
 }))(SimpleCreateDMPanel);
 
+var Confirm = function (_Component) {
+	inherits(Confirm, _Component);
+
+	function Confirm(props) {
+		classCallCheck(this, Confirm);
+
+		var _this = possibleConstructorReturn(this, (Confirm.__proto__ || Object.getPrototypeOf(Confirm)).call(this, props));
+
+		Object.defineProperty(_this, "closePopup", {
+			enumerable: true,
+			writable: true,
+			value: function value() {
+				var modalRoot = document.getElementById("confirm-root");
+				modalRoot.classList.remove("active");
+				// modalRoot.removeChild(this.el);
+			}
+		});
+
+		_this.state = { selected: props.selected };
+		_this.el = document.createElement("div");
+		return _this;
+	}
+
+	createClass(Confirm, [{
+		key: "componentDidMount",
+		value: function componentDidMount() {
+			var modalRoot = document.getElementById("confirm-root");
+			modalRoot.appendChild(this.el);
+			modalRoot.classList.add("active");
+		}
+	}, {
+		key: "componentWillUnmount",
+		value: function componentWillUnmount() {
+			this.closePopup();
+		}
+	}, {
+		key: "componentDidUpdate",
+		value: function componentDidUpdate(prevProps, prevState) {
+			if (this.state.closed && !prevState.closed) {
+				this.closeMenu();
+				this.props.action && this.props.action();
+				return null;
+			}
+		}
+	}, {
+		key: "render",
+		value: function render() {
+			var _this2 = this;
+
+			var bodyClass = classnames({
+				"confirm-popup-body": true,
+				centered: this.props.centered
+			});
+			return reactDom.createPortal(react.createElement(
+				"div",
+				{ className: "confirm-popup", ref: function ref(_ref) {
+						return _this2._div = _ref;
+					} },
+				react.createElement(
+					"div",
+					{ className: bodyClass },
+					this.props.title && react.createElement(
+						"div",
+						{ className: "confirm-title" },
+						this.props.title
+					),
+					this.props.message && react.createElement(
+						"div",
+						{ className: "confirm-message" },
+						this.props.message
+					),
+					react.createElement(
+						"div",
+						{ className: "button-group" },
+						this.props.buttons.map(function (button) {
+							var buttonClass = classnames({
+								"control-button": true,
+								cancel: !button.action
+							});
+
+							return react.createElement(
+								Button,
+								{
+									className: buttonClass,
+									onClick: function onClick(e) {
+										_this2.closePopup();
+										button.action && button.action(e);
+									},
+									key: button.label
+								},
+								button.label
+							);
+						})
+					)
+				)
+			), this.el);
+		}
+	}]);
+	return Confirm;
+}(react_1);
+
+
+var confirmPopup = function confirmPopup(properties) {
+	var root = document.getElementById("confirm-root");
+	root.classList.add("active");
+	reactDom.render(react.createElement(Confirm, properties), root);
+};
+
 var findHost = function findHost() {
 	try {
 		return acquireVsCodeApi();
@@ -50270,114 +50378,6 @@ module.exports = Gravatar;
 });
 
 var Gravatar = unwrapExports(dist);
-
-var Confirm = function (_Component) {
-	inherits(Confirm, _Component);
-
-	function Confirm(props) {
-		classCallCheck(this, Confirm);
-
-		var _this = possibleConstructorReturn(this, (Confirm.__proto__ || Object.getPrototypeOf(Confirm)).call(this, props));
-
-		Object.defineProperty(_this, "closePopup", {
-			enumerable: true,
-			writable: true,
-			value: function value() {
-				var modalRoot = document.getElementById("confirm-root");
-				modalRoot.classList.remove("active");
-				// modalRoot.removeChild(this.el);
-			}
-		});
-
-		_this.state = { selected: props.selected };
-		_this.el = document.createElement("div");
-		return _this;
-	}
-
-	createClass(Confirm, [{
-		key: "componentDidMount",
-		value: function componentDidMount() {
-			var modalRoot = document.getElementById("confirm-root");
-			modalRoot.appendChild(this.el);
-			modalRoot.classList.add("active");
-		}
-	}, {
-		key: "componentWillUnmount",
-		value: function componentWillUnmount() {
-			this.closePopup();
-		}
-	}, {
-		key: "componentDidUpdate",
-		value: function componentDidUpdate(prevProps, prevState) {
-			if (this.state.closed && !prevState.closed) {
-				this.closeMenu();
-				this.props.action && this.props.action();
-				return null;
-			}
-		}
-	}, {
-		key: "render",
-		value: function render() {
-			var _this2 = this;
-
-			var bodyClass = classnames({
-				"confirm-popup-body": true,
-				centered: this.props.centered
-			});
-			return reactDom.createPortal(react.createElement(
-				"div",
-				{ className: "confirm-popup", ref: function ref(_ref) {
-						return _this2._div = _ref;
-					} },
-				react.createElement(
-					"div",
-					{ className: bodyClass },
-					this.props.title && react.createElement(
-						"div",
-						{ className: "confirm-title" },
-						this.props.title
-					),
-					this.props.message && react.createElement(
-						"div",
-						{ className: "confirm-message" },
-						this.props.message
-					),
-					react.createElement(
-						"div",
-						{ className: "button-group" },
-						this.props.buttons.map(function (button) {
-							var buttonClass = classnames({
-								"control-button": true,
-								cancel: !button.action
-							});
-
-							return react.createElement(
-								Button,
-								{
-									className: buttonClass,
-									onClick: function onClick(e) {
-										_this2.closePopup();
-										button.action && button.action(e);
-									},
-									key: button.label
-								},
-								button.label
-							);
-						})
-					)
-				)
-			), this.el);
-		}
-	}]);
-	return Confirm;
-}(react_1);
-
-
-var confirmPopup = function confirmPopup(properties) {
-	var root = document.getElementById("confirm-root");
-	root.classList.add("active");
-	reactDom.render(react.createElement(Confirm, properties), root);
-};
 
 var Headshot = function (_Component) {
 	inherits(Headshot, _Component);
@@ -54826,6 +54826,23 @@ var _initialiseProps$1 = function _initialiseProps() {
 			}
 		}
 	});
+	Object.defineProperty(this, "confirmDeletePost", {
+		enumerable: true,
+		writable: true,
+		value: function value(postId) {
+			confirmPopup({
+				title: "Are you sure?",
+				message: "Deleting a post cannot be undone.",
+				centered: true,
+				buttons: [{
+					label: "Delete Post",
+					action: function action() {
+						return _this4.props.deletePost(postId);
+					}
+				}, { label: "Cancel" }]
+			});
+		}
+	});
 	Object.defineProperty(this, "handleClickHelpLink", {
 		enumerable: true,
 		writable: true,
@@ -55184,23 +55201,6 @@ var SimpleStream = function (_Component) {
 				var postDiv = event.target.closest(".post");
 				if (!postDiv || !postDiv.id) return;
 				_this.confirmDeletePost(postDiv.id);
-			}
-		});
-		Object.defineProperty(_this, "confirmDeletePost", {
-			enumerable: true,
-			writable: true,
-			value: function value(postId) {
-				confirmPopup({
-					title: "Are you sure?",
-					message: "Deleting a post cannot be undone.",
-					centered: true,
-					buttons: [{
-						label: "Delete Post",
-						action: function action() {
-							return _this.props.deletePost(postId);
-						}
-					}, { label: "Cancel" }]
-				});
 			}
 		});
 		Object.defineProperty(_this, "notImplementedYet", {

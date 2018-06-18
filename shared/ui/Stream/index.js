@@ -477,21 +477,6 @@ export class SimpleStream extends Component {
 		this.confirmDeletePost(postDiv.id);
 	};
 
-	confirmDeletePost = postId => {
-		confirmPopup({
-			title: "Are you sure?",
-			message: "Deleting a post cannot be undone.",
-			centered: true,
-			buttons: [
-				{
-					label: "Delete Post",
-					action: () => this.props.deletePost(postId)
-				},
-				{ label: "Cancel" }
-			]
-		});
-	};
-
 	notImplementedYet = () => {
 		this.submitSystemPost("Not implemented yet");
 	};
