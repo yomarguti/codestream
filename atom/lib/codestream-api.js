@@ -7,7 +7,7 @@ import MarkerLocationFinder from "./git/MarkerLocationFinder";
 import db, { upsert } from "./local-cache";
 import { saveUncommittedLocations } from "./actions/marker-location";
 import { normalize } from "./actions/utils";
-import { saveStream } from "./actions/stream";
+import { saveStream, saveStreams } from "./actions/stream";
 import { getPostById } from "./reducers/posts";
 import type { Store } from "./types";
 
