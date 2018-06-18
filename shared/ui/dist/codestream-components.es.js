@@ -55861,11 +55861,6 @@ var SimpleStream = function (_Component) {
 				"\u2191 Unread Messages \u2191"
 			);
 
-			// const umisClass = createClassString({
-			// 	mentions: umis.totalMentions > 0,
-			// 	unread: umis.totalMentions == 0 && umis.totalUnread > 0
-			// });
-
 			var channelName = this.props.postStreamType === "direct" ? react.createElement(
 				"span",
 				null,
@@ -55877,9 +55872,6 @@ var SimpleStream = function (_Component) {
 				react.createElement(Icon, { name: "lock" }),
 				this.props.postStreamName
 			) : "#" + this.props.postStreamName;
-			// const menuActive = this.state.openMenu === this.props.postStreamId;
-			// const totalUMICount = umis.totalMentions || umis.totalUnread || "";
-			// const totalUMICount = umis.totalMentions || umis.totalUnread ? "&middot;" : "\u25C9";
 
 			return react.createElement(
 				"div",

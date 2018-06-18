@@ -309,11 +309,6 @@ export class SimpleStream extends Component {
 				</div>
 			);
 
-		// const umisClass = createClassString({
-		// 	mentions: umis.totalMentions > 0,
-		// 	unread: umis.totalMentions == 0 && umis.totalUnread > 0
-		// });
-
 		const channelName =
 			this.props.postStreamType === "direct" ? (
 				<span>
@@ -328,20 +323,11 @@ export class SimpleStream extends Component {
 			) : (
 				"#" + this.props.postStreamName
 			);
-		// const menuActive = this.state.openMenu === this.props.postStreamId;
-		// const totalUMICount = umis.totalMentions || umis.totalUnread || "";
-		// const totalUMICount = umis.totalMentions || umis.totalUnread ? "&middot;" : "\u25C9";
 
 		return (
 			<div className={streamClass} ref={ref => (this._div = ref)}>
 				<div id="modal-root" />
 				<div id="confirm-root" />
-				{/* <EditingIndicator
-					editingUsers={this.props.editingUsers}
-					inactive={activePanel === "xmain"} // or if no fileStream
-					currentUser={this.props.currentUser}
-					teamMembers={this.props.teamMembersById}
-				/> */}
 				<ChannelPanel
 					activePanel={activePanel}
 					setActivePanel={this.setActivePanel}
