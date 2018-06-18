@@ -4,14 +4,14 @@ import { FormattedMessage } from "react-intl";
 import _ from "underscore";
 import createClassString from "classnames";
 import ComposeBox from "./ComposeBox";
-import DateSeparator from "./DateSeparator";
+// import DateSeparator from "./DateSeparator";
 import ChannelPanel from "./ChannelPanel";
 import PublicChannelPanel from "./PublicChannelPanel";
 import CreateChannelPanel from "./CreateChannelPanel";
 import CreateDMPanel from "./CreateDMPanel";
-import EditingIndicator from "./EditingIndicator";
-import ChannelMenu from "./ChannelMenu";
-import Post from "./Post";
+import PostsPanel from "./PostsPanel";
+// import ChannelMenu from "./ChannelMenu";
+// import Post from "./Post";
 import Icon from "./Icon";
 import EventEmitter from "../event-emitter";
 import * as actions from "./actions";
@@ -63,24 +63,6 @@ export class SimpleStream extends Component {
 		}
 
 		this.scrollToBottom();
-		if (global.atom) {
-			this.disposables.push(
-				atom.keymaps.add("codestream", {
-					"atom-workspace": {
-						escape: "codestream:escape",
-						"cmd-c": "codestream:copy"
-					}
-				}),
-				atom.commands.add("atom-workspace", "codestream:escape", {
-					didDispatch: event => this.handleEscape(event),
-					hiddenInCommandPalette: true
-				}),
-				atom.commands.add("atom-workspace", "codestream:copy", {
-					didDispatch: event => this.copy(event),
-					hiddenInCommandPalette: true
-				})
-			);
-		}
 	}
 
 	componentWillReceiveProps(nextProps) {
@@ -160,7 +142,7 @@ export class SimpleStream extends Component {
 			markStreamRead(postStreamId);
 
 			markStreamRead(prevProps.postStreamId);
-			this.resizeStream();
+			// this.resizeStream();
 		}
 
 		// if we are switching from a non-thread panel
@@ -185,7 +167,7 @@ export class SimpleStream extends Component {
 		}
 
 		if (prevState.threadId !== this.state.threadId) {
-			this.resizeStream();
+			// this.resizeStream();
 		}
 
 		if (prevProps.hasFocus !== this.props.hasFocus) this.handleScroll();
@@ -222,7 +204,7 @@ export class SimpleStream extends Component {
 	}
 
 	handleResizeCompose = () => {
-		this.resizeStream();
+		// this.resizeStream();
 	};
 
 	resizeStream = () => {
@@ -268,52 +250,52 @@ export class SimpleStream extends Component {
 		return this.props.posts.find(post => id === post.id);
 	}
 
-	handleClickHelpLink = event => {
-		event.preventDefault();
-		EventEmitter.emit("interaction:clicked-link", "https://help.codestream.com");
-	};
+	// handleClickHelpLink = event => {
+	// 	event.preventDefault();
+	// 	EventEmitter.emit("interaction:clicked-link", "https://help.codestream.com");
+	// };
 
-	renderIntro = () => {
-		return [
-			<label key="welcome">
-				<FormattedMessage id="stream.intro.welcome" defaultMessage="Welcome to CodeStream!" />
-			</label>,
-			<label key="info">
-				<ul>
-					<li>
-						<FormattedMessage
-							id="stream.intro.eachFile"
-							defaultMessage="Post a message and any of your teammates can join the discussion."
-						/>
-					</li>
-					<li>
-						<FormattedMessage
-							id="stream.intro.comment"
-							defaultMessage={
-								'Comment on a specific block of code by selecting it and then clicking the "+" button.'
-							}
-						/>
-					</li>
-					<li>
-						<FormattedMessage
-							id="stream.intro.share"
-							defaultMessage="Select &quot;Codestream: Invite&quot; from the command palette to invite your team."
-						>
-							{() => (
-								<React.Fragment>
-									Select <a onClick={this.props.goToInvitePage}>Codestream: Invite</a> from the
-									command palette to invite your team.
-								</React.Fragment>
-							)}
-						</FormattedMessage>
-					</li>
-				</ul>
-			</label>,
-			<label key="learn-more">
-				Learn more at <a onClick={this.handleClickHelpLink}>help.codestream.com</a>
-			</label>
-		];
-	};
+	// renderIntro = () => {
+	// 	return [
+	// 		<label key="welcome">
+	// 			<FormattedMessage id="stream.intro.welcome" defaultMessage="Welcome to CodeStream!" />
+	// 		</label>,
+	// 		<label key="info">
+	// 			<ul>
+	// 				<li>
+	// 					<FormattedMessage
+	// 						id="stream.intro.eachFile"
+	// 						defaultMessage="Post a message and any of your teammates can join the discussion."
+	// 					/>
+	// 				</li>
+	// 				<li>
+	// 					<FormattedMessage
+	// 						id="stream.intro.comment"
+	// 						defaultMessage={
+	// 							'Comment on a specific block of code by selecting it and then clicking the "+" button.'
+	// 						}
+	// 					/>
+	// 				</li>
+	// 				<li>
+	// 					<FormattedMessage
+	// 						id="stream.intro.share"
+	// 						defaultMessage="Select &quot;Codestream: Invite&quot; from the command palette to invite your team."
+	// 					>
+	// 						{() => (
+	// 							<React.Fragment>
+	// 								Select <a onClick={this.props.goToInvitePage}>Codestream: Invite</a> from the
+	// 								command palette to invite your team.
+	// 							</React.Fragment>
+	// 						)}
+	// 					</FormattedMessage>
+	// 				</li>
+	// 			</ul>
+	// 		</label>,
+	// 		<label key="learn-more">
+	// 			Learn more at <a onClick={this.handleClickHelpLink}>help.codestream.com</a>
+	// 		</label>
+	// 	];
+	// };
 
 	renderThreadPosts = threadId => {
 		let lastTimestamp = 0;
@@ -349,7 +331,7 @@ export class SimpleStream extends Component {
 	// to be able to animate between the two streams, since they will both be
 	// visible during the transition
 	render() {
-		const { configs, posts, umis } = this.props;
+		const { configs, posts } = this.props;
 		const { activePanel } = this.state;
 
 		const streamClass = createClassString({
@@ -357,17 +339,17 @@ export class SimpleStream extends Component {
 			"no-headshots": !configs.showHeadshots,
 			"reduced-motion": configs.reduceMotion
 		});
-		const postsListClass = createClassString({
-			postslist: true
-		});
+		// const postsListClass = createClassString({
+		// 	postslist: true
+		// });
 		const threadPostsListClass = createClassString({
 			postslist: true,
 			threadlist: true
 		});
 		const mainPanelClass = createClassString({
-			panel: true,
-			"main-panel": true,
-			shrink: activePanel === "thread",
+			// panel: true,
+			// "main-panel": true,
+			// shrink: activePanel === "thread",
 			"off-right":
 				activePanel === "channels" ||
 				activePanel === "create-channel" ||
@@ -389,8 +371,8 @@ export class SimpleStream extends Component {
 			placeholderText = "Reply to " + threadPost.author.username;
 		}
 
-		const streamDivId = "stream-" + this.props.postStreamId;
-		let unread = false;
+		// const streamDivId = "stream-" + this.props.postStreamId;
+		// let unread = false;
 
 		const unreadsAboveClass = createClassString({
 			unreads: true,
@@ -408,10 +390,10 @@ export class SimpleStream extends Component {
 				</div>
 			);
 
-		const umisClass = createClassString({
-			mentions: umis.totalMentions > 0,
-			unread: umis.totalMentions == 0 && umis.totalUnread > 0
-		});
+		// const umisClass = createClassString({
+		// 	mentions: umis.totalMentions > 0,
+		// 	unread: umis.totalMentions == 0 && umis.totalUnread > 0
+		// });
 
 		const channelName =
 			this.props.postStreamType === "direct" ? (
@@ -427,8 +409,8 @@ export class SimpleStream extends Component {
 			) : (
 				"#" + this.props.postStreamName
 			);
-		const menuActive = this.state.openMenu === this.props.postStreamId;
-		const totalUMICount = umis.totalMentions || umis.totalUnread || "";
+		// const menuActive = this.state.openMenu === this.props.postStreamId;
+		// const totalUMICount = umis.totalMentions || umis.totalUnread || "";
 		// const totalUMICount = umis.totalMentions || umis.totalUnread ? "&middot;" : "\u25C9";
 
 		return (
@@ -449,130 +431,83 @@ export class SimpleStream extends Component {
 				<PublicChannelPanel activePanel={activePanel} setActivePanel={this.setActivePanel} />
 				<CreateChannelPanel activePanel={activePanel} setActivePanel={this.setActivePanel} />
 				<CreateDMPanel activePanel={activePanel} setActivePanel={this.setActivePanel} />
-				<div className={mainPanelClass} ref={ref => (this._mainPanel = ref)}>
-					<div className="panel-header" ref={ref => (this._header = ref)}>
-						<span onClick={this.showChannels} className={umisClass}>
-							<Icon name="chevron-left" className="show-channels-icon align-left" />
-							{totalUMICount}
-						</span>
-						<span>{channelName}</span>
-						{this.props.postStreamType !== "direct" && (
-							<span onClick={this.handleClickStreamSettings}>
-								<Icon name="gear" className="show-settings align-right" />
-								{menuActive && (
-									<ChannelMenu
-										stream={this.props.postStream}
-										target={this.state.menuTarget}
-										umiCount={0}
-										isMuted={this.props.mutedStreams[this.props.postStreamId]}
-										setActivePanel={this.setActivePanel}
-										runSlashCommand={this.runSlashCommand}
-										closeMenu={this.closeMenu}
+				<PostsPanel
+					isActive={activePanel === "main"}
+					className={mainPanelClass}
+					channelName={channelName}
+					inThread={this.state.activePanel === "thread"}
+					stream={this.props.postStream}
+					isMuted={this.props.mutedStreams[this.props.postStreamId]}
+					setActivePanel={this.setActivePanel}
+					runSlashCommand={this.runSlashCommand}
+					posts={this.props.posts}
+					currentUser={this.props.currentUser}
+					showChannels={this.showChannels}
+					renderThread={() => (
+						<div className={threadPanelClass}>
+							<div id="close-thread" className="panel-header" onClick={this.handleDismissThread}>
+								<span>
+									<Icon
+										name="chevron-left"
+										onClick={this.showChannels}
+										className="show-channels-icon align-left"
 									/>
-								)}
-							</span>
-						)}
-					</div>
-					{unreadsAbove}
-					<div
-						className={postsListClass}
-						ref={ref => (this._postslist = ref)}
-						onClick={this.handleClickPost}
-						id={streamDivId}
-					>
-						<div className="intro" ref={ref => (this._intro = ref)}>
-							{this.renderIntro()}
-						</div>
-						{posts.map(post => {
-							if (post.deactivated) return null;
-							// this needs to be done by storing the return value of the render,
-							// then setting lastTimestamp, otherwise you wouldn't be able to
-							// compare the current one to the prior one.
-							const parentPost = post.parentPostId
-								? posts.find(p => p.id === post.parentPostId)
-								: null;
-							const newMessageIndicator =
-								post.seqNum && post.seqNum === Number(this.postWithNewMessageIndicator);
-							unread = unread || newMessageIndicator;
-							const returnValue = (
-								<div key={post.id}>
-									<DateSeparator timestamp1={lastTimestamp} timestamp2={post.createdAt} />
+									Back <span className="keybinding">(esc)</span>
+								</span>
+							</div>
+							<div
+								className={threadPostsListClass}
+								ref={ref => (this._threadpostslist = ref)}
+								onClick={this.handleClickPost}
+							>
+								{threadPost && (
 									<Post
-										post={post}
+										post={threadPost}
 										usernames={this.props.usernamesRegexp}
 										currentUsername={this.props.currentUser.username}
-										replyingTo={parentPost}
-										newMessageIndicator={newMessageIndicator}
-										unread={unread}
-										editing={activePanel === "main" && post.id === this.state.editingPostId}
+										key={threadPost.id}
+										showDetails="1"
+										currentCommit={this.props.currentCommit}
+										editing={activePanel === "thread" && threadPost.id === this.state.editingPostId}
 										action={this.postAction}
 									/>
-								</div>
-							);
-							lastTimestamp = post.createdAt;
-							return returnValue;
-						})}
-					</div>
-				</div>
-				<div className={threadPanelClass}>
-					<div id="close-thread" className="panel-header" onClick={this.handleDismissThread}>
-						<span>
-							<Icon
-								name="chevron-left"
-								onClick={this.showChannels}
-								className="show-channels-icon align-left"
-							/>
-							Back <span className="keybinding">(esc)</span>
-						</span>
-					</div>
-					<div
-						className={threadPostsListClass}
-						ref={ref => (this._threadpostslist = ref)}
-						onClick={this.handleClickPost}
-					>
-						{threadPost && (
-							<Post
-								post={threadPost}
-								usernames={this.props.usernamesRegexp}
-								currentUsername={this.props.currentUser.username}
-								key={threadPost.id}
-								showDetails="1"
-								currentCommit={this.props.currentCommit}
-								editing={activePanel === "thread" && threadPost.id === this.state.editingPostId}
-								action={this.postAction}
-							/>
-						)}
-						{this.renderThreadPosts(threadId)}
-					</div>
-				</div>
+								)}
+								{this.renderThreadPosts(threadId)}
+							</div>
+						</div>
+					)}
+					renderComposeBox={() => (
+						<ComposeBox
+							placeholder={placeholderText}
+							teammates={this.props.teammates}
+							slashCommands={this.props.slashCommands}
+							ensureStreamIsActive={this.ensureStreamIsActive}
+							ref={this._compose}
+							disabled={this.props.isOffline}
+							offscreen={activePanel !== "main" && activePanel !== "thread"}
+							onSubmit={this.submitPost}
+							onEmptyUpArrow={this.editLastPost}
+							findMentionedUserIds={this.findMentionedUserIds}
+						/>
+					)}
+				/>
+				{/* {unreadsAbove} */}
 				<div className={unreadsBelowClass} type="below" onClick={this.handleClickUnreads}>
 					&darr; Unread Messages &darr;
 				</div>
-				<ComposeBox
-					placeholder={placeholderText}
-					teammates={this.props.teammates}
-					slashCommands={this.props.slashCommands}
-					ensureStreamIsActive={this.ensureStreamIsActive}
-					ref={this._compose}
-					disabled={this.props.isOffline}
-					offscreen={activePanel !== "main" && activePanel !== "thread"}
-					onSubmit={this.submitPost}
-					onEmptyUpArrow={this.editLastPost}
-					findMentionedUserIds={this.findMentionedUserIds}
-				/>
 			</div>
 		);
 	}
 
-	handleClickStreamSettings = event => {
-		this.setState({ openMenu: this.props.postStreamId, menuTarget: event.target });
-		event.stopPropagation();
-		return true;
-	};
+	// handleClickStreamSettings = event => {
+	// 	this.setState({ openMenu: this.props.postStreamId, menuTarget: event.target });
+	// 	event.stopPropagation();
+	// 	return true;
+	// };
 
-	closeMenu = () => {
-		this.setState({ openMenu: null });
-	};
+	// closeMenu = () => {
+	// 	this.setState({ openMenu: null });
+	// };
 
 	findMyPostBeforeSeqNum(seqNum) {
 		const me = this.props.currentUser.username;
@@ -738,71 +673,71 @@ export class SimpleStream extends Component {
 	};
 
 	// by clicking on the post, we select it
-	handleClickPost = event => {
-		var postDiv = event.target.closest(".post");
-		if (!postDiv) return;
-
-		// if they clicked a link, follow the link rather than selecting the post
-		if (event && event.target && event.target.tagName === "A") return false;
-
-		// console.log(event.target.id);
-		if (event.target.id === "discard-button") {
-			// if the user clicked on the cancel changes button,
-			// presumably because she is editing a post, abort
-			this.setState({ editingPostId: null });
-			return;
-		} else if (event.target.id === "save-button") {
-			// if the user clicked on the save changes button,
-			// save the new post text
-			let newText = document
-				.getElementById("input-div-" + postDiv.id)
-				.innerHTML.replace(/<br>/g, "\n");
-
-			this.replacePostText(postDiv.id, newText);
-			this.setState({ editingPostId: null });
-			return;
-		} else if (postDiv.classList.contains("editing")) {
-			// otherwise, if we aren't currently editing the
-			// post, go to the thread for that post, but if
-			// we are editing, then do nothing.
-			return;
-		} else if (postDiv.classList.contains("system-post")) {
-			// otherwise, if we aren't currently editing the
-			// post, go to the thread for that post, but if
-			// we are editing, then do nothing.
-			return;
-		} else if (window.getSelection().toString().length > 0) {
-			// in this case the user has selected a string
-			// by dragging
-			return;
-		}
-		this.selectPost(postDiv.id, true);
-	};
+	// handleClickPost = event => {
+	// 	var postDiv = event.target.closest(".post");
+	// 	if (!postDiv) return;
+	//
+	// 	// if they clicked a link, follow the link rather than selecting the post
+	// 	if (event && event.target && event.target.tagName === "A") return false;
+	//
+	// 	// console.log(event.target.id);
+	// 	if (event.target.id === "discard-button") {
+	// 		// if the user clicked on the cancel changes button,
+	// 		// presumably because she is editing a post, abort
+	// 		this.setState({ editingPostId: null });
+	// 		return;
+	// 	} else if (event.target.id === "save-button") {
+	// 		// if the user clicked on the save changes button,
+	// 		// save the new post text
+	// 		let newText = document
+	// 			.getElementById("input-div-" + postDiv.id)
+	// 			.innerHTML.replace(/<br>/g, "\n");
+	//
+	// 		this.replacePostText(postDiv.id, newText);
+	// 		this.setState({ editingPostId: null });
+	// 		return;
+	// 	} else if (postDiv.classList.contains("editing")) {
+	// 		// otherwise, if we aren't currently editing the
+	// 		// post, go to the thread for that post, but if
+	// 		// we are editing, then do nothing.
+	// 		return;
+	// 	} else if (postDiv.classList.contains("system-post")) {
+	// 		// otherwise, if we aren't currently editing the
+	// 		// post, go to the thread for that post, but if
+	// 		// we are editing, then do nothing.
+	// 		return;
+	// 	} else if (window.getSelection().toString().length > 0) {
+	// 		// in this case the user has selected a string
+	// 		// by dragging
+	// 		return;
+	// 	}
+	// 	this.selectPost(postDiv.id, true);
+	// };
 
 	// show the thread related to the given post, and if there is
 	// a codeblock, scroll to it and select it
-	selectPost = (id, wasClicked = false) => {
-		EventEmitter.emit("analytics", {
-			label: "Page Viewed",
-			payload: { "Page Name": "Thread View" }
-		});
-		const post = this.findPostById(id);
-		if (!post) return;
-
-		// if it is a child in the thread, it'll have a parentPostId,
-		// otherwise use the id. any post can become the head of a thread
-		const threadId = post.parentPostId || post.id;
-		this.setState({ threadId: threadId, activePanel: "thread" });
-
-		this.focusInput();
-		if (wasClicked) {
-			EventEmitter.emit("interaction:thread-selected", {
-				threadId,
-				streamId: this.props.postStreamId,
-				post
-			});
-		}
-	};
+	// selectPost = (id, wasClicked = false) => {
+	// 	EventEmitter.emit("analytics", {
+	// 		label: "Page Viewed",
+	// 		payload: { "Page Name": "Thread View" }
+	// 	});
+	// 	const post = this.findPostById(id);
+	// 	if (!post) return;
+	//
+	// 	// if it is a child in the thread, it'll have a parentPostId,
+	// 	// otherwise use the id. any post can become the head of a thread
+	// 	const threadId = post.parentPostId || post.id;
+	// 	this.setState({ threadId: threadId, activePanel: "thread" });
+	//
+	// 	this.focusInput();
+	// 	if (wasClicked) {
+	// 		EventEmitter.emit("interaction:thread-selected", {
+	// 			threadId,
+	// 			streamId: this.props.postStreamId,
+	// 			post
+	// 		});
+	// 	}
+	// };
 
 	// not using a gutter for now
 	// installGutter() {
@@ -820,12 +755,6 @@ export class SimpleStream extends Component {
 	handleClickScrollToNewMessages = () => {
 		this.scrollToBottom();
 	};
-
-	handleEscape(event) {
-		if (this.state.editingPostId) this.handleDismissEdit();
-		else if (this.state.activePanel === "thread") this.handleDismissThread();
-		else event.abortKeyBinding();
-	}
 
 	handleDismissEdit() {
 		this.setState({ editingPostId: null });
@@ -1173,8 +1102,7 @@ const mapStateToProps = ({
 	posts,
 	messaging,
 	teams,
-	onboarding,
-	umis
+	onboarding
 }) => {
 	// TODO: figure out a way to do this elsewhere
 	Object.keys(users).forEach(function(key, index) {
@@ -1219,7 +1147,6 @@ const mapStateToProps = ({
 	const mutedStreams = (user && user.preferences && user.preferences.mutedStreams) || {};
 
 	return {
-		umis,
 		configs,
 		isOffline,
 		teamMembersById: toMapBy("id", teamMembers),
@@ -1280,7 +1207,10 @@ const mapStateToProps = ({
 	};
 };
 
-export default connect(mapStateToProps, {
-	...actions,
-	goToInvitePage
-})(SimpleStream);
+export default connect(
+	mapStateToProps,
+	{
+		...actions,
+		goToInvitePage
+	}
+)(SimpleStream);
