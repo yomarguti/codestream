@@ -17,14 +17,15 @@ class Stream extends React.Component {
 	state = {
 		editingPostId: null,
 		menuTarget: null, // can probably replace this with a ref on <Icon/>
+		postWithNewMessageIndicator: null,
 		openMenu: null,
-		threadId: null
+		threadId: null,
+		unreadsAbove: false,
+		unreadsBelow: false
 	};
 	disposables = [];
-	_postList = React.createRef();
 	_compose = React.createRef();
-	_header = React.createRef();
-	_root = React.createRef();
+	_postList = React.createRef();
 
 	componentDidMount() {
 		this.disposables.push(
@@ -33,10 +34,10 @@ class Stream extends React.Component {
 
 		this.scrollToBottom();
 
-		// this listener pays attention to when the input field resizes,
-		// presumably because the user has typed more than one line of text
-		// in it, and calls a function to handle the new size
 		new ResizeObserver(this.scrollToBottom).observe(this._compose.current);
+		new ResizeObserver(this.handleScroll).observe(this._postList.current);
+
+		this._postList.current.addEventListener("scroll", this.handleScroll);
 
 		if (global.atom) {
 			this.disposables.push(
@@ -58,14 +59,104 @@ class Stream extends React.Component {
 		}
 	}
 
+	componentDidUpdate(prevProps, prevState) {
+		const streamId = this.props.stream.id;
+		const switchedStreams = prevProps.stream.id !== streamId;
+
+		// if (nextProps.fileStreamId && switchingFileStreams && nextProps.posts.length === 0) {
+		// 	// TODO: is this still necessary? this was because there was no lazy loading and file streams were complex
+		// 	// this.props.fetchPosts({ streamId: nextProps.fileStreamId, teamId: nextProps.teamId });
+		// }
+
+		if (switchedStreams) {
+			this.dismissThread({ track: false });
+		}
+
+		let postWithNewMessageIndicator;
+
+		if (prevProps.hasFocus && !this.props.hasFocus) {
+			postWithNewMessageIndicator = null;
+		}
+		// if we just got the focus, mark the new stream read
+		if (!prevProps.hasFocus && this.props.hasFocus) {
+			this.checkMarkStreamRead();
+			postWithNewMessageIndicator = null;
+			if (this.props.currentUser && this.props.currentUser.lastReads) {
+				postWithNewMessageIndicator = this.props.currentUser.lastReads[streamId];
+			}
+		}
+		if (this.props.currentUser && this.props.currentUser.lastReads) {
+			postWithNewMessageIndicator = this.props.currentUser.lastReads[streamId];
+		}
+
+		// if we just switched to a new stream, (eagerly) mark both old and new as read
+		if (switchedStreams) {
+			this.props.markStreamRead(streamId);
+			this.props.markStreamRead(prevProps.stream.id);
+		}
+
+		if (prevState.postWithNewMessageIndicator !== postWithNewMessageIndicator)
+			this.setState({ postWithNewMessageIndicator });
+	}
+
 	componentWillUnmount() {
 		this.disposables.forEach(d => d.dispose());
+	}
+
+	checkMarkStreamRead() {
+		// if we have focus, and there are no unread indicators which would mean an
+		// unread is out of view, we assume the entire thread has been observed
+		// and we mark the stream read
+		if (
+			this.props.hasFocus &&
+			this.props.isActive &&
+			!this.state.unreadsAbove &&
+			!this.state.unreadsBelow
+		) {
+			try {
+				if (this.props.currentUser.lastReads[this.props.stream.id]) {
+					this.props.markStreamRead(this.props.stream.id);
+				}
+			} catch (e) {
+				/* this.props.currentUser.lastReads is probably undefined */
+			}
+		}
 	}
 
 	scrollToBottom = force => {
 		// don't scroll to bottom if we're in the middle of an edit,
 		if (this.state.editingPostId && !force) return;
-		this._postList.current.scrollTop = 100000;
+		if (this._postList.current) this._postList.current.scrollTop = 100000;
+	};
+
+	handleScroll = _event => {
+		const scrollDiv = this._postList.current;
+		if (!scrollDiv) {
+			return;
+		}
+		const scrollTop = scrollDiv.scrollTop;
+		const containerHeight = scrollDiv.parentNode.offsetHeight;
+		const scrollHeight = scrollDiv.scrollHeight;
+		const offBottom = scrollHeight - scrollTop - scrollDiv.offsetHeight;
+		const scrolledOffBottom = offBottom > 100;
+		if (scrolledOffBottom !== this.state.scrolledOffBottom) this.setState({ scrolledOffBottom });
+
+		let unreadsAbove = false;
+		let unreadsBelow = false;
+
+		let umiDivs = scrollDiv.getElementsByClassName("unread");
+		Array.from(umiDivs).forEach(umi => {
+			let top = umi.offsetTop;
+			if (top - scrollTop + 10 < 0) {
+				if (!unreadsAbove) unreadsAbove = umi;
+			} else if (top - scrollTop + 60 + umi.offsetHeight > containerHeight) {
+				unreadsBelow = umi;
+			} else if (this.props.hasFocus) {
+				umi.classList.remove("unread");
+			}
+		});
+		if (this.state.unreadsAbove !== unreadsAbove) this.setState({ unreadsAbove });
+		if (this.state.unreadsBelow !== unreadsBelow) this.setState({ unreadsBelow });
 	};
 
 	findPostById = id => this.props.posts.find(post => post.id === id);
@@ -374,7 +465,7 @@ class Stream extends React.Component {
 			// compare the current one to the prior one.
 			const parentPost = this.findPostById(post.parentPostId);
 			const newMessageIndicator =
-				post.seqNum && post.seqNum === Number(this.postWithNewMessageIndicator);
+				post.seqNum && post.seqNum === Number(this.state.postWithNewMessageIndicator);
 			unread = unread || newMessageIndicator;
 			const returnValue = (
 				<div key={post.id}>
@@ -428,11 +519,8 @@ class Stream extends React.Component {
 			);
 
 		return (
-			<div
-				className={createClassString("panel", "main-panel", "posts-panel", className)}
-				ref={this._root}
-			>
-				<div className="panel-header" ref={this._header}>
+			<div className={createClassString("panel", "main-panel", "posts-panel", className)}>
+				<div className="panel-header">
 					<span onClick={this.handleClickGoBack} className={umisClass}>
 						<Icon name="chevron-left" className="show-channels-icon align-left" />
 						{totalUMICount}
@@ -552,6 +640,8 @@ const mapStateToProps = state => {
 
 	return {
 		currentFile: context.currentFile,
+		currentUser: users[session.userId],
+		hasFocus: context.hasFocus,
 		isOffline,
 		fileStreamId: fileStream.id,
 		repoId: context.currentRepoId,

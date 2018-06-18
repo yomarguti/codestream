@@ -21,8 +21,6 @@ import {
 } from "../reducers/streams";
 
 export class SimpleStream extends Component {
-	disposables = [];
-
 	constructor(props) {
 		super(props);
 
@@ -34,119 +32,18 @@ export class SimpleStream extends Component {
 		this._compose = React.createRef();
 	}
 
-	componentDidMount() {
-		if (this._postslist) {
-			this._postslist.addEventListener("scroll", this.handleScroll.bind(this));
-			// this resize observer fires when the height of the
-			// postslist changes, when the window resizes in width
-			// or height, but notably not when new posts are added
-			// this is because the height of the HTML element is
-			// set explicitly
-			new ResizeObserver(() => {
-				this.handleScroll();
-			}).observe(this._postslist);
-		}
-	}
-
-	UNSAFE__componentWillReceiveProps(nextProps) {
-		const switchingFileStreams = nextProps.fileStreamId !== this.props.fileStreamId;
-		const switchingPostStreams = nextProps.postStreamId !== this.props.postStreamId;
-
-		if (nextProps.fileStreamId && switchingFileStreams && nextProps.posts.length === 0) {
-			// FIXME: is this still necessary? this was because there was no lazy loading and file streams were complex
-			// this.props.fetchPosts({ streamId: nextProps.fileStreamId, teamId: nextProps.teamId });
-		}
-
-		if (switchingPostStreams) {
-			this.handleDismissThread({ track: false });
-
-			// keep track of the new message indicator in "this" instead of looking
-			// directly at currentUser.lastReads, because that will change and trigger
-			// a re-render, which would remove the "new messages" line
-			// console.log("Switch to: ", nextProps.postStreamId);
-		}
-		// this.postWithNewMessageIndicator = 10;
-
-		// TODO: DELETE
-		if (nextProps.firstTimeInAtom && !this.state.fileForIntro) {
-			this.setState({ fileForIntro: nextProps.currentFile });
-		}
-
-		if (nextProps.hasFocus && !this.props.hasFocus) {
-			this.postWithNewMessageIndicator = null;
-		}
-		if (!nextProps.hasFocus && this.props.hasFocus) {
-			this.postWithNewMessageIndicator = null;
-			if (this.props.currentUser && this.props.currentUser.lastReads) {
-				this.postWithNewMessageIndicator = this.props.currentUser.lastReads[nextProps.postStreamId];
-			}
-		}
-		if (this.props.currentUser && this.props.currentUser.lastReads) {
-			this.postWithNewMessageIndicator = this.props.currentUser.lastReads[nextProps.postStreamId];
-		}
-	}
-
-	componentWillUnmount() {
-		this.disposables.forEach(d => d.dispose());
-	}
-
 	copy(event) {
 		let selectedText = window.getSelection().toString();
 		atom.clipboard.write(selectedText);
 		event.abortKeyBinding();
 	}
 
-	checkMarkStreamRead() {
-		// if we have focus, and there are no unread indicators which would mean an
-		// unread is out of view, we assume the entire thread has been observed
-		// and we mark the stream read
-		if (this.props.hasFocus && !this.state.unreadsAbove && !this.state.unreadsBelow) {
-			try {
-				if (this.props.currentUser.lastReads[this.props.postStreamId]) {
-					this.props.markStreamRead(this.props.postStreamId);
-				}
-			} catch (e) {
-				/* lastReads is probably undefined */
-			}
-		}
-	}
-
 	componentDidUpdate(prevProps, prevState) {
-		const { postStreamId, markStreamRead } = this.props;
-
-		// this.scrollToBottom();
-
-		// if we just switched to a new stream, (eagerly) mark both old and new as read
-		if (postStreamId !== prevProps.postStreamId) {
-			markStreamRead(postStreamId);
-
-			markStreamRead(prevProps.postStreamId);
-			// this.resizeStream();
-		}
-
 		// if we are switching from a non-thread panel
 		if (this.state.activePanel === "main" && prevState.activePanel !== "main") {
 			setTimeout(() => {
 				this.focusInput();
 			}, 500);
-		}
-
-		// if we just got the focus, mark the new stream read
-		if (this.props.hasFocus && !prevProps.hasFocus) {
-			this.checkMarkStreamRead();
-		}
-
-		if (
-			!this.state.unreadsAbove &&
-			!this.state.unreadsBelow &&
-			(prevState.unreadsAbove || prevState.unreadsBelow)
-		) {
-			console.log("CDU: cmsr");
-			this.checkMarkStreamRead();
-		}
-
-		if (prevState.threadId !== this.state.threadId) {
-			// this.resizeStream();
 		}
 
 		if (prevProps.hasFocus !== this.props.hasFocus) this.handleScroll();

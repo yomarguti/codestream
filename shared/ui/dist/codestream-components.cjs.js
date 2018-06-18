@@ -54398,10 +54398,10 @@ var Stream = function (_React$Component) {
 
 			this.scrollToBottom();
 
-			// this listener pays attention to when the input field resizes,
-			// presumably because the user has typed more than one line of text
-			// in it, and calls a function to handle the new size
 			new ResizeObserver(this.scrollToBottom).observe(this._compose.current);
+			new ResizeObserver(this.handleScroll).observe(this._postList.current);
+
+			this._postList.current.addEventListener("scroll", this.handleScroll);
 
 			if (global.atom) {
 				this.disposables.push(atom.keymaps.add("codestream", {
@@ -54423,11 +54423,67 @@ var Stream = function (_React$Component) {
 			}
 		}
 	}, {
+		key: "componentDidUpdate",
+		value: function componentDidUpdate(prevProps, prevState) {
+			var streamId = this.props.stream.id;
+			var switchedStreams = prevProps.stream.id !== streamId;
+
+			// if (nextProps.fileStreamId && switchingFileStreams && nextProps.posts.length === 0) {
+			// 	// TODO: is this still necessary? this was because there was no lazy loading and file streams were complex
+			// 	// this.props.fetchPosts({ streamId: nextProps.fileStreamId, teamId: nextProps.teamId });
+			// }
+
+			if (switchedStreams) {
+				this.dismissThread({ track: false });
+			}
+
+			var postWithNewMessageIndicator = void 0;
+
+			if (prevProps.hasFocus && !this.props.hasFocus) {
+				postWithNewMessageIndicator = null;
+			}
+			// if we just got the focus, mark the new stream read
+			if (!prevProps.hasFocus && this.props.hasFocus) {
+				this.checkMarkStreamRead();
+				postWithNewMessageIndicator = null;
+				if (this.props.currentUser && this.props.currentUser.lastReads) {
+					postWithNewMessageIndicator = this.props.currentUser.lastReads[streamId];
+				}
+			}
+			if (this.props.currentUser && this.props.currentUser.lastReads) {
+				postWithNewMessageIndicator = this.props.currentUser.lastReads[streamId];
+			}
+
+			// if we just switched to a new stream, (eagerly) mark both old and new as read
+			if (switchedStreams) {
+				this.props.markStreamRead(streamId);
+				this.props.markStreamRead(prevProps.stream.id);
+			}
+
+			if (prevState.postWithNewMessageIndicator !== postWithNewMessageIndicator) this.setState({ postWithNewMessageIndicator: postWithNewMessageIndicator });
+		}
+	}, {
 		key: "componentWillUnmount",
 		value: function componentWillUnmount() {
 			this.disposables.forEach(function (d) {
 				return d.dispose();
 			});
+		}
+	}, {
+		key: "checkMarkStreamRead",
+		value: function checkMarkStreamRead() {
+			// if we have focus, and there are no unread indicators which would mean an
+			// unread is out of view, we assume the entire thread has been observed
+			// and we mark the stream read
+			if (this.props.hasFocus && this.props.isActive && !this.state.unreadsAbove && !this.state.unreadsBelow) {
+				try {
+					if (this.props.currentUser.lastReads[this.props.stream.id]) {
+						this.props.markStreamRead(this.props.stream.id);
+					}
+				} catch (e) {
+					/* this.props.currentUser.lastReads is probably undefined */
+				}
+			}
 		}
 	}, {
 		key: "substituteLastPost",
@@ -54504,13 +54560,10 @@ var Stream = function (_React$Component) {
 
 			return react.createElement(
 				"div",
-				{
-					className: classnames("panel", "main-panel", "posts-panel", className),
-					ref: this._root
-				},
+				{ className: classnames("panel", "main-panel", "posts-panel", className) },
 				react.createElement(
 					"div",
-					{ className: "panel-header", ref: this._header },
+					{ className: "panel-header" },
 					react.createElement(
 						"span",
 						{ onClick: this.handleClickGoBack, className: umisClass },
@@ -54624,8 +54677,11 @@ var _initialiseProps$1 = function _initialiseProps() {
 		value: {
 			editingPostId: null,
 			menuTarget: null, // can probably replace this with a ref on <Icon/>
+			postWithNewMessageIndicator: null,
 			openMenu: null,
-			threadId: null
+			threadId: null,
+			unreadsAbove: false,
+			unreadsBelow: false
 		}
 	});
 	Object.defineProperty(this, "disposables", {
@@ -54633,22 +54689,12 @@ var _initialiseProps$1 = function _initialiseProps() {
 		writable: true,
 		value: []
 	});
-	Object.defineProperty(this, "_postList", {
-		enumerable: true,
-		writable: true,
-		value: react.createRef()
-	});
 	Object.defineProperty(this, "_compose", {
 		enumerable: true,
 		writable: true,
 		value: react.createRef()
 	});
-	Object.defineProperty(this, "_header", {
-		enumerable: true,
-		writable: true,
-		value: react.createRef()
-	});
-	Object.defineProperty(this, "_root", {
+	Object.defineProperty(this, "_postList", {
 		enumerable: true,
 		writable: true,
 		value: react.createRef()
@@ -54659,7 +54705,40 @@ var _initialiseProps$1 = function _initialiseProps() {
 		value: function value(force) {
 			// don't scroll to bottom if we're in the middle of an edit,
 			if (_this4.state.editingPostId && !force) return;
-			_this4._postList.current.scrollTop = 100000;
+			if (_this4._postList.current) _this4._postList.current.scrollTop = 100000;
+		}
+	});
+	Object.defineProperty(this, "handleScroll", {
+		enumerable: true,
+		writable: true,
+		value: function value(_event) {
+			var scrollDiv = _this4._postList.current;
+			if (!scrollDiv) {
+				return;
+			}
+			var scrollTop = scrollDiv.scrollTop;
+			var containerHeight = scrollDiv.parentNode.offsetHeight;
+			var scrollHeight = scrollDiv.scrollHeight;
+			var offBottom = scrollHeight - scrollTop - scrollDiv.offsetHeight;
+			var scrolledOffBottom = offBottom > 100;
+			if (scrolledOffBottom !== _this4.state.scrolledOffBottom) _this4.setState({ scrolledOffBottom: scrolledOffBottom });
+
+			var unreadsAbove = false;
+			var unreadsBelow = false;
+
+			var umiDivs = scrollDiv.getElementsByClassName("unread");
+			Array.from(umiDivs).forEach(function (umi) {
+				var top = umi.offsetTop;
+				if (top - scrollTop + 10 < 0) {
+					if (!unreadsAbove) unreadsAbove = umi;
+				} else if (top - scrollTop + 60 + umi.offsetHeight > containerHeight) {
+					unreadsBelow = umi;
+				} else if (_this4.props.hasFocus) {
+					umi.classList.remove("unread");
+				}
+			});
+			if (_this4.state.unreadsAbove !== unreadsAbove) _this4.setState({ unreadsAbove: unreadsAbove });
+			if (_this4.state.unreadsBelow !== unreadsBelow) _this4.setState({ unreadsBelow: unreadsBelow });
 		}
 	});
 	Object.defineProperty(this, "findPostById", {
@@ -55040,7 +55119,7 @@ var _initialiseProps$1 = function _initialiseProps() {
 				// then setting lastTimestamp, otherwise you wouldn't be able to
 				// compare the current one to the prior one.
 				var parentPost = _this4.findPostById(post.parentPostId);
-				var newMessageIndicator = post.seqNum && post.seqNum === Number(_this4.postWithNewMessageIndicator);
+				var newMessageIndicator = post.seqNum && post.seqNum === Number(_this4.state.postWithNewMessageIndicator);
 				unread = unread || newMessageIndicator;
 				var returnValue = react.createElement(
 					"div",
@@ -55096,6 +55175,8 @@ var mapStateToProps$5 = function mapStateToProps(state) {
 
 	return {
 		currentFile: context.currentFile,
+		currentUser: users[session.userId],
+		hasFocus: context.hasFocus,
 		isOffline: isOffline,
 		fileStreamId: fileStream.id,
 		repoId: context.currentRepoId,
@@ -55130,11 +55211,6 @@ var SimpleStream = function (_Component) {
 
 		var _this = possibleConstructorReturn(this, (SimpleStream.__proto__ || Object.getPrototypeOf(SimpleStream)).call(this, props));
 
-		Object.defineProperty(_this, "disposables", {
-			enumerable: true,
-			writable: true,
-			value: []
-		});
 		Object.defineProperty(_this, "handleResizeCompose", {
 			enumerable: true,
 			writable: true,
@@ -55711,66 +55787,6 @@ var SimpleStream = function (_Component) {
 	}
 
 	createClass(SimpleStream, [{
-		key: "componentDidMount",
-		value: function componentDidMount() {
-			var _this3 = this;
-
-			if (this._postslist) {
-				this._postslist.addEventListener("scroll", this.handleScroll.bind(this));
-				// this resize observer fires when the height of the
-				// postslist changes, when the window resizes in width
-				// or height, but notably not when new posts are added
-				// this is because the height of the HTML element is
-				// set explicitly
-				new ResizeObserver(function () {
-					_this3.handleScroll();
-				}).observe(this._postslist);
-			}
-		}
-	}, {
-		key: "UNSAFE__componentWillReceiveProps",
-		value: function UNSAFE__componentWillReceiveProps(nextProps) {
-			var switchingFileStreams = nextProps.fileStreamId !== this.props.fileStreamId;
-			var switchingPostStreams = nextProps.postStreamId !== this.props.postStreamId;
-
-			if (nextProps.fileStreamId && switchingFileStreams && nextProps.posts.length === 0) ;
-
-			if (switchingPostStreams) {
-				this.handleDismissThread({ track: false });
-
-				// keep track of the new message indicator in "this" instead of looking
-				// directly at currentUser.lastReads, because that will change and trigger
-				// a re-render, which would remove the "new messages" line
-				// console.log("Switch to: ", nextProps.postStreamId);
-			}
-			// this.postWithNewMessageIndicator = 10;
-
-			// TODO: DELETE
-			if (nextProps.firstTimeInAtom && !this.state.fileForIntro) {
-				this.setState({ fileForIntro: nextProps.currentFile });
-			}
-
-			if (nextProps.hasFocus && !this.props.hasFocus) {
-				this.postWithNewMessageIndicator = null;
-			}
-			if (!nextProps.hasFocus && this.props.hasFocus) {
-				this.postWithNewMessageIndicator = null;
-				if (this.props.currentUser && this.props.currentUser.lastReads) {
-					this.postWithNewMessageIndicator = this.props.currentUser.lastReads[nextProps.postStreamId];
-				}
-			}
-			if (this.props.currentUser && this.props.currentUser.lastReads) {
-				this.postWithNewMessageIndicator = this.props.currentUser.lastReads[nextProps.postStreamId];
-			}
-		}
-	}, {
-		key: "componentWillUnmount",
-		value: function componentWillUnmount() {
-			this.disposables.forEach(function (d) {
-				return d.dispose();
-			});
-		}
-	}, {
 		key: "copy",
 		value: function copy(event) {
 			var selectedText = window.getSelection().toString();
@@ -55778,59 +55794,16 @@ var SimpleStream = function (_Component) {
 			event.abortKeyBinding();
 		}
 	}, {
-		key: "checkMarkStreamRead",
-		value: function checkMarkStreamRead() {
-			// if we have focus, and there are no unread indicators which would mean an
-			// unread is out of view, we assume the entire thread has been observed
-			// and we mark the stream read
-			if (this.props.hasFocus && !this.state.unreadsAbove && !this.state.unreadsBelow) {
-				try {
-					if (this.props.currentUser.lastReads[this.props.postStreamId]) {
-						this.props.markStreamRead(this.props.postStreamId);
-					}
-				} catch (e) {
-					/* lastReads is probably undefined */
-				}
-			}
-		}
-	}, {
 		key: "componentDidUpdate",
 		value: function componentDidUpdate(prevProps, prevState) {
-			var _this4 = this;
-
-			var _props = this.props,
-			    postStreamId = _props.postStreamId,
-			    markStreamRead$$1 = _props.markStreamRead;
-
-			// this.scrollToBottom();
-
-			// if we just switched to a new stream, (eagerly) mark both old and new as read
-
-			if (postStreamId !== prevProps.postStreamId) {
-				markStreamRead$$1(postStreamId);
-
-				markStreamRead$$1(prevProps.postStreamId);
-				// this.resizeStream();
-			}
+			var _this3 = this;
 
 			// if we are switching from a non-thread panel
 			if (this.state.activePanel === "main" && prevState.activePanel !== "main") {
 				setTimeout(function () {
-					_this4.focusInput();
+					_this3.focusInput();
 				}, 500);
 			}
-
-			// if we just got the focus, mark the new stream read
-			if (this.props.hasFocus && !prevProps.hasFocus) {
-				this.checkMarkStreamRead();
-			}
-
-			if (!this.state.unreadsAbove && !this.state.unreadsBelow && (prevState.unreadsAbove || prevState.unreadsBelow)) {
-				console.log("CDU: cmsr");
-				this.checkMarkStreamRead();
-			}
-
-			if (prevState.threadId !== this.state.threadId) ;
 
 			if (prevProps.hasFocus !== this.props.hasFocus) this.handleScroll();
 
@@ -55884,7 +55857,7 @@ var SimpleStream = function (_Component) {
 	}, {
 		key: "handleScroll",
 		value: function handleScroll(_event) {
-			var _this5 = this;
+			var _this4 = this;
 
 			var scrollDiv = this._postslist;
 
@@ -55911,7 +55884,7 @@ var SimpleStream = function (_Component) {
 					if (!unreadsAbove) unreadsAbove = umi;
 				} else if (top - scrollTop + 60 + umi.offsetHeight > containerHeight) {
 					unreadsBelow = umi;
-				} else if (_this5.props.hasFocus) {
+				} else if (_this4.props.hasFocus) {
 					umi.classList.remove("unread");
 				}
 			});
@@ -55933,7 +55906,7 @@ var SimpleStream = function (_Component) {
 		// to be able to animate between the two streams, since they will both be
 		// visible during the transition
 		value: function render() {
-			var _this6 = this;
+			var _this5 = this;
 
 			var configs = this.props.configs;
 			var activePanel = this.state.activePanel;
@@ -55951,7 +55924,7 @@ var SimpleStream = function (_Component) {
 			return react.createElement(
 				"div",
 				{ className: streamClass, ref: function ref(_ref5) {
-						return _this6._div = _ref5;
+						return _this5._div = _ref5;
 					} },
 				react.createElement("div", { id: "modal-root" }),
 				react.createElement("div", { id: "confirm-root" }),
