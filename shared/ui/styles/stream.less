@@ -353,7 +353,6 @@
 			border-top: 1px solid @base-border-color;
 			// background-color: inherit;
 			background-color: @app-background-color;
-			// position: absolute;
 			bottom: 0px;
 			padding: 10px;
 			box-sizing: border-box;
@@ -865,23 +864,16 @@
 			overflow-y: auto;
 			position: relative;
 			transition: transform 0.2s, opacity 0.2s;
-
 			&.shrink {
-				// transform: none;
-				left: 100%;
-				animation: 0.2s slideout;
-				// opacity: 0;
-				height: 0;
-				// transition: display 2.25s;
 				transform: scale(0.9);
+				height: 0;
 			}
 		}
 		.threadlist {
 			display: none;
-			transform: scale(0.9);
-			&.visible {
+			&.active {
 				display: block;
-				transform: none;
+				animation: 0.4s slidein;
 			}
 		}
 
@@ -1177,7 +1169,6 @@
 		}
 	}
 	.stream.reduced-motion {
-		.shrink,
 		.off-right {
 			z-index: -1 !important;
 			.panel-header {
@@ -1186,10 +1177,6 @@
 			opacity: 0;
 			animation: none;
 			transition: opacity 0.25s;
-			.postslist.shrink {
-				transform: none;
-				animation: none;
-			}
 		}
 		.panel {
 			left: 0 !important;
@@ -1202,6 +1189,12 @@
 			opacity: 0;
 			transition: opacity 0.25s;
 			animation: none !important;
+		}
+		.postslist {
+			transform: none;
+		}
+		.threadlist.active {
+			animation: none;
 		}
 		.compose {
 			animation: none !important;

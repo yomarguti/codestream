@@ -1,4 +1,4 @@
-import React, { Fragment } from "react";
+import React from "react";
 import { connect } from "react-redux";
 import createClassString from "classnames";
 import { FormattedMessage } from "react-intl";
@@ -156,6 +156,23 @@ class Stream extends React.Component {
 		this.state.threadId ? this.dismissThread() : this.props.showChannels();
 	};
 
+	postAction = (action, post) => {
+		switch (action) {
+			case "make-thread":
+				return this.selectPost(post.id, true);
+			case "edit-post":
+				return this.setState({ editingPostId: post.id });
+			case "delete-post":
+				return this.confirmDeletePost(post.id);
+			case "mark-unread":
+				return this.markUnread(post.id);
+			case "add-reaction":
+				return this.notImplementedYet();
+			case "pin-to-stream":
+				return this.notImplementedYet();
+		}
+	};
+
 	renderIntro = () => {
 		return [
 			<label key="welcome">
@@ -237,7 +254,6 @@ class Stream extends React.Component {
 			channelName,
 			className,
 			renderComposeBox,
-			renderThread,
 			runSlashCommand,
 			setActivePanel,
 			umis
@@ -289,7 +305,7 @@ class Stream extends React.Component {
 					{this.renderPosts()}
 				</div>
 				<div
-					className={createClassString("postslist", "threadlist", { visible: inThread })}
+					className={createClassString("postslist", "threadlist", { active: inThread })}
 					onClick={this.handleClickPost}
 				>
 					{threadPost && (
@@ -334,7 +350,4 @@ const mapStateToProps = state => {
 
 	return { umis: state.umis, usernamesRegexp };
 };
-export default connect(
-	mapStateToProps,
-	{ goToInvitePage }
-)(Stream);
+export default connect(mapStateToProps, { goToInvitePage })(Stream);

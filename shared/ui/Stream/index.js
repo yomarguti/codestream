@@ -1,6 +1,5 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
-import { FormattedMessage } from "react-intl";
 import _ from "underscore";
 import createClassString from "classnames";
 import ComposeBox from "./ComposeBox";
@@ -297,41 +296,12 @@ export class SimpleStream extends Component {
 	// 	];
 	// };
 
-	renderThreadPosts = threadId => {
-		let lastTimestamp = 0;
-		return this.props.posts.map(post => {
-			if (post.deactivated) return null;
-			if (!threadId || threadId !== post.parentPostId) {
-				return null;
-			}
-			// this needs to be done by storing the return value of the render,
-			// then setting lastTimestamp, otherwise you wouldn't be able to
-			// compare the current one to the prior one.
-			const returnValue = (
-				<div key={post.id}>
-					<DateSeparator timestamp1={lastTimestamp} timestamp2={post.createdAt} />
-					<Post
-						post={post}
-						usernames={this.props.usernamesRegexp}
-						currentUsername={this.props.currentUser.username}
-						showDetails="1"
-						currentCommit={this.props.currentCommit}
-						editing={post.id === this.state.editingPostId}
-						action={this.postAction}
-					/>
-				</div>
-			);
-			lastTimestamp = post.createdAt;
-			return returnValue;
-		});
-	};
-
 	// we render both a main stream (postslist) plus also a postslist related
 	// to the currently selected thread (if it exists). the reason for this is
 	// to be able to animate between the two streams, since they will both be
 	// visible during the transition
 	render() {
-		const { configs, posts } = this.props;
+		const { configs } = this.props;
 		const { activePanel } = this.state;
 
 		const streamClass = createClassString({
@@ -362,7 +332,6 @@ export class SimpleStream extends Component {
 			"off-right": activePanel !== "thread"
 		});
 
-		let lastTimestamp = null;
 		let threadId = this.state.threadId;
 		let threadPost = this.findPostById(threadId);
 
@@ -435,7 +404,6 @@ export class SimpleStream extends Component {
 					isActive={activePanel === "main"}
 					className={mainPanelClass}
 					channelName={channelName}
-					inThread={this.state.activePanel === "thread"}
 					stream={this.props.postStream}
 					isMuted={this.props.mutedStreams[this.props.postStreamId]}
 					setActivePanel={this.setActivePanel}
@@ -443,39 +411,6 @@ export class SimpleStream extends Component {
 					posts={this.props.posts}
 					currentUser={this.props.currentUser}
 					showChannels={this.showChannels}
-					renderThread={() => (
-						<div className={threadPanelClass}>
-							<div id="close-thread" className="panel-header" onClick={this.handleDismissThread}>
-								<span>
-									<Icon
-										name="chevron-left"
-										onClick={this.showChannels}
-										className="show-channels-icon align-left"
-									/>
-									Back <span className="keybinding">(esc)</span>
-								</span>
-							</div>
-							<div
-								className={threadPostsListClass}
-								ref={ref => (this._threadpostslist = ref)}
-								onClick={this.handleClickPost}
-							>
-								{threadPost && (
-									<Post
-										post={threadPost}
-										usernames={this.props.usernamesRegexp}
-										currentUsername={this.props.currentUser.username}
-										key={threadPost.id}
-										showDetails="1"
-										currentCommit={this.props.currentCommit}
-										editing={activePanel === "thread" && threadPost.id === this.state.editingPostId}
-										action={this.postAction}
-									/>
-								)}
-								{this.renderThreadPosts(threadId)}
-							</div>
-						</div>
-					)}
 					renderComposeBox={() => (
 						<ComposeBox
 							placeholder={placeholderText}
@@ -633,23 +568,6 @@ export class SimpleStream extends Component {
 
 	markUnread = () => {
 		this.submitSystemPost("Not implemented yet");
-	};
-
-	postAction = (action, post) => {
-		switch (action) {
-			case "make-thread":
-				return this.selectPost(post.id, true);
-			case "edit-post":
-				return this.setState({ editingPostId: post.id });
-			case "delete-post":
-				return this.confirmDeletePost(post.id);
-			case "mark-unread":
-				return this.markUnread(post.id);
-			case "add-reaction":
-				return this.notImplementedYet();
-			case "pin-to-stream":
-				return this.notImplementedYet();
-		}
 	};
 
 	findMentionedUserIds = (text, users) => {
@@ -1207,10 +1125,7 @@ const mapStateToProps = ({
 	};
 };
 
-export default connect(
-	mapStateToProps,
-	{
-		...actions,
-		goToInvitePage
-	}
-)(SimpleStream);
+export default connect(mapStateToProps, {
+	...actions,
+	goToInvitePage
+})(SimpleStream);
