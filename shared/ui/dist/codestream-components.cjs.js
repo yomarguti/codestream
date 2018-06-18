@@ -55590,7 +55590,7 @@ var SimpleStream = function (_Component) {
 		Object.defineProperty(_this, "openStream", {
 			enumerable: true,
 			writable: true,
-			value: function value(args) {
+			value: function value(_args) {
 				// getChannelStreamsForTeam(streams, context.currentTeamId, session.userId) || [],
 			}
 		});
@@ -55862,59 +55862,6 @@ var SimpleStream = function (_Component) {
 			});
 		}
 	}, {
-		key: "render",
-
-
-		// we render both a main stream (postslist) plus also a postslist related
-		// to the currently selected thread (if it exists). the reason for this is
-		// to be able to animate between the two streams, since they will both be
-		// visible during the transition
-		value: function render() {
-			var _this5 = this;
-
-			var configs = this.props.configs;
-			var activePanel = this.state.activePanel;
-
-
-			var streamClass = classnames({
-				stream: true,
-				"no-headshots": !configs.showHeadshots,
-				"reduced-motion": configs.reduceMotion
-			});
-			var mainPanelClass = classnames({
-				"off-right": activePanel === "channels" || activePanel === "create-channel" || activePanel === "create-dm" || activePanel === "public-channels"
-			});
-
-			return react.createElement(
-				"div",
-				{ className: streamClass, ref: function ref(_ref6) {
-						return _this5._div = _ref6;
-					} },
-				react.createElement("div", { id: "modal-root" }),
-				react.createElement("div", { id: "confirm-root" }),
-				react.createElement(ChannelPanel, {
-					activePanel: activePanel,
-					setActivePanel: this.setActivePanel,
-					runSlashCommand: this.runSlashCommand
-				}),
-				react.createElement(PublicChannelPanel, { activePanel: activePanel, setActivePanel: this.setActivePanel }),
-				react.createElement(CreateChannelPanel, { activePanel: activePanel, setActivePanel: this.setActivePanel }),
-				react.createElement(CreateDMPanel, { activePanel: activePanel, setActivePanel: this.setActivePanel }),
-				react.createElement(PostsPanel, {
-					isActive: activePanel === "main",
-					className: mainPanelClass,
-					stream: this.props.postStream,
-					isMuted: this.props.mutedStreams[this.props.postStreamId],
-					setActivePanel: this.setActivePanel,
-					runSlashCommand: this.runSlashCommand,
-					posts: this.props.posts,
-					currentUser: this.props.currentUser,
-					showChannels: this.showChannels,
-					showPostsPanel: this.ensureStreamIsActive
-				})
-			);
-		}
-	}, {
 		key: "findMyPostBeforeSeqNum",
 		value: function findMyPostBeforeSeqNum(seqNum) {
 			var me = this.props.currentUser.username;
@@ -55925,7 +55872,7 @@ var SimpleStream = function (_Component) {
 	}, {
 		key: "handleScroll",
 		value: function handleScroll(_event) {
-			var _this6 = this;
+			var _this5 = this;
 
 			var scrollDiv = this._postslist;
 
@@ -55952,7 +55899,7 @@ var SimpleStream = function (_Component) {
 					if (!unreadsAbove) unreadsAbove = umi;
 				} else if (top - scrollTop + 60 + umi.offsetHeight > containerHeight) {
 					unreadsBelow = umi;
-				} else if (_this6.props.hasFocus) {
+				} else if (_this5.props.hasFocus) {
 					umi.classList.remove("unread");
 				}
 			});
@@ -55967,6 +55914,59 @@ var SimpleStream = function (_Component) {
 		value: function handleDismissEdit() {
 			this.setState({ editingPostId: null });
 			this.focusInput();
+		}
+	}, {
+		key: "render",
+
+
+		// we render both a main stream (postslist) plus also a postslist related
+		// to the currently selected thread (if it exists). the reason for this is
+		// to be able to animate between the two streams, since they will both be
+		// visible during the transition
+		value: function render() {
+			var _this6 = this;
+
+			var configs = this.props.configs;
+			var activePanel = this.state.activePanel;
+
+
+			var streamClass = classnames({
+				stream: true,
+				"no-headshots": !configs.showHeadshots,
+				"reduced-motion": configs.reduceMotion
+			});
+			var mainPanelClass = classnames({
+				"off-right": activePanel === "channels" || activePanel === "create-channel" || activePanel === "create-dm" || activePanel === "public-channels"
+			});
+
+			return react.createElement(
+				"div",
+				{ className: streamClass, ref: function ref(_ref6) {
+						return _this6._div = _ref6;
+					} },
+				react.createElement("div", { id: "modal-root" }),
+				react.createElement("div", { id: "confirm-root" }),
+				react.createElement(ChannelPanel, {
+					activePanel: activePanel,
+					setActivePanel: this.setActivePanel,
+					runSlashCommand: this.runSlashCommand
+				}),
+				react.createElement(PublicChannelPanel, { activePanel: activePanel, setActivePanel: this.setActivePanel }),
+				react.createElement(CreateChannelPanel, { activePanel: activePanel, setActivePanel: this.setActivePanel }),
+				react.createElement(CreateDMPanel, { activePanel: activePanel, setActivePanel: this.setActivePanel }),
+				react.createElement(PostsPanel, {
+					isActive: activePanel === "main",
+					className: mainPanelClass,
+					stream: this.props.postStream,
+					isMuted: this.props.mutedStreams[this.props.postStreamId],
+					setActivePanel: this.setActivePanel,
+					runSlashCommand: this.runSlashCommand,
+					posts: this.props.posts,
+					currentUser: this.props.currentUser,
+					showChannels: this.showChannels,
+					showPostsPanel: this.ensureStreamIsActive
+				})
+			);
 		}
 	}]);
 	return SimpleStream;

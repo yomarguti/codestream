@@ -271,55 +271,6 @@ export class SimpleStream extends Component {
 		}
 	};
 
-	// we render both a main stream (postslist) plus also a postslist related
-	// to the currently selected thread (if it exists). the reason for this is
-	// to be able to animate between the two streams, since they will both be
-	// visible during the transition
-	render() {
-		const { configs } = this.props;
-		const { activePanel } = this.state;
-
-		const streamClass = createClassString({
-			stream: true,
-			"no-headshots": !configs.showHeadshots,
-			"reduced-motion": configs.reduceMotion
-		});
-		const mainPanelClass = createClassString({
-			"off-right":
-				activePanel === "channels" ||
-				activePanel === "create-channel" ||
-				activePanel === "create-dm" ||
-				activePanel === "public-channels"
-		});
-
-		return (
-			<div className={streamClass} ref={ref => (this._div = ref)}>
-				<div id="modal-root" />
-				<div id="confirm-root" />
-				<ChannelPanel
-					activePanel={activePanel}
-					setActivePanel={this.setActivePanel}
-					runSlashCommand={this.runSlashCommand}
-				/>
-				<PublicChannelPanel activePanel={activePanel} setActivePanel={this.setActivePanel} />
-				<CreateChannelPanel activePanel={activePanel} setActivePanel={this.setActivePanel} />
-				<CreateDMPanel activePanel={activePanel} setActivePanel={this.setActivePanel} />
-				<PostsPanel
-					isActive={activePanel === "main"}
-					className={mainPanelClass}
-					stream={this.props.postStream}
-					isMuted={this.props.mutedStreams[this.props.postStreamId]}
-					setActivePanel={this.setActivePanel}
-					runSlashCommand={this.runSlashCommand}
-					posts={this.props.posts}
-					currentUser={this.props.currentUser}
-					showChannels={this.showChannels}
-					showPostsPanel={this.ensureStreamIsActive}
-				/>
-			</div>
-		);
-	}
-
 	findMyPostBeforeSeqNum(seqNum) {
 		const me = this.props.currentUser.username;
 		return _.chain(this.props.posts)
@@ -603,7 +554,7 @@ export class SimpleStream extends Component {
 		return true;
 	};
 
-	openStream = args => {
+	openStream = _args => {
 		// getChannelStreamsForTeam(streams, context.currentTeamId, session.userId) || [],
 	};
 
@@ -648,6 +599,55 @@ export class SimpleStream extends Component {
 		this.submitSystemPost(text);
 		return true;
 	};
+
+	// we render both a main stream (postslist) plus also a postslist related
+	// to the currently selected thread (if it exists). the reason for this is
+	// to be able to animate between the two streams, since they will both be
+	// visible during the transition
+	render() {
+		const { configs } = this.props;
+		const { activePanel } = this.state;
+
+		const streamClass = createClassString({
+			stream: true,
+			"no-headshots": !configs.showHeadshots,
+			"reduced-motion": configs.reduceMotion
+		});
+		const mainPanelClass = createClassString({
+			"off-right":
+				activePanel === "channels" ||
+				activePanel === "create-channel" ||
+				activePanel === "create-dm" ||
+				activePanel === "public-channels"
+		});
+
+		return (
+			<div className={streamClass} ref={ref => (this._div = ref)}>
+				<div id="modal-root" />
+				<div id="confirm-root" />
+				<ChannelPanel
+					activePanel={activePanel}
+					setActivePanel={this.setActivePanel}
+					runSlashCommand={this.runSlashCommand}
+				/>
+				<PublicChannelPanel activePanel={activePanel} setActivePanel={this.setActivePanel} />
+				<CreateChannelPanel activePanel={activePanel} setActivePanel={this.setActivePanel} />
+				<CreateDMPanel activePanel={activePanel} setActivePanel={this.setActivePanel} />
+				<PostsPanel
+					isActive={activePanel === "main"}
+					className={mainPanelClass}
+					stream={this.props.postStream}
+					isMuted={this.props.mutedStreams[this.props.postStreamId]}
+					setActivePanel={this.setActivePanel}
+					runSlashCommand={this.runSlashCommand}
+					posts={this.props.posts}
+					currentUser={this.props.currentUser}
+					showChannels={this.showChannels}
+					showPostsPanel={this.ensureStreamIsActive}
+				/>
+			</div>
+		);
+	}
 }
 
 const mapStateToProps = ({
