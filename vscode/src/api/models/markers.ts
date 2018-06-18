@@ -12,6 +12,7 @@ import {
 } from "../session";
 import { Iterables } from "../../system";
 import { CSMarker } from "../types";
+import { memoize } from "../../system/decorators";
 
 export class Marker {
 	private readonly _range: Range;
@@ -30,18 +31,27 @@ export class Marker {
 		return this._commitHash;
 	}
 
+	@memoize
+	get hoverRange() {
+		return new Range(this._range.start.line, 0, this._range.start.line, 0);
+	}
+
 	get id() {
 		return this.entity.id;
 	}
 
+	private _post: Post | undefined;
 	async post() {
-		const stream = await this.stream();
-		if (stream === undefined) {
-			const post = await this.session.api.getPost(this.entity.postId);
-			return new Post(this.session, post);
+		if (this._post === undefined) {
+			const stream = await this.stream();
+			if (stream === undefined) {
+				const post = await this.session.api.getPost(this.entity.postId);
+				this._post = new Post(this.session, post);
+			} else {
+				this._post = await stream.posts.get(this.entity.postId);
+			}
 		}
-
-		return stream.posts.get(this.entity.postId);
+		return this._post;
 	}
 
 	get postId() {
