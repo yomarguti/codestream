@@ -12,7 +12,7 @@ import EventEmitter from "../event-emitter";
 import * as actions from "./actions";
 import { goToInvitePage } from "../actions/routing";
 import { toMapBy } from "../utils";
-import { slashCommands } from "./SlashCommands";
+import slashCommands from "./slash-commands";
 import { confirmPopup } from "./Confirm";
 import {
 	getPostsForStream,
@@ -237,52 +237,40 @@ export class SimpleStream extends Component {
 		return this.props.posts.find(post => id === post.id);
 	}
 
-	// handleClickHelpLink = event => {
-	// 	event.preventDefault();
-	// 	EventEmitter.emit("interaction:clicked-link", "https://help.codestream.com");
-	// };
-
-	// renderIntro = () => {
-	// 	return [
-	// 		<label key="welcome">
-	// 			<FormattedMessage id="stream.intro.welcome" defaultMessage="Welcome to CodeStream!" />
-	// 		</label>,
-	// 		<label key="info">
-	// 			<ul>
-	// 				<li>
-	// 					<FormattedMessage
-	// 						id="stream.intro.eachFile"
-	// 						defaultMessage="Post a message and any of your teammates can join the discussion."
-	// 					/>
-	// 				</li>
-	// 				<li>
-	// 					<FormattedMessage
-	// 						id="stream.intro.comment"
-	// 						defaultMessage={
-	// 							'Comment on a specific block of code by selecting it and then clicking the "+" button.'
-	// 						}
-	// 					/>
-	// 				</li>
-	// 				<li>
-	// 					<FormattedMessage
-	// 						id="stream.intro.share"
-	// 						defaultMessage="Select &quot;Codestream: Invite&quot; from the command palette to invite your team."
-	// 					>
-	// 						{() => (
-	// 							<React.Fragment>
-	// 								Select <a onClick={this.props.goToInvitePage}>Codestream: Invite</a> from the
-	// 								command palette to invite your team.
-	// 							</React.Fragment>
-	// 						)}
-	// 					</FormattedMessage>
-	// 				</li>
-	// 			</ul>
-	// 		</label>,
-	// 		<label key="learn-more">
-	// 			Learn more at <a onClick={this.handleClickHelpLink}>help.codestream.com</a>
-	// 		</label>
-	// 	];
-	// };
+	runSlashCommand = (command, args) => {
+		switch (command) {
+			case "help":
+				return this.postHelp();
+			case "add":
+				return this.addMembersToStream(args);
+			case "who":
+				return this.showMembers();
+			case "mute":
+				return this.toggleMute();
+			case "muteall":
+				return this.toggleMuteAll();
+			case "msg":
+				return this.sendDirectMessage(args);
+			case "open":
+				return this.openStream(args);
+			case "prefs":
+				return this.openPrefs(args);
+			case "rename":
+				return this.renameChannel(args);
+			case "remove":
+				return this.removeFromStream(args);
+			case "leave":
+				return this.leaveChannel(args);
+			case "delete":
+				return this.deleteChannel(args);
+			case "archive":
+				return this.archiveChannel(args);
+			case "version":
+				return this.postVersion(args);
+			case "me":
+				return false;
+		}
+	};
 
 	// we render both a main stream (postslist) plus also a postslist related
 	// to the currently selected thread (if it exists). the reason for this is
@@ -484,81 +472,6 @@ export class SimpleStream extends Component {
 	markUnread = () => {
 		this.submitSystemPost("Not implemented yet");
 	};
-
-	// by clicking on the post, we select it
-	// handleClickPost = event => {
-	// 	var postDiv = event.target.closest(".post");
-	// 	if (!postDiv) return;
-	//
-	// 	// if they clicked a link, follow the link rather than selecting the post
-	// 	if (event && event.target && event.target.tagName === "A") return false;
-	//
-	// 	// console.log(event.target.id);
-	// 	if (event.target.id === "discard-button") {
-	// 		// if the user clicked on the cancel changes button,
-	// 		// presumably because she is editing a post, abort
-	// 		this.setState({ editingPostId: null });
-	// 		return;
-	// 	} else if (event.target.id === "save-button") {
-	// 		// if the user clicked on the save changes button,
-	// 		// save the new post text
-	// 		let newText = document
-	// 			.getElementById("input-div-" + postDiv.id)
-	// 			.innerHTML.replace(/<br>/g, "\n");
-	//
-	// 		this.replacePostText(postDiv.id, newText);
-	// 		this.setState({ editingPostId: null });
-	// 		return;
-	// 	} else if (postDiv.classList.contains("editing")) {
-	// 		// otherwise, if we aren't currently editing the
-	// 		// post, go to the thread for that post, but if
-	// 		// we are editing, then do nothing.
-	// 		return;
-	// 	} else if (postDiv.classList.contains("system-post")) {
-	// 		// otherwise, if we aren't currently editing the
-	// 		// post, go to the thread for that post, but if
-	// 		// we are editing, then do nothing.
-	// 		return;
-	// 	} else if (window.getSelection().toString().length > 0) {
-	// 		// in this case the user has selected a string
-	// 		// by dragging
-	// 		return;
-	// 	}
-	// 	this.selectPost(postDiv.id, true);
-	// };
-
-	// show the thread related to the given post, and if there is
-	// a codeblock, scroll to it and select it
-	// selectPost = (id, wasClicked = false) => {
-	// 	EventEmitter.emit("analytics", {
-	// 		label: "Page Viewed",
-	// 		payload: { "Page Name": "Thread View" }
-	// 	});
-	// 	const post = this.findPostById(id);
-	// 	if (!post) return;
-	//
-	// 	// if it is a child in the thread, it'll have a parentPostId,
-	// 	// otherwise use the id. any post can become the head of a thread
-	// 	const threadId = post.parentPostId || post.id;
-	// 	this.setState({ threadId: threadId, activePanel: "thread" });
-	//
-	// 	this.focusInput();
-	// 	if (wasClicked) {
-	// 		EventEmitter.emit("interaction:thread-selected", {
-	// 			threadId,
-	// 			streamId: this.props.postStreamId,
-	// 			post
-	// 		});
-	// 	}
-	// };
-
-	// not using a gutter for now
-	// installGutter() {
-	// 	let editor = atom.workspace.getActiveTextEditor();
-	// 	if (editor && !editor.gutterWithName("CodeStream")) {
-	// 		editor.addGutter({ name: "CodeStream", priority: 150 });
-	// 	}
-	// }
 
 	focusInput = () => {
 		const input = document.getElementById("input-div");
@@ -792,7 +705,7 @@ export class SimpleStream extends Component {
 		return true;
 	};
 
-	postHelp = () => {
+	postVersion = () => {
 		const text = "Version info goes here.";
 		this.submitSystemPost(text);
 		return true;

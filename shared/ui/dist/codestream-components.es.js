@@ -50670,6 +50670,12 @@ var AtMentionsPopup = function (_Component) {
 	return AtMentionsPopup;
 }(react_1);
 
+var slashCommands = [{ id: "help", help: "get help" }, { id: "add", help: "add member to channel", description: "@user" }, { id: "archive", help: "archive channel" }, { id: "invite", help: "add to your team", description: "email" }, { id: "leave", help: "leave channel" }, { id: "me", help: "emote" }, { id: "msg", help: "message member", description: "@user" }, { id: "mute", help: "mute channel" },
+// { id: "muteall", help: "mute codestream" },
+// { id: "open", help: "open channel" },
+// { id: "prefs", help: "open preferences" },
+{ id: "rename", help: "rename channel", description: "newname" }, { id: "remove", help: "remove from channel", description: "@user" }, { id: "version", help: "" }, { id: "who", help: "show channel members" }];
+
 var arrayToRange = function arrayToRange(_ref) {
 	var _ref2 = slicedToArray(_ref, 4),
 	    startRow = _ref2[0],
@@ -50975,7 +50981,7 @@ var ComposeBox = function (_React$Component) {
 					}
 				});
 			} else if (type === "slash-commands") {
-				this.props.slashCommands.map(function (command) {
+				slashCommands.map(function (command) {
 					var lowered = command.id.toLowerCase();
 					if (lowered.indexOf(prefix) === 0) {
 						command.identifier = command.id;
@@ -54500,7 +54506,7 @@ var Stream = function (_React$Component) {
 							umiCount: 0,
 							isMuted: this.props.isMuted,
 							setActivePanel: setActivePanel,
-							runSlashCommand: this.runSlashCommand,
+							runSlashCommand: this.props.runSlashCommand,
 							closeMenu: this.closeMenu
 						})
 					)
@@ -54598,44 +54604,6 @@ var _initialiseProps$1 = function _initialiseProps() {
 			return mentionedUserIds;
 		}
 	});
-	Object.defineProperty(this, "runSlashCommand", {
-		enumerable: true,
-		writable: true,
-		value: function value(command, args) {
-			switch (command) {
-				case "help":
-					return _this4.postHelp();
-				case "add":
-					return _this4.addMembersToStream(args);
-				case "who":
-					return _this4.showMembers();
-				case "mute":
-					return _this4.toggleMute();
-				case "muteall":
-					return _this4.toggleMuteAll();
-				case "msg":
-					return _this4.sendDirectMessage(args);
-				case "open":
-					return _this4.openStream(args);
-				case "prefs":
-					return _this4.openPrefs(args);
-				case "rename":
-					return _this4.renameChannel(args);
-				case "remove":
-					return _this4.removeFromStream(args);
-				case "leave":
-					return _this4.leaveChannel(args);
-				case "delete":
-					return _this4.deleteChannel(args);
-				case "archive":
-					return _this4.archiveChannel(args);
-				case "version":
-					return _this4.postVersion(args);
-				case "me":
-					return false;
-			}
-		}
-	});
 	Object.defineProperty(this, "checkForSlashCommands", {
 		enumerable: true,
 		writable: true,
@@ -54647,7 +54615,7 @@ var _initialiseProps$1 = function _initialiseProps() {
 			if (commandMatch) {
 				var command = commandMatch[1];
 				var _args = commandMatch[2];
-				return _this4.runSlashCommand(command, _args);
+				return _this4.props.runSlashCommand(command, _args);
 			}
 
 			return false;
@@ -55056,12 +55024,6 @@ var uuid = function uuid(a) {
 	return a ? (a ^ Math.random() * 16 >> a / 4).toString(16) : ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, uuid);
 };
 
-var slashCommands = [{ id: "help", help: "get help" }, { id: "add", help: "add member to channel", description: "@user" }, { id: "archive", help: "archive channel" }, { id: "invite", help: "add to your team", description: "email" }, { id: "leave", help: "leave channel" }, { id: "me", help: "emote" }, { id: "msg", help: "message member", description: "@user" }, { id: "mute", help: "mute channel" },
-// { id: "muteall", help: "mute codestream" },
-// { id: "open", help: "open channel" },
-// { id: "prefs", help: "open preferences" },
-{ id: "rename", help: "rename channel", description: "newname" }, { id: "remove", help: "remove from channel", description: "@user" }, { id: "version", help: "" }, { id: "who", help: "show channel members" }];
-
 var SimpleStream = function (_Component) {
 	inherits(SimpleStream, _Component);
 
@@ -55130,6 +55092,44 @@ var SimpleStream = function (_Component) {
 			enumerable: true,
 			writable: true,
 			value: function value() {}
+		});
+		Object.defineProperty(_this, "runSlashCommand", {
+			enumerable: true,
+			writable: true,
+			value: function value(command, args) {
+				switch (command) {
+					case "help":
+						return _this.postHelp();
+					case "add":
+						return _this.addMembersToStream(args);
+					case "who":
+						return _this.showMembers();
+					case "mute":
+						return _this.toggleMute();
+					case "muteall":
+						return _this.toggleMuteAll();
+					case "msg":
+						return _this.sendDirectMessage(args);
+					case "open":
+						return _this.openStream(args);
+					case "prefs":
+						return _this.openPrefs(args);
+					case "rename":
+						return _this.renameChannel(args);
+					case "remove":
+						return _this.removeFromStream(args);
+					case "leave":
+						return _this.leaveChannel(args);
+					case "delete":
+						return _this.deleteChannel(args);
+					case "archive":
+						return _this.archiveChannel(args);
+					case "version":
+						return _this.postVersion(args);
+					case "me":
+						return false;
+				}
+			}
 		});
 		Object.defineProperty(_this, "showChannels", {
 			enumerable: true,
@@ -55632,7 +55632,7 @@ var SimpleStream = function (_Component) {
 				return true;
 			}
 		});
-		Object.defineProperty(_this, "postHelp", {
+		Object.defineProperty(_this, "postVersion", {
 			enumerable: true,
 			writable: true,
 			value: function value() {
@@ -55822,61 +55822,14 @@ var SimpleStream = function (_Component) {
 				return id === post.id;
 			});
 		}
+	}, {
+		key: "render",
 
-		// handleClickHelpLink = event => {
-		// 	event.preventDefault();
-		// 	EventEmitter.emit("interaction:clicked-link", "https://help.codestream.com");
-		// };
-
-		// renderIntro = () => {
-		// 	return [
-		// 		<label key="welcome">
-		// 			<FormattedMessage id="stream.intro.welcome" defaultMessage="Welcome to CodeStream!" />
-		// 		</label>,
-		// 		<label key="info">
-		// 			<ul>
-		// 				<li>
-		// 					<FormattedMessage
-		// 						id="stream.intro.eachFile"
-		// 						defaultMessage="Post a message and any of your teammates can join the discussion."
-		// 					/>
-		// 				</li>
-		// 				<li>
-		// 					<FormattedMessage
-		// 						id="stream.intro.comment"
-		// 						defaultMessage={
-		// 							'Comment on a specific block of code by selecting it and then clicking the "+" button.'
-		// 						}
-		// 					/>
-		// 				</li>
-		// 				<li>
-		// 					<FormattedMessage
-		// 						id="stream.intro.share"
-		// 						defaultMessage="Select &quot;Codestream: Invite&quot; from the command palette to invite your team."
-		// 					>
-		// 						{() => (
-		// 							<React.Fragment>
-		// 								Select <a onClick={this.props.goToInvitePage}>Codestream: Invite</a> from the
-		// 								command palette to invite your team.
-		// 							</React.Fragment>
-		// 						)}
-		// 					</FormattedMessage>
-		// 				</li>
-		// 			</ul>
-		// 		</label>,
-		// 		<label key="learn-more">
-		// 			Learn more at <a onClick={this.handleClickHelpLink}>help.codestream.com</a>
-		// 		</label>
-		// 	];
-		// };
 
 		// we render both a main stream (postslist) plus also a postslist related
 		// to the currently selected thread (if it exists). the reason for this is
 		// to be able to animate between the two streams, since they will both be
 		// visible during the transition
-
-	}, {
-		key: "render",
 		value: function render() {
 			var _this5 = this;
 
@@ -56010,82 +55963,6 @@ var SimpleStream = function (_Component) {
 		}
 
 		// dismiss the thread stream and return to the main stream
-
-
-		// by clicking on the post, we select it
-		// handleClickPost = event => {
-		// 	var postDiv = event.target.closest(".post");
-		// 	if (!postDiv) return;
-		//
-		// 	// if they clicked a link, follow the link rather than selecting the post
-		// 	if (event && event.target && event.target.tagName === "A") return false;
-		//
-		// 	// console.log(event.target.id);
-		// 	if (event.target.id === "discard-button") {
-		// 		// if the user clicked on the cancel changes button,
-		// 		// presumably because she is editing a post, abort
-		// 		this.setState({ editingPostId: null });
-		// 		return;
-		// 	} else if (event.target.id === "save-button") {
-		// 		// if the user clicked on the save changes button,
-		// 		// save the new post text
-		// 		let newText = document
-		// 			.getElementById("input-div-" + postDiv.id)
-		// 			.innerHTML.replace(/<br>/g, "\n");
-		//
-		// 		this.replacePostText(postDiv.id, newText);
-		// 		this.setState({ editingPostId: null });
-		// 		return;
-		// 	} else if (postDiv.classList.contains("editing")) {
-		// 		// otherwise, if we aren't currently editing the
-		// 		// post, go to the thread for that post, but if
-		// 		// we are editing, then do nothing.
-		// 		return;
-		// 	} else if (postDiv.classList.contains("system-post")) {
-		// 		// otherwise, if we aren't currently editing the
-		// 		// post, go to the thread for that post, but if
-		// 		// we are editing, then do nothing.
-		// 		return;
-		// 	} else if (window.getSelection().toString().length > 0) {
-		// 		// in this case the user has selected a string
-		// 		// by dragging
-		// 		return;
-		// 	}
-		// 	this.selectPost(postDiv.id, true);
-		// };
-
-		// show the thread related to the given post, and if there is
-		// a codeblock, scroll to it and select it
-		// selectPost = (id, wasClicked = false) => {
-		// 	EventEmitter.emit("analytics", {
-		// 		label: "Page Viewed",
-		// 		payload: { "Page Name": "Thread View" }
-		// 	});
-		// 	const post = this.findPostById(id);
-		// 	if (!post) return;
-		//
-		// 	// if it is a child in the thread, it'll have a parentPostId,
-		// 	// otherwise use the id. any post can become the head of a thread
-		// 	const threadId = post.parentPostId || post.id;
-		// 	this.setState({ threadId: threadId, activePanel: "thread" });
-		//
-		// 	this.focusInput();
-		// 	if (wasClicked) {
-		// 		EventEmitter.emit("interaction:thread-selected", {
-		// 			threadId,
-		// 			streamId: this.props.postStreamId,
-		// 			post
-		// 		});
-		// 	}
-		// };
-
-		// not using a gutter for now
-		// installGutter() {
-		// 	let editor = atom.workspace.getActiveTextEditor();
-		// 	if (editor && !editor.gutterWithName("CodeStream")) {
-		// 		editor.addGutter({ name: "CodeStream", priority: 150 });
-		// 	}
-		// }
 
 	}, {
 		key: "handleDismissEdit",

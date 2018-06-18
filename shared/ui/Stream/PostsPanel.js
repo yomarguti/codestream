@@ -63,41 +63,6 @@ class Stream extends React.Component {
 		return mentionedUserIds;
 	};
 
-	runSlashCommand = (command, args) => {
-		switch (command) {
-			case "help":
-				return this.postHelp();
-			case "add":
-				return this.addMembersToStream(args);
-			case "who":
-				return this.showMembers();
-			case "mute":
-				return this.toggleMute();
-			case "muteall":
-				return this.toggleMuteAll();
-			case "msg":
-				return this.sendDirectMessage(args);
-			case "open":
-				return this.openStream(args);
-			case "prefs":
-				return this.openPrefs(args);
-			case "rename":
-				return this.renameChannel(args);
-			case "remove":
-				return this.removeFromStream(args);
-			case "leave":
-				return this.leaveChannel(args);
-			case "delete":
-				return this.deleteChannel(args);
-			case "archive":
-				return this.archiveChannel(args);
-			case "version":
-				return this.postVersion(args);
-			case "me":
-				return false;
-		}
-	};
-
 	// return true if we are able to use substitute
 	// to edit the text of my last post
 	substituteLastPost(substitute) {
@@ -126,7 +91,7 @@ class Stream extends React.Component {
 		if (commandMatch) {
 			const command = commandMatch[1];
 			const args = commandMatch[2];
-			return this.runSlashCommand(command, args);
+			return this.props.runSlashCommand(command, args);
 		}
 
 		return false;
@@ -435,7 +400,7 @@ class Stream extends React.Component {
 									umiCount={0}
 									isMuted={this.props.isMuted}
 									setActivePanel={setActivePanel}
-									runSlashCommand={this.runSlashCommand}
+									runSlashCommand={this.props.runSlashCommand}
 									closeMenu={this.closeMenu}
 								/>
 							)}
