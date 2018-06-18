@@ -54542,7 +54542,7 @@ var Stream = function (_React$Component) {
 						usernames: this.props.usernamesRegexp,
 						currentUsername: this.props.currentUser.username,
 						key: threadPost.id,
-						showDetails: "1",
+						showDetails: true,
 						currentCommit: this.props.currentCommit,
 						editing: this.props.isActive && threadPost.id === this.state.editingPostId,
 						action: this.postAction
@@ -54962,6 +54962,7 @@ var _initialiseProps$1 = function _initialiseProps() {
 						replyingTo: parentPost,
 						newMessageIndicator: newMessageIndicator,
 						unread: unread,
+						showDetails: Boolean(threadId),
 						editing: _this4.props.isActive && post.id === _this4.state.editingPostId,
 						action: _this4.postAction
 					})

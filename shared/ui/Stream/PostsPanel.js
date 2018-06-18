@@ -357,6 +357,7 @@ class Stream extends React.Component {
 						replyingTo={parentPost}
 						newMessageIndicator={newMessageIndicator}
 						unread={unread}
+						showDetails={Boolean(threadId)}
 						editing={this.props.isActive && post.id === this.state.editingPostId}
 						action={this.postAction}
 					/>
@@ -427,7 +428,7 @@ class Stream extends React.Component {
 							usernames={this.props.usernamesRegexp}
 							currentUsername={this.props.currentUser.username}
 							key={threadPost.id}
-							showDetails="1"
+							showDetails
 							currentCommit={this.props.currentCommit}
 							editing={this.props.isActive && threadPost.id === this.state.editingPostId}
 							action={this.postAction}
