@@ -54461,7 +54461,6 @@ var Stream = function (_React$Component) {
 			var _this3 = this;
 
 			var _props = this.props,
-			    channelName = _props.channelName,
 			    className = _props.className,
 			    setActivePanel = _props.setActivePanel,
 			    umis = _props.umis;
@@ -54478,6 +54477,18 @@ var Stream = function (_React$Component) {
 			var threadPost = this.findPostById(this.state.threadId);
 
 			var placeholderText = inThread ? "Reply to " + threadPost.author.username : "Add comment";
+
+			var channelName = this.props.stream.type === "direct" ? react.createElement(
+				"span",
+				null,
+				react.createElement(Icon, { name: "organization" }),
+				this.props.stream.name
+			) : this.props.stream.privacy === "private" ? react.createElement(
+				"span",
+				null,
+				react.createElement(Icon, { name: "lock" }),
+				this.props.stream.name
+			) : "#" + this.props.stream.name;
 
 			return react.createElement(
 				"div",
@@ -54510,6 +54521,18 @@ var Stream = function (_React$Component) {
 							closeMenu: this.closeMenu
 						})
 					)
+				),
+				inThread ? null : react.createElement(
+					"div",
+					{
+						className: classnames({
+							unreads: true,
+							active: this.state.unreadsAbove
+						}),
+						type: "above",
+						onClick: this.handleClickUnreads
+					},
+					"\u2191 Unread Messages \u2191"
 				),
 				react.createElement(
 					"div",
@@ -54544,6 +54567,19 @@ var Stream = function (_React$Component) {
 						action: this.postAction
 					}),
 					this.renderPosts(this.state.threadId)
+				),
+				react.createElement(
+					"div",
+					{
+						className: classnames({
+							unreads: true,
+							offscreen: !this.props.isActive,
+							active: this.state.unreadsBelow
+						}),
+						type: "below",
+						onClick: this.handleClickUnreads
+					},
+					"\u2193 Unread Messages \u2193"
 				),
 				react.createElement(ComposeBox$1, {
 					placeholder: placeholderText,
@@ -54842,6 +54878,20 @@ var _initialiseProps$1 = function _initialiseProps() {
 		value: function value(event) {
 			event.preventDefault();
 			_this4.state.threadId ? _this4.dismissThread() : _this4.props.showChannels();
+		}
+	});
+	Object.defineProperty(this, "handleClickUnreads", {
+		enumerable: true,
+		writable: true,
+		value: function value(event) {
+			var scrollDiv = _this4._postslist;
+			var umiDivs = scrollDiv.getElementsByClassName("unread");
+			var type = event.target.getAttribute("type");
+
+			var active = type === "above" ? umiDivs[0] : umiDivs[umiDivs.length - 1];
+			if (active) active.scrollIntoView(type === "above");
+			// ...and then a little more, so it is off the border
+			scrollDiv.scrollTop += type === "above" ? -10 : 10;
 		}
 	});
 	Object.defineProperty(this, "postAction", {
@@ -55153,20 +55203,6 @@ var SimpleStream = function (_Component) {
 			writable: true,
 			value: function value(panel) {
 				_this.setState({ activePanel: panel });
-			}
-		});
-		Object.defineProperty(_this, "handleClickUnreads", {
-			enumerable: true,
-			writable: true,
-			value: function value(event) {
-				var scrollDiv = _this._postslist;
-				var umiDivs = scrollDiv.getElementsByClassName("unread");
-				var type = event.target.getAttribute("type");
-				console.log("TYPE IS: ", type);
-				var active = type === "above" ? umiDivs[0] : umiDivs[umiDivs.length - 1];
-				if (active) active.scrollIntoView(type === "above");
-				// ...and then a little more, so it is off the border
-				scrollDiv.scrollTop += type === "above" ? -10 : 10;
 			}
 		});
 		Object.defineProperty(_this, "handleDismissThread", {
@@ -55847,33 +55883,6 @@ var SimpleStream = function (_Component) {
 				"off-right": activePanel === "channels" || activePanel === "create-channel" || activePanel === "create-dm" || activePanel === "public-channels"
 			});
 
-			var unreadsAboveClass = classnames({
-				unreads: true,
-				active: this.state.unreadsAbove
-			});
-			var unreadsBelowClass = classnames({
-				unreads: true,
-				offscreen: activePanel !== "main",
-				active: this.state.unreadsBelow
-			});
-			var unreadsAbove = activePanel === "thread" ? null : react.createElement(
-				"div",
-				{ className: unreadsAboveClass, type: "above", onClick: this.handleClickUnreads },
-				"\u2191 Unread Messages \u2191"
-			);
-
-			var channelName = this.props.postStreamType === "direct" ? react.createElement(
-				"span",
-				null,
-				react.createElement(Icon, { name: "organization" }),
-				this.props.postStreamName
-			) : this.props.isPrivate ? react.createElement(
-				"span",
-				null,
-				react.createElement(Icon, { name: "lock" }),
-				this.props.postStreamName
-			) : "#" + this.props.postStreamName;
-
 			return react.createElement(
 				"div",
 				{ className: streamClass, ref: function ref(_ref6) {
@@ -55892,7 +55901,6 @@ var SimpleStream = function (_Component) {
 				react.createElement(PostsPanel, {
 					isActive: activePanel === "main",
 					className: mainPanelClass,
-					channelName: channelName,
 					stream: this.props.postStream,
 					isMuted: this.props.mutedStreams[this.props.postStreamId],
 					setActivePanel: this.setActivePanel,
@@ -55901,12 +55909,7 @@ var SimpleStream = function (_Component) {
 					currentUser: this.props.currentUser,
 					showChannels: this.showChannels,
 					showPostsPanel: this.ensureStreamIsActive
-				}),
-				react.createElement(
-					"div",
-					{ className: unreadsBelowClass, type: "below", onClick: this.handleClickUnreads },
-					"\u2193 Unread Messages \u2193"
-				)
+				})
 			);
 		}
 	}, {

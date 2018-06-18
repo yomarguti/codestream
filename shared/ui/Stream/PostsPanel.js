@@ -274,6 +274,17 @@ class Stream extends React.Component {
 		this.state.threadId ? this.dismissThread() : this.props.showChannels();
 	};
 
+	handleClickUnreads = event => {
+		let scrollDiv = this._postslist;
+		let umiDivs = scrollDiv.getElementsByClassName("unread");
+		let type = event.target.getAttribute("type");
+
+		let active = type === "above" ? umiDivs[0] : umiDivs[umiDivs.length - 1];
+		if (active) active.scrollIntoView(type === "above");
+		// ...and then a little more, so it is off the border
+		scrollDiv.scrollTop += type === "above" ? -10 : 10;
+	};
+
 	postAction = (action, post) => {
 		switch (action) {
 			case "make-thread":
@@ -369,7 +380,7 @@ class Stream extends React.Component {
 	};
 
 	render() {
-		const { channelName, className, setActivePanel, umis } = this.props;
+		const { className, setActivePanel, umis } = this.props;
 
 		const umisClass = createClassString({
 			mentions: umis.totalMentions > 0,
@@ -382,6 +393,21 @@ class Stream extends React.Component {
 		const threadPost = this.findPostById(this.state.threadId);
 
 		const placeholderText = inThread ? `Reply to ${threadPost.author.username}` : "Add comment";
+
+		const channelName =
+			this.props.stream.type === "direct" ? (
+				<span>
+					<Icon name="organization" />
+					{this.props.stream.name}
+				</span>
+			) : this.props.stream.privacy === "private" ? (
+				<span>
+					<Icon name="lock" />
+					{this.props.stream.name}
+				</span>
+			) : (
+				"#" + this.props.stream.name
+			);
 
 		return (
 			<div className={createClassString("panel", "main-panel", "posts-panel", className)}>
@@ -408,6 +434,18 @@ class Stream extends React.Component {
 						</span>
 					)}
 				</div>
+				{inThread ? null : (
+					<div
+						className={createClassString({
+							unreads: true,
+							active: this.state.unreadsAbove
+						})}
+						type="above"
+						onClick={this.handleClickUnreads}
+					>
+						&uarr; Unread Messages &uarr;
+					</div>
+				)}
 				<div
 					className={createClassString("postslist", { shrink: inThread })}
 					onClick={this.handleClickPost}
@@ -435,6 +473,17 @@ class Stream extends React.Component {
 						/>
 					)}
 					{this.renderPosts(this.state.threadId)}
+				</div>
+				<div
+					className={createClassString({
+						unreads: true,
+						offscreen: !this.props.isActive,
+						active: this.state.unreadsBelow
+					})}
+					type="below"
+					onClick={this.handleClickUnreads}
+				>
+					&darr; Unread Messages &darr;
 				</div>
 				<ComposeBox
 					placeholder={placeholderText}

@@ -293,37 +293,6 @@ export class SimpleStream extends Component {
 				activePanel === "public-channels"
 		});
 
-		const unreadsAboveClass = createClassString({
-			unreads: true,
-			active: this.state.unreadsAbove
-		});
-		const unreadsBelowClass = createClassString({
-			unreads: true,
-			offscreen: activePanel !== "main",
-			active: this.state.unreadsBelow
-		});
-		const unreadsAbove =
-			activePanel === "thread" ? null : (
-				<div className={unreadsAboveClass} type="above" onClick={this.handleClickUnreads}>
-					&uarr; Unread Messages &uarr;
-				</div>
-			);
-
-		const channelName =
-			this.props.postStreamType === "direct" ? (
-				<span>
-					<Icon name="organization" />
-					{this.props.postStreamName}
-				</span>
-			) : this.props.isPrivate ? (
-				<span>
-					<Icon name="lock" />
-					{this.props.postStreamName}
-				</span>
-			) : (
-				"#" + this.props.postStreamName
-			);
-
 		return (
 			<div className={streamClass} ref={ref => (this._div = ref)}>
 				<div id="modal-root" />
@@ -339,7 +308,6 @@ export class SimpleStream extends Component {
 				<PostsPanel
 					isActive={activePanel === "main"}
 					className={mainPanelClass}
-					channelName={channelName}
 					stream={this.props.postStream}
 					isMuted={this.props.mutedStreams[this.props.postStreamId]}
 					setActivePanel={this.setActivePanel}
@@ -349,10 +317,6 @@ export class SimpleStream extends Component {
 					showChannels={this.showChannels}
 					showPostsPanel={this.ensureStreamIsActive}
 				/>
-				{/* {unreadsAbove} */}
-				<div className={unreadsBelowClass} type="below" onClick={this.handleClickUnreads}>
-					&darr; Unread Messages &darr;
-				</div>
 			</div>
 		);
 	}
@@ -415,17 +379,6 @@ export class SimpleStream extends Component {
 		if (this.state.unreadsAbove != unreadsAbove) this.setState({ unreadsAbove: unreadsAbove });
 		if (this.state.unreadsBelow != unreadsBelow) this.setState({ unreadsBelow: unreadsBelow });
 	}
-
-	handleClickUnreads = event => {
-		let scrollDiv = this._postslist;
-		let umiDivs = scrollDiv.getElementsByClassName("unread");
-		let type = event.target.getAttribute("type");
-		console.log("TYPE IS: ", type);
-		let active = type === "above" ? umiDivs[0] : umiDivs[umiDivs.length - 1];
-		if (active) active.scrollIntoView(type === "above");
-		// ...and then a little more, so it is off the border
-		scrollDiv.scrollTop += type === "above" ? -10 : 10;
-	};
 
 	// dismiss the thread stream and return to the main stream
 	handleDismissThread = ({ track = true } = {}) => {
