@@ -12568,129 +12568,9 @@ var classnames = createCommonjsModule(function (module) {
 }());
 });
 
-var reactContenteditable = createCommonjsModule(function (module, exports) {
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-
-
-var _react2 = _interopRequireDefault(react);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var stripNbsp = function stripNbsp(str) {
-  return str.replace(/&nbsp;|\u202F|\u00A0/g, ' ');
+var goToInvitePage = function goToInvitePage() {
+  return { type: "GO_TO_INVITE_PAGE" };
 };
-
-var ContentEditable = function (_React$Component) {
-  _inherits(ContentEditable, _React$Component);
-
-  function ContentEditable() {
-    _classCallCheck(this, ContentEditable);
-
-    var _this = _possibleConstructorReturn(this, (ContentEditable.__proto__ || Object.getPrototypeOf(ContentEditable)).call(this));
-
-    _this.emitChange = _this.emitChange.bind(_this);
-    return _this;
-  }
-
-  _createClass(ContentEditable, [{
-    key: 'render',
-    value: function render() {
-      var _this2 = this;
-
-      var _props = this.props,
-          tagName = _props.tagName,
-          html = _props.html,
-          props = _objectWithoutProperties(_props, ['tagName', 'html']);
-
-      return _react2.default.createElement(tagName || 'div', _extends({}, props, {
-        ref: function ref(e) {
-          return _this2.htmlEl = e;
-        },
-        onInput: this.emitChange,
-        onBlur: this.props.onBlur || this.emitChange,
-        contentEditable: !this.props.disabled,
-        dangerouslySetInnerHTML: { __html: html }
-      }), this.props.children);
-    }
-  }, {
-    key: 'shouldComponentUpdate',
-    value: function shouldComponentUpdate(nextProps) {
-      var props = this.props,
-          htmlEl = this.htmlEl;
-
-      // We need not rerender if the change of props simply reflects the user's edits.
-      // Rerendering in this case would make the cursor/caret jump
-
-      // Rerender if there is no element yet... (somehow?)
-
-      if (!htmlEl) {
-        return true;
-      }
-
-      // ...or if html really changed... (programmatically, not by user edit)
-      if (stripNbsp(nextProps.html) !== stripNbsp(htmlEl.innerHTML) && nextProps.html !== props.html) {
-        return true;
-      }
-
-      var optional = ['style', 'className', 'disabled', 'tagName'];
-
-      // Handle additional properties
-      return optional.some(function (name) {
-        return props[name] !== nextProps[name];
-      });
-    }
-  }, {
-    key: 'componentDidUpdate',
-    value: function componentDidUpdate() {
-      if (this.htmlEl && this.props.html !== this.htmlEl.innerHTML) {
-        // Perhaps React (whose VDOM gets outdated because we often prevent
-        // rerendering) did not update the DOM. So we update it manually now.
-        this.htmlEl.innerHTML = this.props.html;
-      }
-    }
-  }, {
-    key: 'emitChange',
-    value: function emitChange(evt) {
-      if (!this.htmlEl) return;
-      var html = this.htmlEl.innerHTML;
-      if (this.props.onChange && html !== this.lastHtml) {
-        // Clone event with Object.assign to avoid 
-        // "Cannot assign to read only property 'target' of object"
-        var evt = Object.assign({}, evt, {
-          target: {
-            value: html
-          }
-        });
-        this.props.onChange(evt);
-      }
-      this.lastHtml = html;
-    }
-  }]);
-
-  return ContentEditable;
-}(_react2.default.Component);
-
-exports.default = ContentEditable;
-module.exports = exports['default'];
-});
-
-var ContentEditable = unwrapExports(reactContenteditable);
 
 var asyncToGenerator = function (fn) {
   return function () {
@@ -12858,869 +12738,3642 @@ var toConsumableArray = function (arr) {
   }
 };
 
-var findHost = function findHost() {
-	try {
-		return acquireVsCodeApi();
-	} catch (e) {
-		/* probably not in vscode */
-		return window.parent;
-	}
+var _this = undefined;
+
+// uuid generator taken from: https://gist.github.com/jed/982883
+var createTempId = function createTempId(a) {
+	return a ? (a ^ Math.random() * 16 >> a / 4).toString(16) : ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, createTempId);
 };
 
-var EventEmitter = function () {
-	function EventEmitter() {
-		var _this = this;
-
-		classCallCheck(this, EventEmitter);
-		Object.defineProperty(this, "listenersByEvent", {
-			enumerable: true,
-			writable: true,
-			value: new Map()
-		});
-		Object.defineProperty(this, "handler", {
-			enumerable: true,
-			writable: true,
-			value: function value(_ref) {
-				var data = _ref.data;
-
-				if (data.type.startsWith("codestream")) {
-					var event = data.type.replace("codestream:", "");
-					var listeners = _this.listenersByEvent.get(event) || [];
-					listeners.forEach(function (l) {
-						return l(data.body);
-					});
-				}
-			}
-		});
-
-		this.host = findHost();
-		window.addEventListener("message", this.handler, false);
-	}
-
-	createClass(EventEmitter, [{
-		key: "getHost",
-		value: function getHost() {
-			return this.host;
-		}
-	}, {
-		key: "on",
-		value: function on(thing, listener) {
-			return this.subscribe(thing, listener);
-		}
-	}, {
-		key: "subscribe",
-		value: function subscribe(thing, listener) {
-			var _this2 = this;
-
-			var listeners = this.listenersByEvent.get(thing) || [];
-			listeners.push(listener);
-			this.listenersByEvent.set(thing, listeners);
-			return {
-				dispose: function dispose() {
-					var listeners = _this2.listenersByEvent.get(thing).filter(function (l) {
-						return l !== listener;
-					});
-					_this2.listenersByEvent.set(thing, listeners);
-				}
-			};
-		}
-	}, {
-		key: "emit",
-		value: function emit(event, body) {
-			this.host.postMessage({
-				type: "codestream:" + event,
-				body: body
-			}, "*");
-		}
-	}, {
-		key: "onFileChanged",
-		value: function onFileChanged(block, listener) {
-			var _this3 = this;
-
-			this.emit("subscription:file-changed", block);
-			var disposable = this.on("publish:file-changed", listener);
-			return {
-				dispose: function dispose() {
-					disposable.dispose();
-					_this3.emit('unsubscribe:file-changed', block);
-				}
-			};
-		}
-	}]);
-	return EventEmitter;
-}();
-
-var emitter = new EventEmitter();
-
-var crypt = createCommonjsModule(function (module) {
-(function() {
-  var base64map
-      = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/',
-
-  crypt = {
-    // Bit-wise rotation left
-    rotl: function(n, b) {
-      return (n << b) | (n >>> (32 - b));
-    },
-
-    // Bit-wise rotation right
-    rotr: function(n, b) {
-      return (n << (32 - b)) | (n >>> b);
-    },
-
-    // Swap big-endian to little-endian and vice versa
-    endian: function(n) {
-      // If number given, swap endian
-      if (n.constructor == Number) {
-        return crypt.rotl(n, 8) & 0x00FF00FF | crypt.rotl(n, 24) & 0xFF00FF00;
-      }
-
-      // Else, assume array and swap all items
-      for (var i = 0; i < n.length; i++)
-        n[i] = crypt.endian(n[i]);
-      return n;
-    },
-
-    // Generate an array of any length of random bytes
-    randomBytes: function(n) {
-      for (var bytes = []; n > 0; n--)
-        bytes.push(Math.floor(Math.random() * 256));
-      return bytes;
-    },
-
-    // Convert a byte array to big-endian 32-bit words
-    bytesToWords: function(bytes) {
-      for (var words = [], i = 0, b = 0; i < bytes.length; i++, b += 8)
-        words[b >>> 5] |= bytes[i] << (24 - b % 32);
-      return words;
-    },
-
-    // Convert big-endian 32-bit words to a byte array
-    wordsToBytes: function(words) {
-      for (var bytes = [], b = 0; b < words.length * 32; b += 8)
-        bytes.push((words[b >>> 5] >>> (24 - b % 32)) & 0xFF);
-      return bytes;
-    },
-
-    // Convert a byte array to a hex string
-    bytesToHex: function(bytes) {
-      for (var hex = [], i = 0; i < bytes.length; i++) {
-        hex.push((bytes[i] >>> 4).toString(16));
-        hex.push((bytes[i] & 0xF).toString(16));
-      }
-      return hex.join('');
-    },
-
-    // Convert a hex string to a byte array
-    hexToBytes: function(hex) {
-      for (var bytes = [], c = 0; c < hex.length; c += 2)
-        bytes.push(parseInt(hex.substr(c, 2), 16));
-      return bytes;
-    },
-
-    // Convert a byte array to a base-64 string
-    bytesToBase64: function(bytes) {
-      for (var base64 = [], i = 0; i < bytes.length; i += 3) {
-        var triplet = (bytes[i] << 16) | (bytes[i + 1] << 8) | bytes[i + 2];
-        for (var j = 0; j < 4; j++)
-          if (i * 8 + j * 6 <= bytes.length * 8)
-            base64.push(base64map.charAt((triplet >>> 6 * (3 - j)) & 0x3F));
-          else
-            base64.push('=');
-      }
-      return base64.join('');
-    },
-
-    // Convert a base-64 string to a byte array
-    base64ToBytes: function(base64) {
-      // Remove non-base-64 characters
-      base64 = base64.replace(/[^A-Z0-9+\/]/ig, '');
-
-      for (var bytes = [], i = 0, imod4 = 0; i < base64.length;
-          imod4 = ++i % 4) {
-        if (imod4 == 0) continue;
-        bytes.push(((base64map.indexOf(base64.charAt(i - 1))
-            & (Math.pow(2, -2 * imod4 + 8) - 1)) << (imod4 * 2))
-            | (base64map.indexOf(base64.charAt(i)) >>> (6 - imod4 * 2)));
-      }
-      return bytes;
-    }
-  };
-
-  module.exports = crypt;
-})();
-});
-
-var charenc = {
-  // UTF-8 encoding
-  utf8: {
-    // Convert a string to a byte array
-    stringToBytes: function(str) {
-      return charenc.bin.stringToBytes(unescape(encodeURIComponent(str)));
-    },
-
-    // Convert a byte array to a string
-    bytesToString: function(bytes) {
-      return decodeURIComponent(escape(charenc.bin.bytesToString(bytes)));
-    }
-  },
-
-  // Binary encoding
-  bin: {
-    // Convert a string to a byte array
-    stringToBytes: function(str) {
-      for (var bytes = [], i = 0; i < str.length; i++)
-        bytes.push(str.charCodeAt(i) & 0xFF);
-      return bytes;
-    },
-
-    // Convert a byte array to a string
-    bytesToString: function(bytes) {
-      for (var str = [], i = 0; i < bytes.length; i++)
-        str.push(String.fromCharCode(bytes[i]));
-      return str.join('');
-    }
-  }
+// FIXME: this is for analytics purposes and the extension host should probably send the event
+var postCreated = function postCreated(meta) {
+	return { type: "POST_CREATED", meta: meta };
 };
 
-var charenc_1 = charenc;
-
-/*!
- * Determine if an object is a Buffer
- *
- * @author   Feross Aboukhadijeh <https://feross.org>
- * @license  MIT
- */
-
-// The _isBuffer check is for Safari 5-7 support, because it's missing
-// Object.prototype.constructor. Remove this eventually
-var isBuffer_1 = function (obj) {
-  return obj != null && (isBuffer(obj) || isSlowBuffer(obj) || !!obj._isBuffer)
-};
-
-function isBuffer (obj) {
-  return !!obj.constructor && typeof obj.constructor.isBuffer === 'function' && obj.constructor.isBuffer(obj)
-}
-
-// For Node v0.10 support. Remove this eventually.
-function isSlowBuffer (obj) {
-  return typeof obj.readFloatLE === 'function' && typeof obj.slice === 'function' && isBuffer(obj.slice(0, 0))
-}
-
-var md5 = createCommonjsModule(function (module) {
-(function(){
-  var crypt$$1 = crypt,
-      utf8 = charenc_1.utf8,
-      isBuffer = isBuffer_1,
-      bin = charenc_1.bin,
-
-  // The core
-  md5 = function (message, options) {
-    // Convert to byte array
-    if (message.constructor == String)
-      if (options && options.encoding === 'binary')
-        message = bin.stringToBytes(message);
-      else
-        message = utf8.stringToBytes(message);
-    else if (isBuffer(message))
-      message = Array.prototype.slice.call(message, 0);
-    else if (!Array.isArray(message))
-      message = message.toString();
-    // else, assume byte array already
-
-    var m = crypt$$1.bytesToWords(message),
-        l = message.length * 8,
-        a =  1732584193,
-        b = -271733879,
-        c = -1732584194,
-        d =  271733878;
-
-    // Swap endian
-    for (var i = 0; i < m.length; i++) {
-      m[i] = ((m[i] <<  8) | (m[i] >>> 24)) & 0x00FF00FF |
-             ((m[i] << 24) | (m[i] >>>  8)) & 0xFF00FF00;
-    }
-
-    // Padding
-    m[l >>> 5] |= 0x80 << (l % 32);
-    m[(((l + 64) >>> 9) << 4) + 14] = l;
-
-    // Method shortcuts
-    var FF = md5._ff,
-        GG = md5._gg,
-        HH = md5._hh,
-        II = md5._ii;
-
-    for (var i = 0; i < m.length; i += 16) {
-
-      var aa = a,
-          bb = b,
-          cc = c,
-          dd = d;
-
-      a = FF(a, b, c, d, m[i+ 0],  7, -680876936);
-      d = FF(d, a, b, c, m[i+ 1], 12, -389564586);
-      c = FF(c, d, a, b, m[i+ 2], 17,  606105819);
-      b = FF(b, c, d, a, m[i+ 3], 22, -1044525330);
-      a = FF(a, b, c, d, m[i+ 4],  7, -176418897);
-      d = FF(d, a, b, c, m[i+ 5], 12,  1200080426);
-      c = FF(c, d, a, b, m[i+ 6], 17, -1473231341);
-      b = FF(b, c, d, a, m[i+ 7], 22, -45705983);
-      a = FF(a, b, c, d, m[i+ 8],  7,  1770035416);
-      d = FF(d, a, b, c, m[i+ 9], 12, -1958414417);
-      c = FF(c, d, a, b, m[i+10], 17, -42063);
-      b = FF(b, c, d, a, m[i+11], 22, -1990404162);
-      a = FF(a, b, c, d, m[i+12],  7,  1804603682);
-      d = FF(d, a, b, c, m[i+13], 12, -40341101);
-      c = FF(c, d, a, b, m[i+14], 17, -1502002290);
-      b = FF(b, c, d, a, m[i+15], 22,  1236535329);
-
-      a = GG(a, b, c, d, m[i+ 1],  5, -165796510);
-      d = GG(d, a, b, c, m[i+ 6],  9, -1069501632);
-      c = GG(c, d, a, b, m[i+11], 14,  643717713);
-      b = GG(b, c, d, a, m[i+ 0], 20, -373897302);
-      a = GG(a, b, c, d, m[i+ 5],  5, -701558691);
-      d = GG(d, a, b, c, m[i+10],  9,  38016083);
-      c = GG(c, d, a, b, m[i+15], 14, -660478335);
-      b = GG(b, c, d, a, m[i+ 4], 20, -405537848);
-      a = GG(a, b, c, d, m[i+ 9],  5,  568446438);
-      d = GG(d, a, b, c, m[i+14],  9, -1019803690);
-      c = GG(c, d, a, b, m[i+ 3], 14, -187363961);
-      b = GG(b, c, d, a, m[i+ 8], 20,  1163531501);
-      a = GG(a, b, c, d, m[i+13],  5, -1444681467);
-      d = GG(d, a, b, c, m[i+ 2],  9, -51403784);
-      c = GG(c, d, a, b, m[i+ 7], 14,  1735328473);
-      b = GG(b, c, d, a, m[i+12], 20, -1926607734);
-
-      a = HH(a, b, c, d, m[i+ 5],  4, -378558);
-      d = HH(d, a, b, c, m[i+ 8], 11, -2022574463);
-      c = HH(c, d, a, b, m[i+11], 16,  1839030562);
-      b = HH(b, c, d, a, m[i+14], 23, -35309556);
-      a = HH(a, b, c, d, m[i+ 1],  4, -1530992060);
-      d = HH(d, a, b, c, m[i+ 4], 11,  1272893353);
-      c = HH(c, d, a, b, m[i+ 7], 16, -155497632);
-      b = HH(b, c, d, a, m[i+10], 23, -1094730640);
-      a = HH(a, b, c, d, m[i+13],  4,  681279174);
-      d = HH(d, a, b, c, m[i+ 0], 11, -358537222);
-      c = HH(c, d, a, b, m[i+ 3], 16, -722521979);
-      b = HH(b, c, d, a, m[i+ 6], 23,  76029189);
-      a = HH(a, b, c, d, m[i+ 9],  4, -640364487);
-      d = HH(d, a, b, c, m[i+12], 11, -421815835);
-      c = HH(c, d, a, b, m[i+15], 16,  530742520);
-      b = HH(b, c, d, a, m[i+ 2], 23, -995338651);
-
-      a = II(a, b, c, d, m[i+ 0],  6, -198630844);
-      d = II(d, a, b, c, m[i+ 7], 10,  1126891415);
-      c = II(c, d, a, b, m[i+14], 15, -1416354905);
-      b = II(b, c, d, a, m[i+ 5], 21, -57434055);
-      a = II(a, b, c, d, m[i+12],  6,  1700485571);
-      d = II(d, a, b, c, m[i+ 3], 10, -1894986606);
-      c = II(c, d, a, b, m[i+10], 15, -1051523);
-      b = II(b, c, d, a, m[i+ 1], 21, -2054922799);
-      a = II(a, b, c, d, m[i+ 8],  6,  1873313359);
-      d = II(d, a, b, c, m[i+15], 10, -30611744);
-      c = II(c, d, a, b, m[i+ 6], 15, -1560198380);
-      b = II(b, c, d, a, m[i+13], 21,  1309151649);
-      a = II(a, b, c, d, m[i+ 4],  6, -145523070);
-      d = II(d, a, b, c, m[i+11], 10, -1120210379);
-      c = II(c, d, a, b, m[i+ 2], 15,  718787259);
-      b = II(b, c, d, a, m[i+ 9], 21, -343485551);
-
-      a = (a + aa) >>> 0;
-      b = (b + bb) >>> 0;
-      c = (c + cc) >>> 0;
-      d = (d + dd) >>> 0;
-    }
-
-    return crypt$$1.endian([a, b, c, d]);
-  };
-
-  // Auxiliary functions
-  md5._ff  = function (a, b, c, d, x, s, t) {
-    var n = a + (b & c | ~b & d) + (x >>> 0) + t;
-    return ((n << s) | (n >>> (32 - s))) + b;
-  };
-  md5._gg  = function (a, b, c, d, x, s, t) {
-    var n = a + (b & d | c & ~d) + (x >>> 0) + t;
-    return ((n << s) | (n >>> (32 - s))) + b;
-  };
-  md5._hh  = function (a, b, c, d, x, s, t) {
-    var n = a + (b ^ c ^ d) + (x >>> 0) + t;
-    return ((n << s) | (n >>> (32 - s))) + b;
-  };
-  md5._ii  = function (a, b, c, d, x, s, t) {
-    var n = a + (c ^ (b | ~d)) + (x >>> 0) + t;
-    return ((n << s) | (n >>> (32 - s))) + b;
-  };
-
-  // Package private blocksize
-  md5._blocksize = 16;
-  md5._digestsize = 16;
-
-  module.exports = function (message, options) {
-    if (message === undefined || message === null)
-      throw new Error('Illegal argument ' + message);
-
-    var digestbytes = crypt$$1.wordsToBytes(md5(message, options));
-    return options && options.asBytes ? digestbytes :
-        options && options.asString ? bin.bytesToString(digestbytes) :
-        crypt$$1.bytesToHex(digestbytes);
-  };
-
-})();
-});
-
-var strictUriEncode = function (str) {
-	return encodeURIComponent(str).replace(/[!'()*]/g, function (c) {
-		return '%' + c.charCodeAt(0).toString(16).toUpperCase();
-	});
-};
-
-function encoderForArrayFormat(opts) {
-	switch (opts.arrayFormat) {
-		case 'index':
-			return function (key, value, index) {
-				return value === null ? [
-					encode(key, opts),
-					'[',
-					index,
-					']'
-				].join('') : [
-					encode(key, opts),
-					'[',
-					encode(index, opts),
-					']=',
-					encode(value, opts)
-				].join('');
-			};
-
-		case 'bracket':
-			return function (key, value) {
-				return value === null ? encode(key, opts) : [
-					encode(key, opts),
-					'[]=',
-					encode(value, opts)
-				].join('');
-			};
-
-		default:
-			return function (key, value) {
-				return value === null ? encode(key, opts) : [
-					encode(key, opts),
-					'=',
-					encode(value, opts)
-				].join('');
-			};
-	}
-}
-
-function parserForArrayFormat(opts) {
-	var result;
-
-	switch (opts.arrayFormat) {
-		case 'index':
-			return function (key, value, accumulator) {
-				result = /\[(\d*)\]$/.exec(key);
-
-				key = key.replace(/\[\d*\]$/, '');
-
-				if (!result) {
-					accumulator[key] = value;
-					return;
-				}
-
-				if (accumulator[key] === undefined) {
-					accumulator[key] = {};
-				}
-
-				accumulator[key][result[1]] = value;
-			};
-
-		case 'bracket':
-			return function (key, value, accumulator) {
-				result = /(\[\])$/.exec(key);
-				key = key.replace(/\[\]$/, '');
-
-				if (!result) {
-					accumulator[key] = value;
-					return;
-				} else if (accumulator[key] === undefined) {
-					accumulator[key] = [value];
-					return;
-				}
-
-				accumulator[key] = [].concat(accumulator[key], value);
-			};
-
-		default:
-			return function (key, value, accumulator) {
-				if (accumulator[key] === undefined) {
-					accumulator[key] = value;
-					return;
-				}
-
-				accumulator[key] = [].concat(accumulator[key], value);
-			};
-	}
-}
-
-function encode(value, opts) {
-	if (opts.encode) {
-		return opts.strict ? strictUriEncode(value) : encodeURIComponent(value);
-	}
-
-	return value;
-}
-
-function keysSorter(input) {
-	if (Array.isArray(input)) {
-		return input.sort();
-	} else if (typeof input === 'object') {
-		return keysSorter(Object.keys(input)).sort(function (a, b) {
-			return Number(a) - Number(b);
-		}).map(function (key) {
-			return input[key];
-		});
-	}
-
-	return input;
-}
-
-var extract = function (str) {
-	return str.split('?')[1] || '';
-};
-
-var parse = function (str, opts) {
-	opts = objectAssign({arrayFormat: 'none'}, opts);
-
-	var formatter = parserForArrayFormat(opts);
-
-	// Create an object with no prototype
-	// https://github.com/sindresorhus/query-string/issues/47
-	var ret = Object.create(null);
-
-	if (typeof str !== 'string') {
-		return ret;
-	}
-
-	str = str.trim().replace(/^(\?|#|&)/, '');
-
-	if (!str) {
-		return ret;
-	}
-
-	str.split('&').forEach(function (param) {
-		var parts = param.replace(/\+/g, ' ').split('=');
-		// Firefox (pre 40) decodes `%3D` to `=`
-		// https://github.com/sindresorhus/query-string/pull/37
-		var key = parts.shift();
-		var val = parts.length > 0 ? parts.join('=') : undefined;
-
-		// missing `=` should be `null`:
-		// http://w3.org/TR/2012/WD-url-20120524/#collect-url-parameters
-		val = val === undefined ? null : decodeURIComponent(val);
-
-		formatter(decodeURIComponent(key), val, ret);
-	});
-
-	return Object.keys(ret).sort().reduce(function (result, key) {
-		var val = ret[key];
-		if (Boolean(val) && typeof val === 'object' && !Array.isArray(val)) {
-			// Sort object keys, not values
-			result[key] = keysSorter(val);
-		} else {
-			result[key] = val;
-		}
-
-		return result;
-	}, Object.create(null));
-};
-
-var stringify = function (obj, opts) {
-	var defaults = {
-		encode: true,
-		strict: true,
-		arrayFormat: 'none'
+var resolvePendingPost = function resolvePendingPost(pendingId, post) {
+	return {
+		type: "RESOLVE_PENDING_POST",
+		payload: { pendingId: pendingId, post: post }
 	};
+};
 
-	opts = objectAssign(defaults, opts);
+var markStreamRead = function markStreamRead(streamId) {
+	return function (dispatch, getState, _ref) {
+		var api = _ref.api;
 
-	var formatter = encoderForArrayFormat(opts);
+		if (!streamId) return;
+		api.markStreamRead(streamId);
+		return dispatch({ type: "CLEAR_UMI", payload: streamId });
+	};
+};
 
-	return obj ? Object.keys(obj).sort().map(function (key) {
-		var val = obj[key];
+// export const markPostUnRead = (streamId, postId) => (dispatch, getState, { api }) => {
+// if (!streamId) return;
+// api.markPostUnread(streamId, postId);
+// return dispatch({ type: "CLEAR_UMI", payload: streamId });
+// };
 
-		if (val === undefined) {
-			return '';
-		}
+var createPost = function createPost(streamId, parentPostId, text, codeBlocks, mentions, extra) {
+	return function () {
+		var _ref3 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(dispatch, getState, _ref2) {
+			var api = _ref2.api;
 
-		if (val === null) {
-			return encode(key, opts);
-		}
+			var _getState, context, session, pendingId, post;
 
-		if (Array.isArray(val)) {
-			var result = [];
+			return regeneratorRuntime.wrap(function _callee$(_context) {
+				while (1) {
+					switch (_context.prev = _context.next) {
+						case 0:
+							_getState = getState(), context = _getState.context, session = _getState.session;
+							pendingId = createTempId();
 
-			val.slice().forEach(function (val2) {
-				if (val2 === undefined) {
-					return;
+							dispatch({
+								type: "ADD_PENDING_POST",
+								payload: {
+									id: pendingId,
+									streamId: streamId,
+									parentPostId: parentPostId,
+									codeBlocks: codeBlocks,
+									text: text,
+									commitHashWhenPosted: context.currentCommit,
+									creatorId: session.userId,
+									createdAt: new Date().getTime(),
+									pending: true
+								}
+							});
+							_context.prev = 3;
+							_context.next = 6;
+							return api.createPost({
+								id: pendingId,
+								parentPostId: parentPostId,
+								streamId: streamId,
+								text: text,
+								codeBlocks: codeBlocks,
+								mentions: mentions,
+								extra: extra
+							});
+
+						case 6:
+							post = _context.sent;
+
+							dispatch(postCreated(_extends$4({ post: post }, extra)));
+							return _context.abrupt("return", dispatch(resolvePendingPost(pendingId, post)));
+
+						case 11:
+							_context.prev = 11;
+							_context.t0 = _context["catch"](3);
+							return _context.abrupt("return", dispatch({ type: "PENDING_POST_FAILED", payload: pendingId }));
+
+						case 14:
+						case "end":
+							return _context.stop();
+					}
 				}
+			}, _callee, _this, [[3, 11]]);
+		}));
 
-				result.push(formatter(key, val2, result.length));
-			});
+		return function (_x, _x2, _x3) {
+			return _ref3.apply(this, arguments);
+		};
+	}();
+};
 
-			return result.join('&');
+var retryPost = function retryPost(pendingId) {
+	return function () {
+		var _ref5 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(dispatch, getState, _ref4) {
+			var api = _ref4.api;
+
+			var _getState2, posts, pendingPost, post;
+
+			return regeneratorRuntime.wrap(function _callee2$(_context2) {
+				while (1) {
+					switch (_context2.prev = _context2.next) {
+						case 0:
+							_getState2 = getState(), posts = _getState2.posts;
+							pendingPost = posts.pending.find(function (post) {
+								return post.id === pendingId;
+							});
+
+							if (!pendingPost) {
+								_context2.next = 10;
+								break;
+							}
+
+							_context2.next = 5;
+							return api.createPost(pendingPost);
+
+						case 5:
+							post = _context2.sent;
+
+							dispatch(postCreated({ post: post })); // FIXME: analytics metadata is lost
+							return _context2.abrupt("return", dispatch(resolvePendingPost(pendingId, post)));
+
+						case 10:
+						case "end":
+							return _context2.stop();
+					}
+				}
+			}, _callee2, _this);
+		}));
+
+		return function (_x4, _x5, _x6) {
+			return _ref5.apply(this, arguments);
+		};
+	}();
+};
+
+var cancelPost = function cancelPost(id) {
+	return { type: "CANCEL_PENDING_POST", payload: id };
+};
+
+var createSystemPost = function createSystemPost(streamId, parentPostId, text, seqNum) {
+	return function () {
+		var _ref7 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(dispatch, getState, _ref6) {
+			var http = _ref6.http;
+			var state, session, context, pendingId, post;
+			return regeneratorRuntime.wrap(function _callee3$(_context3) {
+				while (1) {
+					switch (_context3.prev = _context3.next) {
+						case 0:
+							state = getState();
+							session = state.session, context = state.context;
+							pendingId = createTempId();
+							post = {
+								id: pendingId,
+								teamId: context.currentTeamId,
+								timestamp: new Date().getTime(),
+								createdAt: new Date().getTime(),
+								creatorId: "codestream",
+								parentPostId: parentPostId,
+								streamId: streamId,
+								seqNum: seqNum,
+								text: text
+							};
+
+
+							dispatch({ type: "ADD_POST", payload: post });
+
+						case 5:
+						case "end":
+							return _context3.stop();
+					}
+				}
+			}, _callee3, _this);
+		}));
+
+		return function (_x7, _x8, _x9) {
+			return _ref7.apply(this, arguments);
+		};
+	}();
+};
+
+var editPost = function editPost(id, text, mentions) {
+	return function () {
+		var _ref9 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(dispatch, getState, _ref8) {
+			var api = _ref8.api;
+			var post;
+			return regeneratorRuntime.wrap(function _callee4$(_context4) {
+				while (1) {
+					switch (_context4.prev = _context4.next) {
+						case 0:
+							_context4.prev = 0;
+							_context4.next = 3;
+							return api.editPost({ id: id, text: text, mentions: mentions });
+
+						case 3:
+							post = _context4.sent;
+							return _context4.abrupt("return", dispatch({ type: "UPDATE_POST", payload: post }));
+
+						case 7:
+							_context4.prev = 7;
+							_context4.t0 = _context4["catch"](0);
+
+						case 9:
+						case "end":
+							return _context4.stop();
+					}
+				}
+			}, _callee4, _this, [[0, 7]]);
+		}));
+
+		return function (_x10, _x11, _x12) {
+			return _ref9.apply(this, arguments);
+		};
+	}();
+};
+
+var deletePost = function deletePost(id) {
+	return function () {
+		var _ref11 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(dispatch, getState, _ref10) {
+			var api = _ref10.api;
+			var post;
+			return regeneratorRuntime.wrap(function _callee5$(_context5) {
+				while (1) {
+					switch (_context5.prev = _context5.next) {
+						case 0:
+							_context5.prev = 0;
+							_context5.next = 3;
+							return api.deletePost(id);
+
+						case 3:
+							post = _context5.sent;
+							return _context5.abrupt("return", dispatch({ type: "DELETE_POST", payload: post }));
+
+						case 7:
+							_context5.prev = 7;
+							_context5.t0 = _context5["catch"](0);
+
+						case 9:
+						case "end":
+							return _context5.stop();
+					}
+				}
+			}, _callee5, _this, [[0, 7]]);
+		}));
+
+		return function (_x13, _x14, _x15) {
+			return _ref11.apply(this, arguments);
+		};
+	}();
+};
+
+// usage: setUserPreference(["favorites", "shoes", "wedges"], "red")
+var setUserPreference = function setUserPreference(prefPath, value) {
+	return function (dispatch, getState, _ref12) {
+		var api = _ref12.api;
+
+		var _getState3 = getState(),
+		    session = _getState3.session,
+		    context = _getState3.context,
+		    users = _getState3.users;
+
+		var user = users[session.userId];
+		if (!user) return;
+
+		if (!user.preferences) user.preferences = {};
+
+		// we walk down the existing user preference to set the value
+		// and simultaneously create a new preference object to pass
+		// to the API server
+		var preferences = user.preferences;
+		var newPreference = {};
+		var newPreferencePointer = newPreference;
+		while (prefPath.length > 1) {
+			var part = prefPath.shift().replace(/\./g, "*");
+			if (!preferences[part]) preferences[part] = {};
+			preferences = preferences[part];
+			newPreferencePointer[part] = {};
+			newPreferencePointer = newPreferencePointer[part];
 		}
+		preferences[prefPath[0].replace(/\./g, "*")] = value;
+		newPreferencePointer[prefPath[0].replace(/\./g, "*")] = value;
 
-		return encode(key, opts) + '=' + encode(val, opts);
-	}).filter(function (x) {
-		return x.length > 0;
-	}).join('&') : '';
+		console.log("Saving preferences: ", newPreference);
+		api.saveUserPreference(newPreference);
+		// dispatch(saveUser(normalize(user)));
+	};
 };
 
-var queryString = {
-	extract: extract,
-	parse: parse,
-	stringify: stringify
+var createStream = function createStream(attributes) {
+	return function () {
+		var _ref14 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(dispatch, getState, _ref13) {
+			var api = _ref13.api;
+
+			var _getState4, context, session, stream, returnStream;
+
+			return regeneratorRuntime.wrap(function _callee6$(_context6) {
+				while (1) {
+					switch (_context6.prev = _context6.next) {
+						case 0:
+							_getState4 = getState(), context = _getState4.context, session = _getState4.session;
+							stream = {
+								teamId: context.currentTeamId,
+								type: attributes.type
+							};
+
+							if (attributes.type === "channel") {
+								stream.name = attributes.name;
+								stream.privacy = attributes.privacy;
+							}
+							if (attributes.memberIds) stream.memberIds = attributes.memberIds;
+							if (attributes.purpose) stream.purpose = attributes.purpose;
+
+							_context6.prev = 5;
+							_context6.next = 8;
+							return api.createStream(stream);
+
+						case 8:
+							returnStream = _context6.sent;
+
+							dispatch({ type: "ADD_STREAM", payload: returnStream });
+							dispatch(setCurrentStream(returnStream.id));
+							return _context6.abrupt("return", returnStream);
+
+						case 14:
+							_context6.prev = 14;
+							_context6.t0 = _context6["catch"](5);
+
+							console.log("Error: ", _context6.t0);
+
+						case 17:
+						case "end":
+							return _context6.stop();
+					}
+				}
+			}, _callee6, _this, [[5, 14]]);
+		}));
+
+		return function (_x16, _x17, _x18) {
+			return _ref14.apply(this, arguments);
+		};
+	}();
 };
 
-var isRetina = function() {
-  var mediaQuery;
-  if (typeof window !== "undefined" && window !== null) {
-    mediaQuery = "(-webkit-min-device-pixel-ratio: 1.25), (min--moz-device-pixel-ratio: 1.25), (-o-min-device-pixel-ratio: 5/4), (min-resolution: 1.25dppx)";
-    if (window.devicePixelRatio > 1.25) {
-      return true;
-    }
-    if (window.matchMedia && window.matchMedia(mediaQuery).matches) {
-      return true;
-    }
-  }
-  return false;
+var setCurrentStream = function setCurrentStream(streamId) {
+	return function () {
+		var _ref15 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7(dispatch) {
+			return regeneratorRuntime.wrap(function _callee7$(_context7) {
+				while (1) {
+					switch (_context7.prev = _context7.next) {
+						case 0:
+							dispatch({ type: "SET_CURRENT_STREAM", payload: streamId });
+
+						case 1:
+						case "end":
+							return _context7.stop();
+					}
+				}
+			}, _callee7, _this);
+		}));
+
+		return function (_x19) {
+			return _ref15.apply(this, arguments);
+		};
+	}();
 };
 
-var dist = createCommonjsModule(function (module) {
+var removeUsersFromStream = function removeUsersFromStream(streamId, userIds) {
+	return function () {
+		var _ref17 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8(dispatch, getState, _ref16) {
+			var api = _ref16.api;
+			var update, returnStream;
+			return regeneratorRuntime.wrap(function _callee8$(_context8) {
+				while (1) {
+					switch (_context8.prev = _context8.next) {
+						case 0:
+							update = {
+								$pull: { memberIds: userIds }
+							};
+							_context8.prev = 1;
+							_context8.next = 4;
+							return api.updateStream(streamId, update);
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+						case 4:
+							returnStream = _context8.sent;
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+							console.log("return stream: ", returnStream);
+							// if (streams.length > 0) dispatch(saveStreams(normalize(streams)));
+							_context8.next = 11;
+							break;
 
+						case 8:
+							_context8.prev = 8;
+							_context8.t0 = _context8["catch"](1);
 
+							console.log("Error: ", _context8.t0);
 
-var _react2 = _interopRequireDefault(react);
+						case 11:
+						case "end":
+							return _context8.stop();
+					}
+				}
+			}, _callee8, _this, [[1, 8]]);
+		}));
 
-
-
-var _md2 = _interopRequireDefault(md5);
-
-
-
-var _queryString2 = _interopRequireDefault(queryString);
-
-
-
-var _isRetina2 = _interopRequireDefault(isRetina);
-
-
-
-var _propTypes2 = _interopRequireDefault(propTypes);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var Gravatar = function (_React$Component) {
-  _inherits(Gravatar, _React$Component);
-
-  function Gravatar() {
-    _classCallCheck(this, Gravatar);
-
-    return _possibleConstructorReturn(this, (Gravatar.__proto__ || Object.getPrototypeOf(Gravatar)).apply(this, arguments));
-  }
-
-  _createClass(Gravatar, [{
-    key: 'render',
-    value: function render() {
-      var base = this.props.protocol + 'www.gravatar.com/avatar/';
-
-      var query = _queryString2.default.stringify({
-        s: this.props.size,
-        r: this.props.rating,
-        d: this.props.default
-      });
-
-      var retinaQuery = _queryString2.default.stringify({
-        s: this.props.size * 2,
-        r: this.props.rating,
-        d: this.props.default
-      });
-
-      // Gravatar service currently trims and lowercases all registered emails
-      var formattedEmail = ('' + this.props.email).trim().toLowerCase();
-
-      var hash = void 0;
-      if (this.props.md5) {
-        hash = this.props.md5;
-      } else if (typeof this.props.email === 'string') {
-        hash = (0, _md2.default)(formattedEmail, { encoding: "binary" });
-      } else {
-        console.warn('Gravatar image can not be fetched. Either the "email" or "md5" prop must be specified.');
-        return _react2.default.createElement('script', null);
-      }
-
-      var src = '' + base + hash + '?' + query;
-      var retinaSrc = '' + base + hash + '?' + retinaQuery;
-
-      var modernBrowser = true; // server-side, we render for modern browsers
-
-      if (typeof window !== 'undefined') {
-        // this is not NodeJS
-        modernBrowser = 'srcset' in document.createElement('img');
-      }
-
-      var className = 'react-gravatar';
-      if (this.props.className) {
-        className = className + ' ' + this.props.className;
-      }
-
-      // Clone this.props and then delete Component specific props so we can
-      // spread the rest into the img.
-
-      var rest = _objectWithoutProperties(this.props, []);
-
-      delete rest.md5;
-      delete rest.email;
-      delete rest.protocol;
-      delete rest.rating;
-      delete rest.size;
-      delete rest.style;
-      delete rest.className;
-      delete rest.default;
-      if (!modernBrowser && (0, _isRetina2.default)()) {
-        return _react2.default.createElement('img', _extends({
-          alt: 'Gravatar for ' + formattedEmail,
-          style: this.props.style,
-          src: retinaSrc,
-          height: this.props.size,
-          width: this.props.size
-        }, rest, {
-          className: className
-        }));
-      }
-      return _react2.default.createElement('img', _extends({
-        alt: 'Gravatar for ' + formattedEmail,
-        style: this.props.style,
-        src: src,
-        srcSet: retinaSrc + ' 2x',
-        height: this.props.size,
-        width: this.props.size
-      }, rest, {
-        className: className
-      }));
-    }
-  }]);
-
-  return Gravatar;
-}(_react2.default.Component);
-
-Gravatar.displayName = 'Gravatar';
-Gravatar.propTypes = {
-  email: _propTypes2.default.string,
-  md5: _propTypes2.default.string,
-  size: _propTypes2.default.number,
-  rating: _propTypes2.default.string,
-  default: _propTypes2.default.string,
-  className: _propTypes2.default.string,
-  protocol: _propTypes2.default.string,
-  style: _propTypes2.default.object
-};
-Gravatar.defaultProps = {
-  size: 50,
-  rating: 'g',
-  default: 'retro',
-  protocol: '//'
+		return function (_x20, _x21, _x22) {
+			return _ref17.apply(this, arguments);
+		};
+	}();
 };
 
+var addUsersToStream = function addUsersToStream(streamId, userIds) {
+	return function () {
+		var _ref19 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(dispatch, getState, _ref18) {
+			var api = _ref18.api;
+			var update, returnStream;
+			return regeneratorRuntime.wrap(function _callee9$(_context9) {
+				while (1) {
+					switch (_context9.prev = _context9.next) {
+						case 0:
+							update = {
+								$push: { memberIds: userIds }
+							};
+							_context9.prev = 1;
+							_context9.next = 4;
+							return api.updateStream(streamId, update);
 
-module.exports = Gravatar;
+						case 4:
+							returnStream = _context9.sent;
+
+							console.log("return stream: ", returnStream);
+							// if (streams.length > 0) dispatch(saveStreams(normalize(streams)));
+							_context9.next = 11;
+							break;
+
+						case 8:
+							_context9.prev = 8;
+							_context9.t0 = _context9["catch"](1);
+
+							console.log("Error: ", _context9.t0);
+
+						case 11:
+						case "end":
+							return _context9.stop();
+					}
+				}
+			}, _callee9, _this, [[1, 8]]);
+		}));
+
+		return function (_x23, _x24, _x25) {
+			return _ref19.apply(this, arguments);
+		};
+	}();
+};
+
+var renameStream = function renameStream(streamId, name) {
+	return function () {
+		var _ref21 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10(dispatch, getState, _ref20) {
+			var api = _ref20.api;
+			var update, returnStream;
+			return regeneratorRuntime.wrap(function _callee10$(_context10) {
+				while (1) {
+					switch (_context10.prev = _context10.next) {
+						case 0:
+							update = { name: name };
+							_context10.prev = 1;
+							_context10.next = 4;
+							return api.updateStream(streamId, update);
+
+						case 4:
+							returnStream = _context10.sent;
+
+							console.log("return stream: ", returnStream);
+							return _context10.abrupt("return", returnStream);
+
+						case 9:
+							_context10.prev = 9;
+							_context10.t0 = _context10["catch"](1);
+
+							console.log("Error: ", _context10.t0);
+
+						case 12:
+						case "end":
+							return _context10.stop();
+					}
+				}
+			}, _callee10, _this, [[1, 9]]);
+		}));
+
+		return function (_x26, _x27, _x28) {
+			return _ref21.apply(this, arguments);
+		};
+	}();
+};
+
+var archiveStream = function archiveStream(streamId, value) {
+	return function () {
+		var _ref23 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11(dispatch, getState, _ref22) {
+			var api = _ref22.api;
+			var update, returnStream;
+			return regeneratorRuntime.wrap(function _callee11$(_context11) {
+				while (1) {
+					switch (_context11.prev = _context11.next) {
+						case 0:
+							update = { isArchived: value };
+							_context11.prev = 1;
+							_context11.next = 4;
+							return api.updateStream(streamId, update);
+
+						case 4:
+							returnStream = _context11.sent;
+
+							console.log("return stream: ", returnStream);
+							return _context11.abrupt("return", returnStream);
+
+						case 9:
+							_context11.prev = 9;
+							_context11.t0 = _context11["catch"](1);
+
+							console.log("Error: ", _context11.t0);
+
+						case 12:
+						case "end":
+							return _context11.stop();
+					}
+				}
+			}, _callee11, _this, [[1, 9]]);
+		}));
+
+		return function (_x29, _x30, _x31) {
+			return _ref23.apply(this, arguments);
+		};
+	}();
+};
+
+var actions = /*#__PURE__*/Object.freeze({
+	markStreamRead: markStreamRead,
+	createPost: createPost,
+	retryPost: retryPost,
+	cancelPost: cancelPost,
+	createSystemPost: createSystemPost,
+	editPost: editPost,
+	deletePost: deletePost,
+	setUserPreference: setUserPreference,
+	createStream: createStream,
+	setCurrentStream: setCurrentStream,
+	removeUsersFromStream: removeUsersFromStream,
+	addUsersToStream: addUsersToStream,
+	renameStream: renameStream,
+	archiveStream: archiveStream
 });
 
-var Gravatar = unwrapExports(dist);
-
-/* eslint-disable no-unused-vars */
-var tooltipOptions = function tooltipOptions(_ref) {
-	var children = _ref.children,
-	    options = objectWithoutProperties(_ref, ["children"]);
-	return options;
-};
-/* eslint-enable no-unused-vars */
-
-var Tooltip = function (_React$Component) {
-	inherits(Tooltip, _React$Component);
-
-	function Tooltip() {
-		classCallCheck(this, Tooltip);
-		return possibleConstructorReturn(this, (Tooltip.__proto__ || Object.getPrototypeOf(Tooltip)).apply(this, arguments));
+var initialState = {
+	byTeam: {
+		//[teamId]: { [streamId]: {} }
+	},
+	byRepo: {
+		//[repoId]: { byFile: {} }
 	}
+};
 
-	createClass(Tooltip, [{
-		key: "componentDidMount",
-		value: function componentDidMount() {
-			this.configure(this.props);
-		}
-	}, {
-		key: "componentDidUpdate",
-		value: function componentDidUpdate(previousProps) {
-			var currentOptions = tooltipOptions(this.props);
-			if (!underscore.isEqual(tooltipOptions(previousProps), currentOptions)) {
-				this.tearDown();
-				this.configure(currentOptions);
-			}
-		}
-	}, {
-		key: "componentWillUnmount",
-		value: function componentWillUnmount() {
-			this.tearDown();
-		}
-	}, {
-		key: "configure",
-		value: function configure(props) {
-			/* eslint-disable no-unused-vars */
-			var children = props.children,
-			    target = props.target,
-			    options = objectWithoutProperties(props, ["children", "target"]);
-			/* eslint-enable no-unused-vars */
+var addStreamForTeam = function addStreamForTeam(state, stream) {
+	var teamId = stream.teamId;
+	var teamStreams = state[teamId] || {};
+	return _extends$4({}, state, defineProperty$1({}, teamId, _extends$4({}, teamStreams, defineProperty$1({}, stream.id, stream))));
+};
 
-			if (global.atom) this.disposable = atom.tooltips.add(target || this.target, options);
-		}
-	}, {
-		key: "tearDown",
-		value: function tearDown() {
-			this.disposable && this.disposable.dispose();
-		}
-	}, {
-		key: "render",
-		value: function render() {
-			var _this2 = this;
+var addStream = function addStream(state, stream) {
+	var existingStreamsForRepo = state.byRepo[stream.repoId] || { byFile: {}, byId: {} };
+	return {
+		byTeam: addStreamForTeam(state.byTeam, stream),
+		byRepo: _extends$4({}, state.byRepo, defineProperty$1({}, stream.repoId, {
+			byFile: _extends$4({}, existingStreamsForRepo.byFile, defineProperty$1({}, stream.file, stream)),
+			byId: _extends$4({}, existingStreamsForRepo.byId, defineProperty$1({}, stream.id, stream))
+		}))
+	};
+};
 
-			try {
-				var child = react.Children.only(this.props.children);
-				return react.cloneElement(child, { ref: function ref(element) {
-						return _this2.target = element;
-					} });
-			} catch (e) {
-				/* nothing to render */
-				return false;
-			}
+var streams = (function () {
+	var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState;
+	var _ref = arguments[1];
+	var type = _ref.type,
+	    payload = _ref.payload;
+
+	switch (type) {
+		case "ADD_STREAMS":
+		case "BOOTSTRAP_STREAMS":
+			return payload.reduce(addStream, state);
+		case "STREAMS-UPDATE_FROM_PUBNUB":
+		case "ADD_STREAM":
+			return addStream(state, payload);
+		default:
+			return state;
+	}
+});
+
+// Selectors
+var getStreamForTeam = function getStreamForTeam(state, teamId) {
+	var streams = state.byTeam[teamId] || {};
+	return Object.values(streams).find(function (stream) {
+		return stream.isTeamStream && stream.name === "general";
+	});
+};
+
+var getChannelStreamsForTeam = function getChannelStreamsForTeam(state, teamId, userId) {
+	var streams = state.byTeam[teamId] || {};
+	return Object.values(streams).filter(function (stream) {
+		return stream.type === "channel" && !stream.isArchived && (stream.isTeamStream || underscore.contains(stream.memberIds, userId));
+	});
+};
+
+var getPublicChannelStreamsForTeam = function getPublicChannelStreamsForTeam(state, teamId, userId) {
+	var streams = state.byTeam[teamId] || {};
+	return Object.values(streams).filter(function (stream) {
+		return stream.type === "channel" && !stream.isArchived && !stream.isTeamStream && !underscore.contains(stream.memberIds, userId);
+	});
+};
+
+var getArchivedChannelStreamsForTeam = function getArchivedChannelStreamsForTeam(state, teamId, userId) {
+	var streams = state.byTeam[teamId] || {};
+	return Object.values(streams).filter(function (stream) {
+		return stream.type === "channel" && stream.isArchived;
+	});
+};
+
+var makeName = function makeName(user) {
+	if (!user) return;
+	if (user.username) {
+		return user.username;
+	} else {
+		return user.email.replace(/@.*/, "");
+	}
+};
+
+var makeDirectMessageStreamName = function makeDirectMessageStreamName(memberIds, users) {
+	var names = memberIds.map(function (id) {
+		return makeName(users[id]);
+	}).filter(Boolean);
+	if (!names) {
+		console.log(memberIds);
+		return "NO NAME";
+	}
+	return names.join(", ");
+};
+
+var getDirectMessageStreamsForTeam = function getDirectMessageStreamsForTeam(state, teamId, userId, users) {
+	var streams = state.byTeam[teamId] || {};
+	var directStreams = Object.values(streams).filter(function (stream) {
+		return stream.type === "direct";
+	});
+	directStreams.map(function (stream) {
+		// if it's a direct message w/myself, then use my name, otherwise exclude myself
+		if (stream.memberIds.length === 1 && stream.memberIds[0] === userId) {
+			stream.name = makeDirectMessageStreamName([userId], users);
+		} else {
+			var withoutMe = (stream.memberIds || []).filter(function (id) {
+				return id !== userId;
+			});
+			stream.name = makeDirectMessageStreamName(withoutMe, users);
 		}
-	}]);
-	return Tooltip;
-}(react.Component);
+	});
+	return directStreams;
+};
+
+var getStreamForId = function getStreamForId(state, teamId, streamId) {
+	var streams = state.byTeam[teamId] || {};
+	return Object.values(streams).find(function (stream) {
+		return stream.id === streamId;
+	});
+};
+
+var getStreamForRepoAndFile = function getStreamForRepoAndFile(state, repoId, file) {
+	var filesForRepo = (state.byRepo[repoId] || {}).byFile;
+	if (filesForRepo) return filesForRepo[file];
+};
+
+// If stream for a pending post is created, the pending post will be lost (not displayed)
+// TODO: reconcile pending posts for a file with stream when the stream is created
+var getPostsForStream = function getPostsForStream(_ref2) {
+	var byStream = _ref2.byStream,
+	    pending = _ref2.pending;
+	var streamId = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "";
+
+	if (streamId === "") return [];
+	var pendingForStream = pending.filter(function (it) {
+		try {
+			return it.streamId === streamId || it.stream.file === streamId;
+		} catch (e) {
+			return false;
+		}
+	});
+	return [].concat(toConsumableArray(underscore.sortBy(byStream[streamId], "seqNum")), toConsumableArray(pendingForStream));
+};
+
+const alert = {
+	name: "alert",
+	figma: {
+		id: "0:5",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"warning",
+		"triangle",
+		"exclamation",
+		"point"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M8.893 1.5c-.183-.31-.52-.5-.887-.5s-.703.19-.886.5L.138 13.499a.98.98 0 0 0 0 1.001c.193.31.53.501.886.501h13.964c.367 0 .704-.19.877-.5a1.03 1.03 0 0 0 .01-1.002L8.893 1.5zm.133 11.497H6.987v-2.003h2.039v2.003zm0-3.004H6.987V5.987h2.039v4.006z\"/>"
+};
+const beaker = {
+	name: "beaker",
+	figma: {
+		id: "0:26",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"experiment",
+		"labs",
+		"experimental",
+		"feature",
+		"test",
+		"science",
+		"education",
+		"study",
+		"development",
+		"testing"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M14.38 14.59L11 7V3h1V2H3v1h1v4L.63 14.59A1 1 0 0 0 1.54 16h11.94c.72 0 1.2-.75.91-1.41h-.01zM3.75 10L5 7V3h5v4l1.25 3h-7.5zM8 8h1v1H8V8zM7 7H6V6h1v1zm0-3h1v1H7V4zm0-3H6V0h1v1z\"/>"
+};
+const bell = {
+	name: "bell",
+	figma: {
+		id: "0:34",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"notification"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M13.99 11.991v1H0v-1l.73-.58c.769-.769.809-2.547 1.189-4.416.77-3.767 4.077-4.996 4.077-4.996 0-.55.45-1 .999-1 .55 0 1 .45 1 1 0 0 3.387 1.229 4.156 4.996.38 1.879.42 3.657 1.19 4.417l.659.58h-.01zM6.995 15.99c1.11 0 1.999-.89 1.999-1.999H4.996c0 1.11.89 1.999 1.999 1.999z\"/>"
+};
+const bold = {
+	name: "bold",
+	figma: {
+		id: "0:38",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"markdown",
+		"bold",
+		"text"
+	],
+	width: 10,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M1 2h3.83c2.48 0 4.3.75 4.3 2.95 0 1.14-.63 2.23-1.67 2.61v.06c1.33.3 2.3 1.23 2.3 2.86 0 2.39-1.97 3.52-4.61 3.52H1V2zm3.66 4.95c1.67 0 2.38-.66 2.38-1.69 0-1.17-.78-1.61-2.34-1.61H3.13v3.3h1.53zm.27 5.39c1.77 0 2.75-.64 2.75-1.98 0-1.27-.95-1.81-2.75-1.81h-1.8v3.8h1.8v-.01z\"/>"
+};
+const book = {
+	name: "book",
+	figma: {
+		id: "0:43",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"book",
+		"journal",
+		"wiki",
+		"readme"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M3 5h4v1H3V5zm0 3h4V7H3v1zm0 2h4V9H3v1zm11-5h-4v1h4V5zm0 2h-4v1h4V7zm0 2h-4v1h4V9zm2-6v9c0 .55-.45 1-1 1H9.5l-1 1-1-1H2c-.55 0-1-.45-1-1V3c0-.55.45-1 1-1h5.5l1 1 1-1H15c.55 0 1 .45 1 1zm-8 .5L7.5 3H2v9h6V3.5zm7-.5H9.5l-.5.5V12h6V3z\"/>"
+};
+const bookmark = {
+	name: "bookmark",
+	figma: {
+		id: "0:54",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"tab",
+		"star"
+	],
+	width: 10,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M9 0H1C.27 0 0 .27 0 1v15l5-3.09L10 16V1c0-.73-.27-1-1-1zm-.78 4.25L6.36 5.61l.72 2.16c.06.22-.02.28-.2.17L5 6.6 3.12 7.94c-.19.11-.25.05-.2-.17l.72-2.16-1.86-1.36c-.17-.16-.14-.23.09-.23l2.3-.03.7-2.16h.25l.7 2.16 2.3.03c.23 0 .27.08.09.23h.01z\"/>"
+};
+const briefcase = {
+	name: "briefcase",
+	figma: {
+		id: "0:58",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"suitcase",
+		"business"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M9 4V3c0-.55-.45-1-1-1H6c-.55 0-1 .45-1 1v1H1c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1h12c.55 0 1-.45 1-1V5c0-.55-.45-1-1-1H9zM6 3h2v1H6V3zm7 6H8v1H6V9H1V5h1v3h10V5h1v4z\"/>"
+};
+const broadcast = {
+	name: "broadcast",
+	figma: {
+		id: "0:63",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"rss",
+		"radio",
+		"signal"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M9 9H8c.55 0 1-.45 1-1V7c0-.55-.45-1-1-1H7c-.55 0-1 .45-1 1v1c0 .55.45 1 1 1H6c-.55 0-1 .45-1 1v2h1v3c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-3h1v-2c0-.55-.45-1-1-1zM7 7h1v1H7V7zm2 4H8v4H7v-4H6v-1h3v1zm2.09-3.5c0-1.98-1.61-3.59-3.59-3.59A3.593 3.593 0 0 0 4 8.31v1.98c-.61-.77-1-1.73-1-2.8 0-2.48 2.02-4.5 4.5-4.5S12 5.01 12 7.49c0 1.06-.39 2.03-1 2.8V8.31c.06-.27.09-.53.09-.81zm3.91 0c0 2.88-1.63 5.38-4 6.63v-1.05a6.553 6.553 0 0 0 3.09-5.58A6.59 6.59 0 0 0 7.5.91 6.59 6.59 0 0 0 .91 7.5c0 2.36 1.23 4.42 3.09 5.58v1.05A7.497 7.497 0 0 1 7.5 0C11.64 0 15 3.36 15 7.5z\"/>"
+};
+const browser = {
+	name: "browser",
+	figma: {
+		id: "0:70",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"window",
+		"web"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M5 3h1v1H5V3zM3 3h1v1H3V3zM1 3h1v1H1V3zm12 10H1V5h12v8zm0-9H7V3h6v1zm1-1c0-.55-.45-1-1-1H1c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1V3z\"/>"
+};
+const bug = {
+	name: "bug",
+	figma: {
+		id: "0:78",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"insect",
+		"issue"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M11 10h3V9h-3V8l3.17-1.03-.34-.94L11 7V6c0-.55-.45-1-1-1V4c0-.48-.36-.88-.83-.97L10.2 2H12V1H9.8l-2 2h-.59L5.2 1H3v1h1.8l1.03 1.03C5.36 3.12 5 3.51 5 4v1c-.55 0-1 .45-1 1v1l-2.83-.97-.34.94L4 8v1H1v1h3v1L.83 12.03l.34.94L4 12v1c0 .55.45 1 1 1h1l1-1V6h1v7l1 1h1c.55 0 1-.45 1-1v-1l2.83.97.34-.94L11 11v-1zM9 5H6V4h3v1z\"/>"
+};
+const calendar = {
+	name: "calendar",
+	figma: {
+		id: "0:82",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"time",
+		"day",
+		"month",
+		"year",
+		"date",
+		"appointment"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M13 2h-1v1.5c0 .28-.22.5-.5.5h-2c-.28 0-.5-.22-.5-.5V2H6v1.5c0 .28-.22.5-.5.5h-2c-.28 0-.5-.22-.5-.5V2H2c-.55 0-1 .45-1 1v11c0 .55.45 1 1 1h11c.55 0 1-.45 1-1V3c0-.55-.45-1-1-1zm0 12H2V5h11v9zM5 3H4V1h1v2zm6 0h-1V1h1v2zM6 7H5V6h1v1zm2 0H7V6h1v1zm2 0H9V6h1v1zm2 0h-1V6h1v1zM4 9H3V8h1v1zm2 0H5V8h1v1zm2 0H7V8h1v1zm2 0H9V8h1v1zm2 0h-1V8h1v1zm-8 2H3v-1h1v1zm2 0H5v-1h1v1zm2 0H7v-1h1v1zm2 0H9v-1h1v1zm2 0h-1v-1h1v1zm-8 2H3v-1h1v1zm2 0H5v-1h1v1zm2 0H7v-1h1v1zm2 0H9v-1h1v1z\"/>"
+};
+const check$1 = {
+	name: "check",
+	figma: {
+		id: "0:104",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"mark",
+		"yes",
+		"confirm",
+		"accept",
+		"ok",
+		"success"
+	],
+	width: 12,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M12 5l-8 8-4-4 1.5-1.5L4 10l6.5-6.5L12 5z\"/>"
+};
+const checklist = {
+	name: "checklist",
+	figma: {
+		id: "0:108",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"todo",
+		"tasks"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M16 8.5l-6 6-3-3L8.5 10l1.5 1.5L14.5 7 16 8.5zM5.7 12.2l.8.8H2c-.55 0-1-.45-1-1V3c0-.55.45-1 1-1h7c.55 0 1 .45 1 1v6.5l-.8-.8c-.39-.39-1.03-.39-1.42 0L5.7 10.8a.996.996 0 0 0 0 1.41v-.01zM4 4h5V3H4v1zm0 2h5V5H4v1zm0 2h3V7H4v1zM3 9H2v1h1V9zm0-2H2v1h1V7zm0-2H2v1h1V5zm0-2H2v1h1V3z\"/>"
+};
+const clippy = {
+	name: "clippy",
+	figma: {
+		id: "0:138",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"copy",
+		"paste",
+		"save",
+		"capture",
+		"clipboard"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M2 13h4v1H2v-1zm5-6H2v1h5V7zm2 3V8l-3 3 3 3v-2h5v-2H9zM4.5 9H2v1h2.5V9zM2 12h2.5v-1H2v1zm9 1h1v2c-.02.28-.11.52-.3.7-.19.18-.42.28-.7.3H1c-.55 0-1-.45-1-1V4c0-.55.45-1 1-1h3c0-1.11.89-2 2-2 1.11 0 2 .89 2 2h3c.55 0 1 .45 1 1v5h-1V6H1v9h10v-2zM2 5h8c0-.55-.45-1-1-1H8c-.55 0-1-.45-1-1s-.45-1-1-1-1 .45-1 1-.45 1-1 1H3c-.55 0-1 .45-1 1z\"/>"
+};
+const clock = {
+	name: "clock",
+	figma: {
+		id: "0:147",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"time",
+		"hour",
+		"minute",
+		"second",
+		"watch"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M8 8h3v2H7c-.55 0-1-.45-1-1V4h2v4zM7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7z\"/>"
+};
+const code = {
+	name: "code",
+	figma: {
+		id: "0:160",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"brackets"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M9.5 3L8 4.5 11.5 8 8 11.5 9.5 13 14 8 9.5 3zm-5 0L0 8l4.5 5L6 11.5 2.5 8 6 4.5 4.5 3z\"/>"
+};
+const comment = {
+	name: "comment",
+	figma: {
+		id: "0:169",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"speak",
+		"bubble"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M14 1H2c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1h2v3.5L7.5 11H14c.55 0 1-.45 1-1V2c0-.55-.45-1-1-1zm0 9H7l-2 2v-2H2V2h12v8z\"/>"
+};
+const dash = {
+	name: "dash",
+	figma: {
+		id: "0:178",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"hyphen",
+		"range"
+	],
+	width: 8,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M0 7v2h8V7H0z\"/>"
+};
+const dashboard = {
+	name: "dashboard",
+	figma: {
+		id: "0:182",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"speed",
+		"dial"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M9 5H8V4h1v1zm4 3h-1v1h1V8zM6 5H5v1h1V5zM5 8H4v1h1V8zm11-5.5l-.5-.5L9 7c-.06-.02-1 0-1 0-.55 0-1 .45-1 1v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-.92l6-5.58zm-1.59 4.09c.19.61.3 1.25.3 1.91 0 3.42-2.78 6.2-6.2 6.2-3.42 0-6.21-2.78-6.21-6.2 0-3.42 2.78-6.2 6.2-6.2 1.2 0 2.31.34 3.27.94l.94-.94A7.459 7.459 0 0 0 8.51 1C4.36 1 1 4.36 1 8.5 1 12.64 4.36 16 8.5 16c4.14 0 7.5-3.36 7.5-7.5 0-1.03-.2-2.02-.59-2.91l-1 1z\"/>"
+};
+const database = {
+	name: "database",
+	figma: {
+		id: "0:190",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"disks",
+		"data"
+	],
+	width: 12,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M6 15c-3.31 0-6-.9-6-2v-2c0-.17.09-.34.21-.5.67.86 3 1.5 5.79 1.5s5.12-.64 5.79-1.5c.13.16.21.33.21.5v2c0 1.1-2.69 2-6 2zm0-4c-3.31 0-6-.9-6-2V7c0-.11.04-.21.09-.31.03-.06.07-.13.12-.19C.88 7.36 3.21 8 6 8s5.12-.64 5.79-1.5c.05.06.09.13.12.19.05.1.09.21.09.31v2c0 1.1-2.69 2-6 2zm0-4c-3.31 0-6-.9-6-2V3c0-1.1 2.69-2 6-2s6 .9 6 2v2c0 1.1-2.69 2-6 2zm0-5c-2.21 0-4 .45-4 1s1.79 1 4 1 4-.45 4-1-1.79-1-4-1z\"/>"
+};
+const diff = {
+	name: "diff",
+	figma: {
+		id: "0:242",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"difference",
+		"changes",
+		"compare"
+	],
+	width: 13,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M6 7h2v1H6v2H5V8H3V7h2V5h1v2zm-3 6h5v-1H3v1zM7.5 2L11 5.5V15c0 .55-.45 1-1 1H1c-.55 0-1-.45-1-1V3c0-.55.45-1 1-1h6.5zM10 6L7 3H1v12h9V6zM8.5 0H3v1h5l4 4v8h1V4.5L8.5 0z\"/>"
+};
+const ellipsis = {
+	name: "ellipsis",
+	figma: {
+		id: "0:249",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"dot",
+		"read",
+		"more",
+		"hidden",
+		"expand"
+	],
+	width: 12,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M11 5H1c-.55 0-1 .45-1 1v4c0 .55.45 1 1 1h10c.55 0 1-.45 1-1V6c0-.55-.45-1-1-1zM4 9H2V7h2v2zm3 0H5V7h2v2zm3 0H8V7h2v2z\"/>"
+};
+const eye = {
+	name: "eye",
+	figma: {
+		id: "0:255",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"look",
+		"watch",
+		"see"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M8.06 2C3 2 0 8 0 8s3 6 8.06 6C13 14 16 8 16 8s-3-6-7.94-6zM8 12c-2.2 0-4-1.78-4-4 0-2.2 1.8-4 4-4 2.22 0 4 1.8 4 4 0 2.22-1.78 4-4 4zm2-4c0 1.11-.89 2-2 2-1.11 0-2-.89-2-2 0-1.11.89-2 2-2 1.11 0 2 .89 2 2z\"/>"
+};
+const file = {
+	name: "file",
+	figma: {
+		id: "0:308",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"file",
+		"text",
+		"words"
+	],
+	width: 12,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M6 5H2V4h4v1zM2 8h7V7H2v1zm0 2h7V9H2v1zm0 2h7v-1H2v1zm10-7.5V14c0 .55-.45 1-1 1H1c-.55 0-1-.45-1-1V2c0-.55.45-1 1-1h7.5L12 4.5zM11 5L8 2H1v12h10V5z\"/>"
+};
+const flame = {
+	name: "flame",
+	figma: {
+		id: "0:325",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"fire",
+		"hot",
+		"burn",
+		"trending"
+	],
+	width: 12,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M5.05.31c.81 2.17.41 3.38-.52 4.31C3.55 5.67 1.98 6.45.9 7.98c-1.45 2.05-1.7 6.53 3.53 7.7-2.2-1.16-2.67-4.52-.3-6.61-.61 2.03.53 3.33 1.94 2.86 1.39-.47 2.3.53 2.27 1.67-.02.78-.31 1.44-1.13 1.81 3.42-.59 4.78-3.42 4.78-5.56 0-2.84-2.53-3.22-1.25-5.61-1.52.13-2.03 1.13-1.89 2.75.09 1.08-1.02 1.8-1.86 1.33-.67-.41-.66-1.19-.06-1.78C8.18 5.31 8.68 2.45 5.05.32L5.03.3l.02.01z\"/>"
+};
+const fold = {
+	name: "fold",
+	figma: {
+		id: "0:329",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"unfold",
+		"hide",
+		"collapse"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M7 9l3 3H8v3H6v-3H4l3-3zm3-6H8V0H6v3H4l3 3 3-3zm4 2c0-.55-.45-1-1-1h-2.5l-1 1h3l-2 2h-7l-2-2h3l-1-1H1c-.55 0-1 .45-1 1l2.5 2.5L0 10c0 .55.45 1 1 1h2.5l1-1h-3l2-2h7l2 2h-3l1 1H13c.55 0 1-.45 1-1l-2.5-2.5L14 5z\"/>"
+};
+const gear = {
+	name: "gear",
+	figma: {
+		id: "0:334",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"settings"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M14 8.77v-1.6l-1.94-.64-.45-1.09.88-1.84-1.13-1.13-1.81.91-1.09-.45-.69-1.92h-1.6l-.63 1.94-1.11.45-1.84-.88-1.13 1.13.91 1.81-.45 1.09L0 7.23v1.59l1.94.64.45 1.09-.88 1.84 1.13 1.13 1.81-.91 1.09.45.69 1.92h1.59l.63-1.94 1.11-.45 1.84.88 1.13-1.13-.92-1.81.47-1.09L14 8.75v.02zM7 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z\"/>"
+};
+const gift = {
+	name: "gift",
+	figma: {
+		id: "0:338",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"package",
+		"present",
+		"skill",
+		"craft",
+		"freebie"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M13 4h-1.38c.19-.33.33-.67.36-.91.06-.67-.11-1.22-.52-1.61C11.1 1.1 10.65 1 10.1 1h-.11c-.53.02-1.11.25-1.53.58-.42.33-.73.72-.97 1.2-.23-.48-.55-.88-.97-1.2-.42-.32-1-.58-1.53-.58h-.03c-.56 0-1.06.09-1.44.48-.41.39-.58.94-.52 1.61.03.23.17.58.36.91H1.98c-.55 0-1 .45-1 1v3h1v5c0 .55.45 1 1 1h9c.55 0 1-.45 1-1V8h1V5c0-.55-.45-1-1-1H13zm-4.78-.88c.17-.36.42-.67.75-.92.3-.23.72-.39 1.05-.41h.09c.45 0 .66.11.8.25s.33.39.3.95c-.05.19-.25.61-.5 1h-2.9l.41-.88v.01zM4.09 2.04c.13-.13.31-.25.91-.25.31 0 .72.17 1.03.41.33.25.58.55.75.92L7.2 4H4.3c-.25-.39-.45-.81-.5-1-.03-.56.16-.81.3-.95l-.01-.01zM7 12.99H3V8h4v5-.01zm0-6H2V5h5v2-.01zm5 6H8V8h4v5-.01zm1-6H8V5h5v2-.01z\"/>"
+};
+const gist = {
+	name: "gist",
+	figma: {
+		id: "0:354",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"gist",
+		"github"
+	],
+	width: 12,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M7.5 5L10 7.5 7.5 10l-.75-.75L8.5 7.5 6.75 5.75 7.5 5zm-3 0L2 7.5 4.5 10l.75-.75L3.5 7.5l1.75-1.75L4.5 5zM0 13V2c0-.55.45-1 1-1h10c.55 0 1 .45 1 1v11c0 .55-.45 1-1 1H1c-.55 0-1-.45-1-1zm1 0h10V2H1v11z\"/>"
+};
+const globe = {
+	name: "globe",
+	figma: {
+		id: "0:389",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"world",
+		"earth",
+		"planet"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M7 1C3.14 1 0 4.14 0 8s3.14 7 7 7c.48 0 .94-.05 1.38-.14-.17-.08-.2-.73-.02-1.09.19-.41.81-1.45.2-1.8-.61-.35-.44-.5-.81-.91-.37-.41-.22-.47-.25-.58-.08-.34.36-.89.39-.94.02-.06.02-.27 0-.33 0-.08-.27-.22-.34-.23-.06 0-.11.11-.2.13-.09.02-.5-.25-.59-.33-.09-.08-.14-.23-.27-.34-.13-.13-.14-.03-.33-.11s-.8-.31-1.28-.48c-.48-.19-.52-.47-.52-.66-.02-.2-.3-.47-.42-.67-.14-.2-.16-.47-.2-.41-.04.06.25.78.2.81-.05.02-.16-.2-.3-.38-.14-.19.14-.09-.3-.95s.14-1.3.17-1.75c.03-.45.38.17.19-.13-.19-.3 0-.89-.14-1.11-.13-.22-.88.25-.88.25.02-.22.69-.58 1.16-.92.47-.34.78-.06 1.16.05.39.13.41.09.28-.05-.13-.13.06-.17.36-.13.28.05.38.41.83.36.47-.03.05.09.11.22s-.06.11-.38.3c-.3.2.02.22.55.61s.38-.25.31-.55c-.07-.3.39-.06.39-.06.33.22.27.02.5.08.23.06.91.64.91.64-.83.44-.31.48-.17.59.14.11-.28.3-.28.3-.17-.17-.19.02-.3.08-.11.06-.02.22-.02.22-.56.09-.44.69-.42.83 0 .14-.38.36-.47.58-.09.2.25.64.06.66-.19.03-.34-.66-1.31-.41-.3.08-.94.41-.59 1.08.36.69.92-.19 1.11-.09.19.1-.06.53-.02.55.04.02.53.02.56.61.03.59.77.53.92.55.17 0 .7-.44.77-.45.06-.03.38-.28 1.03.09.66.36.98.31 1.2.47.22.16.08.47.28.58.2.11 1.06-.03 1.28.31.22.34-.88 2.09-1.22 2.28-.34.19-.48.64-.84.92s-.81.64-1.27.91c-.41.23-.47.66-.66.8 3.14-.7 5.48-3.5 5.48-6.84 0-3.86-3.14-7-7-7L7 1zm1.64 6.56c-.09.03-.28.22-.78-.08-.48-.3-.81-.23-.86-.28 0 0-.05-.11.17-.14.44-.05.98.41 1.11.41.13 0 .19-.13.41-.05.22.08.05.13-.05.14zM6.34 1.7c-.05-.03.03-.08.09-.14.03-.03.02-.11.05-.14.11-.11.61-.25.52.03-.11.27-.58.3-.66.25zm1.23.89c-.19-.02-.58-.05-.52-.14.3-.28-.09-.38-.34-.38-.25-.02-.34-.16-.22-.19.12-.03.61.02.7.08.08.06.52.25.55.38.02.13 0 .25-.17.25zm1.47-.05c-.14.09-.83-.41-.95-.52-.56-.48-.89-.31-1-.41-.11-.1-.08-.19.11-.34.19-.15.69.06 1 .09.3.03.66.27.66.55.02.25.33.5.19.63h-.01z\"/>"
+};
+const graph = {
+	name: "graph",
+	figma: {
+		id: "0:396",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"trend",
+		"stats",
+		"statistics"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M16 14v1H0V0h1v14h15zM5 13H3V8h2v5zm4 0H7V3h2v10zm4 0h-2V6h2v7z\"/>"
+};
+const heart = {
+	name: "heart",
+	figma: {
+		id: "0:400",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"love",
+		"beat"
+	],
+	width: 12,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M9 2c-.97 0-1.69.42-2.2 1-.51.58-.78.92-.8 1-.02-.08-.28-.42-.8-1-.52-.58-1.17-1-2.2-1-1.632.086-2.954 1.333-3 3 0 .52.09 1.52.67 2.67C1.25 8.82 3.01 10.61 6 13c2.98-2.39 4.77-4.17 5.34-5.33C11.91 6.51 12 5.5 12 5c-.047-1.69-1.342-2.913-3-3z\"/>"
+};
+const history = {
+	name: "history",
+	figma: {
+		id: "0:404",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"time",
+		"past",
+		"revert",
+		"back"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M8 13H6V6h5v2H8v5zM7 1C4.81 1 2.87 2.02 1.59 3.59L0 2v4h4L2.5 4.5C3.55 3.17 5.17 2.3 7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-.34.03-.67.09-1H.08C.03 7.33 0 7.66 0 8c0 3.86 3.14 7 7 7s7-3.14 7-7-3.14-7-7-7z\"/>"
+};
+const home = {
+	name: "home",
+	figma: {
+		id: "0:408",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"welcome",
+		"index",
+		"house",
+		"building"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M16 9l-3-3V2h-2v2L8 1 0 9h2l1 5c0 .55.45 1 1 1h8c.55 0 1-.45 1-1l1-5h2zm-4 5H9v-4H7v4H4L2.81 7.69 8 2.5l5.19 5.19L12 14z\"/>"
+};
+const hubot = {
+	name: "hubot",
+	figma: {
+		id: "0:419",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"robot",
+		"bot"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M3 6c-.55 0-1 .45-1 1v2c0 .55.45 1 1 1h8c.55 0 1-.45 1-1V7c0-.55-.45-1-1-1H3zm8 1.75L9.75 9h-1.5L7 7.75 5.75 9h-1.5L3 7.75V7h.75L5 8.25 6.25 7h1.5L9 8.25 10.25 7H11v.75zM5 11h4v1H5v-1zm2-9C3.14 2 0 4.91 0 8.5V13c0 .55.45 1 1 1h12c.55 0 1-.45 1-1V8.5C14 4.91 10.86 2 7 2zm6 11H1V8.5c0-3.09 2.64-5.59 6-5.59s6 2.5 6 5.59V13z\"/>"
+};
+const inbox = {
+	name: "inbox",
+	figma: {
+		id: "0:426",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"mail",
+		"todo",
+		"new",
+		"messages"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M14 9l-1.13-7.14c-.08-.48-.5-.86-1-.86H2.13c-.5 0-.92.38-1 .86L0 9v5c0 .55.45 1 1 1h12c.55 0 1-.45 1-1V9zm-3.28.55l-.44.89c-.17.34-.52.56-.91.56H4.61c-.38 0-.72-.22-.89-.55l-.44-.91c-.17-.33-.52-.55-.89-.55H1l1-7h10l1 7h-1.38c-.39 0-.73.22-.91.55l.01.01z\"/>"
+};
+const info = {
+	name: "info",
+	figma: {
+		id: "0:430",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"help"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M6.3 5.69a.942.942 0 0 1-.28-.7c0-.28.09-.52.28-.7.19-.18.42-.28.7-.28.28 0 .52.09.7.28.18.19.28.42.28.7 0 .28-.09.52-.28.7a1 1 0 0 1-.7.3c-.28 0-.52-.11-.7-.3zM8 7.99c-.02-.25-.11-.48-.31-.69-.2-.19-.42-.3-.69-.31H6c-.27.02-.48.13-.69.31-.2.2-.3.44-.31.69h1v3c.02.27.11.5.31.69.2.2.42.31.69.31h1c.27 0 .48-.11.69-.31.2-.19.3-.42.31-.69H8V7.98v.01zM7 2.3c-3.14 0-5.7 2.54-5.7 5.68 0 3.14 2.56 5.7 5.7 5.7s5.7-2.55 5.7-5.7c0-3.15-2.56-5.69-5.7-5.69v.01zM7 .98c3.86 0 7 3.14 7 7s-3.14 7-7 7-7-3.12-7-7 3.14-7 7-7z\"/>"
+};
+const italic = {
+	name: "italic",
+	figma: {
+		id: "0:454",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"font",
+		"italic",
+		"style"
+	],
+	width: 6,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M2.81 5h1.98L3 14H1l1.81-9zm.36-2.7c0-.7.58-1.3 1.33-1.3.56 0 1.13.38 1.13 1.03 0 .75-.59 1.3-1.33 1.3-.58 0-1.13-.38-1.13-1.03z\"/>"
+};
+const jersey = {
+	name: "jersey",
+	figma: {
+		id: "0:458",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"team",
+		"game",
+		"basketball"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M4.5 6l-.5.5v5l.5.5h2l.5-.5v-5L6.5 6h-2zM6 11H5V7h1v4zm6.27-7.25C12.05 2.37 11.96 1.12 12 0H9.02c0 .27-.13.48-.39.69-.25.2-.63.3-1.13.3-.5 0-.88-.09-1.13-.3-.23-.2-.36-.42-.36-.69H3c.05 1.13-.03 2.38-.25 3.75C2.55 5.13 1.95 5.88 1 6v9c.02.27.11.48.31.69.2.21.42.3.69.31h11c.27-.02.48-.11.69-.31.21-.2.3-.42.31-.69V6c-.95-.13-1.53-.88-1.75-2.25h.02zM13 15H2V7c.89-.5 1.48-1.25 1.72-2.25S4.03 2.5 4 1h1c-.02.78.16 1.47.52 2.06.36.58 1.02.89 2 .94.98-.02 1.64-.33 2-.94.36-.59.5-1.28.48-2.06h1c.02 1.42.13 2.55.33 3.38.2.81.69 2 1.67 2.63v8V15zM8.5 6l-.5.5v5l.5.5h2l.5-.5v-5l-.5-.5h-2zm1.5 5H9V7h1v4z\"/>"
+};
+const keyboard = {
+	name: "keyboard",
+	figma: {
+		id: "0:466",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"type",
+		"keys",
+		"write",
+		"shortcuts"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M10 5H9V4h1v1zM3 6H2v1h1V6zm5-2H7v1h1V4zM4 4H2v1h2V4zm8 7h2v-1h-2v1zM8 7h1V6H8v1zm-4 3H2v1h2v-1zm8-6h-1v1h1V4zm2 0h-1v1h1V4zm-2 5h2V6h-2v3zm4-6v9c0 .55-.45 1-1 1H1c-.55 0-1-.45-1-1V3c0-.55.45-1 1-1h14c.55 0 1 .45 1 1zm-1 0H1v9h14V3zM6 7h1V6H6v1zm0-3H5v1h1V4zM4 7h1V6H4v1zm1 4h6v-1H5v1zm5-4h1V6h-1v1zM3 8H2v1h1V8zm5 0v1h1V8H8zM6 8v1h1V8H6zM5 8H4v1h1V8zm5 1h1V8h-1v1z\"/>"
+};
+const law = {
+	name: "law",
+	figma: {
+		id: "0:490",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"legal",
+		"bill"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M7 4c-.83 0-1.5-.67-1.5-1.5S6.17 1 7 1s1.5.67 1.5 1.5S7.83 4 7 4zm7 6c0 1.11-.89 2-2 2h-1c-1.11 0-2-.89-2-2l2-4h-1c-.55 0-1-.45-1-1H8v8c.42 0 1 .45 1 1h1c.42 0 1 .45 1 1H3c0-.55.58-1 1-1h1c0-.55.58-1 1-1h.03L6 5H5c0 .55-.45 1-1 1H3l2 4c0 1.11-.89 2-2 2H2c-1.11 0-2-.89-2-2l2-4H1V5h3c0-.55.45-1 1-1h4c.55 0 1 .45 1 1h3v1h-1l2 4zM2.5 7L1 10h3L2.5 7zM13 10l-1.5-3-1.5 3h3z\"/>"
+};
+const link = {
+	name: "link",
+	figma: {
+		id: "0:496",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"connect",
+		"hyperlink"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z\"/>"
+};
+const location = {
+	name: "location",
+	figma: {
+		id: "0:516",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"here",
+		"marker"
+	],
+	width: 12,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M6 0C2.69 0 0 2.5 0 5.5 0 10.02 6 16 6 16s6-5.98 6-10.5C12 2.5 9.31 0 6 0zm0 14.55C4.14 12.52 1 8.44 1 5.5 1 3.02 3.25 1 6 1c1.34 0 2.61.48 3.56 1.36.92.86 1.44 1.97 1.44 3.14 0 2.94-3.14 7.02-5 9.05zM8 5.5c0 1.11-.89 2-2 2-1.11 0-2-.89-2-2 0-1.11.89-2 2-2 1.11 0 2 .89 2 2z\"/>"
+};
+const lock = {
+	name: "lock",
+	figma: {
+		id: "0:521",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"secure",
+		"safe",
+		"protected"
+	],
+	width: 12,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M4 13H3v-1h1v1zm8-6v7c0 .55-.45 1-1 1H1c-.55 0-1-.45-1-1V7c0-.55.45-1 1-1h1V4c0-2.2 1.8-4 4-4s4 1.8 4 4v2h1c.55 0 1 .45 1 1zM3.8 6h4.41V4c0-1.22-.98-2.2-2.2-2.2-1.22 0-2.2.98-2.2 2.2v2H3.8zM11 7H2v7h9V7zM4 8H3v1h1V8zm0 2H3v1h1v-1z\"/>"
+};
+const reply = {
+	name: "reply",
+	figma: {
+		id: "0:554",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"reply all",
+		"back"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M6 3.5c3.92.44 8 3.125 8 10-2.312-5.062-4.75-6-8-6V11L.5 5.5 6 0v3.5z\"/>"
+};
+const mail = {
+	name: "mail",
+	figma: {
+		id: "0:558",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"email",
+		"unread"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M0 4v8c0 .55.45 1 1 1h12c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1H1c-.55 0-1 .45-1 1zm13 0L7 9 1 4h12zM1 5.5l4 3-4 3v-6zM2 12l3.5-3L7 10.5 8.5 9l3.5 3H2zm11-.5l-4-3 4-3v6z\"/>"
+};
+const markdown = {
+	name: "markdown",
+	figma: {
+		id: "0:567",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"markup",
+		"style"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M14.85 3H1.15C.52 3 0 3.52 0 4.15v7.69C0 12.48.52 13 1.15 13h13.69c.64 0 1.15-.52 1.15-1.15v-7.7C16 3.52 15.48 3 14.85 3zM9 11H7V8L5.5 9.92 4 8v3H2V5h2l1.5 2L7 5h2v6zm2.99.5L9.5 8H11V5h2v3h1.5l-2.51 3.5z\"/>"
+};
+const megaphone = {
+	name: "megaphone",
+	figma: {
+		id: "0:572",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"bullhorn",
+		"loud",
+		"shout",
+		"broadcast"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M10 1c-.17 0-.36.05-.52.14C8.04 2.02 4.5 4.58 3 5c-1.38 0-3 .67-3 2.5S1.63 10 3 10c.3.08.64.23 1 .41V15h2v-3.45c1.34.86 2.69 1.83 3.48 2.31.16.09.34.14.52.14.52 0 1-.42 1-1V2c0-.58-.48-1-1-1zm0 12c-.38-.23-.89-.58-1.5-1-.16-.11-.33-.22-.5-.34V3.31c.16-.11.31-.2.47-.31.61-.41 1.16-.77 1.53-1v11zm2-6h4v1h-4V7zm0 2l4 2v1l-4-2V9zm4-6v1l-4 2V5l4-2z\"/>"
+};
+const mention = {
+	name: "mention",
+	figma: {
+		id: "0:579",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"at",
+		"ping"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M6.58 15c1.25 0 2.52-.31 3.56-.94l-.42-.94c-.84.52-1.89.83-3.03.83-3.23 0-5.64-2.08-5.64-5.72 0-4.37 3.23-7.18 6.58-7.18 3.45 0 5.22 2.19 5.22 5.2 0 2.39-1.34 3.86-2.5 3.86-1.05 0-1.36-.73-1.05-2.19l.73-3.75H8.98l-.11.72c-.41-.63-.94-.83-1.56-.83-2.19 0-3.66 2.39-3.66 4.38 0 1.67.94 2.61 2.3 2.61.84 0 1.67-.53 2.3-1.25.11.94.94 1.45 1.98 1.45 1.67 0 3.77-1.67 3.77-5C14 2.61 11.59 0 7.83 0 3.66 0 0 3.33 0 8.33 0 12.71 2.92 15 6.58 15zm-.31-5c-.73 0-1.36-.52-1.36-1.67 0-1.45.94-3.22 2.41-3.22.52 0 .84.2 1.25.83l-.52 3.02c-.63.73-1.25 1.05-1.78 1.05V10z\"/>"
+};
+const milestone = {
+	name: "milestone",
+	figma: {
+		id: "0:583",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"marker"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M8 2H6V0h2v2zm4 5H2c-.55 0-1-.45-1-1V4c0-.55.45-1 1-1h10l2 2-2 2zM8 4H6v2h2V4zM6 16h2V8H6v8z\"/>"
+};
+const mirror = {
+	name: "mirror",
+	figma: {
+		id: "0:589",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"reflect"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M15.5 4.7L8.5 0l-7 4.7c-.3.19-.5.45-.5.8V16l7.5-4 7.5 4V5.5c0-.34-.2-.61-.5-.8zm-.5 9.8l-6-3.25V10H8v1.25L2 14.5v-9l6-4V6h1V1.5l6 4v9zM6 7h5V5l3 3-3 3V9H6v2L3 8l3-3v2z\"/>"
+};
+const mute = {
+	name: "mute",
+	figma: {
+		id: "0:599",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"quiet",
+		"sound",
+		"audio",
+		"turn",
+		"off"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M8 2.81v10.38c0 .67-.81 1-1.28.53L3 10H1c-.55 0-1-.45-1-1V7c0-.55.45-1 1-1h2l3.72-3.72C7.19 1.81 8 2.14 8 2.81zm7.53 3.22l-1.06-1.06-1.97 1.97-1.97-1.97-1.06 1.06L11.44 8 9.47 9.97l1.06 1.06 1.97-1.97 1.97 1.97 1.06-1.06L13.56 8l1.97-1.97z\"/>"
+};
+const octoface = {
+	name: "octoface",
+	figma: {
+		id: "0:609",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"octocat",
+		"brand"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M14.7 5.34c.13-.32.55-1.59-.13-3.31 0 0-1.05-.33-3.44 1.3-1-.28-2.07-.32-3.13-.32s-2.13.04-3.13.32c-2.39-1.64-3.44-1.3-3.44-1.3-.68 1.72-.26 2.99-.13 3.31C.49 6.21 0 7.33 0 8.69 0 13.84 3.33 15 7.98 15S16 13.84 16 8.69c0-1.36-.49-2.48-1.3-3.35zM8 14.02c-3.3 0-5.98-.15-5.98-3.35 0-.76.38-1.48 1.02-2.07 1.07-.98 2.9-.46 4.96-.46 2.07 0 3.88-.52 4.96.46.65.59 1.02 1.3 1.02 2.07 0 3.19-2.68 3.35-5.98 3.35zM5.49 9.01c-.66 0-1.2.8-1.2 1.78s.54 1.79 1.2 1.79c.66 0 1.2-.8 1.2-1.79s-.54-1.78-1.2-1.78zm5.02 0c-.66 0-1.2.79-1.2 1.78s.54 1.79 1.2 1.79c.66 0 1.2-.8 1.2-1.79s-.53-1.78-1.2-1.78z\"/>"
+};
+const organization = {
+	name: "organization",
+	figma: {
+		id: "0:613",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"people",
+		"group",
+		"team"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M16 12.999c0 .439-.45 1-1 1H7.995c-.539 0-.994-.447-.995-.999H1c-.54 0-1-.561-1-1 0-2.634 3-4 3-4s.229-.409 0-1c-.841-.621-1.058-.59-1-3 .058-2.419 1.367-3 2.5-3s2.442.58 2.5 3c.058 2.41-.159 2.379-1 3-.229.59 0 1 0 1s1.549.711 2.42 2.088C9.196 9.369 10 8.999 10 8.999s.229-.409 0-1c-.841-.62-1.058-.59-1-3 .058-2.419 1.367-3 2.5-3s2.437.581 2.495 3c.059 2.41-.158 2.38-1 3-.229.59 0 1 0 1s3.005 1.366 3.005 4z\"/>"
+};
+const paintcan = {
+	name: "paintcan",
+	figma: {
+		id: "0:624",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"style",
+		"theme",
+		"art",
+		"color"
+	],
+	width: 12,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M6 0C2.69 0 0 2.69 0 6v1c0 .55.45 1 1 1v5c0 1.1 2.24 2 5 2s5-.9 5-2V8c.55 0 1-.45 1-1V6c0-3.31-2.69-6-6-6zm3 10v.5c0 .28-.22.5-.5.5s-.5-.22-.5-.5V10c0-.28-.22-.5-.5-.5s-.5.22-.5.5v2.5c0 .28-.22.5-.5.5s-.5-.22-.5-.5v-2c0-.28-.22-.5-.5-.5s-.5.22-.5.5v.5c0 .55-.45 1-1 1s-1-.45-1-1v-1c-.55 0-1-.45-1-1V7.2c.91.49 2.36.8 4 .8 1.64 0 3.09-.31 4-.8V9c0 .55-.45 1-1 1zM6 7c-1.68 0-3.12-.41-3.71-1C2.88 5.41 4.32 5 6 5c1.68 0 3.12.41 3.71 1-.59.59-2.03 1-3.71 1zm0-3c-2.76 0-5 .89-5 2 0-2.76 2.24-5 5-5s5 2.24 5 5c0-1.1-2.24-2-5-2z\"/>"
+};
+const pencil = {
+	name: "pencil",
+	figma: {
+		id: "0:630",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"edit",
+		"change",
+		"update",
+		"write"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M0 12v3h3l8-8-3-3-8 8zm3 2H1v-2h1v1h1v1zm10.3-9.3L12 6 9 3l1.3-1.3a.996.996 0 0 1 1.41 0l1.59 1.59c.39.39.39 1.02 0 1.41z\"/>"
+};
+const person = {
+	name: "person",
+	figma: {
+		id: "0:633",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"people",
+		"man",
+		"woman",
+		"human"
+	],
+	width: 12,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M12 14.002a.998.998 0 0 1-.998.998H1.001A1 1 0 0 1 0 13.999V13c0-2.633 4-4 4-4s.229-.409 0-1c-.841-.62-.944-1.59-1-4 .173-2.413 1.867-3 3-3s2.827.586 3 3c-.056 2.41-.159 3.38-1 4-.229.59 0 1 0 1s4 1.367 4 4v1.002z\"/>"
+};
+const pin = {
+	name: "pin",
+	figma: {
+		id: "0:635",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"save",
+		"star",
+		"bookmark"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M10 1.2V2l.5 1L6 6H2.2c-.44 0-.67.53-.34.86L5 10l-4 5 5-4 3.14 3.14a.5.5 0 0 0 .86-.34V10l3-4.5 1 .5h.8c.44 0 .67-.53.34-.86L10.86.86a.5.5 0 0 0-.86.34z\"/>"
+};
+const plug = {
+	name: "plug",
+	figma: {
+		id: "0:637",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"hook",
+		"webhook"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M14 6V5h-4V3H8v1H6c-1.03 0-1.77.81-2 2L3 7c-1.66 0-3 1.34-3 3v2h1v-2c0-1.11.89-2 2-2l1 1c.25 1.16.98 2 2 2h2v1h2v-2h4V9h-4V6h4z\"/>"
+};
+const plus = {
+	name: "plus",
+	figma: {
+		id: "0:639",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"add",
+		"new",
+		"more"
+	],
+	width: 12,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M12 9H7v5H5V9H0V7h5V2h2v5h5v2z\"/>"
+};
+const pulse = {
+	name: "pulse",
+	figma: {
+		id: "0:645",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"graph",
+		"trend",
+		"line",
+		"activity"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M11.5 8L8.8 5.4 6.6 8.5 5.5 1.6 2.38 8H0v2h3.6l.9-1.8.9 5.4L9 8.5l1.6 1.5H14V8h-2.5z\"/>"
+};
+const question = {
+	name: "question",
+	figma: {
+		id: "0:649",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"help",
+		"explain"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M6 10h2v2H6v-2zm4-3.5C10 8.64 8 9 8 9H6c0-.55.45-1 1-1h.5c.28 0 .5-.22.5-.5v-1c0-.28-.22-.5-.5-.5h-1c-.28 0-.5.22-.5.5V7H4c0-1.5 1.5-3 3-3s3 1 3 2.5zM7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7z\"/>"
+};
+const quote = {
+	name: "quote",
+	figma: {
+		id: "0:655",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"quotation"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M6.16 3.5C3.73 5.06 2.55 6.67 2.55 9.36c.16-.05.3-.05.44-.05 1.27 0 2.5.86 2.5 2.41 0 1.61-1.03 2.61-2.5 2.61-1.9 0-2.99-1.52-2.99-4.25 0-3.8 1.75-6.53 5.02-8.42L6.16 3.5zm7 0c-2.43 1.56-3.61 3.17-3.61 5.86.16-.05.3-.05.44-.05 1.27 0 2.5.86 2.5 2.41 0 1.61-1.03 2.61-2.5 2.61-1.89 0-2.98-1.52-2.98-4.25 0-3.8 1.75-6.53 5.02-8.42l1.14 1.84h-.01z\"/>"
+};
+const repo = {
+	name: "repo",
+	figma: {
+		id: "0:706",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"book",
+		"journal",
+		"repository"
+	],
+	width: 12,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M4 9H3V8h1v1zm0-3H3v1h1V6zm0-2H3v1h1V4zm0-2H3v1h1V2zm8-1v12c0 .55-.45 1-1 1H6v2l-1.5-1.5L3 16v-2H1c-.55 0-1-.45-1-1V1c0-.55.45-1 1-1h10c.55 0 1 .45 1 1zm-1 10H1v2h2v-1h3v1h5v-2zm0-10H2v9h9V1z\"/>"
+};
+const rocket = {
+	name: "rocket",
+	figma: {
+		id: "0:715",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"staff",
+		"stafftools",
+		"blast",
+		"off",
+		"space",
+		"launch",
+		"ship"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M12.17 3.83c-.27-.27-.47-.55-.63-.88-.16-.31-.27-.66-.34-1.02-.58.33-1.16.7-1.73 1.13-.58.44-1.14.94-1.69 1.48-.7.7-1.33 1.81-1.78 2.45H3L0 10h3l2-2c-.34.77-1.02 2.98-1 3l1 1c.02.02 2.23-.64 3-1l-2 2v3l3-3v-3c.64-.45 1.75-1.09 2.45-1.78.55-.55 1.05-1.13 1.47-1.7.44-.58.81-1.16 1.14-1.72-.36-.08-.7-.19-1.03-.34a3.39 3.39 0 0 1-.86-.63zM16 0s-.09.38-.3 1.06c-.2.7-.55 1.58-1.06 2.66-.7-.08-1.27-.33-1.66-.72-.39-.39-.63-.94-.7-1.64C13.36.84 14.23.48 14.92.28 15.62.08 16 0 16 0z\"/>"
+};
+const rss = {
+	name: "rss",
+	figma: {
+		id: "0:719",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"broadcast",
+		"feed",
+		"atom"
+	],
+	width: 10,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M2 13H0v-2c1.11 0 2 .89 2 2zM0 3v1a9 9 0 0 1 9 9h1C10 7.48 5.52 3 0 3zm0 4v1c2.75 0 5 2.25 5 5h1c0-3.31-2.69-6-6-6z\"/>"
+};
+const ruby = {
+	name: "ruby",
+	figma: {
+		id: "0:724",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"code",
+		"language"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M13 6l-5 5V4h3l2 2zm3 0l-8 8-8-8 4-4h8l4 4zm-8 6.5L14.5 6l-3-3h-7l-3 3L8 12.5z\"/>"
+};
+const search = {
+	name: "search",
+	figma: {
+		id: "0:729",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"magnifying",
+		"glass"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M15.7 13.3l-3.81-3.83A5.93 5.93 0 0 0 13 6c0-3.31-2.69-6-6-6S1 2.69 1 6s2.69 6 6 6c1.3 0 2.48-.41 3.47-1.11l3.83 3.81c.19.2.45.3.7.3.25 0 .52-.09.7-.3a.996.996 0 0 0 0-1.41v.01zM7 10.7c-2.59 0-4.7-2.11-4.7-4.7 0-2.59 2.11-4.7 4.7-4.7 2.59 0 4.7 2.11 4.7 4.7 0 2.59-2.11 4.7-4.7 4.7z\"/>"
+};
+const server = {
+	name: "server",
+	figma: {
+		id: "0:733",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"computers",
+		"racks",
+		"ops"
+	],
+	width: 12,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M11 6H1c-.55 0-1 .45-1 1v2c0 .55.45 1 1 1h10c.55 0 1-.45 1-1V7c0-.55-.45-1-1-1zM2 9H1V7h1v2zm2 0H3V7h1v2zm2 0H5V7h1v2zm2 0H7V7h1v2zm3-8H1c-.55 0-1 .45-1 1v2c0 .55.45 1 1 1h10c.55 0 1-.45 1-1V2c0-.55-.45-1-1-1zM2 4H1V2h1v2zm2 0H3V2h1v2zm2 0H5V2h1v2zm2 0H7V2h1v2zm3-1h-1V2h1v1zm0 8H1c-.55 0-1 .45-1 1v2c0 .55.45 1 1 1h10c.55 0 1-.45 1-1v-2c0-.55-.45-1-1-1zm-9 3H1v-2h1v2zm2 0H3v-2h1v2zm2 0H5v-2h1v2zm2 0H7v-2h1v2z\"/>"
+};
+const settings = {
+	name: "settings",
+	figma: {
+		id: "0:751",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"sliders",
+		"filters",
+		"controls",
+		"levels"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M4 7H3V2h1v5zm-1 7h1v-3H3v3zm5 0h1V8H8v6zm5 0h1v-2h-1v2zm1-12h-1v6h1V2zM9 2H8v2h1V2zM5 8H2c-.55 0-1 .45-1 1s.45 1 1 1h3c.55 0 1-.45 1-1s-.45-1-1-1zm5-3H7c-.55 0-1 .45-1 1s.45 1 1 1h3c.55 0 1-.45 1-1s-.45-1-1-1zm5 4h-3c-.55 0-1 .45-1 1s.45 1 1 1h3c.55 0 1-.45 1-1s-.45-1-1-1z\"/>"
+};
+const shield = {
+	name: "shield",
+	figma: {
+		id: "0:762",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"protect",
+		"shield",
+		"lock"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M7 0L0 2v6.02C0 12.69 5.31 16 7 16c1.69 0 7-3.31 7-7.98V2L7 0zM5 11l1.14-2.8a.568.568 0 0 0-.25-.59C5.33 7.25 5 6.66 5 6c0-1.09.89-2 1.98-2C8.06 4 9 4.91 9 6c0 .66-.33 1.25-.89 1.61-.19.13-.3.36-.25.59L9 11H5z\"/>"
+};
+const smiley = {
+	name: "smiley",
+	figma: {
+		id: "0:772",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"emoji",
+		"smile",
+		"mood",
+		"emotion"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M8 0C3.58 0 0 3.58 0 8s3.58 8 8 8 8-3.58 8-8-3.58-8-8-8zm4.81 12.81a6.72 6.72 0 0 1-2.17 1.45c-.83.36-1.72.53-2.64.53-.92 0-1.81-.17-2.64-.53-.81-.34-1.55-.83-2.17-1.45a6.773 6.773 0 0 1-1.45-2.17A6.59 6.59 0 0 1 1.21 8c0-.92.17-1.81.53-2.64.34-.81.83-1.55 1.45-2.17.62-.62 1.36-1.11 2.17-1.45A6.59 6.59 0 0 1 8 1.21c.92 0 1.81.17 2.64.53.81.34 1.55.83 2.17 1.45.62.62 1.11 1.36 1.45 2.17.36.83.53 1.72.53 2.64 0 .92-.17 1.81-.53 2.64-.34.81-.83 1.55-1.45 2.17zM4 6.8v-.59c0-.66.53-1.19 1.2-1.19h.59c.66 0 1.19.53 1.19 1.19v.59c0 .67-.53 1.2-1.19 1.2H5.2C4.53 8 4 7.47 4 6.8zm5 0v-.59c0-.66.53-1.19 1.2-1.19h.59c.66 0 1.19.53 1.19 1.19v.59c0 .67-.53 1.2-1.19 1.2h-.59C9.53 8 9 7.47 9 6.8zm4 3.2c-.72 1.88-2.91 3-5 3s-4.28-1.13-5-3c-.14-.39.23-1 .66-1h8.59c.41 0 .89.61.75 1z\"/>"
+};
+const squirrel = {
+	name: "squirrel",
+	figma: {
+		id: "0:779",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"ship",
+		"shipit",
+		"launch"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M12 1C9.79 1 8 2.31 8 3.92c0 1.94.5 3.03 0 6.08 0-4.5-2.77-6.34-4-6.34.05-.5-.48-.66-.48-.66s-.22.11-.3.34c-.27-.31-.56-.27-.56-.27l-.13.58S.7 4.29.68 6.87c.2.33 1.53.6 2.47.43.89.05.67.79.47.99C2.78 9.13 2 8 1 8S0 9 1 9s1 1 3 1c-3.09 1.2 0 4 0 4H3c-1 0-1 1-1 1h6c3 0 5-1 5-3.47 0-.85-.43-1.79-1-2.53-1.11-1.46.23-2.68 1-2 .77.68 3 1 3-2 0-2.21-1.79-4-4-4zM2.5 6c-.28 0-.5-.22-.5-.5s.22-.5.5-.5.5.22.5.5-.22.5-.5.5z\"/>"
+};
+const star = {
+	name: "star",
+	figma: {
+		id: "0:781",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"save",
+		"remember",
+		"like"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M14 6l-4.9-.64L7 1 4.9 5.36 0 6l3.6 3.26L2.67 14 7 11.67 11.33 14l-.93-4.74L14 6z\"/>"
+};
+const stop = {
+	name: "stop",
+	figma: {
+		id: "0:785",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"block",
+		"spam",
+		"report"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M10 1H4L0 5v6l4 4h6l4-4V5l-4-4zm3 9.5L9.5 14h-5L1 10.5v-5L4.5 2h5L13 5.5v5zM6 4h2v5H6V4zm0 6h2v2H6v-2z\"/>"
+};
+const sync = {
+	name: "sync",
+	figma: {
+		id: "0:791",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"cycle",
+		"refresh",
+		"loop"
+	],
+	width: 12,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M10.24 7.4a4.15 4.15 0 0 1-1.2 3.6 4.346 4.346 0 0 1-5.41.54L4.8 10.4.5 9.8l.6 4.2 1.31-1.26c2.36 1.74 5.7 1.57 7.84-.54a5.876 5.876 0 0 0 1.74-4.46l-1.75-.34zM2.96 5a4.346 4.346 0 0 1 5.41-.54L7.2 5.6l4.3.6-.6-4.2-1.31 1.26c-2.36-1.74-5.7-1.57-7.85.54C.5 5.03-.06 6.65.01 8.26l1.75.35A4.17 4.17 0 0 1 2.96 5z\"/>"
+};
+const tag = {
+	name: "tag",
+	figma: {
+		id: "0:795",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"release"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M7.685 1.72a2.49 2.49 0 0 0-1.76-.726H3.48A2.5 2.5 0 0 0 .994 3.48v2.456c0 .656.269 1.292.726 1.76l6.024 6.024a.99.99 0 0 0 1.402 0l4.563-4.563a.99.99 0 0 0 0-1.402L7.685 1.72zM2.366 7.048A1.54 1.54 0 0 1 1.9 5.925V3.48c0-.874.716-1.58 1.58-1.58h2.456c.418 0 .825.159 1.123.467l6.104 6.094-4.702 4.702-6.094-6.114zm.626-4.066h1.989v1.989H2.982V2.982h.01z\"/>"
+};
+const tasklist = {
+	name: "tasklist",
+	figma: {
+		id: "0:800",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"todo"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M15.41 9H7.59C7 9 7 8.59 7 8c0-.59 0-1 .59-1h7.81c.59 0 .59.41.59 1 0 .59 0 1-.59 1h.01zM9.59 4C9 4 9 3.59 9 3c0-.59 0-1 .59-1h5.81c.59 0 .59.41.59 1 0 .59 0 1-.59 1H9.59zM0 3.91l1.41-1.3L3 4.2 7.09 0 8.5 1.41 3 6.91l-3-3zM7.59 12h7.81c.59 0 .59.41.59 1 0 .59 0 1-.59 1H7.59C7 14 7 13.59 7 13c0-.59 0-1 .59-1z\"/>"
+};
+const telescope = {
+	name: "telescope",
+	figma: {
+		id: "0:806",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"science",
+		"space",
+		"look",
+		"view",
+		"explore"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M8 9l3 6h-1l-2-4v5H7v-6l-2 5H4l2-5 2-1zM7 0H6v1h1V0zM5 3H4v1h1V3zM2 1H1v1h1V1zM.63 9a.52.52 0 0 0-.16.67l.55.92c.13.23.41.31.64.2l1.39-.66-1.16-2-1.27.86.01.01zm7.89-5.39l-5.8 3.95L3.95 9.7l6.33-3.03-1.77-3.06h.01zm4.22 1.28l-1.47-2.52a.51.51 0 0 0-.72-.17l-1.2.83 1.84 3.2 1.33-.64c.27-.13.36-.44.22-.7z\"/>"
+};
+const terminal = {
+	name: "terminal",
+	figma: {
+		id: "0:815",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"code",
+		"ops",
+		"shell"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M7 10h4v1H7v-1zm-3 1l3-3-3-3-.75.75L5.5 8l-2.25 2.25L4 11zm10-8v10c0 .55-.45 1-1 1H1c-.55 0-1-.45-1-1V3c0-.55.45-1 1-1h12c.55 0 1 .45 1 1zm-1 0H1v10h12V3z\"/>"
+};
+const thumbsdown = {
+	name: "thumbsdown",
+	figma: {
+		id: "0:831",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"thumb",
+		"thumbsdown",
+		"rejected",
+		"dislike"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M15.97 7.825L15 1.88C14.83.499 13.123 0 11.994 0H5.686c-.2 0-.38.05-.53.14L3.719 1h-1.72C.94 1 0 1.938 0 2.997v3.998c0 1.059.94 2.018 1.999 1.998h1.999c.909 0 1.389.45 2.388 1.55.91.999.88 1.798.63 3.267-.08.5.06 1 .42 1.42.39.47.979.769 1.558.769 1.83 0 2.999-3.718 2.999-5.017l-.02-.98h2.038c1.16 0 1.949-.799 1.979-1.968 0-.06.02-.13-.02-.2v-.01zm-1.969 1.19h-1.989c-.7 0-1.029.28-1.029.969l.03 1.03c0 1.268-1.17 3.997-1.999 3.997-.5 0-1.079-.5-.999-1 .25-1.579.34-2.778-.89-4.137-1.019-1.13-1.768-1.879-3.127-1.879V1.999l1.668-1h6.327c.729 0 1.948.31 1.998 1l.02.02 1 5.996c-.03.64-.38 1-1 1h-.01z\"/>"
+};
+const thumbsup = {
+	name: "thumbsup",
+	figma: {
+		id: "0:835",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"thumb",
+		"thumbsup",
+		"prop",
+		"ship",
+		"like"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M13.991 13.991c-.05.69-1.269 1-1.998 1H5.666l-1.668-1V7.995c1.359 0 2.108-.75 3.128-1.879 1.229-1.359 1.139-2.558.879-4.127-.08-.5.5-1 1-1 .829 0 1.998 2.729 1.998 3.998l-.02 1.03c0 .689.33.969 1.02.969H14c.63 0 .98.36 1 .999l-1 5.996-.01.01zm0-7.995h-2.018l.02-.98C11.993 3.719 10.823 0 8.994 0c-.58 0-1.169.3-1.559.77-.36.41-.5.909-.42 1.409.25 1.479.28 2.278-.629 3.278-1 1.089-1.48 1.549-2.388 1.549h-2C.94 6.996 0 7.935 0 8.994v3.998c0 1.06.94 1.999 1.999 1.999h1.719l1.439.86c.16.089.33.139.52.139h6.325c1.13 0 2.839-.5 2.999-1.879l.979-5.946c.02-.08.02-.14.02-.2-.03-1.17-.84-1.969-1.999-1.969h-.01z\"/>"
+};
+const tools = {
+	name: "tools",
+	figma: {
+		id: "0:839",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"screwdriver",
+		"wrench",
+		"settings"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M4.48 7.27c.26.26 1.28 1.33 1.28 1.33l.56-.58-.88-.91 1.69-1.8s-.76-.74-.43-.45c.32-1.19.03-2.51-.87-3.44C4.93.5 3.66.2 2.52.51l1.93 2-.51 1.96-1.89.52-1.93-2C-.19 4.17.1 5.48 1 6.4c.94.98 2.29 1.26 3.48.87zm6.44 1.94l-2.33 2.3 3.84 3.98c.31.33.73.49 1.14.49.41 0 .82-.16 1.14-.49.63-.65.63-1.7 0-2.35l-3.79-3.93zM16 2.53L13.55 0 6.33 7.46l.88.91-4.31 4.46-.99.53-1.39 2.27.35.37 2.2-1.44.51-1.02L7.9 9.08l.88.91L16 2.53z\"/>"
+};
+const trashcan = {
+	name: "trashcan",
+	figma: {
+		id: "0:844",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"garbage",
+		"rubbish",
+		"recycle",
+		"delete"
+	],
+	width: 12,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M11 2H9c0-.55-.45-1-1-1H5c-.55 0-1 .45-1 1H2c-.55 0-1 .45-1 1v1c0 .55.45 1 1 1v9c0 .55.45 1 1 1h7c.55 0 1-.45 1-1V5c.55 0 1-.45 1-1V3c0-.55-.45-1-1-1zm-1 12H3V5h1v8h1V5h1v8h1V5h1v8h1V5h1v9zm1-10H2V3h9v1z\"/>"
+};
+const unfold = {
+	name: "unfold",
+	figma: {
+		id: "0:857",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"expand",
+		"open",
+		"reveal"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M11.5 7.5L14 10c0 .55-.45 1-1 1H9v-1h3.5l-2-2h-7l-2 2H5v1H1c-.55 0-1-.45-1-1l2.5-2.5L0 5c0-.55.45-1 1-1h4v1H1.5l2 2h7l2-2H9V4h4c.55 0 1 .45 1 1l-2.5 2.5zM6 6h2V3h2L7 0 4 3h2v3zm2 3H6v3H4l3 3 3-3H8V9z\"/>"
+};
+const unmute = {
+	name: "unmute",
+	figma: {
+		id: "0:862",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"loud",
+		"volume",
+		"audio",
+		"sound",
+		"play"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M12 8.02c0 1.09-.45 2.09-1.17 2.83l-.67-.67c.55-.56.89-1.31.89-2.16 0-.85-.34-1.61-.89-2.16l.67-.67A3.99 3.99 0 0 1 12 8.02zM7.72 2.28L4 6H2c-.55 0-1 .45-1 1v2c0 .55.45 1 1 1h2l3.72 3.72c.47.47 1.28.14 1.28-.53V2.81c0-.67-.81-1-1.28-.53zm5.94.08l-.67.67a6.996 6.996 0 0 1 2.06 4.98c0 1.94-.78 3.7-2.06 4.98l.67.67A7.973 7.973 0 0 0 16 8c0-2.22-.89-4.22-2.34-5.66v.02zm-1.41 1.41l-.69.67a5.05 5.05 0 0 1 1.48 3.58c0 1.39-.56 2.66-1.48 3.56l.69.67A5.97 5.97 0 0 0 14 8.02c0-1.65-.67-3.16-1.75-4.25z\"/>"
+};
+const project = {
+	name: "project",
+	figma: {
+		id: "0:868",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"board",
+		"kanban",
+		"columns",
+		"scrum"
+	],
+	width: 15,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M10 12h3V2h-3v10zm-4-2h3V2H6v8zm-4 4h3V2H2v12zm-1 1h13V1H1v14zM14 0H1a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h13a1 1 0 0 0 1-1V1a1 1 0 0 0-1-1z\"/>"
+};
+const report = {
+	name: "report",
+	figma: {
+		id: "0:885",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"report",
+		"abuse",
+		"flag"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M0 2a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H7l-4 4v-4H1a1 1 0 0 1-1-1V2zm1 0h14v9H6.5L4 13.5V11H1V2zm6 6h2v2H7V8zm0-5h2v4H7V3z\"/>"
+};
+const note = {
+	name: "note",
+	figma: {
+		id: "0:891",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"card",
+		"paper",
+		"ticket"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M3 10h4V9H3v1zm0-2h6V7H3v1zm0-2h8V5H3v1zm10 6H1V3h12v9zM1 2c-.55 0-1 .45-1 1v9c0 .55.45 1 1 1h12c.55 0 1-.45 1-1V3c0-.55-.45-1-1-1H1z\"/>"
+};
+const unverified = {
+	name: "unverified",
+	figma: {
+		id: "0:914",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"insecure",
+		"untrusted",
+		"signed"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M15.67 7.066l-1.08-1.34a1.5 1.5 0 0 1-.309-.77l-.19-1.698a1.51 1.51 0 0 0-1.329-1.33l-1.699-.19c-.3-.03-.56-.159-.78-.329L8.945.33a1.504 1.504 0 0 0-1.878 0l-1.34 1.08a1.5 1.5 0 0 1-.77.31l-1.698.19c-.7.08-1.25.63-1.33 1.329l-.19 1.699c-.03.3-.159.56-.329.78L.33 7.055a1.504 1.504 0 0 0 0 1.878l1.08 1.34c.17.22.28.48.31.77l.19 1.698c.08.7.63 1.25 1.329 1.33l1.699.19c.3.03.56.159.78.329l1.339 1.08c.55.439 1.329.439 1.878 0l1.34-1.08c.22-.17.48-.28.77-.31l1.698-.19c.7-.08 1.25-.63 1.33-1.329l.19-1.699c.03-.3.159-.56.329-.78l1.08-1.339a1.504 1.504 0 0 0 0-1.878zm-6.666 4.437c0 .28-.22.5-.5.5h-.999c-.27 0-.5-.22-.5-.5v-1c0-.28.23-.5.5-.5h1c.28 0 .5.22.5.5v1zm1.56-4.887c-.06.17-.17.33-.3.47-.13.16-.14.19-.33.38-.16.17-.31.3-.52.45-.11.089-.2.189-.28.269-.08.08-.14.17-.19.27-.05.1-.08.19-.11.3-.03.11-.03.13-.03.25H7.136c0-.22 0-.31.03-.48.03-.19.08-.36.14-.52.06-.14.14-.28.25-.42.11-.13.23-.25.409-.38.27-.19.36-.3.48-.52.12-.219.2-.379.2-.589 0-.27-.06-.45-.2-.58-.13-.13-.31-.19-.58-.19-.09 0-.19.02-.3.05-.11.03-.17.09-.25.16-.08.07-.14.11-.2.2a.41.41 0 0 0-.09.28H5.028c0-.38.13-.56.27-.83.16-.27.36-.499.61-.669.25-.17.549-.3.879-.38.33-.08.7-.13 1.09-.13.439 0 .829.05 1.168.13.34.09.63.22.88.39.23.17.41.38.55.63.13.25.19.55.19.88 0 .22 0 .419-.08.589l-.02-.01z\"/>"
+};
+const verified = {
+	name: "verified",
+	figma: {
+		id: "0:919",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"trusted",
+		"secure",
+		"trustworthy",
+		"signed"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M15.67 7.066l-1.08-1.34a1.5 1.5 0 0 1-.309-.77l-.19-1.698a1.51 1.51 0 0 0-1.329-1.33l-1.699-.19c-.3-.03-.56-.159-.78-.329L8.945.33a1.504 1.504 0 0 0-1.878 0l-1.34 1.08a1.5 1.5 0 0 1-.77.31l-1.698.19c-.7.08-1.25.63-1.33 1.329l-.19 1.699c-.03.3-.159.56-.329.78L.33 7.055a1.504 1.504 0 0 0 0 1.878l1.08 1.34c.17.22.28.48.31.77l.19 1.698c.08.7.63 1.25 1.329 1.33l1.699.19c.3.03.56.159.78.329l1.339 1.08c.55.439 1.329.439 1.878 0l1.34-1.08c.22-.17.48-.28.77-.31l1.698-.19c.7-.08 1.25-.63 1.33-1.329l.19-1.699c.03-.3.159-.56.329-.78l1.08-1.339a1.504 1.504 0 0 0 0-1.878zm-9.164 4.936L3.008 8.505l1.5-1.5 1.998 2 4.997-4.997 1.499 1.549-6.496 6.445z\"/>"
+};
+const versions$1 = {
+	name: "versions",
+	figma: {
+		id: "0:923",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"history",
+		"commits"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M13 3H7c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1zm-1 8H8V5h4v6zM4 4h1v1H4v6h1v1H4c-.55 0-1-.45-1-1V5c0-.55.45-1 1-1zM1 5h1v1H1v4h1v1H1c-.55 0-1-.45-1-1V6c0-.55.45-1 1-1z\"/>"
+};
+const watch = {
+	name: "watch",
+	figma: {
+		id: "0:929",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"wait",
+		"hourglass",
+		"time",
+		"date"
+	],
+	width: 12,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M6 8h2v1H5V5h1v3zm6 0c0 2.22-1.2 4.16-3 5.19V15c0 .55-.45 1-1 1H4c-.55 0-1-.45-1-1v-1.81C1.2 12.16 0 10.22 0 8s1.2-4.16 3-5.19V1c0-.55.45-1 1-1h4c.55 0 1 .45 1 1v1.81c1.8 1.03 3 2.97 3 5.19zm-1 0c0-2.77-2.23-5-5-5S1 5.23 1 8s2.23 5 5 5 5-2.23 5-5z\"/>"
+};
+const x$1 = {
+	name: "x",
+	figma: {
+		id: "0:932",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"remove",
+		"close",
+		"delete"
+	],
+	width: 12,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M7.48 8l3.75 3.75-1.48 1.48L6 9.48l-3.75 3.75-1.48-1.48L4.52 8 .77 4.25l1.48-1.48L6 6.52l3.75-3.75 1.48 1.48L7.48 8z\"/>"
+};
+const zap = {
+	name: "zap",
+	figma: {
+		id: "0:934",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"electricity",
+		"lightning",
+		"props",
+		"like",
+		"star",
+		"save"
+	],
+	width: 10,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M10 7H6l3-7-9 9h4l-3 7 9-9z\"/>"
+};
+const key$2 = {
+	name: "key",
+	figma: {
+		id: "0:938",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"key",
+		"lock",
+		"secure",
+		"safe"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M12.83 2.17C12.08 1.42 11.14 1.03 10 1c-1.13.03-2.08.42-2.83 1.17S6.04 3.86 6.01 5c0 .3.03.59.09.89L0 12v1l1 1h2l1-1v-1h1v-1h1v-1h2l1.09-1.11c.3.08.59.11.91.11 1.14-.03 2.08-.42 2.83-1.17S13.97 6.14 14 5c-.03-1.14-.42-2.08-1.17-2.83zM11 5.38c-.77 0-1.38-.61-1.38-1.38 0-.77.61-1.38 1.38-1.38.77 0 1.38.61 1.38 1.38 0 .77-.61 1.38-1.38 1.38z\"/>"
+};
+const grabber = {
+	name: "grabber",
+	figma: {
+		id: "0:942",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"mover",
+		"drap",
+		"drop",
+		"sort"
+	],
+	width: 8,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M8 4v1H0V4h8zM0 8h8V7H0v1zm0 3h8v-1H0v1z\"/>"
+};
+const archive = {
+	name: "archive",
+	figma: {
+		id: "2228:2",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"box",
+		"catalog"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M13 2H1v2h12V2zM0 4a1 1 0 0 0 1 1v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H1a1 1 0 0 0-1 1v2zm2 1h10v9H2V5zm2 3h6V7H4v1z\"/>"
+};
+var data$1 = {
+	alert: alert,
+	"arrow-down": {
+	name: "arrow-down",
+	figma: {
+		id: "0:8",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"point",
+		"direction"
+	],
+	width: 10,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M7 7V3H3v4H0l5 6 5-6H7z\"/>"
+},
+	"arrow-left": {
+	name: "arrow-left",
+	figma: {
+		id: "0:10",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"point",
+		"direction"
+	],
+	width: 10,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M6 3L0 8l6 5v-3h4V6H6V3z\"/>"
+},
+	"arrow-right": {
+	name: "arrow-right",
+	figma: {
+		id: "0:12",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"point",
+		"direction"
+	],
+	width: 10,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M10 8L4 3v3H0v4h4v3l6-5z\"/>"
+},
+	"arrow-up": {
+	name: "arrow-up",
+	figma: {
+		id: "0:14",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"point",
+		"direction"
+	],
+	width: 10,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M5 3L0 9h3v4h4V9h3L5 3z\"/>"
+},
+	"arrow-small-down": {
+	name: "arrow-small-down",
+	figma: {
+		id: "0:16",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"point",
+		"direction",
+		"little",
+		"tiny"
+	],
+	width: 6,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M4 7V5H2v2H0l3 4 3-4H4z\"/>"
+},
+	"arrow-small-left": {
+	name: "arrow-small-left",
+	figma: {
+		id: "0:18",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"point",
+		"direction",
+		"little",
+		"tiny"
+	],
+	width: 6,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M4 7V5L0 8l4 3V9h2V7H4z\"/>"
+},
+	"arrow-small-right": {
+	name: "arrow-small-right",
+	figma: {
+		id: "0:20",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"point",
+		"direction",
+		"little",
+		"tiny"
+	],
+	width: 6,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M6 8L2 5v2H0v2h2v2l4-3z\"/>"
+},
+	"arrow-small-up": {
+	name: "arrow-small-up",
+	figma: {
+		id: "0:22",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"point",
+		"direction",
+		"little",
+		"tiny"
+	],
+	width: 6,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M3 5L0 9h2v2h2V9h2L3 5z\"/>"
+},
+	beaker: beaker,
+	bell: bell,
+	bold: bold,
+	book: book,
+	bookmark: bookmark,
+	briefcase: briefcase,
+	broadcast: broadcast,
+	browser: browser,
+	bug: bug,
+	calendar: calendar,
+	check: check$1,
+	checklist: checklist,
+	"chevron-down": {
+	name: "chevron-down",
+	figma: {
+		id: "0:117",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"triangle",
+		"arrow"
+	],
+	width: 10,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M5 11L0 6l1.5-1.5L5 8.25 8.5 4.5 10 6l-5 5z\"/>"
+},
+	"chevron-left": {
+	name: "chevron-left",
+	figma: {
+		id: "0:119",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"triangle",
+		"arrow"
+	],
+	width: 8,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M5.5 3L7 4.5 3.25 8 7 11.5 5.5 13l-5-5 5-5z\"/>"
+},
+	"chevron-right": {
+	name: "chevron-right",
+	figma: {
+		id: "0:121",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"triangle",
+		"arrow"
+	],
+	width: 8,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M7.5 8l-5 5L1 11.5 4.75 8 1 4.5 2.5 3l5 5z\"/>"
+},
+	"chevron-up": {
+	name: "chevron-up",
+	figma: {
+		id: "0:123",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"triangle",
+		"arrow"
+	],
+	width: 10,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M10 10l-1.5 1.5L5 7.75 1.5 11.5 0 10l5-5 5 5z\"/>"
+},
+	"circle-slash": {
+	name: "circle-slash",
+	figma: {
+		id: "0:127",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"no",
+		"deny",
+		"fail",
+		"failure",
+		"error",
+		"bad"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm0 1.3c1.3 0 2.5.44 3.47 1.17l-8 8A5.755 5.755 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zm0 11.41c-1.3 0-2.5-.44-3.47-1.17l8-8c.73.97 1.17 2.17 1.17 3.47 0 3.14-2.56 5.7-5.7 5.7z\"/>"
+},
+	"circuit-board": {
+	name: "circuit-board",
+	figma: {
+		id: "0:132",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"developer",
+		"hardware",
+		"electricity"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M3 5c0-.55.45-1 1-1s1 .45 1 1-.45 1-1 1-1-.45-1-1zm8 0c0-.55-.45-1-1-1s-1 .45-1 1 .45 1 1 1 1-.45 1-1zm0 6c0-.55-.45-1-1-1s-1 .45-1 1 .45 1 1 1 1-.45 1-1zm2-10H5v2.17c.36.19.64.47.83.83h2.34c.42-.78 1.33-1.28 2.34-1.05.75.19 1.36.8 1.53 1.55.31 1.38-.72 2.59-2.05 2.59-.8 0-1.48-.44-1.83-1.09H5.83c-.42.8-1.33 1.28-2.34 1.03-.73-.17-1.34-.78-1.52-1.52C1.72 4.49 2.2 3.59 3 3.17V1H1c-.55 0-1 .45-1 1v12c0 .55.45 1 1 1l5-5h2.17c.42-.78 1.33-1.28 2.34-1.05.75.19 1.36.8 1.53 1.55.31 1.38-.72 2.59-2.05 2.59-.8 0-1.48-.44-1.83-1.09H6.99L4 15h9c.55 0 1-.45 1-1V2c0-.55-.45-1-1-1z\"/>"
+},
+	clippy: clippy,
+	clock: clock,
+	"cloud-download": {
+	name: "cloud-download",
+	figma: {
+		id: "0:152",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"save",
+		"install",
+		"get"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M9 12h2l-3 3-3-3h2V7h2v5zm3-8c0-.44-.91-3-4.5-3C5.08 1 3 2.92 3 5 1.02 5 0 6.52 0 8c0 1.53 1 3 3 3h3V9.7H3C1.38 9.7 1.3 8.28 1.3 8c0-.17.05-1.7 1.7-1.7h1.3V5c0-1.39 1.56-2.7 3.2-2.7 2.55 0 3.13 1.55 3.2 1.8v1.2H12c.81 0 2.7.22 2.7 2.2 0 2.09-2.25 2.2-2.7 2.2h-2V11h2c2.08 0 4-1.16 4-3.5C16 5.06 14.08 4 12 4z\"/>"
+},
+	"cloud-upload": {
+	name: "cloud-upload",
+	figma: {
+		id: "0:156",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"put",
+		"export"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M7 9H5l3-3 3 3H9v5H7V9zm5-4c0-.44-.91-3-4.5-3C5.08 2 3 3.92 3 6 1.02 6 0 7.52 0 9c0 1.53 1 3 3 3h3v-1.3H3c-1.62 0-1.7-1.42-1.7-1.7 0-.17.05-1.7 1.7-1.7h1.3V6c0-1.39 1.56-2.7 3.2-2.7 2.55 0 3.13 1.55 3.2 1.8v1.2H12c.81 0 2.7.22 2.7 2.2 0 2.09-2.25 2.2-2.7 2.2h-2V12h2c2.08 0 4-1.16 4-3.5C16 6.06 14.08 5 12 5z\"/>"
+},
+	code: code,
+	"comment-discussion": {
+	name: "comment-discussion",
+	figma: {
+		id: "0:164",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"converse",
+		"talk"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M15 1H6c-.55 0-1 .45-1 1v2H1c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h1v3l3-3h4c.55 0 1-.45 1-1V9h1l3 3V9h1c.55 0 1-.45 1-1V2c0-.55-.45-1-1-1zM9 11H4.5L3 12.5V11H1V5h4v3c0 .55.45 1 1 1h3v2zm6-3h-2v1.5L11.5 8H6V2h9v6z\"/>"
+},
+	comment: comment,
+	"credit-card": {
+	name: "credit-card",
+	figma: {
+		id: "0:173",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"money",
+		"billing",
+		"payments",
+		"transactions"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M12 9H2V8h10v1zm4-6v9c0 .55-.45 1-1 1H1c-.55 0-1-.45-1-1V3c0-.55.45-1 1-1h14c.55 0 1 .45 1 1zm-1 3H1v6h14V6zm0-3H1v1h14V3zm-9 7H2v1h4v-1z\"/>"
+},
+	dash: dash,
+	dashboard: dashboard,
+	database: database,
+	"desktop-download": {
+	name: "desktop-download",
+	figma: {
+		id: "0:196",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"clone",
+		"download"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M4 6h3V0h2v6h3l-4 4-4-4zm11-4h-4v1h4v8H1V3h4V2H1c-.55 0-1 .45-1 1v9c0 .55.45 1 1 1h5.34c-.25.61-.86 1.39-2.34 2h8c-1.48-.61-2.09-1.39-2.34-2H15c.55 0 1-.45 1-1V3c0-.55-.45-1-1-1z\"/>"
+},
+	"device-camera-video": {
+	name: "device-camera-video",
+	figma: {
+		id: "0:198",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"watch",
+		"view",
+		"media",
+		"stream"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M15.2 2.09L10 5.72V3c0-.55-.45-1-1-1H1c-.55 0-1 .45-1 1v9c0 .55.45 1 1 1h8c.55 0 1-.45 1-1V9.28l5.2 3.63c.33.23.8 0 .8-.41v-10c0-.41-.47-.64-.8-.41z\"/>"
+},
+	"device-camera": {
+	name: "device-camera",
+	figma: {
+		id: "0:202",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"photo",
+		"picture",
+		"image",
+		"snapshot"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M15 3H7c0-.55-.45-1-1-1H2c-.55 0-1 .45-1 1-.55 0-1 .45-1 1v9c0 .55.45 1 1 1h14c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1zM6 5H2V4h4v1zm4.5 7C8.56 12 7 10.44 7 8.5S8.56 5 10.5 5 14 6.56 14 8.5 12.44 12 10.5 12zM13 8.5c0 1.38-1.13 2.5-2.5 2.5S8 9.87 8 8.5 9.13 6 10.5 6 13 7.13 13 8.5z\"/>"
+},
+	"device-desktop": {
+	name: "device-desktop",
+	figma: {
+		id: "0:208",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"computer",
+		"monitor"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M15 2H1c-.55 0-1 .45-1 1v9c0 .55.45 1 1 1h5.34c-.25.61-.86 1.39-2.34 2h8c-1.48-.61-2.09-1.39-2.34-2H15c.55 0 1-.45 1-1V3c0-.55-.45-1-1-1zm0 9H1V3h14v8z\"/>"
+},
+	"device-mobile": {
+	name: "device-mobile",
+	figma: {
+		id: "0:212",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"phone",
+		"iphone",
+		"cellphone"
+	],
+	width: 10,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M9 0H1C.45 0 0 .45 0 1v14c0 .55.45 1 1 1h8c.55 0 1-.45 1-1V1c0-.55-.45-1-1-1zM5 15.3c-.72 0-1.3-.58-1.3-1.3 0-.72.58-1.3 1.3-1.3.72 0 1.3.58 1.3 1.3 0 .72-.58 1.3-1.3 1.3zM9 12H1V2h8v10z\"/>"
+},
+	"diff-added": {
+	name: "diff-added",
+	figma: {
+		id: "0:217",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"new",
+		"addition",
+		"plus"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M13 1H1c-.55 0-1 .45-1 1v12c0 .55.45 1 1 1h12c.55 0 1-.45 1-1V2c0-.55-.45-1-1-1zm0 13H1V2h12v12zM6 9H3V7h3V4h2v3h3v2H8v3H6V9z\"/>"
+},
+	"diff-ignored": {
+	name: "diff-ignored",
+	figma: {
+		id: "0:222",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"slash"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M13 1H1c-.55 0-1 .45-1 1v12c0 .55.45 1 1 1h12c.55 0 1-.45 1-1V2c0-.55-.45-1-1-1zm0 13H1V2h12v12zm-8.5-2H3v-1.5L9.5 4H11v1.5L4.5 12z\"/>"
+},
+	"diff-modified": {
+	name: "diff-modified",
+	figma: {
+		id: "0:227",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"dot",
+		"changed",
+		"updated"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M13 1H1c-.55 0-1 .45-1 1v12c0 .55.45 1 1 1h12c.55 0 1-.45 1-1V2c0-.55-.45-1-1-1zm0 13H1V2h12v12zM4 8c0-1.66 1.34-3 3-3s3 1.34 3 3-1.34 3-3 3-3-1.34-3-3z\"/>"
+},
+	"diff-removed": {
+	name: "diff-removed",
+	figma: {
+		id: "0:232",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"deleted",
+		"subtracted",
+		"dash"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M13 1H1c-.55 0-1 .45-1 1v12c0 .55.45 1 1 1h12c.55 0 1-.45 1-1V2c0-.55-.45-1-1-1zm0 13H1V2h12v12zm-2-5H3V7h8v2z\"/>"
+},
+	"diff-renamed": {
+	name: "diff-renamed",
+	figma: {
+		id: "0:237",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"moved",
+		"arrow"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M6 9H3V7h3V4l5 4-5 4V9zm8-7v12c0 .55-.45 1-1 1H1c-.55 0-1-.45-1-1V2c0-.55.45-1 1-1h12c.55 0 1 .45 1 1zm-1 0H1v12h12V2z\"/>"
+},
+	diff: diff,
+	ellipsis: ellipsis,
+	eye: eye,
+	"file-binary": {
+	name: "file-binary",
+	figma: {
+		id: "0:260",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"image",
+		"video",
+		"word",
+		"powerpoint",
+		"excel"
+	],
+	width: 12,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M4 12h1v1H2v-1h1v-2H2V9h2v3zm8-7.5V14c0 .55-.45 1-1 1H1c-.55 0-1-.45-1-1V2c0-.55.45-1 1-1h7.5L12 4.5zM11 5L8 2H1v12h10V5zM8 4H6v1h1v2H6v1h3V7H8V4zM2 4h3v4H2V4zm1 3h1V5H3v2zm3 2h3v4H6V9zm1 3h1v-2H7v2z\"/>"
+},
+	"file-code": {
+	name: "file-code",
+	figma: {
+		id: "0:270",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"text",
+		"javascript",
+		"html",
+		"css",
+		"php",
+		"ruby",
+		"coffeescript",
+		"sass",
+		"scss"
+	],
+	width: 12,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M8.5 1H1c-.55 0-1 .45-1 1v12c0 .55.45 1 1 1h10c.55 0 1-.45 1-1V4.5L8.5 1zM11 14H1V2h7l3 3v9zM5 6.98L3.5 8.5 5 10l-.5 1L2 8.5 4.5 6l.5.98zM7.5 6L10 8.5 7.5 11l-.5-.98L8.5 8.5 7 7l.5-1z\"/>"
+},
+	"file-directory": {
+	name: "file-directory",
+	figma: {
+		id: "0:276",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"folder"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M13 4H7V3c0-.66-.31-1-1-1H1c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1V5c0-.55-.45-1-1-1zM6 4H1V3h5v1z\"/>"
+},
+	"file-media": {
+	name: "file-media",
+	figma: {
+		id: "0:280",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"image",
+		"video",
+		"audio"
+	],
+	width: 12,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M6 5h2v2H6V5zm6-.5V14c0 .55-.45 1-1 1H1c-.55 0-1-.45-1-1V2c0-.55.45-1 1-1h7.5L12 4.5zM11 5L8 2H1v11l3-5 2 4 2-2 3 3V5z\"/>"
+},
+	"file-pdf": {
+	name: "file-pdf",
+	figma: {
+		id: "0:285",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"adobe"
+	],
+	width: 12,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M8.5 1H1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V4.5L8.5 1zM1 2h4a.68.68 0 0 0-.31.2 1.08 1.08 0 0 0-.23.47 4.22 4.22 0 0 0-.09 1.47c.06.609.173 1.211.34 1.8A21.78 21.78 0 0 1 3.6 8.6c-.5 1-.8 1.66-.91 1.84a7.161 7.161 0 0 0-.69.3 4.19 4.19 0 0 0-1 .64V2zm4.42 4.8a5.65 5.65 0 0 0 1.17 2.09c.275.237.595.417.94.53-.64.09-1.23.2-1.81.33a12.22 12.22 0 0 0-1.81.59c-.587.243.22-.44.61-1.25.365-.74.67-1.51.91-2.3l-.01.01zM11 14H1.5a.743.743 0 0 1-.17 0 2.12 2.12 0 0 0 .73-.44 10.14 10.14 0 0 0 1.78-2.38c.31-.13.58-.23.81-.31l.42-.14c.45-.13.94-.23 1.44-.33s1-.16 1.48-.2c.447.216.912.394 1.39.53.403.11.814.188 1.23.23h.38V14H11zm0-4.86a3.74 3.74 0 0 0-.64-.28 4.22 4.22 0 0 0-.75-.11c-.411.003-.822.03-1.23.08a3 3 0 0 1-1-.64 6.07 6.07 0 0 1-1.29-2.33c.111-.662.178-1.33.2-2 .02-.25.02-.5 0-.75a1.05 1.05 0 0 0-.2-.88.82.82 0 0 0-.61-.23H8l3 3v4.14z\"/>"
+},
+	"file-submodule": {
+	name: "file-submodule",
+	figma: {
+		id: "0:292",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"folder"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M10 7H4v7h9c.55 0 1-.45 1-1V8h-4V7zM9 9H5V8h4v1zm4-5H7V3c0-.66-.31-1-1-1H1c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h2V7c0-.55.45-1 1-1h6c.55 0 1 .45 1 1h3V5c0-.55-.45-1-1-1zM6 4H1V3h5v1z\"/>"
+},
+	"file-symlink-directory": {
+	name: "file-symlink-directory",
+	figma: {
+		id: "0:298",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"folder",
+		"subfolder",
+		"link",
+		"alias"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M13 4H7V3c0-.66-.31-1-1-1H1c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1V5c0-.55-.45-1-1-1zM1 3h5v1H1V3zm6 9v-2c-.98-.02-1.84.22-2.55.7-.71.48-1.19 1.25-1.45 2.3.02-1.64.39-2.88 1.13-3.73C4.86 8.43 5.82 8 7.01 8V6l4 3-4 3H7z\"/>"
+},
+	"file-symlink-file": {
+	name: "file-symlink-file",
+	figma: {
+		id: "0:303",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"link",
+		"alias"
+	],
+	width: 12,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M8.5 1H1c-.55 0-1 .45-1 1v12c0 .55.45 1 1 1h10c.55 0 1-.45 1-1V4.5L8.5 1zM11 14H1V2h7l3 3v9zM6 4.5l4 3-4 3v-2c-.98-.02-1.84.22-2.55.7-.71.48-1.19 1.25-1.45 2.3.02-1.64.39-2.88 1.13-3.73.73-.84 1.69-1.27 2.88-1.27v-2H6z\"/>"
+},
+	file: file,
+	"file-zip": {
+	name: "file-zip",
+	figma: {
+		id: "0:316",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"compress",
+		"archive"
+	],
+	width: 12,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M8.5 1H1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V4.5L8.5 1zM11 14H1V2h3v1h1V2h3l3 3v9zM5 4V3h1v1H5zM4 4h1v1H4V4zm1 2V5h1v1H5zM4 6h1v1H4V6zm1 2V7h1v1H5zM4 9.28A2 2 0 0 0 3 11v1h4v-1a2 2 0 0 0-2-2V8H4v1.28zM6 10v1H4v-1h2z\"/>"
+},
+	flame: flame,
+	fold: fold,
+	gear: gear,
+	gift: gift,
+	"gist-secret": {
+	name: "gist-secret",
+	figma: {
+		id: "0:347",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"gist",
+		"secret",
+		"private"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M8 10.5L9 14H5l1-3.5L5.25 9h3.5L8 10.5zM10 6H4L2 7h10l-2-1zM9 2L7 3 5 2 4 5h6L9 2zm4.03 7.75L10 9l1 2-2 3h3.22c.45 0 .86-.31.97-.75l.56-2.28c.14-.53-.19-1.08-.72-1.22zM4 9l-3.03.75c-.53.14-.86.69-.72 1.22l.56 2.28c.11.44.52.75.97.75H5l-2-3 1-2z\"/>"
+},
+	gist: gist,
+	"git-branch": {
+	name: "git-branch",
+	figma: {
+		id: "0:360",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"fork",
+		"branch",
+		"git",
+		"duplicate"
+	],
+	width: 10,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M10 5c0-1.11-.89-2-2-2a1.993 1.993 0 0 0-1 3.72v.3c-.02.52-.23.98-.63 1.38-.4.4-.86.61-1.38.63-.83.02-1.48.16-2 .45V4.72a1.993 1.993 0 0 0-1-3.72C.88 1 0 1.89 0 3a2 2 0 0 0 1 1.72v6.56c-.59.35-1 .99-1 1.72 0 1.11.89 2 2 2 1.11 0 2-.89 2-2 0-.53-.2-1-.53-1.36.09-.06.48-.41.59-.47.25-.11.56-.17.94-.17 1.05-.05 1.95-.45 2.75-1.25S8.95 7.77 9 6.73h-.02C9.59 6.37 10 5.73 10 5zM2 1.8c.66 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2C1.35 4.2.8 3.65.8 3c0-.65.55-1.2 1.2-1.2zm0 12.41c-.66 0-1.2-.55-1.2-1.2 0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2zm6-8c-.66 0-1.2-.55-1.2-1.2 0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2z\"/>"
+},
+	"git-commit": {
+	name: "git-commit",
+	figma: {
+		id: "0:366",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"save"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M10.86 7c-.45-1.72-2-3-3.86-3-1.86 0-3.41 1.28-3.86 3H0v2h3.14c.45 1.72 2 3 3.86 3 1.86 0 3.41-1.28 3.86-3H14V7h-3.14zM7 10.2c-1.22 0-2.2-.98-2.2-2.2 0-1.22.98-2.2 2.2-2.2 1.22 0 2.2.98 2.2 2.2 0 1.22-.98 2.2-2.2 2.2z\"/>"
+},
+	"git-compare": {
+	name: "git-compare",
+	figma: {
+		id: "0:370",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"difference",
+		"changes"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M5 12H4c-.27-.02-.48-.11-.69-.31-.21-.2-.3-.42-.31-.69V4.72A1.993 1.993 0 0 0 2 1a1.993 1.993 0 0 0-1 3.72V11c.03.78.34 1.47.94 2.06.6.59 1.28.91 2.06.94h1v2l3-3-3-3v2zM2 1.8c.66 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2C1.35 4.2.8 3.65.8 3c0-.65.55-1.2 1.2-1.2zm11 9.48V5c-.03-.78-.34-1.47-.94-2.06-.6-.59-1.28-.91-2.06-.94H9V0L6 3l3 3V4h1c.27.02.48.11.69.31.21.2.3.42.31.69v6.28A1.993 1.993 0 0 0 12 15a1.993 1.993 0 0 0 1-3.72zm-1 2.92c-.66 0-1.2-.55-1.2-1.2 0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2z\"/>"
+},
+	"git-merge": {
+	name: "git-merge",
+	figma: {
+		id: "0:376",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"join"
+	],
+	width: 12,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M10 7c-.73 0-1.38.41-1.73 1.02V8C7.22 7.98 6 7.64 5.14 6.98c-.75-.58-1.5-1.61-1.89-2.44A1.993 1.993 0 0 0 2 .99C.89.99 0 1.89 0 3a2 2 0 0 0 1 1.72v6.56c-.59.35-1 .99-1 1.72 0 1.11.89 2 2 2a1.993 1.993 0 0 0 1-3.72V7.67c.67.7 1.44 1.27 2.3 1.69.86.42 2.03.63 2.97.64v-.02c.36.61 1 1.02 1.73 1.02 1.11 0 2-.89 2-2 0-1.11-.89-2-2-2zm-6.8 6c0 .66-.55 1.2-1.2 1.2-.65 0-1.2-.55-1.2-1.2 0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2zM2 4.2C1.34 4.2.8 3.65.8 3c0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2zm8 6c-.66 0-1.2-.55-1.2-1.2 0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2z\"/>"
+},
+	"git-pull-request": {
+	name: "git-pull-request",
+	figma: {
+		id: "0:382",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"review"
+	],
+	width: 12,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M11 11.28V5c-.03-.78-.34-1.47-.94-2.06C9.46 2.35 8.78 2.03 8 2H7V0L4 3l3 3V4h1c.27.02.48.11.69.31.21.2.3.42.31.69v6.28A1.993 1.993 0 0 0 10 15a1.993 1.993 0 0 0 1-3.72zm-1 2.92c-.66 0-1.2-.55-1.2-1.2 0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2zM4 3c0-1.11-.89-2-2-2a1.993 1.993 0 0 0-1 3.72v6.56A1.993 1.993 0 0 0 2 15a1.993 1.993 0 0 0 1-3.72V4.72c.59-.34 1-.98 1-1.72zm-.8 10c0 .66-.55 1.2-1.2 1.2-.65 0-1.2-.55-1.2-1.2 0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2zM2 4.2C1.34 4.2.8 3.65.8 3c0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2z\"/>"
+},
+	globe: globe,
+	graph: graph,
+	heart: heart,
+	history: history,
+	home: home,
+	"horizontal-rule": {
+	name: "horizontal-rule",
+	figma: {
+		id: "0:412",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"hr"
+	],
+	width: 10,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M1 7h2v2h1V3H3v3H1V3H0v6h1V7zm9 2V7H9v2h1zm0-3V4H9v2h1zM7 6V4h2V3H6v6h1V7h2V6H7zm-7 7h10v-2H0v2z\"/>"
+},
+	hubot: hubot,
+	inbox: inbox,
+	info: info,
+	"issue-closed": {
+	name: "issue-closed",
+	figma: {
+		id: "0:436",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"done",
+		"complete"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M7 10h2v2H7v-2zm2-6H7v5h2V4zm1.5 1.5l-1 1L12 9l4-4.5-1-1L12 7l-1.5-1.5zM8 13.7A5.71 5.71 0 0 1 2.3 8c0-3.14 2.56-5.7 5.7-5.7 1.83 0 3.45.88 4.5 2.2l.92-.92A6.947 6.947 0 0 0 8 1C4.14 1 1 4.14 1 8s3.14 7 7 7 7-3.14 7-7l-1.52 1.52c-.66 2.41-2.86 4.19-5.48 4.19v-.01z\"/>"
+},
+	"issue-opened": {
+	name: "issue-opened",
+	figma: {
+		id: "0:442",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"new"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z\"/>"
+},
+	"issue-reopened": {
+	name: "issue-reopened",
+	figma: {
+		id: "0:448",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"regression"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M8 9H6V4h2v5zm-2 3h2v-2H6v2zm6.33-2H10l1.5 1.5c-1.05 1.33-2.67 2.2-4.5 2.2A5.71 5.71 0 0 1 1.3 8c0-.34.03-.67.09-1H.08C.03 7.33 0 7.66 0 8c0 3.86 3.14 7 7 7 2.19 0 4.13-1.02 5.41-2.59L14 14v-4h-1.67zM1.67 6H4L2.5 4.5C3.55 3.17 5.17 2.3 7 2.3c3.14 0 5.7 2.56 5.7 5.7 0 .34-.03.67-.09 1h1.31c.05-.33.08-.66.08-1 0-3.86-3.14-7-7-7-2.19 0-4.13 1.02-5.41 2.59L0 2v4h1.67z\"/>"
+},
+	italic: italic,
+	jersey: jersey,
+	keyboard: keyboard,
+	law: law,
+	link: link,
+	"list-ordered": {
+	name: "list-ordered",
+	figma: {
+		id: "0:500",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"numbers",
+		"tasks",
+		"todo",
+		"items"
+	],
+	width: 12,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M12 12.99c0 .589 0 .998-.59.998H4.596c-.59 0-.59-.41-.59-.999 0-.59 0-.999.59-.999H11.4c.59 0 .59.41.59 1H12zM4.596 3.996H11.4c.59 0 .59-.41.59-1 0-.589 0-.999-.59-.999H4.596c-.59 0-.59.41-.59 1 0 .589 0 .999.59.999zM11.4 6.994H4.596c-.59 0-.59.41-.59 1 0 .589 0 .999.59.999H11.4c.59 0 .59-.41.59-1 0-.59 0-.999-.59-.999zM2.008 1h-.72C.99 1.19.71 1.25.26 1.34V2h.75v2.138H.17v.859h2.837v-.86h-.999V1zm.25 8.123c-.17 0-.45.03-.66.06.53-.56 1.14-1.249 1.14-1.888-.02-.78-.56-1.299-1.36-1.299-.589 0-.968.2-1.378.64l.58.579c.19-.19.38-.38.639-.38.28 0 .48.16.48.52 0 .53-.77 1.199-1.699 2.058v.58h2.998l-.09-.88h-.66l.01.01zm-.08 3.777v-.03c.44-.19.64-.47.64-.859 0-.7-.56-1.11-1.44-1.11-.479 0-.888.19-1.278.52l.55.64c.25-.2.44-.31.689-.31.27 0 .42.13.42.36 0 .27-.2.44-.86.44v.749c.83 0 .98.17.98.47 0 .25-.23.38-.58.38-.28 0-.56-.14-.81-.38l-.479.659c.3.36.77.56 1.409.56.83 0 1.529-.41 1.529-1.16 0-.5-.31-.809-.77-.939v.01z\"/>"
+},
+	"list-unordered": {
+	name: "list-unordered",
+	figma: {
+		id: "0:508",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"bullet",
+		"point",
+		"tasks",
+		"todo",
+		"items"
+	],
+	width: 12,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M2 13c0 .59 0 1-.59 1H.59C0 14 0 13.59 0 13c0-.59 0-1 .59-1h.81c.59 0 .59.41.59 1H2zm2.59-9h6.81c.59 0 .59-.41.59-1 0-.59 0-1-.59-1H4.59C4 2 4 2.41 4 3c0 .59 0 1 .59 1zM1.41 7H.59C0 7 0 7.41 0 8c0 .59 0 1 .59 1h.81c.59 0 .59-.41.59-1 0-.59 0-1-.59-1h.01zm0-5H.59C0 2 0 2.41 0 3c0 .59 0 1 .59 1h.81c.59 0 .59-.41.59-1 0-.59 0-1-.59-1h.01zm10 5H4.59C4 7 4 7.41 4 8c0 .59 0 1 .59 1h6.81c.59 0 .59-.41.59-1 0-.59 0-1-.59-1h.01zm0 5H4.59C4 12 4 12.41 4 13c0 .59 0 1 .59 1h6.81c.59 0 .59-.41.59-1 0-.59 0-1-.59-1h.01z\"/>"
+},
+	location: location,
+	lock: lock,
+	"logo-gist": {
+	name: "logo-gist",
+	figma: {
+		id: "0:529",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"brand",
+		"github",
+		"logo"
+	],
+	width: 25,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M4.7 8.73h2.45v4.02c-.55.27-1.64.34-2.53.34-2.56 0-3.47-2.2-3.47-5.05 0-2.85.91-5.06 3.48-5.06 1.28 0 2.06.23 3.28.73V2.66C7.27 2.33 6.25 2 4.63 2 1.13 2 0 4.69 0 8.03c0 3.34 1.11 6.03 4.63 6.03 1.64 0 2.81-.27 3.59-.64V7.73H4.7v1zm6.39 3.72V6.06h-1.05v6.28c0 1.25.58 1.72 1.72 1.72v-.89c-.48 0-.67-.16-.67-.7v-.02zm.25-8.72c0-.44-.33-.78-.78-.78s-.77.34-.77.78.33.78.77.78.78-.34.78-.78zm4.34 5.69c-1.5-.13-1.78-.48-1.78-1.17 0-.77.33-1.34 1.88-1.34 1.05 0 1.66.16 2.27.36v-.94c-.69-.3-1.52-.39-2.25-.39-2.2 0-2.92 1.2-2.92 2.31 0 1.08.47 1.88 2.73 2.08 1.55.13 1.77.63 1.77 1.34 0 .73-.44 1.42-2.06 1.42-1.11 0-1.86-.19-2.33-.36v.94c.5.2 1.58.39 2.33.39 2.38 0 3.14-1.2 3.14-2.41 0-1.28-.53-2.03-2.75-2.23h-.03zm8.58-2.47v-.86h-2.42v-2.5l-1.08.31v2.11l-1.56.44v.48h1.56v5c0 1.53 1.19 2.13 2.5 2.13.19 0 .52-.02.69-.05v-.89c-.19.03-.41.03-.61.03-.97 0-1.5-.39-1.5-1.34V6.94h2.42v.02-.01z\"/>"
+},
+	"logo-github": {
+	name: "logo-github",
+	figma: {
+		id: "0:536",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"brand",
+		"github",
+		"logo"
+	],
+	width: 45,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M18.53 12.03h-.02c.009 0 .015.01.024.011h.006l-.01-.01zm.004.011c-.093.001-.327.05-.574.05-.78 0-1.05-.36-1.05-.83V8.13h1.59c.09 0 .16-.08.16-.19v-1.7c0-.09-.08-.17-.16-.17h-1.59V3.96c0-.08-.05-.13-.14-.13h-2.16c-.09 0-.14.05-.14.13v2.17s-1.09.27-1.16.28c-.08.02-.13.09-.13.17v1.36c0 .11.08.19.17.19h1.11v3.28c0 2.44 1.7 2.69 2.86 2.69.53 0 1.17-.17 1.27-.22.06-.02.09-.09.09-.16v-1.5a.177.177 0 0 0-.146-.18zm23.696-2.2c0-1.81-.73-2.05-1.5-1.97-.6.04-1.08.34-1.08.34v3.52s.49.34 1.22.36c1.03.03 1.36-.34 1.36-2.25zm2.43-.16c0 3.43-1.11 4.41-3.05 4.41-1.64 0-2.52-.83-2.52-.83s-.04.46-.09.52c-.03.06-.08.08-.14.08h-1.48c-.1 0-.19-.08-.19-.17l.02-11.11c0-.09.08-.17.17-.17h2.13c.09 0 .17.08.17.17v3.77s.82-.53 2.02-.53l-.01-.02c1.2 0 2.97.45 2.97 3.88zm-8.72-3.61h-2.1c-.11 0-.17.08-.17.19v5.44s-.55.39-1.3.39-.97-.34-.97-1.09V6.25c0-.09-.08-.17-.17-.17h-2.14c-.09 0-.17.08-.17.17v5.11c0 2.2 1.23 2.75 2.92 2.75 1.39 0 2.52-.77 2.52-.77s.05.39.08.45c.02.05.09.09.16.09h1.34c.11 0 .17-.08.17-.17l.02-7.47c0-.09-.08-.17-.19-.17zm-23.7-.01h-2.13c-.09 0-.17.09-.17.2v7.34c0 .2.13.27.3.27h1.92c.2 0 .25-.09.25-.27V6.23c0-.09-.08-.17-.17-.17zm-1.05-3.38c-.77 0-1.38.61-1.38 1.38 0 .77.61 1.38 1.38 1.38.75 0 1.36-.61 1.36-1.38 0-.77-.61-1.38-1.36-1.38zm16.49-.25h-2.11c-.09 0-.17.08-.17.17v4.09h-3.31V2.6c0-.09-.08-.17-.17-.17h-2.13c-.09 0-.17.08-.17.17v11.11c0 .09.09.17.17.17h2.13c.09 0 .17-.08.17-.17V8.96h3.31l-.02 4.75c0 .09.08.17.17.17h2.13c.09 0 .17-.08.17-.17V2.6c0-.09-.08-.17-.17-.17zM8.81 7.35v5.74c0 .04-.01.11-.06.13 0 0-1.25.89-3.31.89-2.49 0-5.44-.78-5.44-5.92S2.58 1.99 5.1 2c2.18 0 3.06.49 3.2.58.04.05.06.09.06.14L7.94 4.5c0 .09-.09.2-.2.17-.36-.11-.9-.33-2.17-.33-1.47 0-3.05.42-3.05 3.73s1.5 3.7 2.58 3.7c.92 0 1.25-.11 1.25-.11v-2.3H4.88c-.11 0-.19-.08-.19-.17V7.35c0-.09.08-.17.19-.17h3.74c.11 0 .19.08.19.17z\"/>"
+},
+	"mail-read": {
+	name: "mail-read",
+	figma: {
+		id: "0:547",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"email",
+		"open"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M6 5H4V4h2v1zm3 1H4v1h5V6zm5-.48V14c0 .55-.45 1-1 1H1c-.55 0-1-.45-1-1V5.52c0-.33.16-.63.42-.81L2 3.58V3c0-.55.45-1 1-1h1.2L7 0l2.8 2H11c.55 0 1 .45 1 1v.58l1.58 1.13c.27.19.42.48.42.81zM3 7.5L7 10l4-2.5V3H3v4.5zm-2 6l4.5-3-4.5-3v6zm11 .5l-5-3-5 3h10zm1-6.5l-4.5 3 4.5 3v-6z\"/>"
+},
+	reply: reply,
+	mail: mail,
+	"mark-github": {
+	name: "mark-github",
+	figma: {
+		id: "0:563",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"octocat",
+		"brand",
+		"github",
+		"logo"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z\"/>"
+},
+	markdown: markdown,
+	megaphone: megaphone,
+	mention: mention,
+	milestone: milestone,
+	mirror: mirror,
+	"mortar-board": {
+	name: "mortar-board",
+	figma: {
+		id: "0:594",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"education",
+		"learn",
+		"teach"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M7.83 9.19L4 8c-4-8 0 1.5 0 2.5S5.8 12 8 12s4-.5 4-1.5V8L8.17 9.19a.73.73 0 0 1-.36 0h.02zm.28-6.39a.34.34 0 0 0-.2 0L.27 5.18a.35.35 0 0 0 0 .67L2 6.4v1.77c-.3.17-.5.5-.5.86 0 .19.05.36.14.5-.08.14-.14.31-.14.5v2.58c0 .55 2 .55 2 0v-2.58c0-.19-.05-.36-.14-.5.08-.14.14-.31.14-.5 0-.38-.2-.69-.5-.86V6.72l4.89 1.53c.06.02.14.02.2 0l7.64-2.38a.35.35 0 0 0 0-.67L8.1 2.81l.01-.01zM8.02 6c-.55 0-1-.22-1-.5s.45-.5 1-.5 1 .22 1 .5-.45.5-1 .5z\"/>"
+},
+	mute: mute,
+	"no-newline": {
+	name: "no-newline",
+	figma: {
+		id: "0:603",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"return"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M16 5v3c0 .55-.45 1-1 1h-3v2L9 8l3-3v2h2V5h2zM8 8c0 2.2-1.8 4-4 4s-4-1.8-4-4 1.8-4 4-4 4 1.8 4 4zM1.5 9.66L5.66 5.5C5.18 5.19 4.61 5 4 5 2.34 5 1 6.34 1 8c0 .61.19 1.17.5 1.66zM7 8c0-.61-.19-1.17-.5-1.66L2.34 10.5c.48.31 1.05.5 1.66.5 1.66 0 3-1.34 3-3z\"/>"
+},
+	octoface: octoface,
+	organization: organization,
+	"package": {
+	name: "package",
+	figma: {
+		id: "0:617",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"box",
+		"ship"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M1 4.27v7.47c0 .45.3.84.75.97l6.5 1.73c.16.05.34.05.5 0l6.5-1.73c.45-.13.75-.52.75-.97V4.27c0-.45-.3-.84-.75-.97l-6.5-1.74a1.4 1.4 0 0 0-.5 0L1.75 3.3c-.45.13-.75.52-.75.97zm7 9.09l-6-1.59V5l6 1.61v6.75zM2 4l2.5-.67L11 5.06l-2.5.67L2 4zm13 7.77l-6 1.59V6.61l2-.55V8.5l2-.53V5.53L15 5v6.77zm-2-7.24L6.5 2.8l2-.53L15 4l-2 .53z\"/>"
+},
+	paintcan: paintcan,
+	pencil: pencil,
+	person: person,
+	pin: pin,
+	plug: plug,
+	plus: plus,
+	"primitive-dot": {
+	name: "primitive-dot",
+	figma: {
+		id: "0:641",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"circle"
+	],
+	width: 8,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M0 8c0-2.2 1.8-4 4-4s4 1.8 4 4-1.8 4-4 4-4-1.8-4-4z\"/>"
+},
+	"primitive-square": {
+	name: "primitive-square",
+	figma: {
+		id: "0:643",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"box"
+	],
+	width: 8,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M8 12H0V4h8v8z\"/>"
+},
+	pulse: pulse,
+	question: question,
+	quote: quote,
+	"radio-tower": {
+	name: "radio-tower",
+	figma: {
+		id: "0:659",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"broadcast"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M4.79 6.11c.25-.25.25-.67 0-.92-.32-.33-.48-.76-.48-1.19 0-.43.16-.86.48-1.19.25-.26.25-.67 0-.92a.613.613 0 0 0-.45-.19c-.16 0-.33.06-.45.19-.57.58-.85 1.35-.85 2.11 0 .76.29 1.53.85 2.11.25.25.66.25.9 0zM2.33.52a.651.651 0 0 0-.92 0C.48 1.48.01 2.74.01 3.99c0 1.26.47 2.52 1.4 3.48.25.26.66.26.91 0s.25-.68 0-.94c-.68-.7-1.02-1.62-1.02-2.54 0-.92.34-1.84 1.02-2.54a.66.66 0 0 0 .01-.93zm5.69 5.1A1.62 1.62 0 1 0 6.4 4c-.01.89.72 1.62 1.62 1.62zM14.59.53a.628.628 0 0 0-.91 0c-.25.26-.25.68 0 .94.68.7 1.02 1.62 1.02 2.54 0 .92-.34 1.83-1.02 2.54-.25.26-.25.68 0 .94a.651.651 0 0 0 .92 0c.93-.96 1.4-2.22 1.4-3.48A5.048 5.048 0 0 0 14.59.53zM8.02 6.92c-.41 0-.83-.1-1.2-.3l-3.15 8.37h1.49l.86-1h4l.84 1h1.49L9.21 6.62c-.38.2-.78.3-1.19.3zm-.01.48L9.02 11h-2l.99-3.6zm-1.99 5.59l1-1h2l1 1h-4zm5.19-11.1c-.25.25-.25.67 0 .92.32.33.48.76.48 1.19 0 .43-.16.86-.48 1.19-.25.26-.25.67 0 .92a.63.63 0 0 0 .9 0c.57-.58.85-1.35.85-2.11 0-.76-.28-1.53-.85-2.11a.634.634 0 0 0-.9 0z\"/>"
+},
+	"repo-clone": {
+	name: "repo-clone",
+	figma: {
+		id: "0:669",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"book",
+		"journal",
+		"repository"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M15 0H9v7c0 .55.45 1 1 1h1v1h1V8h3c.55 0 1-.45 1-1V1c0-.55-.45-1-1-1zm-4 7h-1V6h1v1zm4 0h-3V6h3v1zm0-2h-4V1h4v4zM4 5H3V4h1v1zm0-2H3V2h1v1zM2 1h6V0H1C.45 0 0 .45 0 1v12c0 .55.45 1 1 1h2v2l1.5-1.5L6 16v-2h5c.55 0 1-.45 1-1v-3H2V1zm9 10v2H6v-1H3v1H1v-2h10zM3 8h1v1H3V8zm1-1H3V6h1v1z\"/>"
+},
+	"repo-force-push": {
+	name: "repo-force-push",
+	figma: {
+		id: "0:681",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"book",
+		"journal",
+		"put"
+	],
+	width: 12,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M10 9H8v7H6V9H4l2.25-3H4l3-4 3 4H7.75L10 9zm1-9H1C.45 0 0 .45 0 1v12c0 .55.45 1 1 1h4v-1H1v-2h4v-1H2V1h9v9H9v1h2v2H9v1h2c.55 0 1-.45 1-1V1c0-.55-.45-1-1-1z\"/>"
+},
+	"repo-forked": {
+	name: "repo-forked",
+	figma: {
+		id: "0:685",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"book",
+		"journal",
+		"copy"
+	],
+	width: 10,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M8 1a1.993 1.993 0 0 0-1 3.72V6L5 8 3 6V4.72A1.993 1.993 0 0 0 2 1a1.993 1.993 0 0 0-1 3.72V6.5l3 3v1.78A1.993 1.993 0 0 0 5 15a1.993 1.993 0 0 0 1-3.72V9.5l3-3V4.72A1.993 1.993 0 0 0 8 1zM2 4.2C1.34 4.2.8 3.65.8 3c0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2zm3 10c-.66 0-1.2-.55-1.2-1.2 0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2zm3-10c-.66 0-1.2-.55-1.2-1.2 0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2z\"/>"
+},
+	"repo-pull": {
+	name: "repo-pull",
+	figma: {
+		id: "0:691",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"book",
+		"journal",
+		"get"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M13 8V6H7V4h6V2l3 3-3 3zM4 2H3v1h1V2zm7 5h1v6c0 .55-.45 1-1 1H6v2l-1.5-1.5L3 16v-2H1c-.55 0-1-.45-1-1V1c0-.55.45-1 1-1h10c.55 0 1 .45 1 1v2h-1V1H2v9h9V7zm0 4H1v2h2v-1h3v1h5v-2zM4 6H3v1h1V6zm0-2H3v1h1V4zM3 9h1V8H3v1z\"/>"
+},
+	"repo-push": {
+	name: "repo-push",
+	figma: {
+		id: "0:700",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"book",
+		"journal",
+		"repository",
+		"put"
+	],
+	width: 12,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M4 3H3V2h1v1zM3 5h1V4H3v1zm4 0L4 9h2v7h2V9h2L7 5zm4-5H1C.45 0 0 .45 0 1v12c0 .55.45 1 1 1h4v-1H1v-2h4v-1H2V1h9.02L11 10H9v1h2v2H9v1h2c.55 0 1-.45 1-1V1c0-.55-.45-1-1-1z\"/>"
+},
+	repo: repo,
+	rocket: rocket,
+	rss: rss,
+	ruby: ruby,
+	search: search,
+	server: server,
+	settings: settings,
+	shield: shield,
+	"sign-in": {
+	name: "sign-in",
+	figma: {
+		id: "0:764",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"door",
+		"arrow",
+		"direction",
+		"enter",
+		"log in"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M7 6.75V12h4V8h1v4c0 .55-.45 1-1 1H7v3l-5.45-2.72c-.33-.17-.55-.52-.55-.91V1c0-.55.45-1 1-1h9c.55 0 1 .45 1 1v3h-1V1H3l4 2v2.25L10 3v2h4v2h-4v2L7 6.75z\"/>"
+},
+	"sign-out": {
+	name: "sign-out",
+	figma: {
+		id: "0:768",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"door",
+		"arrow",
+		"direction",
+		"leave",
+		"log out"
+	],
+	width: 16,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M11.992 8.994V6.996H7.995v-2h3.997V2.999l3.998 2.998-3.998 2.998zm-1.998 2.998H5.996V2.998L2 1h7.995v2.998h1V1c0-.55-.45-.999-1-.999H.999A1.001 1.001 0 0 0 0 1v11.372c0 .39.22.73.55.91L5.996 16v-3.008h3.998c.55 0 1-.45 1-1V7.996h-1v3.998z\"/>"
+},
+	smiley: smiley,
+	squirrel: squirrel,
+	star: star,
+	stop: stop,
+	sync: sync,
+	tag: tag,
+	tasklist: tasklist,
+	telescope: telescope,
+	terminal: terminal,
+	"text-size": {
+	name: "text-size",
+	figma: {
+		id: "0:821",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"font",
+		"size",
+		"text"
+	],
+	width: 18,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M13.62 9.08L12.1 3.66h-.06l-1.5 5.42h3.08zM5.7 10.13S4.68 6.52 4.53 6.02h-.08l-1.13 4.11H5.7zM17.31 14h-2.25l-.95-3.25h-4.07L9.09 14H6.84l-.69-2.33H2.87L2.17 14H0l3.3-9.59h2.5l2.17 6.34L10.86 2h2.52l3.94 12h-.01z\"/>"
+},
+	"three-bars": {
+	name: "three-bars",
+	figma: {
+		id: "0:826",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"hamburger",
+		"menu",
+		"dropdown"
+	],
+	width: 12,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M11.41 9H.59C0 9 0 8.59 0 8c0-.59 0-1 .59-1H11.4c.59 0 .59.41.59 1 0 .59 0 1-.59 1h.01zm0-4H.59C0 5 0 4.59 0 4c0-.59 0-1 .59-1H11.4c.59 0 .59.41.59 1 0 .59 0 1-.59 1h.01zM.59 11H11.4c.59 0 .59.41.59 1 0 .59 0 1-.59 1H.59C0 13 0 12.59 0 12c0-.59 0-1 .59-1z\"/>"
+},
+	thumbsdown: thumbsdown,
+	thumbsup: thumbsup,
+	tools: tools,
+	trashcan: trashcan,
+	"triangle-down": {
+	name: "triangle-down",
+	figma: {
+		id: "0:847",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"arrow",
+		"point",
+		"direction"
+	],
+	width: 12,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M0 5l6 6 6-6H0z\"/>"
+},
+	"triangle-left": {
+	name: "triangle-left",
+	figma: {
+		id: "0:849",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"arrow",
+		"point",
+		"direction"
+	],
+	width: 6,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M6 2L0 8l6 6V2z\"/>"
+},
+	"triangle-right": {
+	name: "triangle-right",
+	figma: {
+		id: "0:851",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"arrow",
+		"point",
+		"direction"
+	],
+	width: 6,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M0 14l6-6-6-6v12z\"/>"
+},
+	"triangle-up": {
+	name: "triangle-up",
+	figma: {
+		id: "0:853",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"arrow",
+		"point",
+		"direction"
+	],
+	width: 12,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M12 11L6 5l-6 6h12z\"/>"
+},
+	unfold: unfold,
+	unmute: unmute,
+	project: project,
+	"kebab-horizontal": {
+	name: "kebab-horizontal",
+	figma: {
+		id: "0:875",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"kebab",
+		"dot",
+		"menu",
+		"more"
+	],
+	width: 13,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M1.5 9a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm5 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM13 7.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z\"/>"
+},
+	"kebab-vertical": {
+	name: "kebab-vertical",
+	figma: {
+		id: "0:880",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"kebab",
+		"dot",
+		"menu",
+		"more"
+	],
+	width: 3,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M0 2.5a1.5 1.5 0 1 0 3 0 1.5 1.5 0 0 0-3 0zm0 5a1.5 1.5 0 1 0 3 0 1.5 1.5 0 0 0-3 0zM1.5 14a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z\"/>"
+},
+	report: report,
+	note: note,
+	"screen-full": {
+	name: "screen-full",
+	figma: {
+		id: "0:898",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"fullscreen",
+		"expand"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M13 10h1v3c0 .547-.453 1-1 1h-3v-1h3v-3zM1 10H0v3c0 .547.453 1 1 1h3v-1H1v-3zm0-7h3V2H1c-.547 0-1 .453-1 1v3h1V3zm1 1h10v8H2V4zm2 6h6V6H4v4zm6-8v1h3v3h1V3c0-.547-.453-1-1-1h-3z\"/>"
+},
+	"screen-normal": {
+	name: "screen-normal",
+	figma: {
+		id: "0:906",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"fullscreen",
+		"expand",
+		"exit"
+	],
+	width: 14,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M2 4H0V3h2V1h1v2c0 .547-.453 1-1 1zm0 8H0v1h2v2h1v-2c0-.547-.453-1-1-1zm9-2c0 .547-.453 1-1 1H4c-.547 0-1-.453-1-1V6c0-.547.453-1 1-1h6c.547 0 1 .453 1 1v4zM9 7H5v2h4V7zm2 6v2h1v-2h2v-1h-2c-.547 0-1 .453-1 1zm1-10V1h-1v2c0 .547.453 1 1 1h2V3h-2z\"/>"
+},
+	unverified: unverified,
+	verified: verified,
+	versions: versions$1,
+	watch: watch,
+	x: x$1,
+	zap: zap,
+	key: key$2,
+	grabber: grabber,
+	"plus-small": {
+	name: "plus-small",
+	figma: {
+		id: "0:947",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"add",
+		"new",
+		"more",
+		"small"
+	],
+	width: 7,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M4 4H3v3H0v1h3v3h1V8h3V7H4V4z\"/>"
+},
+	"light-bulb": {
+	name: "light-bulb",
+	figma: {
+		id: "0:951",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"idea"
+	],
+	width: 12,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M6.5 0C3.48 0 1 2.19 1 5c0 .92.55 2.25 1 3 1.34 2.25 1.78 2.78 2 4v1h5v-1c.22-1.22.66-1.75 2-4 .45-.75 1-2.08 1-3 0-2.81-2.48-5-5.5-5zm3.64 7.48c-.25.44-.47.8-.67 1.11-.86 1.41-1.25 2.06-1.45 3.23-.02.05-.02.11-.02.17H5c0-.06 0-.13-.02-.17-.2-1.17-.59-1.83-1.45-3.23-.2-.31-.42-.67-.67-1.11C2.44 6.78 2 5.65 2 5c0-2.2 2.02-4 4.5-4 1.22 0 2.36.42 3.22 1.19C10.55 2.94 11 3.94 11 5c0 .66-.44 1.78-.86 2.48zM4 14h5c-.23 1.14-1.3 2-2.5 2s-2.27-.86-2.5-2z\"/>"
+},
+	"link-external": {
+	name: "link-external",
+	figma: {
+		id: "0:956",
+		file: "FP7lqd1V00LUaT5zvdklkkZr"
+	},
+	keywords: [
+		"out",
+		"see",
+		"more",
+		"go",
+		"to"
+	],
+	width: 12,
+	height: 16,
+	path: "<path fill-rule=\"evenodd\" d=\"M11 10h1v3c0 .55-.45 1-1 1H1c-.55 0-1-.45-1-1V3c0-.55.45-1 1-1h3v1H1v10h10v-3zM6 2l2.25 2.25L5 7.5 6.5 9l3.25-3.25L12 8V2H6z\"/>"
+},
+	archive: archive
+};
+
+var data$2 = /*#__PURE__*/Object.freeze({
+	alert: alert,
+	beaker: beaker,
+	bell: bell,
+	bold: bold,
+	book: book,
+	bookmark: bookmark,
+	briefcase: briefcase,
+	broadcast: broadcast,
+	browser: browser,
+	bug: bug,
+	calendar: calendar,
+	check: check$1,
+	checklist: checklist,
+	clippy: clippy,
+	clock: clock,
+	code: code,
+	comment: comment,
+	dash: dash,
+	dashboard: dashboard,
+	database: database,
+	diff: diff,
+	ellipsis: ellipsis,
+	eye: eye,
+	file: file,
+	flame: flame,
+	fold: fold,
+	gear: gear,
+	gift: gift,
+	gist: gist,
+	globe: globe,
+	graph: graph,
+	heart: heart,
+	history: history,
+	home: home,
+	hubot: hubot,
+	inbox: inbox,
+	info: info,
+	italic: italic,
+	jersey: jersey,
+	keyboard: keyboard,
+	law: law,
+	link: link,
+	location: location,
+	lock: lock,
+	reply: reply,
+	mail: mail,
+	markdown: markdown,
+	megaphone: megaphone,
+	mention: mention,
+	milestone: milestone,
+	mirror: mirror,
+	mute: mute,
+	octoface: octoface,
+	organization: organization,
+	paintcan: paintcan,
+	pencil: pencil,
+	person: person,
+	pin: pin,
+	plug: plug,
+	plus: plus,
+	pulse: pulse,
+	question: question,
+	quote: quote,
+	repo: repo,
+	rocket: rocket,
+	rss: rss,
+	ruby: ruby,
+	search: search,
+	server: server,
+	settings: settings,
+	shield: shield,
+	smiley: smiley,
+	squirrel: squirrel,
+	star: star,
+	stop: stop,
+	sync: sync,
+	tag: tag,
+	tasklist: tasklist,
+	telescope: telescope,
+	terminal: terminal,
+	thumbsdown: thumbsdown,
+	thumbsup: thumbsup,
+	tools: tools,
+	trashcan: trashcan,
+	unfold: unfold,
+	unmute: unmute,
+	project: project,
+	report: report,
+	note: note,
+	unverified: unverified,
+	verified: verified,
+	versions: versions$1,
+	watch: watch,
+	x: x$1,
+	zap: zap,
+	key: key$2,
+	grabber: grabber,
+	archive: archive,
+	default: data$1
+});
+
+var data$3 = ( data$2 && data$1 ) || data$2;
+
+Object.keys(data$3).forEach(function(key) {
+
+  // Returns a string representation of html attributes
+  var htmlAttributes = function(icon, options) {
+    var attributes = [];
+    var attrObj = objectAssign({}, data$3[key].options, options);
+
+    // If the user passed in options
+    if (options) {
+
+      // If any of the width or height is passed in
+      if(options["width"] || options["height"]) {
+        attrObj["width"] = options["width"] ? options["width"] : (parseInt(options["height"]) * data$3[key].options["width"] / data$3[key].options["height"]);
+        attrObj["height"] = options["height"] ? options["height"] : (parseInt(options["width"]) * data$3[key].options["height"] / data$3[key].options["width"]);
+      }
+
+      // If the user passed in class
+      if (options["class"]) {
+        attrObj["class"] = "octicon octicon-" + key + " " + options["class"];
+        attrObj["class"].trim();
+      }
+
+      // If the user passed in aria-label
+      if (options["aria-label"]) {
+        attrObj["aria-label"] = options["aria-label"];
+        attrObj["role"] = "img";
+
+        // Un-hide the icon
+        delete attrObj["aria-hidden"];
+      }
+    }
+
+    Object.keys(attrObj).forEach(function(option) {
+      attributes.push(option + "=\"" + attrObj[option] + "\"");
+    });
+
+    return attributes.join(" ").trim()
+  };
+
+  // Set the symbol for easy access
+  data$3[key].symbol = key;
+
+  // Set all the default options
+  data$3[key].options = {
+    "version": "1.1",
+    "width": data$3[key].width,
+    "height": data$3[key].height,
+    "viewBox": "0 0 " + data$3[key].width + " " + data$3[key].height,
+    "class": "octicon octicon-" + key,
+    "aria-hidden": "true"
+  };
+
+  // Function to return an SVG object
+  data$3[key].toSVG = function(options) {
+    return "<svg " + htmlAttributes(data$3[key], options) + ">" + data$3[key].path + "</svg>"
+  };
+});
+
+// Import data into exports
+var octicons = data$3;
+
+var Icon = function Icon(props) {
+	var octicon = octicons[props.name];
+	if (!octicon) throw new Error("No icon found for '" + props.name + "'");
+
+	return react.createElement("span", {
+		className: classnames("icon", props.className),
+		onClick: props.onClick,
+		dangerouslySetInnerHTML: { __html: octicon.toSVG() }
+	});
+};
+
+Icon.defaultProps = {
+	className: "",
+	onClick: function onClick(event) {
+		return event.preventDefault();
+	}
+};
 
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -30920,4586 +33573,6 @@ if (process.env.NODE_ENV === 'production') {
 var reactDom_1 = reactDom.findDOMNode;
 var reactDom_2 = reactDom.createPortal;
 
-Button.defaultProps = {
-	className: "",
-	disabled: false,
-	loading: false
-};
-
-function Button(_ref) {
-	var children = _ref.children,
-	    className = _ref.className,
-	    disabled = _ref.disabled,
-	    isOffline = _ref.isOffline,
-	    loading = _ref.loading,
-	    extras = objectWithoutProperties(_ref, ["children", "className", "disabled", "isOffline", "loading"]);
-	var extraProps = objectWithoutProperties(extras, ["dispatch"]); // remove non-html attributes
-
-	return react.createElement(
-		"button",
-		_extends$4({
-			className: classnames("native-key-bindings btn inline-block-tight", className, {
-				"btn-primary": !loading
-			}),
-			disabled: loading || disabled
-		}, extraProps),
-		loading ? react.createElement("span", { className: "loading loading-spinner-tiny inline-block" }) : children
-	);
-}
-
-var Confirm = function (_Component) {
-	inherits(Confirm, _Component);
-
-	function Confirm(props) {
-		classCallCheck(this, Confirm);
-
-		var _this = possibleConstructorReturn(this, (Confirm.__proto__ || Object.getPrototypeOf(Confirm)).call(this, props));
-
-		Object.defineProperty(_this, "closePopup", {
-			enumerable: true,
-			writable: true,
-			value: function value() {
-				var modalRoot = document.getElementById("confirm-root");
-				modalRoot.classList.remove("active");
-				// modalRoot.removeChild(this.el);
-			}
-		});
-
-		_this.state = { selected: props.selected };
-		_this.el = document.createElement("div");
-		return _this;
-	}
-
-	createClass(Confirm, [{
-		key: "componentDidMount",
-		value: function componentDidMount() {
-			var modalRoot = document.getElementById("confirm-root");
-			modalRoot.appendChild(this.el);
-			modalRoot.classList.add("active");
-		}
-	}, {
-		key: "componentWillUnmount",
-		value: function componentWillUnmount() {
-			this.closePopup();
-		}
-	}, {
-		key: "componentDidUpdate",
-		value: function componentDidUpdate(prevProps, prevState) {
-			if (this.state.closed && !prevState.closed) {
-				this.closeMenu();
-				this.props.action && this.props.action();
-				return null;
-			}
-		}
-	}, {
-		key: "render",
-		value: function render() {
-			var _this2 = this;
-
-			var bodyClass = classnames({
-				"confirm-popup-body": true,
-				centered: this.props.centered
-			});
-			return reactDom.createPortal(react.createElement(
-				"div",
-				{ className: "confirm-popup", ref: function ref(_ref) {
-						return _this2._div = _ref;
-					} },
-				react.createElement(
-					"div",
-					{ className: bodyClass },
-					this.props.title && react.createElement(
-						"div",
-						{ className: "confirm-title" },
-						this.props.title
-					),
-					this.props.message && react.createElement(
-						"div",
-						{ className: "confirm-message" },
-						this.props.message
-					),
-					react.createElement(
-						"div",
-						{ className: "button-group" },
-						this.props.buttons.map(function (button) {
-							var buttonClass = classnames({
-								"control-button": true,
-								cancel: !button.action
-							});
-
-							return react.createElement(
-								Button,
-								{
-									className: buttonClass,
-									onClick: function onClick(e) {
-										_this2.closePopup();
-										button.action && button.action(e);
-									},
-									key: button.label
-								},
-								button.label
-							);
-						})
-					)
-				)
-			), this.el);
-		}
-	}]);
-	return Confirm;
-}(react_1);
-
-
-var confirmPopup = function confirmPopup(properties) {
-	var root = document.getElementById("confirm-root");
-	root.classList.add("active");
-	reactDom.render(react.createElement(Confirm, properties), root);
-};
-
-var Headshot = function (_Component) {
-	inherits(Headshot, _Component);
-
-	function Headshot() {
-		var _ref;
-
-		var _temp, _this, _ret;
-
-		classCallCheck(this, Headshot);
-
-		for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-			args[_key] = arguments[_key];
-		}
-
-		return _ret = (_temp = (_this = possibleConstructorReturn(this, (_ref = Headshot.__proto__ || Object.getPrototypeOf(Headshot)).call.apply(_ref, [this].concat(args))), _this), Object.defineProperty(_this, "state", {
-			enumerable: true,
-			writable: true,
-			value: { img: null }
-		}), Object.defineProperty(_this, "_div", {
-			enumerable: true,
-			writable: true,
-			value: react.createRef()
-		}), Object.defineProperty(_this, "handleEditHeadshot", {
-			enumerable: true,
-			writable: true,
-			value: function value(event) {
-				event.stopPropagation();
-				confirmPopup({
-					title: "Edit Headshot",
-					message: "Until we have built-in CodeStream headshots, you can edit your headshot by setting it up on Gravatar.com for " + _this.props.person.email + ".\n\nNote that it might take a few minutes for your headshot to appear here.\n\n-Team CodeStream",
-					buttons: [{ label: "OK" }]
-				});
-			}
-		}), _temp), possibleConstructorReturn(_this, _ret);
-	}
-
-	createClass(Headshot, [{
-		key: "componentDidMount",
-		value: function componentDidMount() {
-			var img = this._div.current.querySelector("img");
-			if (img) this.setState({ img: img });
-		}
-	}, {
-		key: "render",
-		value: function render() {
-			var person = this.props.person;
-
-			if (!person) return null;
-
-			if (person.username === "CodeStream") return this.renderCodeStream();
-
-			var defaultImage = encodeURI("https://images.codestream.com/misc/nothing_transparent-36x36.gif");
-			var authorInitials = person.email.charAt(0);
-			if (person.fullName) {
-				authorInitials = person.fullName.replace(/(\w)\w*/g, "$1").replace(/\s/g, "");
-				if (authorInitials.length > 2) authorInitials = authorInitials.substring(0, 2);
-			} else if (person.username) {
-				authorInitials = person.username.charAt(0);
-			}
-			var classNameInitials = "headshot-initials color-" + person.color;
-			var onClick = this.props.mine ? this.handleEditHeadshot : null;
-
-			return react.createElement(
-				"div",
-				{ className: "headshot", ref: this._div, onClick: onClick },
-				this.state.img && react.createElement(Tooltip, {
-					title: this.props.mine ? "Click for headshot instructions" : this.props.person.fullName,
-					delay: "0",
-					target: this.state.img
-				}),
-				react.createElement(Gravatar, {
-					className: "headshot-gravatar",
-					size: this.props.size,
-					"default": defaultImage,
-					protocol: "http://",
-					email: person.email
-				}),
-				react.createElement(
-					"div",
-					{ className: classNameInitials },
-					authorInitials
-				)
-			);
-		}
-	}, {
-		key: "renderCodeStream",
-		value: function renderCodeStream() {
-			return react.createElement(
-				"div",
-				{ className: "headshot", ref: this._div },
-				react.createElement("img", {
-					className: "headshot-system",
-					src: "https://images.codestream.com/logos/grey_blue_transparent-400x400.png"
-				})
-			);
-		}
-	}]);
-	return Headshot;
-}(react_1);
-
-// AtMentionsPopup expects an on/off switch determined by the on property
-// on = show the popup, off = hide the popup
-// a people list, which is the possible list of people to at-mention
-// with the format:
-// [id, nickname, full name, email, headshot, presence]
-// and a prefix, which is used to filter/match against the list
-
-var AtMentionsPopup = function (_Component) {
-	inherits(AtMentionsPopup, _Component);
-
-	function AtMentionsPopup() {
-		var _ref,
-		    _this2 = this;
-
-		var _temp, _this, _ret;
-
-		classCallCheck(this, AtMentionsPopup);
-
-		for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-			args[_key] = arguments[_key];
-		}
-
-		return _ret = (_temp = (_this = possibleConstructorReturn(this, (_ref = AtMentionsPopup.__proto__ || Object.getPrototypeOf(AtMentionsPopup)).call.apply(_ref, [this].concat(args))), _this), Object.defineProperty(_this, "handleClick", {
-			enumerable: true,
-			writable: true,
-			value: function () {
-				var _ref2 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(event) {
-					return regeneratorRuntime.wrap(function _callee$(_context) {
-						while (1) {
-							switch (_context.prev = _context.next) {
-								case 0:
-									console.log("CLICK ON MENTION: " + event.target.innerHTML);
-
-								case 1:
-								case "end":
-									return _context.stop();
-							}
-						}
-					}, _callee, _this2);
-				}));
-
-				function value(_x) {
-					return _ref2.apply(this, arguments);
-				}
-
-				return value;
-			}()
-		}), _temp), possibleConstructorReturn(_this, _ret);
-	}
-
-	createClass(AtMentionsPopup, [{
-		key: "render",
-		value: function render() {
-			var _this3 = this;
-
-			if (!this.props.on) return null;
-
-			var items = this.props.items;
-
-			return react.createElement(
-				"div",
-				{ className: "mentions-popup", ref: function ref(_ref3) {
-						return _this3._div = _ref3;
-					} },
-				react.createElement(
-					"div",
-					{ className: "body" },
-					react.createElement(
-						"div",
-						{ className: "instructions", onClick: function onClick(event) {
-								return _this3.handleClickInstructions();
-							} },
-						this.props.on === "slash-commands" ? react.createElement(
-							"span",
-							null,
-							"Commands matching ",
-							react.createElement(
-								"b",
-								null,
-								"\"/",
-								this.props.prefix,
-								"\""
-							)
-						) : react.createElement(
-							"span",
-							null,
-							"People matching ",
-							react.createElement(
-								"b",
-								null,
-								"\"@",
-								this.props.prefix,
-								"\""
-							)
-						)
-					),
-					react.createElement(
-						"ul",
-						{ className: "compact at-mentions-list" },
-						items.map(function (item) {
-							var className = item.id == _this3.props.selected ? "hover" : "none";
-							// the handleClickPerson event needs to fire onMouseDown
-							// rather than onclick because there is a handleblur
-							// event on the parent element that will un-render
-							// this component
-							return react.createElement(
-								"li",
-								{
-									className: className,
-									key: item.id,
-									onMouseEnter: function onMouseEnter(event) {
-										return _this3.handleMouseEnter(item.id);
-									},
-									onMouseDown: function onMouseDown(event) {
-										return _this3.handleClickItem(item.id);
-									}
-								},
-								item.headshot && react.createElement(Headshot, { size: 18, person: item.headshot }),
-								react.createElement(
-									"span",
-									{ className: "username" },
-									item.identifier
-								),
-								" ",
-								item.description && react.createElement(
-									"span",
-									{ className: "name" },
-									item.description
-								),
-								item.help && react.createElement(
-									"span",
-									{ className: "help" },
-									item.help
-								)
-							);
-						})
-					),
-					react.createElement(
-						"table",
-						null,
-						react.createElement(
-							"tbody",
-							null,
-							react.createElement(
-								"tr",
-								null,
-								react.createElement(
-									"td",
-									null,
-									"\u2191 or \u2193 to navigate"
-								),
-								react.createElement(
-									"td",
-									null,
-									"\u21B5 to select"
-								),
-								react.createElement(
-									"td",
-									null,
-									"esc to dismiss"
-								)
-							)
-						)
-					)
-				)
-			);
-		}
-	}, {
-		key: "handleMouseEnter",
-		value: function handleMouseEnter(id) {
-			return this.props.handleHoverAtMention(id);
-		}
-	}, {
-		key: "handleClickItem",
-		value: function handleClickItem(id) {
-			return this.props.handleSelectAtMention(id);
-		}
-	}, {
-		key: "handleClickInstructions",
-		value: function handleClickInstructions() {
-			return this.props.handleSelectAtMention();
-		}
-	}, {
-		key: "selectFirstAtMention",
-		value: function selectFirstAtMention() {
-			// FIXME -- how to build this?
-		}
-	}]);
-	return AtMentionsPopup;
-}(react_1);
-
-const alert = {
-	name: "alert",
-	figma: {
-		id: "0:5",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"warning",
-		"triangle",
-		"exclamation",
-		"point"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M8.893 1.5c-.183-.31-.52-.5-.887-.5s-.703.19-.886.5L.138 13.499a.98.98 0 0 0 0 1.001c.193.31.53.501.886.501h13.964c.367 0 .704-.19.877-.5a1.03 1.03 0 0 0 .01-1.002L8.893 1.5zm.133 11.497H6.987v-2.003h2.039v2.003zm0-3.004H6.987V5.987h2.039v4.006z\"/>"
-};
-const beaker = {
-	name: "beaker",
-	figma: {
-		id: "0:26",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"experiment",
-		"labs",
-		"experimental",
-		"feature",
-		"test",
-		"science",
-		"education",
-		"study",
-		"development",
-		"testing"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M14.38 14.59L11 7V3h1V2H3v1h1v4L.63 14.59A1 1 0 0 0 1.54 16h11.94c.72 0 1.2-.75.91-1.41h-.01zM3.75 10L5 7V3h5v4l1.25 3h-7.5zM8 8h1v1H8V8zM7 7H6V6h1v1zm0-3h1v1H7V4zm0-3H6V0h1v1z\"/>"
-};
-const bell = {
-	name: "bell",
-	figma: {
-		id: "0:34",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"notification"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M13.99 11.991v1H0v-1l.73-.58c.769-.769.809-2.547 1.189-4.416.77-3.767 4.077-4.996 4.077-4.996 0-.55.45-1 .999-1 .55 0 1 .45 1 1 0 0 3.387 1.229 4.156 4.996.38 1.879.42 3.657 1.19 4.417l.659.58h-.01zM6.995 15.99c1.11 0 1.999-.89 1.999-1.999H4.996c0 1.11.89 1.999 1.999 1.999z\"/>"
-};
-const bold = {
-	name: "bold",
-	figma: {
-		id: "0:38",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"markdown",
-		"bold",
-		"text"
-	],
-	width: 10,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M1 2h3.83c2.48 0 4.3.75 4.3 2.95 0 1.14-.63 2.23-1.67 2.61v.06c1.33.3 2.3 1.23 2.3 2.86 0 2.39-1.97 3.52-4.61 3.52H1V2zm3.66 4.95c1.67 0 2.38-.66 2.38-1.69 0-1.17-.78-1.61-2.34-1.61H3.13v3.3h1.53zm.27 5.39c1.77 0 2.75-.64 2.75-1.98 0-1.27-.95-1.81-2.75-1.81h-1.8v3.8h1.8v-.01z\"/>"
-};
-const book = {
-	name: "book",
-	figma: {
-		id: "0:43",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"book",
-		"journal",
-		"wiki",
-		"readme"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M3 5h4v1H3V5zm0 3h4V7H3v1zm0 2h4V9H3v1zm11-5h-4v1h4V5zm0 2h-4v1h4V7zm0 2h-4v1h4V9zm2-6v9c0 .55-.45 1-1 1H9.5l-1 1-1-1H2c-.55 0-1-.45-1-1V3c0-.55.45-1 1-1h5.5l1 1 1-1H15c.55 0 1 .45 1 1zm-8 .5L7.5 3H2v9h6V3.5zm7-.5H9.5l-.5.5V12h6V3z\"/>"
-};
-const bookmark = {
-	name: "bookmark",
-	figma: {
-		id: "0:54",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"tab",
-		"star"
-	],
-	width: 10,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M9 0H1C.27 0 0 .27 0 1v15l5-3.09L10 16V1c0-.73-.27-1-1-1zm-.78 4.25L6.36 5.61l.72 2.16c.06.22-.02.28-.2.17L5 6.6 3.12 7.94c-.19.11-.25.05-.2-.17l.72-2.16-1.86-1.36c-.17-.16-.14-.23.09-.23l2.3-.03.7-2.16h.25l.7 2.16 2.3.03c.23 0 .27.08.09.23h.01z\"/>"
-};
-const briefcase = {
-	name: "briefcase",
-	figma: {
-		id: "0:58",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"suitcase",
-		"business"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M9 4V3c0-.55-.45-1-1-1H6c-.55 0-1 .45-1 1v1H1c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1h12c.55 0 1-.45 1-1V5c0-.55-.45-1-1-1H9zM6 3h2v1H6V3zm7 6H8v1H6V9H1V5h1v3h10V5h1v4z\"/>"
-};
-const broadcast = {
-	name: "broadcast",
-	figma: {
-		id: "0:63",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"rss",
-		"radio",
-		"signal"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M9 9H8c.55 0 1-.45 1-1V7c0-.55-.45-1-1-1H7c-.55 0-1 .45-1 1v1c0 .55.45 1 1 1H6c-.55 0-1 .45-1 1v2h1v3c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-3h1v-2c0-.55-.45-1-1-1zM7 7h1v1H7V7zm2 4H8v4H7v-4H6v-1h3v1zm2.09-3.5c0-1.98-1.61-3.59-3.59-3.59A3.593 3.593 0 0 0 4 8.31v1.98c-.61-.77-1-1.73-1-2.8 0-2.48 2.02-4.5 4.5-4.5S12 5.01 12 7.49c0 1.06-.39 2.03-1 2.8V8.31c.06-.27.09-.53.09-.81zm3.91 0c0 2.88-1.63 5.38-4 6.63v-1.05a6.553 6.553 0 0 0 3.09-5.58A6.59 6.59 0 0 0 7.5.91 6.59 6.59 0 0 0 .91 7.5c0 2.36 1.23 4.42 3.09 5.58v1.05A7.497 7.497 0 0 1 7.5 0C11.64 0 15 3.36 15 7.5z\"/>"
-};
-const browser = {
-	name: "browser",
-	figma: {
-		id: "0:70",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"window",
-		"web"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M5 3h1v1H5V3zM3 3h1v1H3V3zM1 3h1v1H1V3zm12 10H1V5h12v8zm0-9H7V3h6v1zm1-1c0-.55-.45-1-1-1H1c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1V3z\"/>"
-};
-const bug = {
-	name: "bug",
-	figma: {
-		id: "0:78",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"insect",
-		"issue"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M11 10h3V9h-3V8l3.17-1.03-.34-.94L11 7V6c0-.55-.45-1-1-1V4c0-.48-.36-.88-.83-.97L10.2 2H12V1H9.8l-2 2h-.59L5.2 1H3v1h1.8l1.03 1.03C5.36 3.12 5 3.51 5 4v1c-.55 0-1 .45-1 1v1l-2.83-.97-.34.94L4 8v1H1v1h3v1L.83 12.03l.34.94L4 12v1c0 .55.45 1 1 1h1l1-1V6h1v7l1 1h1c.55 0 1-.45 1-1v-1l2.83.97.34-.94L11 11v-1zM9 5H6V4h3v1z\"/>"
-};
-const calendar = {
-	name: "calendar",
-	figma: {
-		id: "0:82",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"time",
-		"day",
-		"month",
-		"year",
-		"date",
-		"appointment"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M13 2h-1v1.5c0 .28-.22.5-.5.5h-2c-.28 0-.5-.22-.5-.5V2H6v1.5c0 .28-.22.5-.5.5h-2c-.28 0-.5-.22-.5-.5V2H2c-.55 0-1 .45-1 1v11c0 .55.45 1 1 1h11c.55 0 1-.45 1-1V3c0-.55-.45-1-1-1zm0 12H2V5h11v9zM5 3H4V1h1v2zm6 0h-1V1h1v2zM6 7H5V6h1v1zm2 0H7V6h1v1zm2 0H9V6h1v1zm2 0h-1V6h1v1zM4 9H3V8h1v1zm2 0H5V8h1v1zm2 0H7V8h1v1zm2 0H9V8h1v1zm2 0h-1V8h1v1zm-8 2H3v-1h1v1zm2 0H5v-1h1v1zm2 0H7v-1h1v1zm2 0H9v-1h1v1zm2 0h-1v-1h1v1zm-8 2H3v-1h1v1zm2 0H5v-1h1v1zm2 0H7v-1h1v1zm2 0H9v-1h1v1z\"/>"
-};
-const check$1 = {
-	name: "check",
-	figma: {
-		id: "0:104",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"mark",
-		"yes",
-		"confirm",
-		"accept",
-		"ok",
-		"success"
-	],
-	width: 12,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M12 5l-8 8-4-4 1.5-1.5L4 10l6.5-6.5L12 5z\"/>"
-};
-const checklist = {
-	name: "checklist",
-	figma: {
-		id: "0:108",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"todo",
-		"tasks"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M16 8.5l-6 6-3-3L8.5 10l1.5 1.5L14.5 7 16 8.5zM5.7 12.2l.8.8H2c-.55 0-1-.45-1-1V3c0-.55.45-1 1-1h7c.55 0 1 .45 1 1v6.5l-.8-.8c-.39-.39-1.03-.39-1.42 0L5.7 10.8a.996.996 0 0 0 0 1.41v-.01zM4 4h5V3H4v1zm0 2h5V5H4v1zm0 2h3V7H4v1zM3 9H2v1h1V9zm0-2H2v1h1V7zm0-2H2v1h1V5zm0-2H2v1h1V3z\"/>"
-};
-const clippy = {
-	name: "clippy",
-	figma: {
-		id: "0:138",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"copy",
-		"paste",
-		"save",
-		"capture",
-		"clipboard"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M2 13h4v1H2v-1zm5-6H2v1h5V7zm2 3V8l-3 3 3 3v-2h5v-2H9zM4.5 9H2v1h2.5V9zM2 12h2.5v-1H2v1zm9 1h1v2c-.02.28-.11.52-.3.7-.19.18-.42.28-.7.3H1c-.55 0-1-.45-1-1V4c0-.55.45-1 1-1h3c0-1.11.89-2 2-2 1.11 0 2 .89 2 2h3c.55 0 1 .45 1 1v5h-1V6H1v9h10v-2zM2 5h8c0-.55-.45-1-1-1H8c-.55 0-1-.45-1-1s-.45-1-1-1-1 .45-1 1-.45 1-1 1H3c-.55 0-1 .45-1 1z\"/>"
-};
-const clock = {
-	name: "clock",
-	figma: {
-		id: "0:147",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"time",
-		"hour",
-		"minute",
-		"second",
-		"watch"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M8 8h3v2H7c-.55 0-1-.45-1-1V4h2v4zM7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7z\"/>"
-};
-const code = {
-	name: "code",
-	figma: {
-		id: "0:160",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"brackets"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M9.5 3L8 4.5 11.5 8 8 11.5 9.5 13 14 8 9.5 3zm-5 0L0 8l4.5 5L6 11.5 2.5 8 6 4.5 4.5 3z\"/>"
-};
-const comment = {
-	name: "comment",
-	figma: {
-		id: "0:169",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"speak",
-		"bubble"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M14 1H2c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1h2v3.5L7.5 11H14c.55 0 1-.45 1-1V2c0-.55-.45-1-1-1zm0 9H7l-2 2v-2H2V2h12v8z\"/>"
-};
-const dash = {
-	name: "dash",
-	figma: {
-		id: "0:178",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"hyphen",
-		"range"
-	],
-	width: 8,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M0 7v2h8V7H0z\"/>"
-};
-const dashboard = {
-	name: "dashboard",
-	figma: {
-		id: "0:182",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"speed",
-		"dial"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M9 5H8V4h1v1zm4 3h-1v1h1V8zM6 5H5v1h1V5zM5 8H4v1h1V8zm11-5.5l-.5-.5L9 7c-.06-.02-1 0-1 0-.55 0-1 .45-1 1v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-.92l6-5.58zm-1.59 4.09c.19.61.3 1.25.3 1.91 0 3.42-2.78 6.2-6.2 6.2-3.42 0-6.21-2.78-6.21-6.2 0-3.42 2.78-6.2 6.2-6.2 1.2 0 2.31.34 3.27.94l.94-.94A7.459 7.459 0 0 0 8.51 1C4.36 1 1 4.36 1 8.5 1 12.64 4.36 16 8.5 16c4.14 0 7.5-3.36 7.5-7.5 0-1.03-.2-2.02-.59-2.91l-1 1z\"/>"
-};
-const database = {
-	name: "database",
-	figma: {
-		id: "0:190",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"disks",
-		"data"
-	],
-	width: 12,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M6 15c-3.31 0-6-.9-6-2v-2c0-.17.09-.34.21-.5.67.86 3 1.5 5.79 1.5s5.12-.64 5.79-1.5c.13.16.21.33.21.5v2c0 1.1-2.69 2-6 2zm0-4c-3.31 0-6-.9-6-2V7c0-.11.04-.21.09-.31.03-.06.07-.13.12-.19C.88 7.36 3.21 8 6 8s5.12-.64 5.79-1.5c.05.06.09.13.12.19.05.1.09.21.09.31v2c0 1.1-2.69 2-6 2zm0-4c-3.31 0-6-.9-6-2V3c0-1.1 2.69-2 6-2s6 .9 6 2v2c0 1.1-2.69 2-6 2zm0-5c-2.21 0-4 .45-4 1s1.79 1 4 1 4-.45 4-1-1.79-1-4-1z\"/>"
-};
-const diff = {
-	name: "diff",
-	figma: {
-		id: "0:242",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"difference",
-		"changes",
-		"compare"
-	],
-	width: 13,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M6 7h2v1H6v2H5V8H3V7h2V5h1v2zm-3 6h5v-1H3v1zM7.5 2L11 5.5V15c0 .55-.45 1-1 1H1c-.55 0-1-.45-1-1V3c0-.55.45-1 1-1h6.5zM10 6L7 3H1v12h9V6zM8.5 0H3v1h5l4 4v8h1V4.5L8.5 0z\"/>"
-};
-const ellipsis = {
-	name: "ellipsis",
-	figma: {
-		id: "0:249",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"dot",
-		"read",
-		"more",
-		"hidden",
-		"expand"
-	],
-	width: 12,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M11 5H1c-.55 0-1 .45-1 1v4c0 .55.45 1 1 1h10c.55 0 1-.45 1-1V6c0-.55-.45-1-1-1zM4 9H2V7h2v2zm3 0H5V7h2v2zm3 0H8V7h2v2z\"/>"
-};
-const eye = {
-	name: "eye",
-	figma: {
-		id: "0:255",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"look",
-		"watch",
-		"see"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M8.06 2C3 2 0 8 0 8s3 6 8.06 6C13 14 16 8 16 8s-3-6-7.94-6zM8 12c-2.2 0-4-1.78-4-4 0-2.2 1.8-4 4-4 2.22 0 4 1.8 4 4 0 2.22-1.78 4-4 4zm2-4c0 1.11-.89 2-2 2-1.11 0-2-.89-2-2 0-1.11.89-2 2-2 1.11 0 2 .89 2 2z\"/>"
-};
-const file = {
-	name: "file",
-	figma: {
-		id: "0:308",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"file",
-		"text",
-		"words"
-	],
-	width: 12,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M6 5H2V4h4v1zM2 8h7V7H2v1zm0 2h7V9H2v1zm0 2h7v-1H2v1zm10-7.5V14c0 .55-.45 1-1 1H1c-.55 0-1-.45-1-1V2c0-.55.45-1 1-1h7.5L12 4.5zM11 5L8 2H1v12h10V5z\"/>"
-};
-const flame = {
-	name: "flame",
-	figma: {
-		id: "0:325",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"fire",
-		"hot",
-		"burn",
-		"trending"
-	],
-	width: 12,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M5.05.31c.81 2.17.41 3.38-.52 4.31C3.55 5.67 1.98 6.45.9 7.98c-1.45 2.05-1.7 6.53 3.53 7.7-2.2-1.16-2.67-4.52-.3-6.61-.61 2.03.53 3.33 1.94 2.86 1.39-.47 2.3.53 2.27 1.67-.02.78-.31 1.44-1.13 1.81 3.42-.59 4.78-3.42 4.78-5.56 0-2.84-2.53-3.22-1.25-5.61-1.52.13-2.03 1.13-1.89 2.75.09 1.08-1.02 1.8-1.86 1.33-.67-.41-.66-1.19-.06-1.78C8.18 5.31 8.68 2.45 5.05.32L5.03.3l.02.01z\"/>"
-};
-const fold = {
-	name: "fold",
-	figma: {
-		id: "0:329",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"unfold",
-		"hide",
-		"collapse"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M7 9l3 3H8v3H6v-3H4l3-3zm3-6H8V0H6v3H4l3 3 3-3zm4 2c0-.55-.45-1-1-1h-2.5l-1 1h3l-2 2h-7l-2-2h3l-1-1H1c-.55 0-1 .45-1 1l2.5 2.5L0 10c0 .55.45 1 1 1h2.5l1-1h-3l2-2h7l2 2h-3l1 1H13c.55 0 1-.45 1-1l-2.5-2.5L14 5z\"/>"
-};
-const gear = {
-	name: "gear",
-	figma: {
-		id: "0:334",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"settings"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M14 8.77v-1.6l-1.94-.64-.45-1.09.88-1.84-1.13-1.13-1.81.91-1.09-.45-.69-1.92h-1.6l-.63 1.94-1.11.45-1.84-.88-1.13 1.13.91 1.81-.45 1.09L0 7.23v1.59l1.94.64.45 1.09-.88 1.84 1.13 1.13 1.81-.91 1.09.45.69 1.92h1.59l.63-1.94 1.11-.45 1.84.88 1.13-1.13-.92-1.81.47-1.09L14 8.75v.02zM7 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z\"/>"
-};
-const gift = {
-	name: "gift",
-	figma: {
-		id: "0:338",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"package",
-		"present",
-		"skill",
-		"craft",
-		"freebie"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M13 4h-1.38c.19-.33.33-.67.36-.91.06-.67-.11-1.22-.52-1.61C11.1 1.1 10.65 1 10.1 1h-.11c-.53.02-1.11.25-1.53.58-.42.33-.73.72-.97 1.2-.23-.48-.55-.88-.97-1.2-.42-.32-1-.58-1.53-.58h-.03c-.56 0-1.06.09-1.44.48-.41.39-.58.94-.52 1.61.03.23.17.58.36.91H1.98c-.55 0-1 .45-1 1v3h1v5c0 .55.45 1 1 1h9c.55 0 1-.45 1-1V8h1V5c0-.55-.45-1-1-1H13zm-4.78-.88c.17-.36.42-.67.75-.92.3-.23.72-.39 1.05-.41h.09c.45 0 .66.11.8.25s.33.39.3.95c-.05.19-.25.61-.5 1h-2.9l.41-.88v.01zM4.09 2.04c.13-.13.31-.25.91-.25.31 0 .72.17 1.03.41.33.25.58.55.75.92L7.2 4H4.3c-.25-.39-.45-.81-.5-1-.03-.56.16-.81.3-.95l-.01-.01zM7 12.99H3V8h4v5-.01zm0-6H2V5h5v2-.01zm5 6H8V8h4v5-.01zm1-6H8V5h5v2-.01z\"/>"
-};
-const gist = {
-	name: "gist",
-	figma: {
-		id: "0:354",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"gist",
-		"github"
-	],
-	width: 12,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M7.5 5L10 7.5 7.5 10l-.75-.75L8.5 7.5 6.75 5.75 7.5 5zm-3 0L2 7.5 4.5 10l.75-.75L3.5 7.5l1.75-1.75L4.5 5zM0 13V2c0-.55.45-1 1-1h10c.55 0 1 .45 1 1v11c0 .55-.45 1-1 1H1c-.55 0-1-.45-1-1zm1 0h10V2H1v11z\"/>"
-};
-const globe = {
-	name: "globe",
-	figma: {
-		id: "0:389",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"world",
-		"earth",
-		"planet"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M7 1C3.14 1 0 4.14 0 8s3.14 7 7 7c.48 0 .94-.05 1.38-.14-.17-.08-.2-.73-.02-1.09.19-.41.81-1.45.2-1.8-.61-.35-.44-.5-.81-.91-.37-.41-.22-.47-.25-.58-.08-.34.36-.89.39-.94.02-.06.02-.27 0-.33 0-.08-.27-.22-.34-.23-.06 0-.11.11-.2.13-.09.02-.5-.25-.59-.33-.09-.08-.14-.23-.27-.34-.13-.13-.14-.03-.33-.11s-.8-.31-1.28-.48c-.48-.19-.52-.47-.52-.66-.02-.2-.3-.47-.42-.67-.14-.2-.16-.47-.2-.41-.04.06.25.78.2.81-.05.02-.16-.2-.3-.38-.14-.19.14-.09-.3-.95s.14-1.3.17-1.75c.03-.45.38.17.19-.13-.19-.3 0-.89-.14-1.11-.13-.22-.88.25-.88.25.02-.22.69-.58 1.16-.92.47-.34.78-.06 1.16.05.39.13.41.09.28-.05-.13-.13.06-.17.36-.13.28.05.38.41.83.36.47-.03.05.09.11.22s-.06.11-.38.3c-.3.2.02.22.55.61s.38-.25.31-.55c-.07-.3.39-.06.39-.06.33.22.27.02.5.08.23.06.91.64.91.64-.83.44-.31.48-.17.59.14.11-.28.3-.28.3-.17-.17-.19.02-.3.08-.11.06-.02.22-.02.22-.56.09-.44.69-.42.83 0 .14-.38.36-.47.58-.09.2.25.64.06.66-.19.03-.34-.66-1.31-.41-.3.08-.94.41-.59 1.08.36.69.92-.19 1.11-.09.19.1-.06.53-.02.55.04.02.53.02.56.61.03.59.77.53.92.55.17 0 .7-.44.77-.45.06-.03.38-.28 1.03.09.66.36.98.31 1.2.47.22.16.08.47.28.58.2.11 1.06-.03 1.28.31.22.34-.88 2.09-1.22 2.28-.34.19-.48.64-.84.92s-.81.64-1.27.91c-.41.23-.47.66-.66.8 3.14-.7 5.48-3.5 5.48-6.84 0-3.86-3.14-7-7-7L7 1zm1.64 6.56c-.09.03-.28.22-.78-.08-.48-.3-.81-.23-.86-.28 0 0-.05-.11.17-.14.44-.05.98.41 1.11.41.13 0 .19-.13.41-.05.22.08.05.13-.05.14zM6.34 1.7c-.05-.03.03-.08.09-.14.03-.03.02-.11.05-.14.11-.11.61-.25.52.03-.11.27-.58.3-.66.25zm1.23.89c-.19-.02-.58-.05-.52-.14.3-.28-.09-.38-.34-.38-.25-.02-.34-.16-.22-.19.12-.03.61.02.7.08.08.06.52.25.55.38.02.13 0 .25-.17.25zm1.47-.05c-.14.09-.83-.41-.95-.52-.56-.48-.89-.31-1-.41-.11-.1-.08-.19.11-.34.19-.15.69.06 1 .09.3.03.66.27.66.55.02.25.33.5.19.63h-.01z\"/>"
-};
-const graph = {
-	name: "graph",
-	figma: {
-		id: "0:396",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"trend",
-		"stats",
-		"statistics"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M16 14v1H0V0h1v14h15zM5 13H3V8h2v5zm4 0H7V3h2v10zm4 0h-2V6h2v7z\"/>"
-};
-const heart = {
-	name: "heart",
-	figma: {
-		id: "0:400",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"love",
-		"beat"
-	],
-	width: 12,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M9 2c-.97 0-1.69.42-2.2 1-.51.58-.78.92-.8 1-.02-.08-.28-.42-.8-1-.52-.58-1.17-1-2.2-1-1.632.086-2.954 1.333-3 3 0 .52.09 1.52.67 2.67C1.25 8.82 3.01 10.61 6 13c2.98-2.39 4.77-4.17 5.34-5.33C11.91 6.51 12 5.5 12 5c-.047-1.69-1.342-2.913-3-3z\"/>"
-};
-const history = {
-	name: "history",
-	figma: {
-		id: "0:404",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"time",
-		"past",
-		"revert",
-		"back"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M8 13H6V6h5v2H8v5zM7 1C4.81 1 2.87 2.02 1.59 3.59L0 2v4h4L2.5 4.5C3.55 3.17 5.17 2.3 7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-.34.03-.67.09-1H.08C.03 7.33 0 7.66 0 8c0 3.86 3.14 7 7 7s7-3.14 7-7-3.14-7-7-7z\"/>"
-};
-const home = {
-	name: "home",
-	figma: {
-		id: "0:408",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"welcome",
-		"index",
-		"house",
-		"building"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M16 9l-3-3V2h-2v2L8 1 0 9h2l1 5c0 .55.45 1 1 1h8c.55 0 1-.45 1-1l1-5h2zm-4 5H9v-4H7v4H4L2.81 7.69 8 2.5l5.19 5.19L12 14z\"/>"
-};
-const hubot = {
-	name: "hubot",
-	figma: {
-		id: "0:419",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"robot",
-		"bot"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M3 6c-.55 0-1 .45-1 1v2c0 .55.45 1 1 1h8c.55 0 1-.45 1-1V7c0-.55-.45-1-1-1H3zm8 1.75L9.75 9h-1.5L7 7.75 5.75 9h-1.5L3 7.75V7h.75L5 8.25 6.25 7h1.5L9 8.25 10.25 7H11v.75zM5 11h4v1H5v-1zm2-9C3.14 2 0 4.91 0 8.5V13c0 .55.45 1 1 1h12c.55 0 1-.45 1-1V8.5C14 4.91 10.86 2 7 2zm6 11H1V8.5c0-3.09 2.64-5.59 6-5.59s6 2.5 6 5.59V13z\"/>"
-};
-const inbox = {
-	name: "inbox",
-	figma: {
-		id: "0:426",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"mail",
-		"todo",
-		"new",
-		"messages"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M14 9l-1.13-7.14c-.08-.48-.5-.86-1-.86H2.13c-.5 0-.92.38-1 .86L0 9v5c0 .55.45 1 1 1h12c.55 0 1-.45 1-1V9zm-3.28.55l-.44.89c-.17.34-.52.56-.91.56H4.61c-.38 0-.72-.22-.89-.55l-.44-.91c-.17-.33-.52-.55-.89-.55H1l1-7h10l1 7h-1.38c-.39 0-.73.22-.91.55l.01.01z\"/>"
-};
-const info = {
-	name: "info",
-	figma: {
-		id: "0:430",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"help"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M6.3 5.69a.942.942 0 0 1-.28-.7c0-.28.09-.52.28-.7.19-.18.42-.28.7-.28.28 0 .52.09.7.28.18.19.28.42.28.7 0 .28-.09.52-.28.7a1 1 0 0 1-.7.3c-.28 0-.52-.11-.7-.3zM8 7.99c-.02-.25-.11-.48-.31-.69-.2-.19-.42-.3-.69-.31H6c-.27.02-.48.13-.69.31-.2.2-.3.44-.31.69h1v3c.02.27.11.5.31.69.2.2.42.31.69.31h1c.27 0 .48-.11.69-.31.2-.19.3-.42.31-.69H8V7.98v.01zM7 2.3c-3.14 0-5.7 2.54-5.7 5.68 0 3.14 2.56 5.7 5.7 5.7s5.7-2.55 5.7-5.7c0-3.15-2.56-5.69-5.7-5.69v.01zM7 .98c3.86 0 7 3.14 7 7s-3.14 7-7 7-7-3.12-7-7 3.14-7 7-7z\"/>"
-};
-const italic = {
-	name: "italic",
-	figma: {
-		id: "0:454",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"font",
-		"italic",
-		"style"
-	],
-	width: 6,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M2.81 5h1.98L3 14H1l1.81-9zm.36-2.7c0-.7.58-1.3 1.33-1.3.56 0 1.13.38 1.13 1.03 0 .75-.59 1.3-1.33 1.3-.58 0-1.13-.38-1.13-1.03z\"/>"
-};
-const jersey = {
-	name: "jersey",
-	figma: {
-		id: "0:458",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"team",
-		"game",
-		"basketball"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M4.5 6l-.5.5v5l.5.5h2l.5-.5v-5L6.5 6h-2zM6 11H5V7h1v4zm6.27-7.25C12.05 2.37 11.96 1.12 12 0H9.02c0 .27-.13.48-.39.69-.25.2-.63.3-1.13.3-.5 0-.88-.09-1.13-.3-.23-.2-.36-.42-.36-.69H3c.05 1.13-.03 2.38-.25 3.75C2.55 5.13 1.95 5.88 1 6v9c.02.27.11.48.31.69.2.21.42.3.69.31h11c.27-.02.48-.11.69-.31.21-.2.3-.42.31-.69V6c-.95-.13-1.53-.88-1.75-2.25h.02zM13 15H2V7c.89-.5 1.48-1.25 1.72-2.25S4.03 2.5 4 1h1c-.02.78.16 1.47.52 2.06.36.58 1.02.89 2 .94.98-.02 1.64-.33 2-.94.36-.59.5-1.28.48-2.06h1c.02 1.42.13 2.55.33 3.38.2.81.69 2 1.67 2.63v8V15zM8.5 6l-.5.5v5l.5.5h2l.5-.5v-5l-.5-.5h-2zm1.5 5H9V7h1v4z\"/>"
-};
-const keyboard = {
-	name: "keyboard",
-	figma: {
-		id: "0:466",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"type",
-		"keys",
-		"write",
-		"shortcuts"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M10 5H9V4h1v1zM3 6H2v1h1V6zm5-2H7v1h1V4zM4 4H2v1h2V4zm8 7h2v-1h-2v1zM8 7h1V6H8v1zm-4 3H2v1h2v-1zm8-6h-1v1h1V4zm2 0h-1v1h1V4zm-2 5h2V6h-2v3zm4-6v9c0 .55-.45 1-1 1H1c-.55 0-1-.45-1-1V3c0-.55.45-1 1-1h14c.55 0 1 .45 1 1zm-1 0H1v9h14V3zM6 7h1V6H6v1zm0-3H5v1h1V4zM4 7h1V6H4v1zm1 4h6v-1H5v1zm5-4h1V6h-1v1zM3 8H2v1h1V8zm5 0v1h1V8H8zM6 8v1h1V8H6zM5 8H4v1h1V8zm5 1h1V8h-1v1z\"/>"
-};
-const law = {
-	name: "law",
-	figma: {
-		id: "0:490",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"legal",
-		"bill"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M7 4c-.83 0-1.5-.67-1.5-1.5S6.17 1 7 1s1.5.67 1.5 1.5S7.83 4 7 4zm7 6c0 1.11-.89 2-2 2h-1c-1.11 0-2-.89-2-2l2-4h-1c-.55 0-1-.45-1-1H8v8c.42 0 1 .45 1 1h1c.42 0 1 .45 1 1H3c0-.55.58-1 1-1h1c0-.55.58-1 1-1h.03L6 5H5c0 .55-.45 1-1 1H3l2 4c0 1.11-.89 2-2 2H2c-1.11 0-2-.89-2-2l2-4H1V5h3c0-.55.45-1 1-1h4c.55 0 1 .45 1 1h3v1h-1l2 4zM2.5 7L1 10h3L2.5 7zM13 10l-1.5-3-1.5 3h3z\"/>"
-};
-const link = {
-	name: "link",
-	figma: {
-		id: "0:496",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"connect",
-		"hyperlink"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z\"/>"
-};
-const location = {
-	name: "location",
-	figma: {
-		id: "0:516",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"here",
-		"marker"
-	],
-	width: 12,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M6 0C2.69 0 0 2.5 0 5.5 0 10.02 6 16 6 16s6-5.98 6-10.5C12 2.5 9.31 0 6 0zm0 14.55C4.14 12.52 1 8.44 1 5.5 1 3.02 3.25 1 6 1c1.34 0 2.61.48 3.56 1.36.92.86 1.44 1.97 1.44 3.14 0 2.94-3.14 7.02-5 9.05zM8 5.5c0 1.11-.89 2-2 2-1.11 0-2-.89-2-2 0-1.11.89-2 2-2 1.11 0 2 .89 2 2z\"/>"
-};
-const lock = {
-	name: "lock",
-	figma: {
-		id: "0:521",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"secure",
-		"safe",
-		"protected"
-	],
-	width: 12,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M4 13H3v-1h1v1zm8-6v7c0 .55-.45 1-1 1H1c-.55 0-1-.45-1-1V7c0-.55.45-1 1-1h1V4c0-2.2 1.8-4 4-4s4 1.8 4 4v2h1c.55 0 1 .45 1 1zM3.8 6h4.41V4c0-1.22-.98-2.2-2.2-2.2-1.22 0-2.2.98-2.2 2.2v2H3.8zM11 7H2v7h9V7zM4 8H3v1h1V8zm0 2H3v1h1v-1z\"/>"
-};
-const reply = {
-	name: "reply",
-	figma: {
-		id: "0:554",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"reply all",
-		"back"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M6 3.5c3.92.44 8 3.125 8 10-2.312-5.062-4.75-6-8-6V11L.5 5.5 6 0v3.5z\"/>"
-};
-const mail = {
-	name: "mail",
-	figma: {
-		id: "0:558",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"email",
-		"unread"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M0 4v8c0 .55.45 1 1 1h12c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1H1c-.55 0-1 .45-1 1zm13 0L7 9 1 4h12zM1 5.5l4 3-4 3v-6zM2 12l3.5-3L7 10.5 8.5 9l3.5 3H2zm11-.5l-4-3 4-3v6z\"/>"
-};
-const markdown = {
-	name: "markdown",
-	figma: {
-		id: "0:567",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"markup",
-		"style"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M14.85 3H1.15C.52 3 0 3.52 0 4.15v7.69C0 12.48.52 13 1.15 13h13.69c.64 0 1.15-.52 1.15-1.15v-7.7C16 3.52 15.48 3 14.85 3zM9 11H7V8L5.5 9.92 4 8v3H2V5h2l1.5 2L7 5h2v6zm2.99.5L9.5 8H11V5h2v3h1.5l-2.51 3.5z\"/>"
-};
-const megaphone = {
-	name: "megaphone",
-	figma: {
-		id: "0:572",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"bullhorn",
-		"loud",
-		"shout",
-		"broadcast"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M10 1c-.17 0-.36.05-.52.14C8.04 2.02 4.5 4.58 3 5c-1.38 0-3 .67-3 2.5S1.63 10 3 10c.3.08.64.23 1 .41V15h2v-3.45c1.34.86 2.69 1.83 3.48 2.31.16.09.34.14.52.14.52 0 1-.42 1-1V2c0-.58-.48-1-1-1zm0 12c-.38-.23-.89-.58-1.5-1-.16-.11-.33-.22-.5-.34V3.31c.16-.11.31-.2.47-.31.61-.41 1.16-.77 1.53-1v11zm2-6h4v1h-4V7zm0 2l4 2v1l-4-2V9zm4-6v1l-4 2V5l4-2z\"/>"
-};
-const mention = {
-	name: "mention",
-	figma: {
-		id: "0:579",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"at",
-		"ping"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M6.58 15c1.25 0 2.52-.31 3.56-.94l-.42-.94c-.84.52-1.89.83-3.03.83-3.23 0-5.64-2.08-5.64-5.72 0-4.37 3.23-7.18 6.58-7.18 3.45 0 5.22 2.19 5.22 5.2 0 2.39-1.34 3.86-2.5 3.86-1.05 0-1.36-.73-1.05-2.19l.73-3.75H8.98l-.11.72c-.41-.63-.94-.83-1.56-.83-2.19 0-3.66 2.39-3.66 4.38 0 1.67.94 2.61 2.3 2.61.84 0 1.67-.53 2.3-1.25.11.94.94 1.45 1.98 1.45 1.67 0 3.77-1.67 3.77-5C14 2.61 11.59 0 7.83 0 3.66 0 0 3.33 0 8.33 0 12.71 2.92 15 6.58 15zm-.31-5c-.73 0-1.36-.52-1.36-1.67 0-1.45.94-3.22 2.41-3.22.52 0 .84.2 1.25.83l-.52 3.02c-.63.73-1.25 1.05-1.78 1.05V10z\"/>"
-};
-const milestone = {
-	name: "milestone",
-	figma: {
-		id: "0:583",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"marker"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M8 2H6V0h2v2zm4 5H2c-.55 0-1-.45-1-1V4c0-.55.45-1 1-1h10l2 2-2 2zM8 4H6v2h2V4zM6 16h2V8H6v8z\"/>"
-};
-const mirror = {
-	name: "mirror",
-	figma: {
-		id: "0:589",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"reflect"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M15.5 4.7L8.5 0l-7 4.7c-.3.19-.5.45-.5.8V16l7.5-4 7.5 4V5.5c0-.34-.2-.61-.5-.8zm-.5 9.8l-6-3.25V10H8v1.25L2 14.5v-9l6-4V6h1V1.5l6 4v9zM6 7h5V5l3 3-3 3V9H6v2L3 8l3-3v2z\"/>"
-};
-const mute = {
-	name: "mute",
-	figma: {
-		id: "0:599",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"quiet",
-		"sound",
-		"audio",
-		"turn",
-		"off"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M8 2.81v10.38c0 .67-.81 1-1.28.53L3 10H1c-.55 0-1-.45-1-1V7c0-.55.45-1 1-1h2l3.72-3.72C7.19 1.81 8 2.14 8 2.81zm7.53 3.22l-1.06-1.06-1.97 1.97-1.97-1.97-1.06 1.06L11.44 8 9.47 9.97l1.06 1.06 1.97-1.97 1.97 1.97 1.06-1.06L13.56 8l1.97-1.97z\"/>"
-};
-const octoface = {
-	name: "octoface",
-	figma: {
-		id: "0:609",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"octocat",
-		"brand"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M14.7 5.34c.13-.32.55-1.59-.13-3.31 0 0-1.05-.33-3.44 1.3-1-.28-2.07-.32-3.13-.32s-2.13.04-3.13.32c-2.39-1.64-3.44-1.3-3.44-1.3-.68 1.72-.26 2.99-.13 3.31C.49 6.21 0 7.33 0 8.69 0 13.84 3.33 15 7.98 15S16 13.84 16 8.69c0-1.36-.49-2.48-1.3-3.35zM8 14.02c-3.3 0-5.98-.15-5.98-3.35 0-.76.38-1.48 1.02-2.07 1.07-.98 2.9-.46 4.96-.46 2.07 0 3.88-.52 4.96.46.65.59 1.02 1.3 1.02 2.07 0 3.19-2.68 3.35-5.98 3.35zM5.49 9.01c-.66 0-1.2.8-1.2 1.78s.54 1.79 1.2 1.79c.66 0 1.2-.8 1.2-1.79s-.54-1.78-1.2-1.78zm5.02 0c-.66 0-1.2.79-1.2 1.78s.54 1.79 1.2 1.79c.66 0 1.2-.8 1.2-1.79s-.53-1.78-1.2-1.78z\"/>"
-};
-const organization = {
-	name: "organization",
-	figma: {
-		id: "0:613",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"people",
-		"group",
-		"team"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M16 12.999c0 .439-.45 1-1 1H7.995c-.539 0-.994-.447-.995-.999H1c-.54 0-1-.561-1-1 0-2.634 3-4 3-4s.229-.409 0-1c-.841-.621-1.058-.59-1-3 .058-2.419 1.367-3 2.5-3s2.442.58 2.5 3c.058 2.41-.159 2.379-1 3-.229.59 0 1 0 1s1.549.711 2.42 2.088C9.196 9.369 10 8.999 10 8.999s.229-.409 0-1c-.841-.62-1.058-.59-1-3 .058-2.419 1.367-3 2.5-3s2.437.581 2.495 3c.059 2.41-.158 2.38-1 3-.229.59 0 1 0 1s3.005 1.366 3.005 4z\"/>"
-};
-const paintcan = {
-	name: "paintcan",
-	figma: {
-		id: "0:624",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"style",
-		"theme",
-		"art",
-		"color"
-	],
-	width: 12,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M6 0C2.69 0 0 2.69 0 6v1c0 .55.45 1 1 1v5c0 1.1 2.24 2 5 2s5-.9 5-2V8c.55 0 1-.45 1-1V6c0-3.31-2.69-6-6-6zm3 10v.5c0 .28-.22.5-.5.5s-.5-.22-.5-.5V10c0-.28-.22-.5-.5-.5s-.5.22-.5.5v2.5c0 .28-.22.5-.5.5s-.5-.22-.5-.5v-2c0-.28-.22-.5-.5-.5s-.5.22-.5.5v.5c0 .55-.45 1-1 1s-1-.45-1-1v-1c-.55 0-1-.45-1-1V7.2c.91.49 2.36.8 4 .8 1.64 0 3.09-.31 4-.8V9c0 .55-.45 1-1 1zM6 7c-1.68 0-3.12-.41-3.71-1C2.88 5.41 4.32 5 6 5c1.68 0 3.12.41 3.71 1-.59.59-2.03 1-3.71 1zm0-3c-2.76 0-5 .89-5 2 0-2.76 2.24-5 5-5s5 2.24 5 5c0-1.1-2.24-2-5-2z\"/>"
-};
-const pencil = {
-	name: "pencil",
-	figma: {
-		id: "0:630",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"edit",
-		"change",
-		"update",
-		"write"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M0 12v3h3l8-8-3-3-8 8zm3 2H1v-2h1v1h1v1zm10.3-9.3L12 6 9 3l1.3-1.3a.996.996 0 0 1 1.41 0l1.59 1.59c.39.39.39 1.02 0 1.41z\"/>"
-};
-const person = {
-	name: "person",
-	figma: {
-		id: "0:633",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"people",
-		"man",
-		"woman",
-		"human"
-	],
-	width: 12,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M12 14.002a.998.998 0 0 1-.998.998H1.001A1 1 0 0 1 0 13.999V13c0-2.633 4-4 4-4s.229-.409 0-1c-.841-.62-.944-1.59-1-4 .173-2.413 1.867-3 3-3s2.827.586 3 3c-.056 2.41-.159 3.38-1 4-.229.59 0 1 0 1s4 1.367 4 4v1.002z\"/>"
-};
-const pin = {
-	name: "pin",
-	figma: {
-		id: "0:635",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"save",
-		"star",
-		"bookmark"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M10 1.2V2l.5 1L6 6H2.2c-.44 0-.67.53-.34.86L5 10l-4 5 5-4 3.14 3.14a.5.5 0 0 0 .86-.34V10l3-4.5 1 .5h.8c.44 0 .67-.53.34-.86L10.86.86a.5.5 0 0 0-.86.34z\"/>"
-};
-const plug = {
-	name: "plug",
-	figma: {
-		id: "0:637",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"hook",
-		"webhook"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M14 6V5h-4V3H8v1H6c-1.03 0-1.77.81-2 2L3 7c-1.66 0-3 1.34-3 3v2h1v-2c0-1.11.89-2 2-2l1 1c.25 1.16.98 2 2 2h2v1h2v-2h4V9h-4V6h4z\"/>"
-};
-const plus = {
-	name: "plus",
-	figma: {
-		id: "0:639",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"add",
-		"new",
-		"more"
-	],
-	width: 12,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M12 9H7v5H5V9H0V7h5V2h2v5h5v2z\"/>"
-};
-const pulse = {
-	name: "pulse",
-	figma: {
-		id: "0:645",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"graph",
-		"trend",
-		"line",
-		"activity"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M11.5 8L8.8 5.4 6.6 8.5 5.5 1.6 2.38 8H0v2h3.6l.9-1.8.9 5.4L9 8.5l1.6 1.5H14V8h-2.5z\"/>"
-};
-const question = {
-	name: "question",
-	figma: {
-		id: "0:649",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"help",
-		"explain"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M6 10h2v2H6v-2zm4-3.5C10 8.64 8 9 8 9H6c0-.55.45-1 1-1h.5c.28 0 .5-.22.5-.5v-1c0-.28-.22-.5-.5-.5h-1c-.28 0-.5.22-.5.5V7H4c0-1.5 1.5-3 3-3s3 1 3 2.5zM7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7z\"/>"
-};
-const quote = {
-	name: "quote",
-	figma: {
-		id: "0:655",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"quotation"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M6.16 3.5C3.73 5.06 2.55 6.67 2.55 9.36c.16-.05.3-.05.44-.05 1.27 0 2.5.86 2.5 2.41 0 1.61-1.03 2.61-2.5 2.61-1.9 0-2.99-1.52-2.99-4.25 0-3.8 1.75-6.53 5.02-8.42L6.16 3.5zm7 0c-2.43 1.56-3.61 3.17-3.61 5.86.16-.05.3-.05.44-.05 1.27 0 2.5.86 2.5 2.41 0 1.61-1.03 2.61-2.5 2.61-1.89 0-2.98-1.52-2.98-4.25 0-3.8 1.75-6.53 5.02-8.42l1.14 1.84h-.01z\"/>"
-};
-const repo = {
-	name: "repo",
-	figma: {
-		id: "0:706",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"book",
-		"journal",
-		"repository"
-	],
-	width: 12,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M4 9H3V8h1v1zm0-3H3v1h1V6zm0-2H3v1h1V4zm0-2H3v1h1V2zm8-1v12c0 .55-.45 1-1 1H6v2l-1.5-1.5L3 16v-2H1c-.55 0-1-.45-1-1V1c0-.55.45-1 1-1h10c.55 0 1 .45 1 1zm-1 10H1v2h2v-1h3v1h5v-2zm0-10H2v9h9V1z\"/>"
-};
-const rocket = {
-	name: "rocket",
-	figma: {
-		id: "0:715",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"staff",
-		"stafftools",
-		"blast",
-		"off",
-		"space",
-		"launch",
-		"ship"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M12.17 3.83c-.27-.27-.47-.55-.63-.88-.16-.31-.27-.66-.34-1.02-.58.33-1.16.7-1.73 1.13-.58.44-1.14.94-1.69 1.48-.7.7-1.33 1.81-1.78 2.45H3L0 10h3l2-2c-.34.77-1.02 2.98-1 3l1 1c.02.02 2.23-.64 3-1l-2 2v3l3-3v-3c.64-.45 1.75-1.09 2.45-1.78.55-.55 1.05-1.13 1.47-1.7.44-.58.81-1.16 1.14-1.72-.36-.08-.7-.19-1.03-.34a3.39 3.39 0 0 1-.86-.63zM16 0s-.09.38-.3 1.06c-.2.7-.55 1.58-1.06 2.66-.7-.08-1.27-.33-1.66-.72-.39-.39-.63-.94-.7-1.64C13.36.84 14.23.48 14.92.28 15.62.08 16 0 16 0z\"/>"
-};
-const rss = {
-	name: "rss",
-	figma: {
-		id: "0:719",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"broadcast",
-		"feed",
-		"atom"
-	],
-	width: 10,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M2 13H0v-2c1.11 0 2 .89 2 2zM0 3v1a9 9 0 0 1 9 9h1C10 7.48 5.52 3 0 3zm0 4v1c2.75 0 5 2.25 5 5h1c0-3.31-2.69-6-6-6z\"/>"
-};
-const ruby = {
-	name: "ruby",
-	figma: {
-		id: "0:724",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"code",
-		"language"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M13 6l-5 5V4h3l2 2zm3 0l-8 8-8-8 4-4h8l4 4zm-8 6.5L14.5 6l-3-3h-7l-3 3L8 12.5z\"/>"
-};
-const search = {
-	name: "search",
-	figma: {
-		id: "0:729",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"magnifying",
-		"glass"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M15.7 13.3l-3.81-3.83A5.93 5.93 0 0 0 13 6c0-3.31-2.69-6-6-6S1 2.69 1 6s2.69 6 6 6c1.3 0 2.48-.41 3.47-1.11l3.83 3.81c.19.2.45.3.7.3.25 0 .52-.09.7-.3a.996.996 0 0 0 0-1.41v.01zM7 10.7c-2.59 0-4.7-2.11-4.7-4.7 0-2.59 2.11-4.7 4.7-4.7 2.59 0 4.7 2.11 4.7 4.7 0 2.59-2.11 4.7-4.7 4.7z\"/>"
-};
-const server = {
-	name: "server",
-	figma: {
-		id: "0:733",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"computers",
-		"racks",
-		"ops"
-	],
-	width: 12,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M11 6H1c-.55 0-1 .45-1 1v2c0 .55.45 1 1 1h10c.55 0 1-.45 1-1V7c0-.55-.45-1-1-1zM2 9H1V7h1v2zm2 0H3V7h1v2zm2 0H5V7h1v2zm2 0H7V7h1v2zm3-8H1c-.55 0-1 .45-1 1v2c0 .55.45 1 1 1h10c.55 0 1-.45 1-1V2c0-.55-.45-1-1-1zM2 4H1V2h1v2zm2 0H3V2h1v2zm2 0H5V2h1v2zm2 0H7V2h1v2zm3-1h-1V2h1v1zm0 8H1c-.55 0-1 .45-1 1v2c0 .55.45 1 1 1h10c.55 0 1-.45 1-1v-2c0-.55-.45-1-1-1zm-9 3H1v-2h1v2zm2 0H3v-2h1v2zm2 0H5v-2h1v2zm2 0H7v-2h1v2z\"/>"
-};
-const settings = {
-	name: "settings",
-	figma: {
-		id: "0:751",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"sliders",
-		"filters",
-		"controls",
-		"levels"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M4 7H3V2h1v5zm-1 7h1v-3H3v3zm5 0h1V8H8v6zm5 0h1v-2h-1v2zm1-12h-1v6h1V2zM9 2H8v2h1V2zM5 8H2c-.55 0-1 .45-1 1s.45 1 1 1h3c.55 0 1-.45 1-1s-.45-1-1-1zm5-3H7c-.55 0-1 .45-1 1s.45 1 1 1h3c.55 0 1-.45 1-1s-.45-1-1-1zm5 4h-3c-.55 0-1 .45-1 1s.45 1 1 1h3c.55 0 1-.45 1-1s-.45-1-1-1z\"/>"
-};
-const shield = {
-	name: "shield",
-	figma: {
-		id: "0:762",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"protect",
-		"shield",
-		"lock"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M7 0L0 2v6.02C0 12.69 5.31 16 7 16c1.69 0 7-3.31 7-7.98V2L7 0zM5 11l1.14-2.8a.568.568 0 0 0-.25-.59C5.33 7.25 5 6.66 5 6c0-1.09.89-2 1.98-2C8.06 4 9 4.91 9 6c0 .66-.33 1.25-.89 1.61-.19.13-.3.36-.25.59L9 11H5z\"/>"
-};
-const smiley = {
-	name: "smiley",
-	figma: {
-		id: "0:772",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"emoji",
-		"smile",
-		"mood",
-		"emotion"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M8 0C3.58 0 0 3.58 0 8s3.58 8 8 8 8-3.58 8-8-3.58-8-8-8zm4.81 12.81a6.72 6.72 0 0 1-2.17 1.45c-.83.36-1.72.53-2.64.53-.92 0-1.81-.17-2.64-.53-.81-.34-1.55-.83-2.17-1.45a6.773 6.773 0 0 1-1.45-2.17A6.59 6.59 0 0 1 1.21 8c0-.92.17-1.81.53-2.64.34-.81.83-1.55 1.45-2.17.62-.62 1.36-1.11 2.17-1.45A6.59 6.59 0 0 1 8 1.21c.92 0 1.81.17 2.64.53.81.34 1.55.83 2.17 1.45.62.62 1.11 1.36 1.45 2.17.36.83.53 1.72.53 2.64 0 .92-.17 1.81-.53 2.64-.34.81-.83 1.55-1.45 2.17zM4 6.8v-.59c0-.66.53-1.19 1.2-1.19h.59c.66 0 1.19.53 1.19 1.19v.59c0 .67-.53 1.2-1.19 1.2H5.2C4.53 8 4 7.47 4 6.8zm5 0v-.59c0-.66.53-1.19 1.2-1.19h.59c.66 0 1.19.53 1.19 1.19v.59c0 .67-.53 1.2-1.19 1.2h-.59C9.53 8 9 7.47 9 6.8zm4 3.2c-.72 1.88-2.91 3-5 3s-4.28-1.13-5-3c-.14-.39.23-1 .66-1h8.59c.41 0 .89.61.75 1z\"/>"
-};
-const squirrel = {
-	name: "squirrel",
-	figma: {
-		id: "0:779",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"ship",
-		"shipit",
-		"launch"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M12 1C9.79 1 8 2.31 8 3.92c0 1.94.5 3.03 0 6.08 0-4.5-2.77-6.34-4-6.34.05-.5-.48-.66-.48-.66s-.22.11-.3.34c-.27-.31-.56-.27-.56-.27l-.13.58S.7 4.29.68 6.87c.2.33 1.53.6 2.47.43.89.05.67.79.47.99C2.78 9.13 2 8 1 8S0 9 1 9s1 1 3 1c-3.09 1.2 0 4 0 4H3c-1 0-1 1-1 1h6c3 0 5-1 5-3.47 0-.85-.43-1.79-1-2.53-1.11-1.46.23-2.68 1-2 .77.68 3 1 3-2 0-2.21-1.79-4-4-4zM2.5 6c-.28 0-.5-.22-.5-.5s.22-.5.5-.5.5.22.5.5-.22.5-.5.5z\"/>"
-};
-const star = {
-	name: "star",
-	figma: {
-		id: "0:781",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"save",
-		"remember",
-		"like"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M14 6l-4.9-.64L7 1 4.9 5.36 0 6l3.6 3.26L2.67 14 7 11.67 11.33 14l-.93-4.74L14 6z\"/>"
-};
-const stop = {
-	name: "stop",
-	figma: {
-		id: "0:785",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"block",
-		"spam",
-		"report"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M10 1H4L0 5v6l4 4h6l4-4V5l-4-4zm3 9.5L9.5 14h-5L1 10.5v-5L4.5 2h5L13 5.5v5zM6 4h2v5H6V4zm0 6h2v2H6v-2z\"/>"
-};
-const sync = {
-	name: "sync",
-	figma: {
-		id: "0:791",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"cycle",
-		"refresh",
-		"loop"
-	],
-	width: 12,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M10.24 7.4a4.15 4.15 0 0 1-1.2 3.6 4.346 4.346 0 0 1-5.41.54L4.8 10.4.5 9.8l.6 4.2 1.31-1.26c2.36 1.74 5.7 1.57 7.84-.54a5.876 5.876 0 0 0 1.74-4.46l-1.75-.34zM2.96 5a4.346 4.346 0 0 1 5.41-.54L7.2 5.6l4.3.6-.6-4.2-1.31 1.26c-2.36-1.74-5.7-1.57-7.85.54C.5 5.03-.06 6.65.01 8.26l1.75.35A4.17 4.17 0 0 1 2.96 5z\"/>"
-};
-const tag = {
-	name: "tag",
-	figma: {
-		id: "0:795",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"release"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M7.685 1.72a2.49 2.49 0 0 0-1.76-.726H3.48A2.5 2.5 0 0 0 .994 3.48v2.456c0 .656.269 1.292.726 1.76l6.024 6.024a.99.99 0 0 0 1.402 0l4.563-4.563a.99.99 0 0 0 0-1.402L7.685 1.72zM2.366 7.048A1.54 1.54 0 0 1 1.9 5.925V3.48c0-.874.716-1.58 1.58-1.58h2.456c.418 0 .825.159 1.123.467l6.104 6.094-4.702 4.702-6.094-6.114zm.626-4.066h1.989v1.989H2.982V2.982h.01z\"/>"
-};
-const tasklist = {
-	name: "tasklist",
-	figma: {
-		id: "0:800",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"todo"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M15.41 9H7.59C7 9 7 8.59 7 8c0-.59 0-1 .59-1h7.81c.59 0 .59.41.59 1 0 .59 0 1-.59 1h.01zM9.59 4C9 4 9 3.59 9 3c0-.59 0-1 .59-1h5.81c.59 0 .59.41.59 1 0 .59 0 1-.59 1H9.59zM0 3.91l1.41-1.3L3 4.2 7.09 0 8.5 1.41 3 6.91l-3-3zM7.59 12h7.81c.59 0 .59.41.59 1 0 .59 0 1-.59 1H7.59C7 14 7 13.59 7 13c0-.59 0-1 .59-1z\"/>"
-};
-const telescope = {
-	name: "telescope",
-	figma: {
-		id: "0:806",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"science",
-		"space",
-		"look",
-		"view",
-		"explore"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M8 9l3 6h-1l-2-4v5H7v-6l-2 5H4l2-5 2-1zM7 0H6v1h1V0zM5 3H4v1h1V3zM2 1H1v1h1V1zM.63 9a.52.52 0 0 0-.16.67l.55.92c.13.23.41.31.64.2l1.39-.66-1.16-2-1.27.86.01.01zm7.89-5.39l-5.8 3.95L3.95 9.7l6.33-3.03-1.77-3.06h.01zm4.22 1.28l-1.47-2.52a.51.51 0 0 0-.72-.17l-1.2.83 1.84 3.2 1.33-.64c.27-.13.36-.44.22-.7z\"/>"
-};
-const terminal = {
-	name: "terminal",
-	figma: {
-		id: "0:815",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"code",
-		"ops",
-		"shell"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M7 10h4v1H7v-1zm-3 1l3-3-3-3-.75.75L5.5 8l-2.25 2.25L4 11zm10-8v10c0 .55-.45 1-1 1H1c-.55 0-1-.45-1-1V3c0-.55.45-1 1-1h12c.55 0 1 .45 1 1zm-1 0H1v10h12V3z\"/>"
-};
-const thumbsdown = {
-	name: "thumbsdown",
-	figma: {
-		id: "0:831",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"thumb",
-		"thumbsdown",
-		"rejected",
-		"dislike"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M15.97 7.825L15 1.88C14.83.499 13.123 0 11.994 0H5.686c-.2 0-.38.05-.53.14L3.719 1h-1.72C.94 1 0 1.938 0 2.997v3.998c0 1.059.94 2.018 1.999 1.998h1.999c.909 0 1.389.45 2.388 1.55.91.999.88 1.798.63 3.267-.08.5.06 1 .42 1.42.39.47.979.769 1.558.769 1.83 0 2.999-3.718 2.999-5.017l-.02-.98h2.038c1.16 0 1.949-.799 1.979-1.968 0-.06.02-.13-.02-.2v-.01zm-1.969 1.19h-1.989c-.7 0-1.029.28-1.029.969l.03 1.03c0 1.268-1.17 3.997-1.999 3.997-.5 0-1.079-.5-.999-1 .25-1.579.34-2.778-.89-4.137-1.019-1.13-1.768-1.879-3.127-1.879V1.999l1.668-1h6.327c.729 0 1.948.31 1.998 1l.02.02 1 5.996c-.03.64-.38 1-1 1h-.01z\"/>"
-};
-const thumbsup = {
-	name: "thumbsup",
-	figma: {
-		id: "0:835",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"thumb",
-		"thumbsup",
-		"prop",
-		"ship",
-		"like"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M13.991 13.991c-.05.69-1.269 1-1.998 1H5.666l-1.668-1V7.995c1.359 0 2.108-.75 3.128-1.879 1.229-1.359 1.139-2.558.879-4.127-.08-.5.5-1 1-1 .829 0 1.998 2.729 1.998 3.998l-.02 1.03c0 .689.33.969 1.02.969H14c.63 0 .98.36 1 .999l-1 5.996-.01.01zm0-7.995h-2.018l.02-.98C11.993 3.719 10.823 0 8.994 0c-.58 0-1.169.3-1.559.77-.36.41-.5.909-.42 1.409.25 1.479.28 2.278-.629 3.278-1 1.089-1.48 1.549-2.388 1.549h-2C.94 6.996 0 7.935 0 8.994v3.998c0 1.06.94 1.999 1.999 1.999h1.719l1.439.86c.16.089.33.139.52.139h6.325c1.13 0 2.839-.5 2.999-1.879l.979-5.946c.02-.08.02-.14.02-.2-.03-1.17-.84-1.969-1.999-1.969h-.01z\"/>"
-};
-const tools = {
-	name: "tools",
-	figma: {
-		id: "0:839",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"screwdriver",
-		"wrench",
-		"settings"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M4.48 7.27c.26.26 1.28 1.33 1.28 1.33l.56-.58-.88-.91 1.69-1.8s-.76-.74-.43-.45c.32-1.19.03-2.51-.87-3.44C4.93.5 3.66.2 2.52.51l1.93 2-.51 1.96-1.89.52-1.93-2C-.19 4.17.1 5.48 1 6.4c.94.98 2.29 1.26 3.48.87zm6.44 1.94l-2.33 2.3 3.84 3.98c.31.33.73.49 1.14.49.41 0 .82-.16 1.14-.49.63-.65.63-1.7 0-2.35l-3.79-3.93zM16 2.53L13.55 0 6.33 7.46l.88.91-4.31 4.46-.99.53-1.39 2.27.35.37 2.2-1.44.51-1.02L7.9 9.08l.88.91L16 2.53z\"/>"
-};
-const trashcan = {
-	name: "trashcan",
-	figma: {
-		id: "0:844",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"garbage",
-		"rubbish",
-		"recycle",
-		"delete"
-	],
-	width: 12,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M11 2H9c0-.55-.45-1-1-1H5c-.55 0-1 .45-1 1H2c-.55 0-1 .45-1 1v1c0 .55.45 1 1 1v9c0 .55.45 1 1 1h7c.55 0 1-.45 1-1V5c.55 0 1-.45 1-1V3c0-.55-.45-1-1-1zm-1 12H3V5h1v8h1V5h1v8h1V5h1v8h1V5h1v9zm1-10H2V3h9v1z\"/>"
-};
-const unfold = {
-	name: "unfold",
-	figma: {
-		id: "0:857",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"expand",
-		"open",
-		"reveal"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M11.5 7.5L14 10c0 .55-.45 1-1 1H9v-1h3.5l-2-2h-7l-2 2H5v1H1c-.55 0-1-.45-1-1l2.5-2.5L0 5c0-.55.45-1 1-1h4v1H1.5l2 2h7l2-2H9V4h4c.55 0 1 .45 1 1l-2.5 2.5zM6 6h2V3h2L7 0 4 3h2v3zm2 3H6v3H4l3 3 3-3H8V9z\"/>"
-};
-const unmute = {
-	name: "unmute",
-	figma: {
-		id: "0:862",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"loud",
-		"volume",
-		"audio",
-		"sound",
-		"play"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M12 8.02c0 1.09-.45 2.09-1.17 2.83l-.67-.67c.55-.56.89-1.31.89-2.16 0-.85-.34-1.61-.89-2.16l.67-.67A3.99 3.99 0 0 1 12 8.02zM7.72 2.28L4 6H2c-.55 0-1 .45-1 1v2c0 .55.45 1 1 1h2l3.72 3.72c.47.47 1.28.14 1.28-.53V2.81c0-.67-.81-1-1.28-.53zm5.94.08l-.67.67a6.996 6.996 0 0 1 2.06 4.98c0 1.94-.78 3.7-2.06 4.98l.67.67A7.973 7.973 0 0 0 16 8c0-2.22-.89-4.22-2.34-5.66v.02zm-1.41 1.41l-.69.67a5.05 5.05 0 0 1 1.48 3.58c0 1.39-.56 2.66-1.48 3.56l.69.67A5.97 5.97 0 0 0 14 8.02c0-1.65-.67-3.16-1.75-4.25z\"/>"
-};
-const project = {
-	name: "project",
-	figma: {
-		id: "0:868",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"board",
-		"kanban",
-		"columns",
-		"scrum"
-	],
-	width: 15,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M10 12h3V2h-3v10zm-4-2h3V2H6v8zm-4 4h3V2H2v12zm-1 1h13V1H1v14zM14 0H1a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h13a1 1 0 0 0 1-1V1a1 1 0 0 0-1-1z\"/>"
-};
-const report = {
-	name: "report",
-	figma: {
-		id: "0:885",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"report",
-		"abuse",
-		"flag"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M0 2a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H7l-4 4v-4H1a1 1 0 0 1-1-1V2zm1 0h14v9H6.5L4 13.5V11H1V2zm6 6h2v2H7V8zm0-5h2v4H7V3z\"/>"
-};
-const note = {
-	name: "note",
-	figma: {
-		id: "0:891",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"card",
-		"paper",
-		"ticket"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M3 10h4V9H3v1zm0-2h6V7H3v1zm0-2h8V5H3v1zm10 6H1V3h12v9zM1 2c-.55 0-1 .45-1 1v9c0 .55.45 1 1 1h12c.55 0 1-.45 1-1V3c0-.55-.45-1-1-1H1z\"/>"
-};
-const unverified = {
-	name: "unverified",
-	figma: {
-		id: "0:914",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"insecure",
-		"untrusted",
-		"signed"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M15.67 7.066l-1.08-1.34a1.5 1.5 0 0 1-.309-.77l-.19-1.698a1.51 1.51 0 0 0-1.329-1.33l-1.699-.19c-.3-.03-.56-.159-.78-.329L8.945.33a1.504 1.504 0 0 0-1.878 0l-1.34 1.08a1.5 1.5 0 0 1-.77.31l-1.698.19c-.7.08-1.25.63-1.33 1.329l-.19 1.699c-.03.3-.159.56-.329.78L.33 7.055a1.504 1.504 0 0 0 0 1.878l1.08 1.34c.17.22.28.48.31.77l.19 1.698c.08.7.63 1.25 1.329 1.33l1.699.19c.3.03.56.159.78.329l1.339 1.08c.55.439 1.329.439 1.878 0l1.34-1.08c.22-.17.48-.28.77-.31l1.698-.19c.7-.08 1.25-.63 1.33-1.329l.19-1.699c.03-.3.159-.56.329-.78l1.08-1.339a1.504 1.504 0 0 0 0-1.878zm-6.666 4.437c0 .28-.22.5-.5.5h-.999c-.27 0-.5-.22-.5-.5v-1c0-.28.23-.5.5-.5h1c.28 0 .5.22.5.5v1zm1.56-4.887c-.06.17-.17.33-.3.47-.13.16-.14.19-.33.38-.16.17-.31.3-.52.45-.11.089-.2.189-.28.269-.08.08-.14.17-.19.27-.05.1-.08.19-.11.3-.03.11-.03.13-.03.25H7.136c0-.22 0-.31.03-.48.03-.19.08-.36.14-.52.06-.14.14-.28.25-.42.11-.13.23-.25.409-.38.27-.19.36-.3.48-.52.12-.219.2-.379.2-.589 0-.27-.06-.45-.2-.58-.13-.13-.31-.19-.58-.19-.09 0-.19.02-.3.05-.11.03-.17.09-.25.16-.08.07-.14.11-.2.2a.41.41 0 0 0-.09.28H5.028c0-.38.13-.56.27-.83.16-.27.36-.499.61-.669.25-.17.549-.3.879-.38.33-.08.7-.13 1.09-.13.439 0 .829.05 1.168.13.34.09.63.22.88.39.23.17.41.38.55.63.13.25.19.55.19.88 0 .22 0 .419-.08.589l-.02-.01z\"/>"
-};
-const verified = {
-	name: "verified",
-	figma: {
-		id: "0:919",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"trusted",
-		"secure",
-		"trustworthy",
-		"signed"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M15.67 7.066l-1.08-1.34a1.5 1.5 0 0 1-.309-.77l-.19-1.698a1.51 1.51 0 0 0-1.329-1.33l-1.699-.19c-.3-.03-.56-.159-.78-.329L8.945.33a1.504 1.504 0 0 0-1.878 0l-1.34 1.08a1.5 1.5 0 0 1-.77.31l-1.698.19c-.7.08-1.25.63-1.33 1.329l-.19 1.699c-.03.3-.159.56-.329.78L.33 7.055a1.504 1.504 0 0 0 0 1.878l1.08 1.34c.17.22.28.48.31.77l.19 1.698c.08.7.63 1.25 1.329 1.33l1.699.19c.3.03.56.159.78.329l1.339 1.08c.55.439 1.329.439 1.878 0l1.34-1.08c.22-.17.48-.28.77-.31l1.698-.19c.7-.08 1.25-.63 1.33-1.329l.19-1.699c.03-.3.159-.56.329-.78l1.08-1.339a1.504 1.504 0 0 0 0-1.878zm-9.164 4.936L3.008 8.505l1.5-1.5 1.998 2 4.997-4.997 1.499 1.549-6.496 6.445z\"/>"
-};
-const versions$1 = {
-	name: "versions",
-	figma: {
-		id: "0:923",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"history",
-		"commits"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M13 3H7c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1zm-1 8H8V5h4v6zM4 4h1v1H4v6h1v1H4c-.55 0-1-.45-1-1V5c0-.55.45-1 1-1zM1 5h1v1H1v4h1v1H1c-.55 0-1-.45-1-1V6c0-.55.45-1 1-1z\"/>"
-};
-const watch = {
-	name: "watch",
-	figma: {
-		id: "0:929",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"wait",
-		"hourglass",
-		"time",
-		"date"
-	],
-	width: 12,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M6 8h2v1H5V5h1v3zm6 0c0 2.22-1.2 4.16-3 5.19V15c0 .55-.45 1-1 1H4c-.55 0-1-.45-1-1v-1.81C1.2 12.16 0 10.22 0 8s1.2-4.16 3-5.19V1c0-.55.45-1 1-1h4c.55 0 1 .45 1 1v1.81c1.8 1.03 3 2.97 3 5.19zm-1 0c0-2.77-2.23-5-5-5S1 5.23 1 8s2.23 5 5 5 5-2.23 5-5z\"/>"
-};
-const x$1 = {
-	name: "x",
-	figma: {
-		id: "0:932",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"remove",
-		"close",
-		"delete"
-	],
-	width: 12,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M7.48 8l3.75 3.75-1.48 1.48L6 9.48l-3.75 3.75-1.48-1.48L4.52 8 .77 4.25l1.48-1.48L6 6.52l3.75-3.75 1.48 1.48L7.48 8z\"/>"
-};
-const zap = {
-	name: "zap",
-	figma: {
-		id: "0:934",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"electricity",
-		"lightning",
-		"props",
-		"like",
-		"star",
-		"save"
-	],
-	width: 10,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M10 7H6l3-7-9 9h4l-3 7 9-9z\"/>"
-};
-const key$2 = {
-	name: "key",
-	figma: {
-		id: "0:938",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"key",
-		"lock",
-		"secure",
-		"safe"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M12.83 2.17C12.08 1.42 11.14 1.03 10 1c-1.13.03-2.08.42-2.83 1.17S6.04 3.86 6.01 5c0 .3.03.59.09.89L0 12v1l1 1h2l1-1v-1h1v-1h1v-1h2l1.09-1.11c.3.08.59.11.91.11 1.14-.03 2.08-.42 2.83-1.17S13.97 6.14 14 5c-.03-1.14-.42-2.08-1.17-2.83zM11 5.38c-.77 0-1.38-.61-1.38-1.38 0-.77.61-1.38 1.38-1.38.77 0 1.38.61 1.38 1.38 0 .77-.61 1.38-1.38 1.38z\"/>"
-};
-const grabber = {
-	name: "grabber",
-	figma: {
-		id: "0:942",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"mover",
-		"drap",
-		"drop",
-		"sort"
-	],
-	width: 8,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M8 4v1H0V4h8zM0 8h8V7H0v1zm0 3h8v-1H0v1z\"/>"
-};
-const archive = {
-	name: "archive",
-	figma: {
-		id: "2228:2",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"box",
-		"catalog"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M13 2H1v2h12V2zM0 4a1 1 0 0 0 1 1v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H1a1 1 0 0 0-1 1v2zm2 1h10v9H2V5zm2 3h6V7H4v1z\"/>"
-};
-var data$1 = {
-	alert: alert,
-	"arrow-down": {
-	name: "arrow-down",
-	figma: {
-		id: "0:8",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"point",
-		"direction"
-	],
-	width: 10,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M7 7V3H3v4H0l5 6 5-6H7z\"/>"
-},
-	"arrow-left": {
-	name: "arrow-left",
-	figma: {
-		id: "0:10",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"point",
-		"direction"
-	],
-	width: 10,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M6 3L0 8l6 5v-3h4V6H6V3z\"/>"
-},
-	"arrow-right": {
-	name: "arrow-right",
-	figma: {
-		id: "0:12",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"point",
-		"direction"
-	],
-	width: 10,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M10 8L4 3v3H0v4h4v3l6-5z\"/>"
-},
-	"arrow-up": {
-	name: "arrow-up",
-	figma: {
-		id: "0:14",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"point",
-		"direction"
-	],
-	width: 10,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M5 3L0 9h3v4h4V9h3L5 3z\"/>"
-},
-	"arrow-small-down": {
-	name: "arrow-small-down",
-	figma: {
-		id: "0:16",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"point",
-		"direction",
-		"little",
-		"tiny"
-	],
-	width: 6,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M4 7V5H2v2H0l3 4 3-4H4z\"/>"
-},
-	"arrow-small-left": {
-	name: "arrow-small-left",
-	figma: {
-		id: "0:18",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"point",
-		"direction",
-		"little",
-		"tiny"
-	],
-	width: 6,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M4 7V5L0 8l4 3V9h2V7H4z\"/>"
-},
-	"arrow-small-right": {
-	name: "arrow-small-right",
-	figma: {
-		id: "0:20",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"point",
-		"direction",
-		"little",
-		"tiny"
-	],
-	width: 6,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M6 8L2 5v2H0v2h2v2l4-3z\"/>"
-},
-	"arrow-small-up": {
-	name: "arrow-small-up",
-	figma: {
-		id: "0:22",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"point",
-		"direction",
-		"little",
-		"tiny"
-	],
-	width: 6,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M3 5L0 9h2v2h2V9h2L3 5z\"/>"
-},
-	beaker: beaker,
-	bell: bell,
-	bold: bold,
-	book: book,
-	bookmark: bookmark,
-	briefcase: briefcase,
-	broadcast: broadcast,
-	browser: browser,
-	bug: bug,
-	calendar: calendar,
-	check: check$1,
-	checklist: checklist,
-	"chevron-down": {
-	name: "chevron-down",
-	figma: {
-		id: "0:117",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"triangle",
-		"arrow"
-	],
-	width: 10,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M5 11L0 6l1.5-1.5L5 8.25 8.5 4.5 10 6l-5 5z\"/>"
-},
-	"chevron-left": {
-	name: "chevron-left",
-	figma: {
-		id: "0:119",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"triangle",
-		"arrow"
-	],
-	width: 8,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M5.5 3L7 4.5 3.25 8 7 11.5 5.5 13l-5-5 5-5z\"/>"
-},
-	"chevron-right": {
-	name: "chevron-right",
-	figma: {
-		id: "0:121",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"triangle",
-		"arrow"
-	],
-	width: 8,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M7.5 8l-5 5L1 11.5 4.75 8 1 4.5 2.5 3l5 5z\"/>"
-},
-	"chevron-up": {
-	name: "chevron-up",
-	figma: {
-		id: "0:123",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"triangle",
-		"arrow"
-	],
-	width: 10,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M10 10l-1.5 1.5L5 7.75 1.5 11.5 0 10l5-5 5 5z\"/>"
-},
-	"circle-slash": {
-	name: "circle-slash",
-	figma: {
-		id: "0:127",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"no",
-		"deny",
-		"fail",
-		"failure",
-		"error",
-		"bad"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm0 1.3c1.3 0 2.5.44 3.47 1.17l-8 8A5.755 5.755 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zm0 11.41c-1.3 0-2.5-.44-3.47-1.17l8-8c.73.97 1.17 2.17 1.17 3.47 0 3.14-2.56 5.7-5.7 5.7z\"/>"
-},
-	"circuit-board": {
-	name: "circuit-board",
-	figma: {
-		id: "0:132",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"developer",
-		"hardware",
-		"electricity"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M3 5c0-.55.45-1 1-1s1 .45 1 1-.45 1-1 1-1-.45-1-1zm8 0c0-.55-.45-1-1-1s-1 .45-1 1 .45 1 1 1 1-.45 1-1zm0 6c0-.55-.45-1-1-1s-1 .45-1 1 .45 1 1 1 1-.45 1-1zm2-10H5v2.17c.36.19.64.47.83.83h2.34c.42-.78 1.33-1.28 2.34-1.05.75.19 1.36.8 1.53 1.55.31 1.38-.72 2.59-2.05 2.59-.8 0-1.48-.44-1.83-1.09H5.83c-.42.8-1.33 1.28-2.34 1.03-.73-.17-1.34-.78-1.52-1.52C1.72 4.49 2.2 3.59 3 3.17V1H1c-.55 0-1 .45-1 1v12c0 .55.45 1 1 1l5-5h2.17c.42-.78 1.33-1.28 2.34-1.05.75.19 1.36.8 1.53 1.55.31 1.38-.72 2.59-2.05 2.59-.8 0-1.48-.44-1.83-1.09H6.99L4 15h9c.55 0 1-.45 1-1V2c0-.55-.45-1-1-1z\"/>"
-},
-	clippy: clippy,
-	clock: clock,
-	"cloud-download": {
-	name: "cloud-download",
-	figma: {
-		id: "0:152",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"save",
-		"install",
-		"get"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M9 12h2l-3 3-3-3h2V7h2v5zm3-8c0-.44-.91-3-4.5-3C5.08 1 3 2.92 3 5 1.02 5 0 6.52 0 8c0 1.53 1 3 3 3h3V9.7H3C1.38 9.7 1.3 8.28 1.3 8c0-.17.05-1.7 1.7-1.7h1.3V5c0-1.39 1.56-2.7 3.2-2.7 2.55 0 3.13 1.55 3.2 1.8v1.2H12c.81 0 2.7.22 2.7 2.2 0 2.09-2.25 2.2-2.7 2.2h-2V11h2c2.08 0 4-1.16 4-3.5C16 5.06 14.08 4 12 4z\"/>"
-},
-	"cloud-upload": {
-	name: "cloud-upload",
-	figma: {
-		id: "0:156",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"put",
-		"export"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M7 9H5l3-3 3 3H9v5H7V9zm5-4c0-.44-.91-3-4.5-3C5.08 2 3 3.92 3 6 1.02 6 0 7.52 0 9c0 1.53 1 3 3 3h3v-1.3H3c-1.62 0-1.7-1.42-1.7-1.7 0-.17.05-1.7 1.7-1.7h1.3V6c0-1.39 1.56-2.7 3.2-2.7 2.55 0 3.13 1.55 3.2 1.8v1.2H12c.81 0 2.7.22 2.7 2.2 0 2.09-2.25 2.2-2.7 2.2h-2V12h2c2.08 0 4-1.16 4-3.5C16 6.06 14.08 5 12 5z\"/>"
-},
-	code: code,
-	"comment-discussion": {
-	name: "comment-discussion",
-	figma: {
-		id: "0:164",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"converse",
-		"talk"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M15 1H6c-.55 0-1 .45-1 1v2H1c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h1v3l3-3h4c.55 0 1-.45 1-1V9h1l3 3V9h1c.55 0 1-.45 1-1V2c0-.55-.45-1-1-1zM9 11H4.5L3 12.5V11H1V5h4v3c0 .55.45 1 1 1h3v2zm6-3h-2v1.5L11.5 8H6V2h9v6z\"/>"
-},
-	comment: comment,
-	"credit-card": {
-	name: "credit-card",
-	figma: {
-		id: "0:173",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"money",
-		"billing",
-		"payments",
-		"transactions"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M12 9H2V8h10v1zm4-6v9c0 .55-.45 1-1 1H1c-.55 0-1-.45-1-1V3c0-.55.45-1 1-1h14c.55 0 1 .45 1 1zm-1 3H1v6h14V6zm0-3H1v1h14V3zm-9 7H2v1h4v-1z\"/>"
-},
-	dash: dash,
-	dashboard: dashboard,
-	database: database,
-	"desktop-download": {
-	name: "desktop-download",
-	figma: {
-		id: "0:196",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"clone",
-		"download"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M4 6h3V0h2v6h3l-4 4-4-4zm11-4h-4v1h4v8H1V3h4V2H1c-.55 0-1 .45-1 1v9c0 .55.45 1 1 1h5.34c-.25.61-.86 1.39-2.34 2h8c-1.48-.61-2.09-1.39-2.34-2H15c.55 0 1-.45 1-1V3c0-.55-.45-1-1-1z\"/>"
-},
-	"device-camera-video": {
-	name: "device-camera-video",
-	figma: {
-		id: "0:198",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"watch",
-		"view",
-		"media",
-		"stream"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M15.2 2.09L10 5.72V3c0-.55-.45-1-1-1H1c-.55 0-1 .45-1 1v9c0 .55.45 1 1 1h8c.55 0 1-.45 1-1V9.28l5.2 3.63c.33.23.8 0 .8-.41v-10c0-.41-.47-.64-.8-.41z\"/>"
-},
-	"device-camera": {
-	name: "device-camera",
-	figma: {
-		id: "0:202",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"photo",
-		"picture",
-		"image",
-		"snapshot"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M15 3H7c0-.55-.45-1-1-1H2c-.55 0-1 .45-1 1-.55 0-1 .45-1 1v9c0 .55.45 1 1 1h14c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1zM6 5H2V4h4v1zm4.5 7C8.56 12 7 10.44 7 8.5S8.56 5 10.5 5 14 6.56 14 8.5 12.44 12 10.5 12zM13 8.5c0 1.38-1.13 2.5-2.5 2.5S8 9.87 8 8.5 9.13 6 10.5 6 13 7.13 13 8.5z\"/>"
-},
-	"device-desktop": {
-	name: "device-desktop",
-	figma: {
-		id: "0:208",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"computer",
-		"monitor"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M15 2H1c-.55 0-1 .45-1 1v9c0 .55.45 1 1 1h5.34c-.25.61-.86 1.39-2.34 2h8c-1.48-.61-2.09-1.39-2.34-2H15c.55 0 1-.45 1-1V3c0-.55-.45-1-1-1zm0 9H1V3h14v8z\"/>"
-},
-	"device-mobile": {
-	name: "device-mobile",
-	figma: {
-		id: "0:212",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"phone",
-		"iphone",
-		"cellphone"
-	],
-	width: 10,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M9 0H1C.45 0 0 .45 0 1v14c0 .55.45 1 1 1h8c.55 0 1-.45 1-1V1c0-.55-.45-1-1-1zM5 15.3c-.72 0-1.3-.58-1.3-1.3 0-.72.58-1.3 1.3-1.3.72 0 1.3.58 1.3 1.3 0 .72-.58 1.3-1.3 1.3zM9 12H1V2h8v10z\"/>"
-},
-	"diff-added": {
-	name: "diff-added",
-	figma: {
-		id: "0:217",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"new",
-		"addition",
-		"plus"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M13 1H1c-.55 0-1 .45-1 1v12c0 .55.45 1 1 1h12c.55 0 1-.45 1-1V2c0-.55-.45-1-1-1zm0 13H1V2h12v12zM6 9H3V7h3V4h2v3h3v2H8v3H6V9z\"/>"
-},
-	"diff-ignored": {
-	name: "diff-ignored",
-	figma: {
-		id: "0:222",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"slash"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M13 1H1c-.55 0-1 .45-1 1v12c0 .55.45 1 1 1h12c.55 0 1-.45 1-1V2c0-.55-.45-1-1-1zm0 13H1V2h12v12zm-8.5-2H3v-1.5L9.5 4H11v1.5L4.5 12z\"/>"
-},
-	"diff-modified": {
-	name: "diff-modified",
-	figma: {
-		id: "0:227",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"dot",
-		"changed",
-		"updated"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M13 1H1c-.55 0-1 .45-1 1v12c0 .55.45 1 1 1h12c.55 0 1-.45 1-1V2c0-.55-.45-1-1-1zm0 13H1V2h12v12zM4 8c0-1.66 1.34-3 3-3s3 1.34 3 3-1.34 3-3 3-3-1.34-3-3z\"/>"
-},
-	"diff-removed": {
-	name: "diff-removed",
-	figma: {
-		id: "0:232",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"deleted",
-		"subtracted",
-		"dash"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M13 1H1c-.55 0-1 .45-1 1v12c0 .55.45 1 1 1h12c.55 0 1-.45 1-1V2c0-.55-.45-1-1-1zm0 13H1V2h12v12zm-2-5H3V7h8v2z\"/>"
-},
-	"diff-renamed": {
-	name: "diff-renamed",
-	figma: {
-		id: "0:237",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"moved",
-		"arrow"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M6 9H3V7h3V4l5 4-5 4V9zm8-7v12c0 .55-.45 1-1 1H1c-.55 0-1-.45-1-1V2c0-.55.45-1 1-1h12c.55 0 1 .45 1 1zm-1 0H1v12h12V2z\"/>"
-},
-	diff: diff,
-	ellipsis: ellipsis,
-	eye: eye,
-	"file-binary": {
-	name: "file-binary",
-	figma: {
-		id: "0:260",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"image",
-		"video",
-		"word",
-		"powerpoint",
-		"excel"
-	],
-	width: 12,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M4 12h1v1H2v-1h1v-2H2V9h2v3zm8-7.5V14c0 .55-.45 1-1 1H1c-.55 0-1-.45-1-1V2c0-.55.45-1 1-1h7.5L12 4.5zM11 5L8 2H1v12h10V5zM8 4H6v1h1v2H6v1h3V7H8V4zM2 4h3v4H2V4zm1 3h1V5H3v2zm3 2h3v4H6V9zm1 3h1v-2H7v2z\"/>"
-},
-	"file-code": {
-	name: "file-code",
-	figma: {
-		id: "0:270",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"text",
-		"javascript",
-		"html",
-		"css",
-		"php",
-		"ruby",
-		"coffeescript",
-		"sass",
-		"scss"
-	],
-	width: 12,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M8.5 1H1c-.55 0-1 .45-1 1v12c0 .55.45 1 1 1h10c.55 0 1-.45 1-1V4.5L8.5 1zM11 14H1V2h7l3 3v9zM5 6.98L3.5 8.5 5 10l-.5 1L2 8.5 4.5 6l.5.98zM7.5 6L10 8.5 7.5 11l-.5-.98L8.5 8.5 7 7l.5-1z\"/>"
-},
-	"file-directory": {
-	name: "file-directory",
-	figma: {
-		id: "0:276",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"folder"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M13 4H7V3c0-.66-.31-1-1-1H1c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1V5c0-.55-.45-1-1-1zM6 4H1V3h5v1z\"/>"
-},
-	"file-media": {
-	name: "file-media",
-	figma: {
-		id: "0:280",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"image",
-		"video",
-		"audio"
-	],
-	width: 12,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M6 5h2v2H6V5zm6-.5V14c0 .55-.45 1-1 1H1c-.55 0-1-.45-1-1V2c0-.55.45-1 1-1h7.5L12 4.5zM11 5L8 2H1v11l3-5 2 4 2-2 3 3V5z\"/>"
-},
-	"file-pdf": {
-	name: "file-pdf",
-	figma: {
-		id: "0:285",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"adobe"
-	],
-	width: 12,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M8.5 1H1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V4.5L8.5 1zM1 2h4a.68.68 0 0 0-.31.2 1.08 1.08 0 0 0-.23.47 4.22 4.22 0 0 0-.09 1.47c.06.609.173 1.211.34 1.8A21.78 21.78 0 0 1 3.6 8.6c-.5 1-.8 1.66-.91 1.84a7.161 7.161 0 0 0-.69.3 4.19 4.19 0 0 0-1 .64V2zm4.42 4.8a5.65 5.65 0 0 0 1.17 2.09c.275.237.595.417.94.53-.64.09-1.23.2-1.81.33a12.22 12.22 0 0 0-1.81.59c-.587.243.22-.44.61-1.25.365-.74.67-1.51.91-2.3l-.01.01zM11 14H1.5a.743.743 0 0 1-.17 0 2.12 2.12 0 0 0 .73-.44 10.14 10.14 0 0 0 1.78-2.38c.31-.13.58-.23.81-.31l.42-.14c.45-.13.94-.23 1.44-.33s1-.16 1.48-.2c.447.216.912.394 1.39.53.403.11.814.188 1.23.23h.38V14H11zm0-4.86a3.74 3.74 0 0 0-.64-.28 4.22 4.22 0 0 0-.75-.11c-.411.003-.822.03-1.23.08a3 3 0 0 1-1-.64 6.07 6.07 0 0 1-1.29-2.33c.111-.662.178-1.33.2-2 .02-.25.02-.5 0-.75a1.05 1.05 0 0 0-.2-.88.82.82 0 0 0-.61-.23H8l3 3v4.14z\"/>"
-},
-	"file-submodule": {
-	name: "file-submodule",
-	figma: {
-		id: "0:292",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"folder"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M10 7H4v7h9c.55 0 1-.45 1-1V8h-4V7zM9 9H5V8h4v1zm4-5H7V3c0-.66-.31-1-1-1H1c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h2V7c0-.55.45-1 1-1h6c.55 0 1 .45 1 1h3V5c0-.55-.45-1-1-1zM6 4H1V3h5v1z\"/>"
-},
-	"file-symlink-directory": {
-	name: "file-symlink-directory",
-	figma: {
-		id: "0:298",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"folder",
-		"subfolder",
-		"link",
-		"alias"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M13 4H7V3c0-.66-.31-1-1-1H1c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1V5c0-.55-.45-1-1-1zM1 3h5v1H1V3zm6 9v-2c-.98-.02-1.84.22-2.55.7-.71.48-1.19 1.25-1.45 2.3.02-1.64.39-2.88 1.13-3.73C4.86 8.43 5.82 8 7.01 8V6l4 3-4 3H7z\"/>"
-},
-	"file-symlink-file": {
-	name: "file-symlink-file",
-	figma: {
-		id: "0:303",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"link",
-		"alias"
-	],
-	width: 12,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M8.5 1H1c-.55 0-1 .45-1 1v12c0 .55.45 1 1 1h10c.55 0 1-.45 1-1V4.5L8.5 1zM11 14H1V2h7l3 3v9zM6 4.5l4 3-4 3v-2c-.98-.02-1.84.22-2.55.7-.71.48-1.19 1.25-1.45 2.3.02-1.64.39-2.88 1.13-3.73.73-.84 1.69-1.27 2.88-1.27v-2H6z\"/>"
-},
-	file: file,
-	"file-zip": {
-	name: "file-zip",
-	figma: {
-		id: "0:316",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"compress",
-		"archive"
-	],
-	width: 12,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M8.5 1H1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V4.5L8.5 1zM11 14H1V2h3v1h1V2h3l3 3v9zM5 4V3h1v1H5zM4 4h1v1H4V4zm1 2V5h1v1H5zM4 6h1v1H4V6zm1 2V7h1v1H5zM4 9.28A2 2 0 0 0 3 11v1h4v-1a2 2 0 0 0-2-2V8H4v1.28zM6 10v1H4v-1h2z\"/>"
-},
-	flame: flame,
-	fold: fold,
-	gear: gear,
-	gift: gift,
-	"gist-secret": {
-	name: "gist-secret",
-	figma: {
-		id: "0:347",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"gist",
-		"secret",
-		"private"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M8 10.5L9 14H5l1-3.5L5.25 9h3.5L8 10.5zM10 6H4L2 7h10l-2-1zM9 2L7 3 5 2 4 5h6L9 2zm4.03 7.75L10 9l1 2-2 3h3.22c.45 0 .86-.31.97-.75l.56-2.28c.14-.53-.19-1.08-.72-1.22zM4 9l-3.03.75c-.53.14-.86.69-.72 1.22l.56 2.28c.11.44.52.75.97.75H5l-2-3 1-2z\"/>"
-},
-	gist: gist,
-	"git-branch": {
-	name: "git-branch",
-	figma: {
-		id: "0:360",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"fork",
-		"branch",
-		"git",
-		"duplicate"
-	],
-	width: 10,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M10 5c0-1.11-.89-2-2-2a1.993 1.993 0 0 0-1 3.72v.3c-.02.52-.23.98-.63 1.38-.4.4-.86.61-1.38.63-.83.02-1.48.16-2 .45V4.72a1.993 1.993 0 0 0-1-3.72C.88 1 0 1.89 0 3a2 2 0 0 0 1 1.72v6.56c-.59.35-1 .99-1 1.72 0 1.11.89 2 2 2 1.11 0 2-.89 2-2 0-.53-.2-1-.53-1.36.09-.06.48-.41.59-.47.25-.11.56-.17.94-.17 1.05-.05 1.95-.45 2.75-1.25S8.95 7.77 9 6.73h-.02C9.59 6.37 10 5.73 10 5zM2 1.8c.66 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2C1.35 4.2.8 3.65.8 3c0-.65.55-1.2 1.2-1.2zm0 12.41c-.66 0-1.2-.55-1.2-1.2 0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2zm6-8c-.66 0-1.2-.55-1.2-1.2 0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2z\"/>"
-},
-	"git-commit": {
-	name: "git-commit",
-	figma: {
-		id: "0:366",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"save"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M10.86 7c-.45-1.72-2-3-3.86-3-1.86 0-3.41 1.28-3.86 3H0v2h3.14c.45 1.72 2 3 3.86 3 1.86 0 3.41-1.28 3.86-3H14V7h-3.14zM7 10.2c-1.22 0-2.2-.98-2.2-2.2 0-1.22.98-2.2 2.2-2.2 1.22 0 2.2.98 2.2 2.2 0 1.22-.98 2.2-2.2 2.2z\"/>"
-},
-	"git-compare": {
-	name: "git-compare",
-	figma: {
-		id: "0:370",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"difference",
-		"changes"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M5 12H4c-.27-.02-.48-.11-.69-.31-.21-.2-.3-.42-.31-.69V4.72A1.993 1.993 0 0 0 2 1a1.993 1.993 0 0 0-1 3.72V11c.03.78.34 1.47.94 2.06.6.59 1.28.91 2.06.94h1v2l3-3-3-3v2zM2 1.8c.66 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2C1.35 4.2.8 3.65.8 3c0-.65.55-1.2 1.2-1.2zm11 9.48V5c-.03-.78-.34-1.47-.94-2.06-.6-.59-1.28-.91-2.06-.94H9V0L6 3l3 3V4h1c.27.02.48.11.69.31.21.2.3.42.31.69v6.28A1.993 1.993 0 0 0 12 15a1.993 1.993 0 0 0 1-3.72zm-1 2.92c-.66 0-1.2-.55-1.2-1.2 0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2z\"/>"
-},
-	"git-merge": {
-	name: "git-merge",
-	figma: {
-		id: "0:376",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"join"
-	],
-	width: 12,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M10 7c-.73 0-1.38.41-1.73 1.02V8C7.22 7.98 6 7.64 5.14 6.98c-.75-.58-1.5-1.61-1.89-2.44A1.993 1.993 0 0 0 2 .99C.89.99 0 1.89 0 3a2 2 0 0 0 1 1.72v6.56c-.59.35-1 .99-1 1.72 0 1.11.89 2 2 2a1.993 1.993 0 0 0 1-3.72V7.67c.67.7 1.44 1.27 2.3 1.69.86.42 2.03.63 2.97.64v-.02c.36.61 1 1.02 1.73 1.02 1.11 0 2-.89 2-2 0-1.11-.89-2-2-2zm-6.8 6c0 .66-.55 1.2-1.2 1.2-.65 0-1.2-.55-1.2-1.2 0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2zM2 4.2C1.34 4.2.8 3.65.8 3c0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2zm8 6c-.66 0-1.2-.55-1.2-1.2 0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2z\"/>"
-},
-	"git-pull-request": {
-	name: "git-pull-request",
-	figma: {
-		id: "0:382",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"review"
-	],
-	width: 12,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M11 11.28V5c-.03-.78-.34-1.47-.94-2.06C9.46 2.35 8.78 2.03 8 2H7V0L4 3l3 3V4h1c.27.02.48.11.69.31.21.2.3.42.31.69v6.28A1.993 1.993 0 0 0 10 15a1.993 1.993 0 0 0 1-3.72zm-1 2.92c-.66 0-1.2-.55-1.2-1.2 0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2zM4 3c0-1.11-.89-2-2-2a1.993 1.993 0 0 0-1 3.72v6.56A1.993 1.993 0 0 0 2 15a1.993 1.993 0 0 0 1-3.72V4.72c.59-.34 1-.98 1-1.72zm-.8 10c0 .66-.55 1.2-1.2 1.2-.65 0-1.2-.55-1.2-1.2 0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2zM2 4.2C1.34 4.2.8 3.65.8 3c0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2z\"/>"
-},
-	globe: globe,
-	graph: graph,
-	heart: heart,
-	history: history,
-	home: home,
-	"horizontal-rule": {
-	name: "horizontal-rule",
-	figma: {
-		id: "0:412",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"hr"
-	],
-	width: 10,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M1 7h2v2h1V3H3v3H1V3H0v6h1V7zm9 2V7H9v2h1zm0-3V4H9v2h1zM7 6V4h2V3H6v6h1V7h2V6H7zm-7 7h10v-2H0v2z\"/>"
-},
-	hubot: hubot,
-	inbox: inbox,
-	info: info,
-	"issue-closed": {
-	name: "issue-closed",
-	figma: {
-		id: "0:436",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"done",
-		"complete"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M7 10h2v2H7v-2zm2-6H7v5h2V4zm1.5 1.5l-1 1L12 9l4-4.5-1-1L12 7l-1.5-1.5zM8 13.7A5.71 5.71 0 0 1 2.3 8c0-3.14 2.56-5.7 5.7-5.7 1.83 0 3.45.88 4.5 2.2l.92-.92A6.947 6.947 0 0 0 8 1C4.14 1 1 4.14 1 8s3.14 7 7 7 7-3.14 7-7l-1.52 1.52c-.66 2.41-2.86 4.19-5.48 4.19v-.01z\"/>"
-},
-	"issue-opened": {
-	name: "issue-opened",
-	figma: {
-		id: "0:442",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"new"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z\"/>"
-},
-	"issue-reopened": {
-	name: "issue-reopened",
-	figma: {
-		id: "0:448",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"regression"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M8 9H6V4h2v5zm-2 3h2v-2H6v2zm6.33-2H10l1.5 1.5c-1.05 1.33-2.67 2.2-4.5 2.2A5.71 5.71 0 0 1 1.3 8c0-.34.03-.67.09-1H.08C.03 7.33 0 7.66 0 8c0 3.86 3.14 7 7 7 2.19 0 4.13-1.02 5.41-2.59L14 14v-4h-1.67zM1.67 6H4L2.5 4.5C3.55 3.17 5.17 2.3 7 2.3c3.14 0 5.7 2.56 5.7 5.7 0 .34-.03.67-.09 1h1.31c.05-.33.08-.66.08-1 0-3.86-3.14-7-7-7-2.19 0-4.13 1.02-5.41 2.59L0 2v4h1.67z\"/>"
-},
-	italic: italic,
-	jersey: jersey,
-	keyboard: keyboard,
-	law: law,
-	link: link,
-	"list-ordered": {
-	name: "list-ordered",
-	figma: {
-		id: "0:500",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"numbers",
-		"tasks",
-		"todo",
-		"items"
-	],
-	width: 12,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M12 12.99c0 .589 0 .998-.59.998H4.596c-.59 0-.59-.41-.59-.999 0-.59 0-.999.59-.999H11.4c.59 0 .59.41.59 1H12zM4.596 3.996H11.4c.59 0 .59-.41.59-1 0-.589 0-.999-.59-.999H4.596c-.59 0-.59.41-.59 1 0 .589 0 .999.59.999zM11.4 6.994H4.596c-.59 0-.59.41-.59 1 0 .589 0 .999.59.999H11.4c.59 0 .59-.41.59-1 0-.59 0-.999-.59-.999zM2.008 1h-.72C.99 1.19.71 1.25.26 1.34V2h.75v2.138H.17v.859h2.837v-.86h-.999V1zm.25 8.123c-.17 0-.45.03-.66.06.53-.56 1.14-1.249 1.14-1.888-.02-.78-.56-1.299-1.36-1.299-.589 0-.968.2-1.378.64l.58.579c.19-.19.38-.38.639-.38.28 0 .48.16.48.52 0 .53-.77 1.199-1.699 2.058v.58h2.998l-.09-.88h-.66l.01.01zm-.08 3.777v-.03c.44-.19.64-.47.64-.859 0-.7-.56-1.11-1.44-1.11-.479 0-.888.19-1.278.52l.55.64c.25-.2.44-.31.689-.31.27 0 .42.13.42.36 0 .27-.2.44-.86.44v.749c.83 0 .98.17.98.47 0 .25-.23.38-.58.38-.28 0-.56-.14-.81-.38l-.479.659c.3.36.77.56 1.409.56.83 0 1.529-.41 1.529-1.16 0-.5-.31-.809-.77-.939v.01z\"/>"
-},
-	"list-unordered": {
-	name: "list-unordered",
-	figma: {
-		id: "0:508",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"bullet",
-		"point",
-		"tasks",
-		"todo",
-		"items"
-	],
-	width: 12,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M2 13c0 .59 0 1-.59 1H.59C0 14 0 13.59 0 13c0-.59 0-1 .59-1h.81c.59 0 .59.41.59 1H2zm2.59-9h6.81c.59 0 .59-.41.59-1 0-.59 0-1-.59-1H4.59C4 2 4 2.41 4 3c0 .59 0 1 .59 1zM1.41 7H.59C0 7 0 7.41 0 8c0 .59 0 1 .59 1h.81c.59 0 .59-.41.59-1 0-.59 0-1-.59-1h.01zm0-5H.59C0 2 0 2.41 0 3c0 .59 0 1 .59 1h.81c.59 0 .59-.41.59-1 0-.59 0-1-.59-1h.01zm10 5H4.59C4 7 4 7.41 4 8c0 .59 0 1 .59 1h6.81c.59 0 .59-.41.59-1 0-.59 0-1-.59-1h.01zm0 5H4.59C4 12 4 12.41 4 13c0 .59 0 1 .59 1h6.81c.59 0 .59-.41.59-1 0-.59 0-1-.59-1h.01z\"/>"
-},
-	location: location,
-	lock: lock,
-	"logo-gist": {
-	name: "logo-gist",
-	figma: {
-		id: "0:529",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"brand",
-		"github",
-		"logo"
-	],
-	width: 25,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M4.7 8.73h2.45v4.02c-.55.27-1.64.34-2.53.34-2.56 0-3.47-2.2-3.47-5.05 0-2.85.91-5.06 3.48-5.06 1.28 0 2.06.23 3.28.73V2.66C7.27 2.33 6.25 2 4.63 2 1.13 2 0 4.69 0 8.03c0 3.34 1.11 6.03 4.63 6.03 1.64 0 2.81-.27 3.59-.64V7.73H4.7v1zm6.39 3.72V6.06h-1.05v6.28c0 1.25.58 1.72 1.72 1.72v-.89c-.48 0-.67-.16-.67-.7v-.02zm.25-8.72c0-.44-.33-.78-.78-.78s-.77.34-.77.78.33.78.77.78.78-.34.78-.78zm4.34 5.69c-1.5-.13-1.78-.48-1.78-1.17 0-.77.33-1.34 1.88-1.34 1.05 0 1.66.16 2.27.36v-.94c-.69-.3-1.52-.39-2.25-.39-2.2 0-2.92 1.2-2.92 2.31 0 1.08.47 1.88 2.73 2.08 1.55.13 1.77.63 1.77 1.34 0 .73-.44 1.42-2.06 1.42-1.11 0-1.86-.19-2.33-.36v.94c.5.2 1.58.39 2.33.39 2.38 0 3.14-1.2 3.14-2.41 0-1.28-.53-2.03-2.75-2.23h-.03zm8.58-2.47v-.86h-2.42v-2.5l-1.08.31v2.11l-1.56.44v.48h1.56v5c0 1.53 1.19 2.13 2.5 2.13.19 0 .52-.02.69-.05v-.89c-.19.03-.41.03-.61.03-.97 0-1.5-.39-1.5-1.34V6.94h2.42v.02-.01z\"/>"
-},
-	"logo-github": {
-	name: "logo-github",
-	figma: {
-		id: "0:536",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"brand",
-		"github",
-		"logo"
-	],
-	width: 45,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M18.53 12.03h-.02c.009 0 .015.01.024.011h.006l-.01-.01zm.004.011c-.093.001-.327.05-.574.05-.78 0-1.05-.36-1.05-.83V8.13h1.59c.09 0 .16-.08.16-.19v-1.7c0-.09-.08-.17-.16-.17h-1.59V3.96c0-.08-.05-.13-.14-.13h-2.16c-.09 0-.14.05-.14.13v2.17s-1.09.27-1.16.28c-.08.02-.13.09-.13.17v1.36c0 .11.08.19.17.19h1.11v3.28c0 2.44 1.7 2.69 2.86 2.69.53 0 1.17-.17 1.27-.22.06-.02.09-.09.09-.16v-1.5a.177.177 0 0 0-.146-.18zm23.696-2.2c0-1.81-.73-2.05-1.5-1.97-.6.04-1.08.34-1.08.34v3.52s.49.34 1.22.36c1.03.03 1.36-.34 1.36-2.25zm2.43-.16c0 3.43-1.11 4.41-3.05 4.41-1.64 0-2.52-.83-2.52-.83s-.04.46-.09.52c-.03.06-.08.08-.14.08h-1.48c-.1 0-.19-.08-.19-.17l.02-11.11c0-.09.08-.17.17-.17h2.13c.09 0 .17.08.17.17v3.77s.82-.53 2.02-.53l-.01-.02c1.2 0 2.97.45 2.97 3.88zm-8.72-3.61h-2.1c-.11 0-.17.08-.17.19v5.44s-.55.39-1.3.39-.97-.34-.97-1.09V6.25c0-.09-.08-.17-.17-.17h-2.14c-.09 0-.17.08-.17.17v5.11c0 2.2 1.23 2.75 2.92 2.75 1.39 0 2.52-.77 2.52-.77s.05.39.08.45c.02.05.09.09.16.09h1.34c.11 0 .17-.08.17-.17l.02-7.47c0-.09-.08-.17-.19-.17zm-23.7-.01h-2.13c-.09 0-.17.09-.17.2v7.34c0 .2.13.27.3.27h1.92c.2 0 .25-.09.25-.27V6.23c0-.09-.08-.17-.17-.17zm-1.05-3.38c-.77 0-1.38.61-1.38 1.38 0 .77.61 1.38 1.38 1.38.75 0 1.36-.61 1.36-1.38 0-.77-.61-1.38-1.36-1.38zm16.49-.25h-2.11c-.09 0-.17.08-.17.17v4.09h-3.31V2.6c0-.09-.08-.17-.17-.17h-2.13c-.09 0-.17.08-.17.17v11.11c0 .09.09.17.17.17h2.13c.09 0 .17-.08.17-.17V8.96h3.31l-.02 4.75c0 .09.08.17.17.17h2.13c.09 0 .17-.08.17-.17V2.6c0-.09-.08-.17-.17-.17zM8.81 7.35v5.74c0 .04-.01.11-.06.13 0 0-1.25.89-3.31.89-2.49 0-5.44-.78-5.44-5.92S2.58 1.99 5.1 2c2.18 0 3.06.49 3.2.58.04.05.06.09.06.14L7.94 4.5c0 .09-.09.2-.2.17-.36-.11-.9-.33-2.17-.33-1.47 0-3.05.42-3.05 3.73s1.5 3.7 2.58 3.7c.92 0 1.25-.11 1.25-.11v-2.3H4.88c-.11 0-.19-.08-.19-.17V7.35c0-.09.08-.17.19-.17h3.74c.11 0 .19.08.19.17z\"/>"
-},
-	"mail-read": {
-	name: "mail-read",
-	figma: {
-		id: "0:547",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"email",
-		"open"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M6 5H4V4h2v1zm3 1H4v1h5V6zm5-.48V14c0 .55-.45 1-1 1H1c-.55 0-1-.45-1-1V5.52c0-.33.16-.63.42-.81L2 3.58V3c0-.55.45-1 1-1h1.2L7 0l2.8 2H11c.55 0 1 .45 1 1v.58l1.58 1.13c.27.19.42.48.42.81zM3 7.5L7 10l4-2.5V3H3v4.5zm-2 6l4.5-3-4.5-3v6zm11 .5l-5-3-5 3h10zm1-6.5l-4.5 3 4.5 3v-6z\"/>"
-},
-	reply: reply,
-	mail: mail,
-	"mark-github": {
-	name: "mark-github",
-	figma: {
-		id: "0:563",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"octocat",
-		"brand",
-		"github",
-		"logo"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z\"/>"
-},
-	markdown: markdown,
-	megaphone: megaphone,
-	mention: mention,
-	milestone: milestone,
-	mirror: mirror,
-	"mortar-board": {
-	name: "mortar-board",
-	figma: {
-		id: "0:594",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"education",
-		"learn",
-		"teach"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M7.83 9.19L4 8c-4-8 0 1.5 0 2.5S5.8 12 8 12s4-.5 4-1.5V8L8.17 9.19a.73.73 0 0 1-.36 0h.02zm.28-6.39a.34.34 0 0 0-.2 0L.27 5.18a.35.35 0 0 0 0 .67L2 6.4v1.77c-.3.17-.5.5-.5.86 0 .19.05.36.14.5-.08.14-.14.31-.14.5v2.58c0 .55 2 .55 2 0v-2.58c0-.19-.05-.36-.14-.5.08-.14.14-.31.14-.5 0-.38-.2-.69-.5-.86V6.72l4.89 1.53c.06.02.14.02.2 0l7.64-2.38a.35.35 0 0 0 0-.67L8.1 2.81l.01-.01zM8.02 6c-.55 0-1-.22-1-.5s.45-.5 1-.5 1 .22 1 .5-.45.5-1 .5z\"/>"
-},
-	mute: mute,
-	"no-newline": {
-	name: "no-newline",
-	figma: {
-		id: "0:603",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"return"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M16 5v3c0 .55-.45 1-1 1h-3v2L9 8l3-3v2h2V5h2zM8 8c0 2.2-1.8 4-4 4s-4-1.8-4-4 1.8-4 4-4 4 1.8 4 4zM1.5 9.66L5.66 5.5C5.18 5.19 4.61 5 4 5 2.34 5 1 6.34 1 8c0 .61.19 1.17.5 1.66zM7 8c0-.61-.19-1.17-.5-1.66L2.34 10.5c.48.31 1.05.5 1.66.5 1.66 0 3-1.34 3-3z\"/>"
-},
-	octoface: octoface,
-	organization: organization,
-	"package": {
-	name: "package",
-	figma: {
-		id: "0:617",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"box",
-		"ship"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M1 4.27v7.47c0 .45.3.84.75.97l6.5 1.73c.16.05.34.05.5 0l6.5-1.73c.45-.13.75-.52.75-.97V4.27c0-.45-.3-.84-.75-.97l-6.5-1.74a1.4 1.4 0 0 0-.5 0L1.75 3.3c-.45.13-.75.52-.75.97zm7 9.09l-6-1.59V5l6 1.61v6.75zM2 4l2.5-.67L11 5.06l-2.5.67L2 4zm13 7.77l-6 1.59V6.61l2-.55V8.5l2-.53V5.53L15 5v6.77zm-2-7.24L6.5 2.8l2-.53L15 4l-2 .53z\"/>"
-},
-	paintcan: paintcan,
-	pencil: pencil,
-	person: person,
-	pin: pin,
-	plug: plug,
-	plus: plus,
-	"primitive-dot": {
-	name: "primitive-dot",
-	figma: {
-		id: "0:641",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"circle"
-	],
-	width: 8,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M0 8c0-2.2 1.8-4 4-4s4 1.8 4 4-1.8 4-4 4-4-1.8-4-4z\"/>"
-},
-	"primitive-square": {
-	name: "primitive-square",
-	figma: {
-		id: "0:643",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"box"
-	],
-	width: 8,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M8 12H0V4h8v8z\"/>"
-},
-	pulse: pulse,
-	question: question,
-	quote: quote,
-	"radio-tower": {
-	name: "radio-tower",
-	figma: {
-		id: "0:659",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"broadcast"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M4.79 6.11c.25-.25.25-.67 0-.92-.32-.33-.48-.76-.48-1.19 0-.43.16-.86.48-1.19.25-.26.25-.67 0-.92a.613.613 0 0 0-.45-.19c-.16 0-.33.06-.45.19-.57.58-.85 1.35-.85 2.11 0 .76.29 1.53.85 2.11.25.25.66.25.9 0zM2.33.52a.651.651 0 0 0-.92 0C.48 1.48.01 2.74.01 3.99c0 1.26.47 2.52 1.4 3.48.25.26.66.26.91 0s.25-.68 0-.94c-.68-.7-1.02-1.62-1.02-2.54 0-.92.34-1.84 1.02-2.54a.66.66 0 0 0 .01-.93zm5.69 5.1A1.62 1.62 0 1 0 6.4 4c-.01.89.72 1.62 1.62 1.62zM14.59.53a.628.628 0 0 0-.91 0c-.25.26-.25.68 0 .94.68.7 1.02 1.62 1.02 2.54 0 .92-.34 1.83-1.02 2.54-.25.26-.25.68 0 .94a.651.651 0 0 0 .92 0c.93-.96 1.4-2.22 1.4-3.48A5.048 5.048 0 0 0 14.59.53zM8.02 6.92c-.41 0-.83-.1-1.2-.3l-3.15 8.37h1.49l.86-1h4l.84 1h1.49L9.21 6.62c-.38.2-.78.3-1.19.3zm-.01.48L9.02 11h-2l.99-3.6zm-1.99 5.59l1-1h2l1 1h-4zm5.19-11.1c-.25.25-.25.67 0 .92.32.33.48.76.48 1.19 0 .43-.16.86-.48 1.19-.25.26-.25.67 0 .92a.63.63 0 0 0 .9 0c.57-.58.85-1.35.85-2.11 0-.76-.28-1.53-.85-2.11a.634.634 0 0 0-.9 0z\"/>"
-},
-	"repo-clone": {
-	name: "repo-clone",
-	figma: {
-		id: "0:669",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"book",
-		"journal",
-		"repository"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M15 0H9v7c0 .55.45 1 1 1h1v1h1V8h3c.55 0 1-.45 1-1V1c0-.55-.45-1-1-1zm-4 7h-1V6h1v1zm4 0h-3V6h3v1zm0-2h-4V1h4v4zM4 5H3V4h1v1zm0-2H3V2h1v1zM2 1h6V0H1C.45 0 0 .45 0 1v12c0 .55.45 1 1 1h2v2l1.5-1.5L6 16v-2h5c.55 0 1-.45 1-1v-3H2V1zm9 10v2H6v-1H3v1H1v-2h10zM3 8h1v1H3V8zm1-1H3V6h1v1z\"/>"
-},
-	"repo-force-push": {
-	name: "repo-force-push",
-	figma: {
-		id: "0:681",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"book",
-		"journal",
-		"put"
-	],
-	width: 12,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M10 9H8v7H6V9H4l2.25-3H4l3-4 3 4H7.75L10 9zm1-9H1C.45 0 0 .45 0 1v12c0 .55.45 1 1 1h4v-1H1v-2h4v-1H2V1h9v9H9v1h2v2H9v1h2c.55 0 1-.45 1-1V1c0-.55-.45-1-1-1z\"/>"
-},
-	"repo-forked": {
-	name: "repo-forked",
-	figma: {
-		id: "0:685",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"book",
-		"journal",
-		"copy"
-	],
-	width: 10,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M8 1a1.993 1.993 0 0 0-1 3.72V6L5 8 3 6V4.72A1.993 1.993 0 0 0 2 1a1.993 1.993 0 0 0-1 3.72V6.5l3 3v1.78A1.993 1.993 0 0 0 5 15a1.993 1.993 0 0 0 1-3.72V9.5l3-3V4.72A1.993 1.993 0 0 0 8 1zM2 4.2C1.34 4.2.8 3.65.8 3c0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2zm3 10c-.66 0-1.2-.55-1.2-1.2 0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2zm3-10c-.66 0-1.2-.55-1.2-1.2 0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2z\"/>"
-},
-	"repo-pull": {
-	name: "repo-pull",
-	figma: {
-		id: "0:691",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"book",
-		"journal",
-		"get"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M13 8V6H7V4h6V2l3 3-3 3zM4 2H3v1h1V2zm7 5h1v6c0 .55-.45 1-1 1H6v2l-1.5-1.5L3 16v-2H1c-.55 0-1-.45-1-1V1c0-.55.45-1 1-1h10c.55 0 1 .45 1 1v2h-1V1H2v9h9V7zm0 4H1v2h2v-1h3v1h5v-2zM4 6H3v1h1V6zm0-2H3v1h1V4zM3 9h1V8H3v1z\"/>"
-},
-	"repo-push": {
-	name: "repo-push",
-	figma: {
-		id: "0:700",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"book",
-		"journal",
-		"repository",
-		"put"
-	],
-	width: 12,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M4 3H3V2h1v1zM3 5h1V4H3v1zm4 0L4 9h2v7h2V9h2L7 5zm4-5H1C.45 0 0 .45 0 1v12c0 .55.45 1 1 1h4v-1H1v-2h4v-1H2V1h9.02L11 10H9v1h2v2H9v1h2c.55 0 1-.45 1-1V1c0-.55-.45-1-1-1z\"/>"
-},
-	repo: repo,
-	rocket: rocket,
-	rss: rss,
-	ruby: ruby,
-	search: search,
-	server: server,
-	settings: settings,
-	shield: shield,
-	"sign-in": {
-	name: "sign-in",
-	figma: {
-		id: "0:764",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"door",
-		"arrow",
-		"direction",
-		"enter",
-		"log in"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M7 6.75V12h4V8h1v4c0 .55-.45 1-1 1H7v3l-5.45-2.72c-.33-.17-.55-.52-.55-.91V1c0-.55.45-1 1-1h9c.55 0 1 .45 1 1v3h-1V1H3l4 2v2.25L10 3v2h4v2h-4v2L7 6.75z\"/>"
-},
-	"sign-out": {
-	name: "sign-out",
-	figma: {
-		id: "0:768",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"door",
-		"arrow",
-		"direction",
-		"leave",
-		"log out"
-	],
-	width: 16,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M11.992 8.994V6.996H7.995v-2h3.997V2.999l3.998 2.998-3.998 2.998zm-1.998 2.998H5.996V2.998L2 1h7.995v2.998h1V1c0-.55-.45-.999-1-.999H.999A1.001 1.001 0 0 0 0 1v11.372c0 .39.22.73.55.91L5.996 16v-3.008h3.998c.55 0 1-.45 1-1V7.996h-1v3.998z\"/>"
-},
-	smiley: smiley,
-	squirrel: squirrel,
-	star: star,
-	stop: stop,
-	sync: sync,
-	tag: tag,
-	tasklist: tasklist,
-	telescope: telescope,
-	terminal: terminal,
-	"text-size": {
-	name: "text-size",
-	figma: {
-		id: "0:821",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"font",
-		"size",
-		"text"
-	],
-	width: 18,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M13.62 9.08L12.1 3.66h-.06l-1.5 5.42h3.08zM5.7 10.13S4.68 6.52 4.53 6.02h-.08l-1.13 4.11H5.7zM17.31 14h-2.25l-.95-3.25h-4.07L9.09 14H6.84l-.69-2.33H2.87L2.17 14H0l3.3-9.59h2.5l2.17 6.34L10.86 2h2.52l3.94 12h-.01z\"/>"
-},
-	"three-bars": {
-	name: "three-bars",
-	figma: {
-		id: "0:826",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"hamburger",
-		"menu",
-		"dropdown"
-	],
-	width: 12,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M11.41 9H.59C0 9 0 8.59 0 8c0-.59 0-1 .59-1H11.4c.59 0 .59.41.59 1 0 .59 0 1-.59 1h.01zm0-4H.59C0 5 0 4.59 0 4c0-.59 0-1 .59-1H11.4c.59 0 .59.41.59 1 0 .59 0 1-.59 1h.01zM.59 11H11.4c.59 0 .59.41.59 1 0 .59 0 1-.59 1H.59C0 13 0 12.59 0 12c0-.59 0-1 .59-1z\"/>"
-},
-	thumbsdown: thumbsdown,
-	thumbsup: thumbsup,
-	tools: tools,
-	trashcan: trashcan,
-	"triangle-down": {
-	name: "triangle-down",
-	figma: {
-		id: "0:847",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"arrow",
-		"point",
-		"direction"
-	],
-	width: 12,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M0 5l6 6 6-6H0z\"/>"
-},
-	"triangle-left": {
-	name: "triangle-left",
-	figma: {
-		id: "0:849",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"arrow",
-		"point",
-		"direction"
-	],
-	width: 6,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M6 2L0 8l6 6V2z\"/>"
-},
-	"triangle-right": {
-	name: "triangle-right",
-	figma: {
-		id: "0:851",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"arrow",
-		"point",
-		"direction"
-	],
-	width: 6,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M0 14l6-6-6-6v12z\"/>"
-},
-	"triangle-up": {
-	name: "triangle-up",
-	figma: {
-		id: "0:853",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"arrow",
-		"point",
-		"direction"
-	],
-	width: 12,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M12 11L6 5l-6 6h12z\"/>"
-},
-	unfold: unfold,
-	unmute: unmute,
-	project: project,
-	"kebab-horizontal": {
-	name: "kebab-horizontal",
-	figma: {
-		id: "0:875",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"kebab",
-		"dot",
-		"menu",
-		"more"
-	],
-	width: 13,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M1.5 9a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm5 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM13 7.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z\"/>"
-},
-	"kebab-vertical": {
-	name: "kebab-vertical",
-	figma: {
-		id: "0:880",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"kebab",
-		"dot",
-		"menu",
-		"more"
-	],
-	width: 3,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M0 2.5a1.5 1.5 0 1 0 3 0 1.5 1.5 0 0 0-3 0zm0 5a1.5 1.5 0 1 0 3 0 1.5 1.5 0 0 0-3 0zM1.5 14a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z\"/>"
-},
-	report: report,
-	note: note,
-	"screen-full": {
-	name: "screen-full",
-	figma: {
-		id: "0:898",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"fullscreen",
-		"expand"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M13 10h1v3c0 .547-.453 1-1 1h-3v-1h3v-3zM1 10H0v3c0 .547.453 1 1 1h3v-1H1v-3zm0-7h3V2H1c-.547 0-1 .453-1 1v3h1V3zm1 1h10v8H2V4zm2 6h6V6H4v4zm6-8v1h3v3h1V3c0-.547-.453-1-1-1h-3z\"/>"
-},
-	"screen-normal": {
-	name: "screen-normal",
-	figma: {
-		id: "0:906",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"fullscreen",
-		"expand",
-		"exit"
-	],
-	width: 14,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M2 4H0V3h2V1h1v2c0 .547-.453 1-1 1zm0 8H0v1h2v2h1v-2c0-.547-.453-1-1-1zm9-2c0 .547-.453 1-1 1H4c-.547 0-1-.453-1-1V6c0-.547.453-1 1-1h6c.547 0 1 .453 1 1v4zM9 7H5v2h4V7zm2 6v2h1v-2h2v-1h-2c-.547 0-1 .453-1 1zm1-10V1h-1v2c0 .547.453 1 1 1h2V3h-2z\"/>"
-},
-	unverified: unverified,
-	verified: verified,
-	versions: versions$1,
-	watch: watch,
-	x: x$1,
-	zap: zap,
-	key: key$2,
-	grabber: grabber,
-	"plus-small": {
-	name: "plus-small",
-	figma: {
-		id: "0:947",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"add",
-		"new",
-		"more",
-		"small"
-	],
-	width: 7,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M4 4H3v3H0v1h3v3h1V8h3V7H4V4z\"/>"
-},
-	"light-bulb": {
-	name: "light-bulb",
-	figma: {
-		id: "0:951",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"idea"
-	],
-	width: 12,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M6.5 0C3.48 0 1 2.19 1 5c0 .92.55 2.25 1 3 1.34 2.25 1.78 2.78 2 4v1h5v-1c.22-1.22.66-1.75 2-4 .45-.75 1-2.08 1-3 0-2.81-2.48-5-5.5-5zm3.64 7.48c-.25.44-.47.8-.67 1.11-.86 1.41-1.25 2.06-1.45 3.23-.02.05-.02.11-.02.17H5c0-.06 0-.13-.02-.17-.2-1.17-.59-1.83-1.45-3.23-.2-.31-.42-.67-.67-1.11C2.44 6.78 2 5.65 2 5c0-2.2 2.02-4 4.5-4 1.22 0 2.36.42 3.22 1.19C10.55 2.94 11 3.94 11 5c0 .66-.44 1.78-.86 2.48zM4 14h5c-.23 1.14-1.3 2-2.5 2s-2.27-.86-2.5-2z\"/>"
-},
-	"link-external": {
-	name: "link-external",
-	figma: {
-		id: "0:956",
-		file: "FP7lqd1V00LUaT5zvdklkkZr"
-	},
-	keywords: [
-		"out",
-		"see",
-		"more",
-		"go",
-		"to"
-	],
-	width: 12,
-	height: 16,
-	path: "<path fill-rule=\"evenodd\" d=\"M11 10h1v3c0 .55-.45 1-1 1H1c-.55 0-1-.45-1-1V3c0-.55.45-1 1-1h3v1H1v10h10v-3zM6 2l2.25 2.25L5 7.5 6.5 9l3.25-3.25L12 8V2H6z\"/>"
-},
-	archive: archive
-};
-
-var data$2 = /*#__PURE__*/Object.freeze({
-	alert: alert,
-	beaker: beaker,
-	bell: bell,
-	bold: bold,
-	book: book,
-	bookmark: bookmark,
-	briefcase: briefcase,
-	broadcast: broadcast,
-	browser: browser,
-	bug: bug,
-	calendar: calendar,
-	check: check$1,
-	checklist: checklist,
-	clippy: clippy,
-	clock: clock,
-	code: code,
-	comment: comment,
-	dash: dash,
-	dashboard: dashboard,
-	database: database,
-	diff: diff,
-	ellipsis: ellipsis,
-	eye: eye,
-	file: file,
-	flame: flame,
-	fold: fold,
-	gear: gear,
-	gift: gift,
-	gist: gist,
-	globe: globe,
-	graph: graph,
-	heart: heart,
-	history: history,
-	home: home,
-	hubot: hubot,
-	inbox: inbox,
-	info: info,
-	italic: italic,
-	jersey: jersey,
-	keyboard: keyboard,
-	law: law,
-	link: link,
-	location: location,
-	lock: lock,
-	reply: reply,
-	mail: mail,
-	markdown: markdown,
-	megaphone: megaphone,
-	mention: mention,
-	milestone: milestone,
-	mirror: mirror,
-	mute: mute,
-	octoface: octoface,
-	organization: organization,
-	paintcan: paintcan,
-	pencil: pencil,
-	person: person,
-	pin: pin,
-	plug: plug,
-	plus: plus,
-	pulse: pulse,
-	question: question,
-	quote: quote,
-	repo: repo,
-	rocket: rocket,
-	rss: rss,
-	ruby: ruby,
-	search: search,
-	server: server,
-	settings: settings,
-	shield: shield,
-	smiley: smiley,
-	squirrel: squirrel,
-	star: star,
-	stop: stop,
-	sync: sync,
-	tag: tag,
-	tasklist: tasklist,
-	telescope: telescope,
-	terminal: terminal,
-	thumbsdown: thumbsdown,
-	thumbsup: thumbsup,
-	tools: tools,
-	trashcan: trashcan,
-	unfold: unfold,
-	unmute: unmute,
-	project: project,
-	report: report,
-	note: note,
-	unverified: unverified,
-	verified: verified,
-	versions: versions$1,
-	watch: watch,
-	x: x$1,
-	zap: zap,
-	key: key$2,
-	grabber: grabber,
-	archive: archive,
-	default: data$1
-});
-
-var data$3 = ( data$2 && data$1 ) || data$2;
-
-Object.keys(data$3).forEach(function(key) {
-
-  // Returns a string representation of html attributes
-  var htmlAttributes = function(icon, options) {
-    var attributes = [];
-    var attrObj = objectAssign({}, data$3[key].options, options);
-
-    // If the user passed in options
-    if (options) {
-
-      // If any of the width or height is passed in
-      if(options["width"] || options["height"]) {
-        attrObj["width"] = options["width"] ? options["width"] : (parseInt(options["height"]) * data$3[key].options["width"] / data$3[key].options["height"]);
-        attrObj["height"] = options["height"] ? options["height"] : (parseInt(options["width"]) * data$3[key].options["height"] / data$3[key].options["width"]);
-      }
-
-      // If the user passed in class
-      if (options["class"]) {
-        attrObj["class"] = "octicon octicon-" + key + " " + options["class"];
-        attrObj["class"].trim();
-      }
-
-      // If the user passed in aria-label
-      if (options["aria-label"]) {
-        attrObj["aria-label"] = options["aria-label"];
-        attrObj["role"] = "img";
-
-        // Un-hide the icon
-        delete attrObj["aria-hidden"];
-      }
-    }
-
-    Object.keys(attrObj).forEach(function(option) {
-      attributes.push(option + "=\"" + attrObj[option] + "\"");
-    });
-
-    return attributes.join(" ").trim()
-  };
-
-  // Set the symbol for easy access
-  data$3[key].symbol = key;
-
-  // Set all the default options
-  data$3[key].options = {
-    "version": "1.1",
-    "width": data$3[key].width,
-    "height": data$3[key].height,
-    "viewBox": "0 0 " + data$3[key].width + " " + data$3[key].height,
-    "class": "octicon octicon-" + key,
-    "aria-hidden": "true"
-  };
-
-  // Function to return an SVG object
-  data$3[key].toSVG = function(options) {
-    return "<svg " + htmlAttributes(data$3[key], options) + ">" + data$3[key].path + "</svg>"
-  };
-});
-
-// Import data into exports
-var octicons = data$3;
-
-var Icon = function Icon(props) {
-	var octicon = octicons[props.name];
-	if (!octicon) throw new Error("No icon found for '" + props.name + "'");
-
-	return react.createElement("span", {
-		className: classnames("icon", props.className),
-		onClick: props.onClick,
-		dangerouslySetInnerHTML: { __html: octicon.toSVG() }
-	});
-};
-
-Icon.defaultProps = {
-	className: "",
-	onClick: function onClick(event) {
-		return event.preventDefault();
-	}
-};
-
-var arrayToRange = function arrayToRange(_ref) {
-	var _ref2 = slicedToArray(_ref, 4),
-	    startRow = _ref2[0],
-	    startCol = _ref2[1],
-	    endRow = _ref2[2],
-	    endCol = _ref2[3];
-
-	return {
-		start: {
-			row: startRow,
-			col: startCol
-		},
-		end: {
-			row: endRow,
-			col: endCol
-		}
-	};
-};
-
-var ComposeBox = function (_React$Component) {
-	inherits(ComposeBox, _React$Component);
-
-	function ComposeBox() {
-		var _ref3;
-
-		var _temp, _this, _ret;
-
-		classCallCheck(this, ComposeBox);
-
-		for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-			args[_key] = arguments[_key];
-		}
-
-		return _ret = (_temp = (_this = possibleConstructorReturn(this, (_ref3 = ComposeBox.__proto__ || Object.getPrototypeOf(ComposeBox)).call.apply(_ref3, [this].concat(args))), _this), Object.defineProperty(_this, "state", {
-			enumerable: true,
-			writable: true,
-			value: { newPostText: "", quote: null, autoMentions: [] }
-		}), Object.defineProperty(_this, "disposables", {
-			enumerable: true,
-			writable: true,
-			value: []
-		}), Object.defineProperty(_this, "handleCodeHighlightEvent", {
-			enumerable: true,
-			writable: true,
-			value: function value(_ref4) {
-				var authors = _ref4.authors,
-				    state = objectWithoutProperties(_ref4, ["authors"]);
-
-				// make sure we have a compose box to type into
-				_this.props.ensureStreamIsActive();
-				_this.setState({ quote: state });
-
-				var toAtmention = authors.map(function (email) {
-					return underscore.findWhere(_this.props.teammates, { email: email });
-				}).filter(Boolean);
-				if (toAtmention.length > 0) {
-					// TODO handle users with no username
-					var usernames = toAtmention.map(function (user) {
-						return "@" + user.username;
-					});
-					_this.setState({ autoMentions: usernames });
-					// the reason for this unicode space is that chrome will
-					// not render a space at the end of a contenteditable div
-					// unless it is a &nbsp;, which is difficult to insert
-					// so we insert this unicode character instead
-					var newText = usernames.join(", ") + ":\xA0";
-					_this.insertTextAtCursor(newText);
-				}
-			}
-		}), Object.defineProperty(_this, "focus", {
-			enumerable: true,
-			writable: true,
-			value: function value() {
-				_this._contentEditable.htmlEl.focus();
-			}
-		}), Object.defineProperty(_this, "handleHoverAtMention", {
-			enumerable: true,
-			writable: true,
-			value: function value(id) {
-				var index = _this.state.popupItems.findIndex(function (x) {
-					return x.id == id;
-				});
-
-				_this.setState({
-					popupIndex: index,
-					selectedPopupItem: id
-				});
-			}
-		}), Object.defineProperty(_this, "handleSelectAtMention", {
-			enumerable: true,
-			writable: true,
-			value: function value(id) {
-				// if no id is passed, we assume that we're selecting
-				// the currently-selected at mention
-				if (!id) id = _this.state.selectedPopupItem;
-
-				var toInsert = void 0;
-
-				if (_this.state.popupOpen === "slash-commands") {
-					toInsert = id;
-				} else {
-					var user = _this.props.teammates.find(function (t) {
-						return t.id === id;
-					});
-					if (!user) return;
-					toInsert = user.username;
-				}
-				_this.hidePopup();
-				setTimeout(function () {
-					_this.focus();
-				}, 20);
-				// the reason for this unicode space is that chrome will
-				// not render a space at the end of a contenteditable div
-				// unless it is a &nbsp;, which is difficult to insert
-				// so we insert this unicode character instead
-				_this.insertTextAtCursor(toInsert + "\xA0", _this.state.popupPrefix);
-				// this.setNewPostText(text);
-			}
-		}), Object.defineProperty(_this, "handleChange", {
-			enumerable: true,
-			writable: true,
-			value: function value(event) {
-				var newPostText = event.target.value;
-
-				var selection = window.getSelection();
-				var range = selection.getRangeAt(0);
-				var node = range.commonAncestorContainer;
-				var nodeText = node.textContent || "";
-				var upToCursor = nodeText.substring(0, range.startOffset);
-				var peopleMatch = upToCursor.match(/@([a-zA-Z0-9_.+]*)$/);
-				var slashMatch = newPostText.match(/^\/([a-zA-Z0-9+]*)$/);
-				if (_this.state.popupOpen === "at-mentions") {
-					if (peopleMatch) {
-						_this.showPopupSelectors(peopleMatch[0].replace(/@/, ""), "at-mentions");
-					} else {
-						// if the line doesn't end with @word, then hide the popup
-						_this.hidePopup();
-					}
-				} else if (_this.state.popupOpen === "slash-commands") {
-					if (slashMatch) {
-						_this.showPopupSelectors(slashMatch[0].replace(/\//, ""), "slash-commands");
-					} else {
-						// if the line doesn't start with /word, then hide the popup
-						_this.hidePopup();
-					}
-				} else {
-					if (peopleMatch) {
-						_this.showPopupSelectors(peopleMatch[0].replace(/@/, ""), "at-mentions");
-					}
-					if (slashMatch) {
-						_this.showPopupSelectors(slashMatch[0].replace(/\//, ""), "slash-commands");
-					}
-				}
-				// track newPostText as the user types
-				_this.setState({
-					newPostText: newPostText,
-					autoMentions: _this.state.autoMentions.filter(function (mention) {
-						return newPostText.includes(mention);
-					})
-				});
-			}
-		}), Object.defineProperty(_this, "handleBlur", {
-			enumerable: true,
-			writable: true,
-			value: function value(event) {
-				event.preventDefault();
-				_this.hidePopup();
-			}
-		}), Object.defineProperty(_this, "handleKeyPress", {
-			enumerable: true,
-			writable: true,
-			value: function value(event) {
-				var newPostText = _this.state.newPostText;
-
-				// if we have the at-mentions popup open, then the keys
-				// do something different than if we have the focus in
-				// the textarea
-				if (_this.state.popupOpen) {
-					if (event.key == "Escape") {
-						_this.hidePopup();
-					} else if (event.key == "Enter" && !event.shiftKey) {
-						event.preventDefault();
-						_this.selectFirst();
-					}
-				} else if (event.key === "@") {
-					_this.showPopupSelectors("", "at-mentions");
-				} else if (event.key === "/" && newPostText.length === 0) {
-					_this.showPopupSelectors("", "slash-commands");
-				} else if (event.key === "Enter" && !event.shiftKey) {
-					event.preventDefault();
-					if (newPostText.trim().length > 0 && !_this.props.disabled) {
-						// convert the text to plaintext so there is no HTML
-						var text = newPostText.replace(/<br>/g, "\n");
-						var doc = new DOMParser().parseFromString(text, "text/html");
-						text = doc.documentElement.textContent;
-
-						_this.props.onSubmit({
-							text: text,
-							quote: _this.state.quote,
-							mentionedUserIds: _this.props.findMentionedUserIds(text, _this.props.teammates),
-							autoMentions: _this.state.autoMentions
-						});
-						_this.reset();
-					}
-				}
-			}
-		}), Object.defineProperty(_this, "handleClickDismissQuote", {
-			enumerable: true,
-			writable: true,
-			value: function value() {
-				_this.focus();
-				_this.reset();
-			}
-		}), _temp), possibleConstructorReturn(_this, _ret);
-	}
-
-	createClass(ComposeBox, [{
-		key: "componentDidMount",
-		value: function componentDidMount() {
-			var _this2 = this;
-
-			this.disposables.push(emitter.subscribe("interaction:code-highlighted", this.handleCodeHighlightEvent));
-
-			// so that HTML doesn't get pasted into the input field. without this,
-			// HTML would be rendered as HTML when pasted
-			this._contentEditable.htmlEl.addEventListener("paste", function (e) {
-				e.preventDefault();
-				var text = e.clipboardData.getData("text/plain");
-				document.execCommand("insertHTML", false, text.replace(/\n/g, "<br>"));
-			});
-
-			// because atom hijacks most keystroke events
-			if (global.atom) {
-				this.disposables.push(atom.commands.add("atom-workspace", {
-					"codestream:focus-input": function codestreamFocusInput(_event) {
-						return _this2.focus();
-					}
-				}), atom.commands.add(".codestream", "codestream:escape", {
-					didDispatch: function didDispatch(event) {
-						return _this2.handleAtMentionKeyPress(event, "escape");
-					},
-					hiddenInCommandPalette: true
-				}), atom.commands.add(".codestream .compose.popup-open", "codestream:popup-move-up", {
-					didDispatch: function didDispatch(event) {
-						return _this2.handleAtMentionKeyPress(event, "up");
-					},
-					hiddenInCommandPalette: true
-				}), atom.commands.add(".codestream .compose.popup-open", "codestream:popup-move-down", {
-					didDispatch: function didDispatch(event) {
-						return _this2.handleAtMentionKeyPress(event, "down");
-					},
-					hiddenInCommandPalette: true
-				}), atom.commands.add(".codestream .compose.popup-open", "codestream:popup-tab", {
-					didDispatch: function didDispatch(event) {
-						return _this2.handleAtMentionKeyPress(event, "tab");
-					},
-					hiddenInCommandPalette: true
-				}), atom.commands.add(".codestream .native-key-bindings", "codestream:move-up", {
-					didDispatch: function didDispatch(event) {
-						return _this2.handleNonCapturedKeyPress(event, "up");
-					},
-					hiddenInCommandPalette: true
-				}));
-			}
-		}
-	}, {
-		key: "componentWillUnmount",
-		value: function componentWillUnmount() {
-			this.disposables.forEach(function (d) {
-				return d.dispose();
-			});
-		}
-	}, {
-		key: "insertIfEmpty",
-		value: function insertIfEmpty(newText) {
-			// if there's text in the compose area, return without
-			// adding the suggestion
-			if (this.state.newPostText && this.state.newPostText.length > 0) return;
-			// the reason for this unicode space is that chrome will
-			// not render a space at the end of a contenteditable div
-			// unless it is a &nbsp;, which is difficult to insert
-			// so we insert this unicode character instead
-			this.insertTextAtCursor(newText + ":\xA0");
-		}
-	}, {
-		key: "showPopupSelectors",
-
-
-		// set up the parameters to pass to the at mention popup
-		value: function showPopupSelectors(prefix, type) {
-			var itemsToShow = [];
-
-			if (type === "at-mentions") {
-				Object.values(this.props.teammates).forEach(function (person) {
-					var toMatch = person.firstName + " " + person.lastName + "*" + person.username;
-					if (toMatch.toLowerCase().indexOf(prefix) !== -1) {
-						itemsToShow.push({
-							id: person.id,
-							headshot: person,
-							identifier: person.username || person.email,
-							description: person.firstName + " " + person.lastName
-						});
-					}
-				});
-			} else if (type === "slash-commands") {
-				this.props.slashCommands.map(function (command) {
-					var lowered = command.id.toLowerCase();
-					if (lowered.indexOf(prefix) === 0) {
-						command.identifier = command.id;
-						itemsToShow.push(command);
-					}
-				});
-			}
-
-			if (itemsToShow.length == 0) {
-				this.hidePopup();
-			} else {
-				var selected = itemsToShow[0].id;
-
-				this.setState({
-					popupOpen: type,
-					popupPrefix: prefix,
-					popupItems: itemsToShow,
-					popupIndex: 0,
-					selectedPopupItem: selected
-				});
-			}
-		}
-	}, {
-		key: "hidePopup",
-		value: function hidePopup() {
-			this.setState({ popupOpen: false });
-		}
-	}, {
-		key: "selectFirst",
-		value: function selectFirst() {
-			this.handleSelectAtMention();
-		}
-
-		// insert the given text at the cursor of the input field
-		// after first deleting the text in toDelete
-
-	}, {
-		key: "insertTextAtCursor",
-		value: function insertTextAtCursor(text, toDelete) {
-			var sel, range;
-			sel = window.getSelection();
-
-			// if for some crazy reason we can't find a selection, return
-			// to avoid an error.
-			// https://stackoverflow.com/questions/22935320/uncaught-indexsizeerror-failed-to-execute-getrangeat-on-selection-0-is-not
-			if (sel.rangeCount == 0) return;
-
-			range = sel.getRangeAt(0);
-
-			// delete the X characters before the caret
-			range.setStart(range.commonAncestorContainer, range.startOffset - (toDelete || "").length);
-			// range.moveEnd("character", toDelete.length);
-
-			range.deleteContents();
-			var textNode = document.createTextNode(text);
-			range.insertNode(textNode);
-			range.setStartAfter(textNode);
-			sel.removeAllRanges();
-			sel.addRange(range);
-			this._contentEditable.htmlEl.normalize();
-
-			this.setState({ newPostText: this._contentEditable.htmlEl.innerHTML });
-		}
-
-		// the keypress handler for tracking up and down arrow
-		// and enter, while the at mention popup is open
-
-	}, {
-		key: "handleAtMentionKeyPress",
-		value: function handleAtMentionKeyPress(event, eventType) {
-			if (eventType == "escape") {
-				if (this.state.popupOpen) this.hidePopup();
-				// else this.handleDismissThread();
-			} else {
-				var newIndex = 0;
-				if (eventType == "down") {
-					if (this.state.popupIndex < this.state.popupItems.length - 1) {
-						newIndex = this.state.popupIndex + 1;
-					} else {
-						newIndex = 0;
-					}
-				} else if (eventType == "up") {
-					if (this.state.popupIndex == 0) {
-						newIndex = this.state.popupItems.length - 1;
-					} else {
-						newIndex = this.state.popupIndex - 1;
-					}
-				} else if (eventType == "tab") {
-					this.selectFirst();
-				}
-				this.setState({
-					popupIndex: newIndex,
-					selectedPopupItem: this.state.popupItems[newIndex].id
-				});
-			}
-		}
-
-		// for keypresses that we can't capture with standard
-		// javascript events
-
-	}, {
-		key: "handleNonCapturedKeyPress",
-		value: function handleNonCapturedKeyPress(event, eventType) {
-			if (eventType == "up") {
-				if (this.state.newPostText === "") {
-					this.props.onEmptyUpArrow(event);
-				}
-			}
-			event.abortKeyBinding();
-		}
-
-		// when the user hovers over an at-mention list item, change the
-		// state to represent a hovered state
-
-
-		// depending on the contents of the input field, if the user
-		// types a "@" then open the at-mention popup
-
-
-		// when the input field loses focus, one thing we want to do is
-		// to hide the at-mention popup
-
-	}, {
-		key: "reset",
-		value: function reset() {
-			this.setState({ newPostText: "", quote: null, autoMentions: [] });
-		}
-	}, {
-		key: "render",
-		value: function render() {
-			var _this3 = this;
-
-			var _props = this.props,
-			    forwardedRef = _props.forwardedRef,
-			    placeholder = _props.placeholder;
-			var quote = this.state.quote;
-
-
-			var quoteInfo = void 0;
-			var quoteHint = void 0;
-			if (quote) {
-				quoteInfo = quote ? react.createElement(
-					"div",
-					{ className: "code" },
-					quote.quoteText
-				) : "";
-				var range = arrayToRange(quote.quoteRange);
-				var rangeText = null;
-				if (range) {
-					if (range.start.row === range.end.row) {
-						rangeText = "Commenting on line " + (range.start.row + 1);
-					} else {
-						rangeText = "Commenting on lines " + (range.start.row + 1) + "-" + (range.end.row + 1);
-					}
-				}
-				quoteHint = react.createElement(
-					"div",
-					{ className: "hint" },
-					rangeText,
-					react.createElement(Icon, { name: "x", onClick: this.handleClickDismissQuote })
-				);
-			}
-
-			return react.createElement(
-				"div",
-				{
-					ref: forwardedRef,
-					onKeyPress: this.handleKeyPress,
-					onKeyDown: this.handleKeyDown,
-					className: classnames("compose", {
-						offscreen: this.props.offscreen,
-						"popup-open": this.state.popupOpen
-					})
-				},
-				react.createElement(AtMentionsPopup, {
-					on: this.state.popupOpen,
-					items: this.state.popupItems,
-					prefix: this.state.popupPrefix,
-					selected: this.state.selectedPopupItem,
-					handleHoverAtMention: this.handleHoverAtMention,
-					handleSelectAtMention: this.handleSelectAtMention
-				}),
-				quoteInfo,
-				quoteHint,
-				react.createElement(ContentEditable, {
-					className: classnames("native-key-bindings", btoa(placeholder)),
-					id: "input-div",
-					rows: "1",
-					tabIndex: "-1",
-					onChange: this.handleChange,
-					onBlur: this.handleBlur,
-					html: this.state.newPostText,
-					placeholder: placeholder,
-					ref: function ref(_ref5) {
-						return _this3._contentEditable = _ref5;
-					}
-				})
-			);
-		}
-	}]);
-	return ComposeBox;
-}(react.Component);
-
-var ComposeBox$1 = react.forwardRef(function (props, ref) {
-	return react.createElement(ComposeBox, _extends$4({}, props, { forwardedRef: ref }));
-});
-
-var goToInvitePage = function goToInvitePage() {
-  return { type: "GO_TO_INVITE_PAGE" };
-};
-
-var _this = undefined;
-
-// uuid generator taken from: https://gist.github.com/jed/982883
-var createTempId = function createTempId(a) {
-	return a ? (a ^ Math.random() * 16 >> a / 4).toString(16) : ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, createTempId);
-};
-
-// FIXME: this is for analytics purposes and the extension host should probably send the event
-var postCreated = function postCreated(meta) {
-	return { type: "POST_CREATED", meta: meta };
-};
-
-var resolvePendingPost = function resolvePendingPost(pendingId, post) {
-	return {
-		type: "RESOLVE_PENDING_POST",
-		payload: { pendingId: pendingId, post: post }
-	};
-};
-
-var markStreamRead = function markStreamRead(streamId) {
-	return function (dispatch, getState, _ref) {
-		var api = _ref.api;
-
-		if (!streamId) return;
-		api.markStreamRead(streamId);
-		return dispatch({ type: "CLEAR_UMI", payload: streamId });
-	};
-};
-
-// export const markPostUnRead = (streamId, postId) => (dispatch, getState, { api }) => {
-// if (!streamId) return;
-// api.markPostUnread(streamId, postId);
-// return dispatch({ type: "CLEAR_UMI", payload: streamId });
-// };
-
-var createPost = function createPost(streamId, parentPostId, text, codeBlocks, mentions, extra) {
-	return function () {
-		var _ref3 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(dispatch, getState, _ref2) {
-			var api = _ref2.api;
-
-			var _getState, context, session, pendingId, post;
-
-			return regeneratorRuntime.wrap(function _callee$(_context) {
-				while (1) {
-					switch (_context.prev = _context.next) {
-						case 0:
-							_getState = getState(), context = _getState.context, session = _getState.session;
-							pendingId = createTempId();
-
-							dispatch({
-								type: "ADD_PENDING_POST",
-								payload: {
-									id: pendingId,
-									streamId: streamId,
-									parentPostId: parentPostId,
-									codeBlocks: codeBlocks,
-									text: text,
-									commitHashWhenPosted: context.currentCommit,
-									creatorId: session.userId,
-									createdAt: new Date().getTime(),
-									pending: true
-								}
-							});
-							_context.prev = 3;
-							_context.next = 6;
-							return api.createPost({
-								id: pendingId,
-								parentPostId: parentPostId,
-								streamId: streamId,
-								text: text,
-								codeBlocks: codeBlocks,
-								mentions: mentions,
-								extra: extra
-							});
-
-						case 6:
-							post = _context.sent;
-
-							dispatch(postCreated(_extends$4({ post: post }, extra)));
-							return _context.abrupt("return", dispatch(resolvePendingPost(pendingId, post)));
-
-						case 11:
-							_context.prev = 11;
-							_context.t0 = _context["catch"](3);
-							return _context.abrupt("return", dispatch({ type: "PENDING_POST_FAILED", payload: pendingId }));
-
-						case 14:
-						case "end":
-							return _context.stop();
-					}
-				}
-			}, _callee, _this, [[3, 11]]);
-		}));
-
-		return function (_x, _x2, _x3) {
-			return _ref3.apply(this, arguments);
-		};
-	}();
-};
-
-var retryPost = function retryPost(pendingId) {
-	return function () {
-		var _ref5 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(dispatch, getState, _ref4) {
-			var api = _ref4.api;
-
-			var _getState2, posts, pendingPost, post;
-
-			return regeneratorRuntime.wrap(function _callee2$(_context2) {
-				while (1) {
-					switch (_context2.prev = _context2.next) {
-						case 0:
-							_getState2 = getState(), posts = _getState2.posts;
-							pendingPost = posts.pending.find(function (post) {
-								return post.id === pendingId;
-							});
-
-							if (!pendingPost) {
-								_context2.next = 10;
-								break;
-							}
-
-							_context2.next = 5;
-							return api.createPost(pendingPost);
-
-						case 5:
-							post = _context2.sent;
-
-							dispatch(postCreated({ post: post })); // FIXME: analytics metadata is lost
-							return _context2.abrupt("return", dispatch(resolvePendingPost(pendingId, post)));
-
-						case 10:
-						case "end":
-							return _context2.stop();
-					}
-				}
-			}, _callee2, _this);
-		}));
-
-		return function (_x4, _x5, _x6) {
-			return _ref5.apply(this, arguments);
-		};
-	}();
-};
-
-var cancelPost = function cancelPost(id) {
-	return { type: "CANCEL_PENDING_POST", payload: id };
-};
-
-var createSystemPost = function createSystemPost(streamId, parentPostId, text, seqNum) {
-	return function () {
-		var _ref7 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(dispatch, getState, _ref6) {
-			var http = _ref6.http;
-			var state, session, context, pendingId, post;
-			return regeneratorRuntime.wrap(function _callee3$(_context3) {
-				while (1) {
-					switch (_context3.prev = _context3.next) {
-						case 0:
-							state = getState();
-							session = state.session, context = state.context;
-							pendingId = createTempId();
-							post = {
-								id: pendingId,
-								teamId: context.currentTeamId,
-								timestamp: new Date().getTime(),
-								createdAt: new Date().getTime(),
-								creatorId: "codestream",
-								parentPostId: parentPostId,
-								streamId: streamId,
-								seqNum: seqNum,
-								text: text
-							};
-
-
-							dispatch({ type: "ADD_POST", payload: post });
-
-						case 5:
-						case "end":
-							return _context3.stop();
-					}
-				}
-			}, _callee3, _this);
-		}));
-
-		return function (_x7, _x8, _x9) {
-			return _ref7.apply(this, arguments);
-		};
-	}();
-};
-
-var editPost = function editPost(id, text, mentions) {
-	return function () {
-		var _ref9 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(dispatch, getState, _ref8) {
-			var api = _ref8.api;
-			var post;
-			return regeneratorRuntime.wrap(function _callee4$(_context4) {
-				while (1) {
-					switch (_context4.prev = _context4.next) {
-						case 0:
-							_context4.prev = 0;
-							_context4.next = 3;
-							return api.editPost({ id: id, text: text, mentions: mentions });
-
-						case 3:
-							post = _context4.sent;
-							return _context4.abrupt("return", dispatch({ type: "UPDATE_POST", payload: post }));
-
-						case 7:
-							_context4.prev = 7;
-							_context4.t0 = _context4["catch"](0);
-
-						case 9:
-						case "end":
-							return _context4.stop();
-					}
-				}
-			}, _callee4, _this, [[0, 7]]);
-		}));
-
-		return function (_x10, _x11, _x12) {
-			return _ref9.apply(this, arguments);
-		};
-	}();
-};
-
-var deletePost = function deletePost(id) {
-	return function () {
-		var _ref11 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(dispatch, getState, _ref10) {
-			var api = _ref10.api;
-			var post;
-			return regeneratorRuntime.wrap(function _callee5$(_context5) {
-				while (1) {
-					switch (_context5.prev = _context5.next) {
-						case 0:
-							_context5.prev = 0;
-							_context5.next = 3;
-							return api.deletePost(id);
-
-						case 3:
-							post = _context5.sent;
-							return _context5.abrupt("return", dispatch({ type: "DELETE_POST", payload: post }));
-
-						case 7:
-							_context5.prev = 7;
-							_context5.t0 = _context5["catch"](0);
-
-						case 9:
-						case "end":
-							return _context5.stop();
-					}
-				}
-			}, _callee5, _this, [[0, 7]]);
-		}));
-
-		return function (_x13, _x14, _x15) {
-			return _ref11.apply(this, arguments);
-		};
-	}();
-};
-
-// usage: setUserPreference(["favorites", "shoes", "wedges"], "red")
-var setUserPreference = function setUserPreference(prefPath, value) {
-	return function (dispatch, getState, _ref12) {
-		var api = _ref12.api;
-
-		var _getState3 = getState(),
-		    session = _getState3.session,
-		    context = _getState3.context,
-		    users = _getState3.users;
-
-		var user = users[session.userId];
-		if (!user) return;
-
-		if (!user.preferences) user.preferences = {};
-
-		// we walk down the existing user preference to set the value
-		// and simultaneously create a new preference object to pass
-		// to the API server
-		var preferences = user.preferences;
-		var newPreference = {};
-		var newPreferencePointer = newPreference;
-		while (prefPath.length > 1) {
-			var part = prefPath.shift().replace(/\./g, "*");
-			if (!preferences[part]) preferences[part] = {};
-			preferences = preferences[part];
-			newPreferencePointer[part] = {};
-			newPreferencePointer = newPreferencePointer[part];
-		}
-		preferences[prefPath[0].replace(/\./g, "*")] = value;
-		newPreferencePointer[prefPath[0].replace(/\./g, "*")] = value;
-
-		console.log("Saving preferences: ", newPreference);
-		api.saveUserPreference(newPreference);
-		// dispatch(saveUser(normalize(user)));
-	};
-};
-
-var createStream = function createStream(attributes) {
-	return function () {
-		var _ref14 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(dispatch, getState, _ref13) {
-			var api = _ref13.api;
-
-			var _getState4, context, session, stream, returnStream;
-
-			return regeneratorRuntime.wrap(function _callee6$(_context6) {
-				while (1) {
-					switch (_context6.prev = _context6.next) {
-						case 0:
-							_getState4 = getState(), context = _getState4.context, session = _getState4.session;
-							stream = {
-								teamId: context.currentTeamId,
-								type: attributes.type
-							};
-
-							if (attributes.type === "channel") {
-								stream.name = attributes.name;
-								stream.privacy = attributes.privacy;
-							}
-							if (attributes.memberIds) stream.memberIds = attributes.memberIds;
-							if (attributes.purpose) stream.purpose = attributes.purpose;
-
-							_context6.prev = 5;
-							_context6.next = 8;
-							return api.createStream(stream);
-
-						case 8:
-							returnStream = _context6.sent;
-
-							dispatch({ type: "ADD_STREAM", payload: returnStream });
-							dispatch(setCurrentStream(returnStream.id));
-							return _context6.abrupt("return", returnStream);
-
-						case 14:
-							_context6.prev = 14;
-							_context6.t0 = _context6["catch"](5);
-
-							console.log("Error: ", _context6.t0);
-
-						case 17:
-						case "end":
-							return _context6.stop();
-					}
-				}
-			}, _callee6, _this, [[5, 14]]);
-		}));
-
-		return function (_x16, _x17, _x18) {
-			return _ref14.apply(this, arguments);
-		};
-	}();
-};
-
-var setCurrentStream = function setCurrentStream(streamId) {
-	return function () {
-		var _ref15 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7(dispatch) {
-			return regeneratorRuntime.wrap(function _callee7$(_context7) {
-				while (1) {
-					switch (_context7.prev = _context7.next) {
-						case 0:
-							dispatch({ type: "SET_CURRENT_STREAM", payload: streamId });
-
-						case 1:
-						case "end":
-							return _context7.stop();
-					}
-				}
-			}, _callee7, _this);
-		}));
-
-		return function (_x19) {
-			return _ref15.apply(this, arguments);
-		};
-	}();
-};
-
-var removeUsersFromStream = function removeUsersFromStream(streamId, userIds) {
-	return function () {
-		var _ref17 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8(dispatch, getState, _ref16) {
-			var api = _ref16.api;
-			var update, returnStream;
-			return regeneratorRuntime.wrap(function _callee8$(_context8) {
-				while (1) {
-					switch (_context8.prev = _context8.next) {
-						case 0:
-							update = {
-								$pull: { memberIds: userIds }
-							};
-							_context8.prev = 1;
-							_context8.next = 4;
-							return api.updateStream(streamId, update);
-
-						case 4:
-							returnStream = _context8.sent;
-
-							console.log("return stream: ", returnStream);
-							// if (streams.length > 0) dispatch(saveStreams(normalize(streams)));
-							_context8.next = 11;
-							break;
-
-						case 8:
-							_context8.prev = 8;
-							_context8.t0 = _context8["catch"](1);
-
-							console.log("Error: ", _context8.t0);
-
-						case 11:
-						case "end":
-							return _context8.stop();
-					}
-				}
-			}, _callee8, _this, [[1, 8]]);
-		}));
-
-		return function (_x20, _x21, _x22) {
-			return _ref17.apply(this, arguments);
-		};
-	}();
-};
-
-var addUsersToStream = function addUsersToStream(streamId, userIds) {
-	return function () {
-		var _ref19 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(dispatch, getState, _ref18) {
-			var api = _ref18.api;
-			var update, returnStream;
-			return regeneratorRuntime.wrap(function _callee9$(_context9) {
-				while (1) {
-					switch (_context9.prev = _context9.next) {
-						case 0:
-							update = {
-								$push: { memberIds: userIds }
-							};
-							_context9.prev = 1;
-							_context9.next = 4;
-							return api.updateStream(streamId, update);
-
-						case 4:
-							returnStream = _context9.sent;
-
-							console.log("return stream: ", returnStream);
-							// if (streams.length > 0) dispatch(saveStreams(normalize(streams)));
-							_context9.next = 11;
-							break;
-
-						case 8:
-							_context9.prev = 8;
-							_context9.t0 = _context9["catch"](1);
-
-							console.log("Error: ", _context9.t0);
-
-						case 11:
-						case "end":
-							return _context9.stop();
-					}
-				}
-			}, _callee9, _this, [[1, 8]]);
-		}));
-
-		return function (_x23, _x24, _x25) {
-			return _ref19.apply(this, arguments);
-		};
-	}();
-};
-
-var renameStream = function renameStream(streamId, name) {
-	return function () {
-		var _ref21 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10(dispatch, getState, _ref20) {
-			var api = _ref20.api;
-			var update, returnStream;
-			return regeneratorRuntime.wrap(function _callee10$(_context10) {
-				while (1) {
-					switch (_context10.prev = _context10.next) {
-						case 0:
-							update = { name: name };
-							_context10.prev = 1;
-							_context10.next = 4;
-							return api.updateStream(streamId, update);
-
-						case 4:
-							returnStream = _context10.sent;
-
-							console.log("return stream: ", returnStream);
-							return _context10.abrupt("return", returnStream);
-
-						case 9:
-							_context10.prev = 9;
-							_context10.t0 = _context10["catch"](1);
-
-							console.log("Error: ", _context10.t0);
-
-						case 12:
-						case "end":
-							return _context10.stop();
-					}
-				}
-			}, _callee10, _this, [[1, 9]]);
-		}));
-
-		return function (_x26, _x27, _x28) {
-			return _ref21.apply(this, arguments);
-		};
-	}();
-};
-
-var archiveStream = function archiveStream(streamId, value) {
-	return function () {
-		var _ref23 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11(dispatch, getState, _ref22) {
-			var api = _ref22.api;
-			var update, returnStream;
-			return regeneratorRuntime.wrap(function _callee11$(_context11) {
-				while (1) {
-					switch (_context11.prev = _context11.next) {
-						case 0:
-							update = { isArchived: value };
-							_context11.prev = 1;
-							_context11.next = 4;
-							return api.updateStream(streamId, update);
-
-						case 4:
-							returnStream = _context11.sent;
-
-							console.log("return stream: ", returnStream);
-							return _context11.abrupt("return", returnStream);
-
-						case 9:
-							_context11.prev = 9;
-							_context11.t0 = _context11["catch"](1);
-
-							console.log("Error: ", _context11.t0);
-
-						case 12:
-						case "end":
-							return _context11.stop();
-					}
-				}
-			}, _callee11, _this, [[1, 9]]);
-		}));
-
-		return function (_x29, _x30, _x31) {
-			return _ref23.apply(this, arguments);
-		};
-	}();
-};
-
-var streamActions = /*#__PURE__*/Object.freeze({
-	markStreamRead: markStreamRead,
-	createPost: createPost,
-	retryPost: retryPost,
-	cancelPost: cancelPost,
-	createSystemPost: createSystemPost,
-	editPost: editPost,
-	deletePost: deletePost,
-	setUserPreference: setUserPreference,
-	createStream: createStream,
-	setCurrentStream: setCurrentStream,
-	removeUsersFromStream: removeUsersFromStream,
-	addUsersToStream: addUsersToStream,
-	renameStream: renameStream,
-	archiveStream: archiveStream
-});
-
-var initialState = {
-	byTeam: {
-		//[teamId]: { [streamId]: {} }
-	},
-	byRepo: {
-		//[repoId]: { byFile: {} }
-	}
-};
-
-var addStreamForTeam = function addStreamForTeam(state, stream) {
-	var teamId = stream.teamId;
-	var teamStreams = state[teamId] || {};
-	return _extends$4({}, state, defineProperty$1({}, teamId, _extends$4({}, teamStreams, defineProperty$1({}, stream.id, stream))));
-};
-
-var addStream = function addStream(state, stream) {
-	var existingStreamsForRepo = state.byRepo[stream.repoId] || { byFile: {}, byId: {} };
-	return {
-		byTeam: addStreamForTeam(state.byTeam, stream),
-		byRepo: _extends$4({}, state.byRepo, defineProperty$1({}, stream.repoId, {
-			byFile: _extends$4({}, existingStreamsForRepo.byFile, defineProperty$1({}, stream.file, stream)),
-			byId: _extends$4({}, existingStreamsForRepo.byId, defineProperty$1({}, stream.id, stream))
-		}))
-	};
-};
-
-var streams = (function () {
-	var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState;
-	var _ref = arguments[1];
-	var type = _ref.type,
-	    payload = _ref.payload;
-
-	switch (type) {
-		case "ADD_STREAMS":
-		case "BOOTSTRAP_STREAMS":
-			return payload.reduce(addStream, state);
-		case "STREAMS-UPDATE_FROM_PUBNUB":
-		case "ADD_STREAM":
-			return addStream(state, payload);
-		default:
-			return state;
-	}
-});
-
-// Selectors
-var getStreamForTeam = function getStreamForTeam(state, teamId) {
-	var streams = state.byTeam[teamId] || {};
-	return Object.values(streams).find(function (stream) {
-		return stream.isTeamStream && stream.name === "general";
-	});
-};
-
-var getChannelStreamsForTeam = function getChannelStreamsForTeam(state, teamId, userId) {
-	var streams = state.byTeam[teamId] || {};
-	return Object.values(streams).filter(function (stream) {
-		return stream.type === "channel" && !stream.isArchived && (stream.isTeamStream || underscore.contains(stream.memberIds, userId));
-	});
-};
-
-var getPublicChannelStreamsForTeam = function getPublicChannelStreamsForTeam(state, teamId, userId) {
-	var streams = state.byTeam[teamId] || {};
-	return Object.values(streams).filter(function (stream) {
-		return stream.type === "channel" && !stream.isArchived && !stream.isTeamStream && !underscore.contains(stream.memberIds, userId);
-	});
-};
-
-var getArchivedChannelStreamsForTeam = function getArchivedChannelStreamsForTeam(state, teamId, userId) {
-	var streams = state.byTeam[teamId] || {};
-	return Object.values(streams).filter(function (stream) {
-		return stream.type === "channel" && stream.isArchived;
-	});
-};
-
-var makeName = function makeName(user) {
-	if (!user) return;
-	if (user.username) {
-		return user.username;
-	} else {
-		return user.email.replace(/@.*/, "");
-	}
-};
-
-var makeDirectMessageStreamName = function makeDirectMessageStreamName(memberIds, users) {
-	var names = memberIds.map(function (id) {
-		return makeName(users[id]);
-	}).filter(Boolean);
-	if (!names) {
-		console.log(memberIds);
-		return "NO NAME";
-	}
-	return names.join(", ");
-};
-
-var getDirectMessageStreamsForTeam = function getDirectMessageStreamsForTeam(state, teamId, userId, users) {
-	var streams = state.byTeam[teamId] || {};
-	var directStreams = Object.values(streams).filter(function (stream) {
-		return stream.type === "direct";
-	});
-	directStreams.map(function (stream) {
-		// if it's a direct message w/myself, then use my name, otherwise exclude myself
-		if (stream.memberIds.length === 1 && stream.memberIds[0] === userId) {
-			stream.name = makeDirectMessageStreamName([userId], users);
-		} else {
-			var withoutMe = (stream.memberIds || []).filter(function (id) {
-				return id !== userId;
-			});
-			stream.name = makeDirectMessageStreamName(withoutMe, users);
-		}
-	});
-	return directStreams;
-};
-
-var getStreamForId = function getStreamForId(state, teamId, streamId) {
-	var streams = state.byTeam[teamId] || {};
-	return Object.values(streams).find(function (stream) {
-		return stream.id === streamId;
-	});
-};
-
-var getStreamForRepoAndFile = function getStreamForRepoAndFile(state, repoId, file) {
-	var filesForRepo = (state.byRepo[repoId] || {}).byFile;
-	if (filesForRepo) return filesForRepo[file];
-};
-
-// If stream for a pending post is created, the pending post will be lost (not displayed)
-// TODO: reconcile pending posts for a file with stream when the stream is created
-var getPostsForStream = function getPostsForStream(_ref2) {
-	var byStream = _ref2.byStream,
-	    pending = _ref2.pending;
-	var streamId = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "";
-
-	if (streamId === "") return [];
-	var pendingForStream = pending.filter(function (it) {
-		try {
-			return it.streamId === streamId || it.stream.file === streamId;
-		} catch (e) {
-			return false;
-		}
-	});
-	return [].concat(toConsumableArray(underscore.sortBy(byStream[streamId], "seqNum")), toConsumableArray(pendingForStream));
-};
-
 var Menu = function (_Component) {
 	inherits(Menu, _Component);
 
@@ -35749,7 +33822,7 @@ var mapStateToProps = function mapStateToProps(_ref) {
 	    session = _ref.session;
 	return { session: session };
 };
-var ChannelMenu = connect(mapStateToProps, _extends$4({}, contextActions, streamActions)
+var ChannelMenu = connect(mapStateToProps, _extends$4({}, contextActions, actions)
 // ...userActions
 )(SimpleChannelMenu);
 
@@ -36082,6 +34155,33 @@ var ChannelPanel = connect(mapStateToProps$1, {
 	setCurrentStream: setCurrentStream,
 	goToInvitePage: goToInvitePage
 })(SimpleChannelPanel);
+
+Button.defaultProps = {
+	className: "",
+	disabled: false,
+	loading: false
+};
+
+function Button(_ref) {
+	var children = _ref.children,
+	    className = _ref.className,
+	    disabled = _ref.disabled,
+	    isOffline = _ref.isOffline,
+	    loading = _ref.loading,
+	    extras = objectWithoutProperties(_ref, ["children", "className", "disabled", "isOffline", "loading"]);
+	var extraProps = objectWithoutProperties(extras, ["dispatch"]); // remove non-html attributes
+
+	return react.createElement(
+		"button",
+		_extends$4({
+			className: classnames("native-key-bindings btn inline-block-tight", className, {
+				"btn-primary": !loading
+			}),
+			disabled: loading || disabled
+		}, extraProps),
+		loading ? react.createElement("span", { className: "loading loading-spinner-tiny inline-block" }) : children
+	);
+}
 
 var localeData = createCommonjsModule(function (module, exports) {
 !function(e,t){module.exports=t();}(commonjsGlobal,function(){return [{locale:"af",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"jaar",relative:{0:"hierdie jaar",1:"volgende jaar","-1":"verlede jaar"},relativeTime:{future:{one:"oor {0} jaar",other:"oor {0} jaar"},past:{one:"{0} jaar gelede",other:"{0} jaar gelede"}}},month:{displayName:"maand",relative:{0:"vandeesmaand",1:"volgende maand","-1":"verlede maand"},relativeTime:{future:{one:"oor {0} minuut",other:"oor {0} minuut"},past:{one:"{0} maand gelede",other:"{0} maande gelede"}}},day:{displayName:"dag",relative:{0:"vandag",1:"môre",2:"oormôre","-2":"eergister","-1":"gister"},relativeTime:{future:{one:"oor {0} minuut",other:"oor {0} minuut"},past:{one:"{0} dag gelede",other:"{0} dae gelede"}}},hour:{displayName:"uur",relative:{0:"hierdie uur"},relativeTime:{future:{one:"oor {0} uur",other:"oor {0} uur"},past:{one:"{0} uur gelede",other:"{0} uur gelede"}}},minute:{displayName:"minuut",relative:{0:"hierdie minuut"},relativeTime:{future:{one:"oor {0} minuut",other:"oor {0} minuut"},past:{one:"{0} minuut gelede",other:"{0} minute gelede"}}},second:{displayName:"sekonde",relative:{0:"nou"},relativeTime:{future:{one:"oor {0} sekonde",other:"oor {0} sekondes"},past:{one:"{0} sekonde gelede",other:"{0} sekondes gelede"}}}}},{locale:"af-NA",parentLocale:"af"},{locale:"agq",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"kɨnûm",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"ndzɔŋ",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"utsuʔ",relative:{0:"nɛ",1:"tsʉtsʉ","-1":"ā zūɛɛ"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"tàm",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"menè",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"sɛkɔ̀n",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"ak",pluralRuleFunction:function(e,t){return t?"other":0==e||1==e?"one":"other"},fields:{year:{displayName:"Afe",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Bosome",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Da",relative:{0:"Ndɛ",1:"Ɔkyena","-1":"Ndeda"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Dɔnhwer",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Sema",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Sɛkɛnd",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"am",pluralRuleFunction:function(e,t){return t?"other":e>=0&&e<=1?"one":"other"},fields:{year:{displayName:"ዓመት",relative:{0:"በዚህ ዓመት",1:"የሚቀጥለው ዓመት","-1":"ያለፈው ዓመት"},relativeTime:{future:{one:"በ{0} ዓመታት ውስጥ",other:"በ{0} ዓመታት ውስጥ"},past:{one:"ከ{0} ዓመት በፊት",other:"ከ{0} ዓመታት በፊት"}}},month:{displayName:"ወር",relative:{0:"በዚህ ወር",1:"የሚቀጥለው ወር","-1":"ያለፈው ወር"},relativeTime:{future:{one:"በ{0} ወር ውስጥ",other:"በ{0} ወራት ውስጥ"},past:{one:"ከ{0} ወር በፊት",other:"ከ{0} ወራት በፊት"}}},day:{displayName:"ቀን",relative:{0:"ዛሬ",1:"ነገ",2:"ከነገ ወዲያ","-2":"ከትናንት ወዲያ","-1":"ትናንት"},relativeTime:{future:{one:"በ{0} ቀን ውስጥ",other:"በ{0} ቀናት ውስጥ"},past:{one:"ከ{0} ቀን በፊት",other:"ከ{0} ቀናት በፊት"}}},hour:{displayName:"ሰዓት",relative:{0:"ይህ ሰዓት"},relativeTime:{future:{one:"በ{0} ሰዓት ውስጥ",other:"በ{0} ሰዓቶች ውስጥ"},past:{one:"ከ{0} ሰዓት በፊት",other:"ከ{0} ሰዓቶች በፊት"}}},minute:{displayName:"ደቂቃ",relative:{0:"ይህ ደቂቃ"},relativeTime:{future:{one:"በ{0} ደቂቃ ውስጥ",other:"በ{0} ደቂቃዎች ውስጥ"},past:{one:"ከ{0} ደቂቃ በፊት",other:"ከ{0} ደቂቃዎች በፊት"}}},second:{displayName:"ሰከንድ",relative:{0:"አሁን"},relativeTime:{future:{one:"በ{0} ሰከንድ ውስጥ",other:"በ{0} ሰከንዶች ውስጥ"},past:{one:"ከ{0} ሰከንድ በፊት",other:"ከ{0} ሰከንዶች በፊት"}}}}},{locale:"ar",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=Number(a[0])==e&&a[0].slice(-2);return t?"other":0==e?"zero":1==e?"one":2==e?"two":r>=3&&r<=10?"few":r>=11&&r<=99?"many":"other"},fields:{year:{displayName:"السنة",relative:{0:"السنة الحالية",1:"السنة القادمة","-1":"السنة الماضية"},relativeTime:{future:{zero:"خلال {0} سنة",one:"خلال سنة واحدة",two:"خلال سنتين",few:"خلال {0} سنوات",many:"خلال {0} سنة",other:"خلال {0} سنة"},past:{zero:"قبل {0} سنة",one:"قبل سنة واحدة",two:"قبل سنتين",few:"قبل {0} سنوات",many:"قبل {0} سنة",other:"قبل {0} سنة"}}},month:{displayName:"الشهر",relative:{0:"هذا الشهر",1:"الشهر القادم","-1":"الشهر الماضي"},relativeTime:{future:{zero:"خلال {0} شهر",one:"خلال شهر واحد",two:"خلال شهرين",few:"خلال {0} أشهر",many:"خلال {0} شهرًا",other:"خلال {0} شهر"},past:{zero:"قبل {0} شهر",one:"قبل شهر واحد",two:"قبل شهرين",few:"قبل {0} أشهر",many:"قبل {0} شهرًا",other:"قبل {0} شهر"}}},day:{displayName:"يوم",relative:{0:"اليوم",1:"غدًا",2:"بعد الغد","-2":"أول أمس","-1":"أمس"},relativeTime:{future:{zero:"خلال {0} يوم",one:"خلال يوم واحد",two:"خلال يومين",few:"خلال {0} أيام",many:"خلال {0} يومًا",other:"خلال {0} يوم"},past:{zero:"قبل {0} يوم",one:"قبل يوم واحد",two:"قبل يومين",few:"قبل {0} أيام",many:"قبل {0} يومًا",other:"قبل {0} يوم"}}},hour:{displayName:"الساعات",relative:{0:"الساعة الحالية"},relativeTime:{future:{zero:"خلال {0} ساعة",one:"خلال ساعة واحدة",two:"خلال ساعتين",few:"خلال {0} ساعات",many:"خلال {0} ساعة",other:"خلال {0} ساعة"},past:{zero:"قبل {0} ساعة",one:"قبل ساعة واحدة",two:"قبل ساعتين",few:"قبل {0} ساعات",many:"قبل {0} ساعة",other:"قبل {0} ساعة"}}},minute:{displayName:"الدقائق",relative:{0:"هذه الدقيقة"},relativeTime:{future:{zero:"خلال {0} دقيقة",one:"خلال دقيقة واحدة",two:"خلال دقيقتين",few:"خلال {0} دقائق",many:"خلال {0} دقيقة",other:"خلال {0} دقيقة"},past:{zero:"قبل {0} دقيقة",one:"قبل دقيقة واحدة",two:"قبل دقيقتين",few:"قبل {0} دقائق",many:"قبل {0} دقيقة",other:"قبل {0} دقيقة"}}},second:{displayName:"الثواني",relative:{0:"الآن"},relativeTime:{future:{zero:"خلال {0} ثانية",one:"خلال ثانية واحدة",two:"خلال ثانيتين",few:"خلال {0} ثوانٍ",many:"خلال {0} ثانية",other:"خلال {0} ثانية"},past:{zero:"قبل {0} ثانية",one:"قبل ثانية واحدة",two:"قبل ثانيتين",few:"قبل {0} ثوانِ",many:"قبل {0} ثانية",other:"قبل {0} ثانية"}}}}},{locale:"ar-AE",parentLocale:"ar",fields:{year:{displayName:"السنة",relative:{0:"هذه السنة",1:"السنة التالية","-1":"السنة الماضية"},relativeTime:{future:{zero:"خلال {0} سنة",one:"خلال سنة واحدة",two:"خلال سنتين",few:"خلال {0} سنوات",many:"خلال {0} سنة",other:"خلال {0} سنة"},past:{zero:"قبل {0} سنة",one:"قبل سنة واحدة",two:"قبل سنتين",few:"قبل {0} سنوات",many:"قبل {0} سنة",other:"قبل {0} سنة"}}},month:{displayName:"الشهر",relative:{0:"هذا الشهر",1:"الشهر القادم","-1":"الشهر الماضي"},relativeTime:{future:{zero:"خلال {0} شهر",one:"خلال شهر واحد",two:"خلال شهرين",few:"خلال {0} أشهر",many:"خلال {0} شهرًا",other:"خلال {0} شهر"},past:{zero:"قبل {0} شهر",one:"قبل شهر واحد",two:"قبل شهرين",few:"قبل {0} أشهر",many:"قبل {0} شهرًا",other:"قبل {0} شهر"}}},day:{displayName:"يوم",relative:{0:"اليوم",1:"غدًا",2:"بعد الغد","-2":"أول أمس","-1":"أمس"},relativeTime:{future:{zero:"خلال {0} يوم",one:"خلال يوم واحد",two:"خلال يومين",few:"خلال {0} أيام",many:"خلال {0} يومًا",other:"خلال {0} يوم"},past:{zero:"قبل {0} يوم",one:"قبل يوم واحد",two:"قبل يومين",few:"قبل {0} أيام",many:"قبل {0} يومًا",other:"قبل {0} يوم"}}},hour:{displayName:"الساعات",relative:{0:"الساعة الحالية"},relativeTime:{future:{zero:"خلال {0} ساعة",one:"خلال ساعة واحدة",two:"خلال ساعتين",few:"خلال {0} ساعات",many:"خلال {0} ساعة",other:"خلال {0} ساعة"},past:{zero:"قبل {0} ساعة",one:"قبل ساعة واحدة",two:"قبل ساعتين",few:"قبل {0} ساعات",many:"قبل {0} ساعة",other:"قبل {0} ساعة"}}},minute:{displayName:"الدقائق",relative:{0:"هذه الدقيقة"},relativeTime:{future:{zero:"خلال {0} دقيقة",one:"خلال دقيقة واحدة",two:"خلال دقيقتين",few:"خلال {0} دقائق",many:"خلال {0} دقيقة",other:"خلال {0} دقيقة"},past:{zero:"قبل {0} دقيقة",one:"قبل دقيقة واحدة",two:"قبل دقيقتين",few:"قبل {0} دقائق",many:"قبل {0} دقيقة",other:"قبل {0} دقيقة"}}},second:{displayName:"الثواني",relative:{0:"الآن"},relativeTime:{future:{zero:"خلال {0} ثانية",one:"خلال ثانية واحدة",two:"خلال ثانيتين",few:"خلال {0} ثوانٍ",many:"خلال {0} ثانية",other:"خلال {0} ثانية"},past:{zero:"قبل {0} ثانية",one:"قبل ثانية واحدة",two:"قبل ثانيتين",few:"قبل {0} ثوانِ",many:"قبل {0} ثانية",other:"قبل {0} ثانية"}}}}},{locale:"ar-BH",parentLocale:"ar"},{locale:"ar-DJ",parentLocale:"ar"},{locale:"ar-DZ",parentLocale:"ar"},{locale:"ar-EG",parentLocale:"ar"},{locale:"ar-EH",parentLocale:"ar"},{locale:"ar-ER",parentLocale:"ar"},{locale:"ar-IL",parentLocale:"ar"},{locale:"ar-IQ",parentLocale:"ar"},{locale:"ar-JO",parentLocale:"ar"},{locale:"ar-KM",parentLocale:"ar"},{locale:"ar-KW",parentLocale:"ar"},{locale:"ar-LB",parentLocale:"ar"},{locale:"ar-LY",parentLocale:"ar"},{locale:"ar-MA",parentLocale:"ar"},{locale:"ar-MR",parentLocale:"ar"},{locale:"ar-OM",parentLocale:"ar"},{locale:"ar-PS",parentLocale:"ar"},{locale:"ar-QA",parentLocale:"ar"},{locale:"ar-SA",parentLocale:"ar"},{locale:"ar-SD",parentLocale:"ar"},{locale:"ar-SO",parentLocale:"ar"},{locale:"ar-SS",parentLocale:"ar"},{locale:"ar-SY",parentLocale:"ar"},{locale:"ar-TD",parentLocale:"ar"},{locale:"ar-TN",parentLocale:"ar"},{locale:"ar-YE",parentLocale:"ar"},{locale:"ars",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=Number(a[0])==e&&a[0].slice(-2);return t?"other":0==e?"zero":1==e?"one":2==e?"two":r>=3&&r<=10?"few":r>=11&&r<=99?"many":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"as",pluralRuleFunction:function(e,t){return t?1==e||5==e||7==e||8==e||9==e||10==e?"one":2==e||3==e?"two":4==e?"few":6==e?"many":"other":e>=0&&e<=1?"one":"other"},fields:{year:{displayName:"বছৰ",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"মাহ",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"দিন",relative:{0:"আজি",1:"কাইলৈ",2:"পৰহিলৈ","-2":"পৰহি","-1":"কালি"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"ঘণ্টা",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"মিনিট",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"ছেকেণ্ড",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"asa",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Mwaka",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Mweji",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Thiku",relative:{0:"Iyoo",1:"Yavo","-1":"Ighuo"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Thaa",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Dakika",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Thekunde",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"ast",pluralRuleFunction:function(e,t){var a=!String(e).split(".")[1];return t?"other":1==e&&a?"one":"other"},fields:{year:{displayName:"añu",relative:{0:"esti añu",1:"l’añu viniente","-1":"l’añu pasáu"},relativeTime:{future:{one:"en {0} añu",other:"en {0} años"},past:{one:"hai {0} añu",other:"hai {0} años"}}},month:{displayName:"mes",relative:{0:"esti mes",1:"el mes viniente","-1":"el mes pasáu"},relativeTime:{future:{one:"en {0} mes",other:"en {0} meses"},past:{one:"hai {0} mes",other:"hai {0} meses"}}},day:{displayName:"día",relative:{0:"güei",1:"mañana",2:"pasao mañana","-2":"antayeri","-1":"ayeri"},relativeTime:{future:{one:"en {0} día",other:"en {0} díes"},past:{one:"hai {0} día",other:"hai {0} díes"}}},hour:{displayName:"hora",relative:{0:"esta hora"},relativeTime:{future:{one:"en {0} hora",other:"en {0} hores"},past:{one:"hai {0} hora",other:"hai {0} hores"}}},minute:{displayName:"minutu",relative:{0:"esti minutu"},relativeTime:{future:{one:"en {0} minutu",other:"en {0} minutos"},past:{one:"hai {0} minutu",other:"hai {0} minutos"}}},second:{displayName:"segundu",relative:{0:"agora"},relativeTime:{future:{one:"en {0} segundu",other:"en {0} segundos"},past:{one:"hai {0} segundu",other:"hai {0} segundos"}}}}},{locale:"az",pluralRuleFunction:function(e,t){var a=String(e).split(".")[0],r=a.slice(-1),i=a.slice(-2),o=a.slice(-3);return t?1==r||2==r||5==r||7==r||8==r||20==i||50==i||70==i||80==i?"one":3==r||4==r||100==o||200==o||300==o||400==o||500==o||600==o||700==o||800==o||900==o?"few":0==a||6==r||40==i||60==i||90==i?"many":"other":1==e?"one":"other"},fields:{year:{displayName:"İl",relative:{0:"bu il",1:"gələn il","-1":"keçən il"},relativeTime:{future:{one:"{0} il ərzində",other:"{0} il ərzində"},past:{one:"{0} il öncə",other:"{0} il öncə"}}},month:{displayName:"Ay",relative:{0:"bu ay",1:"gələn ay","-1":"keçən ay"},relativeTime:{future:{one:"{0} ay ərzində",other:"{0} ay ərzində"},past:{one:"{0} ay öncə",other:"{0} ay öncə"}}},day:{displayName:"Gün",relative:{0:"bu gün",1:"sabah","-1":"dünən"},relativeTime:{future:{one:"{0} gün ərzində",other:"{0} gün ərzində"},past:{one:"{0} gün öncə",other:"{0} gün öncə"}}},hour:{displayName:"Saat",relative:{0:"bu saat"},relativeTime:{future:{one:"{0} saat ərzində",other:"{0} saat ərzində"},past:{one:"{0} saat öncə",other:"{0} saat öncə"}}},minute:{displayName:"Dəqiqə",relative:{0:"bu dəqiqə"},relativeTime:{future:{one:"{0} dəqiqə ərzində",other:"{0} dəqiqə ərzində"},past:{one:"{0} dəqiqə öncə",other:"{0} dəqiqə öncə"}}},second:{displayName:"Saniyə",relative:{0:"indi"},relativeTime:{future:{one:"{0} saniyə ərzində",other:"{0} saniyə ərzində"},past:{one:"{0} saniyə öncə",other:"{0} saniyə öncə"}}}}},{locale:"az-Arab",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"az-Cyrl",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"az-Latn",parentLocale:"az"},{locale:"bas",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"ŋwìi",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"soŋ",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"kɛl",relative:{0:"lɛ̀n",1:"yàni","-1":"yààni"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"ŋgɛŋ",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"ŋget",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"hìŋgeŋget",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"be",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=Number(a[0])==e,i=r&&a[0].slice(-1),o=r&&a[0].slice(-2);return t?2!=i&&3!=i||12==o||13==o?"other":"few":1==i&&11!=o?"one":i>=2&&i<=4&&(o<12||o>14)?"few":r&&0==i||i>=5&&i<=9||o>=11&&o<=14?"many":"other"},fields:{year:{displayName:"год",relative:{0:"у гэтым годзе",1:"у наступным годзе","-1":"у мінулым годзе"},relativeTime:{future:{one:"праз {0} год",few:"праз {0} гады",many:"праз {0} гадоў",other:"праз {0} года"},past:{one:"{0} год таму",few:"{0} гады таму",many:"{0} гадоў таму",other:"{0} года таму"}}},month:{displayName:"месяц",relative:{0:"у гэтым месяцы",1:"у наступным месяцы","-1":"у мінулым месяцы"},relativeTime:{future:{one:"праз {0} месяц",few:"праз {0} месяцы",many:"праз {0} месяцаў",other:"праз {0} месяца"},past:{one:"{0} месяц таму",few:"{0} месяцы таму",many:"{0} месяцаў таму",other:"{0} месяца таму"}}},day:{displayName:"дзень",relative:{0:"сёння",1:"заўтра",2:"паслязаўтра","-2":"пазаўчора","-1":"учора"},relativeTime:{future:{one:"праз {0} дзень",few:"праз {0} дні",many:"праз {0} дзён",other:"праз {0} дня"},past:{one:"{0} дзень таму",few:"{0} дні таму",many:"{0} дзён таму",other:"{0} дня таму"}}},hour:{displayName:"гадзіна",relative:{0:"у гэту гадзіну"},relativeTime:{future:{one:"праз {0} гадзіну",few:"праз {0} гадзіны",many:"праз {0} гадзін",other:"праз {0} гадзіны"},past:{one:"{0} гадзіну таму",few:"{0} гадзіны таму",many:"{0} гадзін таму",other:"{0} гадзіны таму"}}},minute:{displayName:"хвіліна",relative:{0:"у гэту хвіліну"},relativeTime:{future:{one:"праз {0} хвіліну",few:"праз {0} хвіліны",many:"праз {0} хвілін",other:"праз {0} хвіліны"},past:{one:"{0} хвіліну таму",few:"{0} хвіліны таму",many:"{0} хвілін таму",other:"{0} хвіліны таму"}}},second:{displayName:"секунда",relative:{0:"цяпер"},relativeTime:{future:{one:"праз {0} секунду",few:"праз {0} секунды",many:"праз {0} секунд",other:"праз {0} секунды"},past:{one:"{0} секунду таму",few:"{0} секунды таму",many:"{0} секунд таму",other:"{0} секунды таму"}}}}},{locale:"bem",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Umwaka",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Umweshi",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Ubushiku",relative:{0:"Lelo",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Insa",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Mineti",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Sekondi",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"bez",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Mwaha",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Mwedzi",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Sihu",relative:{0:"Neng’u ni",1:"Hilawu","-1":"Igolo"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Saa",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Dakika",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Sekunde",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"bg",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"година",relative:{0:"тази година",1:"следващата година","-1":"миналата година"},relativeTime:{future:{one:"след {0} година",other:"след {0} години"},past:{one:"преди {0} година",other:"преди {0} години"}}},month:{displayName:"месец",relative:{0:"този месец",1:"следващ месец","-1":"предходен месец"},relativeTime:{future:{one:"след {0} месец",other:"след {0} месеца"},past:{one:"преди {0} месец",other:"преди {0} месеца"}}},day:{displayName:"ден",relative:{0:"днес",1:"утре",2:"вдругиден","-2":"онзи ден","-1":"вчера"},relativeTime:{future:{one:"след {0} ден",other:"след {0} дни"},past:{one:"преди {0} ден",other:"преди {0} дни"}}},hour:{displayName:"час",relative:{0:"в този час"},relativeTime:{future:{one:"след {0} час",other:"след {0} часа"},past:{one:"преди {0} час",other:"преди {0} часа"}}},minute:{displayName:"минута",relative:{0:"в тази минута"},relativeTime:{future:{one:"след {0} минута",other:"след {0} минути"},past:{one:"преди {0} минута",other:"преди {0} минути"}}},second:{displayName:"секунда",relative:{0:"сега"},relativeTime:{future:{one:"след {0} секунда",other:"след {0} секунди"},past:{one:"преди {0} секунда",other:"преди {0} секунди"}}}}},{locale:"bh",pluralRuleFunction:function(e,t){return t?"other":0==e||1==e?"one":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"bm",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"san",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"kalo",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"don",relative:{0:"bi",1:"sini","-1":"kunu"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"lɛrɛ",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"miniti",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"sekondi",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"bm-Nkoo",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"bn",pluralRuleFunction:function(e,t){return t?1==e||5==e||7==e||8==e||9==e||10==e?"one":2==e||3==e?"two":4==e?"few":6==e?"many":"other":e>=0&&e<=1?"one":"other"},fields:{year:{displayName:"বছর",relative:{0:"এই বছর",1:"পরের বছর","-1":"গত বছর"},relativeTime:{future:{one:"{0} বছরে",other:"{0} বছরে"},past:{one:"{0} বছর পূর্বে",other:"{0} বছর পূর্বে"}}},month:{displayName:"মাস",relative:{0:"এই মাস",1:"পরের মাস","-1":"গত মাস"},relativeTime:{future:{one:"{0} মাসে",other:"{0} মাসে"},past:{one:"{0} মাস আগে",other:"{0} মাস আগে"}}},day:{displayName:"দিন",relative:{0:"আজ",1:"আগামীকাল",2:"আগামী পরশু","-2":"গত পরশু","-1":"গতকাল"},relativeTime:{future:{one:"{0} দিনের মধ্যে",other:"{0} দিনের মধ্যে"},past:{one:"{0} দিন আগে",other:"{0} দিন আগে"}}},hour:{displayName:"ঘন্টা",relative:{0:"এই ঘণ্টায়"},relativeTime:{future:{one:"{0} ঘন্টায়",other:"{0} ঘন্টায়"},past:{one:"{0} ঘন্টা আগে",other:"{0} ঘন্টা আগে"}}},minute:{displayName:"মিনিট",relative:{0:"এই মিনিট"},relativeTime:{future:{one:"{0} মিনিটে",other:"{0} মিনিটে"},past:{one:"{0} মিনিট আগে",other:"{0} মিনিট পূর্বে"}}},second:{displayName:"সেকেন্ড",relative:{0:"এখন"},relativeTime:{future:{one:"{0} সেকেন্ডে",other:"{0} সেকেন্ডে"},past:{one:"{0} সেকেন্ড পূর্বে",other:"{0} সেকেন্ড পূর্বে"}}}}},{locale:"bn-IN",parentLocale:"bn"},{locale:"bo",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"ལོ།",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"ཟླ་བ་",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"ཉིན།",relative:{0:"དེ་རིང་",1:"སང་ཉིན་",2:"གནངས་ཉིན་","-2":"ཁས་ཉིན་","-1":"ཁས་ས་"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"ཆུ་ཚོད་",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"སྐར་མ།",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"སྐར་ཆ།",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"bo-IN",parentLocale:"bo"},{locale:"br",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=Number(a[0])==e,i=r&&a[0].slice(-1),o=r&&a[0].slice(-2),n=r&&a[0].slice(-6);return t?"other":1==i&&11!=o&&71!=o&&91!=o?"one":2==i&&12!=o&&72!=o&&92!=o?"two":(3==i||4==i||9==i)&&(o<10||o>19)&&(o<70||o>79)&&(o<90||o>99)?"few":0!=e&&r&&0==n?"many":"other"},fields:{year:{displayName:"bloaz",relative:{0:"hevlene",1:"ar bloaz a zeu","-1":"warlene"},relativeTime:{future:{one:"a-benn {0} bloaz",two:"a-benn {0} vloaz",few:"a-benn {0} bloaz",many:"a-benn {0} a vloazioù",other:"a-benn {0} vloaz"},past:{one:"{0} bloaz zo",two:"{0} vloaz zo",few:"{0} bloaz zo",many:"{0} a vloazioù zo",other:"{0} vloaz zo"}}},month:{displayName:"miz",relative:{0:"ar miz-mañ",1:"ar miz a zeu","-1":"ar miz diaraok"},relativeTime:{future:{one:"a-benn {0} miz",two:"a-benn {0} viz",few:"a-benn {0} miz",many:"a-benn {0} a vizioù",other:"a-benn {0} miz"},past:{one:"{0} miz zo",two:"{0} viz zo",few:"{0} miz zo",many:"{0} a vizioù zo",other:"{0} miz zo"}}},day:{displayName:"deiz",relative:{0:"hiziv",1:"warcʼhoazh","-2":"dercʼhent-decʼh","-1":"decʼh"},relativeTime:{future:{one:"a-benn {0} deiz",two:"a-benn {0} zeiz",few:"a-benn {0} deiz",many:"a-benn {0} a zeizioù",other:"a-benn {0} deiz"},past:{one:"{0} deiz zo",two:"{0} zeiz zo",few:"{0} deiz zo",many:"{0} a zeizioù zo",other:"{0} deiz zo"}}},hour:{displayName:"eur",relative:{0:"this hour"},relativeTime:{future:{one:"a-benn {0} eur",two:"a-benn {0} eur",few:"a-benn {0} eur",many:"a-benn {0} a eurioù",other:"a-benn {0} eur"},past:{one:"{0} eur zo",two:"{0} eur zo",few:"{0} eur zo",many:"{0} a eurioù zo",other:"{0} eur zo"}}},minute:{displayName:"munut",relative:{0:"this minute"},relativeTime:{future:{one:"a-benn {0} munut",two:"a-benn {0} vunut",few:"a-benn {0} munut",many:"a-benn {0} a vunutoù",other:"a-benn {0} munut"},past:{one:"{0} munut zo",two:"{0} vunut zo",few:"{0} munut zo",many:"{0} a vunutoù zo",other:"{0} munut zo"}}},second:{displayName:"eilenn",relative:{0:"bremañ"},relativeTime:{future:{one:"a-benn {0} eilenn",two:"a-benn {0} eilenn",few:"a-benn {0} eilenn",many:"a-benn {0} a eilennoù",other:"a-benn {0} eilenn"},past:{one:"{0} eilenn zo",two:"{0} eilenn zo",few:"{0} eilenn zo",many:"{0} eilenn zo",other:"{0} eilenn zo"}}}}},{locale:"brx",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"बोसोर",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"दान",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"सान",relative:{0:"दिनै",1:"गाबोन","-1":"मैया"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"रिंगा",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"मिनिथ",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"सेखेन्द",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"bs",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=a[0],i=a[1]||"",o=!a[1],n=r.slice(-1),l=r.slice(-2),u=i.slice(-1),s=i.slice(-2);return t?"other":o&&1==n&&11!=l||1==u&&11!=s?"one":o&&n>=2&&n<=4&&(l<12||l>14)||u>=2&&u<=4&&(s<12||s>14)?"few":"other"},fields:{year:{displayName:"godina",relative:{0:"ove godine",1:"sljedeće godine","-1":"prošle godine"},relativeTime:{future:{one:"za {0} godinu",few:"za {0} godine",other:"za {0} godina"},past:{one:"prije {0} godinu",few:"prije {0} godine",other:"prije {0} godina"}}},month:{displayName:"mjesec",relative:{0:"ovaj mjesec",1:"sljedeći mjesec","-1":"prošli mjesec"},relativeTime:{future:{one:"za {0} mjesec",few:"za {0} mjeseca",other:"za {0} mjeseci"},past:{one:"prije {0} mjesec",few:"prije {0} mjeseca",other:"prije {0} mjeseci"}}},day:{displayName:"dan",relative:{0:"danas",1:"sutra",2:"prekosutra","-2":"prekjučer","-1":"jučer"},relativeTime:{future:{one:"za {0} dan",few:"za {0} dana",other:"za {0} dana"},past:{one:"prije {0} dan",few:"prije {0} dana",other:"prije {0} dana"}}},hour:{displayName:"sat",relative:{0:"ovaj sat"},relativeTime:{future:{one:"za {0} sat",few:"za {0} sata",other:"za {0} sati"},past:{one:"prije {0} sat",few:"prije {0} sata",other:"prije {0} sati"}}},minute:{displayName:"minuta",relative:{0:"ova minuta"},relativeTime:{future:{one:"za {0} minutu",few:"za {0} minute",other:"za {0} minuta"},past:{one:"prije {0} minutu",few:"prije {0} minute",other:"prije {0} minuta"}}},second:{displayName:"sekunda",relative:{0:"sada"},relativeTime:{future:{one:"za {0} sekundu",few:"za {0} sekunde",other:"za {0} sekundi"},past:{one:"prije {0} sekundu",few:"prije {0} sekunde",other:"prije {0} sekundi"}}}}},{locale:"bs-Cyrl",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"година",relative:{0:"Ове године",1:"Следеће године","-1":"Прошле године"},relativeTime:{future:{one:"за {0} годину",few:"за {0} године",other:"за {0} година"},past:{one:"пре {0} годину",few:"пре {0} године",other:"пре {0} година"}}},month:{displayName:"месец",relative:{0:"Овог месеца",1:"Следећег месеца","-1":"Прошлог месеца"},relativeTime:{future:{one:"за {0} месец",few:"за {0} месеца",other:"за {0} месеци"},past:{one:"пре {0} месец",few:"пре {0} месеца",other:"пре {0} месеци"}}},day:{displayName:"дан",relative:{0:"данас",1:"сутра",2:"прекосутра","-2":"прекјуче","-1":"јуче"},relativeTime:{future:{one:"за {0} дан",few:"за {0} дана",other:"за {0} дана"},past:{one:"пре {0} дан",few:"пре {0} дана",other:"пре {0} дана"}}},hour:{displayName:"час",relative:{0:"this hour"},relativeTime:{future:{one:"за {0} сат",few:"за {0} сата",other:"за {0} сати"},past:{one:"пре {0} сат",few:"пре {0} сата",other:"пре {0} сати"}}},minute:{displayName:"минут",relative:{0:"this minute"},relativeTime:{future:{one:"за {0} минут",few:"за {0} минута",other:"за {0} минута"},past:{one:"пре {0} минут",few:"пре {0} минута",other:"пре {0} минута"}}},second:{displayName:"секунд",relative:{0:"now"},relativeTime:{future:{one:"за {0} секунд",few:"за {0} секунде",other:"за {0} секунди"},past:{one:"пре {0} секунд",few:"пре {0} секунде",other:"пре {0} секунди"}}}}},{locale:"bs-Latn",parentLocale:"bs"},{locale:"ca",pluralRuleFunction:function(e,t){var a=!String(e).split(".")[1];return t?1==e||3==e?"one":2==e?"two":4==e?"few":"other":1==e&&a?"one":"other"},fields:{year:{displayName:"any",relative:{0:"enguany",1:"l’any que ve","-1":"l’any passat"},relativeTime:{future:{one:"d’aquí a {0} any",other:"d’aquí a {0} anys"},past:{one:"fa {0} any",other:"fa {0} anys"}}},month:{displayName:"mes",relative:{0:"aquest mes",1:"el mes que ve","-1":"el mes passat"},relativeTime:{future:{one:"d’aquí a {0} mes",other:"d’aquí a {0} mesos"},past:{one:"fa {0} mes",other:"fa {0} mesos"}}},day:{displayName:"dia",relative:{0:"avui",1:"demà",2:"demà passat","-2":"abans-d’ahir","-1":"ahir"},relativeTime:{future:{one:"d’aquí a {0} dia",other:"d’aquí a {0} dies"},past:{one:"fa {0} dia",other:"fa {0} dies"}}},hour:{displayName:"hora",relative:{0:"aquesta hora"},relativeTime:{future:{one:"d’aquí a {0} hora",other:"d’aquí a {0} hores"},past:{one:"fa {0} hora",other:"fa {0} hores"}}},minute:{displayName:"minut",relative:{0:"aquest minut"},relativeTime:{future:{one:"d’aquí a {0} minut",other:"d’aquí a {0} minuts"},past:{one:"fa {0} minut",other:"fa {0} minuts"}}},second:{displayName:"segon",relative:{0:"ara"},relativeTime:{future:{one:"d’aquí a {0} segon",other:"d’aquí a {0} segons"},past:{one:"fa {0} segon",other:"fa {0} segons"}}}}},{locale:"ca-AD",parentLocale:"ca"},{locale:"ca-ES-VALENCIA",parentLocale:"ca-ES",fields:{year:{displayName:"any",relative:{0:"enguany",1:"l’any que ve","-1":"l’any passat"},relativeTime:{future:{one:"d’aquí a {0} any",other:"d’aquí a {0} anys"},past:{one:"fa {0} any",other:"fa {0} anys"}}},month:{displayName:"mes",relative:{0:"aquest mes",1:"el mes que ve","-1":"el mes passat"},relativeTime:{future:{one:"d’aquí a {0} mes",other:"d’aquí a {0} mesos"},past:{one:"fa {0} mes",other:"fa {0} mesos"}}},day:{displayName:"dia",relative:{0:"avui",1:"demà",2:"demà passat","-2":"abans-d’ahir","-1":"ahir"},relativeTime:{future:{one:"d’aquí a {0} dia",other:"d’aquí a {0} dies"},past:{one:"fa {0} dia",other:"fa {0} dies"}}},hour:{displayName:"hora",relative:{0:"aquesta hora"},relativeTime:{future:{one:"d’aquí a {0} hora",other:"d’aquí a {0} hores"},past:{one:"fa {0} hora",other:"fa {0} hores"}}},minute:{displayName:"minut",relative:{0:"aquest minut"},relativeTime:{future:{one:"d’aquí a {0} minut",other:"d’aquí a {0} minuts"},past:{one:"fa {0} minut",other:"fa {0} minuts"}}},second:{displayName:"segon",relative:{0:"ara"},relativeTime:{future:{one:"d’aquí a {0} segon",other:"d’aquí a {0} segons"},past:{one:"fa {0} segon",other:"fa {0} segons"}}}}},{locale:"ca-ES",parentLocale:"ca"},{locale:"ca-FR",parentLocale:"ca"},{locale:"ca-IT",parentLocale:"ca"},{locale:"ce",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"шо",relative:{0:"карарчу шарахь",1:"рогӀерчу шарахь","-1":"даханчу шарахь"},relativeTime:{future:{one:"{0} шо даьлча",other:"{0} шо даьлча"},past:{one:"{0} шо хьалха",other:"{0} шо хьалха"}}},month:{displayName:"бутт",relative:{0:"карарчу баттахь",1:"рогӀерчу баттахь","-1":"баханчу баттахь"},relativeTime:{future:{one:"{0} бутт баьлча",other:"{0} бутт баьлча"},past:{one:"{0} бутт хьалха",other:"{0} бутт хьалха"}}},day:{displayName:"де",relative:{0:"тахана",1:"кхана","-1":"селхана"},relativeTime:{future:{one:"{0} де даьлча",other:"{0} де даьлча"},past:{one:"{0} де хьалха",other:"{0} де хьалха"}}},hour:{displayName:"сахьт",relative:{0:"this hour"},relativeTime:{future:{one:"{0} сахьт даьлча",other:"{0} сахьт даьлча"},past:{one:"{0} сахьт хьалха",other:"{0} сахьт хьалха"}}},minute:{displayName:"минот",relative:{0:"this minute"},relativeTime:{future:{one:"{0} минот яьлча",other:"{0} минот яьлча"},past:{one:"{0} минот хьалха",other:"{0} минот хьалха"}}},second:{displayName:"секунд",relative:{0:"now"},relativeTime:{future:{one:"{0} секунд яьлча",other:"{0} секунд яьлча"},past:{one:"{0} секунд хьалха",other:"{0} секунд хьалха"}}}}},{locale:"cgg",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Omwaka",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Omwezi",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Eizooba",relative:{0:"Erizooba",1:"Nyenkyakare","-1":"Nyomwabazyo"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Shaaha",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Edakiika",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Obucweka/Esekendi",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"chr",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"ᎤᏕᏘᏴᏌᏗᏒᎢ",relative:{0:"ᎯᎠ ᏧᏕᏘᏴᏒᏘ",1:"ᎡᏘᏴᎢ","-1":"ᎡᏘ ᏥᎨᏒ"},relativeTime:{future:{one:"ᎾᎿ {0} ᎤᏕᏘᏴᏌᏗᏒᎢ",other:"ᎾᎿ {0} ᎢᏧᏕᏘᏴᏌᏗᏒᎢ"},past:{one:"{0} ᎤᏕᏘᏴᏌᏗᏒᎢ ᏥᎨᏒ",other:"{0} ᎢᏧᏕᏘᏴᏌᏗᏒᎢ ᏥᎨᏒ"}}},month:{displayName:"ᎧᎸᎢ",relative:{0:"ᎯᎠ ᎧᎸᎢ",1:"ᏔᎵᏁ ᎧᎸᎢ","-1":"ᎧᎸᎢ ᏥᎨᏒ"},relativeTime:{future:{one:"ᎾᎿ {0} ᎧᎸᎢ",other:"ᎾᎿ {0} ᏗᎧᎸᎢ"},past:{one:"ᎾᎿ {0} ᎧᎸᎢ ᏥᎨᏒ",other:"ᎾᎿ {0} ᏗᎧᎸᎢ ᏥᎨᏒ"}}},day:{displayName:"ᎢᎦ",relative:{0:"ᎪᎯ ᎢᎦ",1:"ᏌᎾᎴᎢ","-1":"ᏒᎯ"},relativeTime:{future:{one:"ᎾᎿ {0} ᎢᎦ",other:"ᎾᎿ {0} ᎯᎸᏍᎩ ᏧᏒᎯᏛ"},past:{one:"{0} ᎢᎦ ᏥᎨᏒ",other:"{0} ᎯᎸᏍᎩ ᏧᏒᎯᏛ ᏥᎨᏒ"}}},hour:{displayName:"ᏑᏟᎶᏓ",relative:{0:"ᎯᎠ ᏑᏟᎶᏓ"},relativeTime:{future:{one:"ᎾᎿ {0} ᏑᏟᎶᏓ",other:"ᎾᎿ {0} ᎢᏳᏟᎶᏓ"},past:{one:"{0} ᏑᏟᎶᏓ ᏥᎨᏒ",other:"{0} ᎢᏳᏟᎶᏓ ᏥᎨᏒ"}}},minute:{displayName:"ᎢᏯᏔᏬᏍᏔᏅ",relative:{0:"ᎯᎠ ᎢᏯᏔᏬᏍᏔᏅ"},relativeTime:{future:{one:"ᎾᎿ {0} ᎢᏯᏔᏬᏍᏔᏅ",other:"ᎾᎿ {0} ᎢᏯᏔᏬᏍᏔᏅ"},past:{one:"ᎾᎿ {0} ᎢᏯᏔᏬᏍᏔᏅ ᏥᎨᏒ",other:"ᎾᎿ {0} ᎢᏯᏔᏬᏍᏔᏅ ᏥᎨᏒ"}}},second:{displayName:"ᎠᏎᏢ",relative:{0:"ᏃᏊ"},relativeTime:{future:{one:"ᎾᎿ {0} ᎠᏎᏢ",other:"ᎾᎿ {0} ᏓᏓᎾᏩᏍᎬ ᏥᎨᏒ"},past:{one:"{0} ᎠᏎᏢ ᏥᎨᏒ",other:"{0} ᏓᏓᎾᏩᏍᎬ ᏥᎨᏒ"}}}}},{locale:"ckb",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"ckb-IR",parentLocale:"ckb"},{locale:"cs",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=a[0],i=!a[1];return t?"other":1==e&&i?"one":r>=2&&r<=4&&i?"few":i?"other":"many"},fields:{year:{displayName:"rok",relative:{0:"tento rok",1:"příští rok","-1":"minulý rok"},relativeTime:{future:{one:"za {0} rok",few:"za {0} roky",many:"za {0} roku",other:"za {0} let"},past:{one:"před {0} rokem",few:"před {0} lety",many:"před {0} roku",other:"před {0} lety"}}},month:{displayName:"měsíc",relative:{0:"tento měsíc",1:"příští měsíc","-1":"minulý měsíc"},relativeTime:{future:{one:"za {0} měsíc",few:"za {0} měsíce",many:"za {0} měsíce",other:"za {0} měsíců"},past:{one:"před {0} měsícem",few:"před {0} měsíci",many:"před {0} měsíce",other:"před {0} měsíci"}}},day:{displayName:"den",relative:{0:"dnes",1:"zítra",2:"pozítří","-2":"předevčírem","-1":"včera"},relativeTime:{future:{one:"za {0} den",few:"za {0} dny",many:"za {0} dne",other:"za {0} dní"},past:{one:"před {0} dnem",few:"před {0} dny",many:"před {0} dne",other:"před {0} dny"}}},hour:{displayName:"hodina",relative:{0:"tuto hodinu"},relativeTime:{future:{one:"za {0} hodinu",few:"za {0} hodiny",many:"za {0} hodiny",other:"za {0} hodin"},past:{one:"před {0} hodinou",few:"před {0} hodinami",many:"před {0} hodiny",other:"před {0} hodinami"}}},minute:{displayName:"minuta",relative:{0:"tuto minutu"},relativeTime:{future:{one:"za {0} minutu",few:"za {0} minuty",many:"za {0} minuty",other:"za {0} minut"},past:{one:"před {0} minutou",few:"před {0} minutami",many:"před {0} minuty",other:"před {0} minutami"}}},second:{displayName:"sekunda",relative:{0:"nyní"},relativeTime:{future:{one:"za {0} sekundu",few:"za {0} sekundy",many:"za {0} sekundy",other:"za {0} sekund"},past:{one:"před {0} sekundou",few:"před {0} sekundami",many:"před {0} sekundy",other:"před {0} sekundami"}}}}},{locale:"cu",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"cy",pluralRuleFunction:function(e,t){return t?0==e||7==e||8==e||9==e?"zero":1==e?"one":2==e?"two":3==e||4==e?"few":5==e||6==e?"many":"other":0==e?"zero":1==e?"one":2==e?"two":3==e?"few":6==e?"many":"other"},fields:{year:{displayName:"blwyddyn",relative:{0:"eleni",1:"blwyddyn nesaf","-1":"llynedd"},relativeTime:{future:{zero:"ymhen {0} mlynedd",one:"ymhen blwyddyn",two:"ymhen {0} flynedd",few:"ymhen {0} blynedd",many:"ymhen {0} blynedd",other:"ymhen {0} mlynedd"},past:{zero:"{0} o flynyddoedd yn ôl",one:"blwyddyn yn ôl",two:"{0} flynedd yn ôl",few:"{0} blynedd yn ôl",many:"{0} blynedd yn ôl",other:"{0} o flynyddoedd yn ôl"}}},month:{displayName:"mis",relative:{0:"y mis hwn",1:"mis nesaf","-1":"mis diwethaf"},relativeTime:{future:{zero:"ymhen {0} mis",one:"ymhen mis",two:"ymhen deufis",few:"ymhen {0} mis",many:"ymhen {0} mis",other:"ymhen {0} mis"},past:{zero:"{0} mis yn ôl",one:"{0} mis yn ôl",two:"{0} fis yn ôl",few:"{0} mis yn ôl",many:"{0} mis yn ôl",other:"{0} mis yn ôl"}}},day:{displayName:"dydd",relative:{0:"heddiw",1:"yfory",2:"drennydd","-2":"echdoe","-1":"ddoe"},relativeTime:{future:{zero:"ymhen {0} diwrnod",one:"ymhen diwrnod",two:"ymhen deuddydd",few:"ymhen tridiau",many:"ymhen {0} diwrnod",other:"ymhen {0} diwrnod"},past:{zero:"{0} diwrnod yn ôl",one:"{0} diwrnod yn ôl",two:"{0} ddiwrnod yn ôl",few:"{0} diwrnod yn ôl",many:"{0} diwrnod yn ôl",other:"{0} diwrnod yn ôl"}}},hour:{displayName:"awr",relative:{0:"yr awr hon"},relativeTime:{future:{zero:"ymhen {0} awr",one:"ymhen awr",two:"ymhen {0} awr",few:"ymhen {0} awr",many:"ymhen {0} awr",other:"ymhen {0} awr"},past:{zero:"{0} awr yn ôl",one:"awr yn ôl",two:"{0} awr yn ôl",few:"{0} awr yn ôl",many:"{0} awr yn ôl",other:"{0} awr yn ôl"}}},minute:{displayName:"munud",relative:{0:"y funud hon"},relativeTime:{future:{zero:"ymhen {0} munud",one:"ymhen munud",two:"ymhen {0} funud",few:"ymhen {0} munud",many:"ymhen {0} munud",other:"ymhen {0} munud"},past:{zero:"{0} munud yn ôl",one:"{0} munud yn ôl",two:"{0} funud yn ôl",few:"{0} munud yn ôl",many:"{0} munud yn ôl",other:"{0} munud yn ôl"}}},second:{displayName:"eiliad",relative:{0:"nawr"},relativeTime:{future:{zero:"ymhen {0} eiliad",one:"ymhen eiliad",two:"ymhen {0} eiliad",few:"ymhen {0} eiliad",many:"ymhen {0} eiliad",other:"ymhen {0} eiliad"},past:{zero:"{0} eiliad yn ôl",one:"eiliad yn ôl",two:"{0} eiliad yn ôl",few:"{0} eiliad yn ôl",many:"{0} eiliad yn ôl",other:"{0} eiliad yn ôl"}}}}},{locale:"da",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=a[0],i=Number(a[0])==e;return t?"other":1!=e&&(i||0!=r&&1!=r)?"other":"one"},fields:{year:{displayName:"år",relative:{0:"i år",1:"næste år","-1":"sidste år"},relativeTime:{future:{one:"om {0} år",other:"om {0} år"},past:{one:"for {0} år siden",other:"for {0} år siden"}}},month:{displayName:"måned",relative:{0:"denne måned",1:"næste måned","-1":"sidste måned"},relativeTime:{future:{one:"om {0} måned",other:"om {0} måneder"},past:{one:"for {0} måned siden",other:"for {0} måneder siden"}}},day:{displayName:"dag",relative:{0:"i dag",1:"i morgen",2:"i overmorgen","-2":"i forgårs","-1":"i går"},relativeTime:{future:{one:"om {0} dag",other:"om {0} dage"},past:{one:"for {0} dag siden",other:"for {0} dage siden"}}},hour:{displayName:"time",relative:{0:"i den kommende time"},relativeTime:{future:{one:"om {0} time",other:"om {0} timer"},past:{one:"for {0} time siden",other:"for {0} timer siden"}}},minute:{displayName:"minut",relative:{0:"i det kommende minut"},relativeTime:{future:{one:"om {0} minut",other:"om {0} minutter"},past:{one:"for {0} minut siden",other:"for {0} minutter siden"}}},second:{displayName:"sekund",relative:{0:"nu"},relativeTime:{future:{one:"om {0} sekund",other:"om {0} sekunder"},past:{one:"for {0} sekund siden",other:"for {0} sekunder siden"}}}}},{locale:"da-GL",parentLocale:"da"},{locale:"dav",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Mwaka",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Mori",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Ituku",relative:{0:"Idime",1:"Kesho","-1":"Iguo"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Saa",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Dakika",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Sekunde",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"de",pluralRuleFunction:function(e,t){var a=!String(e).split(".")[1];return t?"other":1==e&&a?"one":"other"},fields:{year:{displayName:"Jahr",relative:{0:"dieses Jahr",1:"nächstes Jahr","-1":"letztes Jahr"},relativeTime:{future:{one:"in {0} Jahr",other:"in {0} Jahren"},past:{one:"vor {0} Jahr",other:"vor {0} Jahren"}}},month:{displayName:"Monat",relative:{0:"diesen Monat",1:"nächsten Monat","-1":"letzten Monat"},relativeTime:{future:{one:"in {0} Monat",other:"in {0} Monaten"},past:{one:"vor {0} Monat",other:"vor {0} Monaten"}}},day:{displayName:"Tag",relative:{0:"heute",1:"morgen",2:"übermorgen","-2":"vorgestern","-1":"gestern"},relativeTime:{future:{one:"in {0} Tag",other:"in {0} Tagen"},past:{one:"vor {0} Tag",other:"vor {0} Tagen"}}},hour:{displayName:"Stunde",relative:{0:"in dieser Stunde"},relativeTime:{future:{one:"in {0} Stunde",other:"in {0} Stunden"},past:{one:"vor {0} Stunde",other:"vor {0} Stunden"}}},minute:{displayName:"Minute",relative:{0:"in dieser Minute"},relativeTime:{future:{one:"in {0} Minute",other:"in {0} Minuten"},past:{one:"vor {0} Minute",other:"vor {0} Minuten"}}},second:{displayName:"Sekunde",relative:{0:"jetzt"},relativeTime:{future:{one:"in {0} Sekunde",other:"in {0} Sekunden"},past:{one:"vor {0} Sekunde",other:"vor {0} Sekunden"}}}}},{locale:"de-AT",parentLocale:"de"},{locale:"de-BE",parentLocale:"de"},{locale:"de-CH",parentLocale:"de"},{locale:"de-IT",parentLocale:"de"},{locale:"de-LI",parentLocale:"de"},{locale:"de-LU",parentLocale:"de"},{locale:"dje",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Jiiri",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Handu",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Zaari",relative:{0:"Hõo",1:"Suba","-1":"Bi"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Guuru",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Miniti",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Miti",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"dsb",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=a[0],i=a[1]||"",o=!a[1],n=r.slice(-2),l=i.slice(-2);return t?"other":o&&1==n||1==l?"one":o&&2==n||2==l?"two":o&&(3==n||4==n)||3==l||4==l?"few":"other"},fields:{year:{displayName:"lěto",relative:{0:"lětosa",1:"znowa","-1":"łoni"},relativeTime:{future:{one:"za {0} lěto",two:"za {0} lěśe",few:"za {0} lěta",other:"za {0} lět"},past:{one:"pśed {0} lětom",two:"pśed {0} lětoma",few:"pśed {0} lětami",other:"pśed {0} lětami"}}},month:{displayName:"mjasec",relative:{0:"ten mjasec",1:"pśiducy mjasec","-1":"slědny mjasec"},relativeTime:{future:{one:"za {0} mjasec",two:"za {0} mjaseca",few:"za {0} mjasecy",other:"za {0} mjasecow"},past:{one:"pśed {0} mjasecom",two:"pśed {0} mjasecoma",few:"pśed {0} mjasecami",other:"pśed {0} mjasecami"}}},day:{displayName:"źeń",relative:{0:"źinsa",1:"witśe","-1":"cora"},relativeTime:{future:{one:"za {0} źeń",two:"za {0} dnja",few:"za {0} dny",other:"za {0} dnjow"},past:{one:"pśed {0} dnjom",two:"pśed {0} dnjoma",few:"pśed {0} dnjami",other:"pśed {0} dnjami"}}},hour:{displayName:"góźina",relative:{0:"this hour"},relativeTime:{future:{one:"za {0} góźinu",two:"za {0} góźinje",few:"za {0} góźiny",other:"za {0} góźin"},past:{one:"pśed {0} góźinu",two:"pśed {0} góźinoma",few:"pśed {0} góźinami",other:"pśed {0} góźinami"}}},minute:{displayName:"minuta",relative:{0:"this minute"},relativeTime:{future:{one:"za {0} minutu",two:"za {0} minuśe",few:"za {0} minuty",other:"za {0} minutow"},past:{one:"pśed {0} minutu",two:"pśed {0} minutoma",few:"pśed {0} minutami",other:"pśed {0} minutami"}}},second:{displayName:"sekunda",relative:{0:"now"},relativeTime:{future:{one:"za {0} sekundu",two:"za {0} sekunźe",few:"za {0} sekundy",other:"za {0} sekundow"},past:{one:"pśed {0} sekundu",two:"pśed {0} sekundoma",few:"pśed {0} sekundami",other:"pśed {0} sekundami"}}}}},{locale:"dua",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"mbú",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"mɔ́di",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"búnyá",relative:{0:"wɛ́ŋgɛ̄",1:"kíɛlɛ","-1":"kíɛlɛ nítómb́í"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"ŋgandɛ",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"ndɔkɔ",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"píndí",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"dv",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"dyo",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Emit",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Fuleeŋ",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Funak",relative:{0:"Jaat",1:"Kajom","-1":"Fucen"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"dz",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"ལོ",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"ལོ་འཁོར་ {0} ནང་"},past:{other:"ལོ་འཁོར་ {0} ཧེ་མ་"}}},month:{displayName:"ཟླ་ཝ་",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"ཟླཝ་ {0} ནང་"},past:{other:"ཟླཝ་ {0} ཧེ་མ་"}}},day:{displayName:"ཚེས་",relative:{0:"ད་རིས་",1:"ནངས་པ་",2:"གནངས་ཚེ","-2":"ཁ་ཉིམ","-1":"ཁ་ཙ་"},relativeTime:{future:{other:"ཉིནམ་ {0} ནང་"},past:{other:"ཉིནམ་ {0} ཧེ་མ་"}}},hour:{displayName:"ཆུ་ཚོད",relative:{0:"this hour"},relativeTime:{future:{other:"ཆུ་ཚོད་ {0} ནང་"},past:{other:"ཆུ་ཚོད་ {0} ཧེ་མ་"}}},minute:{displayName:"སྐར་མ",relative:{0:"this minute"},relativeTime:{future:{other:"སྐར་མ་ {0} ནང་"},past:{other:"སྐར་མ་ {0} ཧེ་མ་"}}},second:{displayName:"སྐར་ཆཱ་",relative:{0:"now"},relativeTime:{future:{other:"སྐར་ཆ་ {0} ནང་"},past:{other:"སྐར་ཆ་ {0} ཧེ་མ་"}}}}},{locale:"ebu",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Mwaka",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Mweri",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Mũthenya",relative:{0:"Ũmũnthĩ",1:"Rũciũ","-1":"Ĩgoro"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Ithaa",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Ndagĩka",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Sekondi",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"ee",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"ƒe",relative:{0:"ƒe sia",1:"ƒe si gbɔ na","-1":"ƒe si va yi"},relativeTime:{future:{one:"le ƒe {0} me",other:"le ƒe {0} me"},past:{one:"ƒe {0} si va yi",other:"ƒe {0} si wo va yi"}}},month:{displayName:"ɣleti",relative:{0:"ɣleti sia",1:"ɣleti si gbɔ na","-1":"ɣleti si va yi"},relativeTime:{future:{one:"le ɣleti {0} me",other:"le ɣleti {0} wo me"},past:{one:"ɣleti {0} si va yi",other:"ɣleti {0} si wo va yi"}}},day:{displayName:"ŋkeke",relative:{0:"egbe",1:"etsɔ si gbɔna",2:"nyitsɔ si gbɔna","-2":"nyitsɔ si va yi","-1":"etsɔ si va yi"},relativeTime:{future:{one:"le ŋkeke {0} me",other:"le ŋkeke {0} wo me"},past:{one:"ŋkeke {0} si va yi",other:"ŋkeke {0} si wo va yi"}}},hour:{displayName:"gaƒoƒo",relative:{0:"this hour"},relativeTime:{future:{one:"le gaƒoƒo {0} me",other:"le gaƒoƒo {0} wo me"},past:{one:"gaƒoƒo {0} si va yi",other:"gaƒoƒo {0} si wo va yi"}}},minute:{displayName:"aɖabaƒoƒo",relative:{0:"this minute"},relativeTime:{future:{one:"le aɖabaƒoƒo {0} me",other:"le aɖabaƒoƒo {0} wo me"},past:{one:"aɖabaƒoƒo {0} si va yi",other:"aɖabaƒoƒo {0} si wo va yi"}}},second:{displayName:"sekend",relative:{0:"fifi"},relativeTime:{future:{one:"le sekend {0} me",other:"le sekend {0} wo me"},past:{one:"sekend {0} si va yi",other:"sekend {0} si wo va yi"}}}}},{locale:"ee-TG",parentLocale:"ee"},{locale:"el",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"έτος",relative:{0:"φέτος",1:"επόμενο έτος","-1":"πέρσι"},relativeTime:{future:{one:"σε {0} έτος",other:"σε {0} έτη"},past:{one:"πριν από {0} έτος",other:"πριν από {0} έτη"}}},month:{displayName:"μήνας",relative:{0:"τρέχων μήνας",1:"επόμενος μήνας","-1":"προηγούμενος μήνας"},relativeTime:{future:{one:"σε {0} μήνα",other:"σε {0} μήνες"},past:{one:"πριν από {0} μήνα",other:"πριν από {0} μήνες"}}},day:{displayName:"ημέρα",relative:{0:"σήμερα",1:"αύριο",2:"μεθαύριο","-2":"προχθές","-1":"χθες"},relativeTime:{future:{one:"σε {0} ημέρα",other:"σε {0} ημέρες"},past:{one:"πριν από {0} ημέρα",other:"πριν από {0} ημέρες"}}},hour:{displayName:"ώρα",relative:{0:"αυτήν την ώρα"},relativeTime:{future:{one:"σε {0} ώρα",other:"σε {0} ώρες"},past:{one:"πριν από {0} ώρα",other:"πριν από {0} ώρες"}}},minute:{displayName:"λεπτό",relative:{0:"αυτό το λεπτό"},relativeTime:{future:{one:"σε {0} λεπτό",other:"σε {0} λεπτά"},past:{one:"πριν από {0} λεπτό",other:"πριν από {0} λεπτά"}}},second:{displayName:"δευτερόλεπτο",relative:{0:"τώρα"},relativeTime:{future:{one:"σε {0} δευτερόλεπτο",other:"σε {0} δευτερόλεπτα"},past:{one:"πριν από {0} δευτερόλεπτο",other:"πριν από {0} δευτερόλεπτα"}}}}},{locale:"el-CY",parentLocale:"el"},{locale:"en",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=!a[1],i=Number(a[0])==e,o=i&&a[0].slice(-1),n=i&&a[0].slice(-2);return t?1==o&&11!=n?"one":2==o&&12!=n?"two":3==o&&13!=n?"few":"other":1==e&&r?"one":"other"},fields:{year:{displayName:"year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{one:"in {0} year",other:"in {0} years"},past:{one:"{0} year ago",other:"{0} years ago"}}},month:{displayName:"month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{one:"in {0} month",other:"in {0} months"},past:{one:"{0} month ago",other:"{0} months ago"}}},day:{displayName:"day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{one:"in {0} day",other:"in {0} days"},past:{one:"{0} day ago",other:"{0} days ago"}}},hour:{displayName:"hour",relative:{0:"this hour"},relativeTime:{future:{one:"in {0} hour",other:"in {0} hours"},past:{one:"{0} hour ago",other:"{0} hours ago"}}},minute:{displayName:"minute",relative:{0:"this minute"},relativeTime:{future:{one:"in {0} minute",other:"in {0} minutes"},past:{one:"{0} minute ago",other:"{0} minutes ago"}}},second:{displayName:"second",relative:{0:"now"},relativeTime:{future:{one:"in {0} second",other:"in {0} seconds"},past:{one:"{0} second ago",other:"{0} seconds ago"}}}}},{locale:"en-001",parentLocale:"en"},{locale:"en-150",parentLocale:"en-001"},{locale:"en-AG",parentLocale:"en-001"},{locale:"en-AI",parentLocale:"en-001"},{locale:"en-AS",parentLocale:"en"},{locale:"en-AT",parentLocale:"en-150"},{locale:"en-AU",parentLocale:"en-001"},{locale:"en-BB",parentLocale:"en-001"},{locale:"en-BE",parentLocale:"en-001"},{locale:"en-BI",parentLocale:"en"},{locale:"en-BM",parentLocale:"en-001"},{locale:"en-BS",parentLocale:"en-001"},{locale:"en-BW",parentLocale:"en-001"},{locale:"en-BZ",parentLocale:"en-001"},{locale:"en-CA",parentLocale:"en-001"},{locale:"en-CC",parentLocale:"en-001"},{locale:"en-CH",parentLocale:"en-150"},{locale:"en-CK",parentLocale:"en-001"},{locale:"en-CM",parentLocale:"en-001"},{locale:"en-CX",parentLocale:"en-001"},{locale:"en-CY",parentLocale:"en-001"},{locale:"en-DE",parentLocale:"en-150"},{locale:"en-DG",parentLocale:"en-001"},{locale:"en-DK",parentLocale:"en-150"},{locale:"en-DM",parentLocale:"en-001"},{locale:"en-Dsrt",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"en-ER",parentLocale:"en-001"},{locale:"en-FI",parentLocale:"en-150"},{locale:"en-FJ",parentLocale:"en-001"},{locale:"en-FK",parentLocale:"en-001"},{locale:"en-FM",parentLocale:"en-001"},{locale:"en-GB",parentLocale:"en-001"},{locale:"en-GD",parentLocale:"en-001"},{locale:"en-GG",parentLocale:"en-001"},{locale:"en-GH",parentLocale:"en-001"},{locale:"en-GI",parentLocale:"en-001"},{locale:"en-GM",parentLocale:"en-001"},{locale:"en-GU",parentLocale:"en"},{locale:"en-GY",parentLocale:"en-001"},{locale:"en-HK",parentLocale:"en-001"},{locale:"en-IE",parentLocale:"en-001"},{locale:"en-IL",parentLocale:"en-001"},{locale:"en-IM",parentLocale:"en-001"},{locale:"en-IN",parentLocale:"en-001"},{locale:"en-IO",parentLocale:"en-001"},{locale:"en-JE",parentLocale:"en-001"},{locale:"en-JM",parentLocale:"en-001"},{locale:"en-KE",parentLocale:"en-001"},{locale:"en-KI",parentLocale:"en-001"},{locale:"en-KN",parentLocale:"en-001"},{locale:"en-KY",parentLocale:"en-001"},{locale:"en-LC",parentLocale:"en-001"},{locale:"en-LR",parentLocale:"en-001"},{locale:"en-LS",parentLocale:"en-001"},{locale:"en-MG",parentLocale:"en-001"},{locale:"en-MH",parentLocale:"en"},{locale:"en-MO",parentLocale:"en-001"},{locale:"en-MP",parentLocale:"en"},{locale:"en-MS",parentLocale:"en-001"},{locale:"en-MT",parentLocale:"en-001"},{locale:"en-MU",parentLocale:"en-001"},{locale:"en-MW",parentLocale:"en-001"},{locale:"en-MY",parentLocale:"en-001"},{locale:"en-NA",parentLocale:"en-001"},{locale:"en-NF",parentLocale:"en-001"},{locale:"en-NG",parentLocale:"en-001"},{locale:"en-NL",parentLocale:"en-150"},{locale:"en-NR",parentLocale:"en-001"},{locale:"en-NU",parentLocale:"en-001"},{locale:"en-NZ",parentLocale:"en-001"},{locale:"en-PG",parentLocale:"en-001"},{locale:"en-PH",parentLocale:"en-001"},{locale:"en-PK",parentLocale:"en-001"},{locale:"en-PN",parentLocale:"en-001"},{locale:"en-PR",parentLocale:"en"},{locale:"en-PW",parentLocale:"en-001"},{locale:"en-RW",parentLocale:"en-001"},{locale:"en-SB",parentLocale:"en-001"},{locale:"en-SC",parentLocale:"en-001"},{locale:"en-SD",parentLocale:"en-001"},{locale:"en-SE",parentLocale:"en-150"},{locale:"en-SG",parentLocale:"en-001"},{locale:"en-SH",parentLocale:"en-001"},{locale:"en-SI",parentLocale:"en-150"},{locale:"en-SL",parentLocale:"en-001"},{locale:"en-SS",parentLocale:"en-001"},{locale:"en-SX",parentLocale:"en-001"},{locale:"en-SZ",parentLocale:"en-001"},{locale:"en-Shaw",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"en-TC",parentLocale:"en-001"},{locale:"en-TK",parentLocale:"en-001"},{locale:"en-TO",parentLocale:"en-001"},{locale:"en-TT",parentLocale:"en-001"},{locale:"en-TV",parentLocale:"en-001"},{locale:"en-TZ",parentLocale:"en-001"},{locale:"en-UG",parentLocale:"en-001"},{locale:"en-UM",parentLocale:"en"},{locale:"en-US",parentLocale:"en"},{locale:"en-VC",parentLocale:"en-001"},{locale:"en-VG",parentLocale:"en-001"},{locale:"en-VI",parentLocale:"en"},{locale:"en-VU",parentLocale:"en-001"},{locale:"en-WS",parentLocale:"en-001"},{locale:"en-ZA",parentLocale:"en-001"},{locale:"en-ZM",parentLocale:"en-001"},{locale:"en-ZW",parentLocale:"en-001"},{locale:"eo",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"es",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"año",relative:{0:"este año",1:"el próximo año","-1":"el año pasado"},relativeTime:{future:{one:"dentro de {0} año",other:"dentro de {0} años"},past:{one:"hace {0} año",other:"hace {0} años"}}},month:{displayName:"mes",relative:{0:"este mes",1:"el próximo mes","-1":"el mes pasado"},relativeTime:{future:{one:"dentro de {0} mes",other:"dentro de {0} meses"},past:{one:"hace {0} mes",other:"hace {0} meses"}}},day:{displayName:"día",relative:{0:"hoy",1:"mañana",2:"pasado mañana","-2":"anteayer","-1":"ayer"},relativeTime:{future:{one:"dentro de {0} día",other:"dentro de {0} días"},past:{one:"hace {0} día",other:"hace {0} días"}}},hour:{displayName:"hora",relative:{0:"esta hora"},relativeTime:{future:{one:"dentro de {0} hora",other:"dentro de {0} horas"},past:{one:"hace {0} hora",other:"hace {0} horas"}}},minute:{displayName:"minuto",relative:{0:"este minuto"},relativeTime:{future:{one:"dentro de {0} minuto",other:"dentro de {0} minutos"},past:{one:"hace {0} minuto",other:"hace {0} minutos"}}},second:{displayName:"segundo",relative:{0:"ahora"},relativeTime:{future:{one:"dentro de {0} segundo",other:"dentro de {0} segundos"},past:{one:"hace {0} segundo",other:"hace {0} segundos"}}}}},{locale:"es-419",parentLocale:"es"},{locale:"es-AR",parentLocale:"es-419"},{locale:"es-BO",parentLocale:"es-419"},{locale:"es-BR",parentLocale:"es-419"},{locale:"es-BZ",parentLocale:"es-419"},{locale:"es-CL",parentLocale:"es-419"},{locale:"es-CO",parentLocale:"es-419"},{locale:"es-CR",parentLocale:"es-419",fields:{year:{displayName:"año",relative:{0:"este año",1:"el próximo año","-1":"el año pasado"},relativeTime:{future:{one:"dentro de {0} año",other:"dentro de {0} años"},past:{one:"hace {0} año",other:"hace {0} años"}}},month:{displayName:"mes",relative:{0:"este mes",1:"el próximo mes","-1":"el mes pasado"},relativeTime:{future:{one:"dentro de {0} mes",other:"dentro de {0} meses"},past:{one:"hace {0} mes",other:"hace {0} meses"}}},day:{displayName:"día",relative:{0:"hoy",1:"mañana",2:"pasado mañana","-2":"antier","-1":"ayer"},relativeTime:{future:{one:"dentro de {0} día",other:"dentro de {0} días"},past:{one:"hace {0} día",other:"hace {0} días"}}},hour:{displayName:"hora",relative:{0:"esta hora"},relativeTime:{future:{one:"dentro de {0} hora",other:"dentro de {0} horas"},past:{one:"hace {0} hora",other:"hace {0} horas"}}},minute:{displayName:"minuto",relative:{0:"este minuto"},relativeTime:{future:{one:"dentro de {0} minuto",other:"dentro de {0} minutos"},past:{one:"hace {0} minuto",other:"hace {0} minutos"}}},second:{displayName:"segundo",relative:{0:"ahora"},relativeTime:{future:{one:"dentro de {0} segundo",other:"dentro de {0} segundos"},past:{one:"hace {0} segundo",other:"hace {0} segundos"}}}}},{locale:"es-CU",parentLocale:"es-419"},{locale:"es-DO",parentLocale:"es-419",fields:{year:{displayName:"Año",relative:{0:"este año",1:"el próximo año","-1":"el año pasado"},relativeTime:{future:{one:"dentro de {0} año",other:"dentro de {0} años"},past:{one:"hace {0} año",other:"hace {0} años"}}},month:{displayName:"Mes",relative:{0:"este mes",1:"el próximo mes","-1":"el mes pasado"},relativeTime:{future:{one:"dentro de {0} mes",other:"dentro de {0} meses"},past:{one:"hace {0} mes",other:"hace {0} meses"}}},day:{displayName:"Día",relative:{0:"hoy",1:"mañana",2:"pasado mañana","-2":"anteayer","-1":"ayer"},relativeTime:{future:{one:"dentro de {0} día",other:"dentro de {0} días"},past:{one:"hace {0} día",other:"hace {0} días"}}},hour:{displayName:"hora",relative:{0:"esta hora"},relativeTime:{future:{one:"dentro de {0} hora",other:"dentro de {0} horas"},past:{one:"hace {0} hora",other:"hace {0} horas"}}},minute:{displayName:"Minuto",relative:{0:"este minuto"},relativeTime:{future:{one:"dentro de {0} minuto",other:"dentro de {0} minutos"},past:{one:"hace {0} minuto",other:"hace {0} minutos"}}},second:{displayName:"Segundo",relative:{0:"ahora"},relativeTime:{future:{one:"dentro de {0} segundo",other:"dentro de {0} segundos"},past:{one:"hace {0} segundo",other:"hace {0} segundos"}}}}},{locale:"es-EA",parentLocale:"es"},{locale:"es-EC",parentLocale:"es-419"},{locale:"es-GQ",parentLocale:"es"},{locale:"es-GT",parentLocale:"es-419",fields:{year:{displayName:"año",relative:{0:"este año",1:"el próximo año","-1":"el año pasado"},relativeTime:{future:{one:"dentro de {0} año",other:"dentro de {0} años"},past:{one:"hace {0} año",other:"hace {0} años"}}},month:{displayName:"mes",relative:{0:"este mes",1:"el próximo mes","-1":"el mes pasado"},relativeTime:{future:{one:"dentro de {0} mes",other:"dentro de {0} meses"},past:{one:"hace {0} mes",other:"hace {0} meses"}}},day:{displayName:"día",relative:{0:"hoy",1:"mañana",2:"pasado mañana","-2":"antier","-1":"ayer"},relativeTime:{future:{one:"dentro de {0} día",other:"dentro de {0} días"},past:{one:"hace {0} día",other:"hace {0} días"}}},hour:{displayName:"hora",relative:{0:"esta hora"},relativeTime:{future:{one:"dentro de {0} hora",other:"dentro de {0} horas"},past:{one:"hace {0} hora",other:"hace {0} horas"}}},minute:{displayName:"minuto",relative:{0:"este minuto"},relativeTime:{future:{one:"dentro de {0} minuto",other:"dentro de {0} minutos"},past:{one:"hace {0} minuto",other:"hace {0} minutos"}}},second:{displayName:"segundo",relative:{0:"ahora"},relativeTime:{future:{one:"dentro de {0} segundo",other:"dentro de {0} segundos"},past:{one:"hace {0} segundo",other:"hace {0} segundos"}}}}},{locale:"es-HN",parentLocale:"es-419",fields:{year:{displayName:"año",relative:{0:"este año",1:"el próximo año","-1":"el año pasado"},relativeTime:{future:{one:"dentro de {0} año",other:"dentro de {0} años"},past:{one:"hace {0} año",other:"hace {0} años"}}},month:{displayName:"mes",relative:{0:"este mes",1:"el próximo mes","-1":"el mes pasado"},relativeTime:{future:{one:"dentro de {0} mes",other:"dentro de {0} meses"},past:{one:"hace {0} mes",other:"hace {0} meses"}}},day:{displayName:"día",relative:{0:"hoy",1:"mañana",2:"pasado mañana","-2":"antier","-1":"ayer"},relativeTime:{future:{one:"dentro de {0} día",other:"dentro de {0} días"},past:{one:"hace {0} día",other:"hace {0} días"}}},hour:{displayName:"hora",relative:{0:"esta hora"},relativeTime:{future:{one:"dentro de {0} hora",other:"dentro de {0} horas"},past:{one:"hace {0} hora",other:"hace {0} horas"}}},minute:{displayName:"minuto",relative:{0:"este minuto"},relativeTime:{future:{one:"dentro de {0} minuto",other:"dentro de {0} minutos"},past:{one:"hace {0} minuto",other:"hace {0} minutos"}}},second:{displayName:"segundo",relative:{0:"ahora"},relativeTime:{future:{one:"dentro de {0} segundo",other:"dentro de {0} segundos"},past:{one:"hace {0} segundo",other:"hace {0} segundos"}}}}},{locale:"es-IC",parentLocale:"es"},{locale:"es-MX",parentLocale:"es-419",fields:{year:{displayName:"año",relative:{0:"este año",1:"el año próximo","-1":"el año pasado"},relativeTime:{future:{one:"dentro de {0} año",other:"dentro de {0} años"},past:{one:"hace {0} año",other:"hace {0} años"}}},month:{displayName:"mes",relative:{0:"este mes",1:"el mes próximo","-1":"el mes pasado"},relativeTime:{future:{one:"en {0} mes",other:"en {0} meses"},past:{one:"hace {0} mes",other:"hace {0} meses"}}},day:{displayName:"día",relative:{0:"hoy",1:"mañana",2:"pasado mañana","-2":"antier","-1":"ayer"},relativeTime:{future:{one:"dentro de {0} día",other:"dentro de {0} días"},past:{one:"hace {0} día",other:"hace {0} días"}}},hour:{displayName:"hora",relative:{0:"esta hora"},relativeTime:{future:{one:"dentro de {0} hora",other:"dentro de {0} horas"},past:{one:"hace {0} hora",other:"hace {0} horas"}}},minute:{displayName:"minuto",relative:{0:"este minuto"},relativeTime:{future:{one:"dentro de {0} minuto",other:"dentro de {0} minutos"},past:{one:"hace {0} minuto",other:"hace {0} minutos"}}},second:{displayName:"segundo",relative:{0:"ahora"},relativeTime:{future:{one:"dentro de {0} segundo",other:"dentro de {0} segundos"},past:{one:"hace {0} segundo",other:"hace {0} segundos"}}}}},{locale:"es-NI",parentLocale:"es-419",fields:{year:{displayName:"año",relative:{0:"este año",1:"el próximo año","-1":"el año pasado"},relativeTime:{future:{one:"dentro de {0} año",other:"dentro de {0} años"},past:{one:"hace {0} año",other:"hace {0} años"}}},month:{displayName:"mes",relative:{0:"este mes",1:"el próximo mes","-1":"el mes pasado"},relativeTime:{future:{one:"dentro de {0} mes",other:"dentro de {0} meses"},past:{one:"hace {0} mes",other:"hace {0} meses"}}},day:{displayName:"día",relative:{0:"hoy",1:"mañana",2:"pasado mañana","-2":"antier","-1":"ayer"},relativeTime:{future:{one:"dentro de {0} día",other:"dentro de {0} días"},past:{one:"hace {0} día",other:"hace {0} días"}}},hour:{displayName:"hora",relative:{0:"esta hora"},relativeTime:{future:{one:"dentro de {0} hora",other:"dentro de {0} horas"},past:{one:"hace {0} hora",other:"hace {0} horas"}}},minute:{displayName:"minuto",relative:{0:"este minuto"},relativeTime:{future:{one:"dentro de {0} minuto",other:"dentro de {0} minutos"},past:{one:"hace {0} minuto",other:"hace {0} minutos"}}},second:{displayName:"segundo",relative:{0:"ahora"},relativeTime:{future:{one:"dentro de {0} segundo",other:"dentro de {0} segundos"},past:{one:"hace {0} segundo",other:"hace {0} segundos"}}}}},{locale:"es-PA",parentLocale:"es-419",fields:{year:{displayName:"año",relative:{0:"este año",1:"el próximo año","-1":"el año pasado"},relativeTime:{future:{one:"dentro de {0} año",other:"dentro de {0} años"},past:{one:"hace {0} año",other:"hace {0} años"}}},month:{displayName:"mes",relative:{0:"este mes",1:"el próximo mes","-1":"el mes pasado"},relativeTime:{future:{one:"dentro de {0} mes",other:"dentro de {0} meses"},past:{one:"hace {0} mes",other:"hace {0} meses"}}},day:{displayName:"día",relative:{0:"hoy",1:"mañana",2:"pasado mañana","-2":"antier","-1":"ayer"},relativeTime:{future:{one:"dentro de {0} día",other:"dentro de {0} días"},past:{one:"hace {0} día",other:"hace {0} días"}}},hour:{displayName:"hora",relative:{0:"esta hora"},relativeTime:{future:{one:"dentro de {0} hora",other:"dentro de {0} horas"},past:{one:"hace {0} hora",other:"hace {0} horas"}}},minute:{displayName:"minuto",relative:{0:"este minuto"},relativeTime:{future:{one:"dentro de {0} minuto",other:"dentro de {0} minutos"},past:{one:"hace {0} minuto",other:"hace {0} minutos"}}},second:{displayName:"segundo",relative:{0:"ahora"},relativeTime:{future:{one:"dentro de {0} segundo",other:"dentro de {0} segundos"},past:{one:"hace {0} segundo",other:"hace {0} segundos"}}}}},{locale:"es-PE",parentLocale:"es-419"},{locale:"es-PH",parentLocale:"es"},{locale:"es-PR",parentLocale:"es-419"},{locale:"es-PY",parentLocale:"es-419",fields:{year:{displayName:"año",relative:{0:"este año",1:"el próximo año","-1":"el año pasado"},relativeTime:{future:{one:"dentro de {0} año",other:"dentro de {0} años"},past:{one:"hace {0} año",other:"hace {0} años"}}},month:{displayName:"mes",relative:{0:"este mes",1:"el próximo mes","-1":"el mes pasado"},relativeTime:{future:{one:"dentro de {0} mes",other:"dentro de {0} meses"},past:{one:"hace {0} mes",other:"hace {0} meses"}}},day:{displayName:"día",relative:{0:"hoy",1:"mañana",2:"pasado mañana","-2":"antes de ayer","-1":"ayer"},relativeTime:{future:{one:"dentro de {0} día",other:"dentro de {0} días"},past:{one:"hace {0} día",other:"hace {0} días"}}},hour:{displayName:"hora",relative:{0:"esta hora"},relativeTime:{future:{one:"dentro de {0} hora",other:"dentro de {0} horas"},past:{one:"hace {0} hora",other:"hace {0} horas"}}},minute:{displayName:"minuto",relative:{0:"este minuto"},relativeTime:{future:{one:"dentro de {0} minuto",other:"dentro de {0} minutos"},past:{one:"hace {0} minuto",other:"hace {0} minutos"}}},second:{displayName:"segundo",relative:{0:"ahora"},relativeTime:{future:{one:"dentro de {0} segundo",other:"dentro de {0} segundos"},past:{one:"hace {0} segundo",other:"hace {0} segundos"}}}}},{locale:"es-SV",parentLocale:"es-419",fields:{year:{displayName:"año",relative:{0:"este año",1:"el próximo año","-1":"el año pasado"},relativeTime:{future:{one:"dentro de {0} año",other:"dentro de {0} años"},past:{one:"hace {0} año",other:"hace {0} años"}}},month:{displayName:"mes",relative:{0:"este mes",1:"el próximo mes","-1":"el mes pasado"},relativeTime:{future:{one:"dentro de {0} mes",other:"dentro de {0} meses"},past:{one:"hace {0} mes",other:"hace {0} meses"}}},day:{displayName:"día",relative:{0:"hoy",1:"mañana",2:"pasado mañana","-2":"antier","-1":"ayer"},relativeTime:{future:{one:"dentro de {0} día",other:"dentro de {0} días"},past:{one:"hace {0} día",other:"hace {0} días"}}},hour:{displayName:"hora",relative:{0:"esta hora"},relativeTime:{future:{one:"dentro de {0} hora",other:"dentro de {0} horas"},past:{one:"hace {0} hora",other:"hace {0} horas"}}},minute:{displayName:"minuto",relative:{0:"este minuto"},relativeTime:{future:{one:"dentro de {0} minuto",other:"dentro de {0} minutos"},past:{one:"hace {0} minuto",other:"hace {0} minutos"}}},second:{displayName:"segundo",relative:{0:"ahora"},relativeTime:{future:{one:"dentro de {0} segundo",other:"dentro de {0} segundos"},past:{one:"hace {0} segundo",other:"hace {0} segundos"}}}}},{locale:"es-US",parentLocale:"es-419"},{locale:"es-UY",parentLocale:"es-419"},{locale:"es-VE",parentLocale:"es-419"},{locale:"et",pluralRuleFunction:function(e,t){var a=!String(e).split(".")[1];return t?"other":1==e&&a?"one":"other"},fields:{year:{displayName:"aasta",relative:{0:"käesolev aasta",1:"järgmine aasta","-1":"eelmine aasta"},relativeTime:{future:{one:"{0} aasta pärast",other:"{0} aasta pärast"},past:{one:"{0} aasta eest",other:"{0} aasta eest"}}},month:{displayName:"kuu",relative:{0:"käesolev kuu",1:"järgmine kuu","-1":"eelmine kuu"},relativeTime:{future:{one:"{0} kuu pärast",other:"{0} kuu pärast"},past:{one:"{0} kuu eest",other:"{0} kuu eest"}}},day:{displayName:"päev",relative:{0:"täna",1:"homme",2:"ülehomme","-2":"üleeile","-1":"eile"},relativeTime:{future:{one:"{0} päeva pärast",other:"{0} päeva pärast"},past:{one:"{0} päeva eest",other:"{0} päeva eest"}}},hour:{displayName:"tund",relative:{0:"praegusel tunnil"},relativeTime:{future:{one:"{0} tunni pärast",other:"{0} tunni pärast"},past:{one:"{0} tunni eest",other:"{0} tunni eest"}}},minute:{displayName:"minut",relative:{0:"praegusel minutil"},relativeTime:{future:{one:"{0} minuti pärast",other:"{0} minuti pärast"},past:{one:"{0} minuti eest",other:"{0} minuti eest"}}},second:{displayName:"sekund",relative:{0:"nüüd"},relativeTime:{future:{one:"{0} sekundi pärast",other:"{0} sekundi pärast"},past:{one:"{0} sekundi eest",other:"{0} sekundi eest"}}}}},{locale:"eu",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"urtea",relative:{0:"aurten",1:"hurrengo urtea","-1":"aurreko urtea"},relativeTime:{future:{one:"{0} urte barru",other:"{0} urte barru"},past:{one:"Duela {0} urte",other:"Duela {0} urte"}}},month:{displayName:"hilabetea",relative:{0:"hilabete hau",1:"hurrengo hilabetea","-1":"aurreko hilabetea"},relativeTime:{future:{one:"{0} hilabete barru",other:"{0} hilabete barru"},past:{one:"Duela {0} hilabete",other:"Duela {0} hilabete"}}},day:{displayName:"eguna",relative:{0:"gaur",1:"bihar",2:"etzi","-2":"herenegun","-1":"atzo"},relativeTime:{future:{one:"{0} egun barru",other:"{0} egun barru"},past:{one:"Duela {0} egun",other:"Duela {0} egun"}}},hour:{displayName:"ordua",relative:{0:"ordu honetan"},relativeTime:{future:{one:"{0} ordu barru",other:"{0} ordu barru"},past:{one:"Duela {0} ordu",other:"Duela {0} ordu"}}},minute:{displayName:"minutua",relative:{0:"minutu honetan"},relativeTime:{future:{one:"{0} minutu barru",other:"{0} minutu barru"},past:{one:"Duela {0} minutu",other:"Duela {0} minutu"}}},second:{displayName:"segundoa",relative:{0:"orain"},relativeTime:{future:{one:"{0} segundo barru",other:"{0} segundo barru"},past:{one:"Duela {0} segundo",other:"Duela {0} segundo"}}}}},{locale:"ewo",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"M̀bú",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Ngɔn",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Amǒs",relative:{0:"Aná",1:"Okírí","-1":"Angogé"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Awola",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Enútɛn",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Akábəga",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"fa",pluralRuleFunction:function(e,t){return t?"other":e>=0&&e<=1?"one":"other"},fields:{year:{displayName:"سال",relative:{0:"امسال",1:"سال آینده","-1":"سال گذشته"},relativeTime:{future:{one:"{0} سال بعد",other:"{0} سال بعد"},past:{one:"{0} سال پیش",other:"{0} سال پیش"}}},month:{displayName:"ماه",relative:{0:"این ماه",1:"ماه آینده","-1":"ماه گذشته"},relativeTime:{future:{one:"{0} ماه بعد",other:"{0} ماه بعد"},past:{one:"{0} ماه پیش",other:"{0} ماه پیش"}}},day:{displayName:"روز",relative:{0:"امروز",1:"فردا",2:"پس‌فردا","-2":"پریروز","-1":"دیروز"},relativeTime:{future:{one:"{0} روز بعد",other:"{0} روز بعد"},past:{one:"{0} روز پیش",other:"{0} روز پیش"}}},hour:{displayName:"ساعت",relative:{0:"همین ساعت"},relativeTime:{future:{one:"{0} ساعت بعد",other:"{0} ساعت بعد"},past:{one:"{0} ساعت پیش",other:"{0} ساعت پیش"}}},minute:{displayName:"دقیقه",relative:{0:"همین دقیقه"},relativeTime:{future:{one:"{0} دقیقه بعد",other:"{0} دقیقه بعد"},past:{one:"{0} دقیقه پیش",other:"{0} دقیقه پیش"}}},second:{displayName:"ثانیه",relative:{0:"اکنون"},relativeTime:{future:{one:"{0} ثانیه بعد",other:"{0} ثانیه بعد"},past:{one:"{0} ثانیه پیش",other:"{0} ثانیه پیش"}}}}},{locale:"fa-AF",parentLocale:"fa"},{locale:"ff",pluralRuleFunction:function(e,t){return t?"other":e>=0&&e<2?"one":"other"},fields:{year:{displayName:"Hitaande",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Lewru",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Ñalnde",relative:{0:"Hannde",1:"Jaŋngo","-1":"Haŋki"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Waktu",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Hoƴom",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Majaango",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"ff-CM",parentLocale:"ff"},{locale:"ff-GN",parentLocale:"ff"},{locale:"ff-MR",parentLocale:"ff"},{locale:"fi",pluralRuleFunction:function(e,t){var a=!String(e).split(".")[1];return t?"other":1==e&&a?"one":"other"},fields:{year:{displayName:"vuosi",relative:{0:"tänä vuonna",1:"ensi vuonna","-1":"viime vuonna"},relativeTime:{future:{one:"{0} vuoden päästä",other:"{0} vuoden päästä"},past:{one:"{0} vuosi sitten",other:"{0} vuotta sitten"}}},month:{displayName:"kuukausi",relative:{0:"tässä kuussa",1:"ensi kuussa","-1":"viime kuussa"},relativeTime:{future:{one:"{0} kuukauden päästä",other:"{0} kuukauden päästä"},past:{one:"{0} kuukausi sitten",other:"{0} kuukautta sitten"}}},day:{displayName:"päivä",relative:{0:"tänään",1:"huomenna",2:"ylihuomenna","-2":"toissa päivänä","-1":"eilen"},relativeTime:{future:{one:"{0} päivän päästä",other:"{0} päivän päästä"},past:{one:"{0} päivä sitten",other:"{0} päivää sitten"}}},hour:{displayName:"tunti",relative:{0:"tämän tunnin aikana"},relativeTime:{future:{one:"{0} tunnin päästä",other:"{0} tunnin päästä"},past:{one:"{0} tunti sitten",other:"{0} tuntia sitten"}}},minute:{displayName:"minuutti",relative:{0:"tämän minuutin aikana"},relativeTime:{future:{one:"{0} minuutin päästä",other:"{0} minuutin päästä"},past:{one:"{0} minuutti sitten",other:"{0} minuuttia sitten"}}},second:{displayName:"sekunti",relative:{0:"nyt"},relativeTime:{future:{one:"{0} sekunnin päästä",other:"{0} sekunnin päästä"},past:{one:"{0} sekunti sitten",other:"{0} sekuntia sitten"}}}}},{locale:"fil",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=a[0],i=a[1]||"",o=!a[1],n=r.slice(-1),l=i.slice(-1);return t?1==e?"one":"other":o&&(1==r||2==r||3==r)||o&&4!=n&&6!=n&&9!=n||!o&&4!=l&&6!=l&&9!=l?"one":"other"},fields:{year:{displayName:"taon",relative:{0:"ngayong taon",1:"susunod na taon","-1":"nakaraang taon"},relativeTime:{future:{one:"sa {0} taon",other:"sa {0} (na) taon"},past:{one:"{0} taon ang nakalipas",other:"{0} (na) taon ang nakalipas"}}},month:{displayName:"buwan",relative:{0:"ngayong buwan",1:"susunod na buwan","-1":"nakaraang buwan"},relativeTime:{future:{one:"sa {0} buwan",other:"sa {0} (na) buwan"},past:{one:"{0} buwan ang nakalipas",other:"{0} (na) buwan ang nakalipas"}}},day:{displayName:"araw",relative:{0:"ngayong araw",1:"bukas",2:"Samakalawa","-2":"Araw bago ang kahapon","-1":"kahapon"},relativeTime:{future:{one:"sa {0} araw",other:"sa {0} (na) araw"},past:{one:"{0} araw ang nakalipas",other:"{0} (na) araw ang nakalipas"}}},hour:{displayName:"oras",relative:{0:"ngayong oras"},relativeTime:{future:{one:"sa {0} oras",other:"sa {0} (na) oras"},past:{one:"{0} oras ang nakalipas",other:"{0} (na) oras ang nakalipas"}}},minute:{displayName:"minuto",relative:{0:"sa minutong ito"},relativeTime:{future:{one:"sa {0} minuto",other:"sa {0} (na) minuto"},past:{one:"{0} minuto ang nakalipas",other:"{0} (na) minuto ang nakalipas"}}},second:{displayName:"segundo",relative:{0:"ngayon"},relativeTime:{future:{one:"sa {0} segundo",other:"sa {0} (na) segundo"},past:{one:"{0} segundo ang nakalipas",other:"{0} (na) segundo ang nakalipas"}}}}},{locale:"fo",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"ár",relative:{0:"í ár",1:"næsta ár","-1":"í fjør"},relativeTime:{future:{one:"um {0} ár",other:"um {0} ár"},past:{one:"{0} ár síðan",other:"{0} ár síðan"}}},month:{displayName:"mánaður",relative:{0:"henda mánaðin",1:"næsta mánað","-1":"seinasta mánað"},relativeTime:{future:{one:"um {0} mánað",other:"um {0} mánaðir"},past:{one:"{0} mánað síðan",other:"{0} mánaðir síðan"}}},day:{displayName:"dagur",relative:{0:"í dag",1:"í morgin",2:"í ovurmorgin","-2":"fyrradagin","-1":"í gjár"},relativeTime:{future:{one:"um {0} dag",other:"um {0} dagar"},past:{one:"{0} dagur síðan",other:"{0} dagar síðan"}}},hour:{displayName:"tími",relative:{0:"hendan tíman"},relativeTime:{future:{one:"um {0} tíma",other:"um {0} tímar"},past:{one:"{0} tími síðan",other:"{0} tímar síðan"}}},minute:{displayName:"minuttur",relative:{0:"hendan minuttin"},relativeTime:{future:{one:"um {0} minutt",other:"um {0} minuttir"},past:{one:"{0} minutt síðan",other:"{0} minuttir síðan"}}},second:{displayName:"sekund",relative:{0:"nú"},relativeTime:{future:{one:"um {0} sekund",other:"um {0} sekund"},past:{one:"{0} sekund síðan",other:"{0} sekund síðan"}}}}},{locale:"fo-DK",parentLocale:"fo"},{locale:"fr",pluralRuleFunction:function(e,t){return t?1==e?"one":"other":e>=0&&e<2?"one":"other"},fields:{year:{displayName:"année",relative:{0:"cette année",1:"l’année prochaine","-1":"l’année dernière"},relativeTime:{future:{one:"dans {0} an",other:"dans {0} ans"},past:{one:"il y a {0} an",other:"il y a {0} ans"}}},month:{displayName:"mois",relative:{0:"ce mois-ci",1:"le mois prochain","-1":"le mois dernier"},relativeTime:{future:{one:"dans {0} mois",other:"dans {0} mois"},past:{one:"il y a {0} mois",other:"il y a {0} mois"}}},day:{displayName:"jour",relative:{0:"aujourd’hui",1:"demain",2:"après-demain","-2":"avant-hier","-1":"hier"},relativeTime:{future:{one:"dans {0} jour",other:"dans {0} jours"},past:{one:"il y a {0} jour",other:"il y a {0} jours"}}},hour:{displayName:"heure",relative:{0:"cette heure-ci"},relativeTime:{future:{one:"dans {0} heure",other:"dans {0} heures"},past:{one:"il y a {0} heure",other:"il y a {0} heures"}}},minute:{displayName:"minute",relative:{0:"cette minute-ci"},relativeTime:{future:{one:"dans {0} minute",other:"dans {0} minutes"},past:{one:"il y a {0} minute",other:"il y a {0} minutes"}}},second:{displayName:"seconde",relative:{0:"maintenant"},relativeTime:{future:{one:"dans {0} seconde",other:"dans {0} secondes"},past:{one:"il y a {0} seconde",other:"il y a {0} secondes"}}}}},{locale:"fr-BE",parentLocale:"fr"},{locale:"fr-BF",parentLocale:"fr"},{locale:"fr-BI",parentLocale:"fr"},{locale:"fr-BJ",parentLocale:"fr"},{locale:"fr-BL",parentLocale:"fr"},{locale:"fr-CA",parentLocale:"fr",fields:{year:{displayName:"année",relative:{0:"cette année",1:"l’année prochaine","-1":"l’année dernière"},relativeTime:{future:{one:"Dans {0} an",other:"Dans {0} ans"},past:{one:"Il y a {0} an",other:"Il y a {0} ans"}}},month:{displayName:"mois",relative:{0:"ce mois-ci",1:"le mois prochain","-1":"le mois dernier"},relativeTime:{future:{one:"dans {0} mois",other:"dans {0} mois"},past:{one:"il y a {0} mois",other:"il y a {0} mois"}}},day:{displayName:"jour",relative:{0:"aujourd’hui",1:"demain",2:"après-demain","-2":"avant-hier","-1":"hier"},relativeTime:{future:{one:"dans {0} jour",other:"dans {0} jours"},past:{one:"il y a {0} jour",other:"il y a {0} jours"}}},hour:{displayName:"heure",relative:{0:"cette heure-ci"},relativeTime:{future:{one:"dans {0} heure",other:"dans {0} heures"},past:{one:"il y a {0} heure",other:"il y a {0} heures"}}},minute:{displayName:"minute",relative:{0:"cette minute-ci"},relativeTime:{future:{one:"dans {0} minute",other:"dans {0} minutes"},past:{one:"il y a {0} minute",other:"il y a {0} minutes"}}},second:{displayName:"seconde",relative:{0:"maintenant"},relativeTime:{future:{one:"dans {0} seconde",other:"dans {0} secondes"},past:{one:"il y a {0} seconde",other:"il y a {0} secondes"}}}}},{locale:"fr-CD",parentLocale:"fr"},{locale:"fr-CF",parentLocale:"fr"},{locale:"fr-CG",parentLocale:"fr"},{locale:"fr-CH",parentLocale:"fr"},{locale:"fr-CI",parentLocale:"fr"},{locale:"fr-CM",parentLocale:"fr"},{locale:"fr-DJ",parentLocale:"fr"},{locale:"fr-DZ",parentLocale:"fr"},{locale:"fr-GA",parentLocale:"fr"},{locale:"fr-GF",parentLocale:"fr"},{locale:"fr-GN",parentLocale:"fr"},{locale:"fr-GP",parentLocale:"fr"},{locale:"fr-GQ",parentLocale:"fr"},{locale:"fr-HT",parentLocale:"fr"},{locale:"fr-KM",parentLocale:"fr"},{locale:"fr-LU",parentLocale:"fr"},{locale:"fr-MA",parentLocale:"fr"},{locale:"fr-MC",parentLocale:"fr"},{locale:"fr-MF",parentLocale:"fr"},{locale:"fr-MG",parentLocale:"fr"},{locale:"fr-ML",parentLocale:"fr"},{locale:"fr-MQ",parentLocale:"fr"},{locale:"fr-MR",parentLocale:"fr"},{locale:"fr-MU",parentLocale:"fr"},{locale:"fr-NC",parentLocale:"fr"},{locale:"fr-NE",parentLocale:"fr"},{locale:"fr-PF",parentLocale:"fr"},{locale:"fr-PM",parentLocale:"fr"},{locale:"fr-RE",parentLocale:"fr"},{locale:"fr-RW",parentLocale:"fr"},{locale:"fr-SC",parentLocale:"fr"},{locale:"fr-SN",parentLocale:"fr"},{locale:"fr-SY",parentLocale:"fr"},{locale:"fr-TD",parentLocale:"fr"},{locale:"fr-TG",parentLocale:"fr"},{locale:"fr-TN",parentLocale:"fr"},{locale:"fr-VU",parentLocale:"fr"},{locale:"fr-WF",parentLocale:"fr"},{locale:"fr-YT",parentLocale:"fr"},{locale:"fur",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"an",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{one:"ca di {0} an",other:"ca di {0} agns"},past:{one:"{0} an indaûr",other:"{0} agns indaûr"}}},month:{displayName:"mês",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{one:"ca di {0} mês",other:"ca di {0} mês"},past:{one:"{0} mês indaûr",other:"{0} mês indaûr"}}},day:{displayName:"dì",relative:{0:"vuê",1:"doman",2:"passantdoman","-2":"îr l’altri","-1":"îr"},relativeTime:{future:{one:"ca di {0} zornade",other:"ca di {0} zornadis"},past:{one:"{0} zornade indaûr",other:"{0} zornadis indaûr"}}},hour:{displayName:"ore",relative:{0:"this hour"},relativeTime:{future:{one:"ca di {0} ore",other:"ca di {0} oris"},past:{one:"{0} ore indaûr",other:"{0} oris indaûr"}}},minute:{displayName:"minût",relative:{0:"this minute"},relativeTime:{future:{one:"ca di {0} minût",other:"ca di {0} minûts"},past:{one:"{0} minût indaûr",other:"{0} minûts indaûr"}}},second:{displayName:"secont",relative:{0:"now"},relativeTime:{future:{one:"ca di {0} secont",other:"ca di {0} seconts"},past:{one:"{0} secont indaûr",other:"{0} seconts indaûr"}}}}},{locale:"fy",pluralRuleFunction:function(e,t){var a=!String(e).split(".")[1];return t?"other":1==e&&a?"one":"other"},fields:{year:{displayName:"Jier",relative:{0:"dit jier",1:"folgjend jier","-1":"foarich jier"},relativeTime:{future:{one:"Oer {0} jier",other:"Oer {0} jier"},past:{one:"{0} jier lyn",other:"{0} jier lyn"}}},month:{displayName:"Moanne",relative:{0:"dizze moanne",1:"folgjende moanne","-1":"foarige moanne"},relativeTime:{future:{one:"Oer {0} moanne",other:"Oer {0} moannen"},past:{one:"{0} moanne lyn",other:"{0} moannen lyn"}}},day:{displayName:"dei",relative:{0:"vandaag",1:"morgen",2:"Oermorgen","-2":"eergisteren","-1":"gisteren"},relativeTime:{future:{one:"Oer {0} dei",other:"Oer {0} deien"},past:{one:"{0} dei lyn",other:"{0} deien lyn"}}},hour:{displayName:"oere",relative:{0:"this hour"},relativeTime:{future:{one:"Oer {0} oere",other:"Oer {0} oere"},past:{one:"{0} oere lyn",other:"{0} oere lyn"}}},minute:{displayName:"Minút",relative:{0:"this minute"},relativeTime:{future:{one:"Oer {0} minút",other:"Oer {0} minuten"},past:{one:"{0} minút lyn",other:"{0} minuten lyn"}}},second:{displayName:"Sekonde",relative:{0:"nu"},relativeTime:{future:{one:"Oer {0} sekonde",other:"Oer {0} sekonden"},past:{one:"{0} sekonde lyn",other:"{0} sekonden lyn"}}}}},{locale:"ga",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=Number(a[0])==e;return t?1==e?"one":"other":1==e?"one":2==e?"two":r&&e>=3&&e<=6?"few":r&&e>=7&&e<=10?"many":"other"},fields:{year:{displayName:"Bliain",relative:{0:"an bhliain seo",1:"an bhliain seo chugainn","-1":"anuraidh"},relativeTime:{future:{one:"i gceann {0} bhliain",two:"i gceann {0} bhliain",few:"i gceann {0} bliana",many:"i gceann {0} mbliana",other:"i gceann {0} bliain"},past:{one:"{0} bhliain ó shin",two:"{0} bhliain ó shin",few:"{0} bliana ó shin",many:"{0} mbliana ó shin",other:"{0} bliain ó shin"}}},month:{displayName:"Mí",relative:{0:"an mhí seo",1:"an mhí seo chugainn","-1":"an mhí seo caite"},relativeTime:{future:{one:"i gceann {0} mhí",two:"i gceann {0} mhí",few:"i gceann {0} mhí",many:"i gceann {0} mí",other:"i gceann {0} mí"},past:{one:"{0} mhí ó shin",two:"{0} mhí ó shin",few:"{0} mhí ó shin",many:"{0} mí ó shin",other:"{0} mí ó shin"}}},day:{displayName:"Lá",relative:{0:"inniu",1:"amárach",2:"arú amárach","-2":"arú inné","-1":"inné"},relativeTime:{future:{one:"i gceann {0} lá",two:"i gceann {0} lá",few:"i gceann {0} lá",many:"i gceann {0} lá",other:"i gceann {0} lá"},past:{one:"{0} lá ó shin",two:"{0} lá ó shin",few:"{0} lá ó shin",many:"{0} lá ó shin",other:"{0} lá ó shin"}}},hour:{displayName:"Uair",relative:{0:"an uair seo"},relativeTime:{future:{one:"i gceann {0} uair an chloig",two:"i gceann {0} uair an chloig",few:"i gceann {0} huaire an chloig",many:"i gceann {0} n-uaire an chloig",other:"i gceann {0} uair an chloig"},past:{one:"{0} uair an chloig ó shin",two:"{0} uair an chloig ó shin",few:"{0} huaire an chloig ó shin",many:"{0} n-uaire an chloig ó shin",other:"{0} uair an chloig ó shin"}}},minute:{displayName:"Nóiméad",relative:{0:"an nóiméad seo"},relativeTime:{future:{one:"i gceann {0} nóiméad",two:"i gceann {0} nóiméad",few:"i gceann {0} nóiméad",many:"i gceann {0} nóiméad",other:"i gceann {0} nóiméad"},past:{one:"{0} nóiméad ó shin",two:"{0} nóiméad ó shin",few:"{0} nóiméad ó shin",many:"{0} nóiméad ó shin",other:"{0} nóiméad ó shin"}}},second:{displayName:"Soicind",relative:{0:"anois"},relativeTime:{future:{one:"i gceann {0} soicind",two:"i gceann {0} shoicind",few:"i gceann {0} shoicind",many:"i gceann {0} soicind",other:"i gceann {0} soicind"},past:{one:"{0} soicind ó shin",two:"{0} shoicind ó shin",few:"{0} shoicind ó shin",many:"{0} soicind ó shin",other:"{0} soicind ó shin"}}}}},{locale:"gd",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=Number(a[0])==e;return t?"other":1==e||11==e?"one":2==e||12==e?"two":r&&e>=3&&e<=10||r&&e>=13&&e<=19?"few":"other"},fields:{year:{displayName:"bliadhna",relative:{0:"am bliadhna",1:"an ath-bhliadhna","-2":"a-bhòn-uiridh","-1":"an-uiridh"},relativeTime:{future:{one:"an ceann {0} bhliadhna",two:"an ceann {0} bhliadhna",few:"an ceann {0} bliadhnaichean",other:"an ceann {0} bliadhna"},past:{one:"{0} bhliadhna air ais",two:"{0} bhliadhna air ais",few:"{0} bhliadhnaichean air ais",other:"{0} bliadhna air ais"}}},month:{displayName:"mìos",relative:{0:"am mìos seo",1:"an ath-mhìos","-1":"am mìos seo chaidh"},relativeTime:{future:{one:"an ceann {0} mhìosa",two:"an ceann {0} mhìosa",few:"an ceann {0} mìosan",other:"an ceann {0} mìosa"},past:{one:"{0} mhìos air ais",two:"{0} mhìos air ais",few:"{0} mìosan air ais",other:"{0} mìos air ais"}}},day:{displayName:"latha",relative:{0:"an-diugh",1:"a-màireach",2:"an-earar",3:"an-eararais","-2":"a-bhòin-dè","-1":"an-dè"},relativeTime:{future:{one:"an ceann {0} latha",two:"an ceann {0} latha",few:"an ceann {0} làithean",other:"an ceann {0} latha"},past:{one:"{0} latha air ais",two:"{0} latha air ais",few:"{0} làithean air ais",other:"{0} latha air ais"}}},hour:{displayName:"uair a thìde",relative:{0:"this hour"},relativeTime:{future:{one:"an ceann {0} uair a thìde",two:"an ceann {0} uair a thìde",few:"an ceann {0} uairean a thìde",other:"an ceann {0} uair a thìde"},past:{one:"{0} uair a thìde air ais",two:"{0} uair a thìde air ais",few:"{0} uairean a thìde air ais",other:"{0} uair a thìde air ais"}}},minute:{displayName:"mionaid",relative:{0:"this minute"},relativeTime:{future:{one:"an ceann {0} mhionaid",two:"an ceann {0} mhionaid",few:"an ceann {0} mionaidean",other:"an ceann {0} mionaid"},past:{one:"{0} mhionaid air ais",two:"{0} mhionaid air ais",few:"{0} mionaidean air ais",other:"{0} mionaid air ais"}}},second:{displayName:"diog",relative:{0:"an-dràsta"},relativeTime:{future:{one:"an ceann {0} diog",two:"an ceann {0} dhiog",few:"an ceann {0} diogan",other:"an ceann {0} diog"},past:{one:"{0} diog air ais",two:"{0} dhiog air ais",few:"{0} diogan air ais",other:"{0} diog air ais"}}}}},{locale:"gl",pluralRuleFunction:function(e,t){var a=!String(e).split(".")[1];return t?"other":1==e&&a?"one":"other"},fields:{year:{displayName:"ano",relative:{0:"este ano",1:"o próximo ano","-1":"o ano pasado"},relativeTime:{future:{one:"en {0} ano",other:"en {0} anos"},past:{one:"hai {0} ano",other:"hai {0} anos"}}},month:{displayName:"mes",relative:{0:"este mes",1:"o próximo mes","-1":"o mes pasado"},relativeTime:{future:{one:"en {0} mes",other:"en {0} meses"},past:{one:"hai {0} mes",other:"hai {0} meses"}}},day:{displayName:"día",relative:{0:"hoxe",1:"mañá",2:"pasadomañá","-2":"antonte","-1":"onte"},relativeTime:{future:{one:"en {0} día",other:"en {0} días"},past:{one:"hai {0} día",other:"hai {0} días"}}},hour:{displayName:"hora",relative:{0:"nesta hora"},relativeTime:{future:{one:"en {0} hora",other:"en {0} horas"},past:{one:"hai {0} hora",other:"hai {0} horas"}}},minute:{displayName:"minuto",relative:{0:"neste minuto"},relativeTime:{future:{one:"en {0} minuto",other:"en {0} minutos"},past:{one:"hai {0} minuto",other:"hai {0} minutos"}}},second:{displayName:"segundo",relative:{0:"agora"},relativeTime:{future:{one:"en {0} segundo",other:"en {0} segundos"},past:{one:"hai {0} segundo",other:"hai {0} segundos"}}}}},{locale:"gsw",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Jaar",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Monet",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Tag",relative:{0:"hüt",1:"moorn",2:"übermoorn","-2":"vorgeschter","-1":"geschter"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Schtund",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minuute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Sekunde",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"gsw-FR",parentLocale:"gsw"},{locale:"gsw-LI",parentLocale:"gsw"},{locale:"gu",pluralRuleFunction:function(e,t){return t?1==e?"one":2==e||3==e?"two":4==e?"few":6==e?"many":"other":e>=0&&e<=1?"one":"other"},fields:{year:{displayName:"વર્ષ",relative:{0:"આ વર્ષે",1:"આવતા વર્ષે","-1":"ગયા વર્ષે"},relativeTime:{future:{one:"{0} વર્ષમાં",other:"{0} વર્ષમાં"},past:{one:"{0} વર્ષ પહેલાં",other:"{0} વર્ષ પહેલાં"}}},month:{displayName:"મહિનો",relative:{0:"આ મહિને",1:"આવતા મહિને","-1":"ગયા મહિને"},relativeTime:{future:{one:"{0} મહિનામાં",other:"{0} મહિનામાં"},past:{one:"{0} મહિના પહેલાં",other:"{0} મહિના પહેલાં"}}},day:{displayName:"દિવસ",relative:{0:"આજે",1:"આવતીકાલે",2:"પરમદિવસે","-2":"ગયા પરમદિવસે","-1":"ગઈકાલે"},relativeTime:{future:{one:"{0} દિવસમાં",other:"{0} દિવસમાં"},past:{one:"{0} દિવસ પહેલાં",other:"{0} દિવસ પહેલાં"}}},hour:{displayName:"કલાક",relative:{0:"આ કલાક"},relativeTime:{future:{one:"{0} કલાકમાં",other:"{0} કલાકમાં"},past:{one:"{0} કલાક પહેલાં",other:"{0} કલાક પહેલાં"}}},minute:{displayName:"મિનિટ",relative:{0:"આ મિનિટ"},relativeTime:{future:{one:"{0} મિનિટમાં",other:"{0} મિનિટમાં"},past:{one:"{0} મિનિટ પહેલાં",other:"{0} મિનિટ પહેલાં"}}},second:{displayName:"સેકન્ડ",relative:{0:"હમણાં"},relativeTime:{future:{one:"{0} સેકંડમાં",other:"{0} સેકંડમાં"},past:{one:"{0} સેકંડ પહેલાં",other:"{0} સેકંડ પહેલાં"}}}}},{locale:"guw",pluralRuleFunction:function(e,t){return t?"other":0==e||1==e?"one":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"guz",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Omwaka",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Omotienyi",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Rituko",relative:{0:"Rero",1:"Mambia","-1":"Igoro"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Ensa",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Edakika",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Esekendi",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"gv",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=a[0],i=!a[1],o=r.slice(-1),n=r.slice(-2);return t?"other":i&&1==o?"one":i&&2==o?"two":!i||0!=n&&20!=n&&40!=n&&60!=n&&80!=n?i?"other":"many":"few"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"ha",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Shekara",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Wata",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Kwana",relative:{0:"Yau",1:"Gobe","-1":"Jiya"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Awa",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minti",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Daƙiƙa",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"ha-Arab",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"ha-GH",parentLocale:"ha"},{locale:"ha-NE",parentLocale:"ha"},{locale:"haw",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"he",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=a[0],i=!a[1],o=Number(a[0])==e,n=o&&a[0].slice(-1);return t?"other":1==e&&i?"one":2==r&&i?"two":i&&(e<0||e>10)&&o&&0==n?"many":"other"},fields:{year:{displayName:"שנה",relative:{0:"השנה",1:"השנה הבאה","-1":"השנה שעברה"},relativeTime:{future:{one:"בעוד שנה",two:"בעוד שנתיים",many:"בעוד {0} שנה",other:"בעוד {0} שנים"},past:{one:"לפני שנה",two:"לפני שנתיים",many:"לפני {0} שנה",other:"לפני {0} שנים"}}},month:{displayName:"חודש",relative:{0:"החודש",1:"החודש הבא","-1":"החודש שעבר"},relativeTime:{future:{one:"בעוד חודש",two:"בעוד חודשיים",many:"בעוד {0} חודשים",other:"בעוד {0} חודשים"},past:{one:"לפני חודש",two:"לפני חודשיים",many:"לפני {0} חודשים",other:"לפני {0} חודשים"}}},day:{displayName:"יום",relative:{0:"היום",1:"מחר",2:"מחרתיים","-2":"שלשום","-1":"אתמול"},relativeTime:{future:{one:"בעוד יום {0}",two:"בעוד יומיים",many:"בעוד {0} ימים",other:"בעוד {0} ימים"},past:{one:"לפני יום {0}",two:"לפני יומיים",many:"לפני {0} ימים",other:"לפני {0} ימים"}}},hour:{displayName:"שעה",relative:{0:"בשעה זו"},relativeTime:{future:{one:"בעוד שעה",two:"בעוד שעתיים",many:"בעוד {0} שעות",other:"בעוד {0} שעות"},past:{one:"לפני שעה",two:"לפני שעתיים",many:"לפני {0} שעות",other:"לפני {0} שעות"}}},minute:{displayName:"דקה",relative:{0:"בדקה זו"},relativeTime:{future:{one:"בעוד דקה",two:"בעוד שתי דקות",many:"בעוד {0} דקות",other:"בעוד {0} דקות"},past:{one:"לפני דקה",two:"לפני שתי דקות",many:"לפני {0} דקות",other:"לפני {0} דקות"}}},second:{displayName:"שנייה",relative:{0:"עכשיו"},relativeTime:{future:{one:"בעוד שנייה",two:"בעוד שתי שניות",many:"בעוד {0} שניות",other:"בעוד {0} שניות"},past:{one:"לפני שנייה",two:"לפני שתי שניות",many:"לפני {0} שניות",other:"לפני {0} שניות"}}}}},{locale:"hi",pluralRuleFunction:function(e,t){return t?1==e?"one":2==e||3==e?"two":4==e?"few":6==e?"many":"other":e>=0&&e<=1?"one":"other"},fields:{year:{displayName:"वर्ष",relative:{0:"इस वर्ष",1:"अगला वर्ष","-1":"पिछला वर्ष"},relativeTime:{future:{one:"{0} वर्ष में",other:"{0} वर्ष में"},past:{one:"{0} वर्ष पहले",other:"{0} वर्ष पहले"}}},month:{displayName:"माह",relative:{0:"इस माह",1:"अगला माह","-1":"पिछला माह"},relativeTime:{future:{one:"{0} माह में",other:"{0} माह में"},past:{one:"{0} माह पहले",other:"{0} माह पहले"}}},day:{displayName:"दिन",relative:{0:"आज",1:"कल",2:"परसों","-2":"बीता परसों","-1":"कल"},relativeTime:{future:{one:"{0} दिन में",other:"{0} दिन में"},past:{one:"{0} दिन पहले",other:"{0} दिन पहले"}}},hour:{displayName:"घंटा",relative:{0:"यह घंटा"},relativeTime:{future:{one:"{0} घंटे में",other:"{0} घंटे में"},past:{one:"{0} घंटे पहले",other:"{0} घंटे पहले"}}},minute:{displayName:"मिनट",relative:{0:"यह मिनट"},relativeTime:{future:{one:"{0} मिनट में",other:"{0} मिनट में"},past:{one:"{0} मिनट पहले",other:"{0} मिनट पहले"}}},second:{displayName:"सेकंड",relative:{0:"अब"},relativeTime:{future:{one:"{0} सेकंड में",other:"{0} सेकंड में"},past:{one:"{0} सेकंड पहले",other:"{0} सेकंड पहले"}}}}},{locale:"hr",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=a[0],i=a[1]||"",o=!a[1],n=r.slice(-1),l=r.slice(-2),u=i.slice(-1),s=i.slice(-2);return t?"other":o&&1==n&&11!=l||1==u&&11!=s?"one":o&&n>=2&&n<=4&&(l<12||l>14)||u>=2&&u<=4&&(s<12||s>14)?"few":"other"},fields:{year:{displayName:"godina",relative:{0:"ove godine",1:"sljedeće godine","-1":"prošle godine"},relativeTime:{future:{one:"za {0} godinu",few:"za {0} godine",other:"za {0} godina"},past:{one:"prije {0} godinu",few:"prije {0} godine",other:"prije {0} godina"}}},month:{displayName:"mjesec",relative:{0:"ovaj mjesec",1:"sljedeći mjesec","-1":"prošli mjesec"},relativeTime:{future:{one:"za {0} mjesec",few:"za {0} mjeseca",other:"za {0} mjeseci"},past:{one:"prije {0} mjesec",few:"prije {0} mjeseca",other:"prije {0} mjeseci"}}},day:{displayName:"dan",relative:{0:"danas",1:"sutra",2:"prekosutra","-2":"prekjučer","-1":"jučer"},relativeTime:{future:{one:"za {0} dan",few:"za {0} dana",other:"za {0} dana"},past:{one:"prije {0} dan",few:"prije {0} dana",other:"prije {0} dana"}}},hour:{displayName:"sat",relative:{0:"ovaj sat"},relativeTime:{future:{one:"za {0} sat",few:"za {0} sata",other:"za {0} sati"},past:{one:"prije {0} sat",few:"prije {0} sata",other:"prije {0} sati"}}},minute:{displayName:"minuta",relative:{0:"ova minuta"},relativeTime:{future:{one:"za {0} minutu",few:"za {0} minute",other:"za {0} minuta"},past:{one:"prije {0} minutu",few:"prije {0} minute",other:"prije {0} minuta"}}},second:{displayName:"sekunda",relative:{0:"sad"},relativeTime:{future:{one:"za {0} sekundu",few:"za {0} sekunde",other:"za {0} sekundi"},past:{one:"prije {0} sekundu",few:"prije {0} sekunde",other:"prije {0} sekundi"}}}}},{locale:"hr-BA",parentLocale:"hr"},{locale:"hsb",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=a[0],i=a[1]||"",o=!a[1],n=r.slice(-2),l=i.slice(-2);return t?"other":o&&1==n||1==l?"one":o&&2==n||2==l?"two":o&&(3==n||4==n)||3==l||4==l?"few":"other"},fields:{year:{displayName:"lěto",relative:{0:"lětsa",1:"klětu","-1":"loni"},relativeTime:{future:{one:"za {0} lěto",two:"za {0} lěće",few:"za {0} lěta",other:"za {0} lět"},past:{one:"před {0} lětom",two:"před {0} lětomaj",few:"před {0} lětami",other:"před {0} lětami"}}},month:{displayName:"měsac",relative:{0:"tutón měsac",1:"přichodny měsac","-1":"zašły měsac"},relativeTime:{future:{one:"za {0} měsac",two:"za {0} měsacaj",few:"za {0} měsacy",other:"za {0} měsacow"},past:{one:"před {0} měsacom",two:"před {0} měsacomaj",few:"před {0} měsacami",other:"před {0} měsacami"}}},day:{displayName:"dźeń",relative:{0:"dźensa",1:"jutře","-1":"wčera"},relativeTime:{future:{one:"za {0} dźeń",two:"za {0} dnjej",few:"za {0} dny",other:"za {0} dnjow"},past:{one:"před {0} dnjom",two:"před {0} dnjomaj",few:"před {0} dnjemi",other:"před {0} dnjemi"}}},hour:{displayName:"hodźina",relative:{0:"this hour"},relativeTime:{future:{one:"za {0} hodźinu",two:"za {0} hodźinje",few:"za {0} hodźiny",other:"za {0} hodźin"},past:{one:"před {0} hodźinu",two:"před {0} hodźinomaj",few:"před {0} hodźinami",other:"před {0} hodźinami"}}},minute:{displayName:"minuta",relative:{0:"this minute"},relativeTime:{future:{one:"za {0} minutu",two:"za {0} minuće",few:"za {0} minuty",other:"za {0} minutow"},past:{one:"před {0} minutu",two:"před {0} minutomaj",few:"před {0} minutami",other:"před {0} minutami"}}},second:{displayName:"sekunda",relative:{0:"now"},relativeTime:{future:{one:"za {0} sekundu",two:"za {0} sekundźe",few:"za {0} sekundy",other:"za {0} sekundow"},past:{one:"před {0} sekundu",two:"před {0} sekundomaj",few:"před {0} sekundami",other:"před {0} sekundami"}}}}},{locale:"hu",pluralRuleFunction:function(e,t){return t?1==e||5==e?"one":"other":1==e?"one":"other"},fields:{year:{displayName:"év",relative:{0:"ez az év",1:"következő év","-1":"előző év"},relativeTime:{future:{one:"{0} év múlva",other:"{0} év múlva"},past:{one:"{0} évvel ezelőtt",other:"{0} évvel ezelőtt"}}},month:{displayName:"hónap",relative:{0:"ez a hónap",1:"következő hónap","-1":"előző hónap"},relativeTime:{future:{one:"{0} hónap múlva",other:"{0} hónap múlva"},past:{one:"{0} hónappal ezelőtt",other:"{0} hónappal ezelőtt"}}},day:{displayName:"nap",relative:{0:"ma",1:"holnap",2:"holnapután","-2":"tegnapelőtt","-1":"tegnap"},relativeTime:{future:{one:"{0} nap múlva",other:"{0} nap múlva"},past:{one:"{0} nappal ezelőtt",other:"{0} nappal ezelőtt"}}},hour:{displayName:"óra",relative:{0:"ebben az órában"},relativeTime:{future:{one:"{0} óra múlva",other:"{0} óra múlva"},past:{one:"{0} órával ezelőtt",other:"{0} órával ezelőtt"}}},minute:{displayName:"perc",relative:{0:"ebben a percben"},relativeTime:{future:{one:"{0} perc múlva",other:"{0} perc múlva"},past:{one:"{0} perccel ezelőtt",other:"{0} perccel ezelőtt"}}},second:{displayName:"másodperc",relative:{0:"most"},relativeTime:{future:{one:"{0} másodperc múlva",other:"{0} másodperc múlva"},past:{one:"{0} másodperccel ezelőtt",other:"{0} másodperccel ezelőtt"}}}}},{locale:"hy",pluralRuleFunction:function(e,t){return t?1==e?"one":"other":e>=0&&e<2?"one":"other"},fields:{year:{displayName:"տարի",relative:{0:"այս տարի",1:"հաջորդ տարի","-1":"նախորդ տարի"},relativeTime:{future:{one:"{0} տարուց",other:"{0} տարուց"},past:{one:"{0} տարի առաջ",other:"{0} տարի առաջ"}}},month:{displayName:"ամիս",relative:{0:"այս ամիս",1:"հաջորդ ամիս","-1":"նախորդ ամիս"},relativeTime:{future:{one:"{0} ամսից",other:"{0} ամսից"},past:{one:"{0} ամիս առաջ",other:"{0} ամիս առաջ"}}},day:{displayName:"օր",relative:{0:"այսօր",1:"վաղը",2:"վաղը չէ մյուս օրը","-2":"երեկ չէ առաջի օրը","-1":"երեկ"},relativeTime:{future:{one:"{0} օրից",other:"{0} օրից"},past:{one:"{0} օր առաջ",other:"{0} օր առաջ"}}},hour:{displayName:"ժամ",relative:{0:"այս ժամին"},relativeTime:{future:{one:"{0} ժամից",other:"{0} ժամից"},past:{one:"{0} ժամ առաջ",other:"{0} ժամ առաջ"}}},minute:{displayName:"րոպե",relative:{0:"այս րոպեին"},relativeTime:{future:{one:"{0} րոպեից",other:"{0} րոպեից"},past:{one:"{0} րոպե առաջ",other:"{0} րոպե առաջ"}}},second:{displayName:"վայրկյան",relative:{0:"այժմ"},relativeTime:{future:{one:"{0} վայրկյանից",other:"{0} վայրկյանից"},past:{one:"{0} վայրկյան առաջ",other:"{0} վայրկյան առաջ"}}}}},{locale:"id",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Tahun",relative:{0:"tahun ini",1:"tahun depan","-1":"tahun lalu"},relativeTime:{future:{other:"Dalam {0} tahun"},past:{other:"{0} tahun yang lalu"}}},month:{displayName:"Bulan",relative:{0:"bulan ini",1:"Bulan berikutnya","-1":"bulan lalu"},relativeTime:{future:{other:"Dalam {0} bulan"},past:{other:"{0} bulan yang lalu"}}},day:{displayName:"Hari",relative:{0:"hari ini",1:"besok",2:"lusa","-2":"kemarin dulu","-1":"kemarin"},relativeTime:{future:{other:"Dalam {0} hari"},past:{other:"{0} hari yang lalu"}}},hour:{displayName:"Jam",relative:{0:"jam ini"},relativeTime:{future:{other:"Dalam {0} jam"},past:{other:"{0} jam yang lalu"}}},minute:{displayName:"Menit",relative:{0:"menit ini"},relativeTime:{future:{other:"Dalam {0} menit"},past:{other:"{0} menit yang lalu"}}},second:{displayName:"Detik",relative:{0:"sekarang"},relativeTime:{future:{other:"Dalam {0} detik"},past:{other:"{0} detik yang lalu"}}}}},{locale:"ig",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Afọ",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Ọnwa",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Ụbọchị",relative:{0:"Taata",1:"Echi","-1":"Nnyaafụ"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Elekere",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Nkeji",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Nkejinta",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"ii",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"ꈎ",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"ꆪ",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"ꑍ",relative:{0:"ꀃꑍ",1:"ꃆꏂꑍ",2:"ꌕꀿꑍ","-2":"ꎴꂿꋍꑍ","-1":"ꀋꅔꉈ"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"ꄮꈉ",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"ꃏ",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"ꇙ",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"in",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"is",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=a[0],i=Number(a[0])==e,o=r.slice(-1),n=r.slice(-2);return t?"other":i&&1==o&&11!=n||!i?"one":"other"},fields:{year:{displayName:"ár",relative:{0:"á þessu ári",1:"á næsta ári","-1":"á síðasta ári"},relativeTime:{future:{one:"eftir {0} ár",other:"eftir {0} ár"},past:{one:"fyrir {0} ári",other:"fyrir {0} árum"}}},month:{displayName:"mánuður",relative:{0:"í þessum mánuði",1:"í næsta mánuði","-1":"í síðasta mánuði"},relativeTime:{future:{one:"eftir {0} mánuð",other:"eftir {0} mánuði"},past:{one:"fyrir {0} mánuði",other:"fyrir {0} mánuðum"}}},day:{displayName:"dagur",relative:{0:"í dag",1:"á morgun",2:"eftir tvo daga","-2":"í fyrradag","-1":"í gær"},relativeTime:{future:{one:"eftir {0} dag",other:"eftir {0} daga"},past:{one:"fyrir {0} degi",other:"fyrir {0} dögum"}}},hour:{displayName:"klukkustund",relative:{0:"this hour"},relativeTime:{future:{one:"eftir {0} klukkustund",other:"eftir {0} klukkustundir"},past:{one:"fyrir {0} klukkustund",other:"fyrir {0} klukkustundum"}}},minute:{displayName:"mínúta",relative:{0:"this minute"},relativeTime:{future:{one:"eftir {0} mínútu",other:"eftir {0} mínútur"},past:{one:"fyrir {0} mínútu",other:"fyrir {0} mínútum"}}},second:{displayName:"sekúnda",relative:{0:"núna"},relativeTime:{future:{one:"eftir {0} sekúndu",other:"eftir {0} sekúndur"},past:{one:"fyrir {0} sekúndu",other:"fyrir {0} sekúndum"}}}}},{locale:"it",pluralRuleFunction:function(e,t){var a=!String(e).split(".")[1];return t?11==e||8==e||80==e||800==e?"many":"other":1==e&&a?"one":"other"},fields:{year:{displayName:"anno",relative:{0:"quest’anno",1:"anno prossimo","-1":"anno scorso"},relativeTime:{future:{one:"tra {0} anno",other:"tra {0} anni"},past:{one:"{0} anno fa",other:"{0} anni fa"}}},month:{displayName:"mese",relative:{0:"questo mese",1:"mese prossimo","-1":"mese scorso"},relativeTime:{future:{one:"tra {0} mese",other:"tra {0} mesi"},past:{one:"{0} mese fa",other:"{0} mesi fa"}}},day:{displayName:"giorno",relative:{0:"oggi",1:"domani",2:"dopodomani","-2":"l’altro ieri","-1":"ieri"},relativeTime:{future:{one:"tra {0} giorno",other:"tra {0} giorni"},past:{one:"{0} giorno fa",other:"{0} giorni fa"}}},hour:{displayName:"ora",relative:{0:"quest’ora"},relativeTime:{future:{one:"tra {0} ora",other:"tra {0} ore"},past:{one:"{0} ora fa",other:"{0} ore fa"}}},minute:{displayName:"minuto",relative:{0:"questo minuto"},relativeTime:{future:{one:"tra {0} minuto",other:"tra {0} minuti"},past:{one:"{0} minuto fa",other:"{0} minuti fa"}}},second:{displayName:"secondo",relative:{0:"ora"},relativeTime:{future:{one:"tra {0} secondo",other:"tra {0} secondi"},past:{one:"{0} secondo fa",other:"{0} secondi fa"}}}}},{locale:"it-CH",parentLocale:"it"},{locale:"it-SM",parentLocale:"it"},{locale:"it-VA",parentLocale:"it"},{locale:"iu",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":2==e?"two":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"iu-Latn",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"iw",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=a[0],i=!a[1],o=Number(a[0])==e,n=o&&a[0].slice(-1);return t?"other":1==e&&i?"one":2==r&&i?"two":i&&(e<0||e>10)&&o&&0==n?"many":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"ja",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"年",relative:{0:"今年",1:"翌年","-1":"昨年"},relativeTime:{future:{other:"{0} 年後"},past:{other:"{0} 年前"}}},month:{displayName:"月",relative:{0:"今月",1:"翌月","-1":"先月"},relativeTime:{future:{other:"{0} か月後"},past:{other:"{0} か月前"}}},day:{displayName:"日",relative:{0:"今日",1:"明日",2:"明後日","-2":"一昨日","-1":"昨日"},relativeTime:{future:{other:"{0} 日後"},past:{other:"{0} 日前"}}},hour:{displayName:"時",relative:{0:"1 時間以内"},relativeTime:{future:{other:"{0} 時間後"},past:{other:"{0} 時間前"}}},minute:{displayName:"分",relative:{0:"1 分以内"},relativeTime:{future:{other:"{0} 分後"},past:{other:"{0} 分前"}}},second:{displayName:"秒",relative:{0:"今"},relativeTime:{future:{other:"{0} 秒後"},past:{other:"{0} 秒前"}}}}},{locale:"jbo",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"jgo",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{one:"Nǔu ŋguꞋ {0}",other:"Nǔu ŋguꞋ {0}"},past:{one:"Ɛ́gɛ́ mɔ́ ŋguꞋ {0}",other:"Ɛ́gɛ́ mɔ́ ŋguꞋ {0}"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{one:"Nǔu {0} saŋ",other:"Nǔu {0} saŋ"},past:{one:"ɛ́ gɛ́ mɔ́ pɛsaŋ {0}",other:"ɛ́ gɛ́ mɔ́ pɛsaŋ {0}"}}},day:{displayName:"Day",relative:{0:"lɔꞋɔ",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{one:"Nǔu lɛ́Ꞌ {0}",other:"Nǔu lɛ́Ꞌ {0}"},past:{one:"Ɛ́ gɛ́ mɔ́ lɛ́Ꞌ {0}",other:"Ɛ́ gɛ́ mɔ́ lɛ́Ꞌ {0}"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{one:"nǔu háwa {0}",other:"nǔu háwa {0}"},past:{one:"ɛ́ gɛ mɔ́ {0} háwa",other:"ɛ́ gɛ mɔ́ {0} háwa"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{one:"nǔu {0} minút",other:"nǔu {0} minút"},past:{one:"ɛ́ gɛ́ mɔ́ minút {0}",other:"ɛ́ gɛ́ mɔ́ minút {0}"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"ji",pluralRuleFunction:function(e,t){var a=!String(e).split(".")[1];return t?"other":1==e&&a?"one":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"jmc",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Maka",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Mori",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Mfiri",relative:{0:"Inu",1:"Ngama","-1":"Ukou"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Saa",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Dakyika",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Sekunde",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"jv",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"jw",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"ka",pluralRuleFunction:function(e,t){var a=String(e).split(".")[0],r=a.slice(-2);return t?1==a?"one":0==a||r>=2&&r<=20||40==r||60==r||80==r?"many":"other":1==e?"one":"other"},fields:{year:{displayName:"წელი",relative:{0:"ამ წელს",1:"მომავალ წელს","-1":"გასულ წელს"},relativeTime:{future:{one:"{0} წელიწადში",other:"{0} წელიწადში"},past:{one:"{0} წლის წინ",other:"{0} წლის წინ"}}},month:{displayName:"თვე",relative:{0:"ამ თვეში",1:"მომავალ თვეს","-1":"გასულ თვეს"},relativeTime:{future:{one:"{0} თვეში",other:"{0} თვეში"},past:{one:"{0} თვის წინ",other:"{0} თვის წინ"}}},day:{displayName:"დღე",relative:{0:"დღეს",1:"ხვალ",2:"ზეგ","-2":"გუშინწინ","-1":"გუშინ"},relativeTime:{future:{one:"{0} დღეში",other:"{0} დღეში"},past:{one:"{0} დღის წინ",other:"{0} დღის წინ"}}},hour:{displayName:"საათი",relative:{0:"ამ საათში"},relativeTime:{future:{one:"{0} საათში",other:"{0} საათში"},past:{one:"{0} საათის წინ",other:"{0} საათის წინ"}}},minute:{displayName:"წუთი",relative:{0:"ამ წუთში"},relativeTime:{future:{one:"{0} წუთში",other:"{0} წუთში"},past:{one:"{0} წუთის წინ",other:"{0} წუთის წინ"}}},second:{displayName:"წამი",relative:{0:"ახლა"},relativeTime:{future:{one:"{0} წამში",other:"{0} წამში"},past:{one:"{0} წამის წინ",other:"{0} წამის წინ"}}}}},{locale:"kab",pluralRuleFunction:function(e,t){return t?"other":e>=0&&e<2?"one":"other"},fields:{year:{displayName:"Aseggas",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Aggur",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Ass",relative:{0:"Ass-a",1:"Azekka","-1":"Iḍelli"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Tamert",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Tamrect",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Tasint",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"kaj",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"kam",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Mwaka",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Mwai",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Mũthenya",relative:{0:"Ũmũnthĩ",1:"Ũnĩ","-1":"Ĩyoo"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Saa",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Ndatĩka",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"sekondi",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"kcg",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"kde",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Mwaka",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Mwedi",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Lihiku",relative:{0:"Nelo",1:"Nundu","-1":"Lido"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Saa",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Dakika",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Sekunde",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"kea",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Anu",relative:{0:"es anu li",1:"prósimu anu","-1":"anu pasadu"},relativeTime:{future:{other:"di li {0} anu"},past:{other:"a ten {0} anu"}}},month:{displayName:"Mes",relative:{0:"es mes li",1:"prósimu mes","-1":"mes pasadu"},relativeTime:{future:{other:"di li {0} mes"},past:{other:"a ten {0} mes"}}},day:{displayName:"Dia",relative:{0:"oji",1:"manha","-1":"onti"},relativeTime:{future:{other:"di li {0} dia"},past:{other:"a ten {0} dia"}}},hour:{displayName:"Ora",relative:{0:"this hour"},relativeTime:{future:{other:"di li {0} ora"},past:{other:"a ten {0} ora"}}},minute:{displayName:"Minutu",relative:{0:"this minute"},relativeTime:{future:{other:"di li {0} minutu"},past:{other:"a ten {0} minutu"}}},second:{displayName:"Sigundu",relative:{0:"now"},relativeTime:{future:{other:"di li {0} sigundu"},past:{other:"a ten {0} sigundu"}}}}},{locale:"khq",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Jiiri",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Handu",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Jaari",relative:{0:"Hõo",1:"Suba","-1":"Bi"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Guuru",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Miniti",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Miti",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"ki",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Mwaka",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Mweri",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Mũthenya",relative:{0:"Ũmũthĩ",1:"Rũciũ","-1":"Ira"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Ithaa",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Ndagĩka",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Sekunde",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"kk",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=Number(a[0])==e,i=r&&a[0].slice(-1);return t?6==i||9==i||r&&0==i&&0!=e?"many":"other":1==e?"one":"other"},fields:{year:{displayName:"жыл",relative:{0:"биылғы жыл",1:"келесі жыл","-1":"былтырғы жыл"},relativeTime:{future:{one:"{0} жылдан кейін",other:"{0} жылдан кейін"},past:{one:"{0} жыл бұрын",other:"{0} жыл бұрын"}}},month:{displayName:"ай",relative:{0:"осы ай",1:"келесі ай","-1":"өткен ай"},relativeTime:{future:{one:"{0} айдан кейін",other:"{0} айдан кейін"},past:{one:"{0} ай бұрын",other:"{0} ай бұрын"}}},day:{displayName:"күн",relative:{0:"бүгін",1:"ертең",2:"бүрсігүні","-2":"алдыңгүні","-1":"кеше"},relativeTime:{future:{one:"{0} күннен кейін",other:"{0} күннен кейін"},past:{one:"{0} күн бұрын",other:"{0} күн бұрын"}}},hour:{displayName:"сағат",relative:{0:"осы сағат"},relativeTime:{future:{one:"{0} сағаттан кейін",other:"{0} сағаттан кейін"},past:{one:"{0} сағат бұрын",other:"{0} сағат бұрын"}}},minute:{displayName:"минут",relative:{0:"осы минут"},relativeTime:{future:{one:"{0} минуттан кейін",other:"{0} минуттан кейін"},past:{one:"{0} минут бұрын",other:"{0} минут бұрын"}}},second:{displayName:"секунд",relative:{0:"қазір"},relativeTime:{future:{one:"{0} секундтан кейін",other:"{0} секундтан кейін"},past:{one:"{0} секунд бұрын",other:"{0} секунд бұрын"}}}}},{locale:"kkj",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"muka",1:"nɛmɛnɔ","-1":"kwey"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"kl",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{one:"om {0} ukioq",other:"om {0} ukioq"},past:{one:"for {0} ukioq siden",other:"for {0} ukioq siden"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{one:"om {0} qaammat",other:"om {0} qaammat"},past:{one:"for {0} qaammat siden",other:"for {0} qaammat siden"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{one:"om {0} ulloq unnuarlu",other:"om {0} ulloq unnuarlu"},past:{one:"for {0} ulloq unnuarlu siden",other:"for {0} ulloq unnuarlu siden"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{one:"om {0} nalunaaquttap-akunnera",other:"om {0} nalunaaquttap-akunnera"},past:{one:"for {0} nalunaaquttap-akunnera siden",other:"for {0} nalunaaquttap-akunnera siden"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{one:"om {0} minutsi",other:"om {0} minutsi"},past:{one:"for {0} minutsi siden",other:"for {0} minutsi siden"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{one:"om {0} sekundi",other:"om {0} sekundi"},past:{one:"for {0} sekundi siden",other:"for {0} sekundi siden"}}}}},{locale:"kln",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Kenyit",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Arawet",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Betut",relative:{0:"Raini",1:"Mutai","-1":"Amut"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Sait",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minitit",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Sekondit",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"km",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"ឆ្នាំ",relative:{0:"ឆ្នាំ​នេះ",1:"ឆ្នាំ​ក្រោយ","-1":"ឆ្នាំ​មុន"},relativeTime:{future:{other:"{0} ឆ្នាំទៀត"},past:{other:"{0} ឆ្នាំ​មុន"}}},month:{displayName:"ខែ",relative:{0:"ខែ​នេះ",1:"ខែ​ក្រោយ","-1":"ខែ​មុន"},relativeTime:{future:{other:"{0} ខែទៀត"},past:{other:"{0} ខែមុន"}}},day:{displayName:"ថ្ងៃ",relative:{0:"ថ្ងៃ​នេះ",1:"ថ្ងៃ​ស្អែក",2:"​ខាន​ស្អែក","-2":"ម្សិល​ម៉្ងៃ","-1":"ម្សិលមិញ"},relativeTime:{future:{other:"{0} ថ្ងៃទៀត"},past:{other:"{0} ថ្ងៃ​មុន"}}},hour:{displayName:"ម៉ោង",relative:{0:"ម៉ោងនេះ"},relativeTime:{future:{other:"ក្នុង​រយៈ​ពេល {0} ម៉ោង"},past:{other:"{0} ម៉ោង​មុន"}}},minute:{displayName:"នាទី",relative:{0:"នាទីនេះ"},relativeTime:{future:{other:"{0} នាទីទៀត"},past:{other:"{0} នាទី​មុន"}}},second:{displayName:"វិនាទី",relative:{0:"ឥឡូវ"},relativeTime:{future:{other:"{0} វិនាទីទៀត"},past:{other:"{0} វិនាទី​មុន"}}}}},{locale:"kn",pluralRuleFunction:function(e,t){return t?"other":e>=0&&e<=1?"one":"other"},fields:{year:{displayName:"ವರ್ಷ",relative:{0:"ಈ ವರ್ಷ",1:"ಮುಂದಿನ ವರ್ಷ","-1":"ಹಿಂದಿನ ವರ್ಷ"},relativeTime:{future:{one:"{0} ವರ್ಷದಲ್ಲಿ",other:"{0} ವರ್ಷಗಳಲ್ಲಿ"},past:{one:"{0} ವರ್ಷದ ಹಿಂದೆ",other:"{0} ವರ್ಷಗಳ ಹಿಂದೆ"}}},month:{displayName:"ತಿಂಗಳು",relative:{0:"ಈ ತಿಂಗಳು",1:"ಮುಂದಿನ ತಿಂಗಳು","-1":"ಕಳೆದ ತಿಂಗಳು"},relativeTime:{future:{one:"{0} ತಿಂಗಳಲ್ಲಿ",other:"{0} ತಿಂಗಳುಗಳಲ್ಲಿ"},past:{one:"{0} ತಿಂಗಳುಗಳ ಹಿಂದೆ",other:"{0} ತಿಂಗಳುಗಳ ಹಿಂದೆ"}}},day:{displayName:"ದಿನ",relative:{0:"ಇಂದು",1:"ನಾಳೆ",2:"ನಾಡಿದ್ದು","-2":"ಮೊನ್ನೆ","-1":"ನಿನ್ನೆ"},relativeTime:{future:{one:"{0} ದಿನದಲ್ಲಿ",other:"{0} ದಿನಗಳಲ್ಲಿ"},past:{one:"{0} ದಿನದ ಹಿಂದೆ",other:"{0} ದಿನಗಳ ಹಿಂದೆ"}}},hour:{displayName:"ಗಂಟೆ",relative:{0:"ಈ ಗಂಟೆ"},relativeTime:{future:{one:"{0} ಗಂಟೆಯಲ್ಲಿ",other:"{0} ಗಂಟೆಗಳಲ್ಲಿ"},past:{one:"{0} ಗಂಟೆ ಹಿಂದೆ",other:"{0} ಗಂಟೆಗಳ ಹಿಂದೆ"}}},minute:{displayName:"ನಿಮಿಷ",relative:{0:"ಈ ನಿಮಿಷ"},relativeTime:{future:{one:"{0} ನಿಮಿಷದಲ್ಲಿ",other:"{0} ನಿಮಿಷಗಳಲ್ಲಿ"},past:{one:"{0} ನಿಮಿಷಗಳ ಹಿಂದೆ",other:"{0} ನಿಮಿಷಗಳ ಹಿಂದೆ"}}},second:{displayName:"ಸೆಕೆಂಡ್",relative:{0:"ಈಗ"},relativeTime:{future:{one:"{0} ಸೆಕೆಂಡ್‌ನಲ್ಲಿ",other:"{0} ಸೆಕೆಂಡ್‌ಗಳಲ್ಲಿ"},past:{one:"{0} ಸೆಕೆಂಡ್ ಹಿಂದೆ",other:"{0} ಸೆಕೆಂಡುಗಳ ಹಿಂದೆ"}}}}},{locale:"ko",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"년",relative:{0:"올해",1:"내년","-1":"작년"},relativeTime:{future:{other:"{0}년 후"},past:{other:"{0}년 전"}}},month:{displayName:"월",relative:{0:"이번 달",1:"다음 달","-1":"지난달"},relativeTime:{future:{other:"{0}개월 후"},past:{other:"{0}개월 전"}}},day:{displayName:"일",relative:{0:"오늘",1:"내일",2:"모레","-2":"그저께","-1":"어제"},relativeTime:{future:{other:"{0}일 후"},past:{other:"{0}일 전"}}},hour:{displayName:"시",relative:{0:"현재 시간"},relativeTime:{future:{other:"{0}시간 후"},past:{other:"{0}시간 전"}}},minute:{displayName:"분",relative:{0:"현재 분"},relativeTime:{future:{other:"{0}분 후"},past:{other:"{0}분 전"}}},second:{displayName:"초",relative:{0:"지금"},relativeTime:{future:{other:"{0}초 후"},past:{other:"{0}초 전"}}}}},{locale:"ko-KP",parentLocale:"ko"},{locale:"kok",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"ks",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"ؤری",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"رٮ۪تھ",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"دۄہ",relative:{0:"اَز",1:"پگاہ","-1":"راتھ"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"گٲنٛٹہٕ",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"مِنَٹ",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"سٮ۪کَنڑ",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"ksb",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Ng’waka",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Ng’ezi",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Siku",relative:{0:"Evi eo",1:"Keloi","-1":"Ghuo"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Saa",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Dakika",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Sekunde",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"ksf",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Bǝk",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Ŋwíí",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Ŋwós",relative:{0:"Gɛ́ɛnǝ",1:"Ridúrǝ́","-1":"Rinkɔɔ́"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Cámɛɛn",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Mǝnít",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Háu",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"ksh",pluralRuleFunction:function(e,t){return t?"other":0==e?"zero":1==e?"one":"other"},fields:{year:{displayName:"Johr",relative:{0:"diß Johr",1:"näx Johr","-1":"läz Johr"},relativeTime:{future:{zero:"en keinem Johr",one:"en {0} Johr",other:"en {0} Johre"},past:{zero:"vör keijnem Johr",one:"vör {0} Johr",other:"vör {0} Johre"}}},month:{displayName:"Mohnd",relative:{0:"diese Mohnd",1:"nächste Mohnd","-1":"lätzde Mohnd"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Daach",relative:{0:"hück",1:"morje",2:"övvermorje","-2":"vörjestere","-1":"jestere"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Schtund",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Menutt",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Sekond",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"ku",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"kw",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":2==e?"two":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"ky",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"жыл",relative:{0:"быйыл",1:"эмдиги жылы","-1":"былтыр"},relativeTime:{future:{one:"{0} жылдан кийин",other:"{0} жылдан кийин"},past:{one:"{0} жыл мурун",other:"{0} жыл мурун"}}},month:{displayName:"ай",relative:{0:"бул айда",1:"эмдиги айда","-1":"өткөн айда"},relativeTime:{future:{one:"{0} айдан кийин",other:"{0} айдан кийин"},past:{one:"{0} ай мурун",other:"{0} ай мурун"}}},day:{displayName:"күн",relative:{0:"бүгүн",1:"эртеӊ",2:"бүрсүгүнү","-2":"мурдагы күнү","-1":"кечээ"},relativeTime:{future:{one:"{0} күндөн кийин",other:"{0} күндөн кийин"},past:{one:"{0} күн мурун",other:"{0} күн мурун"}}},hour:{displayName:"саат",relative:{0:"ушул саатта"},relativeTime:{future:{one:"{0} сааттан кийин",other:"{0} сааттан кийин"},past:{one:"{0} саат мурун",other:"{0} саат мурун"}}},minute:{displayName:"мүнөт",relative:{0:"ушул мүнөттө"},relativeTime:{future:{one:"{0} мүнөттөн кийин",other:"{0} мүнөттөн кийин"},past:{one:"{0} мүнөт мурун",other:"{0} мүнөт мурун"}}},second:{displayName:"секунд",relative:{0:"азыр"},relativeTime:{future:{one:"{0} секунддан кийин",other:"{0} секунддан кийин"},past:{one:"{0} секунд мурун",other:"{0} секунд мурун"}}}}},{locale:"lag",pluralRuleFunction:function(e,t){var a=String(e).split(".")[0];return t?"other":0==e?"zero":0!=a&&1!=a||0==e?"other":"one"},fields:{year:{displayName:"Mwaáka",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Mweéri",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Sikʉ",relative:{0:"Isikʉ",1:"Lamʉtoondo","-1":"Niijo"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Sáa",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Dakíka",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Sekúunde",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"lb",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Joer",relative:{0:"dëst Joer",1:"nächst Joer","-1":"lescht Joer"},relativeTime:{future:{one:"an {0} Joer",other:"a(n) {0} Joer"},past:{one:"virun {0} Joer",other:"viru(n) {0} Joer"}}},month:{displayName:"Mount",relative:{0:"dëse Mount",1:"nächste Mount","-1":"leschte Mount"},relativeTime:{future:{one:"an {0} Mount",other:"a(n) {0} Méint"},past:{one:"virun {0} Mount",other:"viru(n) {0} Méint"}}},day:{displayName:"Dag",relative:{0:"haut",1:"muer","-1":"gëschter"},relativeTime:{future:{one:"an {0} Dag",other:"a(n) {0} Deeg"},past:{one:"virun {0} Dag",other:"viru(n) {0} Deeg"}}},hour:{displayName:"Stonn",relative:{0:"this hour"},relativeTime:{future:{one:"an {0} Stonn",other:"a(n) {0} Stonnen"},past:{one:"virun {0} Stonn",other:"viru(n) {0} Stonnen"}}},minute:{displayName:"Minutt",relative:{0:"this minute"},relativeTime:{future:{one:"an {0} Minutt",other:"a(n) {0} Minutten"},past:{one:"virun {0} Minutt",other:"viru(n) {0} Minutten"}}},second:{displayName:"Sekonn",relative:{0:"now"},relativeTime:{future:{one:"an {0} Sekonn",other:"a(n) {0} Sekonnen"},past:{one:"virun {0} Sekonn",other:"viru(n) {0} Sekonnen"}}}}},{locale:"lg",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Mwaka",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Mwezi",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Lunaku",relative:{0:"Lwaleero",1:"Nkya","-1":"Ggulo"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Saawa",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Dakiika",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Kasikonda",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"lkt",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Ómakȟa",relative:{0:"Lé ómakȟa kiŋ",1:"Tȟokáta ómakȟa kiŋháŋ","-1":"Ómakȟa kʼuŋ héhaŋ"},relativeTime:{future:{other:"Letáŋhaŋ ómakȟa {0} kiŋháŋ"},past:{other:"Hékta ómakȟa {0} kʼuŋ héhaŋ"}}},month:{displayName:"Wí",relative:{0:"Lé wí kiŋ",1:"Tȟokáta wí kiŋháŋ","-1":"Wí kʼuŋ héhaŋ"},relativeTime:{future:{other:"Letáŋhaŋ wíyawapi {0} kiŋháŋ"},past:{other:"Hékta wíyawapi {0} kʼuŋ héhaŋ"}}},day:{displayName:"Aŋpétu",relative:{0:"Lé aŋpétu kiŋ",1:"Híŋhaŋni kiŋháŋ","-1":"Ȟtálehaŋ"},relativeTime:{future:{other:"Letáŋhaŋ {0}-čháŋ kiŋháŋ"},past:{other:"Hékta {0}-čháŋ k’uŋ héhaŋ"}}},hour:{displayName:"Owápȟe",relative:{0:"this hour"},relativeTime:{future:{other:"Letáŋhaŋ owápȟe {0} kiŋháŋ"},past:{other:"Hékta owápȟe {0} kʼuŋ héhaŋ"}}},minute:{displayName:"Owápȟe oȟʼáŋkȟo",relative:{0:"this minute"},relativeTime:{future:{other:"Letáŋhaŋ oȟ’áŋkȟo {0} kiŋháŋ"},past:{other:"Hékta oȟ’áŋkȟo {0} k’uŋ héhaŋ"}}},second:{displayName:"Okpí",relative:{0:"now"},relativeTime:{future:{other:"Letáŋhaŋ okpí {0} kiŋháŋ"},past:{other:"Hékta okpí {0} k’uŋ héhaŋ"}}}}},{locale:"ln",pluralRuleFunction:function(e,t){return t?"other":0==e||1==e?"one":"other"},fields:{year:{displayName:"Mobú",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Sánzá",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Mokɔlɔ",relative:{0:"Lɛlɔ́",1:"Lóbi ekoyâ","-1":"Lóbi elékí"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Ngonga",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Monúti",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Sɛkɔ́ndɛ",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"ln-AO",parentLocale:"ln"},{locale:"ln-CF",parentLocale:"ln"},{locale:"ln-CG",parentLocale:"ln"},{locale:"lo",pluralRuleFunction:function(e,t){return t&&1==e?"one":"other"},fields:{year:{displayName:"ປີ",relative:{0:"ປີນີ້",1:"ປີໜ້າ","-1":"ປີກາຍ"},relativeTime:{future:{other:"ໃນອີກ {0} ປີ"},past:{other:"{0} ປີກ່ອນ"}}},month:{displayName:"ເດືອນ",relative:{0:"ເດືອນນີ້",1:"ເດືອນໜ້າ","-1":"ເດືອນແລ້ວ"},relativeTime:{future:{other:"ໃນອີກ {0} ເດືອນ"},past:{other:"{0} ເດືອນກ່ອນ"}}},day:{displayName:"ມື້",relative:{0:"ມື້ນີ້",1:"ມື້ອື່ນ",2:"ມື້ຮື","-2":"ມື້ກ່ອນ","-1":"ມື້ວານ"},relativeTime:{future:{other:"ໃນອີກ {0} ມື້"},past:{other:"{0} ມື້ກ່ອນ"}}},hour:{displayName:"ຊົ່ວໂມງ",relative:{0:"ຊົ່ວໂມງນີ້"},relativeTime:{future:{other:"ໃນອີກ {0} ຊົ່ວໂມງ"},past:{other:"{0} ຊົ່ວໂມງກ່ອນ"}}},minute:{displayName:"ນາທີ",relative:{0:"ນາທີນີ້"},relativeTime:{future:{other:"{0} ໃນອີກ 0 ນາທີ"},past:{other:"{0} ນາທີກ່ອນ"}}},second:{displayName:"ວິນາທີ",relative:{0:"ຕອນນີ້"},relativeTime:{future:{other:"ໃນອີກ {0} ວິນາທີ"},past:{other:"{0} ວິນາທີກ່ອນ"}}}}},{locale:"lrc",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"سال",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"ما",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"روٙز",relative:{0:"أمروٙ",1:"شوٙصوٙ","-1":"دیروٙز"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"ساأت",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"دئیقە",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"ثانیە",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"lrc-IQ",parentLocale:"lrc"},{locale:"lt",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=a[1]||"",i=Number(a[0])==e,o=i&&a[0].slice(-1),n=i&&a[0].slice(-2);return t?"other":1==o&&(n<11||n>19)?"one":o>=2&&o<=9&&(n<11||n>19)?"few":0!=r?"many":"other"},fields:{year:{displayName:"metai",relative:{0:"šiais metais",1:"kitais metais","-1":"praėjusiais metais"},relativeTime:{future:{one:"po {0} metų",few:"po {0} metų",many:"po {0} metų",other:"po {0} metų"},past:{one:"prieš {0} metus",few:"prieš {0} metus",many:"prieš {0} metų",other:"prieš {0} metų"}}},month:{displayName:"mėnuo",relative:{0:"šį mėnesį",1:"kitą mėnesį","-1":"praėjusį mėnesį"},relativeTime:{future:{one:"po {0} mėnesio",few:"po {0} mėnesių",many:"po {0} mėnesio",other:"po {0} mėnesių"},past:{one:"prieš {0} mėnesį",few:"prieš {0} mėnesius",many:"prieš {0} mėnesio",other:"prieš {0} mėnesių"}}},day:{displayName:"diena",relative:{0:"šiandien",1:"rytoj",2:"poryt","-2":"užvakar","-1":"vakar"},relativeTime:{future:{one:"po {0} dienos",few:"po {0} dienų",many:"po {0} dienos",other:"po {0} dienų"},past:{one:"prieš {0} dieną",few:"prieš {0} dienas",many:"prieš {0} dienos",other:"prieš {0} dienų"}}},hour:{displayName:"valanda",relative:{0:"šią valandą"},relativeTime:{future:{one:"po {0} valandos",few:"po {0} valandų",many:"po {0} valandos",other:"po {0} valandų"},past:{one:"prieš {0} valandą",few:"prieš {0} valandas",many:"prieš {0} valandos",other:"prieš {0} valandų"}}},minute:{displayName:"minutė",relative:{0:"šią minutę"},relativeTime:{future:{one:"po {0} minutės",few:"po {0} minučių",many:"po {0} minutės",other:"po {0} minučių"},past:{one:"prieš {0} minutę",few:"prieš {0} minutes",many:"prieš {0} minutės",other:"prieš {0} minučių"}}},second:{displayName:"sekundė",relative:{0:"dabar"},relativeTime:{future:{one:"po {0} sekundės",few:"po {0} sekundžių",many:"po {0} sekundės",other:"po {0} sekundžių"},past:{one:"prieš {0} sekundę",few:"prieš {0} sekundes",many:"prieš {0} sekundės",other:"prieš {0} sekundžių"}}}}},{locale:"lu",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Tshidimu",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Ngondo",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Dituku",relative:{0:"Lelu",1:"Malaba","-1":"Makelela"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Diba",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Kasunsu",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Kasunsukusu",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"luo",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"higa",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"dwe",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"chieng’",relative:{0:"kawuono",1:"kiny","-1":"nyoro"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"saa",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"dakika",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"nyiriri mar saa",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"luy",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Muhiga",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Mweri",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Ridiku",relative:{0:"Lero",1:"Mgamba","-1":"Mgorova"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Isaa",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Idagika",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Sekunde",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"lv",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=a[1]||"",i=r.length,o=Number(a[0])==e,n=o&&a[0].slice(-1),l=o&&a[0].slice(-2),u=r.slice(-2),s=r.slice(-1);return t?"other":o&&0==n||l>=11&&l<=19||2==i&&u>=11&&u<=19?"zero":1==n&&11!=l||2==i&&1==s&&11!=u||2!=i&&1==s?"one":"other"},fields:{year:{displayName:"gads",relative:{0:"šajā gadā",1:"nākamajā gadā","-1":"pagājušajā gadā"},relativeTime:{future:{zero:"pēc {0} gadiem",one:"pēc {0} gada",other:"pēc {0} gadiem"},past:{zero:"pirms {0} gadiem",one:"pirms {0} gada",other:"pirms {0} gadiem"}}},month:{displayName:"mēnesis",relative:{0:"šajā mēnesī",1:"nākamajā mēnesī","-1":"pagājušajā mēnesī"},relativeTime:{future:{zero:"pēc {0} mēnešiem",one:"pēc {0} mēneša",other:"pēc {0} mēnešiem"},past:{zero:"pirms {0} mēnešiem",one:"pirms {0} mēneša",other:"pirms {0} mēnešiem"}}},day:{displayName:"diena",relative:{0:"šodien",1:"rīt",2:"parīt","-2":"aizvakar","-1":"vakar"},relativeTime:{future:{zero:"pēc {0} dienām",one:"pēc {0} dienas",other:"pēc {0} dienām"},past:{zero:"pirms {0} dienām",one:"pirms {0} dienas",other:"pirms {0} dienām"}}},hour:{displayName:"stundas",relative:{0:"šajā stundā"},relativeTime:{future:{zero:"pēc {0} stundām",one:"pēc {0} stundas",other:"pēc {0} stundām"},past:{zero:"pirms {0} stundām",one:"pirms {0} stundas",other:"pirms {0} stundām"}}},minute:{displayName:"minūtes",relative:{0:"šajā minūtē"},relativeTime:{future:{zero:"pēc {0} minūtēm",one:"pēc {0} minūtes",other:"pēc {0} minūtēm"},past:{zero:"pirms {0} minūtēm",one:"pirms {0} minūtes",other:"pirms {0} minūtēm"}}},second:{displayName:"sekundes",relative:{0:"tagad"},relativeTime:{future:{zero:"pēc {0} sekundēm",one:"pēc {0} sekundes",other:"pēc {0} sekundēm"},past:{zero:"pirms {0} sekundēm",one:"pirms {0} sekundes",other:"pirms {0} sekundēm"}}}}},{locale:"mas",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Ɔlárì",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Ɔlápà",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Ɛnkɔlɔ́ŋ",relative:{0:"Táatá",1:"Tááisérè","-1":"Ŋolé"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Ɛ́sáâ",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Oldákikaè",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Sekunde",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"mas-TZ",parentLocale:"mas"},{locale:"mer",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Mwaka",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Mweri",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Ntukũ",relative:{0:"Narua",1:"Rũjũ","-1":"Ĩgoro"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Ĩthaa",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Ndagika",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Sekondi",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"mfe",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Lane",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Mwa",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Zour",relative:{0:"Zordi",1:"Demin","-1":"Yer"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Ler",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minit",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Segonn",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"mg",pluralRuleFunction:function(e,t){return t?"other":0==e||1==e?"one":"other"},fields:{year:{displayName:"Taona",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Volana",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Andro",relative:{0:"Anio",1:"Rahampitso","-1":"Omaly"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Ora",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minitra",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Segondra",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"mgh",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"yaka",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"mweri",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"nihuku",relative:{0:"lel’lo",1:"me’llo","-1":"n’chana"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"isaa",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"idakika",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"isekunde",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"mgo",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"fituʼ",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"iməg",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{one:"+{0} m",other:"+{0} m"},past:{one:"-{0} m",other:"-{0} m"}}},day:{displayName:"anəg",relative:{0:"tèchɔ̀ŋ",1:"isu",2:"isu ywi","-1":"ikwiri"},relativeTime:{future:{one:"+{0} d",other:"+{0} d"},past:{one:"-{0} d",other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{one:"+{0} h",other:"+{0} h"},past:{one:"-{0} h",other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{one:"+{0} min",other:"+{0} min"},past:{one:"-{0} min",other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{one:"+{0} s",other:"+{0} s"},past:{one:"-{0} s",other:"-{0} s"}}}}},{locale:"mk",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=a[0],i=a[1]||"",o=!a[1],n=r.slice(-1),l=r.slice(-2),u=i.slice(-1);return t?1==n&&11!=l?"one":2==n&&12!=l?"two":7!=n&&8!=n||17==l||18==l?"other":"many":o&&1==n||1==u?"one":"other"},fields:{year:{displayName:"година",relative:{0:"оваа година",1:"следната година","-1":"минатата година"},relativeTime:{future:{one:"за {0} година",other:"за {0} години"},past:{one:"пред {0} година",other:"пред {0} години"}}},month:{displayName:"месец",relative:{0:"овој месец",1:"следниот месец","-1":"минатиот месец"},relativeTime:{future:{one:"за {0} месец",other:"за {0} месеци"},past:{one:"пред {0} месец",other:"пред {0} месеци"}}},day:{displayName:"ден",relative:{0:"денес",1:"утре",2:"задутре","-2":"завчера","-1":"вчера"},relativeTime:{future:{one:"за {0} ден",other:"за {0} дена"},past:{one:"пред {0} ден",other:"пред {0} дена"}}},hour:{displayName:"час",relative:{0:"часов"},relativeTime:{future:{one:"за {0} час",other:"за {0} часа"},past:{one:"пред {0} час",other:"пред {0} часа"}}},minute:{displayName:"минута",relative:{0:"оваа минута"},relativeTime:{future:{one:"за {0} минута",other:"за {0} минути"},past:{one:"пред {0} минута",other:"пред {0} минути"}}},second:{displayName:"секунда",relative:{0:"сега"},relativeTime:{future:{one:"за {0} секунда",other:"за {0} секунди"},past:{one:"пред {0} секунда",other:"пред {0} секунди"}}}}},{locale:"ml",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"വർഷം",relative:{0:"ഈ വർ‌ഷം",1:"അടുത്തവർഷം","-1":"കഴിഞ്ഞ വർഷം"},relativeTime:{future:{one:"{0} വർഷത്തിൽ",other:"{0} വർഷത്തിൽ"},past:{one:"{0} വർഷം മുമ്പ്",other:"{0} വർഷം മുമ്പ്"}}},month:{displayName:"മാസം",relative:{0:"ഈ മാസം",1:"അടുത്ത മാസം","-1":"കഴിഞ്ഞ മാസം"},relativeTime:{future:{one:"{0} മാസത്തിൽ",other:"{0} മാസത്തിൽ"},past:{one:"{0} മാസം മുമ്പ്",other:"{0} മാസം മുമ്പ്"}}},day:{displayName:"ദിവസം",relative:{0:"ഇന്ന്",1:"നാളെ",2:"മറ്റന്നാൾ","-2":"മിനിഞ്ഞാന്ന്","-1":"ഇന്നലെ"},relativeTime:{future:{one:"{0} ദിവസത്തിൽ",other:"{0} ദിവസത്തിൽ"},past:{one:"{0} ദിവസം മുമ്പ്",other:"{0} ദിവസം മുമ്പ്"}}},hour:{displayName:"മണിക്കൂർ",relative:{0:"ഈ മണിക്കൂറിൽ"},relativeTime:{future:{one:"{0} മണിക്കൂറിൽ",other:"{0} മണിക്കൂറിൽ"},past:{one:"{0} മണിക്കൂർ മുമ്പ്",other:"{0} മണിക്കൂർ മുമ്പ്"}}},minute:{displayName:"മിനിറ്റ്",relative:{0:"ഈ മിനിറ്റിൽ"},relativeTime:{future:{one:"{0} മിനിറ്റിൽ",other:"{0} മിനിറ്റിൽ"},past:{one:"{0} മിനിറ്റ് മുമ്പ്",other:"{0} മിനിറ്റ് മുമ്പ്"}}},second:{displayName:"സെക്കൻഡ്",relative:{0:"ഇപ്പോൾ"},relativeTime:{future:{one:"{0} സെക്കൻഡിൽ",other:"{0} സെക്കൻഡിൽ"},past:{one:"{0} സെക്കൻഡ് മുമ്പ്",other:"{0} സെക്കൻഡ് മുമ്പ്"}}}}},{locale:"mn",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"жил",relative:{0:"энэ жил",1:"ирэх жил","-1":"өнгөрсөн жил"},relativeTime:{future:{one:"{0} жилийн дараа",other:"{0} жилийн дараа"},past:{one:"{0} жилийн өмнө",other:"{0} жилийн өмнө"}}},month:{displayName:"сар",relative:{0:"энэ сар",1:"ирэх сар","-1":"өнгөрсөн сар"},relativeTime:{future:{one:"{0} сарын дараа",other:"{0} сарын дараа"},past:{one:"{0} сарын өмнө",other:"{0} сарын өмнө"}}},day:{displayName:"өдөр",relative:{0:"өнөөдөр",1:"маргааш",2:"нөгөөдөр","-2":"уржигдар","-1":"өчигдөр"},relativeTime:{future:{one:"{0} өдрийн дараа",other:"{0} өдрийн дараа"},past:{one:"{0} өдрийн өмнө",other:"{0} өдрийн өмнө"}}},hour:{displayName:"цаг",relative:{0:"энэ цаг"},relativeTime:{future:{one:"{0} цагийн дараа",other:"{0} цагийн дараа"},past:{one:"{0} цагийн өмнө",other:"{0} цагийн өмнө"}}},minute:{displayName:"минут",relative:{0:"энэ минут"},relativeTime:{future:{one:"{0} минутын дараа",other:"{0} минутын дараа"},past:{one:"{0} минутын өмнө",other:"{0} минутын өмнө"}}},second:{displayName:"секунд",relative:{0:"одоо"},relativeTime:{future:{one:"{0} секундын дараа",other:"{0} секундын дараа"},past:{one:"{0} секундын өмнө",other:"{0} секундын өмнө"}}}}},{locale:"mn-Mong",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"mo",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=!a[1],i=Number(a[0])==e&&a[0].slice(-2);return t?1==e?"one":"other":1==e&&r?"one":!r||0==e||1!=e&&i>=1&&i<=19?"few":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"mr",pluralRuleFunction:function(e,t){return t?1==e?"one":2==e||3==e?"two":4==e?"few":"other":e>=0&&e<=1?"one":"other"},fields:{year:{displayName:"वर्ष",relative:{0:"हे वर्ष",1:"पुढील वर्ष","-1":"मागील वर्ष"},relativeTime:{future:{one:"{0} वर्षामध्ये",other:"{0} वर्षांमध्ये"},past:{one:"{0} वर्षापूर्वी",other:"{0} वर्षांपूर्वी"}}},month:{displayName:"महिना",relative:{0:"हा महिना",1:"पुढील महिना","-1":"मागील महिना"},relativeTime:{future:{one:"{0} महिन्यामध्ये",other:"{0} महिन्यांमध्ये"},past:{one:"{0} महिन्यापूर्वी",other:"{0} महिन्यांपूर्वी"}}},day:{displayName:"दिवस",relative:{0:"आज",1:"उद्या","-1":"काल"},relativeTime:{future:{one:"{0} दिवसामध्ये",other:"{0} दिवसांमध्ये"},past:{one:"{0} दिवसापूर्वी",other:"{0} दिवसांपूर्वी"}}},hour:{displayName:"तास",relative:{0:"तासात"},relativeTime:{future:{one:"{0} तासामध्ये",other:"{0} तासांमध्ये"},past:{one:"{0} तासापूर्वी",other:"{0} तासांपूर्वी"}}},minute:{displayName:"मिनिट",relative:{0:"या मिनिटात"},relativeTime:{future:{one:"{0} मिनिटामध्ये",other:"{0} मिनिटांमध्ये"},past:{one:"{0} मिनिटापूर्वी",other:"{0} मिनिटांपूर्वी"}}},second:{displayName:"सेकंद",relative:{0:"आत्ता"},relativeTime:{future:{one:"{0} सेकंदामध्ये",other:"{0} सेकंदांमध्ये"},past:{one:"{0} सेकंदापूर्वी",other:"{0} सेकंदांपूर्वी"}}}}},{locale:"ms",pluralRuleFunction:function(e,t){return t&&1==e?"one":"other"},fields:{year:{displayName:"Tahun",relative:{0:"tahun ini",1:"tahun depan","-1":"tahun lalu"},relativeTime:{future:{other:"dalam {0} saat"},past:{other:"{0} tahun lalu"}}},month:{displayName:"Bulan",relative:{0:"bulan ini",1:"bulan depan","-1":"bulan lalu"},relativeTime:{future:{other:"dalam {0} bulan"},past:{other:"{0} bulan lalu"}}},day:{displayName:"Hari",relative:{0:"hari ini",1:"esok",2:"lusa","-2":"kelmarin","-1":"semalam"},relativeTime:{future:{other:"dalam {0} hari"},past:{other:"{0} hari lalu"}}},hour:{displayName:"Jam",relative:{0:"jam ini"},relativeTime:{future:{other:"dalam {0} jam"},past:{other:"{0} jam lalu"}}},minute:{displayName:"Minit",relative:{0:"pada minit ini"},relativeTime:{future:{other:"dalam {0} minit"},past:{other:"{0} minit lalu"}}},second:{displayName:"Saat",relative:{0:"sekarang"},relativeTime:{future:{other:"dalam {0} saat"},past:{other:"{0} saat lalu"}}}}},{locale:"ms-Arab",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"ms-BN",parentLocale:"ms"},{locale:"ms-SG",parentLocale:"ms"},{locale:"mt",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=Number(a[0])==e&&a[0].slice(-2);return t?"other":1==e?"one":0==e||r>=2&&r<=10?"few":r>=11&&r<=19?"many":"other"},fields:{year:{displayName:"Sena",relative:{0:"din is-sena",1:"Is-sena d-dieħla","-1":"Is-sena li għaddiet"},relativeTime:{future:{other:"+{0} y"},past:{one:"{0} sena ilu",few:"{0} snin ilu",many:"{0} snin ilu",other:"{0} snin ilu"}}},month:{displayName:"Xahar",relative:{0:"Dan ix-xahar",1:"Ix-xahar id-dieħel","-1":"Ix-xahar li għadda"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Jum",relative:{0:"Illum",1:"Għada","-1":"Ilbieraħ"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Siegħa",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minuta",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Sekonda",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"mua",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Syii",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Fĩi",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Zah’nane/ Comme",relative:{0:"Tǝ’nahko",1:"Tǝ’nane","-1":"Tǝsoo"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Cok comme",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Cok comme ma laŋne",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Cok comme ma laŋ tǝ biŋ",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"my",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"နှစ်",relative:{0:"ယခုနှစ်",1:"လာမည့်နှစ်","-1":"ယမန်နှစ်"},relativeTime:{future:{other:"{0} နှစ်အတွင်း"},past:{other:"ပြီးခဲ့သည့် {0} နှစ်"}}},month:{displayName:"လ",relative:{0:"ယခုလ",1:"လာမည့်လ","-1":"ပြီးခဲ့သည့်လ"},relativeTime:{future:{other:"{0} လအတွင်း"},past:{other:"ပြီးခဲ့သည့် {0} လ"}}},day:{displayName:"ရက်",relative:{0:"ယနေ့",1:"မနက်ဖြန်",2:"သန်ဘက်ခါ","-2":"တစ်နေ့က","-1":"မနေ့က"},relativeTime:{future:{other:"{0} ရက်အတွင်း"},past:{other:"ပြီးခဲ့သည့် {0} ရက်"}}},hour:{displayName:"နာရီ",relative:{0:"ဤအချိန်"},relativeTime:{future:{other:"{0} နာရီအတွင်း"},past:{other:"ပြီးခဲ့သည့် {0} နာရီ"}}},minute:{displayName:"မိနစ်",relative:{0:"ဤမိနစ်"},relativeTime:{future:{other:"{0} မိနစ်အတွင်း"},past:{other:"ပြီးခဲ့သည့် {0} မိနစ်"}}},second:{displayName:"စက္ကန့်",relative:{0:"ယခု"},relativeTime:{future:{other:"{0} စက္ကန့်အတွင်း"},past:{other:"ပြီးခဲ့သည့် {0} စက္ကန့်"}}}}},{locale:"mzn",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"سال",relative:{0:"امسال",1:"سال دیگه","-1":"پارسال"},relativeTime:{future:{other:"{0} سال دله"},past:{other:"{0} سال پیش"}}},month:{displayName:"ماه",relative:{0:"این ماه",1:"ماه ِبعد","-1":"ماه قبل"},relativeTime:{future:{other:"{0} ماه دله"},past:{other:"{0} ماه پیش"}}},day:{displayName:"روز",relative:{0:"اَمروز",1:"فِردا","-1":"دیروز"},relativeTime:{future:{other:"{0} روز دله"},past:{other:"{0} روز پیش"}}},hour:{displayName:"ساعِت",relative:{0:"this hour"},relativeTime:{future:{other:"{0} ساعِت دله"},past:{other:"{0} ساعِت پیش"}}},minute:{displayName:"دقیقه",relative:{0:"this minute"},relativeTime:{future:{other:"{0} دقیقه دله"},past:{other:"{0} دَقه پیش"}}},second:{displayName:"ثانیه",relative:{0:"now"},relativeTime:{future:{other:"{0} ثانیه دله"},past:{other:"{0} ثانیه پیش"}}}}},{locale:"nah",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"naq",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":2==e?"two":"other"},fields:{year:{displayName:"Kurib",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"ǁKhâb",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Tsees",relative:{0:"Neetsee",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Iiri",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Haib",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"ǀGâub",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"nb",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"år",relative:{0:"i år",1:"neste år","-1":"i fjor"},relativeTime:{future:{one:"om {0} år",other:"om {0} år"},past:{one:"for {0} år siden",other:"for {0} år siden"}}},month:{displayName:"måned",relative:{0:"denne måneden",1:"neste måned","-1":"forrige måned"},relativeTime:{future:{one:"om {0} måned",other:"om {0} måneder"},past:{one:"for {0} måned siden",other:"for {0} måneder siden"}}},day:{displayName:"dag",relative:{0:"i dag",1:"i morgen",2:"i overmorgen","-2":"i forgårs","-1":"i går"},relativeTime:{future:{one:"om {0} døgn",other:"om {0} døgn"},past:{one:"for {0} døgn siden",other:"for {0} døgn siden"}}},hour:{displayName:"time",relative:{0:"denne timen"},relativeTime:{future:{one:"om {0} time",other:"om {0} timer"},past:{one:"for {0} time siden",other:"for {0} timer siden"}}},minute:{displayName:"minutt",relative:{0:"dette minuttet"},relativeTime:{future:{one:"om {0} minutt",other:"om {0} minutter"},past:{one:"for {0} minutt siden",other:"for {0} minutter siden"}}},second:{displayName:"sekund",relative:{0:"nå"},relativeTime:{future:{one:"om {0} sekund",other:"om {0} sekunder"},past:{one:"for {0} sekund siden",other:"for {0} sekunder siden"}}}}},{locale:"nb-SJ",parentLocale:"nb"},{locale:"nd",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Umnyaka",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Inyangacale",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Ilanga",relative:{0:"Lamuhla",1:"Kusasa","-1":"Izolo"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Ihola",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Umuzuzu",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Isekendi",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"nds",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"nds-NL",parentLocale:"nds"},{locale:"ne",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=Number(a[0])==e;return t?r&&e>=1&&e<=4?"one":"other":1==e?"one":"other"},fields:{year:{displayName:"वर्ष",relative:{0:"यो वर्ष",1:"अर्को वर्ष","-1":"गत वर्ष"},relativeTime:{future:{one:"{0} वर्षमा",other:"{0} वर्षमा"},past:{one:"{0} वर्ष अघि",other:"{0} वर्ष अघि"}}},month:{displayName:"महिना",relative:{0:"यो महिना",1:"अर्को महिना","-1":"गत महिना"},relativeTime:{future:{one:"{0} महिनामा",other:"{0} महिनामा"},past:{one:"{0} महिना पहिले",other:"{0} महिना पहिले"}}},day:{displayName:"बार",relative:{0:"आज",1:"भोलि",2:"पर्सि","-2":"अस्ति","-1":"हिजो"},relativeTime:{future:{one:"{0} दिनमा",other:"{0} दिनमा"},past:{one:"{0} दिन पहिले",other:"{0} दिन पहिले"}}},hour:{displayName:"घण्टा",relative:{0:"यो घडीमा"},relativeTime:{future:{one:"{0} घण्टामा",other:"{0} घण्टामा"},past:{one:"{0} घण्टा पहिले",other:"{0} घण्टा पहिले"}}},minute:{displayName:"मिनेट",relative:{0:"यही मिनेटमा"},relativeTime:{future:{one:"{0} मिनेटमा",other:"{0} मिनेटमा"},past:{one:"{0} मिनेट पहिले",other:"{0} मिनेट पहिले"}}},second:{displayName:"सेकेन्ड",relative:{0:"अब"},relativeTime:{future:{one:"{0} सेकेण्डमा",other:"{0} सेकेण्डमा"},past:{one:"{0} सेकेण्ड पहिले",other:"{0} सेकेण्ड पहिले"}}}}},{locale:"ne-IN",parentLocale:"ne"},{locale:"nl",pluralRuleFunction:function(e,t){var a=!String(e).split(".")[1];return t?"other":1==e&&a?"one":"other"},fields:{year:{displayName:"jaar",relative:{0:"dit jaar",1:"volgend jaar","-1":"vorig jaar"},relativeTime:{future:{one:"over {0} jaar",other:"over {0} jaar"},past:{one:"{0} jaar geleden",other:"{0} jaar geleden"}}},month:{displayName:"maand",relative:{0:"deze maand",1:"volgende maand","-1":"vorige maand"},relativeTime:{future:{one:"over {0} maand",other:"over {0} maanden"},past:{one:"{0} maand geleden",other:"{0} maanden geleden"}}},day:{displayName:"dag",relative:{0:"vandaag",1:"morgen",2:"overmorgen","-2":"eergisteren","-1":"gisteren"},relativeTime:{future:{one:"over {0} dag",other:"over {0} dagen"},past:{one:"{0} dag geleden",other:"{0} dagen geleden"}}},hour:{displayName:"uur",relative:{0:"binnen een uur"},relativeTime:{future:{one:"over {0} uur",other:"over {0} uur"},past:{one:"{0} uur geleden",other:"{0} uur geleden"}}},minute:{displayName:"minuut",relative:{0:"binnen een minuut"},relativeTime:{future:{one:"over {0} minuut",other:"over {0} minuten"},past:{one:"{0} minuut geleden",other:"{0} minuten geleden"}}},second:{displayName:"seconde",relative:{0:"nu"},relativeTime:{future:{one:"over {0} seconde",other:"over {0} seconden"},past:{one:"{0} seconde geleden",other:"{0} seconden geleden"}}}}},{locale:"nl-AW",parentLocale:"nl"},{locale:"nl-BE",parentLocale:"nl"},{locale:"nl-BQ",parentLocale:"nl"},{locale:"nl-CW",parentLocale:"nl"},{locale:"nl-SR",parentLocale:"nl"},{locale:"nl-SX",parentLocale:"nl"},{locale:"nmg",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Mbvu",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Ngwɛn",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Duö",relative:{0:"Dɔl",1:"Namáná","-1":"Nakugú"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Wulā",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Mpálâ",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Nyiɛl",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"nn",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"år",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{one:"om {0} år",other:"om {0} år"},past:{one:"for {0} år siden",other:"for {0} år siden"}}},month:{displayName:"månad",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{one:"om {0} måned",other:"om {0} måneder"},past:{one:"for {0} måned siden",other:"for {0} måneder siden"}}},day:{displayName:"dag",relative:{0:"i dag",1:"i morgon",2:"i overmorgon","-2":"i forgårs","-1":"i går"},relativeTime:{future:{one:"om {0} døgn",other:"om {0} døgn"},past:{one:"for {0} døgn siden",other:"for {0} døgn siden"}}},hour:{displayName:"time",relative:{0:"this hour"},relativeTime:{future:{one:"om {0} time",other:"om {0} timer"},past:{one:"for {0} time siden",other:"for {0} timer siden"}}},minute:{displayName:"minutt",relative:{0:"this minute"},relativeTime:{future:{one:"om {0} minutt",other:"om {0} minutter"},past:{one:"for {0} minutt siden",other:"for {0} minutter siden"}}},second:{displayName:"sekund",relative:{0:"now"},relativeTime:{future:{one:"om {0} sekund",other:"om {0} sekunder"},past:{one:"for {0} sekund siden",other:"for {0} sekunder siden"}}}}},{locale:"nnh",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"ngùʼ",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"lyɛ̌ʼ",relative:{0:"lyɛ̌ʼɔɔn",1:"jǔɔ gẅie à ne ntóo","-1":"jǔɔ gẅie à ka tɔ̌g"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"fʉ̀ʼ nèm",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"no",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"nqo",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"nr",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"nso",pluralRuleFunction:function(e,t){return t?"other":0==e||1==e?"one":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"nus",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Ruɔ̱n",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Pay",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Cäŋ",relative:{0:"Walɛ",1:"Ruun","-1":"Pan"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Thaak",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minit",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Thɛkɛni",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"ny",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"nyn",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Omwaka",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Omwezi",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Eizooba",relative:{0:"Erizooba",1:"Nyenkyakare","-1":"Nyomwabazyo"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Shaaha",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Edakiika",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Obucweka/Esekendi",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"om",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"om-KE",parentLocale:"om"},{locale:"or",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"os",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Аз",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Мӕй",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Бон",relative:{0:"Абон",1:"Сом",2:"Иннӕбон","-2":"Ӕндӕрӕбон","-1":"Знон"},relativeTime:{future:{one:"{0} боны фӕстӕ",other:"{0} боны фӕстӕ"},past:{one:"{0} бон раздӕр",other:"{0} боны размӕ"}}},hour:{displayName:"Сахат",relative:{0:"this hour"},relativeTime:{future:{one:"{0} сахаты фӕстӕ",other:"{0} сахаты фӕстӕ"},past:{one:"{0} сахаты размӕ",other:"{0} сахаты размӕ"}}},minute:{displayName:"Минут",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Секунд",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"os-RU",parentLocale:"os"},{locale:"pa",pluralRuleFunction:function(e,t){return t?"other":0==e||1==e?"one":"other"},fields:{year:{displayName:"ਸਾਲ",relative:{0:"ਇਹ ਸਾਲ",1:"ਅਗਲਾ ਸਾਲ","-1":"ਪਿਛਲਾ ਸਾਲ"},relativeTime:{future:{one:"{0} ਸਾਲ ਵਿੱਚ",other:"{0} ਸਾਲਾਂ ਵਿੱਚ"},past:{one:"{0} ਸਾਲ ਪਹਿਲਾਂ",other:"{0} ਸਾਲ ਪਹਿਲਾਂ"}}},month:{displayName:"ਮਹੀਨਾ",relative:{0:"ਇਹ ਮਹੀਨਾ",1:"ਅਗਲਾ ਮਹੀਨਾ","-1":"ਪਿਛਲਾ ਮਹੀਨਾ"},relativeTime:{future:{one:"{0} ਮਹੀਨੇ ਵਿੱਚ",other:"{0} ਮਹੀਨਿਆਂ ਵਿੱਚ"},past:{one:"{0} ਮਹੀਨਾ ਪਹਿਲਾਂ",other:"{0} ਮਹੀਨੇ ਪਹਿਲਾਂ"}}},day:{displayName:"ਦਿਨ",relative:{0:"ਅੱਜ",1:"ਭਲਕੇ","-1":"ਬੀਤਿਆ ਕੱਲ੍ਹ"},relativeTime:{future:{one:"{0} ਦਿਨ ਵਿੱਚ",other:"{0} ਦਿਨਾਂ ਵਿੱਚ"},past:{one:"{0} ਦਿਨ ਪਹਿਲਾਂ",other:"{0} ਦਿਨ ਪਹਿਲਾਂ"}}},hour:{displayName:"ਘੰਟਾ",relative:{0:"ਇਸ ਘੰਟੇ"},relativeTime:{future:{one:"{0} ਘੰਟੇ ਵਿੱਚ",other:"{0} ਘੰਟਿਆਂ ਵਿੱਚ"},past:{one:"{0} ਘੰਟਾ ਪਹਿਲਾਂ",other:"{0} ਘੰਟੇ ਪਹਿਲਾਂ"}}},minute:{displayName:"ਮਿੰਟ",relative:{0:"ਇਸ ਮਿੰਟ"},relativeTime:{future:{one:"{0} ਮਿੰਟ ਵਿੱਚ",other:"{0} ਮਿੰਟਾਂ ਵਿੱਚ"},past:{one:"{0} ਮਿੰਟ ਪਹਿਲਾਂ",other:"{0} ਮਿੰਟ ਪਹਿਲਾਂ"}}},second:{displayName:"ਸਕਿੰਟ",relative:{0:"ਹੁਣ"},relativeTime:{future:{one:"{0} ਸਕਿੰਟ ਵਿੱਚ",other:"{0} ਸਕਿੰਟਾਂ ਵਿੱਚ"},past:{one:"{0} ਸਕਿੰਟ ਪਹਿਲਾਂ",other:"{0} ਸਕਿੰਟ ਪਹਿਲਾਂ"}}}}},{locale:"pa-Arab",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"ورھا",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"مہينا",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"دئن",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"گھنٹا",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"منٹ",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"pa-Guru",parentLocale:"pa"},{locale:"pap",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"pl",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=a[0],i=!a[1],o=r.slice(-1),n=r.slice(-2);return t?"other":1==e&&i?"one":i&&o>=2&&o<=4&&(n<12||n>14)?"few":i&&1!=r&&(0==o||1==o)||i&&o>=5&&o<=9||i&&n>=12&&n<=14?"many":"other"},fields:{year:{displayName:"rok",relative:{0:"w tym roku",1:"w przyszłym roku","-1":"w zeszłym roku"},relativeTime:{future:{one:"za {0} rok",few:"za {0} lata",many:"za {0} lat",other:"za {0} roku"},past:{one:"{0} rok temu",few:"{0} lata temu",many:"{0} lat temu",other:"{0} roku temu"}}},month:{displayName:"miesiąc",relative:{0:"w tym miesiącu",1:"w przyszłym miesiącu","-1":"w zeszłym miesiącu"},relativeTime:{future:{one:"za {0} miesiąc",few:"za {0} miesiące",many:"za {0} miesięcy",other:"za {0} miesiąca"},past:{one:"{0} miesiąc temu",few:"{0} miesiące temu",many:"{0} miesięcy temu",other:"{0} miesiąca temu"}}},day:{displayName:"dzień",relative:{0:"dzisiaj",1:"jutro",2:"pojutrze","-2":"przedwczoraj","-1":"wczoraj"},relativeTime:{future:{one:"za {0} dzień",few:"za {0} dni",many:"za {0} dni",other:"za {0} dnia"},past:{one:"{0} dzień temu",few:"{0} dni temu",many:"{0} dni temu",other:"{0} dnia temu"}}},hour:{displayName:"godzina",relative:{0:"ta godzina"},relativeTime:{future:{one:"za {0} godzinę",few:"za {0} godziny",many:"za {0} godzin",other:"za {0} godziny"},past:{one:"{0} godzinę temu",few:"{0} godziny temu",many:"{0} godzin temu",other:"{0} godziny temu"}}},minute:{displayName:"minuta",relative:{0:"ta minuta"},relativeTime:{future:{one:"za {0} minutę",few:"za {0} minuty",many:"za {0} minut",other:"za {0} minuty"},past:{one:"{0} minutę temu",few:"{0} minuty temu",many:"{0} minut temu",other:"{0} minuty temu"}}},second:{displayName:"sekunda",relative:{0:"teraz"},relativeTime:{future:{one:"za {0} sekundę",few:"za {0} sekundy",many:"za {0} sekund",other:"za {0} sekundy"},past:{one:"{0} sekundę temu",few:"{0} sekundy temu",many:"{0} sekund temu",other:"{0} sekundy temu"}}}}},{locale:"prg",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=a[1]||"",i=r.length,o=Number(a[0])==e,n=o&&a[0].slice(-1),l=o&&a[0].slice(-2),u=r.slice(-2),s=r.slice(-1);return t?"other":o&&0==n||l>=11&&l<=19||2==i&&u>=11&&u<=19?"zero":1==n&&11!=l||2==i&&1==s&&11!=u||2!=i&&1==s?"one":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"ps",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"pt",pluralRuleFunction:function(e,t){var a=String(e).split(".")[0];return t?"other":0==a||1==a?"one":"other"},fields:{year:{displayName:"ano",relative:{0:"este ano",1:"próximo ano","-1":"ano passado"},relativeTime:{future:{one:"em {0} ano",other:"em {0} anos"},past:{one:"há {0} ano",other:"há {0} anos"}}},month:{displayName:"mês",relative:{0:"este mês",1:"próximo mês","-1":"mês passado"},relativeTime:{future:{one:"em {0} mês",other:"em {0} meses"},past:{one:"há {0} mês",other:"há {0} meses"}}},day:{displayName:"dia",relative:{0:"hoje",1:"amanhã",2:"depois de amanhã","-2":"anteontem","-1":"ontem"},relativeTime:{future:{one:"em {0} dia",other:"em {0} dias"},past:{one:"há {0} dia",other:"há {0} dias"}}},hour:{displayName:"hora",relative:{0:"esta hora"},relativeTime:{future:{one:"em {0} hora",other:"em {0} horas"},past:{one:"há {0} hora",other:"há {0} horas"}}},minute:{displayName:"minuto",relative:{0:"este minuto"},relativeTime:{future:{one:"em {0} minuto",other:"em {0} minutos"},past:{one:"há {0} minuto",other:"há {0} minutos"}}},second:{displayName:"segundo",relative:{0:"agora"},relativeTime:{future:{one:"em {0} segundo",other:"em {0} segundos"},past:{one:"há {0} segundo",other:"há {0} segundos"}}}}},{locale:"pt-AO",parentLocale:"pt-PT"},{locale:"pt-PT",parentLocale:"pt",fields:{year:{displayName:"ano",relative:{0:"este ano",1:"próximo ano","-1":"ano passado"},relativeTime:{future:{one:"dentro de {0} ano",other:"dentro de {0} anos"},past:{one:"há {0} ano",other:"há {0} anos"}}},month:{displayName:"mês",relative:{0:"este mês",1:"próximo mês","-1":"mês passado"},relativeTime:{future:{one:"dentro de {0} mês",other:"dentro de {0} meses"},past:{one:"há {0} mês",other:"há {0} meses"}}},day:{displayName:"dia",relative:{0:"hoje",1:"amanhã",2:"depois de amanhã","-2":"anteontem","-1":"ontem"},relativeTime:{future:{one:"dentro de {0} dia",other:"dentro de {0} dias"},past:{one:"há {0} dia",other:"há {0} dias"}}},hour:{displayName:"hora",relative:{0:"esta hora"},relativeTime:{future:{one:"dentro de {0} hora",other:"dentro de {0} horas"},past:{one:"há {0} hora",other:"há {0} horas"}}},minute:{displayName:"minuto",relative:{0:"este minuto"},relativeTime:{future:{one:"dentro de {0} minuto",other:"dentro de {0} minutos"},past:{one:"há {0} minuto",other:"há {0} minutos"}}},second:{displayName:"segundo",relative:{0:"agora"},relativeTime:{future:{one:"dentro de {0} segundo",other:"dentro de {0} segundos"},past:{one:"há {0} segundo",other:"há {0} segundos"}}}}},{locale:"pt-CH",parentLocale:"pt-PT"},{locale:"pt-CV",parentLocale:"pt-PT"},{locale:"pt-GQ",parentLocale:"pt-PT"},{locale:"pt-GW",parentLocale:"pt-PT"},{locale:"pt-LU",parentLocale:"pt-PT"},{locale:"pt-MO",parentLocale:"pt-PT"},{locale:"pt-MZ",parentLocale:"pt-PT"},{locale:"pt-ST",parentLocale:"pt-PT"},{locale:"pt-TL",parentLocale:"pt-PT"},{locale:"qu",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"qu-BO",parentLocale:"qu"},{locale:"qu-EC",parentLocale:"qu"},{locale:"rm",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"onn",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"mais",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Tag",relative:{0:"oz",1:"damaun",2:"puschmaun","-2":"stersas","-1":"ier"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"ura",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"minuta",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"secunda",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"rn",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Umwaka",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Ukwezi",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Umusi",relative:{0:"Uyu musi",1:"Ejo (hazoza)","-1":"Ejo (haheze)"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Isaha",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Umunota",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Isegonda",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"ro",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=!a[1],i=Number(a[0])==e&&a[0].slice(-2);return t?1==e?"one":"other":1==e&&r?"one":!r||0==e||1!=e&&i>=1&&i<=19?"few":"other"},fields:{year:{displayName:"an",relative:{0:"anul acesta",1:"anul viitor","-1":"anul trecut"},relativeTime:{future:{one:"peste {0} an",few:"peste {0} ani",other:"peste {0} de ani"},past:{one:"acum {0} an",few:"acum {0} ani",other:"acum {0} de ani"}}},month:{displayName:"lună",relative:{0:"luna aceasta",1:"luna viitoare","-1":"luna trecută"},relativeTime:{future:{one:"peste {0} lună",few:"peste {0} luni",other:"peste {0} de luni"},past:{one:"acum {0} lună",few:"acum {0} luni",other:"acum {0} de luni"}}},day:{displayName:"zi",relative:{0:"azi",1:"mâine",2:"poimâine","-2":"alaltăieri","-1":"ieri"},relativeTime:{future:{one:"peste {0} zi",few:"peste {0} zile",other:"peste {0} de zile"},past:{one:"acum {0} zi",few:"acum {0} zile",other:"acum {0} de zile"}}},hour:{displayName:"oră",relative:{0:"ora aceasta"},relativeTime:{future:{one:"peste {0} oră",few:"peste {0} ore",other:"peste {0} de ore"},past:{one:"acum {0} oră",few:"acum {0} ore",other:"acum {0} de ore"}}},minute:{displayName:"minut",relative:{0:"minutul acesta"},relativeTime:{future:{one:"peste {0} minut",few:"peste {0} minute",other:"peste {0} de minute"},past:{one:"acum {0} minut",few:"acum {0} minute",other:"acum {0} de minute"}}},second:{displayName:"secundă",relative:{0:"acum"},relativeTime:{future:{one:"peste {0} secundă",few:"peste {0} secunde",other:"peste {0} de secunde"},past:{one:"acum {0} secundă",few:"acum {0} secunde",other:"acum {0} de secunde"}}}}},{locale:"ro-MD",parentLocale:"ro"},{locale:"rof",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Muaka",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Mweri",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Mfiri",relative:{0:"Linu",1:"Ng’ama","-1":"Hiyo"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Isaa",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Dakika",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Sekunde",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"ru",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=a[0],i=!a[1],o=r.slice(-1),n=r.slice(-2);return t?"other":i&&1==o&&11!=n?"one":i&&o>=2&&o<=4&&(n<12||n>14)?"few":i&&0==o||i&&o>=5&&o<=9||i&&n>=11&&n<=14?"many":"other"},fields:{year:{displayName:"год",relative:{0:"в этом году",1:"в следующем году","-1":"в прошлом году"},relativeTime:{future:{one:"через {0} год",few:"через {0} года",many:"через {0} лет",other:"через {0} года"},past:{one:"{0} год назад",few:"{0} года назад",many:"{0} лет назад",other:"{0} года назад"}}},month:{displayName:"месяц",relative:{0:"в этом месяце",1:"в следующем месяце","-1":"в прошлом месяце"},relativeTime:{future:{one:"через {0} месяц",few:"через {0} месяца",many:"через {0} месяцев",other:"через {0} месяца"},past:{one:"{0} месяц назад",few:"{0} месяца назад",many:"{0} месяцев назад",other:"{0} месяца назад"}}},day:{displayName:"день",relative:{0:"сегодня",1:"завтра",2:"послезавтра","-2":"позавчера","-1":"вчера"},relativeTime:{future:{one:"через {0} день",few:"через {0} дня",many:"через {0} дней",other:"через {0} дня"},past:{one:"{0} день назад",few:"{0} дня назад",many:"{0} дней назад",other:"{0} дня назад"}}},hour:{displayName:"час",relative:{0:"в этом часе"},relativeTime:{future:{one:"через {0} час",few:"через {0} часа",many:"через {0} часов",other:"через {0} часа"},past:{one:"{0} час назад",few:"{0} часа назад",many:"{0} часов назад",other:"{0} часа назад"}}},minute:{displayName:"минута",relative:{0:"в эту минуту"},relativeTime:{future:{one:"через {0} минуту",few:"через {0} минуты",many:"через {0} минут",other:"через {0} минуты"},past:{one:"{0} минуту назад",few:"{0} минуты назад",many:"{0} минут назад",other:"{0} минуты назад"}}},second:{displayName:"секунда",relative:{0:"сейчас"},relativeTime:{future:{one:"через {0} секунду",few:"через {0} секунды",many:"через {0} секунд",other:"через {0} секунды"},past:{one:"{0} секунду назад",few:"{0} секунды назад",many:"{0} секунд назад",other:"{0} секунды назад"}}}}},{locale:"ru-BY",parentLocale:"ru"},{locale:"ru-KG",parentLocale:"ru"},{locale:"ru-KZ",parentLocale:"ru"},{locale:"ru-MD",parentLocale:"ru"},{locale:"ru-UA",parentLocale:"ru"},{locale:"rw",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"rwk",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Maka",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Mori",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Mfiri",relative:{0:"Inu",1:"Ngama","-1":"Ukou"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Saa",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Dakyika",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Sekunde",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"sah",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Сыл",relative:{0:"быйыл",1:"эһиил","-1":"Былырыын"},relativeTime:{future:{other:"{0} сылынан"},past:{other:"{0} сыл ынараа өттүгэр"}}},month:{displayName:"Ый",relative:{0:"бу ый",1:"аныгыскы ый","-1":"ааспыт ый"},relativeTime:{future:{other:"{0} ыйынан"},past:{other:"{0} ый ынараа өттүгэр"}}},day:{displayName:"Күн",relative:{0:"Бүгүн",1:"Сарсын",2:"Өйүүн","-2":"Иллэрээ күн","-1":"Бэҕэһээ"},relativeTime:{future:{other:"{0} күнүнэн"},past:{other:"{0} күн ынараа өттүгэр"}}},hour:{displayName:"Чаас",relative:{0:"this hour"},relativeTime:{future:{other:"{0} чааһынан"},past:{other:"{0} чаас ынараа өттүгэр"}}},minute:{displayName:"Мүнүүтэ",relative:{0:"this minute"},relativeTime:{future:{other:"{0} мүнүүтэннэн"},past:{other:"{0} мүнүүтэ ынараа өттүгэр"}}},second:{displayName:"Сөкүүндэ",relative:{0:"билигин"},relativeTime:{future:{other:"{0} сөкүүндэннэн"},past:{other:"{0} сөкүүндэ ынараа өттүгэр"}}}}},{locale:"saq",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Lari",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Lapa",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Mpari",relative:{0:"Duo",1:"Taisere","-1":"Ng’ole"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Saai",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Idakika",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Isekondi",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"sbp",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Mwakha",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Mwesi",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Lusiku",relative:{0:"Ineng’uni",1:"Pamulaawu","-1":"Imehe"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Ilisala",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Idakika",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Isekunde",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"sdh",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"se",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":2==e?"two":"other"},fields:{year:{displayName:"jáhki",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{one:"{0} jahki maŋŋilit",two:"{0} jahkki maŋŋilit",other:"{0} jahkki maŋŋilit"},past:{one:"{0} jahki árat",two:"{0} jahkki árat",other:"{0} jahkki árat"}}},month:{displayName:"mánnu",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{one:"{0} mánotbadji maŋŋilit",two:"{0} mánotbadji maŋŋilit",other:"{0} mánotbadji maŋŋilit"},past:{one:"{0} mánotbadji árat",two:"{0} mánotbadji árat",other:"{0} mánotbadji árat"}}},day:{displayName:"beaivi",relative:{0:"odne",1:"ihttin",2:"paijeelittáá","-2":"oovdebpeivvi","-1":"ikte"},relativeTime:{future:{one:"{0} jándor maŋŋilit",two:"{0} jándor amaŋŋilit",other:"{0} jándora maŋŋilit"},past:{one:"{0} jándor árat",two:"{0} jándora árat",other:"{0} jándora árat"}}},hour:{displayName:"diibmu",relative:{0:"this hour"},relativeTime:{future:{one:"{0} diibmu maŋŋilit",two:"{0} diibmur maŋŋilit",other:"{0} diibmur maŋŋilit"},past:{one:"{0} diibmu árat",two:"{0} diibmur árat",other:"{0} diibmur árat"}}},minute:{displayName:"minuhtta",relative:{0:"this minute"},relativeTime:{future:{one:"{0} minuhta maŋŋilit",two:"{0} minuhtta maŋŋilit",other:"{0} minuhtta maŋŋilit"},past:{one:"{0} minuhta árat",two:"{0} minuhtta árat",other:"{0} minuhtta árat"}}},second:{displayName:"sekunda",relative:{0:"now"},relativeTime:{future:{one:"{0} sekunda maŋŋilit",two:"{0} sekundda maŋŋilit",other:"{0} sekundda maŋŋilit"},past:{one:"{0} sekunda árat",two:"{0} sekundda árat",other:"{0} sekundda árat"}}}}},{locale:"se-FI",parentLocale:"se",fields:{year:{displayName:"jahki",relative:{0:"dán jagi",1:"boahtte jagi","-1":"mannan jagi"},relativeTime:{future:{one:"{0} jagi siste",two:"{0} jagi siste",other:"{0} jagi siste"},past:{one:"{0} jagi árat",two:"{0} jagi árat",other:"{0} jagi árat"}}},month:{displayName:"mánnu",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{one:"{0} mánotbadji maŋŋilit",two:"{0} mánotbadji maŋŋilit",other:"{0} mánotbadji maŋŋilit"},past:{one:"{0} mánotbadji árat",two:"{0} mánotbadji árat",other:"{0} mánotbadji árat"}}},day:{displayName:"beaivi",relative:{0:"odne",1:"ihttin",2:"paijeelittáá","-2":"oovdebpeivvi","-1":"ikte"},relativeTime:{future:{one:"{0} jándor maŋŋilit",two:"{0} jándor amaŋŋilit",other:"{0} jándora maŋŋilit"},past:{one:"{0} jándor árat",two:"{0} jándora árat",other:"{0} jándora árat"}}},hour:{displayName:"diibmu",relative:{0:"this hour"},relativeTime:{future:{one:"{0} diibmu maŋŋilit",two:"{0} diibmur maŋŋilit",other:"{0} diibmur maŋŋilit"},past:{one:"{0} diibmu árat",two:"{0} diibmur árat",other:"{0} diibmur árat"}}},minute:{displayName:"minuhtta",relative:{0:"this minute"},relativeTime:{future:{one:"{0} minuhta maŋŋilit",two:"{0} minuhtta maŋŋilit",other:"{0} minuhtta maŋŋilit"},past:{one:"{0} minuhta árat",two:"{0} minuhtta árat",other:"{0} minuhtta árat"}}},second:{displayName:"sekunda",relative:{0:"now"},relativeTime:{future:{one:"{0} sekunda maŋŋilit",two:"{0} sekundda maŋŋilit",other:"{0} sekundda maŋŋilit"},past:{one:"{0} sekunda árat",two:"{0} sekundda árat",other:"{0} sekundda árat"}}}}},{locale:"se-SE",parentLocale:"se"},{locale:"seh",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Chaka",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Mwezi",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Ntsiku",relative:{0:"Lero",1:"Manguana","-1":"Zuro"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hora",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minuto",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Segundo",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"ses",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Jiiri",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Handu",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Zaari",relative:{0:"Hõo",1:"Suba","-1":"Bi"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Guuru",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Miniti",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Miti",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"sg",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Ngû",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Nze",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Lâ",relative:{0:"Lâsô",1:"Kêkerêke","-1":"Bîrï"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Ngbonga",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Ndurü ngbonga",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Nzîna ngbonga",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"sh",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=a[0],i=a[1]||"",o=!a[1],n=r.slice(-1),l=r.slice(-2),u=i.slice(-1),s=i.slice(-2);return t?"other":o&&1==n&&11!=l||1==u&&11!=s?"one":o&&n>=2&&n<=4&&(l<12||l>14)||u>=2&&u<=4&&(s<12||s>14)?"few":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"shi",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=Number(a[0])==e;return t?"other":e>=0&&e<=1?"one":r&&e>=2&&e<=10?"few":"other"},fields:{year:{displayName:"ⴰⵙⴳⴳⵯⴰⵙ",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"ⴰⵢⵢⵓⵔ",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"ⴰⵙⵙ",relative:{0:"ⴰⵙⵙⴰ",1:"ⴰⵙⴽⴽⴰ","-1":"ⵉⴹⵍⵍⵉ"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"ⵜⴰⵙⵔⴰⴳⵜ",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"ⵜⵓⵙⴷⵉⴷⵜ",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"ⵜⴰⵙⵉⵏⵜ",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"shi-Latn",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"asggʷas",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"ayyur",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"ass",relative:{0:"assa",1:"askka","-1":"iḍlli"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"tasragt",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"tusdidt",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"tasint",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"shi-Tfng",parentLocale:"shi"},{locale:"si",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=a[0],i=a[1]||"";return t?"other":0==e||1==e||0==r&&1==i?"one":"other"},fields:{year:{displayName:"වර්ෂය",relative:{0:"මෙම වසර",1:"ඊළඟ වසර","-1":"පසුගිය වසර"},relativeTime:{future:{one:"වසර {0}කින්",other:"වසර {0}කින්"},past:{one:"වසර {0}කට පෙර",other:"වසර {0}කට පෙර"}}},month:{displayName:"මාසය",relative:{0:"මෙම මාසය",1:"ඊළඟ මාසය","-1":"පසුගිය මාසය"},relativeTime:{future:{one:"මාස {0}කින්",other:"මාස {0}කින්"},past:{one:"මාස {0}කට පෙර",other:"මාස {0}කට පෙර"}}},day:{displayName:"දිනය",relative:{0:"අද",1:"හෙට",2:"අනිද්දා","-2":"පෙරේදා","-1":"ඊයේ"},relativeTime:{future:{one:"දින {0}න්",other:"දින {0}න්"},past:{one:"දින {0}කට පෙර",other:"දින {0}කට පෙර"}}},hour:{displayName:"පැය",relative:{0:"මෙම පැය"},relativeTime:{future:{one:"පැය {0}කින්",other:"පැය {0}කින්"},past:{one:"පැය {0}කට පෙර",other:"පැය {0}කට පෙර"}}},minute:{displayName:"මිනිත්තුව",relative:{0:"මෙම මිනිත්තුව"},relativeTime:{future:{one:"මිනිත්තු {0}කින්",other:"මිනිත්තු {0}කින්"},past:{one:"මිනිත්තු {0}කට පෙර",other:"මිනිත්තු {0}කට පෙර"}}},second:{displayName:"තත්පරය",relative:{0:"දැන්"},relativeTime:{future:{one:"තත්පර {0}කින්",other:"තත්පර {0}කින්"},past:{one:"තත්පර {0}කට පෙර",other:"තත්පර {0}කට පෙර"}}}}},{locale:"sk",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=a[0],i=!a[1];return t?"other":1==e&&i?"one":r>=2&&r<=4&&i?"few":i?"other":"many"},fields:{year:{displayName:"rok",relative:{0:"tento rok",1:"budúci rok","-1":"minulý rok"},relativeTime:{future:{one:"o {0} rok",few:"o {0} roky",many:"o {0} roka",other:"o {0} rokov"},past:{one:"pred {0} rokom",few:"pred {0} rokmi",many:"pred {0} roka",other:"pred {0} rokmi"}}},month:{displayName:"mesiac",relative:{0:"tento mesiac",1:"budúci mesiac","-1":"minulý mesiac"},relativeTime:{future:{one:"o {0} mesiac",few:"o {0} mesiace",many:"o {0} mesiaca",other:"o {0} mesiacov"},past:{one:"pred {0} mesiacom",few:"pred {0} mesiacmi",many:"pred {0} mesiaca",other:"pred {0} mesiacmi"}}},day:{displayName:"deň",relative:{0:"dnes",1:"zajtra",2:"pozajtra","-2":"predvčerom","-1":"včera"},relativeTime:{future:{one:"o {0} deň",few:"o {0} dni",many:"o {0} dňa",other:"o {0} dní"},past:{one:"pred {0} dňom",few:"pred {0} dňami",many:"pred {0} dňa",other:"pred {0} dňami"}}},hour:{displayName:"hodina",relative:{0:"v tejto hodine"},relativeTime:{future:{one:"o {0} hodinu",few:"o {0} hodiny",many:"o {0} hodiny",other:"o {0} hodín"},past:{one:"pred {0} hodinou",few:"pred {0} hodinami",many:"pred {0} hodinou",other:"pred {0} hodinami"}}},minute:{displayName:"minúta",relative:{0:"v tejto minúte"},relativeTime:{future:{one:"o {0} minútu",few:"o {0} minúty",many:"o {0} minúty",other:"o {0} minút"},past:{one:"pred {0} minútou",few:"pred {0} minútami",many:"pred {0} minúty",other:"pred {0} minútami"}}},second:{displayName:"sekunda",relative:{0:"teraz"},relativeTime:{future:{one:"o {0} sekundu",few:"o {0} sekundy",many:"o {0} sekundy",other:"o {0} sekúnd"},past:{one:"pred {0} sekundou",few:"pred {0} sekundami",many:"pred {0} sekundy",other:"pred {0} sekundami"}}}}},{locale:"sl",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=a[0],i=!a[1],o=r.slice(-2);return t?"other":i&&1==o?"one":i&&2==o?"two":i&&(3==o||4==o)||!i?"few":"other"},fields:{year:{displayName:"leto",relative:{0:"letos",1:"naslednje leto","-1":"lani"},relativeTime:{future:{one:"čez {0} leto",two:"čez {0} leti",few:"čez {0} leta",other:"čez {0} let"},past:{one:"pred {0} letom",two:"pred {0} letoma",few:"pred {0} leti",other:"pred {0} leti"}}},month:{displayName:"mesec",relative:{0:"ta mesec",1:"naslednji mesec","-1":"prejšnji mesec"},relativeTime:{future:{one:"čez {0} mesec",two:"čez {0} meseca",few:"čez {0} mesece",other:"čez {0} mesecev"},past:{one:"pred {0} mesecem",two:"pred {0} mesecema",few:"pred {0} meseci",other:"pred {0} meseci"}}},day:{displayName:"dan",relative:{0:"danes",1:"jutri",2:"pojutrišnjem","-2":"predvčerajšnjim","-1":"včeraj"},relativeTime:{future:{one:"čez {0} dan",two:"čez {0} dneva",few:"čez {0} dni",other:"čez {0} dni"},past:{one:"pred {0} dnevom",two:"pred {0} dnevoma",few:"pred {0} dnevi",other:"pred {0} dnevi"}}},hour:{displayName:"ura",relative:{0:"v tej uri"},relativeTime:{future:{one:"čez {0} uro",two:"čez {0} uri",few:"čez {0} ure",other:"čez {0} ur"},past:{one:"pred {0} uro",two:"pred {0} urama",few:"pred {0} urami",other:"pred {0} urami"}}},minute:{displayName:"minuta",relative:{0:"to minuto"},relativeTime:{future:{one:"čez {0} minuto",two:"čez {0} minuti",few:"čez {0} minute",other:"čez {0} minut"},past:{one:"pred {0} minuto",two:"pred {0} minutama",few:"pred {0} minutami",other:"pred {0} minutami"}}},second:{displayName:"sekunda",relative:{0:"zdaj"},relativeTime:{future:{one:"čez {0} sekundo",two:"čez {0} sekundi",few:"čez {0} sekunde",other:"čez {0} sekund"},past:{one:"pred {0} sekundo",two:"pred {0} sekundama",few:"pred {0} sekundami",other:"pred {0} sekundami"}}}}},{locale:"sma",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":2==e?"two":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"smi",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":2==e?"two":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"smj",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":2==e?"two":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"smn",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":2==e?"two":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"sms",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":2==e?"two":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"sn",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Gore",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Mwedzi",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Zuva",relative:{0:"Nhasi",1:"Mangwana","-1":"Nezuro"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Awa",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Mineti",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Sekondi",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"so",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{one:"+{0} y",other:"+{0} y"},past:{one:"-{0} y",other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{one:"+{0} m",other:"+{0} m"},past:{one:"-{0} m",other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"Maanta",1:"Berri","-1":"Shalay"},relativeTime:{future:{one:"+{0} d",other:"+{0} d"},past:{one:"-{0} d",other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{one:"+{0} h",other:"+{0} h"},past:{one:"-{0} h",other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{one:"+{0} min",other:"+{0} min"},past:{one:"-{0} min",other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{one:"+{0} s",other:"+{0} s"},past:{one:"-{0} s",other:"-{0} s"}}}}},{locale:"so-DJ",parentLocale:"so"},{locale:"so-ET",parentLocale:"so"},{locale:"so-KE",parentLocale:"so"},{locale:"sq",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=Number(a[0])==e,i=r&&a[0].slice(-1),o=r&&a[0].slice(-2);return t?1==e?"one":4==i&&14!=o?"many":"other":1==e?"one":"other"},fields:{year:{displayName:"vit",relative:{0:"këtë vit",1:"vitin e ardhshëm","-1":"vitin e kaluar"},relativeTime:{future:{one:"pas {0} viti",other:"pas {0} vjetësh"},past:{one:"{0} vit më parë",other:"{0} vjet më parë"}}},month:{displayName:"muaj",relative:{0:"këtë muaj",1:"muajin e ardhshëm","-1":"muajin e kaluar"},relativeTime:{future:{one:"pas {0} muaji",other:"pas {0} muajsh"},past:{one:"{0} muaj më parë",other:"{0} muaj më parë"}}},day:{displayName:"ditë",relative:{0:"sot",1:"nesër","-1":"dje"},relativeTime:{future:{one:"pas {0} dite",other:"pas {0} ditësh"},past:{one:"{0} ditë më parë",other:"{0} ditë më parë"}}},hour:{displayName:"orë",relative:{0:"këtë orë"},relativeTime:{future:{one:"pas {0} ore",other:"pas {0} orësh"},past:{one:"{0} orë më parë",other:"{0} orë më parë"}}},minute:{displayName:"minutë",relative:{0:"këtë minutë"},relativeTime:{future:{one:"pas {0} minute",other:"pas {0} minutash"},past:{one:"{0} minutë më parë",other:"{0} minuta më parë"}}},second:{displayName:"sekondë",relative:{0:"tani"},relativeTime:{future:{one:"pas {0} sekonde",other:"pas {0} sekondash"},past:{one:"{0} sekondë më parë",other:"{0} sekonda më parë"}}}}},{locale:"sq-MK",parentLocale:"sq"},{locale:"sq-XK",parentLocale:"sq"},{locale:"sr",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=a[0],i=a[1]||"",o=!a[1],n=r.slice(-1),l=r.slice(-2),u=i.slice(-1),s=i.slice(-2);return t?"other":o&&1==n&&11!=l||1==u&&11!=s?"one":o&&n>=2&&n<=4&&(l<12||l>14)||u>=2&&u<=4&&(s<12||s>14)?"few":"other"},fields:{year:{displayName:"година",relative:{0:"ове године",1:"следеће године","-1":"прошле године"},relativeTime:{future:{one:"за {0} годину",few:"за {0} године",other:"за {0} година"},past:{one:"пре {0} године",few:"пре {0} године",other:"пре {0} година"}}},month:{displayName:"месец",relative:{0:"овог месеца",1:"следећег месеца","-1":"прошлог месеца"},relativeTime:{future:{one:"за {0} месец",few:"за {0} месеца",other:"за {0} месеци"},past:{one:"пре {0} месеца",few:"пре {0} месеца",other:"пре {0} месеци"}}},day:{displayName:"дан",relative:{0:"данас",1:"сутра",2:"прекосутра","-2":"прекјуче","-1":"јуче"},relativeTime:{future:{one:"за {0} дан",few:"за {0} дана",other:"за {0} дана"},past:{one:"пре {0} дана",few:"пре {0} дана",other:"пре {0} дана"}}},hour:{displayName:"сат",relative:{0:"овог сата"},relativeTime:{future:{one:"за {0} сат",few:"за {0} сата",other:"за {0} сати"},past:{one:"пре {0} сата",few:"пре {0} сата",other:"пре {0} сати"}}},minute:{displayName:"минут",relative:{0:"овог минута"},relativeTime:{future:{one:"за {0} минут",few:"за {0} минута",other:"за {0} минута"},past:{one:"пре {0} минута",few:"пре {0} минута",other:"пре {0} минута"}}},second:{displayName:"секунд",relative:{0:"сада"},relativeTime:{future:{one:"за {0} секунду",few:"за {0} секунде",other:"за {0} секунди"},past:{one:"пре {0} секунде",few:"пре {0} секунде",other:"пре {0} секунди"}}}}},{locale:"sr-Cyrl",parentLocale:"sr"},{locale:"sr-Cyrl-BA",parentLocale:"sr-Cyrl"},{locale:"sr-Cyrl-ME",parentLocale:"sr-Cyrl"},{locale:"sr-Cyrl-XK",parentLocale:"sr-Cyrl"},{locale:"sr-Latn",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"godina",relative:{0:"ove godine",1:"sledeće godine","-1":"prošle godine"},relativeTime:{future:{one:"za {0} godinu",few:"za {0} godine",other:"za {0} godina"},past:{one:"pre {0} godine",few:"pre {0} godine",other:"pre {0} godina"}}},month:{displayName:"mesec",relative:{0:"ovog meseca",1:"sledećeg meseca","-1":"prošlog meseca"},relativeTime:{future:{one:"za {0} mesec",few:"za {0} meseca",other:"za {0} meseci"},past:{one:"pre {0} meseca",few:"pre {0} meseca",other:"pre {0} meseci"}}},day:{displayName:"dan",relative:{0:"danas",1:"sutra",2:"prekosutra","-2":"prekjuče","-1":"juče"},relativeTime:{future:{one:"za {0} dan",few:"za {0} dana",other:"za {0} dana"},past:{one:"pre {0} dana",few:"pre {0} dana",other:"pre {0} dana"}}},hour:{displayName:"sat",relative:{0:"ovog sata"},relativeTime:{future:{one:"za {0} sat",few:"za {0} sata",other:"za {0} sati"},past:{one:"pre {0} sata",few:"pre {0} sata",other:"pre {0} sati"}}},minute:{displayName:"minut",relative:{0:"ovog minuta"},relativeTime:{future:{one:"za {0} minut",few:"za {0} minuta",other:"za {0} minuta"},past:{one:"pre {0} minuta",few:"pre {0} minuta",other:"pre {0} minuta"}}},second:{displayName:"sekund",relative:{0:"sada"},relativeTime:{future:{one:"za {0} sekundu",few:"za {0} sekunde",other:"za {0} sekundi"},past:{one:"pre {0} sekunde",few:"pre {0} sekunde",other:"pre {0} sekundi"}}}}},{locale:"sr-Latn-BA",parentLocale:"sr-Latn"},{locale:"sr-Latn-ME",parentLocale:"sr-Latn"},{locale:"sr-Latn-XK",parentLocale:"sr-Latn"},{locale:"ss",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"ssy",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"st",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"sv",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=!a[1],i=Number(a[0])==e,o=i&&a[0].slice(-1),n=i&&a[0].slice(-2);return t?1!=o&&2!=o||11==n||12==n?"other":"one":1==e&&r?"one":"other"},fields:{year:{displayName:"år",relative:{0:"i år",1:"nästa år","-1":"i fjol"},relativeTime:{future:{one:"om {0} år",other:"om {0} år"},past:{one:"för {0} år sedan",other:"för {0} år sedan"}}},month:{displayName:"månad",relative:{0:"denna månad",1:"nästa månad","-1":"förra månaden"},relativeTime:{future:{one:"om {0} månad",other:"om {0} månader"},past:{one:"för {0} månad sedan",other:"för {0} månader sedan"}}},day:{displayName:"dag",relative:{0:"i dag",1:"i morgon",2:"i övermorgon","-2":"i förrgår","-1":"i går"},relativeTime:{future:{one:"om {0} dag",other:"om {0} dagar"},past:{one:"för {0} dag sedan",other:"för {0} dagar sedan"}}},hour:{displayName:"timme",relative:{0:"denna timme"},relativeTime:{future:{one:"om {0} timme",other:"om {0} timmar"},past:{one:"för {0} timme sedan",other:"för {0} timmar sedan"}}},minute:{displayName:"minut",relative:{0:"denna minut"},relativeTime:{future:{one:"om {0} minut",other:"om {0} minuter"},past:{one:"för {0} minut sedan",other:"för {0} minuter sedan"}}},second:{displayName:"sekund",relative:{0:"nu"},relativeTime:{future:{one:"om {0} sekund",other:"om {0} sekunder"},past:{one:"för {0} sekund sedan",other:"för {0} sekunder sedan"}}}}},{locale:"sv-AX",parentLocale:"sv"},{locale:"sv-FI",parentLocale:"sv"},{locale:"sw",pluralRuleFunction:function(e,t){var a=!String(e).split(".")[1];return t?"other":1==e&&a?"one":"other"},fields:{year:{displayName:"mwaka",relative:{0:"mwaka huu",1:"mwaka ujao","-1":"mwaka uliopita"},relativeTime:{future:{one:"baada ya mwaka {0}",other:"baada ya miaka {0}"},past:{one:"mwaka {0} uliopita",other:"miaka {0} iliyopita"}}},month:{displayName:"mwezi",relative:{0:"mwezi huu",1:"mwezi ujao","-1":"mwezi uliopita"},relativeTime:{future:{one:"baada ya mwezi {0}",other:"baada ya miezi {0}"},past:{one:"mwezi {0} uliopita",other:"miezi {0} iliyopita"}}},day:{displayName:"siku",relative:{0:"leo",1:"kesho",2:"kesho kutwa","-2":"juzi","-1":"jana"},relativeTime:{future:{one:"baada ya siku {0}",other:"baada ya siku {0}"},past:{one:"siku {0} iliyopita",other:"siku {0} zilizopita"}}},hour:{displayName:"saa",relative:{0:"saa hii"},relativeTime:{future:{one:"baada ya saa {0}",other:"baada ya saa {0}"},past:{one:"saa {0} iliyopita",other:"saa {0} zilizopita"}}},minute:{displayName:"dakika",relative:{0:"dakika hii"},relativeTime:{future:{one:"baada ya dakika {0}",other:"baada ya dakika {0}"},past:{one:"dakika {0} iliyopita",other:"dakika {0} zilizopita"}}},second:{displayName:"sekunde",relative:{0:"sasa hivi"},relativeTime:{future:{one:"baada ya sekunde {0}",other:"baada ya sekunde {0}"},past:{one:"Sekunde {0} iliyopita",other:"Sekunde {0} zilizopita"}}}}},{locale:"sw-CD",parentLocale:"sw"},{locale:"sw-KE",parentLocale:"sw"},{locale:"sw-UG",parentLocale:"sw"},{locale:"syr",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"ta",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"ஆண்டு",relative:{0:"இந்த ஆண்டு",1:"அடுத்த ஆண்டு","-1":"கடந்த ஆண்டு"},relativeTime:{future:{one:"{0} ஆண்டில்",other:"{0} ஆண்டுகளில்"},past:{one:"{0} ஆண்டிற்கு முன்",other:"{0} ஆண்டுகளுக்கு முன்"}}},month:{displayName:"மாதம்",relative:{0:"இந்த மாதம்",1:"அடுத்த மாதம்","-1":"கடந்த மாதம்"},relativeTime:{future:{one:"{0} மாதத்தில்",other:"{0} மாதங்களில்"},past:{one:"{0} மாதத்துக்கு முன்",other:"{0} மாதங்களுக்கு முன்"}}},day:{displayName:"நாள்",relative:{0:"இன்று",1:"நாளை",2:"நாளை மறுநாள்","-2":"நேற்று முன் தினம்","-1":"நேற்று"},relativeTime:{future:{one:"{0} நாளில்",other:"{0} நாட்களில்"},past:{one:"{0} நாளுக்கு முன்",other:"{0} நாட்களுக்கு முன்"}}},hour:{displayName:"மணி",relative:{0:"இந்த ஒரு மணிநேரத்தில்"},relativeTime:{future:{one:"{0} மணிநேரத்தில்",other:"{0} மணிநேரத்தில்"},past:{one:"{0} மணிநேரம் முன்",other:"{0} மணிநேரம் முன்"}}},minute:{displayName:"நிமிடம்",relative:{0:"இந்த ஒரு நிமிடத்தில்"},relativeTime:{future:{one:"{0} நிமிடத்தில்",other:"{0} நிமிடங்களில்"},past:{one:"{0} நிமிடத்திற்கு முன்",other:"{0} நிமிடங்களுக்கு முன்"}}},second:{displayName:"விநாடி",relative:{0:"இப்போது"},relativeTime:{future:{one:"{0} விநாடியில்",other:"{0} விநாடிகளில்"},past:{one:"{0} விநாடிக்கு முன்",other:"{0} விநாடிகளுக்கு முன்"}}}}},{locale:"ta-LK",parentLocale:"ta"},{locale:"ta-MY",parentLocale:"ta"},{locale:"ta-SG",parentLocale:"ta"},{locale:"te",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"సంవత్సరం",relative:{0:"ఈ సంవత్సరం",1:"తదుపరి సంవత్సరం","-1":"గత సంవత్సరం"},relativeTime:{future:{one:"{0} సంవత్సరంలో",other:"{0} సంవత్సరాల్లో"},past:{one:"{0} సంవత్సరం క్రితం",other:"{0} సంవత్సరాల క్రితం"}}},month:{displayName:"నెల",relative:{0:"ఈ నెల",1:"తదుపరి నెల","-1":"గత నెల"},relativeTime:{future:{one:"{0} నెలలో",other:"{0} నెలల్లో"},past:{one:"{0} నెల క్రితం",other:"{0} నెలల క్రితం"}}},day:{displayName:"దినం",relative:{0:"ఈ రోజు",1:"రేపు",2:"ఎల్లుండి","-2":"మొన్న","-1":"నిన్న"},relativeTime:{future:{one:"{0} రోజులో",other:"{0} రోజుల్లో"},past:{one:"{0} రోజు క్రితం",other:"{0} రోజుల క్రితం"}}},hour:{displayName:"గంట",relative:{0:"ఈ గంట"},relativeTime:{future:{one:"{0} గంటలో",other:"{0} గంటల్లో"},past:{one:"{0} గంట క్రితం",other:"{0} గంటల క్రితం"}}},minute:{displayName:"నిమిషము",relative:{0:"ఈ నిమిషం"},relativeTime:{future:{one:"{0} నిమిషంలో",other:"{0} నిమిషాల్లో"},past:{one:"{0} నిమిషం క్రితం",other:"{0} నిమిషాల క్రితం"}}},second:{displayName:"సెకను",relative:{0:"ప్రస్తుతం"},relativeTime:{future:{one:"{0} సెకనులో",other:"{0} సెకన్లలో"},past:{one:"{0} సెకను క్రితం",other:"{0} సెకన్ల క్రితం"}}}}},{locale:"teo",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Ekan",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Elap",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Aparan",relative:{0:"Lolo",1:"Moi","-1":"Jaan"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Esaa",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Idakika",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Isekonde",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"teo-KE",parentLocale:"teo"},{locale:"th",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"ปี",relative:{0:"ปีนี้",1:"ปีหน้า","-1":"ปีที่แล้ว"},relativeTime:{future:{other:"ในอีก {0} ปี"},past:{other:"{0} ปีที่แล้ว"}}},month:{displayName:"เดือน",relative:{0:"เดือนนี้",1:"เดือนหน้า","-1":"เดือนที่แล้ว"},relativeTime:{future:{other:"ในอีก {0} เดือน"},past:{other:"{0} เดือนที่ผ่านมา"}}},day:{displayName:"วัน",relative:{0:"วันนี้",1:"พรุ่งนี้",2:"มะรืนนี้","-2":"เมื่อวานซืน","-1":"เมื่อวาน"},relativeTime:{future:{other:"ในอีก {0} วัน"},past:{other:"{0} วันที่ผ่านมา"}}},hour:{displayName:"ชั่วโมง",relative:{0:"ชั่วโมงนี้"},relativeTime:{future:{other:"ในอีก {0} ชั่วโมง"},past:{other:"{0} ชั่วโมงที่ผ่านมา"}}},minute:{displayName:"นาที",relative:{0:"นาทีนี้"},relativeTime:{future:{other:"ในอีก {0} นาที"},past:{other:"{0} นาทีที่ผ่านมา"}}},second:{displayName:"วินาที",relative:{0:"ขณะนี้"},relativeTime:{future:{other:"ในอีก {0} วินาที"},past:{other:"{0} วินาทีที่ผ่านมา"}}}}},{locale:"ti",pluralRuleFunction:function(e,t){return t?"other":0==e||1==e?"one":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"ti-ER",parentLocale:"ti"},{locale:"tig",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"tk",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"ýyl",relative:{0:"şu ýyl",1:"indiki ýyl","-1":"geçen ýyl"},relativeTime:{future:{one:"{0} ýyldan",other:"{0} ýyldan"},past:{one:"{0} ýyl öň",other:"{0} ýyl öň"}}},month:{displayName:"aý",relative:{0:"şu aý",1:"indiki aý","-1":"geçen aý"},relativeTime:{future:{one:"{0} aýdan",other:"{0} aýdan"},past:{one:"{0} aý öň",other:"{0} aý öň"}}},day:{displayName:"gün",relative:{0:"şu gün",1:"ertir","-1":"düýn"},relativeTime:{future:{one:"{0} günden",other:"{0} günden"},past:{one:"{0} gün öň",other:"{0} gün öň"}}},hour:{displayName:"sagat",relative:{0:"this hour"},relativeTime:{future:{one:"{0} sagatdan",other:"{0} sagatdan"},past:{one:"{0} sagat öň",other:"{0} sagat öň"}}},minute:{displayName:"minut",relative:{0:"this minute"},relativeTime:{future:{one:"{0} minutdan",other:"{0} minutdan"},past:{one:"{0} minut öň",other:"{0} minut öň"}}},second:{displayName:"sekunt",relative:{0:"now"},relativeTime:{future:{one:"{0} sekuntdan",other:"{0} sekuntdan"},past:{one:"{0} sekunt öň",other:"{0} sekunt öň"}}}}},{locale:"tl",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=a[0],i=a[1]||"",o=!a[1],n=r.slice(-1),l=i.slice(-1);return t?1==e?"one":"other":o&&(1==r||2==r||3==r)||o&&4!=n&&6!=n&&9!=n||!o&&4!=l&&6!=l&&9!=l?"one":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"tn",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"to",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"taʻu",relative:{0:"taʻú ni",1:"taʻu kahaʻu","-1":"taʻu kuoʻosi"},relativeTime:{future:{other:"ʻi he taʻu ʻe {0}"},past:{other:"taʻu ʻe {0} kuoʻosi"}}},month:{displayName:"māhina",relative:{0:"māhiná ni",1:"māhina kahaʻu","-1":"māhina kuoʻosi"},relativeTime:{future:{other:"ʻi he māhina ʻe {0}"},past:{other:"māhina ʻe {0} kuoʻosi"}}},day:{displayName:"ʻaho",relative:{0:"ʻahó ni",1:"ʻapongipongi",2:"ʻahepongipongi","-2":"ʻaneheafi","-1":"ʻaneafi"},relativeTime:{future:{other:"ʻi he ʻaho ʻe {0}"},past:{other:"ʻaho ʻe {0} kuoʻosi"}}},hour:{displayName:"houa",relative:{0:"this hour"},relativeTime:{future:{other:"ʻi he houa ʻe {0}"},past:{other:"houa ʻe {0} kuoʻosi"}}},minute:{displayName:"miniti",relative:{0:"this minute"},relativeTime:{future:{other:"ʻi he miniti ʻe {0}"},past:{other:"miniti ʻe {0} kuoʻosi"}}},second:{displayName:"sekoni",relative:{0:"taimí ni"},relativeTime:{future:{other:"ʻi he sekoni ʻe {0}"},past:{other:"sekoni ʻe {0} kuoʻosi"}}}}},{locale:"tr",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"yıl",relative:{0:"bu yıl",1:"gelecek yıl","-1":"geçen yıl"},relativeTime:{future:{one:"{0} yıl sonra",other:"{0} yıl sonra"},past:{one:"{0} yıl önce",other:"{0} yıl önce"}}},month:{displayName:"ay",relative:{0:"bu ay",1:"gelecek ay","-1":"geçen ay"},relativeTime:{future:{one:"{0} ay sonra",other:"{0} ay sonra"},past:{one:"{0} ay önce",other:"{0} ay önce"}}},day:{displayName:"gün",relative:{0:"bugün",1:"yarın",2:"öbür gün","-2":"evvelsi gün","-1":"dün"},relativeTime:{future:{one:"{0} gün sonra",other:"{0} gün sonra"},past:{one:"{0} gün önce",other:"{0} gün önce"}}},hour:{displayName:"saat",relative:{0:"bu saat"},relativeTime:{future:{one:"{0} saat sonra",other:"{0} saat sonra"},past:{one:"{0} saat önce",other:"{0} saat önce"}}},minute:{displayName:"dakika",relative:{0:"bu dakika"},relativeTime:{future:{one:"{0} dakika sonra",other:"{0} dakika sonra"},past:{one:"{0} dakika önce",other:"{0} dakika önce"}}},second:{displayName:"saniye",relative:{0:"şimdi"},relativeTime:{future:{one:"{0} saniye sonra",other:"{0} saniye sonra"},past:{one:"{0} saniye önce",other:"{0} saniye önce"}}}}},{locale:"tr-CY",parentLocale:"tr"},{locale:"ts",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"twq",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Jiiri",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Handu",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Zaari",relative:{0:"Hõo",1:"Suba","-1":"Bi"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Guuru",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Miniti",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Miti",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"tzm",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=Number(a[0])==e;return t?"other":0==e||1==e||r&&e>=11&&e<=99?"one":"other"},fields:{year:{displayName:"Asseggas",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Ayur",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Ass",relative:{0:"Assa",1:"Asekka","-1":"Assenaṭ"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Tasragt",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Tusdat",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Tusnat",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"ug",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"يىل",relative:{0:"بۇ يىل",1:"كېلەر يىل","-1":"ئۆتكەن يىل"},relativeTime:{future:{one:"{0} يىلدىن كېيىن",other:"{0} يىلدىن كېيىن"},past:{one:"{0} يىل ئىلگىرى",other:"{0} يىل ئىلگىرى"}}},month:{displayName:"ئاي",relative:{0:"بۇ ئاي",1:"كېلەر ئاي","-1":"ئۆتكەن ئاي"},relativeTime:{future:{one:"{0} ئايدىن كېيىن",other:"{0} ئايدىن كېيىن"},past:{one:"{0} ئاي ئىلگىرى",other:"{0} ئاي ئىلگىرى"}}},day:{displayName:"كۈن",relative:{0:"بۈگۈن",1:"ئەتە","-1":"تۈنۈگۈن"},relativeTime:{future:{one:"{0} كۈندىن كېيىن",other:"{0} كۈندىن كېيىن"},past:{one:"{0} كۈن ئىلگىرى",other:"{0} كۈن ئىلگىرى"}}},hour:{displayName:"سائەت",relative:{0:"this hour"},relativeTime:{future:{one:"{0} سائەتتىن كېيىن",other:"{0} سائەتتىن كېيىن"},past:{one:"{0} سائەت ئىلگىرى",other:"{0} سائەت ئىلگىرى"}}},minute:{displayName:"مىنۇت",relative:{0:"this minute"},relativeTime:{future:{one:"{0} مىنۇتتىن كېيىن",other:"{0} مىنۇتتىن كېيىن"},past:{one:"{0} مىنۇت ئىلگىرى",other:"{0} مىنۇت ئىلگىرى"}}},second:{displayName:"سېكۇنت",relative:{0:"now"},relativeTime:{future:{one:"{0} سېكۇنتتىن كېيىن",other:"{0} سېكۇنتتىن كېيىن"},past:{one:"{0} سېكۇنت ئىلگىرى",other:"{0} سېكۇنت ئىلگىرى"}}}}},{locale:"uk",pluralRuleFunction:function(e,t){var a=String(e).split("."),r=a[0],i=!a[1],o=Number(a[0])==e,n=o&&a[0].slice(-1),l=o&&a[0].slice(-2),u=r.slice(-1),s=r.slice(-2);return t?3==n&&13!=l?"few":"other":i&&1==u&&11!=s?"one":i&&u>=2&&u<=4&&(s<12||s>14)?"few":i&&0==u||i&&u>=5&&u<=9||i&&s>=11&&s<=14?"many":"other"},fields:{year:{displayName:"рік",relative:{0:"цього року",1:"наступного року","-1":"торік"},relativeTime:{future:{one:"через {0} рік",few:"через {0} роки",many:"через {0} років",other:"через {0} року"},past:{one:"{0} рік тому",few:"{0} роки тому",many:"{0} років тому",other:"{0} року тому"}}},month:{displayName:"місяць",relative:{0:"цього місяця",1:"наступного місяця","-1":"минулого місяця"},relativeTime:{future:{one:"через {0} місяць",few:"через {0} місяці",many:"через {0} місяців",other:"через {0} місяця"},past:{one:"{0} місяць тому",few:"{0} місяці тому",many:"{0} місяців тому",other:"{0} місяця тому"}}},day:{displayName:"день",relative:{0:"сьогодні",1:"завтра",2:"післязавтра","-2":"позавчора","-1":"учора"},relativeTime:{future:{one:"через {0} день",few:"через {0} дні",many:"через {0} днів",other:"через {0} дня"},past:{one:"{0} день тому",few:"{0} дні тому",many:"{0} днів тому",other:"{0} дня тому"}}},hour:{displayName:"година",relative:{0:"цієї години"},relativeTime:{future:{one:"через {0} годину",few:"через {0} години",many:"через {0} годин",other:"через {0} години"},past:{one:"{0} годину тому",few:"{0} години тому",many:"{0} годин тому",other:"{0} години тому"}}},minute:{displayName:"хвилина",relative:{0:"цієї хвилини"},relativeTime:{future:{one:"через {0} хвилину",few:"через {0} хвилини",many:"через {0} хвилин",other:"через {0} хвилини"},past:{one:"{0} хвилину тому",few:"{0} хвилини тому",many:"{0} хвилин тому",other:"{0} хвилини тому"}}},second:{displayName:"секунда",relative:{0:"зараз"},relativeTime:{future:{one:"через {0} секунду",few:"через {0} секунди",many:"через {0} секунд",other:"через {0} секунди"},past:{one:"{0} секунду тому",few:"{0} секунди тому",many:"{0} секунд тому",other:"{0} секунди тому"}}}}},{locale:"ur",pluralRuleFunction:function(e,t){var a=!String(e).split(".")[1];return t?"other":1==e&&a?"one":"other"},fields:{year:{displayName:"سال",relative:{0:"اس سال",1:"اگلے سال","-1":"گزشتہ سال"},relativeTime:{future:{one:"{0} سال میں",other:"{0} سال میں"},past:{one:"{0} سال پہلے",other:"{0} سال پہلے"}}},month:{displayName:"مہینہ",relative:{0:"اس مہینہ",1:"اگلے مہینہ","-1":"پچھلے مہینہ"},relativeTime:{future:{one:"{0} مہینہ میں",other:"{0} مہینے میں"},past:{one:"{0} مہینہ پہلے",other:"{0} مہینے پہلے"}}},day:{displayName:"دن",relative:{0:"آج",1:"آئندہ کل",2:"آنے والا پرسوں","-2":"گزشتہ پرسوں","-1":"گزشتہ کل"},relativeTime:{future:{one:"{0} دن میں",other:"{0} دنوں میں"},past:{one:"{0} دن پہلے",other:"{0} دنوں پہلے"}}},hour:{displayName:"گھنٹہ",relative:{0:"اس گھنٹے"},relativeTime:{future:{one:"{0} گھنٹہ میں",other:"{0} گھنٹے میں"},past:{one:"{0} گھنٹہ پہلے",other:"{0} گھنٹے پہلے"}}},minute:{displayName:"منٹ",relative:{0:"اس منٹ"},relativeTime:{future:{one:"{0} منٹ میں",other:"{0} منٹ میں"},past:{one:"{0} منٹ پہلے",other:"{0} منٹ پہلے"}}},second:{displayName:"سیکنڈ",relative:{0:"اب"},relativeTime:{future:{one:"{0} سیکنڈ میں",other:"{0} سیکنڈ میں"},past:{one:"{0} سیکنڈ پہلے",other:"{0} سیکنڈ پہلے"}}}}},{locale:"ur-IN",parentLocale:"ur",fields:{year:{displayName:"سال",relative:{0:"اس سال",1:"اگلے سال","-1":"گزشتہ سال"},relativeTime:{future:{one:"{0} سال میں",other:"{0} سالوں میں"},past:{one:"{0} سال پہلے",other:"{0} سال پہلے"}}},month:{displayName:"مہینہ",relative:{0:"اس ماہ",1:"اگلے ماہ","-1":"گزشتہ ماہ"},relativeTime:{future:{one:"{0} ماہ میں",other:"{0} ماہ میں"},past:{one:"{0} ماہ قبل",other:"{0} ماہ قبل"}}},day:{displayName:"دن",relative:{0:"آج",1:"آئندہ کل",2:"آنے والا پرسوں","-2":"گزشتہ پرسوں","-1":"گزشتہ کل"},relativeTime:{future:{one:"{0} دن میں",other:"{0} دنوں میں"},past:{one:"{0} دن پہلے",other:"{0} دنوں پہلے"}}},hour:{displayName:"گھنٹہ",relative:{0:"اس گھنٹے"},relativeTime:{future:{one:"{0} گھنٹہ میں",other:"{0} گھنٹے میں"},past:{one:"{0} گھنٹہ پہلے",other:"{0} گھنٹے پہلے"}}},minute:{displayName:"منٹ",relative:{0:"اس منٹ"},relativeTime:{future:{one:"{0} منٹ میں",other:"{0} منٹ میں"},past:{one:"{0} منٹ قبل",other:"{0} منٹ قبل"}}},second:{displayName:"سیکنڈ",relative:{0:"اب"},relativeTime:{future:{one:"{0} سیکنڈ میں",other:"{0} سیکنڈ میں"},past:{one:"{0} سیکنڈ قبل",other:"{0} سیکنڈ قبل"}}}}},{locale:"uz",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"yil",relative:{0:"shu yil",1:"keyingi yil","-1":"o‘tgan yil"},relativeTime:{future:{one:"{0} yildan keyin",other:"{0} yildan keyin"},past:{one:"{0} yil oldin",other:"{0} yil oldin"}}},month:{displayName:"oy",relative:{0:"shu oy",1:"keyingi oy","-1":"o‘tgan oy"},relativeTime:{future:{one:"{0} oydan keyin",other:"{0} oydan keyin"},past:{one:"{0} oy oldin",other:"{0} oy oldin"}}},day:{displayName:"kun",relative:{0:"bugun",1:"ertaga","-1":"kecha"},relativeTime:{future:{one:"{0} kundan keyin",other:"{0} kundan keyin"},past:{one:"{0} kun oldin",other:"{0} kun oldin"}}},hour:{displayName:"soat",relative:{0:"shu soatda"},relativeTime:{future:{one:"{0} soatdan keyin",other:"{0} soatdan keyin"},past:{one:"{0} soat oldin",other:"{0} soat oldin"}}},minute:{displayName:"daqiqa",relative:{0:"shu daqiqada"},relativeTime:{future:{one:"{0} daqiqadan keyin",other:"{0} daqiqadan keyin"},past:{one:"{0} daqiqa oldin",other:"{0} daqiqa oldin"}}},second:{displayName:"soniya",relative:{0:"hozir"},relativeTime:{future:{one:"{0} soniyadan keyin",other:"{0} soniyadan keyin"},past:{one:"{0} soniya oldin",other:"{0} soniya oldin"}}}}},{locale:"uz-Arab",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"uz-Cyrl",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Йил",relative:{0:"бу йил",1:"кейинги йил","-1":"ўтган йил"},relativeTime:{future:{one:"{0} йилдан сўнг",other:"{0} йилдан сўнг"},past:{one:"{0} йил аввал",other:"{0} йил аввал"}}},month:{displayName:"Ой",relative:{0:"бу ой",1:"кейинги ой","-1":"ўтган ой"},relativeTime:{future:{one:"{0} ойдан сўнг",other:"{0} ойдан сўнг"},past:{one:"{0} ой аввал",other:"{0} ой аввал"}}},day:{displayName:"Кун",relative:{0:"бугун",1:"эртага","-1":"кеча"},relativeTime:{future:{one:"{0} кундан сўнг",other:"{0} кундан сўнг"},past:{one:"{0} кун олдин",other:"{0} кун олдин"}}},hour:{displayName:"Соат",relative:{0:"this hour"},relativeTime:{future:{one:"{0} соатдан сўнг",other:"{0} соатдан сўнг"},past:{one:"{0} соат олдин",other:"{0} соат олдин"}}},minute:{displayName:"Дақиқа",relative:{0:"this minute"},relativeTime:{future:{one:"{0} дақиқадан сўнг",other:"{0} дақиқадан сўнг"},past:{one:"{0} дақиқа олдин",other:"{0} дақиқа олдин"}}},second:{displayName:"Сония",relative:{0:"ҳозир"},relativeTime:{future:{one:"{0} сониядан сўнг",other:"{0} сониядан сўнг"},past:{one:"{0} сония олдин",other:"{0} сония олдин"}}}}},{locale:"uz-Latn",parentLocale:"uz"},{locale:"vai",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"ꕢꘋ",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"ꕪꖃ",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"ꔎꔒ",relative:{0:"ꗦꗷ",1:"ꔻꕯ","-1":"ꖴꖸ"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"ꕌꕎ",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"ꕆꕇ",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"ꕧꕃꕧꕪ",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"vai-Latn",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"saŋ",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"kalo",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"tele",relative:{0:"wɛlɛ",1:"sina","-1":"kunu"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"hawa",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"mini",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"jaki-jaka",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"vai-Vaii",parentLocale:"vai"},{locale:"ve",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"vi",pluralRuleFunction:function(e,t){return t&&1==e?"one":"other"},fields:{year:{displayName:"Năm",relative:{0:"năm nay",1:"năm sau","-1":"năm ngoái"},relativeTime:{future:{other:"sau {0} năm nữa"},past:{other:"{0} năm trước"}}},month:{displayName:"Tháng",relative:{0:"tháng này",1:"tháng sau","-1":"tháng trước"},relativeTime:{future:{other:"sau {0} tháng nữa"},past:{other:"{0} tháng trước"}}},day:{displayName:"Ngày",relative:{0:"Hôm nay",1:"Ngày mai",2:"Ngày kia","-2":"Hôm kia","-1":"Hôm qua"},relativeTime:{future:{other:"sau {0} ngày nữa"},past:{other:"{0} ngày trước"}}},hour:{displayName:"Giờ",relative:{0:"giờ này"},relativeTime:{future:{other:"sau {0} giờ nữa"},past:{other:"{0} giờ trước"}}},minute:{displayName:"Phút",relative:{0:"phút này"},relativeTime:{future:{other:"sau {0} phút nữa"},past:{other:"{0} phút trước"}}},second:{displayName:"Giây",relative:{0:"bây giờ"},relativeTime:{future:{other:"sau {0} giây nữa"},past:{other:"{0} giây trước"}}}}},{locale:"vo",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"vun",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Maka",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Mori",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Mfiri",relative:{0:"Inu",1:"Ngama","-1":"Ukou"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Saa",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Dakyika",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Sekunde",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"wa",pluralRuleFunction:function(e,t){return t?"other":0==e||1==e?"one":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"wae",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Jár",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{one:"I {0} jár",other:"I {0} jár"},past:{one:"vor {0} jár",other:"cor {0} jár"}}},month:{displayName:"Mánet",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{one:"I {0} mánet",other:"I {0} mánet"},past:{one:"vor {0} mánet",other:"vor {0} mánet"}}},day:{displayName:"Tag",relative:{0:"Hitte",1:"Móre",2:"Ubermóre","-2":"Vorgešter","-1":"Gešter"},relativeTime:{future:{one:"i {0} tag",other:"i {0} täg"},past:{one:"vor {0} tag",other:"vor {0} täg"}}},hour:{displayName:"Schtund",relative:{0:"this hour"},relativeTime:{future:{one:"i {0} stund",other:"i {0} stunde"},past:{one:"vor {0} stund",other:"vor {0} stunde"}}},minute:{displayName:"Mínütta",relative:{0:"this minute"},relativeTime:{future:{one:"i {0} minüta",other:"i {0} minüte"},past:{one:"vor {0} minüta",other:"vor {0} minüte"}}},second:{displayName:"Sekunda",relative:{0:"now"},relativeTime:{future:{one:"i {0} sekund",other:"i {0} sekunde"},past:{one:"vor {0} sekund",other:"vor {0} sekunde"}}}}},{locale:"wo",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"xh",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"xog",pluralRuleFunction:function(e,t){return t?"other":1==e?"one":"other"},fields:{year:{displayName:"Omwaka",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Omwezi",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Olunaku",relative:{0:"Olwaleelo (leelo)",1:"Enkyo","-1":"Edho"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Essawa",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Edakiika",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Obutikitiki",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"yav",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"yɔɔŋ",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"oóli",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"puɔ́sɛ́",relative:{0:"ínaan",1:"nakinyám","-1":"púyoó"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"kisikɛl,",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"minít",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"síkɛn",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"yi",pluralRuleFunction:function(e,t){var a=!String(e).split(".")[1];return t?"other":1==e&&a?"one":"other"},fields:{year:{displayName:"יאָר",relative:{0:"הײַ יאָר",1:"איבער א יאָר","-1":"פֿאַראַיאָר"},relativeTime:{future:{one:"איבער {0} יאָר",other:"איבער {0} יאָר"},past:{one:"פֿאַר {0} יאָר",other:"פֿאַר {0} יאָר"}}},month:{displayName:"מאנאַט",relative:{0:"דעם חודש",1:"קומענדיקן חודש","-1":"פֿאַרגאנגענעם חודש"},relativeTime:{future:{one:"איבער {0} חודש",other:"איבער {0} חדשים"},past:{one:"פֿאַר {0} חודש",other:"פֿאַר {0} חדשים"}}},day:{displayName:"טאָג",relative:{0:"היינט",1:"מארגן","-1":"נעכטן"},relativeTime:{future:{one:"אין {0} טאָג אַרום",other:"אין {0} טעג אַרום"},past:{other:"-{0} d"}}},hour:{displayName:"שעה",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"מינוט",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"סעקונדע",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"yo",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Ọdún",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Osù",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Ọjọ́",relative:{0:"Òní",1:"Ọ̀la",2:"òtúùnla","-2":"íjẹta","-1":"Àná"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"wákàtí",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Ìsẹ́jú",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Ìsẹ́jú Ààyá",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"yo-BJ",parentLocale:"yo",fields:{year:{displayName:"Ɔdún",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Osù",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Ɔjɔ́",relative:{0:"Òní",1:"Ɔ̀la",2:"òtúùnla","-2":"íjɛta","-1":"Àná"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"wákàtí",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Ìsɛ́jú",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Ìsɛ́jú Ààyá",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"yue",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"年",relative:{0:"今年",1:"下年","-1":"舊年"},relativeTime:{future:{other:"{0} 年後"},past:{other:"{0} 年前"}}},month:{displayName:"月",relative:{0:"今個月",1:"下個月","-1":"上個月"},relativeTime:{future:{other:"{0} 個月後"},past:{other:"{0} 個月前"}}},day:{displayName:"日",relative:{0:"今日",1:"聽日",2:"後天","-2":"前天","-1":"尋日"},relativeTime:{future:{other:"{0} 日後"},past:{other:"{0} 日前"}}},hour:{displayName:"小時",relative:{0:"呢個小時"},relativeTime:{future:{other:"{0} 小時後"},past:{other:"{0} 小時前"}}},minute:{displayName:"分鐘",relative:{0:"呢分鐘"},relativeTime:{future:{other:"{0} 分鐘後"},past:{other:"{0} 分鐘前"}}},second:{displayName:"秒",relative:{0:"宜家"},relativeTime:{future:{other:"{0} 秒後"},past:{other:"{0} 秒前"}}}}},{locale:"yue-Hans",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"Year",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"Month",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"Day",relative:{0:"today",1:"tomorrow","-1":"yesterday"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"Hour",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"Minute",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"Second",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"zgh",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"ⴰⵙⴳⴳⵯⴰⵙ",relative:{0:"this year",1:"next year","-1":"last year"},relativeTime:{future:{other:"+{0} y"},past:{other:"-{0} y"}}},month:{displayName:"ⴰⵢⵢⵓⵔ",relative:{0:"this month",1:"next month","-1":"last month"},relativeTime:{future:{other:"+{0} m"},past:{other:"-{0} m"}}},day:{displayName:"ⴰⵙⵙ",relative:{0:"ⴰⵙⵙⴰ",1:"ⴰⵙⴽⴽⴰ","-1":"ⵉⴹⵍⵍⵉ"},relativeTime:{future:{other:"+{0} d"},past:{other:"-{0} d"}}},hour:{displayName:"ⵜⴰⵙⵔⴰⴳⵜ",relative:{0:"this hour"},relativeTime:{future:{other:"+{0} h"},past:{other:"-{0} h"}}},minute:{displayName:"ⵜⵓⵙⴷⵉⴷⵜ",relative:{0:"this minute"},relativeTime:{future:{other:"+{0} min"},past:{other:"-{0} min"}}},second:{displayName:"ⵜⴰⵙⵉⵏⵜ",relative:{0:"now"},relativeTime:{future:{other:"+{0} s"},past:{other:"-{0} s"}}}}},{locale:"zh",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"年",relative:{0:"今年",1:"明年","-1":"去年"},relativeTime:{future:{other:"{0}年后"},past:{other:"{0}年前"}}},month:{displayName:"月",relative:{0:"本月",1:"下个月","-1":"上个月"},relativeTime:{future:{other:"{0}个月后"},past:{other:"{0}个月前"}}},day:{displayName:"日",relative:{0:"今天",1:"明天",2:"后天","-2":"前天","-1":"昨天"},relativeTime:{future:{other:"{0}天后"},past:{other:"{0}天前"}}},hour:{displayName:"小时",relative:{0:"这一时间 / 此时"},relativeTime:{future:{other:"{0}小时后"},past:{other:"{0}小时前"}}},minute:{displayName:"分钟",relative:{0:"此刻"},relativeTime:{future:{other:"{0}分钟后"},past:{other:"{0}分钟前"}}},second:{displayName:"秒",relative:{0:"现在"},relativeTime:{future:{other:"{0}秒钟后"},past:{other:"{0}秒钟前"}}}}},{locale:"zh-Hans",parentLocale:"zh"},{locale:"zh-Hans-HK",parentLocale:"zh-Hans",fields:{year:{displayName:"年",relative:{0:"今年",1:"明年","-1":"去年"},relativeTime:{future:{other:"{0}年后"},past:{other:"{0}年前"}}},month:{displayName:"月",relative:{0:"本月",1:"下个月","-1":"上个月"},relativeTime:{future:{other:"{0}个月后"},past:{other:"{0}个月前"}}},day:{displayName:"日",relative:{0:"今天",1:"明天",2:"后天","-2":"前天","-1":"昨天"},relativeTime:{future:{other:"{0}天后"},past:{other:"{0}天前"}}},hour:{displayName:"小时",relative:{0:"这一时间 / 此时"},relativeTime:{future:{other:"{0}小时后"},past:{other:"{0}小时前"}}},minute:{displayName:"分钟",relative:{0:"此刻"},relativeTime:{future:{other:"{0}分钟后"},past:{other:"{0}分钟前"}}},second:{displayName:"秒",relative:{0:"现在"},relativeTime:{future:{other:"{0}秒后"},past:{other:"{0}秒前"}}}}},{locale:"zh-Hans-MO",parentLocale:"zh-Hans",fields:{year:{displayName:"年",relative:{0:"今年",1:"明年","-1":"去年"},relativeTime:{future:{other:"{0}年后"},past:{other:"{0}年前"}}},month:{displayName:"月",relative:{0:"本月",1:"下个月","-1":"上个月"},relativeTime:{future:{other:"{0}个月后"},past:{other:"{0}个月前"}}},day:{displayName:"日",relative:{0:"今天",1:"明天",2:"后天","-2":"前天","-1":"昨天"},relativeTime:{future:{other:"{0}天后"},past:{other:"{0}天前"}}},hour:{displayName:"小时",relative:{0:"这一时间 / 此时"},relativeTime:{future:{other:"{0}小时后"},past:{other:"{0}小时前"}}},minute:{displayName:"分钟",relative:{0:"此刻"},relativeTime:{future:{other:"{0}分钟后"},past:{other:"{0}分钟前"}}},second:{displayName:"秒",relative:{0:"现在"},relativeTime:{future:{other:"{0}秒后"},past:{other:"{0}秒前"}}}}},{locale:"zh-Hans-SG",parentLocale:"zh-Hans",fields:{year:{displayName:"年",relative:{0:"今年",1:"明年","-1":"去年"},relativeTime:{future:{other:"{0}年后"},past:{other:"{0}年前"}}},month:{displayName:"月",relative:{0:"本月",1:"下个月","-1":"上个月"},relativeTime:{future:{other:"{0}个月后"},past:{other:"{0}个月前"}}},day:{displayName:"日",relative:{0:"今天",1:"明天",2:"后天","-2":"前天","-1":"昨天"},relativeTime:{future:{other:"{0}天后"},past:{other:"{0}天前"}}},hour:{displayName:"小时",relative:{0:"这一时间 / 此时"},relativeTime:{future:{other:"{0}小时后"},past:{other:"{0}小时前"}}},minute:{displayName:"分钟",relative:{0:"此刻"},relativeTime:{future:{other:"{0}分钟后"},past:{other:"{0}分钟前"}}},second:{displayName:"秒",relative:{0:"现在"},relativeTime:{future:{other:"{0}秒后"},past:{other:"{0}秒前"}}}}},{locale:"zh-Hant",pluralRuleFunction:function(e,t){return "other"},fields:{year:{displayName:"年",relative:{0:"今年",1:"明年","-1":"去年"},relativeTime:{future:{other:"{0} 年後"},past:{other:"{0} 年前"}}},month:{displayName:"月",relative:{0:"本月",1:"下個月","-1":"上個月"},relativeTime:{future:{other:"{0} 個月後"},past:{other:"{0} 個月前"}}},day:{displayName:"日",relative:{0:"今天",1:"明天",2:"後天","-2":"前天","-1":"昨天"},relativeTime:{future:{other:"{0} 天後"},past:{other:"{0} 天前"}}},hour:{displayName:"小時",relative:{0:"這一小時"},relativeTime:{future:{other:"{0} 小時後"},past:{other:"{0} 小時前"}}},minute:{displayName:"分鐘",relative:{0:"這一分鐘"},relativeTime:{future:{other:"{0} 分鐘後"},past:{other:"{0} 分鐘前"}}},second:{displayName:"秒",relative:{0:"現在"},relativeTime:{future:{other:"{0} 秒後"},past:{other:"{0} 秒前"}}}}},{locale:"zh-Hant-HK",parentLocale:"zh-Hant",fields:{year:{displayName:"年",relative:{0:"今年",1:"下年","-1":"上年"},relativeTime:{future:{other:"{0} 年後"},past:{other:"{0} 年前"}}},month:{displayName:"月",relative:{0:"本月",1:"下個月","-1":"上個月"},relativeTime:{future:{other:"{0} 個月後"},past:{other:"{0} 個月前"}}},day:{displayName:"日",relative:{0:"今日",1:"明日",2:"後日","-2":"前日","-1":"昨日"},relativeTime:{future:{other:"{0} 日後"},past:{other:"{0} 日前"}}},hour:{displayName:"小時",relative:{0:"這個小時"},relativeTime:{future:{other:"{0} 小時後"},past:{other:"{0} 小時前"}}},minute:{displayName:"分鐘",relative:{0:"這分鐘"},relativeTime:{future:{other:"{0} 分鐘後"},past:{other:"{0} 分鐘前"}}},second:{displayName:"秒",relative:{0:"現在"},relativeTime:{future:{other:"{0} 秒後"},past:{other:"{0} 秒前"}}}}},{locale:"zh-Hant-MO",parentLocale:"zh-Hant-HK"},{locale:"zu",pluralRuleFunction:function(e,t){return t?"other":e>=0&&e<=1?"one":"other"},fields:{year:{displayName:"Unyaka",relative:{0:"kulo nyaka",1:"unyaka ozayo","-1":"onyakeni odlule"},relativeTime:{future:{one:"onyakeni ongu-{0} ozayo",other:"eminyakeni engu-{0} ezayo"},past:{one:"{0} unyaka odlule",other:"{0} iminyaka edlule"}}},month:{displayName:"Inyanga",relative:{0:"le nyanga",1:"inyanga ezayo","-1":"inyanga edlule"},relativeTime:{future:{one:"enyangeni engu-{0}",other:"ezinyangeni ezingu-{0} ezizayo"},past:{one:"{0} inyanga edlule",other:"{0} izinyanga ezedlule"}}},day:{displayName:"Usuku",relative:{0:"namhlanje",1:"kusasa",2:"usuku olulandela olwakusasa","-2":"usuku olwandulela olwayizolo","-1":"izolo"},relativeTime:{future:{one:"osukwini olungu-{0} oluzayo",other:"ezinsukwini ezingu-{0} ezizayo"},past:{one:"osukwini olungu-{0} olwedlule",other:"ezinsukwini ezingu-{0} ezedlule."}}},hour:{displayName:"Ihora",relative:{0:"leli hora"},relativeTime:{future:{one:"ehoreni elingu-{0} elizayo",other:"emahoreni angu-{0} ezayo"},past:{one:"{0} ihora eledlule",other:"emahoreni angu-{0} edlule"}}},minute:{displayName:"Iminithi",relative:{0:"leli minithi"},relativeTime:{future:{one:"kuminithi elingu-{0} elizayo",other:"kumaminithi angu-{0} ezayo"},past:{one:"{0} iminithi eledlule",other:"{0} amaminithi edlule"}}},second:{displayName:"Isekhondi",relative:{0:"manje"},relativeTime:{future:{one:"kusekhondi elingu-{0} elizayo",other:"kumasekhondi angu-{0} ezayo"},past:{one:"{0} isekhondi eledlule",other:"{0} amasekhondi edlule"}}}}}]});
@@ -44899,9 +42999,79 @@ var mapStateToProps$2 = function mapStateToProps(_ref) {
 	};
 };
 
-var PublicChannelPanel = connect(mapStateToProps$2, _extends$4({}, contextActions, streamActions, {
+var PublicChannelPanel = connect(mapStateToProps$2, _extends$4({}, contextActions, actions, {
 	goToInvitePage: goToInvitePage
 }))(SimplePublicChannelPanel);
+
+/* eslint-disable no-unused-vars */
+var tooltipOptions = function tooltipOptions(_ref) {
+	var children = _ref.children,
+	    options = objectWithoutProperties(_ref, ["children"]);
+	return options;
+};
+/* eslint-enable no-unused-vars */
+
+var Tooltip = function (_React$Component) {
+	inherits(Tooltip, _React$Component);
+
+	function Tooltip() {
+		classCallCheck(this, Tooltip);
+		return possibleConstructorReturn(this, (Tooltip.__proto__ || Object.getPrototypeOf(Tooltip)).apply(this, arguments));
+	}
+
+	createClass(Tooltip, [{
+		key: "componentDidMount",
+		value: function componentDidMount() {
+			this.configure(this.props);
+		}
+	}, {
+		key: "componentDidUpdate",
+		value: function componentDidUpdate(previousProps) {
+			var currentOptions = tooltipOptions(this.props);
+			if (!underscore.isEqual(tooltipOptions(previousProps), currentOptions)) {
+				this.tearDown();
+				this.configure(currentOptions);
+			}
+		}
+	}, {
+		key: "componentWillUnmount",
+		value: function componentWillUnmount() {
+			this.tearDown();
+		}
+	}, {
+		key: "configure",
+		value: function configure(props) {
+			/* eslint-disable no-unused-vars */
+			var children = props.children,
+			    target = props.target,
+			    options = objectWithoutProperties(props, ["children", "target"]);
+			/* eslint-enable no-unused-vars */
+
+			if (global.atom) this.disposable = atom.tooltips.add(target || this.target, options);
+		}
+	}, {
+		key: "tearDown",
+		value: function tearDown() {
+			this.disposable && this.disposable.dispose();
+		}
+	}, {
+		key: "render",
+		value: function render() {
+			var _this2 = this;
+
+			try {
+				var child = react.Children.only(this.props.children);
+				return react.cloneElement(child, { ref: function ref(element) {
+						return _this2.target = element;
+					} });
+			} catch (e) {
+				/* nothing to render */
+				return false;
+			}
+		}
+	}]);
+	return Tooltip;
+}(react.Component);
 
 function memoize(fn) {
   var cache = {};
@@ -51187,6 +49357,1836 @@ var CreateDMPanel = connect(mapStateToProps$4, _extends$4({}, contextActions, {
 	setCurrentStream: setCurrentStream
 }))(SimpleCreateDMPanel);
 
+var findHost = function findHost() {
+	try {
+		return acquireVsCodeApi();
+	} catch (e) {
+		/* probably not in vscode */
+		return window.parent;
+	}
+};
+
+var EventEmitter = function () {
+	function EventEmitter() {
+		var _this = this;
+
+		classCallCheck(this, EventEmitter);
+		Object.defineProperty(this, "listenersByEvent", {
+			enumerable: true,
+			writable: true,
+			value: new Map()
+		});
+		Object.defineProperty(this, "handler", {
+			enumerable: true,
+			writable: true,
+			value: function value(_ref) {
+				var data = _ref.data;
+
+				if (data.type.startsWith("codestream")) {
+					var event = data.type.replace("codestream:", "");
+					var listeners = _this.listenersByEvent.get(event) || [];
+					listeners.forEach(function (l) {
+						return l(data.body);
+					});
+				}
+			}
+		});
+
+		this.host = findHost();
+		window.addEventListener("message", this.handler, false);
+	}
+
+	createClass(EventEmitter, [{
+		key: "getHost",
+		value: function getHost() {
+			return this.host;
+		}
+	}, {
+		key: "on",
+		value: function on(thing, listener) {
+			return this.subscribe(thing, listener);
+		}
+	}, {
+		key: "subscribe",
+		value: function subscribe(thing, listener) {
+			var _this2 = this;
+
+			var listeners = this.listenersByEvent.get(thing) || [];
+			listeners.push(listener);
+			this.listenersByEvent.set(thing, listeners);
+			return {
+				dispose: function dispose() {
+					var listeners = _this2.listenersByEvent.get(thing).filter(function (l) {
+						return l !== listener;
+					});
+					_this2.listenersByEvent.set(thing, listeners);
+				}
+			};
+		}
+	}, {
+		key: "emit",
+		value: function emit(event, body) {
+			this.host.postMessage({
+				type: "codestream:" + event,
+				body: body
+			}, "*");
+		}
+	}, {
+		key: "onFileChanged",
+		value: function onFileChanged(block, listener) {
+			var _this3 = this;
+
+			this.emit("subscription:file-changed", block);
+			var disposable = this.on("publish:file-changed", listener);
+			return {
+				dispose: function dispose() {
+					disposable.dispose();
+					_this3.emit('unsubscribe:file-changed', block);
+				}
+			};
+		}
+	}]);
+	return EventEmitter;
+}();
+
+var emitter = new EventEmitter();
+
+var reactContenteditable = createCommonjsModule(function (module, exports) {
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+
+
+var _react2 = _interopRequireDefault(react);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var stripNbsp = function stripNbsp(str) {
+  return str.replace(/&nbsp;|\u202F|\u00A0/g, ' ');
+};
+
+var ContentEditable = function (_React$Component) {
+  _inherits(ContentEditable, _React$Component);
+
+  function ContentEditable() {
+    _classCallCheck(this, ContentEditable);
+
+    var _this = _possibleConstructorReturn(this, (ContentEditable.__proto__ || Object.getPrototypeOf(ContentEditable)).call(this));
+
+    _this.emitChange = _this.emitChange.bind(_this);
+    return _this;
+  }
+
+  _createClass(ContentEditable, [{
+    key: 'render',
+    value: function render() {
+      var _this2 = this;
+
+      var _props = this.props,
+          tagName = _props.tagName,
+          html = _props.html,
+          props = _objectWithoutProperties(_props, ['tagName', 'html']);
+
+      return _react2.default.createElement(tagName || 'div', _extends({}, props, {
+        ref: function ref(e) {
+          return _this2.htmlEl = e;
+        },
+        onInput: this.emitChange,
+        onBlur: this.props.onBlur || this.emitChange,
+        contentEditable: !this.props.disabled,
+        dangerouslySetInnerHTML: { __html: html }
+      }), this.props.children);
+    }
+  }, {
+    key: 'shouldComponentUpdate',
+    value: function shouldComponentUpdate(nextProps) {
+      var props = this.props,
+          htmlEl = this.htmlEl;
+
+      // We need not rerender if the change of props simply reflects the user's edits.
+      // Rerendering in this case would make the cursor/caret jump
+
+      // Rerender if there is no element yet... (somehow?)
+
+      if (!htmlEl) {
+        return true;
+      }
+
+      // ...or if html really changed... (programmatically, not by user edit)
+      if (stripNbsp(nextProps.html) !== stripNbsp(htmlEl.innerHTML) && nextProps.html !== props.html) {
+        return true;
+      }
+
+      var optional = ['style', 'className', 'disabled', 'tagName'];
+
+      // Handle additional properties
+      return optional.some(function (name) {
+        return props[name] !== nextProps[name];
+      });
+    }
+  }, {
+    key: 'componentDidUpdate',
+    value: function componentDidUpdate() {
+      if (this.htmlEl && this.props.html !== this.htmlEl.innerHTML) {
+        // Perhaps React (whose VDOM gets outdated because we often prevent
+        // rerendering) did not update the DOM. So we update it manually now.
+        this.htmlEl.innerHTML = this.props.html;
+      }
+    }
+  }, {
+    key: 'emitChange',
+    value: function emitChange(evt) {
+      if (!this.htmlEl) return;
+      var html = this.htmlEl.innerHTML;
+      if (this.props.onChange && html !== this.lastHtml) {
+        // Clone event with Object.assign to avoid 
+        // "Cannot assign to read only property 'target' of object"
+        var evt = Object.assign({}, evt, {
+          target: {
+            value: html
+          }
+        });
+        this.props.onChange(evt);
+      }
+      this.lastHtml = html;
+    }
+  }]);
+
+  return ContentEditable;
+}(_react2.default.Component);
+
+exports.default = ContentEditable;
+module.exports = exports['default'];
+});
+
+var ContentEditable = unwrapExports(reactContenteditable);
+
+var crypt = createCommonjsModule(function (module) {
+(function() {
+  var base64map
+      = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/',
+
+  crypt = {
+    // Bit-wise rotation left
+    rotl: function(n, b) {
+      return (n << b) | (n >>> (32 - b));
+    },
+
+    // Bit-wise rotation right
+    rotr: function(n, b) {
+      return (n << (32 - b)) | (n >>> b);
+    },
+
+    // Swap big-endian to little-endian and vice versa
+    endian: function(n) {
+      // If number given, swap endian
+      if (n.constructor == Number) {
+        return crypt.rotl(n, 8) & 0x00FF00FF | crypt.rotl(n, 24) & 0xFF00FF00;
+      }
+
+      // Else, assume array and swap all items
+      for (var i = 0; i < n.length; i++)
+        n[i] = crypt.endian(n[i]);
+      return n;
+    },
+
+    // Generate an array of any length of random bytes
+    randomBytes: function(n) {
+      for (var bytes = []; n > 0; n--)
+        bytes.push(Math.floor(Math.random() * 256));
+      return bytes;
+    },
+
+    // Convert a byte array to big-endian 32-bit words
+    bytesToWords: function(bytes) {
+      for (var words = [], i = 0, b = 0; i < bytes.length; i++, b += 8)
+        words[b >>> 5] |= bytes[i] << (24 - b % 32);
+      return words;
+    },
+
+    // Convert big-endian 32-bit words to a byte array
+    wordsToBytes: function(words) {
+      for (var bytes = [], b = 0; b < words.length * 32; b += 8)
+        bytes.push((words[b >>> 5] >>> (24 - b % 32)) & 0xFF);
+      return bytes;
+    },
+
+    // Convert a byte array to a hex string
+    bytesToHex: function(bytes) {
+      for (var hex = [], i = 0; i < bytes.length; i++) {
+        hex.push((bytes[i] >>> 4).toString(16));
+        hex.push((bytes[i] & 0xF).toString(16));
+      }
+      return hex.join('');
+    },
+
+    // Convert a hex string to a byte array
+    hexToBytes: function(hex) {
+      for (var bytes = [], c = 0; c < hex.length; c += 2)
+        bytes.push(parseInt(hex.substr(c, 2), 16));
+      return bytes;
+    },
+
+    // Convert a byte array to a base-64 string
+    bytesToBase64: function(bytes) {
+      for (var base64 = [], i = 0; i < bytes.length; i += 3) {
+        var triplet = (bytes[i] << 16) | (bytes[i + 1] << 8) | bytes[i + 2];
+        for (var j = 0; j < 4; j++)
+          if (i * 8 + j * 6 <= bytes.length * 8)
+            base64.push(base64map.charAt((triplet >>> 6 * (3 - j)) & 0x3F));
+          else
+            base64.push('=');
+      }
+      return base64.join('');
+    },
+
+    // Convert a base-64 string to a byte array
+    base64ToBytes: function(base64) {
+      // Remove non-base-64 characters
+      base64 = base64.replace(/[^A-Z0-9+\/]/ig, '');
+
+      for (var bytes = [], i = 0, imod4 = 0; i < base64.length;
+          imod4 = ++i % 4) {
+        if (imod4 == 0) continue;
+        bytes.push(((base64map.indexOf(base64.charAt(i - 1))
+            & (Math.pow(2, -2 * imod4 + 8) - 1)) << (imod4 * 2))
+            | (base64map.indexOf(base64.charAt(i)) >>> (6 - imod4 * 2)));
+      }
+      return bytes;
+    }
+  };
+
+  module.exports = crypt;
+})();
+});
+
+var charenc = {
+  // UTF-8 encoding
+  utf8: {
+    // Convert a string to a byte array
+    stringToBytes: function(str) {
+      return charenc.bin.stringToBytes(unescape(encodeURIComponent(str)));
+    },
+
+    // Convert a byte array to a string
+    bytesToString: function(bytes) {
+      return decodeURIComponent(escape(charenc.bin.bytesToString(bytes)));
+    }
+  },
+
+  // Binary encoding
+  bin: {
+    // Convert a string to a byte array
+    stringToBytes: function(str) {
+      for (var bytes = [], i = 0; i < str.length; i++)
+        bytes.push(str.charCodeAt(i) & 0xFF);
+      return bytes;
+    },
+
+    // Convert a byte array to a string
+    bytesToString: function(bytes) {
+      for (var str = [], i = 0; i < bytes.length; i++)
+        str.push(String.fromCharCode(bytes[i]));
+      return str.join('');
+    }
+  }
+};
+
+var charenc_1 = charenc;
+
+/*!
+ * Determine if an object is a Buffer
+ *
+ * @author   Feross Aboukhadijeh <https://feross.org>
+ * @license  MIT
+ */
+
+// The _isBuffer check is for Safari 5-7 support, because it's missing
+// Object.prototype.constructor. Remove this eventually
+var isBuffer_1 = function (obj) {
+  return obj != null && (isBuffer(obj) || isSlowBuffer(obj) || !!obj._isBuffer)
+};
+
+function isBuffer (obj) {
+  return !!obj.constructor && typeof obj.constructor.isBuffer === 'function' && obj.constructor.isBuffer(obj)
+}
+
+// For Node v0.10 support. Remove this eventually.
+function isSlowBuffer (obj) {
+  return typeof obj.readFloatLE === 'function' && typeof obj.slice === 'function' && isBuffer(obj.slice(0, 0))
+}
+
+var md5 = createCommonjsModule(function (module) {
+(function(){
+  var crypt$$1 = crypt,
+      utf8 = charenc_1.utf8,
+      isBuffer = isBuffer_1,
+      bin = charenc_1.bin,
+
+  // The core
+  md5 = function (message, options) {
+    // Convert to byte array
+    if (message.constructor == String)
+      if (options && options.encoding === 'binary')
+        message = bin.stringToBytes(message);
+      else
+        message = utf8.stringToBytes(message);
+    else if (isBuffer(message))
+      message = Array.prototype.slice.call(message, 0);
+    else if (!Array.isArray(message))
+      message = message.toString();
+    // else, assume byte array already
+
+    var m = crypt$$1.bytesToWords(message),
+        l = message.length * 8,
+        a =  1732584193,
+        b = -271733879,
+        c = -1732584194,
+        d =  271733878;
+
+    // Swap endian
+    for (var i = 0; i < m.length; i++) {
+      m[i] = ((m[i] <<  8) | (m[i] >>> 24)) & 0x00FF00FF |
+             ((m[i] << 24) | (m[i] >>>  8)) & 0xFF00FF00;
+    }
+
+    // Padding
+    m[l >>> 5] |= 0x80 << (l % 32);
+    m[(((l + 64) >>> 9) << 4) + 14] = l;
+
+    // Method shortcuts
+    var FF = md5._ff,
+        GG = md5._gg,
+        HH = md5._hh,
+        II = md5._ii;
+
+    for (var i = 0; i < m.length; i += 16) {
+
+      var aa = a,
+          bb = b,
+          cc = c,
+          dd = d;
+
+      a = FF(a, b, c, d, m[i+ 0],  7, -680876936);
+      d = FF(d, a, b, c, m[i+ 1], 12, -389564586);
+      c = FF(c, d, a, b, m[i+ 2], 17,  606105819);
+      b = FF(b, c, d, a, m[i+ 3], 22, -1044525330);
+      a = FF(a, b, c, d, m[i+ 4],  7, -176418897);
+      d = FF(d, a, b, c, m[i+ 5], 12,  1200080426);
+      c = FF(c, d, a, b, m[i+ 6], 17, -1473231341);
+      b = FF(b, c, d, a, m[i+ 7], 22, -45705983);
+      a = FF(a, b, c, d, m[i+ 8],  7,  1770035416);
+      d = FF(d, a, b, c, m[i+ 9], 12, -1958414417);
+      c = FF(c, d, a, b, m[i+10], 17, -42063);
+      b = FF(b, c, d, a, m[i+11], 22, -1990404162);
+      a = FF(a, b, c, d, m[i+12],  7,  1804603682);
+      d = FF(d, a, b, c, m[i+13], 12, -40341101);
+      c = FF(c, d, a, b, m[i+14], 17, -1502002290);
+      b = FF(b, c, d, a, m[i+15], 22,  1236535329);
+
+      a = GG(a, b, c, d, m[i+ 1],  5, -165796510);
+      d = GG(d, a, b, c, m[i+ 6],  9, -1069501632);
+      c = GG(c, d, a, b, m[i+11], 14,  643717713);
+      b = GG(b, c, d, a, m[i+ 0], 20, -373897302);
+      a = GG(a, b, c, d, m[i+ 5],  5, -701558691);
+      d = GG(d, a, b, c, m[i+10],  9,  38016083);
+      c = GG(c, d, a, b, m[i+15], 14, -660478335);
+      b = GG(b, c, d, a, m[i+ 4], 20, -405537848);
+      a = GG(a, b, c, d, m[i+ 9],  5,  568446438);
+      d = GG(d, a, b, c, m[i+14],  9, -1019803690);
+      c = GG(c, d, a, b, m[i+ 3], 14, -187363961);
+      b = GG(b, c, d, a, m[i+ 8], 20,  1163531501);
+      a = GG(a, b, c, d, m[i+13],  5, -1444681467);
+      d = GG(d, a, b, c, m[i+ 2],  9, -51403784);
+      c = GG(c, d, a, b, m[i+ 7], 14,  1735328473);
+      b = GG(b, c, d, a, m[i+12], 20, -1926607734);
+
+      a = HH(a, b, c, d, m[i+ 5],  4, -378558);
+      d = HH(d, a, b, c, m[i+ 8], 11, -2022574463);
+      c = HH(c, d, a, b, m[i+11], 16,  1839030562);
+      b = HH(b, c, d, a, m[i+14], 23, -35309556);
+      a = HH(a, b, c, d, m[i+ 1],  4, -1530992060);
+      d = HH(d, a, b, c, m[i+ 4], 11,  1272893353);
+      c = HH(c, d, a, b, m[i+ 7], 16, -155497632);
+      b = HH(b, c, d, a, m[i+10], 23, -1094730640);
+      a = HH(a, b, c, d, m[i+13],  4,  681279174);
+      d = HH(d, a, b, c, m[i+ 0], 11, -358537222);
+      c = HH(c, d, a, b, m[i+ 3], 16, -722521979);
+      b = HH(b, c, d, a, m[i+ 6], 23,  76029189);
+      a = HH(a, b, c, d, m[i+ 9],  4, -640364487);
+      d = HH(d, a, b, c, m[i+12], 11, -421815835);
+      c = HH(c, d, a, b, m[i+15], 16,  530742520);
+      b = HH(b, c, d, a, m[i+ 2], 23, -995338651);
+
+      a = II(a, b, c, d, m[i+ 0],  6, -198630844);
+      d = II(d, a, b, c, m[i+ 7], 10,  1126891415);
+      c = II(c, d, a, b, m[i+14], 15, -1416354905);
+      b = II(b, c, d, a, m[i+ 5], 21, -57434055);
+      a = II(a, b, c, d, m[i+12],  6,  1700485571);
+      d = II(d, a, b, c, m[i+ 3], 10, -1894986606);
+      c = II(c, d, a, b, m[i+10], 15, -1051523);
+      b = II(b, c, d, a, m[i+ 1], 21, -2054922799);
+      a = II(a, b, c, d, m[i+ 8],  6,  1873313359);
+      d = II(d, a, b, c, m[i+15], 10, -30611744);
+      c = II(c, d, a, b, m[i+ 6], 15, -1560198380);
+      b = II(b, c, d, a, m[i+13], 21,  1309151649);
+      a = II(a, b, c, d, m[i+ 4],  6, -145523070);
+      d = II(d, a, b, c, m[i+11], 10, -1120210379);
+      c = II(c, d, a, b, m[i+ 2], 15,  718787259);
+      b = II(b, c, d, a, m[i+ 9], 21, -343485551);
+
+      a = (a + aa) >>> 0;
+      b = (b + bb) >>> 0;
+      c = (c + cc) >>> 0;
+      d = (d + dd) >>> 0;
+    }
+
+    return crypt$$1.endian([a, b, c, d]);
+  };
+
+  // Auxiliary functions
+  md5._ff  = function (a, b, c, d, x, s, t) {
+    var n = a + (b & c | ~b & d) + (x >>> 0) + t;
+    return ((n << s) | (n >>> (32 - s))) + b;
+  };
+  md5._gg  = function (a, b, c, d, x, s, t) {
+    var n = a + (b & d | c & ~d) + (x >>> 0) + t;
+    return ((n << s) | (n >>> (32 - s))) + b;
+  };
+  md5._hh  = function (a, b, c, d, x, s, t) {
+    var n = a + (b ^ c ^ d) + (x >>> 0) + t;
+    return ((n << s) | (n >>> (32 - s))) + b;
+  };
+  md5._ii  = function (a, b, c, d, x, s, t) {
+    var n = a + (c ^ (b | ~d)) + (x >>> 0) + t;
+    return ((n << s) | (n >>> (32 - s))) + b;
+  };
+
+  // Package private blocksize
+  md5._blocksize = 16;
+  md5._digestsize = 16;
+
+  module.exports = function (message, options) {
+    if (message === undefined || message === null)
+      throw new Error('Illegal argument ' + message);
+
+    var digestbytes = crypt$$1.wordsToBytes(md5(message, options));
+    return options && options.asBytes ? digestbytes :
+        options && options.asString ? bin.bytesToString(digestbytes) :
+        crypt$$1.bytesToHex(digestbytes);
+  };
+
+})();
+});
+
+var strictUriEncode = function (str) {
+	return encodeURIComponent(str).replace(/[!'()*]/g, function (c) {
+		return '%' + c.charCodeAt(0).toString(16).toUpperCase();
+	});
+};
+
+function encoderForArrayFormat(opts) {
+	switch (opts.arrayFormat) {
+		case 'index':
+			return function (key, value, index) {
+				return value === null ? [
+					encode(key, opts),
+					'[',
+					index,
+					']'
+				].join('') : [
+					encode(key, opts),
+					'[',
+					encode(index, opts),
+					']=',
+					encode(value, opts)
+				].join('');
+			};
+
+		case 'bracket':
+			return function (key, value) {
+				return value === null ? encode(key, opts) : [
+					encode(key, opts),
+					'[]=',
+					encode(value, opts)
+				].join('');
+			};
+
+		default:
+			return function (key, value) {
+				return value === null ? encode(key, opts) : [
+					encode(key, opts),
+					'=',
+					encode(value, opts)
+				].join('');
+			};
+	}
+}
+
+function parserForArrayFormat(opts) {
+	var result;
+
+	switch (opts.arrayFormat) {
+		case 'index':
+			return function (key, value, accumulator) {
+				result = /\[(\d*)\]$/.exec(key);
+
+				key = key.replace(/\[\d*\]$/, '');
+
+				if (!result) {
+					accumulator[key] = value;
+					return;
+				}
+
+				if (accumulator[key] === undefined) {
+					accumulator[key] = {};
+				}
+
+				accumulator[key][result[1]] = value;
+			};
+
+		case 'bracket':
+			return function (key, value, accumulator) {
+				result = /(\[\])$/.exec(key);
+				key = key.replace(/\[\]$/, '');
+
+				if (!result) {
+					accumulator[key] = value;
+					return;
+				} else if (accumulator[key] === undefined) {
+					accumulator[key] = [value];
+					return;
+				}
+
+				accumulator[key] = [].concat(accumulator[key], value);
+			};
+
+		default:
+			return function (key, value, accumulator) {
+				if (accumulator[key] === undefined) {
+					accumulator[key] = value;
+					return;
+				}
+
+				accumulator[key] = [].concat(accumulator[key], value);
+			};
+	}
+}
+
+function encode(value, opts) {
+	if (opts.encode) {
+		return opts.strict ? strictUriEncode(value) : encodeURIComponent(value);
+	}
+
+	return value;
+}
+
+function keysSorter(input) {
+	if (Array.isArray(input)) {
+		return input.sort();
+	} else if (typeof input === 'object') {
+		return keysSorter(Object.keys(input)).sort(function (a, b) {
+			return Number(a) - Number(b);
+		}).map(function (key) {
+			return input[key];
+		});
+	}
+
+	return input;
+}
+
+var extract = function (str) {
+	return str.split('?')[1] || '';
+};
+
+var parse = function (str, opts) {
+	opts = objectAssign({arrayFormat: 'none'}, opts);
+
+	var formatter = parserForArrayFormat(opts);
+
+	// Create an object with no prototype
+	// https://github.com/sindresorhus/query-string/issues/47
+	var ret = Object.create(null);
+
+	if (typeof str !== 'string') {
+		return ret;
+	}
+
+	str = str.trim().replace(/^(\?|#|&)/, '');
+
+	if (!str) {
+		return ret;
+	}
+
+	str.split('&').forEach(function (param) {
+		var parts = param.replace(/\+/g, ' ').split('=');
+		// Firefox (pre 40) decodes `%3D` to `=`
+		// https://github.com/sindresorhus/query-string/pull/37
+		var key = parts.shift();
+		var val = parts.length > 0 ? parts.join('=') : undefined;
+
+		// missing `=` should be `null`:
+		// http://w3.org/TR/2012/WD-url-20120524/#collect-url-parameters
+		val = val === undefined ? null : decodeURIComponent(val);
+
+		formatter(decodeURIComponent(key), val, ret);
+	});
+
+	return Object.keys(ret).sort().reduce(function (result, key) {
+		var val = ret[key];
+		if (Boolean(val) && typeof val === 'object' && !Array.isArray(val)) {
+			// Sort object keys, not values
+			result[key] = keysSorter(val);
+		} else {
+			result[key] = val;
+		}
+
+		return result;
+	}, Object.create(null));
+};
+
+var stringify = function (obj, opts) {
+	var defaults = {
+		encode: true,
+		strict: true,
+		arrayFormat: 'none'
+	};
+
+	opts = objectAssign(defaults, opts);
+
+	var formatter = encoderForArrayFormat(opts);
+
+	return obj ? Object.keys(obj).sort().map(function (key) {
+		var val = obj[key];
+
+		if (val === undefined) {
+			return '';
+		}
+
+		if (val === null) {
+			return encode(key, opts);
+		}
+
+		if (Array.isArray(val)) {
+			var result = [];
+
+			val.slice().forEach(function (val2) {
+				if (val2 === undefined) {
+					return;
+				}
+
+				result.push(formatter(key, val2, result.length));
+			});
+
+			return result.join('&');
+		}
+
+		return encode(key, opts) + '=' + encode(val, opts);
+	}).filter(function (x) {
+		return x.length > 0;
+	}).join('&') : '';
+};
+
+var queryString = {
+	extract: extract,
+	parse: parse,
+	stringify: stringify
+};
+
+var isRetina = function() {
+  var mediaQuery;
+  if (typeof window !== "undefined" && window !== null) {
+    mediaQuery = "(-webkit-min-device-pixel-ratio: 1.25), (min--moz-device-pixel-ratio: 1.25), (-o-min-device-pixel-ratio: 5/4), (min-resolution: 1.25dppx)";
+    if (window.devicePixelRatio > 1.25) {
+      return true;
+    }
+    if (window.matchMedia && window.matchMedia(mediaQuery).matches) {
+      return true;
+    }
+  }
+  return false;
+};
+
+var dist = createCommonjsModule(function (module) {
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+
+
+var _react2 = _interopRequireDefault(react);
+
+
+
+var _md2 = _interopRequireDefault(md5);
+
+
+
+var _queryString2 = _interopRequireDefault(queryString);
+
+
+
+var _isRetina2 = _interopRequireDefault(isRetina);
+
+
+
+var _propTypes2 = _interopRequireDefault(propTypes);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Gravatar = function (_React$Component) {
+  _inherits(Gravatar, _React$Component);
+
+  function Gravatar() {
+    _classCallCheck(this, Gravatar);
+
+    return _possibleConstructorReturn(this, (Gravatar.__proto__ || Object.getPrototypeOf(Gravatar)).apply(this, arguments));
+  }
+
+  _createClass(Gravatar, [{
+    key: 'render',
+    value: function render() {
+      var base = this.props.protocol + 'www.gravatar.com/avatar/';
+
+      var query = _queryString2.default.stringify({
+        s: this.props.size,
+        r: this.props.rating,
+        d: this.props.default
+      });
+
+      var retinaQuery = _queryString2.default.stringify({
+        s: this.props.size * 2,
+        r: this.props.rating,
+        d: this.props.default
+      });
+
+      // Gravatar service currently trims and lowercases all registered emails
+      var formattedEmail = ('' + this.props.email).trim().toLowerCase();
+
+      var hash = void 0;
+      if (this.props.md5) {
+        hash = this.props.md5;
+      } else if (typeof this.props.email === 'string') {
+        hash = (0, _md2.default)(formattedEmail, { encoding: "binary" });
+      } else {
+        console.warn('Gravatar image can not be fetched. Either the "email" or "md5" prop must be specified.');
+        return _react2.default.createElement('script', null);
+      }
+
+      var src = '' + base + hash + '?' + query;
+      var retinaSrc = '' + base + hash + '?' + retinaQuery;
+
+      var modernBrowser = true; // server-side, we render for modern browsers
+
+      if (typeof window !== 'undefined') {
+        // this is not NodeJS
+        modernBrowser = 'srcset' in document.createElement('img');
+      }
+
+      var className = 'react-gravatar';
+      if (this.props.className) {
+        className = className + ' ' + this.props.className;
+      }
+
+      // Clone this.props and then delete Component specific props so we can
+      // spread the rest into the img.
+
+      var rest = _objectWithoutProperties(this.props, []);
+
+      delete rest.md5;
+      delete rest.email;
+      delete rest.protocol;
+      delete rest.rating;
+      delete rest.size;
+      delete rest.style;
+      delete rest.className;
+      delete rest.default;
+      if (!modernBrowser && (0, _isRetina2.default)()) {
+        return _react2.default.createElement('img', _extends({
+          alt: 'Gravatar for ' + formattedEmail,
+          style: this.props.style,
+          src: retinaSrc,
+          height: this.props.size,
+          width: this.props.size
+        }, rest, {
+          className: className
+        }));
+      }
+      return _react2.default.createElement('img', _extends({
+        alt: 'Gravatar for ' + formattedEmail,
+        style: this.props.style,
+        src: src,
+        srcSet: retinaSrc + ' 2x',
+        height: this.props.size,
+        width: this.props.size
+      }, rest, {
+        className: className
+      }));
+    }
+  }]);
+
+  return Gravatar;
+}(_react2.default.Component);
+
+Gravatar.displayName = 'Gravatar';
+Gravatar.propTypes = {
+  email: _propTypes2.default.string,
+  md5: _propTypes2.default.string,
+  size: _propTypes2.default.number,
+  rating: _propTypes2.default.string,
+  default: _propTypes2.default.string,
+  className: _propTypes2.default.string,
+  protocol: _propTypes2.default.string,
+  style: _propTypes2.default.object
+};
+Gravatar.defaultProps = {
+  size: 50,
+  rating: 'g',
+  default: 'retro',
+  protocol: '//'
+};
+
+
+module.exports = Gravatar;
+});
+
+var Gravatar = unwrapExports(dist);
+
+var Confirm = function (_Component) {
+	inherits(Confirm, _Component);
+
+	function Confirm(props) {
+		classCallCheck(this, Confirm);
+
+		var _this = possibleConstructorReturn(this, (Confirm.__proto__ || Object.getPrototypeOf(Confirm)).call(this, props));
+
+		Object.defineProperty(_this, "closePopup", {
+			enumerable: true,
+			writable: true,
+			value: function value() {
+				var modalRoot = document.getElementById("confirm-root");
+				modalRoot.classList.remove("active");
+				// modalRoot.removeChild(this.el);
+			}
+		});
+
+		_this.state = { selected: props.selected };
+		_this.el = document.createElement("div");
+		return _this;
+	}
+
+	createClass(Confirm, [{
+		key: "componentDidMount",
+		value: function componentDidMount() {
+			var modalRoot = document.getElementById("confirm-root");
+			modalRoot.appendChild(this.el);
+			modalRoot.classList.add("active");
+		}
+	}, {
+		key: "componentWillUnmount",
+		value: function componentWillUnmount() {
+			this.closePopup();
+		}
+	}, {
+		key: "componentDidUpdate",
+		value: function componentDidUpdate(prevProps, prevState) {
+			if (this.state.closed && !prevState.closed) {
+				this.closeMenu();
+				this.props.action && this.props.action();
+				return null;
+			}
+		}
+	}, {
+		key: "render",
+		value: function render() {
+			var _this2 = this;
+
+			var bodyClass = classnames({
+				"confirm-popup-body": true,
+				centered: this.props.centered
+			});
+			return reactDom.createPortal(react.createElement(
+				"div",
+				{ className: "confirm-popup", ref: function ref(_ref) {
+						return _this2._div = _ref;
+					} },
+				react.createElement(
+					"div",
+					{ className: bodyClass },
+					this.props.title && react.createElement(
+						"div",
+						{ className: "confirm-title" },
+						this.props.title
+					),
+					this.props.message && react.createElement(
+						"div",
+						{ className: "confirm-message" },
+						this.props.message
+					),
+					react.createElement(
+						"div",
+						{ className: "button-group" },
+						this.props.buttons.map(function (button) {
+							var buttonClass = classnames({
+								"control-button": true,
+								cancel: !button.action
+							});
+
+							return react.createElement(
+								Button,
+								{
+									className: buttonClass,
+									onClick: function onClick(e) {
+										_this2.closePopup();
+										button.action && button.action(e);
+									},
+									key: button.label
+								},
+								button.label
+							);
+						})
+					)
+				)
+			), this.el);
+		}
+	}]);
+	return Confirm;
+}(react_1);
+
+
+var confirmPopup = function confirmPopup(properties) {
+	var root = document.getElementById("confirm-root");
+	root.classList.add("active");
+	reactDom.render(react.createElement(Confirm, properties), root);
+};
+
+var Headshot = function (_Component) {
+	inherits(Headshot, _Component);
+
+	function Headshot() {
+		var _ref;
+
+		var _temp, _this, _ret;
+
+		classCallCheck(this, Headshot);
+
+		for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+			args[_key] = arguments[_key];
+		}
+
+		return _ret = (_temp = (_this = possibleConstructorReturn(this, (_ref = Headshot.__proto__ || Object.getPrototypeOf(Headshot)).call.apply(_ref, [this].concat(args))), _this), Object.defineProperty(_this, "state", {
+			enumerable: true,
+			writable: true,
+			value: { img: null }
+		}), Object.defineProperty(_this, "_div", {
+			enumerable: true,
+			writable: true,
+			value: react.createRef()
+		}), Object.defineProperty(_this, "handleEditHeadshot", {
+			enumerable: true,
+			writable: true,
+			value: function value(event) {
+				event.stopPropagation();
+				confirmPopup({
+					title: "Edit Headshot",
+					message: "Until we have built-in CodeStream headshots, you can edit your headshot by setting it up on Gravatar.com for " + _this.props.person.email + ".\n\nNote that it might take a few minutes for your headshot to appear here.\n\n-Team CodeStream",
+					buttons: [{ label: "OK" }]
+				});
+			}
+		}), _temp), possibleConstructorReturn(_this, _ret);
+	}
+
+	createClass(Headshot, [{
+		key: "componentDidMount",
+		value: function componentDidMount() {
+			var img = this._div.current.querySelector("img");
+			if (img) this.setState({ img: img });
+		}
+	}, {
+		key: "render",
+		value: function render() {
+			var person = this.props.person;
+
+			if (!person) return null;
+
+			if (person.username === "CodeStream") return this.renderCodeStream();
+
+			var defaultImage = encodeURI("https://images.codestream.com/misc/nothing_transparent-36x36.gif");
+			var authorInitials = person.email.charAt(0);
+			if (person.fullName) {
+				authorInitials = person.fullName.replace(/(\w)\w*/g, "$1").replace(/\s/g, "");
+				if (authorInitials.length > 2) authorInitials = authorInitials.substring(0, 2);
+			} else if (person.username) {
+				authorInitials = person.username.charAt(0);
+			}
+			var classNameInitials = "headshot-initials color-" + person.color;
+			var onClick = this.props.mine ? this.handleEditHeadshot : null;
+
+			return react.createElement(
+				"div",
+				{ className: "headshot", ref: this._div, onClick: onClick },
+				this.state.img && react.createElement(Tooltip, {
+					title: this.props.mine ? "Click for headshot instructions" : this.props.person.fullName,
+					delay: "0",
+					target: this.state.img
+				}),
+				react.createElement(Gravatar, {
+					className: "headshot-gravatar",
+					size: this.props.size,
+					"default": defaultImage,
+					protocol: "http://",
+					email: person.email
+				}),
+				react.createElement(
+					"div",
+					{ className: classNameInitials },
+					authorInitials
+				)
+			);
+		}
+	}, {
+		key: "renderCodeStream",
+		value: function renderCodeStream() {
+			return react.createElement(
+				"div",
+				{ className: "headshot", ref: this._div },
+				react.createElement("img", {
+					className: "headshot-system",
+					src: "https://images.codestream.com/logos/grey_blue_transparent-400x400.png"
+				})
+			);
+		}
+	}]);
+	return Headshot;
+}(react_1);
+
+// AtMentionsPopup expects an on/off switch determined by the on property
+// on = show the popup, off = hide the popup
+// a people list, which is the possible list of people to at-mention
+// with the format:
+// [id, nickname, full name, email, headshot, presence]
+// and a prefix, which is used to filter/match against the list
+
+var AtMentionsPopup = function (_Component) {
+	inherits(AtMentionsPopup, _Component);
+
+	function AtMentionsPopup() {
+		var _ref,
+		    _this2 = this;
+
+		var _temp, _this, _ret;
+
+		classCallCheck(this, AtMentionsPopup);
+
+		for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+			args[_key] = arguments[_key];
+		}
+
+		return _ret = (_temp = (_this = possibleConstructorReturn(this, (_ref = AtMentionsPopup.__proto__ || Object.getPrototypeOf(AtMentionsPopup)).call.apply(_ref, [this].concat(args))), _this), Object.defineProperty(_this, "handleClick", {
+			enumerable: true,
+			writable: true,
+			value: function () {
+				var _ref2 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(event) {
+					return regeneratorRuntime.wrap(function _callee$(_context) {
+						while (1) {
+							switch (_context.prev = _context.next) {
+								case 0:
+									console.log("CLICK ON MENTION: " + event.target.innerHTML);
+
+								case 1:
+								case "end":
+									return _context.stop();
+							}
+						}
+					}, _callee, _this2);
+				}));
+
+				function value(_x) {
+					return _ref2.apply(this, arguments);
+				}
+
+				return value;
+			}()
+		}), _temp), possibleConstructorReturn(_this, _ret);
+	}
+
+	createClass(AtMentionsPopup, [{
+		key: "render",
+		value: function render() {
+			var _this3 = this;
+
+			if (!this.props.on) return null;
+
+			var items = this.props.items;
+
+			return react.createElement(
+				"div",
+				{ className: "mentions-popup", ref: function ref(_ref3) {
+						return _this3._div = _ref3;
+					} },
+				react.createElement(
+					"div",
+					{ className: "body" },
+					react.createElement(
+						"div",
+						{ className: "instructions", onClick: function onClick(event) {
+								return _this3.handleClickInstructions();
+							} },
+						this.props.on === "slash-commands" ? react.createElement(
+							"span",
+							null,
+							"Commands matching ",
+							react.createElement(
+								"b",
+								null,
+								"\"/",
+								this.props.prefix,
+								"\""
+							)
+						) : react.createElement(
+							"span",
+							null,
+							"People matching ",
+							react.createElement(
+								"b",
+								null,
+								"\"@",
+								this.props.prefix,
+								"\""
+							)
+						)
+					),
+					react.createElement(
+						"ul",
+						{ className: "compact at-mentions-list" },
+						items.map(function (item) {
+							var className = item.id == _this3.props.selected ? "hover" : "none";
+							// the handleClickPerson event needs to fire onMouseDown
+							// rather than onclick because there is a handleblur
+							// event on the parent element that will un-render
+							// this component
+							return react.createElement(
+								"li",
+								{
+									className: className,
+									key: item.id,
+									onMouseEnter: function onMouseEnter(event) {
+										return _this3.handleMouseEnter(item.id);
+									},
+									onMouseDown: function onMouseDown(event) {
+										return _this3.handleClickItem(item.id);
+									}
+								},
+								item.headshot && react.createElement(Headshot, { size: 18, person: item.headshot }),
+								react.createElement(
+									"span",
+									{ className: "username" },
+									item.identifier
+								),
+								" ",
+								item.description && react.createElement(
+									"span",
+									{ className: "name" },
+									item.description
+								),
+								item.help && react.createElement(
+									"span",
+									{ className: "help" },
+									item.help
+								)
+							);
+						})
+					),
+					react.createElement(
+						"table",
+						null,
+						react.createElement(
+							"tbody",
+							null,
+							react.createElement(
+								"tr",
+								null,
+								react.createElement(
+									"td",
+									null,
+									"\u2191 or \u2193 to navigate"
+								),
+								react.createElement(
+									"td",
+									null,
+									"\u21B5 to select"
+								),
+								react.createElement(
+									"td",
+									null,
+									"esc to dismiss"
+								)
+							)
+						)
+					)
+				)
+			);
+		}
+	}, {
+		key: "handleMouseEnter",
+		value: function handleMouseEnter(id) {
+			return this.props.handleHoverAtMention(id);
+		}
+	}, {
+		key: "handleClickItem",
+		value: function handleClickItem(id) {
+			return this.props.handleSelectAtMention(id);
+		}
+	}, {
+		key: "handleClickInstructions",
+		value: function handleClickInstructions() {
+			return this.props.handleSelectAtMention();
+		}
+	}, {
+		key: "selectFirstAtMention",
+		value: function selectFirstAtMention() {
+			// FIXME -- how to build this?
+		}
+	}]);
+	return AtMentionsPopup;
+}(react_1);
+
+var arrayToRange = function arrayToRange(_ref) {
+	var _ref2 = slicedToArray(_ref, 4),
+	    startRow = _ref2[0],
+	    startCol = _ref2[1],
+	    endRow = _ref2[2],
+	    endCol = _ref2[3];
+
+	return {
+		start: {
+			row: startRow,
+			col: startCol
+		},
+		end: {
+			row: endRow,
+			col: endCol
+		}
+	};
+};
+
+var ComposeBox = function (_React$Component) {
+	inherits(ComposeBox, _React$Component);
+
+	function ComposeBox() {
+		var _ref3;
+
+		var _temp, _this, _ret;
+
+		classCallCheck(this, ComposeBox);
+
+		for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+			args[_key] = arguments[_key];
+		}
+
+		return _ret = (_temp = (_this = possibleConstructorReturn(this, (_ref3 = ComposeBox.__proto__ || Object.getPrototypeOf(ComposeBox)).call.apply(_ref3, [this].concat(args))), _this), Object.defineProperty(_this, "state", {
+			enumerable: true,
+			writable: true,
+			value: { newPostText: "", quote: null, autoMentions: [] }
+		}), Object.defineProperty(_this, "disposables", {
+			enumerable: true,
+			writable: true,
+			value: []
+		}), Object.defineProperty(_this, "handleCodeHighlightEvent", {
+			enumerable: true,
+			writable: true,
+			value: function value(_ref4) {
+				var authors = _ref4.authors,
+				    state = objectWithoutProperties(_ref4, ["authors"]);
+
+				// make sure we have a compose box to type into
+				_this.props.ensureStreamIsActive();
+				_this.setState({ quote: state });
+
+				var toAtmention = authors.map(function (email) {
+					return underscore.findWhere(_this.props.teammates, { email: email });
+				}).filter(Boolean);
+				if (toAtmention.length > 0) {
+					// TODO handle users with no username
+					var usernames = toAtmention.map(function (user) {
+						return "@" + user.username;
+					});
+					_this.setState({ autoMentions: usernames });
+					// the reason for this unicode space is that chrome will
+					// not render a space at the end of a contenteditable div
+					// unless it is a &nbsp;, which is difficult to insert
+					// so we insert this unicode character instead
+					var newText = usernames.join(", ") + ":\xA0";
+					_this.insertTextAtCursor(newText);
+				}
+			}
+		}), Object.defineProperty(_this, "focus", {
+			enumerable: true,
+			writable: true,
+			value: function value() {
+				_this._contentEditable.htmlEl.focus();
+			}
+		}), Object.defineProperty(_this, "handleHoverAtMention", {
+			enumerable: true,
+			writable: true,
+			value: function value(id) {
+				var index = _this.state.popupItems.findIndex(function (x) {
+					return x.id == id;
+				});
+
+				_this.setState({
+					popupIndex: index,
+					selectedPopupItem: id
+				});
+			}
+		}), Object.defineProperty(_this, "handleSelectAtMention", {
+			enumerable: true,
+			writable: true,
+			value: function value(id) {
+				// if no id is passed, we assume that we're selecting
+				// the currently-selected at mention
+				if (!id) id = _this.state.selectedPopupItem;
+
+				var toInsert = void 0;
+
+				if (_this.state.popupOpen === "slash-commands") {
+					toInsert = id;
+				} else {
+					var user = _this.props.teammates.find(function (t) {
+						return t.id === id;
+					});
+					if (!user) return;
+					toInsert = user.username;
+				}
+				_this.hidePopup();
+				setTimeout(function () {
+					_this.focus();
+				}, 20);
+				// the reason for this unicode space is that chrome will
+				// not render a space at the end of a contenteditable div
+				// unless it is a &nbsp;, which is difficult to insert
+				// so we insert this unicode character instead
+				_this.insertTextAtCursor(toInsert + "\xA0", _this.state.popupPrefix);
+				// this.setNewPostText(text);
+			}
+		}), Object.defineProperty(_this, "handleChange", {
+			enumerable: true,
+			writable: true,
+			value: function value(event) {
+				var newPostText = event.target.value;
+
+				var selection = window.getSelection();
+				var range = selection.getRangeAt(0);
+				var node = range.commonAncestorContainer;
+				var nodeText = node.textContent || "";
+				var upToCursor = nodeText.substring(0, range.startOffset);
+				var peopleMatch = upToCursor.match(/@([a-zA-Z0-9_.+]*)$/);
+				var slashMatch = newPostText.match(/^\/([a-zA-Z0-9+]*)$/);
+				if (_this.state.popupOpen === "at-mentions") {
+					if (peopleMatch) {
+						_this.showPopupSelectors(peopleMatch[0].replace(/@/, ""), "at-mentions");
+					} else {
+						// if the line doesn't end with @word, then hide the popup
+						_this.hidePopup();
+					}
+				} else if (_this.state.popupOpen === "slash-commands") {
+					if (slashMatch) {
+						_this.showPopupSelectors(slashMatch[0].replace(/\//, ""), "slash-commands");
+					} else {
+						// if the line doesn't start with /word, then hide the popup
+						_this.hidePopup();
+					}
+				} else {
+					if (peopleMatch) {
+						_this.showPopupSelectors(peopleMatch[0].replace(/@/, ""), "at-mentions");
+					}
+					if (slashMatch) {
+						_this.showPopupSelectors(slashMatch[0].replace(/\//, ""), "slash-commands");
+					}
+				}
+				// track newPostText as the user types
+				_this.setState({
+					newPostText: newPostText,
+					autoMentions: _this.state.autoMentions.filter(function (mention) {
+						return newPostText.includes(mention);
+					})
+				});
+			}
+		}), Object.defineProperty(_this, "handleBlur", {
+			enumerable: true,
+			writable: true,
+			value: function value(event) {
+				event.preventDefault();
+				_this.hidePopup();
+			}
+		}), Object.defineProperty(_this, "handleKeyPress", {
+			enumerable: true,
+			writable: true,
+			value: function value(event) {
+				var newPostText = _this.state.newPostText;
+
+				// if we have the at-mentions popup open, then the keys
+				// do something different than if we have the focus in
+				// the textarea
+				if (_this.state.popupOpen) {
+					if (event.key == "Escape") {
+						_this.hidePopup();
+					} else if (event.key == "Enter" && !event.shiftKey) {
+						event.preventDefault();
+						_this.selectFirst();
+					}
+				} else if (event.key === "@") {
+					_this.showPopupSelectors("", "at-mentions");
+				} else if (event.key === "/" && newPostText.length === 0) {
+					_this.showPopupSelectors("", "slash-commands");
+				} else if (event.key === "Enter" && !event.shiftKey) {
+					event.preventDefault();
+					if (newPostText.trim().length > 0 && !_this.props.disabled) {
+						// convert the text to plaintext so there is no HTML
+						var text = newPostText.replace(/<br>/g, "\n");
+						var doc = new DOMParser().parseFromString(text, "text/html");
+						text = doc.documentElement.textContent;
+
+						_this.props.onSubmit({
+							text: text,
+							quote: _this.state.quote,
+							mentionedUserIds: _this.props.findMentionedUserIds(text, _this.props.teammates),
+							autoMentions: _this.state.autoMentions
+						});
+						_this.reset();
+					}
+				}
+			}
+		}), Object.defineProperty(_this, "handleClickDismissQuote", {
+			enumerable: true,
+			writable: true,
+			value: function value() {
+				_this.focus();
+				_this.reset();
+			}
+		}), _temp), possibleConstructorReturn(_this, _ret);
+	}
+
+	createClass(ComposeBox, [{
+		key: "componentDidMount",
+		value: function componentDidMount() {
+			var _this2 = this;
+
+			this.disposables.push(emitter.subscribe("interaction:code-highlighted", this.handleCodeHighlightEvent));
+
+			// so that HTML doesn't get pasted into the input field. without this,
+			// HTML would be rendered as HTML when pasted
+			this._contentEditable.htmlEl.addEventListener("paste", function (e) {
+				e.preventDefault();
+				var text = e.clipboardData.getData("text/plain");
+				document.execCommand("insertHTML", false, text.replace(/\n/g, "<br>"));
+			});
+
+			// because atom hijacks most keystroke events
+			if (global.atom) {
+				this.disposables.push(atom.commands.add("atom-workspace", {
+					"codestream:focus-input": function codestreamFocusInput(_event) {
+						return _this2.focus();
+					}
+				}), atom.commands.add(".codestream", "codestream:escape", {
+					didDispatch: function didDispatch(event) {
+						return _this2.handleAtMentionKeyPress(event, "escape");
+					},
+					hiddenInCommandPalette: true
+				}), atom.commands.add(".codestream .compose.popup-open", "codestream:popup-move-up", {
+					didDispatch: function didDispatch(event) {
+						return _this2.handleAtMentionKeyPress(event, "up");
+					},
+					hiddenInCommandPalette: true
+				}), atom.commands.add(".codestream .compose.popup-open", "codestream:popup-move-down", {
+					didDispatch: function didDispatch(event) {
+						return _this2.handleAtMentionKeyPress(event, "down");
+					},
+					hiddenInCommandPalette: true
+				}), atom.commands.add(".codestream .compose.popup-open", "codestream:popup-tab", {
+					didDispatch: function didDispatch(event) {
+						return _this2.handleAtMentionKeyPress(event, "tab");
+					},
+					hiddenInCommandPalette: true
+				}), atom.commands.add(".codestream .native-key-bindings", "codestream:move-up", {
+					didDispatch: function didDispatch(event) {
+						return _this2.handleNonCapturedKeyPress(event, "up");
+					},
+					hiddenInCommandPalette: true
+				}));
+			}
+		}
+	}, {
+		key: "componentWillUnmount",
+		value: function componentWillUnmount() {
+			this.disposables.forEach(function (d) {
+				return d.dispose();
+			});
+		}
+	}, {
+		key: "insertIfEmpty",
+		value: function insertIfEmpty(newText) {
+			// if there's text in the compose area, return without
+			// adding the suggestion
+			if (this.state.newPostText && this.state.newPostText.length > 0) return;
+			// the reason for this unicode space is that chrome will
+			// not render a space at the end of a contenteditable div
+			// unless it is a &nbsp;, which is difficult to insert
+			// so we insert this unicode character instead
+			this.insertTextAtCursor(newText + ":\xA0");
+		}
+	}, {
+		key: "showPopupSelectors",
+
+
+		// set up the parameters to pass to the at mention popup
+		value: function showPopupSelectors(prefix, type) {
+			var itemsToShow = [];
+
+			if (type === "at-mentions") {
+				Object.values(this.props.teammates).forEach(function (person) {
+					var toMatch = person.firstName + " " + person.lastName + "*" + person.username;
+					if (toMatch.toLowerCase().indexOf(prefix) !== -1) {
+						itemsToShow.push({
+							id: person.id,
+							headshot: person,
+							identifier: person.username || person.email,
+							description: person.firstName + " " + person.lastName
+						});
+					}
+				});
+			} else if (type === "slash-commands") {
+				this.props.slashCommands.map(function (command) {
+					var lowered = command.id.toLowerCase();
+					if (lowered.indexOf(prefix) === 0) {
+						command.identifier = command.id;
+						itemsToShow.push(command);
+					}
+				});
+			}
+
+			if (itemsToShow.length == 0) {
+				this.hidePopup();
+			} else {
+				var selected = itemsToShow[0].id;
+
+				this.setState({
+					popupOpen: type,
+					popupPrefix: prefix,
+					popupItems: itemsToShow,
+					popupIndex: 0,
+					selectedPopupItem: selected
+				});
+			}
+		}
+	}, {
+		key: "hidePopup",
+		value: function hidePopup() {
+			this.setState({ popupOpen: false });
+		}
+	}, {
+		key: "selectFirst",
+		value: function selectFirst() {
+			this.handleSelectAtMention();
+		}
+
+		// insert the given text at the cursor of the input field
+		// after first deleting the text in toDelete
+
+	}, {
+		key: "insertTextAtCursor",
+		value: function insertTextAtCursor(text, toDelete) {
+			var sel, range;
+			sel = window.getSelection();
+
+			// if for some crazy reason we can't find a selection, return
+			// to avoid an error.
+			// https://stackoverflow.com/questions/22935320/uncaught-indexsizeerror-failed-to-execute-getrangeat-on-selection-0-is-not
+			if (sel.rangeCount == 0) return;
+
+			range = sel.getRangeAt(0);
+
+			// delete the X characters before the caret
+			range.setStart(range.commonAncestorContainer, range.startOffset - (toDelete || "").length);
+			// range.moveEnd("character", toDelete.length);
+
+			range.deleteContents();
+			var textNode = document.createTextNode(text);
+			range.insertNode(textNode);
+			range.setStartAfter(textNode);
+			sel.removeAllRanges();
+			sel.addRange(range);
+			this._contentEditable.htmlEl.normalize();
+
+			this.setState({ newPostText: this._contentEditable.htmlEl.innerHTML });
+		}
+
+		// the keypress handler for tracking up and down arrow
+		// and enter, while the at mention popup is open
+
+	}, {
+		key: "handleAtMentionKeyPress",
+		value: function handleAtMentionKeyPress(event, eventType) {
+			if (eventType == "escape") {
+				if (this.state.popupOpen) this.hidePopup();
+				// else this.handleDismissThread();
+			} else {
+				var newIndex = 0;
+				if (eventType == "down") {
+					if (this.state.popupIndex < this.state.popupItems.length - 1) {
+						newIndex = this.state.popupIndex + 1;
+					} else {
+						newIndex = 0;
+					}
+				} else if (eventType == "up") {
+					if (this.state.popupIndex == 0) {
+						newIndex = this.state.popupItems.length - 1;
+					} else {
+						newIndex = this.state.popupIndex - 1;
+					}
+				} else if (eventType == "tab") {
+					this.selectFirst();
+				}
+				this.setState({
+					popupIndex: newIndex,
+					selectedPopupItem: this.state.popupItems[newIndex].id
+				});
+			}
+		}
+
+		// for keypresses that we can't capture with standard
+		// javascript events
+
+	}, {
+		key: "handleNonCapturedKeyPress",
+		value: function handleNonCapturedKeyPress(event, eventType) {
+			if (eventType == "up") {
+				if (this.state.newPostText === "") {
+					this.props.onEmptyUpArrow(event);
+				}
+			}
+			event.abortKeyBinding();
+		}
+
+		// when the user hovers over an at-mention list item, change the
+		// state to represent a hovered state
+
+
+		// depending on the contents of the input field, if the user
+		// types a "@" then open the at-mention popup
+
+
+		// when the input field loses focus, one thing we want to do is
+		// to hide the at-mention popup
+
+	}, {
+		key: "reset",
+		value: function reset() {
+			this.setState({ newPostText: "", quote: null, autoMentions: [] });
+		}
+	}, {
+		key: "render",
+		value: function render() {
+			var _this3 = this;
+
+			var _props = this.props,
+			    forwardedRef = _props.forwardedRef,
+			    placeholder = _props.placeholder;
+			var quote = this.state.quote;
+
+
+			var quoteInfo = void 0;
+			var quoteHint = void 0;
+			if (quote) {
+				quoteInfo = quote ? react.createElement(
+					"div",
+					{ className: "code" },
+					quote.quoteText
+				) : "";
+				var range = arrayToRange(quote.quoteRange);
+				var rangeText = null;
+				if (range) {
+					if (range.start.row === range.end.row) {
+						rangeText = "Commenting on line " + (range.start.row + 1);
+					} else {
+						rangeText = "Commenting on lines " + (range.start.row + 1) + "-" + (range.end.row + 1);
+					}
+				}
+				quoteHint = react.createElement(
+					"div",
+					{ className: "hint" },
+					rangeText,
+					react.createElement(Icon, { name: "x", onClick: this.handleClickDismissQuote })
+				);
+			}
+
+			return react.createElement(
+				"div",
+				{
+					ref: forwardedRef,
+					onKeyPress: this.handleKeyPress,
+					onKeyDown: this.handleKeyDown,
+					className: classnames("compose", {
+						offscreen: this.props.offscreen,
+						"popup-open": this.state.popupOpen
+					})
+				},
+				react.createElement(AtMentionsPopup, {
+					on: this.state.popupOpen,
+					items: this.state.popupItems,
+					prefix: this.state.popupPrefix,
+					selected: this.state.selectedPopupItem,
+					handleHoverAtMention: this.handleHoverAtMention,
+					handleSelectAtMention: this.handleSelectAtMention
+				}),
+				quoteInfo,
+				quoteHint,
+				react.createElement(ContentEditable, {
+					className: classnames("native-key-bindings", btoa(placeholder)),
+					id: "input-div",
+					rows: "1",
+					tabIndex: "-1",
+					onChange: this.handleChange,
+					onBlur: this.handleBlur,
+					html: this.state.newPostText,
+					placeholder: placeholder,
+					ref: function ref(_ref5) {
+						return _this3._contentEditable = _ref5;
+					}
+				})
+			);
+		}
+	}]);
+	return ComposeBox;
+}(react.Component);
+
+var ComposeBox$1 = react.forwardRef(function (props, ref) {
+	return react.createElement(ComposeBox, _extends$4({}, props, { forwardedRef: ref }));
+});
+
 // var Moment_Timezone = require("moment-timezone");
 
 var DateSeparator = function (_Component) {
@@ -54380,273 +54380,7 @@ var Stream = function (_React$Component) {
 			args[_key] = arguments[_key];
 		}
 
-		return _ret = (_temp = (_this = possibleConstructorReturn(this, (_ref = Stream.__proto__ || Object.getPrototypeOf(Stream)).call.apply(_ref, [this].concat(args))), _this), Object.defineProperty(_this, "state", {
-			enumerable: true,
-			writable: true,
-			value: {
-				editingPostId: null,
-				menuTarget: null, // can probably replace this with a ref on <Icon/>
-				openMenu: null,
-				threadId: null
-			}
-		}), Object.defineProperty(_this, "disposables", {
-			enumerable: true,
-			writable: true,
-			value: []
-		}), Object.defineProperty(_this, "gearIcon", {
-			enumerable: true,
-			writable: true,
-			value: react.createRef()
-		}), Object.defineProperty(_this, "findPostById", {
-			enumerable: true,
-			writable: true,
-			value: function value(id) {
-				return _this.props.posts.find(function (post) {
-					return post.id === id;
-				});
-			}
-		}), Object.defineProperty(_this, "handleClickStreamSettings", {
-			enumerable: true,
-			writable: true,
-			value: function value(event) {
-				_this.setState({ openMenu: true, menuTarget: event.target });
-				event.stopPropagation();
-				return true;
-			}
-		}), Object.defineProperty(_this, "closeMenu", {
-			enumerable: true,
-			writable: true,
-			value: function value() {
-				_this.setState({ openMenu: false });
-			}
-		}), Object.defineProperty(_this, "handleClickPost", {
-			enumerable: true,
-			writable: true,
-			value: function value(event) {
-				var postDiv = event.target.closest(".post");
-				if (!postDiv) return;
-
-				// if they clicked a link, follow the link rather than selecting the post
-				if (event && event.target && event.target.tagName === "A") return false;
-
-				// console.log(event.target.id);
-				if (event.target.id === "discard-button") {
-					// if the user clicked on the cancel changes button,
-					// presumably because she is editing a post, abort
-					_this.setState({ editingPostId: null });
-					return;
-				} else if (event.target.id === "save-button") {
-					// if the user clicked on the save changes button,
-					// save the new post text
-					var newText = document.getElementById("input-div-" + postDiv.id).innerHTML.replace(/<br>/g, "\n");
-
-					_this.replacePostText(postDiv.id, newText);
-					_this.setState({ editingPostId: null });
-					return;
-				} else if (postDiv.classList.contains("editing")) {
-					// otherwise, if we aren't currently editing the
-					// post, go to the thread for that post, but if
-					// we are editing, then do nothing.
-					return;
-				} else if (postDiv.classList.contains("system-post")) {
-					// otherwise, if we aren't currently editing the
-					// post, go to the thread for that post, but if
-					// we are editing, then do nothing.
-					return;
-				} else if (window.getSelection().toString().length > 0) {
-					// in this case the user has selected a string
-					// by dragging
-					return;
-				}
-				_this.selectPost(postDiv.id, true);
-			}
-		}), Object.defineProperty(_this, "focusInput", {
-			enumerable: true,
-			writable: true,
-			value: function value() {
-				var input = document.getElementById("input-div");
-				if (input) input.focus();
-			}
-		}), Object.defineProperty(_this, "selectPost", {
-			enumerable: true,
-			writable: true,
-			value: function value(id) {
-				var wasClicked = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-
-				emitter.emit("analytics", {
-					label: "Page Viewed",
-					payload: { "Page Name": "Thread View" }
-				});
-				var post = _this.props.posts.find(function (post) {
-					return id === post.id;
-				});
-				if (!post) return;
-
-				// if it is a child in the thread, it'll have a parentPostId,
-				// otherwise use the id. any post can become the head of a thread
-				var threadId = post.parentPostId || post.id;
-				_this.setState({ threadId: threadId });
-
-				_this.focusInput();
-				if (wasClicked) {
-					emitter.emit("interaction:thread-selected", {
-						threadId: threadId,
-						streamId: _this.props.stream.id,
-						post: post
-					});
-				}
-			}
-		}), Object.defineProperty(_this, "handleClickHelpLink", {
-			enumerable: true,
-			writable: true,
-			value: function value(event) {
-				event.preventDefault();
-				emitter.emit("interaction:clicked-link", "https://help.codestream.com");
-			}
-		}), Object.defineProperty(_this, "dismissThread", {
-			enumerable: true,
-			writable: true,
-			value: function value() {
-				var _ref2 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-				    _ref2$track = _ref2.track,
-				    track = _ref2$track === undefined ? true : _ref2$track;
-
-				emitter.emit("interaction:thread-closed", _this.findPostById(_this.state.threadId));
-				_this.setState({ threadId: null });
-				_this.focusInput();
-				if (track) emitter.emit("analytics", {
-					label: "Page Viewed",
-					payload: { "Page Name": "Source Stream" }
-				});
-			}
-		}), Object.defineProperty(_this, "handleClickGoBack", {
-			enumerable: true,
-			writable: true,
-			value: function value(event) {
-				event.preventDefault();
-				_this.state.threadId ? _this.dismissThread() : _this.props.showChannels();
-			}
-		}), Object.defineProperty(_this, "postAction", {
-			enumerable: true,
-			writable: true,
-			value: function value(action, post) {
-				switch (action) {
-					case "make-thread":
-						return _this.selectPost(post.id, true);
-					case "edit-post":
-						return _this.setState({ editingPostId: post.id });
-					case "delete-post":
-						return _this.confirmDeletePost(post.id);
-					case "mark-unread":
-						return _this.markUnread(post.id);
-					case "add-reaction":
-						return _this.notImplementedYet();
-					case "pin-to-stream":
-						return _this.notImplementedYet();
-				}
-			}
-		}), Object.defineProperty(_this, "renderIntro", {
-			enumerable: true,
-			writable: true,
-			value: function value() {
-				return [react.createElement(
-					"label",
-					{ key: "welcome" },
-					react.createElement(FormattedMessage, { id: "stream.intro.welcome", defaultMessage: "Welcome to CodeStream!" })
-				), react.createElement(
-					"label",
-					{ key: "info" },
-					react.createElement(
-						"ul",
-						null,
-						react.createElement(
-							"li",
-							null,
-							react.createElement(FormattedMessage, {
-								id: "stream.intro.eachFile",
-								defaultMessage: "Post a message and any of your teammates can join the discussion."
-							})
-						),
-						react.createElement(
-							"li",
-							null,
-							react.createElement(FormattedMessage, {
-								id: "stream.intro.comment",
-								defaultMessage: 'Comment on a specific block of code by selecting it and then clicking the "+" button.'
-							})
-						),
-						react.createElement(
-							"li",
-							null,
-							react.createElement(
-								FormattedMessage,
-								{
-									id: "stream.intro.share",
-									defaultMessage: "Select \"Codestream: Invite\" from the command palette to invite your team."
-								},
-								function () {
-									return react.createElement(
-										react.Fragment,
-										null,
-										"Select ",
-										react.createElement(
-											"a",
-											{ onClick: _this.props.goToInvitePage },
-											"Codestream: Invite"
-										),
-										" from the command palette to invite your team."
-									);
-								}
-							)
-						)
-					)
-				), react.createElement(
-					"label",
-					{ key: "learn-more" },
-					"Learn more at ",
-					react.createElement(
-						"a",
-						{ onClick: _this.handleClickHelpLink },
-						"help.codestream.com"
-					)
-				)];
-			}
-		}), Object.defineProperty(_this, "renderPosts", {
-			enumerable: true,
-			writable: true,
-			value: function value(threadId) {
-				var lastTimestamp = 0;
-				var unread = false;
-
-				return _this.props.posts.map(function (post) {
-					if (post.deactivated) return null;
-					if (threadId && threadId !== post.parentPostId) return null;
-					// this needs to be done by storing the return value of the render,
-					// then setting lastTimestamp, otherwise you wouldn't be able to
-					// compare the current one to the prior one.
-					var parentPost = _this.findPostById(post.parentPostId);
-					var newMessageIndicator = post.seqNum && post.seqNum === Number(_this.postWithNewMessageIndicator);
-					unread = unread || newMessageIndicator;
-					var returnValue = react.createElement(
-						"div",
-						{ key: post.id },
-						react.createElement(DateSeparator, { timestamp1: lastTimestamp, timestamp2: post.createdAt }),
-						react.createElement(Post$1, {
-							post: post,
-							usernames: _this.props.usernamesRegexp,
-							currentUsername: _this.props.currentUser.username,
-							replyingTo: parentPost,
-							newMessageIndicator: newMessageIndicator,
-							unread: unread,
-							editing: _this.props.isActive && post.id === _this.state.editingPostId,
-							action: _this.postAction
-						})
-					);
-					lastTimestamp = post.createdAt;
-					return returnValue;
-				});
-			}
-		}), _temp), possibleConstructorReturn(_this, _ret);
+		return _ret = (_temp = (_this = possibleConstructorReturn(this, (_ref = Stream.__proto__ || Object.getPrototypeOf(Stream)).call.apply(_ref, [this].concat(args))), _this), _initialiseProps$1.call(_this), _temp), possibleConstructorReturn(_this, _ret);
 	}
 
 	createClass(Stream, [{
@@ -54681,6 +54415,29 @@ var Stream = function (_React$Component) {
 			});
 		}
 	}, {
+		key: "substituteLastPost",
+
+
+		// return true if we are able to use substitute
+		// to edit the text of my last post
+		value: function substituteLastPost(substitute) {
+			// nothing to substitute? return false
+			if (!substitute) return false;
+
+			// if we can't find my last post in the stream, return false
+			var myLastPost = this.findMyPostBeforeSeqNum(9999999999);
+			if (!myLastPost) return false;
+
+			var find = substitute[1];
+			var replace = substitute[2];
+			// const modifier = substitute[3]; // not used yet
+			var newText = myLastPost.text.replace(find, replace);
+			if (newText !== myLastPost.text) {
+				this.replacePostText(myLastPost.id, newText);
+				return true;
+			} else return false;
+		}
+	}, {
 		key: "handleEscape",
 		value: function handleEscape(event) {
 			if (this.state.editingPostId) this.handleDismissEdit();else if (this.state.threadId) this.dismissThread();else event.abortKeyBinding();
@@ -54703,8 +54460,6 @@ var Stream = function (_React$Component) {
 			var _props = this.props,
 			    channelName = _props.channelName,
 			    className = _props.className,
-			    renderComposeBox = _props.renderComposeBox,
-			    runSlashCommand = _props.runSlashCommand,
 			    setActivePanel = _props.setActivePanel,
 			    umis = _props.umis;
 
@@ -54718,6 +54473,8 @@ var Stream = function (_React$Component) {
 			var inThread = this.state.threadId;
 
 			var threadPost = this.findPostById(this.state.threadId);
+
+			var placeholderText = inThread ? "Reply to " + threadPost.author.username : "Add comment";
 
 			return react.createElement(
 				"div",
@@ -54746,7 +54503,7 @@ var Stream = function (_React$Component) {
 							umiCount: 0,
 							isMuted: this.props.isMuted,
 							setActivePanel: setActivePanel,
-							runSlashCommand: runSlashCommand,
+							runSlashCommand: this.runSlashCommand,
 							closeMenu: this.closeMenu
 						})
 					)
@@ -54760,8 +54517,8 @@ var Stream = function (_React$Component) {
 					},
 					react.createElement(
 						"div",
-						{ className: "intro", ref: function ref(_ref3) {
-								return _this3._intro = _ref3;
+						{ className: "intro", ref: function ref(_ref2) {
+								return _this3._intro = _ref2;
 							} },
 						this.renderIntro()
 					),
@@ -54785,21 +54542,457 @@ var Stream = function (_React$Component) {
 					}),
 					this.renderPosts(this.state.threadId)
 				),
-				renderComposeBox()
+				react.createElement(ComposeBox$1, {
+					placeholder: placeholderText,
+					teammates: this.props.teammates,
+					slashCommands: this.props.slashCommands,
+					ensureStreamIsActive: this.props.showPostsPanel,
+					ref: this._compose,
+					disabled: this.props.isOffline,
+					offscreen: !this.props.isActive,
+					onSubmit: this.submitPost,
+					onEmptyUpArrow: this.editLastPost,
+					findMentionedUserIds: this.findMentionedUserIds
+				})
 			);
 		}
 	}]);
 	return Stream;
 }(react.Component);
 
+var _initialiseProps$1 = function _initialiseProps() {
+	var _this4 = this;
+
+	Object.defineProperty(this, "state", {
+		enumerable: true,
+		writable: true,
+		value: {
+			editingPostId: null,
+			menuTarget: null, // can probably replace this with a ref on <Icon/>
+			openMenu: null,
+			threadId: null
+		}
+	});
+	Object.defineProperty(this, "disposables", {
+		enumerable: true,
+		writable: true,
+		value: []
+	});
+	Object.defineProperty(this, "findPostById", {
+		enumerable: true,
+		writable: true,
+		value: function value(id) {
+			return _this4.props.posts.find(function (post) {
+				return post.id === id;
+			});
+		}
+	});
+	Object.defineProperty(this, "findMentionedUserIds", {
+		enumerable: true,
+		writable: true,
+		value: function value(text, users) {
+			var mentionedUserIds = [];
+			users.forEach(function (user) {
+				var matcher = user.username.replace(/\+/g, "\\+").replace(/\./g, "\\.");
+				if (text.match("@" + matcher + "\\b")) {
+					mentionedUserIds.push(user.id);
+				}
+			});
+			return mentionedUserIds;
+		}
+	});
+	Object.defineProperty(this, "runSlashCommand", {
+		enumerable: true,
+		writable: true,
+		value: function value(command, args) {
+			switch (command) {
+				case "help":
+					return _this4.postHelp();
+				case "add":
+					return _this4.addMembersToStream(args);
+				case "who":
+					return _this4.showMembers();
+				case "mute":
+					return _this4.toggleMute();
+				case "muteall":
+					return _this4.toggleMuteAll();
+				case "msg":
+					return _this4.sendDirectMessage(args);
+				case "open":
+					return _this4.openStream(args);
+				case "prefs":
+					return _this4.openPrefs(args);
+				case "rename":
+					return _this4.renameChannel(args);
+				case "remove":
+					return _this4.removeFromStream(args);
+				case "leave":
+					return _this4.leaveChannel(args);
+				case "delete":
+					return _this4.deleteChannel(args);
+				case "archive":
+					return _this4.archiveChannel(args);
+				case "version":
+					return _this4.postVersion(args);
+				case "me":
+					return false;
+			}
+		}
+	});
+	Object.defineProperty(this, "checkForSlashCommands", {
+		enumerable: true,
+		writable: true,
+		value: function value(text) {
+			var substitute = text.match(/^s\/(.+)\/(.*)\/$/);
+			if (substitute && _this4.substituteLastPost(substitute)) return true;
+
+			var commandMatch = text.match(/^\/(\w+)\b\s*(.*)/);
+			if (commandMatch) {
+				var command = commandMatch[1];
+				var _args = commandMatch[2];
+				return _this4.runSlashCommand(command, _args);
+			}
+
+			return false;
+		}
+	});
+	Object.defineProperty(this, "replacePostText", {
+		enumerable: true,
+		writable: true,
+		value: function value(postId, newText) {
+			// convert the text to plaintext so there is no HTML
+			var doc = new DOMParser().parseFromString(newText, "text/html");
+			var replaceText = doc.documentElement.textContent;
+			var mentionUserIds = _this4.findMentionedUserIds(replaceText, _this4.props.teammates);
+
+			_this4.props.editPost(postId, replaceText, mentionUserIds);
+		}
+	});
+	Object.defineProperty(this, "editLastPost", {
+		enumerable: true,
+		writable: true,
+		value: function value(event) {
+			// find the most recent post I authored
+			var postDiv = event.target.closest(".post");
+			var seqNum = postDiv ? postDiv.dataset.seqNum : 9999999999;
+			var editingPost = _this4.findMyPostBeforeSeqNum(seqNum);
+			if (editingPost) _this4.setState({ editingPostId: editingPost.id });
+		}
+	});
+	Object.defineProperty(this, "submitPost", {
+		enumerable: true,
+		writable: true,
+		value: function value(_ref4) {
+			var text = _ref4.text,
+			    quote = _ref4.quote,
+			    mentionedUserIds = _ref4.mentionedUserIds,
+			    autoMentions = _ref4.autoMentions;
+
+			var codeBlocks = [];
+			var threadId = _this4.state.threadId;
+			var _props2 = _this4.props,
+			    stream = _props2.stream,
+			    fileStreamId = _props2.fileStreamId,
+			    createPost$$1 = _props2.createPost,
+			    currentFile = _props2.currentFile,
+			    repoId = _props2.repoId;
+
+
+			if (_this4.checkForSlashCommands(text)) return;
+
+			if (quote) {
+				var codeBlock = {
+					code: quote.quoteText,
+					location: quote.quoteRange,
+					preContext: quote.preContext,
+					postContext: quote.postContext,
+					repoId: repoId,
+					file: currentFile // this should come from the host
+				};
+
+				// if we have a streamId, send it. otherwise the
+				// API server will create one based on the file
+				// and the repoId.
+				if (fileStreamId) codeBlock.streamId = fileStreamId;
+
+				codeBlocks.push(codeBlock);
+			}
+
+			createPost$$1(stream.id, threadId, text, codeBlocks, mentionedUserIds, {
+				autoMentions: autoMentions
+			});
+		}
+	});
+	Object.defineProperty(this, "handleClickStreamSettings", {
+		enumerable: true,
+		writable: true,
+		value: function value(event) {
+			_this4.setState({ openMenu: true, menuTarget: event.target });
+			event.stopPropagation();
+			return true;
+		}
+	});
+	Object.defineProperty(this, "closeMenu", {
+		enumerable: true,
+		writable: true,
+		value: function value() {
+			_this4.setState({ openMenu: false });
+		}
+	});
+	Object.defineProperty(this, "handleClickPost", {
+		enumerable: true,
+		writable: true,
+		value: function value(event) {
+			var postDiv = event.target.closest(".post");
+			if (!postDiv) return;
+
+			// if they clicked a link, follow the link rather than selecting the post
+			if (event && event.target && event.target.tagName === "A") return false;
+
+			// console.log(event.target.id);
+			if (event.target.id === "discard-button") {
+				// if the user clicked on the cancel changes button,
+				// presumably because she is editing a post, abort
+				_this4.setState({ editingPostId: null });
+				return;
+			} else if (event.target.id === "save-button") {
+				// if the user clicked on the save changes button,
+				// save the new post text
+				var newText = document.getElementById("input-div-" + postDiv.id).innerHTML.replace(/<br>/g, "\n");
+
+				_this4.replacePostText(postDiv.id, newText);
+				_this4.setState({ editingPostId: null });
+				return;
+			} else if (postDiv.classList.contains("editing")) {
+				// otherwise, if we aren't currently editing the
+				// post, go to the thread for that post, but if
+				// we are editing, then do nothing.
+				return;
+			} else if (postDiv.classList.contains("system-post")) {
+				// otherwise, if we aren't currently editing the
+				// post, go to the thread for that post, but if
+				// we are editing, then do nothing.
+				return;
+			} else if (window.getSelection().toString().length > 0) {
+				// in this case the user has selected a string
+				// by dragging
+				return;
+			}
+			_this4.selectPost(postDiv.id, true);
+		}
+	});
+	Object.defineProperty(this, "focusInput", {
+		enumerable: true,
+		writable: true,
+		value: function value() {
+			var input = document.getElementById("input-div");
+			if (input) input.focus();
+		}
+	});
+	Object.defineProperty(this, "selectPost", {
+		enumerable: true,
+		writable: true,
+		value: function value(id) {
+			var wasClicked = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
+			emitter.emit("analytics", {
+				label: "Page Viewed",
+				payload: { "Page Name": "Thread View" }
+			});
+			var post = _this4.props.posts.find(function (post) {
+				return id === post.id;
+			});
+			if (!post) return;
+
+			// if it is a child in the thread, it'll have a parentPostId,
+			// otherwise use the id. any post can become the head of a thread
+			var threadId = post.parentPostId || post.id;
+			_this4.setState({ threadId: threadId });
+
+			_this4.focusInput();
+			if (wasClicked) {
+				emitter.emit("interaction:thread-selected", {
+					threadId: threadId,
+					streamId: _this4.props.stream.id,
+					post: post
+				});
+			}
+		}
+	});
+	Object.defineProperty(this, "handleClickHelpLink", {
+		enumerable: true,
+		writable: true,
+		value: function value(event) {
+			event.preventDefault();
+			emitter.emit("interaction:clicked-link", "https://help.codestream.com");
+		}
+	});
+	Object.defineProperty(this, "dismissThread", {
+		enumerable: true,
+		writable: true,
+		value: function value() {
+			var _ref5 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+			    _ref5$track = _ref5.track,
+			    track = _ref5$track === undefined ? true : _ref5$track;
+
+			emitter.emit("interaction:thread-closed", _this4.findPostById(_this4.state.threadId));
+			_this4.setState({ threadId: null });
+			_this4.focusInput();
+			if (track) emitter.emit("analytics", {
+				label: "Page Viewed",
+				payload: { "Page Name": "Source Stream" }
+			});
+		}
+	});
+	Object.defineProperty(this, "handleClickGoBack", {
+		enumerable: true,
+		writable: true,
+		value: function value(event) {
+			event.preventDefault();
+			_this4.state.threadId ? _this4.dismissThread() : _this4.props.showChannels();
+		}
+	});
+	Object.defineProperty(this, "postAction", {
+		enumerable: true,
+		writable: true,
+		value: function value(action, post) {
+			switch (action) {
+				case "make-thread":
+					return _this4.selectPost(post.id, true);
+				case "edit-post":
+					return _this4.setState({ editingPostId: post.id });
+				case "delete-post":
+					return _this4.confirmDeletePost(post.id);
+				case "mark-unread":
+					return _this4.markUnread(post.id);
+				case "add-reaction":
+					return _this4.notImplementedYet();
+				case "pin-to-stream":
+					return _this4.notImplementedYet();
+			}
+		}
+	});
+	Object.defineProperty(this, "renderIntro", {
+		enumerable: true,
+		writable: true,
+		value: function value() {
+			return [react.createElement(
+				"label",
+				{ key: "welcome" },
+				react.createElement(FormattedMessage, { id: "stream.intro.welcome", defaultMessage: "Welcome to CodeStream!" })
+			), react.createElement(
+				"label",
+				{ key: "info" },
+				react.createElement(
+					"ul",
+					null,
+					react.createElement(
+						"li",
+						null,
+						react.createElement(FormattedMessage, {
+							id: "stream.intro.eachFile",
+							defaultMessage: "Post a message and any of your teammates can join the discussion."
+						})
+					),
+					react.createElement(
+						"li",
+						null,
+						react.createElement(FormattedMessage, {
+							id: "stream.intro.comment",
+							defaultMessage: 'Comment on a specific block of code by selecting it and then clicking the "+" button.'
+						})
+					),
+					react.createElement(
+						"li",
+						null,
+						react.createElement(
+							FormattedMessage,
+							{
+								id: "stream.intro.share",
+								defaultMessage: "Select \"Codestream: Invite\" from the command palette to invite your team."
+							},
+							function () {
+								return react.createElement(
+									react.Fragment,
+									null,
+									"Select ",
+									react.createElement(
+										"a",
+										{ onClick: _this4.props.goToInvitePage },
+										"Codestream: Invite"
+									),
+									" from the command palette to invite your team."
+								);
+							}
+						)
+					)
+				)
+			), react.createElement(
+				"label",
+				{ key: "learn-more" },
+				"Learn more at ",
+				react.createElement(
+					"a",
+					{ onClick: _this4.handleClickHelpLink },
+					"help.codestream.com"
+				)
+			)];
+		}
+	});
+	Object.defineProperty(this, "renderPosts", {
+		enumerable: true,
+		writable: true,
+		value: function value(threadId) {
+			var lastTimestamp = 0;
+			var unread = false;
+
+			return _this4.props.posts.map(function (post) {
+				if (post.deactivated) return null;
+				if (threadId && threadId !== post.parentPostId) return null;
+				// this needs to be done by storing the return value of the render,
+				// then setting lastTimestamp, otherwise you wouldn't be able to
+				// compare the current one to the prior one.
+				var parentPost = _this4.findPostById(post.parentPostId);
+				var newMessageIndicator = post.seqNum && post.seqNum === Number(_this4.postWithNewMessageIndicator);
+				unread = unread || newMessageIndicator;
+				var returnValue = react.createElement(
+					"div",
+					{ key: post.id },
+					react.createElement(DateSeparator, { timestamp1: lastTimestamp, timestamp2: post.createdAt }),
+					react.createElement(Post$1, {
+						post: post,
+						usernames: _this4.props.usernamesRegexp,
+						currentUsername: _this4.props.currentUser.username,
+						replyingTo: parentPost,
+						newMessageIndicator: newMessageIndicator,
+						unread: unread,
+						editing: _this4.props.isActive && post.id === _this4.state.editingPostId,
+						action: _this4.postAction
+					})
+				);
+				lastTimestamp = post.createdAt;
+				return returnValue;
+			});
+		}
+	});
+};
+
 var mapStateToProps$5 = function mapStateToProps(state) {
-	var context = state.context,
+	var connectivity = state.connectivity,
+	    context = state.context,
+	    messaging = state.messaging,
+	    session = state.session,
+	    streams$$1 = state.streams,
 	    teams = state.teams,
 	    users = state.users;
 
 	var teamMembers = teams[context.currentTeamId].memberIds.map(function (id) {
 		return users[id];
 	}).filter(Boolean);
+
+	var fileStream = getStreamForRepoAndFile(streams$$1, context.currentRepoId, context.currentFile) || {};
+
+	var isOffline = connectivity.offline || messaging.failedSubscriptions.length > 0 || messaging.timedOut;
 
 	// this usenames regexp is a pipe-separated list of
 	// either usernames or if no username exists for the
@@ -54813,9 +55006,20 @@ var mapStateToProps$5 = function mapStateToProps(state) {
 	.replace(/\+/g, "\\+") // replace + and . with escaped versions so
 	.replace(/\./g, "\\."); // that the regexp matches the literal chars
 
-	return { umis: state.umis, usernamesRegexp: usernamesRegexp };
+	return {
+		currentFile: context.currentFile,
+		isOffline: isOffline,
+		fileStreamId: fileStream.id,
+		repoId: context.currentRepoId,
+		teammates: teamMembers.filter(function (_ref3) {
+			var id = _ref3.id;
+			return id !== session.userId;
+		}),
+		umis: state.umis,
+		usernamesRegexp: usernamesRegexp
+	};
 };
-var PostsPanel = connect(mapStateToProps$5, { goToInvitePage: goToInvitePage })(Stream);
+var PostsPanel = connect(mapStateToProps$5, _extends$4({}, actions, { goToInvitePage: goToInvitePage }))(Stream);
 
 var toMapBy = function toMapBy(key, entities) {
 	return entities.reduce(function (result, entity) {
@@ -54912,22 +55116,10 @@ var SimpleStream = function (_Component) {
 			writable: true,
 			value: function value() {}
 		});
-		Object.defineProperty(_this, "editLastPost", {
-			enumerable: true,
-			writable: true,
-			value: function value(event) {
-				// find the most recent post I authored
-				console.log("up! ", event);
-				var postDiv = event.target.closest(".post");
-				var seqNum = postDiv ? postDiv.dataset.seqNum : 9999999999;
-				var editingPost = _this.findMyPostBeforeSeqNum(seqNum);
-				if (editingPost) _this.setState({ editingPostId: editingPost.id });
-			}
-		});
 		Object.defineProperty(_this, "showChannels", {
 			enumerable: true,
 			writable: true,
-			value: function value(event) {
+			value: function value() {
 				_this.setState({ activePanel: "channels" });
 			}
 		});
@@ -54937,7 +55129,7 @@ var SimpleStream = function (_Component) {
 			value: function value() {
 				var activePanel = _this.state.activePanel;
 
-				if (activePanel === "main" || activePanel === "thread") _this.focusInput();else _this.setState({ activePanel: "main" });
+				if (activePanel === "main") _this.focusInput();else _this.setState({ activePanel: "main" });
 			}
 		});
 		Object.defineProperty(_this, "setActivePanel", {
@@ -55025,32 +55217,6 @@ var SimpleStream = function (_Component) {
 			writable: true,
 			value: function value() {
 				_this.submitSystemPost("Not implemented yet");
-			}
-		});
-		Object.defineProperty(_this, "findMentionedUserIds", {
-			enumerable: true,
-			writable: true,
-			value: function value(text, users) {
-				var mentionedUserIds = [];
-				users.forEach(function (user) {
-					var matcher = user.username.replace(/\+/g, "\\+").replace(/\./g, "\\.");
-					if (text.match("@" + matcher + "\\b")) {
-						mentionedUserIds.push(user.id);
-					}
-				});
-				return mentionedUserIds;
-			}
-		});
-		Object.defineProperty(_this, "replacePostText", {
-			enumerable: true,
-			writable: true,
-			value: function value(postId, newText) {
-				// convert the text to plaintext so there is no HTML
-				var doc = new DOMParser().parseFromString(newText, "text/html");
-				var replaceText = doc.documentElement.textContent;
-				var mentionUserIds = _this.findMentionedUserIds(replaceText, _this.props.teammates);
-
-				_this.props.editPost(postId, replaceText, mentionUserIds);
 			}
 		});
 		Object.defineProperty(_this, "focusInput", {
@@ -55477,111 +55643,6 @@ var SimpleStream = function (_Component) {
 				return true;
 			}
 		});
-		Object.defineProperty(_this, "runSlashCommand", {
-			enumerable: true,
-			writable: true,
-			value: function value(command, args) {
-				switch (command) {
-					case "help":
-						return _this.postHelp();
-					case "add":
-						return _this.addMembersToStream(args);
-					case "who":
-						return _this.showMembers();
-					case "mute":
-						return _this.toggleMute();
-					case "muteall":
-						return _this.toggleMuteAll();
-					case "msg":
-						return _this.sendDirectMessage(args);
-					case "open":
-						return _this.openStream(args);
-					case "prefs":
-						return _this.openPrefs(args);
-					case "rename":
-						return _this.renameChannel(args);
-					case "remove":
-						return _this.removeFromStream(args);
-					case "leave":
-						return _this.leaveChannel(args);
-					case "delete":
-						return _this.deleteChannel(args);
-					case "archive":
-						return _this.archiveChannel(args);
-					case "version":
-						return _this.postVersion(args);
-					case "me":
-						return false;
-				}
-			}
-		});
-		Object.defineProperty(_this, "checkForSlashCommands", {
-			enumerable: true,
-			writable: true,
-			value: function value(text) {
-				var substitute = text.match(/^s\/(.+)\/(.*)\/$/);
-				if (substitute && _this.substituteLastPost(substitute)) return true;
-
-				var commandMatch = text.match(/^\/(\w+)\b\s*(.*)/);
-				if (commandMatch) {
-					var command = commandMatch[1];
-					var args = commandMatch[2];
-					return _this.runSlashCommand(command, args);
-				}
-
-				return false;
-			}
-		});
-		Object.defineProperty(_this, "submitPost", {
-			enumerable: true,
-			writable: true,
-			value: function value(_ref7) {
-				var text = _ref7.text,
-				    quote = _ref7.quote,
-				    mentionedUserIds = _ref7.mentionedUserIds,
-				    autoMentions = _ref7.autoMentions;
-
-				var codeBlocks = [];
-				var activePanel = _this.state.activePanel;
-				var _this$props4 = _this.props,
-				    postStreamId = _this$props4.postStreamId,
-				    fileStreamId = _this$props4.fileStreamId,
-				    createPost$$1 = _this$props4.createPost,
-				    currentFile = _this$props4.currentFile,
-				    repoId = _this$props4.repoId;
-
-
-				if (_this.checkForSlashCommands(text)) return;
-
-				var threadId = activePanel === "thread" ? _this.state.threadId : null;
-
-				if (quote) {
-					var codeBlock = {
-						code: quote.quoteText,
-						location: quote.quoteRange,
-						preContext: quote.preContext,
-						postContext: quote.postContext,
-						repoId: repoId,
-						file: currentFile
-					};
-
-					// if we have a streamId, send it. otherwise the
-					// API server will create one based on the file
-					// and the repoId.
-					if (fileStreamId) codeBlock.streamId = fileStreamId;
-
-					codeBlocks.push(codeBlock);
-				}
-
-				// FIXME: can't and shouldn't do this here
-				// const editor = atom.workspace.getActiveTextEditor();
-				// const editorText = editor ? editor.getText() : undefined;
-
-				createPost$$1(postStreamId, threadId, text, codeBlocks, mentionedUserIds, {
-					autoMentions: autoMentions
-				});
-			}
-		});
 
 
 		_this.state = {
@@ -55603,7 +55664,7 @@ var SimpleStream = function (_Component) {
 			// this listener pays attention to when the input field resizes,
 			// presumably because the user has typed more than one line of text
 			// in it, and calls a function to handle the new size
-			new ResizeObserver(this.handleResizeCompose).observe(this._compose.current);
+			// new ResizeObserver(this.handleResizeCompose).observe(this._compose.current);
 
 			if (this._postslist) {
 				this._postslist.addEventListener("scroll", this.handleScroll.bind(this));
@@ -55620,8 +55681,8 @@ var SimpleStream = function (_Component) {
 			this.scrollToBottom();
 		}
 	}, {
-		key: "componentWillReceiveProps",
-		value: function componentWillReceiveProps(nextProps) {
+		key: "UNSAFE__componentWillReceiveProps",
+		value: function UNSAFE__componentWillReceiveProps(nextProps) {
 			var switchingFileStreams = nextProps.fileStreamId !== this.props.fileStreamId;
 			var switchingPostStreams = nextProps.postStreamId !== this.props.postStreamId;
 
@@ -55832,35 +55893,9 @@ var SimpleStream = function (_Component) {
 				"no-headshots": !configs.showHeadshots,
 				"reduced-motion": configs.reduceMotion
 			});
-			// const postsListClass = createClassString({
-			// 	postslist: true
-			// });
-			var threadPostsListClass = classnames({
-				postslist: true,
-				threadlist: true
-			});
 			var mainPanelClass = classnames({
-				// panel: true,
-				// "main-panel": true,
-				// shrink: activePanel === "thread",
 				"off-right": activePanel === "channels" || activePanel === "create-channel" || activePanel === "create-dm" || activePanel === "public-channels"
 			});
-			var threadPanelClass = classnames({
-				panel: true,
-				"thread-panel": true,
-				"off-right": activePanel !== "thread"
-			});
-
-			var threadId = this.state.threadId;
-			var threadPost = this.findPostById(threadId);
-
-			var placeholderText = "Add comment";
-			if (activePanel === "thread" && threadPost) {
-				placeholderText = "Reply to " + threadPost.author.username;
-			}
-
-			// const streamDivId = "stream-" + this.props.postStreamId;
-			// let unread = false;
 
 			var unreadsAboveClass = classnames({
 				unreads: true,
@@ -55899,8 +55934,8 @@ var SimpleStream = function (_Component) {
 
 			return react.createElement(
 				"div",
-				{ className: streamClass, ref: function ref(_ref8) {
-						return _this5._div = _ref8;
+				{ className: streamClass, ref: function ref(_ref7) {
+						return _this5._div = _ref7;
 					} },
 				react.createElement("div", { id: "modal-root" }),
 				react.createElement("div", { id: "confirm-root" }),
@@ -55923,20 +55958,7 @@ var SimpleStream = function (_Component) {
 					posts: this.props.posts,
 					currentUser: this.props.currentUser,
 					showChannels: this.showChannels,
-					renderComposeBox: function renderComposeBox() {
-						return react.createElement(ComposeBox$1, {
-							placeholder: placeholderText,
-							teammates: _this5.props.teammates,
-							slashCommands: _this5.props.slashCommands,
-							ensureStreamIsActive: _this5.ensureStreamIsActive,
-							ref: _this5._compose,
-							disabled: _this5.props.isOffline,
-							offscreen: activePanel !== "main" && activePanel !== "thread",
-							onSubmit: _this5.submitPost,
-							onEmptyUpArrow: _this5.editLastPost,
-							findMentionedUserIds: _this5.findMentionedUserIds
-						});
-					}
+					showPostsPanel: this.ensureStreamIsActive
 				}),
 				react.createElement(
 					"div",
@@ -55945,17 +55967,6 @@ var SimpleStream = function (_Component) {
 				)
 			);
 		}
-
-		// handleClickStreamSettings = event => {
-		// 	this.setState({ openMenu: this.props.postStreamId, menuTarget: event.target });
-		// 	event.stopPropagation();
-		// 	return true;
-		// };
-
-		// closeMenu = () => {
-		// 	this.setState({ openMenu: null });
-		// };
-
 	}, {
 		key: "findMyPostBeforeSeqNum",
 		value: function findMyPostBeforeSeqNum(seqNum) {
@@ -56086,47 +56097,19 @@ var SimpleStream = function (_Component) {
 			this.setState({ editingPostId: null });
 			this.focusInput();
 		}
-
-		// return true if we are able to use substitute
-		// to edit the text of my last post
-
-	}, {
-		key: "substituteLastPost",
-		value: function substituteLastPost(substitute) {
-			// nothing to substitute? return false
-			if (!substitute) return false;
-
-			// if we can't find my last post in the stream, return false
-			var myLastPost = this.findMyPostBeforeSeqNum(9999999999);
-			if (!myLastPost) return false;
-
-			var find = substitute[1];
-			var replace = substitute[2];
-			// const modifier = substitute[3]; // not used yet
-			var newText = myLastPost.text.replace(find, replace);
-			if (newText !== myLastPost.text) {
-				this.replacePostText(myLastPost.id, newText);
-				return true;
-			} else return false;
-		}
-
-		// create a new post
-
 	}]);
 	return SimpleStream;
 }(react_1);
 
-var mapStateToProps$6 = function mapStateToProps(_ref9) {
-	var configs = _ref9.configs,
-	    connectivity = _ref9.connectivity,
-	    session = _ref9.session,
-	    context = _ref9.context,
-	    streams$$1 = _ref9.streams,
-	    users = _ref9.users,
-	    posts = _ref9.posts,
-	    messaging = _ref9.messaging,
-	    teams = _ref9.teams,
-	    onboarding = _ref9.onboarding;
+var mapStateToProps$6 = function mapStateToProps(_ref8) {
+	var configs = _ref8.configs,
+	    session = _ref8.session,
+	    context = _ref8.context,
+	    streams$$1 = _ref8.streams,
+	    users = _ref8.users,
+	    posts = _ref8.posts,
+	    teams = _ref8.teams,
+	    onboarding = _ref8.onboarding;
 
 	// TODO: figure out a way to do this elsewhere
 	Object.keys(users).forEach(function (key, index) {
@@ -56143,20 +56126,6 @@ var mapStateToProps$6 = function mapStateToProps(_ref9) {
 		return users[id];
 	}).filter(Boolean);
 
-	// this usenames regexp is a pipe-separated list of
-	// either usernames or if no username exists for the
-	// user then his email address. it is sorted by length
-	// so that the longest possible match will be made.
-	var usernamesRegexp = teamMembers.map(function (user) {
-		return user.username || "";
-	}).sort(function (a, b) {
-		return b.length - a.length;
-	}).join("|").replace(/\|\|+/g, "|") // remove blank identifiers
-	.replace(/\+/g, "\\+") // replace + and . with escaped versions so
-	.replace(/\./g, "\\."); // that the regexp matches the literal chars
-
-	var isOffline = connectivity.offline || messaging.failedSubscriptions.length > 0 || messaging.timedOut;
-
 	// FIXME -- eventually we'll allow the user to switch to other streams, like DMs and channels
 	var teamStream = getStreamForTeam(streams$$1, context.currentTeamId) || {};
 	var postStream = getStreamForId(streams$$1, context.currentTeamId, context.currentStreamId) || teamStream;
@@ -56167,10 +56136,9 @@ var mapStateToProps$6 = function mapStateToProps(_ref9) {
 
 	return {
 		configs: configs,
-		isOffline: isOffline,
 		teamMembersById: toMapBy("id", teamMembers),
-		teammates: teamMembers.filter(function (_ref10) {
-			var id = _ref10.id;
+		teammates: teamMembers.filter(function (_ref9) {
+			var id = _ref9.id;
 			return id !== session.userId;
 		}),
 		postStream: postStream,
@@ -56188,7 +56156,6 @@ var mapStateToProps$6 = function mapStateToProps(_ref9) {
 		currentFile: context.currentFile,
 		currentCommit: context.currentCommit,
 		editingUsers: fileStream.editingUsers,
-		usernamesRegexp: usernamesRegexp,
 		currentUser: user,
 		mutedStreams: mutedStreams,
 		slashCommands: slashCommands,
@@ -56234,7 +56201,7 @@ var mapStateToProps$6 = function mapStateToProps(_ref9) {
 	};
 };
 
-var index$3 = connect(mapStateToProps$6, _extends$4({}, streamActions, {
+var index$3 = connect(mapStateToProps$6, _extends$4({}, actions, {
 	goToInvitePage: goToInvitePage
 }))(SimpleStream);
 

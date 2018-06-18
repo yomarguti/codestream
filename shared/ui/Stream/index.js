@@ -2,15 +2,11 @@ import React, { Component } from "react";
 import { connect } from "react-redux";
 import _ from "underscore";
 import createClassString from "classnames";
-import ComposeBox from "./ComposeBox";
-// import DateSeparator from "./DateSeparator";
 import ChannelPanel from "./ChannelPanel";
 import PublicChannelPanel from "./PublicChannelPanel";
 import CreateChannelPanel from "./CreateChannelPanel";
 import CreateDMPanel from "./CreateDMPanel";
 import PostsPanel from "./PostsPanel";
-// import ChannelMenu from "./ChannelMenu";
-// import Post from "./Post";
 import Icon from "./Icon";
 import EventEmitter from "../event-emitter";
 import * as actions from "./actions";
@@ -47,7 +43,7 @@ export class SimpleStream extends Component {
 		// this listener pays attention to when the input field resizes,
 		// presumably because the user has typed more than one line of text
 		// in it, and calls a function to handle the new size
-		new ResizeObserver(this.handleResizeCompose).observe(this._compose.current);
+		// new ResizeObserver(this.handleResizeCompose).observe(this._compose.current);
 
 		if (this._postslist) {
 			this._postslist.addEventListener("scroll", this.handleScroll.bind(this));
@@ -64,7 +60,7 @@ export class SimpleStream extends Component {
 		this.scrollToBottom();
 	}
 
-	componentWillReceiveProps(nextProps) {
+	UNSAFE__componentWillReceiveProps(nextProps) {
 		const switchingFileStreams = nextProps.fileStreamId !== this.props.fileStreamId;
 		const switchingPostStreams = nextProps.postStreamId !== this.props.postStreamId;
 
@@ -309,39 +305,13 @@ export class SimpleStream extends Component {
 			"no-headshots": !configs.showHeadshots,
 			"reduced-motion": configs.reduceMotion
 		});
-		// const postsListClass = createClassString({
-		// 	postslist: true
-		// });
-		const threadPostsListClass = createClassString({
-			postslist: true,
-			threadlist: true
-		});
 		const mainPanelClass = createClassString({
-			// panel: true,
-			// "main-panel": true,
-			// shrink: activePanel === "thread",
 			"off-right":
 				activePanel === "channels" ||
 				activePanel === "create-channel" ||
 				activePanel === "create-dm" ||
 				activePanel === "public-channels"
 		});
-		const threadPanelClass = createClassString({
-			panel: true,
-			"thread-panel": true,
-			"off-right": activePanel !== "thread"
-		});
-
-		let threadId = this.state.threadId;
-		let threadPost = this.findPostById(threadId);
-
-		let placeholderText = "Add comment";
-		if (activePanel === "thread" && threadPost) {
-			placeholderText = "Reply to " + threadPost.author.username;
-		}
-
-		// const streamDivId = "stream-" + this.props.postStreamId;
-		// let unread = false;
 
 		const unreadsAboveClass = createClassString({
 			unreads: true,
@@ -411,20 +381,7 @@ export class SimpleStream extends Component {
 					posts={this.props.posts}
 					currentUser={this.props.currentUser}
 					showChannels={this.showChannels}
-					renderComposeBox={() => (
-						<ComposeBox
-							placeholder={placeholderText}
-							teammates={this.props.teammates}
-							slashCommands={this.props.slashCommands}
-							ensureStreamIsActive={this.ensureStreamIsActive}
-							ref={this._compose}
-							disabled={this.props.isOffline}
-							offscreen={activePanel !== "main" && activePanel !== "thread"}
-							onSubmit={this.submitPost}
-							onEmptyUpArrow={this.editLastPost}
-							findMentionedUserIds={this.findMentionedUserIds}
-						/>
-					)}
+					showPostsPanel={this.ensureStreamIsActive}
 				/>
 				{/* {unreadsAbove} */}
 				<div className={unreadsBelowClass} type="below" onClick={this.handleClickUnreads}>
@@ -433,16 +390,6 @@ export class SimpleStream extends Component {
 			</div>
 		);
 	}
-
-	// handleClickStreamSettings = event => {
-	// 	this.setState({ openMenu: this.props.postStreamId, menuTarget: event.target });
-	// 	event.stopPropagation();
-	// 	return true;
-	// };
-
-	// closeMenu = () => {
-	// 	this.setState({ openMenu: null });
-	// };
 
 	findMyPostBeforeSeqNum(seqNum) {
 		const me = this.props.currentUser.username;
@@ -454,22 +401,13 @@ export class SimpleStream extends Component {
 			.value();
 	}
 
-	editLastPost = event => {
-		// find the most recent post I authored
-		console.log("up! ", event);
-		const postDiv = event.target.closest(".post");
-		const seqNum = postDiv ? postDiv.dataset.seqNum : 9999999999;
-		const editingPost = this.findMyPostBeforeSeqNum(seqNum);
-		if (editingPost) this.setState({ editingPostId: editingPost.id });
-	};
-
-	showChannels = event => {
+	showChannels = () => {
 		this.setState({ activePanel: "channels" });
 	};
 
 	ensureStreamIsActive = () => {
 		const { activePanel } = this.state;
-		if (activePanel === "main" || activePanel === "thread") this.focusInput();
+		if (activePanel === "main") this.focusInput();
 		else this.setState({ activePanel: "main" });
 	};
 
@@ -570,26 +508,6 @@ export class SimpleStream extends Component {
 		this.submitSystemPost("Not implemented yet");
 	};
 
-	findMentionedUserIds = (text, users) => {
-		const mentionedUserIds = [];
-		users.forEach(user => {
-			const matcher = user.username.replace(/\+/g, "\\+").replace(/\./g, "\\.");
-			if (text.match("@" + matcher + "\\b")) {
-				mentionedUserIds.push(user.id);
-			}
-		});
-		return mentionedUserIds;
-	};
-
-	replacePostText = (postId, newText) => {
-		// convert the text to plaintext so there is no HTML
-		const doc = new DOMParser().parseFromString(newText, "text/html");
-		const replaceText = doc.documentElement.textContent;
-		const mentionUserIds = this.findMentionedUserIds(replaceText, this.props.teammates);
-
-		this.props.editPost(postId, replaceText, mentionUserIds);
-	};
-
 	// by clicking on the post, we select it
 	// handleClickPost = event => {
 	// 	var postDiv = event.target.closest(".post");
@@ -677,26 +595,6 @@ export class SimpleStream extends Component {
 	handleDismissEdit() {
 		this.setState({ editingPostId: null });
 		this.focusInput();
-	}
-
-	// return true if we are able to use substitute
-	// to edit the text of my last post
-	substituteLastPost(substitute) {
-		// nothing to substitute? return false
-		if (!substitute) return false;
-
-		// if we can't find my last post in the stream, return false
-		const myLastPost = this.findMyPostBeforeSeqNum(9999999999);
-		if (!myLastPost) return false;
-
-		const find = substitute[1];
-		const replace = substitute[2];
-		// const modifier = substitute[3]; // not used yet
-		const newText = myLastPost.text.replace(find, replace);
-		if (newText !== myLastPost.text) {
-			this.replacePostText(myLastPost.id, newText);
-			return true;
-		} else return false;
 	}
 
 	toggleMute = () => {
@@ -922,103 +820,15 @@ export class SimpleStream extends Component {
 		this.submitSystemPost(text);
 		return true;
 	};
-
-	runSlashCommand = (command, args) => {
-		switch (command) {
-			case "help":
-				return this.postHelp();
-			case "add":
-				return this.addMembersToStream(args);
-			case "who":
-				return this.showMembers();
-			case "mute":
-				return this.toggleMute();
-			case "muteall":
-				return this.toggleMuteAll();
-			case "msg":
-				return this.sendDirectMessage(args);
-			case "open":
-				return this.openStream(args);
-			case "prefs":
-				return this.openPrefs(args);
-			case "rename":
-				return this.renameChannel(args);
-			case "remove":
-				return this.removeFromStream(args);
-			case "leave":
-				return this.leaveChannel(args);
-			case "delete":
-				return this.deleteChannel(args);
-			case "archive":
-				return this.archiveChannel(args);
-			case "version":
-				return this.postVersion(args);
-			case "me":
-				return false;
-		}
-	};
-
-	checkForSlashCommands = text => {
-		const substitute = text.match(/^s\/(.+)\/(.*)\/$/);
-		if (substitute && this.substituteLastPost(substitute)) return true;
-
-		const commandMatch = text.match(/^\/(\w+)\b\s*(.*)/);
-		if (commandMatch) {
-			const command = commandMatch[1];
-			const args = commandMatch[2];
-			return this.runSlashCommand(command, args);
-		}
-
-		return false;
-	};
-
-	// create a new post
-	submitPost = ({ text, quote, mentionedUserIds, autoMentions }) => {
-		const codeBlocks = [];
-		const { activePanel } = this.state;
-		const { postStreamId, fileStreamId, createPost, currentFile, repoId } = this.props;
-
-		if (this.checkForSlashCommands(text)) return;
-
-		let threadId = activePanel === "thread" ? this.state.threadId : null;
-
-		if (quote) {
-			let codeBlock = {
-				code: quote.quoteText,
-				location: quote.quoteRange,
-				preContext: quote.preContext,
-				postContext: quote.postContext,
-				repoId,
-				file: currentFile
-			};
-
-			// if we have a streamId, send it. otherwise the
-			// API server will create one based on the file
-			// and the repoId.
-			if (fileStreamId) codeBlock.streamId = fileStreamId;
-
-			codeBlocks.push(codeBlock);
-		}
-
-		// FIXME: can't and shouldn't do this here
-		// const editor = atom.workspace.getActiveTextEditor();
-		// const editorText = editor ? editor.getText() : undefined;
-
-		createPost(postStreamId, threadId, text, codeBlocks, mentionedUserIds, {
-			autoMentions
-		});
-	};
 }
 
 const mapStateToProps = ({
 	configs,
-	connectivity,
 	session,
 	context,
 	streams,
 	users,
 	posts,
-	messaging,
 	teams,
 	onboarding
 }) => {
@@ -1036,25 +846,6 @@ const mapStateToProps = ({
 
 	const teamMembers = teams[context.currentTeamId].memberIds.map(id => users[id]).filter(Boolean);
 
-	// this usenames regexp is a pipe-separated list of
-	// either usernames or if no username exists for the
-	// user then his email address. it is sorted by length
-	// so that the longest possible match will be made.
-	const usernamesRegexp = teamMembers
-		.map(user => {
-			return user.username || "";
-		})
-		.sort(function(a, b) {
-			return b.length - a.length;
-		})
-		.join("|")
-		.replace(/\|\|+/g, "|") // remove blank identifiers
-		.replace(/\+/g, "\\+") // replace + and . with escaped versions so
-		.replace(/\./g, "\\."); // that the regexp matches the literal chars
-
-	const isOffline =
-		connectivity.offline || messaging.failedSubscriptions.length > 0 || messaging.timedOut;
-
 	// FIXME -- eventually we'll allow the user to switch to other streams, like DMs and channels
 	const teamStream = getStreamForTeam(streams, context.currentTeamId) || {};
 	const postStream =
@@ -1066,7 +857,6 @@ const mapStateToProps = ({
 
 	return {
 		configs,
-		isOffline,
 		teamMembersById: toMapBy("id", teamMembers),
 		teammates: teamMembers.filter(({ id }) => id !== session.userId),
 		postStream,
@@ -1084,7 +874,6 @@ const mapStateToProps = ({
 		currentFile: context.currentFile,
 		currentCommit: context.currentCommit,
 		editingUsers: fileStream.editingUsers,
-		usernamesRegexp: usernamesRegexp,
 		currentUser: user,
 		mutedStreams,
 		slashCommands,

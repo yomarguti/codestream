@@ -4,10 +4,13 @@ import createClassString from "classnames";
 import { FormattedMessage } from "react-intl";
 import EventEmitter from "../event-emitter";
 import ChannelMenu from "./ChannelMenu";
+import ComposeBox from "./ComposeBox";
 import DateSeparator from "./DateSeparator";
 import Icon from "./Icon";
 import Post from "./Post";
 import { goToInvitePage } from "../actions/routing";
+import * as actions from "./actions";
+import { getStreamForRepoAndFile } from "../reducers/streams";
 
 class Stream extends React.Component {
 	state = {
@@ -17,7 +20,6 @@ class Stream extends React.Component {
 		threadId: null
 	};
 	disposables = [];
-	gearIcon = React.createRef();
 
 	componentDidMount() {
 		if (global.atom) {
@@ -45,6 +47,133 @@ class Stream extends React.Component {
 	}
 
 	findPostById = id => this.props.posts.find(post => post.id === id);
+
+	findMentionedUserIds = (text, users) => {
+		const mentionedUserIds = [];
+		users.forEach(user => {
+			const matcher = user.username.replace(/\+/g, "\\+").replace(/\./g, "\\.");
+			if (text.match("@" + matcher + "\\b")) {
+				mentionedUserIds.push(user.id);
+			}
+		});
+		return mentionedUserIds;
+	};
+
+	runSlashCommand = (command, args) => {
+		switch (command) {
+			case "help":
+				return this.postHelp();
+			case "add":
+				return this.addMembersToStream(args);
+			case "who":
+				return this.showMembers();
+			case "mute":
+				return this.toggleMute();
+			case "muteall":
+				return this.toggleMuteAll();
+			case "msg":
+				return this.sendDirectMessage(args);
+			case "open":
+				return this.openStream(args);
+			case "prefs":
+				return this.openPrefs(args);
+			case "rename":
+				return this.renameChannel(args);
+			case "remove":
+				return this.removeFromStream(args);
+			case "leave":
+				return this.leaveChannel(args);
+			case "delete":
+				return this.deleteChannel(args);
+			case "archive":
+				return this.archiveChannel(args);
+			case "version":
+				return this.postVersion(args);
+			case "me":
+				return false;
+		}
+	};
+
+	// return true if we are able to use substitute
+	// to edit the text of my last post
+	substituteLastPost(substitute) {
+		// nothing to substitute? return false
+		if (!substitute) return false;
+
+		// if we can't find my last post in the stream, return false
+		const myLastPost = this.findMyPostBeforeSeqNum(9999999999);
+		if (!myLastPost) return false;
+
+		const find = substitute[1];
+		const replace = substitute[2];
+		// const modifier = substitute[3]; // not used yet
+		const newText = myLastPost.text.replace(find, replace);
+		if (newText !== myLastPost.text) {
+			this.replacePostText(myLastPost.id, newText);
+			return true;
+		} else return false;
+	}
+
+	checkForSlashCommands = text => {
+		const substitute = text.match(/^s\/(.+)\/(.*)\/$/);
+		if (substitute && this.substituteLastPost(substitute)) return true;
+
+		const commandMatch = text.match(/^\/(\w+)\b\s*(.*)/);
+		if (commandMatch) {
+			const command = commandMatch[1];
+			const args = commandMatch[2];
+			return this.runSlashCommand(command, args);
+		}
+
+		return false;
+	};
+
+	replacePostText = (postId, newText) => {
+		// convert the text to plaintext so there is no HTML
+		const doc = new DOMParser().parseFromString(newText, "text/html");
+		const replaceText = doc.documentElement.textContent;
+		const mentionUserIds = this.findMentionedUserIds(replaceText, this.props.teammates);
+
+		this.props.editPost(postId, replaceText, mentionUserIds);
+	};
+
+	editLastPost = event => {
+		// find the most recent post I authored
+		const postDiv = event.target.closest(".post");
+		const seqNum = postDiv ? postDiv.dataset.seqNum : 9999999999;
+		const editingPost = this.findMyPostBeforeSeqNum(seqNum);
+		if (editingPost) this.setState({ editingPostId: editingPost.id });
+	};
+
+	submitPost = ({ text, quote, mentionedUserIds, autoMentions }) => {
+		const codeBlocks = [];
+		const { threadId } = this.state;
+		const { stream, fileStreamId, createPost, currentFile, repoId } = this.props;
+
+		if (this.checkForSlashCommands(text)) return;
+
+		if (quote) {
+			let codeBlock = {
+				code: quote.quoteText,
+				location: quote.quoteRange,
+				preContext: quote.preContext,
+				postContext: quote.postContext,
+				repoId,
+				file: currentFile // this should come from the host
+			};
+
+			// if we have a streamId, send it. otherwise the
+			// API server will create one based on the file
+			// and the repoId.
+			if (fileStreamId) codeBlock.streamId = fileStreamId;
+
+			codeBlocks.push(codeBlock);
+		}
+
+		createPost(stream.id, threadId, text, codeBlocks, mentionedUserIds, {
+			autoMentions
+		});
+	};
 
 	handleEscape(event) {
 		if (this.state.editingPostId) this.handleDismissEdit();
@@ -250,14 +379,7 @@ class Stream extends React.Component {
 	};
 
 	render() {
-		const {
-			channelName,
-			className,
-			renderComposeBox,
-			runSlashCommand,
-			setActivePanel,
-			umis
-		} = this.props;
+		const { channelName, className, setActivePanel, umis } = this.props;
 
 		const umisClass = createClassString({
 			mentions: umis.totalMentions > 0,
@@ -268,6 +390,8 @@ class Stream extends React.Component {
 		const inThread = this.state.threadId;
 
 		const threadPost = this.findPostById(this.state.threadId);
+
+		const placeholderText = inThread ? `Reply to ${threadPost.author.username}` : "Add comment";
 
 		return (
 			<div className={createClassString("panel", "main-panel", "posts-panel", className)}>
@@ -287,7 +411,7 @@ class Stream extends React.Component {
 									umiCount={0}
 									isMuted={this.props.isMuted}
 									setActivePanel={setActivePanel}
-									runSlashCommand={runSlashCommand}
+									runSlashCommand={this.runSlashCommand}
 									closeMenu={this.closeMenu}
 								/>
 							)}
@@ -322,15 +446,32 @@ class Stream extends React.Component {
 					)}
 					{this.renderPosts(this.state.threadId)}
 				</div>
-				{renderComposeBox()}
+				<ComposeBox
+					placeholder={placeholderText}
+					teammates={this.props.teammates}
+					slashCommands={this.props.slashCommands}
+					ensureStreamIsActive={this.props.showPostsPanel}
+					ref={this._compose}
+					disabled={this.props.isOffline}
+					offscreen={!this.props.isActive}
+					onSubmit={this.submitPost}
+					onEmptyUpArrow={this.editLastPost}
+					findMentionedUserIds={this.findMentionedUserIds}
+				/>
 			</div>
 		);
 	}
 }
 
 const mapStateToProps = state => {
-	const { context, teams, users } = state;
+	const { connectivity, context, messaging, session, streams, teams, users } = state;
 	const teamMembers = teams[context.currentTeamId].memberIds.map(id => users[id]).filter(Boolean);
+
+	const fileStream =
+		getStreamForRepoAndFile(streams, context.currentRepoId, context.currentFile) || {};
+
+	const isOffline =
+		connectivity.offline || messaging.failedSubscriptions.length > 0 || messaging.timedOut;
 
 	// this usenames regexp is a pipe-separated list of
 	// either usernames or if no username exists for the
@@ -348,6 +489,14 @@ const mapStateToProps = state => {
 		.replace(/\+/g, "\\+") // replace + and . with escaped versions so
 		.replace(/\./g, "\\."); // that the regexp matches the literal chars
 
-	return { umis: state.umis, usernamesRegexp };
+	return {
+		currentFile: context.currentFile,
+		isOffline,
+		fileStreamId: fileStream.id,
+		repoId: context.currentRepoId,
+		teammates: teamMembers.filter(({ id }) => id !== session.userId),
+		umis: state.umis,
+		usernamesRegexp
+	};
 };
-export default connect(mapStateToProps, { goToInvitePage })(Stream);
+export default connect(mapStateToProps, { ...actions, goToInvitePage })(Stream);
