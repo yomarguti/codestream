@@ -318,18 +318,6 @@ export class SimpleStream extends Component {
 		if (this.state.unreadsBelow != unreadsBelow) this.setState({ unreadsBelow: unreadsBelow });
 	}
 
-	// dismiss the thread stream and return to the main stream
-	handleDismissThread = ({ track = true } = {}) => {
-		EventEmitter.emit("interaction:thread-closed", this.findPostById(this.state.threadId));
-		this.setState({ activePanel: "main" });
-		this.focusInput();
-		if (track)
-			EventEmitter.emit("analytics", {
-				label: "Page Viewed",
-				payload: { "Page Name": "Source Stream" }
-			});
-	};
-
 	handleEditPost = event => {
 		var postDiv = event.target.closest(".post");
 		if (!postDiv) return;

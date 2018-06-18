@@ -55241,23 +55241,6 @@ var SimpleStream = function (_Component) {
 				_this.setState({ activePanel: panel });
 			}
 		});
-		Object.defineProperty(_this, "handleDismissThread", {
-			enumerable: true,
-			writable: true,
-			value: function value() {
-				var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-				    _ref$track = _ref.track,
-				    track = _ref$track === undefined ? true : _ref$track;
-
-				emitter.emit("interaction:thread-closed", _this.findPostById(_this.state.threadId));
-				_this.setState({ activePanel: "main" });
-				_this.focusInput();
-				if (track) emitter.emit("analytics", {
-					label: "Page Viewed",
-					payload: { "Page Name": "Source Stream" }
-				});
-			}
-		});
 		Object.defineProperty(_this, "handleEditPost", {
 			enumerable: true,
 			writable: true,
@@ -55385,7 +55368,7 @@ var SimpleStream = function (_Component) {
 			enumerable: true,
 			writable: true,
 			value: function () {
-				var _ref2 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(args) {
+				var _ref = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(args) {
 					var _this$extractUsersFro, users, usernames, rest, text;
 
 					return regeneratorRuntime.wrap(function _callee$(_context) {
@@ -55430,8 +55413,8 @@ var SimpleStream = function (_Component) {
 					}, _callee, _this2);
 				}));
 
-				function value(_x3) {
-					return _ref2.apply(this, arguments);
+				function value(_x2) {
+					return _ref.apply(this, arguments);
 				}
 
 				return value;
@@ -55441,7 +55424,7 @@ var SimpleStream = function (_Component) {
 			enumerable: true,
 			writable: true,
 			value: function () {
-				var _ref3 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(args) {
+				var _ref2 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(args) {
 					var newStream;
 					return regeneratorRuntime.wrap(function _callee2$(_context2) {
 						while (1) {
@@ -55482,8 +55465,8 @@ var SimpleStream = function (_Component) {
 					}, _callee2, _this2);
 				}));
 
-				function value(_x4) {
-					return _ref3.apply(this, arguments);
+				function value(_x3) {
+					return _ref2.apply(this, arguments);
 				}
 
 				return value;
@@ -55567,7 +55550,7 @@ var SimpleStream = function (_Component) {
 			enumerable: true,
 			writable: true,
 			value: function () {
-				var _ref4 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(args) {
+				var _ref3 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(args) {
 					var text, _this$extractUsersFro2, users, usernames, rest;
 
 					return regeneratorRuntime.wrap(function _callee3$(_context3) {
@@ -55612,8 +55595,8 @@ var SimpleStream = function (_Component) {
 					}, _callee3, _this2);
 				}));
 
-				function value(_x5) {
-					return _ref4.apply(this, arguments);
+				function value(_x4) {
+					return _ref3.apply(this, arguments);
 				}
 
 				return value;
@@ -55630,7 +55613,7 @@ var SimpleStream = function (_Component) {
 			enumerable: true,
 			writable: true,
 			value: function () {
-				var _ref5 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(args) {
+				var _ref4 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(args) {
 					var teamMembersById, tokens, id, user, stream;
 					return regeneratorRuntime.wrap(function _callee4$(_context4) {
 						while (1) {
@@ -55671,8 +55654,8 @@ var SimpleStream = function (_Component) {
 					}, _callee4, _this2);
 				}));
 
-				function value(_x6) {
-					return _ref5.apply(this, arguments);
+				function value(_x5) {
+					return _ref4.apply(this, arguments);
 				}
 
 				return value;
@@ -55931,9 +55914,6 @@ var SimpleStream = function (_Component) {
 			if (this.state.unreadsAbove != unreadsAbove) this.setState({ unreadsAbove: unreadsAbove });
 			if (this.state.unreadsBelow != unreadsBelow) this.setState({ unreadsBelow: unreadsBelow });
 		}
-
-		// dismiss the thread stream and return to the main stream
-
 	}, {
 		key: "handleDismissEdit",
 		value: function handleDismissEdit() {
@@ -55966,8 +55946,8 @@ var SimpleStream = function (_Component) {
 
 			return react.createElement(
 				"div",
-				{ className: streamClass, ref: function ref(_ref6) {
-						return _this6._div = _ref6;
+				{ className: streamClass, ref: function ref(_ref5) {
+						return _this6._div = _ref5;
 					} },
 				react.createElement("div", { id: "modal-root" }),
 				react.createElement("div", { id: "confirm-root" }),
@@ -55997,15 +55977,15 @@ var SimpleStream = function (_Component) {
 	return SimpleStream;
 }(react_1);
 
-var mapStateToProps$6 = function mapStateToProps(_ref7) {
-	var configs = _ref7.configs,
-	    session = _ref7.session,
-	    context = _ref7.context,
-	    streams$$1 = _ref7.streams,
-	    users = _ref7.users,
-	    posts = _ref7.posts,
-	    teams = _ref7.teams,
-	    onboarding = _ref7.onboarding;
+var mapStateToProps$6 = function mapStateToProps(_ref6) {
+	var configs = _ref6.configs,
+	    session = _ref6.session,
+	    context = _ref6.context,
+	    streams$$1 = _ref6.streams,
+	    users = _ref6.users,
+	    posts = _ref6.posts,
+	    teams = _ref6.teams,
+	    onboarding = _ref6.onboarding;
 
 	// TODO: figure out a way to do this elsewhere
 	Object.keys(users).forEach(function (key, index) {
@@ -56033,8 +56013,8 @@ var mapStateToProps$6 = function mapStateToProps(_ref7) {
 	return {
 		configs: configs,
 		teamMembersById: toMapBy("id", teamMembers),
-		teammates: teamMembers.filter(function (_ref8) {
-			var id = _ref8.id;
+		teammates: teamMembers.filter(function (_ref7) {
+			var id = _ref7.id;
 			return id !== session.userId;
 		}),
 		postStream: postStream,
