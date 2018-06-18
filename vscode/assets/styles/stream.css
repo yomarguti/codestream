@@ -105,7 +105,6 @@ body {
   vertical-align: text-top;
   fill: currentColor;
 }
-
 .codestream [contenteditable="true"]:empty:before {
   content: attr(placeholder);
   opacity: 0.5;
@@ -376,7 +375,6 @@ body {
   border: none;
   border-top: 1px solid rgba(0, 0, 0, 0.3);
   background-color: var(--app-background-color);
-  position: absolute;
   bottom: 0px;
   padding: 10px;
   box-sizing: border-box;
@@ -816,12 +814,28 @@ body {
   height: 100%;
   transition: transform 0.2s, opacity 0.2s;
 }
+.codestream .stream .panel.posts-panel {
+  display: flex;
+  flex-direction: column;
+}
 .codestream .stream .postslist {
   width: 100%;
+  height: 100%;
   max-height: 100%;
   overflow-y: auto;
   position: relative;
   transition: transform 0.2s, opacity 0.2s;
+}
+.codestream .stream .postslist.shrink {
+  transform: scale(0.9);
+  height: 0;
+}
+.codestream .stream .threadlist {
+  display: none;
+}
+.codestream .stream .threadlist.active {
+  display: block;
+  animation: 0.4s slidein;
 }
 .codestream .stream .panel.shrink {
   max-height: 100%;
@@ -1063,25 +1077,18 @@ body {
 .codestream .stream.no-headshots .post .headshot {
   display: none;
 }
-.codestream .stream.reduced-motion .shrink,
 .codestream .stream.reduced-motion .off-right {
   z-index: -1 !important;
   opacity: 0;
   animation: none;
   transition: opacity 0.25s;
 }
-.codestream .stream.reduced-motion .shrink .panel-header,
 .codestream .stream.reduced-motion .off-right .panel-header {
   z-index: -1 !important;
-}
-.codestream .stream.reduced-motion .shrink .postslist,
-.codestream .stream.reduced-motion .off-right .postslist {
-  transform: none;
 }
 .codestream .stream.reduced-motion .panel {
   left: 0 !important;
   animation: none;
-  display: block;
   z-index: 2;
   transition: opacity 0.25s;
 }
@@ -1090,6 +1097,12 @@ body {
   opacity: 0;
   transition: opacity 0.25s;
   animation: none !important;
+}
+.codestream .stream.reduced-motion .postslist {
+  transform: none;
+}
+.codestream .stream.reduced-motion .threadlist.active {
+  animation: none;
 }
 .codestream .stream.reduced-motion .compose {
   animation: none !important;
