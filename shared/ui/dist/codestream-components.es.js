@@ -54384,6 +54384,7 @@ var Stream = function (_React$Component) {
 		value: function componentDidMount() {
 			var _this2 = this;
 
+			this.disposables.push(emitter.on("interaction:marker-selected", this.handleMarkerSelected));
 			if (global.atom) {
 				this.disposables.push(atom.keymaps.add("codestream", {
 					"atom-workspace": {
@@ -54719,6 +54720,16 @@ var _initialiseProps$1 = function _initialiseProps() {
 			});
 		}
 	});
+	Object.defineProperty(this, "handleMarkerSelected", {
+		enumerable: true,
+		writable: true,
+		value: function value(_ref5) {
+			var postId = _ref5.postId;
+
+			_this4.props.showPostsPanel();
+			_this4.selectPost(postId);
+		}
+	});
 	Object.defineProperty(this, "handleClickStreamSettings", {
 		enumerable: true,
 		writable: true,
@@ -54827,9 +54838,9 @@ var _initialiseProps$1 = function _initialiseProps() {
 		enumerable: true,
 		writable: true,
 		value: function value() {
-			var _ref5 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-			    _ref5$track = _ref5.track,
-			    track = _ref5$track === undefined ? true : _ref5$track;
+			var _ref6 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+			    _ref6$track = _ref6.track,
+			    track = _ref6$track === undefined ? true : _ref6$track;
 
 			emitter.emit("interaction:thread-closed", _this4.findPostById(_this4.state.threadId));
 			_this4.setState({ threadId: null });
@@ -55049,15 +55060,6 @@ var SimpleStream = function (_Component) {
 			writable: true,
 			value: []
 		});
-		Object.defineProperty(_this, "handleMarkerSelected", {
-			enumerable: true,
-			writable: true,
-			value: function value(_ref) {
-				var postId = _ref.postId;
-
-				_this.selectPost(postId);
-			}
-		});
 		Object.defineProperty(_this, "handleResizeCompose", {
 			enumerable: true,
 			writable: true,
@@ -55153,9 +55155,9 @@ var SimpleStream = function (_Component) {
 			enumerable: true,
 			writable: true,
 			value: function value() {
-				var _ref2 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-				    _ref2$track = _ref2.track,
-				    track = _ref2$track === undefined ? true : _ref2$track;
+				var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+				    _ref$track = _ref.track,
+				    track = _ref$track === undefined ? true : _ref$track;
 
 				emitter.emit("interaction:thread-closed", _this.findPostById(_this.state.threadId));
 				_this.setState({ activePanel: "main" });
@@ -55310,7 +55312,7 @@ var SimpleStream = function (_Component) {
 			enumerable: true,
 			writable: true,
 			value: function () {
-				var _ref3 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(args) {
+				var _ref2 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(args) {
 					var _this$extractUsersFro, users, usernames, rest, text;
 
 					return regeneratorRuntime.wrap(function _callee$(_context) {
@@ -55356,7 +55358,7 @@ var SimpleStream = function (_Component) {
 				}));
 
 				function value(_x3) {
-					return _ref3.apply(this, arguments);
+					return _ref2.apply(this, arguments);
 				}
 
 				return value;
@@ -55366,7 +55368,7 @@ var SimpleStream = function (_Component) {
 			enumerable: true,
 			writable: true,
 			value: function () {
-				var _ref4 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(args) {
+				var _ref3 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(args) {
 					var newStream;
 					return regeneratorRuntime.wrap(function _callee2$(_context2) {
 						while (1) {
@@ -55408,7 +55410,7 @@ var SimpleStream = function (_Component) {
 				}));
 
 				function value(_x4) {
-					return _ref4.apply(this, arguments);
+					return _ref3.apply(this, arguments);
 				}
 
 				return value;
@@ -55494,7 +55496,7 @@ var SimpleStream = function (_Component) {
 			enumerable: true,
 			writable: true,
 			value: function () {
-				var _ref5 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(args) {
+				var _ref4 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(args) {
 					var text, _this$extractUsersFro2, users, usernames, rest;
 
 					return regeneratorRuntime.wrap(function _callee3$(_context3) {
@@ -55540,7 +55542,7 @@ var SimpleStream = function (_Component) {
 				}));
 
 				function value(_x5) {
-					return _ref5.apply(this, arguments);
+					return _ref4.apply(this, arguments);
 				}
 
 				return value;
@@ -55557,7 +55559,7 @@ var SimpleStream = function (_Component) {
 			enumerable: true,
 			writable: true,
 			value: function () {
-				var _ref6 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(args) {
+				var _ref5 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(args) {
 					var teamMembersById, tokens, id, user, stream;
 					return regeneratorRuntime.wrap(function _callee4$(_context4) {
 						while (1) {
@@ -55599,7 +55601,7 @@ var SimpleStream = function (_Component) {
 				}));
 
 				function value(_x6) {
-					return _ref6.apply(this, arguments);
+					return _ref5.apply(this, arguments);
 				}
 
 				return value;
@@ -55654,8 +55656,6 @@ var SimpleStream = function (_Component) {
 		key: "componentDidMount",
 		value: function componentDidMount() {
 			var _this3 = this;
-
-			this.disposables.push(emitter.subscribe("interaction:marker-selected", this.handleMarkerSelected));
 
 			// this listener pays attention to when the input field resizes,
 			// presumably because the user has typed more than one line of text
@@ -55930,8 +55930,8 @@ var SimpleStream = function (_Component) {
 
 			return react.createElement(
 				"div",
-				{ className: streamClass, ref: function ref(_ref7) {
-						return _this5._div = _ref7;
+				{ className: streamClass, ref: function ref(_ref6) {
+						return _this5._div = _ref6;
 					} },
 				react.createElement("div", { id: "modal-root" }),
 				react.createElement("div", { id: "confirm-root" }),
@@ -56097,15 +56097,15 @@ var SimpleStream = function (_Component) {
 	return SimpleStream;
 }(react_1);
 
-var mapStateToProps$6 = function mapStateToProps(_ref8) {
-	var configs = _ref8.configs,
-	    session = _ref8.session,
-	    context = _ref8.context,
-	    streams$$1 = _ref8.streams,
-	    users = _ref8.users,
-	    posts = _ref8.posts,
-	    teams = _ref8.teams,
-	    onboarding = _ref8.onboarding;
+var mapStateToProps$6 = function mapStateToProps(_ref7) {
+	var configs = _ref7.configs,
+	    session = _ref7.session,
+	    context = _ref7.context,
+	    streams$$1 = _ref7.streams,
+	    users = _ref7.users,
+	    posts = _ref7.posts,
+	    teams = _ref7.teams,
+	    onboarding = _ref7.onboarding;
 
 	// TODO: figure out a way to do this elsewhere
 	Object.keys(users).forEach(function (key, index) {
@@ -56133,8 +56133,8 @@ var mapStateToProps$6 = function mapStateToProps(_ref8) {
 	return {
 		configs: configs,
 		teamMembersById: toMapBy("id", teamMembers),
-		teammates: teamMembers.filter(function (_ref9) {
-			var id = _ref9.id;
+		teammates: teamMembers.filter(function (_ref8) {
+			var id = _ref8.id;
 			return id !== session.userId;
 		}),
 		postStream: postStream,

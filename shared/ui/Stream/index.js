@@ -36,10 +36,6 @@ export class SimpleStream extends Component {
 	}
 
 	componentDidMount() {
-		this.disposables.push(
-			EventEmitter.subscribe("interaction:marker-selected", this.handleMarkerSelected)
-		);
-
 		// this listener pays attention to when the input field resizes,
 		// presumably because the user has typed more than one line of text
 		// in it, and calls a function to handle the new size
@@ -101,10 +97,6 @@ export class SimpleStream extends Component {
 	componentWillUnmount() {
 		this.disposables.forEach(d => d.dispose());
 	}
-
-	handleMarkerSelected = ({ postId }) => {
-		this.selectPost(postId);
-	};
 
 	copy(event) {
 		let selectedText = window.getSelection().toString();

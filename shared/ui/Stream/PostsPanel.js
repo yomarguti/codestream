@@ -22,6 +22,9 @@ class Stream extends React.Component {
 	disposables = [];
 
 	componentDidMount() {
+		this.disposables.push(
+			EventEmitter.on("interaction:marker-selected", this.handleMarkerSelected)
+		);
 		if (global.atom) {
 			this.disposables.push(
 				atom.keymaps.add("codestream", {
@@ -173,6 +176,11 @@ class Stream extends React.Component {
 		createPost(stream.id, threadId, text, codeBlocks, mentionedUserIds, {
 			autoMentions
 		});
+	};
+
+	handleMarkerSelected = ({ postId }) => {
+		this.props.showPostsPanel();
+		this.selectPost(postId);
 	};
 
 	handleEscape(event) {
