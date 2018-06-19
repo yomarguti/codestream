@@ -47,16 +47,15 @@ export class CodeStreamApi {
 	// private responseCache = new Map<string, Promise<any>>();
 
 	constructor(
-		private readonly _agent: CodeStreamAgent,
+		agent: CodeStreamAgent,
 		public baseUrl: string,
 		private _ideVersion: string,
 		private _extensionVersion: string
 	) {
-		this._agent.registerHandler(
+		agent.registerHandler<Promise<any>, any>(
 			"codeStream/api",
-			({ url, token, init }, cancellationToken: CancellationToken) => {
-				return this.onRequest(url, token, init, cancellationToken);
-			}
+			({ url, token, init }, cancellationToken: CancellationToken) =>
+				this.onApiRequest(url, token, init, cancellationToken)
 		);
 
 		// this.useMiddleware({
@@ -72,7 +71,7 @@ export class CodeStreamApi {
 		// });
 	}
 
-	private onRequest(
+	private onApiRequest(
 		url: string,
 		token: string,
 		init: RequestInit,

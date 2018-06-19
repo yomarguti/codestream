@@ -13,13 +13,31 @@ export interface CSMarker {
 	teamId: string;
 	streamId: string;
 	postId: string;
+	commitHashWhenCreated: string;
 }
+
+export interface CSLocationMeta {
+	startWasDeleted?: boolean;
+	endWasDeleted?: boolean;
+	entirelyDeleted?: boolean;
+}
+
+export type CSLocationArray = [number, number, number, number, CSLocationMeta | undefined];
 
 export interface CSMarkerLocations {
 	teamId: string;
 	streamId: string;
 	commitHash: string;
-	locations: { [id: string]: [number, number, number, number] };
+	locations: Map<string, CSLocationArray>;
+	// locations: { [id: string]: CSLocationArray };
+}
+
+export interface CSMarkerLocation {
+	lineStart: number;
+	colStart: number;
+	lineEnd: number;
+	colEnd: number;
+	meta?: CSLocationMeta;
 }
 
 export interface CSCodeBlock {

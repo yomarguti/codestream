@@ -1,5 +1,5 @@
 "use strict";
-import { Functions } from "../system/function";
+import { Functions } from "./function";
 
 function _memoize(fn: Function, key: string): Function {
 	const memoizeKey = `$memoize$${key}`;

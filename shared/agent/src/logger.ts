@@ -17,7 +17,7 @@ export class Logger {
 	static level: TraceLevel = TraceLevel.Silent;
 	private static _agent: CodeStreamAgent | undefined;
 
-	static configure(agent: CodeStreamAgent) {
+	static initialize(agent: CodeStreamAgent) {
 		this._agent = agent;
 	}
 

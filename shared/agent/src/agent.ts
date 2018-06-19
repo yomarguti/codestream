@@ -15,41 +15,36 @@ import {
 	Logger as LSPLogger,
 	ProposedFeatures,
 	TextDocumentPositionParams,
-	TextDocuments,
+	TextDocumentSyncKind,
 	WorkspaceFoldersChangeEvent
 } from "vscode-languageserver";
-import { CodeStreamApi } from "./api/api";
-import { GitService } from "./git/gitService";
+import { Container } from "./container";
 import { Logger } from "./logger";
-import { memoize } from "./system";
+import { Disposables, memoize } from "./system";
 import { gitApi, GitApiRepository } from "./git/git";
+import { MarkerHandler } from "./marker/markerHandler";
 
 const defaults = {
 	serverUrl: "https://api.codestream.com"
 };
 
+export interface InitializationOptions {
+	extensionVersion: string;
+	gitPath: string;
+	ideVersion: string;
+}
+
 export class CodeStreamAgent implements Disposable, LSPLogger {
-	private _api: CodeStreamApi | undefined;
-	private readonly _connection: Connection;
-	private _git: GitService | undefined;
-
-	private _disposables: Disposable[] | undefined;
 	private _clientCapabilities: ClientCapabilities | undefined;
-	private _clientOptions:
-		| {
-				extensionVersion: string;
-				gitPath: string;
-				ideVersion: string;
-		  }
-		| undefined;
-
-	private readonly _documents: TextDocuments = new TextDocuments();
+	private readonly _connection: Connection;
+	private _disposable: Disposable | undefined;
+	private _initializationOptions: InitializationOptions | undefined;
 
 	constructor() {
 		// Create a connection for the server. The connection uses Node's IPC as a transport.
 		// Also include all preview / proposed LSP features.
 		this._connection = createConnection(ProposedFeatures.all);
-		Logger.configure(this);
+		Logger.initialize(this);
 
 		this._connection.onInitialize(this.onInitialize.bind(this));
 		this._connection.onInitialized(this.onInitialized.bind(this));
@@ -57,24 +52,22 @@ export class CodeStreamAgent implements Disposable, LSPLogger {
 		this._connection.onDidChangeWatchedFiles(this.onWatchedFilesChanged.bind(this));
 		this._connection.onHover(this.onHover.bind(this));
 
+		// TODO: This should go away in favor of specific registrations
 		this._connection.onRequest(this.onRequest.bind(this));
-
-		// Listen for open/change/close TextDocument events
-		this._documents.listen(this._connection);
 	}
 
 	dispose() {
-		this._disposables && this._disposables.forEach(d => d.dispose());
+		this._disposable && this._disposable.dispose();
 	}
 
 	private onInitialize(e: InitializeParams) {
 		const capabilities = e.capabilities;
 		this._clientCapabilities = capabilities;
-		this._clientOptions = e.initializationOptions;
+		this._initializationOptions = e.initializationOptions;
 
 		return {
 			capabilities: {
-				textDocumentSync: this._documents.syncKind,
+				textDocumentSync: TextDocumentSyncKind.Full,
 				hoverProvider: true
 			}
 		} as InitializeResult;
@@ -97,31 +90,28 @@ export class CodeStreamAgent implements Disposable, LSPLogger {
 		}
 
 		this._serverUrl = await this.getServerUrl();
-		this._api = new CodeStreamApi(this, this._serverUrl, this.ideVersion, this.extensionVersion);
+		void (await Container.initialize(this, this._connection, this._initializationOptions!));
 
-		setImmediate(async () => {
-			const repos = await this._connection.sendRequest<GitApiRepository[]>(
-				"codeStream/client/git/repos"
-			);
+		const repos = await this._connection.sendRequest<GitApiRepository[]>(
+			"codeStream/client/git/repos"
+		);
 
-			gitApi({
-				getGitPath: async () => this.gitPath,
-				getRepositories: async () => {
-					return repos;
-					// const repos = await this._connection.sendRequest<GitApiRepository[]>(
-					// 	"codeStream/client/git/repos"
-					// );
-					// return repos;
-				}
-			});
+		gitApi({
+			getGitPath: async () => Container.instance.gitPath,
+			getRepositories: async () => {
+				return repos;
+				// const repos = await this._connection.sendRequest<GitApiRepository[]>(
+				// 	"codeStream/client/git/repos"
+				// );
+				// return repos;
+			}
 		});
-		this._git = new GitService();
 
-		this._disposables = subscriptions;
+		this._disposable = Disposables.from(...subscriptions);
 	}
 
 	private onConfigurationChanged(e: DidChangeConfigurationParams) {
-		this._connection.console.log("Configuration change event received");
+		Container.instance.updateConfig(e.settings.codestream);
 	}
 
 	private onHover(e: TextDocumentPositionParams) {
@@ -135,26 +125,8 @@ export class CodeStreamAgent implements Disposable, LSPLogger {
 		this._connection.console.log(`Request ${method} received`);
 
 		switch (method) {
-			case "codeStream/git/repos": {
-				return this._git!.getRepositories();
-			}
-			case "codeStream/git/repo/remote": {
-				const { uri } = params[0];
-				return this._git!.getRepoRemote(uri);
-			}
-			case "codeStream/git/textDocument/authors": {
-				const {
-					textDocument: { uri },
-					options
-				} = params[0];
-				return this._git!.getFileAuthors(uri, options);
-			}
-			case "codeStream/git/textDocument/revision": {
-				const {
-					textDocument: { uri }
-				} = params[0];
-				return this._git!.getFileCurrentSha(uri);
-			}
+			case "codeStream/textDocument/markers":
+				return MarkerHandler.handle(params);
 		}
 
 		return undefined;
@@ -167,25 +139,6 @@ export class CodeStreamAgent implements Disposable, LSPLogger {
 
 	private onWorkspaceFoldersChanged(e: WorkspaceFoldersChangeEvent) {
 		this._connection.console.log("Workspace folder change event received");
-	}
-
-	get api() {
-		return this._api;
-	}
-
-	@memoize
-	get extensionVersion() {
-		return (this._clientOptions && this._clientOptions.extensionVersion) || "";
-	}
-
-	@memoize
-	get gitPath() {
-		return (this._clientOptions && this._clientOptions.gitPath) || "";
-	}
-
-	@memoize
-	get ideVersion() {
-		return (this._clientOptions && this._clientOptions.ideVersion) || "";
 	}
 
 	private _serverUrl: string | undefined;

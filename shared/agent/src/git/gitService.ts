@@ -1,5 +1,6 @@
 "use strict";
 import {
+	CancellationToken,
 	Disposable,
 	Emitter,
 	Event
@@ -8,12 +9,13 @@ import {
 } from "vscode-languageserver";
 import Uri from "vscode-uri";
 import { GitAuthorParser } from "./parsers/authorParser";
-import { getRepositories, git, GitErrors, GitWarnings } from "./git";
-import { GitAuthor, GitRemote, GitRepository } from "./models/models";
+import { getRepositories, git, GitApiRepository, GitErrors, GitWarnings } from "./git";
+import { GitAuthor, GitRemote } from "./models/models";
 import { GitRemoteParser } from "./parsers/remoteParser";
 import { Strings } from "../system";
 import * as fs from "fs";
 import * as path from "path";
+import { CodeStreamAgent } from "../agent";
 
 export * from "./models/models";
 
@@ -50,7 +52,7 @@ export interface IGitService extends Disposable {
 	getRepoRemote(repoPath: string): Promise<GitRemote | undefined>;
 	// getRepoRemote(repoUriOrPath: Uri | string): Promise<GitRemote | undefined>;
 
-	getRepositories(): Promise<GitRepository[]>;
+	getRepositories(): Promise<GitApiRepository[]>;
 
 	resolveRef(uri: Uri, ref: string): Promise<string | undefined>;
 	resolveRef(path: string, ref: string): Promise<string | undefined>;
@@ -65,12 +67,38 @@ export class GitService implements IGitService, Disposable {
 		return this._onDidChangeRepositories.event;
 	}
 
-	constructor() {
+	constructor(agent: CodeStreamAgent) {
+		agent.registerHandler("codeStream/git/repos", (cancellationToken: CancellationToken) =>
+			this.onRepositoriesRequest(cancellationToken)
+		);
+
+		// case "codeStream/git/repo/remote": {
+		// 	const { uri } = params[0];
+		// 	return this._git!.getRepoRemote(uri);
+		// }
+		// case "codeStream/git/textDocument/authors": {
+		// 	const {
+		// 		textDocument: { uri },
+		// 		options
+		// 	} = params[0];
+		// 	return this._git!.getFileAuthors(uri, options);
+		// }
+		// case "codeStream/git/textDocument/revision": {
+		// 	const {
+		// 		textDocument: { uri }
+		// 	} = params[0];
+		// 	return this._git!.getFileCurrentSha(uri);
+		// }
+
 		// this._disposable = workspace.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this);
 	}
 
 	dispose() {
 		this._disposable && this._disposable.dispose();
+	}
+
+	private onRepositoriesRequest(cancellationToken: CancellationToken) {
+		return this.getRepositories();
 	}
 
 	// private onWorkspaceFoldersChanged(e: WorkspaceFoldersChangeEvent) {
@@ -258,11 +286,40 @@ export class GitService implements IGitService, Disposable {
 		return push || fetch;
 	}
 
-	protected _repositories: GitRepository[] | undefined;
-	async getRepositories(): Promise<GitRepository[]> {
+	async repoHasRemote(repoPath: string, remoteUrl: string): Promise<boolean> {
+		let data;
+		try {
+			data = await git({ cwd: repoPath }, "remote", "-v");
+			if (!data) return false;
+		} catch {
+			return false;
+		}
+
+		const remotes = GitRemoteParser.parse(data, repoPath);
+		for (const r of remotes) {
+			if (r.normalizedUrl === remoteUrl) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	async getRepoRoot(filePath: string): Promise<string | undefined> {
+		const [dir] = Strings.splitPath(filePath);
+		try {
+			const data = await git({ cwd: dir }, "rev-parse", "--show-toplevel");
+			return data.trim();
+		} catch {
+			return undefined;
+		}
+	}
+
+	protected _repositories: GitApiRepository[] | undefined;
+	async getRepositories(): Promise<GitApiRepository[]> {
 		if (this._repositories === undefined) {
 			const repos = await getRepositories();
-			this._repositories = repos.map(r => new GitRepository(r.rootUri, this));
+			this._repositories = repos; // repos.map(r => new GitRepository(r.rootUri, this));
 		}
 		return this._repositories;
 	}

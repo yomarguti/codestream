@@ -1,5 +1,5 @@
 "use strict";
-import { Iterables } from "../system/iterable";
+import { Iterables } from "./iterable";
 
 // Code stolen from https://github.com/Microsoft/vscode/blob/b3e6d5bb039a4a9362b52a2c8726267ca68cf64e/src/vs/base/common/map.ts#L352
 
