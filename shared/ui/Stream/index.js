@@ -7,7 +7,6 @@ import PublicChannelPanel from "./PublicChannelPanel";
 import CreateChannelPanel from "./CreateChannelPanel";
 import CreateDMPanel from "./CreateDMPanel";
 import PostsPanel from "./PostsPanel";
-import EventEmitter from "../event-emitter";
 import * as actions from "./actions";
 import { goToInvitePage } from "../actions/routing";
 import { toMapBy } from "../utils";
@@ -37,43 +36,6 @@ export class SimpleStream extends Component {
 		atom.clipboard.write(selectedText);
 		event.abortKeyBinding();
 	}
-
-	handleResizeCompose = () => {
-		// this.resizeStream();
-	};
-
-	resizeStream = () => {
-		if (!this._div || !this._compose) return;
-		const streamHeight = this._div.offsetHeight;
-		const postslistHeight = this._postslist.offsetHeight;
-		const composeHeight = this._compose.current.offsetHeight;
-		const headerHeight = this._header.offsetHeight;
-		if (postslistHeight < streamHeight) {
-			let newHeight = streamHeight - postslistHeight + this._intro.offsetHeight - composeHeight;
-			this._intro.style.height = newHeight + "px";
-		}
-		const padding = composeHeight + headerHeight;
-		// this._div.style.paddingBottom = padding + "px";
-		this._mainPanel.style.paddingBottom = padding + "px";
-		// we re-measure the height of postslist here because we just changed
-		// it with the style declaration immediately above
-		this._threadpostslist.style.height = this._postslist.offsetHeight + "px";
-		// this._threadpostslist.style.top = headerHeight + "px";
-		// if (this._atMentionsPopup)
-		// this._atMentionsPopup.style.bottom = this._compose.offsetHeight + "px";
-
-		let scrollHeight = this._postslist.scrollHeight;
-		let currentScroll = this._postslist.scrollTop;
-		let offBottom = scrollHeight - currentScroll - streamHeight + composeHeight + headerHeight;
-		// if i am manually scrolling, don't programatically scroll to bottom
-		// offBottom is how far we've scrolled off the bottom of the posts list
-		console.log("OFF BOTTOM IS: ", offBottom);
-		if (offBottom < 100) this.scrollToBottom();
-	};
-
-	scrollToBottom = () => {};
-
-	calculateScrolledOffBottom = () => {};
 
 	// return the post, if any, with the given ID
 	findPostById(id) {

@@ -55247,55 +55247,6 @@ var SimpleStream = function (_Component) {
 
 		var _this = possibleConstructorReturn(this, (SimpleStream.__proto__ || Object.getPrototypeOf(SimpleStream)).call(this, props));
 
-		Object.defineProperty(_this, "handleResizeCompose", {
-			enumerable: true,
-			writable: true,
-			value: function value() {
-				// this.resizeStream();
-			}
-		});
-		Object.defineProperty(_this, "resizeStream", {
-			enumerable: true,
-			writable: true,
-			value: function value() {
-				if (!_this._div || !_this._compose) return;
-				var streamHeight = _this._div.offsetHeight;
-				var postslistHeight = _this._postslist.offsetHeight;
-				var composeHeight = _this._compose.current.offsetHeight;
-				var headerHeight = _this._header.offsetHeight;
-				if (postslistHeight < streamHeight) {
-					var newHeight = streamHeight - postslistHeight + _this._intro.offsetHeight - composeHeight;
-					_this._intro.style.height = newHeight + "px";
-				}
-				var padding = composeHeight + headerHeight;
-				// this._div.style.paddingBottom = padding + "px";
-				_this._mainPanel.style.paddingBottom = padding + "px";
-				// we re-measure the height of postslist here because we just changed
-				// it with the style declaration immediately above
-				_this._threadpostslist.style.height = _this._postslist.offsetHeight + "px";
-				// this._threadpostslist.style.top = headerHeight + "px";
-				// if (this._atMentionsPopup)
-				// this._atMentionsPopup.style.bottom = this._compose.offsetHeight + "px";
-
-				var scrollHeight = _this._postslist.scrollHeight;
-				var currentScroll = _this._postslist.scrollTop;
-				var offBottom = scrollHeight - currentScroll - streamHeight + composeHeight + headerHeight;
-				// if i am manually scrolling, don't programatically scroll to bottom
-				// offBottom is how far we've scrolled off the bottom of the posts list
-				console.log("OFF BOTTOM IS: ", offBottom);
-				if (offBottom < 100) _this.scrollToBottom();
-			}
-		});
-		Object.defineProperty(_this, "scrollToBottom", {
-			enumerable: true,
-			writable: true,
-			value: function value() {}
-		});
-		Object.defineProperty(_this, "calculateScrolledOffBottom", {
-			enumerable: true,
-			writable: true,
-			value: function value() {}
-		});
 		Object.defineProperty(_this, "runSlashCommand", {
 			enumerable: true,
 			writable: true,
@@ -55829,11 +55780,11 @@ var SimpleStream = function (_Component) {
 			atom.clipboard.write(selectedText);
 			event.abortKeyBinding();
 		}
-	}, {
-		key: "findPostById",
-
 
 		// return the post, if any, with the given ID
+
+	}, {
+		key: "findPostById",
 		value: function findPostById(id) {
 			return this.props.posts.find(function (post) {
 				return id === post.id;
