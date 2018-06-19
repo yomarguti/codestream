@@ -35,7 +35,7 @@ export async function activate(context: ExtensionContext) {
 			module: serverModule,
 			transport: TransportKind.ipc,
 			options: {
-				execArgv: ["--nolazy", "--inspect=6009"]
+				execArgv: ["--nolazy", "--inspect-brk=6009"]
 			}
 		}
 	};
@@ -86,6 +86,7 @@ function onSessionStatusChanged(e: SessionStatusChangedEvent) {
 	setContext(ContextKeys.Status, status);
 }
 
-function onGitReposRequest(method: string, ...params: any[]): Promise<GitApiRepository[]> {
-	return getRepositories();
+async function onGitReposRequest(method: string, ...params: any[]): Promise<GitApiRepository[]> {
+	const repos = await getRepositories();
+	return repos.map(r => ({ rootUri: r.rootUri.toString() }));
 }

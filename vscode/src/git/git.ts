@@ -101,7 +101,7 @@ export async function git(
 }
 
 export interface GitApiRepository {
-	readonly rootUri: Uri;
+	readonly rootUri: Uri | string;
 	// readonly inputBox: InputBox;
 }
 

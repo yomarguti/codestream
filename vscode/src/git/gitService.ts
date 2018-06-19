@@ -268,7 +268,7 @@ export class GitService extends Disposable implements IGitService {
 		if (this._repositories === undefined) {
 			const repos = await Container.agent.sendRequest<GitApiRepository[]>("codeStream/git/repos");
 			// const repos = await getRepositories();
-			this._repositories = repos.map(r => new GitRepository(r.rootUri));
+			this._repositories = repos.map(r => new GitRepository(Uri.parse(r.rootUri as string)));
 		}
 		return this._repositories;
 	}
