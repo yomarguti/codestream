@@ -1,7 +1,7 @@
 "use strict";
-import { version as vscodeVersion } from "vscode";
-import { extensionVersion } from "../extension";
-import { Logger } from "../logger";
+// import { version as vscodeVersion } from "vscode";
+// import { extensionVersion } from "../extension";
+// import { Logger } from "../logger";
 import {
 	CreatePostRequest,
 	CreatePostResponse,
@@ -37,8 +37,9 @@ import {
 	UpdateStreamMembershipRequest,
 	UpdateStreamMembershipResponse
 } from "./types";
-import fetch, { Headers, RequestInit, Response } from "node-fetch";
+import { RequestInit } from "node-fetch";
 import { URLSearchParams } from "url";
+import { Container } from "../container";
 export * from "./types";
 
 export interface ApiMiddlewareContext {
@@ -266,94 +267,99 @@ export class CodeStreamApi {
 		init?: RequestInit,
 		token?: string
 	): Promise<R> {
-		if (init !== undefined || token !== undefined) {
-			if (init === undefined) {
-				init = {};
-			}
+		return Container.agent.sendRequest<R>("codeStream/api", {
+			url,
+			token,
+			init
+		});
+		// if (init !== undefined || token !== undefined) {
+		// 	if (init === undefined) {
+		// 		init = {};
+		// 	}
 
-			if (init.headers === undefined) {
-				init.headers = new Headers();
-			}
+		// 	if (init.headers === undefined) {
+		// 		init.headers = new Headers();
+		// 	}
 
-			if (init.headers instanceof Headers) {
-				init.headers.append("Accept", "application/json");
-				init.headers.append("Content-Type", "application/json");
+		// 	if (init.headers instanceof Headers) {
+		// 		init.headers.append("Accept", "application/json");
+		// 		init.headers.append("Content-Type", "application/json");
 
-				if (token !== undefined) {
-					init.headers.append("Authorization", `Bearer ${token}`);
-				}
+		// 		if (token !== undefined) {
+		// 			init.headers.append("Authorization", `Bearer ${token}`);
+		// 		}
 
-				init.headers.append("X-CS-Plugin-IDE", "VS Code");
-				init.headers.append("X-CS-Plugin-Version", extensionVersion);
-				init.headers.append("X-CS-IDE-Version", vscodeVersion);
-			}
-		}
+		// 		init.headers.append("X-CS-Plugin-IDE", "VS Code");
+		// 		init.headers.append("X-CS-Plugin-Version", extensionVersion);
+		// 		init.headers.append("X-CS-IDE-Version", vscodeVersion);
+		// 	}
+		// }
 
-		const method = (init && init.method) || "GET";
-		const absoluteUrl = `${this.baseUrl}${url}`;
+		// const method = (init && init.method) || "GET";
+		// const absoluteUrl = `${this.baseUrl}${url}`;
 
-		Logger.log(`${method} ${url} ${CodeStreamApi.sanitize(init && init.body)}`);
+		// Logger.log(`${method} ${url} ${CodeStreamApi.sanitize(init && init.body)}`);
 
-		const hasMiddleware = this._middleware.length > 0;
+		// const hasMiddleware = this._middleware.length > 0;
 
-		let context: ApiMiddlewareContext;
-		if (hasMiddleware) {
-			context = {
-				url: absoluteUrl,
-				method: method,
-				request: init
-			};
+		// let context: ApiMiddlewareContext;
+		// if (hasMiddleware) {
+		// 	context = {
+		// 		url: absoluteUrl,
+		// 		method: method,
+		// 		request: init
+		// 	};
 
-			for (const mw of this._middleware) {
-				if (mw.onRequest === undefined) continue;
+		// 	for (const mw of this._middleware) {
+		// 		if (mw.onRequest === undefined) continue;
 
-				try {
-					await mw.onRequest(context);
-				} catch (ex) {
-					Logger.error(ex, `${method} ${url}: Middleware(${mw.name}).onRequest FAILED`);
-				}
-			}
-		}
+		// 		try {
+		// 			await mw.onRequest(context);
+		// 		} catch (ex) {
+		// 			Logger.error(ex, `${method} ${url}: Middleware(${mw.name}).onRequest FAILED`);
+		// 		}
+		// 	}
+		// }
 
-		let json: Promise<any> | undefined;
-		if (hasMiddleware) {
-			for (const mw of this._middleware) {
-				if (mw.onProvideResponse === undefined) continue;
+		// let json: Promise<any> | undefined;
+		// if (hasMiddleware) {
+		// 	for (const mw of this._middleware) {
+		// 		if (mw.onProvideResponse === undefined) continue;
 
-				try {
-					json = await mw.onProvideResponse(context!);
-					if (json !== undefined) break;
-				} catch (ex) {
-					Logger.error(ex, `${method} ${url}: Middleware(${mw.name}).onProvideResponse FAILED`);
-				}
-			}
-		}
+		// 		try {
+		// 			json = await mw.onProvideResponse(context!);
+		// 			if (json !== undefined) break;
+		// 		} catch (ex) {
+		// 			Logger.error(ex, `${method} ${url}: Middleware(${mw.name}).onProvideResponse FAILED`);
+		// 		}
+		// 	}
+		// }
 
-		if (json === undefined) {
-			const resp = await fetch(absoluteUrl, init);
-			if (resp.status !== 200) throw await this.handleErrorResponse(resp);
-			json = resp.json() as Promise<R>;
-		}
+		// if (json === undefined) {
+		// 	const resp = await fetch(absoluteUrl, init);
+		// 	if (resp.status !== 200) throw await this.handleErrorResponse(resp);
+		// 	json = resp.json() as Promise<R>;
+		// }
 
-		if (hasMiddleware) {
-			for (const mw of this._middleware) {
-				if (mw.onResponse === undefined) continue;
+		// if (hasMiddleware) {
+		// 	for (const mw of this._middleware) {
+		// 		if (mw.onResponse === undefined) continue;
 
-				try {
-					await mw.onResponse(context!, json);
-				} catch (ex) {
-					Logger.error(ex, `${method} ${url}: Middleware(${mw.name}).onResponse FAILED`);
-				}
-			}
-		}
+		// 		try {
+		// 			await mw.onResponse(context!, json);
+		// 		} catch (ex) {
+		// 			Logger.error(ex, `${method} ${url}: Middleware(${mw.name}).onResponse FAILED`);
+		// 		}
+		// 	}
+		// }
 
-		return CodeStreamApi.normalizeResponse(await json);
+		// return CodeStreamApi.normalizeResponse(await json);
 	}
 
-	private async handleErrorResponse(response: Response): Promise<Error> {
-		const data = await response.json();
-		return new Error(`${response.status}: ${response.statusText}\n\n${JSON.stringify(data)}`);
-	}
+	// private async handleErrorResponse(response: Response): Promise<Error> {
+	// 	const data = await response.json();
+	// 	return new Error(`${response.status}: ${response.statusText}\n\n${JSON.stringify(data)}`);
+	// }
 
 	static isStreamSubscriptionRequired(stream: CSStream, userId: string): boolean {
 		if (stream.deactivated || stream.type === StreamType.File) return false;

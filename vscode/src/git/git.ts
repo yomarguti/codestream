@@ -130,7 +130,7 @@ function gitApi() {
 }
 
 let _gitPath: string | undefined;
-async function gitPath(): Promise<string> {
+export async function gitPath(): Promise<string> {
 	if (_gitPath === undefined) {
 		_gitPath = await gitApi().getGitPath();
 	}

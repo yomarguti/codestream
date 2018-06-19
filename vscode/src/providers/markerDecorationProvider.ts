@@ -249,7 +249,7 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 
 	private async getMarkersCore(uri: Uri) {
 		try {
-			const resp = await Container.agent.sendRequest("textDocument/codeStream/markers", {
+			const resp = await Container.agent.sendRequest("codeStream/textDocument/markers", {
 				textDocument: { uri: uri.toString(true) }
 			});
 			resp;

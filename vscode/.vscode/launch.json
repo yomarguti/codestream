@@ -20,7 +20,7 @@
 			"stopOnEntry": false,
 			"sourceMaps": true,
 			"outFiles": ["${workspaceRoot}/out/**/*.js"],
-			"preLaunchTask": "npm: watch"
+			"preLaunchTask": "watch"
 		},
 		{
 			"name": "Debug Extension (Akonwi)",
