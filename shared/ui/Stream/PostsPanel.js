@@ -63,10 +63,21 @@ class Stream extends React.Component {
 		const streamId = this.props.stream.id;
 		const switchedStreams = prevProps.stream.id !== streamId;
 
+		// if we are switching from a non-thread panel
+		if (this.props.isActive && !prevProps.isActive) {
+			// check to see if we should scroll to the bottom
+			if (!this.state.scrolledOffBottom) this.scrollToBottom();
+			setTimeout(() => {
+				this.focusInput();
+			}, 500);
+		}
+
 		// if (nextProps.fileStreamId && switchingFileStreams && nextProps.posts.length === 0) {
 		// 	// TODO: is this still necessary? this was because there was no lazy loading and file streams were complex
 		// 	// this.props.fetchPosts({ streamId: nextProps.fileStreamId, teamId: nextProps.teamId });
 		// }
+
+		if (prevProps.hasFocus !== this.props.hasFocus) this.handleScroll();
 
 		if (switchedStreams) {
 			this.dismissThread({ track: false });
@@ -97,6 +108,30 @@ class Stream extends React.Component {
 
 		if (prevState.postWithNewMessageIndicator !== postWithNewMessageIndicator)
 			this.setState({ postWithNewMessageIndicator });
+
+		if (this.props.posts.length !== prevProps.posts.length) {
+			const lastPost = this.props.posts[this.props.posts.length - 1];
+
+			if (lastPost) {
+				// if the latest post is mine, scroll to the bottom always
+				// otherwise, if we've scrolled up, then just call
+				// handleScroll to make sure new message indicators
+				// appear as appropriate.
+				const mine = this.props.currentUser.username === lastPost.author.username;
+				if (mine || !this.state.scrolledOffBottom) this.scrollToBottom();
+				else this.handleScroll();
+			} else {
+				console.log("Could not find lastPost for ", this.props.posts);
+			}
+
+			if (this.state.editingPostId !== prevState.editingPostId) {
+				// special-case the editing of the bottom-most post...
+				// scroll it into view. in all other cases we let the
+				// focus of the input field make sure the post is focused
+				const lastPost = this.props.posts[this.props.posts.length - 1];
+				if (lastPost && this.state.editingPostId == lastPost.id) this.scrollToBottom(true);
+			}
+		}
 	}
 
 	componentWillUnmount() {

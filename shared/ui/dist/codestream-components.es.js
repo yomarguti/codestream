@@ -54421,13 +54421,26 @@ var Stream = function (_React$Component) {
 	}, {
 		key: "componentDidUpdate",
 		value: function componentDidUpdate(prevProps, prevState) {
+			var _this3 = this;
+
 			var streamId = this.props.stream.id;
 			var switchedStreams = prevProps.stream.id !== streamId;
+
+			// if we are switching from a non-thread panel
+			if (this.props.isActive && !prevProps.isActive) {
+				// check to see if we should scroll to the bottom
+				if (!this.state.scrolledOffBottom) this.scrollToBottom();
+				setTimeout(function () {
+					_this3.focusInput();
+				}, 500);
+			}
 
 			// if (nextProps.fileStreamId && switchingFileStreams && nextProps.posts.length === 0) {
 			// 	// TODO: is this still necessary? this was because there was no lazy loading and file streams were complex
 			// 	// this.props.fetchPosts({ streamId: nextProps.fileStreamId, teamId: nextProps.teamId });
 			// }
+
+			if (prevProps.hasFocus !== this.props.hasFocus) this.handleScroll();
 
 			if (switchedStreams) {
 				this.dismissThread({ track: false });
@@ -54457,6 +54470,29 @@ var Stream = function (_React$Component) {
 			}
 
 			if (prevState.postWithNewMessageIndicator !== postWithNewMessageIndicator) this.setState({ postWithNewMessageIndicator: postWithNewMessageIndicator });
+
+			if (this.props.posts.length !== prevProps.posts.length) {
+				var lastPost = this.props.posts[this.props.posts.length - 1];
+
+				if (lastPost) {
+					// if the latest post is mine, scroll to the bottom always
+					// otherwise, if we've scrolled up, then just call
+					// handleScroll to make sure new message indicators
+					// appear as appropriate.
+					var mine = this.props.currentUser.username === lastPost.author.username;
+					if (mine || !this.state.scrolledOffBottom) this.scrollToBottom();else this.handleScroll();
+				} else {
+					console.log("Could not find lastPost for ", this.props.posts);
+				}
+
+				if (this.state.editingPostId !== prevState.editingPostId) {
+					// special-case the editing of the bottom-most post...
+					// scroll it into view. in all other cases we let the
+					// focus of the input field make sure the post is focused
+					var _lastPost = this.props.posts[this.props.posts.length - 1];
+					if (_lastPost && this.state.editingPostId == _lastPost.id) this.scrollToBottom(true);
+				}
+			}
 		}
 	}, {
 		key: "componentWillUnmount",
@@ -54522,7 +54558,7 @@ var Stream = function (_React$Component) {
 	}, {
 		key: "render",
 		value: function render() {
-			var _this3 = this;
+			var _this4 = this;
 
 			var _props = this.props,
 			    className = _props.className,
@@ -54609,7 +54645,7 @@ var Stream = function (_React$Component) {
 					react.createElement(
 						"div",
 						{ className: "intro", ref: function ref(_ref2) {
-								return _this3._intro = _ref2;
+								return _this4._intro = _ref2;
 							} },
 						this.renderIntro()
 					),
@@ -54665,7 +54701,7 @@ var Stream = function (_React$Component) {
 }(react.Component);
 
 var _initialiseProps$1 = function _initialiseProps() {
-	var _this4 = this;
+	var _this5 = this;
 
 	Object.defineProperty(this, "state", {
 		enumerable: true,
@@ -54700,15 +54736,15 @@ var _initialiseProps$1 = function _initialiseProps() {
 		writable: true,
 		value: function value(force) {
 			// don't scroll to bottom if we're in the middle of an edit,
-			if (_this4.state.editingPostId && !force) return;
-			if (_this4._postList.current) _this4._postList.current.scrollTop = 100000;
+			if (_this5.state.editingPostId && !force) return;
+			if (_this5._postList.current) _this5._postList.current.scrollTop = 100000;
 		}
 	});
 	Object.defineProperty(this, "handleScroll", {
 		enumerable: true,
 		writable: true,
 		value: function value(_event) {
-			var scrollDiv = _this4._postList.current;
+			var scrollDiv = _this5._postList.current;
 			if (!scrollDiv) {
 				return;
 			}
@@ -54717,7 +54753,7 @@ var _initialiseProps$1 = function _initialiseProps() {
 			var scrollHeight = scrollDiv.scrollHeight;
 			var offBottom = scrollHeight - scrollTop - scrollDiv.offsetHeight;
 			var scrolledOffBottom = offBottom > 100;
-			if (scrolledOffBottom !== _this4.state.scrolledOffBottom) _this4.setState({ scrolledOffBottom: scrolledOffBottom });
+			if (scrolledOffBottom !== _this5.state.scrolledOffBottom) _this5.setState({ scrolledOffBottom: scrolledOffBottom });
 
 			var unreadsAbove = false;
 			var unreadsBelow = false;
@@ -54729,19 +54765,19 @@ var _initialiseProps$1 = function _initialiseProps() {
 					if (!unreadsAbove) unreadsAbove = umi;
 				} else if (top - scrollTop + 60 + umi.offsetHeight > containerHeight) {
 					unreadsBelow = umi;
-				} else if (_this4.props.hasFocus) {
+				} else if (_this5.props.hasFocus) {
 					umi.classList.remove("unread");
 				}
 			});
-			if (_this4.state.unreadsAbove !== unreadsAbove) _this4.setState({ unreadsAbove: unreadsAbove });
-			if (_this4.state.unreadsBelow !== unreadsBelow) _this4.setState({ unreadsBelow: unreadsBelow });
+			if (_this5.state.unreadsAbove !== unreadsAbove) _this5.setState({ unreadsAbove: unreadsAbove });
+			if (_this5.state.unreadsBelow !== unreadsBelow) _this5.setState({ unreadsBelow: unreadsBelow });
 		}
 	});
 	Object.defineProperty(this, "findPostById", {
 		enumerable: true,
 		writable: true,
 		value: function value(id) {
-			return _this4.props.posts.find(function (post) {
+			return _this5.props.posts.find(function (post) {
 				return post.id === id;
 			});
 		}
@@ -54765,13 +54801,13 @@ var _initialiseProps$1 = function _initialiseProps() {
 		writable: true,
 		value: function value(text) {
 			var substitute = text.match(/^s\/(.+)\/(.*)\/$/);
-			if (substitute && _this4.substituteLastPost(substitute)) return true;
+			if (substitute && _this5.substituteLastPost(substitute)) return true;
 
 			var commandMatch = text.match(/^\/(\w+)\b\s*(.*)/);
 			if (commandMatch) {
 				var command = commandMatch[1];
 				var _args = commandMatch[2];
-				return _this4.props.runSlashCommand(command, _args);
+				return _this5.props.runSlashCommand(command, _args);
 			}
 
 			return false;
@@ -54784,9 +54820,9 @@ var _initialiseProps$1 = function _initialiseProps() {
 			// convert the text to plaintext so there is no HTML
 			var doc = new DOMParser().parseFromString(newText, "text/html");
 			var replaceText = doc.documentElement.textContent;
-			var mentionUserIds = _this4.findMentionedUserIds(replaceText, _this4.props.teammates);
+			var mentionUserIds = _this5.findMentionedUserIds(replaceText, _this5.props.teammates);
 
-			_this4.props.editPost(postId, replaceText, mentionUserIds);
+			_this5.props.editPost(postId, replaceText, mentionUserIds);
 		}
 	});
 	Object.defineProperty(this, "editLastPost", {
@@ -54796,8 +54832,8 @@ var _initialiseProps$1 = function _initialiseProps() {
 			// find the most recent post I authored
 			var postDiv = event.target.closest(".post");
 			var seqNum = postDiv ? postDiv.dataset.seqNum : 9999999999;
-			var editingPost = _this4.findMyPostBeforeSeqNum(seqNum);
-			if (editingPost) _this4.setState({ editingPostId: editingPost.id });
+			var editingPost = _this5.findMyPostBeforeSeqNum(seqNum);
+			if (editingPost) _this5.setState({ editingPostId: editingPost.id });
 		}
 	});
 	Object.defineProperty(this, "submitPost", {
@@ -54810,8 +54846,8 @@ var _initialiseProps$1 = function _initialiseProps() {
 			    autoMentions = _ref4.autoMentions;
 
 			var codeBlocks = [];
-			var threadId = _this4.state.threadId;
-			var _props2 = _this4.props,
+			var threadId = _this5.state.threadId;
+			var _props2 = _this5.props,
 			    stream = _props2.stream,
 			    fileStreamId = _props2.fileStreamId,
 			    createPost$$1 = _props2.createPost,
@@ -54819,7 +54855,7 @@ var _initialiseProps$1 = function _initialiseProps() {
 			    repoId = _props2.repoId;
 
 
-			if (_this4.checkForSlashCommands(text)) return;
+			if (_this5.checkForSlashCommands(text)) return;
 
 			if (quote) {
 				var codeBlock = {
@@ -54850,15 +54886,15 @@ var _initialiseProps$1 = function _initialiseProps() {
 		value: function value(_ref5) {
 			var postId = _ref5.postId;
 
-			_this4.props.showPostsPanel();
-			_this4.selectPost(postId);
+			_this5.props.showPostsPanel();
+			_this5.selectPost(postId);
 		}
 	});
 	Object.defineProperty(this, "handleClickStreamSettings", {
 		enumerable: true,
 		writable: true,
 		value: function value(event) {
-			_this4.setState({ openMenu: true, menuTarget: event.target });
+			_this5.setState({ openMenu: true, menuTarget: event.target });
 			event.stopPropagation();
 			return true;
 		}
@@ -54867,7 +54903,7 @@ var _initialiseProps$1 = function _initialiseProps() {
 		enumerable: true,
 		writable: true,
 		value: function value() {
-			_this4.setState({ openMenu: false });
+			_this5.setState({ openMenu: false });
 		}
 	});
 	Object.defineProperty(this, "handleClickPost", {
@@ -54884,15 +54920,15 @@ var _initialiseProps$1 = function _initialiseProps() {
 			if (event.target.id === "discard-button") {
 				// if the user clicked on the cancel changes button,
 				// presumably because she is editing a post, abort
-				_this4.setState({ editingPostId: null });
+				_this5.setState({ editingPostId: null });
 				return;
 			} else if (event.target.id === "save-button") {
 				// if the user clicked on the save changes button,
 				// save the new post text
 				var newText = document.getElementById("input-div-" + postDiv.id).innerHTML.replace(/<br>/g, "\n");
 
-				_this4.replacePostText(postDiv.id, newText);
-				_this4.setState({ editingPostId: null });
+				_this5.replacePostText(postDiv.id, newText);
+				_this5.setState({ editingPostId: null });
 				return;
 			} else if (postDiv.classList.contains("editing")) {
 				// otherwise, if we aren't currently editing the
@@ -54909,7 +54945,7 @@ var _initialiseProps$1 = function _initialiseProps() {
 				// by dragging
 				return;
 			}
-			_this4.selectPost(postDiv.id, true);
+			_this5.selectPost(postDiv.id, true);
 		}
 	});
 	Object.defineProperty(this, "focusInput", {
@@ -54930,7 +54966,7 @@ var _initialiseProps$1 = function _initialiseProps() {
 				label: "Page Viewed",
 				payload: { "Page Name": "Thread View" }
 			});
-			var post = _this4.props.posts.find(function (post) {
+			var post = _this5.props.posts.find(function (post) {
 				return id === post.id;
 			});
 			if (!post) return;
@@ -54938,13 +54974,13 @@ var _initialiseProps$1 = function _initialiseProps() {
 			// if it is a child in the thread, it'll have a parentPostId,
 			// otherwise use the id. any post can become the head of a thread
 			var threadId = post.parentPostId || post.id;
-			_this4.setState({ threadId: threadId });
+			_this5.setState({ threadId: threadId });
 
-			_this4.focusInput();
+			_this5.focusInput();
 			if (wasClicked) {
 				emitter.emit("interaction:thread-selected", {
 					threadId: threadId,
-					streamId: _this4.props.stream.id,
+					streamId: _this5.props.stream.id,
 					post: post
 				});
 			}
@@ -54961,7 +54997,7 @@ var _initialiseProps$1 = function _initialiseProps() {
 				buttons: [{
 					label: "Delete Post",
 					action: function action() {
-						return _this4.props.deletePost(postId);
+						return _this5.props.deletePost(postId);
 					}
 				}, { label: "Cancel" }]
 			});
@@ -54983,9 +55019,9 @@ var _initialiseProps$1 = function _initialiseProps() {
 			    _ref6$track = _ref6.track,
 			    track = _ref6$track === undefined ? true : _ref6$track;
 
-			emitter.emit("interaction:thread-closed", _this4.findPostById(_this4.state.threadId));
-			_this4.setState({ threadId: null });
-			_this4.focusInput();
+			emitter.emit("interaction:thread-closed", _this5.findPostById(_this5.state.threadId));
+			_this5.setState({ threadId: null });
+			_this5.focusInput();
 			if (track) emitter.emit("analytics", {
 				label: "Page Viewed",
 				payload: { "Page Name": "Source Stream" }
@@ -54997,14 +55033,14 @@ var _initialiseProps$1 = function _initialiseProps() {
 		writable: true,
 		value: function value(event) {
 			event.preventDefault();
-			_this4.state.threadId ? _this4.dismissThread() : _this4.props.showChannels();
+			_this5.state.threadId ? _this5.dismissThread() : _this5.props.showChannels();
 		}
 	});
 	Object.defineProperty(this, "handleClickUnreads", {
 		enumerable: true,
 		writable: true,
 		value: function value(event) {
-			var scrollDiv = _this4._postslist;
+			var scrollDiv = _this5._postslist;
 			var umiDivs = scrollDiv.getElementsByClassName("unread");
 			var type = event.target.getAttribute("type");
 
@@ -55020,17 +55056,17 @@ var _initialiseProps$1 = function _initialiseProps() {
 		value: function value(action, post) {
 			switch (action) {
 				case "make-thread":
-					return _this4.selectPost(post.id, true);
+					return _this5.selectPost(post.id, true);
 				case "edit-post":
-					return _this4.setState({ editingPostId: post.id });
+					return _this5.setState({ editingPostId: post.id });
 				case "delete-post":
-					return _this4.confirmDeletePost(post.id);
+					return _this5.confirmDeletePost(post.id);
 				case "mark-unread":
-					return _this4.markUnread(post.id);
+					return _this5.markUnread(post.id);
 				case "add-reaction":
-					return _this4.notImplementedYet();
+					return _this5.notImplementedYet();
 				case "pin-to-stream":
-					return _this4.notImplementedYet();
+					return _this5.notImplementedYet();
 			}
 		}
 	});
@@ -55080,7 +55116,7 @@ var _initialiseProps$1 = function _initialiseProps() {
 									"Select ",
 									react.createElement(
 										"a",
-										{ onClick: _this4.props.goToInvitePage },
+										{ onClick: _this5.props.goToInvitePage },
 										"Codestream: Invite"
 									),
 									" from the command palette to invite your team."
@@ -55095,7 +55131,7 @@ var _initialiseProps$1 = function _initialiseProps() {
 				"Learn more at ",
 				react.createElement(
 					"a",
-					{ onClick: _this4.handleClickHelpLink },
+					{ onClick: _this5.handleClickHelpLink },
 					"help.codestream.com"
 				)
 			)];
@@ -55108,14 +55144,14 @@ var _initialiseProps$1 = function _initialiseProps() {
 			var lastTimestamp = 0;
 			var unread = false;
 
-			return _this4.props.posts.map(function (post) {
+			return _this5.props.posts.map(function (post) {
 				if (post.deactivated) return null;
 				if (threadId && threadId !== post.parentPostId) return null;
 				// this needs to be done by storing the return value of the render,
 				// then setting lastTimestamp, otherwise you wouldn't be able to
 				// compare the current one to the prior one.
-				var parentPost = _this4.findPostById(post.parentPostId);
-				var newMessageIndicator = post.seqNum && post.seqNum === Number(_this4.state.postWithNewMessageIndicator);
+				var parentPost = _this5.findPostById(post.parentPostId);
+				var newMessageIndicator = post.seqNum && post.seqNum === Number(_this5.state.postWithNewMessageIndicator);
 				unread = unread || newMessageIndicator;
 				var returnValue = react.createElement(
 					"div",
@@ -55123,14 +55159,14 @@ var _initialiseProps$1 = function _initialiseProps() {
 					react.createElement(DateSeparator, { timestamp1: lastTimestamp, timestamp2: post.createdAt }),
 					react.createElement(Post$1, {
 						post: post,
-						usernames: _this4.props.usernamesRegexp,
-						currentUsername: _this4.props.currentUser.username,
+						usernames: _this5.props.usernamesRegexp,
+						currentUsername: _this5.props.currentUser.username,
 						replyingTo: parentPost,
 						newMessageIndicator: newMessageIndicator,
 						unread: unread,
 						showDetails: Boolean(threadId),
-						editing: _this4.props.isActive && post.id === _this4.state.editingPostId,
-						action: _this4.postAction
+						editing: _this5.props.isActive && post.id === _this5.state.editingPostId,
+						action: _this5.postAction
 					})
 				);
 				lastTimestamp = post.createdAt;
@@ -55790,49 +55826,6 @@ var SimpleStream = function (_Component) {
 			event.abortKeyBinding();
 		}
 	}, {
-		key: "componentDidUpdate",
-		value: function componentDidUpdate(prevProps, prevState) {
-			var _this3 = this;
-
-			// if we are switching from a non-thread panel
-			if (this.state.activePanel === "main" && prevState.activePanel !== "main") {
-				setTimeout(function () {
-					_this3.focusInput();
-				}, 500);
-			}
-
-			if (prevProps.hasFocus !== this.props.hasFocus) this.handleScroll();
-
-			if (this.props.posts.length !== prevProps.posts.length) {
-				var lastPost = this.props.posts[this.props.posts.length - 1];
-
-				if (lastPost) {
-					// if the latest post is mine, scroll to the bottom always
-					// otherwise, if we've scrolled up, then just call
-					// handleScroll to make sure new message indicators
-					// appear as appropriate.
-					var mine = this.props.currentUser.username === lastPost.author.username;
-					if (mine || !this.state.scrolledOffBottom) this.scrollToBottom();else this.handleScroll();
-				} else {
-					console.log("Could not find lastPost for ", this.props.posts);
-				}
-			}
-
-			if (this.state.editingPostId !== prevState.editingPostId) {
-				// special-case the editing of the bottom-most post...
-				// scroll it into view. in all other cases we let the
-				// focus of the input field make sure the post is focused
-				var _lastPost = this.props.posts[this.props.posts.length - 1];
-				if (_lastPost && this.state.editingPostId == _lastPost.id) this.scrollToBottom(true);
-			}
-
-			// if we're switching from the channel list to a stream,
-			// then check to see if we should scroll to the bottom
-			if (this.state.activePanel === "main" && prevState.activePanel !== "main") {
-				if (!this.state.scrolledOffBottom) this.scrollToBottom();
-			}
-		}
-	}, {
 		key: "findPostById",
 
 
@@ -55853,7 +55846,7 @@ var SimpleStream = function (_Component) {
 	}, {
 		key: "handleScroll",
 		value: function handleScroll(_event) {
-			var _this4 = this;
+			var _this3 = this;
 
 			var scrollDiv = this._postslist;
 
@@ -55880,7 +55873,7 @@ var SimpleStream = function (_Component) {
 					if (!unreadsAbove) unreadsAbove = umi;
 				} else if (top - scrollTop + 60 + umi.offsetHeight > containerHeight) {
 					unreadsBelow = umi;
-				} else if (_this4.props.hasFocus) {
+				} else if (_this3.props.hasFocus) {
 					umi.classList.remove("unread");
 				}
 			});
@@ -55902,7 +55895,7 @@ var SimpleStream = function (_Component) {
 		// to be able to animate between the two streams, since they will both be
 		// visible during the transition
 		value: function render() {
-			var _this5 = this;
+			var _this4 = this;
 
 			var configs = this.props.configs;
 			var activePanel = this.state.activePanel;
@@ -55920,7 +55913,7 @@ var SimpleStream = function (_Component) {
 			return react.createElement(
 				"div",
 				{ className: streamClass, ref: function ref(_ref5) {
-						return _this5._div = _ref5;
+						return _this4._div = _ref5;
 					} },
 				react.createElement("div", { id: "modal-root" }),
 				react.createElement("div", { id: "confirm-root" }),
