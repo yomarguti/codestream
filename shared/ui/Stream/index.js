@@ -31,17 +31,6 @@ export class SimpleStream extends Component {
 		this._compose = React.createRef();
 	}
 
-	copy(event) {
-		let selectedText = window.getSelection().toString();
-		atom.clipboard.write(selectedText);
-		event.abortKeyBinding();
-	}
-
-	// return the post, if any, with the given ID
-	findPostById(id) {
-		return this.props.posts.find(post => id === post.id);
-	}
-
 	runSlashCommand = (command, args) => {
 		switch (command) {
 			case "help":

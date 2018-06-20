@@ -54503,6 +54503,13 @@ var Stream = function (_React$Component) {
 			});
 		}
 	}, {
+		key: "copy",
+		value: function copy(event) {
+			var selectedText = window.getSelection().toString();
+			atom.clipboard.write(selectedText);
+			event.abortKeyBinding();
+		}
+	}, {
 		key: "checkMarkStreamRead",
 		value: function checkMarkStreamRead() {
 			// if we have focus, and there are no unread indicators which would mean an
@@ -55761,23 +55768,6 @@ var SimpleStream = function (_Component) {
 	}
 
 	createClass(SimpleStream, [{
-		key: "copy",
-		value: function copy(event) {
-			var selectedText = window.getSelection().toString();
-			atom.clipboard.write(selectedText);
-			event.abortKeyBinding();
-		}
-
-		// return the post, if any, with the given ID
-
-	}, {
-		key: "findPostById",
-		value: function findPostById(id) {
-			return this.props.posts.find(function (post) {
-				return id === post.id;
-			});
-		}
-	}, {
 		key: "render",
 
 

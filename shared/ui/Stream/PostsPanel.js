@@ -138,6 +138,12 @@ class Stream extends React.Component {
 		this.disposables.forEach(d => d.dispose());
 	}
 
+	copy(event) {
+		let selectedText = window.getSelection().toString();
+		atom.clipboard.write(selectedText);
+		event.abortKeyBinding();
+	}
+
 	checkMarkStreamRead() {
 		// if we have focus, and there are no unread indicators which would mean an
 		// unread is out of view, we assume the entire thread has been observed
