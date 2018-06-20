@@ -25,8 +25,7 @@ export class SimpleStream extends Component {
 
 		this.state = {
 			threadId: null,
-			activePanel: "channels",
-			fileForIntro: props.currentFile
+			activePanel: "channels"
 		};
 	}
 
@@ -413,13 +412,6 @@ const mapStateToProps = ({
 		postStreamIsTeamStream: postStream.isTeamStream,
 		postStreamMemberIds: postStream.memberIds,
 		isPrivate: postStream.privacy === "private",
-		fileStreamId: fileStream.id,
-		teamId: context.currentTeamId,
-		repoId: context.currentRepoId,
-		hasFocus: context.hasFocus,
-		firstTimeInAtom: onboarding.firstTimeInAtom,
-		currentFile: context.currentFile,
-		currentCommit: context.currentCommit,
 		editingUsers: fileStream.editingUsers,
 		currentUser: user,
 		mutedStreams,
