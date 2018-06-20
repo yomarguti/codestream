@@ -200,6 +200,7 @@ class Stream extends React.Component {
 		if (this.state.unreadsBelow !== unreadsBelow) this.setState({ unreadsBelow });
 	};
 
+	// TODO: memoize this
 	findPostById = id => this.props.posts.find(post => post.id === id);
 
 	findMyPostBeforeSeqNum(seqNum) {
