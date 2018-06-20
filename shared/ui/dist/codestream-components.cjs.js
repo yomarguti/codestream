@@ -55513,7 +55513,6 @@ var SimpleStream = function (_Component) {
 
 								case 7:
 									_this.submitSystemPost("Rename a channel by typing `/rename [new name]`");
-									// this._compose.current.insertIfEmpty("/rename");
 
 								case 8:
 									return _context2.abrupt("return", true);
@@ -55763,7 +55762,6 @@ var SimpleStream = function (_Component) {
 			activePanel: "channels",
 			fileForIntro: props.currentFile
 		};
-		_this._compose = react.createRef();
 		return _this;
 	}
 

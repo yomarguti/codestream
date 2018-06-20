@@ -28,7 +28,6 @@ export class SimpleStream extends Component {
 			activePanel: "channels",
 			fileForIntro: props.currentFile
 		};
-		this._compose = React.createRef();
 	}
 
 	runSlashCommand = (command, args) => {
@@ -194,7 +193,6 @@ export class SimpleStream extends Component {
 			}
 		} else {
 			this.submitSystemPost("Rename a channel by typing `/rename [new name]`");
-			// this._compose.current.insertIfEmpty("/rename");
 		}
 		return true;
 	};
