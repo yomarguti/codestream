@@ -55869,11 +55869,8 @@ var mapStateToProps$6 = function mapStateToProps(_ref6) {
 		postStreamIsTeamStream: postStream.isTeamStream,
 		postStreamMemberIds: postStream.memberIds,
 		isPrivate: postStream.privacy === "private",
-		editingUsers: fileStream.editingUsers,
 		currentUser: user,
 		mutedStreams: mutedStreams,
-		slashCommands: slashCommands,
-		team: teams[context.currentTeamId],
 		posts: streamPosts.map(function (post) {
 			var user = users[post.creatorId];
 			if (!user) {

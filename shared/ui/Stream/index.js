@@ -10,7 +10,6 @@ import PostsPanel from "./PostsPanel";
 import * as actions from "./actions";
 import { goToInvitePage } from "../actions/routing";
 import { toMapBy } from "../utils";
-import slashCommands from "./slash-commands";
 import { confirmPopup } from "./Confirm";
 import {
 	getPostsForStream,
@@ -412,11 +411,8 @@ const mapStateToProps = ({
 		postStreamIsTeamStream: postStream.isTeamStream,
 		postStreamMemberIds: postStream.memberIds,
 		isPrivate: postStream.privacy === "private",
-		editingUsers: fileStream.editingUsers,
 		currentUser: user,
 		mutedStreams,
-		slashCommands,
-		team: teams[context.currentTeamId],
 		posts: streamPosts.map(post => {
 			let user = users[post.creatorId];
 			if (!user) {
