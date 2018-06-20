@@ -367,16 +367,7 @@ export class SimpleStream extends Component {
 	}
 }
 
-const mapStateToProps = ({
-	configs,
-	session,
-	context,
-	streams,
-	users,
-	posts,
-	teams,
-	onboarding
-}) => {
+const mapStateToProps = ({ configs, session, context, streams, users, posts, teams }) => {
 	// TODO: figure out a way to do this elsewhere
 	Object.keys(users).forEach(function(key, index) {
 		users[key].color = index % 10;
@@ -385,9 +376,6 @@ const mapStateToProps = ({
 			if (email) users[key].username = email.replace(/@.*/, "");
 		}
 	});
-
-	const fileStream =
-		getStreamForRepoAndFile(streams, context.currentRepoId, context.currentFile) || {};
 
 	const teamMembers = teams[context.currentTeamId].memberIds.map(id => users[id]).filter(Boolean);
 

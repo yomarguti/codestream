@@ -54525,6 +54525,9 @@ var Stream = function (_React$Component) {
 				}
 			}
 		}
+
+		// TODO: memoize this
+
 	}, {
 		key: "findMyPostBeforeSeqNum",
 		value: function findMyPostBeforeSeqNum(seqNum) {
@@ -55829,8 +55832,7 @@ var mapStateToProps$6 = function mapStateToProps(_ref6) {
 	    streams$$1 = _ref6.streams,
 	    users = _ref6.users,
 	    posts = _ref6.posts,
-	    teams = _ref6.teams,
-	    onboarding = _ref6.onboarding;
+	    teams = _ref6.teams;
 
 	// TODO: figure out a way to do this elsewhere
 	Object.keys(users).forEach(function (key, index) {
@@ -55840,8 +55842,6 @@ var mapStateToProps$6 = function mapStateToProps(_ref6) {
 			if (email) users[key].username = email.replace(/@.*/, "");
 		}
 	});
-
-	var fileStream = getStreamForRepoAndFile(streams$$1, context.currentRepoId, context.currentFile) || {};
 
 	var teamMembers = teams[context.currentTeamId].memberIds.map(function (id) {
 		return users[id];
