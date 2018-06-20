@@ -690,6 +690,7 @@ const mapStateToProps = state => {
 		.replace(/\./g, "\\."); // that the regexp matches the literal chars
 
 	return {
+		currentCommit: context.currentCommit,
 		currentFile: context.currentFile,
 		currentUser: users[session.userId],
 		hasFocus: context.hasFocus,

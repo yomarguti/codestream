@@ -55222,6 +55222,7 @@ var mapStateToProps$5 = function mapStateToProps(state) {
 	.replace(/\./g, "\\."); // that the regexp matches the literal chars
 
 	return {
+		currentCommit: context.currentCommit,
 		currentFile: context.currentFile,
 		currentUser: users[session.userId],
 		hasFocus: context.hasFocus,
@@ -55759,8 +55760,7 @@ var SimpleStream = function (_Component) {
 
 		_this.state = {
 			threadId: null,
-			activePanel: "channels",
-			fileForIntro: props.currentFile
+			activePanel: "channels"
 		};
 		return _this;
 	}
@@ -55869,13 +55869,6 @@ var mapStateToProps$6 = function mapStateToProps(_ref6) {
 		postStreamIsTeamStream: postStream.isTeamStream,
 		postStreamMemberIds: postStream.memberIds,
 		isPrivate: postStream.privacy === "private",
-		fileStreamId: fileStream.id,
-		teamId: context.currentTeamId,
-		repoId: context.currentRepoId,
-		hasFocus: context.hasFocus,
-		firstTimeInAtom: onboarding.firstTimeInAtom,
-		currentFile: context.currentFile,
-		currentCommit: context.currentCommit,
 		editingUsers: fileStream.editingUsers,
 		currentUser: user,
 		mutedStreams: mutedStreams,
