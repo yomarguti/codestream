@@ -1,4 +1,5 @@
 import React from "react";
+import _ from "underscore";
 import { connect } from "react-redux";
 import createClassString from "classnames";
 import { FormattedMessage } from "react-intl";
@@ -123,14 +124,13 @@ class Stream extends React.Component {
 			} else {
 				console.log("Could not find lastPost for ", this.props.posts);
 			}
-
-			if (this.state.editingPostId !== prevState.editingPostId) {
-				// special-case the editing of the bottom-most post...
-				// scroll it into view. in all other cases we let the
-				// focus of the input field make sure the post is focused
-				const lastPost = this.props.posts[this.props.posts.length - 1];
-				if (lastPost && this.state.editingPostId == lastPost.id) this.scrollToBottom(true);
-			}
+		}
+		if (this.state.editingPostId !== prevState.editingPostId) {
+			// special-case the editing of the bottom-most post...
+			// scroll it into view. in all other cases we let the
+			// focus of the input field make sure the post is focused
+			const lastPost = this.props.posts[this.props.posts.length - 1];
+			if (lastPost && this.state.editingPostId == lastPost.id) this.scrollToBottom(true);
 		}
 	}
 
@@ -195,6 +195,16 @@ class Stream extends React.Component {
 	};
 
 	findPostById = id => this.props.posts.find(post => post.id === id);
+
+	findMyPostBeforeSeqNum(seqNum) {
+		const me = this.props.currentUser.username;
+		return _.chain(this.props.posts)
+			.filter(post => {
+				return post.author.username === me && post.seqNum < seqNum;
+			})
+			.last()
+			.value();
+	}
 
 	findMentionedUserIds = (text, users) => {
 		const mentionedUserIds = [];

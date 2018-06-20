@@ -54482,14 +54482,13 @@ var Stream = function (_React$Component) {
 				} else {
 					console.log("Could not find lastPost for ", this.props.posts);
 				}
-
-				if (this.state.editingPostId !== prevState.editingPostId) {
-					// special-case the editing of the bottom-most post...
-					// scroll it into view. in all other cases we let the
-					// focus of the input field make sure the post is focused
-					var _lastPost = this.props.posts[this.props.posts.length - 1];
-					if (_lastPost && this.state.editingPostId == _lastPost.id) this.scrollToBottom(true);
-				}
+			}
+			if (this.state.editingPostId !== prevState.editingPostId) {
+				// special-case the editing of the bottom-most post...
+				// scroll it into view. in all other cases we let the
+				// focus of the input field make sure the post is focused
+				var _lastPost = this.props.posts[this.props.posts.length - 1];
+				if (_lastPost && this.state.editingPostId == _lastPost.id) this.scrollToBottom(true);
 			}
 		}
 	}, {
@@ -54514,6 +54513,14 @@ var Stream = function (_React$Component) {
 					/* this.props.currentUser.lastReads is probably undefined */
 				}
 			}
+		}
+	}, {
+		key: "findMyPostBeforeSeqNum",
+		value: function findMyPostBeforeSeqNum(seqNum) {
+			var me = this.props.currentUser.username;
+			return underscore.chain(this.props.posts).filter(function (post) {
+				return post.author.username === me && post.seqNum < seqNum;
+			}).last().value();
 		}
 	}, {
 		key: "substituteLastPost",
@@ -55765,14 +55772,6 @@ var SimpleStream = function (_Component) {
 			return this.props.posts.find(function (post) {
 				return id === post.id;
 			});
-		}
-	}, {
-		key: "findMyPostBeforeSeqNum",
-		value: function findMyPostBeforeSeqNum(seqNum) {
-			var me = this.props.currentUser.username;
-			return underscore.chain(this.props.posts).filter(function (post) {
-				return post.author.username === me && post.seqNum < seqNum;
-			}).last().value();
 		}
 	}, {
 		key: "render",
