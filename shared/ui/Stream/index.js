@@ -101,53 +101,6 @@ export class SimpleStream extends Component {
 		this.setState({ activePanel: panel });
 	};
 
-	handleScroll(_event) {
-		const scrollDiv = this._postslist;
-
-		if (!scrollDiv) {
-			// console.log("Couldn't find scrollDiv for ", event);
-			return;
-		}
-
-		const scrollTop = scrollDiv.scrollTop;
-		const containerHeight = scrollDiv.parentNode.offsetHeight;
-		const scrollHeight = scrollDiv.scrollHeight;
-		const offBottom = scrollHeight - scrollTop - scrollDiv.offsetHeight;
-		const scrolledOffBottom = offBottom > 100;
-		// console.log("OB IS: ", offBottom);
-		if (scrolledOffBottom !== this.state.scrolledOffBottom)
-			this.setState({ scrolledOffBottom: scrolledOffBottom });
-
-		let unreadsAbove = false;
-		let unreadsBelow = false;
-
-		let umiDivs = scrollDiv.getElementsByClassName("unread");
-		Array.from(umiDivs).forEach(umi => {
-			let top = umi.offsetTop;
-			if (top - scrollTop + 10 < 0) {
-				if (!unreadsAbove) unreadsAbove = umi;
-			} else if (top - scrollTop + 60 + umi.offsetHeight > containerHeight) {
-				unreadsBelow = umi;
-			} else if (this.props.hasFocus) {
-				umi.classList.remove("unread");
-			}
-		});
-		if (this.state.unreadsAbove != unreadsAbove) this.setState({ unreadsAbove: unreadsAbove });
-		if (this.state.unreadsBelow != unreadsBelow) this.setState({ unreadsBelow: unreadsBelow });
-	}
-
-	handleEditPost = event => {
-		var postDiv = event.target.closest(".post");
-		if (!postDiv) return;
-		this.setState({ editingPostId: postDiv.id });
-	};
-
-	handleDeletePost = event => {
-		var postDiv = event.target.closest(".post");
-		if (!postDiv || !postDiv.id) return;
-		this.confirmDeletePost(postDiv.id);
-	};
-
 	notImplementedYet = () => {
 		this.submitSystemPost("Not implemented yet");
 	};
@@ -164,11 +117,6 @@ export class SimpleStream extends Component {
 	handleClickScrollToNewMessages = () => {
 		this.scrollToBottom();
 	};
-
-	handleDismissEdit() {
-		this.setState({ editingPostId: null });
-		this.focusInput();
-	}
 
 	toggleMute = () => {
 		const { postStreamId } = this.props;

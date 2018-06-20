@@ -54185,8 +54185,7 @@ var Post = function (_Component) {
 								className: "control-button",
 								tabIndex: "2",
 								type: "submit",
-								loading: _this.props.loading,
-								onClick: _this.handleClickSave
+								loading: _this.props.loading
 							},
 							"Save"
 						),
@@ -54197,8 +54196,7 @@ var Post = function (_Component) {
 								className: "control-button cancel",
 								tabIndex: "2",
 								type: "submit",
-								loading: _this.props.loading,
-								onClick: _this.handleClickDiscard
+								loading: _this.props.loading
 							},
 							"Discard"
 						)
@@ -55308,24 +55306,6 @@ var SimpleStream = function (_Component) {
 				_this.setState({ activePanel: panel });
 			}
 		});
-		Object.defineProperty(_this, "handleEditPost", {
-			enumerable: true,
-			writable: true,
-			value: function value(event) {
-				var postDiv = event.target.closest(".post");
-				if (!postDiv) return;
-				_this.setState({ editingPostId: postDiv.id });
-			}
-		});
-		Object.defineProperty(_this, "handleDeletePost", {
-			enumerable: true,
-			writable: true,
-			value: function value(event) {
-				var postDiv = event.target.closest(".post");
-				if (!postDiv || !postDiv.id) return;
-				_this.confirmDeletePost(postDiv.id);
-			}
-		});
 		Object.defineProperty(_this, "notImplementedYet", {
 			enumerable: true,
 			writable: true,
@@ -55799,49 +55779,6 @@ var SimpleStream = function (_Component) {
 			}).last().value();
 		}
 	}, {
-		key: "handleScroll",
-		value: function handleScroll(_event) {
-			var _this3 = this;
-
-			var scrollDiv = this._postslist;
-
-			if (!scrollDiv) {
-				// console.log("Couldn't find scrollDiv for ", event);
-				return;
-			}
-
-			var scrollTop = scrollDiv.scrollTop;
-			var containerHeight = scrollDiv.parentNode.offsetHeight;
-			var scrollHeight = scrollDiv.scrollHeight;
-			var offBottom = scrollHeight - scrollTop - scrollDiv.offsetHeight;
-			var scrolledOffBottom = offBottom > 100;
-			// console.log("OB IS: ", offBottom);
-			if (scrolledOffBottom !== this.state.scrolledOffBottom) this.setState({ scrolledOffBottom: scrolledOffBottom });
-
-			var unreadsAbove = false;
-			var unreadsBelow = false;
-
-			var umiDivs = scrollDiv.getElementsByClassName("unread");
-			Array.from(umiDivs).forEach(function (umi) {
-				var top = umi.offsetTop;
-				if (top - scrollTop + 10 < 0) {
-					if (!unreadsAbove) unreadsAbove = umi;
-				} else if (top - scrollTop + 60 + umi.offsetHeight > containerHeight) {
-					unreadsBelow = umi;
-				} else if (_this3.props.hasFocus) {
-					umi.classList.remove("unread");
-				}
-			});
-			if (this.state.unreadsAbove != unreadsAbove) this.setState({ unreadsAbove: unreadsAbove });
-			if (this.state.unreadsBelow != unreadsBelow) this.setState({ unreadsBelow: unreadsBelow });
-		}
-	}, {
-		key: "handleDismissEdit",
-		value: function handleDismissEdit() {
-			this.setState({ editingPostId: null });
-			this.focusInput();
-		}
-	}, {
 		key: "render",
 
 
@@ -55850,7 +55787,7 @@ var SimpleStream = function (_Component) {
 		// to be able to animate between the two streams, since they will both be
 		// visible during the transition
 		value: function render() {
-			var _this4 = this;
+			var _this3 = this;
 
 			var configs = this.props.configs;
 			var activePanel = this.state.activePanel;
@@ -55868,7 +55805,7 @@ var SimpleStream = function (_Component) {
 			return react.createElement(
 				"div",
 				{ className: streamClass, ref: function ref(_ref5) {
-						return _this4._div = _ref5;
+						return _this3._div = _ref5;
 					} },
 				react.createElement("div", { id: "modal-root" }),
 				react.createElement("div", { id: "confirm-root" }),
