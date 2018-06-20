@@ -423,17 +423,19 @@ export class CodeStreamSession extends Disposable {
 					}
 				}
 
-				if (teamId == null) {
-					if (this.data.repos.length > 0) {
-						for (const repo of await Container.git.getRepositories()) {
-							const url = await repo.getNormalizedUrl();
+				if (teamId == null && this.data.teams.length === 1) {
+					teamId = this.data.teams[0].id;
+				}
 
-							const found = this._data.repos.find(r => r.normalizedUrl === url);
-							if (found === undefined) continue;
+				if (teamId == null && this.data.repos.length > 0) {
+					for (const repo of await Container.git.getRepositories()) {
+						const url = await repo.getNormalizedUrl();
 
-							teamId = found.teamId;
-							break;
-						}
+						const found = this._data.repos.find(r => r.normalizedUrl === url);
+						if (found === undefined) continue;
+
+						teamId = found.teamId;
+						break;
 					}
 				}
 
