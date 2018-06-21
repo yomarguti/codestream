@@ -80,9 +80,10 @@ class Stream extends React.Component {
 
 		if (prevProps.hasFocus !== this.props.hasFocus) this.handleScroll();
 
-		if (switchedStreams) {
-			this.dismissThread({ track: false });
-		}
+		// no longer necessary since you cant switch streams from thread view
+		// if (switchedStreams) {
+		// 	this.dismissThread({ track: false });
+		// }
 
 		let postWithNewMessageIndicator;
 

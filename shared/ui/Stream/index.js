@@ -81,6 +81,7 @@ export class SimpleStream extends Component {
 	};
 
 	focusInput = () => {
+		console.log("FI S");
 		const input = document.getElementById("input-div");
 		if (input) input.focus();
 	};

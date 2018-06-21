@@ -40,7 +40,7 @@ var _descriptors = !_fails(function () {
 });
 
 var _core = createCommonjsModule(function (module) {
-var core = module.exports = { version: '2.5.6' };
+var core = module.exports = { version: '2.5.7' };
 if (typeof __e == 'number') __e = core; // eslint-disable-line no-undef
 });
 var _core_1 = _core.version;
@@ -320,7 +320,7 @@ var _wksExt = {
 
 var defineProperty = _objectDp.f;
 var _wksDefine = function (name) {
-  var $Symbol = _core.Symbol || (_core.Symbol = _library ? {} : _global.Symbol || {});
+  var $Symbol = _core.Symbol || (_core.Symbol = _global.Symbol || {});
   if (name.charAt(0) != '_' && !(name in $Symbol)) defineProperty($Symbol, name, { value: _wksExt.f(name) });
 };
 
@@ -13285,7 +13285,7 @@ var archiveStream = function archiveStream(streamId, value) {
 	}();
 };
 
-var streamActions = /*#__PURE__*/Object.freeze({
+var actions = /*#__PURE__*/Object.freeze({
 	markStreamRead: markStreamRead,
 	createPost: createPost,
 	retryPost: retryPost,
@@ -33827,7 +33827,7 @@ var mapStateToProps = function mapStateToProps(_ref) {
 	    session = _ref.session;
 	return { session: session };
 };
-var ChannelMenu = connect(mapStateToProps, _extends$4({}, contextActions, streamActions)
+var ChannelMenu = connect(mapStateToProps, _extends$4({}, contextActions, actions)
 // ...userActions
 )(SimpleChannelMenu);
 
@@ -33861,6 +33861,7 @@ var SimpleChannelPanel = function (_Component) {
 						{ onClick: _this.handleClickSelectStream },
 						_this.props.channelStreams.map(function (stream) {
 							if (stream.isArchived) return null;
+							if (stream.name.match(/^ls:/)) return null;
 							var icon = _this.props.mutedStreams[stream.id] ? react.createElement(Icon, { name: "mute" }) : stream.privacy === "private" ? react.createElement(Icon, { name: "lock" }) : react.createElement(
 								"span",
 								{ className: "icon" },
@@ -43004,7 +43005,7 @@ var mapStateToProps$2 = function mapStateToProps(_ref) {
 	};
 };
 
-var PublicChannelPanel = connect(mapStateToProps$2, _extends$4({}, contextActions, streamActions, {
+var PublicChannelPanel = connect(mapStateToProps$2, _extends$4({}, contextActions, actions, {
 	goToInvitePage: goToInvitePage
 }))(SimplePublicChannelPanel);
 
@@ -43085,6 +43086,7 @@ function memoize(fn) {
     return cache[arg];
   };
 }
+//# sourceMappingURL=index.es.js.map
 
 var index$1 = {
   animationIterationCount: 1,
@@ -43130,6 +43132,7 @@ var index$1 = {
   strokeOpacity: 1,
   strokeWidth: 1
 };
+//# sourceMappingURL=index.es.js.map
 
 /* eslint-disable */
 // murmurhash2 via https://github.com/garycourt/murmurhash-js/blob/master/murmurhash2_gc.js
@@ -43166,6 +43169,7 @@ function murmurhash2_32_gc(str) {
   h ^= h >>> 15;
   return (h >>> 0).toString(36);
 }
+//# sourceMappingURL=index.es.js.map
 
 var V$2 = function ca(W) {
   function M(d, c, f, h, a) {
@@ -43501,235 +43505,6 @@ var V$2 = function ca(W) {
     return d + c;
   }
 
-<<<<<<< HEAD
-		Object.defineProperty(_this, "renderChannels", {
-			enumerable: true,
-			writable: true,
-			value: function value() {
-				return react.createElement(
-					"div",
-					{ className: "section" },
-					react.createElement(
-						"div",
-						{ className: "header", onClick: _this.handleClickShowPublicChannels },
-						react.createElement(
-							"span",
-							{ className: "clickable" },
-							"Team Channels"
-						),
-						react.createElement(Icon, { className: "align-right", name: "plus", onClick: _this.handleClickCreateChannel })
-					),
-					react.createElement(
-						"ul",
-						{ onClick: _this.handleClickSelectStream },
-						_this.props.channelStreams.map(function (stream) {
-							if (stream.isArchived) return null;
-							if (stream.name.match(/^ls:/)) return null;
-							var icon = _this.props.mutedStreams[stream.id] ? react.createElement(Icon, { name: "mute" }) : stream.privacy === "private" ? react.createElement(Icon, { name: "lock" }) : react.createElement(
-								"span",
-								{ className: "icon" },
-								"#"
-							);
-							var count = _this.props.umis.unread[stream.id] || 0;
-							if (_this.props.mutedStreams[stream.id]) count = 0;
-							var mentions = _this.props.umis.mentions[stream.id] || 0;
-							var menuActive = _this.state.openMenu === stream.id;
-							return react.createElement(
-								"li",
-								{
-									className: classnames({
-										active: menuActive ? true : false,
-										muted: _this.props.mutedStreams[stream.id],
-										unread: count > 0
-									}),
-									key: stream.id,
-									id: stream.id
-								},
-								icon,
-								stream.name,
-								mentions > 0 ? react.createElement(
-									"span",
-									{ className: "umi" },
-									mentions
-								) : null,
-								react.createElement(
-									"span",
-									null,
-									react.createElement(Icon, {
-										name: "gear",
-										className: "align-right",
-										onClick: _this.handleClickStreamSettings
-									}),
-									menuActive && react.createElement(ChannelMenu, {
-										stream: stream,
-										target: _this.state.menuTarget,
-										umiCount: count,
-										isMuted: _this.props.mutedStreams[stream.id],
-										setActivePanel: _this.props.setActivePanel,
-										runSlashCommand: _this.props.runSlashCommand,
-										closeMenu: _this.closeMenu
-									})
-								)
-							);
-						})
-					)
-				);
-			}
-		});
-		Object.defineProperty(_this, "renderDirectMessages", {
-			enumerable: true,
-			writable: true,
-			value: function value() {
-				return react.createElement(
-					"div",
-					{ className: "section" },
-					react.createElement(
-						"div",
-						{ className: "header clickable", onClick: _this.handleClickCreateDirectMessage },
-						react.createElement(
-							"span",
-							{ className: "clickable" },
-							"Direct Messages"
-						),
-						react.createElement(Icon, { name: "plus", className: "align-right" })
-					),
-					react.createElement(
-						"ul",
-						{ onClick: _this.handleClickSelectStream },
-						_this.props.directMessageStreams.map(function (stream) {
-							var count = _this.props.umis.unread[stream.id] || 0;
-							var mentions = _this.props.umis.mentions[stream.id] || 0;
-							if (_this.props.mutedStreams[stream.id] && !count) return null;
-							return react.createElement(
-								"li",
-								{
-									className: classnames({
-										direct: true,
-										unread: count > 0
-									}),
-									key: stream.id,
-									id: stream.id
-								},
-								react.createElement("span", { className: "presence" }),
-								stream.name,
-								mentions > 0 ? react.createElement(
-									"span",
-									{ className: "umi" },
-									mentions
-								) : null,
-								react.createElement(Icon, { name: "x", onClick: _this.handleClickMuteStream, className: "align-right" })
-							);
-						}),
-						_this.props.teammates.map(function (teammate) {
-							if (underscore.contains(_this.props.oneOnOnePeople, teammate.id)) return null;
-							if (_this.props.mutedStreams[teammate.id]) return null;
-							return react.createElement(
-								"li",
-								{ key: teammate.id, teammate: teammate.id },
-								react.createElement("span", { className: "presence" }),
-								react.createElement(
-									"span",
-									{ className: "name" },
-									teammate.name || teammate.firstName ? teammate.firstName + " " + teammate.lastName : teammate.username
-								),
-								react.createElement(Icon, { name: "x", onClick: _this.handleClickMuteStream, className: "align-right" })
-							);
-						}),
-						react.createElement(
-							"li",
-							{ className: "invite", onClick: _this.props.goToInvitePage },
-							react.createElement(
-								"span",
-								null,
-								react.createElement(Icon, { name: "plus-small" }),
-								"Invite People"
-							)
-						)
-					)
-				);
-			}
-		});
-		Object.defineProperty(_this, "handleClickSelectStream", {
-			enumerable: true,
-			writable: true,
-			value: function value(event) {
-				event.preventDefault();
-				var liDiv = event.target.closest("li");
-				if (!liDiv) return; // FIXME throw error
-				if (liDiv.id) {
-					_this.props.setActivePanel("main");
-					_this.props.setCurrentStream(liDiv.id);
-				} else if (liDiv.getAttribute("teammate")) {
-					_this.props.createStream({ type: "direct", memberIds: [liDiv.getAttribute("teammate")] });
-				} else {
-					console.log("Unknown LI in handleClickSelectStream: ", event);
-				}
-			}
-		});
-		Object.defineProperty(_this, "handleClickCreateChannel", {
-			enumerable: true,
-			writable: true,
-			value: function value(event) {
-				_this.props.setActivePanel("create-channel");
-				event.stopPropagation();
-			}
-		});
-		Object.defineProperty(_this, "handleClickShowPublicChannels", {
-			enumerable: true,
-			writable: true,
-			value: function value(event) {
-				_this.props.setActivePanel("public-channels");
-			}
-		});
-		Object.defineProperty(_this, "handleClickCreateDirectMessage", {
-			enumerable: true,
-			writable: true,
-			value: function value(event) {
-				_this.props.setActivePanel("create-dm");
-			}
-		});
-		Object.defineProperty(_this, "handleClickStreamSettings", {
-			enumerable: true,
-			writable: true,
-			value: function value(event) {
-				var liDiv = event.target.closest("li");
-				if (!liDiv || !liDiv.id) return; // FIXME throw error
-				_this.setState({ openMenu: liDiv.id, menuTarget: event.target });
-				event.stopPropagation();
-				return true;
-			}
-		});
-		Object.defineProperty(_this, "handleClickMuteStream", {
-			enumerable: true,
-			writable: true,
-			value: function value(event) {
-				var liDiv = event.target.closest("li");
-				if (!liDiv) return; // FIXME throw error
-				var id = liDiv.id || liDiv.getAttribute("teammate");
-				_this.props.setUserPreference(["mutedStreams", id], !_this.props.mutedStreams[id]);
-				event.stopPropagation();
-				return true;
-			}
-		});
-		Object.defineProperty(_this, "findStream", {
-			enumerable: true,
-			writable: true,
-			value: function value(streamId) {
-				return _this.props.channelStreams.find(function (stream) {
-					return stream.id === streamId;
-				}) || _this.props.directMessageStreams.find(function (stream) {
-					return stream.id === streamId;
-				});
-			}
-		});
-		Object.defineProperty(_this, "closeMenu", {
-			enumerable: true,
-			writable: true,
-			value: function value() {
-				_this.setState({ openMenu: null });
-			}
-		});
-=======
   function P(d, c, f, h) {
     var a = d + ";",
         k = 2 * c + 3 * f + 4 * h;
@@ -43742,7 +43517,6 @@ var V$2 = function ca(W) {
     }
 
     if (0 === v || 2 === v && !L(a, 1)) return a;
->>>>>>> 7da7c29c2ff2b4a01938707442b8568ddde3906f
 
     switch (k) {
       case 1015:
@@ -43984,6 +43758,7 @@ var V$2 = function ca(W) {
   void 0 !== W && T(W);
   return y;
 };
+//# sourceMappingURL=index.es.js.map
 
 var stylisRuleSheet = createCommonjsModule(function (module, exports) {
 (function (factory) {
@@ -44543,6 +44318,7 @@ function createEmotion(context, options) {
   context.__SECRET_EMOTION__ = emotion;
   return emotion;
 }
+//# sourceMappingURL=index.es.js.map
 
 var context = typeof global !== 'undefined' ? global : {};
 
@@ -44557,6 +44333,7 @@ var _createEmotion = createEmotion(context),
     css = _createEmotion.css,
     sheet = _createEmotion.sheet,
     caches = _createEmotion.caches;
+//# sourceMappingURL=index.es.js.map
 
 var performanceNow = createCommonjsModule(function (module) {
 // Generated by CoffeeScript 1.12.2
@@ -44594,7 +44371,7 @@ var performanceNow = createCommonjsModule(function (module) {
 
 }).call(commonjsGlobal);
 
-
+//# sourceMappingURL=performance-now.js.map
 });
 
 var root$2 = typeof window === 'undefined' ? commonjsGlobal : window
@@ -100210,7 +99987,7 @@ var _arrayIncludes$1 = function (IS_INCLUDES) {
 };
 
 var _core$1 = createCommonjsModule(function (module) {
-var core = module.exports = { version: '2.5.6' };
+var core = module.exports = { version: '2.5.7' };
 if (typeof __e == 'number') __e = core; // eslint-disable-line no-undef
 });
 var _core_1$1 = _core$1.version;
@@ -103142,9 +102919,10 @@ var Stream = function (_React$Component) {
 
 			if (prevProps.hasFocus !== this.props.hasFocus) this.handleScroll();
 
-			if (switchedStreams) {
-				this.dismissThread({ track: false });
-			}
+			// no longer necessary since you cant switch streams from thread view
+			// if (switchedStreams) {
+			// 	this.dismissThread({ track: false });
+			// }
 
 			var postWithNewMessageIndicator = void 0;
 
@@ -103938,7 +103716,7 @@ var mapStateToProps$5 = function mapStateToProps(state) {
 		usernamesRegexp: usernamesRegexp
 	};
 };
-var PostsPanel = connect(mapStateToProps$5, _extends$4({}, streamActions, { goToInvitePage: goToInvitePage }))(Stream);
+var PostsPanel = connect(mapStateToProps$5, _extends$4({}, actions, { goToInvitePage: goToInvitePage }))(Stream);
 
 var toMapBy = function toMapBy(key, entities) {
 	return entities.reduce(function (result, entity) {
@@ -104040,6 +103818,7 @@ var SimpleStream = function (_Component) {
 			enumerable: true,
 			writable: true,
 			value: function value() {
+				console.log("FI S");
 				var input = document.getElementById("input-div");
 				if (input) input.focus();
 			}
@@ -104610,7 +104389,7 @@ var mapStateToProps$6 = function mapStateToProps(_ref6) {
 	};
 };
 
-var index$3 = connect(mapStateToProps$6, _extends$4({}, streamActions, {
+var index$3 = connect(mapStateToProps$6, _extends$4({}, actions, {
 	goToInvitePage: goToInvitePage
 }))(SimpleStream);
 
