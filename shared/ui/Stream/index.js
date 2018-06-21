@@ -81,7 +81,6 @@ export class SimpleStream extends Component {
 	};
 
 	focusInput = () => {
-		console.log("FI S");
 		const input = document.getElementById("input-div");
 		if (input) input.focus();
 	};
@@ -223,7 +222,6 @@ export class SimpleStream extends Component {
 
 	archiveChannel = () => {
 		const { postStream, currentUser } = this.props;
-		console.log(postStream);
 		if (postStream.creatorId !== currentUser.id) {
 			let text = "You may only archive channels that you created.";
 			if (postStream.creatorId) text += " This channel was created by " + postStream.creatorId;

@@ -103814,7 +103814,6 @@ var SimpleStream = function (_Component) {
 			enumerable: true,
 			writable: true,
 			value: function value() {
-				console.log("FI S");
 				var input = document.getElementById("input-div");
 				if (input) input.focus();
 			}
@@ -104053,7 +104052,6 @@ var SimpleStream = function (_Component) {
 				    postStream = _this$props.postStream,
 				    currentUser = _this$props.currentUser;
 
-				console.log(postStream);
 				if (postStream.creatorId !== currentUser.id) {
 					var text = "You may only archive channels that you created.";
 					if (postStream.creatorId) text += " This channel was created by " + postStream.creatorId;
