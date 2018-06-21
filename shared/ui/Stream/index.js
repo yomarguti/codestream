@@ -11,12 +11,7 @@ import * as actions from "./actions";
 import { goToInvitePage } from "../actions/routing";
 import { toMapBy } from "../utils";
 import { confirmPopup } from "./Confirm";
-import {
-	getPostsForStream,
-	getStreamForId,
-	getStreamForTeam,
-	getStreamForRepoAndFile
-} from "../reducers/streams";
+import { getPostsForStream, getStreamForId, getStreamForTeam } from "../reducers/streams";
 
 export class SimpleStream extends Component {
 	constructor(props) {
