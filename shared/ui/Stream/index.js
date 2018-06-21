@@ -1071,8 +1071,8 @@ export class SimpleStream extends Component {
 		return true;
 	};
 
-	postHelp = () => {
-		const text = "Version info goes here.";
+	postVersion = () => {
+		const text = "This is CodeStream version " + this.props.pluginVersion + ".";
 		this.submitSystemPost(text);
 		return true;
 	};

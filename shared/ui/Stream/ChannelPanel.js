@@ -51,6 +51,7 @@ export class SimpleChannelPanel extends Component {
 				<ul onClick={this.handleClickSelectStream}>
 					{this.props.channelStreams.map(stream => {
 						if (stream.isArchived) return null;
+						if (stream.name.match(/^ls:/)) return null;
 						const icon = this.props.mutedStreams[stream.id] ? (
 							<Icon name="mute" />
 						) : stream.privacy === "private" ? (

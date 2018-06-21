@@ -44401,6 +44401,7 @@ var SimpleChannelPanel = function (_Component) {
 						{ onClick: _this.handleClickSelectStream },
 						_this.props.channelStreams.map(function (stream) {
 							if (stream.isArchived) return null;
+							if (stream.name.match(/^ls:/)) return null;
 							var icon = _this.props.mutedStreams[stream.id] ? react.createElement(Icon, { name: "mute" }) : stream.privacy === "private" ? react.createElement(Icon, { name: "lock" }) : react.createElement(
 								"span",
 								{ className: "icon" },
@@ -103767,11 +103768,11 @@ var SimpleStream = function (_Component) {
 				return true;
 			}
 		});
-		Object.defineProperty(_this, "postHelp", {
+		Object.defineProperty(_this, "postVersion", {
 			enumerable: true,
 			writable: true,
 			value: function value() {
-				var text = "Version info goes here.";
+				var text = "This is CodeStream version " + _this.props.pluginVersion + ".";
 				_this.submitSystemPost(text);
 				return true;
 			}
