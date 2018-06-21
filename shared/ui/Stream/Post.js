@@ -177,7 +177,6 @@ class Post extends Component {
 						tabIndex="2"
 						type="submit"
 						loading={this.props.loading}
-						onClick={this.handleClickSave}
 					>
 						Save
 					</Button>
@@ -187,7 +186,6 @@ class Post extends Component {
 						tabIndex="2"
 						type="submit"
 						loading={this.props.loading}
-						onClick={this.handleClickDiscard}
 					>
 						Discard
 					</Button>

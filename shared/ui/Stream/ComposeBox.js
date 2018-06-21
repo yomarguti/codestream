@@ -5,6 +5,7 @@ import createClassString from "classnames";
 import EventEmitter from "../event-emitter";
 import AtMentionsPopup from "./AtMentionsPopup";
 import Icon from "./Icon";
+import slashCommands from "./slash-commands";
 
 const arrayToRange = ([startRow, startCol, endRow, endCol]) => {
 	return {
@@ -123,7 +124,7 @@ class ComposeBox extends React.Component {
 				}
 			});
 		} else if (type === "slash-commands") {
-			this.props.slashCommands.map(command => {
+			slashCommands.map(command => {
 				let lowered = command.id.toLowerCase();
 				if (lowered.indexOf(prefix) === 0) {
 					command.identifier = command.id;

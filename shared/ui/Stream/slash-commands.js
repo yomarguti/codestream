@@ -1,4 +1,4 @@
-export const slashCommands = [
+export default [
 	{ id: "help", help: "get help" },
 	{ id: "add", help: "add member to channel", description: "@user" },
 	// { id: "apply", help: "apply patch last post" },
