@@ -141,6 +141,7 @@
 			text-align: center;
 			padding: 5px 0;
 			width: 80%;
+			margin: 0 auto;
 			// left: 10% !important;
 			z-index: 10;
 			white-space: nowrap;
@@ -151,12 +152,10 @@
 			cursor: pointer !important;
 			user-select: none;
 			transition: top 0.2s, bottom 0.2s, background-color 0.2s;
-		}
-		.unreads.active {
-			display: block;
-		}
-		.unreads.hidden {
 			display: none;
+			&.active {
+				display: block;
+			}
 		}
 		.unreads {
 			background: @background-color-info;
@@ -164,7 +163,7 @@
 			color: white;
 		}
 		.unreads[type="above"] {
-			top: -1px;
+			top: 0px;
 			// margin-top: -3em;
 			border-radius: 0 0 5px 5px;
 			border-top: none;
