@@ -24,7 +24,7 @@ body {
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
-  content: '';
+  content: "";
   height: 100%;
   opacity: 0.05;
   position: absolute;
@@ -32,50 +32,26 @@ body {
   z-index: -1;
 }
 .vscode-dark.preload:before {
-  background-image: url('data:image/svg+xml;utf8,<svg width="50" height="40" xmlns="http://www.w3.org/2000/svg"><path fill="#fff" d="M26.92 6.35c-.1.1-.17.24-.17.38v5.43a7.9 7.9 0 0 1 0 15.36v5.53a.53.53 0 0 0 .92.36l11.48-12.17c.71-.76.71-1.94 0-2.7L27.67 6.38a.53.53 0 0 0-.75-.02zm-4.64.02L10.8 18.55a1.96 1.96 0 0 0 0 2.69L22.28 33.4a.53.53 0 0 0 .91-.36v-5.53a7.9 7.9 0 0 1 0-15.36V6.73a.53.53 0 0 0-.53-.52.53.53 0 0 0-.38.16z"/></svg>');
+  background-image: url('data:image/svg+xml;utf8,<svg width="50" height="40" xmlns="http://www.w3.org/2000/svg"><path fill="#fff" d="M20.4 19.87a4.57 4.57 0 1 0 9.13-.01 4.57 4.57 0 0 0-9.13.01z"/><path fill="#fff" d="M26.92 6.35c-.1.1-.17.24-.17.38v5.43a7.9 7.9 0 0 1 0 15.36v5.53a.53.53 0 0 0 .92.36l11.48-12.17c.71-.76.71-1.94 0-2.7L27.67 6.38a.53.53 0 0 0-.75-.02zm-4.64.02L10.8 18.55a1.96 1.96 0 0 0 0 2.69L22.28 33.4a.53.53 0 0 0 .91-.36v-5.53a7.9 7.9 0 0 1 0-15.36V6.73a.53.53 0 0 0-.53-.52.53.53 0 0 0-.38.16z"/></svg>');
 }
 .vscode-light.preload:before {
-  background-image: url('data:image/svg+xml;utf8,<svg width="50" height="40" xmlns="http://www.w3.org/2000/svg"><path fill="#000" d="M26.92 6.35c-.1.1-.17.24-.17.38v5.43a7.9 7.9 0 0 1 0 15.36v5.53a.53.53 0 0 0 .92.36l11.48-12.17c.71-.76.71-1.94 0-2.7L27.67 6.38a.53.53 0 0 0-.75-.02zm-4.64.02L10.8 18.55a1.96 1.96 0 0 0 0 2.69L22.28 33.4a.53.53 0 0 0 .91-.36v-5.53a7.9 7.9 0 0 1 0-15.36V6.73a.53.53 0 0 0-.53-.52.53.53 0 0 0-.38.16z"/></svg>');
-}
-.preload:after {
-  animation: loading-pulse 1.5s infinite cubic-bezier(0.5, 0, 0.5, 1) !important;
-  background-color: currentColor;
-  border-radius: 100%;
-  content: '';
-  display: inline-block;
-  height: 0;
-  left: 50%;
-  opacity: 0.05;
-  padding-bottom: 20%;
-  position: absolute;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 20%;
-  z-index: -1;
-}
-@keyframes loading-pulse {
-  0%,
-  100% {
-    transform: translate(-50%, -50%) scale(1);
-  }
-  50% {
-    transform: translate(-50%, -50%) scale(0);
-  }
+  background-image: url('data:image/svg+xml;utf8,<svg width="50" height="40" xmlns="http://www.w3.org/2000/svg"><path fill="#000" d="M20.4 19.87a4.57 4.57 0 1 0 9.13-.01 4.57 4.57 0 0 0-9.13.01z"/><path fill="#000" d="M26.92 6.35c-.1.1-.17.24-.17.38v5.43a7.9 7.9 0 0 1 0 15.36v5.53a.53.53 0 0 0 .92.36l11.48-12.17c.71-.76.71-1.94 0-2.7L27.67 6.38a.53.53 0 0 0-.75-.02zm-4.64.02L10.8 18.55a1.96 1.96 0 0 0 0 2.69L22.28 33.4a.53.53 0 0 0 .91-.36v-5.53a7.9 7.9 0 0 1 0-15.36V6.73a.53.53 0 0 0-.53-.52.53.53 0 0 0-.38.16z"/></svg>');
 }
 .loader-ring {
-  height: 0;
+  height: 26vw;
   left: 50%;
+  max-height: 31vh;
+  max-width: 31vh;
   opacity: 0.5;
-  padding-bottom: 25%;
   position: absolute;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: 25%;
+  width: 26vw;
 }
 .loader-ring__segment {
   animation: loader-ring-spin 1.5s infinite cubic-bezier(0.5, 0, 0.5, 1) !important;
-  border: 6px solid #009AEF;
-  border-color: #009AEF transparent transparent transparent;
+  border: 6px solid #009aef;
+  border-color: #009aef transparent transparent transparent;
   border-radius: 50%;
   box-sizing: border-box;
   height: 100%;
@@ -231,7 +207,7 @@ body {
   color: white;
 }
 .codestream .stream .unreads[type="above"] {
-  top: 0px;
+  top: -1px;
   border-radius: 0 0 5px 5px;
   border-top: none;
 }
@@ -1109,6 +1085,7 @@ body {
 }
 .codestream .intro {
   margin: 0 40px;
+  height: 90%;
   min-height: 300px;
   box-sizing: border-box;
   display: flex;

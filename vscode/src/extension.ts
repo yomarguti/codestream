@@ -35,7 +35,7 @@ export async function activate(context: ExtensionContext) {
 			module: serverModule,
 			transport: TransportKind.ipc,
 			options: {
-				execArgv: ["--nolazy"] //"--inspect-brk=6009"
+				execArgv: ["--nolazy"] // "--inspect-brk=6009"
 			}
 		}
 	};
