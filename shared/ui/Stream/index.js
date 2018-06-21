@@ -69,7 +69,7 @@ export class SimpleStream extends Component {
 	};
 
 	setActivePanel = panel => {
-		this.setState({ activePanel: panel });
+		if (panel !== this.state.activePanel) this.setState({ activePanel: panel });
 	};
 
 	notImplementedYet = () => {

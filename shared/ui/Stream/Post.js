@@ -13,7 +13,7 @@ import ContentEditable from "react-contenteditable";
 import Button from "./Button";
 import Menu from "./Menu";
 // import "emoji-mart/css/emoji-mart.css";
-// import { Picker } from "emoji-mart";
+import { Picker } from "emoji-mart";
 
 class Post extends Component {
 	constructor(props) {
