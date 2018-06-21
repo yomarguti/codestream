@@ -1,6 +1,7 @@
 // @flow
 import { CompositeDisposable, Directory, Range, TextEditor } from "atom";
 import type { DisplayMarker } from "../types/atom";
+import type { CSBufferLocation } from "../types";
 import Blamer from "../util/blamer";
 
 const trimSelection = editor => {
@@ -37,8 +38,9 @@ const trimSelection = editor => {
 	return range;
 };
 
-const rangeToArray = (range: Range): [number, number, number, number] => {
-	return [range.start.row, range.start.column, range.end.row, range.end.column];
+// Convert Atom's 0-based Range into CodeStream 1-based flat-array location
+const rangeToLocation = (range: Range): CSBufferLocation => {
+	return [range.start.row + 1, range.start.column + 1, range.end.row + 1, range.end.column + 1];
 };
 
 const tooltipOptions = {
@@ -185,7 +187,7 @@ export default class AddCommentPopupManager {
 							type: "codestream:interaction:code-highlighted",
 							body: {
 								authors,
-								quoteRange: rangeToArray(range),
+								quoteRange: rangeToLocation(range),
 								quoteText: code,
 								preContext: preContext,
 								postContext: postContext

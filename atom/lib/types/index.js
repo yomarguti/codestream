@@ -44,3 +44,7 @@ type State = {
 };
 type Action = { type: string };
 export type Store = ReduxStore<State, Action>;
+
+export type CSBufferLocation =
+	| [number, number, number, number, {}]
+	| [number, number, number, number];
