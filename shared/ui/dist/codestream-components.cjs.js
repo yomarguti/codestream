@@ -102733,12 +102733,13 @@ var Post = function (_Component) {
 
 
 			var mine = this.props.currentUsername === post.author.username;
+			var systemPost = post.creatorId === "codestream";
 
 			var postClass = classnames(defineProperty$1({
 				post: true,
 				mine: mine,
 				editing: this.props.editing,
-				"system-post": post.creatorId === "codestream",
+				"system-post": systemPost,
 				unread: this.props.unread,
 				"new-separator": this.props.newMessageIndicator
 			}, "thread-key-" + this.props.threadKey, true));
@@ -102787,7 +102788,7 @@ var Post = function (_Component) {
 						return _this3._div = _ref4;
 					}
 				},
-				react.createElement(Icon, { name: "gear", className: "gear align-right", onClick: this.handleMenuClick }),
+				!systemPost && react.createElement(Icon, { name: "gear", className: "gear align-right", onClick: this.handleMenuClick }),
 				this.state.menuOpen && react.createElement(Menu, { items: menuItems, target: this.state.menuTarget, action: this.handleSelectMenu }),
 				react.createElement(Headshot, { size: 36, person: post.author, mine: mine }),
 				react.createElement(

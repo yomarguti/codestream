@@ -31,12 +31,13 @@ class Post extends Component {
 		const { post } = this.props;
 
 		const mine = this.props.currentUsername === post.author.username;
+		const systemPost = post.creatorId === "codestream";
 
 		const postClass = createClassString({
 			post: true,
 			mine: mine,
 			editing: this.props.editing,
-			"system-post": post.creatorId === "codestream",
+			"system-post": systemPost,
 			unread: this.props.unread,
 			"new-separator": this.props.newMessageIndicator,
 			[`thread-key-${this.props.threadKey}`]: true
@@ -84,7 +85,9 @@ class Post extends Component {
 				thread={post.parentPostId || post.id}
 				ref={ref => (this._div = ref)}
 			>
-				<Icon name="gear" className="gear align-right" onClick={this.handleMenuClick} />
+				{!systemPost && (
+					<Icon name="gear" className="gear align-right" onClick={this.handleMenuClick} />
+				)}
 				{this.state.menuOpen && (
 					<Menu items={menuItems} target={this.state.menuTarget} action={this.handleSelectMenu} />
 				)}
