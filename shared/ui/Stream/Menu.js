@@ -26,7 +26,7 @@ export default class Menu extends Component {
 
 			// check to make sure the menu doesn't display
 			// off the bottom of the screen
-			const tooFar = rect.top + this._div.offsetHeight + 5 - window.innerHeight;
+			const tooFar = rect.top + this._div.offsetHeight + 35 - window.innerHeight;
 			if (tooFar > 0) this._div.style.top = rect.top - tooFar + "px";
 		}
 	}

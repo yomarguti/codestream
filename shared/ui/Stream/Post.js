@@ -53,8 +53,11 @@ class Post extends Component {
 			);
 		}
 
+		let parentPost = this.props.replyingTo;
+
+		const threadLabel = parentPost ? "View Thread" : "Create Thread";
 		let menuItems = [
-			{ label: "Create Thread", action: "make-thread" },
+			{ label: threadLabel, action: "make-thread" },
 			{ label: "Mark Unread", action: "mark-unread" },
 			{ label: "Add Reaction", action: "add-reaction" },
 			{ label: "Pin to Stream", action: "pin-to-stream" }
@@ -67,7 +70,6 @@ class Post extends Component {
 			);
 		}
 
-		let parentPost = this.props.replyingTo;
 		// let alertClass = this.props.alert ? "icon icon-" + this.props.alert : null;
 
 		// this was above Headshot

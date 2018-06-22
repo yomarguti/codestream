@@ -33645,7 +33645,7 @@ var Menu = function (_Component) {
 
 				// check to make sure the menu doesn't display
 				// off the bottom of the screen
-				var tooFar = rect.top + this._div.offsetHeight + 5 - window.innerHeight;
+				var tooFar = rect.top + this._div.offsetHeight + 35 - window.innerHeight;
 				if (tooFar > 0) this._div.style.top = rect.top - tooFar + "px";
 			}
 		}
@@ -102758,12 +102758,14 @@ var Post = function (_Component) {
 				);
 			}
 
-			var menuItems = [{ label: "Create Thread", action: "make-thread" }, { label: "Mark Unread", action: "mark-unread" }, { label: "Add Reaction", action: "add-reaction" }, { label: "Pin to Stream", action: "pin-to-stream" }];
+			var parentPost = this.props.replyingTo;
+
+			var threadLabel = parentPost ? "View Thread" : "Create Thread";
+			var menuItems = [{ label: threadLabel, action: "make-thread" }, { label: "Mark Unread", action: "mark-unread" }, { label: "Add Reaction", action: "add-reaction" }, { label: "Pin to Stream", action: "pin-to-stream" }];
 			if (mine) {
 				menuItems.push({ label: "-" }, { label: "Edit Comment", action: "edit-post" }, { label: "Delete Comment", action: "delete-post" });
 			}
 
-			var parentPost = this.props.replyingTo;
 			// let alertClass = this.props.alert ? "icon icon-" + this.props.alert : null;
 
 			// this was above Headshot
