@@ -790,9 +790,25 @@
 							color: @text-color-subtle;
 						}
 						.icon {
+							top: 2px !important;
 							margin-right: 5px;
 						}
+						.icon.gear {
+							padding-top: 12px !important;
+						}
+						.hash {
+							top: 0 !important;
+						}
+						.icon.align-right .octicon-gear {
+							// 1px closer to the edge because
+							// the gear icon is 2px wider than the + icon
+							margin-right: -1px;
+						}
 						.icon.align-right {
+							float: none;
+							position: absolute;
+							right: 9px;
+							top: 3px !important;
 							margin: 0;
 							display: none;
 							// visibility: hidden;

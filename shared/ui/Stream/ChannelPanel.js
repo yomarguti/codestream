@@ -57,7 +57,7 @@ export class SimpleChannelPanel extends Component {
 						) : stream.privacy === "private" ? (
 							<Icon name="lock" />
 						) : (
-							<span className="icon">#</span>
+							<span className="icon hash">#</span>
 						);
 						let count = this.props.umis.unread[stream.id] || 0;
 						if (this.props.mutedStreams[stream.id]) count = 0;

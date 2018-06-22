@@ -13281,7 +13281,7 @@ var archiveStream = function archiveStream(streamId, value) {
 	}();
 };
 
-var actions = /*#__PURE__*/Object.freeze({
+var streamActions = /*#__PURE__*/Object.freeze({
 	markStreamRead: markStreamRead,
 	createPost: createPost,
 	retryPost: retryPost,
@@ -33823,7 +33823,7 @@ var mapStateToProps = function mapStateToProps(_ref) {
 	    session = _ref.session;
 	return { session: session };
 };
-var ChannelMenu = connect(mapStateToProps, _extends$4({}, contextActions, actions)
+var ChannelMenu = connect(mapStateToProps, _extends$4({}, contextActions, streamActions)
 // ...userActions
 )(SimpleChannelMenu);
 
@@ -33860,7 +33860,7 @@ var SimpleChannelPanel = function (_Component) {
 							if (stream.name.match(/^ls:/)) return null;
 							var icon = _this.props.mutedStreams[stream.id] ? react.createElement(Icon, { name: "mute" }) : stream.privacy === "private" ? react.createElement(Icon, { name: "lock" }) : react.createElement(
 								"span",
-								{ className: "icon" },
+								{ className: "icon hash" },
 								"#"
 							);
 							var count = _this.props.umis.unread[stream.id] || 0;
@@ -43004,7 +43004,7 @@ var mapStateToProps$2 = function mapStateToProps(_ref) {
 	};
 };
 
-var PublicChannelPanel = connect(mapStateToProps$2, _extends$4({}, contextActions, actions, {
+var PublicChannelPanel = connect(mapStateToProps$2, _extends$4({}, contextActions, streamActions, {
 	goToInvitePage: goToInvitePage
 }))(SimplePublicChannelPanel);
 
@@ -103733,7 +103733,7 @@ var mapStateToProps$5 = function mapStateToProps(state) {
 		usernamesRegexp: usernamesRegexp
 	};
 };
-var PostsPanel = connect(mapStateToProps$5, _extends$4({}, actions, { goToInvitePage: goToInvitePage }))(Stream);
+var PostsPanel = connect(mapStateToProps$5, _extends$4({}, streamActions, { goToInvitePage: goToInvitePage }))(Stream);
 
 var toMapBy = function toMapBy(key, entities) {
 	return entities.reduce(function (result, entity) {
@@ -104422,7 +104422,7 @@ var mapStateToProps$6 = function mapStateToProps(_ref6) {
 	};
 };
 
-var index$3 = connect(mapStateToProps$6, _extends$4({}, actions, {
+var index$3 = connect(mapStateToProps$6, _extends$4({}, streamActions, {
 	goToInvitePage: goToInvitePage
 }))(SimpleStream);
 
