@@ -14,7 +14,9 @@ import Button from "./Button";
 import Menu from "./Menu";
 // import "emoji-mart/css/emoji-mart.css";
 import { Picker } from "emoji-mart";
-var md = require("markdown-it")({
+import markdown from "markdown-it";
+
+const md = markdown({
 	linkify: true,
 	breaks: true,
 	typographer: true
