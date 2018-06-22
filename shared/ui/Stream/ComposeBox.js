@@ -125,6 +125,7 @@ class ComposeBox extends React.Component {
 			});
 		} else if (type === "slash-commands") {
 			slashCommands.map(command => {
+				if (command.channelOnly && this.props.isDirectMessage) return;
 				let lowered = command.id.toLowerCase();
 				if (lowered.indexOf(prefix) === 0) {
 					command.identifier = command.id;

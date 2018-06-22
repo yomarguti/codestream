@@ -12,6 +12,7 @@ import { goToInvitePage } from "../actions/routing";
 import { toMapBy } from "../utils";
 import { confirmPopup } from "./Confirm";
 import { getPostsForStream, getStreamForId, getStreamForTeam } from "../reducers/streams";
+import slashCommands from "./slash-commands";
 
 export class SimpleStream extends Component {
 	constructor(props) {
@@ -23,8 +24,13 @@ export class SimpleStream extends Component {
 		};
 	}
 
-	runSlashCommand = (command, args) => {
-		switch (command) {
+	runSlashCommand = (commandId, args) => {
+		if (this.props.postStreamType === "direct") {
+			const command = slashCommands.find(c => c.id === commandId);
+			if (command && command.channelOnly) return this.postNotAllowedInDirectStreams(commandId);
+		}
+
+		switch (commandId) {
 			case "help":
 				return this.postHelp();
 			case "add":
@@ -167,7 +173,7 @@ export class SimpleStream extends Component {
 			return this.submitSystemPost(text);
 		}
 		if (users.length === 0) {
-			this.submitSystemPost("Add members to this channel by typing `/add @nickname`");
+			this.submitSystemPost("Add members to this channel by typing\n`/add @nickname`");
 		} else {
 			await this.props.addUsersToStream(this.props.postStreamId, users);
 			this.submitPost({ text: "/me added " + usernames });
@@ -185,7 +191,7 @@ export class SimpleStream extends Component {
 				this.submitSystemPost("Unable to rename channel.");
 			}
 		} else {
-			this.submitSystemPost("Rename a channel by typing `/rename [new name]`");
+			this.submitSystemPost("Rename a channel by typing\n`/rename [new name]`");
 		}
 		return true;
 	};
@@ -257,7 +263,7 @@ export class SimpleStream extends Component {
 		}
 		const { users, usernames, rest } = this.extractUsersFromArgs(args);
 		if (users.length === 0) {
-			this.submitSystemPost("Usage: /remove @user");
+			this.submitSystemPost("Usage: `/remove @user`");
 		} else {
 			await this.props.removeUsersFromStream(this.props.postStreamId, users);
 			this.submitPost({ text: "/me removed " + usernames });
@@ -280,7 +286,7 @@ export class SimpleStream extends Component {
 			return id === username || id === "@" + username;
 		});
 
-		if (!user) return this.submitSystemPost("Usage: /msg @user message");
+		if (!user) return this.submitSystemPost("Usage: `/msg @user message`");
 
 		// find or create the stream, then select it, then post the message
 		const stream = await this.props.createStream({ type: "direct", memberIds: [user] });
@@ -301,6 +307,12 @@ export class SimpleStream extends Component {
 
 	postHelp = () => {
 		const text = "Help message goes here.";
+		this.submitSystemPost(text);
+		return true;
+	};
+
+	postNotAllowedInDirectStreams = command => {
+		const text = "`/" + command + "` not allowed in direct message streams.";
 		this.submitSystemPost(text);
 		return true;
 	};

@@ -13285,7 +13285,7 @@ var archiveStream = function archiveStream(streamId, value) {
 	}();
 };
 
-var streamActions = /*#__PURE__*/Object.freeze({
+var actions = /*#__PURE__*/Object.freeze({
 	markStreamRead: markStreamRead,
 	createPost: createPost,
 	retryPost: retryPost,
@@ -33827,7 +33827,7 @@ var mapStateToProps = function mapStateToProps(_ref) {
 	    session = _ref.session;
 	return { session: session };
 };
-var ChannelMenu = connect(mapStateToProps, _extends$4({}, contextActions, streamActions)
+var ChannelMenu = connect(mapStateToProps, _extends$4({}, contextActions, actions)
 // ...userActions
 )(SimpleChannelMenu);
 
@@ -43008,7 +43008,7 @@ var mapStateToProps$2 = function mapStateToProps(_ref) {
 	};
 };
 
-var PublicChannelPanel = connect(mapStateToProps$2, _extends$4({}, contextActions, streamActions, {
+var PublicChannelPanel = connect(mapStateToProps$2, _extends$4({}, contextActions, actions, {
 	goToInvitePage: goToInvitePage
 }))(SimplePublicChannelPanel);
 
@@ -50685,13 +50685,13 @@ var AtMentionsPopup = function (_Component) {
 
 var slashCommands = [{ id: "help", help: "get help" }, { id: "add", help: "add member to channel", description: "@user" },
 // { id: "apply", help: "apply patch last post" },
-{ id: "archive", help: "archive channel" },
+{ id: "archive", help: "archive channel", channelOnly: true },
 // { id: "diff", help: "diff last post" },
-{ id: "invite", help: "add to your team", description: "email" }, { id: "leave", help: "leave channel" }, { id: "me", help: "emote" }, { id: "msg", help: "message member", description: "@user" }, { id: "mute", help: "mute channel" },
+{ id: "invite", help: "add to your team", description: "email" }, { id: "leave", help: "leave channel", channelOnly: true }, { id: "me", help: "emote" }, { id: "msg", help: "message member", description: "@user" }, { id: "mute", help: "mute channel" },
 // { id: "muteall", help: "mute codestream" },
 // { id: "open", help: "open channel" },
 // { id: "prefs", help: "open preferences" },
-{ id: "rename", help: "rename channel", description: "newname" }, { id: "remove", help: "remove from channel", description: "@user" }, { id: "version", help: "" }, { id: "who", help: "show channel members" }];
+{ id: "rename", help: "rename channel", description: "newname", channelOnly: true }, { id: "remove", help: "remove from channel", description: "@user", channelOnly: true }, { id: "version", help: "" }, { id: "who", help: "show channel members" }];
 
 var arrayToRange = function arrayToRange(_ref) {
 	var _ref2 = slicedToArray(_ref, 4),
@@ -50983,6 +50983,8 @@ var ComposeBox = function (_React$Component) {
 
 		// set up the parameters to pass to the at mention popup
 		value: function showPopupSelectors(prefix, type) {
+			var _this3 = this;
+
 			var itemsToShow = [];
 
 			if (type === "at-mentions") {
@@ -50999,6 +51001,7 @@ var ComposeBox = function (_React$Component) {
 				});
 			} else if (type === "slash-commands") {
 				slashCommands.map(function (command) {
+					if (command.channelOnly && _this3.props.isDirectMessage) return;
 					var lowered = command.id.toLowerCase();
 					if (lowered.indexOf(prefix) === 0) {
 						command.identifier = command.id;
@@ -51129,7 +51132,7 @@ var ComposeBox = function (_React$Component) {
 	}, {
 		key: "render",
 		value: function render() {
-			var _this3 = this;
+			var _this4 = this;
 
 			var _props = this.props,
 			    forwardedRef = _props.forwardedRef,
@@ -51193,7 +51196,7 @@ var ComposeBox = function (_React$Component) {
 					html: this.state.newPostText,
 					placeholder: placeholder,
 					ref: function ref(_ref5) {
-						return _this3._contentEditable = _ref5;
+						return _this4._contentEditable = _ref5;
 					}
 				})
 			);
@@ -103199,7 +103202,8 @@ var Stream = function (_React$Component) {
 					offscreen: !this.props.isActive,
 					onSubmit: this.submitPost,
 					onEmptyUpArrow: this.editLastPost,
-					findMentionedUserIds: this.findMentionedUserIds
+					findMentionedUserIds: this.findMentionedUserIds,
+					isDirectMessage: this.props.stream.type === "direct"
 				})
 			);
 		}
@@ -103728,7 +103732,7 @@ var mapStateToProps$5 = function mapStateToProps(state) {
 		usernamesRegexp: usernamesRegexp
 	};
 };
-var PostsPanel = connect(mapStateToProps$5, _extends$4({}, streamActions, { goToInvitePage: goToInvitePage }))(Stream);
+var PostsPanel = connect(mapStateToProps$5, _extends$4({}, actions, { goToInvitePage: goToInvitePage }))(Stream);
 
 var toMapBy = function toMapBy(key, entities) {
 	return entities.reduce(function (result, entity) {
@@ -103754,8 +103758,15 @@ var SimpleStream = function (_Component) {
 		Object.defineProperty(_this, "runSlashCommand", {
 			enumerable: true,
 			writable: true,
-			value: function value(command, args) {
-				switch (command) {
+			value: function value(commandId, args) {
+				if (_this.props.postStreamType === "direct") {
+					var command = slashCommands.find(function (c) {
+						return c.id === commandId;
+					});
+					if (command && command.channelOnly) return _this.postNotAllowedInDirectStreams(commandId);
+				}
+
+				switch (commandId) {
 					case "help":
 						return _this.postHelp();
 					case "add":
@@ -103944,7 +103955,7 @@ var SimpleStream = function (_Component) {
 										break;
 									}
 
-									_this.submitSystemPost("Add members to this channel by typing `/add @nickname`");
+									_this.submitSystemPost("Add members to this channel by typing\n`/add @nickname`");
 									_context.next = 11;
 									break;
 
@@ -104004,7 +104015,7 @@ var SimpleStream = function (_Component) {
 									break;
 
 								case 7:
-									_this.submitSystemPost("Rename a channel by typing `/rename [new name]`");
+									_this.submitSystemPost("Rename a channel by typing\n`/rename [new name]`");
 
 								case 8:
 									return _context2.abrupt("return", true);
@@ -104124,7 +104135,7 @@ var SimpleStream = function (_Component) {
 										break;
 									}
 
-									_this.submitSystemPost("Usage: /remove @user");
+									_this.submitSystemPost("Usage: `/remove @user`");
 									_context3.next = 11;
 									break;
 
@@ -104183,7 +104194,7 @@ var SimpleStream = function (_Component) {
 										break;
 									}
 
-									return _context4.abrupt("return", _this.submitSystemPost("Usage: /msg @user message"));
+									return _context4.abrupt("return", _this.submitSystemPost("Usage: `/msg @user message`"));
 
 								case 6:
 									_context4.next = 8;
@@ -104233,6 +104244,15 @@ var SimpleStream = function (_Component) {
 			writable: true,
 			value: function value() {
 				var text = "Help message goes here.";
+				_this.submitSystemPost(text);
+				return true;
+			}
+		});
+		Object.defineProperty(_this, "postNotAllowedInDirectStreams", {
+			enumerable: true,
+			writable: true,
+			value: function value(command) {
+				var text = "`/" + command + "` not allowed in direct message streams.";
 				_this.submitSystemPost(text);
 				return true;
 			}
@@ -104399,7 +104419,7 @@ var mapStateToProps$6 = function mapStateToProps(_ref6) {
 	};
 };
 
-var index$3 = connect(mapStateToProps$6, _extends$4({}, streamActions, {
+var index$3 = connect(mapStateToProps$6, _extends$4({}, actions, {
 	goToInvitePage: goToInvitePage
 }))(SimpleStream);
 

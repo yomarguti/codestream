@@ -657,6 +657,7 @@ class Stream extends React.Component {
 					onSubmit={this.submitPost}
 					onEmptyUpArrow={this.editLastPost}
 					findMentionedUserIds={this.findMentionedUserIds}
+					isDirectMessage={this.props.stream.type === "direct"}
 				/>
 			</div>
 		);
