@@ -59,6 +59,8 @@ export class SimpleStream extends Component {
 				return this.archiveChannel(args);
 			case "version":
 				return this.postVersion(args);
+			case "invite":
+				return this.invitePerson(args);
 			case "me":
 				return false;
 		}
@@ -78,11 +80,11 @@ export class SimpleStream extends Component {
 		if (panel !== this.state.activePanel) this.setState({ activePanel: panel });
 	};
 
-	notImplementedYet = () => {
+	markUnread = () => {
 		this.submitSystemPost("Not implemented yet");
 	};
 
-	markUnread = () => {
+	invitePerson = () => {
 		this.submitSystemPost("Not implemented yet");
 	};
 

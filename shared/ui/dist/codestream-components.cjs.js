@@ -13285,7 +13285,7 @@ var archiveStream = function archiveStream(streamId, value) {
 	}();
 };
 
-var streamActions = /*#__PURE__*/Object.freeze({
+var actions = /*#__PURE__*/Object.freeze({
 	markStreamRead: markStreamRead,
 	createPost: createPost,
 	retryPost: retryPost,
@@ -33827,7 +33827,7 @@ var mapStateToProps = function mapStateToProps(_ref) {
 	    session = _ref.session;
 	return { session: session };
 };
-var ChannelMenu = connect(mapStateToProps, _extends$4({}, contextActions, streamActions)
+var ChannelMenu = connect(mapStateToProps, _extends$4({}, contextActions, actions)
 // ...userActions
 )(SimpleChannelMenu);
 
@@ -43008,7 +43008,7 @@ var mapStateToProps$2 = function mapStateToProps(_ref) {
 	};
 };
 
-var PublicChannelPanel = connect(mapStateToProps$2, _extends$4({}, contextActions, streamActions, {
+var PublicChannelPanel = connect(mapStateToProps$2, _extends$4({}, contextActions, actions, {
 	goToInvitePage: goToInvitePage
 }))(SimplePublicChannelPanel);
 
@@ -103737,7 +103737,7 @@ var mapStateToProps$5 = function mapStateToProps(state) {
 		usernamesRegexp: usernamesRegexp
 	};
 };
-var PostsPanel = connect(mapStateToProps$5, _extends$4({}, streamActions, { goToInvitePage: goToInvitePage }))(Stream);
+var PostsPanel = connect(mapStateToProps$5, _extends$4({}, actions, { goToInvitePage: goToInvitePage }))(Stream);
 
 var toMapBy = function toMapBy(key, entities) {
 	return entities.reduce(function (result, entity) {
@@ -103800,6 +103800,8 @@ var SimpleStream = function (_Component) {
 						return _this.archiveChannel(args);
 					case "version":
 						return _this.postVersion(args);
+					case "invite":
+						return _this.invitePerson(args);
 					case "me":
 						return false;
 				}
@@ -103828,14 +103830,14 @@ var SimpleStream = function (_Component) {
 				if (panel !== _this.state.activePanel) _this.setState({ activePanel: panel });
 			}
 		});
-		Object.defineProperty(_this, "notImplementedYet", {
+		Object.defineProperty(_this, "markUnread", {
 			enumerable: true,
 			writable: true,
 			value: function value() {
 				_this.submitSystemPost("Not implemented yet");
 			}
 		});
-		Object.defineProperty(_this, "markUnread", {
+		Object.defineProperty(_this, "invitePerson", {
 			enumerable: true,
 			writable: true,
 			value: function value() {
@@ -104424,7 +104426,7 @@ var mapStateToProps$6 = function mapStateToProps(_ref6) {
 	};
 };
 
-var index$3 = connect(mapStateToProps$6, _extends$4({}, streamActions, {
+var index$3 = connect(mapStateToProps$6, _extends$4({}, actions, {
 	goToInvitePage: goToInvitePage
 }))(SimpleStream);
 
