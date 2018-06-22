@@ -13281,7 +13281,7 @@ var archiveStream = function archiveStream(streamId, value) {
 	}();
 };
 
-var actions = /*#__PURE__*/Object.freeze({
+var streamActions = /*#__PURE__*/Object.freeze({
 	markStreamRead: markStreamRead,
 	createPost: createPost,
 	retryPost: retryPost,
@@ -33823,7 +33823,7 @@ var mapStateToProps = function mapStateToProps(_ref) {
 	    session = _ref.session;
 	return { session: session };
 };
-var ChannelMenu = connect(mapStateToProps, _extends$4({}, contextActions, actions)
+var ChannelMenu = connect(mapStateToProps, _extends$4({}, contextActions, streamActions)
 // ...userActions
 )(SimpleChannelMenu);
 
@@ -43004,7 +43004,7 @@ var mapStateToProps$2 = function mapStateToProps(_ref) {
 	};
 };
 
-var PublicChannelPanel = connect(mapStateToProps$2, _extends$4({}, contextActions, actions, {
+var PublicChannelPanel = connect(mapStateToProps$2, _extends$4({}, contextActions, streamActions, {
 	goToInvitePage: goToInvitePage
 }))(SimplePublicChannelPanel);
 
@@ -48876,10 +48876,12 @@ var SimpleCreateChannelPanel = function (_Component) {
 		value: function render() {
 			var _this2 = this;
 
+			var inactive = this.props.activePanel !== "create-channel";
+
 			var createChannelPanelClass = classnames({
 				panel: true,
 				"create-channel-panel": true,
-				"off-right": this.props.activePanel !== "create-channel"
+				"off-right": inactive
 			});
 
 			return react.createElement(
@@ -48898,8 +48900,8 @@ var SimpleCreateChannelPanel = function (_Component) {
 					"form",
 					{ id: "create-channel-form", className: "standard-form postslist" },
 					react.createElement(
-						"div",
-						{ className: "form-body" },
+						"fieldset",
+						{ className: "form-body", disabled: inactive },
 						this.renderError(),
 						react.createElement(
 							"p",
@@ -49219,10 +49221,12 @@ var SimpleCreateDMPanel = function (_Component) {
 		value: function render() {
 			var _this2 = this;
 
+			var inactive = this.props.activePanel !== "create-dm";
+
 			var createDMPanelClass = classnames({
 				panel: true,
 				"create-dm-panel": true,
-				"off-right": this.props.activePanel !== "create-dm"
+				"off-right": inactive
 			});
 
 			return react.createElement(
@@ -49241,8 +49245,8 @@ var SimpleCreateDMPanel = function (_Component) {
 					"form",
 					{ id: "create-dm-form", className: "standard-form postslist" },
 					react.createElement(
-						"div",
-						{ className: "form-body" },
+						"fieldset",
+						{ className: "form-body", disabled: inactive },
 						this.renderError(),
 						react.createElement(
 							"p",
@@ -49269,6 +49273,7 @@ var SimpleCreateDMPanel = function (_Component) {
 									options: this.props.teammates,
 									closeMenuOnSelect: false,
 									isClearable: false,
+									disabled: inactive,
 									placeholder: "Enter names...",
 									onChange: function onChange(value) {
 										return _this2.setState({ members: value });
@@ -103728,7 +103733,7 @@ var mapStateToProps$5 = function mapStateToProps(state) {
 		usernamesRegexp: usernamesRegexp
 	};
 };
-var PostsPanel = connect(mapStateToProps$5, _extends$4({}, actions, { goToInvitePage: goToInvitePage }))(Stream);
+var PostsPanel = connect(mapStateToProps$5, _extends$4({}, streamActions, { goToInvitePage: goToInvitePage }))(Stream);
 
 var toMapBy = function toMapBy(key, entities) {
 	return entities.reduce(function (result, entity) {
@@ -104415,7 +104420,7 @@ var mapStateToProps$6 = function mapStateToProps(_ref6) {
 	};
 };
 
-var index$3 = connect(mapStateToProps$6, _extends$4({}, actions, {
+var index$3 = connect(mapStateToProps$6, _extends$4({}, streamActions, {
 	goToInvitePage: goToInvitePage
 }))(SimpleStream);
 

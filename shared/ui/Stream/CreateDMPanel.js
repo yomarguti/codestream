@@ -24,10 +24,12 @@ export class SimpleCreateDMPanel extends Component {
 	}
 
 	render() {
+		const inactive = this.props.activePanel !== "create-dm";
+
 		const createDMPanelClass = createClassString({
 			panel: true,
 			"create-dm-panel": true,
-			"off-right": this.props.activePanel !== "create-dm"
+			"off-right": inactive
 		});
 
 		return (
@@ -36,7 +38,7 @@ export class SimpleCreateDMPanel extends Component {
 					<span className="panel-title">Direct Messages</span>
 				</div>
 				<form id="create-dm-form" className="standard-form postslist">
-					<div className="form-body">
+					<fieldset className="form-body" disabled={inactive}>
 						{this.renderError()}
 						<p className="explainer">
 							Find or create a private conversation with one or more of your teammates.
@@ -53,6 +55,7 @@ export class SimpleCreateDMPanel extends Component {
 									options={this.props.teammates}
 									closeMenuOnSelect={false}
 									isClearable={false}
+									disabled={inactive}
 									placeholder="Enter names..."
 									onChange={value => this.setState({ members: value })}
 								/>
@@ -85,7 +88,7 @@ export class SimpleCreateDMPanel extends Component {
 								</Button>
 							</div>
 						</div>
-					</div>
+					</fieldset>
 					<div className="channel-list">
 						<div className="section">
 							<div className="header">Recent Conversations</div>

@@ -23,10 +23,12 @@ export class SimpleCreateChannelPanel extends Component {
 	}
 
 	render() {
+		const inactive = this.props.activePanel !== "create-channel";
+
 		const createChannelPanelClass = createClassString({
 			panel: true,
 			"create-channel-panel": true,
-			"off-right": this.props.activePanel !== "create-channel"
+			"off-right": inactive
 		});
 
 		return (
@@ -35,7 +37,7 @@ export class SimpleCreateChannelPanel extends Component {
 					<span className="panel-title">New Channel</span>
 				</div>
 				<form id="create-channel-form" className="standard-form postslist">
-					<div className="form-body">
+					<fieldset className="form-body" disabled={inactive}>
 						{this.renderError()}
 						<p className="explainer">
 							Channels are where your dev team discusses projects, repos, or code in general. You
@@ -141,7 +143,7 @@ export class SimpleCreateChannelPanel extends Component {
 								</Button>
 							</div>
 						</div>
-					</div>
+					</fieldset>
 				</form>
 			</div>
 		);
