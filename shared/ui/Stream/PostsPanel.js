@@ -545,6 +545,8 @@ class Stream extends React.Component {
 		const { className, setActivePanel, umis } = this.props;
 
 		const umisClass = createClassString({
+			umis: true,
+			"align-left-button": true,
 			mentions: umis.totalMentions > 0,
 			unread: umis.totalMentions == 0 && umis.totalUnread > 0
 		});
@@ -556,32 +558,28 @@ class Stream extends React.Component {
 
 		const placeholderText = inThread ? `Reply to ${threadPost.author.username}` : "Add comment";
 
-		const channelName =
+		const channelIcon =
 			this.props.stream.type === "direct" ? (
-				<span>
-					<Icon name="organization" />
-					{this.props.stream.name}
-				</span>
+				<Icon name="organization" />
 			) : this.props.stream.privacy === "private" ? (
-				<span>
-					<Icon name="lock" />
-					{this.props.stream.name}
-				</span>
+				<Icon name="lock" />
 			) : (
-				"#" + this.props.stream.name
+				<span>#</span>
 			);
 
 		return (
 			<div className={createClassString("panel", "main-panel", "posts-panel", className)}>
 				<div className="panel-header">
 					<span onClick={this.handleClickGoBack} className={umisClass}>
-						<Icon name="chevron-left" className="show-channels-icon align-left" />
-						{totalUMICount}
+						<Icon name="chevron-left" className="show-channels-icon" />
+						{totalUMICount && <label>{totalUMICount}</label>}
 					</span>
-					<span>{channelName}</span>
+					<span className="panel-title">
+						{channelIcon} {this.props.stream.name}
+					</span>
 					{this.props.stream.type !== "direct" && (
-						<span onClick={this.handleClickStreamSettings}>
-							<Icon name="gear" className="show-settings align-right" />
+						<span onClick={this.handleClickStreamSettings} className="align-right-button">
+							<Icon name="gear" className="show-settings" />
 							{this.state.openMenu && (
 								<ChannelMenu
 									stream={this.props.stream}

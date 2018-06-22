@@ -13281,7 +13281,7 @@ var archiveStream = function archiveStream(streamId, value) {
 	}();
 };
 
-var actions = /*#__PURE__*/Object.freeze({
+var streamActions = /*#__PURE__*/Object.freeze({
 	markStreamRead: markStreamRead,
 	createPost: createPost,
 	retryPost: retryPost,
@@ -33823,7 +33823,7 @@ var mapStateToProps = function mapStateToProps(_ref) {
 	    session = _ref.session;
 	return { session: session };
 };
-var ChannelMenu = connect(mapStateToProps, _extends$4({}, contextActions, actions)
+var ChannelMenu = connect(mapStateToProps, _extends$4({}, contextActions, streamActions)
 // ...userActions
 )(SimpleChannelMenu);
 
@@ -34091,7 +34091,7 @@ var SimpleChannelPanel = function (_Component) {
 						{ className: "panel-header" },
 						react.createElement(
 							"span",
-							null,
+							{ className: "panel-title" },
 							teamName
 						)
 					),
@@ -42895,19 +42895,21 @@ var SimplePublicChannelPanel = function (_Component) {
 				react.createElement(
 					"div",
 					{ className: "panel-header" },
-					react.createElement("span", {
-						onClick: this.showChannels,
-						className: "icon icon-chevron-left show-channels-icon align-left"
-					}),
 					react.createElement(
 						"span",
-						{ onClick: this.showChannels },
+						{ onClick: this.showChannels, className: "align-left-button" },
+						react.createElement(Icon, { name: "chevron-left", className: "show-channels-icon" })
+					),
+					react.createElement(
+						"span",
+						{ className: "panel-title" },
 						"All Channels"
 					),
-					react.createElement("span", {
-						className: "icon icon-diff-added align-right",
-						onClick: this.handleClickCreateChannel
-					})
+					react.createElement(
+						"span",
+						{ onClick: this.handleClickCreateChannel, className: "align-right-button" },
+						react.createElement(Icon, { name: "plus" })
+					)
 				),
 				react.createElement(
 					"div",
@@ -43001,7 +43003,7 @@ var mapStateToProps$2 = function mapStateToProps(_ref) {
 	};
 };
 
-var PublicChannelPanel = connect(mapStateToProps$2, _extends$4({}, contextActions, actions, {
+var PublicChannelPanel = connect(mapStateToProps$2, _extends$4({}, contextActions, streamActions, {
 	goToInvitePage: goToInvitePage
 }))(SimplePublicChannelPanel);
 
@@ -48887,7 +48889,7 @@ var SimpleCreateChannelPanel = function (_Component) {
 					{ className: "panel-header" },
 					react.createElement(
 						"span",
-						{ onClick: this.handleClick },
+						{ className: "panel-title" },
 						"New Channel"
 					)
 				),
@@ -49230,7 +49232,7 @@ var SimpleCreateDMPanel = function (_Component) {
 					{ className: "panel-header" },
 					react.createElement(
 						"span",
-						{ onClick: this.handleClick },
+						{ className: "panel-title" },
 						"Direct Messages"
 					)
 				),
@@ -103058,6 +103060,8 @@ var Stream = function (_React$Component) {
 
 
 			var umisClass = classnames({
+				umis: true,
+				"align-left-button": true,
 				mentions: umis.totalMentions > 0,
 				unread: umis.totalMentions == 0 && umis.totalUnread > 0
 			});
@@ -103069,17 +103073,11 @@ var Stream = function (_React$Component) {
 
 			var placeholderText = inThread ? "Reply to " + threadPost.author.username : "Add comment";
 
-			var channelName = this.props.stream.type === "direct" ? react.createElement(
+			var channelIcon = this.props.stream.type === "direct" ? react.createElement(Icon, { name: "organization" }) : this.props.stream.privacy === "private" ? react.createElement(Icon, { name: "lock" }) : react.createElement(
 				"span",
 				null,
-				react.createElement(Icon, { name: "organization" }),
-				this.props.stream.name
-			) : this.props.stream.privacy === "private" ? react.createElement(
-				"span",
-				null,
-				react.createElement(Icon, { name: "lock" }),
-				this.props.stream.name
-			) : "#" + this.props.stream.name;
+				"#"
+			);
 
 			return react.createElement(
 				"div",
@@ -103090,18 +103088,24 @@ var Stream = function (_React$Component) {
 					react.createElement(
 						"span",
 						{ onClick: this.handleClickGoBack, className: umisClass },
-						react.createElement(Icon, { name: "chevron-left", className: "show-channels-icon align-left" }),
-						totalUMICount
+						react.createElement(Icon, { name: "chevron-left", className: "show-channels-icon" }),
+						totalUMICount && react.createElement(
+							"label",
+							null,
+							totalUMICount
+						)
 					),
 					react.createElement(
 						"span",
-						null,
-						channelName
+						{ className: "panel-title" },
+						channelIcon,
+						" ",
+						this.props.stream.name
 					),
 					this.props.stream.type !== "direct" && react.createElement(
 						"span",
-						{ onClick: this.handleClickStreamSettings },
-						react.createElement(Icon, { name: "gear", className: "show-settings align-right" }),
+						{ onClick: this.handleClickStreamSettings, className: "align-right-button" },
+						react.createElement(Icon, { name: "gear", className: "show-settings" }),
 						this.state.openMenu && react.createElement(ChannelMenu, {
 							stream: this.props.stream,
 							target: this.state.menuTarget,
@@ -103712,7 +103716,7 @@ var mapStateToProps$5 = function mapStateToProps(state) {
 		usernamesRegexp: usernamesRegexp
 	};
 };
-var PostsPanel = connect(mapStateToProps$5, _extends$4({}, actions, { goToInvitePage: goToInvitePage }))(Stream);
+var PostsPanel = connect(mapStateToProps$5, _extends$4({}, streamActions, { goToInvitePage: goToInvitePage }))(Stream);
 
 var toMapBy = function toMapBy(key, entities) {
 	return entities.reduce(function (result, entity) {
@@ -104383,7 +104387,7 @@ var mapStateToProps$6 = function mapStateToProps(_ref6) {
 	};
 };
 
-var index$3 = connect(mapStateToProps$6, _extends$4({}, actions, {
+var index$3 = connect(mapStateToProps$6, _extends$4({}, streamActions, {
 	goToInvitePage: goToInvitePage
 }))(SimpleStream);
 

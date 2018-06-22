@@ -30,7 +30,7 @@ export class SimpleChannelPanel extends Component {
 			<div>
 				<div className={channelPanelClass} ref={this._channelPanel}>
 					<div className="panel-header">
-						<span>{teamName}</span>
+						<span className="panel-title">{teamName}</span>
 					</div>
 					<div className="channel-list postslist">
 						{this.renderChannels()}

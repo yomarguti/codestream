@@ -8,6 +8,7 @@ import {
 	getPublicChannelStreamsForTeam,
 	getArchivedChannelStreamsForTeam
 } from "../reducers/streams";
+import Icon from "./Icon";
 import Button from "./Button";
 import { FormattedMessage } from "react-intl";
 import * as routingActions from "../actions/routing";
@@ -31,15 +32,13 @@ export class SimplePublicChannelPanel extends Component {
 		return (
 			<div className={panelClass}>
 				<div className="panel-header">
-					<span
-						onClick={this.showChannels}
-						className="icon icon-chevron-left show-channels-icon align-left"
-					/>
-					<span onClick={this.showChannels}>All Channels</span>
-					<span
-						className="icon icon-diff-added align-right"
-						onClick={this.handleClickCreateChannel}
-					/>
+					<span onClick={this.showChannels} className="align-left-button">
+						<Icon name="chevron-left" className="show-channels-icon" />
+					</span>
+					<span className="panel-title">All Channels</span>
+					<span onClick={this.handleClickCreateChannel} className="align-right-button">
+						<Icon name="plus" />
+					</span>
 				</div>
 				<div className="channel-list postslist">
 					<p className="explainer">
@@ -147,11 +146,8 @@ const mapStateToProps = ({ context, streams, users, teams, umis, session }) => {
 	};
 };
 
-export default connect(
-	mapStateToProps,
-	{
-		...contextActions,
-		...streamActions,
-		goToInvitePage: routingActions.goToInvitePage
-	}
-)(SimplePublicChannelPanel);
+export default connect(mapStateToProps, {
+	...contextActions,
+	...streamActions,
+	goToInvitePage: routingActions.goToInvitePage
+})(SimplePublicChannelPanel);

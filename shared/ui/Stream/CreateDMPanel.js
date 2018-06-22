@@ -33,7 +33,7 @@ export class SimpleCreateDMPanel extends Component {
 		return (
 			<div className={createDMPanelClass} ref={this._createDMPanel}>
 				<div className="panel-header">
-					<span onClick={this.handleClick}>Direct Messages</span>
+					<span className="panel-title">Direct Messages</span>
 				</div>
 				<form id="create-dm-form" className="standard-form postslist">
 					<div className="form-body">
@@ -185,12 +185,10 @@ const mapStateToProps = ({ context, streams, users, teams, session, umis }) => {
 	});
 
 	// the integer 528593114636 is simply a number far, far in the past
-	const directMessageStreams = _
-		.sortBy(
-			getDirectMessageStreamsForTeam(streams, context.currentTeamId, session.userId, users) || [],
-			stream => stream.mostRecentPostCreatedAt || 528593114636
-		)
-		.reverse();
+	const directMessageStreams = _.sortBy(
+		getDirectMessageStreamsForTeam(streams, context.currentTeamId, session.userId, users) || [],
+		stream => stream.mostRecentPostCreatedAt || 528593114636
+	).reverse();
 
 	return {
 		umis,
@@ -200,11 +198,8 @@ const mapStateToProps = ({ context, streams, users, teams, session, umis }) => {
 	};
 };
 
-export default connect(
-	mapStateToProps,
-	{
-		...contextActions,
-		createStream,
-		setCurrentStream
-	}
-)(SimpleCreateDMPanel);
+export default connect(mapStateToProps, {
+	...contextActions,
+	createStream,
+	setCurrentStream
+})(SimpleCreateDMPanel);

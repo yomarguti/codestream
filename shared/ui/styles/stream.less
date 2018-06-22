@@ -56,6 +56,13 @@
 			font-size: 16px;
 			color: @text-color-highlight;
 
+			.panel-title {
+				.iconx {
+					padding-right: 5px;
+					opacity: 0.5;
+				}
+			}
+
 			span {
 				font-weight: 600;
 				text-overflow: ellipsis;
@@ -69,48 +76,45 @@
 				// font-size: 10px;
 			}
 
-			.mentions-badge {
+			.align-left-button,
+			.align-right-button {
 				position: absolute;
-				top: 2px;
-				left: 10px;
-				background-color: @background-color-info;
-				border-radius: 20px;
-				color: white;
-				width: 20px;
-				height: 20px;
-				text-align: center;
-				font-size: 11px;
-				padding-top: 1px;
-			}
-
-			.icon.align-left {
-				position: absolute;
-				left: 5px;
-				right: auto;
-				// padding: 0 8px 0 3px;
-			}
-			.icon.align-right {
-				position: absolute;
-				right: 5px;
-			}
-			.icon.show-channels-icon.unread {
-				background-color: @text-color;
-				color: @base-background-color;
-			}
-			.icon.show-channels-icon.mentions {
-				background-color: @background-color-info;
-			}
-			.icon.show-channels-icon::before {
-				margin-right: 0;
-			}
-			.icon {
-				top: 0;
+				// top: 0;
+				// font-size: 10px;
+				// height: 1.4em;
 				cursor: pointer;
-				padding: 2px 5px 0 5px;
+				padding: 2px 8px 0px 8px;
 				text-align: center;
 				border-radius: 3px;
 			}
-			.icon:hover {
+			.align-left-button {
+				left: 5px;
+				label {
+					cursor: pointer;
+					padding-left: 3px;
+					vertical-align: 1px;
+					margin: 0;
+				}
+			}
+			.align-right-button {
+				right: 5px;
+			}
+			.umis.unread {
+				background-color: @text-color;
+				color: @base-background-color;
+			}
+			.umis.mentions,
+			.umis.mentions:hover {
+				background-color: @background-color-info;
+			}
+			// .icon.show-channels-icon::before {
+			// margin-right: 0;
+			// }
+			.icon {
+				padding: 0;
+			}
+			.align-left-button:hover,
+			.align-right-button:hover {
 				color: @text-color-highlight;
 				background-color: @base-background-color;
 			}
@@ -204,9 +208,6 @@
 				// display: none;
 				// padding: 2px;
 				padding-right: 5px;
-			}
-			.show-channels-icon::before {
-				margin: 0;
 			}
 		}
 		#close-thread:hover {
@@ -680,7 +681,7 @@
 
 		.icon {
 			position: relative;
-			top: 2px;
+			// top: 2px;
 		}
 
 		.channel-list {
