@@ -53797,7 +53797,7 @@ Linkify.defaultProps = {
 exports.default = Linkify;
 });
 
-var Linkify = unwrapExports(Linkify_1);
+unwrapExports(Linkify_1);
 var Linkify_2 = Linkify_1.linkify;
 
 var PostDetails = function (_Component) {
@@ -102561,6 +102561,12 @@ var Picker = function (_React$PureComponent) {
 
 Picker.defaultProps = _extends$7({}, PickerDefaultProps, { data: data$4 });
 
+var md$1 = require("markdown-it")({
+	linkify: true,
+	breaks: true,
+	typographer: true
+});
+
 var Post = function (_Component) {
 	inherits(Post, _Component);
 
@@ -102623,11 +102629,9 @@ var Post = function (_Component) {
 							part
 						);
 					} else {
-						return react.createElement(
-							Linkify,
-							{ key: iterator++ },
-							part
-						);
+						var result = md$1.render(part);
+						return react.createElement("span", { dangerouslySetInnerHTML: { __html: result } });
+						// return <ReactMarkdown key={iterator++}>{part}</ReactMarkdown>;
 					}
 				});
 			}

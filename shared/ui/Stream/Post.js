@@ -14,6 +14,11 @@ import Button from "./Button";
 import Menu from "./Menu";
 // import "emoji-mart/css/emoji-mart.css";
 import { Picker } from "emoji-mart";
+var md = require("markdown-it")({
+	linkify: true,
+	breaks: true,
+	typographer: true
+});
 
 class Post extends Component {
 	constructor(props) {
@@ -155,7 +160,9 @@ class Post extends Component {
 						</span>
 					);
 			} else {
-				return <Linkify key={iterator++}>{part}</Linkify>;
+				const result = md.render(part);
+				return <span dangerouslySetInnerHTML={{ __html: result }} />;
+				// return <ReactMarkdown key={iterator++}>{part}</ReactMarkdown>;
 			}
 		});
 	};
