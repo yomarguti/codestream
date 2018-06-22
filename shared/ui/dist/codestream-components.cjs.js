@@ -42822,6 +42822,7 @@ var SimplePublicChannelPanel = function (_Component) {
 					);
 				}
 				return [streams$$1.map(function (stream) {
+					if (stream.name.match(/^ls:/)) return null;
 					var icon = stream.privacy === "private" ? react.createElement("span", { className: "icon icon-lock" }) : react.createElement(
 						"span",
 						{ className: "icon" },
