@@ -36,7 +36,7 @@ var _descriptors = !_fails(function () {
 });
 
 var _core = createCommonjsModule(function (module) {
-var core = module.exports = { version: '2.5.7' };
+var core = module.exports = { version: '2.5.6' };
 if (typeof __e == 'number') __e = core; // eslint-disable-line no-undef
 });
 var _core_1 = _core.version;
@@ -99994,7 +99994,7 @@ var _arrayIncludes$1 = function (IS_INCLUDES) {
 };
 
 var _core$1 = createCommonjsModule(function (module) {
-var core = module.exports = { version: '2.5.7' };
+var core = module.exports = { version: '2.5.6' };
 if (typeof __e == 'number') __e = core; // eslint-disable-line no-undef
 });
 var _core_1$1 = _core$1.version;
@@ -103098,7 +103098,25 @@ var Stream = function (_React$Component) {
 			return react.createElement(
 				"div",
 				{ className: classnames("panel", "main-panel", "posts-panel", className) },
-				react.createElement(
+				inThread ? react.createElement(
+					"div",
+					{ id: "close-thread", className: "panel-header", onClick: this.dismissThread },
+					react.createElement(
+						"span",
+						{ className: "align-left-button" },
+						react.createElement(Icon, { name: "chevron-left", className: "show-channels-icon" })
+					),
+					react.createElement(
+						"span",
+						{ className: "panel-title" },
+						"Back ",
+						react.createElement(
+							"span",
+							{ className: "keybinding" },
+							"(esc)"
+						)
+					)
+				) : react.createElement(
 					"div",
 					{ className: "panel-header" },
 					react.createElement(

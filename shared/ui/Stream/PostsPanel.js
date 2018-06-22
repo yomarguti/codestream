@@ -569,31 +569,42 @@ class Stream extends React.Component {
 
 		return (
 			<div className={createClassString("panel", "main-panel", "posts-panel", className)}>
-				<div className="panel-header">
-					<span onClick={this.handleClickGoBack} className={umisClass}>
-						<Icon name="chevron-left" className="show-channels-icon" />
-						{totalUMICount && <label>{totalUMICount}</label>}
-					</span>
-					<span className="panel-title">
-						{channelIcon} {this.props.stream.name}
-					</span>
-					{this.props.stream.type !== "direct" && (
-						<span onClick={this.handleClickStreamSettings} className="align-right-button">
-							<Icon name="gear" className="show-settings" />
-							{this.state.openMenu && (
-								<ChannelMenu
-									stream={this.props.stream}
-									target={this.state.menuTarget}
-									umiCount={0}
-									isMuted={this.props.isMuted}
-									setActivePanel={setActivePanel}
-									runSlashCommand={this.props.runSlashCommand}
-									closeMenu={this.closeMenu}
-								/>
-							)}
+				{inThread ? (
+					<div id="close-thread" className="panel-header" onClick={this.dismissThread}>
+						<span className="align-left-button">
+							<Icon name="chevron-left" className="show-channels-icon" />
 						</span>
-					)}
-				</div>
+						<span className="panel-title">
+							Back <span className="keybinding">(esc)</span>
+						</span>
+					</div>
+				) : (
+					<div className="panel-header">
+						<span onClick={this.handleClickGoBack} className={umisClass}>
+							<Icon name="chevron-left" className="show-channels-icon" />
+							{totalUMICount && <label>{totalUMICount}</label>}
+						</span>
+						<span className="panel-title">
+							{channelIcon} {this.props.stream.name}
+						</span>
+						{this.props.stream.type !== "direct" && (
+							<span onClick={this.handleClickStreamSettings} className="align-right-button">
+								<Icon name="gear" className="show-settings" />
+								{this.state.openMenu && (
+									<ChannelMenu
+										stream={this.props.stream}
+										target={this.state.menuTarget}
+										umiCount={0}
+										isMuted={this.props.isMuted}
+										setActivePanel={setActivePanel}
+										runSlashCommand={this.props.runSlashCommand}
+										closeMenu={this.closeMenu}
+									/>
+								)}
+							</span>
+						)}
+					</div>
+				)}
 				{inThread ? null : (
 					<div
 						className={createClassString({
