@@ -50684,7 +50684,7 @@ var AtMentionsPopup = function (_Component) {
 	return AtMentionsPopup;
 }(react_1);
 
-var slashCommands = [{ id: "help", help: "get help" }, { id: "add", help: "add member to channel", description: "@user" },
+var slashCommands = [{ id: "help", help: "get help" }, { id: "add", help: "add member to channel", description: "@user", channelOnly: true },
 // { id: "apply", help: "apply patch last post" },
 { id: "archive", help: "archive channel", channelOnly: true },
 // { id: "diff", help: "diff last post" },
