@@ -7,7 +7,7 @@ export namespace MarkerUtil {
 	const markersByStreamId = new Map<string, CSMarker[]>();
 
 	export async function getMarkers(streamId: string): Promise<CSMarker[]> {
-		const { api, config } = Container.instance;
+		const { api, config } = Container.instance();
 
 		let markers = markersByStreamId.get(streamId);
 		if (!markers) {

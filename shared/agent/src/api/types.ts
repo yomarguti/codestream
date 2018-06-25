@@ -28,11 +28,12 @@ export interface CSMarkerLocations {
 	teamId: string;
 	streamId: string;
 	commitHash: string;
-	locations: Map<string, CSLocationArray>;
-	// locations: { [id: string]: CSLocationArray };
+	// locations: Map<string, CSLocationArray>;
+	locations: { [id: string]: CSLocationArray };
 }
 
 export interface CSMarkerLocation {
+	id: string;
 	lineStart: number;
 	colStart: number;
 	lineEnd: number;

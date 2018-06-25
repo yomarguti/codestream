@@ -97,7 +97,7 @@ export class CodeStreamAgent implements Disposable, LSPLogger {
 		);
 
 		gitApi({
-			getGitPath: async () => Container.instance.gitPath,
+			getGitPath: async () => Container.instance().gitPath,
 			getRepositories: async () => {
 				return repos;
 				// const repos = await this._connection.sendRequest<GitApiRepository[]>(
@@ -111,7 +111,7 @@ export class CodeStreamAgent implements Disposable, LSPLogger {
 	}
 
 	private onConfigurationChanged(e: DidChangeConfigurationParams) {
-		Container.instance.updateConfig(e.settings.codestream);
+		Container.instance().updateConfig(e.settings.codestream);
 	}
 
 	private onHover(e: TextDocumentPositionParams) {

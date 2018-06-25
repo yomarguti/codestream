@@ -25,19 +25,23 @@
     },
     "dependencies": {
         "date-fns": "^1.29.0",
+        "diff": "3.5.0",
         "lodash.debounce": "4.0.8",
         "node-fetch": "2.1.2",
         "pubnub": "4.21.2",
         "reflect-metadata": "0.1.12",
+        "string-similarity": "^1.2.0",
         "tmp": "0.0.33",
         "tslib": "1.9.2",
         "vscode-languageserver": "^4.2.1",
         "vscode-uri": "1.0.5"
     },
     "devDependencies": {
+        "@types/diff": "3.5.1",
         "@types/node": "7.0.65",
         "@types/node-fetch": "2.1.1",
         "@types/pubnub": "4.0.2",
+        "@types/string-similarity": "^1.2.0",
         "@types/tmp": "0.0.33",
         "prettier": "1.13.5",
         "tslint": "5.10.0",

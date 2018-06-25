@@ -84,5 +84,7 @@ export namespace Container {
 		container = new ServiceContainer(agent, connection, cfg, initializationOptions);
 	}
 
-	export const instance = container;
+	export function instance(): ServiceContainer {
+		return container;
+	}
 }

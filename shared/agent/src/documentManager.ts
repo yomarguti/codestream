@@ -1,5 +1,10 @@
 "use strict";
-import { Disposable, TextDocumentChangeEvent, TextDocuments } from "vscode-languageserver";
+import {
+	Disposable,
+	TextDocument,
+	TextDocumentChangeEvent,
+	TextDocuments
+} from "vscode-languageserver";
 import { Container } from "./container";
 import { Disposables } from "./system";
 
@@ -18,11 +23,11 @@ export class DocumentManager implements Disposable {
 
 	private onContentChanged(e: TextDocumentChangeEvent) {}
 
-	get(uri: string) {
-		this._documents.get(uri);
+	get(uri: string): TextDocument | undefined {
+		return this._documents.get(uri);
 	}
 
 	listen() {
-		this._documents.listen(Container.instance.connection);
+		this._documents.listen(Container.instance().connection);
 	}
 }

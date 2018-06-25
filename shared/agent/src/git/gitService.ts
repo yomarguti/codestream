@@ -16,6 +16,8 @@ import { Strings } from "../system";
 import * as fs from "fs";
 import * as path from "path";
 import { CodeStreamAgent } from "../agent";
+import { IUniDiff, parsePatch } from "diff";
+import { Logger } from "../logger";
 
 export * from "./models/models";
 
@@ -337,5 +339,28 @@ export class GitService implements IGitService, Disposable {
 		} catch {
 			return undefined;
 		}
+	}
+
+	async getDiff(
+		initialCommitHash: string,
+		finalCommitHash: string,
+		filePath: string
+	): Promise<IUniDiff> {
+		const [dir, filename] = Strings.splitPath(filePath);
+		let data;
+		try {
+			data = await git({ cwd: dir }, "diff", initialCommitHash, finalCommitHash, "--", filename);
+		} catch (err) {
+			Logger.warn(
+				`Error getting diff from ${initialCommitHash} to ${finalCommitHash} for ${filename}`
+			);
+			throw err;
+		}
+
+		const patches = parsePatch(data);
+		if (patches.length > 1) {
+			Logger.warn("Parsed diff generated multiple patches");
+		}
+		return patches[0];
 	}
 }

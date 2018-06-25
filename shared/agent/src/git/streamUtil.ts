@@ -12,8 +12,8 @@ export namespace StreamUtil {
 	const streamsByRepoId: StreamsByRepoId = new Map();
 
 	export async function getStreamId(filePath: string): Promise<string | undefined> {
-		const ctx = Container.instance;
-		const repoRoot = await ctx.git.getRepoRoot(filePath);
+		const container = Container.instance();
+		const repoRoot = await container.git.getRepoRoot(filePath);
 		if (!repoRoot) {
 			return;
 		}
@@ -31,7 +31,7 @@ export namespace StreamUtil {
 	}
 
 	async function getStreamsByRepoId(repoId: string): Promise<StreamsByPath> {
-		const { api, config } = Container.instance;
+		const { api, config } = Container.instance();
 		let streams = streamsByRepoId.get(repoId);
 		if (!streams) {
 			streams = new Map();
