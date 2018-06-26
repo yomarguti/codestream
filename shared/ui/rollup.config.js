@@ -29,19 +29,19 @@ export default {
 		}),
 		commonjs({
 			include: "node_modules/**",
-			exclude: "node_modules/react/**",
-			extensions: [".js", ".json"]
-			// namedExports: {
-			// 	"node_modules/react/index.js": [
-			// 		"Component",
-			// 		"Children",
-			// 		"createElement",
-			// 		"Fragment",
-			// 		"isValidElement",
-			// 		"PureComponent"
-			// 	],
-			// 	"node_modules/react-dom/index.js": ["findDOMNode", "createPortal"]
-			// }
+			// exclude: "node_modules/react/**",
+			extensions: [".js", ".json"],
+			namedExports: {
+				"node_modules/react/index.js": [
+					"Component",
+					"Children",
+					"createElement",
+					"Fragment",
+					"isValidElement",
+					"PureComponent"
+				],
+				"node_modules/react-dom/index.js": ["findDOMNode", "createPortal"]
+			}
 		}),
 		babel({
 			exclude: "node_modules/**"

@@ -36,7 +36,7 @@ var _descriptors = !_fails(function () {
 });
 
 var _core = createCommonjsModule(function (module) {
-var core = module.exports = { version: '2.5.6' };
+var core = module.exports = { version: '2.5.7' };
 if (typeof __e == 'number') __e = core; // eslint-disable-line no-undef
 });
 var _core_1 = _core.version;
@@ -281,7 +281,7 @@ var store = _global[SHARED] || (_global[SHARED] = {});
   return store[key] || (store[key] = value !== undefined ? value : {});
 })('versions', []).push({
   version: _core.version,
-  mode: 'global',
+  mode: _library ? 'pure' : 'global',
   copyright: '© 2018 Denis Pushkarev (zloirock.ru)'
 });
 });
@@ -4044,12 +4044,12 @@ _export(_export.P + _export.U + _export.F * _fails(function () {
     if ($slice !== undefined && end === undefined) return $slice.call(_anObject(this), start); // FF fix
     var len = _anObject(this).byteLength;
     var first = _toAbsoluteIndex(start, len);
-    var final = _toAbsoluteIndex(end === undefined ? len : end, len);
-    var result = new (_speciesConstructor(this, $ArrayBuffer))(_toLength(final - first));
+    var fin = _toAbsoluteIndex(end === undefined ? len : end, len);
+    var result = new (_speciesConstructor(this, $ArrayBuffer))(_toLength(fin - first));
     var viewS = new $DataView(this);
     var viewT = new $DataView(result);
     var index = 0;
-    while (first < final) {
+    while (first < fin) {
       viewT.setUint8(index++, viewS.getUint8(first++));
     } return result;
   }
@@ -8703,6 +8703,12 @@ var getStackAddendum = function () {};
 }
 
 function getDeclarationErrorAddendum() {
+  if (ReactCurrentOwner.current) {
+    var name = getComponentName(ReactCurrentOwner.current);
+    if (name) {
+      return '\n\nCheck the render method of `' + name + '`.';
+    }
+  }
   return '';
 }
 
@@ -12497,19 +12503,6 @@ var underscore = createCommonjsModule(function (module, exports) {
   _.prototype.toString = function() {
     return String(this._wrapped);
   };
-
-  // AMD registration happens at the end for compatibility with AMD loaders
-  // that may not enforce next-turn semantics on modules. Even though general
-  // practice for AMD registration is to be anonymous, underscore registers
-  // as a named module because, like jQuery, it is a base library that is
-  // popular enough to be bundled in a third party lib, but not be part of
-  // an AMD load request. Those cases could generate an error when an
-  // anonymous define() is called outside of a loader request.
-  if (typeof undefined == 'function' && undefined.amd) {
-    undefined('underscore', [], function() {
-      return _;
-    });
-  }
 }());
 });
 var underscore_1 = underscore._;
@@ -12553,11 +12546,6 @@ var classnames = createCommonjsModule(function (module) {
 
 	if (module.exports) {
 		module.exports = classNames;
-	} else if (typeof undefined === 'function' && typeof undefined.amd === 'object' && undefined.amd) {
-		// register as 'classnames', consistent with npm package name
-		undefined('classnames', [], function () {
-			return classNames;
-		});
 	} else {
 		window.classNames = classNames;
 	}
@@ -16588,7 +16576,7 @@ function ia(a,b,c,d,e,f,g,h,k){this._hasCaughtError=!1;this._caughtError=null;va
 var B$1={_caughtError:null,_hasCaughtError:!1,_rethrowError:null,_hasRethrowError:!1,invokeGuardedCallback:function(a,b,c,d,e,f,g,h,k){ia.apply(B$1,arguments);},invokeGuardedCallbackAndCatchFirstError:function(a,b,c,d,e,f,g,h,k){B$1.invokeGuardedCallback.apply(this,arguments);if(B$1.hasCaughtError()){var n=B$1.clearCaughtError();B$1._hasRethrowError||(B$1._hasRethrowError=!0,B$1._rethrowError=n);}},rethrowCaughtError:function(){return ka.apply(B$1,arguments)},hasCaughtError:function(){return B$1._hasCaughtError},clearCaughtError:function(){if(B$1._hasCaughtError){var a=
 B$1._caughtError;B$1._caughtError=null;B$1._hasCaughtError=!1;return a}A$1("198");}};function ka(){if(B$1._hasRethrowError){var a=B$1._rethrowError;B$1._rethrowError=null;B$1._hasRethrowError=!1;throw a;}}var la=null,ma={};
 function na(){if(la)for(var a in ma){var b=ma[a],c=la.indexOf(a);-1<c?void 0:A$1("96",a);if(!oa[c]){b.extractEvents?void 0:A$1("97",a);oa[c]=b;c=b.eventTypes;for(var d in c){var e=void 0;var f=c[d],g=b,h=d;pa.hasOwnProperty(h)?A$1("99",h):void 0;pa[h]=f;var k=f.phasedRegistrationNames;if(k){for(e in k)k.hasOwnProperty(e)&&qa(k[e],g,h);e=!0;}else f.registrationName?(qa(f.registrationName,g,h),e=!0):e=!1;e?void 0:A$1("98",d,a);}}}}
-function qa(a,b,c){ra[a]?A$1("100",a):void 0;ra[a]=b;sa[a]=b.eventTypes[c].dependencies;}var oa=[],pa={},ra={},sa={};function ta(a){la?A$1("101"):void 0;la=Array.prototype.slice.call(a);na();}function ua(a){var b=!1,c;for(c in a)if(a.hasOwnProperty(c)){var d=a[c];ma.hasOwnProperty(c)&&ma[c]===d||(ma[c]?A$1("102",c):void 0,ma[c]=d,b=!0);}b&&na();}
+function qa(a,b,c){ra[a]?A$1("100",a):void 0;ra[a]=b;sa[a]=b.eventTypes[c].dependencies;}var oa=[],pa={},ra={},sa={};function ta(a){la?A$1("101"):void 0;la=Array.prototype.slice.call(a);na();}function ua(a){var b=!1,c;for(c in a)if(a.hasOwnProperty(c)){var d=a[c];ma.hasOwnProperty(c)&&ma[c]===d||(ma[c]=d,b=!0);}b&&na();}
 var va={plugins:oa,eventNameDispatchConfigs:pa,registrationNameModules:ra,registrationNameDependencies:sa,possibleRegistrationNames:null,injectEventPluginOrder:ta,injectEventPluginsByName:ua},wa=null,xa=null,ya=null;function za(a,b,c,d){b=a.type||"unknown-event";a.currentTarget=ya(d);B$1.invokeGuardedCallbackAndCatchFirstError(b,c,void 0,a);a.currentTarget=null;}
 function Aa(a,b){null==b?A$1("30"):void 0;if(null==a)return b;if(Array.isArray(a)){if(Array.isArray(b))return a.push.apply(a,b),a;a.push(b);return a}return Array.isArray(b)?[a].concat(b):[a,b]}function Ba(a,b,c){Array.isArray(a)?a.forEach(b,c):a&&b.call(c,a);}var Ca=null;
 function Da(a,b){if(a){var c=a._dispatchListeners,d=a._dispatchInstances;if(Array.isArray(c))for(var e=0;e<c.length&&!a.isPropagationStopped();e++)za(a,b,c[e],d[e]);else c&&za(a,b,c,d);a._dispatchListeners=null;a._dispatchInstances=null;a.isPersistent()||a.constructor.release(a);}}function Ea(a){return Da(a,!0)}function Fa(a){return Da(a,!1)}var Ga={injectEventPluginOrder:ta,injectEventPluginsByName:ua};
@@ -17303,7 +17291,6 @@ function injectEventPluginsByName(injectedNamesToPlugins) {
     }
     var pluginModule = injectedNamesToPlugins[pluginName];
     if (!namesToPlugins.hasOwnProperty(pluginName) || namesToPlugins[pluginName] !== pluginModule) {
-      !!namesToPlugins[pluginName] ? invariant(false, 'EventPluginRegistry: Cannot inject two different event plugins using the same name, `%s`.', pluginName) : void 0;
       namesToPlugins[pluginName] = pluginModule;
       isOrderingDirty = true;
     }
@@ -100011,6 +99998,8 @@ var global = module.exports = typeof window != 'undefined' && window.Math == Mat
 if (typeof __g == 'number') __g = global; // eslint-disable-line no-undef
 });
 
+var _library$1 = true;
+
 var _shared$1 = createCommonjsModule(function (module) {
 var SHARED = '__core-js_shared__';
 var store = _global$1[SHARED] || (_global$1[SHARED] = {});
@@ -100019,7 +100008,7 @@ var store = _global$1[SHARED] || (_global$1[SHARED] = {});
   return store[key] || (store[key] = value !== undefined ? value : {});
 })('versions', []).push({
   version: _core$1.version,
-  mode: 'pure',
+  mode: _library$1 ? 'pure' : 'global',
   copyright: '© 2018 Denis Pushkarev (zloirock.ru)'
 });
 });
@@ -110408,7 +110397,7 @@ Ruler.prototype.__compile__ = function () {
  *
  * ##### Example
  *
- * Replace existing typographer replacement rule with new one:
+ * Replace existing typorgapher replacement rule with new one:
  *
  * ```javascript
  * var md = require('markdown-it')();
@@ -114791,13 +114780,6 @@ const encode$3 = function(input) {
 	let delta = 0;
 	let bias = initialBias;
 
-	// Handle the basic code points.
-	for (const currentValue of input) {
-		if (currentValue < 0x80) {
-			output.push(stringFromCharCode(currentValue));
-		}
-	}
-
 	let basicLength = output.length;
 	let handledCPCount = basicLength;
 
@@ -117715,7 +117697,7 @@ var posts = (function () {
 					byStream: _extends$4({}, state.byStream)
 				};
 				payload.forEach(function (post) {
-					if (post.pending) ;else {
+					if (post.pending) nextState.pending.push(post);else {
 						nextState.byStream = addPost(nextState.byStream, post);
 					}
 				});
