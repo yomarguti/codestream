@@ -116207,7 +116207,12 @@ var Stream = function (_React$Component) {
 
 			return react.createElement(
 				"div",
-				{ className: classnames("panel", "main-panel", "posts-panel", className) },
+				{
+					className: classnames("panel", "main-panel", "posts-panel", className),
+					onKeyPress: this.handleKeyPress,
+					onKeyDown: this.handleKeyDown,
+					onKeyUp: this.handleKeyUp
+				},
 				inThread ? react.createElement(
 					"div",
 					{ id: "close-thread", className: "panel-header", onClick: this.dismissThread },
@@ -116708,6 +116713,14 @@ var _initialiseProps$1 = function _initialiseProps() {
 				case "pin-to-stream":
 					return _this5.notImplementedYet();
 			}
+		}
+	});
+	Object.defineProperty(this, "handleKeyDown", {
+		enumerable: true,
+		writable: true,
+		value: function value(event) {
+			event.preventDefault();
+			_this5.dismissThread();
 		}
 	});
 	Object.defineProperty(this, "renderIntro", {

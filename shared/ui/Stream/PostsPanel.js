@@ -464,6 +464,11 @@ class Stream extends React.Component {
 		}
 	};
 
+	handleKeyDown = event => {
+		event.preventDefault();
+		this.dismissThread();
+	};
+
 	renderIntro = () => {
 		return [
 			<label key="welcome">
@@ -568,7 +573,12 @@ class Stream extends React.Component {
 			);
 
 		return (
-			<div className={createClassString("panel", "main-panel", "posts-panel", className)}>
+			<div
+				className={createClassString("panel", "main-panel", "posts-panel", className)}
+				onKeyPress={this.handleKeyPress}
+				onKeyDown={this.handleKeyDown}
+				onKeyUp={this.handleKeyUp}
+			>
 				{inThread ? (
 					<div id="close-thread" className="panel-header" onClick={this.dismissThread}>
 						<span className="align-left-button">
