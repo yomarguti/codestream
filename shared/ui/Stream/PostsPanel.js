@@ -465,8 +465,10 @@ class Stream extends React.Component {
 	};
 
 	handleKeyDown = event => {
-		event.preventDefault();
-		this.dismissThread();
+		if (event.key === "Escape" && !this.state.openMenu) {
+			this.dismissThread();
+			event.preventDefault();
+		}
 	};
 
 	renderIntro = () => {

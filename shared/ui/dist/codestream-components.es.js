@@ -116715,8 +116715,10 @@ var _initialiseProps$1 = function _initialiseProps() {
 		enumerable: true,
 		writable: true,
 		value: function value(event) {
-			event.preventDefault();
-			_this5.dismissThread();
+			if (event.key === "Escape") {
+				_this5.dismissThread();
+				event.preventDefault();
+			}
 		}
 	});
 	Object.defineProperty(this, "renderIntro", {
