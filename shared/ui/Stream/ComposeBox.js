@@ -21,7 +21,7 @@ const arrayToRange = ([startRow, startCol, endRow, endCol]) => {
 };
 
 class ComposeBox extends React.Component {
-	state = { newPostText: "", quote: null, autoMentions: [] };
+	state = { newPostText: "", quote: null, autoMentions: [], popupOpen: false };
 	disposables = [];
 
 	componentDidMount() {
@@ -353,6 +353,8 @@ class ComposeBox extends React.Component {
 		if (event.key === "ArrowUp" && !this.state.popupOpen) {
 			event.persist();
 			this.props.onEmptyUpArrow(event);
+		} else if (this.state.popupOpen && event.key === "Escape") {
+			this.hidePopup();
 		}
 	};
 
