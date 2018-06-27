@@ -50901,7 +50901,8 @@ var ComposeBox = function (_React$Component) {
 		}), Object.defineProperty(_this, "handleClickDismissQuote", {
 			enumerable: true,
 			writable: true,
-			value: function value() {
+			value: function value(event) {
+				event.preventDefault();
 				_this.focus();
 				_this.reset();
 			}
