@@ -117436,11 +117436,15 @@ var SimpleStream = function (_Component) {
 						react.createElement(
 							"span",
 							null,
-							react.createElement(Icon, {
-								name: "chevron-left",
-								onClick: this.showChannels,
-								className: "show-channels-icon align-left"
-							}),
+							react.createElement(
+								"span",
+								{ className: "align-left-button" },
+								react.createElement(Icon, {
+									name: "chevron-left",
+									onClick: this.showChannels,
+									className: "show-channels-icon"
+								})
+							),
 							"Back ",
 							react.createElement(
 								"span",

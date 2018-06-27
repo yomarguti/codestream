@@ -518,11 +518,13 @@ export class SimpleStream extends Component {
 				<div className={threadPanelClass}>
 					<div id="close-thread" className="panel-header" onClick={this.handleDismissThread}>
 						<span>
-							<Icon
-								name="chevron-left"
-								onClick={this.showChannels}
-								className="show-channels-icon align-left"
-							/>
+							<span className="align-left-button">
+								<Icon
+									name="chevron-left"
+									onClick={this.showChannels}
+									className="show-channels-icon"
+								/>
+							</span>
 							Back <span className="keybinding">(esc)</span>
 						</span>
 					</div>
