@@ -349,6 +349,13 @@ class ComposeBox extends React.Component {
 		}
 	};
 
+	handleKeyDown = event => {
+		if (event.key === "ArrowUp" && !this.state.popupOpen) {
+			event.persist();
+			this.props.onEmptyUpArrow(event);
+		}
+	};
+
 	handleClickDismissQuote = () => {
 		this.focus();
 		this.reset();

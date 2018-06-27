@@ -29,6 +29,7 @@ export default {
 		}),
 		commonjs({
 			include: "node_modules/**",
+			// exclude: "node_modules/react/**",
 			extensions: [".js", ".json"],
 			namedExports: {
 				"node_modules/react/index.js": [
