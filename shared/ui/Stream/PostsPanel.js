@@ -466,7 +466,7 @@ class Stream extends React.Component {
 	};
 
 	handleKeyDown = event => {
-		if (event.key === "Escape" && !this.state.openMenu) {
+		if (event.key === "Escape") {
 			this.dismissThread();
 			event.preventDefault();
 		}
@@ -578,9 +578,7 @@ class Stream extends React.Component {
 		return (
 			<div
 				className={createClassString("panel", "main-panel", "posts-panel", className)}
-				onKeyPress={this.handleKeyPress}
 				onKeyDown={this.handleKeyDown}
-				onKeyUp={this.handleKeyUp}
 			>
 				{inThread ? (
 					<div id="close-thread" className="panel-header" onClick={this.dismissThread}>
