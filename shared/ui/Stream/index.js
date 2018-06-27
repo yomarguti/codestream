@@ -409,7 +409,7 @@ export class SimpleStream extends Component {
 				</div>
 			);
 
-		const umisClass = createClassString({
+		const umisClass = createClassString("align-left-button", {
 			mentions: umis.totalMentions > 0,
 			unread: umis.totalMentions == 0 && umis.totalUnread > 0
 		});
@@ -453,13 +453,13 @@ export class SimpleStream extends Component {
 				<div className={mainPanelClass} ref={ref => (this._mainPanel = ref)}>
 					<div className="panel-header" ref={ref => (this._header = ref)}>
 						<span onClick={this.showChannels} className={umisClass}>
-							<Icon name="chevron-left" className="show-channels-icon align-left" />
+							<Icon name="chevron-left" className="show-channels-icon" />
 							{totalUMICount}
 						</span>
 						<span>{channelName}</span>
 						{this.props.postStreamType !== "direct" && (
-							<span onClick={this.handleClickStreamSettings}>
-								<Icon name="gear" className="show-settings align-right" />
+							<span className="align-right-button" onClick={this.handleClickStreamSettings}>
+								<Icon name="gear" className="show-settings" />
 								{menuActive && (
 									<ChannelMenu
 										stream={this.props.postStream}
