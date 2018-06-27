@@ -188,6 +188,7 @@ class ComposeBox extends React.Component {
 	// the keypress handler for tracking up and down arrow
 	// and enter, while the at mention popup is open
 	handleAtMentionKeyPress(event, eventType) {
+		event.preventDefault();
 		if (eventType == "escape") {
 			if (this.state.popupOpen) this.hidePopup();
 			// else this.handleDismissThread();
@@ -350,11 +351,19 @@ class ComposeBox extends React.Component {
 	};
 
 	handleKeyDown = event => {
-		if (event.key === "ArrowUp" && !this.state.popupOpen) {
-			event.persist();
-			this.props.onEmptyUpArrow(event);
-		} else if (this.state.popupOpen && event.key === "Escape") {
-			this.hidePopup();
+		if (this.state.popupOpen) {
+			if (event.key === "ArrowUp") this.handleAtMentionKeyPress(event, "up");
+			if (event.key === "ArrowDown") this.handleAtMentionKeyPress(event, "down");
+			if (event.key === "Tab") this.handleAtMentionKeyPress(event, "tab");
+			if (event.key === "Escape") {
+				this.hidePopup();
+				event.preventDefault();
+			}
+		} else {
+			if (event.key === "ArrowUp") {
+				event.persist();
+				this.props.onEmptyUpArrow(event);
+			}
 		}
 	};
 
