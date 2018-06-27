@@ -44,7 +44,7 @@ var _descriptors = !_fails(function () {
 });
 
 var _core = createCommonjsModule(function (module) {
-var core = module.exports = { version: '2.5.6' };
+var core = module.exports = { version: '2.5.7' };
 if (typeof __e == 'number') __e = core; // eslint-disable-line no-undef
 });
 var _core_1 = _core.version;
@@ -99996,7 +99996,7 @@ var _arrayIncludes$1 = function (IS_INCLUDES) {
 };
 
 var _core$1 = createCommonjsModule(function (module) {
-var core = module.exports = { version: '2.5.6' };
+var core = module.exports = { version: '2.5.7' };
 if (typeof __e == 'number') __e = core; // eslint-disable-line no-undef
 });
 var _core_1$1 = _core$1.version;
@@ -115778,16 +115778,16 @@ var Stream = function (_React$Component) {
 					react.createElement(
 						"span",
 						{ className: "align-left-button" },
-						react.createElement(Icon, { name: "chevron-left", className: "show-channels-icon" })
-					),
-					react.createElement(
-						"span",
-						{ className: "panel-title" },
-						"Back ",
+						react.createElement(Icon, { name: "chevron-left", className: "show-channels-icon" }),
 						react.createElement(
-							"span",
-							{ className: "keybinding" },
-							"(esc)"
+							"label",
+							null,
+							"Back ",
+							react.createElement(
+								"span",
+								{ className: "keybinding" },
+								"(esc)"
+							)
 						)
 					)
 				) : react.createElement(
@@ -116157,6 +116157,7 @@ var _initialiseProps$1 = function _initialiseProps() {
 		writable: true,
 		value: function value() {
 			var input = document.getElementById("input-div");
+			if (input) console.log(input.closest(".panel"));
 			if (input) input.focus();
 		}
 	});

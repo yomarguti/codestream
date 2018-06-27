@@ -371,6 +371,7 @@ class Stream extends React.Component {
 
 	focusInput = () => {
 		const input = document.getElementById("input-div");
+		if (input) console.log(input.closest(".panel"));
 		if (input) input.focus();
 	};
 
@@ -573,9 +574,7 @@ class Stream extends React.Component {
 					<div id="close-thread" className="panel-header" onClick={this.dismissThread}>
 						<span className="align-left-button">
 							<Icon name="chevron-left" className="show-channels-icon" />
-						</span>
-						<span className="panel-title">
-							Back <span className="keybinding">(esc)</span>
+							<label>Back <span className="keybinding">(esc)</span></label>
 						</span>
 					</div>
 				) : (
