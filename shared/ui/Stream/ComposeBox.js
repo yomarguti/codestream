@@ -358,7 +358,8 @@ class ComposeBox extends React.Component {
 		}
 	};
 
-	handleClickDismissQuote = () => {
+	handleClickDismissQuote = event => {
+		event.preventDefault();
 		this.focus();
 		this.reset();
 	};
