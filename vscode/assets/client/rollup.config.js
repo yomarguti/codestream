@@ -11,6 +11,7 @@ export default {
 		format: "iife",
 		globals: { atom: "" }
 	},
+	preserveSymlinks: true,
 	plugins: [
 		replace({
 			"process.env.NODE_ENV": JSON.stringify("development"),
