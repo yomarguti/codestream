@@ -44413,7 +44413,7 @@ var SimpleChannelPanel = function (_Component) {
 						_this.props.channelStreams.map(function (stream) {
 							if (stream.isArchived) return null;
 							if (stream.name.match(/^ls:/)) return null;
-							var icon = _this.props.mutedStreams[stream.id] ? react.createElement(Icon, { name: "mute" }) : stream.privacy === "private" ? react.createElement(Icon, { name: "lock" }) : react.createElement(
+							var icon = _this.props.mutedStreams[stream.id] ? react.createElement(Icon, { className: "mute", name: "mute" }) : stream.privacy === "private" ? react.createElement(Icon, { className: "lock", name: "lock" }) : react.createElement(
 								"span",
 								{ className: "icon hash" },
 								"#"
@@ -44806,11 +44806,17 @@ var SimplePublicChannelPanel = function (_Component) {
 				}
 				return [streams$$1.map(function (stream) {
 					if (stream.name.match(/^ls:/)) return null;
-					var icon = stream.privacy === "private" ? react.createElement("span", { className: "icon icon-lock" }) : react.createElement(
+					var icon = stream.privacy === "private" ? react.createElement(Icon, { className: "lock", name: "lock" }) : react.createElement(
 						"span",
-						{ className: "icon" },
+						{ className: "icon hash" },
 						"#"
 					);
+					// const icon =
+					// 	stream.privacy === "private" ? (
+					// 		<span className="icon icon-lock" />
+					// 	) : (
+					// 		<span className="icon">#</span>
+					// 	);
 					return react.createElement(
 						"li",
 						{ key: stream.id, id: stream.id },

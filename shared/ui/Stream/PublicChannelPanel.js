@@ -77,10 +77,16 @@ export class SimplePublicChannelPanel extends Component {
 				if (stream.name.match(/^ls:/)) return null;
 				const icon =
 					stream.privacy === "private" ? (
-						<span className="icon icon-lock" />
+						<Icon className="lock" name="lock" />
 					) : (
-						<span className="icon">#</span>
+						<span className="icon hash">#</span>
 					);
+				// const icon =
+				// 	stream.privacy === "private" ? (
+				// 		<span className="icon icon-lock" />
+				// 	) : (
+				// 		<span className="icon">#</span>
+				// 	);
 				return (
 					<li key={stream.id} id={stream.id}>
 						{icon}

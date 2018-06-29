@@ -53,9 +53,9 @@ export class SimpleChannelPanel extends Component {
 						if (stream.isArchived) return null;
 						if (stream.name.match(/^ls:/)) return null;
 						const icon = this.props.mutedStreams[stream.id] ? (
-							<Icon name="mute" />
+							<Icon className="mute" name="mute" />
 						) : stream.privacy === "private" ? (
-							<Icon name="lock" />
+							<Icon className="lock" name="lock" />
 						) : (
 							<span className="icon hash">#</span>
 						);
