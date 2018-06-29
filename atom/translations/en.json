@@ -37,6 +37,7 @@
 	"login.email.label": "Email",
 	"login.email.invalid": "Looks invalid?",
 	"createChannel.name.invalid": "Looks invalid?",
+	"createChannel.name.required": "Required",
 	"login.password.required": "You might need this.",
 	"login.alreadySignedUp": "Looks like you're already signed up! Please enter your password.",
 	"login.alreadyConfirmed": "Your email is already confirmed! Please enter your password.",
