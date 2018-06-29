@@ -150,6 +150,22 @@ export default class WorkspaceApi implements Resource {
 				// /* doesn't really matter */
 				// });
 			}
+			case "join-stream": {
+				return this.api
+					.joinStream(params)
+					.then(stream => {
+						window.parent.postMessage(
+							{ type: "codestream:response", body: { id, action, payload: stream } },
+							"*"
+						);
+					})
+					.catch(error => {
+						window.parent.postMessage(
+							{ type: "codestream:response", body: { id, action, error } },
+							"*"
+						);
+					});
+			}
 			case "save-user-preference": {
 				return this.api.saveUserPreference(params).then(() => {
 					window.parent.postMessage(

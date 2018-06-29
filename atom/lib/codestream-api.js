@@ -201,6 +201,32 @@ export default class CodeStreamApi {
 			throw error;
 		}
 	}
+	async joinStream(streamId) {
+		const { session } = this.store.getState();
+
+		try {
+			const data = await http.put("/join/" + streamId, {}, session.accessToken);
+			console.log("Got back from HTTP: ", data);
+			let streams = data.streams || [];
+			if (data.stream) {
+				streams.push(data.stream);
+			}
+			if (streams.length > 0) {
+				this.store.dispatch(saveStreams(normalize(streams)));
+			}
+			return data.stream;
+		} catch (error) {
+			console.log("Error: ", error);
+			if (http.isApiRequestError(error)) {
+				Raven.captureMessage(error.data.message, {
+					logger: "actions/stream",
+					extra: { error: error.data }
+				});
+			}
+			// TODO: different types of errors?
+			throw error;
+		}
+	}
 }
 
 const backtrackCodeBlockLocations = async (codeBlocks, bufferText, streamId, state, http) => {
