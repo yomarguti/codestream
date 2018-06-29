@@ -976,11 +976,15 @@ export class SimpleStream extends Component {
 	leaveChannel = () => {
 		if (this.props.postStreamIsTeamStream) {
 			const text = "You cannot leave all-hands channels.";
-			return this.submitSystemPost(text);
+			this.submitSystemPost(text);
+			return true;
 		}
+		const message = this.props.isPrivate
+			? "Once you leave a private channel, you won't be able to re-join unless you are added by someone in the channel."
+			: "Once you leave a public channel, you may re-join it in the future by looking at the channels list under TEAM CHANNELS.";
 		confirmPopup({
 			title: "Are you sure?",
-			message: "Public channels can be found on the channels list under TEAM CHANNELS.",
+			message,
 			buttons: [
 				{
 					label: "Leave",
