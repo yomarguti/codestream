@@ -12,6 +12,7 @@ export const slashCommands = [
 	// { id: "muteall", help: "mute codestream" },
 	// { id: "open", help: "open channel" },
 	// { id: "prefs", help: "open preferences" },
+	{ id: "purpose", help: "set channel purpose", description: "newpurpose", channelOnly: true },
 	{ id: "rename", help: "rename channel", description: "newname", channelOnly: true },
 	{ id: "remove", help: "remove from channel", description: "@user", channelOnly: true },
 	{ id: "version", help: "" },

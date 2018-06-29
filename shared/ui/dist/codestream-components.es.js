@@ -43930,7 +43930,7 @@ var renameStream = function renameStream(streamId, name) {
 	}();
 };
 
-var archiveStream = function archiveStream(streamId, value) {
+var setPurpose = function setPurpose(streamId, purpose) {
 	return function () {
 		var _ref23 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11(dispatch, getState, _ref22) {
 			var api = _ref22.api;
@@ -43939,7 +43939,7 @@ var archiveStream = function archiveStream(streamId, value) {
 				while (1) {
 					switch (_context11.prev = _context11.next) {
 						case 0:
-							update = { isArchived: value };
+							update = { purpose: purpose };
 							_context11.prev = 1;
 							_context11.next = 4;
 							return api.updateStream(streamId, update);
@@ -43970,6 +43970,46 @@ var archiveStream = function archiveStream(streamId, value) {
 	}();
 };
 
+var archiveStream = function archiveStream(streamId, value) {
+	return function () {
+		var _ref25 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee12(dispatch, getState, _ref24) {
+			var api = _ref24.api;
+			var update, returnStream;
+			return regeneratorRuntime.wrap(function _callee12$(_context12) {
+				while (1) {
+					switch (_context12.prev = _context12.next) {
+						case 0:
+							update = { isArchived: value };
+							_context12.prev = 1;
+							_context12.next = 4;
+							return api.updateStream(streamId, update);
+
+						case 4:
+							returnStream = _context12.sent;
+
+							console.log("return stream: ", returnStream);
+							return _context12.abrupt("return", returnStream);
+
+						case 9:
+							_context12.prev = 9;
+							_context12.t0 = _context12["catch"](1);
+
+							console.log("Error: ", _context12.t0);
+
+						case 12:
+						case "end":
+							return _context12.stop();
+					}
+				}
+			}, _callee12, _this, [[1, 9]]);
+		}));
+
+		return function (_x33, _x34, _x35) {
+			return _ref25.apply(this, arguments);
+		};
+	}();
+};
+
 var streamActions = /*#__PURE__*/Object.freeze({
 	markStreamRead: markStreamRead,
 	createPost: createPost,
@@ -43984,6 +44024,7 @@ var streamActions = /*#__PURE__*/Object.freeze({
 	removeUsersFromStream: removeUsersFromStream,
 	addUsersToStream: addUsersToStream,
 	renameStream: renameStream,
+	setPurpose: setPurpose,
 	archiveStream: archiveStream
 });
 
@@ -102981,7 +103022,7 @@ var slashCommands = [{ id: "help", help: "get help" }, { id: "add", help: "add m
 // { id: "muteall", help: "mute codestream" },
 // { id: "open", help: "open channel" },
 // { id: "prefs", help: "open preferences" },
-{ id: "rename", help: "rename channel", description: "newname", channelOnly: true }, { id: "remove", help: "remove from channel", description: "@user", channelOnly: true }, { id: "version", help: "" }, { id: "who", help: "show channel members" }];
+{ id: "purpose", help: "set channel purpose", description: "newpurpose", channelOnly: true }, { id: "rename", help: "rename channel", description: "newname", channelOnly: true }, { id: "remove", help: "remove from channel", description: "@user", channelOnly: true }, { id: "version", help: "" }, { id: "who", help: "show channel members" }];
 
 var SimpleStream = function (_Component) {
 	inherits$1(SimpleStream, _Component);
@@ -103583,18 +103624,12 @@ var SimpleStream = function (_Component) {
 								case 3:
 									newStream = _context2.sent;
 
-									if (newStream.name === args) {
-										_this.submitPost({ text: "/me renamed the channel to " + args });
-									} else {
-										console.log("NS: ", newStream);
-										_this.submitSystemPost("Unable to rename channel.");
-									}
+									if (newStream.name === args) _this.submitPost({ text: "/me renamed the channel to " + args });else _this.submitSystemPost("Unable to rename channel.");
 									_context2.next = 8;
 									break;
 
 								case 7:
 									_this.submitSystemPost("Rename a channel by typing `/rename [new name]`");
-									// this._compose.current.insertIfEmpty("/rename");
 
 								case 8:
 									return _context2.abrupt("return", true);
@@ -103609,6 +103644,52 @@ var SimpleStream = function (_Component) {
 
 				function value(_x5) {
 					return _ref4.apply(this, arguments);
+				}
+
+				return value;
+			}()
+		});
+		Object.defineProperty(_this, "setPurpose", {
+			enumerable: true,
+			writable: true,
+			value: function () {
+				var _ref5 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(args) {
+					var newStream;
+					return regeneratorRuntime.wrap(function _callee3$(_context3) {
+						while (1) {
+							switch (_context3.prev = _context3.next) {
+								case 0:
+									if (!args) {
+										_context3.next = 7;
+										break;
+									}
+
+									_context3.next = 3;
+									return _this.props.setPurpose(_this.props.postStreamId, args);
+
+								case 3:
+									newStream = _context3.sent;
+
+									if (newStream.purpose === args) _this.submitPost({ text: "/me set the channel purpose to " + args });else _this.submitSystemPost("Unable to set channel purpose.");
+									_context3.next = 8;
+									break;
+
+								case 7:
+									_this.submitSystemPost("Set a channel purpose by typing `/purpose [new purpose]`");
+
+								case 8:
+									return _context3.abrupt("return", true);
+
+								case 9:
+								case "end":
+									return _context3.stop();
+							}
+						}
+					}, _callee3, _this2);
+				}));
+
+				function value(_x6) {
+					return _ref5.apply(this, arguments);
 				}
 
 				return value;
@@ -103693,53 +103774,53 @@ var SimpleStream = function (_Component) {
 			enumerable: true,
 			writable: true,
 			value: function () {
-				var _ref5 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(args) {
+				var _ref6 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(args) {
 					var text, _this$extractUsersFro2, users, usernames, rest;
 
-					return regeneratorRuntime.wrap(function _callee3$(_context3) {
+					return regeneratorRuntime.wrap(function _callee4$(_context4) {
 						while (1) {
-							switch (_context3.prev = _context3.next) {
+							switch (_context4.prev = _context4.next) {
 								case 0:
 									if (!_this.props.postStreamIsTeamStream) {
-										_context3.next = 3;
+										_context4.next = 3;
 										break;
 									}
 
 									text = "You cannot remove people from all-hands channels.";
-									return _context3.abrupt("return", _this.submitSystemPost(text));
+									return _context4.abrupt("return", _this.submitSystemPost(text));
 
 								case 3:
 									_this$extractUsersFro2 = _this.extractUsersFromArgs(args), users = _this$extractUsersFro2.users, usernames = _this$extractUsersFro2.usernames, rest = _this$extractUsersFro2.rest;
 
 									if (!(users.length === 0)) {
-										_context3.next = 8;
+										_context4.next = 8;
 										break;
 									}
 
 									_this.submitSystemPost("Usage: `/remove @user`");
-									_context3.next = 11;
+									_context4.next = 11;
 									break;
 
 								case 8:
-									_context3.next = 10;
+									_context4.next = 10;
 									return _this.props.removeUsersFromStream(_this.props.postStreamId, users);
 
 								case 10:
 									_this.submitPost({ text: "/me removed " + usernames });
 
 								case 11:
-									return _context3.abrupt("return", true);
+									return _context4.abrupt("return", true);
 
 								case 12:
 								case "end":
-									return _context3.stop();
+									return _context4.stop();
 							}
 						}
-					}, _callee3, _this2);
+					}, _callee4, _this2);
 				}));
 
-				function value(_x6) {
-					return _ref5.apply(this, arguments);
+				function value(_x7) {
+					return _ref6.apply(this, arguments);
 				}
 
 				return value;
@@ -103756,11 +103837,11 @@ var SimpleStream = function (_Component) {
 			enumerable: true,
 			writable: true,
 			value: function () {
-				var _ref6 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(args) {
+				var _ref7 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(args) {
 					var teamMembersById, tokens, id, user, stream;
-					return regeneratorRuntime.wrap(function _callee4$(_context4) {
+					return regeneratorRuntime.wrap(function _callee5$(_context5) {
 						while (1) {
-							switch (_context4.prev = _context4.next) {
+							switch (_context5.prev = _context5.next) {
 								case 0:
 									teamMembersById = _this.props.teamMembersById;
 									tokens = args.split(/(\s+)/);
@@ -103771,34 +103852,34 @@ var SimpleStream = function (_Component) {
 									});
 
 									if (user) {
-										_context4.next = 6;
+										_context5.next = 6;
 										break;
 									}
 
-									return _context4.abrupt("return", _this.submitSystemPost("Usage: `/msg @user message`"));
+									return _context5.abrupt("return", _this.submitSystemPost("Usage: `/msg @user message`"));
 
 								case 6:
-									_context4.next = 8;
+									_context5.next = 8;
 									return _this.props.createStream({ type: "direct", memberIds: [user] });
 
 								case 8:
-									stream = _context4.sent;
+									stream = _context5.sent;
 
 									if (stream && stream._id) {
 										_this.submitPost({ text: tokens.join(" ") });
 									}
-									return _context4.abrupt("return", true);
+									return _context5.abrupt("return", true);
 
 								case 11:
 								case "end":
-									return _context4.stop();
+									return _context5.stop();
 							}
 						}
-					}, _callee4, _this2);
+					}, _callee5, _this2);
 				}));
 
-				function value(_x7) {
-					return _ref6.apply(this, arguments);
+				function value(_x8) {
+					return _ref7.apply(this, arguments);
 				}
 
 				return value;
@@ -103868,6 +103949,8 @@ var SimpleStream = function (_Component) {
 						return _this.openStream(args);
 					case "prefs":
 						return _this.openPrefs(args);
+					case "purpose":
+						return _this.setPurpose(args);
 					case "rename":
 						return _this.renameChannel(args);
 					case "remove":
@@ -103905,11 +103988,11 @@ var SimpleStream = function (_Component) {
 		Object.defineProperty(_this, "submitPost", {
 			enumerable: true,
 			writable: true,
-			value: function value(_ref7) {
-				var text = _ref7.text,
-				    quote = _ref7.quote,
-				    mentionedUserIds = _ref7.mentionedUserIds,
-				    autoMentions = _ref7.autoMentions;
+			value: function value(_ref8) {
+				var text = _ref8.text,
+				    quote = _ref8.quote,
+				    mentionedUserIds = _ref8.mentionedUserIds,
+				    autoMentions = _ref8.autoMentions;
 
 				var codeBlocks = [];
 				var activePanel = _this.state.activePanel;
@@ -104253,8 +104336,8 @@ var SimpleStream = function (_Component) {
 
 			return react.createElement(
 				"div",
-				{ className: streamClass, ref: function ref(_ref13) {
-						return _this5._div = _ref13;
+				{ className: streamClass, ref: function ref(_ref14) {
+						return _this5._div = _ref14;
 					} },
 				react.createElement("div", { id: "modal-root" }),
 				react.createElement("div", { id: "confirm-root" }),
@@ -104274,13 +104357,13 @@ var SimpleStream = function (_Component) {
 				react.createElement(CreateDMPanel, { activePanel: activePanel, setActivePanel: this.setActivePanel }),
 				react.createElement(
 					"div",
-					{ className: mainPanelClass, ref: function ref(_ref11) {
-							return _this5._mainPanel = _ref11;
+					{ className: mainPanelClass, ref: function ref(_ref12) {
+							return _this5._mainPanel = _ref12;
 						} },
 					react.createElement(
 						"div",
-						{ className: "panel-header", ref: function ref(_ref8) {
-								return _this5._header = _ref8;
+						{ className: "panel-header", ref: function ref(_ref9) {
+								return _this5._header = _ref9;
 							} },
 						react.createElement(
 							"span",
@@ -104319,16 +104402,16 @@ var SimpleStream = function (_Component) {
 						"div",
 						{
 							className: postsListClass,
-							ref: function ref(_ref10) {
-								return _this5._postslist = _ref10;
+							ref: function ref(_ref11) {
+								return _this5._postslist = _ref11;
 							},
 							onClick: this.handleClickPost,
 							id: streamDivId
 						},
 						react.createElement(
 							"div",
-							{ className: "intro", ref: function ref(_ref9) {
-									return _this5._intro = _ref9;
+							{ className: "intro", ref: function ref(_ref10) {
+									return _this5._intro = _ref10;
 								} },
 							this.renderIntro()
 						),
@@ -104396,8 +104479,8 @@ var SimpleStream = function (_Component) {
 						"div",
 						{
 							className: threadPostsListClass,
-							ref: function ref(_ref12) {
-								return _this5._threadpostslist = _ref12;
+							ref: function ref(_ref13) {
+								return _this5._threadpostslist = _ref13;
 							},
 							onClick: this.handleClickPost
 						},
@@ -104538,18 +104621,18 @@ var SimpleStream = function (_Component) {
 	return SimpleStream;
 }(react_1);
 
-var mapStateToProps$5 = function mapStateToProps(_ref14) {
-	var configs = _ref14.configs,
-	    connectivity = _ref14.connectivity,
-	    session = _ref14.session,
-	    context = _ref14.context,
-	    streams$$1 = _ref14.streams,
-	    users = _ref14.users,
-	    posts = _ref14.posts,
-	    messaging = _ref14.messaging,
-	    teams = _ref14.teams,
-	    onboarding = _ref14.onboarding,
-	    umis = _ref14.umis;
+var mapStateToProps$5 = function mapStateToProps(_ref15) {
+	var configs = _ref15.configs,
+	    connectivity = _ref15.connectivity,
+	    session = _ref15.session,
+	    context = _ref15.context,
+	    streams$$1 = _ref15.streams,
+	    users = _ref15.users,
+	    posts = _ref15.posts,
+	    messaging = _ref15.messaging,
+	    teams = _ref15.teams,
+	    onboarding = _ref15.onboarding,
+	    umis = _ref15.umis;
 
 	// TODO: figure out a way to do this elsewhere
 	Object.keys(users).forEach(function (key, index) {
@@ -104593,8 +104676,8 @@ var mapStateToProps$5 = function mapStateToProps(_ref14) {
 		configs: configs,
 		isOffline: isOffline,
 		teamMembersById: toMapBy("id", teamMembers),
-		teammates: teamMembers.filter(function (_ref15) {
-			var id = _ref15.id;
+		teammates: teamMembers.filter(function (_ref16) {
+			var id = _ref16.id;
 			return id !== session.userId;
 		}),
 		postStream: postStream,

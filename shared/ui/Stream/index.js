@@ -955,16 +955,19 @@ export class SimpleStream extends Component {
 	renameChannel = async args => {
 		if (args) {
 			const newStream = await this.props.renameStream(this.props.postStreamId, args);
-			if (newStream.name === args) {
-				this.submitPost({ text: "/me renamed the channel to " + args });
-			} else {
-				console.log("NS: ", newStream);
-				this.submitSystemPost("Unable to rename channel.");
-			}
-		} else {
-			this.submitSystemPost("Rename a channel by typing `/rename [new name]`");
-			// this._compose.current.insertIfEmpty("/rename");
-		}
+			if (newStream.name === args) this.submitPost({ text: "/me renamed the channel to " + args });
+			else this.submitSystemPost("Unable to rename channel.");
+		} else this.submitSystemPost("Rename a channel by typing `/rename [new name]`");
+		return true;
+	};
+
+	setPurpose = async args => {
+		if (args) {
+			const newStream = await this.props.setPurpose(this.props.postStreamId, args);
+			if (newStream.purpose === args)
+				this.submitPost({ text: "/me set the channel purpose to " + args });
+			else this.submitSystemPost("Unable to set channel purpose.");
+		} else this.submitSystemPost("Set a channel purpose by typing `/purpose [new purpose]`");
 		return true;
 	};
 
@@ -1113,6 +1116,8 @@ export class SimpleStream extends Component {
 				return this.openStream(args);
 			case "prefs":
 				return this.openPrefs(args);
+			case "purpose":
+				return this.setPurpose(args);
 			case "rename":
 				return this.renameChannel(args);
 			case "remove":
