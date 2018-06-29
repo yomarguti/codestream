@@ -20,7 +20,6 @@ import {
 } from "./actions/context";
 import { updateConfigs } from "./actions/configs";
 import { foundMultipleRemotes } from "./actions/onboarding";
-import { setStreamUMITreatment } from "./actions/umi";
 import logger from "./util/Logger";
 import { online, offline } from "./actions/connectivity";
 import { calculateUncommittedMarkers } from "./actions/marker-location";
@@ -165,12 +164,13 @@ module.exports = {
 			if (repos.length === 1) {
 				// if being initialized much later into atom's lifetime, i.e. just installed or re-enabled
 				if (atom.packages.hasActivatedInitialPackages()) this.setup();
-				// wait for atom workspace to be ready
-				else this.subscriptions.add(atom.packages.onDidActivateInitialPackages(() => this.setup()));
+				else
+					// wait for atom workspace to be ready
+					this.subscriptions.add(atom.packages.onDidActivateInitialPackages(() => this.setup()));
 			}
 		});
 		// this isn't aded to this.subscriptions because it should always run
-		atom.project.onDidChangePaths(paths => reloadPlugin(this));
+		atom.project.onDidChangePaths(_paths => reloadPlugin(this));
 	},
 
 	activate(state) {
