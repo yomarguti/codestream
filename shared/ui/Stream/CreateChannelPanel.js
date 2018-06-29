@@ -22,6 +22,19 @@ export class SimpleCreateChannelPanel extends Component {
 		this._createChannelPanel = React.createRef();
 	}
 
+	componentDidUpdate(prevProps, prevState) {
+		if (this.props.activePanel === "create-channel" && prevProps.activePanel !== "create-channel") {
+			setTimeout(() => {
+				this.focusNameInput();
+			}, 500);
+		}
+	}
+
+	focusNameInput = () => {
+		const input = document.getElementById("channel-name-input");
+		if (input) input.focus();
+	};
+
 	render() {
 		const inactive = this.props.activePanel !== "create-channel";
 
@@ -78,6 +91,7 @@ export class SimpleCreateChannelPanel extends Component {
 										type="text"
 										name="name"
 										tabIndex="0"
+										id="channel-name-input"
 										value={this.state.name}
 										onChange={e => this.setState({ name: e.target.value })}
 										onBlur={this.onBlurName}

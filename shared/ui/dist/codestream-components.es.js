@@ -50683,6 +50683,14 @@ var SimpleCreateChannelPanel = function (_Component) {
 
 		var _this = possibleConstructorReturn$1(this, (SimpleCreateChannelPanel.__proto__ || Object.getPrototypeOf(SimpleCreateChannelPanel)).call(this, props));
 
+		Object.defineProperty(_this, "focusNameInput", {
+			enumerable: true,
+			writable: true,
+			value: function value() {
+				var input = document.getElementById("channel-name-input");
+				if (input) input.focus();
+			}
+		});
 		Object.defineProperty(_this, "renderError", {
 			enumerable: true,
 			writable: true,
@@ -50789,9 +50797,20 @@ var SimpleCreateChannelPanel = function (_Component) {
 	}
 
 	createClass$1(SimpleCreateChannelPanel, [{
+		key: "componentDidUpdate",
+		value: function componentDidUpdate(prevProps, prevState) {
+			var _this2 = this;
+
+			if (this.props.activePanel === "create-channel" && prevProps.activePanel !== "create-channel") {
+				setTimeout(function () {
+					_this2.focusNameInput();
+				}, 500);
+			}
+		}
+	}, {
 		key: "render",
 		value: function render() {
-			var _this2 = this;
+			var _this3 = this;
 
 			var inactive = this.props.activePanel !== "create-channel";
 
@@ -50851,7 +50870,7 @@ var SimpleCreateChannelPanel = function (_Component) {
 											name: "privacy",
 											checked: this.state.privacy === "public",
 											onChange: function onChange(e) {
-												return _this2.setState({ privacy: "public" });
+												return _this3.setState({ privacy: "public" });
 											}
 										}),
 										react.createElement(
@@ -50865,7 +50884,7 @@ var SimpleCreateChannelPanel = function (_Component) {
 											name: "privacy",
 											checked: this.state.privacy === "private",
 											onChange: function onChange(e) {
-												return _this2.setState({ privacy: "private" });
+												return _this3.setState({ privacy: "private" });
 											}
 										}),
 										react.createElement(
@@ -50892,9 +50911,10 @@ var SimpleCreateChannelPanel = function (_Component) {
 										type: "text",
 										name: "name",
 										tabIndex: "0",
+										id: "channel-name-input",
 										value: this.state.name,
 										onChange: function onChange(e) {
-											return _this2.setState({ name: e.target.value });
+											return _this3.setState({ name: e.target.value });
 										},
 										onBlur: this.onBlurName,
 										required: this.state.nameTouched || this.state.formTouched
@@ -50922,7 +50942,7 @@ var SimpleCreateChannelPanel = function (_Component) {
 									tabIndex: "0",
 									value: this.state.purpose,
 									onChange: function onChange(e) {
-										return _this2.setState({ purpose: e.target.value });
+										return _this3.setState({ purpose: e.target.value });
 									}
 								})
 							),
@@ -50949,7 +50969,7 @@ var SimpleCreateChannelPanel = function (_Component) {
 									closeMenuOnSelect: false,
 									isClearable: false,
 									onChange: function onChange(value) {
-										return _this2.setState({ members: value });
+										return _this3.setState({ members: value });
 									}
 								})
 							),
