@@ -110,7 +110,7 @@ export class SimpleCreateChannelPanel extends Component {
 									className="native-key-bindings input-text control"
 									type="text"
 									name="purpose"
-									tabIndex="0"
+									tabIndex="1"
 									value={this.state.purpose}
 									onChange={e => this.setState({ purpose: e.target.value })}
 								/>
@@ -122,6 +122,7 @@ export class SimpleCreateChannelPanel extends Component {
 								<Select
 									id="input-members"
 									name="members"
+									tabIndex="2"
 									classNamePrefix="native-key-bindings react-select"
 									isMulti={true}
 									value={this.state.members || []}
@@ -140,7 +141,7 @@ export class SimpleCreateChannelPanel extends Component {
 								<Button
 									id="save-button"
 									className="control-button"
-									tabIndex="4"
+									tabIndex="3"
 									type="submit"
 									loading={this.state.loading}
 									onClick={this.handleClickCreateChannel}
@@ -150,7 +151,7 @@ export class SimpleCreateChannelPanel extends Component {
 								<Button
 									id="discard-button"
 									className="control-button cancel"
-									tabIndex="5"
+									tabIndex="4"
 									type="submit"
 									onClick={this.handleClickCancel}
 								>

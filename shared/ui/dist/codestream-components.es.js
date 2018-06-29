@@ -51014,7 +51014,7 @@ var SimpleCreateChannelPanel = function (_Component) {
 									className: "native-key-bindings input-text control",
 									type: "text",
 									name: "purpose",
-									tabIndex: "0",
+									tabIndex: "1",
 									value: this.state.purpose,
 									onChange: function onChange(e) {
 										return _this4.setState({ purpose: e.target.value });
@@ -51037,6 +51037,7 @@ var SimpleCreateChannelPanel = function (_Component) {
 								react.createElement(index$2, {
 									id: "input-members",
 									name: "members",
+									tabIndex: "2",
 									classNamePrefix: "native-key-bindings react-select",
 									isMulti: true,
 									value: this.state.members || [],
@@ -51056,7 +51057,7 @@ var SimpleCreateChannelPanel = function (_Component) {
 									{
 										id: "save-button",
 										className: "control-button",
-										tabIndex: "4",
+										tabIndex: "3",
 										type: "submit",
 										loading: this.state.loading,
 										onClick: this.handleClickCreateChannel
@@ -51068,7 +51069,7 @@ var SimpleCreateChannelPanel = function (_Component) {
 									{
 										id: "discard-button",
 										className: "control-button cancel",
-										tabIndex: "5",
+										tabIndex: "4",
 										type: "submit",
 										onClick: this.handleClickCancel
 									},
