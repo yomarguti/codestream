@@ -351,7 +351,10 @@ class ComposeBox extends React.Component {
 
 	handleKeyDown = event => {
 		if (this.state.popupOpen) {
-			if (event.key === "ArrowUp") this.handleAtMentionKeyPress(event, "up");
+			if (event.key === "ArrowUp") {
+				event.stopPropagation();
+				this.handleAtMentionKeyPress(event, "up");
+			}
 			if (event.key === "ArrowDown") this.handleAtMentionKeyPress(event, "down");
 			if (event.key === "Tab") this.handleAtMentionKeyPress(event, "tab");
 			if (event.key === "Escape") {
@@ -361,6 +364,7 @@ class ComposeBox extends React.Component {
 		} else {
 			if (event.key === "ArrowUp") {
 				event.persist();
+				event.stopPropagation();
 				this.props.onEmptyUpArrow(event);
 			}
 		}

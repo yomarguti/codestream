@@ -38521,7 +38521,10 @@ var ComposeBox = function (_React$Component) {
 			writable: true,
 			value: function value(event) {
 				if (_this.state.popupOpen) {
-					if (event.key === "ArrowUp") _this.handleAtMentionKeyPress(event, "up");
+					if (event.key === "ArrowUp") {
+						event.stopPropagation();
+						_this.handleAtMentionKeyPress(event, "up");
+					}
 					if (event.key === "ArrowDown") _this.handleAtMentionKeyPress(event, "down");
 					if (event.key === "Tab") _this.handleAtMentionKeyPress(event, "tab");
 					if (event.key === "Escape") {
@@ -38531,6 +38534,7 @@ var ComposeBox = function (_React$Component) {
 				} else {
 					if (event.key === "ArrowUp") {
 						event.persist();
+						event.stopPropagation();
 						_this.props.onEmptyUpArrow(event);
 					}
 				}
@@ -103189,7 +103193,6 @@ var SimpleStream = function (_Component) {
 			writable: true,
 			value: function value(event) {
 				// find the most recent post I authored
-				console.log("up! ", event);
 				var postDiv = event.target.closest(".post");
 				var seqNum = postDiv ? postDiv.dataset.seqNum : 9999999999;
 				var editingPost = _this.findMyPostBeforeSeqNum(seqNum);
@@ -104009,11 +104012,14 @@ var SimpleStream = function (_Component) {
 
 			var rootInVscode = document.querySelector("body.codestream");
 			if (rootInVscode) {
-				rootInVscode.onkeydown = function (e) {
-					if (e.key === "Escape") {
+				rootInVscode.onkeydown = function (event) {
+					if (event.key === "Escape") {
 						if (_this3.state.threadId) {
 							_this3.handleDismissThread();
 						}
+					}
+					if (event.key === "ArrowUp" && event.target.id !== "input-div") {
+						_this3.editLastPost(event);
 					}
 				};
 			}
