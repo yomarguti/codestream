@@ -53870,7 +53870,7 @@ Linkify.defaultProps = {
 exports.default = Linkify;
 });
 
-unwrapExports(Linkify_1);
+var Linkify = unwrapExports(Linkify_1);
 var Linkify_2 = Linkify_1.linkify;
 
 var PostDetails = function (_Component) {
@@ -102706,7 +102706,12 @@ var Post = function (_Component) {
 							part
 						);
 					} else {
-						return part;
+						return react.createElement(
+							Linkify,
+							{ key: iterator++ },
+							part
+						);
+						// return part;
 						// const result = md.render(part);
 						// return <span dangerouslySetInnerHTML={{ __html: result }} />;
 						// return <ReactMarkdown key={iterator++}>{part}</ReactMarkdown>;

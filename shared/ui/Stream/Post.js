@@ -162,7 +162,8 @@ class Post extends Component {
 						</span>
 					);
 			} else {
-				return part;
+				return <Linkify key={iterator++}>{part}</Linkify>;
+				// return part;
 				// const result = md.render(part);
 				// return <span dangerouslySetInnerHTML={{ __html: result }} />;
 				// return <ReactMarkdown key={iterator++}>{part}</ReactMarkdown>;
