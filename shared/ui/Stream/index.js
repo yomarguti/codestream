@@ -421,6 +421,8 @@ export class SimpleStream extends Component {
 			);
 
 		const umisClass = createClassString("align-left-button", {
+			umis: true,
+			"align-left-button": true,
 			mentions: umis.totalMentions > 0,
 			unread: umis.totalMentions == 0 && umis.totalUnread > 0
 		});
@@ -459,7 +461,7 @@ export class SimpleStream extends Component {
 					<div className="panel-header" ref={ref => (this._header = ref)}>
 						<span onClick={this.showChannels} className={umisClass}>
 							<Icon name="chevron-left" className="show-channels-icon" />
-							{totalUMICount}
+							<label>{totalUMICount}</label>
 						</span>
 						<span>
 							{channelIcon} {this.props.postStreamName}
@@ -531,8 +533,10 @@ export class SimpleStream extends Component {
 									onClick={this.showChannels}
 									className="show-channels-icon"
 								/>
+								<label>
+									Back <span className="keybinding">(esc)</span>
+								</label>
 							</span>
-							Back <span className="keybinding">(esc)</span>
 						</span>
 					</div>
 					<div

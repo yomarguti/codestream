@@ -104236,6 +104236,8 @@ var SimpleStream = function (_Component) {
 			);
 
 			var umisClass = classnames("align-left-button", {
+				umis: true,
+				"align-left-button": true,
 				mentions: umis.totalMentions > 0,
 				unread: umis.totalMentions == 0 && umis.totalUnread > 0
 			});
@@ -104284,7 +104286,11 @@ var SimpleStream = function (_Component) {
 							"span",
 							{ onClick: this.showChannels, className: umisClass },
 							react.createElement(Icon, { name: "chevron-left", className: "show-channels-icon" }),
-							totalUMICount
+							react.createElement(
+								"label",
+								null,
+								totalUMICount
+							)
 						),
 						react.createElement(
 							"span",
@@ -104372,13 +104378,17 @@ var SimpleStream = function (_Component) {
 									name: "chevron-left",
 									onClick: this.showChannels,
 									className: "show-channels-icon"
-								})
-							),
-							"Back ",
-							react.createElement(
-								"span",
-								{ className: "keybinding" },
-								"(esc)"
+								}),
+								react.createElement(
+									"label",
+									null,
+									"Back ",
+									react.createElement(
+										"span",
+										{ className: "keybinding" },
+										"(esc)"
+									)
+								)
 							)
 						)
 					),
