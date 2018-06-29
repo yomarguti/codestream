@@ -45,7 +45,6 @@ export default class WebviewApi {
 	}
 
 	updateStream(streamId, update) {
-		console.log("posting message...");
 		return this.postMessage({
 			action: "update-stream",
 			params: {
@@ -53,6 +52,10 @@ export default class WebviewApi {
 				update
 			}
 		});
+	}
+
+	joinStream(streamId) {
+		return this.postMessage({ action: "join-stream", params: streamId });
 	}
 
 	markStreamRead(streamId) {

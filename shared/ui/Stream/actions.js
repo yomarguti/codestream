@@ -207,6 +207,16 @@ export const addUsersToStream = (streamId, userIds) => async (dispatch, getState
 	}
 };
 
+export const joinStream = streamId => async (dispatch, getState, { api }) => {
+	try {
+		const returnStream = await api.joinStream(streamId);
+		console.log("return stream: ", returnStream);
+		// if (streams.length > 0) dispatch(saveStreams(normalize(streams)));
+	} catch (error) {
+		console.log("Error: ", error);
+	}
+};
+
 export const renameStream = (streamId, name) => async (dispatch, getState, { api }) => {
 	const update = { name };
 

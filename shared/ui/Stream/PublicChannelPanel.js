@@ -23,10 +23,14 @@ export class SimplePublicChannelPanel extends Component {
 	}
 
 	render() {
+		const inactive = this.props.activePanel !== "public-channels";
+		const shrink = this.props.activePanel === "main";
+
 		const panelClass = createClassString({
 			panel: true,
 			"public-channel-panel": true,
-			"off-right": this.props.activePanel !== "public-channels"
+			shrink,
+			"off-right": inactive && !shrink
 		});
 
 		return (
@@ -106,11 +110,11 @@ export class SimplePublicChannelPanel extends Component {
 		this.props.setCurrentStream(liDiv.id);
 	};
 
-	handleClickJoinStream = event => {
+	handleClickJoinStream = async event => {
 		var liDiv = event.target.closest("li");
 		if (!liDiv || !liDiv.id) return; // FIXME throw error
-		this.props.joinStream(liDiv.id);
-		this.props.setActivePanel("main");
+		await this.props.joinStream(liDiv.id);
+		// this.props.setActivePanel("main");
 		this.props.setCurrentStream(liDiv.id);
 	};
 

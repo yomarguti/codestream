@@ -43898,38 +43898,39 @@ var addUsersToStream = function addUsersToStream(streamId, userIds) {
 	}();
 };
 
-var renameStream = function renameStream(streamId, name) {
+var joinStream = function joinStream(streamId) {
 	return function () {
 		var _ref21 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10(dispatch, getState, _ref20) {
 			var api = _ref20.api;
-			var update, returnStream;
+			var returnStream;
 			return regeneratorRuntime.wrap(function _callee10$(_context10) {
 				while (1) {
 					switch (_context10.prev = _context10.next) {
 						case 0:
-							update = { name: name };
-							_context10.prev = 1;
-							_context10.next = 4;
-							return api.updateStream(streamId, update);
+							_context10.prev = 0;
+							_context10.next = 3;
+							return api.joinStream(streamId);
 
-						case 4:
+						case 3:
 							returnStream = _context10.sent;
 
 							console.log("return stream: ", returnStream);
-							return _context10.abrupt("return", returnStream);
+							// if (streams.length > 0) dispatch(saveStreams(normalize(streams)));
+							_context10.next = 10;
+							break;
 
-						case 9:
-							_context10.prev = 9;
-							_context10.t0 = _context10["catch"](1);
+						case 7:
+							_context10.prev = 7;
+							_context10.t0 = _context10["catch"](0);
 
 							console.log("Error: ", _context10.t0);
 
-						case 12:
+						case 10:
 						case "end":
 							return _context10.stop();
 					}
 				}
-			}, _callee10, _this, [[1, 9]]);
+			}, _callee10, _this, [[0, 7]]);
 		}));
 
 		return function (_x27, _x28, _x29) {
@@ -43938,7 +43939,7 @@ var renameStream = function renameStream(streamId, name) {
 	}();
 };
 
-var setPurpose = function setPurpose(streamId, purpose) {
+var renameStream = function renameStream(streamId, name) {
 	return function () {
 		var _ref23 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11(dispatch, getState, _ref22) {
 			var api = _ref22.api;
@@ -43947,7 +43948,7 @@ var setPurpose = function setPurpose(streamId, purpose) {
 				while (1) {
 					switch (_context11.prev = _context11.next) {
 						case 0:
-							update = { purpose: purpose };
+							update = { name: name };
 							_context11.prev = 1;
 							_context11.next = 4;
 							return api.updateStream(streamId, update);
@@ -43978,7 +43979,7 @@ var setPurpose = function setPurpose(streamId, purpose) {
 	}();
 };
 
-var archiveStream = function archiveStream(streamId, value) {
+var setPurpose = function setPurpose(streamId, purpose) {
 	return function () {
 		var _ref25 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee12(dispatch, getState, _ref24) {
 			var api = _ref24.api;
@@ -43987,7 +43988,7 @@ var archiveStream = function archiveStream(streamId, value) {
 				while (1) {
 					switch (_context12.prev = _context12.next) {
 						case 0:
-							update = { isArchived: value };
+							update = { purpose: purpose };
 							_context12.prev = 1;
 							_context12.next = 4;
 							return api.updateStream(streamId, update);
@@ -44018,6 +44019,46 @@ var archiveStream = function archiveStream(streamId, value) {
 	}();
 };
 
+var archiveStream = function archiveStream(streamId, value) {
+	return function () {
+		var _ref27 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee13(dispatch, getState, _ref26) {
+			var api = _ref26.api;
+			var update, returnStream;
+			return regeneratorRuntime.wrap(function _callee13$(_context13) {
+				while (1) {
+					switch (_context13.prev = _context13.next) {
+						case 0:
+							update = { isArchived: value };
+							_context13.prev = 1;
+							_context13.next = 4;
+							return api.updateStream(streamId, update);
+
+						case 4:
+							returnStream = _context13.sent;
+
+							console.log("return stream: ", returnStream);
+							return _context13.abrupt("return", returnStream);
+
+						case 9:
+							_context13.prev = 9;
+							_context13.t0 = _context13["catch"](1);
+
+							console.log("Error: ", _context13.t0);
+
+						case 12:
+						case "end":
+							return _context13.stop();
+					}
+				}
+			}, _callee13, _this, [[1, 9]]);
+		}));
+
+		return function (_x36, _x37, _x38) {
+			return _ref27.apply(this, arguments);
+		};
+	}();
+};
+
 var streamActions = /*#__PURE__*/Object.freeze({
 	markStreamRead: markStreamRead,
 	createPost: createPost,
@@ -44031,6 +44072,7 @@ var streamActions = /*#__PURE__*/Object.freeze({
 	setCurrentStream: setCurrentStream,
 	removeUsersFromStream: removeUsersFromStream,
 	addUsersToStream: addUsersToStream,
+	joinStream: joinStream,
 	renameStream: renameStream,
 	setPurpose: setPurpose,
 	archiveStream: archiveStream
@@ -44839,6 +44881,8 @@ var SimplePublicChannelPanel = function (_Component) {
 	inherits$1(SimplePublicChannelPanel, _Component);
 
 	function SimplePublicChannelPanel(props) {
+		var _this2 = this;
+
 		classCallCheck$1(this, SimplePublicChannelPanel);
 
 		var _this = possibleConstructorReturn$1(this, (SimplePublicChannelPanel.__proto__ || Object.getPrototypeOf(SimplePublicChannelPanel)).call(this, props));
@@ -44895,13 +44939,44 @@ var SimplePublicChannelPanel = function (_Component) {
 		Object.defineProperty(_this, "handleClickJoinStream", {
 			enumerable: true,
 			writable: true,
-			value: function value(event) {
-				var liDiv = event.target.closest("li");
-				if (!liDiv || !liDiv.id) return; // FIXME throw error
-				_this.props.joinStream(liDiv.id);
-				_this.props.setActivePanel("main");
-				_this.props.setCurrentStream(liDiv.id);
-			}
+			value: function () {
+				var _ref = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(event) {
+					var liDiv;
+					return regeneratorRuntime.wrap(function _callee$(_context) {
+						while (1) {
+							switch (_context.prev = _context.next) {
+								case 0:
+									liDiv = event.target.closest("li");
+
+									if (!(!liDiv || !liDiv.id)) {
+										_context.next = 3;
+										break;
+									}
+
+									return _context.abrupt("return");
+
+								case 3:
+									_context.next = 5;
+									return _this.props.joinStream(liDiv.id);
+
+								case 5:
+									// this.props.setActivePanel("main");
+									_this.props.setCurrentStream(liDiv.id);
+
+								case 6:
+								case "end":
+									return _context.stop();
+							}
+						}
+					}, _callee, _this2);
+				}));
+
+				function value(_x) {
+					return _ref.apply(this, arguments);
+				}
+
+				return value;
+			}()
 		});
 		Object.defineProperty(_this, "showChannels", {
 			enumerable: true,
@@ -44927,10 +45002,14 @@ var SimplePublicChannelPanel = function (_Component) {
 	createClass$1(SimplePublicChannelPanel, [{
 		key: "render",
 		value: function render() {
+			var inactive = this.props.activePanel !== "public-channels";
+			var shrink = this.props.activePanel === "main";
+
 			var panelClass = classnames({
 				panel: true,
 				"public-channel-panel": true,
-				"off-right": this.props.activePanel !== "public-channels"
+				shrink: shrink,
+				"off-right": inactive && !shrink
 			});
 
 			return react.createElement(
@@ -45012,13 +45091,13 @@ var SimplePublicChannelPanel = function (_Component) {
 	return SimplePublicChannelPanel;
 }(react_1);
 
-var mapStateToProps$2 = function mapStateToProps(_ref) {
-	var context = _ref.context,
-	    streams$$1 = _ref.streams,
-	    users = _ref.users,
-	    teams = _ref.teams,
-	    umis = _ref.umis,
-	    session = _ref.session;
+var mapStateToProps$2 = function mapStateToProps(_ref2) {
+	var context = _ref2.context,
+	    streams$$1 = _ref2.streams,
+	    users = _ref2.users,
+	    teams = _ref2.teams,
+	    umis = _ref2.umis,
+	    session = _ref2.session;
 
 	var teamMembers = teams[context.currentTeamId].memberIds.map(function (id) {
 		return users[id];
@@ -105527,7 +105606,6 @@ var WebviewApi = function () {
 	}, {
 		key: "updateStream",
 		value: function updateStream(streamId, update) {
-			console.log("posting message...");
 			return this.postMessage({
 				action: "update-stream",
 				params: {
@@ -105535,6 +105613,11 @@ var WebviewApi = function () {
 					update: update
 				}
 			});
+		}
+	}, {
+		key: "joinStream",
+		value: function joinStream(streamId) {
+			return this.postMessage({ action: "join-stream", params: streamId });
 		}
 	}, {
 		key: "markStreamRead",
