@@ -150,7 +150,7 @@ const singleUpsert = (table, primaryKeySchema, changes) => {
 	});
 };
 
-const NESTED_PROPERTY_REGEX = /^(.+)\.(.+)$/;
+const NESTED_PROPERTY_REGEX = /^(.+?)\.(.+)$/;
 
 const handle = (property, object, data, recurse, apply) => {
 	const nestedPropertyMatch = property.match(NESTED_PROPERTY_REGEX);
