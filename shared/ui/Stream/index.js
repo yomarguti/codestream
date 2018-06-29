@@ -946,6 +946,11 @@ export class SimpleStream extends Component {
 				"This is an all-hands channel, so every member of your team is automatically added. To invite somone new to the team use the /invite command.";
 			return this.submitSystemPost(text);
 		}
+		if (this.props.postStreamType === "direct") {
+			const text =
+				"You cannot add people to direct message streams. Create a larger conversation by clicking DIRECT MESSAGES from the channels panel.";
+			return this.submitSystemPost(text);
+		}
 		if (users.length === 0) {
 			this.submitSystemPost("Add members to this channel by typing\n`/add @nickname`");
 		} else {
@@ -956,6 +961,10 @@ export class SimpleStream extends Component {
 	};
 
 	renameChannel = async args => {
+		if (this.props.postStreamType === "direct") {
+			const text = "You cannot rename a direct message stream.";
+			return this.submitSystemPost(text);
+		}
 		if (args) {
 			const newStream = await this.props.renameStream(this.props.postStreamId, args);
 			if (newStream.name === args) this.submitPost({ text: "/me renamed the channel to " + args });
@@ -965,6 +974,10 @@ export class SimpleStream extends Component {
 	};
 
 	setPurpose = async args => {
+		if (this.props.postStreamType === "direct") {
+			const text = "You cannot set a purpose in direct message streams.";
+			return this.submitSystemPost(text);
+		}
 		if (args) {
 			const newStream = await this.props.setPurpose(this.props.postStreamId, args);
 			if (newStream.purpose === args)
@@ -1017,6 +1030,11 @@ export class SimpleStream extends Component {
 			this.submitSystemPost(text);
 			return true;
 		}
+		if (this.props.postStreamType === "direct") {
+			const text =
+				"You cannot archive direct message streams. You can remove them from your list by clicking the X on the channels panel.";
+			return this.submitSystemPost(text);
+		}
 		confirmPopup({
 			title: "Are you sure?",
 			message: "Archived channels can be found on the channels list under TEAM CHANNELS.",
@@ -1042,6 +1060,10 @@ export class SimpleStream extends Component {
 	removeFromStream = async args => {
 		if (this.props.postStreamIsTeamStream) {
 			const text = "You cannot remove people from all-hands channels.";
+			return this.submitSystemPost(text);
+		}
+		if (this.props.postStreamType === "direct") {
+			const text = "You cannot remove people from direct message streams.";
 			return this.submitSystemPost(text);
 		}
 		const { users, usernames, rest } = this.extractUsersFromArgs(args);
@@ -1086,6 +1108,7 @@ export class SimpleStream extends Component {
 		const lastPost = _.last(posts);
 		const seqNum = lastPost ? lastPost.seqNum + 0.001 : 0.001;
 		createSystemPost(postStreamId, threadId, text, seqNum);
+		return true;
 	};
 
 	postHelp = () => {

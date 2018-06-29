@@ -103694,7 +103694,7 @@ var SimpleStream = function (_Component) {
 			writable: true,
 			value: function () {
 				var _ref3 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(args) {
-					var _this$extractUsersFro, users, usernames, rest, text;
+					var _this$extractUsersFro, users, usernames, rest, text, _text;
 
 					return regeneratorRuntime.wrap(function _callee$(_context) {
 						while (1) {
@@ -103711,26 +103711,35 @@ var SimpleStream = function (_Component) {
 									return _context.abrupt("return", _this.submitSystemPost(text));
 
 								case 4:
+									if (!(_this.props.postStreamType === "direct")) {
+										_context.next = 7;
+										break;
+									}
+
+									_text = "You cannot add people to direct message streams. Create a larger conversation by clicking DIRECT MESSAGES from the channels panel.";
+									return _context.abrupt("return", _this.submitSystemPost(_text));
+
+								case 7:
 									if (!(users.length === 0)) {
-										_context.next = 8;
+										_context.next = 11;
 										break;
 									}
 
 									_this.submitSystemPost("Add members to this channel by typing\n`/add @nickname`");
-									_context.next = 11;
+									_context.next = 14;
 									break;
 
-								case 8:
-									_context.next = 10;
+								case 11:
+									_context.next = 13;
 									return _this.props.addUsersToStream(_this.props.postStreamId, users);
 
-								case 10:
+								case 13:
 									_this.submitPost({ text: "/me added " + usernames });
 
-								case 11:
+								case 14:
 									return _context.abrupt("return", true);
 
-								case 12:
+								case 15:
 								case "end":
 									return _context.stop();
 							}
@@ -103750,33 +103759,42 @@ var SimpleStream = function (_Component) {
 			writable: true,
 			value: function () {
 				var _ref4 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(args) {
-					var newStream;
+					var text, newStream;
 					return regeneratorRuntime.wrap(function _callee2$(_context2) {
 						while (1) {
 							switch (_context2.prev = _context2.next) {
 								case 0:
-									if (!args) {
-										_context2.next = 7;
+									if (!(_this.props.postStreamType === "direct")) {
+										_context2.next = 3;
 										break;
 									}
 
-									_context2.next = 3;
-									return _this.props.renameStream(_this.props.postStreamId, args);
+									text = "You cannot rename a direct message stream.";
+									return _context2.abrupt("return", _this.submitSystemPost(text));
 
 								case 3:
+									if (!args) {
+										_context2.next = 10;
+										break;
+									}
+
+									_context2.next = 6;
+									return _this.props.renameStream(_this.props.postStreamId, args);
+
+								case 6:
 									newStream = _context2.sent;
 
 									if (newStream.name === args) _this.submitPost({ text: "/me renamed the channel to " + args });else _this.submitSystemPost("Unable to rename channel.");
-									_context2.next = 8;
+									_context2.next = 11;
 									break;
 
-								case 7:
+								case 10:
 									_this.submitSystemPost("Rename a channel by typing `/rename [new name]`");
 
-								case 8:
+								case 11:
 									return _context2.abrupt("return", true);
 
-								case 9:
+								case 12:
 								case "end":
 									return _context2.stop();
 							}
@@ -103796,33 +103814,42 @@ var SimpleStream = function (_Component) {
 			writable: true,
 			value: function () {
 				var _ref5 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(args) {
-					var newStream;
+					var text, newStream;
 					return regeneratorRuntime.wrap(function _callee3$(_context3) {
 						while (1) {
 							switch (_context3.prev = _context3.next) {
 								case 0:
-									if (!args) {
-										_context3.next = 7;
+									if (!(_this.props.postStreamType === "direct")) {
+										_context3.next = 3;
 										break;
 									}
 
-									_context3.next = 3;
-									return _this.props.setPurpose(_this.props.postStreamId, args);
+									text = "You cannot set a purpose in direct message streams.";
+									return _context3.abrupt("return", _this.submitSystemPost(text));
 
 								case 3:
+									if (!args) {
+										_context3.next = 10;
+										break;
+									}
+
+									_context3.next = 6;
+									return _this.props.setPurpose(_this.props.postStreamId, args);
+
+								case 6:
 									newStream = _context3.sent;
 
 									if (newStream.purpose === args) _this.submitPost({ text: "/me set the channel purpose to " + args });else _this.submitSystemPost("Unable to set channel purpose.");
-									_context3.next = 8;
+									_context3.next = 11;
 									break;
 
-								case 7:
+								case 10:
 									_this.submitSystemPost("Set a channel purpose by typing `/purpose [new purpose]`");
 
-								case 8:
+								case 11:
 									return _context3.abrupt("return", true);
 
-								case 9:
+								case 12:
 								case "end":
 									return _context3.stop();
 							}
@@ -103889,6 +103916,10 @@ var SimpleStream = function (_Component) {
 					_this.submitSystemPost(text);
 					return true;
 				}
+				if (_this.props.postStreamType === "direct") {
+					var _text2 = "You cannot archive direct message streams. You can remove them from your list by clicking the X on the channels panel.";
+					return _this.submitSystemPost(_text2);
+				}
 				confirmPopup({
 					title: "Are you sure?",
 					message: "Archived channels can be found on the channels list under TEAM CHANNELS.",
@@ -103919,7 +103950,7 @@ var SimpleStream = function (_Component) {
 			writable: true,
 			value: function () {
 				var _ref6 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(args) {
-					var text, _this$extractUsersFro2, users, usernames, rest;
+					var text, _text3, _this$extractUsersFro2, users, usernames, rest;
 
 					return regeneratorRuntime.wrap(function _callee4$(_context4) {
 						while (1) {
@@ -103934,28 +103965,37 @@ var SimpleStream = function (_Component) {
 									return _context4.abrupt("return", _this.submitSystemPost(text));
 
 								case 3:
+									if (!(_this.props.postStreamType === "direct")) {
+										_context4.next = 6;
+										break;
+									}
+
+									_text3 = "You cannot remove people from direct message streams.";
+									return _context4.abrupt("return", _this.submitSystemPost(_text3));
+
+								case 6:
 									_this$extractUsersFro2 = _this.extractUsersFromArgs(args), users = _this$extractUsersFro2.users, usernames = _this$extractUsersFro2.usernames, rest = _this$extractUsersFro2.rest;
 
 									if (!(users.length === 0)) {
-										_context4.next = 8;
+										_context4.next = 11;
 										break;
 									}
 
 									_this.submitSystemPost("Usage: `/remove @user`");
-									_context4.next = 11;
+									_context4.next = 14;
 									break;
 
-								case 8:
-									_context4.next = 10;
+								case 11:
+									_context4.next = 13;
 									return _this.props.removeUsersFromStream(_this.props.postStreamId, users);
 
-								case 10:
+								case 13:
 									_this.submitPost({ text: "/me removed " + usernames });
 
-								case 11:
+								case 14:
 									return _context4.abrupt("return", true);
 
-								case 12:
+								case 15:
 								case "end":
 									return _context4.stop();
 							}
@@ -104043,6 +104083,7 @@ var SimpleStream = function (_Component) {
 				var lastPost = underscore.last(posts);
 				var seqNum = lastPost ? lastPost.seqNum + 0.001 : 0.001;
 				createSystemPost$$1(postStreamId, threadId, text, seqNum);
+				return true;
 			}
 		});
 		Object.defineProperty(_this, "postHelp", {
