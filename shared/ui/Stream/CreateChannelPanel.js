@@ -10,7 +10,7 @@ import { FormattedMessage } from "react-intl";
 import Select from "react-select";
 
 const isNameInvalid = name => {
-	const nameRegex = new RegExp("^[a-zA-Z0-9_-]+$");
+	const nameRegex = new RegExp("^[a-zA-Z0-9_-]*$");
 	return nameRegex.test(name) === false;
 };
 
@@ -179,12 +179,19 @@ export class SimpleCreateChannelPanel extends Component {
 
 	renderNameHelp = () => {
 		const { name, nameTouched, formTouched } = this.state;
-		if ((nameTouched || formTouched) && isNameInvalid(name))
-			return (
-				<small className="error-message">
-					<FormattedMessage id="createChannel.name.invalid" />
-				</small>
-			);
+		if (nameTouched || formTouched)
+			if (name.length === 0)
+				return (
+					<small className="error-message">
+						<FormattedMessage id="createChannel.name.required" />
+					</small>
+				);
+			else if (isNameInvalid(name))
+				return (
+					<small className="error-message">
+						<FormattedMessage id="createChannel.name.invalid" />
+					</small>
+				);
 	};
 
 	// onBlurPassword = () => this.setState({ passwordTouched: true });

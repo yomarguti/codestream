@@ -50802,7 +50802,7 @@ var AsyncCreatable = makeAsyncSelect(manageState(makeCreatableSelect(Select)));
 var index$2 = manageState(Select);
 
 var isNameInvalid = function isNameInvalid(name) {
-	var nameRegex = new RegExp("^[a-zA-Z0-9_-]+$");
+	var nameRegex = new RegExp("^[a-zA-Z0-9_-]*$");
 	return nameRegex.test(name) === false;
 };
 
@@ -50847,7 +50847,11 @@ var SimpleCreateChannelPanel = function (_Component) {
 				    nameTouched = _this$state.nameTouched,
 				    formTouched = _this$state.formTouched;
 
-				if ((nameTouched || formTouched) && isNameInvalid(name)) return react.createElement(
+				if (nameTouched || formTouched) if (name.length === 0) return react.createElement(
+					"small",
+					{ className: "error-message" },
+					react.createElement(FormattedMessage, { id: "createChannel.name.required" })
+				);else if (isNameInvalid(name)) return react.createElement(
 					"small",
 					{ className: "error-message" },
 					react.createElement(FormattedMessage, { id: "createChannel.name.invalid" })
