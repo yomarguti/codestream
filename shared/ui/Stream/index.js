@@ -85,11 +85,14 @@ export class SimpleStream extends Component {
 
 		const rootInVscode = document.querySelector("body.codestream");
 		if (rootInVscode) {
-			rootInVscode.onkeydown = e => {
-				if (e.key === "Escape") {
+			rootInVscode.onkeydown = event => {
+				if (event.key === "Escape") {
 					if (this.state.threadId) {
 						this.handleDismissThread();
 					}
+				}
+				if (event.key === "ArrowUp" && event.target.id !== "input-div") {
+					this.editLastPost(event);
 				}
 			};
 		}
@@ -600,7 +603,6 @@ export class SimpleStream extends Component {
 
 	editLastPost = event => {
 		// find the most recent post I authored
-		console.log("up! ", event);
 		const postDiv = event.target.closest(".post");
 		const seqNum = postDiv ? postDiv.dataset.seqNum : 9999999999;
 		const editingPost = this.findMyPostBeforeSeqNum(seqNum);
