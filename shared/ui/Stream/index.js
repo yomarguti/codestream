@@ -576,6 +576,7 @@ export class SimpleStream extends Component {
 					onSubmit={this.submitPost}
 					onEmptyUpArrow={this.editLastPost}
 					findMentionedUserIds={this.findMentionedUserIds}
+					isDirectMessage={this.props.postStreamType === "direct"}
 				/>
 			</div>
 		);
@@ -978,6 +979,7 @@ export class SimpleStream extends Component {
 			const text = "You cannot leave all-hands channels.";
 			this.submitSystemPost(text);
 			return true;
+			iff;
 		}
 		const message = this.props.isPrivate
 			? "Once you leave a private channel, you won't be able to re-join unless you are added by someone in the channel."

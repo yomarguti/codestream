@@ -104520,7 +104520,8 @@ var SimpleStream = function (_Component) {
 					offscreen: activePanel !== "main" && activePanel !== "thread",
 					onSubmit: this.submitPost,
 					onEmptyUpArrow: this.editLastPost,
-					findMentionedUserIds: this.findMentionedUserIds
+					findMentionedUserIds: this.findMentionedUserIds,
+					isDirectMessage: this.props.postStreamType === "direct"
 				})
 			);
 		}
