@@ -103979,6 +103979,17 @@ var SimpleStream = function (_Component) {
 					hiddenInCommandPalette: true
 				}));
 			}
+
+			var rootInVscode = document.querySelector("body.codestream");
+			if (rootInVscode) {
+				rootInVscode.onkeydown = function (e) {
+					if (e.key === "Escape") {
+						if (_this3.state.threadId) {
+							_this3.handleDismissThread();
+						}
+					}
+				};
+			}
 		}
 	}, {
 		key: "componentWillReceiveProps",

@@ -82,6 +82,17 @@ export class SimpleStream extends Component {
 				})
 			);
 		}
+
+		const rootInVscode = document.querySelector("body.codestream");
+		if (rootInVscode) {
+			rootInVscode.onkeydown = e => {
+				if (e.key === "Escape") {
+					if (this.state.threadId) {
+						this.handleDismissThread();
+					}
+				}
+			};
+		}
 	}
 
 	componentWillReceiveProps(nextProps) {
