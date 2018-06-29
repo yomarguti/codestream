@@ -25,11 +25,13 @@ export class SimpleCreateDMPanel extends Component {
 
 	render() {
 		const inactive = this.props.activePanel !== "create-dm";
+		const shrink = this.props.activePanel === "main";
 
 		const createDMPanelClass = createClassString({
 			panel: true,
 			"create-dm-panel": true,
-			"off-right": inactive
+			shrink,
+			"off-right": inactive && !shrink
 		});
 
 		return (
@@ -71,7 +73,7 @@ export class SimpleCreateDMPanel extends Component {
 									className="control-button"
 									tabIndex="2"
 									type="submit"
-									loading={this.props.loading}
+									loading={this.state.loading}
 									onClick={this.handleClickCreateDM}
 								>
 									Go
@@ -81,7 +83,6 @@ export class SimpleCreateDMPanel extends Component {
 									className="control-button cancel"
 									tabIndex="2"
 									type="submit"
-									loading={this.props.loading}
 									onClick={this.handleClickCancel}
 								>
 									Cancel
@@ -139,6 +140,7 @@ export class SimpleCreateDMPanel extends Component {
 	resetForm = () => {
 		this.setState({
 			members: "",
+			loading: false,
 			formTouched: false
 		});
 	};
@@ -160,9 +162,10 @@ export class SimpleCreateDMPanel extends Component {
 		// return isNameInvalid(this.state.name);
 	};
 
-	handleClickCreateDM = event => {
+	handleClickCreateDM = async event => {
 		this.setState({ formTouched: true });
 		if (this.isFormInvalid()) return;
+		this.setState({ loading: true });
 
 		const { members } = this.state;
 		const memberIds = members
@@ -172,9 +175,8 @@ export class SimpleCreateDMPanel extends Component {
 			.filter(Boolean);
 		// console.log("MEMBERS ARE: ", memberIds);
 		// return;
-		this.props.createStream({ type: "direct", memberIds });
+		await this.props.createStream({ type: "direct", memberIds });
 		this.resetForm();
-		this.props.setActivePanel("channels");
 	};
 }
 

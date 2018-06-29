@@ -51121,6 +51121,8 @@ var SimpleCreateDMPanel = function (_Component) {
 	inherits$1(SimpleCreateDMPanel, _Component);
 
 	function SimpleCreateDMPanel(props) {
+		var _this2 = this;
+
 		classCallCheck$1(this, SimpleCreateDMPanel);
 
 		var _this = possibleConstructorReturn$1(this, (SimpleCreateDMPanel.__proto__ || Object.getPrototypeOf(SimpleCreateDMPanel)).call(this, props));
@@ -51172,6 +51174,7 @@ var SimpleCreateDMPanel = function (_Component) {
 			value: function value() {
 				_this.setState({
 					members: "",
+					loading: false,
 					formTouched: false
 				});
 			}
@@ -51205,21 +51208,52 @@ var SimpleCreateDMPanel = function (_Component) {
 		Object.defineProperty(_this, "handleClickCreateDM", {
 			enumerable: true,
 			writable: true,
-			value: function value(event) {
-				_this.setState({ formTouched: true });
-				if (_this.isFormInvalid()) return;
+			value: function () {
+				var _ref = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(event) {
+					var members, memberIds;
+					return regeneratorRuntime.wrap(function _callee$(_context) {
+						while (1) {
+							switch (_context.prev = _context.next) {
+								case 0:
+									_this.setState({ formTouched: true });
 
-				var members = _this.state.members;
+									if (!_this.isFormInvalid()) {
+										_context.next = 3;
+										break;
+									}
 
-				var memberIds = members.map(function (member) {
-					return member.value;
-				}).filter(Boolean);
-				// console.log("MEMBERS ARE: ", memberIds);
-				// return;
-				_this.props.createStream({ type: "direct", memberIds: memberIds });
-				_this.resetForm();
-				_this.props.setActivePanel("channels");
-			}
+									return _context.abrupt("return");
+
+								case 3:
+									_this.setState({ loading: true });
+
+									members = _this.state.members;
+									memberIds = members.map(function (member) {
+										return member.value;
+									}).filter(Boolean);
+									// console.log("MEMBERS ARE: ", memberIds);
+									// return;
+
+									_context.next = 8;
+									return _this.props.createStream({ type: "direct", memberIds: memberIds });
+
+								case 8:
+									_this.resetForm();
+
+								case 9:
+								case "end":
+									return _context.stop();
+							}
+						}
+					}, _callee, _this2);
+				}));
+
+				function value(_x) {
+					return _ref.apply(this, arguments);
+				}
+
+				return value;
+			}()
 		});
 
 
@@ -51231,14 +51265,16 @@ var SimpleCreateDMPanel = function (_Component) {
 	createClass$1(SimpleCreateDMPanel, [{
 		key: "render",
 		value: function render() {
-			var _this2 = this;
+			var _this3 = this;
 
 			var inactive = this.props.activePanel !== "create-dm";
+			var shrink = this.props.activePanel === "main";
 
 			var createDMPanelClass = classnames({
 				panel: true,
 				"create-dm-panel": true,
-				"off-right": inactive
+				shrink: shrink,
+				"off-right": inactive && !shrink
 			});
 
 			return react.createElement(
@@ -51288,7 +51324,7 @@ var SimpleCreateDMPanel = function (_Component) {
 									disabled: inactive,
 									placeholder: "Enter names...",
 									onChange: function onChange(value) {
-										return _this2.setState({ members: value });
+										return _this3.setState({ members: value });
 									}
 								})
 							),
@@ -51302,7 +51338,7 @@ var SimpleCreateDMPanel = function (_Component) {
 										className: "control-button",
 										tabIndex: "2",
 										type: "submit",
-										loading: this.props.loading,
+										loading: this.state.loading,
 										onClick: this.handleClickCreateDM
 									},
 									"Go"
@@ -51314,7 +51350,6 @@ var SimpleCreateDMPanel = function (_Component) {
 										className: "control-button cancel",
 										tabIndex: "2",
 										type: "submit",
-										loading: this.props.loading,
 										onClick: this.handleClickCancel
 									},
 									"Cancel"
@@ -51343,13 +51378,13 @@ var SimpleCreateDMPanel = function (_Component) {
 	return SimpleCreateDMPanel;
 }(react_1);
 
-var mapStateToProps$4 = function mapStateToProps(_ref) {
-	var context = _ref.context,
-	    streams$$1 = _ref.streams,
-	    users = _ref.users,
-	    teams = _ref.teams,
-	    session = _ref.session,
-	    umis = _ref.umis;
+var mapStateToProps$4 = function mapStateToProps(_ref2) {
+	var context = _ref2.context,
+	    streams$$1 = _ref2.streams,
+	    users = _ref2.users,
+	    teams = _ref2.teams,
+	    session = _ref2.session,
+	    umis = _ref2.umis;
 
 	var teamMembers = teams[context.currentTeamId].memberIds.map(function (id) {
 		return users[id];
