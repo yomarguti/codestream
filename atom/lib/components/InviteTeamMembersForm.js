@@ -1,11 +1,9 @@
 import React, { Component } from "react";
 import { FormattedMessage, injectIntl } from "react-intl";
 import { connect } from "react-redux";
-import PropTypes from "prop-types";
 import _ from "underscore-plus";
 import Button from "./onboarding/Button";
 import Tooltip from "./Tooltip";
-import UnexpectedErrorMessage from "./onboarding/UnexpectedErrorMessage";
 import { exitInvitePage } from "../actions/routing";
 import * as teamActions from "../actions/team";
 
@@ -14,10 +12,6 @@ const EMAIL_REGEX = new RegExp(
 );
 
 export class InvitePage extends Component {
-	static contextTypes = {
-		repositories: PropTypes.array
-	};
-
 	initialState = {
 		newMemberEmail: "",
 		newMemberInvalid: false,
@@ -25,46 +19,6 @@ export class InvitePage extends Component {
 	};
 
 	state = this.initialState;
-
-	// async componentDidMount() {
-	// 	const repository = this.context.repositories[0];
-	// 	const cwd = repository.getWorkingDirectory();
-	// 	const logFormat = "--format=%an<trim-this>%ae";
-	// 	const cutoffDate = "6 months ago";
-	// 	const recentCommitterData = await git(["log", logFormat, `--since="${cutoffDate}"`], { cwd });
-	// 	const recentCommitters = parseCommitters(recentCommitterData.split("\n"), { selected: false });
-	// 	const olderCommitterData = await git(["log", logFormat, `--before="${cutoffDate}"`], { cwd });
-	// 	const olderCommitters = parseCommitters(olderCommitterData.split("\n"), {
-	// 		selected: false
-	// 	}).filter(committer => !_.findWhere(recentCommitters, { email: committer.email }));
-	//
-	// 	const committers = [...recentCommitters, ...olderCommitters].filter(
-	// 		c => !this.props.memberEmails.includes(c.email)
-	// 	);
-	//
-	// 	if (committers.length === 0) return this.props.completeOnboarding();
-	//
-	// 	this.setState({
-	// 		loadingCommitters: false,
-	// 		committers
-	// 	});
-	// }
-
-	// renderSubmissionOfNewMembersError = () => {
-	// 	if (this.props.errors.teamNotFound)
-	// 		return (
-	// 			<p className="error-message">
-	// 				<FormattedMessage id="teamSelection.error.teamNotFound" />
-	// 			</p>
-	// 		);
-	// 	if (this.props.errors.noPermission)
-	// 		return (
-	// 			<p className="error-message">
-	// 				<FormattedMessage id="teamSelection.error.noPermission" />
-	// 			</p>
-	// 		);
-	// 	if (this.props.errors.unknown) return <UnexpectedErrorMessage classes="error-message" />;
-	// };
 
 	onNewMemberChange = event => this.setState({ newMemberEmail: event.target.value });
 
@@ -157,7 +111,7 @@ export class InvitePage extends Component {
 	}
 }
 
-const mapStateToProps = ({ session, users, context, teams }) => {
+const mapStateToProps = ({ users, context, teams }) => {
 	const team = teams[context.currentTeamId];
 	const members = team.memberIds
 		.map(id => {
