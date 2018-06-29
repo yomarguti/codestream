@@ -114,6 +114,12 @@ export class SimpleChannelPanel extends Component {
 						let count = this.props.umis.unread[stream.id] || 0;
 						let mentions = this.props.umis.mentions[stream.id] || 0;
 						if (this.props.mutedStreams[stream.id] && !count) return null;
+						const icon =
+							stream.memberIds.length > 2 ? (
+								<Icon className="organization" name="organization" />
+							) : (
+								<Icon className="person" name="person" />
+							);
 						return (
 							<li
 								className={createClassString({
@@ -123,7 +129,7 @@ export class SimpleChannelPanel extends Component {
 								key={stream.id}
 								id={stream.id}
 							>
-								<span className="presence" />
+								{icon}
 								{stream.name}
 								{mentions > 0 ? <span className="umi">{mentions}</span> : null}
 								<Icon name="x" onClick={this.handleClickMuteStream} className="align-right" />
@@ -135,11 +141,9 @@ export class SimpleChannelPanel extends Component {
 						if (this.props.mutedStreams[teammate.id]) return null;
 						return (
 							<li key={teammate.id} teammate={teammate.id}>
-								<span className="presence" />
+								<Icon className="person" name="person" />
 								<span className="name">
-									{teammate.name || teammate.firstName
-										? teammate.firstName + " " + teammate.lastName
-										: teammate.username}
+									{teammate.username || teammate.firstName + " " + teammate.lastName}
 								</span>
 								<Icon name="x" onClick={this.handleClickMuteStream} className="align-right" />
 							</li>

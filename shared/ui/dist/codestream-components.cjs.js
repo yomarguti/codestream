@@ -44537,6 +44537,7 @@ var SimpleChannelPanel = function (_Component) {
 							var count = _this.props.umis.unread[stream.id] || 0;
 							var mentions = _this.props.umis.mentions[stream.id] || 0;
 							if (_this.props.mutedStreams[stream.id] && !count) return null;
+							var icon = stream.memberIds.length > 2 ? react.createElement(Icon, { className: "organization", name: "organization" }) : react.createElement(Icon, { className: "person", name: "person" });
 							return react.createElement(
 								"li",
 								{
@@ -44547,7 +44548,7 @@ var SimpleChannelPanel = function (_Component) {
 									key: stream.id,
 									id: stream.id
 								},
-								react.createElement("span", { className: "presence" }),
+								icon,
 								stream.name,
 								mentions > 0 ? react.createElement(
 									"span",
@@ -44563,11 +44564,11 @@ var SimpleChannelPanel = function (_Component) {
 							return react.createElement(
 								"li",
 								{ key: teammate.id, teammate: teammate.id },
-								react.createElement("span", { className: "presence" }),
+								react.createElement(Icon, { className: "person", name: "person" }),
 								react.createElement(
 									"span",
 									{ className: "name" },
-									teammate.name || teammate.firstName ? teammate.firstName + " " + teammate.lastName : teammate.username
+									teammate.username || teammate.firstName + " " + teammate.lastName
 								),
 								react.createElement(Icon, { name: "x", onClick: _this.handleClickMuteStream, className: "align-right" })
 							);
