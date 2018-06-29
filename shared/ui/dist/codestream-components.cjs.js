@@ -50734,6 +50734,8 @@ var SimpleCreateChannelPanel = function (_Component) {
 	inherits$1(SimpleCreateChannelPanel, _Component);
 
 	function SimpleCreateChannelPanel(props) {
+		var _this2 = this;
+
 		classCallCheck$1(this, SimpleCreateChannelPanel);
 
 		var _this = possibleConstructorReturn$1(this, (SimpleCreateChannelPanel.__proto__ || Object.getPrototypeOf(SimpleCreateChannelPanel)).call(this, props));
@@ -50783,14 +50785,6 @@ var SimpleCreateChannelPanel = function (_Component) {
 				return _this.setState({ nameTouched: true });
 			}
 		});
-		Object.defineProperty(_this, "handleClick", {
-			enumerable: true,
-			writable: true,
-			value: function value(event) {
-				event.preventDefault();
-				_this.props.setActivePanel("channels");
-			}
-		});
 		Object.defineProperty(_this, "resetForm", {
 			enumerable: true,
 			writable: true,
@@ -50799,6 +50793,7 @@ var SimpleCreateChannelPanel = function (_Component) {
 					privacy: "public",
 					name: "",
 					purpose: "",
+					loading: false,
 					members: [],
 					nameTouched: false,
 					formTouched: false
@@ -50824,29 +50819,56 @@ var SimpleCreateChannelPanel = function (_Component) {
 		Object.defineProperty(_this, "handleClickCreateChannel", {
 			enumerable: true,
 			writable: true,
-			value: function value(event) {
-				event.preventDefault();
-				_this.setState({ formTouched: true });
-				if (_this.isFormInvalid()) return;
+			value: function () {
+				var _ref = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(event) {
+					var _this$state2, privacy, name, members, purpose, memberIds;
 
-				var _this$state2 = _this.state,
-				    privacy = _this$state2.privacy,
-				    name = _this$state2.name,
-				    members = _this$state2.members,
-				    purpose = _this$state2.purpose;
+					return regeneratorRuntime.wrap(function _callee$(_context) {
+						while (1) {
+							switch (_context.prev = _context.next) {
+								case 0:
+									event.preventDefault();
+									_this.setState({ formTouched: true });
 
-				var memberIds = (members || []).map(function (member) {
-					return member.value;
-				});
+									if (!_this.isFormInvalid()) {
+										_context.next = 4;
+										break;
+									}
 
-				_this.props.createStream({ type: "channel", privacy: privacy, name: name, memberIds: memberIds, purpose: purpose });
-				_this.resetForm();
-				// this.props.setActivePanel("channels");
-			}
+									return _context.abrupt("return");
+
+								case 4:
+									_this.setState({ loading: true });
+
+									_this$state2 = _this.state, privacy = _this$state2.privacy, name = _this$state2.name, members = _this$state2.members, purpose = _this$state2.purpose;
+									memberIds = (members || []).map(function (member) {
+										return member.value;
+									});
+									_context.next = 9;
+									return _this.props.createStream({ type: "channel", privacy: privacy, name: name, memberIds: memberIds, purpose: purpose });
+
+								case 9:
+									_this.resetForm();
+									// this.props.setActivePanel("channels");
+
+								case 10:
+								case "end":
+									return _context.stop();
+							}
+						}
+					}, _callee, _this2);
+				}));
+
+				function value(_x) {
+					return _ref.apply(this, arguments);
+				}
+
+				return value;
+			}()
 		});
 
 
-		_this.state = { privacy: "public", name: "" };
+		_this.state = { privacy: "public", name: "", loading: false };
 		_this._createChannelPanel = react.createRef();
 		return _this;
 	}
@@ -50854,25 +50876,27 @@ var SimpleCreateChannelPanel = function (_Component) {
 	createClass$1(SimpleCreateChannelPanel, [{
 		key: "componentDidUpdate",
 		value: function componentDidUpdate(prevProps, prevState) {
-			var _this2 = this;
+			var _this3 = this;
 
 			if (this.props.activePanel === "create-channel" && prevProps.activePanel !== "create-channel") {
 				setTimeout(function () {
-					_this2.focusNameInput();
+					_this3.focusNameInput();
 				}, 500);
 			}
 		}
 	}, {
 		key: "render",
 		value: function render() {
-			var _this3 = this;
+			var _this4 = this;
 
 			var inactive = this.props.activePanel !== "create-channel";
+			var shrink = this.props.activePanel === "main";
 
 			var createChannelPanelClass = classnames({
 				panel: true,
 				"create-channel-panel": true,
-				"off-right": inactive
+				shrink: shrink,
+				"off-right": inactive && !shrink
 			});
 
 			return react.createElement(
@@ -50925,7 +50949,7 @@ var SimpleCreateChannelPanel = function (_Component) {
 											name: "privacy",
 											checked: this.state.privacy === "public",
 											onChange: function onChange(e) {
-												return _this3.setState({ privacy: "public" });
+												return _this4.setState({ privacy: "public" });
 											}
 										}),
 										react.createElement(
@@ -50939,7 +50963,7 @@ var SimpleCreateChannelPanel = function (_Component) {
 											name: "privacy",
 											checked: this.state.privacy === "private",
 											onChange: function onChange(e) {
-												return _this3.setState({ privacy: "private" });
+												return _this4.setState({ privacy: "private" });
 											}
 										}),
 										react.createElement(
@@ -50969,7 +50993,7 @@ var SimpleCreateChannelPanel = function (_Component) {
 										id: "channel-name-input",
 										value: this.state.name,
 										onChange: function onChange(e) {
-											return _this3.setState({ name: e.target.value });
+											return _this4.setState({ name: e.target.value });
 										},
 										onBlur: this.onBlurName,
 										required: this.state.nameTouched || this.state.formTouched
@@ -50997,7 +51021,7 @@ var SimpleCreateChannelPanel = function (_Component) {
 									tabIndex: "0",
 									value: this.state.purpose,
 									onChange: function onChange(e) {
-										return _this3.setState({ purpose: e.target.value });
+										return _this4.setState({ purpose: e.target.value });
 									}
 								})
 							),
@@ -51024,7 +51048,7 @@ var SimpleCreateChannelPanel = function (_Component) {
 									closeMenuOnSelect: false,
 									isClearable: false,
 									onChange: function onChange(value) {
-										return _this3.setState({ members: value });
+										return _this4.setState({ members: value });
 									}
 								})
 							),
@@ -51038,7 +51062,7 @@ var SimpleCreateChannelPanel = function (_Component) {
 										className: "control-button",
 										tabIndex: "4",
 										type: "submit",
-										loading: this.props.loading,
+										loading: this.state.loading,
 										onClick: this.handleClickCreateChannel
 									},
 									"Create"
@@ -51050,7 +51074,6 @@ var SimpleCreateChannelPanel = function (_Component) {
 										className: "control-button cancel",
 										tabIndex: "5",
 										type: "submit",
-										loading: this.props.loading,
 										onClick: this.handleClickCancel
 									},
 									"Cancel"
@@ -51068,11 +51091,11 @@ var SimpleCreateChannelPanel = function (_Component) {
 	return SimpleCreateChannelPanel;
 }(react_1);
 
-var mapStateToProps$3 = function mapStateToProps(_ref) {
-	var context = _ref.context,
-	    streams$$1 = _ref.streams,
-	    users = _ref.users,
-	    teams = _ref.teams;
+var mapStateToProps$3 = function mapStateToProps(_ref2) {
+	var context = _ref2.context,
+	    streams$$1 = _ref2.streams,
+	    users = _ref2.users,
+	    teams = _ref2.teams;
 
 	var teamMembers = teams[context.currentTeamId].memberIds.map(function (id) {
 		return users[id];

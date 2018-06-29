@@ -18,7 +18,7 @@ export class SimpleCreateChannelPanel extends Component {
 	constructor(props) {
 		super(props);
 
-		this.state = { privacy: "public", name: "" };
+		this.state = { privacy: "public", name: "", loading: false };
 		this._createChannelPanel = React.createRef();
 	}
 
@@ -37,11 +37,13 @@ export class SimpleCreateChannelPanel extends Component {
 
 	render() {
 		const inactive = this.props.activePanel !== "create-channel";
+		const shrink = this.props.activePanel === "main";
 
 		const createChannelPanelClass = createClassString({
 			panel: true,
 			"create-channel-panel": true,
-			"off-right": inactive
+			shrink,
+			"off-right": inactive && !shrink
 		});
 
 		return (
@@ -140,7 +142,7 @@ export class SimpleCreateChannelPanel extends Component {
 									className="control-button"
 									tabIndex="4"
 									type="submit"
-									loading={this.props.loading}
+									loading={this.state.loading}
 									onClick={this.handleClickCreateChannel}
 								>
 									Create
@@ -150,7 +152,6 @@ export class SimpleCreateChannelPanel extends Component {
 									className="control-button cancel"
 									tabIndex="5"
 									type="submit"
-									loading={this.props.loading}
 									onClick={this.handleClickCancel}
 								>
 									Cancel
@@ -189,16 +190,12 @@ export class SimpleCreateChannelPanel extends Component {
 
 	onBlurName = () => this.setState({ nameTouched: true });
 
-	handleClick = event => {
-		event.preventDefault();
-		this.props.setActivePanel("channels");
-	};
-
 	resetForm = () => {
 		this.setState({
 			privacy: "public",
 			name: "",
 			purpose: "",
+			loading: false,
 			members: [],
 			nameTouched: false,
 			formTouched: false
@@ -215,17 +212,17 @@ export class SimpleCreateChannelPanel extends Component {
 		return isNameInvalid(this.state.name);
 	};
 
-	handleClickCreateChannel = event => {
+	handleClickCreateChannel = async event => {
 		event.preventDefault();
 		this.setState({ formTouched: true });
 		if (this.isFormInvalid()) return;
+		this.setState({ loading: true });
 
 		const { privacy, name, members, purpose } = this.state;
 		const memberIds = (members || []).map(member => {
 			return member.value;
 		});
-
-		this.props.createStream({ type: "channel", privacy, name, memberIds, purpose });
+		await this.props.createStream({ type: "channel", privacy, name, memberIds, purpose });
 		this.resetForm();
 		// this.props.setActivePanel("channels");
 	};
