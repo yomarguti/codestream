@@ -425,19 +425,13 @@ export class SimpleStream extends Component {
 			unread: umis.totalMentions == 0 && umis.totalUnread > 0
 		});
 
-		const channelName =
+		const channelIcon =
 			this.props.postStreamType === "direct" ? (
-				<span>
-					<Icon name="organization" />
-					{this.props.postStreamName}
-				</span>
+				<Icon name="organization" />
 			) : this.props.isPrivate ? (
-				<span>
-					<Icon name="lock" />
-					{this.props.postStreamName}
-				</span>
+				<Icon name="lock" />
 			) : (
-				"#" + this.props.postStreamName
+				<span>#</span>
 			);
 		const menuActive = this.state.openMenu === this.props.postStreamId;
 		const totalUMICount = umis.totalMentions || umis.totalUnread || "";
@@ -467,7 +461,9 @@ export class SimpleStream extends Component {
 							<Icon name="chevron-left" className="show-channels-icon" />
 							{totalUMICount}
 						</span>
-						<span>{channelName}</span>
+						<span>
+							{channelIcon} {this.props.postStreamName}
+						</span>
 						{this.props.postStreamType !== "direct" && (
 							<span className="align-right-button" onClick={this.handleClickStreamSettings}>
 								<Icon name="gear" className="show-settings" />

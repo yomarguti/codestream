@@ -104240,17 +104240,11 @@ var SimpleStream = function (_Component) {
 				unread: umis.totalMentions == 0 && umis.totalUnread > 0
 			});
 
-			var channelName = this.props.postStreamType === "direct" ? react.createElement(
+			var channelIcon = this.props.postStreamType === "direct" ? react.createElement(Icon, { name: "organization" }) : this.props.isPrivate ? react.createElement(Icon, { name: "lock" }) : react.createElement(
 				"span",
 				null,
-				react.createElement(Icon, { name: "organization" }),
-				this.props.postStreamName
-			) : this.props.isPrivate ? react.createElement(
-				"span",
-				null,
-				react.createElement(Icon, { name: "lock" }),
-				this.props.postStreamName
-			) : "#" + this.props.postStreamName;
+				"#"
+			);
 			var menuActive = this.state.openMenu === this.props.postStreamId;
 			var totalUMICount = umis.totalMentions || umis.totalUnread || "";
 			// const totalUMICount = umis.totalMentions || umis.totalUnread ? "&middot;" : "\u25C9";
@@ -104295,7 +104289,9 @@ var SimpleStream = function (_Component) {
 						react.createElement(
 							"span",
 							null,
-							channelName
+							channelIcon,
+							" ",
+							this.props.postStreamName
 						),
 						this.props.postStreamType !== "direct" && react.createElement(
 							"span",
