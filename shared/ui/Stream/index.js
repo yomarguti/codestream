@@ -1078,7 +1078,7 @@ export class SimpleStream extends Component {
 	};
 
 	postHelp = () => {
-		const text = "Help message goes here.";
+		const text = "Get more help at help.codestream.com";
 		this.submitSystemPost(text);
 		return true;
 	};

@@ -103802,7 +103802,7 @@ var SimpleStream = function (_Component) {
 			enumerable: true,
 			writable: true,
 			value: function value() {
-				var text = "Help message goes here.";
+				var text = "Get more help at help.codestream.com";
 				_this.submitSystemPost(text);
 				return true;
 			}
