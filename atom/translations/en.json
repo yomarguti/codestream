@@ -83,6 +83,7 @@
 	"teamMemberSelection.anyoneMissing": "Anyone missing?",
 	"teamMemberSelection.addThem": "Add them!",
 	"teamMemberSelection.add": "ADD",
+	"teamMemberSelection.invite": "Invite",
 	"createChannel.name.invalid": "Looks invalid?",
 	"createChannel.name.required": "Required"
 }

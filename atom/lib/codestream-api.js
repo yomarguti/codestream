@@ -175,6 +175,7 @@ export default class CodeStreamApi {
 			throw error;
 		}
 	}
+
 	async updateStream(params) {
 		const { session } = this.store.getState();
 		const { streamId, update } = params;
@@ -201,6 +202,7 @@ export default class CodeStreamApi {
 			throw error;
 		}
 	}
+
 	async joinStream(streamId) {
 		const { session } = this.store.getState();
 
@@ -226,6 +228,11 @@ export default class CodeStreamApi {
 			// TODO: different types of errors?
 			throw error;
 		}
+	}
+
+	async invite(attributes) {
+		const { session } = this.store.getState();
+		return await http.post("/users", attributes, session.accessToken);
 	}
 }
 

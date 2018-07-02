@@ -174,6 +174,14 @@ export default class WorkspaceApi implements Resource {
 					);
 				});
 			}
+			case "invite": {
+				return this.api.invite(params).then(() => {
+					window.parent.postMessage(
+						{ type: "codestream:response", body: { id, action, payload: {} } },
+						"*"
+					);
+				});
+			}
 		}
 	};
 
