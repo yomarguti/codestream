@@ -32,7 +32,7 @@ export class SimpleChannelPanel extends Component {
 					<div className="panel-header">
 						<span className="panel-title">{teamName}</span>
 					</div>
-					<div className="channel-list postslist">
+					<div className="channel-list vscroll">
 						{this.renderChannels()}
 						{this.renderDirectMessages()}
 					</div>
@@ -149,7 +149,7 @@ export class SimpleChannelPanel extends Component {
 							</li>
 						);
 					})}
-					<li className="invite" onClick={this.props.goToInvitePage}>
+					<li className="invite" onClick={() => this.props.setActivePanel("invite")}>
 						<span>
 							<Icon name="plus-small" />Invite People
 						</span>

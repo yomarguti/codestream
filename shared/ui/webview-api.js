@@ -58,6 +58,10 @@ export default class WebviewApi {
 		return this.postMessage({ action: "join-stream", params: streamId });
 	}
 
+	invite(attributes) {
+		return this.postMessage({ action: "invite", params: attributes });
+	}
+
 	markStreamRead(streamId) {
 		return this.postMessage({ action: "mark-stream-read", params: streamId });
 	}

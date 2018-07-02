@@ -6,6 +6,7 @@ import createClassString from "classnames";
 import ComposeBox from "./ComposeBox";
 import DateSeparator from "./DateSeparator";
 import ChannelPanel from "./ChannelPanel";
+import InvitePanel from "./InvitePanel";
 import PublicChannelPanel from "./PublicChannelPanel";
 import CreateChannelPanel from "./CreateChannelPanel";
 import CreateDMPanel from "./CreateDMPanel";
@@ -316,8 +317,8 @@ export class SimpleStream extends Component {
 						>
 							{() => (
 								<React.Fragment>
-									Select <a onClick={this.props.goToInvitePage}>Codestream: Invite</a> from the
-									command palette to invite your team.
+									Select <a onClick={() => this.setActivePanel("invite")}>Codestream: Invite</a>{" "}
+									from the command palette to invite your team.
 								</React.Fragment>
 							)}
 						</FormattedMessage>
@@ -387,7 +388,8 @@ export class SimpleStream extends Component {
 				activePanel === "channels" ||
 				activePanel === "create-channel" ||
 				activePanel === "create-dm" ||
-				activePanel === "public-channels"
+				activePanel === "public-channels" ||
+				activePanel === "invite"
 		});
 		const threadPanelClass = createClassString({
 			panel: true,
@@ -460,6 +462,7 @@ export class SimpleStream extends Component {
 				<PublicChannelPanel activePanel={activePanel} setActivePanel={this.setActivePanel} />
 				<CreateChannelPanel activePanel={activePanel} setActivePanel={this.setActivePanel} />
 				<CreateDMPanel activePanel={activePanel} setActivePanel={this.setActivePanel} />
+				<InvitePanel activePanel={activePanel} setActivePanel={this.setActivePanel} />
 				<div className={mainPanelClass} ref={ref => (this._mainPanel = ref)}>
 					<div className="panel-header" ref={ref => (this._header = ref)}>
 						<span onClick={this.showChannels} className={umisClass}>

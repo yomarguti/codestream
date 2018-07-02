@@ -51,7 +51,7 @@ export class SimpleCreateChannelPanel extends Component {
 				<div className="panel-header">
 					<span className="panel-title">New Channel</span>
 				</div>
-				<form id="create-channel-form" className="standard-form postslist">
+				<form id="create-channel-form" className="standard-form vscroll">
 					<fieldset className="form-body" disabled={inactive}>
 						{this.renderError()}
 						<p className="explainer">

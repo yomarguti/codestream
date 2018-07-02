@@ -13424,6 +13424,25 @@ var createClass = function () {
   };
 }();
 
+
+
+
+
+var defineProperty$4 = function (obj, key, value) {
+  if (key in obj) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  } else {
+    obj[key] = value;
+  }
+
+  return obj;
+};
+
 var _extends$4 = Object.assign || function (target) {
   for (var i = 1; i < arguments.length; i++) {
     var source = arguments[i];
@@ -13696,6 +13715,66 @@ function shouldIntlComponentUpdate(_ref2, nextProps, nextState) {
 
 
   return !shallowEquals(nextProps, props) || !shallowEquals(nextState, state) || !(nextIntl === intl || shallowEquals(filterProps(nextIntl, intlConfigPropNames), filterProps(intl, intlConfigPropNames)));
+}
+
+/*
+ * Copyright 2015, Yahoo Inc.
+ * Copyrights licensed under the New BSD License.
+ * See the accompanying LICENSE file for terms.
+ */
+
+// Inspired by react-redux's `connect()` HOC factory function implementation:
+// https://github.com/rackt/react-redux
+
+function getDisplayName(Component$$1) {
+  return Component$$1.displayName || Component$$1.name || 'Component';
+}
+
+function injectIntl(WrappedComponent) {
+  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  var _options$intlPropName = options.intlPropName,
+      intlPropName = _options$intlPropName === undefined ? 'intl' : _options$intlPropName,
+      _options$withRef = options.withRef,
+      withRef = _options$withRef === undefined ? false : _options$withRef;
+
+  var InjectIntl = function (_Component) {
+    inherits(InjectIntl, _Component);
+
+    function InjectIntl(props, context) {
+      classCallCheck(this, InjectIntl);
+
+      var _this = possibleConstructorReturn(this, (InjectIntl.__proto__ || Object.getPrototypeOf(InjectIntl)).call(this, props, context));
+
+      invariantIntlContext(context);
+      return _this;
+    }
+
+    createClass(InjectIntl, [{
+      key: 'getWrappedInstance',
+      value: function getWrappedInstance() {
+        invariant_1$1(withRef, '[React Intl] To access the wrapped instance, ' + 'the `{withRef: true}` option must be set when calling: ' + '`injectIntl()`');
+
+        return this.refs.wrappedInstance;
+      }
+    }, {
+      key: 'render',
+      value: function render() {
+        return react.createElement(WrappedComponent, _extends$4({}, this.props, defineProperty$4({}, intlPropName, this.context.intl), {
+          ref: withRef ? 'wrappedInstance' : null
+        }));
+      }
+    }]);
+    return InjectIntl;
+  }(react_1);
+
+  InjectIntl.displayName = 'InjectIntl(' + getDisplayName(WrappedComponent) + ')';
+  InjectIntl.contextTypes = {
+    intl: intlShape
+  };
+  InjectIntl.WrappedComponent = WrappedComponent;
+
+
+  return InjectIntl;
 }
 
 /*
@@ -44055,6 +44134,44 @@ var archiveStream = function archiveStream(streamId, value) {
 	}();
 };
 
+var invite = function invite(attributes) {
+	return function () {
+		var _ref29 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee14(dispatch, getState, _ref28) {
+			var api = _ref28.api;
+			return regeneratorRuntime.wrap(function _callee14$(_context14) {
+				while (1) {
+					switch (_context14.prev = _context14.next) {
+						case 0:
+							_context14.prev = 0;
+
+							console.log("Inviting with: ", attributes);
+							_context14.next = 4;
+							return api.invite(attributes);
+
+						case 4:
+							_context14.next = 9;
+							break;
+
+						case 6:
+							_context14.prev = 6;
+							_context14.t0 = _context14["catch"](0);
+
+							console.log("Error: ", _context14.t0);
+
+						case 9:
+						case "end":
+							return _context14.stop();
+					}
+				}
+			}, _callee14, _this, [[0, 6]]);
+		}));
+
+		return function (_x39, _x40, _x41) {
+			return _ref29.apply(this, arguments);
+		};
+	}();
+};
+
 var streamActions = /*#__PURE__*/Object.freeze({
 	markStreamRead: markStreamRead,
 	createPost: createPost,
@@ -44071,7 +44188,8 @@ var streamActions = /*#__PURE__*/Object.freeze({
 	joinStream: joinStream,
 	renameStream: renameStream,
 	setPurpose: setPurpose,
-	archiveStream: archiveStream
+	archiveStream: archiveStream,
+	invite: invite
 });
 
 var initialState = {
@@ -44613,7 +44731,9 @@ var SimpleChannelPanel = function (_Component) {
 						}),
 						react.createElement(
 							"li",
-							{ className: "invite", onClick: _this.props.goToInvitePage },
+							{ className: "invite", onClick: function onClick() {
+									return _this.props.setActivePanel("invite");
+								} },
 							react.createElement(
 								"span",
 								null,
@@ -44740,7 +44860,7 @@ var SimpleChannelPanel = function (_Component) {
 					),
 					react.createElement(
 						"div",
-						{ className: "channel-list postslist" },
+						{ className: "channel-list vscroll" },
 						this.renderChannels(),
 						this.renderDirectMessages()
 					)
@@ -44800,6 +44920,355 @@ var ChannelPanel = connect(mapStateToProps$1, {
 	setCurrentStream: setCurrentStream,
 	goToInvitePage: goToInvitePage
 })(SimpleChannelPanel);
+
+var EMAIL_REGEX = new RegExp("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$");
+
+var InvitePage = function (_Component) {
+	inherits$1(InvitePage, _Component);
+
+	function InvitePage() {
+		var _ref;
+
+		var _temp, _this, _ret;
+
+		classCallCheck$1(this, InvitePage);
+
+		for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+			args[_key] = arguments[_key];
+		}
+
+		return _ret = (_temp = (_this = possibleConstructorReturn$1(this, (_ref = InvitePage.__proto__ || Object.getPrototypeOf(InvitePage)).call.apply(_ref, [this].concat(args))), _this), Object.defineProperty(_this, "initialState", {
+			enumerable: true,
+			writable: true,
+			value: {
+				loading: false,
+				newMemberEmail: "",
+				newMemberName: "",
+				newMemberInvalid: false,
+				newMemberInputTouched: false
+			}
+		}), Object.defineProperty(_this, "state", {
+			enumerable: true,
+			writable: true,
+			value: _this.initialState
+		}), Object.defineProperty(_this, "onEmailChange", {
+			enumerable: true,
+			writable: true,
+			value: function value(event) {
+				return _this.setState({ newMemberEmail: event.target.value });
+			}
+		}), Object.defineProperty(_this, "onEmailBlur", {
+			enumerable: true,
+			writable: true,
+			value: function value(event) {
+				_this.setState(function (state) {
+					return {
+						inputTouched: true,
+						newMemberEmailInvalid: state.newMemberEmail !== "" && EMAIL_REGEX.test(state.newMemberEmail) === false
+					};
+				});
+			}
+		}), Object.defineProperty(_this, "onNameChange", {
+			enumerable: true,
+			writable: true,
+			value: function value(event) {
+				return _this.setState({ newMemberName: event.target.value });
+			}
+		}), Object.defineProperty(_this, "onSubmit", {
+			enumerable: true,
+			writable: true,
+			value: function value(event) {
+				var _this$state = _this.state,
+				    newMemberEmail = _this$state.newMemberEmail,
+				    newMemberName = _this$state.newMemberName,
+				    newMemberEmailInvalid = _this$state.newMemberEmailInvalid;
+
+				if (newMemberEmailInvalid || newMemberEmail === "") return;
+
+				_this.setState({ loading: true });
+				_this.props.invite({ email: newMemberEmail, name: newMemberName, teamId: _this.props.teamId }).then(function () {
+					_this.setState(_this.initialState);
+				});
+			}
+		}), Object.defineProperty(_this, "onClickReinvite", {
+			enumerable: true,
+			writable: true,
+			value: function value(user) {
+				_this.props.invite({ email: user.email, teamId: _this.props.teamId }).then(function () {
+					atom.notifications.addInfo(_this.props.intl.formatMessage({
+						id: "invitation.emailSent",
+						defaultMessage: "Invitation sent to " + user.email + "!"
+					}));
+				});
+			}
+		}), Object.defineProperty(_this, "focusEmailInput", {
+			enumerable: true,
+			writable: true,
+			value: function value() {
+				var input = document.getElementById("invite-email-input");
+				if (input) input.focus();
+			}
+		}), Object.defineProperty(_this, "renderEmailHelp", {
+			enumerable: true,
+			writable: true,
+			value: function value() {
+				var _this$state2 = _this.state,
+				    newMemberEmailInvalid = _this$state2.newMemberEmailInvalid,
+				    inputTouched = _this$state2.inputTouched;
+
+
+				if (inputTouched && newMemberEmailInvalid) {
+					return react.createElement(
+						"small",
+						{ className: "error-message" },
+						react.createElement(FormattedMessage, { id: "signUp.email.invalid" })
+					);
+				} else return null;
+			}
+		}), _temp), possibleConstructorReturn$1(_this, _ret);
+	}
+
+	createClass$1(InvitePage, [{
+		key: "componentDidUpdate",
+		value: function componentDidUpdate(prevProps, prevState) {
+			var _this2 = this;
+
+			if (this.props.activePanel === "invite" && prevProps.activePanel !== "invite") {
+				setTimeout(function () {
+					_this2.focusEmailInput();
+				}, 500);
+			}
+		}
+	}, {
+		key: "render",
+		value: function render() {
+			var _this3 = this;
+
+			var _state = this.state,
+			    newMemberEmail = _state.newMemberEmail,
+			    newMemberName = _state.newMemberName;
+
+			var inactive = this.props.activePanel !== "invite";
+			var shrink = this.props.activePanel === "main";
+
+			var panelClass = classnames({
+				panel: true,
+				"invite-panel": true,
+				shrink: shrink,
+				"off-right": inactive && !shrink
+			});
+
+			return react.createElement(
+				"div",
+				{ className: panelClass },
+				react.createElement(
+					"div",
+					{ className: "panel-header" },
+					react.createElement(
+						"span",
+						{ className: "align-left-button" },
+						react.createElement(Icon, {
+							name: "chevron-left",
+							onClick: function onClick() {
+								return _this3.props.setActivePanel("channels");
+							},
+							className: "show-channels-icon"
+						})
+					),
+					react.createElement(
+						"span",
+						{ className: "panel-title" },
+						"Invite People"
+					)
+				),
+				react.createElement(
+					"form",
+					{ className: "standard-form vscroll", onSubmit: this.onSubmit },
+					react.createElement(
+						"fieldset",
+						{ className: "form-body", disabled: inactive },
+						react.createElement(
+							"div",
+							{ id: "controls" },
+							react.createElement(
+								"div",
+								{ className: "control-group" },
+								react.createElement(
+									"label",
+									null,
+									"Email"
+								),
+								react.createElement("input", {
+									className: "native-key-bindings input-text",
+									id: "invite-email-input",
+									type: "text",
+									tabIndex: "0",
+									value: newMemberEmail,
+									onChange: this.onEmailChange,
+									onBlur: this.onEmailBlur,
+									autoFocus: true
+								}),
+								this.renderEmailHelp()
+							),
+							react.createElement(
+								"div",
+								{ className: "control-group" },
+								react.createElement(
+									"label",
+									null,
+									"Name ",
+									react.createElement(
+										"span",
+										{ className: "optional" },
+										"(optional)"
+									)
+								),
+								react.createElement("input", {
+									className: "native-key-bindings input-text",
+									type: "text",
+									tabIndex: "1",
+									value: newMemberName,
+									onChange: this.onNameChange
+								})
+							),
+							react.createElement(
+								"div",
+								{ className: "button-group" },
+								react.createElement(
+									Button,
+									{
+										id: "add-button",
+										className: "control-button",
+										tabIndex: "2",
+										type: "submit",
+										loading: this.state.loading
+									},
+									react.createElement(FormattedMessage, { id: "teamMemberSelection.invite", defaultMessage: "INVITE" })
+								),
+								react.createElement(
+									Button,
+									{
+										id: "discard-button",
+										className: "control-button cancel",
+										tabIndex: "3",
+										type: "submit",
+										onClick: function onClick() {
+											return _this3.props.setActivePanel("channels");
+										}
+									},
+									"Cancel"
+								)
+							)
+						)
+					),
+					this.props.invited.length > 0 && react.createElement(
+						"div",
+						{ className: "section" },
+						react.createElement(
+							"div",
+							{ className: "header" },
+							react.createElement(
+								"span",
+								null,
+								"Outstanding Invitations"
+							)
+						),
+						react.createElement(
+							"ul",
+							null,
+							this.props.invited.map(function (user) {
+								return react.createElement(
+									"li",
+									{ key: user.email },
+									react.createElement(
+										"div",
+										{ className: "committer-email" },
+										user.email,
+										react.createElement(
+											"a",
+											{ className: "reinvite", onClick: function onClick() {
+													return _this3.onClickReinvite(user);
+												} },
+											"reinvite"
+										)
+									)
+								);
+							})
+						)
+					),
+					react.createElement(
+						"div",
+						{ className: "section" },
+						react.createElement(
+							"div",
+							{ className: "header" },
+							react.createElement(
+								"span",
+								null,
+								"Current Team"
+							)
+						),
+						react.createElement(
+							"ul",
+							null,
+							this.props.members.map(function (user) {
+								return react.createElement(
+									"li",
+									{ key: user.email },
+									react.createElement(
+										"div",
+										{ className: "committer-name" },
+										user.name
+									),
+									react.createElement(
+										"div",
+										{ className: "committer-email" },
+										user.email
+									)
+								);
+							})
+						)
+					)
+				)
+			);
+		}
+	}]);
+	return InvitePage;
+}(react_1);
+
+var mapStateToProps$2 = function mapStateToProps(_ref2) {
+	var users = _ref2.users,
+	    context = _ref2.context,
+	    teams = _ref2.teams;
+
+	var team = teams[context.currentTeamId];
+	var members = team.memberIds.map(function (id) {
+		var user = users[id];
+		if (!user || !user.isRegistered) return;
+		if (user.firstName || user.lastName) user.name = (user.firstName + " " + user.lastName).trim();else {
+			var email = user.email;
+			if (email) user.name = email.replace(/@.*/, "");
+		}
+		return user;
+	}).filter(Boolean);
+	var invited = team.memberIds.map(function (id) {
+		var user = users[id];
+		if (!user || user.isRegistered) return;
+		user.name = user.email;
+		return user;
+	}).filter(Boolean);
+
+	return {
+		teamId: team.id,
+		teamName: team.name,
+		members: underscore.sortBy(members, "name"),
+		invited: underscore.sortBy(invited, "email")
+	};
+};
+
+var InvitePanel = connect(mapStateToProps$2, {
+	invite: invite
+})(injectIntl(InvitePage));
 
 // var Moment_Timezone = require("moment-timezone");
 
@@ -45087,7 +45556,7 @@ var SimplePublicChannelPanel = function (_Component) {
 	return SimplePublicChannelPanel;
 }(react_1);
 
-var mapStateToProps$2 = function mapStateToProps(_ref2) {
+var mapStateToProps$3 = function mapStateToProps(_ref2) {
 	var context = _ref2.context,
 	    streams$$1 = _ref2.streams,
 	    users = _ref2.users,
@@ -45122,7 +45591,7 @@ var mapStateToProps$2 = function mapStateToProps(_ref2) {
 	};
 };
 
-var PublicChannelPanel = connect(mapStateToProps$2, _extends$5({}, contextActions, streamActions, {
+var PublicChannelPanel = connect(mapStateToProps$3, _extends$5({}, contextActions, streamActions, {
 	goToInvitePage: goToInvitePage
 }))(SimplePublicChannelPanel);
 
@@ -50993,7 +51462,7 @@ var SimpleCreateChannelPanel = function (_Component) {
 				),
 				react.createElement(
 					"form",
-					{ id: "create-channel-form", className: "standard-form postslist" },
+					{ id: "create-channel-form", className: "standard-form vscroll" },
 					react.createElement(
 						"fieldset",
 						{ className: "form-body", disabled: inactive },
@@ -51172,7 +51641,7 @@ var SimpleCreateChannelPanel = function (_Component) {
 	return SimpleCreateChannelPanel;
 }(react_1);
 
-var mapStateToProps$3 = function mapStateToProps(_ref2) {
+var mapStateToProps$4 = function mapStateToProps(_ref2) {
 	var context = _ref2.context,
 	    streams$$1 = _ref2.streams,
 	    users = _ref2.users,
@@ -51197,7 +51666,7 @@ var mapStateToProps$3 = function mapStateToProps(_ref2) {
 	};
 };
 
-var CreateChannelPanel = connect(mapStateToProps$3, _extends$5({}, contextActions, {
+var CreateChannelPanel = connect(mapStateToProps$4, _extends$5({}, contextActions, {
 	createStream: createStream
 }))(SimpleCreateChannelPanel);
 
@@ -51462,7 +51931,7 @@ var SimpleCreateDMPanel = function (_Component) {
 	return SimpleCreateDMPanel;
 }(react_1);
 
-var mapStateToProps$4 = function mapStateToProps(_ref2) {
+var mapStateToProps$5 = function mapStateToProps(_ref2) {
 	var context = _ref2.context,
 	    streams$$1 = _ref2.streams,
 	    users = _ref2.users,
@@ -51493,7 +51962,7 @@ var mapStateToProps$4 = function mapStateToProps(_ref2) {
 	};
 };
 
-var CreateDMPanel = connect(mapStateToProps$4, _extends$5({}, contextActions, {
+var CreateDMPanel = connect(mapStateToProps$5, _extends$5({}, contextActions, {
 	createStream: createStream,
 	setCurrentStream: setCurrentStream
 }))(SimpleCreateDMPanel);
@@ -103303,10 +103772,13 @@ var SimpleStream = function (_Component) {
 										"Select ",
 										react.createElement(
 											"a",
-											{ onClick: _this.props.goToInvitePage },
+											{ onClick: function onClick() {
+													return _this.setActivePanel("invite");
+												} },
 											"Codestream: Invite"
 										),
-										" from the command palette to invite your team."
+										" ",
+										"from the command palette to invite your team."
 									);
 								}
 							)
@@ -104475,7 +104947,7 @@ var SimpleStream = function (_Component) {
 				panel: true,
 				"main-panel": true,
 				shrink: activePanel === "thread",
-				"off-right": activePanel === "channels" || activePanel === "create-channel" || activePanel === "create-dm" || activePanel === "public-channels"
+				"off-right": activePanel === "channels" || activePanel === "create-channel" || activePanel === "create-dm" || activePanel === "public-channels" || activePanel === "invite"
 			});
 			var threadPanelClass = classnames({
 				panel: true,
@@ -104547,6 +105019,7 @@ var SimpleStream = function (_Component) {
 				react.createElement(PublicChannelPanel, { activePanel: activePanel, setActivePanel: this.setActivePanel }),
 				react.createElement(CreateChannelPanel, { activePanel: activePanel, setActivePanel: this.setActivePanel }),
 				react.createElement(CreateDMPanel, { activePanel: activePanel, setActivePanel: this.setActivePanel }),
+				react.createElement(InvitePanel, { activePanel: activePanel, setActivePanel: this.setActivePanel }),
 				react.createElement(
 					"div",
 					{ className: mainPanelClass, ref: function ref(_ref12) {
@@ -104814,7 +105287,7 @@ var SimpleStream = function (_Component) {
 	return SimpleStream;
 }(react_1);
 
-var mapStateToProps$5 = function mapStateToProps(_ref15) {
+var mapStateToProps$6 = function mapStateToProps(_ref15) {
 	var configs = _ref15.configs,
 	    connectivity = _ref15.connectivity,
 	    session = _ref15.session,
@@ -104934,7 +105407,7 @@ var mapStateToProps$5 = function mapStateToProps(_ref15) {
 	};
 };
 
-var index$3 = connect(mapStateToProps$5, _extends$5({}, streamActions, {
+var index$3 = connect(mapStateToProps$6, _extends$5({}, streamActions, {
 	goToInvitePage: goToInvitePage
 }))(SimpleStream);
 
@@ -105659,6 +106132,11 @@ var WebviewApi = function () {
 		key: "joinStream",
 		value: function joinStream(streamId) {
 			return this.postMessage({ action: "join-stream", params: streamId });
+		}
+	}, {
+		key: "invite",
+		value: function invite(attributes) {
+			return this.postMessage({ action: "invite", params: attributes });
 		}
 	}, {
 		key: "markStreamRead",
