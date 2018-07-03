@@ -44570,7 +44570,11 @@ var SimpleChannelMenu = function (_Component) {
 			if (stream.isTeamStream) cantAdd = "Unavailable in all-hands channels";
 			var muteLabel = isMuted ? "Unmute " : "Mute ";
 			if (umiCount === 0) upToDate = "You are up-to-date";
-			var items = [{ label: "View Members", action: "view-members" }, { label: "Add Members to " + streamName, action: "add-members", disabled: cantAdd }, { label: "Rename Channel", action: "rename-channel" }, { label: "-" }, { label: "Mark Read", action: "mark-read", disabled: upToDate }, { label: "-" }, { label: muteLabel + streamName, action: "mute-channel" }, { label: "Leave " + streamName, action: "leave-channel", disabled: cantLeave }, { label: "-" }, { label: "Connect to Slack", action: "connect-slack" }, { label: "Connect to MS Teams", action: "connect-ms-teams" }];
+			var items = [{ label: "View Members", action: "view-members" }, { label: "Add Members to " + streamName, action: "add-members", disabled: cantAdd }, { label: "Rename Channel", action: "rename-channel" }, { label: "-" }, { label: "Mark Read", action: "mark-read", disabled: upToDate }, { label: "-" }, { label: muteLabel + streamName, action: "mute-channel" }, { label: "Leave " + streamName, action: "leave-channel", disabled: cantLeave
+				// { label: "-" },
+				// { label: "Connect to Slack", action: "connect-slack" },
+				// { label: "Connect to MS Teams", action: "connect-ms-teams" }
+			}];
 
 			return react.createElement(Menu, { items: items, target: target, action: this.menuAction });
 		}
