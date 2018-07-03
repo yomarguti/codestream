@@ -43831,20 +43831,24 @@ var createStream = function createStream(attributes) {
 
 							dispatch({ type: "ADD_STREAM", payload: returnStream });
 							dispatch(setCurrentStream(returnStream.id));
+
+							//unmute any created streams
+							dispatch(setUserPreference(["mutedStreams", returnStream.id], false));
+
 							return _context6.abrupt("return", returnStream);
 
-						case 14:
-							_context6.prev = 14;
+						case 15:
+							_context6.prev = 15;
 							_context6.t0 = _context6["catch"](5);
 
 							console.log("Error: ", _context6.t0);
 
-						case 17:
+						case 18:
 						case "end":
 							return _context6.stop();
 					}
 				}
-			}, _callee6, _this, [[5, 14]]);
+			}, _callee6, _this, [[5, 15]]);
 		}));
 
 		return function (_x16, _x17, _x18) {
@@ -44693,6 +44697,7 @@ var SimpleChannelPanel = function (_Component) {
 							var count = _this.props.umis.unread[stream.id] || 0;
 							var mentions = _this.props.umis.mentions[stream.id] || 0;
 							if (_this.props.mutedStreams[stream.id] && !count) return null;
+
 							var icon = stream.memberIds.length > 2 ? react.createElement(Icon, { className: "organization", name: "organization" }) : react.createElement(Icon, { className: "person", name: "person" });
 							return react.createElement(
 								"li",
@@ -44882,6 +44887,7 @@ var mapStateToProps$1 = function mapStateToProps(_ref) {
 	var teamMembers = teams[context.currentTeamId].memberIds.map(function (id) {
 		return users[id];
 	}).filter(Boolean);
+	// .filter(user => user && user.isRegistered);
 
 	var channelStreams = underscore.sortBy(getChannelStreamsForTeam(streams$$1, context.currentTeamId, session.userId) || [], function (stream) {
 		return (stream.name || "").toLowerCase();
@@ -44898,13 +44904,15 @@ var mapStateToProps$1 = function mapStateToProps(_ref) {
 	var oneOnOnePeople = directMessageStreams.map(function (stream) {
 		var notMe = underscore.without(stream.memberIds || [], session.userId);
 		if (notMe.length === 1) return notMe[0];
+
+		// this is my stream with myself, if it exists
+		if (stream.memberIds.length === 1 && stream.memberIds[0] === session.userId) return session.userId;
 		return;
 	}).filter(Boolean);
 
 	return {
 		umis: umis,
 		users: users,
-		session: session,
 		channelStreams: channelStreams,
 		directMessageStreams: directMessageStreams,
 		mutedStreams: mutedStreams,

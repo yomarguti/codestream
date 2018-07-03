@@ -114,6 +114,7 @@ export class SimpleChannelPanel extends Component {
 						let count = this.props.umis.unread[stream.id] || 0;
 						let mentions = this.props.umis.mentions[stream.id] || 0;
 						if (this.props.mutedStreams[stream.id] && !count) return null;
+
 						const icon =
 							stream.memberIds.length > 2 ? (
 								<Icon className="organization" name="organization" />
@@ -217,6 +218,7 @@ export class SimpleChannelPanel extends Component {
 
 const mapStateToProps = ({ context, streams, users, teams, umis, session }) => {
 	const teamMembers = teams[context.currentTeamId].memberIds.map(id => users[id]).filter(Boolean);
+	// .filter(user => user && user.isRegistered);
 
 	const channelStreams = _.sortBy(
 		getChannelStreamsForTeam(streams, context.currentTeamId, session.userId) || [],
@@ -236,6 +238,10 @@ const mapStateToProps = ({ context, streams, users, teams, umis, session }) => {
 		.map(stream => {
 			const notMe = _.without(stream.memberIds || [], session.userId);
 			if (notMe.length === 1) return notMe[0];
+
+			// this is my stream with myself, if it exists
+			if (stream.memberIds.length === 1 && stream.memberIds[0] === session.userId)
+				return session.userId;
 			return;
 		})
 		.filter(Boolean);
@@ -243,7 +249,6 @@ const mapStateToProps = ({ context, streams, users, teams, umis, session }) => {
 	return {
 		umis,
 		users,
-		session,
 		channelStreams,
 		directMessageStreams,
 		mutedStreams,

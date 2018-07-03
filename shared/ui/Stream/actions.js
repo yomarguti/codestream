@@ -166,6 +166,10 @@ export const createStream = attributes => async (dispatch, getState, { api }) =>
 		const returnStream = await api.createStream(stream);
 		dispatch({ type: "ADD_STREAM", payload: returnStream });
 		dispatch(setCurrentStream(returnStream.id));
+
+		//unmute any created streams
+		dispatch(setUserPreference(["mutedStreams", returnStream.id], false));
+
 		return returnStream;
 	} catch (error) {
 		console.log("Error: ", error);
