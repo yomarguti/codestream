@@ -103530,8 +103530,11 @@ var Post = function (_Component) {
 
 			var parentPost = this.props.replyingTo;
 
-			var threadLabel = parentPost ? "View Thread" : "Create Thread";
-			var menuItems = [{ label: threadLabel, action: "make-thread" }, { label: "Mark Unread", action: "mark-unread" }, { label: "Add Reaction", action: "add-reaction" }, { label: "Pin to Stream", action: "pin-to-stream" }];
+			var threadLabel = parentPost ? "View Thread" : "Start a Thread";
+			var menuItems = [{ label: threadLabel, action: "make-thread" }, { label: "Mark Unread", action: "mark-unread"
+				// { label: "Add Reaction", action: "add-reaction" },
+				// { label: "Pin to Stream", action: "pin-to-stream" }
+			}];
 			if (mine) {
 				menuItems.push({ label: "-" }, { label: "Edit Comment", action: "edit-post" }, { label: "Delete Comment", action: "delete-post" });
 			}

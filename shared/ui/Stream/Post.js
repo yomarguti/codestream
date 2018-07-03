@@ -63,12 +63,12 @@ class Post extends Component {
 
 		let parentPost = this.props.replyingTo;
 
-		const threadLabel = parentPost ? "View Thread" : "Create Thread";
+		const threadLabel = parentPost ? "View Thread" : "Start a Thread";
 		let menuItems = [
 			{ label: threadLabel, action: "make-thread" },
-			{ label: "Mark Unread", action: "mark-unread" },
-			{ label: "Add Reaction", action: "add-reaction" },
-			{ label: "Pin to Stream", action: "pin-to-stream" }
+			{ label: "Mark Unread", action: "mark-unread" }
+			// { label: "Add Reaction", action: "add-reaction" },
+			// { label: "Pin to Stream", action: "pin-to-stream" }
 		];
 		if (mine) {
 			menuItems.push(
