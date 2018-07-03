@@ -19,7 +19,7 @@ export class SimplePublicChannelPanel extends Component {
 	constructor(props) {
 		super(props);
 
-		this.state = {};
+		this.state = { loading: null };
 	}
 
 	render() {
@@ -80,7 +80,9 @@ export class SimplePublicChannelPanel extends Component {
 			streams.map(stream => {
 				if (stream.name.match(/^ls:/)) return null;
 				const icon =
-					stream.privacy === "private" ? (
+					stream.id && stream.id === this.state.loading ? (
+						<span className="loading loading-spinner-tiny inline-block" />
+					) : stream.privacy === "private" ? (
 						<Icon className="lock" name="lock" />
 					) : (
 						<span className="icon hash">#</span>
@@ -113,7 +115,9 @@ export class SimplePublicChannelPanel extends Component {
 	handleClickJoinStream = async event => {
 		var liDiv = event.target.closest("li");
 		if (!liDiv || !liDiv.id) return; // FIXME throw error
+		this.setState({ loading: liDiv.id });
 		await this.props.joinStream(liDiv.id);
+		this.setState({ loading: null });
 		// this.props.setActivePanel("main");
 		this.props.setCurrentStream(liDiv.id);
 	};

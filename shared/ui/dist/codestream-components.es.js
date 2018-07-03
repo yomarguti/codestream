@@ -45364,7 +45364,7 @@ var SimplePublicChannelPanel = function (_Component) {
 				}
 				return [streams$$1.map(function (stream) {
 					if (stream.name.match(/^ls:/)) return null;
-					var icon = stream.privacy === "private" ? react.createElement(Icon, { className: "lock", name: "lock" }) : react.createElement(
+					var icon = stream.id && stream.id === _this.state.loading ? react.createElement("span", { className: "loading loading-spinner-tiny inline-block" }) : stream.privacy === "private" ? react.createElement(Icon, { className: "lock", name: "lock" }) : react.createElement(
 						"span",
 						{ className: "icon hash" },
 						"#"
@@ -45420,14 +45420,17 @@ var SimplePublicChannelPanel = function (_Component) {
 									return _context.abrupt("return");
 
 								case 3:
-									_context.next = 5;
+									// FIXME throw error
+									_this.setState({ loading: liDiv.id });
+									_context.next = 6;
 									return _this.props.joinStream(liDiv.id);
 
-								case 5:
+								case 6:
+									_this.setState({ loading: null });
 									// this.props.setActivePanel("main");
 									_this.props.setCurrentStream(liDiv.id);
 
-								case 6:
+								case 8:
 								case "end":
 									return _context.stop();
 							}
@@ -45459,7 +45462,7 @@ var SimplePublicChannelPanel = function (_Component) {
 		});
 
 
-		_this.state = {};
+		_this.state = { loading: null };
 		return _this;
 	}
 
