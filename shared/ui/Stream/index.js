@@ -16,7 +16,6 @@ import Post from "./Post";
 import Icon from "./Icon";
 import EventEmitter from "../event-emitter";
 import * as actions from "./actions";
-import { goToInvitePage } from "../actions/routing";
 import { toMapBy } from "../utils";
 import { slashCommands } from "./SlashCommands";
 import { confirmPopup } from "./Confirm";
@@ -27,6 +26,11 @@ import {
 	getStreamForRepoAndFile
 } from "../reducers/streams";
 import { createPost, createSystemPost, editPost, deletePost } from "./actions";
+
+const EMAIL_MATCH_REGEX = new RegExp(
+	"[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*",
+	"g"
+);
 
 export class SimpleStream extends Component {
 	disposables = [];
@@ -713,11 +717,23 @@ export class SimpleStream extends Component {
 	};
 
 	notImplementedYet = () => {
-		this.submitSystemPost("Not implemented yet");
+		return this.submitSystemPost("Not implemented yet");
 	};
 
-	invitePerson = () => {
-		this.submitSystemPost("Not implemented yet");
+	invitePerson = args => {
+		let email;
+		let invitedEmails = [];
+		while ((email = EMAIL_MATCH_REGEX.exec(args)) !== null) {
+			this.props.invite({ email: email[0], teamId: this.props.teamId });
+			invitedEmails.push(email[0]);
+		}
+		let invited = "";
+		if (invitedEmails.length === 1) invited = usernamesArray[0];
+		else if (invitedEmails.length > 1) {
+			const lastOne = invitedEmails.pop();
+			invited = invitedEmails.join(", ") + " and " + lastOne;
+		}
+		return this.submitSystemPost("Invited " + invited);
 	};
 
 	postAction = (action, post) => {
@@ -877,8 +893,7 @@ export class SimpleStream extends Component {
 		const isMuted = this.props.mutedStreams[postStreamId];
 		this.props.setUserPreference(["mutedStreams", postStreamId], !isMuted);
 		const text = isMuted ? "This stream has been unmuted." : "This stream has been muted.";
-		this.submitSystemPost(text);
-		return true;
+		return this.submitSystemPost(text);
 	};
 
 	showMembers = () => {
@@ -909,8 +924,7 @@ export class SimpleStream extends Component {
 				"\n\nThis is an all-hands channel, so every member of your team is automatically added.";
 		}
 
-		this.submitSystemPost(text);
-		return true;
+		return this.submitSystemPost(text);
 	};
 
 	extractUsersFromArgs = (args = "") => {
@@ -955,12 +969,11 @@ export class SimpleStream extends Component {
 			return this.submitSystemPost(text);
 		}
 		if (users.length === 0) {
-			this.submitSystemPost("Add members to this channel by typing\n`/add @nickname`");
+			return this.submitSystemPost("Add members to this channel by typing\n`/add @nickname`");
 		} else {
 			await this.props.addUsersToStream(this.props.postStreamId, users);
-			this.submitPost({ text: "/me added " + usernames });
+			return this.submitPost({ text: "/me added " + usernames });
 		}
-		return true;
 	};
 
 	renameChannel = async args => {
@@ -993,9 +1006,7 @@ export class SimpleStream extends Component {
 	leaveChannel = () => {
 		if (this.props.postStreamIsTeamStream) {
 			const text = "You cannot leave all-hands channels.";
-			this.submitSystemPost(text);
-			return true;
-			iff;
+			return this.submitSystemPost(text);
 		}
 		const message = this.props.isPrivate
 			? "Once you leave a private channel, you won't be able to re-join unless you are added by someone in the channel."
@@ -1030,8 +1041,7 @@ export class SimpleStream extends Component {
 		if (postStream.creatorId !== currentUser.id) {
 			let text = "You may only archive channels that you created.";
 			if (postStream.creatorId) text += " This channel was created by " + postStream.creatorId;
-			this.submitSystemPost(text);
-			return true;
+			return this.submitSystemPost(text);
 		}
 		if (this.props.postStreamType === "direct") {
 			const text =
@@ -1134,12 +1144,20 @@ export class SimpleStream extends Component {
 
 	runSlashCommand = (command, args) => {
 		switch (command) {
-			case "help":
-				return this.postHelp();
 			case "add":
 				return this.addMembersToStream(args);
-			case "who":
-				return this.showMembers();
+			case "archive":
+				return this.archiveChannel(args);
+			case "delete":
+				return this.deleteChannel(args);
+			case "help":
+				return this.postHelp();
+			case "invite":
+				return this.invitePerson(args);
+			case "leave":
+				return this.leaveChannel(args);
+			case "me":
+				return false;
 			case "mute":
 				return this.toggleMute();
 			case "muteall":
@@ -1152,20 +1170,14 @@ export class SimpleStream extends Component {
 				return this.openPrefs(args);
 			case "purpose":
 				return this.setPurpose(args);
-			case "rename":
-				return this.renameChannel(args);
 			case "remove":
 				return this.removeFromStream(args);
-			case "leave":
-				return this.leaveChannel(args);
-			case "delete":
-				return this.deleteChannel(args);
-			case "archive":
-				return this.archiveChannel(args);
+			case "rename":
+				return this.renameChannel(args);
 			case "version":
 				return this.postVersion(args);
-			case "me":
-				return false;
+			case "who":
+				return this.showMembers();
 		}
 	};
 
@@ -1339,6 +1351,5 @@ const mapStateToProps = ({
 };
 
 export default connect(mapStateToProps, {
-	...actions,
-	goToInvitePage
+	...actions
 })(SimpleStream);

@@ -43502,10 +43502,6 @@ var DateSeparator = function (_Component) {
 	return DateSeparator;
 }(react_1);
 
-var goToInvitePage = function goToInvitePage() {
-  return { type: "GO_TO_INVITE_PAGE" };
-};
-
 var _this = undefined;
 
 // uuid generator taken from: https://gist.github.com/jed/982883
@@ -44924,7 +44920,7 @@ var ChannelPanel = connect(mapStateToProps$1, {
 	setCurrentStream: setCurrentStream
 })(SimpleChannelPanel);
 
-var EMAIL_REGEX = new RegExp("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$");
+var EMAIL_REGEX = new RegExp("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$");
 
 var InvitePage = function (_Component) {
 	inherits$1(InvitePage, _Component);
@@ -103641,6 +103637,8 @@ var slashCommands = [{ id: "help", help: "get help" }, { id: "add", help: "add m
 // { id: "prefs", help: "open preferences" },
 { id: "purpose", help: "set channel purpose", description: "newpurpose", channelOnly: true }, { id: "rename", help: "rename channel", description: "newname", channelOnly: true }, { id: "remove", help: "remove from channel", description: "@user", channelOnly: true }, { id: "version", help: "" }, { id: "who", help: "show channel members" }];
 
+var EMAIL_MATCH_REGEX = new RegExp("[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*", "g");
+
 var SimpleStream = function (_Component) {
 	inherits$1(SimpleStream, _Component);
 
@@ -103949,14 +103947,25 @@ var SimpleStream = function (_Component) {
 			enumerable: true,
 			writable: true,
 			value: function value() {
-				_this.submitSystemPost("Not implemented yet");
+				return _this.submitSystemPost("Not implemented yet");
 			}
 		});
 		Object.defineProperty(_this, "invitePerson", {
 			enumerable: true,
 			writable: true,
-			value: function value() {
-				_this.submitSystemPost("Not implemented yet");
+			value: function value(args) {
+				var email = void 0;
+				var invitedEmails = [];
+				while ((email = EMAIL_MATCH_REGEX.exec(args)) !== null) {
+					_this.props.invite({ email: email[0], teamId: _this.props.teamId });
+					invitedEmails.push(email[0]);
+				}
+				var invited = "";
+				if (invitedEmails.length === 1) invited = usernamesArray[0];else if (invitedEmails.length > 1) {
+					var lastOne = invitedEmails.pop();
+					invited = invitedEmails.join(", ") + " and " + lastOne;
+				}
+				return _this.submitSystemPost("Invited " + invited);
 			}
 		});
 		Object.defineProperty(_this, "postAction", {
@@ -104099,8 +104108,7 @@ var SimpleStream = function (_Component) {
 				var isMuted = _this.props.mutedStreams[postStreamId];
 				_this.props.setUserPreference(["mutedStreams", postStreamId], !isMuted);
 				var text = isMuted ? "This stream has been unmuted." : "This stream has been muted.";
-				_this.submitSystemPost(text);
-				return true;
+				return _this.submitSystemPost(text);
 			}
 		});
 		Object.defineProperty(_this, "showMembers", {
@@ -104132,8 +104140,7 @@ var SimpleStream = function (_Component) {
 					text += "\n\nThis is an all-hands channel, so every member of your team is automatically added.";
 				}
 
-				_this.submitSystemPost(text);
-				return true;
+				return _this.submitSystemPost(text);
 			}
 		});
 		Object.defineProperty(_this, "extractUsersFromArgs", {
@@ -104202,21 +104209,16 @@ var SimpleStream = function (_Component) {
 										break;
 									}
 
-									_this.submitSystemPost("Add members to this channel by typing\n`/add @nickname`");
-									_context.next = 14;
-									break;
+									return _context.abrupt("return", _this.submitSystemPost("Add members to this channel by typing\n`/add @nickname`"));
 
 								case 11:
 									_context.next = 13;
 									return _this.props.addUsersToStream(_this.props.postStreamId, users);
 
 								case 13:
-									_this.submitPost({ text: "/me added " + usernames });
+									return _context.abrupt("return", _this.submitPost({ text: "/me added " + usernames }));
 
 								case 14:
-									return _context.abrupt("return", true);
-
-								case 15:
 								case "end":
 									return _context.stop();
 							}
@@ -104347,8 +104349,7 @@ var SimpleStream = function (_Component) {
 			value: function value() {
 				if (_this.props.postStreamIsTeamStream) {
 					var text = "You cannot leave all-hands channels.";
-					_this.submitSystemPost(text);
-					return true;
+					return _this.submitSystemPost(text);
 				}
 				var message = _this.props.isPrivate ? "Once you leave a private channel, you won't be able to re-join unless you are added by someone in the channel." : "Once you leave a public channel, you may re-join it in the future by looking at the channels list under TEAM CHANNELS.";
 				confirmPopup({
@@ -104390,8 +104391,7 @@ var SimpleStream = function (_Component) {
 				if (postStream.creatorId !== currentUser.id) {
 					var text = "You may only archive channels that you created.";
 					if (postStream.creatorId) text += " This channel was created by " + postStream.creatorId;
-					_this.submitSystemPost(text);
-					return true;
+					return _this.submitSystemPost(text);
 				}
 				if (_this.props.postStreamType === "direct") {
 					var _text2 = "You cannot archive direct message streams. You can remove them from your list by clicking the X on the channels panel.";
@@ -104595,12 +104595,20 @@ var SimpleStream = function (_Component) {
 			writable: true,
 			value: function value(command, args) {
 				switch (command) {
-					case "help":
-						return _this.postHelp();
 					case "add":
 						return _this.addMembersToStream(args);
-					case "who":
-						return _this.showMembers();
+					case "archive":
+						return _this.archiveChannel(args);
+					case "delete":
+						return _this.deleteChannel(args);
+					case "help":
+						return _this.postHelp();
+					case "invite":
+						return _this.invitePerson(args);
+					case "leave":
+						return _this.leaveChannel(args);
+					case "me":
+						return false;
 					case "mute":
 						return _this.toggleMute();
 					case "muteall":
@@ -104613,20 +104621,14 @@ var SimpleStream = function (_Component) {
 						return _this.openPrefs(args);
 					case "purpose":
 						return _this.setPurpose(args);
-					case "rename":
-						return _this.renameChannel(args);
 					case "remove":
 						return _this.removeFromStream(args);
-					case "leave":
-						return _this.leaveChannel(args);
-					case "delete":
-						return _this.deleteChannel(args);
-					case "archive":
-						return _this.archiveChannel(args);
+					case "rename":
+						return _this.renameChannel(args);
 					case "version":
 						return _this.postVersion(args);
-					case "me":
-						return false;
+					case "who":
+						return _this.showMembers();
 				}
 			}
 		});
@@ -105408,9 +105410,7 @@ var mapStateToProps$6 = function mapStateToProps(_ref15) {
 	};
 };
 
-var index$3 = connect(mapStateToProps$6, _extends$5({}, streamActions, {
-	goToInvitePage: goToInvitePage
-}))(SimpleStream);
+var index$3 = connect(mapStateToProps$6, _extends$5({}, streamActions))(SimpleStream);
 
 var toMapBy$1 = function toMapBy(key, entities) {
 	return entities.reduce(function (result, entity) {
