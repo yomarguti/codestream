@@ -1,4 +1,5 @@
 import Dexie from "dexie";
+import _ from "underscore-plus";
 
 const codestreamEnv = sessionStorage.getItem("codestream.env");
 
@@ -184,7 +185,11 @@ const operations = {
 		Object.keys(data).forEach(property => {
 			handle(property, object, data, operations.$pull, () => {
 				const value = object[property];
-				if (Array.isArray(value)) object[property] = value.filter(it => it !== data[property]);
+				if (Array.isArray(value)) {
+					if (Array.isArray(data[property]))
+						object[property] = value.filter(it => !_.contains(data[property], it));
+					else object[property] = value.filter(it => it !== data[property]);
+				}
 			});
 		});
 	},
