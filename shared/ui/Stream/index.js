@@ -728,10 +728,15 @@ export class SimpleStream extends Component {
 			invitedEmails.push(email[0]);
 		}
 		let invited = "";
-		if (invitedEmails.length === 1) invited = usernamesArray[0];
-		else if (invitedEmails.length > 1) {
-			const lastOne = invitedEmails.pop();
-			invited = invitedEmails.join(", ") + " and " + lastOne;
+		switch (invitedEmails.length) {
+			case 0:
+				return this.submitSystemPost("Usage: /invite [email address]");
+			case 1:
+				invited = invitedEmails[0];
+				break;
+			default:
+				const lastOne = invitedEmails.pop();
+				invited = invitedEmails.join(", ") + " and " + lastOne;
 		}
 		return this.submitSystemPost("Invited " + invited);
 	};

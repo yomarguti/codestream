@@ -103641,7 +103641,7 @@ var slashCommands = [{ id: "help", help: "get help" }, { id: "add", help: "add m
 // { id: "muteall", help: "mute codestream" },
 // { id: "open", help: "open channel" },
 // { id: "prefs", help: "open preferences" },
-{ id: "purpose", help: "set channel purpose", description: "newpurpose", channelOnly: true }, { id: "rename", help: "rename channel", description: "newname", channelOnly: true }, { id: "remove", help: "remove from channel", description: "@user", channelOnly: true }, { id: "version", help: "" }, { id: "who", help: "show channel members" }];
+{ id: "purpose", help: "set purpose", description: "text", channelOnly: true }, { id: "rename", help: "rename channel", description: "newname", channelOnly: true }, { id: "remove", help: "remove from channel", description: "@user", channelOnly: true }, { id: "version", help: "" }, { id: "who", help: "show channel members" }];
 
 var EMAIL_MATCH_REGEX = new RegExp("[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*", "g");
 
@@ -103967,9 +103967,15 @@ var SimpleStream = function (_Component) {
 					invitedEmails.push(email[0]);
 				}
 				var invited = "";
-				if (invitedEmails.length === 1) invited = usernamesArray[0];else if (invitedEmails.length > 1) {
-					var lastOne = invitedEmails.pop();
-					invited = invitedEmails.join(", ") + " and " + lastOne;
+				switch (invitedEmails.length) {
+					case 0:
+						return _this.submitSystemPost("Usage: /invite [email address]");
+					case 1:
+						invited = invitedEmails[0];
+						break;
+					default:
+						var lastOne = invitedEmails.pop();
+						invited = invitedEmails.join(", ") + " and " + lastOne;
 				}
 				return _this.submitSystemPost("Invited " + invited);
 			}
