@@ -104257,7 +104257,7 @@ var SimpleStream = function (_Component) {
 								case 6:
 									newStream = _context2.sent;
 
-									if (newStream.name === args) _this.submitPost({ text: "/me renamed the channel to " + args });else _this.submitSystemPost("Unable to rename channel.");
+									if (newStream.name === args) _this.submitPost({ text: "/me renamed the channel to " + args });else _this.submitSystemPost("Unable to rename channel. Names must match [a-zA-Z0-9._-]+");
 									_context2.next = 11;
 									break;
 
