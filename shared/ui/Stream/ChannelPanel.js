@@ -256,6 +256,5 @@ const mapStateToProps = ({ context, streams, users, teams, umis, session }) => {
 export default connect(mapStateToProps, {
 	createStream,
 	setUserPreference,
-	setCurrentStream,
-	goToInvitePage: routingActions.goToInvitePage
+	setCurrentStream
 })(SimpleChannelPanel);

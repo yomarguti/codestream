@@ -44917,8 +44917,7 @@ var mapStateToProps$1 = function mapStateToProps(_ref) {
 var ChannelPanel = connect(mapStateToProps$1, {
 	createStream: createStream,
 	setUserPreference: setUserPreference,
-	setCurrentStream: setCurrentStream,
-	goToInvitePage: goToInvitePage
+	setCurrentStream: setCurrentStream
 })(SimpleChannelPanel);
 
 var EMAIL_REGEX = new RegExp("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$");
@@ -45591,9 +45590,7 @@ var mapStateToProps$3 = function mapStateToProps(_ref2) {
 	};
 };
 
-var PublicChannelPanel = connect(mapStateToProps$3, _extends$5({}, contextActions, streamActions, {
-	goToInvitePage: goToInvitePage
-}))(SimplePublicChannelPanel);
+var PublicChannelPanel = connect(mapStateToProps$3, _extends$5({}, contextActions, streamActions))(SimplePublicChannelPanel);
 
 function memoize(fn) {
   var cache = {};
