@@ -405,7 +405,10 @@ export class SimpleStream extends Component {
 		let threadId = this.state.threadId;
 		let threadPost = this.findPostById(threadId);
 
-		let placeholderText = "Add comment";
+		let placeholderText = "Message #" + this.props.postStreamName;
+		if (this.props.postStreamType === "direct") {
+			placeholderText = "Message " + this.props.postStreamName;
+		}
 		if (activePanel === "thread" && threadPost) {
 			placeholderText = "Reply to " + threadPost.author.username;
 		}

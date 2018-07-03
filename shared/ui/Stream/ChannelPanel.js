@@ -240,8 +240,10 @@ const mapStateToProps = ({ context, streams, users, teams, umis, session }) => {
 			if (notMe.length === 1) return notMe[0];
 
 			// this is my stream with myself, if it exists
-			if (stream.memberIds.length === 1 && stream.memberIds[0] === session.userId)
+			if (stream.memberIds.length === 1 && stream.memberIds[0] === session.userId) {
+				stream.isMeStream = true;
 				return session.userId;
+			}
 			return;
 		})
 		.filter(Boolean);

@@ -44906,7 +44906,10 @@ var mapStateToProps$1 = function mapStateToProps(_ref) {
 		if (notMe.length === 1) return notMe[0];
 
 		// this is my stream with myself, if it exists
-		if (stream.memberIds.length === 1 && stream.memberIds[0] === session.userId) return session.userId;
+		if (stream.memberIds.length === 1 && stream.memberIds[0] === session.userId) {
+			stream.isMeStream = true;
+			return session.userId;
+		}
 		return;
 	}).filter(Boolean);
 
@@ -104983,7 +104986,10 @@ var SimpleStream = function (_Component) {
 			var threadId = this.state.threadId;
 			var threadPost = this.findPostById(threadId);
 
-			var placeholderText = "Add comment";
+			var placeholderText = "Message #" + this.props.postStreamName;
+			if (this.props.postStreamType === "direct") {
+				placeholderText = "Message " + this.props.postStreamName;
+			}
 			if (activePanel === "thread" && threadPost) {
 				placeholderText = "Reply to " + threadPost.author.username;
 			}
