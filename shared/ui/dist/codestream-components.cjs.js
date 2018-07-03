@@ -104245,7 +104245,7 @@ var SimpleStream = function (_Component) {
 			writable: true,
 			value: function () {
 				var _ref4 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(args) {
-					var text, newStream;
+					var text, oldName, newStream;
 					return regeneratorRuntime.wrap(function _callee2$(_context2) {
 						while (1) {
 							switch (_context2.prev = _context2.next) {
@@ -104260,27 +104260,28 @@ var SimpleStream = function (_Component) {
 
 								case 3:
 									if (!args) {
-										_context2.next = 10;
+										_context2.next = 11;
 										break;
 									}
 
-									_context2.next = 6;
+									oldName = _this.props.postStreamName;
+									_context2.next = 7;
 									return _this.props.renameStream(_this.props.postStreamId, args);
 
-								case 6:
+								case 7:
 									newStream = _context2.sent;
 
-									if (newStream.name === args) _this.submitPost({ text: "/me renamed the channel to " + args });else _this.submitSystemPost("Unable to rename channel. Names must match [a-zA-Z0-9._-]+");
-									_context2.next = 11;
+									if (newStream.name === args) _this.submitPost({ text: "/me renamed the channel from #" + oldName + " to #" + args });else _this.submitSystemPost("Unable to rename channel. Names must match [a-zA-Z0-9._-]+");
+									_context2.next = 12;
 									break;
 
-								case 10:
+								case 11:
 									_this.submitSystemPost("Rename a channel by typing `/rename [new name]`");
 
-								case 11:
+								case 12:
 									return _context2.abrupt("return", true);
 
-								case 12:
+								case 13:
 								case "end":
 									return _context2.stop();
 							}

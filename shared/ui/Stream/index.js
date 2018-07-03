@@ -982,8 +982,10 @@ export class SimpleStream extends Component {
 			return this.submitSystemPost(text);
 		}
 		if (args) {
+			const oldName = this.props.postStreamName;
 			const newStream = await this.props.renameStream(this.props.postStreamId, args);
-			if (newStream.name === args) this.submitPost({ text: "/me renamed the channel to " + args });
+			if (newStream.name === args)
+				this.submitPost({ text: "/me renamed the channel from #" + oldName + " to #" + args });
 			else this.submitSystemPost("Unable to rename channel. Names must match [a-zA-Z0-9._-]+");
 		} else this.submitSystemPost("Rename a channel by typing `/rename [new name]`");
 		return true;
