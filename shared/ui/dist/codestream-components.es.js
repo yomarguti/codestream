@@ -38518,7 +38518,7 @@ var ComposeBox = function (_React$Component) {
 				var node = range.commonAncestorContainer;
 				var nodeText = node.textContent || "";
 				var upToCursor = nodeText.substring(0, range.startOffset);
-				var peopleMatch = upToCursor.match(/@([a-zA-Z0-9_.+]*)$/);
+				var peopleMatch = upToCursor.match(/(?:^|\s)@([a-zA-Z0-9_.+]*)$/);
 				var slashMatch = newPostText.match(/^\/([a-zA-Z0-9+]*)$/);
 				if (_this.state.popupOpen === "at-mentions") {
 					if (peopleMatch) {
