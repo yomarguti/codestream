@@ -104837,10 +104837,10 @@ var SimpleStream = function (_Component) {
 
 			if (switchingPostStreams) {
 				console.log("SETTING PWNMI to NULL!");
-				this.postWithNewMessageIndicator = null;
+				this.postWithNewMessageIndicator = undefined;
 			}
 			console.log(nextProps.currentUser.lastReads[nextProps.postStreamId]);
-			if (nextProps.currentUser && nextProps.currentUser.lastReads && nextProps.currentUser.lastReads[nextProps.postStreamId]) {
+			if (nextProps.currentUser && nextProps.currentUser.lastReads && typeof nextProps.currentUser.lastReads[nextProps.postStreamId] !== "undefined") {
 				console.log("SETTING PWNMI to ", nextProps.currentUser.lastReads[nextProps.postStreamId]);
 				this.postWithNewMessageIndicator = nextProps.currentUser.lastReads[nextProps.postStreamId];
 			}
@@ -105143,7 +105143,7 @@ var SimpleStream = function (_Component) {
 							var parentPost = post.parentPostId ? posts.find(function (p) {
 								return p.id === post.parentPostId;
 							}) : null;
-							var newMessageIndicator = post.seqNum && post.seqNum === Number(_this5.postWithNewMessageIndicator) + 1;
+							var newMessageIndicator = typeof _this5.postWithNewMessageIndicator !== "undefined" && post.seqNum === _this5.postWithNewMessageIndicator + 1;
 							unread = unread || newMessageIndicator;
 							var returnValue = react.createElement(
 								"div",
