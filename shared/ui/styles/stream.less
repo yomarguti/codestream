@@ -1019,7 +1019,7 @@
 			position: relative;
 			max-width: 100%;
 			// this is to accomodate the new-message indicator line
-			border-bottom: 1px solid transparent;
+			border-top: 1px solid transparent;
 			border-left: 1px solid transparent;
 			// overflow-x: hidden;
 			.headshot-gravatar,
@@ -1161,20 +1161,19 @@
 		}
 
 		.post.new-separator {
-			border-bottom: 1px solid @text-color-info;
+			border-top: 1px solid @text-color-info;
 			position: relative;
 		}
-		.post.new-separator::after {
+		.post.new-separator::before {
 			content: "new";
 			display: block;
 			right: 10px;
-			bottom: -11px;
+			top: -13px;
 			color: @text-color-info;
 			background: @app-background-color;
 			padding: 2px 5px;
 			position: absolute;
 			border-radius: 10px;
-			z-index: 3;
 
 			// font-size: 11px;
 			// padding: 6px 0 0 0;
