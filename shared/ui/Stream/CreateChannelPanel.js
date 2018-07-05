@@ -244,7 +244,7 @@ const mapStateToProps = ({ context, streams, users, teams }) => {
 	const members = teamMembers.map(user => {
 		return {
 			value: user.id,
-			label: user.firstName ? user.firstName + " " + user.lastName : user.username
+			label: user.username
 		};
 	});
 	return {

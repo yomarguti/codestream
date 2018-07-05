@@ -51669,7 +51669,7 @@ var mapStateToProps$4 = function mapStateToProps(_ref2) {
 	var members = teamMembers.map(function (user) {
 		return {
 			value: user.id,
-			label: user.firstName ? user.firstName + " " + user.lastName : user.username
+			label: user.username
 		};
 	});
 	return {
