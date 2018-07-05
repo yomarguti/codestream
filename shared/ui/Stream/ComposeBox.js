@@ -362,7 +362,7 @@ class ComposeBox extends React.Component {
 				event.preventDefault();
 			}
 		} else {
-			if (event.key === "ArrowUp") {
+			if (event.key === "ArrowUp" && this.state.newPostText === "") {
 				event.persist();
 				event.stopPropagation();
 				this.props.onEmptyUpArrow(event);
