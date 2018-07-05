@@ -150,6 +150,17 @@ export default class WorkspaceApi implements Resource {
 				// /* doesn't really matter */
 				// });
 			}
+			case "mark-post-unread": {
+				return this.api.markPostUnread(params).then(() => {
+					window.parent.postMessage(
+						{ type: "codestream:response", body: { id, action, payload: {} } },
+						"*"
+					);
+				});
+				// .catch(e => {
+				// /* doesn't really matter */
+				// });
+			}
 			case "join-stream": {
 				return this.api
 					.joinStream(params)

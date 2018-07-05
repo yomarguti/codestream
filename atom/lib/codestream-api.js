@@ -151,6 +151,11 @@ export default class CodeStreamApi {
 		return http.put(`/read/${streamId}`, {}, session.accessToken);
 	}
 
+	async markPostUnread(postId: string) {
+		const { session } = this.store.getState();
+		return http.put(`/unread/${postId}`, {}, session.accessToken);
+	}
+
 	async saveUserPreference(newPreference) {
 		const { session } = this.store.getState();
 		return http.put("/preferences", newPreference, session.accessToken);
