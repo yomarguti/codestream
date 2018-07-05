@@ -182,12 +182,15 @@ export class SimpleCreateDMPanel extends Component {
 
 const mapStateToProps = ({ context, streams, users, teams, session, umis }) => {
 	const teamMembers = teams[context.currentTeamId].memberIds.map(id => users[id]).filter(Boolean);
-	const members = teamMembers.map(user => {
-		return {
-			value: user.id,
-			label: user.firstName ? user.firstName + " " + user.lastName : user.username
-		};
-	});
+	const members = teamMembers
+		.map(user => {
+			if (!user.isRegistered) return null;
+			return {
+				value: user.id,
+				label: user.username
+			};
+		})
+		.filter(Boolean);
 
 	// the integer 528593114636 is simply a number far, far in the past
 	const directMessageStreams = _.sortBy(

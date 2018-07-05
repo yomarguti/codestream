@@ -45082,14 +45082,10 @@ var InvitePage = function (_Component) {
 					{ className: "panel-header" },
 					react.createElement(
 						"span",
-						{ className: "align-left-button" },
-						react.createElement(Icon, {
-							name: "chevron-left",
-							onClick: function onClick() {
+						{ className: "align-left-button", onClick: function onClick() {
 								return _this3.props.setActivePanel("channels");
-							},
-							className: "show-channels-icon"
-						})
+							} },
+						react.createElement(Icon, { name: "chevron-left", className: "show-channels-icon" })
 					),
 					react.createElement(
 						"span",
@@ -51960,11 +51956,12 @@ var mapStateToProps$5 = function mapStateToProps(_ref2) {
 		return users[id];
 	}).filter(Boolean);
 	var members = teamMembers.map(function (user) {
+		if (!user.isRegistered) return null;
 		return {
 			value: user.id,
-			label: user.firstName ? user.firstName + " " + user.lastName : user.username
+			label: user.username
 		};
-	});
+	}).filter(Boolean);
 
 	// the integer 528593114636 is simply a number far, far in the past
 	var directMessageStreams = underscore.sortBy(getDirectMessageStreamsForTeam(streams$$1, context.currentTeamId, session.userId, users) || [], function (stream) {

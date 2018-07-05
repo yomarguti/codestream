@@ -99,12 +99,8 @@ export class InvitePage extends Component {
 		return (
 			<div className={panelClass}>
 				<div className="panel-header">
-					<span className="align-left-button">
-						<Icon
-							name="chevron-left"
-							onClick={() => this.props.setActivePanel("channels")}
-							className="show-channels-icon"
-						/>
+					<span className="align-left-button" onClick={() => this.props.setActivePanel("channels")}>
+						<Icon name="chevron-left" className="show-channels-icon" />
 					</span>
 					<span className="panel-title">Invite People</span>
 				</div>
