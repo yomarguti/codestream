@@ -141,7 +141,6 @@ export class SimpleStream extends Component {
 			console.log("SETTING PWNMI to NULL!");
 			this.postWithNewMessageIndicator = undefined;
 		}
-		console.log(nextProps.currentUser.lastReads[nextProps.postStreamId]);
 		if (
 			nextProps.currentUser &&
 			nextProps.currentUser.lastReads &&

@@ -104843,7 +104843,6 @@ var SimpleStream = function (_Component) {
 				console.log("SETTING PWNMI to NULL!");
 				this.postWithNewMessageIndicator = undefined;
 			}
-			console.log(nextProps.currentUser.lastReads[nextProps.postStreamId]);
 			if (nextProps.currentUser && nextProps.currentUser.lastReads && typeof nextProps.currentUser.lastReads[nextProps.postStreamId] !== "undefined") {
 				console.log("SETTING PWNMI to ", nextProps.currentUser.lastReads[nextProps.postStreamId]);
 				this.postWithNewMessageIndicator = nextProps.currentUser.lastReads[nextProps.postStreamId];
@@ -105945,7 +105944,7 @@ var umis = (function () {
 			}
 		case "CLEAR_UMI":
 			{
-				// console.log("clear umis in the reducer: ", payload);
+				console.log("clear umis in the reducer: ", payload);
 				var _nextState2 = _extends$5({}, state);
 				// instead of deleting it, we set it to zero
 				// so that when we loop through the keys we can
