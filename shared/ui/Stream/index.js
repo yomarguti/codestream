@@ -127,17 +127,23 @@ export class SimpleStream extends Component {
 			this.setState({ fileForIntro: nextProps.currentFile });
 		}
 
-		if (nextProps.hasFocus && !this.props.hasFocus) {
+		// if (nextProps.hasFocus && !this.props.hasFocus) {
+		// 	this.postWithNewMessageIndicator = null;
+		// }
+		// if (!nextProps.hasFocus && this.props.hasFocus) {
+		// 	this.postWithNewMessageIndicator = null;
+		// 	if (this.props.currentUser && this.props.currentUser.lastReads) {
+		// 		this.postWithNewMessageIndicator = this.props.currentUser.lastReads[nextProps.postStreamId];
+		// 	}
+		// }
+
+		if (switchingPostStreams) {
+			console.log("SETTING PWNMI to NULL!");
 			this.postWithNewMessageIndicator = null;
 		}
-		if (!nextProps.hasFocus && this.props.hasFocus) {
-			this.postWithNewMessageIndicator = null;
-			if (this.props.currentUser && this.props.currentUser.lastReads) {
-				this.postWithNewMessageIndicator = this.props.currentUser.lastReads[nextProps.postStreamId];
-			}
-		}
-		if (this.props.currentUser && this.props.currentUser.lastReads) {
-			this.postWithNewMessageIndicator = this.props.currentUser.lastReads[nextProps.postStreamId];
+		if (nextProps.currentUser && nextProps.currentUser.lastReads) {
+			console.log("SETTING PWNMI to ", nextProps.currentUser.lastReads[nextProps.postStreamId]);
+			this.postWithNewMessageIndicator = nextProps.currentUser.lastReads[nextProps.postStreamId];
 		}
 	}
 
@@ -159,9 +165,17 @@ export class SimpleStream extends Component {
 		// if we have focus, and there are no unread indicators which would mean an
 		// unread is out of view, we assume the entire thread has been observed
 		// and we mark the stream read
-		if (this.props.hasFocus && !this.state.unreadsAbove && !this.state.unreadsBelow) {
+		if (
+			this.props.hasFocus &&
+			this.state.activePanel === "main" &&
+			!this.state.unreadsAbove &&
+			!this.state.unreadsBelow
+		) {
 			try {
+				// this gets called pretty often, so only ping the API
+				// server if there is an actual change
 				if (this.props.currentUser.lastReads[this.props.postStreamId]) {
+					console.log("Marking within check");
 					this.props.markStreamRead(this.props.postStreamId);
 				}
 			} catch (e) {
@@ -175,12 +189,15 @@ export class SimpleStream extends Component {
 
 		// this.scrollToBottom();
 
-		// if we just switched to a new stream, (eagerly) mark both old and new as read
+		// if we just switched to a new stream, check to see if we are up-to-date
 		if (postStreamId !== prevProps.postStreamId) {
-			markStreamRead(postStreamId);
-
-			markStreamRead(prevProps.postStreamId);
+			this.checkMarkStreamRead();
 			this.resizeStream();
+		}
+
+		// if we just got the focus, check to see if we are up-to-date
+		if (this.props.hasFocus && !prevProps.hasFocus) {
+			this.checkMarkStreamRead();
 		}
 
 		// if we are switching from a non-thread panel
@@ -190,11 +207,8 @@ export class SimpleStream extends Component {
 			}, 500);
 		}
 
-		// if we just got the focus, mark the new stream read
-		if (this.props.hasFocus && !prevProps.hasFocus) {
-			this.checkMarkStreamRead();
-		}
-
+		// if we are scrolling around (which changes unreadsAbove and/or unreadsBelow)
+		// then check to see if we are up-to-date
 		if (
 			!this.state.unreadsAbove &&
 			!this.state.unreadsBelow &&
@@ -204,12 +218,16 @@ export class SimpleStream extends Component {
 			this.checkMarkStreamRead();
 		}
 
+		// when going in and out of threads, make sure the streams are all
+		// the right height
 		if (prevState.threadId !== this.state.threadId) {
 			this.resizeStream();
 		}
 
 		if (prevProps.hasFocus !== this.props.hasFocus) this.handleScroll();
 
+		// FIXME -- there should be a more definitive way
+		// to detect when a new post came in
 		if (this.props.posts.length !== prevProps.posts.length) {
 			const lastPost = this.props.posts[this.props.posts.length - 1];
 
@@ -237,6 +255,7 @@ export class SimpleStream extends Component {
 		// if we're switching from the channel list to a stream,
 		// then check to see if we should scroll to the bottom
 		if (this.state.activePanel === "main" && prevState.activePanel !== "main") {
+			// FIXME only scroll to the first unread message
 			if (!this.state.scrolledOffBottom) this.scrollToBottom();
 		}
 	}
@@ -717,6 +736,10 @@ export class SimpleStream extends Component {
 				{ label: "Cancel" }
 			]
 		});
+	};
+
+	markUnread = postId => {
+		this.props.markPostUnread(postId);
 	};
 
 	notImplementedYet = () => {

@@ -43531,16 +43531,21 @@ var markStreamRead = function markStreamRead(streamId) {
 	};
 };
 
-// export const markPostUnRead = (streamId, postId) => (dispatch, getState, { api }) => {
-// if (!streamId) return;
-// api.markPostUnread(streamId, postId);
-// return dispatch({ type: "CLEAR_UMI", payload: streamId });
-// };
+var markPostUnread = function markPostUnread(postId) {
+	return function (dispatch, getState, _ref2) {
+		var api = _ref2.api;
+
+		if (!postId) return;
+		console.log("CALLING API: ", api);
+		api.markPostUnread(postId);
+		// return dispatch({ type: "CLEAR_UMI", payload: streamId });
+	};
+};
 
 var createPost = function createPost(streamId, parentPostId, text, codeBlocks, mentions, extra) {
 	return function () {
-		var _ref3 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(dispatch, getState, _ref2) {
-			var api = _ref2.api;
+		var _ref4 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(dispatch, getState, _ref3) {
+			var api = _ref3.api;
 
 			var _getState, context, session, pendingId, post;
 
@@ -43597,15 +43602,15 @@ var createPost = function createPost(streamId, parentPostId, text, codeBlocks, m
 		}));
 
 		return function (_x, _x2, _x3) {
-			return _ref3.apply(this, arguments);
+			return _ref4.apply(this, arguments);
 		};
 	}();
 };
 
 var retryPost = function retryPost(pendingId) {
 	return function () {
-		var _ref5 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(dispatch, getState, _ref4) {
-			var api = _ref4.api;
+		var _ref6 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(dispatch, getState, _ref5) {
+			var api = _ref5.api;
 
 			var _getState2, posts, pendingPost, post;
 
@@ -43641,7 +43646,7 @@ var retryPost = function retryPost(pendingId) {
 		}));
 
 		return function (_x4, _x5, _x6) {
-			return _ref5.apply(this, arguments);
+			return _ref6.apply(this, arguments);
 		};
 	}();
 };
@@ -43652,8 +43657,8 @@ var cancelPost = function cancelPost(id) {
 
 var createSystemPost = function createSystemPost(streamId, parentPostId, text, seqNum) {
 	return function () {
-		var _ref7 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(dispatch, getState, _ref6) {
-			var http = _ref6.http;
+		var _ref8 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(dispatch, getState, _ref7) {
+			var http = _ref7.http;
 			var state, session, context, pendingId, post;
 			return regeneratorRuntime.wrap(function _callee3$(_context3) {
 				while (1) {
@@ -43686,15 +43691,15 @@ var createSystemPost = function createSystemPost(streamId, parentPostId, text, s
 		}));
 
 		return function (_x7, _x8, _x9) {
-			return _ref7.apply(this, arguments);
+			return _ref8.apply(this, arguments);
 		};
 	}();
 };
 
 var editPost = function editPost(id, text, mentions) {
 	return function () {
-		var _ref9 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(dispatch, getState, _ref8) {
-			var api = _ref8.api;
+		var _ref10 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(dispatch, getState, _ref9) {
+			var api = _ref9.api;
 			var post;
 			return regeneratorRuntime.wrap(function _callee4$(_context4) {
 				while (1) {
@@ -43721,15 +43726,15 @@ var editPost = function editPost(id, text, mentions) {
 		}));
 
 		return function (_x10, _x11, _x12) {
-			return _ref9.apply(this, arguments);
+			return _ref10.apply(this, arguments);
 		};
 	}();
 };
 
 var deletePost = function deletePost(id) {
 	return function () {
-		var _ref11 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(dispatch, getState, _ref10) {
-			var api = _ref10.api;
+		var _ref12 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(dispatch, getState, _ref11) {
+			var api = _ref11.api;
 			var post;
 			return regeneratorRuntime.wrap(function _callee5$(_context5) {
 				while (1) {
@@ -43756,15 +43761,15 @@ var deletePost = function deletePost(id) {
 		}));
 
 		return function (_x13, _x14, _x15) {
-			return _ref11.apply(this, arguments);
+			return _ref12.apply(this, arguments);
 		};
 	}();
 };
 
 // usage: setUserPreference(["favorites", "shoes", "wedges"], "red")
 var setUserPreference = function setUserPreference(prefPath, value) {
-	return function (dispatch, getState, _ref12) {
-		var api = _ref12.api;
+	return function (dispatch, getState, _ref13) {
+		var api = _ref13.api;
 
 		var _getState3 = getState(),
 		    session = _getState3.session,
@@ -43800,8 +43805,8 @@ var setUserPreference = function setUserPreference(prefPath, value) {
 
 var createStream = function createStream(attributes) {
 	return function () {
-		var _ref14 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(dispatch, getState, _ref13) {
-			var api = _ref13.api;
+		var _ref15 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(dispatch, getState, _ref14) {
+			var api = _ref14.api;
 
 			var _getState4, context, session, stream, returnStream;
 
@@ -43852,14 +43857,14 @@ var createStream = function createStream(attributes) {
 		}));
 
 		return function (_x16, _x17, _x18) {
-			return _ref14.apply(this, arguments);
+			return _ref15.apply(this, arguments);
 		};
 	}();
 };
 
 var setCurrentStream = function setCurrentStream(streamId) {
 	return function () {
-		var _ref15 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7(dispatch, getState) {
+		var _ref16 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7(dispatch, getState) {
 			var _getState5, context;
 
 			return regeneratorRuntime.wrap(function _callee7$(_context7) {
@@ -43880,15 +43885,15 @@ var setCurrentStream = function setCurrentStream(streamId) {
 		}));
 
 		return function (_x19, _x20) {
-			return _ref15.apply(this, arguments);
+			return _ref16.apply(this, arguments);
 		};
 	}();
 };
 
 var removeUsersFromStream = function removeUsersFromStream(streamId, userIds) {
 	return function () {
-		var _ref17 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8(dispatch, getState, _ref16) {
-			var api = _ref16.api;
+		var _ref18 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8(dispatch, getState, _ref17) {
+			var api = _ref17.api;
 			var update, returnStream;
 			return regeneratorRuntime.wrap(function _callee8$(_context8) {
 				while (1) {
@@ -43924,15 +43929,15 @@ var removeUsersFromStream = function removeUsersFromStream(streamId, userIds) {
 		}));
 
 		return function (_x21, _x22, _x23) {
-			return _ref17.apply(this, arguments);
+			return _ref18.apply(this, arguments);
 		};
 	}();
 };
 
 var addUsersToStream = function addUsersToStream(streamId, userIds) {
 	return function () {
-		var _ref19 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(dispatch, getState, _ref18) {
-			var api = _ref18.api;
+		var _ref20 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(dispatch, getState, _ref19) {
+			var api = _ref19.api;
 			var update, returnStream;
 			return regeneratorRuntime.wrap(function _callee9$(_context9) {
 				while (1) {
@@ -43968,15 +43973,15 @@ var addUsersToStream = function addUsersToStream(streamId, userIds) {
 		}));
 
 		return function (_x24, _x25, _x26) {
-			return _ref19.apply(this, arguments);
+			return _ref20.apply(this, arguments);
 		};
 	}();
 };
 
 var joinStream = function joinStream(streamId) {
 	return function () {
-		var _ref21 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10(dispatch, getState, _ref20) {
-			var api = _ref20.api;
+		var _ref22 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10(dispatch, getState, _ref21) {
+			var api = _ref21.api;
 			var returnStream;
 			return regeneratorRuntime.wrap(function _callee10$(_context10) {
 				while (1) {
@@ -44009,15 +44014,15 @@ var joinStream = function joinStream(streamId) {
 		}));
 
 		return function (_x27, _x28, _x29) {
-			return _ref21.apply(this, arguments);
+			return _ref22.apply(this, arguments);
 		};
 	}();
 };
 
 var renameStream = function renameStream(streamId, name) {
 	return function () {
-		var _ref23 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11(dispatch, getState, _ref22) {
-			var api = _ref22.api;
+		var _ref24 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11(dispatch, getState, _ref23) {
+			var api = _ref23.api;
 			var update, returnStream;
 			return regeneratorRuntime.wrap(function _callee11$(_context11) {
 				while (1) {
@@ -44049,15 +44054,15 @@ var renameStream = function renameStream(streamId, name) {
 		}));
 
 		return function (_x30, _x31, _x32) {
-			return _ref23.apply(this, arguments);
+			return _ref24.apply(this, arguments);
 		};
 	}();
 };
 
 var setPurpose = function setPurpose(streamId, purpose) {
 	return function () {
-		var _ref25 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee12(dispatch, getState, _ref24) {
-			var api = _ref24.api;
+		var _ref26 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee12(dispatch, getState, _ref25) {
+			var api = _ref25.api;
 			var update, returnStream;
 			return regeneratorRuntime.wrap(function _callee12$(_context12) {
 				while (1) {
@@ -44089,15 +44094,15 @@ var setPurpose = function setPurpose(streamId, purpose) {
 		}));
 
 		return function (_x33, _x34, _x35) {
-			return _ref25.apply(this, arguments);
+			return _ref26.apply(this, arguments);
 		};
 	}();
 };
 
 var archiveStream = function archiveStream(streamId, value) {
 	return function () {
-		var _ref27 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee13(dispatch, getState, _ref26) {
-			var api = _ref26.api;
+		var _ref28 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee13(dispatch, getState, _ref27) {
+			var api = _ref27.api;
 			var update, returnStream;
 			return regeneratorRuntime.wrap(function _callee13$(_context13) {
 				while (1) {
@@ -44129,15 +44134,15 @@ var archiveStream = function archiveStream(streamId, value) {
 		}));
 
 		return function (_x36, _x37, _x38) {
-			return _ref27.apply(this, arguments);
+			return _ref28.apply(this, arguments);
 		};
 	}();
 };
 
 var invite = function invite(attributes) {
 	return function () {
-		var _ref29 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee14(dispatch, getState, _ref28) {
-			var api = _ref28.api;
+		var _ref30 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee14(dispatch, getState, _ref29) {
+			var api = _ref29.api;
 			return regeneratorRuntime.wrap(function _callee14$(_context14) {
 				while (1) {
 					switch (_context14.prev = _context14.next) {
@@ -44167,13 +44172,14 @@ var invite = function invite(attributes) {
 		}));
 
 		return function (_x39, _x40, _x41) {
-			return _ref29.apply(this, arguments);
+			return _ref30.apply(this, arguments);
 		};
 	}();
 };
 
 var streamActions = /*#__PURE__*/Object.freeze({
 	markStreamRead: markStreamRead,
+	markPostUnread: markPostUnread,
 	createPost: createPost,
 	retryPost: retryPost,
 	cancelPost: cancelPost,
@@ -103544,7 +103550,7 @@ var Post = function (_Component) {
 
 			var parentPost = this.props.replyingTo;
 
-			var threadLabel = parentPost ? "View Thread" : "Start a Thread";
+			var threadLabel = parentPost || post.hasReplies ? "View Thread" : "Start a Thread";
 			var menuItems = [{ label: threadLabel, action: "make-thread" }, { label: "Mark Unread", action: "mark-unread"
 				// { label: "Add Reaction", action: "add-reaction" },
 				// { label: "Pin to Stream", action: "pin-to-stream" }
@@ -103958,6 +103964,13 @@ var SimpleStream = function (_Component) {
 						}
 					}, { label: "Cancel" }]
 				});
+			}
+		});
+		Object.defineProperty(_this, "markUnread", {
+			enumerable: true,
+			writable: true,
+			value: function value(postId) {
+				_this.props.markPostUnread(postId);
 			}
 		});
 		Object.defineProperty(_this, "notImplementedYet", {
@@ -104815,17 +104828,23 @@ var SimpleStream = function (_Component) {
 				this.setState({ fileForIntro: nextProps.currentFile });
 			}
 
-			if (nextProps.hasFocus && !this.props.hasFocus) {
+			// if (nextProps.hasFocus && !this.props.hasFocus) {
+			// 	this.postWithNewMessageIndicator = null;
+			// }
+			// if (!nextProps.hasFocus && this.props.hasFocus) {
+			// 	this.postWithNewMessageIndicator = null;
+			// 	if (this.props.currentUser && this.props.currentUser.lastReads) {
+			// 		this.postWithNewMessageIndicator = this.props.currentUser.lastReads[nextProps.postStreamId];
+			// 	}
+			// }
+
+			if (switchingPostStreams) {
+				console.log("SETTING PWNMI to NULL!");
 				this.postWithNewMessageIndicator = null;
 			}
-			if (!nextProps.hasFocus && this.props.hasFocus) {
-				this.postWithNewMessageIndicator = null;
-				if (this.props.currentUser && this.props.currentUser.lastReads) {
-					this.postWithNewMessageIndicator = this.props.currentUser.lastReads[nextProps.postStreamId];
-				}
-			}
-			if (this.props.currentUser && this.props.currentUser.lastReads) {
-				this.postWithNewMessageIndicator = this.props.currentUser.lastReads[nextProps.postStreamId];
+			if (nextProps.currentUser && nextProps.currentUser.lastReads) {
+				console.log("SETTING PWNMI to ", nextProps.currentUser.lastReads[nextProps.postStreamId]);
+				this.postWithNewMessageIndicator = nextProps.currentUser.lastReads[nextProps.postStreamId];
 			}
 		}
 	}, {
@@ -104848,9 +104867,12 @@ var SimpleStream = function (_Component) {
 			// if we have focus, and there are no unread indicators which would mean an
 			// unread is out of view, we assume the entire thread has been observed
 			// and we mark the stream read
-			if (this.props.hasFocus && !this.state.unreadsAbove && !this.state.unreadsBelow) {
+			if (this.props.hasFocus && this.state.activePanel === "main" && !this.state.unreadsAbove && !this.state.unreadsBelow) {
 				try {
+					// this gets called pretty often, so only ping the API
+					// server if there is an actual change
 					if (this.props.currentUser.lastReads[this.props.postStreamId]) {
+						console.log("Marking within check");
 						this.props.markStreamRead(this.props.postStreamId);
 					}
 				} catch (e) {
@@ -104869,13 +104891,16 @@ var SimpleStream = function (_Component) {
 
 			// this.scrollToBottom();
 
-			// if we just switched to a new stream, (eagerly) mark both old and new as read
+			// if we just switched to a new stream, check to see if we are up-to-date
 
 			if (postStreamId !== prevProps.postStreamId) {
-				markStreamRead$$1(postStreamId);
-
-				markStreamRead$$1(prevProps.postStreamId);
+				this.checkMarkStreamRead();
 				this.resizeStream();
+			}
+
+			// if we just got the focus, check to see if we are up-to-date
+			if (this.props.hasFocus && !prevProps.hasFocus) {
+				this.checkMarkStreamRead();
 			}
 
 			// if we are switching from a non-thread panel
@@ -104885,22 +104910,23 @@ var SimpleStream = function (_Component) {
 				}, 500);
 			}
 
-			// if we just got the focus, mark the new stream read
-			if (this.props.hasFocus && !prevProps.hasFocus) {
-				this.checkMarkStreamRead();
-			}
-
+			// if we are scrolling around (which changes unreadsAbove and/or unreadsBelow)
+			// then check to see if we are up-to-date
 			if (!this.state.unreadsAbove && !this.state.unreadsBelow && (prevState.unreadsAbove || prevState.unreadsBelow)) {
 				console.log("CDU: cmsr");
 				this.checkMarkStreamRead();
 			}
 
+			// when going in and out of threads, make sure the streams are all
+			// the right height
 			if (prevState.threadId !== this.state.threadId) {
 				this.resizeStream();
 			}
 
 			if (prevProps.hasFocus !== this.props.hasFocus) this.handleScroll();
 
+			// FIXME -- there should be a more definitive way
+			// to detect when a new post came in
 			if (this.props.posts.length !== prevProps.posts.length) {
 				var lastPost = this.props.posts[this.props.posts.length - 1];
 
@@ -104927,6 +104953,7 @@ var SimpleStream = function (_Component) {
 			// if we're switching from the channel list to a stream,
 			// then check to see if we should scroll to the bottom
 			if (this.state.activePanel === "main" && prevState.activePanel !== "main") {
+				// FIXME only scroll to the first unread message
 				if (!this.state.scrolledOffBottom) this.scrollToBottom();
 			}
 		}
@@ -106170,6 +106197,11 @@ var WebviewApi = function () {
 		key: "markStreamRead",
 		value: function markStreamRead(streamId) {
 			return this.postMessage({ action: "mark-stream-read", params: streamId });
+		}
+	}, {
+		key: "markPostUnread",
+		value: function markPostUnread(postId) {
+			return this.postMessage({ action: "mark-post-unread", params: postId });
 		}
 	}, {
 		key: "saveUserPreference",

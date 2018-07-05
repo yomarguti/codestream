@@ -66,6 +66,10 @@ export default class WebviewApi {
 		return this.postMessage({ action: "mark-stream-read", params: streamId });
 	}
 
+	markPostUnread(postId) {
+		return this.postMessage({ action: "mark-post-unread", params: postId });
+	}
+
 	saveUserPreference(newPreference) {
 		return this.postMessage({ action: "save-user-preference", params: newPreference });
 	}

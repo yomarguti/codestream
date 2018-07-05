@@ -18,11 +18,12 @@ export const markStreamRead = streamId => (dispatch, getState, { api }) => {
 	return dispatch({ type: "CLEAR_UMI", payload: streamId });
 };
 
-// export const markPostUnRead = (streamId, postId) => (dispatch, getState, { api }) => {
-// if (!streamId) return;
-// api.markPostUnread(streamId, postId);
-// return dispatch({ type: "CLEAR_UMI", payload: streamId });
-// };
+export const markPostUnread = postId => (dispatch, getState, { api }) => {
+	if (!postId) return;
+	console.log("CALLING API: ", api);
+	api.markPostUnread(postId);
+	// return dispatch({ type: "CLEAR_UMI", payload: streamId });
+};
 
 export const createPost = (streamId, parentPostId, text, codeBlocks, mentions, extra) => async (
 	dispatch,
