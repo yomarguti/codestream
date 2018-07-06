@@ -104713,7 +104713,7 @@ var SimpleStream = function (_Component) {
 						preContext: quote.preContext,
 						postContext: quote.postContext,
 						repoId: repoId,
-						file: currentFile
+						file: quote.file
 					};
 
 					// if we have a streamId, send it. otherwise the
@@ -104755,6 +104755,10 @@ var SimpleStream = function (_Component) {
 			// presumably because the user has typed more than one line of text
 			// in it, and calls a function to handle the new size
 			new ResizeObserver(this.handleResizeCompose).observe(this._compose.current);
+
+			// go ahead and do resizing because some environments (VS Code) have a
+			// polyfill for ResizeObserver which won't be triggered automatically
+			this.handleResizeCompose();
 
 			if (this._postslist) {
 				this._postslist.addEventListener("scroll", this.handleScroll.bind(this));
