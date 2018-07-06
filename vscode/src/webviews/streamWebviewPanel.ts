@@ -211,7 +211,7 @@ export class StreamWebviewPanel extends Disposable {
 
 						let post;
 						if (codeBlocks === undefined || codeBlocks.length === 0) {
-							post = await Container.session.api.createPost(text, parentPostId, streamId, teamId)
+							post = await Container.session.api.createPost(text, parentPostId, streamId, teamId);
 						} else {
 							const block = codeBlocks[0];
 							const gitRepos = await Container.git.getRepositories();
@@ -221,10 +221,19 @@ export class StreamWebviewPanel extends Disposable {
 							// TODO: use repo remotes instead of repoId
 							const fileStream = {
 								file: block.file,
-								repoId: ''
-							}
+								repoId: ""
+							};
 
-							post = Container.session.api.createPostWithCode(text, parentPostId, block.code, block.location, commitHash, fileStream, streamId, teamId)
+							post = Container.session.api.createPostWithCode(
+								text,
+								parentPostId,
+								block.code,
+								block.location,
+								commitHash,
+								fileStream,
+								streamId,
+								teamId
+							);
 						}
 
 						if (post === undefined) return;
@@ -257,11 +266,16 @@ export class StreamWebviewPanel extends Disposable {
 						break;
 					}
 					case "mark-stream-read":
-						const response = await this._streamThread.stream.markRead();
-						this.postMessage({
-							type: "codestream:response",
-							body: { id: body.id, payload: response }
-						});
+						const stream = await Container.session.getStream(body.params);
+						if (stream) {
+							const response = await stream.markRead();
+							this.postMessage({
+								type: "codestream:response",
+								body: { id: body.id, payload: response }
+							});
+						} else {
+							// TODO
+						}
 						break;
 					case "create-stream": {
 						const { type, teamId, name, privacy, memberIds } = body.params;
