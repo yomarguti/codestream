@@ -1,5 +1,5 @@
 "use strict";
-import { Range, Uri } from "vscode";
+import { Uri } from "vscode";
 import { CodeStreamCollection, CodeStreamItem } from "./collection";
 import { Iterables, memoize, Strings } from "../../system";
 import { Post, PostCollection } from "./posts";
@@ -51,7 +51,7 @@ abstract class StreamBase<T extends CSStream> extends CodeStreamItem<T> {
 	async postCode(
 		text: string,
 		code: string,
-		range: Range,
+		range: [number, number, number, number],
 		commitHash: string,
 		markerStream: FileStream,
 		parentPostId?: string
@@ -59,7 +59,7 @@ abstract class StreamBase<T extends CSStream> extends CodeStreamItem<T> {
 	async postCode(
 		text: string,
 		code: string,
-		range: Range,
+		range: [number, number, number, number],
 		commitHash: string,
 		markerStream: string | { file: string; repoId: string },
 		parentPostId?: string
@@ -67,7 +67,7 @@ abstract class StreamBase<T extends CSStream> extends CodeStreamItem<T> {
 	async postCode(
 		text: string,
 		code: string,
-		range: Range,
+		range: [number, number, number, number],
 		commitHash: string,
 		markerStreamOrId: FileStream | string | { file: string; repoId: string },
 		parentPostId?: string

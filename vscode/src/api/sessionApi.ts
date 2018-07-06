@@ -1,5 +1,5 @@
 "use strict";
-import { MessageItem, Range, Uri, window } from "vscode";
+import { MessageItem, Uri, window } from "vscode";
 import {
 	CodeStreamApi,
 	CreatePostRequestCodeBlock,
@@ -54,7 +54,7 @@ export class CodeStreamSessionApi {
 		text: string,
 		parentPostId: string | undefined,
 		code: string,
-		range: Range,
+		location: [number, number, number, number],
 		commitHash: string,
 		fileStream: string | { file: string; repoId: string },
 		streamId: string,
@@ -62,7 +62,7 @@ export class CodeStreamSessionApi {
 	): Promise<CSPost | undefined> {
 		const codeBlock: CreatePostRequestCodeBlock = {
 			code: code,
-			location: [range.start.line, range.start.character, range.end.line, range.end.character]
+			location
 		};
 
 		if (typeof fileStream === "string") {
@@ -72,14 +72,19 @@ export class CodeStreamSessionApi {
 			codeBlock.repoId = fileStream.repoId;
 		}
 
-		return (await this._api.createPost(this.token, {
-			teamId: teamId || this.teamId,
-			streamId: streamId,
-			text: text,
-			parentPostId,
-			codeBlocks: [codeBlock],
-			commitHashWhenPosted: commitHash
-		})).post;
+		try {
+			return (await this._api.createPost(this.token, {
+				teamId: teamId || this.teamId,
+				streamId: streamId,
+				text: text,
+				parentPostId,
+				codeBlocks: [codeBlock],
+				commitHashWhenPosted: commitHash
+			})).post;
+		} catch (e) {
+			debugger;
+			return;
+		}
 	}
 
 	async createRepo(

@@ -200,9 +200,6 @@ export class StreamWebviewPanel extends Disposable {
 
 		const { type } = e;
 
-		const createRange = (array: number[][]) =>
-			new Range(array[0][0], array[0][1], array[1][0], array[1][1]);
-
 		switch (type.replace("codestream:", "")) {
 			case "request":
 				const body = e.body as CSWebviewRequest;
@@ -210,7 +207,7 @@ export class StreamWebviewPanel extends Disposable {
 				// TODO: Add exception handling for failed requests
 				switch (body.action) {
 					case "create-post":
-						const { text, codeBlocks, commitHashWhenPosted, parentPostId } = body.params;
+						const { text, codeBlocks, parentPostId } = body.params;
 
 						let post;
 						if (codeBlocks === undefined || codeBlocks.length === 0) {
@@ -227,11 +224,15 @@ export class StreamWebviewPanel extends Disposable {
 								markerStream = block.streamId;
 							}
 
+							const repos = await Container.git.getRepositories();
+							const repo = repos.find(r => r.containsFile(block.file));
+							const commitHash = (await repo!.getCurrentCommit()) || "";
+
 							post = await this._streamThread.stream.postCode(
 								text,
 								block.code,
-								createRange(block.location),
-								commitHashWhenPosted,
+								block.location,
+								commitHash,
 								markerStream,
 								parentPostId
 							);
@@ -420,7 +421,8 @@ export class StreamWebviewPanel extends Disposable {
 			body: {
 				quoteRange: [range.start.line, range.start.character, range.end.line, range.end.character],
 				quoteText: code,
-				authors: mentions.split(" ")
+				authors: mentions.split(" "),
+				file: relativePath
 			}
 		});
 	}

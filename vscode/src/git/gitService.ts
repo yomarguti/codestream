@@ -57,6 +57,8 @@ export interface IGitService extends Disposable {
 	resolveRef(uri: Uri, ref: string): Promise<string | undefined>;
 	resolveRef(path: string, ref: string): Promise<string | undefined>;
 	//   resolveRef(uriOrPath: Uri | string, ref: string): Promise<string | undefined> {
+
+	getCurrentCommit(uri: Uri): Promise<string>;
 }
 
 export class GitService extends Disposable implements IGitService {
@@ -285,6 +287,15 @@ export class GitService extends Disposable implements IGitService {
 			return data.trim();
 		} catch {
 			return undefined;
+		}
+	}
+
+	async getCurrentCommit(uri: Uri) {
+		try {
+			const data = await git({ cwd: uri.fsPath }, "rev-parse", "HEAD");
+			return data.trim();
+		} catch {
+			return "";
 		}
 	}
 }

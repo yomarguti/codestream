@@ -1,4 +1,6 @@
 "use strict";
+import * as Path from "path";
+import * as fs from "fs";
 import { Uri } from "vscode";
 import { GitRemote } from "../gitService";
 import { Container } from "../../container";
@@ -27,5 +29,13 @@ export class GitRepository {
 			this._remote = await Container.git.getRepoRemote(this.uri);
 		}
 		return this._remote;
+	}
+
+	containsFile(path: string) {
+		return fs.existsSync(Path.join(this.uri.fsPath, path));
+	}
+
+	getCurrentCommit() {
+		return Container.git.getCurrentCommit(this.uri);
 	}
 }
