@@ -81,6 +81,18 @@ body {
   vertical-align: text-top;
   fill: currentColor;
 }
+.codestream a {
+  text-decoration: underline;
+}
+.codestream ul.compact {
+  margin: 0;
+  padding: 0;
+}
+.codestream ul.compact li {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
 .codestream [contenteditable="true"]:empty:before {
   content: attr(placeholder);
   opacity: 0.5;
@@ -113,13 +125,13 @@ body {
   text-align: center;
   background-color: var(--app-background-color);
   border-bottom: 1px solid rgba(0, 0, 0, 0.3);
+  padding: 5px 35px 10px 35px;
   z-index: 30;
   user-select: none;
-  height: 2em;
+  height: 2.1em;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: pre;
-  padding: 0 35px 10px 35px;
   font-size: 16px;
   color: var(--text-color-subtle);
 }
@@ -145,6 +157,7 @@ body {
   left: 5px;
 }
 .codestream .stream .panel-header .align-left-button label {
+  display: inline-block;
   cursor: pointer;
   padding-left: 3px;
   vertical-align: 1px;
@@ -248,6 +261,14 @@ body {
 .codestream .stream #create-dm-form .button-group {
   margin-top: 30px;
 }
+.codestream .stream .standard-form .input-text {
+  width: 100%;
+}
+.codestream .stream .standard-form fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
 .codestream .stream .standard-form .form-body {
   padding: 20px;
 }
@@ -255,8 +276,10 @@ body {
   color: var(--text-color-subtle);
 }
 .codestream .stream .standard-form #controls label {
+  display: inline-block;
   font-size: 1.2em;
-  margin: 0 0 2px 3px;
+  padding: 0 0 3px 3px;
+  margin: 0;
 }
 .codestream .stream .standard-form #controls label .optional {
   opacity: 0.5;
@@ -648,73 +671,97 @@ body {
   box-sizing: border-box;
   padding-bottom: 50px;
 }
-.codestream .stream .channel-list .no-matches {
+.codestream .stream .channel-list .no-matches,
+.codestream .stream .invite-panel .no-matches {
   font-style: italic;
   padding: 5px 10px;
 }
-.codestream .stream .channel-list .section {
+.codestream .stream .channel-list .section,
+.codestream .stream .invite-panel .section {
   padding: 10px 0;
   font-size: 15px;
 }
-.codestream .stream .channel-list .section .clickable {
+.codestream .stream .channel-list .section .clickable,
+.codestream .stream .invite-panel .section .clickable {
   cursor: pointer;
 }
-.codestream .stream .channel-list .section .header {
+.codestream .stream .channel-list .section .header,
+.codestream .stream .invite-panel .section .header {
   text-transform: uppercase;
   font-weight: normal;
   padding: 2px 10px;
   color: var(--text-color-subtle);
+  background: var(--app-background-color);
   position: relative;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: block;
+  z-index: 1;
+  position: sticky;
 }
-.codestream .stream .channel-list .section .header span {
+.codestream .stream .channel-list .section .header span,
+.codestream .stream .invite-panel .section .header span {
   opacity: 0.5;
 }
-.codestream .stream .channel-list .section .header span.clickable:hover {
+.codestream .stream .channel-list .section .header span.clickable:hover,
+.codestream .stream .invite-panel .section .header span.clickable:hover {
   opacity: 1;
 }
-.codestream .stream .channel-list .section .header.clickable:hover {
+.codestream .stream .channel-list .section .header.clickable:hover,
+.codestream .stream .invite-panel .section .header.clickable:hover {
   opacity: 1;
   background: var(--app-background-color-hover);
 }
-.codestream .stream .channel-list .section .latest-post {
+.codestream .stream .channel-list .section .latest-post,
+.codestream .stream .invite-panel .section .latest-post {
   position: absolute;
   right: 9px;
   top: 2px;
   color: var(--text-color-subtle);
 }
-.codestream .stream .channel-list .section .icon.align-right {
+.codestream .stream .channel-list .section .icon.align-right,
+.codestream .stream .invite-panel .section .icon.align-right {
   position: absolute;
   right: 9px;
   top: 2px;
   cursor: pointer;
   z-index: 1;
 }
-.codestream .stream .channel-list .section .icon.align-right:hover {
+.codestream .stream .channel-list .section .icon.align-right:hover,
+.codestream .stream .invite-panel .section .icon.align-right:hover {
   color: var(--text-color-subtle);
 }
-.codestream .stream .channel-list .section ul {
+.codestream .stream .channel-list .section ul,
+.codestream .stream .invite-panel .section ul {
   margin: 0;
   padding: 0;
 }
-.codestream .stream .channel-list .section ul li.unread {
+.codestream .stream .channel-list .section ul li.unread,
+.codestream .stream .invite-panel .section ul li.unread {
   font-weight: 800;
   opacity: 1;
   color: var(--text-color-subtle);
 }
 .codestream .stream .channel-list .section ul li:hover,
-.codestream .stream .channel-list .section ul li.active {
+.codestream .stream .invite-panel .section ul li:hover,
+.codestream .stream .channel-list .section ul li.active,
+.codestream .stream .invite-panel .section ul li.active {
   opacity: 1;
   color: var(--text-color-subtle);
   background: var(--app-background-color-hover);
 }
-.codestream .stream .channel-list .section ul .invite {
+.codestream .stream .channel-list .section ul .invite,
+.codestream .stream .invite-panel .section ul .invite {
   color: var(--link-color);
 }
-.codestream .stream .channel-list .section ul .invite .icon::before {
+.codestream .stream .channel-list .section ul .invite .icon::before,
+.codestream .stream .invite-panel .section ul .invite .icon::before {
   width: 8px !important;
   padding-left: 1px;
 }
-.codestream .stream .channel-list .section ul li {
+.codestream .stream .channel-list .section ul li,
+.codestream .stream .invite-panel .section ul li {
   position: relative;
   font-weight: 100;
   padding: 2px 10px;
@@ -723,24 +770,30 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.codestream .stream .channel-list .section ul li xspan.name {
+.codestream .stream .channel-list .section ul li xspan.name,
+.codestream .stream .invite-panel .section ul li xspan.name {
   padding-left: 5px;
   color: var(--text-color-subtle);
 }
-.codestream .stream .channel-list .section ul li .icon {
+.codestream .stream .channel-list .section ul li .icon,
+.codestream .stream .invite-panel .section ul li .icon {
   top: 2px !important;
   margin-right: 5px;
 }
-.codestream .stream .channel-list .section ul li .icon.gear {
+.codestream .stream .channel-list .section ul li .icon.gear,
+.codestream .stream .invite-panel .section ul li .icon.gear {
   padding-top: 12px !important;
 }
-.codestream .stream .channel-list .section ul li .hash {
+.codestream .stream .channel-list .section ul li .hash,
+.codestream .stream .invite-panel .section ul li .hash {
   top: 0 !important;
 }
-.codestream .stream .channel-list .section ul li .icon.align-right .octicon-gear {
+.codestream .stream .channel-list .section ul li .icon.align-right .octicon-gear,
+.codestream .stream .invite-panel .section ul li .icon.align-right .octicon-gear {
   margin-right: -1px;
 }
-.codestream .stream .channel-list .section ul li .icon.align-right {
+.codestream .stream .channel-list .section ul li .icon.align-right,
+.codestream .stream .invite-panel .section ul li .icon.align-right {
   float: none;
   position: absolute;
   right: 9px;
@@ -749,17 +802,40 @@ body {
   display: none;
   opacity: 0.6;
 }
-.codestream .stream .channel-list .section ul li .icon.align-right:hover {
+.codestream .stream .channel-list .section ul li .icon.align-right:hover,
+.codestream .stream .invite-panel .section ul li .icon.align-right:hover {
   opacity: 1;
 }
 .codestream .stream .channel-list .section ul li .icon-lock::before,
-.codestream .stream .channel-list .section ul li .icon-mute::before {
+.codestream .stream .invite-panel .section ul li .icon-lock::before,
+.codestream .stream .channel-list .section ul li .icon-mute::before,
+.codestream .stream .invite-panel .section ul li .icon-mute::before {
   font-size: 12px;
   padding-right: 0;
   margin-right: 0;
   width: 10px;
 }
-.codestream .stream .channel-list .section ul li .presence {
+.codestream .stream .channel-list .section ul li .lock,
+.codestream .stream .invite-panel .section ul li .lock,
+.codestream .stream .channel-list .section ul li .mute,
+.codestream .stream .invite-panel .section ul li .mute,
+.codestream .stream .channel-list .section ul li .person,
+.codestream .stream .invite-panel .section ul li .person,
+.codestream .stream .channel-list .section ul li .organization,
+.codestream .stream .invite-panel .section ul li .organization {
+  padding-right: 0;
+  width: 10px;
+  display: inline-block;
+  transform: scale(0.8);
+}
+.codestream .stream .channel-list .section ul li .mute,
+.codestream .stream .invite-panel .section ul li .mute,
+.codestream .stream .channel-list .section ul li .organization,
+.codestream .stream .invite-panel .section ul li .organization {
+  margin: 0 6px 0 -1px;
+}
+.codestream .stream .channel-list .section ul li .presence,
+.codestream .stream .invite-panel .section ul li .presence {
   display: inline-block;
   width: 8px;
   height: 8px;
@@ -767,7 +843,8 @@ body {
   background: green;
   margin: 0 5px 1px 0;
 }
-.codestream .stream .channel-list .section ul li .umi {
+.codestream .stream .channel-list .section ul li .umi,
+.codestream .stream .invite-panel .section ul li .umi {
   position: absolute;
   text-align: center;
   border-radius: 3px;
@@ -782,19 +859,33 @@ body {
   font-weight: normal;
   z-index: 2;
 }
-.codestream .stream .channel-list .section ul li time {
+.codestream .stream .channel-list .section ul li time,
+.codestream .stream .invite-panel .section ul li time {
   float: right;
   opacity: 0.5;
   color: var(--app-background-color);
 }
-.codestream .stream .channel-list .section ul li time .details {
+.codestream .stream .channel-list .section ul li time .details,
+.codestream .stream .invite-panel .section ul li time .details {
   color: var(--text-color);
 }
-.codestream .stream .channel-list .section ul li:hover .icon.align-right {
+.codestream .stream .channel-list .section ul li:hover .icon.align-right,
+.codestream .stream .invite-panel .section ul li:hover .icon.align-right {
   display: block;
 }
-.codestream .stream .channel-list .section ul li.muted {
+.codestream .stream .channel-list .section ul li.muted,
+.codestream .stream .invite-panel .section ul li.muted {
   opacity: 0.5;
+}
+.codestream .stream .channel-list .committer-email,
+.codestream .stream .invite-panel .committer-email {
+  font-size: smaller;
+  color: var(--text-color-subtle);
+}
+.codestream .stream .channel-list .reinvite,
+.codestream .stream .invite-panel .reinvite {
+  float: right;
+  color: var(--link-color);
 }
 .codestream .stream .standard-form .header {
   padding: 2px 20px !important;
@@ -813,7 +904,8 @@ body {
   height: 100%;
   transition: transform 0.2s, opacity 0.2s;
 }
-.codestream .stream .postslist {
+.codestream .stream .postslist,
+.codestream .stream .vscroll {
   width: 100%;
   max-height: 100%;
   overflow-y: auto;
@@ -824,21 +916,18 @@ body {
   max-height: 100%;
   overflow: hidden;
 }
-.codestream .stream .panel.shrink .postslist {
+.codestream .stream .panel.shrink .postslist,
+.codestream .stream .panel.shrink .vscroll {
   transform: scale(0.9);
 }
 .codestream .stream .panel.shrink .code {
   overflow-x: hidden;
   overflow-y: hidden;
 }
-.codestream .stream .channel-panel .postslist {
+.codestream .stream .vscroll {
   padding-bottom: 50px;
 }
-.codestream .stream .thread-panel,
-.codestream .stream .main-panel,
-.codestream .stream .create-channel-panel,
-.codestream .stream .create-dm-panel,
-.codestream .stream .public-channel-panel {
+.codestream .stream .panel {
   animation: 0.4s slidein;
   background-color: var(--app-background-color);
 }
@@ -848,6 +937,7 @@ body {
 .codestream .stream .public-channel-panel li .explainer {
   color: var(--text-color-subtle);
   padding: 0 15px 5px 15px;
+  font-size: smaller;
 }
 .codestream .stream #create-channel-form,
 .codestream .stream #create-dm-form {
@@ -888,6 +978,7 @@ body {
   padding: 10px 9px 10px 55px;
   cursor: pointer;
   min-height: 56px;
+  white-space: pre-wrap;
   word-wrap: break-word;
   position: relative;
   max-width: 100%;
@@ -1225,6 +1316,9 @@ body {
 .codestream .react-select__multi-value__remove:hover {
   background: #c00;
   color: white;
+}
+.codestream .react-select__menu {
+  z-index: 2;
 }
 .codestream .react-select__menu-list {
   background: var(--base-background-color);

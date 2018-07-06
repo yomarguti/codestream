@@ -59,5 +59,7 @@ export default {
 	"slackInfo.p1":
 		"Connect CodeStream to Slack and all of your team's messages on CodeStream will also get posted to a channel on Slack.",
 	"slackInfo.p2":
-		"This is a great option if you have developers that don't use Atom. They can even reply to messages directly from Slack!"
+	"This is a great option if you have developers that don't use Atom. They can even reply to messages directly from Slack!",
+	"createChannel.name.invalid": "Looks invalid?",
+	"createChannel.name.required": "Required"
 };
