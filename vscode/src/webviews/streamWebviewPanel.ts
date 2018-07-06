@@ -207,35 +207,24 @@ export class StreamWebviewPanel extends Disposable {
 				// TODO: Add exception handling for failed requests
 				switch (body.action) {
 					case "create-post":
-						const { text, codeBlocks, parentPostId } = body.params;
+						const { text, codeBlocks, parentPostId, streamId, teamId } = body.params;
 
 						let post;
 						if (codeBlocks === undefined || codeBlocks.length === 0) {
-							post = await this._streamThread.stream.post(text, parentPostId);
+							post = await Container.session.api.createPost(text, parentPostId, streamId, teamId)
 						} else {
 							const block = codeBlocks[0];
-							let markerStream;
-							if (block.streamId === undefined) {
-								markerStream = {
-									file: block.file!,
-									repoId: block.repoId!
-								};
-							} else {
-								markerStream = block.streamId;
+							const gitRepos = await Container.git.getRepositories();
+							const gitRepo = gitRepos.find(r => r.containsFile(block.file));
+							const commitHash = (await gitRepo!.getCurrentCommit()) || "";
+
+							// TODO: use repo remotes instead of repoId
+							const fileStream = {
+								file: block.file,
+								repoId: ''
 							}
 
-							const repos = await Container.git.getRepositories();
-							const repo = repos.find(r => r.containsFile(block.file));
-							const commitHash = (await repo!.getCurrentCommit()) || "";
-
-							post = await this._streamThread.stream.postCode(
-								text,
-								block.code,
-								block.location,
-								commitHash,
-								markerStream,
-								parentPostId
-							);
+							post = Container.session.api.createPostWithCode(text, parentPostId, block.code, block.location, commitHash, fileStream, streamId, teamId)
 						}
 
 						if (post === undefined) return;
@@ -244,7 +233,7 @@ export class StreamWebviewPanel extends Disposable {
 							type: "codestream:response",
 							body: {
 								id: body.id,
-								payload: post.entity
+								payload: post
 							}
 						});
 						break;
