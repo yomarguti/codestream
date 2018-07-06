@@ -102,6 +102,7 @@
 			.align-left-button {
 				left: 5px;
 				label {
+					display: inline-block;
 					cursor: pointer;
 					padding-left: 3px;
 					vertical-align: 1px;
@@ -250,6 +251,14 @@
 		}
 
 		.standard-form {
+			.input-text {
+				width: 100%;
+			}
+			fieldset {
+				border: none;
+				padding: 0;
+				margin: 0;
+			}
 			.form-body {
 				padding: 20px;
 			}
@@ -258,8 +267,10 @@
 			}
 			#controls {
 				label {
+					display: inline-block;
 					font-size: 1.2em;
-					margin: 0 0 2px 3px;
+					padding: 0 0 3px 3px;
+					margin: 0;
 					.optional {
 						opacity: 0.5;
 					}
