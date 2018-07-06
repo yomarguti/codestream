@@ -211,7 +211,7 @@ export class StreamWebviewPanel extends Disposable {
 
 						let post;
 						if (codeBlocks === undefined || codeBlocks.length === 0) {
-							post = await Container.session.api.createPost(text, parentPostId, streamId, teamId);
+							post = await this.session.api.createPost(text, parentPostId, streamId, teamId);
 						} else {
 							const block = codeBlocks[0];
 							const gitRepos = await Container.git.getRepositories();
@@ -224,7 +224,7 @@ export class StreamWebviewPanel extends Disposable {
 								repoId: ""
 							};
 
-							post = Container.session.api.createPostWithCode(
+							post = this.session.api.createPostWithCode(
 								text,
 								parentPostId,
 								block.code,
@@ -247,8 +247,8 @@ export class StreamWebviewPanel extends Disposable {
 						});
 						break;
 					case "delete-post": {
-						const post = await Container.session.api.getPost(body.params);
-						const updates = await Container.session.api.deletePost(body.params);
+						const post = await this.session.api.getPost(body.params);
+						const updates = await this.session.api.deletePost(body.params);
 						this.postMessage({
 							type: "codestream:response",
 							body: { id: body.id, payload: { ...post, ...updates } }
@@ -257,8 +257,8 @@ export class StreamWebviewPanel extends Disposable {
 					}
 					case "edit-post": {
 						const { id, text, mentions } = body.params;
-						const post = await Container.session.api.getPost(id);
-						const updates = await Container.session.api.editPost(id, text, mentions);
+						const post = await this.session.api.getPost(id);
+						const updates = await this.session.api.editPost(id, text, mentions);
 						this.postMessage({
 							type: "codestream:response",
 							body: { id: body.id, payload: { ...post, ...updates } }
@@ -266,7 +266,7 @@ export class StreamWebviewPanel extends Disposable {
 						break;
 					}
 					case "mark-stream-read":
-						const stream = await Container.session.getStream(body.params);
+						const stream = await this.session.getStream(body.params);
 						if (stream) {
 							const response = await stream.markRead();
 							this.postMessage({
@@ -274,6 +274,7 @@ export class StreamWebviewPanel extends Disposable {
 								body: { id: body.id, payload: response }
 							});
 						} else {
+							debugger;
 							// TODO
 						}
 						break;
@@ -281,14 +282,9 @@ export class StreamWebviewPanel extends Disposable {
 						const { type, teamId, name, privacy, memberIds } = body.params;
 						let stream;
 						if (type === "channel") {
-							stream = await Container.session.api.createChannelStream(
-								name,
-								memberIds,
-								privacy,
-								teamId
-							);
+							stream = await this.session.api.createChannelStream(name, memberIds, privacy, teamId);
 						} else if (type === "direct") {
-							stream = await Container.session.api.createDirectStream(memberIds);
+							stream = await this.session.api.createDirectStream(memberIds);
 						}
 						return this.postMessage({
 							type: "codestream:response",
@@ -296,7 +292,7 @@ export class StreamWebviewPanel extends Disposable {
 						});
 					}
 					case "save-user-preference": {
-						const response = await Container.session.api.savePreferences(body.params);
+						const response = await this.session.api.savePreferences(body.params);
 						return this.postMessage({
 							type: "codestream:response",
 							body: { id: body.id, payload: response }
