@@ -196,8 +196,6 @@ export class StreamWebviewPanel extends Disposable {
 	}
 
 	private async onPanelWebViewMessageReceived(e: CSWebviewMessage) {
-		if (this._streamThread === undefined) return;
-
 		const { type } = e;
 
 		switch (type.replace("codestream:", "")) {
@@ -302,15 +300,12 @@ export class StreamWebviewPanel extends Disposable {
 				break;
 
 			case "interaction:thread-selected": {
-				const { threadId, streamId, post } = e.body;
-				if (this._streamThread !== undefined && this._streamThread.stream.id === streamId) {
-					this._streamThread.id = threadId;
-				}
+				const { streamId, post } = e.body;
+
+				const stream = await this.session.getStream(streamId);
 
 				if (post.codeBlocks === undefined) return;
-				await Container.commands.openPostWorkingFile(
-					new Post(this.session, post, this._streamThread.stream)
-				);
+				await Container.commands.openPostWorkingFile(new Post(this.session, post, stream));
 				break;
 			}
 			case "subscription:file-changed": {
