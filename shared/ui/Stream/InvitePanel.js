@@ -141,7 +141,7 @@ export class InvitePage extends Component {
 									type="submit"
 									loading={this.state.loading}
 								>
-									<FormattedMessage id="teamMemberSelection.invite" defaultMessage="INVITE" />
+									<FormattedMessage id="teamMemberSelection.invite" defaultMessage="Invite" />
 								</Button>
 								<Button
 									id="discard-button"
