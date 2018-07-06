@@ -106,6 +106,7 @@
                 const bodyStyle = body.style;
                 let color = computedStyle.getPropertyValue('--color').trim();
                 bodyStyle.setProperty('--text-color', opacity(color, 80));
+                bodyStyle.setProperty('--text-color-highlight', color);
                 bodyStyle.setProperty('--text-color-subtle', opacity(color, 60));
                 switch (theme) {
                     case 'dark':
@@ -124,7 +125,7 @@
                         bodyStyle.setProperty('--app-background-color-darker', darken(color, 4));
                         bodyStyle.setProperty('--app-background-color-hover', lighten(color, 7));
 
-                        bodyStyle.setProperty('--base-background-color', lighten(color, 10));
+                        bodyStyle.setProperty('--base-background-color', color, 10);
                         bodyStyle.setProperty('--tool-panel-background-color', lighten(color, 10));
                         break;
 
@@ -132,7 +133,7 @@
                         bodyStyle.setProperty('--app-background-color', darken(color, 4));
                         bodyStyle.setProperty('--app-background-color-hover', darken(color, 7));
 
-                        bodyStyle.setProperty('--base-background-color', opacity(darken(color, 15), 40));
+                        bodyStyle.setProperty('--base-background-color', color);
                         bodyStyle.setProperty('--tool-panel-background-color', darken(color, 10));
                         break;
                 }
