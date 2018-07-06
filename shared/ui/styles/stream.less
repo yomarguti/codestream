@@ -10,6 +10,19 @@
 }
 
 .codestream {
+	a {
+		text-decoration: underline;
+	}
+	ul.compact {
+		margin: 0;
+		padding: 0;
+		li {
+			margin: 0;
+			padding: 0;
+			list-style: none;
+		}
+	}
+
 	[contenteditable="true"]:empty:before {
 		content: attr(placeholder);
 		opacity: 0.5;
