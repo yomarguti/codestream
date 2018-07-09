@@ -1,3 +1,4 @@
+import EventEmitter from "../event-emitter";
 // uuid generator taken from: https://gist.github.com/jed/982883
 const createTempId = a =>
 	a
@@ -177,11 +178,13 @@ export const createStream = attributes => async (dispatch, getState, { api }) =>
 	}
 };
 
-export const setCurrentStream = streamId => async (dispatch, getState) => {
+export const setCurrentStream = streamId => (dispatch, getState) => {
 	const { context } = getState();
 	// don't set the stream ID unless it actually changed
-	if (context.currentStreamId !== streamId)
+	if (context.currentStreamId !== streamId) {
+		EventEmitter.emit("interaction:changed-active-stream", streamId);
 		dispatch({ type: "SET_CURRENT_STREAM", payload: streamId });
+	}
 };
 
 export const removeUsersFromStream = (streamId, userIds) => async (dispatch, getState, { api }) => {

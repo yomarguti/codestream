@@ -43503,7 +43503,6 @@ var DateSeparator = function (_Component) {
 }(react_1);
 
 var _this = undefined;
-
 // uuid generator taken from: https://gist.github.com/jed/982883
 var createTempId = function createTempId(a) {
 	return a ? (a ^ Math.random() * 16 >> a / 4).toString(16) : ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, createTempId);
@@ -43863,44 +43862,74 @@ var createStream = function createStream(attributes) {
 };
 
 var setCurrentStream = function setCurrentStream(streamId) {
-	return function () {
-		var _ref16 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7(dispatch, getState) {
-			var _getState5, context;
+	return function (dispatch, getState) {
+		var _getState5 = getState(),
+		    context = _getState5.context;
+		// don't set the stream ID unless it actually changed
 
-			return regeneratorRuntime.wrap(function _callee7$(_context7) {
-				while (1) {
-					switch (_context7.prev = _context7.next) {
-						case 0:
-							_getState5 = getState(), context = _getState5.context;
-							// don't set the stream ID unless it actually changed
 
-							if (context.currentStreamId !== streamId) dispatch({ type: "SET_CURRENT_STREAM", payload: streamId });
-
-						case 2:
-						case "end":
-							return _context7.stop();
-					}
-				}
-			}, _callee7, _this);
-		}));
-
-		return function (_x19, _x20) {
-			return _ref16.apply(this, arguments);
-		};
-	}();
+		if (context.currentStreamId !== streamId) {
+			emitter.emit("interaction:changed-active-stream", streamId);
+			dispatch({ type: "SET_CURRENT_STREAM", payload: streamId });
+		}
+	};
 };
 
 var removeUsersFromStream = function removeUsersFromStream(streamId, userIds) {
 	return function () {
-		var _ref18 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8(dispatch, getState, _ref17) {
-			var api = _ref17.api;
+		var _ref17 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7(dispatch, getState, _ref16) {
+			var api = _ref16.api;
+			var update, returnStream;
+			return regeneratorRuntime.wrap(function _callee7$(_context7) {
+				while (1) {
+					switch (_context7.prev = _context7.next) {
+						case 0:
+							update = {
+								$pull: { memberIds: userIds }
+							};
+							_context7.prev = 1;
+							_context7.next = 4;
+							return api.updateStream(streamId, update);
+
+						case 4:
+							returnStream = _context7.sent;
+
+							console.log("return stream: ", returnStream);
+							// if (streams.length > 0) dispatch(saveStreams(normalize(streams)));
+							_context7.next = 11;
+							break;
+
+						case 8:
+							_context7.prev = 8;
+							_context7.t0 = _context7["catch"](1);
+
+							console.log("Error: ", _context7.t0);
+
+						case 11:
+						case "end":
+							return _context7.stop();
+					}
+				}
+			}, _callee7, _this, [[1, 8]]);
+		}));
+
+		return function (_x19, _x20, _x21) {
+			return _ref17.apply(this, arguments);
+		};
+	}();
+};
+
+var addUsersToStream = function addUsersToStream(streamId, userIds) {
+	return function () {
+		var _ref19 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8(dispatch, getState, _ref18) {
+			var api = _ref18.api;
 			var update, returnStream;
 			return regeneratorRuntime.wrap(function _callee8$(_context8) {
 				while (1) {
 					switch (_context8.prev = _context8.next) {
 						case 0:
 							update = {
-								$pull: { memberIds: userIds }
+								$push: { memberIds: userIds }
 							};
 							_context8.prev = 1;
 							_context8.next = 4;
@@ -43928,107 +43957,103 @@ var removeUsersFromStream = function removeUsersFromStream(streamId, userIds) {
 			}, _callee8, _this, [[1, 8]]);
 		}));
 
-		return function (_x21, _x22, _x23) {
-			return _ref18.apply(this, arguments);
-		};
-	}();
-};
-
-var addUsersToStream = function addUsersToStream(streamId, userIds) {
-	return function () {
-		var _ref20 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(dispatch, getState, _ref19) {
-			var api = _ref19.api;
-			var update, returnStream;
-			return regeneratorRuntime.wrap(function _callee9$(_context9) {
-				while (1) {
-					switch (_context9.prev = _context9.next) {
-						case 0:
-							update = {
-								$push: { memberIds: userIds }
-							};
-							_context9.prev = 1;
-							_context9.next = 4;
-							return api.updateStream(streamId, update);
-
-						case 4:
-							returnStream = _context9.sent;
-
-							console.log("return stream: ", returnStream);
-							// if (streams.length > 0) dispatch(saveStreams(normalize(streams)));
-							_context9.next = 11;
-							break;
-
-						case 8:
-							_context9.prev = 8;
-							_context9.t0 = _context9["catch"](1);
-
-							console.log("Error: ", _context9.t0);
-
-						case 11:
-						case "end":
-							return _context9.stop();
-					}
-				}
-			}, _callee9, _this, [[1, 8]]);
-		}));
-
-		return function (_x24, _x25, _x26) {
-			return _ref20.apply(this, arguments);
+		return function (_x22, _x23, _x24) {
+			return _ref19.apply(this, arguments);
 		};
 	}();
 };
 
 var joinStream = function joinStream(streamId) {
 	return function () {
-		var _ref22 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10(dispatch, getState, _ref21) {
-			var api = _ref21.api;
+		var _ref21 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(dispatch, getState, _ref20) {
+			var api = _ref20.api;
 			var returnStream;
-			return regeneratorRuntime.wrap(function _callee10$(_context10) {
+			return regeneratorRuntime.wrap(function _callee9$(_context9) {
 				while (1) {
-					switch (_context10.prev = _context10.next) {
+					switch (_context9.prev = _context9.next) {
 						case 0:
-							_context10.prev = 0;
-							_context10.next = 3;
+							_context9.prev = 0;
+							_context9.next = 3;
 							return api.joinStream(streamId);
 
 						case 3:
-							returnStream = _context10.sent;
+							returnStream = _context9.sent;
 
 							console.log("return stream: ", returnStream);
 							// if (streams.length > 0) dispatch(saveStreams(normalize(streams)));
-							_context10.next = 10;
+							_context9.next = 10;
 							break;
 
 						case 7:
-							_context10.prev = 7;
-							_context10.t0 = _context10["catch"](0);
+							_context9.prev = 7;
+							_context9.t0 = _context9["catch"](0);
 
-							console.log("Error: ", _context10.t0);
+							console.log("Error: ", _context9.t0);
 
 						case 10:
 						case "end":
-							return _context10.stop();
+							return _context9.stop();
 					}
 				}
-			}, _callee10, _this, [[0, 7]]);
+			}, _callee9, _this, [[0, 7]]);
 		}));
 
-		return function (_x27, _x28, _x29) {
-			return _ref22.apply(this, arguments);
+		return function (_x25, _x26, _x27) {
+			return _ref21.apply(this, arguments);
 		};
 	}();
 };
 
 var renameStream = function renameStream(streamId, name) {
 	return function () {
-		var _ref24 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11(dispatch, getState, _ref23) {
-			var api = _ref23.api;
+		var _ref23 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10(dispatch, getState, _ref22) {
+			var api = _ref22.api;
+			var update, returnStream;
+			return regeneratorRuntime.wrap(function _callee10$(_context10) {
+				while (1) {
+					switch (_context10.prev = _context10.next) {
+						case 0:
+							update = { name: name };
+							_context10.prev = 1;
+							_context10.next = 4;
+							return api.updateStream(streamId, update);
+
+						case 4:
+							returnStream = _context10.sent;
+
+							console.log("return stream: ", returnStream);
+							return _context10.abrupt("return", returnStream);
+
+						case 9:
+							_context10.prev = 9;
+							_context10.t0 = _context10["catch"](1);
+
+							console.log("Error: ", _context10.t0);
+
+						case 12:
+						case "end":
+							return _context10.stop();
+					}
+				}
+			}, _callee10, _this, [[1, 9]]);
+		}));
+
+		return function (_x28, _x29, _x30) {
+			return _ref23.apply(this, arguments);
+		};
+	}();
+};
+
+var setPurpose = function setPurpose(streamId, purpose) {
+	return function () {
+		var _ref25 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11(dispatch, getState, _ref24) {
+			var api = _ref24.api;
 			var update, returnStream;
 			return regeneratorRuntime.wrap(function _callee11$(_context11) {
 				while (1) {
 					switch (_context11.prev = _context11.next) {
 						case 0:
-							update = { name: name };
+							update = { purpose: purpose };
 							_context11.prev = 1;
 							_context11.next = 4;
 							return api.updateStream(streamId, update);
@@ -44053,22 +44078,22 @@ var renameStream = function renameStream(streamId, name) {
 			}, _callee11, _this, [[1, 9]]);
 		}));
 
-		return function (_x30, _x31, _x32) {
-			return _ref24.apply(this, arguments);
+		return function (_x31, _x32, _x33) {
+			return _ref25.apply(this, arguments);
 		};
 	}();
 };
 
-var setPurpose = function setPurpose(streamId, purpose) {
+var archiveStream = function archiveStream(streamId, value) {
 	return function () {
-		var _ref26 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee12(dispatch, getState, _ref25) {
-			var api = _ref25.api;
+		var _ref27 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee12(dispatch, getState, _ref26) {
+			var api = _ref26.api;
 			var update, returnStream;
 			return regeneratorRuntime.wrap(function _callee12$(_context12) {
 				while (1) {
 					switch (_context12.prev = _context12.next) {
 						case 0:
-							update = { purpose: purpose };
+							update = { isArchived: value };
 							_context12.prev = 1;
 							_context12.next = 4;
 							return api.updateStream(streamId, update);
@@ -44093,126 +44118,86 @@ var setPurpose = function setPurpose(streamId, purpose) {
 			}, _callee12, _this, [[1, 9]]);
 		}));
 
-		return function (_x33, _x34, _x35) {
-			return _ref26.apply(this, arguments);
-		};
-	}();
-};
-
-var archiveStream = function archiveStream(streamId, value) {
-	return function () {
-		var _ref28 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee13(dispatch, getState, _ref27) {
-			var api = _ref27.api;
-			var update, returnStream;
-			return regeneratorRuntime.wrap(function _callee13$(_context13) {
-				while (1) {
-					switch (_context13.prev = _context13.next) {
-						case 0:
-							update = { isArchived: value };
-							_context13.prev = 1;
-							_context13.next = 4;
-							return api.updateStream(streamId, update);
-
-						case 4:
-							returnStream = _context13.sent;
-
-							console.log("return stream: ", returnStream);
-							return _context13.abrupt("return", returnStream);
-
-						case 9:
-							_context13.prev = 9;
-							_context13.t0 = _context13["catch"](1);
-
-							console.log("Error: ", _context13.t0);
-
-						case 12:
-						case "end":
-							return _context13.stop();
-					}
-				}
-			}, _callee13, _this, [[1, 9]]);
-		}));
-
-		return function (_x36, _x37, _x38) {
-			return _ref28.apply(this, arguments);
+		return function (_x34, _x35, _x36) {
+			return _ref27.apply(this, arguments);
 		};
 	}();
 };
 
 var invite = function invite(attributes) {
 	return function () {
-		var _ref30 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee14(dispatch, getState, _ref29) {
-			var api = _ref29.api;
-			return regeneratorRuntime.wrap(function _callee14$(_context14) {
+		var _ref29 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee13(dispatch, getState, _ref28) {
+			var api = _ref28.api;
+			return regeneratorRuntime.wrap(function _callee13$(_context13) {
 				while (1) {
-					switch (_context14.prev = _context14.next) {
+					switch (_context13.prev = _context13.next) {
 						case 0:
-							_context14.prev = 0;
+							_context13.prev = 0;
 
 							console.log("Inviting with: ", attributes);
-							_context14.next = 4;
+							_context13.next = 4;
 							return api.invite(attributes);
 
 						case 4:
-							_context14.next = 9;
+							_context13.next = 9;
 							break;
 
 						case 6:
-							_context14.prev = 6;
-							_context14.t0 = _context14["catch"](0);
+							_context13.prev = 6;
+							_context13.t0 = _context13["catch"](0);
 
-							console.log("Error: ", _context14.t0);
+							console.log("Error: ", _context13.t0);
 
 						case 9:
 						case "end":
-							return _context14.stop();
+							return _context13.stop();
 					}
 				}
-			}, _callee14, _this, [[0, 6]]);
+			}, _callee13, _this, [[0, 6]]);
 		}));
 
-		return function (_x39, _x40, _x41) {
-			return _ref30.apply(this, arguments);
+		return function (_x37, _x38, _x39) {
+			return _ref29.apply(this, arguments);
 		};
 	}();
 };
 
 var fetchPosts = function fetchPosts(params) {
 	return function () {
-		var _ref32 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee15(dispatch, getState, _ref31) {
-			var api = _ref31.api;
+		var _ref31 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee14(dispatch, getState, _ref30) {
+			var api = _ref30.api;
 			var posts;
-			return regeneratorRuntime.wrap(function _callee15$(_context15) {
+			return regeneratorRuntime.wrap(function _callee14$(_context14) {
 				while (1) {
-					switch (_context15.prev = _context15.next) {
+					switch (_context14.prev = _context14.next) {
 						case 0:
-							_context15.prev = 0;
-							_context15.next = 3;
+							_context14.prev = 0;
+							_context14.next = 3;
 							return api.fetchPosts(params);
 
 						case 3:
-							posts = _context15.sent;
-							return _context15.abrupt("return", dispatch({
+							posts = _context14.sent;
+							return _context14.abrupt("return", dispatch({
 								type: "ADD_POSTS_FOR_STREAM",
 								payload: { posts: posts, streamId: params.streamId }
 							}));
 
 						case 7:
-							_context15.prev = 7;
-							_context15.t0 = _context15["catch"](0);
+							_context14.prev = 7;
+							_context14.t0 = _context14["catch"](0);
 
-							console.error(_context15.t0);
+							console.error(_context14.t0);
 
 						case 10:
 						case "end":
-							return _context15.stop();
+							return _context14.stop();
 					}
 				}
-			}, _callee15, _this, [[0, 7]]);
+			}, _callee14, _this, [[0, 7]]);
 		}));
 
-		return function (_x42, _x43, _x44) {
-			return _ref32.apply(this, arguments);
+		return function (_x40, _x41, _x42) {
+			return _ref31.apply(this, arguments);
 		};
 	}();
 };
