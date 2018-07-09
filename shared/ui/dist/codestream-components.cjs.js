@@ -44132,32 +44132,31 @@ var invite = function invite(attributes) {
 	return function () {
 		var _ref29 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee13(dispatch, getState, _ref28) {
 			var api = _ref28.api;
+			var user;
 			return regeneratorRuntime.wrap(function _callee13$(_context13) {
 				while (1) {
 					switch (_context13.prev = _context13.next) {
 						case 0:
 							_context13.prev = 0;
-
-							console.log("Inviting with: ", attributes);
-							_context13.next = 4;
+							_context13.next = 3;
 							return api.invite(attributes);
 
-						case 4:
-							_context13.next = 9;
-							break;
+						case 3:
+							user = _context13.sent;
+							return _context13.abrupt("return", dispatch({ type: "ADD_USER", payload: user }));
 
-						case 6:
-							_context13.prev = 6;
+						case 7:
+							_context13.prev = 7;
 							_context13.t0 = _context13["catch"](0);
 
 							console.log("Error: ", _context13.t0);
 
-						case 9:
+						case 10:
 						case "end":
 							return _context13.stop();
 					}
 				}
-			}, _callee13, _this, [[0, 6]]);
+			}, _callee13, _this, [[0, 7]]);
 		}));
 
 		return function (_x37, _x38, _x39) {
@@ -45024,6 +45023,7 @@ var InvitePage = function (_Component) {
 			enumerable: true,
 			writable: true,
 			value: function value(event) {
+				event.preventDefault();
 				var _this$state = _this.state,
 				    newMemberEmail = _this$state.newMemberEmail,
 				    newMemberName = _this$state.newMemberName,
@@ -45228,9 +45228,13 @@ var InvitePage = function (_Component) {
 										user.email,
 										react.createElement(
 											"a",
-											{ className: "reinvite", onClick: function onClick() {
-													return _this3.onClickReinvite(user);
-												} },
+											{
+												className: "reinvite",
+												onClick: function onClick(event) {
+													event.preventDefault();
+													_this3.onClickReinvite(user);
+												}
+											},
 											"reinvite"
 										)
 									)

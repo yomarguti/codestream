@@ -37,6 +37,7 @@ export class InvitePage extends Component {
 	onNameChange = event => this.setState({ newMemberName: event.target.value });
 
 	onSubmit = event => {
+		event.preventDefault();
 		const { newMemberEmail, newMemberName, newMemberEmailInvalid } = this.state;
 		if (newMemberEmailInvalid || newMemberEmail === "") return;
 
@@ -165,7 +166,13 @@ export class InvitePage extends Component {
 									<li key={user.email}>
 										<div className="committer-email">
 											{user.email}
-											<a className="reinvite" onClick={() => this.onClickReinvite(user)}>
+											<a
+												className="reinvite"
+												onClick={event => {
+													event.preventDefault();
+													this.onClickReinvite(user);
+												}}
+											>
 												reinvite
 											</a>
 										</div>
