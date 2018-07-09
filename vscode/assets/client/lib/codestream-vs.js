@@ -2,10 +2,10 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { addLocaleData, IntlProvider } from "react-intl";
 import { createStore, WebviewApi } from "codestream-components";
+import copy from "codestream-components/translations/en.json";
 import { Provider } from "react-redux";
 import en from "react-intl/locale-data/en";
 import CodeStreamRoot from "./components/VSCodeStreamRoot";
-import copy from "../translations/en.js";
 import rpcMiddleWare from "./rpc-middleware";
 
 addLocaleData([...en]);
