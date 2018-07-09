@@ -18,8 +18,7 @@ import {
 	PostsReceivedEvent,
 	SessionChangedEvent,
 	SessionChangedType,
-	StreamThread,
-	StreamType
+	StreamThread
 } from "../api/session";
 import { Container } from "../container";
 import { Logger } from "../logger";
@@ -189,9 +188,8 @@ export class StreamWebviewPanel extends Disposable {
 	private onPanelViewStateChanged(e: WebviewPanelOnDidChangeViewStateEvent) {
 		Logger.log("WebView.ViewStateChanged", e.webviewPanel.visible);
 		// HACK: Because messages aren't sent to the webview when hidden, we need to reset the whole view if we are invalid
-		if (this._invalidateOnVisible && this.streamThread !== undefined && e.webviewPanel.visible) {
+		if (this._invalidateOnVisible && e.webviewPanel.visible) {
 			this._invalidateOnVisible = false;
-			this.setStream(this.streamThread);
 		}
 	}
 
@@ -244,6 +242,16 @@ export class StreamWebviewPanel extends Disposable {
 							}
 						});
 						break;
+					case "fetch-posts": {
+						const { streamId, teamId } = body.params;
+						return this.postMessage({
+							type: "codestream:response",
+							body: {
+								id: body.id,
+								payload: await this.session.api.getPosts(streamId, teamId)
+							}
+						});
+					}
 					case "delete-post": {
 						const post = await this.session.api.getPost(body.params);
 						const updates = await this.session.api.deletePost(body.params);
@@ -347,8 +355,6 @@ export class StreamWebviewPanel extends Disposable {
 	}
 
 	private onPostsReceived(e: PostsReceivedEvent) {
-		if (this._streamThread === undefined) return;
-
 		this.postMessage({
 			type: "push-data",
 			body: {
@@ -359,8 +365,6 @@ export class StreamWebviewPanel extends Disposable {
 	}
 
 	private onSessionChanged(e: SessionChangedEvent) {
-		if (this._streamThread === undefined) return;
-
 		switch (e.type) {
 			case SessionChangedType.Streams:
 			case SessionChangedType.Repositories:
@@ -422,18 +426,11 @@ export class StreamWebviewPanel extends Disposable {
 	}
 
 	show(streamThread?: StreamThread) {
-		if (
-			streamThread === undefined ||
-			(this._streamThread &&
-				this._streamThread.id === streamThread.id &&
-				this._streamThread.stream.id === streamThread.stream.id)
-		) {
-			this._panel!.reveal(undefined, false);
-
-			return this._streamThread;
+		if (streamThread) {
+			// return this.setStream(streamThread);
 		}
 
-		return this.setStream(streamThread);
+		return this._show();
 	}
 
 	private async getHtml(): Promise<string> {
@@ -462,14 +459,13 @@ export class StreamWebviewPanel extends Disposable {
 		}
 	}
 
-	private async setStream(streamThread: StreamThread): Promise<StreamThread> {
-		const label = await streamThread.stream.label();
-
+	private async _show() {
+		const title = "CodeStream";
 		let html = loadingHtml;
 		if (this._panel === undefined) {
 			this._panel = window.createWebviewPanel(
 				"CodeStream.stream",
-				"CodeStream",
+				title,
 				{ viewColumn: ViewColumn.Three, preserveFocus: false },
 				{
 					retainContextWhenHidden: true,
@@ -490,16 +486,13 @@ export class StreamWebviewPanel extends Disposable {
 
 			this._panel.webview.html = html;
 		} else {
-			this._panel.title = `${label} \u00a0\u2022\u00a0 CodeStream`;
+			this._panel.title = title;
 			this._panel.webview.html = html;
 			this._panel.reveal(ViewColumn.Three, false);
 		}
 
-		this._streamThread = streamThread;
-
-		const [content, posts, repos, streams, teams, users] = await Promise.all([
+		const [content, repos, streams, teams, users] = await Promise.all([
 			this.getHtml(),
-			streamThread.stream.posts.entities(),
 			this.session.repos.entities(),
 			Container.session.channels.entities(),
 			this.session.teams.entities(),
@@ -507,18 +500,10 @@ export class StreamWebviewPanel extends Disposable {
 		]);
 
 		const state: BootstrapState = Object.create(null);
-		state.currentTeamId = streamThread.stream.teamId;
+		state.currentTeamId = this.session.team.id;
 		state.currentUserId = this.session.userId;
-		state.currentStreamId = streamThread.stream.id;
-		if (streamThread.stream.type === StreamType.Channel) {
-			if (streamThread.stream.isLiveShareChannel) {
-				state.currentStreamLabel = label;
-				state.currentStreamServiceType = "liveshare";
-			}
-		}
-		state.selectedPostId = streamThread.id;
 
-		state.posts = posts;
+		// state.posts = posts;
 		state.repos = repos;
 		state.streams = streams;
 		state.teams = teams;
@@ -535,7 +520,5 @@ export class StreamWebviewPanel extends Disposable {
 
 		this._panel.webview.html = html;
 		this._panel.reveal(ViewColumn.Three, false);
-
-		return this._streamThread;
 	}
 }

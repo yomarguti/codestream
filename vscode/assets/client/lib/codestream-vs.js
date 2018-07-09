@@ -15,16 +15,8 @@ const data = window.bootstrap;
 const store = createStore(
 	{
 		context: {
-			currentTeamId: data.currentTeamId,
-			currentRepoId: data.currentRepoId,
-			currentStreamId: data.currentStreamId,
-			currentFile: data.currentFile,
-			currentStreamLabel: data.currentStreamLabel,
-			currentStreamServiceType: data.currentStreamServiceType
+			currentTeamId: data.currentTeamId
 		},
-		// ipcInteractions: {
-		// 	selectedPostId: data.selectedPostId
-		// },
 		session: {
 			userId: data.currentUserId
 		}
@@ -36,7 +28,6 @@ const store = createStore(
 store.dispatch({ type: "BOOTSTRAP_USERS", payload: data.users });
 store.dispatch({ type: "BOOTSTRAP_REPOS", payload: data.repos });
 store.dispatch({ type: "BOOTSTRAP_TEAMS", payload: data.teams });
-store.dispatch({ type: "BOOTSTRAP_POSTS", payload: data.posts });
 store.dispatch({ type: "BOOTSTRAP_STREAMS", payload: data.streams });
 store.dispatch({ type: "BOOTSTRAP_COMPLETE" });
 
