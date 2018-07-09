@@ -171,6 +171,7 @@ export class StreamWebviewPanel extends Disposable {
 	private _disposable: Disposable | undefined;
 	private _panel: WebviewPanel | undefined;
 	private _streamThread: StreamThread | undefined;
+	private _activeStreamId: string | undefined;
 
 	constructor(public readonly session: CodeStreamSession) {
 		super(() => this.dispose());
@@ -316,6 +317,10 @@ export class StreamWebviewPanel extends Disposable {
 				await Container.commands.openPostWorkingFile(new Post(this.session, post, stream));
 				break;
 			}
+			case "interaction:changed-active-stream": {
+				this._activeStreamId = e.body;
+				break;
+			}
 			case "subscription:file-changed": {
 				const codeBlock = e.body as CSCodeBlock;
 
@@ -377,6 +382,10 @@ export class StreamWebviewPanel extends Disposable {
 				});
 				break;
 		}
+	}
+
+	get activeStreamId() {
+		return this._activeStreamId;
 	}
 
 	get streamThread() {
