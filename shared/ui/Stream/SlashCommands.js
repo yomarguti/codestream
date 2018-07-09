@@ -8,7 +8,7 @@ export const slashCommands = [
 	{ id: "leave", help: "leave channel", channelOnly: true },
 	{ id: "me", help: "emote" },
 	{ id: "msg", help: "message member", description: "@user" },
-	{ id: "mute", help: "mute channel" },
+	{ id: "mute", help: "mute channel", channelOnly: true },
 	// { id: "muteall", help: "mute codestream" },
 	// { id: "open", help: "open channel" },
 	// { id: "prefs", help: "open preferences" },
