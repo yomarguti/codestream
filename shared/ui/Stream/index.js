@@ -1036,7 +1036,7 @@ export class SimpleStream extends Component {
 				this.submitPost({ text: "/me renamed the channel from #" + oldName + " to #" + args });
 			else
 				this.submitSystemPost(
-					"Unable to rename channel. We don't support these characters: ~#%&*{}+/:<>?|'\"."
+					"Unable to rename channel. We don't support these characters: .~#%&*{}+/:<>?|'\"."
 				);
 		} else this.submitSystemPost("Rename a channel by typing `/rename [new name]`");
 		return true;

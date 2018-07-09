@@ -51461,6 +51461,8 @@ var SimpleCreateChannelPanel = function (_Component) {
 				"off-right": inactive && !shrink
 			});
 
+			var tooltipTitle = "We don't support these characters: .~#%&*{}+/:<>?|'\".";
+
 			return react.createElement(
 				"div",
 				{ className: createChannelPanelClass, ref: this._createChannelPanel },
@@ -51546,7 +51548,7 @@ var SimpleCreateChannelPanel = function (_Component) {
 								),
 								react.createElement(
 									Tooltip,
-									{ title: "Names must match [a-zA-Z0-9._-]+", placement: "left" },
+									{ title: tooltipTitle, placement: "left" },
 									react.createElement("input", {
 										className: "native-key-bindings input-text control",
 										type: "text",
@@ -104304,7 +104306,7 @@ var SimpleStream = function (_Component) {
 								case 7:
 									newStream = _context2.sent;
 
-									if (newStream.name === args) _this.submitPost({ text: "/me renamed the channel from #" + oldName + " to #" + args });else _this.submitSystemPost("Unable to rename channel. We don't support these characters: ~#%&*{}+/:<>?|'\".");
+									if (newStream.name === args) _this.submitPost({ text: "/me renamed the channel from #" + oldName + " to #" + args });else _this.submitSystemPost("Unable to rename channel. We don't support these characters: .~#%&*{}+/:<>?|'\".");
 									_context2.next = 12;
 									break;
 

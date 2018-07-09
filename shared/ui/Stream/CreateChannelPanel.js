@@ -46,6 +46,8 @@ export class SimpleCreateChannelPanel extends Component {
 			"off-right": inactive && !shrink
 		});
 
+		const tooltipTitle = "We don't support these characters: .~#%&*{}+/:<>?|'\".";
+
 		return (
 			<div className={createChannelPanelClass} ref={this._createChannelPanel}>
 				<div className="panel-header">
@@ -87,7 +89,7 @@ export class SimpleCreateChannelPanel extends Component {
 							</div>
 							<div id="name-controls" className="control-group">
 								<label>Channel Name</label>
-								<Tooltip title="We don't support these characters: ~#%&*{}+/:<>?|'\"." placement="left">
+								<Tooltip title={tooltipTitle} placement="left">
 									<input
 										className="native-key-bindings input-text control"
 										type="text"
