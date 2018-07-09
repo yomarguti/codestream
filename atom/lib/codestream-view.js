@@ -3,8 +3,8 @@ import { render, unmountComponentAtNode } from "react-dom";
 import { addLocaleData, IntlProvider } from "react-intl";
 import { Provider } from "react-redux";
 import en from "react-intl/locale-data/en";
+import copy from "codestream-components/translations/en.json";
 import CodeStreamRoot from "./components/CodeStreamRoot";
-import copy from "../translations/en.json";
 
 addLocaleData([...en]);
 
