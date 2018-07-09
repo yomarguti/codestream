@@ -87,7 +87,7 @@ export class SimpleCreateChannelPanel extends Component {
 							</div>
 							<div id="name-controls" className="control-group">
 								<label>Channel Name</label>
-								<Tooltip title="Names must match [a-zA-Z0-9._-]+" placement="left">
+								<Tooltip title="We don't support these characters: ~#%&*{}+/:<>?|'\"." placement="left">
 									<input
 										className="native-key-bindings input-text control"
 										type="text"

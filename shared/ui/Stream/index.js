@@ -475,7 +475,11 @@ export class SimpleStream extends Component {
 		// const totalUMICount = umis.totalMentions || umis.totalUnread ? "&middot;" : "\u25C9";
 
 		return (
-			<div className={streamClass} ref={ref => (this._div = ref)}>
+			<div
+				className={streamClass}
+				onMouseDown={this.handleMouseDown}
+				ref={ref => (this._div = ref)}
+			>
 				<div id="modal-root" />
 				<div id="confirm-root" />
 				<EditingIndicator
@@ -615,6 +619,10 @@ export class SimpleStream extends Component {
 			</div>
 		);
 	}
+
+	handleMouseDown = event => {
+		// console.log("mouse is down");
+	};
 
 	handleClickStreamSettings = event => {
 		this.setState({ openMenu: this.props.postStreamId, menuTarget: event.target });
@@ -1022,7 +1030,10 @@ export class SimpleStream extends Component {
 			const newStream = await this.props.renameStream(this.props.postStreamId, args);
 			if (newStream.name === args)
 				this.submitPost({ text: "/me renamed the channel from #" + oldName + " to #" + args });
-			else this.submitSystemPost("Unable to rename channel. Names must match [a-zA-Z0-9._-]+");
+			else
+				this.submitSystemPost(
+					"Unable to rename channel. We don't support these characters: ~#%&*{}+/:<>?|'\"."
+				);
 		} else this.submitSystemPost("Rename a channel by typing `/rename [new name]`");
 		return true;
 	};

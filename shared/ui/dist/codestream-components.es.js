@@ -45155,7 +45155,7 @@ var InvitePage = function (_Component) {
 										type: "submit",
 										loading: this.state.loading
 									},
-									react.createElement(FormattedMessage, { id: "teamMemberSelection.invite", defaultMessage: "INVITE" })
+									react.createElement(FormattedMessage, { id: "teamMemberSelection.invite", defaultMessage: "Invite" })
 								),
 								react.createElement(
 									Button,
@@ -103847,6 +103847,13 @@ var SimpleStream = function (_Component) {
 				});
 			}
 		});
+		Object.defineProperty(_this, "handleMouseDown", {
+			enumerable: true,
+			writable: true,
+			value: function value(event) {
+				// console.log("mouse is down");
+			}
+		});
 		Object.defineProperty(_this, "handleClickStreamSettings", {
 			enumerable: true,
 			writable: true,
@@ -104297,7 +104304,7 @@ var SimpleStream = function (_Component) {
 								case 7:
 									newStream = _context2.sent;
 
-									if (newStream.name === args) _this.submitPost({ text: "/me renamed the channel from #" + oldName + " to #" + args });else _this.submitSystemPost("Unable to rename channel. Names must match [a-zA-Z0-9._-]+");
+									if (newStream.name === args) _this.submitPost({ text: "/me renamed the channel from #" + oldName + " to #" + args });else _this.submitSystemPost("Unable to rename channel. We don't support these characters: ~#%&*{}+/:<>?|'\".");
 									_context2.next = 12;
 									break;
 
@@ -105054,9 +105061,13 @@ var SimpleStream = function (_Component) {
 
 			return react.createElement(
 				"div",
-				{ className: streamClass, ref: function ref(_ref14) {
+				{
+					className: streamClass,
+					onMouseDown: this.handleMouseDown,
+					ref: function ref(_ref14) {
 						return _this5._div = _ref14;
-					} },
+					}
+				},
 				react.createElement("div", { id: "modal-root" }),
 				react.createElement("div", { id: "confirm-root" }),
 				react.createElement(EditingIndicator, {
