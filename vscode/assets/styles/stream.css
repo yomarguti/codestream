@@ -84,6 +84,9 @@ body {
 .codestream a {
   text-decoration: underline;
 }
+.codestream .error-message {
+  color: #c00;
+}
 .codestream ul.compact {
   margin: 0;
   padding: 0;

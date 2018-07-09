@@ -473,7 +473,7 @@ export class StreamWebviewPanel extends Disposable {
 		if (this._panel === undefined) {
 			this._panel = window.createWebviewPanel(
 				"CodeStream.stream",
-				`${label} \u00a0\u2022\u00a0 CodeStream`,
+				"CodeStream",
 				{ viewColumn: ViewColumn.Three, preserveFocus: false },
 				{
 					retainContextWhenHidden: true,
