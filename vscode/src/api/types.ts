@@ -290,3 +290,13 @@ export interface UpdateStreamMembershipRequest {
 export interface UpdateStreamMembershipResponse {
 	stream: CSStream;
 }
+
+export interface InviteRequest {
+	email: string;
+	teamId: string;
+	fullName?: string;
+}
+
+export interface InviteResponse {
+	user: CSUser;
+}

@@ -36,6 +36,10 @@ export class CodeStreamSessionApi {
 		})).stream;
 	}
 
+	async invite(email: string, teamId: string, fullName?: string): Promise<CSUser> {
+		return (await this._api.invite(this.token, { email, teamId, fullName })).user;
+	}
+
 	async createPost(
 		text: string,
 		parentPostId: string | undefined,

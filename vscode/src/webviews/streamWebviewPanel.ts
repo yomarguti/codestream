@@ -203,7 +203,7 @@ export class StreamWebviewPanel extends Disposable {
 				// TODO: Add sequence ids to ensure correct matching
 				// TODO: Add exception handling for failed requests
 				switch (body.action) {
-					case "create-post":
+					case "create-post": {
 						const { text, codeBlocks, parentPostId, streamId, teamId } = body.params;
 
 						let post;
@@ -243,6 +243,7 @@ export class StreamWebviewPanel extends Disposable {
 							}
 						});
 						break;
+					}
 					case "fetch-posts": {
 						const { streamId, teamId } = body.params;
 						return this.postMessage({
@@ -272,7 +273,7 @@ export class StreamWebviewPanel extends Disposable {
 						});
 						break;
 					}
-					case "mark-stream-read":
+					case "mark-stream-read": {
 						const stream = await this.session.getStream(body.params);
 						if (stream) {
 							const response = await stream.markRead();
@@ -285,6 +286,7 @@ export class StreamWebviewPanel extends Disposable {
 							// TODO
 						}
 						break;
+					}
 					case "create-stream": {
 						const { type, teamId, name, privacy, memberIds } = body.params;
 						let stream;
@@ -303,6 +305,13 @@ export class StreamWebviewPanel extends Disposable {
 						return this.postMessage({
 							type: "codestream:response",
 							body: { id: body.id, payload: response }
+						});
+					}
+					case "invite": {
+						const { email, teamId, fullName } = body.params;
+						return this.postMessage({
+							type: "codestream:response",
+							body: { id: body.id, payload: await this.session.api.invite(email, teamId, fullName) }
 						});
 					}
 				}

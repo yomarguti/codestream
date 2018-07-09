@@ -29,6 +29,8 @@ import {
 	GetTeamsResponse,
 	GetUserResponse,
 	GetUsersResponse,
+	InviteRequest,
+	InviteResponse,
 	JoinStreamRequest,
 	JoinStreamResponse,
 	LoginRequest,
@@ -224,6 +226,10 @@ export class CodeStreamApi {
 			request,
 			token
 		);
+	}
+
+	invite(token: string, request: InviteRequest) {
+		return this.post<InviteRequest, InviteResponse>("/users", request, token);
 	}
 
 	markStreamRead(token: string, streamId: string) {
