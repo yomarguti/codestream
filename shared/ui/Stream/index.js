@@ -1374,8 +1374,7 @@ const mapStateToProps = ({
 					user = {
 						username: "CodeStream",
 						email: "",
-						firstName: "",
-						lastName: ""
+						fullName: ""
 					};
 				} else {
 					console.warn(
@@ -1384,19 +1383,18 @@ const mapStateToProps = ({
 					user = {
 						username: "Unknown user",
 						email: "",
-						firstName: "",
-						lastName: ""
+						fullName: ""
 					};
 				}
 			}
-			const { username, email, firstName = "", lastName = "", color } = user;
+			const { username, email, fullName = "", color } = user;
 			return {
 				...post,
 				author: {
 					username,
 					email,
 					color,
-					fullName: `${firstName} ${lastName}`.trim()
+					fullName
 				}
 			};
 		})

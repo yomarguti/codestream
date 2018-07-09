@@ -143,9 +143,7 @@ export class SimpleChannelPanel extends Component {
 						return (
 							<li key={teammate.id} teammate={teammate.id}>
 								<Icon className="person" name="person" />
-								<span className="name">
-									{teammate.username || teammate.firstName + " " + teammate.lastName}
-								</span>
+								<span className="name">{teammate.username || teammate.fullName}</span>
 								<Icon name="x" onClick={this.handleClickMuteStream} className="align-right" />
 							</li>
 						);

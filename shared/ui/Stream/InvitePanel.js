@@ -181,7 +181,7 @@ export class InvitePage extends Component {
 						<ul>
 							{this.props.members.map(user => (
 								<li key={user.email}>
-									<div className="committer-name">{user.name}</div>
+									<div className="committer-name">{user.fullName}</div>
 									<div className="committer-email">{user.email}</div>
 								</li>
 							))}
@@ -199,10 +199,9 @@ const mapStateToProps = ({ users, context, teams }) => {
 		.map(id => {
 			const user = users[id];
 			if (!user || !user.isRegistered) return;
-			if (user.firstName || user.lastName) user.name = `${user.firstName} ${user.lastName}`.trim();
-			else {
+			if (!user.fullName) {
 				let email = user.email;
-				if (email) user.name = email.replace(/@.*/, "");
+				if (email) user.fullName = email.replace(/@.*/, "");
 			}
 			return user;
 		})
@@ -211,7 +210,8 @@ const mapStateToProps = ({ users, context, teams }) => {
 		.map(id => {
 			const user = users[id];
 			if (!user || user.isRegistered) return;
-			user.name = user.email;
+			let email = user.email;
+			if (email) user.fullName = email.replace(/@.*/, "");
 			return user;
 		})
 		.filter(Boolean);

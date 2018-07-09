@@ -38709,13 +38709,13 @@ var ComposeBox = function (_React$Component) {
 
 			if (type === "at-mentions") {
 				Object.values(this.props.teammates).forEach(function (person) {
-					var toMatch = person.firstName + " " + person.lastName + "*" + person.username;
+					var toMatch = person.fullName + "*" + person.username;
 					if (toMatch.toLowerCase().indexOf(prefix) !== -1) {
 						itemsToShow.push({
 							id: person.id,
 							headshot: person,
 							identifier: person.username || person.email,
-							description: person.firstName + " " + person.lastName
+							description: person.fullName
 						});
 					}
 				});
@@ -44735,7 +44735,7 @@ var SimpleChannelPanel = function (_Component) {
 								react.createElement(
 									"span",
 									{ className: "name" },
-									teammate.username || teammate.firstName + " " + teammate.lastName
+									teammate.username || teammate.fullName
 								),
 								react.createElement(Icon, { name: "x", onClick: _this.handleClickMuteStream, className: "align-right" })
 							);
@@ -45230,7 +45230,7 @@ var InvitePage = function (_Component) {
 									react.createElement(
 										"div",
 										{ className: "committer-name" },
-										user.name
+										user.fullName
 									),
 									react.createElement(
 										"div",
@@ -45257,16 +45257,17 @@ var mapStateToProps$2 = function mapStateToProps(_ref2) {
 	var members = team.memberIds.map(function (id) {
 		var user = users[id];
 		if (!user || !user.isRegistered) return;
-		if (user.firstName || user.lastName) user.name = (user.firstName + " " + user.lastName).trim();else {
+		if (!user.fullName) {
 			var email = user.email;
-			if (email) user.name = email.replace(/@.*/, "");
+			if (email) user.fullName = email.replace(/@.*/, "");
 		}
 		return user;
 	}).filter(Boolean);
 	var invited = team.memberIds.map(function (id) {
 		var user = users[id];
 		if (!user || user.isRegistered) return;
-		user.name = user.email;
+		var email = user.email;
+		if (email) user.fullName = email.replace(/@.*/, "");
 		return user;
 	}).filter(Boolean);
 
@@ -105444,26 +105445,22 @@ var mapStateToProps$6 = function mapStateToProps(_ref15) {
 					user = {
 						username: "CodeStream",
 						email: "",
-						firstName: "",
-						lastName: ""
+						fullName: ""
 					};
 				} else {
 					console.warn("Redux store doesn't have a user with id " + post.creatorId + " for post with id " + post.id);
 					user = {
 						username: "Unknown user",
 						email: "",
-						firstName: "",
-						lastName: ""
+						fullName: ""
 					};
 				}
 			}
 			var _user = user,
 			    username = _user.username,
 			    email = _user.email,
-			    _user$firstName = _user.firstName,
-			    firstName = _user$firstName === undefined ? "" : _user$firstName,
-			    _user$lastName = _user.lastName,
-			    lastName = _user$lastName === undefined ? "" : _user$lastName,
+			    _user$fullName = _user.fullName,
+			    fullName = _user$fullName === undefined ? "" : _user$fullName,
 			    color = _user.color;
 
 			return _extends$5({}, post, {
@@ -105471,7 +105468,7 @@ var mapStateToProps$6 = function mapStateToProps(_ref15) {
 					username: username,
 					email: email,
 					color: color,
-					fullName: (firstName + " " + lastName).trim()
+					fullName: fullName
 				}
 			});
 		})

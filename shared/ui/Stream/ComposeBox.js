@@ -112,13 +112,13 @@ class ComposeBox extends React.Component {
 
 		if (type === "at-mentions") {
 			Object.values(this.props.teammates).forEach(person => {
-				let toMatch = person.firstName + " " + person.lastName + "*" + person.username;
+				let toMatch = person.fullName + "*" + person.username;
 				if (toMatch.toLowerCase().indexOf(prefix) !== -1) {
 					itemsToShow.push({
 						id: person.id,
 						headshot: person,
 						identifier: person.username || person.email,
-						description: person.firstName + " " + person.lastName
+						description: person.fullName
 					});
 				}
 			});
