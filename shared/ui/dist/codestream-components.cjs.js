@@ -51380,7 +51380,7 @@ var SimpleCreateChannelPanel = function (_Component) {
 			enumerable: true,
 			writable: true,
 			value: function value() {
-				return isNameInvalid(_this.state.name);
+				return isNameInvalid(_this.state.name) || _this.state.name.length === 0;
 			}
 		});
 		Object.defineProperty(_this, "handleClickCreateChannel", {

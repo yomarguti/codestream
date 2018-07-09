@@ -219,7 +219,7 @@ export class SimpleCreateChannelPanel extends Component {
 	};
 
 	isFormInvalid = () => {
-		return isNameInvalid(this.state.name);
+		return isNameInvalid(this.state.name) || this.state.name.length === 0;
 	};
 
 	handleClickCreateChannel = async event => {
