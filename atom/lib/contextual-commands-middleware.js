@@ -1,6 +1,5 @@
 import { CompositeDisposable } from "atom";
 import { logout, showSlackInfo } from "./actions/context";
-import { goToInvitePage } from "./actions/routing";
 import WorkspaceApi from "./workspace/workspace-api";
 
 export default store => {
@@ -11,7 +10,6 @@ export default store => {
 		subscriptions.add(
 			atom.commands.add("atom-workspace", {
 				"codestream:slack-integration": () => store.dispatch(showSlackInfo()),
-				"codestream:invite": () => store.dispatch(goToInvitePage()),
 				"codestream:logout": () => store.dispatch(logout())
 			})
 		);

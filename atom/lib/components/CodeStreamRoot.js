@@ -6,7 +6,6 @@ import Raven from "raven-js";
 import NoGit from "./NoGit";
 import TooMuchGit from "./TooMuchGit";
 import Onboarding from "./onboarding/Onboarding";
-import Pages from "./Pages";
 import { Stream } from "codestream-components";
 import NoAccess from "./NoAccess";
 import OfflineBanner from "./OfflineBanner";
@@ -51,7 +50,6 @@ class CodeStreamRoot extends Component {
 		const {
 			catchingUp,
 			accessToken,
-			currentPage,
 			bootstrapped,
 			repositories,
 			onboarding,
@@ -80,23 +78,21 @@ class CodeStreamRoot extends Component {
 		if (catchingUp) return <Loading message="Hold on, we're catching you up" />;
 		if (showSlackInfo) return <SlackInfo />;
 		else if (onboarding.complete && accessToken) {
-			const children = [
+			return [
 				<OfflineBanner key="offline-banner" />,
 				<BufferReferenceManager
 					key="buffer-references"
 					workingDirectory={this.props.workingDirectory}
 					repo={repositories[0]}
-				/>
+				/>,
+				<Stream key="stream" />
 			];
-			if (currentPage) return [...children, <Pages key="onboarding" page={currentPage} />];
-			else return [...children, <Stream key="stream" />];
 		} else return [<OfflineBanner key="offline-banner" />, <Onboarding key="onboarding" />];
 	}
 }
 
 const mapStateToProps = ({
 	bootstrapped,
-	currentPage,
 	session,
 	onboarding,
 	context,
@@ -107,7 +103,6 @@ const mapStateToProps = ({
 	noAccess: context.noAccess,
 	catchingUp: messaging.catchingUp,
 	showSlackInfo: context.showSlackInfo,
-	currentPage,
 	bootstrapped,
 	onboarding,
 	workingDirectory: repoAttributes.workingDirectory
