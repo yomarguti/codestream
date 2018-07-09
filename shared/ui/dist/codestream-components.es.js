@@ -38522,7 +38522,7 @@ var ComposeBox = function (_React$Component) {
 				var slashMatch = newPostText.match(/^\/([a-zA-Z0-9+]*)$/);
 				if (_this.state.popupOpen === "at-mentions") {
 					if (peopleMatch) {
-						_this.showPopupSelectors(peopleMatch[0].replace(/@/, ""), "at-mentions");
+						_this.showPopupSelectors(peopleMatch[1].replace(/@/, ""), "at-mentions");
 					} else {
 						// if the line doesn't end with @word, then hide the popup
 						_this.hidePopup();
@@ -38536,7 +38536,7 @@ var ComposeBox = function (_React$Component) {
 					}
 				} else {
 					if (peopleMatch) {
-						_this.showPopupSelectors(peopleMatch[0].replace(/@/, ""), "at-mentions");
+						_this.showPopupSelectors(peopleMatch[1].replace(/@/, ""), "at-mentions");
 					}
 					if (slashMatch) {
 						_this.showPopupSelectors(slashMatch[0].replace(/\//, ""), "slash-commands");

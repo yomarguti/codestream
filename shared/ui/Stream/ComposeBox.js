@@ -277,7 +277,7 @@ class ComposeBox extends React.Component {
 		const slashMatch = newPostText.match(/^\/([a-zA-Z0-9+]*)$/);
 		if (this.state.popupOpen === "at-mentions") {
 			if (peopleMatch) {
-				this.showPopupSelectors(peopleMatch[0].replace(/@/, ""), "at-mentions");
+				this.showPopupSelectors(peopleMatch[1].replace(/@/, ""), "at-mentions");
 			} else {
 				// if the line doesn't end with @word, then hide the popup
 				this.hidePopup();
@@ -291,7 +291,7 @@ class ComposeBox extends React.Component {
 			}
 		} else {
 			if (peopleMatch) {
-				this.showPopupSelectors(peopleMatch[0].replace(/@/, ""), "at-mentions");
+				this.showPopupSelectors(peopleMatch[1].replace(/@/, ""), "at-mentions");
 			}
 			if (slashMatch) {
 				this.showPopupSelectors(slashMatch[0].replace(/\//, ""), "slash-commands");
