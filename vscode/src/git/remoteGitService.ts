@@ -57,8 +57,7 @@ export class RemoteGitService extends Disposable implements IGitService {
 		let uri;
 		try {
 			uri = Uri.parse(repo.url);
-		}
-		catch {
+		} catch {
 			uri = Uri.parse(repo.normalizedUrl);
 		}
 
@@ -84,13 +83,11 @@ export class RemoteGitService extends Disposable implements IGitService {
 				let uri;
 				try {
 					uri = Uri.parse(r.url);
-				}
-				catch {
+				} catch {
 					uri = Uri.parse(r.normalizedUrl);
 				}
 				return new GitRepository(uri.with({ scheme: "vsls" }));
-			}
-			);
+			});
 		}
 		return this._repositories;
 	}
@@ -99,5 +96,9 @@ export class RemoteGitService extends Disposable implements IGitService {
 	async resolveRef(path: string, ref: string): Promise<string | undefined>;
 	async resolveRef(uriOrPath: Uri | string, ref: string): Promise<string | undefined> {
 		return ref;
+	}
+
+	getCurrentCommit() {
+		return Promise.resolve("TODO");
 	}
 }

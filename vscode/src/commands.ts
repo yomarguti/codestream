@@ -299,7 +299,12 @@ export class Commands extends Disposable {
 			return streamThread.stream.postCode(
 				args.text,
 				code,
-				selection,
+				[
+					selection.start.line,
+					selection.start.character,
+					selection.end.line,
+					selection.end.character
+				],
 				commitHash!,
 				markerStream,
 				streamThread.id
