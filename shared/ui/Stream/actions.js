@@ -266,7 +266,6 @@ export const archiveStream = (streamId, value) => async (dispatch, getState, { a
 
 export const invite = attributes => async (dispatch, getState, { api }) => {
 	try {
-		console.log("Inviting with: ", attributes);
 		await api.invite(attributes);
 	} catch (error) {
 		console.log("Error: ", error);

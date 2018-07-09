@@ -42,7 +42,7 @@ export class InvitePage extends Component {
 
 		this.setState({ loading: true });
 		this.props
-			.invite({ email: newMemberEmail, name: newMemberName, teamId: this.props.teamId })
+			.invite({ email: newMemberEmail, fullName: newMemberName, teamId: this.props.teamId })
 			.then(() => {
 				this.setState(this.initialState);
 			});
