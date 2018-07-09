@@ -269,3 +269,15 @@ export const invite = attributes => async (dispatch, getState, { api }) => {
 		console.log("Error: ", error);
 	}
 };
+
+export const fetchPosts = params => async (dispatch, getState, { api }) => {
+	try {
+		const posts = await api.fetchPosts(params);
+		return dispatch({
+			type: "ADD_POSTS_FOR_STREAM",
+			payload: { posts, streamId: params.streamId }
+		});
+	} catch (error) {
+		console.error(error);
+	}
+};
