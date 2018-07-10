@@ -111,11 +111,6 @@ export class SimpleStream extends Component {
 		const switchingFileStreams = nextProps.fileStreamId !== this.props.fileStreamId;
 		const switchingPostStreams = nextProps.postStreamId !== this.props.postStreamId;
 
-		if (nextProps.fileStreamId && switchingFileStreams && nextProps.posts.length === 0) {
-			// FIXME: is this still necessary? this was because there was no lazy loading and file streams were complex
-			// this.props.fetchPosts({ streamId: nextProps.fileStreamId, teamId: nextProps.teamId });
-		}
-
 		if (switchingPostStreams) {
 			this.handleDismissThread({ track: false });
 
@@ -263,6 +258,9 @@ export class SimpleStream extends Component {
 		// if we're switching from the channel list to a stream,
 		// then check to see if we should scroll to the bottom
 		if (this.state.activePanel === "main" && prevState.activePanel !== "main") {
+			if (postStreamId && this.props.posts.length === 0) {
+				this.props.fetchPosts({ streamId: postStreamId, teamId: this.props.teamId });
+			}
 			// FIXME only scroll to the first unread message
 			if (!this.state.scrolledOffBottom) this.scrollToBottom();
 		}

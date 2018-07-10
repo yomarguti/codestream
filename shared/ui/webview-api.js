@@ -28,6 +28,10 @@ export default class WebviewApi {
 		});
 	}
 
+	fetchPosts(params) {
+		return this.postMessage({ action: "fetch-posts", params });
+	}
+
 	createPost(post) {
 		return this.postMessage({ action: "create-post", params: post });
 	}
