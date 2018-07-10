@@ -41,6 +41,7 @@ import { StreamVisibilityManager } from "./streamVisibility";
 import { Functions, memoize, Strings } from "../system";
 import { Team, TeamCollection } from "./models/teams";
 import { User, UserCollection } from "./models/users";
+import Cache from "./cache";
 
 export {
 	ChannelStream,
@@ -92,16 +93,18 @@ export class CodeStreamSession extends Disposable {
 
 	private _presenceManager: PresenceManager | undefined;
 	private _streamVisibilityManager: StreamVisibilityManager | undefined;
+	private _cache: Cache;
 
 	constructor(private _serverUrl: string) {
 		super(() => this.dispose());
 
 		this._api = new CodeStreamApi(_serverUrl);
-		(this._pubnub = new PubNubReceiver()),
-			(this._disposable = Disposable.from(
-				this._pubnub.onDidReceiveMessage(this.onMessageReceived, this),
-				configuration.onDidChange(this.onConfigurationChanged, this)
-			));
+		this._cache = new Cache(this);
+		this._pubnub = new PubNubReceiver(this._cache);
+		this._disposable = Disposable.from(
+			this._pubnub.onDidReceiveMessage(this.onMessageReceived, this),
+			configuration.onDidChange(this.onConfigurationChanged, this)
+		);
 	}
 
 	dispose() {

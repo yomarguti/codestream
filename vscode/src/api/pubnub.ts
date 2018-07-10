@@ -2,6 +2,7 @@
 import { Disposable, Event, EventEmitter } from "vscode";
 import { CSPost, CSRepository, CSStream } from "./types";
 import { CodeStreamApi } from "./api";
+import Cache from "./cache";
 import { Logger } from "../logger";
 import Pubnub = require("pubnub");
 import { Iterables } from "../system";
@@ -41,6 +42,11 @@ export class PubNubReceiver {
 	private _pubnub: Pubnub | undefined;
 	private _listener: Pubnub.ListenerParameters | undefined;
 	private _userId: string | undefined;
+	private _cache: Cache;
+
+	constructor(cache: Cache) {
+		this._cache = cache;
+	}
 
 	initialize(authKey: string, userId: string, subscribeKey: string): Disposable {
 		this._userId = userId;
@@ -172,7 +178,7 @@ export class PubNubReceiver {
 		// }
 	}
 
-	processMessage(data: { [key: string]: any }) {
+	async processMessage(data: { [key: string]: any }) {
 		const { requestId, ...messages } = data;
 		requestId;
 
@@ -195,7 +201,7 @@ export class PubNubReceiver {
 
 				switch (key as MessageType) {
 					case "posts":
-						entities = this.stripDirectives(key, entities);
+						entities = await this._cache.resolvePosts(entities);
 						if (!entities || !entities.length) continue;
 
 						this._onDidReceiveMessage.fire({
@@ -204,7 +210,7 @@ export class PubNubReceiver {
 						});
 						break;
 					case "repos":
-						entities = this.stripDirectives(key, entities);
+						entities = await this._cache.resolveRepos(entities);
 						if (!entities || !entities.length) continue;
 
 						this._onDidReceiveMessage.fire({
@@ -213,7 +219,7 @@ export class PubNubReceiver {
 						});
 						break;
 					case "streams":
-						entities = this.stripDirectives(key, entities);
+						entities = await this._cache.resolveStreams(entities);
 						if (!entities || !entities.length) continue;
 
 						const streams = CodeStreamApi.normalizeResponse(entities) as CSStream[];
