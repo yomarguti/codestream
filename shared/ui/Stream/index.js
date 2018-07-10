@@ -1,6 +1,5 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
-import { FormattedMessage } from "react-intl";
 import _ from "underscore";
 import createClassString from "classnames";
 import ComposeBox from "./ComposeBox";
@@ -318,46 +317,28 @@ export class SimpleStream extends Component {
 		EventEmitter.emit("interaction:clicked-link", "https://help.codestream.com");
 	};
 
-	renderIntro = () => {
-		return [
-			<label key="welcome">
-				<FormattedMessage id="stream.intro.welcome" defaultMessage="Welcome to CodeStream!" />
-			</label>,
+	renderIntro = nameElement => {
+		const [first, ...rest] = this.props.channelMembers
+			.filter(member => member.id !== this.props.currentUser.id)
+			.map(member => member.username)
+			.sort();
+		const localizedMembers = rest.reduce(
+			(result, string, index, array) =>
+				index === array.length - 1 ? `${result}, and ${string}` : `${result}, ${string}`,
+			first
+		);
+
+		return (
 			<label key="info">
-				<ul>
-					<li>
-						<FormattedMessage
-							id="stream.intro.eachFile"
-							defaultMessage="Post a message and any of your teammates can join the discussion."
-						/>
-					</li>
-					<li>
-						<FormattedMessage
-							id="stream.intro.comment"
-							defaultMessage={
-								'Comment on a specific block of code by selecting it and then clicking the "+" button.'
-							}
-						/>
-					</li>
-					<li>
-						<FormattedMessage
-							id="stream.intro.share"
-							defaultMessage="Select &quot;Codestream: Invite&quot; from the command palette to invite your team."
-						>
-							{() => (
-								<React.Fragment>
-									Select <a onClick={() => this.setActivePanel("invite")}>Codestream: Invite</a>{" "}
-									from the command palette to invite your team.
-								</React.Fragment>
-							)}
-						</FormattedMessage>
-					</li>
-				</ul>
-			</label>,
-			<label key="learn-more">
-				Learn more at <a onClick={this.handleClickHelpLink}>help.codestream.com</a>
+				{this.props.postStream.type === "direct" ? (
+					<span>This is the beginning of your direct message with {localizedMembers}.</span>
+				) : (
+					<span>
+						This is the beginning of the <b>{nameElement}</b> channel.
+					</span>
+				)}
 			</label>
-		];
+		);
 	};
 
 	renderThreadPosts = threadId => {
@@ -533,7 +514,11 @@ export class SimpleStream extends Component {
 						id={streamDivId}
 					>
 						<div className="intro" ref={ref => (this._intro = ref)}>
-							{this.renderIntro()}
+							{this.renderIntro(
+								<span>
+									{channelIcon} {this.props.postStreamName}
+								</span>
+							)}
 						</div>
 						{posts.map(post => {
 							if (post.deactivated) return null;
@@ -1339,6 +1324,10 @@ const mapStateToProps = ({
 	const user = users[session.userId];
 	const mutedStreams = (user && user.preferences && user.preferences.mutedStreams) || {};
 
+	const channelMembers = postStream.memberIds
+		? postStream.memberIds.map(id => users[id])
+		: teamMembers;
+
 	return {
 		umis,
 		configs,
@@ -1365,6 +1354,7 @@ const mapStateToProps = ({
 		mutedStreams,
 		slashCommands,
 		team: teams[context.currentTeamId],
+		channelMembers,
 		posts: streamPosts.map(post => {
 			let user = users[post.creatorId];
 			if (!user) {
