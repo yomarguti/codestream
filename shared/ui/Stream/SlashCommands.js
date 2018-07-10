@@ -6,7 +6,7 @@ export const slashCommands = [
 	// { id: "diff", help: "diff last post" },
 	{ id: "invite", help: "add to your team", description: "email" },
 	{ id: "leave", help: "leave channel", channelOnly: true },
-	{ id: "me", help: "emote" },
+	{ id: "me", help: "emote", description "text" },
 	{ id: "msg", help: "message member", description: "@user" },
 	{ id: "mute", help: "mute channel", channelOnly: true },
 	// { id: "muteall", help: "mute codestream" },

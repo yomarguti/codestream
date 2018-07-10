@@ -104431,12 +104431,6 @@ var SimpleStream = function (_Component) {
 				var _this$props = _this.props,
 				    postStream = _this$props.postStream,
 				    currentUser = _this$props.currentUser;
-
-				if (postStream.creatorId !== currentUser.id) {
-					var text = "You may only archive channels that you created.";
-					if (postStream.creatorId) text += " This channel was created by " + postStream.creatorId;
-					return _this.submitSystemPost(text);
-				}
 				if (_this.props.postStreamType === "direct") {
 					var _text2 = "You cannot archive direct message streams. You can remove them from your list by clicking the X on the channels panel.";
 					return _this.submitSystemPost(_text2);
