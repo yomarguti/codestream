@@ -217,11 +217,11 @@ export const addUsersToStream = (streamId, userIds) => async (dispatch, getState
 
 export const joinStream = streamId => async (dispatch, getState, { api }) => {
 	try {
-		const returnStream = await api.joinStream(streamId);
-		console.log("return stream: ", returnStream);
-		// if (streams.length > 0) dispatch(saveStreams(normalize(streams)));
+		const teamId = getState().context.currentTeamId;
+		const stream = await api.joinStream({ streamId, teamId });
+		return dispatch({ type: "UPDATE_STREAM", payload: stream });
 	} catch (error) {
-		console.log("Error: ", error);
+		console.log("Error joining team:", error);
 	}
 };
 

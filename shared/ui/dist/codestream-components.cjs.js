@@ -39851,35 +39851,32 @@ var joinStream = function joinStream(streamId) {
 	return function () {
 		var _ref21 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(dispatch, getState, _ref20) {
 			var api = _ref20.api;
-			var returnStream;
+			var teamId, stream;
 			return regeneratorRuntime.wrap(function _callee9$(_context9) {
 				while (1) {
 					switch (_context9.prev = _context9.next) {
 						case 0:
 							_context9.prev = 0;
-							_context9.next = 3;
-							return api.joinStream(streamId);
+							teamId = getState().context.currentTeamId;
+							_context9.next = 4;
+							return api.joinStream({ streamId: streamId, teamId: teamId });
 
-						case 3:
-							returnStream = _context9.sent;
+						case 4:
+							stream = _context9.sent;
+							return _context9.abrupt("return", dispatch({ type: "UPDATE_STREAM", payload: stream }));
 
-							console.log("return stream: ", returnStream);
-							// if (streams.length > 0) dispatch(saveStreams(normalize(streams)));
-							_context9.next = 10;
-							break;
-
-						case 7:
-							_context9.prev = 7;
+						case 8:
+							_context9.prev = 8;
 							_context9.t0 = _context9["catch"](0);
 
-							console.log("Error: ", _context9.t0);
+							console.log("Error joining team:", _context9.t0);
 
-						case 10:
+						case 11:
 						case "end":
 							return _context9.stop();
 					}
 				}
-			}, _callee9, _this, [[0, 7]]);
+			}, _callee9, _this, [[0, 8]]);
 		}));
 
 		return function (_x25, _x26, _x27) {
@@ -40144,6 +40141,7 @@ var streams = (function () {
 		case "BOOTSTRAP_STREAMS":
 			return payload.reduce(addStream, state);
 		case "STREAMS-UPDATE_FROM_PUBNUB":
+		case "UPDATE_STREAM":
 		case "ADD_STREAM":
 			return addStream(state, payload);
 		default:
@@ -106215,8 +106213,8 @@ var WebviewApi = function () {
 		}
 	}, {
 		key: "joinStream",
-		value: function joinStream(streamId) {
-			return this.postMessage({ action: "join-stream", params: streamId });
+		value: function joinStream(params) {
+			return this.postMessage({ action: "join-stream", params: params });
 		}
 	}, {
 		key: "invite",
