@@ -1159,8 +1159,8 @@ export class SimpleStream extends Component {
 
 		// find or create the stream, then select it, then post the message
 		const stream = await this.props.createStream({ type: "direct", memberIds: [user] });
-		if (stream && stream._id) {
-			this.submitPost({ text: tokens.join(" ") });
+		if (stream && (stream._id || stream.id)) {
+			this.submitPost({ text: tokens.join(" ").trim() });
 		}
 		return true;
 	};

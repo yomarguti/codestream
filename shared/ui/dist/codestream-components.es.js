@@ -281,7 +281,7 @@ var store = _global[SHARED] || (_global[SHARED] = {});
   return store[key] || (store[key] = value !== undefined ? value : {});
 })('versions', []).push({
   version: _core.version,
-  mode: _library ? 'pure' : 'global',
+  mode: 'global',
   copyright: '© 2018 Denis Pushkarev (zloirock.ru)'
 });
 });
@@ -316,7 +316,7 @@ var _wksExt = {
 
 var defineProperty = _objectDp.f;
 var _wksDefine = function (name) {
-  var $Symbol = _core.Symbol || (_core.Symbol = _library ? {} : _global.Symbol || {});
+  var $Symbol = _core.Symbol || (_core.Symbol = _global.Symbol || {});
   if (name.charAt(0) != '_' && !(name in $Symbol)) defineProperty($Symbol, name, { value: _wksExt.f(name) });
 };
 
@@ -103684,11 +103684,11 @@ var slashCommands = [{ id: "help", help: "get help" }, { id: "add", help: "add m
 // { id: "apply", help: "apply patch last post" },
 { id: "archive", help: "archive channel", channelOnly: true },
 // { id: "diff", help: "diff last post" },
-{ id: "invite", help: "add to your team", description: "email" }, { id: "leave", help: "leave channel", channelOnly: true }, { id: "me", help: "emote" }, { id: "msg", help: "message member", description: "@user" }, { id: "mute", help: "mute channel", channelOnly: true },
+{ id: "invite", help: "add to your team", description: "email" }, { id: "leave", help: "leave channel", channelOnly: true }, { id: "me", help: "emote", description: "text" }, { id: "msg", help: "message member", description: "@user text" }, { id: "mute", help: "mute channel", channelOnly: true },
 // { id: "muteall", help: "mute codestream" },
 // { id: "open", help: "open channel" },
 // { id: "prefs", help: "open preferences" },
-{ id: "purpose", help: "set purpose", description: "text", channelOnly: true }, { id: "rename", help: "rename channel", description: "newname", channelOnly: true }, { id: "remove", help: "remove from channel", description: "@user", channelOnly: true }, { id: "version", help: "" }, { id: "who", help: "show channel members" }];
+{ id: "purpose", help: "set purpose", description: "text", channelOnly: true }, { id: "rename", help: "rename channel", description: "newname", channelOnly: true }, { id: "remove", help: "remove from channel", description: "@user", channelOnly: true }, { id: "version", help: "show codeStream version" }, { id: "who", help: "show channel members" }];
 
 var EMAIL_MATCH_REGEX = new RegExp("[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*", "g");
 
@@ -104594,8 +104594,8 @@ var SimpleStream = function (_Component) {
 								case 8:
 									stream = _context5.sent;
 
-									if (stream && stream._id) {
-										_this.submitPost({ text: tokens.join(" ") });
+									if (stream && (stream._id || stream.id)) {
+										_this.submitPost({ text: tokens.join(" ").trim() });
 									}
 									return _context5.abrupt("return", true);
 
