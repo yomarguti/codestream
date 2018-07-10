@@ -8,6 +8,7 @@
   "license": "",
   "scripts": {
     "vscode-bundle": "rollup -c && npm run vscode-build-css",
+    "vscode-bundle-watch": "rollup -c -w",
     "vscode-build-css": "lessc ./styles/vscode-stream.less ./../styles/stream.css",
     "prettify": "prettier --config .prettierrc --write ./{lib,spec}/*.js ./{lib,spec}/**/*.js ./package.json ./.prettierrc"
   },
