@@ -516,7 +516,8 @@ export class SimpleStream extends Component {
 						<div className="intro" ref={ref => (this._intro = ref)}>
 							{this.renderIntro(
 								<span>
-									{channelIcon} {this.props.postStreamName}
+									{channelIcon}
+									{this.props.postStreamName}
 								</span>
 							)}
 						</div>
@@ -1324,9 +1325,11 @@ const mapStateToProps = ({
 	const user = users[session.userId];
 	const mutedStreams = (user && user.preferences && user.preferences.mutedStreams) || {};
 
-	const channelMembers = postStream.memberIds
-		? postStream.memberIds.map(id => users[id])
-		: teamMembers;
+	const channelMembers = postStream.isTeamStream
+		? teamMembers
+		: postStream.memberIds
+			? postStream.memberIds.map(id => users[id])
+			: [];
 
 	return {
 		umis,

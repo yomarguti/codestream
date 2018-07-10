@@ -105155,7 +105155,6 @@ var SimpleStream = function (_Component) {
 								"span",
 								null,
 								channelIcon,
-								" ",
 								this.props.postStreamName
 							))
 						),
@@ -105416,9 +105415,9 @@ var mapStateToProps$6 = function mapStateToProps(_ref15) {
 	var user = users[session.userId];
 	var mutedStreams = user && user.preferences && user.preferences.mutedStreams || {};
 
-	var channelMembers = postStream.memberIds ? postStream.memberIds.map(function (id) {
+	var channelMembers = postStream.isTeamStream ? teamMembers : postStream.memberIds ? postStream.memberIds.map(function (id) {
 		return users[id];
-	}) : teamMembers;
+	}) : [];
 
 	return {
 		umis: umis,
