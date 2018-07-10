@@ -16,7 +16,8 @@ export default store => {
 
 	return next => action => {
 		console.debug(`new action: ${action.type}`, action.payload);
-		console.debug("new state is", store.getState());
-		return next(action);
+		const result  = next(action)
+		console.debug('new state is', store.getState())
+		return result
 	};
 };

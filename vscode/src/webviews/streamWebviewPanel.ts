@@ -314,6 +314,13 @@ export class StreamWebviewPanel extends Disposable {
 							body: { id: body.id, payload: await this.session.api.invite(email, teamId, fullName) }
 						});
 					}
+					case "join-stream": {
+						const { streamId, teamId } = body.params;
+						return this.postMessage({
+							type: "codestream:response",
+							body: { id: body.id, payload: await this.session.api.joinStream(streamId, teamId) }
+						});
+					}
 				}
 				break;
 
