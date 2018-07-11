@@ -104319,7 +104319,7 @@ var SimpleStream = function (_Component) {
 								case 7:
 									newStream = _context2.sent;
 
-									if (newStream.name === args) _this.submitPost({ text: "/me renamed the channel from #" + oldName + " to #" + args });else _this.submitSystemPost("Unable to rename channel. We don't support these characters: .~#%&*{}+/:<>?|'\".");
+									if (newStream && newStream.name === args) _this.submitPost({ text: "/me renamed the channel from #" + oldName + " to #" + args });else _this.submitSystemPost("Unable to rename channel. Channel names must be unique. CodeStream doesn't support these characters: .~#%&*{}+/:<>?|'\".");
 									_context2.next = 12;
 									break;
 

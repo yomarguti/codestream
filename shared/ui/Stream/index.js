@@ -1018,11 +1018,11 @@ export class SimpleStream extends Component {
 		if (args) {
 			const oldName = this.props.postStreamName;
 			const newStream = await this.props.renameStream(this.props.postStreamId, args);
-			if (newStream.name === args)
+			if (newStream && newStream.name === args)
 				this.submitPost({ text: "/me renamed the channel from #" + oldName + " to #" + args });
 			else
 				this.submitSystemPost(
-					"Unable to rename channel. We don't support these characters: .~#%&*{}+/:<>?|'\"."
+					"Unable to rename channel. Channel names must be unique. CodeStream doesn't support these characters: .~#%&*{}+/:<>?|'\"."
 				);
 		} else this.submitSystemPost("Rename a channel by typing `/rename [new name]`");
 		return true;
