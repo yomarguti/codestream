@@ -42,35 +42,44 @@ export class SimpleChannelMenu extends Component {
 	menuAction = action => {
 		const streamId = this.props.stream.id;
 
-		if (action === "view-members") {
-			this.props.setActivePanel("main");
-			this.props.setCurrentStream(streamId);
-			setTimeout(() => {
-				this.props.runSlashCommand("who");
-			}, 500);
-		} else if (action === "mute-channel") {
-			this.props.setUserPreference(["mutedStreams", streamId], !this.props.isMuted);
-		} else if (action === "add-members") {
-			this.props.setActivePanel("main");
-			this.props.setCurrentStream(streamId);
-			setTimeout(() => {
-				this.props.runSlashCommand("add");
-			}, 500);
-		} else if (action === "rename-channel") {
-			this.props.setActivePanel("main");
-			this.props.setCurrentStream(streamId);
-			setTimeout(() => {
-				this.props.runSlashCommand("rename");
-			}, 500);
-		} else if (action === "leave-channel") {
-			this.props.setActivePanel("main");
-			this.props.setCurrentStream(streamId);
-			setTimeout(() => {
-				this.props.runSlashCommand("leave");
-			}, 100);
-		}
 		this.props.closeMenu();
-		// this.setState({ openMenu: null });
+
+		switch (action) {
+			case "view-members":
+				this.props.setActivePanel("main");
+				this.props.setCurrentStream(streamId);
+				setTimeout(() => {
+					this.props.runSlashCommand("who");
+				}, 500);
+				return;
+			case "mute-channel":
+				this.props.setUserPreference(["mutedStreams", streamId], !this.props.isMuted);
+				return;
+			case "add-members":
+				this.props.setActivePanel("main");
+				this.props.setCurrentStream(streamId);
+				setTimeout(() => {
+					this.props.runSlashCommand("add");
+				}, 500);
+				return;
+			case "rename-channel":
+				this.props.setActivePanel("main");
+				this.props.setCurrentStream(streamId);
+				setTimeout(() => {
+					this.props.runSlashCommand("rename");
+				}, 500);
+				return;
+			case "leave-channel":
+				this.props.setActivePanel("main");
+				this.props.setCurrentStream(streamId);
+				setTimeout(() => {
+					this.props.runSlashCommand("leave");
+				}, 100);
+				return;
+			case "mark-read":
+				this.props.markStreamRead(streamId);
+				return;
+		}
 	};
 }
 

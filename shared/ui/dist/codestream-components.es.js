@@ -40425,35 +40425,44 @@ var SimpleChannelMenu = function (_Component) {
 			value: function value(action) {
 				var streamId = _this.props.stream.id;
 
-				if (action === "view-members") {
-					_this.props.setActivePanel("main");
-					_this.props.setCurrentStream(streamId);
-					setTimeout(function () {
-						_this.props.runSlashCommand("who");
-					}, 500);
-				} else if (action === "mute-channel") {
-					_this.props.setUserPreference(["mutedStreams", streamId], !_this.props.isMuted);
-				} else if (action === "add-members") {
-					_this.props.setActivePanel("main");
-					_this.props.setCurrentStream(streamId);
-					setTimeout(function () {
-						_this.props.runSlashCommand("add");
-					}, 500);
-				} else if (action === "rename-channel") {
-					_this.props.setActivePanel("main");
-					_this.props.setCurrentStream(streamId);
-					setTimeout(function () {
-						_this.props.runSlashCommand("rename");
-					}, 500);
-				} else if (action === "leave-channel") {
-					_this.props.setActivePanel("main");
-					_this.props.setCurrentStream(streamId);
-					setTimeout(function () {
-						_this.props.runSlashCommand("leave");
-					}, 100);
-				}
 				_this.props.closeMenu();
-				// this.setState({ openMenu: null });
+
+				switch (action) {
+					case "view-members":
+						_this.props.setActivePanel("main");
+						_this.props.setCurrentStream(streamId);
+						setTimeout(function () {
+							_this.props.runSlashCommand("who");
+						}, 500);
+						return;
+					case "mute-channel":
+						_this.props.setUserPreference(["mutedStreams", streamId], !_this.props.isMuted);
+						return;
+					case "add-members":
+						_this.props.setActivePanel("main");
+						_this.props.setCurrentStream(streamId);
+						setTimeout(function () {
+							_this.props.runSlashCommand("add");
+						}, 500);
+						return;
+					case "rename-channel":
+						_this.props.setActivePanel("main");
+						_this.props.setCurrentStream(streamId);
+						setTimeout(function () {
+							_this.props.runSlashCommand("rename");
+						}, 500);
+						return;
+					case "leave-channel":
+						_this.props.setActivePanel("main");
+						_this.props.setCurrentStream(streamId);
+						setTimeout(function () {
+							_this.props.runSlashCommand("leave");
+						}, 100);
+						return;
+					case "mark-read":
+						_this.props.markStreamRead(streamId);
+						return;
+				}
 			}
 		});
 
