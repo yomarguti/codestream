@@ -208,8 +208,9 @@ export default class CodeStreamApi {
 		}
 	}
 
-	async joinStream(streamId) {
+	async joinStream(params) {
 		const { session } = this.store.getState();
+		const { streamId } = params;
 
 		try {
 			const data = await http.put("/join/" + streamId, {}, session.accessToken);
