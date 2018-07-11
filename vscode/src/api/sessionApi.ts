@@ -36,6 +36,10 @@ export class CodeStreamSessionApi {
 		})).stream;
 	}
 
+	async invite(email: string, teamId: string, fullName?: string): Promise<CSUser> {
+		return (await this._api.invite(this.token, { email, teamId, fullName })).user;
+	}
+
 	async createPost(
 		text: string,
 		parentPostId: string | undefined,
@@ -375,7 +379,9 @@ export class CodeStreamSessionApi {
 	}
 
 	async joinStream(streamId: string, teamId?: string) {
-		return (await this._api.joinStream(this.token, streamId, teamId || this.teamId, {})).stream;
+		await this._api.joinStream(this.token, teamId || this.teamId, streamId, {});
+		// Hack: because the response to the previous call is a $directive
+		return (await this._api.getStream(this.token, teamId || this.teamId, streamId)).stream;
 	}
 
 	async updatePresence(status: PresenceStatus, sessionId: string) {

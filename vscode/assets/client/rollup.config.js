@@ -3,6 +3,7 @@ import babel from "rollup-plugin-babel";
 import resolve from "rollup-plugin-node-resolve";
 import commonjs from "rollup-plugin-commonjs";
 import replace from "rollup-plugin-replace";
+import json from "rollup-plugin-json";
 
 export default {
 	input: "lib/codestream-vs.js",
@@ -13,6 +14,7 @@ export default {
 	},
 	preserveSymlinks: true,
 	plugins: [
+		json({ include: "node_modules/codestream-components/**" }),
 		replace({
 			"process.env.NODE_ENV": JSON.stringify("development"),
 			delimiters: ["", ""]

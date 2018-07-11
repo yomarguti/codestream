@@ -77,13 +77,6 @@ export class StreamViewController implements Disposable {
 		Container.notifications.clearUnreadCount();
 
 		if (this._panel === undefined) {
-			if (streamThread === undefined) {
-				streamThread = this._lastStreamThread || {
-					id: undefined,
-					stream: await this.session.getDefaultTeamChannel()
-				};
-			}
-
 			this._panel = new StreamWebviewPanel(this.session);
 
 			this._disposablePanel = Disposable.from(

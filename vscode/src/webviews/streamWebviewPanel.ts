@@ -18,8 +18,7 @@ import {
 	PostsReceivedEvent,
 	SessionChangedEvent,
 	SessionChangedType,
-	StreamThread,
-	StreamType
+	StreamThread
 } from "../api/session";
 import { Container } from "../container";
 import { Logger } from "../logger";
@@ -172,6 +171,7 @@ export class StreamWebviewPanel extends Disposable {
 	private _disposable: Disposable | undefined;
 	private _panel: WebviewPanel | undefined;
 	private _streamThread: StreamThread | undefined;
+	private _activeStreamId: string | undefined;
 
 	constructor(public readonly session: CodeStreamSession) {
 		super(() => this.dispose());
@@ -189,15 +189,12 @@ export class StreamWebviewPanel extends Disposable {
 	private onPanelViewStateChanged(e: WebviewPanelOnDidChangeViewStateEvent) {
 		Logger.log("WebView.ViewStateChanged", e.webviewPanel.visible);
 		// HACK: Because messages aren't sent to the webview when hidden, we need to reset the whole view if we are invalid
-		if (this._invalidateOnVisible && this.streamThread !== undefined && e.webviewPanel.visible) {
+		if (this._invalidateOnVisible && e.webviewPanel.visible) {
 			this._invalidateOnVisible = false;
-			this.setStream(this.streamThread);
 		}
 	}
 
 	private async onPanelWebViewMessageReceived(e: CSWebviewMessage) {
-		if (this._streamThread === undefined) return;
-
 		const { type } = e;
 
 		switch (type.replace("codestream:", "")) {
@@ -206,35 +203,33 @@ export class StreamWebviewPanel extends Disposable {
 				// TODO: Add sequence ids to ensure correct matching
 				// TODO: Add exception handling for failed requests
 				switch (body.action) {
-					case "create-post":
-						const { text, codeBlocks, parentPostId } = body.params;
+					case "create-post": {
+						const { text, codeBlocks, parentPostId, streamId, teamId } = body.params;
 
 						let post;
 						if (codeBlocks === undefined || codeBlocks.length === 0) {
-							post = await this._streamThread.stream.post(text, parentPostId);
+							post = await this.session.api.createPost(text, parentPostId, streamId, teamId);
 						} else {
 							const block = codeBlocks[0];
-							let markerStream;
-							if (block.streamId === undefined) {
-								markerStream = {
-									file: block.file!,
-									repoId: block.repoId!
-								};
-							} else {
-								markerStream = block.streamId;
-							}
+							const gitRepos = await Container.git.getRepositories();
+							const gitRepo = gitRepos.find(r => r.containsFile(block.file));
+							const commitHash = (await gitRepo!.getCurrentCommit()) || "";
 
-							const repos = await Container.git.getRepositories();
-							const repo = repos.find(r => r.containsFile(block.file));
-							const commitHash = (await repo!.getCurrentCommit()) || "";
+							// TODO: use repo remotes instead of repoId
+							const fileStream = {
+								file: block.file,
+								repoId: ""
+							};
 
-							post = await this._streamThread.stream.postCode(
+							post = this.session.api.createPostWithCode(
 								text,
+								parentPostId,
 								block.code,
 								block.location,
 								commitHash,
-								markerStream,
-								parentPostId
+								fileStream,
+								streamId,
+								teamId
 							);
 						}
 
@@ -244,13 +239,24 @@ export class StreamWebviewPanel extends Disposable {
 							type: "codestream:response",
 							body: {
 								id: body.id,
-								payload: post.entity
+								payload: post
 							}
 						});
 						break;
+					}
+					case "fetch-posts": {
+						const { streamId, teamId } = body.params;
+						return this.postMessage({
+							type: "codestream:response",
+							body: {
+								id: body.id,
+								payload: await this.session.api.getPosts(streamId, teamId)
+							}
+						});
+					}
 					case "delete-post": {
-						const post = await Container.session.api.getPost(body.params);
-						const updates = await Container.session.api.deletePost(body.params);
+						const post = await this.session.api.getPost(body.params);
+						const updates = await this.session.api.deletePost(body.params);
 						this.postMessage({
 							type: "codestream:response",
 							body: { id: body.id, payload: { ...post, ...updates } }
@@ -259,33 +265,35 @@ export class StreamWebviewPanel extends Disposable {
 					}
 					case "edit-post": {
 						const { id, text, mentions } = body.params;
-						const post = await Container.session.api.getPost(id);
-						const updates = await Container.session.api.editPost(id, text, mentions);
+						const post = await this.session.api.getPost(id);
+						const updates = await this.session.api.editPost(id, text, mentions);
 						this.postMessage({
 							type: "codestream:response",
 							body: { id: body.id, payload: { ...post, ...updates } }
 						});
 						break;
 					}
-					case "mark-stream-read":
-						const response = await this._streamThread.stream.markRead();
-						this.postMessage({
-							type: "codestream:response",
-							body: { id: body.id, payload: response }
-						});
+					case "mark-stream-read": {
+						const stream = await this.session.getStream(body.params);
+						if (stream) {
+							const response = await stream.markRead();
+							this.postMessage({
+								type: "codestream:response",
+								body: { id: body.id, payload: response }
+							});
+						} else {
+							debugger;
+							// TODO
+						}
 						break;
+					}
 					case "create-stream": {
 						const { type, teamId, name, privacy, memberIds } = body.params;
 						let stream;
 						if (type === "channel") {
-							stream = await Container.session.api.createChannelStream(
-								name,
-								memberIds,
-								privacy,
-								teamId
-							);
+							stream = await this.session.api.createChannelStream(name, memberIds, privacy, teamId);
 						} else if (type === "direct") {
-							stream = await Container.session.api.createDirectStream(memberIds);
+							stream = await this.session.api.createDirectStream(memberIds);
 						}
 						return this.postMessage({
 							type: "codestream:response",
@@ -293,25 +301,40 @@ export class StreamWebviewPanel extends Disposable {
 						});
 					}
 					case "save-user-preference": {
-						const response = await Container.session.api.savePreferences(body.params);
+						const response = await this.session.api.savePreferences(body.params);
 						return this.postMessage({
 							type: "codestream:response",
 							body: { id: body.id, payload: response }
+						});
+					}
+					case "invite": {
+						const { email, teamId, fullName } = body.params;
+						return this.postMessage({
+							type: "codestream:response",
+							body: { id: body.id, payload: await this.session.api.invite(email, teamId, fullName) }
+						});
+					}
+					case "join-stream": {
+						const { streamId, teamId } = body.params;
+						return this.postMessage({
+							type: "codestream:response",
+							body: { id: body.id, payload: await this.session.api.joinStream(streamId, teamId) }
 						});
 					}
 				}
 				break;
 
 			case "interaction:thread-selected": {
-				const { threadId, streamId, post } = e.body;
-				if (this._streamThread !== undefined && this._streamThread.stream.id === streamId) {
-					this._streamThread.id = threadId;
-				}
+				const { streamId, post } = e.body;
+
+				const stream = await this.session.getStream(streamId);
 
 				if (post.codeBlocks === undefined) return;
-				await Container.commands.openPostWorkingFile(
-					new Post(this.session, post, this._streamThread.stream)
-				);
+				await Container.commands.openPostWorkingFile(new Post(this.session, post, stream));
+				break;
+			}
+			case "interaction:changed-active-stream": {
+				this._activeStreamId = e.body;
 				break;
 			}
 			case "subscription:file-changed": {
@@ -353,8 +376,6 @@ export class StreamWebviewPanel extends Disposable {
 	}
 
 	private onPostsReceived(e: PostsReceivedEvent) {
-		if (this._streamThread === undefined) return;
-
 		this.postMessage({
 			type: "push-data",
 			body: {
@@ -365,8 +386,6 @@ export class StreamWebviewPanel extends Disposable {
 	}
 
 	private onSessionChanged(e: SessionChangedEvent) {
-		if (this._streamThread === undefined) return;
-
 		switch (e.type) {
 			case SessionChangedType.Streams:
 			case SessionChangedType.Repositories:
@@ -379,6 +398,10 @@ export class StreamWebviewPanel extends Disposable {
 				});
 				break;
 		}
+	}
+
+	get activeStreamId() {
+		return this._activeStreamId;
 	}
 
 	get streamThread() {
@@ -428,18 +451,11 @@ export class StreamWebviewPanel extends Disposable {
 	}
 
 	show(streamThread?: StreamThread) {
-		if (
-			streamThread === undefined ||
-			(this._streamThread &&
-				this._streamThread.id === streamThread.id &&
-				this._streamThread.stream.id === streamThread.stream.id)
-		) {
-			this._panel!.reveal(undefined, false);
-
-			return this._streamThread;
+		if (streamThread) {
+			// return this.setStream(streamThread);
 		}
 
-		return this.setStream(streamThread);
+		return this._show();
 	}
 
 	private async getHtml(): Promise<string> {
@@ -468,14 +484,13 @@ export class StreamWebviewPanel extends Disposable {
 		}
 	}
 
-	private async setStream(streamThread: StreamThread): Promise<StreamThread> {
-		const label = await streamThread.stream.label();
-
+	private async _show() {
+		const title = "CodeStream";
 		let html = loadingHtml;
 		if (this._panel === undefined) {
 			this._panel = window.createWebviewPanel(
 				"CodeStream.stream",
-				"CodeStream",
+				title,
 				{ viewColumn: ViewColumn.Three, preserveFocus: false },
 				{
 					retainContextWhenHidden: true,
@@ -496,16 +511,13 @@ export class StreamWebviewPanel extends Disposable {
 
 			this._panel.webview.html = html;
 		} else {
-			this._panel.title = `${label} \u00a0\u2022\u00a0 CodeStream`;
+			this._panel.title = title;
 			this._panel.webview.html = html;
 			this._panel.reveal(ViewColumn.Three, false);
 		}
 
-		this._streamThread = streamThread;
-
-		const [content, posts, repos, streams, teams, users] = await Promise.all([
+		const [content, repos, streams, teams, users] = await Promise.all([
 			this.getHtml(),
-			streamThread.stream.posts.entities(),
 			this.session.repos.entities(),
 			Container.session.channels.entities(),
 			this.session.teams.entities(),
@@ -513,18 +525,10 @@ export class StreamWebviewPanel extends Disposable {
 		]);
 
 		const state: BootstrapState = Object.create(null);
-		state.currentTeamId = streamThread.stream.teamId;
+		state.currentTeamId = this.session.team.id;
 		state.currentUserId = this.session.userId;
-		state.currentStreamId = streamThread.stream.id;
-		if (streamThread.stream.type === StreamType.Channel) {
-			if (streamThread.stream.isLiveShareChannel) {
-				state.currentStreamLabel = label;
-				state.currentStreamServiceType = "liveshare";
-			}
-		}
-		state.selectedPostId = streamThread.id;
 
-		state.posts = posts;
+		// state.posts = posts;
 		state.repos = repos;
 		state.streams = streams;
 		state.teams = teams;
@@ -541,7 +545,5 @@ export class StreamWebviewPanel extends Disposable {
 
 		this._panel.webview.html = html;
 		this._panel.reveal(ViewColumn.Three, false);
-
-		return this._streamThread;
 	}
 }
