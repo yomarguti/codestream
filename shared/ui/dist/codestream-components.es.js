@@ -281,7 +281,7 @@ var store = _global[SHARED] || (_global[SHARED] = {});
   return store[key] || (store[key] = value !== undefined ? value : {});
 })('versions', []).push({
   version: _core.version,
-  mode: _library ? 'pure' : 'global',
+  mode: 'global',
   copyright: '© 2018 Denis Pushkarev (zloirock.ru)'
 });
 });
@@ -316,7 +316,7 @@ var _wksExt = {
 
 var defineProperty = _objectDp.f;
 var _wksDefine = function (name) {
-  var $Symbol = _core.Symbol || (_core.Symbol = _library ? {} : _global.Symbol || {});
+  var $Symbol = _core.Symbol || (_core.Symbol = _global.Symbol || {});
   if (name.charAt(0) != '_' && !(name in $Symbol)) defineProperty($Symbol, name, { value: _wksExt.f(name) });
 };
 
@@ -104161,7 +104161,8 @@ var SimpleStream = function (_Component) {
 			writable: true,
 			value: function value() {
 				var memberIds = _this.props.postStreamMemberIds;
-				var streamName = _this.props.postStreamName;
+				var streamName = _this.props.postStreamType === "direct" ? "this DM" : _this.props.postStreamName;
+
 				var names = [];
 				if (_this.props.postStreamIsTeamStream) {
 					_this.props.teammates.map(function (user) {

@@ -930,7 +930,9 @@ export class SimpleStream extends Component {
 
 	showMembers = () => {
 		const memberIds = this.props.postStreamMemberIds;
-		const streamName = this.props.postStreamName;
+		const streamName =
+			this.props.postStreamType === "direct" ? "this DM" : this.props.postStreamName;
+
 		let names = [];
 		if (this.props.postStreamIsTeamStream) {
 			this.props.teammates.map(user => {
