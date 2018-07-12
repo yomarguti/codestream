@@ -118,7 +118,7 @@ export class SimplePublicChannelPanel extends Component {
 		this.setState({ loading: liDiv.id });
 		await this.props.joinStream(liDiv.id);
 		this.setState({ loading: null });
-		// this.props.setActivePanel("main");
+		this.props.setActivePanel("main");
 		this.props.setCurrentStream(liDiv.id);
 	};
 

@@ -45486,10 +45486,10 @@ var SimplePublicChannelPanel = function (_Component) {
 
 								case 6:
 									_this.setState({ loading: null });
-									// this.props.setActivePanel("main");
+									_this.props.setActivePanel("main");
 									_this.props.setCurrentStream(liDiv.id);
 
-								case 8:
+								case 9:
 								case "end":
 									return _context.stop();
 							}
