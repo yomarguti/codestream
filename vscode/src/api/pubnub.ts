@@ -277,18 +277,6 @@ export class PubNubReceiver {
 			}
 		}
 	}
-
-	private stripDirectives(key: string, entities: any[] | undefined) {
-		if (!entities || !entities.length) return entities;
-
-		return entities.filter(e => {
-			if (Object.keys(e).some(k => k.startsWith("$"))) {
-				Logger.log(`PubNub '${key}' message with directive skipped\n${JSON.stringify(e)}`);
-				return false;
-			}
-			return true;
-		});
-	}
 }
 
 interface PubNubErrorStatus {
