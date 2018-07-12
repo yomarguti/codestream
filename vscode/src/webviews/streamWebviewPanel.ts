@@ -404,6 +404,8 @@ export class StreamWebviewPanel extends Disposable {
 		switch (e.type) {
 			case SessionChangedType.Streams:
 			case SessionChangedType.Repositories:
+			case SessionChangedType.Users:
+			case SessionChangedType.Teams:
 				this.postMessage({
 					type: "push-data",
 					body: {

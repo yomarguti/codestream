@@ -23,7 +23,10 @@ import {
 	PostsMessageReceivedEvent,
 	PubNubReceiver,
 	RepositoriesMessageReceivedEvent,
-	StreamsMessageReceivedEvent
+	StreamsMessageReceivedEvent,
+	TeamsMessageReceivedEvent,
+	UsersMessageReceivedEvent,
+	MarkersMessageReceivedEvent
 } from "./pubnub";
 import { Repository, RepositoryCollection } from "./models/repositories";
 import {
@@ -147,6 +150,15 @@ export class CodeStreamSession extends Disposable {
 				break;
 			case MessageType.Streams:
 				this.fireChanged(new StreamsAddedEvent(this, e));
+				break;
+			case MessageType.Users:
+				this.fireChanged(new UsersUpdatedEvent(this, e));
+				break;
+			case MessageType.Teams:
+				this.fireChanged(new TeamsUpdatedEvent(this, e));
+				break;
+			case MessageType.Markers:
+				this.fireChanged(new MarkersUpdatedEvent(this, e));
 				break;
 		}
 	}
@@ -547,7 +559,10 @@ export class PostsReceivedEvent {
 export enum SessionChangedType {
 	Git = "git",
 	Repositories = "repos",
-	Streams = "streams"
+	Streams = "streams",
+	Teams = "teams",
+	Markers = "markers",
+	Users = "users"
 }
 
 export interface GitChangedEvent extends IMergeableEvent<GitChangedEvent> {
@@ -624,7 +639,52 @@ export class StreamsAddedEvent implements IMergeableEvent<StreamsAddedEvent> {
 	}
 }
 
-export type SessionChangedEvent = GitChangedEvent | RepositoriesAddedEvent | StreamsAddedEvent;
+class UsersUpdatedEvent {
+	type = SessionChangedType.Users;
+
+	constructor(
+		private readonly session: CodeStreamSession,
+		private readonly _event: UsersMessageReceivedEvent
+	) {}
+
+	entities() {
+		return this._event.users;
+	}
+}
+
+class TeamsUpdatedEvent {
+	type = SessionChangedType.Teams;
+
+	constructor(
+		private readonly session: CodeStreamSession,
+		private readonly _event: TeamsMessageReceivedEvent
+	) {}
+
+	entities() {
+		return this._event.teams;
+	}
+}
+
+class MarkersUpdatedEvent {
+	type = SessionChangedType.Markers;
+
+	constructor(
+		private readonly session: CodeStreamSession,
+		private readonly _event: MarkersMessageReceivedEvent
+	) {}
+
+	entities() {
+		return this._event.markers;
+	}
+}
+
+export type SessionChangedEvent =
+	| GitChangedEvent
+	| RepositoriesAddedEvent
+	| StreamsAddedEvent
+	| UsersUpdatedEvent
+	| TeamsUpdatedEvent
+	| MarkersUpdatedEvent;
 
 export enum SessionStatus {
 	SignedOut = "signedOut",

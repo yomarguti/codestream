@@ -1,6 +1,6 @@
 "use strict";
 import { Disposable, Event, EventEmitter } from "vscode";
-import { CSPost, CSRepository, CSStream } from "./types";
+import { CSMarker, CSPost, CSRepository, CSStream, CSTeam, CSUser } from "./types";
 import { CodeStreamApi } from "./api";
 import Cache from "./cache";
 import { Logger } from "../logger";
@@ -10,7 +10,10 @@ import { Iterables } from "../system";
 export enum MessageType {
 	Posts = "posts",
 	Repositories = "repos",
-	Streams = "streams"
+	Streams = "streams",
+	Users = "users",
+	Teams = "teams",
+	Markers = "markers"
 }
 
 export interface PostsMessageReceivedEvent {
@@ -28,10 +31,28 @@ export interface StreamsMessageReceivedEvent {
 	streams: CSStream[];
 }
 
+export interface UsersMessageReceivedEvent {
+	type: MessageType.Users;
+	users: CSUser[];
+}
+
+export interface TeamsMessageReceivedEvent {
+	type: MessageType.Teams;
+	teams: CSTeam[];
+}
+
+export interface MarkersMessageReceivedEvent {
+	type: MessageType.Markers;
+	markers: CSMarker[];
+}
+
 export type MessageReceivedEvent =
 	| PostsMessageReceivedEvent
 	| RepositoriesMessageReceivedEvent
-	| StreamsMessageReceivedEvent;
+	| StreamsMessageReceivedEvent
+	| UsersMessageReceivedEvent
+	| MarkersMessageReceivedEvent
+	| TeamsMessageReceivedEvent;
 
 export class PubNubReceiver {
 	private _onDidReceiveMessage = new EventEmitter<MessageReceivedEvent>();
@@ -190,10 +211,14 @@ export class PubNubReceiver {
 				switch (key) {
 					case "post":
 					case "repo":
+					case "user":
+					case "team":
+					case "marker":
 					case "stream":
 						key += "s";
 						entities = [obj];
 						break;
+					// case "markerLocations"
 					default:
 						entities = obj;
 						break;
@@ -201,28 +226,23 @@ export class PubNubReceiver {
 
 				switch (key as MessageType) {
 					case "posts":
-						entities = await this._cache.resolvePosts(entities);
-						if (!entities || !entities.length) continue;
-
+						const posts = (await this._cache.resolvePosts(entities)) as CSPost[];
 						this._onDidReceiveMessage.fire({
 							type: MessageType.Posts,
-							posts: CodeStreamApi.normalizeResponse(entities) as CSPost[]
+							posts
 						});
 						break;
 					case "repos":
-						entities = await this._cache.resolveRepos(entities);
-						if (!entities || !entities.length) continue;
+						const repos = (await this._cache.resolveRepos(entities)) as CSRepository[];
 
 						this._onDidReceiveMessage.fire({
 							type: MessageType.Repositories,
-							repos: CodeStreamApi.normalizeResponse(entities) as CSRepository[]
+							repos
 						});
 						break;
 					case "streams":
-						entities = await this._cache.resolveStreams(entities);
-						if (!entities || !entities.length) continue;
+						const streams = (await this._cache.resolveStreams(entities)) as CSStream[];
 
-						const streams = CodeStreamApi.normalizeResponse(entities) as CSStream[];
 						// Subscribe to any new non-file, non-team streams
 						this.subscribeCore([
 							...Iterables.filterMap(
@@ -236,6 +256,21 @@ export class PubNubReceiver {
 
 						this._onDidReceiveMessage.fire({ type: MessageType.Streams, streams: streams });
 						break;
+					case "users": {
+						const users = (await this._cache.resolveUsers(entities)) as CSUser[];
+						this._onDidReceiveMessage.fire({ type: MessageType.Users, users });
+						break;
+					}
+					case "teams": {
+						const teams = (await this._cache.resolveTeams(entities)) as CSTeam[];
+						this._onDidReceiveMessage.fire({ type: MessageType.Teams, teams });
+						break;
+					}
+					case "markers": {
+						const markers = (await this._cache.resolveMarkers(entities)) as CSMarker[];
+						this._onDidReceiveMessage.fire({ type: MessageType.Markers, markers });
+						break;
+					}
 				}
 			} catch (ex) {
 				Logger.error(ex, `PubNub '${key}' FAILED`);

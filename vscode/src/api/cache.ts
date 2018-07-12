@@ -1,4 +1,4 @@
-import { CSPost, CSRepository, CSStream } from "./types";
+import { CSMarker, CSPost, CSRepository, CSStream, CSTeam, CSUser } from "./types";
 import { CodeStreamSession } from "./session";
 import { CodeStreamApi } from "./api";
 
@@ -7,62 +7,60 @@ export default class Cache {
 	private posts: Map<string, CSPost>;
 	private repos: Map<string, CSRepository>;
 	private streams: Map<string, CSStream>;
+	private users: Map<string, CSUser>;
+	private teams: Map<string, CSTeam>;
+	private markers: Map<string, CSMarker>;
 
 	constructor(session: CodeStreamSession) {
 		this.session = session;
 		this.posts = new Map();
 		this.repos = new Map();
 		this.streams = new Map();
+		this.users = new Map();
+		this.teams = new Map();
+		this.markers = new Map();
 	}
 
 	resolvePosts(changeSets: object[]) {
-		return Promise.all(
-			changeSets.map(async c => {
-				const changes = CodeStreamApi.normalizeResponse(c);
-				const post = this.posts.get(changes["id"]);
-				if (post) {
-					const updatedPost = this._resolve(post, changes);
-					this.posts.set(post.id, updatedPost);
-					return updatedPost;
-				} else {
-					const updatedPost = await this.session.api.getPost(changes["id"]);
-					this.posts.set(changes["id"], updatedPost);
-					return updatedPost;
-				}
-			})
-		);
+		return this._resolveById(this.posts, changeSets, id => this.session.api.getPost(id));
 	}
 
 	resolveRepos(changeSets: object[]) {
-		return Promise.all(
-			changeSets.map(async c => {
-				const changes = CodeStreamApi.normalizeResponse(c);
-				const repo = this.repos.get(changes["id"]);
-				if (repo) {
-					const updatedRepo = this._resolve(repo, changes);
-					this.repos.set(post.id, updatedRepo);
-					return updatedRepo;
-				} else {
-					const updatedRepo = await this.session.api.getRepo(changes["id"]);
-					this.repos.set(changes["id"], updatedRepo);
-					return updatedRepo;
-				}
-			})
-		);
+		return this._resolveById(this.repos, changeSets, id => this.session.api.getRepo(id));
 	}
 
 	resolveStreams(changeSets: object[]) {
+		return this._resolveById(this.streams, changeSets, id => this.session.api.getStream(id));
+	}
+
+	resolveUsers(changeSets: object[]) {
+		return this._resolveById(this.users, changeSets, id => this.session.api.getUser(id));
+	}
+
+	resolveTeams(changeSets: object[]) {
+		return this._resolveById(this.teams, changeSets, id => this.session.api.getTeam(id));
+	}
+
+	resolveMarkers(changeSets: object[]) {
+		return this._resolveById(this.markers, changeSets, id => this.session.api.getMarker(id));
+	}
+
+	private _resolveById(
+		cache: Map<string, any>,
+		changeSets: object[],
+		fetch: (id: string) => Promise<any>
+	) {
 		return Promise.all(
 			changeSets.map(async c => {
 				const changes = CodeStreamApi.normalizeResponse(c);
-				const record = this.streams.get(changes["id"]);
+				const record = cache.get(changes["id"]);
 				if (record) {
 					const updatedRecord = this._resolve(record, changes);
-					this.streams.set(record.id, updatedRecord);
+					cache.set(record.id, updatedRecord);
 					return updatedRecord;
 				} else {
-					const updatedRecord = await this.session.api.getStream(changes["id"]);
-					this.streams.set(changes["id"], updatedRecord);
+					const updatedRecord = await fetch(changes["id"]);
+					cache.set(changes["id"], updatedRecord);
 					return updatedRecord;
 				}
 			})
@@ -94,6 +92,7 @@ const handle = (property, object, data, recurse, apply) => {
 	const nestedPropertyMatch = property.match(NESTED_PROPERTY_REGEX);
 	if (nestedPropertyMatch) {
 		let [, topField, subField] = nestedPropertyMatch;
+		if (object[topField] === undefined) object[topField] = {};
 		if (typeof object[topField] === "object")
 			recurse(object[topField], { [subField]: data[property] });
 	} else apply();
