@@ -167,6 +167,8 @@ export class SimpleStream extends Component {
 		// if we have focus, and there are no unread indicators which would mean an
 		// unread is out of view, we assume the entire thread has been observed
 		// and we mark the stream read
+		// console.log("checkMarkStreamRead");
+
 		if (
 			this.props.hasFocus &&
 			this.state.activePanel === "main" &&
@@ -176,7 +178,7 @@ export class SimpleStream extends Component {
 			try {
 				// this gets called pretty often, so only ping the API
 				// server if there is an actual change
-				if (this.props.currentUser.lastReads[this.props.postStreamId]) {
+				if (typeof this.props.currentUser.lastReads[this.props.postStreamId] !== "undefined") {
 					console.log("Marking within check");
 					this.props.markStreamRead(this.props.postStreamId);
 				}
@@ -294,7 +296,7 @@ export class SimpleStream extends Component {
 		let offBottom = scrollHeight - currentScroll - streamHeight + composeHeight + headerHeight;
 		// if i am manually scrolling, don't programatically scroll to bottom
 		// offBottom is how far we've scrolled off the bottom of the posts list
-		console.log("OFF BOTTOM IS: ", offBottom);
+		// console.log("OFF BOTTOM IS: ", offBottom);
 		if (offBottom < 100) this.scrollToBottom();
 	};
 
@@ -454,8 +456,15 @@ export class SimpleStream extends Component {
 				<span>#</span>
 			);
 		const menuActive = this.state.openMenu === this.props.postStreamId;
-		const totalUMICount = umis.totalMentions || umis.totalUnread || "";
+		// const totalUMICount = umis.totalMentions || umis.totalUnread || "";
 		// const totalUMICount = umis.totalMentions || umis.totalUnread ? "&middot;" : "\u25C9";
+		const totalUMICount = umis.totalMentions ? (
+			<label>{umis.totalMentions}</label>
+		) : umis.totalUnread ? (
+			<Icon name="chevron-left" className="show-channels-icon" />
+		) : (
+			""
+		);
 
 		return (
 			<div
@@ -484,7 +493,7 @@ export class SimpleStream extends Component {
 					<div className="panel-header" ref={ref => (this._header = ref)}>
 						<span onClick={this.showChannels} className={umisClass}>
 							<Icon name="chevron-left" className="show-channels-icon" />
-							<label>{totalUMICount}</label>
+							{totalUMICount}
 						</span>
 						<span>
 							{channelIcon} {this.props.postStreamName}

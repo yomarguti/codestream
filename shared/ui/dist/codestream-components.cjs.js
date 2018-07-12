@@ -103766,7 +103766,7 @@ var SimpleStream = function (_Component) {
 				var offBottom = scrollHeight - currentScroll - streamHeight + composeHeight + headerHeight;
 				// if i am manually scrolling, don't programatically scroll to bottom
 				// offBottom is how far we've scrolled off the bottom of the posts list
-				console.log("OFF BOTTOM IS: ", offBottom);
+				// console.log("OFF BOTTOM IS: ", offBottom);
 				if (offBottom < 100) _this.scrollToBottom();
 			}
 		});
@@ -104886,11 +104886,13 @@ var SimpleStream = function (_Component) {
 			// if we have focus, and there are no unread indicators which would mean an
 			// unread is out of view, we assume the entire thread has been observed
 			// and we mark the stream read
+			// console.log("checkMarkStreamRead");
+
 			if (this.props.hasFocus && this.state.activePanel === "main" && !this.state.unreadsAbove && !this.state.unreadsBelow) {
 				try {
 					// this gets called pretty often, so only ping the API
 					// server if there is an actual change
-					if (this.props.currentUser.lastReads[this.props.postStreamId]) {
+					if (typeof this.props.currentUser.lastReads[this.props.postStreamId] !== "undefined") {
 						console.log("Marking within check");
 						this.props.markStreamRead(this.props.postStreamId);
 					}
@@ -105074,8 +105076,13 @@ var SimpleStream = function (_Component) {
 				"#"
 			);
 			var menuActive = this.state.openMenu === this.props.postStreamId;
-			var totalUMICount = umis.totalMentions || umis.totalUnread || "";
+			// const totalUMICount = umis.totalMentions || umis.totalUnread || "";
 			// const totalUMICount = umis.totalMentions || umis.totalUnread ? "&middot;" : "\u25C9";
+			var totalUMICount = umis.totalMentions ? react.createElement(
+				"label",
+				null,
+				umis.totalMentions
+			) : umis.totalUnread ? react.createElement(Icon, { name: "chevron-left", className: "show-channels-icon" }) : "";
 
 			return react.createElement(
 				"div",
@@ -105117,11 +105124,7 @@ var SimpleStream = function (_Component) {
 							"span",
 							{ onClick: this.showChannels, className: umisClass },
 							react.createElement(Icon, { name: "chevron-left", className: "show-channels-icon" }),
-							react.createElement(
-								"label",
-								null,
-								totalUMICount
-							)
+							totalUMICount
 						),
 						react.createElement(
 							"span",
