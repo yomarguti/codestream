@@ -324,11 +324,15 @@ export class SimpleStream extends Component {
 			.filter(member => member.id !== this.props.currentUser.id)
 			.map(member => member.username)
 			.sort();
-		const localizedMembers = rest.reduce(
-			(result, string, index, array) =>
-				index === array.length - 1 ? `${result}, and ${string}` : `${result}, ${string}`,
-			first
-		);
+
+		const localizedMembers =
+			rest.length === 1
+				? `${first} and ${rest[0]}`
+				: rest.reduce(
+						(result, string, index, array) =>
+							index === array.length - 1 ? `${result}, and ${string}` : `${result}, ${string}`,
+						first
+				  );
 
 		return (
 			<label key="info">
