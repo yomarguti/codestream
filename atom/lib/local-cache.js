@@ -157,6 +157,7 @@ const handle = (property, object, data, recurse, apply) => {
 	const nestedPropertyMatch = property.match(NESTED_PROPERTY_REGEX);
 	if (nestedPropertyMatch) {
 		let [, topField, subField] = nestedPropertyMatch;
+		if (object[topField] === undefined) object[topField] = {};
 		if (typeof object[topField] === "object")
 			recurse(object[topField], { [subField]: data[property] });
 	} else apply();
