@@ -255,10 +255,8 @@ export const archiveStream = (streamId, value) => async (dispatch, getState, { a
 	const update = { isArchived: value };
 
 	try {
-		const returnStream = await api.updateStream(streamId, update);
-		console.log("return stream: ", returnStream);
-		return returnStream;
-		// if (streams.length > 0) dispatch(saveStreams(normalize(streams)));
+		const stream = await api.updateStream(streamId, update);
+		if (stream) return dispatch({ type: "UPDATE_STREAM", payload: stream });
 	} catch (error) {
 		console.log("Error: ", error);
 	}
