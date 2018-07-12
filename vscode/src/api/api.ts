@@ -211,6 +211,10 @@ export class CodeStreamApi {
 		return this.put<JoinStreamRequest, JoinStreamResponse>(`/join/${streamId}`, request, token);
 	}
 
+	updateStream(token: string, streamId: string, request: object) {
+		return this.put(`/streams/${streamId}`, request, token);
+	}
+
 	updatePresence(token: string, request: UpdatePresenceRequest) {
 		return this.put<UpdatePresenceRequest, UpdatePresenceResponse>(`/presence`, request, token);
 	}

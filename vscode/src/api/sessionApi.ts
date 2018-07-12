@@ -384,6 +384,12 @@ export class CodeStreamSessionApi {
 		return (await this._api.getStream(this.token, teamId || this.teamId, streamId)).stream;
 	}
 
+	async updateStream(streamId: string, update: object) {
+		await this._api.updateStream(this.token, streamId, update);
+		// Hack: because the response to the previous call is a $directive
+		return (await this._api.getStream(this.token, this.teamId, streamId)).stream;
+	}
+
 	async updatePresence(status: PresenceStatus, sessionId: string) {
 		return (await this._api.updatePresence(this.token, {
 			sessionId: sessionId,

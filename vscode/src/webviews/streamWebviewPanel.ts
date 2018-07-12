@@ -321,6 +321,21 @@ export class StreamWebviewPanel extends Disposable {
 							body: { id: body.id, payload: await this.session.api.joinStream(streamId, teamId) }
 						});
 					}
+					case "update-stream": {
+						const { streamId, update } = body.params;
+						const responseBody: { [key: string]: any } = { id: body.id };
+						try {
+							responseBody.payload = await this.session.api.updateStream(streamId, update);
+						} catch (error) {
+							if (!error.message.includes("403")) responseBody.error = error.message;
+						} finally {
+							this.postMessage({
+								type: "codestream:response",
+								body: responseBody
+							});
+						}
+						break;
+					}
 				}
 				break;
 
