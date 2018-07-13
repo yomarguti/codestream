@@ -117,21 +117,23 @@ export const savePostsForStream = (streamId, attributes) => (dispatch, getState,
 };
 
 export const resolveFromPubnub = (post, isHistory) => async (dispatch, getState) => {
-	Raven.captureBreadcrumb({
-		message: "Attempting to resolve a post from pubnub.",
-		category: "action"
-	});
-
 	const { session } = getState();
 	const isNotFromCurrentUser = post.creatorId !== session.userId;
 	const isFromEmailOrSlack = !post.commitHashWhenPosted; // crude. right now posts from email won't ever have commit context
 
+	const resolve = () => dispatch(pubnubActions.resolveFromPubnub("posts", post, isHistory));
 	if (isHistory || isNotFromCurrentUser || isFromEmailOrSlack) {
-		Raven.captureBreadcrumb({
-			message: "Post is history, does not belong to current user, or it might be from email.",
-			category: "action",
-			data: { isHistory, isNotFromCurrentUser, isFromEmailOrSlack }
-		});
-		return dispatch(pubnubActions.resolveFromPubnub("posts", post, isHistory));
+		return resolve();
+	} else {
+		if (post.createdAt)
+			// if this is a newly created post by the current user, delay handling it
+			// to avoid a race condition where this post gets displayed before the
+			// pending post in the UI has been resolved with the response from the server.
+			return new Promise(fulfill =>
+				setImmediate(() => {
+					fulfill(resolve());
+				})
+			);
+		else return resolve();
 	}
 };
