@@ -1,0 +1,35 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../codestream-lsp-agent"
+		},
+		{
+			"path": "../codestream-components"
+		}
+	],
+	"launch": {
+		"configurations": [],
+		"compounds": [
+			{
+				"name": "Launch CodeStream & Attach to Agent",
+				"configurations": ["Launch CodeStream", "Attach to Agent"]
+			}
+		]
+	},
+	"settings": {
+		"editor.insertSpaces": false,
+		"files.exclude": {
+			"**/node_modules": true,
+			"**/out": false
+		},
+		"search.exclude": {
+			"**/out": true
+		},
+		"tslint.autoFixOnSave": true,
+		"typescript.tsdk": "./node_modules/typescript/lib",
+		"typescript.tsc.autoDetect": "off"
+	}
+}

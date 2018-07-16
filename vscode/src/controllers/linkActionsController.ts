@@ -7,8 +7,8 @@ const codestreamRegex = /codestream:\/\/(.*?)\?d=(.*?)(?:&tt=(.*?))?(?=\s|$)/; /
 const codestreamMatchRegex = /(codestream:\/\/.*?\?d=.*?(?:&tt=.*?)?(?=\s|$))/;
 
 interface LinkActionCallbacks {
-	onMatch: (post: Post, context: any) => any;
-	onAction?: (context: any) => any;
+	onMatch(post: Post, context: any): any;
+	onAction?(context: any): any;
 }
 
 interface LinkActionTextTransformation {

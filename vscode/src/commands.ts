@@ -326,8 +326,6 @@ export class Commands extends Disposable {
 
 	@command("wipe")
 	async wipe() {
-		await Container.session.streamVisibility.clear();
-
 		const regex = /(\d+)([d|h|m])/;
 		const value = await window.showInputBox({
 			prompt:

@@ -1,5 +1,6 @@
 "use strict";
 import { Disposable, ExtensionContext } from "vscode";
+import { CodeStreamAgentClient, CodeStreamAgentOptions } from "./agentClient";
 import { CodeStreamSession } from "./api/session";
 import { Commands } from "./commands";
 import { Config, configuration } from "./configuration";
@@ -19,14 +20,18 @@ import { NotificationsController } from "./controllers/notificationsController";
 import { StatusBarController } from "./controllers/statusBarController";
 import { StreamViewController } from "./controllers/streamViewController";
 import { CodeStreamBot } from "./codestreamBot";
-import { LanguageClient } from "vscode-languageclient";
 // import { UnreadDecorationProvider } from './providers/decorationProvider';
 
 export class Container {
-	static async initialize(context: ExtensionContext, config: Config, agent: LanguageClient) {
+	static async initialize(
+		context: ExtensionContext,
+		config: Config,
+		agentOptions: CodeStreamAgentOptions
+	) {
 		this._context = context;
 		this._config = config;
-		this._agent = agent;
+
+		this._agent = new CodeStreamAgentClient(context, agentOptions);
 
 		context.subscriptions.push((this._git = new GitService()));
 		context.subscriptions.push((this._session = new CodeStreamSession(config.serverUrl)));
@@ -65,7 +70,7 @@ export class Container {
 		context.subscriptions.push((this._bot = new CodeStreamBot()));
 	}
 
-	private static _agent: LanguageClient;
+	private static _agent: CodeStreamAgentClient;
 	static get agent() {
 		return this._agent;
 	}

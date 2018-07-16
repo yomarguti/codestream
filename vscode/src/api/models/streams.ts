@@ -17,7 +17,7 @@ abstract class StreamBase<T extends CSStream> extends CodeStreamItem<T> {
 	}
 
 	get hidden() {
-		return this.session.streamVisibility.isHidden(this.entity.id);
+		return false;
 	}
 
 	private _posts: PostCollection | undefined;
@@ -32,9 +32,7 @@ abstract class StreamBase<T extends CSStream> extends CodeStreamItem<T> {
 		return this.entity.teamId;
 	}
 
-	hide() {
-		return this.session.streamVisibility.hide(this.entity.id);
-	}
+	hide() {}
 
 	async post(text: string, parentPostId?: string) {
 		const post = await this.session.api.createPost(

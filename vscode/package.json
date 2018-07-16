@@ -594,9 +594,10 @@
         "agent-build": "pushd \"../codestream-lsp-agent\" && npm run build && popd",
         "agent-watch": "pushd \"../codestream-lsp-agent\" && npm run watch && popd",
         "build": "npm run compile && npm run lint",
+        "clean": "git clean -Xdf --exclude=!node_modules",
         "compile": "tsc -p ./",
-        "lint": "tslint --fix --project tsconfig.json",
-        "prettify": "prettier --config .prettierrc --write ./src/**/*.ts ./assets/client/**/*.js ./package.json ./.prettierrc",
+        "lint": "tslint --project tsconfig.json --fix",
+        "prettify": "prettier --config .prettierrc --write \"./src/**/*.ts\" \"./assets/client/**/*.js\" ./package.json ./.prettierrc",
         "watch": "tsc -w -p ./",
         "pack": "vsce package",
         "webview-bundle": "pushd \"./assets/client\" && npm install --no-save && npm run vscode-bundle && popd",
@@ -612,7 +613,7 @@
         "reflect-metadata": "0.1.12",
         "tmp": "0.0.33",
         "tslib": "1.9.3",
-        "vscode-languageclient": "4.2.1"
+        "vscode-languageclient": "4.3.0"
     },
     "devDependencies": {
         "@types/node": "7.0.67",

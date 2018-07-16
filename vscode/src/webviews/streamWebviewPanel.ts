@@ -171,7 +171,6 @@ export class StreamWebviewPanel extends Disposable {
 	private _disposable: Disposable | undefined;
 	private _panel: WebviewPanel | undefined;
 	private _streamThread: StreamThread | undefined;
-	private _activeStreamId: string | undefined;
 
 	constructor(public readonly session: CodeStreamSession) {
 		super(() => this.dispose());
@@ -191,6 +190,7 @@ export class StreamWebviewPanel extends Disposable {
 		// HACK: Because messages aren't sent to the webview when hidden, we need to reset the whole view if we are invalid
 		if (this._invalidateOnVisible && e.webviewPanel.visible) {
 			this._invalidateOnVisible = false;
+			this.setStream(this._streamThread);
 		}
 	}
 
@@ -340,16 +340,25 @@ export class StreamWebviewPanel extends Disposable {
 				break;
 
 			case "interaction:thread-selected": {
-				const { streamId, post } = e.body;
+				const { threadId, streamId, post } = e.body;
+				if (this._streamThread !== undefined && this._streamThread.stream.id === streamId) {
+					this._streamThread.id = threadId;
+				}
 
 				const stream = await this.session.getStream(streamId);
 
 				if (post.codeBlocks === undefined) return;
-				await Container.commands.openPostWorkingFile(new Post(this.session, post, stream));
+
+				void (await Container.commands.openPostWorkingFile(new Post(this.session, post, stream)));
 				break;
 			}
 			case "interaction:changed-active-stream": {
-				this._activeStreamId = e.body;
+				const streamId = e.body;
+
+				const stream = await this.session.getStream(streamId);
+				if (stream !== undefined) {
+					this._streamThread = { id: undefined, stream: stream };
+				}
 				break;
 			}
 			case "subscription:file-changed": {
@@ -417,10 +426,6 @@ export class StreamWebviewPanel extends Disposable {
 		}
 	}
 
-	get activeStreamId() {
-		return this._activeStreamId;
-	}
-
 	get streamThread() {
 		return this._streamThread;
 	}
@@ -468,11 +473,19 @@ export class StreamWebviewPanel extends Disposable {
 	}
 
 	show(streamThread?: StreamThread) {
-		if (streamThread) {
-			// return this.setStream(streamThread);
+		if (
+			this._panel !== undefined &&
+			(streamThread === undefined ||
+				(this._streamThread &&
+					this._streamThread.id === streamThread.id &&
+					this._streamThread.stream.id === streamThread.stream.id))
+		) {
+			this._panel.reveal(undefined, false);
+
+			return this._streamThread;
 		}
 
-		return this._show();
+		return this.setStream(streamThread);
 	}
 
 	private async getHtml(): Promise<string> {
@@ -501,13 +514,12 @@ export class StreamWebviewPanel extends Disposable {
 		}
 	}
 
-	private async _show() {
-		const title = "CodeStream";
+	private async setStream(streamThread?: StreamThread): Promise<StreamThread | undefined> {
 		let html = loadingHtml;
 		if (this._panel === undefined) {
 			this._panel = window.createWebviewPanel(
 				"CodeStream.stream",
-				title,
+				"CodeStream",
 				{ viewColumn: ViewColumn.Three, preserveFocus: false },
 				{
 					retainContextWhenHidden: true,
@@ -528,10 +540,11 @@ export class StreamWebviewPanel extends Disposable {
 
 			this._panel.webview.html = html;
 		} else {
-			this._panel.title = title;
 			this._panel.webview.html = html;
 			this._panel.reveal(ViewColumn.Three, false);
 		}
+
+		this._streamThread = streamThread;
 
 		const [content, repos, streams, teams, users] = await Promise.all([
 			this.getHtml(),
@@ -544,8 +557,10 @@ export class StreamWebviewPanel extends Disposable {
 		const state: BootstrapState = Object.create(null);
 		state.currentTeamId = this.session.team.id;
 		state.currentUserId = this.session.userId;
-
-		// state.posts = posts;
+		if (streamThread !== undefined) {
+			state.currentStreamId = streamThread.stream.id;
+			state.selectedPostId = streamThread.id;
+		}
 		state.repos = repos;
 		state.streams = streams;
 		state.teams = teams;
@@ -562,5 +577,7 @@ export class StreamWebviewPanel extends Disposable {
 
 		this._panel.webview.html = html;
 		this._panel.reveal(ViewColumn.Three, false);
+
+		return this._streamThread;
 	}
 }

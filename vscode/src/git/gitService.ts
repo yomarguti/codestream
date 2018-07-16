@@ -8,7 +8,7 @@ import {
 	WorkspaceFoldersChangeEvent
 } from "vscode";
 import { GitAuthorParser } from "./parsers/authorParser";
-import { git, GitApiRepository, GitErrors, GitWarnings } from "./git";
+import { git, GitErrors, GitWarnings } from "./git";
 import { Logger } from "../logger";
 import { GitAuthor, GitRemote, GitRepository } from "./models/models";
 import { GitRemoteParser } from "./parsers/remoteParser";
@@ -268,9 +268,8 @@ export class GitService extends Disposable implements IGitService {
 	protected _repositories: GitRepository[] | undefined;
 	async getRepositories(): Promise<GitRepository[]> {
 		if (this._repositories === undefined) {
-			const repos = await Container.agent.sendRequest<GitApiRepository[]>("codeStream/git/repos");
+			this._repositories = await Container.agent.getRepositories();
 			// const repos = await getRepositories();
-			this._repositories = repos.map(r => new GitRepository(Uri.parse(r.rootUri as string)));
 		}
 		return this._repositories;
 	}

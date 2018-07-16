@@ -72,7 +72,7 @@ export class Configuration {
 	async migrate<TFrom, TTo>(
 		from: string,
 		to: string,
-		options: { fallbackValue?: TTo; migrationFn?: (value: TFrom) => TTo } = {}
+		options: { fallbackValue?: TTo; migrationFn?(value: TFrom): TTo } = {}
 	): Promise<boolean> {
 		const inspection = configuration.inspect(from);
 		if (inspection === undefined) return false;
@@ -143,7 +143,7 @@ export class Configuration {
 	async migrateIfMissing<TFrom, TTo>(
 		from: string,
 		to: string,
-		options: { migrationFn?: (value: TFrom) => TTo } = {}
+		options: { migrationFn?(value: TFrom): TTo } = {}
 	) {
 		const fromInspection = configuration.inspect(from);
 		if (fromInspection === undefined) return;
