@@ -2,6 +2,8 @@
 import { Range, Uri } from "vscode";
 import { Container } from "../../container";
 import { Logger } from "../../logger";
+import { Iterables } from "../../system";
+import { memoize } from "../../system/decorators";
 import {
 	ChannelStream,
 	CodeStreamSession,
@@ -10,9 +12,7 @@ import {
 	Post,
 	Repository
 } from "../session";
-import { Iterables } from "../../system";
 import { CSMarker } from "../types";
-import { memoize } from "../../system/decorators";
 
 export class Marker {
 	private readonly _range: Range;

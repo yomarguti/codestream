@@ -1,4 +1,6 @@
 "use strict";
+import * as fs from "fs";
+import * as path from "path";
 import {
 	Disposable,
 	Event,
@@ -7,15 +9,13 @@ import {
 	workspace,
 	WorkspaceFoldersChangeEvent
 } from "vscode";
-import { GitAuthorParser } from "./parsers/authorParser";
-import { git, GitErrors, GitWarnings } from "./git";
-import { Logger } from "../logger";
-import { GitAuthor, GitRemote, GitRepository } from "./models/models";
-import { GitRemoteParser } from "./parsers/remoteParser";
-import { Strings } from "../system";
-import * as fs from "fs";
-import * as path from "path";
 import { Container } from "../container";
+import { Logger } from "../logger";
+import { Strings } from "../system";
+import { git, GitErrors, GitWarnings } from "./git";
+import { GitAuthor, GitRemote, GitRepository } from "./models/models";
+import { GitAuthorParser } from "./parsers/authorParser";
+import { GitRemoteParser } from "./parsers/remoteParser";
 
 export * from "./models/models";
 

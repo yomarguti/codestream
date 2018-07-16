@@ -1,11 +1,11 @@
 "use strict";
+import Pubnub = require("pubnub");
 import { Disposable, Event, EventEmitter } from "vscode";
-import { CSMarker, CSPost, CSRepository, CSStream, CSTeam, CSUser } from "./types";
+import { Logger } from "../logger";
+import { Iterables } from "../system";
 import { CodeStreamApi } from "./api";
 import { Cache } from "./cache";
-import { Logger } from "../logger";
-import Pubnub = require("pubnub");
-import { Iterables } from "../system";
+import { CSMarker, CSPost, CSRepository, CSStream, CSTeam, CSUser } from "./types";
 
 export enum MessageType {
 	Posts = "posts",

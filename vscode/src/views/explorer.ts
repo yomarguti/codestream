@@ -12,6 +12,7 @@ import {
 } from "vscode";
 import { configuration } from "../configuration";
 import { Container } from "../container";
+import { ChannelsNode } from "./channelsNode";
 import {
 	ExplorerNode,
 	PeopleNode,
@@ -19,7 +20,6 @@ import {
 	RepositoriesNode,
 	StreamNode
 } from "./explorerNodes";
-import { ChannelsNode } from "./channelsNode";
 
 export * from "./explorerNodes";
 

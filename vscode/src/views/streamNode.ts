@@ -2,8 +2,8 @@
 import { TreeItem, TreeItemCollapsibleState } from "vscode";
 import { CodeStreamSession, Stream, StreamType } from "../api/session";
 import { OpenStreamCommandArgs } from "../commands";
-import { ContextValue, ExplorerNode } from "./explorerNode";
 import { Container } from "../container";
+import { ContextValue, ExplorerNode } from "./explorerNode";
 
 export class StreamNode extends ExplorerNode {
 	constructor(

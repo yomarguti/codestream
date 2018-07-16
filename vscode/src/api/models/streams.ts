@@ -1,12 +1,12 @@
 "use strict";
 import { Uri } from "vscode";
-import { CodeStreamCollection, CodeStreamItem } from "./collection";
 import { Iterables, memoize, Strings } from "../../system";
+import { CodeStreamSession, SessionChangedEvent, SessionChangedType } from "../session";
+import { CSChannelStream, CSDirectStream, CSFileStream, CSStream, StreamType } from "../types";
+import { CodeStreamCollection, CodeStreamItem } from "./collection";
 import { Post, PostCollection } from "./posts";
 import { Repository } from "./repositories";
-import { CodeStreamSession, SessionChangedEvent, SessionChangedType } from "../session";
 import { Team } from "./teams";
-import { CSChannelStream, CSDirectStream, CSFileStream, CSStream, StreamType } from "../types";
 import { User } from "./users";
 
 export { StreamType } from "../types";

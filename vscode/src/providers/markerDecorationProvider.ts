@@ -17,7 +17,6 @@ import {
 	window,
 	workspace
 } from "vscode";
-import { Container } from "../container";
 import {
 	Marker,
 	PostsReceivedEvent,
@@ -25,6 +24,7 @@ import {
 	SessionStatusChangedEvent
 } from "../api/session";
 import { OpenStreamCommandArgs } from "../commands";
+import { Container } from "../container";
 import { Logger } from "../logger";
 
 export class MarkerDecorationProvider implements HoverProvider, Disposable {

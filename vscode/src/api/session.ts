@@ -9,13 +9,26 @@ import {
 } from "vscode";
 import { configuration } from "../configuration";
 import { Container } from "../container";
-import { CodeStreamSessionApi } from "./sessionApi";
 import { Logger } from "../logger";
+import { Functions, memoize, Strings } from "../system";
+import { CodeStreamApi, CSRepository, CSStream, PresenceStatus } from "./api";
+import { Cache } from "./cache";
 import { Marker, MarkerCollection } from "./models/markers";
 import { Post } from "./models/posts";
+import { Repository } from "./models/repositories";
+import {
+	ChannelStream,
+	ChannelStreamCreationOptions,
+	DirectStream,
+	FileStream,
+	Stream,
+	StreamThread,
+	StreamType
+} from "./models/streams";
+import { Team } from "./models/teams";
+import { User } from "./models/users";
 import { PresenceManager } from "./presence";
 import { PresenceMiddleware } from "./presenceMiddleware";
-import { CodeStreamApi, CSRepository, CSStream, PresenceStatus } from "./api";
 import {
 	MarkersMessageReceivedEvent,
 	MessageReceivedEvent,
@@ -27,20 +40,7 @@ import {
 	TeamsMessageReceivedEvent,
 	UsersMessageReceivedEvent
 } from "./pubnub";
-import { Repository } from "./models/repositories";
-import {
-	ChannelStream,
-	ChannelStreamCreationOptions,
-	DirectStream,
-	FileStream,
-	Stream,
-	StreamThread,
-	StreamType
-} from "./models/streams";
-import { Functions, memoize, Strings } from "../system";
-import { Cache } from "./cache";
-import { Team } from "./models/teams";
-import { User } from "./models/users";
+import { CodeStreamSessionApi } from "./sessionApi";
 import { SessionState } from "./sessionState";
 
 export {

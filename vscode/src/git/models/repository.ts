@@ -1,9 +1,9 @@
 "use strict";
-import * as Path from "path";
 import * as fs from "fs";
+import * as Path from "path";
 import { Uri } from "vscode";
-import { GitRemote } from "../gitService";
 import { Container } from "../../container";
+import { GitRemote } from "../gitService";
 
 export class GitRepository {
 	constructor(public readonly uri: Uri) {}

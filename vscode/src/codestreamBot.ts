@@ -1,3 +1,4 @@
+import * as path from "path";
 import {
 	commands,
 	ConfigurationChangeEvent,
@@ -15,7 +16,6 @@ import { encryptionKey } from "./constants";
 import { Container } from "./container";
 import { Logger } from "./logger";
 import { Command, createCommandDecorator, Crypto, Functions } from "./system";
-import * as path from "path";
 
 const commandRegistry: Command[] = [];
 const command = createCommandDecorator(commandRegistry);

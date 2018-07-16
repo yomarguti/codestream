@@ -1,10 +1,10 @@
 "use strict";
 import { TreeItem, TreeItemCollapsibleState } from "vscode";
 import { CodeStreamSession } from "../api/session";
+import { Iterables } from "../system";
 import { ContextValue, ExplorerNode } from "./explorerNode";
 import { StreamNode } from "./streamNode";
 import { UserNode } from "./userNode";
-import { Iterables } from "../system";
 
 export class PeopleNode extends ExplorerNode {
 	constructor(public readonly session: CodeStreamSession) {

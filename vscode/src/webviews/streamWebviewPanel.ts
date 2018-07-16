@@ -1,4 +1,5 @@
 "use strict";
+import * as fs from "fs";
 import {
 	Disposable,
 	Event,
@@ -22,7 +23,6 @@ import {
 } from "../api/session";
 import { Container } from "../container";
 import { Logger } from "../logger";
-import * as fs from "fs";
 
 const loadingHtml = `
 <!DOCTYPE html>

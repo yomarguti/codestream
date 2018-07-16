@@ -1,5 +1,7 @@
 "use strict";
 import { MessageItem, Uri, window } from "vscode";
+import { Container } from "../container";
+import { GitRepository } from "../git/gitService";
 import {
 	CodeStreamApi,
 	CreatePostRequestCodeBlock,
@@ -16,8 +18,6 @@ import {
 	PresenceStatus,
 	StreamType
 } from "./api";
-import { Container } from "../container";
-import { GitRepository } from "../git/gitService";
 
 export class CodeStreamSessionApi {
 	constructor(

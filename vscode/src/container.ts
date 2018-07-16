@@ -2,9 +2,17 @@
 import { Disposable, ExtensionContext } from "vscode";
 import { CodeStreamAgentClient, CodeStreamAgentOptions } from "./agentClient";
 import { CodeStreamSession } from "./api/session";
+import { CodeStreamBot } from "./codestreamBot";
 import { Commands } from "./commands";
 import { Config, configuration } from "./configuration";
+import { LinkActionsController } from "./controllers/linkActionsController";
+import { LiveShareController } from "./controllers/liveShareController";
+import { NotificationsController } from "./controllers/notificationsController";
+import { StatusBarController } from "./controllers/statusBarController";
+import { StreamViewController } from "./controllers/streamViewController";
+import { GitService, IGitService } from "./git/gitService";
 import { CodeStreamCodeActionProvider } from "./providers/codeActionProvider";
+import { MarkerDecorationProvider } from "./providers/markerDecorationProvider";
 // import { CodeStreamCodeLensProvider } from './providers/codeLensProvider';
 import {
 	ChannelsExplorer,
@@ -12,14 +20,6 @@ import {
 	PeopleExplorer,
 	RepositoriesExplorer
 } from "./views/explorer";
-import { GitService, IGitService } from "./git/gitService";
-import { LinkActionsController } from "./controllers/linkActionsController";
-import { LiveShareController } from "./controllers/liveShareController";
-import { MarkerDecorationProvider } from "./providers/markerDecorationProvider";
-import { NotificationsController } from "./controllers/notificationsController";
-import { StatusBarController } from "./controllers/statusBarController";
-import { StreamViewController } from "./controllers/streamViewController";
-import { CodeStreamBot } from "./codestreamBot";
 // import { UnreadDecorationProvider } from './providers/decorationProvider';
 
 export class Container {

@@ -1,4 +1,6 @@
 "use strict";
+import { RequestInit } from "node-fetch";
+import { ExtensionContext, Uri } from "vscode";
 import {
 	Disposable,
 	InitializeResult,
@@ -7,12 +9,10 @@ import {
 	ServerOptions,
 	TransportKind
 } from "vscode-languageclient";
-import { ExtensionContext, Uri } from "vscode";
-import { getRepositories, GitApiRepository } from "./git/git";
-import { Logger } from "./logger";
-import { RequestInit } from "node-fetch";
-import { GitRepository } from "./git/gitService";
 import { LoginResponse } from "./api/types";
+import { getRepositories, GitApiRepository } from "./git/git";
+import { GitRepository } from "./git/gitService";
+import { Logger } from "./logger";
 
 // TODO: Fix this, but for now keep in sync with InitializationOptions in agent.ts in codestream-lsp-agent
 export interface CodeStreamAgentOptions {

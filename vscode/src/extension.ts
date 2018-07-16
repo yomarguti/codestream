@@ -3,13 +3,13 @@ import "reflect-metadata";
 
 import { ExtensionContext, extensions, version as vscodeVersion } from "vscode";
 import { CodeStreamAgentOptions } from "./agentClient";
+import { SessionStatusChangedEvent } from "./api/session";
 import { ContextKeys, setContext } from "./common";
 import { Config, configuration, Configuration } from "./configuration";
 import { extensionQualifiedId } from "./constants";
 import { Container } from "./container";
-import { Logger } from "./logger";
-import { SessionStatusChangedEvent } from "./api/session";
 import { gitPath } from "./git/git";
+import { Logger } from "./logger";
 
 const extension = extensions.getExtension(extensionQualifiedId)!;
 export const extensionVersion = extension.packageJSON.version;

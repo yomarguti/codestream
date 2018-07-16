@@ -1,4 +1,7 @@
 "use strict";
+import { RequestInit } from "node-fetch";
+import { URLSearchParams } from "url";
+import { Container } from "../container";
 import {
 	CreatePostRequest,
 	CreatePostResponse,
@@ -38,9 +41,6 @@ import {
 	UpdateStreamMembershipRequest,
 	UpdateStreamMembershipResponse
 } from "./types";
-import { RequestInit } from "node-fetch";
-import { URLSearchParams } from "url";
-import { Container } from "../container";
 export * from "./types";
 
 export interface ApiMiddlewareContext {

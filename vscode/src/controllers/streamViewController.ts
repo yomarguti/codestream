@@ -7,8 +7,8 @@ import {
 	SessionStatusChangedEvent,
 	StreamThread
 } from "../api/session";
-import { StreamWebviewPanel } from "../webviews/streamWebviewPanel";
 import { Container } from "../container";
+import { StreamWebviewPanel } from "../webviews/streamWebviewPanel";
 
 export class StreamViewController implements Disposable {
 	private _disposable: Disposable | undefined;

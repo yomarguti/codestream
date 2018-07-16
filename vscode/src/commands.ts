@@ -1,3 +1,4 @@
+import * as path from "path";
 import {
 	commands,
 	ConfigurationTarget,
@@ -23,9 +24,8 @@ import { configuration, TraceLevel } from "./configuration";
 import { encryptionKey } from "./constants";
 import { Container } from "./container";
 import { Logger } from "./logger";
-import { PostNode } from "./views/postNode";
 import { Command, createCommandDecorator, Crypto, Dates, Iterables } from "./system";
-import * as path from "path";
+import { PostNode } from "./views/postNode";
 
 const commandRegistry: Command[] = [];
 const command = createCommandDecorator(commandRegistry);

@@ -1,8 +1,8 @@
 "use strict";
-import { CodeStreamCollection, CodeStreamItem } from "./collection";
-import { CodeStreamSession } from "../session";
 import { Iterables } from "../../system";
+import { CodeStreamSession } from "../session";
 import { CSUser } from "../types";
+import { CodeStreamCollection, CodeStreamItem } from "./collection";
 
 export class User extends CodeStreamItem<CSUser> {
 	constructor(session: CodeStreamSession, user: CSUser) {

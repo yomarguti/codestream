@@ -11,10 +11,10 @@ import {
 import { Post, SessionStatus, SessionStatusChangedEvent } from "../api/session";
 import { ContextKeys, setContext } from "../common";
 import { Container } from "../container";
-import { UserNode } from "../views/explorer";
-import { Logger } from "../logger";
 import { RemoteGitService, RemoteRepository } from "../git/remoteGitService";
+import { Logger } from "../logger";
 import { Command, createCommandDecorator, Iterables } from "../system";
+import { UserNode } from "../views/explorer";
 
 const commandRegistry: Command[] = [];
 const command = createCommandDecorator(commandRegistry);

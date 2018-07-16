@@ -2,9 +2,9 @@
 import { TreeItem, TreeItemCollapsibleState } from "vscode";
 import { CodeStreamSession, Repository } from "../api/session";
 import { Container } from "../container";
+import { Iterables } from "../system";
 import { ContextValue, ExplorerNode, SubscribableExplorerNode } from "./explorerNode";
 import { StreamNode } from "./streamNode";
-import { Iterables } from "../system";
 
 export class RepositoryNode extends SubscribableExplorerNode {
 	constructor(public readonly session: CodeStreamSession, public readonly repository: Repository) {

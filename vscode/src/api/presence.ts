@@ -1,9 +1,9 @@
 "use strict";
 import { Disposable, Event, EventEmitter, MessageItem, window } from "vscode";
-import { PresenceStatus } from "./api";
-import { CodeStreamSessionApi } from "./sessionApi";
 import { Container } from "../container";
 import { Logger } from "../logger";
+import { PresenceStatus } from "./api";
+import { CodeStreamSessionApi } from "./sessionApi";
 
 export class PresenceManager extends Disposable {
 	private _onDidChange = new EventEmitter<PresenceStatus>();

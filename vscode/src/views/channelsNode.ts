@@ -1,9 +1,9 @@
 "use strict";
 import { TreeItem, TreeItemCollapsibleState } from "vscode";
 import { ChannelStream, CodeStreamSession } from "../api/session";
+import { Iterables } from "../system";
 import { ContextValue, ExplorerNode } from "./explorerNode";
 import { StreamNode } from "./streamNode";
-import { Iterables } from "../system";
 
 export class ChannelsNode extends ExplorerNode {
 	private readonly _childrenResourceType: ContextValue;

@@ -1,12 +1,12 @@
 "use strict";
+import * as path from "path";
 import { Uri, workspace, WorkspaceFolder } from "vscode";
+import { Strings } from "../../system";
+import { CodeStreamSession, SessionChangedEvent, SessionChangedType } from "../session";
+import { CSRepository } from "../types";
 import { CodeStreamCollection, CodeStreamItem } from "./collection";
 import { MarkerCollection } from "./markers";
-import { CodeStreamSession, SessionChangedEvent, SessionChangedType } from "../session";
 import { FileStreamCollection } from "./streams";
-import { Strings } from "../../system";
-import { CSRepository } from "../types";
-import * as path from "path";
 
 export class Repository extends CodeStreamItem<CSRepository> {
 	constructor(
