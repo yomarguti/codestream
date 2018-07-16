@@ -2,7 +2,7 @@
 import { Disposable, Event, EventEmitter } from "vscode";
 import { CSMarker, CSPost, CSRepository, CSStream, CSTeam, CSUser } from "./types";
 import { CodeStreamApi } from "./api";
-import Cache from "./cache";
+import { Cache } from "./cache";
 import { Logger } from "../logger";
 import Pubnub = require("pubnub");
 import { Iterables } from "../system";

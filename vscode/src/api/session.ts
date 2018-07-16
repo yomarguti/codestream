@@ -1,4 +1,5 @@
 "use strict";
+import { PresenceMiddleware } from "./presenceMiddleware";
 import {
 	ConfigurationChangeEvent,
 	ConfigurationTarget,
@@ -8,7 +9,6 @@ import {
 	Uri,
 	window
 } from "vscode";
-import { CodeStreamApi, CSRepository, CSStream, LoginResponse, PresenceStatus } from "./api";
 import { configuration } from "../configuration";
 import { Container } from "../container";
 import { CodeStreamSessionApi } from "./sessionApi";
@@ -16,8 +16,9 @@ import { Logger } from "../logger";
 import { Marker, MarkerCollection } from "./models/markers";
 import { Post } from "./models/posts";
 import { PresenceManager } from "./presence";
-import { PresenceMiddleware } from "./presenceMiddleware";
+import { CodeStreamApi, CSRepository, CSStream, LoginResponse, PresenceStatus } from "./api";
 import {
+	MarkersMessageReceivedEvent,
 	MessageReceivedEvent,
 	MessageType,
 	PostsMessageReceivedEvent,
@@ -25,8 +26,7 @@ import {
 	RepositoriesMessageReceivedEvent,
 	StreamsMessageReceivedEvent,
 	TeamsMessageReceivedEvent,
-	UsersMessageReceivedEvent,
-	MarkersMessageReceivedEvent
+	UsersMessageReceivedEvent
 } from "./pubnub";
 import { Repository, RepositoryCollection } from "./models/repositories";
 import {
@@ -44,7 +44,7 @@ import { StreamVisibilityManager } from "./streamVisibility";
 import { Functions, memoize, Strings } from "../system";
 import { Team, TeamCollection } from "./models/teams";
 import { User, UserCollection } from "./models/users";
-import Cache from "./cache";
+import { Cache } from "./cache";
 
 export {
 	ChannelStream,
@@ -152,13 +152,13 @@ export class CodeStreamSession extends Disposable {
 				this.fireChanged(new StreamsAddedEvent(this, e));
 				break;
 			case MessageType.Users:
-				this.fireChanged(new UsersUpdatedEvent(this, e));
+				this.fireChanged(new UsersChangedEvent(this, e));
 				break;
 			case MessageType.Teams:
-				this.fireChanged(new TeamsUpdatedEvent(this, e));
+				this.fireChanged(new TeamsChangedEvent(this, e));
 				break;
 			case MessageType.Markers:
-				this.fireChanged(new MarkersUpdatedEvent(this, e));
+				this.fireChanged(new MarkersChangedEvent(this, e));
 				break;
 		}
 	}
@@ -538,7 +538,7 @@ export class PostsReceivedEvent {
 		return this._event.posts.length;
 	}
 
-	affects(id: string, type: "stream" | "repo" | "team" = "stream") {
+	affects(id: string, type: "entity" | "stream" | "repo" | "team" = "stream") {
 		return affects(this._event.posts, id, type);
 	}
 
@@ -582,7 +582,7 @@ export class RepositoriesAddedEvent implements IMergeableEvent<RepositoriesAdded
 		return this._event.repos.length;
 	}
 
-	affects(id: string, type: "team" = "team"): boolean {
+	affects(id: string, type: "entity" | "team" = "team"): boolean {
 		return affects(this._event.repos, id, type);
 	}
 
@@ -612,7 +612,7 @@ export class StreamsAddedEvent implements IMergeableEvent<StreamsAddedEvent> {
 		return this._event.streams.length;
 	}
 
-	affects(id: string, type: "repo" | "team" = "repo"): boolean {
+	affects(id: string, type: "entity" | "repo" | "team" = "repo"): boolean {
 		return affects(this._event.streams, id, type);
 	}
 
@@ -639,42 +639,70 @@ export class StreamsAddedEvent implements IMergeableEvent<StreamsAddedEvent> {
 	}
 }
 
-class UsersUpdatedEvent {
-	type = SessionChangedType.Users;
+class UsersChangedEvent {
+	readonly type = SessionChangedType.Users;
 
 	constructor(
 		private readonly session: CodeStreamSession,
 		private readonly _event: UsersMessageReceivedEvent
 	) {}
 
+	affects(id: string, type: "entity" | "team" = "entity") {
+		return affects(this._event.users, id, type);
+	}
+
 	entities() {
 		return this._event.users;
 	}
+
+	@memoize
+	items(): User[] {
+		return this._event.users.map(u => new User(this.session, u));
+	}
 }
 
-class TeamsUpdatedEvent {
-	type = SessionChangedType.Teams;
+class TeamsChangedEvent {
+	readonly type = SessionChangedType.Teams;
 
 	constructor(
 		private readonly session: CodeStreamSession,
 		private readonly _event: TeamsMessageReceivedEvent
 	) {}
 
+	affects(id: string, type: "entity" = "entity") {
+		return affects(this._event.teams, id, type);
+	}
+
 	entities() {
 		return this._event.teams;
 	}
+
+	@memoize
+	items(): Team[] {
+		return this._event.teams.map(t => new Team(this.session, t));
+	}
 }
 
-class MarkersUpdatedEvent {
-	type = SessionChangedType.Markers;
+class MarkersChangedEvent {
+	readonly type = SessionChangedType.Markers;
 
 	constructor(
-		private readonly session: CodeStreamSession,
+		public readonly session: CodeStreamSession,
 		private readonly _event: MarkersMessageReceivedEvent
 	) {}
 
+	affects(id: string, type: "entity" | "stream" | "team" = "stream") {
+		return affects(this._event.markers, id, type);
+	}
+
 	entities() {
 		return this._event.markers;
+	}
+
+	@memoize
+	items(): Marker[] {
+		throw new Error("Not implemented");
+		// return this._event.markers.map(m => new Marker(this.session, m));
 	}
 }
 
@@ -682,9 +710,9 @@ export type SessionChangedEvent =
 	| GitChangedEvent
 	| RepositoriesAddedEvent
 	| StreamsAddedEvent
-	| UsersUpdatedEvent
-	| TeamsUpdatedEvent
-	| MarkersUpdatedEvent;
+	| UsersChangedEvent
+	| TeamsChangedEvent
+	| MarkersChangedEvent;
 
 export enum SessionStatus {
 	SignedOut = "signedOut",
@@ -696,7 +724,11 @@ export interface SessionStatusChangedEvent {
 	getStatus(): SessionStatus;
 }
 
-function affects(data: { [key: string]: any }[], id: string, type: "stream" | "repo" | "team") {
+function affects(
+	data: { [key: string]: any }[],
+	id: string,
+	type: "entity" | "stream" | "repo" | "team"
+) {
 	let key: string;
 	switch (type) {
 		case "repo":
@@ -709,7 +741,7 @@ function affects(data: { [key: string]: any }[], id: string, type: "stream" | "r
 			key = "teamId";
 			break;
 		default:
-			return false;
+			key = "id";
 	}
 	return data.some(i => (i as { [key: string]: any })[key] === id);
 }

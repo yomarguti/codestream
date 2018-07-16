@@ -2,7 +2,7 @@ import { CSMarker, CSPost, CSRepository, CSStream, CSTeam, CSUser } from "./type
 import { CodeStreamSession } from "./session";
 import { CodeStreamApi } from "./api";
 
-export default class Cache {
+export class Cache {
 	private session: CodeStreamSession;
 	private posts: Map<string, CSPost>;
 	private repos: Map<string, CSRepository>;
@@ -52,7 +52,7 @@ export default class Cache {
 	) {
 		return Promise.all(
 			changeSets.map(async c => {
-				const changes = CodeStreamApi.normalizeResponse(c);
+				const changes = CodeStreamApi.normalizeResponse(c) as { [key: string]: any };
 				const record = cache.get(changes["id"]);
 				if (record) {
 					const updatedRecord = this._resolve(record, changes);
@@ -67,8 +67,11 @@ export default class Cache {
 		);
 	}
 
-	private _resolve({ id, ...object }, changes) {
-		let result = { ...object };
+	private _resolve(
+		{ id, ...object }: { id: string; object: any[] },
+		changes: { [key: string]: any }
+	) {
+		const result: { [key: string]: any } = { ...object };
 		Object.keys(changes).forEach(change => {
 			const operation = operations[change];
 			if (operation) {
@@ -88,28 +91,29 @@ export default class Cache {
 
 const NESTED_PROPERTY_REGEX = /^(.+?)\.(.+)$/;
 
-const handle = (property, object, data, recurse, apply) => {
+const handle = (property: any, object: any, data: any, recurse: any, apply: any) => {
 	const nestedPropertyMatch = property.match(NESTED_PROPERTY_REGEX);
 	if (nestedPropertyMatch) {
-		let [, topField, subField] = nestedPropertyMatch;
+		const [, topField, subField] = nestedPropertyMatch;
 		if (object[topField] === undefined) object[topField] = {};
-		if (typeof object[topField] === "object")
+		if (typeof object[topField] === "object") {
 			recurse(object[topField], { [subField]: data[property] });
+		}
 	} else apply();
 };
 
 const operations = {
-	$set(object, data) {
+	$set(object: any, data: any) {
 		Object.keys(data).forEach(property => {
 			handle(property, object, data, operations.$set, () => (object[property] = data[property]));
 		});
 	},
-	$unset(object, data) {
+	$unset(object: any, data: any) {
 		Object.keys(data).forEach(property => {
 			handle(property, object, data, operations.$unset, () => (object[property] = undefined));
 		});
 	},
-	$push(object, data) {
+	$push(object: any, data: any) {
 		Object.keys(data).forEach(property => {
 			handle(property, object, data, operations.$push, () => {
 				const value = object[property];
@@ -117,19 +121,19 @@ const operations = {
 			});
 		});
 	},
-	$pull(object, data) {
+	$pull(object: any, data: any) {
 		Object.keys(data).forEach(property => {
 			handle(property, object, data, operations.$pull, () => {
 				const value = object[property];
 				if (Array.isArray(value)) {
-					if (Array.isArray(data[property]))
-						object[property] = value.filter(it => !_.contains(data[property], it));
-					else object[property] = value.filter(it => it !== data[property]);
+					if (Array.isArray(data[property])) {
+						object[property] = value.filter(it => !data[property].includes(it));
+					} else object[property] = value.filter(it => it !== data[property]);
 				}
 			});
 		});
 	},
-	$addToSet(object, data) {
+	$addToSet(object: any, data: any) {
 		Object.keys(data).forEach(property => {
 			handle(property, object, data, operations.$addToSet, () => {
 				let newValue = data[property];
@@ -137,14 +141,14 @@ const operations = {
 				const currentValue = object[property];
 				if (currentValue === undefined) object[property] = newValue;
 				else if (Array.isArray(currentValue)) {
-					newValue.forEach(value => {
+					newValue.forEach((value: any) => {
 						if (!currentValue.find(it => it === value)) currentValue.push(value);
 					});
 				}
 			});
 		});
 	},
-	$inc(object, data) {
+	$inc(object: any, data: any) {
 		Object.keys(data).forEach(property => {
 			handle(property, object, data, operations.$inc, () => {
 				const value = object[property];
@@ -153,4 +157,4 @@ const operations = {
 			});
 		});
 	}
-};
+} as any;
