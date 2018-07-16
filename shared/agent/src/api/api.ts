@@ -48,10 +48,11 @@ export class CodeStreamApi {
 
 	constructor(
 		agent: CodeStreamAgent,
-		public baseUrl: string,
-		private _ideVersion: string,
-		private _extensionVersion: string
+		baseUrl: string,
+		private readonly _ideVersion: string,
+		private readonly _extensionVersion: string
 	) {
+		this._baseUrl = baseUrl;
 		agent.registerHandler<Promise<any>, any>(
 			"codeStream/api",
 			({ url, token, init }, cancellationToken: CancellationToken) =>
@@ -69,6 +70,15 @@ export class CodeStreamApi {
 		//         this.responseCache.set(context.url, response);
 		//     }
 		// });
+	}
+
+	private _baseUrl: string;
+	get baseUrl() {
+		return this._baseUrl;
+	}
+	set baseUrl(value: string) {
+		// TODO: Might need some checks here
+		this._baseUrl = value;
 	}
 
 	private onApiRequest(

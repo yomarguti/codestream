@@ -4,12 +4,11 @@
 		{
 			"type": "node",
 			"request": "attach",
-			"name": "Attach to LSP Agent",
-			"address": "localhost",
-			"protocol": "inspector",
+			"name": "Attach to Agent",
 			"port": 6009,
 			"sourceMaps": true,
-			"outFiles": ["${workspaceRoot}/out/**/*.js"]
+			"outFiles": ["${workspaceRoot}/out/**/*.js"],
+			"trace": true
 		}
 	]
 }

@@ -2,46 +2,61 @@
 import { Connection } from "vscode-languageserver";
 import { Config } from "./config";
 import { GitService } from "./git/gitService";
-import { CodeStreamApi } from "./api/api";
+import { CodeStreamApi, LoginResponse } from "./api/api";
 import { DocumentManager } from "./documentManager";
-import { CodeStreamAgent, InitializationOptions } from "./agent";
+import { CodeStreamAgent, CodeStreamAgentOptions } from "./agent";
+import { Logger } from "./logger";
 
 class ServiceContainer {
 	public readonly extensionVersion: string;
 	public readonly gitPath: string;
 	public readonly ideVersion: string;
 
+	public readonly state: {
+		email: string;
+		userId: string;
+		teamId: string;
+		token: string;
+		serverUrl: string;
+	};
+
 	constructor(
 		public readonly agent: CodeStreamAgent,
 		public readonly connection: Connection,
-		config: Config,
-		initializationOptions: InitializationOptions
+		public readonly api: CodeStreamApi,
+		options: CodeStreamAgentOptions,
+		loginResponse: LoginResponse
 	) {
-		this.gitPath = initializationOptions.gitPath;
-		this.extensionVersion = initializationOptions.extensionVersion;
-		this.ideVersion = initializationOptions.ideVersion;
+		this.gitPath = options.gitPath;
+		this.extensionVersion = options.extensionVersion;
+		this.ideVersion = options.ideVersion;
 
-		this._config = config;
-		this._api = new CodeStreamApi(
-			agent,
-			this.config.serverUrl,
-			this.ideVersion,
-			this.extensionVersion
-		);
+		this.state = {
+			email: options.email,
+			userId: loginResponse.user.id,
+			teamId: options.teamId,
+			token: options.token,
+			serverUrl: options.serverUrl
+		};
+
+		// this._config = {
+		// 	email: options.email,
+		// 	password: options.token,
+		// 	serverUrl: options.serverUrl!,
+		// 	team: undefined!,
+		// 	teamId: undefined!,
+		// 	token: undefined!
+		// };
+
 		this._git = new GitService(agent);
 
 		this._documents = new DocumentManager();
 	}
 
-	private _api: CodeStreamApi;
-	get api() {
-		return this._api;
-	}
-
-	private _config: Config;
-	get config() {
-		return this._config;
-	}
+	// private _config: Config;
+	// get config() {
+	// 	return this._config;
+	// }
 
 	private _documents: DocumentManager;
 	get documents() {
@@ -54,37 +69,38 @@ class ServiceContainer {
 	}
 
 	updateConfig(config: Config) {
-		const prevCfg = this._config;
-
-		this._config = {
-			...this.config,
-			...config
-		};
-
-		if (prevCfg.serverUrl !== this._config.serverUrl) {
-			this._api = new CodeStreamApi(
-				this.agent,
-				this.config.serverUrl,
-				this.ideVersion,
-				this.extensionVersion
-			);
-		}
+		// 	const prevCfg = this._config;
+		// 	this._config = {
+		// 		...this.config,
+		// 		...config
+		// 	};
+		// 	if (prevCfg && prevCfg.serverUrl !== this._config.serverUrl) {
+		// 		this.api.baseUrl = this.config.serverUrl;
+		// 	}
 	}
 }
 
-let container: ServiceContainer;
+let container: ServiceContainer | undefined;
 
 export namespace Container {
 	export async function initialize(
 		agent: CodeStreamAgent,
 		connection: Connection,
-		initializationOptions: InitializationOptions
+		api: CodeStreamApi,
+		options: CodeStreamAgentOptions,
+		loginResponse: LoginResponse
 	) {
-		const cfg = (await connection.workspace.getConfiguration("codestream")) as Config;
-		container = new ServiceContainer(agent, connection, cfg, initializationOptions);
+		container = new ServiceContainer(agent, connection, api, options, loginResponse);
 	}
 
 	export function instance(): ServiceContainer {
+		if (container === undefined) {
+			debugger;
+			const ex = new Error("Container not yet initialized.");
+			Logger.error(ex);
+			throw ex;
+		}
+
 		return container;
 	}
 }

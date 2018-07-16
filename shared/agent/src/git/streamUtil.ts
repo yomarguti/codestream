@@ -31,11 +31,11 @@ export namespace StreamUtil {
 	}
 
 	async function getStreamsByRepoId(repoId: string): Promise<StreamsByPath> {
-		const { api, config } = Container.instance();
+		const { api, state } = Container.instance();
 		let streams = streamsByRepoId.get(repoId);
 		if (!streams) {
 			streams = new Map();
-			const response = await api.getStreams(config.token, config.teamId, repoId);
+			const response = await api.getStreams(state.token, state.teamId, repoId);
 			for (const stream of response.streams) {
 				const fileStream = stream as CSFileStream;
 				streams.set(fileStream.file, fileStream);

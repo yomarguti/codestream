@@ -19,8 +19,9 @@
     },
     "scripts": {
         "build": "npm run compile && npm run lint",
+        "clean": "git clean -Xdf --exclude=!node_modules",
         "compile": "tsc -p ./",
-        "lint": "tslint --project tsconfig.json",
+        "lint": "tslint --project tsconfig.json --fix",
         "watch": "tsc -w -p ./"
     },
     "dependencies": {
@@ -33,7 +34,7 @@
         "string-similarity": "^1.2.0",
         "tmp": "0.0.33",
         "tslib": "1.9.3",
-        "vscode-languageserver": "^4.2.1",
+        "vscode-languageserver": "^4.3.0",
         "vscode-uri": "1.0.5"
     },
     "devDependencies": {

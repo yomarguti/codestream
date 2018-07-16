@@ -92,14 +92,14 @@ export namespace MarkerLocationUtil {
 	}
 
 	async function getMarkerLocations(streamId: string, commitHash: string): Promise<LocationsById> {
-		const { api, config } = Container.instance();
+		const { api, state } = Container.instance();
 		const commitsCache = streamsCache[streamId] || (streamsCache[streamId] = {});
 		let locationsCache = commitsCache[commitHash];
 
 		if (!locationsCache) {
 			const response = await api.getMarkerLocations(
-				config.token,
-				config.teamId,
+				state.token,
+				state.teamId,
 				streamId,
 				commitHash
 			);

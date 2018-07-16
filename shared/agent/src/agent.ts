@@ -23,22 +23,25 @@ import { Logger } from "./logger";
 import { Disposables, memoize } from "./system";
 import { gitApi, GitApiRepository } from "./git/git";
 import { MarkerHandler } from "./marker/markerHandler";
+import { CodeStreamApi } from "./api/api";
 
-const defaults = {
-	serverUrl: "https://api.codestream.com"
-};
-
-export interface InitializationOptions {
+// TODO: Fix this, but for now keep in sync with CodeStreamAgentOptions in agentClient.ts in vscode-codestream
+export interface CodeStreamAgentOptions {
 	extensionVersion: string;
 	gitPath: string;
 	ideVersion: string;
+
+	serverUrl: string;
+	email: string;
+	team: string;
+	teamId: string;
+	token: string;
 }
 
 export class CodeStreamAgent implements Disposable, LSPLogger {
 	private _clientCapabilities: ClientCapabilities | undefined;
 	private readonly _connection: Connection;
 	private _disposable: Disposable | undefined;
-	private _initializationOptions: InitializationOptions | undefined;
 
 	constructor() {
 		// Create a connection for the server. The connection uses Node's IPC as a transport.
@@ -60,57 +63,111 @@ export class CodeStreamAgent implements Disposable, LSPLogger {
 		this._disposable && this._disposable.dispose();
 	}
 
-	private onInitialize(e: InitializeParams) {
+	private async onInitialize(e: InitializeParams) {
 		const capabilities = e.capabilities;
 		this._clientCapabilities = capabilities;
-		this._initializationOptions = e.initializationOptions;
+
+		const options = e.initializationOptions! as CodeStreamAgentOptions;
+		const api = new CodeStreamApi(
+			this,
+			options.serverUrl,
+			options.ideVersion,
+			options.extensionVersion
+		);
+		const loginResponse = await api.login(options.email, options.token);
+
+		// TODO: Since the token is current a password, replace it with an access token
+		options.token = loginResponse.accessToken;
+
+		// If there is only 1 team, use it regardless of config
+		if (loginResponse.teams.length === 1) {
+			options.teamId = loginResponse.teams[0].id;
+		}
+
+		if (options.teamId == null) {
+			if (options.team) {
+				const normalizedTeamName = options.team.toLocaleUpperCase();
+				const team = loginResponse.teams.find(
+					t => t.name.toLocaleUpperCase() === normalizedTeamName
+				);
+				if (team != null) {
+					options.teamId = team.id;
+				}
+			}
+
+			// if (opts.teamId == null && data.repos.length > 0) {
+			// 	for (const repo of await Container.git.getRepositories()) {
+			// 		const url = await repo.getNormalizedUrl();
+
+			// 		const found = data.repos.find(r => r.normalizedUrl === url);
+			// 		if (found === undefined) continue;
+
+			// 		teamId = found.teamId;
+			// 		break;
+			// 	}
+			// }
+
+			// If we still can't find a team, then just pick the first one
+			if (options.teamId == null) {
+				options.teamId = loginResponse.teams[0].id;
+			}
+		}
+
+		if (loginResponse.teams.find(t => t.id === options.teamId) === undefined) {
+			options.teamId = loginResponse.teams[0].id;
+		}
+
+		void (await Container.initialize(this, this._connection, api, options, loginResponse));
 
 		return {
 			capabilities: {
 				textDocumentSync: TextDocumentSyncKind.Full,
 				hoverProvider: true
+			},
+			result: {
+				loginResponse: { ...loginResponse },
+				state: { ...Container.instance().state }
 			}
 		} as InitializeResult;
 	}
 
 	private async onInitialized(e: InitializedParams) {
-		const subscriptions = [];
+		try {
+			// const repos = await this._connection.sendRequest<GitApiRepository[]>("codeStream/git/repos");
 
-		if (this.supportsConfiguration) {
-			// Register for all configuration changes
-			subscriptions.push(
-				await this._connection.client.register(DidChangeConfigurationNotification.type, undefined)
-			);
-		}
+			gitApi({
+				getGitPath: async () => Container.instance().gitPath,
+				getRepositories: async () =>
+					this._connection.sendRequest<GitApiRepository[]>("codeStream/git/repos")
+			});
 
-		if (this.supportsWorkspaces) {
-			subscriptions.push(
-				this._connection.workspace.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this)
-			);
-		}
+			const subscriptions = [];
 
-		this._serverUrl = await this.getServerUrl();
-		void (await Container.initialize(this, this._connection, this._initializationOptions!));
-
-		const repos = await this._connection.sendRequest<GitApiRepository[]>(
-			"codeStream/client/git/repos"
-		);
-
-		gitApi({
-			getGitPath: async () => Container.instance().gitPath,
-			getRepositories: async () => {
-				return repos;
-				// const repos = await this._connection.sendRequest<GitApiRepository[]>(
-				// 	"codeStream/client/git/repos"
-				// );
-				// return repos;
+			if (this.supportsConfiguration) {
+				// Register for all configuration changes
+				subscriptions.push(
+					await this._connection.client.register(DidChangeConfigurationNotification.type, undefined)
+				);
 			}
-		});
 
-		this._disposable = Disposables.from(...subscriptions);
+			if (this.supportsWorkspaces) {
+				subscriptions.push(
+					this._connection.workspace.onDidChangeWorkspaceFolders(
+						this.onWorkspaceFoldersChanged,
+						this
+					)
+				);
+			}
+
+			this._disposable = Disposables.from(...subscriptions);
+		} catch (ex) {
+			debugger;
+			Logger.error(ex);
+			throw ex;
+		}
 	}
 
-	private onConfigurationChanged(e: DidChangeConfigurationParams) {
+	private async onConfigurationChanged(e: DidChangeConfigurationParams) {
 		Container.instance().updateConfig(e.settings.codestream);
 	}
 
@@ -141,11 +198,6 @@ export class CodeStreamAgent implements Disposable, LSPLogger {
 		this._connection.console.log("Workspace folder change event received");
 	}
 
-	private _serverUrl: string | undefined;
-	get serverUrl() {
-		return this._serverUrl!;
-	}
-
 	@memoize
 	get supportsConfiguration() {
 		return (
@@ -164,13 +216,6 @@ export class CodeStreamAgent implements Disposable, LSPLogger {
 				!!this._clientCapabilities.workspace.workspaceFolders) ||
 			false
 		);
-	}
-
-	private async getServerUrl() {
-		const url = await this._connection.workspace.getConfiguration("codestream.serverUrl");
-		if (url) return url as string;
-
-		return defaults.serverUrl;
 	}
 
 	registerHandler<R, E>(method: string, handler: GenericRequestHandler<R, E>) {
