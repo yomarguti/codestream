@@ -106240,6 +106240,7 @@ var WebviewApi = function () {
 
 			var request = _this.pendingRequests.get(id);
 			if (request) {
+				console.debug("codestream:response", { id: id, payload: payload, error: error });
 				if (payload) request.resolve(payload);else {
 					request.reject(error || "No error provided by host process in response to " + request.action);
 				}
@@ -106256,6 +106257,7 @@ var WebviewApi = function () {
 			var id = uuid();
 			return new Promise(function (resolve, reject) {
 				_this2.pendingRequests.set(id, { resolve: resolve, reject: reject, action: message.action });
+				console.debug("codestream:request", _extends$4({ id: id }, message));
 				_this2.host.postMessage({ type: "codestream:request", body: _extends$4({ id: id }, message) }, "*");
 			});
 		}

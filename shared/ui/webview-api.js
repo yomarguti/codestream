@@ -9,6 +9,7 @@ export default class WebviewApi {
 		EventEmitter.on("response", ({ id, payload, error }) => {
 			const request = this.pendingRequests.get(id);
 			if (request) {
+				console.debug("codestream:response", { id, payload, error });
 				if (payload) request.resolve(payload);
 				else {
 					request.reject(
@@ -24,6 +25,7 @@ export default class WebviewApi {
 		const id = uuid();
 		return new Promise((resolve, reject) => {
 			this.pendingRequests.set(id, { resolve, reject, action: message.action });
+			console.debug("codestream:request", { id, ...message });
 			this.host.postMessage({ type: "codestream:request", body: { id, ...message } }, "*");
 		});
 	}
