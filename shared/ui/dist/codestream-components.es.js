@@ -30979,6 +30979,19 @@ var Confirm = function (_Component) {
 			}
 		}
 	}, {
+		key: "renderMessage",
+		value: function renderMessage() {
+			var message = this.props.message;
+
+			if (message) {
+				return react.createElement(
+					"div",
+					{ className: "confirm-message" },
+					typeof message === "function" ? message() : message
+				);
+			}
+		}
+	}, {
 		key: "render",
 		value: function render() {
 			var _this2 = this;
@@ -30987,6 +31000,7 @@ var Confirm = function (_Component) {
 				"confirm-popup-body": true,
 				centered: this.props.centered
 			});
+
 			return reactDom.createPortal(react.createElement(
 				"div",
 				{ className: "confirm-popup", ref: function ref(_ref) {
@@ -31000,11 +31014,7 @@ var Confirm = function (_Component) {
 						{ className: "confirm-title" },
 						this.props.title
 					),
-					this.props.message && react.createElement(
-						"div",
-						{ className: "confirm-message" },
-						this.props.message
-					),
+					this.renderMessage(),
 					react.createElement(
 						"div",
 						{ className: "button-group" },
@@ -104803,7 +104813,24 @@ var SimpleStream = function (_Component) {
 				if (!isFromGitRepo) {
 					confirmPopup({
 						title: "Missing Git Info",
-						message: "This repo doesn’t appear to be managed by Git. When your teammates view this post, we won’t be able to connect the code block to the appropriate file in their IDE. Learn more.",
+						message: function message() {
+							return react.createElement(
+								"span",
+								null,
+								"This repo doesn\u2019t appear to be managed by Git. When your teammates view this post, we won\u2019t be able to connect the code block to the appropriate file in their IDE.",
+								" ",
+								react.createElement(
+									"a",
+									{
+										onClick: function onClick(e) {
+											e.preventDefault();
+											emitter.emit("interaction:clicked-link", "https://help.codestream.com/hc/en-us/articles/360001530571-Git-Issues");
+										}
+									},
+									"Learn more"
+								)
+							);
+						},
 						centered: true,
 						buttons: [{
 							label: "Post Anyway",

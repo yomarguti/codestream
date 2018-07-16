@@ -1289,8 +1289,23 @@ export class SimpleStream extends Component {
 		if (!isFromGitRepo) {
 			confirmPopup({
 				title: "Missing Git Info",
-				message:
-					"This repo doesn’t appear to be managed by Git. When your teammates view this post, we won’t be able to connect the code block to the appropriate file in their IDE. Learn more.",
+				message: () => (
+					<span>
+						This repo doesn’t appear to be managed by Git. When your teammates view this post, we
+						won’t be able to connect the code block to the appropriate file in their IDE.{" "}
+						<a
+							onClick={e => {
+								e.preventDefault();
+								EventEmitter.emit(
+									"interaction:clicked-link",
+									"https://help.codestream.com/hc/en-us/articles/360001530571-Git-Issues"
+								);
+							}}
+						>
+							Learn more
+						</a>
+					</span>
+				),
 				centered: true,
 				buttons: [
 					{

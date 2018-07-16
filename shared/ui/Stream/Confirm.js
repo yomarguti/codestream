@@ -34,16 +34,26 @@ export default class Confirm extends Component {
 		}
 	}
 
+	renderMessage() {
+		const { message } = this.props;
+		if (message) {
+			return (
+				<div className="confirm-message">{typeof message === "function" ? message() : message}</div>
+			);
+		}
+	}
+
 	render() {
 		const bodyClass = createClassString({
 			"confirm-popup-body": true,
 			centered: this.props.centered
 		});
+
 		return ReactDOM.createPortal(
 			<div className="confirm-popup" ref={ref => (this._div = ref)}>
 				<div className={bodyClass}>
 					{this.props.title && <div className="confirm-title">{this.props.title}</div>}
-					{this.props.message && <div className="confirm-message">{this.props.message}</div>}
+					{this.renderMessage()}
 					<div className="button-group">
 						{this.props.buttons.map(button => {
 							const buttonClass = createClassString({
