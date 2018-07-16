@@ -244,6 +244,10 @@ export class CodeStreamApi {
 		return this.put("/preferences", preferences, token);
 	}
 
+	getMe(token: string) {
+		return this.get("/users/me", token);
+	}
+
 	private delete<R extends object>(url: string, token?: string): Promise<R> {
 		let resp = undefined;
 		if (resp === undefined) {
