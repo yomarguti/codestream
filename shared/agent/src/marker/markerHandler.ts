@@ -1,10 +1,10 @@
 "use strict";
 
 import { URL } from "url";
-import { StreamUtil } from "../git/streamUtil";
-import { MarkerUtil } from "./markerUtil";
 import { CSMarker } from "../api/types";
+import { StreamUtil } from "../git/streamUtil";
 import { MarkerLocationUtil } from "../markerLocation/markerLocationUtil";
+import { MarkerUtil } from "./markerUtil";
 
 export namespace MarkerHandler {
 	export interface HandleMarkersResponse {

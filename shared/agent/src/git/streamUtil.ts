@@ -1,9 +1,9 @@
 "use strict";
 
-import { Container } from "../container";
 import * as path from "path";
-import { RepoUtil } from "../repo/repoUtil";
 import { CSFileStream } from "../api/types";
+import { Container } from "../container";
+import { RepoUtil } from "../repo/repoUtil";
 
 type StreamsByPath = Map<string, CSFileStream>;
 type StreamsByRepoId = Map<string, StreamsByPath>;

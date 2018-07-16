@@ -1,9 +1,9 @@
 "use strict";
 
-import { CSMarkerLocation } from "../api/types";
 import { IUniDiff } from "diff";
-import { buildChangeset, Change, Changeset } from "./changeset";
 import { compareTwoStrings, findBestMatch, Rating } from "string-similarity";
+import { CSMarkerLocation } from "../api/types";
+import { buildChangeset, Change, Changeset } from "./changeset";
 import { MarkerLocationUtil } from "./markerLocationUtil";
 import LocationsById = MarkerLocationUtil.LocationsById;
 

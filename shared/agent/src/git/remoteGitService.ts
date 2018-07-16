@@ -1,9 +1,9 @@
 "use strict";
 import { Disposable, Emitter, Event } from "vscode-languageserver";
 import Uri from "vscode-uri";
+import { GitApiRepository } from "./git";
 import { IGitService } from "./gitService";
 import { GitAuthor, GitRemote, GitRemoteType } from "./models/models";
-import { GitApiRepository } from "./git";
 
 export * from "./models/models";
 

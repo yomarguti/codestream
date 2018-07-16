@@ -1,10 +1,10 @@
 "use strict";
 import { Connection } from "vscode-languageserver";
-import { Config } from "./config";
-import { GitService } from "./git/gitService";
-import { CodeStreamApi, LoginResponse } from "./api/api";
-import { DocumentManager } from "./documentManager";
 import { CodeStreamAgent, CodeStreamAgentOptions } from "./agent";
+import { CodeStreamApi, LoginResponse } from "./api/api";
+import { Config } from "./config";
+import { DocumentManager } from "./documentManager";
+import { GitService } from "./git/gitService";
 import { Logger } from "./logger";
 
 class ServiceContainer {

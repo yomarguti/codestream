@@ -1,4 +1,6 @@
 "use strict";
+import fetch, { Headers, RequestInit, Response } from "node-fetch";
+import { URLSearchParams } from "url";
 import { CancellationToken } from "vscode-languageserver";
 import { CodeStreamAgent } from "../agent";
 import { Logger } from "../logger";
@@ -37,8 +39,6 @@ import {
 	UpdateStreamMembershipRequest,
 	UpdateStreamMembershipResponse
 } from "./types";
-import fetch, { Headers, RequestInit, Response } from "node-fetch";
-import { URLSearchParams } from "url";
 
 export * from "./types";
 

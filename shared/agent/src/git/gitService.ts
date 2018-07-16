@@ -1,4 +1,7 @@
 "use strict";
+import { IUniDiff, parsePatch } from "diff";
+import * as fs from "fs";
+import * as path from "path";
 import {
 	CancellationToken,
 	Disposable,
@@ -8,16 +11,13 @@ import {
 	// WorkspaceFoldersChangeEvent
 } from "vscode-languageserver";
 import Uri from "vscode-uri";
-import { GitAuthorParser } from "./parsers/authorParser";
+import { CodeStreamAgent } from "../agent";
+import { Logger } from "../logger";
+import { Strings } from "../system";
 import { getRepositories, git, GitApiRepository, GitErrors, GitWarnings } from "./git";
 import { GitAuthor, GitRemote } from "./models/models";
+import { GitAuthorParser } from "./parsers/authorParser";
 import { GitRemoteParser } from "./parsers/remoteParser";
-import { Strings } from "../system";
-import * as fs from "fs";
-import * as path from "path";
-import { CodeStreamAgent } from "../agent";
-import { IUniDiff, parsePatch } from "diff";
-import { Logger } from "../logger";
 
 export * from "./models/models";
 

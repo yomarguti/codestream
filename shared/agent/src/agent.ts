@@ -18,12 +18,12 @@ import {
 	TextDocumentSyncKind,
 	WorkspaceFoldersChangeEvent
 } from "vscode-languageserver";
-import { Container } from "./container";
-import { Logger } from "./logger";
-import { Disposables, memoize } from "./system";
-import { gitApi, GitApiRepository } from "./git/git";
-import { MarkerHandler } from "./marker/markerHandler";
 import { CodeStreamApi } from "./api/api";
+import { Container } from "./container";
+import { gitApi, GitApiRepository } from "./git/git";
+import { Logger } from "./logger";
+import { MarkerHandler } from "./marker/markerHandler";
+import { Disposables, memoize } from "./system";
 
 // TODO: Fix this, but for now keep in sync with CodeStreamAgentOptions in agentClient.ts in vscode-codestream
 export interface CodeStreamAgentOptions {

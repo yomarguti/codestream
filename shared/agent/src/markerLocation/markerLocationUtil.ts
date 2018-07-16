@@ -1,12 +1,12 @@
 "use strict";
 
-import { Container } from "../container";
-import { CSLocationArray, CSMarker, CSMarkerLocation } from "../api/types";
+import { structuredPatch } from "diff";
 import { URL } from "url";
+import { CSLocationArray, CSMarker, CSMarkerLocation } from "../api/types";
+import { Container } from "../container";
 import { StreamUtil } from "../git/streamUtil";
 import { MarkerUtil } from "../marker/markerUtil";
 import { calculateLocations } from "./calculator";
-import { structuredPatch } from "diff";
 
 export namespace MarkerLocationUtil {
 	const streamsCache: {
