@@ -122,7 +122,7 @@ export const deletePost = id => async (dispatch, getState, { api }) => {
 };
 
 // usage: setUserPreference(["favorites", "shoes", "wedges"], "red")
-export const setUserPreference = (prefPath, value) => (dispatch, getState, { api }) => {
+export const setUserPreference = (prefPath, value) => async (dispatch, getState, { api }) => {
 	const { session, context, users } = getState();
 	let user = users[session.userId];
 	if (!user) return;
@@ -146,8 +146,14 @@ export const setUserPreference = (prefPath, value) => (dispatch, getState, { api
 	newPreferencePointer[prefPath[0].replace(/\./g, "*")] = value;
 
 	console.log("Saving preferences: ", newPreference);
-	api.saveUserPreference(newPreference);
-	// dispatch(saveUser(normalize(user)));
+	try {
+		dispatch({
+			type: "UPDATE_USER",
+			payload: await api.saveUserPreference(newPreference)
+		});
+	} catch (error) {
+		console.error("error trying to update preferences", error);
+	}
 };
 
 export const createStream = attributes => async (dispatch, getState, { api }) => {

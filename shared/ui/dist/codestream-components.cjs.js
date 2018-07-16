@@ -39651,51 +39651,94 @@ var deletePost = function deletePost(id) {
 
 // usage: setUserPreference(["favorites", "shoes", "wedges"], "red")
 var setUserPreference = function setUserPreference(prefPath, value) {
-	return function (dispatch, getState, _ref13) {
-		var api = _ref13.api;
-
-		var _getState3 = getState(),
-		    session = _getState3.session,
-		    context = _getState3.context,
-		    users = _getState3.users;
-
-		var user = users[session.userId];
-		if (!user) return;
-
-		if (!user.preferences) user.preferences = {};
-
-		// we walk down the existing user preference to set the value
-		// and simultaneously create a new preference object to pass
-		// to the API server
-		var preferences = user.preferences;
-		var newPreference = {};
-		var newPreferencePointer = newPreference;
-		while (prefPath.length > 1) {
-			var part = prefPath.shift().replace(/\./g, "*");
-			if (!preferences[part]) preferences[part] = {};
-			preferences = preferences[part];
-			newPreferencePointer[part] = {};
-			newPreferencePointer = newPreferencePointer[part];
-		}
-		preferences[prefPath[0].replace(/\./g, "*")] = value;
-		newPreferencePointer[prefPath[0].replace(/\./g, "*")] = value;
-
-		console.log("Saving preferences: ", newPreference);
-		api.saveUserPreference(newPreference);
-		// dispatch(saveUser(normalize(user)));
-	};
-};
-
-var createStream = function createStream(attributes) {
 	return function () {
-		var _ref15 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(dispatch, getState, _ref14) {
-			var api = _ref14.api;
+		var _ref14 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(dispatch, getState, _ref13) {
+			var api = _ref13.api;
 
-			var _getState4, context, session, stream, returnStream;
+			var _getState3, session, context, users, user, preferences, newPreference, newPreferencePointer, part;
 
 			return regeneratorRuntime.wrap(function _callee6$(_context6) {
 				while (1) {
 					switch (_context6.prev = _context6.next) {
+						case 0:
+							_getState3 = getState(), session = _getState3.session, context = _getState3.context, users = _getState3.users;
+							user = users[session.userId];
+
+							if (user) {
+								_context6.next = 4;
+								break;
+							}
+
+							return _context6.abrupt("return");
+
+						case 4:
+
+							if (!user.preferences) user.preferences = {};
+
+							// we walk down the existing user preference to set the value
+							// and simultaneously create a new preference object to pass
+							// to the API server
+							preferences = user.preferences;
+							newPreference = {};
+							newPreferencePointer = newPreference;
+
+							while (prefPath.length > 1) {
+								part = prefPath.shift().replace(/\./g, "*");
+
+								if (!preferences[part]) preferences[part] = {};
+								preferences = preferences[part];
+								newPreferencePointer[part] = {};
+								newPreferencePointer = newPreferencePointer[part];
+							}
+							preferences[prefPath[0].replace(/\./g, "*")] = value;
+							newPreferencePointer[prefPath[0].replace(/\./g, "*")] = value;
+
+							console.log("Saving preferences: ", newPreference);
+							_context6.prev = 12;
+							_context6.t0 = dispatch;
+							_context6.next = 16;
+							return api.saveUserPreference(newPreference);
+
+						case 16:
+							_context6.t1 = _context6.sent;
+							_context6.t2 = {
+								type: "UPDATE_USER",
+								payload: _context6.t1
+							};
+							(0, _context6.t0)(_context6.t2);
+							_context6.next = 24;
+							break;
+
+						case 21:
+							_context6.prev = 21;
+							_context6.t3 = _context6["catch"](12);
+
+							console.error("error trying to update preferences", _context6.t3);
+
+						case 24:
+						case "end":
+							return _context6.stop();
+					}
+				}
+			}, _callee6, _this, [[12, 21]]);
+		}));
+
+		return function (_x16, _x17, _x18) {
+			return _ref14.apply(this, arguments);
+		};
+	}();
+};
+
+var createStream = function createStream(attributes) {
+	return function () {
+		var _ref16 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7(dispatch, getState, _ref15) {
+			var api = _ref15.api;
+
+			var _getState4, context, session, stream, returnStream;
+
+			return regeneratorRuntime.wrap(function _callee7$(_context7) {
+				while (1) {
+					switch (_context7.prev = _context7.next) {
 						case 0:
 							_getState4 = getState(), context = _getState4.context, session = _getState4.session;
 							stream = {
@@ -39710,12 +39753,12 @@ var createStream = function createStream(attributes) {
 							if (attributes.memberIds) stream.memberIds = attributes.memberIds;
 							if (attributes.purpose) stream.purpose = attributes.purpose;
 
-							_context6.prev = 5;
-							_context6.next = 8;
+							_context7.prev = 5;
+							_context7.next = 8;
 							return api.createStream(stream);
 
 						case 8:
-							returnStream = _context6.sent;
+							returnStream = _context7.sent;
 
 							dispatch({ type: "ADD_STREAM", payload: returnStream });
 							dispatch(setCurrentStream(returnStream.id));
@@ -39723,24 +39766,24 @@ var createStream = function createStream(attributes) {
 							//unmute any created streams
 							dispatch(setUserPreference(["mutedStreams", returnStream.id], false));
 
-							return _context6.abrupt("return", returnStream);
+							return _context7.abrupt("return", returnStream);
 
 						case 15:
-							_context6.prev = 15;
-							_context6.t0 = _context6["catch"](5);
+							_context7.prev = 15;
+							_context7.t0 = _context7["catch"](5);
 
-							console.log("Error: ", _context6.t0);
+							console.log("Error: ", _context7.t0);
 
 						case 18:
 						case "end":
-							return _context6.stop();
+							return _context7.stop();
 					}
 				}
-			}, _callee6, _this, [[5, 15]]);
+			}, _callee7, _this, [[5, 15]]);
 		}));
 
-		return function (_x16, _x17, _x18) {
-			return _ref15.apply(this, arguments);
+		return function (_x19, _x20, _x21) {
+			return _ref16.apply(this, arguments);
 		};
 	}();
 };
@@ -39761,59 +39804,15 @@ var setCurrentStream = function setCurrentStream(streamId) {
 
 var removeUsersFromStream = function removeUsersFromStream(streamId, userIds) {
 	return function () {
-		var _ref17 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7(dispatch, getState, _ref16) {
-			var api = _ref16.api;
-			var update, returnStream;
-			return regeneratorRuntime.wrap(function _callee7$(_context7) {
-				while (1) {
-					switch (_context7.prev = _context7.next) {
-						case 0:
-							update = {
-								$pull: { memberIds: userIds }
-							};
-							_context7.prev = 1;
-							_context7.next = 4;
-							return api.updateStream(streamId, update);
-
-						case 4:
-							returnStream = _context7.sent;
-
-							console.log("return stream: ", returnStream);
-							// if (streams.length > 0) dispatch(saveStreams(normalize(streams)));
-							_context7.next = 11;
-							break;
-
-						case 8:
-							_context7.prev = 8;
-							_context7.t0 = _context7["catch"](1);
-
-							console.log("Error: ", _context7.t0);
-
-						case 11:
-						case "end":
-							return _context7.stop();
-					}
-				}
-			}, _callee7, _this, [[1, 8]]);
-		}));
-
-		return function (_x19, _x20, _x21) {
-			return _ref17.apply(this, arguments);
-		};
-	}();
-};
-
-var addUsersToStream = function addUsersToStream(streamId, userIds) {
-	return function () {
-		var _ref19 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8(dispatch, getState, _ref18) {
-			var api = _ref18.api;
+		var _ref18 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8(dispatch, getState, _ref17) {
+			var api = _ref17.api;
 			var update, returnStream;
 			return regeneratorRuntime.wrap(function _callee8$(_context8) {
 				while (1) {
 					switch (_context8.prev = _context8.next) {
 						case 0:
 							update = {
-								$push: { memberIds: userIds }
+								$pull: { memberIds: userIds }
 							};
 							_context8.prev = 1;
 							_context8.next = 4;
@@ -39842,99 +39841,103 @@ var addUsersToStream = function addUsersToStream(streamId, userIds) {
 		}));
 
 		return function (_x22, _x23, _x24) {
-			return _ref19.apply(this, arguments);
+			return _ref18.apply(this, arguments);
 		};
 	}();
 };
 
-var joinStream = function joinStream(streamId) {
+var addUsersToStream = function addUsersToStream(streamId, userIds) {
 	return function () {
-		var _ref21 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(dispatch, getState, _ref20) {
-			var api = _ref20.api;
-			var teamId, stream;
+		var _ref20 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(dispatch, getState, _ref19) {
+			var api = _ref19.api;
+			var update, returnStream;
 			return regeneratorRuntime.wrap(function _callee9$(_context9) {
 				while (1) {
 					switch (_context9.prev = _context9.next) {
 						case 0:
-							_context9.prev = 0;
-							teamId = getState().context.currentTeamId;
+							update = {
+								$push: { memberIds: userIds }
+							};
+							_context9.prev = 1;
 							_context9.next = 4;
-							return api.joinStream({ streamId: streamId, teamId: teamId });
+							return api.updateStream(streamId, update);
 
 						case 4:
-							stream = _context9.sent;
-							return _context9.abrupt("return", dispatch({ type: "UPDATE_STREAM", payload: stream }));
+							returnStream = _context9.sent;
+
+							console.log("return stream: ", returnStream);
+							// if (streams.length > 0) dispatch(saveStreams(normalize(streams)));
+							_context9.next = 11;
+							break;
 
 						case 8:
 							_context9.prev = 8;
-							_context9.t0 = _context9["catch"](0);
+							_context9.t0 = _context9["catch"](1);
 
-							console.log("Error joining team:", _context9.t0);
+							console.log("Error: ", _context9.t0);
 
 						case 11:
 						case "end":
 							return _context9.stop();
 					}
 				}
-			}, _callee9, _this, [[0, 8]]);
+			}, _callee9, _this, [[1, 8]]);
 		}));
 
 		return function (_x25, _x26, _x27) {
-			return _ref21.apply(this, arguments);
+			return _ref20.apply(this, arguments);
+		};
+	}();
+};
+
+var joinStream = function joinStream(streamId) {
+	return function () {
+		var _ref22 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10(dispatch, getState, _ref21) {
+			var api = _ref21.api;
+			var teamId, stream;
+			return regeneratorRuntime.wrap(function _callee10$(_context10) {
+				while (1) {
+					switch (_context10.prev = _context10.next) {
+						case 0:
+							_context10.prev = 0;
+							teamId = getState().context.currentTeamId;
+							_context10.next = 4;
+							return api.joinStream({ streamId: streamId, teamId: teamId });
+
+						case 4:
+							stream = _context10.sent;
+							return _context10.abrupt("return", dispatch({ type: "UPDATE_STREAM", payload: stream }));
+
+						case 8:
+							_context10.prev = 8;
+							_context10.t0 = _context10["catch"](0);
+
+							console.log("Error joining team:", _context10.t0);
+
+						case 11:
+						case "end":
+							return _context10.stop();
+					}
+				}
+			}, _callee10, _this, [[0, 8]]);
+		}));
+
+		return function (_x28, _x29, _x30) {
+			return _ref22.apply(this, arguments);
 		};
 	}();
 };
 
 var renameStream = function renameStream(streamId, name) {
 	return function () {
-		var _ref23 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10(dispatch, getState, _ref22) {
-			var api = _ref22.api;
-			var update, returnStream;
-			return regeneratorRuntime.wrap(function _callee10$(_context10) {
-				while (1) {
-					switch (_context10.prev = _context10.next) {
-						case 0:
-							update = { name: name };
-							_context10.prev = 1;
-							_context10.next = 4;
-							return api.updateStream(streamId, update);
-
-						case 4:
-							returnStream = _context10.sent;
-
-							console.log("return stream: ", returnStream);
-							return _context10.abrupt("return", returnStream);
-
-						case 9:
-							_context10.prev = 9;
-							_context10.t0 = _context10["catch"](1);
-
-							console.log("Error: ", _context10.t0);
-
-						case 12:
-						case "end":
-							return _context10.stop();
-					}
-				}
-			}, _callee10, _this, [[1, 9]]);
-		}));
-
-		return function (_x28, _x29, _x30) {
-			return _ref23.apply(this, arguments);
-		};
-	}();
-};
-
-var setPurpose = function setPurpose(streamId, purpose) {
-	return function () {
-		var _ref25 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11(dispatch, getState, _ref24) {
-			var api = _ref24.api;
+		var _ref24 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11(dispatch, getState, _ref23) {
+			var api = _ref23.api;
 			var update, returnStream;
 			return regeneratorRuntime.wrap(function _callee11$(_context11) {
 				while (1) {
 					switch (_context11.prev = _context11.next) {
 						case 0:
-							update = { purpose: purpose };
+							update = { name: name };
 							_context11.prev = 1;
 							_context11.next = 4;
 							return api.updateStream(streamId, update);
@@ -39960,38 +39963,30 @@ var setPurpose = function setPurpose(streamId, purpose) {
 		}));
 
 		return function (_x31, _x32, _x33) {
-			return _ref25.apply(this, arguments);
+			return _ref24.apply(this, arguments);
 		};
 	}();
 };
 
-var archiveStream = function archiveStream(streamId, value) {
+var setPurpose = function setPurpose(streamId, purpose) {
 	return function () {
-		var _ref27 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee12(dispatch, getState, _ref26) {
-			var api = _ref26.api;
-			var update, stream;
+		var _ref26 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee12(dispatch, getState, _ref25) {
+			var api = _ref25.api;
+			var update, returnStream;
 			return regeneratorRuntime.wrap(function _callee12$(_context12) {
 				while (1) {
 					switch (_context12.prev = _context12.next) {
 						case 0:
-							update = { isArchived: value };
+							update = { purpose: purpose };
 							_context12.prev = 1;
 							_context12.next = 4;
 							return api.updateStream(streamId, update);
 
 						case 4:
-							stream = _context12.sent;
+							returnStream = _context12.sent;
 
-							if (!stream) {
-								_context12.next = 7;
-								break;
-							}
-
-							return _context12.abrupt("return", dispatch({ type: "UPDATE_STREAM", payload: stream }));
-
-						case 7:
-							_context12.next = 12;
-							break;
+							console.log("return stream: ", returnStream);
+							return _context12.abrupt("return", returnStream);
 
 						case 9:
 							_context12.prev = 9;
@@ -40008,73 +40003,81 @@ var archiveStream = function archiveStream(streamId, value) {
 		}));
 
 		return function (_x34, _x35, _x36) {
-			return _ref27.apply(this, arguments);
+			return _ref26.apply(this, arguments);
+		};
+	}();
+};
+
+var archiveStream = function archiveStream(streamId, value) {
+	return function () {
+		var _ref28 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee13(dispatch, getState, _ref27) {
+			var api = _ref27.api;
+			var update, stream;
+			return regeneratorRuntime.wrap(function _callee13$(_context13) {
+				while (1) {
+					switch (_context13.prev = _context13.next) {
+						case 0:
+							update = { isArchived: value };
+							_context13.prev = 1;
+							_context13.next = 4;
+							return api.updateStream(streamId, update);
+
+						case 4:
+							stream = _context13.sent;
+
+							if (!stream) {
+								_context13.next = 7;
+								break;
+							}
+
+							return _context13.abrupt("return", dispatch({ type: "UPDATE_STREAM", payload: stream }));
+
+						case 7:
+							_context13.next = 12;
+							break;
+
+						case 9:
+							_context13.prev = 9;
+							_context13.t0 = _context13["catch"](1);
+
+							console.log("Error: ", _context13.t0);
+
+						case 12:
+						case "end":
+							return _context13.stop();
+					}
+				}
+			}, _callee13, _this, [[1, 9]]);
+		}));
+
+		return function (_x37, _x38, _x39) {
+			return _ref28.apply(this, arguments);
 		};
 	}();
 };
 
 var invite = function invite(attributes) {
 	return function () {
-		var _ref29 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee13(dispatch, getState, _ref28) {
-			var api = _ref28.api;
+		var _ref30 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee14(dispatch, getState, _ref29) {
+			var api = _ref29.api;
 			var user;
-			return regeneratorRuntime.wrap(function _callee13$(_context13) {
-				while (1) {
-					switch (_context13.prev = _context13.next) {
-						case 0:
-							_context13.prev = 0;
-							_context13.next = 3;
-							return api.invite(attributes);
-
-						case 3:
-							user = _context13.sent;
-							return _context13.abrupt("return", dispatch({ type: "ADD_USER", payload: user }));
-
-						case 7:
-							_context13.prev = 7;
-							_context13.t0 = _context13["catch"](0);
-
-							console.log("Error: ", _context13.t0);
-
-						case 10:
-						case "end":
-							return _context13.stop();
-					}
-				}
-			}, _callee13, _this, [[0, 7]]);
-		}));
-
-		return function (_x37, _x38, _x39) {
-			return _ref29.apply(this, arguments);
-		};
-	}();
-};
-
-var fetchPosts = function fetchPosts(params) {
-	return function () {
-		var _ref31 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee14(dispatch, getState, _ref30) {
-			var api = _ref30.api;
-			var posts;
 			return regeneratorRuntime.wrap(function _callee14$(_context14) {
 				while (1) {
 					switch (_context14.prev = _context14.next) {
 						case 0:
 							_context14.prev = 0;
 							_context14.next = 3;
-							return api.fetchPosts(params);
+							return api.invite(attributes);
 
 						case 3:
-							posts = _context14.sent;
-							return _context14.abrupt("return", dispatch({
-								type: "ADD_POSTS_FOR_STREAM",
-								payload: { posts: posts, streamId: params.streamId }
-							}));
+							user = _context14.sent;
+							return _context14.abrupt("return", dispatch({ type: "ADD_USER", payload: user }));
 
 						case 7:
 							_context14.prev = 7;
 							_context14.t0 = _context14["catch"](0);
 
-							console.error(_context14.t0);
+							console.log("Error: ", _context14.t0);
 
 						case 10:
 						case "end":
@@ -40085,7 +40088,47 @@ var fetchPosts = function fetchPosts(params) {
 		}));
 
 		return function (_x40, _x41, _x42) {
-			return _ref31.apply(this, arguments);
+			return _ref30.apply(this, arguments);
+		};
+	}();
+};
+
+var fetchPosts = function fetchPosts(params) {
+	return function () {
+		var _ref32 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee15(dispatch, getState, _ref31) {
+			var api = _ref31.api;
+			var posts;
+			return regeneratorRuntime.wrap(function _callee15$(_context15) {
+				while (1) {
+					switch (_context15.prev = _context15.next) {
+						case 0:
+							_context15.prev = 0;
+							_context15.next = 3;
+							return api.fetchPosts(params);
+
+						case 3:
+							posts = _context15.sent;
+							return _context15.abrupt("return", dispatch({
+								type: "ADD_POSTS_FOR_STREAM",
+								payload: { posts: posts, streamId: params.streamId }
+							}));
+
+						case 7:
+							_context15.prev = 7;
+							_context15.t0 = _context15["catch"](0);
+
+							console.error(_context15.t0);
+
+						case 10:
+						case "end":
+							return _context15.stop();
+					}
+				}
+			}, _callee15, _this, [[0, 7]]);
+		}));
+
+		return function (_x43, _x44, _x45) {
+			return _ref32.apply(this, arguments);
 		};
 	}();
 };
@@ -105785,6 +105828,11 @@ var configs = (function () {
 
 var initialState$6 = {};
 
+var updateUser = function updateUser(payload, users) {
+	var user = users[payload.id] || {};
+	return _extends$4({}, users, payload);
+};
+
 var users = (function () {
 	var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState$6;
 	var _ref = arguments[1];
@@ -105796,11 +105844,14 @@ var users = (function () {
 			return toMapBy$1("id", payload);
 		case "USERS-UPDATE_FROM_PUBNUB":
 		case "ADD_USER":
-			return _extends$4({}, state, defineProperty$1({}, payload.id, payload));
+			return _extends$4({}, state, defineProperty$1({}, payload.id, updateUser(payload, state)));
 		case "ADD_USERS":
-			return _extends$4({}, state, toMapBy$1("id", payload));
-		case "UPDATE_USER":
-			return _extends$4({}, state, defineProperty$1({}, payload.id, payload));
+			{
+				var updatedUsers = payload.map(function (user) {
+					return updateUser(user, state);
+				});
+				return _extends$4({}, state, toMapBy$1("id", updatedUsers));
+			}
 		default:
 			return state;
 	}
@@ -106176,7 +106227,6 @@ var WebviewApi = function () {
 
 			var request = _this.pendingRequests.get(id);
 			if (request) {
-				console.debug("codestream:response", { id: id, payload: payload, error: error });
 				if (payload) request.resolve(payload);else {
 					request.reject(error || "No error provided by host process in response to " + request.action);
 				}
@@ -106193,7 +106243,6 @@ var WebviewApi = function () {
 			var id = uuid();
 			return new Promise(function (resolve, reject) {
 				_this2.pendingRequests.set(id, { resolve: resolve, reject: reject, action: message.action });
-				console.debug("codestream:request", _extends$4({ id: id }, message));
 				_this2.host.postMessage({ type: "codestream:request", body: _extends$4({ id: id }, message) }, "*");
 			});
 		}
