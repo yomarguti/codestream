@@ -104763,7 +104763,8 @@ var SimpleStream = function (_Component) {
 				var text = _ref8.text,
 				    quote = _ref8.quote,
 				    mentionedUserIds = _ref8.mentionedUserIds,
-				    autoMentions = _ref8.autoMentions;
+				    autoMentions = _ref8.autoMentions,
+				    isFromGitRepo = _ref8.isFromGitRepo;
 
 				var codeBlocks = [];
 				var activePanel = _this.state.activePanel;
@@ -104797,13 +104798,23 @@ var SimpleStream = function (_Component) {
 					codeBlocks.push(codeBlock);
 				}
 
-				// FIXME: can't and shouldn't do this here
-				// const editor = atom.workspace.getActiveTextEditor();
-				// const editorText = editor ? editor.getText() : undefined;
+				var submit = function submit() {
+					return createPost$$1(postStreamId, threadId, text, codeBlocks, mentionedUserIds, {
+						autoMentions: autoMentions
+					});
+				};
 
-				createPost$$1(postStreamId, threadId, text, codeBlocks, mentionedUserIds, {
-					autoMentions: autoMentions
-				});
+				if (!isFromGitRepo) {
+					confirmPopup({
+						title: "Missing Git Info",
+						message: "This repo doesn’t appear to be managed by Git. When your teammates view this post, we won’t be able to connect the code block to the appropriate file in their IDE. Learn more.",
+						centered: true,
+						buttons: [{
+							label: "Post Anyway",
+							action: submit
+						}, { label: "Cancel" }]
+					});
+				} else submit();
 			}
 		});
 

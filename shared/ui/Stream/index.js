@@ -1254,7 +1254,7 @@ export class SimpleStream extends Component {
 	};
 
 	// create a new post
-	submitPost = ({ text, quote, mentionedUserIds, autoMentions }) => {
+	submitPost = ({ text, quote, mentionedUserIds, autoMentions, isFromGitRepo }) => {
 		const codeBlocks = [];
 		const { activePanel } = this.state;
 		const { postStreamId, fileStreamId, createPost, currentFile, repoId } = this.props;
@@ -1281,13 +1281,26 @@ export class SimpleStream extends Component {
 			codeBlocks.push(codeBlock);
 		}
 
-		// FIXME: can't and shouldn't do this here
-		// const editor = atom.workspace.getActiveTextEditor();
-		// const editorText = editor ? editor.getText() : undefined;
+		const submit = () =>
+			createPost(postStreamId, threadId, text, codeBlocks, mentionedUserIds, {
+				autoMentions
+			});
 
-		createPost(postStreamId, threadId, text, codeBlocks, mentionedUserIds, {
-			autoMentions
-		});
+		if (!isFromGitRepo) {
+			confirmPopup({
+				title: "Missing Git Info",
+				message:
+					"This repo doesn’t appear to be managed by Git. When your teammates view this post, we won’t be able to connect the code block to the appropriate file in their IDE. Learn more.",
+				centered: true,
+				buttons: [
+					{
+						label: "Post Anyway",
+						action: submit
+					},
+					{ label: "Cancel" }
+				]
+			});
+		} else submit();
 	};
 }
 
