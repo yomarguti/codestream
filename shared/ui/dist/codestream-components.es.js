@@ -105826,7 +105826,7 @@ var initialState$6 = {};
 
 var updateUser = function updateUser(payload, users) {
 	var user = users[payload.id] || {};
-	return _extends$4({}, users, payload);
+	return _extends$4({}, user, payload);
 };
 
 var users = (function () {

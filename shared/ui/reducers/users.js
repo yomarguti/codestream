@@ -4,7 +4,7 @@ const initialState = {};
 
 const updateUser = (payload, users) => {
 	const user = users[payload.id] || {};
-	return { ...users, ...payload };
+	return { ...user, ...payload };
 };
 
 export default (state = initialState, { type, payload }) => {
