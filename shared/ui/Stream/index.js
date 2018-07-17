@@ -1254,7 +1254,7 @@ export class SimpleStream extends Component {
 	};
 
 	// create a new post
-	submitPost = ({ text, quote, mentionedUserIds, autoMentions, isFromGitRepo }) => {
+	submitPost = ({ text, quote, mentionedUserIds, autoMentions }) => {
 		const codeBlocks = [];
 		const { activePanel } = this.state;
 		const { postStreamId, fileStreamId, createPost, currentFile, repoId } = this.props;
@@ -1286,13 +1286,32 @@ export class SimpleStream extends Component {
 				autoMentions
 			});
 
-		if (!isFromGitRepo) {
+		if (quote.gitError) {
+			let title;
+			let message;
+			switch (quote.gitError) {
+				case "noRepository": {
+					title = "Missing Git Info";
+					message =
+						"This repo doesn’t appear to be managed by Git. When your teammates view this post, we won’t be able to connect the code block to the appropriate file in their IDE.";
+					break;
+				}
+				case "noRemote": {
+					title = "No remote URL";
+					message = "This repo doesn’t have a remote URL configured.";
+					break;
+				}
+				case "noGit":
+					title = "Git not in path";
+					message =
+						"We aren’t able to find Git information for this repo because Git isn’t in your PATH.";
+					break;
+			}
 			confirmPopup({
-				title: "Missing Git Info",
+				title,
 				message: () => (
 					<span>
-						This repo doesn’t appear to be managed by Git. When your teammates view this post, we
-						won’t be able to connect the code block to the appropriate file in their IDE.{" "}
+						{message + " "}
 						<a
 							onClick={e => {
 								e.preventDefault();

@@ -104773,8 +104773,7 @@ var SimpleStream = function (_Component) {
 				var text = _ref8.text,
 				    quote = _ref8.quote,
 				    mentionedUserIds = _ref8.mentionedUserIds,
-				    autoMentions = _ref8.autoMentions,
-				    isFromGitRepo = _ref8.isFromGitRepo;
+				    autoMentions = _ref8.autoMentions;
 
 				var codeBlocks = [];
 				var activePanel = _this.state.activePanel;
@@ -104814,15 +104813,34 @@ var SimpleStream = function (_Component) {
 					});
 				};
 
-				if (!isFromGitRepo) {
+				if (quote.gitError) {
+					var title = void 0;
+					var _message = void 0;
+					switch (quote.gitError) {
+						case "noRepository":
+							{
+								title = "Missing Git Info";
+								_message = "This repo doesn’t appear to be managed by Git. When your teammates view this post, we won’t be able to connect the code block to the appropriate file in their IDE.";
+								break;
+							}
+						case "noRemote":
+							{
+								title = "No remote URL";
+								_message = "This repo doesn’t have a remote URL configured.";
+								break;
+							}
+						case "noGit":
+							title = "Git not in path";
+							_message = "We aren’t able to find Git information for this repo because Git isn’t in your PATH.";
+							break;
+					}
 					confirmPopup({
-						title: "Missing Git Info",
+						title: title,
 						message: function message() {
 							return react.createElement(
 								"span",
 								null,
-								"This repo doesn\u2019t appear to be managed by Git. When your teammates view this post, we won\u2019t be able to connect the code block to the appropriate file in their IDE.",
-								" ",
+								_message + " ",
 								react.createElement(
 									"a",
 									{
