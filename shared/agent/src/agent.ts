@@ -82,6 +82,9 @@ export class CodeStreamAgent implements Disposable, LSPLogger {
 		// If there is only 1 team, use it regardless of config
 		if (loginResponse.teams.length === 1) {
 			options.teamId = loginResponse.teams[0].id;
+		} else {
+			// Sort the teams from oldest to newest
+			loginResponse.teams.sort((a, b) => a.createdAt - b.createdAt);
 		}
 
 		if (options.teamId == null) {
