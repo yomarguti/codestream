@@ -7,6 +7,7 @@ import {
 	EventEmitter,
 	Uri
 } from "vscode";
+import { WorkspaceState } from "../common";
 import { configuration } from "../configuration";
 import { Container } from "../container";
 import { Logger } from "../logger";
@@ -361,14 +362,17 @@ export class CodeStreamSession extends Disposable {
 			const e = { getStatus: () => this._status };
 			this._onDidChangeStatus.fire(e);
 
+			if (!teamId) {
+				// If there is a configuration settings for a team, use that above others
+				teamId = Container.config.team
+					? undefined
+					: Container.context.workspaceState.get(WorkspaceState.TeamId);
+			}
+
 			const result = await Container.agent.login(email, password, teamId, Container.config.team);
 			if (teamId !== result.state.teamId) {
 				teamId = result.state.teamId;
-				// await configuration.update(
-				// 	configuration.name("teamId").value,
-				// 	teamId,
-				// 	ConfigurationTarget.Workspace
-				// );
+				await Container.context.workspaceState.update(WorkspaceState.TeamId, teamId);
 			}
 			const loginResponse = result.loginResponse;
 
