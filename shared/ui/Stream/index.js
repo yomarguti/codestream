@@ -930,7 +930,13 @@ export class SimpleStream extends Component {
 	}
 
 	toggleMute = () => {
-		const { postStreamId } = this.props;
+		const { postStreamId, postStreamType } = this.props;
+
+		if (postStreamType === "direct") {
+			const text = "You cannot mute direct message streams. Close them on the Channels list page.";
+			return this.submitSystemPost(text);
+		}
+
 		const isMuted = this.props.mutedStreams[postStreamId];
 		this.props.setUserPreference(["mutedStreams", postStreamId], !isMuted);
 		const text = isMuted ? "This stream has been unmuted." : "This stream has been muted.";
