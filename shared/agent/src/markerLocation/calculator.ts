@@ -171,8 +171,12 @@ class Calculation {
 		for (const id in locations) {
 			const location = locations[id];
 			calculatedLocations.set(location.id, new CalculatedLocation(location, calculatedLines));
-			linesOfInterest.add(location.lineStart);
-			linesOfInterest.add(location.lineEnd);
+			if (location.lineStart !== DELETED) {
+				linesOfInterest.add(location.lineStart);
+			}
+			if (location.lineEnd !== DELETED) {
+				linesOfInterest.add(location.lineEnd);
+			}
 		}
 
 		const lines = Array.from(linesOfInterest.values()).sort(sortNumber);
@@ -238,15 +242,19 @@ class Calculation {
 
 	private assignNewLines() {
 		for (const location of this._calculatedLocations.values()) {
-			const startLine = this.getCalculatedLine(location.lineStartOld);
-			location.lineStartNew = startLine.newLine;
-			location.lineStartOldContent = startLine.delContent;
-			location.lineStartNewContent = startLine.addContent;
+			if (location.lineStartOld !== DELETED) {
+				const startLine = this.getCalculatedLine(location.lineStartOld);
+				location.lineStartNew = startLine.newLine;
+				location.lineStartOldContent = startLine.delContent;
+				location.lineStartNewContent = startLine.addContent;
+			}
 
-			const endLine = this.getCalculatedLine(location.lineEndOld);
-			location.lineEndNew = endLine.newLine;
-			location.lineEndOldContent = endLine.delContent;
-			location.lineEndNewContent = endLine.addContent;
+			if (location.lineEndOld !== DELETED) {
+				const endLine = this.getCalculatedLine(location.lineEndOld);
+				location.lineEndNew = endLine.newLine;
+				location.lineEndOldContent = endLine.delContent;
+				location.lineEndNewContent = endLine.addContent;
+			}
 		}
 	}
 
