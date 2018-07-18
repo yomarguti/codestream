@@ -25,7 +25,6 @@ import { encryptionKey } from "./constants";
 import { Container } from "./container";
 import { Logger } from "./logger";
 import { Command, createCommandDecorator, Crypto, Dates, Iterables } from "./system";
-import { PostNode } from "./views/postNode";
 
 const commandRegistry: Command[] = [];
 const command = createCommandDecorator(commandRegistry);
@@ -129,10 +128,7 @@ export class Commands extends Disposable {
 	}
 
 	@command("comparePostFileRevisionWithWorking", { showErrorMessage: "Unable to open post" })
-	async comparePostFileRevisionWithWorking(post?: Post | PostNode) {
-		if (post instanceof PostNode) {
-			post = post.post;
-		}
+	async comparePostFileRevisionWithWorking(post?: Post) {
 		if (post == null) return;
 
 		const block = await post.codeBlock();
@@ -153,10 +149,7 @@ export class Commands extends Disposable {
 	}
 
 	@command("openPostWorkingFile", { showErrorMessage: "Unable to open post" })
-	async openPostWorkingFile(post?: Post | PostNode) {
-		if (post instanceof PostNode) {
-			post = post.post;
-		}
+	async openPostWorkingFile(post?: Post) {
 		if (post == null) return;
 
 		const block = await post.codeBlock();
@@ -171,10 +164,7 @@ export class Commands extends Disposable {
 	}
 
 	@command("openPostFileRevision", { showErrorMessage: "Unable to open post" })
-	async openPostFileRevision(post?: Post | PostNode) {
-		if (post instanceof PostNode) {
-			post = post.post;
-		}
+	async openPostFileRevision(post?: Post) {
 		if (post == null) return;
 
 		const block = await post.codeBlock();

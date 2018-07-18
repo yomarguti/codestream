@@ -43,46 +43,10 @@
                     "description": "Specifies whether to automatically sign in to CodeStream",
                     "scope": "window"
                 },
-                "codestream.traceLevel": {
-                    "type": "string",
-                    "default": "debug",
-                    "enum": [
-                        "silent",
-                        "errors",
-                        "verbose",
-                        "debug"
-                    ],
-                    "description": "Specifies how much (if any) output will be sent to the CodeStream output channel",
-                    "scope": "window"
-                },
-                "codestream.serverUrl": {
-                    "type": "string",
-                    "default": "https://api.codestream.com",
-                    "description": "Specifies the url to use to connect to the CodeStream service",
-                    "scope": "window"
-                },
                 "codestream.email": {
                     "type": "string",
                     "default": null,
                     "description": "Specifies the email address to use to connect to the CodeStream service",
-                    "scope": "window"
-                },
-                "codestream.password": {
-                    "type": "string",
-                    "default": null,
-                    "description": "Specifies the password to use to connect to the CodeStream service",
-                    "scope": "window"
-                },
-                "codestream.team": {
-                    "type": "string",
-                    "default": null,
-                    "description": "Specifies the optional team to use to connect to the CodeStream service",
-                    "scope": "window"
-                },
-                "codestream.explorers.enabled": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Specifies whether to show the `CodeStream` explorers",
                     "scope": "window"
                 },
                 "codestream.notifications": {
@@ -96,77 +60,34 @@
                     "description": "Specifies when to show notifications for incoming messages",
                     "scope": "window"
                 },
-                "codestream.bot.enabled": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Specifies whether to enable the CodeStream demo bot",
-                    "scope": "window"
-                },
-                "codestream.bot.email": {
+                "codestream.password": {
                     "type": "string",
                     "default": null,
-                    "description": "Specifies the demo bot's email address to use to connect to the CodeStream service",
+                    "description": "Specifies the password to use to connect to the CodeStream service",
                     "scope": "window"
                 },
-                "codestream.bot.password": {
+                "codestream.serverUrl": {
+                    "type": "string",
+                    "default": "https://api.codestream.com",
+                    "description": "Specifies the url to use to connect to the CodeStream service",
+                    "scope": "window"
+                },
+                "codestream.team": {
                     "type": "string",
                     "default": null,
-                    "description": "Specifies the demo bot's password to use to connect to the CodeStream service",
+                    "description": "Specifies an optional team to use to connect to the CodeStream service",
                     "scope": "window"
                 },
-                "codestream.bot.triggers": {
-                    "type": "array",
-                    "default": [],
-                    "items": {
-                        "type": "object",
-                        "required": [
-                            "type",
-                            "response"
-                        ],
-                        "properties": {
-                            "type": {
-                                "default": "immediate",
-                                "enum": [
-                                    "immediate",
-                                    "delayed",
-                                    "hotkey"
-                                ],
-                                "description": "Specifies the demo bot's trigger type"
-                            },
-                            "pattern": {
-                                "type": "string",
-                                "description": "Specifies the demo bot's trigger message regular expression pattern"
-                            },
-                            "response": {
-                                "type": "object",
-                                "required": [
-                                    "message"
-                                ],
-                                "properties": {
-                                    "message": {
-                                        "type": "string",
-                                        "description": "Specifies the demo bot's response message"
-                                    },
-                                    "location": {
-                                        "type": "string",
-                                        "default": "channel",
-                                        "enum": [
-                                            "channel",
-                                            "thread"
-                                        ],
-                                        "description": "Specifies where the demo bot's response should be posted"
-                                    },
-                                    "codeBlock": {
-                                        "type": "string",
-                                        "description": "Specifies the demo bot's optional response code block e.g. \"start,end:filename\""
-                                    }
-                                },
-                                "description": "Specifies the demo bot's response"
-                            }
-                        }
-                    },
-                    "uniqueItems": true,
-                    "description": "Specifies the demo bot's triggers",
+                "codestream.traceLevel": {
+                    "type": "string",
+                    "default": "debug",
+                    "enum": [
+                        "silent",
+                        "errors",
+                        "verbose",
+                        "debug"
+                    ],
+                    "description": "Specifies how much (if any) output will be sent to the CodeStream output channel",
                     "scope": "window"
                 }
             }
@@ -247,93 +168,6 @@
                 "category": "CodeStream"
             },
             {
-                "command": "codestream.channels.hideStream",
-                "title": "Close",
-                "category": "CodeStream",
-                "icon": {
-                    "dark": "assets/images/dark/close-small.svg",
-                    "light": "assets/images/light/close-small.svg"
-                }
-            },
-            {
-                "command": "codestream.people.hideStream",
-                "title": "Close",
-                "category": "CodeStream",
-                "icon": {
-                    "dark": "assets/images/dark/close-small.svg",
-                    "light": "assets/images/light/close-small.svg"
-                }
-            },
-            {
-                "command": "codestream.repositories.hideStream",
-                "title": "Close",
-                "category": "CodeStream",
-                "icon": {
-                    "dark": "assets/images/dark/close-small.svg",
-                    "light": "assets/images/light/close-small.svg"
-                }
-            },
-            {
-                "command": "codestream.liveshare.hideStream",
-                "title": "Close",
-                "category": "CodeStream",
-                "icon": {
-                    "dark": "assets/images/dark/close-small.svg",
-                    "light": "assets/images/light/close-small.svg"
-                }
-            },
-            {
-                "command": "codestream.channels.refresh",
-                "title": "Refresh",
-                "category": "CodeStream",
-                "icon": {
-                    "dark": "assets/images/dark/refresh.svg",
-                    "light": "assets/images/light/refresh.svg"
-                }
-            },
-            {
-                "command": "codestream.people.refresh",
-                "title": "Refresh",
-                "category": "CodeStream",
-                "icon": {
-                    "dark": "assets/images/dark/refresh.svg",
-                    "light": "assets/images/light/refresh.svg"
-                }
-            },
-            {
-                "command": "codestream.repositories.refresh",
-                "title": "Refresh",
-                "category": "CodeStream",
-                "icon": {
-                    "dark": "assets/images/dark/refresh.svg",
-                    "light": "assets/images/light/refresh.svg"
-                }
-            },
-            {
-                "command": "codestream.liveshare.refresh",
-                "title": "Refresh",
-                "category": "CodeStream",
-                "icon": {
-                    "dark": "assets/images/dark/refresh.svg",
-                    "light": "assets/images/light/refresh.svg"
-                }
-            },
-            {
-                "command": "codestream.channels.refreshNode",
-                "title": "Refresh",
-                "category": "CodeStream"
-            },
-            {
-                "command": "codestream.people.refreshNode",
-                "title": "Refresh",
-                "category": "CodeStream"
-            },
-            {
-                "command": "codestream.repositories.refreshNode",
-                "title": "Refresh",
-                "category": "CodeStream"
-            },
-            {
                 "command": "codestream.liveshare.refreshNode",
                 "title": "Refresh",
                 "category": "CodeStream"
@@ -341,11 +175,6 @@
             {
                 "command": "codestream.runServiceAction",
                 "title": "Run Service Action",
-                "category": "CodeStream"
-            },
-            {
-                "command": "codestream.bot.trigger",
-                "title": "Trigger Pending Bot Response",
                 "category": "CodeStream"
             }
         ],
@@ -408,60 +237,8 @@
                     "when": "false"
                 },
                 {
-                    "command": "codestream.channels.hideStream",
-                    "when": "false"
-                },
-                {
-                    "command": "codestream.people.hideStream",
-                    "when": "false"
-                },
-                {
-                    "command": "codestream.repositories.hideStream",
-                    "when": "false"
-                },
-                {
-                    "command": "codestream.liveshare.hideStream",
-                    "when": "false"
-                },
-                {
-                    "command": "codestream.channels.refresh",
-                    "when": "false"
-                },
-                {
-                    "command": "codestream.people.refresh",
-                    "when": "false"
-                },
-                {
-                    "command": "codestream.repositories.refresh",
-                    "when": "false"
-                },
-                {
-                    "command": "codestream.liveshare.refresh",
-                    "when": "false"
-                },
-                {
-                    "command": "codestream.channels.refreshNode",
-                    "when": "false"
-                },
-                {
-                    "command": "codestream.people.refreshNode",
-                    "when": "false"
-                },
-                {
-                    "command": "codestream.repositories.refreshNode",
-                    "when": "false"
-                },
-                {
-                    "command": "codestream.liveshare.refreshNode",
-                    "when": "false"
-                },
-                {
                     "command": "codestream.runServiceAction",
                     "when": "false"
-                },
-                {
-                    "command": "codestream.bot.trigger",
-                    "when": "codestream:status == signedIn && config.codestream.bot.enabled"
                 }
             ],
             "editor/context": [
@@ -469,120 +246,6 @@
                     "command": "codestream.postCode",
                     "when": "editorTextFocus && editorHasSelection && codestream:status == signedIn",
                     "group": "1_codestream@1"
-                }
-            ],
-            "view/title": [
-                {
-                    "command": "codestream.channels.refresh",
-                    "when": "view == codestream.channels",
-                    "group": "navigation@99"
-                },
-                {
-                    "command": "codestream.addChannel",
-                    "when": "view == codestream.channels",
-                    "group": "navigation@1"
-                },
-                {
-                    "command": "codestream.people.refresh",
-                    "when": "view == codestream.people",
-                    "group": "navigation@99"
-                },
-                {
-                    "command": "codestream.repositories.refresh",
-                    "when": "view == codestream.repositories",
-                    "group": "navigation@99"
-                },
-                {
-                    "command": "codestream.liveshare.refresh",
-                    "when": "view == codestream.liveshare",
-                    "group": "navigation@99"
-                }
-            ],
-            "view/item/context": [
-                {
-                    "command": "codestream.channels.hideStream",
-                    "when": "view == codestream.channels && viewItem =~ /codestream:(channel|directMessage|fileStream)\\b/",
-                    "group": "inline@1"
-                },
-                {
-                    "command": "codestream.people.hideStream",
-                    "when": "view == codestream.people && viewItem =~ /codestream:(channel|directMessage|fileStream)\\b/",
-                    "group": "inline@1"
-                },
-                {
-                    "command": "codestream.repositories.hideStream",
-                    "when": "view == codestream.repositories && viewItem =~ /codestream:(channel|directMessage|fileStream)\\b/",
-                    "group": "inline@1"
-                },
-                {
-                    "command": "codestream.liveshare.hideStream",
-                    "when": "view == codestream.liveshare && viewItem =~ /codestream:(channel|directMessage|fileStream)\\b/",
-                    "group": "inline@1"
-                },
-                {
-                    "command": "codestream.channels.refreshNode",
-                    "when": "view == codestream.channels",
-                    "group": "9_codestream@1"
-                },
-                {
-                    "command": "codestream.people.refreshNode",
-                    "when": "view == codestream.people",
-                    "group": "9_codestream@1"
-                },
-                {
-                    "command": "codestream.repositories.refreshNode",
-                    "when": "view == codestream.repositories",
-                    "group": "9_codestream@1"
-                },
-                {
-                    "command": "codestream.liveshare.refreshNode",
-                    "when": "view == codestream.liveshare",
-                    "group": "9_codestream@1"
-                },
-                {
-                    "command": "codestream.vsls.invite",
-                    "when": "codestream:liveShareInstalled && view == codestream.people && viewItem =~ /codestream:user\\b(?!:)/",
-                    "group": "2_codestream@1"
-                }
-            ]
-        },
-        "keybindings": [
-            {
-                "command": "codestream.bot.trigger",
-                "key": "alt+z",
-                "when": "codestream:status == signedIn && config.codestream.bot.enabled"
-            }
-        ],
-        "views": {
-            "codestream": [
-                {
-                    "id": "codestream.channels",
-                    "name": "Channels",
-                    "when": "codestream:status == signedIn && config.codestream.explorers.enabled"
-                },
-                {
-                    "id": "codestream.people",
-                    "name": "People",
-                    "when": "codestream:status == signedIn && config.codestream.explorers.enabled"
-                },
-                {
-                    "id": "codestream.repositories",
-                    "name": "Repositories",
-                    "when": "codestream:status == signedIn && config.codestream.explorers.enabled && false"
-                },
-                {
-                    "id": "codestream.liveshare",
-                    "name": "Live Share Sessions",
-                    "when": "codestream:status == signedIn && config.codestream.explorers.enabled"
-                }
-            ]
-        },
-        "viewsContainers": {
-            "activitybar": [
-                {
-                    "id": "codestream",
-                    "title": "CodeStream",
-                    "icon": "assets/images/codestream.svg"
                 }
             ]
         }

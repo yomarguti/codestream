@@ -1,17 +1,5 @@
 "use strict";
 
-export interface BotResponse {
-	message: string;
-	location?: "channel" | "thread";
-	codeBlock?: string;
-}
-
-export interface BotTrigger {
-	type: "immediate" | "delayed" | "hotkey";
-	pattern?: string;
-	response: BotResponse;
-}
-
 export enum Notifications {
 	All = "all",
 	Mentions = "mentions",
@@ -27,20 +15,7 @@ export enum TraceLevel {
 
 export interface Config {
 	autoSignIn: boolean;
-
-	bot: {
-		email: string;
-		enabled: boolean;
-		password: string;
-		triggers: BotTrigger[];
-	};
-
 	email: string;
-
-	explorers: {
-		enabled: boolean;
-	};
-
 	notifications: Notifications;
 	password: string;
 	serverUrl: string;

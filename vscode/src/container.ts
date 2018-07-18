@@ -1,8 +1,7 @@
 "use strict";
-import { Disposable, ExtensionContext } from "vscode";
+import { ExtensionContext } from "vscode";
 import { CodeStreamAgentClient, CodeStreamAgentOptions } from "./agentClient";
 import { CodeStreamSession } from "./api/session";
-import { CodeStreamBot } from "./codestreamBot";
 import { Commands } from "./commands";
 import { Config, configuration } from "./configuration";
 import { LinkActionsController } from "./controllers/linkActionsController";
@@ -14,12 +13,6 @@ import { GitService, IGitService } from "./git/gitService";
 import { CodeStreamCodeActionProvider } from "./providers/codeActionProvider";
 import { MarkerDecorationProvider } from "./providers/markerDecorationProvider";
 // import { CodeStreamCodeLensProvider } from './providers/codeLensProvider';
-import {
-	ChannelsExplorer,
-	LiveShareExplorer,
-	PeopleExplorer,
-	RepositoriesExplorer
-} from "./views/explorer";
 // import { UnreadDecorationProvider } from './providers/decorationProvider';
 
 export class Container {
@@ -48,36 +41,11 @@ export class Container {
 		// context.subscriptions.push(this._unreadDecorator = new UnreadDecorationProvider());
 
 		context.subscriptions.push((this._streamView = new StreamViewController(this._session)));
-
-		if (config.explorers.enabled) {
-			context.subscriptions.push((this._channelsExplorer = new ChannelsExplorer()));
-			context.subscriptions.push((this._liveShareExplorer = new LiveShareExplorer()));
-			context.subscriptions.push((this._peopleExplorer = new PeopleExplorer()));
-			context.subscriptions.push((this._repositoriesExplorer = new RepositoriesExplorer()));
-		} else {
-			let disposable: Disposable;
-			disposable = configuration.onDidChange(e => {
-				if (configuration.changed(e, configuration.name("explorers")("enabled").value)) {
-					disposable.dispose();
-					context.subscriptions.push((this._channelsExplorer = new ChannelsExplorer()));
-					context.subscriptions.push((this._liveShareExplorer = new LiveShareExplorer()));
-					context.subscriptions.push((this._peopleExplorer = new PeopleExplorer()));
-					context.subscriptions.push((this._repositoriesExplorer = new RepositoriesExplorer()));
-				}
-			});
-		}
-
-		context.subscriptions.push((this._bot = new CodeStreamBot()));
 	}
 
 	private static _agent: CodeStreamAgentClient;
 	static get agent() {
 		return this._agent;
-	}
-
-	private static _bot: CodeStreamBot;
-	static get bot() {
-		return this._bot;
 	}
 
 	private static _codeActions: CodeStreamCodeActionProvider;
@@ -106,26 +74,6 @@ export class Container {
 	private static _context: ExtensionContext;
 	static get context() {
 		return this._context;
-	}
-
-	private static _channelsExplorer: ChannelsExplorer;
-	static get channelsExplorer() {
-		return this._channelsExplorer;
-	}
-
-	private static _liveShareExplorer: LiveShareExplorer;
-	static get liveShareExplorer() {
-		return this._liveShareExplorer;
-	}
-
-	private static _peopleExplorer: PeopleExplorer;
-	static get peopleExplorer() {
-		return this._peopleExplorer;
-	}
-
-	private static _repositoriesExplorer: RepositoriesExplorer;
-	static get repositoriesExplorer() {
-		return this._repositoriesExplorer;
 	}
 
 	private static _git: IGitService;

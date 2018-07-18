@@ -14,7 +14,6 @@ import { Container } from "../container";
 import { RemoteGitService, RemoteRepository } from "../git/remoteGitService";
 import { Logger } from "../logger";
 import { Command, createCommandDecorator, Iterables } from "../system";
-import { UserNode } from "../views/explorer";
 
 const commandRegistry: Command[] = [];
 const command = createCommandDecorator(commandRegistry);
@@ -157,36 +156,24 @@ export class LiveShareController extends Disposable {
 	}
 
 	@command("vsls.invite")
-	async invite(args: UserNode | InviteCommandArgs) {
+	async invite(args: InviteCommandArgs) {
 		if (!this.isInstalled) throw new Error("Live Share is not installed");
 
-		let streamThread;
 		const users = [];
-		if (args instanceof UserNode) {
-			users.push(args.user);
-			streamThread = {
-				id: undefined,
-				stream: await Container.session.directMessages.getOrCreateByMembers([
-					Container.session.userId,
-					args.user.id
-				])
-			};
+		if (typeof args.userIds === "string") {
+			const user = await Container.session.users.get(args.userIds);
+			if (user !== undefined) {
+				users.push(user);
+			}
 		} else {
-			if (typeof args.userIds === "string") {
-				const user = await Container.session.users.get(args.userIds);
+			for (const id of args.userIds) {
+				const user = await Container.session.users.get(id);
 				if (user !== undefined) {
 					users.push(user);
 				}
-			} else {
-				for (const id of args.userIds) {
-					const user = await Container.session.users.get(id);
-					if (user !== undefined) {
-						users.push(user);
-					}
-				}
 			}
-			streamThread = Container.streamView.activeStreamThread;
 		}
+		const streamThread = Container.streamView.activeStreamThread;
 
 		Logger.log(
 			"LiveShareController.invite: ",
