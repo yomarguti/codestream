@@ -1,14 +1,20 @@
 "use strict";
 
 import { URL } from "url";
-import { CSMarker } from "../api/types";
+import { Range } from "vscode-languageserver";
+import { CSMarkerLocation } from "../api/types";
 import { StreamUtil } from "../git/streamUtil";
 import { MarkerLocationUtil } from "../markerLocation/markerLocationUtil";
 import { MarkerUtil } from "./markerUtil";
 
 export namespace MarkerHandler {
+	export interface MarkerWithRange {
+		id: string;
+		range: Range;
+	}
+
 	export interface HandleMarkersResponse {
-		markers: CSMarker[];
+		markers: MarkerWithRange[];
 	}
 
 	const emptyResponse = {
@@ -31,10 +37,17 @@ export namespace MarkerHandler {
 
 			const markers = await MarkerUtil.getMarkers(streamId);
 			const locations = await MarkerLocationUtil.getCurrentLocations(textDocument.uri);
-			locations;
-			debugger;
+
+			const markersWithRange = [];
+			for (const marker of markers) {
+				markersWithRange.push({
+					id: marker.id,
+					range: locationToRange(locations[marker.id])
+				});
+			}
+
 			return {
-				markers
+				markers: markersWithRange
 			};
 		} catch (err) {
 			console.error(err);
@@ -42,4 +55,17 @@ export namespace MarkerHandler {
 			return emptyResponse;
 		}
 	}
+}
+
+function locationToRange(location: CSMarkerLocation): Range {
+	return {
+		start: {
+			line: location.lineStart - 1,
+			character: location.colStart - 1
+		},
+		end: {
+			line: location.lineEnd - 1,
+			character: location.colEnd - 1
+		}
+	};
 }
