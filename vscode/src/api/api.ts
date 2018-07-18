@@ -35,6 +35,7 @@ import {
 	JoinStreamResponse,
 	LoginRequest,
 	LoginResponse,
+	MeResponse,
 	StreamType,
 	UpdatePresenceRequest,
 	UpdatePresenceResponse,
@@ -242,7 +243,7 @@ export class CodeStreamApi {
 	}
 
 	getMe(token: string) {
-		return this.get("/users/me", token);
+		return this.get<MeResponse>("/users/me", token);
 	}
 
 	private delete<R extends object>(url: string, token?: string): Promise<R> {

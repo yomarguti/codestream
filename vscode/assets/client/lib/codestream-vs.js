@@ -6,7 +6,7 @@ import copy from "codestream-components/translations/en.json";
 import { Provider } from "react-redux";
 import en from "react-intl/locale-data/en";
 import CodeStreamRoot from "./components/VSCodeStreamRoot";
-import rpcMiddleWare from "./rpc-middleware";
+import loggingMiddleWare from "./logging-middleware";
 
 addLocaleData([...en]);
 
@@ -22,7 +22,22 @@ const store = createStore(
 		}
 	},
 	{ api: new WebviewApi() },
-	[rpcMiddleWare]
+	[loggingMiddleWare]
+);
+
+window.addEventListener(
+	"message",
+	event => {
+		console.log("received message from extension host", event.data);
+		const { type, body } = event.data;
+		if (type === "push-data") {
+			return store.dispatch({ type: `ADD_${body.type.toUpperCase()}`, payload: body.payload });
+		}
+		if (type === "ui-data") {
+			return store.dispatch(body);
+		}
+	},
+	false
 );
 
 store.dispatch({ type: "BOOTSTRAP_USERS", payload: data.users });

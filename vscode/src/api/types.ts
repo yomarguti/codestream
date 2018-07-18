@@ -300,3 +300,7 @@ export interface InviteRequest {
 export interface InviteResponse {
 	user: CSUser;
 }
+
+export interface MeResponse {
+	user: CSUser;
+}

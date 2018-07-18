@@ -28,7 +28,7 @@ export class CodeStreamSessionApi {
 
 	async savePreferences(preferences: {}) {
 		await this._api.savePreferences(this.token, preferences);
-		return this._api.getMe(this.token);
+		return (await this._api.getMe(this.token)).user;
 	}
 
 	async addUserToStream(streamId: string, userId: string, teamId?: string) {
