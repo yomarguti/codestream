@@ -1,11 +1,11 @@
 "use strict";
 import {
+	Connection,
 	Disposable,
 	TextDocument,
 	TextDocumentChangeEvent,
 	TextDocuments
 } from "vscode-languageserver";
-import { Container } from "./container";
 import { Disposables } from "./system";
 
 export class DocumentManager implements Disposable {
@@ -27,7 +27,7 @@ export class DocumentManager implements Disposable {
 		return this._documents.get(uri);
 	}
 
-	listen() {
-		this._documents.listen(Container.instance().connection);
+	listen(conn: Connection) {
+		this._documents.listen(conn);
 	}
 }

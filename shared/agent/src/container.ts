@@ -51,6 +51,7 @@ class ServiceContainer {
 		this._git = new GitService(agent);
 
 		this._documents = new DocumentManager();
+		this._documents.listen(this.connection);
 	}
 
 	// private _config: Config;
