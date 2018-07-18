@@ -1263,6 +1263,11 @@ export class SimpleStream extends Component {
 
 		let threadId = activePanel === "thread" ? this.state.threadId : null;
 
+		const submit = () =>
+			createPost(postStreamId, threadId, text, codeBlocks, mentionedUserIds, {
+				autoMentions
+			});
+
 		if (quote) {
 			let codeBlock = {
 				code: quote.quoteText,
@@ -1279,62 +1284,57 @@ export class SimpleStream extends Component {
 			if (fileStreamId) codeBlock.streamId = fileStreamId;
 
 			codeBlocks.push(codeBlock);
-		}
-
-		const submit = () =>
-			createPost(postStreamId, threadId, text, codeBlocks, mentionedUserIds, {
-				autoMentions
-			});
-
-		if (quote.gitError) {
-			let title;
-			let message;
-			switch (quote.gitError) {
-				case "noRepository": {
-					title = "Missing Git Info";
-					message =
-						"This repo doesn’t appear to be managed by Git. When your teammates view this post, we won’t be able to connect the code block to the appropriate file in their IDE.";
-					break;
+			if (quote.gitError) {
+				let title;
+				let message;
+				switch (quote.gitError) {
+					case "noRepository": {
+						title = "Missing Git Info";
+						message =
+							"This repo doesn’t appear to be managed by Git. When your teammates view this post, we won’t be able to connect the code block to the appropriate file in their IDE.";
+						break;
+					}
+					case "noRemote": {
+						title = "No remote URL";
+						message = "This repo doesn’t have a remote URL configured.";
+						break;
+					}
+					case "noGit":
+						title = "Git not in path";
+						message =
+							"We aren’t able to find Git information for this repo because Git isn’t in your PATH.";
+						break;
 				}
-				case "noRemote": {
-					title = "No remote URL";
-					message = "This repo doesn’t have a remote URL configured.";
-					break;
-				}
-				case "noGit":
-					title = "Git not in path";
-					message =
-						"We aren’t able to find Git information for this repo because Git isn’t in your PATH.";
-					break;
+				return confirmPopup({
+					title,
+					message: () => (
+						<span>
+							{message + " "}
+							<a
+								onClick={e => {
+									e.preventDefault();
+									EventEmitter.emit(
+										"interaction:clicked-link",
+										"https://help.codestream.com/hc/en-us/articles/360001530571-Git-Issues"
+									);
+								}}
+							>
+								Learn more
+							</a>
+						</span>
+					),
+					centered: true,
+					buttons: [
+						{
+							label: "Post Anyway",
+							action: submit
+						},
+						{ label: "Cancel" }
+					]
+				});
 			}
-			confirmPopup({
-				title,
-				message: () => (
-					<span>
-						{message + " "}
-						<a
-							onClick={e => {
-								e.preventDefault();
-								EventEmitter.emit(
-									"interaction:clicked-link",
-									"https://help.codestream.com/hc/en-us/articles/360001530571-Git-Issues"
-								);
-							}}
-						>
-							Learn more
-						</a>
-					</span>
-				),
-				centered: true,
-				buttons: [
-					{
-						label: "Post Anyway",
-						action: submit
-					},
-					{ label: "Cancel" }
-				]
-			});
-		} else submit();
+		}
+		submit();
 	};
 }
 

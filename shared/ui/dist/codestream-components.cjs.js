@@ -104789,6 +104789,12 @@ var SimpleStream = function (_Component) {
 
 				var threadId = activePanel === "thread" ? _this.state.threadId : null;
 
+				var submit = function submit() {
+					return createPost$$1(postStreamId, threadId, text, codeBlocks, mentionedUserIds, {
+						autoMentions: autoMentions
+					});
+				};
+
 				if (quote) {
 					var codeBlock = {
 						code: quote.quoteText,
@@ -104805,61 +104811,55 @@ var SimpleStream = function (_Component) {
 					if (fileStreamId) codeBlock.streamId = fileStreamId;
 
 					codeBlocks.push(codeBlock);
-				}
-
-				var submit = function submit() {
-					return createPost$$1(postStreamId, threadId, text, codeBlocks, mentionedUserIds, {
-						autoMentions: autoMentions
-					});
-				};
-
-				if (quote.gitError) {
-					var title = void 0;
-					var _message = void 0;
-					switch (quote.gitError) {
-						case "noRepository":
-							{
-								title = "Missing Git Info";
-								_message = "This repo doesn’t appear to be managed by Git. When your teammates view this post, we won’t be able to connect the code block to the appropriate file in their IDE.";
+					if (quote.gitError) {
+						var title = void 0;
+						var _message = void 0;
+						switch (quote.gitError) {
+							case "noRepository":
+								{
+									title = "Missing Git Info";
+									_message = "This repo doesn’t appear to be managed by Git. When your teammates view this post, we won’t be able to connect the code block to the appropriate file in their IDE.";
+									break;
+								}
+							case "noRemote":
+								{
+									title = "No remote URL";
+									_message = "This repo doesn’t have a remote URL configured.";
+									break;
+								}
+							case "noGit":
+								title = "Git not in path";
+								_message = "We aren’t able to find Git information for this repo because Git isn’t in your PATH.";
 								break;
-							}
-						case "noRemote":
-							{
-								title = "No remote URL";
-								_message = "This repo doesn’t have a remote URL configured.";
-								break;
-							}
-						case "noGit":
-							title = "Git not in path";
-							_message = "We aren’t able to find Git information for this repo because Git isn’t in your PATH.";
-							break;
+						}
+						return confirmPopup({
+							title: title,
+							message: function message() {
+								return react.createElement(
+									"span",
+									null,
+									_message + " ",
+									react.createElement(
+										"a",
+										{
+											onClick: function onClick(e) {
+												e.preventDefault();
+												emitter.emit("interaction:clicked-link", "https://help.codestream.com/hc/en-us/articles/360001530571-Git-Issues");
+											}
+										},
+										"Learn more"
+									)
+								);
+							},
+							centered: true,
+							buttons: [{
+								label: "Post Anyway",
+								action: submit
+							}, { label: "Cancel" }]
+						});
 					}
-					confirmPopup({
-						title: title,
-						message: function message() {
-							return react.createElement(
-								"span",
-								null,
-								_message + " ",
-								react.createElement(
-									"a",
-									{
-										onClick: function onClick(e) {
-											e.preventDefault();
-											emitter.emit("interaction:clicked-link", "https://help.codestream.com/hc/en-us/articles/360001530571-Git-Issues");
-										}
-									},
-									"Learn more"
-								)
-							);
-						},
-						centered: true,
-						buttons: [{
-							label: "Post Anyway",
-							action: submit
-						}, { label: "Cancel" }]
-					});
-				} else submit();
+				}
+				submit();
 			}
 		});
 
