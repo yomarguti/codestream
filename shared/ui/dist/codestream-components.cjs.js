@@ -104799,16 +104799,14 @@ var SimpleStream = function (_Component) {
 					var codeBlock = {
 						code: quote.quoteText,
 						location: quote.quoteRange,
-						preContext: quote.preContext,
-						postContext: quote.postContext,
-						repoId: repoId,
+						// repoId,
 						file: quote.file
 					};
 
 					// if we have a streamId, send it. otherwise the
 					// API server will create one based on the file
 					// and the repoId.
-					if (fileStreamId) codeBlock.streamId = fileStreamId;
+					// if (fileStreamId) codeBlock.streamId = fileStreamId;
 
 					codeBlocks.push(codeBlock);
 					if (quote.gitError) {
