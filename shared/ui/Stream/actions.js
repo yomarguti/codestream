@@ -50,6 +50,7 @@ export const createPost = (streamId, parentPostId, text, codeBlocks, mentions, e
 	try {
 		const post = await api.createPost({
 			id: pendingId,
+			teamId: context.currentTeamId,
 			parentPostId,
 			streamId,
 			text,

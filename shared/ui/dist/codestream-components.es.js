@@ -39463,6 +39463,7 @@ var createPost = function createPost(streamId, parentPostId, text, codeBlocks, m
 							_context.next = 6;
 							return api.createPost({
 								id: pendingId,
+								teamId: context.currentTeamId,
 								parentPostId: parentPostId,
 								streamId: streamId,
 								text: text,
