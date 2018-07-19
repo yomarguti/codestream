@@ -18,11 +18,11 @@
         "node": "*"
     },
     "scripts": {
-        "build": "npm run compile && npm run lint",
+        "build": "npm run lint && webpack --env.developement",
+        "bundle": "npm run lint && webpack --env.production",
         "clean": "git clean -Xdf --exclude=!node_modules",
-        "compile": "tsc -p ./",
         "lint": "tslint --project tsconfig.json --fix",
-        "watch": "tsc -w -p ./"
+        "watch": "webpack --watch --env.development"
     },
     "dependencies": {
         "date-fns": "^1.29.0",
@@ -44,8 +44,13 @@
         "@types/pubnub": "4.0.2",
         "@types/string-similarity": "^1.2.0",
         "@types/tmp": "0.0.33",
+        "copy-webpack-plugin": "4.5.2",
         "prettier": "1.13.7",
-        "tslint": "5.10.0",
-        "typescript": "2.9.2"
+        "ts-loader": "4.4.2",
+        "tslint": "5.11.0",
+        "typescript": "2.9.2",
+        "webpack": "4.16.1",
+        "webpack-cli": "3.1.0",
+        "webpack-node-externals": "1.7.2"
     }
 }
