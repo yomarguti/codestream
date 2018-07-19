@@ -254,19 +254,20 @@
         "*"
     ],
     "scripts": {
-        "agent-build": "pushd \"../codestream-lsp-agent\" && npm run build && popd",
-        "agent-watch": "pushd \"../codestream-lsp-agent\" && npm run watch && popd",
-        "build": "npm run compile && npm run lint",
+        "build": "npm run lint && tsc -m commonjs -p ./",
+        "bundle": "npm run lint && webpack --env.production",
         "clean": "git clean -Xdf --exclude=!node_modules",
-        "compile": "tsc -p ./",
         "lint": "tslint --project tsconfig.json --fix",
-        "prettify": "prettier --config .prettierrc --write \"./src/**/*.ts\" \"./assets/client/**/*.js\" ./package.json ./.prettierrc",
-        "watch": "tsc -w -p ./",
         "pack": "vsce package",
-        "webview-bundle": "pushd \"./assets/client\" && npm install --no-save && npm run vscode-bundle && popd",
-        "webview-build-css": "pushd \"./assets/client\" && npm run vscode-build-css && popd",
+        "prettify": "prettier --config .prettierrc --write \"./src/**/*.ts\" \"./assets/client/**/*.js\" ./package.json ./.prettierrc",
+        "watch": "tsc --watch -m commonjs -p ./",
+        "agent:build": "pushd \"../codestream-lsp-agent\" && npm run build && popd",
+        "agent:bundle": "pushd \"../codestream-lsp-agent\" && npm run bundle && popd",
+        "agent:watch": "pushd \"../codestream-lsp-agent\" && npm run watch && popd",
+        "webview:bundle": "pushd \"./assets/client\" && npm install --no-save && npm run vscode-bundle && popd",
+        "webview:build-css": "pushd \"./assets/client\" && npm run vscode-build-css && popd",
         "postinstall": "node ./node_modules/vscode/bin/install",
-        "vscode:prepublish": "npm run build"
+        "vscode:prepublish": "npm run bundle"
     },
     "dependencies": {
         "date-fns": "1.29.0",
@@ -284,8 +285,12 @@
         "@types/pubnub": "4.0.2",
         "@types/tmp": "0.0.33",
         "prettier": "1.13.7",
-        "tslint": "5.10.0",
+        "ts-loader": "4.4.2",
+        "tslint": "5.11.0",
         "typescript": "2.9.2",
-        "vscode": "1.1.18"
+        "vscode": "1.1.18",
+        "webpack": "4.16.1",
+        "webpack-cli": "3.1.0",
+        "webpack-node-externals": "1.7.2"
     }
 }

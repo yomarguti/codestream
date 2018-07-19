@@ -16,12 +16,6 @@
 		},
 		{
 			"type": "npm",
-			"script": "compile",
-			"group": "build",
-			"problemMatcher": ["$tsc"]
-		},
-		{
-			"type": "npm",
 			"script": "lint",
 			"group": "build",
 			"problemMatcher": ["$tslint5"]
@@ -35,7 +29,7 @@
 		},
 		{
 			"label": "watch",
-			"dependsOn": ["npm: agent-watch", "npm: watch"],
+			"dependsOn": ["npm: agent:watch", "npm: watch"],
 			"group": {
 				"kind": "build",
 				"isDefault": true

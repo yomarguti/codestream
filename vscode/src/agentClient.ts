@@ -48,14 +48,13 @@ export class CodeStreamAgentClient implements Disposable {
 	constructor(context: ExtensionContext, options: CodeStreamAgentOptions) {
 		// If the extension is launched in debug mode then the debug server options are used
 		// Otherwise the run options are used
-		const serverModule = context.asAbsolutePath("../codestream-lsp-agent/out/agent.js");
 		this._serverOptions = {
 			run: {
-				module: serverModule,
+				module: context.asAbsolutePath("agent.js"),
 				transport: TransportKind.ipc
 			},
 			debug: {
-				module: serverModule,
+				module: context.asAbsolutePath("out/agent.js"),
 				transport: TransportKind.ipc,
 				options: {
 					execArgv: ["--nolazy", "--inspect=6009"] // "--inspect-brk=6009"
