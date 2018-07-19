@@ -10,6 +10,7 @@ import {
 	WebviewPanel,
 	WebviewPanelOnDidChangeViewStateEvent,
 	window,
+	WindowState,
 	workspace
 } from "vscode";
 import {
@@ -183,11 +184,14 @@ export class StreamWebviewPanel extends Disposable {
 	}
 
 	private _disposable: Disposable | undefined;
+	private readonly _ipc: WebviewIpc;
 	private _panel: WebviewPanel | undefined;
 	private _streamThread: StreamThread | undefined;
 
 	constructor(public readonly session: CodeStreamSession) {
 		super(() => this.dispose());
+
+		this._ipc = new WebviewIpc();
 	}
 
 	dispose() {
@@ -198,13 +202,32 @@ export class StreamWebviewPanel extends Disposable {
 		this._onDidClose.fire();
 	}
 
-	private _invalidateOnVisible: boolean = false;
+	private _panelState: { active: boolean; visible: boolean } = {
+		active: true,
+		visible: true
+	};
 	private onPanelViewStateChanged(e: WebviewPanelOnDidChangeViewStateEvent) {
-		Logger.log("WebView.ViewStateChanged", e.webviewPanel.visible);
-		// HACK: Because messages aren't sent to the webview when hidden, we need to reset the whole view if we are invalid
-		if (this._invalidateOnVisible && e.webviewPanel.visible) {
-			this._invalidateOnVisible = false;
-			this.setStream(this._streamThread);
+		const previous = this._panelState;
+		this._panelState = { active: e.webviewPanel.active, visible: e.webviewPanel.visible };
+
+		if (this._panelState.visible !== previous.visible) {
+			// HACK: Because messages aren't sent to the webview when hidden, we need to reset the whole view if we are invalid
+			if (this._panelState.visible && this._ipc.paused) {
+				this.setStream(this._streamThread);
+			}
+
+			return;
+		}
+
+		// If we aren't visible, there is no point because we can't post any messages
+		if (!this._panelState.visible) return;
+
+		if (this._panelState.active !== previous.active) {
+			if (this._panelState.active && window.state.focused) {
+				this._ipc.onFocus();
+			} else if (!this._panelState.active) {
+				this._ipc.onBlur();
+			}
 		}
 	}
 
@@ -261,13 +284,14 @@ export class StreamWebviewPanel extends Disposable {
 					}
 					case "fetch-posts": {
 						const { streamId, teamId } = body.params;
-						return this.postMessage({
+						this.postMessage({
 							type: "codestream:response",
 							body: {
 								id: body.id,
 								payload: await this.session.api.getPosts(streamId, teamId)
 							}
 						});
+						break;
 					}
 					case "delete-post": {
 						const post = await this.session.api.getPost(body.params);
@@ -310,31 +334,35 @@ export class StreamWebviewPanel extends Disposable {
 						} else if (type === "direct") {
 							stream = await this.session.api.createDirectStream(memberIds);
 						}
-						return this.postMessage({
+						this.postMessage({
 							type: "codestream:response",
 							body: { id: body.id, payload: stream }
 						});
+						break;
 					}
 					case "save-user-preference": {
 						const response = await this.session.api.savePreferences(body.params);
-						return this.postMessage({
+						this.postMessage({
 							type: "codestream:response",
 							body: { id: body.id, payload: response }
 						});
+						break;
 					}
 					case "invite": {
 						const { email, teamId, fullName } = body.params;
-						return this.postMessage({
+						this.postMessage({
 							type: "codestream:response",
 							body: { id: body.id, payload: await this.session.api.invite(email, teamId, fullName) }
 						});
+						break;
 					}
 					case "join-stream": {
 						const { streamId, teamId } = body.params;
-						return this.postMessage({
+						this.postMessage({
 							type: "codestream:response",
 							body: { id: body.id, payload: await this.session.api.joinStream(streamId, teamId) }
 						});
+						break;
 					}
 					case "update-stream": {
 						const { streamId, update } = body.params;
@@ -342,7 +370,9 @@ export class StreamWebviewPanel extends Disposable {
 						try {
 							responseBody.payload = await this.session.api.updateStream(streamId, update);
 						} catch (error) {
-							if (!error.message.includes("403")) responseBody.error = error.message;
+							if (!error.message.includes("403")) {
+								responseBody.error = error.message;
+							}
 						} finally {
 							this.postMessage({
 								type: "codestream:response",
@@ -441,6 +471,16 @@ export class StreamWebviewPanel extends Disposable {
 		}
 	}
 
+	private onWindowStateChanged(e: WindowState) {
+		if (this._panelState.visible && this._panelState.active) {
+			if (e.focused) {
+				this._ipc.onFocus();
+			} else {
+				this._ipc.onBlur();
+			}
+		}
+	}
+
 	get streamThread() {
 		return this._streamThread;
 	}
@@ -532,11 +572,8 @@ export class StreamWebviewPanel extends Disposable {
 		return doc.getText();
 	}
 
-	private async postMessage(request: CSWebviewMessage) {
-		const success = await this._panel!.webview.postMessage(request);
-		if (!success) {
-			this._invalidateOnVisible = true;
-		}
+	private postMessage(request: CSWebviewMessage) {
+		return this._ipc.postMessage(request);
 	}
 
 	private async setStream(streamThread?: StreamThread): Promise<StreamThread | undefined> {
@@ -554,17 +591,22 @@ export class StreamWebviewPanel extends Disposable {
 				}
 			);
 
+			this._ipc.reset(this._panel);
+
 			this._disposable = Disposable.from(
 				this.session.onDidReceivePosts(this.onPostsReceived, this),
 				this.session.onDidChange(this.onSessionChanged, this),
 				this._panel,
 				this._panel.onDidDispose(this.onPanelDisposed, this),
 				this._panel.onDidChangeViewState(this.onPanelViewStateChanged, this),
-				this._panel.webview.onDidReceiveMessage(this.onPanelWebViewMessageReceived, this)
+				this._panel.webview.onDidReceiveMessage(this.onPanelWebViewMessageReceived, this),
+				window.onDidChangeWindowState(this.onWindowStateChanged, this)
 			);
 
 			this._panel.webview.html = html;
 		} else {
+			this._ipc.reset(this._panel);
+
 			this._panel.webview.html = html;
 			this._panel.reveal(ViewColumn.Three, false);
 		}
@@ -604,5 +646,46 @@ export class StreamWebviewPanel extends Disposable {
 		this._panel.reveal(ViewColumn.Three, false);
 
 		return this._streamThread;
+	}
+}
+
+class WebviewIpc {
+	private _panel: WebviewPanel | undefined;
+
+	constructor() {}
+
+	private _paused: boolean = false;
+	get paused() {
+		return this._paused;
+	}
+
+	reset(panel: WebviewPanel) {
+		this._panel = panel;
+		this._paused = false;
+	}
+
+	onBlur() {
+		this.postMessage({
+			type: "codestream:interaction:blur",
+			body: {}
+		});
+	}
+
+	onFocus() {
+		this.postMessage({
+			type: "codestream:interaction:focus",
+			body: {}
+		});
+	}
+
+	/*private*/ async postMessage(request: CSWebviewMessage) {
+		if (this._panel === undefined) throw new Error("Webview has not been created yet");
+		if (this._paused) return false;
+
+		const success = await this._panel.webview.postMessage(request);
+		if (!success) {
+			this._paused = true;
+		}
+		return success;
 	}
 }
