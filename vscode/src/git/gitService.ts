@@ -54,11 +54,13 @@ export interface IGitService extends Disposable {
 
 	getRepositories(): Promise<GitRepository[]>;
 
+	getRepositoryForFile(file: string): Promise<GitRepository | undefined>;
+
 	resolveRef(uri: Uri, ref: string): Promise<string | undefined>;
 	resolveRef(path: string, ref: string): Promise<string | undefined>;
 	//   resolveRef(uriOrPath: Uri | string, ref: string): Promise<string | undefined> {
 
-	getCurrentCommit(uri: Uri): Promise<string>;
+	getCurrentCommit(uri: Uri): Promise<string | undefined>;
 }
 
 export class GitService extends Disposable implements IGitService {
@@ -274,6 +276,11 @@ export class GitService extends Disposable implements IGitService {
 		return this._repositories;
 	}
 
+	async getRepositoryForFile(path: string) {
+		const repositories = await this.getRepositories();
+		return repositories.find(repo => repo.containsFile(path));
+	}
+
 	async resolveRef(uri: Uri, ref: string): Promise<string | undefined>;
 	async resolveRef(path: string, ref: string): Promise<string | undefined>;
 	async resolveRef(uriOrPath: Uri | string, ref: string): Promise<string | undefined> {
@@ -294,7 +301,7 @@ export class GitService extends Disposable implements IGitService {
 			const data = await git({ cwd: uri.fsPath }, "rev-parse", "HEAD");
 			return data.trim();
 		} catch {
-			return "";
+			return;
 		}
 	}
 }

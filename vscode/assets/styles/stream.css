@@ -1212,12 +1212,8 @@ body {
   width: 100%;
   word-wrap: break-word;
 }
-.codestream .intro label ul {
-  text-align: left;
-  padding: 0;
-}
-.codestream .intro label ul li {
-  margin: 5% 0;
+.codestream .intro label .octicon {
+  vertical-align: middle;
 }
 .codestream .intro .logo {
   color: var(--text-color-subtle-extra);

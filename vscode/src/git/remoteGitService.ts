@@ -92,6 +92,11 @@ export class RemoteGitService extends Disposable implements IGitService {
 		return this._repositories;
 	}
 
+	async getRepositoryForFile(path: string) {
+		const repositories = await this.getRepositories();
+		return repositories.find(repo => repo.containsFile(path));
+	}
+
 	async resolveRef(uri: Uri, ref: string): Promise<string | undefined>;
 	async resolveRef(path: string, ref: string): Promise<string | undefined>;
 	async resolveRef(uriOrPath: Uri | string, ref: string): Promise<string | undefined> {

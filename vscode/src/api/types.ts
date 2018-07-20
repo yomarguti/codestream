@@ -125,9 +125,10 @@ export interface LoginResponse {
 
 export interface CreatePostRequestCodeBlock {
 	code: string;
-	location: [number, number, number, number];
-	streamId?: string;
+	location?: [number, number, number, number];
 	file?: string;
+	remotes?: string[];
+	streamId?: string;
 	repoId?: string;
 }
 

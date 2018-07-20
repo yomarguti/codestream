@@ -55,6 +55,29 @@ export class CodeStreamSessionApi {
 		})).post;
 	}
 
+	async createPostWithCode2(
+		text: string,
+		parentPostId: string | undefined,
+		streamId: string,
+		teamId: string,
+		commitHashWhenPosted: string | undefined,
+		codeBlocks: CreatePostRequestCodeBlock[]
+	) {
+		try {
+			return (await this._api.createPost(this.token, {
+				teamId: teamId || this.teamId,
+				streamId,
+				text,
+				parentPostId,
+				codeBlocks,
+				commitHashWhenPosted
+			})).post;
+		} catch (e) {
+			debugger;
+			return;
+		}
+	}
+
 	async createPostWithCode(
 		text: string,
 		parentPostId: string | undefined,

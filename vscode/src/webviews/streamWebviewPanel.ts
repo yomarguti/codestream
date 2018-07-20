@@ -12,7 +12,15 @@ import {
 	window,
 	workspace
 } from "vscode";
-import { CSCodeBlock, CSPost, CSRepository, CSStream, CSTeam, CSUser } from "../api/api";
+import {
+	CreatePostRequestCodeBlock,
+	CSCodeBlock,
+	CSPost,
+	CSRepository,
+	CSStream,
+	CSTeam,
+	CSUser
+} from "../api/api";
 import {
 	CodeStreamSession,
 	Post,
@@ -136,6 +144,12 @@ interface CSWebviewRequest {
 	params: any;
 }
 
+enum GitError {
+	NoRepository = "noRepository",
+	NoGit = "noGit",
+	NoRemote = "noRemote"
+}
+
 // TODO: Make this work
 class BufferChangeTracker {
 	private _listeners: Map<string, Function[]>;
@@ -210,37 +224,38 @@ export class StreamWebviewPanel extends Disposable {
 						if (codeBlocks === undefined || codeBlocks.length === 0) {
 							post = await this.session.api.createPost(text, parentPostId, streamId, teamId);
 						} else {
-							const block = codeBlocks[0];
-							const gitRepos = await Container.git.getRepositories();
-							const gitRepo = gitRepos.find(r => r.containsFile(block.file));
-							const commitHash = (await gitRepo!.getCurrentCommit()) || "";
+							const block = codeBlocks[0] as CreatePostRequestCodeBlock;
+							let commitHash;
 
-							// TODO: use repo remotes instead of repoId
-							const fileStream = {
-								file: block.file,
-								repoId: ""
-							};
+							const repo = block.file && (await Container.git.getRepositoryForFile(block.file));
+							if (repo) {
+								const remote = await repo.getRemote();
+								if (remote) block.remotes = [remote.toString()];
+								else block.remotes = [];
+								commitHash = await repo.getCurrentCommit();
+							}
 
-							post = this.session.api.createPostWithCode(
+							// TODO: pass the file streamId (as block.streamId) if we know it
+
+							post = await this.session.api.createPostWithCode2(
 								text,
 								parentPostId,
-								block.code,
-								block.location,
-								commitHash,
-								fileStream,
 								streamId,
-								teamId
+								teamId,
+								commitHash,
+								codeBlocks
 							);
 						}
 
-						if (post === undefined) return;
+						const responseBody: { [key: string]: any } = {
+							id: body.id
+						};
+						if (post === undefined) responseBody.error = "Failed to create post";
+						else responseBody.payload = post;
 
 						this.postMessage({
 							type: "codestream:response",
-							body: {
-								id: body.id,
-								payload: post
-							}
+							body: responseBody
 						});
 						break;
 					}
@@ -453,7 +468,6 @@ export class StreamWebviewPanel extends Disposable {
 	}
 
 	postCode(
-		repoId: string,
 		relativePath: string,
 		code: string,
 		range: Range,
@@ -461,13 +475,24 @@ export class StreamWebviewPanel extends Disposable {
 		text?: string,
 		mentions: string = ""
 	) {
+		return this.codeSelected(relativePath, code, range, mentions);
+	}
+
+	codeSelected(
+		relativePath: string,
+		code: string,
+		range: Range,
+		mentions: string = "",
+		gitError?: GitError
+	) {
 		return this.postMessage({
 			type: "codestream:interaction:code-highlighted",
 			body: {
 				quoteRange: [range.start.line, range.start.character, range.end.line, range.end.character],
 				quoteText: code,
 				authors: mentions.split(" "),
-				file: relativePath
+				file: relativePath,
+				gitError: gitError && gitError.valueOf()
 			}
 		});
 	}

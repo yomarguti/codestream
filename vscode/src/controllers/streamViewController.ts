@@ -69,7 +69,7 @@ export class StreamViewController implements Disposable {
 		mentions: string = ""
 	) {
 		await this.show(streamThread);
-		return this._panel!.postCode(repo.id, relativePath, code, range, commitHash, text, mentions);
+		return this._panel!.postCode(relativePath, code, range, commitHash, text, mentions);
 	}
 
 	async show(streamThread?: StreamThread) {
