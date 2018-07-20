@@ -105,9 +105,9 @@ export interface GitApiRepository {
 	// readonly inputBox: InputBox;
 }
 
-export function getRepositories() {
+export async function getRepositories() {
 	try {
-		return gitApi().getRepositories();
+		return (await gitApi()).getRepositories();
 	} catch (ex) {
 		Logger.error(ex);
 		return Promise.resolve([]);
@@ -120,11 +120,18 @@ interface GitApi {
 }
 
 let _gitApi: GitApi | undefined;
-function gitApi() {
+async function gitApi() {
 	if (_gitApi === undefined) {
-		const git = extensions.getExtension("vscode.git");
-		if (git === undefined) throw new Error("Git extension not found!");
-		_gitApi = git.exports;
+		try {
+			const git = extensions.getExtension("vscode.git");
+			if (git === undefined) throw new Error("Git extension not found!");
+
+			_gitApi = git.isActive ? git.exports : await git.activate();
+		} catch (ex) {
+			debugger;
+			Logger.error(ex);
+			throw ex;
+		}
 	}
 	return _gitApi!;
 }
@@ -132,7 +139,7 @@ function gitApi() {
 let _gitPath: string | undefined;
 export async function gitPath(): Promise<string> {
 	if (_gitPath === undefined) {
-		_gitPath = await gitApi().getGitPath();
+		_gitPath = await (await gitApi()).getGitPath();
 	}
 	return _gitPath;
 }
