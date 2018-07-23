@@ -257,19 +257,20 @@
         "build": "npm run lint && tsc -m commonjs -p ./",
         "bundle": "npm run lint && webpack --env.production",
         "clean": "git clean -Xdf --exclude=!node_modules",
-        "lint": "tslint --project tsconfig.json --fix",
+        "lint": "tslint --project tsconfig.json",
         "pack": "vsce package",
         "prettify": "prettier --config .prettierrc --write \"./src/**/*.ts\" \"./assets/client/**/*.js\" ./package.json ./.prettierrc",
         "rebuild": "npm run clean && npm install --no-save && npm run build && npm run agent:rebuild",
         "watch": "tsc --watch -m commonjs -p ./",
         "agent:build": "pushd \"../codestream-lsp-agent\" && npm run build && popd",
         "agent:bundle": "pushd \"../codestream-lsp-agent\" && npm run bundle && popd",
+        "agent:pack": "pushd \"../codestream-lsp-agent\" && npm run pack && popd",
         "agent:rebuild": "pushd \"../codestream-lsp-agent\" && npm run rebuild && popd",
         "agent:watch": "pushd \"../codestream-lsp-agent\" && npm run watch && popd",
         "webview:bundle": "pushd \"./assets/client\" && npm install --no-save && npm run vscode-bundle && popd",
         "webview:build-css": "pushd \"./assets/client\" && npm run vscode-build-css && popd",
         "postinstall": "node ./node_modules/vscode/bin/install",
-        "vscode:prepublish": "npm run bundle"
+        "vscode:prepublish": "npm run clean && npm install --no-save && npm run bundle && npm run agent:pack"
     },
     "dependencies": {
         "date-fns": "1.29.0",
@@ -290,8 +291,9 @@
         "ts-loader": "4.4.2",
         "tslint": "5.11.0",
         "typescript": "2.9.2",
+        "vsce": "1.44.0",
         "vscode": "1.1.18",
-        "webpack": "4.16.1",
+        "webpack": "4.16.2",
         "webpack-cli": "3.1.0",
         "webpack-node-externals": "1.7.2"
     }
