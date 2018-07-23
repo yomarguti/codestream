@@ -613,12 +613,13 @@ export class StreamWebviewPanel extends Disposable {
 
 		this._streamThread = streamThread;
 
-		const [content, repos, streams, teams, users] = await Promise.all([
+		const [content, repos, streams, teams, users, currentUser] = await Promise.all([
 			this.getHtml(),
 			this.session.repos.entities(),
 			Container.session.channels.entities(),
 			this.session.teams.entities(),
-			this.session.users.entities()
+			this.session.users.entities(),
+			this.session.api.getMe()
 		]);
 
 		const state: BootstrapState = Object.create(null);
@@ -631,7 +632,7 @@ export class StreamWebviewPanel extends Disposable {
 		state.repos = repos;
 		state.streams = streams;
 		state.teams = teams;
-		state.users = users;
+		state.users = users.map(user => (user.id === currentUser.id ? currentUser : user));
 
 		html = content
 			.replace(

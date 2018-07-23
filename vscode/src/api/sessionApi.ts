@@ -28,6 +28,10 @@ export class CodeStreamSessionApi {
 
 	async savePreferences(preferences: {}) {
 		await this._api.savePreferences(this.token, preferences);
+		return this.getMe();
+	}
+
+	async getMe() {
 		return (await this._api.getMe(this.token)).user;
 	}
 
