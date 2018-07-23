@@ -14,8 +14,10 @@ const data = window.bootstrap;
 
 const store = createStore(
 	{
+		startOnMainPanel: Boolean(data.currentStreamId),
 		context: {
-			currentTeamId: data.currentTeamId
+			currentTeamId: data.currentTeamId,
+			currentStreamId: data.currentStreamId
 		},
 		session: {
 			userId: data.currentUserId
