@@ -66,18 +66,13 @@ export default class CodestreamView {
 	}
 
 	render() {
-		const directories = atom.project.getDirectories();
-		const repoPromises = directories.map(repo => atom.project.repositoryForDirectory(repo));
-		Promise.all(repoPromises).then(repos => {
-			repos = repos.filter(Boolean);
-			render(
-				<IntlProvider locale="en" messages={copy}>
-					<Provider store={this.store}>
-						<CodeStreamRoot repositories={repos} />
-					</Provider>
-				</IntlProvider>,
-				this.element
-			);
-		});
+		render(
+			<IntlProvider locale="en" messages={copy}>
+				<Provider store={this.store}>
+					<CodeStreamRoot />
+				</Provider>
+			</IntlProvider>,
+			this.element
+		);
 	}
 }

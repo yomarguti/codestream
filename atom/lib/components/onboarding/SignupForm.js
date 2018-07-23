@@ -2,13 +2,11 @@ import { shell } from "electron";
 import React, { Component } from "react";
 import { FormattedMessage } from "react-intl";
 import { connect } from "react-redux";
-import PropTypes from "prop-types";
 import getSystemUser from "username";
 import Button from "./Button";
 import Tooltip from "../Tooltip";
 import UnexpectedErrorMessage from "./UnexpectedErrorMessage";
 import * as actions from "../../actions/onboarding";
-const { CompositeDisposable } = require("atom");
 
 const isUsernameInvalid = username => new RegExp("^[-a-zA-Z0-9_.]{1,21}$").test(username) === false;
 const isPasswordInvalid = password => password.length < 6;
@@ -18,20 +16,8 @@ const isEmailInvalid = email => {
 	);
 	return email === "" || emailRegex.test(email) === false;
 };
-const parseName = name => {
-	const names = name.split(" ");
-	if (names.length > 2) return { firstName: name, lastName: "" };
-	else {
-		const [firstName, lastName = ""] = names;
-		return { firstName, lastName };
-	}
-};
 
 export class SimpleSignupForm extends Component {
-	static contextTypes = {
-		repositories: PropTypes.array
-	};
-
 	constructor(props) {
 		super(props);
 		this.state = {
@@ -43,29 +29,9 @@ export class SimpleSignupForm extends Component {
 			emailTouched: false,
 			telemetryConsent: true
 		};
-		this.subscriptions = new CompositeDisposable();
-	}
-
-	componentDidMount() {
-		const { repositories } = this.context;
-		const repository = repositories[0];
-		const gitDirectory = repository.getWorkingDirectory();
-		const defaultEmail = (this.defaultEmail = repository.getConfigValue(
-			"user.email",
-			gitDirectory
-		));
-		this.setState({
-			email: defaultEmail || "",
-			name: repository.getConfigValue("user.name", gitDirectory) || ""
-		});
-	}
-
-	componentWillUnmount() {
-		this.subscriptions.dispose();
 	}
 
 	onBlurUsername = () => {
-		const { username } = this.state;
 		this.setState({ usernameTouched: true });
 	};
 
@@ -80,7 +46,7 @@ export class SimpleSignupForm extends Component {
 	};
 
 	renderUsernameHelp = () => {
-		const { username, usernameInUse } = this.state;
+		const { username } = this.state;
 		if (username.length > 21)
 			return (
 				<small className="error-message">
@@ -137,14 +103,13 @@ export class SimpleSignupForm extends Component {
 		if (this.isFormInvalid()) return;
 		this.setState({ loading: true });
 		const { register } = this.props;
-		const { username, password, email, name, telemetryConsent } = this.state;
+		const { username, password, email, telemetryConsent } = this.state;
 		const preferences = { telemetryConsent };
 		register({
 			username,
 			password,
 			email,
-			preferences,
-			...parseName(name)
+			preferences
 		}).then(() => this.setState({ loading: false }));
 	};
 

@@ -1,10 +1,7 @@
 import { shell } from "electron";
 import React, { Component } from "react";
-import PropTypes from "prop-types";
 import { connect } from "react-redux";
 import Raven from "raven-js";
-import NoGit from "./NoGit";
-import TooMuchGit from "./TooMuchGit";
 import Onboarding from "./onboarding/Onboarding";
 import { Stream } from "codestream-components";
 import NoAccess from "./NoAccess";
@@ -21,25 +18,7 @@ const Loading = props => (
 );
 
 class CodeStreamRoot extends Component {
-	static defaultProps = {
-		repositories: [],
-		user: {}
-	};
-
-	static childContextTypes = {
-		repositories: PropTypes.array
-	};
-
-	constructor(props) {
-		super(props);
-		this.state = {};
-	}
-
-	getChildContext() {
-		return {
-			repositories: this.props.repositories
-		};
-	}
+	state = { hasError: false };
 
 	componentDidCatch(error, info) {
 		this.setState({ hasError: true });
@@ -51,7 +30,6 @@ class CodeStreamRoot extends Component {
 			catchingUp,
 			accessToken,
 			bootstrapped,
-			repositories,
 			onboarding,
 			noAccess,
 			showSlackInfo
@@ -71,8 +49,6 @@ class CodeStreamRoot extends Component {
 					</p>
 				</div>
 			);
-		if (repositories.length === 0) return <NoGit />;
-		if (repositories.length > 1) return <TooMuchGit />;
 		if (noAccess) return <NoAccess reason={noAccess} />;
 		if (!bootstrapped) return <Loading message="CodeStream engage..." />;
 		if (catchingUp) return <Loading message="Hold on, we're catching you up" />;
@@ -83,7 +59,7 @@ class CodeStreamRoot extends Component {
 				<BufferReferenceManager
 					key="buffer-references"
 					workingDirectory={this.props.workingDirectory}
-					repo={repositories[0]}
+					repo={atom.project.repositories[0]}
 				/>,
 				<Stream key="stream" />
 			];
@@ -103,8 +79,8 @@ const mapStateToProps = ({
 	noAccess: context.noAccess,
 	catchingUp: messaging.catchingUp,
 	showSlackInfo: context.showSlackInfo,
+	workingDirectory: repoAttributes.workingDirectory,
 	bootstrapped,
-	onboarding,
-	workingDirectory: repoAttributes.workingDirectory
+	onboarding
 });
 export default connect(mapStateToProps)(withConfigs(CodeStreamRoot));

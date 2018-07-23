@@ -40,7 +40,7 @@ export class SimpleEmailConfirmationForm extends Component {
 	submitCode = event => {
 		event.preventDefault();
 		const confirmationCode = this.state.values.join("");
-		const { email, userId, transition, confirmEmail, store } = this.props;
+		const { email, userId, confirmEmail } = this.props;
 		confirmEmail({ userId, email, confirmationCode });
 		this.setState(
 			state => {

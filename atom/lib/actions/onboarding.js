@@ -1,6 +1,6 @@
 import Raven from "raven-js";
 import { normalize } from "./utils";
-import { setContext, setCurrentRepo, setCurrentTeam, noAccess, noRemoteUrl } from "./context";
+import { setCurrentRepo, setCurrentTeam, noAccess } from "./context";
 import { saveUser, saveUsers, ensureCorrectTimeZone } from "./user";
 import { saveRepo, saveRepos } from "./repo";
 import { fetchCompanies, saveCompany } from "./company";
@@ -54,131 +54,14 @@ const existingUserLoggedIntoMatchedRepo = payload => ({
 	payload
 });
 
-const fetchRepoInfo = ({ url, knownCommitHashes = [], firstCommitHash }) => async (
-	dispatch,
-	getState,
-	{ http }
-) => {
-	if (!url) {
-		Raven.captureMessage("No url found while trying to fetch repository information.", {
-			logger: "actions/onboarding",
-			extra: { url, knownCommitHashes, firstCommitHash }
-		});
-		return dispatch(noRemoteUrl());
-	}
-	try {
-		const hashes = knownCommitHashes.join(",");
-		const { repo, usernames } = await http.get(
-			`/no-auth/find-repo?url=${encodeURIComponent(
-				url
-			)}&knownCommitHashes=${hashes}&firstCommitHash=${firstCommitHash}`
-		);
-
-		if (repo) {
-			return {
-				usernamesInTeam: usernames,
-				currentRepoId: repo._id,
-				currentTeamId: repo.teamId,
-				noAccess: false
-			};
-		}
-	} catch (error) {
-		if (http.isApiRequestError(error)) {
-			if (error.data.code === "REPO-1000") dispatch(noAccess());
-			if (error.data.code === "UNKNOWN") dispatch(noAccess());
-		} else if (http.isApiUnreachableError(error)) dispatch(serverUnreachable());
-		else
-			logError("encountered unexpected error while fetching repo information", error, {
-				url,
-				knownCommitHashes
-			});
-		throw new Error("Unable to get repo information"); // TODO: tell the user exactly what's wrong
-	}
-};
-
-const matchRepoInfo = ({ url, knownCommitHashes = [], firstCommitHash }) => async (
-	dispatch,
-	getState,
-	{ http }
-) => {
-	if (!url) {
-		Raven.captureMessage("No url found while trying to match repository information.", {
-			logger: "actions/onboarding",
-			extra: { url, knownCommitHashes, firstCommitHash }
-		});
-		return dispatch(noRemoteUrl());
-	}
-	try {
-		const hashes = knownCommitHashes.join(",");
-		const { teams, teamCreators, repo, usernames, knownService, org, domain } = await http.get(
-			`/no-auth/match-repo?url=${encodeURIComponent(
-				url
-			)}&knownCommitHashes=${hashes}&firstCommitHash=${firstCommitHash}`
-		);
-
-		if (repo) {
-			return {
-				usernamesInTeam: usernames,
-				currentRepoId: repo._id,
-				currentTeamId: repo.teamId,
-				noAccess: false
-			};
-		} else if (teams) {
-			return {
-				teamsMatchingRepo: teams || [],
-				teamCreatorsMatchingRepo: teamCreators || {},
-				knownService: knownService,
-				org: org,
-				domain: domain
-			};
-		}
-	} catch (error) {
-		if (http.isApiRequestError(error)) {
-			if (error.data.code === "REPO-1000") dispatch(noAccess());
-			if (error.data.code === "UNKNOWN") dispatch(noAccess());
-		} else if (http.isApiUnreachableError(error)) dispatch(serverUnreachable());
-		else
-			logError("encountered unexpected error while matching repo information", error, {
-				url,
-				knownCommitHashes
-			});
-		throw new Error("Unable to get repo information"); // TODO: tell the user exactly what's wrong
-	}
-};
-
 export const completeOnboarding = () => ({ type: "ONBOARDING_COMPLETE" });
 export const goToSignup = () => ({ type: "GO_TO_SIGNUP" });
 export const goToLogin = () => ({ type: "GO_TO_LOGIN" });
 export const goToCreateTeam = () => ({ type: "GO_TO_CREATE_TEAM" });
 export const goToSelectTeam = () => ({ type: "GO_TO_SELECT_TEAM" });
 export const goToConfirmation = attributes => ({ type: "GO_TO_CONFIRMATION", payload: attributes });
-export const foundMultipleRemotes = remotes => ({
-	type: "FOUND_MULTIPLE_REMOTES",
-	payload: { remotes }
-});
-
-export const selectRemote = url => dispatch => {
-	dispatch({
-		type: "SET_REPO_URL",
-		payload: url
-	});
-	dispatch({ type: "SELECTED_REMOTE" });
-};
 
 export const register = attributes => async (dispatch, getState, { http }) => {
-	const { repoAttributes } = getState();
-
-	try {
-		const repoInfo = await dispatch(fetchRepoInfo(repoAttributes));
-		if (repoInfo) {
-			dispatch(setContext(repoInfo));
-			if (repoInfo.usernamesInTeam.includes(attributes.username))
-				return dispatch({ type: "SIGNUP-USERNAME_COLLISION" });
-		}
-	} catch (error) {
-		return;
-	}
-
 	return http
 		.post("/no-auth/register", attributes)
 		.then(async ({ user }) => {
@@ -196,7 +79,7 @@ export const register = attributes => async (dispatch, getState, { http }) => {
 
 // common helper for after a user has logged in or confirmed
 async function _handleUserLogin(options) {
-	const { loginData, dispatch, getState, firstTimeInAtom } = options;
+	const { loginData, dispatch } = options;
 	const { accessToken, teams, repos, pubnubKey } = loginData;
 
 	let { user } = loginData;
@@ -224,52 +107,16 @@ async function _handleUserLogin(options) {
 	// since last login
 	dispatch(ensureCorrectTimeZone());
 
-	const { context, repoAttributes } = getState();
-	let teamIdForRepo = context.currentTeamId;
-	let repoInfo;
-	if (!teamIdForRepo) {
-		// find a match for our repo, which may find an exact match that was
-		// previously not found (in case a team has been created since CS was
-		// initialized) ... but if based on the domain it finds a team but not
-		// an exact match, then we go into the "Get Invited" flow
-		repoInfo = await dispatch(matchRepoInfo(repoAttributes));
-		if (repoInfo && repoInfo.currentTeamId) {
-			dispatch(setContext(repoInfo));
-			teamIdForRepo = repoInfo.currentTeamId;
-		} else if (repoInfo && repoInfo.teamsMatchingRepo) {
-			const matchingTeams = repoInfo.teamsMatchingRepo.filter(team => {
-				return teamIdsForUser.includes(team._id);
-			});
-			if (matchingTeams.length > 0) {
-				// in this case, we've logged in with a repo that matches one of
-				// the teams we are in, so we'll just go through the normal flow
-				// to decide which team the user wants to add the repo to
-				repoInfo = null;
-			}
-		}
-	}
+	let currentTeamId = teamIdsForUser[0];
 
-	let alreadyOnTeam;
-	if (repoInfo && repoInfo.teamsMatchingRepo && repoInfo.teamsMatchingRepo.length) {
-		if (userTeams.length === 0) {
-			dispatch(newUserLoggedIntoMatchedRepo({ firstTimeInAtom, ...repoInfo }));
-		} else {
-			dispatch(existingUserLoggedIntoMatchedRepo({ firstTimeInAtom, ...repoInfo }));
-		}
-	} else if (!teamIdForRepo) {
-		if (userTeams.length === 0) {
-			dispatch(newUserLoggedIntoNewRepo({ firstTimeInAtom }));
-		} else {
-			await dispatch(fetchTeamMembers(teamIdsForUser));
-			dispatch(existingUserLoggedIntoNewRepo({ firstTimeInAtom }));
-		}
-	} else if (teamIdsForUser.includes(teamIdForRepo)) {
-		alreadyOnTeam = true;
+	if (currentTeamId) {
 		await dispatch(fetchTeamMembers(teamIdsForUser));
+		dispatch(fetchTeamStreams());
 		dispatch(fetchCompanies(userTeams.map(t => t.companyId)));
+		dispatch(setCurrentTeam(currentTeamId));
 	}
 
-	return { teamIdForRepo, alreadyOnTeam };
+	return { currentTeamId };
 }
 
 export const confirmEmail = params => async (dispatch, getState, { http }) => {
@@ -277,23 +124,19 @@ export const confirmEmail = params => async (dispatch, getState, { http }) => {
 	return http
 		.post("/no-auth/confirm", params)
 		.then(async loginData => {
-			const { teamIdForRepo, alreadyOnTeam } = await _handleUserLogin({
+			const { currentTeamId } = await _handleUserLogin({
 				loginData,
 				params,
 				dispatch,
-				getState,
-				firstTimeInAtom: true
+				getState
 			});
 
-			if (alreadyOnTeam) {
+			if (currentTeamId) {
 				dispatch(fetchTeamStreams());
-				dispatch({ type: "EXISTING_USER_CONFIRMED" });
 				dispatch(completeOnboarding());
-			} else if (teamIdForRepo) {
-				await dispatch(joinTeam("EXISTING_USER_CONFIRMED"));
-				dispatch(completeOnboarding());
-			}
-			dispatch({ type: "USER_CONFIRMED", meta: { alreadyOnTeam } });
+			} else dispatch(goToCreateTeam({}));
+
+			dispatch({ type: "USER_CONFIRMED", meta: { alreadyOnTeam: Boolean(currentTeamId) } });
 			dispatch(requestFinished());
 		})
 		.catch(error => {
@@ -354,34 +197,18 @@ export const backToInvite = () => async (dispatch, getState) => {
 };
 
 export const createTeam = name => (dispatch, getState, { http }) => {
-	const { session, repoAttributes } = getState();
-	const params = {
-		url: repoAttributes.url,
-		knownCommitHashes: repoAttributes.knownCommitHashes,
-		team: { name }
-	};
+	const { session } = getState();
+
 	dispatch(requestStarted());
 	return http
-		.post("/repos", params, session.accessToken)
+		.post("/teams", { name }, session.accessToken)
 		.then(async data => {
 			dispatch(requestFinished());
-			const company = normalize(data.company);
 			const team = normalize(data.team);
-			const repo = normalize(data.repo);
-			const users = normalize(data.users);
-
-			await dispatch(saveCompany(company));
-			await dispatch(saveRepo(repo));
 			await dispatch(saveTeam(team));
-			await dispatch(saveUsers(users));
 
 			dispatch(setCurrentTeam(team.id));
-			dispatch(setCurrentRepo(repo.id));
-
-			dispatch({
-				type: "TEAM_CREATED",
-				payload: { teamId: team.id }
-			});
+			dispatch(completeOnboarding());
 		})
 		.catch(error => {
 			dispatch(requestFinished());
@@ -461,7 +288,7 @@ export const authenticate = params => async (dispatch, getState, { http }) => {
 				);
 			}
 
-			const { teamIdForRepo, alreadyOnTeam } = await _handleUserLogin({
+			const { currentTeamId, alreadyOnTeam } = await _handleUserLogin({
 				loginData,
 				params,
 				dispatch,
@@ -471,7 +298,7 @@ export const authenticate = params => async (dispatch, getState, { http }) => {
 			if (alreadyOnTeam) {
 				dispatch(fetchLatestForTeamStream());
 				dispatch(loggedIn());
-			} else if (teamIdForRepo) {
+			} else if (currentTeamId) {
 				await dispatch(joinTeam(loggedIn().type));
 			}
 			dispatch(requestFinished());

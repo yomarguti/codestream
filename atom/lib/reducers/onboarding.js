@@ -49,22 +49,16 @@ export default (state = initialState, { type, payload }) => {
 				alreadyOnTeam: true,
 				...payload
 			};
-		case "LOGGED_INTO_FOREIGN_REPO":
-			return { ...initialState, step: "noAccess" };
-		case "EXISTING_USER_CONFIRMED_IN_FOREIGN_REPO":
-			return { ...initialState, step: "noAccess", firstTimeInAtom: true };
 		case "USER_ALREADY_CONFIRMED":
 			return { ...initialState, step: "login", props: payload };
-		case "EXISTING_USER_CONFIRMED":
-			return { ...initialState, complete: true, firstTimeInAtom: true };
+		case "USER_CONFIRMED":
+			return { ...initialState, complete: true };
 		case "INVALID_CONFIRMATION_CODE":
 			return { ...state, errors: { invalidCode: true } };
 		case "EXPIRED_CONFIRMATION_CODE":
 			return { ...state, errors: { expiredCode: true } };
 		case "CREATE_TEAM-INVALID_REPO_URL":
 			return { ...state, errors: { invalidRepoUrl: true } };
-		case "TEAM_CREATED":
-			return { ...state, step: "identifyMembers", props: payload };
 		case "TEAM_NOT_FOUND":
 			return { ...state, errors: { teamNotFound: true } };
 		case "INVALID_PERMISSION_FOR_TEAM":
@@ -82,7 +76,7 @@ export default (state = initialState, { type, payload }) => {
 			return { ...state, step: "changeUsername", props: payload };
 		case "LOGGED_IN":
 		case "ONBOARDING_COMPLETE":
-			return { ...initialState, firstTimeInAtom: state.firstTimeInAtom, complete: true };
+			return { ...initialState, complete: true };
 		case "RESET_ONBOARDING":
 			return initialState;
 		case "ONBOARDING-SERVER_UNREACHABLE":

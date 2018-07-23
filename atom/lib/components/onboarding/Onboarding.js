@@ -1,6 +1,5 @@
 import React from "react";
 import { connect } from "react-redux";
-import RemoteSelectionForm from "./RemoteSelectionForm";
 import SignupForm from "./SignupForm";
 import EmailConfirmationForm from "./EmailConfirmationForm";
 import LoginForm from "./LoginForm";
@@ -11,7 +10,6 @@ import ChangeUsernameForm from "./ChangeUsernameForm";
 import GetInvitedForm from "./GetInvitedForm";
 
 const views = {
-	selectRemote: RemoteSelectionForm,
 	signUp: SignupForm,
 	confirmEmail: EmailConfirmationForm,
 	login: LoginForm,
