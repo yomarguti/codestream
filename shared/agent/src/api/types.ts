@@ -138,6 +138,7 @@ export interface LoginResponse {
 	user: CSUser;
 	accessToken: string;
 	pubnubKey: string;
+	pubnubToken: string;
 	teams: CSTeam[];
 	repos: CSRepository[];
 }

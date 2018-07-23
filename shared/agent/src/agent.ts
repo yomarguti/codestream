@@ -18,12 +18,19 @@ import {
 	TextDocumentSyncKind,
 	WorkspaceFoldersChangeEvent
 } from "vscode-languageserver";
-import { CodeStreamApi } from "./api/api";
+import { CodeStreamApi, LoginResponse } from "./api/api";
 import { Container } from "./container";
 import { gitApi, GitApiRepository } from "./git/git";
 import { Logger } from "./logger";
 import { MarkerHandler } from "./marker/markerHandler";
 import { Disposables, memoize } from "./system";
+import {
+	PubnubReceiver,
+	PubnubInitializer,
+	ChannelDescriptor,
+	StatusChangeEvent,
+	PubnubStatus
+} from "./pubnub/pubnubReceiver";
 
 // TODO: Fix this, but for now keep in sync with CodeStreamAgentOptions in agentClient.ts in vscode-codestream
 export interface CodeStreamAgentOptions {
@@ -42,6 +49,7 @@ export class CodeStreamAgent implements Disposable, LSPLogger {
 	private _clientCapabilities: ClientCapabilities | undefined;
 	private readonly _connection: Connection;
 	private _disposable: Disposable | undefined;
+	private _pubnubReceiver: PubnubReceiver;
 
 	constructor() {
 		// Create a connection for the server. The connection uses Node's IPC as a transport.
@@ -57,6 +65,8 @@ export class CodeStreamAgent implements Disposable, LSPLogger {
 
 		// TODO: This should go away in favor of specific registrations
 		this._connection.onRequest(this.onRequest.bind(this));
+
+		this._pubnubReceiver = new PubnubReceiver();
 	}
 
 	dispose() {
@@ -122,6 +132,8 @@ export class CodeStreamAgent implements Disposable, LSPLogger {
 
 		void (await Container.initialize(this, this._connection, api, options, loginResponse));
 
+		this.initializePubnub(loginResponse);
+
 		return {
 			capabilities: {
 				textDocumentSync: TextDocumentSyncKind.Full,
@@ -174,6 +186,27 @@ export class CodeStreamAgent implements Disposable, LSPLogger {
 		Container.instance().updateConfig(e.settings.codestream);
 	}
 
+	private initializePubnub (loginResponse: LoginResponse) {
+		const channels: Array<ChannelDescriptor> = (loginResponse.teams || []).map(team => {
+			return {
+				name: `team-${team.id}`,
+				withPresence: true
+			} as ChannelDescriptor;
+		});
+		channels.push({ name: `user-${loginResponse.user.id}` } as ChannelDescriptor);
+
+		this._pubnubReceiver.initialize({
+			subscribeKey: loginResponse.pubnubKey,
+			authKey: loginResponse.pubnubToken,
+			userId: loginResponse.user.id,
+			online: true
+		} as PubnubInitializer);
+
+		this._pubnubReceiver.onStatusChange(this.onPubnubStatusChange.bind(this));
+		this._pubnubReceiver.onMessagesReceived(this.onPubnubMessages.bind(this));
+		this._pubnubReceiver.subscribe(channels);
+	}
+
 	private onHover(e: TextDocumentPositionParams) {
 		this._connection.console.log("Hover request received");
 		return undefined;
@@ -199,6 +232,39 @@ export class CodeStreamAgent implements Disposable, LSPLogger {
 
 	private onWorkspaceFoldersChanged(e: WorkspaceFoldersChangeEvent) {
 		this._connection.console.log("Workspace folder change event received");
+	}
+
+	private onPubnubStatusChange(e: StatusChangeEvent) {
+		switch (e.status) {
+			case PubnubStatus.Connected:
+				// TODO: let the extension know we are connected?
+				break;
+
+			case PubnubStatus.Trouble:
+				// TODO: let the extension know we have trouble?
+				break;
+
+			case PubnubStatus.Reset:
+				// TODO: must fetch all data fetch from the server
+				break;
+
+			case PubnubStatus.Offline:
+				// TODO: let the extension know we are offline?
+				break;
+
+			case PubnubStatus.SomeFailed:
+				// TODO: let the extension know we have trouble?
+				// the indicated channels have not been subscribed to, what do we do?
+				break;
+
+			case PubnubStatus.Failed:
+				// TODO: catastrophic failure event, what do we do?
+				break;
+		}
+	}
+
+	private onPubnubMessages(messages: Array<any>) {
+		// TODO: do something with these messages...
 	}
 
 	@memoize
