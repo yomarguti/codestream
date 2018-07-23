@@ -446,7 +446,7 @@ export class StreamWebviewPanel extends Disposable {
 
 	private onPostsReceived(e: PostsReceivedEvent) {
 		this.postMessage({
-			type: "push-data",
+			type: "codestream:data",
 			body: {
 				type: "posts",
 				payload: e.entities()
@@ -461,7 +461,7 @@ export class StreamWebviewPanel extends Disposable {
 			case SessionChangedType.Users:
 			case SessionChangedType.Teams:
 				this.postMessage({
-					type: "push-data",
+					type: "codestream:data",
 					body: {
 						type: e.type,
 						payload: e.entities()

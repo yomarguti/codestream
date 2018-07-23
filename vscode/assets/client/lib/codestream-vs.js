@@ -27,24 +27,16 @@ const store = createStore(
 	[loggingMiddleWare]
 );
 
-window.addEventListener(
-	"message",
-	event => {
-		console.log("received message from extension host", event.data);
-		const { type, body } = event.data;
-		if (type === "push-data") {
-			return store.dispatch({ type: `ADD_${body.type.toUpperCase()}`, payload: body.payload });
-		}
-	},
-	false
-);
+EventEmitter.on("data", ({ type, payload }) => {
+	store.dispatch({ type: `ADD_${type.toUpperCase()}`, payload});
+});
 
-EventEmitter.on('interaction:focus', () => {
+EventEmitter.on("interaction:focus", () => {
 	// TODO
-})
-EventEmitter.on('interaction:blur', () => {
+});
+EventEmitter.on("interaction:blur", () => {
 	// TODO
-})
+});
 
 store.dispatch({ type: "BOOTSTRAP_USERS", payload: data.users });
 store.dispatch({ type: "BOOTSTRAP_REPOS", payload: data.repos });
