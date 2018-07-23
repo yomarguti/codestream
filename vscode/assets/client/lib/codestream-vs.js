@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { addLocaleData, IntlProvider } from "react-intl";
-import { createStore, WebviewApi } from "codestream-components";
+import { createStore, EventEmitter, WebviewApi } from "codestream-components";
 import copy from "codestream-components/translations/en.json";
 import { Provider } from "react-redux";
 import en from "react-intl/locale-data/en";
@@ -35,12 +35,16 @@ window.addEventListener(
 		if (type === "push-data") {
 			return store.dispatch({ type: `ADD_${body.type.toUpperCase()}`, payload: body.payload });
 		}
-		if (type === "ui-data") {
-			return store.dispatch(body);
-		}
 	},
 	false
 );
+
+EventEmitter.on('interaction:focus', () => {
+	// TODO
+})
+EventEmitter.on('interaction:blur', () => {
+	// TODO
+})
 
 store.dispatch({ type: "BOOTSTRAP_USERS", payload: data.users });
 store.dispatch({ type: "BOOTSTRAP_REPOS", payload: data.repos });
