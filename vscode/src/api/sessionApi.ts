@@ -1,5 +1,5 @@
 "use strict";
-import { MessageItem, Uri, window } from "vscode";
+import { Uri } from "vscode";
 import { Container } from "../container";
 import { GitRepository } from "../git/gitService";
 import {
@@ -227,18 +227,18 @@ export class CodeStreamSessionApi {
 		const found = await registeredRepos.find(r => r.normalizedUrl === remoteUrl);
 		if (found !== undefined) return found;
 
-		const actions: MessageItem[] = [
-			{ title: "Add Repository" },
-			{ title: "Skip", isCloseAffordance: true }
-		];
+		// const actions: MessageItem[] = [
+		// 	{ title: "Add Repository" },
+		// 	{ title: "Skip", isCloseAffordance: true }
+		// ];
 
-		const result = await window.showInformationMessage(
-			`The repository with url \`${remote.uri.toString()}\` isn't currently part of your team. Should we add it?`,
-			...actions
-		);
-		if (result === actions[0]) {
-			return await this.createRepo(remote.uri, firsts);
-		}
+		// const result = await window.showInformationMessage(
+		// 	`The repository with url \`${remote.uri.toString()}\` isn't currently part of your team. Should we add it?`,
+		// 	...actions
+		// );
+		// if (result === actions[0]) {
+		// 	return await this.createRepo(remote.uri, firsts);
+		// }
 
 		return undefined;
 	}
