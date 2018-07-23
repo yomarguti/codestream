@@ -32,6 +32,10 @@ const bootstrapped = (state = false, { type }) => {
 	return state;
 };
 
+const startOnMainPanel = (state = false, { type }) => {
+	return state;
+};
+
 const appReducer = combineReducers({
 	bootstrapped,
 	companies,
@@ -47,6 +51,7 @@ const appReducer = combineReducers({
 	repoAttributes,
 	repos,
 	session,
+	startOnMainPanel,
 	streams,
 	teams,
 	umis,

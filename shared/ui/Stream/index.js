@@ -38,11 +38,18 @@ export class SimpleStream extends Component {
 		super(props);
 
 		this.state = {
+			initialRender: true,
 			threadId: null,
 			activePanel: "channels",
 			fileForIntro: props.currentFile
 		};
 		this._compose = React.createRef();
+	}
+
+	static getDerivedStateFromProps(props, state) {
+		return state.initialRender && props.postStreamId && props.startOnMainPanel
+			? { activePanel: "main", initialRender: false }
+			: { initialRender: false };
 	}
 
 	componentDidMount() {
@@ -197,6 +204,7 @@ export class SimpleStream extends Component {
 		if (postStreamId !== prevProps.postStreamId) {
 			this.checkMarkStreamRead();
 			this.resizeStream();
+			if (postStreamId) this.setActivePanel("main");
 		}
 
 		// if we just got the focus, check to see if we are up-to-date
@@ -1341,6 +1349,7 @@ const mapStateToProps = ({
 	connectivity,
 	session,
 	context,
+	startOnMainPanel,
 	streams,
 	users,
 	posts,
@@ -1398,6 +1407,7 @@ const mapStateToProps = ({
 			: [];
 
 	return {
+		startOnMainPanel,
 		umis,
 		configs,
 		isOffline,
