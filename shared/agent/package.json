@@ -22,7 +22,7 @@
         "bundle": "npm run lint && webpack --env.production",
         "clean": "git clean -Xdf --exclude=!node_modules",
         "lint": "tslint --project tsconfig.json --fix",
-        "rebuild": "npm run clean && npm install && npm run build",
+        "rebuild": "npm run clean && npm install --no-save && npm run build",
         "watch": "webpack --watch --env.development"
     },
     "dependencies": {
