@@ -1,23 +1,28 @@
 "use strict";
 const path = require("path");
-const CopyWebpackPlugin = require("copy-webpack-plugin");
+const FileManagerWebpackPlugin = require("filemanager-webpack-plugin");
 
 module.exports = function(env, argv) {
-	if (env === undefined) {
-		env = {};
-	}
+	env = env || {};
 
 	const production = !!env.production;
+	console.log("Production:", production);
 
-	const plugins = [];
-
-	if (!production) {
-		plugins.push(
-			new CopyWebpackPlugin([
-				{ from: "./out/*", to: "../../vscode-codestream/out/", flatten: true }
-			])
-		);
-	}
+	const plugins = [
+		new FileManagerWebpackPlugin({
+			onEnd: [
+				{
+					copy: [
+						{
+							source: "out/*",
+							// TODO: Use environment variable if exists
+							destination: path.resolve(__dirname, "../vscode-codestream/out/")
+						}
+					]
+				}
+			]
+		})
+	];
 
 	return {
 		entry: "./src/agent.ts",

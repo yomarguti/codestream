@@ -21,7 +21,8 @@
         "build": "npm run lint && webpack --env.development",
         "bundle": "npm run lint && webpack --env.production",
         "clean": "git clean -Xdf --exclude=!node_modules",
-        "lint": "tslint --project tsconfig.json --fix",
+        "lint": "tslint --project tsconfig.json",
+        "pack": "npm run clean && npm install --no-save && npm run bundle",
         "rebuild": "npm run clean && npm install --no-save && npm run build",
         "watch": "webpack --watch --env.development"
     },
@@ -45,12 +46,12 @@
         "@types/pubnub": "4.0.2",
         "@types/string-similarity": "^1.2.0",
         "@types/tmp": "0.0.33",
-        "copy-webpack-plugin": "4.5.2",
+        "filemanager-webpack-plugin": "1.0.27",
         "prettier": "1.13.7",
         "ts-loader": "4.4.2",
         "tslint": "5.11.0",
         "typescript": "2.9.2",
-        "webpack": "4.16.1",
+        "webpack": "4.16.2",
         "webpack-cli": "3.1.0",
         "webpack-node-externals": "1.7.2"
     }
