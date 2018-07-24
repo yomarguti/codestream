@@ -49,5 +49,6 @@ export function setContext(key: ContextKeys | string, value: any) {
 }
 
 export enum WorkspaceState {
+	webviewState = "codestream:webviewState",
 	TeamId = "codestream:teamId"
 }

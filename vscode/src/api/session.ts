@@ -90,10 +90,11 @@ export class CodeStreamSession implements Disposable {
 	constructor(private _serverUrl: string) {
 		this._api = new CodeStreamApi(_serverUrl);
 		this._cache = new Cache(this);
+		this._pubnub = new PubNubReceiver(this._cache);
 		this._disposable = Disposable.from(
-			(this._pubnub = new PubNubReceiver(this._cache)),
+			configuration.onDidChange(this.onConfigurationChanged, this),
 			this._pubnub.onDidReceiveMessage(this.onMessageReceived, this),
-			configuration.onDidChange(this.onConfigurationChanged, this)
+			this._pubnub
 		);
 	}
 

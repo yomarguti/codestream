@@ -178,6 +178,12 @@ class BufferChangeTracker {
 
 export class StreamWebviewPanel extends Disposable {
 	private _bufferChangeTracker = new BufferChangeTracker();
+
+	private _onDidChangeStream = new EventEmitter<StreamThread>();
+	get onDidChangeStream(): Event<StreamThread> {
+		return this._onDidChangeStream.event;
+	}
+
 	private _onDidClose = new EventEmitter<void>();
 	get onDidClose(): Event<void> {
 		return this._onDidClose.event;
@@ -388,6 +394,7 @@ export class StreamWebviewPanel extends Disposable {
 				const { threadId, streamId, post } = e.body;
 				if (this._streamThread !== undefined && this._streamThread.stream.id === streamId) {
 					this._streamThread.id = threadId;
+					this._onDidChangeStream.fire(this._streamThread);
 				}
 
 				const stream = await this.session.getStream(streamId);
@@ -403,6 +410,7 @@ export class StreamWebviewPanel extends Disposable {
 				const stream = await this.session.getStream(streamId);
 				if (stream !== undefined) {
 					this._streamThread = { id: undefined, stream: stream };
+					this._onDidChangeStream.fire(this._streamThread);
 				}
 				break;
 			}
@@ -612,6 +620,7 @@ export class StreamWebviewPanel extends Disposable {
 		}
 
 		this._streamThread = streamThread;
+		this._onDidChangeStream.fire(this._streamThread);
 
 		const [content, repos, streams, teams, users, currentUser] = await Promise.all([
 			this.getHtml(),

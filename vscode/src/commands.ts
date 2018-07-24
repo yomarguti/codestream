@@ -23,6 +23,7 @@ import { openEditor } from "./common";
 import { configuration, TraceLevel } from "./configuration";
 import { encryptionKey } from "./constants";
 import { Container } from "./container";
+import { StreamThreadId } from "./controllers/streamViewController";
 import { Logger } from "./logger";
 import { Command, createCommandDecorator, Crypto, Dates, Iterables } from "./system";
 
@@ -51,11 +52,6 @@ type StreamLocator =
 	| { type: StreamType.Channel; name: string; create?: ChannelStreamCreationOptions }
 	| { type: StreamType.Direct; members: string[]; create?: boolean }
 	| { type: StreamType.File; uri: Uri; create?: boolean };
-
-interface StreamThreadId {
-	id: string | undefined;
-	streamId: string;
-}
 
 interface IRequiresStream {
 	streamThread: StreamThread | StreamThreadId | StreamLocator | undefined;
