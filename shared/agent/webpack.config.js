@@ -44,6 +44,11 @@ module.exports = function(env, argv) {
 					test: /\.tsx?$/,
 					use: "ts-loader",
 					exclude: /node_modules/
+				},
+				{
+					test: /\.mjs$/,
+					include: /node_modules/,
+					type: "javascript/auto"
 				}
 			]
 		},
