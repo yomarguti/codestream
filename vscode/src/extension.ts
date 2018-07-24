@@ -2,7 +2,7 @@
 import "reflect-metadata";
 
 import { ExtensionContext, extensions, version as vscodeVersion } from "vscode";
-import { CodeStreamAgentOptions } from "./agentClient";
+import { CodeStreamAgentOptions } from "./agent/agentConnection";
 import { SessionStatusChangedEvent } from "./api/session";
 import { ContextKeys, setContext } from "./common";
 import { Config, configuration, Configuration } from "./configuration";

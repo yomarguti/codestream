@@ -8,11 +8,11 @@ import {
 	LanguageClientOptions,
 	ServerOptions,
 	TransportKind
-} from "vscode-languageclient";
-import { LoginResponse } from "./api/types";
-import { getRepositories, GitApiRepository } from "./git/git";
-import { GitRepository } from "./git/gitService";
-import { Logger } from "./logger";
+} from "vscode-languageclient/lib/main";
+import { LoginResponse } from "../api/types";
+import { getRepositories, GitApiRepository } from "../git/git";
+import { GitRepository } from "../git/gitService";
+import { Logger } from "../logger";
 
 // TODO: Fix this, but for now keep in sync with InitializationOptions in agent.ts in codestream-lsp-agent
 export interface CodeStreamAgentOptions {
@@ -38,7 +38,7 @@ export interface CodeStreamAgentResult {
 	};
 }
 
-export class CodeStreamAgentClient implements Disposable {
+export class CodeStreamAgentConnection implements Disposable {
 	private _client: LanguageClient | undefined;
 	private _disposable: Disposable | undefined;
 
@@ -139,9 +139,13 @@ export class CodeStreamAgentClient implements Disposable {
 		void (await this.stop());
 	}
 
-	private async onGitReposRequest(method: string, ...params: any[]): Promise<GitApiRepository[]> {
+	private async onGitReposRequest(): Promise<GitApiRepository[]> {
 		const repos = await getRepositories();
 		return repos.map(r => ({ rootUri: r.rootUri.toString() }));
+	}
+
+	private onMessagesReceived(...params: any[]) {
+		console.log("Messages received");
 	}
 
 	@started
@@ -181,6 +185,11 @@ export class CodeStreamAgentClient implements Disposable {
 			this.onGitReposRequest.bind(this)
 		);
 
+		this._client.onNotification(
+			"codeStream/didReceiveMessages",
+			this.onMessagesReceived.bind(this)
+		);
+
 		return this._client.initializeResult!;
 	}
 
@@ -195,19 +204,19 @@ export class CodeStreamAgentClient implements Disposable {
 }
 
 function started(
-	target: CodeStreamAgentClient,
+	target: CodeStreamAgentConnection,
 	propertyName: string,
 	descriptor: TypedPropertyDescriptor<any>
 ) {
 	if (typeof descriptor.value === "function") {
 		const method = descriptor.value;
-		descriptor.value = function(this: CodeStreamAgentClient, ...args: any[]) {
+		descriptor.value = function(this: CodeStreamAgentConnection, ...args: any[]) {
 			if (!this.started) throw new Error("CodeStream Agent has not been started");
 			return method!.apply(this, args);
 		};
 	} else if (typeof descriptor.get === "function") {
 		const get = descriptor.get;
-		descriptor.get = function(this: CodeStreamAgentClient, ...args: any[]) {
+		descriptor.get = function(this: CodeStreamAgentConnection, ...args: any[]) {
 			if (!this.started) throw new Error("CodeStream Agent has not been started");
 			return get!.apply(this, args);
 		};

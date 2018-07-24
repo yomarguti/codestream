@@ -1,6 +1,6 @@
 "use strict";
 import { ExtensionContext } from "vscode";
-import { CodeStreamAgentClient, CodeStreamAgentOptions } from "./agentClient";
+import { CodeStreamAgentConnection, CodeStreamAgentOptions } from "./agent/agentConnection";
 import { CodeStreamSession } from "./api/session";
 import { Commands } from "./commands";
 import { Config, configuration } from "./configuration";
@@ -24,7 +24,7 @@ export class Container {
 		this._context = context;
 		this._config = config;
 
-		this._agent = new CodeStreamAgentClient(context, agentOptions);
+		this._agent = new CodeStreamAgentConnection(context, agentOptions);
 
 		context.subscriptions.push((this._git = new GitService()));
 		context.subscriptions.push((this._session = new CodeStreamSession(config.serverUrl)));
@@ -43,7 +43,7 @@ export class Container {
 		context.subscriptions.push((this._streamView = new StreamViewController(this._session)));
 	}
 
-	private static _agent: CodeStreamAgentClient;
+	private static _agent: CodeStreamAgentConnection;
 	static get agent() {
 		return this._agent;
 	}
