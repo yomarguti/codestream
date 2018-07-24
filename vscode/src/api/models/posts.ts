@@ -1,12 +1,12 @@
 "use strict";
 import { Range, Uri } from "vscode";
 import { Dates, Iterables, memoize } from "../../system";
-import { Repository } from "../models/repositories";
-import { Stream, StreamType } from "../models/streams";
-import { User } from "../models/users";
 import { CodeStreamSession, PostsReceivedEvent } from "../session";
 import { CSPost } from "../types";
 import { CodeStreamCollection, CodeStreamItem } from "./collection";
+import { Repository } from "./repositories";
+import { Stream, StreamType } from "./streams";
+import { User } from "./users";
 
 interface CodeBlock {
 	readonly code: string;

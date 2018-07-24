@@ -3,7 +3,7 @@ import { MessageItem, window } from "vscode";
 import { TraceLevel } from "../configuration";
 import { extensionId } from "../constants";
 import { Logger } from "../logger";
-import { Functions } from "../system/function";
+import { Functions } from "./function";
 
 export function createCommandDecorator(
 	registry: Command[]
