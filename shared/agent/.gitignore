@@ -1,6 +1,4 @@
 dist
 node_modules
-client/server
-assets/client/node_modules
 npm-debug.log
 .idea/dictionaries

@@ -30,7 +30,6 @@ module.exports = function(env, argv) {
 		target: "node",
 		devtool: !production ? "eval-source-map" : undefined,
 		output: {
-			libraryTarget: "commonjs2",
 			filename: "agent.js"
 		},
 		resolve: {

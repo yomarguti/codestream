@@ -22,7 +22,7 @@
     "scripts": {
         "build": "npm run lint && webpack --env.development",
         "bundle": "npm run lint && webpack --env.production",
-        "clean": "git clean -Xdf --exclude=!node_modules",
+        "clean": "git clean -Xdf -e !node_modules -e !node_modules/**/*",
         "lint": "tslint --project tsconfig.json",
         "pack": "npm run clean && npm install --no-save && npm run bundle",
         "rebuild": "npm run clean && npm install --no-save && npm run build",
