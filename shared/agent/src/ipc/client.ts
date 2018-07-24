@@ -1,5 +1,5 @@
 "use strict";
-import { RequestType0 } from "vscode-languageserver/lib/main";
+import { RequestType0 } from "vscode-languageserver";
 import { GitApiRepository } from "../git/git";
 
 export namespace GitRepositoriesRequest {

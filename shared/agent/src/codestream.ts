@@ -5,7 +5,7 @@ import {
 	Range,
 	TextDocumentIdentifier,
 	TextDocumentPositionParams
-} from "vscode-languageserver/lib/main";
+} from "vscode-languageserver";
 import { CodeStreamAgent, CodeStreamAgentOptions } from "./agent";
 import { CodeStreamApi, CSPost, CSStream } from "./api/api";
 import { Container } from "./container";
@@ -140,7 +140,6 @@ export class CodeStream {
 		}
 		this._teamId = this._options.teamId;
 		this._userId = loginResponse.user.id;
-		this._userId;
 
 		void (await Container.initialize(
 			this._agent,
@@ -245,7 +244,7 @@ export class CodeStream {
 		return undefined;
 	}
 
-	/*private*/ async getSubscribeableStreams(userId: string, teamId?: string): Promise<CSStream[]> {
+	private async getSubscribeableStreams(userId: string, teamId?: string): Promise<CSStream[]> {
 		return (await this._api.getStreams<CSStream>(
 			this._apiToken!,
 			teamId || this._teamId!

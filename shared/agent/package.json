@@ -53,6 +53,7 @@
         "@types/string-similarity": "^1.2.0",
         "@types/tmp": "0.0.33",
         "chai": "4.1.2",
+        "clean-webpack-plugin": "0.1.19",
         "filemanager-webpack-plugin": "1.0.27",
         "mocha": "5.2.0",
         "prettier": "1.13.7",

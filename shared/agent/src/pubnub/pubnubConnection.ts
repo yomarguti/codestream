@@ -2,7 +2,7 @@
 // messages in real-time
 "use strict";
 import * as Pubnub from "pubnub";
-import { Disposable, Emitter, Event } from "vscode-languageserver/lib/main";
+import { Disposable, Emitter, Event } from "vscode-languageserver";
 import { CodeStreamApi } from "../api/api";
 import { PubnubHistory, PubnubHistoryInput, PubnubHistoryOutput } from "./pubnubHistory";
 
@@ -307,7 +307,7 @@ export class PubnubConnection {
 			return this.offline();
 		}
 		const channels = this.getUnsubscribedChannels();
-		if (Object.keys(channels).length === 0) {
+		if (channels.length === 0) {
 			// no unsubscribed channels, just do a catch up on messages
 			return this.catchUp();
 		}
@@ -457,9 +457,13 @@ export class PubnubConnection {
 		} catch (error) {
 			gotError = true;
 		}
-		const troubleChannels = gotError ? channels : channels.filter(channel => {
-			return !response.channels[channel].occupants.find(occupant => occupant.uuid === this._userId);
-		});
+		const troubleChannels = gotError
+			? channels
+			: channels.filter(channel => {
+					return !response.channels[channel].occupants.find(
+						occupant => occupant.uuid === this._userId
+					);
+			  });
 		if (troubleChannels.length > 0) {
 			// let the client know we're experiencing difficulty, and attempt to resubscribe to
 			// the channels in question
@@ -491,7 +495,7 @@ export class PubnubConnection {
 	// we never successfully subscribed to one or more channels requested, enter into a failure
 	// mode, ask the api server to explicitly grant us subscription access to those channels,
 	// and try again
-	private async subscriptionFailure (channels: string[]) {
+	private async subscriptionFailure(channels: string[]) {
 		this.emitTrouble(channels);
 		this._grantFailures = [];
 		await Promise.all(
@@ -512,7 +516,7 @@ export class PubnubConnection {
 
 	// ask the api server to explicitly grant us access to the given channel, if we don't
 	// get access, something is wrong, and the client will have to know about it
-	private async grantChannel (channel: string) {
+	private async grantChannel(channel: string) {
 		try {
 			await this._api!.grant(this._accessToken!, channel);
 		} catch (error) {
@@ -566,7 +570,7 @@ export class PubnubConnection {
 
 	// emit a Trouble event, indicating we're having trouble subscribing to one or more
 	// channels, so the client can display something to the user as needed
-	private emitTrouble (channels?: string[]) {
+	private emitTrouble(channels?: string[]) {
 		// this says we need to notify the client when we get fully connected (again)
 		this._needConnectedMessage = true;
 		this.emitStatus(PubnubStatus.Trouble, channels);

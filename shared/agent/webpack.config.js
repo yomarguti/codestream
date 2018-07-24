@@ -1,6 +1,7 @@
 "use strict";
 const webpack = require("webpack");
 const path = require("path");
+const CleanWebpackPlugin = require("clean-webpack-plugin");
 const FileManagerWebpackPlugin = require("filemanager-webpack-plugin");
 
 module.exports = function(env, argv) {
@@ -10,6 +11,7 @@ module.exports = function(env, argv) {
 	console.log("Production:", production);
 
 	const plugins = [
+		new CleanWebpackPlugin(["dist"]),
 		// Added because of https://github.com/felixge/node-formidable/issues/337
 		new webpack.DefinePlugin({ "global.GENTLY": false }),
 		new FileManagerWebpackPlugin({

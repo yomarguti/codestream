@@ -6,7 +6,7 @@ import {
 	RequestType,
 	RequestType0,
 	TextDocumentIdentifier
-} from "vscode-languageserver/lib/main";
+} from "vscode-languageserver";
 import { CSPost } from "../api/api";
 import { GitApiRepository } from "../git/git";
 
@@ -37,10 +37,10 @@ export namespace PostCodeRequest {
 	);
 }
 
-export namespace DidReceiveMessagesNotification {
+export namespace DidReceivePubNubMessagesNotification {
 	export interface Params {
 		[key: string]: any;
 	}
 
-	export const type = new NotificationType<Params, void>("codeStream/didReceiveMessages");
+	export const type = new NotificationType<Params[], void>("codeStream/didReceivePubNubMessages");
 }
