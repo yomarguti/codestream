@@ -153,8 +153,9 @@ export class CodeStream {
 			this._agent,
 			this._api,
 			loginResponse.pubnubKey,
-			loginResponse.pubnubToken,
-			loginResponse.accessToken,
+			// TODO: Change this once production is upgraded to use the pubnub token
+			this._apiToken, // loginResponse.pubnubToken,
+			this._apiToken,
 			this._userId,
 			this._teamId
 		);
