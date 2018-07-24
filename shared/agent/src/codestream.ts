@@ -11,12 +11,12 @@ import { CodeStreamApi, CSPost, CSStream } from "./api/api";
 import { Container } from "./container";
 import { ApiRequest, PostCodeRequest } from "./ipc/agent";
 import { MarkerHandler } from "./marker/markerHandler";
-import { PubnubConnection } from "./pubnub/pubnubConnection";
+import { PubnubReceiver } from "./pubnub/pubnubReceiver";
 
 export class CodeStream {
 	private readonly _api: CodeStreamApi;
 	private _apiToken: string | undefined;
-	private _pubnub: PubnubConnection | undefined;
+	private _pubnub: PubnubReceiver | undefined;
 	private _teamId: string | undefined;
 	private _userId: string | undefined;
 
@@ -150,17 +150,18 @@ export class CodeStream {
 			loginResponse
 		));
 
-		this._pubnub;
-		// this._pubnub = new PubnubConnection(
-		// 	this._agent,
-		// 	loginResponse.pubnubKey,
-		// 	loginResponse.pubnubToken,
-		// 	this._userId,
-		// 	this._teamId
-		// );
+		this._pubnub = new PubnubReceiver(
+			this._agent,
+			this._api,
+			loginResponse.pubnubKey,
+			loginResponse.pubnubToken,
+			loginResponse.accessToken,
+			this._userId,
+			this._teamId
+		);
 
-		// const streams = await this.getSubscribeableStreams(this._userId, this._teamId);
-		// this._pubnub.listen(streams.map(s => s.id));
+		const streams = await this.getSubscribeableStreams(this._userId, this._teamId);
+		this._pubnub.listen(streams.map(s => s.id));
 
 		return {
 			loginResponse: { ...loginResponse },

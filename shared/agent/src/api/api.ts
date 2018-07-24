@@ -61,13 +61,11 @@ export class CodeStreamApi {
 		this._baseUrl = value;
 	}
 
-	async login(email: string, password: string): Promise<LoginResponse> {
-		const resp = await this.put<LoginRequest, LoginResponse>("/no-auth/login", {
+	login(email: string, password: string): Promise<LoginResponse> {
+		return this.put<LoginRequest, LoginResponse>("/no-auth/login", {
 			email: email,
 			password: password
 		});
-
-		return resp;
 	}
 
 	useMiddleware(middleware: CodeStreamApiMiddleware) {
@@ -206,6 +204,10 @@ export class CodeStreamApi {
 			request,
 			token
 		);
+	}
+
+	grant(token: string, channel: string): Promise<any> {
+		return this.put(`/grant/${channel}`, {}, token);
 	}
 
 	private delete<R extends object>(url: string, token?: string): Promise<R> {
