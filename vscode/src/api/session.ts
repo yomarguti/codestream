@@ -1,12 +1,5 @@
 "use strict";
-import {
-	ConfigurationChangeEvent,
-	// ConfigurationTarget,
-	Disposable,
-	Event,
-	EventEmitter,
-	Uri
-} from "vscode";
+import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, Uri } from "vscode";
 import { WorkspaceState } from "../common";
 import { configuration } from "../configuration";
 import { Container } from "../container";
@@ -61,7 +54,7 @@ export {
 	User
 };
 
-export class CodeStreamSession extends Disposable {
+export class CodeStreamSession implements Disposable {
 	private static _sessions: Map<string, Promise<CodeStreamSession>> = new Map();
 
 	static findRepo(serverUrl: string, repoUrl: string, firstCommitHashes: string[]) {
@@ -95,12 +88,10 @@ export class CodeStreamSession extends Disposable {
 	private _state: SessionState | undefined;
 
 	constructor(private _serverUrl: string) {
-		super(() => this.dispose());
-
 		this._api = new CodeStreamApi(_serverUrl);
 		this._cache = new Cache(this);
-		this._pubnub = new PubNubReceiver(this._cache);
 		this._disposable = Disposable.from(
+			(this._pubnub = new PubNubReceiver(this._cache)),
 			this._pubnub.onDidReceiveMessage(this.onMessageReceived, this),
 			configuration.onDidChange(this.onConfigurationChanged, this)
 		);
@@ -381,17 +372,8 @@ export class CodeStreamSession extends Disposable {
 			this._sessionApi = new CodeStreamSessionApi(this._api, this._state.token, teamId);
 
 			const disposables = [
-				this._pubnub.initialize(this._state.token, this.userId, this._state.pubnubKey),
 				Container.git.onDidChangeRepositories(this.onGitRepositoriesChanged, this)
 			];
-
-			const streams = await this._sessionApi.getSubscribeableStreams(this.userId, teamId);
-			this._pubnub.subscribe(
-				this.userId,
-				teamId,
-				loginResponse.repos.map(r => r.id),
-				streams.map(s => s.id)
-			);
 
 			this._presenceManager = new PresenceManager(this._sessionApi, id);
 

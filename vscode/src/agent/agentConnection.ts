@@ -1,6 +1,6 @@
 "use strict";
 import { RequestInit } from "node-fetch";
-import { ExtensionContext, Uri } from "vscode";
+import { Event, EventEmitter, ExtensionContext, Uri } from "vscode";
 import {
 	Disposable,
 	InitializeResult,
@@ -39,6 +39,11 @@ export interface CodeStreamAgentResult {
 }
 
 export class CodeStreamAgentConnection implements Disposable {
+	private _onDidReceivePubNubMessages = new EventEmitter<{ [key: string]: any }[]>();
+	get onDidReceivePubNubMessages(): Event<{ [key: string]: any }[]> {
+		return this._onDidReceivePubNubMessages.event;
+	}
+
 	private _client: LanguageClient | undefined;
 	private _disposable: Disposable | undefined;
 
@@ -144,8 +149,9 @@ export class CodeStreamAgentConnection implements Disposable {
 		return repos.map(r => ({ rootUri: r.rootUri.toString() }));
 	}
 
-	private onMessagesReceived(...params: any[]) {
+	private onPubNubMessagesReceived(...messages: { [key: string]: any }[]) {
 		console.log("Messages received");
+		this._onDidReceivePubNubMessages.fire(messages);
 	}
 
 	@started
@@ -155,7 +161,7 @@ export class CodeStreamAgentConnection implements Disposable {
 			return response;
 		} catch (ex) {
 			debugger;
-			Logger.error(ex, `CodeStreamAgentClient.sendRequest`, method, params);
+			Logger.error(ex, `CodeStreamAgentConnection.sendRequest`, method, params);
 			throw ex;
 		}
 	}
@@ -186,8 +192,8 @@ export class CodeStreamAgentConnection implements Disposable {
 		);
 
 		this._client.onNotification(
-			"codeStream/didReceiveMessages",
-			this.onMessagesReceived.bind(this)
+			"codeStream/didReceivePubNubMessages",
+			this.onPubNubMessagesReceived.bind(this)
 		);
 
 		return this._client.initializeResult!;
