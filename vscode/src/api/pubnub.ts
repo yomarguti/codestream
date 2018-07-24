@@ -1,5 +1,5 @@
 "use strict";
-import Pubnub = require("pubnub");
+import * as Pubnub from "pubnub";
 import { Disposable, Event, EventEmitter } from "vscode";
 import { Logger } from "../logger";
 import { Iterables } from "../system";
