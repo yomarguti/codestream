@@ -1,8 +1,6 @@
 "use strict";
 import fetch, { Headers, RequestInit, Response } from "node-fetch";
 import { URLSearchParams } from "url";
-import { CancellationToken } from "vscode-languageserver";
-import { CodeStreamAgent } from "../agent";
 import { Logger } from "../logger";
 import {
 	CreatePostRequest,
@@ -47,29 +45,11 @@ export class CodeStreamApi {
 	// private responseCache = new Map<string, Promise<any>>();
 
 	constructor(
-		agent: CodeStreamAgent,
 		baseUrl: string,
 		private readonly _ideVersion: string,
 		private readonly _extensionVersion: string
 	) {
 		this._baseUrl = baseUrl;
-		agent.registerHandler<Promise<any>, any>(
-			"codeStream/api",
-			({ url, token, init }, cancellationToken: CancellationToken) =>
-				this.onApiRequest(url, token, init, cancellationToken)
-		);
-
-		// this.useMiddleware({
-		//     name: 'ResponseCaching',
-		//     onProvideResponse: async context => {
-		//         if (context.method !== 'GET') return undefined;
-		//         return this.responseCache.get(context.url);
-		//     },
-		//     onResponse: async (context, response) => {
-		//         if (context.method !== 'GET') return;
-		//         this.responseCache.set(context.url, response);
-		//     }
-		// });
 	}
 
 	private _baseUrl: string;
@@ -79,16 +59,6 @@ export class CodeStreamApi {
 	set baseUrl(value: string) {
 		// TODO: Might need some checks here
 		this._baseUrl = value;
-	}
-
-	private onApiRequest(
-		url: string,
-		token: string,
-		init: RequestInit,
-		cancellationToken: CancellationToken
-	) {
-		const result = this.fetch(url, init, token);
-		return result;
 	}
 
 	async login(email: string, password: string): Promise<LoginResponse> {
@@ -280,7 +250,7 @@ export class CodeStreamApi {
 		);
 	}
 
-	private async fetch<R extends object>(
+	/*private*/ async fetch<R extends object>(
 		url: string,
 		init?: RequestInit,
 		token?: string

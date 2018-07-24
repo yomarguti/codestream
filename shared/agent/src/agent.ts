@@ -1,6 +1,7 @@
 "use strict";
 
 import {
+	CancellationToken,
 	ClientCapabilities,
 	Connection,
 	createConnection,
@@ -8,29 +9,26 @@ import {
 	DidChangeConfigurationParams,
 	DidChangeWatchedFilesParams,
 	Disposable,
-	GenericRequestHandler,
 	InitializedParams,
 	InitializeParams,
 	InitializeResult,
 	Logger as LSPLogger,
+	NotificationType,
+	NotificationType0,
 	ProposedFeatures,
-	TextDocumentPositionParams,
+	RequestHandler,
+	RequestHandler0,
+	RequestType,
+	RequestType0,
 	TextDocumentSyncKind,
 	WorkspaceFoldersChangeEvent
 } from "vscode-languageserver";
-import { CodeStreamApi, LoginResponse } from "./api/api";
+import { CodeStream } from "./codestream";
 import { Container } from "./container";
-import { gitApi, GitApiRepository } from "./git/git";
+import { gitApi } from "./git/git";
+import { GitRepositoriesRequest } from "./ipc/client";
 import { Logger } from "./logger";
-import { MarkerHandler } from "./marker/markerHandler";
 import { Disposables, memoize } from "./system";
-import {
-	PubnubReceiver,
-	PubnubInitializer,
-	ChannelDescriptor,
-	StatusChangeEvent,
-	PubnubStatus
-} from "./pubnub/pubnubReceiver";
 
 // TODO: Fix this, but for now keep in sync with CodeStreamAgentOptions in agentClient.ts in vscode-codestream
 export interface CodeStreamAgentOptions {
@@ -49,7 +47,6 @@ export class CodeStreamAgent implements Disposable, LSPLogger {
 	private _clientCapabilities: ClientCapabilities | undefined;
 	private readonly _connection: Connection;
 	private _disposable: Disposable | undefined;
-	private _pubnubReceiver: PubnubReceiver;
 
 	constructor() {
 		// Create a connection for the server. The connection uses Node's IPC as a transport.
@@ -61,12 +58,6 @@ export class CodeStreamAgent implements Disposable, LSPLogger {
 		this._connection.onInitialized(this.onInitialized.bind(this));
 		this._connection.onDidChangeConfiguration(this.onConfigurationChanged.bind(this));
 		this._connection.onDidChangeWatchedFiles(this.onWatchedFilesChanged.bind(this));
-		this._connection.onHover(this.onHover.bind(this));
-
-		// TODO: This should go away in favor of specific registrations
-		this._connection.onRequest(this.onRequest.bind(this));
-
-		this._pubnubReceiver = new PubnubReceiver();
 	}
 
 	dispose() {
@@ -77,83 +68,27 @@ export class CodeStreamAgent implements Disposable, LSPLogger {
 		const capabilities = e.capabilities;
 		this._clientCapabilities = capabilities;
 
-		const options = e.initializationOptions! as CodeStreamAgentOptions;
-		const api = new CodeStreamApi(
+		const codestream = new CodeStream(
 			this,
-			options.serverUrl,
-			options.ideVersion,
-			options.extensionVersion
+			this._connection,
+			e.initializationOptions! as CodeStreamAgentOptions
 		);
-		const loginResponse = await api.login(options.email, options.token);
-
-		// TODO: Since the token is current a password, replace it with an access token
-		options.token = loginResponse.accessToken;
-
-		// If there is only 1 team, use it regardless of config
-		if (loginResponse.teams.length === 1) {
-			options.teamId = loginResponse.teams[0].id;
-		} else {
-			// Sort the teams from oldest to newest
-			loginResponse.teams.sort((a, b) => a.createdAt - b.createdAt);
-		}
-
-		if (options.teamId == null) {
-			if (options.team) {
-				const normalizedTeamName = options.team.toLocaleUpperCase();
-				const team = loginResponse.teams.find(
-					t => t.name.toLocaleUpperCase() === normalizedTeamName
-				);
-				if (team != null) {
-					options.teamId = team.id;
-				}
-			}
-
-			// if (opts.teamId == null && data.repos.length > 0) {
-			// 	for (const repo of await Container.git.getRepositories()) {
-			// 		const url = await repo.getNormalizedUrl();
-
-			// 		const found = data.repos.find(r => r.normalizedUrl === url);
-			// 		if (found === undefined) continue;
-
-			// 		teamId = found.teamId;
-			// 		break;
-			// 	}
-			// }
-
-			// If we still can't find a team, then just pick the first one
-			if (options.teamId == null) {
-				options.teamId = loginResponse.teams[0].id;
-			}
-		}
-
-		if (loginResponse.teams.find(t => t.id === options.teamId) === undefined) {
-			options.teamId = loginResponse.teams[0].id;
-		}
-
-		void (await Container.initialize(this, this._connection, api, options, loginResponse));
-
-		this.initializePubnub(loginResponse);
+		const result = await codestream.login();
 
 		return {
 			capabilities: {
 				textDocumentSync: TextDocumentSyncKind.Full,
 				hoverProvider: true
 			},
-			result: {
-				loginResponse: { ...loginResponse },
-				state: { ...Container.instance().state }
-			}
+			result: result
 		} as InitializeResult;
 	}
 
 	private async onInitialized(e: InitializedParams) {
 		try {
-			// const repos = await this._connection.sendRequest<GitApiRepository[]>("codeStream/git/repos");
-
 			gitApi({
 				getGitPath: async () => Container.instance().gitPath,
-				getRepositories: async () =>
-					this._connection.sendRequest<GitApiRepository[]>("codeStream/git/repos")
+				getRepositories: async () => this.sendRequest(GitRepositoriesRequest.type)
 			});
 
 			const subscriptions = [];
@@ -186,45 +121,6 @@ export class CodeStreamAgent implements Disposable, LSPLogger {
 		Container.instance().updateConfig(e.settings.codestream);
 	}
 
-	private initializePubnub (loginResponse: LoginResponse) {
-		const channels: Array<ChannelDescriptor> = (loginResponse.teams || []).map(team => {
-			return {
-				name: `team-${team.id}`,
-				withPresence: true
-			} as ChannelDescriptor;
-		});
-		channels.push({ name: `user-${loginResponse.user.id}` } as ChannelDescriptor);
-
-		this._pubnubReceiver.initialize({
-			subscribeKey: loginResponse.pubnubKey,
-			authKey: loginResponse.pubnubToken,
-			userId: loginResponse.user.id,
-			online: true
-		} as PubnubInitializer);
-
-		this._pubnubReceiver.onStatusChange(this.onPubnubStatusChange.bind(this));
-		this._pubnubReceiver.onMessagesReceived(this.onPubnubMessages.bind(this));
-		this._pubnubReceiver.subscribe(channels);
-	}
-
-	private onHover(e: TextDocumentPositionParams) {
-		this._connection.console.log("Hover request received");
-		return undefined;
-	}
-
-	private onRequest(method: string, ...params: any[]) {
-		if (!method.startsWith("codeStream")) return undefined;
-
-		this._connection.console.log(`Request ${method} received`);
-
-		switch (method) {
-			case "codeStream/textDocument/markers":
-				return MarkerHandler.handle(params);
-		}
-
-		return undefined;
-	}
-
 	private onWatchedFilesChanged(e: DidChangeWatchedFilesParams) {
 		// Monitored files have change in VSCode
 		this._connection.console.log("Watched Files change event received");
@@ -232,39 +128,6 @@ export class CodeStreamAgent implements Disposable, LSPLogger {
 
 	private onWorkspaceFoldersChanged(e: WorkspaceFoldersChangeEvent) {
 		this._connection.console.log("Workspace folder change event received");
-	}
-
-	private onPubnubStatusChange(e: StatusChangeEvent) {
-		switch (e.status) {
-			case PubnubStatus.Connected:
-				// TODO: let the extension know we are connected?
-				break;
-
-			case PubnubStatus.Trouble:
-				// TODO: let the extension know we have trouble?
-				break;
-
-			case PubnubStatus.Reset:
-				// TODO: must fetch all data fetch from the server
-				break;
-
-			case PubnubStatus.Offline:
-				// TODO: let the extension know we are offline?
-				break;
-
-			case PubnubStatus.SomeFailed:
-				// TODO: let the extension know we have trouble?
-				// the indicated channels have not been subscribed to, what do we do?
-				break;
-
-			case PubnubStatus.Failed:
-				// TODO: catastrophic failure event, what do we do?
-				break;
-		}
-	}
-
-	private onPubnubMessages(messages: Array<any>) {
-		// TODO: do something with these messages...
 	}
 
 	@memoize
@@ -287,8 +150,37 @@ export class CodeStreamAgent implements Disposable, LSPLogger {
 		);
 	}
 
-	registerHandler<R, E>(method: string, handler: GenericRequestHandler<R, E>) {
-		return this._connection.onRequest<R, E>(method, handler);
+	get connection() {
+		return this._connection;
+	}
+
+	registerHandler<R, E, RO>(type: RequestType0<R, E, RO>, handler: RequestHandler0<R, E>): void;
+	registerHandler<P, R, E, RO>(
+		type: RequestType<P, R, E, RO>,
+		handler: RequestHandler<P, R, E>
+	): void;
+	registerHandler(type: any, handler: any): void {
+		return this._connection.onRequest(type, handler);
+	}
+
+	sendNotification<RO>(type: NotificationType0<RO>): void;
+	sendNotification<P, RO>(type: NotificationType<P, RO>, params: P): void;
+	sendNotification(type: any, params?: any): void {
+		return this._connection.sendNotification(type, params);
+	}
+
+	sendRequest<R, E, RO>(type: RequestType0<R, E, RO>, token?: CancellationToken): Thenable<R>;
+	sendRequest<P, R, E, RO>(
+		type: RequestType<P, R, E, RO>,
+		params: P,
+		token?: CancellationToken
+	): Thenable<R>;
+	sendRequest(type: any, params?: any, token?: CancellationToken): Thenable<any> {
+		if (CancellationToken.is(params)) {
+			token = params;
+			params = undefined;
+		}
+		return this._connection.sendRequest(type, params, token);
 	}
 
 	error(exception: Error): void;

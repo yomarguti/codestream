@@ -12,6 +12,7 @@ import {
 } from "vscode-languageserver";
 import Uri from "vscode-uri";
 import { CodeStreamAgent } from "../agent";
+import { GitRepositoriesRequest } from "../ipc/agent";
 import { Logger } from "../logger";
 import { Strings } from "../system";
 import { getRepositories, git, GitApiRepository, GitErrors, GitWarnings } from "./git";
@@ -70,9 +71,7 @@ export class GitService implements IGitService, Disposable {
 	}
 
 	constructor(agent: CodeStreamAgent) {
-		agent.registerHandler("codeStream/git/repos", (cancellationToken: CancellationToken) =>
-			this.onRepositoriesRequest(cancellationToken)
-		);
+		agent.registerHandler(GitRepositoriesRequest.type, this.onRepositoriesRequest.bind(this));
 
 		// case "codeStream/git/repo/remote": {
 		// 	const { uri } = params[0];
@@ -91,7 +90,6 @@ export class GitService implements IGitService, Disposable {
 		// 	} = params[0];
 		// 	return this._git!.getFileCurrentSha(uri);
 		// }
-
 		// this._disposable = workspace.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this);
 	}
 

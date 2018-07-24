@@ -1,52 +1,52 @@
 // Provide the PubnubReceiver class, which encapsulates communications with Pubnub to receive
-// messages in real-time 
-
-import { Disposable, Emitter, Event } from "vscode-languageserver/lib/main";
+// messages in real-time
+"use strict";
 import * as Pubnub from "pubnub";
+import { Disposable, Emitter, Event } from "vscode-languageserver";
 import { PubnubHistory, PubnubHistoryInput, PubnubHistoryOutput } from "./pubnubHistory";
 
 // use this interface to initialize the PubnubReceiver class
 export interface PubnubInitializer {
-	subscribeKey: string,	// identifies our Pubnub account, comes from pubnubKey returned with the login response from the API
-	authKey: string,		// unique Pubnub token provided in the login response
-	userId: string,			// ID of the current user
-	channels?: Array<ChannelDescriptor | string>,	// channels to subscribe to, provided on initialization or later using subscribe()
-	lastMessageReceivedAt?: number,	// should persist across sessions, interruptions in service will retrieve messages since this time
-	online?: boolean	// for now, whether the network is online is tracked from without the PubnubReceiver instance, but this is still TBD
+	subscribeKey: string; // identifies our Pubnub account, comes from pubnubKey returned with the login response from the API
+	authKey: string; // unique Pubnub token provided in the login response
+	userId: string; // ID of the current user
+	channels?: (ChannelDescriptor | string)[]; // channels to subscribe to, provided on initialization or later using subscribe()
+	lastMessageReceivedAt?: number; // should persist across sessions, interruptions in service will retrieve messages since this time
+	online?: boolean; // for now, whether the network is online is tracked from without the PubnubReceiver instance, but this is still TBD
 }
 
 // when providing channels to subscribe to, you can provide just the channel name,
 // or if you want presence notifications, you can use this interface, specifying
 // withPresence as true
 export interface ChannelDescriptor {
-	name: string,
-	withPresence?: boolean
+	name: string;
+	withPresence?: boolean;
 }
 
 // the PubnubReceiver instance will emit a status through onStatusChange(), for some
 // statuses, information on which channels are affected is also provided
 export interface StatusChangeEvent {
-	status: PubnubStatus,
-	channels?: Array<string>
+	status: PubnubStatus;
+	channels?: string[];
 }
 
 // one of the statuses emitted in StatusChangeEvent above
 export enum PubnubStatus {
-	Connected,	// indicates all channels have been successfully subscribed to as requested
-	Trouble,	// indicates trouble with the network or one or more subscriptions, should be a temporary state
-	SomeFailed,	// indicates some channels could not be subscribed to, and client action is required to correct this
-	Failed,		// indicates a complete failure to subscribe, in practice this should never occur
-	Offline,	// indicates the network is currently offline, so messages won't be received
-	Reset		// indicates that during catching up on history, there are too many messages or it's been too long...
-				// the client should retrieve fresh data from the server as if it is a fresh login
+	Connected, // indicates all channels have been successfully subscribed to as requested
+	Trouble, // indicates trouble with the network or one or more subscriptions, should be a temporary state
+	SomeFailed, // indicates some channels could not be subscribed to, and client action is required to correct this
+	Failed, // indicates a complete failure to subscribe, in practice this should never occur
+	Offline, // indicates the network is currently offline, so messages won't be received
+	Reset // indicates that during catching up on history, there are too many messages or it's been too long...
+	// the client should retrieve fresh data from the server as if it is a fresh login
 }
 
 // internal, maintains map of channels and whether they are yet successfully subscribed
 interface SubscriptionMap {
 	[key: string]: {
-		subscribed: boolean,
-		withPresence?: boolean
-	}
+		subscribed: boolean;
+		withPresence?: boolean;
+	};
 }
 
 // PubNub's retention time is one week ... to avoid missing messages on the edge, we'll
@@ -56,7 +56,6 @@ const TEN_MINUTES = 10 * 60 * 1000;
 const THRESHOLD_FOR_CATCHUP = ONE_WEEK - TEN_MINUTES;
 
 export class PubnubReceiver {
-
 	private _fullySubscribed: boolean = false;
 	private _subscriptions: SubscriptionMap = {};
 	private _userId: string | undefined;
@@ -65,27 +64,27 @@ export class PubnubReceiver {
 	private _pubnub: Pubnub | undefined;
 	private _lastMessageReceivedAt: number = 0;
 	private _listener: Pubnub.ListenerParameters | undefined;
-	private _messageEmitter = new Emitter<Array<any>>();
+	private _messageEmitter = new Emitter<{ [key: string]: any }[]>();
 	private _statusEmitter = new Emitter<StatusChangeEvent>();
-	private _queuedChannels: Array<ChannelDescriptor> = [];
+	private _queuedChannels: ChannelDescriptor[] = [];
 	private _statusTimeout: NodeJS.Timer | undefined;
 	private _online: boolean = false;
-	private _grantFailures: Array<string> = [];
+	private _grantFailures: string[] = [];
 	private _lastTick: number = 0;
 	private _tickInterval: NodeJS.Timer | undefined;
 
 	// call to receive status updates
-	get onStatusChange(): Event<StatusChangeEvent> {
+	get onDidStatusChange(): Event<StatusChangeEvent> {
 		return this._statusEmitter.event;
 	}
 
 	// call to listen for Pubnub messages
-	get onMessagesReceived(): Event<Array<any>> {
+	get onDidReceiveMessages(): Event<{ [key: string]: any }[]> {
 		return this._messageEmitter.event;
 	}
 
 	// initialize PubnubReceiver and optionally subscribe to channels
-	initialize (options: PubnubInitializer): Disposable {
+	initialize(options: PubnubInitializer): Disposable {
 		this._subscribeKey = options.subscribeKey;
 		this._authKey = options.authKey;
 		this._userId = options.userId;
@@ -118,42 +117,42 @@ export class PubnubReceiver {
 	}
 
 	// subscribe to the passed channels
-	subscribe (channels: Array<ChannelDescriptor | string>) {
-		const channelDescriptors: Array<ChannelDescriptor> = this.normalizeChannelDescriptors(channels);
+	subscribe(channels: (ChannelDescriptor | string)[]) {
+		const channelDescriptors: ChannelDescriptor[] = this.normalizeChannelDescriptors(channels);
 		// while processing subscriptions, we hold off accepting new subscriptions until processing is complete,
 		// in the meantime, queue them up ... we'll drain the queue when we've successfully subscribed
 		// to the current channels being processed
 		if (!this._fullySubscribed) {
 			if (!this._online) {
-				this.offline();	// emit an Offline event even though the client should already "know", just to be communicative
+				this.offline(); // emit an Offline event even though the client should already "know", just to be communicative
 			}
 			this.queueChannels(channelDescriptors);
-		}
-		else {
+		} else {
 			this.subscribeToChannels(channelDescriptors);
 		}
 	}
 
-	// turn every channel, even if specified by channel name, into a ChannelDescriptor 
-	private normalizeChannelDescriptors (channels: Array<ChannelDescriptor | string>): Array<ChannelDescriptor> {
+	// turn every channel, even if specified by channel name, into a ChannelDescriptor
+	private normalizeChannelDescriptors(
+		channels: (ChannelDescriptor | string)[]
+	): ChannelDescriptor[] {
 		return channels.map(channel => {
-			if (typeof channel === 'string') {
+			if (typeof channel === "string") {
 				return { name: channel };
-			}
-			else {
+			} else {
 				return channel;
 			}
 		});
 	}
 
 	// we're not in a position to subscribe to these channels, queue them up for later
-	private queueChannels (channels: Array<ChannelDescriptor>) {
+	private queueChannels(channels: ChannelDescriptor[]) {
 		this._queuedChannels.push(...channels);
 	}
 
 	// a request was made to subscribe to some channels but we weren't ready to handle them,
 	// now we are, so drain the queue and subscribe to those channels
-	private drainQueue () {
+	private drainQueue() {
 		const channels = this._queuedChannels;
 		this._queuedChannels = [];
 		this.subscribeToChannels(channels);
@@ -161,7 +160,7 @@ export class PubnubReceiver {
 
 	// for now, we're accepting online/offline events from the client, but how this will
 	// really work is TBD
-	setOnline (online: boolean) {
+	setOnline(online: boolean) {
 		const wasOnline = this._online;
 		this._online = online;
 		if (online && !wasOnline) {
@@ -169,15 +168,14 @@ export class PubnubReceiver {
 			// subscriptions are still in good standing by calling Pubnub's hereNow, which
 			// tells us who is subscribed to which channels
 			this.confirmSubscriptions();
-		}
-		else if (!online && wasOnline) {
+		} else if (!online && wasOnline) {
 			// if we're offline, go into a waiting mode until we come online again
 			this.offline();
 		}
 	}
 
 	// add listeners for Pubnub status updates, messages, and presence updates
-	private addListener () {
+	private addListener() {
 		this._listener = {
 			presence: this.onPresence.bind(this),
 			message: this.onMessage.bind(this),
@@ -188,14 +186,14 @@ export class PubnubReceiver {
 
 	// start a ticking clock ... we tick once per second, but if we detect a gap in ticks of
 	// longer than 10 seconds, that typically means a computer put on standby or a laptop close ...
-	// in this case, the tick gap is usually our quickest way of detecting that we may have 
+	// in this case, the tick gap is usually our quickest way of detecting that we may have
 	// some catching up to do once the network connection is restored
-	private startTicking () {
+	private startTicking() {
 		this._tickInterval = setInterval(this.tick.bind(this), 1000);
 	}
 
 	// one tick of the clock, if longer than 10 seconds, assume a network "hiccup" of some kind
-	private tick () {
+	private tick() {
 		const now = Date.now();
 		if (this._lastTick > 0 && now - this._lastTick > 10000) {
 			this.netHiccup();
@@ -204,24 +202,24 @@ export class PubnubReceiver {
 	}
 
 	// for test purposes, simulate a long tick (since we can't physically close a laptop!)
-	simulateLongTick () {
+	simulateLongTick() {
 		clearInterval(this._tickInterval!);
 		setTimeout(this.startTicking.bind(this), 11000);
 	}
 
 	// remove Pubnub listeners we set up earlier
-	private removeListener () {
+	private removeListener() {
 		if (this._pubnub && this._listener) {
 			this._pubnub.removeListener(this._listener);
 		}
 	}
 
 	// when a message is received from Pubnub...
-	private onMessage (event: Pubnub.MessageEvent) {
+	private onMessage(event: Pubnub.MessageEvent) {
 		// track the last time a message was received, each time we encounter a disconnected situation,
 		// we'll fetch the message history from this point going forward
 		this._lastMessageReceivedAt = this.timetokenToTimestamp(event.timetoken);
-		this._messageEmitter.fire([event.message]);
+		this.emitMessages([event.message]);
 	}
 
 	// presence event from Pubnub
@@ -238,20 +236,16 @@ export class PubnubReceiver {
 		) {
 			// a successful subscription of certain channels
 			this.setConnected(status.affectedChannels);
-		}
-		else if (
-			this._fullySubscribed && 
+		} else if (
+			this._fullySubscribed &&
 			(status as any).error &&
-			(
-				status.operation === Pubnub.OPERATIONS.PNHeartbeatOperation ||
-				status.operation === Pubnub.OPERATIONS.PNSubscribeOperation
-			)
+			(status.operation === Pubnub.OPERATIONS.PNHeartbeatOperation ||
+				status.operation === Pubnub.OPERATIONS.PNSubscribeOperation)
 		) {
 			// a network error of some kind, we'll confirm our subscriptions and
 			// make sure we are truly connected
 			this.netHiccup();
-		}
-		else if (
+		} else if (
 			(status as any).error &&
 			status.category === Pubnub.CATEGORIES.PNAccessDeniedCategory
 		) {
@@ -259,21 +253,20 @@ export class PubnubReceiver {
 			let response;
 			try {
 				response = JSON.parse((status as any).errorData.response.text);
-			}
-			catch (error) {
+			} catch (error) {
 				// this is really a total failsafe, but if we can't determine the payload
 				// for some reason, we assume the worst
 				this.subscriptionFailureAll();
 				return;
 			}
 			// we'll explicitly force the server to grant us permission to access these channels,
-			// hoping that this is just a glitch or delay 
+			// hoping that this is just a glitch or delay
 			this.subscriptionFailure(response.payload.channels || []);
 		}
 	}
 
 	// for testing purposes, simulate a Pubnub status event which indicates a network error
-	simulateNetError (delay: number = 0) {
+	simulateNetError(delay: number = 0) {
 		setTimeout(() => {
 			this.onStatus({
 				error: true,
@@ -281,18 +274,18 @@ export class PubnubReceiver {
 			});
 		}, delay);
 	}
-	
+
 	// subscribe to these channels
-	private subscribeToChannels (channels:Array<ChannelDescriptor>) {
+	private subscribeToChannels(channels: ChannelDescriptor[]) {
 		// add them as unsubscribed, then subscribe to unsubscribed channels
 		this.addChannels(channels);
 		this.subscribeAll();
 	}
 
 	// subscribe to all requested channels that we are not yet subscribed to
-	private subscribeAll () {
+	private subscribeAll() {
 		if (!this._online) {
-			// can't subscribe if we are offline, enter into an offline state and 
+			// can't subscribe if we are offline, enter into an offline state and
 			// wait to go online again
 			return this.offline();
 		}
@@ -305,13 +298,12 @@ export class PubnubReceiver {
 		// split into channels that require presence updates and those that don't, and
 		// make a separate call to Pubnub to subscribe for each
 		const timetoken = this.timestampToTimetoken(this._lastMessageReceivedAt - 10000);
-		const channelsWithPresence: Array<string> = [];
-		const channelsWithoutPresence: Array<string> = [];
+		const channelsWithPresence: string[] = [];
+		const channelsWithoutPresence: string[] = [];
 		channels.forEach(channel => {
 			if (this._subscriptions[channel].withPresence) {
 				channelsWithPresence.push(channel);
-			}
-			else {
+			} else {
 				channelsWithoutPresence.push(channel);
 			}
 		});
@@ -329,17 +321,17 @@ export class PubnubReceiver {
 			} as Pubnub.SubscribeParameters);
 		}
 
-		// it sucks that we don't get a direct response from Pubnub when we try to 
+		// it sucks that we don't get a direct response from Pubnub when we try to
 		// subscribe to channels ... when we get a failure, we're not told which channels
 		// failed ... so avoid race condition problems by explicitly timing out if we
-		// don't receive a success message 
+		// don't receive a success message
 		this._statusTimeout = setTimeout(this.subscriptionTimeout.bind(this), 5000);
 	}
 
 	// add channels to our list of channels we know we need to subscribe to, mark them
 	// as unsubscribed unless we already know about them
-	private addChannels (channels: Array<ChannelDescriptor>) {
-		for (let channel of channels) {
+	private addChannels(channels: ChannelDescriptor[]) {
+		for (const channel of channels) {
 			if (!this._subscriptions[channel.name]) {
 				this._subscriptions[channel.name] = {
 					subscribed: false,
@@ -353,8 +345,8 @@ export class PubnubReceiver {
 	// set the given channels as successfully subscribed to, and if we're subscribed to
 	// all channels that have been requested, catch up on any missed history and emit
 	// a Connected event when done
-	private setConnected (channels: Array<string>) {
-		for (let channel of channels) {
+	private setConnected(channels: string[]) {
+		for (const channel of channels) {
 			this._subscriptions[channel].subscribed = true;
 		}
 		if (this.getUnsubscribedChannels().length === 0) {
@@ -364,7 +356,7 @@ export class PubnubReceiver {
 	}
 
 	// catch up on missed history, while disconnected
-	private async catchUp () {
+	private async catchUp() {
 		if (!this._lastMessageReceivedAt) {
 			// if _lastMessageReceivedAt is not set, we assume a fresh session, with no
 			// catch up necessary
@@ -372,7 +364,7 @@ export class PubnubReceiver {
 		}
 		if (Date.now() - this._lastMessageReceivedAt > THRESHOLD_FOR_CATCHUP) {
 			// if it's been too long, we don't want to process a whole ton of messages,
-			// and in any case we only retain messages for one week ... so better to 
+			// and in any case we only retain messages for one week ... so better to
 			// force the client to initiate a fresh session
 			return this.reset();
 		}
@@ -391,8 +383,7 @@ export class PubnubReceiver {
 				channels,
 				since: this._lastMessageReceivedAt
 			} as PubnubHistoryInput);
-		}
-		catch (error) {
+		} catch (error) {
 			// this is catastrophic ... if we can't catch up on messages, something is
 			// badly wrong and some client action will be required
 			return this.subscriptionFailureAll();
@@ -402,9 +393,7 @@ export class PubnubReceiver {
 			// want to over-burden the client with processing, better just to force
 			// a fresh session
 			return this.reset();
-		}
-
-		else if (historyOutput.messages && historyOutput.messages.length > 0) {
+		} else if (historyOutput.messages && historyOutput.messages.length > 0) {
 			// emit all messages found
 			this.emitMessages(historyOutput.messages);
 		}
@@ -414,13 +403,12 @@ export class PubnubReceiver {
 	}
 
 	// we detected a network hiccup of some kind, detect whether we are offline,
-	// and if so, go into a waiting mode, otherwise confirm our subscriptions are still 
+	// and if so, go into a waiting mode, otherwise confirm our subscriptions are still
 	// in good standing
-	private async netHiccup () {
+	private async netHiccup() {
 		if (!this._online) {
 			this.offline();
-		}
-		else {
+		} else {
 			this.confirmSubscriptions();
 		}
 	}
@@ -428,7 +416,7 @@ export class PubnubReceiver {
 	// confirm our subscriptions are in good standing by calling Pubnub's hereNow(),
 	// which tells us which users are subscribed to which channels ... make sure
 	// we're in all the expected channels, and if we aren't, resubscribe to them
-	private async confirmSubscriptions () {
+	private async confirmSubscriptions() {
 		const channels = this.getSubscribedChannels();
 		if (channels.length === 0) {
 			// no subscribed channels to worry about, proceed through the state machine
@@ -439,28 +427,28 @@ export class PubnubReceiver {
 		// look for the occupants of the given channels, and if we are not among
 		// them, something has gone wrong and we must resubscribe
 		let response: Pubnub.HereNowResponse;
-		let gotError: boolean = false;
+		let gotError = false;
 		try {
 			response = await this._pubnub!.hereNow({
 				channels,
 				includeUUIDs: true
 			} as Pubnub.HereNowParameters);
-		}
-		catch (error) {
+		} catch (error) {
 			gotError = true;
 		}
 		if (
 			gotError ||
 			channels.find(channel => {
-				return !response.channels[channel].occupants.find(occupant => occupant.uuid === this._userId);
+				return !response.channels[channel].occupants.find(
+					occupant => occupant.uuid === this._userId
+				);
 			})
 		) {
-			// let the client know we're experiencing difficulty, and attempt to resubscribe to 
+			// let the client know we're experiencing difficulty, and attempt to resubscribe to
 			// the channels in question
 			this.emitTrouble();
 			this.resubscribe();
-		}
-		else {
+		} else {
 			// seems like we're good, let's make sure we didn't miss anything by catching up on
 			// message history
 			this.catchUp();
@@ -468,7 +456,7 @@ export class PubnubReceiver {
 	}
 
 	// unsubscribe to all channels and stop listening to messages and status updates (clean up)
-	private unsubscribeAll () {
+	private unsubscribeAll() {
 		const channels = this.getSubscribedChannels();
 		this._pubnub!.unsubscribe({ channels });
 		this._subscriptions = {};
@@ -478,23 +466,21 @@ export class PubnubReceiver {
 	// some sort of disaster has happened and we are completely unable to subscribe to any
 	// channels, for now, we'll enter into a loop of trying over and over again to resubscribe,
 	// but we might need to introduce some throttling into this behavior
-	private async subscriptionFailureAll () {
+	private async subscriptionFailureAll() {
 		// let the client know we are experiencing difficulty, ask the api server to explicitly
 		// grant us access to all the channels we are supposed to have access to, and try again
 		// to resubscribe ... let's hope this process doesn't go on for too long
 		this.emitTrouble();
 		try {
-//			await this._api.grantAll(token);
-		}
-		catch (error) {
-		}
+			// 			await this._api.grantAll(token);
+		} catch (error) {}
 		this.resubscribe();
 	}
 
 	// we timed out trying to successfully subscribe to one or more channels, enter into a failure
 	// mode, ask the api server to explicitly grant us subscription access to those channels,
 	// and try again
-	private async subscriptionTimeout () {
+	private async subscriptionTimeout() {
 		const failedChannels = this.getUnsubscribedChannels();
 		await this.subscriptionFailure(failedChannels);
 	}
@@ -502,14 +488,16 @@ export class PubnubReceiver {
 	// we never successfully subscribed to one or more channels requested, enter into a failure
 	// mode, ask the api server to explicitly grant us subscription access to those channels,
 	// and try again
-	private async subscriptionFailure (channels:Array<string>) {
+	private async subscriptionFailure(channels: string[]) {
 		this.emitTrouble();
 		this._grantFailures = [];
-		await Promise.all(channels.map(async channel => {
-			await this.grantChannel(channel);
-		}));
+		await Promise.all(
+			channels.map(async channel => {
+				await this.grantChannel(channel);
+			})
+		);
 		if (this._grantFailures.length > 0) {
-			// if we are unable to get explicit access to any channels, something is really wrong, 
+			// if we are unable to get explicit access to any channels, something is really wrong,
 			// so notify the client of the failures so it can take whatever action, and remove
 			// those channels from our list of channels to try, we're writing them off and the
 			// client is going to have to figure out what to do about it
@@ -521,31 +509,29 @@ export class PubnubReceiver {
 
 	// ask the api server to explicitly grant us access to the given channel, if we don't
 	// get access, something is wrong, and the client will have to know about it
-	private grantChannel (channel: string) {
+	private grantChannel(channel: string) {
 		try {
-//			await this._api.grant(token, { channel });
-		}
-		catch (error) {
+			// 			await this._api.grant(token, { channel });
+		} catch (error) {
 			this._grantFailures.push(channel);
 		}
 	}
 
 	// we're finally subscribed to all channels requested, and are caught up on messages
-	private subscribed () {
+	private subscribed() {
 		// if there are more channels waiting to be subscribed to in the queue, drain the
 		// queue and subscribe to those channels, otherwise simply emit a Connected event,
 		// indicating we're good to go
 		if (this._queuedChannels.length > 0) {
 			this.drainQueue();
-		}
-		else {
+		} else {
 			this._fullySubscribed = true;
 			this.emitConnected();
 		}
 	}
 
 	// emit a status update to the client, with channels of interest optionally specified
-	private emitStatus (status: PubnubStatus, channels?: Array<string>) {
+	private emitStatus(status: PubnubStatus, channels?: string[]) {
 		this._statusEmitter.fire({
 			status: status,
 			channels: channels
@@ -554,56 +540,56 @@ export class PubnubReceiver {
 
 	// emit a Connected event, letting the client know about all the channels we're now
 	// subscribed to
-	private emitConnected () {
+	private emitConnected() {
 		const channels = this.getAllChannels();
 		this.emitStatus(PubnubStatus.Connected, channels);
 	}
 
 	// emit a Trouble event, indicating we're having trouble subscribing to one or more
 	// channels, so the client can display something to the user as needed
-	private emitTrouble () {
+	private emitTrouble() {
 		const channels = this.getUnsubscribedChannels();
 		this.emitStatus(PubnubStatus.Trouble, channels);
 	}
 
 	// let the client know we were unable to subscribe to a given set of channels, and
 	// moreover that we were unable to even get the server to give us access to those
-	// channels ... something is wrong in this case and we'll no longer attempt to 
+	// channels ... something is wrong in this case and we'll no longer attempt to
 	// subscribe to those channels
-	private emitFailures (channels: Array<string>) {
+	private emitFailures(channels: string[]) {
 		this.emitStatus(PubnubStatus.SomeFailed, channels);
 	}
 
 	// get all known channels to which we are being asked to subscribe
-	private getAllChannels () : Array<string> {
+	private getAllChannels(): string[] {
 		return Object.keys(this._subscriptions);
 	}
 
 	// get all channels that we are actively subscribed to
-	private getSubscribedChannels () : Array<string> {
+	private getSubscribedChannels(): string[] {
 		return Object.keys(this._subscriptions).filter(channel => {
 			return this._subscriptions[channel].subscribed;
 		});
 	}
 
 	// get all channels that we are not yet subscribed to
-	private getUnsubscribedChannels () : Array<string> {
+	private getUnsubscribedChannels(): string[] {
 		return Object.keys(this._subscriptions).filter(channel => {
 			return !this._subscriptions[channel].subscribed;
 		});
 	}
 
 	// emit an Offline event, indicating we are currently not connected to the network
-	private offline () {
+	private offline() {
 		this.emitStatus(PubnubStatus.Offline);
 	}
 
 	// resubscribe to all channels
-	private resubscribe () {
+	private resubscribe() {
 		Object.keys(this._subscriptions).forEach(channel => {
 			this._subscriptions[channel].subscribed = false;
 		});
-		// also drain the queue and add any queued channels to the list, since we're 
+		// also drain the queue and add any queued channels to the list, since we're
 		// starting from scratch on all of them anyway
 		this.drainQueue();
 	}
@@ -611,33 +597,33 @@ export class PubnubReceiver {
 	// emit a Reset event, indicating to the client that we have too many messages to
 	// fetch to catch up on messages, and that it would be better for the client to
 	// initiate a fresh session ... in doing this, we'll unsubscribe to all channels,
-	// since it is expected that the client will initiate new subscriptions after 
+	// since it is expected that the client will initiate new subscriptions after
 	// resetting the session
-	private reset () {
+	private reset() {
 		this.unsubscribeAll();
 		this.emitStatus(PubnubStatus.Reset);
 	}
 
 	// remove the given set of channels from our list of channels to which we are
 	// trying to subscribe
-	private removeChannels (channels: Array<string>) {
-		for (let channel of channels) {
+	private removeChannels(channels: string[]) {
+		for (const channel of channels) {
 			delete this._subscriptions[channel];
 		}
 	}
 
 	// emit Pubnub messages to the client
-	private emitMessages (messages: Array<any>) {
+	private emitMessages(messages: { [key: string]: any }[]) {
 		this._messageEmitter.fire(messages);
 	}
 
 	// convert from unix timestamp to Pubnub time token
-	private timestampToTimetoken (timestamp:number) : number {
+	private timestampToTimetoken(timestamp: number): number {
 		return timestamp * 10000;
 	}
 
 	// convert from Pubnub time token to unix timestamp
-	private timetokenToTimestamp (timetoken:string) : number {
+	private timetokenToTimestamp(timetoken: string): number {
 		return parseInt(timetoken, 10) / 10000;
 	}
 }
