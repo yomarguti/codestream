@@ -5,7 +5,8 @@
     "version": "0.0.1",
     "author": "CodeStream",
     "publisher": "CodeStream",
-    "license": "MIT",
+    "private": true,
+    "license": "UNLICENSED",
     "homepage": "https://codestream.com",
     "bugs": {
         "url": "https://github.com/TeamCodeStream/codestream-lsp-agent"
@@ -17,6 +18,7 @@
     "engines": {
         "node": "*"
     },
+    "main": "./dist/agent",
     "scripts": {
         "build": "npm run lint && webpack --env.development",
         "bundle": "npm run lint && webpack --env.production",

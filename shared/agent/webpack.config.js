@@ -14,9 +14,9 @@ module.exports = function(env, argv) {
 				{
 					copy: [
 						{
-							source: "out/*",
+							source: "dist/*",
 							// TODO: Use environment variable if exists
-							destination: path.resolve(__dirname, "../vscode-codestream/out/")
+							destination: path.resolve(__dirname, "../vscode-codestream/dist/")
 						}
 					]
 				}
@@ -31,8 +31,7 @@ module.exports = function(env, argv) {
 		devtool: !production ? "eval-source-map" : undefined,
 		output: {
 			libraryTarget: "commonjs2",
-			filename: "agent.js",
-			path: path.resolve(__dirname, "out")
+			filename: "agent.js"
 		},
 		resolve: {
 			extensions: [".tsx", ".ts", ".js"]

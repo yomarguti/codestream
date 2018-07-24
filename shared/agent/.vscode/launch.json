@@ -7,7 +7,7 @@
 			"name": "Attach to Agent",
 			"port": 6009,
 			"sourceMaps": true,
-			"outFiles": ["${workspaceRoot}/out/**/*.js"],
+			"outFiles": ["${workspaceRoot}/dist/**/*.js"],
 			"trace": true
 		}
 	]
