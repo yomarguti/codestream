@@ -5,7 +5,7 @@
     "version": "0.0.9",
     "author": "CodeStream",
     "publisher": "CodeStream",
-    "license": "MIT",
+    "license": "UNLICENSED",
     "homepage": "https://codestream.com",
     "bugs": {
         "url": "https://github.com/TeamCodeStream/vscode-codestream"
@@ -17,7 +17,7 @@
     "engines": {
         "vscode": "^1.25.0"
     },
-    "main": "./out/extension",
+    "main": "./dist/extension",
     "icon": "assets/images/codestream.png",
     "preview": true,
     "categories": [

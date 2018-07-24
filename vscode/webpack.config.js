@@ -15,8 +15,7 @@ module.exports = function(env, argv) {
 		devtool: !production ? "eval-source-map" : undefined,
 		output: {
 			libraryTarget: "commonjs2",
-			filename: "extension.js",
-			path: path.resolve(__dirname, "out")
+			filename: "extension.js"
 		},
 		resolve: {
 			extensions: [".tsx", ".ts", ".js"]

@@ -23,10 +23,10 @@
 		"editor.insertSpaces": false,
 		"files.exclude": {
 			"**/node_modules": true,
-			"**/out": false
+			"**/dist": false
 		},
 		"search.exclude": {
-			"**/out": true
+			"**/dist": true
 		},
 		"tslint.autoFixOnSave": true,
 		"typescript.tsdk": "./node_modules/typescript/lib",

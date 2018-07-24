@@ -54,7 +54,7 @@ export class CodeStreamAgentClient implements Disposable {
 				transport: TransportKind.ipc
 			},
 			debug: {
-				module: context.asAbsolutePath("out/agent.js"),
+				module: context.asAbsolutePath("dist/agent.js"),
 				transport: TransportKind.ipc,
 				options: {
 					execArgv: ["--nolazy", "--inspect=6009"] // "--inspect-brk=6009"
