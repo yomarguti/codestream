@@ -78,10 +78,10 @@ export class CodeStreamSession implements Disposable {
 
 	private _disposable: Disposable | undefined;
 	private _disposableSignedIn: Disposable | undefined;
+	private _id: string | undefined;
 
 	private _api: CodeStreamApi;
 	private readonly _pubnub: PubNubReceiver;
-
 	private _presenceManager: PresenceManager | undefined;
 	private _cache: Cache;
 	private _sessionApi: CodeStreamSessionApi | undefined;
@@ -191,6 +191,10 @@ export class CodeStreamSession implements Disposable {
 		this._postsReceivedDebounced(e);
 	}
 
+	get id() {
+		return this._id;
+	}
+
 	@signedIn
 	get api(): CodeStreamSessionApi {
 		return this._sessionApi!;
@@ -204,11 +208,6 @@ export class CodeStreamSession implements Disposable {
 	@signedIn
 	get directMessages() {
 		return this._state!.directMessages;
-	}
-
-	@signedIn
-	get id() {
-		return this._state!.id;
 	}
 
 	@signedIn
@@ -270,8 +269,9 @@ export class CodeStreamSession implements Disposable {
 	}
 
 	async logout() {
-		if (this._state !== undefined) {
-			CodeStreamSession._sessions.delete(this._state.id);
+		if (this._id !== undefined) {
+			CodeStreamSession._sessions.delete(this._id);
+			this._id = undefined;
 		}
 
 		this._status = SessionStatus.SignedOut;
@@ -350,6 +350,8 @@ export class CodeStreamSession implements Disposable {
 		Logger.log(`Signing ${email} into CodeStream (${this.serverUrl})`);
 
 		try {
+			this._id = id;
+
 			this._status = SessionStatus.SigningIn;
 			const e = { getStatus: () => this._status };
 			this._onDidChangeStatus.fire(e);
@@ -368,7 +370,7 @@ export class CodeStreamSession implements Disposable {
 			}
 			const loginResponse = result.loginResponse;
 
-			this._state = new SessionState(this, id, teamId, loginResponse);
+			this._state = new SessionState(this, teamId, loginResponse);
 
 			this._sessionApi = new CodeStreamSessionApi(this._api, this._state.token, teamId);
 

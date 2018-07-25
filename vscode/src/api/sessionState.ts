@@ -9,7 +9,6 @@ import { CodeStreamSession } from "./session";
 export class SessionState {
 	constructor(
 		private readonly session: CodeStreamSession,
-		public readonly id: string,
 		public readonly teamId: string,
 		private readonly _data: LoginResponse
 	) {}
