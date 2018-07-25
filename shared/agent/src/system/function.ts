@@ -5,7 +5,7 @@ const _debounce = require("lodash.debounce");
 export interface IDeferrable {
 	cancel(): void;
 	flush(...args: any[]): void;
-	pending?: () => boolean;
+	pending?(): boolean;
 }
 
 interface IPropOfValue {

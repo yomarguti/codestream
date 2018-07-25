@@ -117,8 +117,8 @@ const formatterOptions = { addSuffix: true, locale: patch };
 
 export namespace Dates {
 	export interface IDateFormatter {
-		fromNow: () => string;
-		format: (format: string) => string;
+		fromNow(): string;
+		format(format: string): string;
 	}
 
 	export function dateDaysFromNow(date: Date, now: number = Date.now()) {
