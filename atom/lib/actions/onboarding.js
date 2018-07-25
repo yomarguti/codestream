@@ -288,18 +288,16 @@ export const authenticate = params => async (dispatch, getState, { http }) => {
 				);
 			}
 
-			const { currentTeamId, alreadyOnTeam } = await _handleUserLogin({
+			const { currentTeamId } = await _handleUserLogin({
 				loginData,
 				params,
 				dispatch,
 				getState
 			});
 
-			if (alreadyOnTeam) {
+			if (currentTeamId) {
 				dispatch(fetchLatestForTeamStream());
 				dispatch(loggedIn());
-			} else if (currentTeamId) {
-				await dispatch(joinTeam(loggedIn().type));
 			}
 			dispatch(requestFinished());
 		})

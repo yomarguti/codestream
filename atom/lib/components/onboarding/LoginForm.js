@@ -1,7 +1,6 @@
 import React, { Component } from "react";
 import { FormattedMessage } from "react-intl";
 import { connect } from "react-redux";
-import PropTypes from "prop-types";
 import UnexpectedErrorMessage from "./UnexpectedErrorMessage";
 import Button from "./Button";
 import * as actions from "../../actions/onboarding";
@@ -16,10 +15,6 @@ const isEmailInvalid = email => {
 };
 
 export class SimpleLoginForm extends Component {
-	static contextTypes = {
-		repositories: PropTypes.array
-	};
-
 	constructor(props) {
 		super(props);
 		this.state = {
@@ -32,12 +27,6 @@ export class SimpleLoginForm extends Component {
 	}
 
 	componentDidMount() {
-		const { repositories } = this.context;
-		const repository = repositories[0];
-		const gitDirectory = repository.getWorkingDirectory();
-		this.setState({
-			email: repository.getConfigValue("user.email", gitDirectory) || ""
-		});
 		this.addToolTip("login-input-email", "The email address for your CodeStream account");
 		this.addToolTip("login-input-password", "Your CodeStream password");
 	}
@@ -197,7 +186,7 @@ export class SimpleLoginForm extends Component {
 	}
 }
 
-const mapStateToProps = ({ context, onboarding }) => ({
+const mapStateToProps = ({ onboarding }) => ({
 	...onboarding.props,
 	errors: onboarding.errors,
 	loading: onboarding.requestInProcess
