@@ -2,6 +2,7 @@ import "@babel/polyfill";
 import { createStore, applyMiddleware } from "redux";
 import { composeWithDevTools } from "redux-devtools-extension";
 import thunk from "redux-thunk";
+import Container from "./Container";
 import Stream from "./Stream";
 import reducer from "./reducers";
 import WebviewApi from "./webview-api";
@@ -15,4 +16,4 @@ export const createCodeStreamStore = (initialState = {}, thunkArg = {}, middlewa
 	);
 };
 
-export { EventEmitter, Stream, WebviewApi, createCodeStreamStore as createStore };
+export { Container, EventEmitter, Stream, WebviewApi, createCodeStreamStore as createStore };

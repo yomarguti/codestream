@@ -1,0 +1,44 @@
+import * as React from "react";
+import { addLocaleData, IntlProvider } from "react-intl";
+import englishLocaleData from "react-intl/locale-data/en";
+import { connect, Provider } from "react-redux";
+import Stream from "../Stream";
+
+addLocaleData(englishLocaleData);
+
+const mapStateToProps = state => ({
+	bootstrapped: state.bootstrapped,
+	loggedIn: Boolean(state.session.userId)
+});
+const Root = connect(mapStateToProps)(props => {
+	if (!props.bootstrapped) return <Loading message="CodeStream engage..." />;
+	if (!props.loggedIn) return <div>TODO: Login</div>;
+	return <Stream />;
+});
+
+export default class Container extends React.Component {
+	state = { hasError: false };
+
+	componentDidCatch(error, info) {
+		this.setState({ hasError: true });
+	}
+
+	render() {
+		const { i18n, store } = this.props;
+
+		let content;
+		if (this.state.hasError)
+			content = (
+				<div id="oops">
+					<p>An unexpected error has occurred. Please reload the window.</p>
+				</div>
+			);
+		else content = <Root />;
+
+		return (
+			<IntlProvider locale={i18n.locale} messages={i18n.messages}>
+				<Provider store={store}>{content}</Provider>
+			</IntlProvider>
+		);
+	}
+}
