@@ -79,6 +79,15 @@ export class SimpleStream extends Component {
 		}
 
 		this.scrollToBottom();
+
+		if (
+			this.state.activePanel === "main" &&
+			this.props.postStreamId &&
+			this.props.posts.length === 0
+		) {
+			this.props.fetchPosts({ streamId: this.props.postStreamId, teamId: this.props.teamId });
+		}
+
 		if (global.atom) {
 			this.disposables.push(
 				atom.keymaps.add("codestream", {
