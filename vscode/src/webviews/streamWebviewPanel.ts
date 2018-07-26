@@ -28,6 +28,7 @@ import {
 	PostsReceivedEvent,
 	SessionChangedEvent,
 	SessionChangedType,
+	SessionStatus,
 	StreamThread
 } from "../api/session";
 import { Container } from "../container";
@@ -619,30 +620,32 @@ export class StreamWebviewPanel extends Disposable {
 			this._panel.reveal(ViewColumn.Three, false);
 		}
 
+		const state: BootstrapState = Object.create(null);
+
+		if (this.session.status === SessionStatus.SignedIn) {
+			const [repos, streams, teams, users, currentUser] = await Promise.all([
+				this.session.repos.entities(),
+				Container.session.channels.entities(),
+				this.session.teams.entities(),
+				this.session.users.entities(),
+				this.session.api.getMe()
+			]);
+
+			state.currentTeamId = this.session.team.id;
+			state.currentUserId = this.session.userId;
+			if (streamThread !== undefined) {
+				state.currentStreamId = streamThread.stream.id;
+				state.selectedPostId = streamThread.id;
+			}
+			state.repos = repos;
+			state.streams = streams;
+			state.teams = teams;
+			state.users = users.map(user => (user.id === currentUser.id ? currentUser : user));
+		}
 		this._streamThread = streamThread;
 		this._onDidChangeStream.fire(this._streamThread);
 
-		const [content, repos, streams, teams, users, currentUser] = await Promise.all([
-			this.getHtml(),
-			this.session.repos.entities(),
-			Container.session.channels.entities(),
-			this.session.teams.entities(),
-			this.session.users.entities(),
-			this.session.api.getMe()
-		]);
-
-		const state: BootstrapState = Object.create(null);
-		state.currentTeamId = this.session.team.id;
-		state.currentUserId = this.session.userId;
-		if (streamThread !== undefined) {
-			state.currentStreamId = streamThread.stream.id;
-			state.selectedPostId = streamThread.id;
-		}
-		state.repos = repos;
-		state.streams = streams;
-		state.teams = teams;
-		state.users = users.map(user => (user.id === currentUser.id ? currentUser : user));
-
+		const content = await this.getHtml();
 		html = content
 			.replace(
 				/{{root}}/g,
