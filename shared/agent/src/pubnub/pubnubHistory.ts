@@ -59,6 +59,9 @@ export class PubnubHistory {
 				done = true;
 			}
 		} while (!done && channels.length > 0);
+		if (!output.reset) {
+			output.messages = this._allMessages.map(message => message.message || message.entry);
+		}
 		return output;
 	}
 
@@ -84,9 +87,9 @@ export class PubnubHistory {
 
 	// process the messages we received ... since the messages are coming from multiple channels, we sort
 	// them by timestamp before returning to the client, given the client a true chronological "replay"
-	private processMessages(output: PubnubHistoryOutput): object[] {
+	private processMessages(output: PubnubHistoryOutput) {
 		this._allMessages.forEach(message => {
-			message.timestamp = this.timetokenToTimestamp(message.timetoken);
+			message.timestamp = parseInt(message.timetoken, 10);
 		});
 		this._allMessages.sort((a, b) => {
 			return a.timestamp - b.timestamp;
@@ -96,7 +99,6 @@ export class PubnubHistory {
 			// store the last message received, so we know where to start from next time
 			output.timestamp = this._allMessages[this._allMessages.length - 1].timestamp;
 		}
-		return this._allMessages.map(message => message.entry);
 	}
 
 	// retrieve historical messages in batch
@@ -104,6 +106,7 @@ export class PubnubHistory {
 		const response: any = await (this._pubnub! as any).fetchMessages({
 			channels,
 			end: timetoken,
+			count: 25,
 			stringifiedTimeToken: true
 		});
 		/*
@@ -118,7 +121,7 @@ export class PubnubHistory {
 		// messages waiting, and we fetch individually for each channel, where we can get
 		// more messages at a time
 		const channelsWithMoreMessages: string[] = [];
-		const latestTimetokenPerChannel: { [key: string]: number } = {};
+		const earliestTimetokenPerChannel: { [key: string]: number } = {};
 		for (const channel in response.channels) {
 			const messages = response.channels[channel];
 			this._allMessages.push(...messages);
@@ -127,29 +130,29 @@ export class PubnubHistory {
 			}
 			for (const message of messages) {
 				const timetoken = parseInt(message.timetoken, 10);
-				if (!latestTimetokenPerChannel[channel] || timetoken > latestTimetokenPerChannel[channel]) {
-					latestTimetokenPerChannel[channel] = timetoken;
+				if (!earliestTimetokenPerChannel[channel] || timetoken < earliestTimetokenPerChannel[channel]) {
+					earliestTimetokenPerChannel[channel] = timetoken;
 				}
 			}
 		}
 
 		await Promise.all(
 			channelsWithMoreMessages.map(async channel => {
-				await this.retrieveChannelHistory(channel, latestTimetokenPerChannel[channel]);
+				await this.retrieveChannelHistory(channel, earliestTimetokenPerChannel[channel] - 1);
 			})
 		);
 	}
 
-		// retrieve the historical messages for an individual channel ... we can only retrieve in
-		// pages of 100 ... but if we get to the limit of 1000 messages (10 pages), we'll stop
-		// and force the client to do a session reset instead
-		private async retrieveChannelHistory(channel: string, since: number, depth: number = 0) {
+	// retrieve the historical messages for an individual channel ... we can only retrieve in
+	// pages of 100 ... but if we get to the limit of 1000 messages (10 pages), we'll stop
+	// and force the client to do a session reset instead
+	private async retrieveChannelHistory(channel: string, before: number, depth: number = 0) {
 		if (depth === 10) {
 			throw new Error("RESET");
 		}
 		const response: any = await (this._pubnub! as any).history({
 			channel,
-			end: since.toString(),
+			start: before.toString(),
 			stringifiedTimeToken: true
 		});
 		/*
@@ -164,11 +167,6 @@ export class PubnubHistory {
 		if (response.messages.length >= 100) {
 			await this.retrieveChannelHistory(channel, parseInt(response.startTimeToken!, 10), depth + 1);
 		}
-	}
-
-	// convert from Pubnub time token to unix timestamp
-	private timetokenToTimestamp(timetoken: string): number {
-		return Math.floor(parseInt(timetoken, 10) / 10000);
 	}
 
 	// convert from unix timestamp to stringified Pubnub time token

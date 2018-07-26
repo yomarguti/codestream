@@ -1,6 +1,7 @@
 "use strict";
 import fetch, { Headers, RequestInit, Response } from "node-fetch";
 import { URLSearchParams } from "url";
+import { ServerError } from "../agentError";
 import { Logger } from "../logger";
 import {
 	CreatePostRequest,
@@ -343,7 +344,7 @@ export class CodeStreamApi {
 
 	private async handleErrorResponse(response: Response): Promise<Error> {
 		const data = await response.json();
-		return new Error(`${response.status}: ${response.statusText}\n\n${JSON.stringify(data)}`);
+		return new ServerError(response.statusText, data, response.status);
 	}
 
 	static isStreamSubscriptionRequired(stream: CSStream, userId: string): boolean {

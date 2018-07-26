@@ -1,4 +1,5 @@
 "use strict";
+import { Disposable } from "vscode-languageserver";
 import { CodeStreamAgent } from "../agent";
 import { CodeStreamApi, CSStream } from "../api/api";
 import { DidReceivePubNubMessagesNotification } from "../ipc/agent";
@@ -13,6 +14,7 @@ import {
 
 export class PubnubReceiver {
 	private readonly _pubnubConnection: PubnubConnection;
+	private _connection: Disposable | undefined;
 
 	constructor(
 		private _agent: CodeStreamAgent,
@@ -24,7 +26,7 @@ export class PubnubReceiver {
 		private readonly _teamId: string
 	) {
 		this._pubnubConnection = new PubnubConnection();
-		this._pubnubConnection.initialize({
+		this._connection = this._pubnubConnection.initialize({
 			api,
 			accessToken,
 			subscribeKey: pubnubKey,
@@ -37,7 +39,7 @@ export class PubnubReceiver {
 		this._pubnubConnection.onDidReceiveMessages(this.onPubNubMessagesReceived, this);
 	}
 
-	listen(streamIds?: string[]) {
+	listen(streamIds?: string[]): Disposable {
 		const channels: ChannelDescriptor[] = [
 			{ name: `user-${this._userId}` },
 			{ name: `team-${this._teamId}`, withPresence: true }
@@ -48,6 +50,12 @@ export class PubnubReceiver {
 		}
 
 		this._pubnubConnection.subscribe(channels);
+
+		return {
+			dispose: () => {
+				this._connection!.dispose();
+			}
+		};
 	}
 
 	private onPubnubStatusChanged(e: StatusChangeEvent) {
@@ -68,13 +76,9 @@ export class PubnubReceiver {
 				// TODO: let the extension know we are offline?
 				break;
 
-			case PubnubStatus.SomeFailed:
+			case PubnubStatus.Failed:
 				// TODO: let the extension know we have trouble?
 				// the indicated channels have not been subscribed to, what do we do?
-				break;
-
-			case PubnubStatus.Failed:
-				// TODO: catastrophic failure event, what do we do?
 				break;
 		}
 	}

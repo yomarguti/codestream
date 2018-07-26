@@ -27,7 +27,7 @@
         "pack": "npm run clean && npm install --no-save && npm run bundle",
         "rebuild": "npm run clean && npm install --no-save && npm run build",
         "watch": "webpack --watch --env.development",
-        "test": "mocha --compilerOptions --recursive --require node_modules/ts-node/register test/**/*.spec.ts"
+        "test": "export TS_NODE_COMPILER_OPTIONS='{ \"module\": \"commonjs\", \"types\": [\"node\"] }' && mocha --compilerOptions --recursive --require node_modules/ts-node/register src/test/**/*.spec.ts"
     },
     "dependencies": {
         "date-fns": "^1.29.0",

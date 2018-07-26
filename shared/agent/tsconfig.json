@@ -9,7 +9,6 @@
 		"moduleResolution": "node",
 		"noFallthroughCasesInSwitch": true,
 		"noImplicitReturns": true,
-		"noUnusedLocals": true,
 		"outDir": "dist",
 		"removeComments": true,
 		"rootDir": "./src",
