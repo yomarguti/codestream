@@ -12,7 +12,7 @@ import {
 	Post,
 	Repository
 } from "../session";
-import { CSMarker } from "../types";
+import { CSLocationArray, CSMarker } from "../types";
 
 export class Marker {
 	private readonly _range: Range;
@@ -22,7 +22,7 @@ export class Marker {
 		public readonly fileStream: FileStream,
 		private readonly entity: CSMarker,
 		private readonly _commitHash: string,
-		location: [number, number, number, number]
+		location: CSLocationArray
 	) {
 		this._range = new Range(location[0], location[1], location[2], location[3]);
 	}

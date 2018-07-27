@@ -1,18 +1,22 @@
 "use strict";
 import { RequestInit } from "node-fetch";
-import { Event, EventEmitter, ExtensionContext, Uri } from "vscode";
+import { Event, EventEmitter, ExtensionContext, Range, TextDocument, Uri } from "vscode";
 import {
+	CancellationToken,
 	Disposable,
 	InitializeResult,
 	LanguageClient,
 	LanguageClientOptions,
+	RequestType,
+	RequestType0,
 	ServerOptions,
 	TransportKind
-} from "vscode-languageclient/lib/main";
+} from "vscode-languageclient";
 import { LoginResponse } from "../api/types";
 import { getRepositories, GitApiRepository } from "../git/git";
 import { GitRepository } from "../git/gitService";
 import { Logger } from "../logger";
+import { DocumentPreparePostRequest } from "./ipc";
 
 // TODO: Fix this, but for now keep in sync with InitializationOptions in agent.ts in codestream-lsp-agent
 export interface CodeStreamAgentOptions {
@@ -100,7 +104,7 @@ export class CodeStreamAgentConnection implements Disposable {
 	async getMarkers(uri: Uri): Promise<any> {
 		try {
 			const response = await this.sendRequest("codeStream/textDocument/markers", {
-				textDocument: { uri: uri.toString(true) }
+				textDocument: { uri: uri.toString() }
 			});
 			return response;
 		} catch (ex) {
@@ -140,8 +144,16 @@ export class CodeStreamAgentConnection implements Disposable {
 		return response.result as CodeStreamAgentResult;
 	}
 
-	async logout() {
-		void (await this.stop());
+	logout() {
+		return this.stop();
+	}
+
+	preparePost(document: TextDocument, range: Range): Promise<DocumentPreparePostRequest.Response> {
+		return this.sendRequest(DocumentPreparePostRequest.type, {
+			textDocument: { uri: document.uri.toString() },
+			range: range,
+			dirty: document.isDirty
+		});
 	}
 
 	private async onGitReposRequest(): Promise<GitApiRepository[]> {
@@ -154,8 +166,18 @@ export class CodeStreamAgentConnection implements Disposable {
 		this._onDidReceivePubNubMessages.fire(messages);
 	}
 
+	private sendRequest<R, E, RO>(
+		type: RequestType0<R, E, RO>,
+		token?: CancellationToken
+	): Promise<R>;
+	private sendRequest<P, R, E, RO>(
+		type: RequestType<P, R, E, RO>,
+		params: P,
+		token?: CancellationToken
+	): Promise<R>;
+	private sendRequest<R>(method: string, params?: any): Promise<R>;
 	@started
-	private async sendRequest<R>(method: string, params?: any): Promise<R> {
+	private async sendRequest<R>(method: any, params?: any): Promise<R> {
 		try {
 			const response = await this._client!.sendRequest<R>(method, params);
 			return response;

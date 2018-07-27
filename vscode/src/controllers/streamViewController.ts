@@ -1,8 +1,7 @@
 "use strict";
-import { Disposable, Range } from "vscode";
+import { Disposable, Range, Uri } from "vscode";
 import {
 	CodeStreamSession,
-	Repository,
 	SessionStatus,
 	SessionStatusChangedEvent,
 	StreamThread
@@ -94,17 +93,21 @@ export class StreamViewController implements Disposable {
 	}
 
 	async postCode(
-		streamThread: StreamThread,
-		repo: Repository,
-		relativePath: string,
 		code: string,
+		uri: Uri,
 		range: Range,
-		commitHash: string,
-		text?: string,
-		mentions: string = ""
+		source?: {
+			file: string;
+			repoPath: string;
+			revision: string;
+			authors: { id: string; name: string }[];
+			remotes: { name: string; url: string }[];
+		}
 	) {
-		await this.show(streamThread);
-		return this._panel!.postCode(relativePath, code, range, commitHash, text, mentions);
+		if (!this.visible) {
+			await this.show();
+		}
+		return await this._panel!.postCode(code, uri, range, source);
 	}
 
 	async show(streamThread?: StreamThread) {

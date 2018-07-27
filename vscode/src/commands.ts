@@ -8,8 +8,7 @@ import {
 	TextDocument,
 	Uri,
 	ViewColumn,
-	window,
-	workspace
+	window
 } from "vscode";
 import {
 	ChannelStreamCreationOptions,
@@ -25,7 +24,7 @@ import { encryptionKey } from "./constants";
 import { Container } from "./container";
 import { StreamThreadId } from "./controllers/streamViewController";
 import { Logger } from "./logger";
-import { Command, createCommandDecorator, Crypto, Dates, Iterables } from "./system";
+import { Command, createCommandDecorator, Crypto, Dates } from "./system";
 
 const commandRegistry: Command[] = [];
 const command = createCommandDecorator(commandRegistry);
@@ -217,7 +216,7 @@ export class Commands extends Disposable {
 	}
 
 	@command("postCode", { showErrorMessage: "Unable to add comment" })
-	async postCode(args: PostCodeCommandArgs): Promise<Post | Stream | undefined> {
+	async postCode(args: PostCodeCommandArgs) {
 		if (args == null) {
 			args = {} as PostCodeCommandArgs;
 		}
@@ -237,77 +236,14 @@ export class Commands extends Disposable {
 
 		if (document === undefined || selection === undefined) return undefined;
 
-		const streamThread = await this.findStreamThread(args.session || Container.session, args, {
-			includeActive: true,
-			includeDefault: true
-		});
-		if (streamThread === undefined) throw new Error(`No stream could be found`);
-
-		const uri = document.uri;
-
-		const repo = await (args.session || Container.session).repos.getByFileUri(uri);
-		if (repo === undefined) {
-			throw new Error(`No repository could be found for Uri(${uri.toString()}`);
-		}
-
-		const authors = await Container.git.getFileAuthors(uri, {
-			ref: args.ref,
-			startLine: selection.start.line,
-			endLine: selection.end.line,
-			contents: document.isDirty ? document.getText() : undefined
-		});
-
-		const authorEmails = authors.map(a => a.email);
-		Logger.log(`Commands.postCode: authors found: ${authorEmails.join(", ")}`);
-
-		const users = await (args.session || Container.session).users.getByEmails(authorEmails);
-		const mentions = Iterables.join(Iterables.map(users, u => `@${u.name}`), ", ");
-
-		let code;
-		let commitHash;
-		if (args.ref == null) {
-			code = document.getText(selection);
-			commitHash = await Container.git.getFileCurrentSha(document.uri);
-		} else {
-			const content = await Container.git.getFileRevisionContent(document.uri, args.ref);
-			if (content == null) {
-				throw new Error(`Unable to load file revision contents for Uri(${uri.toString()}`);
-			}
-
-			const revision = await workspace.openTextDocument({ content: content });
-			code = revision.getText(selection);
-			commitHash = await Container.git.resolveRef(document.uri, args.ref);
-		}
-
-		if (args.send && args.text) {
-			// Get the file/marker stream to post to
-			const markerStream = await repo.streams.toIdOrArgs(uri);
-			return streamThread.stream.postCode(
-				args.text,
-				code,
-				[
-					selection.start.line,
-					selection.start.character,
-					selection.end.line,
-					selection.end.character
-				],
-				commitHash!,
-				markerStream,
-				streamThread.id
-			);
-		}
-
-		await Container.streamView.postCode(
-			streamThread,
-			repo,
-			repo.relativizeUri(uri),
-			code,
+		const response = await Container.agent.preparePost(document, selection);
+		const streamThread = await Container.streamView.postCode(
+			response.code,
+			document.uri,
 			selection,
-			commitHash!,
-			args.text,
-			mentions
+			response.source
 		);
-		return streamThread.stream;
+		return streamThread !== undefined ? streamThread.stream : undefined;
 	}
 
 	@command("wipe")

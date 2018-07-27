@@ -1,3 +1,5 @@
+// TODO: Fix this, but for now keep in sync with api/types.ts in codestream-lsp-agent
+
 "use strict";
 
 export interface CSEntity {
@@ -13,13 +15,32 @@ export interface CSMarker {
 	teamId: string;
 	streamId: string;
 	postId: string;
+	commitHashWhenCreated: string;
 }
+
+export interface CSLocationMeta {
+	startWasDeleted?: boolean;
+	endWasDeleted?: boolean;
+	entirelyDeleted?: boolean;
+}
+
+export type CSLocationArray = [number, number, number, number, CSLocationMeta | undefined];
 
 export interface CSMarkerLocations {
 	teamId: string;
 	streamId: string;
 	commitHash: string;
-	locations: { [id: string]: [number, number, number, number] };
+	// locations: Map<string, CSLocationArray>;
+	locations: { [id: string]: CSLocationArray };
+}
+
+export interface CSMarkerLocation {
+	id: string;
+	lineStart: number;
+	colStart: number;
+	lineEnd: number;
+	colEnd: number;
+	meta?: CSLocationMeta;
 }
 
 export interface CSCodeBlock {
@@ -31,13 +52,18 @@ export interface CSCodeBlock {
 }
 
 export interface CSPost extends CSEntity {
+	teamId: string;
 	streamId: string;
+	repoId: string;
+	seqNum: number;
 	text: string;
 	codeBlocks?: CSCodeBlock[];
 	commitHashWhenPosted?: string;
-	repoId: string;
-	teamId: string;
-	seqNum: number;
+	hasBeenEdited: boolean;
+	hasReplies: boolean;
+	mentionedUserIds: string[];
+	origin: "email" | "slack" | "teams";
+	parentPostId?: string;
 }
 
 export interface CSRepository extends CSEntity {
@@ -55,59 +81,83 @@ export enum StreamType {
 }
 
 export interface CSChannelStream extends CSEntity {
+	isArchived: boolean;
+	privacy: "public" | "private";
+	sortId: string;
 	teamId: string;
+	mostRecentPostCreatedAt?: number;
+	mostRecentPostId?: string;
+	purpose?: string;
+
 	type: StreamType.Channel;
 	name: string;
 	memberIds?: string[];
-	sortId: string;
 	isTeamStream: boolean;
-	mostRecentPostId?: string;
-	privacy: "public" | "private";
 }
 
 export interface CSDirectStream extends CSEntity {
+	isArchived: boolean;
+	privacy: "public" | "private";
+	sortId: string;
 	teamId: string;
+	mostRecentPostCreatedAt?: number;
+	mostRecentPostId?: string;
+	purpose?: string;
+
 	type: StreamType.Direct;
 	name?: string;
 	memberIds: string[];
-	sortId: string;
-	mostRecentPostId?: string;
-	privacy: "public" | "private";
 }
 
 export interface CSFileStream extends CSEntity {
+	isArchived: boolean;
+	privacy: "public" | "private";
+	sortId: string;
 	teamId: string;
+	mostRecentPostCreatedAt?: number;
+	mostRecentPostId?: string;
+	purpose?: string;
+
 	type: StreamType.File;
 	file: string;
 	repoId: string;
-	sortId: string;
-	mostRecentPostId?: string;
-	privacy: "public" | "private";
+	numMarkers: number;
+	editingUsers?: any;
 }
 
 export type CSStream = CSChannelStream | CSDirectStream | CSFileStream;
 
 export interface CSTeam extends CSEntity {
+	companyId: string;
+	memberIds: string[];
 	name: string;
 	primaryReferral: "internal" | "external";
-	memberIds: string[];
-	creatorId: string;
-	companyId: string;
+	integrations?: { [key: string]: { enabled: boolean } };
 }
 
 export interface CSUser extends CSEntity {
-	username: string;
+	companyIds: string[];
 	email: string;
 	firstName: string;
-	lastName: string;
+	fullName: string;
 	isRegistered: boolean;
-	registeredAt: Date;
-	timeZone: string;
-	joinMethod: string; // 'Create Team'
-	primaryReferral: "internal" | "external";
-	originTeamId: string;
-	companyIds: string[];
+	lastName: string;
+	lastPostCreatedAt: number;
+	numMentions: number;
+	numInvites: number;
+	registeredAt: number;
 	teamIds: string[];
+	timeZone: string;
+	totalPosts: number;
+	username: string;
+
+	lastReads?: any;
+	preferences?: any;
+	secondaryEmails?: string[];
+
+	// joinMethod: string; // 'Create Team'
+	// primaryReferral: "internal" | "external";
+	// originTeamId: string;
 }
 
 export interface LoginRequest {
@@ -119,17 +169,24 @@ export interface LoginResponse {
 	user: CSUser;
 	accessToken: string;
 	pubnubKey: string;
+	pubnubToken: string;
 	teams: CSTeam[];
 	repos: CSRepository[];
 }
 
 export interface CreatePostRequestCodeBlock {
 	code: string;
+	preContext?: string;
+	postContext?: string;
+
 	location?: [number, number, number, number];
-	file?: string;
-	remotes?: string[];
+	commitHash?: string;
+
 	streamId?: string;
+	file?: string;
+
 	repoId?: string;
+	remotes?: string[];
 }
 
 export interface CreatePostRequest {

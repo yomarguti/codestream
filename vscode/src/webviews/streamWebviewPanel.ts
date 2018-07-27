@@ -146,12 +146,6 @@ interface CSWebviewRequest {
 	params: any;
 }
 
-enum GitError {
-	NoRepository = "noRepository",
-	NoGit = "noGit",
-	NoRemote = "noRemote"
-}
-
 // TODO: Make this work
 class BufferChangeTracker {
 	private _listeners: Map<string, Function[]>;
@@ -516,34 +510,32 @@ export class StreamWebviewPanel extends Disposable {
 		});
 	}
 
-	postCode(
-		relativePath: string,
+	async postCode(
 		code: string,
+		uri: Uri,
 		range: Range,
-		commitHash: string,
-		text?: string,
-		mentions: string = ""
+		source?: {
+			file: string;
+			repoPath: string;
+			revision: string;
+			authors: { id: string; name: string }[];
+			remotes: { name: string; url: string }[];
+		}
 	) {
-		return this.codeSelected(relativePath, code, range, mentions);
-	}
-
-	codeSelected(
-		relativePath: string,
-		code: string,
-		range: Range,
-		mentions: string = "",
-		gitError?: GitError
-	) {
-		return this.postMessage({
+		void (await this.postMessage({
 			type: "codestream:interaction:code-highlighted",
 			body: {
-				quoteRange: [range.start.line, range.start.character, range.end.line, range.end.character],
 				quoteText: code,
-				authors: mentions.split(" "),
-				file: relativePath,
-				gitError: gitError && gitError.valueOf()
+				quoteRange: source && [
+					range.start.line,
+					range.start.character,
+					range.end.line,
+					range.end.character
+				],
+				quoteSource: source
 			}
-		});
+		}));
+		return this._streamThread;
 	}
 
 	show(streamThread?: StreamThread) {
