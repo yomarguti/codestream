@@ -7,8 +7,8 @@ import {
 	RequestType0,
 	TextDocumentIdentifier
 } from "vscode-languageserver";
-import { CSPost } from "../api/api";
 import { GitApiRepository } from "../git/git";
+import { MarkerHandler } from "../marker/markerHandler";
 
 export namespace ApiRequest {
 	export interface Params {
@@ -17,23 +17,48 @@ export namespace ApiRequest {
 		init: RequestInit;
 	}
 
-	export const type = new RequestType<Params, Promise<{}>, void, void>("codeStream/api");
+	export const type = new RequestType<Params, any, void, void>("codeStream/api");
 }
 
 export namespace GitRepositoriesRequest {
-	export const type = new RequestType0<Promise<GitApiRepository[]>, void, void>(
-		"codeStream/git/repos"
-	);
+	export const type = new RequestType0<GitApiRepository[], void, void>("codeStream/git/repos");
 }
 
-export namespace PostCodeRequest {
+export namespace DocumentMarkersRequest {
 	export interface Params {
-		document: TextDocumentIdentifier;
-		range: Range;
+		textDocument: TextDocumentIdentifier;
 	}
 
-	export const type = new RequestType<Params, Promise<CSPost | undefined>, void, void>(
-		"codeStream/textDocument/post"
+	export const type = new RequestType<
+		Params,
+		MarkerHandler.HandleMarkersResponse | undefined,
+		void,
+		void
+	>("codeStream/textDocument/markers");
+}
+
+export namespace DocumentPreparePostRequest {
+	export interface Params {
+		textDocument: TextDocumentIdentifier;
+		range: Range;
+		dirty: boolean;
+	}
+
+	export interface Response {
+		code: string;
+		source:
+			| {
+					file: string;
+					repoPath: string;
+					revision: string;
+					authors: { id: string; name: string }[];
+					remotes: { name: string; url: string }[];
+			  }
+			| undefined;
+	}
+
+	export const type = new RequestType<Params, Response, void, void>(
+		"codeStream/textDocument/preparePost"
 	);
 }
 

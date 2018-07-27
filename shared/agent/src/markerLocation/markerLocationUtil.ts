@@ -25,12 +25,12 @@ export namespace MarkerLocationUtil {
 		const { documents, git } = Container.instance();
 		const filePath = new URL(documentUri).pathname;
 
-		const currentCommitHash = await git.getFileCurrentSha(filePath);
+		const currentCommitHash = await git.getFileCurrentRevision(filePath);
 		if (!currentCommitHash) {
 			return {};
 		}
 		const currentCommitLocations = await getCommitLocations(filePath, currentCommitHash);
-		const currentCommitText = await git.getFileRevisionContent(filePath, currentCommitHash);
+		const currentCommitText = await git.getFileContentForRevision(filePath, currentCommitHash);
 		if (currentCommitText === undefined) {
 			throw new Error(`Could not retrieve contents for ${filePath}@${currentCommitHash}`);
 		}

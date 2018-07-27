@@ -31,15 +31,18 @@ export class RemoteGitService implements IGitService, Disposable {
 		return [];
 	}
 
-	async getFileCurrentSha(uriOrPath: Uri | string): Promise<string | undefined> {
+	async getFileCurrentRevision(uriOrPath: Uri | string): Promise<string | undefined> {
 		return undefined;
 	}
 
-	async getFileRevision(uriOrPath: Uri | string, ref: string): Promise<string | undefined> {
+	async getFileContentForRevision(
+		uriOrPath: Uri | string,
+		ref: string
+	): Promise<string | undefined> {
 		return undefined;
 	}
 
-	async getFileRevisionContent(uriOrPath: Uri | string, ref: string): Promise<string | undefined> {
+	async getFileForRevision(uriOrPath: Uri | string, ref: string): Promise<string | undefined> {
 		return undefined;
 	}
 

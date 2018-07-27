@@ -1,7 +1,7 @@
 "use strict";
 
 import { URL } from "url";
-import { Range } from "vscode-languageserver";
+import { Range, TextDocumentIdentifier } from "vscode-languageserver";
 import { CSMarkerLocation } from "../api/types";
 import { StreamUtil } from "../git/streamUtil";
 import { MarkerLocationUtil } from "../markerLocation/markerLocationUtil";
@@ -21,12 +21,10 @@ export namespace MarkerHandler {
 		markers: []
 	};
 
-	export async function handle(params: any[]): Promise<HandleMarkersResponse> {
+	export async function handle(document: TextDocumentIdentifier): Promise<HandleMarkersResponse> {
 		try {
-			const textDocument = params[0].textDocument as { uri: string };
-			const filePath = new URL(textDocument.uri).pathname;
+			const filePath = new URL(document.uri).pathname;
 
-			// const token = params[1] as rpc.CancellationToken;
 			// const repoId = RepoUtil.getRepoId(filePath);
 
 			debugger;
@@ -36,7 +34,7 @@ export namespace MarkerHandler {
 			}
 
 			const markers = await MarkerUtil.getMarkers(streamId);
-			const locations = await MarkerLocationUtil.getCurrentLocations(textDocument.uri);
+			const locations = await MarkerLocationUtil.getCurrentLocations(document.uri);
 
 			const markersWithRange = [];
 			for (const marker of markers) {

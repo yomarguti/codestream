@@ -23,14 +23,14 @@ import {
 	TextDocumentSyncKind,
 	WorkspaceFoldersChangeEvent
 } from "vscode-languageserver";
-import { CodeStream } from "./codestream";
 import { Container } from "./container";
 import { gitApi } from "./git/git";
 import { GitRepositoriesRequest } from "./ipc/client";
 import { Logger } from "./logger";
+import { CodeStreamSession } from "./session";
 import { Disposables, memoize } from "./system";
 
-// TODO: Fix this, but for now keep in sync with CodeStreamAgentOptions in agentClient.ts in vscode-codestream
+// TODO: Fix this, but for now keep in sync with CodeStreamAgentOptions in agentConnection.ts in vscode-codestream
 export interface CodeStreamAgentOptions {
 	extensionVersion: string;
 	gitPath: string;
@@ -47,6 +47,7 @@ export class CodeStreamAgent implements Disposable, LSPLogger {
 	private _clientCapabilities: ClientCapabilities | undefined;
 	private readonly _connection: Connection;
 	private _disposable: Disposable | undefined;
+	private _session: CodeStreamSession | undefined;
 
 	constructor() {
 		// Create a connection for the server. The connection uses Node's IPC as a transport.
@@ -68,12 +69,12 @@ export class CodeStreamAgent implements Disposable, LSPLogger {
 		const capabilities = e.capabilities;
 		this._clientCapabilities = capabilities;
 
-		const codestream = new CodeStream(
+		this._session = new CodeStreamSession(
 			this,
 			this._connection,
 			e.initializationOptions! as CodeStreamAgentOptions
 		);
-		const result = await codestream.login();
+		const result = await this._session.login();
 
 		return {
 			capabilities: {

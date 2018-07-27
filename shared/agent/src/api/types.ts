@@ -50,13 +50,18 @@ export interface CSCodeBlock {
 }
 
 export interface CSPost extends CSEntity {
+	teamId: string;
 	streamId: string;
+	repoId: string;
+	seqNum: number;
 	text: string;
 	codeBlocks?: CSCodeBlock[];
 	commitHashWhenPosted?: string;
-	repoId: string;
-	teamId: string;
-	seqNum: number;
+	hasBeenEdited: boolean;
+	hasReplies: boolean;
+	mentionedUserIds: string[];
+	origin: "email" | "slack" | "teams";
+	parentPostId?: string;
 }
 
 export interface CSRepository extends CSEntity {
@@ -74,59 +79,83 @@ export enum StreamType {
 }
 
 export interface CSChannelStream extends CSEntity {
+	isArchived: boolean;
+	privacy: "public" | "private";
+	sortId: string;
 	teamId: string;
+	mostRecentPostCreatedAt?: number;
+	mostRecentPostId?: string;
+	purpose?: string;
+
 	type: StreamType.Channel;
 	name: string;
 	memberIds?: string[];
-	sortId: string;
 	isTeamStream: boolean;
-	mostRecentPostId?: string;
-	privacy: "public" | "private";
 }
 
 export interface CSDirectStream extends CSEntity {
+	isArchived: boolean;
+	privacy: "public" | "private";
+	sortId: string;
 	teamId: string;
+	mostRecentPostCreatedAt?: number;
+	mostRecentPostId?: string;
+	purpose?: string;
+
 	type: StreamType.Direct;
 	name?: string;
 	memberIds: string[];
-	sortId: string;
-	mostRecentPostId?: string;
-	privacy: "public" | "private";
 }
 
 export interface CSFileStream extends CSEntity {
+	isArchived: boolean;
+	privacy: "public" | "private";
+	sortId: string;
 	teamId: string;
+	mostRecentPostCreatedAt?: number;
+	mostRecentPostId?: string;
+	purpose?: string;
+
 	type: StreamType.File;
 	file: string;
 	repoId: string;
-	sortId: string;
-	mostRecentPostId?: string;
-	privacy: "public" | "private";
+	numMarkers: number;
+	editingUsers?: any;
 }
 
 export type CSStream = CSChannelStream | CSDirectStream | CSFileStream;
 
 export interface CSTeam extends CSEntity {
+	companyId: string;
+	memberIds: string[];
 	name: string;
 	primaryReferral: "internal" | "external";
-	memberIds: string[];
-	creatorId: string;
-	companyId: string;
+	integrations?: { [key: string]: { enabled: boolean } };
 }
 
 export interface CSUser extends CSEntity {
-	username: string;
+	companyIds: string[];
 	email: string;
 	firstName: string;
-	lastName: string;
+	fullName: string;
 	isRegistered: boolean;
-	registeredAt: Date;
-	timeZone: string;
-	joinMethod: string; // 'Create Team'
-	primaryReferral: "internal" | "external";
-	originTeamId: string;
-	companyIds: string[];
+	lastName: string;
+	lastPostCreatedAt: number;
+	numMentions: number;
+	numInvites: number;
+	registeredAt: number;
 	teamIds: string[];
+	timeZone: string;
+	totalPosts: number;
+	username: string;
+
+	lastReads?: any;
+	preferences?: any;
+	secondaryEmails?: string[];
+
+	// joinMethod: string; // 'Create Team'
+	// primaryReferral: "internal" | "external";
+	// originTeamId: string;
 }
 
 export interface LoginRequest {
@@ -145,10 +174,17 @@ export interface LoginResponse {
 
 export interface CreatePostRequestCodeBlock {
 	code: string;
-	location: [number, number, number, number];
+	preContext?: string;
+	postContext?: string;
+
+	location?: [number, number, number, number];
+	commitHash?: string;
+
 	streamId?: string;
 	file?: string;
+
 	repoId?: string;
+	remotes?: string[];
 }
 
 export interface CreatePostRequest {
@@ -163,6 +199,14 @@ export interface CreatePostRequest {
 export interface CreatePostResponse {
 	post: CSPost;
 }
+
+export interface EditPostRequest {
+	id: string;
+	text: string;
+	mentionedUserIds: string[];
+}
+
+export interface EditPostResponse extends DeletePostResponse {}
 
 export interface CreateRepoRequest {
 	teamId: string;
@@ -301,4 +345,18 @@ export interface UpdateStreamMembershipRequest {
 
 export interface UpdateStreamMembershipResponse {
 	stream: CSStream;
+}
+
+export interface InviteRequest {
+	email: string;
+	teamId: string;
+	fullName?: string;
+}
+
+export interface InviteResponse {
+	user: CSUser;
+}
+
+export interface MeResponse {
+	user: CSUser;
 }

@@ -1,4 +1,5 @@
 "use strict";
+import * as path from "path";
 import {
 	CancellationToken,
 	Connection,
@@ -6,19 +7,19 @@ import {
 	TextDocumentIdentifier,
 	TextDocumentPositionParams
 } from "vscode-languageserver";
+import URI from "vscode-uri";
 import { CodeStreamAgent, CodeStreamAgentOptions } from "./agent";
 import { CodeStreamApi, CSPost, CSStream } from "./api/api";
+import { UserCollection } from "./api/models/users";
 import { Container } from "./container";
-import { ApiRequest, PostCodeRequest } from "./ipc/agent";
+import { ApiRequest, DocumentMarkersRequest, DocumentPreparePostRequest } from "./ipc/agent";
 import { MarkerHandler } from "./marker/markerHandler";
 import { PubnubReceiver } from "./pubnub/pubnubReceiver";
+import { Iterables, Strings } from "./system";
 
-export class CodeStream {
+export class CodeStreamSession {
 	private readonly _api: CodeStreamApi;
-	private _apiToken: string | undefined;
 	private _pubnub: PubnubReceiver | undefined;
-	private _teamId: string | undefined;
-	private _userId: string | undefined;
 
 	constructor(
 		private readonly _agent: CodeStreamAgent,
@@ -33,26 +34,9 @@ export class CodeStream {
 
 		this._connection.onHover(this.onHover.bind(this));
 
-		// TODO: This should go away in favor of specific registrations
-		this._connection.onRequest(this.onRequest.bind(this));
-
 		this._agent.registerHandler(ApiRequest.type, this.onApiRequest.bind(this));
-		this._agent.registerHandler(PostCodeRequest.type, this.onPostCodeRequest.bind(this));
-		// this._agent.registerHandler(
-		// 	"codeStream/api",
-		// 	(
-		// 		{ url, token, init }: { url: string; token: string; init: RequestInit },
-		// 		cancellationToken: CancellationToken
-		// 	) => this.onApiRequest(url, token, init, cancellationToken)
-		// );
-
-		// this._agent.registerHandler(
-		// 	"codeStream/textDocument/post",
-		// 	(
-		// 		{ document, range }: { document: TextDocumentIdentifier; range: Range },
-		// 		cancellationToken: CancellationToken
-		// 	) => this.onPostCodeRequest(document, range, cancellationToken)
-		// );
+		this._agent.registerHandler(DocumentMarkersRequest.type, this.onMarkersRequest.bind(this));
+		this._agent.registerHandler(DocumentPreparePostRequest.type, this.onPostCodeRequest.bind(this));
 	}
 
 	private onApiRequest(
@@ -69,26 +53,47 @@ export class CodeStream {
 		return undefined;
 	}
 
-	private onPostCodeRequest(
-		{ document, range }: PostCodeRequest.Params,
+	private onMarkersRequest(
+		{ textDocument }: DocumentMarkersRequest.Params,
 		cancellationToken: CancellationToken
 	) {
-		const result = this.postCode(document, range);
+		this._connection.console.log(`DocumentMarkersRequest received`);
+
+		const result = MarkerHandler.handle(textDocument);
 		return result;
 	}
 
-	// TODO: Remove this and use specific route registration
-	private onRequest(method: string, ...params: any[]) {
-		if (!method.startsWith("codeStream")) return undefined;
+	private onPostCodeRequest(
+		{ textDocument, range, dirty }: DocumentPreparePostRequest.Params,
+		cancellationToken: CancellationToken
+	) {
+		this._connection.console.log(`DocumentPostCodeRequest received`);
 
-		this._connection.console.log(`Request ${method} received`);
+		const result = this.postCode(textDocument, range, dirty);
+		return result;
+	}
 
-		switch (method) {
-			case "codeStream/textDocument/markers":
-				return MarkerHandler.handle(params);
+	private _apiToken: string | undefined;
+	get apiToken() {
+		return this._apiToken!;
+	}
+
+	private _teamId: string | undefined;
+	get teamId() {
+		return this._teamId!;
+	}
+
+	private _userId: string | undefined;
+	get userId() {
+		return this._userId!;
+	}
+
+	private _users: UserCollection | undefined;
+	get users() {
+		if (this._users === undefined) {
+			this._users = new UserCollection(this);
 		}
-
-		return undefined;
+		return this._users;
 	}
 
 	async login() {
@@ -169,80 +174,58 @@ export class CodeStream {
 		};
 	}
 
-	async postCode(document: TextDocumentIdentifier, range: Range): Promise<CSPost | undefined> {
-		// const streamThread = await this.findStreamThread(args.session || Container.session, args, {
-		// 	includeActive: true,
-		// 	includeDefault: true
-		// });
-		// if (streamThread === undefined) throw new Error(`No stream could be found`);
+	async postCode(
+		documentId: TextDocumentIdentifier,
+		range: Range,
+		dirty: boolean = false
+	): Promise<DocumentPreparePostRequest.Response> {
+		const { documents, git } = Container.instance();
+		const document = documents.get(documentId.uri);
+		if (document === undefined) {
+			throw new Error(`No document could be found for Uri(${documentId.uri})`);
+		}
 
-		// const uri = document.uri;
+		const uri = URI.parse(document.uri);
+		const repoPath = await git.getRepoRoot(uri.fsPath);
 
-		// const repo = await (args.session || Container.session).repos.getByFileUri(uri);
-		// if (repo === undefined) {
-		// 	throw new Error(`No repository could be found for Uri(${uri.toString()}`);
-		// }
+		let authors: { id: string; name: string }[] | undefined;
+		let file: string | undefined;
+		let remotes: { name: string; url: string }[] | undefined;
+		let rev: string | undefined;
+		if (repoPath !== undefined) {
+			file = Strings.normalizePath(path.relative(repoPath, uri.fsPath));
+			if (file[0] === "/") {
+				file = file.substr(1);
+			}
 
-		// const authors = await Container.git.getFileAuthors(uri, {
-		// 	ref: args.ref,
-		// 	startLine: selection.start.line,
-		// 	endLine: selection.end.line,
-		// 	contents: document.isDirty ? document.getText() : undefined
-		// });
+			rev = await git.getFileCurrentRevision(uri.fsPath);
+			const gitRemotes = await git.getRepoRemotes(repoPath);
+			remotes = [...Iterables.map(gitRemotes, r => ({ name: r.name, url: r.normalizedUrl }))];
 
-		// const authorEmails = authors.map(a => a.email);
-		// Logger.log(`Commands.postCode: authors found: ${authorEmails.join(", ")}`);
+			const gitAuthors = await git.getFileAuthors(uri.fsPath, {
+				startLine: range.start.line,
+				endLine: range.end.line,
+				contents: dirty ? document.getText() : undefined
+			});
+			const authorEmails = gitAuthors.map(a => a.email);
 
-		// const users = await (args.session || Container.session).users.getByEmails(authorEmails);
-		// const mentions = Iterables.join(Iterables.map(users, u => `@${u.name}`), ", ");
+			const users = await this.users.getByEmails(authorEmails);
+			authors = [...Iterables.map(users, u => ({ id: u.id, name: u.name }))];
+		}
 
-		// let code;
-		// let commitHash;
-		// if (args.ref == null) {
-		// 	code = document.getText(selection);
-		// 	commitHash = await Container.git.getFileCurrentSha(document.uri);
-		// } else {
-		// 	const content = await Container.git.getFileRevisionContent(document.uri, args.ref);
-		// 	if (content == null) {
-		// 		throw new Error(`Unable to load file revision contents for Uri(${uri.toString()}`);
-		// 	}
-
-		// 	const revision = await workspace.openTextDocument({ content: content });
-		// 	code = revision.getText(selection);
-		// 	commitHash = await Container.git.resolveRef(document.uri, args.ref);
-		// }
-
-		// if (args.send && args.text) {
-		// 	// Get the file/marker stream to post to
-		// 	const markerStream = await repo.streams.toIdOrArgs(uri);
-		// 	return streamThread.stream.postCode(
-		// 		args.text,
-		// 		code,
-		// 		[
-		// 			selection.start.line,
-		// 			selection.start.character,
-		// 			selection.end.line,
-		// 			selection.end.character
-		// 		],
-		// 		commitHash!,
-		// 		markerStream,
-		// 		streamThread.id
-		// 	);
-		// }
-
-		// await Container.streamView.postCode(
-		// 	streamThread,
-		// 	repo,
-		// 	repo.relativizeUri(uri),
-		// 	code,
-		// 	selection,
-		// 	commitHash!,
-		// 	args.text,
-		// 	mentions
-		// );
-		// return streamThread.stream;
-
-		return undefined;
+		return {
+			code: document.getText(range),
+			source:
+				repoPath !== undefined
+					? {
+							file: file!,
+							repoPath: repoPath,
+							revision: rev!,
+							authors: authors || [],
+							remotes: remotes || []
+					  }
+					: undefined
+		};
 	}
 
 	private async getSubscribeableStreams(userId: string, teamId?: string): Promise<CSStream[]> {

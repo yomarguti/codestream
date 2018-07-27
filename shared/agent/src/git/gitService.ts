@@ -35,16 +35,16 @@ export interface IGitService extends Disposable {
 	): Promise<GitAuthor[]>;
 	// getFileAuthors(uriOrPath: Uri | string, options?: { ref?: string, contents?: string, startLine?: number, endLine?: number }): Promise<GitAuthor[]>;
 
-	getFileCurrentSha(uri: Uri): Promise<string | undefined>;
-	getFileCurrentSha(path: string): Promise<string | undefined>;
+	getFileCurrentRevision(uri: Uri): Promise<string | undefined>;
+	getFileCurrentRevision(path: string): Promise<string | undefined>;
 	// getFileCurrentSha(uriOrPath: Uri | string): Promise<string | undefined>;
 
-	getFileRevision(uri: Uri, ref: string): Promise<string | undefined>;
-	getFileRevision(path: string, ref: string): Promise<string | undefined>;
+	getFileForRevision(uri: Uri, ref: string): Promise<string | undefined>;
+	getFileForRevision(path: string, ref: string): Promise<string | undefined>;
 	// getFileRevision(uriOrPath: Uri | string, ref: string): Promise<string | undefined>;
 
-	getFileRevisionContent(uri: Uri, ref: string): Promise<string | undefined>;
-	getFileRevisionContent(path: string, ref: string): Promise<string | undefined>;
+	getFileContentForRevision(uri: Uri, ref: string): Promise<string | undefined>;
+	getFileContentForRevision(path: string, ref: string): Promise<string | undefined>;
 	// getFileRevisionContent(uriOrPath: Uri | string, ref: string): Promise<string | undefined>;
 
 	getRepoFirstCommits(repoUri: Uri): Promise<string[]>;
@@ -141,9 +141,9 @@ export class GitService implements IGitService, Disposable {
 		return GitAuthorParser.parse(data);
 	}
 
-	async getFileCurrentSha(uri: Uri): Promise<string | undefined>;
-	async getFileCurrentSha(path: string): Promise<string | undefined>;
-	async getFileCurrentSha(uriOrPath: Uri | string): Promise<string | undefined> {
+	async getFileCurrentRevision(uri: Uri): Promise<string | undefined>;
+	async getFileCurrentRevision(path: string): Promise<string | undefined>;
+	async getFileCurrentRevision(uriOrPath: Uri | string): Promise<string | undefined> {
 		const [dir, filename] = Strings.splitPath(
 			typeof uriOrPath === "string" ? uriOrPath : uriOrPath.fsPath
 		);
@@ -152,9 +152,36 @@ export class GitService implements IGitService, Disposable {
 		return data ? data : undefined;
 	}
 
-	async getFileRevision(uri: Uri, ref: string): Promise<string | undefined>;
-	async getFileRevision(path: string, ref: string): Promise<string | undefined>;
-	async getFileRevision(uriOrPath: Uri | string, ref: string): Promise<string | undefined> {
+	async getFileContentForRevision(uri: Uri, ref: string): Promise<string | undefined>;
+	async getFileContentForRevision(path: string, ref: string): Promise<string | undefined>;
+	async getFileContentForRevision(
+		uriOrPath: Uri | string,
+		ref: string
+	): Promise<string | undefined> {
+		const [dir, filename] = Strings.splitPath(
+			typeof uriOrPath === "string" ? uriOrPath : uriOrPath.fsPath
+		);
+
+		try {
+			const data = await git({ cwd: dir, encoding: "utf8" }, "show", `${ref}:./${filename}`, "--");
+			return data;
+		} catch (ex) {
+			const msg = ex && ex.toString();
+			if (
+				GitErrors.badRevision.test(msg) ||
+				GitWarnings.notFound.test(msg) ||
+				GitWarnings.foundButNotInRevision.test(msg)
+			) {
+				return undefined;
+			}
+
+			throw ex;
+		}
+	}
+
+	async getFileForRevision(uri: Uri, ref: string): Promise<string | undefined>;
+	async getFileForRevision(path: string, ref: string): Promise<string | undefined>;
+	async getFileForRevision(uriOrPath: Uri | string, ref: string): Promise<string | undefined> {
 		const [dir, filename] = Strings.splitPath(
 			typeof uriOrPath === "string" ? uriOrPath : uriOrPath.fsPath
 		);
@@ -198,30 +225,6 @@ export class GitService implements IGitService, Disposable {
 		});
 	}
 
-	async getFileRevisionContent(uri: Uri, ref: string): Promise<string | undefined>;
-	async getFileRevisionContent(path: string, ref: string): Promise<string | undefined>;
-	async getFileRevisionContent(uriOrPath: Uri | string, ref: string): Promise<string | undefined> {
-		const [dir, filename] = Strings.splitPath(
-			typeof uriOrPath === "string" ? uriOrPath : uriOrPath.fsPath
-		);
-
-		try {
-			const data = await git({ cwd: dir, encoding: "utf8" }, "show", `${ref}:./${filename}`, "--");
-			return data;
-		} catch (ex) {
-			const msg = ex && ex.toString();
-			if (
-				GitErrors.badRevision.test(msg) ||
-				GitWarnings.notFound.test(msg) ||
-				GitWarnings.foundButNotInRevision.test(msg)
-			) {
-				return undefined;
-			}
-
-			throw ex;
-		}
-	}
-
 	async getRepoFirstCommits(repoUri: Uri): Promise<string[]>;
 	async getRepoFirstCommits(repoPath: string): Promise<string[]>;
 	async getRepoFirstCommits(repoUriOrPath: Uri | string): Promise<string[]> {
@@ -261,16 +264,8 @@ export class GitService implements IGitService, Disposable {
 	async getRepoRemote(repoPath: string): Promise<GitRemote | undefined>;
 	async getRepoRemote(repoUriOrPath: Uri | string): Promise<GitRemote | undefined> {
 		const repoPath = typeof repoUriOrPath === "string" ? repoUriOrPath : repoUriOrPath.fsPath;
+		const remotes = await this.getRepoRemotes(repoPath);
 
-		let data;
-		try {
-			data = await git({ cwd: repoPath }, "remote", "-v");
-			if (!data) return undefined;
-		} catch {
-			return undefined;
-		}
-
-		const remotes = GitRemoteParser.parse(data, repoPath);
 		let fetch;
 		let push;
 		for (const r of remotes) {
@@ -284,6 +279,19 @@ export class GitService implements IGitService, Disposable {
 		}
 
 		return push || fetch;
+	}
+
+	async getRepoRemotes(repoUri: Uri): Promise<GitRemote[]>;
+	async getRepoRemotes(repoPath: string): Promise<GitRemote[]>;
+	async getRepoRemotes(repoUriOrPath: Uri | string): Promise<GitRemote[]> {
+		const repoPath = typeof repoUriOrPath === "string" ? repoUriOrPath : repoUriOrPath.fsPath;
+
+		try {
+			const data = await git({ cwd: repoPath }, "remote", "-v");
+			return GitRemoteParser.parse(data, repoPath);
+		} catch {
+			return [];
+		}
 	}
 
 	async repoHasRemote(repoPath: string, remoteUrl: string): Promise<boolean> {
