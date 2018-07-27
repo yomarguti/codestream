@@ -10,24 +10,42 @@ import {
 	Range,
 	TextDocument
 } from "vscode";
+import { SessionStatus, SessionStatusChangedEvent } from "../api/session";
 import { PostCodeCommandArgs } from "../commands";
+import { Container } from "../container";
 
 export class CodeStreamCodeActionProvider extends Disposable implements CodeActionProvider {
 	static selector: DocumentSelector = [{ scheme: "file" }, { scheme: "vsls" }];
 
-	private readonly _disposable: Disposable | undefined;
+	private readonly _disposable: Disposable;
+	private _disposableSignedIn: Disposable | undefined;
 
 	constructor() {
 		super(() => this.dispose());
 
-		this._disposable = languages.registerCodeActionsProvider(
-			CodeStreamCodeActionProvider.selector,
-			this
+		this._disposable = Disposable.from(
+			Container.session.onDidChangeStatus(this.onSessionStatusChanged, this)
 		);
 	}
 
 	dispose() {
 		this._disposable && this._disposable.dispose();
+	}
+
+	private async onSessionStatusChanged(e: SessionStatusChangedEvent) {
+		const status = e.getStatus();
+		switch (status) {
+			case SessionStatus.SignedOut:
+				this._disposableSignedIn && this._disposableSignedIn.dispose();
+				break;
+
+			case SessionStatus.SignedIn:
+				this._disposableSignedIn = languages.registerCodeActionsProvider(
+					CodeStreamCodeActionProvider.selector,
+					this
+				);
+				break;
+		}
 	}
 
 	provideCodeActions(
@@ -36,7 +54,7 @@ export class CodeStreamCodeActionProvider extends Disposable implements CodeActi
 		context: CodeActionContext,
 		token: CancellationToken
 	): Command[] | Thenable<Command[]> {
-		if (range.start.compareTo(range.end) === 0) return [];
+		if (!Container.session.signedIn || range.start.compareTo(range.end) === 0) return [];
 
 		return [
 			{
