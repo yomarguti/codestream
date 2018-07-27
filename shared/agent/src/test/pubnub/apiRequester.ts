@@ -2,6 +2,7 @@
 
 import { request, RequestOptions } from "https";
 import { parse } from "url";
+import { ServerError } from "../../agentError";
 
 export interface ApiRequesterOptions {
 	origin: string;
@@ -90,7 +91,7 @@ export class ApiRequester {
 								callback(`error parsing JSON data: ${error}`);
 							}
 							if (response.statusCode! < 200 || response.statusCode! >= 300) {
-								callback(new Error(`${response.statusCode}:https error\n\n${JSON.stringify(parsed)}`));
+								callback(new ServerError("https error", parsed, response.statusCode));
 							}
 							else {
 								callback(null, parsed);

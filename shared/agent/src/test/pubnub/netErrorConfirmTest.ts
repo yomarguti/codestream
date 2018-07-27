@@ -10,7 +10,7 @@ export class NetErrorConfirmTest extends PubnubTester {
 	private _didGetNetworkProblem: boolean = false;
 
 	describe () {
-		return "after subscribing, going offline, and coming online again, a Confirmed event should be emitted after confirming the subscription";
+		return "after subscribing, going offline with a network error, and coming online again, a Confirmed event should be emitted after confirming the subscription";
 	}
 
 	run (): Promise<void> {

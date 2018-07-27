@@ -64,18 +64,20 @@ export class CatchUpTest extends PubnubTester {
 	listenForMessage () {
 		this._messageListener = this._pubnubConnection!.onDidReceiveMessages((messages: any[]) => {
 			if (
+				!this._didGoOnline &&
 				messages.length === 1 &&
 				messages[0].post &&
 				messages[0].post._id === this._postData!._id
 			) {
-				if (this._didGoOnline) {
-					this._resolve();
-				}
-				else {
-					this._pubnubConnection!.simulateOffline();
-					this._pubnubConnection!.setOnline(false);
-					this.createPost({ token: this._otherUserData!.accessToken });
-				}
+				this._pubnubConnection!.simulateOffline();
+				this._pubnubConnection!.setOnline(false);
+				this.createPost({ token: this._otherUserData!.accessToken });
+			}
+			else if (
+				this._didGoOnline &&
+				messages.find(message => message.post && message.post._id === this._postData!._id)
+			) {
+				this._resolve();
 			}
 		});
 	}

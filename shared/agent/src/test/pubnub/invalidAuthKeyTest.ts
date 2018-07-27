@@ -12,6 +12,7 @@ export class InvalidAuthKeyTest extends PubnubTester {
 	constructor (config: PubnubTesterConfig) {
 		super(config);
 		this._pubnubToken = "hello";
+		this._testTimeout = 20000;
 	}
 
 	describe () {

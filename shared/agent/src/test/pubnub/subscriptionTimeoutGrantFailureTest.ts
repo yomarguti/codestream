@@ -10,7 +10,7 @@ export class SubscriptionTimeoutGrantFailureTest extends PubnubTester {
 	private _didGetFailed: boolean = false;
 
 	describe () {
-		return "when a subscription times out, an a channel is not granted access, that channel should be removed from the list of channels to subscribe to, and subscription of other channels should proceed with success and an emitted Connected event";
+		return "when a subscription times out, and a channel is not granted access, that channel should be removed from the list of channels to subscribe to, and subscription of other channels should proceed with success and an emitted Connected event";
 	}
 
 	async before () {

@@ -108,7 +108,18 @@ export class MultiMessageCatchUpTest extends PubnubTester {
 			}
 			else if (this._didGoOnline) {
 				const postIdsReceived = messages.map(message => message.post._id);
-				const postIdsCreated = [this._firstPostId, ...this._posts.map(post => post._id)];
+				const postIdsCreated = [this._firstPostId || "", ...this._posts.map(post => post._id)];
+				this.eliminateDuplicates(postIdsReceived);
+
+				if (postIdsReceived.length !== postIdsCreated.length) {
+					console.warn("RXlen=" + postIdsReceived.length + " CXlen=" + postIdsCreated.length);
+				}
+				const len = Math.max(postIdsReceived.length, postIdsCreated.length);
+				for (let i = 0; i < len; i++) {
+					if (postIdsReceived[i] !== postIdsCreated[i]) {
+						console.warn(`ELEM ${i} rx=${postIdsReceived[i]} cx=${postIdsCreated[i]}`);
+					}
+				}
 				expect(postIdsReceived).to.deep.equal(postIdsCreated);
 				this._resolve();
 			}
@@ -135,5 +146,15 @@ export class MultiMessageCatchUpTest extends PubnubTester {
 		return new Promise(resolve => {
 			setTimeout(resolve, n);
 		});
+	}
+
+	eliminateDuplicates (sortedArray: string[]) {
+		let length = sortedArray.length;
+		for (let i = length - 1; i >= 0; i--) {
+			if (i < length - 1 && sortedArray[i] === sortedArray[i + 1]) {
+				sortedArray.splice(i, 1);
+				length--;
+			}
+		}
 	}
 }

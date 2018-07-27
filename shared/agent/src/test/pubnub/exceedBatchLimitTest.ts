@@ -15,7 +15,7 @@ export class ExceedBatchLimitTest extends MultiMessageCatchUpTest {
 		this._testTimeout = (
 			this._numStreams * this._numPostsPerStream +
 			this._numPostsPerStream * this._numExtraPostsPerPost
-		) * 500 + 30000;
+		) * 500 + 60000;
 	}
 
 	describe () {

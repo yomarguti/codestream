@@ -70,7 +70,7 @@ const THRESHOLD_BUFFER = 12000;
 export class PubnubConnection {
 	private _api: CodeStreamApi | undefined;
 	private _fullySubscribed: boolean = false;
-	private _neverSubscribed: boolean = true;
+	private _lastSuccessfulSubscription: number = 0;
 	private _subscriptions: SubscriptionMap = {};
 	private _userId: string | undefined;
 	private _subscribeKey: string | undefined;
@@ -93,8 +93,8 @@ export class PubnubConnection {
 	private _simulateGrantFailure: boolean | string | string[] | undefined;
 	private _simulateSubscriptionTimeout: boolean = false;
 	private _simulateOffline: boolean = false;
-	private _numResubscribeRetries: number = 0;
 	private _aborted: boolean = false;
+	private _numResubscribes: number = 0;
 
 	// call to receive status updates
 	get onDidStatusChange(): Event<StatusChangeEvent> {
@@ -117,7 +117,7 @@ export class PubnubConnection {
 		this._online = options.online || false;
 		this._testMode = options.testMode || false;
 		this._aborted = false;
-		this._numResubscribeRetries = 0;
+		this._numResubscribes = 0;
 
 		const channels = options.channels || [];
 		const channelDescriptors = this.normalizeChannelDescriptors(channels);
@@ -610,16 +610,18 @@ export class PubnubConnection {
 		if (
 			this._grantFailures.length === 0 &&
 			this.getSubscribedChannels().length === 0 &&
-			this._neverSubscribed
+			this._lastSuccessfulSubscription === 0
 		) {
-			this._numResubscribeRetries++;
-			if (this._numResubscribeRetries === 10) {
+			if (this._numResubscribes === 10) {
 				this._aborted = true;
 				this.unsubscribeAll();
 				return this.emitStatus(PubnubStatus.Aborted);
 			}
 		}
-		this.resubscribe();
+		const interval = this.getThrottleInterval();
+		setTimeout(() => {
+			this.resubscribe();
+		}, interval);
 	}
 
 	// ask the api server to explicitly grant us access to the given channel, if we don't
@@ -633,7 +635,7 @@ export class PubnubConnection {
 					this._simulateGrantFailure.includes(channel)
 				)
 			) {
-				throw new Error('403: Invalid token\n\n{"code": "AUTH-1000"}');
+				throw new ServerError("invalid token", { code: "AUTH-1000" }, 403);
 			}
 			await this._api!.grant(this._accessToken!, channel);
 		} catch (error) {
@@ -657,7 +659,10 @@ export class PubnubConnection {
 			this.drainQueue();
 		} else {
 			this._fullySubscribed = true;
-			this._neverSubscribed = false;
+			if (this.getSubscribedChannels().length > 0) {
+				this._lastSuccessfulSubscription = Date.now();
+				this._numResubscribes = 0;
+			}
 			// we only need to emit the message that we are connected under two conditions:
 			// either the client added channels (so they need to know they subscribed successfully),
 			// or we encountered network trouble and told them about it (with emitTrouble()),
@@ -726,6 +731,7 @@ export class PubnubConnection {
 
 	// resubscribe to all channels
 	private resubscribe() {
+		this._numResubscribes++;
 		Object.keys(this._subscriptions).forEach(channel => {
 			this._subscriptions[channel].subscribed = false;
 		});
@@ -751,6 +757,19 @@ export class PubnubConnection {
 	private removeChannels(channels: string[]) {
 		for (const channel of channels) {
 			delete this._subscriptions[channel];
+		}
+	}
+
+	// to throttle resubscribe attempts, determine the next interval to wait until resubscribe
+	private getThrottleInterval () {
+		if (this._numResubscribes < 10) {
+			return 0;
+		}
+		else if (this._numResubscribes < 100) {
+			return 1000;
+		}
+		else {
+			return 60000;
 		}
 	}
 

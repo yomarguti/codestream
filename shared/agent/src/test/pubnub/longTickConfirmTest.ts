@@ -15,7 +15,7 @@ export class LongTickConfirmTest extends PubnubTester {
 	}
 
 	describe () {
-		return "after subscribing, going offline, and coming online again, a Confirmed event should be emitted after confirming the subscription";
+		return "after subscribing, going offline with a long tick, and coming online again, a Confirmed event should be emitted after confirming the subscription";
 	}
 
 	run (): Promise<void> {
