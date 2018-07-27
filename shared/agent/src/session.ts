@@ -9,7 +9,7 @@ import {
 } from "vscode-languageserver";
 import URI from "vscode-uri";
 import { CodeStreamAgent, CodeStreamAgentOptions } from "./agent";
-import { CodeStreamApi, CSPost, CSStream } from "./api/api";
+import { CodeStreamApi, CSStream } from "./api/api";
 import { UserCollection } from "./api/models/users";
 import { Container } from "./container";
 import { ApiRequest, DocumentMarkersRequest, DocumentPreparePostRequest } from "./ipc/agent";
