@@ -30,6 +30,10 @@ export default class WebviewApi {
 		});
 	}
 
+	authenticate(params) {
+		return this.postMessage({ action: "authenticate", params });
+	}
+
 	fetchPosts(params) {
 		return this.postMessage({ action: "fetch-posts", params });
 	}

@@ -44641,10 +44641,12 @@ var Menu = function (_Component) {
 	return Menu;
 }(react_1);
 
-
+var setContext = function setContext(payload) {
+  return { type: "SET_CONTEXT", payload: payload };
+};
 
 var contextActions = /*#__PURE__*/Object.freeze({
-
+	setContext: setContext
 });
 
 var SimpleChannelMenu = function (_Component) {
@@ -105715,6 +105717,338 @@ var mapStateToProps$6 = function mapStateToProps(_ref15) {
 
 var Stream = connect(mapStateToProps$6, _extends$5({}, streamActions))(SimpleStream);
 
+Button$1.defaultProps = {
+	className: "",
+	disabled: false,
+	loading: false
+};
+
+function Button$1(_ref) {
+	var children = _ref.children,
+	    className = _ref.className,
+	    disabled = _ref.disabled,
+	    loading = _ref.loading,
+	    extras = objectWithoutProperties$1(_ref, ["children", "className", "disabled", "loading"]);
+	var extraProps = objectWithoutProperties$1(extras, ["dispatch"]); // remove non-html attributes
+
+	return react.createElement(
+		"button",
+		_extends$5({
+			className: classnames("native-key-bindings btn inline-block-tight", className, {
+				"btn-primary": !loading
+			}),
+			disabled: loading || disabled
+		}, extraProps),
+		loading ? react.createElement("span", { className: "loading loading-spinner-tiny inline-block" }) : children
+	);
+}
+
+var _this$1 = undefined;
+
+var authenticate = function authenticate(params) {
+	return function () {
+		var _ref2 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(dispatch, getState, _ref) {
+			var api = _ref.api;
+			var response;
+			return regeneratorRuntime.wrap(function _callee$(_context) {
+				while (1) {
+					switch (_context.prev = _context.next) {
+						case 0:
+							_context.next = 2;
+							return api.authenticate(params);
+
+						case 2:
+							response = _context.sent;
+
+							dispatch({ type: "ADD_STREAMS", payload: response.streams });
+							dispatch({ type: "ADD_TEAMS", payload: response.teams });
+							dispatch({ type: "ADD_USERS", payload: response.users });
+							dispatch(setContext({ currentTeamId: response.currentTeamId }));
+							dispatch({ type: "INIT_SESSION", payload: { userId: response.currentUserId } });
+
+						case 8:
+						case "end":
+							return _context.stop();
+					}
+				}
+			}, _callee, _this$1);
+		}));
+
+		return function (_x, _x2, _x3) {
+			return _ref2.apply(this, arguments);
+		};
+	}();
+};
+
+var actions = /*#__PURE__*/Object.freeze({
+	authenticate: authenticate
+});
+
+var isPasswordInvalid = function isPasswordInvalid(password) {
+	return password.length === 0;
+};
+var isEmailInvalid = function isEmailInvalid(email) {
+	var emailRegex = new RegExp("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$");
+	return email === "" || emailRegex.test(email) === false;
+};
+
+var Login = function (_React$Component) {
+	inherits$1(Login, _React$Component);
+
+	function Login() {
+		var _ref,
+		    _this2 = this;
+
+		var _temp, _this, _ret;
+
+		classCallCheck$1(this, Login);
+
+		for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+			args[_key] = arguments[_key];
+		}
+
+		return _ret = (_temp = (_this = possibleConstructorReturn$1(this, (_ref = Login.__proto__ || Object.getPrototypeOf(Login)).call.apply(_ref, [this].concat(args))), _this), Object.defineProperty(_this, "state", {
+			enumerable: true,
+			writable: true,
+			value: {
+				password: "",
+				passwordTouched: false,
+				emailTouched: false
+			}
+		}), Object.defineProperty(_this, "onBlurPassword", {
+			enumerable: true,
+			writable: true,
+			value: function value() {
+				return _this.setState({ passwordTouched: true });
+			}
+		}), Object.defineProperty(_this, "onBlurEmail", {
+			enumerable: true,
+			writable: true,
+			value: function value() {
+				return _this.setState({ emailTouched: true });
+			}
+		}), Object.defineProperty(_this, "renderEmailHelp", {
+			enumerable: true,
+			writable: true,
+			value: function value() {
+				var _this$state = _this.state,
+				    email = _this$state.email,
+				    emailTouched = _this$state.emailTouched;
+
+				if (isEmailInvalid(email) && emailTouched) return react_3(
+					"small",
+					{ className: "error-message" },
+					react_3(FormattedMessage, { id: "login.email.invalid" })
+				);
+			}
+		}), Object.defineProperty(_this, "renderPasswordHelp", {
+			enumerable: true,
+			writable: true,
+			value: function value() {
+				var _this$state2 = _this.state,
+				    password = _this$state2.password,
+				    passwordTouched = _this$state2.passwordTouched;
+
+				if (isPasswordInvalid(password) && passwordTouched) {
+					return react_3(
+						"small",
+						{ className: "error-message" },
+						react_3(FormattedMessage, { id: "login.password.required" })
+					);
+				}
+			}
+		}), Object.defineProperty(_this, "renderAccountMessage", {
+			enumerable: true,
+			writable: true,
+			value: function value() {
+				if (_this.props.alreadySignedUp) return react_3(
+					"p",
+					null,
+					react_3(FormattedMessage, { id: "login.alreadySignedUp" })
+				);
+				if (_this.props.alreadyConfirmed) return react_3(
+					"p",
+					null,
+					react_3(FormattedMessage, { id: "login.alreadyConfirmed" })
+				);
+			}
+		}), Object.defineProperty(_this, "renderError", {
+			enumerable: true,
+			writable: true,
+			value: function value() {
+				// if (this.props.errors.invalidCredentials)
+				// 	return (
+				// 		<span className="error-message form-error">
+				// 			<FormattedMessage id="login.invalid" />
+				// 		</span>
+				// 	);
+				// if (this.props.errors.unknown)
+				// 	return <UnexpectedErrorMessage classes="error-message page-error" />;
+			}
+		}), Object.defineProperty(_this, "isFormInvalid", {
+			enumerable: true,
+			writable: true,
+			value: function value() {
+				var _this$state3 = _this.state,
+				    password = _this$state3.password,
+				    email = _this$state3.email;
+
+				return isPasswordInvalid(password) || isEmailInvalid(email);
+			}
+		}), Object.defineProperty(_this, "submitCredentials", {
+			enumerable: true,
+			writable: true,
+			value: function () {
+				var _ref2 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(event) {
+					var _this$state4, password, email;
+
+					return regeneratorRuntime.wrap(function _callee$(_context) {
+						while (1) {
+							switch (_context.prev = _context.next) {
+								case 0:
+									event.preventDefault();
+
+									if (!_this.isFormInvalid()) {
+										_context.next = 3;
+										break;
+									}
+
+									return _context.abrupt("return");
+
+								case 3:
+									_this$state4 = _this.state, password = _this$state4.password, email = _this$state4.email;
+
+									_this.props.authenticate({ password: password, email: email });
+
+								case 5:
+								case "end":
+									return _context.stop();
+							}
+						}
+					}, _callee, _this2);
+				}));
+
+				function value(_x) {
+					return _ref2.apply(this, arguments);
+				}
+
+				return value;
+			}()
+		}), _temp), possibleConstructorReturn$1(_this, _ret);
+	}
+
+	// componentDidMount() {
+	// 	this.addToolTip("login-input-email", "The email address for your CodeStream account");
+	// 	this.addToolTip("login-input-password", "Your CodeStream password");
+	// }
+
+	createClass$1(Login, [{
+		key: "render",
+		value: function render() {
+			var _this3 = this;
+
+			return react_3(
+				"div",
+				{ id: "login-page" },
+				react_3(
+					"form",
+					{ id: "login-form", onSubmit: this.submitCredentials },
+					react_3(
+						"h2",
+						null,
+						"Sign In to CodeStream"
+					),
+					this.renderAccountMessage(),
+					this.renderError(),
+					react_3(
+						"div",
+						{ id: "controls" },
+						react_3(
+							"div",
+							{ id: "email-controls", className: "control-group" },
+							react_3(
+								"label",
+								null,
+								react_3(FormattedMessage, { id: "login.email.label" })
+							),
+							react_3("input", {
+								id: "login-input-email",
+								className: "native-key-bindings input-text control",
+								type: "text",
+								name: "email",
+								tabIndex: "0",
+								value: this.state.email,
+								onChange: function onChange(e) {
+									return _this3.setState({ email: e.target.value });
+								},
+								onBlur: this.onBlurEmail,
+								required: this.state.emailTouched
+							}),
+							this.renderEmailHelp()
+						),
+						react_3(
+							"div",
+							{ id: "password-controls", className: "control-group" },
+							react_3(
+								"label",
+								null,
+								react_3(FormattedMessage, { id: "login.password.label" })
+							),
+							react_3("input", {
+								id: "login-input-password",
+								className: "native-key-bindings input-text",
+								type: "password",
+								name: "password",
+								tabIndex: "1",
+								value: this.state.password,
+								onChange: function onChange(e) {
+									return _this3.setState({ password: e.target.value });
+								},
+								onBlur: this.onBlurPassword,
+								required: this.state.passwordTouched
+							}),
+							this.renderPasswordHelp()
+						),
+						react_3(
+							Button$1,
+							{
+								id: "login-button",
+								className: "control-button",
+								tabIndex: "2",
+								type: "submit",
+								loading: this.props.loading
+							},
+							react_3(FormattedMessage, { id: "login.submitButton" })
+						),
+						react_3(
+							"div",
+							{ className: "footer" },
+							react_3(
+								"p",
+								null,
+								react_3(
+									"strong",
+									null,
+									react_3(FormattedMessage, { id: "login.footer.noAccount" }),
+									" ",
+									react_3(
+										"a",
+										{ onClick: this.props.goToSignup },
+										react_3(FormattedMessage, { id: "login.footer.signUp" })
+									)
+								)
+							)
+						)
+					)
+				)
+			);
+		}
+	}]);
+	return Login;
+}(react_1);
+
+var Login$1 = connect(null, actions)(Login);
+
 addLocaleData(en);
 
 var mapStateToProps$7 = function mapStateToProps(state) {
@@ -105725,11 +106059,7 @@ var mapStateToProps$7 = function mapStateToProps(state) {
 };
 var Root = connect(mapStateToProps$7)(function (props) {
 	if (!props.bootstrapped) return react_3(Loading, { message: "CodeStream engage..." });
-	if (!props.loggedIn) return react_3(
-		"div",
-		null,
-		"TODO: Login"
-	);
+	if (!props.loggedIn) return react_3(Login$1, null);
 	return react_3(Stream, null);
 });
 
@@ -106496,6 +106826,11 @@ var WebviewApi = function () {
 				console.debug("codestream:request", _extends$5({ id: id }, message));
 				_this2.host.postMessage({ type: "codestream:request", body: _extends$5({ id: id }, message) }, "*");
 			});
+		}
+	}, {
+		key: "authenticate",
+		value: function authenticate(params) {
+			return this.postMessage({ action: "authenticate", params: params });
 		}
 	}, {
 		key: "fetchPosts",

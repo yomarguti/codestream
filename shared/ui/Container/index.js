@@ -3,6 +3,7 @@ import { addLocaleData, IntlProvider } from "react-intl";
 import englishLocaleData from "react-intl/locale-data/en";
 import { connect, Provider } from "react-redux";
 import Stream from "../Stream";
+import Login from "../Login";
 
 addLocaleData(englishLocaleData);
 
@@ -12,7 +13,7 @@ const mapStateToProps = state => ({
 });
 const Root = connect(mapStateToProps)(props => {
 	if (!props.bootstrapped) return <Loading message="CodeStream engage..." />;
-	if (!props.loggedIn) return <div>TODO: Login</div>;
+	if (!props.loggedIn) return <Login />;
 	return <Stream />;
 });
 
