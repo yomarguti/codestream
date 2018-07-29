@@ -38501,21 +38501,16 @@ var ComposeBox = function (_React$Component) {
 		}), Object.defineProperty(_this, "handleCodeHighlightEvent", {
 			enumerable: true,
 			writable: true,
-			value: function value(_ref4) {
-				var authors = _ref4.authors,
-				    state = objectWithoutProperties$1(_ref4, ["authors"]);
-
+			value: function value(body) {
 				// make sure we have a compose box to type into
 				_this.props.ensureStreamIsActive();
-				_this.setState({ quote: state });
+				_this.setState({ quote: body });
 
-				var toAtmention = authors.map(function (email) {
-					return underscore.findWhere(_this.props.teammates, { email: email });
-				}).filter(Boolean);
-				if (toAtmention.length > 0) {
+				var usersToMention = body.quoteSource.authors;
+				if (usersToMention.length > 0) {
 					// TODO handle users with no username
-					var usernames = toAtmention.map(function (user) {
-						return "@" + user.username;
+					var usernames = usersToMention.map(function (user) {
+						return "@" + user.name;
 					});
 					_this.setState({ autoMentions: usernames });
 					// the reason for this unicode space is that chrome will
@@ -38984,8 +38979,8 @@ var ComposeBox = function (_React$Component) {
 					onBlur: this.handleBlur,
 					html: this.state.newPostText,
 					placeholder: placeholder,
-					ref: function ref(_ref5) {
-						return _this4._contentEditable = _ref5;
+					ref: function ref(_ref4) {
+						return _this4._contentEditable = _ref4;
 					}
 				})
 			);
@@ -104898,63 +104893,52 @@ var SimpleStream = function (_Component) {
 					var codeBlock = {
 						code: quote.quoteText,
 						location: quote.quoteRange,
-						// repoId,
 						file: quote.file
 					};
 
-					// if we have a streamId, send it. otherwise the
-					// API server will create one based on the file
-					// and the repoId.
-					// if (fileStreamId) codeBlock.streamId = fileStreamId;
-
 					codeBlocks.push(codeBlock);
-					if (quote.gitError) {
-						var title = void 0;
-						var _message = void 0;
-						switch (quote.gitError) {
-							case "noRepository":
-								{
-									title = "Missing Git Info";
-									_message = "This repo doesn’t appear to be managed by Git. When your teammates view this post, we won’t be able to connect the code block to the appropriate file in their IDE.";
-									break;
-								}
-							case "noRemote":
-								{
-									title = "No remote URL";
-									_message = "This repo doesn’t have a remote URL configured.";
-									break;
-								}
-							case "noGit":
-								title = "Git not in path";
-								_message = "We aren’t able to find Git information for this repo because Git isn’t in your PATH.";
-								break;
-						}
-						return confirmPopup({
-							title: title,
-							message: function message() {
-								return react.createElement(
-									"span",
-									null,
-									_message + " ",
-									react.createElement(
-										"a",
-										{
-											onClick: function onClick(e) {
-												e.preventDefault();
-												emitter.emit("interaction:clicked-link", "https://help.codestream.com/hc/en-us/articles/360001530571-Git-Issues");
-											}
-										},
-										"Learn more"
-									)
-								);
-							},
-							centered: true,
-							buttons: [{
-								label: "Post Anyway",
-								action: submit
-							}, { label: "Cancel" }]
-						});
+					var title = void 0;
+					var _message = void 0;
+
+					if (!quote.quoteSource) {
+						title = "Missing Git Info";
+						_message = "This repo doesn’t appear to be managed by Git. When your teammates view this post, we won’t be able to connect the code block to the appropriate file in their IDE.";
+					} else if (quote.quoteSource.remotes.length === 0) {
+						title = "No remote URL";
+						_message = "This repo doesn’t have a remote URL configured.";
 					}
+					// }
+					// case "noGit":
+					// 	title = "Git not in path";
+					// 	message =
+					// 		"We aren’t able to find Git information for this repo because Git isn’t in your PATH.";
+					// 	break;
+
+					if (title) return confirmPopup({
+						title: title,
+						message: function message() {
+							return react.createElement(
+								"span",
+								null,
+								_message + " ",
+								react.createElement(
+									"a",
+									{
+										onClick: function onClick(e) {
+											e.preventDefault();
+											emitter.emit("interaction:clicked-link", "https://help.codestream.com/hc/en-us/articles/360001530571-Git-Issues");
+										}
+									},
+									"Learn more"
+								)
+							);
+						},
+						centered: true,
+						buttons: [{
+							label: "Post Anyway",
+							action: submit
+						}, { label: "Cancel" }]
+					});
 				}
 				submit();
 			}

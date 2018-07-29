@@ -70,17 +70,15 @@ class ComposeBox extends React.Component {
 		this.disposables.forEach(d => d.dispose());
 	}
 
-	handleCodeHighlightEvent = ({ authors, ...state }) => {
+	handleCodeHighlightEvent = body => {
 		// make sure we have a compose box to type into
 		this.props.ensureStreamIsActive();
-		this.setState({ quote: state });
+		this.setState({ quote: body });
 
-		const toAtmention = authors
-			.map(email => _.findWhere(this.props.teammates, { email }))
-			.filter(Boolean);
-		if (toAtmention.length > 0) {
+		const usersToMention = body.quoteSource.authors;
+		if (usersToMention.length > 0) {
 			// TODO handle users with no username
-			const usernames = toAtmention.map(user => `@${user.username}`);
+			const usernames = usersToMention.map(user => `@${user.name}`);
 			this.setState({ autoMentions: usernames });
 			// the reason for this unicode space is that chrome will
 			// not render a space at the end of a contenteditable div

@@ -1289,37 +1289,29 @@ export class SimpleStream extends Component {
 			let codeBlock = {
 				code: quote.quoteText,
 				location: quote.quoteRange,
-				// repoId,
 				file: quote.file
 			};
 
-			// if we have a streamId, send it. otherwise the
-			// API server will create one based on the file
-			// and the repoId.
-			// if (fileStreamId) codeBlock.streamId = fileStreamId;
-
 			codeBlocks.push(codeBlock);
-			if (quote.gitError) {
-				let title;
-				let message;
-				switch (quote.gitError) {
-					case "noRepository": {
-						title = "Missing Git Info";
-						message =
-							"This repo doesn’t appear to be managed by Git. When your teammates view this post, we won’t be able to connect the code block to the appropriate file in their IDE.";
-						break;
-					}
-					case "noRemote": {
-						title = "No remote URL";
-						message = "This repo doesn’t have a remote URL configured.";
-						break;
-					}
-					case "noGit":
-						title = "Git not in path";
-						message =
-							"We aren’t able to find Git information for this repo because Git isn’t in your PATH.";
-						break;
-				}
+			let title;
+			let message;
+
+			if (!quote.quoteSource) {
+				title = "Missing Git Info";
+				message =
+					"This repo doesn’t appear to be managed by Git. When your teammates view this post, we won’t be able to connect the code block to the appropriate file in their IDE.";
+			} else if (quote.quoteSource.remotes.length === 0) {
+				title = "No remote URL";
+				message = "This repo doesn’t have a remote URL configured.";
+			}
+			// }
+			// case "noGit":
+			// 	title = "Git not in path";
+			// 	message =
+			// 		"We aren’t able to find Git information for this repo because Git isn’t in your PATH.";
+			// 	break;
+
+			if (title)
 				return confirmPopup({
 					title,
 					message: () => (
@@ -1347,7 +1339,6 @@ export class SimpleStream extends Component {
 						{ label: "Cancel" }
 					]
 				});
-			}
 		}
 		submit();
 	};
