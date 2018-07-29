@@ -526,12 +526,7 @@ export class StreamWebviewPanel extends Disposable {
 			type: "codestream:interaction:code-highlighted",
 			body: {
 				quoteText: code,
-				quoteRange: source && [
-					range.start.line,
-					range.start.character,
-					range.end.line,
-					range.end.character
-				],
+				quoteRange: [range.start.line, range.start.character, range.end.line, range.end.character],
 				quoteSource: source
 			}
 		}));
