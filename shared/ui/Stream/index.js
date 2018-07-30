@@ -1289,7 +1289,8 @@ export class SimpleStream extends Component {
 			let codeBlock = {
 				code: quote.quoteText,
 				location: quote.quoteRange,
-				file: quote.file
+				file: quote.file,
+				source: quote.quoteSource
 			};
 
 			codeBlocks.push(codeBlock);
