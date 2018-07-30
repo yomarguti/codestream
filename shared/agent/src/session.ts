@@ -9,10 +9,15 @@ import {
 } from "vscode-languageserver";
 import URI from "vscode-uri";
 import { CodeStreamAgent, CodeStreamAgentOptions } from "./agent";
-import { CodeStreamApi, CSStream } from "./api/api";
+import { CodeStreamApi, CreatePostRequestCodeBlock, CSStream } from "./api/api";
 import { UserCollection } from "./api/models/users";
 import { Container } from "./container";
-import { ApiRequest, DocumentMarkersRequest, DocumentPreparePostRequest } from "./ipc/agent";
+import {
+	ApiRequest,
+	DocumentMarkersRequest,
+	DocumentPostRequest,
+	DocumentPreparePostRequest
+} from "./ipc/agent";
 import { MarkerHandler } from "./marker/markerHandler";
 import { PubnubReceiver } from "./pubnub/pubnubReceiver";
 import { Iterables, Strings } from "./system";
@@ -36,7 +41,11 @@ export class CodeStreamSession {
 
 		this._agent.registerHandler(ApiRequest.type, this.onApiRequest.bind(this));
 		this._agent.registerHandler(DocumentMarkersRequest.type, this.onMarkersRequest.bind(this));
-		this._agent.registerHandler(DocumentPreparePostRequest.type, this.onPostCodeRequest.bind(this));
+		this._agent.registerHandler(
+			DocumentPreparePostRequest.type,
+			this.onPreparePostRequest.bind(this)
+		);
+		this._agent.registerHandler(DocumentPostRequest.type, this.onPostRequest.bind(this));
 	}
 
 	private onApiRequest(
@@ -63,14 +72,30 @@ export class CodeStreamSession {
 		return result;
 	}
 
-	private onPostCodeRequest(
-		{ textDocument, range, dirty }: DocumentPreparePostRequest.Params,
+	private onPreparePostRequest(
+		e: DocumentPreparePostRequest.Params,
 		cancellationToken: CancellationToken
 	) {
-		this._connection.console.log(`DocumentPostCodeRequest received`);
+		this._connection.console.log(`DocumentPreparePostRequest received`);
 
-		const result = this.postCode(textDocument, range, dirty);
-		return result;
+		return this.preparePostCode(e.textDocument, e.range, e.dirty);
+	}
+
+	private onPostRequest(e: DocumentPostRequest.Params) {
+		this._connection.console.log(`DocumentPostRequest received`);
+
+		return this.postCode(
+			e.textDocument,
+			// e.range,
+			// e.dirty,
+			e.text,
+			e.code,
+			e.location,
+			e.source,
+			e.parentPostId,
+			e.streamId,
+			e.teamId
+		);
 	}
 
 	private _apiToken: string | undefined;
@@ -174,7 +199,7 @@ export class CodeStreamSession {
 		};
 	}
 
-	async postCode(
+	async preparePostCode(
 		documentId: TextDocumentIdentifier,
 		range: Range,
 		dirty: boolean = false
@@ -188,7 +213,7 @@ export class CodeStreamSession {
 		const uri = URI.parse(document.uri);
 		const repoPath = await git.getRepoRoot(uri.fsPath);
 
-		let authors: { id: string; name: string }[] | undefined;
+		let authors: { id: string; username: string }[] | undefined;
 		let file: string | undefined;
 		let remotes: { name: string; url: string }[] | undefined;
 		let rev: string | undefined;
@@ -210,7 +235,7 @@ export class CodeStreamSession {
 			const authorEmails = gitAuthors.map(a => a.email);
 
 			const users = await this.users.getByEmails(authorEmails);
-			authors = [...Iterables.map(users, u => ({ id: u.id, name: u.name }))];
+			authors = [...Iterables.map(users, u => ({ id: u.id, username: u.name }))];
 		}
 
 		return {
@@ -226,6 +251,51 @@ export class CodeStreamSession {
 					  }
 					: undefined
 		};
+	}
+
+	async postCode(
+		documentId: TextDocumentIdentifier,
+		// range: Range,
+		// dirty: boolean = false,
+		text: string,
+		code: string,
+		location: [number, number, number, number] | undefined,
+		source:
+			| {
+					file: string;
+					repoPath: string;
+					revision: string;
+					authors: { id: string; username: string }[];
+					remotes: { name: string; url: string }[];
+			  }
+			| undefined,
+		parentPostId: string | undefined,
+		streamId: string,
+		teamId?: string
+	) {
+		const codeBlock: CreatePostRequestCodeBlock = {
+			code: code,
+			location: location
+		};
+
+		if (source !== undefined) {
+			codeBlock.file = source.file;
+			codeBlock.remotes = source.remotes.map(r => r.url);
+		}
+
+		try {
+			return (await this._api.createPost(this._apiToken!, {
+				teamId: teamId || this.teamId,
+				streamId: streamId,
+				text: text,
+				parentPostId: parentPostId,
+				codeBlocks: [codeBlock],
+				commitHashWhenPosted: source && source.revision
+			})).post;
+		} catch (ex) {
+			debugger;
+			return;
+		}
 	}
 
 	private async getSubscribeableStreams(userId: string, teamId?: string): Promise<CSStream[]> {

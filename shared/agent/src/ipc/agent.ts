@@ -7,6 +7,7 @@ import {
 	RequestType0,
 	TextDocumentIdentifier
 } from "vscode-languageserver";
+import { CSPost } from "../api/api";
 import { GitApiRepository } from "../git/git";
 import { MarkerHandler } from "../marker/markerHandler";
 
@@ -51,7 +52,7 @@ export namespace DocumentPreparePostRequest {
 					file: string;
 					repoPath: string;
 					revision: string;
-					authors: { id: string; name: string }[];
+					authors: { id: string; username: string }[];
 					remotes: { name: string; url: string }[];
 			  }
 			| undefined;
@@ -60,6 +61,29 @@ export namespace DocumentPreparePostRequest {
 	export const type = new RequestType<Params, Response, void, void>(
 		"codeStream/textDocument/preparePost"
 	);
+}
+
+export namespace DocumentPostRequest {
+	export interface Params {
+		textDocument: TextDocumentIdentifier;
+		text: string;
+		code: string;
+		location: [number, number, number, number] | undefined;
+		source:
+			| {
+					file: string;
+					repoPath: string;
+					revision: string;
+					authors: { id: string; username: string }[];
+					remotes: { name: string; url: string }[];
+			  }
+			| undefined;
+		parentPostId: string | undefined;
+		streamId: string;
+		teamId?: string;
+	}
+
+	export const type = new RequestType<Params, CSPost, void, void>("codeStream/textDocument/post");
 }
 
 export namespace DidReceivePubNubMessagesNotification {
