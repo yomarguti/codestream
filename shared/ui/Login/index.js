@@ -28,7 +28,7 @@ export class Login extends React.Component {
 
 	onBlurEmail = () => this.setState({ emailTouched: true });
 
-	renderEmailHelp = () => {
+	renderEmailError = () => {
 		const { email, emailTouched } = this.state;
 		if (isEmailInvalid(email) && emailTouched)
 			return (
@@ -110,7 +110,7 @@ export class Login extends React.Component {
 								onBlur={this.onBlurEmail}
 								required={this.state.emailTouched}
 							/>
-							{this.renderEmailHelp()}
+							{this.renderEmailError()}
 						</div>
 						<div id="password-controls" className="control-group">
 							<label>
