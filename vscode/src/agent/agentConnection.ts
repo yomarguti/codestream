@@ -12,11 +12,11 @@ import {
 	ServerOptions,
 	TransportKind
 } from "vscode-languageclient";
-import { LoginResponse } from "../api/types";
+import { CSPost, LoginResponse } from "../api/types";
 import { getRepositories, GitApiRepository } from "../git/git";
 import { GitRepository } from "../git/gitService";
 import { Logger } from "../logger";
-import { DocumentPreparePostRequest } from "./ipc";
+import { DocumentPostRequest, DocumentPreparePostRequest } from "./ipc";
 
 // TODO: Fix this, but for now keep in sync with InitializationOptions in agent.ts in codestream-lsp-agent
 export interface CodeStreamAgentOptions {
@@ -153,6 +153,38 @@ export class CodeStreamAgentConnection implements Disposable {
 			textDocument: { uri: document.uri.toString() },
 			range: range,
 			dirty: document.isDirty
+		});
+	}
+
+	postCode(
+		uri: Uri,
+		// document: TextDocument,
+		// range: Range,
+		text: string,
+		code: string,
+		location: [number, number, number, number] | undefined,
+		source:
+			| {
+					file: string;
+					repoPath: string;
+					revision: string;
+					authors: { id: string; username: string }[];
+					remotes: { name: string; url: string }[];
+			  }
+			| undefined,
+		parentPostId: string | undefined,
+		streamId: string
+	): Promise<CSPost> {
+		return this.sendRequest(DocumentPostRequest.type, {
+			textDocument: { uri: uri.toString() },
+			// range: range,
+			// dirty: document.isDirty,
+			text: text,
+			code: code,
+			location: location,
+			source: source,
+			parentPostId: parentPostId,
+			streamId: streamId
 		});
 	}
 

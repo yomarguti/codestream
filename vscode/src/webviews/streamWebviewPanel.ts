@@ -1,5 +1,6 @@
 "use strict";
 import * as fs from "fs";
+import * as path from "path";
 import {
 	Disposable,
 	Event,
@@ -13,15 +14,7 @@ import {
 	WindowState,
 	workspace
 } from "vscode";
-import {
-	CreatePostRequestCodeBlock,
-	CSCodeBlock,
-	CSPost,
-	CSRepository,
-	CSStream,
-	CSTeam,
-	CSUser
-} from "../api/api";
+import { CSCodeBlock, CSPost, CSRepository, CSStream, CSTeam, CSUser } from "../api/api";
 import {
 	CodeStreamSession,
 	Post,
@@ -236,7 +229,7 @@ export class StreamWebviewPanel extends Disposable {
 		const { type } = e;
 
 		switch (type.replace("codestream:", "")) {
-			case "request":
+			case "request": {
 				const body = e.body as CSWebviewRequest;
 				// TODO: Add sequence ids to ensure correct matching
 				// TODO: Add exception handling for failed requests
@@ -248,34 +241,47 @@ export class StreamWebviewPanel extends Disposable {
 						if (codeBlocks === undefined || codeBlocks.length === 0) {
 							post = await this.session.api.createPost(text, parentPostId, streamId, teamId);
 						} else {
-							const block = codeBlocks[0] as CreatePostRequestCodeBlock;
-							let commitHash;
+							const block = codeBlocks[0] as {
+								code: string;
+								location?: [number, number, number, number];
+								file?: string;
+								source?: {
+									file: string;
+									repoPath: string;
+									revision: string;
+									authors: { id: string; username: string }[];
+									remotes: { name: string; url: string }[];
+								};
+							};
 
-							const repo = block.file && (await Container.git.getRepositoryForFile(block.file));
-							if (repo) {
-								const remote = await repo.getRemote();
-								if (remote) block.remotes = [remote.toString()];
-								else block.remotes = [];
-								commitHash = await repo.getCurrentCommit();
+							let uri;
+							if (block.source) {
+								uri = Uri.file(path.join(block.source.repoPath, block.source.file));
+							} else {
+								// TODO: Need the workspace folder or some way of rehyrating the absolute path
+								// const folder = workspace.getWorkspaceFolder()
+								uri = Uri.file(block.file!);
 							}
 
-							// TODO: pass the file streamId (as block.streamId) if we know it
-
-							post = await this.session.api.createPostWithCode2(
+							post = await Container.agent.postCode(
+								uri,
 								text,
+								block.code,
+								block.location,
+								block.source,
 								parentPostId,
-								streamId,
-								teamId,
-								commitHash,
-								codeBlocks
+								streamId
 							);
 						}
 
 						const responseBody: { [key: string]: any } = {
 							id: body.id
 						};
-						if (post === undefined) responseBody.error = "Failed to create post";
-						else responseBody.payload = post;
+						if (post === undefined) {
+							responseBody.error = "Failed to create post";
+						} else {
+							responseBody.payload = post;
+						}
 
 						this.postMessage({
 							type: "codestream:response",
@@ -384,18 +390,18 @@ export class StreamWebviewPanel extends Disposable {
 					}
 				}
 				break;
-
+			}
 			case "interaction:thread-selected": {
+				// Really means post selected
 				const { threadId, streamId, post } = e.body;
 				if (this._streamThread !== undefined && this._streamThread.stream.id === streamId) {
 					this._streamThread.id = threadId;
 					this._onDidChangeStream.fire(this._streamThread);
 				}
 
+				if (post.codeBlocks == null || post.codeBlocks.length === 0) return;
+
 				const stream = await this.session.getStream(streamId);
-
-				if (post.codeBlocks === undefined) return;
-
 				void (await Container.commands.openPostWorkingFile(new Post(this.session, post, stream)));
 				break;
 			}
@@ -518,16 +524,27 @@ export class StreamWebviewPanel extends Disposable {
 			file: string;
 			repoPath: string;
 			revision: string;
-			authors: { id: string; name: string }[];
+			authors: { id: string; username: string }[];
 			remotes: { name: string; url: string }[];
 		}
 	) {
+		let file;
+		if (source === undefined) {
+			const folder = workspace.getWorkspaceFolder(uri);
+			if (folder !== undefined) {
+				file = path.relative(folder.uri.fsPath, uri.fsPath);
+			}
+		} else {
+			file = source.file;
+		}
+
 		void (await this.postMessage({
 			type: "codestream:interaction:code-highlighted",
 			body: {
-				quoteText: code,
-				quoteRange: [range.start.line, range.start.character, range.end.line, range.end.character],
-				quoteSource: source
+				code: code,
+				file: file,
+				location: [range.start.line, range.start.character, range.end.line, range.end.character],
+				source: source
 			}
 		}));
 		return this._streamThread;

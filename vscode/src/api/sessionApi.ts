@@ -76,7 +76,7 @@ export class CodeStreamSessionApi {
 				codeBlocks,
 				commitHashWhenPosted
 			})).post;
-		} catch (e) {
+		} catch (ex) {
 			debugger;
 			return;
 		}
@@ -86,22 +86,32 @@ export class CodeStreamSessionApi {
 		text: string,
 		parentPostId: string | undefined,
 		code: string,
-		location: [number, number, number, number],
-		commitHash: string,
-		fileStream: string | { file: string; repoId: string },
+		location: [number, number, number, number] | undefined,
+		commitHash: string | undefined,
+		fileStream:
+			| string
+			| { file: string; remotes: { name: string; url: string }[] }
+			| { file: string; repoId: string }
+			| undefined,
 		streamId: string,
 		teamId?: string
 	): Promise<CSPost | undefined> {
 		const codeBlock: CreatePostRequestCodeBlock = {
 			code: code,
-			location
+			location: location
 		};
 
-		if (typeof fileStream === "string") {
-			codeBlock.streamId = fileStream;
-		} else {
-			codeBlock.file = fileStream.file;
-			codeBlock.repoId = fileStream.repoId;
+		if (fileStream !== undefined) {
+			if (typeof fileStream === "string") {
+				codeBlock.streamId = fileStream;
+			} else {
+				codeBlock.file = fileStream.file;
+				if ("repoId" in fileStream) {
+					codeBlock.repoId = fileStream.repoId;
+				} else {
+					codeBlock.remotes = fileStream.remotes.map(r => r.url);
+				}
+			}
 		}
 
 		try {
@@ -113,7 +123,7 @@ export class CodeStreamSessionApi {
 				codeBlocks: [codeBlock],
 				commitHashWhenPosted: commitHash
 			})).post;
-		} catch (e) {
+		} catch (ex) {
 			debugger;
 			return;
 		}

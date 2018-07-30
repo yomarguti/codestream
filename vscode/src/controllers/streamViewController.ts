@@ -100,7 +100,7 @@ export class StreamViewController implements Disposable {
 			file: string;
 			repoPath: string;
 			revision: string;
-			authors: { id: string; name: string }[];
+			authors: { id: string; username: string }[];
 			remotes: { name: string; url: string }[];
 		}
 	) {
