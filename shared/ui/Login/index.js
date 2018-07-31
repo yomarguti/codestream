@@ -14,9 +14,13 @@ const isEmailInvalid = email => {
 
 export class Login extends React.Component {
 	state = {
+		email: "",
 		password: "",
 		passwordTouched: false,
-		emailTouched: false
+		emailTouched: false,
+		error: {
+			invalidCredentials: false
+		}
 	};
 
 	// componentDidMount() {
@@ -65,12 +69,12 @@ export class Login extends React.Component {
 	};
 
 	renderError = () => {
-		// if (this.props.errors.invalidCredentials)
-		// 	return (
-		// 		<span className="error-message form-error">
-		// 			<FormattedMessage id="login.invalid" />
-		// 		</span>
-		// 	);
+		if (this.state.error.invalidCredentials)
+			return (
+				<div className="error-message form-error">
+					<FormattedMessage id="login.invalid" />
+				</div>
+			);
 		// if (this.props.errors.unknown)
 		// 	return <UnexpectedErrorMessage classes="error-message page-error" />;
 	};
@@ -84,7 +88,11 @@ export class Login extends React.Component {
 		event.preventDefault();
 		if (this.isFormInvalid()) return;
 		const { password, email } = this.state;
-		this.props.authenticate({ password, email });
+		try {
+			await this.props.authenticate({ password, email });
+		} catch (error) {
+			this.setState({ error });
+		}
 	};
 
 	render() {

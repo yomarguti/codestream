@@ -105730,6 +105730,10 @@ function Button$1(_ref) {
 
 var _this$1 = undefined;
 
+var errorMappings = {
+	INVALID_CREDENTIALS: { invalidCredentials: true }
+};
+
 var authenticate = function authenticate(params) {
 	return function () {
 		var _ref2 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(dispatch, getState, _ref) {
@@ -105739,10 +105743,11 @@ var authenticate = function authenticate(params) {
 				while (1) {
 					switch (_context.prev = _context.next) {
 						case 0:
-							_context.next = 2;
+							_context.prev = 0;
+							_context.next = 3;
 							return api.authenticate(params);
 
-						case 2:
+						case 3:
 							response = _context.sent;
 
 							dispatch({ type: "ADD_STREAMS", payload: response.streams });
@@ -105750,13 +105755,20 @@ var authenticate = function authenticate(params) {
 							dispatch({ type: "ADD_USERS", payload: response.users });
 							dispatch(setContext({ currentTeamId: response.currentTeamId }));
 							dispatch({ type: "INIT_SESSION", payload: { userId: response.currentUserId } });
+							_context.next = 14;
+							break;
 
-						case 8:
+						case 11:
+							_context.prev = 11;
+							_context.t0 = _context["catch"](0);
+							throw errorMappings[_context.t0];
+
+						case 14:
 						case "end":
 							return _context.stop();
 					}
 				}
-			}, _callee, _this$1);
+			}, _callee, _this$1, [[0, 11]]);
 		}));
 
 		return function (_x, _x2, _x3) {
@@ -105796,9 +105808,13 @@ var Login = function (_React$Component) {
 			enumerable: true,
 			writable: true,
 			value: {
+				email: "",
 				password: "",
 				passwordTouched: false,
-				emailTouched: false
+				emailTouched: false,
+				error: {
+					invalidCredentials: false
+				}
 			}
 		}), Object.defineProperty(_this, "onBlurPassword", {
 			enumerable: true,
@@ -105861,12 +105877,11 @@ var Login = function (_React$Component) {
 			enumerable: true,
 			writable: true,
 			value: function value() {
-				// if (this.props.errors.invalidCredentials)
-				// 	return (
-				// 		<span className="error-message form-error">
-				// 			<FormattedMessage id="login.invalid" />
-				// 		</span>
-				// 	);
+				if (_this.state.error.invalidCredentials) return react_3(
+					"div",
+					{ className: "error-message form-error" },
+					react_3(FormattedMessage, { id: "login.invalid" })
+				);
 				// if (this.props.errors.unknown)
 				// 	return <UnexpectedErrorMessage classes="error-message page-error" />;
 			}
@@ -105902,15 +105917,26 @@ var Login = function (_React$Component) {
 
 								case 3:
 									_this$state4 = _this.state, password = _this$state4.password, email = _this$state4.email;
+									_context.prev = 4;
+									_context.next = 7;
+									return _this.props.authenticate({ password: password, email: email });
 
-									_this.props.authenticate({ password: password, email: email });
+								case 7:
+									_context.next = 12;
+									break;
 
-								case 5:
+								case 9:
+									_context.prev = 9;
+									_context.t0 = _context["catch"](4);
+
+									_this.setState({ error: _context.t0 });
+
+								case 12:
 								case "end":
 									return _context.stop();
 							}
 						}
-					}, _callee, _this2);
+					}, _callee, _this2, [[4, 9]]);
 				}));
 
 				function value(_x) {
