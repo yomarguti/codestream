@@ -552,7 +552,7 @@ export class StreamWebviewPanel extends Disposable {
 	private async getHtml(): Promise<string> {
 		if (Logger.isDebugging) {
 			return new Promise<string>((resolve, reject) => {
-				fs.readFile(Container.context.asAbsolutePath("/assets/index.html"), "utf8", (err, data) => {
+				fs.readFile(Container.context.asAbsolutePath("webview.html"), "utf8", (err, data) => {
 					if (err) {
 						reject(err);
 					} else {
@@ -562,9 +562,7 @@ export class StreamWebviewPanel extends Disposable {
 			});
 		}
 
-		const doc = await workspace.openTextDocument(
-			Container.context.asAbsolutePath("/assets/index.html")
-		);
+		const doc = await workspace.openTextDocument(Container.context.asAbsolutePath("webview.html"));
 		return doc.getText();
 	}
 

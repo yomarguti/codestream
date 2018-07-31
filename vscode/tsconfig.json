@@ -19,5 +19,5 @@
 		"target": "es2017",
 		"types": ["reflect-metadata"]
 	},
-	"exclude": ["node_modules"]
+	"exclude": ["node_modules", "src/webviews/app"]
 }
