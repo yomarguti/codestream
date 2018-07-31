@@ -1,6 +1,5 @@
 {
     "name": "codestream-lsp-agent",
-    "displayName": "CodeStream Agent",
     "description": "The knowledge base behind your codebase",
     "version": "0.0.1",
     "author": "CodeStream",
@@ -9,7 +8,7 @@
     "license": "UNLICENSED",
     "homepage": "https://codestream.com",
     "bugs": {
-        "url": "https://github.com/TeamCodeStream/codestream-lsp-agent"
+        "url": "https://github.com/TeamCodeStream/codestream-lsp-agent/issues"
     },
     "repository": {
         "type": "git",
@@ -25,6 +24,7 @@
         "clean": "git clean -Xdf -e !node_modules -e !node_modules/**/*",
         "lint": "tslint --project tsconfig.json",
         "pack": "npm run clean && npm install --no-save && npm run bundle",
+        "pretty": "prettier --config .prettierrc --write \"./src/**/*.ts\" ./package.json ./.prettierrc",
         "rebuild": "npm run clean && npm install --no-save && npm run build",
         "watch": "webpack --watch --env.development",
         "test": "export TS_NODE_COMPILER_OPTIONS='{ \"module\": \"commonjs\", \"types\": [\"node\"] }' && mocha --compilerOptions --recursive --require node_modules/ts-node/register src/test/**/*.spec.ts"
