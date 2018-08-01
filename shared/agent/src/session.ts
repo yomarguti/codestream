@@ -22,6 +22,11 @@ import { MarkerHandler } from "./marker/markerHandler";
 import { PubnubReceiver } from "./pubnub/pubnubReceiver";
 import { Iterables, Strings } from "./system";
 
+const loginApiErrorMappings: { [k: string]: string } = {
+	"USRC-1001": "INVALID_CREDENTIALS",
+	"USRC-1010": "NOT_CONFIRMED"
+};
+
 export class CodeStreamSession {
 	private readonly _api: CodeStreamApi;
 	private _pubnub: PubnubReceiver | undefined;
@@ -122,7 +127,14 @@ export class CodeStreamSession {
 	}
 
 	async login() {
-		const loginResponse = await this._api.login(this._options.email, this._options.token);
+		let loginResponse;
+		try {
+			loginResponse = await this._api.login(this._options.email, this._options.token);
+		} catch (error) {
+			return {
+				error: loginApiErrorMappings[error.info.code] || ""
+			};
+		}
 
 		this._apiToken = loginResponse.accessToken;
 		// TODO: Since the token is current a password, replace it with an access token
