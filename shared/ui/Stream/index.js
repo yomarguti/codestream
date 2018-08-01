@@ -57,6 +57,11 @@ export class SimpleStream extends Component {
 			EventEmitter.subscribe("interaction:marker-selected", this.handleMarkerSelected)
 		);
 
+		if (this.props.postStreamId) {
+			// so the host knows what the initial/default channel is
+			EventEmitter.emit("interaction:changed-active-stream", this.props.postStreamId);
+		}
+
 		// this listener pays attention to when the input field resizes,
 		// presumably because the user has typed more than one line of text
 		// in it, and calls a function to handle the new size
@@ -1473,9 +1478,6 @@ const mapStateToProps = ({
 	};
 };
 
-export default connect(
-	mapStateToProps,
-	{
-		...actions
-	}
-)(SimpleStream);
+export default connect(mapStateToProps, {
+	...actions
+})(SimpleStream);
