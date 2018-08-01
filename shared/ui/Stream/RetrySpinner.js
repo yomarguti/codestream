@@ -1,5 +1,6 @@
 import React, { Fragment } from "react";
 import Tooltip from "./Tooltip";
+import Icon from "./Icon";
 
 export default class RetrySpinner extends React.Component {
 	state = { loading: false };
@@ -35,10 +36,10 @@ export default class RetrySpinner extends React.Component {
 				) : (
 					<Fragment>
 						<Tooltip title="Retry" placement="top">
-							<span className="icon icon-sync text-error" onClick={this.onRetry} />
+							<Icon name="sync" className="error" onClick={this.onRetry} />
 						</Tooltip>
 						<Tooltip title="Cancel" placement="top">
-							<span className="icon icon-remove-close" onClick={this.onCancel} />
+							<Icon name="x" className="error" onClick={this.onCancel} />
 						</Tooltip>
 					</Fragment>
 				)}
