@@ -1343,6 +1343,7 @@ export class SimpleStream extends Component {
 						{ label: "Cancel" }
 					]
 				});
+			}
 		}
 		submit();
 	};
