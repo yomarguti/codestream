@@ -104,15 +104,6 @@
                 "category": "CodeStream"
             },
             {
-                "command": "codestream.addChannel",
-                "title": "Add Channel",
-                "category": "CodeStream",
-                "icon": {
-                    "dark": "assets/images/dark/add.svg",
-                    "light": "assets/images/light/add.svg"
-                }
-            },
-            {
                 "command": "codestream.comparePostFileRevisionWithWorking",
                 "title": "Compare Revision with Working",
                 "category": "CodeStream"
@@ -128,28 +119,8 @@
                 "category": "CodeStream"
             },
             {
-                "command": "codestream.openStream",
-                "title": "Open Stream",
-                "category": "CodeStream"
-            },
-            {
-                "command": "codestream.post",
-                "title": "Post Message",
-                "category": "CodeStream"
-            },
-            {
                 "command": "codestream.postCode",
                 "title": "Add CodeStream Comment",
-                "category": "CodeStream"
-            },
-            {
-                "command": "codestream.wipe",
-                "title": "Wipe",
-                "category": "CodeStream"
-            },
-            {
-                "command": "codestream.show",
-                "title": "Show CodeStream",
                 "category": "CodeStream"
             },
             {
@@ -165,11 +136,6 @@
             {
                 "command": "codestream.vsls.join",
                 "title": "Join Live Share",
-                "category": "CodeStream"
-            },
-            {
-                "command": "codestream.liveshare.refreshNode",
-                "title": "Refresh",
                 "category": "CodeStream"
             },
             {
@@ -189,10 +155,6 @@
                     "when": "codestream:status == signedIn"
                 },
                 {
-                    "command": "codestream.addChannel",
-                    "when": "codestream:status == signedIn"
-                },
-                {
                     "command": "codestream.comparePostFileRevisionWithWorking",
                     "when": "false"
                 },
@@ -205,24 +167,8 @@
                     "when": "false"
                 },
                 {
-                    "command": "codestream.openStream",
-                    "when": "codestream:status == signedIn"
-                },
-                {
-                    "command": "codestream.post",
-                    "when": "codestream:status == signedIn"
-                },
-                {
                     "command": "codestream.postCode",
                     "when": "editorTextFocus && editorHasSelection && codestream:status == signedIn"
-                },
-                {
-                    "command": "codestream.wipe",
-                    "when": "codestream:status == signedIn"
-                },
-                {
-                    "command": "codestream.show",
-                    "when": "codestream:status == signedIn"
                 },
                 {
                     "command": "codestream.toggle",

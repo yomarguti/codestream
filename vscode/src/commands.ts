@@ -94,23 +94,6 @@ export class Commands extends Disposable {
 		this._disposable && this._disposable.dispose();
 	}
 
-	@command("addChannel", { showErrorMessage: "Unable to add channel" })
-	async addChannel() {
-		const name = await window.showInputBox({
-			prompt: "Enter channel name",
-			placeHolder: "e.g. awesome-feature",
-			validateInput: v => {
-				if (v.includes(" ")) return "Channel names cannot contain spaces";
-				if (v.length > 64) return "Channel names cannot be longer than 64 characters";
-				return undefined;
-			}
-		});
-		if (name === undefined) return;
-
-		const channel = await Container.session.addChannel(name);
-		return await this.openStream({ streamThread: { id: undefined, stream: channel } });
-	}
-
 	@command("comparePostFileRevisionWithWorking", { showErrorMessage: "Unable to open post" })
 	async comparePostFileRevisionWithWorking(post?: Post) {
 		if (post == null) return;
@@ -235,60 +218,11 @@ export class Commands extends Disposable {
 		return streamThread !== undefined ? streamThread.stream : undefined;
 	}
 
-	@command("wipe")
-	async wipe() {
-		const regex = /(\d+)([d|h|m])/;
-		const value = await window.showInputBox({
-			prompt:
-				"Enter the number of days, hours, or minutes after which all content (channels, posts, markers, etc) will be deleted",
-			placeHolder: "e.g. 5d or 6h or 10m",
-			validateInput: v => (regex.test(v) ? undefined : "Invalid input")
-		});
-		if (value === undefined) return;
-
-		const match = regex.exec(value);
-		if (match == null) return;
-
-		const [, num, unit] = match;
-
-		let milliseconds;
-		switch (unit) {
-			case "d":
-				milliseconds = parseInt(num, 10) * 24 * 60 * 60000;
-				break;
-			case "h":
-				milliseconds = parseInt(num, 10) * 60 * 60000;
-				break;
-			case "m":
-				milliseconds = parseInt(num, 10) * 60000;
-				break;
-			default:
-				return;
-		}
-
-		Logger.log(
-			`Delete all data after ${Dates.toFormatter(
-				new Date(new Date().getTime() - milliseconds)
-			).format("MMMM Do, YYYY h:mma")}`
-		);
-		Container.session.api.deleteTeamContent(new Date().getTime() - milliseconds);
-		commands.executeCommand(BuiltInCommands.ReloadWindow);
-	}
-
 	@command("runServiceAction")
 	runServiceAction(args: { commandUri: string }) {
 		if (args == null) return;
 
 		return Container.linkActions.execute(args.commandUri);
-	}
-
-	@command("show")
-	show() {
-		return Container.streamView.show();
-	}
-
-	showActivity() {
-		return commands.executeCommand(BuiltInCommands.ShowCodeStream);
 	}
 
 	@command("signIn", { customErrorHandling: true })
