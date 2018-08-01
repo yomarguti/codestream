@@ -114,7 +114,7 @@ function initializeColorPalette() {
 			case "dark":
 				bodyStyle.setProperty("--app-background-color", color);
 				bodyStyle.setProperty("--app-background-color-darker", darken(color, 4));
-				bodyStyle.setProperty("--app-background-color-hover", lighten(color, 7));
+				bodyStyle.setProperty("--app-background-color-hover", lighten(color, 3));
 
 				bodyStyle.setProperty("--base-background-color", lighten(color, 4));
 				bodyStyle.setProperty("--tool-panel-background-color", lighten(color, 10));
