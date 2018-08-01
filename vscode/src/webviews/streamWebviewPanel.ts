@@ -603,7 +603,7 @@ export class StreamWebviewPanel extends Disposable {
 	}
 
 	reset() {
-		if (this._panel !== undefined && this._streamThread !== undefined) {
+		if (this._panel !== undefined && this.session.status === SessionStatus.SignedOut) {
 			this._streamThread = undefined;
 			this.setStream(undefined);
 		}
