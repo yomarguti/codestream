@@ -1129,10 +1129,13 @@ export class SimpleStream extends Component {
 	};
 
 	archiveChannel = () => {
-		const { postStream, currentUser } = this.props;
-		if (false && postStream.creatorId !== currentUser.id) {
+		const { postStream, currentUser, teamMembersById } = this.props;
+		if (postStream.creatorId !== currentUser.id) {
 			let text = "You may only archive channels that you created.";
-			if (postStream.creatorId) text += " This channel was created by " + postStream.creatorId;
+			if (postStream.creatorId) {
+				const creator = teamMembersById[postStream.creatorId];
+				if (creator) text += " This channel was created by @" + creator.username;
+			}
 			return this.submitSystemPost(text);
 		}
 		if (this.props.postStreamType === "direct") {
