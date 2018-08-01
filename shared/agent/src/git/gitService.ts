@@ -317,6 +317,7 @@ export class GitService implements IGitService, Disposable {
 		const [dir] = Strings.splitPath(filePath);
 		try {
 			const data = await git({ cwd: dir }, "rev-parse", "--show-toplevel");
+			if (data === "") return undefined;
 			return data.trim();
 		} catch {
 			return undefined;
