@@ -300,7 +300,9 @@ export class SimpleStream extends Component {
 		}
 		const padding = composeHeight + headerHeight;
 		// this._div.style.paddingBottom = padding + "px";
+
 		this._mainPanel.style.paddingBottom = padding + "px";
+
 		// we re-measure the height of postslist here because we just changed
 		// it with the style declaration immediately above
 		this._threadpostslist.style.height = this._postslist.offsetHeight + "px";
@@ -536,51 +538,58 @@ export class SimpleStream extends Component {
 							</span>
 						)}
 					</div>
-					{unreadsAbove}
-					<div
-						className={postsListClass}
-						ref={ref => (this._postslist = ref)}
-						onClick={this.handleClickPost}
-						id={streamDivId}
-					>
-						<div className="intro" ref={ref => (this._intro = ref)}>
-							{this.renderIntro(
-								<span>
-									{channelIcon}
-									{this.props.postStreamName}
-								</span>
-							)}
+					<div className="shadow-overlay">
+						<div class="shadow-container">
+							<div class="shadow shadow-top"></div>
+							<div class="shadow shadow-bottom"></div>
 						</div>
-						{posts.map(post => {
-							if (post.deactivated) return null;
-							// this needs to be done by storing the return value of the render,
-							// then setting lastTimestamp, otherwise you wouldn't be able to
-							// compare the current one to the prior one.
-							const parentPost = post.parentPostId
-								? posts.find(p => p.id === post.parentPostId)
-								: null;
-							const newMessageIndicator =
-								typeof this.postWithNewMessageIndicator !== "undefined" &&
-								post.seqNum === this.postWithNewMessageIndicator + 1;
-							unread = unread || newMessageIndicator;
-							const returnValue = (
-								<div key={post.id}>
-									<DateSeparator timestamp1={lastTimestamp} timestamp2={post.createdAt} />
-									<Post
-										post={post}
-										usernames={this.props.usernamesRegexp}
-										currentUsername={this.props.currentUser.username}
-										replyingTo={parentPost}
-										newMessageIndicator={newMessageIndicator}
-										unread={unread}
-										editing={activePanel === "main" && post.id === this.state.editingPostId}
-										action={this.postAction}
-									/>
-								</div>
-							);
-							lastTimestamp = post.createdAt;
-							return returnValue;
-						})}
+						<div
+							className={postsListClass}
+							ref={ref => (this._postslist = ref)}
+							onClick={this.handleClickPost}
+							id={streamDivId}
+						>
+							<div class="shadow-cover-top"></div>
+							<div className="intro" ref={ref => (this._intro = ref)}>
+								{this.renderIntro(
+									<span>
+										{channelIcon}
+										{this.props.postStreamName}
+									</span>
+								)}
+							</div>
+							{posts.map(post => {
+								if (post.deactivated) return null;
+								// this needs to be done by storing the return value of the render,
+								// then setting lastTimestamp, otherwise you wouldn't be able to
+								// compare the current one to the prior one.
+								const parentPost = post.parentPostId
+									? posts.find(p => p.id === post.parentPostId)
+									: null;
+								const newMessageIndicator =
+									typeof this.postWithNewMessageIndicator !== "undefined" &&
+									post.seqNum === this.postWithNewMessageIndicator + 1;
+								unread = unread || newMessageIndicator;
+								const returnValue = (
+									<div key={post.id}>
+										<DateSeparator timestamp1={lastTimestamp} timestamp2={post.createdAt} />
+										<Post
+											post={post}
+											usernames={this.props.usernamesRegexp}
+											currentUsername={this.props.currentUser.username}
+											replyingTo={parentPost}
+											newMessageIndicator={newMessageIndicator}
+											unread={unread}
+											editing={activePanel === "main" && post.id === this.state.editingPostId}
+											action={this.postAction}
+										/>
+									</div>
+								);
+								lastTimestamp = post.createdAt;
+								return returnValue;
+							})}
+							<div class="shadow-cover-bottom"></div>
+						</div>
 					</div>
 				</div>
 				<div className={threadPanelClass}>
@@ -598,24 +607,32 @@ export class SimpleStream extends Component {
 							</span>
 						</span>
 					</div>
-					<div
-						className={threadPostsListClass}
-						ref={ref => (this._threadpostslist = ref)}
-						onClick={this.handleClickPost}
-					>
-						{threadPost && (
-							<Post
-								post={threadPost}
-								usernames={this.props.usernamesRegexp}
-								currentUsername={this.props.currentUser.username}
-								key={threadPost.id}
-								showDetails="1"
-								currentCommit={this.props.currentCommit}
-								editing={activePanel === "thread" && threadPost.id === this.state.editingPostId}
-								action={this.postAction}
-							/>
-						)}
-						{this.renderThreadPosts(threadId)}
+					<div className="shadow-overlay">
+						<div class="shadow-container">
+							<div class="shadow shadow-top"></div>
+							<div class="shadow shadow-bottom"></div>
+						</div>
+						<div
+							className={threadPostsListClass}
+							ref={ref => (this._threadpostslist = ref)}
+							onClick={this.handleClickPost}
+						>
+							<div class="shadow-cover-top"></div>
+							{threadPost && (
+								<Post
+									post={threadPost}
+									usernames={this.props.usernamesRegexp}
+									currentUsername={this.props.currentUser.username}
+									key={threadPost.id}
+									showDetails="1"
+									currentCommit={this.props.currentCommit}
+									editing={activePanel === "thread" && threadPost.id === this.state.editingPostId}
+									action={this.postAction}
+								/>
+							)}
+							{this.renderThreadPosts(threadId)}
+							<div class="shadow-cover-bottom"></div>
+						</div>
 					</div>
 				</div>
 				<div className={unreadsBelowClass} type="below" onClick={this.handleClickUnreads}>
