@@ -292,7 +292,9 @@ export class CodeStreamSession {
 
 		if (source !== undefined) {
 			codeBlock.file = source.file;
-			codeBlock.remotes = source.remotes.map(r => r.url);
+			if (source.remotes.length > 0) {
+				codeBlock.remotes = source.remotes.map(r => r.url);
+			}
 		}
 
 		try {
