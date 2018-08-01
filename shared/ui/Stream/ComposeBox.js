@@ -75,10 +75,18 @@ class ComposeBox extends React.Component {
 		this.props.ensureStreamIsActive();
 		this.setState({ quote: body });
 
-		const usersToMention = body.quoteSource.authors;
-		if (usersToMention.length > 0) {
+		let mentions;
+		if (body.authors) {
+			mentions = body.authors
+				.map(email => _.findWhere(this.props.teammates, { email }))
+				.filter(Boolean);
+		} else {
+			mentions = body.source && body.source.authors;
+		}
+
+		if (mentions && mentions.length > 0) {
 			// TODO handle users with no username
-			const usernames = usersToMention.map(user => `@${user.name}`);
+			const usernames = mentions.map(u => `@${u.username}`);
 			this.setState({ autoMentions: usernames });
 			// the reason for this unicode space is that chrome will
 			// not render a space at the end of a contenteditable div
@@ -385,8 +393,8 @@ class ComposeBox extends React.Component {
 		let quoteInfo;
 		let quoteHint;
 		if (quote) {
-			quoteInfo = quote ? <div className="code">{quote.quoteText}</div> : "";
-			let range = arrayToRange(quote.quoteRange);
+			quoteInfo = quote ? <div className="code">{quote.code}</div> : "";
+			let range = arrayToRange(quote.location);
 			let rangeText = null;
 			if (range) {
 				if (range.start.row === range.end.row) {

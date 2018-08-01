@@ -1287,37 +1287,40 @@ export class SimpleStream extends Component {
 
 		if (quote) {
 			let codeBlock = {
-				code: quote.quoteText,
-				location: quote.quoteRange,
-				file: quote.file,
-				source: quote.quoteSource
+				code: quote.code,
+				location: quote.location,
+				file: quote.file
 			};
 
-			codeBlocks.push(codeBlock);
-			let title;
-			let message;
-
-			if (!quote.quoteSource) {
-				title = "Missing Git Info";
-				message =
-					"This repo doesn’t appear to be managed by Git. When your teammates view this post, we won’t be able to connect the code block to the appropriate file in their IDE.";
-			} else if (quote.quoteSource.remotes.length === 0) {
-				title = "No remote URL";
-				message = "This repo doesn’t have a remote URL configured.";
+			if (quote.source) {
+				codeBlock.file = quote.source.file;
+				codeBlock.source = quote.source;
 			}
-			// }
-			// case "noGit":
-			// 	title = "Git not in path";
-			// 	message =
-			// 		"We aren’t able to find Git information for this repo because Git isn’t in your PATH.";
-			// 	break;
 
-			if (title)
+			codeBlocks.push(codeBlock);
+
+			let warning;
+			if (quote.source) {
+				if (!quote.source.remotes || quote.source.remotes.length === 0) {
+					warning = {
+						title: "No remote URL",
+						message: "This repo doesn’t have a remote URL configured."
+					};
+				}
+			} else {
+				warning = {
+					title: "Missing Git Info",
+					message:
+						"This repo doesn’t appear to be managed by Git. When your teammates view this post, we won’t be able to connect the code block to the appropriate file in their IDE."
+				};
+			}
+
+			if (warning) {
 				return confirmPopup({
-					title,
+					title: warning.title,
 					message: () => (
 						<span>
-							{message + " "}
+							{warning.message + " "}
 							<a
 								onClick={e => {
 									e.preventDefault();
@@ -1469,6 +1472,9 @@ const mapStateToProps = ({
 	};
 };
 
-export default connect(mapStateToProps, {
-	...actions
-})(SimpleStream);
+export default connect(
+	mapStateToProps,
+	{
+		...actions
+	}
+)(SimpleStream);
