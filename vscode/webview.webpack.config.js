@@ -36,17 +36,18 @@ module.exports = function(env, argv) {
 	return {
 		context: path.resolve(__dirname, "src/webviews/app"),
 		entry: {
-			webview: ["./index.js", "./styles/vscode-stream.less"]
+			webview: ["./index.js", "./styles/webview.less"]
 		},
 		mode: production ? "production" : "development",
 		devtool: !production ? "eval-source-map" : undefined,
 		output: {
 			filename: "[name].js",
-			path: path.resolve(__dirname, "dist/app"),
-			publicPath: "{{root}}/dist/app/"
+			path: path.resolve(__dirname, "dist/webview"),
+			publicPath: "{{root}}/dist/webview/"
 		},
 		optimization: {
 			splitChunks: {
+				chunks: "all",
 				cacheGroups: {
 					styles: {
 						name: "styles",
@@ -59,7 +60,11 @@ module.exports = function(env, argv) {
 		},
 		resolve: {
 			extensions: [".tsx", ".ts", ".jsx", ".js"],
-			modules: [path.resolve(__dirname, "src/webviews/app"), "node_modules"]
+			modules: [path.resolve(__dirname, "src/webviews/app"), "node_modules"],
+			alias: {
+				// TODO: Use environment variable if exists
+				"codestream-components$": path.resolve(__dirname, "../codestream-components/index.js")
+			}
 		},
 		module: {
 			rules: [
@@ -69,7 +74,7 @@ module.exports = function(env, argv) {
 				},
 				{
 					test: /\.jsx?$/,
-					use: ["babel-loader"],
+					use: "babel-loader",
 					exclude: /node_modules/
 				},
 				{
@@ -89,6 +94,7 @@ module.exports = function(env, argv) {
 						{
 							loader: "less-loader",
 							options: {
+								// Turn off sourceMap because of https://github.com/less/less.js/issues/3300
 								sourceMap: false //!production
 							}
 						}
