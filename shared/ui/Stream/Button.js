@@ -12,12 +12,12 @@ export default function Button({ children, className, disabled, isOffline, loadi
 	return (
 		<button
 			className={createClassString("native-key-bindings btn inline-block-tight", className, {
-				"btn-primary": !loading
+				"btn-primary": true
 			})}
 			disabled={loading || disabled}
 			{...extraProps}
 		>
-			{loading ? <span className="loading loading-spinner-tiny inline-block" /> : children}
+			{loading && global.atom ? <span className="loading loading-spinner-tiny inline-block" /> : children}
 		</button>
 	);
 }
