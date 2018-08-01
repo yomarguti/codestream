@@ -12,7 +12,7 @@ import {
 	ServerOptions,
 	TransportKind
 } from "vscode-languageclient";
-import { CSPost, LoginResponse } from "../api/types";
+import { CSPost, LoginResponse, LoginResult } from "../api/types";
 import { getRepositories, GitApiRepository } from "../git/git";
 import { GitRepository } from "../git/gitService";
 import { Logger } from "../logger";
@@ -40,6 +40,7 @@ export interface CodeStreamAgentResult {
 		token: string;
 		serverUrl: string;
 	};
+	error?: LoginResult;
 }
 
 export class CodeStreamAgentConnection implements Disposable {
@@ -140,6 +141,10 @@ export class CodeStreamAgentConnection implements Disposable {
 			team,
 			teamId
 		});
+
+		if (response.result!.error) {
+			await this.stop();
+		}
 
 		return response.result as CodeStreamAgentResult;
 	}

@@ -1,10 +1,18 @@
 "use strict";
-import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, Uri } from "vscode";
+import {
+	ConfigurationChangeEvent,
+	ConfigurationTarget,
+	Disposable,
+	Event,
+	EventEmitter,
+	Uri
+} from "vscode";
 import { WorkspaceState } from "../common";
 import { configuration } from "../configuration";
+import { encryptionKey } from "../constants";
 import { Container } from "../container";
 import { Logger } from "../logger";
-import { Functions, memoize, Strings } from "../system";
+import { Crypto, Functions, memoize, Strings } from "../system";
 import { CodeStreamApi, CSRepository, CSStream, PresenceStatus } from "./api";
 import { Cache } from "./cache";
 import { Marker, MarkerCollection } from "./models/markers";
@@ -36,6 +44,7 @@ import {
 } from "./pubnub";
 import { CodeStreamSessionApi } from "./sessionApi";
 import { SessionState } from "./sessionState";
+import { LoginResult } from "./types";
 
 export {
 	ChannelStream,
@@ -55,7 +64,7 @@ export {
 };
 
 export class CodeStreamSession implements Disposable {
-	private static _sessions: Map<string, Promise<CodeStreamSession>> = new Map();
+	private static _loginPromise: Promise<LoginResult> | undefined;
 
 	static findRepo(serverUrl: string, repoUrl: string, firstCommitHashes: string[]) {
 		return new CodeStreamApi(serverUrl).findRepo(repoUrl, firstCommitHashes);
@@ -257,20 +266,27 @@ export class CodeStreamSession implements Disposable {
 		return this._state!.users;
 	}
 
-	async login(email: string, password: string, teamId?: string): Promise<void> {
+	async login(email: string, password: string, teamId?: string): Promise<LoginResult> {
 		const id = Strings.sha1(`${this.serverUrl}|${email}|${password}|${teamId}`);
-		let session = CodeStreamSession._sessions.get(id);
-		if (session !== undefined) return;
 
-		session = this.loginCore(id, email, password, teamId);
-		CodeStreamSession._sessions.set(id, session);
+		let loginPromise;
 
-		await session;
+		if (CodeStreamSession._loginPromise !== undefined) {
+			loginPromise = CodeStreamSession._loginPromise;
+		} else {
+			CodeStreamSession._loginPromise = loginPromise = this.loginCore(id, email, password, teamId);
+		}
+
+		const result = await loginPromise;
+		if (result !== LoginResult.Success) {
+			CodeStreamSession._loginPromise = undefined;
+		}
+		return result;
 	}
 
 	async logout() {
 		if (this._id !== undefined) {
-			CodeStreamSession._sessions.delete(this._id);
+			CodeStreamSession._loginPromise = undefined;
 			this._id = undefined;
 		}
 
@@ -346,8 +362,15 @@ export class CodeStreamSession implements Disposable {
 		email: string,
 		password: string,
 		teamId?: string
-	): Promise<CodeStreamSession> {
+	): Promise<LoginResult> {
 		Logger.log(`Signing ${email} into CodeStream (${this.serverUrl})`);
+
+		configuration.update(configuration.name("email").value, email, ConfigurationTarget.Global);
+		configuration.update(
+			configuration.name("password").value,
+			Crypto.encrypt(password, "aes-256-ctr", encryptionKey),
+			ConfigurationTarget.Global
+		);
 
 		try {
 			this._id = id;
@@ -364,6 +387,23 @@ export class CodeStreamSession implements Disposable {
 			}
 
 			const result = await Container.agent.login(email, password, teamId, Container.config.team);
+
+			if (result.error) {
+				this._status = SessionStatus.SignedOut;
+				this._onDidChangeStatus.fire(e);
+				configuration.update(
+					configuration.name("email").value,
+					undefined,
+					ConfigurationTarget.Global
+				);
+				configuration.update(
+					configuration.name("password").value,
+					undefined,
+					ConfigurationTarget.Global
+				);
+				return result.error;
+			}
+
 			if (teamId !== result.state.teamId) {
 				teamId = result.state.teamId;
 				await Container.context.workspaceState.update(WorkspaceState.TeamId, teamId);
@@ -396,7 +436,7 @@ export class CodeStreamSession implements Disposable {
 			this._status = SessionStatus.SignedIn;
 			this._onDidChangeStatus.fire(e);
 
-			return this;
+			return LoginResult.Success;
 		} catch (ex) {
 			Logger.error(ex);
 			void (await this.logout());

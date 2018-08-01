@@ -1,15 +1,5 @@
 import * as path from "path";
-import {
-	commands,
-	ConfigurationTarget,
-	Disposable,
-	MessageItem,
-	Range,
-	TextDocument,
-	Uri,
-	ViewColumn,
-	window
-} from "vscode";
+import { commands, Disposable, Range, TextDocument, Uri, ViewColumn, window } from "vscode";
 import {
 	ChannelStreamCreationOptions,
 	CodeStreamSession,
@@ -19,7 +9,6 @@ import {
 	StreamType
 } from "./api/session";
 import { openEditor } from "./common";
-import { configuration, TraceLevel } from "./configuration";
 import { encryptionKey } from "./constants";
 import { Container } from "./container";
 import { StreamThreadId } from "./controllers/streamViewController";
@@ -398,64 +387,7 @@ export class Commands extends Disposable {
 		}
 
 		if (!email || !decryptedPassword) {
-			if (!email) {
-				decryptedPassword = undefined;
-
-				email = await window.showInputBox({
-					prompt: "Enter your CodeStream email address",
-					placeHolder: "e.g. @company.com"
-				});
-				if (email === undefined) return;
-
-				await configuration.update(
-					configuration.name("email").value,
-					email,
-					ConfigurationTarget.Global
-				);
-			}
-
-			if (!decryptedPassword) {
-				decryptedPassword = await window.showInputBox({
-					prompt: "Enter your CodeStream password",
-					placeHolder: "password",
-					password: true
-				});
-				if (decryptedPassword === undefined) return;
-
-				password = Crypto.encrypt(decryptedPassword, "aes-256-ctr", encryptionKey);
-				await configuration.update(
-					configuration.name("password").value,
-					password,
-					ConfigurationTarget.Global
-				);
-			}
-		}
-
-		try {
-			return await Container.session.login(email, decryptedPassword, teamId);
-		} catch (ex) {
-			const actions: MessageItem[] = [{ title: "Retry" }, { title: "Retry with Credential Reset" }];
-
-			const tracing = Container.config.traceLevel !== TraceLevel.Silent;
-			if (tracing) {
-				actions.push({ title: "Open Output Channel" });
-			}
-
-			const result = await window.showErrorMessage(
-				`Unable to sign into CodeStream${
-					!tracing ? "" : `. ${ex.message}. See the CodeStream output channel for more details`
-				}`,
-				...actions
-			);
-			if (result === undefined) throw ex;
-
-			if (result === actions[0]) {
-				setImmediate(() => this.signInCore(email, password));
-			} else if (result === actions[1]) {
-				setImmediate(() => this.signInCore(undefined, undefined));
-			} else if (result === actions[2]) {
-				Logger.showOutputChannel();
-			}
-		}
+			Container.streamView.show();
+		} else await Container.session.login(email, decryptedPassword, teamId);
 	}
 }

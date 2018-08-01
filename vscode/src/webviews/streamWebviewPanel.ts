@@ -24,6 +24,7 @@ import {
 	SessionStatus,
 	StreamThread
 } from "../api/session";
+import { LoginResult } from "../api/types";
 import { Container } from "../container";
 import { Logger } from "../logger";
 
@@ -225,6 +226,24 @@ export class StreamWebviewPanel extends Disposable {
 		}
 	}
 
+	private async getBootstrapState() {
+		const [streams, teams, users, currentUser] = await Promise.all([
+			Container.session.channels.entities(),
+			this.session.teams.entities(),
+			this.session.users.entities(),
+			this.session.api.getMe()
+		]);
+
+		const state: BootstrapState = Object.create(null);
+		state.currentTeamId = this.session.team.id;
+		state.currentUserId = this.session.userId;
+		state.streams = streams;
+		state.teams = teams;
+		state.users = users.map(user => (user.id === currentUser.id ? currentUser : user));
+
+		return state;
+	}
+
 	private async onPanelWebViewMessageReceived(e: CSWebviewMessage) {
 		const { type } = e;
 
@@ -234,6 +253,23 @@ export class StreamWebviewPanel extends Disposable {
 				// TODO: Add sequence ids to ensure correct matching
 				// TODO: Add exception handling for failed requests
 				switch (body.action) {
+					case "authenticate": {
+						const { email, password } = body.params;
+
+						const status = await this.session.login(email, password);
+
+						const responseBody: { id: string; [k: string]: any } = { id: body.id };
+
+						if (status === LoginResult.Success) {
+							responseBody.payload = await this.getBootstrapState();
+						} else responseBody.error = status;
+
+						this.postMessage({
+							type: "codestream:response",
+							body: responseBody
+						});
+						break;
+					}
 					case "create-post": {
 						const { text, codeBlocks, parentPostId, streamId, teamId } = body.params;
 
@@ -566,6 +602,13 @@ export class StreamWebviewPanel extends Disposable {
 		return this.setStream(streamThread);
 	}
 
+	reset() {
+		if (this._panel !== undefined && this._streamThread !== undefined) {
+			this._streamThread = undefined;
+			this.setStream(undefined);
+		}
+	}
+
 	private async getHtml(): Promise<string> {
 		if (Logger.isDebugging) {
 			return new Promise<string>((resolve, reject) => {
@@ -622,27 +665,14 @@ export class StreamWebviewPanel extends Disposable {
 			this._panel.reveal(ViewColumn.Three, false);
 		}
 
-		const state: BootstrapState = Object.create(null);
+		let state: BootstrapState = Object.create(null);
 
 		if (this.session.status === SessionStatus.SignedIn) {
-			const [repos, streams, teams, users, currentUser] = await Promise.all([
-				this.session.repos.entities(),
-				Container.session.channels.entities(),
-				this.session.teams.entities(),
-				this.session.users.entities(),
-				this.session.api.getMe()
-			]);
-
-			state.currentTeamId = this.session.team.id;
-			state.currentUserId = this.session.userId;
+			state = await this.getBootstrapState();
 			if (streamThread !== undefined) {
 				state.currentStreamId = streamThread.stream.id;
 				state.selectedPostId = streamThread.id;
 			}
-			state.repos = repos;
-			state.streams = streams;
-			state.teams = teams;
-			state.users = users.map(user => (user.id === currentUser.id ? currentUser : user));
 		}
 		this._streamThread = streamThread;
 		this._onDidChangeStream.fire(this._streamThread);

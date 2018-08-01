@@ -362,3 +362,9 @@ export interface InviteResponse {
 export interface MeResponse {
 	user: CSUser;
 }
+
+export enum LoginResult {
+	Success = "SUCCESS",
+	InvalidCredentials = "INVALID_CREDENTIALS",
+	Unknown = "UNKNOWN"
+}

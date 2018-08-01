@@ -49,7 +49,8 @@ export class StreamViewController implements Disposable {
 		const status = e.getStatus();
 		switch (status) {
 			case SessionStatus.SignedOut:
-				this.closePanel();
+				if (this.visible) this._panel!.reset();
+				else this.closePanel();
 				break;
 
 			case SessionStatus.SignedIn:
