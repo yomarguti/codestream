@@ -112,7 +112,6 @@ export class Login extends React.Component {
 								className="native-key-bindings input-text control"
 								type="text"
 								name="email"
-								tabIndex="0"
 								value={this.state.email}
 								onChange={e => this.setState({ email: e.target.value })}
 								onBlur={this.onBlurEmail}
@@ -129,7 +128,6 @@ export class Login extends React.Component {
 								className="native-key-bindings input-text"
 								type="password"
 								name="password"
-								tabIndex="1"
 								value={this.state.password}
 								onChange={e => this.setState({ password: e.target.value })}
 								onBlur={this.onBlurPassword}
@@ -145,7 +143,6 @@ export class Login extends React.Component {
 						<Button
 							id="login-button"
 							className="control-button"
-							tabIndex="2"
 							type="submit"
 							loading={this.props.loading}
 						>
