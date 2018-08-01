@@ -199,7 +199,7 @@ export class GitService implements IGitService, Disposable {
 		const suffix = Strings.sanitizeForFileSystem(ref.substr(0, 8)).substr(0, 50);
 		const ext = path.extname(filename);
 
-		const tmp = await import("tmp");
+		const tmp = await import(/* webpackChunkName: "tmp", webpackMode: "eager" */ "tmp");
 		return new Promise<string>((resolve, reject) => {
 			tmp.file(
 				{ prefix: `${path.basename(filename, ext)}-${suffix}__`, postfix: ext },

@@ -6,9 +6,7 @@ const FileManagerWebpackPlugin = require("filemanager-webpack-plugin");
 
 module.exports = function(env, argv) {
 	env = env || {};
-
 	const production = !!env.production;
-	console.log("Production:", production);
 
 	const plugins = [
 		new CleanWebpackPlugin(["dist"]),
@@ -30,12 +28,14 @@ module.exports = function(env, argv) {
 	];
 
 	return {
-		entry: "./src/agent.ts",
+		entry: {
+			agent: "./src/agent.ts"
+		},
 		mode: production ? "production" : "development",
 		target: "node",
 		devtool: !production ? "eval-source-map" : undefined,
 		output: {
-			filename: "agent.js"
+			filename: "[name].js"
 		},
 		resolve: {
 			extensions: [".tsx", ".ts", ".js"]
@@ -47,6 +47,7 @@ module.exports = function(env, argv) {
 					use: "ts-loader",
 					exclude: /node_modules/
 				},
+				// Required to solve issues with some dependencies in node_modules
 				{
 					test: /\.mjs$/,
 					include: /node_modules/,
