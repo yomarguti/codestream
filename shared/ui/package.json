@@ -7,70 +7,53 @@
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"build": "rollup -c",
-		"build-watch": "rollup -c -w"
+		"build-watch": "rollup -c -w",
+		"bundle": "webpack --env.development",
+		"pack": "webpack --env.production",
+		"watch": "webpack --watch --env.development"
 	},
 	"author": "akonwi",
 	"license": "UNLICENSED",
-	"babel": {
-		"presets": [
-			[
-				"env",
-				{
-					"debug": false,
-					"modules": false,
-					"useBuiltIns": true
-				}
-			],
-			"react"
-		],
-		"plugins": [
-			[
-				"transform-class-properties",
-				{
-					"spec": true
-				}
-			],
-			[
-				"transform-object-rest-spread"
-			],
-			"external-helpers"
-		]
-	},
 	"dependencies": {
-		"@babel/polyfill": "^7.0.0-beta.51",
-		"classnames": "^2.2.5",
-		"emoji-mart": "^2.6.1",
+		"@babel/polyfill": "7.0.0-beta.51",
+		"classnames": "2.2.5",
+		"emoji-mart": "2.6.1",
 		"markdown-it": "https://github.com/akonwi/markdown-it",
-		"moment": "^2.22.1",
-		"octicons": "^7.3.0",
-		"react": "^16.3.2",
-		"react-contenteditable": "^2.1.0",
-		"react-dom": "^16.3.2",
-		"react-gravatar": "^2.6.3",
-		"react-intl": "^2.4.0",
-		"react-linkify": "^0.2.2",
-		"react-redux": "^5.0.7",
-		"react-select": "^2.0.0-beta.6",
-		"redux": "^4.0.0",
-		"redux-devtools-extension": "^2.13.2",
-		"redux-thunk": "^2.3.0",
-		"underscore": "^1.9.0"
+		"moment": "2.22.1",
+		"octicons": "7.3.0",
+		"react": "16.4.1",
+		"react-contenteditable": "2.1.0",
+		"react-dom": "16.4.1",
+		"react-gravatar": "2.6.3",
+		"react-intl": "2.4.0",
+		"react-linkify": "0.2.2",
+		"react-redux": "5.0.7",
+		"react-select": "2.0.0-beta.6",
+		"redux": "4.0.0",
+		"redux-thunk": "2.3.0",
+		"underscore": "1.9.0"
 	},
 	"devDependencies": {
-		"babel-cli": "^6.26.0",
-		"babel-eslint": "^8.2.5",
-		"babel-plugin-external-helpers": "^6.22.0",
-		"babel-plugin-transform-class-properties": "^6.24.1",
-		"babel-plugin-transform-object-rest-spread": "^6.26.0",
-		"babel-preset-env": "^1.7.0",
-		"babel-preset-react": "^6.24.1",
-		"eslint": "^5.0.1",
-		"eslint-plugin-react": "^7.10.0",
-		"prettier": "^1.12.1",
-		"rollup": "^0.61.2",
-		"rollup-plugin-babel": "^3.0.4",
-		"rollup-plugin-commonjs": "^9.1.3",
-		"rollup-plugin-json": "^3.0.0",
-		"rollup-plugin-node-resolve": "^3.3.0"
+		"babel-cli": "6.26.0",
+		"babel-eslint": "8.2.6",
+		"babel-loader": "7.1.5",
+		"babel-plugin-external-helpers": "6.22.0",
+		"babel-plugin-transform-class-properties": "6.24.1",
+		"babel-plugin-transform-object-rest-spread": "6.26.0",
+		"babel-preset-env": "1.7.0",
+		"babel-preset-react": "6.24.1",
+		"clean-webpack-plugin": "0.1.19",
+		"eslint": "5.2.0",
+		"eslint-plugin-react": "7.10.0",
+		"filemanager-webpack-plugin": "1.0.28",
+		"prettier": "1.14.0",
+		"redux-devtools-extension": "2.13.5",
+		"rollup": "0.61.2",
+		"rollup-plugin-babel": "3.0.4",
+		"rollup-plugin-commonjs": "9.1.3",
+		"rollup-plugin-json": "3.0.0",
+		"rollup-plugin-node-resolve": "3.3.0",
+		"webpack": "4.16.3",
+		"webpack-cli": "3.1.0"
 	}
 }
