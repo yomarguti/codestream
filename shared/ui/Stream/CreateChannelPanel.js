@@ -198,7 +198,10 @@ export class SimpleCreateChannelPanel extends Component {
 
 	// onBlurPassword = () => this.setState({ passwordTouched: true });
 
-	onBlurName = () => this.setState({ nameTouched: true });
+	onBlurName = () => {
+		return;
+		// this.setState({ nameTouched: true });
+	}
 
 	resetForm = () => {
 		this.setState({
