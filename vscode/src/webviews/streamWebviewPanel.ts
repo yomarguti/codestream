@@ -313,7 +313,7 @@ export class StreamWebviewPanel extends Disposable {
 						const responseBody: { [key: string]: any } = {
 							id: body.id
 						};
-						if (post === undefined) {
+						if (!post) {
 							responseBody.error = "Failed to create post";
 						} else {
 							responseBody.payload = post;
