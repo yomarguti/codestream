@@ -1342,13 +1342,14 @@ export class SimpleStream extends Component {
 						<span>
 							{warning.message + " "}
 							<a
-								onClick={e => {
-									e.preventDefault();
-									EventEmitter.emit(
-										"interaction:clicked-link",
-										"https://help.codestream.com/hc/en-us/articles/360001530571-Git-Issues"
-									);
-								}}
+								// onClick={e => {
+								// 	e.preventDefault();
+								// 	EventEmitter.emit(
+								// 		"interaction:clicked-link",
+								// 		"https://help.codestream.com/hc/en-us/articles/360001530571-Git-Issues"
+								// 	);
+								// }}
+								href="https://help.codestream.com/hc/en-us/articles/360001530571-Git-Issues"
 							>
 								Learn more
 							</a>
