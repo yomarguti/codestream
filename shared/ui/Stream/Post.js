@@ -181,7 +181,7 @@ class Post extends Component {
 		return (
 			<div className="edit-post">
 				<ContentEditable
-					className="native-key-bindings"
+					className="native-key-bindings message-input"
 					id={id}
 					rows="1"
 					tabIndex="-1"

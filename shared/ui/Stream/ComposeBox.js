@@ -432,7 +432,7 @@ class ComposeBox extends React.Component {
 				{quoteInfo}
 				{quoteHint}
 				<ContentEditable
-					className={createClassString("native-key-bindings", btoa(placeholder))}
+					className={createClassString("native-key-bindings", "message-input", btoa(placeholder))}
 					id="input-div"
 					rows="1"
 					tabIndex="-1"
