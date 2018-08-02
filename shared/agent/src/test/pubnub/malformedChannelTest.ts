@@ -3,12 +3,11 @@
 import { InvalidChannelTest } from "./invalidChannelTest";
 
 export class MalformedChannelTest extends InvalidChannelTest {
-
-	describe () {
+	describe() {
 		return "subscription to a channel with a malformed name should be rejected";
 	}
 
-	getInvalidChannelName () {
+	getInvalidChannelName() {
 		return "xyz";
 	}
 }

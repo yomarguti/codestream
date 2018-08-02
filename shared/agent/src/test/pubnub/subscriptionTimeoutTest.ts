@@ -5,18 +5,16 @@ import { PubnubStatus, StatusChangeEvent } from "../../pubnub/pubnubConnection";
 import { PubnubTester } from "./pubnubTester";
 
 export class SubscriptionTimeoutTest extends PubnubTester {
-
-	describe () {
+	describe() {
 		return "when a subscription times out, a Trouble event should be emitted";
 	}
 
-	run (): Promise<void> {
+	run(): Promise<void> {
 		this._statusListener = this._pubnubConnection!.onDidStatusChange((event: StatusChangeEvent) => {
 			if (event.status === PubnubStatus.Trouble) {
 				expect(event.channels).to.deep.equal([`user-${this._userData!.user._id}`]);
 				this._resolve();
-			}
-			else {
+			} else {
 				this._reject("unexpected connection status: " + event.status);
 			}
 		});

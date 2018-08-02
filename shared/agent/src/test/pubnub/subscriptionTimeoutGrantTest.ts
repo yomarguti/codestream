@@ -5,26 +5,20 @@ import { PubnubStatus, StatusChangeEvent } from "../../pubnub/pubnubConnection";
 import { PubnubTester } from "./pubnubTester";
 
 export class SubscriptionTimeoutGrantTest extends PubnubTester {
-
 	private _didGetTrouble: boolean = false;
 
-	describe () {
+	describe() {
 		return "when a subscription times out, a Granted event should be emitted indicating access was granted for the timed out channel";
 	}
 
-	run (): Promise<void> {
+	run(): Promise<void> {
 		this._statusListener = this._pubnubConnection!.onDidStatusChange((event: StatusChangeEvent) => {
 			if (event.status === PubnubStatus.Trouble) {
 				this._didGetTrouble = true;
-			}
-			else if (
-				event.status === PubnubStatus.Granted &&
-				this._didGetTrouble
-			) {
+			} else if (event.status === PubnubStatus.Granted && this._didGetTrouble) {
 				expect(event.channels).to.deep.equal([`user-${this._userData!.user._id}`]);
 				this._resolve();
-			}
-			else {
+			} else {
 				this._reject("unexpected connection status: " + event.status);
 			}
 		});

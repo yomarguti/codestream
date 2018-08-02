@@ -25,11 +25,9 @@ export interface PubnubTesterConfig {
 }
 
 class CodeStreamApiSimulator {
+	constructor(private _apiRequester: ApiRequester) {}
 
-	constructor (private _apiRequester: ApiRequester) {
-	}
-
-	async grant (token: string, channel: string) {
+	async grant(token: string, channel: string) {
 		const request = {
 			method: "PUT",
 			path: `/grant/${channel}`,
@@ -41,7 +39,6 @@ class CodeStreamApiSimulator {
 }
 
 export abstract class PubnubTester {
-
 	protected _userData: LoginResponse | undefined;
 	protected _otherUserData: LoginResponse | undefined;
 	protected _teamData: TeamData | undefined;
@@ -61,23 +58,23 @@ export abstract class PubnubTester {
 	protected _messageListener: Disposable | undefined;
 	protected _pubnubToken: string | undefined;
 
-	constructor (config: PubnubTesterConfig) {
+	constructor(config: PubnubTesterConfig) {
 		this._apiRequester = new ApiRequester({ origin: config.apiOrigin });
 		this._api = new CodeStreamApi("", "", "");
 		this._apiSimulator = new CodeStreamApiSimulator(this._apiRequester);
 		this._api.grant = this._apiSimulator.grant.bind(this._apiSimulator);
 	}
 
-	describe () {
+	describe() {
 		return "???";
 	}
 
-	async before () {
+	async before() {
 		await this.createUser();
- 		this.initializeConnection();
+		this.initializeConnection();
 	}
 
-	async after () {
+	async after() {
 		this._pubnubDisposable!.dispose();
 		delete this._pubnubConnection;
 		if (this._successTimeout) {
@@ -91,7 +88,7 @@ export abstract class PubnubTester {
 		}
 	}
 
-	run (): Promise<void> {
+	run(): Promise<void> {
 		this.setSuccessTimeout();
 		return new Promise((resolve, reject) => {
 			this._resolve = resolve;
@@ -99,19 +96,19 @@ export abstract class PubnubTester {
 		});
 	}
 
-	getTestTimeout () {
+	getTestTimeout() {
 		return this._testTimeout;
 	}
 
-	private async createUser () {
+	private async createUser() {
 		this._userData = await new UserCreator(this._apiRequester).createUser();
 	}
 
-	protected async createOtherUser () {
+	protected async createOtherUser() {
 		this._otherUserData = await new UserCreator(this._apiRequester).createUser();
 	}
 
-	private initializeConnection () {
+	private initializeConnection() {
 		this._pubnubConnection = new PubnubConnection();
 		this._pubnubDisposable = this._pubnubConnection.initialize({
 			api: this._api,
@@ -124,7 +121,7 @@ export abstract class PubnubTester {
 		} as PubnubInitializer);
 	}
 
-	protected async createTeamAndStream () {
+	protected async createTeamAndStream() {
 		this._apiRequester.setToken(this._userData!.accessToken);
 		await this.createTeam();
 		await this.createOtherUser();
@@ -132,7 +129,7 @@ export abstract class PubnubTester {
 		await this.createChannel();
 	}
 
-	protected async createTeam (options: ApiRequestOverrides = {}) {
+	protected async createTeam(options: ApiRequestOverrides = {}) {
 		const teamName = Randomstring.generate(12);
 		const data = {
 			name: teamName
@@ -144,11 +141,11 @@ export abstract class PubnubTester {
 			data
 		};
 		Object.assign(request, options);
-		const response = await this._apiRequester.request(request) as CreateTeamResponse;
+		const response = (await this._apiRequester.request(request)) as CreateTeamResponse;
 		this._teamData = response.team;
 	}
 
-	protected async inviteOtherUser (options: ApiRequestOverrides = {}) {
+	protected async inviteOtherUser(options: ApiRequestOverrides = {}) {
 		const data = {
 			teamId: this._teamData!._id,
 			email: this._otherUserData!.user.email
@@ -163,7 +160,7 @@ export abstract class PubnubTester {
 		await this._apiRequester.request(request);
 	}
 
-	protected async createChannel (options: ApiRequestOverrides = {}) {
+	protected async createChannel(options: ApiRequestOverrides = {}) {
 		const streamName = Randomstring.generate(12);
 		const data = {
 			teamId: this._teamData!._id,
@@ -178,11 +175,11 @@ export abstract class PubnubTester {
 			data
 		};
 		Object.assign(request, options);
-		const response = await this._apiRequester.request(request) as CreateStreamResponse;
+		const response = (await this._apiRequester.request(request)) as CreateStreamResponse;
 		this._streamData = response.stream;
 	}
 
-	protected async createPost (options: ApiRequestOverrides = {}) {
+	protected async createPost(options: ApiRequestOverrides = {}) {
 		const text = Randomstring.generate(100);
 		const data = {
 			streamId: this._streamData!._id,
@@ -194,19 +191,19 @@ export abstract class PubnubTester {
 			path: "/posts",
 			data
 		};
-		const response = await this._apiRequester.request(request) as CreatePostResponse;
+		const response = (await this._apiRequester.request(request)) as CreatePostResponse;
 		this._postData = response.post;
 	}
 
-	protected subscribeToUserChannel () {
+	protected subscribeToUserChannel() {
 		this._pubnubConnection!.subscribe([`user-${this._userData!.user._id}`]);
 	}
 
-	protected subscribeToStreamChannel () {
+	protected subscribeToStreamChannel() {
 		this._pubnubConnection!.subscribe([`stream-${this._streamData!._id}`]);
 	}
 
-	private setSuccessTimeout () {
+	private setSuccessTimeout() {
 		this._successTimeout = setTimeout(() => {
 			this._reject("timed out");
 			delete this._successTimeout;

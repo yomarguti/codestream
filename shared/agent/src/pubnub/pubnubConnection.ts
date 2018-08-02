@@ -17,7 +17,7 @@ export interface PubnubInitializer {
 	channels?: (ChannelDescriptor | string)[]; // channels to subscribe to, provided on initialization or later using subscribe()
 	lastMessageReceivedAt?: number; // should persist across sessions, interruptions in service will retrieve messages since this time
 	online?: boolean; // for now, whether the network is online is tracked from without the PubnubConnection instance, but this is still TBD
-	testMode?: boolean;	// whether we emit test-mode statuses, not normally used in production
+	testMode?: boolean; // whether we emit test-mode statuses, not normally used in production
 }
 
 // when providing channels to subscribe to, you can provide just the channel name,
@@ -37,19 +37,19 @@ export interface StatusChangeEvent {
 
 // one of the statuses emitted in StatusChangeEvent above
 export enum PubnubStatus {
-	Connected,	// indicates all channels have been successfully subscribed to as requested
-	Trouble, 	// indicates trouble with the network or one or more subscriptions, should be a temporary state
-	Failed, 	// indicates some channels could not be subscribed to, and client action is required to correct this
-	Offline, 	// indicates the network is currently offline, so messages won't be received
-	Reset, 		// indicates that during catching up on history, there are too many messages or it's been too long...
-				// the client should retrieve fresh data from the server as if it is a fresh login
-	Aborted,	// an aborted state, usually the result of a bad Pubnub token, client must reinitialize
+	Connected, // indicates all channels have been successfully subscribed to as requested
+	Trouble, // indicates trouble with the network or one or more subscriptions, should be a temporary state
+	Failed, // indicates some channels could not be subscribed to, and client action is required to correct this
+	Offline, // indicates the network is currently offline, so messages won't be received
+	Reset, // indicates that during catching up on history, there are too many messages or it's been too long...
+	// the client should retrieve fresh data from the server as if it is a fresh login
+	Aborted, // an aborted state, usually the result of a bad Pubnub token, client must reinitialize
 
 	// the statuses below are used only for testing, normally these are private and black-boxed
-	Confirmed,	// indicates subscriptions have been confirmed
-	NetworkProblem,	// indicates a network problem of some sort
-	Queued,		// indicates channels have been queued for subscribing
-	Granted		// access was granted to channels
+	Confirmed, // indicates subscriptions have been confirmed
+	NetworkProblem, // indicates a network problem of some sort
+	Queued, // indicates channels have been queued for subscribing
+	Granted // access was granted to channels
 }
 
 // internal, maintains map of channels and whether they are yet successfully subscribed
@@ -291,8 +291,7 @@ export class PubnubConnection {
 			if (!this._simulateSubscriptionTimeout) {
 				// a successful subscription of certain channels
 				this.setConnected(status.subscribedChannels);
-			}
-			else {
+			} else {
 				this._simulateSubscriptionTimeout = false;
 			}
 		} else if (
@@ -323,7 +322,7 @@ export class PubnubConnection {
 			// hoping that this is just a glitch or delay
 			this.subscriptionFailure(response.payload.channels || []);
 		}
-/* This doesn't work ... maybe in the browser, but in the agent, we never get the PNNetworkUpCategory,
+		/* This doesn't work ... maybe in the browser, but in the agent, we never get the PNNetworkUpCategory,
    so we never get out of Offline mode
 		else if (status.category === Pubnub.CATEGORIES.PNNetworkDownCategory) {
 			this.setOnline(false);
@@ -430,7 +429,7 @@ export class PubnubConnection {
 	}
 
 	// force-set the last message received timestamp, for testing catch-up
-	setLastMessageReceivedAt (lastMessageReceivedAt: number) {
+	setLastMessageReceivedAt(lastMessageReceivedAt: number) {
 		this._lastMessageReceivedAt = lastMessageReceivedAt;
 	}
 
@@ -497,7 +496,7 @@ export class PubnubConnection {
 	}
 
 	// simulate a failure to confirm subscriptions, for testing purposes
-	simulateConfirmFailure (doSimulate?: boolean) {
+	simulateConfirmFailure(doSimulate?: boolean) {
 		this._simulateConfirmFailure = doSimulate || typeof doSimulate === "undefined";
 	}
 
@@ -598,8 +597,7 @@ export class PubnubConnection {
 			// client is going to have to figure out what to do about it
 			this.emitFailures(this._grantFailures);
 			this.removeChannels(this._grantFailures);
-		}
-		else if (this._testMode) {
+		} else if (this._testMode) {
 			this.emitStatus(PubnubStatus.Granted, channels);
 		}
 
@@ -630,10 +628,8 @@ export class PubnubConnection {
 		try {
 			if (
 				this._simulateGrantFailure === true ||
-				(
-					this._simulateGrantFailure instanceof Array &&
-					this._simulateGrantFailure.includes(channel)
-				)
+				(this._simulateGrantFailure instanceof Array &&
+					this._simulateGrantFailure.includes(channel))
 			) {
 				throw new ServerError("invalid token", { code: "AUTH-1000" }, 403);
 			}
@@ -641,10 +637,7 @@ export class PubnubConnection {
 		} catch (error) {
 			// if we get a 403 from the API server, we assume we don't have actual access
 			// to these channels for whatever reason
-			if (
-				error instanceof ServerError &&
-				error.statusCode === 403
-			) {
+			if (error instanceof ServerError && error.statusCode === 403) {
 				this._grantFailures.push(channel);
 			}
 		}
@@ -761,14 +754,12 @@ export class PubnubConnection {
 	}
 
 	// to throttle resubscribe attempts, determine the next interval to wait until resubscribe
-	private getThrottleInterval () {
+	private getThrottleInterval() {
 		if (this._numResubscribes < 10) {
 			return 0;
-		}
-		else if (this._numResubscribes < 100) {
+		} else if (this._numResubscribes < 100) {
 			return 1000;
-		}
-		else {
+		} else {
 			return 60000;
 		}
 	}

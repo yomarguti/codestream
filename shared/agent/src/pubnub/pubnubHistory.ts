@@ -49,10 +49,7 @@ export class PubnubHistory {
 		const sliceSize = 500; // batch history is limited to 500 channels
 		do {
 			channels = this._channels.slice(startSlice, sliceSize);
-			if (
-				channels.length > 0 &&
-				await this.fetchByChannelSlice(output, channels)
-			) {
+			if (channels.length > 0 && (await this.fetchByChannelSlice(output, channels))) {
 				this.processMessages(output);
 				startSlice += sliceSize;
 			} else {
@@ -130,7 +127,10 @@ export class PubnubHistory {
 			}
 			for (const message of messages) {
 				const timetoken = parseInt(message.timetoken, 10);
-				if (!earliestTimetokenPerChannel[channel] || timetoken < earliestTimetokenPerChannel[channel]) {
+				if (
+					!earliestTimetokenPerChannel[channel] ||
+					timetoken < earliestTimetokenPerChannel[channel]
+				) {
 					earliestTimetokenPerChannel[channel] = timetoken;
 				}
 			}

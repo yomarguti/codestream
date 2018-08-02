@@ -25,25 +25,23 @@ export interface ApiRequestOverrides {
 }
 
 export class ApiRequester {
-
 	private _origin: string;
 	private _token: string | undefined;
 
-	constructor (options: ApiRequesterOptions) {
+	constructor(options: ApiRequesterOptions) {
 		this._origin = options.origin;
 	}
 
-	setToken (token: string) {
+	setToken(token: string) {
 		this._token = token;
 	}
 
-	async request (options: ApiRequestOptions) {
+	async request(options: ApiRequestOptions) {
 		return new Promise((resolve, reject) => {
 			const callback = (error: any, result?: object) => {
 				if (error) {
 					reject(error);
-				}
-				else {
+				} else {
 					resolve(result);
 				}
 			};
@@ -66,43 +64,37 @@ export class ApiRequester {
 				let token;
 				if (options.token) {
 					token = options.token;
-				}
-				else if (this._token && !options.noToken) {
+				} else if (this._token && !options.noToken) {
 					token = this._token;
 				}
 				if (token) {
 					httpsOptions.headers!.authorization = `Bearer ${token}`;
 				}
-				const clientRequest = request(
-					httpsOptions,
-					response => {
-						let responseData = "";
+				const clientRequest = request(httpsOptions, response => {
+					let responseData = "";
 
-						response.on("data", incomingData => {
-							responseData += incomingData.toString();
-						});
+					response.on("data", incomingData => {
+						responseData += incomingData.toString();
+					});
 
-						response.on("end", () => {
-							let parsed;
-							try {
-								parsed = JSON.parse(responseData);
-							}
-							catch (error) {
-								callback(`error parsing JSON data: ${error}`);
-							}
-							if (response.statusCode! < 200 || response.statusCode! >= 300) {
-								callback(new ServerError("https error", parsed, response.statusCode));
-							}
-							else {
-								callback(null, parsed);
-							}
-						});
+					response.on("end", () => {
+						let parsed;
+						try {
+							parsed = JSON.parse(responseData);
+						} catch (error) {
+							callback(`error parsing JSON data: ${error}`);
+						}
+						if (response.statusCode! < 200 || response.statusCode! >= 300) {
+							callback(new ServerError("https error", parsed, response.statusCode));
+						} else {
+							callback(null, parsed);
+						}
+					});
 
-						response.on("error", error => {
-							callback(`https error: ${error}`);
-						});
-					}
-				);
+					response.on("error", error => {
+						callback(`https error: ${error}`);
+					});
+				});
 
 				clientRequest.on("error", error => {
 					callback(error);

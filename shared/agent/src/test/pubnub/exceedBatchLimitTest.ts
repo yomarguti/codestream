@@ -4,25 +4,25 @@ import { MultiMessageCatchUpTest } from "./multiMessageCatchUpTest";
 import { PubnubTesterConfig } from "./pubnubTester";
 
 export class ExceedBatchLimitTest extends MultiMessageCatchUpTest {
-
 	private _whichStream: number;
 	private _numExtraPostsPerPost: number;
 
-	constructor (config: PubnubTesterConfig) {
+	constructor(config: PubnubTesterConfig) {
 		super(config);
 		this._whichStream = 2;
 		this._numExtraPostsPerPost = 40;
-		this._testTimeout = (
-			this._numStreams * this._numPostsPerStream +
-			this._numPostsPerStream * this._numExtraPostsPerPost
-		) * 500 + 60000;
+		this._testTimeout =
+			(this._numStreams * this._numPostsPerStream +
+				this._numPostsPerStream * this._numExtraPostsPerPost) *
+				500 +
+			60000;
 	}
 
-	describe () {
+	describe() {
 		return "multiple messages across several streams, including more than 25 messages in a stream, missed while offline, should be received after going online";
 	}
 
-	async createSeveralPosts () {
+	async createSeveralPosts() {
 		let postNum = 0;
 		for (let i = 0; i < this._numPostsPerStream; i++) {
 			for (let j = 0; j < this._numStreams; j++) {

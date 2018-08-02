@@ -4,22 +4,20 @@ import { PubnubStatus, StatusChangeEvent } from "../../pubnub/pubnubConnection";
 import { PubnubTester } from "./pubnubTester";
 
 export class MessageTest extends PubnubTester {
-
-	describe () {
+	describe() {
 		return "should be able to receive messages after subscribing to a Pubnub channel";
 	}
 
-	async before () {
+	async before() {
 		await super.before();
 		await this.createTeamAndStream();
 	}
 
-	run (): Promise<void> {
+	run(): Promise<void> {
 		this._statusListener = this._pubnubConnection!.onDidStatusChange((event: StatusChangeEvent) => {
 			if (event.status === PubnubStatus.Connected) {
 				this.createPost({ token: this._otherUserData!.accessToken });
-			}
-			else {
+			} else {
 				this._reject("unexpected connection status: " + event.status);
 			}
 		});
@@ -29,7 +27,7 @@ export class MessageTest extends PubnubTester {
 		return promise;
 	}
 
-	listenForMessage () {
+	listenForMessage() {
 		this._messageListener = this._pubnubConnection!.onDidReceiveMessages((messages: any[]) => {
 			if (
 				messages.length === 1 &&

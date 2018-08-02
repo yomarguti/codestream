@@ -9,8 +9,8 @@ export interface RegisterRequest {
 
 export interface RegisterResponse {
 	user: {
-		email: string,
-		confirmationCode: string
+		email: string;
+		confirmationCode: string;
 	};
 }
 
