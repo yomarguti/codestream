@@ -18,7 +18,14 @@ export default function Button({ children, className, disabled, loading, ...extr
 			disabled={loading || disabled}
 			{...extraProps}
 		>
-			{loading ? <span className="loading loading-spinner-tiny inline-block" /> : children}
+			{loading ? (
+				<React.Fragment>
+					{children}
+					...
+				</React.Fragment>
+			) : (
+				children
+			)}
 		</button>
 	);
 }

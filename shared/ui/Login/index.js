@@ -88,11 +88,13 @@ export class Login extends React.Component {
 		event.preventDefault();
 		if (this.isFormInvalid()) return;
 		const { password, email } = this.state;
+		this.setState({ loading: true });
 		try {
 			await this.props.authenticate({ password, email });
 		} catch (error) {
 			this.setState({ error });
 		}
+		this.setState({ loading: false });
 	};
 
 	render() {
@@ -144,7 +146,7 @@ export class Login extends React.Component {
 							id="login-button"
 							className="control-button"
 							type="submit"
-							loading={this.props.loading}
+							loading={this.state.loading}
 						>
 							<FormattedMessage id="login.submitButton" />
 						</Button>
@@ -165,4 +167,7 @@ export class Login extends React.Component {
 	}
 }
 
-export default connect(null, actions)(Login);
+export default connect(
+	null,
+	actions
+)(Login);
