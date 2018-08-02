@@ -100,67 +100,71 @@ export class Login extends React.Component {
 	render() {
 		return (
 			<div id="login-page">
-				<form id="login-form" onSubmit={this.submitCredentials}>
-					<h2>Sign In to CodeStream</h2>
-					{this.renderAccountMessage()}
-					{this.renderError()}
-					<div id="controls">
-						<div id="email-controls" className="control-group">
-							<label>
-								<FormattedMessage id="login.email.label" />
-							</label>
-							<input
-								id="login-input-email"
-								className="native-key-bindings input-text control"
-								type="text"
-								name="email"
-								value={this.state.email}
-								onChange={e => this.setState({ email: e.target.value })}
-								onBlur={this.onBlurEmail}
-								required={this.state.emailTouched}
-							/>
-							{this.renderEmailError()}
+				<form id="login-form" className="standard-form" onSubmit={this.submitCredentials}>
+					<fieldset class="form-body">
+						<h2>Sign In to CodeStream</h2>
+						{this.renderAccountMessage()}
+						{this.renderError()}
+						<div id="controls">
+							<div id="email-controls" className="control-group">
+								<label>
+									<FormattedMessage id="login.email.label" />
+								</label>
+								<input
+									id="login-input-email"
+									className="native-key-bindings input-text control"
+									type="text"
+									name="email"
+									value={this.state.email}
+									onChange={e => this.setState({ email: e.target.value })}
+									onBlur={this.onBlurEmail}
+									required={this.state.emailTouched}
+								/>
+								{this.renderEmailError()}
+							</div>
+							<div id="password-controls" className="control-group">
+								<label>
+									<FormattedMessage id="login.password.label" />
+								</label>
+								<input
+									id="login-input-password"
+									className="native-key-bindings input-text"
+									type="password"
+									name="password"
+									value={this.state.password}
+									onChange={e => this.setState({ password: e.target.value })}
+									onBlur={this.onBlurPassword}
+									required={this.state.passwordTouched}
+								/>
+								{this.renderPasswordHelp()}
+								{/* <div className="help-link">
+								<a onClick={() => this.props.transition("forgotPassword")}>
+									<FormattedMessage id="login.forgotPassword" />
+								</a>
+							</div> */}
+							</div>
+							<div className="button-group">
+								<Button
+									id="login-button"
+									className="control-button"
+									type="submit"
+									loading={this.state.loading}
+								>
+									<FormattedMessage id="login.submitButton" />
+								</Button>
+							</div>
+							<div className="footer">
+								<p>
+									<strong>
+										<FormattedMessage id="login.footer.noAccount" />{" "}
+										<a onClick={this.props.goToSignup}>
+											<FormattedMessage id="login.footer.signUp" />
+										</a>
+									</strong>
+								</p>
+							</div>
 						</div>
-						<div id="password-controls" className="control-group">
-							<label>
-								<FormattedMessage id="login.password.label" />
-							</label>
-							<input
-								id="login-input-password"
-								className="native-key-bindings input-text"
-								type="password"
-								name="password"
-								value={this.state.password}
-								onChange={e => this.setState({ password: e.target.value })}
-								onBlur={this.onBlurPassword}
-								required={this.state.passwordTouched}
-							/>
-							{this.renderPasswordHelp()}
-							{/* <div className="help-link">
-							<a onClick={() => this.props.transition("forgotPassword")}>
-								<FormattedMessage id="login.forgotPassword" />
-							</a>
-						</div> */}
-						</div>
-						<Button
-							id="login-button"
-							className="control-button"
-							type="submit"
-							loading={this.state.loading}
-						>
-							<FormattedMessage id="login.submitButton" />
-						</Button>
-						<div className="footer">
-							<p>
-								<strong>
-									<FormattedMessage id="login.footer.noAccount" />{" "}
-									<a onClick={this.props.goToSignup}>
-										<FormattedMessage id="login.footer.signUp" />
-									</a>
-								</strong>
-							</p>
-						</div>
-					</div>
+					</fieldset>
 				</form>
 			</div>
 		);

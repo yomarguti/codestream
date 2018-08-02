@@ -249,19 +249,9 @@
 			background-color: lighten(@background-color-info, 5%);
 		}
 
-		#create-channel-form,
-		#create-dm-form {
-			.button-group {
-				margin-top: 30px;
-			}
-		}
-
 		.edit-post,
 		.standard-form {
 			.button-group {
-				// padding: 0px 10px 10px 56px;
-				margin-bottom: 5px;
-				margin-top: 10px;
 				button {
 					// this crazy escape syntax is required due to a bug in LESS
 					width: calc(~"50% - 5px");
@@ -1374,14 +1364,19 @@
 		margin: 8px 0;
 	}
 
+	.invite-panel .standard-form {
+		max-width: 100%;
+	}
 	.standard-form {
+		padding: 0 10px;
 		.input-text {
 			width: 100%;
 		}
 		fieldset {
+			max-width: 300px;
+			margin: 0 auto;
 			border: none;
 			padding: 0;
-			margin: 0;
 		}
 		.form-body {
 			padding: 20px;
@@ -1447,6 +1442,9 @@
 				vertical-align: -2px;
 			}
 		}
+	}
+	.button-group {
+		margin-top: 24px;
 	}
 }
 
