@@ -117,14 +117,16 @@ function initializeColorPalette() {
 				bodyStyle.setProperty("--app-background-color-hover", lighten(color, 3));
 
 				bodyStyle.setProperty("--base-background-color", lighten(color, 4));
+				bodyStyle.setProperty("--base-border-color", darken(color, 10));
 				bodyStyle.setProperty("--tool-panel-background-color", lighten(color, 10));
 				break;
 
 			case "light":
-				bodyStyle.setProperty("--app-background-color", darken(color, 4));
+				bodyStyle.setProperty("--app-background-color", color);
 				bodyStyle.setProperty("--app-background-color-hover", darken(color, 7));
 
-				bodyStyle.setProperty("--base-background-color", color);
+				bodyStyle.setProperty("--base-background-color", darken(color, 3));
+				bodyStyle.setProperty("--base-border-color", darken(color, 10));
 				bodyStyle.setProperty("--tool-panel-background-color", darken(color, 10));
 				break;
 		}

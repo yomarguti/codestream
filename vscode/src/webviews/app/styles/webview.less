@@ -111,10 +111,15 @@ body.preload * {
 	a:focus {
 		outline: none;
 	}
+	button.cancel {
+		background-color: @background-color-highlight-light !important;
+		.vscode-dark& {
+			background-color: @background-color-highlight-dark !important;
+		}
+	}
 
 	input[type="text"],
 	input[type="password"] {
-		background-color: @background-color-highlight-dark;
 		outline: none;
 		border: none;
 		padding: 5px 6px !important;
@@ -122,6 +127,10 @@ body.preload * {
 		font-family: inherit !important;
 		opacity: 1 !important;
 		color: @text-color !important;
+		background-color: @background-color-highlight-light;
+		.vscode-dark& {
+			background-color: @background-color-highlight-dark;
+		}
 	}
 
 	input[type="text"]:focus,
@@ -143,7 +152,10 @@ body.preload * {
 				padding-left: 0;
 			}
 			.radio-group {
-				background-color: @background-color-highlight-dark;
+				background-color: @background-color-highlight-light;
+				.vscode-dark& {
+					background-color: @background-color-highlight-dark;
+				}
 				padding: 3px 5px 5px 5px;
 				border-radius: 0px;
 				label {
@@ -197,18 +209,19 @@ body.preload * {
 					float: none;
 				}
 			}
+		}
 
-			#input-div:focus {
-				outline: 1px solid #99caeb;
-				.vscode-dark& {
-					outline: 1px solid #205376;
-				}
+		.message-input:focus {
+			outline: 1px solid #99caeb;
+			.vscode-dark& {
+				outline: 1px solid #205376;
 			}
-			#input-div {
-				border-radius: 0;
-				border: none;
-				padding: 5px 6px !important;
-			}
+		}
+
+		.message-input {
+			border-radius: 0;
+			border: none;
+			padding: 5px 6px !important;
 		}
 
 		.code::-webkit-scrollbar-corner {
@@ -304,7 +317,10 @@ body.preload * {
 		border-color: @base-border-color;
 		border: none;
 		border: 1px solid transparent;
-		background-color: @background-color-highlight-dark;
+		background-color: @background-color-highlight-light;
+		.vscode-dark& {
+			background-color: @background-color-highlight-dark;
+		}
 		margin: 0;
 		font-family: inherit;
 		font-size: 13px;
@@ -415,6 +431,10 @@ body.preload * {
 		background-size: 100% 4px;
 		width: inherit;
 		height: 5px;
+	}
+
+	.shadow-top, .shadow-bottom {
+		opacity: .2;
 	}
 	  
 	.shadow-cover-top {
