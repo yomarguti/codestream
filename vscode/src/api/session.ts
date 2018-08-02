@@ -389,7 +389,7 @@ export class CodeStreamSession implements Disposable {
 			const result = await Container.agent.login(email, password, teamId, Container.config.team);
 
 			if (result.error) {
-				this._status = SessionStatus.SignedOut;
+				this._status = SessionStatus.SignInFailed;
 				this._onDidChangeStatus.fire(e);
 				configuration.update(
 					configuration.name("email").value,
@@ -638,6 +638,7 @@ export type SessionChangedEvent =
 
 export enum SessionStatus {
 	SignedOut = "signedOut",
+	SignInFailed = "signInFailed",
 	SigningIn = "signingIn",
 	SignedIn = "signedIn"
 }

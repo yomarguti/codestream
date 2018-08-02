@@ -49,6 +49,7 @@ export class StatusBarController extends Disposable {
 
 		switch (status) {
 			case SessionStatus.SignedOut:
+			case SessionStatus.SignInFailed:
 				this._statusBarItem.text = ` $(comment-discussion) Sign in... `;
 				this._statusBarItem.command = "codestream.signIn";
 				this._statusBarItem.tooltip = "Sign in to CodeStream...";
