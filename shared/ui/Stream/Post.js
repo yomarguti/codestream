@@ -63,13 +63,17 @@ class Post extends Component {
 
 		let parentPost = this.props.replyingTo;
 
-		const threadLabel = parentPost || post.hasReplies ? "View Thread" : "Start a Thread";
-		let menuItems = [
-			{ label: threadLabel, action: "make-thread" },
-			{ label: "Mark Unread", action: "mark-unread" }
+		let menuItems = [];
+
+		if (!this.props.showDetails) {
+			const threadLabel = parentPost || post.hasReplies ? "View Thread" : "Start a Thread";
+			menuItems.push({ label: threadLabel, action: "make-thread" });
+		}
+
+		menuItems.push({ label: "Mark Unread", action: "mark-unread" });
 			// { label: "Add Reaction", action: "add-reaction" },
 			// { label: "Pin to Stream", action: "pin-to-stream" }
-		];
+
 		if (mine) {
 			menuItems.push(
 				{ label: "-" },

@@ -1232,7 +1232,8 @@ export class SimpleStream extends Component {
 	};
 
 	postVersion = () => {
-		const text = "This is CodeStream version " + this.props.pluginVersion + ".";
+		// const text = "This is CodeStream version " + this.props.pluginVersion + ".";
+		const text = "This is CodeStream version 1.0.";
 		this.submitSystemPost(text);
 		return true;
 	};
