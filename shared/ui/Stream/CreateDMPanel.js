@@ -201,7 +201,7 @@ const mapStateToProps = ({ context, streams, users, teams, session, umis }) => {
 	return {
 		umis,
 		directMessageStreams,
-		teammates: members,
+		teammates: _.sortBy(members, member => member.label.toLowerCase()),
 		team: teams[context.currentTeamId]
 	};
 };

@@ -254,7 +254,7 @@ const mapStateToProps = ({ context, streams, users, teams }) => {
 	});
 	return {
 		channelStreams,
-		teammates: members,
+		teammates: _.sortBy(members, member => member.label.toLowerCase()),
 		team: teams[context.currentTeamId]
 	};
 };
