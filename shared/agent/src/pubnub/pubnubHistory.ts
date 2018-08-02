@@ -7,6 +7,7 @@ export interface PubnubHistoryInput {
 	pubnub: Pubnub;
 	channels: string[];
 	since: number;
+	debug?(msg: string, info?: any): void;	// for debug messages
 }
 
 export interface PubnubHistoryOutput {
@@ -20,6 +21,7 @@ export class PubnubHistory {
 	private _channels: string[] = [];
 	private _since: number = 0;
 	private _allMessages: any[] = [];
+	private _debug: (msg: string, info?: any) => void = () => {};
 
 	// Fetch the history of messages that have come through the specified channels since the specified timestamp
 	// We do a batch fetch (https://www.pubnub.com/docs/nodejs-javascript/api-reference-storage-and-playback#batch-history)
@@ -39,6 +41,9 @@ export class PubnubHistory {
 		this._pubnub = options.pubnub;
 		this._channels = options.channels;
 		this._since = options.since;
+		if (options.debug) {
+			this._debug = options.debug;
+		}
 
 		const output: PubnubHistoryOutput = {};
 
@@ -83,7 +88,7 @@ export class PubnubHistory {
 	}
 
 	// process the messages we received ... since the messages are coming from multiple channels, we sort
-	// them by timestamp before returning to the client, given the client a true chronological "replay"
+	// them by timestamp before returning to the client, giving the client a true chronological "replay"
 	private processMessages(output: PubnubHistoryOutput) {
 		this._allMessages.forEach(message => {
 			message.timestamp = parseInt(message.timetoken, 10);
@@ -94,18 +99,20 @@ export class PubnubHistory {
 
 		if (this._allMessages.length > 0) {
 			// store the last message received, so we know where to start from next time
-			output.timestamp = this._allMessages[this._allMessages.length - 1].timestamp;
+			output.timestamp = this.timetokenToTimeStamp(this._allMessages[this._allMessages.length - 1].timestamp);
 		}
 	}
 
 	// retrieve historical messages in batch
 	private async retrieveBatchHistory(channels: string[], timetoken: string) {
+		this._debug(`Calling Pubnub.fetchMessages from ${timetoken} for ${channels.join(",")}`);
 		const response: any = await (this._pubnub! as any).fetchMessages({
 			channels,
 			end: timetoken,
 			count: 25,
 			stringifiedTimeToken: true
 		});
+		this._debug("fetchMessages response", response);
 		/*
 		const response: Pubnub.FetchMessagesResponse = await this._pubnub!.fetchMessages({
 			channels,
@@ -150,11 +157,14 @@ export class PubnubHistory {
 		if (depth === 10) {
 			throw new Error("RESET");
 		}
+		this._debug(`Calling Pubnub.history from ${before} for ${channel}`);
 		const response: any = await (this._pubnub! as any).history({
 			channel,
 			start: before.toString(),
 			stringifiedTimeToken: true
 		});
+		this._debug("history response", response);
+
 		/*
 		const response: Pubnub.HistoryResponse = await this._pubnub!.history({
 			channel,
@@ -172,5 +182,10 @@ export class PubnubHistory {
 	// convert from unix timestamp to stringified Pubnub time token
 	private timestampToTimetokenStringified(timestamp: number): string {
 		return (timestamp * 10000).toString();
+	}
+
+	// convert from Pubnub time token to unix timestamp
+	private timetokenToTimeStamp(timetoken: string): number {
+		return Math.floor(parseInt(timetoken, 10) / 10000);
 	}
 }

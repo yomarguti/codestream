@@ -15,6 +15,7 @@ import {
 export class PubnubReceiver {
 	private readonly _pubnubConnection: PubnubConnection;
 	private _connection: Disposable | undefined;
+	private _debugMode: boolean = true;
 
 	constructor(
 		private _agent: CodeStreamAgent,
@@ -32,7 +33,8 @@ export class PubnubReceiver {
 			subscribeKey: pubnubKey,
 			authKey: pubnubToken,
 			userId: _userId,
-			online: true
+			online: true,
+			debug: this.debug.bind(this)
 		});
 
 		this._pubnubConnection.onDidStatusChange(this.onPubnubStatusChanged, this);
@@ -59,6 +61,7 @@ export class PubnubReceiver {
 	}
 
 	private onPubnubStatusChanged(e: StatusChangeEvent) {
+		this.debug("Connection status", e);
 		switch (e.status) {
 			case PubnubStatus.Connected:
 				// TODO: let the extension know we are connected?
@@ -84,6 +87,7 @@ export class PubnubReceiver {
 	}
 
 	private onPubNubMessagesReceived(messages: { [key: string]: any }[]) {
+		this.debug("PubNub messages", messages);
 		this._agent.sendNotification(DidReceivePubNubMessagesNotification.type, messages);
 
 		for (const message of messages) {
@@ -179,5 +183,17 @@ export class PubnubReceiver {
 			}
 			return true;
 		});
+	}
+
+	private debug(msg: string, info?: any) {
+		if (this._debugMode) {
+			const now = new Date().toString();
+			msg = `${now}: PUBNUB: ${msg}`;
+			if (info) {
+				msg += `: ${JSON.stringify(info, undefined, 10)}`;
+			}
+			Logger.log(msg);
+			console.log(msg);
+		}
 	}
 }
