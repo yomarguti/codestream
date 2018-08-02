@@ -7,7 +7,5 @@
 	"search.exclude": {
 		"**/dist": true
 	},
-	"tslint.autoFixOnSave": true,
-	"typescript.tsdk": "./node_modules/typescript/lib",
-	"typescript.tsc.autoDetect": "off"
+	"tslint.autoFixOnSave": true
 }
