@@ -433,8 +433,11 @@ body.preload * {
 		height: 5px;
 	}
 
-	.shadow-top, .shadow-bottom {
-		opacity: .2;
+	
+	.vscode-light & {
+		.shadow-top, .shadow-bottom {
+			opacity: .2;
+		}
 	}
 	  
 	.shadow-cover-top {
@@ -454,7 +457,7 @@ body.preload * {
 		// background: red;
 		position: relative;
 		// position: absolute;
-		// bottom: 0;
+		bottom: -1px;
 		z-index: 5;
 	}
 }
