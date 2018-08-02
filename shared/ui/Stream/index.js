@@ -294,10 +294,10 @@ export class SimpleStream extends Component {
 		const postslistHeight = this._postslist.offsetHeight;
 		const composeHeight = this._compose.current.offsetHeight;
 		const headerHeight = this._header.offsetHeight;
-		if (postslistHeight < streamHeight) {
-			let newHeight = streamHeight - postslistHeight + this._intro.offsetHeight - composeHeight;
-			this._intro.style.height = newHeight + "px";
-		}
+		// if (postslistHeight < streamHeight) {
+		// 	let newHeight = streamHeight - postslistHeight + this._intro.offsetHeight - composeHeight;
+		// 	this._intro.style.height = newHeight + "px";
+		// }
 		const padding = composeHeight + headerHeight;
 		// this._div.style.paddingBottom = padding + "px";
 
