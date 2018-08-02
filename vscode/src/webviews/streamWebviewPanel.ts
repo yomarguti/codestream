@@ -24,6 +24,7 @@ import {
 	CSUser,
 	LoginResult
 } from "../api/api";
+import { configuration } from "../configuration";
 import {
 	CodeStreamSession,
 	Post,

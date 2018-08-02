@@ -9,6 +9,7 @@ import {
 	EventEmitter,
 	Uri
 } from "vscode";
+import * as uuid from "uuid/v4";
 import { WorkspaceState } from "../common";
 import { configuration } from "../configuration";
 import { encryptionKey } from "../constants";
