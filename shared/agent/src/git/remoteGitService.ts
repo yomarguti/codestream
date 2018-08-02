@@ -1,9 +1,8 @@
 "use strict";
 import { Disposable, Emitter, Event } from "vscode-languageserver";
 import Uri from "vscode-uri";
-import { GitApiRepository } from "./git";
 import { IGitService } from "./gitService";
-import { GitAuthor, GitRemote, GitRemoteType } from "./models/models";
+import { GitAuthor, GitRemote, GitRemoteType, GitRepository } from "./models/models";
 
 export * from "./models/models";
 
@@ -74,11 +73,11 @@ export class RemoteGitService implements IGitService, Disposable {
 		);
 	}
 
-	protected _repositories: GitApiRepository[] | undefined;
-	async getRepositories(): Promise<GitApiRepository[]> {
+	protected _repositories: GitRepository[] | undefined;
+	async getRepositories(): Promise<GitRepository[]> {
 		if (this._repositories === undefined) {
 			this._repositories = this._repos.map(
-				r => ({ rootUri: Uri.parse(r.url).with({ scheme: "vsls" }) })
+				r => new GitRepository(Uri.parse(r.url).with({ scheme: "vsls" }), this)
 				// new GitRepository(Uri.parse(r.url).with({ scheme: "vsls" }), this)
 			);
 		}

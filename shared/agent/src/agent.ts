@@ -24,8 +24,6 @@ import {
 	WorkspaceFoldersChangeEvent
 } from "vscode-languageserver";
 import { Container } from "./container";
-import { gitApi } from "./git/git";
-import { GitRepositoriesRequest } from "./ipc/client";
 import { Logger } from "./logger";
 import { CodeStreamSession } from "./session";
 import { Disposables, memoize } from "./system";
@@ -87,11 +85,6 @@ export class CodeStreamAgent implements Disposable, LSPLogger {
 
 	private async onInitialized(e: InitializedParams) {
 		try {
-			gitApi({
-				getGitPath: async () => Container.instance().gitPath,
-				getRepositories: async () => this.sendRequest(GitRepositoriesRequest.type)
-			});
-
 			const subscriptions = [];
 
 			if (this.supportsConfiguration) {

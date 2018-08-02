@@ -12,12 +12,13 @@ import { CodeStreamAgent, CodeStreamAgentOptions } from "./agent";
 import { CodeStreamApi, CreatePostRequestCodeBlock, CSStream } from "./api/api";
 import { UserCollection } from "./api/models/users";
 import { Container } from "./container";
+import { setGitPath } from "./git/git";
 import {
 	ApiRequest,
 	DocumentMarkersRequest,
 	DocumentPostRequest,
 	DocumentPreparePostRequest
-} from "./ipc/agent";
+} from "./ipc";
 import { MarkerHandler } from "./marker/markerHandler";
 import { PubnubReceiver } from "./pubnub/pubnubReceiver";
 import { Iterables, Strings } from "./system";
@@ -183,6 +184,7 @@ export class CodeStreamSession {
 		this._teamId = this._options.teamId;
 		this._userId = loginResponse.user.id;
 
+		setGitPath(this._options.gitPath);
 		void (await Container.initialize(
 			this._agent,
 			this._connection,

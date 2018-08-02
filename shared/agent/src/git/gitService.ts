@@ -12,11 +12,11 @@ import {
 } from "vscode-languageserver";
 import Uri from "vscode-uri";
 import { CodeStreamAgent } from "../agent";
-import { GitRepositoriesRequest } from "../ipc/agent";
+import { GitRepositoriesRequest } from "../ipc";
 import { Logger } from "../logger";
 import { Strings } from "../system";
-import { getRepositories, git, GitApiRepository, GitErrors, GitWarnings } from "./git";
-import { GitAuthor, GitRemote } from "./models/models";
+import { git, GitErrors, GitWarnings } from "./git";
+import { GitAuthor, GitRemote, GitRepository } from "./models/models";
 import { GitAuthorParser } from "./parsers/authorParser";
 import { GitRemoteParser } from "./parsers/remoteParser";
 
@@ -55,7 +55,7 @@ export interface IGitService extends Disposable {
 	getRepoRemote(repoPath: string): Promise<GitRemote | undefined>;
 	// getRepoRemote(repoUriOrPath: Uri | string): Promise<GitRemote | undefined>;
 
-	getRepositories(): Promise<GitApiRepository[]>;
+	getRepositories(): Promise<GitRepository[]>;
 
 	resolveRef(uri: Uri, ref: string): Promise<string | undefined>;
 	resolveRef(path: string, ref: string): Promise<string | undefined>;
@@ -324,10 +324,10 @@ export class GitService implements IGitService, Disposable {
 		}
 	}
 
-	protected _repositories: GitApiRepository[] | undefined;
-	async getRepositories(): Promise<GitApiRepository[]> {
+	protected _repositories: GitRepository[] | undefined;
+	async getRepositories(): Promise<GitRepository[]> {
 		if (this._repositories === undefined) {
-			const repos = await getRepositories();
+			const repos: GitRepository[] = []; // await getRepositories();
 			this._repositories = repos; // repos.map(r => new GitRepository(r.rootUri, this));
 		}
 		return this._repositories;

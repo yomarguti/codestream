@@ -1,3 +1,5 @@
+// TODO: Fix this, but for now keep in sync with agent/ipc.ts in vscode-codestream
+
 "use strict";
 import { RequestInit } from "node-fetch";
 import {
@@ -7,9 +9,7 @@ import {
 	RequestType0,
 	TextDocumentIdentifier
 } from "vscode-languageserver";
-import { CSPost } from "../api/api";
-import { GitApiRepository } from "../git/git";
-import { MarkerHandler } from "../marker/markerHandler";
+import { CSPost } from "./api/api";
 
 export namespace ApiRequest {
 	export interface Params {
@@ -22,7 +22,16 @@ export namespace ApiRequest {
 }
 
 export namespace GitRepositoriesRequest {
-	export const type = new RequestType0<GitApiRepository[], void, void>("codeStream/git/repos");
+	export interface Response {
+		uri: string;
+	}
+
+	export const type = new RequestType0<Response[], void, void>("codeStream/git/repos");
+}
+
+export interface MarkerWithRange {
+	id: string;
+	range: Range;
 }
 
 export namespace DocumentMarkersRequest {
@@ -30,12 +39,13 @@ export namespace DocumentMarkersRequest {
 		textDocument: TextDocumentIdentifier;
 	}
 
-	export const type = new RequestType<
-		Params,
-		MarkerHandler.HandleMarkersResponse | undefined,
-		void,
-		void
-	>("codeStream/textDocument/markers");
+	export interface Response {
+		markers: MarkerWithRange[];
+	}
+
+	export const type = new RequestType<Params, Response | undefined, void, void>(
+		"codeStream/textDocument/markers"
+	);
 }
 
 export namespace DocumentPreparePostRequest {

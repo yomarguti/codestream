@@ -4,24 +4,18 @@ import { URL } from "url";
 import { Range, TextDocumentIdentifier } from "vscode-languageserver";
 import { CSMarkerLocation } from "../api/types";
 import { StreamUtil } from "../git/streamUtil";
+import { DocumentMarkersRequest } from "../ipc";
 import { MarkerLocationUtil } from "../markerLocation/markerLocationUtil";
 import { MarkerUtil } from "./markerUtil";
 
 export namespace MarkerHandler {
-	export interface MarkerWithRange {
-		id: string;
-		range: Range;
-	}
-
-	export interface HandleMarkersResponse {
-		markers: MarkerWithRange[];
-	}
-
 	const emptyResponse = {
 		markers: []
 	};
 
-	export async function handle(document: TextDocumentIdentifier): Promise<HandleMarkersResponse> {
+	export async function handle(
+		document: TextDocumentIdentifier
+	): Promise<DocumentMarkersRequest.Response> {
 		try {
 			const filePath = new URL(document.uri).pathname;
 

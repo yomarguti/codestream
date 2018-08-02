@@ -2,7 +2,7 @@
 import { Disposable } from "vscode-languageserver";
 import { CodeStreamAgent } from "../agent";
 import { CodeStreamApi, CSStream } from "../api/api";
-import { DidReceivePubNubMessagesNotification } from "../ipc/agent";
+import { DidReceivePubNubMessagesNotification } from "../ipc";
 import { Logger } from "../logger";
 import { Iterables } from "../system";
 import {
