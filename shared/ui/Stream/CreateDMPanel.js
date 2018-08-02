@@ -90,38 +90,41 @@ export class SimpleCreateDMPanel extends Component {
 							</div>
 						</div>
 					</fieldset>
-					<div className="channel-list">
-						<div className="section">
-							<div className="header">Recent Conversations</div>
-							{this.renderDirectMessages()}
-						</div>
-					</div>
+					{this.renderDirectMessages()}
 				</form>
 			</div>
 		);
 	}
 
 	renderDirectMessages = () => {
+		if (this.props.directMessageStreams.length === 0) {
+			return null;
+		}
 		return (
-			<ul onClick={this.handleClickSelectStream}>
-				{this.props.directMessageStreams.map(stream => {
-					let count = this.props.umis.unread[stream.id] || 0;
-					let mentions = this.props.umis.mentions[stream.id] || 0;
-					return (
-						<li
-							className={createClassString({
-								direct: true,
-								unread: count > 0
-							})}
-							key={stream.id}
-							id={stream.id}
-						>
-							{stream.name}
-							<Timestamp time={stream.mostRecentPostCreatedAt} />
-						</li>
-					);
-				})}
-			</ul>
+			<div className="channel-list">
+			<div className="section">
+				<div className="header">Recent Conversations</div>
+					<ul onClick={this.handleClickSelectStream}>
+						{this.props.directMessageStreams.map(stream => {
+							let count = this.props.umis.unread[stream.id] || 0;
+							let mentions = this.props.umis.mentions[stream.id] || 0;
+							return (
+								<li
+									className={createClassString({
+										direct: true,
+										unread: count > 0
+									})}
+									key={stream.id}
+									id={stream.id}
+								>
+									{stream.name}
+									<Timestamp time={stream.mostRecentPostCreatedAt} />
+								</li>
+							);
+						})}
+					</ul>
+				</div>
+			</div>
 		);
 	};
 

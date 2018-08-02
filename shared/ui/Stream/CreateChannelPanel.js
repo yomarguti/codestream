@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
 import * as contextActions from "../actions/context";
+import _ from "underscore";
 import { createStream } from "./actions";
 import createClassString from "classnames";
 import { getChannelStreamsForTeam } from "../reducers/streams";
