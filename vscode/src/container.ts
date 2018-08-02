@@ -26,7 +26,7 @@ export class Container {
 
 		this._agent = new CodeStreamAgentConnection(context, agentOptions);
 
-		context.subscriptions.push((this._git = new GitService()));
+		this._git = new GitService();
 		context.subscriptions.push((this._session = new CodeStreamSession(config.serverUrl)));
 
 		context.subscriptions.push((this._notifications = new NotificationsController()));

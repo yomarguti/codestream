@@ -100,26 +100,16 @@ export async function git(
 	return data;
 }
 
-export interface GitApiRepository {
+export interface GitExtensionRepository {
 	readonly rootUri: Uri | string;
 	// readonly inputBox: InputBox;
 }
 
-export async function getRepositories() {
-	try {
-		return (await gitApi()).getRepositories();
-	} catch (ex) {
-		Logger.error(ex);
-		return Promise.resolve([]);
-	}
-}
-
-interface GitApi {
+interface GitExtensionApi {
 	getGitPath(): Promise<string>;
-	getRepositories(): Promise<GitApiRepository[]>;
 }
 
-let _gitApi: GitApi | undefined;
+let _gitApi: GitExtensionApi | undefined;
 async function gitApi() {
 	if (_gitApi === undefined) {
 		try {

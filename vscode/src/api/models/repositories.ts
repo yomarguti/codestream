@@ -83,7 +83,7 @@ export class RepositoryCollection extends CodeStreamCollection<Repository, CSRep
 	}
 
 	private onSessionChanged(e: SessionChangedEvent) {
-		if (e.type !== SessionChangedType.Git && e.type !== SessionChangedType.Repositories) return;
+		if (e.type !== SessionChangedType.Repositories) return;
 
 		this.invalidate();
 	}

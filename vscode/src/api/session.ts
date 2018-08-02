@@ -132,11 +132,6 @@ export class CodeStreamSession implements Disposable {
 		}
 	}
 
-	private onGitRepositoriesChanged() {
-		this.fireChanged({} as GitChangedEvent);
-		this._onDidChange.fire();
-	}
-
 	private onMessageReceived(e: MessageReceivedEvent) {
 		switch (e.type) {
 			case MessageType.Posts:
@@ -411,19 +406,12 @@ export class CodeStreamSession implements Disposable {
 			const loginResponse = result.loginResponse;
 
 			this._state = new SessionState(this, teamId, loginResponse);
-
 			this._sessionApi = new CodeStreamSessionApi(this._api, this._state.token, teamId);
-
-			const disposables = [
-				Container.git.onDidChangeRepositories(this.onGitRepositoriesChanged, this)
-			];
-
 			this._presenceManager = new PresenceManager(this._sessionApi, id);
 
 			this._disposableSignedIn = Disposable.from(
-				...disposables,
-				this._presenceManager,
-				this._api.useMiddleware(new PresenceMiddleware(this._presenceManager))
+				this._api.useMiddleware(new PresenceMiddleware(this._presenceManager)),
+				this._presenceManager
 			);
 
 			this._presenceManager.online();
@@ -479,17 +467,11 @@ export class PostsReceivedEvent {
 }
 
 export enum SessionChangedType {
-	Git = "git",
 	Repositories = "repos",
 	Streams = "streams",
 	Teams = "teams",
 	Markers = "markers",
 	Users = "users"
-}
-
-export interface GitChangedEvent extends IMergeableEvent<GitChangedEvent> {
-	readonly type: SessionChangedType.Git;
-	merge(e: GitChangedEvent): void;
 }
 
 export class RepositoriesAddedEvent implements IMergeableEvent<RepositoriesAddedEvent> {
@@ -629,7 +611,6 @@ class MarkersChangedEvent {
 }
 
 export type SessionChangedEvent =
-	| GitChangedEvent
 	| RepositoriesAddedEvent
 	| StreamsAddedEvent
 	| UsersChangedEvent

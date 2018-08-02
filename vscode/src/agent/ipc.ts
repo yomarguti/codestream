@@ -1,4 +1,4 @@
-// TODO: Fix this, but for now keep in sync with ipc/agent.ts in codestream-lsp-agent
+// TODO: Fix this, but for now keep in sync with ipc.ts in codestream-lsp-agent
 
 "use strict";
 import { RequestInit } from "node-fetch";
@@ -10,7 +10,6 @@ import {
 	TextDocumentIdentifier
 } from "vscode-languageclient";
 import { CSPost } from "../api/types";
-import { GitApiRepository } from "../git/git";
 
 export namespace ApiRequest {
 	export interface Params {
@@ -23,21 +22,31 @@ export namespace ApiRequest {
 }
 
 export namespace GitRepositoriesRequest {
-	export const type = new RequestType0<GitApiRepository[], void, void>("codeStream/git/repos");
+	export interface Response {
+		uri: string;
+	}
+
+	export const type = new RequestType0<Response[], void, void>("codeStream/git/repos");
 }
 
-// export namespace DocumentMarkersRequest {
-// 	export interface Params {
-// 		textDocument: TextDocumentIdentifier;
-// 	}
+export interface MarkerWithRange {
+	id: string;
+	range: Range;
+}
 
-// 	export const type = new RequestType<
-// 		Params,
-// 		Promise<MarkerHandler.HandleMarkersResponse | undefined>,
-// 		void,
-// 		void
-// 	>("codeStream/textDocument/markers");
-// }
+export namespace DocumentMarkersRequest {
+	export interface Params {
+		textDocument: TextDocumentIdentifier;
+	}
+
+	export interface Response {
+		markers: MarkerWithRange[];
+	}
+
+	export const type = new RequestType<Params, Response | undefined, void, void>(
+		"codeStream/textDocument/markers"
+	);
+}
 
 export namespace DocumentPreparePostRequest {
 	export interface Params {

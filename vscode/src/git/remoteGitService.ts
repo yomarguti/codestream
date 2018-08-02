@@ -1,7 +1,7 @@
 "use strict";
-import { Disposable, Event, EventEmitter, Uri } from "vscode";
+import { Uri } from "vscode";
 import { IGitService } from "./gitService";
-import { GitAuthor, GitRemote, GitRemoteType, GitRepository } from "./models/models";
+import { GitRemote, GitRemoteType, GitRepository } from "./models/models";
 
 export * from "./models/models";
 
@@ -12,34 +12,14 @@ export interface RemoteRepository {
 	url: string;
 }
 
-export class RemoteGitService extends Disposable implements IGitService {
-	private _onDidChangeRepositories = new EventEmitter<void>();
-	get onDidChangeRepositories(): Event<void> {
-		return this._onDidChangeRepositories.event;
-	}
-
-	constructor(private _repos: RemoteRepository[]) {
-		super(() => this.dispose());
-	}
-
-	dispose() {}
-
-	async getFileAuthors(
-		uriOrPath: Uri | string,
-		options: { ref?: string; contents?: string; startLine?: number; endLine?: number } = {}
-	): Promise<GitAuthor[]> {
-		return [];
-	}
+export class RemoteGitService implements IGitService {
+	constructor(private _repos: RemoteRepository[]) {}
 
 	async getFileCurrentSha(uriOrPath: Uri | string): Promise<string | undefined> {
 		return undefined;
 	}
 
 	async getFileRevision(uriOrPath: Uri | string, ref: string): Promise<string | undefined> {
-		return undefined;
-	}
-
-	async getFileRevisionContent(uriOrPath: Uri | string, ref: string): Promise<string | undefined> {
 		return undefined;
 	}
 
@@ -90,20 +70,5 @@ export class RemoteGitService extends Disposable implements IGitService {
 			});
 		}
 		return this._repositories;
-	}
-
-	async getRepositoryForFile(path: string) {
-		const repositories = await this.getRepositories();
-		return repositories.find(repo => repo.containsFile(path));
-	}
-
-	async resolveRef(uri: Uri, ref: string): Promise<string | undefined>;
-	async resolveRef(path: string, ref: string): Promise<string | undefined>;
-	async resolveRef(uriOrPath: Uri | string, ref: string): Promise<string | undefined> {
-		return ref;
-	}
-
-	getCurrentCommit() {
-		return Promise.resolve("TODO");
 	}
 }

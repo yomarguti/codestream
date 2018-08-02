@@ -13,10 +13,9 @@ import {
 	TransportKind
 } from "vscode-languageclient";
 import { CSPost, LoginResponse, LoginResult } from "../api/types";
-import { getRepositories, GitApiRepository } from "../git/git";
 import { GitRepository } from "../git/gitService";
 import { Logger } from "../logger";
-import { DocumentPostRequest, DocumentPreparePostRequest } from "./ipc";
+import { DocumentPostRequest, DocumentPreparePostRequest, GitRepositoriesRequest } from "./ipc";
 
 // TODO: Fix this, but for now keep in sync with InitializationOptions in agent.ts in codestream-lsp-agent
 export interface CodeStreamAgentOptions {
@@ -118,8 +117,10 @@ export class CodeStreamAgentConnection implements Disposable {
 	@started
 	async getRepositories(): Promise<GitRepository[]> {
 		try {
-			const response = await this.sendRequest<GitApiRepository[]>("codeStream/git/repos");
-			const repositories = response.map(r => new GitRepository(Uri.parse(r.rootUri as string)));
+			const response = await this.sendRequest<GitRepositoriesRequest.Response[]>(
+				"codeStream/git/repos"
+			);
+			const repositories = response.map(r => new GitRepository(Uri.parse(r.uri as string)));
 			return repositories;
 		} catch (ex) {
 			debugger;
@@ -193,11 +194,6 @@ export class CodeStreamAgentConnection implements Disposable {
 		});
 	}
 
-	private async onGitReposRequest(): Promise<GitApiRepository[]> {
-		const repos = await getRepositories();
-		return repos.map(r => ({ rootUri: r.rootUri.toString() }));
-	}
-
 	private onPubNubMessagesReceived(...messages: { [key: string]: any }[]) {
 		console.log("Messages received");
 		this._onDidReceivePubNubMessages.fire(messages);
@@ -244,11 +240,6 @@ export class CodeStreamAgentConnection implements Disposable {
 
 		this._disposable = this._client.start();
 		void (await this._client.onReady());
-
-		this._client.onRequest<any, Promise<GitApiRepository[]>>(
-			"codeStream/git/repos",
-			this.onGitReposRequest.bind(this)
-		);
 
 		this._client.onNotification(
 			"codeStream/didReceivePubNubMessages",

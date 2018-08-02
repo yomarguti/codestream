@@ -34,8 +34,4 @@ export class GitRepository {
 	containsFile(path: string) {
 		return fs.existsSync(Path.join(this.uri.fsPath, path));
 	}
-
-	getCurrentCommit() {
-		return Container.git.getCurrentCommit(this.uri);
-	}
 }
