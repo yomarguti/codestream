@@ -452,10 +452,13 @@ body.preload * {
 	z-index: 0;
 
 	border-radius: 0;
-	text-transform: lowercase;
-	font-size: 13px;
-	padding: 2px;
-	border: 1px solid transparent;
+	text-transform: uppercase;
+	// 11px font size with 1px padding makes the buttons
+	// exactly the same height as the text input fields
+	font-size: 11px !important;
+	padding: 1px;
+	border: 1px solid transparent !important;
+	outline: none !important;
 
 
 	&.btn-primary {
