@@ -24,6 +24,7 @@ export interface AgentOptions {
 	// passwordOrToken: string | AccessToken;
 	team: string;
 	teamId: string;
+	signupToken: string;
 }
 
 export interface AgentResult {

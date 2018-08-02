@@ -32,7 +32,12 @@ import { Iterables, Strings } from "./system";
 
 const loginApiErrorMappings: { [k: string]: string } = {
 	"USRC-1001": "INVALID_CREDENTIALS",
-	"USRC-1010": "NOT_CONFIRMED"
+	"USRC-1010": "NOT_CONFIRMED",
+	"AUTH-1002": "TOKEN_INVALID",
+	"AUTH-1005": "TOKEN_INVALID",
+	// "RAPI-1001": "missing parameter" // shouldn't ever happen
+	"RAPI-1003": "NOT_FOUND",
+	"USRC-1012": "USER_NOT_ON_TEAM"
 };
 
 export class CodeStreamSession {
@@ -132,8 +137,20 @@ export class CodeStreamSession {
 	}
 
 	async login() {
+		let loginResponse
 		try {
-			const loginResponse = await this._api.login(this._options.email, this._options.token);
+			if (this._options.signupToken)
+				loginResponse = await this._api.checkSignup(this._options.signupToken);
+			else loginResponse = await this._api.login(this._options.email, this._options.token);
+		} catch (ex) {
+			if (ex instanceof ServerError) {
+				return {
+					error: loginApiErrorMappings[ex.info.code] || ""
+				};
+			}
+
+			throw AgentError.wrap(ex, `Login failed:\n${ex.message}`);
+		}
 
 			this._apiToken = loginResponse.accessToken;
 			// TODO: Since the token is current a password, replace it with an access token

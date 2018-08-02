@@ -4,6 +4,7 @@ import { URLSearchParams } from "url";
 import { ServerError } from "../agentError";
 import { Logger } from "../logger";
 import {
+	CompleteSignupRequest,
 	CreatePostRequest,
 	CreatePostResponse,
 	CreateRepoRequest,
@@ -66,6 +67,12 @@ export class CodeStreamApi {
 		return this.put<LoginRequest, LoginResponse>("/no-auth/login", {
 			email: email,
 			password: password
+		});
+	}
+
+	checkSignup(token: string): Promise<LoginResponse> {
+		return this.put<CompleteSignupRequest, LoginResponse>("/no-auth/check-signup", {
+			token
 		});
 	}
 
