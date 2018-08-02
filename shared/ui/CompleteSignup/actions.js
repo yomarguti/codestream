@@ -1,26 +1,13 @@
 import { setContext } from "../actions/context";
 
-const errorMappings = {
-	INVALID_CREDENTIALS: { invalidCredentials: true }
-};
-
-export const authenticate = params => async (dispatch, getState, { api }) => {
+export const validateSignup = () => async (dispatch, getState, { api }) => {
 	try {
-		const response = await api.authenticate(params);
+		const response = await api.validateSignup();
 		dispatch({ type: "ADD_STREAMS", payload: response.streams });
 		dispatch({ type: "ADD_TEAMS", payload: response.teams });
 		dispatch({ type: "ADD_USERS", payload: response.users });
 		dispatch(setContext({ currentTeamId: response.currentTeamId }));
 		dispatch({ type: "INIT_SESSION", payload: { userId: response.currentUserId } });
-	} catch (error) {
-		throw errorMappings[error];
-	}
-};
-
-export const startSignup = () => async (dispatch, getState, { api }) => {
-	try {
-		await api.startSignup();
-		dispatch({ type: "GO_TO_COMPLETE_SIGNUP" });
 	} catch (error) {
 		console.error(error);
 	}

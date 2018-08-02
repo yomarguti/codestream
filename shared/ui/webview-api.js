@@ -30,6 +30,14 @@ export default class WebviewApi {
 		});
 	}
 
+	startSignup() {
+		return this.postMessage({ action: "go-to-signup" });
+	}
+
+	validateSignup() {
+		return this.postMessage({ action: "validate-signup" });
+	}
+
 	authenticate(params) {
 		return this.postMessage({ action: "authenticate", params });
 	}

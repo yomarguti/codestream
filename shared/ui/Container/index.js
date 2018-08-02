@@ -4,8 +4,20 @@ import englishLocaleData from "react-intl/locale-data/en";
 import { connect, Provider } from "react-redux";
 import Stream from "../Stream";
 import Login from "../Login";
+import CompleteSignup from "../CompleteSignup";
 
 addLocaleData(englishLocaleData);
+
+const UnauthenticatedRoutes = connect(state => ({ page: state.route }))(props => {
+	switch (props.page) {
+		case "login":
+			return <Login />;
+		case "completeSignup":
+			return <CompleteSignup />;
+		default:
+			return <Login />;
+	}
+});
 
 const mapStateToProps = state => ({
 	bootstrapped: state.bootstrapped,
@@ -13,7 +25,7 @@ const mapStateToProps = state => ({
 });
 const Root = connect(mapStateToProps)(props => {
 	if (!props.bootstrapped) return <Loading message="CodeStream engage..." />;
-	if (!props.loggedIn) return <Login />;
+	if (!props.loggedIn) return <UnauthenticatedRoutes />;
 	return <Stream />;
 });
 

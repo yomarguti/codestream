@@ -13,7 +13,8 @@ import markerLocations from "./marker-locations";
 import umis from "./umis";
 import messaging from "./messaging";
 import connectivity from "./connectivity";
-import currentPage from "./currentPage";
+import currentPage from "./currentPage"; // TODO: remove this
+import route from "./route";
 
 const session = (state = {}, { type, payload }) => {
 	if (type === "INIT_SESSION") return payload;
@@ -50,6 +51,7 @@ const appReducer = combineReducers({
 	posts,
 	repoAttributes,
 	repos,
+	route,
 	session,
 	startOnMainPanel,
 	streams,
