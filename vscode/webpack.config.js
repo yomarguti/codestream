@@ -8,21 +8,24 @@ module.exports = function(env, argv) {
 	env = env || {};
 	const production = !!env.production;
 
-	let onStartCopy = [];
 	const watch = !!(argv.watch || argv.w);
+
+	let clean = ["dist"];
+	let onStartCopy = [];
 	if (!watch) {
+		clean.push("src/shared");
 		onStartCopy.push(
 			// Copy in the type declarations from the agent, because referencing them directly is a nightmare
 			{
 				// TODO: Use environment variable if exists
-				source: path.resolve(__dirname, "../codestream-lsp-agent/types/*.d.ts"),
-				destination: "types/"
+				source: path.resolve(__dirname, "../codestream-lsp-agent/src/shared/*"),
+				destination: "src/shared/"
 			}
 		);
 	}
 
 	const plugins = [
-		new CleanWebpackPlugin(["dist"]),
+		new CleanWebpackPlugin(clean),
 		new FileManagerWebpackPlugin({
 			onStart: [{ copy: onStartCopy }],
 			onEnd: [

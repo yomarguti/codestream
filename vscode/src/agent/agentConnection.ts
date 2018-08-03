@@ -1,5 +1,4 @@
 "use strict";
-import { CSPost } from "codestream";
 import { RequestInit } from "node-fetch";
 import { Event, EventEmitter, ExtensionContext, Range, TextDocument, Uri } from "vscode";
 import {
@@ -12,6 +11,7 @@ import {
 	ServerOptions,
 	TransportKind
 } from "vscode-languageclient";
+import { CSPost } from "../api/api";
 import { GitRepository } from "../git/gitService";
 import { Logger } from "../logger";
 import {
@@ -25,9 +25,9 @@ import {
 	DocumentPreparePostRequest,
 	DocumentPreparePostResponse,
 	GitRepositoriesRequest
-} from "./protocol";
+} from "../shared/agent.protocol";
 
-export { AgentOptions } from "./protocol";
+export { AgentOptions } from "../shared/agent.protocol";
 
 export class CodeStreamAgentConnection implements Disposable {
 	private _onDidReceivePubNubMessages = new EventEmitter<{ [key: string]: any }[]>();
@@ -50,7 +50,7 @@ export class CodeStreamAgentConnection implements Disposable {
 				transport: TransportKind.ipc
 			},
 			debug: {
-				module: context.asAbsolutePath("dist/agent.js"),
+				module: context.asAbsolutePath("../codestream-lsp-agent/dist/agent.js"),
 				transport: TransportKind.ipc,
 				options: {
 					execArgv: ["--nolazy", "--inspect=6009"] // "--inspect-brk=6009"

@@ -1,4 +1,7 @@
 "use strict";
+import { RequestInit } from "node-fetch";
+import { URLSearchParams } from "url";
+import { Container } from "../container";
 import {
 	CreatePostRequest,
 	CreatePostResponse,
@@ -38,11 +41,9 @@ import {
 	UpdatePresenceResponse,
 	UpdateStreamMembershipRequest,
 	UpdateStreamMembershipResponse
-} from "codestream";
-import { RequestInit } from "node-fetch";
-import { URLSearchParams } from "url";
-import { Container } from "../container";
-export * from "codestream";
+} from "../shared/api.protocol";
+
+export * from "../shared/api.protocol";
 
 export interface ApiMiddlewareContext {
 	readonly url: string;

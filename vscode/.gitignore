@@ -1,5 +1,5 @@
 dist
-types/
+src/shared/
 webview.html
 node_modules
 npm-debug.log
