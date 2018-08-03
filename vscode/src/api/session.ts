@@ -1,5 +1,4 @@
 "use strict";
-import { AgentResult } from "../shared/agent.protocol";
 import * as uuid from "uuid/v4";
 import {
 	ConfigurationChangeEvent,
@@ -9,12 +8,12 @@ import {
 	EventEmitter,
 	Uri
 } from "vscode";
-import * as uuid from "uuid/v4";
 import { WorkspaceState } from "../common";
 import { configuration } from "../configuration";
 import { encryptionKey } from "../constants";
 import { Container } from "../container";
 import { Logger } from "../logger";
+import { AgentResult } from "../shared/agent.protocol";
 import { Crypto, Functions, memoize, Strings } from "../system";
 import { CodeStreamApi, CSRepository, CSStream, LoginResult, PresenceStatus } from "./api";
 import { Cache } from "./cache";
