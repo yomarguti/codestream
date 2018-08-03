@@ -162,6 +162,10 @@ export interface LoginRequest {
 	token?: string;
 }
 
+export interface CompleteSignupRequest {
+	token: string;
+}
+
 export interface LoginResponse {
 	user: CSUser;
 	accessToken: string;
@@ -174,6 +178,8 @@ export interface LoginResponse {
 export enum LoginResult {
 	Success = "SUCCESS",
 	InvalidCredentials = "INVALID_CREDENTIALS",
+	InvalidToken = "TOKEN_INVALID",
+	NotOnTeam = "USER_NOT_ON_TEAM",
 	Unknown = "UNKNOWN"
 }
 

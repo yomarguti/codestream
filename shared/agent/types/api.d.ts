@@ -163,6 +163,10 @@ declare module "codestream" {
 		token?: string;
 	}
 
+	export interface CompleteSignupRequest {
+		token: string;
+	}
+
 	export interface LoginResponse {
 		user: CSUser;
 		accessToken: string;
@@ -170,13 +174,6 @@ declare module "codestream" {
 		pubnubToken: string;
 		teams: CSTeam[];
 		repos: CSRepository[];
-	}
-
-	export enum LoginResult {
-		Success = "SUCCESS",
-		InvalidCredentials = "INVALID_CREDENTIALS",
-		NotOnTeam = "USER_NOT_ON_TEAM",
-		Unknown = "UNKNOWN"
 	}
 
 	export interface CreatePostRequestCodeBlock {

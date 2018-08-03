@@ -137,95 +137,13 @@ export class CodeStreamSession {
 	}
 
 	async login() {
-		let loginResponse
+		let loginResponse;
 		try {
-			if (this._options.signupToken)
+			if (this._options.signupToken) {
 				loginResponse = await this._api.checkSignup(this._options.signupToken);
-			else loginResponse = await this._api.login(this._options.email, this._options.token);
-		} catch (ex) {
-			if (ex instanceof ServerError) {
-				return {
-					error: loginApiErrorMappings[ex.info.code] || ""
-				};
-			}
-
-			throw AgentError.wrap(ex, `Login failed:\n${ex.message}`);
-		}
-
-			this._apiToken = loginResponse.accessToken;
-			// TODO: Since the token is current a password, replace it with an access token
-			this._options.token = loginResponse.accessToken;
-
-			// If there is only 1 team, use it regardless of config
-			if (loginResponse.teams.length === 1) {
-				this._options.teamId = loginResponse.teams[0].id;
 			} else {
-				// Sort the teams from oldest to newest
-				loginResponse.teams.sort((a, b) => a.createdAt - b.createdAt);
+				loginResponse = await this._api.login(this._options.email, this._options.token);
 			}
-
-			if (this._options.teamId == null) {
-				if (this._options.team) {
-					const normalizedTeamName = this._options.team.toLocaleUpperCase();
-					const team = loginResponse.teams.find(
-						t => t.name.toLocaleUpperCase() === normalizedTeamName
-					);
-					if (team != null) {
-						this._options.teamId = team.id;
-					}
-				}
-
-				// if (opts.teamId == null && data.repos.length > 0) {
-				// 	for (const repo of await Container.git.getRepositories()) {
-				// 		const url = await repo.getNormalizedUrl();
-
-				// 		const found = data.repos.find(r => r.normalizedUrl === url);
-				// 		if (found === undefined) continue;
-
-				// 		teamId = found.teamId;
-				// 		break;
-				// 	}
-				// }
-
-				// If we still can't find a team, then just pick the first one
-				if (this._options.teamId == null) {
-					this._options.teamId = loginResponse.teams[0].id;
-				}
-			}
-
-			if (loginResponse.teams.find(t => t.id === this._options.teamId) === undefined) {
-				this._options.teamId = loginResponse.teams[0].id;
-			}
-			this._teamId = this._options.teamId;
-			this._userId = loginResponse.user.id;
-
-			setGitPath(this._options.gitPath);
-			void (await Container.initialize(
-				this._agent,
-				this._connection,
-				this._api,
-				this._options,
-				loginResponse
-			));
-
-			this._pubnub = new PubnubReceiver(
-				this._agent,
-				this._api,
-				loginResponse.pubnubKey,
-				// TODO: Change this once production is upgraded to use the pubnub token
-				this._apiToken, // loginResponse.pubnubToken,
-				this._apiToken,
-				this._userId,
-				this._teamId
-			);
-
-			const streams = await this.getSubscribeableStreams(this._userId, this._teamId);
-			this._pubnub.listen(streams.map(s => s.id));
-
-			return {
-				loginResponse: { ...loginResponse },
-				state: { ...Container.instance().state }
-			};
 		} catch (ex) {
 			if (ex instanceof ServerError) {
 				return {
@@ -235,6 +153,81 @@ export class CodeStreamSession {
 
 			throw AgentError.wrap(ex, `Login failed:\n${ex.message}`);
 		}
+
+		this._apiToken = loginResponse.accessToken;
+		// TODO: Since the token is current a password, replace it with an access token
+		this._options.token = loginResponse.accessToken;
+
+		// If there is only 1 team, use it regardless of config
+		if (loginResponse.teams.length === 1) {
+			this._options.teamId = loginResponse.teams[0].id;
+		} else {
+			// Sort the teams from oldest to newest
+			loginResponse.teams.sort((a, b) => a.createdAt - b.createdAt);
+		}
+
+		if (this._options.teamId == null) {
+			if (this._options.team) {
+				const normalizedTeamName = this._options.team.toLocaleUpperCase();
+				const team = loginResponse.teams.find(
+					t => t.name.toLocaleUpperCase() === normalizedTeamName
+				);
+				if (team != null) {
+					this._options.teamId = team.id;
+				}
+			}
+
+			// if (opts.teamId == null && data.repos.length > 0) {
+			// 	for (const repo of await Container.git.getRepositories()) {
+			// 		const url = await repo.getNormalizedUrl();
+
+			// 		const found = data.repos.find(r => r.normalizedUrl === url);
+			// 		if (found === undefined) continue;
+
+			// 		teamId = found.teamId;
+			// 		break;
+			// 	}
+			// }
+
+			// If we still can't find a team, then just pick the first one
+			if (this._options.teamId == null) {
+				this._options.teamId = loginResponse.teams[0].id;
+			}
+		}
+
+		if (loginResponse.teams.find(t => t.id === this._options.teamId) === undefined) {
+			this._options.teamId = loginResponse.teams[0].id;
+		}
+		this._teamId = this._options.teamId;
+		this._userId = loginResponse.user.id;
+
+		setGitPath(this._options.gitPath);
+		void (await Container.initialize(
+			this._agent,
+			this._connection,
+			this._api,
+			this._options,
+			loginResponse
+		));
+
+		this._pubnub = new PubnubReceiver(
+			this._agent,
+			this._api,
+			loginResponse.pubnubKey,
+			// TODO: Change this once production is upgraded to use the pubnub token
+			this._apiToken, // loginResponse.pubnubToken,
+			this._apiToken,
+			this._userId,
+			this._teamId
+		);
+
+		const streams = await this.getSubscribeableStreams(this._userId, this._teamId);
+		this._pubnub.listen(streams.map(s => s.id));
+
+		return {
+			loginResponse: { ...loginResponse },
+			state: { ...Container.instance().state }
+		};
 	}
 
 	async preparePostCode(
