@@ -17,9 +17,9 @@ module.exports = function(env, argv) {
 				{
 					copy: [
 						{
-							source: "types/*",
+							source: "src/shared/*",
 							// TODO: Use environment variable if exists
-							destination: path.resolve(__dirname, "../vscode-codestream/types/")
+							destination: path.resolve(__dirname, "../vscode-codestream/src/shared/")
 						},
 						{
 							source: "dist/*",

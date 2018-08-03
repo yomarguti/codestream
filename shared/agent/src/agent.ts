@@ -24,11 +24,11 @@ import {
 } from "vscode-languageserver";
 import { Container } from "./container";
 import { Logger } from "./logger";
-import { AgentOptions } from "./protocol";
 import { CodeStreamSession } from "./session";
+import { AgentOptions } from "./shared/agent.protocol";
 import { Disposables, memoize } from "./system";
 
-export * from "./protocol";
+export * from "./shared/agent.protocol";
 
 export class CodeStreamAgent implements Disposable, LSPLogger {
 	private _clientCapabilities: ClientCapabilities | undefined;

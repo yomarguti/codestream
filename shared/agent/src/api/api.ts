@@ -1,4 +1,8 @@
 "use strict";
+import fetch, { Headers, RequestInit, Response } from "node-fetch";
+import { URLSearchParams } from "url";
+import { ServerError } from "../agentError";
+import { Logger } from "../logger";
 import {
 	CreatePostRequest,
 	CreatePostResponse,
@@ -33,13 +37,9 @@ import {
 	UpdatePresenceResponse,
 	UpdateStreamMembershipRequest,
 	UpdateStreamMembershipResponse
-} from "codestream";
-import fetch, { Headers, RequestInit, Response } from "node-fetch";
-import { URLSearchParams } from "url";
-import { ServerError } from "../agentError";
-import { Logger } from "../logger";
+} from "../shared/api.protocol";
 
-export * from "codestream";
+export * from "../shared/api.protocol";
 
 export class CodeStreamApi {
 	private readonly _middleware: CodeStreamApiMiddleware[] = [];
