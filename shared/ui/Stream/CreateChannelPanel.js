@@ -11,8 +11,8 @@ import { FormattedMessage } from "react-intl";
 import Select from "react-select";
 
 const isNameInvalid = name => {
-	const nameRegex = new RegExp("^[a-zA-Z0-9_-]*$");
-	return nameRegex.test(name) === false;
+	const nameRegex = new RegExp("[.~#%&*{}+/:<>?|'\"]");
+	return nameRegex.test(name);
 };
 
 export class SimpleCreateChannelPanel extends Component {
@@ -59,7 +59,7 @@ export class SimpleCreateChannelPanel extends Component {
 						{this.renderError()}
 						<p className="explainer">
 							Channels are where your dev team discusses projects, repos, or code in general. You
-							might create one channel per repo, or one per client.
+							might create one channel per repo, or one per client. Channel names may contain spaces, but not special characters.
 						</p>
 						<div id="controls">
 							<div id="privacy-controls" className="control-group">
