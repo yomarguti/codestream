@@ -1,10 +1,20 @@
 "use strict";
+import { CSPost } from "codestream";
+import {
+	AgentInitializeResult,
+	AgentOptions,
+	AgentResult,
+	ApiRequest,
+	DocumentMarkersRequest,
+	DocumentPostRequest,
+	DocumentPreparePostRequest,
+	GitRepositoriesRequest
+} from "codestream-agent";
 import { RequestInit } from "node-fetch";
 import { Event, EventEmitter, ExtensionContext, Range, TextDocument, Uri } from "vscode";
 import {
 	CancellationToken,
 	Disposable,
-	InitializeResult,
 	LanguageClient,
 	LanguageClientOptions,
 	RequestType,
@@ -12,35 +22,10 @@ import {
 	ServerOptions,
 	TransportKind
 } from "vscode-languageclient";
-import { CSPost, LoginResponse, LoginResult } from "../api/types";
 import { GitRepository } from "../git/gitService";
 import { Logger } from "../logger";
-import { DocumentPostRequest, DocumentPreparePostRequest, GitRepositoriesRequest } from "./ipc";
 
-// TODO: Fix this, but for now keep in sync with InitializationOptions in agent.ts in codestream-lsp-agent
-export interface CodeStreamAgentOptions {
-	extensionVersion: string;
-	gitPath: string;
-	ideVersion: string;
-
-	serverUrl?: string;
-	email?: string;
-	team?: string;
-	teamId?: string;
-	token?: string;
-}
-
-export interface CodeStreamAgentResult {
-	loginResponse: LoginResponse;
-	state: {
-		email: string;
-		userId: string;
-		teamId: string;
-		token: string;
-		serverUrl: string;
-	};
-	error?: LoginResult;
-}
+export { AgentOptions } from "codestream-agent";
 
 export class CodeStreamAgentConnection implements Disposable {
 	private _onDidReceivePubNubMessages = new EventEmitter<{ [key: string]: any }[]>();
@@ -54,7 +39,7 @@ export class CodeStreamAgentConnection implements Disposable {
 	private _clientOptions: LanguageClientOptions;
 	private _serverOptions: ServerOptions;
 
-	constructor(context: ExtensionContext, options: CodeStreamAgentOptions) {
+	constructor(context: ExtensionContext, options: AgentOptions) {
 		// If the extension is launched in debug mode then the debug server options are used
 		// Otherwise the run options are used
 		this._serverOptions = {
@@ -92,18 +77,18 @@ export class CodeStreamAgentConnection implements Disposable {
 	}
 
 	@started
-	async api<R>(url: string, init?: RequestInit, token?: string) {
-		return this.sendRequest<R>("codeStream/api", {
-			url,
-			token,
-			init
+	async api<R>(url: string, init?: RequestInit, token?: string): Promise<R> {
+		return this.sendRequest(ApiRequest.type, {
+			url: url,
+			init: init,
+			token: token
 		});
 	}
 
 	@started
-	async getMarkers(uri: Uri): Promise<any> {
+	async getMarkers(uri: Uri): Promise<DocumentMarkersRequest.Response | undefined> {
 		try {
-			const response = await this.sendRequest("codeStream/textDocument/markers", {
+			const response = await this.sendRequest(DocumentMarkersRequest.type, {
 				textDocument: { uri: uri.toString() }
 			});
 			return response;
@@ -117,9 +102,7 @@ export class CodeStreamAgentConnection implements Disposable {
 	@started
 	async getRepositories(): Promise<GitRepository[]> {
 		try {
-			const response = await this.sendRequest<GitRepositoriesRequest.Response[]>(
-				"codeStream/git/repos"
-			);
+			const response = await this.sendRequest(GitRepositoriesRequest.type);
 			const repositories = response.map(r => new GitRepository(Uri.parse(r.uri as string)));
 			return repositories;
 		} catch (ex) {
@@ -129,12 +112,7 @@ export class CodeStreamAgentConnection implements Disposable {
 		}
 	}
 
-	async login(
-		email: string,
-		token: string,
-		teamId?: string,
-		team?: string
-	): Promise<CodeStreamAgentResult> {
+	async login(email: string, token: string, teamId?: string, team?: string): Promise<AgentResult> {
 		const response = await this.start({
 			...this._clientOptions.initializationOptions,
 			email: email,
@@ -147,7 +125,7 @@ export class CodeStreamAgentConnection implements Disposable {
 			await this.stop();
 		}
 
-		return response.result as CodeStreamAgentResult;
+		return response.result;
 	}
 
 	logout() {
@@ -208,19 +186,18 @@ export class CodeStreamAgentConnection implements Disposable {
 		params: P,
 		token?: CancellationToken
 	): Promise<R>;
-	private sendRequest<R>(method: string, params?: any): Promise<R>;
 	@started
-	private async sendRequest<R>(method: any, params?: any): Promise<R> {
+	private async sendRequest(method: any, params?: any): Promise<any> {
 		try {
-			const response = await this._client!.sendRequest<R>(method, params);
+			const response = await this._client!.sendRequest(method, params);
 			return response;
 		} catch (ex) {
 			debugger;
-			Logger.error(ex, `CodeStreamAgentConnection.sendRequest`, method, params);
+			Logger.error(ex, `AgentConnection.sendRequest`, method, params);
 			throw ex;
 		}
 	}
-	private async start(options: Required<CodeStreamAgentOptions>): Promise<InitializeResult> {
+	private async start(options: Required<AgentOptions>): Promise<AgentInitializeResult> {
 		if (this._client !== undefined) {
 			throw new Error("Agent has already been started");
 		}
@@ -246,7 +223,7 @@ export class CodeStreamAgentConnection implements Disposable {
 			this.onPubNubMessagesReceived.bind(this)
 		);
 
-		return this._client.initializeResult!;
+		return this._client.initializeResult! as AgentInitializeResult;
 	}
 
 	private async stop(): Promise<void> {

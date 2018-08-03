@@ -2,8 +2,8 @@
 import * as path from "path";
 import { Uri, workspace, WorkspaceFolder } from "vscode";
 import { Strings } from "../../system";
+import { CSRepository } from "../api";
 import { CodeStreamSession, SessionChangedEvent, SessionChangedType } from "../session";
-import { CSRepository } from "../types";
 import { CodeStreamCollection, CodeStreamItem } from "./collection";
 import { MarkerCollection } from "./markers";
 import { FileStreamCollection } from "./streams";

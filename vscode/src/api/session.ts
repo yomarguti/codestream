@@ -13,7 +13,7 @@ import { encryptionKey } from "../constants";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { Crypto, Functions, memoize, Strings } from "../system";
-import { CodeStreamApi, CSRepository, CSStream, PresenceStatus } from "./api";
+import { CodeStreamApi, CSRepository, CSStream, LoginResult, PresenceStatus } from "./api";
 import { Cache } from "./cache";
 import { Marker, MarkerCollection } from "./models/markers";
 import { Post } from "./models/posts";
@@ -44,7 +44,6 @@ import {
 } from "./pubnub";
 import { CodeStreamSessionApi } from "./sessionApi";
 import { SessionState } from "./sessionState";
-import { LoginResult } from "./types";
 
 export {
 	ChannelStream,

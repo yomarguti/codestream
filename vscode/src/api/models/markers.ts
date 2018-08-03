@@ -4,6 +4,7 @@ import { Container } from "../../container";
 import { Logger } from "../../logger";
 import { Iterables } from "../../system";
 import { memoize } from "../../system/decorators";
+import { CSLocationArray, CSMarker } from "../api";
 import {
 	ChannelStream,
 	CodeStreamSession,
@@ -12,7 +13,6 @@ import {
 	Post,
 	Repository
 } from "../session";
-import { CSLocationArray, CSMarker } from "../types";
 
 export class Marker {
 	private readonly _range: Range;

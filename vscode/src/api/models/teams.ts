@@ -1,6 +1,6 @@
 "use strict";
+import { CSTeam } from "../api";
 import { CodeStreamSession } from "../session";
-import { CSTeam } from "../types";
 import { CodeStreamCollection, CodeStreamItem } from "./collection";
 
 export class Team extends CodeStreamItem<CSTeam> {

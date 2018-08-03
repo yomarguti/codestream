@@ -14,7 +14,15 @@ import {
 	WindowState,
 	workspace
 } from "vscode";
-import { CSCodeBlock, CSPost, CSRepository, CSStream, CSTeam, CSUser } from "../api/api";
+import {
+	CSCodeBlock,
+	CSPost,
+	CSRepository,
+	CSStream,
+	CSTeam,
+	CSUser,
+	LoginResult
+} from "../api/api";
 import {
 	CodeStreamSession,
 	Post,
@@ -24,7 +32,6 @@ import {
 	SessionStatus,
 	StreamThread
 } from "../api/session";
-import { LoginResult } from "../api/types";
 import { Container } from "../container";
 import { Logger } from "../logger";
 

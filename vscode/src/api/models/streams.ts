@@ -1,15 +1,15 @@
 "use strict";
 import { Uri } from "vscode";
 import { Iterables, memoize, Strings } from "../../system";
+import { CSChannelStream, CSDirectStream, CSFileStream, CSStream, StreamType } from "../api";
 import { CodeStreamSession, SessionChangedEvent, SessionChangedType } from "../session";
-import { CSChannelStream, CSDirectStream, CSFileStream, CSStream, StreamType } from "../types";
 import { CodeStreamCollection, CodeStreamItem } from "./collection";
 import { Post, PostCollection } from "./posts";
 import { Repository } from "./repositories";
 import { Team } from "./teams";
 import { User } from "./users";
 
-export { StreamType } from "../types";
+export { StreamType } from "../api";
 
 abstract class StreamBase<T extends CSStream> extends CodeStreamItem<T> {
 	constructor(session: CodeStreamSession, stream: T) {

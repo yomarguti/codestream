@@ -8,15 +8,29 @@ module.exports = function(env, argv) {
 	env = env || {};
 	const production = !!env.production;
 
+	let onStartCopy = [];
+	const watch = !!(argv.watch || argv.w);
+	if (!watch) {
+		onStartCopy.push(
+			// Copy in the type declarations from the agent, because referencing them directly is a nightmare
+			{
+				// TODO: Use environment variable if exists
+				source: path.resolve(__dirname, "../codestream-lsp-agent/types/*.d.ts"),
+				destination: "types/"
+			}
+		);
+	}
+
 	const plugins = [
 		new CleanWebpackPlugin(["dist"]),
 		new FileManagerWebpackPlugin({
+			onStart: [{ copy: onStartCopy }],
 			onEnd: [
 				{
 					copy: [
 						{
-							source: path.resolve(__dirname, "../codestream-lsp-agent/dist/*"),
 							// TODO: Use environment variable if exists
+							source: path.resolve(__dirname, "../codestream-lsp-agent/dist/*"),
 							destination: "dist/"
 						}
 					]
@@ -35,7 +49,11 @@ module.exports = function(env, argv) {
 			filename: "extension.js"
 		},
 		resolve: {
-			extensions: [".tsx", ".ts", ".js"]
+			extensions: [".tsx", ".ts", ".js"],
+			alias: {
+				codestream$: path.resolve(__dirname, "types/api.d.ts"),
+				"codestream-agent$": path.resolve(__dirname, "types/agent.d.ts")
+			}
 		},
 		externals: [nodeExternals()],
 		module: {
@@ -43,7 +61,11 @@ module.exports = function(env, argv) {
 				{
 					test: /\.tsx?$/,
 					use: "ts-loader",
-					exclude: /node_modules/
+					exclude: /node_modules|\.d\.ts$/
+				},
+				{
+					test: /\.d\.ts$/,
+					loader: "ignore-loader"
 				}
 			]
 		},

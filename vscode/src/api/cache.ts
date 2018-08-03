@@ -1,6 +1,5 @@
-import { CodeStreamApi } from "./api";
+import { CodeStreamApi, CSMarker, CSPost, CSRepository, CSStream, CSTeam, CSUser } from "./api";
 import { CodeStreamSession } from "./session";
-import { CSMarker, CSPost, CSRepository, CSStream, CSTeam, CSUser } from "./types";
 
 export class Cache {
 	private session: CodeStreamSession;

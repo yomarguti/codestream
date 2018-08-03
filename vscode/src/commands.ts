@@ -12,8 +12,7 @@ import { openEditor } from "./common";
 import { encryptionKey } from "./constants";
 import { Container } from "./container";
 import { StreamThreadId } from "./controllers/streamViewController";
-import { Logger } from "./logger";
-import { Command, createCommandDecorator, Crypto, Dates } from "./system";
+import { Command, createCommandDecorator, Crypto } from "./system";
 
 const commandRegistry: Command[] = [];
 const command = createCommandDecorator(commandRegistry);

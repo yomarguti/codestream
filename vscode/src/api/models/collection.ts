@@ -2,8 +2,8 @@
 import { Disposable, Event, EventEmitter } from "vscode";
 import { Logger } from "../../logger";
 import { Functions, Iterables } from "../../system";
+import { CSEntity } from "../api";
 import { CodeStreamSession } from "../session";
-import { CSEntity } from "../types";
 
 export const CollectionItem = Symbol("codestream-item");
 

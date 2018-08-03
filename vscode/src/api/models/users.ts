@@ -1,7 +1,7 @@
 "use strict";
 import { Iterables } from "../../system";
+import { CSUser } from "../api";
 import { CodeStreamSession } from "../session";
-import { CSUser } from "../types";
 import { CodeStreamCollection, CodeStreamItem } from "./collection";
 
 export class User extends CodeStreamItem<CSUser> {
