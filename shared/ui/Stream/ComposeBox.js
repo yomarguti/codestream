@@ -20,7 +20,7 @@ const arrayToRange = ([startRow, startCol, endRow, endCol]) => {
 };
 
 class ComposeBox extends React.Component {
-	state = { newPostText: "", quote: null, autoMentions: [], popupOpen: false };
+	state = { postTextByStream: {}, quote: null, autoMentions: [], popupOpen: false };
 	disposables = [];
 
 	componentDidMount() {
@@ -100,7 +100,7 @@ class ComposeBox extends React.Component {
 	insertIfEmpty(newText) {
 		// if there's text in the compose area, return without
 		// adding the suggestion
-		if (this.state.newPostText && this.state.newPostText.length > 0) return;
+		if (this.state.postTextByStream[this.props.streamId] && this.state.postTextByStream[this.props.streamId].length > 0) return;
 		// the reason for this unicode space is that chrome will
 		// not render a space at the end of a contenteditable div
 		// unless it is a &nbsp;, which is difficult to insert
@@ -187,7 +187,9 @@ class ComposeBox extends React.Component {
 		sel.addRange(range);
 		this._contentEditable.htmlEl.normalize();
 
-		this.setState({ newPostText: this._contentEditable.htmlEl.innerHTML });
+		let postTextByStream = this.state.postTextByStream;
+		postTextByStream[this.props.streamId] = this._contentEditable.htmlEl.innerHTML;
+		this.setState({ postTextByStream });
 	}
 
 	// the keypress handler for tracking up and down arrow
@@ -225,7 +227,7 @@ class ComposeBox extends React.Component {
 	// javascript events
 	handleNonCapturedKeyPress(event, eventType) {
 		if (eventType == "up") {
-			if (this.state.newPostText === "") {
+			if (this.state.postTextByStream[this.props.streamId] === "") {
 				this.props.onEmptyUpArrow(event);
 			}
 		}
@@ -304,8 +306,11 @@ class ComposeBox extends React.Component {
 			}
 		}
 		// track newPostText as the user types
+		let postTextByStream = this.state.postTextByStream;
+		postTextByStream[this.props.streamId] = this._contentEditable.htmlEl.innerHTML;
+		// this.setState({ postTextByStream });
 		this.setState({
-			newPostText,
+			postTextByStream,
 			autoMentions: this.state.autoMentions.filter(mention => newPostText.includes(mention))
 		});
 	};
@@ -318,7 +323,7 @@ class ComposeBox extends React.Component {
 	};
 
 	handleKeyPress = event => {
-		var newPostText = this.state.newPostText;
+		let newPostText = this.state.postTextByStream[this.props.streamId];
 
 		// if we have the at-mentions popup open, then the keys
 		// do something different than if we have the focus in
@@ -368,7 +373,7 @@ class ComposeBox extends React.Component {
 				event.preventDefault();
 			}
 		} else {
-			if (event.key === "ArrowUp" && this.state.newPostText === "") {
+			if (event.key === "ArrowUp" && this.state.postTextByStream[this.props.streamId] === "") {
 				event.persist();
 				event.stopPropagation();
 				this.props.onEmptyUpArrow(event);
@@ -383,7 +388,7 @@ class ComposeBox extends React.Component {
 	};
 
 	reset() {
-		this.setState({ newPostText: "", quote: null, autoMentions: [] });
+		this.setState({ postTextByStream: [], quote: null, autoMentions: [] });
 	}
 
 	render() {
@@ -410,6 +415,8 @@ class ComposeBox extends React.Component {
 				</div>
 			);
 		}
+
+		let contentEditableHTML = this.state.postTextByStream[this.props.streamId] || "";
 
 		return (
 			<div
@@ -438,7 +445,7 @@ class ComposeBox extends React.Component {
 					tabIndex="-1"
 					onChange={this.handleChange}
 					onBlur={this.handleBlur}
-					html={this.state.newPostText}
+					html={contentEditableHTML}
 					placeholder={placeholder}
 					ref={ref => (this._contentEditable = ref)}
 				/>
