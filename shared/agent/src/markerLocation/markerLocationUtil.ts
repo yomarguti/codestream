@@ -2,7 +2,7 @@
 
 import { structuredPatch } from "diff";
 import { URL } from "url";
-import { CSLocationArray, CSMarker, CSMarkerLocation } from "../api/types";
+import { CSLocationArray, CSMarker, CSMarkerLocation } from "../api/api";
 import { Container } from "../container";
 import { StreamUtil } from "../git/streamUtil";
 import { MarkerUtil } from "../marker/markerUtil";

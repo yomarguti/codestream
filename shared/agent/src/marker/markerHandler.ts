@@ -2,9 +2,9 @@
 
 import { URL } from "url";
 import { Range, TextDocumentIdentifier } from "vscode-languageserver";
-import { CSMarkerLocation } from "../api/types";
+import { DocumentMarkersRequest } from "../agent";
+import { CSMarkerLocation } from "../api/api";
 import { StreamUtil } from "../git/streamUtil";
-import { DocumentMarkersRequest } from "../ipc";
 import { MarkerLocationUtil } from "../markerLocation/markerLocationUtil";
 import { MarkerUtil } from "./markerUtil";
 

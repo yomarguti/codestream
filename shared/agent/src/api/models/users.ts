@@ -2,7 +2,7 @@
 import { Container } from "../../container";
 import { CodeStreamSession } from "../../session";
 import { Iterables } from "../../system";
-import { CSUser } from "../types";
+import { CSUser } from "../api";
 import { CodeStreamCollection, CodeStreamItem } from "./collection";
 
 export class User extends CodeStreamItem<CSUser> {

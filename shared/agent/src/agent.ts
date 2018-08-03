@@ -1,5 +1,5 @@
 "use strict";
-
+import { AgentOptions } from "codestream-agent";
 import {
 	CancellationToken,
 	ClientCapabilities,
@@ -28,18 +28,7 @@ import { Logger } from "./logger";
 import { CodeStreamSession } from "./session";
 import { Disposables, memoize } from "./system";
 
-// TODO: Fix this, but for now keep in sync with CodeStreamAgentOptions in agentConnection.ts in vscode-codestream
-export interface CodeStreamAgentOptions {
-	extensionVersion: string;
-	gitPath: string;
-	ideVersion: string;
-
-	serverUrl: string;
-	email: string;
-	team: string;
-	teamId: string;
-	token: string;
-}
+export * from "codestream-agent";
 
 export class CodeStreamAgent implements Disposable, LSPLogger {
 	private _clientCapabilities: ClientCapabilities | undefined;
@@ -70,7 +59,7 @@ export class CodeStreamAgent implements Disposable, LSPLogger {
 		this._session = new CodeStreamSession(
 			this,
 			this._connection,
-			e.initializationOptions! as CodeStreamAgentOptions
+			e.initializationOptions! as AgentOptions
 		);
 		const result = await this._session.login();
 

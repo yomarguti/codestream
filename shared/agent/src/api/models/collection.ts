@@ -3,7 +3,7 @@ import { Disposable, Emitter, Event } from "vscode-languageserver";
 import { Logger } from "../../logger";
 import { CodeStreamSession } from "../../session";
 import { Functions, Iterables } from "../../system";
-import { CSEntity } from "../types";
+import { CSEntity } from "../api";
 
 export const CollectionItem = Symbol("codestream-item");
 

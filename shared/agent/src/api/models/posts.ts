@@ -5,7 +5,7 @@
 // import { Stream, StreamType } from "../models/streams";
 // import { Repository } from "../models/repositories";
 // import { User } from "../models/users";
-// import { CSPost } from "../types";
+// import { CSPost } from "../api";
 // import { Dates, Iterables, memoize } from "../../system";
 
 // interface CodeBlock {

@@ -1,6 +1,6 @@
 "use strict";
 import { Connection } from "vscode-languageserver";
-import { CodeStreamAgent, CodeStreamAgentOptions } from "./agent";
+import { AgentOptions, CodeStreamAgent } from "./agent";
 import { CodeStreamApi, LoginResponse } from "./api/api";
 import { Config } from "./config";
 import { DocumentManager } from "./documentManager";
@@ -24,7 +24,7 @@ class ServiceContainer {
 		public readonly agent: CodeStreamAgent,
 		public readonly connection: Connection,
 		public readonly api: CodeStreamApi,
-		options: CodeStreamAgentOptions,
+		options: AgentOptions,
 		loginResponse: LoginResponse
 	) {
 		this.gitPath = options.gitPath;
@@ -39,25 +39,11 @@ class ServiceContainer {
 			serverUrl: options.serverUrl
 		};
 
-		// this._config = {
-		// 	email: options.email,
-		// 	password: options.token,
-		// 	serverUrl: options.serverUrl!,
-		// 	team: undefined!,
-		// 	teamId: undefined!,
-		// 	token: undefined!
-		// };
-
 		this._git = new GitService(agent);
 
 		this._documents = new DocumentManager();
 		this._documents.listen(this.connection);
 	}
-
-	// private _config: Config;
-	// get config() {
-	// 	return this._config;
-	// }
 
 	private _documents: DocumentManager;
 	get documents() {
@@ -88,7 +74,7 @@ export namespace Container {
 		agent: CodeStreamAgent,
 		connection: Connection,
 		api: CodeStreamApi,
-		options: CodeStreamAgentOptions,
+		options: AgentOptions,
 		loginResponse: LoginResponse
 	) {
 		container = new ServiceContainer(agent, connection, api, options, loginResponse);

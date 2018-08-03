@@ -11,8 +11,7 @@ import {
 	// WorkspaceFoldersChangeEvent
 } from "vscode-languageserver";
 import Uri from "vscode-uri";
-import { CodeStreamAgent } from "../agent";
-import { GitRepositoriesRequest } from "../ipc";
+import { CodeStreamAgent, GitRepositoriesRequest } from "../agent";
 import { Logger } from "../logger";
 import { Strings } from "../system";
 import { git, GitErrors, GitWarnings } from "./git";

@@ -17,6 +17,11 @@ module.exports = function(env, argv) {
 				{
 					copy: [
 						{
+							source: "types/*",
+							// TODO: Use environment variable if exists
+							destination: path.resolve(__dirname, "../vscode-codestream/types/")
+						},
+						{
 							source: "dist/*",
 							// TODO: Use environment variable if exists
 							destination: path.resolve(__dirname, "../vscode-codestream/dist/")
@@ -38,14 +43,22 @@ module.exports = function(env, argv) {
 			filename: "[name].js"
 		},
 		resolve: {
-			extensions: [".tsx", ".ts", ".js"]
+			extensions: [".tsx", ".ts", ".js"],
+			alias: {
+				codestream$: path.resolve(__dirname, "types/api.d.ts"),
+				"codestream-agent$": path.resolve(__dirname, "types/agent.d.ts")
+			}
 		},
 		module: {
 			rules: [
 				{
 					test: /\.tsx?$/,
 					use: "ts-loader",
-					exclude: /node_modules/
+					exclude: /node_modules|\.d\.ts$/
+				},
+				{
+					test: /\.d\.ts$/,
+					loader: "ignore-loader"
 				},
 				// Required to solve issues with some dependencies in node_modules
 				{

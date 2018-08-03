@@ -1,7 +1,7 @@
 "use strict";
 
 import * as path from "path";
-import { CSFileStream } from "../api/types";
+import { CSFileStream } from "../api/api";
 import { Container } from "../container";
 import { RepoUtil } from "../repo/repoUtil";
 

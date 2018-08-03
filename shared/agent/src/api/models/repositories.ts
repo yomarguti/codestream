@@ -5,7 +5,7 @@
 // import { CodeStreamSession, SessionChangedEvent, SessionChangedType } from "../session";
 // import { FileStreamCollection } from "./streams";
 // import { Strings } from "../../system";
-// import { CSRepository } from "../types";
+// import { CSRepository } from "../api";
 // import * as path from "path";
 
 // export class Repository extends CodeStreamItem<CSRepository> {

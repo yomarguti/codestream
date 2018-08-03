@@ -1,6 +1,6 @@
 "use strict";
 
-import { CSMarker } from "../api/types";
+import { CSMarker } from "../api/api";
 import { Container } from "../container";
 
 export namespace MarkerUtil {

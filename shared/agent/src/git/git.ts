@@ -1,5 +1,4 @@
 "use strict";
-import Uri from "vscode-uri";
 import { Logger } from "../logger";
 import { CommandOptions, runCommand } from "./shell";
 

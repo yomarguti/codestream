@@ -1,7 +1,7 @@
 // "use strict";
 // import { CodeStreamCollection, CodeStreamItem } from "./collection";
 // import { CodeStreamSession } from "../session";
-// import { CSTeam } from "../types";
+// import { CSTeam } from "../api";
 
 // export class Team extends CodeStreamItem<CSTeam> {
 // 	constructor(session: CodeStreamSession, team: CSTeam) {

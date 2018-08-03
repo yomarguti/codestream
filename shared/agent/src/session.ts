@@ -8,17 +8,18 @@ import {
 	TextDocumentPositionParams
 } from "vscode-languageserver";
 import URI from "vscode-uri";
-import { CodeStreamAgent, CodeStreamAgentOptions } from "./agent";
+import {
+	AgentOptions,
+	ApiRequest,
+	CodeStreamAgent,
+	DocumentMarkersRequest,
+	DocumentPostRequest,
+	DocumentPreparePostRequest
+} from "./agent";
 import { CodeStreamApi, CreatePostRequestCodeBlock, CSStream } from "./api/api";
 import { UserCollection } from "./api/models/users";
 import { Container } from "./container";
 import { setGitPath } from "./git/git";
-import {
-	ApiRequest,
-	DocumentMarkersRequest,
-	DocumentPostRequest,
-	DocumentPreparePostRequest
-} from "./ipc";
 import { MarkerHandler } from "./marker/markerHandler";
 import { PubnubReceiver } from "./pubnub/pubnubReceiver";
 import { Iterables, Strings } from "./system";
@@ -35,7 +36,7 @@ export class CodeStreamSession {
 	constructor(
 		private readonly _agent: CodeStreamAgent,
 		private readonly _connection: Connection,
-		private readonly _options: CodeStreamAgentOptions
+		private readonly _options: AgentOptions
 	) {
 		this._api = new CodeStreamApi(
 			_options.serverUrl,

@@ -6,10 +6,10 @@
 // import { Repository } from "./repositories";
 // import { CodeStreamSession, SessionChangedEvent, SessionChangedType } from "../session";
 // import { Team } from "./teams";
-// import { CSChannelStream, CSDirectStream, CSFileStream, CSStream, StreamType } from "../types";
+// import { CSChannelStream, CSDirectStream, CSFileStream, CSStream, StreamType } from "../api";
 // import { User } from "./users";
 
-// export { StreamType } from "../types";
+// export { StreamType } from "../api";
 
 // abstract class StreamBase<T extends CSStream> extends CodeStreamItem<T> {
 // 	constructor(session: CodeStreamSession, stream: T) {

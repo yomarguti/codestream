@@ -2,7 +2,7 @@
 
 import { IUniDiff } from "diff";
 import { compareTwoStrings, findBestMatch, Rating } from "string-similarity";
-import { CSMarkerLocation } from "../api/types";
+import { CSMarkerLocation } from "../api/api";
 import { buildChangeset, Change, Changeset } from "./changeset";
 import { MarkerLocationUtil } from "./markerLocationUtil";
 import LocationsById = MarkerLocationUtil.LocationsById;
