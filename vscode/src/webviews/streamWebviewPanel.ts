@@ -2,6 +2,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import {
+	commands,
 	Disposable,
 	Event,
 	EventEmitter,
@@ -32,6 +33,7 @@ import {
 	SessionStatus,
 	StreamThread
 } from "../api/session";
+import { configuration } from "../configuration";
 import { Container } from "../container";
 import { Logger } from "../logger";
 
@@ -266,6 +268,42 @@ export class StreamWebviewPanel extends Disposable {
 						const status = await this.session.login(email, password);
 
 						const responseBody: { id: string; [k: string]: any } = { id: body.id };
+
+						if (status === LoginResult.Success) {
+							responseBody.payload = await this.getBootstrapState();
+						} else responseBody.error = status;
+
+						this.postMessage({
+							type: "codestream:response",
+							body: responseBody
+						});
+						break;
+					}
+					case "go-to-signup": {
+						const responseBody: { id: string; [k: string]: any } = { id: body.id };
+						try {
+							await commands.executeCommand(
+								"vscode.open",
+								Uri.parse(
+									`${configuration.get(
+										"webAppUrl"
+									)}/signup?signup_token=${this.session.getSignupToken()}`
+								)
+							);
+							responseBody.payload = true;
+						} catch (error) {
+							responseBody.error = error.message;
+						}
+
+						this.postMessage({
+							type: "codestream:response",
+							body: responseBody
+						});
+						break;
+					}
+					case "validate-signup": {
+						const responseBody: { id: string; [k: string]: any } = { id: body.id };
+						const status = await this.session.loginWithSignupToken();
 
 						if (status === LoginResult.Success) {
 							responseBody.payload = await this.getBootstrapState();

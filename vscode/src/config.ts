@@ -19,6 +19,7 @@ export interface Config {
 	notifications: Notifications;
 	password: string;
 	serverUrl: string;
+	webAppUrl: string;
 	team: string;
 	traceLevel: TraceLevel;
 }

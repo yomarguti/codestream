@@ -1,4 +1,6 @@
 "use strict";
+import { AgentResult } from "../shared/agent.protocol";
+import * as uuid from "uuid/v4";
 import {
 	ConfigurationChangeEvent,
 	ConfigurationTarget,
@@ -94,6 +96,7 @@ export class CodeStreamSession implements Disposable {
 	private _cache: Cache;
 	private _sessionApi: CodeStreamSessionApi | undefined;
 	private _state: SessionState | undefined;
+	private _signupToken: string | undefined;
 
 	constructor(private _serverUrl: string) {
 		this._api = new CodeStreamApi(_serverUrl);
@@ -260,6 +263,12 @@ export class CodeStreamSession implements Disposable {
 		return this._state!.users;
 	}
 
+	getSignupToken() {
+		if (!this._signupToken) this._signupToken = uuid();
+
+		return this._signupToken;
+	}
+
 	async login(email: string, password: string, teamId?: string): Promise<LoginResult> {
 		const id = Strings.sha1(`${this.serverUrl}|${email}|${password}|${teamId}`);
 
@@ -276,6 +285,29 @@ export class CodeStreamSession implements Disposable {
 			CodeStreamSession._loginPromise = undefined;
 		}
 		return result;
+	}
+
+	async loginWithSignupToken(): Promise<LoginResult> {
+		// TODO: reuse this._loginPromise
+		if (this._signupToken === undefined) throw new Error("A signup token hasn't been generated");
+
+		this._status = SessionStatus.SigningIn;
+		const e = { getStatus: () => this._status };
+		this._onDidChangeStatus.fire(e);
+
+		const result = await Container.agent.loginWithSignupToken(this._signupToken);
+
+		if (result.error) {
+			this._status = SessionStatus.SignInFailed;
+			this._onDidChangeStatus.fire(e);
+			if (result.error !== LoginResult.NotOnTeam) {
+				this._signupToken = undefined;
+			}
+			return result.error;
+		}
+
+		await this.initializeSession(result, this._signupToken);
+		return LoginResult.Success;
 	}
 
 	async logout() {
@@ -398,30 +430,7 @@ export class CodeStreamSession implements Disposable {
 				return result.error;
 			}
 
-			if (teamId !== result.state.teamId) {
-				teamId = result.state.teamId;
-				await Container.context.workspaceState.update(WorkspaceState.TeamId, teamId);
-			}
-			const loginResponse = result.loginResponse;
-
-			this._state = new SessionState(this, teamId, loginResponse);
-			this._sessionApi = new CodeStreamSessionApi(this._api, this._state.token, teamId);
-			this._presenceManager = new PresenceManager(this._sessionApi, id);
-
-			this._disposableSignedIn = Disposable.from(
-				this._api.useMiddleware(new PresenceMiddleware(this._presenceManager)),
-				this._presenceManager
-			);
-
-			this._presenceManager.online();
-
-			Logger.log(
-				`${email} signed into CodeStream (${this.serverUrl}); userId=${
-					this.userId
-				}, teamId=${teamId}`
-			);
-			this._status = SessionStatus.SignedIn;
-			this._onDidChangeStatus.fire(e);
+			await this.initializeSession(result, id, teamId);
 
 			return LoginResult.Success;
 		} catch (ex) {
@@ -432,6 +441,32 @@ export class CodeStreamSession implements Disposable {
 
 			throw ex;
 		}
+	}
+
+	private async initializeSession(result: AgentResult, id: string, teamId = "") {
+		if (!teamId || teamId !== result.state.teamId) {
+			teamId = result.state.teamId;
+			await Container.context.workspaceState.update(WorkspaceState.TeamId, teamId);
+		}
+
+		this._state = new SessionState(this, teamId, result.loginResponse);
+		this._sessionApi = new CodeStreamSessionApi(this._api, this._state.token, teamId);
+		this._presenceManager = new PresenceManager(this._sessionApi, id);
+
+		this._disposableSignedIn = Disposable.from(
+			this._api.useMiddleware(new PresenceMiddleware(this._presenceManager)),
+			this._presenceManager
+		);
+
+		this._presenceManager.online();
+
+		Logger.log(
+			`${result.loginResponse.user.email} signed into CodeStream (${this.serverUrl}); userId=${
+				this.userId
+			}, teamId=${teamId}`
+		);
+		this._status = SessionStatus.SignedIn;
+		this._onDidChangeStatus.fire({ getStatus: () => this._status });
 	}
 }
 

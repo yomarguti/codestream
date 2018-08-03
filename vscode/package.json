@@ -72,6 +72,12 @@
                     "description": "Specifies the url to use to connect to the CodeStream service",
                     "scope": "window"
                 },
+                "codestream.webAppUrl": {
+                    "type": "string",
+                    "default": "https://app.codestream.com",
+                    "description": "Specifies the url for the CodeStream web portal",
+                    "scope": "window"
+                },
                 "codestream.team": {
                     "type": "string",
                     "default": null,
@@ -224,11 +230,12 @@
     "dependencies": {
         "date-fns": "1.29.0",
         "lodash.debounce": "4.0.8",
-        "pubnub": "4.21.2",
         "node-fetch": "2.2.0",
+        "pubnub": "4.21.2",
         "reflect-metadata": "0.1.12",
         "tmp": "0.0.33",
         "tslib": "1.9.3",
+        "uuid": "^3.3.2",
         "vscode-languageclient": "4.4.0"
     },
     "devDependencies": {
@@ -236,6 +243,7 @@
         "@types/node-fetch": "2.1.2",
         "@types/pubnub": "4.0.2",
         "@types/tmp": "0.0.33",
+        "@types/uuid": "^3.4.3",
         "babel-core": "6.26.3",
         "babel-loader": "7.1.5",
         "babel-plugin-external-helpers": "6.22.0",
