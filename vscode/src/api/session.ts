@@ -425,6 +425,8 @@ export class CodeStreamSession implements Disposable {
 
 			return LoginResult.Success;
 		} catch (ex) {
+			ex.message = ex.message.replace("Request initialize failed with message: ", "CodeStream: ");
+
 			Logger.error(ex);
 			void (await this.logout());
 

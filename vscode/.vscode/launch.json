@@ -9,6 +9,9 @@
 			"args": ["--extensionDevelopmentPath=${workspaceRoot}"],
 			"stopOnEntry": false,
 			"sourceMaps": true,
+			"sourceMapPathOverrides": {
+				"webpack:///./*": "${workspaceRoot}/*"
+			},
 			"outFiles": ["${workspaceRoot}/dist/**/*.js"],
 			"trace": true
 		},
@@ -20,6 +23,9 @@
 			"args": ["--extensionDevelopmentPath=${workspaceRoot}"],
 			"stopOnEntry": false,
 			"sourceMaps": true,
+			"sourceMapPathOverrides": {
+				"webpack:///./*": "${workspaceRoot}/*"
+			},
 			"outFiles": ["${workspaceRoot}/dist/**/*.js"],
 			"preLaunchTask": "npm: rebuild"
 		},
@@ -31,6 +37,9 @@
 			"args": ["--extensionDevelopmentPath=${workspaceRoot}"],
 			"stopOnEntry": false,
 			"sourceMaps": true,
+			"sourceMapPathOverrides": {
+				"webpack:///./*": "${workspaceRoot}/*"
+			},
 			"outFiles": ["${workspaceRoot}/dist/**/*.js"],
 			"trace": true,
 			"preLaunchTask": "watch"
@@ -48,6 +57,9 @@
 			],
 			"stopOnEntry": false,
 			"sourceMaps": true,
+			"sourceMapPathOverrides": {
+				"webpack:///./*": "${workspaceRoot}/*"
+			},
 			"outFiles": ["${workspaceRoot}/dist/**/*.js"],
 			"preLaunchTask": "npm: watch"
 		}

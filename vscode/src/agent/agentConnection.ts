@@ -1,15 +1,5 @@
 "use strict";
 import { CSPost } from "codestream";
-import {
-	AgentInitializeResult,
-	AgentOptions,
-	AgentResult,
-	ApiRequest,
-	DocumentMarkersRequest,
-	DocumentPostRequest,
-	DocumentPreparePostRequest,
-	GitRepositoriesRequest
-} from "codestream-agent";
 import { RequestInit } from "node-fetch";
 import { Event, EventEmitter, ExtensionContext, Range, TextDocument, Uri } from "vscode";
 import {
@@ -24,8 +14,20 @@ import {
 } from "vscode-languageclient";
 import { GitRepository } from "../git/gitService";
 import { Logger } from "../logger";
+import {
+	AgentInitializeResult,
+	AgentOptions,
+	AgentResult,
+	ApiRequest,
+	DocumentMarkersRequest,
+	DocumentMarkersResponse,
+	DocumentPostRequest,
+	DocumentPreparePostRequest,
+	DocumentPreparePostResponse,
+	GitRepositoriesRequest
+} from "./protocol";
 
-export { AgentOptions } from "codestream-agent";
+export { AgentOptions } from "./protocol";
 
 export class CodeStreamAgentConnection implements Disposable {
 	private _onDidReceivePubNubMessages = new EventEmitter<{ [key: string]: any }[]>();
@@ -78,7 +80,7 @@ export class CodeStreamAgentConnection implements Disposable {
 
 	@started
 	async api<R>(url: string, init?: RequestInit, token?: string): Promise<R> {
-		return this.sendRequest(ApiRequest.type, {
+		return this.sendRequest(ApiRequest, {
 			url: url,
 			init: init,
 			token: token
@@ -86,9 +88,9 @@ export class CodeStreamAgentConnection implements Disposable {
 	}
 
 	@started
-	async getMarkers(uri: Uri): Promise<DocumentMarkersRequest.Response | undefined> {
+	async getMarkers(uri: Uri): Promise<DocumentMarkersResponse | undefined> {
 		try {
-			const response = await this.sendRequest(DocumentMarkersRequest.type, {
+			const response = await this.sendRequest(DocumentMarkersRequest, {
 				textDocument: { uri: uri.toString() }
 			});
 			return response;
@@ -102,7 +104,7 @@ export class CodeStreamAgentConnection implements Disposable {
 	@started
 	async getRepositories(): Promise<GitRepository[]> {
 		try {
-			const response = await this.sendRequest(GitRepositoriesRequest.type);
+			const response = await this.sendRequest(GitRepositoriesRequest);
 			const repositories = response.map(r => new GitRepository(Uri.parse(r.uri as string)));
 			return repositories;
 		} catch (ex) {
@@ -132,8 +134,8 @@ export class CodeStreamAgentConnection implements Disposable {
 		return this.stop();
 	}
 
-	preparePost(document: TextDocument, range: Range): Promise<DocumentPreparePostRequest.Response> {
-		return this.sendRequest(DocumentPreparePostRequest.type, {
+	preparePost(document: TextDocument, range: Range): Promise<DocumentPreparePostResponse> {
+		return this.sendRequest(DocumentPreparePostRequest, {
 			textDocument: { uri: document.uri.toString() },
 			range: range,
 			dirty: document.isDirty
@@ -159,7 +161,7 @@ export class CodeStreamAgentConnection implements Disposable {
 		parentPostId: string | undefined,
 		streamId: string
 	): Promise<CSPost> {
-		return this.sendRequest(DocumentPostRequest.type, {
+		return this.sendRequest(DocumentPostRequest, {
 			textDocument: { uri: uri.toString() },
 			// range: range,
 			// dirty: document.isDirty,
