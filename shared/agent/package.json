@@ -1,7 +1,7 @@
 {
     "name": "codestream-lsp-agent",
     "description": "The knowledge base behind your codebase",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "author": "CodeStream",
     "publisher": "CodeStream",
     "private": true,
