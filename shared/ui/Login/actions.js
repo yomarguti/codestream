@@ -20,8 +20,9 @@ export const authenticate = params => async (dispatch, getState, { api }) => {
 export const startSignup = () => async (dispatch, getState, { api }) => {
 	try {
 		await api.startSignup();
-		dispatch({ type: "GO_TO_COMPLETE_SIGNUP" });
 	} catch (error) {
 		console.error(error);
 	}
 };
+
+export const goToNextPage = () => ({ type: "GO_TO_COMPLETE_SIGNUP" });

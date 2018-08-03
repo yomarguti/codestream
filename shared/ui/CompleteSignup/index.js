@@ -5,30 +5,33 @@ import Button from "../Login/Button";
 import * as actions from "./actions";
 
 export class CompleteSignup extends React.Component {
-	state = {};
+	state = {
+		signUpNotComplete: false
+	};
 
-	// renderError = () => {
-	// 	if (this.state.error.invalidCredentials)
-	// 		return (
-	// 			<div className="error-message form-error">
-	// 				<FormattedMessage id="login.invalid" />
-	// 			</div>
-	// 		);
-	// 	// if (this.props.errors.unknown)
-	// 	// 	return <UnexpectedErrorMessage classes="error-message page-error" />;
-	// };
-
-	handleClickContinue = event => {
+	handleClickContinue = async event => {
 		event.preventDefault();
-		this.props.validateSignup();
+		try {
+			await this.props.validateSignup();
+		} catch (error) {
+			if (error === "USER_NOT_ON_TEAM") {
+				this.setState({ signUpNotComplete: true });
+			} else this.props.goToLogin();
+		}
 	};
 
 	render() {
+		const mainParagraphCopy = this.state.signUpNotComplete
+			? "signup.complete.notComplete"
+			: "signup.complete.main";
+
 		return (
 			<div id="complete-signup-page">
-				<h2>Sign In to CodeStream</h2>
-				<p>Once you've completed..</p>
-				<Button onClick={this.handleClickContinue}>CONTINUE</Button>
+				<h2>CodeStream</h2>
+				<FormattedMessage id={mainParagraphCopy}>{text => <p>{text}</p>}</FormattedMessage>
+				<Button onClick={this.handleClickContinue}>
+					<FormattedMessage id="signup.complete.button" />
+				</Button>
 				<a>Sign in</a>
 			</div>
 		);
