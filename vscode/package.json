@@ -204,7 +204,7 @@
         "bundle": "npm run lint && npm run agent:bundle && webpack --env.production && npm run webview:bundle",
         "clean": "git clean -Xdf -e !node_modules -e !node_modules/**/*",
         "lint": "tslint --project tsconfig.json",
-        "pack": "vsce package",
+        "pack": "npm run clean && npm install --no-save && vsce package",
         "pretty": "prettier --config .prettierrc --write \"./src/**/*.ts\" \"./src/**/*.js\" ./package.json ./.prettierrc",
         "rebuild": "npm run clean && npm install --no-save && npm run agent:rebuild && npm run build && npm run webview:rebuild",
         "watch": "webpack --watch --env.development",
@@ -219,7 +219,7 @@
         "webview:watch": "webpack --watch --config ./webview.webpack.config.js --env.development",
         "preinstall": "pushd \"../codestream-components\" && npm install --no-save && popd",
         "postinstall": "node ./node_modules/vscode/bin/install",
-        "vscode:prepublish": "npm run clean && npm install --no-save && npm run agent:pack && npm run lint && webpack --env.production && npm run webview:bundle"
+        "vscode:prepublish": "npm run agent:pack && npm run lint && webpack --env.production && npm run webview:bundle"
     },
     "dependencies": {
         "date-fns": "1.29.0",
