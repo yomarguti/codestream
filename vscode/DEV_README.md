@@ -1,20 +1,22 @@
 # CodeStream for Visual Studio Code
 
-## Build and Run
-
-### Getting the sources
+### Getting the code
 
 ```
 git clone https://github.com/TeamCodeStream/vscode-codestream.git
 ```
 
-👉 **NOTE!** Make sure to clone the `vscode-codestream` repository into a folder that is a sibling of the `codestream-lsp-agent` repository
+👉 **NOTE!** Make sure to clone the `vscode-codestream` repository into a folder that is a sibling of the `codestream-component` and `codestream-lsp-agent` repositories
 
 Prerequisites
 
 - [Git](https://git-scm.com/)
 - [NodeJS](https://nodejs.org/en/), `>= 8.9.1, < 9.0.0`
 - [npm](https://npmjs.com/), `>= 6.2.0`
+
+### Warnings
+
+👉 Do NOT make changes to the files in `src/shared` they are files copied in from `codestream-lsp-agent` and need to be modified there.
 
 ### Build
 
