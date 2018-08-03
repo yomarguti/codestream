@@ -4,3 +4,4 @@ webview.html
 node_modules
 npm-debug.log
 codestream-*.vsix
+build.json

@@ -35,6 +35,10 @@ module.exports = function(env, argv) {
 							// TODO: Use environment variable if exists
 							source: path.resolve(__dirname, "../codestream-lsp-agent/dist/*"),
 							destination: "dist/"
+						},
+						{
+							source: path.resolve(__dirname, "build.json"),
+							destination: "dist/"
 						}
 					]
 				}

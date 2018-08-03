@@ -10,6 +10,7 @@ import { extensionQualifiedId } from "./constants";
 import { Container } from "./container";
 import { gitPath } from "./git/git";
 import { Logger } from "./logger";
+import { FileSystem } from "./system";
 
 const extension = extensions.getExtension(extensionQualifiedId)!;
 export const extensionVersion = extension.packageJSON.version;
@@ -18,11 +19,22 @@ export async function activate(context: ExtensionContext) {
 	Configuration.configure(context);
 	Logger.configure(context);
 
+	// Check for an optional build number
+	let build = { number: "" };
+	try {
+		build = await FileSystem.loadJsonFromFile<{ number: string }>(
+			context.asAbsolutePath("build.json")
+		);
+	} catch {}
+
+	const version = `${extensionVersion}${build.number ? `-${build.number}` : ""}`;
+	Logger.log(`CodeStream v${version} starting...`);
+
 	const git = await gitPath();
 
 	const cfg = configuration.get<Config>();
 	await Container.initialize(context, cfg, {
-		extensionVersion: extensionVersion,
+		extensionVersion: version,
 		gitPath: git,
 		ideVersion: vscodeVersion,
 		serverUrl: cfg.serverUrl
