@@ -20,19 +20,24 @@ export class CompleteSignup extends React.Component {
 		}
 	};
 
+	handleClickSignin = event => {
+		event.preventDefault();
+		this.props.goToLogin();
+	};
+
 	render() {
 		const mainParagraphCopy = this.state.signUpNotComplete
 			? "signup.complete.notComplete"
 			: "signup.complete.main";
 
 		return (
-			<div id="complete-signup-page">
+			<div>
 				<h2>CodeStream</h2>
 				<FormattedMessage id={mainParagraphCopy}>{text => <p>{text}</p>}</FormattedMessage>
 				<Button onClick={this.handleClickContinue}>
 					<FormattedMessage id="signup.complete.button" />
 				</Button>
-				<a>Sign in</a>
+				<a onClick={this.handleClickSignin}>Sign in</a>
 			</div>
 		);
 	}
