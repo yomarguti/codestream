@@ -101,7 +101,7 @@ export class Login extends React.Component {
 		return (
 			<div id="login-page">
 				<form id="login-form" className="standard-form" onSubmit={this.submitCredentials}>
-					<fieldset class="form-body">
+					<fieldset className="form-body">
 						<h2>Sign In to CodeStream</h2>
 						{this.renderAccountMessage()}
 						{this.renderError()}
@@ -175,4 +175,3 @@ export default connect(
 	null,
 	actions
 )(Login);
-
