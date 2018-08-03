@@ -97,6 +97,11 @@ export class Login extends React.Component {
 		this.setState({ loading: false });
 	};
 
+	handleClickSignup = event => {
+		event.preventDefault();
+		this.props.startSignup();
+	};
+
 	render() {
 		return (
 			<div id="login-page">
@@ -157,7 +162,7 @@ export class Login extends React.Component {
 								<p>
 									<strong>
 										<FormattedMessage id="login.footer.noAccount" />{" "}
-										<a onClick={this.props.goToSignup}>
+										<a onClick={this.handleClickSignup}>
 											<FormattedMessage id="login.footer.signUp" />
 										</a>
 									</strong>
