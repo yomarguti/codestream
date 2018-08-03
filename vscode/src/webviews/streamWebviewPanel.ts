@@ -135,6 +135,7 @@ interface BootstrapState {
 	teams: CSTeam[];
 	users: CSUser[];
 	repos: CSRepository[];
+	version: string;
 }
 
 // TODO: Clean this up to be consistent with the structure
@@ -244,6 +245,7 @@ export class StreamWebviewPanel extends Disposable {
 		]);
 
 		const state: BootstrapState = Object.create(null);
+		state.version = Container.version;
 		state.currentTeamId = this.session.team.id;
 		state.currentUserId = this.session.userId;
 		state.streams = streams;
@@ -718,7 +720,10 @@ export class StreamWebviewPanel extends Disposable {
 				state.currentStreamId = streamThread.stream.id;
 				state.selectedPostId = streamThread.id;
 			}
+		} else {
+			state.version = Container.version;
 		}
+
 		this._streamThread = streamThread;
 		this._onDidChangeStream.fire(this._streamThread);
 

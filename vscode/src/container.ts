@@ -20,6 +20,7 @@ export class Container {
 		this._context = context;
 		this._config = config;
 
+		this._version = agentOptions.extensionVersion;
 		this._agent = new CodeStreamAgentConnection(context, agentOptions);
 
 		this._git = new GitService();
@@ -120,6 +121,11 @@ export class Container {
 	// static get unreadDecorator(): UnreadDecorationProvider {
 	//     return this._unreadDecorator;
 	// }
+
+	private static _version: string;
+	static get version(): string {
+		return this._version;
+	}
 
 	static resetConfig() {
 		this._config = undefined;
