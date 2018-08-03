@@ -148,12 +148,15 @@ class Post extends Component {
 	};
 
 	renderTextLinkified = text => {
-		let usernameRegExp = new RegExp("(@(?:" + this.props.usernames + ")\\b)");
+		let usernameRegExp = new RegExp("(@(?:" + this.props.usernames.toLowerCase() + ")\\b)", "i");
 		let bodyParts = text.split(usernameRegExp);
 		let iterator = 0;
+		const meLowerCase = "@" + this.props.currentUsername.toLowerCase();
+
 		return bodyParts.map(part => {
-			if (part.match(usernameRegExp)) {
-				if (part === "@" + this.props.currentUsername)
+			const partLowerCase = part.toLowerCase();
+			if (partLowerCase.match(usernameRegExp)) {
+				if (partLowerCase === meLowerCase)
 					return (
 						<span key={iterator++} className="at-mention me">
 							{part}
