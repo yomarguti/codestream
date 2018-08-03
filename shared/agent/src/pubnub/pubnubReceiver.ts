@@ -88,7 +88,7 @@ export class PubnubReceiver {
 
 	private onPubNubMessagesReceived(messages: { [key: string]: any }[]) {
 		this.debug("PubNub messages", messages);
-		this._agent.sendNotification(DidReceivePubNubMessagesNotification.type, messages);
+		this._agent.sendNotification(DidReceivePubNubMessagesNotification, messages);
 
 		for (const message of messages) {
 			this.processMessage(message);

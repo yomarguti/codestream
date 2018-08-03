@@ -11,11 +11,17 @@ import URI from "vscode-uri";
 import {
 	AgentOptions,
 	ApiRequest,
+	ApiRequestParams,
 	CodeStreamAgent,
 	DocumentMarkersRequest,
+	DocumentMarkersRequestParams,
 	DocumentPostRequest,
-	DocumentPreparePostRequest
+	DocumentPostRequestParams,
+	DocumentPreparePostRequest,
+	DocumentPreparePostRequestParams,
+	DocumentPreparePostResponse
 } from "./agent";
+import { AgentError, ServerError } from "./agentError";
 import { CodeStreamApi, CreatePostRequestCodeBlock, CSStream } from "./api/api";
 import { UserCollection } from "./api/models/users";
 import { Container } from "./container";
@@ -46,17 +52,14 @@ export class CodeStreamSession {
 
 		this._connection.onHover(this.onHover.bind(this));
 
-		this._agent.registerHandler(ApiRequest.type, this.onApiRequest.bind(this));
-		this._agent.registerHandler(DocumentMarkersRequest.type, this.onMarkersRequest.bind(this));
-		this._agent.registerHandler(
-			DocumentPreparePostRequest.type,
-			this.onPreparePostRequest.bind(this)
-		);
-		this._agent.registerHandler(DocumentPostRequest.type, this.onPostRequest.bind(this));
+		this._agent.registerHandler(ApiRequest, this.onApiRequest.bind(this));
+		this._agent.registerHandler(DocumentMarkersRequest, this.onMarkersRequest.bind(this));
+		this._agent.registerHandler(DocumentPreparePostRequest, this.onPreparePostRequest.bind(this));
+		this._agent.registerHandler(DocumentPostRequest, this.onPostRequest.bind(this));
 	}
 
 	private onApiRequest(
-		{ url, token, init }: ApiRequest.Params,
+		{ url, token, init }: ApiRequestParams,
 		cancellationToken: CancellationToken
 	) {
 		const result = this._api.fetch(url, init, token);
@@ -70,7 +73,7 @@ export class CodeStreamSession {
 	}
 
 	private onMarkersRequest(
-		{ textDocument }: DocumentMarkersRequest.Params,
+		{ textDocument }: DocumentMarkersRequestParams,
 		cancellationToken: CancellationToken
 	) {
 		this._connection.console.log(`DocumentMarkersRequest received`);
@@ -80,7 +83,7 @@ export class CodeStreamSession {
 	}
 
 	private onPreparePostRequest(
-		e: DocumentPreparePostRequest.Params,
+		e: DocumentPreparePostRequestParams,
 		cancellationToken: CancellationToken
 	) {
 		this._connection.console.log(`DocumentPreparePostRequest received`);
@@ -88,7 +91,7 @@ export class CodeStreamSession {
 		return this.preparePostCode(e.textDocument, e.range, e.dirty);
 	}
 
-	private onPostRequest(e: DocumentPostRequest.Params) {
+	private onPostRequest(e: DocumentPostRequestParams) {
 		this._connection.console.log(`DocumentPostRequest received`);
 
 		return this.postCode(
@@ -132,10 +135,14 @@ export class CodeStreamSession {
 		let loginResponse;
 		try {
 			loginResponse = await this._api.login(this._options.email, this._options.token);
-		} catch (error) {
-			return {
-				error: loginApiErrorMappings[error.info.code] || ""
-			};
+		} catch (ex) {
+			if (ex instanceof ServerError) {
+				return {
+					error: loginApiErrorMappings[ex.info.code] || ""
+				};
+			}
+
+			throw AgentError.wrap(ex, `Login failed:\n${ex.message}`);
 		}
 
 		this._apiToken = loginResponse.accessToken;
@@ -218,7 +225,7 @@ export class CodeStreamSession {
 		documentId: TextDocumentIdentifier,
 		range: Range,
 		dirty: boolean = false
-	): Promise<DocumentPreparePostRequest.Response> {
+	): Promise<DocumentPreparePostResponse> {
 		const { documents, git } = Container.instance();
 		const document = documents.get(documentId.uri);
 		if (document === undefined) {

@@ -2,7 +2,7 @@
 
 import { URL } from "url";
 import { Range, TextDocumentIdentifier } from "vscode-languageserver";
-import { DocumentMarkersRequest } from "../agent";
+import { DocumentMarkersResponse } from "../agent";
 import { CSMarkerLocation } from "../api/api";
 import { StreamUtil } from "../git/streamUtil";
 import { MarkerLocationUtil } from "../markerLocation/markerLocationUtil";
@@ -13,9 +13,7 @@ export namespace MarkerHandler {
 		markers: []
 	};
 
-	export async function handle(
-		document: TextDocumentIdentifier
-	): Promise<DocumentMarkersRequest.Response> {
+	export async function handle(document: TextDocumentIdentifier): Promise<DocumentMarkersResponse> {
 		try {
 			const filePath = new URL(document.uri).pathname;
 

@@ -1,11 +1,18 @@
 "use strict";
 
 export class AgentError extends Error {
-	info: any = {};
+	info: any;
+	innerError: Error | undefined;
 
 	constructor(message: string, info: any = {}) {
 		super(message);
 		this.info = info;
+	}
+
+	static wrap(ex: Error, message: string, info: any = {}) {
+		const wrapped = new AgentError(message, info);
+		wrapped.innerError = ex;
+		return wrapped;
 	}
 }
 

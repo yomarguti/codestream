@@ -1,5 +1,4 @@
 "use strict";
-import { AgentOptions } from "codestream-agent";
 import {
 	CancellationToken,
 	ClientCapabilities,
@@ -25,10 +24,11 @@ import {
 } from "vscode-languageserver";
 import { Container } from "./container";
 import { Logger } from "./logger";
+import { AgentOptions } from "./protocol";
 import { CodeStreamSession } from "./session";
 import { Disposables, memoize } from "./system";
 
-export * from "codestream-agent";
+export * from "./protocol";
 
 export class CodeStreamAgent implements Disposable, LSPLogger {
 	private _clientCapabilities: ClientCapabilities | undefined;

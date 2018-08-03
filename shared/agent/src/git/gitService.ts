@@ -70,7 +70,7 @@ export class GitService implements IGitService, Disposable {
 	}
 
 	constructor(agent: CodeStreamAgent) {
-		agent.registerHandler(GitRepositoriesRequest.type, this.onRepositoriesRequest.bind(this));
+		agent.registerHandler(GitRepositoriesRequest, this.onRepositoriesRequest.bind(this));
 
 		// case "codeStream/git/repo/remote": {
 		// 	const { uri } = params[0];
