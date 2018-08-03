@@ -37,7 +37,7 @@ module.exports = function(env, argv) {
 							destination: "dist/"
 						},
 						{
-							source: path.resolve(__dirname, "build.json"),
+							source: path.resolve(__dirname, "build*.json"),
 							destination: "dist/"
 						}
 					]
