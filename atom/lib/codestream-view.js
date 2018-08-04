@@ -1,12 +1,6 @@
 import React from "react";
 import { render, unmountComponentAtNode } from "react-dom";
-import { addLocaleData, IntlProvider } from "react-intl";
-import { Provider } from "react-redux";
-import en from "react-intl/locale-data/en";
-import copy from "codestream-components/translations/en.json";
 import CodeStreamRoot from "./components/CodeStreamRoot";
-
-addLocaleData([...en]);
 
 export const CODESTREAM_VIEW_URI = "atom://codestream";
 
@@ -66,13 +60,6 @@ export default class CodestreamView {
 	}
 
 	render() {
-		render(
-			<IntlProvider locale="en" messages={copy}>
-				<Provider store={this.store}>
-					<CodeStreamRoot />
-				</Provider>
-			</IntlProvider>,
-			this.element
-		);
+		render(<CodeStreamRoot store={this.store} />, this.element);
 	}
 }

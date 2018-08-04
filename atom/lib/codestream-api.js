@@ -9,13 +9,44 @@ import { saveUncommittedLocations } from "./actions/marker-location";
 import { normalize } from "./actions/utils";
 import { saveStream, saveStreams } from "./actions/stream";
 import { getPostById } from "./reducers/posts";
-import type { Store } from "./types";
+
+type LoginResponse = { user: {}, teams: Array<{}>, accessToken: string };
 
 export default class CodeStreamApi {
-	store: Store;
+	accessToken: ?string;
 
-	constructor(store: Store) {
-		this.store = store;
+	setAccessToken(token: string) {
+		this.accessToken = token;
+	}
+
+	async authenticate(email: string, password: string): Promise<LoginResponse> {
+		try {
+			return await http.put("/no-auth/login", { email, password });
+		} catch (error) {
+			if (error.data.code === "USRC-1001") throw "INVALID_CREDENTIALS";
+			if (error.data.code === "USRC-1010") throw "NOT_CONFIRMED";
+		}
+	}
+
+	async getStreams(teamId: string) {
+		return (await http.get(`/streams?teamId=${teamId}`, this.accessToken)).streams;
+	}
+
+	async getTeams() {
+		return (await http.get("/teams?mine", this.accessToken)).teams;
+	}
+
+	async getUsers(teamIds: string[]) {
+		const responses = await Promise.all(
+			teamIds.map(
+				async teamId => (await http.get(`/users?teamId=${teamId}`, this.accessToken)).users
+			)
+		);
+		return [].concat.apply([], responses);
+	}
+
+	async getPosts(streamId: string, teamId: string) {
+		return (await http.get(`/posts?streamId=${streamId}&teamId=${teamId}`, this.accessToken)).posts;
 	}
 
 	async createPost(

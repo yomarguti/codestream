@@ -1,52 +1,90 @@
 // @flow
-import { shell } from "electron";
-import { CompositeDisposable } from "atom";
-import mixpanel from "mixpanel-browser";
-import { EventEmitter } from "codestream-components";
-import AddCommentPopupManager from "./add-comment-popup-manager";
-import BufferChangeTracker from "./buffer-change-tracker";
-import DiffManager from "./diff-manager";
-import ContentHighlighter from "./content-highlighter";
-import MarkerLocationTracker from "./marker-location-tracker";
-import EditTracker from "./edit-tracker";
+// import AddCommentPopupManager from "./add-comment-popup-manager";
+// import BufferChangeTracker from "./buffer-change-tracker";
+// import DiffManager from "./diff-manager";
+// import ContentHighlighter from "./content-highlighter";
+// import MarkerLocationTracker from "./marker-location-tracker";
+// import EditTracker from "./edit-tracker";
 import CodeStreamApi from "../codestream-api";
-import type { Resource, Store } from "../types";
+import ViewApi from "./view-api";
 
-export default class WorkspaceApi implements Resource {
-	initialized: boolean = false;
-	subscriptions = new CompositeDisposable();
-	popupManager: Resource;
-	bufferChangeTracker: Resource;
-	diffManager: Resource;
-	contentHighlighter: Resource;
-	markerLocationTracker: Resource;
-	editTracker: Resource;
-	store: Store;
+type Session = {
+	user: { [key: string]: any },
+	teamIds: string[],
+	accessToken: string
+};
+
+export default class WorkspaceSession {
+	viewApi: ViewApi;
 	api: CodeStreamApi;
+	session: ?Session;
 
-	constructor(store: Store) {
-		this.store = store;
+	constructor(session: ?Session) {
+		this.api = new CodeStreamApi();
+		this.viewApi = new ViewApi(this);
+		if (session) {
+			this.session = session;
+			this.api.setAccessToken(session.accessToken);
+		}
+		// this.popupManager = new AddCommentPopupManager(repoAttributes.workingDirectory);
+		// this.bufferChangeTracker = new BufferChangeTracker(this.store, repoAttributes.workingDirectory);
+		// this.diffManager = new DiffManager(this.store);
+		// this.contentHighlighter = new ContentHighlighter(this.store);
+		// this.markerLocationTracker = new MarkerLocationTracker(this.store);
+		// this.editTracker = new EditTracker(this.store);
+		// this.setupListeners();
+		// this.initialized = true;
 	}
 
-	initialize() {
-		const { repoAttributes } = this.store.getState();
-		this.api = new CodeStreamApi(this.store);
-		this.popupManager = new AddCommentPopupManager(repoAttributes.workingDirectory);
-		this.bufferChangeTracker = new BufferChangeTracker(this.store, repoAttributes.workingDirectory);
-		this.diffManager = new DiffManager(this.store);
-		this.contentHighlighter = new ContentHighlighter(this.store);
-		this.markerLocationTracker = new MarkerLocationTracker(this.store);
-		this.editTracker = new EditTracker(this.store);
-		this.setupListeners();
-		this.initialized = true;
+	// setupListeners() {
+	// 	this.subscriptions.add(
+	// 		EventEmitter.on("interaction:clicked-link", link => shell.openExternal(link)),
+	// 		EventEmitter.on("analytics", ({ label, payload }) => mixpanel.track(label, payload)),
+	// 		EventEmitter.on("request", this.handleWebviewRequest)
+	// 	);
+	// }
+
+	getUserId() {
+		return this.session.user.id;
 	}
 
-	setupListeners() {
-		this.subscriptions.add(
-			EventEmitter.on("interaction:clicked-link", link => shell.openExternal(link)),
-			EventEmitter.on("analytics", ({ label, payload }) => mixpanel.track(label, payload)),
-			EventEmitter.on("request", this.handleWebviewRequest)
-		);
+	getCurrentTeamId() {
+		return this.session.teamIds[0];
+	}
+
+	getTeams() {
+		return this.api.getTeams();
+	}
+
+	getStreams() {
+		return this.api.getStreams(this.getCurrentTeamId());
+	}
+
+	getUsers() {
+		return this.api.getUsers([this.getCurrentTeamId()]);
+	}
+
+	getPosts(streamId: string, teamId: string) {
+		return this.api.getPosts(streamId, teamId);
+	}
+
+	async login(email: string, password: string) {
+		const result = await this.api.authenticate(email, password);
+		this.session = {
+			user: result.user,
+			teamIds: result.user.teamIds,
+			accessToken: result.accessToken
+		};
+		this.api.setAccessToken(result.accessToken);
+		// TODO: setup pubnub
+		// TODO: register logout command?
+		// TODO: start presence tracking
+		return true;
+	}
+
+	logout() {
+		this.session = undefined;
+		this.api = new CodeStreamApi();
 	}
 
 	handleWebviewRequest = ({ id, action, params }) => {
@@ -196,15 +234,7 @@ export default class WorkspaceApi implements Resource {
 		}
 	};
 
-	destroy() {
-		if (this.initialized) {
-			this.subscriptions.dispose();
-			this.popupManager.destroy();
-			this.bufferChangeTracker.destroy();
-			this.diffManager.destroy();
-			this.contentHighlighter.destroy();
-			this.markerLocationTracker.destroy();
-			this.editTracker.destroy();
-		}
+	serialize() {
+		return this.session;
 	}
 }

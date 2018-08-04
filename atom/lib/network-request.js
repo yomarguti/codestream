@@ -1,5 +1,18 @@
 export const PRODUCTION_URL = "https://api.codestream.com";
 
+const normalize = object => {
+	for (let [key, value] of Object.entries(object)) {
+		if (key.startsWith("_")) {
+			key = key.substring(1);
+			object[key] = value;
+		}
+		if (Array.isArray(value)) object[key] = value.map(normalize);
+		if (typeof value === "object") object[key] = normalize(value);
+	}
+
+	return object;
+};
+
 // Babel doesn't support extending native Objects like Error, Array, etc.
 // so extending Error for custom errors is done the old fashioned way. https://github.com/chaijs/chai/issues/909
 export function ApiRequestError(message, data) {
@@ -34,7 +47,7 @@ const tryFetch = async (url, config) => {
 	try {
 		const response = await fetch(url, config);
 		const json = await response.json();
-		if (response.ok) return json;
+		if (response.ok) return normalize(json);
 		else throw json;
 	} catch (data) {
 		if (data.message === "Failed to fetch" && navigator.onLine)
