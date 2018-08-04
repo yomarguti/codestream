@@ -56,11 +56,7 @@ module.exports = function(env, argv) {
 			filename: "extension.js"
 		},
 		resolve: {
-			extensions: [".tsx", ".ts", ".js"],
-			alias: {
-				codestream$: path.resolve(__dirname, "types/api.d.ts"),
-				"codestream-agent$": path.resolve(__dirname, "types/agent.d.ts")
-			}
+			extensions: [".tsx", ".ts", ".js"]
 		},
 		externals: [nodeExternals()],
 		module: {
