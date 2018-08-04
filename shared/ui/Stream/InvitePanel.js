@@ -85,6 +85,10 @@ export class InvitePage extends Component {
 		} else return null;
 	};
 
+	tabIndex = () => {
+		return global.atom ? this.tabIndexCount++ : "0";
+	}
+
 	render() {
 		const { newMemberEmail, newMemberName } = this.state;
 		const inactive = this.props.activePanel !== "invite";
@@ -96,6 +100,8 @@ export class InvitePage extends Component {
 			shrink,
 			"off-right": inactive && !shrink
 		});
+
+		this.tabIndexCount = 0;
 
 		return (
 			<div className={panelClass}>
@@ -114,7 +120,7 @@ export class InvitePage extends Component {
 									className="native-key-bindings input-text"
 									id="invite-email-input"
 									type="text"
-									tabIndex="0"
+									tabIndex={this.tabIndex()}
 									value={newMemberEmail}
 									onChange={this.onEmailChange}
 									onBlur={this.onEmailBlur}
@@ -129,7 +135,7 @@ export class InvitePage extends Component {
 								<input
 									className="native-key-bindings input-text"
 									type="text"
-									tabIndex="1"
+									tabIndex={this.tabIndex()}
 									value={newMemberName}
 									onChange={this.onNameChange}
 								/>
@@ -138,7 +144,7 @@ export class InvitePage extends Component {
 								<Button
 									id="add-button"
 									className="control-button"
-									tabIndex="2"
+									tabIndex={this.tabIndex()}
 									type="submit"
 									loading={this.state.loading}
 								>
@@ -147,7 +153,7 @@ export class InvitePage extends Component {
 								<Button
 									id="discard-button"
 									className="control-button cancel"
-									tabIndex="3"
+									tabIndex={this.tabIndex()}
 									type="submit"
 									onClick={() => this.props.setActivePanel("channels")}
 								>
