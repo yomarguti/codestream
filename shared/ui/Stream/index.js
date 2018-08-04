@@ -540,8 +540,8 @@ export class SimpleStream extends Component {
 					</div>
 					<div className="shadow-overlay">
 						<div class="shadow-container">
-							<div class="shadow shadow-top"></div>
-							<div class="shadow shadow-bottom"></div>
+							<div class="shadow shadow-top" />
+							<div class="shadow shadow-bottom" />
 						</div>
 						<div
 							className={postsListClass}
@@ -549,7 +549,7 @@ export class SimpleStream extends Component {
 							onClick={this.handleClickPost}
 							id={streamDivId}
 						>
-							<div class="shadow-cover-top"></div>
+							<div class="shadow-cover-top" />
 							<div className="intro" ref={ref => (this._intro = ref)}>
 								{this.renderIntro(
 									<span>
@@ -588,7 +588,7 @@ export class SimpleStream extends Component {
 								lastTimestamp = post.createdAt;
 								return returnValue;
 							})}
-							<div class="shadow-cover-bottom"></div>
+							<div class="shadow-cover-bottom" />
 						</div>
 					</div>
 				</div>
@@ -609,15 +609,15 @@ export class SimpleStream extends Component {
 					</div>
 					<div className="shadow-overlay">
 						<div class="shadow-container">
-							<div class="shadow shadow-top"></div>
-							<div class="shadow shadow-bottom"></div>
+							<div class="shadow shadow-top" />
+							<div class="shadow shadow-bottom" />
 						</div>
 						<div
 							className={threadPostsListClass}
 							ref={ref => (this._threadpostslist = ref)}
 							onClick={this.handleClickPost}
 						>
-							<div class="shadow-cover-top"></div>
+							<div class="shadow-cover-top" />
 							{threadPost && (
 								<Post
 									post={threadPost}
@@ -631,7 +631,7 @@ export class SimpleStream extends Component {
 								/>
 							)}
 							{this.renderThreadPosts(threadId)}
-							<div class="shadow-cover-bottom"></div>
+							<div class="shadow-cover-bottom" />
 						</div>
 					</div>
 				</div>

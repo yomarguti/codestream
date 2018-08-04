@@ -17,7 +17,7 @@ export default function Button({ children, className, disabled, isOffline, loadi
 			disabled={loading || disabled}
 			{...extraProps}
 		>
-			{loading && global.atom ? <span className="loading loading-spinner-tiny inline-block" /> : children}
+			{loading ? <span className="loading loading-spinner-tiny inline-block" /> : children}
 		</button>
 	);
 }
