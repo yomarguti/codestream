@@ -29,7 +29,7 @@
 		},
 		{
 			"label": "watch",
-			"dependsOn": ["npm: agent:watch", "npm: webview:watch", "npm: watch"],
+			"dependsOn": ["npm: agent:watch", "npm: watch"],
 			"group": {
 				"kind": "build",
 				"isDefault": true

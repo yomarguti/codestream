@@ -44,11 +44,10 @@ npm run watch
 
 It will do an initial full build and then watch for file changes, compiling those changes incrementally, enabling a fast, iterative coding experience.
 
-To watch the extension, webview, and agent, use the following in separate terminals:
+To watch the extension and agent, use the following in separate terminals:
 
 ```
 npm run watch
-npm run webview:watch
 npm run agent:watch
 ```
 
@@ -56,6 +55,12 @@ Or use the provided `watch` task in VS Code, execute the following from the comm
 
 ```
 task watch
+```
+
+👉 **Tip!** If you only want to watch for changes in the webview you can execute the following command:
+
+```
+npm run webview:watch
 ```
 
 👉 **Tip!** Open VS Code to the folder where you have cloned the repository and press <kbd>CMD+SHIFT+B</kbd> (<kbd>CTRL+SHIFT+B</kbd> on Windows, Linux) to start the build. To view the build output open the Output stream by pressing <kbd>CMD+SHIFT+U</kbd>. This will run the `watch` task.
