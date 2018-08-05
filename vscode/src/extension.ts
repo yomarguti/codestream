@@ -20,14 +20,14 @@ export async function activate(context: ExtensionContext) {
 	Logger.configure(context);
 
 	// Check for an optional build number
-	let build = { number: "" };
+	let info = { build: "" };
 	try {
-		build = await FileSystem.loadJsonFromFile<{ number: string }>(
-			context.asAbsolutePath("build.json")
+		info = await FileSystem.loadJsonFromFile<{ build: string }>(
+			context.asAbsolutePath(`codestream-${extensionVersion}.info`)
 		);
 	} catch {}
 
-	const version = `${extensionVersion}${build.number ? `-${build.number}` : ""}`;
+	const version = `${extensionVersion}${info.build ? `-${info.build}` : ""}`;
 	Logger.log(`CodeStream v${version} starting...`);
 
 	const git = await gitPath();
