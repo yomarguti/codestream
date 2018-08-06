@@ -107,10 +107,20 @@ export class Login extends React.Component {
 			<div id="login-page">
 				<form id="login-form" className="standard-form" onSubmit={this.submitCredentials}>
 					<fieldset className="form-body">
-						<h2>Sign In to CodeStream</h2>
 						{this.renderAccountMessage()}
-						{this.renderError()}
 						<div id="controls">
+							<h3>New to CodeStream?</h3>
+							<Button
+								id="login-button"
+								className="control-button"
+								type="submit"
+								onClick={this.handleClickSignup}
+							>
+								<FormattedMessage id="login.footer.signUp" />
+							</Button>
+							<div className="spacer" />
+							<h3>Already Have an Account?</h3>
+							{this.renderError()}
 							<div id="email-controls" className="control-group">
 								<label>
 									<FormattedMessage id="login.email.label" />
@@ -142,11 +152,11 @@ export class Login extends React.Component {
 									required={this.state.passwordTouched}
 								/>
 								{this.renderPasswordHelp()}
-								{/* <div className="help-link">
-								<a onClick={() => this.props.transition("forgotPassword")}>
-									<FormattedMessage id="login.forgotPassword" />
-								</a>
-							</div> */}
+								<div className="help-link">
+									<a onClick={() => this.props.transition("forgotPassword")}>
+										<FormattedMessage id="login.forgotPassword" />
+									</a>
+								</div>
 							</div>
 							<div className="button-group">
 								<Button
@@ -157,16 +167,6 @@ export class Login extends React.Component {
 								>
 									<FormattedMessage id="login.submitButton" />
 								</Button>
-							</div>
-							<div className="footer">
-								<p>
-									<strong>
-										<FormattedMessage id="login.footer.noAccount" />{" "}
-										<a onClick={this.handleClickSignup}>
-											<FormattedMessage id="login.footer.signUp" />
-										</a>
-									</strong>
-								</p>
 							</div>
 						</div>
 					</fieldset>
