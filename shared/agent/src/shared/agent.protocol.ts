@@ -20,8 +20,7 @@ export interface AgentOptions {
 
 	serverUrl: string;
 	email: string;
-	token: string;
-	// passwordOrToken: string | AccessToken;
+	passwordOrToken: string | AccessToken;
 	team: string;
 	teamId: string;
 	signupToken: string;

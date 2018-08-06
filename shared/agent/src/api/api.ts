@@ -3,6 +3,7 @@ import fetch, { Headers, RequestInit, Response } from "node-fetch";
 import { URLSearchParams } from "url";
 import { ServerError } from "../agentError";
 import { Logger } from "../logger";
+import { AccessToken } from "../shared/agent.protocol";
 import {
 	CompleteSignupRequest,
 	CreatePostRequest,
@@ -40,6 +41,7 @@ import {
 	UpdateStreamMembershipResponse
 } from "../shared/api.protocol";
 
+export { AccessToken } from "../shared/agent.protocol";
 export * from "../shared/api.protocol";
 
 export class CodeStreamApi {
@@ -63,11 +65,15 @@ export class CodeStreamApi {
 		this._baseUrl = value;
 	}
 
-	login(email: string, password: string): Promise<LoginResponse> {
-		return this.put<LoginRequest, LoginResponse>("/no-auth/login", {
-			email: email,
-			password: password
-		});
+	login(email: string, passwordOrToken: string | AccessToken): Promise<LoginResponse> {
+		if (typeof passwordOrToken === "string") {
+			return this.put<LoginRequest, LoginResponse>("/no-auth/login", {
+				email: email,
+				password: passwordOrToken
+			});
+		} else {
+			return this.put<{}, LoginResponse>("/login", {}, passwordOrToken.value);
+		}
 	}
 
 	checkSignup(token: string): Promise<LoginResponse> {

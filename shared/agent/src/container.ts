@@ -35,7 +35,7 @@ class ServiceContainer {
 			email: options.email,
 			userId: loginResponse.user.id,
 			teamId: options.teamId,
-			token: options.token,
+			token: loginResponse.accessToken,
 			serverUrl: options.serverUrl
 		};
 

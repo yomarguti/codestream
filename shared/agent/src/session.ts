@@ -143,7 +143,7 @@ export class CodeStreamSession {
 			if (this._options.signupToken) {
 				loginResponse = await this._api.checkSignup(this._options.signupToken);
 			} else {
-				loginResponse = await this._api.login(this._options.email, this._options.token);
+				loginResponse = await this._api.login(this._options.email, this._options.passwordOrToken);
 			}
 		} catch (ex) {
 			if (ex instanceof ServerError) {
@@ -156,8 +156,7 @@ export class CodeStreamSession {
 		}
 
 		this._apiToken = loginResponse.accessToken;
-		// TODO: Since the token is current a password, replace it with an access token
-		this._options.token = loginResponse.accessToken;
+		this._options.passwordOrToken = { value: loginResponse.accessToken };
 
 		// If there is only 1 team, use it regardless of config
 		if (loginResponse.teams.length === 1) {
