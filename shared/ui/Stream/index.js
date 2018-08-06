@@ -1324,8 +1324,9 @@ export class SimpleStream extends Component {
 			if (quote.source) {
 				if (!quote.source.remotes || quote.source.remotes.length === 0) {
 					warning = {
-						title: "No remote URL",
-						message: "This repo doesn’t have a remote URL configured."
+						title: "No Remote URL",
+						message:
+							"This repo doesn’t have a remote URL configured. When your teammates view this post, we won’t be able to connect the code block to the appropriate file in their IDE."
 					};
 				}
 			} else {
