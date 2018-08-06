@@ -5,6 +5,7 @@ const initialState = {
 	currentCommit: "",
 	noAccess: false,
 	showSlackInfo: false,
+	hasFocus: true, // we assume we start with the focus when codestream initializes
 	usernamesInTeam: []
 };
 
