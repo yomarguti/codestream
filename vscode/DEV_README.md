@@ -79,18 +79,27 @@ We use [tslint](https://palantir.github.io/tslint/) for linting our code. You ca
 
 To lint the code as you make changes you can install the [TSLint](https://marketplace.visualstudio.com/items/eg2.tslint) extension.
 
+### Testing
+
+To run the unit tests (currently only for the agent) run the following from a terminal:
+
+```
+npm run test
+```
+
 ### Bundling
+
+To generate a production bundle (without packaging) run the following from a terminal:
+
+```
+npm run bundle
+```
 
 To generate a VSIX (installation package) run the following from a terminal:
 
 ```
-npm run pack
-```
-
-Or to just run a production bundle without packaging:
-
-```
 npm run bundle
+npm run pack
 ```
 
 ### Configuration
