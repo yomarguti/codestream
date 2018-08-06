@@ -111,9 +111,8 @@ export class Login extends React.Component {
 						<div id="controls">
 							<h3>New to CodeStream?</h3>
 							<Button
-								id="login-button"
+								id="signup-button"
 								className="control-button"
-								type="submit"
 								onClick={this.handleClickSignup}
 							>
 								<FormattedMessage id="login.footer.signUp" />
