@@ -174,6 +174,9 @@ body.preload * {
 		.explainer {
 			margin: 0 0 15px 0 !important;
 		}
+		.help-link {
+			text-transform: lowercase;
+		}
 	}
 
 	.stream {
@@ -238,7 +241,6 @@ body.preload * {
 		}
 
 		.post {
-
 			&.editing {
 				.vscode-dark& {
 					background-color: @background-color-highlight-dark !important;
@@ -407,7 +409,7 @@ body.preload * {
 		height: 100%;
 		pointer-events: none;
 	}
-	  
+
 	.shadow {
 		position: absolute;
 		z-index: 4;
@@ -422,7 +424,7 @@ body.preload * {
 		width: inherit;
 		height: 5px;
 	}
-	  
+
 	.shadow-bottom {
 		bottom: 0;
 		left: 0;
@@ -433,13 +435,13 @@ body.preload * {
 		height: 5px;
 	}
 
-	
 	.vscode-light & {
-		.shadow-top, .shadow-bottom {
-			opacity: .2;
+		.shadow-top,
+		.shadow-bottom {
+			opacity: 0.2;
 		}
 	}
-	  
+
 	.shadow-cover-top {
 		float: top;
 		height: 7px;
@@ -448,7 +450,7 @@ body.preload * {
 		position: relative;
 		z-index: 5;
 	}
-	  
+
 	.shadow-cover-bottom {
 		float: bottom;
 		height: 6px;
@@ -482,7 +484,6 @@ body.preload * {
 	padding: 1px;
 	border: 1px solid transparent !important;
 	outline: none !important;
-
 
 	&.btn-primary {
 		color: white;
@@ -525,49 +526,69 @@ body.preload * {
 @spinner-duration: 1.2s;
 
 .loading-spinner(@size) {
-  position: relative;
-  display: block;
-  width: 1em;
-  height: 1em;
-  font-size: @size;
-  background: radial-gradient(@background-color-info .1em, transparent .11em);
+	position: relative;
+	display: block;
+	width: 1em;
+	height: 1em;
+	font-size: @size;
+	background: radial-gradient(@background-color-info 0.1em, transparent 0.11em);
 
-  &::before,
-  &::after {
-    content: "";
-    position: absolute;
-    z-index: 10; // prevent sibling elements from getting their own layers
-    top: 0;
-    left: 0;
-    border-radius: 1em;
-    width: inherit;
-    height: inherit;
-    border-radius: 1em;
-    border: 2px solid;
-    -webkit-animation: spinner-animation @spinner-duration infinite;
-    -webkit-animation-fill-mode: backwards;
-  }
-  &::before {
-    border-color: @background-color-info transparent transparent transparent;
-  }
-  &::after {
-    border-color: transparent lighten(@background-color-info, 15%) transparent transparent;
-    -webkit-animation-delay: @spinner-duration/2;
-  }
+	&::before,
+	&::after {
+		content: "";
+		position: absolute;
+		z-index: 10; // prevent sibling elements from getting their own layers
+		top: 0;
+		left: 0;
+		border-radius: 1em;
+		width: inherit;
+		height: inherit;
+		border-radius: 1em;
+		border: 2px solid;
+		-webkit-animation: spinner-animation @spinner-duration infinite;
+		-webkit-animation-fill-mode: backwards;
+	}
+	&::before {
+		border-color: @background-color-info transparent transparent transparent;
+	}
+	&::after {
+		border-color: transparent lighten(@background-color-info, 15%) transparent transparent;
+		-webkit-animation-delay: @spinner-duration / 2;
+	}
 
-  &.inline-block {
-    display: inline-block;
-  }
+	&.inline-block {
+		display: inline-block;
+	}
 }
 
 @-webkit-keyframes spinner-animation {
-    0% { transform: rotateZ(  0deg); -webkit-animation-timing-function: cubic-bezier(0, 0, .8, .2); }
-   50% { transform: rotateZ(180deg); -webkit-animation-timing-function: cubic-bezier(.2, .8, 1, 1); }
-  100% { transform: rotateZ(360deg); }
+	0% {
+		transform: rotateZ(0deg);
+		-webkit-animation-timing-function: cubic-bezier(0, 0, 0.8, 0.2);
+	}
+	50% {
+		transform: rotateZ(180deg);
+		-webkit-animation-timing-function: cubic-bezier(0.2, 0.8, 1, 1);
+	}
+	100% {
+		transform: rotateZ(360deg);
+	}
 }
 
 // Spinner sizes
-.loading-spinner-tiny   { .loading-spinner(12px); &::before, &::after { border-width: 1px; } }
-.loading-spinner-small  { .loading-spinner(32px); }
-.loading-spinner-medium { .loading-spinner(48px); }
-.loading-spinner-large  { .loading-spinner(64px); }
+.loading-spinner-tiny {
+	.loading-spinner(12px);
+	&::before,
+	&::after {
+		border-width: 1px;
+	}
+}
+.loading-spinner-small {
+	.loading-spinner(32px);
+}
+.loading-spinner-medium {
+	.loading-spinner(48px);
+}
+.loading-spinner-large {
+	.loading-spinner(64px);
+}
