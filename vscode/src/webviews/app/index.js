@@ -159,6 +159,7 @@ const data = window.bootstrap;
 
 const store = createStore(
 	{
+		pluginVersion: data.version,
 		startOnMainPanel: Boolean(data.currentStreamId),
 		context: {
 			currentTeamId: data.currentTeamId,
