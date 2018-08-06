@@ -336,6 +336,25 @@ export class DirectStreamCollection extends StreamCollectionBase<DirectStream, C
 	}
 }
 
+export class ChannelAndDirectStreamCollection extends StreamCollectionBase<
+	ChannelStream | DirectStream,
+	CSChannelStream | CSDirectStream
+> {
+	constructor(session: CodeStreamSession, teamId: string) {
+		super(session, teamId);
+	}
+
+	protected entityMapper(e: CSChannelStream | CSDirectStream) {
+		if (e.type === StreamType.Direct) return new DirectStream(this.session, e);
+
+		return new ChannelStream(this.session, e);
+	}
+
+	protected async fetch() {
+		return this.session.api.getChannelOrDirectStreams();
+	}
+}
+
 export class FileStreamCollection extends StreamCollectionBase<FileStream, CSFileStream> {
 	constructor(session: CodeStreamSession, teamId: string, public readonly repo: Repository) {
 		super(session, teamId);

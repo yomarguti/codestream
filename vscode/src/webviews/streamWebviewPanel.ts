@@ -237,7 +237,7 @@ export class StreamWebviewPanel extends Disposable {
 
 	private async getBootstrapState() {
 		const [streams, teams, users, currentUser] = await Promise.all([
-			Container.session.channels.entities(),
+			Container.session.channelsAndDMs.entities(),
 			this.session.teams.entities(),
 			this.session.users.entities(),
 			this.session.api.getMe()

@@ -1,7 +1,11 @@
 "use strict";
 import { LoginResponse } from "./api";
 import { RepositoryCollection } from "./models/repositories";
-import { ChannelStreamCollection, DirectStreamCollection } from "./models/streams";
+import {
+	ChannelAndDirectStreamCollection,
+	ChannelStreamCollection,
+	DirectStreamCollection
+} from "./models/streams";
 import { Team, TeamCollection } from "./models/teams";
 import { User, UserCollection } from "./models/users";
 import { CodeStreamSession } from "./session";
@@ -31,6 +35,14 @@ export class SessionState {
 			this._channels = new ChannelStreamCollection(this.session, this.teamId);
 		}
 		return this._channels;
+	}
+
+	private _channelsAndDMs: ChannelAndDirectStreamCollection | undefined;
+	get channelsAndDMs() {
+		if (this._channelsAndDMs === undefined) {
+			this._channelsAndDMs = new ChannelAndDirectStreamCollection(this.session, this.teamId);
+		}
+		return this._channelsAndDMs;
 	}
 
 	private _directMessages: DirectStreamCollection | undefined;

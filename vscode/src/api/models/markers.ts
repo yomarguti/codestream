@@ -69,10 +69,7 @@ export class Marker {
 	private _stream: ChannelStream | DirectStream | undefined;
 	async stream() {
 		if (this._stream === undefined) {
-			this._stream = await this.session.channels.get(this.entity.streamId);
-			if (this._stream === undefined) {
-				this._stream = await this.session.directMessages.get(this.entity.streamId);
-			}
+			this._stream = await this.session.channelsAndDMs.get(this.entity.streamId);
 		}
 		return this._stream;
 	}

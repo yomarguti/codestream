@@ -207,6 +207,11 @@ export class CodeStreamSession implements Disposable {
 	}
 
 	@signedIn
+	get channelsAndDMs() {
+		return this._state!.channelsAndDMs;
+	}
+
+	@signedIn
 	get directMessages() {
 		return this._state!.directMessages;
 	}
