@@ -152,11 +152,11 @@ export class Login extends React.Component {
 									required={this.state.passwordTouched}
 								/>
 								{this.renderPasswordHelp()}
-								<div className="help-link">
+								{/* <div className="help-link">
 									<a onClick={() => this.props.transition("forgotPassword")}>
 										<FormattedMessage id="login.forgotPassword" />
 									</a>
-								</div>
+								</div> */}
 							</div>
 							<div className="button-group">
 								<Button
