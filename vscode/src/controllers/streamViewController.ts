@@ -4,6 +4,7 @@ import {
 	CodeStreamSession,
 	SessionStatus,
 	SessionStatusChangedEvent,
+	SessionStatusSignedOutReason,
 	StreamThread
 } from "../api/session";
 import { WorkspaceState } from "../common";
@@ -48,14 +49,19 @@ export class StreamViewController implements Disposable {
 	private async onSessionStatusChanged(e: SessionStatusChangedEvent) {
 		const status = e.getStatus();
 		switch (status) {
-			case SessionStatus.SignInFailed:
-				if (!this.visible) {
-					this.show();
-				}
-				break;
 			case SessionStatus.SignedOut:
-				if (this.visible) this._panel!.reset();
-				else this.closePanel();
+				if (e.reason === SessionStatusSignedOutReason.SignInFailure) {
+					if (!this.visible) {
+						this.show();
+					}
+					break;
+				}
+
+				if (this.visible) {
+					this._panel!.reset();
+				} else {
+					this.closePanel();
+				}
 				break;
 
 			case SessionStatus.SignedIn:

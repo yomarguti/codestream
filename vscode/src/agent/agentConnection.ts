@@ -15,6 +15,7 @@ import { CSPost } from "../api/api";
 import { GitRepository } from "../git/gitService";
 import { Logger } from "../logger";
 import {
+	AccessToken,
 	AgentInitializeResult,
 	AgentOptions,
 	AgentResult,
@@ -27,7 +28,7 @@ import {
 	GitRepositoriesRequest
 } from "../shared/agent.protocol";
 
-export { AgentOptions } from "../shared/agent.protocol";
+export { AccessToken, AgentOptions, AgentResult } from "../shared/agent.protocol";
 
 export class CodeStreamAgentConnection implements Disposable {
 	private _onDidReceivePubNubMessages = new EventEmitter<{ [key: string]: any }[]>();
@@ -114,11 +115,16 @@ export class CodeStreamAgentConnection implements Disposable {
 		}
 	}
 
-	async login(email: string, token: string, teamId?: string, team?: string): Promise<AgentResult> {
+	async login(
+		email: string,
+		passwordOrToken: string | AccessToken,
+		teamId?: string,
+		team?: string
+	): Promise<AgentResult> {
 		const response = await this.start({
 			...this._clientOptions.initializationOptions,
 			email: email,
-			token: token,
+			passwordOrToken: passwordOrToken,
 			team,
 			teamId
 		});

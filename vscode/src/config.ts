@@ -17,7 +17,6 @@ export interface Config {
 	autoSignIn: boolean;
 	email: string;
 	notifications: Notifications;
-	password: string;
 	serverUrl: string;
 	webAppUrl: string;
 	team: string;

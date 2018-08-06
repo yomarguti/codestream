@@ -30,7 +30,6 @@ import {
 	PostsReceivedEvent,
 	SessionChangedEvent,
 	SessionChangedType,
-	SessionStatus,
 	StreamThread
 } from "../api/session";
 import { configuration } from "../configuration";
@@ -135,6 +134,7 @@ interface BootstrapState {
 	teams: CSTeam[];
 	users: CSUser[];
 	repos: CSRepository[];
+	email?: string;
 	version: string;
 }
 
@@ -211,6 +211,7 @@ export class StreamWebviewPanel extends Disposable {
 		active: true,
 		visible: true
 	};
+
 	private onPanelViewStateChanged(e: WebviewPanelOnDidChangeViewStateEvent) {
 		const previous = this._panelState;
 		this._panelState = { active: e.webviewPanel.active, visible: e.webviewPanel.visible };
@@ -714,13 +715,14 @@ export class StreamWebviewPanel extends Disposable {
 
 		let state: BootstrapState = Object.create(null);
 
-		if (this.session.status === SessionStatus.SignedIn) {
+		if (this.session.signedIn) {
 			state = await this.getBootstrapState();
 			if (streamThread !== undefined) {
 				state.currentStreamId = streamThread.stream.id;
 				state.selectedPostId = streamThread.id;
 			}
 		} else {
+			state.email = Container.config.email;
 			state.version = Container.version;
 		}
 

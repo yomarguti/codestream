@@ -59,29 +59,6 @@ export class CodeStreamSessionApi {
 		})).post;
 	}
 
-	async createPostWithCode2(
-		text: string,
-		parentPostId: string | undefined,
-		streamId: string,
-		teamId: string,
-		commitHashWhenPosted: string | undefined,
-		codeBlocks: CreatePostRequestCodeBlock[]
-	) {
-		try {
-			return (await this._api.createPost(this.token, {
-				teamId: teamId || this.teamId,
-				streamId,
-				text,
-				parentPostId,
-				codeBlocks,
-				commitHashWhenPosted
-			})).post;
-		} catch (ex) {
-			debugger;
-			return;
-		}
-	}
-
 	async createPostWithCode(
 		text: string,
 		parentPostId: string | undefined,
@@ -211,18 +188,6 @@ export class CodeStreamSessionApi {
 
 	async editPost(postId: string, text: string, mentionedUserIds: string[]) {
 		return (await this._api.editPost(this.token, { id: postId, text, mentionedUserIds })).post;
-	}
-
-	deleteTeamContent(
-		newerThan: number | undefined,
-		includeStreams: boolean = false,
-		teamId?: string
-	) {
-		return this._api.deleteTeamContent(this.token, {
-			teamId: teamId || this.teamId,
-			newerThan: newerThan,
-			includeStreams: includeStreams
-		});
 	}
 
 	private async findOrRegisterRepo(repo: GitRepository, registeredRepos: CSRepository[]) {
@@ -392,12 +357,6 @@ export class CodeStreamSessionApi {
 			teamId = repoOrRepoId.teamId;
 		}
 		return (await this._api.getStreams<CSFileStream>(this.token, teamId, repoId)).streams;
-	}
-
-	async getSubscribeableStreams(userId: string, teamId?: string): Promise<CSStream[]> {
-		return (await this._api.getStreams<CSStream>(this.token, teamId || this.teamId)).streams.filter(
-			s => CodeStreamApi.isStreamSubscriptionRequired(s, userId)
-		);
 	}
 
 	async getTeam(teamId: string): Promise<CSTeam | undefined> {

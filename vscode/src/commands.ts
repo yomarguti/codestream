@@ -1,5 +1,6 @@
 import * as path from "path";
 import { commands, Disposable, Range, TextDocument, Uri, ViewColumn, window } from "vscode";
+import { AccessToken } from "./agent/agentConnection";
 import {
 	ChannelStreamCreationOptions,
 	CodeStreamSession,
@@ -8,11 +9,10 @@ import {
 	StreamThread,
 	StreamType
 } from "./api/session";
-import { openEditor } from "./common";
-import { encryptionKey } from "./constants";
+import { GlobalState, openEditor } from "./common";
 import { Container } from "./container";
 import { StreamThreadId } from "./controllers/streamViewController";
-import { Command, createCommandDecorator, Crypto } from "./system";
+import { Command, createCommandDecorator } from "./system";
 
 const commandRegistry: Command[] = [];
 const command = createCommandDecorator(commandRegistry);
@@ -225,8 +225,17 @@ export class Commands extends Disposable {
 	}
 
 	@command("signIn", { customErrorHandling: true })
-	signIn() {
-		return this.signInCore(Container.config.email, Container.config.password);
+	async signIn() {
+		let token = Container.context.globalState.get<AccessToken | string>(GlobalState.AccessToken);
+		if (typeof token === "string") {
+			token = { value: token };
+		}
+
+		if (!Container.config.email || !token) {
+			await Container.streamView.show();
+		} else {
+			await Container.session.login(Container.config.email, token);
+		}
 	}
 
 	@command("signOut")
@@ -305,22 +314,5 @@ export class Commands extends Disposable {
 		}
 
 		return streamThread;
-	}
-
-	private async signInCore(
-		email: string | undefined,
-		password: string | undefined,
-		teamId?: string
-	) {
-		let decryptedPassword;
-		if (password) {
-			try {
-				decryptedPassword = Crypto.decrypt(password, "aes-256-ctr", encryptionKey);
-			} catch {}
-		}
-
-		if (!email || !decryptedPassword) {
-			Container.streamView.show();
-		} else await Container.session.login(email, decryptedPassword, teamId);
 	}
 }

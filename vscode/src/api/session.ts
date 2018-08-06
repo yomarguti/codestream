@@ -8,13 +8,12 @@ import {
 	EventEmitter,
 	Uri
 } from "vscode";
-import { WorkspaceState } from "../common";
+import { AccessToken, AgentResult } from "../agent/agentConnection";
+import { GlobalState, WorkspaceState } from "../common";
 import { configuration } from "../configuration";
-import { encryptionKey } from "../constants";
 import { Container } from "../container";
 import { Logger } from "../logger";
-import { AgentResult } from "../shared/agent.protocol";
-import { Crypto, Functions, memoize, Strings } from "../system";
+import { Functions, memoize, Strings } from "../system";
 import { CodeStreamApi, CSRepository, CSStream, LoginResult, PresenceStatus } from "./api";
 import { Cache } from "./cache";
 import { Marker, MarkerCollection } from "./models/markers";
@@ -103,7 +102,6 @@ export class CodeStreamSession implements Disposable {
 		this._cache = new Cache(this);
 		this._pubnub = new PubNubReceiver(this._cache);
 		this._disposable = Disposable.from(
-			configuration.onDidChange(this.onConfigurationChanged, this),
 			this._pubnub.onDidReceiveMessage(this.onMessageReceived, this),
 			this._pubnub
 		);
@@ -124,10 +122,7 @@ export class CodeStreamSession implements Disposable {
 			}
 		}
 
-		if (
-			configuration.changed(e, configuration.name("email").value) ||
-			configuration.changed(e, configuration.name("password").value)
-		) {
+		if (configuration.changed(e, configuration.name("email").value)) {
 			if (this.signedIn) {
 				this.logout();
 			}
@@ -269,15 +264,26 @@ export class CodeStreamSession implements Disposable {
 		return this._signupToken;
 	}
 
-	async login(email: string, password: string, teamId?: string): Promise<LoginResult> {
-		const id = Strings.sha1(`${this.serverUrl}|${email}|${password}|${teamId}`);
+	async login(email: string, password: string, teamId?: string): Promise<LoginResult>;
+	async login(email: string, token: AccessToken, teamId?: string): Promise<LoginResult>;
+	async login(
+		email: string,
+		passwordOrToken: string | AccessToken,
+		teamId?: string
+	): Promise<LoginResult> {
+		const id = Strings.sha1(`${this.serverUrl}|${email}|${teamId}`);
 
 		let loginPromise;
 
 		if (CodeStreamSession._loginPromise !== undefined) {
 			loginPromise = CodeStreamSession._loginPromise;
 		} else {
-			CodeStreamSession._loginPromise = loginPromise = this.loginCore(id, email, password, teamId);
+			CodeStreamSession._loginPromise = loginPromise = this.loginCore(
+				id,
+				email,
+				passwordOrToken,
+				teamId
+			);
 		}
 
 		const result = await loginPromise;
@@ -292,17 +298,20 @@ export class CodeStreamSession implements Disposable {
 		if (this._signupToken === undefined) throw new Error("A signup token hasn't been generated");
 
 		this._status = SessionStatus.SigningIn;
-		const e = { getStatus: () => this._status };
+		const e: SessionStatusChangedEvent = { getStatus: () => this._status };
 		this._onDidChangeStatus.fire(e);
 
 		const result = await Container.agent.loginWithSignupToken(this._signupToken);
 
 		if (result.error) {
-			this._status = SessionStatus.SignInFailed;
+			this._status = SessionStatus.SignedOut;
+			e.reason = SessionStatusSignedOutReason.SignInFailure;
 			this._onDidChangeStatus.fire(e);
+
 			if (result.error !== LoginResult.NotOnTeam) {
 				this._signupToken = undefined;
 			}
+
 			return result.error;
 		}
 
@@ -315,6 +324,9 @@ export class CodeStreamSession implements Disposable {
 			CodeStreamSession._loginPromise = undefined;
 			this._id = undefined;
 		}
+
+		// Clear the access token
+		await Container.context.globalState.update(GlobalState.AccessToken, undefined);
 
 		this._status = SessionStatus.SignedOut;
 
@@ -386,23 +398,21 @@ export class CodeStreamSession implements Disposable {
 	private async loginCore(
 		id: string,
 		email: string,
-		password: string,
+		passwordOrToken: string | AccessToken,
 		teamId?: string
 	): Promise<LoginResult> {
 		Logger.log(`Signing ${email} into CodeStream (${this.serverUrl})`);
 
-		configuration.update(configuration.name("email").value, email, ConfigurationTarget.Global);
-		configuration.update(
-			configuration.name("password").value,
-			Crypto.encrypt(password, "aes-256-ctr", encryptionKey),
-			ConfigurationTarget.Global
-		);
-
 		try {
 			this._id = id;
 
+			this._serverUrl = Container.config.serverUrl;
+			if (this._api.baseUrl !== this.serverUrl) {
+				this._api.baseUrl = this.serverUrl;
+			}
+
 			this._status = SessionStatus.SigningIn;
-			const e = { getStatus: () => this._status };
+			const e: SessionStatusChangedEvent = { getStatus: () => this._status };
 			this._onDidChangeStatus.fire(e);
 
 			if (!teamId) {
@@ -412,21 +422,21 @@ export class CodeStreamSession implements Disposable {
 					: Container.context.workspaceState.get(WorkspaceState.TeamId);
 			}
 
-			const result = await Container.agent.login(email, password, teamId, Container.config.team);
+			const result = await Container.agent.login(
+				email,
+				passwordOrToken,
+				teamId,
+				Container.config.team
+			);
 
 			if (result.error) {
-				this._status = SessionStatus.SignInFailed;
+				// Clear the access token
+				await Container.context.globalState.update(GlobalState.AccessToken, undefined);
+
+				this._status = SessionStatus.SignedOut;
+				e.reason = SessionStatusSignedOutReason.SignInFailure;
 				this._onDidChangeStatus.fire(e);
-				configuration.update(
-					configuration.name("email").value,
-					undefined,
-					ConfigurationTarget.Global
-				);
-				configuration.update(
-					configuration.name("password").value,
-					undefined,
-					ConfigurationTarget.Global
-				);
+
 				return result.error;
 			}
 
@@ -443,7 +453,22 @@ export class CodeStreamSession implements Disposable {
 		}
 	}
 
-	private async initializeSession(result: AgentResult, id: string, teamId = "") {
+	private async initializeSession(result: AgentResult, id: string, teamId?: string) {
+		const email = result.loginResponse.user.email;
+
+		await Container.context.globalState.update(GlobalState.AccessToken, {
+			value: result.loginResponse.accessToken
+		} as AccessToken);
+
+		// Update the saved e-mail on successful login
+		if (email !== Container.config.email) {
+			await configuration.update(
+				configuration.name("email").value,
+				email,
+				ConfigurationTarget.Global
+			);
+		}
+
 		if (!teamId || teamId !== result.state.teamId) {
 			teamId = result.state.teamId;
 			await Container.context.workspaceState.update(WorkspaceState.TeamId, teamId);
@@ -454,17 +479,17 @@ export class CodeStreamSession implements Disposable {
 		this._presenceManager = new PresenceManager(this._sessionApi, id);
 
 		this._disposableSignedIn = Disposable.from(
-			this._api.useMiddleware(new PresenceMiddleware(this._presenceManager)),
-			this._presenceManager
+			configuration.onDidChange(this.onConfigurationChanged, this),
+			this._presenceManager,
+			this._api.useMiddleware(new PresenceMiddleware(this._presenceManager))
 		);
 
 		this._presenceManager.online();
 
 		Logger.log(
-			`${result.loginResponse.user.email} signed into CodeStream (${this.serverUrl}); userId=${
-				this.userId
-			}, teamId=${teamId}`
+			`${email} signed into CodeStream (${this.serverUrl}); userId=${this.userId}, teamId=${teamId}`
 		);
+
 		this._status = SessionStatus.SignedIn;
 		this._onDidChangeStatus.fire({ getStatus: () => this._status });
 	}
@@ -655,13 +680,17 @@ export type SessionChangedEvent =
 
 export enum SessionStatus {
 	SignedOut = "signedOut",
-	SignInFailed = "signInFailed",
 	SigningIn = "signingIn",
 	SignedIn = "signedIn"
 }
 
+export enum SessionStatusSignedOutReason {
+	SignInFailure = "signInFailure"
+}
+
 export interface SessionStatusChangedEvent {
 	getStatus(): SessionStatus;
+	reason?: SessionStatusSignedOutReason;
 }
 
 function affects(

@@ -1,6 +1,5 @@
 "use strict";
 import { RequestInit } from "node-fetch";
-import { URLSearchParams } from "url";
 import { Container } from "../container";
 import {
 	CreatePostRequest,
@@ -11,8 +10,6 @@ import {
 	CreateStreamResponse,
 	CSStream,
 	DeletePostResponse,
-	DeleteTeamContentRequest,
-	DeleteTeamContentResponse,
 	EditPostRequest,
 	EditPostResponse,
 	FindRepoResponse,
@@ -33,10 +30,7 @@ import {
 	InviteResponse,
 	JoinStreamRequest,
 	JoinStreamResponse,
-	LoginRequest,
-	LoginResponse,
 	MeResponse,
-	StreamType,
 	UpdatePresenceRequest,
 	UpdatePresenceResponse,
 	UpdateStreamMembershipRequest,
@@ -76,15 +70,6 @@ export class CodeStreamApi {
 		// });
 	}
 
-	async login(email: string, password: string): Promise<LoginResponse> {
-		const resp = await this.put<LoginRequest, LoginResponse>("/no-auth/login", {
-			email: email,
-			password: password
-		});
-
-		return resp;
-	}
-
 	useMiddleware(middleware: ApiMiddleware) {
 		this._middleware.push(middleware);
 		return {
@@ -113,18 +98,6 @@ export class CodeStreamApi {
 
 	editPost(token: string, request: EditPostRequest) {
 		return this.put<EditPostRequest, EditPostResponse>(`/posts/${request.id}`, request, token);
-	}
-
-	deleteStream(token: string, teamId: string, streamId: string) {
-		return this.delete<any /*DeleteStreamResponse*/>(`/streams/${streamId}`, token);
-	}
-
-	deleteTeamContent(token: string, request: DeleteTeamContentRequest) {
-		return this.put<DeleteTeamContentRequest, DeleteTeamContentResponse>(
-			`/delete-content`,
-			request,
-			token
-		);
 	}
 
 	findRepo(url: string, firstCommitHashes: string[]) {
@@ -297,15 +270,6 @@ export class CodeStreamApi {
 		return Container.agent.api<R>(url, init, token);
 	}
 
-	static isStreamSubscriptionRequired(stream: CSStream, userId: string): boolean {
-		if (stream.deactivated || stream.type === StreamType.File) return false;
-		if (stream.type === StreamType.Channel) {
-			if (stream.memberIds === undefined) return false;
-			if (!stream.memberIds.includes(userId)) return false;
-		}
-		return true;
-	}
-
 	static normalizeResponse<R extends object>(obj: { [key: string]: any }): R {
 		for (const [key, value] of Object.entries(obj)) {
 			if (key === "_id") {
@@ -320,19 +284,5 @@ export class CodeStreamApi {
 		}
 
 		return obj as R;
-	}
-
-	static sanitize(
-		body:
-			| ArrayBuffer
-			| ArrayBufferView
-			| NodeJS.ReadableStream
-			| string
-			| URLSearchParams
-			| undefined
-	) {
-		if (body === undefined || typeof body !== "string") return "";
-
-		return body.replace(/("password":)".*?"/gi, '$1"<hidden>"');
 	}
 }
