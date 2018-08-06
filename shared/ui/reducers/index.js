@@ -44,6 +44,10 @@ const startOnMainPanel = (state = false, { type }) => {
 	return state;
 };
 
+const pluginVersion = (state = "", { type }) => {
+	return state;
+};
+
 const appReducer = combineReducers({
 	bootstrapped,
 	companies,
@@ -55,6 +59,7 @@ const appReducer = combineReducers({
 	markers,
 	messaging,
 	onboarding,
+	pluginVersion,
 	posts,
 	repoAttributes,
 	repos,

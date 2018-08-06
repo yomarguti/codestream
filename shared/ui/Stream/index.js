@@ -1233,8 +1233,7 @@ export class SimpleStream extends Component {
 	};
 
 	postVersion = () => {
-		// const text = "This is CodeStream version " + this.props.pluginVersion + ".";
-		const text = "This is CodeStream version 1.0.";
+		const text = `This is CodeStream version ${this.props.pluginVersion}.`;
 		this.submitSystemPost(text);
 		return true;
 	};
@@ -1380,6 +1379,7 @@ const mapStateToProps = ({
 	startOnMainPanel,
 	streams,
 	users,
+	pluginVersion,
 	posts,
 	messaging,
 	teams,
@@ -1435,6 +1435,7 @@ const mapStateToProps = ({
 			: [];
 
 	return {
+		pluginVersion,
 		startOnMainPanel,
 		umis,
 		configs,
