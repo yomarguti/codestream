@@ -177,10 +177,12 @@ EventEmitter.on("data", ({ type, payload }) => {
 });
 
 EventEmitter.on("interaction:focus", () => {
-	// TODO
+	setTimeout(() => {
+		store.dispatch({ type: "SET_HAS_FOCUS", payload: true });
+	}, 10); // we want the first click to go to the FocusTrap blanket
 });
 EventEmitter.on("interaction:blur", () => {
-	// TODO
+	store.dispatch({ type: "SET_HAS_FOCUS", payload: false });
 });
 
 if (data.currentUserId) {
