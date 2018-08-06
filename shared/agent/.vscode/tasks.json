@@ -1,14 +1,132 @@
 {
-    // See https://go.microsoft.com/fwlink/?LinkId=733558
-    // for the documentation about the tasks.json format
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "type": "npm",
-            "script": "build",
-            "problemMatcher": [
-                "$tsc"
-            ]
-        }
-    ]
+	// See https://go.microsoft.com/fwlink/?LinkId=733558
+	// for the documentation about the tasks.json format
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "build",
+			"problemMatcher": [
+				{
+					"fileLocation": "absolute",
+					"owner": "typescript",
+					"pattern": [
+						{
+							"regexp": "\\[tsl\\] ERROR in (.*)?\\((\\d+),(\\d+)\\)",
+							"file": 1,
+							"line": 2,
+							"column": 3
+						},
+						{
+							"regexp": "\\s*TS\\d+:\\s*(.*)",
+							"message": 1
+						}
+					],
+					"severity": "error",
+					"source": "ts"
+				},
+				{
+					"fileLocation": "relative",
+					"owner": "typescript",
+					"pattern": [
+						{
+							"regexp": "WARNING in (.*)",
+							"file": 1
+						},
+						{
+							"regexp": "Module Warning (.*)"
+						},
+						{
+							"regexp": "\\[(\\d+), (\\d+)\\]: (.*)",
+							"line": 1,
+							"column": 2,
+							"message": 3
+						}
+					],
+					"severity": "warning",
+					"source": "tslint",
+					"background": {
+						"activeOnStart": true,
+						"beginsPattern": {
+							"regexp": "webpack is watching the files..."
+						},
+						"endsPattern": {
+							"regexp": "Built at\\:(.*)"
+						}
+					}
+				}
+			]
+		},
+		{
+			"type": "npm",
+			"script": "lint",
+			"group": "build",
+			"problemMatcher": ["$tslint5"]
+		},
+		{
+			"type": "npm",
+			"script": "watch",
+			"group": "build",
+			"isBackground": true,
+			"problemMatcher": [
+				{
+					"fileLocation": "absolute",
+					"owner": "typescript",
+					"pattern": [
+						{
+							"regexp": "\\[tsl\\] ERROR in (.*)?\\((\\d+),(\\d+)\\)",
+							"file": 1,
+							"line": 2,
+							"column": 3
+						},
+						{
+							"regexp": "\\s*TS\\d+:\\s*(.*)",
+							"message": 1
+						}
+					],
+					"severity": "error",
+					"source": "ts",
+					"background": {
+						"activeOnStart": true,
+						"beginsPattern": {
+							"regexp": "webpack is watching the files..."
+						},
+						"endsPattern": {
+							"regexp": "Built at\\:(.*)"
+						}
+					}
+				},
+				{
+					"fileLocation": "relative",
+					"owner": "typescript",
+					"pattern": [
+						{
+							"regexp": "WARNING in (.*)",
+							"file": 1
+						},
+						{
+							"regexp": "Module Warning (.*)"
+						},
+						{
+							"regexp": "\\[(\\d+), (\\d+)\\]: (.*)",
+							"line": 1,
+							"column": 2,
+							"message": 3
+						}
+					],
+					"severity": "warning",
+					"source": "tslint",
+					"background": {
+						"activeOnStart": true,
+						"beginsPattern": {
+							"regexp": "webpack is watching the files..."
+						},
+						"endsPattern": {
+							"regexp": "Built at\\:(.*)"
+						}
+					}
+				}
+			]
+		}
+	]
 }

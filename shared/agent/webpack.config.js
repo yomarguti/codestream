@@ -40,13 +40,19 @@ module.exports = function(env, argv) {
 		target: "node",
 		devtool: !production ? "eval-source-map" : undefined,
 		output: {
-			filename: "[name].js"
+			filename: "[name].js",
+			devtoolModuleFilenameTemplate: "file:///[absolute-resource-path]"
 		},
 		resolve: {
 			extensions: [".tsx", ".ts", ".js"]
 		},
 		module: {
 			rules: [
+				{
+					test: /\.ts$/,
+					enforce: "pre",
+					use: "tslint-loader"
+				},
 				{
 					test: /\.tsx?$/,
 					use: "ts-loader",

@@ -19,13 +19,14 @@
     },
     "main": "./dist/agent",
     "scripts": {
-        "build": "npm run lint && webpack --env.development",
-        "bundle": "npm run lint && webpack --env.production",
+        "build": "webpack --env.development",
+        "bundle": "webpack --env.production",
         "clean": "git clean -Xdf -e !node_modules -e !node_modules/**/*",
         "lint": "tslint --project tsconfig.json",
-        "pack": "npm run clean && npm install --no-save && npm run bundle",
+        "pack": "npm run reset && npm run bundle",
         "pretty": "prettier --config .prettierrc --write \"./src/**/*.ts\" ./package.json ./.prettierrc",
-        "rebuild": "npm run clean && npm install --no-save && npm run build",
+        "rebuild": "npm run reset && npm run build",
+        "reset": "npm run clean && npm install --no-save",
         "watch": "webpack --watch --env.development",
         "test": "export TS_NODE_COMPILER_OPTIONS='{ \"module\": \"commonjs\", \"types\": [\"node\"] }' && mocha --compilerOptions --recursive --require node_modules/ts-node/register src/test/**/*.spec.ts"
     },
@@ -54,7 +55,7 @@
         "@types/tmp": "0.0.33",
         "chai": "4.1.2",
         "clean-webpack-plugin": "0.1.19",
-        "filemanager-webpack-plugin": "1.0.28",
+        "filemanager-webpack-plugin": "1.0.29",
         "ignore-loader": "0.1.2",
         "mocha": "5.2.0",
         "prettier": "1.14.0",
@@ -62,8 +63,9 @@
         "ts-loader": "4.4.2",
         "ts-node": "7.0.0",
         "tslint": "5.11.0",
+        "tslint-loader": "3.6.0",
         "typescript": "3.0.1",
-        "webpack": "4.16.4",
+        "webpack": "4.16.5",
         "webpack-cli": "3.1.0",
         "webpack-node-externals": "1.7.2"
     }
