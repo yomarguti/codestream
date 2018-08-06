@@ -43,11 +43,9 @@ export class CodeStreamAgentConnection implements Disposable {
 	private _serverOptions: ServerOptions;
 
 	constructor(context: ExtensionContext, options: AgentOptions) {
-		// If the extension is launched in debug mode then the debug server options are used
-		// Otherwise the run options are used
 		this._serverOptions = {
 			run: {
-				module: context.asAbsolutePath("agent.js"),
+				module: context.asAbsolutePath("dist/agent.js"),
 				transport: TransportKind.ipc
 			},
 			debug: {
@@ -59,7 +57,6 @@ export class CodeStreamAgentConnection implements Disposable {
 			}
 		};
 
-		// Options to control the language client
 		this._clientOptions = {
 			initializationOptions: { ...options },
 			// Register the server for file-based text documents

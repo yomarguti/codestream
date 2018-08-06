@@ -28,7 +28,7 @@ export async function activate(context: ExtensionContext) {
 	} catch {}
 
 	const version = `${extensionVersion}${info.build ? `-${info.build}` : ""}`;
-	Logger.log(`CodeStream v${version} starting...`);
+	Logger.log(`CodeStream v${version} starting ${Logger.isDebugging ? "in debug mode" : ""}...`);
 
 	const git = await gitPath();
 

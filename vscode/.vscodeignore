@@ -1,6 +1,14 @@
 .vscode/**
-assets/client/**
+io/**
 src/**
 **/*.map
+.babelrc
+.gitattributes
 .gitignore
+.prettierignore
+.prettierrc
+codestream.code-workspace
+DEV_README.md
 tsconfig.json
+tslint.json
+webpack.config.js
