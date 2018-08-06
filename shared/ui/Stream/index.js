@@ -1082,6 +1082,12 @@ export class SimpleStream extends Component {
 		return true;
 	};
 
+	printSlackInstructions = async args => {
+		const message = "";
+		this.submitSystemPost(message);
+		return true;
+	};
+
 	setPurpose = async args => {
 		if (this.props.postStreamType === "direct") {
 			const text = "You cannot set a purpose in direct message streams.";
@@ -1270,6 +1276,8 @@ export class SimpleStream extends Component {
 				return this.removeFromStream(args);
 			case "rename":
 				return this.renameChannel(args);
+			case "slack":
+				return this.printSlackInstructions(args);
 			case "version":
 				return this.postVersion(args);
 			case "who":

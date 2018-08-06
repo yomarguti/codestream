@@ -31,13 +31,27 @@ export class CompleteSignup extends React.Component {
 			: "signup.complete.main";
 
 		return (
-			<div>
-				<h2>CodeStream</h2>
-				<FormattedMessage id={mainParagraphCopy}>{text => <p>{text}</p>}</FormattedMessage>
-				<Button onClick={this.handleClickContinue}>
-					<FormattedMessage id="signup.complete.button" />
-				</Button>
-				<a onClick={this.handleClickSignin}>Sign in</a>
+			<div id="continue-page">
+				<form id="continue-form" className="standard-form" onSubmit={this.submitCredentials}>
+					<fieldset className="form-body">
+						<h2>CodeStream</h2>
+						<FormattedMessage id={mainParagraphCopy}>{text => <p>{text}</p>}</FormattedMessage>
+						<div id="controls">
+							<div className="button-group">
+								<Button onClick={this.handleClickContinue} className="control-button">
+									<FormattedMessage id="signup.complete.button" />
+								</Button>
+							</div>
+							<div className="footer">
+								<p>
+									<strong>
+										<a onClick={this.handleClickSignin}>Sign in</a>
+									</strong>
+								</p>
+							</div>
+						</div>
+					</fieldset>
+				</form>
 			</div>
 		);
 	}
