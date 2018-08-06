@@ -163,7 +163,8 @@ const store = createStore(
 		startOnMainPanel: Boolean(data.currentStreamId),
 		context: {
 			currentTeamId: data.currentTeamId,
-			currentStreamId: data.currentStreamId
+			currentStreamId: data.currentStreamId,
+			hasFocus: true
 		},
 		session: {
 			userId: data.currentUserId
