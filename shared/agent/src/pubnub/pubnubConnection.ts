@@ -18,7 +18,7 @@ export interface PubnubInitializer {
 	lastMessageReceivedAt?: number; // should persist across sessions, interruptions in service will retrieve messages since this time
 	online?: boolean; // for now, whether the network is online is tracked from without the PubnubConnection instance, but this is still TBD
 	testMode?: boolean; // whether we emit test-mode statuses, not normally used in production
-	debug?(msg: string, info?: any): void;	// for debug messages
+	debug?(msg: string, info?: any): void; // for debug messages
 }
 
 // when providing channels to subscribe to, you can provide just the channel name,
@@ -38,19 +38,19 @@ export interface StatusChangeEvent {
 
 // one of the statuses emitted in StatusChangeEvent above
 export enum PubnubStatus {
-	Connected = "Connected",	// indicates all channels have been successfully subscribed to as requested
-	Trouble = "Trouble", 		// indicates trouble with the network or one or more subscriptions, should be a temporary state
-	Failed = "Failed", 			// indicates some channels could not be subscribed to, and client action is required to correct this
-	Offline = "Offline", 		// indicates the network is currently offline, so messages won't be received
-	Reset = "Reset", 			// indicates that during catching up on history, there are too many messages or it's been too long...
-								// the client should retrieve fresh data from the server as if it is a fresh login
-	Aborted = "Aborted",		// an aborted state, usually the result of a bad Pubnub token, client must reinitialize
+	Connected = "Connected", // indicates all channels have been successfully subscribed to as requested
+	Trouble = "Trouble", // indicates trouble with the network or one or more subscriptions, should be a temporary state
+	Failed = "Failed", // indicates some channels could not be subscribed to, and client action is required to correct this
+	Offline = "Offline", // indicates the network is currently offline, so messages won't be received
+	Reset = "Reset", // indicates that during catching up on history, there are too many messages or it's been too long...
+	// the client should retrieve fresh data from the server as if it is a fresh login
+	Aborted = "Aborted", // an aborted state, usually the result of a bad Pubnub token, client must reinitialize
 
 	// the statuses below are used only for testing, normally these are private and black-boxed
-	Confirmed = "Confirmed",	// indicates subscriptions have been confirmed
-	NetworkProblem = "NetworkProblem",	// indicates a network problem of some sort
-	Queued = "Queued",			// indicates channels have been queued for subscribing
-	Granted = "Granted"			// access was granted to channels
+	Confirmed = "Confirmed", // indicates subscriptions have been confirmed
+	NetworkProblem = "NetworkProblem", // indicates a network problem of some sort
+	Queued = "Queued", // indicates channels have been queued for subscribing
+	Granted = "Granted" // access was granted to channels
 }
 
 // internal, maintains map of channels and whether they are yet successfully subscribed
@@ -520,7 +520,10 @@ export class PubnubConnection {
 		} else if (historyOutput.messages && historyOutput.messages.length > 0) {
 			// emit all messages found and update to timestamp of last message received
 			this._lastMessageReceivedAt = historyOutput.timestamp!;
-			this._debug(`${historyOutput.messages.length} messages received from history`, historyOutput.messages);
+			this._debug(
+				`${historyOutput.messages.length} messages received from history`,
+				historyOutput.messages
+			);
 			this._debug(`_lastMessageReceivedAt updated to ${historyOutput.timestamp}`);
 			this.emitMessages(historyOutput.messages);
 		}
@@ -585,14 +588,11 @@ export class PubnubConnection {
 		let troubleChannels;
 		if (gotError || !response! || !response!.channels) {
 			troubleChannels = channels;
-		}
-		else {
+		} else {
 			troubleChannels = channels.filter(channel => {
 				return (
 					!response.channels[channel] ||
-					!response.channels[channel].occupants.find(
-						occupant => occupant.uuid === this._userId
-					)
+					!response.channels[channel].occupants.find(occupant => occupant.uuid === this._userId)
 				);
 			});
 			if (troubleChannels.length > 0) {
@@ -683,7 +683,9 @@ export class PubnubConnection {
 			this._lastSuccessfulSubscription === 0
 		) {
 			if (this._numResubscribes === 10) {
-				this._debug("All subscriptions so far have failed after 10 retries, going into aborted mode...");
+				this._debug(
+					"All subscriptions so far have failed after 10 retries, going into aborted mode..."
+				);
 				this._aborted = true;
 				this.unsubscribeAll();
 				return this.emitStatus(PubnubStatus.Aborted);
@@ -732,7 +734,9 @@ export class PubnubConnection {
 		// queue and subscribe to those channels, otherwise simply emit a Connected event,
 		// indicating we're good to go
 		if (this._queuedChannels.length > 0) {
-			this._debug("Successfully subscribed, but there are additional subscriptions in queue, draining queue...");
+			this._debug(
+				"Successfully subscribed, but there are additional subscriptions in queue, draining queue..."
+			);
 			this.drainQueue();
 		} else {
 			this._subscriptionsPending = false;

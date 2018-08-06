@@ -7,7 +7,7 @@ export interface PubnubHistoryInput {
 	pubnub: Pubnub;
 	channels: string[];
 	since: number;
-	debug?(msg: string, info?: any): void;	// for debug messages
+	debug?(msg: string, info?: any): void; // for debug messages
 }
 
 export interface PubnubHistoryOutput {
@@ -99,7 +99,9 @@ export class PubnubHistory {
 
 		if (this._allMessages.length > 0) {
 			// store the last message received, so we know where to start from next time
-			output.timestamp = this.timetokenToTimeStamp(this._allMessages[this._allMessages.length - 1].timestamp);
+			output.timestamp = this.timetokenToTimeStamp(
+				this._allMessages[this._allMessages.length - 1].timestamp
+			);
 		}
 	}
 
