@@ -17,9 +17,15 @@ import currentPage from "./currentPage"; // TODO: remove this
 import route from "./route";
 
 const session = (state = {}, { type, payload }) => {
-	if (type === "INIT_SESSION") return payload;
-	if (type === "CLEAR_SESSION") return {};
-	else return state;
+	switch (type) {
+		case "RESET":
+		case "CLEAR_SESSION":
+			return {};
+		case "INIT_SESSION":
+			return payload;
+		default:
+			return state;
+	}
 };
 
 const repoAttributes = (state = {}, { type, payload }) => {
@@ -30,6 +36,7 @@ const repoAttributes = (state = {}, { type, payload }) => {
 
 const bootstrapped = (state = false, { type }) => {
 	if (type === "BOOTSTRAP_COMPLETE") return true;
+	if (type === "RESET") return true;
 	return state;
 };
 

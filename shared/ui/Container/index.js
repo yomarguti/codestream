@@ -8,6 +8,13 @@ import CompleteSignup from "../CompleteSignup";
 
 addLocaleData(englishLocaleData);
 
+const Loading = props => (
+	<div className="loading-page">
+		<span className="loading loading-spinner-large inline-block" />
+		<p>{props.message}</p>
+	</div>
+);
+
 const UnauthenticatedRoutes = connect(state => ({ page: state.route }))(props => {
 	switch (props.page) {
 		case "login":

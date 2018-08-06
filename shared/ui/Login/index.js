@@ -92,9 +92,9 @@ export class Login extends React.Component {
 		try {
 			await this.props.authenticate({ password, email });
 		} catch (error) {
+			this.setState({ loading: false });
 			this.setState({ error });
 		}
-		this.setState({ loading: false });
 	};
 
 	handleClickSignup = event => {
