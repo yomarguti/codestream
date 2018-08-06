@@ -707,7 +707,7 @@ export class PubnubConnection {
 				(this._simulateGrantFailure instanceof Array &&
 					this._simulateGrantFailure.includes(channel))
 			) {
-				throw new ServerError("invalid token", { code: "AUTH-1000" }, 403);
+				throw new ServerError("invalid token", { code: "RAPI-1009" }, 403);
 			}
 			this._debug("Explicitly requesting access for", channel);
 			await this._api!.grant(this._accessToken!, channel);
@@ -720,7 +720,10 @@ export class PubnubConnection {
 				error instanceof ServerError &&
 				error.statusCode === 403 &&
 				error.info &&
-				error.info.code === "RAPI-1009"
+				(
+					error.info.code === "RAPI-1009" ||
+					error.info.code === "USRC-1008"
+				)
 			) {
 				this._debug("Server explicitly refused access", channel);
 				this._grantFailures.push(channel);
