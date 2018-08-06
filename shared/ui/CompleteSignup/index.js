@@ -42,13 +42,13 @@ export class CompleteSignup extends React.Component {
 									<FormattedMessage id="signup.complete.button" />
 								</Button>
 							</div>
-							<div className="footer">
+							{/*<div className="footer">
 								<p>
 									<strong>
 										<a onClick={this.handleClickSignin}>Sign in</a>
 									</strong>
 								</p>
-							</div>
+							</div>*/}
 						</div>
 					</fieldset>
 				</form>

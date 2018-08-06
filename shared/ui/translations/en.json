@@ -21,7 +21,7 @@
 	"signUp.legal.learnMore": "Learn more.",
 	"signUp.footer.alreadySignedUp": "Have an account?",
 	"signUp.footer.signIn": "Sign In",
-	"signup.complete.main": "Once you've completed the sign-up process, return here to get started with CodeStream.",
+	"signup.complete.main": "Your web browser should have opened up to a CodeStream registration page. Once you've completed the sign-up process, return here to get started with CodeStream.",
 	"signup.complete.notComplete": "Please complete Sign Up before continuing.",
 	"signup.complete.button": "CONTINUE",
 	"confirmation.invalid": "Uh oh. Invalid code.",
