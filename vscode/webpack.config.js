@@ -60,7 +60,8 @@ function getExtensionConfig(env) {
 		devtool: !env.production ? "eval-source-map" : undefined,
 		output: {
 			libraryTarget: "commonjs2",
-			filename: "extension.js"
+			filename: "extension.js",
+			devtoolModuleFilenameTemplate: "file:///[absolute-resource-path]"
 		},
 		resolve: {
 			extensions: [".tsx", ".ts", ".js"]
@@ -68,6 +69,11 @@ function getExtensionConfig(env) {
 		externals: [nodeExternals()],
 		module: {
 			rules: [
+				{
+					test: /\.ts$/,
+					enforce: "pre",
+					use: "tslint-loader"
+				},
 				{
 					test: /\.tsx?$/,
 					use: "ts-loader",
@@ -79,7 +85,8 @@ function getExtensionConfig(env) {
 				}
 			]
 		},
-		plugins: plugins
+		plugins: plugins,
+		stats: { all: false, assets: true, builtAt: true, errors: true, timings: true, warnings: true }
 	};
 }
 
@@ -180,6 +187,7 @@ function getWebviewConfig(env) {
 				}
 			]
 		},
-		plugins: plugins
+		plugins: plugins,
+		stats: { all: false, assets: true, builtAt: true, errors: true, timings: true, warnings: true }
 	};
 }

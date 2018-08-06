@@ -7,11 +7,8 @@
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": ["--extensionDevelopmentPath=${workspaceRoot}"],
-			"stopOnEntry": false,
+			"smartStep": true,
 			"sourceMaps": true,
-			"sourceMapPathOverrides": {
-				"webpack:///./*": "${workspaceRoot}/*"
-			},
 			"outFiles": ["${workspaceRoot}/dist/**/*.js"],
 			"trace": true
 		},
@@ -21,11 +18,8 @@
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": ["--extensionDevelopmentPath=${workspaceRoot}"],
-			"stopOnEntry": false,
+			"smartStep": true,
 			"sourceMaps": true,
-			"sourceMapPathOverrides": {
-				"webpack:///./*": "${workspaceRoot}/*"
-			},
 			"outFiles": ["${workspaceRoot}/dist/**/*.js"],
 			"preLaunchTask": "npm: rebuild"
 		},
@@ -35,11 +29,8 @@
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": ["--extensionDevelopmentPath=${workspaceRoot}"],
-			"stopOnEntry": false,
+			"smartStep": true,
 			"sourceMaps": true,
-			"sourceMapPathOverrides": {
-				"webpack:///./*": "${workspaceRoot}/*"
-			},
 			"outFiles": ["${workspaceRoot}/dist/**/*.js"],
 			"trace": true,
 			"preLaunchTask": "watch"
@@ -55,11 +46,8 @@
 				"akonwi.codestream",
 				"/Users/akonwi/projects/bundles/"
 			],
-			"stopOnEntry": false,
+			"smartStep": true,
 			"sourceMaps": true,
-			"sourceMapPathOverrides": {
-				"webpack:///./*": "${workspaceRoot}/*"
-			},
 			"outFiles": ["${workspaceRoot}/dist/**/*.js"],
 			"preLaunchTask": "npm: watch"
 		}
