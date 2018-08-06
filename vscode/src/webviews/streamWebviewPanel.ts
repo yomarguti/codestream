@@ -215,25 +215,23 @@ export class StreamWebviewPanel extends Disposable {
 	private onPanelViewStateChanged(e: WebviewPanelOnDidChangeViewStateEvent) {
 		const previous = this._panelState;
 		this._panelState = { active: e.webviewPanel.active, visible: e.webviewPanel.visible };
+		if (this._panelState.visible === previous.visible) return;
 
-		if (this._panelState.visible !== previous.visible) {
-			// HACK: Because messages aren't sent to the webview when hidden, we need to reset the whole view if we are invalid
-			if (this._panelState.visible && this._ipc.paused) {
-				this.setStream(this._streamThread);
-			}
+		if (!this._panelState.visible) {
+			this._ipc.onBlur();
 
 			return;
 		}
 
-		// If we aren't visible, there is no point because we can't post any messages
-		if (!this._panelState.visible) return;
+		// HACK: Because messages aren't sent to the webview when hidden, we need to reset the whole view if we are invalid
+		if (this._ipc.paused) {
+			this.setStream(this._streamThread);
 
-		if (this._panelState.active !== previous.active) {
-			if (this._panelState.active && window.state.focused) {
-				this._ipc.onFocus();
-			} else if (!this._panelState.active) {
-				this._ipc.onBlur();
-			}
+			return;
+		}
+
+		if (window.state.focused) {
+			this._ipc.onFocus();
 		}
 	}
 
@@ -565,7 +563,7 @@ export class StreamWebviewPanel extends Disposable {
 	}
 
 	private onWindowStateChanged(e: WindowState) {
-		if (this._panelState.visible && this._panelState.active) {
+		if (this._panelState.visible) {
 			if (e.focused) {
 				this._ipc.onFocus();
 			} else {
