@@ -20,15 +20,14 @@
     "main": "./dist/agent",
     "scripts": {
         "build": "webpack --env.development",
-        "bundle": "webpack --env.production",
+        "bundle": "npm run reset && webpack --env.production",
         "clean": "git clean -Xdf -e !node_modules -e !node_modules/**/*",
         "lint": "tslint --project tsconfig.json",
-        "pack": "npm run reset && npm run bundle",
         "pretty": "prettier --config .prettierrc --write \"./src/**/*.ts\" ./package.json ./.prettierrc",
         "rebuild": "npm run reset && npm run build",
         "reset": "npm run clean && npm install --no-save",
-        "watch": "webpack --watch --env.development",
-        "test": "export TS_NODE_COMPILER_OPTIONS='{ \"module\": \"commonjs\", \"types\": [\"node\"] }' && mocha --compilerOptions --recursive --require node_modules/ts-node/register src/test/**/*.spec.ts"
+        "test": "cross-env TS_NODE_COMPILER_OPTIONS=\"{ \\\"module\\\": \\\"commonjs\\\", \\\"types\\\": [\\\"node\\\"] }\" mocha --require ts-node/register --recursive \"src/test/**/*.spec.ts\"",
+        "watch": "webpack --watch --env.development"
     },
     "dependencies": {
         "date-fns": "1.29.0",
@@ -55,6 +54,7 @@
         "@types/tmp": "0.0.33",
         "chai": "4.1.2",
         "clean-webpack-plugin": "0.1.19",
+        "cross-env": "5.2.0",
         "filemanager-webpack-plugin": "1.0.29",
         "ignore-loader": "0.1.2",
         "mocha": "5.2.0",
