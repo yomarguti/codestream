@@ -35,6 +35,7 @@ const loginApiErrorMappings: { [k: string]: string } = {
 	"USRC-1001": "INVALID_CREDENTIALS",
 	"USRC-1010": "NOT_CONFIRMED",
 	"AUTH-1002": "TOKEN_INVALID",
+	"AUTH-1003": "TOKEN_INVALID",
 	"AUTH-1005": "TOKEN_INVALID",
 	// "RAPI-1001": "missing parameter" // shouldn't ever happen
 	"RAPI-1003": "NOT_FOUND",
