@@ -207,7 +207,7 @@
     ],
     "scripts": {
         "build": "webpack --env.development",
-        "bundle": "npm run reset && run agent:bundle && webpack --env.production",
+        "bundle": "npm run reset && npm run agent:bundle && webpack --env.production",
         "clean": "git clean -Xdf -e !node_modules -e !node_modules/**/* -e !codestream*.info",
         "lint": "tslint --project tsconfig.json",
         "pack": "vsce package",
