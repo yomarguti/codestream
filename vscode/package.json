@@ -223,7 +223,7 @@
         "webview:watch": "webpack --watch --config-name webview --env.development",
         "preinstall": "pushd \"../codestream-components\" && npm install --no-save && popd",
         "postinstall": "node ./node_modules/vscode/bin/install",
-        "vscode:prepublish": "npm run agent:pack && webpack --env.production && npm run webview:bundle"
+        "vscode:prepublish": "npm run agent:pack && webpack --env.production"
     },
     "dependencies": {
         "date-fns": "1.29.0",
