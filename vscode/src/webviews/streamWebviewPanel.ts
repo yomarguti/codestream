@@ -682,7 +682,7 @@ export class StreamWebviewPanel extends Disposable {
 			this._panel = window.createWebviewPanel(
 				"CodeStream.stream",
 				"CodeStream",
-				{ viewColumn: ViewColumn.Three, preserveFocus: false },
+				{ viewColumn: ViewColumn.Beside, preserveFocus: false },
 				{
 					retainContextWhenHidden: true,
 					enableFindWidget: true,
@@ -708,7 +708,7 @@ export class StreamWebviewPanel extends Disposable {
 			this._ipc.reset(this._panel);
 
 			this._panel.webview.html = html;
-			this._panel.reveal(ViewColumn.Three, false);
+			this._panel.reveal(undefined, false);
 		}
 
 		let state: BootstrapState = Object.create(null);
@@ -738,7 +738,7 @@ export class StreamWebviewPanel extends Disposable {
 			.replace("'{{bootstrap}}'", JSON.stringify(state));
 
 		this._panel.webview.html = html;
-		this._panel.reveal(ViewColumn.Three, false);
+		this._panel.reveal(undefined, false);
 
 		return this._streamThread;
 	}
