@@ -33,7 +33,12 @@ export class Cache {
 	}
 
 	resolveUsers(changeSets: object[]) {
-		return this._resolveById(this.users, changeSets, id => this.session.api.getUser(id));
+		return this._resolveById(this.users, changeSets, id => {
+			if (id === this.session.userId) {
+				return this.session.api.getMe();
+			}
+			return this.session.api.getUser(id);
+		});
 	}
 
 	resolveTeams(changeSets: object[]) {
