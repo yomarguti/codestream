@@ -100,7 +100,11 @@ class ComposeBox extends React.Component {
 	insertIfEmpty(newText) {
 		// if there's text in the compose area, return without
 		// adding the suggestion
-		if (this.state.postTextByStream[this.props.streamId] && this.state.postTextByStream[this.props.streamId].length > 0) return;
+		if (
+			this.state.postTextByStream[this.props.streamId] &&
+			this.state.postTextByStream[this.props.streamId].length > 0
+		)
+			return;
 		// the reason for this unicode space is that chrome will
 		// not render a space at the end of a contenteditable div
 		// unless it is a &nbsp;, which is difficult to insert
@@ -323,7 +327,7 @@ class ComposeBox extends React.Component {
 	};
 
 	handleKeyPress = event => {
-		let newPostText = this.state.postTextByStream[this.props.streamId];
+		let newPostText = this.state.postTextByStream[this.props.streamId] || "";
 
 		// if we have the at-mentions popup open, then the keys
 		// do something different than if we have the focus in

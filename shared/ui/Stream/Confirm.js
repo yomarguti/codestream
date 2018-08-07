@@ -58,10 +58,10 @@ export default class Confirm extends Component {
 						{this.props.buttons.map(button => {
 							const buttonClass = createClassString({
 								"control-button": true,
-								cancel: !button.action
+								cancel: !button.action && !button.uri
 							});
 
-							return (
+							const buttonComponent = (
 								<Button
 									className={buttonClass}
 									onClick={e => {
@@ -73,6 +73,8 @@ export default class Confirm extends Component {
 									{button.label}
 								</Button>
 							);
+
+							return button.uri ? <a href={button.uri}>{buttonComponent}</a> : buttonComponent;
 						})}
 					</div>
 				</div>

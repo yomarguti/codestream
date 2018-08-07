@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import { FormattedMessage, injectIntl } from "react-intl";
 import { connect } from "react-redux";
 import _ from "underscore";
 import createClassString from "classnames";
@@ -1084,8 +1085,22 @@ export class SimpleStream extends Component {
 	};
 
 	printSlackInstructions = async args => {
-		const message = "";
-		this.submitSystemPost(message);
+		const intl = this.props.intl;
+		const message =
+			intl.formatMessage({ id: "slackInfo.p1" }) +
+			"\n\n" +
+			intl.formatMessage({ id: "slackInfo.p2" });
+		confirmPopup({
+			title: "Slack Integration",
+			message,
+			buttons: [
+				{
+					label: "Add to Slack",
+					uri: `/no-auth/slack/addtoslack?codestream_team=${this.props.teamId}`
+				},
+				{ label: "Cancel" }
+			]
+		});
 		return true;
 	};
 
@@ -1512,4 +1527,4 @@ export default connect(
 	{
 		...actions
 	}
-)(SimpleStream);
+)(injectIntl(SimpleStream));
