@@ -15,6 +15,10 @@ function calcTotals(state) {
 
 export default (state = initialState, { type, payload }) => {
 	switch (type) {
+		case "UPDATE_UNREADS": {
+			return payload;
+		}
+		// ---- LEGACY: these will be removed once atom is no longer using them
 		case "INCREMENT_UMI": {
 			// console.log("incrementint umis in the reducer: ", payload);
 			let nextState = { ...state };
@@ -43,6 +47,7 @@ export default (state = initialState, { type, payload }) => {
 		case "SET_UMI": {
 			return calcTotals(payload);
 		}
+		// ---- END LEGACY
 		case "RESET_UMI": {
 			let nextState = { ...initialState };
 			return calcTotals(nextState);

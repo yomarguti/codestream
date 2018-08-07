@@ -192,15 +192,14 @@ export class SimpleStream extends Component {
 			!this.state.unreadsAbove &&
 			!this.state.unreadsBelow
 		) {
-			try {
-				// this gets called pretty often, so only ping the API
-				// server if there is an actual change
-				if (typeof this.props.currentUser.lastReads[this.props.postStreamId] !== "undefined") {
-					console.log("Marking within check");
-					this.props.markStreamRead(this.props.postStreamId);
-				}
-			} catch (e) {
-				/* lastReads is probably undefined */
+			// this gets called pretty often, so only ping the API
+			// server if there is an actual change
+			if (
+				this.props.umis.unread[this.props.postStreamId] > 0 ||
+				this.props.umis.mentions[this.props.postStreamId] > 0
+			) {
+				console.log("Marking within check");
+				this.props.markStreamRead(this.props.postStreamId);
 			}
 		}
 	}
@@ -1411,6 +1410,8 @@ export class SimpleStream extends Component {
 	};
 }
 
+const sum = (total, num) => total + Math.round(num);
+
 const mapStateToProps = ({
 	configs,
 	connectivity,
@@ -1477,7 +1478,11 @@ const mapStateToProps = ({
 	return {
 		pluginVersion,
 		startOnMainPanel,
-		umis,
+		umis: {
+			...umis,
+			totalUnread: Object.values(umis.unread).reduce(sum, 0),
+			totalMentions: Object.values(umis.mentions).reduce(sum, 0)
+		},
 		configs,
 		isOffline,
 		teamMembersById: toMapBy("id", teamMembers),
