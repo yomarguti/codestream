@@ -14,6 +14,7 @@ import { configuration } from "../configuration";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { Functions, memoize, Strings } from "../system";
+import { CSPost, CSUser } from "./api";
 import { CodeStreamApi, CSRepository, CSStream, LoginResult, PresenceStatus } from "./api";
 import { Cache } from "./cache";
 import { Marker, MarkerCollection } from "./models/markers";
@@ -131,9 +132,11 @@ export class CodeStreamSession implements Disposable {
 
 	private onMessageReceived(e: MessageReceivedEvent) {
 		switch (e.type) {
-			case MessageType.Posts:
+			case MessageType.Posts: {
 				this.firePostsReceived(new PostsReceivedEvent(this, e));
+				this.incrementUnreads(e.posts);
 				break;
+			}
 			case MessageType.Repositories:
 				this.fireChanged(new RepositoriesAddedEvent(this, e));
 				break;
@@ -142,6 +145,14 @@ export class CodeStreamSession implements Disposable {
 				break;
 			case MessageType.Users:
 				this.fireChanged(new UsersChangedEvent(this, e));
+				e.users.some(user => {
+					if (user.id === this.userId) {
+						this._state!.updateUser(user);
+						this.calculateUnreads(user);
+						return true;
+					}
+					return false;
+				});
 				break;
 			case MessageType.Teams:
 				this.fireChanged(new TeamsChangedEvent(this, e));
@@ -261,6 +272,11 @@ export class CodeStreamSession implements Disposable {
 	@signedIn
 	get users() {
 		return this._state!.users;
+	}
+
+	@signedIn
+	get unreads() {
+		return this._state!.unreads;
 	}
 
 	getSignupToken() {
@@ -484,6 +500,7 @@ export class CodeStreamSession implements Disposable {
 		this._state = new SessionState(this, teamId, result.loginResponse);
 		this._sessionApi = new CodeStreamSessionApi(this._api, this._state.token, teamId);
 		this._presenceManager = new PresenceManager(this._sessionApi, id);
+		this.calculateUnreads(result.loginResponse.user);
 
 		this._disposableSignedIn = Disposable.from(
 			configuration.onDidChange(this.onConfigurationChanged, this),
@@ -499,6 +516,62 @@ export class CodeStreamSession implements Disposable {
 
 		this._status = SessionStatus.SignedIn;
 		this._onDidChangeStatus.fire({ getStatus: () => this._status });
+	}
+
+	private getMentionRegex(name: string) {
+		return new RegExp(`@${name}\\b`);
+	}
+
+	private async calculateUnreads(user: CSUser) {
+		const mentionRegex = this.getMentionRegex(user.username);
+
+		const lastReads = user.lastReads || {};
+		const entries = Object.entries(lastReads);
+		if (entries.length === 0) {
+			this._state!.unreads.clear();
+		}
+		entries.forEach(async ([streamId, lastReadSeqNum]) => {
+			const latestPost = await this._sessionApi!.getLatestPost(streamId);
+			const unreadPosts = await this._sessionApi!.getPostsInRange(
+				streamId,
+				lastReadSeqNum,
+				latestPost.seqNum
+			);
+
+			let unreadCount = 0;
+			let mentionCount = 0;
+			unreadPosts.forEach(post => {
+				if (!post.deactivated) {
+					if (post.text.match(mentionRegex)) {
+						mentionCount++;
+						unreadCount++;
+					} else {
+						unreadCount++;
+					}
+				}
+			});
+			this.unreads.mentions[streamId] = mentionCount;
+			this.unreads.unread[streamId] = unreadCount;
+		});
+
+		this._onDidChange.fire(new UnreadsChangedEvent(this._state!.unreads.getValues()));
+	}
+
+	private incrementUnreads(posts: CSPost[]) {
+		const mentionRegex = this.getMentionRegex(this.user.name);
+
+		const unreads = this._state!.unreads;
+
+		posts.forEach(post => {
+			if (!post.deactivated && post.creatorId !== this.userId && post.createdAt) {
+				if (post.text.match(mentionRegex)) {
+					unreads.incrementMention(post.streamId);
+				} else {
+					unreads.incrementUnread(post.streamId);
+				}
+			}
+		});
+		this._onDidChange.fire(new UnreadsChangedEvent(this._state!.unreads.getValues()));
 	}
 }
 
@@ -539,7 +612,8 @@ export enum SessionChangedType {
 	Streams = "streams",
 	Teams = "teams",
 	Markers = "markers",
-	Users = "users"
+	Users = "users",
+	Unreads = "unreads"
 }
 
 export class RepositoriesAddedEvent implements IMergeableEvent<RepositoriesAddedEvent> {
@@ -678,12 +752,32 @@ class MarkersChangedEvent {
 	}
 }
 
+class UnreadsChangedEvent {
+	readonly type = SessionChangedType.Unreads;
+
+	constructor(public readonly unreads: { unread: {}; mentions: {} }) {}
+
+	affects(id: string, type: "entity") {
+		return false;
+	}
+
+	entities() {
+		return this.unreads;
+	}
+
+	@memoize
+	items() {
+		throw new Error("Not implemented");
+	}
+}
+
 export type SessionChangedEvent =
 	| RepositoriesAddedEvent
 	| StreamsAddedEvent
 	| UsersChangedEvent
 	| TeamsChangedEvent
-	| MarkersChangedEvent;
+	| MarkersChangedEvent
+	| UnreadsChangedEvent;
 
 export enum SessionStatus {
 	SignedOut = "signedOut",

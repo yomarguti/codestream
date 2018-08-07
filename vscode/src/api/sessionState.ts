@@ -1,5 +1,6 @@
 "use strict";
 import { LoginResponse } from "./api";
+import { CSUser } from "./api";
 import { RepositoryCollection } from "./models/repositories";
 import {
 	ChannelAndDirectStreamCollection,
@@ -10,12 +11,44 @@ import { Team, TeamCollection } from "./models/teams";
 import { User, UserCollection } from "./models/users";
 import { CodeStreamSession } from "./session";
 
+class UnreadCounter {
+	unread: { [streamId: string]: number } = {};
+	mentions: { [streamId: string]: number } = {};
+
+	incrementUnread(streamId: string) {
+		const count = this.unread[streamId] || 0;
+		this.unread[streamId] = count + 1;
+	}
+
+	incrementMention(streamId: string) {
+		const count = this.mentions[streamId] || 0;
+		this.mentions[streamId] = count + 1;
+		this.incrementUnread(streamId);
+	}
+
+	clear() {
+		this.unread = {};
+		this.mentions = {};
+	}
+
+	getValues() {
+		return {
+			unread: this.unread,
+			mentions: this.mentions
+		};
+	}
+}
+
 export class SessionState {
+	_unreads: UnreadCounter;
+
 	constructor(
 		private readonly session: CodeStreamSession,
 		public readonly teamId: string,
 		private readonly _data: LoginResponse
-	) {}
+	) {
+		this._unreads = new UnreadCounter();
+	}
 
 	get pubnubKey() {
 		return this._data.pubnubKey;
@@ -93,7 +126,15 @@ export class SessionState {
 		return this._users;
 	}
 
+	get unreads() {
+		return this._unreads;
+	}
+
 	hasSingleTeam(): Promise<boolean> {
 		return Promise.resolve(this._data!.teams.length === 1);
+	}
+
+	updateUser(user: CSUser) {
+		this._user = new User(this.session, user);
 	}
 }

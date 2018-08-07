@@ -28,6 +28,10 @@ export class User extends CodeStreamItem<CSUser> {
 	get name() {
 		return this.entity.username || this.fullName;
 	}
+
+	get lastReads() {
+		return this.entity.lastReads || {};
+	}
 }
 
 export class UserCollection extends CodeStreamCollection<User, CSUser> {

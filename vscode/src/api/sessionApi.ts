@@ -282,6 +282,26 @@ export class CodeStreamSessionApi {
 		return (await this._api.getPost(this.token, teamId || this.teamId, postId)).post;
 	}
 
+	async getLatestPost(streamId: string, teamId?: string): Promise<CSPost> {
+		const posts = (await this._api.getLatestPost(this.token, teamId || this.teamId, streamId))
+			.posts;
+		return posts[0];
+	}
+
+	async getPostsInRange(
+		streamId: string,
+		start: number,
+		end: number,
+		teamId?: string
+	): Promise<CSPost[]> {
+		return (await this._api.getPostsInRange(
+			this.token,
+			teamId || this.teamId,
+			streamId,
+			`${start}-${end}`
+		)).posts;
+	}
+
 	async getPosts(stream: CSStream): Promise<CSPost[]>;
 	async getPosts(streamId: string, teamId?: string): Promise<CSPost[]>;
 	async getPosts(streamOrStreamId: CSStream | string, teamId?: string): Promise<CSPost[]> {

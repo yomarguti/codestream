@@ -132,6 +132,25 @@ export class CodeStreamApi {
 		return this.get<GetPostResponse>(`/posts/${postId}?teamId=${teamId}`, token);
 	}
 
+	getLatestPost(token: string, teamId: string, streamId: string): Promise<GetPostsResponse> {
+		return this.get<GetPostsResponse>(
+			`/posts/?teamId=${teamId}&streamId=${streamId}&limit=1`,
+			token
+		);
+	}
+
+	getPostsInRange(
+		token: string,
+		teamId: string,
+		streamId: string,
+		range: string
+	): Promise<GetPostsResponse> {
+		return this.get<GetPostsResponse>(
+			`/posts/?teamId=${teamId}&streamId=${streamId}&seqnum=${range}`,
+			token
+		);
+	}
+
 	getPosts(token: string, teamId: string, streamId: string): Promise<GetPostsResponse> {
 		return this.get<GetPostsResponse>(`/posts?teamId=${teamId}&streamId=${streamId}`, token);
 	}

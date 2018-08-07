@@ -168,7 +168,8 @@ const store = createStore(
 		},
 		session: {
 			userId: data.currentUserId
-		}
+		},
+		umis: data.unreads
 	},
 	{ api: new WebviewApi() },
 	[loggingMiddleWare]
@@ -176,6 +177,10 @@ const store = createStore(
 
 EventEmitter.on("data", ({ type, payload }) => {
 	store.dispatch({ type: `ADD_${type.toUpperCase()}`, payload });
+});
+
+EventEmitter.on("data:unreads", unreads => {
+	store.dispatch({ type: `UPDATE_UNREADS`, payload: unreads });
 });
 
 EventEmitter.on("interaction:focus", () => {

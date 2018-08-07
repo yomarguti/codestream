@@ -133,6 +133,7 @@ interface BootstrapState {
 	streams: CSStream[];
 	teams: CSTeam[];
 	users: CSUser[];
+	unreads: { unread: { [streamId: string]: number }; mentions: { [streamId: string]: number } };
 	repos: CSRepository[];
 	email?: string;
 	version: string;
@@ -236,11 +237,12 @@ export class StreamWebviewPanel extends Disposable {
 	}
 
 	private async getBootstrapState() {
-		const [streams, teams, users, currentUser] = await Promise.all([
+		const [streams, teams, users, currentUser, unreads] = await Promise.all([
 			Container.session.channelsAndDMs.entities(),
 			this.session.teams.entities(),
 			this.session.users.entities(),
-			this.session.api.getMe()
+			this.session.user.entity,
+			this.session.unreads.getValues()
 		]);
 
 		const state: BootstrapState = Object.create(null);
@@ -250,6 +252,7 @@ export class StreamWebviewPanel extends Disposable {
 		state.streams = streams;
 		state.teams = teams;
 		state.users = users.map(user => (user.id === currentUser.id ? currentUser : user));
+		state.unreads = unreads;
 
 		return state;
 	}
@@ -559,6 +562,12 @@ export class StreamWebviewPanel extends Disposable {
 					}
 				});
 				break;
+			case SessionChangedType.Unreads: {
+				this.postMessage({
+					type: "codestream:data:unreads",
+					body: e.entities()
+				});
+			}
 		}
 	}
 
