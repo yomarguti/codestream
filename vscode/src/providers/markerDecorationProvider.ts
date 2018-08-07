@@ -250,15 +250,18 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 	private async getMarkersCore(uri: Uri) {
 		try {
 			const resp = await Container.agent.getMarkers(uri);
-			resp;
-		} catch (ex) {
-			debugger;
-		}
-
-		try {
-			const collection = await Container.session.getMarkers(uri);
-			const markers = collection === undefined ? [] : [...(await collection.items())];
-			return markers;
+			return resp !== undefined
+				? resp.markers.map(
+						m =>
+							new Marker(Container.session, m, m.commitHashWhenCreated, [
+								m.range.start.line,
+								m.range.start.character,
+								m.range.end.line,
+								m.range.end.character,
+								undefined
+							])
+				  )
+				: [];
 		} catch (ex) {
 			Logger.error(ex);
 			return [];

@@ -19,7 +19,6 @@ export class Marker {
 
 	constructor(
 		public readonly session: CodeStreamSession,
-		public readonly fileStream: FileStream,
 		private readonly entity: CSMarker,
 		private readonly _commitHash: string,
 		location: CSLocationArray
@@ -142,7 +141,6 @@ export class MarkerCollection {
 					id,
 					new Marker(
 						this.session,
-						this.fileStream,
 						marker,
 						markerLocations.commitHash,
 						markerLocations.locations[id]
