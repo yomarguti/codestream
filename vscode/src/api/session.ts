@@ -324,14 +324,16 @@ export class CodeStreamSession implements Disposable {
 		return LoginResult.Success;
 	}
 
-	async logout() {
+	async logout(reset: boolean = true) {
 		if (this._id !== undefined) {
 			CodeStreamSession._loginPromise = undefined;
 			this._id = undefined;
 		}
 
-		// Clear the access token
-		await Container.context.globalState.update(GlobalState.AccessToken, undefined);
+		if (reset) {
+			// Clear the access token
+			await Container.context.globalState.update(GlobalState.AccessToken, undefined);
+		}
 
 		this._status = SessionStatus.SignedOut;
 
@@ -452,7 +454,7 @@ export class CodeStreamSession implements Disposable {
 			ex.message = ex.message.replace("Request initialize failed with message: ", "CodeStream: ");
 
 			Logger.error(ex);
-			void (await this.logout());
+			void (await this.logout(false));
 
 			throw ex;
 		}

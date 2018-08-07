@@ -66,7 +66,7 @@ export class PresenceManager extends Disposable {
 			Logger.error(ex);
 
 			this.dispose();
-			Container.session.logout();
+			Container.session.logout(false);
 
 			const actions: MessageItem[] = [{ title: "Reconnect" }];
 
