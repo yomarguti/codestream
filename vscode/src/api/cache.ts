@@ -114,7 +114,7 @@ const operations = {
 	},
 	$unset(object: any, data: any) {
 		Object.keys(data).forEach(property => {
-			handle(property, object, data, operations.$unset, () => (object[property] = undefined));
+			handle(property, object, data, operations.$unset, () => delete object[property]);
 		});
 	},
 	$push(object: any, data: any) {
