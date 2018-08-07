@@ -7,7 +7,7 @@ import {
 	RequestType0,
 	TextDocumentIdentifier
 } from "vscode-languageserver-protocol";
-import { CSPost, LoginResponse, LoginResult } from "./api.protocol";
+import { CSMarker, CSPost, LoginResponse, LoginResult } from "./api.protocol";
 
 export interface AccessToken {
 	value: string;
@@ -61,8 +61,7 @@ export interface DocumentMarkersRequestParams {
 	textDocument: TextDocumentIdentifier;
 }
 
-export interface MarkerWithRange {
-	id: string;
+export interface MarkerWithRange extends CSMarker {
 	range: Range;
 }
 

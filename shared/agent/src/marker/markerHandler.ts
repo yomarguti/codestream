@@ -6,6 +6,7 @@ import { DocumentMarkersResponse } from "../agent";
 import { CSMarkerLocation } from "../api/api";
 import { StreamUtil } from "../git/streamUtil";
 import { MarkerLocationUtil } from "../markerLocation/markerLocationUtil";
+import { MarkerWithRange } from "../shared/agent.protocol";
 import { MarkerUtil } from "./markerUtil";
 
 export namespace MarkerHandler {
@@ -28,10 +29,10 @@ export namespace MarkerHandler {
 			const markers = await MarkerUtil.getMarkers(streamId);
 			const locations = await MarkerLocationUtil.getCurrentLocations(document.uri);
 
-			const markersWithRange = [];
+			const markersWithRange: MarkerWithRange[] = [];
 			for (const marker of markers) {
 				markersWithRange.push({
-					id: marker.id,
+					...marker,
 					range: locationToRange(locations[marker.id])
 				});
 			}
