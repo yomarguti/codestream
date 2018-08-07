@@ -113,6 +113,7 @@ export class Login extends React.Component {
 							<Button
 								id="signup-button"
 								className="control-button"
+								type="button"
 								onClick={this.handleClickSignup}
 							>
 								<FormattedMessage id="login.footer.signUp" />
