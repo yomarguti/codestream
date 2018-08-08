@@ -147,7 +147,9 @@ export interface CSUser extends CSEntity {
 	totalPosts: number;
 	username: string;
 
-	lastReads?: any;
+	lastReads?: {
+		[streamId: string]: number;
+	};
 	preferences?: any;
 	secondaryEmails?: string[];
 
