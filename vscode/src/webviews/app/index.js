@@ -159,7 +159,6 @@ const data = window.bootstrap;
 
 const store = createStore(
 	{
-		configs: data.configs || {},
 		pluginVersion: data.version,
 		startOnMainPanel: Boolean(data.currentStreamId),
 		context: {
@@ -175,6 +174,8 @@ const store = createStore(
 	{ api: new WebviewApi() },
 	[loggingMiddleWare]
 );
+
+store.dispatch({ type: "UPDATE_CONFIGS", payload: data.configs });
 
 EventEmitter.on("data", ({ type, payload }) => {
 	store.dispatch({ type: `ADD_${type.toUpperCase()}`, payload });
