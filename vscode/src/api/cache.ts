@@ -29,7 +29,13 @@ export class Cache {
 	}
 
 	resolveStreams(changeSets: object[]) {
-		return this._resolveById(this.streams, changeSets, id => this.session.api.getStream(id));
+		return this._resolveById(this.streams, changeSets, async id => {
+			try {
+				return this.session.api.getStream(id);
+			} catch (error) {
+				return;
+			}
+		});
 	}
 
 	resolveUsers(changeSets: object[]) {
@@ -49,12 +55,12 @@ export class Cache {
 		return this._resolveById(this.markers, changeSets, id => this.session.api.getMarker(id));
 	}
 
-	private _resolveById(
+	private async _resolveById(
 		cache: Map<string, any>,
 		changeSets: object[],
 		fetch: (id: string) => Promise<any>
 	) {
-		return Promise.all(
+		const resolved = await Promise.all(
 			changeSets.map(async c => {
 				const changes = CodeStreamApi.normalizeResponse(c) as { [key: string]: any };
 				const record = cache.get(changes["id"]);
@@ -64,11 +70,14 @@ export class Cache {
 					return updatedRecord;
 				} else {
 					const updatedRecord = await fetch(changes["id"]);
-					cache.set(changes["id"], updatedRecord);
-					return updatedRecord;
+					if (updatedRecord) {
+						cache.set(changes["id"], updatedRecord);
+						return updatedRecord;
+					}
 				}
 			})
 		);
+		return resolved.filter(Boolean);
 	}
 
 	private _resolve(
