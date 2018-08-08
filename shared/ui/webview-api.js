@@ -77,6 +77,10 @@ export default class WebviewApi {
 		return this.postMessage({ action: "join-stream", params });
 	}
 
+	leaveStream(teamId, streamId, update) {
+		return this.postMessage({ action: "leave-stream", params: { teamId, streamId, update } });
+	}
+
 	invite(attributes) {
 		return this.postMessage({ action: "invite", params: attributes });
 	}

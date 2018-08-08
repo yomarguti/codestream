@@ -198,9 +198,10 @@ export const setCurrentStream = streamId => (dispatch, getState) => {
 
 export const leaveChannel = streamId => async (dispatch, getState, { api }) => {
 	const { context, session, streams } = getState();
+
 	try {
 		// 	FIXME: when there is a proper /leave endpoint,
-		await api.updateStream(streamId, {
+		await api.leaveStream(context.teamId, streamId, {
 			$pull: { memberIds: [session.userId] }
 		});
 		const stream = getStreamForId(streams, context.currentTeamId, streamId);
@@ -208,6 +209,9 @@ export const leaveChannel = streamId => async (dispatch, getState, { api }) => {
 			type: "UPDATE_STREAM",
 			payload: { ...stream, memberIds: stream.memberIds.filter(id => id !== session.userId) }
 		});
+		if (context.currentStreamId === streamId) {
+			EventEmitter.emit("interaction:changed-active-stream", undefined);
+		}
 	} catch (error) {
 		console.error(error);
 	}
