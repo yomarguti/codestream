@@ -391,9 +391,9 @@ export class PubnubConnection {
 		const channels = this.getUnsubscribedChannels();
 		this._debug("Unsubscribed channels are", channels);
 		if (channels.length === 0) {
-			// no unsubscribed channels, just do a catch up on messages
-			this._debug("No unsubscribed channels, catching up...");
-			return this.catchUp();
+			// no unsubscribed channels, just say we're fully subscribed
+			this._debug("No unsubscribed channels, we are fully subscribed");
+			return this.subscribed();
 		}
 
 		// split into channels that require presence updates and those that don't, and
@@ -452,16 +452,21 @@ export class PubnubConnection {
 	// all channels that have been requested, catch up on any missed history and emit
 	// a Connected event when done
 	private setConnected(channels: string[]) {
-		this._debug("These channels have connected", channels);
+		this._debug("These channels are connected", channels);
+		const newlyConnected: string[] = [];
 		for (const channel of channels) {
-			this._subscriptions[channel].subscribed = true;
+			if (!this._subscriptions[channel].subscribed) {
+				this._subscriptions[channel].subscribed = true;
+				newlyConnected.push(channel);
+			}
 		}
 		if (this.getUnsubscribedChannels().length === 0) {
-			this._debug("No more unsubscribed channels, catching up...");
+			this._debug("No more unsubscribed channels");
 			clearTimeout(this._statusTimeout!);
 			delete this._statusTimeout;
-			this.catchUp();
 		}
+		this._debug("Catching up on these channels", newlyConnected);
+		this.catchUp(newlyConnected);
 	}
 
 	// force-set the last message received timestamp, for testing catch-up
@@ -470,7 +475,7 @@ export class PubnubConnection {
 	}
 
 	// catch up on missed history, while disconnected
-	private async catchUp() {
+	private async catchUp(channels: string[]) {
 		if (!this._lastMessageReceivedAt) {
 			// if _lastMessageReceivedAt is not set, we assume a fresh session, with no
 			// catch up necessary
@@ -485,9 +490,8 @@ export class PubnubConnection {
 			return this.reset();
 		}
 
-		const channels = this.getSubscribedChannels();
 		if (channels.length === 0) {
-			this._debug("No subscribed channels to catch up with");
+			this._debug("No channels to catch up with");
 			if (this.getUnsubscribedChannels().length === 0) {
 				this._debug("And no channels at all, no catch-up is needed");
 				// if no channels, we just assume we're fully subscribed
@@ -500,7 +504,7 @@ export class PubnubConnection {
 		let historyOutput: PubnubHistoryOutput;
 		try {
 			const since = this._lastMessageReceivedAt - THRESHOLD_BUFFER;
-			this._debug("Fetching history since", since);
+			this._debug(`Fetching history since ${since} for`, channels);
 			historyOutput = await new PubnubHistory().fetchHistory({
 				pubnub: this._pubnub,
 				channels,
@@ -566,8 +570,8 @@ export class PubnubConnection {
 		if (channels.length === 0) {
 			// no subscribed channels to worry about, proceed through the state machine
 			// to a subscribed state again
-			this._debug("No subscribed channels to confirm, catching up...");
-			return this.catchUp();
+			this._debug("No subscribed channels to confirm, assume we are fully subscribed");
+			return this.subscribed();
 		}
 
 		// look for the occupants of the given channels, and if we are not among
@@ -615,7 +619,7 @@ export class PubnubConnection {
 			// message history
 			this._debug("Subscriptions confirmed, reconnect and catch up...");
 			(this._pubnub! as any).reconnect();
-			this.catchUp();
+			this.catchUp(this.getSubscribedChannels());
 		}
 	}
 
