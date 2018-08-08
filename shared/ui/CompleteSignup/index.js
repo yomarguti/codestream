@@ -1,19 +1,22 @@
 import * as React from "react";
 import { FormattedMessage } from "react-intl";
 import { connect } from "react-redux";
-import Button from "../Login/Button";
+import Button from "../Stream/Button";
 import * as actions from "./actions";
 
 export class CompleteSignup extends React.Component {
 	state = {
-		signUpNotComplete: false
+		signUpNotComplete: false,
+		loading: false
 	};
 
 	handleClickContinue = async event => {
 		event.preventDefault();
 		try {
+			this.setState({ loading: true });
 			await this.props.validateSignup();
 		} catch (error) {
+			this.setState({ loading: false });
 			if (error === "USER_NOT_ON_TEAM" || error === "NOT_CONFIRMED") {
 				this.setState({ signUpNotComplete: true });
 			} else this.props.goToLogin();
@@ -49,7 +52,11 @@ export class CompleteSignup extends React.Component {
 
 						<div id="controls">
 							<div className="button-group">
-								<Button onClick={this.handleClickContinue} className="control-button">
+								<Button
+									className="control-button"
+									onClick={this.handleClickContinue}
+									loading={this.state.loading}
+								>
 									<FormattedMessage id="signup.complete.button" />
 								</Button>
 							</div>

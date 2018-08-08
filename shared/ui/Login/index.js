@@ -1,7 +1,7 @@
 import * as React from "react";
 import { FormattedMessage } from "react-intl";
 import { connect } from "react-redux";
-import Button from "./Button";
+import Button from "../Stream/Button";
 import * as actions from "./actions";
 
 const isPasswordInvalid = password => password.length === 0;
