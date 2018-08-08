@@ -25,17 +25,28 @@ export class CompleteSignup extends React.Component {
 		this.props.goToLogin();
 	};
 
-	render() {
-		const mainParagraphCopy = this.state.signUpNotComplete
-			? "signup.complete.notComplete"
-			: "signup.complete.main";
+	handleClickSignup = event => {
+		event.preventDefault();
+		this.props.startSignup();
+	};
 
+	render() {
 		return (
 			<div id="continue-page">
 				<form id="continue-form" className="standard-form" onSubmit={this.submitCredentials}>
 					<fieldset className="form-body">
 						<h2>CodeStream</h2>
-						<FormattedMessage id={mainParagraphCopy}>{text => <p>{text}</p>}</FormattedMessage>
+						{this.state.signUpNotComplete ? (
+							<p>
+								Please complete <a onClick={this.handleClickSignup}>Sign Up in your browser</a>{" "}
+								before continuing.
+							</p>
+						) : (
+							<FormattedMessage id={"signup.complete.main"}>
+								{text => <p>{text}</p>}
+							</FormattedMessage>
+						)}
+
 						<div id="controls">
 							<div className="button-group">
 								<Button onClick={this.handleClickContinue} className="control-button">
