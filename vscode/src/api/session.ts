@@ -372,7 +372,7 @@ export class CodeStreamSession implements Disposable {
 
 	@signedIn
 	leaveChannel(streamId: string, teamId: string) {
-		this._onDidChange.fire(new StreamLeftEvent(streamId, teamId));
+		this._onDidChange.fire(new StreamsMembershipChangedEvent(streamId, teamId));
 	}
 
 	@signedIn
@@ -651,7 +651,7 @@ export class RepositoriesAddedEvent implements IMergeableEvent<RepositoriesAdded
 	}
 }
 
-export class StreamLeftEvent {
+export class StreamsMembershipChangedEvent {
 	readonly type = SessionChangedType.Streams;
 
 	constructor(private readonly streamId: string, private readonly teamId: string) {}
@@ -795,7 +795,7 @@ class UnreadsChangedEvent {
 export type SessionChangedEvent =
 	| RepositoriesAddedEvent
 	| StreamsAddedEvent
-	| StreamLeftEvent
+	| StreamsMembershipChangedEvent
 	| UsersChangedEvent
 	| TeamsChangedEvent
 	| MarkersChangedEvent
