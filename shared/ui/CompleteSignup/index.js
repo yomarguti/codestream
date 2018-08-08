@@ -14,7 +14,7 @@ export class CompleteSignup extends React.Component {
 		try {
 			await this.props.validateSignup();
 		} catch (error) {
-			if (error === "USER_NOT_ON_TEAM") {
+			if (error === "USER_NOT_ON_TEAM" || error === "NOT_CONFIRMED") {
 				this.setState({ signUpNotComplete: true });
 			} else this.props.goToLogin();
 		}
