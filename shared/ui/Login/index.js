@@ -13,20 +13,18 @@ const isEmailInvalid = email => {
 };
 
 export class Login extends React.Component {
-	state = {
-		email: "",
-		password: "",
-		passwordTouched: false,
-		emailTouched: false,
-		error: {
-			invalidCredentials: false
-		}
-	};
-
-	// componentDidMount() {
-	// 	this.addToolTip("login-input-email", "The email address for your CodeStream account");
-	// 	this.addToolTip("login-input-password", "Your CodeStream password");
-	// }
+	constructor(props) {
+		super(props);
+		this.state = {
+			email: props.initialEmail || "",
+			password: "",
+			passwordTouched: false,
+			emailTouched: false,
+			error: {
+				invalidCredentials: false
+			}
+		};
+	}
 
 	onBlurPassword = () => this.setState({ passwordTouched: true });
 
@@ -177,6 +175,6 @@ export class Login extends React.Component {
 }
 
 export default connect(
-	null,
+	state => ({ initialEmail: state.configs.email }),
 	actions
 )(Login);
