@@ -32,7 +32,6 @@ import {
 	SessionChangedType,
 	StreamThread
 } from "../api/session";
-import { configuration } from "../configuration";
 import { Container } from "../container";
 import { Logger } from "../logger";
 
@@ -135,9 +134,10 @@ interface BootstrapState {
 	users: CSUser[];
 	unreads: { unread: { [streamId: string]: number }; mentions: { [streamId: string]: number } };
 	repos: CSRepository[];
-	email?: string;
 	version: string;
-	configs: { [k: string]: any };
+	configs: {
+		[k: string]: any;
+	};
 }
 
 // TODO: Clean this up to be consistent with the structure
@@ -255,7 +255,7 @@ export class StreamWebviewPanel extends Disposable {
 		state.users = users.map(user => (user.id === currentUser.id ? currentUser : user));
 		state.unreads = unreads;
 		state.configs = {
-			serverUrl: configuration.get("serverUrl")
+			serverUrl: Container.config.serverUrl,
 		};
 
 		return state;
@@ -293,9 +293,9 @@ export class StreamWebviewPanel extends Disposable {
 							await commands.executeCommand(
 								"vscode.open",
 								Uri.parse(
-									`${configuration.get(
-										"webAppUrl"
-									)}/signup?signup_token=${this.session.getSignupToken()}`
+									`${
+										Container.config.webAppUrl
+									}/signup?signup_token=${this.session.getSignupToken()}`
 								)
 							);
 							responseBody.payload = true;
@@ -733,8 +733,8 @@ export class StreamWebviewPanel extends Disposable {
 				state.selectedPostId = streamThread.id;
 			}
 		} else {
-			state.email = Container.config.email;
 			state.version = Container.version;
+			state.configs = { email: Container.config.email };
 		}
 
 		this._streamThread = streamThread;
