@@ -466,8 +466,8 @@ export class StreamWebviewPanel extends Disposable {
 						try {
 							responseBody.payload = await this.session.api.updateStream(streamId, update);
 						} catch (error) {
-							if (!error.message.includes("403")) {
-								responseBody.error = error.message;
+							if (error.message.includes("Forbidden")) {
+								responseBody.payload = false;
 							}
 						} finally {
 							this.postMessage({
