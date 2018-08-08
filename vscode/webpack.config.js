@@ -178,8 +178,7 @@ function getWebviewConfig(env) {
 						{
 							loader: "less-loader",
 							options: {
-								// Turn off sourceMap because of https://github.com/less/less.js/issues/3300
-								sourceMap: false //!production
+								sourceMap: !env.production
 							}
 						}
 					],
