@@ -4,8 +4,9 @@
 		"**/node_modules": true,
 		"**/dist": true
 	},
+	"prettier.requireConfig": true,
+	"prettier.tslintIntegration": true,
 	"search.exclude": {
 		"**/dist": true
-	},
-	"tslint.autoFixOnSave": true
+	}
 }
