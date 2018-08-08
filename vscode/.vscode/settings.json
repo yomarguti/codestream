@@ -2,10 +2,11 @@
 	"editor.insertSpaces": false,
 	"files.exclude": {
 		"**/node_modules": true,
-		"**/out": true
+		"**/dist": true
 	},
+	"prettier.requireConfig": true,
+	"prettier.tslintIntegration": true,
 	"search.exclude": {
-		"**/out": true
-	},
-	"tslint.autoFixOnSave": true
+		"**/dist": true
+	}
 }
