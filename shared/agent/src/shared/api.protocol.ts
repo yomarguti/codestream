@@ -182,6 +182,7 @@ export enum LoginResult {
 	InvalidCredentials = "INVALID_CREDENTIALS",
 	InvalidToken = "TOKEN_INVALID",
 	NotOnTeam = "USER_NOT_ON_TEAM",
+	NotConfirmed = "NOT_CONFIRMED",
 	Unknown = "UNKNOWN"
 }
 
