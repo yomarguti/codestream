@@ -642,7 +642,7 @@ export class SimpleStream extends Component {
 				</div>
 				<ComposeBox
 					placeholder={placeholderText}
-					teammates={this.props.teammates}
+					teammates={this.props.channelMembersNotMe}
 					slashCommands={this.props.slashCommands}
 					streamId={this.props.postStreamId}
 					ensureStreamIsActive={this.ensureStreamIsActive}
@@ -1488,6 +1488,7 @@ const mapStateToProps = ({
 		slashCommands,
 		team: teams[context.currentTeamId],
 		channelMembers,
+		channelMembersNotMe: channelMembers.filter(({ id }) => id !== session.userId),
 		posts: streamPosts.map(post => {
 			let user = users[post.creatorId];
 			if (!user) {
