@@ -1099,7 +1099,7 @@ export class SimpleStream extends Component {
 	};
 
 	printSlackInstructions = async args => {
-		const intl = this.props.intl;
+		const { configs, intl } = this.props;
 		const message =
 			intl.formatMessage({ id: "slackInfo.p1" }) +
 			"\n\n" +
@@ -1110,7 +1110,7 @@ export class SimpleStream extends Component {
 			buttons: [
 				{
 					label: "Add to Slack",
-					uri: `/no-auth/slack/addtoslack?codestream_team=${this.props.teamId}`
+					uri: `${configs.serverUrl}/no-auth/slack/addtoslack?codestream_team=${this.props.teamId}`
 				},
 				{ label: "Cancel" }
 			]
