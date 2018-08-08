@@ -137,6 +137,7 @@ interface BootstrapState {
 	repos: CSRepository[];
 	email?: string;
 	version: string;
+	configs: { [k: string]: any };
 }
 
 // TODO: Clean this up to be consistent with the structure
@@ -253,6 +254,9 @@ export class StreamWebviewPanel extends Disposable {
 		state.teams = teams;
 		state.users = users.map(user => (user.id === currentUser.id ? currentUser : user));
 		state.unreads = unreads;
+		state.configs = {
+			serverUrl: configuration.get("serverUrl")
+		};
 
 		return state;
 	}
