@@ -425,8 +425,10 @@ export class PubnubConnection {
 		// subscribe to channels ... when we get a failure, we're not told which channels
 		// failed ... so avoid race condition problems by explicitly timing out if we
 		// don't receive a success message
-		this._debug("Pubnub subscriptions timing out in 5s...");
-		this._statusTimeout = setTimeout(this.subscriptionTimeout.bind(this), 5000);
+		if (!this._statusTimeout) {
+			this._debug("Pubnub subscriptions timing out in 5s...");
+			this._statusTimeout = setTimeout(this.subscriptionTimeout.bind(this), 5000);
+		}
 	}
 
 	// add channels to our list of channels we know we need to subscribe to, mark them
@@ -636,6 +638,7 @@ export class PubnubConnection {
 	// mode, ask the api server to explicitly grant us subscription access to those channels,
 	// and try again
 	private async subscriptionTimeout() {
+		delete this._statusTimeout;
 		const failedChannels = this.getUnsubscribedChannels();
 		this._debug("Subscription timed out for", failedChannels);
 		await this.subscriptionFailure(failedChannels);
@@ -682,7 +685,7 @@ export class PubnubConnection {
 			this.getSubscribedChannels().length === 0 &&
 			this._lastSuccessfulSubscription === 0
 		) {
-			if (this._numResubscribes === 10) {
+			if (this._numResubscribes >= 10) {
 				this._debug(
 					"All subscriptions so far have failed after 10 retries, going into aborted mode..."
 				);
@@ -818,6 +821,7 @@ export class PubnubConnection {
 	// resubscribe to all channels
 	private resubscribe() {
 		this._numResubscribes++;
+		this._debug("Set numResubscribes to " + this._numResubscribes);
 		Object.keys(this._subscriptions).forEach(channel => {
 			this._subscriptions[channel].subscribed = false;
 		});

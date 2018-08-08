@@ -38,7 +38,12 @@ class CodeStreamApiSimulator {
 	}
 }
 
+let TEST_NUM = 0;
+
 export abstract class PubnubTester {
+
+	public testNum: number = 0;
+
 	protected _userData: LoginResponse | undefined;
 	protected _otherUserData: LoginResponse | undefined;
 	protected _teamData: TeamData | undefined;
@@ -63,6 +68,7 @@ export abstract class PubnubTester {
 		this._api = new CodeStreamApi("", "", "");
 		this._apiSimulator = new CodeStreamApiSimulator(this._apiRequester);
 		this._api.grant = this._apiSimulator.grant.bind(this._apiSimulator);
+		this.testNum = ++TEST_NUM;
 	}
 
 	describe() {
@@ -118,6 +124,7 @@ export abstract class PubnubTester {
 			userId: this._userData!.user._id,
 			online: this._startOffline ? false : true,
 			testMode: true
+// 			debug: this.debug.bind(this)
 		} as PubnubInitializer);
 	}
 
@@ -208,5 +215,14 @@ export abstract class PubnubTester {
 			this._reject("timed out");
 			delete this._successTimeout;
 		}, this._testTimeout);
+	}
+
+	private debug(msg: string, info?: any) {
+		const now = new Date().toString();
+		msg = `${now}: TEST ${this.testNum}: ${msg}`;
+		if (info) {
+			msg += `: ${JSON.stringify(info, undefined, 10)}`;
+		}
+		console.log(msg);
 	}
 }

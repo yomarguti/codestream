@@ -14,7 +14,7 @@ export class ExceedBatchLimitTest extends MultiMessageCatchUpTest {
 		this._testTimeout =
 			(this._numStreams * this._numPostsPerStream +
 				this._numPostsPerStream * this._numExtraPostsPerPost) *
-				500 +
+				1000 +
 			60000;
 	}
 
@@ -39,7 +39,7 @@ export class ExceedBatchLimitTest extends MultiMessageCatchUpTest {
 						},
 						token: this._otherUserData!.accessToken
 					});
-					await this.pause(500);
+					await this.pause(1000);
 					this._posts.push(this._postData!);
 				}
 			}

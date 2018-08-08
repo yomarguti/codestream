@@ -10,13 +10,11 @@ import { InvalidAuthKeyTest } from "./invalidAuthKeyTest";
 import { InvalidChannelTest } from "./invalidChannelTest";
 import { LongTickConfirmTest } from "./longTickConfirmTest";
 import { LongTickOfflineTest } from "./longTickOfflineTest";
-import { LongTickTest } from "./longTickTest";
 import { MalformedChannelTest } from "./malformedChannelTest";
 import { MessageTest } from "./messageTest";
 import { MultiMessageCatchUpTest } from "./multiMessageCatchUpTest";
 import { NetErrorConfirmTest } from "./netErrorConfirmTest";
 import { NetErrorOfflineTest } from "./netErrorOfflineTest";
-import { NetErrorTest } from "./netErrorTest";
 import { OfflineTest } from "./offlineTest";
 import { OnlineConfirmTest } from "./onlineConfirmTest";
 import { PubnubTester, PubnubTesterConfig } from "./pubnubTester";
@@ -42,10 +40,8 @@ const Tests: PubnubTester[] = [
 	new OfflineTest(TesterConfig),
 	new StartOfflineTest(TesterConfig),
 	new GoOnlineTest(TesterConfig),
-	new LongTickTest(TesterConfig),
 	new LongTickOfflineTest(TesterConfig),
-	new LongTickConfirmTest(TesterConfig),
-	new NetErrorTest(TesterConfig),
+ 	new LongTickConfirmTest(TesterConfig),
 	new NetErrorOfflineTest(TesterConfig),
 	new NetErrorConfirmTest(TesterConfig),
 	new OnlineConfirmTest(TesterConfig),
@@ -69,10 +65,12 @@ const Tests: PubnubTester[] = [
 describe("Pubnub tests", function() {
 	this.timeout(20000);
 	Tests.forEach(async test => {
-		before(test.before.bind(test));
-		after(test.after.bind(test));
-		it(test.describe(), async () => {
-			await test.run();
-		}).timeout(test.getTestTimeout() + 1000);
+		describe(test.describe(), () => {
+			before(test.before.bind(test));
+			after(test.after.bind(test));
+			it(`${test.testNum} - ${test.describe()}`, async () => {
+				await test.run();
+			}).timeout(test.getTestTimeout() + 1000);
+		});
 	});
 });
