@@ -175,7 +175,7 @@ const store = createStore(
 	[loggingMiddleWare]
 );
 
-store.dispatch({ type: "UPDATE_CONFIGS", payload: data.configs });
+store.dispatch({ type: "UPDATE_CONFIGS", payload: data.configs || {} });
 
 EventEmitter.on("data", ({ type, payload }) => {
 	store.dispatch({ type: `ADD_${type.toUpperCase()}`, payload });
