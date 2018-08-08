@@ -1,4 +1,6 @@
 import EventEmitter from "../event-emitter";
+import { getStreamForId } from "../reducers/streams";
+
 // uuid generator taken from: https://gist.github.com/jed/982883
 const createTempId = a =>
 	a
@@ -191,6 +193,23 @@ export const setCurrentStream = streamId => (dispatch, getState) => {
 	if (context.currentStreamId !== streamId) {
 		EventEmitter.emit("interaction:changed-active-stream", streamId);
 		dispatch({ type: "SET_CURRENT_STREAM", payload: streamId });
+	}
+};
+
+export const leaveChannel = streamId => async (dispatch, getState, { api }) => {
+	const { context, session, streams } = getState();
+	try {
+		// 	FIXME: when there is a proper /leave endpoint,
+		await api.updateStream(streamId, {
+			$pull: { memberIds: [session.userId] }
+		});
+		const stream = getStreamForId(streams, context.currentTeamId, streamId);
+		dispatch({
+			type: "UPDATE_STREAM",
+			payload: { ...stream, memberIds: stream.memberIds.filter(id => id !== session.userId) }
+		});
+	} catch (error) {
+		console.error(error);
 	}
 };
 

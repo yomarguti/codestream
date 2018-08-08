@@ -1155,7 +1155,7 @@ export class SimpleStream extends Component {
 	};
 
 	executeLeaveChannel = () => {
-		this.props.removeUsersFromStream(this.props.postStreamId, [this.props.currentUser.id]);
+		this.props.leaveChannel(this.props.postStreamId);
 		this.setActivePanel("channels");
 		return true;
 	};

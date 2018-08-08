@@ -10,10 +10,11 @@ export default class WebviewApi {
 			const request = this.pendingRequests.get(id);
 			if (request) {
 				console.debug("codestream:response", { id, payload, error });
-				if (payload) request.resolve(payload);
+				if (payload !== undefined) request.resolve(payload);
 				else {
 					request.reject(
-						error || `No error provided by host process in response to ${request.action}`
+						error ||
+							`No payload and no error provided by host process in response to ${request.action}`
 					);
 				}
 				this.pendingRequests.delete(id);
