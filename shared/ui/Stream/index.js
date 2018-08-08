@@ -832,7 +832,22 @@ export class SimpleStream extends Component {
 				return this.notImplementedYet();
 			case "pin-to-stream":
 				return this.notImplementedYet();
+			case "direct-message":
+				return this.sendDirectMessage(post.author.username);
+			case "live-share":
+				return this.notImplementedYet();
+			case "edit-headshot":
+				return this.headshotInstructions(post.author.email);
 		}
+	};
+
+	headshotInstructions = email => {
+		const message =
+			"Until we have built-in CodeStream headshots, you can edit your headshot by setting it up on Gravatar.com for " +
+			email +
+			".\n\nNote that it might take a few minutes for your headshot to appear here.";
+
+		this.submitSystemPost(message);
 	};
 
 	findMentionedUserIds = (text, users) => {
@@ -1226,7 +1241,7 @@ export class SimpleStream extends Component {
 
 		// find or create the stream, then select it, then post the message
 		const stream = await this.props.createStream({ type: "direct", memberIds: [user] });
-		if (stream && (stream._id || stream.id)) {
+		if (stream && (stream._id || stream.id) && tokens.length) {
 			this.submitPost({ text: tokens.join(" ").trim() });
 		}
 		return true;

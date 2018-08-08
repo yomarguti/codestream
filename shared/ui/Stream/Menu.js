@@ -21,8 +21,14 @@ export default class Menu extends Component {
 		if (this.props && this.props.target) {
 			const rect = this.props.target.getBoundingClientRect();
 			this._div.style.top = rect.top + "px";
-			const left = rect.right - this._div.offsetWidth + 5;
-			this._div.style.left = left + "px";
+
+			if (this.props.align === "left") {
+				// const left = rect.right - this._div.offsetWidth + 5;
+				// this._div.style.left = left + "px";
+			} else {
+				const left = rect.right - this._div.offsetWidth + 5;
+				this._div.style.left = left + "px";
+			}
 
 			// check to make sure the menu doesn't display
 			// off the bottom of the screen
@@ -58,6 +64,7 @@ export default class Menu extends Component {
 					<ul className="compact">
 						{this.props.items.map(item => {
 							if (item.label === "-") return <hr key={count++} />;
+							if (item.fragment) return item.fragment;
 							return (
 								<li
 									className={createClassString({

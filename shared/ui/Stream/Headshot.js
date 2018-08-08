@@ -30,17 +30,9 @@ export default class Headshot extends Component {
 			authorInitials = person.username.charAt(0);
 		}
 		const classNameInitials = "headshot-initials color-" + person.color;
-		const onClick = this.props.mine ? this.handleEditHeadshot : null;
 
 		return (
-			<div className="headshot" ref={this._div} onClick={onClick}>
-				{this.state.img && (
-					<Tooltip
-						title={this.props.mine ? "Click for headshot instructions" : this.props.person.fullName}
-						delay="0"
-						target={this.state.img}
-					/>
-				)}
+			<div className="headshot" ref={this._div} onClick={this.props.onClick}>
 				<Gravatar
 					className="headshot-gravatar"
 					size={this.props.size}

@@ -26,7 +26,8 @@ class Post extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			menuOpen: false
+			menuOpen: false,
+			authorMenuOpen: false
 		};
 	}
 
@@ -36,6 +37,7 @@ class Post extends Component {
 
 	render() {
 		const { post } = this.props;
+		const { menuOpen, authorMenuOpen, menuTarget } = this.state;
 
 		const mine = this.props.currentUsername === post.author.username;
 		const systemPost = post.creatorId === "codestream";
@@ -71,8 +73,8 @@ class Post extends Component {
 		}
 
 		menuItems.push({ label: "Mark Unread", action: "mark-unread" });
-			// { label: "Add Reaction", action: "add-reaction" },
-			// { label: "Pin to Stream", action: "pin-to-stream" }
+		// { label: "Add Reaction", action: "add-reaction" },
+		// { label: "Pin to Stream", action: "pin-to-stream" }
 
 		if (mine) {
 			menuItems.push(
@@ -82,6 +84,28 @@ class Post extends Component {
 			);
 		}
 
+		let authorMenuItems = [];
+		// if (this.state.authorMenuOpen) {
+		authorMenuItems.push({
+			fragment: (
+				<div className="headshot-popup">
+					<Headshot size={144} person={post.author} />
+					<div className="author-details">
+						<div className="author-username">@{post.author.username}</div>
+						<div className="author-fullname">{post.author.fullName}</div>
+					</div>
+				</div>
+			)
+		});
+		if (mine) {
+			authorMenuItems.push({ label: "Edit Headshot", action: "edit-headshot" });
+		} else {
+			authorMenuItems.push(
+				{ label: "Live Share", action: "live-share" },
+				{ label: "Direct Message", action: "direct-message" }
+			);
+		}
+		// }
 		// let alertClass = this.props.alert ? "icon icon-" + this.props.alert : null;
 
 		// this was above Headshot
@@ -99,10 +123,16 @@ class Post extends Component {
 				{!systemPost && (
 					<Icon name="gear" className="gear align-right" onClick={this.handleMenuClick} />
 				)}
-				{this.state.menuOpen && (
-					<Menu items={menuItems} target={this.state.menuTarget} action={this.handleSelectMenu} />
+				{menuOpen && <Menu items={menuItems} target={menuTarget} action={this.handleSelectMenu} />}
+				{authorMenuOpen && (
+					<Menu
+						items={authorMenuItems}
+						target={menuTarget}
+						action={this.handleSelectMenu}
+						align="left"
+					/>
 				)}
-				<Headshot size={36} person={post.author} mine={mine} />
+				<Headshot size={36} person={post.author} mine={mine} onClick={this.handleHeadshotClick} />
 				<span className="author" ref={ref => (this._authorDiv = ref)}>
 					{post.author.username}
 					{this.renderEmote(post)}
@@ -230,10 +260,19 @@ class Post extends Component {
 		this.setState({ menuOpen: !this.state.menuOpen, menuTarget: event.target });
 	};
 
+	handleHeadshotClick = async event => {
+		console.log("HANDLED!");
+		event.stopPropagation();
+		this.setState({ authorMenuOpen: !this.state.authorMenuOpen, menuTarget: event.target });
+	};
+
 	handleSelectMenu = action => {
 		this.props.action(action, this.props.post);
-		this.setState({ menuOpen: false });
+		this.setState({ menuOpen: false, authorMenuOpen: false });
 	};
 }
 
-export default connect(null, { cancelPost, retryPost })(Post);
+export default connect(
+	null,
+	{ cancelPost, retryPost }
+)(Post);

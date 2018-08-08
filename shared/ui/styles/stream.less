@@ -996,6 +996,7 @@
 				z-index: 1;
 				left: 10px;
 			}
+
 			.author {
 				font-size: 13px;
 				padding: 0px 3px 3px 0;
@@ -1171,6 +1172,52 @@
 					opacity: 1;
 				}
 			}
+		}
+	}
+	.headshot-popup {
+		position: relative;
+		.headshot-gravatar,
+		.headshot-system {
+			top: 0;
+			left: 0;
+			display: block;
+			position: absolute;
+			width: 144px;
+			height: 144px;
+			border-radius: 4px;
+			background: none;
+			z-index: 2;
+		}
+		.headshot-initials {
+			display: block;
+			position: absolute;
+			font-size: 72px;
+			text-transform: capitalize;
+			text-align: center;
+			padding-top: 24px;
+			border-radius: 4px;
+			color: @app-background-color;
+			z-index: 1;
+			width: 144px;
+			height: 144px;
+			left: 0;
+		}
+		.headshot-gravatar,
+		.headshot-system,
+		.headshot-initials {
+			border-radius: 4px 4px 0 0;
+			margin-top: -5px;
+		}
+		.author-details {
+			padding: 154px 10px 20px 10px;
+			width: 144px;
+			color: @text-color-subtle;
+			border-bottom: 1px solid @base-border-color;
+		}
+		.author-username {
+			color: @text-color-info;
+			font-size: 16px;
+			word-break: break-all;
 		}
 	}
 	.stream.no-headshots {
