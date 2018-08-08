@@ -460,21 +460,29 @@ export class StreamWebviewPanel extends Disposable {
 						});
 						break;
 					}
+					case "leave-stream": {
+						const { streamId, teamId, update } = body.params;
+						try {
+							await this.session.api.updateStream(streamId, update);
+						} catch (e) {
+							/* */
+						}
+						this.session.leaveChannel(streamId, teamId);
+						this.postMessage({ type: "codestream:response", body: { id: body.id, payload: true } });
+						break;
+					}
 					case "update-stream": {
 						const { streamId, update } = body.params;
 						const responseBody: { [key: string]: any } = { id: body.id };
 						try {
 							responseBody.payload = await this.session.api.updateStream(streamId, update);
 						} catch (error) {
-							if (error.message.includes("Forbidden")) {
-								responseBody.payload = false;
-							}
-						} finally {
-							this.postMessage({
-								type: "codestream:response",
-								body: responseBody
-							});
+							responseBody.error = error;
 						}
+						this.postMessage({
+							type: "codestream:response",
+							body: responseBody
+						});
 						break;
 					}
 				}
@@ -497,6 +505,10 @@ export class StreamWebviewPanel extends Disposable {
 			case "interaction:changed-active-stream": {
 				const streamId = e.body;
 
+				if (!streamId) {
+					this._streamThread = undefined;
+					return;
+				}
 				const stream = await this.session.getStream(streamId);
 				if (stream !== undefined) {
 					this._streamThread = { id: undefined, stream: stream };

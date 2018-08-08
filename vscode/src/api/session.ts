@@ -371,6 +371,11 @@ export class CodeStreamSession implements Disposable {
 	}
 
 	@signedIn
+	leaveChannel(streamId: string, teamId: string) {
+		this._onDidChange.fire(new StreamLeftEvent(streamId, teamId));
+	}
+
+	@signedIn
 	addChannel(
 		name: string,
 		options: ChannelStreamCreationOptions = { membership: "auto", privacy: "public" }
@@ -646,6 +651,22 @@ export class RepositoriesAddedEvent implements IMergeableEvent<RepositoriesAdded
 	}
 }
 
+export class StreamLeftEvent {
+	readonly type = SessionChangedType.Streams;
+
+	constructor(private readonly streamId: string, private readonly teamId: string) {}
+
+	affects(id: string, type: "entity" | "team" = "team"): boolean {
+		if (type === "entity" && id === this.streamId) {
+			return true;
+		}
+		if (type === "team" && id === this.teamId) {
+			return true;
+		}
+		return false;
+	}
+}
+
 export class StreamsAddedEvent implements IMergeableEvent<StreamsAddedEvent> {
 	readonly type = SessionChangedType.Streams;
 
@@ -774,6 +795,7 @@ class UnreadsChangedEvent {
 export type SessionChangedEvent =
 	| RepositoriesAddedEvent
 	| StreamsAddedEvent
+	| StreamLeftEvent
 	| UsersChangedEvent
 	| TeamsChangedEvent
 	| MarkersChangedEvent
