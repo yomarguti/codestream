@@ -329,7 +329,7 @@ export class CodeStreamSession implements Disposable {
 			e.reason = SessionStatusSignedOutReason.SignInFailure;
 			this._onDidChangeStatus.fire(e);
 
-			if (result.error !== LoginResult.NotOnTeam) {
+			if (result.error !== LoginResult.NotOnTeam && result.error !== LoginResult.NotConfirmed) {
 				this._signupToken = undefined;
 			}
 
