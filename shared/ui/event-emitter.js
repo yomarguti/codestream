@@ -22,6 +22,7 @@ class EventEmitter {
 	handler = ({ data }) => {
 		if (data.type.startsWith("codestream")) {
 			const event = data.type.replace("codestream:", "");
+			console.debug(`[${event}] event received`, data.body);
 			const listeners = this.listenersByEvent.get(event) || [];
 			listeners.forEach(l => l(data.body));
 		}
@@ -58,8 +59,8 @@ class EventEmitter {
 		const disposable = this.on("publish:file-changed", listener);
 		return {
 			dispose: () => {
-				disposable.dispose()
-				this.emit('unsubscribe:file-changed', block)
+				disposable.dispose();
+				this.emit("unsubscribe:file-changed", block);
 			}
 		};
 	}
