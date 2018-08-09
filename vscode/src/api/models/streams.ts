@@ -37,6 +37,7 @@ abstract class StreamBase<T extends CSStream> extends CodeStreamItem<T> {
 	async post(text: string, parentPostId?: string) {
 		const post = await this.session.api.createPost(
 			text,
+			[],
 			parentPostId,
 			this.entity.id,
 			this.entity.teamId
