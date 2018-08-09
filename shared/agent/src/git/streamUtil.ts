@@ -35,7 +35,7 @@ export namespace StreamUtil {
 		let streams = streamsByRepoId.get(repoId);
 		if (!streams) {
 			streams = new Map();
-			const response = await api.getStreams(state.token, state.teamId, repoId);
+			const response = await api.getStreams(state.apiToken, state.teamId, repoId);
 			for (const stream of response.streams) {
 				const fileStream = stream as CSFileStream;
 				streams.set(fileStream.file, fileStream);

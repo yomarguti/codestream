@@ -98,7 +98,7 @@ export namespace MarkerLocationUtil {
 
 		if (!locationsCache) {
 			const response = await api.getMarkerLocations(
-				state.token,
+				state.apiToken,
 				state.teamId,
 				streamId,
 				commitHash

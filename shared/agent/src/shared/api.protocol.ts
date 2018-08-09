@@ -62,12 +62,16 @@ export interface CSPost extends CSEntity {
 	parentPostId?: string;
 }
 
-export interface CSRepository extends CSEntity {
+export interface CSRemote {
 	url: string;
-	firstCommitHash: string;
 	normalizedUrl: string;
+	companyIdentifier: string;
+}
+
+export interface CSRepository extends CSEntity {
+	name: string;
+	remotes: CSRemote[];
 	teamId: string;
-	companyId: string;
 }
 
 export enum StreamType {

@@ -15,14 +15,16 @@ export namespace RepoUtil {
 
 		let id = repoIdsByPath.get(repoRoot);
 		if (!id) {
-			const getReposResponse = await api.getRepos(state.token, state.teamId);
+			const getReposResponse = await api.getRepos(state.apiToken, state.teamId);
 			const repos = getReposResponse.repos;
 
-			for (const r of repos) {
-				if (git.repoHasRemote(repoRoot, r.normalizedUrl)) {
-					id = r.id;
-					repoIdsByPath.set(repoRoot, id);
-					return id;
+			for (const repo of repos) {
+				for (const r of repo.remotes) {
+					if (git.repoHasRemote(repoRoot, r.normalizedUrl)) {
+						id = repo.id;
+						repoIdsByPath.set(repoRoot, id);
+						return id;
+					}
 				}
 			}
 		}

@@ -2,30 +2,23 @@
 import { IUniDiff, parsePatch } from "diff";
 import * as fs from "fs";
 import * as path from "path";
-import {
-	CancellationToken,
-	Disposable,
-	Emitter,
-	Event
-	// workspace,
-	// WorkspaceFoldersChangeEvent
-} from "vscode-languageserver";
-import Uri from "vscode-uri";
-import { CodeStreamAgent, GitRepositoriesRequest } from "../agent";
+import { Disposable } from "vscode-languageserver";
+import URI from "vscode-uri";
+import { CodeStreamApi } from "../api/api";
 import { Logger } from "../logger";
+import { CodeStreamSession } from "../session";
 import { Strings } from "../system";
 import { git, GitErrors, GitWarnings } from "./git";
 import { GitAuthor, GitRemote, GitRepository } from "./models/models";
 import { GitAuthorParser } from "./parsers/authorParser";
 import { GitRemoteParser } from "./parsers/remoteParser";
+import { GitRepositories } from "./repositories";
 
 export * from "./models/models";
 
 export interface IGitService extends Disposable {
-	onDidChangeRepositories: Event<void>;
-
 	getFileAuthors(
-		uri: Uri,
+		uri: URI,
 		options?: { ref?: string; contents?: string; startLine?: number; endLine?: number }
 	): Promise<GitAuthor[]>;
 	getFileAuthors(
@@ -34,79 +27,49 @@ export interface IGitService extends Disposable {
 	): Promise<GitAuthor[]>;
 	// getFileAuthors(uriOrPath: Uri | string, options?: { ref?: string, contents?: string, startLine?: number, endLine?: number }): Promise<GitAuthor[]>;
 
-	getFileCurrentRevision(uri: Uri): Promise<string | undefined>;
+	getFileCurrentRevision(uri: URI): Promise<string | undefined>;
 	getFileCurrentRevision(path: string): Promise<string | undefined>;
 	// getFileCurrentSha(uriOrPath: Uri | string): Promise<string | undefined>;
 
-	getFileForRevision(uri: Uri, ref: string): Promise<string | undefined>;
+	getFileForRevision(uri: URI, ref: string): Promise<string | undefined>;
 	getFileForRevision(path: string, ref: string): Promise<string | undefined>;
 	// getFileRevision(uriOrPath: Uri | string, ref: string): Promise<string | undefined>;
 
-	getFileContentForRevision(uri: Uri, ref: string): Promise<string | undefined>;
+	getFileContentForRevision(uri: URI, ref: string): Promise<string | undefined>;
 	getFileContentForRevision(path: string, ref: string): Promise<string | undefined>;
 	// getFileRevisionContent(uriOrPath: Uri | string, ref: string): Promise<string | undefined>;
 
-	getRepoFirstCommits(repoUri: Uri): Promise<string[]>;
+	getRepoFirstCommits(repoUri: URI): Promise<string[]>;
 	getRepoFirstCommits(repoPath: string): Promise<string[]>;
 	// getRepoFirstCommits(repoUriOrPath: Uri | string): Promise<string[]>;
 
-	getRepoRemote(repoUri: Uri): Promise<GitRemote | undefined>;
+	getRepoRemote(repoUri: URI): Promise<GitRemote | undefined>;
 	getRepoRemote(repoPath: string): Promise<GitRemote | undefined>;
 	// getRepoRemote(repoUriOrPath: Uri | string): Promise<GitRemote | undefined>;
 
-	getRepositories(): Promise<GitRepository[]>;
+	getRepositories(): Promise<Iterable<GitRepository>>;
+	getRepositoryById(id: string): Promise<GitRepository | undefined>;
+	getRepositoryByFilePath(filePath: string): Promise<GitRepository | undefined>;
 
-	resolveRef(uri: Uri, ref: string): Promise<string | undefined>;
+	resolveRef(uri: URI, ref: string): Promise<string | undefined>;
 	resolveRef(path: string, ref: string): Promise<string | undefined>;
 	//   resolveRef(uriOrPath: Uri | string, ref: string): Promise<string | undefined> {
 }
 
 export class GitService implements IGitService, Disposable {
 	private _disposable: Disposable | undefined;
+	private readonly _repositories: GitRepositories;
 
-	private _onDidChangeRepositories = new Emitter<void>();
-	get onDidChangeRepositories(): Event<void> {
-		return this._onDidChangeRepositories.event;
-	}
-
-	constructor(agent: CodeStreamAgent) {
-		agent.registerHandler(GitRepositoriesRequest, this.onRepositoriesRequest.bind(this));
-
-		// case "codeStream/git/repo/remote": {
-		// 	const { uri } = params[0];
-		// 	return this._git!.getRepoRemote(uri);
-		// }
-		// case "codeStream/git/textDocument/authors": {
-		// 	const {
-		// 		textDocument: { uri },
-		// 		options
-		// 	} = params[0];
-		// 	return this._git!.getFileAuthors(uri, options);
-		// }
-		// case "codeStream/git/textDocument/revision": {
-		// 	const {
-		// 		textDocument: { uri }
-		// 	} = params[0];
-		// 	return this._git!.getFileCurrentSha(uri);
-		// }
-		// this._disposable = workspace.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this);
+	constructor(private _session: CodeStreamSession, private _api: CodeStreamApi) {
+		this._repositories = new GitRepositories(this, _session, _api);
 	}
 
 	dispose() {
 		this._disposable && this._disposable.dispose();
 	}
 
-	private onRepositoriesRequest(cancellationToken: CancellationToken) {
-		return this.getRepositories();
-	}
-
-	// private onWorkspaceFoldersChanged(e: WorkspaceFoldersChangeEvent) {
-	// 	this._repositories = undefined;
-	// 	this._onDidChangeRepositories.fire(undefined);
-	// }
-
 	async getFileAuthors(
-		uri: Uri,
+		uri: URI,
 		options?: { ref?: string; contents?: string; startLine?: number; endLine?: number }
 	): Promise<GitAuthor[]>;
 	async getFileAuthors(
@@ -114,7 +77,7 @@ export class GitService implements IGitService, Disposable {
 		options?: { ref?: string; contents?: string; startLine?: number; endLine?: number }
 	): Promise<GitAuthor[]>;
 	async getFileAuthors(
-		uriOrPath: Uri | string,
+		uriOrPath: URI | string,
 		options: { ref?: string; contents?: string; startLine?: number; endLine?: number } = {}
 	): Promise<GitAuthor[]> {
 		const [dir, filename] = Strings.splitPath(
@@ -140,9 +103,9 @@ export class GitService implements IGitService, Disposable {
 		return GitAuthorParser.parse(data);
 	}
 
-	async getFileCurrentRevision(uri: Uri): Promise<string | undefined>;
+	async getFileCurrentRevision(uri: URI): Promise<string | undefined>;
 	async getFileCurrentRevision(path: string): Promise<string | undefined>;
-	async getFileCurrentRevision(uriOrPath: Uri | string): Promise<string | undefined> {
+	async getFileCurrentRevision(uriOrPath: URI | string): Promise<string | undefined> {
 		const [dir, filename] = Strings.splitPath(
 			typeof uriOrPath === "string" ? uriOrPath : uriOrPath.fsPath
 		);
@@ -151,10 +114,10 @@ export class GitService implements IGitService, Disposable {
 		return data ? data : undefined;
 	}
 
-	async getFileContentForRevision(uri: Uri, ref: string): Promise<string | undefined>;
+	async getFileContentForRevision(uri: URI, ref: string): Promise<string | undefined>;
 	async getFileContentForRevision(path: string, ref: string): Promise<string | undefined>;
 	async getFileContentForRevision(
-		uriOrPath: Uri | string,
+		uriOrPath: URI | string,
 		ref: string
 	): Promise<string | undefined> {
 		const [dir, filename] = Strings.splitPath(
@@ -178,9 +141,32 @@ export class GitService implements IGitService, Disposable {
 		}
 	}
 
-	async getFileForRevision(uri: Uri, ref: string): Promise<string | undefined>;
+	async getDiff(
+		initialCommitHash: string,
+		finalCommitHash: string,
+		filePath: string
+	): Promise<IUniDiff> {
+		const [dir, filename] = Strings.splitPath(filePath);
+		let data;
+		try {
+			data = await git({ cwd: dir }, "diff", initialCommitHash, finalCommitHash, "--", filename);
+		} catch (err) {
+			Logger.warn(
+				`Error getting diff from ${initialCommitHash} to ${finalCommitHash} for ${filename}`
+			);
+			throw err;
+		}
+
+		const patches = parsePatch(data);
+		if (patches.length > 1) {
+			Logger.warn("Parsed diff generated multiple patches");
+		}
+		return patches[0];
+	}
+
+	async getFileForRevision(uri: URI, ref: string): Promise<string | undefined>;
 	async getFileForRevision(path: string, ref: string): Promise<string | undefined>;
-	async getFileForRevision(uriOrPath: Uri | string, ref: string): Promise<string | undefined> {
+	async getFileForRevision(uriOrPath: URI | string, ref: string): Promise<string | undefined> {
 		const [dir, filename] = Strings.splitPath(
 			typeof uriOrPath === "string" ? uriOrPath : uriOrPath.fsPath
 		);
@@ -224,9 +210,9 @@ export class GitService implements IGitService, Disposable {
 		});
 	}
 
-	async getRepoFirstCommits(repoUri: Uri): Promise<string[]>;
+	async getRepoFirstCommits(repoUri: URI): Promise<string[]>;
 	async getRepoFirstCommits(repoPath: string): Promise<string[]>;
-	async getRepoFirstCommits(repoUriOrPath: Uri | string): Promise<string[]> {
+	async getRepoFirstCommits(repoUriOrPath: URI | string): Promise<string[]> {
 		const repoPath = typeof repoUriOrPath === "string" ? repoUriOrPath : repoUriOrPath.fsPath;
 
 		let data;
@@ -259,9 +245,9 @@ export class GitService implements IGitService, Disposable {
 		return data.trim().split("\n");
 	}
 
-	async getRepoRemote(repoUri: Uri): Promise<GitRemote | undefined>;
+	async getRepoRemote(repoUri: URI): Promise<GitRemote | undefined>;
 	async getRepoRemote(repoPath: string): Promise<GitRemote | undefined>;
-	async getRepoRemote(repoUriOrPath: Uri | string): Promise<GitRemote | undefined> {
+	async getRepoRemote(repoUriOrPath: URI | string): Promise<GitRemote | undefined> {
 		const repoPath = typeof repoUriOrPath === "string" ? repoUriOrPath : repoUriOrPath.fsPath;
 		const remotes = await this.getRepoRemotes(repoPath);
 
@@ -280,9 +266,9 @@ export class GitService implements IGitService, Disposable {
 		return push || fetch;
 	}
 
-	async getRepoRemotes(repoUri: Uri): Promise<GitRemote[]>;
+	async getRepoRemotes(repoUri: URI): Promise<GitRemote[]>;
 	async getRepoRemotes(repoPath: string): Promise<GitRemote[]>;
-	async getRepoRemotes(repoUriOrPath: Uri | string): Promise<GitRemote[]> {
+	async getRepoRemotes(repoUriOrPath: URI | string): Promise<GitRemote[]> {
 		const repoPath = typeof repoUriOrPath === "string" ? repoUriOrPath : repoUriOrPath.fsPath;
 
 		try {
@@ -312,29 +298,37 @@ export class GitService implements IGitService, Disposable {
 		return false;
 	}
 
-	async getRepoRoot(filePath: string): Promise<string | undefined> {
-		const [dir] = Strings.splitPath(filePath);
+	async getRepoRoot(filePath: string, isDirectory: boolean = false): Promise<string | undefined> {
+		let cwd;
+		if (isDirectory) {
+			cwd = filePath;
+		} else {
+			[cwd] = Strings.splitPath(filePath);
+		}
+
 		try {
-			const data = await git({ cwd: dir }, "rev-parse", "--show-toplevel");
-			if (data === "") return undefined;
-			return data.trim();
+			const data = (await git({ cwd: cwd }, "rev-parse", "--show-toplevel")).trim();
+			return data === "" ? undefined : data;
 		} catch {
 			return undefined;
 		}
 	}
 
-	protected _repositories: GitRepository[] | undefined;
-	async getRepositories(): Promise<GitRepository[]> {
-		if (this._repositories === undefined) {
-			const repos: GitRepository[] = []; // await getRepositories();
-			this._repositories = repos; // repos.map(r => new GitRepository(r.rootUri, this));
-		}
-		return this._repositories;
+	getRepositories(): Promise<Iterable<GitRepository>> {
+		return this._repositories.get();
 	}
 
-	async resolveRef(uri: Uri, ref: string): Promise<string | undefined>;
+	getRepositoryById(id: string): Promise<GitRepository | undefined> {
+		return this._repositories.getById(id);
+	}
+
+	getRepositoryByFilePath(filePath: string): Promise<GitRepository | undefined> {
+		return this._repositories.getByFilePath(filePath);
+	}
+
+	async resolveRef(uri: URI, ref: string): Promise<string | undefined>;
 	async resolveRef(path: string, ref: string): Promise<string | undefined>;
-	async resolveRef(uriOrPath: Uri | string, ref: string): Promise<string | undefined> {
+	async resolveRef(uriOrPath: URI | string, ref: string): Promise<string | undefined> {
 		const [dir, filename] = Strings.splitPath(
 			typeof uriOrPath === "string" ? uriOrPath : uriOrPath.fsPath
 		);
@@ -345,28 +339,5 @@ export class GitService implements IGitService, Disposable {
 		} catch {
 			return undefined;
 		}
-	}
-
-	async getDiff(
-		initialCommitHash: string,
-		finalCommitHash: string,
-		filePath: string
-	): Promise<IUniDiff> {
-		const [dir, filename] = Strings.splitPath(filePath);
-		let data;
-		try {
-			data = await git({ cwd: dir }, "diff", initialCommitHash, finalCommitHash, "--", filename);
-		} catch (err) {
-			Logger.warn(
-				`Error getting diff from ${initialCommitHash} to ${finalCommitHash} for ${filename}`
-			);
-			throw err;
-		}
-
-		const patches = parsePatch(data);
-		if (patches.length > 1) {
-			Logger.warn("Parsed diff generated multiple patches");
-		}
-		return patches[0];
 	}
 }

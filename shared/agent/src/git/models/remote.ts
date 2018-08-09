@@ -1,4 +1,4 @@
-import Uri from "vscode-uri";
+import URI from "vscode-uri";
 
 "use strict";
 
@@ -8,7 +8,7 @@ export enum GitRemoteType {
 }
 
 export class GitRemote {
-	public readonly uri: Uri;
+	public readonly uri: URI;
 
 	constructor(
 		public readonly repoPath: string,
@@ -19,7 +19,7 @@ export class GitRemote {
 		public readonly path: string,
 		public readonly types: { type: GitRemoteType; url: string }[]
 	) {
-		this.uri = Uri.parse(scheme ? url : `ssh://${url}`);
+		this.uri = URI.parse(scheme ? url : `ssh://${url}`);
 	}
 
 	get normalizedUrl(): string {

@@ -1,28 +1,21 @@
 "use strict";
-import { Connection } from "vscode-languageserver";
-import { AgentOptions, CodeStreamAgent } from "./agent";
+import { AgentOptions, AgentState } from "./agent";
 import { CodeStreamApi, LoginResponse } from "./api/api";
 import { Config } from "./config";
 import { DocumentManager } from "./documentManager";
 import { GitService } from "./git/gitService";
 import { Logger } from "./logger";
+import { CodeStreamSession } from "./session";
 
 class ServiceContainer {
 	public readonly extensionVersion: string;
 	public readonly gitPath: string;
 	public readonly ideVersion: string;
 
-	public readonly state: {
-		email: string;
-		userId: string;
-		teamId: string;
-		token: string;
-		serverUrl: string;
-	};
+	public readonly state: AgentState;
 
 	constructor(
-		public readonly agent: CodeStreamAgent,
-		public readonly connection: Connection,
+		public readonly session: CodeStreamSession,
 		public readonly api: CodeStreamApi,
 		options: AgentOptions,
 		loginResponse: LoginResponse
@@ -35,22 +28,22 @@ class ServiceContainer {
 			email: options.email,
 			userId: loginResponse.user.id,
 			teamId: options.teamId,
-			token: loginResponse.accessToken,
+			apiToken: loginResponse.accessToken,
 			serverUrl: options.serverUrl
 		};
 
-		this._git = new GitService(agent);
+		this._git = new GitService(session, api);
 
 		this._documents = new DocumentManager();
-		this._documents.listen(this.connection);
+		this._documents.listen(session.connection);
 	}
 
-	private _documents: DocumentManager;
+	private readonly _documents: DocumentManager;
 	get documents() {
 		return this._documents;
 	}
 
-	private _git: GitService;
+	private readonly _git: GitService;
 	get git() {
 		return this._git;
 	}
@@ -71,13 +64,12 @@ let container: ServiceContainer | undefined;
 
 export namespace Container {
 	export async function initialize(
-		agent: CodeStreamAgent,
-		connection: Connection,
+		session: CodeStreamSession,
 		api: CodeStreamApi,
 		options: AgentOptions,
 		loginResponse: LoginResponse
 	) {
-		container = new ServiceContainer(agent, connection, api, options, loginResponse);
+		container = new ServiceContainer(session, api, options, loginResponse);
 	}
 
 	export function instance(): ServiceContainer {

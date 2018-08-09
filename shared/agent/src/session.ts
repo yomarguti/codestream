@@ -11,14 +11,13 @@ import URI from "vscode-uri";
 import {
 	AgentOptions,
 	ApiRequest,
-	ApiRequestParams,
 	CodeStreamAgent,
+	DocumentFromCodeBlockRequest,
+	DocumentFromCodeBlockResponse,
+	DocumentLatestRevisionRequest,
 	DocumentMarkersRequest,
-	DocumentMarkersRequestParams,
 	DocumentPostRequest,
-	DocumentPostRequestParams,
 	DocumentPreparePostRequest,
-	DocumentPreparePostRequestParams,
 	DocumentPreparePostResponse
 } from "./agent";
 import { AgentError, ServerError } from "./agentError";
@@ -45,10 +44,11 @@ const loginApiErrorMappings: { [k: string]: string } = {
 export class CodeStreamSession {
 	private readonly _api: CodeStreamApi;
 	private _pubnub: PubnubReceiver | undefined;
+	private readonly _readyPromise: Promise<void>;
 
 	constructor(
-		private readonly _agent: CodeStreamAgent,
-		private readonly _connection: Connection,
+		public readonly agent: CodeStreamAgent,
+		public readonly connection: Connection,
 		private readonly _options: AgentOptions
 	) {
 		this._api = new CodeStreamApi(
@@ -57,62 +57,45 @@ export class CodeStreamSession {
 			_options.extensionVersion
 		);
 
-		this._connection.onHover(this.onHover.bind(this));
+		this._readyPromise = new Promise<void>(resolve => this.agent.onReady(resolve));
+		this.connection.onHover(this.onHover.bind(this));
 
-		this._agent.registerHandler(ApiRequest, this.onApiRequest.bind(this));
-		this._agent.registerHandler(DocumentMarkersRequest, this.onMarkersRequest.bind(this));
-		this._agent.registerHandler(DocumentPreparePostRequest, this.onPreparePostRequest.bind(this));
-		this._agent.registerHandler(DocumentPostRequest, this.onPostRequest.bind(this));
-	}
-
-	private onApiRequest(
-		{ url, token, init }: ApiRequestParams,
-		cancellationToken: CancellationToken
-	) {
-		const result = this._api.fetch(url, init, token);
-		return result;
+		this.agent.registerHandler(ApiRequest, (e, cancellationToken: CancellationToken) =>
+			this._api.fetch(e.url, e.init, e.token)
+		);
+		this.agent.registerHandler(DocumentFromCodeBlockRequest, e =>
+			this.getDocumentFromCodeBlock(e.repoId, e.file, e.markerId, e.streamId, e.revision)
+		);
+		this.agent.registerHandler(DocumentMarkersRequest, e => MarkerHandler.handle(e.textDocument));
+		this.agent.registerHandler(DocumentPreparePostRequest, e =>
+			this.preparePostCode(e.textDocument, e.range, e.dirty)
+		);
+		this.agent.registerHandler(DocumentPostRequest, e =>
+			this.postCode(
+				e.textDocument,
+				// e.range,
+				// e.dirty,
+				e.text,
+				e.code,
+				e.location,
+				e.source,
+				e.parentPostId,
+				e.streamId,
+				e.teamId
+			)
+		);
+		this.agent.registerHandler(DocumentLatestRevisionRequest, async e => {
+			const revision = await Container.instance().git.getFileCurrentRevision(
+				URI.parse(e.textDocument.uri)
+			);
+			return { revision: revision };
+		});
 	}
 
 	// TODO: Move out of here
 	private onHover(e: TextDocumentPositionParams) {
-		this._connection.console.log("Hover request received");
+		this.connection.console.log("Hover request received");
 		return undefined;
-	}
-
-	private onMarkersRequest(
-		{ textDocument }: DocumentMarkersRequestParams,
-		cancellationToken: CancellationToken
-	) {
-		this._connection.console.log(`DocumentMarkersRequest received`);
-
-		const result = MarkerHandler.handle(textDocument);
-		return result;
-	}
-
-	private onPreparePostRequest(
-		e: DocumentPreparePostRequestParams,
-		cancellationToken: CancellationToken
-	) {
-		this._connection.console.log(`DocumentPreparePostRequest received`);
-
-		return this.preparePostCode(e.textDocument, e.range, e.dirty);
-	}
-
-	private onPostRequest(e: DocumentPostRequestParams) {
-		this._connection.console.log(`DocumentPostRequest received`);
-
-		return this.postCode(
-			e.textDocument,
-			// e.range,
-			// e.dirty,
-			e.text,
-			e.code,
-			e.location,
-			e.source,
-			e.parentPostId,
-			e.streamId,
-			e.teamId
-		);
 	}
 
 	private _apiToken: string | undefined;
@@ -136,6 +119,14 @@ export class CodeStreamSession {
 			this._users = new UserCollection(this);
 		}
 		return this._users;
+	}
+
+	get workspace() {
+		return this.connection.workspace;
+	}
+
+	async ready() {
+		return this._readyPromise;
 	}
 
 	async login() {
@@ -203,16 +194,10 @@ export class CodeStreamSession {
 		this._userId = loginResponse.user.id;
 
 		setGitPath(this._options.gitPath);
-		void (await Container.initialize(
-			this._agent,
-			this._connection,
-			this._api,
-			this._options,
-			loginResponse
-		));
+		void (await Container.initialize(this, this._api, this._options, loginResponse));
 
 		this._pubnub = new PubnubReceiver(
-			this._agent,
+			this.agent,
 			this._api,
 			loginResponse.pubnubKey,
 			// TODO: Change this once production is upgraded to use the pubnub token
@@ -228,6 +213,41 @@ export class CodeStreamSession {
 		return {
 			loginResponse: { ...loginResponse },
 			state: { ...Container.instance().state }
+		};
+	}
+
+	async getDocumentFromCodeBlock(
+		repoId: string,
+		file: string,
+		markerId: string,
+		streamId: string,
+		revision: string
+	): Promise<DocumentFromCodeBlockResponse | undefined> {
+		const repo = await Container.instance().git.getRepositoryById(repoId);
+		if (repo === undefined) return undefined;
+
+		// TODO: Call real marker recalcs to get the latest position
+		const locations = await this._api.getMarkerLocations(
+			this._apiToken!,
+			this._teamId!,
+			streamId,
+			revision
+		);
+
+		let range;
+		if (locations !== undefined) {
+			const location = locations.markerLocations.locations[markerId];
+			range = Range.create(location[0], location[1], location[2], location[3]);
+		} else {
+			range = Range.create(0, 0, 0, 0);
+		}
+
+		const absolutePath = path.join(repo.path, file);
+
+		return {
+			textDocument: { uri: URI.file(absolutePath).toString() },
+			range: range,
+			revision: undefined
 		};
 	}
 

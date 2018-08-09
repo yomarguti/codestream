@@ -11,7 +11,7 @@ export namespace MarkerUtil {
 
 		let markers = markersByStreamId.get(streamId);
 		if (!markers) {
-			const response = await api.getMarkers(state.token, state.teamId, streamId);
+			const response = await api.getMarkers(state.apiToken, state.teamId, streamId);
 			markers = response.markers;
 			markersByStreamId.set(streamId, markers);
 		}

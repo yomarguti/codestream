@@ -49,13 +49,46 @@ export interface ApiRequestParams {
 }
 export const ApiRequest = new RequestType<ApiRequestParams, any, void, void>("codeStream/api");
 
-export interface GitRepositoriesResponse {
-	uri: string;
+export const DidReceivePubNubMessagesNotification = new NotificationType<
+	DidReceivePubNubMessagesNotificationParams[],
+	void
+>("codeStream/didReceivePubNubMessages");
+
+export interface DocumentFromCodeBlockRequestParams {
+	file: string;
+	repoId: string;
+	markerId: string;
+	streamId: string;
+	revision: string;
 }
 
-export const GitRepositoriesRequest = new RequestType0<GitRepositoriesResponse[], void, void>(
-	"codeStream/git/repos"
-);
+export interface DocumentFromCodeBlockResponse {
+	textDocument: TextDocumentIdentifier;
+	range: Range;
+	revision?: string;
+}
+
+export const DocumentFromCodeBlockRequest = new RequestType<
+	DocumentFromCodeBlockRequestParams,
+	DocumentFromCodeBlockResponse | undefined,
+	void,
+	void
+>("codeStream/documentFromCodeBlock");
+
+export interface DocumentLatestRevisionRequestParams {
+	textDocument: TextDocumentIdentifier;
+}
+
+export interface DocumentLatestRevisionResponse {
+	revision?: string;
+}
+
+export const DocumentLatestRevisionRequest = new RequestType<
+	DocumentLatestRevisionRequestParams,
+	DocumentLatestRevisionResponse,
+	void,
+	void
+>("codeStream/textDocument/scm/revision");
 
 export interface DocumentMarkersRequestParams {
 	textDocument: TextDocumentIdentifier;
@@ -120,8 +153,3 @@ export const DocumentPostRequest = new RequestType<DocumentPostRequestParams, CS
 export interface DidReceivePubNubMessagesNotificationParams {
 	[key: string]: any;
 }
-
-export const DidReceivePubNubMessagesNotification = new NotificationType<
-	DidReceivePubNubMessagesNotificationParams[],
-	void
->("codeStream/didReceivePubNubMessages");

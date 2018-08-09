@@ -6,8 +6,9 @@ import {
 	createConnection,
 	DidChangeConfigurationNotification,
 	DidChangeConfigurationParams,
-	DidChangeWatchedFilesParams,
 	Disposable,
+	Emitter,
+	Event,
 	InitializedParams,
 	InitializeParams,
 	InitializeResult,
@@ -19,8 +20,7 @@ import {
 	RequestHandler0,
 	RequestType,
 	RequestType0,
-	TextDocumentSyncKind,
-	WorkspaceFoldersChangeEvent
+	TextDocumentSyncKind
 } from "vscode-languageserver";
 import { Container } from "./container";
 import { Logger } from "./logger";
@@ -30,7 +30,20 @@ import { Disposables, memoize } from "./system";
 
 export * from "./shared/agent.protocol";
 
+export interface AgentState {
+	email: string;
+	userId: string;
+	teamId: string;
+	apiToken: string;
+	serverUrl: string;
+}
+
 export class CodeStreamAgent implements Disposable, LSPLogger {
+	private _onReady = new Emitter<void>();
+	get onReady(): Event<void> {
+		return this._onReady.event;
+	}
+
 	private _clientCapabilities: ClientCapabilities | undefined;
 	private readonly _connection: Connection;
 	private _disposable: Disposable | undefined;
@@ -45,7 +58,7 @@ export class CodeStreamAgent implements Disposable, LSPLogger {
 		this._connection.onInitialize(this.onInitialize.bind(this));
 		this._connection.onInitialized(this.onInitialized.bind(this));
 		this._connection.onDidChangeConfiguration(this.onConfigurationChanged.bind(this));
-		this._connection.onDidChangeWatchedFiles(this.onWatchedFilesChanged.bind(this));
+		// this._connection.onDidChangeWatchedFiles(this.onWatchedFilesChanged.bind(this));
 	}
 
 	dispose() {
@@ -83,16 +96,9 @@ export class CodeStreamAgent implements Disposable, LSPLogger {
 				);
 			}
 
-			if (this.supportsWorkspaces) {
-				subscriptions.push(
-					this._connection.workspace.onDidChangeWorkspaceFolders(
-						this.onWorkspaceFoldersChanged,
-						this
-					)
-				);
-			}
-
 			this._disposable = Disposables.from(...subscriptions);
+
+			this._onReady.fire(undefined);
 		} catch (ex) {
 			debugger;
 			Logger.error(ex);
@@ -104,14 +110,10 @@ export class CodeStreamAgent implements Disposable, LSPLogger {
 		Container.instance().updateConfig(e.settings.codestream);
 	}
 
-	private onWatchedFilesChanged(e: DidChangeWatchedFilesParams) {
-		// Monitored files have change in VSCode
-		this._connection.console.log("Watched Files change event received");
-	}
-
-	private onWorkspaceFoldersChanged(e: WorkspaceFoldersChangeEvent) {
-		this._connection.console.log("Workspace folder change event received");
-	}
+	// private onWatchedFilesChanged(e: DidChangeWatchedFilesParams) {
+	// 	// Monitored files have change in VSCode
+	// 	this._connection.console.log("Watched Files change event received");
+	// }
 
 	@memoize
 	get supportsConfiguration() {
