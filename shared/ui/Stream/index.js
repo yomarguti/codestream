@@ -40,8 +40,7 @@ export class SimpleStream extends Component {
 
 		this.state = {
 			threadId: null,
-			activePanel: props.postStreamId && props.startOnMainPanel ? "main" : "channels",
-			fileForIntro: props.currentFile
+			activePanel: props.postStreamId && props.startOnMainPanel ? "main" : "channels"
 		};
 		this._compose = React.createRef();
 	}
@@ -130,11 +129,6 @@ export class SimpleStream extends Component {
 		}
 		// this.postWithNewMessageIndicator = 10;
 
-		// TODO: DELETE
-		if (nextProps.firstTimeInAtom && !this.state.fileForIntro) {
-			this.setState({ fileForIntro: nextProps.currentFile });
-		}
-
 		// if (nextProps.hasFocus && !this.props.hasFocus) {
 		// 	this.postWithNewMessageIndicator = null;
 		// }
@@ -198,7 +192,7 @@ export class SimpleStream extends Component {
 	}
 
 	componentDidUpdate(prevProps, prevState) {
-		const { postStreamId, markStreamRead } = this.props;
+		const { postStreamId } = this.props;
 
 		// this.scrollToBottom();
 
@@ -216,6 +210,7 @@ export class SimpleStream extends Component {
 
 		// if we are switching from a non-thread panel
 		if (this.state.activePanel === "main" && prevState.activePanel !== "main") {
+			this.checkMarkStreamRead();
 			setTimeout(() => {
 				this.focusInput();
 			}, 500);
