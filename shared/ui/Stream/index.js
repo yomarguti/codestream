@@ -273,12 +273,16 @@ export class SimpleStream extends Component {
 			if (lastPost && this.state.editingPostId == lastPost.id) this.scrollToBottom(true);
 		}
 
+		const switchingToMainPanel =
+			prevState.activePanel !== "main" && this.state.activePanel === "main";
+		const switchingStreams = postStreamId && postStreamId !== prevProps.postStreamId;
+		if ((switchingToMainPanel || switchingStreams) && this.props.posts.length === 0) {
+			this.props.fetchPosts({ streamId: postStreamId, teamId: this.props.teamId });
+		}
+
 		// if we're switching from the channel list to a stream,
 		// then check to see if we should scroll to the bottom
-		if (this.state.activePanel === "main" && prevState.activePanel !== "main") {
-			if (postStreamId && this.props.posts.length === 0) {
-				this.props.fetchPosts({ streamId: postStreamId, teamId: this.props.teamId });
-			}
+		if (switchingToMainPanel) {
 			// FIXME only scroll to the first unread message
 			if (!this.state.scrolledOffBottom) this.scrollToBottom();
 		}
