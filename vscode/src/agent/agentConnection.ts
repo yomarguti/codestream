@@ -54,7 +54,7 @@ export class CodeStreamAgentConnection implements Disposable {
 				module: context.asAbsolutePath("../codestream-lsp-agent/dist/agent.js"),
 				transport: TransportKind.ipc,
 				options: {
-					execArgv: ["--nolazy", "--inspect=6009"] // "--inspect-brk=6009"
+					execArgv: ["--nolazy", "--inspect-brk=6009"] // "--inspect-brk=6009"
 				}
 			}
 		};
@@ -175,6 +175,7 @@ export class CodeStreamAgentConnection implements Disposable {
 		// document: TextDocument,
 		// range: Range,
 		text: string,
+		mentionedUserIds: string[],
 		code: string,
 		location: [number, number, number, number] | undefined,
 		source:
@@ -193,6 +194,7 @@ export class CodeStreamAgentConnection implements Disposable {
 			textDocument: { uri: uri.toString() },
 			// range: range,
 			// dirty: document.isDirty,
+			mentionedUserIds,
 			text: text,
 			code: code,
 			location: location,
@@ -222,7 +224,7 @@ export class CodeStreamAgentConnection implements Disposable {
 			const response = await this._client!.sendRequest(method, params);
 			return response;
 		} catch (ex) {
-			debugger;
+			// debugger;
 			Logger.error(ex, `AgentConnection.sendRequest`, method, params);
 			throw ex;
 		}
