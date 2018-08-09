@@ -360,17 +360,23 @@
 			// take the app background color, and shade it towards
 			// a neutral grey by 25%
 			// background-color: mix(@app-background-color, #808080, 75%);
-			background-color: rgba(127, 127, 127, 0.2);
+			// background-color: rgba(127, 127, 127, 0.2);
 
 			// filter: brightness(90%);
 			// color: @text-color-error;
 			// background-color: @background-color-highlight;
 			// box-shadow: 0 5px 10px #ccc;;
 
-			background-color: @background-color-info;
+			// background-color: @background-color-info;
 			// color: @text-color-highlight;
 			color: white;
 			font-weight: normal;
+
+			background-color: @text-color-info-muted;
+			color: #fff;
+			font-weight: 600;
+			margin: 1px 0px -1px 0px;
+			padding: 0px 7px 2px 4px;
 		}
 
 		pre {
@@ -816,7 +822,8 @@
 							right: 8px;
 							width: 25px;
 							height: 18px;
-							background: @background-color-info;
+							// background: @background-color-info;
+							background-color: @text-color-info-muted;
 							color: white;
 							font-weight: normal;
 							z-index: 2;
