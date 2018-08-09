@@ -329,11 +329,17 @@ export class StreamWebviewPanel extends Disposable {
 						break;
 					}
 					case "create-post": {
-						const { text, codeBlocks, parentPostId, streamId, teamId } = body.params;
+						const { text, codeBlocks, mentions, parentPostId, streamId, teamId } = body.params;
 
 						let post;
 						if (codeBlocks === undefined || codeBlocks.length === 0) {
-							post = await this.session.api.createPost(text, parentPostId, streamId, teamId);
+							post = await this.session.api.createPost(
+								text,
+								mentions,
+								parentPostId,
+								streamId,
+								teamId
+							);
 						} else {
 							const block = codeBlocks[0] as {
 								code: string;

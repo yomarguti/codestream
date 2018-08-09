@@ -45,11 +45,13 @@ export class CodeStreamSessionApi {
 
 	async createPost(
 		text: string,
+		mentionedUserIds: string[],
 		parentPostId: string | undefined,
 		streamId: string,
 		teamId?: string
 	): Promise<CSPost | undefined> {
 		return (await this._api.createPost(this.token, {
+			mentionedUserIds,
 			teamId: teamId || this.teamId,
 			streamId: streamId,
 			text: text,
