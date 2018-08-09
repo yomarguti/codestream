@@ -366,6 +366,7 @@ export class StreamWebviewPanel extends Disposable {
 							post = await Container.agent.postCode(
 								uri,
 								text,
+								mentions,
 								block.code,
 								block.location,
 								block.source,
