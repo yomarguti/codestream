@@ -112,7 +112,7 @@ export class SimpleChannelPanel extends Component {
 				<ul onClick={this.handleClickSelectStream}>
 					{this.props.directMessageStreams.map(stream => {
 						let count = this.props.umis.unread[stream.id] || 0;
-						let mentions = this.props.umis.mentions[stream.id] || 0;
+						// let mentions = this.props.umis.mentions[stream.id] || 0;
 						if (this.props.mutedStreams[stream.id] && !count) return null;
 
 						const icon =
@@ -132,7 +132,7 @@ export class SimpleChannelPanel extends Component {
 							>
 								{icon}
 								{stream.name}
-								{mentions > 0 ? <span className="umi">{mentions}</span> : null}
+								{count > 0 ? <span className="umi">{count}</span> : null}
 								<Icon name="x" onClick={this.handleClickMuteStream} className="align-right" />
 							</li>
 						);
@@ -150,7 +150,8 @@ export class SimpleChannelPanel extends Component {
 					})}
 					<li className="invite" onClick={() => this.props.setActivePanel("invite")}>
 						<span>
-							<Icon name="plus-small" />Invite People
+							<Icon name="plus-small" />
+							Invite People
 						</span>
 					</li>
 				</ul>
@@ -258,8 +259,11 @@ const mapStateToProps = ({ context, streams, users, teams, umis, session }) => {
 	};
 };
 
-export default connect(mapStateToProps, {
-	createStream,
-	setUserPreference,
-	setCurrentStream
-})(SimpleChannelPanel);
+export default connect(
+	mapStateToProps,
+	{
+		createStream,
+		setUserPreference,
+		setCurrentStream
+	}
+)(SimpleChannelPanel);
