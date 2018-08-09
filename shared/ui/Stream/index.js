@@ -39,18 +39,11 @@ export class SimpleStream extends Component {
 		super(props);
 
 		this.state = {
-			initialRender: true,
 			threadId: null,
-			activePanel: "channels",
+			activePanel: props.postStreamId && props.startOnMainPanel ? "main" : "channels",
 			fileForIntro: props.currentFile
 		};
 		this._compose = React.createRef();
-	}
-
-	static getDerivedStateFromProps(props, state) {
-		return state.initialRender && props.postStreamId && props.startOnMainPanel
-			? { activePanel: "main", initialRender: false }
-			: { initialRender: false };
 	}
 
 	componentDidMount() {
