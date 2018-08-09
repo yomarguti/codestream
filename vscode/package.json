@@ -122,21 +122,6 @@
                 "category": "CodeStream"
             },
             {
-                "command": "codestream.comparePostFileRevisionWithWorking",
-                "title": "Compare Revision with Working",
-                "category": "CodeStream"
-            },
-            {
-                "command": "codestream.openPostWorkingFile",
-                "title": "Open Working File",
-                "category": "CodeStream"
-            },
-            {
-                "command": "codestream.openPostFileRevision",
-                "title": "Open File Revision",
-                "category": "CodeStream"
-            },
-            {
                 "command": "codestream.postCode",
                 "title": "Add CodeStream Comment",
                 "category": "CodeStream"
@@ -171,18 +156,6 @@
                 {
                     "command": "codestream.signOut",
                     "when": "codestream:status == signedIn"
-                },
-                {
-                    "command": "codestream.comparePostFileRevisionWithWorking",
-                    "when": "false"
-                },
-                {
-                    "command": "codestream.openPostWorkingFile",
-                    "when": "false"
-                },
-                {
-                    "command": "codestream.openPostFileRevision",
-                    "when": "false"
                 },
                 {
                     "command": "codestream.postCode",

@@ -624,6 +624,10 @@ export class StreamWebviewPanel extends Disposable {
 		return this._streamThread;
 	}
 
+	get viewColumn(): ViewColumn | undefined {
+		return this._panel === undefined ? undefined : this._panel.viewColumn;
+	}
+
 	get visible() {
 		return this._panel === undefined ? false : this._panel.visible;
 	}
