@@ -212,6 +212,7 @@ export interface CreatePostRequest {
 	text: string;
 	codeBlocks?: CreatePostRequestCodeBlock[];
 	commitHashWhenPosted?: string;
+	mentionedUserIds?: string[];
 }
 
 export interface CreatePostResponse {
