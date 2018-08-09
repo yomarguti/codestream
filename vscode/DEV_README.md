@@ -110,6 +110,7 @@ To connect to the PD environment, use the following settings
 
 ```json
 "codestream.serverUrl": "https://pd-api.codestream.us:9443",
+"codestream.webAppUrl": "http://pd-app.codestream.us:1380",
 "codestream.email": "<email>",
 "codestream.password": "<password>",
 "codestream.team": "<team>", // Shouldn't really be needed unless there are issues and you belong to more than 1 team
@@ -132,6 +133,7 @@ To connect to the Production environment, use the following settings
 | `codestream.notifications` | Specifies when to show notifications for incoming messages                       |
 | `codestream.password`      | Specifies the password to use to connect to the CodeStream service               |
 | `codestream.serverUrl`     | Specifies the url to use to connect to the CodeStream service                    |
+| `codestream.webAppUrl`     | Specifies the url to use to connect to the CodeStream web app                    |
 | `codestream.team`          | Specifies an optional team to use to connect to the CodeStream service           |
 | `codestream.traceLevel`    | Specifies how much (if any) output will be sent to the CodeStream output channel |
 
