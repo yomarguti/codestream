@@ -512,9 +512,6 @@ export class CodeStreamSession implements Disposable {
 
 		const lastReads = user.lastReads || {};
 		const entries = Object.entries(lastReads);
-		if (entries.length === 0) {
-			this._state!.unreads.clear();
-		}
 		entries.forEach(async ([streamId, lastReadSeqNum]) => {
 			const latestPost = await this._sessionApi!.getLatestPost(streamId);
 			const unreadPosts = await this._sessionApi!.getPostsInRange(
@@ -539,7 +536,13 @@ export class CodeStreamSession implements Disposable {
 			this.unreads.unread[streamId] = unreadCount;
 		});
 
-		this._onDidChange.fire(new UnreadsChangedEvent(this._state!.unreads.getValues()));
+		this.unreads.getStreamIds().forEach(streamId => {
+			if (!lastReads[streamId]) {
+				this.unreads.clear(streamId);
+			}
+		});
+
+		this._onDidChange.fire(new UnreadsChangedEvent(this.unreads.getValues()));
 	}
 
 	private incrementUnreads(posts: CSPost[]) {
