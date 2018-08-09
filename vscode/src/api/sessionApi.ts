@@ -1,7 +1,5 @@
 "use strict";
 import { Uri } from "vscode";
-import { Container } from "../container";
-import { GitRepository } from "../git/gitService";
 import {
 	CodeStreamApi,
 	CreatePostRequestCodeBlock,
@@ -188,53 +186,6 @@ export class CodeStreamSessionApi {
 
 	async editPost(postId: string, text: string, mentionedUserIds: string[]) {
 		return (await this._api.editPost(this.token, { id: postId, text, mentionedUserIds })).post;
-	}
-
-	private async findOrRegisterRepo(repo: GitRepository, registeredRepos: CSRepository[]) {
-		const [firsts, remote] = await Promise.all([repo.getFirstCommits(), repo.getRemote()]);
-
-		if (remote === undefined || firsts.length === 0) return undefined;
-
-		const remoteUrl = remote.normalizedUrl;
-		// TODO: What should we do if there are no remotes? skip?
-		if (remoteUrl === undefined) return undefined;
-
-		const found = await registeredRepos.find(r => r.normalizedUrl === remoteUrl);
-		if (found !== undefined) return found;
-
-		// const actions: MessageItem[] = [
-		// 	{ title: "Add Repository" },
-		// 	{ title: "Skip", isCloseAffordance: true }
-		// ];
-
-		// const result = await window.showInformationMessage(
-		// 	`The repository with url \`${remote.uri.toString()}\` isn't currently part of your team. Should we add it?`,
-		// 	...actions
-		// );
-		// if (result === actions[0]) {
-		// 	return await this.createRepo(remote.uri, firsts);
-		// }
-
-		return undefined;
-	}
-
-	async findOrRegisterRepos(): Promise<[Uri, CSRepository][]> {
-		const [registeredRepos, repos] = await Promise.all([
-			this.getRepos(),
-			Container.git.getRepositories()
-		]);
-
-		const items: [Uri, CSRepository][] = [];
-
-		let found;
-		for (const repo of repos) {
-			found = await this.findOrRegisterRepo(repo, registeredRepos);
-			if (found === undefined) continue;
-
-			items.push([repo.uri, found]);
-		}
-
-		return items;
 	}
 
 	async getMarker(markerId: string, teamId?: string): Promise<CSMarker> {

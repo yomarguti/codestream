@@ -8,7 +8,6 @@ import { ContextKeys, setContext } from "./common";
 import { Config, configuration, Configuration } from "./configuration";
 import { extensionQualifiedId } from "./constants";
 import { Container } from "./container";
-import { gitPath } from "./git/git";
 import { Logger } from "./logger";
 import { FileSystem } from "./system";
 
@@ -52,4 +51,33 @@ export async function deactivate(): Promise<void> {}
 function onSessionStatusChanged(e: SessionStatusChangedEvent) {
 	const status = e.getStatus();
 	setContext(ContextKeys.Status, status);
+}
+
+interface GitExtensionApi {
+	getGitPath(): Promise<string>;
+}
+
+let _gitApi: GitExtensionApi | undefined;
+async function gitApi() {
+	if (_gitApi === undefined) {
+		try {
+			const git = extensions.getExtension("vscode.git");
+			if (git === undefined) throw new Error("Git extension not found!");
+
+			_gitApi = git.isActive ? git.exports : await git.activate();
+		} catch (ex) {
+			debugger;
+			Logger.error(ex);
+			throw ex;
+		}
+	}
+	return _gitApi!;
+}
+
+let _gitPath: string | undefined;
+export async function gitPath(): Promise<string> {
+	if (_gitPath === undefined) {
+		_gitPath = await (await gitApi()).getGitPath();
+	}
+	return _gitPath;
 }

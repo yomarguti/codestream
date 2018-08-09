@@ -1,11 +1,10 @@
 "use strict";
 import * as path from "path";
-import { Uri, workspace, WorkspaceFolder } from "vscode";
+import { Uri, WorkspaceFolder } from "vscode";
 import { Strings } from "../../system";
 import { CSRepository } from "../api";
-import { CodeStreamSession, SessionChangedEvent, SessionChangedType } from "../session";
-import { CodeStreamCollection, CodeStreamItem } from "./collection";
-import { MarkerCollection } from "./markers";
+import { CodeStreamSession } from "../session";
+import { CodeStreamItem } from "./collection";
 import { FileStreamCollection } from "./streams";
 
 export class Repository extends CodeStreamItem<CSRepository> {
@@ -17,25 +16,12 @@ export class Repository extends CodeStreamItem<CSRepository> {
 		super(session, repo);
 	}
 
-	async getMarkers(uri: Uri): Promise<MarkerCollection | undefined> {
-		if (workspace.getWorkspaceFolder(uri) !== this._folder) return undefined;
-
-		const stream = await this.streams.getByUri(uri);
-		if (stream === undefined) return undefined;
-
-		return new MarkerCollection(this.session, this, stream, uri, this.entity.teamId);
-	}
-
-	get hash() {
-		return this.entity.firstCommitHash;
-	}
-
 	get name() {
-		return this.entity.normalizedUrl;
+		return this.entity.name;
 	}
 
 	get normalizedUrl() {
-		return this.entity.normalizedUrl;
+		return this.entity.remotes[0].normalizedUrl;
 	}
 
 	private _streams: FileStreamCollection | undefined;
@@ -47,7 +33,7 @@ export class Repository extends CodeStreamItem<CSRepository> {
 	}
 
 	get url() {
-		return this.entity.url;
+		return this.entity.remotes[0].url;
 	}
 
 	normalizeUri(relativeUri: Uri): Uri;
@@ -75,55 +61,55 @@ export class Repository extends CodeStreamItem<CSRepository> {
 	}
 }
 
-export class RepositoryCollection extends CodeStreamCollection<Repository, CSRepository> {
-	constructor(session: CodeStreamSession, public readonly teamId: string) {
-		super(session);
+// export class RepositoryCollection extends CodeStreamCollection<Repository, CSRepository> {
+// 	constructor(session: CodeStreamSession, public readonly teamId: string) {
+// 		super(session);
 
-		this.disposables.push(session.onDidChange(this.onSessionChanged, this));
-	}
+// 		this.disposables.push(session.onDidChange(this.onSessionChanged, this));
+// 	}
 
-	private onSessionChanged(e: SessionChangedEvent) {
-		if (e.type !== SessionChangedType.Repositories) return;
+// 	private onSessionChanged(e: SessionChangedEvent) {
+// 		if (e.type !== SessionChangedType.Repositories) return;
 
-		this.invalidate();
-	}
+// 		this.invalidate();
+// 	}
 
-	async getByFileUri(uri: Uri): Promise<Repository | undefined> {
-		const folder = workspace.getWorkspaceFolder(uri);
-		if (folder === undefined) return undefined;
+// 	async getByFileUri(uri: Uri): Promise<Repository | undefined> {
+// 		const folder = workspace.getWorkspaceFolder(uri);
+// 		if (folder === undefined) return undefined;
 
-		await this.ensureLoaded();
-		return this._reposByWorkspaceFolder.get(folder);
-	}
+// 		await this.ensureLoaded();
+// 		return this._reposByWorkspaceFolder.get(folder);
+// 	}
 
-	private _reposByUri: Map<Uri, Repository> = new Map();
-	private _reposByWorkspaceFolder: Map<WorkspaceFolder, Repository> = new Map();
+// 	private _reposByUri: Map<Uri, Repository> = new Map();
+// 	private _reposByWorkspaceFolder: Map<WorkspaceFolder, Repository> = new Map();
 
-	protected entityMapper(e: CSRepository, folder?: WorkspaceFolder) {
-		return new Repository(this.session, e, folder);
-	}
+// 	protected entityMapper(e: CSRepository, folder?: WorkspaceFolder) {
+// 		return new Repository(this.session, e, folder);
+// 	}
 
-	protected async fetch() {
-		const repos = await this.session.api.findOrRegisterRepos();
+// 	protected async fetch() {
+// 		const repos = await this.session.api.findOrRegisterRepos();
 
-		this._reposByUri.clear();
-		this._reposByWorkspaceFolder.clear();
+// 		this._reposByUri.clear();
+// 		this._reposByWorkspaceFolder.clear();
 
-		const items: Repository[] = [];
+// 		const items: Repository[] = [];
 
-		let item;
-		for (const [uri, repo] of repos) {
-			const folder = workspace.getWorkspaceFolder(uri);
+// 		let item;
+// 		for (const [uri, repo] of repos) {
+// 			const folder = workspace.getWorkspaceFolder(uri);
 
-			item = this.entityMapper(repo, folder);
-			items.push(item);
+// 			item = this.entityMapper(repo, folder);
+// 			items.push(item);
 
-			this._reposByUri.set(uri, item);
-			if (folder !== undefined) {
-				this._reposByWorkspaceFolder.set(folder, item);
-			}
-		}
+// 			this._reposByUri.set(uri, item);
+// 			if (folder !== undefined) {
+// 				this._reposByWorkspaceFolder.set(folder, item);
+// 			}
+// 		}
 
-		return items;
-	}
-}
+// 		return items;
+// 	}
+// }

@@ -92,13 +92,10 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 
 		for (const e of editors) {
 			const uri = e.document.uri;
-			const repo = await Container.session.getRepositoryByUri(uri);
-			if (repo === undefined) continue;
-
-			const file = repo.relativizeUri(uri);
+			const file = uri.fsPath;
 
 			for (const p of posts) {
-				if (p.codeBlocks!.some(cb => cb.file === file)) {
+				if (p.codeBlocks!.some(cb => file.endsWith(cb.file))) {
 					this.apply(e);
 
 					break;
@@ -253,7 +250,7 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 			return resp !== undefined
 				? resp.markers.map(
 						m =>
-							new Marker(Container.session, m, m.commitHashWhenCreated, [
+							new Marker(Container.session, m, [
 								m.range.start.line,
 								m.range.start.character,
 								m.range.end.line,

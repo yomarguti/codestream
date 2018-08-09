@@ -5,8 +5,7 @@ import {
 	ConfigurationTarget,
 	Disposable,
 	Event,
-	EventEmitter,
-	Uri
+	EventEmitter
 } from "vscode";
 import { AccessToken, AgentResult } from "../agent/agentConnection";
 import { GlobalState, WorkspaceState } from "../common";
@@ -17,7 +16,7 @@ import { Functions, memoize, Strings } from "../system";
 import { CSPost, CSUser } from "./api";
 import { CodeStreamApi, CSRepository, CSStream, LoginResult, PresenceStatus } from "./api";
 import { Cache } from "./cache";
-import { Marker, MarkerCollection } from "./models/markers";
+import { Marker } from "./models/markers";
 import { Post } from "./models/posts";
 import { Repository } from "./models/repositories";
 import {
@@ -53,7 +52,6 @@ export {
 	DirectStream,
 	FileStream,
 	Marker,
-	MarkerCollection,
 	Post,
 	PresenceStatus,
 	Repository,
@@ -232,11 +230,6 @@ export class CodeStreamSession implements Disposable {
 		return this._presenceManager!;
 	}
 
-	@signedIn
-	get repos() {
-		return this._state!.repos;
-	}
-
 	get serverUrl() {
 		return this._serverUrl;
 	}
@@ -386,19 +379,6 @@ export class CodeStreamSession implements Disposable {
 	@signedIn
 	getDefaultTeamChannel() {
 		return this.channels.getOrCreateByName("general", { membership: "auto", privacy: "public" });
-	}
-
-	@signedIn
-	async getMarkers(uri: Uri): Promise<MarkerCollection | undefined> {
-		const repo = await this.getRepositoryByUri(uri);
-		if (repo === undefined) return undefined;
-
-		return repo.getMarkers(uri);
-	}
-
-	@signedIn
-	getRepositoryByUri(uri: Uri): Promise<Repository | undefined> {
-		return this.repos.getByFileUri(uri);
 	}
 
 	@signedIn
