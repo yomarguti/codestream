@@ -73,6 +73,10 @@ We use [prettier](https://prettier.io/) for formatting our code. You can run pre
 
 To format the code as you make changes you can install the [Prettier - Code formatter](https://marketplace.visualstudio.com/items/esbenp.prettier-vscode) extension.
 
+Add the following to your User Settings to run prettier:
+
+`"editor.formatOnSave": true,`
+
 ### Linting
 
 We use [tslint](https://palantir.github.io/tslint/) for linting our code. You can run tslint across the code by calling `npm run lint` from a terminal. Warnings from tslint show up in the `Errors and Warnings` quick box and you can navigate to them from inside VS Code.
