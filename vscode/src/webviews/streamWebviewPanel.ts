@@ -255,7 +255,7 @@ export class StreamWebviewPanel extends Disposable {
 		state.users = users.map(user => (user.id === currentUser.id ? currentUser : user));
 		state.unreads = unreads;
 		state.configs = {
-			serverUrl: Container.config.serverUrl,
+			serverUrl: Container.config.serverUrl
 		};
 
 		return state;
@@ -583,6 +583,11 @@ export class StreamWebviewPanel extends Disposable {
 					type: "codestream:data:unreads",
 					body: e.entities()
 				});
+				break;
+			}
+			case SessionChangedType.StreamsMembership: {
+				// TODO: Does this need to be sent to the view?
+				break;
 			}
 		}
 	}

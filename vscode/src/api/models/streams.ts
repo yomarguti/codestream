@@ -254,7 +254,9 @@ abstract class StreamCollectionBase<
 	}
 
 	protected onSessionChanged(e: SessionChangedEvent) {
-		if (e.type !== SessionChangedType.Streams) return;
+		if (e.type !== SessionChangedType.Streams && e.type !== SessionChangedType.StreamsMembership) {
+			return;
+		}
 
 		if (e.affects(this.teamId, "team")) {
 			this.invalidate();
@@ -363,7 +365,7 @@ export class FileStreamCollection extends StreamCollectionBase<FileStream, CSFil
 	protected onSessionChanged(e: SessionChangedEvent) {
 		if (e.type !== SessionChangedType.Streams) return;
 
-		if (e.affects(this.teamId, "team") && e.affects(this.repo.id)) {
+		if (e.affects(this.teamId, "team")) {
 			this.invalidate();
 		}
 	}

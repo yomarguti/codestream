@@ -615,6 +615,7 @@ export class PostsReceivedEvent {
 export enum SessionChangedType {
 	Repositories = "repos",
 	Streams = "streams",
+	StreamsMembership = "streamsMembership",
 	Teams = "teams",
 	Markers = "markers",
 	Users = "users",
@@ -652,11 +653,11 @@ export class RepositoriesAddedEvent implements IMergeableEvent<RepositoriesAdded
 }
 
 export class StreamsMembershipChangedEvent {
-	readonly type = SessionChangedType.Streams;
+	readonly type = SessionChangedType.StreamsMembership;
 
 	constructor(private readonly streamId: string, private readonly teamId: string) {}
 
-	affects(id: string, type: "entity" | "team" = "team"): boolean {
+	affects(id: string, type: "entity" | "team" = "entity"): boolean {
 		if (type === "entity" && id === this.streamId) {
 			return true;
 		}
@@ -679,7 +680,7 @@ export class StreamsAddedEvent implements IMergeableEvent<StreamsAddedEvent> {
 		return this._event.streams.length;
 	}
 
-	affects(id: string, type: "entity" | "repo" | "team" = "repo"): boolean {
+	affects(id: string, type: "entity" | "team" = "entity"): boolean {
 		return affects(this._event.streams, id, type);
 	}
 
