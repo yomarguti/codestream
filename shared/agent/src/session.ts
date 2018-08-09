@@ -76,6 +76,7 @@ export class CodeStreamSession {
 				// e.range,
 				// e.dirty,
 				e.text,
+				e.mentionedUserIds,
 				e.code,
 				e.location,
 				e.source,
@@ -315,6 +316,7 @@ export class CodeStreamSession {
 		// range: Range,
 		// dirty: boolean = false,
 		text: string,
+		mentionedUserIds: string[],
 		code: string,
 		location: [number, number, number, number] | undefined,
 		source:
@@ -347,6 +349,7 @@ export class CodeStreamSession {
 				teamId: teamId || this.teamId,
 				streamId: streamId,
 				text: text,
+				mentionedUserIds,
 				parentPostId: parentPostId,
 				codeBlocks: [codeBlock],
 				commitHashWhenPosted: source && source.revision

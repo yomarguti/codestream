@@ -138,6 +138,7 @@ export const DocumentPreparePostRequest = new RequestType<
 export interface DocumentPostRequestParams {
 	textDocument: TextDocumentIdentifier;
 	text: string;
+	mentionedUserIds: string[];
 	code: string;
 	location?: [number, number, number, number];
 	source?: CodeBlockSource;
