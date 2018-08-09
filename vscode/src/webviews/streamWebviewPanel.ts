@@ -3,6 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import {
 	commands,
+	ConfigurationChangeEvent,
 	Disposable,
 	Event,
 	EventEmitter,
@@ -32,6 +33,8 @@ import {
 	SessionChangedType,
 	StreamThread
 } from "../api/session";
+import { configuration } from "../configuration";
+import { extensionId } from "../constants";
 import { Container } from "../container";
 import { Logger } from "../logger";
 
@@ -255,7 +258,9 @@ export class StreamWebviewPanel extends Disposable {
 		state.users = users.map(user => (user.id === currentUser.id ? currentUser : user));
 		state.unreads = unreads;
 		state.configs = {
-			serverUrl: Container.config.serverUrl
+			serverUrl: Container.config.serverUrl,
+			reduceMotion: Container.config.reduceMotion,
+			showHeadshots: Container.config.showHeadshots
 		};
 
 		return state;
@@ -602,6 +607,19 @@ export class StreamWebviewPanel extends Disposable {
 		}
 	}
 
+	private onConfigurationChanged(e: ConfigurationChangeEvent) {
+		if (e.affectsConfiguration(extensionId)) {
+			this.postMessage({
+				type: "codestream:configs",
+				body: {
+					serverUrl: Container.config.serverUrl,
+					showHeadshots: Container.config.showHeadshots,
+					reduceMotion: Container.config.reduceMotion
+				}
+			});
+		}
+	}
+
 	get streamThread() {
 		return this._streamThread;
 	}
@@ -730,7 +748,8 @@ export class StreamWebviewPanel extends Disposable {
 				this._panel.onDidDispose(this.onPanelDisposed, this),
 				this._panel.onDidChangeViewState(this.onPanelViewStateChanged, this),
 				this._panel.webview.onDidReceiveMessage(this.onPanelWebViewMessageReceived, this),
-				window.onDidChangeWindowState(this.onWindowStateChanged, this)
+				window.onDidChangeWindowState(this.onWindowStateChanged, this),
+				configuration.onDidChange(this.onConfigurationChanged, this)
 			);
 
 			this._panel.webview.html = html;

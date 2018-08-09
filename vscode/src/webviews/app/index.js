@@ -185,6 +185,8 @@ EventEmitter.on("data:unreads", unreads => {
 	store.dispatch({ type: `UPDATE_UNREADS`, payload: unreads });
 });
 
+EventEmitter.on("configs", configs => store.dispatch({ type: "UPDATE_CONFIGS", payload: configs }));
+
 EventEmitter.on("interaction:focus", () => {
 	setTimeout(() => {
 		store.dispatch({ type: "SET_HAS_FOCUS", payload: true });

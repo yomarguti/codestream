@@ -21,4 +21,6 @@ export interface Config {
 	webAppUrl: string;
 	team: string;
 	traceLevel: TraceLevel;
+	showHeadshots: boolean;
+	reduceMotion: boolean;
 }

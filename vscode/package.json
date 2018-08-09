@@ -95,6 +95,18 @@
                     ],
                     "description": "Specifies how much (if any) output will be sent to the CodeStream output channel",
                     "scope": "window"
+                },
+                "codestream.reduceMotion": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Reduce the animations in the view",
+                    "scope": "window"
+                },
+                "codestream.showHeadshots": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Display headshots in the stream",
+                    "scope": "window"
                 }
             }
         },

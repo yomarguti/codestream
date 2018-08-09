@@ -136,6 +136,8 @@ To connect to the Production environment, use the following settings
 | `codestream.webAppUrl`     | Specifies the url to use to connect to the CodeStream web app                    |
 | `codestream.team`          | Specifies an optional team to use to connect to the CodeStream service           |
 | `codestream.traceLevel`    | Specifies how much (if any) output will be sent to the CodeStream output channel |
+| `codestream.reduceMotion`  | Reduce the animations in the view                                                |
+| `codestream.showHeadshots` | Display headshots in the stream                                                  |
 
 ### Debugging
 
