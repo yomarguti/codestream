@@ -11,6 +11,7 @@ import { User, UserCollection } from "./models/users";
 import { CodeStreamSession } from "./session";
 
 class UnreadCounter {
+	lastReads: { [streamId: string]: number } = {};
 	unread: { [streamId: string]: number } = {};
 	mentions: { [streamId: string]: number } = {};
 
@@ -33,7 +34,8 @@ class UnreadCounter {
 	getValues() {
 		return {
 			unread: this.unread,
-			mentions: this.mentions
+			mentions: this.mentions,
+			lastReads: this.lastReads
 		};
 	}
 
