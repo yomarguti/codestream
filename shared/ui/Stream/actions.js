@@ -18,7 +18,6 @@ const resolvePendingPost = (pendingId, post) => ({
 export const markStreamRead = streamId => (dispatch, getState, { api }) => {
 	if (!streamId) return;
 	api.markStreamRead(streamId);
-	return dispatch({ type: "CLEAR_UMI", payload: streamId });
 };
 
 export const markPostUnread = postId => (dispatch, getState, { api }) => {

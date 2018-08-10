@@ -143,13 +143,9 @@ export class SimpleStream extends Component {
 			console.log("SETTING PWNMI to NULL!");
 			this.postWithNewMessageIndicator = undefined;
 		}
-		if (
-			nextProps.currentUser &&
-			nextProps.currentUser.lastReads &&
-			typeof nextProps.currentUser.lastReads[nextProps.postStreamId] !== "undefined"
-		) {
-			console.log("SETTING PWNMI to ", nextProps.currentUser.lastReads[nextProps.postStreamId]);
-			this.postWithNewMessageIndicator = nextProps.currentUser.lastReads[nextProps.postStreamId];
+		if (typeof nextProps.umis.lastReads[nextProps.postStreamId] !== "undefined") {
+			console.log("SETTING PWNMI to ", nextProps.umis.lastReads[nextProps.postStreamId]);
+			this.postWithNewMessageIndicator = nextProps.umis.lastReads[nextProps.postStreamId];
 		}
 	}
 
@@ -561,7 +557,7 @@ export class SimpleStream extends Component {
 									: null;
 								const newMessageIndicator =
 									typeof this.postWithNewMessageIndicator !== "undefined" &&
-									post.seqNum === this.postWithNewMessageIndicator + 1;
+									post.seqNum === this.postWithNewMessageIndicator;
 								unread = unread || newMessageIndicator;
 								const returnValue = (
 									<div key={post.id}>

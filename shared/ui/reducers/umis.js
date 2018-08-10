@@ -1,7 +1,7 @@
 import { toMapBy } from "./utils";
 import _ from "underscore";
 
-const initialState = { mentions: {}, unread: {} };
+const initialState = { lastReads: {}, mentions: {}, unread: {} };
 
 function getSum(total, num) {
 	return total + Math.round(num);
