@@ -473,7 +473,7 @@ export class CodeStreamSession implements Disposable {
 			await configuration.update(
 				configuration.name("email").value,
 				email,
-				ConfigurationTarget.Global
+				ConfigurationTarget.Workspace
 			);
 		}
 
