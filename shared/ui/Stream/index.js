@@ -707,7 +707,6 @@ export class SimpleStream extends Component {
 		const scrollHeight = scrollDiv.scrollHeight;
 		const offBottom = scrollHeight - scrollTop - scrollDiv.offsetHeight;
 		const scrolledOffBottom = offBottom > 100 ? true : null;
-		// console.log("OB IS: ", offBottom);
 		if (scrolledOffBottom != this.state.scrolledOffBottom)
 			this.setState({ scrolledOffBottom: scrolledOffBottom });
 
@@ -719,12 +718,13 @@ export class SimpleStream extends Component {
 			let top = umi.offsetTop;
 			if (top - scrollTop + 10 < 0) {
 				if (!unreadsAbove) unreadsAbove = umi;
-			} else if (top - scrollTop + 60 + umi.offsetHeight > containerHeight) {
+			} else if (top - scrollTop + umi.offsetHeight > containerHeight) {
 				unreadsBelow = umi;
 			} else if (this.props.hasFocus) {
 				umi.classList.remove("unread");
 			}
 		});
+
 		if (this.state.unreadsAbove != unreadsAbove) this.setState({ unreadsAbove: unreadsAbove });
 		if (this.state.unreadsBelow != unreadsBelow) this.setState({ unreadsBelow: unreadsBelow });
 	}
