@@ -1,5 +1,5 @@
 "use strict";
-import { Disposable, Range, Uri } from "vscode";
+import { Disposable, Range, Uri, ViewColumn } from "vscode";
 import {
 	CodeStreamSession,
 	SessionStatus,
@@ -87,6 +87,10 @@ export class StreamViewController implements Disposable {
 		if (this._panel === undefined) return undefined;
 
 		return this._panel.streamThread;
+	}
+
+	get viewColumn(): ViewColumn | undefined {
+		return this._panel === undefined ? undefined : this._panel.viewColumn;
 	}
 
 	get visible() {

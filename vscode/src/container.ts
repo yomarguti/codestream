@@ -9,7 +9,6 @@ import { LiveShareController } from "./controllers/liveShareController";
 import { NotificationsController } from "./controllers/notificationsController";
 import { StatusBarController } from "./controllers/statusBarController";
 import { StreamViewController } from "./controllers/streamViewController";
-import { GitService, IGitService } from "./git/gitService";
 import { CodeStreamCodeActionProvider } from "./providers/codeActionProvider";
 import { MarkerDecorationProvider } from "./providers/markerDecorationProvider";
 // import { CodeStreamCodeLensProvider } from './providers/codeLensProvider';
@@ -23,7 +22,6 @@ export class Container {
 		this._version = agentOptions.extensionVersion;
 		this._agent = new CodeStreamAgentConnection(context, agentOptions);
 
-		this._git = new GitService();
 		context.subscriptions.push((this._session = new CodeStreamSession(config.serverUrl)));
 
 		context.subscriptions.push((this._notifications = new NotificationsController()));
@@ -71,15 +69,6 @@ export class Container {
 	private static _context: ExtensionContext;
 	static get context() {
 		return this._context;
-	}
-
-	private static _git: IGitService;
-	static get git() {
-		return this._git;
-	}
-
-	static overrideGit(git: IGitService) {
-		this._git = git;
 	}
 
 	private static _linkActions: LinkActionsController;

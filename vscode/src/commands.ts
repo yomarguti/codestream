@@ -93,26 +93,28 @@ export class Commands extends Disposable {
 		this._disposable && this._disposable.dispose();
 	}
 
-	@command("comparePostFileRevisionWithWorking", { showErrorMessage: "Unable to open post" })
-	async comparePostFileRevisionWithWorking(post?: Post) {
-		if (post == null) return;
+	// @command("comparePostFileRevisionWithWorking", { showErrorMessage: "Unable to open post" })
+	// async comparePostFileRevisionWithWorking(post?: Post) {
+	// 	if (post == null) return;
 
-		const block = await post.codeBlock();
-		if (block === undefined) return;
+	// 	const block = await post.codeBlock();
+	// 	if (block === undefined) return;
 
-		const file = await Container.git.getFileRevision(block.uri, block.hash);
-		if (file === undefined) return;
+	// 	const file = await Container.git.getFileRevision(block.uri, block.revision!);
+	// 	if (file === undefined) return;
 
-		const filename = path.basename(block.uri.fsPath);
+	// 	const filename = path.basename(block.uri.fsPath);
 
-		return commands.executeCommand(
-			BuiltInCommands.Diff,
-			Uri.file(file),
-			block.uri,
-			`${filename} (${block.hash.substr(0, 8)}) \u00a0\u27F7\u00a0 ${filename}`,
-			{ preview: true, viewColumn: ViewColumn.One, selection: block.range }
-		);
-	}
+	// 	return commands.executeCommand(
+	// 		BuiltInCommands.Diff,
+	// 		Uri.file(file),
+	// 		block.uri,
+	// 		`${filename}${
+	// 			block.revision !== undefined ? ` (${block.revision.substr(0, 8)})` : ""
+	// 		} \u00a0\u27F7\u00a0 ${filename}`,
+	// 		{ preview: true, viewColumn: ViewColumn.Beside, selection: block.range }
+	// 	);
+	// }
 
 	@command("openPostWorkingFile", { showErrorMessage: "Unable to open post" })
 	async openPostWorkingFile(post?: Post) {
@@ -121,30 +123,39 @@ export class Commands extends Disposable {
 		const block = await post.codeBlock();
 		if (block === undefined) return;
 
+		// FYI, this doesn't always work, see https://github.com/Microsoft/vscode/issues/56097
+		let column = Container.streamView.viewColumn as number | undefined;
+		if (column !== undefined) {
+			column--;
+			if (column <= 0) {
+				column = undefined;
+			}
+		}
+
 		// TODO: Need to follow marker to current sha
 		return openEditor(block.uri, {
 			preview: true,
-			viewColumn: ViewColumn.One,
+			viewColumn: column || ViewColumn.Beside,
 			selection: block.range
 		});
 	}
 
-	@command("openPostFileRevision", { showErrorMessage: "Unable to open post" })
-	async openPostFileRevision(post?: Post) {
-		if (post == null) return;
+	// @command("openPostFileRevision", { showErrorMessage: "Unable to open post" })
+	// async openPostFileRevision(post?: Post) {
+	// 	if (post == null) return;
 
-		const block = await post.codeBlock();
-		if (block === undefined) return;
+	// 	const block = await post.codeBlock();
+	// 	if (block === undefined) return;
 
-		const file = await Container.git.getFileRevision(block.uri, block.hash);
-		if (file === undefined) return;
+	// 	const file = await Container.git.getFileRevision(block.uri, block.revision!);
+	// 	if (file === undefined) return;
 
-		return openEditor(Uri.file(file), {
-			preview: true,
-			viewColumn: ViewColumn.One,
-			selection: block.range
-		});
-	}
+	// 	return openEditor(Uri.file(file), {
+	// 		preview: true,
+	// 		viewColumn: ViewColumn.Beside,
+	// 		selection: block.range
+	// 	});
+	// }
 
 	@command("openStream", { showErrorMessage: "Unable to open stream" })
 	async openStream(args: OpenStreamCommandArgs): Promise<StreamThread | undefined> {
@@ -289,16 +300,16 @@ export class Commands extends Disposable {
 					stream = await session.directMessages.getByMembers(locator.members);
 					break;
 
-				case StreamType.File:
-					const repo = await session.repos.getByFileUri(locator.uri);
-					if (repo !== undefined) {
-						if (locator.create) {
-							return { id: undefined, stream: await repo.streams.getOrCreateByUri(locator.uri) };
-						}
+				// case StreamType.File:
+				// 	const repo = await session.repos.getByFileUri(locator.uri);
+				// 	if (repo !== undefined) {
+				// 		if (locator.create) {
+				// 			return { id: undefined, stream: await repo.streams.getOrCreateByUri(locator.uri) };
+				// 		}
 
-						stream = await repo.streams.getByUri(locator.uri);
-						break;
-					}
+				// 		stream = await repo.streams.getByUri(locator.uri);
+				// 		break;
+				// 	}
 			}
 
 			if (stream !== undefined) return { id: undefined, stream: stream };

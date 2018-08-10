@@ -1,17 +1,17 @@
 "use strict";
 import { Range, Uri } from "vscode";
+import { Container } from "../../container";
 import { Dates, Iterables, memoize } from "../../system";
 import { CSPost } from "../api";
 import { CodeStreamSession, PostsReceivedEvent } from "../session";
 import { CodeStreamCollection, CodeStreamItem } from "./collection";
-import { Repository } from "./repositories";
-import { Stream, StreamType } from "./streams";
+import { Stream } from "./streams";
 import { User } from "./users";
 
 interface CodeBlock {
 	readonly code: string;
-	readonly hash: string;
 	readonly range: Range;
+	readonly revision?: string;
 	readonly uri: Uri;
 }
 
@@ -49,41 +49,29 @@ export class Post extends CodeStreamItem<CSPost> {
 		return this.entity.text;
 	}
 
-	@memoize
+	// @memoize
 	async codeBlock(): Promise<CodeBlock | undefined> {
 		if (this.entity.codeBlocks === undefined || this.entity.codeBlocks.length === 0) {
 			return undefined;
 		}
 
 		const block = this.entity.codeBlocks[0];
-
-		const repo = await this.session.repos.get(block.repoId);
-		if (repo === undefined) {
-			throw new Error(`Unable to find code block for Post(${this.entity.id})`);
-		}
-
-		const uri = repo.normalizeUri(block.file);
-
-		const markerStream = await repo.streams.getByUri(uri);
-		if (markerStream === undefined) {
-			throw new Error(`Unable to find code block for Post(${this.entity.id})`);
-		}
-
-		const locations = await this.session.api.getMarkerLocations(
-			this.entity.commitHashWhenPosted!,
-			markerStream.id
+		const resp = await Container.agent.getDocumentFromCodeBlock(
+			block,
+			this.entity.commitHashWhenPosted!
 		);
-		if (locations === undefined) {
-			throw new Error(`Unable to find code block for Post(${this.entity.id})`);
-		}
-
-		const location = locations.locations[block.markerId];
+		if (resp === undefined) return undefined;
 
 		return {
 			code: block.code,
-			range: new Range(location[0], location[1], location[2], location[3]),
-			hash: this.entity.commitHashWhenPosted!,
-			uri: uri!
+			range: new Range(
+				resp.range.start.line,
+				resp.range.start.character,
+				resp.range.end.line,
+				resp.range.end.character
+			),
+			revision: resp.revision,
+			uri: Uri.parse(resp.textDocument.uri)
 		};
 	}
 
@@ -132,14 +120,6 @@ export class Post extends CodeStreamItem<CSPost> {
 			const [, mention] = match;
 			yield mention;
 		} while (match != null);
-	}
-
-	@memoize
-	async repo(): Promise<Repository | undefined> {
-		const stream = await this.stream();
-		if (stream.type !== StreamType.File) return undefined;
-
-		return stream.repo();
 	}
 
 	@memoize

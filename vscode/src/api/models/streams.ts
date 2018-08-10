@@ -37,6 +37,7 @@ abstract class StreamBase<T extends CSStream> extends CodeStreamItem<T> {
 	async post(text: string, parentPostId?: string) {
 		const post = await this.session.api.createPost(
 			text,
+			[],
 			parentPostId,
 			this.entity.id,
 			this.entity.teamId
@@ -198,41 +199,8 @@ export class FileStream extends StreamBase<CSFileStream> {
 		return this.entity.repoId;
 	}
 
-	// @memoize
-	// get uri() {
-	//     const uri = Uri.parse(this.entity.file);
-	//     if (uri.scheme) return uri;
-
-	//     return Uri.file(this.entity.file);
-	// }
-
-	@memoize
-	async absoluteUri() {
-		const repo = await this.repo();
-		if (repo === undefined) return undefined;
-
-		const uri = Uri.parse(this.path);
-		if (uri.scheme) return uri;
-
-		return repo.normalizeUri(Uri.file(this.path));
-	}
-
 	label() {
 		return this.entity.file;
-	}
-
-	// @memoize
-	async repo(): Promise<Repository> {
-		if (this._repo === undefined) {
-			const repo = await this.session.repos.get(this.entity.repoId);
-			if (repo === undefined) {
-				throw new Error(`Repository(${this.entity.repoId}) could not be found`);
-			}
-
-			this._repo = repo;
-		}
-
-		return this._repo;
 	}
 }
 

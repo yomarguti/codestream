@@ -5,8 +5,7 @@ import {
 	ConfigurationTarget,
 	Disposable,
 	Event,
-	EventEmitter,
-	Uri
+	EventEmitter
 } from "vscode";
 import { AccessToken, AgentResult } from "../agent/agentConnection";
 import { GlobalState, WorkspaceState } from "../common";
@@ -17,7 +16,7 @@ import { Functions, memoize, Strings } from "../system";
 import { CSPost, CSUser } from "./api";
 import { CodeStreamApi, CSRepository, CSStream, LoginResult, PresenceStatus } from "./api";
 import { Cache } from "./cache";
-import { Marker, MarkerCollection } from "./models/markers";
+import { Marker } from "./models/markers";
 import { Post } from "./models/posts";
 import { Repository } from "./models/repositories";
 import {
@@ -53,7 +52,6 @@ export {
 	DirectStream,
 	FileStream,
 	Marker,
-	MarkerCollection,
 	Post,
 	PresenceStatus,
 	Repository,
@@ -232,11 +230,6 @@ export class CodeStreamSession implements Disposable {
 		return this._presenceManager!;
 	}
 
-	@signedIn
-	get repos() {
-		return this._state!.repos;
-	}
-
 	get serverUrl() {
 		return this._serverUrl;
 	}
@@ -389,19 +382,6 @@ export class CodeStreamSession implements Disposable {
 	}
 
 	@signedIn
-	async getMarkers(uri: Uri): Promise<MarkerCollection | undefined> {
-		const repo = await this.getRepositoryByUri(uri);
-		if (repo === undefined) return undefined;
-
-		return repo.getMarkers(uri);
-	}
-
-	@signedIn
-	getRepositoryByUri(uri: Uri): Promise<Repository | undefined> {
-		return this.repos.getByFileUri(uri);
-	}
-
-	@signedIn
 	async getStream(streamId: string): Promise<Stream | undefined> {
 		const stream = await this.api.getStream(streamId);
 		if (stream === undefined) return undefined;
@@ -532,9 +512,6 @@ export class CodeStreamSession implements Disposable {
 
 		const lastReads = user.lastReads || {};
 		const entries = Object.entries(lastReads);
-		if (entries.length === 0) {
-			this._state!.unreads.clear();
-		}
 		entries.forEach(async ([streamId, lastReadSeqNum]) => {
 			const latestPost = await this._sessionApi!.getLatestPost(streamId);
 			const unreadPosts = await this._sessionApi!.getPostsInRange(
@@ -559,7 +536,13 @@ export class CodeStreamSession implements Disposable {
 			this.unreads.unread[streamId] = unreadCount;
 		});
 
-		this._onDidChange.fire(new UnreadsChangedEvent(this._state!.unreads.getValues()));
+		this.unreads.getStreamIds().forEach(streamId => {
+			if (!lastReads[streamId]) {
+				this.unreads.clear(streamId);
+			}
+		});
+
+		this._onDidChange.fire(new UnreadsChangedEvent(this.unreads.getValues()));
 	}
 
 	private incrementUnreads(posts: CSPost[]) {

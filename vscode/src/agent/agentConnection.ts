@@ -11,8 +11,7 @@ import {
 	ServerOptions,
 	TransportKind
 } from "vscode-languageclient";
-import { CSPost } from "../api/api";
-import { GitRepository } from "../git/gitService";
+import { CSCodeBlock, CSPost } from "../api/api";
 import { Logger } from "../logger";
 import {
 	AccessToken,
@@ -20,12 +19,15 @@ import {
 	AgentOptions,
 	AgentResult,
 	ApiRequest,
+	DocumentFromCodeBlockRequest,
+	DocumentFromCodeBlockResponse,
+	DocumentLatestRevisionRequest,
+	DocumentLatestRevisionResponse,
 	DocumentMarkersRequest,
 	DocumentMarkersResponse,
 	DocumentPostRequest,
 	DocumentPreparePostRequest,
-	DocumentPreparePostResponse,
-	GitRepositoriesRequest
+	DocumentPreparePostResponse
 } from "../shared/agent.protocol";
 
 export { AccessToken, AgentOptions, AgentResult } from "../shared/agent.protocol";
@@ -86,25 +88,33 @@ export class CodeStreamAgentConnection implements Disposable {
 	}
 
 	@started
+	getDocumentFromCodeBlock(
+		block: CSCodeBlock,
+		revision: string
+	): Promise<DocumentFromCodeBlockResponse | undefined> {
+		return this.sendRequest(DocumentFromCodeBlockRequest, {
+			repoId: block.repoId,
+			file: block.file,
+			markerId: block.markerId,
+			streamId: block.streamId!,
+			revision: revision
+		});
+	}
+
+	@started
+	async getLatestRevision(uri: Uri): Promise<DocumentLatestRevisionResponse> {
+		return this.sendRequest(DocumentLatestRevisionRequest, {
+			textDocument: { uri: uri.toString() }
+		});
+	}
+
+	@started
 	async getMarkers(uri: Uri): Promise<DocumentMarkersResponse | undefined> {
 		try {
 			const response = await this.sendRequest(DocumentMarkersRequest, {
 				textDocument: { uri: uri.toString() }
 			});
 			return response;
-		} catch (ex) {
-			debugger;
-			Logger.error(ex);
-			throw ex;
-		}
-	}
-
-	@started
-	async getRepositories(): Promise<GitRepository[]> {
-		try {
-			const response = await this.sendRequest(GitRepositoriesRequest);
-			const repositories = response.map(r => new GitRepository(Uri.parse(r.uri as string)));
-			return repositories;
 		} catch (ex) {
 			debugger;
 			Logger.error(ex);
@@ -150,6 +160,7 @@ export class CodeStreamAgentConnection implements Disposable {
 		return this.stop();
 	}
 
+	@started
 	preparePost(document: TextDocument, range: Range): Promise<DocumentPreparePostResponse> {
 		return this.sendRequest(DocumentPreparePostRequest, {
 			textDocument: { uri: document.uri.toString() },
@@ -158,11 +169,13 @@ export class CodeStreamAgentConnection implements Disposable {
 		});
 	}
 
+	@started
 	postCode(
 		uri: Uri,
 		// document: TextDocument,
 		// range: Range,
 		text: string,
+		mentionedUserIds: string[],
 		code: string,
 		location: [number, number, number, number] | undefined,
 		source:
@@ -181,6 +194,7 @@ export class CodeStreamAgentConnection implements Disposable {
 			textDocument: { uri: uri.toString() },
 			// range: range,
 			// dirty: document.isDirty,
+			mentionedUserIds,
 			text: text,
 			code: code,
 			location: location,
@@ -210,7 +224,7 @@ export class CodeStreamAgentConnection implements Disposable {
 			const response = await this._client!.sendRequest(method, params);
 			return response;
 		} catch (ex) {
-			debugger;
+			// debugger;
 			Logger.error(ex, `AgentConnection.sendRequest`, method, params);
 			throw ex;
 		}

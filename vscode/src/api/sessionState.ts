@@ -1,7 +1,6 @@
 "use strict";
 import { LoginResponse } from "./api";
 import { CSUser } from "./api";
-import { RepositoryCollection } from "./models/repositories";
 import {
 	ChannelAndDirectStreamCollection,
 	ChannelStreamCollection,
@@ -26,9 +25,9 @@ class UnreadCounter {
 		this.incrementUnread(streamId);
 	}
 
-	clear() {
-		this.unread = {};
-		this.mentions = {};
+	clear(streamId: string) {
+		this.unread[streamId] = 0;
+		this.mentions[streamId] = 0;
 	}
 
 	getValues() {
@@ -36,6 +35,10 @@ class UnreadCounter {
 			unread: this.unread,
 			mentions: this.mentions
 		};
+	}
+
+	getStreamIds() {
+		return [...new Set([...Object.keys(this.unread), ...Object.keys(this.mentions)])];
 	}
 }
 
@@ -84,14 +87,6 @@ export class SessionState {
 			this._directMessages = new DirectStreamCollection(this.session, this.teamId);
 		}
 		return this._directMessages;
-	}
-
-	private _repos: RepositoryCollection | undefined;
-	get repos() {
-		if (this._repos === undefined) {
-			this._repos = new RepositoryCollection(this.session, this.teamId);
-		}
-		return this._repos;
 	}
 
 	private _team: Team | undefined;

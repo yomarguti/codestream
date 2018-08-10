@@ -1,18 +1,8 @@
 "use strict";
-import { Range, Uri } from "vscode";
-import { Container } from "../../container";
-import { Logger } from "../../logger";
-import { Iterables } from "../../system";
+import { Range } from "vscode";
 import { memoize } from "../../system/decorators";
 import { CSLocationArray, CSMarker } from "../api";
-import {
-	ChannelStream,
-	CodeStreamSession,
-	DirectStream,
-	FileStream,
-	Post,
-	Repository
-} from "../session";
+import { ChannelStream, CodeStreamSession, DirectStream, Post } from "../session";
 
 export class Marker {
 	private readonly _range: Range;
@@ -20,14 +10,9 @@ export class Marker {
 	constructor(
 		public readonly session: CodeStreamSession,
 		private readonly entity: CSMarker,
-		private readonly _commitHash: string,
 		location: CSLocationArray
 	) {
 		this._range = new Range(location[0], location[1], location[2], location[3]);
-	}
-
-	get commitHash() {
-		return this._commitHash;
 	}
 
 	@memoize
@@ -74,85 +59,88 @@ export class Marker {
 	}
 }
 
-export class MarkerCollection {
-	constructor(
-		public readonly session: CodeStreamSession,
-		public readonly repository: Repository,
-		public readonly fileStream: FileStream,
-		private readonly _uri: Uri,
-		public readonly teamId: string
-	) {}
+// export class MarkerCollection {
+// 	constructor(
+// 		public readonly session: CodeStreamSession,
+// 		public readonly repository: Repository,
+// 		public readonly fileStream: FileStream,
+// 		private readonly _uri: Uri,
+// 		public readonly teamId: string
+// 	) {}
 
-	async filter(predicate: (item: Marker) => boolean) {
-		return Iterables.filter(await this.items(), predicate);
-	}
+// 	async filter(predicate: (item: Marker) => boolean) {
+// 		return Iterables.filter(await this.items(), predicate);
+// 	}
 
-	async find(predicate: (item: Marker) => boolean) {
-		return Iterables.find(await this.items(), predicate);
-	}
+// 	async find(predicate: (item: Marker) => boolean) {
+// 		return Iterables.find(await this.items(), predicate);
+// 	}
 
-	async first() {
-		return Iterables.first(await this.items());
-	}
+// 	async first() {
+// 		return Iterables.first(await this.items());
+// 	}
 
-	async get(key: string) {
-		const collection = await this.ensureLoaded();
-		return collection.get(key);
-	}
+// 	async get(key: string) {
+// 		const collection = await this.ensureLoaded();
+// 		return collection.get(key);
+// 	}
 
-	async has(key: string) {
-		const collection = await this.ensureLoaded();
-		return collection.has(key);
-	}
+// 	async has(key: string) {
+// 		const collection = await this.ensureLoaded();
+// 		return collection.has(key);
+// 	}
 
-	private _collection: Promise<Map<string, Marker>> | undefined;
-	async items(): Promise<IterableIterator<Marker>> {
-		const items = await this.ensureLoaded();
-		return items.values();
-	}
+// 	private _collection: Promise<Map<string, Marker>> | undefined;
+// 	async items(): Promise<IterableIterator<Marker>> {
+// 		const items = await this.ensureLoaded();
+// 		return items.values();
+// 	}
 
-	protected ensureLoaded() {
-		if (this._collection === undefined) {
-			this._collection = this.load();
-		}
-		return this._collection;
-	}
+// 	protected ensureLoaded() {
+// 		if (this._collection === undefined) {
+// 			this._collection = this.load();
+// 		}
+// 		return this._collection;
+// 	}
 
-	protected async load() {
-		try {
-			const sha = await Container.git.getFileCurrentSha(this._uri);
-			const markers = new Map<string, CSMarker>(
-				(await this.session.api.getMarkers(sha!, this.fileStream.id)).map<[string, CSMarker]>(m => [
-					m.id,
-					m
-				])
-			);
-			const markerLocations = await this.session.api.getMarkerLocations(sha!, this.fileStream.id);
+// 	protected async load() {
+// 		try {
+// 			const resp = await Container.agent.getLatestRevision(this._uri);
+// 			const revision = resp.revision!;
+// 			const markers = new Map<string, CSMarker>(
+// 				(await this.session.api.getMarkers(revision, this.fileStream.id)).map<[string, CSMarker]>(
+// 					m => [m.id, m]
+// 				)
+// 			);
+// 			const markerLocations = await this.session.api.getMarkerLocations(
+// 				revision,
+// 				this.fileStream.id
+// 			);
 
-			const entities = new Map<string, Marker>();
+// 			const entities = new Map<string, Marker>();
 
-			if (markers.size === 0 || !markerLocations.locations) return entities;
+// 			if (markers.size === 0 || !markerLocations.locations) return entities;
 
-			for (const id of Object.keys(markerLocations.locations)) {
-				const marker = markers.get(id);
-				if (marker === undefined) continue;
+// 			for (const id of Object.keys(markerLocations.locations)) {
+// 				const marker = markers.get(id);
+// 				if (marker === undefined) continue;
 
-				entities.set(
-					id,
-					new Marker(
-						this.session,
-						marker,
-						markerLocations.commitHash,
-						markerLocations.locations[id]
-					)
-				);
-			}
+// 				entities.set(
+// 					id,
+// 					new Marker(
+// 						this.session,
+// 						marker,
+// 						markerLocations.commitHash,
+// 						markerLocations.locations[id]
+// 					)
+// 				);
+// 			}
 
-			return entities;
-		} catch (ex) {
-			Logger.error(ex);
-			debugger;
-			throw ex;
-		}
-	}
-}
+// 			return entities;
+// 		} catch (ex) {
+// 			Logger.error(ex);
+// 			debugger;
+// 			throw ex;
+// 		}
+// 	}
+// }

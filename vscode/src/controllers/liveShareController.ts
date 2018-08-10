@@ -11,9 +11,9 @@ import {
 import { Post, SessionStatus, SessionStatusChangedEvent } from "../api/session";
 import { ContextKeys, setContext } from "../common";
 import { Container } from "../container";
-import { RemoteGitService, RemoteRepository } from "../git/remoteGitService";
+// import { RemoteRepository } from "../git/remoteGitService";
 import { Logger } from "../logger";
-import { Command, createCommandDecorator, Iterables } from "../system";
+import { Command, createCommandDecorator } from "../system";
 
 const commandRegistry: Command[] = [];
 const command = createCommandDecorator(commandRegistry);
@@ -27,7 +27,7 @@ interface LiveShareContext {
 	sessionUserId: string;
 	streamId: string;
 	memberIds: string[];
-	repos: RemoteRepository[];
+	// repos: RemoteRepository[];
 }
 
 interface InviteCommandArgs {
@@ -143,7 +143,7 @@ export class LiveShareController extends Disposable {
 		switch (status) {
 			case SessionStatus.SigningIn:
 				// Since we are in a live share session, swap out our git service
-				Container.overrideGit(new RemoteGitService(context.repos));
+				// Container.overrideGit(new RemoteGitService(context.repos));
 				break;
 
 			case SessionStatus.SignedIn:
@@ -190,11 +190,10 @@ export class LiveShareController extends Disposable {
 
 		const currentUserId = Container.session.userId;
 		const memberIds = [currentUserId, ...users.map(u => u.id)];
-		const repos = Iterables.map(
-			await Container.session.repos.items(),
-			r =>
-				({ id: r.id, hash: r.hash, normalizedUrl: r.normalizedUrl, url: r.url } as RemoteRepository)
-		);
+		// const repos = Iterables.map(
+		// 	await Container.session.repos.items(),
+		// 	r => ({ id: r.id, hash: "", normalizedUrl: r.normalizedUrl, url: r.url } as RemoteRepository)
+		// );
 
 		// Create a new channel specifically for this live share session
 		const liveShareStream = await Container.session.channels.getOrCreateByName(
@@ -210,8 +209,8 @@ export class LiveShareController extends Disposable {
 				sessionId: sessionId,
 				sessionUserId: currentUserId,
 				streamId: liveShareStream.id,
-				memberIds: memberIds,
-				repos: [...repos]
+				memberIds: memberIds
+				// repos: [...repos]
 			},
 			{
 				type: "link",
