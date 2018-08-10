@@ -22,7 +22,7 @@ class EventEmitter {
 	handler = ({ data }) => {
 		if (data.type.startsWith("codestream")) {
 			const event = data.type.replace("codestream:", "");
-			console.debug(`[${event}] event received`, data.body);
+			if (event !== "response") console.debug(`[${event}] event received`, data.body);
 			const listeners = this.listenersByEvent.get(event) || [];
 			listeners.forEach(l => l(data.body));
 		}
