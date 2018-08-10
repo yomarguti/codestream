@@ -31,7 +31,7 @@ CodeStream is currently in beta. The core messaging functionality, which is the 
 
 ![Markers](https://help.codestream.com/hc/article_attachments/360008723011/Screen_Shot_2018-08-06_at_5.03.41_PM.png)
 
-- Set up the Slack integration and all of your team’s messages on CodeStream will flow through to the channel of your choice on Slack. You can even reply to those messages right from Slack, and the replies will get posted to CodeStream.
+- Set up the Slack integration by typing "/slack" in any stream and all of your team’s messages on CodeStream will flow through to the channel of your choice on Slack. You can even reply to those messages right from Slack, and the replies will get posted to CodeStream.
 
 ![SlackIntegration](https://help.codestream.com/hc/article_attachments/360002212591/SlackCSBot.png)
 
