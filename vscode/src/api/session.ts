@@ -511,54 +511,69 @@ export class CodeStreamSession implements Disposable {
 		const mentionRegex = this.getMentionRegex(user.username);
 
 		const lastReads = user.lastReads || {};
+		const unreadCounter = this._state!.unreads;
 		const entries = Object.entries(lastReads);
-		entries.forEach(async ([streamId, lastReadSeqNum]) => {
-			const latestPost = await this._sessionApi!.getLatestPost(streamId);
-			const unreadPosts = await this._sessionApi!.getPostsInRange(
-				streamId,
-				lastReadSeqNum,
-				latestPost.seqNum
-			);
+		await Promise.all(
+			entries.map(async ([streamId, lastReadSeqNum]) => {
+				const [stream, latestPost] = await Promise.all([
+					this._sessionApi!.getStream(streamId),
+					this._sessionApi!.getLatestPost(streamId)
+				]);
 
-			let unreadCount = 0;
-			let mentionCount = 0;
-			unreadPosts.forEach(post => {
-				if (!post.deactivated) {
-					if (post.text.match(mentionRegex)) {
-						mentionCount++;
-						unreadCount++;
-					} else {
-						unreadCount++;
+				const unreadPosts = await this._sessionApi!.getPostsInRange(
+					streamId,
+					lastReadSeqNum,
+					latestPost.seqNum
+				);
+
+				const streamType = stream!.type;
+				let unreadCount = 0;
+				let mentionCount = 0;
+				unreadPosts.forEach(post => {
+					if (!post.deactivated) {
+						if (post.text.match(mentionRegex) || streamType === StreamType.Direct) {
+							mentionCount++;
+							unreadCount++;
+						} else {
+							unreadCount++;
+						}
 					}
-				}
-			});
-			this.unreads.mentions[streamId] = mentionCount;
-			this.unreads.unread[streamId] = unreadCount;
-		});
+				});
+				unreadCounter.mentions[streamId] = mentionCount;
+				unreadCounter.unread[streamId] = unreadCount;
+			})
+		);
 
-		this.unreads.getStreamIds().forEach(streamId => {
-			if (!lastReads[streamId]) {
-				this.unreads.clear(streamId);
+		unreadCounter.getStreamIds().forEach(streamId => {
+			if (lastReads[streamId] === undefined) {
+				unreadCounter.clear(streamId);
 			}
 		});
 
-		this._onDidChange.fire(new UnreadsChangedEvent(this.unreads.getValues()));
+		unreadCounter.lastReads = lastReads;
+		this._onDidChange.fire(new UnreadsChangedEvent(unreadCounter.getValues()));
 	}
 
-	private incrementUnreads(posts: CSPost[]) {
+	private async incrementUnreads(posts: CSPost[]) {
 		const mentionRegex = this.getMentionRegex(this.user.name);
 
-		const unreads = this._state!.unreads;
+		const unreadCounter = this._state!.unreads;
 
-		posts.forEach(post => {
-			if (!post.deactivated && post.creatorId !== this.userId && post.createdAt) {
-				if (post.text.match(mentionRegex)) {
-					unreads.incrementMention(post.streamId);
-				} else {
-					unreads.incrementUnread(post.streamId);
+		await Promise.all(
+			posts.map(async post => {
+				if (!post.deactivated && post.creatorId !== this.userId) {
+					const stream = await this._sessionApi!.getStream(post.streamId);
+					if (post.text.match(mentionRegex) || stream!.type === StreamType.Direct) {
+						unreadCounter.incrementMention(post.streamId);
+					} else {
+						unreadCounter.incrementUnread(post.streamId);
+					}
+					if (unreadCounter.lastReads[post.streamId] === undefined) {
+						unreadCounter.lastReads[post.streamId] = post.seqNum;
+					}
 				}
-			}
-		});
+			})
+		);
 		this._onDidChange.fire(new UnreadsChangedEvent(this._state!.unreads.getValues()));
 	}
 }
