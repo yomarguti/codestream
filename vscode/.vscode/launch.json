@@ -34,22 +34,6 @@
 			"outFiles": ["${workspaceRoot}/dist/**/*.js"],
 			"trace": true,
 			"preLaunchTask": "watch"
-		},
-		{
-			"name": "Debug Extension (Akonwi)",
-			"type": "extensionHost",
-			"request": "launch",
-			"runtimeExecutable": "${execPath}",
-			"args": [
-				"--extensionDevelopmentPath=${workspaceRoot}",
-				"--enable-proposed-api",
-				"akonwi.codestream",
-				"/Users/akonwi/projects/bundles/"
-			],
-			"smartStep": true,
-			"sourceMaps": true,
-			"outFiles": ["${workspaceRoot}/dist/**/*.js"],
-			"preLaunchTask": "npm: watch"
 		}
 	]
 }
