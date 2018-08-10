@@ -143,7 +143,10 @@ export class SimpleStream extends Component {
 			console.log("SETTING PWNMI to NULL!");
 			this.postWithNewMessageIndicator = undefined;
 		}
-		if (typeof nextProps.umis.lastReads[nextProps.postStreamId] !== "undefined") {
+		if (
+			nextProps.umis.lastReads &&
+			typeof nextProps.umis.lastReads[nextProps.postStreamId] !== "undefined"
+		) {
 			console.log("SETTING PWNMI to ", nextProps.umis.lastReads[nextProps.postStreamId]);
 			this.postWithNewMessageIndicator = nextProps.umis.lastReads[nextProps.postStreamId];
 		}
