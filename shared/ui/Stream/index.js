@@ -444,15 +444,9 @@ export class SimpleStream extends Component {
 		});
 		const unreadsBelowClass = createClassString({
 			unreads: true,
-			offscreen: activePanel !== "main",
-			active: this.state.unreadsBelow
+			// offscreen: activePanel === "main",
+			active: this.state.unreadsBelow && activePanel === "main"
 		});
-		const unreadsAbove =
-			activePanel === "thread" ? null : (
-				<div className={unreadsAboveClass} type="above" onClick={this.handleClickUnreads}>
-					&uarr; Unread Messages &uarr;
-				</div>
-			);
 
 		const umisClass = createClassString("align-left-button", {
 			umis: true,
@@ -534,6 +528,12 @@ export class SimpleStream extends Component {
 						<div class="shadow-container">
 							<div class="shadow shadow-top" />
 							<div class="shadow shadow-bottom" />
+							<div className={unreadsAboveClass} type="above" onClick={this.handleClickUnreads}>
+								&uarr; Unread Messages &uarr;
+							</div>
+							<div className={unreadsBelowClass} type="below" onClick={this.handleClickUnreads}>
+								&darr; Unread Messages &darr;
+							</div>
 						</div>
 						<div
 							className={postsListClass}
@@ -626,9 +626,6 @@ export class SimpleStream extends Component {
 							<div class="shadow-cover-bottom" />
 						</div>
 					</div>
-				</div>
-				<div className={unreadsBelowClass} type="below" onClick={this.handleClickUnreads}>
-					&darr; Unread Messages &darr;
 				</div>
 				<ComposeBox
 					placeholder={placeholderText}
