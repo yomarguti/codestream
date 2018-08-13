@@ -749,6 +749,9 @@ export class StreamWebviewPanel extends Disposable {
 					enableScripts: true
 				}
 			);
+			this._panel.iconPath = Uri.file(
+				Container.context.asAbsolutePath("assets/images/codestream.png")
+			);
 
 			this._ipc.reset(this._panel);
 
