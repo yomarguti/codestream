@@ -96,4 +96,8 @@ export default class WebviewApi {
 	saveUserPreference(newPreference) {
 		return this.postMessage({ action: "save-user-preference", params: newPreference });
 	}
+
+	async showCode(post) {
+		return this.postMessage({ action: "show-code", params: post });
+	}
 }

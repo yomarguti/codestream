@@ -311,3 +311,7 @@ export const fetchPosts = params => async (dispatch, getState, { api }) => {
 		console.error(error);
 	}
 };
+
+export const showCode = post => (dispatch, getState, { api }) => {
+	return api.showCode(post);
+};

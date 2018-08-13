@@ -40,6 +40,7 @@ export class SimpleStream extends Component {
 
 		this.state = {
 			threadId: null,
+			threadTrigger: null,
 			activePanel: props.postStreamId && props.startOnMainPanel ? "main" : "channels"
 		};
 		this._compose = React.createRef();
@@ -378,6 +379,7 @@ export class SimpleStream extends Component {
 						currentCommit={this.props.currentCommit}
 						editing={post.id === this.state.editingPostId}
 						action={this.postAction}
+						didTriggerThread={this.state.threadTrigger === post.id}
 					/>
 				</div>
 			);
@@ -620,6 +622,7 @@ export class SimpleStream extends Component {
 									currentCommit={this.props.currentCommit}
 									editing={activePanel === "thread" && threadPost.id === this.state.editingPostId}
 									action={this.postAction}
+									didTriggerThread={threadPost.id === this.state.threadTrigger}
 								/>
 							)}
 							{this.renderThreadPosts(threadId)}
@@ -912,14 +915,13 @@ export class SimpleStream extends Component {
 		// if it is a child in the thread, it'll have a parentPostId,
 		// otherwise use the id. any post can become the head of a thread
 		const threadId = post.parentPostId || post.id;
-		this.setState({ threadId: threadId, activePanel: "thread" });
+		this.setState({ threadId: threadId, threadTrigger: id, activePanel: "thread" });
 
 		this.focusInput();
 		if (wasClicked) {
 			EventEmitter.emit("interaction:thread-selected", {
 				threadId,
-				streamId: this.props.postStreamId,
-				post
+				streamId: this.props.postStreamId
 			});
 		}
 	};

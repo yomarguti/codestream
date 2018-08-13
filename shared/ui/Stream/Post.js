@@ -8,7 +8,7 @@ import Timestamp from "./Timestamp";
 // import Menu from "./Menu";
 import PostDetails from "./PostDetails";
 import RetrySpinner from "./RetrySpinner";
-import { retryPost, cancelPost } from "./actions";
+import { retryPost, cancelPost, showCode } from "./actions";
 import ContentEditable from "react-contenteditable";
 import Button from "./Button";
 import Menu from "./Menu";
@@ -23,12 +23,40 @@ import { Picker } from "emoji-mart";
 // });
 
 class Post extends Component {
-	constructor(props) {
-		super(props);
-		this.state = {
-			menuOpen: false,
-			authorMenuOpen: false
-		};
+	state = {
+		menuOpen: false,
+		authorMenuOpen: false,
+		warning: null
+	};
+
+	componentDidMount() {
+		if (this.props.didTriggerThread) {
+			this.showCode();
+		}
+	}
+
+	componentDidUpdate(prevProps, prevState) {
+		if (this.props.editing && !prevProps.editing) {
+			document.getElementById("input-div-" + this.props.post.id).focus();
+		}
+
+		if (!prevProps.didTriggerThread && this.props.didTriggerThread) {
+			this.showCode();
+		}
+	}
+
+	async showCode() {
+		const codeBlock = this.props.post.codeBlocks && this.props.post.codeBlocks[0];
+		if (codeBlock) {
+			if (codeBlock.repoId) {
+				const status = await this.props.showCode(this.props.post);
+				if (status === "SUCCESS") {
+					this.setState({ warning: null });
+				} else {
+					this.setState({ warning: "UNKNOWN_LOCATION" });
+				}
+			} else this.setState({ warning: "NO_REMOTE" });
+		}
 	}
 
 	resubmit = () => this.props.retryPost(this.props.post.id);
@@ -57,7 +85,10 @@ class Post extends Component {
 			let code = post.codeBlocks[0].code;
 			codeBlock = (
 				<div className="code-reference">
-					<span>{post.codeBlocks[0].file || "-"}</span>
+					<div className="header">
+						<span class="file">{post.codeBlocks[0].file || "-"}</span>
+						{this.state.warning && <Icon name="info" />}
+					</div>
 					<div className="code">{code}</div>
 				</div>
 			);
@@ -106,7 +137,6 @@ class Post extends Component {
 			);
 		}
 		// }
-		// let alertClass = this.props.alert ? "icon icon-" + this.props.alert : null;
 
 		// this was above Headshot
 		// <span className="icon icon-gear" onClick={this.handleMenuClick} />
@@ -154,10 +184,10 @@ class Post extends Component {
 						</div>
 					)}
 					{codeBlock}
-					{this.props.showDetails && (
-						<PostDetails post={post} currentCommit={this.props.currentCommit} />
-					)}
-					{/* {alertClass && <span className={alertClass} />} */}
+					{this.props.showDetails &&
+						!this.state.warning && (
+							<PostDetails post={post} currentCommit={this.props.currentCommit} />
+						)}
 					{this.renderBody(post)}
 					{!this.props.editng && post.hasBeenEdited && <span className="edited">(edited)</span>}
 				</div>
@@ -249,18 +279,12 @@ class Post extends Component {
 		);
 	};
 
-	componentDidUpdate(prevProps, _prevState) {
-		if (this.props.editing && !prevProps.editing) {
-			document.getElementById("input-div-" + this.props.post.id).focus();
-		}
-	}
-
-	handleMenuClick = async event => {
+	handleMenuClick = event => {
 		event.stopPropagation();
 		this.setState({ menuOpen: !this.state.menuOpen, menuTarget: event.target });
 	};
 
-	handleHeadshotClick = async event => {
+	handleHeadshotClick = event => {
 		console.log("HANDLED!");
 		event.stopPropagation();
 		this.setState({ authorMenuOpen: !this.state.authorMenuOpen, menuTarget: event.target });
@@ -274,5 +298,5 @@ class Post extends Component {
 
 export default connect(
 	null,
-	{ cancelPost, retryPost }
+	{ cancelPost, retryPost, showCode }
 )(Post);
