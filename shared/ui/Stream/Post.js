@@ -16,6 +16,7 @@ import Menu from "./Menu";
 import Tooltip from "./Tooltip";
 // import "emoji-mart/css/emoji-mart.css";
 import { Picker } from "emoji-mart";
+import { getById } from "../reducers/repos";
 // import markdown from "markdown-it";
 
 // const md = markdown({
@@ -93,10 +94,13 @@ class Post extends Component {
 			case "REPO_NOT_IN_WORKSPACE": {
 				return (
 					<span>
-						{intl.formatMessage({
-							id: "codeBlock.repoMissing",
-							defaultMessage: "You don’t currently have the repo for this code open."
-						})}
+						{intl.formatMessage(
+							{
+								id: "codeBlock.repoMissing",
+								defaultMessage: "You don’t currently have the {repoName} repo open."
+							},
+							{ repoName: this.props.repoName }
+						)}
 					</span>
 				);
 			}
@@ -353,7 +357,15 @@ class Post extends Component {
 	};
 }
 
+const mapStateToProps = (state, props) => {
+	const codeBlock = props.post.codeBlocks && props.post.codeBlocks[0];
+	const repo = codeBlock && getById(state.repos, codeBlock.repoId);
+
+	return {
+		repoName: repo ? repo.name : ""
+	};
+};
 export default connect(
-	null,
+	mapStateToProps,
 	{ cancelPost, retryPost, showCode }
 )(injectIntl(Post));

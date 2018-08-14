@@ -15,3 +15,7 @@ export default (state = initialState, { type, payload }) => {
 			return state;
 	}
 };
+
+export const getById = (state, id) => {
+	return state[id];
+};
