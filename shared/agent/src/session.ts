@@ -27,6 +27,7 @@ import { Container } from "./container";
 import { setGitPath } from "./git/git";
 import { Logger } from "./logger";
 import { MarkerHandler } from "./marker/markerHandler";
+import { PostHandler } from "./post/postHandler";
 import { PubnubReceiver } from "./pubnub/pubnubReceiver";
 import { Iterables, Strings } from "./system";
 
@@ -72,21 +73,38 @@ export class CodeStreamSession {
 		this.agent.registerHandler(DocumentPreparePostRequest, e =>
 			this.preparePostCode(e.textDocument, e.range, e.dirty)
 		);
-		this.agent.registerHandler(DocumentPostRequest, e =>
-			this.postCode(
-				e.textDocument,
-				// e.range,
-				// e.dirty,
-				e.text,
-				e.mentionedUserIds,
-				e.code,
-				e.location,
-				e.source,
-				e.parentPostId,
-				e.streamId,
-				e.teamId
-			)
+		// this.agent.registerHandler(DocumentPostRequest, e =>
+		// 	this.postCode(
+		// 		e.textDocument,
+		// 		// e.range,
+		// 		// e.dirty,
+		// 		e.text,
+		// 		e.mentionedUserIds,
+		// 		e.code,
+		// 		e.location,
+		// 		e.source,
+		// 		e.parentPostId,
+		// 		e.streamId,
+		// 		e.teamId
+		// 	)
+		this.agent.registerHandler(
+			DocumentPostRequest,
+			// e => this.postCode(
+			// 	e.textDocument,
+			// 	// e.range,
+			// 	// e.dirty,
+			// 	e.text,
+			// 	e.code,
+			// 	e.location,
+			// 	e.source,
+			// 	e.parentPostId,
+			// 	e.streamId,
+			// 	e.teamId
+			// )
+			// e => PostHandler.postCode(e.textDocument)
+			e => PostHandler.postCode(e.textDocument, e.location, e.text, e.streamId, e.parentPostId)
 		);
+
 		this.agent.registerHandler(DocumentLatestRevisionRequest, async e => {
 			const revision = await Container.instance().git.getFileCurrentRevision(
 				URI.parse(e.textDocument.uri)
@@ -293,55 +311,6 @@ export class CodeStreamSession {
 					  }
 					: undefined
 		};
-	}
-
-	async postCode(
-		documentId: TextDocumentIdentifier,
-		// range: Range,
-		// dirty: boolean = false,
-		text: string,
-		mentionedUserIds: string[],
-		code: string,
-		location: [number, number, number, number] | undefined,
-		source:
-			| {
-					file: string;
-					repoPath: string;
-					revision: string;
-					authors: { id: string; username: string }[];
-					remotes: { name: string; url: string }[];
-			  }
-			| undefined,
-		parentPostId: string | undefined,
-		streamId: string,
-		teamId?: string
-	) {
-		const codeBlock: CreatePostRequestCodeBlock = {
-			code: code,
-			location: location
-		};
-
-		if (source !== undefined) {
-			codeBlock.file = source.file;
-			if (source.remotes.length > 0) {
-				codeBlock.remotes = source.remotes.map(r => r.url);
-			}
-		}
-
-		try {
-			return (await this._api.createPost(this._apiToken!, {
-				teamId: teamId || this.teamId,
-				streamId: streamId,
-				text: text,
-				mentionedUserIds,
-				parentPostId: parentPostId,
-				codeBlocks: [codeBlock],
-				commitHashWhenPosted: source && source.revision
-			})).post;
-		} catch (ex) {
-			debugger;
-			return;
-		}
 	}
 
 	private async getSubscribeableStreams(userId: string, teamId?: string): Promise<CSStream[]> {

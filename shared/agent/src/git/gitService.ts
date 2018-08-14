@@ -43,9 +43,15 @@ export interface IGitService extends Disposable {
 	getRepoFirstCommits(repoPath: string): Promise<string[]>;
 	// getRepoFirstCommits(repoUriOrPath: Uri | string): Promise<string[]>;
 
+	getRepoHeadRevision(repoUri: URI): Promise<string | undefined>;
+	getRepoHeadRevision(repoPath: string): Promise<string | undefined>;
+
 	getRepoRemote(repoUri: URI): Promise<GitRemote | undefined>;
 	getRepoRemote(repoPath: string): Promise<GitRemote | undefined>;
 	// getRepoRemote(repoUriOrPath: Uri | string): Promise<GitRemote | undefined>;
+
+	getRepoRoot(uri: URI, isDirectory?: boolean): Promise<string | undefined>;
+	getRepoRoot(path: string, isDirectory?: boolean): Promise<string | undefined>;
 
 	getRepositories(): Promise<Iterable<GitRepository>>;
 	getRepositoryById(id: string): Promise<GitRepository | undefined>;
@@ -245,6 +251,15 @@ export class GitService implements IGitService, Disposable {
 		return data.trim().split("\n");
 	}
 
+	async getRepoHeadRevision(repoUri: URI): Promise<string | undefined>;
+	async getRepoHeadRevision(repoPath: string): Promise<string | undefined>;
+	async getRepoHeadRevision(repoUriOrPath: URI | string): Promise<string | undefined> {
+		const repoPath = typeof repoUriOrPath === "string" ? repoUriOrPath : repoUriOrPath.fsPath;
+
+		const data = (await git({ cwd: repoPath }, "log", "-n1", "--format=%H")).trim();
+		return data ? data : undefined;
+	}
+
 	async getRepoRemote(repoUri: URI): Promise<GitRemote | undefined>;
 	async getRepoRemote(repoPath: string): Promise<GitRemote | undefined>;
 	async getRepoRemote(repoUriOrPath: URI | string): Promise<GitRemote | undefined> {
@@ -298,7 +313,13 @@ export class GitService implements IGitService, Disposable {
 		return false;
 	}
 
-	async getRepoRoot(filePath: string, isDirectory: boolean = false): Promise<string | undefined> {
+	async getRepoRoot(uri: URI, isDirectory?: boolean): Promise<string | undefined>;
+	async getRepoRoot(path: string, isDirectory?: boolean): Promise<string | undefined>;
+	async getRepoRoot(
+		uriOrPath: URI | string,
+		isDirectory: boolean = false
+	): Promise<string | undefined> {
+		const filePath = typeof uriOrPath === "string" ? uriOrPath : uriOrPath.fsPath;
 		let cwd;
 		if (isDirectory) {
 			cwd = filePath;

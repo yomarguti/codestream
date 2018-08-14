@@ -40,7 +40,8 @@
         "tmp": "0.0.33",
         "tslib": "1.9.3",
         "vscode-languageserver": "4.4.0",
-        "vscode-uri": "1.0.5"
+        "vscode-uri": "1.0.5",
+        "write-file-atomic": "2.3.0"
     },
     "devDependencies": {
         "@types/chai": "4.1.4",
@@ -52,6 +53,7 @@
         "@types/randomstring": "1.1.6",
         "@types/string-similarity": "1.2.0",
         "@types/tmp": "0.0.33",
+        "@types/write-file-atomic": "2.1.1",
         "chai": "4.1.2",
         "clean-webpack-plugin": "0.1.19",
         "cross-env": "5.2.0",

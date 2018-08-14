@@ -6,6 +6,7 @@ import {
 	TextDocumentChangeEvent,
 	TextDocuments
 } from "vscode-languageserver";
+import { MarkerLocationUtil } from "./markerLocation/markerLocationUtil";
 import { Disposables } from "./system";
 
 export class DocumentManager implements Disposable {
@@ -14,7 +15,10 @@ export class DocumentManager implements Disposable {
 
 	constructor() {
 		this._documents = new TextDocuments();
-		this._disposable = Disposables.from(this._documents.onDidChangeContent(this.onContentChanged));
+		this._disposable = Disposables.from(
+			this._documents.onDidOpen(this.onOpened),
+			this._documents.onDidChangeContent(this.onContentChanged)
+		);
 	}
 
 	dispose() {
@@ -22,6 +26,10 @@ export class DocumentManager implements Disposable {
 	}
 
 	private onContentChanged(e: TextDocumentChangeEvent) {}
+
+	private onOpened(e: TextDocumentChangeEvent) {
+		MarkerLocationUtil.monitorRepo(e.document.uri);
+	}
 
 	get(uri: string): TextDocument | undefined {
 		return this._documents.get(uri);

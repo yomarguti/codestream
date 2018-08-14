@@ -727,10 +727,7 @@ export class PubnubConnection {
 				error instanceof ServerError &&
 				error.statusCode === 403 &&
 				error.info &&
-				(
-					error.info.code === "RAPI-1009" ||
-					error.info.code === "USRC-1008"
-				)
+				(error.info.code === "RAPI-1009" || error.info.code === "USRC-1008")
 			) {
 				this._debug("Server explicitly refused access", channel);
 				this._grantFailures.push(channel);

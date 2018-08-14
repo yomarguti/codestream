@@ -2,8 +2,8 @@
 import * as path from "path";
 import { CSFileStream } from "../api/api";
 import { Container } from "../container";
+import { GitRepository } from "../git/models/repository";
 import { Strings } from "../system";
-import { GitRepository } from "./models/models";
 
 type StreamsByPath = Map<string, CSFileStream>;
 type StreamsByRepoId = Map<string, StreamsByPath>;

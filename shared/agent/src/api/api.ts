@@ -370,15 +370,18 @@ export class CodeStreamApi {
 	}
 
 	static normalizeResponse<R extends object>(obj: { [key: string]: any }): R {
-		for (const [key, value] of Object.entries(obj)) {
-			if (key === "_id") {
-				obj["id"] = value;
-			}
+		// FIXME maybe the api server should never return arrays with null elements?
+		if (obj != null) {
+			for (const [key, value] of Object.entries(obj)) {
+				if (key === "_id") {
+					obj["id"] = value;
+				}
 
-			if (Array.isArray(value)) {
-				obj[key] = value.map(v => this.normalizeResponse(v));
-			} else if (typeof value === "object") {
-				obj[key] = this.normalizeResponse(value);
+				if (Array.isArray(value)) {
+					obj[key] = value.map(v => this.normalizeResponse(v));
+				} else if (typeof value === "object") {
+					obj[key] = this.normalizeResponse(value);
+				}
 			}
 		}
 

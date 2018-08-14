@@ -41,7 +41,6 @@ class CodeStreamApiSimulator {
 let TEST_NUM = 0;
 
 export abstract class PubnubTester {
-
 	public testNum: number = 0;
 
 	protected _userData: LoginResponse | undefined;
@@ -124,7 +123,7 @@ export abstract class PubnubTester {
 			userId: this._userData!.user._id,
 			online: this._startOffline ? false : true,
 			testMode: true
-// 			debug: this.debug.bind(this)
+			// 			debug: this.debug.bind(this)
 		} as PubnubInitializer);
 	}
 

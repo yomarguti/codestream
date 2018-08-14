@@ -1,12 +1,17 @@
 "use strict";
 
 import { structuredPatch } from "diff";
+import { URL } from "url";
+import { TextDocumentIdentifier } from "vscode-languageserver";
+import { Range } from "vscode-languageserver-protocol";
 import URI from "vscode-uri";
 import { CSLocationArray, CSMarker, CSMarkerLocation } from "../api/api";
+import { getCache } from "../cache";
 import { Container } from "../container";
-import { StreamUtil } from "../git/streamUtil";
 import { MarkerUtil } from "../marker/markerUtil";
-import { calculateLocations } from "./calculator";
+import { StreamUtil } from "../stream/streamUtil";
+import { calculateLocation, calculateLocations } from "./calculator";
+import { RepoMonitor } from "./repoMonitor";
 
 export namespace MarkerLocationUtil {
 	const streamsCache: {
@@ -20,6 +25,10 @@ export namespace MarkerLocationUtil {
 	export interface LocationsById {
 		[id: string]: CSMarkerLocation;
 	}
+
+	const monitoredRepos = new Set<string>();
+
+	const repoMonitor = new RepoMonitor();
 
 	export async function getCurrentLocations(documentUri: string): Promise<LocationsById> {
 		const { documents, git } = Container.instance();
@@ -42,6 +51,37 @@ export namespace MarkerLocationUtil {
 		const currentBufferText = doc.getText();
 		const diff = structuredPatch(filePath, filePath, currentCommitText, currentBufferText, "", "");
 		return calculateLocations(currentCommitLocations, diff);
+	}
+
+	export async function backtrackLocation(
+		documentId: TextDocumentIdentifier,
+		location: CSMarkerLocation
+	): Promise<CSMarkerLocation> {
+		const { documents, git } = Container.instance();
+		const documentUri = documentId.uri;
+		const filePath = new URL(documentUri).pathname;
+
+		const fileCurrentRevision = await git.getFileCurrentRevision(filePath);
+		if (!fileCurrentRevision) {
+			// TODO marcelo - must signal
+			return location;
+			// return deletedLocation(location);
+		}
+
+		const currentCommitText = await git.getFileContentForRevision(filePath, fileCurrentRevision);
+		if (currentCommitText === undefined) {
+			throw new Error(`Could not retrieve contents for ${filePath}@${fileCurrentRevision}`);
+		}
+
+		const doc = documents.get(documentUri);
+		if (!doc) {
+			throw new Error(`Could not retrieve ${documentUri} from document manager`);
+		}
+		// Maybe in this case the IDE should inform the buffer contents to ensure we have the exact same
+		// buffer text the user is seeing
+		const currentBufferText = doc.getText();
+		const diff = structuredPatch(filePath, filePath, currentBufferText, currentCommitText, "", "");
+		return calculateLocation(location, diff);
 	}
 
 	async function getCommitLocations(filePath: string, commitHash: string): Promise<LocationsById> {
@@ -89,6 +129,27 @@ export namespace MarkerLocationUtil {
 		const commitsCache = streamsCache[streamId];
 		const locationsCache = commitsCache[commitHash];
 		locationsCache[location.id] = location;
+	}
+
+	export async function saveUncommittedLocation(
+		filePath: string,
+		fileContents: string,
+		location: CSMarkerLocation
+	) {
+		const { git } = Container.instance();
+		const repoRoot = await git.getRepoRoot(filePath);
+
+		if (!repoRoot) {
+			throw new Error(`Could not find repo root for ${filePath}`);
+		}
+
+		const cache = await getCache(repoRoot);
+		const uncommittedLocations = cache.getCollection("uncommittedLocations");
+		uncommittedLocations.set(location.id, {
+			fileContents,
+			location
+		});
+		await cache.flush();
 	}
 
 	async function getMarkerLocations(streamId: string, commitHash: string): Promise<LocationsById> {
@@ -151,8 +212,54 @@ export namespace MarkerLocationUtil {
 			lineStart: array[0],
 			colStart: array[1],
 			lineEnd: array[2],
-			colEnd: array[3],
-			meta: array[4]
+			colEnd: array[3]
+		};
+	}
+
+	export function rangeToLocation(range: Range): CSMarkerLocation {
+		return {
+			id: "$transientLocation",
+			lineStart: range.start.line + 1,
+			colStart: range.start.character + 1,
+			lineEnd: range.end.line + 1,
+			colEnd: range.end.character + 1
+		};
+	}
+
+	export async function monitorRepo(documentUri: string) {
+		const { git } = Container.instance();
+		const filePath = new URL(documentUri).pathname;
+
+		const repoRoot = await git.getRepoRoot(filePath);
+		if (!repoRoot) {
+			return;
+		}
+
+		repoMonitor.monitor(repoRoot);
+	}
+
+	export function locationToArray(location: CSMarkerLocation): CSLocationArray {
+		return [
+			location.lineStart,
+			location.colStart,
+			location.lineEnd,
+			location.colEnd,
+			location.meta
+		];
+	}
+
+	export function emptyFileLocation(): CSMarkerLocation {
+		return {
+			id: "$transientLocation",
+			lineStart: 1,
+			colStart: 1,
+			lineEnd: 1,
+			colEnd: 1,
+			meta: {
+				startWasDeleted: true,
+				endWasDeleted: true,
+				entirelyDeleted: true
+			}
 		};
 	}
 }

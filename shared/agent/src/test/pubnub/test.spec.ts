@@ -41,7 +41,7 @@ const Tests: PubnubTester[] = [
 	new StartOfflineTest(TesterConfig),
 	new GoOnlineTest(TesterConfig),
 	new LongTickOfflineTest(TesterConfig),
- 	new LongTickConfirmTest(TesterConfig),
+	new LongTickConfirmTest(TesterConfig),
 	new NetErrorOfflineTest(TesterConfig),
 	new NetErrorConfirmTest(TesterConfig),
 	new OnlineConfirmTest(TesterConfig),

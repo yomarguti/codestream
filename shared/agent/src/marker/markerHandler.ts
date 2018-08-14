@@ -3,10 +3,10 @@ import { Range, TextDocumentIdentifier, TextDocumentPositionParams } from "vscod
 import URI from "vscode-uri";
 import { DocumentMarkersResponse } from "../agent";
 import { CSMarkerLocation } from "../api/api";
-import { StreamUtil } from "../git/streamUtil";
 import { Logger } from "../logger";
 import { MarkerLocationUtil } from "../markerLocation/markerLocationUtil";
 import { MarkerWithRange } from "../shared/agent.protocol";
+import { StreamUtil } from "../stream/streamUtil";
 import { MarkerUtil } from "./markerUtil";
 
 export namespace MarkerHandler {

@@ -19,6 +19,21 @@ export async function calculateLocations(
 	return calculation.results();
 }
 
+export async function calculateLocation(
+	location: CSMarkerLocation,
+	diff: IUniDiff
+): Promise<CSMarkerLocation> {
+	const calculated = await calculateLocations(byId(location), diff);
+	return calculated[location.id];
+}
+
+function byId(location: CSMarkerLocation): LocationsById {
+	const id = location.id;
+	const locationById: LocationsById = {};
+	locationById[id] = location;
+	return locationById;
+}
+
 function sortNumber(a: number, b: number) {
 	return a - b;
 }
@@ -53,8 +68,6 @@ class CalculatedLocation {
 	public lineEndOldContent = "";
 	public lineStartNewContent = "";
 	public lineEndNewContent = "";
-	public dels: string[] = [];
-	public adds: string[] = [];
 	private lineMap: Map<number, CalculatedLine>;
 
 	constructor(location: CSMarkerLocation, lineMap: Map<number, CalculatedLine>) {

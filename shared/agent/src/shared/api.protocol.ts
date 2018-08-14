@@ -195,7 +195,7 @@ export interface CreatePostRequestCodeBlock {
 	preContext?: string;
 	postContext?: string;
 
-	location?: [number, number, number, number];
+	location?: CSLocationArray;
 	commitHash?: string;
 
 	streamId?: string;
@@ -205,9 +205,17 @@ export interface CreatePostRequestCodeBlock {
 	remotes?: string[];
 }
 
+export interface CreatePostRequestStream {
+	teamId: string;
+	type: StreamType.File;
+	repoId?: string;
+	file: string;
+}
+
 export interface CreatePostRequest {
 	teamId: string;
-	streamId: string;
+	streamId?: string;
+	stream?: CreatePostRequestStream;
 	parentPostId?: string;
 	text: string;
 	codeBlocks?: CreatePostRequestCodeBlock[];
