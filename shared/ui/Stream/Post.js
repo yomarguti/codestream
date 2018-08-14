@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
+import { injectIntl } from "react-intl";
 import createClassString from "classnames";
 import Linkify from "react-linkify";
 import Headshot from "./Headshot";
@@ -12,6 +13,7 @@ import { retryPost, cancelPost, showCode } from "./actions";
 import ContentEditable from "react-contenteditable";
 import Button from "./Button";
 import Menu from "./Menu";
+import Tooltip from "./Tooltip";
 // import "emoji-mart/css/emoji-mart.css";
 import { Picker } from "emoji-mart";
 // import markdown from "markdown-it";
@@ -53,7 +55,7 @@ class Post extends Component {
 				if (status === "SUCCESS") {
 					this.setState({ warning: null });
 				} else {
-					this.setState({ warning: "UNKNOWN_LOCATION" });
+					this.setState({ warning: status });
 				}
 			} else this.setState({ warning: "NO_REMOTE" });
 		}
@@ -62,6 +64,37 @@ class Post extends Component {
 	resubmit = () => this.props.retryPost(this.props.post.id);
 
 	cancel = () => this.props.cancelPost(this.props.post.id);
+
+	getWarningMessage() {
+		const { intl } = this.props;
+		switch (this.state.warning) {
+			case "NO_REMOTE": {
+				return intl.formatMessage({
+					id: "codeBlock.noRemote",
+					defaultMessage: "This code does not have a remote URL associated with it. Learn more."
+				});
+			}
+			case "FILE_NOT_FOUND": {
+				return intl.formatMessage({
+					id: "codeBlock.fileNotFound",
+					defaultMessage: "You don’t currently have this file in your repo."
+				});
+			}
+			case "REPO_NOT_IN_WORKSPACE": {
+				return intl.formatMessage({
+					id: "codeBlock.repoMissing",
+					defaultMessage: "You don’t currently have the repo for this code open."
+				});
+			}
+			case "UNKNOWN_LOCATION":
+			default: {
+				return intl.formatMessage({
+					id: "codeBlock.locationUnknown",
+					defaultMessage: "Unknown code block location."
+				});
+			}
+		}
+	}
 
 	render() {
 		const { post } = this.props;
@@ -87,7 +120,13 @@ class Post extends Component {
 				<div className="code-reference">
 					<div className="header">
 						<span class="file">{post.codeBlocks[0].file || "-"}</span>
-						{this.state.warning && <Icon name="info" />}
+						{this.state.warning && (
+							<Tooltip placement="left" title={this.getWarningMessage()}>
+								<span className="icon-wrapper">
+									<Icon name="info" />
+								</span>
+							</Tooltip>
+						)}
 					</div>
 					<div className="code">{code}</div>
 				</div>
@@ -299,4 +338,4 @@ class Post extends Component {
 export default connect(
 	null,
 	{ cancelPost, retryPost, showCode }
-)(Post);
+)(injectIntl(Post));

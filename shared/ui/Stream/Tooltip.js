@@ -1,11 +1,14 @@
 import React from "react";
 import _ from "underscore";
+import RCTooltip from "rc-tooltip";
 
 /* eslint-disable no-unused-vars */
 const tooltipOptions = ({ children, ...options }) => options;
 /* eslint-enable no-unused-vars */
 
 export default class Tooltip extends React.Component {
+	isInAtom = Boolean(global.atom);
+
 	componentDidMount() {
 		this.configure(this.props);
 	}
@@ -26,7 +29,7 @@ export default class Tooltip extends React.Component {
 		/* eslint-disable no-unused-vars */
 		const { children, target, ...options } = props;
 		/* eslint-enable no-unused-vars */
-		if (global.atom) this.disposable = atom.tooltips.add(target || this.target, options);
+		if (this.isInAtom) this.disposable = atom.tooltips.add(target || this.target, options);
 	}
 
 	tearDown() {
@@ -35,10 +38,18 @@ export default class Tooltip extends React.Component {
 
 	render() {
 		try {
-			const child = React.Children.only(this.props.children);
-			return React.cloneElement(child, { ref: element => (this.target = element) });
+			if (this.isInAtom) {
+				const child = React.Children.only(this.props.children);
+				return React.cloneElement(child, { ref: element => (this.target = element) });
+			} else {
+				return (
+					<RCTooltip placement={this.props.placement} overlay={<span>{this.props.title}</span>}>
+						{this.props.children}
+					</RCTooltip>
+				);
+			}
 		} catch (e) {
-			/* nothing to render */
+			console.error("A Tooltip could not render", e);
 			return false;
 		}
 	}
