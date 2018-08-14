@@ -1,18 +1,11 @@
 "use strict";
-import * as path from "path";
-import { Uri, WorkspaceFolder } from "vscode";
-import { Strings } from "../../system";
 import { CSRepository } from "../api";
 import { CodeStreamSession } from "../session";
 import { CodeStreamItem } from "./collection";
 import { FileStreamCollection } from "./streams";
 
 export class Repository extends CodeStreamItem<CSRepository> {
-	constructor(
-		session: CodeStreamSession,
-		repo: CSRepository,
-		private readonly _folder?: WorkspaceFolder
-	) {
+	constructor(session: CodeStreamSession, repo: CSRepository) {
 		super(session, repo);
 	}
 
@@ -34,30 +27,6 @@ export class Repository extends CodeStreamItem<CSRepository> {
 
 	get url() {
 		return this.entity.remotes[0].url;
-	}
-
-	normalizeUri(relativeUri: Uri): Uri;
-	normalizeUri(relativePath: string): Uri;
-	normalizeUri(relativeUriOrPath: Uri | string) {
-		const relativePath =
-			typeof relativeUriOrPath === "string" ? relativeUriOrPath : relativeUriOrPath.fsPath;
-		return Uri.file(Strings.normalizePath(path.join(this._folder!.uri.fsPath, relativePath)));
-	}
-
-	relativizeUri(absoluteUri: Uri): string;
-	relativizeUri(absolutePath: string): string;
-	relativizeUri(absoluteUriOrPath: Uri | string) {
-		const absolutePath =
-			typeof absoluteUriOrPath === "string" ? absoluteUriOrPath : absoluteUriOrPath.fsPath;
-
-		const root = this._folder!.uri.fsPath;
-		let relativePath = Strings.normalizePath(
-			root ? path.relative(root, absolutePath) : absolutePath
-		);
-		if (relativePath[0] === "/") {
-			relativePath = relativePath.substr(1);
-		}
-		return relativePath;
 	}
 }
 

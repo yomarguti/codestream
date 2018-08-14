@@ -1,5 +1,4 @@
 "use strict";
-import { Uri } from "vscode";
 import { Iterables, memoize, Strings } from "../../system";
 import { CSChannelStream, CSDirectStream, CSFileStream, CSStream, StreamType } from "../api";
 import { CodeStreamSession, SessionChangedEvent, SessionChangedType } from "../session";
@@ -336,36 +335,6 @@ export class FileStreamCollection extends StreamCollectionBase<FileStream, CSFil
 		if (e.affects(this.teamId, "team")) {
 			this.invalidate();
 		}
-	}
-
-	async getByUri(uri: Uri): Promise<FileStream | undefined> {
-		if (uri.scheme !== "file" && uri.scheme !== "vsls") throw new Error(`Uri must be a file`);
-
-		const relativePath = this.repo.relativizeUri(uri);
-
-		return Iterables.find(await this.items(), s => s.path === relativePath);
-	}
-
-	async getOrCreateByUri(uri: Uri): Promise<FileStream> {
-		const stream = await this.getByUri(uri);
-		if (stream !== undefined) return stream;
-
-		const relativePath = this.repo.relativizeUri(uri);
-
-		const s = await this.session.api.createFileStream(relativePath, this.repo.id);
-		if (s === undefined) throw new Error(`Unable to create stream`);
-
-		return new FileStream(this.session, s, this.repo);
-	}
-
-	async toIdOrArgs(uri: Uri) {
-		const markerStream = await this.repo.streams.getByUri(uri);
-		return markerStream !== undefined
-			? markerStream.id
-			: {
-					file: this.repo.relativizeUri(uri),
-					repoId: this.repo.id
-			  };
 	}
 
 	protected entityMapper(e: CSFileStream) {
