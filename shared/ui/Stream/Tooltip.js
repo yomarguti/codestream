@@ -42,8 +42,9 @@ export default class Tooltip extends React.Component {
 				const child = React.Children.only(this.props.children);
 				return React.cloneElement(child, { ref: element => (this.target = element) });
 			} else {
+				const content = this.props.content ? this.props.content : <span>{this.props.title}</span>;
 				return (
-					<RCTooltip placement={this.props.placement} overlay={<span>{this.props.title}</span>}>
+					<RCTooltip placement={this.props.placement} overlay={content}>
 						{this.props.children}
 					</RCTooltip>
 				);

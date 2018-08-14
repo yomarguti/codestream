@@ -1,5 +1,6 @@
 {
 	"and": "and",
+	"learnMore": "Learn more.",
 	"signUp.username.label": "Username",
 	"signUp.username.tip": "Up to 21 characters. Valid special characters are (._-)",
 	"signUp.username.length": "Up to 21 characters",

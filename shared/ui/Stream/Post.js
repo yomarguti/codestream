@@ -69,29 +69,47 @@ class Post extends Component {
 		const { intl } = this.props;
 		switch (this.state.warning) {
 			case "NO_REMOTE": {
-				return intl.formatMessage({
+				const message = intl.formatMessage({
 					id: "codeBlock.noRemote",
-					defaultMessage: "This code does not have a remote URL associated with it. Learn more."
+					defaultMessage: "This code does not have a remote URL associated with it."
 				});
+				const learnMore = intl.formatMessage({ id: "learnMore" });
+				return (
+					<span>
+						{message} <a href="https://codestream.com">{learnMore}</a>
+					</span>
+				);
 			}
 			case "FILE_NOT_FOUND": {
-				return intl.formatMessage({
-					id: "codeBlock.fileNotFound",
-					defaultMessage: "You don’t currently have this file in your repo."
-				});
+				return (
+					<span>
+						{intl.formatMessage({
+							id: "codeBlock.fileNotFound",
+							defaultMessage: "You don’t currently have this file in your repo."
+						})}
+					</span>
+				);
 			}
 			case "REPO_NOT_IN_WORKSPACE": {
-				return intl.formatMessage({
-					id: "codeBlock.repoMissing",
-					defaultMessage: "You don’t currently have the repo for this code open."
-				});
+				return (
+					<span>
+						{intl.formatMessage({
+							id: "codeBlock.repoMissing",
+							defaultMessage: "You don’t currently have the repo for this code open."
+						})}
+					</span>
+				);
 			}
 			case "UNKNOWN_LOCATION":
 			default: {
-				return intl.formatMessage({
-					id: "codeBlock.locationUnknown",
-					defaultMessage: "Unknown code block location."
-				});
+				return (
+					<span>
+						{intl.formatMessage({
+							id: "codeBlock.locationUnknown",
+							defaultMessage: "Unknown code block location."
+						})}
+					</span>
+				);
 			}
 		}
 	}
@@ -121,7 +139,7 @@ class Post extends Component {
 					<div className="header">
 						<span class="file">{post.codeBlocks[0].file || "-"}</span>
 						{this.state.warning && (
-							<Tooltip placement="left" title={this.getWarningMessage()}>
+							<Tooltip placement="left" content={this.getWarningMessage()}>
 								<span className="icon-wrapper">
 									<Icon name="info" />
 								</span>
