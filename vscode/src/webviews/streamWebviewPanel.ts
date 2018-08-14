@@ -239,9 +239,10 @@ export class StreamWebviewPanel implements Disposable {
 	}
 
 	private async getBootstrapState() {
-		const [streams, teams, users, currentUser, unreads] = await Promise.all([
+		const [streams, teams, repos, users, currentUser, unreads] = await Promise.all([
 			Container.session.channelsAndDMs.entities(),
 			this.session.teams.entities(),
+			this.session.repos.entities(),
 			this.session.users.entities(),
 			this.session.user.entity,
 			this.session.unreads.getValues()
@@ -253,6 +254,7 @@ export class StreamWebviewPanel implements Disposable {
 		state.currentUserId = this.session.userId;
 		state.streams = streams;
 		state.teams = teams;
+		state.repos = repos;
 		state.users = users.map(user => (user.id === currentUser.id ? currentUser : user));
 		state.unreads = unreads;
 		state.configs = {

@@ -1,7 +1,7 @@
 "use strict";
 import { CSRepository } from "../api";
-import { CodeStreamSession } from "../session";
-import { CodeStreamItem } from "./collection";
+import { CodeStreamSession, SessionChangedEvent, SessionChangedType } from "../session";
+import { CodeStreamCollection, CodeStreamItem } from "./collection";
 import { FileStreamCollection } from "./streams";
 
 export class Repository extends CodeStreamItem<CSRepository> {
@@ -30,55 +30,26 @@ export class Repository extends CodeStreamItem<CSRepository> {
 	}
 }
 
-// export class RepositoryCollection extends CodeStreamCollection<Repository, CSRepository> {
-// 	constructor(session: CodeStreamSession, public readonly teamId: string) {
-// 		super(session);
+export class RepositoryCollection extends CodeStreamCollection<Repository, CSRepository> {
+	constructor(session: CodeStreamSession, public readonly teamId: string) {
+		super(session);
 
-// 		this.disposables.push(session.onDidChange(this.onSessionChanged, this));
-// 	}
+		this.disposables.push(session.onDidChange(this.onSessionChanged, this));
+	}
 
-// 	private onSessionChanged(e: SessionChangedEvent) {
-// 		if (e.type !== SessionChangedType.Repositories) return;
+	private onSessionChanged(e: SessionChangedEvent) {
+		if (e.type !== SessionChangedType.Repositories) return;
 
-// 		this.invalidate();
-// 	}
+		this.invalidate();
+	}
 
-// 	async getByFileUri(uri: Uri): Promise<Repository | undefined> {
-// 		const folder = workspace.getWorkspaceFolder(uri);
-// 		if (folder === undefined) return undefined;
+	protected entityMapper(e: CSRepository) {
+		return new Repository(this.session, e);
+	}
 
-// 		await this.ensureLoaded();
-// 		return this._reposByWorkspaceFolder.get(folder);
-// 	}
+	protected async fetch() {
+		const repos = await this.session.api.getRepos();
 
-// 	private _reposByUri: Map<Uri, Repository> = new Map();
-// 	private _reposByWorkspaceFolder: Map<WorkspaceFolder, Repository> = new Map();
-
-// 	protected entityMapper(e: CSRepository, folder?: WorkspaceFolder) {
-// 		return new Repository(this.session, e, folder);
-// 	}
-
-// 	protected async fetch() {
-// 		const repos = await this.session.api.findOrRegisterRepos();
-
-// 		this._reposByUri.clear();
-// 		this._reposByWorkspaceFolder.clear();
-
-// 		const items: Repository[] = [];
-
-// 		let item;
-// 		for (const [uri, repo] of repos) {
-// 			const folder = workspace.getWorkspaceFolder(uri);
-
-// 			item = this.entityMapper(repo, folder);
-// 			items.push(item);
-
-// 			this._reposByUri.set(uri, item);
-// 			if (folder !== undefined) {
-// 				this._reposByWorkspaceFolder.set(folder, item);
-// 			}
-// 		}
-
-// 		return items;
-// 	}
-// }
+		return repos.map(repo => this.entityMapper(repo));
+	}
+}

@@ -1,6 +1,7 @@
 "use strict";
 import { LoginResponse } from "./api";
 import { CSUser } from "./api";
+import { RepositoryCollection } from "./models/repositories";
 import {
 	ChannelAndDirectStreamCollection,
 	ChannelStreamCollection,
@@ -89,6 +90,14 @@ export class SessionState {
 			this._directMessages = new DirectStreamCollection(this.session, this.teamId);
 		}
 		return this._directMessages;
+	}
+
+	private _repos: RepositoryCollection | undefined;
+	get repos() {
+		if (this._repos === undefined) {
+			this._repos = new RepositoryCollection(this.session, this.teamId);
+		}
+		return this._repos;
 	}
 
 	private _team: Team | undefined;

@@ -230,6 +230,11 @@ export class CodeStreamSession implements Disposable {
 		return this._presenceManager!;
 	}
 
+	@signedIn
+	get repos() {
+		return this._state!.repos;
+	}
+
 	get serverUrl() {
 		return this._serverUrl;
 	}

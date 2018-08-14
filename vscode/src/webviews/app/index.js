@@ -200,6 +200,7 @@ if (data.currentUserId) {
 	store.dispatch({ type: "BOOTSTRAP_USERS", payload: data.users });
 	store.dispatch({ type: "BOOTSTRAP_TEAMS", payload: data.teams });
 	store.dispatch({ type: "BOOTSTRAP_STREAMS", payload: data.streams });
+	store.dispatch({ type: "BOOTSTRAP_REPOS", payload: data.repos });
 }
 store.dispatch({ type: "BOOTSTRAP_COMPLETE" });
 
