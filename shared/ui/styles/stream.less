@@ -20,6 +20,35 @@
 	.error-message {
 		color: @text-color-error;
 	}
+
+	// these shadow styles are to support having a shadow appear above and below
+	// the edges of content that are scrolled out of the way. in vscode it's part
+	// of the editor's UI, so the styles to actually create the shadows are in
+	// webviews/app/styles/webview.less (search for shadow). for atom, which doesn't
+	// have the shadow UI treatment, we put the wrappers here (so scrolling still
+	// works), but the actual shadow div styles aren't present.
+	// from https://codepen.io/TofuBot/pen/obydpM
+	.shadow-overlay {
+		position: relative;
+		width: auto;
+		height: auto;
+		height: 100%;
+	}
+
+	.shadow-container {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		pointer-events: none;
+	}
+
+	.shadow {
+		position: absolute;
+		z-index: 4;
+	}
+
 	ul.compact {
 		margin: 0;
 		padding: 0;
@@ -126,7 +155,8 @@
 			}
 			.umis.mentions,
 			.umis.mentions:hover {
-				background-color: @text-color-info-muted;
+				// background-color: @text-color-info-muted;
+				background: @background-color-umi;
 			}
 			// .icon.show-channels-icon::before {
 			// margin-right: 0;
@@ -181,7 +211,8 @@
 		}
 		.unreads {
 			position: absolute;
-			background: @text-color-info-muted;
+			// background: @text-color-info-muted;
+			background: @background-color-umi;
 			border: none;
 			color: white;
 		}
@@ -369,7 +400,8 @@
 			color: white;
 			font-weight: normal;
 
-			background-color: @text-color-info-muted;
+			// background-color: @text-color-info-muted;
+			background: @background-color-umi;
 			color: #fff;
 			font-weight: 600;
 			margin: 1px 0px -1px 0px;
@@ -819,8 +851,7 @@
 							right: 8px;
 							width: 25px;
 							height: 18px;
-							// background: @background-color-info;
-							background-color: @text-color-info-muted;
+							background-color: @background-color-umi;
 							color: white;
 							font-weight: normal;
 							z-index: 2;
