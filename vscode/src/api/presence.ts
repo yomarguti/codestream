@@ -5,7 +5,7 @@ import { Logger } from "../logger";
 import { PresenceStatus } from "./api";
 import { CodeStreamSessionApi } from "./sessionApi";
 
-export class PresenceManager extends Disposable {
+export class PresenceManager implements Disposable {
 	private _onDidChange = new EventEmitter<PresenceStatus>();
 	get onDidChange(): Event<PresenceStatus> {
 		return this._onDidChange.event;
@@ -20,9 +20,7 @@ export class PresenceManager extends Disposable {
 	constructor(
 		private readonly sessionApi: CodeStreamSessionApi,
 		private readonly sessionId: string
-	) {
-		super(() => this.dispose());
-	}
+	) {}
 
 	dispose() {
 		if (this._timer !== undefined) {

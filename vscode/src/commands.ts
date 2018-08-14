@@ -76,12 +76,10 @@ export interface PostCodeCommandArgs extends IRequiresStream {
 	session?: CodeStreamSession;
 }
 
-export class Commands extends Disposable {
+export class Commands implements Disposable {
 	private readonly _disposable: Disposable;
 
 	constructor() {
-		super(() => this.dispose);
-
 		this._disposable = Disposable.from(
 			...commandRegistry.map(({ name, key, method }) =>
 				commands.registerCommand(name, (...args: any[]) => method.apply(this, args))

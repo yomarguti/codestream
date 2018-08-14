@@ -39,7 +39,7 @@ interface JoinCommandArgs {
 	url: string;
 }
 
-export class LiveShareController extends Disposable {
+export class LiveShareController implements Disposable {
 	static ensureLiveShare(): boolean {
 		if (liveShare === undefined) {
 			liveShare = extensions.getExtension("ms-vsliveshare.vsliveshare");
@@ -51,8 +51,6 @@ export class LiveShareController extends Disposable {
 	private readonly _disposable: Disposable | undefined;
 
 	constructor() {
-		super(() => this.dispose());
-
 		if (!LiveShareController.ensureLiveShare()) return;
 
 		setContext(ContextKeys.LiveShareInstalled, true);

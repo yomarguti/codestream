@@ -9,7 +9,7 @@ export interface UnreadCountChangedEvent {
 	getCount(): number;
 }
 
-export class NotificationsController extends Disposable {
+export class NotificationsController implements Disposable {
 	private _onDidChangeUnreadCount = new EventEmitter<UnreadCountChangedEvent>();
 	get onDidChangeUnreadCount(): Event<UnreadCountChangedEvent> {
 		return this._onDidChangeUnreadCount.event;
@@ -19,8 +19,6 @@ export class NotificationsController extends Disposable {
 	private _count: number = 0;
 
 	constructor() {
-		super(() => this.dispose());
-
 		this._disposable = Disposable.from(
 			Container.session.onDidReceivePosts(this.onSessionPostsReceived, this)
 		);

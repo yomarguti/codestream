@@ -14,15 +14,13 @@ import { SessionStatus, SessionStatusChangedEvent } from "../api/session";
 import { PostCodeCommandArgs } from "../commands";
 import { Container } from "../container";
 
-export class CodeStreamCodeActionProvider extends Disposable implements CodeActionProvider {
+export class CodeStreamCodeActionProvider implements CodeActionProvider, Disposable {
 	static selector: DocumentSelector = [{ scheme: "file" }, { scheme: "vsls" }];
 
 	private readonly _disposable: Disposable;
 	private _disposableSignedIn: Disposable | undefined;
 
 	constructor() {
-		super(() => this.dispose());
-
 		this._disposable = Disposable.from(
 			Container.session.onDidChangeStatus(this.onSessionStatusChanged, this)
 		);

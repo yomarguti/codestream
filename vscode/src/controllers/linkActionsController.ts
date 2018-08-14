@@ -16,12 +16,8 @@ interface LinkActionTextTransformation {
 	replacement: string;
 }
 
-export class LinkActionsController extends Disposable {
+export class LinkActionsController implements Disposable {
 	private _disposable: Disposable | undefined;
-
-	constructor() {
-		super(() => this.dispose());
-	}
 
 	dispose() {
 		this._disposable && this._disposable.dispose();

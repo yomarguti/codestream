@@ -180,7 +180,7 @@ class BufferChangeTracker {
 	}
 }
 
-export class StreamWebviewPanel extends Disposable {
+export class StreamWebviewPanel implements Disposable {
 	private _bufferChangeTracker = new BufferChangeTracker();
 
 	private _onDidChangeStream = new EventEmitter<StreamThread>();
@@ -199,8 +199,6 @@ export class StreamWebviewPanel extends Disposable {
 	private _streamThread: StreamThread | undefined;
 
 	constructor(public readonly session: CodeStreamSession) {
-		super(() => this.dispose());
-
 		this._ipc = new WebviewIpc();
 	}
 

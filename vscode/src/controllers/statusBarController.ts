@@ -4,13 +4,11 @@ import { SessionStatus, SessionStatusChangedEvent } from "../api/session";
 import { Container } from "../container";
 import { UnreadCountChangedEvent } from "./notificationsController";
 
-export class StatusBarController extends Disposable {
+export class StatusBarController implements Disposable {
 	private _disposable: Disposable;
 	private _statusBarItem: StatusBarItem | undefined;
 
 	constructor() {
-		super(() => this.dispose());
-
 		this._disposable = Disposable.from(
 			Container.session.onDidChangeStatus(this.onSessionStatusChanged, this),
 			Container.notifications.onDidChangeUnreadCount(this.onUnreadCountChanged, this)
