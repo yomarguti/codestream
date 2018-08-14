@@ -11,10 +11,6 @@ export class Team extends CodeStreamItem<CSTeam> {
 	get name() {
 		return this.entity.name;
 	}
-
-	// get repos() {
-	//     return this.session.repo;
-	// }
 }
 
 export class TeamCollection extends CodeStreamCollection<Team, CSTeam> {

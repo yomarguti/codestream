@@ -5,7 +5,6 @@ import { CodeStreamSession, SessionChangedEvent, SessionChangedType } from "../s
 import { CodeStreamCollection, CodeStreamItem } from "./collection";
 import { Post, PostCollection } from "./posts";
 import { Repository } from "./repositories";
-import { Team } from "./teams";
 import { User } from "./users";
 
 export { StreamType } from "../api";
@@ -13,10 +12,6 @@ export { StreamType } from "../api";
 abstract class StreamBase<T extends CSStream> extends CodeStreamItem<T> {
 	constructor(session: CodeStreamSession, stream: T) {
 		super(session, stream);
-	}
-
-	get hidden() {
-		return false;
 	}
 
 	private _posts: PostCollection | undefined;
@@ -31,8 +26,6 @@ abstract class StreamBase<T extends CSStream> extends CodeStreamItem<T> {
 		return this.entity.teamId;
 	}
 
-	hide() {}
-
 	async post(text: string, parentPostId?: string) {
 		const post = await this.session.api.createPost(
 			text,
@@ -44,56 +37,6 @@ abstract class StreamBase<T extends CSStream> extends CodeStreamItem<T> {
 		if (post === undefined) throw new Error(`Unable to post to Stream(${this.entity.id})`);
 
 		return new Post(this.session, post);
-	}
-
-	async postCode(
-		text: string,
-		code: string,
-		range: [number, number, number, number],
-		commitHash: string,
-		markerStream: FileStream,
-		parentPostId?: string
-	): Promise<Post>;
-	async postCode(
-		text: string,
-		code: string,
-		range: [number, number, number, number],
-		commitHash: string,
-		markerStream: string | { file: string; repoId: string },
-		parentPostId?: string
-	): Promise<Post>;
-	async postCode(
-		text: string,
-		code: string,
-		range: [number, number, number, number],
-		commitHash: string,
-		markerStreamOrId: FileStream | string | { file: string; repoId: string },
-		parentPostId?: string
-	) {
-		const markerStream =
-			markerStreamOrId instanceof FileStream ? markerStreamOrId.id : markerStreamOrId;
-
-		const post = await this.session.api.createPostWithCode(
-			text,
-			parentPostId,
-			code,
-			range,
-			commitHash,
-			markerStream,
-			this.entity.id,
-			this.entity.teamId
-		);
-		if (post === undefined) throw new Error(`Unable to post code to Stream(${this.entity.id})`);
-
-		return new Post(this.session, post);
-	}
-
-	// @memoize
-	async team(): Promise<Team> {
-		const team = await this.session.teams.get(this.entity.teamId);
-		if (team === undefined) throw new Error(`Team(${this.entity.teamId}) could not be found`);
-
-		return team;
 	}
 
 	async markRead(): Promise<any> {

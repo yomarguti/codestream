@@ -65,10 +65,6 @@ export {
 export class CodeStreamSession implements Disposable {
 	private static _loginPromise: Promise<LoginResult> | undefined;
 
-	static findRepo(serverUrl: string, repoUrl: string, firstCommitHashes: string[]) {
-		return new CodeStreamApi(serverUrl).findRepo(repoUrl, firstCommitHashes);
-	}
-
 	private _onDidChange = new EventEmitter<SessionChangedEvent>();
 	get onDidChange(): Event<SessionChangedEvent> {
 		return this._onDidChange.event;
