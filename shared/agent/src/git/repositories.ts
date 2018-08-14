@@ -128,8 +128,13 @@ export class GitRepositories {
 
 	private async getKnownRepositories() {
 		const resp = await this._api.getRepos(this._session.apiToken, this._session.teamId);
-		const remotesToRepo = Iterables.flatMap(resp.repos, r =>
-			r.remotes.map<[string, CSRepository]>(remote => [remote.normalizedUrl, r])
+		const remotesToRepo = Iterables.flatMap(
+			resp.repos,
+			r =>
+				r.remotes !== undefined && r.remotes.length !== 0
+					? r.remotes.map<[string, CSRepository]>(remote => [remote.normalizedUrl, r])
+					: ([[(r as any).normalizedUrl as string, r]] as [string, CSRepository][])
+			// r => r.remotes !== undefined && r.remotes.length !== 0
 		);
 		return new Map<string, CSRepository>(remotesToRepo);
 	}

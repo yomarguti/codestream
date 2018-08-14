@@ -89,10 +89,13 @@ export namespace Iterables {
 
 	export function* flatMap<T, TMapped>(
 		source: Iterable<T> | IterableIterator<T>,
-		mapper: (item: T) => Iterable<TMapped>
+		mapper: (item: T) => Iterable<TMapped>,
+		predicate?: (item: T) => boolean
 	): Iterable<TMapped> {
 		for (const item of source) {
-			yield* mapper(item);
+			if (predicate === undefined || predicate(item)) {
+				yield* mapper(item);
+			}
 		}
 	}
 
