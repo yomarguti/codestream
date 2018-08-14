@@ -31,6 +31,10 @@ export default class WebviewApi {
 		});
 	}
 
+	bootstrap() {
+		return this.postMessage({ action: "bootstrap" });
+	}
+
 	startSignup() {
 		return this.postMessage({ action: "go-to-signup" });
 	}
