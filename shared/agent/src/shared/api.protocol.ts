@@ -280,6 +280,12 @@ export interface EditPostRequest {
 
 export interface EditPostResponse extends DeletePostResponse {}
 
+export interface MarkPostUnreadRequest {
+	id: string;
+}
+
+export interface MarkPostUnreadResponse extends DeletePostResponse {}
+
 export interface FindRepoResponse {
 	repo?: CSRepository;
 	usernames?: string[];
