@@ -59,53 +59,6 @@ export class CodeStreamSessionApi {
 		})).post;
 	}
 
-	async createPostWithCode(
-		text: string,
-		parentPostId: string | undefined,
-		code: string,
-		location: [number, number, number, number] | undefined,
-		commitHash: string | undefined,
-		fileStream:
-			| string
-			| { file: string; remotes: { name: string; url: string }[] }
-			| { file: string; repoId: string }
-			| undefined,
-		streamId: string,
-		teamId?: string
-	): Promise<CSPost | undefined> {
-		const codeBlock: CreatePostRequestCodeBlock = {
-			code: code,
-			location: location
-		};
-
-		if (fileStream !== undefined) {
-			if (typeof fileStream === "string") {
-				codeBlock.streamId = fileStream;
-			} else {
-				codeBlock.file = fileStream.file;
-				if ("repoId" in fileStream) {
-					codeBlock.repoId = fileStream.repoId;
-				} else {
-					codeBlock.remotes = fileStream.remotes.map(r => r.url);
-				}
-			}
-		}
-
-		try {
-			return (await this._api.createPost(this.token, {
-				teamId: teamId || this.teamId,
-				streamId: streamId,
-				text: text,
-				parentPostId,
-				codeBlocks: [codeBlock],
-				commitHashWhenPosted: commitHash
-			})).post;
-		} catch (ex) {
-			debugger;
-			return;
-		}
-	}
-
 	async createRepo(
 		uri: Uri,
 		firstCommitHashes: string[],
