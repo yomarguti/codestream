@@ -1,9 +1,9 @@
 "use strict";
-
 import * as path from "path";
 import { CSFileStream } from "../api/api";
 import { Container } from "../container";
-import { RepoUtil } from "../repo/repoUtil";
+import { Strings } from "../system";
+import { GitRepository } from "./models/models";
 
 type StreamsByPath = Map<string, CSFileStream>;
 type StreamsByRepoId = Map<string, StreamsByPath>;
@@ -13,35 +13,41 @@ export namespace StreamUtil {
 
 	export async function getStreamId(filePath: string): Promise<string | undefined> {
 		const container = Container.instance();
-		const repoRoot = await container.git.getRepoRoot(filePath);
-		if (!repoRoot) {
-			return;
-		}
+		const repo = await container.git.getRepositoryByFilePath(filePath);
+		if (repo === undefined || repo.id === undefined) return undefined;
 
-		const repoId = await RepoUtil.getRepoId(filePath);
-		if (!repoId) {
-			return;
-		}
-
-		const streamsByPath = await getStreamsByRepoId(repoId);
-		const relPath = path.relative(repoRoot, filePath);
+		// TODO: Why not lookup streams by absolute path?
+		const streamsByPath = await getStreamsByRepo(repo);
+		const relPath = Strings.normalizePath(path.relative(repo.path, filePath));
 		const stream = streamsByPath.get(relPath);
 
 		return stream && stream.id;
 	}
 
-	async function getStreamsByRepoId(repoId: string): Promise<StreamsByPath> {
-		const { api, state } = Container.instance();
-		let streams = streamsByRepoId.get(repoId);
-		if (!streams) {
-			streams = new Map();
-			const response = await api.getStreams(state.apiToken, state.teamId, repoId);
-			for (const stream of response.streams) {
-				const fileStream = stream as CSFileStream;
-				streams.set(fileStream.file, fileStream);
-			}
-			streamsByRepoId.set(repoId, streams);
+	async function getStreamsByRepo(repoId: string): Promise<StreamsByPath>;
+	async function getStreamsByRepo(repo: GitRepository): Promise<StreamsByPath>;
+	async function getStreamsByRepo(repoOrId: GitRepository | string): Promise<StreamsByPath> {
+		let repo;
+		let streamByPathMap;
+		if (typeof repoOrId === "string") {
+			streamByPathMap = streamsByRepoId.get(repoOrId);
+			if (streamByPathMap !== undefined) return streamByPathMap;
+
+			repo = await Container.instance().git.getRepositoryById(repoOrId);
+			if (repo === undefined || repo.id === undefined) return new Map();
+		} else {
+			repo = repoOrId;
+			if (repo.id === undefined) return new Map();
+
+			streamByPathMap = streamsByRepoId.get(repo.id);
+			if (streamByPathMap !== undefined) return streamByPathMap;
 		}
-		return streams;
+
+		// TODO: Why not cache the streams by absolute path for faster lookups?
+		const streams = await repo.getStreams();
+		streamByPathMap = new Map(streams.map<[string, CSFileStream]>(s => [s.file, s]));
+		streamsByRepoId.set(repo.id, streamByPathMap);
+
+		return streamByPathMap;
 	}
 }

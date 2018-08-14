@@ -58,7 +58,7 @@ export class CodeStreamSession {
 		);
 
 		this._readyPromise = new Promise<void>(resolve => this.agent.onReady(resolve));
-		this.connection.onHover(this.onHover.bind(this));
+		this.connection.onHover(e => MarkerHandler.onHover(e));
 
 		this.agent.registerHandler(ApiRequest, (e, cancellationToken: CancellationToken) =>
 			this._api.fetch(e.url, e.init, e.token)
@@ -66,7 +66,9 @@ export class CodeStreamSession {
 		this.agent.registerHandler(DocumentFromCodeBlockRequest, e =>
 			this.getDocumentFromCodeBlock(e.repoId, e.file, e.markerId, e.streamId, e.revision)
 		);
-		this.agent.registerHandler(DocumentMarkersRequest, e => MarkerHandler.handle(e.textDocument));
+		this.agent.registerHandler(DocumentMarkersRequest, e =>
+			MarkerHandler.onRequest(e.textDocument)
+		);
 		this.agent.registerHandler(DocumentPreparePostRequest, e =>
 			this.preparePostCode(e.textDocument, e.range, e.dirty)
 		);
@@ -91,12 +93,6 @@ export class CodeStreamSession {
 			);
 			return { revision: revision };
 		});
-	}
-
-	// TODO: Move out of here
-	private onHover(e: TextDocumentPositionParams) {
-		this.connection.console.log("Hover request received");
-		return undefined;
 	}
 
 	private _apiToken: string | undefined;
@@ -169,18 +165,6 @@ export class CodeStreamSession {
 					this._options.teamId = team.id;
 				}
 			}
-
-			// if (opts.teamId == null && data.repos.length > 0) {
-			// 	for (const repo of await Container.git.getRepositories()) {
-			// 		const url = await repo.getNormalizedUrl();
-
-			// 		const found = data.repos.find(r => r.normalizedUrl === url);
-			// 		if (found === undefined) continue;
-
-			// 		teamId = found.teamId;
-			// 		break;
-			// 	}
-			// }
 
 			// If we still can't find a team, then just pick the first one
 			if (this._options.teamId == null) {

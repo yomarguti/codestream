@@ -1,7 +1,7 @@
 "use strict";
 
 import { structuredPatch } from "diff";
-import { URL } from "url";
+import URI from "vscode-uri";
 import { CSLocationArray, CSMarker, CSMarkerLocation } from "../api/api";
 import { Container } from "../container";
 import { StreamUtil } from "../git/streamUtil";
@@ -23,7 +23,7 @@ export namespace MarkerLocationUtil {
 
 	export async function getCurrentLocations(documentUri: string): Promise<LocationsById> {
 		const { documents, git } = Container.instance();
-		const filePath = new URL(documentUri).pathname;
+		const filePath = URI.parse(documentUri).fsPath;
 
 		const currentCommitHash = await git.getFileCurrentRevision(filePath);
 		if (!currentCommitHash) {
