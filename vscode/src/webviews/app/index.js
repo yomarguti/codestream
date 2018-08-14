@@ -151,67 +151,77 @@ function initializeColorPalette() {
 
 initializeColorPalette();
 
-setTimeout(() => {
-	document.body.classList.remove("preload");
-}, 1000); // Wait for animations to complete
-
-const data = window.bootstrap;
-
-let panel;
-if (data.currentStreamId) panel = "main";
-if (data.currentStreamId && data.currentThreadId) panel = "thread";
-
-const store = createStore(
-	{
-		pluginVersion: data.version,
-		startupProps: {
-			startOnMainPanel: Boolean(data.currentStreamId),
-			threadId: data.currentThreadId
+const start = Date.now();
+const api = new WebviewApi();
+api.bootstrap().then(data => {
+	let panel;
+	if (data.currentStreamId) panel = "main";
+	if (data.currentStreamId && data.currentThreadId) panel = "thread";
+	const store = createStore(
+		{
+			pluginVersion: data.version,
+			startupProps: {
+				startOnMainPanel: Boolean(data.currentStreamId),
+				threadId: data.currentThreadId
+			},
+			context: {
+				currentTeamId: data.currentTeamId,
+				currentStreamId: data.currentStreamId,
+				hasFocus: true,
+				...(panel ? { panel } : {}) // a little black magic so not to assume what the view will use as a default
+			},
+			session: {
+				userId: data.currentUserId
+			},
+			umis: data.unreads
 		},
-		context: {
-			currentTeamId: data.currentTeamId,
-			currentStreamId: data.currentStreamId,
-			hasFocus: true,
-			...(panel ? { panel } : {}) // a little black magic so not to assume what the view will use as a default
-		},
-		session: {
-			userId: data.currentUserId
-		},
-		umis: data.unreads
-	},
-	{ api: new WebviewApi() },
-	[loggingMiddleWare]
-);
-
-// TODO: should be able to include data.configs in call to createStore
-store.dispatch(actions.updateConfigs(data.configs || {}));
-
-EventEmitter.on("data", ({ type, payload }) => {
-	store.dispatch({ type: `ADD_${type.toUpperCase()}`, payload });
-});
-
-EventEmitter.on("data:unreads", unreads => {
-	store.dispatch(actions.updateUnreads(unreads));
-});
-
-EventEmitter.on("configs", configs => store.dispatch(actions.updateConfigs(configs)));
-
-EventEmitter.on("interaction:focus", () => {
-	setTimeout(() => {
-		store.dispatch(actions.focus());
-	}, 10); // we want the first click to go to the FocusTrap blanket
-});
-EventEmitter.on("interaction:blur", () => {
-	store.dispatch(actions.blur());
-});
-
-EventEmitter.on("interaction:signed-out", () => {
-	store.dispatch(actions.reset());
-});
-
-store.dispatch(actions.bootstrap(data)).then(() => {
-	ReactDOM.render(
-		<Container store={store} i18n={{ locale: "en", messages: translations }} />,
-		document.querySelector("#app")
+		{ api },
+		[loggingMiddleWare]
 	);
+
+	// TODO: should be able to include data.configs in call to createStore
+	store.dispatch(actions.updateConfigs(data.configs || {}));
+
+	EventEmitter.on("data", ({ type, payload }) => {
+		store.dispatch({ type: `ADD_${type.toUpperCase()}`, payload });
+	});
+
+	EventEmitter.on("data:unreads", unreads => {
+		store.dispatch(actions.updateUnreads(unreads));
+	});
+
+	EventEmitter.on("configs", configs => store.dispatch(actions.updateConfigs(configs)));
+
+	EventEmitter.on("interaction:focus", () => {
+		setTimeout(() => {
+			store.dispatch(actions.focus());
+		}, 10); // we want the first click to go to the FocusTrap blanket
+	});
+	EventEmitter.on("interaction:blur", () => {
+		store.dispatch(actions.blur());
+	});
+
+	EventEmitter.on("interaction:signed-out", () => {
+		store.dispatch(actions.reset());
+	});
+
+	const render = () => {
+		setTimeout(() => {
+			document.body.classList.remove("preload");
+		}, 1000); // Wait for animations to complete
+
+		ReactDOM.render(
+			<Container store={store} i18n={{ locale: "en", messages: translations }} />,
+			document.querySelector("#app")
+		);
+	};
+
+	store.dispatch(actions.bootstrap(data)).then(() => {
+		const duration = Date.now() - start;
+		if (duration < 250) {
+			setTimeout(render, 250 - duration);
+		} else {
+			render();
+		}
+	});
 });

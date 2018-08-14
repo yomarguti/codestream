@@ -38,92 +38,6 @@ import { extensionId } from "../constants";
 import { Container } from "../container";
 import { Logger } from "../logger";
 
-const loadingHtml = `
-<!DOCTYPE html>
-	<html lang="en">
-	<head>
-		<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
-		<title>CodeStream</title>
-		<style>
-		html, body {
-			height: 100%;
-			overflow: hidden;
-			padding: 0 !important;
-		}
-
-		.loading:before {
-			background-position: center;
-			background-repeat: no-repeat;
-			background-size: contain;
-			content: '';
-			height: 100%;
-			opacity: 0.05;
-			position: absolute;
-			width: 100%;
-			z-index: -1;
-		}
-
-		.vscode-dark.loading:before {
-			background-image: url('data:image/svg+xml;utf8,<svg width="50" height="40" xmlns="http://www.w3.org/2000/svg"><path fill="#fff" d="M20.4 19.87a4.57 4.57 0 1 0 9.13-.01 4.57 4.57 0 0 0-9.13.01z"/><path fill="#fff" d="M26.92 6.35c-.1.1-.17.24-.17.38v5.43a7.9 7.9 0 0 1 0 15.36v5.53a.53.53 0 0 0 .92.36l11.48-12.17c.71-.76.71-1.94 0-2.7L27.67 6.38a.53.53 0 0 0-.75-.02zm-4.64.02L10.8 18.55a1.96 1.96 0 0 0 0 2.69L22.28 33.4a.53.53 0 0 0 .91-.36v-5.53a7.9 7.9 0 0 1 0-15.36V6.73a.53.53 0 0 0-.53-.52.53.53 0 0 0-.38.16z"/></svg>');
-		}
-
-		.vscode-light.loading:before {
-			background-image: url('data:image/svg+xml;utf8,<svg width="50" height="40" xmlns="http://www.w3.org/2000/svg"><path fill="#000" d="M20.4 19.87a4.57 4.57 0 1 0 9.13-.01 4.57 4.57 0 0 0-9.13.01z"/><path fill="#000" d="M26.92 6.35c-.1.1-.17.24-.17.38v5.43a7.9 7.9 0 0 1 0 15.36v5.53a.53.53 0 0 0 .92.36l11.48-12.17c.71-.76.71-1.94 0-2.7L27.67 6.38a.53.53 0 0 0-.75-.02zm-4.64.02L10.8 18.55a1.96 1.96 0 0 0 0 2.69L22.28 33.4a.53.53 0 0 0 .91-.36v-5.53a7.9 7.9 0 0 1 0-15.36V6.73a.53.53 0 0 0-.53-.52.53.53 0 0 0-.38.16z"/></svg>');
-		}
-
-		.loader-ring {
-			height: 26vw;
-			left: 50%;
-			max-height: 31vh;
-			max-width: 31vh;
-			opacity: 0.5;
-			position: absolute;
-			top: 50%;
-			transform: translate(-50%, -50%);
-			width: 26vw;
-		}
-
-		.loader-ring__segment {
-			animation: loader-ring-spin 1.5s infinite cubic-bezier(0.5, 0, 0.5, 1);
-			border: 6px solid #009AEF;
-			border-color: #009AEF transparent transparent transparent;
-			border-radius: 50%;
-			box-sizing: border-box;
-			height: 100%;
-			position: absolute;
-			width: 100%;
-		}
-
-		.loader-ring__segment:nth-child(1) {
-			animation-delay: 0.05s;
-		}
-
-		.loader-ring__segment:nth-child(2) {
-			animation-direction: reverse;
-		}
-
-		.loader-ring__segment:nth-child(3) {
-			animation-delay: 0.05s;
-			animation-direction: reverse;
-		}
-
-		@keyframes loader-ring-spin {
-			0% { transform: rotate(0deg); }
-			100% { transform: rotate(360deg); }
-		}
-		</style>
-	</head>
-	<body class="loading">
-		<div class="loader-ring">
-			<div class="loader-ring__segment"></div>
-			<div class="loader-ring__segment"></div>
-			<div class="loader-ring__segment"></div>
-			<div class="loader-ring__segment"></div>
-		</div>
-	</body>
-</html>
-`;
-
 interface BootstrapState {
 	currentTeamId: string;
 	currentUserId: string;
@@ -193,6 +107,7 @@ export class StreamWebviewPanel implements Disposable {
 		return this._onDidClose.event;
 	}
 
+	private _bootstrapPromise: Promise<BootstrapState> | undefined;
 	private _disposable: Disposable | undefined;
 	private readonly _ipc: WebviewIpc;
 	private _panel: WebviewPanel | undefined;
@@ -280,6 +195,28 @@ export class StreamWebviewPanel implements Disposable {
 					// TODO: Add sequence ids to ensure correct matching
 					// TODO: Add exception handling for failed requests
 					switch (body.action) {
+						case "bootstrap":
+							let state: BootstrapState = Object.create(null);
+							if (this.session.signedIn) {
+								state = await (this._bootstrapPromise || this.getBootstrapState());
+								this._bootstrapPromise = undefined;
+								if (this._streamThread !== undefined) {
+									state.currentStreamId = this._streamThread.stream.id;
+									state.currentThreadId = this._streamThread.id;
+								}
+							} else {
+								state.version = Container.version;
+								state.configs = { email: Container.config.email };
+							}
+
+							this.postMessage({
+								type: "codestream:response",
+								body: {
+									id: body.id,
+									payload: state
+								}
+							});
+							break;
 						case "authenticate": {
 							const { email, password } = body.params;
 
@@ -760,9 +697,12 @@ export class StreamWebviewPanel implements Disposable {
 		}
 	}
 
+	private _html: string | undefined;
 	private async getHtml(): Promise<string> {
+		let content;
+		// When we are debugging avoid any caching so that we can change the html and have it update without reloading
 		if (Logger.isDebugging) {
-			return new Promise<string>((resolve, reject) => {
+			content = await new Promise<string>((resolve, reject) => {
 				fs.readFile(Container.context.asAbsolutePath("webview.html"), "utf8", (err, data) => {
 					if (err) {
 						reject(err);
@@ -771,10 +711,22 @@ export class StreamWebviewPanel implements Disposable {
 					}
 				});
 			});
+		} else {
+			if (this._html !== undefined) return this._html;
+
+			const doc = await workspace.openTextDocument(
+				Container.context.asAbsolutePath("webview.html")
+			);
+			content = doc.getText();
 		}
 
-		const doc = await workspace.openTextDocument(Container.context.asAbsolutePath("webview.html"));
-		return doc.getText();
+		this._html = content.replace(
+			/{{root}}/g,
+			Uri.file(Container.context.asAbsolutePath("."))
+				.with({ scheme: "vscode-resource" })
+				.toString()
+		);
+		return this._html;
 	}
 
 	private postMessage(request: CSWebviewMessage) {
@@ -782,8 +734,10 @@ export class StreamWebviewPanel implements Disposable {
 	}
 
 	private async setStream(streamThread?: StreamThread): Promise<StreamThread | undefined> {
-		let html = loadingHtml;
 		if (this._panel === undefined) {
+			// Kick off the bootstrap compute to be ready for later
+			this._bootstrapPromise = this.getBootstrapState();
+
 			this._panel = window.createWebviewPanel(
 				"CodeStream.stream",
 				"CodeStream",
@@ -811,43 +765,15 @@ export class StreamWebviewPanel implements Disposable {
 				window.onDidChangeWindowState(this.onWindowStateChanged, this),
 				configuration.onDidChange(this.onConfigurationChanged, this)
 			);
-
-			this._panel.webview.html = html;
 		} else {
 			this._ipc.reset(this._panel);
-
-			this._panel.webview.html = html;
-			this._panel.reveal(this._panel.viewColumn, false);
 		}
 
-		let state: BootstrapState = Object.create(null);
-
-		if (this.session.signedIn) {
-			state = await this.getBootstrapState();
-			if (streamThread !== undefined) {
-				state.currentStreamId = streamThread.stream.id;
-				state.currentThreadId = streamThread.id;
-			}
-		} else {
-			state.version = Container.version;
-			state.configs = { email: Container.config.email };
-		}
+		this._panel.webview.html = await this.getHtml();
+		this._panel.reveal(this._panel.viewColumn, false);
 
 		this._streamThread = streamThread;
 		this._onDidChangeStream.fire(this._streamThread);
-
-		const content = await this.getHtml();
-		html = content
-			.replace(
-				/{{root}}/g,
-				Uri.file(Container.context.asAbsolutePath("."))
-					.with({ scheme: "vscode-resource" })
-					.toString()
-			)
-			.replace("'{{bootstrap}}'", JSON.stringify(state));
-
-		this._panel.webview.html = html;
-		this._panel.reveal(this._panel.viewColumn, false);
 
 		return this._streamThread;
 	}
