@@ -523,7 +523,7 @@ export class CodeStreamSession implements Disposable {
 
 				const unreadPosts = await this._sessionApi!.getPostsInRange(
 					streamId,
-					lastReadSeqNum,
+					lastReadSeqNum + 1,
 					latestPost.seqNum
 				);
 
@@ -570,7 +570,7 @@ export class CodeStreamSession implements Disposable {
 						unreadCounter.incrementUnread(post.streamId);
 					}
 					if (unreadCounter.lastReads[post.streamId] === undefined) {
-						unreadCounter.lastReads[post.streamId] = post.seqNum;
+						unreadCounter.lastReads[post.streamId] = post.seqNum - 1;
 					}
 				}
 			})
