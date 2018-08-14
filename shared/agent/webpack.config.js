@@ -51,7 +51,8 @@ module.exports = function(env, argv) {
 				{
 					test: /\.ts$/,
 					enforce: "pre",
-					use: "tslint-loader"
+					use: "tslint-loader",
+					exclude: /node_modules/
 				},
 				{
 					test: /\.tsx?$/,
