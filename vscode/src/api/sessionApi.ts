@@ -190,6 +190,10 @@ export class CodeStreamSessionApi {
 		return (await this._api.editPost(this.token, { id: postId, text, mentionedUserIds })).post;
 	}
 
+	async markPostUnread(postId: string) {
+		return (await this._api.markPostUnread(this.token, { id: postId })).post;
+	}
+
 	async getMarker(markerId: string, teamId?: string): Promise<CSMarker> {
 		return (await this._api.getMarker(this.token, teamId || this.teamId, markerId)).marker;
 	}

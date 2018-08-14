@@ -12,6 +12,8 @@ import {
 	DeletePostResponse,
 	EditPostRequest,
 	EditPostResponse,
+	MarkPostUnreadRequest,
+	MarkPostUnreadResponse,
 	FindRepoResponse,
 	GetMarkerLocationsResponse,
 	GetMarkerResponse,
@@ -36,6 +38,7 @@ import {
 	UpdateStreamMembershipRequest,
 	UpdateStreamMembershipResponse
 } from "../shared/api.protocol";
+import { request } from "https";
 
 export * from "../shared/api.protocol";
 
@@ -98,6 +101,14 @@ export class CodeStreamApi {
 
 	editPost(token: string, request: EditPostRequest) {
 		return this.put<EditPostRequest, EditPostResponse>(`/posts/${request.id}`, request, token);
+	}
+
+	markPostUnread(token: string, request: MarkPostUnreadRequest) {
+		return this.put<MarkPostUnreadRequest, MarkPostUnreadResponse>(
+			`/unread/${request.id}`,
+			request,
+			token
+		);
 	}
 
 	findRepo(url: string, firstCommitHashes: string[]) {

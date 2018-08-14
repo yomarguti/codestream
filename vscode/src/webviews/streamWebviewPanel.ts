@@ -434,6 +434,15 @@ export class StreamWebviewPanel implements Disposable {
 						}
 						break;
 					}
+					case "mark-post-unread": {
+						const post = await this.session.api.getPost(body.params);
+						const updates = await this.session.api.markPostUnread(body.params);
+						this.postMessage({
+							type: "codestream:response",
+							body: { id: body.id, payload: { ...post, ...updates } }
+						});
+						break;
+					}
 					case "create-stream": {
 						const { type, teamId, name, privacy, memberIds } = body.params;
 						let stream;
