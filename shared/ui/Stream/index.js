@@ -216,6 +216,10 @@ export class SimpleStream extends Component {
 			}, 500);
 		}
 
+		if (this.state.activePanel === "thread" && prevState.activePanel === "main") {
+			this.handleScroll();
+		}
+
 		// if we are scrolling around (which changes unreadsAbove and/or unreadsBelow)
 		// then check to see if we are up-to-date
 		if (
@@ -695,7 +699,7 @@ export class SimpleStream extends Component {
 	};
 
 	handleScroll(_event) {
-		const scrollDiv = this._postslist;
+		const scrollDiv = this.state.activePanel === "thread" ? this._threadpostslist : this._postslist;
 
 		if (!scrollDiv) {
 			// console.log("Couldn't find scrollDiv for ", event);
