@@ -11,21 +11,32 @@ import {
 import { BuiltInCommands } from "./commands";
 import { Logger } from "./logger";
 
+export enum ShowCodeResult {
+	Success = "SUCCESS",
+	FileNotFound = "FILE_NOT_FOUND",
+	RepoNotInWorkspace = "REPO_NOT_IN_WORKSPACE"
+}
+
 export async function openEditor(
 	uri: Uri,
 	options: TextDocumentShowOptions & { rethrow?: boolean } = {}
-): Promise<TextEditor | undefined> {
+): Promise<ShowCodeResult | undefined> {
 	const { rethrow, ...opts } = options;
 	try {
 		const document = await workspace.openTextDocument(uri);
-		return window.showTextDocument(document, {
+		window.showTextDocument(document, {
 			preserveFocus: false,
 			preview: true,
 			viewColumn: ViewColumn.Active,
 			...opts
 		});
+		return ShowCodeResult.Success;
 	} catch (ex) {
 		const msg = ex.toString();
+		if (msg.includes("File not found")) {
+			return ShowCodeResult.FileNotFound;
+		}
+
 		if (msg.includes("File seems to be binary and cannot be opened as text")) {
 			await commands.executeCommand(BuiltInCommands.Open, uri);
 

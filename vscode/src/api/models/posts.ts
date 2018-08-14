@@ -60,7 +60,7 @@ export class Post extends CodeStreamItem<CSPost> {
 			block,
 			this.entity.commitHashWhenPosted!
 		);
-		if (resp === undefined) return undefined;
+		if (resp === undefined || resp === null) return undefined;
 
 		return {
 			code: block.code,

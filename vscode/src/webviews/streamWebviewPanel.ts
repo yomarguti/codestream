@@ -497,21 +497,30 @@ export class StreamWebviewPanel extends Disposable {
 						});
 						break;
 					}
+					case "show-code": {
+						const post = e.body.params;
+						if (post.codeBlocks == null || post.codeBlocks.length === 0) return;
+
+						const stream = await this.session.getStream(post.streamId);
+						const status = await Container.commands.openPostWorkingFile(
+							new Post(this.session, post, stream)
+						);
+						this.postMessage({
+							type: "codestream:response",
+							body: { id: e.body.id, payload: status }
+						});
+						break;
+					}
 				}
 				break;
 			}
 			case "interaction:thread-selected": {
 				// Really means post selected
-				const { threadId, streamId, post } = e.body;
+				const { threadId, streamId } = e.body;
 				if (this._streamThread !== undefined && this._streamThread.stream.id === streamId) {
 					this._streamThread.id = threadId;
 					this._onDidChangeStream.fire(this._streamThread);
 				}
-
-				if (post.codeBlocks == null || post.codeBlocks.length === 0) return;
-
-				const stream = await this.session.getStream(streamId);
-				void (await Container.commands.openPostWorkingFile(new Post(this.session, post, stream)));
 				break;
 			}
 			case "interaction:changed-active-stream": {
@@ -547,22 +556,6 @@ export class StreamWebviewPanel extends Disposable {
 				this._bufferChangeTracker.unsubscribe(codeblock);
 				break;
 			}
-			// switch (body.name) {
-			// 	case "post-clicked":
-			// 		if (body.payload.codeBlocks === undefined) return;
-
-			// 		await Container.commands.openPostWorkingFile(
-			// 			new Post(this.session, body.payload, this._streamThread.stream)
-			// 		);
-			// 		break;
-
-			// 	case "post-diff-clicked":
-			// 		if (body.payload === undefined) return;
-
-			// 		await Container.commands.comparePostFileRevisionWithWorking(
-			// 			new Post(this.session, body.payload, this._streamThread.stream)
-			// 		);
-			// 		break;
 		}
 	}
 

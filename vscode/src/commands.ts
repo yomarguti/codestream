@@ -9,7 +9,7 @@ import {
 	StreamThread,
 	StreamType
 } from "./api/session";
-import { GlobalState, openEditor } from "./common";
+import { GlobalState, openEditor, ShowCodeResult } from "./common";
 import { Container } from "./container";
 import { StreamThreadId } from "./controllers/streamViewController";
 import { Command, createCommandDecorator } from "./system";
@@ -121,7 +121,7 @@ export class Commands extends Disposable {
 		if (post == null) return;
 
 		const block = await post.codeBlock();
-		if (block === undefined) return;
+		if (block === undefined) return ShowCodeResult.RepoNotInWorkspace;
 
 		// FYI, this doesn't always work, see https://github.com/Microsoft/vscode/issues/56097
 		let column = Container.streamView.viewColumn as number | undefined;
