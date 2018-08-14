@@ -566,7 +566,7 @@ export class SimpleStream extends Component {
 									: null;
 								const newMessageIndicator =
 									typeof this.postWithNewMessageIndicator !== "undefined" &&
-									post.seqNum === this.postWithNewMessageIndicator;
+									post.seqNum === this.postWithNewMessageIndicator + 1;
 								unread = unread || newMessageIndicator;
 								const returnValue = (
 									<div key={post.id}>
