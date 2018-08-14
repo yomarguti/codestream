@@ -192,10 +192,9 @@ class Post extends Component {
 		if (mine) {
 			authorMenuItems.push({ label: "Edit Headshot", action: "edit-headshot" });
 		} else {
-			authorMenuItems.push(
-				{ label: "Live Share", action: "live-share" },
-				{ label: "Direct Message", action: "direct-message" }
-			);
+			// FIXME -- this should be a check for MS, not a negative for Atom
+			if (!global.atom) authorMenuItems.push({ label: "Start Live Share", action: "live-share" });
+			authorMenuItems.push({ label: "Direct Message", action: "direct-message" });
 		}
 		// }
 

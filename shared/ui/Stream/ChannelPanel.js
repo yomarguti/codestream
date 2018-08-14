@@ -113,7 +113,12 @@ export class SimpleChannelPanel extends Component {
 					{this.props.directMessageStreams.map(stream => {
 						let count = this.props.umis.unread[stream.id] || 0;
 						// let mentions = this.props.umis.mentions[stream.id] || 0;
-						if (this.props.mutedStreams[stream.id] && !count) return null;
+						if (this.props.mutedStreams[stream.id]) {
+							// if you have muted a stream, check to see if there is a UMI.
+							// if so, unmute the stream. if not, don't display it.
+							if (count) this.props.setUserPreference(["mutedStreams", stream.id], false);
+							else return null;
+						}
 
 						const icon =
 							stream.memberIds.length > 2 ? (

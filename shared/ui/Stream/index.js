@@ -1269,7 +1269,7 @@ export class SimpleStream extends Component {
 	};
 
 	runSlashCommand = (command, args) => {
-		switch (command) {
+		switch ((command || "").toLowerCase()) {
 			case "add":
 				return this.addMembersToStream(args);
 			case "archive":
@@ -1282,6 +1282,8 @@ export class SimpleStream extends Component {
 				return this.invitePerson(args);
 			case "leave":
 				return this.leaveChannel(args);
+			case "live":
+				return this.notImplementedYet();
 			case "me":
 				return false;
 			case "mute":
