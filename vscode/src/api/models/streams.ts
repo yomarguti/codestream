@@ -125,7 +125,7 @@ export class DirectStream extends StreamBase<CSDirectStream> {
 export class FileStream extends StreamBase<CSFileStream> {
 	readonly type = StreamType.File;
 
-	constructor(session: CodeStreamSession, stream: CSFileStream, private _repo?: Repository) {
+	constructor(session: CodeStreamSession, stream: CSFileStream) {
 		super(session, stream);
 	}
 
@@ -281,7 +281,7 @@ export class FileStreamCollection extends StreamCollectionBase<FileStream, CSFil
 	}
 
 	protected entityMapper(e: CSFileStream) {
-		return new FileStream(this.session, e, this.repo);
+		return new FileStream(this.session, e);
 	}
 
 	protected async fetch() {

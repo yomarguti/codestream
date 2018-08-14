@@ -1,4 +1,3 @@
-import * as path from "path";
 import { commands, Disposable, Range, TextDocument, Uri, ViewColumn, window } from "vscode";
 import { AccessToken } from "./agent/agentConnection";
 import {

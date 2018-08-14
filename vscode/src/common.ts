@@ -2,7 +2,6 @@
 import {
 	commands,
 	TextDocumentShowOptions,
-	TextEditor,
 	Uri,
 	ViewColumn,
 	window,

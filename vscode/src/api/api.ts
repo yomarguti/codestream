@@ -12,8 +12,6 @@ import {
 	DeletePostResponse,
 	EditPostRequest,
 	EditPostResponse,
-	MarkPostUnreadRequest,
-	MarkPostUnreadResponse,
 	FindRepoResponse,
 	GetMarkerLocationsResponse,
 	GetMarkerResponse,
@@ -32,13 +30,14 @@ import {
 	InviteResponse,
 	JoinStreamRequest,
 	JoinStreamResponse,
+	MarkPostUnreadRequest,
+	MarkPostUnreadResponse,
 	MeResponse,
 	UpdatePresenceRequest,
 	UpdatePresenceResponse,
 	UpdateStreamMembershipRequest,
 	UpdateStreamMembershipResponse
 } from "../shared/api.protocol";
-import { request } from "https";
 
 export * from "../shared/api.protocol";
 
