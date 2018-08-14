@@ -699,7 +699,7 @@ export class StreamWebviewPanel extends Disposable {
 					this._streamThread.id === streamThread.id &&
 					this._streamThread.stream.id === streamThread.stream.id))
 		) {
-			this._panel.reveal(undefined, false);
+			this._panel.reveal(this._panel.viewColumn, false);
 
 			return this._streamThread;
 		}
@@ -771,7 +771,7 @@ export class StreamWebviewPanel extends Disposable {
 			this._ipc.reset(this._panel);
 
 			this._panel.webview.html = html;
-			this._panel.reveal(undefined, false);
+			this._panel.reveal(this._panel.viewColumn, false);
 		}
 
 		let state: BootstrapState = Object.create(null);
@@ -801,7 +801,7 @@ export class StreamWebviewPanel extends Disposable {
 			.replace("'{{bootstrap}}'", JSON.stringify(state));
 
 		this._panel.webview.html = html;
-		this._panel.reveal(undefined, false);
+		this._panel.reveal(this._panel.viewColumn, false);
 
 		return this._streamThread;
 	}
