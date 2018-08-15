@@ -60,6 +60,7 @@ export class PubNubReceiver implements Disposable {
 
 	private _cache: Cache;
 	private _disposable: Disposable;
+	private _ignoredStreams = new Set();
 
 	constructor(cache: Cache) {
 		this._cache = cache;
@@ -71,6 +72,10 @@ export class PubNubReceiver implements Disposable {
 
 	dispose() {
 		this._disposable.dispose();
+	}
+
+	ignoreStream(streamId: string) {
+		this._ignoredStreams.add(streamId);
 	}
 
 	private async onPubNubMessagesReceived(messages: { [key: string]: any }[]) {
@@ -121,6 +126,7 @@ export class PubNubReceiver implements Disposable {
 						});
 						break;
 					case "streams":
+						entities = entities.filter((e: any) => !this._ignoredStreams.has(e["_id"]));
 						const streams = (await this._cache.resolveStreams(entities)) as CSStream[];
 
 						// // Subscribe to any new non-file, non-team streams

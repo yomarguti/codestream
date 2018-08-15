@@ -366,6 +366,7 @@ export class CodeStreamSession implements Disposable {
 
 	@signedIn
 	leaveChannel(streamId: string, teamId: string) {
+		this._pubnub.ignoreStream(streamId);
 		this._onDidChange.fire(new StreamsMembershipChangedEvent(streamId, teamId));
 	}
 
