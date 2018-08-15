@@ -130,7 +130,7 @@ interface BootstrapState {
 	currentStreamId: string;
 	currentStreamLabel?: string;
 	currentStreamServiceType?: "liveshare";
-	selectedPostId?: string;
+	currentThreadId?: string;
 	posts: CSPost[];
 	streams: CSStream[];
 	teams: CSTeam[];
@@ -786,7 +786,7 @@ export class StreamWebviewPanel implements Disposable {
 			state = await this.getBootstrapState();
 			if (streamThread !== undefined) {
 				state.currentStreamId = streamThread.stream.id;
-				state.selectedPostId = streamThread.id;
+				state.currentThreadId = streamThread.id;
 			}
 		} else {
 			state.version = Container.version;

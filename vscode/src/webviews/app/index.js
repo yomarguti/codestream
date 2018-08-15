@@ -160,7 +160,10 @@ const data = window.bootstrap;
 const store = createStore(
 	{
 		pluginVersion: data.version,
-		startOnMainPanel: Boolean(data.currentStreamId),
+		startupProps: {
+			startOnMainPanel: Boolean(data.currentStreamId),
+			threadId: data.currentThreadId
+		},
 		context: {
 			currentTeamId: data.currentTeamId,
 			currentStreamId: data.currentStreamId,
