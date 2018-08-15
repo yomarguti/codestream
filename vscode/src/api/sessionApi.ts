@@ -2,7 +2,6 @@
 import { Uri } from "vscode";
 import {
 	CodeStreamApi,
-	CreatePostRequestCodeBlock,
 	CSChannelStream,
 	CSDirectStream,
 	CSFileStream,

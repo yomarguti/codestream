@@ -1,9 +1,8 @@
 "use strict";
-import { Disposable, Event, EventEmitter, window } from "vscode";
+import { Disposable, window } from "vscode";
 import { Post, PostsReceivedEvent, StreamType } from "../api/session";
 import { Notifications } from "../configuration";
 import { Container } from "../container";
-import { Arrays, Functions } from "../system";
 
 export class NotificationsController implements Disposable {
 	private _disposable: Disposable;
