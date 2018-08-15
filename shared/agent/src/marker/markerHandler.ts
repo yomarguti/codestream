@@ -65,7 +65,9 @@ export namespace MarkerHandler {
 
 		const locationsById = await MarkerLocationUtil.getCurrentLocations(documentUri);
 		const location = locationsById[markerId];
-		const range = MarkerLocationUtil.locationToRange(location);
+		const range = location
+			? MarkerLocationUtil.locationToRange(location)
+			: Range.create(0, 0, 0, 0);
 
 		return {
 			textDocument: { uri: documentUri },
