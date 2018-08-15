@@ -53,7 +53,7 @@ export class SimpleStream extends Component {
 
 	componentDidMount() {
 		this.disposables.push(
-			EventEmitter.subscribe("interaction:marker-selected", this.handleMarkerSelected)
+			EventEmitter.on("interaction:stream-thread-selected", this.handleStreamThreadSelected)
 		);
 
 		// this listener pays attention to when the input field resizes,
@@ -162,8 +162,14 @@ export class SimpleStream extends Component {
 		this.disposables.forEach(d => d.dispose());
 	}
 
-	handleMarkerSelected = ({ postId }) => {
-		this.selectPost(postId);
+	handleStreamThreadSelected = async ({ streamId, threadId }) => {
+		if (streamId !== this.props.postStreamId) {
+			await this.props.fetchPosts({ streamId, teamId: this.props.currentTeamId });
+			this.props.setCurrentStream(streamId);
+			if (threadId) this.selectPost(threadId);
+		} else {
+			if (threadId) this.selectPost(threadId);
+		}
 	};
 
 	copy(event) {
