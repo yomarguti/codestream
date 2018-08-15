@@ -67,7 +67,8 @@ class Post extends Component {
 				const learnMore = intl.formatMessage({ id: "learnMore" });
 				return (
 					<span>
-						{message} <a href="https://help.codestream.com">{learnMore}</a>
+						{message}{" "}
+						<a href="https://help.codestream.com/hc/en-us/articles/360013410551">{learnMore}</a>
 					</span>
 				);
 			}
