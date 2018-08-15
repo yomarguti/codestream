@@ -56,10 +56,7 @@ export class Post extends CodeStreamItem<CSPost> {
 		}
 
 		const block = this.entity.codeBlocks[0];
-		const resp = await Container.agent.getDocumentFromCodeBlock(
-			block,
-			this.entity.commitHashWhenPosted!
-		);
+		const resp = await Container.agent.getDocumentFromCodeBlock(block);
 		if (resp === undefined || resp === null) return undefined;
 
 		return {

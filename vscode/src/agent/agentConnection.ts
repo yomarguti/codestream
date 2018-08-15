@@ -88,16 +88,11 @@ export class CodeStreamAgentConnection implements Disposable {
 	}
 
 	@started
-	getDocumentFromCodeBlock(
-		block: CSCodeBlock,
-		revision: string
-	): Promise<DocumentFromCodeBlockResponse | undefined> {
+	getDocumentFromCodeBlock(block: CSCodeBlock): Promise<DocumentFromCodeBlockResponse | undefined> {
 		return this.sendRequest(DocumentFromCodeBlockRequest, {
 			repoId: block.repoId,
 			file: block.file,
-			markerId: block.markerId,
-			streamId: block.streamId!,
-			revision: revision
+			markerId: block.markerId
 		});
 	}
 
