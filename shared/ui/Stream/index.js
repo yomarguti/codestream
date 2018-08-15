@@ -196,7 +196,7 @@ export class SimpleStream extends Component {
 				this.props.umis.unread[this.props.postStreamId] > 0 ||
 				this.props.umis.mentions[this.props.postStreamId] > 0
 			) {
-				console.log("Marking within check");
+				console.log("Marking within check. StreamID: ", this.props.postStreamId);
 				this.props.markStreamRead(this.props.postStreamId);
 			}
 		}
