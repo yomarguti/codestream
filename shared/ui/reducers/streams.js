@@ -47,6 +47,14 @@ export default (state = initialState, { type, payload }) => {
 		case "UPDATE_STREAM":
 		case "ADD_STREAM":
 			return addStream(state, payload);
+		case "REMOVE_STREAM": {
+			const streamsForTeam = state.byTeam[payload.teamId] || {};
+			delete streamsForTeam[payload.streamId];
+			return {
+				...state,
+				byTeam: { ...state.byTeam, [payload.teamId]: streamsForTeam }
+			};
+		}
 		default:
 			return state;
 	}
