@@ -1,8 +1,12 @@
 "use strict";
 import { Disposable, StatusBarAlignment, StatusBarItem, window } from "vscode";
-import { SessionStatus, SessionStatusChangedEvent } from "../api/session";
+import {
+	SessionChangedEvent,
+	SessionStatus,
+	SessionStatusChangedEvent,
+	UnreadsChangedEvent
+} from "../api/session";
 import { Container } from "../container";
-import { UnreadCountChangedEvent } from "./notificationsController";
 
 export class StatusBarController implements Disposable {
 	private _disposable: Disposable;
@@ -11,7 +15,7 @@ export class StatusBarController implements Disposable {
 	constructor() {
 		this._disposable = Disposable.from(
 			Container.session.onDidChangeStatus(this.onSessionStatusChanged, this),
-			Container.notifications.onDidChangeUnreadCount(this.onUnreadCountChanged, this)
+			Container.session.onDidChange(this.onSessionChanged, this)
 		);
 
 		this.updateStatusBar(Container.session.status);
@@ -25,8 +29,10 @@ export class StatusBarController implements Disposable {
 		this._disposable && this._disposable.dispose();
 	}
 
-	private onUnreadCountChanged(e: UnreadCountChangedEvent) {
-		this.updateStatusBar(Container.session.status, e.getCount());
+	private onSessionChanged(e: SessionChangedEvent) {
+		if (e instanceof UnreadsChangedEvent) {
+			this.updateStatusBar(Container.session.status, e.getCount());
+		}
 	}
 
 	private onSessionStatusChanged(e: SessionStatusChangedEvent) {

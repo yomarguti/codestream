@@ -127,9 +127,6 @@ export class StreamViewController implements Disposable {
 	}
 
 	async show(streamThread?: StreamThread) {
-		// HACK: 💩
-		Container.notifications.clearUnreadCount();
-
 		if (this._panel === undefined) {
 			if (streamThread === undefined) {
 				streamThread = this._lastStreamThread;

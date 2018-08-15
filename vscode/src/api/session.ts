@@ -773,10 +773,10 @@ class MarkersChangedEvent {
 	}
 }
 
-class UnreadsChangedEvent {
+export class UnreadsChangedEvent {
 	readonly type = SessionChangedType.Unreads;
 
-	constructor(public readonly unreads: { unread: {}; mentions: {} }) {}
+	constructor(public readonly unreads: { unread: { [key: string]: number }; mentions: {} }) {}
 
 	affects(id: string, type: "entity") {
 		return false;
@@ -789,6 +789,10 @@ class UnreadsChangedEvent {
 	@memoize
 	items() {
 		throw new Error("Not implemented");
+	}
+
+	getCount() {
+		return Object.values(this.unreads.unread).reduce((total, count) => total + count, 0);
 	}
 }
 
