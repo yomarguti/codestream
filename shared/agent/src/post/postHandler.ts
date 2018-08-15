@@ -85,17 +85,13 @@ export namespace PostHandler {
 		mentionedUserIds: string[]
 	): Promise<CSPost | undefined> {
 		const { api, state, git, documents } = Container.instance();
-		debugger;
-
 		const document = documents.get(documentId.uri);
 		if (!document) {
 			throw new Error(`Could not retrieve document ${documentId.uri} from document manager`);
 		}
 		const filePath = URI.parse(documentId.uri).fsPath;
-		// const streamId = await StreamUtil.getStreamId(filePath);
 		const fileContents = document.getText();
 
-		// let stream: CreatePostRequestStream | undefined;
 		let codeBlock: CreatePostRequestCodeBlock | undefined;
 		let commitHashWhenPosted: string | undefined;
 		let location: CSMarkerLocation | undefined;
