@@ -5,15 +5,81 @@ import { Error } from "tslint/lib/error";
 import { TextDocumentIdentifier } from "vscode-languageserver";
 import { Range } from "vscode-languageserver-protocol";
 import URI from "vscode-uri";
+import { DocumentPreparePostResponse } from "../agent";
 import { CreatePostRequestCodeBlock, CSMarkerLocation, CSPost } from "../api/api";
 import { Container } from "../container";
+import { Logger } from "../logger";
 import { MarkerLocationUtil } from "../markerLocation/markerLocationUtil";
+import { Iterables, Strings } from "../system";
 
 export namespace PostHandler {
+	let lastFullCode = "";
+
+	export async function documentPreparePost(
+		documentId: TextDocumentIdentifier,
+		range: Range,
+		dirty: boolean = false
+	): Promise<DocumentPreparePostResponse> {
+		const { documents, git, session } = Container.instance();
+		const document = documents.get(documentId.uri);
+		if (document === undefined) {
+			throw new Error(`No document could be found for Uri(${documentId.uri})`);
+		}
+		lastFullCode = document.getText();
+
+		const uri = URI.parse(document.uri);
+		const repoPath = await git.getRepoRoot(uri.fsPath);
+
+		let authors: { id: string; username: string }[] | undefined;
+		let file: string | undefined;
+		let remotes: { name: string; url: string }[] | undefined;
+		let rev: string | undefined;
+		if (repoPath !== undefined) {
+			try {
+				file = Strings.normalizePath(path.relative(repoPath, uri.fsPath));
+				if (file[0] === "/") {
+					file = file.substr(1);
+				}
+
+				rev = await git.getFileCurrentRevision(uri.fsPath);
+				const gitRemotes = await git.getRepoRemotes(repoPath);
+				remotes = [...Iterables.map(gitRemotes, r => ({ name: r.name, url: r.normalizedUrl }))];
+
+				const gitAuthors = await git.getFileAuthors(uri.fsPath, {
+					startLine: range.start.line,
+					endLine: range.end.line - 1,
+					contents: dirty ? lastFullCode : undefined
+				});
+				const authorEmails = gitAuthors.map(a => a.email);
+
+				const users = await session.users.getByEmails(authorEmails);
+				authors = [...Iterables.map(users, u => ({ id: u.id, username: u.name }))];
+			} catch (ex) {
+				Logger.error(ex);
+				debugger;
+			}
+		}
+
+		return {
+			code: document.getText(range),
+			source:
+				repoPath !== undefined
+					? {
+							file: file!,
+							repoPath: repoPath,
+							revision: rev!,
+							authors: authors || [],
+							remotes: remotes || []
+					  }
+					: undefined
+		};
+	}
+
 	export async function documentPost(
 		documentId: TextDocumentIdentifier,
 		rangeArray: [number, number, number, number] | undefined,
 		text: string,
+		code: string,
 		streamId: string,
 		parentPostId: string | undefined,
 		mentionedUserIds: string[]
@@ -38,9 +104,6 @@ export namespace PostHandler {
 			const range = Range.create(rangeArray[0], rangeArray[1], rangeArray[2], rangeArray[3]);
 			location = MarkerLocationUtil.rangeToLocation(range);
 
-			const code = document.getText(range);
-			const preContext = document.getText(preRange(range));
-			const postContext = document.getText(postRange(range));
 			const repoRoot = await git.getRepoRoot(filePath);
 
 			let relPath;
@@ -52,7 +115,11 @@ export namespace PostHandler {
 				const fileCurrentRevision = await git.getFileCurrentRevision(filePath);
 				if (fileCurrentRevision) {
 					commitHashWhenPosted = fileCurrentRevision;
-					backtrackedLocation = await MarkerLocationUtil.backtrackLocation(documentId, location);
+					backtrackedLocation = await MarkerLocationUtil.backtrackLocation(
+						documentId,
+						lastFullCode,
+						location
+					);
 				} else {
 					commitHashWhenPosted = (await git.getRepoHeadRevision(repoRoot))!;
 					backtrackedLocation = MarkerLocationUtil.emptyFileLocation();
@@ -61,8 +128,6 @@ export namespace PostHandler {
 
 			codeBlock = {
 				code,
-				preContext,
-				postContext,
 				file: relPath,
 				remotes,
 				location: backtrackedLocation && MarkerLocationUtil.locationToArray(backtrackedLocation)

@@ -69,13 +69,14 @@ export class CodeStreamSession {
 			MarkerHandler.documentMarkers(e.textDocument)
 		);
 		this.agent.registerHandler(DocumentPreparePostRequest, e =>
-			this.preparePostCode(e.textDocument, e.range, e.dirty)
+			PostHandler.documentPreparePost(e.textDocument, e.range, e.dirty)
 		);
 		this.agent.registerHandler(DocumentPostRequest, e =>
 			PostHandler.documentPost(
 				e.textDocument,
 				e.location,
 				e.text,
+				e.code,
 				e.streamId,
 				e.parentPostId,
 				e.mentionedUserIds
@@ -192,65 +193,6 @@ export class CodeStreamSession {
 		return {
 			loginResponse: { ...loginResponse },
 			state: { ...Container.instance().state }
-		};
-	}
-
-	async preparePostCode(
-		documentId: TextDocumentIdentifier,
-		range: Range,
-		dirty: boolean = false
-	): Promise<DocumentPreparePostResponse> {
-		const { documents, git } = Container.instance();
-		const document = documents.get(documentId.uri);
-		if (document === undefined) {
-			throw new Error(`No document could be found for Uri(${documentId.uri})`);
-		}
-
-		const uri = URI.parse(document.uri);
-		const repoPath = await git.getRepoRoot(uri.fsPath);
-
-		let authors: { id: string; username: string }[] | undefined;
-		let file: string | undefined;
-		let remotes: { name: string; url: string }[] | undefined;
-		let rev: string | undefined;
-		if (repoPath !== undefined) {
-			try {
-				file = Strings.normalizePath(path.relative(repoPath, uri.fsPath));
-				if (file[0] === "/") {
-					file = file.substr(1);
-				}
-
-				rev = await git.getFileCurrentRevision(uri.fsPath);
-				const gitRemotes = await git.getRepoRemotes(repoPath);
-				remotes = [...Iterables.map(gitRemotes, r => ({ name: r.name, url: r.normalizedUrl }))];
-
-				const gitAuthors = await git.getFileAuthors(uri.fsPath, {
-					startLine: range.start.line,
-					endLine: range.end.line - 1,
-					contents: dirty ? document.getText() : undefined
-				});
-				const authorEmails = gitAuthors.map(a => a.email);
-
-				const users = await this.users.getByEmails(authorEmails);
-				authors = [...Iterables.map(users, u => ({ id: u.id, username: u.name }))];
-			} catch (ex) {
-				Logger.error(ex);
-				debugger;
-			}
-		}
-
-		return {
-			code: document.getText(range),
-			source:
-				repoPath !== undefined
-					? {
-							file: file!,
-							repoPath: repoPath,
-							revision: rev!,
-							authors: authors || [],
-							remotes: remotes || []
-					  }
-					: undefined
 		};
 	}
 

@@ -53,6 +53,7 @@ export namespace MarkerLocationUtil {
 
 	export async function backtrackLocation(
 		documentId: TextDocumentIdentifier,
+		text: string,
 		location: CSMarkerLocation
 	): Promise<CSMarkerLocation> {
 		const { documents, git } = Container.instance();
@@ -77,8 +78,7 @@ export namespace MarkerLocationUtil {
 		}
 		// Maybe in this case the IDE should inform the buffer contents to ensure we have the exact same
 		// buffer text the user is seeing
-		const currentBufferText = doc.getText();
-		const diff = structuredPatch(filePath, filePath, currentBufferText, currentCommitText, "", "");
+		const diff = structuredPatch(filePath, filePath, text, currentCommitText, "", "");
 		return calculateLocation(location, diff);
 	}
 
