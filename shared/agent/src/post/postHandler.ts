@@ -1,11 +1,13 @@
 "use strict";
 
 import * as path from "path";
-import { Error } from "tslint/lib/error";
-import { TextDocumentIdentifier } from "vscode-languageserver";
 import { Range } from "vscode-languageserver-protocol";
 import URI from "vscode-uri";
-import { DocumentPreparePostResponse } from "../agent";
+import {
+	DocumentPostRequestParams,
+	DocumentPreparePostRequestParams,
+	DocumentPreparePostResponse
+} from "../agent";
 import { CreatePostRequestCodeBlock, CSMarkerLocation, CSPost } from "../api/api";
 import { Container } from "../container";
 import { Logger } from "../logger";
@@ -15,12 +17,13 @@ import { Iterables, Strings } from "../system";
 export namespace PostHandler {
 	let lastFullCode = "";
 
-	export async function documentPreparePost(
-		documentId: TextDocumentIdentifier,
-		range: Range,
-		dirty: boolean = false
-	): Promise<DocumentPreparePostResponse> {
+	export async function documentPreparePost({
+		textDocument: documentId,
+		range,
+		dirty
+	}: DocumentPreparePostRequestParams): Promise<DocumentPreparePostResponse> {
 		const { documents, git, session } = Container.instance();
+
 		const document = documents.get(documentId.uri);
 		if (document === undefined) {
 			throw new Error(`No document could be found for Uri(${documentId.uri})`);
@@ -75,20 +78,22 @@ export namespace PostHandler {
 		};
 	}
 
-	export async function documentPost(
-		documentId: TextDocumentIdentifier,
-		rangeArray: [number, number, number, number] | undefined,
-		text: string,
-		code: string,
-		streamId: string,
-		parentPostId: string | undefined,
-		mentionedUserIds: string[]
-	): Promise<CSPost | undefined> {
+	export async function documentPost({
+		textDocument: documentId,
+		location: rangeArray,
+		text,
+		code,
+		streamId,
+		parentPostId,
+		mentionedUserIds
+	}: DocumentPostRequestParams): Promise<CSPost | undefined> {
 		const { api, state, git, documents } = Container.instance();
+
 		const document = documents.get(documentId.uri);
 		if (!document) {
 			throw new Error(`Could not retrieve document ${documentId.uri} from document manager`);
 		}
+
 		const filePath = URI.parse(documentId.uri).fsPath;
 		const fileContents = document.getText();
 

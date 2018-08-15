@@ -62,26 +62,10 @@ export class CodeStreamSession {
 		this.agent.registerHandler(ApiRequest, (e, cancellationToken: CancellationToken) =>
 			this._api.fetch(e.url, e.init, e.token)
 		);
-		this.agent.registerHandler(DocumentFromCodeBlockRequest, e =>
-			MarkerHandler.documentFromCodeBlock(e.repoId, e.file, e.markerId)
-		);
-		this.agent.registerHandler(DocumentMarkersRequest, e =>
-			MarkerHandler.documentMarkers(e.textDocument)
-		);
-		this.agent.registerHandler(DocumentPreparePostRequest, e =>
-			PostHandler.documentPreparePost(e.textDocument, e.range, e.dirty)
-		);
-		this.agent.registerHandler(DocumentPostRequest, e =>
-			PostHandler.documentPost(
-				e.textDocument,
-				e.location,
-				e.text,
-				e.code,
-				e.streamId,
-				e.parentPostId,
-				e.mentionedUserIds
-			)
-		);
+		this.agent.registerHandler(DocumentFromCodeBlockRequest, MarkerHandler.documentFromCodeBlock);
+		this.agent.registerHandler(DocumentMarkersRequest, MarkerHandler.documentMarkers);
+		this.agent.registerHandler(DocumentPreparePostRequest, PostHandler.documentPreparePost);
+		this.agent.registerHandler(DocumentPostRequest, PostHandler.documentPost);
 
 		this.agent.registerHandler(DocumentLatestRevisionRequest, async e => {
 			const revision = await Container.instance().git.getFileCurrentRevision(

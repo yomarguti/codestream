@@ -58,8 +58,6 @@ export interface DocumentFromCodeBlockRequestParams {
 	file: string;
 	repoId: string;
 	markerId: string;
-	streamId: string;
-	revision: string;
 }
 
 export interface DocumentFromCodeBlockResponse {
@@ -73,7 +71,7 @@ export const DocumentFromCodeBlockRequest = new RequestType<
 	DocumentFromCodeBlockResponse | undefined,
 	void,
 	void
->("codeStream/documentFromCodeBlock");
+>("codeStream/textDocument/fromCodeBlock");
 
 export interface DocumentLatestRevisionRequestParams {
 	textDocument: TextDocumentIdentifier;
