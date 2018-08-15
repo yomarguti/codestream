@@ -6,7 +6,6 @@ import Linkify from "react-linkify";
 import Headshot from "./Headshot";
 import Icon from "./Icon";
 import Timestamp from "./Timestamp";
-// import Menu from "./Menu";
 import PostDetails from "./PostDetails";
 import RetrySpinner from "./RetrySpinner";
 import { retryPost, cancelPost, showCode } from "./actions";
@@ -14,16 +13,7 @@ import ContentEditable from "react-contenteditable";
 import Button from "./Button";
 import Menu from "./Menu";
 import Tooltip from "./Tooltip";
-// import "emoji-mart/css/emoji-mart.css";
-import { Picker } from "emoji-mart";
 import { getById } from "../reducers/repos";
-// import markdown from "markdown-it";
-
-// const md = markdown({
-// 	linkify: true,
-// 	breaks: true,
-// 	typographer: true
-// });
 
 class Post extends Component {
 	state = {
