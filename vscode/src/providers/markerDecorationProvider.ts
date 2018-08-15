@@ -11,6 +11,7 @@ import {
 	Position,
 	Range,
 	TextDocument,
+	TextDocumentChangeEvent,
 	TextEditor,
 	TextEditorDecorationType,
 	Uri,
@@ -26,12 +27,14 @@ import {
 import { OpenStreamCommandArgs } from "../commands";
 import { Container } from "../container";
 import { Logger } from "../logger";
+import { Functions } from "../system/function";
 
 export class MarkerDecorationProvider implements HoverProvider, Disposable {
 	private readonly _disposable: Disposable | undefined;
 	private readonly _decorationType: TextEditorDecorationType;
 
 	private readonly _markersCache = new Map<string, Promise<Marker[]>>();
+	private _watchedEditorsMap: Map<string, () => void> | undefined;
 
 	constructor() {
 		this._decorationType = window.createTextEditorDecorationType({
@@ -54,14 +57,14 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 			languages.registerHoverProvider({ scheme: "file" }, this),
 			Container.session.onDidChangeStatus(this.onSessionStatusChanged, this),
 			Container.session.onDidReceivePosts(this.onPostsReceived, this),
-			window.onDidChangeActiveTextEditor(this.onEditorChanged, this),
-			workspace.onDidCloseTextDocument(this.onClosedDocument, this)
+			// window.onDidChangeActiveTextEditor(this.onEditorChanged, this),
+			window.onDidChangeVisibleTextEditors(this.onEditorVisibilityChanged, this),
+			workspace.onDidChangeTextDocument(this.onDocumentChanged, this),
+			workspace.onDidCloseTextDocument(this.onDocumentClosed, this)
 		);
 
 		if (Container.session.status === SessionStatus.SignedIn) {
-			for (const e of this.getApplicableVisibleEditors()) {
-				this.apply(e);
-			}
+			this.applyToApplicableVisibleEditors();
 		}
 	}
 
@@ -70,14 +73,27 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 		this._disposable && this._disposable.dispose();
 	}
 
-	private async onClosedDocument(e: TextDocument) {
+	private async onDocumentChanged(e: TextDocumentChangeEvent) {
+		if (this._watchedEditorsMap === undefined) return;
+
+		const fn = this._watchedEditorsMap.get(e.document.uri.toString());
+		if (fn === undefined) return;
+
+		fn();
+	}
+
+	private async onDocumentClosed(e: TextDocument) {
 		this._markersCache.delete(e.uri.toString());
 	}
 
-	private async onEditorChanged(e: TextEditor | undefined) {
-		if (e === undefined) return;
+	// private async onEditorChanged(e: TextEditor | undefined) {
+	// 	if (e === undefined) return;
 
-		this.apply(e);
+	// 	this.apply(e);
+	// }
+
+	private async onEditorVisibilityChanged(e: TextEditor[]) {
+		this.applyToApplicableVisibleEditors(e);
 	}
 
 	private async onPostsReceived(e: PostsReceivedEvent) {
@@ -111,18 +127,36 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 				break;
 
 			case SessionStatus.SignedIn:
-				for (const e of this.getApplicableVisibleEditors()) {
-					this.apply(e);
-				}
+				this.applyToApplicableVisibleEditors();
 				break;
 		}
 	}
 
-	async apply(editor: TextEditor | undefined) {
+	async apply(editor: TextEditor | undefined, force: boolean = false) {
 		if (!Container.session.signedIn || !this.isApplicableEditor(editor)) return;
 
+		if (force) {
+			this._markersCache.delete(editor!.document.uri.toString());
+		}
 		const decorations = await this.provideDecorations(editor!);
 		editor!.setDecorations(this._decorationType, decorations);
+	}
+
+	applyToApplicableVisibleEditors(editors = window.visibleTextEditors) {
+		const editorsToWatch = new Map<string, () => void>();
+
+		for (const e of this.getApplicableVisibleEditors(editors)) {
+			const key = e.document.uri.toString();
+			editorsToWatch.set(
+				key,
+				(this._watchedEditorsMap && this._watchedEditorsMap.get(key)) ||
+					Functions.debounce(() => this.apply(e, true), 1000)
+			);
+
+			this.apply(e);
+		}
+
+		this._watchedEditorsMap = editorsToWatch;
 	}
 
 	clear(editor: TextEditor | undefined = window.activeTextEditor) {
