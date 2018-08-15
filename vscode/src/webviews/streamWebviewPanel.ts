@@ -528,7 +528,6 @@ export class StreamWebviewPanel implements Disposable {
 				break;
 			}
 			case "interaction:thread-selected": {
-				// Really means post selected
 				const { threadId, streamId } = e.body;
 				if (this._streamThread !== undefined && this._streamThread.stream.id === streamId) {
 					this._streamThread.id = threadId;
@@ -543,6 +542,7 @@ export class StreamWebviewPanel implements Disposable {
 					this._streamThread = undefined;
 					return;
 				}
+
 				const stream = await this.session.getStream(streamId);
 				if (stream !== undefined) {
 					this._streamThread = { id: undefined, stream: stream };
@@ -698,19 +698,25 @@ export class StreamWebviewPanel implements Disposable {
 	}
 
 	show(streamThread?: StreamThread) {
+		if (this._panel === undefined) return this.setStream(streamThread);
+
 		if (
-			this._panel !== undefined &&
-			(streamThread === undefined ||
-				(this._streamThread &&
-					this._streamThread.id === streamThread.id &&
-					this._streamThread.stream.id === streamThread.stream.id))
+			streamThread === undefined ||
+			(this._streamThread &&
+				this._streamThread.id === streamThread.id &&
+				this._streamThread.stream.id === streamThread.stream.id)
 		) {
 			this._panel.reveal(this._panel.viewColumn, false);
 
 			return this._streamThread;
 		}
 
-		return this.setStream(streamThread);
+		this._ipc.onChangeStreamThread(streamThread);
+
+		this._streamThread = streamThread;
+		this._onDidChangeStream.fire(this._streamThread);
+
+		return this._streamThread;
 	}
 
 	reset() {
@@ -839,6 +845,16 @@ class WebviewIpc {
 		this.postMessage({
 			type: "codestream:interaction:focus",
 			body: {}
+		});
+	}
+
+	onChangeStreamThread(streamThread: StreamThread) {
+		this.postMessage({
+			type: "codestream:interaction:stream-thread-selected",
+			body: {
+				streamId: streamThread.stream.id,
+				threadId: streamThread.id
+			}
 		});
 	}
 
