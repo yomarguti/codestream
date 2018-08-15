@@ -552,7 +552,7 @@ export class CodeStreamSession implements Disposable {
 		});
 
 		unreadCounter.lastReads = lastReads;
-		this._onDidChange.fire(new UnreadsChangedEvent(unreadCounter.getValues()));
+		this._onDidChange.fire(new UnreadsChangedEvent(this._state!.user, unreadCounter.getValues()));
 	}
 
 	private async incrementUnreads(posts: CSPost[]) {
@@ -566,6 +566,7 @@ export class CodeStreamSession implements Disposable {
 					const stream = await this._sessionApi!.getStream(post.streamId);
 					if (post.text.match(mentionRegex) || stream!.type === StreamType.Direct) {
 						unreadCounter.incrementMention(post.streamId);
+						unreadCounter.incrementUnread(post.streamId);
 					} else {
 						unreadCounter.incrementUnread(post.streamId);
 					}
@@ -575,7 +576,9 @@ export class CodeStreamSession implements Disposable {
 				}
 			})
 		);
-		this._onDidChange.fire(new UnreadsChangedEvent(this._state!.unreads.getValues()));
+		this._onDidChange.fire(
+			new UnreadsChangedEvent(this._state!.user, this._state!.unreads.getValues())
+		);
 	}
 }
 
@@ -776,7 +779,13 @@ class MarkersChangedEvent {
 export class UnreadsChangedEvent {
 	readonly type = SessionChangedType.Unreads;
 
-	constructor(public readonly unreads: { unread: { [key: string]: number }; mentions: {} }) {}
+	constructor(
+		private user: User,
+		public readonly unreads: {
+			unread: { [key: string]: number };
+			mentions: { [key: string]: number };
+		}
+	) {}
 
 	affects(id: string, type: "entity") {
 		return false;
@@ -792,7 +801,15 @@ export class UnreadsChangedEvent {
 	}
 
 	getCount() {
-		return Object.values(this.unreads.unread).reduce((total, count) => total + count, 0);
+		return Object.entries(this.unreads.unread).reduce((total, [streamId, count]) => {
+			// if a channel is muted, mentions override that. so include them in the count
+			if (this.user.hasMutedChannel(streamId)) {
+				const mentionCount = this.unreads.mentions[streamId] || 0;
+				return total + mentionCount;
+			} else {
+				return total + count;
+			}
+		}, 0);
 	}
 }
 

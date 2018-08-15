@@ -32,6 +32,15 @@ export class User extends CodeStreamItem<CSUser> {
 	get lastReads() {
 		return this.entity.lastReads || {};
 	}
+
+	hasMutedChannel(streamId: string) {
+		const preferences = this.entity.preferences;
+		if (preferences === undefined) return false;
+		const mutedStreams = preferences.mutedStreams;
+		if (mutedStreams === undefined) return false;
+
+		return mutedStreams[streamId] === true;
+	}
 }
 
 export class UserCollection extends CodeStreamCollection<User, CSUser> {

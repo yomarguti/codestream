@@ -24,7 +24,6 @@ class UnreadCounter {
 	incrementMention(streamId: string) {
 		const count = this.mentions[streamId] || 0;
 		this.mentions[streamId] = count + 1;
-		this.incrementUnread(streamId);
 	}
 
 	clear(streamId: string) {
