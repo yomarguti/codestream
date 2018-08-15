@@ -492,10 +492,10 @@ class Calculation {
 function calculateColumn(oldCol: number, oldContent: string, newContent: string) {
 	if (oldCol === 1) {
 		return 1;
-	} else if (oldCol > oldContent.length) {
-		return newContent.length + 1;
 	} else if (oldContent === newContent) {
 		return oldCol;
+	} else if (oldCol > oldContent.length) {
+		return newContent.length + 1;
 	}
 
 	let pre = oldContent.substring(oldCol - 4, oldCol - 1);
