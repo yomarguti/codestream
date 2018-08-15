@@ -13,21 +13,10 @@ export namespace PostHandler {
 	export async function postCode(
 		documentId: TextDocumentIdentifier,
 		rangeArray: [number, number, number, number] | undefined,
-		// dirty: boolean = false,
 		text: string,
-		// code: string,
-		// source:
-		// 	| {
-		// 			file: string;
-		// 			repoPath: string;
-		// 			revision: string;
-		// 			authors: { id: string; username: string }[];
-		// 			remotes: { name: string; url: string }[];
-		// 	  }
-		// 	| undefined,
 		streamId: string,
-		parentPostId: string | undefined
-		// teamId?: string
+		parentPostId: string | undefined,
+		mentionedUserIds: string[]
 	): Promise<CSPost | undefined> {
 		const { api, state, git, documents } = Container.instance();
 		debugger;
@@ -60,16 +49,6 @@ export namespace PostHandler {
 				relPath = path.relative(repoRoot, filePath);
 				remotes = (await git.getRepoRemotes(repoRoot)).map(r => r.normalizedUrl);
 
-				if (!streamId) {
-					debugger;
-					// stream = {
-					// 	teamId: state.teamId,
-					// 	type: StreamType.File,
-					// 	repoId: await RepoUtil.getRepoId(filePath),
-					// 	file: relPath
-					// };
-				}
-
 				const fileCurrentRevision = await git.getFileCurrentRevision(filePath);
 				if (fileCurrentRevision) {
 					commitHashWhenPosted = fileCurrentRevision;
@@ -94,11 +73,11 @@ export namespace PostHandler {
 			const post = (await api.createPost(state.apiToken, {
 				teamId: state.teamId,
 				streamId,
-				// stream,
 				text,
 				parentPostId,
 				codeBlocks: codeBlock && [codeBlock],
-				commitHashWhenPosted
+				commitHashWhenPosted,
+				mentionedUserIds
 			})).post;
 
 			if (post.codeBlocks) {

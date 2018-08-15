@@ -73,36 +73,15 @@ export class CodeStreamSession {
 		this.agent.registerHandler(DocumentPreparePostRequest, e =>
 			this.preparePostCode(e.textDocument, e.range, e.dirty)
 		);
-		// this.agent.registerHandler(DocumentPostRequest, e =>
-		// 	this.postCode(
-		// 		e.textDocument,
-		// 		// e.range,
-		// 		// e.dirty,
-		// 		e.text,
-		// 		e.mentionedUserIds,
-		// 		e.code,
-		// 		e.location,
-		// 		e.source,
-		// 		e.parentPostId,
-		// 		e.streamId,
-		// 		e.teamId
-		// 	)
-		this.agent.registerHandler(
-			DocumentPostRequest,
-			// e => this.postCode(
-			// 	e.textDocument,
-			// 	// e.range,
-			// 	// e.dirty,
-			// 	e.text,
-			// 	e.code,
-			// 	e.location,
-			// 	e.source,
-			// 	e.parentPostId,
-			// 	e.streamId,
-			// 	e.teamId
-			// )
-			// e => PostHandler.postCode(e.textDocument)
-			e => PostHandler.postCode(e.textDocument, e.location, e.text, e.streamId, e.parentPostId)
+		this.agent.registerHandler(DocumentPostRequest, e =>
+			PostHandler.postCode(
+				e.textDocument,
+				e.location,
+				e.text,
+				e.streamId,
+				e.parentPostId,
+				e.mentionedUserIds
+			)
 		);
 
 		this.agent.registerHandler(DocumentLatestRevisionRequest, async e => {
