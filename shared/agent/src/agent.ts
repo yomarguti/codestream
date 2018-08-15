@@ -12,7 +12,6 @@ import {
 	InitializedParams,
 	InitializeParams,
 	InitializeResult,
-	Logger as LSPLogger,
 	NotificationType,
 	NotificationType0,
 	ProposedFeatures,
@@ -38,7 +37,7 @@ export interface AgentState {
 	serverUrl: string;
 }
 
-export class CodeStreamAgent implements Disposable, LSPLogger {
+export class CodeStreamAgent implements Disposable {
 	private _onReady = new Emitter<void>();
 	get onReady(): Event<void> {
 		return this._onReady.event;
@@ -174,10 +173,6 @@ export class CodeStreamAgent implements Disposable, LSPLogger {
 		this._connection.console.error(
 			typeof exceptionOrmessage === "string" ? exceptionOrmessage : exceptionOrmessage.toString()
 		);
-	}
-
-	info(message: string): void {
-		this._connection.console.info(message);
 	}
 
 	listen() {
