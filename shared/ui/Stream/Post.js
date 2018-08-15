@@ -38,6 +38,11 @@ class Post extends Component {
 		}
 	}
 
+	handleClick = event => {
+		event.stopPropagation();
+		this.showCode();
+	};
+
 	async showCode() {
 		const codeBlock = this.props.post.codeBlocks && this.props.post.codeBlocks[0];
 		if (codeBlock) {
@@ -200,6 +205,7 @@ class Post extends Component {
 				data-seq-num={post.seqNum}
 				thread={post.parentPostId || post.id}
 				ref={ref => (this._div = ref)}
+				onClick={this.props.showDetails && this.handleClick}
 			>
 				{!systemPost && (
 					<Icon name="gear" className="gear align-right" onClick={this.handleMenuClick} />
