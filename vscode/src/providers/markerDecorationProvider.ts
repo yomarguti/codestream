@@ -40,16 +40,15 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 		this._decorationType = window.createTextEditorDecorationType({
 			before: {
 				backgroundColor: "#3193f1",
-				contentText: " ",
+				contentText: "",
 				height: "0.75em",
 				width: "0.75em",
-				margin: "0 0.5em",
+				margin: "0 0.5em 0 0",
 				borderRadius: "25%"
-				// textDecoration: 'none; right: calc(100% - 1em); position: absolute'
+				// textDecoration: "none; left: 0; position: relative"
 			} as any,
 			overviewRulerColor: "#3193f1",
-			overviewRulerLane: OverviewRulerLane.Center,
-			borderRadius: "10px"
+			overviewRulerLane: OverviewRulerLane.Center
 		});
 
 		this._disposable = Disposable.from(
@@ -179,7 +178,7 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 			if (starts.has(start)) continue;
 
 			decorations.push({
-				range: new Range(start, 0, start, 0)
+				range: marker.hoverRange // editor.document.validateRange(marker.hoverRange)
 			});
 			starts.add(start);
 		}
@@ -198,7 +197,9 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 		const markers = await this.getMarkers(document.uri);
 		if (markers.length === 0 || token.isCancellationRequested) return undefined;
 
-		const hoveredMarkers = markers.filter(m => m.hoverRange.contains(position));
+		const hoveredMarkers = markers.filter(
+			m => m.hoverRange.contains(position) // document.validateRange(m.hoverRange).contains(position)
+		);
 		if (hoveredMarkers.length === 0) return undefined;
 
 		// Make sure we don't start queuing up requests to get the hovers
@@ -207,11 +208,15 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 			if (token.isCancellationRequested) return undefined;
 		}
 
-		this._hoverPromise = this.provideHoverCore(hoveredMarkers, token);
+		this._hoverPromise = this.provideHoverCore(document, hoveredMarkers, token);
 		return this._hoverPromise;
 	}
 
-	async provideHoverCore(markers: Marker[], token: CancellationToken): Promise<Hover | undefined> {
+	async provideHoverCore(
+		document: TextDocument,
+		markers: Marker[],
+		token: CancellationToken
+	): Promise<Hover | undefined> {
 		try {
 			let message = undefined;
 			let range = undefined;
@@ -242,9 +247,9 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 					)} "Open Comment")`;
 
 					if (range) {
-						range.union(m.hoverRange);
+						range.union(m.hoverRange); // document.validateRange(m.hoverRange));
 					} else {
-						range = m.hoverRange;
+						range = m.hoverRange; // document.validateRange(m.hoverRange);
 					}
 				} catch (ex) {
 					Logger.error(ex);
