@@ -205,7 +205,6 @@ export class CodeStreamAgentConnection implements Disposable {
 	}
 
 	private onPubNubMessagesReceived(...messages: { [key: string]: any }[]) {
-		console.log("Messages received");
 		this._onDidReceivePubNubMessages.fire(messages);
 	}
 
@@ -219,13 +218,13 @@ export class CodeStreamAgentConnection implements Disposable {
 		token?: CancellationToken
 	): Promise<R>;
 	@started
-	private async sendRequest(method: any, params?: any): Promise<any> {
+	private async sendRequest(type: any, params?: any): Promise<any> {
 		try {
-			const response = await this._client!.sendRequest(method, params);
+			const response = await this._client!.sendRequest(type, params);
 			return response;
 		} catch (ex) {
 			// debugger;
-			Logger.error(ex, `AgentConnection.sendRequest`, method, params);
+			Logger.error(ex, `AgentConnection.sendRequest(${type.method})`, params);
 			throw ex;
 		}
 	}
