@@ -10,7 +10,7 @@ import { Container } from "../container";
 import { MarkerLocationUtil } from "../markerLocation/markerLocationUtil";
 
 export namespace PostHandler {
-	export async function postCode(
+	export async function documentPost(
 		documentId: TextDocumentIdentifier,
 		rangeArray: [number, number, number, number] | undefined,
 		text: string,

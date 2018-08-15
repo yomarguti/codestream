@@ -214,6 +214,19 @@ export namespace MarkerLocationUtil {
 		};
 	}
 
+	export function locationToRange(location: CSMarkerLocation): Range {
+		return {
+			start: {
+				line: location.lineStart - 1,
+				character: location.colStart - 1
+			},
+			end: {
+				line: location.lineEnd - 1,
+				character: location.colEnd - 1
+			}
+		};
+	}
+
 	export function rangeToLocation(range: Range): CSMarkerLocation {
 		return {
 			id: "$transientLocation",

@@ -1,13 +1,14 @@
 "use strict";
-import { Range, TextDocumentIdentifier, TextDocumentPositionParams } from "vscode-languageserver";
+import { TextDocumentIdentifier, TextDocumentPositionParams } from "vscode-languageserver";
 import URI from "vscode-uri";
-import { DocumentMarkersResponse } from "../agent";
-import { CSMarkerLocation } from "../api/api";
+import { DocumentFromCodeBlockResponse, DocumentMarkersResponse } from "../agent";
 import { Logger } from "../logger";
 import { MarkerLocationUtil } from "../markerLocation/markerLocationUtil";
 import { MarkerWithRange } from "../shared/agent.protocol";
 import { StreamUtil } from "../stream/streamUtil";
 import { MarkerUtil } from "./markerUtil";
+import * as path from "path";
+import { Container } from "../container";
 
 export namespace MarkerHandler {
 	const emptyResponse = {
@@ -19,10 +20,9 @@ export namespace MarkerHandler {
 		return undefined;
 	}
 
-	export async function onRequest(
+	export async function documentMarkers(
 		document: TextDocumentIdentifier
 	): Promise<DocumentMarkersResponse> {
-		Logger.log("Marker request received");
 		try {
 			const filePath = URI.parse(document.uri).fsPath;
 			const streamId = await StreamUtil.getStreamId(filePath);
@@ -33,7 +33,8 @@ export namespace MarkerHandler {
 			const markers = await MarkerUtil.getMarkers(streamId);
 			const locations = await MarkerLocationUtil.getCurrentLocations(document.uri);
 			const markersWithRange = markers.map(
-				m => ({ ...m, range: locationToRange(locations[m.id]) } as MarkerWithRange)
+				m =>
+					({ ...m, range: MarkerLocationUtil.locationToRange(locations[m.id]) } as MarkerWithRange)
 			);
 
 			return {
@@ -45,17 +46,27 @@ export namespace MarkerHandler {
 			return emptyResponse;
 		}
 	}
-}
 
-function locationToRange(location: CSMarkerLocation): Range {
-	return {
-		start: {
-			line: location.lineStart - 1,
-			character: location.colStart - 1
-		},
-		end: {
-			line: location.lineEnd - 1,
-			character: location.colEnd - 1
+	export async function documentFromCodeBlock(
+		repoId: string,
+		file: string,
+		markerId: string
+	): Promise<DocumentFromCodeBlockResponse | undefined> {
+		const { git } = Container.instance();
+		const repo = await git.getRepositoryById(repoId);
+		if (repo === undefined) {
+			return undefined;
 		}
-	};
+		const filePath = path.join(repo.path, file);
+		const documentUri = URI.file(filePath).toString();
+		const locationsById = await MarkerLocationUtil.getCurrentLocations(documentUri);
+		const location = locationsById[markerId];
+		const range = MarkerLocationUtil.locationToRange(location);
+
+		return {
+			textDocument: { uri: documentUri },
+			range: range,
+			revision: undefined
+		};
+	}
 }

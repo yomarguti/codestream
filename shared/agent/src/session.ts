@@ -65,16 +65,16 @@ export class CodeStreamSession {
 			this._api.fetch(e.url, e.init, e.token)
 		);
 		this.agent.registerHandler(DocumentFromCodeBlockRequest, e =>
-			this.getDocumentFromCodeBlock(e.repoId, e.file, e.markerId, e.streamId, e.revision)
+			MarkerHandler.documentFromCodeBlock(e.repoId, e.file, e.markerId)
 		);
 		this.agent.registerHandler(DocumentMarkersRequest, e =>
-			MarkerHandler.onRequest(e.textDocument)
+			MarkerHandler.documentMarkers(e.textDocument)
 		);
 		this.agent.registerHandler(DocumentPreparePostRequest, e =>
 			this.preparePostCode(e.textDocument, e.range, e.dirty)
 		);
 		this.agent.registerHandler(DocumentPostRequest, e =>
-			PostHandler.postCode(
+			PostHandler.documentPost(
 				e.textDocument,
 				e.location,
 				e.text,
@@ -195,41 +195,6 @@ export class CodeStreamSession {
 		return {
 			loginResponse: { ...loginResponse },
 			state: { ...Container.instance().state }
-		};
-	}
-
-	async getDocumentFromCodeBlock(
-		repoId: string,
-		file: string,
-		markerId: string,
-		streamId: string,
-		revision: string
-	): Promise<DocumentFromCodeBlockResponse | undefined> {
-		const repo = await Container.instance().git.getRepositoryById(repoId);
-		if (repo === undefined) return undefined;
-
-		// TODO: Call real marker recalcs to get the latest position
-		const locations = await this._api.getMarkerLocations(
-			this._apiToken!,
-			this._teamId!,
-			streamId,
-			revision
-		);
-
-		let range;
-		if (locations !== undefined) {
-			const location = locations.markerLocations.locations[markerId];
-			range = Range.create(location[0], location[1], location[2], location[3]);
-		} else {
-			range = Range.create(0, 0, 0, 0);
-		}
-
-		const absolutePath = path.join(repo.path, file);
-
-		return {
-			textDocument: { uri: URI.file(absolutePath).toString() },
-			range: range,
-			revision: undefined
 		};
 	}
 
