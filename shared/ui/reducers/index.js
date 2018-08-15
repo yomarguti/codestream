@@ -40,6 +40,14 @@ const bootstrapped = (state = false, { type }) => {
 	return state;
 };
 
+const initialStartupProps = {
+	startOnMainPanel: false,
+	threadId: null
+};
+const startupProps = (state = initialStartupProps, action) => {
+	return state;
+};
+
 const startOnMainPanel = (state = false, { type }) => {
 	return state;
 };
@@ -65,7 +73,7 @@ const appReducer = combineReducers({
 	repos,
 	route,
 	session,
-	startOnMainPanel,
+	startupProps,
 	streams,
 	teams,
 	umis,

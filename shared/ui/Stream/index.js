@@ -38,10 +38,15 @@ export class SimpleStream extends Component {
 	constructor(props) {
 		super(props);
 
+		let initialPanel = "channels";
+
+		if (props.postStreamId && props.startOnMainPanel) initialPanel = "main";
+		if (props.startOnMainPanel && props.initialThreadId) initialPanel = "thread";
+
 		this.state = {
-			threadId: null,
+			threadId: props.initialThreadId,
 			threadTrigger: null,
-			activePanel: props.postStreamId && props.startOnMainPanel ? "main" : "channels"
+			activePanel: initialPanel
 		};
 		this._compose = React.createRef();
 	}
@@ -75,7 +80,7 @@ export class SimpleStream extends Component {
 		this.scrollToBottom();
 
 		if (
-			this.state.activePanel === "main" &&
+			(this.state.activePanel === "main" || this.state.activePanel === "thread") &&
 			this.props.postStreamId &&
 			this.props.posts.length === 0
 		) {
@@ -1413,7 +1418,7 @@ const mapStateToProps = ({
 	connectivity,
 	session,
 	context,
-	startOnMainPanel,
+	startupProps,
 	streams,
 	users,
 	pluginVersion,
@@ -1473,7 +1478,8 @@ const mapStateToProps = ({
 
 	return {
 		pluginVersion,
-		startOnMainPanel,
+		startOnMainPanel: startupProps.startOnMainPanel,
+		initialThreadId: startupProps.threadId,
 		umis: {
 			...umis,
 			totalUnread: Object.values(umis.unread).reduce(sum, 0),
