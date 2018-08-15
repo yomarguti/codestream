@@ -67,14 +67,12 @@ export class StatusBarController implements Disposable {
 				break;
 
 			case SessionStatus.SignedIn:
-				let label;
-				if (count === 0) {
-					label = Container.session.user.name;
-					if (!(await Container.session.hasSingleTeam())) {
-						label += ` (${Container.session.team.name})`;
-					}
-				} else {
-					label = `${count}`;
+				let label = Container.session.user.name;
+				if (!(await Container.session.hasSingleTeam())) {
+					label += ` - ${Container.session.team.name}`;
+				}
+				if (count > 0) {
+					label += ` (${count})`;
 				}
 
 				this._statusBarItem.text = ` $(comment-discussion) ${label} `;
