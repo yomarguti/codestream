@@ -239,29 +239,33 @@ export class StreamWebviewPanel implements Disposable {
 	}
 
 	private async getBootstrapState() {
-		const [streams, teams, repos, users, currentUser, unreads] = await Promise.all([
+		const state: BootstrapState = Object.create(null);
+
+		const promise = Promise.all([
 			Container.session.channelsAndDMs.entities(),
 			this.session.teams.entities(),
 			this.session.repos.entities(),
-			this.session.users.entities(),
-			this.session.user.entity,
-			this.session.unreads.getValues()
+			this.session.users.entities()
 		]);
 
-		const state: BootstrapState = Object.create(null);
 		state.version = Container.version;
 		state.currentTeamId = this.session.team.id;
 		state.currentUserId = this.session.userId;
-		state.streams = streams;
-		state.teams = teams;
-		state.repos = repos;
-		state.users = users.map(user => (user.id === currentUser.id ? currentUser : user));
-		state.unreads = unreads;
 		state.configs = {
 			serverUrl: Container.config.serverUrl,
 			reduceMotion: Container.config.reduceMotion,
 			showHeadshots: Container.config.showHeadshots
 		};
+
+		state.unreads = this.session.unreads.getValues();
+
+		const currentUser = this.session.user.entity;
+		const [streams, teams, repos, users] = await promise;
+
+		state.streams = streams;
+		state.teams = teams;
+		state.repos = repos;
+		state.users = users.map(user => (user.id === currentUser.id ? currentUser : user));
 
 		return state;
 	}
