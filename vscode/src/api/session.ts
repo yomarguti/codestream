@@ -515,34 +515,33 @@ export class CodeStreamSession implements Disposable {
 		const lastReads = user.lastReads || {};
 		const unreadCounter = this._state!.unreads;
 		const entries = Object.entries(lastReads);
+		const unreadStreams = await this._sessionApi!.getUnreadStreams();
 		await Promise.all(
 			entries.map(async ([streamId, lastReadSeqNum]) => {
-				const [stream, latestPost] = await Promise.all([
-					this._sessionApi!.getStream(streamId),
-					this._sessionApi!.getLatestPost(streamId)
-				]);
+				const stream = unreadStreams.find(stream => stream.id === streamId);
+				if (stream) {
+					const latestPost = await this._sessionApi!.getLatestPost(streamId);
+					const unreadPosts = await this._sessionApi!.getPostsInRange(
+						streamId,
+						lastReadSeqNum + 1,
+						latestPost.seqNum
+					);
 
-				const unreadPosts = await this._sessionApi!.getPostsInRange(
-					streamId,
-					lastReadSeqNum + 1,
-					latestPost.seqNum
-				);
-
-				const streamType = stream!.type;
-				let unreadCount = 0;
-				let mentionCount = 0;
-				unreadPosts.forEach(post => {
-					if (!post.deactivated) {
-						if (post.text.match(mentionRegex) || streamType === StreamType.Direct) {
-							mentionCount++;
-							unreadCount++;
-						} else {
-							unreadCount++;
+					let unreadCount = 0;
+					let mentionCount = 0;
+					unreadPosts.forEach(post => {
+						if (!post.deactivated) {
+							if (post.text.match(mentionRegex) || stream.type === StreamType.Direct) {
+								mentionCount++;
+								unreadCount++;
+							} else {
+								unreadCount++;
+							}
 						}
-					}
-				});
-				unreadCounter.mentions[streamId] = mentionCount;
-				unreadCounter.unread[streamId] = unreadCount;
+					});
+					unreadCounter.mentions[streamId] = mentionCount;
+					unreadCounter.unread[streamId] = unreadCount;
+				}
 			})
 		);
 

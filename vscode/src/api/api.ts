@@ -181,6 +181,13 @@ export class CodeStreamApi {
 		return this.get<GetStreamResponse<T>>(`/streams/${streamId}`, token);
 	}
 
+	getUnreadStreams<T extends CSStream>(
+		token: string,
+		teamId: string
+	): Promise<GetStreamsResponse<T>> {
+		return this.get<GetStreamsResponse<T>>(`/streams?teamId=${teamId}&unread`, token);
+	}
+
 	getStreams<T extends CSStream>(
 		token: string,
 		teamId: string,

@@ -257,6 +257,10 @@ export class CodeStreamSessionApi {
 		return (await this._api.getStream(this.token, teamId || this.teamId, streamId)).stream;
 	}
 
+	async getUnreadStreams(teamId?: string): Promise<CSStream[]> {
+		return (await this._api.getUnreadStreams(this.token, teamId || this.teamId)).streams;
+	}
+
 	async getChannelStreams(teamId?: string): Promise<CSChannelStream[]> {
 		return (await this._api.getStreams<CSChannelStream>(
 			this.token,
