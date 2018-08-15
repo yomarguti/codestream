@@ -181,12 +181,21 @@ export interface LoginResponse {
 	repos: CSRepository[];
 }
 
+export enum ApiErrors {
+	InvalidCredentials = "INVALID_CREDENTIALS",
+	InvalidToken = "TOKEN_INVALID",
+	NotConfirmed = "NOT_CONFIRMED",
+	NotOnTeam = "USER_NOT_ON_TEAM",
+	NotFound = "NOT_FOUND",
+	Unknown = "UNKNOWN"
+}
+
 export enum LoginResult {
 	Success = "SUCCESS",
 	InvalidCredentials = "INVALID_CREDENTIALS",
 	InvalidToken = "TOKEN_INVALID",
-	NotOnTeam = "USER_NOT_ON_TEAM",
 	NotConfirmed = "NOT_CONFIRMED",
+	NotOnTeam = "USER_NOT_ON_TEAM",
 	Unknown = "UNKNOWN"
 }
 

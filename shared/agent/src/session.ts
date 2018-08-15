@@ -4,8 +4,7 @@ import {
 	CancellationToken,
 	Connection,
 	Range,
-	TextDocumentIdentifier,
-	TextDocumentPositionParams
+	TextDocumentIdentifier
 } from "vscode-languageserver";
 import URI from "vscode-uri";
 import {
@@ -13,7 +12,6 @@ import {
 	ApiRequest,
 	CodeStreamAgent,
 	DocumentFromCodeBlockRequest,
-	DocumentFromCodeBlockResponse,
 	DocumentLatestRevisionRequest,
 	DocumentMarkersRequest,
 	DocumentPostRequest,
@@ -21,7 +19,7 @@ import {
 	DocumentPreparePostResponse
 } from "./agent";
 import { AgentError, ServerError } from "./agentError";
-import { CodeStreamApi, CreatePostRequestCodeBlock, CSStream } from "./api/api";
+import { ApiErrors, CodeStreamApi, CSStream, LoginResult } from "./api/api";
 import { UserCollection } from "./api/models/users";
 import { Container } from "./container";
 import { setGitPath } from "./git/git";
@@ -31,15 +29,15 @@ import { PostHandler } from "./post/postHandler";
 import { PubnubReceiver } from "./pubnub/pubnubReceiver";
 import { Iterables, Strings } from "./system";
 
-const loginApiErrorMappings: { [k: string]: string } = {
-	"USRC-1001": "INVALID_CREDENTIALS",
-	"USRC-1010": "NOT_CONFIRMED",
-	"AUTH-1002": "TOKEN_INVALID",
-	"AUTH-1003": "TOKEN_INVALID",
-	"AUTH-1005": "TOKEN_INVALID",
+const loginApiErrorMappings: { [k: string]: ApiErrors } = {
+	"USRC-1001": ApiErrors.InvalidCredentials,
+	"USRC-1010": ApiErrors.NotConfirmed,
+	"AUTH-1002": ApiErrors.InvalidToken,
+	"AUTH-1003": ApiErrors.InvalidToken,
+	"AUTH-1005": ApiErrors.InvalidToken,
 	// "RAPI-1001": "missing parameter" // shouldn't ever happen
-	"RAPI-1003": "NOT_FOUND",
-	"USRC-1012": "USER_NOT_ON_TEAM"
+	"RAPI-1003": ApiErrors.NotFound,
+	"USRC-1012": ApiErrors.NotOnTeam
 };
 
 export class CodeStreamSession {
@@ -134,7 +132,7 @@ export class CodeStreamSession {
 		} catch (ex) {
 			if (ex instanceof ServerError) {
 				return {
-					error: loginApiErrorMappings[ex.info.code] || ""
+					error: loginApiErrorMappings[ex.info.code] || LoginResult.Unknown
 				};
 			}
 
