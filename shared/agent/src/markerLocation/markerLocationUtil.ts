@@ -1,7 +1,5 @@
 "use strict";
-
 import { structuredPatch } from "diff";
-import { URL } from "url";
 import { TextDocumentIdentifier } from "vscode-languageserver";
 import { Range } from "vscode-languageserver-protocol";
 import URI from "vscode-uri";
@@ -59,7 +57,7 @@ export namespace MarkerLocationUtil {
 	): Promise<CSMarkerLocation> {
 		const { documents, git } = Container.instance();
 		const documentUri = documentId.uri;
-		const filePath = new URL(documentUri).pathname;
+		const filePath = URI.parse(documentUri).fsPath;
 
 		const fileCurrentRevision = await git.getFileCurrentRevision(filePath);
 		if (!fileCurrentRevision) {
@@ -228,7 +226,7 @@ export namespace MarkerLocationUtil {
 
 	export async function monitorRepo(documentUri: string) {
 		const { git } = Container.instance();
-		const filePath = new URL(documentUri).pathname;
+		const filePath = URI.parse(documentUri).fsPath;
 
 		const repoRoot = await git.getRepoRoot(filePath);
 		if (!repoRoot) {
