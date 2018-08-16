@@ -8,8 +8,7 @@
 			"port": 6009,
 			"smartStep": true,
 			"sourceMaps": true,
-			"outFiles": ["${workspaceRoot}/dist/**/*.js"],
-			"trace": true
+			"outFiles": ["${workspaceRoot}/dist/**/*.js"]
 		}
 	]
 }
