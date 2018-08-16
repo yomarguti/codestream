@@ -60,6 +60,7 @@ export class CodeStreamAgentConnection implements Disposable {
 		};
 
 		this._clientOptions = {
+			outputChannelName: "CodeStream Agent",
 			initializationOptions: { ...options },
 			// Register the server for file-based text documents
 			documentSelector: [{ scheme: "file", language: "*" }],
