@@ -62,8 +62,6 @@ export {
 };
 
 export class CodeStreamSession implements Disposable {
-	private static _loginPromise: Promise<LoginResult> | undefined;
-
 	private _onDidChange = new EventEmitter<SessionChangedEvent>();
 	get onDidChange(): Event<SessionChangedEvent> {
 		return this._onDidChange.event;
@@ -82,6 +80,7 @@ export class CodeStreamSession implements Disposable {
 	private _disposable: Disposable | undefined;
 
 	private _id: string | undefined;
+	private _loginPromise: Promise<LoginResult> | undefined;
 	private _presenceManager: PresenceManager | undefined;
 	private _pubnub: PubNubReceiver | undefined;
 	private _sessionApi: CodeStreamSessionApi | undefined;
@@ -277,22 +276,13 @@ export class CodeStreamSession implements Disposable {
 	): Promise<LoginResult> {
 		const id = Strings.sha1(`${this.serverUrl}|${email}|${teamId}`);
 
-		let loginPromise;
-
-		if (CodeStreamSession._loginPromise !== undefined) {
-			loginPromise = CodeStreamSession._loginPromise;
-		} else {
-			CodeStreamSession._loginPromise = loginPromise = this.loginCore(
-				id,
-				email,
-				passwordOrToken,
-				teamId
-			);
+		if (this._loginPromise === undefined) {
+			this._loginPromise = this.loginCore(id, email, passwordOrToken, teamId);
 		}
 
-		const result = await loginPromise;
+		const result = await this._loginPromise;
 		if (result !== LoginResult.Success) {
-			CodeStreamSession._loginPromise = undefined;
+			this._loginPromise = undefined;
 		}
 		return result;
 	}
@@ -324,8 +314,8 @@ export class CodeStreamSession implements Disposable {
 	}
 
 	async logout(reset: boolean = true) {
-		CodeStreamSession._loginPromise = undefined;
 		this._id = undefined;
+		this._loginPromise = undefined;
 
 		if (reset) {
 			// Clear the access token
