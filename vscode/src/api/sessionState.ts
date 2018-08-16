@@ -27,8 +27,8 @@ class UnreadCounter {
 	}
 
 	clear(streamId: string) {
-		this.unread[streamId] = 0;
-		this.mentions[streamId] = 0;
+		delete this.unread[streamId];
+		delete this.mentions[streamId];
 	}
 
 	getValues() {
