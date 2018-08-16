@@ -535,6 +535,13 @@ export class StreamWebviewPanel implements Disposable {
 				}
 				break;
 			}
+			case "interaction:thread-closed": {
+				if (this._streamThread !== undefined) {
+					this._streamThread.id = undefined;
+					this._onDidChangeStream.fire(this._streamThread);
+				}
+				break;
+			}
 			case "interaction:changed-active-stream": {
 				const streamId = e.body;
 
