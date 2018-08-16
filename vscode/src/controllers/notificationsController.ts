@@ -18,8 +18,9 @@ export class NotificationsController implements Disposable {
 	}
 
 	private async onSessionPostsReceived(e: PostsReceivedEvent) {
-		const currentUserId = Container.session.userId;
-		const currentUsername = Container.session.user.name;
+		const currentUser = Container.session.user;
+		const currentUserId = currentUser.id;
+		const currentUsername = currentUser.name;
 
 		const activeStream = Container.streamView.activeStreamThread;
 		const streamVisible = Container.streamView.visible;
@@ -27,6 +28,7 @@ export class NotificationsController implements Disposable {
 		if (Container.config.notifications !== Notifications.None) {
 			for (const post of e.items()) {
 				if (post.deleted || post.senderId === currentUserId) continue;
+				if (currentUser.hasMutedChannel(post.streamId)) continue;
 
 				const isPostStreamVisible =
 					streamVisible &&
