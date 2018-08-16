@@ -166,12 +166,9 @@ export class SimpleStream extends Component {
 
 	handleStreamThreadSelected = async ({ streamId, threadId }) => {
 		if (streamId !== this.props.postStreamId) {
-			await this.props.fetchPosts({ streamId, teamId: this.props.currentTeamId });
 			this.props.setCurrentStream(streamId);
-			if (threadId) this.selectPost(threadId);
-		} else {
-			if (threadId) this.selectPost(threadId);
 		}
+		if (threadId) this.selectPost(threadId);
 	};
 
 	copy(event) {
