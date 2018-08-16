@@ -335,56 +335,58 @@ export class StreamWebviewPanel implements Disposable {
 					case "create-post": {
 						const { text, codeBlocks, mentions, parentPostId, streamId, teamId } = body.params;
 
-						let post;
-						if (codeBlocks === undefined || codeBlocks.length === 0) {
-							post = await this.session.api.createPost(
-								text,
-								mentions,
-								parentPostId,
-								streamId,
-								teamId
-							);
-						} else {
-							const block = codeBlocks[0] as {
-								code: string;
-								location?: [number, number, number, number];
-								file?: string;
-								source?: {
-									file: string;
-									repoPath: string;
-									revision: string;
-									authors: { id: string; username: string }[];
-									remotes: { name: string; url: string }[];
-								};
-							};
-
-							let uri;
-							if (block.source) {
-								uri = Uri.file(path.join(block.source.repoPath, block.source.file));
-							} else {
-								// TODO: Need the workspace folder or some way of rehyrating the absolute path
-								// const folder = workspace.getWorkspaceFolder()
-								uri = Uri.file(block.file!);
-							}
-
-							post = await Container.agent.postCode(
-								uri,
-								text,
-								mentions,
-								block.code,
-								block.location,
-								block.source,
-								parentPostId,
-								streamId
-							);
-						}
-
 						const responseBody: { [key: string]: any } = {
 							id: body.id
 						};
-						if (!post) {
-							responseBody.error = "Failed to create post";
-						} else {
+						let post;
+						try {
+							if (codeBlocks === undefined || codeBlocks.length === 0) {
+								post = await this.session.api.createPost(
+									text,
+									mentions,
+									parentPostId,
+									streamId,
+									teamId
+								);
+							} else {
+								const block = codeBlocks[0] as {
+									code: string;
+									location?: [number, number, number, number];
+									file?: string;
+									source?: {
+										file: string;
+										repoPath: string;
+										revision: string;
+										authors: { id: string; username: string }[];
+										remotes: { name: string; url: string }[];
+									};
+								};
+
+								let uri;
+								if (block.source) {
+									uri = Uri.file(path.join(block.source.repoPath, block.source.file));
+								} else {
+									// TODO: Need the workspace folder or some way of rehyrating the absolute path
+									// const folder = workspace.getWorkspaceFolder()
+									uri = Uri.file(block.file!);
+								}
+
+								post = await Container.agent.postCode(
+									uri,
+									text,
+									mentions,
+									block.code,
+									block.location,
+									block.source,
+									parentPostId,
+									streamId
+								);
+							}
+						} catch (error) {
+							responseBody.error = error;
+						}
+
+						if (post) {
 							responseBody.payload = post;
 						}
 
