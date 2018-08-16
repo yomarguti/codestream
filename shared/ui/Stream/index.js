@@ -207,8 +207,6 @@ export class SimpleStream extends Component {
 	componentDidUpdate(prevProps, prevState) {
 		const { postStreamId } = this.props;
 
-		// this.scrollToBottom();
-
 		// if we just switched to a new stream, check to see if we are up-to-date
 		if (postStreamId !== prevProps.postStreamId) {
 			this.checkMarkStreamRead();
@@ -544,15 +542,15 @@ export class SimpleStream extends Component {
 						)}
 					</div>
 					<div className="shadow-overlay">
+						<div className={unreadsAboveClass} type="above" onClick={this.handleClickUnreads}>
+							&uarr; Unread Messages &uarr;
+						</div>
+						<div className={unreadsBelowClass} type="below" onClick={this.handleClickUnreads}>
+							&darr; Unread Messages &darr;
+						</div>
 						<div class="shadow-container">
 							<div class="shadow shadow-top" />
 							<div class="shadow shadow-bottom" />
-							<div className={unreadsAboveClass} type="above" onClick={this.handleClickUnreads}>
-								&uarr; Unread Messages &uarr;
-							</div>
-							<div className={unreadsBelowClass} type="below" onClick={this.handleClickUnreads}>
-								&darr; Unread Messages &darr;
-							</div>
 						</div>
 						<div
 							className={postsListClass}
