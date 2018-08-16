@@ -157,6 +157,10 @@ setTimeout(() => {
 
 const data = window.bootstrap;
 
+let panel;
+if (data.currentStreamId) panel = "main";
+if (data.currentStreamId && data.currentThreadId) panel = "thread";
+
 const store = createStore(
 	{
 		pluginVersion: data.version,
@@ -167,7 +171,8 @@ const store = createStore(
 		context: {
 			currentTeamId: data.currentTeamId,
 			currentStreamId: data.currentStreamId,
-			hasFocus: true
+			hasFocus: true,
+			...(panel ? { panel } : {}) // a little black magic so not to assume what the view will use as a default
 		},
 		session: {
 			userId: data.currentUserId
