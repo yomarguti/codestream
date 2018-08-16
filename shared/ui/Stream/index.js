@@ -757,7 +757,7 @@ export class SimpleStream extends Component {
 
 	// dismiss the thread stream and return to the main stream
 	handleDismissThread = ({ track = true } = {}) => {
-		EventEmitter.emit("interaction:thread-closed", this.findPostById(this.state.threadId));
+		EventEmitter.emit("interaction:thread-closed", this.state.threadId);
 		this.setState({ activePanel: "main" });
 		this.focusInput();
 		if (track)
