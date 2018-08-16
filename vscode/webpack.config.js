@@ -31,7 +31,7 @@ function getExtensionConfig(env) {
 	}
 
 	const plugins = [
-		new CleanPlugin(clean),
+		new CleanPlugin(clean, { verbose: false }),
 		new FileManagerPlugin({
 			onStart: [{ copy: onStartCopy }],
 			onEnd: [
@@ -87,7 +87,15 @@ function getExtensionConfig(env) {
 			]
 		},
 		plugins: plugins,
-		stats: { all: false, assets: true, builtAt: true, errors: true, timings: true, warnings: true }
+		stats: {
+			all: false,
+			assets: true,
+			builtAt: true,
+			env: true,
+			errors: true,
+			timings: true,
+			warnings: true
+		}
 	};
 }
 
@@ -188,6 +196,14 @@ function getWebviewConfig(env) {
 			]
 		},
 		plugins: plugins,
-		stats: { all: false, assets: true, builtAt: true, errors: true, timings: true, warnings: true }
+		stats: {
+			all: false,
+			assets: true,
+			builtAt: true,
+			env: true,
+			errors: true,
+			timings: true,
+			warnings: true
+		}
 	};
 }
