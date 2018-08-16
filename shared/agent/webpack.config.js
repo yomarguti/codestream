@@ -9,7 +9,7 @@ module.exports = function(env, argv) {
 	const production = !!env.production;
 
 	const plugins = [
-		new CleanWebpackPlugin(["dist"]),
+		new CleanWebpackPlugin(["dist"], { verbose: false }),
 		// Added because of https://github.com/felixge/node-formidable/issues/337
 		new webpack.DefinePlugin({ "global.GENTLY": false }),
 		new FileManagerWebpackPlugin({
@@ -71,6 +71,15 @@ module.exports = function(env, argv) {
 				}
 			]
 		},
-		plugins: plugins
+		plugins: plugins,
+		stats: {
+			all: false,
+			assets: true,
+			builtAt: true,
+			env: true,
+			errors: true,
+			timings: true,
+			warnings: true
+		}
 	};
 };

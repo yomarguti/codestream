@@ -27,7 +27,7 @@
         "rebuild": "npm run reset && npm run build",
         "reset": "npm run clean && npm install --no-save",
         "test": "cross-env TS_NODE_COMPILER_OPTIONS=\"{ \\\"module\\\": \\\"commonjs\\\", \\\"types\\\": [\\\"node\\\"] }\" mocha --require ts-node/register --recursive \"src/test/**/*.spec.ts\"",
-        "watch": "webpack --watch --env.development"
+        "watch": "webpack --watch --env.development --info-verbosity verbose"
     },
     "dependencies": {
         "date-fns": "1.29.0",

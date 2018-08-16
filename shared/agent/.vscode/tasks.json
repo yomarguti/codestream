@@ -44,16 +44,7 @@
 						}
 					],
 					"severity": "warning",
-					"source": "tslint",
-					"background": {
-						"activeOnStart": true,
-						"beginsPattern": {
-							"regexp": "webpack is watching the files..."
-						},
-						"endsPattern": {
-							"regexp": "Built at\\:(.*)"
-						}
-					}
+					"source": "tslint"
 				}
 			]
 		},
@@ -89,10 +80,10 @@
 					"background": {
 						"activeOnStart": true,
 						"beginsPattern": {
-							"regexp": "webpack is watching the files..."
+							"regexp": "Compilation starting…"
 						},
 						"endsPattern": {
-							"regexp": "Built at\\:(.*)"
+							"regexp": "Compilation finished"
 						}
 					}
 				},
@@ -119,10 +110,10 @@
 					"background": {
 						"activeOnStart": true,
 						"beginsPattern": {
-							"regexp": "webpack is watching the files..."
+							"regexp": "Compilation starting…"
 						},
 						"endsPattern": {
-							"regexp": "Built at\\:(.*)"
+							"regexp": "Compilation finished"
 						}
 					}
 				}
