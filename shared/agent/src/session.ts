@@ -1,11 +1,5 @@
 "use strict";
-import * as path from "path";
-import {
-	CancellationToken,
-	Connection,
-	Range,
-	TextDocumentIdentifier
-} from "vscode-languageserver";
+import { CancellationToken, Connection } from "vscode-languageserver";
 import URI from "vscode-uri";
 import {
 	AgentOptions,
@@ -15,19 +9,16 @@ import {
 	DocumentLatestRevisionRequest,
 	DocumentMarkersRequest,
 	DocumentPostRequest,
-	DocumentPreparePostRequest,
-	DocumentPreparePostResponse
+	DocumentPreparePostRequest
 } from "./agent";
 import { AgentError, ServerError } from "./agentError";
 import { ApiErrors, CodeStreamApi, CSStream, LoginResult } from "./api/api";
 import { UserCollection } from "./api/models/users";
 import { Container } from "./container";
 import { setGitPath } from "./git/git";
-import { Logger } from "./logger";
 import { MarkerHandler } from "./marker/markerHandler";
 import { PostHandler } from "./post/postHandler";
 import { PubnubReceiver } from "./pubnub/pubnubReceiver";
-import { Iterables, Strings } from "./system";
 
 const loginApiErrorMappings: { [k: string]: ApiErrors } = {
 	"USRC-1001": ApiErrors.InvalidCredentials,
