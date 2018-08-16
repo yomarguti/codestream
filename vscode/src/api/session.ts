@@ -13,8 +13,7 @@ import { configuration } from "../configuration";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { Functions, memoize, Strings } from "../system";
-import { CSPost, CSUser } from "./api";
-import { CodeStreamApi, CSRepository, CSStream, LoginResult, PresenceStatus } from "./api";
+import { CSPost, CSRepository, CSStream, CSUser, LoginResult, PresenceStatus } from "./api";
 import { Cache } from "./cache";
 import { Marker } from "./models/markers";
 import { Post } from "./models/posts";
@@ -81,36 +80,26 @@ export class CodeStreamSession implements Disposable {
 	}
 
 	private _disposable: Disposable | undefined;
-	private _disposableSignedIn: Disposable | undefined;
-	private _id: string | undefined;
 
-	private _api: CodeStreamApi;
-	private readonly _pubnub: PubNubReceiver;
+	private _id: string | undefined;
 	private _presenceManager: PresenceManager | undefined;
-	private _cache: Cache;
+	private _pubnub: PubNubReceiver | undefined;
 	private _sessionApi: CodeStreamSessionApi | undefined;
 	private _state: SessionState | undefined;
 	private _signupToken: string | undefined;
 
-	constructor(private _serverUrl: string) {
-		this._api = new CodeStreamApi(_serverUrl);
-		this._cache = new Cache(this);
-		this._pubnub = new PubNubReceiver(this._cache);
-		this._disposable = Disposable.from(
-			this._pubnub.onDidReceiveMessage(this.onMessageReceived, this),
-			this._pubnub
-		);
-	}
+	constructor(private _serverUrl: string) {}
 
 	dispose() {
 		this._disposable && this._disposable.dispose();
-		this._disposableSignedIn && this._disposableSignedIn.dispose();
 	}
 
 	private async onConfigurationChanged(e: ConfigurationChangeEvent) {
 		if (configuration.changed(e, configuration.name("serverUrl").value)) {
 			this._serverUrl = Container.config.serverUrl;
-			this._api.baseUrl = this._serverUrl;
+			if (this._sessionApi !== undefined) {
+				this._sessionApi.baseUrl = this._serverUrl;
+			}
 
 			if (this.signedIn) {
 				this.logout();
@@ -308,7 +297,7 @@ export class CodeStreamSession implements Disposable {
 		return result;
 	}
 
-	async loginWithSignupToken(): Promise<LoginResult> {
+	async loginViaSignupToken(): Promise<LoginResult> {
 		// TODO: reuse this._loginPromise
 		if (this._signupToken === undefined) throw new Error("A signup token hasn't been generated");
 
@@ -316,7 +305,7 @@ export class CodeStreamSession implements Disposable {
 		const e: SessionStatusChangedEvent = { getStatus: () => this._status };
 		this._onDidChangeStatus.fire(e);
 
-		const result = await Container.agent.loginWithSignupToken(this._signupToken);
+		const result = await Container.agent.loginViaSignupToken(this._signupToken);
 
 		if (result.error) {
 			this._status = SessionStatus.SignedOut;
@@ -330,15 +319,13 @@ export class CodeStreamSession implements Disposable {
 			return result.error;
 		}
 
-		await this.initializeSession(result, this._signupToken);
+		await this.completeLogin(result, this._signupToken);
 		return LoginResult.Success;
 	}
 
 	async logout(reset: boolean = true) {
-		if (this._id !== undefined) {
-			CodeStreamSession._loginPromise = undefined;
-			this._id = undefined;
-		}
+		CodeStreamSession._loginPromise = undefined;
+		this._id = undefined;
 
 		if (reset) {
 			// Clear the access token
@@ -351,22 +338,24 @@ export class CodeStreamSession implements Disposable {
 			void (await Container.agent.logout());
 		}
 
-		// Clean up saved state
-		this._state = undefined;
-		this._presenceManager = undefined;
-		this._sessionApi = undefined;
-
-		if (this._disposableSignedIn !== undefined) {
-			this._disposableSignedIn.dispose();
-			this._disposableSignedIn = undefined;
+		if (this._disposable !== undefined) {
+			this._disposable.dispose();
+			this._disposable = undefined;
 		}
+
+		// Clean up saved state
+		this._presenceManager = undefined;
+		this._pubnub = undefined;
+		this._sessionApi = undefined;
+		this._state = undefined;
+		this._signupToken = undefined;
 
 		setImmediate(() => this._onDidChangeStatus.fire({ getStatus: () => this._status }));
 	}
 
 	@signedIn
 	leaveChannel(streamId: string, teamId: string) {
-		this._pubnub.ignoreStream(streamId);
+		this._pubnub!.ignoreStream(streamId);
 		this._onDidChange.fire(new StreamsMembershipChangedEvent(streamId, teamId));
 	}
 
@@ -416,11 +405,6 @@ export class CodeStreamSession implements Disposable {
 		try {
 			this._id = id;
 
-			this._serverUrl = Container.config.serverUrl;
-			if (this._api.baseUrl !== this.serverUrl) {
-				this._api.baseUrl = this.serverUrl;
-			}
-
 			this._status = SessionStatus.SigningIn;
 			const e: SessionStatusChangedEvent = { getStatus: () => this._status };
 			this._onDidChangeStatus.fire(e);
@@ -450,7 +434,7 @@ export class CodeStreamSession implements Disposable {
 				return result.error;
 			}
 
-			await this.initializeSession(result, id, teamId);
+			await this.completeLogin(result, id, teamId);
 
 			return LoginResult.Success;
 		} catch (ex) {
@@ -463,7 +447,7 @@ export class CodeStreamSession implements Disposable {
 		}
 	}
 
-	private async initializeSession(result: AgentResult, id: string, teamId?: string) {
+	private async completeLogin(result: AgentResult, id: string, teamId?: string) {
 		const email = result.loginResponse.user.email;
 
 		await Container.context.globalState.update(GlobalState.AccessToken, {
@@ -484,15 +468,20 @@ export class CodeStreamSession implements Disposable {
 			await Container.context.workspaceState.update(WorkspaceState.TeamId, teamId);
 		}
 
+		this._serverUrl = Container.config.serverUrl;
+		this._pubnub = new PubNubReceiver(new Cache(this));
 		this._state = new SessionState(this, teamId, result.loginResponse);
-		this._sessionApi = new CodeStreamSessionApi(this._api, this._state.token, teamId);
+		this._sessionApi = new CodeStreamSessionApi(this._serverUrl, this._state.token, teamId);
 		this._presenceManager = new PresenceManager(this._sessionApi, id);
+
 		this.calculateUnreads(result.loginResponse.user);
 
-		this._disposableSignedIn = Disposable.from(
+		this._disposable = Disposable.from(
+			this._pubnub.onDidReceiveMessage(this.onMessageReceived, this),
+			this._pubnub,
 			configuration.onDidChange(this.onConfigurationChanged, this),
 			this._presenceManager,
-			this._api.useMiddleware(new PresenceMiddleware(this._presenceManager))
+			this._sessionApi.useMiddleware(new PresenceMiddleware(this._presenceManager))
 		);
 
 		this._presenceManager.online();

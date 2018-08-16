@@ -1,6 +1,7 @@
 "use strict";
 import { Uri } from "vscode";
 import {
+	ApiMiddleware,
 	CodeStreamApi,
 	CSChannelStream,
 	CSDirectStream,
@@ -17,11 +18,22 @@ import {
 } from "./api";
 
 export class CodeStreamSessionApi {
-	constructor(
-		private readonly _api: CodeStreamApi,
-		private readonly token: string,
-		private readonly teamId: string
-	) {}
+	private readonly _api: CodeStreamApi;
+
+	constructor(baseUrl: string, private readonly token: string, private readonly teamId: string) {
+		this._api = new CodeStreamApi(baseUrl);
+	}
+
+	get baseUrl() {
+		return this._api.baseUrl;
+	}
+	set baseUrl(value: string) {
+		this._api.baseUrl = value;
+	}
+
+	useMiddleware(middleware: ApiMiddleware) {
+		return this._api.useMiddleware(middleware);
+	}
 
 	async savePreferences(preferences: {}) {
 		await this._api.savePreferences(this.token, preferences);

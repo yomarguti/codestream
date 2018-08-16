@@ -138,7 +138,7 @@ export class CodeStreamAgentConnection implements Disposable {
 		return response.result;
 	}
 
-	async loginWithSignupToken(token: string): Promise<AgentResult> {
+	async loginViaSignupToken(token: string): Promise<AgentResult> {
 		const response = await this.start({
 			...this._clientOptions.initializationOptions,
 			signupToken: token

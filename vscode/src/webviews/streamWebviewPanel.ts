@@ -320,7 +320,7 @@ export class StreamWebviewPanel implements Disposable {
 					}
 					case "validate-signup": {
 						const responseBody: { id: string; [k: string]: any } = { id: body.id };
-						const status = await this.session.loginWithSignupToken();
+						const status = await this.session.loginViaSignupToken();
 
 						if (status === LoginResult.Success) {
 							responseBody.payload = await this.getBootstrapState();
