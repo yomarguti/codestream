@@ -18,8 +18,12 @@ export default class RetrySpinner extends React.Component {
 		event.stopPropagation();
 		if (this.state.loading === false) {
 			this.setState({ loading: true });
-			await this.props.callback();
-			if (this.mounted) this.setState({ loading: false });
+			try {
+				await this.props.callback();
+			} catch (e) {
+			} finally {
+				if (this.mounted) this.setState({ loading: false });
+			}
 		}
 	};
 
