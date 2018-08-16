@@ -1485,8 +1485,10 @@ const mapStateToProps = ({
 		initialThreadId: startupProps.threadId,
 		umis: {
 			...umis,
-			totalUnread: Object.values(umis.unread).reduce(sum, 0),
-			totalMentions: Object.values(umis.mentions).reduce(sum, 0)
+			totalUnread: Object.values(_.omit(umis.unread, postStream.id)).reduce(sum, 0),
+			totalMentions: Object.values(_.omit(umis.mentions, postStream.id)).reduce(sum, 0)
+			// totalUnread: Object.values(umis.unread).reduce(sum, 0),
+			// totalMentions: Object.values(umis.mentions).reduce(sum, 0)
 		},
 		configs,
 		isOffline,
