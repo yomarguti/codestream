@@ -8,6 +8,6 @@ export default (state = initialState, { type, payload }) => {
 		case "UPDATE_CONFIGS":
 			return { ...state, ...payload };
 		default:
-			return state;
+			return { ...initialState, ...state };
 	}
 };
