@@ -932,7 +932,7 @@ export class SimpleStream extends Component {
 		// if it is a child in the thread, it'll have a parentPostId,
 		// otherwise use the id. any post can become the head of a thread
 		const threadId = post.parentPostId || post.id;
-		this.setState({ threadId: threadId, threadTrigger: id, activePanel: "thread" });
+		this.setState({ threadId: threadId, threadTrigger: wasClicked && id, activePanel: "thread" });
 
 		this.focusInput();
 		if (wasClicked) {
