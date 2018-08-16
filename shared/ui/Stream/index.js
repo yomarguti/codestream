@@ -38,15 +38,9 @@ export class SimpleStream extends Component {
 	constructor(props) {
 		super(props);
 
-		let initialPanel = "channels";
-
-		if (props.postStreamId && props.startOnMainPanel) initialPanel = "main";
-		if (props.startOnMainPanel && props.initialThreadId) initialPanel = "thread";
-
 		this.state = {
 			threadId: props.initialThreadId,
-			threadTrigger: null,
-			activePanel: initialPanel
+			threadTrigger: null
 		};
 		this._compose = React.createRef();
 	}
@@ -82,7 +76,7 @@ export class SimpleStream extends Component {
 		this.scrollToBottom();
 
 		if (
-			(this.state.activePanel === "main" || this.state.activePanel === "thread") &&
+			(this.props.activePanel === "main" || this.props.activePanel === "thread") &&
 			this.props.postStreamId &&
 			this.props.posts.length === 0
 		) {
@@ -185,7 +179,7 @@ export class SimpleStream extends Component {
 
 		if (
 			this.props.hasFocus &&
-			this.state.activePanel === "main" &&
+			this.props.activePanel === "main" &&
 			!this.state.unreadsAbove &&
 			!this.state.unreadsBelow
 		) {
@@ -202,13 +196,12 @@ export class SimpleStream extends Component {
 	}
 
 	componentDidUpdate(prevProps, prevState) {
-		const { postStreamId } = this.props;
+		const { activePanel, postStreamId } = this.props;
 
 		// if we just switched to a new stream, check to see if we are up-to-date
-		if (postStreamId !== prevProps.postStreamId) {
+		if (activePanel === "main" && postStreamId && postStreamId !== prevProps.postStreamId) {
 			this.checkMarkStreamRead();
 			this.resizeStream();
-			if (postStreamId) this.setActivePanel("main");
 		}
 
 		// if we just got the focus, check to see if we are up-to-date
@@ -217,14 +210,14 @@ export class SimpleStream extends Component {
 		}
 
 		// if we are switching from a non-thread panel
-		if (this.state.activePanel === "main" && prevState.activePanel !== "main") {
+		if (this.props.activePanel === "main" && prevProps.activePanel !== "main") {
 			this.checkMarkStreamRead();
 			setTimeout(() => {
 				this.focusInput();
 			}, 500);
 		}
 
-		if (this.state.activePanel === "thread" && prevState.activePanel === "main") {
+		if (this.props.activePanel === "thread" && prevProps.activePanel === "main") {
 			this.handleScroll();
 		}
 
@@ -274,7 +267,7 @@ export class SimpleStream extends Component {
 		}
 
 		const switchingToMainPanel =
-			prevState.activePanel !== "main" && this.state.activePanel === "main";
+			prevProps.activePanel !== "main" && this.props.activePanel === "main";
 		const switchingStreams = postStreamId && postStreamId !== prevProps.postStreamId;
 		if ((switchingToMainPanel || switchingStreams) && this.props.posts.length === 0) {
 			this.props.fetchPosts({ streamId: postStreamId, teamId: this.props.teamId });
@@ -405,8 +398,7 @@ export class SimpleStream extends Component {
 	// to be able to animate between the two streams, since they will both be
 	// visible during the transition
 	render() {
-		const { configs, posts, umis } = this.props;
-		const { activePanel } = this.state;
+		const { activePanel, configs, posts, umis } = this.props;
 
 		const streamClass = createClassString({
 			stream: true,
@@ -694,21 +686,21 @@ export class SimpleStream extends Component {
 	};
 
 	showChannels = event => {
-		this.setState({ activePanel: "channels" });
+		this.setActivePanel("channels");
 	};
 
 	ensureStreamIsActive = () => {
-		const { activePanel } = this.state;
+		const { activePanel } = this.props;
 		if (activePanel === "main" || activePanel === "thread") this.focusInput();
-		else this.setState({ activePanel: "main" });
+		else this.setActivePanel("main");
 	};
 
 	setActivePanel = panel => {
-		if (panel !== this.state.activePanel) this.setState({ activePanel: panel });
+		if (panel !== this.props.activePanel) this.props.setPanel(panel);
 	};
 
 	handleScroll(_event) {
-		const scrollDiv = this.state.activePanel === "thread" ? this._threadpostslist : this._postslist;
+		const scrollDiv = this.props.activePanel === "thread" ? this._threadpostslist : this._postslist;
 
 		if (!scrollDiv) {
 			// console.log("Couldn't find scrollDiv for ", event);
@@ -756,7 +748,8 @@ export class SimpleStream extends Component {
 	// dismiss the thread stream and return to the main stream
 	handleDismissThread = ({ track = true } = {}) => {
 		EventEmitter.emit("interaction:thread-closed", this.state.threadId);
-		this.setState({ activePanel: "main", threadId: null });
+		this.setState({ threadId: null });
+		this.setActivePanel("main");
 		this.focusInput();
 		if (track)
 			EventEmitter.emit("analytics", {
@@ -928,7 +921,8 @@ export class SimpleStream extends Component {
 		// if it is a child in the thread, it'll have a parentPostId,
 		// otherwise use the id. any post can become the head of a thread
 		const threadId = post.parentPostId || post.id;
-		this.setState({ threadId: threadId, threadTrigger: wasClicked && id, activePanel: "thread" });
+		this.setState({ threadId: threadId, threadTrigger: wasClicked && id });
+		this.setActivePanel("thread");
 
 		this.focusInput();
 		if (wasClicked) {
@@ -958,7 +952,7 @@ export class SimpleStream extends Component {
 
 	handleEscape(event) {
 		if (this.state.editingPostId) this.handleDismissEdit();
-		else if (this.state.activePanel === "thread") this.handleDismissThread();
+		else if (this.props.activePanel === "thread") this.handleDismissThread();
 		else event.abortKeyBinding();
 	}
 
@@ -1159,7 +1153,6 @@ export class SimpleStream extends Component {
 
 	executeLeaveChannel = () => {
 		this.props.leaveChannel(this.props.postStreamId);
-		this.setActivePanel("channels");
 		return true;
 	};
 
@@ -1250,7 +1243,7 @@ export class SimpleStream extends Component {
 	};
 
 	submitSystemPost = text => {
-		const { activePanel } = this.state;
+		const { activePanel } = this.props;
 		const { postStreamId, createSystemPost, posts } = this.props;
 		const threadId = activePanel === "thread" ? this.state.threadId : null;
 		const lastPost = _.last(posts);
@@ -1337,7 +1330,7 @@ export class SimpleStream extends Component {
 	// create a new post
 	submitPost = ({ text, quote, mentionedUserIds, autoMentions }) => {
 		const codeBlocks = [];
-		const { activePanel } = this.state;
+		const { activePanel } = this.props;
 		const { postStreamId, fileStreamId, createPost, currentFile, repoId } = this.props;
 
 		if (this.checkForSlashCommands(text)) return;
@@ -1482,6 +1475,7 @@ const mapStateToProps = ({
 
 	return {
 		pluginVersion,
+		activePanel: context.panel,
 		startOnMainPanel: startupProps.startOnMainPanel,
 		initialThreadId: startupProps.threadId,
 		umis: {

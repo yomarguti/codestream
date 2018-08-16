@@ -4,6 +4,7 @@ import {
 	getChannelStreamsForTeam,
 	getDirectMessageStreamsForTeam
 } from "../reducers/streams";
+export { setPanel } from "../actions/context";
 
 // uuid generator taken from: https://gist.github.com/jed/982883
 const createTempId = a =>
@@ -221,6 +222,7 @@ export const leaveChannel = streamId => async (dispatch, getState, { api }) => {
 		if (context.currentStreamId === streamId) {
 			EventEmitter.emit("interaction:changed-active-stream", undefined);
 			dispatch(setCurrentStream(undefined));
+			dispatch(setPanel("channels"));
 		}
 	} catch (error) {
 		console.error(error);
