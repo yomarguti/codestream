@@ -9,8 +9,7 @@
 			"args": ["--extensionDevelopmentPath=${workspaceRoot}"],
 			"smartStep": true,
 			"sourceMaps": true,
-			"outFiles": ["${workspaceRoot}/dist/**/*.js"],
-			"trace": true
+			"outFiles": ["${workspaceRoot}/dist/**/*.js"]
 		},
 		{
 			"name": "Rebuild & Launch CodeStream",
@@ -32,7 +31,6 @@
 			"smartStep": true,
 			"sourceMaps": true,
 			"outFiles": ["${workspaceRoot}/dist/**/*.js"],
-			"trace": true,
 			"preLaunchTask": "watch"
 		}
 	]
