@@ -120,9 +120,7 @@ export class StreamViewController implements Disposable {
 			remotes: { name: string; url: string }[];
 		}
 	) {
-		if (!this.visible) {
-			await this.show();
-		}
+		await this.show();
 		return await this._panel!.postCode(code, uri, range, source);
 	}
 
