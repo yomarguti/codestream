@@ -42,12 +42,14 @@ export namespace MarkerLocationUtil {
 			throw new Error(`Could not retrieve contents for ${filePath}@${currentCommitHash}`);
 		}
 
+		let diff;
 		const doc = documents.get(documentUri);
-		if (!doc) {
-			throw new Error(`Could not retrieve ${documentUri} from document manager`);
+		if (doc) {
+			const currentBufferText = doc.getText();
+			diff = structuredPatch(filePath, filePath, currentCommitText, currentBufferText, "", "");
+		} else {
+			diff = await git.getDiffFromHead(filePath);
 		}
-		const currentBufferText = doc.getText();
-		const diff = structuredPatch(filePath, filePath, currentCommitText, currentBufferText, "", "");
 		return calculateLocations(currentCommitLocations, diff);
 	}
 
@@ -105,7 +107,7 @@ export namespace MarkerLocationUtil {
 				locationsToCalculate[marker.id] = allCommitLocations[marker.id];
 			}
 
-			const diff = await git.getDiff(commitHashWhenCreated, commitHash, filePath);
+			const diff = await git.getDiffBetweenCommits(commitHashWhenCreated, commitHash, filePath);
 			const calculatedLocations = await calculateLocations(locationsToCalculate, diff);
 			for (const id in calculatedLocations) {
 				const location = calculatedLocations[id];

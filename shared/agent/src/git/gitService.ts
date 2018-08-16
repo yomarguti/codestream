@@ -147,7 +147,7 @@ export class GitService implements IGitService, Disposable {
 		}
 	}
 
-	async getDiff(
+	async getDiffBetweenCommits(
 		initialCommitHash: string,
 		finalCommitHash: string,
 		filePath: string
@@ -160,6 +160,23 @@ export class GitService implements IGitService, Disposable {
 			Logger.warn(
 				`Error getting diff from ${initialCommitHash} to ${finalCommitHash} for ${filename}`
 			);
+			throw err;
+		}
+
+		const patches = parsePatch(data);
+		if (patches.length > 1) {
+			Logger.warn("Parsed diff generated multiple patches");
+		}
+		return patches[0];
+	}
+
+	async getDiffFromHead(filePath: string): Promise<IUniDiff> {
+		const [dir, filename] = Strings.splitPath(filePath);
+		let data;
+		try {
+			data = await git({ cwd: dir }, "diff", "HEAD", "--", filename);
+		} catch (err) {
+			Logger.warn(`Error getting diff from HEAD to working directory for ${filename}`);
 			throw err;
 		}
 

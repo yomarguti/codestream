@@ -83,6 +83,7 @@ export namespace PostHandler {
 		location: rangeArray,
 		text,
 		code,
+		source,
 		streamId,
 		parentPostId,
 		mentionedUserIds
@@ -105,32 +106,24 @@ export namespace PostHandler {
 			const range = Range.create(rangeArray[0], rangeArray[1], rangeArray[2], rangeArray[3]);
 			location = MarkerLocationUtil.rangeToLocation(range);
 
-			const repoRoot = await git.getRepoRoot(filePath);
-
-			let relPath;
-			let remotes;
-			if (repoRoot) {
-				relPath = path.relative(repoRoot, filePath);
-				remotes = (await git.getRepoRemotes(repoRoot)).map(r => r.normalizedUrl);
-
-				const fileCurrentRevision = await git.getFileCurrentRevision(filePath);
-				if (fileCurrentRevision) {
-					commitHashWhenPosted = fileCurrentRevision;
+			if (source) {
+				if (source.revision) {
+					commitHashWhenPosted = source.revision;
 					backtrackedLocation = await MarkerLocationUtil.backtrackLocation(
 						documentId,
 						lastFullCode,
 						location
 					);
 				} else {
-					commitHashWhenPosted = (await git.getRepoHeadRevision(repoRoot))!;
+					commitHashWhenPosted = (await git.getRepoHeadRevision(source.repoPath))!;
 					backtrackedLocation = MarkerLocationUtil.emptyFileLocation();
 				}
 			}
 
 			codeBlock = {
 				code,
-				file: relPath,
-				remotes,
+				file: source && source.file,
+				remotes: source && source.remotes.map(r => r.url),
 				location: backtrackedLocation && MarkerLocationUtil.locationToArray(backtrackedLocation)
 			};
 		}
