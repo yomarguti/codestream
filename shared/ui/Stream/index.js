@@ -647,6 +647,7 @@ export class SimpleStream extends Component {
 					teammates={this.props.channelMembersNotMe}
 					slashCommands={this.props.slashCommands}
 					streamId={this.props.postStreamId}
+					currentUserId={this.props.currentUser.id}
 					ensureStreamIsActive={this.ensureStreamIsActive}
 					ref={this._compose}
 					disabled={this.props.isOffline}

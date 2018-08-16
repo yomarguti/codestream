@@ -75,16 +75,12 @@ class ComposeBox extends React.Component {
 		this.props.ensureStreamIsActive();
 		this.setState({ quote: body });
 
-		let mentions;
-		if (body.authors) {
-			mentions = body.authors
-				.map(email => _.findWhere(this.props.teammates, { email }))
-				.filter(Boolean);
-		} else {
-			mentions = body.source && body.source.authors;
+		let mentions = [];
+		if (body.source && body.source.authors) {
+			mentions = body.source.authors.filter(author => author.id !== this.props.currentUserId);
 		}
 
-		if (mentions && mentions.length > 0) {
+		if (mentions.length > 0) {
 			// TODO handle users with no username
 			const usernames = mentions.map(u => `@${u.username}`);
 			this.setState({ autoMentions: usernames });
