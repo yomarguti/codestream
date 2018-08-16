@@ -207,9 +207,10 @@ class Post extends Component {
 				ref={ref => (this._div = ref)}
 				onClick={this.props.showDetails && this.handleClick}
 			>
-				{!systemPost && (
-					<Icon name="gear" className="gear align-right" onClick={this.handleMenuClick} />
-				)}
+				{!systemPost &&
+					!post.error && (
+						<Icon name="gear" className="gear align-right" onClick={this.handleMenuClick} />
+					)}
 				{menuOpen && <Menu items={menuItems} target={menuTarget} action={this.handleSelectMenu} />}
 				{authorMenuOpen && (
 					<Menu
