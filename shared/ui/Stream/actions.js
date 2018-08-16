@@ -1,5 +1,9 @@
 import EventEmitter from "../event-emitter";
-import { getStreamForId } from "../reducers/streams";
+import {
+	getStreamForId,
+	getChannelStreamsForTeam,
+	getDirectMessageStreamsForTeam
+} from "../reducers/streams";
 
 // uuid generator taken from: https://gist.github.com/jed/982883
 const createTempId = a =>
@@ -313,6 +317,25 @@ export const fetchPosts = params => async (dispatch, getState, { api }) => {
 		return dispatch({
 			type: "ADD_POSTS_FOR_STREAM",
 			payload: { posts, streamId: params.streamId }
+		});
+	} catch (error) {
+		console.error(error);
+	}
+};
+
+export const fetchPostsForStreams = () => async (dispatch, getState) => {
+	const { context, session, streams, users } = getState();
+
+	try {
+		const channels = getChannelStreamsForTeam(streams, context.currentTeamId, session.userId);
+		const dms = getDirectMessageStreamsForTeam(
+			streams,
+			context.currentTeamId,
+			session.userId,
+			users
+		);
+		[...channels, ...dms].forEach(channel => {
+			dispatch(fetchPosts({ streamId: channel.id, teamId: context.currentTeamId }));
 		});
 	} catch (error) {
 		console.error(error);
