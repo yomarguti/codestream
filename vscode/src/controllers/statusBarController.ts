@@ -1,5 +1,5 @@
 "use strict";
-import { Disposable, StatusBarAlignment, StatusBarItem, window } from "vscode";
+import { Disposable, StatusBarAlignment, StatusBarItem, ThemeColor, window } from "vscode";
 import {
 	SessionChangedEvent,
 	SessionStatus,
@@ -78,7 +78,6 @@ export class StatusBarController implements Disposable {
 				this._statusBarItem.text = ` $(comment-discussion) ${label} `;
 				this._statusBarItem.command = "codestream.toggle";
 				this._statusBarItem.tooltip = "Toggle CodeStream";
-				this._statusBarItem.color = count === 0 ? undefined : "#009aef";
 				break;
 		}
 
