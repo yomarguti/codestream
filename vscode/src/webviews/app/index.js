@@ -183,6 +183,7 @@ const store = createStore(
 	[loggingMiddleWare]
 );
 
+// TODO: should be able to include data.configs in call to createStore
 store.dispatch({ type: "UPDATE_CONFIGS", payload: data.configs || {} });
 
 EventEmitter.on("data", ({ type, payload }) => {
