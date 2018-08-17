@@ -217,16 +217,12 @@ export namespace MarkerLocationUtil {
 	}
 
 	export function locationToRange(location: CSMarkerLocation): Range {
-		return {
-			start: {
-				line: location.lineStart - 1,
-				character: location.colStart - 1
-			},
-			end: {
-				line: location.lineEnd - 1,
-				character: location.colEnd - 1
-			}
-		};
+		return Range.create(
+			Math.max(location.lineStart - 1, 0),
+			Math.max(location.colStart - 1, 0),
+			Math.max(location.lineEnd - 1, 0),
+			Math.max(location.colEnd - 1, 0)
+		);
 	}
 
 	export function rangeToLocation(range: Range): CSMarkerLocation {
