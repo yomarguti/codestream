@@ -63,7 +63,7 @@ export class CodeStreamAgentConnection implements Disposable {
 			outputChannelName: "CodeStream Agent",
 			initializationOptions: { ...options },
 			// Register the server for file-based text documents
-			documentSelector: [{ scheme: "file", language: "*" }],
+			documentSelector: [{ scheme: "file", language: "*" }, { scheme: "untitled", language: "*" }],
 			synchronize: {
 				// Synchronize the setting section 'codestream' to the server
 				configurationSection: "codestream"

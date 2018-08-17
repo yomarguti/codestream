@@ -271,313 +271,331 @@ export class StreamWebviewPanel implements Disposable {
 	}
 
 	private async onPanelWebViewMessageReceived(e: CSWebviewMessage) {
-		const { type } = e;
+		try {
+			const { type } = e;
 
-		switch (type.replace("codestream:", "")) {
-			case "request": {
-				const body = e.body as CSWebviewRequest;
-				// TODO: Add sequence ids to ensure correct matching
-				// TODO: Add exception handling for failed requests
-				switch (body.action) {
-					case "authenticate": {
-						const { email, password } = body.params;
+			switch (type.replace("codestream:", "")) {
+				case "request": {
+					const body = e.body as CSWebviewRequest;
+					// TODO: Add sequence ids to ensure correct matching
+					// TODO: Add exception handling for failed requests
+					switch (body.action) {
+						case "authenticate": {
+							const { email, password } = body.params;
 
-						const status = await this.session.login(email, password);
+							const status = await this.session.login(email, password);
 
-						const responseBody: { id: string; [k: string]: any } = { id: body.id };
+							const responseBody: { id: string; [k: string]: any } = { id: body.id };
 
-						if (status === LoginResult.Success) {
-							responseBody.payload = await this.getBootstrapState();
-						} else responseBody.error = status;
+							if (status === LoginResult.Success) {
+								responseBody.payload = await this.getBootstrapState();
+							} else responseBody.error = status;
 
-						this.postMessage({
-							type: "codestream:response",
-							body: responseBody
-						});
-						break;
-					}
-					case "go-to-signup": {
-						const responseBody: { id: string; [k: string]: any } = { id: body.id };
-						try {
-							await commands.executeCommand(
-								"vscode.open",
-								Uri.parse(
-									`${
-										Container.config.webAppUrl
-									}/signup?signup_token=${this.session.getSignupToken()}`
-								)
-							);
-							responseBody.payload = true;
-						} catch (error) {
-							responseBody.error = error.message;
+							this.postMessage({
+								type: "codestream:response",
+								body: responseBody
+							});
+							break;
 						}
+						case "go-to-signup": {
+							const responseBody: { id: string; [k: string]: any } = { id: body.id };
+							try {
+								await commands.executeCommand(
+									"vscode.open",
+									Uri.parse(
+										`${
+											Container.config.webAppUrl
+										}/signup?signup_token=${this.session.getSignupToken()}`
+									)
+								);
+								responseBody.payload = true;
+							} catch (error) {
+								responseBody.error = error.message;
+							}
 
-						this.postMessage({
-							type: "codestream:response",
-							body: responseBody
-						});
-						break;
-					}
-					case "validate-signup": {
-						const responseBody: { id: string; [k: string]: any } = { id: body.id };
-						const status = await this.session.loginViaSignupToken();
+							this.postMessage({
+								type: "codestream:response",
+								body: responseBody
+							});
+							break;
+						}
+						case "validate-signup": {
+							const responseBody: { id: string; [k: string]: any } = { id: body.id };
+							const status = await this.session.loginViaSignupToken();
 
-						if (status === LoginResult.Success) {
-							responseBody.payload = await this.getBootstrapState();
-						} else responseBody.error = status;
+							if (status === LoginResult.Success) {
+								responseBody.payload = await this.getBootstrapState();
+							} else responseBody.error = status;
 
-						this.postMessage({
-							type: "codestream:response",
-							body: responseBody
-						});
-						break;
-					}
-					case "create-post": {
-						const { text, codeBlocks, mentions, parentPostId, streamId, teamId } = body.params;
+							this.postMessage({
+								type: "codestream:response",
+								body: responseBody
+							});
+							break;
+						}
+						case "create-post": {
+							const {
+								text,
+								extra: { fileUri } = { fileUri: undefined },
+								codeBlocks,
+								mentions,
+								parentPostId,
+								streamId,
+								teamId
+							} = body.params;
 
-						const responseBody: { [key: string]: any } = {
-							id: body.id
-						};
-						let post;
-						try {
-							if (codeBlocks === undefined || codeBlocks.length === 0) {
-								post = await this.session.api.createPost(
-									text,
-									mentions,
-									parentPostId,
-									streamId,
+							const responseBody: { [key: string]: any } = {
+								id: body.id
+							};
+							let post;
+							try {
+								if (codeBlocks === undefined || codeBlocks.length === 0) {
+									post = await this.session.api.createPost(
+										text,
+										mentions,
+										parentPostId,
+										streamId,
+										teamId
+									);
+								} else {
+									const block = codeBlocks[0] as {
+										code: string;
+										location?: [number, number, number, number];
+										file?: string;
+										source?: {
+											file: string;
+											repoPath: string;
+											revision: string;
+											authors: { id: string; username: string }[];
+											remotes: { name: string; url: string }[];
+										};
+									};
+
+									const uri = block.source
+										? Uri.file(path.join(block.source.repoPath, block.source.file))
+										: Uri.parse(fileUri);
+									post = await Container.agent.postCode(
+										uri,
+										text,
+										mentions,
+										block.code,
+										block.location,
+										block.source,
+										parentPostId,
+										streamId
+									);
+								}
+							} catch (error) {
+								responseBody.error = error;
+							}
+
+							if (post) {
+								responseBody.payload = post;
+							}
+
+							this.postMessage({
+								type: "codestream:response",
+								body: responseBody
+							});
+							break;
+						}
+						case "fetch-posts": {
+							const { streamId, teamId } = body.params;
+							this.postMessage({
+								type: "codestream:response",
+								body: {
+									id: body.id,
+									payload: await this.session.api.getPosts(streamId, teamId)
+								}
+							});
+							break;
+						}
+						case "delete-post": {
+							const post = await this.session.api.getPost(body.params);
+							const updates = await this.session.api.deletePost(body.params);
+							this.postMessage({
+								type: "codestream:response",
+								body: { id: body.id, payload: { ...post, ...updates } }
+							});
+							break;
+						}
+						case "edit-post": {
+							const { id, text, mentions } = body.params;
+							const post = await this.session.api.getPost(id);
+							const updates = await this.session.api.editPost(id, text, mentions);
+							this.postMessage({
+								type: "codestream:response",
+								body: { id: body.id, payload: { ...post, ...updates } }
+							});
+							break;
+						}
+						case "mark-stream-read": {
+							const stream = await this.session.getStream(body.params);
+							if (stream) {
+								const response = await stream.markRead();
+								this.postMessage({
+									type: "codestream:response",
+									body: { id: body.id, payload: response }
+								});
+							} else {
+								debugger;
+								// TODO
+							}
+							break;
+						}
+						case "mark-post-unread": {
+							const post = await this.session.api.getPost(body.params);
+							const updates = await this.session.api.markPostUnread(body.params);
+							this.postMessage({
+								type: "codestream:response",
+								body: { id: body.id, payload: { ...post, ...updates } }
+							});
+							break;
+						}
+						case "create-stream": {
+							const { type, teamId, name, privacy, memberIds } = body.params;
+							let stream;
+							if (type === "channel") {
+								stream = await this.session.api.createChannelStream(
+									name,
+									memberIds,
+									privacy,
 									teamId
 								);
-							} else {
-								const block = codeBlocks[0] as {
-									code: string;
-									location?: [number, number, number, number];
-									file?: string;
-									source?: {
-										file: string;
-										repoPath: string;
-										revision: string;
-										authors: { id: string; username: string }[];
-										remotes: { name: string; url: string }[];
-									};
-								};
-
-								let uri;
-								if (block.source) {
-									uri = Uri.file(path.join(block.source.repoPath, block.source.file));
-								} else {
-									// TODO: Need the workspace folder or some way of rehyrating the absolute path
-									// const folder = workspace.getWorkspaceFolder()
-									uri = Uri.file(block.file!);
-								}
-
-								post = await Container.agent.postCode(
-									uri,
-									text,
-									mentions,
-									block.code,
-									block.location,
-									block.source,
-									parentPostId,
-									streamId
-								);
+							} else if (type === "direct") {
+								stream = await this.session.api.createDirectStream(memberIds);
 							}
-						} catch (error) {
-							responseBody.error = error;
+							this.postMessage({
+								type: "codestream:response",
+								body: { id: body.id, payload: stream }
+							});
+							break;
 						}
-
-						if (post) {
-							responseBody.payload = post;
-						}
-
-						this.postMessage({
-							type: "codestream:response",
-							body: responseBody
-						});
-						break;
-					}
-					case "fetch-posts": {
-						const { streamId, teamId } = body.params;
-						this.postMessage({
-							type: "codestream:response",
-							body: {
-								id: body.id,
-								payload: await this.session.api.getPosts(streamId, teamId)
-							}
-						});
-						break;
-					}
-					case "delete-post": {
-						const post = await this.session.api.getPost(body.params);
-						const updates = await this.session.api.deletePost(body.params);
-						this.postMessage({
-							type: "codestream:response",
-							body: { id: body.id, payload: { ...post, ...updates } }
-						});
-						break;
-					}
-					case "edit-post": {
-						const { id, text, mentions } = body.params;
-						const post = await this.session.api.getPost(id);
-						const updates = await this.session.api.editPost(id, text, mentions);
-						this.postMessage({
-							type: "codestream:response",
-							body: { id: body.id, payload: { ...post, ...updates } }
-						});
-						break;
-					}
-					case "mark-stream-read": {
-						const stream = await this.session.getStream(body.params);
-						if (stream) {
-							const response = await stream.markRead();
+						case "save-user-preference": {
+							const response = await this.session.api.savePreferences(body.params);
 							this.postMessage({
 								type: "codestream:response",
 								body: { id: body.id, payload: response }
 							});
-						} else {
-							debugger;
-							// TODO
+							break;
 						}
-						break;
-					}
-					case "mark-post-unread": {
-						const post = await this.session.api.getPost(body.params);
-						const updates = await this.session.api.markPostUnread(body.params);
-						this.postMessage({
-							type: "codestream:response",
-							body: { id: body.id, payload: { ...post, ...updates } }
-						});
-						break;
-					}
-					case "create-stream": {
-						const { type, teamId, name, privacy, memberIds } = body.params;
-						let stream;
-						if (type === "channel") {
-							stream = await this.session.api.createChannelStream(name, memberIds, privacy, teamId);
-						} else if (type === "direct") {
-							stream = await this.session.api.createDirectStream(memberIds);
+						case "invite": {
+							const { email, teamId, fullName } = body.params;
+							this.postMessage({
+								type: "codestream:response",
+								body: {
+									id: body.id,
+									payload: await this.session.api.invite(email, teamId, fullName)
+								}
+							});
+							break;
 						}
-						this.postMessage({
-							type: "codestream:response",
-							body: { id: body.id, payload: stream }
-						});
-						break;
-					}
-					case "save-user-preference": {
-						const response = await this.session.api.savePreferences(body.params);
-						this.postMessage({
-							type: "codestream:response",
-							body: { id: body.id, payload: response }
-						});
-						break;
-					}
-					case "invite": {
-						const { email, teamId, fullName } = body.params;
-						this.postMessage({
-							type: "codestream:response",
-							body: { id: body.id, payload: await this.session.api.invite(email, teamId, fullName) }
-						});
-						break;
-					}
-					case "join-stream": {
-						const { streamId, teamId } = body.params;
-						this.postMessage({
-							type: "codestream:response",
-							body: { id: body.id, payload: await this.session.api.joinStream(streamId, teamId) }
-						});
-						break;
-					}
-					case "leave-stream": {
-						const { streamId, teamId, update } = body.params;
-						try {
-							await this.session.api.updateStream(streamId, update);
-						} catch (e) {
-							/* */
+						case "join-stream": {
+							const { streamId, teamId } = body.params;
+							this.postMessage({
+								type: "codestream:response",
+								body: { id: body.id, payload: await this.session.api.joinStream(streamId, teamId) }
+							});
+							break;
 						}
-						this.session.leaveChannel(streamId, teamId);
-						this.postMessage({ type: "codestream:response", body: { id: body.id, payload: true } });
-						break;
-					}
-					case "update-stream": {
-						const { streamId, update } = body.params;
-						const responseBody: { [key: string]: any } = { id: body.id };
-						try {
-							responseBody.payload = await this.session.api.updateStream(streamId, update);
-						} catch (error) {
-							responseBody.error = error;
+						case "leave-stream": {
+							const { streamId, teamId, update } = body.params;
+							try {
+								await this.session.api.updateStream(streamId, update);
+							} catch (e) {
+								/* */
+							}
+							this.session.leaveChannel(streamId, teamId);
+							this.postMessage({
+								type: "codestream:response",
+								body: { id: body.id, payload: true }
+							});
+							break;
 						}
-						this.postMessage({
-							type: "codestream:response",
-							body: responseBody
-						});
-						break;
-					}
-					case "show-code": {
-						const post = e.body.params;
-						if (post.codeBlocks == null || post.codeBlocks.length === 0) return;
+						case "update-stream": {
+							const { streamId, update } = body.params;
+							const responseBody: { [key: string]: any } = { id: body.id };
+							try {
+								responseBody.payload = await this.session.api.updateStream(streamId, update);
+							} catch (error) {
+								responseBody.error = error;
+							}
+							this.postMessage({
+								type: "codestream:response",
+								body: responseBody
+							});
+							break;
+						}
+						case "show-code": {
+							const post = e.body.params;
+							if (post.codeBlocks == null || post.codeBlocks.length === 0) return;
 
-						const stream = await this.session.getStream(post.streamId);
-						const status = await Container.commands.openPostWorkingFile(
-							new Post(this.session, post, stream)
-						);
-						this.postMessage({
-							type: "codestream:response",
-							body: { id: e.body.id, payload: status }
-						});
-						break;
-					}
-				}
-				break;
-			}
-			case "interaction:thread-selected": {
-				const { threadId, streamId } = e.body;
-				if (this._streamThread !== undefined && this._streamThread.stream.id === streamId) {
-					this._streamThread.id = threadId;
-					this._onDidChangeStream.fire(this._streamThread);
-				}
-				break;
-			}
-			case "interaction:thread-closed": {
-				if (this._streamThread !== undefined) {
-					this._streamThread.id = undefined;
-					this._onDidChangeStream.fire(this._streamThread);
-				}
-				break;
-			}
-			case "interaction:changed-active-stream": {
-				const streamId = e.body;
-
-				if (!streamId) {
-					this._streamThread = undefined;
-					return;
-				}
-
-				const stream = await this.session.getStream(streamId);
-				if (stream !== undefined) {
-					this._streamThread = { id: undefined, stream: stream };
-					this._onDidChangeStream.fire(this._streamThread);
-				}
-				break;
-			}
-			case "subscription:file-changed": {
-				const codeBlock = e.body as CSCodeBlock;
-
-				this._bufferChangeTracker.observe(codeBlock, hasDiff => {
-					this.postMessage({
-						type: "codestream:publish:file-changed",
-						body: {
-							file: codeBlock.file,
-							hasDiff
+							const stream = await this.session.getStream(post.streamId);
+							const status = await Container.commands.openPostWorkingFile(
+								new Post(this.session, post, stream)
+							);
+							this.postMessage({
+								type: "codestream:response",
+								body: { id: e.body.id, payload: status }
+							});
+							break;
 						}
+					}
+					break;
+				}
+				case "interaction:thread-selected": {
+					const { threadId, streamId } = e.body;
+					if (this._streamThread !== undefined && this._streamThread.stream.id === streamId) {
+						this._streamThread.id = threadId;
+						this._onDidChangeStream.fire(this._streamThread);
+					}
+					break;
+				}
+				case "interaction:thread-closed": {
+					if (this._streamThread !== undefined) {
+						this._streamThread.id = undefined;
+						this._onDidChangeStream.fire(this._streamThread);
+					}
+					break;
+				}
+				case "interaction:changed-active-stream": {
+					const streamId = e.body;
+
+					if (!streamId) {
+						this._streamThread = undefined;
+						return;
+					}
+
+					const stream = await this.session.getStream(streamId);
+					if (stream !== undefined) {
+						this._streamThread = { id: undefined, stream: stream };
+						this._onDidChangeStream.fire(this._streamThread);
+					}
+					break;
+				}
+				case "subscription:file-changed": {
+					const codeBlock = e.body as CSCodeBlock;
+
+					this._bufferChangeTracker.observe(codeBlock, hasDiff => {
+						this.postMessage({
+							type: "codestream:publish:file-changed",
+							body: {
+								file: codeBlock.file,
+								hasDiff
+							}
+						});
 					});
-				});
-				break;
+					break;
+				}
+				case "unsubscribe:file-changed": {
+					const codeblock = e.body as CSCodeBlock;
+					this._bufferChangeTracker.unsubscribe(codeblock);
+					break;
+				}
 			}
-			case "unsubscribe:file-changed": {
-				const codeblock = e.body as CSCodeBlock;
-				this._bufferChangeTracker.unsubscribe(codeblock);
-				break;
-			}
+		} catch (ex) {
+			debugger;
+			Logger.error(ex);
 		}
 	}
 
@@ -699,6 +717,7 @@ export class StreamWebviewPanel implements Disposable {
 			body: {
 				code: code,
 				file: file,
+				fileUri: uri.toString(),
 				location: [range.start.line, range.start.character, range.end.line, range.end.character],
 				source: source
 			}
