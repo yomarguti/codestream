@@ -18,7 +18,9 @@ import { Container } from "./container";
 import { setGitPath } from "./git/git";
 import { MarkerHandler } from "./marker/markerHandler";
 import { PostHandler } from "./post/postHandler";
-import { PubnubReceiver } from "./pubnub/pubnubReceiver";
+import { MessageReceivedEvent, MessageType, PubnubReceiver } from "./pubnub/pubnubReceiver";
+import { MarkerLocationUtil } from "./markerLocation/markerLocationUtil";
+import { StreamUtil } from "./stream/streamUtil";
 
 const loginApiErrorMappings: { [k: string]: ApiErrors } = {
 	"USRC-1001": ApiErrors.InvalidCredentials,
@@ -162,8 +164,9 @@ export class CodeStreamSession {
 			this._teamId
 		);
 
-		const streams = await this.getSubscribeableStreams(this._userId, this._teamId);
+		const streams = await this.getSubscribableStreams(this._userId, this._teamId);
 		this._pubnub.listen(streams.map(s => s.id));
+		this._pubnub.onDidReceiveMessage(this.onMessageReceived, this);
 
 		return {
 			loginResponse: { ...loginResponse },
@@ -171,10 +174,32 @@ export class CodeStreamSession {
 		};
 	}
 
-	private async getSubscribeableStreams(userId: string, teamId?: string): Promise<CSStream[]> {
+	private async getSubscribableStreams(userId: string, teamId?: string): Promise<CSStream[]> {
 		return (await this._api.getStreams<CSStream>(
 			this._apiToken!,
 			teamId || this._teamId!
 		)).streams.filter(s => CodeStreamApi.isStreamSubscriptionRequired(s, userId));
+	}
+
+	private onMessageReceived(e: MessageReceivedEvent) {
+		switch (e.type) {
+			case MessageType.Posts: {
+				break;
+			}
+			case MessageType.Repositories:
+				break;
+			case MessageType.Streams:
+				StreamUtil.cacheStreams(e.streams);
+				break;
+			case MessageType.Users:
+				break;
+			case MessageType.Teams:
+				break;
+			case MessageType.Markers:
+				break;
+			case MessageType.MarkerLocations:
+				MarkerLocationUtil.cacheMarkerLocations(e.markerLocations);
+				break;
+		}
 	}
 }

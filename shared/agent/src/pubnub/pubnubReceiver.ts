@@ -1,8 +1,17 @@
 "use strict";
-import { Disposable } from "vscode-languageserver";
+import { Disposable, Emitter, Event } from "vscode-languageserver";
 import { CodeStreamAgent } from "../agent";
 import { DidReceivePubNubMessagesNotification } from "../agent";
-import { CodeStreamApi, CSStream } from "../api/api";
+import {
+	CodeStreamApi,
+	CSMarker,
+	CSMarkerLocations,
+	CSPost,
+	CSRepository,
+	CSStream,
+	CSTeam,
+	CSUser
+} from "../api/api";
 import { Logger } from "../logger";
 import { Iterables } from "../system";
 import {
@@ -12,7 +21,66 @@ import {
 	StatusChangeEvent
 } from "./pubnubConnection";
 
+export enum MessageType {
+	Posts = "posts",
+	Repositories = "repos",
+	Streams = "streams",
+	Users = "users",
+	Teams = "teams",
+	Markers = "markers",
+	MarkerLocations = "markerLocations"
+}
+
+export interface PostsMessageReceivedEvent {
+	type: MessageType.Posts;
+	posts: CSPost[];
+}
+
+export interface RepositoriesMessageReceivedEvent {
+	type: MessageType.Repositories;
+	repos: CSRepository[];
+}
+
+export interface StreamsMessageReceivedEvent {
+	type: MessageType.Streams;
+	streams: CSStream[];
+}
+
+export interface UsersMessageReceivedEvent {
+	type: MessageType.Users;
+	users: CSUser[];
+}
+
+export interface TeamsMessageReceivedEvent {
+	type: MessageType.Teams;
+	teams: CSTeam[];
+}
+
+export interface MarkersMessageReceivedEvent {
+	type: MessageType.Markers;
+	markers: CSMarker[];
+}
+
+export interface MarkerLocationsMessageReceivedEvent {
+	type: MessageType.MarkerLocations;
+	markerLocations: CSMarkerLocations[];
+}
+
+export type MessageReceivedEvent =
+	| PostsMessageReceivedEvent
+	| RepositoriesMessageReceivedEvent
+	| StreamsMessageReceivedEvent
+	| UsersMessageReceivedEvent
+	| MarkersMessageReceivedEvent
+	| MarkerLocationsMessageReceivedEvent
+	| TeamsMessageReceivedEvent;
+
 export class PubnubReceiver {
+	private _onDidReceiveMessage = new Emitter<MessageReceivedEvent>();
+	get onDidReceiveMessage(): Event<MessageReceivedEvent> {
+		return this._onDidReceiveMessage.event;
+	}
+
 	private readonly _pubnubConnection: PubnubConnection;
 	private _connection: Disposable | undefined;
 	private _debugMode: boolean = true;
@@ -150,6 +218,7 @@ export class PubnubReceiver {
 										: undefined
 							)
 						]);
+						this._onDidReceiveMessage.fire({ type: MessageType.Streams, streams });
 						break;
 					// case "users": {
 					// 	const users = (await this._cache.resolveUsers(entities)) as CSUser[];
@@ -161,11 +230,18 @@ export class PubnubReceiver {
 					// 	this._onDidReceiveMessage.fire({ type: MessageType.Teams, teams });
 					// 	break;
 					// }
-					// case "markers": {
-					// 	const markers = (await this._cache.resolveMarkers(entities)) as CSMarker[];
-					// 	this._onDidReceiveMessage.fire({ type: MessageType.Markers, markers });
-					// 	break;
-					// }
+					case "markers": {
+						const markers = CodeStreamApi.normalizeResponse(entities) as CSMarker[];
+						this._onDidReceiveMessage.fire({ type: MessageType.Markers, markers });
+						break;
+					}
+					case "markerLocations": {
+						const markerLocations = CodeStreamApi.normalizeResponse(
+							entities
+						) as CSMarkerLocations[];
+						this._onDidReceiveMessage.fire({ type: MessageType.MarkerLocations, markerLocations });
+						break;
+					}
 				}
 			} catch (ex) {
 				Logger.error(ex, `PubNub '${key}' FAILED`);

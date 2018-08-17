@@ -3,7 +3,7 @@ import { structuredPatch } from "diff";
 import { TextDocumentIdentifier } from "vscode-languageserver";
 import { Range } from "vscode-languageserver-protocol";
 import URI from "vscode-uri";
-import { CSLocationArray, CSMarker, CSMarkerLocation } from "../api/api";
+import { CSLocationArray, CSMarker, CSMarkerLocation, CSMarkerLocations } from "../api/api";
 import { getCache } from "../cache";
 import { Container } from "../container";
 import { MarkerUtil } from "../marker/markerUtil";
@@ -131,6 +131,18 @@ export namespace MarkerLocationUtil {
 		locationsCache[location.id] = location;
 	}
 
+	export async function cacheMarkerLocations(markerLocations: CSMarkerLocations[]) {
+		for (const markerLocation of markerLocations) {
+			const { streamId, commitHash, locations } = markerLocation;
+			const locationsCache = await getMarkerLocations(streamId, commitHash);
+			for (const id in locations) {
+				const locationArray = locations[id];
+				const location = arrayToLocation(id, locationArray);
+				locationsCache[id] = location;
+			}
+		}
+	}
+
 	export async function saveUncommittedLocation(
 		filePath: string,
 		fileContents: string,
@@ -173,7 +185,7 @@ export namespace MarkerLocationUtil {
 			}
 		}
 
-		return { ...locationsCache };
+		return locationsCache;
 	}
 
 	function getMissingMarkersByCommit(markers: CSMarker[], locations: LocationsById) {

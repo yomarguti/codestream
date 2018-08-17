@@ -1,15 +1,25 @@
 "use strict";
 import * as path from "path";
-import { CSFileStream } from "../api/api";
+import { CSFileStream, CSStream } from "../api/api";
 import { Container } from "../container";
 import { GitRepository } from "../git/models/repository";
 import { Strings } from "../system";
+import { StreamType } from "../shared/api.protocol";
 
 type StreamsByPath = Map<string, CSFileStream>;
 type StreamsByRepoId = Map<string, StreamsByPath>;
 
 export namespace StreamUtil {
 	const streamsByRepoId: StreamsByRepoId = new Map();
+
+	export async function cacheStreams(streams: CSStream[]) {
+		for (const stream of streams) {
+			if (stream.type === StreamType.File) {
+				const streamsByPath = await getStreamsByRepo(stream.repoId);
+				streamsByPath.set(stream.file, stream);
+			}
+		}
+	}
 
 	export async function getStreamId(filePath: string): Promise<string | undefined> {
 		const container = Container.instance();
