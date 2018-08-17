@@ -8,6 +8,7 @@ import {
 	LanguageClientOptions,
 	RequestType,
 	RequestType0,
+	RevealOutputChannelOn,
 	ServerOptions,
 	TransportKind
 } from "vscode-languageclient";
@@ -61,6 +62,7 @@ export class CodeStreamAgentConnection implements Disposable {
 
 		this._clientOptions = {
 			outputChannelName: "CodeStream Agent",
+			revealOutputChannelOn: RevealOutputChannelOn.Never,
 			initializationOptions: { ...options },
 			// Register the server for file-based text documents
 			documentSelector: [{ scheme: "file", language: "*" }, { scheme: "untitled", language: "*" }],
