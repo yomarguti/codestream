@@ -24,7 +24,7 @@ class Post extends Component {
 
 	componentDidMount() {
 		if (this.props.didTriggerThread) {
-			this.showCode();
+			this.showCode(true);
 		}
 	}
 
@@ -34,7 +34,7 @@ class Post extends Component {
 		}
 
 		if (!prevProps.didTriggerThread && this.props.didTriggerThread) {
-			this.showCode();
+			this.showCode(true);
 		}
 	}
 
@@ -43,11 +43,11 @@ class Post extends Component {
 		this.showCode();
 	};
 
-	async showCode() {
+	async showCode(enteringThread = false) {
 		const codeBlock = this.props.post.codeBlocks && this.props.post.codeBlocks[0];
 		if (codeBlock) {
 			if (codeBlock.repoId) {
-				const status = await this.props.showCode(this.props.post);
+				const status = await this.props.showCode(this.props.post, enteringThread);
 				if (status === "SUCCESS") {
 					this.setState({ warning: null });
 				} else {

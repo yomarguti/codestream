@@ -346,6 +346,6 @@ export const fetchPostsForStreams = () => async (dispatch, getState) => {
 	}
 };
 
-export const showCode = post => (dispatch, getState, { api }) => {
-	return api.showCode(post);
+export const showCode = (post, enteringThread) => (dispatch, getState, { api }) => {
+	return api.showCode(post, enteringThread);
 };
