@@ -37,11 +37,12 @@ export namespace PostHandler {
 		let remotes: { name: string; url: string }[] | undefined;
 		let rev: string | undefined;
 
+		let gitError;
 		let repoPath;
 		if (uri.scheme === "file") {
-			repoPath = await git.getRepoRoot(uri.fsPath);
-			if (repoPath !== undefined) {
-				try {
+			try {
+				repoPath = await git.getRepoRoot(uri.fsPath);
+				if (repoPath !== undefined) {
 					file = Strings.normalizePath(path.relative(repoPath, uri.fsPath));
 					if (file[0] === "/") {
 						file = file.substr(1);
@@ -60,10 +61,11 @@ export namespace PostHandler {
 
 					const users = await session.users.getByEmails(authorEmails);
 					authors = [...Iterables.map(users, u => ({ id: u.id, username: u.name }))];
-				} catch (ex) {
-					Logger.error(ex);
-					debugger;
 				}
+			} catch (ex) {
+				gitError = ex.toString();
+				Logger.error(ex);
+				debugger;
 			}
 		}
 
@@ -78,7 +80,8 @@ export namespace PostHandler {
 							authors: authors || [],
 							remotes: remotes || []
 					  }
-					: undefined
+					: undefined,
+			gitError: gitError
 		};
 	}
 

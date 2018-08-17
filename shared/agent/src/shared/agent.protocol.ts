@@ -124,6 +124,7 @@ export interface DocumentPreparePostRequestParams {
 export interface DocumentPreparePostResponse {
 	code: string;
 	source?: CodeBlockSource;
+	gitError?: string;
 }
 
 export const DocumentPreparePostRequest = new RequestType<
