@@ -118,10 +118,11 @@ export class StreamViewController implements Disposable {
 			revision: string;
 			authors: { id: string; username: string }[];
 			remotes: { name: string; url: string }[];
-		}
+		},
+		gitError?: string
 	) {
 		await this.show();
-		return await this._panel!.postCode(code, uri, range, source);
+		return await this._panel!.postCode(code, uri, range, source, gitError);
 	}
 
 	async show(streamThread?: StreamThread) {

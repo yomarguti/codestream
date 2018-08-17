@@ -225,7 +225,8 @@ export class Commands implements Disposable {
 			response.code,
 			document.uri,
 			selection,
-			response.source
+			response.source,
+			response.gitError
 		);
 		return streamThread !== undefined ? streamThread.stream : undefined;
 	}

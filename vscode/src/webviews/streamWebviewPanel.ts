@@ -701,7 +701,8 @@ export class StreamWebviewPanel implements Disposable {
 			revision: string;
 			authors: { id: string; username: string }[];
 			remotes: { name: string; url: string }[];
-		}
+		},
+		gitError?: string
 	) {
 		let file;
 		if (source === undefined) {
@@ -720,7 +721,8 @@ export class StreamWebviewPanel implements Disposable {
 				file: file,
 				fileUri: uri.toString(),
 				location: [range.start.line, range.start.character, range.end.line, range.end.character],
-				source: source
+				source: source,
+				gitError
 			}
 		}));
 		return this._streamThread;
