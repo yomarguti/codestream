@@ -527,7 +527,7 @@ export class StreamWebviewPanel implements Disposable {
 							break;
 						}
 						case "show-code": {
-							const post = e.body.params;
+							const { post, enteringThread } = e.body.params;
 							if (post.codeBlocks == null || post.codeBlocks.length === 0) return;
 
 							const stream = await this.session.getStream(post.streamId);
