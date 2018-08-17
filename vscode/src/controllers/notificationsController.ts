@@ -25,36 +25,38 @@ export class NotificationsController implements Disposable {
 		const activeStream = Container.streamView.activeStreamThread;
 		const streamVisible = Container.streamView.visible;
 
-		if (Container.config.notifications !== Notifications.None) {
-			for (const post of e.items()) {
-				if (post.deleted || post.senderId === currentUserId) continue;
-				if (currentUser.hasMutedChannel(post.streamId)) continue;
+		if (Container.config.notifications === Notifications.None) return;
 
-				const isPostStreamVisible =
-					streamVisible &&
-					!(activeStream === undefined || activeStream.stream.id !== post.streamId);
+		for (const post of e.items()) {
+			if (post.deleted || post.senderId === currentUserId) continue;
 
-				switch (Container.config.notifications) {
-					case Notifications.All:
-						if (!isPostStreamVisible) {
-							this.showNotification(post);
-						} else if (
-							post.mentioned(currentUsername) ||
-							((await post.stream()).type === StreamType.Direct && !isPostStreamVisible)
-						) {
-							this.showNotification(post);
-						}
-						break;
+			const mentioned = post.mentioned(currentUsername);
+			// If we are muted and not mentioned, skip it
+			if (currentUser.hasMutedChannel(post.streamId) && !mentioned) continue;
 
-					case Notifications.Mentions:
-						if (
-							post.mentioned(currentUsername) ||
-							((await post.stream()).type === StreamType.Direct && !isPostStreamVisible)
-						) {
-							this.showNotification(post);
-						}
-						break;
-				}
+			const isPostStreamVisible =
+				streamVisible && !(activeStream === undefined || activeStream.stream.id !== post.streamId);
+
+			switch (Container.config.notifications) {
+				case Notifications.All:
+					if (!isPostStreamVisible) {
+						this.showNotification(post);
+					} else if (
+						mentioned ||
+						(!isPostStreamVisible && (await post.stream()).type === StreamType.Direct)
+					) {
+						this.showNotification(post);
+					}
+					break;
+
+				case Notifications.Mentions:
+					if (
+						mentioned ||
+						(!isPostStreamVisible && (await post.stream()).type === StreamType.Direct)
+					) {
+						this.showNotification(post);
+					}
+					break;
 			}
 		}
 	}
