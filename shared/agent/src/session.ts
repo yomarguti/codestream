@@ -17,9 +17,9 @@ import { UserCollection } from "./api/models/users";
 import { Container } from "./container";
 import { setGitPath } from "./git/git";
 import { MarkerHandler } from "./marker/markerHandler";
+import { MarkerLocationUtil } from "./markerLocation/markerLocationUtil";
 import { PostHandler } from "./post/postHandler";
 import { MessageReceivedEvent, MessageType, PubnubReceiver } from "./pubnub/pubnubReceiver";
-import { MarkerLocationUtil } from "./markerLocation/markerLocationUtil";
 import { StreamUtil } from "./stream/streamUtil";
 
 const loginApiErrorMappings: { [k: string]: ApiErrors } = {

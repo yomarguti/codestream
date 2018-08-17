@@ -3,8 +3,8 @@ import * as path from "path";
 import { CSFileStream, CSStream } from "../api/api";
 import { Container } from "../container";
 import { GitRepository } from "../git/models/repository";
-import { Strings } from "../system";
 import { StreamType } from "../shared/api.protocol";
+import { Strings } from "../system";
 
 type StreamsByPath = Map<string, CSFileStream>;
 type StreamsByRepoId = Map<string, StreamsByPath>;
