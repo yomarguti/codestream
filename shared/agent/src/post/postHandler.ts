@@ -31,35 +31,39 @@ export namespace PostHandler {
 		lastFullCode = document.getText();
 
 		const uri = URI.parse(document.uri);
-		const repoPath = await git.getRepoRoot(uri.fsPath);
 
 		let authors: { id: string; username: string }[] | undefined;
 		let file: string | undefined;
 		let remotes: { name: string; url: string }[] | undefined;
 		let rev: string | undefined;
-		if (repoPath !== undefined) {
-			try {
-				file = Strings.normalizePath(path.relative(repoPath, uri.fsPath));
-				if (file[0] === "/") {
-					file = file.substr(1);
+
+		let repoPath;
+		if (uri.scheme === "file") {
+			repoPath = await git.getRepoRoot(uri.fsPath);
+			if (repoPath !== undefined) {
+				try {
+					file = Strings.normalizePath(path.relative(repoPath, uri.fsPath));
+					if (file[0] === "/") {
+						file = file.substr(1);
+					}
+
+					rev = await git.getFileCurrentRevision(uri.fsPath);
+					const gitRemotes = await git.getRepoRemotes(repoPath);
+					remotes = [...Iterables.map(gitRemotes, r => ({ name: r.name, url: r.normalizedUrl }))];
+
+					const gitAuthors = await git.getFileAuthors(uri.fsPath, {
+						startLine: range.start.line,
+						endLine: range.end.line - 1,
+						contents: dirty ? lastFullCode : undefined
+					});
+					const authorEmails = gitAuthors.map(a => a.email);
+
+					const users = await session.users.getByEmails(authorEmails);
+					authors = [...Iterables.map(users, u => ({ id: u.id, username: u.name }))];
+				} catch (ex) {
+					Logger.error(ex);
+					debugger;
 				}
-
-				rev = await git.getFileCurrentRevision(uri.fsPath);
-				const gitRemotes = await git.getRepoRemotes(repoPath);
-				remotes = [...Iterables.map(gitRemotes, r => ({ name: r.name, url: r.normalizedUrl }))];
-
-				const gitAuthors = await git.getFileAuthors(uri.fsPath, {
-					startLine: range.start.line,
-					endLine: range.end.line - 1,
-					contents: dirty ? lastFullCode : undefined
-				});
-				const authorEmails = gitAuthors.map(a => a.email);
-
-				const users = await session.users.getByEmails(authorEmails);
-				authors = [...Iterables.map(users, u => ({ id: u.id, username: u.name }))];
-			} catch (ex) {
-				Logger.error(ex);
-				debugger;
 			}
 		}
 
