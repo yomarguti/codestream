@@ -28,6 +28,7 @@
 			"problemMatcher": [
 				{
 					"base": "$ts-webpack-watch",
+					"fileLocation": "absolute",
 					"background": {
 						"activeOnStart": true,
 						"beginsPattern": {
@@ -60,27 +61,11 @@
 			"problemMatcher": [
 				{
 					"base": "$ts-webpack-watch",
-					"background": {
-						"activeOnStart": true,
-						"beginsPattern": {
-							"regexp": "Child extension:"
-						},
-						"endsPattern": {
-							"regexp": "Built at: .*"
-						}
-					}
+					"fileLocation": "absolute"
 				},
 				{
 					"base": "$tslint-webpack-watch",
-					"background": {
-						"activeOnStart": true,
-						"beginsPattern": {
-							"regexp": "Child extension:"
-						},
-						"endsPattern": {
-							"regexp": "Built at: .*"
-						}
-					}
+					"fileLocation": ["relative", "${workspaceFolder}/../codestream-lsp-agent/"]
 				}
 			]
 		},
