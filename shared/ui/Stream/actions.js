@@ -4,7 +4,9 @@ import {
 	getChannelStreamsForTeam,
 	getDirectMessageStreamsForTeam
 } from "../reducers/streams";
-export { setPanel } from "../actions/context";
+import { setPanel } from "../actions/context";
+
+export { setPanel };
 
 // uuid generator taken from: https://gist.github.com/jed/982883
 const createTempId = a =>
