@@ -28,7 +28,7 @@ class Post extends Component {
 		}
 	}
 
-	componentDidUpdate(prevProps, prevState) {
+	componentDidUpdate(prevProps, _prevState) {
 		if (this.props.editing && !prevProps.editing) {
 			document.getElementById("input-div-" + this.props.post.id).focus();
 		}
@@ -134,10 +134,11 @@ class Post extends Component {
 		let codeBlock = null;
 		if (post.codeBlocks && post.codeBlocks.length) {
 			let code = post.codeBlocks[0].code;
+			const noRepo = !post.codeBlocks[0].repoId;
 			codeBlock = (
 				<div className="code-reference">
-					<div className="header">
-						<span class="file">{post.codeBlocks[0].file || "-"}</span>
+					<div className={createClassString("header", { "no-repo": noRepo })}>
+						<span className="file">{post.codeBlocks[0].file || "-"}</span>
 						{this.state.warning && (
 							<Tooltip placement="left" content={this.getWarningMessage()}>
 								<span className="icon-wrapper">
