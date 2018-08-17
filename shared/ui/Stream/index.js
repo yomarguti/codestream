@@ -321,6 +321,7 @@ export class SimpleStream extends Component {
 		// unless the force parameter is called
 		if (this.state.editingPostId && !force) return;
 		if (this._postslist) this._postslist.scrollTop = 1000000;
+		if (this._threadpostslist) this._threadpostslist.scrollTop = 1000000;
 	};
 
 	calculateScrolledOffBottom = () => {};
