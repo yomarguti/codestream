@@ -1332,6 +1332,7 @@ export class SimpleStream extends Component {
 		const codeBlocks = [];
 		const { activePanel } = this.props;
 		const { postStreamId, fileStreamId, createPost, currentFile, repoId } = this.props;
+		let fileUri;
 
 		if (this.checkForSlashCommands(text)) return;
 
@@ -1339,10 +1340,13 @@ export class SimpleStream extends Component {
 
 		const submit = () =>
 			createPost(postStreamId, threadId, text, codeBlocks, mentionedUserIds, {
-				autoMentions
+				autoMentions,
+				fileUri
 			});
 
 		if (quote) {
+			fileUri = quote.fileUri;
+
 			let codeBlock = {
 				code: quote.code,
 				location: quote.location,
