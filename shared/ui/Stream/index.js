@@ -1370,7 +1370,7 @@ export class SimpleStream extends Component {
 							"This repo doesn’t have a remote URL configured. When your teammates view this post, we won’t be able to connect the code block to the appropriate file in their IDE."
 					};
 				}
-			} else {
+			} else if (quote.gitError) {
 				warning = {
 					title: "Missing Git Info",
 					message:
