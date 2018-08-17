@@ -55,6 +55,10 @@ export function isStreamThreadId(
 	return (streamOrThreadOrLocator as StreamThreadId).streamId !== undefined;
 }
 
+export interface OpenPostWorkingFileArgs {
+	preserveFocus: boolean;
+}
+
 export interface OpenStreamCommandArgs extends IRequiresStream {
 	session?: CodeStreamSession;
 }
@@ -114,7 +118,7 @@ export class Commands implements Disposable {
 	// }
 
 	@command("openPostWorkingFile", { showErrorMessage: "Unable to open post" })
-	async openPostWorkingFile(post?: Post) {
+	async openPostWorkingFile(post?: Post, args: OpenPostWorkingFileArgs = { preserveFocus: false }) {
 		if (post == null) return;
 
 		const block = await post.codeBlock();
@@ -133,7 +137,8 @@ export class Commands implements Disposable {
 		return openEditor(block.uri, {
 			preview: true,
 			viewColumn: column || ViewColumn.Beside,
-			selection: block.range
+			selection: block.range,
+			preserveFocus: args.preserveFocus
 		});
 	}
 

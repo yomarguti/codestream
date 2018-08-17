@@ -532,7 +532,8 @@ export class StreamWebviewPanel implements Disposable {
 
 							const stream = await this.session.getStream(post.streamId);
 							const status = await Container.commands.openPostWorkingFile(
-								new Post(this.session, post, stream)
+								new Post(this.session, post, stream),
+								{ preserveFocus: enteringThread }
 							);
 							this.postMessage({
 								type: "codestream:response",
