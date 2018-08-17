@@ -143,8 +143,8 @@ export namespace PostHandler {
 				mentionedUserIds
 			})).post;
 
-			if (post.codeBlocks) {
-				const meta = backtrackedLocation!.meta;
+			if (post.codeBlocks && backtrackedLocation) {
+				const meta = backtrackedLocation.meta;
 				if (meta && (meta.startWasDeleted || meta.endWasDeleted)) {
 					const uncommittedLocation = {
 						id: post.codeBlocks[0].markerId,
