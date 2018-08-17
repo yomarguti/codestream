@@ -541,7 +541,7 @@ export class CodeStreamSession implements Disposable {
 
 		await Promise.all(
 			posts.map(async post => {
-				if (!post.deactivated && post.creatorId !== this.userId) {
+				if (!post.deactivated && !post.hasBeenEdited && post.creatorId !== this.userId) {
 					const stream = await this._sessionApi!.getStream(post.streamId);
 					if (post.text.match(mentionRegex) || stream!.type === StreamType.Direct) {
 						unreadCounter.incrementMention(post.streamId);
