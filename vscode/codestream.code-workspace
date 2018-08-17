@@ -28,6 +28,7 @@
 		"prettier.requireConfig": true,
 		"prettier.tslintIntegration": true,
 		"search.exclude": {
+			"**/node_modules": true,
 			"**/dist": true
 		}
 	}
