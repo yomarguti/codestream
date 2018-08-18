@@ -20,6 +20,10 @@ import {
 	AgentOptions,
 	AgentResult,
 	ApiRequest,
+	DidChangeDocumentMarkersNotification,
+	DidChangeDocumentMarkersNotificationResponse,
+	DidReceivePubNubMessagesNotification,
+	DidReceivePubNubMessagesNotificationResponse,
 	DocumentFromCodeBlockRequest,
 	DocumentFromCodeBlockResponse,
 	DocumentLatestRevisionRequest,
@@ -33,9 +37,22 @@ import {
 
 export { AccessToken, AgentOptions, AgentResult } from "../shared/agent.protocol";
 
+export interface PubNubMessagesReceivedEvent {
+	[key: string]: any;
+}
+
+export interface DocumentMarkersChangedEvent {
+	uri: Uri;
+}
+
 export class CodeStreamAgentConnection implements Disposable {
-	private _onDidReceivePubNubMessages = new EventEmitter<{ [key: string]: any }[]>();
-	get onDidReceivePubNubMessages(): Event<{ [key: string]: any }[]> {
+	private _onDidChangeDocumentMarkers = new EventEmitter<DocumentMarkersChangedEvent>();
+	get onDidChangeDocumentMarkers(): Event<DocumentMarkersChangedEvent> {
+		return this._onDidChangeDocumentMarkers.event;
+	}
+
+	private _onDidReceivePubNubMessages = new EventEmitter<PubNubMessagesReceivedEvent[]>();
+	get onDidReceivePubNubMessages(): Event<PubNubMessagesReceivedEvent[]> {
 		return this._onDidReceivePubNubMessages.event;
 	}
 
@@ -202,7 +219,11 @@ export class CodeStreamAgentConnection implements Disposable {
 		});
 	}
 
-	private onPubNubMessagesReceived(...messages: { [key: string]: any }[]) {
+	private onDocumentMarkersChanged(e: DidChangeDocumentMarkersNotificationResponse) {
+		this._onDidChangeDocumentMarkers.fire({ uri: Uri.parse(e.textDocument.uri) });
+	}
+
+	private onPubNubMessagesReceived(...messages: DidReceivePubNubMessagesNotificationResponse[]) {
 		this._onDidReceivePubNubMessages.fire(messages);
 	}
 
@@ -248,8 +269,13 @@ export class CodeStreamAgentConnection implements Disposable {
 		void (await this._client.onReady());
 
 		this._client.onNotification(
-			"codeStream/didReceivePubNubMessages",
+			DidReceivePubNubMessagesNotification,
 			this.onPubNubMessagesReceived.bind(this)
+		);
+
+		this._client.onNotification(
+			DidChangeDocumentMarkersNotification,
+			this.onDocumentMarkersChanged.bind(this)
 		);
 
 		return this._client.initializeResult! as AgentInitializeResult;

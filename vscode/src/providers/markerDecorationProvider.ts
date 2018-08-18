@@ -21,6 +21,8 @@ import {
 import {
 	Marker,
 	PostsReceivedEvent,
+	SessionChangedEvent,
+	SessionChangedType,
 	SessionStatus,
 	SessionStatusChangedEvent
 } from "../api/session";
@@ -95,9 +97,8 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 			this._inlineDecorationType,
 			this._overlayDecorationType,
 			languages.registerHoverProvider({ scheme: "file" }, this),
+			Container.session.onDidChange(this.onSessionChanged, this),
 			Container.session.onDidChangeStatus(this.onSessionStatusChanged, this),
-			Container.session.onDidReceivePosts(this.onPostsReceived, this),
-			// window.onDidChangeActiveTextEditor(this.onEditorChanged, this),
 			window.onDidChangeVisibleTextEditors(this.onEditorVisibilityChanged, this),
 			workspace.onDidChangeTextDocument(this.onDocumentChanged, this),
 			workspace.onDidCloseTextDocument(this.onDocumentClosed, this)
@@ -126,38 +127,23 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 		this._markersCache.delete(e.uri.toString());
 	}
 
-	// private async onEditorChanged(e: TextEditor | undefined) {
-	// 	if (e === undefined) return;
-
-	// 	this.apply(e);
-	// }
-
 	private async onEditorVisibilityChanged(e: TextEditor[]) {
 		this.applyToApplicableVisibleEditors(e);
 	}
 
-	private async onPostsReceived(e: PostsReceivedEvent) {
+	private onSessionChanged(e: SessionChangedEvent) {
+		if (e.type !== SessionChangedType.Markers) return;
+
+		const uri = e.uri.toString();
+		this._markersCache.delete(uri);
+
 		const editors = this.getApplicableVisibleEditors();
 		if (editors.length === 0) return;
 
-		const posts = e.entities().filter(p => p.codeBlocks !== undefined && p.codeBlocks.length !== 0);
-		if (posts.length === 0) return;
+		const editor = editors.find(e => e.document.uri.toString() === uri);
+		if (editor === undefined) return;
 
-		// This is lame, but for right now its too much of a pain to figure out which editor to clear
-		this._markersCache.clear();
-
-		for (const e of editors) {
-			const uri = e.document.uri;
-			const file = uri.fsPath;
-
-			for (const p of posts) {
-				if (p.codeBlocks!.some(cb => file.endsWith(cb.file))) {
-					this.apply(e);
-
-					break;
-				}
-			}
-		}
+		this.apply(editor);
 	}
 
 	private onSessionStatusChanged(e: SessionStatusChangedEvent) {

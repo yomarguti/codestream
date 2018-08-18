@@ -627,7 +627,7 @@ export class StreamWebviewPanel implements Disposable {
 			case SessionChangedType.Unreads: {
 				this.postMessage({
 					type: "codestream:data:unreads",
-					body: e.entities()
+					body: e.unreads
 				});
 				break;
 			}

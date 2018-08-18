@@ -5,9 +5,10 @@ import {
 	ConfigurationTarget,
 	Disposable,
 	Event,
-	EventEmitter
+	EventEmitter,
+	Uri
 } from "vscode";
-import { AccessToken, AgentResult } from "../agent/agentConnection";
+import { AccessToken, AgentResult, DocumentMarkersChangedEvent } from "../agent/agentConnection";
 import { GlobalState, WorkspaceState } from "../common";
 import { configuration } from "../configuration";
 import { Container } from "../container";
@@ -32,7 +33,6 @@ import { User } from "./models/users";
 import { PresenceManager } from "./presence";
 import { PresenceMiddleware } from "./presenceMiddleware";
 import {
-	MarkersMessageReceivedEvent,
 	MessageReceivedEvent,
 	MessageType,
 	PostsMessageReceivedEvent,
@@ -112,6 +112,10 @@ export class CodeStreamSession implements Disposable {
 		}
 	}
 
+	private onDocumentMarkersChanged(e: DocumentMarkersChangedEvent) {
+		this.fireChanged(new MarkersChangedEvent(this, e));
+	}
+
 	private onMessageReceived(e: MessageReceivedEvent) {
 		switch (e.type) {
 			case MessageType.Posts: {
@@ -138,9 +142,6 @@ export class CodeStreamSession implements Disposable {
 				break;
 			case MessageType.Teams:
 				this.fireChanged(new TeamsChangedEvent(this, e));
-				break;
-			case MessageType.Markers:
-				this.fireChanged(new MarkersChangedEvent(this, e));
 				break;
 		}
 	}
@@ -467,6 +468,7 @@ export class CodeStreamSession implements Disposable {
 		this.calculateUnreads(result.loginResponse.user);
 
 		this._disposable = Disposable.from(
+			Container.agent.onDidChangeDocumentMarkers(this.onDocumentMarkersChanged, this),
 			this._pubnub.onDidReceiveMessage(this.onMessageReceived, this),
 			this._pubnub,
 			configuration.onDidChange(this.onConfigurationChanged, this),
@@ -729,21 +731,11 @@ class MarkersChangedEvent {
 
 	constructor(
 		public readonly session: CodeStreamSession,
-		private readonly _event: MarkersMessageReceivedEvent
+		private readonly _event: DocumentMarkersChangedEvent
 	) {}
 
-	affects(id: string, type: "entity" | "stream" | "team" = "stream") {
-		return affects(this._event.markers, id, type);
-	}
-
-	entities() {
-		return this._event.markers;
-	}
-
-	@memoize
-	items(): Marker[] {
-		throw new Error("Not implemented");
-		// return this._event.markers.map(m => new Marker(this.session, m));
+	get uri() {
+		return this._event.uri;
 	}
 }
 
@@ -756,19 +748,6 @@ export class UnreadsChangedEvent {
 			mentions: { [key: string]: number };
 		}
 	) {}
-
-	affects(id: string, type: "entity") {
-		return false;
-	}
-
-	entities() {
-		return this.unreads;
-	}
-
-	@memoize
-	items() {
-		throw new Error("Not implemented");
-	}
 
 	getMentionCount() {
 		return Object.values(this.unreads.mentions).reduce((total, count) => total + count, 0);
