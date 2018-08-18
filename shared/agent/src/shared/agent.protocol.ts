@@ -4,7 +4,6 @@ import {
 	NotificationType,
 	Range,
 	RequestType,
-	RequestType0,
 	TextDocumentIdentifier
 } from "vscode-languageserver-protocol";
 import { CSMarker, CSPost, LoginResponse, LoginResult } from "./api.protocol";
@@ -53,6 +52,18 @@ export const DidReceivePubNubMessagesNotification = new NotificationType<
 	DidReceivePubNubMessagesNotificationParams[],
 	void
 >("codeStream/didReceivePubNubMessages");
+
+export interface DidReceivePubNubMessagesNotificationParams {
+	[key: string]: any;
+}
+
+export const DidChangeDocumentMarkers = new NotificationType<DidChangeDocumentMarkersParams, void>(
+	"codeStream/didChangeDocumentMarkers"
+);
+
+export interface DidChangeDocumentMarkersParams {
+	textDocument: TextDocumentIdentifier;
+}
 
 export interface DocumentFromCodeBlockRequestParams {
 	file: string;
@@ -149,7 +160,3 @@ export interface DocumentPostRequestParams {
 export const DocumentPostRequest = new RequestType<DocumentPostRequestParams, CSPost, void, void>(
 	"codeStream/textDocument/post"
 );
-
-export interface DidReceivePubNubMessagesNotificationParams {
-	[key: string]: any;
-}
