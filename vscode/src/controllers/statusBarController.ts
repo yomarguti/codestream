@@ -31,7 +31,7 @@ export class StatusBarController implements Disposable {
 
 	private onSessionChanged(e: SessionChangedEvent) {
 		if (e instanceof UnreadsChangedEvent) {
-			this.updateStatusBar(Container.session.status, e.getCount());
+			this.updateStatusBar(Container.session.status, e.getMentionCount());
 		}
 	}
 

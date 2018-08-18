@@ -531,19 +531,17 @@ export class CodeStreamSession implements Disposable {
 		});
 
 		unreadCounter.lastReads = lastReads;
-		this._onDidChange.fire(new UnreadsChangedEvent(this._state!.user, unreadCounter.getValues()));
+		this._onDidChange.fire(new UnreadsChangedEvent(unreadCounter.getValues()));
 	}
 
 	private async incrementUnreads(posts: CSPost[]) {
-		const mentionRegex = this.getMentionRegex(this.user.name);
-
 		const unreadCounter = this._state!.unreads;
 
 		await Promise.all(
 			posts.map(async post => {
 				if (!post.deactivated && !post.hasBeenEdited && post.creatorId !== this.userId) {
 					const stream = await this._sessionApi!.getStream(post.streamId);
-					if (post.text.match(mentionRegex) || stream!.type === StreamType.Direct) {
+					if (post.mentionedUserIds.includes(this.user.id) || stream!.type === StreamType.Direct) {
 						unreadCounter.incrementMention(post.streamId);
 						unreadCounter.incrementUnread(post.streamId);
 					} else {
@@ -555,9 +553,7 @@ export class CodeStreamSession implements Disposable {
 				}
 			})
 		);
-		this._onDidChange.fire(
-			new UnreadsChangedEvent(this._state!.user, this._state!.unreads.getValues())
-		);
+		this._onDidChange.fire(new UnreadsChangedEvent(this._state!.unreads.getValues()));
 	}
 }
 
@@ -759,7 +755,6 @@ export class UnreadsChangedEvent {
 	readonly type = SessionChangedType.Unreads;
 
 	constructor(
-		private user: User,
 		public readonly unreads: {
 			unread: { [key: string]: number };
 			mentions: { [key: string]: number };
@@ -779,16 +774,8 @@ export class UnreadsChangedEvent {
 		throw new Error("Not implemented");
 	}
 
-	getCount() {
-		return Object.entries(this.unreads.unread).reduce((total, [streamId, count]) => {
-			// if a channel is muted, mentions override that. so include them in the count
-			if (this.user.hasMutedChannel(streamId)) {
-				const mentionCount = this.unreads.mentions[streamId] || 0;
-				return total + mentionCount;
-			} else {
-				return total + count;
-			}
-		}, 0);
+	getMentionCount() {
+		return Object.values(this.unreads.mentions).reduce((total, count) => total + count, 0);
 	}
 }
 
