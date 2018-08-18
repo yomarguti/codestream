@@ -49,19 +49,20 @@ export interface ApiRequestParams {
 export const ApiRequest = new RequestType<ApiRequestParams, any, void, void>("codeStream/api");
 
 export const DidReceivePubNubMessagesNotification = new NotificationType<
-	DidReceivePubNubMessagesNotificationParams[],
+	DidReceivePubNubMessagesNotificationResponse[],
 	void
 >("codeStream/didReceivePubNubMessages");
 
-export interface DidReceivePubNubMessagesNotificationParams {
+export interface DidReceivePubNubMessagesNotificationResponse {
 	[key: string]: any;
 }
 
-export const DidChangeDocumentMarkers = new NotificationType<DidChangeDocumentMarkersParams, void>(
-	"codeStream/didChangeDocumentMarkers"
-);
+export const DidChangeDocumentMarkersNotification = new NotificationType<
+	DidChangeDocumentMarkersNotificationResponse,
+	void
+>("codeStream/didChangeDocumentMarkers");
 
-export interface DidChangeDocumentMarkersParams {
+export interface DidChangeDocumentMarkersNotificationResponse {
 	textDocument: TextDocumentIdentifier;
 }
 
