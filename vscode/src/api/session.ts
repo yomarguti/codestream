@@ -484,13 +484,7 @@ export class CodeStreamSession implements Disposable {
 		this._onDidChangeStatus.fire({ getStatus: () => this._status });
 	}
 
-	private getMentionRegex(name: string) {
-		return new RegExp(`@${name}\\b`);
-	}
-
 	private async calculateUnreads(user: CSUser) {
-		const mentionRegex = this.getMentionRegex(user.username);
-
 		const lastReads = user.lastReads || {};
 		const unreadCounter = this._state!.unreads;
 		const entries = Object.entries(lastReads);
@@ -510,7 +504,8 @@ export class CodeStreamSession implements Disposable {
 					let mentionCount = 0;
 					unreadPosts.forEach(post => {
 						if (!post.deactivated) {
-							if (post.text.match(mentionRegex) || stream.type === StreamType.Direct) {
+							const mentionedUserIds = post.mentionedUserIds || [];
+							if (mentionedUserIds.includes(user.id) || stream.type === StreamType.Direct) {
 								mentionCount++;
 								unreadCount++;
 							} else {
@@ -541,7 +536,8 @@ export class CodeStreamSession implements Disposable {
 			posts.map(async post => {
 				if (!post.deactivated && !post.hasBeenEdited && post.creatorId !== this.userId) {
 					const stream = await this._sessionApi!.getStream(post.streamId);
-					if (post.mentionedUserIds.includes(this.user.id) || stream!.type === StreamType.Direct) {
+					const mentionedUserIds = post.mentionedUserIds || [];
+					if (mentionedUserIds.includes(this.user.id) || stream!.type === StreamType.Direct) {
 						unreadCounter.incrementMention(post.streamId);
 						unreadCounter.incrementUnread(post.streamId);
 					} else {
