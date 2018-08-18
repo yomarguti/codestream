@@ -33,7 +33,8 @@ export namespace MarkerHandler {
 			const streamId = await StreamUtil.getStreamId(filePath);
 			if (!streamId) return emptyResponse;
 
-			const markers = await MarkerUtil.getMarkers(streamId);
+			const markersById = await MarkerUtil.getMarkers(streamId);
+			const markers = Array.from(markersById.values());
 			const locations = await MarkerLocationUtil.getCurrentLocations(documentId.uri);
 			const markersWithRange = markers.map(
 				m =>

@@ -3,18 +3,31 @@
 import { CSMarker } from "../api/api";
 import { Container } from "../container";
 
-export namespace MarkerUtil {
-	const markersByStreamId = new Map<string, CSMarker[]>();
+type MarkersById = Map<string, CSMarker>;
+type MarkersByStreamId = Map<string, MarkersById>;
 
-	export async function getMarkers(streamId: string): Promise<CSMarker[]> {
+export namespace MarkerUtil {
+	const markersByStreamId: MarkersByStreamId = new Map();
+
+	export async function getMarkers(streamId: string): Promise<MarkersById> {
 		const { api, state } = Container.instance();
 
-		let markers = markersByStreamId.get(streamId);
-		if (!markers) {
+		let markersById = markersByStreamId.get(streamId);
+		if (!markersById) {
+			markersById = new Map();
+			markersByStreamId.set(streamId, markersById);
 			const response = await api.getMarkers(state.apiToken, state.teamId, streamId);
-			markers = response.markers;
-			markersByStreamId.set(streamId, markers);
+			for (const marker of response.markers) {
+				markersById.set(marker.id, marker);
+			}
 		}
-		return markers;
+		return markersById;
+	}
+
+	export async function cacheMarkers(markers: CSMarker[]) {
+		for (const marker of markers) {
+			const markersById = await getMarkers(marker.streamId);
+			markersById.set(marker.id, marker);
+		}
 	}
 }

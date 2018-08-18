@@ -17,8 +17,8 @@ export class RepoMonitor extends EventEmitter {
 	} = {};
 
 	monitor(repoRoot: string) {
-		if (repoRoot.endsWith(".git")) {
-			repoRoot = path.join(repoRoot, "..");
+		if (!repoRoot.endsWith(".git")) {
+			repoRoot = path.join(repoRoot, ".git");
 		}
 		repoRoot = path.normalize(repoRoot);
 

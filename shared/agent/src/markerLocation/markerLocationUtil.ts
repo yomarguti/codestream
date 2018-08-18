@@ -92,7 +92,8 @@ export namespace MarkerLocationUtil {
 			return {};
 		}
 
-		const markers = await MarkerUtil.getMarkers(streamId);
+		const markersById = await MarkerUtil.getMarkers(streamId);
+		const markers = Array.from(markersById.values());
 
 		const currentCommitLocations = await getMarkerLocations(streamId, commitHash);
 		const missingMarkersByCommit = getMissingMarkersByCommit(markers, currentCommitLocations);

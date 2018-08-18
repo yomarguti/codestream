@@ -17,6 +17,7 @@ import { UserCollection } from "./api/models/users";
 import { Container } from "./container";
 import { setGitPath } from "./git/git";
 import { MarkerHandler } from "./marker/markerHandler";
+import { MarkerUtil } from "./marker/markerUtil";
 import { MarkerLocationUtil } from "./markerLocation/markerLocationUtil";
 import { PostHandler } from "./post/postHandler";
 import { MessageReceivedEvent, MessageType, PubnubReceiver } from "./pubnub/pubnubReceiver";
@@ -196,6 +197,7 @@ export class CodeStreamSession {
 			case MessageType.Teams:
 				break;
 			case MessageType.Markers:
+				MarkerUtil.cacheMarkers(e.markers);
 				break;
 			case MessageType.MarkerLocations:
 				MarkerLocationUtil.cacheMarkerLocations(e.markerLocations);
