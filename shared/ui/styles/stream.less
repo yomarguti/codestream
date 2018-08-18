@@ -1141,9 +1141,11 @@
 				border: 1px solid @base-border-color;
 				border-bottom: 1px dashed @base-border-color;
 				&.no-repo {
-					height: 1px;
-					padding: 1px;
+					height: 0;
 					border-bottom: none;
+					* {
+						display: none;
+					}
 				}
 				.file {
 					opacity: 0.5;
