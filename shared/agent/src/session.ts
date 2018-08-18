@@ -110,9 +110,11 @@ export class CodeStreamSession {
 			}
 		} catch (ex) {
 			if (ex instanceof ServerError) {
-				return {
-					error: loginApiErrorMappings[ex.info.code] || LoginResult.Unknown
-				};
+				if (ex.statusCode !== undefined && ex.statusCode >= 400 && ex.statusCode < 500) {
+					return {
+						error: loginApiErrorMappings[ex.info.code] || LoginResult.Unknown
+					};
+				}
 			}
 
 			throw AgentError.wrap(ex, `Login failed:\n${ex.message}`);

@@ -356,7 +356,12 @@ export class CodeStreamApi {
 	}
 
 	private async handleErrorResponse(response: Response): Promise<Error> {
-		const data = await response.json();
+		let data;
+		if (response.status >= 400 && response.status < 500) {
+			try {
+				data = await response.json();
+			} catch {}
+		}
 		return new ServerError(response.statusText, data, response.status);
 	}
 
