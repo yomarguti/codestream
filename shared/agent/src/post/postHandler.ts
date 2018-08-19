@@ -109,6 +109,7 @@ export namespace PostHandler {
 		let commitHashWhenPosted: string | undefined;
 		let location: CSMarkerLocation | undefined;
 		let backtrackedLocation: CSMarkerLocation | undefined;
+		let remotes: string[] | undefined;
 		if (rangeArray) {
 			const range = Range.create(rangeArray[0], rangeArray[1], rangeArray[2], rangeArray[3]);
 			location = MarkerLocationUtil.rangeToLocation(range);
@@ -125,12 +126,15 @@ export namespace PostHandler {
 					commitHashWhenPosted = (await git.getRepoHeadRevision(source.repoPath))!;
 					backtrackedLocation = MarkerLocationUtil.emptyFileLocation();
 				}
+				if (source.remotes && source.remotes.length > 0) {
+					remotes = source.remotes.map(r => r.url);
+				}
 			}
 
 			codeBlock = {
 				code,
+				remotes,
 				file: source && source.file,
-				remotes: source && source.remotes.map(r => r.url),
 				location: backtrackedLocation && MarkerLocationUtil.locationToArray(backtrackedLocation)
 			};
 		}
