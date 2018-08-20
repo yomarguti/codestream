@@ -11,9 +11,9 @@ import {
 } from "../agent";
 import { Container } from "../container";
 import { Logger } from "../logger";
-import { MarkerLocationUtil } from "../markerLocation/markerLocationUtil";
-import { StreamUtil } from "../stream/streamUtil";
-import { MarkerUtil } from "./markerUtil";
+import { MarkerLocationManager } from "../markerLocation/markerLocationManager";
+import { StreamManager } from "../stream/streamManager";
+import { MarkerManager } from "./markerManager";
 
 export namespace MarkerHandler {
 	const emptyResponse = {
@@ -30,15 +30,18 @@ export namespace MarkerHandler {
 	}: DocumentMarkersRequestParams): Promise<DocumentMarkersResponse> {
 		try {
 			const filePath = URI.parse(documentId.uri).fsPath;
-			const streamId = await StreamUtil.getStreamId(filePath);
+			const streamId = await StreamManager.getStreamId(filePath);
 			if (!streamId) return emptyResponse;
 
-			const markersById = await MarkerUtil.getMarkers(streamId);
+			const markersById = await MarkerManager.getMarkers(streamId);
 			const markers = Array.from(markersById.values());
-			const locations = await MarkerLocationUtil.getCurrentLocations(documentId.uri);
+			const locations = await MarkerLocationManager.getCurrentLocations(documentId.uri);
 			const markersWithRange = markers.map(
 				m =>
-					({ ...m, range: MarkerLocationUtil.locationToRange(locations[m.id]) } as MarkerWithRange)
+					({
+						...m,
+						range: MarkerLocationManager.locationToRange(locations[m.id])
+					} as MarkerWithRange)
 			);
 
 			return {
@@ -64,10 +67,10 @@ export namespace MarkerHandler {
 		const filePath = path.join(repo.path, file);
 		const documentUri = URI.file(filePath).toString();
 
-		const locationsById = await MarkerLocationUtil.getCurrentLocations(documentUri);
+		const locationsById = await MarkerLocationManager.getCurrentLocations(documentUri);
 		const location = locationsById[markerId];
 		const range = location
-			? MarkerLocationUtil.locationToRange(location)
+			? MarkerLocationManager.locationToRange(location)
 			: Range.create(0, 0, 0, 0);
 
 		return {

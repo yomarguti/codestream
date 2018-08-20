@@ -1,5 +1,4 @@
 "use strict";
-import * as _path from "path";
 import { WorkspaceFolder } from "vscode-languageserver";
 import { CSFileStream, CSRepository, StreamType } from "../../api/api";
 import { Container } from "../../container";

@@ -11,7 +11,7 @@ import {
 import { CreatePostRequestCodeBlock, CSMarkerLocation, CSPost } from "../api/api";
 import { Container } from "../container";
 import { Logger } from "../logger";
-import { MarkerLocationUtil } from "../markerLocation/markerLocationUtil";
+import { MarkerLocationManager } from "../markerLocation/markerLocationManager";
 import { Iterables, Strings } from "../system";
 
 export namespace PostHandler {
@@ -112,19 +112,19 @@ export namespace PostHandler {
 		let remotes: string[] | undefined;
 		if (rangeArray) {
 			const range = Range.create(rangeArray[0], rangeArray[1], rangeArray[2], rangeArray[3]);
-			location = MarkerLocationUtil.rangeToLocation(range);
+			location = MarkerLocationManager.rangeToLocation(range);
 
 			if (source) {
 				if (source.revision) {
 					commitHashWhenPosted = source.revision;
-					backtrackedLocation = await MarkerLocationUtil.backtrackLocation(
+					backtrackedLocation = await MarkerLocationManager.backtrackLocation(
 						documentId,
 						lastFullCode,
 						location
 					);
 				} else {
 					commitHashWhenPosted = (await git.getRepoHeadRevision(source.repoPath))!;
-					backtrackedLocation = MarkerLocationUtil.emptyFileLocation();
+					backtrackedLocation = MarkerLocationManager.emptyFileLocation();
 				}
 				if (source.remotes && source.remotes.length > 0) {
 					remotes = source.remotes.map(r => r.url);
@@ -135,7 +135,7 @@ export namespace PostHandler {
 				code,
 				remotes,
 				file: source && source.file,
-				location: backtrackedLocation && MarkerLocationUtil.locationToArray(backtrackedLocation)
+				location: backtrackedLocation && MarkerLocationManager.locationToArray(backtrackedLocation)
 			};
 		}
 
@@ -158,7 +158,7 @@ export namespace PostHandler {
 						...location!
 					};
 
-					await MarkerLocationUtil.saveUncommittedLocation(
+					await MarkerLocationManager.saveUncommittedLocation(
 						filePath,
 						fileContents,
 						uncommittedLocation
@@ -171,39 +171,5 @@ export namespace PostHandler {
 			debugger;
 			return;
 		}
-	}
-
-	function preRange(range: Range): Range {
-		const { start } = range;
-		const preStart = {
-			line: Math.max(start.line - 3, 0),
-			character: 0
-		};
-		const preEnd = {
-			line: start.line,
-			character: start.character
-		};
-		const preRange = {
-			start: preStart,
-			end: preEnd
-		};
-		return preRange;
-	}
-
-	function postRange(range: Range) {
-		const { end } = range;
-		const postStart = {
-			line: end.line + 4,
-			character: end.character
-		};
-		const postEnd = {
-			line: end.line + 4,
-			character: 0
-		};
-		const postRange = {
-			start: postStart,
-			end: postEnd
-		};
-		return postRange;
 	}
 }

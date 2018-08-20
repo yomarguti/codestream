@@ -2,10 +2,10 @@
 
 import { Container } from "../container";
 
-export namespace RepoUtil {
-	const repoIdsByPath = new Map<string, string>();
+export class RepoManager {
+	private static repoIdsByPath = new Map<string, string>();
 
-	export async function getRepoId(filePath: string): Promise<string | undefined> {
+	static async getRepoId(filePath: string): Promise<string | undefined> {
 		const { api, state, git } = Container.instance();
 
 		const repoRoot = await git.getRepoRoot(filePath);
@@ -13,7 +13,7 @@ export namespace RepoUtil {
 			return;
 		}
 
-		let id = repoIdsByPath.get(repoRoot);
+		let id = RepoManager.repoIdsByPath.get(repoRoot);
 		if (!id) {
 			const getReposResponse = await api.getRepos(state.apiToken, state.teamId);
 			const repos = getReposResponse.repos;
@@ -22,7 +22,7 @@ export namespace RepoUtil {
 				for (const r of repo.remotes) {
 					if (git.repoHasRemote(repoRoot, r.normalizedUrl)) {
 						id = repo.id;
-						repoIdsByPath.set(repoRoot, id);
+						RepoManager.repoIdsByPath.set(repoRoot, id);
 						return id;
 					}
 				}

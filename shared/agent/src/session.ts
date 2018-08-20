@@ -17,11 +17,11 @@ import { UserCollection } from "./api/models/users";
 import { Container } from "./container";
 import { setGitPath } from "./git/git";
 import { MarkerHandler } from "./marker/markerHandler";
-import { MarkerUtil } from "./marker/markerUtil";
-import { MarkerLocationUtil } from "./markerLocation/markerLocationUtil";
+import { MarkerManager } from "./marker/markerManager";
+import { MarkerLocationManager } from "./markerLocation/markerLocationManager";
 import { PostHandler } from "./post/postHandler";
 import { MessageReceivedEvent, MessageType, PubnubReceiver } from "./pubnub/pubnubReceiver";
-import { StreamUtil } from "./stream/streamUtil";
+import { StreamManager } from "./stream/streamManager";
 
 const loginApiErrorMappings: { [k: string]: ApiErrors } = {
 	"USRC-1001": ApiErrors.InvalidCredentials,
@@ -192,17 +192,17 @@ export class CodeStreamSession {
 			case MessageType.Repositories:
 				break;
 			case MessageType.Streams:
-				StreamUtil.cacheStreams(e.streams);
+				StreamManager.cacheStreams(e.streams);
 				break;
 			case MessageType.Users:
 				break;
 			case MessageType.Teams:
 				break;
 			case MessageType.Markers:
-				MarkerUtil.cacheMarkers(e.markers);
+				MarkerManager.cacheMarkers(e.markers);
 				break;
 			case MessageType.MarkerLocations:
-				MarkerLocationUtil.cacheMarkerLocations(e.markerLocations);
+				MarkerLocationManager.cacheMarkerLocations(e.markerLocations);
 				break;
 		}
 	}

@@ -6,7 +6,7 @@ import {
 	TextDocumentChangeEvent,
 	TextDocuments
 } from "vscode-languageserver";
-import { MarkerLocationUtil } from "./markerLocation/markerLocationUtil";
+import { MarkerLocationManager } from "./markerLocation/markerLocationManager";
 import { Disposables } from "./system";
 
 export class DocumentManager implements Disposable {
@@ -28,7 +28,7 @@ export class DocumentManager implements Disposable {
 	private onContentChanged(e: TextDocumentChangeEvent) {}
 
 	private onOpened(e: TextDocumentChangeEvent) {
-		MarkerLocationUtil.monitorRepo(e.document.uri);
+		MarkerLocationManager.monitorRepo(e.document.uri);
 	}
 
 	get(uri: string): TextDocument | undefined {

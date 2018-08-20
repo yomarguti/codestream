@@ -3,7 +3,6 @@
 import { EventEmitter } from "events";
 import * as fs from "fs";
 import * as path from "path";
-import { MarkerLocationUtil } from "./markerLocationUtil";
 
 export enum RepoEvents {
 	commitHashChanged
@@ -30,7 +29,7 @@ export class RepoMonitor extends EventEmitter {
 		// fs.watch(logFile, (event: string, filename: string) => {
 		fs.watch(logFile, () => {
 			this.emit("commitHashChanged");
-			// MarkerLocationUtil.commitHashChanged();
+			// MarkerLocationManager.commitHashChanged();
 		});
 	}
 

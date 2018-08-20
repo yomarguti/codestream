@@ -4,8 +4,7 @@ import { IUniDiff } from "diff";
 import { compareTwoStrings, findBestMatch, Rating } from "string-similarity";
 import { CSMarkerLocation } from "../api/api";
 import { buildChangeset, Change, Changeset } from "./changeset";
-import { MarkerLocationUtil } from "./markerLocationUtil";
-import LocationsById = MarkerLocationUtil.LocationsById;
+import { LocationsById } from "./markerLocationManager";
 
 const LINE_SIMILARITY_THRESHOLD = 0.6;
 const CHANGE_SIMILARITY_THRESHOLD = 0.5;
