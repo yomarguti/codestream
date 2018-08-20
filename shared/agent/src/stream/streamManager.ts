@@ -43,7 +43,7 @@ export class StreamManager {
 		const { git } = Container.instance();
 
 		const stream = await StreamManager.getStream(streamId);
-		if (stream.type !== StreamType.File) {
+		if (!stream || stream.type !== StreamType.File) {
 			return undefined;
 		}
 
@@ -58,13 +58,19 @@ export class StreamManager {
 		return TextDocumentIdentifier.create(documentUri);
 	}
 
-	static async getStream(streamId: string): Promise<CSStream> {
+	static async getStream(streamId: string): Promise<CSStream | undefined> {
 		let stream = StreamManager.streamsById.get(streamId);
 		if (!stream) {
 			const { api, session } = Container.instance();
-			const response = await api.getStream(session.apiToken, session.teamId, streamId);
-			stream = response.stream;
-			await StreamManager.cacheStreams([stream]);
+			try {
+				const response = await api.getStream(session.apiToken, session.teamId, streamId);
+				stream = response.stream;
+				await StreamManager.cacheStreams([stream]);
+			} catch (err) {
+				// FIXME - when the user doesn't have access to the stream, the server returns a 403
+				// there should be a cleaner way to handle it
+				return undefined;
+			}
 		}
 		return stream;
 	}

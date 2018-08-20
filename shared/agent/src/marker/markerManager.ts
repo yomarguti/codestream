@@ -1,6 +1,6 @@
 "use strict";
 import { DidChangeDocumentMarkersNotification } from "../agent";
-import { CSMarker } from "../api/api";
+import { CSMarker, CSStream, StreamType } from "../api/api";
 import { Container } from "../container";
 import { StreamManager } from "../stream/streamManager";
 
@@ -29,13 +29,23 @@ export class MarkerManager {
 
 	private static async filterMarkers(markers: CSMarker[]): Promise<CSMarker[]> {
 		const filteredMarkers: CSMarker[] = [];
+		const { userId } = Container.instance().session;
 		for (const marker of markers) {
 			const stream = await StreamManager.getStream(marker.postStreamId);
-			if (stream && !stream.isArchived && !stream.deactivated) {
+			if (stream && MarkerManager.canSeeMarkers(stream, userId)) {
 				filteredMarkers.push(marker);
 			}
 		}
 		return filteredMarkers;
+	}
+
+	private static canSeeMarkers(stream: CSStream, userId: string): boolean {
+		if (stream.deactivated || stream.type === StreamType.File) return false;
+		if (stream.type === StreamType.Channel) {
+			if (stream.memberIds === undefined) return true;
+			if (!stream.memberIds.includes(userId)) return false;
+		}
+		return true;
 	}
 
 	static async cacheMarkers(markers: CSMarker[]) {
