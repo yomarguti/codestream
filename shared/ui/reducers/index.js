@@ -81,6 +81,6 @@ const appReducer = combineReducers({
 });
 
 export default (state, action) => {
-	if (action.type === "RESET") state = undefined;
+	if (action.type === "RESET") state = { configs: state.configs };
 	return appReducer(state, action);
 };
