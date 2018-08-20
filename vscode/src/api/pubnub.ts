@@ -2,7 +2,7 @@
 import { Disposable, Event, EventEmitter } from "vscode";
 import { Container } from "../container";
 import { Logger } from "../logger";
-import { CSMarker, CSPost, CSRepository, CSStream, CSTeam, CSUser } from "./api";
+import { CSPost, CSRepository, CSStream, CSTeam, CSUser } from "./api";
 import { Cache } from "./cache";
 
 export enum MessageType {

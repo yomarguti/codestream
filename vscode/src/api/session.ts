@@ -5,8 +5,7 @@ import {
 	ConfigurationTarget,
 	Disposable,
 	Event,
-	EventEmitter,
-	Uri
+	EventEmitter
 } from "vscode";
 import { AccessToken, AgentResult, DocumentMarkersChangedEvent } from "../agent/agentConnection";
 import { GlobalState, WorkspaceState } from "../common";

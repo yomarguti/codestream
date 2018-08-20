@@ -9,7 +9,6 @@ import {
 	MarkdownString,
 	OverviewRulerLane,
 	Position,
-	Range,
 	TextDocument,
 	TextDocumentChangeEvent,
 	TextEditor,
@@ -20,7 +19,6 @@ import {
 } from "vscode";
 import {
 	Marker,
-	PostsReceivedEvent,
 	SessionChangedEvent,
 	SessionChangedType,
 	SessionStatus,
