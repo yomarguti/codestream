@@ -252,7 +252,7 @@ export class StreamWebviewPanel implements Disposable {
 		state.currentTeamId = this.session.team.id;
 		state.currentUserId = this.session.userId;
 		state.configs = {
-			serverUrl: Container.config.serverUrl,
+			serverUrl: Container.session.serverUrl,
 			reduceMotion: Container.config.reduceMotion,
 			showHeadshots: Container.config.avatars
 		};
@@ -649,11 +649,14 @@ export class StreamWebviewPanel implements Disposable {
 	}
 
 	private onConfigurationChanged(e: ConfigurationChangeEvent) {
-		if (e.affectsConfiguration(extensionId)) {
+		if (
+			configuration.changed(e, configuration.name("avatars").value) ||
+			configuration.changed(e, configuration.name("reduceMotion").value)
+		) {
 			this.postMessage({
 				type: "codestream:configs",
 				body: {
-					serverUrl: Container.config.serverUrl,
+					serverUrl: Container.session.serverUrl,
 					showHeadshots: Container.config.avatars,
 					reduceMotion: Container.config.reduceMotion
 				}
@@ -827,7 +830,7 @@ export class StreamWebviewPanel implements Disposable {
 			}
 		} else {
 			state.version = Container.version;
-			state.configs = { email: Container.config.email };
+			state.configs = { email: Container.session.email };
 		}
 
 		this._streamThread = streamThread;

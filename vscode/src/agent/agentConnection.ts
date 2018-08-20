@@ -138,6 +138,7 @@ export class CodeStreamAgentConnection implements Disposable {
 	}
 
 	async login(
+		serverUrl: string,
 		email: string,
 		passwordOrToken: string | AccessToken,
 		teamId?: string,
@@ -145,6 +146,7 @@ export class CodeStreamAgentConnection implements Disposable {
 	): Promise<AgentResult> {
 		const response = await this.start({
 			...this._clientOptions.initializationOptions,
+			serverUrl: serverUrl,
 			email: email,
 			passwordOrToken: passwordOrToken,
 			team,
@@ -158,9 +160,10 @@ export class CodeStreamAgentConnection implements Disposable {
 		return response.result;
 	}
 
-	async loginViaSignupToken(token: string): Promise<AgentResult> {
+	async loginViaSignupToken(serverUrl: string, token: string): Promise<AgentResult> {
 		const response = await this.start({
 			...this._clientOptions.initializationOptions,
+			serverUrl: serverUrl,
 			signupToken: token
 		});
 

@@ -1,10 +1,10 @@
 "use strict";
-import { Disposable, StatusBarAlignment, StatusBarItem, ThemeColor, window } from "vscode";
+import { Disposable, StatusBarAlignment, StatusBarItem, window } from "vscode";
 import {
 	SessionChangedEvent,
+	SessionChangedType,
 	SessionStatus,
-	SessionStatusChangedEvent,
-	UnreadsChangedEvent
+	SessionStatusChangedEvent
 } from "../api/session";
 import { Container } from "../container";
 
@@ -30,9 +30,9 @@ export class StatusBarController implements Disposable {
 	}
 
 	private onSessionChanged(e: SessionChangedEvent) {
-		if (e instanceof UnreadsChangedEvent) {
-			this.updateStatusBar(Container.session.status, e.getMentionCount());
-		}
+		if (e.type !== SessionChangedType.Unreads) return;
+
+		this.updateStatusBar(Container.session.status, e.getMentionCount());
 	}
 
 	private onSessionStatusChanged(e: SessionStatusChangedEvent) {

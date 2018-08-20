@@ -1,5 +1,4 @@
 import { commands, Disposable, Range, TextDocument, Uri, ViewColumn, window } from "vscode";
-import { AccessToken } from "./agent/agentConnection";
 import {
 	ChannelStreamCreationOptions,
 	CodeStreamSession,
@@ -8,7 +7,8 @@ import {
 	StreamThread,
 	StreamType
 } from "./api/session";
-import { GlobalState, openEditor, ShowCodeResult } from "./common";
+import { TokenManager } from "./api/tokenManager";
+import { openEditor, ShowCodeResult } from "./common";
 import { Container } from "./container";
 import { StreamThreadId } from "./controllers/streamViewController";
 import { Command, createCommandDecorator } from "./system";
@@ -116,6 +116,12 @@ export class Commands implements Disposable {
 	// 		{ preview: true, viewColumn: ViewColumn.Beside, selection: block.range }
 	// 	);
 	// }
+
+	@command("goOffline")
+	async goOffline() {
+		Container.streamView.hide();
+		await Container.session.logout(false);
+	}
 
 	@command("openPostWorkingFile", { showErrorMessage: "Unable to open post" })
 	async openPostWorkingFile(post?: Post, args: OpenPostWorkingFileArgs = { preserveFocus: false }) {
@@ -240,12 +246,8 @@ export class Commands implements Disposable {
 
 	@command("signIn", { customErrorHandling: true })
 	async signIn() {
-		let token = Container.context.globalState.get<AccessToken | string>(GlobalState.AccessToken);
-		if (typeof token === "string") {
-			token = { value: token };
-		}
-
-		if (!Container.config.email || !token) {
+		const token = TokenManager.get(Container.config.serverUrl, Container.config.email);
+		if (!token) {
 			await Container.streamView.show();
 		} else {
 			await Container.session.login(Container.config.email, token);

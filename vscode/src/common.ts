@@ -1,12 +1,5 @@
 "user strict";
-import {
-	commands,
-	TextDocumentShowOptions,
-	Uri,
-	ViewColumn,
-	window,
-	workspace
-} from "vscode";
+import { commands, TextDocumentShowOptions, Uri, ViewColumn, window, workspace } from "vscode";
 import { BuiltInCommands } from "./commands";
 import { Logger } from "./logger";
 
@@ -59,7 +52,7 @@ export function setContext(key: ContextKeys | string, value: any) {
 }
 
 export enum GlobalState {
-	AccessToken = "codestream:accessToken"
+	AccessTokens = "codestream:accessTokens"
 }
 
 export enum WorkspaceState {

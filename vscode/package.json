@@ -135,6 +135,11 @@
         },
         "commands": [
             {
+                "command": "codestream.goOffline",
+                "title": "Go Offline",
+                "category": "CodeStream"
+            },
+            {
                 "command": "codestream.signIn",
                 "title": "Sign In...",
                 "category": "CodeStream"
@@ -172,6 +177,10 @@
         ],
         "menus": {
             "commandPalette": [
+                {
+                    "command": "codestream.goOffline",
+                    "when": "codestream:status == signedIn"
+                },
                 {
                     "command": "codestream.signIn",
                     "when": "codestream:status == signedOut"

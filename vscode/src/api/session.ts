@@ -1,14 +1,8 @@
 "use strict";
 import * as uuid from "uuid/v4";
-import {
-	ConfigurationChangeEvent,
-	ConfigurationTarget,
-	Disposable,
-	Event,
-	EventEmitter
-} from "vscode";
+import { ConfigurationTarget, Disposable, Event, EventEmitter } from "vscode";
 import { AccessToken, AgentResult, DocumentMarkersChangedEvent } from "../agent/agentConnection";
-import { GlobalState, WorkspaceState } from "../common";
+import { WorkspaceState } from "../common";
 import { configuration } from "../configuration";
 import { Container } from "../container";
 import { Logger } from "../logger";
@@ -43,6 +37,7 @@ import {
 } from "./pubnub";
 import { CodeStreamSessionApi } from "./sessionApi";
 import { SessionState } from "./sessionState";
+import { TokenManager } from "./tokenManager";
 
 export {
 	ChannelStream,
@@ -78,6 +73,7 @@ export class CodeStreamSession implements Disposable {
 
 	private _disposable: Disposable | undefined;
 
+	private _email: string | undefined;
 	private _id: string | undefined;
 	private _loginPromise: Promise<LoginResult> | undefined;
 	private _presenceManager: PresenceManager | undefined;
@@ -92,24 +88,22 @@ export class CodeStreamSession implements Disposable {
 		this._disposable && this._disposable.dispose();
 	}
 
-	private async onConfigurationChanged(e: ConfigurationChangeEvent) {
-		if (configuration.changed(e, configuration.name("serverUrl").value)) {
-			this._serverUrl = Container.config.serverUrl;
-			if (this._sessionApi !== undefined) {
-				this._sessionApi.baseUrl = this._serverUrl;
-			}
-
-			if (this.signedIn) {
-				this.logout();
-			}
-		}
-
-		if (configuration.changed(e, configuration.name("email").value)) {
-			if (this.signedIn) {
-				this.logout();
-			}
-		}
-	}
+	// private async onConfigurationChanged(e: ConfigurationChangeEvent) {
+	// 	if (configuration.changed(e, configuration.name("serverUrl").value)) {
+	// 		this._serverUrl = Container.config.serverUrl;
+	// 		if (this._sessionApi !== undefined) {
+	// 			this._sessionApi.baseUrl = this._serverUrl;
+	// 		}
+	// 		if (this.signedIn) {
+	// 			this.logout();
+	// 		}
+	// 	}
+	// 	if (configuration.changed(e, configuration.name("email").value)) {
+	// 		if (this.signedIn) {
+	// 			this.logout();
+	// 		}
+	// 	}
+	// }
 
 	private onDocumentMarkersChanged(e: DocumentMarkersChangedEvent) {
 		this.fireChanged(new MarkersChangedEvent(this, e));
@@ -183,6 +177,10 @@ export class CodeStreamSession implements Disposable {
 			);
 		}
 		this._postsReceivedDebounced(e);
+	}
+
+	get email() {
+		return this._email;
 	}
 
 	get id() {
@@ -274,10 +272,8 @@ export class CodeStreamSession implements Disposable {
 		passwordOrToken: string | AccessToken,
 		teamId?: string
 	): Promise<LoginResult> {
-		const id = Strings.sha1(`${this.serverUrl}|${email}|${teamId}`);
-
 		if (this._loginPromise === undefined) {
-			this._loginPromise = this.loginCore(id, email, passwordOrToken, teamId);
+			this._loginPromise = this.loginCore(email, passwordOrToken, teamId);
 		}
 
 		const result = await this._loginPromise;
@@ -291,11 +287,13 @@ export class CodeStreamSession implements Disposable {
 		// TODO: reuse this._loginPromise
 		if (this._signupToken === undefined) throw new Error("A signup token hasn't been generated");
 
+		this._serverUrl = Container.config.serverUrl;
+
 		this._status = SessionStatus.SigningIn;
 		const e: SessionStatusChangedEvent = { getStatus: () => this._status };
 		this._onDidChangeStatus.fire(e);
 
-		const result = await Container.agent.loginViaSignupToken(this._signupToken);
+		const result = await Container.agent.loginViaSignupToken(this._serverUrl, this._signupToken);
 
 		if (result.error) {
 			this._status = SessionStatus.SignedOut;
@@ -319,9 +317,10 @@ export class CodeStreamSession implements Disposable {
 
 		if (reset) {
 			// Clear the access token
-			await Container.context.globalState.update(GlobalState.AccessToken, undefined);
+			await TokenManager.clear(this._serverUrl, this._email!);
 		}
 
+		this._email = undefined;
 		this._status = SessionStatus.SignedOut;
 
 		if (Container.agent !== undefined) {
@@ -384,16 +383,14 @@ export class CodeStreamSession implements Disposable {
 	}
 
 	private async loginCore(
-		id: string,
 		email: string,
 		passwordOrToken: string | AccessToken,
 		teamId?: string
 	): Promise<LoginResult> {
+		this._serverUrl = Container.config.serverUrl;
 		Logger.log(`Signing ${email} into CodeStream (${this.serverUrl})`);
 
 		try {
-			this._id = id;
-
 			this._status = SessionStatus.SigningIn;
 			const e: SessionStatusChangedEvent = { getStatus: () => this._status };
 			this._onDidChangeStatus.fire(e);
@@ -406,6 +403,7 @@ export class CodeStreamSession implements Disposable {
 			}
 
 			const result = await Container.agent.login(
+				this._serverUrl,
 				email,
 				passwordOrToken,
 				teamId,
@@ -414,7 +412,7 @@ export class CodeStreamSession implements Disposable {
 
 			if (result.error) {
 				// Clear the access token
-				await Container.context.globalState.update(GlobalState.AccessToken, undefined);
+				await TokenManager.clear(this._serverUrl, email);
 
 				this._status = SessionStatus.SignedOut;
 				e.reason = SessionStatusSignedOutReason.SignInFailure;
@@ -423,7 +421,7 @@ export class CodeStreamSession implements Disposable {
 				return result.error;
 			}
 
-			await this.completeLogin(result, id, teamId);
+			await this.completeLogin(result, teamId);
 
 			return LoginResult.Success;
 		} catch (ex) {
@@ -436,20 +434,35 @@ export class CodeStreamSession implements Disposable {
 		}
 	}
 
-	private async completeLogin(result: AgentResult, id: string, teamId?: string) {
+	private async completeLogin(result: AgentResult, teamId?: string) {
 		const email = result.loginResponse.user.email;
+		this._email = email;
 
-		await Container.context.globalState.update(GlobalState.AccessToken, {
-			value: result.loginResponse.accessToken
-		} as AccessToken);
+		// Create an id for this session
+		// TODO: Probably needs to be more unique
+		this._id = Strings.sha1(`${this.serverUrl}|${email}|${teamId}`.toLowerCase());
+
+		await TokenManager.addOrUpdate(this._serverUrl, email, result.loginResponse.accessToken);
 
 		// Update the saved e-mail on successful login
 		if (email !== Container.config.email) {
-			await configuration.update(
-				configuration.name("email").value,
-				email,
-				ConfigurationTarget.Global
-			);
+			let target = ConfigurationTarget.Global;
+
+			// Determine where to best save the e-mail
+			const emailSetting = configuration.inspect(configuration.name("email").value);
+			// If we have an e-mail in the workspace, save it to the workspace
+			if (emailSetting !== undefined && emailSetting.workspaceValue !== undefined) {
+				target = ConfigurationTarget.Workspace;
+			} else {
+				// If we don't have an e-mail in the workspace, check if the serverUrl is in the workspace
+				const serverUrlSetting = configuration.inspect(configuration.name("serverUrl").value);
+				// If we have a serverUrl in the workspace, save the e-mail to the workspace
+				if (serverUrlSetting !== undefined && serverUrlSetting.workspaceValue !== undefined) {
+					target = ConfigurationTarget.Workspace;
+				}
+			}
+
+			await configuration.update(configuration.name("email").value, email, target);
 		}
 
 		if (!teamId || teamId !== result.state.teamId) {
@@ -457,11 +470,10 @@ export class CodeStreamSession implements Disposable {
 			await Container.context.workspaceState.update(WorkspaceState.TeamId, teamId);
 		}
 
-		this._serverUrl = Container.config.serverUrl;
 		this._pubnub = new PubNubReceiver(new Cache(this));
 		this._state = new SessionState(this, teamId, result.loginResponse);
 		this._sessionApi = new CodeStreamSessionApi(this._serverUrl, this._state.token, teamId);
-		this._presenceManager = new PresenceManager(this._sessionApi, id);
+		this._presenceManager = new PresenceManager(this._sessionApi, this._id);
 
 		this.calculateUnreads(result.loginResponse.user);
 
@@ -469,7 +481,7 @@ export class CodeStreamSession implements Disposable {
 			Container.agent.onDidChangeDocumentMarkers(this.onDocumentMarkersChanged, this),
 			this._pubnub.onDidReceiveMessage(this.onMessageReceived, this),
 			this._pubnub,
-			configuration.onDidChange(this.onConfigurationChanged, this),
+			// configuration.onDidChange(this.onConfigurationChanged, this),
 			this._presenceManager,
 			this._sessionApi.useMiddleware(new PresenceMiddleware(this._presenceManager))
 		);
