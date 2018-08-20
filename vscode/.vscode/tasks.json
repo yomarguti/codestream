@@ -28,6 +28,7 @@
 			"problemMatcher": [
 				{
 					"base": "$ts-webpack-watch",
+					"applyTo": "closedDocuments",
 					"fileLocation": "absolute",
 					"background": {
 						"activeOnStart": true,
@@ -41,6 +42,7 @@
 				},
 				{
 					"base": "$tslint-webpack-watch",
+					"applyTo": "closedDocuments",
 					"background": {
 						"activeOnStart": true,
 						"beginsPattern": {
@@ -61,10 +63,12 @@
 			"problemMatcher": [
 				{
 					"base": "$ts-webpack-watch",
+					"applyTo": "closedDocuments",
 					"fileLocation": "absolute"
 				},
 				{
 					"base": "$tslint-webpack-watch",
+					"applyTo": "closedDocuments",
 					"fileLocation": ["relative", "${workspaceFolder}/../codestream-lsp-agent/"]
 				}
 			]
