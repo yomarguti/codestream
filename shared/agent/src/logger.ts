@@ -24,9 +24,9 @@ export class Logger {
 	static log(message?: any, ...params: any[]): void {
 		if (this.level !== TraceLevel.Verbose && this.level !== TraceLevel.Debug) return;
 
-		if (Logger.isDebugging) {
-			console.log(this.timestamp, ConsolePrefix, message, ...params);
-		}
+		// if (Logger.isDebugging) {
+		// 	console.log(this.timestamp, ConsolePrefix, message, ...params);
+		// }
 
 		if (this._agent !== undefined) {
 			this._agent.log(
@@ -38,9 +38,9 @@ export class Logger {
 	static error(ex: Error, classOrMethod?: string, ...params: any[]): void {
 		if (this.level === TraceLevel.Silent) return;
 
-		if (Logger.isDebugging) {
-			console.error(this.timestamp, ConsolePrefix, classOrMethod, ...params, ex);
-		}
+		// if (Logger.isDebugging) {
+		// 	console.error(this.timestamp, ConsolePrefix, classOrMethod, ...params, ex);
+		// }
 
 		if (this._agent !== undefined) {
 			this._agent.error(
@@ -57,9 +57,9 @@ export class Logger {
 	static warn(message?: any, ...params: any[]): void {
 		if (this.level === TraceLevel.Silent) return;
 
-		if (Logger.isDebugging) {
-			console.warn(this.timestamp, ConsolePrefix, message, ...params);
-		}
+		// if (Logger.isDebugging) {
+		// 	console.warn(this.timestamp, ConsolePrefix, message, ...params);
+		// }
 
 		if (this._agent !== undefined) {
 			this._agent.warn(
