@@ -101,12 +101,19 @@ export class CodeStreamSession {
 	}
 
 	async login() {
+		const { email, passwordOrToken, serverUrl, signupToken } = this._options;
+		if (!signupToken && typeof passwordOrToken !== "string") {
+			if (passwordOrToken.email !== email || passwordOrToken.url !== serverUrl) {
+				throw new AgentError("Invalid credentials.");
+			}
+		}
+
 		let loginResponse;
 		try {
-			if (this._options.signupToken) {
-				loginResponse = await this._api.checkSignup(this._options.signupToken);
+			if (signupToken) {
+				loginResponse = await this._api.checkSignup(signupToken);
 			} else {
-				loginResponse = await this._api.login(this._options.email, this._options.passwordOrToken);
+				loginResponse = await this._api.login(email, passwordOrToken);
 			}
 		} catch (ex) {
 			if (ex instanceof ServerError) {
@@ -121,7 +128,11 @@ export class CodeStreamSession {
 		}
 
 		this._apiToken = loginResponse.accessToken;
-		this._options.passwordOrToken = { value: loginResponse.accessToken };
+		this._options.passwordOrToken = {
+			url: serverUrl,
+			email: email,
+			value: loginResponse.accessToken
+		};
 
 		// If there is only 1 team, use it regardless of config
 		if (loginResponse.teams.length === 1) {

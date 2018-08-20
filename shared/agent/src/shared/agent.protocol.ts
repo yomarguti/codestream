@@ -9,6 +9,8 @@ import {
 import { CSMarker, CSPost, LoginResponse, LoginResult } from "./api.protocol";
 
 export interface AccessToken {
+	email: string;
+	url: string;
 	value: string;
 }
 
