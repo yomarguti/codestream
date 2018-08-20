@@ -6,9 +6,10 @@
 			"request": "attach",
 			"name": "Attach to Agent",
 			"port": 6009,
+			"outFiles": ["${workspaceRoot}/dist/**/*.js"],
+			"skipFiles": ["<node_internals>/**/*.js", "**/node_modules/**/*.js", "**/extensions/**/*.js"],
 			"smartStep": true,
-			"sourceMaps": true,
-			"outFiles": ["${workspaceRoot}/dist/**/*.js"]
+			"sourceMaps": true
 		}
 	]
 }
