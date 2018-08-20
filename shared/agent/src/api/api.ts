@@ -271,88 +271,99 @@ export class CodeStreamApi {
 		init?: RequestInit,
 		token?: string
 	): Promise<R> {
-		if (init !== undefined || token !== undefined) {
-			if (init === undefined) {
-				init = {};
-			}
+		const start = process.hrtime();
 
-			if (init.headers === undefined) {
-				init.headers = new Headers();
-			}
-
-			if (init.headers instanceof Headers) {
-				init.headers.append("Accept", "application/json");
-				init.headers.append("Content-Type", "application/json");
-
-				if (token !== undefined) {
-					init.headers.append("Authorization", `Bearer ${token}`);
+		let traceResult;
+		try {
+			if (init !== undefined || token !== undefined) {
+				if (init === undefined) {
+					init = {};
 				}
 
-				init.headers.append("X-CS-Plugin-IDE", "VS Code");
-				init.headers.append("X-CS-Plugin-Version", this._extensionVersion);
-				init.headers.append("X-CS-IDE-Version", this._ideVersion);
-			}
-		}
+				if (init.headers === undefined) {
+					init.headers = new Headers();
+				}
 
-		const method = (init && init.method) || "GET";
-		const absoluteUrl = `${this.baseUrl}${url}`;
+				if (init.headers instanceof Headers) {
+					init.headers.append("Accept", "application/json");
+					init.headers.append("Content-Type", "application/json");
 
-		Logger.log(`${method} ${url} ${CodeStreamApi.sanitize(init && init.body)}`);
+					if (token !== undefined) {
+						init.headers.append("Authorization", `Bearer ${token}`);
+					}
 
-		const hasMiddleware = this._middleware.length > 0;
-
-		let context: CodeStreamApiMiddlewareContext;
-		if (hasMiddleware) {
-			context = {
-				url: absoluteUrl,
-				method: method,
-				request: init
-			};
-
-			for (const mw of this._middleware) {
-				if (mw.onRequest === undefined) continue;
-
-				try {
-					await mw.onRequest(context);
-				} catch (ex) {
-					Logger.error(ex, `${method} ${url}: Middleware(${mw.name}).onRequest FAILED`);
+					init.headers.append("X-CS-Plugin-IDE", "VS Code");
+					init.headers.append("X-CS-Plugin-Version", this._extensionVersion);
+					init.headers.append("X-CS-IDE-Version", this._ideVersion);
 				}
 			}
-		}
 
-		let json: Promise<any> | undefined;
-		if (hasMiddleware) {
-			for (const mw of this._middleware) {
-				if (mw.onProvideResponse === undefined) continue;
+			const method = (init && init.method) || "GET";
+			const absoluteUrl = `${this.baseUrl}${url}`;
 
-				try {
-					json = await mw.onProvideResponse(context!);
-					if (json !== undefined) break;
-				} catch (ex) {
-					Logger.error(ex, `${method} ${url}: Middleware(${mw.name}).onProvideResponse FAILED`);
+			const hasMiddleware = this._middleware.length > 0;
+
+			let context: CodeStreamApiMiddlewareContext;
+			if (hasMiddleware) {
+				context = {
+					url: absoluteUrl,
+					method: method,
+					request: init
+				};
+
+				for (const mw of this._middleware) {
+					if (mw.onRequest === undefined) continue;
+
+					try {
+						await mw.onRequest(context);
+					} catch (ex) {
+						Logger.error(ex, `${method} ${url}: Middleware(${mw.name}).onRequest FAILED`);
+					}
 				}
 			}
-		}
 
-		if (json === undefined) {
-			const resp = await fetch(absoluteUrl, init);
-			if (resp.status !== 200) throw await this.handleErrorResponse(resp);
-			json = resp.json() as Promise<R>;
-		}
+			let json: Promise<any> | undefined;
+			if (hasMiddleware) {
+				for (const mw of this._middleware) {
+					if (mw.onProvideResponse === undefined) continue;
 
-		if (hasMiddleware) {
-			for (const mw of this._middleware) {
-				if (mw.onResponse === undefined) continue;
-
-				try {
-					await mw.onResponse(context!, json);
-				} catch (ex) {
-					Logger.error(ex, `${method} ${url}: Middleware(${mw.name}).onResponse FAILED`);
+					try {
+						json = await mw.onProvideResponse(context!);
+						if (json !== undefined) break;
+					} catch (ex) {
+						Logger.error(ex, `${method} ${url}: Middleware(${mw.name}).onProvideResponse FAILED`);
+					}
 				}
 			}
-		}
 
-		return CodeStreamApi.normalizeResponse(await json);
+			if (json === undefined) {
+				const resp = await fetch(absoluteUrl, init);
+				if (resp.status !== 200) {
+					traceResult = `FAILED ${method} ${url}`;
+					throw await this.handleErrorResponse(resp);
+				}
+
+				traceResult = `Completed ${method} ${url}`;
+				json = resp.json() as Promise<R>;
+			}
+
+			if (hasMiddleware) {
+				for (const mw of this._middleware) {
+					if (mw.onResponse === undefined) continue;
+
+					try {
+						await mw.onResponse(context!, json);
+					} catch (ex) {
+						Logger.error(ex, `${method} ${url}: Middleware(${mw.name}).onResponse FAILED`);
+					}
+				}
+			}
+
+			return CodeStreamApi.normalizeResponse(await json);
+		} finally {
+			const duration = process.hrtime(start);
+			Logger.log(`${traceResult} in ${duration[0] * 1000 + Math.floor(duration[1] / 1000000)}ms`);
+		}
 	}
 
 	private async handleErrorResponse(response: Response): Promise<Error> {

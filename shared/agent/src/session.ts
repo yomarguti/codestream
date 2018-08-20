@@ -16,6 +16,7 @@ import { ApiErrors, CodeStreamApi, CSStream, LoginResult } from "./api/api";
 import { UserCollection } from "./api/models/users";
 import { Container } from "./container";
 import { setGitPath } from "./git/git";
+import { Logger } from "./logger";
 import { MarkerHandler } from "./marker/markerHandler";
 import { MarkerManager } from "./marker/markerManager";
 import { MarkerLocationManager } from "./markerLocation/markerLocationManager";
@@ -108,84 +109,90 @@ export class CodeStreamSession {
 			}
 		}
 
-		let loginResponse;
+		const start = process.hrtime();
 		try {
-			if (signupToken) {
-				loginResponse = await this._api.checkSignup(signupToken);
+			let loginResponse;
+			try {
+				if (signupToken) {
+					loginResponse = await this._api.checkSignup(signupToken);
+				} else {
+					loginResponse = await this._api.login(email, passwordOrToken);
+				}
+			} catch (ex) {
+				if (ex instanceof ServerError) {
+					if (ex.statusCode !== undefined && ex.statusCode >= 400 && ex.statusCode < 500) {
+						return {
+							error: loginApiErrorMappings[ex.info.code] || LoginResult.Unknown
+						};
+					}
+				}
+
+				throw AgentError.wrap(ex, `Login failed:\n${ex.message}`);
+			}
+
+			this._apiToken = loginResponse.accessToken;
+			this._options.passwordOrToken = {
+				url: serverUrl,
+				email: email,
+				value: loginResponse.accessToken
+			};
+
+			// If there is only 1 team, use it regardless of config
+			if (loginResponse.teams.length === 1) {
+				this._options.teamId = loginResponse.teams[0].id;
 			} else {
-				loginResponse = await this._api.login(email, passwordOrToken);
-			}
-		} catch (ex) {
-			if (ex instanceof ServerError) {
-				if (ex.statusCode !== undefined && ex.statusCode >= 400 && ex.statusCode < 500) {
-					return {
-						error: loginApiErrorMappings[ex.info.code] || LoginResult.Unknown
-					};
-				}
+				// Sort the teams from oldest to newest
+				loginResponse.teams.sort((a, b) => a.createdAt - b.createdAt);
 			}
 
-			throw AgentError.wrap(ex, `Login failed:\n${ex.message}`);
-		}
-
-		this._apiToken = loginResponse.accessToken;
-		this._options.passwordOrToken = {
-			url: serverUrl,
-			email: email,
-			value: loginResponse.accessToken
-		};
-
-		// If there is only 1 team, use it regardless of config
-		if (loginResponse.teams.length === 1) {
-			this._options.teamId = loginResponse.teams[0].id;
-		} else {
-			// Sort the teams from oldest to newest
-			loginResponse.teams.sort((a, b) => a.createdAt - b.createdAt);
-		}
-
-		if (this._options.teamId == null) {
-			if (this._options.team) {
-				const normalizedTeamName = this._options.team.toLocaleUpperCase();
-				const team = loginResponse.teams.find(
-					t => t.name.toLocaleUpperCase() === normalizedTeamName
-				);
-				if (team != null) {
-					this._options.teamId = team.id;
-				}
-			}
-
-			// If we still can't find a team, then just pick the first one
 			if (this._options.teamId == null) {
+				if (this._options.team) {
+					const normalizedTeamName = this._options.team.toLocaleUpperCase();
+					const team = loginResponse.teams.find(
+						t => t.name.toLocaleUpperCase() === normalizedTeamName
+					);
+					if (team != null) {
+						this._options.teamId = team.id;
+					}
+				}
+
+				// If we still can't find a team, then just pick the first one
+				if (this._options.teamId == null) {
+					this._options.teamId = loginResponse.teams[0].id;
+				}
+			}
+
+			if (loginResponse.teams.find(t => t.id === this._options.teamId) === undefined) {
 				this._options.teamId = loginResponse.teams[0].id;
 			}
+			this._teamId = this._options.teamId;
+			this._userId = loginResponse.user.id;
+
+			setGitPath(this._options.gitPath);
+			void (await Container.initialize(this, this._api, this._options, loginResponse));
+
+			this._pubnub = new PubnubReceiver(
+				this.agent,
+				this._api,
+				loginResponse.pubnubKey,
+				loginResponse.pubnubToken,
+				this._apiToken,
+				this._userId,
+				this._teamId
+			);
+
+			const streams = await this.getSubscribableStreams(this._userId, this._teamId);
+			this._pubnub.listen(streams.map(s => s.id));
+			this._pubnub.onDidReceiveMessage(this.onMessageReceived, this);
+
+			return {
+				loginResponse: { ...loginResponse },
+				state: { ...Container.instance().state }
+			};
+		} finally {
+			const duration = process.hrtime(start);
+			Logger.log(`Login completed in ${duration[0] * 1000 + Math.floor(duration[1] / 1000000)}ms`);
 		}
-
-		if (loginResponse.teams.find(t => t.id === this._options.teamId) === undefined) {
-			this._options.teamId = loginResponse.teams[0].id;
-		}
-		this._teamId = this._options.teamId;
-		this._userId = loginResponse.user.id;
-
-		setGitPath(this._options.gitPath);
-		void (await Container.initialize(this, this._api, this._options, loginResponse));
-
-		this._pubnub = new PubnubReceiver(
-			this.agent,
-			this._api,
-			loginResponse.pubnubKey,
-			loginResponse.pubnubToken,
-			this._apiToken,
-			this._userId,
-			this._teamId
-		);
-
-		const streams = await this.getSubscribableStreams(this._userId, this._teamId);
-		this._pubnub.listen(streams.map(s => s.id));
-		this._pubnub.onDidReceiveMessage(this.onMessageReceived, this);
-
-		return {
-			loginResponse: { ...loginResponse },
-			state: { ...Container.instance().state }
-		};
 	}
 
 	private async getSubscribableStreams(userId: string, teamId?: string): Promise<CSStream[]> {
