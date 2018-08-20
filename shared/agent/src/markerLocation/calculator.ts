@@ -2,7 +2,7 @@
 
 import { IUniDiff } from "diff";
 import { compareTwoStrings, findBestMatch, Rating } from "string-similarity";
-import { CSMarkerLocation } from "../api/api";
+import { CSLocationMeta, CSMarkerLocation } from "../api/api";
 import { buildChangeset, Change, Changeset } from "./changeset";
 import { LocationsById } from "./markerLocationManager";
 
@@ -67,6 +67,7 @@ class CalculatedLocation {
 	public lineEndOldContent = "";
 	public lineStartNewContent = "";
 	public lineEndNewContent = "";
+	public meta: CSLocationMeta = {};
 	private lineMap: Map<number, CalculatedLine>;
 
 	constructor(location: CSMarkerLocation, lineMap: Map<number, CalculatedLine>) {
@@ -81,11 +82,23 @@ class CalculatedLocation {
 	public trimLineStartChange() {
 		const change = this.lineStartChange();
 		this.lineStartNew = change.addStart + change.adds.length;
+		this.colStartNew = 1;
+		this.meta.startWasDeleted = true;
 	}
 
 	public trimLineEndChange() {
 		const change = this.lineEndChange();
 		this.lineEndNew = change.addStart - 1;
+		this.colEndNew = 1;
+		this.meta.endWasDeleted = true;
+	}
+
+	public trimLineChange() {
+		this.trimLineStartChange();
+		this.lineEndNew = this.lineStartNew;
+		this.colEndNew = 1;
+		this.meta.endWasDeleted = true;
+		this.meta.entirelyDeleted = true;
 	}
 
 	public isLineStartDeleted(): boolean {
@@ -162,7 +175,8 @@ class CalculatedLocation {
 			lineStart: this.lineStartNew,
 			colStart: this.colStartNew,
 			lineEnd: this.lineEndNew,
-			colEnd: this.colEndNew
+			colEnd: this.colEndNew,
+			meta: this.meta
 		};
 	}
 }
@@ -351,7 +365,9 @@ class Calculation {
 	private calculateMissingLocations() {
 		for (const location of this._calculatedLocations.values()) {
 			if (location.isEntirelyDeleted()) {
-				this.findMovedLocation(location);
+				if (!this.findMovedLocation(location)) {
+					location.trimLineChange();
+				}
 			} else if (location.isLineStartDeleted()) {
 				location.trimLineStartChange();
 			} else if (location.isLineEndDeleted()) {
@@ -378,7 +394,7 @@ class Calculation {
 	//    we say we found the location
 	// 6) if we exhaust all changes from (4) without finding lines (5), then we
 	//    consider the location as deleted
-	private findMovedLocation(location: CalculatedLocation) {
+	private findMovedLocation(location: CalculatedLocation): boolean {
 		// if a multi-line location is considered moved, it means that both its
 		// lineStartChange and lineEndChange are the same, so we can always get
 		// the content from lineStartChange
@@ -413,11 +429,16 @@ class Calculation {
 
 				location.lineEndNewContent = lineEndContent;
 				location.lineEndNew = change.addStart + lineEndIndex;
+				location.lineStartNewContent = lineStartContent;
+				location.lineStartNew = change.addStart + lineStartIndex;
+				return true;
+			} else {
+				location.lineStartNewContent = location.lineEndNewContent = lineStartContent;
+				location.lineStartNew = location.lineEndNew = change.addStart + lineStartIndex;
+				return true;
 			}
-
-			location.lineStartNewContent = lineStartContent;
-			location.lineStartNew = change.addStart + lineStartIndex;
 		}
+		return false;
 	}
 
 	private findChangesWithSimilarAddContent(content: string): Change[] {

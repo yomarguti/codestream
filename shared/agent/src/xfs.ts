@@ -8,7 +8,11 @@ export namespace xfs {
 		return new Promise((resolve, reject) => {
 			fs.readFile(srcPath, "utf8", (err, data) => {
 				if (err) {
-					reject(err);
+					if (err.code === "ENOENT") {
+						resolve(undefined);
+					} else {
+						reject(err);
+					}
 				} else {
 					resolve(JSON.parse(data.toString()));
 				}

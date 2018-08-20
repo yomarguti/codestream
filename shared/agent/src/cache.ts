@@ -67,5 +67,5 @@ async function load(repoPath: string): Promise<Cache> {
 	const cachePath = path.join(repoPath, `codestream-${userId}.cache`);
 	const data = await xfs.readJson(cachePath);
 
-	return new Cache(cachePath, data);
+	return new Cache(cachePath, data || {});
 }

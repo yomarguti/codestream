@@ -95,15 +95,9 @@ export namespace PostHandler {
 		parentPostId,
 		mentionedUserIds
 	}: DocumentPostRequestParams): Promise<CSPost | undefined> {
-		const { api, state, git, documents } = Container.instance();
-
-		const document = documents.get(documentId.uri);
-		if (!document) {
-			throw new Error(`Could not retrieve document ${documentId.uri} from document manager`);
-		}
-
+		const { api, state, git } = Container.instance();
 		const filePath = URI.parse(documentId.uri).fsPath;
-		const fileContents = document.getText();
+		const fileContents = lastFullCode;
 
 		let codeBlock: CreatePostRequestCodeBlock | undefined;
 		let commitHashWhenPosted: string | undefined;
@@ -119,7 +113,7 @@ export namespace PostHandler {
 					commitHashWhenPosted = source.revision;
 					backtrackedLocation = await MarkerLocationManager.backtrackLocation(
 						documentId,
-						lastFullCode,
+						fileContents,
 						location
 					);
 				} else {
@@ -154,8 +148,8 @@ export namespace PostHandler {
 				const meta = backtrackedLocation.meta;
 				if (meta && (meta.startWasDeleted || meta.endWasDeleted)) {
 					const uncommittedLocation = {
-						id: post.codeBlocks[0].markerId,
-						...location!
+						...location!,
+						id: post.codeBlocks[0].markerId
 					};
 
 					await MarkerLocationManager.saveUncommittedLocation(
