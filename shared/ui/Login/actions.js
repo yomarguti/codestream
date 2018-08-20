@@ -12,6 +12,7 @@ export const authenticate = params => async (dispatch, getState, { api }) => {
 		dispatch({ type: "ADD_USERS", payload: response.users });
 		dispatch(setContext({ currentTeamId: response.currentTeamId }));
 		dispatch({ type: "INIT_SESSION", payload: { userId: response.currentUserId } });
+		dispatch({ type: "UPDATE_UNREADS", payload: response.unreads });
 	} catch (error) {
 		throw errorMappings[error];
 	}
