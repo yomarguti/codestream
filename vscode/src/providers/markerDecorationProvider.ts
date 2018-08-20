@@ -25,6 +25,7 @@ import {
 	SessionStatusChangedEvent
 } from "../api/session";
 import { OpenStreamCommandArgs } from "../commands";
+import { MarkerStyle } from "../config";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { Functions } from "../system/function";
@@ -79,14 +80,35 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 	private _watchedEditorsMap: Map<string, () => void> | undefined;
 
 	constructor() {
+		let inline;
+		let overlay;
+		switch (Container.config.markerStyle) {
+			case MarkerStyle.Logo:
+				inline = logoDecoration(inlineIcon);
+				overlay = logoDecoration(overlayIcon);
+				break;
+			case MarkerStyle.Squircle:
+				inline = squircleDecoration(inlineIcon);
+				overlay = squircleDecoration(overlayIcon);
+				break;
+			case MarkerStyle.Triangle:
+				inline = triangleDecoration(inlineShape);
+				overlay = triangleDecoration(overlayShape);
+				break;
+			default:
+				inline = bubbleDecoration(inlineShape);
+				overlay = bubbleDecoration(overlayShape);
+				break;
+		}
+
 		this._inlineDecorationType = window.createTextEditorDecorationType({
-			before: bubbleDecoration(inlineIcon),
+			before: inline,
 			overviewRulerColor: "#3193f1",
 			overviewRulerLane: OverviewRulerLane.Center
 		});
 
 		this._overlayDecorationType = window.createTextEditorDecorationType({
-			before: bubbleDecoration(overlayIcon),
+			before: overlay,
 			overviewRulerColor: "#3193f1",
 			overviewRulerLane: OverviewRulerLane.Center
 		});

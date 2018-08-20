@@ -254,7 +254,7 @@ export class StreamWebviewPanel implements Disposable {
 		state.configs = {
 			serverUrl: Container.config.serverUrl,
 			reduceMotion: Container.config.reduceMotion,
-			showHeadshots: Container.config.showHeadshots
+			showHeadshots: Container.config.avatars
 		};
 
 		state.unreads = this.session.unreads.getValues();
@@ -654,7 +654,7 @@ export class StreamWebviewPanel implements Disposable {
 				type: "codestream:configs",
 				body: {
 					serverUrl: Container.config.serverUrl,
-					showHeadshots: Container.config.showHeadshots,
+					showHeadshots: Container.config.avatars,
 					reduceMotion: Container.config.reduceMotion
 				}
 			});

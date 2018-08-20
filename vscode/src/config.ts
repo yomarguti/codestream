@@ -1,5 +1,12 @@
 "use strict";
 
+export enum MarkerStyle {
+	Bubble = "bubble",
+	Logo = "logo",
+	Squircle = "squircle",
+	Triangle = "triangle"
+}
+
 export enum Notifications {
 	All = "all",
 	Mentions = "mentions",
@@ -15,12 +22,13 @@ export enum TraceLevel {
 
 export interface Config {
 	autoSignIn: boolean;
+	avatars: boolean;
 	email: string;
+	markerStyle: MarkerStyle;
 	notifications: Notifications;
+	reduceMotion: boolean;
 	serverUrl: string;
-	webAppUrl: string;
 	team: string;
 	traceLevel: TraceLevel;
-	showHeadshots: boolean;
-	reduceMotion: boolean;
+	webAppUrl: string;
 }
