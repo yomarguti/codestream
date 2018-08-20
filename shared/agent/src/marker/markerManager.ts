@@ -19,12 +19,24 @@ export class MarkerManager {
 			markersById = new Map();
 			MarkerManager.markersByStreamId.set(streamId, markersById);
 			const response = await api.getMarkers(state.apiToken, state.teamId, streamId);
-			for (const marker of response.markers) {
+			const markers = await MarkerManager.filterMarkers(response.markers);
+			for (const marker of markers) {
 				markersById.set(marker.id, marker);
 			}
 		}
 
 		return markersById;
+	}
+
+	private static async filterMarkers(markers: CSMarker[]): Promise<CSMarker[]> {
+		const filteredMarkers: CSMarker[] = [];
+		for (const marker of markers) {
+			const stream = await StreamManager.getStream(marker.postStreamId);
+			if (stream && !stream.isArchived && !stream.deactivated) {
+				filteredMarkers.push(marker);
+			}
+		}
+		return filteredMarkers;
 	}
 
 	static async cacheMarkers(markers: CSMarker[]) {

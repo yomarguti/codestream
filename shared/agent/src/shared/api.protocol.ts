@@ -11,6 +11,7 @@ export interface CSMarker {
 	teamId: string;
 	streamId: string;
 	postId: string;
+	postStreamId: string;
 	commitHashWhenCreated: string;
 }
 
