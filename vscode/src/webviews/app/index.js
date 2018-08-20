@@ -205,6 +205,10 @@ EventEmitter.on("interaction:blur", () => {
 	store.dispatch({ type: "SET_HAS_FOCUS", payload: false });
 });
 
+EventEmitter.on("interaction:signed-out", () => {
+	store.dispatch({ type: "RESET" });
+});
+
 if (data.currentUserId) {
 	store.dispatch({ type: "BOOTSTRAP_USERS", payload: data.users });
 	store.dispatch({ type: "BOOTSTRAP_TEAMS", payload: data.teams });

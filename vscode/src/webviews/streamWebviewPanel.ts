@@ -753,7 +753,7 @@ export class StreamWebviewPanel implements Disposable {
 	reset() {
 		if (this._panel !== undefined) {
 			this._streamThread = undefined;
-			this.setStream(undefined);
+			this.postMessage({ type: "codestream:interaction:signed-out", body: null });
 		}
 	}
 
