@@ -24,7 +24,7 @@ export class MarkerLocationManager {
 		};
 	} = {};
 
-	private static monitoredRepos = new Set<string>();
+	// private static monitoredRepos = new Set<string>();
 
 	private static repoMonitor = new RepoMonitor();
 

@@ -1,9 +1,8 @@
 "use strict";
-
+import { DidChangeDocumentMarkersNotification } from "../agent";
 import { CSMarker } from "../api/api";
 import { Container } from "../container";
 import { StreamManager } from "../stream/streamManager";
-import { DidChangeDocumentMarkersNotification } from "../shared/agent.protocol";
 
 type MarkersById = Map<string, CSMarker>;
 type MarkersByStreamId = Map<string, MarkersById>;

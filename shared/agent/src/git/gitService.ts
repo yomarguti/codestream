@@ -66,8 +66,8 @@ export class GitService implements IGitService, Disposable {
 	private _disposable: Disposable | undefined;
 	private readonly _repositories: GitRepositories;
 
-	constructor(private _session: CodeStreamSession, private _api: CodeStreamApi) {
-		this._repositories = new GitRepositories(this, _session, _api);
+	constructor(public readonly session: CodeStreamSession, api: CodeStreamApi) {
+		this._repositories = new GitRepositories(this, session, api);
 	}
 
 	dispose() {
