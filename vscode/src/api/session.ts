@@ -495,12 +495,20 @@ export class CodeStreamSession implements Disposable {
 			entries.map(async ([streamId, lastReadSeqNum]) => {
 				const stream = unreadStreams.find(stream => stream.id === streamId);
 				if (stream) {
-					const latestPost = await this._sessionApi!.getLatestPost(streamId);
-					const unreadPosts = await this._sessionApi!.getPostsInRange(
-						streamId,
-						lastReadSeqNum + 1,
-						latestPost.seqNum
-					);
+					let latestPost;
+					let unreadPosts;
+					try {
+						latestPost = await this._sessionApi!.getLatestPost(streamId);
+						unreadPosts = await this._sessionApi!.getPostsInRange(
+							streamId,
+							lastReadSeqNum + 1,
+							latestPost.seqNum
+						);
+					} catch (error) {
+						// likely an access error because user is no longer in this channel
+						debugger;
+						return;
+					}
 
 					let unreadCount = 0;
 					let mentionCount = 0;
