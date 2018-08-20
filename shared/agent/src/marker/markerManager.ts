@@ -28,15 +28,17 @@ export class MarkerManager {
 	}
 
 	private static async filterMarkers(markers: CSMarker[]): Promise<CSMarker[]> {
-		const filteredMarkers: CSMarker[] = [];
+		const includedMarkers: CSMarker[] = [];
 		const { userId } = Container.instance().session;
 		for (const marker of markers) {
+			if (marker.postStreamId == null) continue;
+
 			const stream = await StreamManager.getStream(marker.postStreamId);
 			if (stream && MarkerManager.canSeeMarkers(stream, userId)) {
-				filteredMarkers.push(marker);
+				includedMarkers.push(marker);
 			}
 		}
-		return filteredMarkers;
+		return includedMarkers;
 	}
 
 	private static canSeeMarkers(stream: CSStream, userId: string): boolean {
