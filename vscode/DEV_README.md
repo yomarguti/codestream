@@ -108,11 +108,41 @@ npm run pack
 
 ### Configuration
 
-#### Connecting to a CodeStream environment
+| Name                       | Description                                                                      |
+| -------------------------- | -------------------------------------------------------------------------------- |
+| `codestream.autoSignIn`    | Specifies whether to automatically sign in to CodeStream                         |
+| `codestream.avatars`       | Specifies whether to show avatars                                                |
+| `codestream.email`         | Specifies the email to use to connect to the CodeStream service                  |
+| `"codestream.markerStyle`  | Specifies the indicator style to use for CodeStream code markers                 |
+| `codestream.notifications` | Specifies when to show notifications for incoming messages                       |
+| `codestream.password`      | Specifies the password to use to connect to the CodeStream service               |
+| `codestream.reduceMotion`  | Specifies whether to reduce animation/transition motions                         |
+| `codestream.serverUrl`     | Specifies the url to use to connect to the CodeStream service                    |
+| `codestream.team`          | Specifies an optional team to use to connect to the CodeStream service           |
+| `codestream.traceLevel`    | Specifies how much (if any) output will be sent to the CodeStream output channel |
+| `codestream.webAppUrl`     | Specifies the url to use to connect to the CodeStream web app                    |
+
+### Debugging
+
+#### Using VS Code
+
+- Open the `vscode-codestream` repository folder
+- Choose the `Launch CodeStream` launch configuration from the launch dropdown in the Debug viewlet and press `F5`.
+
+### Downloading Built VSIXs
+
+Here are the download links for pre-built vsix bundles:
+
+- **CI**: https://assets.codestream.com/local/vscode/codestream-latest.vsix
+- **PD**: https://assets.codestream.com/pd/vscode/codestream-latest.vsix
+- **QA**: https://assets.codestream.com/qa/vscode/codestream-latest.vsix
+- **Production**: https://assets.codestream.com/prod/vscode/codestream-latest.vsix
+
+### Connecting to a CodeStream environment
 
 Probably the easiest way to switch between environments is to create separate workspace files for each using the example workspace files below.
 
-##### Connecting to the PD environment
+#### Connecting to the PD environment
 
 Use the following settings:
 
@@ -141,7 +171,9 @@ Example workspace file &mdash; save as pd.code-workspace
 }
 ```
 
-##### To connect to the QA environment, use the following settings
+#### Connecting to the QA environment
+
+Use the following settings:
 
 ```json
 "codestream.serverUrl": "https://qa-api.codestream.us",
@@ -168,7 +200,9 @@ Example workspace file &mdash; save as qa.code-workspace
 }
 ```
 
-##### To connect to the Production environment, use the following settings
+#### Connecting to the Production environment
+
+Use the following settings:
 
 ```json
 "codestream.email": "<email>",
@@ -190,26 +224,3 @@ Example workspace file &mdash; save as prod.code-workspace
 	}
 }
 ```
-
-#### Settings
-
-| Name                       | Description                                                                      |
-| -------------------------- | -------------------------------------------------------------------------------- |
-| `codestream.autoSignIn`    | Specifies whether to automatically sign in to CodeStream                         |
-| `codestream.avatars`       | Specifies whether to show avatars                                                |
-| `codestream.email`         | Specifies the email to use to connect to the CodeStream service                  |
-| `"codestream.markerStyle`  | Specifies the indicator style to use for CodeStream code markers                 |
-| `codestream.notifications` | Specifies when to show notifications for incoming messages                       |
-| `codestream.password`      | Specifies the password to use to connect to the CodeStream service               |
-| `codestream.reduceMotion`  | Specifies whether to reduce animation/transition motions                         |
-| `codestream.serverUrl`     | Specifies the url to use to connect to the CodeStream service                    |
-| `codestream.team`          | Specifies an optional team to use to connect to the CodeStream service           |
-| `codestream.traceLevel`    | Specifies how much (if any) output will be sent to the CodeStream output channel |
-| `codestream.webAppUrl`     | Specifies the url to use to connect to the CodeStream web app                    |
-
-### Debugging
-
-#### Using VS Code
-
-- Open the `vscode-codestream` repository folder
-- Choose the `Launch CodeStream` launch configuration from the launch dropdown in the Debug viewlet and press `F5`.
