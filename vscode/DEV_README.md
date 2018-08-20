@@ -110,22 +110,85 @@ npm run pack
 
 #### Connecting to a CodeStream environment
 
-To connect to the PD environment, use the following settings
+Probably the easiest way to switch between environments is to create separate workspace files for each using the example workspace files below.
+
+##### Connecting to the PD environment
+
+Use the following settings:
 
 ```json
 "codestream.serverUrl": "https://pd-api.codestream.us:9443",
 "codestream.webAppUrl": "http://pd-app.codestream.us:1380",
 "codestream.email": "<email>",
-"codestream.password": "<password>",
 "codestream.team": "<team>", // Shouldn't really be needed unless there are issues and you belong to more than 1 team
 ```
 
-To connect to the Production environment, use the following settings
+Example workspace file &mdash; save as pd.code-workspace
+
+```json
+{
+	"folders": [
+		{
+			"path": "<absolute or relative folder path here>"
+		}
+	],
+	"settings": {
+		"codestream.serverUrl": "https://pd-api.codestream.us:9443",
+		"codestream.webAppUrl": "http://pd-app.codestream.us:1380",
+		"codestream.email": "<email>",
+		"codestream.team": "<team>" // Shouldn't really be needed unless there are issues and you belong to more than 1 team
+	}
+}
+```
+
+##### To connect to the QA environment, use the following settings
+
+```json
+"codestream.serverUrl": "https://qa-api.codestream.us",
+"codestream.webAppUrl": "http://qa-app.codestream.us",
+"codestream.email": "<email>",
+"codestream.team": "<team>", // Shouldn't really be needed unless there are issues and you belong to more than 1 team
+```
+
+Example workspace file &mdash; save as qa.code-workspace
+
+```json
+{
+	"folders": [
+		{
+			"path": "<absolute or relative folder path here>"
+		}
+	],
+	"settings": {
+		"codestream.serverUrl": "https://qa-api.codestream.us",
+		"codestream.webAppUrl": "http://qa-app.codestream.us",
+		"codestream.email": "<email>",
+		"codestream.team": "<team>" // Shouldn't really be needed unless there are issues and you belong to more than 1 team
+	}
+}
+```
+
+##### To connect to the Production environment, use the following settings
 
 ```json
 "codestream.email": "<email>",
-"codestream.password": "<password>",
 "codestream.team": "<team>", // Shouldn't really be needed unless there are issues and you belong to more than 1 team
+```
+
+Example workspace file &mdash; save as prod.code-workspace
+
+```json
+{
+	"folders": [
+		{
+			"path": "<absolute or relative folder path here>"
+		}
+	],
+	"settings": {
+		"codestream.email": "<email>",
+		"codestream.team": "<team>" // Shouldn't really be needed unless there are issues and you belong to more than 1 team
+	}
+}
 ```
 
 #### Settings
