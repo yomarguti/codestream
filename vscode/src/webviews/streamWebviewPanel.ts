@@ -830,7 +830,7 @@ export class StreamWebviewPanel implements Disposable {
 			}
 		} else {
 			state.version = Container.version;
-			state.configs = { email: Container.session.email };
+			state.configs = { email: Container.config.email };
 		}
 
 		this._streamThread = streamThread;
