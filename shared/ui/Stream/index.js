@@ -742,9 +742,9 @@ export class SimpleStream extends Component {
 		let type = event.target.getAttribute("type");
 		console.log("TYPE IS: ", type);
 		let active = type === "above" ? umiDivs[0] : umiDivs[umiDivs.length - 1];
-		if (active) active.scrollIntoView(type === "above");
-		// ...and then a little more, so it is off the border
-		scrollDiv.scrollTop += type === "above" ? -10 : 10;
+		if (active) {
+			scrollDiv.scrollTop = active.offsetTop + (type === "above" ? -10 : 10);
+		}
 	};
 
 	// dismiss the thread stream and return to the main stream
