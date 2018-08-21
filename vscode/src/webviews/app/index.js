@@ -212,7 +212,8 @@ api.bootstrap().then(data => {
 
 		ReactDOM.render(
 			<Container store={store} i18n={{ locale: "en", messages: translations }} />,
-			document.querySelector("#app")
+			document.querySelector("#app"),
+			() => EventEmitter.emit("view-ready")
 		);
 	};
 

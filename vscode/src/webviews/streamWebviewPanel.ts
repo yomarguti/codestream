@@ -190,6 +190,10 @@ export class StreamWebviewPanel implements Disposable {
 			const { type } = e;
 
 			switch (type.replace("codestream:", "")) {
+				case "view-ready": {
+					// view is rendered and ready to receive messages
+					break;
+				}
 				case "request": {
 					const body = e.body as CSWebviewRequest;
 					// TODO: Add sequence ids to ensure correct matching
