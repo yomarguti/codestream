@@ -64,7 +64,14 @@ export class GitRepositories {
 	async syncKnownRepositories() {
 		const remoteToRepoMap = await this.getKnownRepositories();
 
-		const tree = await this.getRepositoryTree();
+		// Don't call: const tree = await this.getRepositoryTree(); because it waits on the _syncPromise
+
+		if (this._searchPromise !== undefined) {
+			await this._searchPromise;
+			this._searchPromise = undefined;
+		}
+
+		const tree = this._repositoryTree;
 		for (const repo of tree.values()) {
 			// TODO: Probably should update the repo even for ones that have matches, but right now we are only using the repo id
 			if (repo.id === undefined) {
