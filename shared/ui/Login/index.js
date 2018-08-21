@@ -84,7 +84,11 @@ export class Login extends React.Component {
 
 	submitCredentials = async event => {
 		event.preventDefault();
-		if (this.isFormInvalid()) return;
+		if (this.isFormInvalid()) {
+			if (!(this.state.passwordTouched && this.state.emailTouched))
+				this.setState({ emailTouched: true, passwordTouched: true });
+			return;
+		}
 		const { password, email } = this.state;
 		this.setState({ loading: true });
 		try {
