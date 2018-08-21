@@ -1,13 +1,17 @@
 @streamId = 5afa393f0b6d962a96af9eee
+@postId = 5b7c68cd1c1a357bf69702d8
 
 # @name login
-PUT {{baseUrl}}/no-auth/login
+PUT {{baseUrl}}/login
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
-{
-    "email": "{{user}}",
-    "password": "{{pwd}}"
-}
+### GET Post
+# @name post
+GET {{baseUrl}}/posts/{{postId}}?teamId={{login.response.body.$.teams[0]._id}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
 
 ### Find Repo
 GET {{baseUrl}}/no-auth/find-repo&url={{}}&firstCommitHash={{}}
