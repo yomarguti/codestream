@@ -81,6 +81,7 @@ const appReducer = combineReducers({
 });
 
 export default (state, action) => {
-	if (action.type === "RESET") state = { configs: state.configs };
+	if (action.type === "RESET")
+		state = { configs: state.configs, pluginVersion: state.pluginVersion };
 	return appReducer(state, action);
 };
