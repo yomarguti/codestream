@@ -454,7 +454,7 @@ export class SimpleStream extends Component {
 			// offscreen: activePanel === "main",
 			active: this.state.unreadsBelow && activePanel === "main"
 		});
-
+		umis.totalUnread = 2;
 		const umisClass = createClassString("align-left-button", {
 			umis: true,
 			"align-left-button": true,
@@ -474,9 +474,10 @@ export class SimpleStream extends Component {
 		// const totalUMICount = umis.totalMentions || umis.totalUnread || "";
 		// const totalUMICount = umis.totalMentions || umis.totalUnread ? "&middot;" : "\u25C9";
 		const totalUMICount = umis.totalMentions ? (
-			<label>{umis.totalMentions}</label>
+			<label>{umis.totalMentions > 99 ? "99+" : umis.totalMentions}</label>
 		) : umis.totalUnread ? (
-			<Icon name="chevron-left" className="show-channels-icon" />
+			<div className="unread-badge" />
+			// <Icon name="chevron-left" className="show-channels-icon" />
 		) : (
 			""
 		);

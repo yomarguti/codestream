@@ -151,7 +151,16 @@
 			.align-right-button {
 				right: 5px;
 			}
-			.umis.unread {
+			.umis .unread-badge {
+				width: 7px;
+				height: 7px;
+				border-radius: 5px;
+				background: @background-color-umi;
+				display: inline-block;
+				vertical-align: 4px;
+				margin-left: 3px;
+			}
+			x.umis.unread {
 				background-color: @text-color;
 				color: @base-background-color;
 			}
@@ -159,6 +168,8 @@
 			.umis.mentions:hover {
 				// background-color: @text-color-info-muted;
 				background: @background-color-umi;
+				border-radius: 12.5px;
+				vertical-align: 3px;
 			}
 			// .icon.show-channels-icon::before {
 			// margin-right: 0;
@@ -848,7 +859,7 @@
 						.umi {
 							position: absolute;
 							text-align: center;
-							border-radius: 3px;
+							border-radius: 9px;
 							font-size: 12px;
 							padding-top: 0;
 							top: 3px;
