@@ -269,7 +269,6 @@ export class PubnubReceiver {
 				msg += `: ${JSON.stringify(info, undefined, 10)}`;
 			}
 			Logger.log(msg);
-			console.log(msg);
 		}
 	}
 }

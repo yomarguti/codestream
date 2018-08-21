@@ -97,6 +97,7 @@ export class PubnubConnection {
 	private _aborted: boolean = false;
 	private _numResubscribes: number = 0;
 	private _debug: (msg: string, info?: any) => void = () => {};
+	private _troubled: boolean = false;
 
 	// call to receive status updates
 	get onDidStatusChange(): Event<StatusChangeEvent> {
@@ -110,10 +111,10 @@ export class PubnubConnection {
 
 	// initialize PubnubConnection and optionally subscribe to channels
 	initialize(options: PubnubInitializer): Disposable {
+		this._debug(`Pubnub Connection initializing...`);
 		if (options.debug) {
 			this._debug = options.debug;
 		}
-		this._debug("Pubnub Connection initializing...");
 
 		this._api = options.api;
 		this._subscribeKey = options.subscribeKey;
@@ -199,6 +200,7 @@ export class PubnubConnection {
 		if (this._testMode) {
 			this.emitStatus(PubnubStatus.Queued, channels.map(channel => channel.name));
 		}
+		this._debug('Queueing ' + channels);
 		this._queuedChannels.push(...channels);
 	}
 
@@ -660,6 +662,12 @@ export class PubnubConnection {
 	// mode, ask the api server to explicitly grant us subscription access to those channels,
 	// and try again
 	private async subscriptionFailure(channels: string[]) {
+		if (this._troubled) {
+			// ignore additional failures if we're already in trouble,
+			// issues are already being resolved
+			this._debug('Ignoring subscription failures, we are already in trouble', channels);
+			return;
+		}
 		this.emitTrouble(channels);
 		this._grantFailures = [];
 		await Promise.all(
@@ -747,6 +755,7 @@ export class PubnubConnection {
 			this.drainQueue();
 		} else {
 			this._subscriptionsPending = false;
+			this._troubled = false;
 			if (this.getSubscribedChannels().length > 0) {
 				this._debug("Subscription successful", this.getSubscribedChannels());
 				this._lastSuccessfulSubscription = Date.now();
@@ -782,6 +791,8 @@ export class PubnubConnection {
 	// emit a Trouble event, indicating we're having trouble subscribing to one or more
 	// channels, so the client can display something to the user as needed
 	private emitTrouble(channels?: string[]) {
+		this._debug('We are in trouble');
+		this._troubled = true;
 		// this says we need to notify the client when we get fully connected (again)
 		this._needConnectedMessage = true;
 		this.emitStatus(PubnubStatus.Trouble, channels);
