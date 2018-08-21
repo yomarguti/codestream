@@ -60,6 +60,7 @@ export class GitRepositories {
 		return tree.findSubstr(filePath);
 	}
 
+	private _syncPromise: Promise<void> | undefined;
 	async syncKnownRepositories() {
 		const remoteToRepoMap = await this.getKnownRepositories();
 
@@ -84,8 +85,12 @@ export class GitRepositories {
 		return this.onWorkspaceFoldersChanged();
 	}
 
-	private onRepositoriesChanged(e: RepositoriesChangedEvent) {
-		this.syncKnownRepositories();
+	private async onRepositoriesChanged(e: RepositoriesChangedEvent) {
+		if (this._syncPromise !== undefined) {
+			await this._syncPromise;
+		}
+
+		this._syncPromise = this.syncKnownRepositories();
 	}
 
 	private async onWorkspaceFoldersChanged(e?: WorkspaceFoldersChangeEvent) {
@@ -160,6 +165,11 @@ export class GitRepositories {
 		if (this._searchPromise !== undefined) {
 			await this._searchPromise;
 			this._searchPromise = undefined;
+		}
+
+		if (this._syncPromise !== undefined) {
+			await this._syncPromise;
+			this._syncPromise = undefined;
 		}
 
 		return this._repositoryTree;
