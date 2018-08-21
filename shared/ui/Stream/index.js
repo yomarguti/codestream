@@ -454,7 +454,6 @@ export class SimpleStream extends Component {
 			// offscreen: activePanel === "main",
 			active: this.state.unreadsBelow && activePanel === "main"
 		});
-		umis.totalUnread = 2;
 		const umisClass = createClassString("align-left-button", {
 			umis: true,
 			"align-left-button": true,
