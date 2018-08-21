@@ -200,7 +200,7 @@ export class PubnubConnection {
 		if (this._testMode) {
 			this.emitStatus(PubnubStatus.Queued, channels.map(channel => channel.name));
 		}
-		this._debug('Queueing ' + channels);
+		this._debug("Queueing " + channels);
 		this._queuedChannels.push(...channels);
 	}
 
@@ -665,7 +665,7 @@ export class PubnubConnection {
 		if (this._troubled) {
 			// ignore additional failures if we're already in trouble,
 			// issues are already being resolved
-			this._debug('Ignoring subscription failures, we are already in trouble', channels);
+			this._debug("Ignoring subscription failures, we are already in trouble", channels);
 			return;
 		}
 		this.emitTrouble(channels);
@@ -791,7 +791,7 @@ export class PubnubConnection {
 	// emit a Trouble event, indicating we're having trouble subscribing to one or more
 	// channels, so the client can display something to the user as needed
 	private emitTrouble(channels?: string[]) {
-		this._debug('We are in trouble');
+		this._debug("We are in trouble");
 		this._troubled = true;
 		// this says we need to notify the client when we get fully connected (again)
 		this._needConnectedMessage = true;
