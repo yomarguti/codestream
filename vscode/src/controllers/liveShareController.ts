@@ -108,7 +108,7 @@ export class LiveShareController implements Disposable {
 		);
 
 		// Only notify if we've been mentioned
-		if (!post.mentioned(Container.session.user.name)) return;
+		if (!post.mentioned(Container.session.user.id)) return;
 
 		const actions: MessageItem[] = [
 			{ title: "Join Live Share" },

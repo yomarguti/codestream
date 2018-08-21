@@ -1,7 +1,7 @@
 "use strict";
 import { Range, Uri } from "vscode";
 import { Container } from "../../container";
-import { Dates, Iterables, memoize } from "../../system";
+import { Dates, memoize } from "../../system";
 import { CSPost } from "../api";
 import { CodeStreamSession, PostsReceivedEvent } from "../session";
 import { CodeStreamCollection, CodeStreamItem } from "./collection";
@@ -92,31 +92,10 @@ export class Post extends CodeStreamItem<CSPost> {
 		return this._dateFormatter.fromNow();
 	}
 
-	mentioned(name: string): boolean {
-		name = name.toLocaleUpperCase();
-		return Iterables.some(this.mentions(), m => m.toLocaleUpperCase() === name);
-	}
-
-	// async *mentionedUsers() {
-	//     for (const mention of this.mentions()) {
-	//         const user = await this.session.users.getByName(mention);
-	//         if (user !== undefined) yield user;
-	//     }
-	// }
-
-	*mentions() {
-		// Recreate this each call, because this iterable can be stopped and never finished
-		// and the regex can end up trying to continue incorrectly
-		const mentionsRegex = /(?:^|\s)@(\w+)(?:\b(?!@|[\(\{\[\<\-])|$)/g;
-
-		let match: RegExpExecArray | null = null;
-		do {
-			match = mentionsRegex.exec(this.entity.text);
-			if (match == null) break;
-
-			const [, mention] = match;
-			yield mention;
-		} while (match != null);
+	mentioned(userId: string): boolean {
+		return this.entity.mentionedUserIds == null || this.entity.mentionedUserIds.length === 0
+			? false
+			: this.entity.mentionedUserIds.includes(userId);
 	}
 
 	@memoize
