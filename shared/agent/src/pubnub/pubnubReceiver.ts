@@ -195,8 +195,13 @@ export class PubnubReceiver {
 					// 		});
 					// 		break;
 					case "repos":
-						const repos = CodeStreamApi.normalizeResponse(entities) as CSRepository[];
-						this._onDidReceiveMessage.fire({ type: MessageType.Repositories, repos });
+						// TODO: Need to deal with directives or just fire events with ids or entities
+						let repos;
+						entities = this.stripDirectives(key, entities);
+						if (entities && entities.length) {
+							repos = CodeStreamApi.normalizeResponse(entities) as CSRepository[];
+						}
+						this._onDidReceiveMessage.fire({ type: MessageType.Repositories, repos: repos || [] });
 						break;
 					case "streams":
 						// TODO: Needs fixing

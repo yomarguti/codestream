@@ -1,5 +1,5 @@
 "use strict";
-import { CancellationToken, Connection } from "vscode-languageserver";
+import { CancellationToken, Connection, Emitter, Event } from "vscode-languageserver";
 import URI from "vscode-uri";
 import {
 	AgentOptions,
@@ -12,7 +12,7 @@ import {
 	DocumentPreparePostRequest
 } from "./agent";
 import { AgentError, ServerError } from "./agentError";
-import { ApiErrors, CodeStreamApi, CSStream, LoginResult } from "./api/api";
+import { ApiErrors, CodeStreamApi, CSRepository, CSStream, LoginResult } from "./api/api";
 import { UserCollection } from "./api/models/users";
 import { Container } from "./container";
 import { setGitPath } from "./git/git";
@@ -21,7 +21,12 @@ import { MarkerHandler } from "./marker/markerHandler";
 import { MarkerManager } from "./marker/markerManager";
 import { MarkerLocationManager } from "./markerLocation/markerLocationManager";
 import { PostHandler } from "./post/postHandler";
-import { MessageReceivedEvent, MessageType, PubnubReceiver } from "./pubnub/pubnubReceiver";
+import {
+	MessageReceivedEvent,
+	MessageType,
+	PubnubReceiver,
+	RepositoriesMessageReceivedEvent
+} from "./pubnub/pubnubReceiver";
 import { StreamManager } from "./stream/streamManager";
 
 const loginApiErrorMappings: { [k: string]: ApiErrors } = {
@@ -35,7 +40,25 @@ const loginApiErrorMappings: { [k: string]: ApiErrors } = {
 	"USRC-1012": ApiErrors.NotOnTeam
 };
 
+export class RepositoriesChangedEvent {
+	constructor(
+		private readonly session: CodeStreamSession,
+		private readonly _event: RepositoriesMessageReceivedEvent
+	) {}
+
+	entities(): CSRepository[] {
+		return this._event.repos;
+	}
+}
+
+export type SessionChangedEvent = RepositoriesChangedEvent;
+
 export class CodeStreamSession {
+	private _onDidChangeRepositories = new Emitter<RepositoriesChangedEvent>();
+	get onDidChangeRepositories(): Event<RepositoriesChangedEvent> {
+		return this._onDidChangeRepositories.event;
+	}
+
 	private readonly _api: CodeStreamApi;
 	private _pubnub: PubnubReceiver | undefined;
 	private readonly _readyPromise: Promise<void>;
@@ -208,6 +231,7 @@ export class CodeStreamSession {
 				break;
 			}
 			case MessageType.Repositories:
+				this._onDidChangeRepositories.fire(new RepositoriesChangedEvent(this, e));
 				break;
 			case MessageType.Streams:
 				StreamManager.cacheStreams(e.streams);

@@ -11,8 +11,9 @@ import {
 import URI from "vscode-uri";
 import { CodeStreamApi, CSRepository } from "../api/api";
 import { Logger } from "../logger";
-import { CodeStreamSession } from "../session";
+import { CodeStreamSession, RepositoriesChangedEvent } from "../session";
 import { Iterables, Objects, Strings, TernarySearchTree } from "../system";
+import { Disposables } from "../system/disposable";
 import { GitRepository, GitService } from "./gitService";
 
 export class GitRepositories {
@@ -59,16 +60,32 @@ export class GitRepositories {
 		return tree.findSubstr(filePath);
 	}
 
+	async syncKnownRepositories() {
+		const remoteToRepoMap = await this.getKnownRepositories();
+
+		const tree = await this.getRepositoryTree();
+		for (const repo of tree.values()) {
+			// TODO: Probably should update the repo even for ones that have matches, but right now we are only using the repo id
+			if (repo.id === undefined) {
+				await repo.searchForKnownRepository(remoteToRepoMap);
+			}
+		}
+	}
+
 	private async start() {
 		// Wait for the session to be ready first
 		await this._session.ready();
 
-		this._disposable = this._session.workspace.onDidChangeWorkspaceFolders(
-			this.onWorkspaceFoldersChanged,
-			this
+		this._disposable = Disposables.from(
+			this._session.onDidChangeRepositories(this.onRepositoriesChanged, this),
+			this._session.workspace.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this)
 		);
 
 		return this.onWorkspaceFoldersChanged();
+	}
+
+	private onRepositoriesChanged(e: RepositoriesChangedEvent) {
+		this.syncKnownRepositories();
 	}
 
 	private async onWorkspaceFoldersChanged(e?: WorkspaceFoldersChangeEvent) {
