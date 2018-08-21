@@ -305,7 +305,7 @@ export class StreamWebviewPanel implements Disposable {
 									Uri.parse(
 										`${
 											Container.config.webAppUrl
-										}/signup?signup_token=${this.session.getSignupToken()}`
+										}/signup?force_auth=true&signup_token=${this.session.getSignupToken()}`
 									)
 								);
 								responseBody.payload = true;
