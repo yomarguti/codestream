@@ -95,7 +95,7 @@ export class MarkerLocationManager {
 			return {};
 		}
 
-		const markersById = await MarkerManager.getMarkers(streamId);
+		const markersById = await MarkerManager.getMarkersForStream(streamId);
 		const markers = Array.from(markersById.values());
 
 		const currentCommitLocations = await MarkerLocationManager.getMarkerLocations(

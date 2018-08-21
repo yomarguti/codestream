@@ -13,6 +13,7 @@ export interface CSMarker {
 	postId: string;
 	postStreamId: string;
 	commitHashWhenCreated: string;
+	deactivated: boolean;
 }
 
 export interface CSLocationMeta {
