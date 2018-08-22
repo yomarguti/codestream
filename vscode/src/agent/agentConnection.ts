@@ -223,10 +223,12 @@ export class CodeStreamAgentConnection implements Disposable {
 	}
 
 	private onDocumentMarkersChanged(e: DidChangeDocumentMarkersNotificationResponse) {
+		Logger.log("AgentConnection.onDocumentMarkersChanged", e.textDocument.uri);
 		this._onDidChangeDocumentMarkers.fire({ uri: Uri.parse(e.textDocument.uri) });
 	}
 
 	private onPubNubMessagesReceived(...messages: DidReceivePubNubMessagesNotificationResponse[]) {
+		Logger.log("AgentConnection.onPubNubMessagesReceived", messages);
 		this._onDidReceivePubNubMessages.fire(messages);
 	}
 
@@ -242,6 +244,7 @@ export class CodeStreamAgentConnection implements Disposable {
 	@started
 	private async sendRequest(type: any, params?: any): Promise<any> {
 		try {
+			Logger.log(`AgentConnection.sendRequest(${type.method})`);
 			const response = await this._client!.sendRequest(type, params);
 			return response;
 		} catch (ex) {
