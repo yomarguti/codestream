@@ -201,6 +201,17 @@ export enum LoginResult {
 	Unknown = "UNKNOWN"
 }
 
+export interface CreateMarkerLocationRequest {
+	teamId: string;
+	streamId: string;
+	commitHash: string;
+	locations: {
+		[id: string]: CSLocationArray;
+	};
+}
+
+export interface CreateMarkerLocationResponse {}
+
 export interface CreatePostRequestCodeBlock {
 	code: string;
 	preContext?: string;

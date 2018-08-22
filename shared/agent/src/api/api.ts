@@ -6,6 +6,8 @@ import { Logger } from "../logger";
 import { AccessToken } from "../shared/agent.protocol";
 import {
 	CompleteSignupRequest,
+	CreateMarkerLocationRequest,
+	CreateMarkerLocationResponse,
 	CreatePostRequest,
 	CreatePostResponse,
 	CreateRepoRequest,
@@ -90,6 +92,17 @@ export class CodeStreamApi {
 				this._middleware.splice(i, 1);
 			}
 		};
+	}
+
+	createMarkerLocation(
+		token: string,
+		request: CreateMarkerLocationRequest
+	): Promise<CreateMarkerLocationResponse> {
+		return this.put<CreateMarkerLocationRequest, CreateMarkerLocationResponse>(
+			`/marker-locations`,
+			request,
+			token
+		);
 	}
 
 	createPost(token: string, request: CreatePostRequest): Promise<CreatePostResponse> {

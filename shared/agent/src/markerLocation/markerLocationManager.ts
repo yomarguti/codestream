@@ -15,6 +15,10 @@ export interface LocationsById {
 	[id: string]: CSMarkerLocation;
 }
 
+interface ArraysById {
+	[id: string]: CSLocationArray;
+}
+
 export class MarkerLocationManager {
 	private static streamsCache: {
 		[streamId: string]: {
@@ -88,7 +92,7 @@ export class MarkerLocationManager {
 	}
 
 	static async getCommitLocations(filePath: string, commitHash: string): Promise<LocationsById> {
-		const { git } = Container.instance();
+		const { git, api, session } = Container.instance();
 
 		const streamId = await StreamManager.getStreamId(filePath);
 		if (!streamId) {
@@ -123,25 +127,26 @@ export class MarkerLocationManager {
 			const diff = await git.getDiffBetweenCommits(commitHashWhenCreated, commitHash, filePath);
 			const calculatedLocations = await calculateLocations(locationsToCalculate, diff);
 			for (const id in calculatedLocations) {
-				const location = calculatedLocations[id];
-				await MarkerLocationManager.saveMarkerLocation(streamId, commitHash, location);
-				currentCommitLocations[id] = location;
+				currentCommitLocations[id] = calculatedLocations[id];
 			}
+
+			await api.createMarkerLocation(session.apiToken, {
+				teamId: session.teamId,
+				streamId,
+				commitHash,
+				locations: MarkerLocationManager.arraysById(calculatedLocations)
+			});
 		}
 
 		return currentCommitLocations;
 	}
 
-	static async saveMarkerLocation(
-		streamId: string,
-		commitHash: string,
-		location: CSMarkerLocation
-	) {
-		await MarkerLocationManager.getMarkerLocations(streamId, commitHash);
-		// TODO Marcelo save it on the api server
-		const commitsCache = MarkerLocationManager.streamsCache[streamId];
-		const locationsCache = commitsCache[commitHash];
-		locationsCache[location.id] = location;
+	private static arraysById(locations: LocationsById): ArraysById {
+		const result: ArraysById = {};
+		for (const id in locations) {
+			result[id] = MarkerLocationManager.locationToArray(locations[id]);
+		}
+		return result;
 	}
 
 	static async cacheMarkerLocations(markerLocations: CSMarkerLocations[]) {
