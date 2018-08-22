@@ -38,7 +38,7 @@ class Post extends Component {
 		}
 	}
 
-	handleClick = event => {
+	handleClickCodeBlock = event => {
 		event.stopPropagation();
 		this.showCode();
 	};
@@ -136,7 +136,10 @@ class Post extends Component {
 			let code = post.codeBlocks[0].code;
 			const noRepo = !post.codeBlocks[0].repoId;
 			codeBlock = (
-				<div className="code-reference">
+				<div
+					className="code-reference"
+					onClick={this.props.showDetails && this.handleClickCodeBlock}
+				>
 					<div className={createClassString("header", { "no-repo": noRepo })}>
 						<span className="file">{post.codeBlocks[0].file || "-"}</span>
 						{this.state.warning && (
@@ -206,7 +209,6 @@ class Post extends Component {
 				data-seq-num={post.seqNum}
 				thread={post.parentPostId || post.id}
 				ref={ref => (this._div = ref)}
-				onClick={this.props.showDetails && this.handleClick}
 			>
 				{!systemPost &&
 					!post.error && (
