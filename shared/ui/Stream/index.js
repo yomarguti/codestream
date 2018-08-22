@@ -117,8 +117,12 @@ export class SimpleStream extends Component {
 					const postId = event.target.id.split("-").pop();
 					return this.editPost(postId);
 				}
-				if (event.key === "ArrowUp" && event.target.id !== "input-div") {
-					this.editLastPost(event);
+				if (event.key === "ArrowUp") {
+					if (event.target.id === "input-div") {
+						if (event.target.textContent.length === 0) this.editLastPost(event);
+					} else {
+						this.editLastPost(event);
+					}
 				}
 			};
 		}
