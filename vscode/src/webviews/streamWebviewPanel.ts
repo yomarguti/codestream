@@ -34,7 +34,6 @@ import {
 	StreamThread
 } from "../api/session";
 import { configuration } from "../configuration";
-import { extensionId } from "../constants";
 import { Container } from "../container";
 import { Logger } from "../logger";
 
@@ -110,6 +109,7 @@ export class StreamWebviewPanel implements Disposable {
 	private _bootstrapPromise: Promise<BootstrapState> | undefined;
 	private _disposable: Disposable | undefined;
 	private readonly _ipc: WebviewIpc;
+	private _onReadyResolver: ((value?: {} | PromiseLike<{}> | undefined) => void) | undefined;
 	private _panel: WebviewPanel | undefined;
 	private _streamThread: StreamThread | undefined;
 
@@ -186,12 +186,16 @@ export class StreamWebviewPanel implements Disposable {
 	}
 
 	private async onPanelWebViewMessageReceived(e: CSWebviewMessage) {
+		// TODO: Given all the async work in here -- we need to extract this into a separate method with blocks to make sure events don't get interleaved
 		try {
 			const { type } = e;
 
 			switch (type.replace("codestream:", "")) {
 				case "view-ready": {
 					// view is rendered and ready to receive messages
+					if (this._onReadyResolver !== undefined) {
+						this._onReadyResolver();
+					}
 					break;
 				}
 				case "request": {
@@ -504,7 +508,10 @@ export class StreamWebviewPanel implements Disposable {
 					const streamId = e.body;
 
 					if (!streamId) {
-						this._streamThread = undefined;
+						if (this._streamThread !== undefined) {
+							this._streamThread = undefined;
+							this._onDidChangeStream.fire(this._streamThread);
+						}
 						return;
 					}
 
@@ -777,6 +784,13 @@ export class StreamWebviewPanel implements Disposable {
 		this._panel.reveal(this._panel.viewColumn, false);
 
 		this._streamThread = streamThread;
+
+		// Wait until the webview is ready
+		await new Promise((resolve, reject) => {
+			this._onReadyResolver = resolve;
+			setTimeout(reject, 15000);
+		});
+
 		this._onDidChangeStream.fire(this._streamThread);
 
 		return this._streamThread;
