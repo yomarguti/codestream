@@ -468,7 +468,8 @@ export class SimpleStream extends Component {
 			) : (
 				<span>#</span>
 			);
-		const menuActive = this.state.openMenu === this.props.postStreamId;
+		const menuActive = this.props.postStreamId && this.state.openMenu === this.props.postStreamId;
+
 		// const totalUMICount = umis.totalMentions || umis.totalUnread || "";
 		// const totalUMICount = umis.totalMentions || umis.totalUnread ? "&middot;" : "\u25C9";
 		const totalUMICount = umis.totalMentions ? (
