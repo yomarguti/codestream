@@ -43,6 +43,10 @@ class Collection {
 	set(key: string, value: any) {
 		this.collectionData[key] = value;
 	}
+
+	get(key: string): any {
+		return this.collectionData[key];
+	}
 }
 
 const caches = new Map<string, Cache>();

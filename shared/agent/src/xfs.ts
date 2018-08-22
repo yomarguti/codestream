@@ -4,8 +4,8 @@ import * as fs from "fs";
 import * as writeAtomic from "write-file-atomic";
 
 export namespace xfs {
-	export async function readJson(srcPath: string) {
-		return new Promise((resolve, reject) => {
+	export async function readText(srcPath: string) {
+		return new Promise<string | undefined>((resolve, reject) => {
 			fs.readFile(srcPath, "utf8", (err, data) => {
 				if (err) {
 					if (err.code === "ENOENT") {
@@ -14,10 +14,15 @@ export namespace xfs {
 						reject(err);
 					}
 				} else {
-					resolve(JSON.parse(data.toString()));
+					resolve(data.toString());
 				}
 			});
 		});
+	}
+
+	export async function readJson(srcPath: string): Promise<string | undefined> {
+		const data = await xfs.readText(srcPath);
+		return data ? JSON.parse(data) : undefined;
 	}
 
 	export async function writeJsonAtomic(json: any, destPath: string): Promise<undefined> {

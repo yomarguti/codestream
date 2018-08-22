@@ -8,6 +8,7 @@ import { getCache } from "../cache";
 import { Container } from "../container";
 import { MarkerManager } from "../marker/markerManager";
 import { StreamManager } from "../stream/streamManager";
+import { xfs } from "../xfs";
 import { calculateLocation, calculateLocations } from "./calculator";
 import { RepoMonitor } from "./repoMonitor";
 
@@ -17,6 +18,15 @@ export interface LocationsById {
 
 interface ArraysById {
 	[id: string]: CSLocationArray;
+}
+
+interface UncommittedLocation {
+	fileContents: string;
+	location: CSMarkerLocation;
+}
+
+interface UncommittedLocationsById {
+	[id: string]: UncommittedLocation;
 }
 
 export class MarkerLocationManager {
@@ -34,30 +44,97 @@ export class MarkerLocationManager {
 
 	static async getCurrentLocations(documentUri: string): Promise<LocationsById> {
 		const { documents, git } = Container.instance();
-		const filePath = URI.parse(documentUri).fsPath;
 
+		const currentLocations: LocationsById = {};
+		const filePath = URI.parse(documentUri).fsPath;
+		const repoRoot = await git.getRepoRoot(filePath);
 		const currentCommitHash = await git.getFileCurrentRevision(filePath);
-		if (!currentCommitHash) {
-			return {};
+		if (!repoRoot || !currentCommitHash) {
+			return currentLocations;
 		}
+
 		const currentCommitLocations = await MarkerLocationManager.getCommitLocations(
 			filePath,
 			currentCommitHash
 		);
-		const currentCommitText = await git.getFileContentForRevision(filePath, currentCommitHash);
-		if (currentCommitText === undefined) {
-			throw new Error(`Could not retrieve contents for ${filePath}@${currentCommitHash}`);
+		if (!Object.keys(currentCommitLocations).length) {
+			return currentLocations;
 		}
 
-		let diff;
+		const {
+			committedLocations,
+			uncommittedLocations
+		} = await MarkerLocationManager.classifyLocations(repoRoot, currentCommitLocations);
 		const doc = documents.get(documentUri);
-		if (doc) {
-			const currentBufferText = doc.getText();
-			diff = structuredPatch(filePath, filePath, currentCommitText, currentBufferText, "", "");
-		} else {
-			diff = await git.getDiffFromHead(filePath);
+		let currentBufferText = doc && doc.getText();
+		if (currentBufferText == null) {
+			currentBufferText = await xfs.readText(filePath);
 		}
-		return calculateLocations(currentCommitLocations, diff);
+		if (!currentBufferText) {
+			throw new Error(`Could not retrieve contents for ${filePath}`);
+		}
+
+		const result: LocationsById = {};
+
+		if (Object.keys(committedLocations).length) {
+			const currentCommitText = await git.getFileContentForRevision(filePath, currentCommitHash);
+			if (currentCommitText === undefined) {
+				throw new Error(`Could not retrieve contents for ${filePath}@${currentCommitHash}`);
+			}
+			const diff = structuredPatch(
+				filePath,
+				filePath,
+				currentCommitText,
+				currentBufferText,
+				"",
+				""
+			);
+			Object.assign(result, await calculateLocations(committedLocations, diff));
+		}
+
+		if (Object.keys(uncommittedLocations).length) {
+			for (const id in uncommittedLocations) {
+				const uncommittedLocation = uncommittedLocations[id];
+				const uncommittedBufferText = uncommittedLocation.fileContents;
+				const diff = structuredPatch(
+					filePath,
+					filePath,
+					uncommittedBufferText,
+					currentBufferText,
+					"",
+					""
+				);
+				result[id] = await calculateLocation(uncommittedLocation.location, diff);
+			}
+		}
+
+		return result;
+	}
+
+	private static async classifyLocations(
+		repoPath: string,
+		locations: LocationsById
+	): Promise<{
+		committedLocations: LocationsById;
+		uncommittedLocations: UncommittedLocationsById;
+	}> {
+		const result = {
+			committedLocations: {} as LocationsById,
+			uncommittedLocations: {} as UncommittedLocationsById
+		};
+		const cache = await getCache(repoPath);
+		const cachedUncommittedLocations = cache.getCollection("uncommittedLocations");
+		for (const id in locations) {
+			const location = locations[id];
+			const uncommittedLocation = cachedUncommittedLocations.get(location.id);
+			if (uncommittedLocation) {
+				result.uncommittedLocations[id] = uncommittedLocation;
+			} else {
+				result.committedLocations[id] = location;
+			}
+		}
+
+		return result;
 	}
 
 	static async backtrackLocation(
@@ -155,8 +232,7 @@ export class MarkerLocationManager {
 			const locationsCache = await MarkerLocationManager.getMarkerLocations(streamId, commitHash);
 			for (const id in locations) {
 				const locationArray = locations[id];
-				const location = MarkerLocationManager.arrayToLocation(id, locationArray);
-				locationsCache[id] = location;
+				locationsCache[id] = MarkerLocationManager.arrayToLocation(id, locationArray);
 			}
 		}
 	}
@@ -178,7 +254,7 @@ export class MarkerLocationManager {
 		uncommittedLocations.set(location.id, {
 			fileContents,
 			location
-		});
+		} as UncommittedLocation);
 		await cache.flush();
 	}
 
