@@ -1,11 +1,14 @@
 "use strict";
 import { RequestInit } from "node-fetch";
-import { Event, EventEmitter, ExtensionContext, Range, TextDocument, Uri } from "vscode";
+import { Event, EventEmitter, ExtensionContext, Range, TextDocument, Uri, window } from "vscode";
 import {
 	CancellationToken,
+	CloseAction,
 	Disposable,
+	ErrorAction,
 	LanguageClient,
 	LanguageClientOptions,
+	Message,
 	RequestType,
 	RequestType0,
 	RevealOutputChannelOn,
@@ -13,6 +16,8 @@ import {
 	TransportKind
 } from "vscode-languageclient";
 import { CSCodeBlock, CSPost } from "../api/api";
+import { CodeStreamEnvironment } from "../api/session";
+import { Container } from "../container";
 import { Logger } from "../logger";
 import {
 	AccessToken,
@@ -78,6 +83,32 @@ export class CodeStreamAgentConnection implements Disposable {
 		};
 
 		this._clientOptions = {
+			errorHandler: {
+				error: (error: Error, message: Message, count: number) => {
+					Logger.error(error, "AgentConnection.error", message.jsonrpc, count);
+
+					const env = Container.session.environment;
+					if (env === CodeStreamEnvironment.PD || env === CodeStreamEnvironment.QA) {
+						window.showErrorMessage(
+							`CodeStream Connection Error (${count})\n${error.message}\n${message.jsonrpc}`
+						);
+					}
+
+					return ErrorAction.Continue;
+				},
+				closed: () => {
+					Logger.error(undefined!, "AgentConnection.closed");
+
+					const env = Container.session.environment;
+					if (env === CodeStreamEnvironment.PD || env === CodeStreamEnvironment.QA) {
+						window.showErrorMessage(
+							`CodeStream Connection Closed\nAttempting to reestablish connection...`
+						);
+					}
+
+					return CloseAction.Restart;
+				}
+			},
 			outputChannelName: "CodeStream Agent",
 			revealOutputChannelOn: RevealOutputChannelOn.Never,
 			initializationOptions: { ...options },
