@@ -105,9 +105,17 @@ export class SimpleStream extends Component {
 		if (rootInVscode) {
 			rootInVscode.onkeydown = event => {
 				if (event.key === "Escape") {
-					if (this.state.threadId) {
+					if (event.target.id.startsWith("input-div-")) {
+						// cancel post edit
+						this.setState({ editingPostId: null });
+					} else if (this.state.threadId) {
 						this.handleDismissThread();
 					}
+				}
+				if (event.key === "Enter" && !event.shiftKey && event.target.id.startsWith("input-div-")) {
+					// save post edit
+					const postId = event.target.id.split("-").pop();
+					return this.editPost(postId);
 				}
 				if (event.key === "ArrowUp" && event.target.id !== "input-div") {
 					this.editLastPost(event);
@@ -867,6 +875,13 @@ export class SimpleStream extends Component {
 		this.props.editPost(postId, replaceText, mentionUserIds);
 	};
 
+	editPost = id => {
+		let newText = document.getElementById("input-div-" + id).innerHTML.replace(/<br>/g, "\n");
+
+		this.replacePostText(id, newText);
+		this.setState({ editingPostId: null });
+	};
+
 	// by clicking on the post, we select it
 	handleClickPost = event => {
 		var postDiv = event.target.closest(".post");
@@ -884,13 +899,7 @@ export class SimpleStream extends Component {
 		} else if (event.target.id === "save-button") {
 			// if the user clicked on the save changes button,
 			// save the new post text
-			let newText = document
-				.getElementById("input-div-" + postDiv.id)
-				.innerHTML.replace(/<br>/g, "\n");
-
-			this.replacePostText(postDiv.id, newText);
-			this.setState({ editingPostId: null });
-			return;
+			return this.editPost(postDiv.id);
 		} else if (postDiv.classList.contains("editing")) {
 			// otherwise, if we aren't currently editing the
 			// post, go to the thread for that post, but if
