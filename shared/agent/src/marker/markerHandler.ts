@@ -1,6 +1,6 @@
 "use strict";
 import * as path from "path";
-import { Range, TextDocumentPositionParams } from "vscode-languageserver";
+import { Range } from "vscode-languageserver";
 import URI from "vscode-uri";
 import {
 	DocumentFromCodeBlockRequestParams,
@@ -10,7 +10,6 @@ import {
 	MarkerWithRange
 } from "../agent";
 import { Container } from "../container";
-import { Logger } from "../logger";
 import { MarkerLocationManager } from "../markerLocation/markerLocationManager";
 import { StreamManager } from "../stream/streamManager";
 import { MarkerManager } from "./markerManager";
@@ -20,10 +19,10 @@ export namespace MarkerHandler {
 		markers: []
 	};
 
-	export function onHover(e: TextDocumentPositionParams) {
-		Logger.log("Hover request received");
-		return undefined;
-	}
+	// export function onHover(e: TextDocumentPositionParams) {
+	// 	Logger.log("Hover request received");
+	// 	return undefined;
+	// }
 
 	export async function documentMarkers({
 		textDocument: documentId

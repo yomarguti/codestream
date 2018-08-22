@@ -75,7 +75,7 @@ export class CodeStreamSession {
 		);
 
 		this._readyPromise = new Promise<void>(resolve => this.agent.onReady(resolve));
-		this.connection.onHover(e => MarkerHandler.onHover(e));
+		// this.connection.onHover(e => MarkerHandler.onHover(e));
 
 		this.agent.registerHandler(ApiRequest, (e, cancellationToken: CancellationToken) =>
 			this._api.fetch(e.url, e.init, e.token)
