@@ -37,6 +37,8 @@ import {
 	LoginRequest,
 	LoginResponse,
 	StreamType,
+	UpdateMarkerRequest,
+	UpdateMarkerResponse,
 	UpdatePresenceRequest,
 	UpdatePresenceResponse,
 	UpdateStreamMembershipRequest,
@@ -214,6 +216,14 @@ export class CodeStreamApi {
 
 	joinStream(token: string, teamId: string, streamId: string, request: JoinStreamRequest) {
 		return this.put<JoinStreamRequest, JoinStreamResponse>(`/join/${streamId}`, request, token);
+	}
+
+	updateMarker(token: string, markerId: string, request: UpdateMarkerRequest) {
+		return this.put<UpdateMarkerRequest, UpdateMarkerResponse>(
+			`/markers/${markerId}`,
+			request,
+			token
+		);
 	}
 
 	updatePresence(token: string, request: UpdatePresenceRequest) {

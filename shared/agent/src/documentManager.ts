@@ -27,9 +27,7 @@ export class DocumentManager implements Disposable {
 
 	private onContentChanged(e: TextDocumentChangeEvent) {}
 
-	private onOpened(e: TextDocumentChangeEvent) {
-		MarkerLocationManager.monitorRepo(e.document.uri);
-	}
+	private onOpened(e: TextDocumentChangeEvent) {}
 
 	get(uri: string): TextDocument | undefined {
 		return this._documents.get(uri);

@@ -47,6 +47,14 @@ class Collection {
 	get(key: string): any {
 		return this.collectionData[key];
 	}
+
+	delete(key: string) {
+		delete this.collectionData[key];
+	}
+
+	keys(): string[] {
+		return Object.keys(this.collectionData);
+	}
 }
 
 const caches = new Map<string, Cache>();

@@ -1,16 +1,23 @@
 "use strict";
 import { structuredPatch } from "diff";
+import * as path from "path";
 import { TextDocumentIdentifier } from "vscode-languageserver";
 import { Range } from "vscode-languageserver-protocol";
 import URI from "vscode-uri";
-import { CSLocationArray, CSMarker, CSMarkerLocation, CSMarkerLocations } from "../api/api";
+import {
+	CSFileStream,
+	CSLocationArray,
+	CSMarker,
+	CSMarkerLocation,
+	CSMarkerLocations
+} from "../api/api";
 import { getCache } from "../cache";
 import { Container } from "../container";
+import { GitRepository } from "../git/models/repository";
 import { MarkerManager } from "../marker/markerManager";
 import { StreamManager } from "../stream/streamManager";
 import { xfs } from "../xfs";
 import { calculateLocation, calculateLocations } from "./calculator";
-import { RepoMonitor } from "./repoMonitor";
 
 export interface LocationsById {
 	[id: string]: CSMarkerLocation;
@@ -37,10 +44,6 @@ export class MarkerLocationManager {
 			};
 		};
 	} = {};
-
-	// private static monitoredRepos = new Set<string>();
-
-	private static repoMonitor = new RepoMonitor();
 
 	static async getCurrentLocations(documentUri: string): Promise<LocationsById> {
 		const { documents, git } = Container.instance();
@@ -258,6 +261,48 @@ export class MarkerLocationManager {
 		await cache.flush();
 	}
 
+	static async flushUncommittedLocations(repo: GitRepository) {
+		const { api, git, session } = Container.instance();
+		const cache = await getCache(repo.path);
+		const uncommittedLocations = cache.getCollection("uncommittedLocations");
+		for (const id of uncommittedLocations.keys()) {
+			const marker = await MarkerManager.getMarker(id);
+			const stream = (await StreamManager.getStream(marker.streamId)) as CSFileStream;
+			const uncommittedLocation = uncommittedLocations.get(id) as UncommittedLocation;
+			const originalContents = uncommittedLocation.fileContents;
+			const relPath = stream.file;
+			const absPath = path.join(repo.path, relPath);
+			const commitHash = await git.getFileCurrentRevision(absPath);
+			if (!commitHash) {
+				continue;
+			}
+			const commitContents = await git.getFileContentForRevision(absPath, commitHash);
+			if (!commitContents) {
+				continue;
+			}
+			const diff = structuredPatch(relPath, relPath, originalContents, commitContents, "", "");
+			const location = await calculateLocation(uncommittedLocation.location, diff);
+			if (location.meta && location.meta.entirelyDeleted) {
+				continue;
+			}
+			const locationArraysById = {} as {
+				[id: string]: CSLocationArray;
+			};
+			locationArraysById[id] = this.locationToArray(location);
+			await api.createMarkerLocation(session.apiToken, {
+				teamId: session.teamId,
+				streamId: stream.id,
+				commitHash,
+				locations: locationArraysById
+			});
+			await api.updateMarker(session.apiToken, id, {
+				commitHashWhenCreated: commitHash
+			});
+			uncommittedLocations.delete(id);
+			await cache.flush();
+		}
+	}
+
 	static async getMarkerLocations(streamId: string, commitHash: string): Promise<LocationsById> {
 		const { api, state } = Container.instance();
 		const commitsCache =
@@ -341,18 +386,6 @@ export class MarkerLocationManager {
 			lineEnd: range.end.line + 1,
 			colEnd: range.end.character + 1
 		};
-	}
-
-	static async monitorRepo(documentUri: string) {
-		const { git } = Container.instance();
-		const filePath = URI.parse(documentUri).fsPath;
-
-		const repoRoot = await git.getRepoRoot(filePath);
-		if (!repoRoot) {
-			return;
-		}
-
-		MarkerLocationManager.repoMonitor.monitor(repoRoot);
 	}
 
 	static locationToArray(location: CSMarkerLocation): CSLocationArray {

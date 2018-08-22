@@ -2,7 +2,7 @@
 import { IUniDiff, parsePatch } from "diff";
 import * as fs from "fs";
 import * as path from "path";
-import { Disposable } from "vscode-languageserver";
+import { Disposable, Event } from "vscode-languageserver";
 import URI from "vscode-uri";
 import { CodeStreamApi } from "../api/api";
 import { Logger } from "../logger";
@@ -362,6 +362,10 @@ export class GitService implements IGitService, Disposable {
 
 	getRepositoryByFilePath(filePath: string): Promise<GitRepository | undefined> {
 		return this._repositories.getByFilePath(filePath);
+	}
+
+	get onRepositoryCommitHashChanged(): Event<GitRepository> {
+		return this._repositories.onCommitHashChanged;
 	}
 
 	async resolveRef(uri: URI, ref: string): Promise<string | undefined>;

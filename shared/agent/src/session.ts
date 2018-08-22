@@ -207,7 +207,10 @@ export class CodeStreamSession {
 			const streams = await this.getSubscribableStreams(this._userId, this._teamId);
 			this._pubnub.listen(streams.map(s => s.id));
 			this._pubnub.onDidReceiveMessage(this.onMessageReceived, this);
-
+			const { git } = Container.instance();
+			git.onRepositoryCommitHashChanged(repo => {
+				MarkerLocationManager.flushUncommittedLocations(repo);
+			});
 			return {
 				loginResponse: { ...loginResponse },
 				state: { ...Container.instance().state }

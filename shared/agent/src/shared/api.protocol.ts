@@ -399,6 +399,14 @@ export enum PresenceStatus {
 	Away = "away"
 }
 
+export interface UpdateMarkerRequest {
+	commitHashWhenCreated?: string;
+}
+
+export interface UpdateMarkerResponse {
+	marker: CSMarker;
+}
+
 export interface UpdatePresenceRequest {
 	sessionId: string;
 	status: PresenceStatus;

@@ -22,6 +22,11 @@ export class GitRepositories {
 		return this._onDidChange.event;
 	}
 
+	private _onCommitHashChanged = new Emitter<GitRepository>();
+	get onCommitHashChanged(): Event<GitRepository> {
+		return this._onCommitHashChanged.event;
+	}
+
 	private _disposable: Disposable | undefined;
 	private readonly _repositoryTree: TernarySearchTree<GitRepository>;
 	private _searchPromise: Promise<void> | undefined;
@@ -152,6 +157,25 @@ export class GitRepositories {
 		if (!initializing) {
 			// Defer the event trigger enough to let everything unwind
 			setImmediate(() => this._onDidChange.fire(undefined));
+		}
+
+		await this.monitorRepos();
+	}
+
+	private _monitors: fs.FSWatcher[] = [];
+	private async monitorRepos() {
+		for (const monitor of this._monitors) {
+			monitor.close();
+		}
+		this._monitors = [];
+
+		const repos = this._repositoryTree.values();
+		for (const repo of repos) {
+			const logFile = path.join(repo.path, ".git", "logs", "HEAD");
+			const watcher = fs.watch(logFile, () => {
+				this._onCommitHashChanged.fire(repo);
+			});
+			this._monitors.push(watcher);
 		}
 	}
 
