@@ -7,6 +7,8 @@ import Stream from "./Stream";
 import reducer from "./reducers";
 import WebviewApi from "./webview-api";
 import EventEmitter from "./event-emitter";
+import * as miscActions from "./actions";
+import * as contextActions from "./actions/context";
 
 export const createCodeStreamStore = (initialState = {}, thunkArg = {}, middleware) => {
 	return createStore(
@@ -16,4 +18,13 @@ export const createCodeStreamStore = (initialState = {}, thunkArg = {}, middlewa
 	);
 };
 
-export { Container, EventEmitter, Stream, WebviewApi, createCodeStreamStore as createStore };
+const actions = { ...miscActions, ...contextActions };
+
+export {
+	actions,
+	Container,
+	EventEmitter,
+	Stream,
+	WebviewApi,
+	createCodeStreamStore as createStore
+};
