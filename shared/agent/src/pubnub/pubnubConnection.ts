@@ -97,7 +97,8 @@ export class PubnubConnection {
 	private _aborted: boolean = false;
 	private _numResubscribes: number = 0;
 	private _debug: (msg: string, info?: any) => void = () => {};
-	private _troubled: boolean = false;
+	private _catchingUpSince: number = 0;
+	private _activeFailures: string[] = [];
 
 	// call to receive status updates
 	get onDidStatusChange(): Event<StatusChangeEvent> {
@@ -478,17 +479,29 @@ export class PubnubConnection {
 
 	// catch up on missed history, while disconnected
 	private async catchUp(channels: string[]) {
-		if (!this._lastMessageReceivedAt) {
-			// if _lastMessageReceivedAt is not set, we assume a fresh session, with no
-			// catch up necessary
+		// catch up since the last message received, or, if we are caught in a loop
+		// of trying to catch up already, continue to catch up from that point
+		let since = 0;
+		if (this._catchingUpSince > 0) {
+			since = this._catchingUpSince;
+			this._debug(`Already catching up since ${this._catchingUpSince}`);
+		}
+		else if (this._lastMessageReceivedAt > 0) {
+			since = this._lastMessageReceivedAt - THRESHOLD_BUFFER;
+			this._debug(`Last message was recevied at ${this._lastMessageReceivedAt}`);
+		}
+		if (!since) {
+			// assume a fresh session, with no catch up necessary
 			this._debug("No messages have been received yet, assume fresh session");
+			this._lastMessageReceivedAt = Date.now();
 			return this.subscribed();
 		}
-		if (Date.now() - this._lastMessageReceivedAt - THRESHOLD_BUFFER > THRESHOLD_FOR_CATCHUP) {
+		if (Date.now() - since > THRESHOLD_FOR_CATCHUP) {
 			// if it's been too long, we don't want to process a whole ton of messages,
 			// and in any case we only retain messages for one month ... so better to
 			// force the client to initiate a fresh session
 			this._debug("Been away for too long, forcing reset");
+			this._catchingUpSince = 0;
 			return this.reset();
 		}
 
@@ -497,6 +510,7 @@ export class PubnubConnection {
 			if (this.getUnsubscribedChannels().length === 0) {
 				this._debug("And no channels at all, no catch-up is needed");
 				// if no channels, we just assume we're fully subscribed
+				this._catchingUpSince = 0;
 				this.subscribed();
 			}
 			return;
@@ -505,7 +519,6 @@ export class PubnubConnection {
 		// fetch history since the last message received
 		let historyOutput: PubnubHistoryOutput;
 		try {
-			const since = this._lastMessageReceivedAt - THRESHOLD_BUFFER;
 			this._debug(`Fetching history since ${since} for`, channels);
 			historyOutput = await new PubnubHistory().fetchHistory({
 				pubnub: this._pubnub,
@@ -515,6 +528,7 @@ export class PubnubConnection {
 		} catch (error) {
 			// this is bad ... if we can't catch up on history, we'll start
 			// with a clean slate and try to resubscribe all over again
+			error = error instanceof Error ? error.message : error;
 			this._debug("Fetch history error, resubscribing...", error);
 			this.emitTrouble();
 			return this.resubscribe();
@@ -538,6 +552,7 @@ export class PubnubConnection {
 
 		// nothing left to do ... we are successfully subscribed to all channels!
 		this._debug("Caught up!");
+		this._catchingUpSince = 0;
 		this.subscribed();
 	}
 
@@ -662,12 +677,11 @@ export class PubnubConnection {
 	// mode, ask the api server to explicitly grant us subscription access to those channels,
 	// and try again
 	private async subscriptionFailure(channels: string[]) {
-		if (this._troubled) {
-			// ignore additional failures if we're already in trouble,
-			// issues are already being resolved
-			this._debug("Ignoring subscription failures, we are already in trouble", channels);
-			return;
+		channels = channels.filter(channel => !this._activeFailures.includes(channel ));
+		if (channels.length === 0) {
+			this._debug("Already handling subscription failures, ignoring:", channels);
 		}
+		this._activeFailures = [...this._activeFailures, ...channels];
 		this.emitTrouble(channels);
 		this._grantFailures = [];
 		await Promise.all(
@@ -754,8 +768,8 @@ export class PubnubConnection {
 			);
 			this.drainQueue();
 		} else {
+			this._activeFailures = [];
 			this._subscriptionsPending = false;
-			this._troubled = false;
 			if (this.getSubscribedChannels().length > 0) {
 				this._debug("Subscription successful", this.getSubscribedChannels());
 				this._lastSuccessfulSubscription = Date.now();
@@ -792,7 +806,6 @@ export class PubnubConnection {
 	// channels, so the client can display something to the user as needed
 	private emitTrouble(channels?: string[]) {
 		this._debug("We are in trouble");
-		this._troubled = true;
 		// this says we need to notify the client when we get fully connected (again)
 		this._needConnectedMessage = true;
 		this.emitStatus(PubnubStatus.Trouble, channels);
@@ -838,7 +851,7 @@ export class PubnubConnection {
 			this._subscriptions[channel].subscribed = false;
 		});
 		this._debug("Resubscribing to all channels...");
-		this._pubnub!.unsubscribeAll();
+		// this._pubnub!.unsubscribeAll();
 		this._subscriptionsPending = true;
 		// also drain the queue and add any queued channels to the list, since we're
 		// starting from scratch on all of them anyway
