@@ -124,8 +124,9 @@ export class CodeStreamSession implements Disposable {
 	private onMessageReceived(e: MessageReceivedEvent) {
 		switch (e.type) {
 			case MessageType.Posts: {
-				this.firePostsReceived(new PostsReceivedEvent(this, e));
 				this.incrementUnreads(e.posts);
+
+				this.firePostsReceived(new PostsReceivedEvent(this, e));
 				break;
 			}
 			case MessageType.Repositories:
@@ -135,17 +136,17 @@ export class CodeStreamSession implements Disposable {
 				this.fireChanged(new StreamsAddedEvent(this, e));
 				break;
 			case MessageType.Users:
+				const user = e.users.find(u => u.id === this.userId);
+				if (user != null) {
+					this._state!.updateUser(user);
+					this.calculateUnreads(user);
+				}
+
 				this.fireChanged(new UsersChangedEvent(this, e));
-				e.users.some(user => {
-					if (user.id === this.userId) {
-						this._state!.updateUser(user);
-						this.calculateUnreads(user);
-						return true;
-					}
-					return false;
-				});
 				break;
 			case MessageType.Teams:
+				this._state!.updateTeams();
+
 				this.fireChanged(new TeamsChangedEvent(this, e));
 				break;
 		}

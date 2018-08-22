@@ -45,7 +45,7 @@ class UnreadCounter {
 }
 
 export class SessionState {
-	_unreads: UnreadCounter;
+	private readonly _unreads: UnreadCounter;
 
 	constructor(
 		private readonly session: CodeStreamSession,
@@ -139,7 +139,13 @@ export class SessionState {
 		return Promise.resolve(this._data!.teams.length === 1);
 	}
 
+	async updateTeams() {
+		this._data.teams = await this.teams.entities();
+		this._team = undefined;
+	}
+
 	updateUser(user: CSUser) {
-		this._user = new User(this.session, user);
+		this._data.user = user;
+		this._user = undefined;
 	}
 }

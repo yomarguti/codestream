@@ -1,7 +1,7 @@
 "use strict";
 import { Iterables } from "../../system";
 import { CSUser } from "../api";
-import { CodeStreamSession } from "../session";
+import { CodeStreamSession, SessionChangedEvent, SessionChangedType } from "../session";
 import { CodeStreamCollection, CodeStreamItem } from "./collection";
 
 export class User extends CodeStreamItem<CSUser> {
@@ -46,6 +46,14 @@ export class User extends CodeStreamItem<CSUser> {
 export class UserCollection extends CodeStreamCollection<User, CSUser> {
 	constructor(session: CodeStreamSession, public readonly teamId: string) {
 		super(session);
+
+		this.disposables.push(session.onDidChange(this.onSessionChanged, this));
+	}
+
+	protected onSessionChanged(e: SessionChangedEvent) {
+		if (e.type !== SessionChangedType.Users) return;
+
+		this.invalidate();
 	}
 
 	async getByEmail(
@@ -90,7 +98,8 @@ export class UserCollection extends CodeStreamCollection<User, CSUser> {
 		return new User(this.session, e);
 	}
 
-	protected fetch() {
-		return this.session.api.getUsers();
+	protected async fetch() {
+		const users = await this.session.api.getUsers();
+		return users;
 	}
 }
