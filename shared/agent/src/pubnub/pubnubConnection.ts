@@ -485,8 +485,7 @@ export class PubnubConnection {
 		if (this._catchingUpSince > 0) {
 			since = this._catchingUpSince;
 			this._debug(`Already catching up since ${this._catchingUpSince}`);
-		}
-		else if (this._lastMessageReceivedAt > 0) {
+		} else if (this._lastMessageReceivedAt > 0) {
 			since = this._lastMessageReceivedAt - THRESHOLD_BUFFER;
 			this._debug(`Last message was recevied at ${this._lastMessageReceivedAt}`);
 		}
@@ -677,7 +676,7 @@ export class PubnubConnection {
 	// mode, ask the api server to explicitly grant us subscription access to those channels,
 	// and try again
 	private async subscriptionFailure(channels: string[]) {
-		channels = channels.filter(channel => !this._activeFailures.includes(channel ));
+		channels = channels.filter(channel => !this._activeFailures.includes(channel));
 		if (channels.length === 0) {
 			this._debug("Already handling subscription failures, ignoring:", channels);
 		}
