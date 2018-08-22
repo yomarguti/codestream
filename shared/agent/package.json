@@ -39,8 +39,8 @@
         "string-similarity": "1.2.0",
         "tmp": "0.0.33",
         "tslib": "1.9.3",
-        "vscode-languageserver": "5.0.0",
-        "vscode-uri": "1.0.5",
+        "vscode-languageserver": "5.0.3",
+        "vscode-uri": "1.0.6",
         "write-file-atomic": "2.3.0"
     },
     "devDependencies": {
@@ -57,18 +57,18 @@
         "chai": "4.1.2",
         "clean-webpack-plugin": "0.1.19",
         "cross-env": "5.2.0",
-        "filemanager-webpack-plugin": "2.0.0",
+        "filemanager-webpack-plugin": "2.0.1",
         "ignore-loader": "0.1.2",
         "mocha": "5.2.0",
         "prettier": "1.14.2",
         "prettier-tslint": "0.4.0",
         "randomstring": "1.1.5",
-        "ts-loader": "4.4.2",
+        "ts-loader": "4.5.0",
         "ts-node": "7.0.1",
         "tslint": "5.11.0",
         "tslint-loader": "3.6.0",
         "typescript": "3.0.1",
-        "webpack": "4.16.5",
+        "webpack": "4.17.1",
         "webpack-cli": "3.1.0",
         "webpack-node-externals": "1.7.2"
     }
