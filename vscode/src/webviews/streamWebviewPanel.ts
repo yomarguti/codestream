@@ -553,6 +553,7 @@ export class StreamWebviewPanel implements Disposable {
 	}
 
 	private onPostsReceived(e: PostsReceivedEvent) {
+		Logger.log(`WebviewPanel.onPostsReceived: Attempting to send new posts to the webview...`);
 		this.postMessage({
 			type: "codestream:data",
 			body: {
@@ -568,6 +569,9 @@ export class StreamWebviewPanel implements Disposable {
 			case SessionChangedType.Repositories:
 			case SessionChangedType.Users:
 			case SessionChangedType.Teams:
+				Logger.log(
+					`WebviewPanel.onSessionChanged: Attempting to send new ${e.type} to the webview...`
+				);
 				this.postMessage({
 					type: "codestream:data",
 					body: {
@@ -577,6 +581,9 @@ export class StreamWebviewPanel implements Disposable {
 				});
 				break;
 			case SessionChangedType.Unreads: {
+				Logger.log(
+					`WebviewPanel.onSessionChanged: Attempting to send update unreads to the webview...`
+				);
 				this.postMessage({
 					type: "codestream:data:unreads",
 					body: e.unreads
@@ -841,13 +848,40 @@ class WebviewIpc {
 	}
 
 	/*private*/ async postMessage(request: CSWebviewMessage) {
-		if (this._panel === undefined) throw new Error("Webview has not been created yet");
-		if (this._paused) return false;
+		if (this._panel === undefined) {
+			Logger.log(
+				`WebviewPanel:FAILED posting ${
+					request.type
+				} to the webview; Webview has not been created yet`
+			);
 
-		const success = await this._panel.webview.postMessage(request);
+			throw new Error("Webview has not been created yet");
+		}
+		if (this._paused) {
+			Logger.log(
+				`WebviewPanel: FAILED posting ${
+					request.type
+				} to the webview; Webview is invisible and can't receive messages`
+			);
+
+			return false;
+		}
+
+		let success;
+		try {
+			success = await this._panel.webview.postMessage(request);
+		} catch (ex) {
+			Logger.error(ex);
+			success = false;
+		}
+
 		if (!success) {
 			this._paused = true;
 		}
+
+		Logger.log(
+			`WebviewPanel: ${success ? "Completed" : "FAILED"} posting ${request.type} to the webview`
+		);
 		return success;
 	}
 }
