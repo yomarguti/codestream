@@ -326,14 +326,13 @@ class Post extends Component {
 						Save
 					</Button>
 					<Button
-						id="discard-button"
+						id="cancel-button"
 						className="control-button cancel"
 						tabIndex="2"
 						type="submit"
 						loading={this.props.loading}
-						onClick={this.handleClickDiscard}
 					>
-						Discard
+						Cancel
 					</Button>
 				</div>
 			</div>

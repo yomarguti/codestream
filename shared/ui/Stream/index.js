@@ -876,7 +876,7 @@ export class SimpleStream extends Component {
 		if (event && event.target && event.target.tagName === "A") return false;
 
 		// console.log(event.target.id);
-		if (event.target.id === "discard-button") {
+		if (event.target.id === "cancel-button") {
 			// if the user clicked on the cancel changes button,
 			// presumably because she is editing a post, abort
 			this.setState({ editingPostId: null });
