@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { FormattedMessage, injectIntl } from "react-intl";
+import { injectIntl } from "react-intl";
 import { connect } from "react-redux";
 import _ from "underscore";
 import createClassString from "classnames";
@@ -25,7 +25,6 @@ import {
 	getStreamForTeam,
 	getStreamForRepoAndFile
 } from "../reducers/streams";
-import { createPost, createSystemPost, editPost, deletePost } from "./actions";
 
 const EMAIL_MATCH_REGEX = new RegExp(
 	"[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*",
@@ -476,8 +475,8 @@ export class SimpleStream extends Component {
 			<label>{umis.totalMentions > 99 ? "99+" : umis.totalMentions}</label>
 		) : umis.totalUnread ? (
 			<div className="unread-badge" />
-			// <Icon name="chevron-left" className="show-channels-icon" />
 		) : (
+			// <Icon name="chevron-left" className="show-channels-icon" />
 			""
 		);
 

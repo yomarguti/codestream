@@ -2,11 +2,9 @@ import React, { Component } from "react";
 import { connect } from "react-redux";
 import createClassString from "classnames";
 import _ from "underscore";
-import * as routingActions from "../actions/routing";
 import { createStream, setCurrentStream, setUserPreference } from "./actions";
 import { getChannelStreamsForTeam, getDirectMessageStreamsForTeam } from "../reducers/streams";
 import Icon from "./Icon";
-import Menu from "./Menu";
 import ChannelMenu from "./ChannelMenu";
 
 export class SimpleChannelPanel extends Component {
