@@ -144,13 +144,25 @@ export class CodeStreamAgent implements Disposable {
 		handler: RequestHandler<P, R, E>
 	): void;
 	registerHandler(type: any, handler: any): void {
-		return this._connection.onRequest(type, handler);
+		try {
+			Logger.log(`Agent.registerHandler(${type.method})`);
+			return this._connection.onRequest(type, handler);
+		} catch (ex) {
+			Logger.error(ex, `Agent.registerHandler(${type.method})`);
+			throw ex;
+		}
 	}
 
 	sendNotification<RO>(type: NotificationType0<RO>): void;
 	sendNotification<P, RO>(type: NotificationType<P, RO>, params: P): void;
 	sendNotification(type: any, params?: any): void {
-		return this._connection.sendNotification(type, params);
+		try {
+			Logger.log(`Agent.sendNotification(${type.method})`);
+			return this._connection.sendNotification(type, params);
+		} catch (ex) {
+			Logger.error(ex, `Agent.sendNotification(${type.method})`, params);
+			throw ex;
+		}
 	}
 
 	sendRequest<R, E, RO>(type: RequestType0<R, E, RO>, token?: CancellationToken): Thenable<R>;
@@ -164,7 +176,14 @@ export class CodeStreamAgent implements Disposable {
 			token = params;
 			params = undefined;
 		}
-		return this._connection.sendRequest(type, params, token);
+
+		try {
+			Logger.log(`Agent.sendRequest(${type.method})`);
+			return this._connection.sendRequest(type, params, token);
+		} catch (ex) {
+			Logger.error(ex, `Agent.sendRequest(${type.method})`, params);
+			throw ex;
+		}
 	}
 
 	error(exception: Error): void;
