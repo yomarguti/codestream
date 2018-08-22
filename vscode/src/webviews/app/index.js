@@ -1,7 +1,7 @@
 import "resize-observer";
 import React from "react";
 import ReactDOM from "react-dom";
-import { Container, createStore, EventEmitter, WebviewApi } from "codestream-components";
+import { actions, Container, createStore, EventEmitter, WebviewApi } from "codestream-components";
 import translations from "codestream-components/translations/en.json";
 import loggingMiddleWare from "./logging-middleware";
 
@@ -184,40 +184,34 @@ const store = createStore(
 );
 
 // TODO: should be able to include data.configs in call to createStore
-store.dispatch({ type: "UPDATE_CONFIGS", payload: data.configs || {} });
+store.dispatch(actions.updateConfigs(data.configs || {}));
 
 EventEmitter.on("data", ({ type, payload }) => {
 	store.dispatch({ type: `ADD_${type.toUpperCase()}`, payload });
 });
 
 EventEmitter.on("data:unreads", unreads => {
-	store.dispatch({ type: `UPDATE_UNREADS`, payload: unreads });
+	store.dispatch(actions.updateUnreads(unreads));
 });
 
-EventEmitter.on("configs", configs => store.dispatch({ type: "UPDATE_CONFIGS", payload: configs }));
+EventEmitter.on("configs", configs => store.dispatch(actions.updateConfigs(configs)));
 
 EventEmitter.on("interaction:focus", () => {
 	setTimeout(() => {
-		store.dispatch({ type: "SET_HAS_FOCUS", payload: true });
+		store.dispatch(actions.focus());
 	}, 10); // we want the first click to go to the FocusTrap blanket
 });
 EventEmitter.on("interaction:blur", () => {
-	store.dispatch({ type: "SET_HAS_FOCUS", payload: false });
+	store.dispatch(actions.blur());
 });
 
 EventEmitter.on("interaction:signed-out", () => {
-	store.dispatch({ type: "RESET" });
+	store.dispatch(actions.reset());
 });
 
-if (data.currentUserId) {
-	store.dispatch({ type: "BOOTSTRAP_USERS", payload: data.users });
-	store.dispatch({ type: "BOOTSTRAP_TEAMS", payload: data.teams });
-	store.dispatch({ type: "BOOTSTRAP_STREAMS", payload: data.streams });
-	store.dispatch({ type: "BOOTSTRAP_REPOS", payload: data.repos });
-}
-store.dispatch({ type: "BOOTSTRAP_COMPLETE" });
-
-ReactDOM.render(
-	<Container store={store} i18n={{ locale: "en", messages: translations }} />,
-	document.querySelector("#app")
-);
+store.dispatch(actions.bootstrap(data)).then(() => {
+	ReactDOM.render(
+		<Container store={store} i18n={{ locale: "en", messages: translations }} />,
+		document.querySelector("#app")
+	);
+});
