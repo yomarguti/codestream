@@ -55,6 +55,15 @@ export {
 	User
 };
 
+const envRegex = /https?:\/\/(pd-|qa-)api.codestream.(?:us|com)/;
+
+export enum CodeStreamEnvironment {
+	PD = "pd",
+	Production = "prod",
+	QA = "qa",
+	Unknown = "unknown"
+}
+
 export class CodeStreamSession implements Disposable {
 	private _onDidChange = new EventEmitter<SessionChangedEvent>();
 	get onDidChange(): Event<SessionChangedEvent> {
@@ -74,6 +83,7 @@ export class CodeStreamSession implements Disposable {
 	private _disposable: Disposable | undefined;
 
 	private _email: string | undefined;
+	private _environment = CodeStreamEnvironment.Unknown;
 	private _id: string | undefined;
 	private _loginPromise: Promise<LoginResult> | undefined;
 	private _presenceManager: PresenceManager | undefined;
@@ -82,7 +92,9 @@ export class CodeStreamSession implements Disposable {
 	private _state: SessionState | undefined;
 	private _signupToken: string | undefined;
 
-	constructor(private _serverUrl: string) {}
+	constructor(private _serverUrl: string) {
+		this.setServerUrl(_serverUrl);
+	}
 
 	dispose() {
 		this._disposable && this._disposable.dispose();
@@ -90,7 +102,7 @@ export class CodeStreamSession implements Disposable {
 
 	// private async onConfigurationChanged(e: ConfigurationChangeEvent) {
 	// 	if (configuration.changed(e, configuration.name("serverUrl").value)) {
-	// 		this._serverUrl = Container.config.serverUrl;
+	// 		this.setServerUrl(Container.config.serverUrl);
 	// 		if (this._sessionApi !== undefined) {
 	// 			this._sessionApi.baseUrl = this._serverUrl;
 	// 		}
@@ -217,8 +229,31 @@ export class CodeStreamSession implements Disposable {
 		return this._state!.repos;
 	}
 
-	get serverUrl() {
+	get environment(): CodeStreamEnvironment {
+		return this._environment;
+	}
+
+	get serverUrl(): string {
 		return this._serverUrl;
+	}
+	private setServerUrl(url: string) {
+		this._serverUrl = url;
+		this._environment = CodeStreamEnvironment.Unknown;
+
+		const match = envRegex.exec(url);
+		if (match == null) return;
+
+		switch (match[1].toLowerCase()) {
+			case "pd-":
+				this._environment = CodeStreamEnvironment.PD;
+				break;
+			case "qa-":
+				this._environment = CodeStreamEnvironment.QA;
+				break;
+			default:
+				this._environment = CodeStreamEnvironment.Production;
+				break;
+		}
 	}
 
 	get signedIn() {
@@ -287,7 +322,7 @@ export class CodeStreamSession implements Disposable {
 		// TODO: reuse this._loginPromise
 		if (this._signupToken === undefined) throw new Error("A signup token hasn't been generated");
 
-		this._serverUrl = Container.config.serverUrl;
+		this.setServerUrl(Container.config.serverUrl);
 
 		this._status = SessionStatus.SigningIn;
 		const e: SessionStatusChangedEvent = { getStatus: () => this._status };
@@ -387,7 +422,7 @@ export class CodeStreamSession implements Disposable {
 		passwordOrToken: string | AccessToken,
 		teamId?: string
 	): Promise<LoginResult> {
-		this._serverUrl = Container.config.serverUrl;
+		this.setServerUrl(Container.config.serverUrl);
 		Logger.log(`Signing ${email} into CodeStream (${this.serverUrl})`);
 
 		try {

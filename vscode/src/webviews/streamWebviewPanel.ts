@@ -26,6 +26,7 @@ import {
 	LoginResult
 } from "../api/api";
 import {
+	CodeStreamEnvironment,
 	CodeStreamSession,
 	Post,
 	PostsReceivedEvent,
@@ -44,6 +45,7 @@ interface BootstrapState {
 	currentStreamLabel?: string;
 	currentStreamServiceType?: "liveshare";
 	currentThreadId?: string;
+	env: CodeStreamEnvironment;
 	posts: CSPost[];
 	streams: CSStream[];
 	teams: CSTeam[];
@@ -164,6 +166,7 @@ export class StreamWebviewPanel implements Disposable {
 		]);
 
 		state.version = Container.version;
+		state.env = this.session.environment;
 		state.currentTeamId = this.session.team.id;
 		state.currentUserId = this.session.userId;
 		state.configs = {
@@ -213,8 +216,9 @@ export class StreamWebviewPanel implements Disposable {
 									state.currentThreadId = this._streamThread.id;
 								}
 							} else {
-								state.version = Container.version;
+								state.env = this.session.environment;
 								state.configs = { email: Container.config.email };
+								state.version = Container.version;
 							}
 
 							this.postMessage({

@@ -1,6 +1,7 @@
 "use strict";
 import { Disposable, StatusBarAlignment, StatusBarItem, window } from "vscode";
 import {
+	CodeStreamEnvironment,
 	SessionChangedEvent,
 	SessionChangedType,
 	SessionStatus,
@@ -51,16 +52,26 @@ export class StatusBarController implements Disposable {
 				this._statusBarItem || window.createStatusBarItem(StatusBarAlignment.Right, -99);
 		}
 
+		let env = "";
+		switch (Container.session.environment) {
+			case CodeStreamEnvironment.PD:
+				env = "PD: ";
+				break;
+			case CodeStreamEnvironment.QA:
+				env = "QA: ";
+				break;
+		}
+
 		switch (status) {
 			case SessionStatus.SignedOut:
-				this._statusBarItem.text = ` $(comment-discussion) Sign in... `;
+				this._statusBarItem.text = ` $(comment-discussion) ${env}Sign in... `;
 				this._statusBarItem.command = "codestream.signIn";
 				this._statusBarItem.tooltip = "Sign in to CodeStream...";
 				this._statusBarItem.color = undefined;
 				break;
 
 			case SessionStatus.SigningIn:
-				this._statusBarItem.text = ` $(comment-discussion) Signing in... `;
+				this._statusBarItem.text = ` $(comment-discussion) ${env}Signing in... `;
 				this._statusBarItem.command = undefined;
 				this._statusBarItem.tooltip = "Signing in to CodeStream, please wait";
 				this._statusBarItem.color = undefined;
@@ -75,7 +86,7 @@ export class StatusBarController implements Disposable {
 					label += ` (${count})`;
 				}
 
-				this._statusBarItem.text = ` $(comment-discussion) ${label} `;
+				this._statusBarItem.text = ` $(comment-discussion) ${env}${label} `;
 				this._statusBarItem.command = "codestream.toggle";
 				this._statusBarItem.tooltip = "Toggle CodeStream";
 				break;
