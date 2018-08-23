@@ -109,7 +109,7 @@ export class CodeStreamAgentConnection implements Disposable {
 					return CloseAction.Restart;
 				}
 			},
-			outputChannelName: "CodeStream Agent",
+			outputChannelName: "CodeStream (Agent)",
 			revealOutputChannelOn: RevealOutputChannelOn.Never,
 			initializationOptions: { ...options },
 			// Register the server for file-based text documents
