@@ -183,6 +183,12 @@ export class PubnubConnection {
 		}
 	}
 
+	// unsubscribe to the passed channels
+	unsubscribe(channels: string[]) {
+		this._debug("Request to unsubscribe from these channels", channels);
+		this.removeChannels(channels);
+	}
+
 	// turn every channel, even if specified by channel name, into a ChannelDescriptor
 	private normalizeChannelDescriptors(
 		channels: (ChannelDescriptor | string)[]
@@ -311,6 +317,12 @@ export class PubnubConnection {
 	private onStatus(status: Pubnub.StatusEvent | any) {
 		this._debug("Pubnub status received", status);
 		if (
+			(status as any).error &&
+			status.operation === Pubnub.OPERATIONS.PNUnsubscribeOperation
+		) {
+			// ignore any errors associated unsubscribing
+			return;
+		} else if (
 			!(status as any).error &&
 			status.operation === Pubnub.OPERATIONS.PNSubscribeOperation &&
 			status.category === Pubnub.CATEGORIES.PNConnectedCategory
@@ -321,15 +333,6 @@ export class PubnubConnection {
 			} else {
 				this._simulateSubscriptionTimeout = false;
 			}
-		} else if (
-			!this._subscriptionsPending &&
-			(status as any).error &&
-			(status.operation === Pubnub.OPERATIONS.PNHeartbeatOperation ||
-				status.operation === Pubnub.OPERATIONS.PNSubscribeOperation)
-		) {
-			// a network error of some kind, we'll confirm our subscriptions and
-			// make sure we are truly connected
-			this.netHiccup();
 		} else if (
 			(status as any).error &&
 			status.category === Pubnub.CATEGORIES.PNAccessDeniedCategory
@@ -349,6 +352,15 @@ export class PubnubConnection {
 			// we'll explicitly force the server to grant us permission to access these channels,
 			// hoping that this is just a glitch or delay
 			this.subscriptionFailure(response.payload.channels || []);
+		} else if (
+			!this._subscriptionsPending &&
+			(status as any).error &&
+			(status.operation === Pubnub.OPERATIONS.PNHeartbeatOperation ||
+				status.operation === Pubnub.OPERATIONS.PNSubscribeOperation)
+		) {
+			// a network error of some kind, we'll confirm our subscriptions and
+			// make sure we are truly connected
+			this.netHiccup();
 		}
 		/* This doesn't work ... maybe in the browser, but in the agent, we never get the PNNetworkUpCategory,
    so we never get out of Offline mode
@@ -567,7 +579,10 @@ export class PubnubConnection {
 		if (!this._online) {
 			this._debug("And we are offline");
 			this.offline();
-		} else {
+		} else if (this._activeFailures.length > 0) {
+			this._debug("There are active failures in progress, ignore network hiccup");
+		}
+		else {
 			this._debug("Confirm subscriptions...");
 			this.confirmSubscriptions();
 		}
@@ -675,10 +690,10 @@ export class PubnubConnection {
 	// we never successfully subscribed to one or more channels requested, enter into a failure
 	// mode, ask the api server to explicitly grant us subscription access to those channels,
 	// and try again
-	private async subscriptionFailure(channels: string[]) {
-		channels = channels.filter(channel => !this._activeFailures.includes(channel));
+	private async subscriptionFailure(failedChannels: string[]) {
+		let channels = failedChannels.filter(channel => !this._activeFailures.includes(channel));
 		if (channels.length === 0) {
-			this._debug("Already handling subscription failures, ignoring:", channels);
+			this._debug("Already handling subscription failures, ignoring:", failedChannels);
 		}
 		this._activeFailures = [...this._activeFailures, ...channels];
 		this.emitTrouble(channels);
@@ -697,6 +712,7 @@ export class PubnubConnection {
 			this._debug("Grant failures, these channels will be removed", channels);
 			this.emitFailures(this._grantFailures);
 			this.removeChannels(this._grantFailures);
+			channels = channels.filter(channel => !this._grantFailures.includes(channel));
 		} else if (this._testMode) {
 			this.emitStatus(PubnubStatus.Granted, channels);
 		}
@@ -719,11 +735,16 @@ export class PubnubConnection {
 				return this.emitStatus(PubnubStatus.Aborted);
 			}
 		}
-		const interval = this.getThrottleInterval();
-		this._debug(`Resubscribing in ${interval} ms...`);
-		setTimeout(() => {
-			this.resubscribe();
-		}, interval);
+
+		if (channels.length === 0) {
+			this.subscribed();
+		} else {
+			const interval = this.getThrottleInterval();
+			this._debug(`Resubscribing in ${interval} ms...`);
+			setTimeout(() => {
+				this.resubscribe();
+			}, interval);
+		}
 	}
 
 	// ask the api server to explicitly grant us access to the given channel, if we don't
@@ -870,6 +891,7 @@ export class PubnubConnection {
 	// remove the given set of channels from our list of channels to which we are
 	// trying to subscribe
 	private removeChannels(channels: string[]) {
+		this._pubnub!.unsubscribe({ channels });
 		for (const channel of channels) {
 			delete this._subscriptions[channel];
 		}
