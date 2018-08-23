@@ -44,6 +44,7 @@ import {
 	UpdateStreamMembershipRequest,
 	UpdateStreamMembershipResponse
 } from "../shared/api.protocol";
+import { Functions } from "../system/function";
 
 export { AccessToken } from "../shared/agent.protocol";
 export * from "../shared/api.protocol";
@@ -363,9 +364,9 @@ export class CodeStreamApi {
 			}
 
 			if (json === undefined) {
-				const resp = await fetch(absoluteUrl, init);
+				const [resp, retryCount] = await this.fetchCore(0, absoluteUrl, init);
 				if (resp.status !== 200) {
-					traceResult = `API: FAILED ${method} ${url}`;
+					traceResult = `API: FAILED(${retryCount}x) ${method} ${url}`;
 					throw await this.handleErrorResponse(resp);
 				}
 
@@ -389,6 +390,37 @@ export class CodeStreamApi {
 		} finally {
 			const duration = process.hrtime(start);
 			Logger.log(`${traceResult} in ${duration[0] * 1000 + Math.floor(duration[1] / 1000000)}ms`);
+		}
+	}
+
+	private async fetchCore(
+		count: number,
+		url: string,
+		init?: RequestInit
+	): Promise<[Response, number]> {
+		try {
+			const resp = await fetch(url, init);
+			if (resp.status !== 200) {
+				if (resp.status < 400 || resp.status >= 500) {
+					count++;
+					if (count <= 3) {
+						await Functions.wait(250 * count);
+						return this.fetchCore(count, url, init);
+					}
+				}
+			}
+			return [resp, count];
+		} catch (ex) {
+			debugger;
+			Logger.error(ex);
+
+			count++;
+			if (count <= 3) {
+				await Functions.wait(250 * count);
+				return this.fetchCore(count, url, init);
+			}
+
+			throw ex;
 		}
 	}
 
