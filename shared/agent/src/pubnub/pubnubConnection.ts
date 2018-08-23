@@ -421,6 +421,11 @@ export class PubnubConnection {
 			} else {
 				channelsWithoutPresence.push(channel);
 			}
+			// remove this channel from list of active failures, since we are trying again
+			const index = this._activeFailures.indexOf(channel);
+			if (index !== -1) {
+				this._activeFailures.splice(index, 1);
+			}
 		});
 		if (channelsWithPresence.length > 0) {
 			this._debug("Pubnub subscribing (with presence) to", channelsWithPresence);
@@ -542,7 +547,7 @@ export class PubnubConnection {
 			error = error instanceof Error ? error.message : error;
 			this._debug("Fetch history error, resubscribing...", error);
 			this.emitTrouble();
-			return this.resubscribe();
+			return this.resubscribe(channels);
 		}
 		if (historyOutput.reset) {
 			this._debug("Too much history, forcing reset");
@@ -641,7 +646,7 @@ export class PubnubConnection {
 			// the channels in question
 			this._debug("Failed to confirm all subscriptions, resubscribing...");
 			this.emitTrouble(troubleChannels);
-			this.resubscribe();
+			this.resubscribe(troubleChannels);
 		} else {
 			if (this._testMode) {
 				this.emitStatus(PubnubStatus.Confirmed);
@@ -693,7 +698,8 @@ export class PubnubConnection {
 	private async subscriptionFailure(failedChannels: string[]) {
 		let channels = failedChannels.filter(channel => !this._activeFailures.includes(channel));
 		if (channels.length === 0) {
-			this._debug("Already handling subscription failures, ignoring:", failedChannels);
+			this._debug("Already handling subscription failures, ignoring", failedChannels);
+			return;
 		}
 		this._activeFailures = [...this._activeFailures, ...channels];
 		this.emitTrouble(channels);
@@ -742,7 +748,7 @@ export class PubnubConnection {
 			const interval = this.getThrottleInterval();
 			this._debug(`Resubscribing in ${interval} ms...`);
 			setTimeout(() => {
-				this.resubscribe();
+				this.resubscribe(channels);
 			}, interval);
 		}
 	}
@@ -864,13 +870,16 @@ export class PubnubConnection {
 	}
 
 	// resubscribe to all channels
-	private resubscribe() {
+	private resubscribe(channels?: string[]) {
+		if (!channels) {
+			channels = Object.keys(this._subscriptions);
+		}
 		this._numResubscribes++;
 		this._debug("Set numResubscribes to " + this._numResubscribes);
-		Object.keys(this._subscriptions).forEach(channel => {
+		channels.forEach(channel => {
 			this._subscriptions[channel].subscribed = false;
 		});
-		this._debug("Resubscribing to all channels...");
+		this._debug("Resubscribing to", channels);
 		// this._pubnub!.unsubscribeAll();
 		this._subscriptionsPending = true;
 		// also drain the queue and add any queued channels to the list, since we're
