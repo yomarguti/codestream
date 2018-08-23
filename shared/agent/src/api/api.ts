@@ -340,7 +340,7 @@ export class CodeStreamApi {
 					try {
 						await mw.onRequest(context);
 					} catch (ex) {
-						Logger.error(ex, `${method} ${url}: Middleware(${mw.name}).onRequest FAILED`);
+						Logger.error(ex, `API: ${method} ${url}: Middleware(${mw.name}).onRequest FAILED`);
 					}
 				}
 			}
@@ -354,7 +354,10 @@ export class CodeStreamApi {
 						json = await mw.onProvideResponse(context!);
 						if (json !== undefined) break;
 					} catch (ex) {
-						Logger.error(ex, `${method} ${url}: Middleware(${mw.name}).onProvideResponse FAILED`);
+						Logger.error(
+							ex,
+							`API: ${method} ${url}: Middleware(${mw.name}).onProvideResponse FAILED`
+						);
 					}
 				}
 			}
@@ -362,11 +365,11 @@ export class CodeStreamApi {
 			if (json === undefined) {
 				const resp = await fetch(absoluteUrl, init);
 				if (resp.status !== 200) {
-					traceResult = `FAILED ${method} ${url}`;
+					traceResult = `API: FAILED ${method} ${url}`;
 					throw await this.handleErrorResponse(resp);
 				}
 
-				traceResult = `Completed ${method} ${url}`;
+				traceResult = `API: Completed ${method} ${url}`;
 				json = resp.json() as Promise<R>;
 			}
 
@@ -377,7 +380,7 @@ export class CodeStreamApi {
 					try {
 						await mw.onResponse(context!, json);
 					} catch (ex) {
-						Logger.error(ex, `${method} ${url}: Middleware(${mw.name}).onResponse FAILED`);
+						Logger.error(ex, `API: ${method} ${url}: Middleware(${mw.name}).onResponse FAILED`);
 					}
 				}
 			}

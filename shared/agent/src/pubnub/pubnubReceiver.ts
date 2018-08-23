@@ -12,7 +12,7 @@ import {
 	CSTeam,
 	CSUser
 } from "../api/api";
-import { Logger } from "../logger";
+import { Logger, TraceLevel } from "../logger";
 import { Iterables } from "../system";
 import {
 	ChannelDescriptor,
@@ -83,7 +83,6 @@ export class PubnubReceiver {
 
 	private readonly _pubnubConnection: PubnubConnection;
 	private _connection: Disposable | undefined;
-	private _debugMode: boolean = true;
 
 	constructor(
 		private _agent: CodeStreamAgent,
@@ -263,13 +262,8 @@ export class PubnubReceiver {
 	}
 
 	private debug(msg: string, info?: any) {
-		if (this._debugMode) {
-			const now = new Date().toString();
-			msg = `${now}: PUBNUB: ${msg}`;
-			if (info) {
-				msg += `: ${JSON.stringify(info, undefined, 10)}`;
-			}
-			Logger.log(msg);
-		}
+		if (Logger.level !== TraceLevel.Debug && !Logger.isDebugging) return;
+
+		Logger.log(`PUBNUB: ${msg}${info ? `: ${JSON.stringify(info, undefined, 10)}` : ""}`);
 	}
 }

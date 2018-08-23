@@ -14,7 +14,7 @@ export enum TraceLevel {
 }
 
 export class Logger {
-	static level: TraceLevel = TraceLevel.Verbose;
+	static level: TraceLevel = TraceLevel.Debug;
 	private static _agent: CodeStreamAgent | undefined;
 
 	static initialize(agent: CodeStreamAgent) {
@@ -29,9 +29,7 @@ export class Logger {
 		// }
 
 		if (this._agent !== undefined) {
-			this._agent.log(
-				(Logger.isDebugging ? [this.timestamp, message, ...params] : [message, ...params]).join(" ")
-			);
+			this._agent.log([this.timestamp, message, ...params].join(" "));
 		}
 	}
 
@@ -43,12 +41,7 @@ export class Logger {
 		// }
 
 		if (this._agent !== undefined) {
-			this._agent.error(
-				(Logger.isDebugging
-					? [this.timestamp, classOrMethod, ...params, ex]
-					: [classOrMethod, ...params, ex]
-				).join(" ")
-			);
+			this._agent.error([this.timestamp, classOrMethod, ...params, ex].join(" "));
 		}
 
 		// Telemetry.trackException(ex);
@@ -62,9 +55,7 @@ export class Logger {
 		// }
 
 		if (this._agent !== undefined) {
-			this._agent.warn(
-				(Logger.isDebugging ? [this.timestamp, message, ...params] : [message, ...params]).join(" ")
-			);
+			this._agent.warn([this.timestamp, message, ...params].join(" "));
 		}
 	}
 

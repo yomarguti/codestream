@@ -50,7 +50,7 @@ export async function git(
 
 	let promise = pendingCommands.get(command);
 	if (promise === undefined) {
-		Logger.log(`Running${command}`);
+		Logger.log(`GIT: Running${command}`);
 		// Fixes https://github.com/eamodio/vscode-gitlens/issues/73 & https://github.com/eamodio/vscode-gitlens/issues/161
 		// See https://stackoverflow.com/questions/4144417/how-to-handle-asian-characters-in-file-names-in-git-on-os-x
 		args.splice(0, 0, "-c", "core.quotepath=false", "-c", "color.ui=false");
@@ -59,7 +59,7 @@ export async function git(
 
 		pendingCommands.set(command, promise);
 	} else {
-		Logger.log(`Awaiting${command}`);
+		Logger.log(`GIT: Awaiting${command}`);
 	}
 
 	let data: string;
@@ -89,7 +89,7 @@ export async function git(
 		const duration = process.hrtime(start);
 		const completedIn = `in ${duration[0] * 1000 + Math.floor(duration[1] / 1000000)} ms`;
 
-		Logger.log(`Completed${command} ${completedIn}`);
+		Logger.log(`GIT: Completed${command} ${completedIn}`);
 		// Logger.logGitCommand(`${gitCommand} ${completedIn}`, runOpts.cwd!);
 	}
 
