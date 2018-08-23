@@ -77,8 +77,8 @@ export class CodeStreamAgent implements Disposable {
 
 		return {
 			capabilities: {
-				textDocumentSync: TextDocumentSyncKind.Full,
-				hoverProvider: true
+				textDocumentSync: TextDocumentSyncKind.Full
+				// hoverProvider: true
 			},
 			result: result
 		} as InitializeResult;
