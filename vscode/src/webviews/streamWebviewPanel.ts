@@ -52,6 +52,9 @@ interface BootstrapState {
 	users: CSUser[];
 	unreads: { unread: { [streamId: string]: number }; mentions: { [streamId: string]: number } };
 	repos: CSRepository[];
+	services: {
+		vsls?: boolean;
+	};
 	version: string;
 	configs: {
 		[k: string]: any;
@@ -159,30 +162,32 @@ export class StreamWebviewPanel implements Disposable {
 		const state: BootstrapState = Object.create(null);
 
 		const promise = Promise.all([
-			Container.session.channelsAndDMs.entities(),
-			this.session.teams.entities(),
 			this.session.repos.entities(),
+			this.session.channelsAndDMs.entities(),
+			this.session.teams.entities(),
 			this.session.users.entities()
 		]);
 
-		state.version = Container.version;
-		state.env = this.session.environment;
-		state.currentTeamId = this.session.team.id;
-		state.currentUserId = this.session.userId;
 		state.configs = {
-			serverUrl: Container.session.serverUrl,
+			serverUrl: this.session.serverUrl,
 			reduceMotion: Container.config.reduceMotion,
 			showHeadshots: Container.config.avatars
 		};
-
+		state.currentTeamId = this.session.team.id;
+		state.currentUserId = this.session.userId;
+		state.env = this.session.environment;
+		state.services = {
+			vsls: Container.liveShare.isInstalled
+		};
 		state.unreads = this.session.unreads.getValues();
+		state.version = Container.version;
 
 		const currentUser = this.session.user.entity;
-		const [streams, teams, repos, users] = await promise;
+		const [repos, streams, teams, users] = await promise;
 
+		state.repos = repos;
 		state.streams = streams;
 		state.teams = teams;
-		state.repos = repos;
 		state.users = users.map(user => (user.id === currentUser.id ? currentUser : user));
 
 		return state;
@@ -218,6 +223,7 @@ export class StreamWebviewPanel implements Disposable {
 							} else {
 								state.env = this.session.environment;
 								state.configs = { email: Container.config.email };
+								state.services = {};
 								state.version = Container.version;
 							}
 
@@ -615,7 +621,7 @@ export class StreamWebviewPanel implements Disposable {
 			this.postMessage({
 				type: "codestream:configs",
 				body: {
-					serverUrl: Container.session.serverUrl,
+					serverUrl: this.session.serverUrl,
 					showHeadshots: Container.config.avatars,
 					reduceMotion: Container.config.reduceMotion
 				}
