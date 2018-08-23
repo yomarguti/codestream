@@ -6,7 +6,7 @@ export const slashCommands = [
 	// { id: "diff", help: "diff last post" },
 	{ id: "invite", help: "add to your team", description: "email" },
 	{ id: "leave", help: "leave channel", channelOnly: true },
-	{ id: "live", help: "start live share", msOnly: true },
+	{ id: "liveshare", help: "start live share", msOnly: true },
 	{ id: "me", help: "emote", description: "text" },
 	{ id: "msg", help: "message member", description: "@user text" },
 	{ id: "mute", help: "mute channel", channelOnly: true },
@@ -14,8 +14,8 @@ export const slashCommands = [
 	// { id: "open", help: "open channel" },
 	// { id: "prefs", help: "open preferences" },
 	{ id: "purpose", help: "set purpose", description: "text", channelOnly: true },
-	{ id: "rename", help: "rename channel", description: "newname", channelOnly: true },
 	{ id: "remove", help: "remove from channel", description: "@user", channelOnly: true },
+	{ id: "rename", help: "rename channel", description: "newname", channelOnly: true },
 	{ id: "slack", help: "connect to slack" },
 	{ id: "version", help: "show codeStream version" },
 	{ id: "who", help: "show channel members" }

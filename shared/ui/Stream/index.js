@@ -844,7 +844,7 @@ export class SimpleStream extends Component {
 			case "direct-message":
 				return this.sendDirectMessage(post.author.username);
 			case "live-share":
-				return this.notImplementedYet();
+				return this.inviteToLiveShare(post.creatorId);
 			case "edit-headshot":
 				return this.headshotInstructions(post.author.email);
 		}
@@ -1257,8 +1257,7 @@ export class SimpleStream extends Component {
 	};
 
 	submitSystemPost = text => {
-		const { activePanel } = this.props;
-		const { postStreamId, createSystemPost, posts } = this.props;
+		const { activePanel, postStreamId, createSystemPost, posts } = this.props;
 		const threadId = activePanel === "thread" ? this.state.threadId : null;
 		const lastPost = _.last(posts);
 		const seqNum = lastPost ? lastPost.seqNum + 0.001 : 0.001;
@@ -1284,34 +1283,57 @@ export class SimpleStream extends Component {
 		return true;
 	};
 
+	inviteToLiveShare = userId => {
+		EventEmitter.emit("interaction:svc-request", {
+			service: "vsls",
+			action: {
+				type: "invite",
+				userId: userId
+			}
+		});
+	};
+
+	startLiveShare = () => {
+		const { activePanel, postStreamId } = this.props;
+		const threadId = activePanel === "thread" ? this.state.threadId : undefined;
+		EventEmitter.emit("interaction:svc-request", {
+			service: "vsls",
+			action: {
+				type: "start",
+				streamId: postStreamId,
+				threadId: threadId
+			}
+		});
+	};
+
 	runSlashCommand = (command, args) => {
 		switch ((command || "").toLowerCase()) {
+			case "help":
+				return this.postHelp();
 			case "add":
 				return this.addMembersToStream(args);
 			case "archive":
-				return this.archiveChannel(args);
-			case "delete":
-				return this.deleteChannel(args);
-			case "help":
-				return this.postHelp();
+				return this.archiveChannel();
+			// case "delete":
+			// 	return this.deleteChannel();
 			case "invite":
 				return this.invitePerson(args);
 			case "leave":
-				return this.leaveChannel(args);
-			case "live":
-				return this.notImplementedYet();
+				return this.leaveChannel();
+			case "liveshare":
+				return this.startLiveShare();
 			case "me":
 				return false;
-			case "mute":
-				return this.toggleMute();
-			case "muteall":
-				return this.toggleMuteAll();
 			case "msg":
 				return this.sendDirectMessage(args);
+			case "mute":
+				return this.toggleMute();
+			// case "muteall":
+			// 	return this.toggleMuteAll();
 			case "open":
 				return this.openStream(args);
-			case "prefs":
-				return this.openPrefs(args);
+			// case "prefs":
+			// 	return this.openPrefs(args);
 			case "purpose":
 				return this.setPurpose(args);
 			case "remove":
@@ -1321,7 +1343,7 @@ export class SimpleStream extends Component {
 			case "slack":
 				return this.printSlackInstructions(args);
 			case "version":
-				return this.postVersion(args);
+				return this.postVersion();
 			case "who":
 				return this.showMembers();
 		}
