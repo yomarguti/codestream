@@ -345,13 +345,13 @@ export class CodeStreamApi {
 				}
 			}
 
-			let json: Promise<any> | undefined;
+			let json: Promise<R> | undefined;
 			if (hasMiddleware) {
 				for (const mw of this._middleware) {
 					if (mw.onProvideResponse === undefined) continue;
 
 					try {
-						json = await mw.onProvideResponse(context!);
+						json = mw.onProvideResponse(context!);
 						if (json !== undefined) break;
 					} catch (ex) {
 						Logger.error(
@@ -464,6 +464,6 @@ export interface CodeStreamApiMiddlewareContext {
 export interface CodeStreamApiMiddleware {
 	readonly name: string;
 	onRequest?(context: CodeStreamApiMiddlewareContext): Promise<void>;
-	onProvideResponse?(context: CodeStreamApiMiddlewareContext): Promise<any | undefined>;
-	onResponse?(context: CodeStreamApiMiddlewareContext, response: Promise<any>): Promise<void>;
+	onProvideResponse?<R>(context: CodeStreamApiMiddlewareContext): Promise<R>;
+	onResponse?<R>(context: CodeStreamApiMiddlewareContext, response: Promise<R>): Promise<void>;
 }
