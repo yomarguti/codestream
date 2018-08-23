@@ -1,6 +1,7 @@
 "use strict";
 import { WebviewPanel } from "vscode";
 import { StreamThread } from "../api/session";
+import { Container } from "../container";
 import { Logger } from "../logger";
 import { StreamWebviewPanel } from "./streamWebviewPanel";
 
@@ -9,6 +10,34 @@ export interface WebviewIpcMessage {
 	type: string;
 	body: any;
 }
+
+export interface VslsInviteServiceRequestAction {
+	type: "invite";
+	userId: string;
+}
+
+export interface VslsJoinServiceRequestAction {
+	type: "join";
+	url: string;
+}
+
+export interface VslsStartServiceRequestAction {
+	type: "start";
+	streamId: string;
+	threadId?: string;
+}
+
+export type VslsServiceRequestAction =
+	| VslsInviteServiceRequestAction
+	| VslsJoinServiceRequestAction
+	| VslsStartServiceRequestAction;
+
+export interface VslsServiceRequest {
+	service: "vsls";
+	action: VslsServiceRequestAction;
+}
+
+export type ServiceRequest = VslsServiceRequest;
 
 export class WebviewIpc {
 	static readonly QueueThreshold = 100;
@@ -46,28 +75,35 @@ export class WebviewIpc {
 		return this.flushQueue();
 	}
 
-	onBlur() {
-		this.postMessage({
+	sendDidBlur() {
+		return this.postMessage({
 			type: "codestream:interaction:blur",
 			body: {}
 		});
 	}
 
-	onFocus() {
-		this.postMessage({
+	sendDidFocus() {
+		return this.postMessage({
 			type: "codestream:interaction:focus",
 			body: {}
 		});
 	}
 
-	onChangeStreamThread(streamThread: StreamThread) {
-		this.postMessage({
+	sendDidChangeStreamThread(streamThread: StreamThread) {
+		return this.postMessage({
 			type: "codestream:interaction:stream-thread-selected",
 			body: {
 				streamId: streamThread.stream.id,
 				threadId: streamThread.id
 			}
 		});
+	}
+
+	onServiceRequest(msg: ServiceRequest) {
+		switch (msg.service) {
+			case "vsls":
+				Container.vsls.processRequest(msg.action);
+		}
 	}
 
 	/*private*/ async postMessage(msg: WebviewIpcMessage) {

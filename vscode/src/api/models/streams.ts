@@ -1,7 +1,13 @@
 "use strict";
+import { ChannelServiceType } from "../../shared/api.protocol";
 import { Iterables, memoize, Strings } from "../../system";
 import { CSChannelStream, CSDirectStream, CSFileStream, CSStream, StreamType } from "../api";
-import { CodeStreamSession, SessionChangedEvent, SessionChangedType } from "../session";
+import {
+	CodeStreamSession,
+	SessionChangedEvent,
+	SessionChangedType,
+	StreamsMembershipChangedEvent
+} from "../session";
 import { CodeStreamCollection, CodeStreamItem } from "./collection";
 import { Post, PostCollection } from "./posts";
 import { Repository } from "./repositories";
@@ -44,8 +50,7 @@ abstract class StreamBase<T extends CSStream> extends CodeStreamItem<T> {
 	}
 }
 
-// TODO: Using this format, because channel names can only be 64 characters
-const liveShareServiceChannelRegex = /^ls:(.*?):(.*)$/;
+// const vslsServiceChannelRegex = /^svc:vsls:(.*)$/;
 
 export class ChannelStream extends StreamBase<CSChannelStream> {
 	readonly type = StreamType.Channel;
@@ -58,29 +63,29 @@ export class ChannelStream extends StreamBase<CSChannelStream> {
 		return this.entity.name;
 	}
 
-	@memoize
-	get isLiveShareChannel() {
-		return liveShareServiceChannelRegex.test(this.entity.name);
-	}
+	// @memoize
+	// get isLiveShareChannel() {
+	// 	return vslsServiceChannelRegex.test(this.entity.name);
+	// }
 
-	async label() {
-		// ls:<userId>:<sessionId>
-		const match = liveShareServiceChannelRegex.exec(this.entity.name);
-		if (match == null) return `#${this.entity.name}`;
+	// async label() {
+	// 	// svc:vsls:<sessionId>
+	// 	const match = vslsServiceChannelRegex.exec(this.entity.name);
+	// 	if (match == null) return `#${this.entity.name}`;
 
-		const [, userId] = match;
+	// 	const [, userId] = match;
 
-		let members = "";
-		if (this.entity.memberIds !== undefined) {
-			members = ` (${Iterables.join(
-				Iterables.map((await this.members(userId))!, u => u.name),
-				", "
-			)})`;
-		}
+	// 	let members = "";
+	// 	if (this.entity.memberIds !== undefined) {
+	// 		members = ` (${Iterables.join(
+	// 			Iterables.map((await this.members(userId))!, u => u.name),
+	// 			", "
+	// 		)})`;
+	// 	}
 
-		const user = await this.session.users.get(userId);
-		return `${user !== undefined ? `${user.name}'s ` : ""}Session${members}`;
-	}
+	// 	const user = await this.session.users.get(userId);
+	// 	return `${user !== undefined ? `${user.name}'s ` : ""}Session${members}`;
+	// }
 
 	async members(...excludes: string[]): Promise<Iterable<User> | undefined> {
 		if (this.entity.memberIds === undefined) return undefined;
@@ -98,18 +103,18 @@ export class DirectStream extends StreamBase<CSDirectStream> {
 		super(session, stream);
 	}
 
-	@memoize
-	async label() {
-		const label = Iterables.join(
-			Iterables.map(await this.members(this.session.userId), u => u.name),
-			", "
-		);
-		if (!label && this.entity.memberIds.includes(this.session.userId)) {
-			return `${this.session.user.name} (you)`;
-		}
+	// @memoize
+	// async label() {
+	// 	const label = Iterables.join(
+	// 		Iterables.map(await this.members(this.session.userId), u => u.name),
+	// 		", "
+	// 	);
+	// 	if (!label && this.entity.memberIds.includes(this.session.userId)) {
+	// 		return `${this.session.user.name} (you)`;
+	// 	}
 
-		return label;
-	}
+	// 	return label;
+	// }
 
 	get memberIds(): string[] {
 		return this.entity.memberIds;
@@ -141,12 +146,12 @@ export class FileStream extends StreamBase<CSFileStream> {
 		return this.entity.repoId;
 	}
 
-	label() {
-		return this.entity.file;
-	}
+	// label() {
+	// 	return this.entity.file;
+	// }
 }
 
-export type Stream = ChannelStream | DirectStream | FileStream;
+export type Stream = ChannelStream | DirectStream;
 
 export interface StreamThread {
 	id: string | undefined;
@@ -177,6 +182,15 @@ abstract class StreamCollectionBase<
 export interface ChannelStreamCreationOptions {
 	membership?: "auto" | string[];
 	privacy?: "public" | "private";
+	purpose?: string;
+}
+
+export interface ServiceChannelStreamCreationOptions {
+	name?: string;
+	membership?: "auto" | string[];
+	privacy?: "public" | "private";
+	purpose?: string;
+	serviceInfo?: { [key: string]: any };
 }
 
 export class ChannelStreamCollection extends StreamCollectionBase<ChannelStream, CSChannelStream> {
@@ -188,22 +202,106 @@ export class ChannelStreamCollection extends StreamCollectionBase<ChannelStream,
 		return Iterables.find(await this.items(), s => s.name === name);
 	}
 
-	async getOrCreateByName(
-		name: string,
-		creationOptions: ChannelStreamCreationOptions = {}
-	): Promise<ChannelStream> {
-		const stream = await this.getByName(name);
-		if (stream !== undefined) return stream;
+	async getByService(type: ChannelServiceType, key: string): Promise<ChannelStream | undefined> {
+		return Iterables.find(
+			await this.items(),
+			s => s.entity.serviceType === type && s.entity.serviceKey === key
+		);
+	}
+
+	async getDefaultTeamChannel(): Promise<ChannelStream> {
+		const entities = (await this.entities()).sort((a, b) => a.createdAt - b.createdAt);
+		const stream = entities.find(s => s.isTeamStream && !s.isArchived);
+		if (stream === undefined) throw new Error(`Unable to find a default stream`);
+
+		return new ChannelStream(this.session, stream);
+	}
+
+	async getOrCreateByService(
+		type: ChannelServiceType,
+		key: string,
+		creationOptions: ServiceChannelStreamCreationOptions = {}
+	) {
+		const stream = await this.getByService(type, key);
+		if (stream !== undefined) {
+			if (
+				stream.entity.memberIds != null &&
+				creationOptions.membership != null &&
+				typeof creationOptions.membership !== "string"
+			) {
+				// Ensure correct membership
+				const missingIds = creationOptions.membership.filter(
+					id => !stream.entity.memberIds!.includes(id)
+				);
+
+				const entity = (await this.session.api.updateStream(stream.id, {
+					$push: { memberIds: missingIds }
+				})) as CSChannelStream;
+
+				return new ChannelStream(this.session, entity);
+			}
+
+			return stream;
+		}
 
 		const s = await this.session.api.createChannelStream(
-			name,
+			creationOptions.name!,
 			creationOptions.membership,
 			creationOptions.privacy,
+			creationOptions.purpose,
+			{
+				serviceType: type,
+				serviceKey: key,
+				serviceInfo: creationOptions.serviceInfo
+			},
 			this.teamId
 		);
 		if (s === undefined) throw new Error(`Unable to create stream`);
 
 		return new ChannelStream(this.session, s);
+	}
+
+	async getOrCreateByName(
+		name: string,
+		creationOptions: ChannelStreamCreationOptions = {}
+	): Promise<ChannelStream> {
+		const stream = await this.getByName(name);
+		if (stream !== undefined) {
+			if (
+				stream.entity.memberIds != null &&
+				creationOptions.membership != null &&
+				typeof creationOptions.membership !== "string"
+			) {
+				// Ensure correct membership
+				const missingIds = creationOptions.membership.filter(
+					id => !stream.entity.memberIds!.includes(id)
+				);
+
+				const entity = (await this.session.api.updateStream(stream.id, {
+					$push: { memberIds: missingIds }
+				})) as CSChannelStream;
+
+				return new ChannelStream(this.session, entity);
+			}
+
+			return stream;
+		}
+
+		const s = await this.session.api.createChannelStream(
+			name,
+			creationOptions.membership,
+			creationOptions.privacy,
+			creationOptions.purpose,
+			undefined,
+			this.teamId
+		);
+		if (s === undefined) throw new Error(`Unable to create stream`);
+
+		return new ChannelStream(this.session, s);
+	}
+
+	leave(id: string) {
+		this.session.notify(new StreamsMembershipChangedEvent(id, this.teamId));
 	}
 
 	protected entityMapper(e: CSChannelStream) {

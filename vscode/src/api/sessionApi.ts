@@ -1,5 +1,6 @@
 "use strict";
 import { Uri } from "vscode";
+import { ChannelServiceType } from "../shared/api.protocol";
 import {
 	ApiMiddleware,
 	CodeStreamApi,
@@ -86,6 +87,12 @@ export class CodeStreamSessionApi {
 		name: string,
 		membership?: "auto" | string[],
 		privacy: "public" | "private" = membership === "auto" ? "public" : "private",
+		purpose?: string,
+		service?: {
+			serviceType: ChannelServiceType;
+			serviceKey?: string;
+			serviceInfo?: { [key: string]: any };
+		},
 		teamId?: string
 	): Promise<CSChannelStream | undefined> {
 		return (await this._api.createStream(this.token, {
@@ -94,7 +101,9 @@ export class CodeStreamSessionApi {
 			name: name,
 			memberIds: membership === "auto" ? undefined : membership,
 			isTeamStream: membership === "auto",
-			privacy: membership === "auto" ? "public" : privacy
+			privacy: membership === "auto" ? "public" : privacy,
+			purpose: purpose,
+			...service
 		})).stream as CSChannelStream;
 	}
 

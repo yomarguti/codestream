@@ -44,6 +44,7 @@ export async function openEditor(
 
 export enum ContextKeys {
 	LiveShareInstalled = "codestream:liveShareInstalled",
+	LiveShareSessionActive = "codestream:liveShareSessionActive",
 	Status = "codestream:status"
 }
 

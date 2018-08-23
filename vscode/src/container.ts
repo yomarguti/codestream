@@ -4,7 +4,6 @@ import { AgentOptions, CodeStreamAgentConnection } from "./agent/agentConnection
 import { CodeStreamSession } from "./api/session";
 import { Commands } from "./commands";
 import { Config, configuration } from "./configuration";
-import { LinkActionsController } from "./controllers/linkActionsController";
 import { LiveShareController } from "./controllers/liveShareController";
 import { NotificationsController } from "./controllers/notificationsController";
 import { StatusBarController } from "./controllers/statusBarController";
@@ -25,8 +24,7 @@ export class Container {
 		context.subscriptions.push((this._session = new CodeStreamSession(config.serverUrl)));
 
 		context.subscriptions.push((this._notifications = new NotificationsController()));
-		context.subscriptions.push((this._linkActions = new LinkActionsController()));
-		context.subscriptions.push((this._liveShare = new LiveShareController()));
+		context.subscriptions.push((this._vsls = new LiveShareController()));
 
 		context.subscriptions.push((this._commands = new Commands()));
 		context.subscriptions.push((this._codeActions = new CodeStreamCodeActionProvider()));
@@ -71,16 +69,6 @@ export class Container {
 		return this._context;
 	}
 
-	private static _linkActions: LinkActionsController;
-	static get linkActions() {
-		return this._linkActions;
-	}
-
-	private static _liveShare: LiveShareController;
-	static get liveShare() {
-		return this._liveShare;
-	}
-
 	private static _markerDecorations: MarkerDecorationProvider;
 	static get markerDecorations() {
 		return this._markerDecorations;
@@ -114,6 +102,11 @@ export class Container {
 	private static _version: string;
 	static get version(): string {
 		return this._version;
+	}
+
+	private static _vsls: LiveShareController;
+	static get vsls() {
+		return this._vsls;
 	}
 
 	static resetConfig() {

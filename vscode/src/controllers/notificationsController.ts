@@ -1,8 +1,9 @@
 "use strict";
-import { Disposable, window } from "vscode";
+import { Disposable, MessageItem, window } from "vscode";
 import { Post, PostsReceivedEvent, StreamType } from "../api/session";
 import { Notifications } from "../configuration";
 import { Container } from "../container";
+import { vslsUrlRegex } from "./liveShareController";
 
 export class NotificationsController implements Disposable {
 	private _disposable: Disposable;
@@ -37,12 +38,12 @@ export class NotificationsController implements Disposable {
 			switch (Container.config.notifications) {
 				case Notifications.All:
 					if (!isPostStreamVisible) {
-						this.showNotification(post);
+						this.showNotification(post, false);
 					} else if (
 						mentioned ||
 						(!isPostStreamVisible && (await post.stream()).type === StreamType.Direct)
 					) {
-						this.showNotification(post);
+						this.showNotification(post, true);
 					}
 					break;
 
@@ -51,22 +52,45 @@ export class NotificationsController implements Disposable {
 						mentioned ||
 						(!isPostStreamVisible && (await post.stream()).type === StreamType.Direct)
 					) {
-						this.showNotification(post);
+						this.showNotification(post, true);
 					}
 					break;
 			}
 		}
 	}
 
-	async showNotification(post: Post) {
+	async showNotification(post: Post, mentioned: boolean) {
 		const sender = await post.sender();
+
+		const text = post.text;
+		if (mentioned && sender !== undefined) {
+			const match = vslsUrlRegex.exec(text);
+			if (match != null) {
+				const actions: MessageItem[] = [
+					{ title: "Join Live Share" },
+					{ title: "Ignore", isCloseAffordance: true }
+				];
+
+				const result = await window.showInformationMessage(
+					`${sender.name} is inviting you to join a Live Share session`,
+					...actions
+				);
+
+				if (result === actions[0]) {
+					Container.vsls.join({ url: match[0] });
+				}
+
+				return;
+			}
+		}
 
 		// const actions: MessageItem[] = [
 		//     { title: 'Open' }
 		// ];
 
-		const text = Container.linkActions.resolveTextTransformations(post.text);
-		window.showInformationMessage(`${sender !== undefined ? sender.name : "Someone"}: ${text}`);
+		await window.showInformationMessage(
+			`${sender !== undefined ? sender.name : "Someone"}: ${post.text}`
+		);
 		// const result = await window.showInformationMessage(`${sender !== undefined ? sender.name : 'Someone'}: ${text}`, ...actions);
 		// if (result === actions[0]) {
 		//     Container.commands.openStream({ streamThread: { id: undefined, streamId: post.streamId } });

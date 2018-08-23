@@ -237,13 +237,6 @@ export class Commands implements Disposable {
 		return streamThread !== undefined ? streamThread.stream : undefined;
 	}
 
-	@command("runServiceAction")
-	runServiceAction(args: { commandUri: string }) {
-		if (args == null) return;
-
-		return Container.linkActions.execute(args.commandUri);
-	}
-
 	@command("signIn", { customErrorHandling: true })
 	async signIn() {
 		const token = TokenManager.get(Container.config.serverUrl, Container.config.email);
@@ -326,7 +319,7 @@ export class Commands implements Disposable {
 		}
 
 		if (streamThread === undefined && options.includeDefault) {
-			streamThread = { id: undefined, stream: await session.getDefaultTeamChannel() };
+			streamThread = { id: undefined, stream: await session.channels.getDefaultTeamChannel() };
 		}
 
 		return streamThread;

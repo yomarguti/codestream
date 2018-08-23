@@ -158,21 +158,6 @@
                 "command": "codestream.toggle",
                 "title": "Toggle CodeStream",
                 "category": "CodeStream"
-            },
-            {
-                "command": "codestream.vsls.invite",
-                "title": "Invite to Live Share",
-                "category": "CodeStream"
-            },
-            {
-                "command": "codestream.vsls.join",
-                "title": "Join Live Share",
-                "category": "CodeStream"
-            },
-            {
-                "command": "codestream.runServiceAction",
-                "title": "Run Service Action",
-                "category": "CodeStream"
             }
         ],
         "menus": {
@@ -196,18 +181,6 @@
                 {
                     "command": "codestream.toggle",
                     "when": "codestream:status == signedIn"
-                },
-                {
-                    "command": "codestream.vsls.invite",
-                    "when": "false"
-                },
-                {
-                    "command": "codestream.vsls.join",
-                    "when": "false"
-                },
-                {
-                    "command": "codestream.runServiceAction",
-                    "when": "false"
                 }
             ],
             "editor/context": [
@@ -249,7 +222,8 @@
         "tmp": "0.0.33",
         "tslib": "1.9.3",
         "uuid": "^3.3.2",
-        "vscode-languageclient": "5.0.1"
+        "vscode-languageclient": "5.0.1",
+        "vsls": "0.3.426"
     },
     "devDependencies": {
         "@types/node": "8.10.25",

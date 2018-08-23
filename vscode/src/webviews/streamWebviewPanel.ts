@@ -137,7 +137,7 @@ export class StreamWebviewPanel implements Disposable {
 		if (this._panelState.visible === previous.visible) return;
 
 		if (!this._panelState.visible) {
-			this._ipc.onBlur();
+			this._ipc.sendDidBlur();
 
 			return;
 		}
@@ -145,7 +145,7 @@ export class StreamWebviewPanel implements Disposable {
 		this._ipc.resume();
 
 		if (window.state.focused) {
-			this._ipc.onFocus();
+			this._ipc.sendDidFocus();
 		}
 	}
 
@@ -168,7 +168,7 @@ export class StreamWebviewPanel implements Disposable {
 		state.currentUserId = this.session.userId;
 		state.env = this.session.environment;
 		state.services = {
-			vsls: Container.liveShare.isInstalled
+			vsls: Container.vsls.installed
 		};
 		state.unreads = this.session.unreads.getValues();
 		state.version = Container.version;
@@ -399,13 +399,15 @@ export class StreamWebviewPanel implements Disposable {
 							break;
 						}
 						case "create-stream": {
-							const { type, teamId, name, privacy, memberIds } = body.params;
+							const { type, teamId, name, purpose, privacy, memberIds } = body.params;
 							let stream;
 							if (type === "channel") {
 								stream = await this.session.api.createChannelStream(
 									name,
 									memberIds,
 									privacy,
+									purpose,
+									undefined,
 									teamId
 								);
 							} else if (type === "direct") {
@@ -445,13 +447,13 @@ export class StreamWebviewPanel implements Disposable {
 							break;
 						}
 						case "leave-stream": {
-							const { streamId, teamId, update } = body.params;
+							const { streamId, update } = body.params;
 							try {
 								await this.session.api.updateStream(streamId, update);
 							} catch (e) {
 								/* */
 							}
-							this.session.leaveChannel(streamId, teamId);
+							this.session.channels.leave(streamId);
 							this.postMessage({
 								type: "codestream:response",
 								body: { id: body.id, payload: true }
@@ -523,6 +525,9 @@ export class StreamWebviewPanel implements Disposable {
 					}
 					break;
 				}
+				case "interaction:svc-request":
+					this._ipc.onServiceRequest(e.body);
+					break;
 				case "subscription:file-changed": {
 					const codeBlock = e.body as CSCodeBlock;
 
@@ -597,9 +602,9 @@ export class StreamWebviewPanel implements Disposable {
 	private onWindowStateChanged(e: WindowState) {
 		if (this._panelState.visible) {
 			if (e.focused) {
-				this._ipc.onFocus();
+				this._ipc.sendDidFocus();
 			} else {
-				this._ipc.onBlur();
+				this._ipc.sendDidBlur();
 			}
 		}
 	}
@@ -714,7 +719,7 @@ export class StreamWebviewPanel implements Disposable {
 			return this._streamThread;
 		}
 
-		this._ipc.onChangeStreamThread(streamThread);
+		this._ipc.sendDidChangeStreamThread(streamThread);
 
 		this._streamThread = streamThread;
 		this._onDidChangeStream.fire(this._streamThread);

@@ -113,7 +113,11 @@ export class CodeStreamAgentConnection implements Disposable {
 			revealOutputChannelOn: RevealOutputChannelOn.Never,
 			initializationOptions: { ...options },
 			// Register the server for file-based text documents
-			documentSelector: [{ scheme: "file", language: "*" }, { scheme: "untitled", language: "*" }],
+			documentSelector: [
+				{ scheme: "file", language: "*" },
+				{ scheme: "untitled", language: "*" },
+				{ scheme: "vsls", language: "*" }
+			],
 			synchronize: {
 				// Synchronize the setting section 'codestream' to the server
 				configurationSection: "codestream"

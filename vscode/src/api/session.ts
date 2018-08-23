@@ -379,24 +379,6 @@ export class CodeStreamSession implements Disposable {
 	}
 
 	@signedIn
-	leaveChannel(streamId: string, teamId: string) {
-		this._onDidChange.fire(new StreamsMembershipChangedEvent(streamId, teamId));
-	}
-
-	@signedIn
-	addChannel(
-		name: string,
-		options: ChannelStreamCreationOptions = { membership: "auto", privacy: "public" }
-	) {
-		return this.channels.getOrCreateByName(name, options);
-	}
-
-	@signedIn
-	getDefaultTeamChannel() {
-		return this.channels.getOrCreateByName("general", { membership: "auto", privacy: "public" });
-	}
-
-	@signedIn
 	async getStream(streamId: string): Promise<Stream | undefined> {
 		const stream = await this.api.getStream(streamId);
 		if (stream === undefined) return undefined;
@@ -406,8 +388,6 @@ export class CodeStreamSession implements Disposable {
 				return new ChannelStream(this, stream);
 			case StreamType.Direct:
 				return new DirectStream(this, stream);
-			case StreamType.File:
-				return new FileStream(this, stream);
 			default:
 				throw new Error("Invalid stream type");
 		}
@@ -416,6 +396,11 @@ export class CodeStreamSession implements Disposable {
 	@signedIn
 	hasSingleTeam(): Promise<boolean> {
 		return this._state!.hasSingleTeam();
+	}
+
+	@signedIn
+	notify(e: SessionChangedEvent) {
+		this._onDidChange.fire(e);
 	}
 
 	private async loginCore(
@@ -718,7 +703,7 @@ export class StreamsAddedEvent implements IMergeableEvent<StreamsAddedEvent> {
 	}
 
 	@memoize
-	items(): Stream[] {
+	items(): (Stream | FileStream)[] {
 		return this._event.streams.map(s => {
 			switch (s.type) {
 				case StreamType.Channel:
