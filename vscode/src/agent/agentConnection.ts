@@ -275,7 +275,11 @@ export class CodeStreamAgentConnection implements Disposable {
 	@started
 	private async sendRequest(type: any, params?: any): Promise<any> {
 		try {
-			Logger.log(`AgentConnection.sendRequest(${type.method})`);
+			Logger.log(
+				`AgentConnection.sendRequest(${type.method})${
+					type.method === ApiRequest.method ? `: ${params.url}` : ""
+				}`
+			);
 			const response = await this._client!.sendRequest(type, params);
 			return response;
 		} catch (ex) {
