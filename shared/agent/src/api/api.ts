@@ -390,13 +390,23 @@ export class CodeStreamApi {
 	}
 
 	private async handleErrorResponse(response: Response): Promise<Error> {
+		let message = response.statusText;
 		let data;
 		if (response.status >= 400 && response.status < 500) {
 			try {
 				data = await response.json();
+				if (data.code) {
+					message += `(${data.code})`;
+				}
+				if (data.message) {
+					message += `: ${data.message}`;
+				}
+				if (data.info && data.info.name) {
+					message += `\n${data.info.name}`;
+				}
 			} catch {}
 		}
-		return new ServerError(response.statusText, data, response.status);
+		return new ServerError(message, data, response.status);
 	}
 
 	static isStreamSubscriptionRequired(stream: CSStream, userId: string): boolean {
