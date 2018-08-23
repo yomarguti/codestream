@@ -37,6 +37,7 @@ import {
 import { configuration } from "../configuration";
 import { Container } from "../container";
 import { Logger } from "../logger";
+import { WebviewIpc, WebviewIpcMessage } from "./webviewIpc";
 
 interface BootstrapState {
 	currentTeamId: string;
@@ -59,12 +60,6 @@ interface BootstrapState {
 	configs: {
 		[k: string]: any;
 	};
-}
-
-// TODO: Clean this up to be consistent with the structure
-interface CSWebviewMessage {
-	type: string;
-	body: any;
 }
 
 interface CSWebviewRequest {
@@ -119,11 +114,12 @@ export class StreamWebviewPanel implements Disposable {
 	private _streamThread: StreamThread | undefined;
 
 	constructor(public readonly session: CodeStreamSession) {
-		this._ipc = new WebviewIpc();
+		this._ipc = new WebviewIpc(this);
 	}
 
 	dispose() {
 		this._disposable && this._disposable.dispose();
+		this._panel = undefined;
 	}
 
 	private onPanelDisposed() {
@@ -146,12 +142,7 @@ export class StreamWebviewPanel implements Disposable {
 			return;
 		}
 
-		// HACK: Because messages aren't sent to the webview when hidden, we need to reset the whole view if we are invalid
-		if (this._ipc.paused) {
-			this.setStream(this._streamThread);
-
-			return;
-		}
+		this._ipc.resume();
 
 		if (window.state.focused) {
 			this._ipc.onFocus();
@@ -193,7 +184,7 @@ export class StreamWebviewPanel implements Disposable {
 		return state;
 	}
 
-	private async onPanelWebViewMessageReceived(e: CSWebviewMessage) {
+	private async onPanelWebViewMessageReceived(e: WebviewIpcMessage) {
 		// TODO: Given all the async work in here -- we need to extract this into a separate method with blocks to make sure events don't get interleaved
 		try {
 			const { type } = e;
@@ -696,8 +687,21 @@ export class StreamWebviewPanel implements Disposable {
 		return this._streamThread;
 	}
 
+	async reload() {
+		if (this._panel === undefined) return this.createWebview(this._streamThread);
+
+		// Reset the html to get the webview to reload
+		this._panel.webview.html = "";
+		this._panel.webview.html = await this.getHtml();
+		this._panel.reveal(this._panel.viewColumn, false);
+
+		await this.waitUntilReady();
+
+		return this._streamThread;
+	}
+
 	show(streamThread?: StreamThread) {
-		if (this._panel === undefined) return this.setStream(streamThread);
+		if (this._panel === undefined) return this.createWebview(streamThread);
 
 		if (
 			streamThread === undefined ||
@@ -718,11 +722,55 @@ export class StreamWebviewPanel implements Disposable {
 		return this._streamThread;
 	}
 
-	reset() {
+	signedOut() {
 		if (this._panel !== undefined) {
 			this._streamThread = undefined;
 			this.postMessage({ type: "codestream:interaction:signed-out", body: null });
 		}
+	}
+
+	private async createWebview(streamThread?: StreamThread): Promise<StreamThread | undefined> {
+		// Kick off the bootstrap compute to be ready for later
+		this._bootstrapPromise = this.getBootstrapState();
+
+		this._panel = window.createWebviewPanel(
+			"CodeStream.stream",
+			"CodeStream",
+			{ viewColumn: ViewColumn.Beside, preserveFocus: false },
+			{
+				retainContextWhenHidden: true,
+				enableFindWidget: true,
+				enableCommandUris: true,
+				enableScripts: true
+			}
+		);
+		this._panel.iconPath = Uri.file(
+			Container.context.asAbsolutePath("assets/images/codestream.png")
+		);
+
+		this._ipc.connect(this._panel);
+
+		this._disposable = Disposable.from(
+			this.session.onDidReceivePosts(this.onPostsReceived, this),
+			this.session.onDidChange(this.onSessionChanged, this),
+			this._panel,
+			this._panel.onDidDispose(this.onPanelDisposed, this),
+			this._panel.onDidChangeViewState(this.onPanelViewStateChanged, this),
+			this._panel.webview.onDidReceiveMessage(this.onPanelWebViewMessageReceived, this),
+			window.onDidChangeWindowState(this.onWindowStateChanged, this),
+			configuration.onDidChange(this.onConfigurationChanged, this)
+		);
+
+		this._panel.webview.html = await this.getHtml();
+		this._panel.reveal(this._panel.viewColumn, false);
+
+		this._streamThread = streamThread;
+
+		await this.waitUntilReady();
+
+		this._onDidChangeStream.fire(this._streamThread);
+
+		return this._streamThread;
 	}
 
 	private _html: string | undefined;
@@ -757,137 +805,23 @@ export class StreamWebviewPanel implements Disposable {
 		return this._html;
 	}
 
-	private postMessage(request: CSWebviewMessage) {
+	private postMessage(request: WebviewIpcMessage) {
 		return this._ipc.postMessage(request);
 	}
 
-	private async setStream(streamThread?: StreamThread): Promise<StreamThread | undefined> {
-		if (this._panel === undefined) {
-			// Kick off the bootstrap compute to be ready for later
-			this._bootstrapPromise = this.getBootstrapState();
-
-			this._panel = window.createWebviewPanel(
-				"CodeStream.stream",
-				"CodeStream",
-				{ viewColumn: ViewColumn.Beside, preserveFocus: false },
-				{
-					retainContextWhenHidden: true,
-					enableFindWidget: true,
-					enableCommandUris: true,
-					enableScripts: true
-				}
-			);
-			this._panel.iconPath = Uri.file(
-				Container.context.asAbsolutePath("assets/images/codestream.png")
-			);
-
-			this._ipc.reset(this._panel);
-
-			this._disposable = Disposable.from(
-				this.session.onDidReceivePosts(this.onPostsReceived, this),
-				this.session.onDidChange(this.onSessionChanged, this),
-				this._panel,
-				this._panel.onDidDispose(this.onPanelDisposed, this),
-				this._panel.onDidChangeViewState(this.onPanelViewStateChanged, this),
-				this._panel.webview.onDidReceiveMessage(this.onPanelWebViewMessageReceived, this),
-				window.onDidChangeWindowState(this.onWindowStateChanged, this),
-				configuration.onDidChange(this.onConfigurationChanged, this)
-			);
-		} else {
-			this._ipc.reset(this._panel);
-		}
-
-		this._panel.webview.html = await this.getHtml();
-		this._panel.reveal(this._panel.viewColumn, false);
-
-		this._streamThread = streamThread;
-
+	private waitUntilReady() {
 		// Wait until the webview is ready
-		await new Promise((resolve, reject) => {
-			this._onReadyResolver = resolve;
-			setTimeout(reject, 15000);
+		return new Promise((resolve, reject) => {
+			const timer = setTimeout(() => {
+				Logger.warn("Webview: FAILED waiting for webview ready event; closing webview...");
+				this.dispose();
+				resolve();
+			}, 15000);
+
+			this._onReadyResolver = () => {
+				clearTimeout(timer);
+				resolve();
+			};
 		});
-
-		this._onDidChangeStream.fire(this._streamThread);
-
-		return this._streamThread;
-	}
-}
-
-class WebviewIpc {
-	private _panel: WebviewPanel | undefined;
-
-	constructor() {}
-
-	private _paused: boolean = false;
-	get paused() {
-		return this._paused;
-	}
-
-	reset(panel: WebviewPanel) {
-		this._panel = panel;
-		this._paused = false;
-	}
-
-	onBlur() {
-		this.postMessage({
-			type: "codestream:interaction:blur",
-			body: {}
-		});
-	}
-
-	onFocus() {
-		this.postMessage({
-			type: "codestream:interaction:focus",
-			body: {}
-		});
-	}
-
-	onChangeStreamThread(streamThread: StreamThread) {
-		this.postMessage({
-			type: "codestream:interaction:stream-thread-selected",
-			body: {
-				streamId: streamThread.stream.id,
-				threadId: streamThread.id
-			}
-		});
-	}
-
-	/*private*/ async postMessage(request: CSWebviewMessage) {
-		if (this._panel === undefined) {
-			Logger.log(
-				`WebviewPanel:FAILED posting ${
-					request.type
-				} to the webview; Webview has not been created yet`
-			);
-
-			throw new Error("Webview has not been created yet");
-		}
-		if (this._paused) {
-			Logger.log(
-				`WebviewPanel: FAILED posting ${
-					request.type
-				} to the webview; Webview is invisible and can't receive messages`
-			);
-
-			return false;
-		}
-
-		let success;
-		try {
-			success = await this._panel.webview.postMessage(request);
-		} catch (ex) {
-			Logger.error(ex);
-			success = false;
-		}
-
-		if (!success) {
-			this._paused = true;
-		}
-
-		Logger.log(
-			`WebviewPanel: ${success ? "Completed" : "FAILED"} posting ${request.type} to the webview`
-		);
-		return success;
 	}
 }

@@ -58,7 +58,7 @@ export class StreamViewController implements Disposable {
 				}
 
 				if (this.visible) {
-					this._panel!.reset();
+					this._panel!.signedOut();
 				} else {
 					this.closePanel();
 				}
