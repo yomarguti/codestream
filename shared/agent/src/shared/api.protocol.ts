@@ -266,6 +266,7 @@ export interface CreateChannelStreamRequest {
 	memberIds?: string[];
 	isTeamStream: boolean;
 	privacy: "public" | "private";
+	purpose?: string;
 }
 
 export interface CreateDirectStreamRequest {
