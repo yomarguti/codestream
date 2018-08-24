@@ -530,6 +530,8 @@ function calculateColumn(oldCol: number, oldContent: string, newContent: string)
 		i = oldContent.indexOf(str);
 		while (i > -1) {
 			oldContentPositions.push(i + pre.length + 1);
+			if (i === oldContent.length) break;
+
 			i = oldContent.indexOf(str, i + 1);
 		}
 
@@ -539,6 +541,8 @@ function calculateColumn(oldCol: number, oldContent: string, newContent: string)
 		i = newContent.indexOf(str);
 		while (i > -1) {
 			newContentPositions.push(i + pre.length + 1);
+			if (i === oldContent.length) break;
+
 			i = oldContent.indexOf(str, i + 1);
 		}
 
