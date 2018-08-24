@@ -9,5 +9,6 @@ export const bootstrap = (data = {}) => async dispatch => {
 	dispatch({ type: "BOOTSTRAP_TEAMS", payload: data.teams || [] });
 	dispatch({ type: "BOOTSTRAP_STREAMS", payload: data.streams || [] });
 	dispatch({ type: "BOOTSTRAP_REPOS", payload: data.repos || [] });
+	dispatch({ type: "BOOTSTRAP_SERVICES", payload: data.services || {} });
 	dispatch({ type: "BOOTSTRAP_COMPLETE" });
 };

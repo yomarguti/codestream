@@ -15,6 +15,7 @@ import messaging from "./messaging";
 import connectivity from "./connectivity";
 import currentPage from "./currentPage"; // TODO: remove this
 import route from "./route";
+import services from "./services";
 
 const session = (state = {}, { type, payload }) => {
 	switch (type) {
@@ -77,7 +78,8 @@ const appReducer = combineReducers({
 	streams,
 	teams,
 	umis,
-	users
+	users,
+	services
 });
 
 export default (state, action) => {

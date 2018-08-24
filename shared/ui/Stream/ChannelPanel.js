@@ -57,11 +57,12 @@ export class SimpleChannelPanel extends Component {
 	};
 
 	renderServiceChannels = () => {
+		if (this.props.serviceStreams.length === 0) return null;
+
 		return (
 			<div className="section">
 				<div className="header" onClick={this.handleClickShowPublicChannels}>
 					<span className="clickable">Live Share Sessions</span>
-					<Icon className="align-right" name="plus" onClick={this.handleClickCreateChannel} />
 				</div>
 				{this.renderStreams(this.props.serviceStreams)}
 			</div>
@@ -73,11 +74,17 @@ export class SimpleChannelPanel extends Component {
 			<ul onClick={this.handleClickSelectStream}>
 				{streams.map(stream => {
 					if (stream.isArchived) return null;
+
+					// FIXME remove this line once we're sure there are no PROD streams of this type
+					// no new ones are being created
 					if (stream.name.match(/^ls:/)) return null;
+
 					const icon = this.props.mutedStreams[stream.id] ? (
 						<Icon className="mute" name="mute" />
 					) : stream.privacy === "private" ? (
 						<Icon className="lock" name="lock" />
+					) : stream.serviceType === "vsls" ? (
+						<Icon className="broadcast" name="broadcast" />
 					) : (
 						<span className="icon hash">#</span>
 					);

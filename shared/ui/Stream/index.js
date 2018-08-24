@@ -264,6 +264,7 @@ export class SimpleStream extends Component {
 				const mine = this.props.currentUser.username === lastPost.author.username;
 				if (mine || !this.state.scrolledOffBottom) this.scrollToBottom();
 				else this.handleScroll();
+				this.checkMarkStreamRead();
 			} else {
 				console.log("Could not find lastPost for ", this.props.posts);
 			}
@@ -652,6 +653,7 @@ export class SimpleStream extends Component {
 					teammates={this.props.teammates}
 					slashCommands={this.props.slashCommands}
 					streamId={this.props.postStreamId}
+					services={this.props.services}
 					currentUserId={this.props.currentUser.id}
 					ensureStreamIsActive={this.ensureStreamIsActive}
 					ref={this._compose}
@@ -1471,6 +1473,7 @@ const mapStateToProps = ({
 	messaging,
 	teams,
 	onboarding,
+	services,
 	umis
 }) => {
 	// TODO: figure out a way to do this elsewhere
@@ -1482,6 +1485,7 @@ const mapStateToProps = ({
 		}
 	});
 
+	console.log("SERVICES IS ", services);
 	const fileStream =
 		getStreamForRepoAndFile(streams, context.currentRepoId, context.currentFile) || {};
 
@@ -1558,6 +1562,7 @@ const mapStateToProps = ({
 		slashCommands,
 		team: teams[context.currentTeamId],
 		channelMembers,
+		services,
 		posts: streamPosts.map(post => {
 			let user = users[post.creatorId];
 			if (!user) {

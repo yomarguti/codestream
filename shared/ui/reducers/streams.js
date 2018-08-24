@@ -72,7 +72,7 @@ export const getChannelStreamsForTeam = (state, teamId, userId) => {
 		stream =>
 			stream.type === "channel" &&
 			!stream.isArchived &&
-			!stream.name.match(/^svc-vsls-/) &&
+			!stream.serviceType &&
 			(stream.isTeamStream || _.contains(stream.memberIds, userId))
 	);
 };
@@ -84,7 +84,7 @@ export const getPublicChannelStreamsForTeam = (state, teamId, userId) => {
 			stream.type === "channel" &&
 			!stream.isArchived &&
 			!stream.isTeamStream &&
-			!stream.name.match(/^svc-vsls-/) &&
+			!stream.serviceType &&
 			!_.contains(stream.memberIds, userId)
 	);
 };
@@ -133,7 +133,7 @@ export const getServiceStreamsForTeam = (state, teamId, userId, users) => {
 		stream =>
 			stream.type === "channel" &&
 			!stream.isArchived &&
-			stream.name.match(/^svc-vsls-/) &&
+			stream.serviceType &&
 			(stream.isTeamStream || _.contains(stream.memberIds, userId))
 	);
 	serviceStreams.map(stream => {
