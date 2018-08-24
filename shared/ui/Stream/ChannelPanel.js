@@ -267,7 +267,7 @@ const mapStateToProps = ({ context, streams, users, teams, umis, session }) => {
 
 	const serviceStreams = _.sortBy(
 		getServiceStreamsForTeam(streams, context.currentTeamId, session.userId, users) || [],
-		stream => (stream.name || "").toLowerCase()
+		stream => -stream.createdAt
 	);
 
 	// get a list of the users i have 1:1 streams with
