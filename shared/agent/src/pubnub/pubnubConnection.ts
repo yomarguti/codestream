@@ -316,10 +316,7 @@ export class PubnubConnection {
 	// respond to a Pubnub status event
 	private onStatus(status: Pubnub.StatusEvent | any) {
 		this._debug("Pubnub status received", status);
-		if (
-			(status as any).error &&
-			status.operation === Pubnub.OPERATIONS.PNUnsubscribeOperation
-		) {
+		if ((status as any).error && status.operation === Pubnub.OPERATIONS.PNUnsubscribeOperation) {
 			// ignore any errors associated unsubscribing
 			return;
 		} else if (
@@ -586,8 +583,7 @@ export class PubnubConnection {
 			this.offline();
 		} else if (this._activeFailures.length > 0) {
 			this._debug("There are active failures in progress, ignore network hiccup");
-		}
-		else {
+		} else {
 			this._debug("Confirm subscriptions...");
 			this.confirmSubscriptions();
 		}
