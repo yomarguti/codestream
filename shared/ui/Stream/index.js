@@ -1291,11 +1291,17 @@ export class SimpleStream extends Component {
 				userId: userId
 			}
 		});
+
+		return true;
 	};
 
 	startLiveShare = () => {
 		const { activePanel, postStreamId } = this.props;
 		const threadId = activePanel === "thread" ? this.state.threadId : undefined;
+
+		const text = "Starting Live Share session...";
+		this.submitSystemPost(text);
+
 		EventEmitter.emit("interaction:svc-request", {
 			service: "vsls",
 			action: {
@@ -1304,6 +1310,8 @@ export class SimpleStream extends Component {
 				threadId: threadId
 			}
 		});
+
+		return true;
 	};
 
 	runSlashCommand = (command, args) => {

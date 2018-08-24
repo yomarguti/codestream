@@ -72,6 +72,7 @@ export const getChannelStreamsForTeam = (state, teamId, userId) => {
 		stream =>
 			stream.type === "channel" &&
 			!stream.isArchived &&
+			!stream.name.match(/^svc-vsls-/) &&
 			(stream.isTeamStream || _.contains(stream.memberIds, userId))
 	);
 };
@@ -83,6 +84,7 @@ export const getPublicChannelStreamsForTeam = (state, teamId, userId) => {
 			stream.type === "channel" &&
 			!stream.isArchived &&
 			!stream.isTeamStream &&
+			!stream.name.match(/^svc-vsls-/) &&
 			!_.contains(stream.memberIds, userId)
 	);
 };
@@ -123,6 +125,21 @@ export const getDirectMessageStreamsForTeam = (state, teamId, userId, users) => 
 		}
 	});
 	return directStreams;
+};
+
+export const getServiceStreamsForTeam = (state, teamId, userId, users) => {
+	const streams = state.byTeam[teamId] || {};
+	const serviceStreams = Object.values(streams).filter(
+		stream =>
+			stream.type === "channel" &&
+			!stream.isArchived &&
+			stream.name.match(/^svc-vsls-/) &&
+			(stream.isTeamStream || _.contains(stream.memberIds, userId))
+	);
+	serviceStreams.map(stream => {
+		stream.displayName = "Live Share";
+	});
+	return serviceStreams;
 };
 
 export const getStreamForId = (state, teamId, streamId) => {

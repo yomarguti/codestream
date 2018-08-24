@@ -3,7 +3,11 @@ import { connect } from "react-redux";
 import createClassString from "classnames";
 import _ from "underscore";
 import { createStream, setCurrentStream, setUserPreference } from "./actions";
-import { getChannelStreamsForTeam, getDirectMessageStreamsForTeam } from "../reducers/streams";
+import {
+	getChannelStreamsForTeam,
+	getDirectMessageStreamsForTeam,
+	getServiceStreamsForTeam
+} from "../reducers/streams";
 import Icon from "./Icon";
 import ChannelMenu from "./ChannelMenu";
 
@@ -31,72 +35,91 @@ export class SimpleChannelPanel extends Component {
 						<span className="panel-title">{teamName}</span>
 					</div>
 					<div className="channel-list vscroll">
-						{this.renderChannels()}
+						{this.renderTeamChannels()}
 						{this.renderDirectMessages()}
+						{this.renderServiceChannels()}
 					</div>
 				</div>
 			</div>
 		);
 	}
 
-	renderChannels = () => {
+	renderTeamChannels = () => {
 		return (
 			<div className="section">
 				<div className="header" onClick={this.handleClickShowPublicChannels}>
 					<span className="clickable">Team Channels</span>
 					<Icon className="align-right" name="plus" onClick={this.handleClickCreateChannel} />
 				</div>
-				<ul onClick={this.handleClickSelectStream}>
-					{this.props.channelStreams.map(stream => {
-						if (stream.isArchived) return null;
-						if (stream.name.match(/^ls:/) && !this.props.umis.unread[stream.id]) return null;
-						const icon = this.props.mutedStreams[stream.id] ? (
-							<Icon className="mute" name="mute" />
-						) : stream.privacy === "private" ? (
-							<Icon className="lock" name="lock" />
-						) : (
-							<span className="icon hash">#</span>
-						);
-						let count = this.props.umis.unread[stream.id] || 0;
-						if (this.props.mutedStreams[stream.id]) count = 0;
-						let mentions = this.props.umis.mentions[stream.id] || 0;
-						let menuActive = this.state.openMenu === stream.id;
-						return (
-							<li
-								className={createClassString({
-									active: menuActive ? true : false,
-									muted: this.props.mutedStreams[stream.id],
-									unread: count > 0
-								})}
-								key={stream.id}
-								id={stream.id}
-							>
-								{icon}
-								{stream.name}
-								{mentions > 0 ? <span className="umi">{mentions}</span> : null}
-								<span>
-									<Icon
-										name="gear"
-										className="align-right"
-										onClick={this.handleClickStreamSettings}
-									/>
-									{menuActive && (
-										<ChannelMenu
-											stream={stream}
-											target={this.state.menuTarget}
-											umiCount={count}
-											isMuted={this.props.mutedStreams[stream.id]}
-											setActivePanel={this.props.setActivePanel}
-											runSlashCommand={this.props.runSlashCommand}
-											closeMenu={this.closeMenu}
-										/>
-									)}
-								</span>
-							</li>
-						);
-					})}
-				</ul>
+				{this.renderStreams(this.props.channelStreams)}
 			</div>
+		);
+	};
+
+	renderServiceChannels = () => {
+		return (
+			<div className="section">
+				<div className="header" onClick={this.handleClickShowPublicChannels}>
+					<span className="clickable">Live Share Sessions</span>
+					<Icon className="align-right" name="plus" onClick={this.handleClickCreateChannel} />
+				</div>
+				{this.renderStreams(this.props.serviceStreams)}
+			</div>
+		);
+	};
+
+	renderStreams = streams => {
+		return (
+			<ul onClick={this.handleClickSelectStream}>
+				{streams.map(stream => {
+					if (stream.isArchived) return null;
+					if (stream.name.match(/^ls:/)) return null;
+					const icon = this.props.mutedStreams[stream.id] ? (
+						<Icon className="mute" name="mute" />
+					) : stream.privacy === "private" ? (
+						<Icon className="lock" name="lock" />
+					) : (
+						<span className="icon hash">#</span>
+					);
+					let count = this.props.umis.unread[stream.id] || 0;
+					if (this.props.mutedStreams[stream.id]) count = 0;
+					let mentions = this.props.umis.mentions[stream.id] || 0;
+					let menuActive = this.state.openMenu === stream.id;
+					return (
+						<li
+							className={createClassString({
+								active: menuActive ? true : false,
+								muted: this.props.mutedStreams[stream.id],
+								unread: count > 0
+							})}
+							key={stream.id}
+							id={stream.id}
+						>
+							{icon}
+							{stream.name}
+							{mentions > 0 ? <span className="umi">{mentions}</span> : null}
+							<span>
+								<Icon
+									name="gear"
+									className="align-right"
+									onClick={this.handleClickStreamSettings}
+								/>
+								{menuActive && (
+									<ChannelMenu
+										stream={stream}
+										target={this.state.menuTarget}
+										umiCount={count}
+										isMuted={this.props.mutedStreams[stream.id]}
+										setActivePanel={this.props.setActivePanel}
+										runSlashCommand={this.props.runSlashCommand}
+										closeMenu={this.closeMenu}
+									/>
+								)}
+							</span>
+						</li>
+					);
+				})}
+			</ul>
 		);
 	};
 
@@ -235,6 +258,11 @@ const mapStateToProps = ({ context, streams, users, teams, umis, session }) => {
 		stream => (stream.name || "").toLowerCase()
 	);
 
+	const serviceStreams = _.sortBy(
+		getServiceStreamsForTeam(streams, context.currentTeamId, session.userId, users) || [],
+		stream => (stream.name || "").toLowerCase()
+	);
+
 	// get a list of the users i have 1:1 streams with
 	const oneOnOnePeople = directMessageStreams
 		.map(stream => {
@@ -255,6 +283,7 @@ const mapStateToProps = ({ context, streams, users, teams, umis, session }) => {
 		users,
 		channelStreams,
 		directMessageStreams,
+		serviceStreams,
 		mutedStreams,
 		teammates: teamMembers,
 		oneOnOnePeople,
