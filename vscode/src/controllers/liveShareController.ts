@@ -1,16 +1,9 @@
 "use strict";
-import { commands, Disposable, Extension, extensions, MessageItem, Uri, window } from "vscode";
+import { Disposable, Extension, extensions, Uri } from "vscode";
 import * as vsls from "vsls/vscode";
 import { ChannelServiceType } from "../api/api";
 import { ServiceChannelStreamCreationOptions } from "../api/models/streams";
-import {
-	ChannelStreamCreationOptions,
-	Post,
-	SessionStatus,
-	SessionStatusChangedEvent,
-	StreamThread,
-	StreamType
-} from "../api/session";
+import { SessionStatus, SessionStatusChangedEvent, StreamThread, StreamType } from "../api/session";
 import { ContextKeys, setContext } from "../common";
 import { Container } from "../container";
 import { Logger } from "../logger";
@@ -29,11 +22,11 @@ interface StartCommandArgs {
 	streamThread?: StreamThread;
 }
 
-export const vslsUrlRegex = /https:\/\/insiders\.liveshare\.vsengsaas\.visualstudio\.com\/join\?.+?\b/;
+export const vslsUrlRegex = /https:\/\/insiders\.liveshare\.vsengsaas\.visualstudio\.com\/join\?(.+?)\b/;
 
 export class LiveShareController implements Disposable {
 	private _disposable: Disposable | undefined;
-	private _sessionId: string | undefined;
+	private _vslsId: string | undefined;
 	private readonly _vslsPromise: Promise<vsls.LiveShare | null>;
 	private readonly _vslsExtension: Extension<any> | undefined;
 
@@ -53,10 +46,10 @@ export class LiveShareController implements Disposable {
 		if (vsls != null) {
 			setContext(ContextKeys.LiveShareInstalled, true);
 
-			this.setSessionId(vsls.session.id);
+			this.setVslsId(vsls.session.id);
 
 			this._disposable = Disposable.from(
-				Container.session.onDidChangeStatus(this.onSessionStatusChanged, this),
+				Container.session.onDidChangeSessionStatus(this.onSessionStatusChanged, this),
 				vsls.onDidChangeSession(this.onLiveShareSessionChanged, this)
 			);
 		}
@@ -66,46 +59,39 @@ export class LiveShareController implements Disposable {
 		return this._vslsExtension != null;
 	}
 
-	get sessionId(): string | undefined {
-		return this._sessionId;
+	get vslsId(): string | undefined {
+		return this._vslsId;
 	}
-
-	private setSessionId(id: string | null) {
-		this._sessionId = id == null ? undefined : id;
+	private setVslsId(id: string | null) {
+		this._vslsId = id == null ? undefined : id;
 		setContext(ContextKeys.LiveShareSessionActive, id != null);
 	}
 
 	private async onLiveShareSessionChanged(e: vsls.SessionChangeEvent) {
-		const sessionId = e.session.id;
-		this.setSessionId(sessionId);
-		if (sessionId == null) return;
+		const vslsId = e.session.id;
+		this.setVslsId(vslsId);
+		if (vslsId == null) return;
 
 		// If we are in an active (remote) live share session, open the liveshare channel
-		const channel = await Container.session.channels.getByService(
-			ChannelServiceType.Vsls,
-			sessionId
-		);
-		if (channel === undefined) return;
+		const vslsChannel = await this.getVslsChannel(vslsId);
+		if (vslsChannel === undefined) return;
 
 		Container.commands.openStream({
-			streamThread: { id: undefined, stream: channel }
+			streamThread: { id: undefined, stream: vslsChannel }
 		});
 	}
 
 	private async onSessionStatusChanged(e: SessionStatusChangedEvent) {
 		const status = e.getStatus();
 		// If we aren't signed in or in an active (remote) live share session kick out
-		if (status !== SessionStatus.SignedIn || this.sessionId === undefined) return;
+		if (status !== SessionStatus.SignedIn || this.vslsId === undefined) return;
 
 		// If we are in an active (remote) live share session, open the liveshare channel
-		const channel = await Container.session.channels.getByService(
-			ChannelServiceType.Vsls,
-			this.sessionId
-		);
-		if (channel === undefined) return;
+		const vslsChannel = await this.getVslsChannel(this.vslsId);
+		if (vslsChannel === undefined) return;
 
 		Container.commands.openStream({
-			streamThread: { id: undefined, stream: channel }
+			streamThread: { id: undefined, stream: vslsChannel }
 		});
 	}
 
@@ -148,11 +134,11 @@ export class LiveShareController implements Disposable {
 			return;
 		}
 
-		this.setSessionId(vsls.session.id);
+		this.setVslsId(vsls.session.id);
 
 		// Create a new channel specifically for this live share session
-		const name = this.getChannelName();
-		const channel = await Container.session.channels.getOrCreateByService(
+		const name = this.getVslsChannelName();
+		const vslsChannel = await Container.session.channels.getOrCreateByService(
 			ChannelServiceType.Vsls,
 			vsls.session.id!,
 			{
@@ -162,21 +148,21 @@ export class LiveShareController implements Disposable {
 			}
 		);
 
-		await Container.commands.post({
-			streamThread: { id: undefined, stream: direct },
-			text: `Join my Live Share session: ${uri.toString()}`,
-			send: true,
-			silent: true
-		});
-
+		await direct.post(`Join my Live Share session: ${uri.toString()}`);
 		return Container.commands.openStream({
-			streamThread: { id: undefined, stream: channel }
+			streamThread: { id: undefined, stream: vslsChannel }
 		});
 	}
 
 	async join(args: JoinCommandArgs) {
 		const vsls = await this._vslsPromise;
 		if (vsls == null) throw new Error("Live Share is not installed");
+
+		const match = vslsUrlRegex.exec(args.url);
+		if (match != null) {
+			// Ensure we are a member of the channel
+			await this.getVslsChannel(match[0]);
+		}
 
 		await vsls.join(Uri.parse(args.url), { newWindow: false });
 	}
@@ -215,58 +201,58 @@ export class LiveShareController implements Disposable {
 			return;
 		}
 
-		this.setSessionId(vsls.session.id);
+		this.setVslsId(vsls.session.id);
+
+		const currentChannel = streamThread.stream;
 
 		// Create a new channel specifically for this live share session, based on the current channel
-		const stream = streamThread.stream;
-
-		const name = this.getChannelName();
+		const name = this.getVslsChannelName();
 		let createOptions: ServiceChannelStreamCreationOptions;
-		switch (stream.type) {
-			case StreamType.Channel:
-				createOptions = {
-					name: name,
-					membership: stream.entity.memberIds === undefined ? "auto" : stream.entity.memberIds,
-					privacy: stream.entity.privacy
-				};
-				break;
+		switch (currentChannel.type) {
 			case StreamType.Direct:
 				createOptions = {
 					name: name,
-					membership: stream.entity.memberIds,
+					membership: currentChannel.entity.memberIds,
 					privacy: "private"
 				};
 				break;
 			default:
 				createOptions = {
 					name: name,
-					membership: "auto",
 					privacy: "public"
 				};
 				break;
 		}
 
-		const channel = await Container.session.channels.getOrCreateByService(
+		const vslsChannel = await Container.session.channels.getOrCreateByService(
 			ChannelServiceType.Vsls,
 			vsls.session.id!,
 			createOptions
 		);
 
-		await Container.commands.post({
-			streamThread: streamThread,
-			text: `Join my Live Share session: ${uri.toString()}`,
-			send: true,
-			silent: true
-		});
-
+		await currentChannel.post(`Join my Live Share session: ${uri.toString()}`, streamThread.id);
 		return Container.commands.openStream({
-			streamThread: { id: undefined, stream: channel }
+			streamThread: { id: undefined, stream: vslsChannel }
 		});
 	}
 
-	private getChannelName() {
+	private async getVslsChannel(vslsId: string) {
+		const vslsChannel = await Container.session.channels.getByService(
+			ChannelServiceType.Vsls,
+			vslsId
+		);
+
+		// Ensure we are a member of the channel
+		if (vslsChannel !== undefined && !vslsChannel.memberOf(Container.session.userId)) {
+			await Container.session.api.joinStream(vslsChannel.id);
+		}
+
+		return vslsChannel;
+	}
+
+	private getVslsChannelName() {
 		return `${Container.session.user.name} - Live Share - ${Dates.toFormatter(new Date()).format(
-			"MMM Do h-mm-ssa"
+			"MMM Do h:mm:ssa"
 		)}`;
 	}
 }

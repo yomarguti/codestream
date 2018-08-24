@@ -1,13 +1,8 @@
 "use strict";
 import { ChannelServiceType } from "../../shared/api.protocol";
-import { Iterables, memoize, Strings } from "../../system";
+import { Iterables, Strings } from "../../system";
 import { CSChannelStream, CSDirectStream, CSFileStream, CSStream, StreamType } from "../api";
-import {
-	CodeStreamSession,
-	SessionChangedEvent,
-	SessionChangedType,
-	StreamsMembershipChangedEvent
-} from "../session";
+import { CodeStreamSession, StreamsChangedEvent, StreamsMembershipChangedEvent } from "../session";
 import { CodeStreamCollection, CodeStreamItem } from "./collection";
 import { Post, PostCollection } from "./posts";
 import { Repository } from "./repositories";
@@ -50,8 +45,6 @@ abstract class StreamBase<T extends CSStream> extends CodeStreamItem<T> {
 	}
 }
 
-// const vslsServiceChannelRegex = /^svc:vsls:(.*)$/;
-
 export class ChannelStream extends StreamBase<CSChannelStream> {
 	readonly type = StreamType.Channel;
 
@@ -64,28 +57,17 @@ export class ChannelStream extends StreamBase<CSChannelStream> {
 	}
 
 	// @memoize
-	// get isLiveShareChannel() {
-	// 	return vslsServiceChannelRegex.test(this.entity.name);
-	// }
-
 	// async label() {
-	// 	// svc:vsls:<sessionId>
-	// 	const match = vslsServiceChannelRegex.exec(this.entity.name);
-	// 	if (match == null) return `#${this.entity.name}`;
-
-	// 	const [, userId] = match;
-
-	// 	let members = "";
-	// 	if (this.entity.memberIds !== undefined) {
-	// 		members = ` (${Iterables.join(
-	// 			Iterables.map((await this.members(userId))!, u => u.name),
-	// 			", "
-	// 		)})`;
-	// 	}
-
-	// 	const user = await this.session.users.get(userId);
-	// 	return `${user !== undefined ? `${user.name}'s ` : ""}Session${members}`;
+	// 	return `#${this.entity.name}`;
 	// }
+
+	get memberIds(): string[] | undefined {
+		return this.entity.memberIds;
+	}
+
+	memberOf(id: string) {
+		return this.entity.memberIds === undefined ? true : this.entity.memberIds.includes(id);
+	}
 
 	async members(...excludes: string[]): Promise<Iterable<User> | undefined> {
 		if (this.entity.memberIds === undefined) return undefined;
@@ -118,6 +100,10 @@ export class DirectStream extends StreamBase<CSDirectStream> {
 
 	get memberIds(): string[] {
 		return this.entity.memberIds;
+	}
+
+	memberOf(id: string) {
+		return this.entity.memberIds.includes(id);
 	}
 
 	async members(...excludes: string[]): Promise<Iterable<User>> {
@@ -165,17 +151,11 @@ abstract class StreamCollectionBase<
 	constructor(session: CodeStreamSession, public readonly teamId: string) {
 		super(session);
 
-		this.disposables.push(session.onDidChange(this.onSessionChanged, this));
+		this.disposables.push(session.onDidChangeStreams(this.onStreamsChanged, this));
 	}
 
-	protected onSessionChanged(e: SessionChangedEvent) {
-		if (e.type !== SessionChangedType.Streams && e.type !== SessionChangedType.StreamsMembership) {
-			return;
-		}
-
-		if (e.affects(this.teamId, "team")) {
-			this.invalidate();
-		}
+	protected onStreamsChanged(e: StreamsChangedEvent | StreamsMembershipChangedEvent) {
+		this.invalidate();
 	}
 }
 
@@ -300,10 +280,6 @@ export class ChannelStreamCollection extends StreamCollectionBase<ChannelStream,
 		return new ChannelStream(this.session, s);
 	}
 
-	leave(id: string) {
-		this.session.notify(new StreamsMembershipChangedEvent(id, this.teamId));
-	}
-
 	protected entityMapper(e: CSChannelStream) {
 		return new ChannelStream(this.session, e);
 	}
@@ -370,12 +346,8 @@ export class FileStreamCollection extends StreamCollectionBase<FileStream, CSFil
 		super(session, teamId);
 	}
 
-	protected onSessionChanged(e: SessionChangedEvent) {
-		if (e.type !== SessionChangedType.Streams) return;
-
-		if (e.affects(this.teamId, "team")) {
-			this.invalidate();
-		}
+	protected onStreamsChanged(e: StreamsChangedEvent) {
+		this.invalidate();
 	}
 
 	protected entityMapper(e: CSFileStream) {

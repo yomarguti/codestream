@@ -3,7 +3,7 @@ import { Range, Uri } from "vscode";
 import { Container } from "../../container";
 import { Dates, memoize } from "../../system";
 import { CSPost } from "../api";
-import { CodeStreamSession, PostsReceivedEvent } from "../session";
+import { CodeStreamSession, PostsChangedEvent } from "../session";
 import { CodeStreamCollection, CodeStreamItem } from "./collection";
 import { Stream } from "./streams";
 import { User } from "./users";
@@ -125,11 +125,11 @@ export class PostCollection extends CodeStreamCollection<Post, CSPost> {
 	) {
 		super(session);
 
-		this.disposables.push(session.onDidReceivePosts(this.onPostsReceived, this));
+		this.disposables.push(session.onDidChangePosts(this.onPostsChanged, this));
 	}
 
-	private onPostsReceived(e: PostsReceivedEvent) {
-		if (e.affects(this.stream.id)) {
+	private onPostsChanged(e: PostsChangedEvent) {
+		if (e.affects(this.stream.id, "stream")) {
 			this.invalidate();
 		}
 	}

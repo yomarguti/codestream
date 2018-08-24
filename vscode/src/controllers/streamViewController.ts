@@ -29,7 +29,7 @@ export class StreamViewController implements Disposable {
 
 	constructor(public readonly session: CodeStreamSession) {
 		this._disposable = Disposable.from(
-			Container.session.onDidChangeStatus(this.onSessionStatusChanged, this)
+			Container.session.onDidChangeSessionStatus(this.onSessionStatusChanged, this)
 		);
 	}
 
@@ -101,11 +101,6 @@ export class StreamViewController implements Disposable {
 		if (this._panel === undefined) return;
 
 		this._panel.hide();
-	}
-
-	async post(streamThread: StreamThread, text: string) {
-		await this.show(streamThread);
-		return this._panel!.post(text);
 	}
 
 	async postCode(

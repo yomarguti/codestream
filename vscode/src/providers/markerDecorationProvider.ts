@@ -19,10 +19,9 @@ import {
 } from "vscode";
 import {
 	Marker,
-	SessionChangedEvent,
-	SessionChangedType,
 	SessionStatus,
-	SessionStatusChangedEvent
+	SessionStatusChangedEvent,
+	TextDocumentMarkersChangedEvent
 } from "../api/session";
 import { OpenStreamCommandArgs } from "../commands";
 import { MarkerStyle } from "../config";
@@ -117,8 +116,8 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 			this._inlineDecorationType,
 			this._overlayDecorationType,
 			languages.registerHoverProvider({ scheme: "file" }, this),
-			Container.session.onDidChange(this.onSessionChanged, this),
-			Container.session.onDidChangeStatus(this.onSessionStatusChanged, this),
+			Container.session.onDidChangeTextDocumentMarkers(this.onMarkersChanged, this),
+			Container.session.onDidChangeSessionStatus(this.onSessionStatusChanged, this),
 			window.onDidChangeVisibleTextEditors(this.onEditorVisibilityChanged, this),
 			workspace.onDidChangeTextDocument(this.onDocumentChanged, this),
 			workspace.onDidCloseTextDocument(this.onDocumentClosed, this)
@@ -151,9 +150,7 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 		this.applyToApplicableVisibleEditors(e);
 	}
 
-	private onSessionChanged(e: SessionChangedEvent) {
-		if (e.type !== SessionChangedType.Markers) return;
-
+	private onMarkersChanged(e: TextDocumentMarkersChangedEvent) {
 		const uri = e.uri.toString();
 		this._markersCache.delete(uri);
 

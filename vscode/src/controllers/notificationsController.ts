@@ -1,6 +1,6 @@
 "use strict";
 import { Disposable, MessageItem, window } from "vscode";
-import { Post, PostsReceivedEvent, StreamType } from "../api/session";
+import { Post, PostsChangedEvent, StreamType } from "../api/session";
 import { Notifications } from "../configuration";
 import { Container } from "../container";
 import { vslsUrlRegex } from "./liveShareController";
@@ -10,7 +10,7 @@ export class NotificationsController implements Disposable {
 
 	constructor() {
 		this._disposable = Disposable.from(
-			Container.session.onDidReceivePosts(this.onSessionPostsReceived, this)
+			Container.session.onDidChangePosts(this.onSessionPostsReceived, this)
 		);
 	}
 
@@ -18,7 +18,7 @@ export class NotificationsController implements Disposable {
 		this._disposable && this._disposable.dispose();
 	}
 
-	private async onSessionPostsReceived(e: PostsReceivedEvent) {
+	private async onSessionPostsReceived(e: PostsChangedEvent) {
 		const currentUser = Container.session.user;
 		const activeStream = Container.streamView.activeStreamThread;
 		const streamVisible = Container.streamView.visible;

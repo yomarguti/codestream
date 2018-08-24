@@ -39,7 +39,7 @@ export async function activate(context: ExtensionContext) {
 		serverUrl: cfg.serverUrl
 	} as AgentOptions);
 
-	context.subscriptions.push(Container.session.onDidChangeStatus(onSessionStatusChanged));
+	context.subscriptions.push(Container.session.onDidChangeSessionStatus(onSessionStatusChanged));
 
 	if (cfg.autoSignIn) {
 		Container.commands.signIn();

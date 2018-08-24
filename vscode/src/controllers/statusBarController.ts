@@ -2,10 +2,9 @@
 import { Disposable, StatusBarAlignment, StatusBarItem, window } from "vscode";
 import {
 	CodeStreamEnvironment,
-	SessionChangedEvent,
-	SessionChangedType,
 	SessionStatus,
-	SessionStatusChangedEvent
+	SessionStatusChangedEvent,
+	UnreadsChangedEvent
 } from "../api/session";
 import { Container } from "../container";
 
@@ -15,8 +14,8 @@ export class StatusBarController implements Disposable {
 
 	constructor() {
 		this._disposable = Disposable.from(
-			Container.session.onDidChangeStatus(this.onSessionStatusChanged, this),
-			Container.session.onDidChange(this.onSessionChanged, this)
+			Container.session.onDidChangeSessionStatus(this.onSessionStatusChanged, this),
+			Container.session.onDidChangeUnreads(this.onUnreadsChanged, this)
 		);
 
 		this.updateStatusBar(Container.session.status);
@@ -30,9 +29,7 @@ export class StatusBarController implements Disposable {
 		this._disposable && this._disposable.dispose();
 	}
 
-	private onSessionChanged(e: SessionChangedEvent) {
-		if (e.type !== SessionChangedType.Unreads) return;
-
+	private onUnreadsChanged(e: UnreadsChangedEvent) {
 		this.updateStatusBar(Container.session.status, e.getMentionCount());
 	}
 

@@ -5,9 +5,30 @@ import { Container } from "../container";
 import { Logger } from "../logger";
 import { StreamWebviewPanel } from "./streamWebviewPanel";
 
+export enum WebviewIpcMessageType {
+	didBlur = "codestream:interaction:blur",
+	didChangeConfiguration = "codestream:configs",
+	didChangeData = "codestream:data",
+	didChangeStreamThread = "codestream:interaction:stream-thread-selected",
+	didChangeUnreads = "codestream:data:unreads",
+	didFileChange = "codestream:publish:file-changed",
+	didFocus = "codestream:interaction:focus",
+	didPostCode = "codestream:interaction:code-highlighted",
+	didSignOut = "codestream:interaction:signed-out",
+	onActiveThreadChanged = "codestream:interaction:thread-selected",
+	onActiveThreadClosed = "codestream:interaction:thread-closed",
+	onActiveStreamChanged = "codestream:interaction:changed-active-stream",
+	onFileChangedSubscribe = "codestream:subscription:file-changed",
+	onFileChangedUnsubscribe = "codestream:unsubscribe:file-changed",
+	onRequest = "codestream:request",
+	onServiceRequest = "codestream:interaction:svc-request",
+	onViewReady = "codestream:view-ready",
+	response = "codestream:response"
+}
+
 // TODO: Clean this up to be consistent with the structure
 export interface WebviewIpcMessage {
-	type: string;
+	type: WebviewIpcMessageType;
 	body: any;
 }
 
@@ -77,21 +98,21 @@ export class WebviewIpc {
 
 	sendDidBlur() {
 		return this.postMessage({
-			type: "codestream:interaction:blur",
+			type: WebviewIpcMessageType.didBlur,
 			body: {}
 		});
 	}
 
 	sendDidFocus() {
 		return this.postMessage({
-			type: "codestream:interaction:focus",
+			type: WebviewIpcMessageType.didFocus,
 			body: {}
 		});
 	}
 
 	sendDidChangeStreamThread(streamThread: StreamThread) {
 		return this.postMessage({
-			type: "codestream:interaction:stream-thread-selected",
+			type: WebviewIpcMessageType.didChangeStreamThread,
 			body: {
 				streamId: streamThread.stream.id,
 				threadId: streamThread.id

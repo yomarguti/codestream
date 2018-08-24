@@ -63,13 +63,6 @@ export interface OpenStreamCommandArgs extends IRequiresStream {
 	session?: CodeStreamSession;
 }
 
-export interface PostCommandArgs extends IRequiresStream {
-	text?: string;
-	send?: boolean;
-	silent?: boolean;
-	session?: CodeStreamSession;
-}
-
 export interface PostCodeCommandArgs extends IRequiresStream {
 	document?: TextDocument;
 	range?: Range;
@@ -118,9 +111,8 @@ export class Commands implements Disposable {
 	// }
 
 	@command("goOffline")
-	async goOffline() {
-		Container.streamView.hide();
-		await Container.session.logout(false);
+	goOffline() {
+		return Container.session.goOffline();
 	}
 
 	@command("openPostWorkingFile", { showErrorMessage: "Unable to open post" })
@@ -165,7 +157,7 @@ export class Commands implements Disposable {
 	// 	});
 	// }
 
-	@command("openStream", { showErrorMessage: "Unable to open stream" })
+	// @command("openStream", { showErrorMessage: "Unable to open stream" })
 	async openStream(args: OpenStreamCommandArgs): Promise<StreamThread | undefined> {
 		if (args == null) return undefined;
 
@@ -176,33 +168,6 @@ export class Commands implements Disposable {
 		if (streamThread === undefined) return undefined;
 
 		return Container.streamView.show(streamThread);
-	}
-
-	@command("post", { showErrorMessage: "Unable to post message" })
-	async post(args: PostCommandArgs): Promise<Post | StreamThread> {
-		if (args == null) {
-			args = {} as PostCommandArgs;
-		}
-
-		const streamThread = await this.findStreamThread(args.session || Container.session, args, {
-			includeActive: true,
-			includeDefault: true /*!args.send*/
-		});
-		if (streamThread === undefined) throw new Error(`No stream could be found`);
-
-		if (args.send && args.text) {
-			if (!args.silent) {
-				await this.openStream({ streamThread: streamThread });
-			}
-			return streamThread.stream.post(args.text, streamThread.id);
-		}
-
-		if (args.text) {
-			await Container.streamView.post(streamThread, args.text);
-			return streamThread;
-		}
-
-		return (await this.openStream({ streamThread: streamThread }))!;
 	}
 
 	@command("postCode", { showErrorMessage: "Unable to add comment" })

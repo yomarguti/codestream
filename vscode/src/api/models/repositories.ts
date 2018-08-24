@@ -1,6 +1,6 @@
 "use strict";
 import { CSRepository } from "../api";
-import { CodeStreamSession, SessionChangedEvent, SessionChangedType } from "../session";
+import { CodeStreamSession, RepositoriesChangedEvent } from "../session";
 import { CodeStreamCollection, CodeStreamItem } from "./collection";
 import { FileStreamCollection } from "./streams";
 
@@ -34,12 +34,10 @@ export class RepositoryCollection extends CodeStreamCollection<Repository, CSRep
 	constructor(session: CodeStreamSession, public readonly teamId: string) {
 		super(session);
 
-		this.disposables.push(session.onDidChange(this.onSessionChanged, this));
+		this.disposables.push(session.onDidChangeRepositories(this.onRepositoriesChanged, this));
 	}
 
-	private onSessionChanged(e: SessionChangedEvent) {
-		if (e.type !== SessionChangedType.Repositories) return;
-
+	private onRepositoriesChanged(e: RepositoriesChangedEvent) {
 		this.invalidate();
 	}
 

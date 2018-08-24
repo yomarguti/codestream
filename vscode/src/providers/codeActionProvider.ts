@@ -26,7 +26,7 @@ export class CodeStreamCodeActionProvider implements CodeActionProvider, Disposa
 
 	constructor() {
 		this._disposable = Disposable.from(
-			Container.session.onDidChangeStatus(this.onSessionStatusChanged, this)
+			Container.session.onDidChangeSessionStatus(this.onSessionStatusChanged, this)
 		);
 	}
 

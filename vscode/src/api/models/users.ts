@@ -1,7 +1,7 @@
 "use strict";
 import { Iterables } from "../../system";
 import { CSUser } from "../api";
-import { CodeStreamSession, SessionChangedEvent, SessionChangedType } from "../session";
+import { CodeStreamSession, UsersChangedEvent } from "../session";
 import { CodeStreamCollection, CodeStreamItem } from "./collection";
 
 export class User extends CodeStreamItem<CSUser> {
@@ -47,12 +47,10 @@ export class UserCollection extends CodeStreamCollection<User, CSUser> {
 	constructor(session: CodeStreamSession, public readonly teamId: string) {
 		super(session);
 
-		this.disposables.push(session.onDidChange(this.onSessionChanged, this));
+		this.disposables.push(session.onDidChangeUsers(this.onUsersChanged, this));
 	}
 
-	protected onSessionChanged(e: SessionChangedEvent) {
-		if (e.type !== SessionChangedType.Users) return;
-
+	protected onUsersChanged(e: UsersChangedEvent) {
 		this.invalidate();
 	}
 
