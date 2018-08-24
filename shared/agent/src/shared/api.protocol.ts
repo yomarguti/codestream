@@ -82,6 +82,10 @@ export enum StreamType {
 	File = "file"
 }
 
+export enum ChannelServiceType {
+	Vsls = "vsls"
+}
+
 export interface CSChannelStream extends CSEntity {
 	isArchived: boolean;
 	privacy: "public" | "private";
@@ -95,6 +99,9 @@ export interface CSChannelStream extends CSEntity {
 	name: string;
 	memberIds?: string[];
 	isTeamStream: boolean;
+	serviceType?: ChannelServiceType.Vsls;
+	serviceKey?: string;
+	serviceInfo?: { [key: string]: any };
 }
 
 export interface CSDirectStream extends CSEntity {
@@ -267,6 +274,9 @@ export interface CreateChannelStreamRequest {
 	isTeamStream: boolean;
 	privacy: "public" | "private";
 	purpose?: string;
+	serviceType?: ChannelServiceType.Vsls;
+	serviceKey?: string;
+	serviceInfo?: { [key: string]: any };
 }
 
 export interface CreateDirectStreamRequest {
