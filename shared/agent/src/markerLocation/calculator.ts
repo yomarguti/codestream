@@ -510,10 +510,12 @@ class Calculation {
 //
 // Therefore, since specificIndex is 1, newCol = 36
 function calculateColumn(oldCol: number, oldContent: string, newContent: string) {
-	if (oldCol === 1) {
-		return 1;
-	} else if (oldContent === newContent) {
+	if (!oldContent || !newContent || oldContent === newContent) {
 		return oldCol;
+	}
+
+	if (oldCol <= 1) {
+		return 1;
 	} else if (oldCol > oldContent.length) {
 		return newContent.length + 1;
 	}
@@ -530,8 +532,6 @@ function calculateColumn(oldCol: number, oldContent: string, newContent: string)
 		i = oldContent.indexOf(str);
 		while (i > -1) {
 			oldContentPositions.push(i + pre.length + 1);
-			if (i === oldContent.length) break;
-
 			i = oldContent.indexOf(str, i + 1);
 		}
 
@@ -541,8 +541,6 @@ function calculateColumn(oldCol: number, oldContent: string, newContent: string)
 		i = newContent.indexOf(str);
 		while (i > -1) {
 			newContentPositions.push(i + pre.length + 1);
-			if (i === oldContent.length) break;
-
 			i = oldContent.indexOf(str, i + 1);
 		}
 
