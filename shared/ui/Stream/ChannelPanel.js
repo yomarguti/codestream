@@ -9,6 +9,7 @@ import {
 	getServiceStreamsForTeam
 } from "../reducers/streams";
 import Icon from "./Icon";
+import Tooltip from "./Tooltip";
 import ChannelMenu from "./ChannelMenu";
 
 export class SimpleChannelPanel extends Component {
@@ -48,10 +49,16 @@ export class SimpleChannelPanel extends Component {
 		return (
 			<div className="section">
 				<div className="header" onClick={this.handleClickShowPublicChannels}>
-					<span className="clickable">Team Channels</span>
-					<Icon className="align-right" name="plus" onClick={this.handleClickCreateChannel} />
+					<Tooltip title="Browse All Channels" placement="left" delay="1">
+						<span className="clickable">Team Channels</span>
+					</Tooltip>
+					<Tooltip title="Create a Channel" placement="bottom">
+						<Icon className="align-right" name="plus" onClick={this.handleClickCreateChannel} />
+					</Tooltip>
 				</div>
-				{this.renderStreams(this.props.channelStreams)}
+				<ul onClick={this.handleClickSelectStream}>
+					{this.renderStreams(this.props.channelStreams)}
+				</ul>
 			</div>
 		);
 	};
@@ -61,81 +68,79 @@ export class SimpleChannelPanel extends Component {
 
 		return (
 			<div className="section">
-				<div className="header" onClick={this.handleClickShowPublicChannels}>
+				<div className="header">
 					<span className="clickable">Live Share Sessions</span>
 				</div>
-				{this.renderStreams(this.props.serviceStreams)}
+				<ul onClick={this.handleClickSelectStream}>
+					{this.renderStreams(this.props.serviceStreams)}
+				</ul>
 			</div>
 		);
 	};
 
 	renderStreams = streams => {
-		return (
-			<ul onClick={this.handleClickSelectStream}>
-				{streams.map(stream => {
-					if (stream.isArchived) return null;
+		return streams.map(stream => {
+			if (stream.isArchived) return null;
 
-					// FIXME remove this line once we're sure there are no PROD streams of this type
-					// no new ones are being created
-					if (stream.name.match(/^ls:/)) return null;
+			// FIXME remove this line once we're sure there are no PROD streams of this type
+			// no new ones are being created
+			if (stream.name.match(/^ls:/)) return null;
 
-					const icon = this.props.mutedStreams[stream.id] ? (
-						<Icon className="mute" name="mute" />
-					) : stream.privacy === "private" ? (
-						<Icon className="lock" name="lock" />
-					) : stream.serviceType === "vsls" ? (
-						<Icon className="broadcast" name="broadcast" />
-					) : (
-						<span className="icon hash">#</span>
-					);
-					let count = this.props.umis.unread[stream.id] || 0;
-					if (this.props.mutedStreams[stream.id]) count = 0;
-					let mentions = this.props.umis.mentions[stream.id] || 0;
-					let menuActive = this.state.openMenu === stream.id;
-					return (
-						<li
-							className={createClassString({
-								active: menuActive ? true : false,
-								muted: this.props.mutedStreams[stream.id],
-								unread: count > 0
-							})}
-							key={stream.id}
-							id={stream.id}
-						>
-							{icon}
-							{stream.name}
-							{mentions > 0 ? <span className="umi">{mentions}</span> : null}
-							<span>
-								<Icon
-									name="gear"
-									className="align-right"
-									onClick={this.handleClickStreamSettings}
-								/>
-								{menuActive && (
-									<ChannelMenu
-										stream={stream}
-										target={this.state.menuTarget}
-										umiCount={count}
-										isMuted={this.props.mutedStreams[stream.id]}
-										setActivePanel={this.props.setActivePanel}
-										runSlashCommand={this.props.runSlashCommand}
-										closeMenu={this.closeMenu}
-									/>
-								)}
-							</span>
-						</li>
-					);
-				})}
-			</ul>
-		);
+			const icon = this.props.mutedStreams[stream.id] ? (
+				<Icon className="mute" name="mute" />
+			) : stream.privacy === "private" ? (
+				<Icon className="lock" name="lock" />
+			) : stream.serviceType === "vsls" ? (
+				<Icon className="broadcast" name="broadcast" />
+			) : (
+				<span className="icon hash">#</span>
+			);
+			let count = this.props.umis.unread[stream.id] || 0;
+			if (this.props.mutedStreams[stream.id]) count = 0;
+			let mentions = this.props.umis.mentions[stream.id] || 0;
+			let menuActive = this.state.openMenu === stream.id;
+			return (
+				<li
+					className={createClassString({
+						active: menuActive ? true : false,
+						muted: this.props.mutedStreams[stream.id],
+						unread: count > 0
+					})}
+					key={stream.id}
+					id={stream.id}
+				>
+					{icon}
+					{stream.name}
+					{mentions > 0 ? <span className="umi">{mentions}</span> : null}
+					<span>
+						<Icon name="gear" className="align-right" onClick={this.handleClickStreamSettings} />
+						{menuActive && (
+							<ChannelMenu
+								stream={stream}
+								target={this.state.menuTarget}
+								umiCount={count}
+								isMuted={this.props.mutedStreams[stream.id]}
+								setActivePanel={this.props.setActivePanel}
+								runSlashCommand={this.props.runSlashCommand}
+								closeMenu={this.closeMenu}
+							/>
+						)}
+					</span>
+				</li>
+			);
+		});
 	};
 
 	renderDirectMessages = () => {
 		return (
 			<div className="section">
 				<div className="header clickable" onClick={this.handleClickCreateDirectMessage}>
-					<span className="clickable">Direct Messages</span>
-					<Icon name="plus" className="align-right" />
+					<Tooltip title="Open a direct message" delay="1">
+						<span className="clickable">Direct Messages</span>
+					</Tooltip>
+					<Tooltip title="Open a direct message">
+						<Icon name="plus" className="align-right" />
+					</Tooltip>
 				</div>
 				<ul onClick={this.handleClickSelectStream}>
 					{this.props.directMessageStreams.map(stream => {

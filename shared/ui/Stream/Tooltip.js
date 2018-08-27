@@ -44,7 +44,11 @@ export default class Tooltip extends React.Component {
 			} else {
 				const content = this.props.content ? this.props.content : <span>{this.props.title}</span>;
 				return (
-					<RCTooltip placement={this.props.placement} overlay={content}>
+					<RCTooltip
+						placement={this.props.placement}
+						overlay={content}
+						mouseEnterDelay={this.props.delay}
+					>
 						{this.props.children}
 					</RCTooltip>
 				);
