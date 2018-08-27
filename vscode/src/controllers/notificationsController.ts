@@ -26,7 +26,10 @@ export class NotificationsController implements Disposable {
 		if (Container.config.notifications === Notifications.None) return;
 
 		for (const post of e.items()) {
-			if (post.deleted || post.senderId === currentUser.id) continue;
+			// Don't show notifications for deleted, edited (if edited it isn't the first time its been seen), has replies (same as edited), or was posted by the current user
+			if (post.deleted || post.edited || post.hasReplies || post.senderId === currentUser.id) {
+				continue;
+			}
 
 			const mentioned = post.mentioned(currentUser.id);
 			// If we are muted and not mentioned, skip it

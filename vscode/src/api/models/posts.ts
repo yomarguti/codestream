@@ -26,11 +26,19 @@ export class Post extends CodeStreamItem<CSPost> {
 	}
 
 	get deleted() {
-		return this.entity.deactivated;
+		return !!this.entity.deactivated;
+	}
+
+	get edited() {
+		return !!this.entity.hasBeenEdited;
 	}
 
 	get hasCode() {
 		return this.entity.codeBlocks !== undefined && this.entity.codeBlocks.length !== 0;
+	}
+
+	get hasReplies() {
+		return !!this.entity.hasReplies;
 	}
 
 	get senderId() {

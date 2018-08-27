@@ -544,38 +544,39 @@ export class CodeStreamSession implements Disposable {
 		await Promise.all(
 			entries.map(async ([streamId, lastReadSeqNum]) => {
 				const stream = unreadStreams.find(stream => stream.id === streamId);
-				if (stream) {
-					let latestPost;
-					let unreadPosts;
-					try {
-						latestPost = await this._sessionApi!.getLatestPost(streamId);
-						unreadPosts = await this._sessionApi!.getPostsInRange(
-							streamId,
-							lastReadSeqNum + 1,
-							latestPost.seqNum
-						);
-					} catch (error) {
-						// likely an access error because user is no longer in this channel
-						debugger;
-						return;
-					}
+				if (!stream) return;
 
-					let unreadCount = 0;
-					let mentionCount = 0;
-					unreadPosts.forEach(post => {
-						if (!post.deactivated) {
-							const mentionedUserIds = post.mentionedUserIds || [];
-							if (mentionedUserIds.includes(user.id) || stream.type === StreamType.Direct) {
-								mentionCount++;
-								unreadCount++;
-							} else {
-								unreadCount++;
-							}
-						}
-					});
-					unreadCounter.mentions[streamId] = mentionCount;
-					unreadCounter.unread[streamId] = unreadCount;
+				let latestPost;
+				let unreadPosts;
+				try {
+					latestPost = await this._sessionApi!.getLatestPost(streamId);
+					unreadPosts = await this._sessionApi!.getPostsInRange(
+						streamId,
+						lastReadSeqNum + 1,
+						latestPost.seqNum
+					);
+				} catch (error) {
+					// likely an access error because user is no longer in this channel
+					debugger;
+					return;
 				}
+
+				let unreadCount = 0;
+				let mentionCount = 0;
+				for (const post of unreadPosts) {
+					if (post.deactivated) continue;
+
+					const mentionedUserIds = post.mentionedUserIds || [];
+					if (mentionedUserIds.includes(user.id) || stream.type === StreamType.Direct) {
+						mentionCount++;
+						unreadCount++;
+					} else {
+						unreadCount++;
+					}
+				}
+
+				unreadCounter.mentions[streamId] = mentionCount;
+				unreadCounter.unread[streamId] = unreadCount;
 			})
 		);
 
@@ -594,18 +595,27 @@ export class CodeStreamSession implements Disposable {
 
 		await Promise.all(
 			posts.map(async post => {
-				if (!post.deactivated && !post.hasBeenEdited && post.creatorId !== this.userId) {
-					const stream = await this._sessionApi!.getStream(post.streamId);
-					const mentionedUserIds = post.mentionedUserIds || [];
-					if (mentionedUserIds.includes(this.user.id) || stream!.type === StreamType.Direct) {
-						unreadCounter.incrementMention(post.streamId);
-						unreadCounter.incrementUnread(post.streamId);
-					} else {
-						unreadCounter.incrementUnread(post.streamId);
-					}
-					if (unreadCounter.lastReads[post.streamId] === undefined) {
-						unreadCounter.lastReads[post.streamId] = post.seqNum - 1;
-					}
+				// Don't increment unreads for deleted, edited (if edited it isn't the first time its been seen), has replies (same as edited), or was posted by the current user
+				if (
+					post.deactivated ||
+					post.hasBeenEdited ||
+					post.hasReplies ||
+					post.creatorId === this.userId
+				) {
+					return;
+				}
+
+				const stream = await this._sessionApi!.getStream(post.streamId);
+
+				const mentionedUserIds = post.mentionedUserIds || [];
+				if (mentionedUserIds.includes(this.user.id) || stream!.type === StreamType.Direct) {
+					unreadCounter.incrementMention(post.streamId);
+					unreadCounter.incrementUnread(post.streamId);
+				} else {
+					unreadCounter.incrementUnread(post.streamId);
+				}
+				if (unreadCounter.lastReads[post.streamId] === undefined) {
+					unreadCounter.lastReads[post.streamId] = post.seqNum - 1;
 				}
 			})
 		);
@@ -626,7 +636,7 @@ function createMergableDebouncedEvent<E extends MergeableEvent<SessionChangedEve
 		},
 		250,
 		{ maxWait: 1000 }
-	); // as ((e: MergeableEvent<SessionChangedEvent>) => void);
+	);
 }
 
 function signedIn(
