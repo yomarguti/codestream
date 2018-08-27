@@ -84,8 +84,7 @@ export enum SessionSignedOutReason {
 	NetworkIssue = "networkIssue",
 	SignInFailure = "signInFailure",
 	UserSignedOut = "userSignedOut",
-	UserWentOffline = "userWentOffline",
-	Unknown = "unknown"
+	UserWentOffline = "userWentOffline"
 }
 
 export enum SessionStatus {
@@ -383,7 +382,7 @@ export class CodeStreamSession implements Disposable {
 		return LoginResult.Success;
 	}
 
-	async logout(reason: SessionSignedOutReason = SessionSignedOutReason.Unknown) {
+	async logout(reason: SessionSignedOutReason = SessionSignedOutReason.UserSignedOut) {
 		this._id = undefined;
 		this._loginPromise = undefined;
 
