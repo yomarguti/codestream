@@ -29,8 +29,8 @@ export class User extends CodeStreamItem<CSUser> {
 		return this.entity.username || this.fullName;
 	}
 
-	get lastReads() {
-		return this.entity.lastReads || {};
+	get lastReads(): { [streamId: string]: number } {
+		return this.entity.lastReads || Object.create(null);
 	}
 
 	hasMutedChannel(streamId: string) {

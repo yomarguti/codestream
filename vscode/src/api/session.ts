@@ -173,7 +173,7 @@ export class CodeStreamSession implements Disposable {
 	private onMessageReceived(e: MessageReceivedEvent) {
 		switch (e.type) {
 			case MessageType.Posts:
-				this.incrementUnreads(e.posts);
+				this._state!.unreads.update(e.posts, this.fireDidChangeUnreads);
 
 				this.fireDidChangePosts(new PostsChangedEvent(this, e));
 				break;
@@ -192,7 +192,7 @@ export class CodeStreamSession implements Disposable {
 				const user = e.users.find(u => u.id === this.userId);
 				if (user != null) {
 					this._state!.updateUser(user);
-					this.calculateUnreads(user);
+					this._state!.unreads.compute(user.lastReads, this.fireDidChangeUnreads);
 				}
 
 				this.fireDidChangeUsers(new UsersChangedEvent(this, e));
@@ -473,14 +473,16 @@ export class CodeStreamSession implements Disposable {
 	}
 
 	private async completeLogin(result: AgentResult, teamId?: string) {
-		const email = result.loginResponse.user.email;
+		const user = result.loginResponse.user;
+		const email = user.email;
 		this._email = email;
 
 		// Create an id for this session
 		// TODO: Probably needs to be more unique
 		this._id = Strings.sha1(`${this.serverUrl}|${email}|${teamId}`.toLowerCase());
 
-		await TokenManager.addOrUpdate(this._serverUrl, email, result.loginResponse.accessToken);
+		const token = result.loginResponse.accessToken;
+		await TokenManager.addOrUpdate(this._serverUrl, email, token);
 
 		// Update the saved e-mail on successful login
 		if (email !== Container.config.email) {
@@ -509,11 +511,11 @@ export class CodeStreamSession implements Disposable {
 		}
 
 		this._pubnub = new PubNubReceiver(new Cache(this));
-		this._state = new SessionState(this, teamId, result.loginResponse);
-		this._sessionApi = new CodeStreamSessionApi(this._serverUrl, this._state.token, teamId);
+		this._sessionApi = new CodeStreamSessionApi(this._serverUrl, token, teamId);
 		this._presenceManager = new PresenceManager(this._sessionApi, this._id);
 
-		this.calculateUnreads(result.loginResponse.user);
+		this._state = new SessionState(this, teamId, result.loginResponse);
+		this._state.unreads.compute(user.lastReads, this.fireDidChangeUnreads);
 
 		this._disposable = Disposable.from(
 			Container.agent.onDidChangeDocumentMarkers(
@@ -533,92 +535,6 @@ export class CodeStreamSession implements Disposable {
 		);
 
 		this.setStatus(SessionStatus.SignedIn);
-	}
-
-	private async calculateUnreads(user: CSUser) {
-		const lastReads = user.lastReads || {};
-		const unreadCounter = this._state!.unreads;
-		const entries = Object.entries(lastReads);
-		const unreadStreams = await this._sessionApi!.getUnreadStreams();
-		await Promise.all(
-			entries.map(async ([streamId, lastReadSeqNum]) => {
-				const stream = unreadStreams.find(stream => stream.id === streamId);
-				if (!stream) return;
-
-				let latestPost;
-				let unreadPosts;
-				try {
-					latestPost = await this._sessionApi!.getLatestPost(streamId);
-					unreadPosts = await this._sessionApi!.getPostsInRange(
-						streamId,
-						lastReadSeqNum + 1,
-						latestPost.seqNum
-					);
-				} catch (error) {
-					// likely an access error because user is no longer in this channel
-					debugger;
-					return;
-				}
-
-				let unreadCount = 0;
-				let mentionCount = 0;
-				for (const post of unreadPosts) {
-					if (post.deactivated) continue;
-
-					const mentionedUserIds = post.mentionedUserIds || [];
-					if (mentionedUserIds.includes(user.id) || stream.type === StreamType.Direct) {
-						mentionCount++;
-						unreadCount++;
-					} else {
-						unreadCount++;
-					}
-				}
-
-				unreadCounter.mentions[streamId] = mentionCount;
-				unreadCounter.unread[streamId] = unreadCount;
-			})
-		);
-
-		unreadCounter.getStreamIds().forEach(streamId => {
-			if (lastReads[streamId] === undefined) {
-				unreadCounter.clear(streamId);
-			}
-		});
-
-		unreadCounter.lastReads = lastReads;
-		this.fireDidChangeUnreads(new UnreadsChangedEvent(this, unreadCounter.getValues()));
-	}
-
-	private async incrementUnreads(posts: CSPost[]) {
-		const unreadCounter = this._state!.unreads;
-
-		await Promise.all(
-			posts.map(async post => {
-				// Don't increment unreads for deleted, edited (if edited it isn't the first time its been seen), has replies (same as edited), or was posted by the current user
-				if (
-					post.deactivated ||
-					post.hasBeenEdited ||
-					post.hasReplies ||
-					post.creatorId === this.userId
-				) {
-					return;
-				}
-
-				const stream = await this._sessionApi!.getStream(post.streamId);
-
-				const mentionedUserIds = post.mentionedUserIds || [];
-				if (mentionedUserIds.includes(this.user.id) || stream!.type === StreamType.Direct) {
-					unreadCounter.incrementMention(post.streamId);
-					unreadCounter.incrementUnread(post.streamId);
-				} else {
-					unreadCounter.incrementUnread(post.streamId);
-				}
-				if (unreadCounter.lastReads[post.streamId] === undefined) {
-					unreadCounter.lastReads[post.streamId] = post.seqNum - 1;
-				}
-			})
-		);
-		this.fireDidChangeUnreads(new UnreadsChangedEvent(this, this._state!.unreads.getValues()));
 	}
 }
 
