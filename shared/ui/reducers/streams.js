@@ -105,26 +105,35 @@ const makeName = user => {
 
 const makeDirectMessageStreamName = (memberIds, users) => {
 	const names = memberIds.map(id => makeName(users[id])).filter(Boolean);
-	if (!names) {
-		console.log(memberIds);
+	if (names.length === 0) {
+		console.warn("Cannot create direct message stream name without member names", {
+			memberIds,
+			users
+		});
 		return "NO NAME";
 	}
 	return names.join(", ");
 };
 
-export const getDirectMessageStreamsForTeam = (state, teamId, userId, users) => {
-	const streams = state.byTeam[teamId] || {};
-	const directStreams = Object.values(streams).filter(stream => stream.type === "direct");
-	directStreams.map(stream => {
+export const getDMName = (stream, users, currentUserId) => {
+	if (stream.name) return stream.name;
+	if (stream.type === "direct") {
 		// if it's a direct message w/myself, then use my name, otherwise exclude myself
-		if (stream.memberIds.length === 1 && stream.memberIds[0] === userId) {
-			stream.name = makeDirectMessageStreamName([userId], users);
-		} else {
-			const withoutMe = (stream.memberIds || []).filter(id => id !== userId);
-			stream.name = makeDirectMessageStreamName(withoutMe, users);
+		if (stream.memberIds.length === 1 && stream.memberIds[0] === currentUserId) {
+			return makeDirectMessageStreamName([currentUserId], users);
 		}
-	});
-	return directStreams;
+		const withoutMe = (stream.memberIds || []).filter(id => id !== currentUserId);
+		return makeDirectMessageStreamName(withoutMe, users);
+	} else {
+		console.warn("Cannot get a name for a non-dm channel", stream);
+		return "NO NAME";
+	}
+};
+
+export const getDirectMessageStreamsForTeam = (state, teamId) => {
+	const streams = state.byTeam[teamId] || {};
+	// TODO: filter for only those including the current user
+	return Object.values(streams).filter(stream => stream.type === "direct");
 };
 
 export const getServiceStreamsForTeam = (state, teamId, userId, users) => {

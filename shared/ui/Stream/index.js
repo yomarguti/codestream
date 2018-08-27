@@ -23,7 +23,8 @@ import {
 	getPostsForStream,
 	getStreamForId,
 	getStreamForTeam,
-	getStreamForRepoAndFile
+	getStreamForRepoAndFile,
+	getDMName
 } from "../reducers/streams";
 
 const EMAIL_MATCH_REGEX = new RegExp(
@@ -1525,6 +1526,13 @@ const mapStateToProps = ({
 			? postStream.memberIds.map(id => users[id])
 			: [];
 
+	const teamMembersById = toMapBy("id", teamMembers);
+
+	const postStreamName =
+		postStream.type === "direct"
+			? getDMName(postStream, teamMembersById, session.userId)
+			: postStream.name;
+
 	return {
 		pluginVersion,
 		activePanel: context.panel,
@@ -1539,11 +1547,11 @@ const mapStateToProps = ({
 		},
 		configs,
 		isOffline,
-		teamMembersById: toMapBy("id", teamMembers),
+		teamMembersById,
 		teammates: teamMembers.filter(({ id }) => id !== session.userId),
 		postStream,
 		postStreamId: postStream.id,
-		postStreamName: postStream.name,
+		postStreamName,
 		postStreamType: postStream.type,
 		postStreamIsTeamStream: postStream.isTeamStream,
 		postStreamMemberIds: postStream.memberIds,

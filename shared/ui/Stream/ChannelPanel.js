@@ -6,8 +6,10 @@ import { createStream, setCurrentStream, setUserPreference } from "./actions";
 import {
 	getChannelStreamsForTeam,
 	getDirectMessageStreamsForTeam,
-	getServiceStreamsForTeam
+	getServiceStreamsForTeam,
+	getDMName
 } from "../reducers/streams";
+import { toMapBy } from "../utils";
 import Icon from "./Icon";
 import Tooltip from "./Tooltip";
 import ChannelMenu from "./ChannelMenu";
@@ -265,10 +267,13 @@ const mapStateToProps = ({ context, streams, users, teams, umis, session }) => {
 	const user = users[session.userId];
 	const mutedStreams = (user && user.preferences && user.preferences.mutedStreams) || {};
 
-	const directMessageStreams = _.sortBy(
-		getDirectMessageStreamsForTeam(streams, context.currentTeamId, session.userId, users) || [],
-		stream => (stream.name || "").toLowerCase()
+	const dmStreams = (getDirectMessageStreamsForTeam(streams, context.currentTeamId) || []).map(
+		stream => ({
+			...stream,
+			name: getDMName(stream, toMapBy("id", teamMembers), session.userId)
+		})
 	);
+	const directMessageStreams = _.sortBy(dmStreams, stream => (stream.name || "").toLowerCase());
 
 	const serviceStreams = _.sortBy(
 		getServiceStreamsForTeam(streams, context.currentTeamId, session.userId, users) || [],

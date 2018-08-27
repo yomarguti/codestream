@@ -328,16 +328,11 @@ export const fetchPosts = params => async (dispatch, getState, { api }) => {
 };
 
 export const fetchPostsForStreams = () => async (dispatch, getState) => {
-	const { context, session, streams, users } = getState();
+	const { context, session, streams } = getState();
 
 	try {
 		const channels = getChannelStreamsForTeam(streams, context.currentTeamId, session.userId);
-		const dms = getDirectMessageStreamsForTeam(
-			streams,
-			context.currentTeamId,
-			session.userId,
-			users
-		);
+		const dms = getDirectMessageStreamsForTeam(streams, context.currentTeamId);
 		[...channels, ...dms].forEach(channel => {
 			dispatch(fetchPosts({ streamId: channel.id, teamId: context.currentTeamId }));
 		});

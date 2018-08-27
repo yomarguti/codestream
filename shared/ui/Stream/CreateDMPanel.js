@@ -4,16 +4,12 @@ import * as contextActions from "../actions/context";
 import _ from "underscore";
 import { createStream, setCurrentStream } from "./actions";
 import createClassString from "classnames";
-import { getDirectMessageStreamsForTeam } from "../reducers/streams";
+import { getDirectMessageStreamsForTeam, getDMName } from "../reducers/streams";
 import Button from "./Button";
 import { FormattedMessage } from "react-intl";
 import Select from "react-select";
 import Timestamp from "./Timestamp";
-
-const isNameInvalid = name => {
-	const nameRegex = new RegExp("^[a-zA-Z0-9_-]+$");
-	return nameRegex.test(name) === false;
-};
+import { toMapBy } from "../utils";
 
 export class SimpleCreateDMPanel extends Component {
 	constructor(props) {
@@ -102,8 +98,8 @@ export class SimpleCreateDMPanel extends Component {
 		}
 		return (
 			<div className="channel-list">
-			<div className="section">
-				<div className="header">Recent Conversations</div>
+				<div className="section">
+					<div className="header">Recent Conversations</div>
 					<ul onClick={this.handleClickSelectStream}>
 						{this.props.directMessageStreams.map(stream => {
 							let count = this.props.umis.unread[stream.id] || 0;
@@ -195,9 +191,15 @@ const mapStateToProps = ({ context, streams, users, teams, session, umis }) => {
 		})
 		.filter(Boolean);
 
+	const dmStreams = (getDirectMessageStreamsForTeam(streams, context.currentTeamId) || []).map(
+		stream => ({
+			...stream,
+			name: getDMName(stream, toMapBy("id", teamMembers), session.userId)
+		})
+	);
 	// the integer 528593114636 is simply a number far, far in the past
 	const directMessageStreams = _.sortBy(
-		getDirectMessageStreamsForTeam(streams, context.currentTeamId, session.userId, users) || [],
+		dmStreams,
 		stream => stream.mostRecentPostCreatedAt || 528593114636
 	).reverse();
 
@@ -209,8 +211,11 @@ const mapStateToProps = ({ context, streams, users, teams, session, umis }) => {
 	};
 };
 
-export default connect(mapStateToProps, {
-	...contextActions,
-	createStream,
-	setCurrentStream
-})(SimpleCreateDMPanel);
+export default connect(
+	mapStateToProps,
+	{
+		...contextActions,
+		createStream,
+		setCurrentStream
+	}
+)(SimpleCreateDMPanel);
