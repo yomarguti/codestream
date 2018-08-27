@@ -251,12 +251,10 @@ export class UnreadsChangedEvent {
 
 	@memoize
 	toIpcMessage(): WebviewIpcMessage {
+		// TODO: Change this payload to match the other `codestream:data` events
 		return {
 			type: WebviewIpcMessageType.didChangeUnreads,
-			body: {
-				type: this.type,
-				payload: this._unreads
-			}
+			body: this._unreads
 		};
 	}
 }
