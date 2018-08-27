@@ -20,9 +20,7 @@ export class Login extends React.Component {
 			password: "",
 			passwordTouched: false,
 			emailTouched: false,
-			error: {
-				invalidCredentials: false
-			}
+			error: null
 		};
 	}
 
@@ -67,14 +65,25 @@ export class Login extends React.Component {
 	};
 
 	renderError = () => {
-		if (this.state.error.invalidCredentials)
+		if (this.state.error === "INVALID_CREDENTIALS")
 			return (
 				<div className="error-message form-error">
 					<FormattedMessage id="login.invalid" />
 				</div>
 			);
-		// if (this.props.errors.unknown)
-		// 	return <UnexpectedErrorMessage classes="error-message page-error" />;
+		if (this.state.error === "UNKNOWN")
+			return (
+				<div className="error-message form-error">
+					<FormattedMessage
+						id="error.unexpected"
+						defaultMessage="Something went wrong! Please try again, or "
+					/>
+					<a href="https://help.codestream.com">
+						<FormattedMessage id="contactSupport" defaultMessage="contact support" />
+					</a>
+					.
+				</div>
+			);
 	};
 
 	isFormInvalid = () => {
