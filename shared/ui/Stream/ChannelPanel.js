@@ -49,7 +49,7 @@ export class SimpleChannelPanel extends Component {
 		return (
 			<div className="section">
 				<div className="header" onClick={this.handleClickShowPublicChannels}>
-					<Tooltip title="Browse All Channels" placement="left" delay="1">
+					<Tooltip title="Browse All Channels" placement="left" delay=".5">
 						<span className="clickable">Team Channels</span>
 					</Tooltip>
 					<Tooltip title="Create a Channel" placement="bottom">
@@ -135,7 +135,7 @@ export class SimpleChannelPanel extends Component {
 		return (
 			<div className="section">
 				<div className="header clickable" onClick={this.handleClickCreateDirectMessage}>
-					<Tooltip title="Open a direct message" delay="1">
+					<Tooltip title="Open a direct message" delay=".5">
 						<span className="clickable">Direct Messages</span>
 					</Tooltip>
 					<Tooltip title="Open a direct message">

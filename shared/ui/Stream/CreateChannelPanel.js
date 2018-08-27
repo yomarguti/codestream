@@ -38,7 +38,7 @@ export class SimpleCreateChannelPanel extends Component {
 
 	tabIndex = () => {
 		return global.atom ? this.tabIndexCount++ : "0";
-	}
+	};
 
 	render() {
 		const inactive = this.props.activePanel !== "create-channel";
@@ -65,14 +65,16 @@ export class SimpleCreateChannelPanel extends Component {
 						{this.renderError()}
 						<p className="explainer">
 							Channels are where your dev team discusses projects, repos, or code in general. You
-							might create one channel per repo, or one per client. Channel names may contain spaces, but not special characters.
+							might create one channel per repo, or one per client. Channel names may contain
+							spaces, but not special characters.
 						</p>
 						<div id="controls">
 							<div id="privacy-controls" className="control-group">
 								<label>Privacy</label>
 								<Tooltip
 									title="Private channels are only visible to people you invite"
-									placement="left"
+									placement="bottom"
+									delay=".5"
 								>
 									<div className="radio-group">
 										<input
@@ -96,7 +98,7 @@ export class SimpleCreateChannelPanel extends Component {
 							</div>
 							<div id="name-controls" className="control-group">
 								<label>Channel Name</label>
-								<Tooltip title={tooltipTitle} placement="left">
+								<Tooltip title={tooltipTitle} placement="bottom" delay=".5">
 									<input
 										className="native-key-bindings input-text control"
 										type="text"
@@ -208,7 +210,7 @@ export class SimpleCreateChannelPanel extends Component {
 	onBlurName = () => {
 		return;
 		// this.setState({ nameTouched: true });
-	}
+	};
 
 	resetForm = () => {
 		this.setState({
@@ -266,7 +268,10 @@ const mapStateToProps = ({ context, streams, users, teams }) => {
 	};
 };
 
-export default connect(mapStateToProps, {
-	...contextActions,
-	createStream
-})(SimpleCreateChannelPanel);
+export default connect(
+	mapStateToProps,
+	{
+		...contextActions,
+		createStream
+	}
+)(SimpleCreateChannelPanel);
