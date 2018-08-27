@@ -252,7 +252,7 @@ export class UnreadsChangedEvent {
 	@memoize
 	toIpcMessage(): WebviewIpcMessage {
 		return {
-			type: WebviewIpcMessageType.didChangeData,
+			type: WebviewIpcMessageType.didChangeUnreads,
 			body: {
 				type: this.type,
 				payload: this._unreads
