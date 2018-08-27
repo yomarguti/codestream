@@ -80,14 +80,18 @@ export enum CodeStreamEnvironment {
 	Unknown = "unknown"
 }
 
+export enum SessionSignedOutReason {
+	NetworkIssue = "networkIssue",
+	SignInFailure = "signInFailure",
+	UserSignedOut = "userSignedOut",
+	UserWentOffline = "userWentOffline",
+	Unknown = "unknown"
+}
+
 export enum SessionStatus {
 	SignedOut = "signedOut",
 	SigningIn = "signingIn",
 	SignedIn = "signedIn"
-}
-
-export enum SessionStatusSignedOutReason {
-	SignInFailure = "signInFailure"
 }
 
 export class CodeStreamSession implements Disposable {
@@ -270,7 +274,7 @@ export class CodeStreamSession implements Disposable {
 	get status() {
 		return this._status;
 	}
-	private setStatus(status: SessionStatus, signedOutReason?: SessionStatusSignedOutReason) {
+	private setStatus(status: SessionStatus, signedOutReason?: SessionSignedOutReason) {
 		this._status = status;
 		const e: SessionStatusChangedEvent = { getStatus: () => this._status };
 		e.reason = signedOutReason;
@@ -330,7 +334,7 @@ export class CodeStreamSession implements Disposable {
 
 	async goOffline() {
 		Container.streamView.hide();
-		return Container.session.logout(false);
+		return Container.session.logout(SessionSignedOutReason.UserWentOffline);
 	}
 
 	@signedIn
@@ -366,7 +370,7 @@ export class CodeStreamSession implements Disposable {
 		const result = await Container.agent.loginViaSignupToken(this._serverUrl, this._signupToken);
 
 		if (result.error) {
-			this.setStatus(SessionStatus.SignedOut, SessionStatusSignedOutReason.SignInFailure);
+			this.setStatus(SessionStatus.SignedOut, SessionSignedOutReason.SignInFailure);
 
 			if (result.error !== LoginResult.NotOnTeam && result.error !== LoginResult.NotConfirmed) {
 				this._signupToken = undefined;
@@ -379,35 +383,39 @@ export class CodeStreamSession implements Disposable {
 		return LoginResult.Success;
 	}
 
-	async logout(reset: boolean = true) {
+	async logout(reason: SessionSignedOutReason = SessionSignedOutReason.Unknown) {
 		this._id = undefined;
 		this._loginPromise = undefined;
 
-		if (reset) {
-			// Clear the access token
-			await TokenManager.clear(this._serverUrl, this._email!);
+		try {
+			if (reason === SessionSignedOutReason.UserSignedOut) {
+				// Clear the access token
+				await TokenManager.clear(this._serverUrl, this._email!);
+			}
+
+			this._email = undefined;
+			this._status = SessionStatus.SignedOut;
+
+			if (Container.agent !== undefined) {
+				void (await Container.agent.logout());
+			}
+
+			if (this._disposable !== undefined) {
+				this._disposable.dispose();
+				this._disposable = undefined;
+			}
+		} finally {
+			// Clean up saved state
+			this._presenceManager = undefined;
+			this._pubnub = undefined;
+			this._sessionApi = undefined;
+			this._state = undefined;
+			this._signupToken = undefined;
+
+			setImmediate(() =>
+				this._onDidChangeSessionStatus.fire({ getStatus: () => this._status, reason: reason })
+			);
 		}
-
-		this._email = undefined;
-		this._status = SessionStatus.SignedOut;
-
-		if (Container.agent !== undefined) {
-			void (await Container.agent.logout());
-		}
-
-		if (this._disposable !== undefined) {
-			this._disposable.dispose();
-			this._disposable = undefined;
-		}
-
-		// Clean up saved state
-		this._presenceManager = undefined;
-		this._pubnub = undefined;
-		this._sessionApi = undefined;
-		this._state = undefined;
-		this._signupToken = undefined;
-
-		setImmediate(() => this._onDidChangeSessionStatus.fire({ getStatus: () => this._status }));
 	}
 
 	@signedIn
@@ -447,7 +455,7 @@ export class CodeStreamSession implements Disposable {
 			if (result.error) {
 				// Clear the access token
 				await TokenManager.clear(this._serverUrl, email);
-				this.setStatus(SessionStatus.SignedOut, SessionStatusSignedOutReason.SignInFailure);
+				this.setStatus(SessionStatus.SignedOut, SessionSignedOutReason.SignInFailure);
 
 				return result.error;
 			}
@@ -459,7 +467,7 @@ export class CodeStreamSession implements Disposable {
 			ex.message = ex.message.replace("Request initialize failed with message: ", "CodeStream: ");
 
 			Logger.error(ex);
-			void (await this.logout(false));
+			void (await this.logout(SessionSignedOutReason.SignInFailure));
 
 			throw ex;
 		}

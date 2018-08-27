@@ -2,9 +2,9 @@
 import { Disposable, Range, Uri, ViewColumn } from "vscode";
 import {
 	CodeStreamSession,
+	SessionSignedOutReason,
 	SessionStatus,
 	SessionStatusChangedEvent,
-	SessionStatusSignedOutReason,
 	StreamThread
 } from "../api/session";
 import { WorkspaceState } from "../common";
@@ -50,18 +50,19 @@ export class StreamViewController implements Disposable {
 		const status = e.getStatus();
 		switch (status) {
 			case SessionStatus.SignedOut:
-				if (e.reason === SessionStatusSignedOutReason.SignInFailure) {
+				if (e.reason === SessionSignedOutReason.SignInFailure) {
 					if (!this.visible) {
 						this.show();
 					}
 					break;
 				}
 
-				if (this.visible) {
+				if (this.visible && e.reason === SessionSignedOutReason.UserSignedOut) {
 					this._panel!.signedOut();
-				} else {
-					this.closePanel();
+					break;
 				}
+
+				this.closePanel();
 				break;
 
 			case SessionStatus.SignedIn:

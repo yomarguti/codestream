@@ -199,13 +199,19 @@ export class StreamWebviewPanel implements Disposable {
 						case "authenticate": {
 							const { email, password } = body.params;
 
-							const status = await this.session.login(email, password);
+							let status: LoginResult;
+							try {
+								status = await this.session.login(email, password);
+							} catch (ex) {
+								status = LoginResult.Unknown;
+							}
 
 							const responseBody: { id: string; [k: string]: any } = { id: body.id };
-
 							if (status === LoginResult.Success) {
 								responseBody.payload = await this.getBootstrapState();
-							} else responseBody.error = status;
+							} else {
+								responseBody.error = status;
+							}
 
 							this.postMessage({
 								type: WebviewIpcMessageType.response,

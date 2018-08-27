@@ -17,8 +17,8 @@ import {
 	FileStream,
 	Post,
 	Repository,
+	SessionSignedOutReason,
 	SessionStatus,
-	SessionStatusSignedOutReason,
 	Stream,
 	Team,
 	User
@@ -26,7 +26,7 @@ import {
 
 export interface SessionStatusChangedEvent {
 	getStatus(): SessionStatus;
-	reason?: SessionStatusSignedOutReason;
+	reason?: SessionSignedOutReason;
 }
 
 export class TextDocumentMarkersChangedEvent {
