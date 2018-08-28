@@ -63,7 +63,7 @@ export interface MarkersMessageReceivedEvent {
 
 export interface MarkerLocationsMessageReceivedEvent {
 	type: MessageType.MarkerLocations;
-	markerLocations: CSMarkerLocations[];
+	markerLocations: CSMarkerLocations;
 }
 
 export type MessageReceivedEvent =
@@ -239,9 +239,7 @@ export class PubnubReceiver {
 						break;
 					}
 					case "markerLocations": {
-						const markerLocations = CodeStreamApi.normalizeResponse(
-							entities
-						) as CSMarkerLocations[];
+						const markerLocations = CodeStreamApi.normalizeResponse(entities) as CSMarkerLocations;
 						this._onDidReceiveMessage.fire({ type: MessageType.MarkerLocations, markerLocations });
 						break;
 					}

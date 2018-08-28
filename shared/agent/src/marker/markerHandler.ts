@@ -10,6 +10,7 @@ import {
 	MarkerWithRange
 } from "../agent";
 import { Container } from "../container";
+import { Logger } from "../logger";
 import { MarkerLocationManager } from "../markerLocation/markerLocationManager";
 import { StreamManager } from "../stream/streamManager";
 import { MarkerManager } from "./markerManager";
@@ -29,12 +30,23 @@ export namespace MarkerHandler {
 	}: DocumentMarkersRequestParams): Promise<DocumentMarkersResponse> {
 		try {
 			const filePath = URI.parse(documentId.uri).fsPath;
+			Logger.log(`MARKERS: requested markers for ${filePath}`);
 			const streamId = await StreamManager.getStreamId(filePath);
-			if (!streamId) return emptyResponse;
+			if (!streamId) {
+				Logger.log(`MARKERS: no streamId found for ${filePath} - returning empty response`);
+				return emptyResponse;
+			}
 
 			const markersById = await MarkerManager.getMarkersForStream(streamId, true);
 			const markers = Array.from(markersById.values());
+			Logger.log(`MARKERS: found ${markers.length} markers - retrieving current locations`);
 			const locations = await MarkerLocationManager.getCurrentLocations(documentId.uri);
+			for (const mrk of markers) {
+				const loc = locations[mrk.id];
+				Logger.log(
+					`MARKERS: ${mrk.id}=[${loc.lineStart}, ${loc.colStart}, ${loc.lineEnd}, ${loc.colEnd}]`
+				);
+			}
 			const markersWithRange = markers.map(
 				m =>
 					({
