@@ -515,7 +515,6 @@ export class CodeStreamSession implements Disposable {
 		this._presenceManager = new PresenceManager(this._sessionApi, this._id);
 
 		this._state = new SessionState(this, teamId, result.loginResponse);
-		this._state.unreads.compute(user.lastReads, this.fireDidChangeUnreads);
 
 		this._disposable = Disposable.from(
 			Container.agent.onDidChangeDocumentMarkers(
@@ -535,6 +534,8 @@ export class CodeStreamSession implements Disposable {
 		);
 
 		this.setStatus(SessionStatus.SignedIn);
+
+		this._state.unreads.compute(user.lastReads, this.fireDidChangeUnreads);
 	}
 }
 

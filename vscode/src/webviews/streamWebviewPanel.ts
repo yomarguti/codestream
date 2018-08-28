@@ -733,6 +733,7 @@ export class StreamWebviewPanel implements Disposable {
 			this.session.repos.entities(),
 			this.session.channelsAndDMs.entities(),
 			this.session.teams.entities(),
+			this.session.unreads.get(),
 			this.session.users.entities()
 		]);
 
@@ -747,15 +748,15 @@ export class StreamWebviewPanel implements Disposable {
 		state.services = {
 			vsls: Container.vsls.installed
 		};
-		state.unreads = this.session.unreads.getValues();
 		state.version = Container.version;
 
 		const currentUser = this.session.user.entity;
-		const [repos, streams, teams, users] = await promise;
+		const [repos, streams, teams, unreads, users] = await promise;
 
 		state.repos = repos;
 		state.streams = streams;
 		state.teams = teams;
+		state.unreads = unreads;
 		state.users = users.map(user => (user.id === currentUser.id ? currentUser : user));
 
 		return state;
