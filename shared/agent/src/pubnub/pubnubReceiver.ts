@@ -86,17 +86,17 @@ export class PubnubReceiver {
 
 	constructor(
 		private _agent: CodeStreamAgent,
-		api: CodeStreamApi,
+		private readonly _api: CodeStreamApi,
 		pubnubKey: string,
 		pubnubToken: string,
-		accessToken: string,
+		private readonly _accessToken: string,
 		private readonly _userId: string,
 		private readonly _teamId: string
 	) {
 		this._pubnubConnection = new PubnubConnection();
 		this._connection = this._pubnubConnection.initialize({
-			api,
-			accessToken,
+			api: _api,
+			accessToken: _accessToken,
 			subscribeKey: pubnubKey,
 			authKey: pubnubToken,
 			userId: _userId,
@@ -162,7 +162,7 @@ export class PubnubReceiver {
 		}
 	}
 
-	private processMessage(message: { [key: string]: any }) {
+	private async processMessage(message: { [key: string]: any }) {
 		const { requestId, ...messages } = message;
 		requestId;
 
@@ -203,8 +203,11 @@ export class PubnubReceiver {
 						this._onDidReceiveMessage.fire({ type: MessageType.Repositories, repos: repos || [] });
 						break;
 					case "streams":
-						// TODO: Needs fixing
-						entities = this.stripDirectives(key, entities);
+						entities = await this.processDirectives(
+							key,
+							entities,
+							async id => (await this._api.getStream(this._accessToken, this._teamId, id)).stream
+						);
 						if (!entities || !entities.length) continue;
 
 						const streams = CodeStreamApi.normalizeResponse(entities) as CSStream[];
@@ -247,6 +250,28 @@ export class PubnubReceiver {
 				Logger.error(ex, `PubNub '${key}' FAILED`);
 			}
 		}
+	}
+
+	private async processDirectives(
+		key: string,
+		entities: any[] | undefined,
+		fetch: (id: string) => Promise<any>
+	): Promise<any[] | undefined> {
+		if (!entities || !entities.length) return entities;
+
+		const fetched = await Promise.all(
+			entities.map(async e => {
+				if (Object.keys(e).some(k => k.startsWith("$"))) {
+					try {
+						return await fetch(e._id);
+					} catch {
+						return undefined;
+					}
+				}
+				return e;
+			})
+		);
+		return fetched.filter(e => e !== undefined);
 	}
 
 	private stripDirectives(key: string, entities: any[] | undefined) {
