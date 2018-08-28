@@ -30,7 +30,7 @@ export class StatusBarController implements Disposable {
 	}
 
 	private onUnreadsChanged(e: UnreadsChangedEvent) {
-		this.updateStatusBar(Container.session.status, e.getMentionCount());
+		this.updateStatusBar(Container.session.status, e.getMentionCount(), e.getUnreadCount());
 	}
 
 	private onSessionStatusChanged(e: SessionStatusChangedEvent) {
@@ -43,7 +43,11 @@ export class StatusBarController implements Disposable {
 		}
 	}
 
-	private async updateStatusBar(status: SessionStatus, count: number = 0) {
+	private async updateStatusBar(
+		status: SessionStatus,
+		mentionCount: number = 0,
+		unreadCount: number = 0
+	) {
 		if (this._statusBarItem === undefined) {
 			this._statusBarItem =
 				this._statusBarItem || window.createStatusBarItem(StatusBarAlignment.Right, -99);
@@ -76,16 +80,25 @@ export class StatusBarController implements Disposable {
 
 			case SessionStatus.SignedIn:
 				let label = Container.session.user.name;
+				let tooltip = "Toggle CodeStream";
 				if (!(await Container.session.hasSingleTeam())) {
 					label += ` - ${Container.session.team.name}`;
 				}
-				if (count > 0) {
-					label += ` (${count})`;
+				if (mentionCount > 0) {
+					label += ` (${mentionCount})`;
+					tooltip += `\n${mentionCount} unread mention${mentionCount === 1 ? "" : "s"}`;
+				} else if (unreadCount > 0) {
+					label += ` \u00a0\u2022`;
+				}
+
+				const unreadsOnly = unreadCount - mentionCount;
+				if (unreadsOnly > 0) {
+					tooltip += `\n${unreadsOnly} unread message${unreadsOnly === 1 ? "" : "s"}`;
 				}
 
 				this._statusBarItem.text = ` $(comment-discussion) ${env}${label} `;
 				this._statusBarItem.command = "codestream.toggle";
-				this._statusBarItem.tooltip = "Toggle CodeStream";
+				this._statusBarItem.tooltip = tooltip;
 				break;
 		}
 

@@ -250,6 +250,11 @@ export class UnreadsChangedEvent {
 	}
 
 	@memoize
+	getUnreadCount() {
+		return Object.values(this._unreads.unread).reduce((total, count) => total + count, 0);
+	}
+
+	@memoize
 	toIpcMessage(): WebviewIpcMessage {
 		// TODO: Change this payload to match the other `codestream:data` events
 		return {
