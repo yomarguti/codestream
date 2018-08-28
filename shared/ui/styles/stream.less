@@ -67,18 +67,25 @@
 	}
 
 	#focus-trap {
-		width: 0;
-		height: 0;
+		pointer-events: none;
+		width: 100vw;
+		height: 100vh;
+		position: absolute;
+		z-index: 2147483647;
+
+		&.active {
+			pointer-events: unset;
+		}
 	}
 
 	#modal-root.active,
-	#confirm-root.active,
-	#focus-trap.active {
+	#confirm-root.active {
 		width: 100%;
 		height: 100%;
 		position: absolute;
 		z-index: 3000;
 	}
+
 	#confirm-root {
 		animation: 0.2s slideout;
 	}
