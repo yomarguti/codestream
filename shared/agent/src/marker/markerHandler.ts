@@ -42,7 +42,7 @@ export namespace MarkerHandler {
 			Logger.log(`MARKERS: found ${markers.length} markers - retrieving current locations`);
 			const locations = await MarkerLocationManager.getCurrentLocations(documentId.uri);
 			for (const mrk of markers) {
-				const loc = locations[mrk.id];
+				const loc = locations[mrk.id] || {};
 				Logger.log(
 					`MARKERS: ${mrk.id}=[${loc.lineStart}, ${loc.colStart}, ${loc.lineEnd}, ${loc.colEnd}]`
 				);

@@ -125,10 +125,10 @@ export class MarkerLocationManager {
 					"",
 					""
 				);
-				const currLoc = await calculateLocation(uncommittedLocation.location, diff);
+				const currLoc = (await calculateLocation(uncommittedLocation.location, diff)) || {};
 				result[id] = currLoc;
 
-				const uncommLoc = uncommittedLocation.location;
+				const uncommLoc = uncommittedLocation.location || {};
 
 				Logger.log(
 					`MARKERS: ${id} [${uncommLoc.lineStart}, ${uncommLoc.colStart}, ${uncommLoc.lineEnd}, ${
@@ -253,8 +253,8 @@ export class MarkerLocationManager {
 			Logger.log(`MARKERS: calculating locations`);
 			const calculatedLocations = await calculateLocations(locationsToCalculate, diff);
 			for (const id in calculatedLocations) {
-				const origLoc = locationsToCalculate[id];
-				const currLoc = calculatedLocations[id];
+				const origLoc = locationsToCalculate[id] || {};
+				const currLoc = calculatedLocations[id] || {};
 				Logger.log(
 					`MARKERS: ${id} [${origLoc.lineStart}, ${origLoc.colStart}, ${origLoc.lineEnd}, ${
 						origLoc.colEnd
