@@ -10,7 +10,6 @@ import InvitePanel from "./InvitePanel";
 import PublicChannelPanel from "./PublicChannelPanel";
 import CreateChannelPanel from "./CreateChannelPanel";
 import CreateDMPanel from "./CreateDMPanel";
-import EditingIndicator from "./EditingIndicator";
 import ChannelMenu from "./ChannelMenu";
 import Post from "./Post";
 import Icon from "./Icon";
@@ -504,12 +503,6 @@ export class SimpleStream extends Component {
 				<div id="modal-root" />
 				<div id="confirm-root" />
 				{this.props.hasFocus || <div id="focus-trap" className="active" />}
-				<EditingIndicator
-					editingUsers={this.props.editingUsers}
-					inactive={activePanel === "xmain"} // or if no fileStream
-					currentUser={this.props.currentUser}
-					teamMembers={this.props.teamMembersById}
-				/>
 				<ChannelPanel
 					activePanel={activePanel}
 					setActivePanel={this.setActivePanel}
