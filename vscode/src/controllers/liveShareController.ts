@@ -70,7 +70,8 @@ export class LiveShareController implements Disposable {
 	private async onLiveShareSessionChanged(e: vsls.SessionChangeEvent) {
 		const vslsId = e.session.id;
 		this.setVslsId(vslsId);
-		if (vslsId == null) return;
+		// If we aren't signed in or in an active (remote) live share session kick out
+		if (Container.session.status !== SessionStatus.SignedIn || vslsId == null) return;
 
 		// If we are in an active (remote) live share session, open the liveshare channel
 		const vslsChannel = await this.getVslsChannel(vslsId);
@@ -84,7 +85,7 @@ export class LiveShareController implements Disposable {
 	private async onSessionStatusChanged(e: SessionStatusChangedEvent) {
 		const status = e.getStatus();
 		// If we aren't signed in or in an active (remote) live share session kick out
-		if (status !== SessionStatus.SignedIn || this.vslsId === undefined) return;
+		if (status !== SessionStatus.SignedIn || this.vslsId == null) return;
 
 		// If we are in an active (remote) live share session, open the liveshare channel
 		const vslsChannel = await this.getVslsChannel(this.vslsId);
@@ -161,7 +162,7 @@ export class LiveShareController implements Disposable {
 		const match = vslsUrlRegex.exec(args.url);
 		if (match != null) {
 			// Ensure we are a member of the channel
-			await this.getVslsChannel(match[0]);
+			await this.getVslsChannel(match[1]);
 		}
 
 		await vsls.join(Uri.parse(args.url), { newWindow: false });
