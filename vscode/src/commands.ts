@@ -157,7 +157,7 @@ export class Commands implements Disposable {
 	// 	});
 	// }
 
-	// @command("openStream", { showErrorMessage: "Unable to open stream" })
+	@command("openStream", { showErrorMessage: "Unable to open stream" })
 	async openStream(args: OpenStreamCommandArgs): Promise<StreamThread | undefined> {
 		if (args == null) return undefined;
 
