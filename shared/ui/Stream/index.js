@@ -502,7 +502,7 @@ export class SimpleStream extends Component {
 			>
 				<div id="modal-root" />
 				<div id="confirm-root" />
-				{this.props.hasFocus || <div id="focus-trap" className="active" />}
+				<div id="focus-trap" className={createClassString({ active: !this.props.hasFocus })} />
 				<ChannelPanel
 					activePanel={activePanel}
 					setActivePanel={this.setActivePanel}
