@@ -740,7 +740,8 @@ export class StreamWebviewPanel implements Disposable {
 		state.configs = {
 			serverUrl: this.session.serverUrl,
 			reduceMotion: Container.config.reduceMotion,
-			showHeadshots: Container.config.avatars
+			showHeadshots: Container.config.avatars,
+			email: Container.config.email
 		};
 		state.currentTeamId = this.session.team.id;
 		state.currentUserId = this.session.userId;
