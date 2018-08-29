@@ -5,7 +5,8 @@ import { IHunk, IUniDiff } from "diff";
 enum Operation {
 	Sync,
 	Add,
-	Del
+	Del,
+	Comment
 }
 
 enum State {
@@ -21,6 +22,8 @@ function getOperation(symbol: string): Operation {
 			return Operation.Add;
 		case "-":
 			return Operation.Del;
+		case "\\":
+			return Operation.Comment;
 		default:
 			throw new Error(`Unknown operation symbol ${symbol}`);
 	}
@@ -125,6 +128,8 @@ class ChangesetBuilder {
 				return this._add(line);
 			case Operation.Del:
 				return this._del(line);
+			case Operation.Comment:
+				return;
 		}
 	}
 
