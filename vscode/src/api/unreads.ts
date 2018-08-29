@@ -84,6 +84,8 @@ export class UnreadCounter {
 
 		const unreadStreams = await this.session.api.getUnreadStreams();
 		if (unreadStreams.length !== 0) {
+			const entries = Object.entries(lastReads);
+
 			await Promise.all(
 				entries.map(async ([streamId, lastReadSeqNum]) => {
 					const stream = unreadStreams.find(stream => stream.id === streamId);
@@ -97,6 +99,9 @@ export class UnreadCounter {
 							streamId,
 							lastReadSeqNum + 1,
 							latestPost.seqNum
+						);
+						unreadPosts = unreadPosts.filter(
+							p => !p.deactivated && p.creatorId !== this._currentUserId
 						);
 					} catch (ex) {
 						// likely an access error because user is no longer in this channel
@@ -121,8 +126,6 @@ export class UnreadCounter {
 
 	private computeForPosts(posts: CSPost[], userId: string, stream?: CSStream) {
 		for (const post of posts) {
-			if (post.deactivated) return;
-
 			if (
 				(stream && stream.type) === StreamType.Direct ||
 				(post.mentionedUserIds || []).includes(userId)
