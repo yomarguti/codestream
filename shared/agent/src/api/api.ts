@@ -325,16 +325,16 @@ export class CodeStreamApi {
 			const method = (init && init.method) || "GET";
 			const absoluteUrl = `${this.baseUrl}${url}`;
 
-			const hasMiddleware = this._middleware.length > 0;
+			const context =
+				this._middleware.length > 0
+					? ({
+							url: absoluteUrl,
+							method: method,
+							request: init
+					  } as CodeStreamApiMiddlewareContext)
+					: undefined;
 
-			let context: CodeStreamApiMiddlewareContext;
-			if (hasMiddleware) {
-				context = {
-					url: absoluteUrl,
-					method: method,
-					request: init
-				};
-
+			if (context !== undefined) {
 				for (const mw of this._middleware) {
 					if (mw.onRequest === undefined) continue;
 
@@ -347,7 +347,7 @@ export class CodeStreamApi {
 			}
 
 			let json: Promise<R> | undefined;
-			if (hasMiddleware) {
+			if (context !== undefined) {
 				for (const mw of this._middleware) {
 					if (mw.onProvideResponse === undefined) continue;
 
@@ -370,11 +370,15 @@ export class CodeStreamApi {
 					throw await this.handleErrorResponse(resp);
 				}
 
+				if (context !== undefined) {
+					context.response = resp;
+				}
+
 				traceResult = `API: Completed ${method} ${url}`;
 				json = resp.json() as Promise<R>;
 			}
 
-			if (hasMiddleware) {
+			if (context !== undefined) {
 				for (const mw of this._middleware) {
 					if (mw.onResponse === undefined) continue;
 
@@ -488,14 +492,18 @@ export class CodeStreamApi {
 }
 
 export interface CodeStreamApiMiddlewareContext {
-	readonly url: string;
-	readonly method: string;
-	readonly request: RequestInit | undefined;
+	url: string;
+	method: string;
+	request: RequestInit | undefined;
+	response?: Response;
 }
 
 export interface CodeStreamApiMiddleware {
 	readonly name: string;
-	onRequest?(context: CodeStreamApiMiddlewareContext): Promise<void>;
-	onProvideResponse?<R>(context: CodeStreamApiMiddlewareContext): Promise<R>;
-	onResponse?<R>(context: CodeStreamApiMiddlewareContext, response: Promise<R>): Promise<void>;
+	onRequest?(context: Readonly<CodeStreamApiMiddlewareContext>): Promise<void>;
+	onProvideResponse?<R>(context: Readonly<CodeStreamApiMiddlewareContext>): Promise<R>;
+	onResponse?<R>(
+		context: Readonly<CodeStreamApiMiddlewareContext>,
+		responseJson: Promise<R>
+	): Promise<void>;
 }

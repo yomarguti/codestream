@@ -15,6 +15,7 @@ export interface AccessToken {
 }
 
 export interface AgentOptions {
+	extensionBuild: string;
 	extensionVersion: string;
 	gitPath: string;
 	ideVersion: string;

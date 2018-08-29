@@ -1,5 +1,11 @@
 "use strict";
-import { CancellationToken, Connection, Emitter, Event } from "vscode-languageserver";
+import {
+	CancellationToken,
+	Connection,
+	Emitter,
+	Event,
+	MessageActionItem
+} from "vscode-languageserver";
 import URI from "vscode-uri";
 import {
 	AgentOptions,
@@ -13,6 +19,7 @@ import {
 } from "./agent";
 import { AgentError, ServerError } from "./agentError";
 import { ApiErrors, CodeStreamApi, CSRepository, CSStream, LoginResult } from "./api/api";
+import { VersionMiddlewareManager } from "./api/middleware/versionMiddleware";
 import { UserCollection } from "./api/models/users";
 import { Container } from "./container";
 import { setGitPath } from "./git/git";
@@ -73,6 +80,8 @@ export class CodeStreamSession {
 			_options.ideVersion,
 			_options.extensionVersion
 		);
+
+		new VersionMiddlewareManager(this._api);
 
 		this._readyPromise = new Promise<void>(resolve => this.agent.onReady(resolve));
 		// this.connection.onHover(e => MarkerHandler.onHover(e));
@@ -219,6 +228,18 @@ export class CodeStreamSession {
 			const duration = process.hrtime(start);
 			Logger.log(`Login completed in ${duration[0] * 1000 + Math.floor(duration[1] / 1000000)}ms`);
 		}
+	}
+
+	showErrorMessage<T extends MessageActionItem>(message: string, ...actions: T[]) {
+		return this.connection.window.showErrorMessage(message, ...actions);
+	}
+
+	showInformationMessage<T extends MessageActionItem>(message: string, ...actions: T[]) {
+		return this.connection.window.showInformationMessage(message, ...actions);
+	}
+
+	showWarningMessage<T extends MessageActionItem>(message: string, ...actions: T[]) {
+		return this.connection.window.showWarningMessage(message, ...actions);
 	}
 
 	private async getSubscribableStreams(userId: string, teamId?: string): Promise<CSStream[]> {
