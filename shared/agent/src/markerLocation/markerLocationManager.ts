@@ -245,7 +245,12 @@ export class MarkerLocationManager {
 			);
 			const locationsToCalculate: LocationsById = {};
 			for (const marker of missingMarkers) {
-				locationsToCalculate[marker.id] = allCommitLocations[marker.id];
+				const originalLocation = allCommitLocations[marker.id];
+				if (originalLocation) {
+					locationsToCalculate[marker.id] = originalLocation;
+				} else {
+					Logger.warn(`Could not find original location for marker ${marker.id}`);
+				}
 			}
 
 			Logger.log(`MARKERS: diffing ${filePath} from ${commitHashWhenCreated} to ${commitHash}`);
@@ -287,12 +292,18 @@ export class MarkerLocationManager {
 		return result;
 	}
 
-	static async cacheMarkerLocations(markerLocations: CSMarkerLocations) {
-		const { streamId, commitHash, locations } = markerLocations;
-		const locationsCache = await MarkerLocationManager.getMarkerLocations(streamId, commitHash);
-		for (const id in locations) {
-			const locationArray = locations[id];
-			locationsCache[id] = MarkerLocationManager.arrayToLocation(id, locationArray);
+	static async cacheMarkerLocations(markerLocations: CSMarkerLocations | CSMarkerLocations[]) {
+		if (!Array.isArray(markerLocations)) {
+			markerLocations = [markerLocations];
+		}
+
+		for (const markerLocation of markerLocations) {
+			const { streamId, commitHash, locations } = markerLocation;
+			const locationsCache = await MarkerLocationManager.getMarkerLocations(streamId, commitHash);
+			for (const id in locations) {
+				const locationArray = locations[id];
+				locationsCache[id] = MarkerLocationManager.arrayToLocation(id, locationArray);
+			}
 		}
 	}
 
