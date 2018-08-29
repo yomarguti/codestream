@@ -615,6 +615,7 @@ export class SimpleStream extends Component {
 							</span>
 						</span>
 					</div>
+					<OfflineBanner />
 					<div className="shadow-overlay">
 						<div class="shadow-container">
 							<div class="shadow shadow-top" />
