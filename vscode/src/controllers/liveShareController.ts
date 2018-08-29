@@ -253,7 +253,7 @@ export class LiveShareController implements Disposable {
 
 	private getVslsChannelName() {
 		return `${Container.session.user.name} - Live Share - ${Dates.toFormatter(new Date()).format(
-			"MMM Do h:mm:ssa"
+			"MMM Do h-mm-ssa"
 		)}`;
 	}
 }
