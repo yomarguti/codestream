@@ -49,10 +49,6 @@ const startupProps = (state = initialStartupProps, action) => {
 	return state;
 };
 
-const startOnMainPanel = (state = false, { type }) => {
-	return state;
-};
-
 const pluginVersion = (state = "", { type }) => {
 	return state;
 };
