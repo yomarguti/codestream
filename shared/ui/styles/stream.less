@@ -4,6 +4,8 @@
 //@import "ui-variables";
 // @import "emoji-mart/css/emoji-mart.css";
 
+@panel-header-height: 2.1em;
+
 // for the octicons
 .octicon {
 	display: inline-block;
@@ -21,6 +23,27 @@
 	}
 	.error-message {
 		color: @text-color-error;
+	}
+
+	.banner {
+		height: @panel-header-height;
+		position: absolute;
+		padding: 0;
+		width: 100%;
+		z-index: 30;
+	}
+
+	#offline-banner {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		height: inherit;
+		background-color: @text-color-warning;
+		text-align: center;
+		font-size: 12px;
+		.content * {
+			color: @app-background-color;
+		}
 	}
 
 	// these shadow styles are to support having a shadow appear above and below
@@ -112,7 +135,7 @@
 			z-index: 30;
 			user-select: none;
 
-			height: 2.1em;
+			height: @panel-header-height;
 			overflow: hidden;
 			text-overflow: ellipsis;
 			white-space: pre;

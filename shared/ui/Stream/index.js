@@ -13,6 +13,7 @@ import CreateDMPanel from "./CreateDMPanel";
 import ChannelMenu from "./ChannelMenu";
 import Post from "./Post";
 import Icon from "./Icon";
+import OfflineBanner from "./OfflineBanner";
 import EventEmitter from "../event-emitter";
 import * as actions from "./actions";
 import { toMapBy } from "../utils";
@@ -538,6 +539,7 @@ export class SimpleStream extends Component {
 							</span>
 						)}
 					</div>
+					<OfflineBanner />
 					<div className="shadow-overlay">
 						<div className={unreadsAboveClass} type="above" onClick={this.handleClickUnreads}>
 							&uarr; Unread Messages &uarr;
@@ -545,9 +547,9 @@ export class SimpleStream extends Component {
 						<div className={unreadsBelowClass} type="below" onClick={this.handleClickUnreads}>
 							&darr; Unread Messages &darr;
 						</div>
-						<div class="shadow-container">
-							<div class="shadow shadow-top" />
-							<div class="shadow shadow-bottom" />
+						<div className="shadow-container">
+							<div className="shadow shadow-top" />
+							<div className="shadow shadow-bottom" />
 						</div>
 						<div
 							className={postsListClass}
