@@ -65,6 +65,10 @@ export class UnreadCounter {
 
 			this.computeForPosts(posts, this._currentUserId, stream);
 
+			if (this.lastReads[streamId] === undefined) {
+				this.lastReads[streamId] = posts[0].seqNum - 1;
+			}
+
 			Logger.log(
 				`Unreads.update(${streamId}):`,
 				`After: mentions=${this.mentions[streamId]}, unreads=${this.unread[streamId]}`
