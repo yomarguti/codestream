@@ -43,6 +43,8 @@ export class UnreadCounter {
 		);
 		if (posts.length === 0) return;
 
+		Logger.log(`Unreads.update:`, "Updating...");
+
 		const grouped = Arrays.groupBy(posts, p => p.streamId);
 
 		// const streams = await Promise.all(
@@ -55,10 +57,24 @@ export class UnreadCounter {
 
 			this.mentions[streamId] = this.mentions[streamId] || 0;
 			this.unread[streamId] = this.unread[streamId] || 0;
+
+			Logger.log(
+				`Unreads.update(${streamId}):`,
+				`Before: mentions=${this.mentions[streamId]}, unreads=${this.unread[streamId]}`
+			);
+
 			this.computeForPosts(posts, this._currentUserId, stream);
+
+			Logger.log(
+				`Unreads.update(${streamId}):`,
+				`After: mentions=${this.mentions[streamId]}, unreads=${this.unread[streamId]}`
+			);
 		}
 
-		notifier(new UnreadsChangedEvent(this.session, this.values()));
+		const values = this.values();
+		Logger.log(`Unreads.update:`, `Completed; values=${JSON.stringify(values)}`);
+
+		notifier(new UnreadsChangedEvent(this.session, values));
 	}
 
 	private values() {
@@ -76,11 +92,12 @@ export class UnreadCounter {
 		if (lastReads === undefined) {
 			lastReads = Object.create(null) as { [streamId: string]: number };
 		}
-		const entries = Object.entries(lastReads);
 
 		// Reset the counters
 		this.unread = Object.create(null);
 		this.mentions = Object.create(null);
+
+		Logger.log(`Unreads.compute:`, "Computing...");
 
 		const unreadStreams = await this.session.api.getUnreadStreams();
 		if (unreadStreams.length !== 0) {
@@ -113,6 +130,11 @@ export class UnreadCounter {
 					this.mentions[streamId] = this.mentions[streamId] || 0;
 					this.unread[streamId] = this.unread[streamId] || 0;
 					this.computeForPosts(unreadPosts, this._currentUserId, stream);
+
+					Logger.log(
+						`Unreads.compute(${streamId}):`,
+						`mentions=${this.mentions[streamId]}, unreads=${this.unread[streamId]}`
+					);
 				})
 			);
 		}
@@ -121,7 +143,10 @@ export class UnreadCounter {
 		this.lastReads = lastReads;
 		this._computePromise = undefined;
 
-		notifier(new UnreadsChangedEvent(this.session, this.values()));
+		const values = this.values();
+		Logger.log(`Unreads.compute:`, `Completed; values=${JSON.stringify(values)}`);
+
+		notifier(new UnreadsChangedEvent(this.session, values));
 	}
 
 	private computeForPosts(posts: CSPost[], userId: string, stream?: CSStream) {
