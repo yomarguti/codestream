@@ -56,7 +56,8 @@ export class CodeStreamApi {
 	constructor(
 		baseUrl: string,
 		private readonly _ideVersion: string,
-		private readonly _extensionVersion: string
+		private readonly _extensionVersion: string,
+		private readonly _extensionBuild: string
 	) {
 		this._baseUrl = baseUrl;
 	}
@@ -317,7 +318,10 @@ export class CodeStreamApi {
 					}
 
 					init.headers.append("X-CS-Plugin-IDE", "VS Code");
-					init.headers.append("X-CS-Plugin-Version", this._extensionVersion);
+					init.headers.append(
+						"X-CS-Plugin-Version",
+						`${this._extensionVersion}-${this._extensionBuild}`
+					);
 					init.headers.append("X-CS-IDE-Version", this._ideVersion);
 				}
 			}

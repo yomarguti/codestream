@@ -64,7 +64,7 @@ export abstract class PubnubTester {
 
 	constructor(config: PubnubTesterConfig) {
 		this._apiRequester = new ApiRequester({ origin: config.apiOrigin });
-		this._api = new CodeStreamApi("", "", "");
+		this._api = new CodeStreamApi("", "", "", "");
 		this._apiSimulator = new CodeStreamApiSimulator(this._apiRequester);
 		this._api.grant = this._apiSimulator.grant.bind(this._apiSimulator);
 		this.testNum = ++TEST_NUM;

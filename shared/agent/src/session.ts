@@ -78,7 +78,8 @@ export class CodeStreamSession {
 		this._api = new CodeStreamApi(
 			_options.serverUrl,
 			_options.ideVersion,
-			_options.extensionVersion
+			_options.extensionVersion,
+			_options.extensionBuild
 		);
 
 		new VersionMiddlewareManager(this._api);
