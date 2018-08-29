@@ -192,6 +192,9 @@ api.bootstrap().then(data => {
 
 	EventEmitter.on("configs", configs => store.dispatch(actions.updateConfigs(configs)));
 
+	EventEmitter.on("connectivity:offline", () => store.dispatch(actions.offline()));
+	EventEmitter.on("connectivity:online", () => store.dispatch(actions.online()));
+
 	EventEmitter.on("interaction:focus", () => {
 		setTimeout(() => {
 			store.dispatch(actions.focus());

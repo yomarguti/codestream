@@ -23,7 +23,9 @@ export enum WebviewIpcMessageType {
 	onRequest = "codestream:request",
 	onServiceRequest = "codestream:interaction:svc-request",
 	onViewReady = "codestream:view-ready",
-	response = "codestream:response"
+	response = "codestream:response",
+	didDisconnect = "codestream:connectivity:offline",
+	didConnect = "codestream:connectivity:online"
 }
 
 // TODO: Clean this up to be consistent with the structure
