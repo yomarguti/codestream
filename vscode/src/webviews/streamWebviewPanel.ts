@@ -185,7 +185,7 @@ export class StreamWebviewPanel implements Disposable {
 								state.env = this.session.environment;
 								state.configs = { email: Container.config.email };
 								state.services = {};
-								state.version = Container.version;
+								state.version = Container.formattedVersion;
 							}
 
 							this.postMessage({
@@ -749,7 +749,7 @@ export class StreamWebviewPanel implements Disposable {
 		state.services = {
 			vsls: Container.vsls.installed
 		};
-		state.version = Container.version;
+		state.version = Container.formattedVersion;
 
 		const currentUser = this.session.user.entity;
 		const [repos, streams, teams, unreads, users] = await promise;

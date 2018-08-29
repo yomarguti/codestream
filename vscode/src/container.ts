@@ -19,6 +19,10 @@ export class Container {
 		this._config = config;
 
 		this._version = agentOptions.extensionVersion;
+		this._versionBuild = agentOptions.extensionBuild;
+		this._formattedVersion = `${agentOptions.extensionVersion}${
+			agentOptions.extensionBuild ? `-${agentOptions.extensionBuild}` : ""
+		}`;
 		this._agent = new CodeStreamAgentConnection(context, agentOptions);
 
 		context.subscriptions.push((this._session = new CodeStreamSession(config.serverUrl)));
@@ -69,6 +73,11 @@ export class Container {
 		return this._context;
 	}
 
+	private static _formattedVersion: string;
+	static get formattedVersion(): string {
+		return this._formattedVersion;
+	}
+
 	private static _markerDecorations: MarkerDecorationProvider;
 	static get markerDecorations() {
 		return this._markerDecorations;
@@ -102,6 +111,11 @@ export class Container {
 	private static _version: string;
 	static get version(): string {
 		return this._version;
+	}
+
+	private static _versionBuild: string;
+	static get versionBuild(): string {
+		return this._versionBuild;
 	}
 
 	private static _vsls: LiveShareController;
