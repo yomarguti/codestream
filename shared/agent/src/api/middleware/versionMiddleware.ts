@@ -36,7 +36,7 @@ export class VersionMiddlewareManager implements Disposable {
 			case VersionCompatibility.CompatibleUpgradeAvailable: {
 				const actions: MessageActionItem[] = [{ title: "Download" }, { title: "Later" }];
 				const result = await Container.instance().session.showInformationMessage(
-					"A new version of CodeStream is available. Download it now or grab it later via /version.",
+					"A new version of CodeStream is available.",
 					...actions
 				);
 				if (result !== undefined && result.title === "Download") {
@@ -47,7 +47,7 @@ export class VersionMiddlewareManager implements Disposable {
 			case VersionCompatibility.CompatibleUpgradeRecommended: {
 				const actions: MessageActionItem[] = [{ title: "Download" }, { title: "Later" }];
 				const result = await Container.instance().session.showWarningMessage(
-					"A new version of CodeStream is available. We recommend upgrading as soon as possible. Download it now or grab it later via /version.",
+					"A new version of CodeStream is available. We recommend upgrading as soon as possible.",
 					...actions
 				);
 				if (result !== undefined && result.title === "Download") {
