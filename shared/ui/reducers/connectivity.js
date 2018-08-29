@@ -11,5 +11,4 @@ export default (state = initialState, { type }) => {
 		default:
 			return state;
 	}
-	return state;
 };

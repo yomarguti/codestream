@@ -13,3 +13,6 @@ export const bootstrap = (data = {}) => async dispatch => {
 	dispatch(updateUnreads(data.unreads || {}));
 	dispatch({ type: "BOOTSTRAP_COMPLETE" });
 };
+
+export const offline = () => ({ type: "OFFLINE" });
+export const online = () => ({ type: "ONLINE" });
