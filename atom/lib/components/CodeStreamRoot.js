@@ -1,15 +1,6 @@
-import { shell } from "electron";
 import React, { Component } from "react";
-import { connect } from "react-redux";
-import Raven from "raven-js";
-import Onboarding from "./onboarding/Onboarding";
 import { Container } from "codestream-components";
 import translations from "codestream-components/translations/en.json";
-import NoAccess from "./NoAccess";
-import OfflineBanner from "./OfflineBanner";
-import SlackInfo from "./SlackInfo";
-import withConfigs from "./withConfigs";
-import BufferReferenceManager from "./atom/BufferReferenceManager";
 
 export default class CodeStreamRoot extends Component {
 	render() {

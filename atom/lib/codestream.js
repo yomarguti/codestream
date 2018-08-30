@@ -1,29 +1,17 @@
 import os from "os";
 import { CompositeDisposable } from "atom";
-import _ from "underscore-plus";
 import Raven from "raven-js";
 import CodestreamView, { CODESTREAM_VIEW_URI } from "./codestream-view";
 import db, { bootstrapStore } from "./local-cache";
-import * as GitRepo from "./git/GitRepo";
-import git from "./git";
+// import * as GitRepo from "./git/GitRepo";
+// import git from "./git";
+import { logout } from "./actions/context";
 import createStore from "./createStore";
-import {
-	commitHashChanged,
-	logout,
-	noGit,
-	noRemoteUrl,
-	setRepoAttributes,
-	setRepoUrl,
-	setCurrentFile,
-	setCurrentCommit,
-	setHasFocus
-} from "./actions/context";
-import { updateConfigs } from "./actions/configs";
-import { foundMultipleRemotes } from "./actions/onboarding";
+// import { updateConfigs } from "./actions/configs";
 import logger from "./util/Logger";
-import { online, offline } from "./actions/connectivity";
-import { calculateUncommittedMarkers } from "./actions/marker-location";
-import { setActive } from "./actions/presence";
+// import { online, offline } from "./actions/connectivity";
+// import { calculateUncommittedMarkers } from "./actions/marker-location";
+// import { setActive } from "./actions/presence";
 import { setUserPreference } from "./actions/user";
 import WorkspaceSession from "./workspace/workspace-session";
 
@@ -78,7 +66,7 @@ let store;
 // 	}
 // };
 
-module.exports = {
+export default {
 	subscriptions: null,
 	view: null,
 	statusBar: null,
@@ -131,9 +119,9 @@ module.exports = {
 					// atom.reload();
 				}
 			}),
-			atom.config.observe("CodeStream", configs => {
-				store.dispatch(updateConfigs(configs));
-			}),
+			// atom.config.observe("CodeStream", configs => {
+			// 	store.dispatch(updateConfigs(configs));
+			// }),
 			atom.config.observe("CodeStream.emailNotifications", setting => {
 				store.dispatch(setUserPreference(["emailNotifications"], setting ? "on" : "off"));
 			})

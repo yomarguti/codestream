@@ -1,0 +1,223 @@
+"use strict";
+const path = require("path");
+const nodeExternals = require("webpack-node-externals");
+// const BabelExternalHelpersPlugin = require("webpack-babel-external-helpers-2");
+const CleanPlugin = require("clean-webpack-plugin");
+const FileManagerPlugin = require("filemanager-webpack-plugin");
+// const HtmlPlugin = require("html-webpack-plugin");
+// const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+
+module.exports = function(env, argv) {
+	env = env || {};
+	env.production = !!env.production;
+	env.watch = !!(argv.watch || argv.w);
+
+	return [getExtensionConfig(env) /*, getWebviewConfig(env) */];
+};
+
+function getExtensionConfig(env) {
+	let clean = ["dist"];
+
+	const plugins = [
+		new CleanPlugin(clean, { verbose: false }),
+		new FileManagerPlugin({
+			onEnd: [
+				{
+					copy: [
+						{
+							source: path.resolve(__dirname, "codestream-*.info"),
+							destination: "dist/"
+						},
+						{
+							source: path.resolve(
+								__dirname,
+								"../codestream-components/styles/{login,stream}.less"
+							),
+							destination: "dist/styles"
+						}
+					]
+				}
+			]
+		})
+	];
+
+	return {
+		name: "codestream",
+		entry: "./lib/codestream.js",
+		mode: env.production ? "production" : "development",
+		target: "node",
+		devtool: !env.production ? "eval-source-map" : undefined,
+		output: {
+			libraryTarget: "commonjs2",
+			libraryExport: "default",
+			filename: "codestream.js",
+			devtoolModuleFilenameTemplate: "file:///[absolute-resource-path]"
+		},
+		resolve: {
+			extensions: [".tsx", ".ts", ".js"],
+			// modules: [path.resolve(__dirname, "../codestream-components/node_modules"), "node_modules"],
+			alias: {
+				// TODO: Use environment variable if exists
+				"codestream-components$": path.resolve(__dirname, "../codestream-components/index.js"),
+				"codestream-components": path.resolve(__dirname, "../codestream-components/")
+			}
+		},
+		externals: [nodeExternals(), { atom: "atom", electron: "electron" }],
+		module: {
+			rules: [
+				{
+					test: /\.js$/,
+					exclude: /node_modules/,
+					use: {
+						loader: "babel-loader",
+						options: {
+							presets: [
+								["@babel/preset-env", { modules: false }],
+								"@babel/preset-react",
+								"@babel/preset-flow"
+							],
+							plugins: [
+								"@babel/plugin-proposal-object-rest-spread",
+								"@babel/plugin-proposal-class-properties"
+							]
+						}
+					}
+				}
+				// 	{
+				// 		test: /\.ts$/,
+				// 		enforce: "pre",
+				// 		use: "tslint-loader",
+				// 		exclude: /node_modules/
+				// 	},
+				// 	{
+				// 		test: /\.tsx?$/,
+				// 		use: "ts-loader",
+				// 		exclude: /node_modules|\.d\.ts$/
+				// 	},
+				// 	{
+				// 		test: /\.d\.ts$/,
+				// 		loader: "ignore-loader"
+				// 	}
+			]
+		},
+		plugins: plugins,
+		stats: {
+			all: false,
+			assets: true,
+			builtAt: true,
+			env: true,
+			errors: true,
+			timings: true,
+			warnings: true
+		}
+	};
+}
+
+// function getWebviewConfig(env) {
+// 	const plugins = [
+// 		new CleanPlugin(["dist/webview", "webview.html"]),
+// 		// new BabelExternalHelpersPlugin(),
+// 		new MiniCssExtractPlugin({
+// 			filename: "webview.css"
+// 		}),
+// 		new HtmlPlugin({
+// 			template: "index.html",
+// 			filename: path.resolve(__dirname, "webview.html"),
+// 			inject: true,
+// 			minify: env.production
+// 				? {
+// 						removeComments: true,
+// 						collapseWhitespace: true,
+// 						removeRedundantAttributes: true,
+// 						useShortDoctype: true,
+// 						removeEmptyAttributes: true,
+// 						removeStyleLinkTypeAttributes: true,
+// 						keepClosingSlash: true
+// 				  }
+// 				: false
+// 		})
+// 	];
+//
+// 	return {
+// 		name: "webview",
+// 		context: path.resolve(__dirname, "src/webviews/app"),
+// 		entry: {
+// 			webview: ["./index.js", "./styles/webview.less"]
+// 		},
+// 		mode: env.production ? "production" : "development",
+// 		devtool: !env.production ? "eval-source-map" : undefined,
+// 		output: {
+// 			filename: "[name].js",
+// 			path: path.resolve(__dirname, "dist/webview"),
+// 			publicPath: "{{root}}/dist/webview/"
+// 		},
+// 		optimization: {
+// 			splitChunks: {
+// 				chunks: "all",
+// 				cacheGroups: {
+// 					styles: {
+// 						name: "styles",
+// 						test: /\.css$/,
+// 						chunks: "all",
+// 						enforce: true
+// 					}
+// 				}
+// 			}
+// 		},
+// 		resolve: {
+// 			extensions: [".tsx", ".ts", ".jsx", ".js"],
+// 			modules: [path.resolve(__dirname, "src/webviews/app"), "node_modules"],
+// 			alias: {
+// 				// TODO: Use environment variable if exists
+// 				"codestream-components$": path.resolve(__dirname, "../codestream-components/index.js"),
+// 				"codestream-components": path.resolve(__dirname, "../codestream-components/")
+// 			}
+// 		},
+// 		module: {
+// 			rules: [
+// 				{
+// 					test: /\.html$/,
+// 					use: "html-loader"
+// 				},
+// 				{
+// 					test: /\.jsx?$/,
+// 					use: "babel-loader",
+// 					exclude: /node_modules/
+// 				},
+// 				{
+// 					test: /\.less$/,
+// 					use: [
+// 						{
+// 							loader: MiniCssExtractPlugin.loader
+// 						},
+// 						{
+// 							loader: "css-loader",
+// 							options: {
+// 								minimize: env.production,
+// 								sourceMap: !env.production,
+// 								url: false
+// 							}
+// 						},
+// 						{
+// 							loader: "less-loader",
+// 							options: {
+// 								sourceMap: !env.production
+// 							}
+// 						}
+// 					],
+// 					exclude: /node_modules/
+// 				}
+// 			]
+// 		},
+// 		plugins: plugins,
+// 		stats: {
+// 			all: false,
+// 			assets: true,
+// 			builtAt: true,
+// 			env: true,
+// 			errors: true,
+// 			timings: true,
+// 			warnings: true
+// 		}
+// 	};
+// }
