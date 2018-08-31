@@ -367,19 +367,18 @@ export class CodeStreamApi {
 				}
 			}
 
+			let resp;
+			let retryCount = 0;
 			if (json === undefined) {
-				const [resp, retryCount] = await this.fetchCore(0, absoluteUrl, init);
-				if (resp.status !== 200) {
-					traceResult = `API: FAILED(${retryCount}x) ${method} ${url}`;
-					throw await this.handleErrorResponse(resp);
-				}
-
+				[resp, retryCount] = await this.fetchCore(0, absoluteUrl, init);
 				if (context !== undefined) {
 					context.response = resp;
 				}
 
-				traceResult = `API: Completed ${method} ${url}`;
-				json = resp.json() as Promise<R>;
+				if (resp.ok) {
+					traceResult = `API: Completed ${method} ${url}`;
+					json = resp.json() as Promise<R>;
+				}
 			}
 
 			if (context !== undefined) {
@@ -394,7 +393,12 @@ export class CodeStreamApi {
 				}
 			}
 
-			return CodeStreamApi.normalizeResponse(await json);
+			if (resp !== undefined && !resp.ok) {
+				traceResult = `API: FAILED(${retryCount}x) ${method} ${url}`;
+				throw await this.handleErrorResponse(resp);
+			}
+
+			return CodeStreamApi.normalizeResponse(await json!);
 		} finally {
 			const duration = process.hrtime(start);
 			Logger.log(`${traceResult} in ${duration[0] * 1000 + Math.floor(duration[1] / 1000000)}ms`);
@@ -508,6 +512,6 @@ export interface CodeStreamApiMiddleware {
 	onProvideResponse?<R>(context: Readonly<CodeStreamApiMiddlewareContext>): Promise<R>;
 	onResponse?<R>(
 		context: Readonly<CodeStreamApiMiddlewareContext>,
-		responseJson: Promise<R>
+		responseJson: Promise<R> | undefined
 	): Promise<void>;
 }
