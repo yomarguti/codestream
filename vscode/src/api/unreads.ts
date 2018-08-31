@@ -20,10 +20,14 @@ export class UnreadCounter {
 	}
 
 	private _computePromise: Promise<void> | undefined;
-	compute(
+	async compute(
 		lastReads: { [streamId: string]: number } | undefined,
 		notifier: (e: UnreadsChangedEvent) => void
 	) {
+		if (this._computePromise !== undefined) {
+			await this._computePromise;
+		}
+
 		this._computePromise = this.computeCore(lastReads, notifier);
 		return this._computePromise;
 	}
@@ -43,7 +47,11 @@ export class UnreadCounter {
 		);
 		if (posts.length === 0) return;
 
-		Logger.log(`Unreads.update:`, "Updating...");
+		if (this._computePromise !== undefined) {
+			await this._computePromise;
+		}
+
+		Logger.log(`Unreads.update:`, `Updating unreads for ${posts.length} posts...`);
 
 		const grouped = Arrays.groupBy(posts, p => p.streamId);
 
@@ -131,14 +139,16 @@ export class UnreadCounter {
 						return;
 					}
 
-					this.mentions[streamId] = this.mentions[streamId] || 0;
-					this.unread[streamId] = this.unread[streamId] || 0;
-					this.computeForPosts(unreadPosts, this._currentUserId, stream);
+					if (unreadPosts != null && unreadPosts.length !== 0) {
+						this.mentions[streamId] = this.mentions[streamId] || 0;
+						this.unread[streamId] = this.unread[streamId] || 0;
+						this.computeForPosts(unreadPosts, this._currentUserId, stream);
 
-					Logger.log(
-						`Unreads.compute(${streamId}):`,
-						`mentions=${this.mentions[streamId]}, unreads=${this.unread[streamId]}`
-					);
+						Logger.log(
+							`Unreads.compute(${streamId}):`,
+							`mentions=${this.mentions[streamId]}, unreads=${this.unread[streamId]}`
+						);
+					}
 				})
 			);
 		}
