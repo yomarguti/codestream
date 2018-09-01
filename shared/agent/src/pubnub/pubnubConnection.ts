@@ -99,6 +99,7 @@ export class PubnubConnection {
 	private _debug: (msg: string, info?: any) => void = () => {};
 	private _catchingUpSince: number = 0;
 	private _activeFailures: string[] = [];
+	private _messagesReceived: { [key: string]: number } = {};
 
 	// call to receive status updates
 	get onDidStatusChange(): Event<StatusChangeEvent> {
@@ -300,7 +301,20 @@ export class PubnubConnection {
 			this._lastMessageReceivedAt = receivedAt;
 			this._debug("_lastMessageReceivedAt updated");
 		}
-		this.emitMessages([event.message]);
+		
+		// we avoid sending duplicate messages up the chain by maintaining a list of the messages
+		// we've already received, dropping duplicates to the floor
+		const { messageId } = event.message;
+		if (
+			!messageId ||
+			!this._messagesReceived[messageId]
+		) {
+			if (messageId) {
+				this._messagesReceived[messageId] = Date.now();
+			}
+			this.emitMessages([event.message]);
+		}
+		this.cleanUpMessagesReceived();
 	}
 
 	// presence event from Pubnub
@@ -921,5 +935,16 @@ export class PubnubConnection {
 	// convert from Pubnub time token to unix timestamp
 	private timetokenToTimestamp(timetoken: string): number {
 		return Math.floor(parseInt(timetoken, 10) / 10000);
+	}
+
+	// clean up our ongoing tracking of messages received
+	private cleanUpMessagesReceived () {
+		// we'll clean up any record of messages received more than ten minutes old
+		const cutoff = Date.now() - 10 * 60 * 1000;
+		Object.keys(this._messagesReceived).forEach(messageId => {
+			if (this._messagesReceived[messageId] < cutoff) {
+				delete this._messagesReceived[messageId];
+			}
+		});
 	}
 }
