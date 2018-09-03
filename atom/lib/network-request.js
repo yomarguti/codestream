@@ -1,13 +1,15 @@
 export const PRODUCTION_URL = "https://api.codestream.com";
 
 const normalize = object => {
-	for (let [key, value] of Object.entries(object)) {
-		if (key.startsWith("_")) {
-			key = key.substring(1);
-			object[key] = value;
+	if (object) {
+		for (let [key, value] of Object.entries(object)) {
+			if (key.startsWith("_")) {
+				key = key.substring(1);
+				object[key] = value;
+			}
+			if (Array.isArray(value)) object[key] = value.map(normalize);
+			if (typeof value === "object") object[key] = normalize(value);
 		}
-		if (Array.isArray(value)) object[key] = value.map(normalize);
-		if (typeof value === "object") object[key] = normalize(value);
 	}
 
 	return object;

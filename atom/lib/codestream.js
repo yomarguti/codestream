@@ -8,7 +8,7 @@ import db, { bootstrapStore } from "./local-cache";
 import { logout } from "./actions/context";
 import createStore from "./createStore";
 // import { updateConfigs } from "./actions/configs";
-import logger from "./util/Logger";
+// import logger from "./util/Logger";
 // import { online, offline } from "./actions/connectivity";
 // import { calculateUncommittedMarkers } from "./actions/marker-location";
 // import { setActive } from "./actions/presence";
@@ -33,12 +33,11 @@ if (false) {
 	});
 }
 
-logger.addHandler((level, msg) => {
-	console.log(`[${level}] ${msg}`);
-});
+// logger.addHandler((level, msg) => {
+// 	console.log(`[${level}] ${msg}`);
+// });
 
 let workspaceSession;
-let store;
 
 // const getCurrentCommit = async repo => {
 // 	try {
@@ -70,6 +69,7 @@ export default {
 	subscriptions: null,
 	view: null,
 	statusBar: null,
+	store: null,
 	config: {
 		showHeadshots: {
 			description: "Display headshots in the stream.",
@@ -92,11 +92,11 @@ export default {
 	initialize(state) {
 		this.subscriptions = new CompositeDisposable();
 		workspaceSession = new WorkspaceSession(state.workspaceSession);
-		store = createStore(
+		this.store = createStore(
 			{ ...state.viewState, configs: atom.config.get("CodeStream") },
 			workspaceSession.viewApi
 		);
-		bootstrapStore(store);
+		bootstrapStore(this.store);
 	},
 
 	async activate(_state) {
@@ -105,7 +105,7 @@ export default {
 			atom.workspace.addOpener(uri => {
 				if (uri === CODESTREAM_VIEW_URI) {
 					if (this.view && this.view.alive) return this.view;
-					this.view = new CodestreamView(store);
+					this.view = new CodestreamView(this.store);
 					return this.view;
 				}
 			}),
@@ -114,17 +114,17 @@ export default {
 				"codestream:reset": () => {
 					// db.delete();
 					atom.commands.dispatch(document.querySelector("atom-workspace"), "codestream:logout");
-					store.dispatch({ type: "RESET" });
+					this.store.dispatch({ type: "RESET" });
 					workspaceSession.logout();
 					// atom.reload();
 				}
-			}),
+			})
 			// atom.config.observe("CodeStream", configs => {
 			// 	store.dispatch(updateConfigs(configs));
 			// }),
-			atom.config.observe("CodeStream.emailNotifications", setting => {
-				store.dispatch(setUserPreference(["emailNotifications"], setting ? "on" : "off"));
-			})
+			// atom.config.observe("CodeStream.emailNotifications", setting => {
+			// 	this.store.dispatch(setUserPreference(["emailNotifications"], setting ? "on" : "off"));
+			// })
 		);
 
 		// Dev mode goodies
@@ -138,7 +138,7 @@ export default {
 				didDispatch: () => {
 					sessionStorage.setItem("codestream.env", "dev");
 					sessionStorage.setItem("codestream.url", "https://pd-api.codestream.us:9443");
-					store.dispatch(logout());
+					this.store.dispatch(logout());
 					atom.reload();
 				},
 				hiddenInCommandPalette
@@ -147,7 +147,7 @@ export default {
 				didDispatch: () => {
 					sessionStorage.setItem("codestream.env", "local");
 					sessionStorage.setItem("codestream.url", "https://localhost.codestream.us:12079");
-					store.dispatch(logout());
+					this.store.dispatch(logout());
 					atom.reload();
 				},
 				hiddenInCommandPalette
@@ -156,7 +156,7 @@ export default {
 				didDispatch: () => {
 					sessionStorage.setItem("codestream.env", "qa");
 					sessionStorage.setItem("codestream.url", "https://qa-api.codestream.us");
-					store.dispatch(logout());
+					this.store.dispatch(logout());
 					atom.reload();
 				},
 				hiddenInCommandPalette
@@ -165,7 +165,7 @@ export default {
 				didDispatch: () => {
 					sessionStorage.removeItem("codestream.env");
 					sessionStorage.removeItem("codestream.url");
-					store.dispatch(logout());
+					this.store.dispatch(logout());
 					atom.reload();
 				},
 				hiddenInCommandPalette
@@ -185,15 +185,15 @@ export default {
 	deactivate() {
 		this.subscriptions.dispose();
 		if (this.statusBarTile) this.statusBarTile.destroy();
-		store.dispatch(logout());
+		this.store.dispatch(logout());
 	},
 
 	serialize() {
-		return { workspaceSession: workspaceSession.serialize(), viewState: store.getState() };
+		return { workspaceSession: workspaceSession.serialize(), viewState: this.store.getState() };
 	},
 
 	deserializeCodestreamView() {
-		this.view = new CodestreamView(store);
+		this.view = new CodestreamView(this.store);
 		return this.view;
 	},
 

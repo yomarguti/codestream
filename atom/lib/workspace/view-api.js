@@ -13,6 +13,7 @@ export default class ViewApi {
 		return {
 			currentTeamId: this.workspaceSession.getCurrentTeamId(),
 			currentUserId: this.workspaceSession.getUserId(),
+			unreads: { lastReads: {}, unread: {}, mentions: {} },
 			streams,
 			teams,
 			users
