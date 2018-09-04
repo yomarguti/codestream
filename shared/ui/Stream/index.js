@@ -1482,7 +1482,6 @@ const mapStateToProps = ({
 		}
 	});
 
-	console.log("SERVICES IS ", services);
 	const fileStream =
 		getStreamForRepoAndFile(streams, context.currentRepoId, context.currentFile) || {};
 
