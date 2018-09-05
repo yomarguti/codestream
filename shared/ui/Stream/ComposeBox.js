@@ -488,9 +488,7 @@ class ComposeBox extends React.Component {
 						style={{
 							position: "absolute",
 							bottom: "45px",
-							right: "10px",
-							maxWidth: "95%",
-							boxShadow: "0 5px 10px rgba(0, 0, 0, 0.2)"
+							right: "10px"
 						}}
 					/>
 				)}

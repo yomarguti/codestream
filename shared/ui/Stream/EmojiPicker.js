@@ -28,7 +28,8 @@ export default class EmojiPicker extends Component {
 				// const left = rect.right - this._div.offsetWidth + 5;
 				// this._div.style.left = left + "px";
 			} else {
-				const left = rect.right - this._div.offsetWidth + 5;
+				let left = rect.right - this._div.offsetWidth + 5;
+				if (left < 10) left = 10;
 				this._div.style.left = left + "px";
 			}
 

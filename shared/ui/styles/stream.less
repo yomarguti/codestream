@@ -18,6 +18,10 @@
 .emoji-mart * {
 	border-color: @base-border-color;
 }
+.emoji-mart {
+	max-width: 95%;
+	box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+}
 
 @panel-header-height: 2.1em;
 
@@ -1112,7 +1116,7 @@
 				margin: 5px 5px 0 0;
 				line-height: 1.5em;
 				display: inline-block;
-				padding: 2px 5px 2px 2px;
+				padding: 3px 6px 3px 3px;
 				border: 1px solid @base-border-color;
 				border-radius: 4px;
 				background: @base-background-color;
@@ -1125,10 +1129,19 @@
 					margin: 0;
 					padding: 0;
 				}
+				&.add-reaction {
+					opacity: 0;
+				}
 			}
 			.reaction:hover {
 				border-color: @text-color-info;
 				color: @text-color-info;
+			}
+			.reactions:hover {
+				.add-reaction {
+					opacity: 1;
+					padding: 3px 6px;
+				}
 			}
 			.headshot-gravatar,
 			.headshot-system {

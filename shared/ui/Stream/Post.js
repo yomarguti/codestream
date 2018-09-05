@@ -122,7 +122,7 @@ class Post extends Component {
 		const { post } = this.props;
 		const { menuOpen, authorMenuOpen, menuTarget } = this.state;
 
-		const mine = this.props.currentUsername === post.author.username;
+		const mine = this.props.currentUser.username === post.author.username;
 		const systemPost = post.creatorId === "codestream";
 
 		const postClass = createClassString({
@@ -268,14 +268,7 @@ class Post extends Component {
 					<Icon name="smiley" className="smiley" onClick={this.handleReactionClick} />
 				</Tooltip>
 				{this.state.emojiOpen && (
-					<EmojiPicker
-						addEmoji={this.addReaction}
-						target={this._div}
-						style={{
-							maxWidth: "95%",
-							boxShadow: "0 5px 10px rgba(0, 0, 0, 0.2)"
-						}}
-					/>
+					<EmojiPicker addEmoji={this.addReaction} target={this.state.emojiTarget} />
 				)}
 				<Tooltip title="More Options...">
 					<Icon name="gear" className="gear" onClick={this.handleMenuClick} />
@@ -299,7 +292,7 @@ class Post extends Component {
 	renderTextLinkified = text => {
 		let usernameRegExp = new RegExp("(@(?:" + this.props.usernames.toLowerCase() + ")\\b)", "i");
 		let bodyParts = markdownify(text).split(usernameRegExp);
-		const meLowerCase = "@" + this.props.currentUsername.toLowerCase();
+		const meLowerCase = "@" + this.props.currentUser.username.toLowerCase();
 
 		const html = bodyParts
 			.map(part => {
@@ -355,7 +348,7 @@ class Post extends Component {
 	};
 
 	addReaction = emoji => {
-		let { post } = this.props;
+		let { post, currentUser } = this.props;
 
 		this.setState({ emojiOpen: false });
 		if (!emoji || !emoji.id) return;
@@ -363,16 +356,16 @@ class Post extends Component {
 		if (!post.reactions) post.reactions = {};
 		if (!post.reactions[emoji.id]) post.reactions[emoji.id] = [];
 		// FIXME add the correct user ID
-		post.reactions[emoji.id].push("pez");
+		post.reactions[emoji.id].push(currentUser.id);
 	};
 
 	toggleReaction = (emojiId, event) => {
-		let { post } = this.props;
+		let { post, currentUser } = this.props;
 
 		if (event) event.stopPropagation();
 
 		// FIXME
-		const userId = "pez";
+		const userId = currentUser.id;
 
 		if (!emojiId) return;
 		if (!post.reactions) post.reactions = {};
@@ -383,22 +376,31 @@ class Post extends Component {
 
 	renderReactions = post => {
 		const reactions = post.reactions || {};
-		return Object.keys(reactions)
-			.map(emojiId => {
-				const reactors = reactions[emojiId] || [];
-				if (reactors.length == 0) return null;
-				const emoji = emojify(":" + emojiId + ":");
-				const reactorNames = reactors.join(", ");
-				return (
-					<Tooltip title={reactorNames} key={emojiId} placement="top">
-						<div className="reaction" onClick={event => this.toggleReaction(emojiId, event)}>
-							<span dangerouslySetInnerHTML={{ __html: emoji }} />
-							{reactors.length}
-						</div>
-					</Tooltip>
-				);
-			})
-			.filter(Boolean);
+		const keys = Object.keys(reactions);
+		if (keys.length === 0) return null;
+		return (
+			<div className="reactions">
+				{keys.map(emojiId => {
+					const reactors = reactions[emojiId] || [];
+					if (reactors.length == 0) return null;
+					const emoji = emojify(":" + emojiId + ":");
+					const reactorNames = reactors.join(", ");
+					return (
+						<Tooltip title={reactorNames} key={emojiId} placement="top">
+							<div className="reaction" onClick={event => this.toggleReaction(emojiId, event)}>
+								<span dangerouslySetInnerHTML={{ __html: emoji }} />
+								{reactors.length}
+							</div>
+						</Tooltip>
+					);
+				})}
+				<Tooltip title="Add Reaction" key="add" placement="top">
+					<div className="reaction add-reaction" onClick={this.handleReactionClick}>
+						<Icon name="smiley" className="smiley" onClick={this.handleReactionClick} />
+					</div>
+				</Tooltip>
+			</div>
+		);
 	};
 
 	handleMenuClick = event => {
@@ -408,7 +410,7 @@ class Post extends Component {
 
 	handleReactionClick = event => {
 		event.stopPropagation();
-		this.setState({ emojiOpen: !this.state.emojiOpen });
+		this.setState({ emojiOpen: !this.state.emojiOpen, emojiTarget: event.target });
 	};
 
 	handleHeadshotClick = event => {
