@@ -1116,9 +1116,9 @@
 				margin: 5px 5px 0 0;
 				line-height: 1.5em;
 				display: inline-block;
-				padding: 3px 6px 3px 3px;
+				padding: 2px 5px 2px 2px;
 				border: 1px solid @base-border-color;
-				border-radius: 4px;
+				border-radius: 15px;
 				background: @base-background-color;
 				white-space: normal;
 				.emoji {
@@ -1132,15 +1132,22 @@
 				&.add-reaction {
 					opacity: 0;
 				}
+				&.mine {
+					border-color: @background-color-umi;
+					background: @background-color-umi;
+					color: white;
+				}
 			}
-			.reaction:hover {
+			.reaction:hover,
+			.reaction.mine:hover {
 				border-color: @text-color-info;
+				background: @base-background-color;
 				color: @text-color-info;
 			}
 			.reactions:hover {
 				.add-reaction {
 					opacity: 1;
-					padding: 3px 6px;
+					padding: 2px 5px;
 				}
 			}
 			.headshot-gravatar,

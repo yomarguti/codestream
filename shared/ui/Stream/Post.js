@@ -373,7 +373,7 @@ class Post extends Component {
 	};
 
 	renderReactions = post => {
-		const users = this.props.users;
+		const { users, currentUser } = this.props;
 		const reactions = post.reactions || {};
 		const keys = Object.keys(reactions);
 		if (keys.length === 0) return null;
@@ -384,9 +384,10 @@ class Post extends Component {
 					if (reactors.length == 0) return null;
 					const emoji = emojify(":" + emojiId + ":");
 					const reactorNames = reactors.map(id => users[id].username).join(", ");
+					const className = _.contains(reactors, currentUser.id) ? "reaction mine" : "reaction";
 					return (
 						<Tooltip title={reactorNames} key={emojiId} placement="top">
-							<div className="reaction" onClick={event => this.toggleReaction(emojiId, event)}>
+							<div className={className} onClick={event => this.toggleReaction(emojiId, event)}>
 								<span dangerouslySetInnerHTML={{ __html: emoji }} />
 								{reactors.length}
 							</div>
@@ -413,7 +414,6 @@ class Post extends Component {
 	};
 
 	handleHeadshotClick = event => {
-		console.log("HANDLED!");
 		event.stopPropagation();
 		this.setState({ authorMenuOpen: !this.state.authorMenuOpen, menuTarget: event.target });
 	};
