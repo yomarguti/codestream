@@ -355,7 +355,6 @@ class Post extends Component {
 
 		if (!post.reactions) post.reactions = {};
 		if (!post.reactions[emoji.id]) post.reactions[emoji.id] = [];
-		// FIXME add the correct user ID
 		post.reactions[emoji.id].push(currentUser.id);
 	};
 
@@ -364,7 +363,6 @@ class Post extends Component {
 
 		if (event) event.stopPropagation();
 
-		// FIXME
 		const userId = currentUser.id;
 
 		if (!emojiId) return;
@@ -375,6 +373,7 @@ class Post extends Component {
 	};
 
 	renderReactions = post => {
+		const users = this.props.users;
 		const reactions = post.reactions || {};
 		const keys = Object.keys(reactions);
 		if (keys.length === 0) return null;
@@ -384,7 +383,7 @@ class Post extends Component {
 					const reactors = reactions[emojiId] || [];
 					if (reactors.length == 0) return null;
 					const emoji = emojify(":" + emojiId + ":");
-					const reactorNames = reactors.join(", ");
+					const reactorNames = reactors.map(id => users[id].username).join(", ");
 					return (
 						<Tooltip title={reactorNames} key={emojiId} placement="top">
 							<div className="reaction" onClick={event => this.toggleReaction(emojiId, event)}>
@@ -430,9 +429,11 @@ const mapStateToProps = (state, props) => {
 	const repo = codeBlock && getById(state.repos, codeBlock.repoId);
 
 	return {
+		users: state.users,
 		repoName: repo ? repo.name : ""
 	};
 };
+
 export default connect(
 	mapStateToProps,
 	{ cancelPost, retryPost, showCode }
