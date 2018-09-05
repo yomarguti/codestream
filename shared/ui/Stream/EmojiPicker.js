@@ -1,13 +1,26 @@
-import { Picker } from "emoji-mart";
+import { Picker, store } from "emoji-mart";
 import React, { Component } from "react";
 import ReactDOM from "react-dom";
 import createClassString from "classnames";
+import * as actions from "./actions";
+import { connect } from "react-redux";
 
-export default class EmojiPicker extends Component {
+export class SimpleEmojiPicker extends Component {
 	constructor(props) {
 		super(props);
 		this.el = document.createElement("div");
 		this.state = {};
+
+		store.setHandlers({
+			// keys are "skin", "frequently", and "last"
+			getter: key => {
+				return this.props.currentUser.preferences["emojiPicker-" + key];
+			},
+
+			setter: (key, value) => {
+				this.props.setUserPreference(["emojiPicker-" + key], value);
+			}
+		});
 	}
 
 	componentDidMount() {
@@ -70,3 +83,17 @@ export default class EmojiPicker extends Component {
 		);
 	}
 }
+
+const mapStateToProps = ({ session, users }) => {
+	const currentUser = users[session.userId];
+	return {
+		currentUser
+	};
+};
+
+export default connect(
+	mapStateToProps,
+	{
+		...actions
+	}
+)(SimpleEmojiPicker);

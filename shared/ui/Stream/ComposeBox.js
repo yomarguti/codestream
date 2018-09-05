@@ -6,6 +6,7 @@ import EventEmitter from "../event-emitter";
 import AtMentionsPopup from "./AtMentionsPopup";
 import Icon from "./Icon";
 import EmojiPicker from "./EmojiPicker";
+import { getCurrentCursorPosition, createRange } from "../utils";
 
 const arrayToRange = ([startRow, startCol, endRow, endCol]) => {
 	return {
@@ -204,10 +205,19 @@ class ComposeBox extends React.Component {
 		sel.removeAllRanges();
 		sel.addRange(range);
 		this._contentEditable.htmlEl.normalize();
+		// sel.collapse(textNode);
+		sel.modify("move", "backward", "character");
+		sel.modify("move", "forward", "character");
+		// window.getSelection().empty();
+		// this.focus();
 
 		let postTextByStream = this.state.postTextByStream;
 		postTextByStream[this.props.streamId] = this._contentEditable.htmlEl.innerHTML;
-		this.setState({ postTextByStream });
+
+		this.setState({
+			postTextByStream,
+			cursorPosition: getCurrentCursorPosition("input-div")
+		});
 	}
 
 	// the keypress handler for tracking up and down arrow
@@ -334,7 +344,8 @@ class ComposeBox extends React.Component {
 		// this.setState({ postTextByStream });
 		this.setState({
 			postTextByStream,
-			autoMentions: this.state.autoMentions.filter(mention => newPostText.includes(mention))
+			autoMentions: this.state.autoMentions.filter(mention => newPostText.includes(mention)),
+			cursorPosition: getCurrentCursorPosition("input-div")
 		});
 	};
 
@@ -343,6 +354,29 @@ class ComposeBox extends React.Component {
 	handleBlur = event => {
 		event.preventDefault();
 		this.hidePopup();
+	};
+
+	handleClick = event => {
+		this.setState({
+			cursorPosition: getCurrentCursorPosition("input-div")
+		});
+	};
+
+	setCurrentCursorPosition = chars => {
+		if (this._contentEditable.htmlEl.innerHTML === "") {
+			return;
+		}
+		if (chars < 0) chars = 0;
+
+		var selection = window.getSelection();
+
+		let range = createRange(document.getElementById("input-div").parentNode, { count: chars });
+
+		if (range) {
+			range.collapse(false);
+			selection.removeAllRanges();
+			selection.addRange(range);
+		}
 	};
 
 	handleKeyPress = event => {
@@ -412,14 +446,17 @@ class ComposeBox extends React.Component {
 		this.reset();
 	};
 
-	toggleEmojiPicker = () => {
+	toggleEmojiPicker = event => {
 		this.setState({ emojiPickerOpen: !this.state.emojiPickerOpen });
+		// this.focus();
+		// event.stopPropagation();
 	};
 
 	addEmoji = emoji => {
 		this.setState({ emojiPickerOpen: false });
 		if (emoji && emoji.colons) {
 			this.focus();
+			this.setCurrentCursorPosition(this.state.cursorPosition);
 			this.insertTextAtCursor(emoji.colons); // + "\u00A0"); <= that's a space
 		}
 	};
@@ -499,6 +536,7 @@ class ComposeBox extends React.Component {
 					tabIndex="-1"
 					onChange={this.handleChange}
 					onBlur={this.handleBlur}
+					onClick={this.handleClick}
 					html={contentEditableHTML}
 					placeholder={placeholder}
 					ref={ref => (this._contentEditable = ref)}
