@@ -319,6 +319,12 @@ export interface EditPostRequest {
 	mentionedUserIds: string[];
 }
 
+export interface ReactToPostResponse extends DeletePostResponse {}
+
+export interface ReactToPostRequest {
+	[emoji: string]: boolean;
+}
+
 export interface EditPostResponse extends DeletePostResponse {}
 
 export interface MarkPostUnreadRequest {

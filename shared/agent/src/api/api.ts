@@ -266,6 +266,7 @@ export class CodeStreamApi {
 		body: RQ,
 		token?: string
 	): Promise<R> {
+		Logger.log("POSTING: ", JSON.stringify(body));
 		return this.fetch<R>(
 			url,
 			{
@@ -376,7 +377,7 @@ export class CodeStreamApi {
 				}
 
 				if (resp.ok) {
-					traceResult = `API: Completed ${method} ${url}`;
+					traceResult = `API: Completed ${method} ${url} ` + JSON.stringify(init);
 					json = resp.json() as Promise<R>;
 				}
 			}
