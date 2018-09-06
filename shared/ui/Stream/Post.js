@@ -18,6 +18,7 @@ import { getById } from "../reducers/repos";
 import { markdownify, emojify } from "./Markdowner";
 import hljs from "highlight.js";
 import _ from "underscore";
+import { reactToPost } from "./actions";
 
 class Post extends Component {
 	state = {
@@ -121,6 +122,8 @@ class Post extends Component {
 	render() {
 		const { post } = this.props;
 		const { menuOpen, authorMenuOpen, menuTarget } = this.state;
+
+		console.log("REACTIONS ARE: ", post.reactions);
 
 		const mine = this.props.currentUser.username === post.author.username;
 		const systemPost = post.creatorId === "codestream";
@@ -353,9 +356,13 @@ class Post extends Component {
 		this.setState({ emojiOpen: false });
 		if (!emoji || !emoji.id) return;
 
-		if (!post.reactions) post.reactions = {};
-		if (!post.reactions[emoji.id]) post.reactions[emoji.id] = [];
-		post.reactions[emoji.id].push(currentUser.id);
+		this.props.reactToPost(post.id, emoji.id, true);
+	};
+
+	postHasReactionFromUser = emojiId => {
+		const { post, currentUser } = this.props;
+		const userId = currentUser.id;
+		return post.reactions && post.reactions[emojiId] && _.contains(post.reactions[emojiId], userId);
 	};
 
 	toggleReaction = (emojiId, event) => {
@@ -363,13 +370,10 @@ class Post extends Component {
 
 		if (event) event.stopPropagation();
 
-		const userId = currentUser.id;
-
 		if (!emojiId) return;
-		if (!post.reactions) post.reactions = {};
-		if (!post.reactions[emojiId]) post.reactions[emojiId] = [];
-		if (!_.contains(post.reactions[emojiId], userId)) post.reactions[emojiId].push(userId);
-		else post.reactions[emojiId] = _.without(post.reactions[emojiId], userId);
+
+		const value = this.postHasReactionFromUser(emojiId) ? false : true;
+		this.props.reactToPost(post.id, emojiId, value);
 	};
 
 	renderReactions = post => {
@@ -377,6 +381,7 @@ class Post extends Component {
 		const reactions = post.reactions || {};
 		const keys = Object.keys(reactions);
 		if (keys.length === 0) return null;
+		let atLeastOneReaction = false;
 		return (
 			<div className="reactions">
 				{keys.map(emojiId => {
@@ -385,6 +390,7 @@ class Post extends Component {
 					const emoji = emojify(":" + emojiId + ":");
 					const reactorNames = reactors.map(id => users[id].username).join(", ");
 					const className = _.contains(reactors, currentUser.id) ? "reaction mine" : "reaction";
+					atLeastOneReaction = true;
 					return (
 						<Tooltip title={reactorNames} key={emojiId} placement="top">
 							<div className={className} onClick={event => this.toggleReaction(emojiId, event)}>
@@ -394,11 +400,13 @@ class Post extends Component {
 						</Tooltip>
 					);
 				})}
-				<Tooltip title="Add Reaction" key="add" placement="top">
-					<div className="reaction add-reaction" onClick={this.handleReactionClick}>
-						<Icon name="smiley" className="smiley" onClick={this.handleReactionClick} />
-					</div>
-				</Tooltip>
+				{atLeastOneReaction && (
+					<Tooltip title="Add Reaction" key="add" placement="top">
+						<div className="reaction add-reaction" onClick={this.handleReactionClick}>
+							<Icon name="smiley" className="smiley" onClick={this.handleReactionClick} />
+						</div>
+					</Tooltip>
+				)}
 			</div>
 		);
 	};
@@ -436,5 +444,5 @@ const mapStateToProps = (state, props) => {
 
 export default connect(
 	mapStateToProps,
-	{ cancelPost, retryPost, showCode }
+	{ cancelPost, retryPost, showCode, reactToPost }
 )(injectIntl(Post));

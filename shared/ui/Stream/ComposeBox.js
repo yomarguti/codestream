@@ -362,6 +362,7 @@ class ComposeBox extends React.Component {
 		});
 	};
 
+	// https://stackoverflow.com/questions/6249095/how-to-set-caretcursor-position-in-contenteditable-element-div
 	setCurrentCursorPosition = chars => {
 		if (this._contentEditable.htmlEl.innerHTML === "") {
 			return;

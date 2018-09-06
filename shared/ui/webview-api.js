@@ -59,6 +59,10 @@ export default class WebviewApi {
 		return this.postMessage({ action: "edit-post", params });
 	}
 
+	reactToPost(params) {
+		return this.postMessage({ action: "react-to-post", params });
+	}
+
 	deletePost(params) {
 		return this.postMessage({ action: "delete-post", params });
 	}

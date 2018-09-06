@@ -121,6 +121,17 @@ export const editPost = (id, text, mentions) => async (dispatch, getState, { api
 	}
 };
 
+export const reactToPost = (id, emoji, value) => async (dispatch, getState, { api }) => {
+	try {
+		console.log("REACTIN TO POST!", id);
+		const post = await api.reactToPost({ id, emoji, value });
+		console.log("GOT POST BACK: ", post);
+		return dispatch({ type: "UPDATE_POST", payload: post });
+	} catch (e) {
+		// TODO:
+	}
+};
+
 export const deletePost = id => async (dispatch, getState, { api }) => {
 	try {
 		const post = await api.deletePost(id);
