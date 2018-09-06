@@ -163,6 +163,10 @@ export class CodeStreamSessionApi {
 		return (await this._api.editPost(this.token, { id: postId, text, mentionedUserIds })).post;
 	}
 
+	async reactToPost(postId: string, emoji: string, value: boolean) {
+		return (await this._api.reactToPost(this.token, postId, { [emoji]: value })).post;
+	}
+
 	async markPostUnread(postId: string) {
 		return (await this._api.markPostUnread(this.token, { id: postId })).post;
 	}
