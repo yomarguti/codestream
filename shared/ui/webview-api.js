@@ -1,5 +1,7 @@
 import EventEmitter from "./event-emitter";
-import { uuid } from "./utils";
+import { shortUuid } from "./utils";
+
+let sequence = 0;
 
 export default class WebviewApi {
 	pendingRequests = new Map();
@@ -23,7 +25,13 @@ export default class WebviewApi {
 	}
 
 	postMessage(message) {
-		const id = uuid();
+		if (sequence === Number.MAX_SAFE_INTEGER) {
+			sequence = 1;
+		} else {
+			sequence++;
+		}
+
+		const id = `${sequence}:${shortUuid()}`;
 		return new Promise((resolve, reject) => {
 			this.pendingRequests.set(id, { resolve, reject, action: message.action });
 			console.debug("codestream:request", { id, ...message });
