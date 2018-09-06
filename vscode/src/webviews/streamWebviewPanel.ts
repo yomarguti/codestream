@@ -341,6 +341,16 @@ export class StreamWebviewPanel implements Disposable {
 							});
 							break;
 						}
+						case "react-to-post": {
+							const { id, emoji, value } = body.params;
+							const post = await this.session.api.getPost(id);
+							const updates = await this.session.api.reactToPost(id, emoji, value);
+							this.postMessage({
+								type: WebviewIpcMessageType.response,
+								body: { id: body.id, payload: { ...post, ...updates } }
+							});
+							break;
+						}
 						case "edit-post": {
 							const { id, text, mentions } = body.params;
 							const post = await this.session.api.getPost(id);

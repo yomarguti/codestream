@@ -284,6 +284,7 @@ export class CodeStreamAgentConnection implements Disposable {
 					type.method === ApiRequest.method ? `: ${params.url}` : ""
 				}`
 			);
+			Logger.log("Params: ", params);
 			const response = await this._client!.sendRequest(type, params);
 			return response;
 		} catch (ex) {

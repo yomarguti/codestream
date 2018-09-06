@@ -33,6 +33,8 @@ import {
 	MarkPostUnreadRequest,
 	MarkPostUnreadResponse,
 	MeResponse,
+	ReactToPostRequest,
+	ReactToPostResponse,
 	UpdatePresenceRequest,
 	UpdatePresenceResponse,
 	UpdateStreamMembershipRequest,
@@ -83,6 +85,7 @@ export class CodeStreamApi {
 	}
 
 	createPost(token: string, request: CreatePostRequest): Promise<CreatePostResponse> {
+		console.log("CREATING POST: ", request);
 		return this.post<CreatePostRequest, CreatePostResponse>(`/posts`, request, token);
 	}
 
@@ -96,6 +99,10 @@ export class CodeStreamApi {
 
 	deletePost(token: string, teamId: string, postId: string) {
 		return this.delete<DeletePostResponse>(`/posts/${postId}`, token);
+	}
+
+	reactToPost(token: string, postId: string, request: ReactToPostRequest) {
+		return this.put<ReactToPostRequest, ReactToPostResponse>(`/react/${postId}`, request, token);
 	}
 
 	editPost(token: string, request: EditPostRequest) {
@@ -273,6 +280,7 @@ export class CodeStreamApi {
 		body: RQ,
 		token?: string
 	): Promise<R> {
+		console.log("CALLING A POST REQUEST WITH: ", JSON.stringify(body));
 		return this.fetch<R>(
 			url,
 			{
