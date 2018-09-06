@@ -42,7 +42,12 @@ import {
 import { configuration } from "../configuration";
 import { Container } from "../container";
 import { Logger } from "../logger";
-import { WebviewIpc, WebviewIpcMessage, WebviewIpcMessageType } from "./webviewIpc";
+import {
+	toLoggableIpcMessage,
+	WebviewIpc,
+	WebviewIpcMessage,
+	WebviewIpcMessageType
+} from "./webviewIpc";
 
 interface BootstrapState {
 	currentTeamId: string;
@@ -157,8 +162,9 @@ export class StreamWebviewPanel implements Disposable {
 	private async onPanelWebViewMessageReceived(e: WebviewIpcMessage) {
 		// TODO: Given all the async work in here -- we need to extract this into a separate method with blocks to make sure events don't get interleaved
 		try {
-			const { type } = e;
+			Logger.log(`WebviewPanel: Received message ${toLoggableIpcMessage(e)} from the webview`);
 
+			const { type } = e;
 			switch (type) {
 				case WebviewIpcMessageType.onViewReady: {
 					// view is rendered and ready to receive messages
@@ -169,10 +175,14 @@ export class StreamWebviewPanel implements Disposable {
 				}
 				case WebviewIpcMessageType.onRequest: {
 					const body = e.body as CSWebviewRequest;
-					// TODO: Add sequence ids to ensure correct matching
 					// TODO: Add exception handling for failed requests
 					switch (body.action) {
 						case "bootstrap":
+							Logger.log(
+								`WebviewPanel: Bootstrapping webview...`,
+								`SignedIn=${this.session.signedIn}`
+							);
+
 							let state: BootstrapState = Object.create(null);
 							if (this.session.signedIn) {
 								state = await (this._bootstrapPromise || this.getBootstrapState());
@@ -547,9 +557,7 @@ export class StreamWebviewPanel implements Disposable {
 			case SessionChangedEventType.Teams:
 			case SessionChangedEventType.Unreads:
 			case SessionChangedEventType.Users:
-				Logger.log(
-					`WebviewPanel.onSessionDataChanged: Attempting to send ${e.type} to the webview...`
-				);
+				Logger.log(`WebviewPanel: Attempting to send ${e.type} to the webview...`);
 				this.postMessage(e.toIpcMessage());
 				break;
 		}

@@ -28,6 +28,18 @@ export enum WebviewIpcMessageType {
 	didConnect = "codestream:connectivity:online"
 }
 
+export function toLoggableIpcMessage(msg: WebviewIpcMessage) {
+	if (msg.type === WebviewIpcMessageType.response) {
+		return `${msg.type}(${msg.body.id || ""})`;
+	}
+
+	if (msg.type === WebviewIpcMessageType.onRequest) {
+		return `${msg.type}(${msg.body.id || ""}):${msg.body.action || ""}`;
+	}
+
+	return msg.type;
+}
+
 // TODO: Clean this up to be consistent with the structure
 export interface WebviewIpcMessage {
 	type: WebviewIpcMessageType;
@@ -132,7 +144,9 @@ export class WebviewIpc {
 	/*private*/ async postMessage(msg: WebviewIpcMessage) {
 		if (this._panel === undefined) {
 			Logger.log(
-				`WebviewPanel: FAILED posting ${msg.type} to the webview; Webview has not been created yet`
+				`WebviewPanel: FAILED posting ${toLoggableIpcMessage(
+					msg
+				)} to the webview; Webview has not been created yet`
 			);
 
 			throw new Error("Webview has not been created yet");
@@ -142,9 +156,9 @@ export class WebviewIpc {
 			this.enqueue(msg);
 
 			Logger.log(
-				`WebviewPanel: FAILED posting ${
-					msg.type
-				} to the webview; Webview is invisible and can't receive messages`
+				`WebviewPanel: FAILED posting ${toLoggableIpcMessage(
+					msg
+				)} to the webview; Webview is invisible and can't receive messages`
 			);
 
 			return false;
@@ -153,7 +167,7 @@ export class WebviewIpc {
 		// If there is a pending flush operation, wait until it completes
 		if (this._flushingPromise !== undefined) {
 			if (!(await this._flushingPromise)) {
-				Logger.log(`WebviewPanel: FAILED posting ${msg.type} to the webview`);
+				Logger.log(`WebviewPanel: FAILED posting ${toLoggableIpcMessage(msg)} to the webview`);
 
 				return false;
 			}
@@ -180,7 +194,9 @@ export class WebviewIpc {
 		}
 
 		Logger.log(
-			`WebviewPanel: ${success ? "Completed" : "FAILED"} posting ${msg.type} to the webview`
+			`WebviewPanel: ${success ? "Completed" : "FAILED"} posting ${toLoggableIpcMessage(
+				msg
+			)} to the webview`
 		);
 
 		return success;
