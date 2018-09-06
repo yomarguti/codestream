@@ -19,11 +19,19 @@ export default class AtMentionsPopup extends Component {
 					<div className="instructions" onClick={event => this.handleClickInstructions()}>
 						{this.props.on === "slash-commands" ? (
 							<span>
-								Commands matching <b>"/{this.props.prefix}"</b>
+								Commands matching{" "}
+								<b>
+									"/
+									{this.props.prefix}"
+								</b>
 							</span>
 						) : (
 							<span>
-								People matching <b>"@{this.props.prefix}"</b>
+								People matching{" "}
+								<b>
+									"@
+									{this.props.prefix}"
+								</b>
 							</span>
 						)}
 					</div>

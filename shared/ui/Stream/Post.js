@@ -12,8 +12,13 @@ import { retryPost, cancelPost, showCode } from "./actions";
 import ContentEditable from "react-contenteditable";
 import Button from "./Button";
 import Menu from "./Menu";
+import EmojiPicker from "./EmojiPicker";
 import Tooltip from "./Tooltip";
 import { getById } from "../reducers/repos";
+import { markdownify, emojify } from "./Markdowner";
+import hljs from "highlight.js";
+import _ from "underscore";
+import { reactToPost } from "./actions";
 
 class Post extends Component {
 	state = {
@@ -118,7 +123,9 @@ class Post extends Component {
 		const { post } = this.props;
 		const { menuOpen, authorMenuOpen, menuTarget } = this.state;
 
-		const mine = this.props.currentUsername === post.author.username;
+		console.log("REACTIONS ARE: ", post.reactions);
+
+		const mine = this.props.currentUser.username === post.author.username;
 		const systemPost = post.creatorId === "codestream";
 
 		const postClass = createClassString({
@@ -150,7 +157,11 @@ class Post extends Component {
 							</Tooltip>
 						)}
 					</div>
-					<div className="code">{code}</div>
+
+					<div
+						className="code"
+						dangerouslySetInnerHTML={{ __html: hljs.highlightAuto(code).value }}
+					/>
 				</div>
 			);
 		}
@@ -163,6 +174,7 @@ class Post extends Component {
 			const threadLabel = parentPost || post.hasReplies ? "View Thread" : "Start a Thread";
 			menuItems.push({ label: threadLabel, action: "make-thread" });
 		}
+		// menuItems.push({ label: "Add Reaction", action: "add-reaction" });
 
 		menuItems.push({ label: "Mark Unread", action: "mark-unread" });
 		// { label: "Add Reaction", action: "add-reaction" },
@@ -197,11 +209,8 @@ class Post extends Component {
 				authorMenuItems.push({ label: "Invite to Live Share", action: "live-share" });
 			authorMenuItems.push({ label: "Direct Message", action: "direct-message" });
 		}
-		// }
 
-		// this was above Headshot
-		// <span className="icon icon-gear" onClick={this.handleMenuClick} />
-		// {menu}
+		const showIcons = !systemPost && !post.error;
 
 		return (
 			<div
@@ -211,10 +220,7 @@ class Post extends Component {
 				thread={post.parentPostId || post.id}
 				ref={ref => (this._div = ref)}
 			>
-				{!systemPost &&
-					!post.error && (
-						<Icon name="gear" className="gear align-right" onClick={this.handleMenuClick} />
-					)}
+				{showIcons && this.renderIcons()}
 				{menuOpen && <Menu items={menuItems} target={menuTarget} action={this.handleSelectMenu} />}
 				{authorMenuOpen && (
 					<Menu
@@ -253,9 +259,26 @@ class Post extends Component {
 					{this.renderBody(post)}
 					{!this.props.editng && post.hasBeenEdited && <span className="edited">(edited)</span>}
 				</div>
+				{this.renderReactions(post)}
 			</div>
 		);
 	}
+
+	renderIcons = () => {
+		return (
+			<div className="align-right">
+				<Tooltip title="Add Reaction">
+					<Icon name="smiley" className="smiley" onClick={this.handleReactionClick} />
+				</Tooltip>
+				{this.state.emojiOpen && (
+					<EmojiPicker addEmoji={this.addReaction} target={this.state.emojiTarget} />
+				)}
+				<Tooltip title="More Options...">
+					<Icon name="gear" className="gear" onClick={this.handleMenuClick} />
+				</Tooltip>
+			</div>
+		);
+	};
 
 	renderEmote = post => {
 		let matches = post.text.match(/^\/me\s+(.*)/);
@@ -271,33 +294,20 @@ class Post extends Component {
 
 	renderTextLinkified = text => {
 		let usernameRegExp = new RegExp("(@(?:" + this.props.usernames.toLowerCase() + ")\\b)", "i");
-		let bodyParts = text.split(usernameRegExp);
-		let iterator = 0;
-		const meLowerCase = "@" + this.props.currentUsername.toLowerCase();
+		let bodyParts = markdownify(text).split(usernameRegExp);
+		const meLowerCase = "@" + this.props.currentUser.username.toLowerCase();
 
-		return bodyParts.map(part => {
-			const partLowerCase = part.toLowerCase();
-			if (partLowerCase.match(usernameRegExp)) {
-				if (partLowerCase === meLowerCase)
-					return (
-						<span key={iterator++} className="at-mention me">
-							{part}
-						</span>
-					);
-				else
-					return (
-						<span key={iterator++} className="at-mention">
-							{part}
-						</span>
-					);
-			} else {
-				return <Linkify key={iterator++}>{part}</Linkify>;
-				// return part;
-				// const result = md.render(part);
-				// return <span dangerouslySetInnerHTML={{ __html: result }} />;
-				// return <ReactMarkdown key={iterator++}>{part}</ReactMarkdown>;
-			}
-		});
+		const html = bodyParts
+			.map(part => {
+				const partLowerCase = part.toLowerCase();
+				if (partLowerCase.match(usernameRegExp)) {
+					const meClass = partLowerCase === meLowerCase ? " me" : "";
+					return "<span class='at-mention" + meClass + "'>" + part + "</span>";
+				} else return part;
+			})
+			.join("");
+
+		return <span dangerouslySetInnerHTML={{ __html: html }} />;
 	};
 
 	renderBodyEditing = post => {
@@ -340,13 +350,78 @@ class Post extends Component {
 		);
 	};
 
+	addReaction = emoji => {
+		let { post, currentUser } = this.props;
+
+		this.setState({ emojiOpen: false });
+		if (!emoji || !emoji.id) return;
+
+		this.props.reactToPost(post.id, emoji.id, true);
+	};
+
+	postHasReactionFromUser = emojiId => {
+		const { post, currentUser } = this.props;
+		const userId = currentUser.id;
+		return post.reactions && post.reactions[emojiId] && _.contains(post.reactions[emojiId], userId);
+	};
+
+	toggleReaction = (emojiId, event) => {
+		let { post, currentUser } = this.props;
+
+		if (event) event.stopPropagation();
+
+		if (!emojiId) return;
+
+		const value = this.postHasReactionFromUser(emojiId) ? false : true;
+		this.props.reactToPost(post.id, emojiId, value);
+	};
+
+	renderReactions = post => {
+		const { users, currentUser } = this.props;
+		const reactions = post.reactions || {};
+		const keys = Object.keys(reactions);
+		if (keys.length === 0) return null;
+		let atLeastOneReaction = false;
+		return (
+			<div className="reactions">
+				{keys.map(emojiId => {
+					const reactors = reactions[emojiId] || [];
+					if (reactors.length == 0) return null;
+					const emoji = emojify(":" + emojiId + ":");
+					const reactorNames = reactors.map(id => users[id].username).join(", ");
+					const className = _.contains(reactors, currentUser.id) ? "reaction mine" : "reaction";
+					atLeastOneReaction = true;
+					return (
+						<Tooltip title={reactorNames} key={emojiId} placement="top">
+							<div className={className} onClick={event => this.toggleReaction(emojiId, event)}>
+								<span dangerouslySetInnerHTML={{ __html: emoji }} />
+								{reactors.length}
+							</div>
+						</Tooltip>
+					);
+				})}
+				{atLeastOneReaction && (
+					<Tooltip title="Add Reaction" key="add" placement="top">
+						<div className="reaction add-reaction" onClick={this.handleReactionClick}>
+							<Icon name="smiley" className="smiley" onClick={this.handleReactionClick} />
+						</div>
+					</Tooltip>
+				)}
+			</div>
+		);
+	};
+
 	handleMenuClick = event => {
 		event.stopPropagation();
 		this.setState({ menuOpen: !this.state.menuOpen, menuTarget: event.target });
 	};
 
+	handleReactionClick = event => {
+		event.stopPropagation();
+		this.setState({ emojiOpen: !this.state.emojiOpen, emojiTarget: event.target });
+	};
+
 	handleHeadshotClick = event => {
-		console.log("HANDLED!");
 		event.stopPropagation();
 		this.setState({ authorMenuOpen: !this.state.authorMenuOpen, menuTarget: event.target });
 	};
@@ -362,10 +437,12 @@ const mapStateToProps = (state, props) => {
 	const repo = codeBlock && getById(state.repos, codeBlock.repoId);
 
 	return {
+		users: state.users,
 		repoName: repo ? repo.name : ""
 	};
 };
+
 export default connect(
 	mapStateToProps,
-	{ cancelPost, retryPost, showCode }
+	{ cancelPost, retryPost, showCode, reactToPost }
 )(injectIntl(Post));

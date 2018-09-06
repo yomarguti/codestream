@@ -5,6 +5,8 @@ import createClassString from "classnames";
 import EventEmitter from "../event-emitter";
 import AtMentionsPopup from "./AtMentionsPopup";
 import Icon from "./Icon";
+import EmojiPicker from "./EmojiPicker";
+import { getCurrentCursorPosition, createRange } from "../utils";
 
 const arrayToRange = ([startRow, startCol, endRow, endCol]) => {
 	return {
@@ -20,7 +22,13 @@ const arrayToRange = ([startRow, startCol, endRow, endCol]) => {
 };
 
 class ComposeBox extends React.Component {
-	state = { postTextByStream: {}, quote: null, autoMentions: [], popupOpen: false };
+	state = {
+		postTextByStream: {},
+		quote: null,
+		autoMentions: [],
+		popupOpen: false,
+		emojiPickerOpen: false
+	};
 	disposables = [];
 
 	componentDidMount() {
@@ -116,7 +124,7 @@ class ComposeBox extends React.Component {
 	showPopupSelectors(prefix, type) {
 		let itemsToShow = [];
 
-		console.log("SERVICES: ", this.props.services);
+		// console.log("SERVICES: ", this.props.services);
 
 		if (type === "at-mentions") {
 			Object.values(this.props.teammates).forEach(person => {
@@ -140,6 +148,14 @@ class ComposeBox extends React.Component {
 					itemsToShow.push(command);
 				}
 			});
+		} else if (type === "emojis") {
+			console.log("matching prefix: >" + prefix + "<");
+			if (prefix && prefix.length > 1) {
+			} else {
+				itemsToShow.push({
+					identifier: "Matching Emoji. Type 2 or more characters"
+				});
+			}
 		}
 
 		if (itemsToShow.length == 0) {
@@ -189,10 +205,19 @@ class ComposeBox extends React.Component {
 		sel.removeAllRanges();
 		sel.addRange(range);
 		this._contentEditable.htmlEl.normalize();
+		// sel.collapse(textNode);
+		sel.modify("move", "backward", "character");
+		sel.modify("move", "forward", "character");
+		// window.getSelection().empty();
+		// this.focus();
 
 		let postTextByStream = this.state.postTextByStream;
 		postTextByStream[this.props.streamId] = this._contentEditable.htmlEl.innerHTML;
-		this.setState({ postTextByStream });
+
+		this.setState({
+			postTextByStream,
+			cursorPosition: getCurrentCursorPosition("input-div")
+		});
 	}
 
 	// the keypress handler for tracking up and down arrow
@@ -285,6 +310,7 @@ class ComposeBox extends React.Component {
 		const nodeText = node.textContent || "";
 		const upToCursor = nodeText.substring(0, range.startOffset);
 		const peopleMatch = upToCursor.match(/(?:^|\s)@([a-zA-Z0-9_.+]*)$/);
+		const emojiMatch = upToCursor.match(/(?:^|\s):([a-z+_]*)$/);
 		const slashMatch = newPostText.match(/^\/([a-zA-Z0-9+]*)$/);
 		if (this.state.popupOpen === "at-mentions") {
 			if (peopleMatch) {
@@ -300,13 +326,17 @@ class ComposeBox extends React.Component {
 				// if the line doesn't start with /word, then hide the popup
 				this.hidePopup();
 			}
+		} else if (this.state.popupOpen === "emojis") {
+			if (emojiMatch) {
+				this.showPopupSelectors(emojiMatch[1].replace(/:/, ""), "emojis");
+			} else {
+				// if the line doesn't look like :word, then hide the popup
+				this.hidePopup();
+			}
 		} else {
-			if (peopleMatch) {
-				this.showPopupSelectors(peopleMatch[1].replace(/@/, ""), "at-mentions");
-			}
-			if (slashMatch) {
-				this.showPopupSelectors(slashMatch[0].replace(/\//, ""), "slash-commands");
-			}
+			if (peopleMatch) this.showPopupSelectors(peopleMatch[1].replace(/@/, ""), "at-mentions");
+			if (slashMatch) this.showPopupSelectors(slashMatch[0].replace(/\//, ""), "slash-commands");
+			if (emojiMatch) this.showPopupSelectors(emojiMatch[1].replace(/:/, ""), "emojis");
 		}
 		// track newPostText as the user types
 		let postTextByStream = this.state.postTextByStream;
@@ -314,7 +344,8 @@ class ComposeBox extends React.Component {
 		// this.setState({ postTextByStream });
 		this.setState({
 			postTextByStream,
-			autoMentions: this.state.autoMentions.filter(mention => newPostText.includes(mention))
+			autoMentions: this.state.autoMentions.filter(mention => newPostText.includes(mention)),
+			cursorPosition: getCurrentCursorPosition("input-div")
 		});
 	};
 
@@ -323,6 +354,30 @@ class ComposeBox extends React.Component {
 	handleBlur = event => {
 		event.preventDefault();
 		this.hidePopup();
+	};
+
+	handleClick = event => {
+		this.setState({
+			cursorPosition: getCurrentCursorPosition("input-div")
+		});
+	};
+
+	// https://stackoverflow.com/questions/6249095/how-to-set-caretcursor-position-in-contenteditable-element-div
+	setCurrentCursorPosition = chars => {
+		if (this._contentEditable.htmlEl.innerHTML === "") {
+			return;
+		}
+		if (chars < 0) chars = 0;
+
+		var selection = window.getSelection();
+
+		let range = createRange(document.getElementById("input-div").parentNode, { count: chars });
+
+		if (range) {
+			range.collapse(false);
+			selection.removeAllRanges();
+			selection.addRange(range);
+		}
 	};
 
 	handleKeyPress = event => {
@@ -340,6 +395,8 @@ class ComposeBox extends React.Component {
 			}
 		} else if (event.key === "@") {
 			this.showPopupSelectors("", "at-mentions");
+		} else if (event.key === ":") {
+			this.showPopupSelectors("", "emojis");
 		} else if (event.key === "/" && newPostText.length === 0) {
 			this.showPopupSelectors("", "slash-commands");
 		} else if (event.key === "Enter" && !event.shiftKey) {
@@ -390,13 +447,28 @@ class ComposeBox extends React.Component {
 		this.reset();
 	};
 
+	toggleEmojiPicker = event => {
+		this.setState({ emojiPickerOpen: !this.state.emojiPickerOpen });
+		// this.focus();
+		// event.stopPropagation();
+	};
+
+	addEmoji = emoji => {
+		this.setState({ emojiPickerOpen: false });
+		if (emoji && emoji.colons) {
+			this.focus();
+			this.setCurrentCursorPosition(this.state.cursorPosition);
+			this.insertTextAtCursor(emoji.colons); // + "\u00A0"); <= that's a space
+		}
+	};
+
 	reset() {
-		this.setState({ postTextByStream: [], quote: null, autoMentions: [] });
+		this.setState({ postTextByStream: [], quote: null, autoMentions: [], emojiPickerOpen: false });
 	}
 
 	render() {
 		const { forwardedRef, placeholder } = this.props;
-		const { quote } = this.state;
+		const { quote, emojiPickerOpen } = this.state;
 
 		let quoteInfo;
 		let quoteHint;
@@ -441,6 +513,23 @@ class ComposeBox extends React.Component {
 				/>
 				{quoteInfo}
 				{quoteHint}
+				<Icon
+					name="smiley"
+					className={createClassString("smiley", {
+						hover: emojiPickerOpen
+					})}
+					onClick={this.toggleEmojiPicker}
+				/>
+				{emojiPickerOpen && (
+					<EmojiPicker
+						addEmoji={this.addEmoji}
+						style={{
+							position: "absolute",
+							bottom: "45px",
+							right: "10px"
+						}}
+					/>
+				)}
 				<ContentEditable
 					className={createClassString("native-key-bindings", "message-input", btoa(placeholder))}
 					id="input-div"
@@ -448,6 +537,7 @@ class ComposeBox extends React.Component {
 					tabIndex="-1"
 					onChange={this.handleChange}
 					onBlur={this.handleBlur}
+					onClick={this.handleClick}
 					html={contentEditableHTML}
 					placeholder={placeholder}
 					ref={ref => (this._contentEditable = ref)}

@@ -2,7 +2,26 @@
 @import "../node_modules/rc-tooltip/assets/bootstrap.css";
 
 //@import "ui-variables";
-// @import "emoji-mart/css/emoji-mart.css";
+@import "../node_modules/highlight.js/styles/default.css";
+
+@import "../node_modules/emoji-mart/css/emoji-mart.css";
+// for some reason the search icon appears too low so we correct it here
+.emoji-mart-search-icon {
+	top: 2px;
+}
+.emoji-mart,
+.emoji-mart-category-label span {
+	background: @base-background-color;
+	color: @text-color;
+}
+.emoji-mart,
+.emoji-mart * {
+	border-color: @base-border-color;
+}
+.emoji-mart {
+	max-width: 95%;
+	box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+}
 
 @panel-header-height: 2.1em;
 
@@ -386,6 +405,22 @@
 				opacity: 0.5;
 			}
 
+			.smiley {
+				position: absolute;
+				bottom: 15px;
+				right: 18px;
+				opacity: 0.4;
+				cursor: pointer;
+				transition: transform 0.1s;
+			}
+
+			.smiley:hover,
+			.smiley.hover {
+				opacity: 1;
+				color: @text-color-info;
+				transform: scale(1.4);
+			}
+
 			.hint {
 				margin: 4px -5px 4px 2px;
 				font-size: 12px;
@@ -407,7 +442,8 @@
 		.message-input {
 			box-sizing: border-box;
 			width: 100%;
-			padding: 10px;
+			// the 30px is to make room for the smiley icon
+			padding: 10px 30px 10px 10px;
 			border-radius: 4px;
 			// background: #fff;
 			background: @base-background-color;
@@ -467,6 +503,7 @@
 			color: @text-color;
 		}
 		.code,
+		code,
 		pre code {
 			max-width: 100%;
 			max-height: 200px;
@@ -485,13 +522,19 @@
 			line-height: 12px;
 			tab-size: 2;
 			position: relative;
-			display: block;
 			color: @text-color;
 		}
+		code,
 		pre code {
 			margin-top: 5px;
 			border: 1px solid @base-border-color;
 			border-radius: 4px;
+		}
+		pre code {
+			display: block;
+		}
+		code {
+			padding: 2px 5px;
 		}
 		.mentions-popup {
 			width: 100%;
@@ -1046,10 +1089,10 @@
 			}
 		}
 
-		.post.unread {
-			border-left: 1px solid @background-color-info;
-			border-right: 1px solid @background-color-info;
-		}
+		// .post.unread {
+		// 	border-left: 1px solid @background-color-info;
+		// 	border-right: 1px solid @background-color-info;
+		// }
 		.post {
 			padding: 10px 9px 10px 55px; // 1px left and right for border
 			cursor: pointer;
@@ -1062,6 +1105,51 @@
 			border-top: 1px solid transparent;
 			border-left: 1px solid transparent;
 			// overflow-x: hidden;
+			.emoji {
+				font-size: 1.5em;
+				vertical-align: -0.15em;
+			}
+			.only-emoji .emoji {
+				font-size: 2.5em;
+			}
+			.reaction {
+				margin: 5px 5px 0 0;
+				line-height: 1.5em;
+				display: inline-block;
+				padding: 2px 7px 2px 2px;
+				border: 1px solid @base-border-color;
+				border-radius: 15px;
+				background: @base-background-color;
+				white-space: normal;
+				.emoji {
+					vertical-align: -0.2em;
+				}
+				p {
+					display: inline;
+					margin: 0;
+					padding: 0;
+				}
+				&.add-reaction {
+					opacity: 0;
+				}
+				&.mine {
+					border-color: @background-color-umi;
+					background: @background-color-umi;
+					color: white;
+				}
+			}
+			.reaction:hover,
+			.reaction.mine:hover {
+				border-color: @text-color-info;
+				background: @base-background-color;
+				color: @text-color-info;
+			}
+			.reactions:hover {
+				.add-reaction {
+					opacity: 1;
+					padding: 2px 4px;
+				}
+			}
 			.headshot-gravatar,
 			.headshot-system {
 				display: block;
@@ -1131,10 +1219,19 @@
 				// padding-left: 46px;
 			}
 			.align-right {
-				color: @text-color-subtle;
-				opacity: 0.5;
 				display: none;
 				float: right;
+				.icon {
+					color: @text-color-subtle;
+					opacity: 0.5;
+					display: inline-block;
+					transition: transform 0.1s;
+					padding-left: 3px;
+					padding-right: 3px;
+					&.smiley {
+						transform: scale(0.9);
+					}
+				}
 			}
 			.icon-alert,
 			.icon-question {
@@ -1156,11 +1253,12 @@
 				// left: 30px;
 			}
 			blockquote {
-				border-left: 2px solid @text-color-info;
-				padding: 2px 0 2px 10px;
+				border-left: 3px solid @text-color-info;
+				padding: 0px 0 0px 5px;
 				margin: 5px 0;
 				font-family: inherit;
 				font-size: inherit;
+				background: inherit;
 			}
 			.replying-to,
 			.code-reference .file {
@@ -1270,11 +1368,14 @@
 
 		.post:hover {
 			background: @app-background-color-hover;
-			.gear {
+			.align-right {
 				display: block;
+				// opacity: 1;
 			}
-			.gear:hover {
-				color: #aaa;
+			.icon:hover {
+				opacity: 1;
+				color: @text-color-info;
+				transform: scale(1.4);
 			}
 			time {
 				.details {
