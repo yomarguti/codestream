@@ -45,6 +45,7 @@ import {
 	UpdateStreamMembershipResponse
 } from "../shared/api.protocol";
 import { Functions } from "../system/function";
+import { Strings } from "../system/string";
 
 export { AccessToken } from "../shared/agent.protocol";
 export * from "../shared/api.protocol";
@@ -401,8 +402,7 @@ export class CodeStreamApi {
 
 			return CodeStreamApi.normalizeResponse(await json!);
 		} finally {
-			const duration = process.hrtime(start);
-			Logger.log(`${traceResult} in ${duration[0] * 1000 + Math.floor(duration[1] / 1000000)}ms`);
+			Logger.log(`${traceResult} in ${Strings.getDurationMilliseconds(start)} ms`);
 		}
 	}
 

@@ -301,14 +301,11 @@ export class PubnubConnection {
 			this._lastMessageReceivedAt = receivedAt;
 			this._debug("_lastMessageReceivedAt updated");
 		}
-		
+
 		// we avoid sending duplicate messages up the chain by maintaining a list of the messages
 		// we've already received, dropping duplicates to the floor
 		const { messageId } = event.message;
-		if (
-			!messageId ||
-			!this._messagesReceived[messageId]
-		) {
+		if (!messageId || !this._messagesReceived[messageId]) {
 			if (messageId) {
 				this._messagesReceived[messageId] = Date.now();
 			}
@@ -938,7 +935,7 @@ export class PubnubConnection {
 	}
 
 	// clean up our ongoing tracking of messages received
-	private cleanUpMessagesReceived () {
+	private cleanUpMessagesReceived() {
 		// we'll clean up any record of messages received more than ten minutes old
 		const cutoff = Date.now() - 10 * 60 * 1000;
 		Object.keys(this._messagesReceived).forEach(messageId => {

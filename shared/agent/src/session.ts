@@ -35,6 +35,7 @@ import {
 	RepositoriesMessageReceivedEvent
 } from "./pubnub/pubnubReceiver";
 import { StreamManager } from "./stream/streamManager";
+import { Strings } from "./system";
 
 const loginApiErrorMappings: { [k: string]: ApiErrors } = {
 	"USRC-1001": ApiErrors.InvalidCredentials,
@@ -226,8 +227,7 @@ export class CodeStreamSession {
 				state: { ...Container.instance().state }
 			};
 		} finally {
-			const duration = process.hrtime(start);
-			Logger.log(`Login completed in ${duration[0] * 1000 + Math.floor(duration[1] / 1000000)}ms`);
+			Logger.log(`Login completed in ${Strings.getDurationMilliseconds(start)} ms`);
 		}
 	}
 

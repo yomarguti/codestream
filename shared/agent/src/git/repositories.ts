@@ -234,11 +234,10 @@ export class GitRepositories {
 		}
 
 		if (depth <= 0) {
-			const duration = process.hrtime(start);
 			Logger.log(
-				`Searching for repositories (depth=${depth}) in '${folderUri.fsPath}' took ${duration[0] *
-					1000 +
-					Math.floor(duration[1] / 1000000)} ms`
+				`Searching for repositories (depth=${depth}) in '${
+					folderUri.fsPath
+				}' took ${Strings.getDurationMilliseconds(start)} ms`
 			);
 
 			return repositories;
@@ -306,11 +305,10 @@ export class GitRepositories {
 			repositories.push(repo);
 		}
 
-		const duration = process.hrtime(start);
 		Logger.log(
-			`Searching for repositories (depth=${depth}) in '${folderUri.fsPath}' took ${duration[0] *
-				1000 +
-				Math.floor(duration[1] / 1000000)} ms`
+			`Searching for repositories (depth=${depth}) in '${
+				folderUri.fsPath
+			}' took ${Strings.getDurationMilliseconds(start)} ms`
 		);
 
 		return repositories;

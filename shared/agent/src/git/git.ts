@@ -1,5 +1,6 @@
 "use strict";
 import { Logger } from "../logger";
+import { Strings } from "../system";
 import { CommandOptions, runCommand } from "./shell";
 
 export const GitErrors = {
@@ -86,8 +87,7 @@ export async function git(
 	} finally {
 		pendingCommands.delete(command);
 
-		const duration = process.hrtime(start);
-		const completedIn = `in ${duration[0] * 1000 + Math.floor(duration[1] / 1000000)} ms`;
+		const completedIn = `in ${Strings.getDurationMilliseconds(start)} ms`;
 
 		Logger.log(`GIT: Completed${command} ${completedIn}`);
 		// Logger.logGitCommand(`${gitCommand} ${completedIn}`, runOpts.cwd!);
