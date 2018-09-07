@@ -2,6 +2,7 @@
 // import * as str from "../strings";
 const MarkdownIt = require("markdown-it");
 const markdownItSlack = require("markdown-it-slack");
+const markdownItEmoji = require("markdown-it-emoji-mart");
 import hljs from "highlight.js";
 
 // export const parseUsernames = (uiMessage: UIMessage): UIMessage => {
@@ -80,7 +81,9 @@ const md = new MarkdownIt({
 
 		return '<pre class="hljs"><code>' + md.utils.escapeHtml(str) + "</code></pre>";
 	}
-}).use(markdownItSlack);
+})
+	.use(markdownItSlack)
+	.use(markdownItEmoji);
 
 md.renderer.rules.emoji = function(token, idx) {
 	return '<span class="emoji">' + token[idx].content + "</span>";

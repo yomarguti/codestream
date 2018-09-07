@@ -21,6 +21,7 @@
 		"emoji-mart": "^2.8.1",
 		"highlight.js": "^9.12.0",
 		"markdown-it": "^8.4.1",
+		"markdown-it-emoji-mart": "^0.1.1",
 		"markdown-it-slack": "^1.2.0",
 		"moment": "2.22.1",
 		"octicons": "7.3.0",
