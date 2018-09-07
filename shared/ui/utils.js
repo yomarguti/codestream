@@ -31,7 +31,7 @@ export const getCurrentCursorPosition = parentId => {
 		charCount = -1,
 		node;
 
-	console.log(selection);
+	// console.log(selection);
 	if (selection.focusNode) {
 		if (isChildOf(selection.focusNode, parentId)) {
 			node = selection.focusNode;

@@ -7,6 +7,7 @@ import AtMentionsPopup from "./AtMentionsPopup";
 import Icon from "./Icon";
 import EmojiPicker from "./EmojiPicker";
 import { getCurrentCursorPosition, createRange } from "../utils";
+const emojiData = require("../node_modules/markdown-it-emoji-mart/lib/data/full.json");
 
 const arrayToRange = ([startRow, startCol, endRow, endCol]) => {
 	return {
@@ -149,11 +150,15 @@ class ComposeBox extends React.Component {
 				}
 			});
 		} else if (type === "emojis") {
-			console.log("matching prefix: >" + prefix + "<");
 			if (prefix && prefix.length > 1) {
+				Object.keys(emojiData).map(emojiId => {
+					if (emojiId.indexOf(prefix) === 0) {
+						itemsToShow.push({ id: emojiId, identifier: emojiData[emojiId] + " " + emojiId });
+					}
+				});
 			} else {
 				itemsToShow.push({
-					identifier: "Matching Emoji. Type 2 or more characters"
+					description: "Matching Emoji. Type 2 or more characters"
 				});
 			}
 		}
@@ -279,13 +284,16 @@ class ComposeBox extends React.Component {
 		if (!id) id = this.state.selectedPopupItem;
 
 		let toInsert;
+		let toInsertPostfix = "";
 
 		if (this.state.popupOpen === "slash-commands") {
-			toInsert = id;
+			toInsert = id + "\u00A0";
+		} else if (this.state.popupOpen === "emojis") {
+			toInsert = id + ":\u00A0";
 		} else {
 			let user = this.props.teammates.find(t => t.id === id);
 			if (!user) return;
-			toInsert = user.username;
+			toInsert = user.username + ":\u00A0";
 		}
 		this.hidePopup();
 		setTimeout(() => {
@@ -295,7 +303,7 @@ class ComposeBox extends React.Component {
 		// not render a space at the end of a contenteditable div
 		// unless it is a &nbsp;, which is difficult to insert
 		// so we insert this unicode character instead
-		this.insertTextAtCursor(toInsert + "\u00A0", this.state.popupPrefix);
+		this.insertTextAtCursor(toInsert, this.state.popupPrefix);
 		// this.setNewPostText(text);
 	};
 
