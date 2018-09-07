@@ -267,7 +267,6 @@ export class CodeStreamApi {
 		body: RQ,
 		token?: string
 	): Promise<R> {
-		Logger.log("POSTING: ", JSON.stringify(body));
 		return this.fetch<R>(
 			url,
 			{
@@ -402,7 +401,11 @@ export class CodeStreamApi {
 
 			return CodeStreamApi.normalizeResponse(await json!);
 		} finally {
-			Logger.log(`${traceResult} in ${Strings.getDurationMilliseconds(start)} ms`);
+			Logger.log(
+				`${traceResult}${
+					init && init.body ? ` body=${CodeStreamApi.sanitize(init && init.body)}` : ""
+				} \u2022 ${Strings.getDurationMilliseconds(start)} ms`
+			);
 		}
 	}
 
@@ -496,7 +499,9 @@ export class CodeStreamApi {
 	) {
 		if (body === undefined || typeof body !== "string") return "";
 
-		return body.replace(/("password":)".*?"/gi, '$1"<hidden>"');
+		return body
+			.replace(/("password":)".*?"/gi, '$1"<hidden>"')
+			.replace(/("token":)".*?"/gi, '$1"<hidden>"');
 	}
 }
 
