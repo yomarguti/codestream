@@ -567,8 +567,9 @@ export class StreamWebviewPanel implements Disposable {
 			case SessionChangedEventType.Teams:
 			case SessionChangedEventType.Unreads:
 			case SessionChangedEventType.Users:
-				Logger.log(`WebviewPanel: Attempting to send ${e.type} to the webview...`);
-				this.postMessage(e.toIpcMessage());
+				const msg = e.toIpcMessage();
+				Logger.log(`WebviewPanel: Attempting to send ${toLoggableIpcMessage(msg)} to the webview...`);
+				this.postMessage(msg);
 				break;
 		}
 	}
