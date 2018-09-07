@@ -1179,7 +1179,7 @@ export class SimpleStream extends Component {
 	};
 
 	archiveChannel = () => {
-		const { postStream, currentUser, teamMembersById } = this.props;
+		const { postStream, currentUserId, teamMembersById } = this.props;
 		if (postStream.creatorId !== currentUserId) {
 			let text = "You may only archive channels that you created.";
 			if (postStream.creatorId) {
