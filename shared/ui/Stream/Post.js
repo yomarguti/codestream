@@ -123,8 +123,6 @@ class Post extends Component {
 		const { post } = this.props;
 		const { menuOpen, authorMenuOpen, menuTarget } = this.state;
 
-		console.log("REACTIONS ARE: ", post.reactions);
-
 		const mine = this.props.currentUser.username === post.author.username;
 		const systemPost = post.creatorId === "codestream";
 
