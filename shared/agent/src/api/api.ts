@@ -377,7 +377,7 @@ export class CodeStreamApi {
 				}
 
 				if (resp.ok) {
-					traceResult = `API: Completed ${method} ${url} ` + JSON.stringify(init);
+					traceResult = `API: Completed ${method} ${url}`;
 					json = resp.json() as Promise<R>;
 				}
 			}
