@@ -98,7 +98,7 @@ export class WebviewIpc {
 
 		this._paused = false;
 		if (this._queue.length > WebviewIpc.QueueThreshold) {
-			Logger.log("WebviewPanel: Too out of data; reloading...");
+			Logger.log("WebviewPanel: Too out of date; reloading...");
 
 			await this._webview.reload();
 

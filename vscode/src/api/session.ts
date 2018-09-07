@@ -7,7 +7,7 @@ import { configuration } from "../configuration";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { Functions, Strings } from "../system";
-import { CSPost, CSUser, LoginResult, PresenceStatus } from "./api";
+import { LoginResult, PresenceStatus } from "./api";
 import { Cache } from "./cache";
 import { Marker } from "./models/markers";
 import { Post } from "./models/posts";
@@ -71,7 +71,7 @@ export {
 	UsersChangedEvent
 };
 
-const envRegex = /https?:\/\/(pd-|qa-)api.codestream.(?:us|com)/;
+const envRegex = /https?:\/\/(pd-|qa-)?api.codestream.(?:us|com)/;
 
 export enum CodeStreamEnvironment {
 	PD = "pd",
@@ -252,7 +252,8 @@ export class CodeStreamSession implements Disposable {
 		const match = envRegex.exec(url);
 		if (match == null) return;
 
-		switch (match[1].toLowerCase()) {
+		const [, env] = match;
+		switch (env == null ? env : env.toLowerCase()) {
 			case "pd-":
 				this._environment = CodeStreamEnvironment.PD;
 				break;

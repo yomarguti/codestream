@@ -9,12 +9,14 @@ import { Config, configuration, Configuration } from "./configuration";
 import { extensionQualifiedId } from "./constants";
 import { Container } from "./container";
 import { Logger } from "./logger";
-import { FileSystem } from "./system";
+import { FileSystem, Strings } from "./system";
 
 const extension = extensions.getExtension(extensionQualifiedId)!;
 export const extensionVersion = extension.packageJSON.version;
 
 export async function activate(context: ExtensionContext) {
+	const start = process.hrtime();
+
 	Configuration.configure(context);
 	Logger.configure(context);
 
@@ -48,6 +50,12 @@ export async function activate(context: ExtensionContext) {
 	if (cfg.autoSignIn) {
 		Container.commands.signIn();
 	}
+
+	Logger.log(
+		`CodeStream v${extensionVersion}${
+			info.build ? `-${info.build}` : ""
+		} started \u2022 ${Strings.getDurationMilliseconds(start)} ms`
+	);
 }
 
 export async function deactivate(): Promise<void> {}
