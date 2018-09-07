@@ -7,10 +7,10 @@
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": ["--extensionDevelopmentPath=${workspaceRoot}"],
-			"smartStep": true,
-			"sourceMaps": true,
 			"outFiles": ["${workspaceRoot}/dist/**/*.js"],
-			"trace": true
+			"skipFiles": ["<node_internals>/**/*.js", "**/node_modules/**/*.js", "**/extensions/**/*.js"],
+			"smartStep": true,
+			"sourceMaps": true
 		},
 		{
 			"name": "Rebuild & Launch CodeStream",
@@ -18,9 +18,10 @@
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": ["--extensionDevelopmentPath=${workspaceRoot}"],
+			"outFiles": ["${workspaceRoot}/dist/**/*.js"],
+			"skipFiles": ["<node_internals>/**/*.js", "**/node_modules/**/*.js", "**/extensions/**/*.js"],
 			"smartStep": true,
 			"sourceMaps": true,
-			"outFiles": ["${workspaceRoot}/dist/**/*.js"],
 			"preLaunchTask": "npm: rebuild"
 		},
 		{
@@ -29,27 +30,11 @@
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": ["--extensionDevelopmentPath=${workspaceRoot}"],
+			"outFiles": ["${workspaceRoot}/dist/**/*.js"],
+			"skipFiles": ["<node_internals>/**/*.js", "**/node_modules/**/*.js", "**/extensions/**/*.js"],
 			"smartStep": true,
 			"sourceMaps": true,
-			"outFiles": ["${workspaceRoot}/dist/**/*.js"],
-			"trace": true,
 			"preLaunchTask": "watch"
-		},
-		{
-			"name": "Debug Extension (Akonwi)",
-			"type": "extensionHost",
-			"request": "launch",
-			"runtimeExecutable": "${execPath}",
-			"args": [
-				"--extensionDevelopmentPath=${workspaceRoot}",
-				"--enable-proposed-api",
-				"akonwi.codestream",
-				"/Users/akonwi/projects/bundles/"
-			],
-			"smartStep": true,
-			"sourceMaps": true,
-			"outFiles": ["${workspaceRoot}/dist/**/*.js"],
-			"preLaunchTask": "npm: watch"
 		}
 	]
 }

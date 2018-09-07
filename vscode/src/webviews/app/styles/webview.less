@@ -18,12 +18,17 @@ body {
 	background-size: contain;
 
 	.vscode-dark & {
-		// a comment here explaining what this was would be awesome... thanks -Pez
+		// CodeStream logo in svg for the loading background
 		background-image: url('data:image/svg+xml;utf8,<svg width="50" height="40" xmlns="http://www.w3.org/2000/svg"><path fill="#fff" fill-opacity="0.05" d="M20.4 19.87a4.57 4.57 0 1 0 9.13-.01 4.57 4.57 0 0 0-9.13.01z"/><path fill="#fff" fill-opacity="0.05" d="M26.92 6.35c-.1.1-.17.24-.17.38v5.43a7.9 7.9 0 0 1 0 15.36v5.53a.53.53 0 0 0 .92.36l11.48-12.17c.71-.76.71-1.94 0-2.7L27.67 6.38a.53.53 0 0 0-.75-.02zm-4.64.02L10.8 18.55a1.96 1.96 0 0 0 0 2.69L22.28 33.4a.53.53 0 0 0 .91-.36v-5.53a7.9 7.9 0 0 1 0-15.36V6.73a.53.53 0 0 0-.53-.52.53.53 0 0 0-.38.16z"/></svg>');
 	}
 
 	.vscode-light & {
+		// CodeStream logo in svg for the loading background
 		background-image: url('data:image/svg+xml;utf8,<svg width="50" height="40" xmlns="http://www.w3.org/2000/svg"><path fill="#000" fill-opacity="0.05" d="M20.4 19.87a4.57 4.57 0 1 0 9.13-.01 4.57 4.57 0 0 0-9.13.01z"/><path fill="#000" fill-opacity="0.05" d="M26.92 6.35c-.1.1-.17.24-.17.38v5.43a7.9 7.9 0 0 1 0 15.36v5.53a.53.53 0 0 0 .92.36l11.48-12.17c.71-.76.71-1.94 0-2.7L27.67 6.38a.53.53 0 0 0-.75-.02zm-4.64.02L10.8 18.55a1.96 1.96 0 0 0 0 2.69L22.28 33.4a.53.53 0 0 0 .91-.36v-5.53a7.9 7.9 0 0 1 0-15.36V6.73a.53.53 0 0 0-.53-.52.53.53 0 0 0-.38.16z"/></svg>');
+	}
+
+	.preload & {
+		background-color: var(--app-background-color);
 	}
 }
 
@@ -70,6 +75,11 @@ body {
 	height: 100%;
 	position: absolute;
 	width: 100%;
+
+	.preload & {
+		// Force this animation to happen during preload
+		animation-duration: 1.5s !important;
+	}
 }
 
 .loader-ring__segment:nth-child(1) {
@@ -143,6 +153,18 @@ body.preload * {
 	}
 	input[type="radio"] {
 		outline: none;
+	}
+	.post.new-separator {
+		border-top: 1px solid #99caeb;
+		.vscode-dark& {
+			border-top: 1px solid #205376;
+		}
+	}
+	.post.new-separator::before {
+		color: #99caeb;
+		.vscode-dark& {
+			color: #205376;
+		}
 	}
 
 	.standard-form {
@@ -225,7 +247,8 @@ body.preload * {
 		.message-input {
 			border-radius: 0;
 			border: none;
-			padding: 5px 6px !important;
+			// the 26px is to make room for the smiley icon
+			padding: 5px 26px 5px 6px !important;
 		}
 
 		.code::-webkit-scrollbar-corner {
@@ -242,7 +265,7 @@ body.preload * {
 					background-color: @background-color-highlight-light !important;
 				}
 			}
-			.code-reference span {
+			.code-reference .file {
 				height: 1.4em;
 				overflow: hidden;
 				text-overflow: ellipsis;
@@ -257,7 +280,7 @@ body.preload * {
 					font-weight: normal;
 				}
 			}
-			.code-reference span {
+			.code-reference .header {
 				direction: rtl;
 				text-align: center;
 				color: @text-color-subtle;
@@ -386,27 +409,8 @@ body.preload * {
 		opacity: 0.5;
 		margin: 4px 0;
 	}
+
 	// from https://codepen.io/TofuBot/pen/obydpM
-	.shadow-overlay {
-		position: relative;
-		width: auto;
-		height: auto;
-		height: 100%;
-	}
-	.shadow-container {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		pointer-events: none;
-	}
-
-	.shadow {
-		position: absolute;
-		z-index: 4;
-	}
-
 	.shadow-top {
 		top: 0;
 		left: 0;
@@ -427,7 +431,7 @@ body.preload * {
 		height: 5px;
 	}
 
-	.vscode-light & {
+	.vscode-light& {
 		.shadow-top,
 		.shadow-bottom {
 			opacity: 0.2;

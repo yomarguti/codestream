@@ -1,20 +1,13 @@
 "use strict";
 import * as uuid from "uuid/v4";
-import {
-	ConfigurationChangeEvent,
-	ConfigurationTarget,
-	Disposable,
-	Event,
-	EventEmitter
-} from "vscode";
-import { AccessToken, AgentResult } from "../agent/agentConnection";
-import { GlobalState, WorkspaceState } from "../common";
+import { ConfigurationTarget, Disposable, Event, EventEmitter } from "vscode";
+import { AccessToken, AgentResult, DocumentMarkersChangedEvent } from "../agent/agentConnection";
+import { WorkspaceState } from "../common";
 import { configuration } from "../configuration";
 import { Container } from "../container";
 import { Logger } from "../logger";
-import { Functions, memoize, Strings } from "../system";
-import { CSPost, CSUser } from "./api";
-import { CodeStreamApi, CSRepository, CSStream, LoginResult, PresenceStatus } from "./api";
+import { Functions, Strings } from "../system";
+import { CSPost, CSUser, LoginResult, PresenceStatus } from "./api";
 import { Cache } from "./cache";
 import { Marker } from "./models/markers";
 import { Post } from "./models/posts";
@@ -32,19 +25,24 @@ import { Team } from "./models/teams";
 import { User } from "./models/users";
 import { PresenceManager } from "./presence";
 import { PresenceMiddleware } from "./presenceMiddleware";
-import {
-	MarkersMessageReceivedEvent,
-	MessageReceivedEvent,
-	MessageType,
-	PostsMessageReceivedEvent,
-	PubNubReceiver,
-	RepositoriesMessageReceivedEvent,
-	StreamsMessageReceivedEvent,
-	TeamsMessageReceivedEvent,
-	UsersMessageReceivedEvent
-} from "./pubnub";
+import { MessageReceivedEvent, MessageType, PubNubReceiver } from "./pubnub";
 import { CodeStreamSessionApi } from "./sessionApi";
+import {
+	MergeableEvent,
+	PostsChangedEvent,
+	RepositoriesChangedEvent,
+	SessionChangedEvent,
+	SessionChangedEventType,
+	SessionStatusChangedEvent,
+	StreamsChangedEvent,
+	StreamsMembershipChangedEvent,
+	TeamsChangedEvent,
+	TextDocumentMarkersChangedEvent,
+	UnreadsChangedEvent,
+	UsersChangedEvent
+} from "./sessionEvents";
 import { SessionState } from "./sessionState";
+import { TokenManager } from "./tokenManager";
 
 export {
 	ChannelStream,
@@ -52,153 +50,158 @@ export {
 	DirectStream,
 	FileStream,
 	Marker,
+	DocumentMarkersChangedEvent,
 	Post,
+	PostsChangedEvent,
 	PresenceStatus,
 	Repository,
+	RepositoriesChangedEvent,
+	SessionChangedEventType,
+	SessionStatusChangedEvent,
 	Stream,
+	StreamsChangedEvent,
+	StreamsMembershipChangedEvent,
 	StreamThread,
 	StreamType,
 	Team,
-	User
+	TeamsChangedEvent,
+	TextDocumentMarkersChangedEvent,
+	UnreadsChangedEvent,
+	User,
+	UsersChangedEvent
 };
 
+const envRegex = /https?:\/\/(pd-|qa-)api.codestream.(?:us|com)/;
+
+export enum CodeStreamEnvironment {
+	PD = "pd",
+	Production = "prod",
+	QA = "qa",
+	Unknown = "unknown"
+}
+
+export enum SessionSignedOutReason {
+	NetworkIssue = "networkIssue",
+	SignInFailure = "signInFailure",
+	UserSignedOut = "userSignedOut",
+	UserWentOffline = "userWentOffline"
+}
+
+export enum SessionStatus {
+	SignedOut = "signedOut",
+	SigningIn = "signingIn",
+	SignedIn = "signedIn"
+}
+
 export class CodeStreamSession implements Disposable {
-	private static _loginPromise: Promise<LoginResult> | undefined;
-
-	static findRepo(serverUrl: string, repoUrl: string, firstCommitHashes: string[]) {
-		return new CodeStreamApi(serverUrl).findRepo(repoUrl, firstCommitHashes);
+	private _onDidChangeTextDocumentMarkers = new EventEmitter<TextDocumentMarkersChangedEvent>();
+	get onDidChangeTextDocumentMarkers(): Event<TextDocumentMarkersChangedEvent> {
+		return this._onDidChangeTextDocumentMarkers.event;
 	}
 
-	private _onDidChange = new EventEmitter<SessionChangedEvent>();
-	get onDidChange(): Event<SessionChangedEvent> {
-		return this._onDidChange.event;
+	private _onDidChangePosts = new EventEmitter<PostsChangedEvent>();
+	get onDidChangePosts(): Event<PostsChangedEvent> {
+		return this._onDidChangePosts.event;
+	}
+	private fireDidChangePosts = createMergableDebouncedEvent(this._onDidChangePosts);
+
+	private _onDidChangeRepositories = new EventEmitter<RepositoriesChangedEvent>();
+	get onDidChangeRepositories(): Event<RepositoriesChangedEvent> {
+		return this._onDidChangeRepositories.event;
+	}
+	private fireDidChangeRepositories = createMergableDebouncedEvent(this._onDidChangeRepositories);
+
+	private _onDidChangeSessionStatus = new EventEmitter<SessionStatusChangedEvent>();
+	get onDidChangeSessionStatus(): Event<SessionStatusChangedEvent> {
+		return this._onDidChangeSessionStatus.event;
 	}
 
-	private _onDidChangeStatus = new EventEmitter<SessionStatusChangedEvent>();
-	get onDidChangeStatus(): Event<SessionStatusChangedEvent> {
-		return this._onDidChangeStatus.event;
+	private _onDidChangeStreams = new EventEmitter<
+		StreamsChangedEvent | StreamsMembershipChangedEvent
+	>();
+	get onDidChangeStreams(): Event<StreamsChangedEvent | StreamsMembershipChangedEvent> {
+		return this._onDidChangeStreams.event;
 	}
+	private fireDidChangeStreams = createMergableDebouncedEvent(this._onDidChangeStreams);
 
-	private _onDidReceivePosts = new EventEmitter<PostsReceivedEvent>();
-	get onDidReceivePosts(): Event<PostsReceivedEvent> {
-		return this._onDidReceivePosts.event;
+	private _onDidChangeTeams = new EventEmitter<TeamsChangedEvent>();
+	get onDidChangeTeams(): Event<TeamsChangedEvent> {
+		return this._onDidChangeTeams.event;
 	}
+	private fireDidChangeTeams = createMergableDebouncedEvent(this._onDidChangeTeams);
+
+	private _onDidChangeUnreads = new EventEmitter<UnreadsChangedEvent>();
+	get onDidChangeUnreads(): Event<UnreadsChangedEvent> {
+		return this._onDidChangeUnreads.event;
+	}
+	private fireDidChangeUnreads = Functions.debounce(
+		(e: UnreadsChangedEvent) => this._onDidChangeUnreads.fire(e),
+		250,
+		{ maxWait: 1000 }
+	);
+
+	private _onDidChangeUsers = new EventEmitter<UsersChangedEvent>();
+	get onDidChangeUsers(): Event<UsersChangedEvent> {
+		return this._onDidChangeUsers.event;
+	}
+	private fireDidChangeUsers = createMergableDebouncedEvent(this._onDidChangeUsers);
 
 	private _disposable: Disposable | undefined;
-	private _disposableSignedIn: Disposable | undefined;
-	private _id: string | undefined;
 
-	private _api: CodeStreamApi;
-	private readonly _pubnub: PubNubReceiver;
+	private _email: string | undefined;
+	private _environment = CodeStreamEnvironment.Unknown;
+	private _id: string | undefined;
+	private _loginPromise: Promise<LoginResult> | undefined;
 	private _presenceManager: PresenceManager | undefined;
-	private _cache: Cache;
+	private _pubnub: PubNubReceiver | undefined;
 	private _sessionApi: CodeStreamSessionApi | undefined;
 	private _state: SessionState | undefined;
 	private _signupToken: string | undefined;
 
 	constructor(private _serverUrl: string) {
-		this._api = new CodeStreamApi(_serverUrl);
-		this._cache = new Cache(this);
-		this._pubnub = new PubNubReceiver(this._cache);
-		this._disposable = Disposable.from(
-			this._pubnub.onDidReceiveMessage(this.onMessageReceived, this),
-			this._pubnub
-		);
+		this.setServerUrl(_serverUrl);
 	}
 
 	dispose() {
 		this._disposable && this._disposable.dispose();
-		this._disposableSignedIn && this._disposableSignedIn.dispose();
 	}
 
-	private async onConfigurationChanged(e: ConfigurationChangeEvent) {
-		if (configuration.changed(e, configuration.name("serverUrl").value)) {
-			this._serverUrl = Container.config.serverUrl;
-			this._api.baseUrl = this._serverUrl;
-
-			if (this.signedIn) {
-				this.logout();
-			}
-		}
-
-		if (configuration.changed(e, configuration.name("email").value)) {
-			if (this.signedIn) {
-				this.logout();
-			}
-		}
+	private onDocumentMarkersChanged(e: DocumentMarkersChangedEvent) {
+		this._onDidChangeTextDocumentMarkers.fire(new TextDocumentMarkersChangedEvent(this, e.uri));
 	}
 
 	private onMessageReceived(e: MessageReceivedEvent) {
 		switch (e.type) {
-			case MessageType.Posts: {
-				this.firePostsReceived(new PostsReceivedEvent(this, e));
-				this.incrementUnreads(e.posts);
+			case MessageType.Posts:
+				this._state!.unreads.update(e.posts, this.fireDidChangeUnreads);
+
+				this.fireDidChangePosts(new PostsChangedEvent(this, e));
 				break;
-			}
 			case MessageType.Repositories:
-				this.fireChanged(new RepositoriesAddedEvent(this, e));
+				this.fireDidChangeRepositories(new RepositoriesChangedEvent(this, e));
 				break;
 			case MessageType.Streams:
-				this.fireChanged(new StreamsAddedEvent(this, e));
-				break;
-			case MessageType.Users:
-				this.fireChanged(new UsersChangedEvent(this, e));
-				e.users.some(user => {
-					if (user.id === this.userId) {
-						this._state!.updateUser(user);
-						this.calculateUnreads(user);
-						return true;
-					}
-					return false;
-				});
+				this.fireDidChangeStreams(new StreamsChangedEvent(this, e));
 				break;
 			case MessageType.Teams:
-				this.fireChanged(new TeamsChangedEvent(this, e));
+				this._state!.updateTeams();
+
+				this.fireDidChangeTeams(new TeamsChangedEvent(this, e));
 				break;
-			case MessageType.Markers:
-				this.fireChanged(new MarkersChangedEvent(this, e));
+			case MessageType.Users:
+				const user = e.users.find(u => u.id === this.userId);
+				if (user != null) {
+					this._state!.updateUser(user);
+					this._state!.unreads.compute(user.lastReads, this.fireDidChangeUnreads);
+				}
+
+				this.fireDidChangeUsers(new UsersChangedEvent(this, e));
 				break;
 		}
 	}
 
-	private _changedDebounced: ((e: SessionChangedEvent) => void) | undefined;
-	protected fireChanged(e: SessionChangedEvent) {
-		if (this._changedDebounced === undefined) {
-			this._changedDebounced = Functions.debounceMerge(
-				(e: SessionChangedEvent) => this._onDidChange.fire(e),
-				(combined: SessionChangedEvent[] | undefined, current: SessionChangedEvent) => {
-					if (combined === undefined) return [current];
-
-					const found = combined.find(_ => _.type === current.type);
-					if (found === undefined) {
-						combined.push(current);
-					} else {
-						(found as IMergeableEvent<SessionChangedEvent>).merge(current);
-					}
-					return combined;
-				},
-				250
-			);
-		}
-		this._changedDebounced(e);
-	}
-
-	private _postsReceivedDebounced: ((e: PostsReceivedEvent) => void) | undefined;
-	protected firePostsReceived(e: PostsReceivedEvent) {
-		if (this._postsReceivedDebounced === undefined) {
-			this._postsReceivedDebounced = Functions.debounceMerge(
-				(e: PostsReceivedEvent) => this._onDidReceivePosts.fire(e),
-				(combined: PostsReceivedEvent[] | undefined, current: PostsReceivedEvent) => {
-					if (combined === undefined) return [current];
-
-					combined[0].merge(current);
-					return combined;
-				},
-				250,
-				{ maxWait: 1000 }
-			);
-		}
-		this._postsReceivedDebounced(e);
+	get email() {
+		return this._email;
 	}
 
 	get id() {
@@ -230,8 +233,36 @@ export class CodeStreamSession implements Disposable {
 		return this._presenceManager!;
 	}
 
-	get serverUrl() {
+	@signedIn
+	get repos() {
+		return this._state!.repos;
+	}
+
+	get environment(): CodeStreamEnvironment {
+		return this._environment;
+	}
+
+	get serverUrl(): string {
 		return this._serverUrl;
+	}
+	private setServerUrl(url: string) {
+		this._serverUrl = url;
+		this._environment = CodeStreamEnvironment.Unknown;
+
+		const match = envRegex.exec(url);
+		if (match == null) return;
+
+		switch (match[1].toLowerCase()) {
+			case "pd-":
+				this._environment = CodeStreamEnvironment.PD;
+				break;
+			case "qa-":
+				this._environment = CodeStreamEnvironment.QA;
+				break;
+			default:
+				this._environment = CodeStreamEnvironment.Production;
+				break;
+		}
 	}
 
 	get signedIn() {
@@ -241,6 +272,13 @@ export class CodeStreamSession implements Disposable {
 	private _status: SessionStatus = SessionStatus.SignedOut;
 	get status() {
 		return this._status;
+	}
+	private setStatus(status: SessionStatus, signedOutReason?: SessionSignedOutReason) {
+		this._status = status;
+		const e: SessionStatusChangedEvent = { getStatus: () => this._status };
+		e.reason = signedOutReason;
+
+		this._onDidChangeSessionStatus.fire(e);
 	}
 
 	@signedIn
@@ -278,109 +316,6 @@ export class CodeStreamSession implements Disposable {
 		return this._signupToken;
 	}
 
-	async login(email: string, password: string, teamId?: string): Promise<LoginResult>;
-	async login(email: string, token: AccessToken, teamId?: string): Promise<LoginResult>;
-	async login(
-		email: string,
-		passwordOrToken: string | AccessToken,
-		teamId?: string
-	): Promise<LoginResult> {
-		const id = Strings.sha1(`${this.serverUrl}|${email}|${teamId}`);
-
-		let loginPromise;
-
-		if (CodeStreamSession._loginPromise !== undefined) {
-			loginPromise = CodeStreamSession._loginPromise;
-		} else {
-			CodeStreamSession._loginPromise = loginPromise = this.loginCore(
-				id,
-				email,
-				passwordOrToken,
-				teamId
-			);
-		}
-
-		const result = await loginPromise;
-		if (result !== LoginResult.Success) {
-			CodeStreamSession._loginPromise = undefined;
-		}
-		return result;
-	}
-
-	async loginWithSignupToken(): Promise<LoginResult> {
-		// TODO: reuse this._loginPromise
-		if (this._signupToken === undefined) throw new Error("A signup token hasn't been generated");
-
-		this._status = SessionStatus.SigningIn;
-		const e: SessionStatusChangedEvent = { getStatus: () => this._status };
-		this._onDidChangeStatus.fire(e);
-
-		const result = await Container.agent.loginWithSignupToken(this._signupToken);
-
-		if (result.error) {
-			this._status = SessionStatus.SignedOut;
-			e.reason = SessionStatusSignedOutReason.SignInFailure;
-			this._onDidChangeStatus.fire(e);
-
-			if (result.error !== LoginResult.NotOnTeam && result.error !== LoginResult.NotConfirmed) {
-				this._signupToken = undefined;
-			}
-
-			return result.error;
-		}
-
-		await this.initializeSession(result, this._signupToken);
-		return LoginResult.Success;
-	}
-
-	async logout(reset: boolean = true) {
-		if (this._id !== undefined) {
-			CodeStreamSession._loginPromise = undefined;
-			this._id = undefined;
-		}
-
-		if (reset) {
-			// Clear the access token
-			await Container.context.globalState.update(GlobalState.AccessToken, undefined);
-		}
-
-		this._status = SessionStatus.SignedOut;
-
-		if (Container.agent !== undefined) {
-			void (await Container.agent.logout());
-		}
-
-		// Clean up saved state
-		this._state = undefined;
-		this._presenceManager = undefined;
-		this._sessionApi = undefined;
-
-		if (this._disposableSignedIn !== undefined) {
-			this._disposableSignedIn.dispose();
-			this._disposableSignedIn = undefined;
-		}
-
-		setImmediate(() => this._onDidChangeStatus.fire({ getStatus: () => this._status }));
-	}
-
-	@signedIn
-	leaveChannel(streamId: string, teamId: string) {
-		this._onDidChange.fire(new StreamsMembershipChangedEvent(streamId, teamId));
-	}
-
-	@signedIn
-	addChannel(
-		name: string,
-		options: ChannelStreamCreationOptions = { membership: "auto", privacy: "public" }
-	) {
-		return this.channels.getOrCreateByName(name, options);
-	}
-
-	@signedIn
-	getDefaultTeamChannel() {
-		return this.channels.getOrCreateByName("general", { membership: "auto", privacy: "public" });
-	}
-
 	@signedIn
 	async getStream(streamId: string): Promise<Stream | undefined> {
 		const stream = await this.api.getStream(streamId);
@@ -391,11 +326,14 @@ export class CodeStreamSession implements Disposable {
 				return new ChannelStream(this, stream);
 			case StreamType.Direct:
 				return new DirectStream(this, stream);
-			case StreamType.File:
-				return new FileStream(this, stream);
 			default:
 				throw new Error("Invalid stream type");
 		}
+	}
+
+	async goOffline() {
+		Container.streamView.hide();
+		return Container.session.logout(SessionSignedOutReason.UserWentOffline);
 	}
 
 	@signedIn
@@ -403,25 +341,100 @@ export class CodeStreamSession implements Disposable {
 		return this._state!.hasSingleTeam();
 	}
 
-	private async loginCore(
-		id: string,
+	async login(email: string, password: string, teamId?: string): Promise<LoginResult>;
+	async login(email: string, token: AccessToken, teamId?: string): Promise<LoginResult>;
+	async login(
 		email: string,
 		passwordOrToken: string | AccessToken,
 		teamId?: string
 	): Promise<LoginResult> {
+		if (this._loginPromise === undefined) {
+			this._loginPromise = this.loginCore(email, passwordOrToken, teamId);
+		}
+
+		const result = await this._loginPromise;
+		if (result !== LoginResult.Success) {
+			this._loginPromise = undefined;
+		}
+		return result;
+	}
+
+	async loginViaSignupToken(): Promise<LoginResult> {
+		// TODO: reuse this._loginPromise
+		if (this._signupToken === undefined) throw new Error("A signup token hasn't been generated");
+
+		this.setServerUrl(Container.config.serverUrl);
+		this.setStatus(SessionStatus.SigningIn);
+
+		const result = await Container.agent.loginViaSignupToken(this._serverUrl, this._signupToken);
+
+		if (result.error) {
+			this.setStatus(SessionStatus.SignedOut, SessionSignedOutReason.SignInFailure);
+
+			if (result.error !== LoginResult.NotOnTeam && result.error !== LoginResult.NotConfirmed) {
+				this._signupToken = undefined;
+			}
+
+			return result.error;
+		}
+
+		await this.completeLogin(result, this._signupToken);
+		return LoginResult.Success;
+	}
+
+	async logout(reason: SessionSignedOutReason = SessionSignedOutReason.UserSignedOut) {
+		this._id = undefined;
+		this._loginPromise = undefined;
+
+		try {
+			if (reason === SessionSignedOutReason.UserSignedOut) {
+				// Clear the access token
+				await TokenManager.clear(this._serverUrl, this._email!);
+			}
+
+			this._email = undefined;
+			this._status = SessionStatus.SignedOut;
+
+			if (Container.agent !== undefined) {
+				void (await Container.agent.logout());
+			}
+
+			if (this._disposable !== undefined) {
+				this._disposable.dispose();
+				this._disposable = undefined;
+			}
+		} finally {
+			// Clean up saved state
+			this._presenceManager = undefined;
+			this._pubnub = undefined;
+			this._sessionApi = undefined;
+			this._state = undefined;
+			this._signupToken = undefined;
+
+			setImmediate(() =>
+				this._onDidChangeSessionStatus.fire({ getStatus: () => this._status, reason: reason })
+			);
+		}
+	}
+
+	@signedIn
+	// HACK: Hate exposing this here -- should ideally be wrapped up all the way in the agent
+	notifyDidLeaveChannel(id: string, teamId?: string) {
+		this.fireDidChangeStreams(
+			new StreamsMembershipChangedEvent(this, [{ id: id, teamId: teamId || this._state!.teamId }])
+		);
+	}
+
+	private async loginCore(
+		email: string,
+		passwordOrToken: string | AccessToken,
+		teamId?: string
+	): Promise<LoginResult> {
+		this.setServerUrl(Container.config.serverUrl);
 		Logger.log(`Signing ${email} into CodeStream (${this.serverUrl})`);
 
 		try {
-			this._id = id;
-
-			this._serverUrl = Container.config.serverUrl;
-			if (this._api.baseUrl !== this.serverUrl) {
-				this._api.baseUrl = this.serverUrl;
-			}
-
-			this._status = SessionStatus.SigningIn;
-			const e: SessionStatusChangedEvent = { getStatus: () => this._status };
-			this._onDidChangeStatus.fire(e);
+			this.setStatus(SessionStatus.SigningIn);
 
 			if (!teamId) {
 				// If there is a configuration settings for a team, use that above others
@@ -431,6 +444,7 @@ export class CodeStreamSession implements Disposable {
 			}
 
 			const result = await Container.agent.login(
+				this._serverUrl,
 				email,
 				passwordOrToken,
 				teamId,
@@ -439,42 +453,56 @@ export class CodeStreamSession implements Disposable {
 
 			if (result.error) {
 				// Clear the access token
-				await Container.context.globalState.update(GlobalState.AccessToken, undefined);
-
-				this._status = SessionStatus.SignedOut;
-				e.reason = SessionStatusSignedOutReason.SignInFailure;
-				this._onDidChangeStatus.fire(e);
+				await TokenManager.clear(this._serverUrl, email);
+				this.setStatus(SessionStatus.SignedOut, SessionSignedOutReason.SignInFailure);
 
 				return result.error;
 			}
 
-			await this.initializeSession(result, id, teamId);
+			await this.completeLogin(result, teamId);
 
 			return LoginResult.Success;
 		} catch (ex) {
 			ex.message = ex.message.replace("Request initialize failed with message: ", "CodeStream: ");
 
 			Logger.error(ex);
-			void (await this.logout(false));
+			void (await this.logout(SessionSignedOutReason.SignInFailure));
 
 			throw ex;
 		}
 	}
 
-	private async initializeSession(result: AgentResult, id: string, teamId?: string) {
-		const email = result.loginResponse.user.email;
+	private async completeLogin(result: AgentResult, teamId?: string) {
+		const user = result.loginResponse.user;
+		const email = user.email;
+		this._email = email;
 
-		await Container.context.globalState.update(GlobalState.AccessToken, {
-			value: result.loginResponse.accessToken
-		} as AccessToken);
+		// Create an id for this session
+		// TODO: Probably needs to be more unique
+		this._id = Strings.sha1(`${this.serverUrl}|${email}|${teamId}`.toLowerCase());
+
+		const token = result.loginResponse.accessToken;
+		await TokenManager.addOrUpdate(this._serverUrl, email, token);
 
 		// Update the saved e-mail on successful login
 		if (email !== Container.config.email) {
-			await configuration.update(
-				configuration.name("email").value,
-				email,
-				ConfigurationTarget.Global
-			);
+			let target = ConfigurationTarget.Global;
+
+			// Determine where to best save the e-mail
+			const emailSetting = configuration.inspect(configuration.name("email").value);
+			// If we have an e-mail in the workspace, save it to the workspace
+			if (emailSetting !== undefined && emailSetting.workspaceValue !== undefined) {
+				target = ConfigurationTarget.Workspace;
+			} else {
+				// If we don't have an e-mail in the workspace, check if the serverUrl is in the workspace
+				const serverUrlSetting = configuration.inspect(configuration.name("serverUrl").value);
+				// If we have a serverUrl in the workspace, save the e-mail to the workspace
+				if (serverUrlSetting !== undefined && serverUrlSetting.workspaceValue !== undefined) {
+					target = ConfigurationTarget.Workspace;
+				}
+			}
+
+			await configuration.update(configuration.name("email").value, email, target);
 		}
 
 		if (!teamId || teamId !== result.state.teamId) {
@@ -482,15 +510,21 @@ export class CodeStreamSession implements Disposable {
 			await Container.context.workspaceState.update(WorkspaceState.TeamId, teamId);
 		}
 
-		this._state = new SessionState(this, teamId, result.loginResponse);
-		this._sessionApi = new CodeStreamSessionApi(this._api, this._state.token, teamId);
-		this._presenceManager = new PresenceManager(this._sessionApi, id);
-		this.calculateUnreads(result.loginResponse.user);
+		this._pubnub = new PubNubReceiver(new Cache(this));
+		this._sessionApi = new CodeStreamSessionApi(this._serverUrl, token, teamId);
+		this._presenceManager = new PresenceManager(this._sessionApi, this._id);
 
-		this._disposableSignedIn = Disposable.from(
-			configuration.onDidChange(this.onConfigurationChanged, this),
+		this._state = new SessionState(this, teamId, result.loginResponse);
+
+		this._disposable = Disposable.from(
+			Container.agent.onDidChangeDocumentMarkers(
+				Functions.debounce(this.onDocumentMarkersChanged, 500),
+				this
+			),
+			this._pubnub.onDidReceiveMessage(this.onMessageReceived, this),
+			this._pubnub,
 			this._presenceManager,
-			this._api.useMiddleware(new PresenceMiddleware(this._presenceManager))
+			this._sessionApi.useMiddleware(new PresenceMiddleware(this._presenceManager))
 		);
 
 		this._presenceManager.online();
@@ -499,342 +533,26 @@ export class CodeStreamSession implements Disposable {
 			`${email} signed into CodeStream (${this.serverUrl}); userId=${this.userId}, teamId=${teamId}`
 		);
 
-		this._status = SessionStatus.SignedIn;
-		this._onDidChangeStatus.fire({ getStatus: () => this._status });
-	}
+		this.setStatus(SessionStatus.SignedIn);
 
-	private getMentionRegex(name: string) {
-		return new RegExp(`@${name}\\b`);
-	}
-
-	private async calculateUnreads(user: CSUser) {
-		const mentionRegex = this.getMentionRegex(user.username);
-
-		const lastReads = user.lastReads || {};
-		const unreadCounter = this._state!.unreads;
-		const entries = Object.entries(lastReads);
-		await Promise.all(
-			entries.map(async ([streamId, lastReadSeqNum]) => {
-				const [stream, latestPost] = await Promise.all([
-					this._sessionApi!.getStream(streamId),
-					this._sessionApi!.getLatestPost(streamId)
-				]);
-
-				const unreadPosts = await this._sessionApi!.getPostsInRange(
-					streamId,
-					lastReadSeqNum,
-					latestPost.seqNum
-				);
-
-				const streamType = stream!.type;
-				let unreadCount = 0;
-				let mentionCount = 0;
-				unreadPosts.forEach(post => {
-					if (!post.deactivated) {
-						if (post.text.match(mentionRegex) || streamType === StreamType.Direct) {
-							mentionCount++;
-							unreadCount++;
-						} else {
-							unreadCount++;
-						}
-					}
-				});
-				unreadCounter.mentions[streamId] = mentionCount;
-				unreadCounter.unread[streamId] = unreadCount;
-			})
-		);
-
-		unreadCounter.getStreamIds().forEach(streamId => {
-			if (lastReads[streamId] === undefined) {
-				unreadCounter.clear(streamId);
-			}
-		});
-
-		unreadCounter.lastReads = lastReads;
-		this._onDidChange.fire(new UnreadsChangedEvent(unreadCounter.getValues()));
-	}
-
-	private async incrementUnreads(posts: CSPost[]) {
-		const mentionRegex = this.getMentionRegex(this.user.name);
-
-		const unreadCounter = this._state!.unreads;
-
-		await Promise.all(
-			posts.map(async post => {
-				if (!post.deactivated && post.creatorId !== this.userId) {
-					const stream = await this._sessionApi!.getStream(post.streamId);
-					if (post.text.match(mentionRegex) || stream!.type === StreamType.Direct) {
-						unreadCounter.incrementMention(post.streamId);
-					} else {
-						unreadCounter.incrementUnread(post.streamId);
-					}
-					if (unreadCounter.lastReads[post.streamId] === undefined) {
-						unreadCounter.lastReads[post.streamId] = post.seqNum;
-					}
-				}
-			})
-		);
-		this._onDidChange.fire(new UnreadsChangedEvent(this._state!.unreads.getValues()));
+		this._state.unreads.compute(user.lastReads, this.fireDidChangeUnreads);
 	}
 }
 
-interface IMergeableEvent<T> {
-	merge(e: T): void;
-}
+function createMergableDebouncedEvent<E extends MergeableEvent<SessionChangedEvent>>(emitter: {
+	fire(e?: E): void;
+}) {
+	return Functions.debounceMerge(
+		(e: E) => emitter.fire(e),
+		(combined: E[] | undefined, current: E) => {
+			if (combined === undefined) return [current];
 
-export class PostsReceivedEvent {
-	constructor(
-		private readonly session: CodeStreamSession,
-		private readonly _event: PostsMessageReceivedEvent
-	) {}
-
-	get count() {
-		return this._event.posts.length;
-	}
-
-	affects(id: string, type: "entity" | "stream" | "repo" | "team" = "stream") {
-		return affects(this._event.posts, id, type);
-	}
-
-	entities() {
-		return this._event.posts;
-	}
-
-	@memoize
-	items() {
-		return this._event.posts.map(p => new Post(this.session, p));
-	}
-
-	merge(e: PostsReceivedEvent) {
-		this._event.posts.push(...e._event.posts);
-	}
-}
-
-export enum SessionChangedType {
-	Repositories = "repos",
-	Streams = "streams",
-	StreamsMembership = "streamsMembership",
-	Teams = "teams",
-	Markers = "markers",
-	Users = "users",
-	Unreads = "unreads"
-}
-
-export class RepositoriesAddedEvent implements IMergeableEvent<RepositoriesAddedEvent> {
-	readonly type = SessionChangedType.Repositories;
-
-	constructor(
-		private readonly session: CodeStreamSession,
-		private readonly _event: RepositoriesMessageReceivedEvent
-	) {}
-
-	get count() {
-		return this._event.repos.length;
-	}
-
-	affects(id: string, type: "entity" | "team" = "team"): boolean {
-		return affects(this._event.repos, id, type);
-	}
-
-	entities(): CSRepository[] {
-		return this._event.repos;
-	}
-
-	@memoize
-	items(): Repository[] {
-		return this._event.repos.map(r => new Repository(this.session, r));
-	}
-
-	merge(e: RepositoriesAddedEvent) {
-		this._event.repos.push(...e._event.repos);
-	}
-}
-
-export class StreamsMembershipChangedEvent {
-	readonly type = SessionChangedType.StreamsMembership;
-
-	constructor(private readonly streamId: string, private readonly teamId: string) {}
-
-	affects(id: string, type: "entity" | "team" = "entity"): boolean {
-		if (type === "entity" && id === this.streamId) {
-			return true;
-		}
-		if (type === "team" && id === this.teamId) {
-			return true;
-		}
-		return false;
-	}
-}
-
-export class StreamsAddedEvent implements IMergeableEvent<StreamsAddedEvent> {
-	readonly type = SessionChangedType.Streams;
-
-	constructor(
-		private readonly session: CodeStreamSession,
-		private readonly _event: StreamsMessageReceivedEvent
-	) {}
-
-	get count() {
-		return this._event.streams.length;
-	}
-
-	affects(id: string, type: "entity" | "team" = "entity"): boolean {
-		return affects(this._event.streams, id, type);
-	}
-
-	entities(): CSStream[] {
-		return this._event.streams;
-	}
-
-	@memoize
-	items(): Stream[] {
-		return this._event.streams.map(s => {
-			switch (s.type) {
-				case StreamType.Channel:
-					return new ChannelStream(this.session, s);
-				case StreamType.Direct:
-					return new DirectStream(this.session, s);
-				case StreamType.File:
-					return new FileStream(this.session, s);
-			}
-		});
-	}
-
-	merge(e: StreamsAddedEvent) {
-		this._event.streams.push(...e._event.streams);
-	}
-}
-
-class UsersChangedEvent {
-	readonly type = SessionChangedType.Users;
-
-	constructor(
-		private readonly session: CodeStreamSession,
-		private readonly _event: UsersMessageReceivedEvent
-	) {}
-
-	affects(id: string, type: "entity" | "team" = "entity") {
-		return affects(this._event.users, id, type);
-	}
-
-	entities() {
-		return this._event.users;
-	}
-
-	@memoize
-	items(): User[] {
-		return this._event.users.map(u => new User(this.session, u));
-	}
-}
-
-class TeamsChangedEvent {
-	readonly type = SessionChangedType.Teams;
-
-	constructor(
-		private readonly session: CodeStreamSession,
-		private readonly _event: TeamsMessageReceivedEvent
-	) {}
-
-	affects(id: string, type: "entity" = "entity") {
-		return affects(this._event.teams, id, type);
-	}
-
-	entities() {
-		return this._event.teams;
-	}
-
-	@memoize
-	items(): Team[] {
-		return this._event.teams.map(t => new Team(this.session, t));
-	}
-}
-
-class MarkersChangedEvent {
-	readonly type = SessionChangedType.Markers;
-
-	constructor(
-		public readonly session: CodeStreamSession,
-		private readonly _event: MarkersMessageReceivedEvent
-	) {}
-
-	affects(id: string, type: "entity" | "stream" | "team" = "stream") {
-		return affects(this._event.markers, id, type);
-	}
-
-	entities() {
-		return this._event.markers;
-	}
-
-	@memoize
-	items(): Marker[] {
-		throw new Error("Not implemented");
-		// return this._event.markers.map(m => new Marker(this.session, m));
-	}
-}
-
-class UnreadsChangedEvent {
-	readonly type = SessionChangedType.Unreads;
-
-	constructor(public readonly unreads: { unread: {}; mentions: {} }) {}
-
-	affects(id: string, type: "entity") {
-		return false;
-	}
-
-	entities() {
-		return this.unreads;
-	}
-
-	@memoize
-	items() {
-		throw new Error("Not implemented");
-	}
-}
-
-export type SessionChangedEvent =
-	| RepositoriesAddedEvent
-	| StreamsAddedEvent
-	| StreamsMembershipChangedEvent
-	| UsersChangedEvent
-	| TeamsChangedEvent
-	| MarkersChangedEvent
-	| UnreadsChangedEvent;
-
-export enum SessionStatus {
-	SignedOut = "signedOut",
-	SigningIn = "signingIn",
-	SignedIn = "signedIn"
-}
-
-export enum SessionStatusSignedOutReason {
-	SignInFailure = "signInFailure"
-}
-
-export interface SessionStatusChangedEvent {
-	getStatus(): SessionStatus;
-	reason?: SessionStatusSignedOutReason;
-}
-
-function affects(
-	data: { [key: string]: any }[],
-	id: string,
-	type: "entity" | "stream" | "repo" | "team"
-) {
-	let key: string;
-	switch (type) {
-		case "repo":
-			key = "repoId";
-			break;
-		case "stream":
-			key = "streamId";
-			break;
-		case "team":
-			key = "teamId";
-			break;
-		default:
-			key = "id";
-	}
-	return data.some(i => (i as { [key: string]: any })[key] === id);
+			combined[0].merge(current);
+			return combined;
+		},
+		250,
+		{ maxWait: 1000 }
+	);
 }
 
 function signedIn(

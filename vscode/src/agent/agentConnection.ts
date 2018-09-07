@@ -1,17 +1,23 @@
 "use strict";
 import { RequestInit } from "node-fetch";
-import { Event, EventEmitter, ExtensionContext, Range, TextDocument, Uri } from "vscode";
+import { Event, EventEmitter, ExtensionContext, Range, TextDocument, Uri, window } from "vscode";
 import {
 	CancellationToken,
+	CloseAction,
 	Disposable,
+	ErrorAction,
 	LanguageClient,
 	LanguageClientOptions,
+	Message,
 	RequestType,
 	RequestType0,
+	RevealOutputChannelOn,
 	ServerOptions,
 	TransportKind
 } from "vscode-languageclient";
 import { CSCodeBlock, CSPost } from "../api/api";
+import { CodeStreamEnvironment } from "../api/session";
+import { Container } from "../container";
 import { Logger } from "../logger";
 import {
 	AccessToken,
@@ -19,6 +25,10 @@ import {
 	AgentOptions,
 	AgentResult,
 	ApiRequest,
+	DidChangeDocumentMarkersNotification,
+	DidChangeDocumentMarkersNotificationResponse,
+	DidReceivePubNubMessagesNotification,
+	DidReceivePubNubMessagesNotificationResponse,
 	DocumentFromCodeBlockRequest,
 	DocumentFromCodeBlockResponse,
 	DocumentLatestRevisionRequest,
@@ -32,9 +42,22 @@ import {
 
 export { AccessToken, AgentOptions, AgentResult } from "../shared/agent.protocol";
 
+export interface PubNubMessagesReceivedEvent {
+	[key: string]: any;
+}
+
+export interface DocumentMarkersChangedEvent {
+	uri: Uri;
+}
+
 export class CodeStreamAgentConnection implements Disposable {
-	private _onDidReceivePubNubMessages = new EventEmitter<{ [key: string]: any }[]>();
-	get onDidReceivePubNubMessages(): Event<{ [key: string]: any }[]> {
+	private _onDidChangeDocumentMarkers = new EventEmitter<DocumentMarkersChangedEvent>();
+	get onDidChangeDocumentMarkers(): Event<DocumentMarkersChangedEvent> {
+		return this._onDidChangeDocumentMarkers.event;
+	}
+
+	private _onDidReceivePubNubMessages = new EventEmitter<PubNubMessagesReceivedEvent[]>();
+	get onDidReceivePubNubMessages(): Event<PubNubMessagesReceivedEvent[]> {
 		return this._onDidReceivePubNubMessages.event;
 	}
 
@@ -60,9 +83,41 @@ export class CodeStreamAgentConnection implements Disposable {
 		};
 
 		this._clientOptions = {
+			errorHandler: {
+				error: (error: Error, message: Message, count: number) => {
+					Logger.error(error, "AgentConnection.error", message.jsonrpc, count);
+
+					const env = Container.session.environment;
+					if (env === CodeStreamEnvironment.PD || env === CodeStreamEnvironment.QA) {
+						window.showErrorMessage(
+							`CodeStream Connection Error (${count})\n${error.message}\n${message.jsonrpc}`
+						);
+					}
+
+					return ErrorAction.Continue;
+				},
+				closed: () => {
+					Logger.error(undefined!, "AgentConnection.closed");
+
+					const env = Container.session.environment;
+					if (env === CodeStreamEnvironment.PD || env === CodeStreamEnvironment.QA) {
+						window.showErrorMessage(
+							`CodeStream Connection Closed\nAttempting to reestablish connection...`
+						);
+					}
+
+					return CloseAction.Restart;
+				}
+			},
+			outputChannelName: "CodeStream (Agent)",
+			revealOutputChannelOn: RevealOutputChannelOn.Never,
 			initializationOptions: { ...options },
 			// Register the server for file-based text documents
-			documentSelector: [{ scheme: "file", language: "*" }],
+			documentSelector: [
+				{ scheme: "file", language: "*" },
+				{ scheme: "untitled", language: "*" },
+				{ scheme: "vsls", language: "*" }
+			],
 			synchronize: {
 				// Synchronize the setting section 'codestream' to the server
 				configurationSection: "codestream"
@@ -88,16 +143,11 @@ export class CodeStreamAgentConnection implements Disposable {
 	}
 
 	@started
-	getDocumentFromCodeBlock(
-		block: CSCodeBlock,
-		revision: string
-	): Promise<DocumentFromCodeBlockResponse | undefined> {
+	getDocumentFromCodeBlock(block: CSCodeBlock): Promise<DocumentFromCodeBlockResponse | undefined> {
 		return this.sendRequest(DocumentFromCodeBlockRequest, {
 			repoId: block.repoId,
 			file: block.file,
-			markerId: block.markerId,
-			streamId: block.streamId!,
-			revision: revision
+			markerId: block.markerId
 		});
 	}
 
@@ -123,6 +173,7 @@ export class CodeStreamAgentConnection implements Disposable {
 	}
 
 	async login(
+		serverUrl: string,
 		email: string,
 		passwordOrToken: string | AccessToken,
 		teamId?: string,
@@ -130,6 +181,7 @@ export class CodeStreamAgentConnection implements Disposable {
 	): Promise<AgentResult> {
 		const response = await this.start({
 			...this._clientOptions.initializationOptions,
+			serverUrl: serverUrl,
 			email: email,
 			passwordOrToken: passwordOrToken,
 			team,
@@ -143,9 +195,10 @@ export class CodeStreamAgentConnection implements Disposable {
 		return response.result;
 	}
 
-	async loginWithSignupToken(token: string): Promise<AgentResult> {
+	async loginViaSignupToken(serverUrl: string, token: string): Promise<AgentResult> {
 		const response = await this.start({
 			...this._clientOptions.initializationOptions,
+			serverUrl: serverUrl,
 			signupToken: token
 		});
 
@@ -204,8 +257,13 @@ export class CodeStreamAgentConnection implements Disposable {
 		});
 	}
 
-	private onPubNubMessagesReceived(...messages: { [key: string]: any }[]) {
-		console.log("Messages received");
+	private onDocumentMarkersChanged(e: DidChangeDocumentMarkersNotificationResponse) {
+		Logger.log("AgentConnection.onDocumentMarkersChanged", e.textDocument.uri);
+		this._onDidChangeDocumentMarkers.fire({ uri: Uri.parse(e.textDocument.uri) });
+	}
+
+	private onPubNubMessagesReceived(...messages: DidReceivePubNubMessagesNotificationResponse[]) {
+		Logger.log("AgentConnection.onPubNubMessagesReceived", messages);
 		this._onDidReceivePubNubMessages.fire(messages);
 	}
 
@@ -219,13 +277,19 @@ export class CodeStreamAgentConnection implements Disposable {
 		token?: CancellationToken
 	): Promise<R>;
 	@started
-	private async sendRequest(method: any, params?: any): Promise<any> {
+	private async sendRequest(type: any, params?: any): Promise<any> {
 		try {
-			const response = await this._client!.sendRequest(method, params);
+			Logger.log(
+				`AgentConnection.sendRequest(${type.method})${
+					type.method === ApiRequest.method ? `: ${params.url}` : ""
+				}`
+			);
+			Logger.log("Params: ", params);
+			const response = await this._client!.sendRequest(type, params);
 			return response;
 		} catch (ex) {
 			// debugger;
-			Logger.error(ex, `AgentConnection.sendRequest`, method, params);
+			Logger.error(ex, `AgentConnection.sendRequest(${type.method})`, params);
 			throw ex;
 		}
 	}
@@ -251,8 +315,13 @@ export class CodeStreamAgentConnection implements Disposable {
 		void (await this._client.onReady());
 
 		this._client.onNotification(
-			"codeStream/didReceivePubNubMessages",
+			DidReceivePubNubMessagesNotification,
 			this.onPubNubMessagesReceived.bind(this)
+		);
+
+		this._client.onNotification(
+			DidChangeDocumentMarkersNotification,
+			this.onDocumentMarkersChanged.bind(this)
 		);
 
 		return this._client.initializeResult! as AgentInitializeResult;

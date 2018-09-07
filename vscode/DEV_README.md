@@ -108,40 +108,19 @@ npm run pack
 
 ### Configuration
 
-#### Connecting to a CodeStream environment
-
-To connect to the PD environment, use the following settings
-
-```json
-"codestream.serverUrl": "https://pd-api.codestream.us:9443",
-"codestream.webAppUrl": "http://pd-app.codestream.us:1380",
-"codestream.email": "<email>",
-"codestream.password": "<password>",
-"codestream.team": "<team>", // Shouldn't really be needed unless there are issues and you belong to more than 1 team
-```
-
-To connect to the Production environment, use the following settings
-
-```json
-"codestream.email": "<email>",
-"codestream.password": "<password>",
-"codestream.team": "<team>", // Shouldn't really be needed unless there are issues and you belong to more than 1 team
-```
-
-#### Settings
-
 | Name                       | Description                                                                      |
 | -------------------------- | -------------------------------------------------------------------------------- |
 | `codestream.autoSignIn`    | Specifies whether to automatically sign in to CodeStream                         |
+| `codestream.avatars`       | Specifies whether to show avatars                                                |
 | `codestream.email`         | Specifies the email to use to connect to the CodeStream service                  |
+| `"codestream.markerStyle`  | Specifies the indicator style to use for CodeStream code markers                 |
 | `codestream.notifications` | Specifies when to show notifications for incoming messages                       |
 | `codestream.password`      | Specifies the password to use to connect to the CodeStream service               |
+| `codestream.reduceMotion`  | Specifies whether to reduce animation/transition motions                         |
 | `codestream.serverUrl`     | Specifies the url to use to connect to the CodeStream service                    |
-| `codestream.webAppUrl`     | Specifies the url to use to connect to the CodeStream web app                    |
 | `codestream.team`          | Specifies an optional team to use to connect to the CodeStream service           |
 | `codestream.traceLevel`    | Specifies how much (if any) output will be sent to the CodeStream output channel |
-| `codestream.reduceMotion`  | Reduce the animations in the view                                                |
-| `codestream.showHeadshots` | Display headshots in the stream                                                  |
+| `codestream.webAppUrl`     | Specifies the url to use to connect to the CodeStream web app                    |
 
 ### Debugging
 
@@ -149,3 +128,99 @@ To connect to the Production environment, use the following settings
 
 - Open the `vscode-codestream` repository folder
 - Choose the `Launch CodeStream` launch configuration from the launch dropdown in the Debug viewlet and press `F5`.
+
+### Downloading Built VSIXs
+
+Here are the download links for pre-built vsix bundles:
+
+- **CI**: https://assets.codestream.com/local/vscode/codestream-latest.vsix
+- **PD**: https://assets.codestream.com/pd/vscode/codestream-latest.vsix
+- **QA**: https://assets.codestream.com/qa/vscode/codestream-latest.vsix
+- **Production**: https://assets.codestream.com/prod/vscode/codestream-latest.vsix
+
+### Connecting to a CodeStream environment
+
+Probably the easiest way to switch between environments is to create separate workspace files for each using the example workspace files below.
+
+#### Connecting to the PD environment
+
+Use the following settings:
+
+```json
+"codestream.serverUrl": "https://pd-api.codestream.us:9443",
+"codestream.webAppUrl": "http://pd-app.codestream.us:1380",
+"codestream.email": "<email>",
+"codestream.team": "<team>", // Shouldn't really be needed unless there are issues and you belong to more than 1 team
+```
+
+Example workspace file &mdash; save as pd.code-workspace
+
+```json
+{
+	"folders": [
+		{
+			"path": "<absolute or relative folder path here>"
+		}
+	],
+	"settings": {
+		"codestream.serverUrl": "https://pd-api.codestream.us:9443",
+		"codestream.webAppUrl": "http://pd-app.codestream.us:1380",
+		"codestream.email": "<email>",
+		"codestream.team": "<team>" // Shouldn't really be needed unless there are issues and you belong to more than 1 team
+	}
+}
+```
+
+#### Connecting to the QA environment
+
+Use the following settings:
+
+```json
+"codestream.serverUrl": "https://qa-api.codestream.us",
+"codestream.webAppUrl": "http://qa-app.codestream.us",
+"codestream.email": "<email>",
+"codestream.team": "<team>", // Shouldn't really be needed unless there are issues and you belong to more than 1 team
+```
+
+Example workspace file &mdash; save as qa.code-workspace
+
+```json
+{
+	"folders": [
+		{
+			"path": "<absolute or relative folder path here>"
+		}
+	],
+	"settings": {
+		"codestream.serverUrl": "https://qa-api.codestream.us",
+		"codestream.webAppUrl": "http://qa-app.codestream.us",
+		"codestream.email": "<email>",
+		"codestream.team": "<team>" // Shouldn't really be needed unless there are issues and you belong to more than 1 team
+	}
+}
+```
+
+#### Connecting to the Production environment
+
+Use the following settings:
+
+```json
+"codestream.email": "<email>",
+"codestream.team": "<team>", // Shouldn't really be needed unless there are issues and you belong to more than 1 team
+```
+
+Example workspace file &mdash; save as prod.code-workspace
+
+```json
+{
+	"folders": [
+		{
+			"path": "<absolute or relative folder path here>"
+		}
+	],
+	"settings": {
+		"codestream.email": "<email>",
+		"codestream.team": "<team>" // Shouldn't really be needed unless there are issues and you belong to more than 1 team
+	}
+}
+```

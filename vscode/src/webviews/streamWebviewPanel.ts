@@ -26,103 +26,28 @@ import {
 	LoginResult
 } from "../api/api";
 import {
+	CodeStreamEnvironment,
 	CodeStreamSession,
 	Post,
-	PostsReceivedEvent,
-	SessionChangedEvent,
-	SessionChangedType,
-	StreamThread
+	PostsChangedEvent,
+	RepositoriesChangedEvent,
+	SessionChangedEventType,
+	StreamsChangedEvent,
+	StreamsMembershipChangedEvent,
+	StreamThread,
+	TeamsChangedEvent,
+	UnreadsChangedEvent,
+	UsersChangedEvent
 } from "../api/session";
 import { configuration } from "../configuration";
-import { extensionId } from "../constants";
 import { Container } from "../container";
 import { Logger } from "../logger";
-
-const loadingHtml = `
-<!DOCTYPE html>
-	<html lang="en">
-	<head>
-		<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
-		<title>CodeStream</title>
-		<style>
-		html, body {
-			height: 100%;
-			overflow: hidden;
-			padding: 0 !important;
-		}
-
-		.loading:before {
-			background-position: center;
-			background-repeat: no-repeat;
-			background-size: contain;
-			content: '';
-			height: 100%;
-			opacity: 0.05;
-			position: absolute;
-			width: 100%;
-			z-index: -1;
-		}
-
-		.vscode-dark.loading:before {
-			background-image: url('data:image/svg+xml;utf8,<svg width="50" height="40" xmlns="http://www.w3.org/2000/svg"><path fill="#fff" d="M20.4 19.87a4.57 4.57 0 1 0 9.13-.01 4.57 4.57 0 0 0-9.13.01z"/><path fill="#fff" d="M26.92 6.35c-.1.1-.17.24-.17.38v5.43a7.9 7.9 0 0 1 0 15.36v5.53a.53.53 0 0 0 .92.36l11.48-12.17c.71-.76.71-1.94 0-2.7L27.67 6.38a.53.53 0 0 0-.75-.02zm-4.64.02L10.8 18.55a1.96 1.96 0 0 0 0 2.69L22.28 33.4a.53.53 0 0 0 .91-.36v-5.53a7.9 7.9 0 0 1 0-15.36V6.73a.53.53 0 0 0-.53-.52.53.53 0 0 0-.38.16z"/></svg>');
-		}
-
-		.vscode-light.loading:before {
-			background-image: url('data:image/svg+xml;utf8,<svg width="50" height="40" xmlns="http://www.w3.org/2000/svg"><path fill="#000" d="M20.4 19.87a4.57 4.57 0 1 0 9.13-.01 4.57 4.57 0 0 0-9.13.01z"/><path fill="#000" d="M26.92 6.35c-.1.1-.17.24-.17.38v5.43a7.9 7.9 0 0 1 0 15.36v5.53a.53.53 0 0 0 .92.36l11.48-12.17c.71-.76.71-1.94 0-2.7L27.67 6.38a.53.53 0 0 0-.75-.02zm-4.64.02L10.8 18.55a1.96 1.96 0 0 0 0 2.69L22.28 33.4a.53.53 0 0 0 .91-.36v-5.53a7.9 7.9 0 0 1 0-15.36V6.73a.53.53 0 0 0-.53-.52.53.53 0 0 0-.38.16z"/></svg>');
-		}
-
-		.loader-ring {
-			height: 26vw;
-			left: 50%;
-			max-height: 31vh;
-			max-width: 31vh;
-			opacity: 0.5;
-			position: absolute;
-			top: 50%;
-			transform: translate(-50%, -50%);
-			width: 26vw;
-		}
-
-		.loader-ring__segment {
-			animation: loader-ring-spin 1.5s infinite cubic-bezier(0.5, 0, 0.5, 1);
-			border: 6px solid #009AEF;
-			border-color: #009AEF transparent transparent transparent;
-			border-radius: 50%;
-			box-sizing: border-box;
-			height: 100%;
-			position: absolute;
-			width: 100%;
-		}
-
-		.loader-ring__segment:nth-child(1) {
-			animation-delay: 0.05s;
-		}
-
-		.loader-ring__segment:nth-child(2) {
-			animation-direction: reverse;
-		}
-
-		.loader-ring__segment:nth-child(3) {
-			animation-delay: 0.05s;
-			animation-direction: reverse;
-		}
-
-		@keyframes loader-ring-spin {
-			0% { transform: rotate(0deg); }
-			100% { transform: rotate(360deg); }
-		}
-		</style>
-	</head>
-	<body class="loading">
-		<div class="loader-ring">
-			<div class="loader-ring__segment"></div>
-			<div class="loader-ring__segment"></div>
-			<div class="loader-ring__segment"></div>
-			<div class="loader-ring__segment"></div>
-		</div>
-	</body>
-</html>
-`;
+import {
+	toLoggableIpcMessage,
+	WebviewIpc,
+	WebviewIpcMessage,
+	WebviewIpcMessageType
+} from "./webviewIpc";
 
 interface BootstrapState {
 	currentTeamId: string;
@@ -130,23 +55,21 @@ interface BootstrapState {
 	currentStreamId: string;
 	currentStreamLabel?: string;
 	currentStreamServiceType?: "liveshare";
-	selectedPostId?: string;
+	currentThreadId?: string;
+	env: CodeStreamEnvironment;
 	posts: CSPost[];
 	streams: CSStream[];
 	teams: CSTeam[];
 	users: CSUser[];
 	unreads: { unread: { [streamId: string]: number }; mentions: { [streamId: string]: number } };
 	repos: CSRepository[];
+	services: {
+		vsls?: boolean;
+	};
 	version: string;
 	configs: {
 		[k: string]: any;
 	};
-}
-
-// TODO: Clean this up to be consistent with the structure
-interface CSWebviewMessage {
-	type: string;
-	body: any;
 }
 
 interface CSWebviewRequest {
@@ -180,7 +103,7 @@ class BufferChangeTracker {
 	}
 }
 
-export class StreamWebviewPanel extends Disposable {
+export class StreamWebviewPanel implements Disposable {
 	private _bufferChangeTracker = new BufferChangeTracker();
 
 	private _onDidChangeStream = new EventEmitter<StreamThread>();
@@ -193,19 +116,20 @@ export class StreamWebviewPanel extends Disposable {
 		return this._onDidClose.event;
 	}
 
+	private _bootstrapPromise: Promise<BootstrapState> | undefined;
 	private _disposable: Disposable | undefined;
 	private readonly _ipc: WebviewIpc;
+	private _onReadyResolver: ((value?: {} | PromiseLike<{}> | undefined) => void) | undefined;
 	private _panel: WebviewPanel | undefined;
 	private _streamThread: StreamThread | undefined;
 
 	constructor(public readonly session: CodeStreamSession) {
-		super(() => this.dispose());
-
-		this._ipc = new WebviewIpc();
+		this._ipc = new WebviewIpc(this);
 	}
 
 	dispose() {
 		this._disposable && this._disposable.dispose();
+		this._panel = undefined;
 	}
 
 	private onPanelDisposed() {
@@ -223,404 +147,452 @@ export class StreamWebviewPanel extends Disposable {
 		if (this._panelState.visible === previous.visible) return;
 
 		if (!this._panelState.visible) {
-			this._ipc.onBlur();
+			this._ipc.sendDidBlur();
 
 			return;
 		}
 
-		// HACK: Because messages aren't sent to the webview when hidden, we need to reset the whole view if we are invalid
-		if (this._ipc.paused) {
-			this.setStream(this._streamThread);
-
-			return;
-		}
+		this._ipc.resume();
 
 		if (window.state.focused) {
-			this._ipc.onFocus();
+			this._ipc.sendDidFocus();
 		}
 	}
 
-	private async getBootstrapState() {
-		const [streams, teams, users, currentUser, unreads] = await Promise.all([
-			Container.session.channelsAndDMs.entities(),
-			this.session.teams.entities(),
-			this.session.users.entities(),
-			this.session.user.entity,
-			this.session.unreads.getValues()
-		]);
+	private async onPanelWebViewMessageReceived(e: WebviewIpcMessage) {
+		// TODO: Given all the async work in here -- we need to extract this into a separate method with blocks to make sure events don't get interleaved
+		try {
+			Logger.log(`WebviewPanel: Received message ${toLoggableIpcMessage(e)} from the webview`);
 
-		const state: BootstrapState = Object.create(null);
-		state.version = Container.version;
-		state.currentTeamId = this.session.team.id;
-		state.currentUserId = this.session.userId;
-		state.streams = streams;
-		state.teams = teams;
-		state.users = users.map(user => (user.id === currentUser.id ? currentUser : user));
-		state.unreads = unreads;
-		state.configs = {
-			serverUrl: Container.config.serverUrl,
-			reduceMotion: Container.config.reduceMotion,
-			showHeadshots: Container.config.showHeadshots
-		};
-
-		return state;
-	}
-
-	private async onPanelWebViewMessageReceived(e: CSWebviewMessage) {
-		const { type } = e;
-
-		switch (type.replace("codestream:", "")) {
-			case "request": {
-				const body = e.body as CSWebviewRequest;
-				// TODO: Add sequence ids to ensure correct matching
-				// TODO: Add exception handling for failed requests
-				switch (body.action) {
-					case "authenticate": {
-						const { email, password } = body.params;
-
-						const status = await this.session.login(email, password);
-
-						const responseBody: { id: string; [k: string]: any } = { id: body.id };
-
-						if (status === LoginResult.Success) {
-							responseBody.payload = await this.getBootstrapState();
-						} else responseBody.error = status;
-
-						this.postMessage({
-							type: "codestream:response",
-							body: responseBody
-						});
-						break;
+			const { type } = e;
+			switch (type) {
+				case WebviewIpcMessageType.onViewReady: {
+					// view is rendered and ready to receive messages
+					if (this._onReadyResolver !== undefined) {
+						this._onReadyResolver();
 					}
-					case "go-to-signup": {
-						const responseBody: { id: string; [k: string]: any } = { id: body.id };
-						try {
-							await commands.executeCommand(
-								"vscode.open",
-								Uri.parse(
-									`${
-										Container.config.webAppUrl
-									}/signup?signup_token=${this.session.getSignupToken()}`
-								)
+					break;
+				}
+				case WebviewIpcMessageType.onRequest: {
+					const body = e.body as CSWebviewRequest;
+					// TODO: Add exception handling for failed requests
+					switch (body.action) {
+						case "bootstrap":
+							Logger.log(
+								`WebviewPanel: Bootstrapping webview...`,
+								`SignedIn=${this.session.signedIn}`
 							);
-							responseBody.payload = true;
-						} catch (error) {
-							responseBody.error = error.message;
+
+							let state: BootstrapState = Object.create(null);
+							if (this.session.signedIn) {
+								state = await (this._bootstrapPromise || this.getBootstrapState());
+								this._bootstrapPromise = undefined;
+								if (this._streamThread !== undefined) {
+									state.currentStreamId = this._streamThread.stream.id;
+									state.currentThreadId = this._streamThread.id;
+								}
+							} else {
+								state.env = this.session.environment;
+								state.configs = { email: Container.config.email };
+								state.services = {};
+								state.version = Container.formattedVersion;
+							}
+
+							this.postMessage({
+								type: WebviewIpcMessageType.response,
+								body: {
+									id: body.id,
+									payload: state
+								}
+							});
+							break;
+						case "authenticate": {
+							const { email, password } = body.params;
+
+							let status: LoginResult;
+							try {
+								status = await this.session.login(email, password);
+							} catch (ex) {
+								status = LoginResult.Unknown;
+							}
+
+							const responseBody: { id: string; [k: string]: any } = { id: body.id };
+							if (status === LoginResult.Success) {
+								responseBody.payload = await this.getBootstrapState();
+							} else {
+								responseBody.error = status;
+							}
+
+							this.postMessage({
+								type: WebviewIpcMessageType.response,
+								body: responseBody
+							});
+							break;
 						}
+						case "go-to-signup": {
+							const responseBody: { id: string; [k: string]: any } = { id: body.id };
+							try {
+								await commands.executeCommand(
+									"vscode.open",
+									Uri.parse(
+										`${
+											Container.config.webAppUrl
+										}/signup?force_auth=true&signup_token=${this.session.getSignupToken()}`
+									)
+								);
+								responseBody.payload = true;
+							} catch (error) {
+								responseBody.error = error.message;
+							}
 
-						this.postMessage({
-							type: "codestream:response",
-							body: responseBody
-						});
-						break;
-					}
-					case "validate-signup": {
-						const responseBody: { id: string; [k: string]: any } = { id: body.id };
-						const status = await this.session.loginWithSignupToken();
+							this.postMessage({
+								type: WebviewIpcMessageType.response,
+								body: responseBody
+							});
+							break;
+						}
+						case "validate-signup": {
+							const responseBody: { id: string; [k: string]: any } = { id: body.id };
+							const status = await this.session.loginViaSignupToken();
 
-						if (status === LoginResult.Success) {
-							responseBody.payload = await this.getBootstrapState();
-						} else responseBody.error = status;
+							if (status === LoginResult.Success) {
+								responseBody.payload = await this.getBootstrapState();
+							} else responseBody.error = status;
 
-						this.postMessage({
-							type: "codestream:response",
-							body: responseBody
-						});
-						break;
-					}
-					case "create-post": {
-						const { text, codeBlocks, mentions, parentPostId, streamId, teamId } = body.params;
-
-						let post;
-						if (codeBlocks === undefined || codeBlocks.length === 0) {
-							post = await this.session.api.createPost(
+							this.postMessage({
+								type: WebviewIpcMessageType.response,
+								body: responseBody
+							});
+							break;
+						}
+						case "create-post": {
+							const {
 								text,
+								extra: { fileUri } = { fileUri: undefined },
+								codeBlocks,
 								mentions,
 								parentPostId,
 								streamId,
 								teamId
-							);
-						} else {
-							const block = codeBlocks[0] as {
-								code: string;
-								location?: [number, number, number, number];
-								file?: string;
-								source?: {
-									file: string;
-									repoPath: string;
-									revision: string;
-									authors: { id: string; username: string }[];
-									remotes: { name: string; url: string }[];
-								};
+							} = body.params;
+
+							const responseBody: { [key: string]: any } = {
+								id: body.id
 							};
+							let post;
+							try {
+								if (codeBlocks === undefined || codeBlocks.length === 0) {
+									post = await this.session.api.createPost(
+										text,
+										mentions,
+										parentPostId,
+										streamId,
+										teamId
+									);
+								} else {
+									const block = codeBlocks[0] as {
+										code: string;
+										location?: [number, number, number, number];
+										file?: string;
+										source?: {
+											file: string;
+											repoPath: string;
+											revision: string;
+											authors: { id: string; username: string }[];
+											remotes: { name: string; url: string }[];
+										};
+									};
 
-							let uri;
-							if (block.source) {
-								uri = Uri.file(path.join(block.source.repoPath, block.source.file));
-							} else {
-								// TODO: Need the workspace folder or some way of rehyrating the absolute path
-								// const folder = workspace.getWorkspaceFolder()
-								uri = Uri.file(block.file!);
+									const uri = block.source
+										? Uri.file(path.join(block.source.repoPath, block.source.file))
+										: Uri.parse(fileUri);
+									post = await Container.agent.postCode(
+										uri,
+										text,
+										mentions,
+										block.code,
+										block.location,
+										block.source,
+										parentPostId,
+										streamId
+									);
+								}
+							} catch (error) {
+								responseBody.error = error;
 							}
 
-							post = await Container.agent.postCode(
-								uri,
-								text,
-								mentions,
-								block.code,
-								block.location,
-								block.source,
-								parentPostId,
-								streamId
-							);
-						}
-
-						const responseBody: { [key: string]: any } = {
-							id: body.id
-						};
-						if (!post) {
-							responseBody.error = "Failed to create post";
-						} else {
-							responseBody.payload = post;
-						}
-
-						this.postMessage({
-							type: "codestream:response",
-							body: responseBody
-						});
-						break;
-					}
-					case "fetch-posts": {
-						const { streamId, teamId } = body.params;
-						this.postMessage({
-							type: "codestream:response",
-							body: {
-								id: body.id,
-								payload: await this.session.api.getPosts(streamId, teamId)
+							if (post) {
+								responseBody.payload = post;
 							}
-						});
-						break;
-					}
-					case "delete-post": {
-						const post = await this.session.api.getPost(body.params);
-						const updates = await this.session.api.deletePost(body.params);
-						this.postMessage({
-							type: "codestream:response",
-							body: { id: body.id, payload: { ...post, ...updates } }
-						});
-						break;
-					}
-					case "edit-post": {
-						const { id, text, mentions } = body.params;
-						const post = await this.session.api.getPost(id);
-						const updates = await this.session.api.editPost(id, text, mentions);
-						this.postMessage({
-							type: "codestream:response",
-							body: { id: body.id, payload: { ...post, ...updates } }
-						});
-						break;
-					}
-					case "mark-stream-read": {
-						const stream = await this.session.getStream(body.params);
-						if (stream) {
-							const response = await stream.markRead();
+
 							this.postMessage({
-								type: "codestream:response",
+								type: WebviewIpcMessageType.response,
+								body: responseBody
+							});
+							break;
+						}
+						case "fetch-posts": {
+							const { streamId, teamId } = body.params;
+							this.postMessage({
+								type: WebviewIpcMessageType.response,
+								body: {
+									id: body.id,
+									payload: await this.session.api.getPosts(streamId, teamId)
+								}
+							});
+							break;
+						}
+						case "delete-post": {
+							const post = await this.session.api.getPost(body.params);
+							const updates = await this.session.api.deletePost(body.params);
+							this.postMessage({
+								type: WebviewIpcMessageType.response,
+								body: { id: body.id, payload: { ...post, ...updates } }
+							});
+							break;
+						}
+						case "react-to-post": {
+							const { id, emoji, value } = body.params;
+							const post = await this.session.api.getPost(id);
+							const updates = await this.session.api.reactToPost(id, emoji, value);
+							this.postMessage({
+								type: WebviewIpcMessageType.response,
+								body: { id: body.id, payload: { ...post, ...updates } }
+							});
+							break;
+						}
+						case "edit-post": {
+							const { id, text, mentions } = body.params;
+							const post = await this.session.api.getPost(id);
+							const updates = await this.session.api.editPost(id, text, mentions);
+							this.postMessage({
+								type: WebviewIpcMessageType.response,
+								body: { id: body.id, payload: { ...post, ...updates } }
+							});
+							break;
+						}
+						case "mark-stream-read": {
+							const stream = await this.session.getStream(body.params);
+							if (stream) {
+								const response = await stream.markRead();
+								this.postMessage({
+									type: WebviewIpcMessageType.response,
+									body: { id: body.id, payload: response }
+								});
+							} else {
+								debugger;
+								// TODO
+							}
+							break;
+						}
+						case "mark-post-unread": {
+							const post = await this.session.api.getPost(body.params);
+							const updates = await this.session.api.markPostUnread(body.params);
+							this.postMessage({
+								type: WebviewIpcMessageType.response,
+								body: { id: body.id, payload: { ...post, ...updates } }
+							});
+							break;
+						}
+						case "create-stream": {
+							const { type, teamId, name, purpose, privacy, memberIds } = body.params;
+							let stream;
+							if (type === "channel") {
+								stream = await this.session.api.createChannelStream(
+									name,
+									memberIds,
+									privacy,
+									purpose,
+									undefined,
+									teamId
+								);
+							} else if (type === "direct") {
+								stream = await this.session.api.createDirectStream(memberIds);
+							}
+							this.postMessage({
+								type: WebviewIpcMessageType.response,
+								body: { id: body.id, payload: stream }
+							});
+							break;
+						}
+						case "save-user-preference": {
+							const response = await this.session.api.savePreferences(body.params);
+							this.postMessage({
+								type: WebviewIpcMessageType.response,
 								body: { id: body.id, payload: response }
 							});
-						} else {
-							debugger;
-							// TODO
+							break;
 						}
-						break;
-					}
-					case "create-stream": {
-						const { type, teamId, name, privacy, memberIds } = body.params;
-						let stream;
-						if (type === "channel") {
-							stream = await this.session.api.createChannelStream(name, memberIds, privacy, teamId);
-						} else if (type === "direct") {
-							stream = await this.session.api.createDirectStream(memberIds);
+						case "invite": {
+							const { email, teamId, fullName } = body.params;
+							this.postMessage({
+								type: WebviewIpcMessageType.response,
+								body: {
+									id: body.id,
+									payload: await this.session.api.invite(email, teamId, fullName)
+								}
+							});
+							break;
 						}
-						this.postMessage({
-							type: "codestream:response",
-							body: { id: body.id, payload: stream }
-						});
-						break;
-					}
-					case "save-user-preference": {
-						const response = await this.session.api.savePreferences(body.params);
-						this.postMessage({
-							type: "codestream:response",
-							body: { id: body.id, payload: response }
-						});
-						break;
-					}
-					case "invite": {
-						const { email, teamId, fullName } = body.params;
-						this.postMessage({
-							type: "codestream:response",
-							body: { id: body.id, payload: await this.session.api.invite(email, teamId, fullName) }
-						});
-						break;
-					}
-					case "join-stream": {
-						const { streamId, teamId } = body.params;
-						this.postMessage({
-							type: "codestream:response",
-							body: { id: body.id, payload: await this.session.api.joinStream(streamId, teamId) }
-						});
-						break;
-					}
-					case "leave-stream": {
-						const { streamId, teamId, update } = body.params;
-						try {
-							await this.session.api.updateStream(streamId, update);
-						} catch (e) {
-							/* */
+						case "join-stream": {
+							const { streamId, teamId } = body.params;
+							this.postMessage({
+								type: WebviewIpcMessageType.response,
+								body: { id: body.id, payload: await this.session.api.joinStream(streamId, teamId) }
+							});
+							break;
 						}
-						this.session.leaveChannel(streamId, teamId);
-						this.postMessage({ type: "codestream:response", body: { id: body.id, payload: true } });
-						break;
-					}
-					case "update-stream": {
-						const { streamId, update } = body.params;
-						const responseBody: { [key: string]: any } = { id: body.id };
-						try {
-							responseBody.payload = await this.session.api.updateStream(streamId, update);
-						} catch (error) {
-							responseBody.error = error;
+						case "leave-stream": {
+							const { streamId, update } = body.params;
+							try {
+								await this.session.api.updateStream(streamId, update);
+							} catch (e) {
+								/* */
+							}
+							this.session.notifyDidLeaveChannel(streamId);
+							this.postMessage({
+								type: WebviewIpcMessageType.response,
+								body: { id: body.id, payload: true }
+							});
+							break;
 						}
-						this.postMessage({
-							type: "codestream:response",
-							body: responseBody
-						});
-						break;
-					}
-				}
-				break;
-			}
-			case "interaction:thread-selected": {
-				// Really means post selected
-				const { threadId, streamId, post } = e.body;
-				if (this._streamThread !== undefined && this._streamThread.stream.id === streamId) {
-					this._streamThread.id = threadId;
-					this._onDidChangeStream.fire(this._streamThread);
-				}
+						case "update-stream": {
+							const { streamId, update } = body.params;
+							const responseBody: { [key: string]: any } = { id: body.id };
+							try {
+								responseBody.payload = await this.session.api.updateStream(streamId, update);
+							} catch (error) {
+								responseBody.error = error;
+							}
+							this.postMessage({
+								type: WebviewIpcMessageType.response,
+								body: responseBody
+							});
+							break;
+						}
+						case "show-code": {
+							const { post, enteringThread } = e.body.params;
+							if (post.codeBlocks == null || post.codeBlocks.length === 0) return;
 
-				if (post.codeBlocks == null || post.codeBlocks.length === 0) return;
-
-				const stream = await this.session.getStream(streamId);
-				void (await Container.commands.openPostWorkingFile(new Post(this.session, post, stream)));
-				break;
-			}
-			case "interaction:changed-active-stream": {
-				const streamId = e.body;
-
-				if (!streamId) {
-					this._streamThread = undefined;
-					return;
-				}
-				const stream = await this.session.getStream(streamId);
-				if (stream !== undefined) {
-					this._streamThread = { id: undefined, stream: stream };
-					this._onDidChangeStream.fire(this._streamThread);
-				}
-				break;
-			}
-			case "subscription:file-changed": {
-				const codeBlock = e.body as CSCodeBlock;
-
-				this._bufferChangeTracker.observe(codeBlock, hasDiff => {
-					this.postMessage({
-						type: "codestream:publish:file-changed",
-						body: {
-							file: codeBlock.file,
-							hasDiff
+							const stream = await this.session.getStream(post.streamId);
+							const status = await Container.commands.openPostWorkingFile(
+								new Post(this.session, post, stream),
+								{ preserveFocus: enteringThread }
+							);
+							this.postMessage({
+								type: WebviewIpcMessageType.response,
+								body: { id: e.body.id, payload: status }
+							});
+							break;
 						}
+					}
+					break;
+				}
+				case WebviewIpcMessageType.onActiveThreadChanged: {
+					const { threadId, streamId } = e.body;
+					if (this._streamThread !== undefined && this._streamThread.stream.id === streamId) {
+						this._streamThread.id = threadId;
+						this._onDidChangeStream.fire(this._streamThread);
+					}
+					break;
+				}
+				case WebviewIpcMessageType.onActiveThreadClosed: {
+					if (this._streamThread !== undefined) {
+						this._streamThread.id = undefined;
+						this._onDidChangeStream.fire(this._streamThread);
+					}
+					break;
+				}
+				case WebviewIpcMessageType.onActiveStreamChanged: {
+					const streamId = e.body;
+
+					if (!streamId) {
+						if (this._streamThread !== undefined) {
+							this._streamThread = undefined;
+							this._onDidChangeStream.fire(this._streamThread);
+						}
+						return;
+					}
+
+					const stream = await this.session.getStream(streamId);
+					if (stream !== undefined) {
+						this._streamThread = { id: undefined, stream: stream };
+						this._onDidChangeStream.fire(this._streamThread);
+					}
+					break;
+				}
+				case WebviewIpcMessageType.onServiceRequest:
+					this._ipc.onServiceRequest(e.body);
+					break;
+				case WebviewIpcMessageType.onFileChangedSubscribe: {
+					const codeBlock = e.body as CSCodeBlock;
+
+					this._bufferChangeTracker.observe(codeBlock, hasDiff => {
+						this.postMessage({
+							type: WebviewIpcMessageType.didFileChange,
+							body: {
+								file: codeBlock.file,
+								hasDiff
+							}
+						});
 					});
-				});
-				break;
+					break;
+				}
+				case WebviewIpcMessageType.onFileChangedUnsubscribe: {
+					const codeblock = e.body as CSCodeBlock;
+					this._bufferChangeTracker.unsubscribe(codeblock);
+					break;
+				}
 			}
-			case "unsubscribe:file-changed": {
-				const codeblock = e.body as CSCodeBlock;
-				this._bufferChangeTracker.unsubscribe(codeblock);
-				break;
-			}
-			// switch (body.name) {
-			// 	case "post-clicked":
-			// 		if (body.payload.codeBlocks === undefined) return;
-
-			// 		await Container.commands.openPostWorkingFile(
-			// 			new Post(this.session, body.payload, this._streamThread.stream)
-			// 		);
-			// 		break;
-
-			// 	case "post-diff-clicked":
-			// 		if (body.payload === undefined) return;
-
-			// 		await Container.commands.comparePostFileRevisionWithWorking(
-			// 			new Post(this.session, body.payload, this._streamThread.stream)
-			// 		);
-			// 		break;
+		} catch (ex) {
+			debugger;
+			Logger.error(ex);
 		}
 	}
 
-	private onPostsReceived(e: PostsReceivedEvent) {
-		this.postMessage({
-			type: "codestream:data",
-			body: {
-				type: "posts",
-				payload: e.entities()
-			}
-		});
-	}
-
-	private onSessionChanged(e: SessionChangedEvent) {
+	private onSessionDataChanged(
+		e:
+			| PostsChangedEvent
+			| RepositoriesChangedEvent
+			| StreamsChangedEvent
+			| StreamsMembershipChangedEvent
+			| TeamsChangedEvent
+			| UnreadsChangedEvent
+			| UsersChangedEvent
+	) {
 		switch (e.type) {
-			case SessionChangedType.Streams:
-			case SessionChangedType.Repositories:
-			case SessionChangedType.Users:
-			case SessionChangedType.Teams:
-				this.postMessage({
-					type: "codestream:data",
-					body: {
-						type: e.type,
-						payload: e.entities()
-					}
-				});
+			case SessionChangedEventType.Posts:
+			case SessionChangedEventType.Repositories:
+			case SessionChangedEventType.Streams:
+			case SessionChangedEventType.Teams:
+			case SessionChangedEventType.Unreads:
+			case SessionChangedEventType.Users:
+				Logger.log(`WebviewPanel: Attempting to send ${e.type} to the webview...`);
+				this.postMessage(e.toIpcMessage());
 				break;
-			case SessionChangedType.Unreads: {
-				this.postMessage({
-					type: "codestream:data:unreads",
-					body: e.entities()
-				});
-				break;
-			}
-			case SessionChangedType.StreamsMembership: {
-				// TODO: Does this need to be sent to the view?
-				break;
-			}
 		}
 	}
 
 	private onWindowStateChanged(e: WindowState) {
 		if (this._panelState.visible) {
 			if (e.focused) {
-				this._ipc.onFocus();
+				this._ipc.sendDidFocus();
 			} else {
-				this._ipc.onBlur();
+				this._ipc.sendDidBlur();
 			}
 		}
 	}
 
 	private onConfigurationChanged(e: ConfigurationChangeEvent) {
-		if (e.affectsConfiguration(extensionId)) {
+		if (
+			configuration.changed(e, configuration.name("avatars").value) ||
+			configuration.changed(e, configuration.name("reduceMotion").value)
+		) {
 			this.postMessage({
-				type: "codestream:configs",
+				type: WebviewIpcMessageType.didChangeConfiguration,
 				body: {
-					serverUrl: Container.config.serverUrl,
-					showHeadshots: Container.config.showHeadshots,
+					serverUrl: this.session.serverUrl,
+					showHeadshots: Container.config.avatars,
 					reduceMotion: Container.config.reduceMotion
 				}
 			});
@@ -645,18 +617,6 @@ export class StreamWebviewPanel extends Disposable {
 		this._panel.dispose();
 	}
 
-	post(text: string) {
-		return this.postMessage({
-			type: "interaction",
-			body: {
-				type: "SELECTED_CODE",
-				payload: {
-					text: text
-				}
-			}
-		});
-	}
-
 	async postCode(
 		code: string,
 		uri: Uri,
@@ -667,7 +627,8 @@ export class StreamWebviewPanel extends Disposable {
 			revision: string;
 			authors: { id: string; username: string }[];
 			remotes: { name: string; url: string }[];
-		}
+		},
+		gitError?: string
 	) {
 		let file;
 		if (source === undefined) {
@@ -680,43 +641,152 @@ export class StreamWebviewPanel extends Disposable {
 		}
 
 		void (await this.postMessage({
-			type: "codestream:interaction:code-highlighted",
+			type: WebviewIpcMessageType.didPostCode,
 			body: {
 				code: code,
 				file: file,
+				fileUri: uri.toString(),
 				location: [range.start.line, range.start.character, range.end.line, range.end.character],
-				source: source
+				source: source,
+				gitError
 			}
 		}));
 		return this._streamThread;
 	}
 
+	async reload() {
+		if (this._panel === undefined) return this.createWebview(this._streamThread);
+
+		// Reset the html to get the webview to reload
+		this._panel.webview.html = "";
+		this._panel.webview.html = await this.getHtml();
+		this._panel.reveal(this._panel.viewColumn, false);
+
+		await this.waitUntilReady();
+
+		return this._streamThread;
+	}
+
 	show(streamThread?: StreamThread) {
+		if (this._panel === undefined) return this.createWebview(streamThread);
+
 		if (
-			this._panel !== undefined &&
-			(streamThread === undefined ||
-				(this._streamThread &&
-					this._streamThread.id === streamThread.id &&
-					this._streamThread.stream.id === streamThread.stream.id))
+			streamThread === undefined ||
+			(this._streamThread &&
+				this._streamThread.id === streamThread.id &&
+				this._streamThread.stream.id === streamThread.stream.id)
 		) {
-			this._panel.reveal(undefined, false);
+			this._panel.reveal(this._panel.viewColumn, false);
 
 			return this._streamThread;
 		}
 
-		return this.setStream(streamThread);
+		this._ipc.sendDidChangeStreamThread(streamThread);
+
+		this._streamThread = streamThread;
+		this._onDidChangeStream.fire(this._streamThread);
+
+		return this._streamThread;
 	}
 
-	reset() {
+	signedOut() {
 		if (this._panel !== undefined) {
 			this._streamThread = undefined;
-			this.setStream(undefined);
+			this.postMessage({ type: WebviewIpcMessageType.didSignOut, body: null });
 		}
 	}
 
+	private async createWebview(streamThread?: StreamThread): Promise<StreamThread | undefined> {
+		// Kick off the bootstrap compute to be ready for later
+		this._bootstrapPromise = this.getBootstrapState();
+
+		this._panel = window.createWebviewPanel(
+			"CodeStream.stream",
+			"CodeStream",
+			{ viewColumn: ViewColumn.Beside, preserveFocus: false },
+			{
+				retainContextWhenHidden: true,
+				enableFindWidget: true,
+				enableCommandUris: true,
+				enableScripts: true
+			}
+		);
+		this._panel.iconPath = Uri.file(
+			Container.context.asAbsolutePath("assets/images/codestream.png")
+		);
+
+		this._ipc.connect(this._panel);
+
+		this._disposable = Disposable.from(
+			this.session.onDidChangePosts(this.onSessionDataChanged, this),
+			this.session.onDidChangeRepositories(this.onSessionDataChanged, this),
+			this.session.onDidChangeStreams(this.onSessionDataChanged, this),
+			this.session.onDidChangeTeams(this.onSessionDataChanged, this),
+			this.session.onDidChangeUnreads(this.onSessionDataChanged, this),
+			this.session.onDidChangeUsers(this.onSessionDataChanged, this),
+			this._panel,
+			this._panel.onDidDispose(this.onPanelDisposed, this),
+			this._panel.onDidChangeViewState(this.onPanelViewStateChanged, this),
+			this._panel.webview.onDidReceiveMessage(this.onPanelWebViewMessageReceived, this),
+			window.onDidChangeWindowState(this.onWindowStateChanged, this),
+			configuration.onDidChange(this.onConfigurationChanged, this)
+		);
+
+		this._panel.webview.html = await this.getHtml();
+		this._panel.reveal(this._panel.viewColumn, false);
+
+		this._streamThread = streamThread;
+
+		await this.waitUntilReady();
+
+		this._onDidChangeStream.fire(this._streamThread);
+
+		return this._streamThread;
+	}
+
+	private async getBootstrapState() {
+		const state: BootstrapState = Object.create(null);
+
+		const promise = Promise.all([
+			this.session.repos.entities(),
+			this.session.channelsAndDMs.entities(),
+			this.session.teams.entities(),
+			this.session.unreads.get(),
+			this.session.users.entities()
+		]);
+
+		state.configs = {
+			serverUrl: this.session.serverUrl,
+			reduceMotion: Container.config.reduceMotion,
+			showHeadshots: Container.config.avatars,
+			email: Container.config.email
+		};
+		state.currentTeamId = this.session.team.id;
+		state.currentUserId = this.session.userId;
+		state.env = this.session.environment;
+		state.services = {
+			vsls: Container.vsls.installed
+		};
+		state.version = Container.formattedVersion;
+
+		const currentUser = this.session.user.entity;
+		const [repos, streams, teams, unreads, users] = await promise;
+
+		state.repos = repos;
+		state.streams = streams;
+		state.teams = teams;
+		state.unreads = unreads;
+		state.users = users.map(user => (user.id === currentUser.id ? currentUser : user));
+
+		return state;
+	}
+
+	private _html: string | undefined;
 	private async getHtml(): Promise<string> {
+		let content;
+		// When we are debugging avoid any caching so that we can change the html and have it update without reloading
 		if (Logger.isDebugging) {
-			return new Promise<string>((resolve, reject) => {
+			content = await new Promise<string>((resolve, reject) => {
 				fs.readFile(Container.context.asAbsolutePath("webview.html"), "utf8", (err, data) => {
 					if (err) {
 						reject(err);
@@ -725,122 +795,41 @@ export class StreamWebviewPanel extends Disposable {
 					}
 				});
 			});
+		} else {
+			if (this._html !== undefined) return this._html;
+
+			const doc = await workspace.openTextDocument(
+				Container.context.asAbsolutePath("webview.html")
+			);
+			content = doc.getText();
 		}
 
-		const doc = await workspace.openTextDocument(Container.context.asAbsolutePath("webview.html"));
-		return doc.getText();
+		this._html = content.replace(
+			/{{root}}/g,
+			Uri.file(Container.context.asAbsolutePath("."))
+				.with({ scheme: "vscode-resource" })
+				.toString()
+		);
+		return this._html;
 	}
 
-	private postMessage(request: CSWebviewMessage) {
+	private postMessage(request: WebviewIpcMessage) {
 		return this._ipc.postMessage(request);
 	}
 
-	private async setStream(streamThread?: StreamThread): Promise<StreamThread | undefined> {
-		let html = loadingHtml;
-		if (this._panel === undefined) {
-			this._panel = window.createWebviewPanel(
-				"CodeStream.stream",
-				"CodeStream",
-				{ viewColumn: ViewColumn.Beside, preserveFocus: false },
-				{
-					retainContextWhenHidden: true,
-					enableFindWidget: true,
-					enableCommandUris: true,
-					enableScripts: true
-				}
-			);
+	private waitUntilReady() {
+		// Wait until the webview is ready
+		return new Promise((resolve, reject) => {
+			const timer = setTimeout(() => {
+				Logger.warn("Webview: FAILED waiting for webview ready event; closing webview...");
+				this.dispose();
+				resolve();
+			}, 15000);
 
-			this._ipc.reset(this._panel);
-
-			this._disposable = Disposable.from(
-				this.session.onDidReceivePosts(this.onPostsReceived, this),
-				this.session.onDidChange(this.onSessionChanged, this),
-				this._panel,
-				this._panel.onDidDispose(this.onPanelDisposed, this),
-				this._panel.onDidChangeViewState(this.onPanelViewStateChanged, this),
-				this._panel.webview.onDidReceiveMessage(this.onPanelWebViewMessageReceived, this),
-				window.onDidChangeWindowState(this.onWindowStateChanged, this),
-				configuration.onDidChange(this.onConfigurationChanged, this)
-			);
-
-			this._panel.webview.html = html;
-		} else {
-			this._ipc.reset(this._panel);
-
-			this._panel.webview.html = html;
-			this._panel.reveal(undefined, false);
-		}
-
-		let state: BootstrapState = Object.create(null);
-
-		if (this.session.signedIn) {
-			state = await this.getBootstrapState();
-			if (streamThread !== undefined) {
-				state.currentStreamId = streamThread.stream.id;
-				state.selectedPostId = streamThread.id;
-			}
-		} else {
-			state.version = Container.version;
-			state.configs = { email: Container.config.email };
-		}
-
-		this._streamThread = streamThread;
-		this._onDidChangeStream.fire(this._streamThread);
-
-		const content = await this.getHtml();
-		html = content
-			.replace(
-				/{{root}}/g,
-				Uri.file(Container.context.asAbsolutePath("."))
-					.with({ scheme: "vscode-resource" })
-					.toString()
-			)
-			.replace("'{{bootstrap}}'", JSON.stringify(state));
-
-		this._panel.webview.html = html;
-		this._panel.reveal(undefined, false);
-
-		return this._streamThread;
-	}
-}
-
-class WebviewIpc {
-	private _panel: WebviewPanel | undefined;
-
-	constructor() {}
-
-	private _paused: boolean = false;
-	get paused() {
-		return this._paused;
-	}
-
-	reset(panel: WebviewPanel) {
-		this._panel = panel;
-		this._paused = false;
-	}
-
-	onBlur() {
-		this.postMessage({
-			type: "codestream:interaction:blur",
-			body: {}
+			this._onReadyResolver = () => {
+				clearTimeout(timer);
+				resolve();
+			};
 		});
-	}
-
-	onFocus() {
-		this.postMessage({
-			type: "codestream:interaction:focus",
-			body: {}
-		});
-	}
-
-	/*private*/ async postMessage(request: CSWebviewMessage) {
-		if (this._panel === undefined) throw new Error("Webview has not been created yet");
-		if (this._paused) return false;
-
-		const success = await this._panel.webview.postMessage(request);
-		if (!success) {
-			this._paused = true;
-		}
-		return success;
 	}
 }

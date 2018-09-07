@@ -1,7 +1,7 @@
 "use strict";
 import { Iterables } from "../../system";
 import { CSUser } from "../api";
-import { CodeStreamSession } from "../session";
+import { CodeStreamSession, UsersChangedEvent } from "../session";
 import { CodeStreamCollection, CodeStreamItem } from "./collection";
 
 export class User extends CodeStreamItem<CSUser> {
@@ -29,14 +29,29 @@ export class User extends CodeStreamItem<CSUser> {
 		return this.entity.username || this.fullName;
 	}
 
-	get lastReads() {
-		return this.entity.lastReads || {};
+	get lastReads(): { [streamId: string]: number } {
+		return this.entity.lastReads || Object.create(null);
+	}
+
+	hasMutedChannel(streamId: string) {
+		const preferences = this.entity.preferences;
+		if (preferences === undefined) return false;
+		const mutedStreams = preferences.mutedStreams;
+		if (mutedStreams === undefined) return false;
+
+		return mutedStreams[streamId] === true;
 	}
 }
 
 export class UserCollection extends CodeStreamCollection<User, CSUser> {
 	constructor(session: CodeStreamSession, public readonly teamId: string) {
 		super(session);
+
+		this.disposables.push(session.onDidChangeUsers(this.onUsersChanged, this));
+	}
+
+	protected onUsersChanged(e: UsersChangedEvent) {
+		this.invalidate();
 	}
 
 	async getByEmail(
@@ -81,7 +96,8 @@ export class UserCollection extends CodeStreamCollection<User, CSUser> {
 		return new User(this.session, e);
 	}
 
-	protected fetch() {
-		return this.session.api.getUsers();
+	protected async fetch() {
+		const users = await this.session.api.getUsers();
+		return users;
 	}
 }

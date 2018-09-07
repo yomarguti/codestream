@@ -1,6 +1,4 @@
-import * as path from "path";
 import { commands, Disposable, Range, TextDocument, Uri, ViewColumn, window } from "vscode";
-import { AccessToken } from "./agent/agentConnection";
 import {
 	ChannelStreamCreationOptions,
 	CodeStreamSession,
@@ -9,7 +7,8 @@ import {
 	StreamThread,
 	StreamType
 } from "./api/session";
-import { GlobalState, openEditor } from "./common";
+import { TokenManager } from "./api/tokenManager";
+import { openEditor, ShowCodeResult } from "./common";
 import { Container } from "./container";
 import { StreamThreadId } from "./controllers/streamViewController";
 import { Command, createCommandDecorator } from "./system";
@@ -56,14 +55,11 @@ export function isStreamThreadId(
 	return (streamOrThreadOrLocator as StreamThreadId).streamId !== undefined;
 }
 
-export interface OpenStreamCommandArgs extends IRequiresStream {
-	session?: CodeStreamSession;
+export interface OpenPostWorkingFileArgs {
+	preserveFocus: boolean;
 }
 
-export interface PostCommandArgs extends IRequiresStream {
-	text?: string;
-	send?: boolean;
-	silent?: boolean;
+export interface OpenStreamCommandArgs extends IRequiresStream {
 	session?: CodeStreamSession;
 }
 
@@ -76,12 +72,10 @@ export interface PostCodeCommandArgs extends IRequiresStream {
 	session?: CodeStreamSession;
 }
 
-export class Commands extends Disposable {
+export class Commands implements Disposable {
 	private readonly _disposable: Disposable;
 
 	constructor() {
-		super(() => this.dispose);
-
 		this._disposable = Disposable.from(
 			...commandRegistry.map(({ name, key, method }) =>
 				commands.registerCommand(name, (...args: any[]) => method.apply(this, args))
@@ -116,12 +110,17 @@ export class Commands extends Disposable {
 	// 	);
 	// }
 
+	@command("goOffline")
+	goOffline() {
+		return Container.session.goOffline();
+	}
+
 	@command("openPostWorkingFile", { showErrorMessage: "Unable to open post" })
-	async openPostWorkingFile(post?: Post) {
+	async openPostWorkingFile(post?: Post, args: OpenPostWorkingFileArgs = { preserveFocus: false }) {
 		if (post == null) return;
 
 		const block = await post.codeBlock();
-		if (block === undefined) return;
+		if (block === undefined) return ShowCodeResult.RepoNotInWorkspace;
 
 		// FYI, this doesn't always work, see https://github.com/Microsoft/vscode/issues/56097
 		let column = Container.streamView.viewColumn as number | undefined;
@@ -136,7 +135,8 @@ export class Commands extends Disposable {
 		return openEditor(block.uri, {
 			preview: true,
 			viewColumn: column || ViewColumn.Beside,
-			selection: block.range
+			selection: block.range,
+			preserveFocus: args.preserveFocus
 		});
 	}
 
@@ -170,33 +170,6 @@ export class Commands extends Disposable {
 		return Container.streamView.show(streamThread);
 	}
 
-	@command("post", { showErrorMessage: "Unable to post message" })
-	async post(args: PostCommandArgs): Promise<Post | StreamThread> {
-		if (args == null) {
-			args = {} as PostCommandArgs;
-		}
-
-		const streamThread = await this.findStreamThread(args.session || Container.session, args, {
-			includeActive: true,
-			includeDefault: true /*!args.send*/
-		});
-		if (streamThread === undefined) throw new Error(`No stream could be found`);
-
-		if (args.send && args.text) {
-			if (!args.silent) {
-				await this.openStream({ streamThread: streamThread });
-			}
-			return streamThread.stream.post(args.text, streamThread.id);
-		}
-
-		if (args.text) {
-			await Container.streamView.post(streamThread, args.text);
-			return streamThread;
-		}
-
-		return (await this.openStream({ streamThread: streamThread }))!;
-	}
-
 	@command("postCode", { showErrorMessage: "Unable to add comment" })
 	async postCode(args: PostCodeCommandArgs) {
 		if (args == null) {
@@ -223,26 +196,16 @@ export class Commands extends Disposable {
 			response.code,
 			document.uri,
 			selection,
-			response.source
+			response.source,
+			response.gitError
 		);
 		return streamThread !== undefined ? streamThread.stream : undefined;
 	}
 
-	@command("runServiceAction")
-	runServiceAction(args: { commandUri: string }) {
-		if (args == null) return;
-
-		return Container.linkActions.execute(args.commandUri);
-	}
-
 	@command("signIn", { customErrorHandling: true })
 	async signIn() {
-		let token = Container.context.globalState.get<AccessToken | string>(GlobalState.AccessToken);
-		if (typeof token === "string") {
-			token = { value: token };
-		}
-
-		if (!Container.config.email || !token) {
+		const token = TokenManager.get(Container.config.serverUrl, Container.config.email);
+		if (!token) {
 			await Container.streamView.show();
 		} else {
 			await Container.session.login(Container.config.email, token);
@@ -321,7 +284,7 @@ export class Commands extends Disposable {
 		}
 
 		if (streamThread === undefined && options.includeDefault) {
-			streamThread = { id: undefined, stream: await session.getDefaultTeamChannel() };
+			streamThread = { id: undefined, stream: await session.channels.getDefaultTeamChannel() };
 		}
 
 		return streamThread;

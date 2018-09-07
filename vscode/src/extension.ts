@@ -26,20 +26,24 @@ export async function activate(context: ExtensionContext) {
 		);
 	} catch {}
 
-	const version = `${extensionVersion}${info.build ? `-${info.build}` : ""}`;
-	Logger.log(`CodeStream v${version} starting ${Logger.isDebugging ? "in debug mode" : ""}...`);
+	Logger.log(
+		`CodeStream v${extensionVersion}${info.build ? `-${info.build}` : ""} starting ${
+			Logger.isDebugging ? "in debug mode" : ""
+		}...`
+	);
 
 	const git = await gitPath();
 
 	const cfg = configuration.get<Config>();
 	await Container.initialize(context, cfg, {
-		extensionVersion: version,
+		extensionBuild: info.build,
+		extensionVersion: extensionVersion,
 		gitPath: git,
 		ideVersion: vscodeVersion,
 		serverUrl: cfg.serverUrl
 	} as AgentOptions);
 
-	context.subscriptions.push(Container.session.onDidChangeStatus(onSessionStatusChanged));
+	context.subscriptions.push(Container.session.onDidChangeSessionStatus(onSessionStatusChanged));
 
 	if (cfg.autoSignIn) {
 		Container.commands.signIn();

@@ -1,7 +1,7 @@
 // 'use strict';
 // import { CancellationToken, CodeLens, CodeLensProvider, Disposable, DocumentSelector, Event, EventEmitter, languages, Range, TextDocument, TextEditorSelectionChangeEvent, window, workspace } from 'vscode';
 
-// export class CodeStreamCodeLensProvider extends Disposable implements CodeLensProvider {
+// export class CodeStreamCodeLensProvider implements CodeLensProvider, Disposable {
 
 //     static selector: DocumentSelector = { scheme: 'file' };
 
@@ -13,8 +13,6 @@
 //     private readonly _disposable: Disposable | undefined;
 
 //     constructor() {
-//         super(() => this.dispose());
-
 //         this._disposable = Disposable.from(
 //             languages.registerCodeLensProvider(CodeStreamCodeLensProvider.selector, this),
 //             window.onDidChangeTextEditorSelection(this.onSelectionChanged, this)

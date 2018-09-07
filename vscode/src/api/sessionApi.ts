@@ -1,8 +1,9 @@
 "use strict";
 import { Uri } from "vscode";
+import { ChannelServiceType } from "../shared/api.protocol";
 import {
+	ApiMiddleware,
 	CodeStreamApi,
-	CreatePostRequestCodeBlock,
 	CSChannelStream,
 	CSDirectStream,
 	CSFileStream,
@@ -18,11 +19,22 @@ import {
 } from "./api";
 
 export class CodeStreamSessionApi {
-	constructor(
-		private readonly _api: CodeStreamApi,
-		private readonly token: string,
-		private readonly teamId: string
-	) {}
+	private readonly _api: CodeStreamApi;
+
+	constructor(baseUrl: string, private readonly token: string, private readonly teamId: string) {
+		this._api = new CodeStreamApi(baseUrl);
+	}
+
+	get baseUrl() {
+		return this._api.baseUrl;
+	}
+	set baseUrl(value: string) {
+		this._api.baseUrl = value;
+	}
+
+	useMiddleware(middleware: ApiMiddleware) {
+		return this._api.useMiddleware(middleware);
+	}
 
 	async savePreferences(preferences: {}) {
 		await this._api.savePreferences(this.token, preferences);
@@ -59,53 +71,6 @@ export class CodeStreamSessionApi {
 		})).post;
 	}
 
-	async createPostWithCode(
-		text: string,
-		parentPostId: string | undefined,
-		code: string,
-		location: [number, number, number, number] | undefined,
-		commitHash: string | undefined,
-		fileStream:
-			| string
-			| { file: string; remotes: { name: string; url: string }[] }
-			| { file: string; repoId: string }
-			| undefined,
-		streamId: string,
-		teamId?: string
-	): Promise<CSPost | undefined> {
-		const codeBlock: CreatePostRequestCodeBlock = {
-			code: code,
-			location: location
-		};
-
-		if (fileStream !== undefined) {
-			if (typeof fileStream === "string") {
-				codeBlock.streamId = fileStream;
-			} else {
-				codeBlock.file = fileStream.file;
-				if ("repoId" in fileStream) {
-					codeBlock.repoId = fileStream.repoId;
-				} else {
-					codeBlock.remotes = fileStream.remotes.map(r => r.url);
-				}
-			}
-		}
-
-		try {
-			return (await this._api.createPost(this.token, {
-				teamId: teamId || this.teamId,
-				streamId: streamId,
-				text: text,
-				parentPostId,
-				codeBlocks: [codeBlock],
-				commitHashWhenPosted: commitHash
-			})).post;
-		} catch (ex) {
-			debugger;
-			return;
-		}
-	}
-
 	async createRepo(
 		uri: Uri,
 		firstCommitHashes: string[],
@@ -122,6 +87,12 @@ export class CodeStreamSessionApi {
 		name: string,
 		membership?: "auto" | string[],
 		privacy: "public" | "private" = membership === "auto" ? "public" : "private",
+		purpose?: string,
+		service?: {
+			serviceType: ChannelServiceType;
+			serviceKey?: string;
+			serviceInfo?: { [key: string]: any };
+		},
 		teamId?: string
 	): Promise<CSChannelStream | undefined> {
 		return (await this._api.createStream(this.token, {
@@ -130,7 +101,9 @@ export class CodeStreamSessionApi {
 			name: name,
 			memberIds: membership === "auto" ? undefined : membership,
 			isTeamStream: membership === "auto",
-			privacy: membership === "auto" ? "public" : privacy
+			privacy: membership === "auto" ? "public" : privacy,
+			purpose: purpose,
+			...service
 		})).stream as CSChannelStream;
 	}
 
@@ -188,6 +161,14 @@ export class CodeStreamSessionApi {
 
 	async editPost(postId: string, text: string, mentionedUserIds: string[]) {
 		return (await this._api.editPost(this.token, { id: postId, text, mentionedUserIds })).post;
+	}
+
+	async reactToPost(postId: string, emoji: string, value: boolean) {
+		return (await this._api.reactToPost(this.token, postId, { [emoji]: value })).post;
+	}
+
+	async markPostUnread(postId: string) {
+		return (await this._api.markPostUnread(this.token, { id: postId })).post;
 	}
 
 	async getMarker(markerId: string, teamId?: string): Promise<CSMarker> {
@@ -299,6 +280,10 @@ export class CodeStreamSessionApi {
 
 	async getStream(streamId: string, teamId?: string): Promise<CSStream | undefined> {
 		return (await this._api.getStream(this.token, teamId || this.teamId, streamId)).stream;
+	}
+
+	async getUnreadStreams(teamId?: string): Promise<CSStream[]> {
+		return (await this._api.getUnreadStreams(this.token, teamId || this.teamId)).streams;
 	}
 
 	async getChannelStreams(teamId?: string): Promise<CSChannelStream[]> {

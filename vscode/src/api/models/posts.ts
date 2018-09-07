@@ -1,9 +1,9 @@
 "use strict";
 import { Range, Uri } from "vscode";
 import { Container } from "../../container";
-import { Dates, Iterables, memoize } from "../../system";
+import { Dates, memoize } from "../../system";
 import { CSPost } from "../api";
-import { CodeStreamSession, PostsReceivedEvent } from "../session";
+import { CodeStreamSession, PostsChangedEvent } from "../session";
 import { CodeStreamCollection, CodeStreamItem } from "./collection";
 import { Stream } from "./streams";
 import { User } from "./users";
@@ -26,11 +26,19 @@ export class Post extends CodeStreamItem<CSPost> {
 	}
 
 	get deleted() {
-		return this.entity.deactivated;
+		return !!this.entity.deactivated;
+	}
+
+	get edited() {
+		return !!this.entity.hasBeenEdited;
 	}
 
 	get hasCode() {
 		return this.entity.codeBlocks !== undefined && this.entity.codeBlocks.length !== 0;
+	}
+
+	get hasReplies() {
+		return !!this.entity.hasReplies;
 	}
 
 	get senderId() {
@@ -56,11 +64,8 @@ export class Post extends CodeStreamItem<CSPost> {
 		}
 
 		const block = this.entity.codeBlocks[0];
-		const resp = await Container.agent.getDocumentFromCodeBlock(
-			block,
-			this.entity.commitHashWhenPosted!
-		);
-		if (resp === undefined) return undefined;
+		const resp = await Container.agent.getDocumentFromCodeBlock(block);
+		if (resp === undefined || resp === null) return undefined;
 
 		return {
 			code: block.code,
@@ -95,31 +100,10 @@ export class Post extends CodeStreamItem<CSPost> {
 		return this._dateFormatter.fromNow();
 	}
 
-	mentioned(name: string): boolean {
-		name = name.toLocaleUpperCase();
-		return Iterables.some(this.mentions(), m => m.toLocaleUpperCase() === name);
-	}
-
-	// async *mentionedUsers() {
-	//     for (const mention of this.mentions()) {
-	//         const user = await this.session.users.getByName(mention);
-	//         if (user !== undefined) yield user;
-	//     }
-	// }
-
-	*mentions() {
-		// Recreate this each call, because this iterable can be stopped and never finished
-		// and the regex can end up trying to continue incorrectly
-		const mentionsRegex = /(?:^|\s)@(\w+)(?:\b(?!@|[\(\{\[\<\-])|$)/g;
-
-		let match: RegExpExecArray | null = null;
-		do {
-			match = mentionsRegex.exec(this.entity.text);
-			if (match == null) break;
-
-			const [, mention] = match;
-			yield mention;
-		} while (match != null);
+	mentioned(userId: string): boolean {
+		return this.entity.mentionedUserIds == null || this.entity.mentionedUserIds.length === 0
+			? false
+			: this.entity.mentionedUserIds.includes(userId);
 	}
 
 	@memoize
@@ -149,11 +133,11 @@ export class PostCollection extends CodeStreamCollection<Post, CSPost> {
 	) {
 		super(session);
 
-		this.disposables.push(session.onDidReceivePosts(this.onPostsReceived, this));
+		this.disposables.push(session.onDidChangePosts(this.onPostsChanged, this));
 	}
 
-	private onPostsReceived(e: PostsReceivedEvent) {
-		if (e.affects(this.stream.id)) {
+	private onPostsChanged(e: PostsChangedEvent) {
+		if (e.affects(this.stream.id, "stream")) {
 			this.invalidate();
 		}
 	}

@@ -1,28 +1,16 @@
 "use strict";
-import { Disposable, Event, EventEmitter, window } from "vscode";
-import { Post, PostsReceivedEvent, StreamType } from "../api/session";
+import { Disposable, MessageItem, window } from "vscode";
+import { Post, PostsChangedEvent, StreamType } from "../api/session";
 import { Notifications } from "../configuration";
 import { Container } from "../container";
-import { Arrays, Functions } from "../system";
+import { vslsUrlRegex } from "./liveShareController";
 
-export interface UnreadCountChangedEvent {
-	getCount(): number;
-}
-
-export class NotificationsController extends Disposable {
-	private _onDidChangeUnreadCount = new EventEmitter<UnreadCountChangedEvent>();
-	get onDidChangeUnreadCount(): Event<UnreadCountChangedEvent> {
-		return this._onDidChangeUnreadCount.event;
-	}
-
+export class NotificationsController implements Disposable {
 	private _disposable: Disposable;
-	private _count: number = 0;
 
 	constructor() {
-		super(() => this.dispose());
-
 		this._disposable = Disposable.from(
-			Container.session.onDidReceivePosts(this.onSessionPostsReceived, this)
+			Container.session.onDidChangePosts(this.onSessionPostsReceived, this)
 		);
 	}
 
@@ -30,96 +18,85 @@ export class NotificationsController extends Disposable {
 		this._disposable && this._disposable.dispose();
 	}
 
-	private async onSessionPostsReceived(e: PostsReceivedEvent) {
-		const currentUserId = Container.session.userId;
-		const currentUsername = Container.session.user.name;
-
+	private async onSessionPostsReceived(e: PostsChangedEvent) {
+		const currentUser = Container.session.user;
 		const activeStream = Container.streamView.activeStreamThread;
 		const streamVisible = Container.streamView.visible;
 
-		let count = 0;
-		if (Container.config.notifications !== Notifications.None) {
-			for (const post of e.items()) {
-				if (post.deleted || post.senderId === currentUserId) continue;
+		if (Container.config.notifications === Notifications.None) return;
 
-				const isPostStreamVisible =
-					streamVisible &&
-					!(activeStream === undefined || activeStream.stream.id !== post.streamId);
-				if (!isPostStreamVisible) {
-					count++;
-				}
-
-				switch (Container.config.notifications) {
-					case Notifications.All:
-						if (!isPostStreamVisible) {
-							this.showNotification(post);
-						} else if (
-							post.mentioned(currentUsername) ||
-							((await post.stream()).type === StreamType.Direct && !isPostStreamVisible)
-						) {
-							this.showNotification(post);
-						}
-						break;
-
-					case Notifications.Mentions:
-						if (
-							post.mentioned(currentUsername) ||
-							((await post.stream()).type === StreamType.Direct && !isPostStreamVisible)
-						) {
-							this.showNotification(post);
-						}
-						break;
-				}
+		for (const post of e.items()) {
+			// Don't show notifications for deleted, edited (if edited it isn't the first time its been seen), has replies (same as edited), or was posted by the current user
+			if (post.deleted || post.edited || post.hasReplies || post.senderId === currentUser.id) {
+				continue;
 			}
-		} else {
-			count = Arrays.count(
-				e.items(),
-				p =>
-					!p.deleted &&
-					p.senderId !== currentUserId &&
-					(!streamVisible || activeStream === undefined || activeStream.stream.id !== p.streamId)
-			);
+
+			const mentioned = post.mentioned(currentUser.id);
+			// If we are muted and not mentioned, skip it
+			if (currentUser.hasMutedChannel(post.streamId) && !mentioned) continue;
+
+			const isPostStreamVisible =
+				streamVisible && !(activeStream === undefined || activeStream.stream.id !== post.streamId);
+
+			switch (Container.config.notifications) {
+				case Notifications.All:
+					if (!isPostStreamVisible) {
+						this.showNotification(post, false);
+					} else if (
+						mentioned ||
+						(!isPostStreamVisible && (await post.stream()).type === StreamType.Direct)
+					) {
+						this.showNotification(post, true);
+					}
+					break;
+
+				case Notifications.Mentions:
+					if (
+						mentioned ||
+						(!isPostStreamVisible && (await post.stream()).type === StreamType.Direct)
+					) {
+						this.showNotification(post, true);
+					}
+					break;
+			}
 		}
-
-		if (count === 0) return;
-
-		// 💩💩💩 need to keep track of a lot more
-		this._count += count;
-		this.fireUnreadCountChanged({
-			getCount: () => this._count
-		});
 	}
 
-	clearUnreadCount() {
-		this._count = 0;
-		this.fireUnreadCountChanged({
-			getCount: () => this._count
-		});
-	}
-
-	async showNotification(post: Post) {
+	async showNotification(post: Post, mentioned: boolean) {
 		const sender = await post.sender();
+
+		const text = post.text;
+		if (mentioned && sender !== undefined) {
+			const match = vslsUrlRegex.exec(text);
+			if (match != null) {
+				const actions: MessageItem[] = [
+					{ title: "Join Live Share" },
+					{ title: "Ignore", isCloseAffordance: true }
+				];
+
+				const result = await window.showInformationMessage(
+					`${sender.name} is inviting you to join a Live Share session`,
+					...actions
+				);
+
+				if (result === actions[0]) {
+					Container.vsls.join({ url: match[0] });
+				}
+
+				return;
+			}
+		}
 
 		// const actions: MessageItem[] = [
 		//     { title: 'Open' }
 		// ];
 
-		const text = Container.linkActions.resolveTextTransformations(post.text);
-		window.showInformationMessage(`${sender !== undefined ? sender.name : "Someone"}: ${text}`);
+		await window.showInformationMessage(
+			`${sender !== undefined ? sender.name : "Someone"}: ${post.text}`
+		);
 		// const result = await window.showInformationMessage(`${sender !== undefined ? sender.name : 'Someone'}: ${text}`, ...actions);
 		// if (result === actions[0]) {
 		//     Container.commands.openStream({ streamThread: { id: undefined, streamId: post.streamId } });
 		// }
-	}
-
-	private _unreadCountChangedDebounced: ((e: UnreadCountChangedEvent) => void) | undefined;
-	protected fireUnreadCountChanged(e: UnreadCountChangedEvent) {
-		if (this._unreadCountChangedDebounced === undefined) {
-			this._unreadCountChangedDebounced = Functions.debounce(
-				(e: UnreadCountChangedEvent) => this._onDidChangeUnreadCount.fire(e),
-				250
-			);
-		}
-		this._unreadCountChangedDebounced(e);
 	}
 }

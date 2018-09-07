@@ -2,9 +2,9 @@
 import { Disposable, Range, Uri, ViewColumn } from "vscode";
 import {
 	CodeStreamSession,
+	SessionSignedOutReason,
 	SessionStatus,
 	SessionStatusChangedEvent,
-	SessionStatusSignedOutReason,
 	StreamThread
 } from "../api/session";
 import { WorkspaceState } from "../common";
@@ -29,7 +29,7 @@ export class StreamViewController implements Disposable {
 
 	constructor(public readonly session: CodeStreamSession) {
 		this._disposable = Disposable.from(
-			Container.session.onDidChangeStatus(this.onSessionStatusChanged, this)
+			Container.session.onDidChangeSessionStatus(this.onSessionStatusChanged, this)
 		);
 	}
 
@@ -50,18 +50,19 @@ export class StreamViewController implements Disposable {
 		const status = e.getStatus();
 		switch (status) {
 			case SessionStatus.SignedOut:
-				if (e.reason === SessionStatusSignedOutReason.SignInFailure) {
+				if (e.reason === SessionSignedOutReason.SignInFailure) {
 					if (!this.visible) {
 						this.show();
 					}
 					break;
 				}
 
-				if (this.visible) {
-					this._panel!.reset();
-				} else {
-					this.closePanel();
+				if (this.visible && e.reason === SessionSignedOutReason.UserSignedOut) {
+					this._panel!.signedOut();
+					break;
 				}
+
+				this.closePanel();
 				break;
 
 			case SessionStatus.SignedIn:
@@ -103,11 +104,6 @@ export class StreamViewController implements Disposable {
 		this._panel.hide();
 	}
 
-	async post(streamThread: StreamThread, text: string) {
-		await this.show(streamThread);
-		return this._panel!.post(text);
-	}
-
 	async postCode(
 		code: string,
 		uri: Uri,
@@ -118,18 +114,14 @@ export class StreamViewController implements Disposable {
 			revision: string;
 			authors: { id: string; username: string }[];
 			remotes: { name: string; url: string }[];
-		}
+		},
+		gitError?: string
 	) {
-		if (!this.visible) {
-			await this.show();
-		}
-		return await this._panel!.postCode(code, uri, range, source);
+		await this.show();
+		return this._panel!.postCode(code, uri, range, source, gitError);
 	}
 
 	async show(streamThread?: StreamThread) {
-		// HACK: 💩
-		Container.notifications.clearUnreadCount();
-
 		if (this._panel === undefined) {
 			if (streamThread === undefined) {
 				streamThread = this._lastStreamThread;

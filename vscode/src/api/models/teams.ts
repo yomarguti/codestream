@@ -1,6 +1,6 @@
 "use strict";
 import { CSTeam } from "../api";
-import { CodeStreamSession } from "../session";
+import { CodeStreamSession, TeamsChangedEvent } from "../session";
 import { CodeStreamCollection, CodeStreamItem } from "./collection";
 
 export class Team extends CodeStreamItem<CSTeam> {
@@ -11,15 +11,17 @@ export class Team extends CodeStreamItem<CSTeam> {
 	get name() {
 		return this.entity.name;
 	}
-
-	// get repos() {
-	//     return this.session.repo;
-	// }
 }
 
 export class TeamCollection extends CodeStreamCollection<Team, CSTeam> {
 	constructor(session: CodeStreamSession, private readonly _ids: string[]) {
 		super(session);
+
+		this.disposables.push(session.onDidChangeTeams(this.onTeamsChanged, this));
+	}
+
+	protected onTeamsChanged(e: TeamsChangedEvent) {
+		this.invalidate();
 	}
 
 	protected entityMapper(e: CSTeam) {

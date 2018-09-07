@@ -1,7 +1,7 @@
 import "resize-observer";
 import React from "react";
 import ReactDOM from "react-dom";
-import { Container, createStore, EventEmitter, WebviewApi } from "codestream-components";
+import { actions, Container, createStore, EventEmitter, WebviewApi } from "codestream-components";
 import translations from "codestream-components/translations/en.json";
 import loggingMiddleWare from "./logging-middleware";
 
@@ -123,7 +123,7 @@ function initializeColorPalette() {
 
 			case "light":
 				bodyStyle.setProperty("--app-background-color", color);
-				bodyStyle.setProperty("--app-background-color-hover", darken(color, 7));
+				bodyStyle.setProperty("--app-background-color-hover", darken(color, 1.5));
 
 				bodyStyle.setProperty("--base-background-color", darken(color, 3));
 				bodyStyle.setProperty("--base-border-color", darken(color, 10));
@@ -151,59 +151,105 @@ function initializeColorPalette() {
 
 initializeColorPalette();
 
-setTimeout(() => {
-	document.body.classList.remove("preload");
-}, 1000); // Wait for animations to complete
-
-const data = window.bootstrap;
-
-const store = createStore(
-	{
-		pluginVersion: data.version,
-		startOnMainPanel: Boolean(data.currentStreamId),
-		context: {
-			currentTeamId: data.currentTeamId,
-			currentStreamId: data.currentStreamId,
-			hasFocus: true
+const start = Date.now();
+const api = new WebviewApi();
+api.bootstrap().then(data => {
+	let panel;
+	if (data.currentStreamId) panel = "main";
+	if (data.currentStreamId && data.currentThreadId) panel = "thread";
+	const store = createStore(
+		{
+			pluginVersion: data.version,
+			startupProps: {
+				startOnMainPanel: Boolean(data.currentStreamId),
+				threadId: data.currentThreadId
+			},
+			context: {
+				currentTeamId: data.currentTeamId,
+				currentStreamId: data.currentStreamId,
+				hasFocus: true,
+				...(panel ? { panel } : {}) // a little black magic so not to assume what the view will use as a default
+			},
+			session: {
+				userId: data.currentUserId
+			},
+			umis: data.unreads
 		},
-		session: {
-			userId: data.currentUserId
+		{ api },
+		[loggingMiddleWare]
+	);
+
+	// TODO: should be able to include data.configs in call to createStore
+	store.dispatch(actions.updateConfigs(data.configs || {}));
+
+	EventEmitter.on("data", ({ type, payload }) => {
+		store.dispatch({ type: `ADD_${type.toUpperCase()}`, payload });
+	});
+
+	EventEmitter.on("data:unreads", unreads => {
+		store.dispatch(actions.updateUnreads(unreads));
+	});
+
+	EventEmitter.on("configs", configs => store.dispatch(actions.updateConfigs(configs)));
+
+	EventEmitter.on("connectivity:offline", () => store.dispatch(actions.offline()));
+	EventEmitter.on("connectivity:online", () => store.dispatch(actions.online()));
+
+	EventEmitter.on("interaction:focus", () => {
+		setTimeout(() => {
+			store.dispatch(actions.focus());
+		}, 10); // we want the first click to go to the FocusTrap blanket
+	});
+	EventEmitter.on("interaction:blur", () => {
+		store.dispatch(actions.blur());
+	});
+
+	EventEmitter.on("interaction:signed-out", () => {
+		store.dispatch(actions.reset());
+	});
+
+	const render = () => {
+		setTimeout(() => {
+			document.body.classList.remove("preload");
+		}, 1000); // Wait for animations to complete
+
+		ReactDOM.render(
+			<Container store={store} i18n={{ locale: "en", messages: translations }} />,
+			document.querySelector("#app"),
+			() => EventEmitter.emit("view-ready")
+		);
+	};
+
+	const vslsUrlRegex = /https:\/\/insiders\.liveshare\.vsengsaas\.visualstudio\.com\/join\?/;
+
+	document.body.addEventListener(
+		"click",
+		function(e) {
+			if (e == null || e.target == null || e.target.tagName !== "A") return;
+
+			if (!vslsUrlRegex.test(e.target.href)) return;
+
+			e.preventDefault();
+			e.stopPropagation();
+			e.stopImmediatePropagation();
+
+			EventEmitter.emit("interaction:svc-request", {
+				service: "vsls",
+				action: {
+					type: "join",
+					url: e.target.href
+				}
+			});
 		},
-		umis: data.unreads
-	},
-	{ api: new WebviewApi() },
-	[loggingMiddleWare]
-);
+		true
+	);
 
-store.dispatch({ type: "UPDATE_CONFIGS", payload: data.configs || {} });
-
-EventEmitter.on("data", ({ type, payload }) => {
-	store.dispatch({ type: `ADD_${type.toUpperCase()}`, payload });
+	store.dispatch(actions.bootstrap(data)).then(() => {
+		const duration = Date.now() - start;
+		if (duration < 250) {
+			setTimeout(render, 250 - duration);
+		} else {
+			render();
+		}
+	});
 });
-
-EventEmitter.on("data:unreads", unreads => {
-	store.dispatch({ type: `UPDATE_UNREADS`, payload: unreads });
-});
-
-EventEmitter.on("configs", configs => store.dispatch({ type: "UPDATE_CONFIGS", payload: configs }));
-
-EventEmitter.on("interaction:focus", () => {
-	setTimeout(() => {
-		store.dispatch({ type: "SET_HAS_FOCUS", payload: true });
-	}, 10); // we want the first click to go to the FocusTrap blanket
-});
-EventEmitter.on("interaction:blur", () => {
-	store.dispatch({ type: "SET_HAS_FOCUS", payload: false });
-});
-
-if (data.currentUserId) {
-	store.dispatch({ type: "BOOTSTRAP_USERS", payload: data.users });
-	store.dispatch({ type: "BOOTSTRAP_TEAMS", payload: data.teams });
-	store.dispatch({ type: "BOOTSTRAP_STREAMS", payload: data.streams });
-}
-store.dispatch({ type: "BOOTSTRAP_COMPLETE" });
-
-ReactDOM.render(
-	<Container store={store} i18n={{ locale: "en", messages: translations }} />,
-	document.querySelector("#app")
-);

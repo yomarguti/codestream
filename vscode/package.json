@@ -2,7 +2,7 @@
     "name": "codestream",
     "displayName": "CodeStream",
     "description": "The knowledge base behind your codebase",
-    "version": "0.5.0",
+    "version": "0.9.0",
     "author": "CodeStream",
     "publisher": "CodeStream",
     "license": "UNLICENSED",
@@ -15,7 +15,7 @@
         "url": "https://github.com/TeamCodeStream/vscode-codestream"
     },
     "engines": {
-        "vscode": "^1.25.0"
+        "vscode": "^1.26.0"
     },
     "main": "./dist/extension",
     "icon": "assets/images/codestream.png",
@@ -43,10 +43,34 @@
                     "description": "Specifies whether to automatically sign in to CodeStream",
                     "scope": "window"
                 },
+                "codestream.avatars": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Specifies whether to show avatars",
+                    "scope": "window"
+                },
                 "codestream.email": {
                     "type": "string",
                     "default": null,
                     "description": "Specifies the email address to use to connect to the CodeStream service",
+                    "scope": "window"
+                },
+                "codestream.markerStyle": {
+                    "type": "string",
+                    "default": "bubble",
+                    "enum": [
+                        "bubble",
+                        "logo",
+                        "squircle",
+                        "triangle"
+                    ],
+                    "enumDescriptions": [
+                        "Chat bubble indicators",
+                        "CodeStream logo indicators",
+                        "Squircle indicators",
+                        "Triangle indicators"
+                    ],
+                    "description": "Specifies the indicator style to use for CodeStream code markers",
                     "scope": "window"
                 },
                 "codestream.notifications": {
@@ -57,6 +81,11 @@
                         "mentions",
                         "none"
                     ],
+                    "enumDescriptions": [
+                        "Shows notifications for all incoming messages",
+                        "Shows notifications for all direct messages and @mentions",
+                        "No notifications will be shown"
+                    ],
                     "description": "Specifies when to show notifications for incoming messages",
                     "scope": "window"
                 },
@@ -66,16 +95,16 @@
                     "description": "Specifies the password to use to connect to the CodeStream service",
                     "scope": "window"
                 },
+                "codestream.reduceMotion": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Specifies whether to reduce animation/transition motions",
+                    "scope": "window"
+                },
                 "codestream.serverUrl": {
                     "type": "string",
                     "default": "https://api.codestream.com",
                     "description": "Specifies the url to use to connect to the CodeStream service",
-                    "scope": "window"
-                },
-                "codestream.webAppUrl": {
-                    "type": "string",
-                    "default": "https://app.codestream.com",
-                    "description": "Specifies the url for the CodeStream web portal",
                     "scope": "window"
                 },
                 "codestream.team": {
@@ -96,21 +125,20 @@
                     "description": "Specifies how much (if any) output will be sent to the CodeStream output channel",
                     "scope": "window"
                 },
-                "codestream.reduceMotion": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Reduce the animations in the view",
-                    "scope": "window"
-                },
-                "codestream.showHeadshots": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Display headshots in the stream",
+                "codestream.webAppUrl": {
+                    "type": "string",
+                    "default": "https://app.codestream.com",
+                    "description": "Specifies the url for the CodeStream web portal",
                     "scope": "window"
                 }
             }
         },
         "commands": [
+            {
+                "command": "codestream.goOffline",
+                "title": "Go Offline",
+                "category": "CodeStream"
+            },
             {
                 "command": "codestream.signIn",
                 "title": "Sign In...",
@@ -130,25 +158,14 @@
                 "command": "codestream.toggle",
                 "title": "Toggle CodeStream",
                 "category": "CodeStream"
-            },
-            {
-                "command": "codestream.vsls.invite",
-                "title": "Invite to Live Share",
-                "category": "CodeStream"
-            },
-            {
-                "command": "codestream.vsls.join",
-                "title": "Join Live Share",
-                "category": "CodeStream"
-            },
-            {
-                "command": "codestream.runServiceAction",
-                "title": "Run Service Action",
-                "category": "CodeStream"
             }
         ],
         "menus": {
             "commandPalette": [
+                {
+                    "command": "codestream.goOffline",
+                    "when": "codestream:status == signedIn"
+                },
                 {
                     "command": "codestream.signIn",
                     "when": "codestream:status == signedOut"
@@ -164,18 +181,6 @@
                 {
                     "command": "codestream.toggle",
                     "when": "codestream:status == signedIn"
-                },
-                {
-                    "command": "codestream.vsls.invite",
-                    "when": "false"
-                },
-                {
-                    "command": "codestream.vsls.join",
-                    "when": "false"
-                },
-                {
-                    "command": "codestream.runServiceAction",
-                    "when": "false"
                 }
             ],
             "editor/context": [
@@ -217,10 +222,11 @@
         "tmp": "0.0.33",
         "tslib": "1.9.3",
         "uuid": "^3.3.2",
-        "vscode-languageclient": "4.4.0"
+        "vscode-languageclient": "5.0.1",
+        "vsls": "0.3.426"
     },
     "devDependencies": {
-        "@types/node": "8.10.24",
+        "@types/node": "8.10.25",
         "@types/node-fetch": "2.1.2",
         "@types/pubnub": "4.0.2",
         "@types/tmp": "0.0.33",
@@ -234,26 +240,26 @@
         "babel-preset-react": "6.24.1",
         "clean-webpack-plugin": "0.1.19",
         "css-loader": "1.0.0",
-        "filemanager-webpack-plugin": "1.0.29",
+        "filemanager-webpack-plugin": "2.0.1",
         "html-loader": "0.5.5",
         "html-webpack-plugin": "3.2.0",
         "ignore-loader": "0.1.2",
         "less": "3.8.1",
         "less-loader": "4.1.0",
-        "mini-css-extract-plugin": "0.4.1",
-        "prettier": "1.14.1",
+        "mini-css-extract-plugin": "0.4.2",
+        "prettier": "1.14.2",
         "prettier-tslint": "0.4.0",
         "react": "16.4.1",
         "react-dom": "16.4.1",
         "redux-mock-store": "1.5.3",
         "resize-observer": "0.1.0",
-        "ts-loader": "4.4.2",
+        "ts-loader": "4.5.0",
         "tslint": "5.11.0",
         "tslint-loader": "3.6.0",
         "typescript": "3.0.1",
         "vsce": "1.46.0",
-        "vscode": "1.1.18",
-        "webpack": "4.16.5",
+        "vscode": "1.1.21",
+        "webpack": "4.17.1",
         "webpack-babel-external-helpers-2": "4.0.0",
         "webpack-cli": "3.1.0",
         "webpack-node-externals": "1.7.2"

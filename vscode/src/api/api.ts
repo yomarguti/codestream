@@ -30,7 +30,11 @@ import {
 	InviteResponse,
 	JoinStreamRequest,
 	JoinStreamResponse,
+	MarkPostUnreadRequest,
+	MarkPostUnreadResponse,
 	MeResponse,
+	ReactToPostRequest,
+	ReactToPostResponse,
 	UpdatePresenceRequest,
 	UpdatePresenceResponse,
 	UpdateStreamMembershipRequest,
@@ -96,8 +100,20 @@ export class CodeStreamApi {
 		return this.delete<DeletePostResponse>(`/posts/${postId}`, token);
 	}
 
+	reactToPost(token: string, postId: string, request: ReactToPostRequest) {
+		return this.put<ReactToPostRequest, ReactToPostResponse>(`/react/${postId}`, request, token);
+	}
+
 	editPost(token: string, request: EditPostRequest) {
 		return this.put<EditPostRequest, EditPostResponse>(`/posts/${request.id}`, request, token);
+	}
+
+	markPostUnread(token: string, request: MarkPostUnreadRequest) {
+		return this.put<MarkPostUnreadRequest, MarkPostUnreadResponse>(
+			`/unread/${request.id}`,
+			request,
+			token
+		);
 	}
 
 	findRepo(url: string, firstCommitHashes: string[]) {
@@ -169,6 +185,13 @@ export class CodeStreamApi {
 		streamId: string
 	): Promise<GetStreamResponse<T>> {
 		return this.get<GetStreamResponse<T>>(`/streams/${streamId}`, token);
+	}
+
+	getUnreadStreams<T extends CSStream>(
+		token: string,
+		teamId: string
+	): Promise<GetStreamsResponse<T>> {
+		return this.get<GetStreamsResponse<T>>(`/streams?teamId=${teamId}&unread`, token);
 	}
 
 	getStreams<T extends CSStream>(

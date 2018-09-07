@@ -14,13 +14,11 @@ interface ICollectionItem<TEntity extends CSEntity> {
 	readonly entity: TEntity;
 }
 
-export abstract class CodeStreamItem<TEntity extends CSEntity> extends Disposable
-	implements ICollectionItem<TEntity> {
+export abstract class CodeStreamItem<TEntity extends CSEntity>
+	implements ICollectionItem<TEntity>, Disposable {
 	[CollectionItem] = true;
 
-	constructor(protected readonly session: CodeStreamSession, public readonly entity: TEntity) {
-		super(() => this.dispose());
-	}
+	constructor(protected readonly session: CodeStreamSession, public readonly entity: TEntity) {}
 
 	dispose() {}
 
@@ -32,15 +30,13 @@ export abstract class CodeStreamItem<TEntity extends CSEntity> extends Disposabl
 export abstract class CodeStreamCollection<
 	TItem extends ICollectionItem<TEntity>,
 	TEntity extends CSEntity
-> extends Disposable {
+> implements Disposable {
 	private _onDidChange = new EventEmitter<void>();
 	get onDidChange(): Event<void> {
 		return this._onDidChange.event;
 	}
 
-	constructor(protected readonly session: CodeStreamSession) {
-		super(() => this.dispose());
-	}
+	constructor(protected readonly session: CodeStreamSession) {}
 
 	dispose() {
 		if (this._disposables !== undefined) {

@@ -20,6 +20,8 @@
 		]
 	},
 	"settings": {
+		"codestream.serverUrl": "https://pd-api.codestream.us:9443",
+		"codestream.webAppUrl": "http://pd-app.codestream.us:1380",
 		"editor.insertSpaces": false,
 		"files.exclude": {
 			"**/node_modules": true,

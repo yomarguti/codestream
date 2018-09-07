@@ -43,9 +43,7 @@ export class Logger {
 		}
 
 		if (this.output !== undefined) {
-			this.output.appendLine(
-				(Logger.isDebugging ? [this.timestamp, message, ...params] : [message, ...params]).join(" ")
-			);
+			this.output.appendLine([this.timestamp, message, ...params].join(" "));
 		}
 	}
 
@@ -57,12 +55,7 @@ export class Logger {
 		}
 
 		if (this.output !== undefined) {
-			this.output.appendLine(
-				(Logger.isDebugging
-					? [this.timestamp, classOrMethod, ...params, ex]
-					: [classOrMethod, ...params, ex]
-				).join(" ")
-			);
+			this.output.appendLine([this.timestamp, classOrMethod, ...params, ex].join(" "));
 		}
 
 		// Telemetry.trackException(ex);
@@ -76,9 +69,7 @@ export class Logger {
 		}
 
 		if (this.output !== undefined) {
-			this.output.appendLine(
-				(Logger.isDebugging ? [this.timestamp, message, ...params] : [message, ...params]).join(" ")
-			);
+			this.output.appendLine([this.timestamp, message, ...params].join(" "));
 		}
 	}
 
@@ -94,19 +85,6 @@ export class Logger {
 			.toISOString()
 			.replace(/T/, " ")
 			.replace(/\..+/, "")}:${("00" + now.getUTCMilliseconds()).slice(-3)}]`;
-	}
-
-	static gitOutput: OutputChannel | undefined;
-
-	static logGitCommand(command: string, cwd: string, ex?: Error): void {
-		if (this.level !== TraceLevel.Debug) return;
-
-		if (this.gitOutput === undefined) {
-			this.gitOutput = window.createOutputChannel(`${extensionOutputChannelName} (Git)`);
-		}
-		this.gitOutput.appendLine(
-			`${this.timestamp} ${command} (${cwd})${ex === undefined ? "" : `\n\n${ex.toString()}`}`
-		);
 	}
 
 	private static _isDebugging: boolean | undefined;

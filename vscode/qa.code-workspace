@@ -20,6 +20,8 @@
 		]
 	},
 	"settings": {
+		"codestream.serverUrl": "https://qa-api.codestream.us",
+		"codestream.webAppUrl": "http://qa-app.codestream.us",
 		"editor.insertSpaces": false,
 		"files.exclude": {
 			"**/node_modules": true,

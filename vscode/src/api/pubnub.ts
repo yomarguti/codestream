@@ -2,7 +2,7 @@
 import { Disposable, Event, EventEmitter } from "vscode";
 import { Container } from "../container";
 import { Logger } from "../logger";
-import { CSMarker, CSPost, CSRepository, CSStream, CSTeam, CSUser } from "./api";
+import { CSPost, CSRepository, CSStream, CSTeam, CSUser } from "./api";
 import { Cache } from "./cache";
 
 export enum MessageType {
@@ -39,17 +39,11 @@ export interface TeamsMessageReceivedEvent {
 	teams: CSTeam[];
 }
 
-export interface MarkersMessageReceivedEvent {
-	type: MessageType.Markers;
-	markers: CSMarker[];
-}
-
 export type MessageReceivedEvent =
 	| PostsMessageReceivedEvent
 	| RepositoriesMessageReceivedEvent
 	| StreamsMessageReceivedEvent
 	| UsersMessageReceivedEvent
-	| MarkersMessageReceivedEvent
 	| TeamsMessageReceivedEvent;
 
 export class PubNubReceiver implements Disposable {
@@ -144,11 +138,6 @@ export class PubNubReceiver implements Disposable {
 					case "teams": {
 						const teams = (await this._cache.resolveTeams(entities)) as CSTeam[];
 						this._onDidReceiveMessage.fire({ type: MessageType.Teams, teams });
-						break;
-					}
-					case "markers": {
-						const markers = (await this._cache.resolveMarkers(entities)) as CSMarker[];
-						this._onDidReceiveMessage.fire({ type: MessageType.Markers, markers });
 						break;
 					}
 				}

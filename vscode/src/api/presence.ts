@@ -3,9 +3,10 @@ import { Disposable, Event, EventEmitter, MessageItem, window } from "vscode";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { PresenceStatus } from "./api";
+import { SessionSignedOutReason } from "./session";
 import { CodeStreamSessionApi } from "./sessionApi";
 
-export class PresenceManager extends Disposable {
+export class PresenceManager implements Disposable {
 	private _onDidChange = new EventEmitter<PresenceStatus>();
 	get onDidChange(): Event<PresenceStatus> {
 		return this._onDidChange.event;
@@ -20,9 +21,7 @@ export class PresenceManager extends Disposable {
 	constructor(
 		private readonly sessionApi: CodeStreamSessionApi,
 		private readonly sessionId: string
-	) {
-		super(() => this.dispose());
-	}
+	) {}
 
 	dispose() {
 		if (this._timer !== undefined) {
@@ -66,7 +65,7 @@ export class PresenceManager extends Disposable {
 			Logger.error(ex);
 
 			this.dispose();
-			Container.session.logout(false);
+			Container.session.logout(SessionSignedOutReason.NetworkIssue);
 
 			const actions: MessageItem[] = [{ title: "Reconnect" }];
 

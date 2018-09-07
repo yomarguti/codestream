@@ -4,7 +4,6 @@ import { AgentOptions, CodeStreamAgentConnection } from "./agent/agentConnection
 import { CodeStreamSession } from "./api/session";
 import { Commands } from "./commands";
 import { Config, configuration } from "./configuration";
-import { LinkActionsController } from "./controllers/linkActionsController";
 import { LiveShareController } from "./controllers/liveShareController";
 import { NotificationsController } from "./controllers/notificationsController";
 import { StatusBarController } from "./controllers/statusBarController";
@@ -20,13 +19,16 @@ export class Container {
 		this._config = config;
 
 		this._version = agentOptions.extensionVersion;
+		this._versionBuild = agentOptions.extensionBuild;
+		this._formattedVersion = `${agentOptions.extensionVersion}${
+			agentOptions.extensionBuild ? `-${agentOptions.extensionBuild}` : ""
+		}`;
 		this._agent = new CodeStreamAgentConnection(context, agentOptions);
 
 		context.subscriptions.push((this._session = new CodeStreamSession(config.serverUrl)));
 
 		context.subscriptions.push((this._notifications = new NotificationsController()));
-		context.subscriptions.push((this._linkActions = new LinkActionsController()));
-		context.subscriptions.push((this._liveShare = new LiveShareController()));
+		context.subscriptions.push((this._vsls = new LiveShareController()));
 
 		context.subscriptions.push((this._commands = new Commands()));
 		context.subscriptions.push((this._codeActions = new CodeStreamCodeActionProvider()));
@@ -71,14 +73,9 @@ export class Container {
 		return this._context;
 	}
 
-	private static _linkActions: LinkActionsController;
-	static get linkActions() {
-		return this._linkActions;
-	}
-
-	private static _liveShare: LiveShareController;
-	static get liveShare() {
-		return this._liveShare;
+	private static _formattedVersion: string;
+	static get formattedVersion(): string {
+		return this._formattedVersion;
 	}
 
 	private static _markerDecorations: MarkerDecorationProvider;
@@ -114,6 +111,16 @@ export class Container {
 	private static _version: string;
 	static get version(): string {
 		return this._version;
+	}
+
+	private static _versionBuild: string;
+	static get versionBuild(): string {
+		return this._versionBuild;
+	}
+
+	private static _vsls: LiveShareController;
+	static get vsls() {
+		return this._vsls;
 	}
 
 	static resetConfig() {
