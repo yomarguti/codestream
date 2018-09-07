@@ -72,7 +72,7 @@ export class StatusBarController implements Disposable {
 				break;
 
 			case SessionStatus.SigningIn:
-				this._statusBarItem.text = ` $(comment-discussion) ${env}Signing in... `;
+				this._statusBarItem.text = ` $(sync~spin) ${env}Signing in... `;
 				this._statusBarItem.command = undefined;
 				this._statusBarItem.tooltip = "Signing in to CodeStream, please wait";
 				this._statusBarItem.color = undefined;
