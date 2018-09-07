@@ -179,6 +179,9 @@ export class Login extends React.Component {
 									<FormattedMessage id="login.submitButton" />
 								</Button>
 							</div>
+							<div className="footer" style={{ opacity: 0.5, fontSize: ".9em" }}>
+								CodeStream Version {this.props.pluginVersion} <sup>BETA</sup>
+							</div>
 						</div>
 					</fieldset>
 				</form>
@@ -188,6 +191,6 @@ export class Login extends React.Component {
 }
 
 export default connect(
-	state => ({ initialEmail: state.configs.email }),
+	state => ({ initialEmail: state.configs.email, pluginVersion: state.pluginVersion }),
 	actions
 )(Login);
