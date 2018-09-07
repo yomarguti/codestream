@@ -262,7 +262,7 @@ export class SimpleStream extends Component {
 				// otherwise, if we've scrolled up, then just call
 				// handleScroll to make sure new message indicators
 				// appear as appropriate.
-				const mine = this.props.currentUser.username === lastPost.author.username;
+				const mine = this.props.currentUserId === lastPost.creatorId;
 				if (mine || !this.state.scrolledOffBottom) this.scrollToBottom();
 				else this.handleScroll();
 				this.checkMarkStreamRead();
@@ -351,7 +351,7 @@ export class SimpleStream extends Component {
 
 	renderIntro = nameElement => {
 		const [first, ...rest] = this.props.channelMembers
-			.filter(member => member.id !== this.props.currentUser.id)
+			.filter(member => member.id !== this.props.currentUserId)
 			.map(member => member.username)
 			.sort();
 
@@ -393,7 +393,8 @@ export class SimpleStream extends Component {
 					<Post
 						post={post}
 						usernames={this.props.usernamesRegexp}
-						currentUser={this.props.currentUser}
+						currentUserId={this.props.currentUserId}
+						currentUserName={this.props.currentUserName}
 						showDetails="1"
 						currentCommit={this.props.currentCommit}
 						editing={post.id === this.state.editingPostId}
@@ -584,7 +585,8 @@ export class SimpleStream extends Component {
 										<Post
 											post={post}
 											usernames={this.props.usernamesRegexp}
-											currentUser={this.props.currentUser}
+											currentUserId={this.props.currentUserId}
+											currentUserName={this.props.currentUserName}
 											replyingTo={parentPost}
 											newMessageIndicator={newMessageIndicator}
 											unread={unread}
@@ -631,7 +633,8 @@ export class SimpleStream extends Component {
 								<Post
 									post={threadPost}
 									usernames={this.props.usernamesRegexp}
-									currentUser={this.props.currentUser}
+									currentUserId={this.props.currentUserId}
+									currentUserName={this.props.currentUserName}
 									key={threadPost.id}
 									showDetails="1"
 									currentCommit={this.props.currentCommit}
@@ -651,7 +654,7 @@ export class SimpleStream extends Component {
 					slashCommands={this.props.slashCommands}
 					streamId={this.props.postStreamId}
 					services={this.props.services}
-					currentUserId={this.props.currentUser.id}
+					currentUserId={this.props.currentUserId}
 					ensureStreamIsActive={this.ensureStreamIsActive}
 					ref={this._compose}
 					disabled={this.props.isOffline}
@@ -680,7 +683,7 @@ export class SimpleStream extends Component {
 	};
 
 	findMyPostBeforeSeqNum(seqNum) {
-		const me = this.props.currentUser.username;
+		const me = this.props.currentUserName;
 		return _.chain(this.props.posts)
 			.filter(post => {
 				return post.author.username === me && post.seqNum < seqNum;
@@ -1176,7 +1179,7 @@ export class SimpleStream extends Component {
 
 	archiveChannel = () => {
 		const { postStream, currentUser, teamMembersById } = this.props;
-		if (postStream.creatorId !== currentUser.id) {
+		if (postStream.creatorId !== currentUserId) {
 			let text = "You may only archive channels that you created.";
 			if (postStream.creatorId) {
 				const creator = teamMembersById[postStream.creatorId];
@@ -1205,7 +1208,7 @@ export class SimpleStream extends Component {
 	};
 
 	executeArchiveChannel = () => {
-		const { postStream, currentUser } = this.props;
+		const { postStream } = this.props;
 		console.log("Calling archive channel with: ", postStream.id);
 		this.props.archiveStream(postStream.id, true);
 		this.setActivePanel("channels");
@@ -1560,7 +1563,8 @@ const mapStateToProps = ({
 		currentCommit: context.currentCommit,
 		editingUsers: fileStream.editingUsers,
 		usernamesRegexp: usernamesRegexp,
-		currentUser: user,
+		currentUserId: user.id,
+		currentUserName: user.username,
 		mutedStreams,
 		slashCommands,
 		team: teams[context.currentTeamId],

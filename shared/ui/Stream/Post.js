@@ -20,6 +20,7 @@ import hljs from "highlight.js";
 import _ from "underscore";
 import { reactToPost } from "./actions";
 
+let renderCount = 0;
 class Post extends Component {
 	state = {
 		menuOpen: false,
@@ -120,10 +121,11 @@ class Post extends Component {
 	}
 
 	render() {
+		// console.log(renderCount++);
 		const { post } = this.props;
 		const { menuOpen, authorMenuOpen, menuTarget } = this.state;
 
-		const mine = this.props.currentUser.username === post.author.username;
+		const mine = post.creatorId === this.props.currentUserId;
 		const systemPost = post.creatorId === "codestream";
 
 		const postClass = createClassString({
@@ -293,7 +295,7 @@ class Post extends Component {
 	renderTextLinkified = text => {
 		let usernameRegExp = new RegExp("(@(?:" + this.props.usernames.toLowerCase() + ")\\b)", "i");
 		let bodyParts = markdownify(text).split(usernameRegExp);
-		const meLowerCase = "@" + this.props.currentUser.username.toLowerCase();
+		const meLowerCase = "@" + this.props.currentUserName.toLowerCase();
 
 		const html = bodyParts
 			.map(part => {
@@ -349,7 +351,7 @@ class Post extends Component {
 	};
 
 	addReaction = emoji => {
-		let { post, currentUser } = this.props;
+		let { post } = this.props;
 
 		this.setState({ emojiOpen: false });
 		if (!emoji || !emoji.id) return;
@@ -358,13 +360,16 @@ class Post extends Component {
 	};
 
 	postHasReactionFromUser = emojiId => {
-		const { post, currentUser } = this.props;
-		const userId = currentUser.id;
-		return post.reactions && post.reactions[emojiId] && _.contains(post.reactions[emojiId], userId);
+		const { post, currentUserId } = this.props;
+		return (
+			post.reactions &&
+			post.reactions[emojiId] &&
+			_.contains(post.reactions[emojiId], currentUserId)
+		);
 	};
 
 	toggleReaction = (emojiId, event) => {
-		let { post, currentUser } = this.props;
+		let { post } = this.props;
 
 		if (event) event.stopPropagation();
 
@@ -375,7 +380,7 @@ class Post extends Component {
 	};
 
 	renderReactions = post => {
-		const { users, currentUser } = this.props;
+		const { userNames, currentUserId } = this.props;
 		const reactions = post.reactions || {};
 		const keys = Object.keys(reactions);
 		if (keys.length === 0) return null;
@@ -386,8 +391,8 @@ class Post extends Component {
 					const reactors = reactions[emojiId] || [];
 					if (reactors.length == 0) return null;
 					const emoji = emojify(":" + emojiId + ":");
-					const reactorNames = reactors.map(id => users[id].username).join(", ");
-					const className = _.contains(reactors, currentUser.id) ? "reaction mine" : "reaction";
+					const reactorNames = reactors.map(id => userNames[id]).join(", ");
+					const className = _.contains(reactors, currentUserId) ? "reaction mine" : "reaction";
 					atLeastOneReaction = true;
 					return (
 						<Tooltip title={reactorNames} key={emojiId} placement="top">
@@ -433,9 +438,10 @@ class Post extends Component {
 const mapStateToProps = (state, props) => {
 	const codeBlock = props.post.codeBlocks && props.post.codeBlocks[0];
 	const repo = codeBlock && getById(state.repos, codeBlock.repoId);
-
+	let userNames = {};
+	for (var key in state.users || {}) userNames[key] = state.users[key].username;
 	return {
-		users: state.users,
+		userNames,
 		repoName: repo ? repo.name : ""
 	};
 };
