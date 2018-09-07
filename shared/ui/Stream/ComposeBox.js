@@ -293,7 +293,7 @@ class ComposeBox extends React.Component {
 		} else {
 			let user = this.props.teammates.find(t => t.id === id);
 			if (!user) return;
-			toInsert = user.username + ":\u00A0";
+			toInsert = user.username + "\u00A0";
 		}
 		this.hidePopup();
 		setTimeout(() => {
