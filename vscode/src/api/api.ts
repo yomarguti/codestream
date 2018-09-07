@@ -85,7 +85,6 @@ export class CodeStreamApi {
 	}
 
 	createPost(token: string, request: CreatePostRequest): Promise<CreatePostResponse> {
-		console.log("CREATING POST: ", request);
 		return this.post<CreatePostRequest, CreatePostResponse>(`/posts`, request, token);
 	}
 
@@ -280,7 +279,6 @@ export class CodeStreamApi {
 		body: RQ,
 		token?: string
 	): Promise<R> {
-		console.log("CALLING A POST REQUEST WITH: ", JSON.stringify(body));
 		return this.fetch<R>(
 			url,
 			{
