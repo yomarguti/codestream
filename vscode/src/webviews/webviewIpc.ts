@@ -53,6 +53,12 @@ export interface WebviewIpcMessage {
 	body: any;
 }
 
+export interface WebviewIpcMessageResponseBody {
+	id: string;
+	payload?: any;
+	error?: string;
+}
+
 export interface VslsInviteServiceRequestAction {
 	type: "invite";
 	userId: string;
