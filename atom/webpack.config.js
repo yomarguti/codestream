@@ -82,22 +82,22 @@ function getExtensionConfig(env) {
 							]
 						}
 					}
+				},
+				{
+					test: /\.ts$/,
+					enforce: "pre",
+					use: "tslint-loader",
+					exclude: /node_modules/
+				},
+				{
+					test: /\.tsx?$/,
+					use: "ts-loader",
+					exclude: /node_modules|\.d\.ts$/
+				},
+				{
+					test: /\.d\.ts$/,
+					loader: "ignore-loader"
 				}
-				// 	{
-				// 		test: /\.ts$/,
-				// 		enforce: "pre",
-				// 		use: "tslint-loader",
-				// 		exclude: /node_modules/
-				// 	},
-				// 	{
-				// 		test: /\.tsx?$/,
-				// 		use: "ts-loader",
-				// 		exclude: /node_modules|\.d\.ts$/
-				// 	},
-				// 	{
-				// 		test: /\.d\.ts$/,
-				// 		loader: "ignore-loader"
-				// 	}
 			]
 		},
 		plugins: plugins,

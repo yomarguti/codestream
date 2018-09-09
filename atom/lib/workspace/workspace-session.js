@@ -7,6 +7,7 @@
 // import EditTracker from "./edit-tracker";
 import CodeStreamApi from "../codestream-api";
 import ViewApi from "./view-api";
+import Agent from "./agent";
 
 type Session = {
 	user: { [key: string]: any },
@@ -69,6 +70,8 @@ export default class WorkspaceSession {
 	}
 
 	async login(email: string, password: string) {
+		const agent = new Agent();
+		agent.login(email, password);
 		const result = await this.api.authenticate(email, password);
 		this.session = {
 			user: result.user,
