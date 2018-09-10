@@ -62,6 +62,7 @@ export interface CSPost extends CSEntity {
 	mentionedUserIds: string[];
 	origin: "email" | "slack" | "teams";
 	parentPostId?: string;
+	reactions: object;
 }
 
 export interface CSRemote {
