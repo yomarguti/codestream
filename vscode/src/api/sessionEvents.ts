@@ -23,10 +23,13 @@ import {
 	Team,
 	User
 } from "./session";
+import { Unreads } from "./unreads";
 
 export interface SessionStatusChangedEvent {
 	getStatus(): SessionStatus;
+	session: CodeStreamSession;
 	reason?: SessionSignedOutReason;
+	unreads?: Unreads;
 }
 
 export class TextDocumentMarkersChangedEvent {
@@ -245,13 +248,11 @@ export class UnreadsChangedEvent {
 	) {}
 
 	@memoize
-	getMentionCount() {
-		return Object.values(this._unreads.mentions).reduce((total, count) => total + count, 0);
-	}
-
-	@memoize
-	getUnreadCount() {
-		return Object.values(this._unreads.unread).reduce((total, count) => total + count, 0);
+	unreads(): Unreads {
+		return {
+			mentions: Object.values(this._unreads.mentions).reduce((total, count) => total + count, 0),
+			messages: Object.values(this._unreads.unread).reduce((total, count) => total + count, 0)
+		};
 	}
 
 	@memoize

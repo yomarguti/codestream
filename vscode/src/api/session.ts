@@ -43,6 +43,7 @@ import {
 } from "./sessionEvents";
 import { SessionState } from "./sessionState";
 import { TokenManager } from "./tokenManager";
+import { Unreads } from "./unreads";
 
 export {
 	ChannelStream,
@@ -274,9 +275,17 @@ export class CodeStreamSession implements Disposable {
 	get status() {
 		return this._status;
 	}
-	private setStatus(status: SessionStatus, signedOutReason?: SessionSignedOutReason) {
+	private setStatus(
+		status: SessionStatus,
+		signedOutReason?: SessionSignedOutReason,
+		unreads?: Unreads
+	) {
 		this._status = status;
-		const e: SessionStatusChangedEvent = { getStatus: () => this._status };
+		const e: SessionStatusChangedEvent = {
+			getStatus: () => this._status,
+			session: this,
+			unreads: unreads
+		};
 		e.reason = signedOutReason;
 
 		this._onDidChangeSessionStatus.fire(e);
@@ -413,7 +422,11 @@ export class CodeStreamSession implements Disposable {
 			this._signupToken = undefined;
 
 			setImmediate(() =>
-				this._onDidChangeSessionStatus.fire({ getStatus: () => this._status, reason: reason })
+				this._onDidChangeSessionStatus.fire({
+					getStatus: () => this._status,
+					session: this,
+					reason: reason
+				})
 			);
 		}
 	}
@@ -515,7 +528,7 @@ export class CodeStreamSession implements Disposable {
 		this._sessionApi = new CodeStreamSessionApi(this._serverUrl, token, teamId);
 		this._presenceManager = new PresenceManager(this._sessionApi, this._id);
 
-		this._state = new SessionState(this, teamId, result.loginResponse);
+		this._state = new SessionState(this, this._sessionApi, teamId, result.loginResponse);
 
 		this._disposable = Disposable.from(
 			Container.agent.onDidChangeDocumentMarkers(
@@ -528,15 +541,15 @@ export class CodeStreamSession implements Disposable {
 			this._sessionApi.useMiddleware(new PresenceMiddleware(this._presenceManager))
 		);
 
+		const unreads = await this._state.unreads.compute(user.lastReads, undefined);
+
 		this._presenceManager.online();
 
 		Logger.log(
 			`${email} signed into CodeStream (${this.serverUrl}); userId=${this.userId}, teamId=${teamId}`
 		);
 
-		this.setStatus(SessionStatus.SignedIn);
-
-		this._state.unreads.compute(user.lastReads, this.fireDidChangeUnreads);
+		this.setStatus(SessionStatus.SignedIn, undefined, unreads);
 	}
 }
 

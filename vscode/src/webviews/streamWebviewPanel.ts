@@ -771,7 +771,7 @@ export class StreamWebviewPanel implements Disposable {
 			this.session.repos.entities(),
 			this.session.channelsAndDMs.entities(),
 			this.session.teams.entities(),
-			this.session.unreads.get(),
+			this.session.unreads.entity(),
 			this.session.users.entities()
 		]);
 

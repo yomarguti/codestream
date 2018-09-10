@@ -6,6 +6,7 @@ import {
 	SessionStatusChangedEvent,
 	UnreadsChangedEvent
 } from "../api/session";
+import { Unreads } from "../api/unreads";
 import { Container } from "../container";
 
 export class StatusBarController implements Disposable {
@@ -30,11 +31,16 @@ export class StatusBarController implements Disposable {
 	}
 
 	private onUnreadsChanged(e: UnreadsChangedEvent) {
-		this.updateStatusBar(Container.session.status, e.getMentionCount(), e.getUnreadCount());
+		this.updateStatusBar(e.session.status, e.unreads());
 	}
 
-	private onSessionStatusChanged(e: SessionStatusChangedEvent) {
-		this.updateStatusBar(e.getStatus());
+	private async onSessionStatusChanged(e: SessionStatusChangedEvent) {
+		const status = e.getStatus();
+		if (status === SessionStatus.SignedIn) {
+			this.updateStatusBar(status, e.unreads);
+		} else {
+			this.updateStatusBar(status);
+		}
 	}
 
 	async clear() {
@@ -45,8 +51,7 @@ export class StatusBarController implements Disposable {
 
 	private async updateStatusBar(
 		status: SessionStatus,
-		mentionCount: number = 0,
-		unreadCount: number = 0
+		unreads: Unreads = { mentions: 0, messages: 0 }
 	) {
 		if (this._statusBarItem === undefined) {
 			this._statusBarItem =
@@ -84,14 +89,14 @@ export class StatusBarController implements Disposable {
 				if (!(await Container.session.hasSingleTeam())) {
 					label += ` - ${Container.session.team.name}`;
 				}
-				if (mentionCount > 0) {
-					label += ` (${mentionCount})`;
-					tooltip += `\n${mentionCount} unread mention${mentionCount === 1 ? "" : "s"}`;
-				} else if (unreadCount > 0) {
+				if (unreads.mentions > 0) {
+					label += ` (${unreads.mentions})`;
+					tooltip += `\n${unreads.mentions} unread mention${unreads.mentions === 1 ? "" : "s"}`;
+				} else if (unreads.messages > 0) {
 					label += ` \u00a0\u2022`;
 				}
 
-				const unreadsOnly = unreadCount - mentionCount;
+				const unreadsOnly = unreads.messages - unreads.mentions;
 				if (unreadsOnly > 0) {
 					tooltip += `\n${unreadsOnly} unread message${unreadsOnly === 1 ? "" : "s"}`;
 				}
