@@ -224,3 +224,11 @@ Example workspace file &mdash; save as prod.code-workspace
 	}
 }
 ```
+
+#### Best Practices (according to Eric)
+
+Here's what I do --
+1. Install the latest approved vsix in the insiders version of vscode (which is what I use for development/debugging) and I open the `codestream.code-workspace` running in prod
+2. Install the latest approved vsix running in qa or pd or prod (currently qa) by using `qa.code-workspace` or `pd.code-workspace` or just opening a folder (or nothing) for prod
+
+Typically I develop/debug against prod (so I open a folder or something other than the workspace files), but if I want to debug against qa or pd, I'd open the corresponding workspace file in the debug host vscode window
