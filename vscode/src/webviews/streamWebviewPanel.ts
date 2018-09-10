@@ -46,6 +46,7 @@ import {
 	toLoggableIpcMessage,
 	WebviewIpc,
 	WebviewIpcMessage,
+	WebviewIpcMessageResponseBody,
 	WebviewIpcMessageType
 } from "./webviewIpc";
 
@@ -183,27 +184,20 @@ export class StreamWebviewPanel implements Disposable {
 								`SignedIn=${this.session.signedIn}`
 							);
 
-							let state: BootstrapState = Object.create(null);
-							if (this.session.signedIn) {
-								state = await (this._bootstrapPromise || this.getBootstrapState());
+							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
+							try {
+								responseBody.payload = await (this._bootstrapPromise || this.getBootstrapState());
 								this._bootstrapPromise = undefined;
-								if (this._streamThread !== undefined) {
-									state.currentStreamId = this._streamThread.stream.id;
-									state.currentThreadId = this._streamThread.id;
-								}
-							} else {
-								state.env = this.session.environment;
-								state.configs = { email: Container.config.email };
-								state.services = {};
-								state.version = Container.formattedVersion;
+							} catch (ex) {
+								debugger;
+								Logger.error(ex);
+
+								responseBody.error = ex.message;
 							}
 
 							this.postMessage({
 								type: WebviewIpcMessageType.response,
-								body: {
-									id: body.id,
-									payload: state
-								}
+								body: responseBody
 							});
 							break;
 						case "authenticate": {
@@ -216,9 +210,16 @@ export class StreamWebviewPanel implements Disposable {
 								status = LoginResult.Unknown;
 							}
 
-							const responseBody: { id: string; [k: string]: any } = { id: body.id };
+							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
 							if (status === LoginResult.Success) {
-								responseBody.payload = await this.getBootstrapState();
+								try {
+									responseBody.payload = await this.getBootstrapState();
+								} catch (ex) {
+									debugger;
+									Logger.error(ex);
+
+									responseBody.error = ex.message;
+								}
 							} else {
 								responseBody.error = status;
 							}
@@ -230,7 +231,7 @@ export class StreamWebviewPanel implements Disposable {
 							break;
 						}
 						case "go-to-signup": {
-							const responseBody: { id: string; [k: string]: any } = { id: body.id };
+							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
 							try {
 								await commands.executeCommand(
 									"vscode.open",
@@ -241,8 +242,8 @@ export class StreamWebviewPanel implements Disposable {
 									)
 								);
 								responseBody.payload = true;
-							} catch (error) {
-								responseBody.error = error.message;
+							} catch (ex) {
+								responseBody.error = ex.message;
 							}
 
 							this.postMessage({
@@ -252,11 +253,18 @@ export class StreamWebviewPanel implements Disposable {
 							break;
 						}
 						case "validate-signup": {
-							const responseBody: { id: string; [k: string]: any } = { id: body.id };
+							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
 							const status = await this.session.loginViaSignupToken();
 
 							if (status === LoginResult.Success) {
-								responseBody.payload = await this.getBootstrapState();
+								try {
+									responseBody.payload = await this.getBootstrapState();
+								} catch (ex) {
+									debugger;
+									Logger.error(ex);
+
+									responseBody.error = ex.message;
+								}
 							} else responseBody.error = status;
 
 							this.postMessage({
@@ -276,9 +284,8 @@ export class StreamWebviewPanel implements Disposable {
 								teamId
 							} = body.params;
 
-							const responseBody: { [key: string]: any } = {
-								id: body.id
-							};
+							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
+
 							let post;
 							try {
 								if (codeBlocks === undefined || codeBlocks.length === 0) {
@@ -317,8 +324,8 @@ export class StreamWebviewPanel implements Disposable {
 										streamId
 									);
 								}
-							} catch (error) {
-								responseBody.error = error;
+							} catch (ex) {
+								responseBody.error = ex;
 							}
 
 							if (post) {
@@ -458,11 +465,12 @@ export class StreamWebviewPanel implements Disposable {
 						}
 						case "update-stream": {
 							const { streamId, update } = body.params;
-							const responseBody: { [key: string]: any } = { id: body.id };
+
+							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
 							try {
 								responseBody.payload = await this.session.api.updateStream(streamId, update);
-							} catch (error) {
-								responseBody.error = error;
+							} catch (ex) {
+								responseBody.error = ex;
 							}
 							this.postMessage({
 								type: WebviewIpcMessageType.response,
@@ -567,8 +575,11 @@ export class StreamWebviewPanel implements Disposable {
 			case SessionChangedEventType.Teams:
 			case SessionChangedEventType.Unreads:
 			case SessionChangedEventType.Users:
-				Logger.log(`WebviewPanel: Attempting to send ${e.type} to the webview...`);
-				this.postMessage(e.toIpcMessage());
+				const msg = e.toIpcMessage();
+				Logger.log(
+					`WebviewPanel: Attempting to send ${toLoggableIpcMessage(msg)} to the webview...`
+				);
+				this.postMessage(msg);
 				break;
 		}
 	}
@@ -747,11 +758,20 @@ export class StreamWebviewPanel implements Disposable {
 	private async getBootstrapState() {
 		const state: BootstrapState = Object.create(null);
 
+		if (!this.session.signedIn) {
+			state.env = this.session.environment;
+			state.configs = { email: Container.config.email };
+			state.services = {};
+			state.version = Container.formattedVersion;
+
+			return state;
+		}
+
 		const promise = Promise.all([
 			this.session.repos.entities(),
 			this.session.channelsAndDMs.entities(),
 			this.session.teams.entities(),
-			this.session.unreads.get(),
+			this.session.unreads.entity(),
 			this.session.users.entities()
 		]);
 
@@ -777,6 +797,11 @@ export class StreamWebviewPanel implements Disposable {
 		state.teams = teams;
 		state.unreads = unreads;
 		state.users = users.map(user => (user.id === currentUser.id ? currentUser : user));
+
+		if (this._streamThread !== undefined) {
+			state.currentStreamId = this._streamThread.stream.id;
+			state.currentThreadId = this._streamThread.id;
+		}
 
 		return state;
 	}

@@ -3,6 +3,12 @@ import { Logger } from "../logger";
 import { Arrays } from "../system/array";
 import { CSPost, CSStream, StreamType } from "./api";
 import { CodeStreamSession, UnreadsChangedEvent } from "./session";
+import { CodeStreamSessionApi } from "./sessionApi";
+
+export interface Unreads {
+	mentions: number;
+	messages: number;
+}
 
 export class UnreadCounter {
 	private lastReads: { [streamId: string]: number } = Object.create(null);
@@ -11,6 +17,7 @@ export class UnreadCounter {
 
 	constructor(
 		public readonly session: CodeStreamSession,
+		private readonly _api: CodeStreamSessionApi,
 		private readonly _currentUserId: string
 	) {}
 
@@ -19,10 +26,10 @@ export class UnreadCounter {
 		delete this.mentions[streamId];
 	}
 
-	private _computePromise: Promise<void> | undefined;
+	private _computePromise: Promise<Unreads> | undefined;
 	async compute(
 		lastReads: { [streamId: string]: number } | undefined,
-		notifier: (e: UnreadsChangedEvent) => void
+		notifier: ((e: UnreadsChangedEvent) => void) | undefined
 	) {
 		if (this._computePromise !== undefined) {
 			await this._computePromise;
@@ -32,18 +39,29 @@ export class UnreadCounter {
 		return this._computePromise;
 	}
 
-	async get() {
+	async entity() {
 		if (this._computePromise !== undefined) {
 			await this._computePromise;
 		}
 		return this.values();
 	}
 
+	async unreads() {
+		if (this._computePromise !== undefined) {
+			await this._computePromise;
+		}
+		return this.counts();
+	}
+
 	async update(posts: CSPost[], notifier: (e: UnreadsChangedEvent) => void) {
 		// Don't increment unreads for deleted, edited (if edited it isn't the first time its been seen), has replies (same as edited), or was posted by the current user
 		posts = posts.filter(
 			p =>
-				!p.deactivated && !p.hasBeenEdited && !p.hasReplies && p.creatorId !== this._currentUserId
+				!p.deactivated &&
+				!p.hasBeenEdited &&
+				!p.hasReplies &&
+				p.creatorId !== this._currentUserId &&
+				Object.keys(p.reactions).length === 0
 		);
 		if (posts.length === 0) return;
 
@@ -56,11 +74,11 @@ export class UnreadCounter {
 		const grouped = Arrays.groupBy(posts, p => p.streamId);
 
 		// const streams = await Promise.all(
-		// 	Object.keys(grouped).map(async streamId => this.session.api.getStream(streamId))
+		// 	Object.keys(grouped).map(async streamId => this._api.getStream(streamId))
 		// );
 
 		for (const [streamId, posts] of Object.entries(grouped)) {
-			const stream = await this.session.api.getStream(streamId);
+			const stream = await this._api.getStream(streamId);
 			if (stream == null) continue;
 
 			this.mentions[streamId] = this.mentions[streamId] || 0;
@@ -89,17 +107,9 @@ export class UnreadCounter {
 		notifier(new UnreadsChangedEvent(this.session, values));
 	}
 
-	private values() {
-		return {
-			unread: this.unread,
-			mentions: this.mentions,
-			lastReads: this.lastReads
-		};
-	}
-
 	private async computeCore(
 		lastReads: { [streamId: string]: number } | undefined,
-		notifier: (e: UnreadsChangedEvent) => void
+		notifier: ((e: UnreadsChangedEvent) => void) | undefined
 	) {
 		if (lastReads === undefined) {
 			lastReads = Object.create(null) as { [streamId: string]: number };
@@ -111,7 +121,7 @@ export class UnreadCounter {
 
 		Logger.log(`Unreads.compute:`, "Computing...");
 
-		const unreadStreams = await this.session.api.getUnreadStreams();
+		const unreadStreams = await this._api.getUnreadStreams();
 		if (unreadStreams.length !== 0) {
 			const entries = Object.entries(lastReads);
 
@@ -123,8 +133,8 @@ export class UnreadCounter {
 					let latestPost;
 					let unreadPosts;
 					try {
-						latestPost = await this.session.api.getLatestPost(streamId);
-						unreadPosts = await this.session.api.getPostsInRange(
+						latestPost = await this._api.getLatestPost(streamId);
+						unreadPosts = await this._api.getPostsInRange(
 							streamId,
 							lastReadSeqNum + 1,
 							latestPost.seqNum
@@ -160,7 +170,11 @@ export class UnreadCounter {
 		const values = this.values();
 		Logger.log(`Unreads.compute:`, `Completed; values=${JSON.stringify(values)}`);
 
-		notifier(new UnreadsChangedEvent(this.session, values));
+		if (notifier !== undefined) {
+			notifier(new UnreadsChangedEvent(this.session, values));
+		}
+
+		return this.counts();
 	}
 
 	private computeForPosts(posts: CSPost[], userId: string, stream?: CSStream) {
@@ -173,5 +187,20 @@ export class UnreadCounter {
 			}
 			this.unread[post.streamId]++;
 		}
+	}
+
+	private counts(): Unreads {
+		return {
+			mentions: Object.values(this.mentions).reduce((total, count) => total + count, 0),
+			messages: Object.values(this.unread).reduce((total, count) => total + count, 0)
+		};
+	}
+
+	private values() {
+		return {
+			unread: this.unread,
+			mentions: this.mentions,
+			lastReads: this.lastReads
+		};
 	}
 }

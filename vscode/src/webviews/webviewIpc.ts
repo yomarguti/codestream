@@ -29,21 +29,34 @@ export enum WebviewIpcMessageType {
 }
 
 export function toLoggableIpcMessage(msg: WebviewIpcMessage) {
-	if (msg.type === WebviewIpcMessageType.response) {
-		return `${msg.type}(${msg.body.id || ""})`;
-	}
+	switch (msg.type) {
+		case WebviewIpcMessageType.response:
+			return `${msg.type}(${msg.body.id || ""})`;
 
-	if (msg.type === WebviewIpcMessageType.onRequest) {
-		return `${msg.type}(${msg.body.id || ""}):${msg.body.action || ""}`;
-	}
+		case WebviewIpcMessageType.onRequest:
+			return `${msg.type}(${msg.body.id || ""}):${msg.body.action || ""}`;
 
-	return msg.type;
+		case WebviewIpcMessageType.response:
+			return `${msg.type}(${msg.body.id || ""})`;
+
+		case WebviewIpcMessageType.didChangeData:
+			return `${msg.type}(${msg.body.type || ""})`;
+
+		default:
+			return msg.type;
+	}
 }
 
 // TODO: Clean this up to be consistent with the structure
 export interface WebviewIpcMessage {
 	type: WebviewIpcMessageType;
 	body: any;
+}
+
+export interface WebviewIpcMessageResponseBody {
+	id: string;
+	payload?: any;
+	error?: string;
 }
 
 export interface VslsInviteServiceRequestAction {
@@ -98,7 +111,7 @@ export class WebviewIpc {
 
 		this._paused = false;
 		if (this._queue.length > WebviewIpc.QueueThreshold) {
-			Logger.log("WebviewPanel: Too out of data; reloading...");
+			Logger.log("WebviewPanel: Too out of date; reloading...");
 
 			await this._webview.reload();
 

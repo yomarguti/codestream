@@ -279,12 +279,15 @@ export class CodeStreamAgentConnection implements Disposable {
 	@started
 	private async sendRequest(type: any, params?: any): Promise<any> {
 		try {
+			const traceParams =
+				type.method === ApiRequest.method ? params.init && params.init.body : params;
+
 			Logger.log(
 				`AgentConnection.sendRequest(${type.method})${
 					type.method === ApiRequest.method ? `: ${params.url}` : ""
-				}`
+				}`,
+				traceParams ? `params=${sanitize(JSON.stringify(traceParams))}` : ""
 			);
-			Logger.log("Params: ", params);
 			const response = await this._client!.sendRequest(type, params);
 			return response;
 		} catch (ex) {
@@ -335,6 +338,14 @@ export class CodeStreamAgentConnection implements Disposable {
 
 		this._client = undefined;
 	}
+}
+
+function sanitize(json: string) {
+	if (json === undefined || typeof json !== "string") return "";
+
+	return json
+		.replace(/("password":)".*?"/gi, '$1"<hidden>"')
+		.replace(/("token":)".*?"/gi, '$1"<hidden>"');
 }
 
 function started(
