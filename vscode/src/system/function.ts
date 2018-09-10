@@ -1,6 +1,7 @@
 "use strict";
 const _debounce = require("lodash.debounce");
 // const _once = require('lodash.once');
+import * as uuidv4 from "uuid/v4";
 
 export interface IDeferrable {
 	cancel(): void;
@@ -191,5 +192,24 @@ export namespace Functions {
 			await wait(100);
 			counter++;
 		}
+	}
+
+	export function uuid() {
+		return uuidv4();
+	}
+
+	export function shortUuid() {
+		const data = new Uint8Array(16);
+		uuidv4(null, data, 0);
+
+		const base64 = Buffer.from(
+			data.buffer as ArrayBuffer,
+			data.byteOffset,
+			data.byteLength
+		).toString("base64");
+		return base64
+			.replace(/\+/g, "-") // Replace + with - (see RFC 4648, sec. 5)
+			.replace(/\//g, "_") // Replace / with _ (see RFC 4648, sec. 5)
+			.substring(0, 22); // Drop '==' padding;
 	}
 }

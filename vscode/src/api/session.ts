@@ -1,5 +1,4 @@
 "use strict";
-import * as uuid from "uuid/v4";
 import { ConfigurationTarget, Disposable, Event, EventEmitter } from "vscode";
 import { AccessToken, AgentResult, DocumentMarkersChangedEvent } from "../agent/agentConnection";
 import { WorkspaceState } from "../common";
@@ -73,6 +72,7 @@ export {
 };
 
 const envRegex = /https?:\/\/(pd-|qa-)?api.codestream.(?:us|com)/;
+const instanceId = Functions.shortUuid();
 
 export enum CodeStreamEnvironment {
 	PD = "pd",
@@ -321,7 +321,7 @@ export class CodeStreamSession implements Disposable {
 	}
 
 	getSignupToken() {
-		if (!this._signupToken) this._signupToken = uuid();
+		if (!this._signupToken) this._signupToken = Functions.uuid();
 
 		return this._signupToken;
 	}
@@ -492,8 +492,7 @@ export class CodeStreamSession implements Disposable {
 		this._email = email;
 
 		// Create an id for this session
-		// TODO: Probably needs to be more unique
-		this._id = Strings.sha1(`${this.serverUrl}|${email}|${teamId}`.toLowerCase());
+		this._id = Strings.sha1(`${instanceId}|${this.serverUrl}|${email}|${teamId}`.toLowerCase());
 
 		const token = result.loginResponse.accessToken;
 		await TokenManager.addOrUpdate(this._serverUrl, email, token);
