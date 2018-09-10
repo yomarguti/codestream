@@ -186,8 +186,15 @@ export class StreamWebviewPanel implements Disposable {
 
 							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
 							try {
-								responseBody.payload = await (this._bootstrapPromise || this.getBootstrapState());
+								const state = await (this._bootstrapPromise || this.getBootstrapState());
 								this._bootstrapPromise = undefined;
+
+								if (this._streamThread !== undefined) {
+									state.currentStreamId = this._streamThread.stream.id;
+									state.currentThreadId = this._streamThread.id;
+								}
+
+								responseBody.payload = state;
 							} catch (ex) {
 								debugger;
 								Logger.error(ex);
