@@ -35,6 +35,13 @@ Set up the Slack integration by typing "/slack" in any stream and all of your te
 
 ![SlackIntegration](https://help.codestream.com/hc/article_attachments/360002212591/SlackCSBot.png)
 
+## Visual Studio Live Share integration
+
+Live Share is an excellent plugin from Microsoft that allows users of VS Code to share a project with teammates so that they can access it right from within their IDE. Once a share session has been started you can edit and debug together in real time. CodeStream extends Live Share functionality by creating a channel for each share session so that you can chat with the people you’re sharing with throughout the course of the share session.
+
+![LiveShareIntegration](https://help.codestream.com/hc/article_attachments/360010003011/Screen_Shot_2018-08-27_at_1.09.00_PM.png)
+![LiveShareChannels](https://help.codestream.com/hc/article_attachments/360009985332/Screen_Shot_2018-08-27_at_1.09.42_PM.png)
+
 # Frequently Asked Questions
 
 #### Where are messages stored?
