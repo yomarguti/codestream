@@ -43,7 +43,11 @@ export class UnreadCounter {
 		// Don't increment unreads for deleted, edited (if edited it isn't the first time its been seen), has replies (same as edited), or was posted by the current user
 		posts = posts.filter(
 			p =>
-				!p.deactivated && !p.hasBeenEdited && !p.hasReplies && p.creatorId !== this._currentUserId
+				!p.deactivated &&
+				!p.hasBeenEdited &&
+				!p.hasReplies &&
+				p.creatorId !== this._currentUserId &&
+				Object.keys(p.reactions).length === 0
 		);
 		if (posts.length === 0) return;
 
