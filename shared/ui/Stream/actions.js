@@ -121,12 +121,19 @@ export const editPost = (id, text, mentions) => async (dispatch, getState, { api
 	}
 };
 
-export const reactToPost = (id, emoji, value) => async (dispatch, getState, { api }) => {
+export const reactToPost = (post, emoji, value) => async (dispatch, getState, { api }) => {
 	try {
-		console.log("REACTIN TO POST!", id);
-		const post = await api.reactToPost({ id, emoji, value });
-		console.log("GOT POST BACK: ", post);
-		return dispatch({ type: "UPDATE_POST", payload: post });
+		const { context, session } = getState();
+		// optimistically set it on the client... waiting for the server
+		if (!post.reactions) post.reactions = {};
+		if (!post.reactions[emoji]) post.reactions[emoji] = [];
+		if (value) post.reactions[emoji].push(session.userId);
+		else post.reactions[emoji] = _.without(post.reactions[emoji], session.userId);
+		dispatch({ type: "UPDATE_POST", payload: post });
+
+		// then update it for real on the API server
+		const updatedPost = await api.reactToPost({ id: post.id, emoji, value });
+		return dispatch({ type: "UPDATE_POST", payload: updatedPost });
 	} catch (e) {
 		// TODO:
 	}

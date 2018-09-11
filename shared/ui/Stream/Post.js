@@ -356,7 +356,7 @@ class Post extends Component {
 		this.setState({ emojiOpen: false });
 		if (!emoji || !emoji.id) return;
 
-		this.props.reactToPost(post.id, emoji.id, true);
+		this.props.reactToPost(post, emoji.id, true);
 	};
 
 	postHasReactionFromUser = emojiId => {
@@ -376,7 +376,7 @@ class Post extends Component {
 		if (!emojiId) return;
 
 		const value = this.postHasReactionFromUser(emojiId) ? false : true;
-		this.props.reactToPost(post.id, emojiId, value);
+		this.props.reactToPost(post, emojiId, value);
 	};
 
 	renderReactions = post => {
