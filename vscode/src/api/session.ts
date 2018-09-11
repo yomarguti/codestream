@@ -155,6 +155,7 @@ export class CodeStreamSession implements Disposable {
 	private _loginPromise: Promise<LoginResult> | undefined;
 	private _presenceManager: PresenceManager | undefined;
 	private _pubnub: PubNubReceiver | undefined;
+	private _cache: Cache | undefined;
 	private _sessionApi: CodeStreamSessionApi | undefined;
 	private _state: SessionState | undefined;
 	private _signupToken: string | undefined;
@@ -523,8 +524,9 @@ export class CodeStreamSession implements Disposable {
 			await Container.context.workspaceState.update(WorkspaceState.TeamId, teamId);
 		}
 
-		this._pubnub = new PubNubReceiver(new Cache(this));
-		this._sessionApi = new CodeStreamSessionApi(this._serverUrl, token, teamId);
+		this._cache = new Cache(this);
+		this._pubnub = new PubNubReceiver(this._cache);
+		this._sessionApi = new CodeStreamSessionApi(this._serverUrl, token, teamId, this._cache);
 		this._presenceManager = new PresenceManager(this._sessionApi, this._id);
 
 		this._state = new SessionState(this, this._sessionApi, teamId, result.loginResponse);

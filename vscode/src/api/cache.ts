@@ -20,6 +20,11 @@ export class Cache {
 		this.markers = new Map();
 	}
 
+	async resolvePost(changeSet: object) {
+		const resolved = await this.resolvePosts([changeSet]);
+		if (resolved.length > 0) return resolved[0];
+	}
+
 	resolvePosts(changeSets: object[]) {
 		return this._resolveById(this.posts, changeSets, id => this.session.api.getPost(id));
 	}

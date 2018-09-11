@@ -17,11 +17,17 @@ import {
 	PresenceStatus,
 	StreamType
 } from "./api";
+import { Cache } from "./cache";
 
 export class CodeStreamSessionApi {
 	private readonly _api: CodeStreamApi;
 
-	constructor(baseUrl: string, private readonly token: string, private readonly teamId: string) {
+	constructor(
+		baseUrl: string,
+		private readonly token: string,
+		private readonly teamId: string,
+		private cache: Cache
+	) {
 		this._api = new CodeStreamApi(baseUrl);
 	}
 
@@ -164,7 +170,8 @@ export class CodeStreamSessionApi {
 	}
 
 	async reactToPost(postId: string, emoji: string, value: boolean) {
-		return (await this._api.reactToPost(this.token, postId, { [emoji]: value })).post;
+		const post = (await this._api.reactToPost(this.token, postId, { [emoji]: value })).post;
+		return await this.cache.resolvePost(post);
 	}
 
 	async markPostUnread(postId: string) {
