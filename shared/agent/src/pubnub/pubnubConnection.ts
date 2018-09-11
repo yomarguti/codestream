@@ -297,7 +297,7 @@ export class PubnubConnection {
 		// we'll fetch the message history from this point going forward
 		const receivedAt = this.timetokenToTimestamp(event.timetoken);
 		this._debug("Pubnub message received at", receivedAt);
-		if (receivedAt > this._lastMessageReceivedAt) {
+		if (receivedAt > this._lastMessageReceivedAt && !this._subscriptionsPending) {
 			this._lastMessageReceivedAt = receivedAt;
 			this._debug("_lastMessageReceivedAt updated");
 		}
