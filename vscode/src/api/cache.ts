@@ -21,8 +21,7 @@ export class Cache {
 	}
 
 	async resolvePost(changeSet: object) {
-		const resolved = await this.resolvePosts([changeSet]);
-		if (resolved.length > 0) return resolved[0];
+		return (await this.resolvePosts([changeSet]))[0];
 	}
 
 	resolvePosts(changeSets: object[]) {
