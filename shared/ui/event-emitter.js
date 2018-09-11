@@ -24,7 +24,7 @@ class EventEmitter {
 			const event = data.type.replace("codestream:", "");
 			if (event !== "response") console.debug(`[${event}] event received`, data.body);
 			const listeners = this.listenersByEvent.get(event) || [];
-			listeners.forEach(l => l(data.body));
+			setImmediate(() => listeners.forEach(l => l(data.body)));
 		}
 	};
 
