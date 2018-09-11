@@ -204,7 +204,7 @@ export class Commands implements Disposable {
 
 	@command("signIn", { customErrorHandling: true })
 	async signIn() {
-		const token = TokenManager.get(Container.config.serverUrl, Container.config.email);
+		const token = await TokenManager.get(Container.config.serverUrl, Container.config.email);
 		if (!token) {
 			await Container.streamView.show();
 		} else {

@@ -219,17 +219,16 @@
         "date-fns": "1.29.0",
         "lodash.debounce": "4.0.8",
         "reflect-metadata": "0.1.12",
-        "tmp": "0.0.33",
         "tslib": "1.9.3",
         "uuid": "^3.3.2",
         "vscode-languageclient": "5.0.1",
         "vsls": "0.3.426"
     },
     "devDependencies": {
+        "@types/keytar": "4.0.1",
         "@types/node": "8.10.29",
         "@types/node-fetch": "2.1.2",
         "@types/pubnub": "4.0.2",
-        "@types/tmp": "0.0.33",
         "@types/uuid": "^3.4.4",
         "babel-core": "6.26.3",
         "babel-loader": "7.1.5",
