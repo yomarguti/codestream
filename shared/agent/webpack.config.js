@@ -43,12 +43,8 @@ module.exports = function(env, argv) {
 			filename: "[name].js",
 			devtoolModuleFilenameTemplate: "file:///[absolute-resource-path]"
 		},
-		resolve: {
-			extensions: [".tsx", ".ts", ".js"],
-			alias: {
-				// Required because of https://github.com/bitinn/node-fetch/issues/493#issuecomment-414111024
-				"node-fetch$": "node-fetch/lib/index.js"
-			}
+		externals: {
+			encoding: "encoding"
 		},
 		module: {
 			rules: [
@@ -67,7 +63,17 @@ module.exports = function(env, argv) {
 					test: /\.d\.ts$/,
 					loader: "ignore-loader"
 				}
-			]
+			],
+			// Removes `Critical dependency: the request of a dependency is an expression` from `./node_modules/vscode-languageserver/lib/files.js`
+			exprContextRegExp: /^$/,
+			exprContextCritical: false
+		},
+		resolve: {
+			extensions: [".ts", ".tsx", ".js", ".jsx"],
+			alias: {
+				// Required because of https://github.com/bitinn/node-fetch/issues/493#issuecomment-414111024
+				"node-fetch": path.resolve(__dirname, "node_modules/node-fetch/lib/index.js")
+			}
 		},
 		plugins: plugins,
 		stats: {
