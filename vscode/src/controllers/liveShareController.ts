@@ -31,7 +31,7 @@ export class LiveShareController implements Disposable {
 	private readonly _vslsExtension: Extension<any> | undefined;
 
 	constructor() {
-		this._vslsExtension = extensions.getExtension("ms-vsliveshare.vsliveshare");
+		this._vslsExtension = extensions.getExtension(vsls.extensionId);
 
 		this._vslsPromise = vsls.getApiAsync();
 		void this.ensureLiveShare();

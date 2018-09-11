@@ -1,6 +1,5 @@
 "use strict";
 const path = require("path");
-const nodeExternals = require("webpack-node-externals");
 // const BabelExternalHelpersPlugin = require("webpack-babel-external-helpers-2");
 const CleanPlugin = require("clean-webpack-plugin");
 const FileManagerPlugin = require("filemanager-webpack-plugin");
@@ -63,10 +62,9 @@ function getExtensionConfig(env) {
 			filename: "extension.js",
 			devtoolModuleFilenameTemplate: "file:///[absolute-resource-path]"
 		},
-		resolve: {
-			extensions: [".tsx", ".ts", ".js"]
+		externals: {
+			vscode: "commonjs vscode"
 		},
-		externals: [nodeExternals()],
 		module: {
 			rules: [
 				{
@@ -79,12 +77,18 @@ function getExtensionConfig(env) {
 					test: /\.tsx?$/,
 					use: "ts-loader",
 					exclude: /node_modules|\.d\.ts$/
-				},
-				{
-					test: /\.d\.ts$/,
-					loader: "ignore-loader"
 				}
-			]
+			],
+			// Removes `Critical dependency: the request of a dependency is an expression` from `./node_modules/vsls/vscode.js`
+			exprContextRegExp: /^$/,
+			exprContextCritical: false
+		},
+		resolve: {
+			extensions: [".ts", ".tsx", ".js", ".jsx"],
+			alias: {
+				"node-fetch": path.resolve(__dirname, "node_modules/node-fetch/lib/index.js"),
+				"vsls/vscode": path.resolve(__dirname, "node_modules/vsls/vscode.js")
+			}
 		},
 		plugins: plugins,
 		stats: {
@@ -150,15 +154,6 @@ function getWebviewConfig(env) {
 				}
 			}
 		},
-		resolve: {
-			extensions: [".tsx", ".ts", ".jsx", ".js"],
-			modules: [path.resolve(__dirname, "src/webviews/app"), "node_modules"],
-			alias: {
-				// TODO: Use environment variable if exists
-				"codestream-components$": path.resolve(__dirname, "../codestream-components/index.js"),
-				"codestream-components": path.resolve(__dirname, "../codestream-components/")
-			}
-		},
 		module: {
 			rules: [
 				{
@@ -194,6 +189,15 @@ function getWebviewConfig(env) {
 					exclude: /node_modules/
 				}
 			]
+		},
+		resolve: {
+			extensions: [".ts", ".tsx", ".js", ".jsx"],
+			modules: [path.resolve(__dirname, "src/webviews/app"), "node_modules"],
+			alias: {
+				// TODO: Use environment variable if exists
+				"codestream-components$": path.resolve(__dirname, "../codestream-components/index.js"),
+				"codestream-components": path.resolve(__dirname, "../codestream-components/")
+			}
 		},
 		plugins: plugins,
 		stats: {

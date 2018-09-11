@@ -1,5 +1,6 @@
 .vscode/**
 io/**
+node_modules/**
 src/**
 **/*.map
 .babelrc
@@ -7,8 +8,9 @@ src/**
 .gitignore
 .prettierignore
 .prettierrc
-codestream.code-workspace
+*.code-workspace
 DEV_README.md
+package-lock.json
 tsconfig.json
 tslint.json
 webpack.config.js

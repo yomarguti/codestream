@@ -21,14 +21,9 @@
 	},
 	"settings": {
 		"editor.insertSpaces": false,
-		"files.exclude": {
-			"**/node_modules": true,
-			"**/dist": false
-		},
 		"prettier.requireConfig": true,
 		"prettier.tslintIntegration": true,
 		"search.exclude": {
-			"**/node_modules": true,
 			"**/dist": true
 		}
 	}

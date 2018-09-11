@@ -23,14 +23,9 @@
 		"codestream.serverUrl": "https://qa-api.codestream.us",
 		"codestream.webAppUrl": "http://qa-app.codestream.us",
 		"editor.insertSpaces": false,
-		"files.exclude": {
-			"**/node_modules": true,
-			"**/dist": false
-		},
 		"prettier.requireConfig": true,
 		"prettier.tslintIntegration": true,
 		"search.exclude": {
-			"**/node_modules": true,
 			"**/dist": true
 		}
 	}
