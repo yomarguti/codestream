@@ -1,5 +1,13 @@
 import * as uuidv4 from "uuid/v4";
 
+export const accessSafely = f => {
+	try {
+		return f();
+	} catch (e) {
+		return undefined;
+	}
+};
+
 export const toMapBy = (key, entities) =>
 	entities.reduce((result, entity) => ({ ...result, [entity[key]]: entity }), {});
 

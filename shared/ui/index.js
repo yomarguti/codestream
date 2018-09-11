@@ -9,12 +9,19 @@ import WebviewApi from "./webview-api";
 import EventEmitter from "./event-emitter";
 import * as miscActions from "./actions";
 import * as contextActions from "./actions/context";
+import middleware from "./middleware";
 
-export const createCodeStreamStore = (initialState = {}, thunkArg = {}, middleware) => {
+export const createCodeStreamStore = (
+	initialState = {},
+	thunkArg = {},
+	consumerMiddleware = []
+) => {
 	return createStore(
 		reducer,
 		initialState,
-		composeWithDevTools(applyMiddleware(thunk.withExtraArgument(thunkArg), ...middleware))
+		composeWithDevTools(
+			applyMiddleware(thunk.withExtraArgument(thunkArg), ...middleware, ...consumerMiddleware)
+		)
 	);
 };
 
