@@ -855,7 +855,7 @@ export class StreamWebviewPanel implements Disposable {
 				Logger.warn("Webview: FAILED waiting for webview ready event; closing webview...");
 				this.dispose();
 				resolve();
-			}, 15000);
+			}, 30000);
 
 			this._onReadyResolver = () => {
 				clearTimeout(timer);
