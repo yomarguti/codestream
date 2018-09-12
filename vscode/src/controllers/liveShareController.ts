@@ -1,6 +1,6 @@
 "use strict";
 import { Disposable, Extension, extensions, Uri } from "vscode";
-import * as vsls from "vsls/vscode";
+import * as vslsApi from "vsls/vscode";
 import { ChannelServiceType } from "../api/api";
 import { ServiceChannelStreamCreationOptions } from "../api/models/streams";
 import { SessionStatus, SessionStatusChangedEvent, StreamThread, StreamType } from "../api/session";
@@ -27,13 +27,11 @@ export const vslsUrlRegex = /https:\/\/insiders\.liveshare\.vsengsaas\.visualstu
 export class LiveShareController implements Disposable {
 	private _disposable: Disposable | undefined;
 	private _vslsId: string | undefined;
-	private readonly _vslsPromise: Promise<vsls.LiveShare | null>;
+	private _vslsPromise: Promise<vslsApi.LiveShare | null> | undefined;
 	private readonly _vslsExtension: Extension<any> | undefined;
 
 	constructor() {
-		this._vslsExtension = extensions.getExtension(vsls.extensionId);
-
-		this._vslsPromise = vsls.getApiAsync();
+		this._vslsExtension = extensions.getExtension(vslsApi.extensionId);
 		void this.ensureLiveShare();
 	}
 
@@ -42,21 +40,44 @@ export class LiveShareController implements Disposable {
 	}
 
 	async ensureLiveShare(): Promise<void> {
-		const vsls = await this._vslsPromise;
-		if (vsls != null) {
-			setContext(ContextKeys.LiveShareInstalled, true);
+		try {
+			this._installed = this._vslsExtension != null;
+			this._vslsPromise = this.getLiveShareApi();
 
-			this.setVslsId(vsls.session.id);
+			const vsls = await this._vslsPromise;
+			this._installed = vsls != null;
 
-			this._disposable = Disposable.from(
-				Container.session.onDidChangeSessionStatus(this.onSessionStatusChanged, this),
-				vsls.onDidChangeSession(this.onLiveShareSessionChanged, this)
-			);
+			if (vsls != null) {
+				setContext(ContextKeys.LiveShareInstalled, true);
+
+				this.setVslsId(vsls.session.id);
+
+				this._disposable = Disposable.from(
+					Container.session.onDidChangeSessionStatus(this.onSessionStatusChanged, this),
+					vsls.onDidChangeSession(this.onLiveShareSessionChanged, this)
+				);
+			}
+		} catch (ex) {
+			debugger;
+			Logger.error(ex);
 		}
 	}
 
+	private async getLiveShareApi() {
+		if (this._vslsExtension == null) return null;
+
+		// Avoids using the vslsApi call because of module bundling issues
+		const extensionApi = (this._vslsExtension.isActive
+			? this._vslsExtension.exports
+			: await this._vslsExtension.activate()) as any | undefined;
+		if (extensionApi != null) {
+			return extensionApi.getApi("0.3.666");
+		}
+	}
+
+	private _installed: boolean = false;
 	get installed() {
-		return this._vslsExtension != null;
+		return this._installed;
 	}
 
 	get vslsId(): string | undefined {
@@ -67,7 +88,7 @@ export class LiveShareController implements Disposable {
 		setContext(ContextKeys.LiveShareSessionActive, id != null);
 	}
 
-	private async onLiveShareSessionChanged(e: vsls.SessionChangeEvent) {
+	private async onLiveShareSessionChanged(e: vslsApi.SessionChangeEvent) {
 		const vslsId = e.session.id;
 		this.setVslsId(vslsId);
 		// If we aren't signed in or in an active (remote) live share session kick out
