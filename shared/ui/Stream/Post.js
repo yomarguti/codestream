@@ -205,7 +205,7 @@ class Post extends Component {
 			authorMenuItems.push({ label: "Edit Headshot", action: "edit-headshot" });
 		} else {
 			// FIXME -- this should be a check for MS, not a negative for Atom
-			if (!global.atom)
+			if (this.props.canLiveshare)
 				authorMenuItems.push({ label: "Invite to Live Share", action: "live-share" });
 			authorMenuItems.push({ label: "Direct Message", action: "direct-message" });
 		}
@@ -442,7 +442,8 @@ const mapStateToProps = (state, props) => {
 	for (var key in state.users || {}) userNames[key] = state.users[key].username;
 	return {
 		userNames,
-		repoName: repo ? repo.name : ""
+		repoName: repo ? repo.name : "",
+		canLiveshare: state.services.vsls
 	};
 };
 
