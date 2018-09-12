@@ -70,9 +70,9 @@ export class LiveShareController implements Disposable {
 		const extensionApi = (this._vslsExtension.isActive
 			? this._vslsExtension.exports
 			: await this._vslsExtension.activate()) as any | undefined;
-		if (extensionApi != null) {
-			return extensionApi.getApi("0.3.666");
-		}
+		if (extensionApi == null) return null;
+
+		return extensionApi.getApi("0.3.666");
 	}
 
 	private _installed: boolean = false;
