@@ -1,11 +1,13 @@
 "use strict";
-import { AgentOptions, AgentState } from "./agent";
+import { AgentOptions, AgentState, CodeStreamEnvironment } from "./agent";
 import { CodeStreamApi, LoginResponse } from "./api/api";
 import { Config } from "./config";
 import { DocumentManager } from "./documentManager";
 import { GitService } from "./git/gitService";
 import { Logger } from "./logger";
 import { CodeStreamSession } from "./session";
+
+const envRegex = /https?:\/\/(pd-|qa-)?api.codestream.(?:us|com)/;
 
 class ServiceContainer {
 	public readonly extensionVersion: string;
@@ -25,11 +27,12 @@ class ServiceContainer {
 		this.ideVersion = options.ideVersion;
 
 		this.state = {
-			email: options.email,
-			userId: loginResponse.user.id,
-			teamId: options.teamId,
 			apiToken: loginResponse.accessToken,
-			serverUrl: options.serverUrl
+			email: options.email,
+			environment: this.getEnvironment(options.serverUrl),
+			teamId: options.teamId,
+			serverUrl: options.serverUrl,
+			userId: loginResponse.user.id
 		};
 
 		this._git = new GitService(session, api);
@@ -57,6 +60,21 @@ class ServiceContainer {
 		// 	if (prevCfg && prevCfg.serverUrl !== this._config.serverUrl) {
 		// 		this.api.baseUrl = this.config.serverUrl;
 		// 	}
+	}
+
+	private getEnvironment(url: string) {
+		const match = envRegex.exec(url);
+		if (match == null) return CodeStreamEnvironment.Unknown;
+
+		const [, env] = match;
+		switch (env == null ? env : env.toLowerCase()) {
+			case "pd-":
+				return CodeStreamEnvironment.PD;
+			case "qa-":
+				return CodeStreamEnvironment.QA;
+			default:
+				return CodeStreamEnvironment.Production;
+		}
 	}
 }
 

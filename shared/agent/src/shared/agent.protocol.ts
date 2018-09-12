@@ -14,29 +14,39 @@ export interface AccessToken {
 	value: string;
 }
 
+export enum CodeStreamEnvironment {
+	PD = "pd",
+	Production = "prod",
+	QA = "qa",
+	Unknown = "unknown"
+}
+
 export interface AgentOptions {
 	extensionBuild: string;
 	extensionVersion: string;
 	gitPath: string;
 	ideVersion: string;
 
-	serverUrl: string;
 	email: string;
 	passwordOrToken: string | AccessToken;
+	serverUrl: string;
+	signupToken: string;
 	team: string;
 	teamId: string;
-	signupToken: string;
+}
+
+export interface AgentState {
+	apiToken: string;
+	email: string;
+	environment: CodeStreamEnvironment;
+	serverUrl: string;
+	teamId: string;
+	userId: string;
 }
 
 export interface AgentResult {
 	loginResponse: LoginResponse;
-	state: {
-		email: string;
-		userId: string;
-		teamId: string;
-		token: string;
-		serverUrl: string;
-	};
+	state: AgentState;
 	error?: LoginResult;
 }
 
@@ -67,6 +77,25 @@ export const DidChangeDocumentMarkersNotification = new NotificationType<
 
 export interface DidChangeDocumentMarkersNotificationResponse {
 	textDocument: TextDocumentIdentifier;
+}
+
+export enum VersionCompatibility {
+	Compatible = "ok",
+	CompatibleUpgradeAvailable = "outdated",
+	CompatibleUpgradeRecommended = "deprecated",
+	UnsupportedUpgradeRequired = "incompatible",
+	Unknown = "unknownVersion"
+}
+
+export const DidChangeVersionCompatibilityNotification = new NotificationType<
+	DidChangeVersionCompatibilityNotificationResponse,
+	void
+>("codeStream/didChangeVersionCompatibility");
+
+export interface DidChangeVersionCompatibilityNotificationResponse {
+	compatibility: VersionCompatibility;
+	downloadUrl: string;
+	version: string | undefined;
 }
 
 export interface DocumentFromCodeBlockRequestParams {
@@ -163,4 +192,16 @@ export interface DocumentPostRequestParams {
 
 export const DocumentPostRequest = new RequestType<DocumentPostRequestParams, CSPost, void, void>(
 	"codeStream/textDocument/post"
+);
+
+export enum LogoutReason {
+	Unknown = "unknown"
+}
+
+export interface LogoutRequestParams {
+	reason?: LogoutReason;
+}
+
+export const LogoutRequest = new RequestType<LogoutRequestParams, undefined, void, void>(
+	"codeStream/logout"
 );

@@ -19,7 +19,10 @@ import {
 } from "./agent";
 import { AgentError, ServerError } from "./agentError";
 import { ApiErrors, CodeStreamApi, CSRepository, CSStream, LoginResult } from "./api/api";
-import { VersionMiddlewareManager } from "./api/middleware/versionMiddleware";
+import {
+	VersionCompatibilityChangedEvent,
+	VersionMiddlewareManager
+} from "./api/middleware/versionMiddleware";
 import { UserCollection } from "./api/models/users";
 import { Container } from "./container";
 import { setGitPath } from "./git/git";
@@ -34,6 +37,11 @@ import {
 	PubnubReceiver,
 	RepositoriesMessageReceivedEvent
 } from "./pubnub/pubnubReceiver";
+import {
+	DidChangeVersionCompatibilityNotification,
+	LogoutReason,
+	LogoutRequest
+} from "./shared/agent.protocol";
 import { StreamManager } from "./stream/streamManager";
 import { Strings } from "./system";
 
@@ -83,7 +91,8 @@ export class CodeStreamSession {
 			_options.extensionBuild
 		);
 
-		new VersionMiddlewareManager(this._api);
+		const versionManager = new VersionMiddlewareManager(this._api);
+		versionManager.onDidChangeCompatibility(this.onVersionCompatibilityChanged, this);
 
 		this._readyPromise = new Promise<void>(resolve => this.agent.onReady(resolve));
 		// this.connection.onHover(e => MarkerHandler.onHover(e));
@@ -102,6 +111,34 @@ export class CodeStreamSession {
 			);
 			return { revision: revision };
 		});
+	}
+
+	private onMessageReceived(e: MessageReceivedEvent) {
+		switch (e.type) {
+			case MessageType.Posts: {
+				break;
+			}
+			case MessageType.Repositories:
+				this._onDidChangeRepositories.fire(new RepositoriesChangedEvent(this, e));
+				break;
+			case MessageType.Streams:
+				StreamManager.cacheStreams(e.streams);
+				break;
+			case MessageType.Users:
+				break;
+			case MessageType.Teams:
+				break;
+			case MessageType.Markers:
+				MarkerManager.cacheMarkers(e.markers);
+				break;
+			case MessageType.MarkerLocations:
+				MarkerLocationManager.cacheMarkerLocations(e.markerLocations);
+				break;
+		}
+	}
+
+	private onVersionCompatibilityChanged(e: VersionCompatibilityChangedEvent) {
+		this.agent.sendNotification(DidChangeVersionCompatibilityNotification, e);
 	}
 
 	private _apiToken: string | undefined;
@@ -222,6 +259,7 @@ export class CodeStreamSession {
 			git.onRepositoryCommitHashChanged(repo => {
 				MarkerLocationManager.flushUncommittedLocations(repo);
 			});
+
 			return {
 				loginResponse: { ...loginResponse },
 				state: { ...Container.instance().state }
@@ -229,6 +267,10 @@ export class CodeStreamSession {
 		} finally {
 			Logger.log(`Login completed in ${Strings.getDurationMilliseconds(start)} ms`);
 		}
+	}
+
+	logout(reason?: LogoutReason) {
+		return this.agent.sendRequest(LogoutRequest, { reason: reason });
 	}
 
 	showErrorMessage<T extends MessageActionItem>(message: string, ...actions: T[]) {
@@ -248,29 +290,5 @@ export class CodeStreamSession {
 			this._apiToken!,
 			teamId || this._teamId!
 		)).streams.filter(s => CodeStreamApi.isStreamSubscriptionRequired(s, userId));
-	}
-
-	private onMessageReceived(e: MessageReceivedEvent) {
-		switch (e.type) {
-			case MessageType.Posts: {
-				break;
-			}
-			case MessageType.Repositories:
-				this._onDidChangeRepositories.fire(new RepositoriesChangedEvent(this, e));
-				break;
-			case MessageType.Streams:
-				StreamManager.cacheStreams(e.streams);
-				break;
-			case MessageType.Users:
-				break;
-			case MessageType.Teams:
-				break;
-			case MessageType.Markers:
-				MarkerManager.cacheMarkers(e.markers);
-				break;
-			case MessageType.MarkerLocations:
-				MarkerLocationManager.cacheMarkerLocations(e.markerLocations);
-				break;
-		}
 	}
 }

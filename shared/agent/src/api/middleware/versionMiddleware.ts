@@ -1,19 +1,19 @@
 "use strict";
-import opn from "opn";
-import { Disposable, MessageActionItem } from "vscode-languageserver";
-import { Container } from "../../container";
+import { Disposable, Emitter, Event } from "vscode-languageserver";
+import { VersionCompatibility } from "../../agent";
 import { CodeStreamApi, CodeStreamApiMiddleware, CodeStreamApiMiddlewareContext } from "../api";
 
-// export interface VersionCompatibilityChangedEvent {
-// 	compatibility: VersionCompatibility;
-// 	version: string | undefined;
-// }
+export interface VersionCompatibilityChangedEvent {
+	compatibility: VersionCompatibility;
+	downloadUrl: string;
+	version: string | undefined;
+}
 
 export class VersionMiddlewareManager implements Disposable {
-	// private _onDidChangeCompatibility = new Emitter<VersionCompatibilityChangedEvent>();
-	// get onDidChangeCompatibility(): Event<VersionCompatibilityChangedEvent> {
-	// 	return this._onDidChangeCompatibility.event;
-	// }
+	private _onDidChangeCompatibility = new Emitter<VersionCompatibilityChangedEvent>();
+	get onDidChangeCompatibility(): Event<VersionCompatibilityChangedEvent> {
+		return this._onDidChangeCompatibility.event;
+	}
 
 	private readonly _disposable: Disposable;
 	private _compatibility: VersionCompatibility | undefined;
@@ -26,60 +26,16 @@ export class VersionMiddlewareManager implements Disposable {
 		this._disposable && this._disposable.dispose();
 	}
 
-	async notify(compatibility: VersionCompatibility, version: string | undefined) {
+	async notify(compatibility: VersionCompatibility, url: string, version: string | undefined) {
 		if (this._compatibility === compatibility) return;
 
 		this._compatibility = compatibility;
-		// this._onDidChangeCompatibility.fire({ compatibility: compatibility, version: version });
-
-		switch (compatibility) {
-			case VersionCompatibility.CompatibleUpgradeAvailable: {
-				const actions: MessageActionItem[] = [{ title: "Download" }, { title: "Later" }];
-				const result = await Container.instance().session.showInformationMessage(
-					"A new version of CodeStream is available.",
-					...actions
-				);
-				if (result !== undefined && result.title === "Download") {
-					this.downloadLatest();
-				}
-				break;
-			}
-			case VersionCompatibility.CompatibleUpgradeRecommended: {
-				const actions: MessageActionItem[] = [{ title: "Download" }, { title: "Later" }];
-				const result = await Container.instance().session.showWarningMessage(
-					"A new version of CodeStream is available. We recommend upgrading as soon as possible.",
-					...actions
-				);
-				if (result !== undefined && result.title === "Download") {
-					this.downloadLatest();
-				}
-				break;
-			}
-			case VersionCompatibility.IncompatibleUpgradeRequired: {
-				const actions: MessageActionItem[] = [{ title: "Download" }];
-				const result = await Container.instance().session.showErrorMessage(
-					"This version of CodeStream is no longer supported. Please download and install the latest version.",
-					...actions
-				);
-				if (result !== undefined) {
-					this.downloadLatest();
-				}
-				break;
-			}
-		}
+		this._onDidChangeCompatibility.fire({
+			compatibility: compatibility,
+			downloadUrl: url,
+			version: version
+		});
 	}
-
-	async downloadLatest() {
-		await opn("https://assets.codestream.com/prod/vscode/codestream-latest.vsix");
-	}
-}
-
-enum VersionCompatibility {
-	Compatible = "ok",
-	CompatibleUpgradeAvailable = "outdated",
-	CompatibleUpgradeRecommended = "deprecated",
-	IncompatibleUpgradeRequired = "incompatible",
-	Unknown = "unknownVersion"
 }
 
 export class VersionMiddleware implements CodeStreamApiMiddleware {
@@ -91,7 +47,7 @@ export class VersionMiddleware implements CodeStreamApiMiddleware {
 
 	async onResponse<R>(context: Readonly<CodeStreamApiMiddlewareContext>, responseJson: Promise<R>) {
 		if (context.response === undefined) return;
-		if (!context.url.endsWith("/presence")) return;
+		if (!context.response.ok || !context.url.endsWith("/presence")) return;
 
 		const compatibility = context.response.headers.get(
 			"X-CS-Version-Disposition"
@@ -100,12 +56,16 @@ export class VersionMiddleware implements CodeStreamApiMiddleware {
 		if (
 			compatibility == null ||
 			compatibility === VersionCompatibility.Compatible ||
-			compatibility === VersionCompatibility.Unknown
+			compatibility === VersionCompatibility.Unknown ||
+			(!context.response.ok && compatibility !== VersionCompatibility.UnsupportedUpgradeRequired)
 		) {
 			return;
 		}
 
+		const url =
+			context.response.headers.get("X-CS-Latest-Asset-Url") ||
+			"https://assets.codestream.com/prod/vscode/codestream-latest.vsix";
 		const version = context.response.headers.get("X-CS-Current-Version");
-		void this._manager.notify(compatibility, version == null ? undefined : version);
+		void this._manager.notify(compatibility, url, version == null ? undefined : version);
 	}
 }

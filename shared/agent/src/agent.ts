@@ -29,14 +29,6 @@ import { Disposables, memoize } from "./system";
 
 export * from "./shared/agent.protocol";
 
-export interface AgentState {
-	email: string;
-	userId: string;
-	teamId: string;
-	apiToken: string;
-	serverUrl: string;
-}
-
 export class CodeStreamAgent implements Disposable {
 	private _onReady = new Emitter<void>();
 	get onReady(): Event<void> {
