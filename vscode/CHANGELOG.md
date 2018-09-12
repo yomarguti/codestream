@@ -9,8 +9,9 @@
 - Adds display of CodeStream version number to bottom of sign-in page.
 
 ### Changed
-- Stores credentials in native credential store if available for increased security.
-- Bundles node_modules into extension for speed and reduced size.
+- Increases security by storing credentials in the native credential store if available.
+- Reduces package size and improves loading performance.
+- Notifies users of required extension updates, but otherwise now lets VS Code handle regular updates.
 
 ### Fixed
-- Fixed issue with new channel members not always seeing complete message history without reload of webview.
+- Fixes issue with new channel members not always seeing complete message history without reload of webview.
