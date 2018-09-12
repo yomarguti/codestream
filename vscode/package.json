@@ -8,11 +8,11 @@
     "license": "UNLICENSED",
     "homepage": "https://codestream.com",
     "bugs": {
-        "url": "https://github.com/TeamCodeStream/vscode-codestream/issues"
+        "url": "https://github.com/TeamCodeStream/CodeStream/issues"
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/TeamCodeStream/vscode-codestream"
+        "url": "https://github.com/TeamCodeStream/CodeStream"
     },
     "engines": {
         "vscode": "^1.26.0"
@@ -24,13 +24,15 @@
         "Other"
     ],
     "galleryBanner": {
-        "color": "#009aef",
-        "theme": "dark"
+        "color": "#eff1f3",
+        "theme": "light"
     },
     "keywords": [
         "chat",
+        "knowledge base",
         "comment",
-        "collaborate"
+        "collaborate",
+        "code review"
     ],
     "contributes": {
         "configuration": {
