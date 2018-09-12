@@ -1,6 +1,11 @@
 "use strict";
 import { ConfigurationTarget, Disposable, Event, EventEmitter } from "vscode";
-import { AccessToken, AgentResult, DocumentMarkersChangedEvent } from "../agent/agentConnection";
+import {
+	AccessToken,
+	AgentResult,
+	CodeStreamEnvironment,
+	DocumentMarkersChangedEvent
+} from "../agent/agentConnection";
 import { WorkspaceState } from "../common";
 import { configuration } from "../configuration";
 import { Container } from "../container";
@@ -47,6 +52,7 @@ import { Unreads } from "./unreads";
 export {
 	ChannelStream,
 	ChannelStreamCreationOptions,
+	CodeStreamEnvironment,
 	DirectStream,
 	FileStream,
 	Marker,
@@ -73,13 +79,6 @@ export {
 
 const envRegex = /https?:\/\/(pd-|qa-)?api.codestream.(?:us|com)/;
 const instanceId = Functions.shortUuid();
-
-export enum CodeStreamEnvironment {
-	PD = "pd",
-	Production = "prod",
-	QA = "qa",
-	Unknown = "unknown"
-}
 
 export enum SessionSignedOutReason {
 	NetworkIssue = "networkIssue",
@@ -491,6 +490,7 @@ export class CodeStreamSession implements Disposable {
 		const user = result.loginResponse.user;
 		const email = user.email;
 		this._email = email;
+		this._environment = result.state.environment;
 
 		// Create an id for this session
 		this._id = Strings.sha1(`${instanceId}|${this.serverUrl}|${email}|${teamId}`.toLowerCase());

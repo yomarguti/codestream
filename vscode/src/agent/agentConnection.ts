@@ -1,6 +1,16 @@
 "use strict";
 import { RequestInit } from "node-fetch";
-import { Event, EventEmitter, ExtensionContext, Range, TextDocument, Uri, window } from "vscode";
+import {
+	commands,
+	Event,
+	EventEmitter,
+	ExtensionContext,
+	MessageItem,
+	Range,
+	TextDocument,
+	Uri,
+	window
+} from "vscode";
 import {
 	CancellationToken,
 	CloseAction,
@@ -16,7 +26,8 @@ import {
 	TransportKind
 } from "vscode-languageclient";
 import { CSCodeBlock, CSPost } from "../api/api";
-import { CodeStreamEnvironment } from "../api/session";
+import { BuiltInCommands } from "../commands";
+import { extensionQualifiedId } from "../constants";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import {
@@ -25,8 +36,11 @@ import {
 	AgentOptions,
 	AgentResult,
 	ApiRequest,
+	CodeStreamEnvironment,
 	DidChangeDocumentMarkersNotification,
 	DidChangeDocumentMarkersNotificationResponse,
+	DidChangeVersionCompatibilityNotification,
+	DidChangeVersionCompatibilityNotificationResponse,
 	DidReceivePubNubMessagesNotification,
 	DidReceivePubNubMessagesNotificationResponse,
 	DocumentFromCodeBlockRequest,
@@ -37,10 +51,18 @@ import {
 	DocumentMarkersResponse,
 	DocumentPostRequest,
 	DocumentPreparePostRequest,
-	DocumentPreparePostResponse
+	DocumentPreparePostResponse,
+	LogoutRequest,
+	LogoutRequestParams,
+	VersionCompatibility
 } from "../shared/agent.protocol";
 
-export { AccessToken, AgentOptions, AgentResult } from "../shared/agent.protocol";
+export {
+	AccessToken,
+	AgentOptions,
+	AgentResult,
+	CodeStreamEnvironment
+} from "../shared/agent.protocol";
 
 export interface PubNubMessagesReceivedEvent {
 	[key: string]: any;
@@ -262,9 +284,78 @@ export class CodeStreamAgentConnection implements Disposable {
 		this._onDidChangeDocumentMarkers.fire({ uri: Uri.parse(e.textDocument.uri) });
 	}
 
+	private onLogout(e: LogoutRequestParams) {
+		Logger.log("AgentConnection.onLogout", `reason=${e.reason}`);
+
+		void Container.session.goOffline();
+	}
+
 	private onPubNubMessagesReceived(...messages: DidReceivePubNubMessagesNotificationResponse[]) {
 		Logger.log("AgentConnection.onPubNubMessagesReceived", messages);
 		this._onDidReceivePubNubMessages.fire(messages);
+	}
+
+	private async onVersionCompatibilityChanged(
+		e: DidChangeVersionCompatibilityNotificationResponse
+	) {
+		switch (e.compatibility) {
+			case VersionCompatibility.CompatibleUpgradeAvailable: {
+				if (Container.session.environment === CodeStreamEnvironment.Production) return;
+
+				const actions: MessageItem[] = [{ title: "Download" }, { title: "Later" }];
+
+				const result = await window.showInformationMessage(
+					"A new version of CodeStream is available.",
+					...actions
+				);
+				if (result !== undefined && result.title === "Download") {
+					await commands.executeCommand(BuiltInCommands.Open, Uri.parse(e.downloadUrl));
+				}
+				break;
+			}
+			case VersionCompatibility.CompatibleUpgradeRecommended: {
+				if (Container.session.environment === CodeStreamEnvironment.Production) return;
+
+				const actions: MessageItem[] = [{ title: "Download" }, { title: "Later" }];
+				const result = await window.showWarningMessage(
+					"A new version of CodeStream is available. We recommend upgrading as soon as possible.",
+					...actions
+				);
+				if (result !== undefined && result.title === "Download") {
+					await commands.executeCommand(BuiltInCommands.Open, Uri.parse(e.downloadUrl));
+				}
+				break;
+			}
+			case VersionCompatibility.UnsupportedUpgradeRequired: {
+				await Container.session.goOffline();
+
+				if (Container.session.environment === CodeStreamEnvironment.Production) {
+					const actions: MessageItem[] = [{ title: "Upgrade" }];
+					const result = await window.showErrorMessage(
+						"This version of CodeStream is no longer supported. Please upgrade to the latest version.",
+						...actions
+					);
+
+					if (result !== undefined) {
+						await commands.executeCommand("workbench.extensions.action.checkForUpdates");
+						await commands.executeCommand("workbench.extensions.action.showExtensionsWithIds", [
+							extensionQualifiedId
+						]);
+					}
+				} else {
+					const actions: MessageItem[] = [{ title: "Download" }];
+					const result = await window.showErrorMessage(
+						"This version of CodeStream is no longer supported. Please download and install the latest version.",
+						...actions
+					);
+
+					if (result !== undefined) {
+						await commands.executeCommand(BuiltInCommands.Open, Uri.parse(e.downloadUrl));
+					}
+				}
+				break;
+			}
+		}
 	}
 
 	private sendRequest<R, E, RO>(
@@ -296,6 +387,7 @@ export class CodeStreamAgentConnection implements Disposable {
 			throw ex;
 		}
 	}
+
 	private async start(options: Required<AgentOptions>): Promise<AgentInitializeResult> {
 		if (this._client !== undefined) {
 			throw new Error("Agent has already been started");
@@ -317,6 +409,8 @@ export class CodeStreamAgentConnection implements Disposable {
 		this._disposable = this._client.start();
 		void (await this._client.onReady());
 
+		this._client.onRequest(LogoutRequest, this.onLogout.bind(this));
+
 		this._client.onNotification(
 			DidReceivePubNubMessagesNotification,
 			this.onPubNubMessagesReceived.bind(this)
@@ -325,6 +419,11 @@ export class CodeStreamAgentConnection implements Disposable {
 		this._client.onNotification(
 			DidChangeDocumentMarkersNotification,
 			this.onDocumentMarkersChanged.bind(this)
+		);
+
+		this._client.onNotification(
+			DidChangeVersionCompatibilityNotification,
+			this.onVersionCompatibilityChanged.bind(this)
 		);
 
 		return this._client.initializeResult! as AgentInitializeResult;
