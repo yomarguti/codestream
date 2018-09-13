@@ -204,7 +204,6 @@ class Post extends Component {
 		if (mine) {
 			authorMenuItems.push({ label: "Edit Headshot", action: "edit-headshot" });
 		} else {
-			// FIXME -- this should be a check for MS, not a negative for Atom
 			if (this.props.canLiveshare)
 				authorMenuItems.push({ label: "Invite to Live Share", action: "live-share" });
 			authorMenuItems.push({ label: "Direct Message", action: "direct-message" });
