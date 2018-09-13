@@ -207,3 +207,19 @@ export interface LogoutRequestParams {
 export const LogoutRequest = new RequestType<LogoutRequestParams, undefined, void, void>(
 	"codeStream/logout"
 );
+
+export interface GetPostsRequestParams {
+	streamId: string;
+	limit: number;
+	beforeSeq?: number;
+	afterSeq?: number;
+}
+
+export interface GetPostsResponse {
+	posts: CSPost[];
+	maxSeq: number;
+}
+
+export const GetPostsRequest = new RequestType<GetPostsRequestParams, GetPostsResponse, void, void>(
+	"codeStream/posts"
+);

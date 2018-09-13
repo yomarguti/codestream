@@ -6,6 +6,7 @@ import { DocumentManager } from "./documentManager";
 import { GitService } from "./git/gitService";
 import { Logger } from "./logger";
 import { CodeStreamSession } from "./session";
+import { PostManager } from "./managers/postManager";
 
 const envRegex = /https?:\/\/(pd-|qa-)?api.codestream.(?:us|com)/;
 
@@ -50,6 +51,11 @@ class ServiceContainer {
 	get git() {
 		return this._git;
 	}
+
+	// public readonly markers = new MarkerManager();
+	// public readonly markerLocations = new MarkerLocationManager();
+	public readonly postManager = new PostManager();
+	// public readonly streams = new StreamManager();
 
 	updateConfig(config: Config) {
 		// 	const prevCfg = this._config;

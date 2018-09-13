@@ -15,7 +15,8 @@ import {
 	DocumentLatestRevisionRequest,
 	DocumentMarkersRequest,
 	DocumentPostRequest,
-	DocumentPreparePostRequest
+	DocumentPreparePostRequest,
+	GetPostsRequest
 } from "./agent";
 import { AgentError, ServerError } from "./agentError";
 import { ApiErrors, CodeStreamApi, CSRepository, CSStream, LoginResult } from "./api/api";
@@ -28,7 +29,6 @@ import { Container } from "./container";
 import { setGitPath } from "./git/git";
 import { Logger } from "./logger";
 import { MarkerHandler } from "./marker/markerHandler";
-import { MarkerManager } from "./marker/markerManager";
 import { MarkerLocationManager } from "./markerLocation/markerLocationManager";
 import { PostHandler } from "./post/postHandler";
 import {
@@ -44,6 +44,7 @@ import {
 } from "./shared/agent.protocol";
 import { StreamManager } from "./stream/streamManager";
 import { Strings } from "./system";
+import { MarkerManager } from "./marker/markerManager";
 
 const loginApiErrorMappings: { [k: string]: ApiErrors } = {
 	"USRC-1001": ApiErrors.InvalidCredentials,
@@ -104,6 +105,7 @@ export class CodeStreamSession {
 		this.agent.registerHandler(DocumentMarkersRequest, MarkerHandler.documentMarkers);
 		this.agent.registerHandler(DocumentPreparePostRequest, PostHandler.documentPreparePost);
 		this.agent.registerHandler(DocumentPostRequest, PostHandler.documentPost);
+		this.agent.registerHandler(GetPostsRequest, PostHandler.getPosts);
 
 		this.agent.registerHandler(DocumentLatestRevisionRequest, async e => {
 			const revision = await Container.instance().git.getFileCurrentRevision(

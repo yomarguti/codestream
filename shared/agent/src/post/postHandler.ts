@@ -6,9 +6,11 @@ import URI from "vscode-uri";
 import {
 	DocumentPostRequestParams,
 	DocumentPreparePostRequestParams,
-	DocumentPreparePostResponse
+	DocumentPreparePostResponse,
+	GetPostsRequestParams,
+	GetPostsResponse
 } from "../agent";
-import { CreatePostRequestCodeBlock, CSMarkerLocation, CSPost } from "../api/api";
+import { CreatePostRequestCodeBlock, CSMarkerLocation, CSPost, GetPostResponse } from "../api/api";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { MarkerLocationManager } from "../markerLocation/markerLocationManager";
@@ -16,6 +18,20 @@ import { Iterables, Strings } from "../system";
 
 export namespace PostHandler {
 	let lastFullCode = "";
+
+	export async function getPosts(params: GetPostsRequestParams): Promise<GetPostsResponse> {
+		const { postManager } = Container.instance();
+		const slice = await postManager.getPosts(
+			params.streamId,
+			params.afterSeq,
+			params.beforeSeq,
+			params.limit
+		);
+		return {
+			posts: slice.data,
+			maxSeq: slice.maxSeq
+		};
+	}
 
 	export async function documentPreparePost({
 		textDocument: documentId,

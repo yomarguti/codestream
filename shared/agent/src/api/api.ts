@@ -174,6 +174,42 @@ export class CodeStreamApi {
 		return this.get<GetPostsResponse>(`/posts?teamId=${teamId}&streamId=${streamId}`, token);
 	}
 
+	getPostsBySequence(
+		token: string,
+		teamId: string,
+		streamId: string,
+		minSeq: number,
+		maxSeq: number
+	): Promise<GetPostsResponse> {
+		const teamParam = `teamId=${teamId}`;
+		const streamParam = `streamId=${streamId}`;
+		const seqParam = `seqnum=${minSeq}-${maxSeq}`;
+		return this.get<GetPostsResponse>(`/posts?${teamParam}&${streamParam}&${seqParam}`, token);
+	}
+
+	getPostsLesserThan(
+		token: string,
+		teamId: string,
+		streamId: string,
+		limit: number,
+		lt?: string
+	): Promise<GetPostsResponse> {
+		const teamParam = `?teamId=${teamId}`;
+		const streamParam = `&streamId=${streamId}`;
+		const ltParam = lt ? `&lt=${lt}` : "";
+		const limitParam = `&limit=${limit}`;
+		return this.get<GetPostsResponse>(
+			`/posts${teamParam}${streamParam}${ltParam}${limitParam}`,
+			token
+		);
+	}
+
+	getChildPosts(token: string, teamId: string, parentPostId: string): Promise<GetPostsResponse> {
+		const teamParam = `?teamId=${teamId}`;
+		const parentParam = `?parentPostId=${parentPostId}`;
+		return this.get<GetPostsResponse>(`/posts${teamParam}${parentParam}`, token);
+	}
+
 	getRepo(token: string, teamId: string, repoId: string): Promise<GetRepoResponse> {
 		return this.get<GetRepoResponse>(`/repos/${repoId}`, token);
 	}

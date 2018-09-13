@@ -358,6 +358,7 @@ export interface GetPostResponse {
 
 export interface GetPostsResponse {
 	posts: CSPost[];
+	more?: boolean;
 }
 
 export interface GetRepoResponse {
