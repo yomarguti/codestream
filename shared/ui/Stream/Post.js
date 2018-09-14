@@ -390,11 +390,12 @@ class Post extends Component {
 					const reactors = reactions[emojiId] || [];
 					if (reactors.length == 0) return null;
 					const emoji = emojify(":" + emojiId + ":");
-					const reactorNames = reactors.map(id => userNames[id]).join(", ");
+					const tooltipText =
+						reactors.map(id => userNames[id]).join(", ") + " reacted with " + emojiId;
 					const className = _.contains(reactors, currentUserId) ? "reaction mine" : "reaction";
 					atLeastOneReaction = true;
 					return (
-						<Tooltip title={reactorNames} key={emojiId} placement="top">
+						<Tooltip title={tooltipText} key={emojiId} placement="top">
 							<div className={className} onClick={event => this.toggleReaction(emojiId, event)}>
 								<span dangerouslySetInnerHTML={{ __html: emoji }} />
 								{reactors.length}
