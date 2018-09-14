@@ -1,8 +1,8 @@
 {
     "name": "codestream",
     "displayName": "CodeStream",
-    "description": "The knowledge base behind your codebase",
-    "version": "0.11.0",
+    "description": "Put team chat into VS Code to create a better way to discuss code and share knowledge about your codebase within your development teams — building the knowledge base behind your codebase. Integrates with Slack, Microsoft Teams, and Visual Studio Live Share.",
+    "version": "0.11.1",
     "author": "CodeStream",
     "publisher": "CodeStream",
     "license": "UNLICENSED",
@@ -29,10 +29,10 @@
     },
     "keywords": [
         "chat",
-        "knowledge base",
+        "slack",
         "comment",
-        "collaborate",
-        "code review"
+        "collaboration",
+        "live"
     ],
     "contributes": {
         "configuration": {
