@@ -163,6 +163,22 @@ body.preload * {
 					vertical-align: 0 !important;
 				}
 			}
+			.tab-group {
+				label.checked {
+					background-color: @background-color-highlight-light;
+					.vscode-dark& {
+						background-color: @background-color-highlight-dark;
+					}
+				}
+			}
+			.tab-tip {
+				font-size: smaller;
+				background-color: @background-color-highlight-light;
+				.vscode-dark& {
+					background-color: @background-color-highlight-dark;
+				}
+				padding: 10px;
+			}
 			.control-group {
 				margin: 5px 0;
 			}
