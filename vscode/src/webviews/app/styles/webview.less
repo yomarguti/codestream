@@ -166,6 +166,20 @@ body.preload * {
 			.control-group {
 				margin: 5px 0;
 			}
+			.styled-select {
+				background-color: @background-color-highlight-light;
+				opacity: 1;
+				margin: 2px 0 5px 0;
+				.vscode-dark& {
+					background-color: @background-color-highlight-dark;
+				}
+				border-radius: 0px;
+				select {
+					opacity: 1;
+					background-color: rgba(0, 0, 0, 0);
+					outline: none;
+				}
+			}
 		}
 		.error-message {
 			// text-transform: lowercase;
@@ -287,6 +301,15 @@ body.preload * {
 
 		.code::-webkit-scrollbar-corner {
 			background-color: rgba(0, 0, 0, 0);
+		}
+		.code-reference .header {
+			border: none !important;
+			border-bottom: 1px dashed @base-border-color !important;
+			border-radius: 0 !important;
+		}
+		.code {
+			border: none !important;
+			border-radius: 0 !important;
 		}
 
 		.post {
