@@ -169,6 +169,7 @@
 			}
 
 			.panel-title {
+				padding-top: 5px;
 				.iconx {
 					padding-right: 5px;
 					opacity: 0.5;
@@ -443,6 +444,18 @@
 			}
 			.code {
 				margin-top: 0;
+				// to counteract the border-top: none
+				border: 1px solid @base-border-color;
+				border-radius: 4px;
+			}
+		}
+		.compose.full-height {
+			height: 100%;
+			box-sizing: border-box;
+			z-index: 50;
+			padding-top: 0;
+			.message-input {
+				height: 100px;
 			}
 		}
 
@@ -1781,6 +1794,17 @@
 				padding: 5px 10px;
 				border-radius: 3px;
 			}
+			.tab-group {
+				input {
+					display: none;
+				}
+				input:checked {
+					display: block;
+				}
+				.tab:checked {
+					background-color: @app-background-color-darker;
+				}
+			}
 
 			input[type="text"],
 			input[type="password"],
@@ -1803,6 +1827,19 @@
 				vertical-align: -2px;
 			}
 		}
+		.styled-select {
+			margin: 5px 0;
+		}
+		select {
+			border: none;
+			font-size: 12px;
+			height: 29px;
+			padding: 5px; /* If you add too much padding here, the options won't show in IE */
+			padding: 4px 8px;
+			color: @text-color;
+			background-color: @app-background-color-darker;
+			width: 100%;
+		}
 	}
 	.button-group {
 		margin-top: 24px;
@@ -1812,9 +1849,24 @@
 			width: 100%;
 		}
 	}
+
 	.postslist div:focus {
 		outline: none !important;
 		border: none !important;
+	}
+
+	#code-comment-form {
+		width: 100%;
+		padding: 0;
+		fieldset {
+			max-width: none;
+		}
+		.form-body {
+			padding: 0;
+		}
+		.align-right-button {
+			right: 0px;
+		}
 	}
 }
 

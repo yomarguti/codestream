@@ -8,6 +8,7 @@ import Icon from "./Icon";
 import EmojiPicker from "./EmojiPicker";
 import { getCurrentCursorPosition, createRange } from "../utils";
 const emojiData = require("../node_modules/markdown-it-emoji-mart/lib/data/full.json");
+import Select from "react-select";
 
 const arrayToRange = ([startRow, startCol, endRow, endCol]) => {
 	return {
@@ -28,7 +29,8 @@ class ComposeBox extends React.Component {
 		quote: null,
 		autoMentions: [],
 		popupOpen: false,
-		emojiPickerOpen: false
+		emojiPickerOpen: false,
+		commentType: "comment"
 	};
 	disposables = [];
 
@@ -510,30 +512,94 @@ class ComposeBox extends React.Component {
 		this.setState({ postTextByStream: [], quote: null, autoMentions: [], emojiPickerOpen: false });
 	}
 
+	renderCommentForm = quote => {
+		let range = arrayToRange(quote.location);
+		let rangeText = "";
+		if (range) {
+			if (range.start.row === range.end.row) {
+				rangeText = "Commenting on line " + (range.start.row + 1);
+			} else {
+				rangeText = "Commenting on lines " + (range.start.row + 1) + "-" + (range.end.row + 1);
+			}
+		}
+		return (
+			<form id="code-comment-form" className="standard-form vscroll">
+				<div className="panel-header">
+					<span>{rangeText}</span>
+					<span className="align-right-button" onClick={this.handleClickDismissQuote}>
+						<Icon name="x" />
+					</span>
+				</div>
+				<fieldset className="form-body">
+					<div id="controls" className="control-group">
+						<div className="styled-select">
+							<select>
+								<option>Post to #general</option>
+							</select>
+						</div>
+						<div className="code">{quote.code}</div>
+						<div className="tab-group">
+							<input
+								id="radio-comment-type-comment"
+								type="radio"
+								name="comment-type"
+								checked={this.state.commentType === "comment"}
+								onChange={e => this.setState({ commentType: "comment" })}
+							/>
+							<label htmlFor="radio-comment-type-comment">
+								<Icon name="comment" /> Comment
+							</label>
+							<input
+								id="radio-comment-type-issue"
+								type="radio"
+								name="comment-type"
+								checked={this.state.commentType === "issue"}
+								onChange={e => this.setState({ commentType: "issue" })}
+							/>
+							<label htmlFor="radio-comment-type-issue">
+								<Icon name="bug" /> Issue
+							</label>
+							<input
+								id="radio-comment-type-trap"
+								type="radio"
+								name="comment-type"
+								checked={this.state.commentType === "trap"}
+								onChange={e => this.setState({ commentType: "trap" })}
+							/>
+							<label htmlFor="radio-comment-type-trap">
+								<Icon name="shield" /> Code Trap
+							</label>
+							{this.state.commentType === "trap" && (
+								<div className="hint tip">
+									Code Traps are really awesome because they work well and they are great.
+								</div>
+							)}
+						</div>
+					</div>
+					{this.state.commentType === "issue" && (
+						<div id="members-controls" className="control-group">
+							<Select
+								id="input-assignees"
+								name="assignees"
+								classNamePrefix="native-key-bindings react-select"
+								isMulti={true}
+								value={this.state.assignees || []}
+								options={this.props.teammates}
+								closeMenuOnSelect={false}
+								isClearable={false}
+								placeholder="Assignee (optional)"
+								onChange={value => this.setState({ assignees: value })}
+							/>
+						</div>
+					)}
+				</fieldset>
+			</form>
+		);
+	};
+
 	render() {
 		const { forwardedRef, placeholder } = this.props;
 		const { quote, emojiPickerOpen } = this.state;
-
-		let quoteInfo;
-		let quoteHint;
-		if (quote) {
-			quoteInfo = quote ? <div className="code">{quote.code}</div> : "";
-			let range = arrayToRange(quote.location);
-			let rangeText = null;
-			if (range) {
-				if (range.start.row === range.end.row) {
-					rangeText = "Commenting on line " + (range.start.row + 1);
-				} else {
-					rangeText = "Commenting on lines " + (range.start.row + 1) + "-" + (range.end.row + 1);
-				}
-			}
-			quoteHint = (
-				<div className="hint">
-					{rangeText}
-					<Icon name="x" onClick={this.handleClickDismissQuote} />
-				</div>
-			);
-		}
 
 		let contentEditableHTML = this.state.postTextByStream[this.props.streamId] || "";
 
@@ -544,7 +610,8 @@ class ComposeBox extends React.Component {
 				onKeyDown={this.handleKeyDown}
 				className={createClassString("compose", {
 					offscreen: this.props.offscreen,
-					"popup-open": this.state.popupOpen
+					"popup-open": this.state.popupOpen,
+					"full-height": quote
 				})}
 			>
 				<AtMentionsPopup
@@ -555,8 +622,7 @@ class ComposeBox extends React.Component {
 					handleHoverAtMention={this.handleHoverAtMention}
 					handleSelectAtMention={this.handleSelectAtMention}
 				/>
-				{quoteInfo}
-				{quoteHint}
+				{quote && this.renderCommentForm(quote)}
 				<Icon
 					name="smiley"
 					className={createClassString("smiley", {
@@ -578,7 +644,6 @@ class ComposeBox extends React.Component {
 				<ContentEditable
 					className={createClassString("native-key-bindings", "message-input", btoa(placeholder))}
 					id="input-div"
-					rows="1"
 					tabIndex="-1"
 					onChange={this.handleChange}
 					onBlur={this.handleBlur}
