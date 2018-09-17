@@ -1795,13 +1795,15 @@
 				border-radius: 3px;
 			}
 			.tab-group {
+				margin-top: 5px;
 				input {
 					display: none;
 				}
-				input:checked {
-					display: block;
+				label {
+					display: inline-block;
+					padding: 5px 10px;
 				}
-				.tab:checked {
+				label.checked {
 					background-color: @app-background-color-darker;
 				}
 			}

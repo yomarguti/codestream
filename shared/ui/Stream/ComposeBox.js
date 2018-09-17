@@ -546,7 +546,12 @@ class ComposeBox extends React.Component {
 								checked={this.state.commentType === "comment"}
 								onChange={e => this.setState({ commentType: "comment" })}
 							/>
-							<label htmlFor="radio-comment-type-comment">
+							<label
+								htmlFor="radio-comment-type-comment"
+								className={createClassString({
+									checked: this.state.commentType === "comment"
+								})}
+							>
 								<Icon name="comment" /> Comment
 							</label>
 							<input
@@ -556,7 +561,12 @@ class ComposeBox extends React.Component {
 								checked={this.state.commentType === "issue"}
 								onChange={e => this.setState({ commentType: "issue" })}
 							/>
-							<label htmlFor="radio-comment-type-issue">
+							<label
+								htmlFor="radio-comment-type-issue"
+								className={createClassString({
+									checked: this.state.commentType === "issue"
+								})}
+							>
 								<Icon name="bug" /> Issue
 							</label>
 							<input
@@ -566,15 +576,20 @@ class ComposeBox extends React.Component {
 								checked={this.state.commentType === "trap"}
 								onChange={e => this.setState({ commentType: "trap" })}
 							/>
-							<label htmlFor="radio-comment-type-trap">
+							<label
+								htmlFor="radio-comment-type-trap"
+								className={createClassString({
+									checked: this.state.commentType === "trap"
+								})}
+							>
 								<Icon name="shield" /> Code Trap
 							</label>
-							{this.state.commentType === "trap" && (
-								<div className="hint tip">
-									Code Traps are really awesome because they work well and they are great.
-								</div>
-							)}
 						</div>
+						{this.state.commentType === "trap" && (
+							<div className="tab-tip">
+								Code Traps are really awesome because they work well and they are great.
+							</div>
+						)}
 					</div>
 					{this.state.commentType === "issue" && (
 						<div id="members-controls" className="control-group">
