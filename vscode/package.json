@@ -110,8 +110,18 @@
                     "scope": "window"
                 },
                 "codestream.showInStatusBar": {
-                    "type": "boolean",
-                    "default": true,
+                    "type": "string",
+                    "enum": [
+                        "left",
+                        "right",
+                        false
+                    ],
+                    "enumDescriptions": [
+                        "Shows the CodeStream status bar item on the left",
+                        "Shows the CodeStream status bar item on the right",
+                        "No CodeStream status bar item will be shown"
+                    ],
+                    "default": "left",
                     "description": "Specifies whether to show CodeStream in the status bar",
                     "scope": "window"
                 },

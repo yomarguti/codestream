@@ -44,6 +44,12 @@ export class StatusBarController implements Disposable {
 		if (initializing || configuration.changed(e, configuration.name("showInStatusBar").value)) {
 			const cfg = Container.config;
 
+			if (this._enabledDisposable !== undefined) {
+				this._enabledDisposable.dispose();
+				this._enabledDisposable = undefined;
+				this._statusBarItem = undefined;
+			}
+
 			if (cfg.showInStatusBar) {
 				this._enabledDisposable = Disposable.from(
 					Container.session.onDidChangeSessionStatus(this.onSessionStatusChanged, this),
@@ -51,10 +57,6 @@ export class StatusBarController implements Disposable {
 
 					this.updateStatusBar(Container.session.status)
 				);
-			} else if (this._enabledDisposable !== undefined) {
-				this._enabledDisposable.dispose();
-				this._enabledDisposable = undefined;
-				this._statusBarItem = undefined;
 			}
 		}
 	}
@@ -80,8 +82,11 @@ export class StatusBarController implements Disposable {
 
 	private updateStatusBar(status: SessionStatus, unreads: Unreads = { mentions: 0, messages: 0 }) {
 		if (this._statusBarItem === undefined) {
-			this._statusBarItem =
-				this._statusBarItem || window.createStatusBarItem(StatusBarAlignment.Right, -99);
+			const rightAlign = Container.config.showInStatusBar === "right";
+			this._statusBarItem = window.createStatusBarItem(
+				rightAlign ? StatusBarAlignment.Right : StatusBarAlignment.Left,
+				rightAlign ? -99 : 5
+			);
 		}
 
 		let env = "";

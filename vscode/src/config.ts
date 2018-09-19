@@ -28,7 +28,7 @@ export interface Config {
 	notifications: Notifications;
 	reduceMotion: boolean;
 	serverUrl: string;
-	showInStatusBar: boolean;
+	showInStatusBar: "left" | "right" | false;
 	team: string;
 	traceLevel: TraceLevel;
 	webAppUrl: string;
