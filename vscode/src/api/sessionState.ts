@@ -105,8 +105,8 @@ export class SessionState {
 		return this._unreads;
 	}
 
-	hasSingleTeam(): Promise<boolean> {
-		return Promise.resolve(this._data!.teams.length === 1);
+	hasSingleTeam(): boolean {
+		return this._data!.teams.length === 1;
 	}
 
 	async updateTeams() {

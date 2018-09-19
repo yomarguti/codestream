@@ -1,5 +1,11 @@
 "use strict";
-import { Disposable, StatusBarAlignment, StatusBarItem, window } from "vscode";
+import {
+	ConfigurationChangeEvent,
+	Disposable,
+	StatusBarAlignment,
+	StatusBarItem,
+	window
+} from "vscode";
 import {
 	CodeStreamEnvironment,
 	SessionStatus,
@@ -7,27 +13,50 @@ import {
 	UnreadsChangedEvent
 } from "../api/session";
 import { Unreads } from "../api/unreads";
+import { configuration } from "../configuration";
 import { Container } from "../container";
 
 export class StatusBarController implements Disposable {
-	private _disposable: Disposable;
+	private readonly _disposable: Disposable;
+	private _enabledDisposable: Disposable | undefined;
 	private _statusBarItem: StatusBarItem | undefined;
 
 	constructor() {
 		this._disposable = Disposable.from(
+			configuration.onDidChange(this.onConfigurationChanged, this),
 			Container.session.onDidChangeSessionStatus(this.onSessionStatusChanged, this),
 			Container.session.onDidChangeUnreads(this.onUnreadsChanged, this)
 		);
 
-		this.updateStatusBar(Container.session.status);
+		this.onConfigurationChanged(configuration.initializingChangeEvent);
 	}
 
 	dispose() {
 		this.clear();
 
-		this._statusBarItem && this._statusBarItem.dispose();
-
+		this._enabledDisposable && this._enabledDisposable.dispose();
 		this._disposable && this._disposable.dispose();
+	}
+
+	private onConfigurationChanged(e: ConfigurationChangeEvent) {
+		const initializing = configuration.initializing(e);
+
+		if (initializing || configuration.changed(e, configuration.name("showInStatusBar").value)) {
+			const cfg = Container.config;
+
+			if (cfg.showInStatusBar) {
+				this._enabledDisposable = Disposable.from(
+					Container.session.onDidChangeSessionStatus(this.onSessionStatusChanged, this),
+					Container.session.onDidChangeUnreads(this.onUnreadsChanged, this),
+
+					this.updateStatusBar(Container.session.status)
+				);
+			} else if (this._enabledDisposable !== undefined) {
+				this._enabledDisposable.dispose();
+				this._enabledDisposable = undefined;
+				this._statusBarItem = undefined;
+			}
+		}
 	}
 
 	private onUnreadsChanged(e: UnreadsChangedEvent) {
@@ -49,10 +78,7 @@ export class StatusBarController implements Disposable {
 		}
 	}
 
-	private async updateStatusBar(
-		status: SessionStatus,
-		unreads: Unreads = { mentions: 0, messages: 0 }
-	) {
+	private updateStatusBar(status: SessionStatus, unreads: Unreads = { mentions: 0, messages: 0 }) {
 		if (this._statusBarItem === undefined) {
 			this._statusBarItem =
 				this._statusBarItem || window.createStatusBarItem(StatusBarAlignment.Right, -99);
@@ -86,7 +112,7 @@ export class StatusBarController implements Disposable {
 			case SessionStatus.SignedIn:
 				let label = Container.session.user.name;
 				let tooltip = "Toggle CodeStream";
-				if (!(await Container.session.hasSingleTeam())) {
+				if (!Container.session.hasSingleTeam()) {
 					label += ` - ${Container.session.team.name}`;
 				}
 				if (unreads.mentions > 0) {
@@ -108,5 +134,7 @@ export class StatusBarController implements Disposable {
 		}
 
 		this._statusBarItem.show();
+
+		return this._statusBarItem;
 	}
 }

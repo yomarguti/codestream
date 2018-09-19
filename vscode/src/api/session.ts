@@ -347,7 +347,7 @@ export class CodeStreamSession implements Disposable {
 	}
 
 	@signedIn
-	hasSingleTeam(): Promise<boolean> {
+	hasSingleTeam(): boolean {
 		return this._state!.hasSingleTeam();
 	}
 

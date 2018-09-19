@@ -109,6 +109,12 @@
                     "description": "Specifies the url to use to connect to the CodeStream service",
                     "scope": "window"
                 },
+                "codestream.showInStatusBar": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Specifies whether to show CodeStream in the status bar",
+                    "scope": "window"
+                },
                 "codestream.team": {
                     "type": "string",
                     "default": null,
@@ -170,7 +176,7 @@
                 },
                 {
                     "command": "codestream.signIn",
-                    "when": "codestream:status == signedOut"
+                    "when": "codestream:status != signedIn && codestream:status != signingIn"
                 },
                 {
                     "command": "codestream.signOut",
