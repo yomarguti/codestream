@@ -9,6 +9,7 @@
 		"build": "rollup -c",
 		"build-watch": "rollup -c -w",
 		"bundle": "webpack --env.development",
+		"clean:ci": "git clean -xdf",
 		"pack": "webpack --env.production",
 		"watch": "webpack --watch --env.development"
 	},
