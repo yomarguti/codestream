@@ -5,6 +5,7 @@ import _ from "underscore";
 import { createStream } from "./actions";
 import createClassString from "classnames";
 import { getChannelStreamsForTeam } from "../reducers/streams";
+import Icon from "./Icon";
 import Button from "./Button";
 import Tooltip from "./Tooltip";
 import { FormattedMessage } from "react-intl";
@@ -58,6 +59,9 @@ export class SimpleCreateChannelPanel extends Component {
 		return (
 			<div className={createChannelPanelClass} ref={this._createChannelPanel}>
 				<div className="panel-header">
+					<span className="align-left-button" onClick={() => this.props.setActivePanel("channels")}>
+						<Icon name="chevron-left" className="show-channels-icon" />
+					</span>
 					<span className="panel-title">New Channel</span>
 				</div>
 				<form id="create-channel-form" className="standard-form vscroll">

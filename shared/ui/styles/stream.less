@@ -782,8 +782,8 @@
 		}
 
 		.channel-list {
-			max-height: 100%;
-			overflow-y: auto;
+			// max-height: 100%;
+			// overflow-y: auto;
 			user-select: none;
 			box-sizing: border-box;
 			padding-bottom: 50px;
@@ -1079,6 +1079,22 @@
 		#create-channel-form,
 		#create-dm-form {
 			height: 100%;
+		}
+		#create-dm-form {
+			padding: 0;
+			#controls {
+				position: relative;
+				margin-bottom: 10px;
+			}
+			#input-members {
+				width: 88%;
+			}
+			#save-button {
+				width: 10%;
+				position: absolute;
+				right: 0;
+				bottom: 1px;
+			}
 		}
 		.panel.off-right {
 			transform: none;
@@ -1587,6 +1603,7 @@
 		font-size: 1.15em;
 		color: @text-color;
 		min-height: 20px;
+		
 	}
 	.react-select__control-is-focused {
 		box-shadow: none;

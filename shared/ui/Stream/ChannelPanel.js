@@ -90,7 +90,7 @@ export class SimpleChannelPanel extends Component {
 					expanded: this.state.expanded["teamChannels"]
 				})}
 			>
-				<div className="header" onClick={e => this.toggleSection(e, "teamChannels")}>
+				<div className="header top" onClick={e => this.toggleSection(e, "teamChannels")}>
 					<Icon name="triangle-right" className="triangle-right" />
 					<span className="clickable">Team Channels</span>
 					<div className="align-right">

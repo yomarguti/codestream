@@ -9,13 +9,14 @@ import Button from "./Button";
 import { FormattedMessage } from "react-intl";
 import Select from "react-select";
 import Timestamp from "./Timestamp";
+import Icon from "./Icon";
 import { toMapBy } from "../utils";
 
 export class SimpleCreateDMPanel extends Component {
 	constructor(props) {
 		super(props);
 
-		this.state = {};
+		this.state = { members: []};
 		this._createDMPanel = React.createRef();
 	}
 
@@ -33,6 +34,9 @@ export class SimpleCreateDMPanel extends Component {
 		return (
 			<div className={createDMPanelClass} ref={this._createDMPanel}>
 				<div className="panel-header">
+					<span className="align-left-button" onClick={() => this.props.setActivePanel("channels")}>
+						<Icon name="chevron-left" className="show-channels-icon" />
+					</span>
 					<span className="panel-title">Direct Messages</span>
 				</div>
 				<form id="create-dm-form" className="standard-form postslist">
@@ -49,13 +53,13 @@ export class SimpleCreateDMPanel extends Component {
 									name="members"
 									classNamePrefix="native-key-bindings react-select"
 									isMulti={true}
-									value={this.state.members || []}
+									value={this.state.members}
 									options={this.props.teammates}
 									closeMenuOnSelect={false}
 									isClearable={false}
 									disabled={inactive}
 									placeholder="Enter names..."
-									onChange={value => this.setState({ members: value })}
+									onChange={value => this.setState({ members: value || [] })}
 								/>
 								{/* <div className="help-link">
 								<a onClick={() => this.props.transition("forgotPassword")}>
@@ -63,27 +67,16 @@ export class SimpleCreateDMPanel extends Component {
 								</a>
 							</div> */}
 							</div>
-							<div className="button-group">
-								<Button
-									id="save-button"
-									className="control-button"
-									tabIndex="2"
-									type="submit"
-									loading={this.state.loading}
-									onClick={this.handleClickCreateDM}
-								>
-									Go
-								</Button>
-								<Button
-									id="discard-button"
-									className="control-button cancel"
-									tabIndex="2"
-									type="submit"
-									onClick={this.handleClickCancel}
-								>
-									Cancel
-								</Button>
-							</div>
+							<Button
+								id="save-button"
+								className="control-button"
+								tabIndex="2"
+								type="submit"
+								loading={this.state.loading}
+								onClick={this.handleClickCreateDM}
+							>
+								Go
+							</Button>
 						</div>
 					</fieldset>
 					{this.renderDirectMessages()}
@@ -141,7 +134,7 @@ export class SimpleCreateDMPanel extends Component {
 
 	resetForm = () => {
 		this.setState({
-			members: "",
+			members: [],
 			loading: false,
 			formTouched: false
 		});
@@ -177,7 +170,9 @@ export class SimpleCreateDMPanel extends Component {
 			.filter(Boolean);
 		// console.log("MEMBERS ARE: ", memberIds);
 		// return;
-		await this.props.createStream({ type: "direct", memberIds });
+		if (memberIds.length)
+			await this.props.createStream({ type: "direct", memberIds });
+						
 		this.resetForm();
 	};
 }
