@@ -99,7 +99,10 @@ export class SimpleCreateDMPanel extends Component {
 		return (
 			<div className="channel-list">
 				<div className="section">
-					<div className="header">Recent Conversations</div>
+					<div className="header">
+						<span style={{ float: "right" }}>Last Post</span>
+						Recent DMs
+					</div>
 					<ul onClick={this.handleClickSelectStream}>
 						{this.props.directMessageStreams.map(stream => {
 							let count = this.props.umis.unread[stream.id] || 0;

@@ -18,7 +18,14 @@ export class SimpleChannelPanel extends Component {
 	constructor(props) {
 		super(props);
 
-		this.state = {};
+		this.state = {
+			expanded: {
+				teamChannels: true,
+				directMessages: true,
+				liveShareSessions: true,
+				unreads: true
+			}
+		};
 		this._channelPanel = React.createRef();
 	}
 
@@ -32,31 +39,68 @@ export class SimpleChannelPanel extends Component {
 		});
 
 		return (
-			<div>
-				<div className={channelPanelClass} ref={this._channelPanel}>
-					<div className="panel-header">
-						<span className="panel-title">{teamName}</span>
+			<div className={channelPanelClass} ref={this._channelPanel}>
+				<div className="panel-header">
+					<span className="panel-title">{teamName}</span>
+				</div>
+				<div className="shadow-overlay">
+					<div className="shadow-container">
+						<div className="shadow shadow-top" />
+						<div className="shadow shadow-bottom" />
 					</div>
 					<div className="channel-list vscroll">
+						{this.renderUnreadChannels()}
 						{this.renderTeamChannels()}
 						{this.renderDirectMessages()}
 						{this.renderServiceChannels()}
+						<div class="shadow-cover-bottom" />
 					</div>
 				</div>
 			</div>
 		);
 	}
 
-	renderTeamChannels = () => {
+	toggleSection = (e, section) => {
+		e.stopPropagation();
+		this.setState({
+			expanded: { ...this.state.expanded, [section]: !this.state.expanded[section] }
+		});
+	};
+
+	renderUnreadChannels = () => {
+		return;
 		return (
 			<div className="section">
-				<div className="header" onClick={this.handleClickShowPublicChannels}>
-					<Tooltip title="Browse All Channels" placement="left" delay=".5">
-						<span className="clickable">Team Channels</span>
+				<div className="header">
+					<Tooltip title="All Channels With Unread Messages" placement="left" delay=".5">
+						<span className="clickable">UNREADS</span>
 					</Tooltip>
-					<Tooltip title="Create a Channel" placement="bottom">
-						<Icon className="align-right" name="plus" onClick={this.handleClickCreateChannel} />
-					</Tooltip>
+				</div>
+				<ul onClick={this.handleClickSelectStream}>
+					{this.renderStreams(this.props.channelStreams)}
+				</ul>
+			</div>
+		);
+	};
+
+	renderTeamChannels = () => {
+		return (
+			<div
+				className={createClassString("section", "has-children", {
+					expanded: this.state.expanded["teamChannels"]
+				})}
+			>
+				<div className="header" onClick={e => this.toggleSection(e, "teamChannels")}>
+					<Icon name="triangle-right" className="triangle-right" />
+					<span className="clickable">Team Channels</span>
+					<div className="align-right">
+						<Tooltip title="Create a Channel" placement="bottom">
+							<Icon name="list-unordered" onClick={this.handleClickShowPublicChannels} />
+						</Tooltip>
+						<Tooltip title="Create a Channel" placement="bottom">
+							<Icon name="plus" onClick={this.handleClickCreateChannel} />
+						</Tooltip>
+					</div>
 				</div>
 				<ul onClick={this.handleClickSelectStream}>
 					{this.renderStreams(this.props.channelStreams)}
@@ -69,8 +113,13 @@ export class SimpleChannelPanel extends Component {
 		if (this.props.serviceStreams.length === 0) return null;
 
 		return (
-			<div className="section">
-				<div className="header">
+			<div
+				className={createClassString("section", "has-children", {
+					expanded: this.state.expanded["liveShareSessions"]
+				})}
+			>
+				<div className="header" onClick={e => this.toggleSection(e, "liveShareSessions")}>
+					<Icon name="triangle-right" className="triangle-right" />
 					<span className="clickable">Live Share Sessions</span>
 				</div>
 				<ul onClick={this.handleClickSelectStream}>
@@ -135,14 +184,19 @@ export class SimpleChannelPanel extends Component {
 
 	renderDirectMessages = () => {
 		return (
-			<div className="section">
-				<div className="header clickable" onClick={this.handleClickCreateDirectMessage}>
-					<Tooltip title="Open a direct message" delay=".5">
-						<span className="clickable">Direct Messages</span>
-					</Tooltip>
-					<Tooltip title="Open a direct message">
-						<Icon name="plus" className="align-right" />
-					</Tooltip>
+			<div
+				className={createClassString("section", "has-children", {
+					expanded: this.state.expanded["directMessages"]
+				})}
+			>
+				<div className="header" onClick={e => this.toggleSection(e, "directMessages")}>
+					<Icon name="triangle-right" className="triangle-right" />
+					<span className="clickable">Direct Messages</span>
+					<div className="align-right">
+						<Tooltip title="Open a direct message">
+							<Icon name="plus" onClick={this.handleClickCreateDirectMessage} />
+						</Tooltip>
+					</div>
 				</div>
 				<ul onClick={this.handleClickSelectStream}>
 					{this.props.directMessageStreams.map(stream => {
@@ -213,16 +267,18 @@ export class SimpleChannelPanel extends Component {
 		}
 	};
 
-	handleClickCreateChannel = event => {
+	handleClickCreateChannel = e => {
+		e.stopPropagation();
 		this.props.setActivePanel("create-channel");
-		event.stopPropagation();
 	};
 
-	handleClickShowPublicChannels = event => {
+	handleClickShowPublicChannels = e => {
+		e.stopPropagation();
 		this.props.setActivePanel("public-channels");
 	};
 
-	handleClickCreateDirectMessage = event => {
+	handleClickCreateDirectMessage = e => {
+		e.stopPropagation();
 		this.props.setActivePanel("create-dm");
 	};
 

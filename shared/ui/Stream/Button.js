@@ -1,4 +1,5 @@
 import React from "react";
+import Icon from "./Icon";
 import createClassString from "classnames";
 
 Button.defaultProps = {
@@ -17,7 +18,7 @@ export default function Button({ children, className, disabled, isOffline, loadi
 			disabled={loading || disabled}
 			{...extraProps}
 		>
-			{loading ? <span className="loading loading-spinner-tiny inline-block" /> : children}
+			{loading ? <Icon name="sync" className="spin" /> : children}
 		</button>
 	);
 }

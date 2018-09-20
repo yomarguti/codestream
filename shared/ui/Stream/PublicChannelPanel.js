@@ -24,7 +24,7 @@ export class SimplePublicChannelPanel extends Component {
 
 	render() {
 		const inactive = this.props.activePanel !== "public-channels";
-		const shrink = this.props.activePanel === "main";
+		const shrink = this.props.activePanel === "main" || this.props.activePanel == "create-channel";
 
 		const panelClass = createClassString({
 			panel: true,
@@ -81,7 +81,7 @@ export class SimplePublicChannelPanel extends Component {
 				if (stream.name.match(/^ls:/)) return null;
 				const icon =
 					stream.id && stream.id === this.state.loading ? (
-						<span className="loading loading-spinner-tiny inline-block" />
+						<Icon className="spin" name="sync" />
 					) : stream.privacy === "private" ? (
 						<Icon className="lock" name="lock" />
 					) : (
@@ -118,7 +118,6 @@ export class SimplePublicChannelPanel extends Component {
 		this.setState({ loading: liDiv.id });
 		await this.props.joinStream(liDiv.id);
 		this.setState({ loading: null });
-		this.props.setActivePanel("main");
 		this.props.setCurrentStream(liDiv.id);
 	};
 
@@ -161,7 +160,10 @@ const mapStateToProps = ({ context, streams, users, teams, umis, session }) => {
 	};
 };
 
-export default connect(mapStateToProps, {
-	...contextActions,
-	...streamActions
-})(SimplePublicChannelPanel);
+export default connect(
+	mapStateToProps,
+	{
+		...contextActions,
+		...streamActions
+	}
+)(SimplePublicChannelPanel);

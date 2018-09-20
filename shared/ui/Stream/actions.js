@@ -241,8 +241,9 @@ export const leaveChannel = streamId => async (dispatch, getState, { api }) => {
 		}
 		if (context.currentStreamId === streamId) {
 			EventEmitter.emit("interaction:changed-active-stream", undefined);
+			// this will take you to the #general channel
 			dispatch(setCurrentStream(undefined));
-			dispatch(setPanel("channels"));
+			// dispatch(setPanel("channels"));
 		}
 	} catch (error) {
 		console.error(error);

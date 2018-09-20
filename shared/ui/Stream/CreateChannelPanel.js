@@ -65,8 +65,7 @@ export class SimpleCreateChannelPanel extends Component {
 						{this.renderError()}
 						<p className="explainer">
 							Channels are where your dev team discusses projects, repos, or code in general. You
-							might create one channel per repo, or one per client. Channel names may contain
-							spaces, but not special characters.
+							might create one channel per repo, or one per client.
 						</p>
 						<div id="controls">
 							<div id="privacy-controls" className="control-group">

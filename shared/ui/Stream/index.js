@@ -1160,6 +1160,7 @@ export class SimpleStream extends Component {
 			buttons: [
 				{
 					label: "Leave",
+					wait: true,
 					action: this.executeLeaveChannel
 				},
 				{ label: "Cancel" }
@@ -1168,8 +1169,8 @@ export class SimpleStream extends Component {
 		return true;
 	};
 
-	executeLeaveChannel = () => {
-		this.props.leaveChannel(this.props.postStreamId);
+	executeLeaveChannel = async () => {
+		await this.props.leaveChannel(this.props.postStreamId);
 		return true;
 	};
 

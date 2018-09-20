@@ -6,7 +6,7 @@ import Button from "./Button";
 export default class Confirm extends Component {
 	constructor(props) {
 		super(props);
-		this.state = { selected: props.selected };
+		this.state = { selected: props.selected, loading: null };
 		this.el = document.createElement("div");
 	}
 
@@ -64,11 +64,16 @@ export default class Confirm extends Component {
 							const buttonComponent = (
 								<Button
 									className={buttonClass}
-									onClick={e => {
+									onClick={async e => {
+										if (button.action) {
+											this.setState({ loading: button.label });
+											if (button.wait) await button.action(e);
+											else button.action(e);
+										}
 										this.closePopup();
-										button.action && button.action(e);
 									}}
 									key={button.label}
+									loading={this.state.loading === button.label}
 								>
 									{button.label}
 								</Button>
