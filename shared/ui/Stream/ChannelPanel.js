@@ -183,6 +183,64 @@ export class SimpleChannelPanel extends Component {
 	};
 
 	renderDirectMessages = () => {
+		let unsortedStreams = this.props.directMessageStreams
+			.map(stream => {
+				let count = this.props.umis.unread[stream.id] || 0;
+				// let mentions = this.props.umis.mentions[stream.id] || 0;
+				if (this.props.mutedStreams[stream.id]) {
+					// if you have muted a stream, check to see if there is a UMI.
+					// if so, unmute the stream. if not, don't display it.
+					if (count) this.props.setUserPreference(["mutedStreams", stream.id], false);
+					else return null;
+				}
+
+				const icon =
+					stream.memberIds.length > 2 ? (
+						<Icon className="organization" name="organization" />
+					) : (
+						<Icon className="person" name="person" />
+					);
+				return {
+					name: (stream.name || "").toLowerCase(),
+					element: (
+						<li
+							className={createClassString({
+								direct: true,
+								unread: count > 0
+							})}
+							key={stream.id}
+							id={stream.id}
+						>
+							{icon}
+							{stream.name}
+							{count > 0 ? <span className="umi">{count}</span> : null}
+							<Icon name="x" onClick={this.handleClickMuteStream} className="align-right" />
+						</li>
+					)
+				};
+			})
+			.filter(Boolean);
+
+		unsortedStreams.concat(
+			this.props.teammates
+				.map(teammate => {
+					if (_.contains(this.props.oneOnOnePeople, teammate.id)) return null;
+					if (this.props.mutedStreams[teammate.id]) return null;
+					const name = teammate.username || teammate.fullName || "";
+					return {
+						name: name.toLowerCase(),
+						element: (
+							<li key={teammate.id} teammate={teammate.id}>
+								<Icon className="person" name="person" />
+								<span className="name">{name}</span>
+								<Icon name="x" onClick={this.handleClickMuteStream} className="align-right" />
+							</li>
+						)
+					};
+				})
+				.filter(Boolean)
+		);
+
 		return (
 			<div
 				className={createClassString("section", "has-children", {
@@ -199,49 +257,7 @@ export class SimpleChannelPanel extends Component {
 					</div>
 				</div>
 				<ul onClick={this.handleClickSelectStream}>
-					{this.props.directMessageStreams.map(stream => {
-						let count = this.props.umis.unread[stream.id] || 0;
-						// let mentions = this.props.umis.mentions[stream.id] || 0;
-						if (this.props.mutedStreams[stream.id]) {
-							// if you have muted a stream, check to see if there is a UMI.
-							// if so, unmute the stream. if not, don't display it.
-							if (count) this.props.setUserPreference(["mutedStreams", stream.id], false);
-							else return null;
-						}
-
-						const icon =
-							stream.memberIds.length > 2 ? (
-								<Icon className="organization" name="organization" />
-							) : (
-								<Icon className="person" name="person" />
-							);
-						return (
-							<li
-								className={createClassString({
-									direct: true,
-									unread: count > 0
-								})}
-								key={stream.id}
-								id={stream.id}
-							>
-								{icon}
-								{stream.name}
-								{count > 0 ? <span className="umi">{count}</span> : null}
-								<Icon name="x" onClick={this.handleClickMuteStream} className="align-right" />
-							</li>
-						);
-					})}
-					{this.props.teammates.map(teammate => {
-						if (_.contains(this.props.oneOnOnePeople, teammate.id)) return null;
-						if (this.props.mutedStreams[teammate.id]) return null;
-						return (
-							<li key={teammate.id} teammate={teammate.id}>
-								<Icon className="person" name="person" />
-								<span className="name">{teammate.username || teammate.fullName}</span>
-								<Icon name="x" onClick={this.handleClickMuteStream} className="align-right" />
-							</li>
-						);
-					})}
+					{_.sortBy(unsortedStreams, stream => stream.name).map(stream => stream.element)}
 					<li className="invite" onClick={() => this.props.setActivePanel("invite")}>
 						<span>
 							<Icon name="plus-small" />
@@ -323,13 +339,12 @@ const mapStateToProps = ({ context, streams, users, teams, umis, session }) => {
 	const user = users[session.userId];
 	const mutedStreams = (user && user.preferences && user.preferences.mutedStreams) || {};
 
-	const dmStreams = (getDirectMessageStreamsForTeam(streams, context.currentTeamId) || []).map(
-		stream => ({
-			...stream,
-			name: getDMName(stream, toMapBy("id", teamMembers), session.userId)
-		})
-	);
-	const directMessageStreams = _.sortBy(dmStreams, stream => (stream.name || "").toLowerCase());
+	const directMessageStreams = (
+		getDirectMessageStreamsForTeam(streams, context.currentTeamId) || []
+	).map(stream => ({
+		...stream,
+		name: getDMName(stream, toMapBy("id", teamMembers), session.userId)
+	}));
 
 	const serviceStreams = _.sortBy(
 		getServiceStreamsForTeam(streams, context.currentTeamId, session.userId, users) || [],
