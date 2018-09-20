@@ -131,6 +131,7 @@ class Post extends Component {
 		const postClass = createClassString({
 			post: true,
 			mine: mine,
+			hover: menuOpen || authorMenuOpen,
 			editing: this.props.editing,
 			"system-post": systemPost,
 			unread: this.props.unread,
