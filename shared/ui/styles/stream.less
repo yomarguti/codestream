@@ -589,6 +589,8 @@
 				}
 			}
 			ul {
+				max-height: 80vh;
+				overflow-y: auto;
 				// border-bottom: 1px solid @base-border-color;
 				border-top: 1px solid @base-border-color;
 				// background: #fff;
@@ -1755,6 +1757,20 @@
 	.button-group.one-button {
 		button {
 			width: 100%;
+		}
+	}
+}
+
+@media only screen and (max-width: 300px) {
+	.codestream {
+		.stream {
+			.post {
+				min-height: 40px;
+				padding-left: 10px;
+				.headshot {
+					display: none;
+				}
+			}
 		}
 	}
 }

@@ -13,6 +13,7 @@ import CreateDMPanel from "./CreateDMPanel";
 import ChannelMenu from "./ChannelMenu";
 import Post from "./Post";
 import Icon from "./Icon";
+import Tooltip from "./Tooltip";
 import OfflineBanner from "./OfflineBanner";
 import EventEmitter from "../event-emitter";
 import * as actions from "./actions";
@@ -24,6 +25,7 @@ import {
 	getStreamForId,
 	getStreamForTeam,
 	getStreamForRepoAndFile,
+	getChannelStreamsForTeam,
 	getDMName
 } from "../reducers/streams";
 
@@ -520,9 +522,11 @@ export class SimpleStream extends Component {
 							<Icon name="chevron-left" className="show-channels-icon" />
 							{totalUMICount}
 						</span>
-						<span>
-							{channelIcon} {this.props.postStreamName}
-						</span>
+						<Tooltip title={this.props.postStreamPurpose} placement="bottom">
+							<span>
+								{channelIcon} {this.props.postStreamName}
+							</span>
+						</Tooltip>
 						{this.props.postStreamType !== "direct" && (
 							<span className="align-right-button" onClick={this.handleClickStreamSettings}>
 								<Icon name="gear" className="show-settings" />
@@ -653,6 +657,7 @@ export class SimpleStream extends Component {
 					placeholder={placeholderText}
 					teammates={this.props.teammates}
 					slashCommands={this.props.slashCommands}
+					channelStreams={this.props.channelStreams}
 					streamId={this.props.postStreamId}
 					services={this.props.services}
 					currentUserId={this.props.currentUserId}
@@ -1533,8 +1538,14 @@ const mapStateToProps = ({
 			? getDMName(postStream, teamMembersById, session.userId)
 			: postStream.name;
 
+	const channelStreams = _.sortBy(
+		getChannelStreamsForTeam(streams, context.currentTeamId, session.userId) || [],
+		stream => (stream.name || "").toLowerCase()
+	);
+
 	return {
 		pluginVersion,
+		channelStreams,
 		activePanel: context.panel,
 		startOnMainPanel: startupProps.startOnMainPanel,
 		initialThreadId: startupProps.threadId,
@@ -1552,6 +1563,7 @@ const mapStateToProps = ({
 		postStream,
 		postStreamId: postStream.id,
 		postStreamName,
+		postStreamPurpose: postStream.purpose,
 		postStreamType: postStream.type,
 		postStreamIsTeamStream: postStream.isTeamStream,
 		postStreamMemberIds: postStream.memberIds,

@@ -149,6 +149,17 @@ class ComposeBox extends React.Component {
 					itemsToShow.push(command);
 				}
 			});
+		} else if (type === "channels") {
+			Object.values(this.props.channelStreams).forEach(channel => {
+				let toMatch = channel.name;
+				if (toMatch.toLowerCase().indexOf(prefix) !== -1) {
+					itemsToShow.push({
+						id: channel.name,
+						identifier: "#" + channel.name,
+						description: channel.purpose
+					});
+				}
+			});
 		} else if (type === "emojis") {
 			if (prefix && prefix.length > 1) {
 				Object.keys(emojiData).map(emojiId => {
@@ -288,6 +299,8 @@ class ComposeBox extends React.Component {
 
 		if (this.state.popupOpen === "slash-commands") {
 			toInsert = id + "\u00A0";
+		} else if (this.state.popupOpen === "channels") {
+			toInsert = id + "\u00A0";
 		} else if (this.state.popupOpen === "emojis") {
 			toInsert = id + ":\u00A0";
 		} else {
@@ -318,6 +331,7 @@ class ComposeBox extends React.Component {
 		const nodeText = node.textContent || "";
 		const upToCursor = nodeText.substring(0, range.startOffset);
 		const peopleMatch = upToCursor.match(/(?:^|\s)@([a-zA-Z0-9_.+]*)$/);
+		const channelMatch = upToCursor.match(/(?:^|\s)#([a-zA-Z0-9_.+]*)$/);
 		const emojiMatch = upToCursor.match(/(?:^|\s):([a-z+_]*)$/);
 		const slashMatch = newPostText.match(/^\/([a-zA-Z0-9+]*)$/);
 		if (this.state.popupOpen === "at-mentions") {
@@ -333,6 +347,13 @@ class ComposeBox extends React.Component {
 			} else {
 				// if the line doesn't start with /word, then hide the popup
 				this.hidePopup();
+			}		
+		} else if (this.state.popupOpen === "channels") {
+			if (channelMatch) {
+				this.showPopupSelectors(channelMatch[1].replace(/#/, ""), "channels");
+			} else {
+				// if the line doesn't end with #word, then hide the popup
+				this.hidePopup();
 			}
 		} else if (this.state.popupOpen === "emojis") {
 			if (emojiMatch) {
@@ -344,6 +365,7 @@ class ComposeBox extends React.Component {
 		} else {
 			if (peopleMatch) this.showPopupSelectors(peopleMatch[1].replace(/@/, ""), "at-mentions");
 			if (slashMatch) this.showPopupSelectors(slashMatch[0].replace(/\//, ""), "slash-commands");
+			if (channelMatch) this.showPopupSelectors(channelMatch[1].replace(/#/, ""), "channels");
 			if (emojiMatch) this.showPopupSelectors(emojiMatch[1].replace(/:/, ""), "emojis");
 		}
 		// track newPostText as the user types
@@ -407,6 +429,8 @@ class ComposeBox extends React.Component {
 			this.showPopupSelectors("", "emojis");
 		} else if (event.key === "/" && newPostText.length === 0) {
 			this.showPopupSelectors("", "slash-commands");
+		} else if (event.key === "#") {
+			this.showPopupSelectors("", "channels");
 		} else if (event.key === "Enter" && !event.shiftKey) {
 			event.preventDefault();
 			if (newPostText.trim().length > 0 && !this.props.disabled) {

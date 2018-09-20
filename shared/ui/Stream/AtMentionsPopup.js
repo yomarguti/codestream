@@ -25,6 +25,14 @@ export default class AtMentionsPopup extends Component {
 									{this.props.prefix}"
 								</b>
 							</span>
+						) : this.props.on === "channels" ? (
+							<span>
+								Channels matching{" "}
+								<b>
+									"#
+									{this.props.prefix}"
+								</b>
+							</span>
 						) : this.props.on === "emojis" ? (
 							<span>
 								Emoji matching{" "}

@@ -37,6 +37,8 @@ export default class Tooltip extends React.Component {
 	}
 
 	render() {
+		if (!this.props.title) return this.props.children;
+
 		try {
 			if (this.isInAtom) {
 				const child = React.Children.only(this.props.children);
