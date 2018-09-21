@@ -170,8 +170,8 @@ body.preload * {
 	.standard-form {
 		#controls {
 			label {
-				text-transform: lowercase;
-				font-size: 11px !important;
+				// text-transform: lowercase;
+				font-size: 13px !important;
 				padding-left: 0;
 			}
 			.radio-group {
@@ -187,11 +187,11 @@ body.preload * {
 				}
 			}
 			.control-group {
-				margin: 2px 0;
+				margin: 5px 0;
 			}
 		}
 		.error-message {
-			text-transform: lowercase;
+			// text-transform: lowercase;
 		}
 		.explainer {
 			margin: 0 0 15px 0 !important;
@@ -208,7 +208,59 @@ body.preload * {
 		.channel-list,
 		.invite-panel {
 			.section {
-				padding: 0 0 20px 0;
+				padding: 0 0 0 0;
+				font-size: 13px;
+				color: var(--vscode-sideBar-foreground);
+				.header {
+					font-size: 11px;
+					font-weight: bold;
+					// background: @background-color-highlight;
+					background-color: var(--vscode-sideBarSectionHeader-background);
+					color: var(--vscode-sideBarSectionHeader-foreground);
+					padding: 3px 10px;
+					position: relative; // overrides sticky
+					span {
+						opacity: 1;
+					}
+					&.top {
+						z-index: 5;
+					}
+				}
+				.header .align-right {
+					display: none;
+				}
+				&:hover {
+					.header .align-right {
+						display: inline-block;
+					}
+				}
+				li {
+					height: 22px;
+					padding-left: 22px !important;
+					.lock,
+					.mute,
+					.person,
+					.broadcast,
+					.organization {
+						vertical-align: 1px;
+						transform: scale(0.7) !important;
+					}
+					.lock,
+					.mute {
+						margin-left: -2px !important;
+					}
+					.broadcast {
+						margin-left: -3px !important;
+					}
+					.spin {
+						vertical-align: 3px;
+						margin-left: -3.5px !important;
+						transform: scale(0.7) !important;
+					}
+				}
+				ul {
+					margin-bottom: 5px;
+				}
 			}
 		}
 		.mentions-popup {
@@ -458,6 +510,18 @@ body.preload * {
 		bottom: -1px;
 		z-index: 5;
 	}
+	.vscroll,
+	.code {
+		&::-webkit-scrollbar-thumb {
+			visibility: hidden;
+		}
+
+		&:hover {
+			&::-webkit-scrollbar-thumb {
+				visibility: visible;
+			}
+		}
+	}
 }
 
 .btn {
@@ -473,7 +537,7 @@ body.preload * {
 	z-index: 0;
 
 	border-radius: 0;
-	text-transform: uppercase;
+	// text-transform: uppercase;
 	// 11px font size with 1px padding makes the buttons
 	// exactly the same height as the text input fields
 	font-size: 11px !important;
@@ -487,6 +551,10 @@ body.preload * {
 		border: 1px solid #181a1f;
 		background-color: #4d78cc;
 		background-image: linear-gradient(#557ecf, #4d78cc);
+		background: var(--vscode-button-background);
+	}
+	&:hover {
+		background: var(--vscode-button-hoverBackground);
 	}
 }
 
@@ -514,6 +582,24 @@ body.preload * {
 	a {
 		text-decoration: none;
 		color: @text-color;
+	}
+}
+
+.spin {
+	font-size: 11px;
+	height: 16px;
+	width: 12px;
+	margin: 0;
+	padding: 0;
+	line-height: 10px;
+	display: inline-block;
+	svg {
+		animation: octicon-spin 2s linear infinite;
+	}
+}
+@keyframes octicon-spin {
+	100% {
+		transform: rotate(360deg);
 	}
 }
 
