@@ -52,6 +52,8 @@ import {
 	DocumentPostRequest,
 	DocumentPreparePostRequest,
 	DocumentPreparePostResponse,
+	GetPostsResponse,
+	GetPostsRequest,
 	LogoutRequest,
 	LogoutRequestParams,
 	VersionCompatibility
@@ -187,6 +189,17 @@ export class CodeStreamAgentConnection implements Disposable {
 				textDocument: { uri: uri.toString() }
 			});
 			return response;
+		} catch (ex) {
+			debugger;
+			Logger.error(ex);
+			throw ex;
+		}
+	}
+
+	@started
+	async getPosts(streamId: string, beforeSeq?: number): Promise<CSPost[]> {
+		try {
+			return (await this.sendRequest(GetPostsRequest, { streamId, limit: 100, beforeSeq })).posts;
 		} catch (ex) {
 			debugger;
 			Logger.error(ex);

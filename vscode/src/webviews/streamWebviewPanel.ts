@@ -346,12 +346,13 @@ export class StreamWebviewPanel implements Disposable {
 							break;
 						}
 						case "fetch-posts": {
-							const { streamId, teamId } = body.params;
+							const { streamId, teamId, beforeSeqNum } = body.params;
+
 							this.postMessage({
 								type: WebviewIpcMessageType.response,
 								body: {
 									id: body.id,
-									payload: await this.session.api.getPosts(streamId, teamId)
+									payload: await Container.agent.getPosts(streamId, beforeSeqNum)
 								}
 							});
 							break;
