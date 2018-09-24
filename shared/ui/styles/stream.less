@@ -22,6 +22,9 @@
 	max-width: 95%;
 	box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
 }
+.emoji-mart-category .emoji-mart-emoji:hover:before {
+	background-color: @background-color-highlight;
+}
 
 @panel-header-height: 2.1em;
 
@@ -840,12 +843,13 @@
 				}
 				.triangle-right {
 					display: inline-block;
-					transform: scale(0.6);
+					transform: scale(0.65);
 					margin-right: 5px;
 					vertical-align: 1px;
 				}
 				&.expanded .triangle-right {
-					transform: scale(0.6) rotate(45deg);
+					transform: scale(0.65) rotate(45deg);
+					// vertical-align: 0;
 				}
 				.latest-post {
 					position: absolute;
