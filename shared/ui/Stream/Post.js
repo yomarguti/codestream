@@ -2,7 +2,6 @@ import React, { Component } from "react";
 import { connect } from "react-redux";
 import { injectIntl } from "react-intl";
 import createClassString from "classnames";
-import Linkify from "react-linkify";
 import Headshot from "./Headshot";
 import Icon from "./Icon";
 import Timestamp from "./Timestamp";
@@ -19,6 +18,7 @@ import { markdownify, emojify } from "./Markdowner";
 import hljs from "highlight.js";
 import _ from "underscore";
 import { reactToPost } from "./actions";
+const Path = require("path");
 
 let renderCount = 0;
 class Post extends Component {
@@ -120,6 +120,19 @@ class Post extends Component {
 		}
 	}
 
+	renderCode(codeBlock) {
+		const path = codeBlock.file;
+		let extension = Path.extname(path).toLowerCase();
+		if (extension.startsWith(".")) {
+			extension = extension.substring(1);
+		}
+		const codeHTML = extension
+			? hljs.highlight(extension, codeBlock.code).value
+			: hljs.highlightAuto(codeBlock.code).value;
+
+		return <div className="code" dangerouslySetInnerHTML={{ __html: codeHTML }} />;
+	}
+
 	render() {
 		// console.log(renderCount++);
 		const { post } = this.props;
@@ -158,11 +171,7 @@ class Post extends Component {
 							</Tooltip>
 						)}
 					</div>
-
-					<div
-						className="code"
-						dangerouslySetInnerHTML={{ __html: hljs.highlightAuto(code).value }}
-					/>
+					{this.renderCode(post.codeBlocks[0])}
 				</div>
 			);
 		}
