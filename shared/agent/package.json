@@ -26,8 +26,9 @@
         "lint": "tslint --project tsconfig.json",
         "pretty": "prettier --config .prettierrc --write \"./src/**/*.ts\" ./package.json ./.prettierrc",
         "rebuild": "npm run clean && npm install --no-save && npm run build",
-        "test": "cross-env TS_NODE_COMPILER_OPTIONS=\"{ \\\"module\\\": \\\"commonjs\\\", \\\"types\\\": [\\\"node\\\"] }\" mocha --require ts-node/register --recursive \"src/test/**/*.spec.ts\"",
-        "test-ci": "mocha --require ts-node/register --reporter mocha-teamcity-reporter --recursive \"src/test/**/*.spec.ts\"",
+        "test-integration": "cross-env TS_NODE_COMPILER_OPTIONS=\"{ \\\"module\\\": \\\"commonjs\\\", \\\"types\\\": [\\\"node\\\"] }\" mocha --require ts-node/register --recursive \"test/integration/**/*.spec.ts\"",
+        "test-unit": "cross-env TS_NODE_COMPILER_OPTIONS=\"{ \\\"module\\\": \\\"commonjs\\\", \\\"types\\\": [\\\"node\\\"] }\" mocha --require ts-node/register --recursive \"test/unit/**/*.spec.ts\"",
+        "test-unit-ci": "mocha --require ts-node/register --reporter mocha-teamcity-reporter --recursive \"test/unit/**/*.spec.ts\"",
         "watch": "webpack --watch --env.development --info-verbosity verbose"
     },
     "dependencies": {
