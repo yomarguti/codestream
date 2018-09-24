@@ -49,7 +49,7 @@ export default class Tooltip extends React.Component {
 					<RCTooltip
 						placement={this.props.placement}
 						overlay={content}
-						mouseEnterDelay={this.props.delay}
+						mouseEnterDelay={this.props.delay || 0}
 					>
 						{this.props.children}
 					</RCTooltip>

@@ -242,6 +242,7 @@ class ComposeBox extends React.Component {
 		event.preventDefault();
 		if (eventType == "escape") {
 			if (this.state.popupOpen) this.hidePopup();
+			if (this.state.emojiPickerOpen) this.hideEmojiPicker();
 			// else this.handleDismissThread();
 		} else {
 			let newIndex = 0;
@@ -347,7 +348,7 @@ class ComposeBox extends React.Component {
 			} else {
 				// if the line doesn't start with /word, then hide the popup
 				this.hidePopup();
-			}		
+			}
 		} else if (this.state.popupOpen === "channels") {
 			if (channelMatch) {
 				this.showPopupSelectors(channelMatch[1].replace(/#/, ""), "channels");
@@ -464,6 +465,11 @@ class ComposeBox extends React.Component {
 				this.hidePopup();
 				event.preventDefault();
 			}
+		} else if (this.state.emojiPickerOpen) {
+			if (event.key === "Escape") {
+				this.hideEmojiPicker();
+				event.preventDefault();
+			}
 		} else {
 			if (event.key === "ArrowUp" && this.state.postTextByStream[this.props.streamId] === "") {
 				event.persist();
@@ -483,6 +489,10 @@ class ComposeBox extends React.Component {
 		this.setState({ emojiPickerOpen: !this.state.emojiPickerOpen });
 		// this.focus();
 		// event.stopPropagation();
+	};
+
+	hideEmojiPicker = () => {
+		this.setState({ emojiPickerOpen: false });
 	};
 
 	addEmoji = emoji => {
@@ -555,6 +565,7 @@ class ComposeBox extends React.Component {
 				{emojiPickerOpen && (
 					<EmojiPicker
 						addEmoji={this.addEmoji}
+						autoFocus={true}
 						style={{
 							position: "absolute",
 							bottom: "45px",

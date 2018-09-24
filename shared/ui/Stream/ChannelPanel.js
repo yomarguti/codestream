@@ -164,7 +164,9 @@ export class SimpleChannelPanel extends Component {
 					{stream.name}
 					{mentions > 0 ? <span className="umi">{mentions}</span> : null}
 					<span>
-						<Icon name="gear" className="align-right" onClick={this.handleClickStreamSettings} />
+						<Tooltip title="Channel Settings">
+							<Icon name="gear" className="align-right" onClick={this.handleClickStreamSettings} />
+						</Tooltip>
 						{menuActive && (
 							<ChannelMenu
 								stream={stream}
@@ -214,7 +216,9 @@ export class SimpleChannelPanel extends Component {
 							{icon}
 							{stream.name}
 							{count > 0 ? <span className="umi">{count}</span> : null}
-							<Icon name="x" onClick={this.handleClickMuteStream} className="align-right" />
+							<Tooltip title="Close Conversation">
+								<Icon name="x" onClick={this.handleClickMuteStream} className="align-right" />
+							</Tooltip>
 						</li>
 					)
 				};
@@ -234,7 +238,9 @@ export class SimpleChannelPanel extends Component {
 							<li key={teammate.id} teammate={teammate.id}>
 								<Icon className="person" name="person" />
 								<span className="name">{name}</span>
-								<Icon name="x" onClick={this.handleClickMuteStream} className="align-right" />
+								<Tooltip title="Close Conversation">
+									<Icon name="x" onClick={this.handleClickMuteStream} className="align-right" />
+								</Tooltip>
 							</li>
 						)
 					};

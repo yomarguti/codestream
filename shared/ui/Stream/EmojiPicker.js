@@ -77,7 +77,14 @@ export class SimpleEmojiPicker extends Component {
 
 		return ReactDOM.createPortal(
 			<div ref={ref => (this._div = ref)} style={target ? { position: "absolute" } : {}}>
-				<Picker onSelect={addEmoji} emoji="" native={true} title="" style={style} />
+				<Picker
+					autoFocus={this.props.autoFocus}
+					onSelect={addEmoji}
+					emoji=""
+					native={true}
+					title=""
+					style={style}
+				/>
 			</div>,
 			this.el
 		);

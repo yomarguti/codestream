@@ -479,7 +479,11 @@ export class SimpleStream extends Component {
 
 		const channelIcon =
 			this.props.postStreamType === "direct" ? (
-				<Icon name="organization" />
+				this.props.postStreamMemberIds.length > 2 ? (
+					<Icon name="organization" className="organization" />
+				) : (
+					<Icon name="person" />
+				)
 			) : this.props.isPrivate ? (
 				<Icon name="lock" />
 			) : (
@@ -529,7 +533,9 @@ export class SimpleStream extends Component {
 						</Tooltip>
 						{this.props.postStreamType !== "direct" && (
 							<span className="align-right-button" onClick={this.handleClickStreamSettings}>
-								<Icon name="gear" className="show-settings" />
+								<Tooltip title="Channel Settings">
+									<Icon name="gear" className="show-settings" />
+								</Tooltip>
 								{menuActive && (
 									<ChannelMenu
 										stream={this.props.postStream}
