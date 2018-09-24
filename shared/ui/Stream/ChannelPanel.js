@@ -226,6 +226,7 @@ export class SimpleChannelPanel extends Component {
 				.map(teammate => {
 					if (_.contains(this.props.oneOnOnePeople, teammate.id)) return null;
 					if (this.props.mutedStreams[teammate.id]) return null;
+					if (!teammate.isRegistered) return null;
 					const name = teammate.username || teammate.fullName || "";
 					return {
 						name: name.toLowerCase(),
