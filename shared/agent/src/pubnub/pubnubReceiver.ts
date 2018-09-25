@@ -189,7 +189,7 @@ export class PubnubReceiver {
 					case "posts":
 						this._onDidReceiveMessage.fire({
 							type: MessageType.Posts,
-							changeSets: obj
+							changeSets: entities
 						});
 						break;
 					case "repos":
