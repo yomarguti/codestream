@@ -64,7 +64,7 @@ export class Cache<T extends CSEntity> {
 	 */
 	getBy(field: keyof T, value: any): T | undefined {
 		const index = this.indexes.get(field);
-		if (!index || index.type != IndexType.Unique) {
+		if (!index || index.type !== IndexType.Unique) {
 			throw new Error(`No unique index declared for field ${field}`);
 		}
 		return index.get(value);
@@ -80,7 +80,7 @@ export class Cache<T extends CSEntity> {
 	 */
 	getManyBy(field: keyof T, value: any): T[] | undefined {
 		const index = this.indexes.get(field);
-		if (!index || index.type != IndexType.Group) {
+		if (!index || index.type !== IndexType.Group) {
 			throw new Error(`No group index declared for field ${field}`);
 		}
 		return index.getManyBy(value);

@@ -29,6 +29,7 @@ import { Container } from "./container";
 import { setGitPath } from "./git/git";
 import { Logger } from "./logger";
 import { MarkerHandler } from "./marker/markerHandler";
+import { MarkerManager } from "./marker/markerManager";
 import { MarkerLocationManager } from "./markerLocation/markerLocationManager";
 import { PostHandler } from "./post/postHandler";
 import {
@@ -44,7 +45,6 @@ import {
 } from "./shared/agent.protocol";
 import { StreamManager } from "./stream/streamManager";
 import { Strings } from "./system";
-import { MarkerManager } from "./marker/markerManager";
 
 const loginApiErrorMappings: { [k: string]: ApiErrors } = {
 	"USRC-1001": ApiErrors.InvalidCredentials,

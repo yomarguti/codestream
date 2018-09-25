@@ -143,7 +143,7 @@ export class GroupIndex<T extends CSEntity> extends BaseIndex<T> {
 
 		if (oldEntity) {
 			const oldGroup = this.getGroupForEntity(oldEntity);
-			if (oldGroup && oldGroup != group) {
+			if (oldGroup && oldGroup !== group) {
 				oldGroup.delete(oldEntity.id);
 			}
 		}
@@ -273,7 +273,8 @@ export class GroupSequentialIndex<T extends CSEntity> extends BaseIndex<T> {
 			const last = dataSlice[dataSlice.length - 1];
 			const lastSeq = last && (last as any)[this.seqField];
 
-			let seqStart, seqEnd;
+			let seqStart;
+			let seqEnd;
 			if (lastSeq) {
 				seqEnd = lastSeq + 1;
 				seqStart = seqEnd - dataSlice.length;

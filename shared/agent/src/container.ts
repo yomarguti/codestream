@@ -5,8 +5,8 @@ import { Config } from "./config";
 import { DocumentManager } from "./documentManager";
 import { GitService } from "./git/gitService";
 import { Logger } from "./logger";
-import { CodeStreamSession } from "./session";
 import { PostManager } from "./managers/postManager";
+import { CodeStreamSession } from "./session";
 
 const envRegex = /https?:\/\/(pd-|qa-)?api.codestream.(?:us|com)/;
 
