@@ -33,7 +33,7 @@ export enum MessageType {
 
 export interface PostsMessageReceivedEvent {
 	type: MessageType.Posts;
-	posts: CSPost[];
+	changeSets: object[];
 }
 
 export interface RepositoriesMessageReceivedEvent {
@@ -186,13 +186,12 @@ export class PubnubReceiver {
 				}
 
 				switch (key) {
-					// 	case "posts":
-					// 		const posts = (await this._cache.resolvePosts(entities)) as CSPost[];
-					// 		this._onDidReceiveMessage.fire({
-					// 			type: MessageType.Posts,
-					// 			posts
-					// 		});
-					// 		break;
+					case "posts":
+						this._onDidReceiveMessage.fire({
+							type: MessageType.Posts,
+							changeSets: obj
+						});
+						break;
 					case "repos":
 						// TODO: Need to deal with directives or just fire events with ids or entities
 						let repos;

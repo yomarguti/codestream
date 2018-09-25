@@ -116,8 +116,10 @@ export class CodeStreamSession {
 	}
 
 	private onMessageReceived(e: MessageReceivedEvent) {
+		const { postManager } = Container.instance();
 		switch (e.type) {
 			case MessageType.Posts: {
+				postManager.resolve(e.changeSets);
 				break;
 			}
 			case MessageType.Repositories:
