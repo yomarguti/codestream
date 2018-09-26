@@ -1,0 +1,67 @@
+#!/usr/bin/env python3
+
+#desc# Publish vscode extension assets to cloudfront
+
+import argparse
+import sys
+import os
+import json
+import re
+
+sys.path.append(os.environ['DT_TOP'] + "/lib")
+from sysUtils import dumpDict, shellExecNoBuffer, shellExec
+from buildUtils import getBuildGlobals
+import awsCS
+
+parser = argparse.ArgumentParser(description = "Publish prod VS Code asset to Cloudfront distribution")
+parser.add_argument('--build-number', type=str, required = False, default="codestream-latest", help = "build to promote (codestream-X.Y.Z+N or codestream-latest)")
+parser.add_argument('--dryrun', action='store_true', default=False, help='dry run')
+parser.add_argument('--debug', action='store_true', default=False, help='debug')
+parser.add_argument('--asset-env', type = str, required = True, choices = ['dev', 'prod'])
+args = parser.parse_args()
+
+buildGlobals = getBuildGlobals()
+artifactUrlPrefix = buildGlobals['artifactUrlPrefix']
+tmpDir = os.environ['VSCSB_TMP']
+assetDir = "dev/" if args.asset_env == 'dev' else ""
+awsCS = awsCS.awsCS(args)
+cloudfrontDistributionId = awsCS.getCloudFrontProperty('assets', 'distributionId')
+s3BucketPrefix = awsCS.getCloudFrontProperty('assets','s3BucketPrefix')
+
+# grab the assets from the internal server
+infoFile = tmpDir + "/" + args.build_number + ".info"
+cmd = "curl -fs -o " + infoFile + " " + artifactUrlPrefix + "/" + args.asset_env + "/vscode-codestream/" + args.build_number + ".info"
+shellExecNoBuffer(cmd, printCmd = True, abortOnFail = True)
+if not os.path.isfile(infoFile):
+	print("could not get info file")
+	exit(1)
+shellExecNoBuffer("cat " + infoFile)
+yesno = input("\nPublish this asset (y/N)? ")
+if not re.search(r'^\s*y', yesno, re.I):
+	print("ok, never mind")
+	os.unlink(infoFile)
+	exit(1)
+
+vsixFile = tmpDir + "/" + args.build_number + ".vsix"
+cmd = "curl -fs -o " + vsixFile + " " + artifactUrlPrefix + "/" + args.asset_env + "/vscode-codestream/" + args.build_number + ".vsix"
+shellExecNoBuffer(cmd, printCmd = True, abortOnFail = True)
+if not os.path.isfile(vsixFile):
+	print("could not get vsix file")
+	os.unlink(infoFile)
+	exit(1)
+
+# copy assets to cloudfront as -latest
+cmd = "aws s3 cp " + infoFile + " " + s3BucketPrefix + "/" + assetDir + "vscode/codestream-latest.info --sse"
+shellExecNoBuffer(cmd, abortOnFail = True, printCmd = True, dryrun = args.dryrun)
+
+cmd = "aws s3 cp " + vsixFile + " " + s3BucketPrefix + "/" + assetDir + "vscode/codestream-latest.vsix --sse"
+shellExecNoBuffer(cmd, abortOnFail = True, printCmd = True, dryrun = args.dryrun)
+
+# invalidate cloudfront distribution
+cmd = "aws cloudfront create-invalidation --distribution-id " + cloudfrontDistributionId + " --paths /" + assetDir + "vscode/codestream-latest.*"
+shellExecNoBuffer(cmd, abortOnFail = True, printCmd = True, dryrun = args.dryrun)
+
+print("removing",infoFile)
+os.unlink(infoFile)
+print("removing",vsixFile)
+os.unlink(vsixFile)

@@ -3,6 +3,8 @@ io/**
 node_modules/**
 src/**
 **/*.map
+bin/**
+sandbox/**
 .babelrc
 .gitattributes
 .gitignore

@@ -217,7 +217,7 @@
         "build": "webpack --env.development",
         "bundle": "npm run clean:ci && npm install --no-save && npm run agent:bundle && webpack --env.production",
         "clean": "git clean -Xdf -e !node_modules -e !node_modules/**/* -e !codestream*.info",
-        "clean:ci": "git clean -xdf -e !codestream*.info && npm run webview:clean:ci && npm run agent:clean:ci",
+        "clean:ci": "git clean -xdf && npm run webview:clean:ci && npm run agent:clean:ci",
         "lint": "tslint --project tsconfig.json",
         "pack": "vsce package",
         "pretty": "prettier --config .prettierrc --write \"./src/**/*.ts\" \"./src/**/*.js\" ./package.json ./.prettierrc",

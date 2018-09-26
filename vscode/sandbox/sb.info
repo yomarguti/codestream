@@ -1,0 +1,5 @@
+SB_TYPE=vscode_sb
+SB_PREFIX=VSCSB
+GIT_ORIGIN=git@github.com:teamcodestream/vscode-codestream
+SB_PROJECT_PATH=vscode-codestream
+#SB_DEPS=a:b:c
