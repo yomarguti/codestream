@@ -38,6 +38,7 @@ There are 2 builds; one for the develop branch (Continuous Integration) and one 
 1. Copy the assets to the CloudFront distribution.  
 `vscsb-publish-assets-to-cloudfront --asset-env prod`
 1. Deploy the extension to the Visual Studio Marketplace.
+1. Bump to the next minor (or major) version number in package.json in the **develop** branch
 
 
 ## Hotfixing (untested / unconfirmed, more thought needed)
