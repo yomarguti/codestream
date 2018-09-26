@@ -2,9 +2,7 @@
 import { CodeStreamAgent } from "./agent";
 // import { Telemetry } from './telemetry';
 
-const ConsolePrefix = `[CodeStreamAgent]`;
-
-const isDebuggingRegex = /^--inspect(-brk)?=?/;
+// const ConsolePrefix = `[CodeStreamAgent]`;
 
 export enum TraceLevel {
 	Silent = "silent",
@@ -70,9 +68,9 @@ export class Logger {
 	private static _isDebugging: boolean | undefined;
 	static get isDebugging() {
 		if (this._isDebugging === undefined) {
-			const args = process.execArgv;
-
-			this._isDebugging = args ? args.some(arg => isDebuggingRegex.test(arg)) : false;
+			const env = process.env;
+			this._isDebugging =
+				env && env.DEBUG_EXT ? env.DEBUG_EXT.toLowerCase().includes("codestream") : false;
 		}
 
 		return this._isDebugging;
