@@ -197,9 +197,9 @@ export class CodeStreamAgentConnection implements Disposable {
 	}
 
 	@started
-	async getPosts(streamId: string, beforeSeq?: number): Promise<CSPost[]> {
+	async getPosts(streamId: string, limit: number, beforeSeq?: number): Promise<CSPost[]> {
 		try {
-			return (await this.sendRequest(GetPostsRequest, { streamId, limit: 100, beforeSeq })).posts;
+			return (await this.sendRequest(GetPostsRequest, { streamId, limit, beforeSeq })).posts;
 		} catch (ex) {
 			debugger;
 			Logger.error(ex);
