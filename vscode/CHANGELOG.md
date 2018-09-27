@@ -13,6 +13,10 @@
 - Changes UI of the channel switcher to more closely mirror the VS Code sidebar.
 - Changes `codestream.showInStatusBar` setting to allow CodeStream to be shown at either the left or right side of the status bar.
 
+## Fixed
+
+- Fixes [#3](https://github.com/TeamCodeStream/CodeStream/issues/3) &mdash; Logging to debug console when debugging different extension
+
 ## [0.12.0] - 2018-09-19
 
 ### Added
