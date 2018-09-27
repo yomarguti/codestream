@@ -302,17 +302,21 @@ body.preload * {
 		}
 
 		.message-input:focus {
-			outline: 1px solid #99caeb;
+			outline: 1px solid #99caeb !important;
 			.vscode-dark& {
-				outline: 1px solid #205376;
+				outline: 1px solid #205376 !important;
 			}
 		}
 
 		.message-input {
-			border-radius: 0;
-			border: none;
-			// the 26px is to make room for the smiley icon
+			border-radius: 0 !important;
+			border: none !important;
+			// the 26px is to make room for the smiley and plus icons
 			padding: 5px 26px 5px 6px !important;
+		}
+
+		.message-input.has-plus {
+			padding: 5px 26px 5px 36px !important;
 		}
 
 		.code::-webkit-scrollbar-corner {
