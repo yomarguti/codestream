@@ -513,6 +513,7 @@ class ComposeBox extends React.Component {
 	}
 
 	renderCommentForm = quote => {
+		const { commentType } = this.state;
 		let range = arrayToRange(quote.location);
 		let rangeText = "";
 		if (range) {
@@ -532,39 +533,60 @@ class ComposeBox extends React.Component {
 				</div>
 				<fieldset className="form-body">
 					<div id="controls" className="control-group">
+						<br />
+						<br />
+						<br />
+						<br />
+						<label>{rangeText}</label>
+						<div className="code">{quote.code}</div>
+						<label>Post to</label>
 						<div className="styled-select">
 							<select>
-								<option>Post to #general</option>
+								<option>#general</option>
 							</select>
 						</div>
-						<div className="code">{quote.code}</div>
 						<div className="tab-group">
 							<input
 								id="radio-comment-type-comment"
 								type="radio"
 								name="comment-type"
-								checked={this.state.commentType === "comment"}
+								checked={commentType === "comment"}
 								onChange={e => this.setState({ commentType: "comment" })}
 							/>
 							<label
 								htmlFor="radio-comment-type-comment"
 								className={createClassString({
-									checked: this.state.commentType === "comment"
+									checked: commentType === "comment"
 								})}
 							>
 								<Icon name="comment" /> Comment
 							</label>
 							<input
+								id="radio-comment-type-question"
+								type="radio"
+								name="comment-type"
+								checked={commentType === "question"}
+								onChange={e => this.setState({ commentType: "question" })}
+							/>
+							<label
+								htmlFor="radio-comment-type-question"
+								className={createClassString({
+									checked: commentType === "question"
+								})}
+							>
+								<Icon name="question" /> Question
+							</label>
+							<input
 								id="radio-comment-type-issue"
 								type="radio"
 								name="comment-type"
-								checked={this.state.commentType === "issue"}
+								checked={commentType === "issue"}
 								onChange={e => this.setState({ commentType: "issue" })}
 							/>
 							<label
 								htmlFor="radio-comment-type-issue"
 								className={createClassString({
-									checked: this.state.commentType === "issue"
+									checked: commentType === "issue"
 								})}
 							>
 								<Icon name="bug" /> Issue
@@ -573,13 +595,13 @@ class ComposeBox extends React.Component {
 								id="radio-comment-type-trap"
 								type="radio"
 								name="comment-type"
-								checked={this.state.commentType === "trap"}
+								checked={commentType === "trap"}
 								onChange={e => this.setState({ commentType: "trap" })}
 							/>
 							<label
 								htmlFor="radio-comment-type-trap"
 								className={createClassString({
-									checked: this.state.commentType === "trap"
+									checked: commentType === "trap"
 								})}
 							>
 								<Icon name="shield" /> Code Trap
@@ -591,7 +613,7 @@ class ComposeBox extends React.Component {
 							</div>
 						)}
 					</div>
-					{this.state.commentType === "issue" && (
+					{commentType === "issue" && (
 						<div id="members-controls" className="control-group">
 							<Select
 								id="input-assignees"
@@ -606,6 +628,15 @@ class ComposeBox extends React.Component {
 								onChange={value => this.setState({ assignees: value })}
 							/>
 						</div>
+					)}
+					{(commentType === "issue" || commentType === "question") && (
+						<input
+							type="text"
+							name="title"
+							className="native-key-bindings input-text control"
+							onChange={value => this.setState({ title: value })}
+							placeholder="Title"
+						/>
 					)}
 				</fieldset>
 			</form>

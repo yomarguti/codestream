@@ -450,6 +450,7 @@
 			}
 		}
 		.compose.full-height {
+			vertical-align: bottom;
 			height: 100%;
 			box-sizing: border-box;
 			z-index: 50;
@@ -1795,16 +1796,25 @@
 				border-radius: 3px;
 			}
 			.tab-group {
-				margin-top: 5px;
+				margin-top: 8px;
 				input {
 					display: none;
 				}
 				label {
 					display: inline-block;
 					padding: 5px 10px;
+					cursor: pointer;
+					opacity: 0.4;
+				}
+				label:first-of-type {
+					padding-left: 0;
+				}
+				label:hover {
+					opacity: 0.8;
 				}
 				label.checked {
-					background-color: @app-background-color-darker;
+					opacity: 1;
+					// background-color: @app-background-color-darker;
 				}
 			}
 
@@ -1865,6 +1875,7 @@
 		}
 		.form-body {
 			padding: 0;
+			vertical-align: bottom;
 		}
 		.align-right-button {
 			right: 0px;
