@@ -62,4 +62,4 @@ CodeStream is free to use while in beta so we encourage you to try it out and se
 
 # Help & Feedback
 
-Check out our [help center](https://help.codestream.com) for more information on getting started with CodeStream. Please follow [@teamcodestream](http://twitter.com/teamcodestream) for product updates and to share feedback and questions. You may also [contact us](https://help.codestream.com/hc/en-us/requests/new) directly.
+Check out our [wiki](https://github.com/TeamCodeStream/CodeStream/wiki) for more information on getting started with CodeStream. Please follow [@teamcodestream](http://twitter.com/teamcodestream) for product updates and to share feedback and questions. You can also email us at support@codestream.com.
