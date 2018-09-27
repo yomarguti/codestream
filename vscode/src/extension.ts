@@ -21,25 +21,28 @@ export async function activate(context: ExtensionContext) {
 	Logger.configure(context);
 
 	// Check for an optional build number
-	let info = { build: "" };
+	let info = { buildNumber: "", assetEnvironment: "dev" };
 	try {
-		info = await FileSystem.loadJsonFromFile<{ build: string }>(
+		info = await FileSystem.loadJsonFromFile<{ buildNumber: string; assetEnvironment: string }>(
 			context.asAbsolutePath(`codestream-${extensionVersion}.info`)
 		);
 	} catch {}
 
+	const formattedVersion = `${extensionVersion}${info.buildNumber ? `-${info.buildNumber}` : ""}${
+		info.assetEnvironment && info.assetEnvironment !== "prod" ? ` (${info.assetEnvironment})` : ""
+	}`;
 	Logger.log(
-		`CodeStream v${extensionVersion}${info.build ? `-${info.build}` : ""} starting ${
-			Logger.isDebugging ? "in debug mode" : ""
-		}...`
+		`CodeStream v${formattedVersion} starting ${Logger.isDebugging ? "in debug mode" : ""}...`
 	);
 
 	const git = await gitPath();
 
 	const cfg = configuration.get<Config>();
 	await Container.initialize(context, cfg, {
-		extensionBuild: info.build,
+		extensionBuild: info.buildNumber,
+		extensionBuildEnv: info.assetEnvironment,
 		extensionVersion: extensionVersion,
+		extensionVersionFormatted: formattedVersion,
 		gitPath: git,
 		ideVersion: vscodeVersion,
 		serverUrl: cfg.serverUrl
@@ -52,9 +55,7 @@ export async function activate(context: ExtensionContext) {
 	}
 
 	Logger.log(
-		`CodeStream v${extensionVersion}${
-			info.build ? `-${info.build}` : ""
-		} started \u2022 ${Strings.getDurationMilliseconds(start)} ms`
+		`CodeStream v${formattedVersion} started \u2022 ${Strings.getDurationMilliseconds(start)} ms`
 	);
 }
 
