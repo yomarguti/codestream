@@ -190,7 +190,8 @@
 			}
 
 			.align-left-button,
-			.align-right-button {
+			.align-right-button,
+			.align-right-button-second {
 				position: absolute;
 				// top: 0;
 				// font-size: 10px;
@@ -212,6 +213,9 @@
 			}
 			.align-right-button {
 				right: 5px;
+			}
+			.align-right-button-second {
+				right: 35px;
 			}
 			.umis .unread-badge {
 				width: 7px;
@@ -241,13 +245,20 @@
 				padding: 0;
 			}
 			.align-left-button:hover,
-			.align-right-button:hover {
+			.align-right-button:hover,
+			.align-right-button-second:hover {
 				color: @text-color-highlight;
 				background-color: @base-background-color;
 			}
 			.icon-lock::before {
 				font-size: 0.8em;
 				margin-right: 0;
+			}
+
+			.search-bar {
+				input {
+					width: 100%;
+				}
 			}
 		}
 
@@ -390,6 +401,9 @@
 			animation: 0.2s slideout;
 			// transition: bottom 0.4s;
 		}
+		.message-input-wrapper {
+			position: relative;
+		}
 		.compose {
 			left: 0;
 			// transition: left 0.2s;
@@ -413,20 +427,35 @@
 				opacity: 0.5;
 			}
 
-			.smiley {
+			.smiley,
+			.plus {
 				position: absolute;
-				bottom: 15px;
-				right: 18px;
+				bottom: 5px;
+				right: 8px;
 				opacity: 0.4;
 				cursor: pointer;
 				transition: transform 0.1s;
 			}
 
 			.smiley:hover,
-			.smiley.hover {
+			.smiley.hover,
+			.plus:hover,
+			.plus.hover {
 				opacity: 1;
 				color: @text-color-info;
 				transform: scale(1.4);
+			}
+
+			.plus {
+				left: 8px;
+				right: auto;
+			}
+			.plus-sep {
+				position: absolute;
+				height: 100%;
+				left: 27px;
+				width: 0;
+				border-right: 1px solid @base-border-color;
 			}
 
 			.hint {
@@ -441,6 +470,11 @@
 				.icon:hover {
 					color: @text-color-error;
 				}
+				&.frame {
+					margin: 0;
+					padding: 10px;
+					background-color: @background-color-highlight;
+				}
 			}
 			.code {
 				margin-top: 0;
@@ -449,22 +483,28 @@
 				border-radius: 4px;
 			}
 		}
+		.compose {
+		}
 		.compose.full-height {
-			vertical-align: bottom;
-			height: 100%;
+			// height: 50vh;
+			transition: padding 0.2s;
 			box-sizing: border-box;
-			z-index: 50;
-			padding-top: 0;
+			// z-index: 50;
+			padding: 30px 30px 30px 30px;
+			padding-bottom: 10vh;
 			.message-input {
 				height: 100px;
+			}
+			.plus {
+				display: none;
 			}
 		}
 
 		.message-input {
 			box-sizing: border-box;
 			width: 100%;
-			// the 30px is to make room for the smiley icon
-			padding: 10px 30px 10px 10px;
+			// the 30px is to make room for the smiley and plus icons
+			padding: 10px 30px 10px 40px;
 			border-radius: 4px;
 			// background: #fff;
 			background: @base-background-color;
@@ -998,7 +1038,12 @@
 						.heart,
 						.person,
 						.broadcast,
-						.organization {
+						.organization,
+						.question,
+						.issue,
+						.trap,
+						.snippet,
+						.comment {
 							padding-right: 0;
 							// margin-right: 0;
 							width: 10px;
@@ -1006,6 +1051,17 @@
 							transform: scale(0.8);
 							// top: -1px !important;
 							// vertical-align: 1zpx;
+						}
+						.question,
+						.issue,
+						.trap,
+						.snippet,
+						.comment {
+							vertical-align: 1.5px;
+							margin: 0 7px 0 -2px;
+						}
+						.comment {
+							vertical-align: 0;
 						}
 						.mute,
 						.broadcast,
@@ -1430,6 +1486,89 @@
 			}
 		}
 
+		.post.collapsed {
+			.author {
+				display: none;
+			}
+			time {
+				display: none;
+			}
+			.headshot {
+				left: 0;
+				position: absolute;
+				width: 18px;
+				height: 18px;
+				margin-right: 6px;
+				vertical-align: -4px;
+				transition: width 0.2s height 0.2s;
+			}
+			.headshot-gravatar {
+				position: absolute;
+				width: 18px;
+				height: 18px;
+				border-radius: 3px;
+				z-index: 2;
+				transition: width 0.2s height 0.2s;
+			}
+			.headshot-initials {
+				position: absolute;
+				width: 18px;
+				height: 18px;
+				border-radius: 3px;
+				text-align: center;
+				font-size: 11px;
+				text-transform: capitalize;
+				padding-top: 1px;
+				z-index: 1;
+				color: @app-background-color;
+				transition: width 0.2s height 0.2s;
+			}
+			.replying-to {
+				display: none;
+			}
+			.body {
+				white-space: nowrap;
+				max-height: 2em;
+				text-overflow: ellipsis;
+				overflow: hidden;
+			}
+			.reactions {
+				display: none;
+			}
+			min-height: 40px;
+			padding-left: 38px;
+		}
+		.post.has-status {
+			.status-button {
+				float: right;
+				margin-left: 5px;
+				// border: 2px solid green;
+				border-radius: 3px;
+				width: 16px;
+				height: 16px;
+				text-align: center;
+				border: 2px solid @text-color;
+				opacity: 1;
+				.check {
+					opacity: 1;
+					transform: scale(0.75);
+					transition: transform 0.2s;
+					display: inline-block;
+					top: -1px !important;
+					color: @text-color !important;
+				}
+				&.checked {
+					background-color: @text-color;
+					border: none;
+					.check {
+						// opacity: 0.6;
+						transform: scale(1);
+						color: @app-background-color !important;
+					}
+				}
+			}
+		}
+
 		.post.editing {
 			background-color: @background-color-highlight !important;
 		}
@@ -1797,6 +1936,8 @@
 			}
 			.tab-group {
 				margin-top: 8px;
+				white-space: nowrap;
+				overflow: hidden;
 				input {
 					display: none;
 				}
@@ -1867,18 +2008,42 @@
 		border: none !important;
 	}
 
+	.multi-compose {
+		.button-group {
+			margin-top: 10px;
+			.hint {
+				margin: 0 !important;
+			}
+		}
+	}
+
 	#code-comment-form {
 		width: 100%;
 		padding: 0;
+		position: relative;
+		overflow-x: hidden;
 		fieldset {
-			max-width: none;
+			padding: 0;
+			max-width: 100%;
 		}
 		.form-body {
+			width: 100%;
 			padding: 0;
-			vertical-align: bottom;
 		}
 		.align-right-button {
 			right: 0px;
+		}
+		.chat-bubble {
+			vertical-align: -2px;
+		}
+		label {
+			margin-top: 15px !important;
+		}
+		.tab-group {
+			margin-top: 0 !important;
+			label {
+				padding-top: 0 !important;
+			}
 		}
 	}
 }

@@ -26,6 +26,7 @@ export class SimpleChannelPanel extends Component {
 
 		this.state = {
 			expanded: {
+				knowledgeBase: true,
 				teamChannels: true,
 				directMessages: true,
 				liveShareSessions: true,
@@ -61,6 +62,7 @@ export class SimpleChannelPanel extends Component {
 						<div className="shadow shadow-bottom" />
 					</div>
 					<div className="channel-list vscroll">
+						{this.renderKnowledgeBase()}
 						{this.renderUnreadChannels()}
 						{this.renderTeamChannels()}
 						{this.renderDirectMessages()}
@@ -95,6 +97,70 @@ export class SimpleChannelPanel extends Component {
 		// );
 	};
 
+	renderKnowledgeBase = () => {
+		return (
+			<div
+				className={createClassString("section", "has-children", {
+					expanded: this.state.expanded["knowledgeBase"]
+				})}
+			>
+				<div className="header top" onClick={e => this.toggleSection(e, "knowledgeBase")}>
+					<Icon name="triangle-right" className="triangle-right" />
+					<span className="clickable">Knowledge Base</span>
+					<div className="align-right">
+						<Tooltip title="Add to Knowledge Base" placement="bottom">
+							<Icon name="plus" onClick={this.handleClickCreateKnowledge} />
+						</Tooltip>
+					</div>
+				</div>
+				{this.renderKnowledgeItems()}
+			</div>
+		);
+	};
+
+	renderKnowledgeItems = () => {
+		return (
+			<ul onClick={this.handleClickSelectKnowledge}>
+				<li key="comment" id="comment">
+					<Icon name="comment" className="comment" />
+					Code Comments
+				</li>
+				<li key="question" id="question">
+					<Icon name="question" className="question" />
+					Questions &amp; Answers
+				</li>
+				<li key="issue" id="issue">
+					<Icon name="bug" className="issue" />
+					Issues
+				</li>
+				<li key="trap" id="trap">
+					<Icon name="stop" className="trap" />
+					Code Traps
+				</li>
+				<li key="snippet" id="snippet">
+					<Icon name="code" className="snippet" />
+					Snippets
+				</li>
+			</ul>
+		);
+	};
+
+	renderUnreadChannels = () => {
+		return;
+		// return (
+		// 	<div className="section">
+		// 		<div className="header">
+		// 			<Tooltip title="All Channels With Unread Messages" placement="left" delay=".5">
+		// 				<span className="clickable">UNREADS</span>
+		// 			</Tooltip>
+		// 		</div>
+		// 		<ul onClick={this.handleClickSelectStream}>
+		// 			{this.renderStreams(this.props.channelStreams)}
+		// 		</ul>
+		// 	</div>
+		// );
+	};
+
 	renderTeamChannels = () => {
 		return (
 			<div
@@ -106,10 +172,8 @@ export class SimpleChannelPanel extends Component {
 					<Icon name="triangle-right" className="triangle-right" />
 					<span className="clickable">Channels</span>
 					<div className="align-right">
-						<Tooltip title="Browse all Channels" placement="left" delay="0.5">
-							<span>
-								<Icon name="list-unordered" onClick={this.handleClickShowPublicChannels} />
-							</span>
+						<Tooltip title="Browse Public Channels" placement="left" delay="0.5">
+							<Icon name="list-unordered" onClick={this.handleClickShowPublicChannels} />
 						</Tooltip>
 						<Tooltip title="Create a Channel" placement="left" delay="0.5">
 							<span>
@@ -348,6 +412,15 @@ export class SimpleChannelPanel extends Component {
 		);
 	};
 
+	handleClickCreateKnowledge = e => {
+		e.stopPropagation();
+		this.props.setActivePanel("main");
+		setTimeout(() => {
+			this.props.runSlashCommand("multi-compose");
+		}, 500);
+		return;
+	};
+
 	handleClickSelectStream = event => {
 		event.preventDefault();
 		var liDiv = event.target.closest("li");
@@ -359,6 +432,18 @@ export class SimpleChannelPanel extends Component {
 			this.props.createStream({ type: "direct", memberIds: [liDiv.getAttribute("teammate")] });
 		} else {
 			console.log("Unknown LI in handleClickSelectStream: ", event);
+		}
+	};
+
+	handleClickSelectKnowledge = event => {
+		event.preventDefault();
+		var liDiv = event.target.closest("li");
+		if (!liDiv) return; // FIXME throw error
+		if (liDiv.id) {
+			this.props.setActivePanel("knowledge");
+			this.props.setKnowledgeType(liDiv.id);
+		} else {
+			console.log("Unknown LI in handleClickSelectKnowledge: ", event);
 		}
 	};
 

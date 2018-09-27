@@ -163,9 +163,10 @@ class Post extends React.Component {
 		if (this.props.deactivated) return null;
 
 		// console.log(renderCount++);
-		const { post } = this.props;
-		// console.log(post);
+		const { post, showStatus } = this.props;
 		const { menuOpen, authorMenuOpen, menuTarget } = this.state;
+
+		const headshotSize = this.props.headshotSize || 36;
 
 		const mine = post.creatorId === this.props.currentUserId;
 		const systemPost = post.creatorId === "codestream";
@@ -176,9 +177,11 @@ class Post extends React.Component {
 			hover: menuOpen || authorMenuOpen,
 			editing: this.props.editing,
 			"system-post": systemPost,
+			"has-status": showStatus,
 			unread: this.props.unread,
 			"new-separator": this.props.newMessageIndicator,
-			[`thread-key-${this.props.threadKey}`]: true
+			[`thread-key-${this.props.threadKey}`]: true,
+			[this.props.extraClass]: true
 		});
 
 		let codeBlock = null;
@@ -259,6 +262,7 @@ class Post extends React.Component {
 				thread={post.parentPostId || post.id}
 				ref={ref => (this._div = ref)}
 			>
+				{showStatus && this.renderStatus()}
 				{showIcons && this.renderIcons()}
 				{menuOpen && <Menu items={menuItems} target={menuTarget} action={this.handleSelectMenu} />}
 				{authorMenuOpen && (
@@ -270,8 +274,14 @@ class Post extends React.Component {
 					/>
 				)}
 				<Debug object={post} placement="top">
-					<Headshot size={36} person={post.author} mine={mine} onClick={this.handleHeadshotClick} />
+					<Headshot
+						size={headshotSize}
+						person={post.author}
+						mine={mine}
+						onClick={this.handleHeadshotClick}
+					/>
 				</Debug>
+
 				<span className="author" ref={ref => (this._authorDiv = ref)}>
 					{post.author.username}
 					{this.renderEmote(post)}
@@ -340,6 +350,19 @@ class Post extends React.Component {
 		return null;
 	};
 
+	renderStatus = () => {
+		console.log("STATUS IS: ", this.props.status);
+		const statusClass = createClassString({
+			"status-button": true,
+			checked: this.props.status
+		});
+		return (
+			<div class={statusClass} onclick={this.toggleStatus}>
+				{this.props.status && <Icon name="check" className="check" />}
+			</div>
+		);
+	};
+
 	renderIcons = () => {
 		return (
 			<div className="align-right">
@@ -382,6 +405,11 @@ class Post extends React.Component {
 
 				return match;
 			});
+
+			if (this.props.q) {
+				// const matchQueryRegexp = new RegExp(this.props.q, "g");
+				// return part.replace(matchQueryRegexp, "<u><b>$&</b></u>");
+			}
 		}
 
 		return <span dangerouslySetInnerHTML={{ __html: html }} />;

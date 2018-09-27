@@ -10,6 +10,7 @@ import ChannelPanel from "./ChannelPanel";
 import InvitePanel from "./InvitePanel";
 import PublicChannelPanel from "./PublicChannelPanel";
 import CreateChannelPanel from "./CreateChannelPanel";
+import KnowledgePanel from "./KnowledgePanel";
 import CreateDMPanel from "./CreateDMPanel";
 import ChannelMenu from "./ChannelMenu";
 import Post from "./Post";
@@ -340,6 +341,7 @@ export class SimpleStream extends Component {
 				activePanel === "create-channel" ||
 				activePanel === "create-dm" ||
 				activePanel === "public-channels" ||
+				activePanel === "knowledge" ||
 				activePanel === "invite"
 		});
 		const threadPanelClass = createClassString({
@@ -410,8 +412,17 @@ export class SimpleStream extends Component {
 				<ChannelPanel
 					activePanel={activePanel}
 					setActivePanel={this.setActivePanel}
+					setKnowledgeType={this.setKnowledgeType}
 					runSlashCommand={this.runSlashCommand}
 					isSlackTeam={this.props.isSlackTeam}
+				/>
+				<KnowledgePanel
+					activePanel={activePanel}
+					setActivePanel={this.setActivePanel}
+					knowledgeType={this.state.knowledgeType}
+					usernames={this.props.usernamesRegexp}
+					currentUserName={this.props.currentUserName}
+					postAction={this.postAction}
 				/>
 				<PublicChannelPanel
 					activePanel={activePanel}
@@ -570,6 +581,10 @@ export class SimpleStream extends Component {
 			</div>
 		);
 	}
+
+	setKnowledgeType = type => {
+		this.setState({ knowledgeType: type });
+	};
 
 	handleClickStreamSettings = event => {
 		this.setState({ openMenu: this.props.postStreamId, menuTarget: event.target });
@@ -1165,6 +1180,8 @@ export class SimpleStream extends Component {
 		return true;
 	};
 
+	multiCompose = () => {};
+
 	postHelp = () => {
 		const text = "Get more help at help.codestream.com";
 		this.submitSystemPost(text);
@@ -1274,7 +1291,7 @@ export class SimpleStream extends Component {
 	};
 
 	// create a new post
-	submitPost = ({ text, quote, mentionedUserIds, autoMentions }) => {
+	submitPost = ({ text, title, quote, mentionedUserIds, autoMentions }) => {
 		const codeBlocks = [];
 		const { activePanel } = this.props;
 		const { postStreamId, createPost } = this.props;
@@ -1286,6 +1303,7 @@ export class SimpleStream extends Component {
 
 		const submit = () =>
 			createPost(postStreamId, threadId, text, codeBlocks, mentionedUserIds, {
+				title,
 				autoMentions,
 				fileUri
 			}).then(this._postslist.scrollToBottom);
