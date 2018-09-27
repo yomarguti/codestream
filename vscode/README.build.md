@@ -37,7 +37,8 @@ There are 2 builds; one for the develop branch (Continuous Integration) and one 
 1. Tag the **vscode-codestream**, **codestream-lsp-agent** and **codestream-components** repos with the lightweight tag **vscode-X.Y.Z**.
 1. Copy the assets to the CloudFront distribution.  
 `vscsb-publish-assets-to-cloudfront --asset-env prod`
-1. Deploy the extension to the Visual Studio Marketplace.
+1. Deploy the extension to the Visual Studio Marketplace  
+`vsce publish --packagePath codestream-0.13.0+3.vsix`
 1. Bump to the next minor (or major) version number in package.json in the **develop** branch
 
 
