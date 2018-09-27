@@ -51,7 +51,8 @@ export class PostManager extends EntityManager<CSPost> {
 		} else if (after != null && limit != null) {
 			return await this.getGroupSlice("streamId", streamId, after + 1, after + limit + 1);
 		} else if (before != null && limit != null) {
-			return await this.getGroupSlice("streamId", streamId, before - limit, before);
+			const seqStart = Math.max(before - limit, 1);
+			return await this.getGroupSlice("streamId", streamId, seqStart, before);
 		} else if (limit != null) {
 			return await this.getGroupTail("streamId", streamId, limit);
 		}
