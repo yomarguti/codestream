@@ -23,7 +23,9 @@ export enum CodeStreamEnvironment {
 
 export interface AgentOptions {
 	extensionBuild: string;
+	extensionBuildEnv: string;
 	extensionVersion: string;
+	extensionVersionFormatted: string;
 	gitPath: string;
 	ideVersion: string;
 
