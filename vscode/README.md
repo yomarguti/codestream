@@ -2,8 +2,7 @@
 
 CodeStream is the knowledge base behind your codebase. CodeStream allows your development team to collaborate within Visual Studio Code and conversation threads automatically become annotations that live with your codebase forever, so your codebase gets smarter over time.
 
-![FullIDE](https://help.codestream.com/hc/article_attachments/360008724052/FullScreen.png)
-
+![CodeStream](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/CodeStream.png)
 # Requirements
 
 - CodeStream requires a current version of **[Visual Studio Code](https://code.visualstudio.com/)**.
@@ -15,32 +14,32 @@ CodeStream is the knowledge base behind your codebase. CodeStream allows your de
 
 To talk about a specific block of code, just select the code in your buffer and then click on the light bulb that appears at the left of your selection and choose _Add CodeStream Comment_ (or set up a keybinding for the command). CodeStream will even automatically @mention the author of the code.
 
-![PostCodeBlock](https://help.codestream.com/hc/article_attachments/360007936372/VSCPost.png)
+![Add Comment](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/AddCSComment.png)
 
 ## Add comments to ongoing discussions
 
 Click on any post in the chat stream to add a comment. If the post included a code block, you’ll automatically be taken to the appropriate souce file and scrolled to the code block. If the code block doesn’t match what you have in your buffer, you’ll have options to view a diff or even apply the changes to your buffer.
 
-![ThreadView](https://help.codestream.com/hc/article_attachments/360008723191/Screen_Shot_2018-08-06_at_5.12.03_PM.png)
+![Thread View](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/ThreadView.png)
 
 ##  Leverage your team's knowledge base
 
 If you see a marker to the left of a block of code in your source file, that means that a discussion took place about that code. Hover over the marker and click _Open Comment_ to view the discussion.
 
-![Markers](https://help.codestream.com/hc/article_attachments/360009591551/Screen_Shot_2018-08-21_at_12.08.49_PM.png)
+![Discussion Marker](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/Marker.png)
 
 ## Slack integration
 
 Set up the Slack integration by typing "/slack" in any stream and all of your team’s messages on CodeStream will flow through to the channel of your choice on Slack. You can even reply to those messages right from Slack, and the replies will get posted to CodeStream.
 
-![SlackIntegration](https://help.codestream.com/hc/article_attachments/360002212591/SlackCSBot.png)
+![Slack Integration](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/SlackIntegration.png)
 
 ## Visual Studio Live Share integration
 
 Live Share is an excellent plugin from Microsoft that allows users of VS Code to share a project with teammates so that they can access it right from within their IDE. Once a share session has been started you can edit and debug together in real time. CodeStream extends Live Share functionality by creating a channel for each share session so that you can chat with the people you’re sharing with throughout the course of the share session.
 
-![LiveShareIntegration](https://help.codestream.com/hc/article_attachments/360010003011/Screen_Shot_2018-08-27_at_1.09.00_PM.png)
-![LiveShareChannels](https://help.codestream.com/hc/article_attachments/360009985332/Screen_Shot_2018-08-27_at_1.09.42_PM.png)
+![Message in Stream](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/LiveShareStream.png)
+![Live Share Channels](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/LiveShareChannels.png)
 
 # Frequently Asked Questions
 
