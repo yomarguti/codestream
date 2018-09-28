@@ -12,7 +12,7 @@ Support for more IDEs is on the way.
 
 # Help & Feedback
 
-* Our [wiki](https://help.codestream.com) here on GitHub is a complete help guide with information on getting started with CodeStream. 
+* Our [wiki](https://github.com/TeamCodeStream/CodeStream/wiki) here on GitHub is a complete help guide with information on getting started with CodeStream. 
 * Report a bug or send a suggestion in [GitHub issues](https://github.com/TeamCodeStream/CodeStream/issues).
 * Contact us directly at support@codestream.com.
 * Follow [@teamcodestream](http://twitter.com/teamcodestream) for product updates and to share feedback and questions.
