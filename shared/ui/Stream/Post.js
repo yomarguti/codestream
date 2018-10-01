@@ -162,6 +162,7 @@ class Post extends React.Component {
 		let extension = Path.extname(path).toLowerCase();
 		if (extension.startsWith(".")) {
 			extension = extension.substring(1);
+			if (extension === "tsx") extension = "jsx"; // Placeholder until https://github.com/highlightjs/highlight.js/pull/1663 get's merged
 		}
 		const codeHTML = extension
 			? hljs.highlight(extension, codeBlock.code).value
