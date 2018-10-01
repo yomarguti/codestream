@@ -10,11 +10,14 @@ export default store => next => action => {
 			const { session, streams } = store.getState();
 
 			if (isTeamStream || safe(() => memberIds.includes(session.userId))) {
-				const stream = getStreamForId(streams, id, teamId);
+				const stream = getStreamForId(streams, teamId, id);
 				if (!safe(() => stream.memberIds.includes(session.userId))) {
-					setImmediate(() => {
-						store.dispatch(fetchPosts({ teamId, streamId: id }));
-					});
+					requestIdleCallback(
+						() => {
+							store.dispatch(fetchPosts({ teamId, streamId: id }));
+						},
+						{ timeout: 2000 }
+					);
 				}
 			}
 		});
