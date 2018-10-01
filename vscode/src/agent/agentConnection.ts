@@ -52,7 +52,6 @@ import {
 	DocumentPostRequest,
 	DocumentPreparePostRequest,
 	DocumentPreparePostResponse,
-	GetPostsResponse,
 	GetPostsRequest,
 	LogoutRequest,
 	LogoutRequestParams,
