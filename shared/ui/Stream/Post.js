@@ -59,18 +59,21 @@ class Post extends React.Component {
 		if (this.props.deactivated) return;
 
 		const isNewPost = prevProps.deactivated && !this.props.deactivated;
-		const editStateToggled = this.props.editing !== prevProps.editing;
+		const editStateToggledOff = !this.props.editing && prevProps.editing;
 		const postContentChanged = !isNewPost && this.props.post.text !== prevProps.post.text;
 		if (
 			postContentChanged ||
 			isNewPost ||
-			editStateToggled ||
+			editStateToggledOff ||
 			!isEqual(prevProps.post.reactions, this.props.post.reactions)
 		)
 			this.props.onNeedsResize(this.props.index);
 
-		if (this.props.editing && !prevProps.editing) {
-			document.getElementById(this.getEditInputId()).focus();
+		const editStateToggledOn = this.props.editing && !prevProps.editing;
+		if (editStateToggledOn) {
+			this.props.focusOnRow(this.props.index);
+			this.props.onNeedsResize(this.props.index);
+			requestAnimationFrame(() => document.getElementById(this.getEditInputId()).focus());
 		}
 
 		if (!prevProps.didTriggerThread && this.props.didTriggerThread) {
