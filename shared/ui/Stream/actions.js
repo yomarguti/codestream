@@ -123,13 +123,14 @@ export const editPost = (id, text, mentions) => async (dispatch, getState, { api
 
 export const reactToPost = (post, emoji, value) => async (dispatch, getState, { api }) => {
 	try {
-		const { context, session } = getState();
+		const { session } = getState();
 		// optimistically set it on the client... waiting for the server
-		if (!post.reactions) post.reactions = {};
-		if (!post.reactions[emoji]) post.reactions[emoji] = [];
-		if (value) post.reactions[emoji].push(session.userId);
-		else post.reactions[emoji] = _.without(post.reactions[emoji], session.userId);
-		dispatch({ type: "UPDATE_POST", payload: post });
+		const reactions = { ...(post.reactions || {}) };
+		if (!reactions[emoji]) reactions[emoji] = [];
+		if (value) reactions[emoji].push(session.userId);
+		else reactions[emoji] = reactions[emoji].filter(id => id === session.userId);
+
+		dispatch({ type: "UPDATE_POST", payload: { ...post, reactions } });
 
 		// then update it for real on the API server
 		const updatedPost = await api.reactToPost({ id: post.id, emoji, value });
@@ -337,10 +338,11 @@ export const invite = attributes => async (dispatch, getState, { api }) => {
 export const fetchPosts = params => async (dispatch, getState, { api }) => {
 	try {
 		const posts = await api.fetchPosts(params);
-		return dispatch({
+		dispatch({
 			type: "ADD_POSTS_FOR_STREAM",
 			payload: { posts, streamId: params.streamId }
 		});
+		return posts;
 	} catch (error) {
 		console.error(error);
 	}

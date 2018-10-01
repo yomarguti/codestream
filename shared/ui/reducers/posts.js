@@ -30,7 +30,6 @@ export default (state = initialState, { type, payload }) => {
 		case "ADD_POSTS_FOR_STREAM": {
 			const { streamId, posts } = payload;
 			const streamPosts = { ...(state.byStream[streamId] || {}) };
-			const repoId = posts.length > 0 && posts[0].repoId;
 			posts.forEach(post => {
 				streamPosts[post.id] = post;
 			});
@@ -87,8 +86,8 @@ export default (state = initialState, { type, payload }) => {
 
 // If stream for a pending post is created, the pending post will be lost (not displayed)
 // TODO: reconcile pending posts for a file with stream when the stream is created
-export const getPostsForStream = ({ byStream, pending }, streamId = "") => {
-	if (streamId === "") return [];
+export const getPostsForStream = ({ byStream, pending }, streamId) => {
+	if (!streamId) return [];
 	const pendingForStream = pending.filter(it => {
 		try {
 			return it.streamId === streamId || it.stream.file === streamId;
@@ -96,10 +95,13 @@ export const getPostsForStream = ({ byStream, pending }, streamId = "") => {
 			return false;
 		}
 	});
-	// return [..._.sortBy(byStream[streamId], "seqNum"), ...pendingForStream];
-	return [..._.sortBy(byStream[streamId], "seqNum").slice(-50), ...pendingForStream];
+	return [
+		..._.sortBy(byStream[streamId], "seqNum").filter(p => !p.deactivated),
+		...pendingForStream
+	];
 };
 
-export const getPost = ({ byStream }, streamId, postId) => {
-	return (byStream[streamId] || {})[postId];
+export const getPost = ({ byStream, pending }, streamId, postId) => {
+	const post = (byStream[streamId] || {})[postId];
+	return post || pending.find(p => p.id === postId);
 };

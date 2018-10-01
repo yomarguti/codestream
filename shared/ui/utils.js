@@ -1,11 +1,29 @@
 import * as uuidv4 from "uuid/v4";
 
-export const accessSafely = f => {
+export const safe = f => {
 	try {
 		return f();
 	} catch (e) {
 		return undefined;
 	}
+};
+
+export const rangeTo = size => [...Array(size).keys()];
+
+export const debounceToAnimationFrame = fn => {
+	let result;
+	let requestId;
+
+	return function() {
+		if (requestId) {
+			cancelAnimationFrame(requestId);
+		}
+		requestId = requestAnimationFrame(() => {
+			requestId = undefined;
+			result = fn.apply(undefined, rangeTo(arguments.length).map(i => arguments[i]));
+		});
+		return result;
+	};
 };
 
 export const toMapBy = (key, entities) =>
@@ -95,3 +113,13 @@ export const createRange = (node, chars, range) => {
 
 	return range;
 };
+
+// const name = this.constructor.displayName || this.constructor.name || "Component";
+// console.group(name);
+// console.debug("props", { prevProps, currProps: this.props });
+// Object.keys(prevProps).forEach(key => {
+// 	if (prevProps[key] !== this.props[key]) {
+// 		console.log(`property ${key} changed from ${prevProps[key]} to ${this.props[key]}`);
+// 	}
+// });
+// console.groupEnd(name);

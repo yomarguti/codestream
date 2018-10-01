@@ -4,6 +4,7 @@ import { connect } from "react-redux";
 import _ from "underscore";
 import createClassString from "classnames";
 import ComposeBox from "./ComposeBox";
+import PostList from "./PostList";
 import DateSeparator from "./DateSeparator";
 import ChannelPanel from "./ChannelPanel";
 import InvitePanel from "./InvitePanel";
@@ -17,7 +18,7 @@ import Tooltip from "./Tooltip";
 import OfflineBanner from "./OfflineBanner";
 import EventEmitter from "../event-emitter";
 import * as actions from "./actions";
-import { toMapBy } from "../utils";
+import { safe, toMapBy } from "../utils";
 import { slashCommands } from "./SlashCommands";
 import { confirmPopup } from "./Confirm";
 import {
@@ -52,7 +53,7 @@ export class SimpleStream extends Component {
 			EventEmitter.on("interaction:stream-thread-selected", this.handleStreamThreadSelected)
 		);
 
-		this.props.fetchPostsForStreams();
+		// this.props.fetchPostsForStreams();
 
 		// this listener pays attention to when the input field resizes,
 		// presumably because the user has typed more than one line of text
@@ -63,26 +64,14 @@ export class SimpleStream extends Component {
 		// polyfill for ResizeObserver which won't be triggered automatically
 		this.handleResizeCompose();
 
-		if (this._postslist) {
-			this._postslist.addEventListener("scroll", this.handleScroll.bind(this));
-			// this resize observer fires when the height of the
-			// postslist changes, when the window resizes in width
-			// or height, but notably not when new posts are added
-			// this is because the height of the HTML element is
-			// set explicitly
-			new ResizeObserver(() => {
-				this.handleScroll();
-			}).observe(this._postslist);
-		}
-
-		this.scrollToBottom();
-
 		if (
-			(this.props.activePanel === "main" || this.props.activePanel === "thread") &&
+			this.props.activePanel === "thread" &&
 			this.props.postStreamId &&
 			this.props.posts.length === 0
 		) {
-			this.props.fetchPosts({ streamId: this.props.postStreamId, teamId: this.props.teamId });
+			const { postStreamId, teamId } = this.props;
+			// TODO: make thread a PostList so it can be intialized properly on its own
+			this.props.fetchPosts({ streamId: postStreamId, teamId, limit: 150 });
 		}
 
 		if (global.atom) {
@@ -108,14 +97,13 @@ export class SimpleStream extends Component {
 		if (rootInVscode) {
 			rootInVscode.onkeydown = event => {
 				if (event.key === "Escape") {
-					if (event.target.id.startsWith("input-div-")) {
-						// cancel post edit
-						this.setState({ editingPostId: null });
+					if (event.target.id.includes("input-div-")) {
+						this.handleEscape(event);
 					} else if (this.state.threadId) {
 						this.handleDismissThread();
 					}
 				}
-				if (event.key === "Enter" && !event.shiftKey && event.target.id.startsWith("input-div-")) {
+				if (event.key === "Enter" && !event.shiftKey && event.target.id.includes("input-div-")) {
 					// save post edit
 					const postId = event.target.id.split("-").pop();
 					return this.editPost(postId);
@@ -128,43 +116,6 @@ export class SimpleStream extends Component {
 					}
 				}
 			};
-		}
-	}
-
-	componentWillReceiveProps(nextProps) {
-		const switchingFileStreams = nextProps.fileStreamId !== this.props.fileStreamId;
-		const switchingPostStreams = nextProps.postStreamId !== this.props.postStreamId;
-
-		if (switchingPostStreams) {
-			this.handleDismissThread({ track: false });
-
-			// keep track of the new message indicator in "this" instead of looking
-			// directly at currentUser.lastReads, because that will change and trigger
-			// a re-render, which would remove the "new messages" line
-			// console.log("Switch to: ", nextProps.postStreamId);
-		}
-		// this.postWithNewMessageIndicator = 10;
-
-		// if (nextProps.hasFocus && !this.props.hasFocus) {
-		// 	this.postWithNewMessageIndicator = null;
-		// }
-		// if (!nextProps.hasFocus && this.props.hasFocus) {
-		// 	this.postWithNewMessageIndicator = null;
-		// 	if (this.props.currentUser && this.props.currentUser.lastReads) {
-		// 		this.postWithNewMessageIndicator = this.props.currentUser.lastReads[nextProps.postStreamId];
-		// 	}
-		// }
-
-		if (switchingPostStreams) {
-			console.log("SETTING PWNMI to NULL!");
-			this.postWithNewMessageIndicator = undefined;
-		}
-		if (
-			nextProps.umis.lastReads &&
-			typeof nextProps.umis.lastReads[nextProps.postStreamId] !== "undefined"
-		) {
-			console.log("SETTING PWNMI to ", nextProps.umis.lastReads[nextProps.postStreamId]);
-			this.postWithNewMessageIndicator = nextProps.umis.lastReads[nextProps.postStreamId];
 		}
 	}
 
@@ -203,7 +154,7 @@ export class SimpleStream extends Component {
 				this.props.umis.unread[this.props.postStreamId] > 0 ||
 				this.props.umis.mentions[this.props.postStreamId] > 0
 			) {
-				console.log("Marking within check. StreamID: ", this.props.postStreamId);
+				// console.log("Marking within check. StreamID: ", this.props.postStreamId);
 				this.props.markStreamRead(this.props.postStreamId);
 			}
 		}
@@ -218,32 +169,12 @@ export class SimpleStream extends Component {
 			this.resizeStream();
 		}
 
-		// if we just got the focus, check to see if we are up-to-date
-		if (this.props.hasFocus && !prevProps.hasFocus) {
-			this.checkMarkStreamRead();
-		}
-
-		// if we are switching from a non-thread panel
+		// if we are switching from a non-main panel
 		if (this.props.activePanel === "main" && prevProps.activePanel !== "main") {
 			this.checkMarkStreamRead();
 			setTimeout(() => {
 				this.focusInput();
 			}, 500);
-		}
-
-		if (this.props.activePanel === "thread" && prevProps.activePanel === "main") {
-			this.handleScroll();
-		}
-
-		// if we are scrolling around (which changes unreadsAbove and/or unreadsBelow)
-		// then check to see if we are up-to-date
-		if (
-			!this.state.unreadsAbove &&
-			!this.state.unreadsBelow &&
-			(prevState.unreadsAbove || prevState.unreadsBelow)
-		) {
-			console.log("CDU: cmsr");
-			this.checkMarkStreamRead();
 		}
 
 		// when going in and out of threads, make sure the streams are all
@@ -252,49 +183,57 @@ export class SimpleStream extends Component {
 			this.resizeStream();
 		}
 
-		if (prevProps.hasFocus !== this.props.hasFocus) this.handleScroll();
+		const switchedStreams = postStreamId && postStreamId !== prevProps.postStreamId;
+		if (switchedStreams) {
+			this.handleDismissThread({ track: false });
+			safe(() => this._postslist.scrollToBottom());
 
-		// FIXME -- there should be a more definitive way
-		// to detect when a new post came in
-		if (this.props.posts.length !== prevProps.posts.length) {
-			const lastPost = this.props.posts[this.props.posts.length - 1];
+			// keep track of the new message indicator in "this" instead of looking
+			// directly at currentUser.lastReads, because that will change and trigger
+			// a re-render, which would remove the "new messages" line
+			// console.log("Switch to: ", nextProps.postStreamId);
+			// this.postWithNewMessageIndicator = 10;
+			// if (nextProps.hasFocus && !this.props.hasFocus) {
+			// 	this.postWithNewMessageIndicator = null;
+			// }
+			// if (!nextProps.hasFocus && this.props.hasFocus) {
+			// 	this.postWithNewMessageIndicator = null;
+			// 	if (this.props.currentUser && this.props.currentUser.lastReads) {
+			// 		this.postWithNewMessageIndicator = this.props.currentUser.lastReads[nextProps.postStreamId];
+			// 	}
+			// }
+			console.log("SETTING PWNMI to NULL!");
+			this.postWithNewMessageIndicator = undefined;
+			this.setState({ firstUnreadPostSeqNum: null });
+		}
+		if (this.props.activePanel !== prevProps.activePanel && this.state.editingPostId)
+			this.handleDismissEdit();
 
-			if (lastPost) {
-				// if the latest post is mine, scroll to the bottom always
-				// otherwise, if we've scrolled up, then just call
-				// handleScroll to make sure new message indicators
-				// appear as appropriate.
-				const mine = this.props.currentUserId === lastPost.creatorId;
-				if (mine || !this.state.scrolledOffBottom) this.scrollToBottom();
-				else this.handleScroll();
-				this.checkMarkStreamRead();
-			} else {
-				console.log("Could not find lastPost for ", this.props.posts);
+		const { umis } = this.props;
+		if (umis.lastReads) {
+			// TODO: refactor this and simplify it
+			if (
+				typeof umis.lastReads[postStreamId] === "undefined" &&
+				typeof prevProps.umis.lastReads[postStreamId] !== "undefined"
+			) {
+				this.setState({ firstUnreadPostSeqNum: null });
+			} else if (
+				umis.lastReads[postStreamId] !== safe(() => prevProps.umis.lastReads[postStreamId])
+			) {
+				console.log("SETTING PWNMI to ", umis.lastReads[postStreamId]);
+				this.postWithNewMessageIndicator = umis.lastReads[postStreamId];
+				this.setState({ firstUnreadPostSeqNum: this.postWithNewMessageIndicator + 1 });
 			}
 		}
-
-		if (this.state.editingPostId !== prevState.editingPostId) {
-			// special-case the editing of the bottom-most post...
-			// scroll it into view. in all other cases we let the
-			// focus of the input field make sure the post is focused
-			const lastPost = this.props.posts[this.props.posts.length - 1];
-			if (lastPost && this.state.editingPostId == lastPost.id) this.scrollToBottom(true);
-		}
-
-		const switchingToMainPanel =
-			prevProps.activePanel !== "main" && this.props.activePanel === "main";
-		const switchingStreams = postStreamId && postStreamId !== prevProps.postStreamId;
-		if ((switchingToMainPanel || switchingStreams) && this.props.posts.length === 0) {
-			this.props.fetchPosts({ streamId: postStreamId, teamId: this.props.teamId });
-		}
-
-		// if we're switching from the channel list to a stream,
-		// then check to see if we should scroll to the bottom
-		if (switchingToMainPanel) {
-			// FIXME only scroll to the first unread message
-			if (!this.state.scrolledOffBottom) this.scrollToBottom();
-		}
 	}
+
+	setPostsListRef = element => {
+		this._postslist = element;
+	};
+
+	setThreadListRef = element => {
+		this._threadpostslist = element;
+	};
 
 	handleResizeCompose = () => {
 		this.resizeStream();
@@ -302,8 +241,8 @@ export class SimpleStream extends Component {
 
 	resizeStream = () => {
 		if (!this._div || !this._compose) return;
-		const streamHeight = this._div.offsetHeight;
-		const postslistHeight = this._postslist.offsetHeight;
+		// const streamHeight = this._div.offsetHeight;
+		// const postslistHeight = this._postslist.offsetHeight;
 		const composeHeight = this._compose.current.offsetHeight;
 		const headerHeight = this._header.offsetHeight;
 		// if (postslistHeight < streamHeight) {
@@ -314,32 +253,26 @@ export class SimpleStream extends Component {
 		// this._div.style.paddingBottom = padding + "px";
 
 		this._mainPanel.style.paddingBottom = padding + "px";
+		this._threadPanel.style.paddingBottom = padding + "px";
 
-		// we re-measure the height of postslist here because we just changed
-		// it with the style declaration immediately above
-		this._threadpostslist.style.height = this._postslist.offsetHeight + "px";
-		// this._threadpostslist.style.top = headerHeight + "px";
-		// if (this._atMentionsPopup)
-		// this._atMentionsPopup.style.bottom = this._compose.offsetHeight + "px";
+		safe(() => this._postslist.resize());
+		// safe(() => this._threadpostslist.resize());
 
-		let scrollHeight = this._postslist.scrollHeight;
-		let currentScroll = this._postslist.scrollTop;
-		let offBottom = scrollHeight - currentScroll - streamHeight + composeHeight + headerHeight;
+		// // we re-measure the height of postslist here because we just changed
+		// // it with the style declaration immediately above
+		// this._threadpostslist.style.height = this._postslist.offsetHeight + "px";
+		// // this._threadpostslist.style.top = headerHeight + "px";
+		// // if (this._atMentionsPopup)
+		// // this._atMentionsPopup.style.bottom = this._compose.offsetHeight + "px";
+		//
+		// let scrollHeight = this._postslist.scrollHeight;
+		// let currentScroll = this._postslist.scrollTop;
+		// let offBottom = scrollHeight - currentScroll - streamHeight + composeHeight + headerHeight;
 		// if i am manually scrolling, don't programatically scroll to bottom
 		// offBottom is how far we've scrolled off the bottom of the posts list
 		// console.log("OFF BOTTOM IS: ", offBottom);
-		if (offBottom < 100) this.scrollToBottom();
+		// if (offBottom < 100) this.scrollToBottom();
 	};
-
-	scrollToBottom = force => {
-		// don't scroll to bottom if we're in the middle of an edit,
-		// unless the force parameter is called
-		if (this.state.editingPostId && !force) return;
-		if (this._postslist) this._postslist.scrollTop = 1000000;
-		if (this._threadpostslist) this._threadpostslist.scrollTop = 1000000;
-	};
-
-	calculateScrolledOffBottom = () => {};
 
 	// return the post, if any, with the given ID
 	findPostById(id) {
@@ -393,7 +326,8 @@ export class SimpleStream extends Component {
 				<div key={post.id}>
 					<DateSeparator timestamp1={lastTimestamp} timestamp2={post.createdAt} />
 					<Post
-						post={post}
+						id={post.id}
+						streamId={this.props.postStreamId}
 						usernames={this.props.usernamesRegexp}
 						currentUserId={this.props.currentUserId}
 						currentUserName={this.props.currentUserName}
@@ -415,7 +349,7 @@ export class SimpleStream extends Component {
 	// to be able to animate between the two streams, since they will both be
 	// visible during the transition
 	render() {
-		const { activePanel, configs, posts, umis } = this.props;
+		const { activePanel, configs, umis } = this.props;
 
 		const streamClass = createClassString({
 			stream: true,
@@ -446,7 +380,6 @@ export class SimpleStream extends Component {
 			"off-right": activePanel !== "thread"
 		});
 
-		let lastTimestamp = null;
 		let threadId = this.state.threadId;
 		let threadPost = this.findPostById(threadId);
 
@@ -459,7 +392,6 @@ export class SimpleStream extends Component {
 		}
 
 		const streamDivId = "stream-" + this.props.postStreamId;
-		let unread = false;
 
 		const unreadsAboveClass = createClassString({
 			unreads: true,
@@ -562,57 +494,37 @@ export class SimpleStream extends Component {
 							<div className="shadow shadow-top" />
 							<div className="shadow shadow-bottom" />
 						</div>
-						<div
-							className={postsListClass}
-							ref={ref => (this._postslist = ref)}
-							onClick={this.handleClickPost}
-							id={streamDivId}
-						>
-							<div class="shadow-cover-top" />
-							<div className="intro" ref={ref => (this._intro = ref)}>
-								{this.renderIntro(
-									<span>
-										{channelIcon}
-										{this.props.postStreamName}
-									</span>
-								)}
-							</div>
-							{posts.map(post => {
-								if (post.deactivated) return null;
-								// this needs to be done by storing the return value of the render,
-								// then setting lastTimestamp, otherwise you wouldn't be able to
-								// compare the current one to the prior one.
-								const parentPost = post.parentPostId
-									? posts.find(p => p.id === post.parentPostId)
-									: null;
-								const newMessageIndicator =
-									typeof this.postWithNewMessageIndicator !== "undefined" &&
-									post.seqNum === this.postWithNewMessageIndicator + 1;
-								unread = unread || newMessageIndicator;
-								const returnValue = (
-									<div key={post.id}>
-										<DateSeparator timestamp1={lastTimestamp} timestamp2={post.createdAt} />
-										<Post
-											post={post}
-											usernames={this.props.usernamesRegexp}
-											currentUserId={this.props.currentUserId}
-											currentUserName={this.props.currentUserName}
-											replyingTo={parentPost}
-											newMessageIndicator={newMessageIndicator}
-											unread={unread}
-											editing={activePanel === "main" && post.id === this.state.editingPostId}
-											action={this.postAction}
-										/>
+						<div className={postsListClass} onClick={this.handleClickPost} id={streamDivId}>
+							<PostList
+								id={`posts-list-${this.props.postStreamId}`}
+								ref={this.setPostsListRef}
+								isActive={this.props.activePanel === "main"}
+								hasFocus={this.props.hasFocus}
+								postWithNewMessageIndicator={this.postWithNewMessageIndicator}
+								firstUnreadPostSeqNum={this.state.firstUnreadPostSeqNum}
+								usernamesRegexp={this.props.usernamesRegexp}
+								currentUserId={this.props.currentUserId}
+								currentUserName={this.props.currentUserName}
+								editingPostId={this.state.editingPostId}
+								postAction={this.postAction}
+								onDidChangeVisiblePosts={this.handleDidChangeVisiblePosts}
+								streamId={this.props.postStreamId}
+								teamId={this.props.teamId}
+								renderIntro={() => (
+									<div className="intro" ref={ref => (this._intro = ref)}>
+										{this.renderIntro(
+											<span>
+												{channelIcon}
+												{this.props.postStreamName}
+											</span>
+										)}
 									</div>
-								);
-								lastTimestamp = post.createdAt;
-								return returnValue;
-							})}
-							<div class="shadow-cover-bottom" />
+								)}
+							/>
 						</div>
 					</div>
 				</div>
-				<div className={threadPanelClass}>
+				<div className={threadPanelClass} ref={ref => (this._threadPanel = ref)}>
 					<div id="close-thread" className="panel-header" onClick={this.handleDismissThread}>
 						<span className="align-left-button">
 							<Icon
@@ -630,19 +542,16 @@ export class SimpleStream extends Component {
 					</div>
 					<OfflineBanner />
 					<div className="shadow-overlay">
-						<div class="shadow-container">
-							<div class="shadow shadow-top" />
-							<div class="shadow shadow-bottom" />
+						<div className="shadow-container">
+							<div className="shadow shadow-top" />
+							<div className="shadow shadow-bottom" />
 						</div>
-						<div
-							className={threadPostsListClass}
-							ref={ref => (this._threadpostslist = ref)}
-							onClick={this.handleClickPost}
-						>
-							<div class="shadow-cover-top" />
+						<div className={threadPostsListClass} onClick={this.handleClickPost}>
+							<div className="shadow-cover-top" />
 							{threadPost && (
 								<Post
-									post={threadPost}
+									id={threadPost.id}
+									streamId={this.props.postStreamId}
 									usernames={this.props.usernamesRegexp}
 									currentUserId={this.props.currentUserId}
 									currentUserName={this.props.currentUserName}
@@ -655,7 +564,7 @@ export class SimpleStream extends Component {
 								/>
 							)}
 							{this.renderThreadPosts(threadId)}
-							<div class="shadow-cover-bottom" />
+							<div className="shadow-cover-bottom" />
 						</div>
 					</div>
 				</div>
@@ -705,11 +614,23 @@ export class SimpleStream extends Component {
 	}
 
 	editLastPost = event => {
-		// find the most recent post I authored
-		const postDiv = event.target.closest(".post");
-		const seqNum = postDiv ? postDiv.dataset.seqNum : 9999999999;
-		const editingPost = this.findMyPostBeforeSeqNum(seqNum);
-		if (editingPost) this.setState({ editingPostId: editingPost.id });
+		const { activePanel } = this.props;
+		let list;
+		if (activePanel === "main") {
+			list = this._postslist;
+			const { post, index } = list.getUsersMostRecentPost();
+			if (post)
+				this.setState({ editingPostId: post.id }, () => {
+					list.scrollTo(index);
+				});
+			//else no recent posts to edit
+		} else {
+			// TODO: make the thread list a PostList
+			const postDiv = event.target.closest(".post");
+			const seqNum = postDiv ? postDiv.dataset.seqNum : 9999999999;
+			const editingPost = this.findMyPostBeforeSeqNum(seqNum);
+			if (editingPost) this.setState({ editingPostId: editingPost.id });
+		}
 	};
 
 	showChannels = event => {
@@ -726,50 +647,15 @@ export class SimpleStream extends Component {
 		if (panel !== this.props.activePanel) this.props.setPanel(panel);
 	};
 
-	handleScroll(_event) {
-		const scrollDiv = this.props.activePanel === "thread" ? this._threadpostslist : this._postslist;
-
-		if (!scrollDiv) {
-			// console.log("Couldn't find scrollDiv for ", event);
-			return;
+	handleDidChangeVisiblePosts = data => {
+		const { unreadsAbove, unreadsBelow } = this.state;
+		if (unreadsAbove !== data.unreadsAbove || unreadsBelow !== data.unreadsBelow) {
+			this.setState(data, this.checkMarkStreamRead);
 		}
-
-		const scrollTop = scrollDiv.scrollTop;
-		const containerHeight = scrollDiv.parentNode.offsetHeight;
-		const scrollHeight = scrollDiv.scrollHeight;
-		const offBottom = scrollHeight - scrollTop - scrollDiv.offsetHeight;
-		const scrolledOffBottom = offBottom > 100 ? true : null;
-		if (scrolledOffBottom != this.state.scrolledOffBottom)
-			this.setState({ scrolledOffBottom: scrolledOffBottom });
-
-		let unreadsAbove = null;
-		let unreadsBelow = null;
-
-		let umiDivs = scrollDiv.getElementsByClassName("unread");
-		Array.from(umiDivs).forEach(umi => {
-			let top = umi.offsetTop;
-			if (top - scrollTop + 10 < 0) {
-				if (!unreadsAbove) unreadsAbove = umi;
-			} else if (top - scrollTop + umi.offsetHeight > containerHeight) {
-				unreadsBelow = umi;
-			} else if (this.props.hasFocus) {
-				umi.classList.remove("unread");
-			}
-		});
-
-		if (this.state.unreadsAbove != unreadsAbove) this.setState({ unreadsAbove: unreadsAbove });
-		if (this.state.unreadsBelow != unreadsBelow) this.setState({ unreadsBelow: unreadsBelow });
-	}
+	};
 
 	handleClickUnreads = event => {
-		let scrollDiv = this._postslist;
-		let umiDivs = scrollDiv.getElementsByClassName("unread");
-		let type = event.target.getAttribute("type");
-		console.log("TYPE IS: ", type);
-		let active = type === "above" ? umiDivs[0] : umiDivs[umiDivs.length - 1];
-		if (active) {
-			scrollDiv.scrollTop = active.offsetTop + (type === "above" ? -10 : 10);
-		}
+		this._postslist.scrollToUnread(event.target.getAttribute("type"));
 	};
 
 	// dismiss the thread stream and return to the main stream
@@ -894,7 +780,9 @@ export class SimpleStream extends Component {
 	};
 
 	editPost = id => {
-		let newText = document.getElementById("input-div-" + id).innerHTML.replace(/<br>/g, "\n");
+		let inputId = `input-div-${id}`;
+		if (this.state.threadId) inputId = `thread-${inputId}`;
+		let newText = document.getElementById(inputId).innerHTML.replace(/<br>/g, "\n");
 
 		this.replacePostText(id, newText);
 		this.setState({ editingPostId: null });
@@ -972,10 +860,6 @@ export class SimpleStream extends Component {
 	focusInput = () => {
 		const input = document.getElementById("input-div");
 		if (input) input.focus();
-	};
-
-	handleClickScrollToNewMessages = () => {
-		this.scrollToBottom();
 	};
 
 	handleEscape(event) {
@@ -1401,7 +1285,7 @@ export class SimpleStream extends Component {
 			createPost(postStreamId, threadId, text, codeBlocks, mentionedUserIds, {
 				autoMentions,
 				fileUri
-			});
+			}).then(() => safe(() => this._postslist.scrollToBottom()));
 
 		if (quote) {
 			fileUri = quote.fileUri;
@@ -1489,15 +1373,6 @@ const mapStateToProps = ({
 	services,
 	umis
 }) => {
-	// TODO: figure out a way to do this elsewhere
-	Object.keys(users).forEach(function(key, index) {
-		users[key].color = index % 10;
-		if (!users[key].username) {
-			let email = users[key].email;
-			if (email) users[key].username = email.replace(/@.*/, "");
-		}
-	});
-
 	const fileStream =
 		getStreamForRepoAndFile(streams, context.currentRepoId, context.currentFile) || {};
 

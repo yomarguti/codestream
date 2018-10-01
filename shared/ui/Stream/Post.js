@@ -1,7 +1,9 @@
 import React, { Component } from "react";
+import * as Path from "path";
 import { connect } from "react-redux";
 import { injectIntl } from "react-intl";
 import createClassString from "classnames";
+import { isEqual } from "underscore";
 import Headshot from "./Headshot";
 import Icon from "./Icon";
 import Timestamp from "./Timestamp";
@@ -14,16 +16,23 @@ import Menu from "./Menu";
 import EmojiPicker from "./EmojiPicker";
 import Tooltip from "./Tooltip";
 import { getById } from "../reducers/repos";
+import { getPost } from "../reducers/posts";
 import { markdownify, emojify } from "./Markdowner";
 import hljs from "highlight.js";
 import _ from "underscore";
 import { reactToPost } from "./actions";
-const Path = require("path");
+import { safe } from "../utils";
 
 let renderCount = 0;
-class Post extends Component {
+class Post extends React.Component {
+	static defaultProps = {
+		onNeedsResize: () => {}
+	};
 	state = {
+		emojiOpen: false,
+		emojiTarget: null,
 		menuOpen: false,
+		menuTarget: null,
 		authorMenuOpen: false,
 		warning: null
 	};
@@ -34,9 +43,34 @@ class Post extends Component {
 		}
 	}
 
+	shouldComponentUpdate(nextProps, nextState) {
+		const postChanged = true; //  nextProps.post.version !== this.props.post.version;
+
+		const propsChanged = Object.entries(this.props).some(([prop, value]) => {
+			return !["userNames", "post"].includes(prop) && value !== this.props[prop];
+		});
+		const userNamesChanged = !_.isEqual(this.props.userNames, nextProps.userNames);
+		const stateChanged = !_.isEqual(this.state, nextState);
+		const shouldUpdate = propsChanged || userNamesChanged || postChanged || stateChanged;
+		return shouldUpdate;
+	}
+
 	componentDidUpdate(prevProps, _prevState) {
+		if (this.props.deactivated) return;
+
+		const isNewPost = prevProps.deactivated && !this.props.deactivated;
+		const editStateToggled = this.props.editing !== prevProps.editing;
+		const postContentChanged = !isNewPost && this.props.post.text !== prevProps.post.text;
+		if (
+			postContentChanged ||
+			isNewPost ||
+			editStateToggled ||
+			!isEqual(prevProps.post.reactions, this.props.post.reactions)
+		)
+			this.props.onNeedsResize(this.props.index);
+
 		if (this.props.editing && !prevProps.editing) {
-			document.getElementById("input-div-" + this.props.post.id).focus();
+			document.getElementById(this.getEditInputId()).focus();
 		}
 
 		if (!prevProps.didTriggerThread && this.props.didTriggerThread) {
@@ -134,6 +168,8 @@ class Post extends Component {
 	}
 
 	render() {
+		if (this.props.deactivated) return null;
+
 		// console.log(renderCount++);
 		const { post } = this.props;
 		const { menuOpen, authorMenuOpen, menuTarget } = this.state;
@@ -266,7 +302,7 @@ class Post extends Component {
 							<PostDetails post={post} currentCommit={this.props.currentCommit} />
 						)}
 					{this.renderBody(post)}
-					{!this.props.editng && post.hasBeenEdited && <span className="edited">(edited)</span>}
+					{!this.props.editing && post.hasBeenEdited && <span className="edited">(edited)</span>}
 				</div>
 				{this.renderReactions(post)}
 			</div>
@@ -319,8 +355,14 @@ class Post extends Component {
 		return <span dangerouslySetInnerHTML={{ __html: html }} />;
 	};
 
+	getEditInputId = () => {
+		let id = `input-div-${this.props.post.id}`;
+		if (this.props.showDetails) id = `thread-${id}`;
+		return id;
+	};
+
 	renderBodyEditing = post => {
-		const id = "input-div-" + post.id;
+		const id = this.getEditInputId();
 
 		return (
 			<div className="edit-post">
@@ -446,14 +488,38 @@ class Post extends Component {
 }
 
 const mapStateToProps = (state, props) => {
-	const codeBlock = props.post.codeBlocks && props.post.codeBlocks[0];
-	const repo = codeBlock && getById(state.repos, codeBlock.repoId);
+	const { users } = state;
+	// TODO: figure out a way to do this elsewhere
+	Object.keys(users).forEach(function(key, index) {
+		users[key].color = index % 10;
+		if (!users[key].username) {
+			let email = users[key].email;
+			if (email) users[key].username = email.replace(/@.*/, "");
+		}
+	});
+
+	const post = getPost(state.posts, props.streamId, props.id);
+	if (!post) return { deactivated: true };
+
+	const repoName = safe(() => {
+		const codeBlock = post.codeBlocks[0];
+		return getById(state.repos, codeBlock.repoId);
+	});
 	let userNames = {};
-	for (var key in state.users || {}) userNames[key] = state.users[key].username;
+	for (var key in users || {}) userNames[key] = users[key].username;
+
+	let author = users[post.creatorId];
+	if (!author) {
+		author = { email: "", fullName: "" };
+		if (post.creatorId === "codestream") author.username = "CodeStream";
+		else author.username = post.creatorId;
+	}
+
 	return {
 		userNames,
-		repoName: repo ? repo.name : "",
-		canLiveshare: state.services.vsls
+		repoName: repoName || "",
+		canLiveshare: state.services.vsls,
+		post: { ...post, author } // pull author out
 	};
 };
 
