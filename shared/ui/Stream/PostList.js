@@ -127,10 +127,12 @@ export default infiniteLoadable(
 			if (index >= startIndex && index <= stopIndex) {
 				this.recomputeVisibleRowHeights(startIndex, stopIndex);
 				if (!this.scrolledOffBottom) requestAnimationFrame(this.scrollToBottom); // TODO: be more selective about which things change
-			} else {
-				this.list.scrollToRow(index);
-				requestAnimationFrame(() => this.onUpdatePost(index));
 			}
+		};
+
+		focusOnRow = index => {
+			const { startIndex, stopIndex } = this.lastRenderedRowsData;
+			if (index <= startIndex || index >= stopIndex) this.list.scrollToRow(index);
 		};
 
 		onScroll = data => {
@@ -333,6 +335,7 @@ export default infiniteLoadable(
 													editing={isActive && post.id === editingPostId}
 													action={postAction}
 													index={index}
+													focusOnRow={this.focusOnRow}
 													onNeedsResize={this.onUpdatePost}
 													showDetails={this.props.showDetails}
 													streamId={this.props.streamId}
