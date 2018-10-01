@@ -27,9 +27,9 @@ if args.action in ['clean','destroy']:
 	buildstepGeneric(args, cmd = "npm run clean:ci", workingDir = buildData['sandboxTop'])
 
 if args.action == 'destroy':
-	buildstepDestroy(args, buildData, repoList = allRepos)
+	buildstepDestroy(args, buildData)
 
-if args.action in ['build']:
+if args.action == 'build':
 	print("there is no build for the agent yet")
 
 if args.action == 'citest':

@@ -37,4 +37,4 @@ export LSPAGENT_TMP=$LSPAGENT_SANDBOX/tmp     # temp directory
 export LSPAGENT_CONFS=$LSPAGENT_SANDBOX/conf  # config files directory
 export LSPAGENT_DATA=$LSPAGENT_SANDBOX/data   # data directory
 export LSPAGENT_PIDS=$LSPAGENT_SANDBOX/pid    # pid files directory
-[ -z "$LSPAGENT_ASSET_ENV"] && export LSPAGENT_ASSET_ENV=local
+[ -z "$LSPAGENT_ASSET_ENV" ] && export LSPAGENT_ASSET_ENV=local
