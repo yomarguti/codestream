@@ -33,7 +33,7 @@ if args.action == 'build':
 	print("there is no build for the agent yet")
 
 if args.action == 'citest':
-	buildstepGeneric(args, cmd = "npm run test-unit-ci")
+	buildstepGeneric(args, cmd = "npm run bash-test-unit-ci")
 
 if args.action == 'publish':
 	print("there are not assets for the agent yet")
