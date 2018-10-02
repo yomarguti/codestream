@@ -3,7 +3,12 @@ import fetch, { Headers, RequestInit, Response } from "node-fetch";
 import { URLSearchParams } from "url";
 import { ServerError } from "../agentError";
 import { Logger } from "../logger";
-import { AccessToken } from "../shared/agent.protocol";
+import {
+	AccessToken,
+	GetLatestPostResponse,
+	GetPostsInRangeResponse,
+	GetUnreadStreamsResponse
+} from "../shared/agent.protocol";
 import {
 	CompleteSignupRequest,
 	CreateMarkerLocationRequest,
@@ -18,6 +23,9 @@ import {
 	DeletePostResponse,
 	DeleteTeamContentRequest,
 	DeleteTeamContentResponse,
+	EditPostRequest,
+	EditPostResponse,
+	Emojis,
 	FindRepoResponse,
 	GetMarkerLocationsResponse,
 	GetMarkerResponse,
@@ -32,10 +40,18 @@ import {
 	GetTeamsResponse,
 	GetUserResponse,
 	GetUsersResponse,
+	InviteRequest,
+	InviteResponse,
 	JoinStreamRequest,
 	JoinStreamResponse,
 	LoginRequest,
 	LoginResponse,
+	MarkPostUnreadRequest,
+	MarkPostUnreadResponse,
+	GetMeResponse,
+	Push,
+	ReactToPostRequest,
+	ReactToPostResponse,
 	StreamType,
 	UpdateMarkerRequest,
 	UpdateMarkerResponse,
@@ -130,6 +146,22 @@ export class CodeStreamApi {
 		return this.delete<any /*DeleteStreamResponse*/>(`/streams/${streamId}`, token);
 	}
 
+	reactToPost(token: string, request: ReactToPostRequest) {
+		return this.put<Emojis, ReactToPostResponse>(`/react/${request.postId}`, request.emojis, token);
+	}
+
+	editPost(token: string, request: EditPostRequest) {
+		return this.put<EditPostRequest, EditPostResponse>(`/posts/${request.id}`, request, token);
+	}
+
+	markPostUnread(token: string, request: MarkPostUnreadRequest) {
+		return this.put<MarkPostUnreadRequest, MarkPostUnreadResponse>(
+			`/unread/${request.id}`,
+			request,
+			token
+		);
+	}
+
 	deleteTeamContent(token: string, request: DeleteTeamContentRequest) {
 		return this.put<DeleteTeamContentRequest, DeleteTeamContentResponse>(
 			`/delete-content`,
@@ -168,6 +200,25 @@ export class CodeStreamApi {
 
 	getPost(token: string, teamId: string, postId: string): Promise<GetPostResponse> {
 		return this.get<GetPostResponse>(`/posts/${postId}?teamId=${teamId}`, token);
+	}
+
+	getLatestPost(token: string, teamId: string, streamId: string): Promise<GetLatestPostResponse> {
+		return this.get<GetLatestPostResponse>(
+			`/posts/?teamId=${teamId}&streamId=${streamId}&limit=1`,
+			token
+		);
+	}
+
+	getPostsInRange(
+		token: string,
+		teamId: string,
+		streamId: string,
+		range: string
+	): Promise<GetPostsInRangeResponse> {
+		return this.get<GetPostsInRangeResponse>(
+			`/posts/?teamId=${teamId}&streamId=${streamId}&seqnum=${range}`,
+			token
+		);
 	}
 
 	getPosts(token: string, teamId: string, streamId: string): Promise<GetPostsResponse> {
@@ -226,6 +277,13 @@ export class CodeStreamApi {
 		return this.get<GetStreamResponse<T>>(`/streams/${streamId}`, token);
 	}
 
+	getUnreadStreams<T extends CSStream>(
+		token: string,
+		teamId: string
+	): Promise<GetUnreadStreamsResponse> {
+		return this.get<GetUnreadStreamsResponse>(`/streams?teamId=${teamId}&unread`, token);
+	}
+
 	getStreams<T extends CSStream>(
 		token: string,
 		teamId: string,
@@ -253,8 +311,12 @@ export class CodeStreamApi {
 		return this.get<GetUsersResponse>(`/users?teamId=${teamId}`, token);
 	}
 
-	joinStream(token: string, teamId: string, streamId: string, request: JoinStreamRequest) {
-		return this.put<JoinStreamRequest, JoinStreamResponse>(`/join/${streamId}`, request, token);
+	joinStream(token: string, teamId: string, streamId: string) {
+		return this.put<object, JoinStreamResponse>(`/join/${streamId}`, {}, token);
+	}
+
+	updateStream(token: string, streamId: string, request: object) {
+		return this.put(`/streams/${streamId}`, request, token);
 	}
 
 	updateMarker(token: string, markerId: string, request: UpdateMarkerRequest) {
@@ -269,17 +331,24 @@ export class CodeStreamApi {
 		return this.put<UpdatePresenceRequest, UpdatePresenceResponse>(`/presence`, request, token);
 	}
 
-	updateStreamMembership(
-		token: string,
-		teamId: string,
-		streamId: string,
-		request: UpdateStreamMembershipRequest
-	) {
-		return this.put<UpdateStreamMembershipRequest, UpdateStreamMembershipResponse>(
-			`/streams/${streamId}`,
-			request,
-			token
-		);
+	updateStreamMembership(token: string, teamId: string, streamId: string, push: Push) {
+		return this.put<Push, UpdateStreamMembershipResponse>(`/streams/${streamId}`, push, token);
+	}
+
+	invite(token: string, request: InviteRequest) {
+		return this.post<InviteRequest, InviteResponse>("/users", request, token);
+	}
+
+	markStreamRead(token: string, streamId: string) {
+		return this.put(`/read/${streamId}`, {}, token);
+	}
+
+	savePreferences(token: string, preferences: {}) {
+		return this.put("/preferences", preferences, token);
+	}
+
+	getMe(token: string) {
+		return this.get<GetMeResponse>("/users/me", token);
 	}
 
 	grant(token: string, channel: string): Promise<any> {

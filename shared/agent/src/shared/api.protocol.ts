@@ -322,8 +322,13 @@ export interface EditPostRequest {
 
 export interface ReactToPostResponse extends DeletePostResponse {}
 
-export interface ReactToPostRequest {
+export interface Emojis {
 	[emoji: string]: boolean;
+}
+
+export interface ReactToPostRequest {
+	postId: string;
+	emojis: Emojis;
 }
 
 export interface EditPostResponse extends DeletePostResponse {}
@@ -403,13 +408,16 @@ export interface InviteResponse {
 	user: CSUser;
 }
 
-export interface JoinStreamRequest {}
+export interface JoinStreamRequest {
+	teamId: string;
+	streamId: string;
+}
 
 export interface JoinStreamResponse {
 	stream: CSStream;
 }
 
-export interface MeResponse {
+export interface GetMeResponse {
 	user: CSUser;
 }
 
@@ -435,8 +443,14 @@ export interface UpdatePresenceResponse {
 	awayTimeout: number;
 }
 
-export interface UpdateStreamMembershipRequest {
+export interface Push {
 	$push: string;
+}
+
+export interface UpdateStreamMembershipRequest {
+	teamId: string;
+	streamId: string;
+	push: Push;
 }
 
 export interface UpdateStreamMembershipResponse {
