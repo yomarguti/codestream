@@ -33,15 +33,16 @@ There are 2 builds; one for the develop branch (Continuous Integration) and one 
 | [Prod](http://tc.codestream.us/viewType.html?buildTypeId=VscodeCodestream_Prod) | [prod](http://assets.codestream.us/artifacts/prod/vscode-codestream/) | Triggered by updates to the **master** branch.<br>Build prod assets on TC agent, run tests and publish the artifacts for internal distribution. |
 
 
-## Production Release (untested / unconfirmed, more details needed)
+## Production Release
 1. Tag the **vscode-codestream**, **codestream-lsp-agent** and **codestream-components** repos with the lightweight tag **vscode-X.Y.Z**.
 1. Copy the assets to the CloudFront distribution.  
 `vscsb-publish-assets-to-cloudfront --asset-env prod`
 1. Deploy the extension to the Visual Studio Marketplace  
-`vsce publish --packagePath codestream-0.13.0+3.vsix`
+`vsce publish --packagePath codestream-*.vsix`.  The extension will be validated before going live. See the progress at https://marketplace.visualstudio.com/manage/publishers/CodeStream.  
+The Azure DevOps site is at https://teamcodestream.visualstudio.com.
 1. Bump to the next minor (or major) version number in package.json in the **develop** branch
 
 
 ## Hotfixing (untested / unconfirmed, more thought needed)
-
-1. we need a reliable way to do this with TC
+1. If the **master** branch already represents the version being hotfixed, create the fix on the HEAD of **master** and let TeamCity create the new asset as usual. Remember to bump the version patch number in package.json and follow the Production Release instructions above.
+1. Otherwise, we need a reliable way to do this with TC
