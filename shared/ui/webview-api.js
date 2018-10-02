@@ -102,11 +102,14 @@ export default class WebviewApi {
 	}
 
 	markStreamRead(streamId) {
-		return this.postMessage({ action: "mark-stream-read", params: streamId });
+		return this.postMessage({ action: "mark-stream-read", params: { streamId } });
 	}
 
-	markPostUnread(postId) {
-		return this.postMessage({ action: "mark-post-unread", params: postId });
+	markPostUnread(streamId, postId) {
+		return this.postMessage({
+			action: "mark-post-unread",
+			params: { streamId: streamId, id: postId }
+		});
 	}
 
 	saveUserPreference(newPreference) {

@@ -691,7 +691,7 @@ export class SimpleStream extends Component {
 			buttons: [
 				{
 					label: "Delete Post",
-					action: () => this.props.deletePost(postId)
+					action: () => this.props.deletePost(this.props.postStreamId, postId)
 				},
 				{ label: "Cancel" }
 			]
@@ -699,7 +699,7 @@ export class SimpleStream extends Component {
 	};
 
 	markUnread = postId => {
-		this.props.markPostUnread(postId);
+		this.props.markPostUnread(this.props.postStreamId, postId);
 	};
 
 	notImplementedYet = () => {
@@ -776,7 +776,7 @@ export class SimpleStream extends Component {
 		const replaceText = doc.documentElement.textContent;
 		const mentionUserIds = this.findMentionedUserIds(replaceText, this.props.teammates);
 
-		this.props.editPost(postId, replaceText, mentionUserIds);
+		this.props.editPost(this.props.postStreamId, postId, replaceText, mentionUserIds);
 	};
 
 	editPost = id => {

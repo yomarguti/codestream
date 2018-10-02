@@ -27,10 +27,10 @@ export const markStreamRead = streamId => (dispatch, getState, { api }) => {
 	api.markStreamRead(streamId);
 };
 
-export const markPostUnread = postId => (dispatch, getState, { api }) => {
+export const markPostUnread = (streamId, postId) => (dispatch, getState, { api }) => {
 	if (!postId) return;
 	console.log("CALLING API: ", api);
-	api.markPostUnread(postId);
+	api.markPostUnread(streamId, postId);
 	// return dispatch({ type: "CLEAR_UMI", payload: streamId });
 };
 
@@ -112,9 +112,9 @@ export const createSystemPost = (streamId, parentPostId, text, seqNum) => async 
 	dispatch({ type: "ADD_POST", payload: post });
 };
 
-export const editPost = (id, text, mentions) => async (dispatch, getState, { api }) => {
+export const editPost = (streamId, id, text, mentions) => async (dispatch, getState, { api }) => {
 	try {
-		const post = await api.editPost({ id, text, mentions });
+		const post = await api.editPost({ streamId, id, text, mentions });
 		return dispatch({ type: "UPDATE_POST", payload: post });
 	} catch (e) {
 		// TODO:
@@ -133,16 +133,21 @@ export const reactToPost = (post, emoji, value) => async (dispatch, getState, { 
 		dispatch({ type: "UPDATE_POST", payload: { ...post, reactions } });
 
 		// then update it for real on the API server
-		const updatedPost = await api.reactToPost({ id: post.id, emoji, value });
+		const updatedPost = await api.reactToPost({
+			streamId: post.streamId,
+			id: post.id,
+			emoji,
+			value
+		});
 		return dispatch({ type: "UPDATE_POST", payload: updatedPost });
 	} catch (e) {
 		// TODO:
 	}
 };
 
-export const deletePost = id => async (dispatch, getState, { api }) => {
+export const deletePost = (streamId, id) => async (dispatch, getState, { api }) => {
 	try {
-		const post = await api.deletePost(id);
+		const post = await api.deletePost({ streamId, id });
 		return dispatch({ type: "DELETE_POST", payload: post });
 	} catch (e) {
 		// TODO
