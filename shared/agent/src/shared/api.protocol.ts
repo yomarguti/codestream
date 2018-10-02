@@ -322,13 +322,14 @@ export interface EditPostRequest {
 
 export interface ReactToPostResponse extends DeletePostResponse {}
 
-export interface Emojis {
+export interface Reactions {
 	[emoji: string]: boolean;
 }
 
 export interface ReactToPostRequest {
+	streamId: string;
 	postId: string;
-	emojis: Emojis;
+	reactions: Reactions;
 }
 
 export interface EditPostResponse extends DeletePostResponse {}

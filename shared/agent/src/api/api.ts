@@ -25,7 +25,7 @@ import {
 	DeleteTeamContentResponse,
 	EditPostRequest,
 	EditPostResponse,
-	Emojis,
+	Reactions,
 	FindRepoResponse,
 	GetMarkerLocationsResponse,
 	GetMarkerResponse,
@@ -147,7 +147,11 @@ export class CodeStreamApi {
 	}
 
 	reactToPost(token: string, request: ReactToPostRequest) {
-		return this.put<Emojis, ReactToPostResponse>(`/react/${request.postId}`, request.emojis, token);
+		return this.put<Reactions, ReactToPostResponse>(
+			`/react/${request.postId}`,
+			request.reactions,
+			token
+		);
 	}
 
 	editPost(token: string, request: EditPostRequest) {
