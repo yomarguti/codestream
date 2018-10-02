@@ -116,75 +116,101 @@ export class Login extends React.Component {
 	render() {
 		return (
 			<div id="login-page">
-				<form id="login-form" className="standard-form" onSubmit={this.submitCredentials}>
-					<fieldset className="form-body">
-						{this.renderAccountMessage()}
-						<div id="controls">
-							<h3>New to CodeStream?</h3>
-							<Button
-								id="signup-button"
-								className="control-button"
-								type="button"
-								onClick={this.handleClickSignup}
-							>
-								<FormattedMessage id="login.footer.signUp" />
-							</Button>
-							<div className="spacer" />
-							<h3>Already Have an Account?</h3>
-							{this.renderError()}
-							<div id="email-controls" className="control-group">
-								<label>
-									<FormattedMessage id="login.email.label" />
-								</label>
-								<input
-									id="login-input-email"
-									className="native-key-bindings input-text control"
-									type="text"
-									name="email"
-									value={this.state.email}
-									onChange={e => this.setState({ email: e.target.value })}
-									onBlur={this.onBlurEmail}
-									required={this.state.emailTouched}
-								/>
-								{this.renderEmailError()}
+				<div className="box">
+					<h2>Sign In to CodeStream</h2>
+					<form className="standard-form">
+						<fieldset className="form-body">
+							<div id="controls">
+								<div className="control-group">
+									<label>Have an access token?</label>
+									<input className="input-text" type="text" />
+								</div>
+								<div className="button-group">
+									<Button className="control-button" type="button" onClick={this.signInWithToken}>
+										Sign In with Access Token
+									</Button>
+								</div>
 							</div>
-							<div id="password-controls" className="control-group">
-								<label>
-									<FormattedMessage id="login.password.label" />
-								</label>
-								<input
-									id="login-input-password"
-									className="native-key-bindings input-text"
-									type="password"
-									name="password"
-									value={this.state.password}
-									onChange={e => this.setState({ password: e.target.value })}
-									onBlur={this.onBlurPassword}
-									required={this.state.passwordTouched}
-								/>
-								{this.renderPasswordHelp()}
-								{/* <div className="help-link">
+						</fieldset>
+					</form>
+					<div className="divider" />
+					<form className="standard-form">
+						<fieldset className="form-body">
+							<div id="controls">
+								<div className="button-group">
+									<Button className="control-button" type="button" onClick={this.signInWithSlack}>
+										Sign In with Slack
+									</Button>
+								</div>
+							</div>
+						</fieldset>
+					</form>
+					<div className="divider" />
+					<form className="standard-form" onSubmit={this.submitCredentials}>
+						<fieldset className="form-body">
+							{this.renderAccountMessage()}
+							<div id="controls">
+								<div className="spacer" />
+								{this.renderError()}
+								<div id="email-controls" className="control-group">
+									<label>
+										<FormattedMessage id="login.email.label" />
+									</label>
+									<input
+										id="login-input-email"
+										className="native-key-bindings input-text control"
+										type="text"
+										name="email"
+										value={this.state.email}
+										onChange={e => this.setState({ email: e.target.value })}
+										onBlur={this.onBlurEmail}
+										required={this.state.emailTouched}
+									/>
+									{this.renderEmailError()}
+								</div>
+								<div id="password-controls" className="control-group">
+									<label>
+										<FormattedMessage id="login.password.label" />
+									</label>
+									<input
+										id="login-input-password"
+										className="native-key-bindings input-text"
+										type="password"
+										name="password"
+										value={this.state.password}
+										onChange={e => this.setState({ password: e.target.value })}
+										onBlur={this.onBlurPassword}
+										required={this.state.passwordTouched}
+									/>
+									{this.renderPasswordHelp()}
+									{/* <div className="help-link">
 									<a onClick={() => this.props.transition("forgotPassword")}>
 										<FormattedMessage id="login.forgotPassword" />
 									</a>
 								</div> */}
+								</div>
+								<div className="button-group">
+									<Button
+										id="login-button"
+										className="control-button"
+										type="submit"
+										loading={this.state.loading}
+									>
+										<FormattedMessage id="login.submitButton" />
+									</Button>
+								</div>
+								<div className="footer" style={{ opacity: 0.5, fontSize: ".9em" }}>
+									<p>
+										Don't have an account? <a onClick={this.handleClickSignup}>Sign Up</a>
+									</p>
+									<p>
+										CodeStream Version {this.props.pluginVersion} <sup>BETA</sup>
+									</p>
+								</div>
 							</div>
-							<div className="button-group">
-								<Button
-									id="login-button"
-									className="control-button"
-									type="submit"
-									loading={this.state.loading}
-								>
-									<FormattedMessage id="login.submitButton" />
-								</Button>
-							</div>
-							<div className="footer" style={{ opacity: 0.5, fontSize: ".9em" }}>
-								CodeStream Version {this.props.pluginVersion} <sup>BETA</sup>
-							</div>
-						</div>
-					</fieldset>
-				</form>
+						</fieldset>
+					</form>
+				</div>
 			</div>
 		);
 	}

@@ -6,9 +6,32 @@
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
+	align-items: center;
+	h2 {
+		text-align: center;
+	}
 }
 
-#login-form,
+#login-page {
+	.box {
+		width: 100%;
+		max-width: 340px;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+	}
+	.standard-form .form-body {
+		padding-top: 0;
+	}
+	.divider {
+		width: 80%;
+		height: 2px;
+		background-color: @app-background-color-darker;
+		margin: 0 auto;
+	}
+}
+
+#login-page .standard-form,
 #continue-form {
 	width: 100%;
 	margin: 0 auto;
@@ -21,7 +44,7 @@
 	}
 
 	.spacer {
-		height: 30px;
+		height: 10px;
 	}
 
 	.form-error {

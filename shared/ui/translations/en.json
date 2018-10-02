@@ -41,7 +41,7 @@
 	"login.alreadyConfirmed": "Your email is already confirmed! Please enter your password.",
 	"login.invalid": "Sorry, you entered an incorrect email or password.",
 	"login.forgotPassword": "Forgot password?",
-	"login.submitButton": "SIGN IN",
+	"login.submitButton": "Sign In with CodeStream",
 	"login.footer.noAccount": "Don't have an account?",
 	"login.footer.signUp": "Sign Up",
 	"login.password.label": "Password",
