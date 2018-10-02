@@ -1,4 +1,4 @@
-export default (state = "login", { type }) => {
+export default (state = "signup", { type }) => {
 	switch (type) {
 		case "GO_TO_COMPLETE_SIGNUP":
 			return "completeSignup";

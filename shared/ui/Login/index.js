@@ -115,102 +115,100 @@ export class Login extends React.Component {
 
 	render() {
 		return (
-			<div id="login-page">
-				<div className="box">
-					<h2>Sign In to CodeStream</h2>
-					<form className="standard-form">
-						<fieldset className="form-body">
-							<div id="controls">
-								<div className="control-group">
-									<label>Have an access token?</label>
-									<input className="input-text" type="text" />
-								</div>
-								<div className="button-group">
-									<Button className="control-button" type="button" onClick={this.signInWithToken}>
-										Sign In with Access Token
-									</Button>
-								</div>
+			<div id="login-page" className="onboarding-page">
+				<h2>Sign In to CodeStream</h2>
+				<form className="standard-form">
+					<fieldset className="form-body">
+						<div id="controls">
+							<div className="control-group">
+								<label>Have an access token?</label>
+								<input className="input-text" type="text" />
 							</div>
-						</fieldset>
-					</form>
-					<div className="divider" />
-					<form className="standard-form">
-						<fieldset className="form-body">
-							<div id="controls">
-								<div className="button-group">
-									<Button className="control-button" type="button" onClick={this.signInWithSlack}>
-										Sign In with Slack
-									</Button>
-								</div>
+							<div className="button-group">
+								<Button className="control-button" type="button" onClick={this.signInWithToken}>
+									Sign In with Access Token
+								</Button>
 							</div>
-						</fieldset>
-					</form>
-					<div className="divider" />
-					<form className="standard-form" onSubmit={this.submitCredentials}>
-						<fieldset className="form-body">
-							{this.renderAccountMessage()}
-							<div id="controls">
-								<div className="spacer" />
-								{this.renderError()}
-								<div id="email-controls" className="control-group">
-									<label>
-										<FormattedMessage id="login.email.label" />
-									</label>
-									<input
-										id="login-input-email"
-										className="native-key-bindings input-text control"
-										type="text"
-										name="email"
-										value={this.state.email}
-										onChange={e => this.setState({ email: e.target.value })}
-										onBlur={this.onBlurEmail}
-										required={this.state.emailTouched}
-									/>
-									{this.renderEmailError()}
-								</div>
-								<div id="password-controls" className="control-group">
-									<label>
-										<FormattedMessage id="login.password.label" />
-									</label>
-									<input
-										id="login-input-password"
-										className="native-key-bindings input-text"
-										type="password"
-										name="password"
-										value={this.state.password}
-										onChange={e => this.setState({ password: e.target.value })}
-										onBlur={this.onBlurPassword}
-										required={this.state.passwordTouched}
-									/>
-									{this.renderPasswordHelp()}
-									{/* <div className="help-link">
+						</div>
+					</fieldset>
+				</form>
+				<div className="divider" />
+				<form className="standard-form">
+					<fieldset className="form-body">
+						<div id="controls">
+							<div className="button-group">
+								<Button className="control-button" type="button" onClick={this.signInWithSlack}>
+									Sign In with Slack
+								</Button>
+							</div>
+						</div>
+					</fieldset>
+				</form>
+				<div className="divider" />
+				<form className="standard-form" onSubmit={this.submitCredentials}>
+					<fieldset className="form-body">
+						{this.renderAccountMessage()}
+						<div id="controls">
+							<div className="spacer" />
+							{this.renderError()}
+							<div id="email-controls" className="control-group">
+								<label>
+									<FormattedMessage id="login.email.label" />
+								</label>
+								<input
+									id="login-input-email"
+									className="native-key-bindings input-text control"
+									type="text"
+									name="email"
+									value={this.state.email}
+									onChange={e => this.setState({ email: e.target.value })}
+									onBlur={this.onBlurEmail}
+									required={this.state.emailTouched}
+								/>
+								{this.renderEmailError()}
+							</div>
+							<div id="password-controls" className="control-group">
+								<label>
+									<FormattedMessage id="login.password.label" />
+								</label>
+								<input
+									id="login-input-password"
+									className="native-key-bindings input-text"
+									type="password"
+									name="password"
+									value={this.state.password}
+									onChange={e => this.setState({ password: e.target.value })}
+									onBlur={this.onBlurPassword}
+									required={this.state.passwordTouched}
+								/>
+								{this.renderPasswordHelp()}
+								{/* <div className="help-link">
 									<a onClick={() => this.props.transition("forgotPassword")}>
 										<FormattedMessage id="login.forgotPassword" />
 									</a>
 								</div> */}
-								</div>
-								<div className="button-group">
-									<Button
-										id="login-button"
-										className="control-button"
-										type="submit"
-										loading={this.state.loading}
-									>
-										<FormattedMessage id="login.submitButton" />
-									</Button>
-								</div>
-								<div className="footer" style={{ opacity: 0.5, fontSize: ".9em" }}>
-									<p>
-										Don't have an account? <a onClick={this.handleClickSignup}>Sign Up</a>
-									</p>
-									<p>
-										CodeStream Version {this.props.pluginVersion} <sup>BETA</sup>
-									</p>
-								</div>
 							</div>
-						</fieldset>
-					</form>
-				</div>
+							<div className="button-group">
+								<Button
+									id="login-button"
+									className="control-button"
+									type="submit"
+									loading={this.state.loading}
+								>
+									<FormattedMessage id="login.submitButton" />
+								</Button>
+							</div>
+							<div className="footer">
+								<p>
+									Don't have an account? <a onClick={this.handleClickSignup}>Sign Up</a>
+								</p>
+								<p style={{ opacity: 0.5, fontSize: ".9em" }}>
+									CodeStream Version {this.props.pluginVersion} <sup>BETA</sup>
+								</p>
+							</div>
+						</div>
+					</fieldset>
+				</form>
 			</div>
 		);
 	}

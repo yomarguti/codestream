@@ -4,6 +4,7 @@ import englishLocaleData from "react-intl/locale-data/en";
 import { connect, Provider } from "react-redux";
 import Stream from "../Stream";
 import Login from "../Login";
+import Signup from "../Signup";
 import CompleteSignup from "../CompleteSignup";
 
 addLocaleData(englishLocaleData);
@@ -17,6 +18,8 @@ const Loading = props => (
 
 const UnauthenticatedRoutes = connect(state => ({ page: state.route }))(props => {
 	switch (props.page) {
+		case "signup":
+			return <Signup />;
 		case "login":
 			return <Login />;
 		case "completeSignup":
