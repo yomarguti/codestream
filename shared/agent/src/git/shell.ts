@@ -95,7 +95,7 @@ export function findExecutable(exe: string, args: string[]): { cmd: string; args
 
 export interface CommandOptions {
 	readonly cwd?: string;
-	readonly env?: Object;
+	readonly env?: NodeJS.ProcessEnv;
 	readonly encoding?: BufferEncoding;
 	/**
 	 * The size the output buffer to allocate to the spawned process. Set this
@@ -129,7 +129,7 @@ export function runCommand(command: string, args: any[], options: CommandOptions
 			command,
 			args,
 			opts,
-			(err: Error & { code?: string | number } | null, stdout, stderr) => {
+			(err: Error & { code?: string | number } | null, stdout: string, stderr: string) => {
 				if (!err) {
 					if (stderr) {
 						Logger.warn(`Warning(${command} ${args.join(" ")}): ${stderr}`);
