@@ -172,6 +172,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	async editPost(streamId: string, postId: string, text: string, mentionedUserIds: string[]) {
 		const changes = (await this._codestream.editPost(this._token, {
 			id: postId,
+			streamId,
 			text,
 			mentionedUserIds
 		})).post;
@@ -184,7 +185,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	async markPostUnread(streamId: string, postId: string) {
-		const changes = (await this._codestream.markPostUnread(this._token, { id: postId })).post;
+		const changes = (await this._codestream.markPostUnread(this._token, { id: postId, streamId })).post;
 		return await this._cache.resolvePost(changes);
 	}
 
