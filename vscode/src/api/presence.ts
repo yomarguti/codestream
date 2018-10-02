@@ -3,8 +3,8 @@ import { Disposable, Event, EventEmitter, MessageItem, window } from "vscode";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { PresenceStatus } from "./api";
+import { ApiProvider } from "./apiProvider";
 import { SessionSignedOutReason } from "./session";
-import { CodeStreamSessionApi } from "./sessionApi";
 
 export class PresenceManager implements Disposable {
 	private _onDidChange = new EventEmitter<PresenceStatus>();
@@ -18,10 +18,7 @@ export class PresenceManager implements Disposable {
 	private _timer: NodeJS.Timer | undefined;
 	private _timestamp: number | undefined;
 
-	constructor(
-		private readonly sessionApi: CodeStreamSessionApi,
-		private readonly sessionId: string
-	) {}
+	constructor(private readonly _api: ApiProvider, private readonly _sessionId: string) {}
 
 	dispose() {
 		if (this._timer !== undefined) {
@@ -56,7 +53,7 @@ export class PresenceManager implements Disposable {
 
 		if (this._promise !== undefined && this._promiseStatus === status) return;
 
-		this._promise = this.sessionApi.updatePresence(status, this.sessionId);
+		this._promise = this._api.updatePresence(status, this._sessionId);
 		this._promiseStatus = status;
 
 		try {

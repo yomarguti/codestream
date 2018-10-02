@@ -352,41 +352,48 @@ export class StreamWebviewPanel implements Disposable {
 								type: WebviewIpcMessageType.response,
 								body: {
 									id: body.id,
-									payload: await Container.agent.getPosts(streamId, limit, beforeSeqNum)
+									payload: await this.session.api.getPosts(streamId, limit, beforeSeqNum)
 								}
 							});
 							break;
 						}
 						case "delete-post": {
-							const post = await this.session.api.getPost(body.params);
-							const updates = await this.session.api.deletePost(body.params);
-							this.postMessage({
-								type: WebviewIpcMessageType.response,
-								body: { id: body.id, payload: { ...post, ...updates } }
-							});
-							break;
-						}
-						case "react-to-post": {
-							const { id, emoji, value } = body.params;
-							const post = await this.session.api.reactToPost(id, emoji, value);
+							const { streamId, id } = body.params;
+
+							const post = await this.session.api.deletePost(streamId, id);
 							this.postMessage({
 								type: WebviewIpcMessageType.response,
 								body: { id: body.id, payload: post }
 							});
+
+							break;
+						}
+						case "react-to-post": {
+							const { streamId, id, emoji, value } = body.params;
+
+							const post = await this.session.api.reactToPost(streamId, id, emoji, value);
+							this.postMessage({
+								type: WebviewIpcMessageType.response,
+								body: { id: body.id, payload: post }
+							});
+
 							break;
 						}
 						case "edit-post": {
-							const { id, text, mentions } = body.params;
-							const post = await this.session.api.getPost(id);
-							const updates = await this.session.api.editPost(id, text, mentions);
+							const { streamId, id, text, mentions } = body.params;
+
+							const post = await this.session.api.editPost(streamId, id, text, mentions);
 							this.postMessage({
 								type: WebviewIpcMessageType.response,
-								body: { id: body.id, payload: { ...post, ...updates } }
+								body: { id: body.id, payload: post }
 							});
+
 							break;
 						}
 						case "mark-stream-read": {
-							const stream = await this.session.getStream(body.params);
+							const { streamId, id } = body.params;
+
+							const stream = await this.session.getStream(streamId);
 							if (stream) {
 								const response = await stream.markRead();
 								this.postMessage({
@@ -397,19 +404,23 @@ export class StreamWebviewPanel implements Disposable {
 								debugger;
 								// TODO
 							}
+
 							break;
 						}
 						case "mark-post-unread": {
-							const post = await this.session.api.getPost(body.params);
-							const updates = await this.session.api.markPostUnread(body.params);
+							const { streamId, id } = body.params;
+
+							const post = await this.session.api.markPostUnread(streamId, id);
 							this.postMessage({
 								type: WebviewIpcMessageType.response,
-								body: { id: body.id, payload: { ...post, ...updates } }
+								body: { id: body.id, payload: post }
 							});
+
 							break;
 						}
 						case "create-stream": {
 							const { type, teamId, name, purpose, privacy, memberIds } = body.params;
+
 							let stream;
 							if (type === "channel") {
 								stream = await this.session.api.createChannelStream(
@@ -427,18 +438,22 @@ export class StreamWebviewPanel implements Disposable {
 								type: WebviewIpcMessageType.response,
 								body: { id: body.id, payload: stream }
 							});
+
 							break;
 						}
 						case "save-user-preference": {
 							const response = await this.session.api.savePreferences(body.params);
+
 							this.postMessage({
 								type: WebviewIpcMessageType.response,
 								body: { id: body.id, payload: response }
 							});
+
 							break;
 						}
 						case "invite": {
 							const { email, teamId, fullName } = body.params;
+
 							this.postMessage({
 								type: WebviewIpcMessageType.response,
 								body: {
@@ -446,28 +461,34 @@ export class StreamWebviewPanel implements Disposable {
 									payload: await this.session.api.invite(email, teamId, fullName)
 								}
 							});
+
 							break;
 						}
 						case "join-stream": {
 							const { streamId, teamId } = body.params;
+
 							this.postMessage({
 								type: WebviewIpcMessageType.response,
 								body: { id: body.id, payload: await this.session.api.joinStream(streamId, teamId) }
 							});
+
 							break;
 						}
 						case "leave-stream": {
 							const { streamId, update } = body.params;
+
 							try {
 								await this.session.api.updateStream(streamId, update);
 							} catch (e) {
 								/* */
 							}
+
 							this.session.notifyDidLeaveChannel(streamId);
 							this.postMessage({
 								type: WebviewIpcMessageType.response,
 								body: { id: body.id, payload: true }
 							});
+
 							break;
 						}
 						case "update-stream": {
@@ -483,6 +504,7 @@ export class StreamWebviewPanel implements Disposable {
 								type: WebviewIpcMessageType.response,
 								body: responseBody
 							});
+
 							break;
 						}
 						case "show-code": {
@@ -498,6 +520,7 @@ export class StreamWebviewPanel implements Disposable {
 								type: WebviewIpcMessageType.response,
 								body: { id: e.body.id, payload: status }
 							});
+
 							break;
 						}
 					}
@@ -509,6 +532,7 @@ export class StreamWebviewPanel implements Disposable {
 						this._streamThread.id = threadId;
 						this._onDidChangeStream.fire(this._streamThread);
 					}
+
 					break;
 				}
 				case WebviewIpcMessageType.onActiveThreadClosed: {
@@ -516,6 +540,7 @@ export class StreamWebviewPanel implements Disposable {
 						this._streamThread.id = undefined;
 						this._onDidChangeStream.fire(this._streamThread);
 					}
+
 					break;
 				}
 				case WebviewIpcMessageType.onActiveStreamChanged: {
@@ -526,6 +551,7 @@ export class StreamWebviewPanel implements Disposable {
 							this._streamThread = undefined;
 							this._onDidChangeStream.fire(this._streamThread);
 						}
+
 						return;
 					}
 
@@ -534,11 +560,14 @@ export class StreamWebviewPanel implements Disposable {
 						this._streamThread = { id: undefined, stream: stream };
 						this._onDidChangeStream.fire(this._streamThread);
 					}
+
 					break;
 				}
-				case WebviewIpcMessageType.onServiceRequest:
+				case WebviewIpcMessageType.onServiceRequest: {
 					this._ipc.onServiceRequest(e.body);
+
 					break;
+				}
 				case WebviewIpcMessageType.onFileChangedSubscribe: {
 					const codeBlock = e.body as CSCodeBlock;
 
@@ -551,11 +580,13 @@ export class StreamWebviewPanel implements Disposable {
 							}
 						});
 					});
+
 					break;
 				}
 				case WebviewIpcMessageType.onFileChangedUnsubscribe: {
 					const codeblock = e.body as CSCodeBlock;
 					this._bufferChangeTracker.unsubscribe(codeblock);
+
 					break;
 				}
 			}

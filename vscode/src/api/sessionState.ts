@@ -1,6 +1,7 @@
 "use strict";
 import { LoginResponse } from "./api";
 import { CSUser } from "./api";
+import { ApiProvider } from "./apiProvider";
 import { RepositoryCollection } from "./models/repositories";
 import {
 	ChannelAndDirectStreamCollection,
@@ -10,7 +11,6 @@ import {
 import { Team, TeamCollection } from "./models/teams";
 import { User, UserCollection } from "./models/users";
 import { CodeStreamSession } from "./session";
-import { CodeStreamSessionApi } from "./sessionApi";
 import { UnreadCounter } from "./unreads";
 
 export class SessionState {
@@ -18,7 +18,7 @@ export class SessionState {
 
 	constructor(
 		private readonly _session: CodeStreamSession,
-		api: CodeStreamSessionApi,
+		api: ApiProvider,
 		public readonly teamId: string,
 		private readonly _data: LoginResponse
 	) {

@@ -12,7 +12,9 @@ import { Container } from "../container";
 import { Logger } from "../logger";
 import { Functions, Strings } from "../system";
 import { LoginResult, PresenceStatus } from "./api";
+import { ApiProvider } from "./apiProvider";
 import { Cache } from "./cache";
+import { CodeStreamApiProvider } from "./codestreamApi";
 import { Marker } from "./models/markers";
 import { Post } from "./models/posts";
 import { Repository } from "./models/repositories";
@@ -30,7 +32,6 @@ import { User } from "./models/users";
 import { PresenceManager } from "./presence";
 import { PresenceMiddleware } from "./presenceMiddleware";
 import { MessageReceivedEvent, MessageType, PubNubReceiver } from "./pubnub";
-import { CodeStreamSessionApi } from "./sessionApi";
 import {
 	MergeableEvent,
 	PostsChangedEvent,
@@ -148,6 +149,7 @@ export class CodeStreamSession implements Disposable {
 
 	private _disposable: Disposable | undefined;
 
+	private _api: ApiProvider | undefined;
 	private _email: string | undefined;
 	private _environment = CodeStreamEnvironment.Unknown;
 	private _id: string | undefined;
@@ -155,7 +157,6 @@ export class CodeStreamSession implements Disposable {
 	private _presenceManager: PresenceManager | undefined;
 	private _pubnub: PubNubReceiver | undefined;
 	private _cache: Cache | undefined;
-	private _sessionApi: CodeStreamSessionApi | undefined;
 	private _state: SessionState | undefined;
 	private _signupToken: string | undefined;
 
@@ -210,8 +211,8 @@ export class CodeStreamSession implements Disposable {
 	}
 
 	@signedIn
-	get api(): CodeStreamSessionApi {
-		return this._sessionApi!;
+	get api(): ApiProvider {
+		return this._api!;
 	}
 
 	@signedIn
@@ -417,7 +418,7 @@ export class CodeStreamSession implements Disposable {
 			// Clean up saved state
 			this._presenceManager = undefined;
 			this._pubnub = undefined;
-			this._sessionApi = undefined;
+			this._api = undefined;
 			this._state = undefined;
 			this._signupToken = undefined;
 
@@ -526,10 +527,10 @@ export class CodeStreamSession implements Disposable {
 
 		this._cache = new Cache(this);
 		this._pubnub = new PubNubReceiver(this._cache);
-		this._sessionApi = new CodeStreamSessionApi(this._serverUrl, token, teamId, this._cache);
-		this._presenceManager = new PresenceManager(this._sessionApi, this._id);
+		this._api = new CodeStreamApiProvider(this._serverUrl, token, teamId, this._cache);
+		this._presenceManager = new PresenceManager(this._api, this._id);
 
-		this._state = new SessionState(this, this._sessionApi, teamId, result.loginResponse);
+		this._state = new SessionState(this, this._api, teamId, result.loginResponse);
 
 		this._disposable = Disposable.from(
 			Container.agent.onDidChangeDocumentMarkers(
@@ -539,7 +540,7 @@ export class CodeStreamSession implements Disposable {
 			this._pubnub.onDidReceiveMessage(this.onMessageReceived, this),
 			this._pubnub,
 			this._presenceManager,
-			this._sessionApi.useMiddleware(new PresenceMiddleware(this._presenceManager))
+			this._api.useMiddleware(new PresenceMiddleware(this._presenceManager))
 		);
 
 		const unreads = await this._state.unreads.compute(user.lastReads, undefined);

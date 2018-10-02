@@ -25,7 +25,9 @@ export class Cache {
 	}
 
 	resolvePosts(changeSets: object[]) {
-		return this._resolveById(this.posts, changeSets, id => this.session.api.getPost(id));
+		return this._resolveById(this.posts, changeSets, id =>
+			this.session.api.getPost(undefined!, id)
+		);
 	}
 
 	resolveRepos(changeSets: object[]) {

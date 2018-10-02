@@ -2,8 +2,8 @@
 import { Logger } from "../logger";
 import { Arrays } from "../system/array";
 import { CSPost, CSStream, StreamType } from "./api";
+import { ApiProvider } from "./apiProvider";
 import { CodeStreamSession, UnreadsChangedEvent } from "./session";
-import { CodeStreamSessionApi } from "./sessionApi";
 
 export interface Unreads {
 	mentions: number;
@@ -17,7 +17,7 @@ export class UnreadCounter {
 
 	constructor(
 		public readonly session: CodeStreamSession,
-		private readonly _api: CodeStreamSessionApi,
+		private readonly _api: ApiProvider,
 		private readonly _currentUserId: string
 	) {}
 
@@ -61,7 +61,7 @@ export class UnreadCounter {
 				!p.hasBeenEdited &&
 				!p.hasReplies &&
 				p.creatorId !== this._currentUserId &&
-				Object.keys(p.reactions).length === 0
+				(p.reactions == null || Object.keys(p.reactions).length === 0)
 		);
 		if (posts.length === 0) return;
 

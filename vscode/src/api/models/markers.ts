@@ -29,7 +29,7 @@ export class Marker {
 		if (this._post === undefined) {
 			const stream = await this.stream();
 			if (stream === undefined) {
-				const post = await this.session.api.getPost(this.entity.postId);
+				const post = await this.session.api.getPost(this.entity.streamId, this.entity.postId);
 				this._post = new Post(this.session, post);
 			} else {
 				this._post = await stream.posts.get(this.entity.postId);

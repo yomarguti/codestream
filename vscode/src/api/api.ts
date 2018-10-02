@@ -88,9 +88,9 @@ export class CodeStreamApi {
 		return this.post<CreatePostRequest, CreatePostResponse>(`/posts`, request, token);
 	}
 
-	createRepo(token: string, request: CreateRepoRequest): Promise<CreateRepoResponse> {
-		return this.post<CreateRepoRequest, CreateRepoResponse>(`/repos`, request, token);
-	}
+	// createRepo(token: string, request: CreateRepoRequest): Promise<CreateRepoResponse> {
+	// 	return this.post<CreateRepoRequest, CreateRepoResponse>(`/repos`, request, token);
+	// }
 
 	createStream(token: string, request: CreateStreamRequest): Promise<CreateStreamResponse> {
 		return this.post<CreateStreamRequest, CreateStreamResponse>(`/streams`, request, token);
@@ -116,13 +116,13 @@ export class CodeStreamApi {
 		);
 	}
 
-	findRepo(url: string, firstCommitHashes: string[]) {
-		return this.get<FindRepoResponse>(
-			`/no-auth/find-repo?url=${encodeURIComponent(url)}&knownCommitHashes=${firstCommitHashes.join(
-				","
-			)}&firstCommitHash=${firstCommitHashes[0]}`
-		);
-	}
+	// findRepo(url: string, firstCommitHashes: string[]) {
+	// 	return this.get<FindRepoResponse>(
+	// 		`/no-auth/find-repo?url=${encodeURIComponent(url)}&knownCommitHashes=${firstCommitHashes.join(
+	// 			","
+	// 		)}&firstCommitHash=${firstCommitHashes[0]}`
+	// 	);
+	// }
 
 	getMarker(token: string, teamId: string, markerId: string): Promise<GetMarkerResponse> {
 		return this.get<GetMarkerResponse>(`/markers/${markerId}?teamId=${teamId}`, token);
