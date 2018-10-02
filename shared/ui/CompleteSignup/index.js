@@ -35,7 +35,7 @@ export class CompleteSignup extends React.Component {
 
 	render() {
 		return (
-			<div id="continue-page">
+			<div className="onboarding-page">
 				<form id="continue-form" className="standard-form" onSubmit={this.submitCredentials}>
 					<fieldset className="form-body">
 						<h2>CodeStream</h2>
