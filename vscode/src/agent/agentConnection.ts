@@ -53,8 +53,10 @@ import {
 	DocumentPreparePostRequest,
 	DocumentPreparePostResponse,
 	GetPostsRequest,
+	JoinStreamRequestType,
 	LogoutRequest,
 	LogoutRequestParams,
+	ReactToPostRequestType,
 	VersionCompatibility
 } from "../shared/agent.protocol";
 
@@ -199,6 +201,29 @@ export class CodeStreamAgentConnection implements Disposable {
 	async getPosts(streamId: string, limit = 100, beforeSeq?: number): Promise<CSPost[]> {
 		try {
 			return (await this.sendRequest(GetPostsRequest, { streamId, limit, beforeSeq })).posts;
+		} catch (ex) {
+			debugger;
+			Logger.error(ex);
+			throw ex;
+		}
+	}
+
+	@started
+	async reactToPost(streamId: string, postId: string, emoji: string, value: boolean): Promise<CSPost> {
+		try {
+			const reactions = { [emoji]: value };
+			return (await this.sendRequest(ReactToPostRequestType, { streamId, postId,  reactions})).post;
+		} catch (ex) {
+			debugger;
+			Logger.error(ex);
+			throw ex;
+		}
+	}
+
+	@started
+	async joinStream(teamId: string, streamId: string) {
+		try {
+			await this.sendRequest(JoinStreamRequestType, { teamId, streamId });
 		} catch (ex) {
 			debugger;
 			Logger.error(ex);

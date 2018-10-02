@@ -179,9 +179,8 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	async reactToPost(streamId: string, postId: string, emoji: string, value: boolean) {
-		const changes = (await this._codestream.reactToPost(this._token, postId, { [emoji]: value }))
-			.post;
-		return await this._cache.resolvePost(changes);
+		const post = await Container.agent.reactToPost(streamId, postId, emoji, value);
+		return await this._cache.resolvePost(post);
 	}
 
 	async markPostUnread(streamId: string, postId: string) {
@@ -313,7 +312,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	async joinStream(streamId: string, teamId?: string): Promise<CSStream> {
-		await this._codestream.joinStream(this._token, teamId || this._teamId, streamId, {});
+		await Container.agent.joinStream(teamId || this._teamId, streamId);
 		// Hack: because the response to the previous call is a $directive
 		return (await this._codestream.getStream(this._token, teamId || this._teamId, streamId)).stream;
 	}

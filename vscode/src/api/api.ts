@@ -16,6 +16,7 @@ import {
 	GetMarkerLocationsResponse,
 	GetMarkerResponse,
 	GetMarkersResponse,
+	GetMeResponse,
 	GetPostResponse,
 	GetPostsResponse,
 	GetRepoResponse,
@@ -32,7 +33,6 @@ import {
 	JoinStreamResponse,
 	MarkPostUnreadRequest,
 	MarkPostUnreadResponse,
-	MeResponse,
 	ReactToPostRequest,
 	ReactToPostResponse,
 	UpdatePresenceRequest,
@@ -259,7 +259,7 @@ export class CodeStreamApi {
 	}
 
 	getMe(token: string) {
-		return this.get<MeResponse>("/users/me", token);
+		return this.get<GetMeResponse>("/users/me", token);
 	}
 
 	private delete<R extends object>(url: string, token?: string): Promise<R> {
