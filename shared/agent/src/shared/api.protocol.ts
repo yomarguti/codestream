@@ -316,6 +316,7 @@ export interface DeleteTeamContentResponse {}
 
 export interface EditPostRequest {
 	id: string;
+	streamId: string;
 	text: string;
 	mentionedUserIds: string[];
 }
@@ -336,6 +337,7 @@ export interface EditPostResponse extends DeletePostResponse {}
 
 export interface MarkPostUnreadRequest {
 	id: string;
+	streamId: string;
 }
 
 export interface MarkPostUnreadResponse extends DeletePostResponse {}

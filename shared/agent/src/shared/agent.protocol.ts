@@ -287,6 +287,7 @@ export const CreateStreamRequestType = new RequestType<
 
 export interface DeletePostRequest {
 	teamId: string;
+	streamId: string;
 	postId: string;
 }
 
