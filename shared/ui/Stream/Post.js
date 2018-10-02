@@ -26,7 +26,8 @@ import { safe } from "../utils";
 let renderCount = 0;
 class Post extends React.Component {
 	static defaultProps = {
-		onNeedsResize: () => {}
+		onNeedsResize: () => {},
+		focusOnRow: () => {}
 	};
 	state = {
 		emojiOpen: false,
