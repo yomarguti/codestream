@@ -173,7 +173,8 @@ api.bootstrap().then(data => {
 			session: {
 				userId: data.currentUserId
 			},
-			umis: data.unreads
+			umis: data.unreads,
+			...(data.configs.email ? { route: "login" } : {})
 		},
 		{ api },
 		[loggingMiddleWare]
