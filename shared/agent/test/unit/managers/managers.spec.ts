@@ -497,7 +497,7 @@ function makeTestEntity(): TestEntity {
 	return {
 		id: (++idSeed).toString(),
 		createdAt: new Date().getTime(),
-		modifiedAt: new Date(),
+		modifiedAt: new Date().getTime(),
 		creatorId: "666"
 	};
 }
@@ -509,7 +509,7 @@ function makePerson(firstName: string, lastName: string, ssn?: string): TestPers
 		lastName,
 		ssn,
 		createdAt: new Date().getTime(),
-		modifiedAt: new Date(),
+		modifiedAt: new Date().getTime(),
 		creatorId: "666"
 	};
 }
@@ -521,7 +521,7 @@ function makePost(streamId: Id, seq: number): TestPost {
 		text: `Post ${seq}, stream ${streamId}.`,
 		seq,
 		createdAt: new Date().getTime(),
-		modifiedAt: new Date(),
+		modifiedAt: new Date().getTime(),
 		creatorId: "666"
 	};
 }

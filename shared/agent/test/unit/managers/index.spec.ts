@@ -323,7 +323,7 @@ function makePerson(id: string, firstName: string, lastName: string, ssn?: strin
 		lastName,
 		ssn,
 		createdAt: new Date().getTime(),
-		modifiedAt: new Date(),
+		modifiedAt: new Date().getTime(),
 		creatorId: "666"
 	};
 }
@@ -335,7 +335,7 @@ function makePost(id: Id, streamId: Id, text: string, seq: number): TestPost {
 		text,
 		seq,
 		createdAt: new Date().getTime(),
-		modifiedAt: new Date(),
+		modifiedAt: new Date().getTime(),
 		creatorId: "666"
 	};
 }

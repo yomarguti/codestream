@@ -1,7 +1,7 @@
-import { describe, it } from "mocha";
 import { expect } from "chai";
-import { CSEntity } from "../../../src/shared/api.protocol";
+import { describe, it } from "mocha";
 import { SequentialSlice } from "../../../src/managers/sequentialSlice";
+import { CSEntity } from "../../../src/shared/api.protocol";
 
 describe("SequentialSlice", function() {
 	it("detects sequence gaps", function() {
@@ -46,7 +46,7 @@ function makePost(seq: number): TestPost {
 		id: (++idSeed).toString(),
 		seq,
 		createdAt: new Date().getTime(),
-		modifiedAt: new Date(),
+		modifiedAt: new Date().getTime(),
 		creatorId: "666"
 	};
 }

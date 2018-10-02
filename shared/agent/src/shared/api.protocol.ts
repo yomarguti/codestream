@@ -1,7 +1,7 @@
 export interface CSEntity {
 	deactivated?: boolean;
 	createdAt: number;
-	modifiedAt: Date;
+	modifiedAt: number;
 	id: string;
 	creatorId: string;
 }
@@ -52,17 +52,17 @@ export interface CSCodeBlock {
 export interface CSPost extends CSEntity {
 	teamId: string;
 	streamId: string;
-	repoId: string;
+	repoId?: string;
 	seqNum: number;
 	text: string;
 	codeBlocks?: CSCodeBlock[];
 	commitHashWhenPosted?: string;
 	hasBeenEdited: boolean;
 	hasReplies: boolean;
-	mentionedUserIds: string[];
+	mentionedUserIds?: string[];
 	origin: "email" | "slack" | "teams";
 	parentPostId?: string;
-	reactions: object;
+	reactions?: object;
 }
 
 export interface CSRemote {
