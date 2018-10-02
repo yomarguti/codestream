@@ -60,7 +60,7 @@ export interface CSPost extends CSEntity {
 	hasBeenEdited: boolean;
 	hasReplies: boolean;
 	mentionedUserIds?: string[];
-	origin: "email" | "slack" | "teams";
+	origin?: "email" | "slack" | "teams";
 	parentPostId?: string;
 	reactions?: object;
 }
