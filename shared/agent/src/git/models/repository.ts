@@ -36,7 +36,7 @@ export class GitRepository {
 		if (this.id === undefined) return [];
 
 		const { api, state } = Container.instance();
-		const response = await api.getStreams(state.apiToken, state.teamId, this.id);
+		const response = await api.getStreams(state.apiToken, state.teamId, undefined, this.id);
 		return response.streams.filter(s => s.type === StreamType.File) as CSFileStream[];
 	}
 

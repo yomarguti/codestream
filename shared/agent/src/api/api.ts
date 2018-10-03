@@ -6,7 +6,7 @@ import { Logger } from "../logger";
 import {
 	AccessToken,
 	FetchLatestPostResponse,
-	// GetPostsInRangeResponse,
+	FetchPostsInRangeResponse,
 	FetchUnreadStreamsResponse
 } from "../shared/agent.protocol";
 import {
@@ -209,17 +209,17 @@ export class CodeStreamApi {
 		);
 	}
 
-	// getPostsInRange(
-	// 	token: string,
-	// 	teamId: string,
-	// 	streamId: string,
-	// 	range: string
-	// ): Promise<GetPostsInRangeResponse> {
-	// 	return this.get<GetPostsInRangeResponse>(
-	// 		`/posts/?teamId=${teamId}&streamId=${streamId}&seqnum=${range}`,
-	// 		token
-	// 	);
-	// }
+	getPostsInRange(
+		token: string,
+		teamId: string,
+		streamId: string,
+		range: string
+	): Promise<FetchPostsInRangeResponse> {
+		return this.get<FetchPostsInRangeResponse>(
+			`/posts/?teamId=${teamId}&streamId=${streamId}&seqnum=${range}`,
+			token
+		);
+	}
 
 	getPosts(token: string, teamId: string, streamId: string): Promise<GetPostsResponse> {
 		return this.get<GetPostsResponse>(`/posts?teamId=${teamId}&streamId=${streamId}`, token);
@@ -284,15 +284,26 @@ export class CodeStreamApi {
 		return this.get<FetchUnreadStreamsResponse>(`/streams?teamId=${teamId}&unread`, token);
 	}
 
-	getStreams<T extends CSStream>(
+	async getStreams<T extends CSStream>(
 		token: string,
 		teamId: string,
+		types?: (StreamType.Channel | StreamType.Direct)[],
 		repoId?: string
 	): Promise<GetStreamsResponse<T>> {
-		return this.get<GetStreamsResponse<T>>(
+		const response = await this.get<GetStreamsResponse<T>>(
 			`/streams?teamId=${teamId}${repoId === undefined ? "" : `&repoId=${repoId}`}`,
 			token
 		);
+		if (types) {
+			return {
+				...response,
+				streams: response.streams.filter(s =>
+					types.includes(s.type as StreamType.Channel | StreamType.Direct)
+				)
+			};
+		}
+
+		return response;
 	}
 
 	getTeam(token: string, teamId: string): Promise<GetTeamResponse> {

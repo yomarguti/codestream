@@ -79,22 +79,22 @@ export const FetchPostsRequestType = new RequestType<
 	void
 >("codeStream/posts");
 
-// export interface GetPostsInRangeRequest {
-// 	streamId: string;
-// 	range: string;
-// }
+export interface FetchPostsInRangeRequest {
+	streamId: string;
+	range: string;
+}
 
-// export interface GetPostsInRangeResponse {
-// 	posts: CSPost[];
-// 	more?: boolean;
-// }
+export interface FetchPostsInRangeResponse {
+	posts: CSPost[];
+	more?: boolean;
+}
 
-// export const GetPostsInRangeRequestType = new RequestType<
-// 	GetPostsInRangeRequest,
-// 	GetPostsInRangeResponse,
-// 	void,
-// 	void
-// >("codeStream/getPostsInRange");
+export const FetchPostsInRangeRequestType = new RequestType<
+	FetchPostsInRangeRequest,
+	FetchPostsInRangeResponse,
+	void,
+	void
+>("codeStream/posts/inRange");
 
 export interface FetchLatestPostRequest {
 	streamId: string;

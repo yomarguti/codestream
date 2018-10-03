@@ -4,6 +4,7 @@ import {
 	ChannelServiceType,
 	CSChannelStream,
 	CSDirectStream,
+	CSFileStream,
 	CSStream,
 	StreamType
 } from "./api.protocol";
@@ -48,11 +49,11 @@ export const CreateDirectStreamRequestType = new RequestType<
 >("codeStream/streams/createDirect");
 
 export interface FetchStreamsRequest {
-	repoId?: string;
+	types?: (StreamType.Channel | StreamType.Direct)[];
 }
 
 export interface FetchStreamsResponse {
-	streams: CSStream[];
+	streams: (CSChannelStream | CSDirectStream)[];
 }
 
 export const FetchStreamsRequestType = new RequestType<
@@ -61,6 +62,21 @@ export const FetchStreamsRequestType = new RequestType<
 	void,
 	void
 >("codeStream/streams");
+
+export interface FetchFileStreamsRequest {
+	repoId: string;
+}
+
+export interface FetchFileStreamsResponse {
+	streams: CSFileStream[];
+}
+
+export const FetchFileStreamsRequestType = new RequestType<
+	FetchFileStreamsRequest,
+	FetchFileStreamsResponse,
+	void,
+	void
+>("codeStream/streams/file");
 
 export interface FetchUnreadStreamsRequest {}
 

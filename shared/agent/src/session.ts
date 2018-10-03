@@ -27,6 +27,9 @@ import {
 	FetchLatestPostRequest,
 	FetchLatestPostRequestType,
 	FetchLatestPostResponse,
+	FetchPostsInRangeRequest,
+	FetchPostsInRangeRequestType,
+	FetchPostsInRangeResponse,
 	FetchPostsRequestType,
 	FetchStreamsRequest,
 	FetchStreamsRequestType,
@@ -40,9 +43,6 @@ import {
 	GetMarkerLocationsRequestType,
 	GetMarkerRequest,
 	GetMarkerRequestType,
-	// GetPostsInRangeRequest,
-	// GetPostsInRangeRequestType,
-	// GetPostsInRangeResponse,
 	GetMarkersRequest,
 	GetMarkersRequestType,
 	GetMeRequest,
@@ -142,6 +142,11 @@ import {
 	CreateDirectStreamRequestType,
 	CreateDirectStreamResponse,
 	DidChangeVersionCompatibilityNotification,
+	FetchFileStreamsRequest,
+	FetchFileStreamsRequestType,
+	FetchFileStreamsResponse,
+	FetchPostsRequest,
+	FetchPostsResponse,
 	LogoutReason,
 	LogoutRequest
 } from "./shared/agent.protocol";
@@ -229,14 +234,14 @@ export class CodeStreamSession {
 		this.agent.registerHandler(GetMarkerLocationsRequestType, this.handleGetMarkerLocations);
 		this.agent.registerHandler(GetMarkersRequestType, this.handleGetMarkers);
 		this.agent.registerHandler(GetPostRequestType, this.handleGetPost);
-		this.agent.registerHandler(FetchLatestPostRequestType, this.handleGetLatestPost);
-		// this.agent.registerHandler(GetPostsInRangeRequestType, this.handleGetPostsInRange);
-		// this.agent.registerHandler(GetPostsRequestType, this.handleGetPosts);
+		this.agent.registerHandler(FetchLatestPostRequestType, this.handleFetchLatestPost);
+		this.agent.registerHandler(FetchPostsInRangeRequestType, this.handleFetchPostsInRange);
 		this.agent.registerHandler(GetRepoRequestType, this.handleGetRepo);
 		this.agent.registerHandler(GetReposRequestType, this.handleGetRepos);
 		this.agent.registerHandler(GetStreamRequestType, this.handleGetStream);
 		this.agent.registerHandler(FetchUnreadStreamsRequestType, this.handleGetUnreadStreams);
 		this.agent.registerHandler(FetchStreamsRequestType, this.handleGetStreams);
+		this.agent.registerHandler(FetchFileStreamsRequestType, this.handleGetFileStreams);
 		this.agent.registerHandler(GetTeamRequestType, this.handleGetTeam);
 		this.agent.registerHandler(GetTeamsRequestType, this.handleGetTeams);
 		this.agent.registerHandler(GetUserRequestType, this.handleGetUser);
@@ -511,15 +516,15 @@ export class CodeStreamSession {
 		return api.getPost(session.apiToken, session.teamId, request.id);
 	}
 
-	handleGetLatestPost(request: FetchLatestPostRequest): Promise<FetchLatestPostResponse> {
+	handleFetchLatestPost(request: FetchLatestPostRequest): Promise<FetchLatestPostResponse> {
 		const { api, session } = Container.instance();
 		return api.getLatestPost(session.apiToken, session.teamId, request.streamId);
 	}
 
-	// handleGetPostsInRange(request: GetPostsInRangeRequest): Promise<GetPostsInRangeResponse> {
-	// 	const { api, session } = Container.instance();
-	// 	return api.getPostsInRange(session.apiToken, request.teamId, request.streamId, request.range);
-	// }
+	handleFetchPostsInRange(request: FetchPostsInRangeRequest): Promise<FetchPostsInRangeResponse> {
+		const { api, session } = Container.instance();
+		return api.getPostsInRange(session.apiToken, session.teamId, request.streamId, request.range);
+	}
 
 	handleGetRepo(request: GetRepoRequest): Promise<GetRepoResponse> {
 		const { api, session } = Container.instance();
@@ -543,7 +548,12 @@ export class CodeStreamSession {
 
 	handleGetStreams(request: FetchStreamsRequest): Promise<FetchStreamsResponse> {
 		const { api, session } = Container.instance();
-		return api.getStreams(session.apiToken, session.teamId, request.repoId);
+		return api.getStreams(session.apiToken, session.teamId, request.types);
+	}
+
+	handleGetFileStreams(request: FetchFileStreamsRequest): Promise<FetchFileStreamsResponse> {
+		const { api, session } = Container.instance();
+		return api.getStreams(session.apiToken, session.teamId, undefined, request.repoId);
 	}
 
 	handleGetTeam(request: GetTeamRequest): Promise<GetTeamResponse> {

@@ -82,7 +82,7 @@ export class StreamManager {
 			repoStreams = new Map();
 			StreamManager.streamsByRepoId.set(repoId, repoStreams);
 			const { api, session } = Container.instance();
-			const response = await api.getStreams(session.apiToken, session.teamId, repoId);
+			const response = await api.getStreams(session.apiToken, session.teamId, undefined, repoId);
 			const streams = response.streams as CSFileStream[];
 
 			for (const stream of streams) {
