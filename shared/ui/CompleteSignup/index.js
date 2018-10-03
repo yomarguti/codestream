@@ -3,6 +3,7 @@ import { FormattedMessage } from "react-intl";
 import { connect } from "react-redux";
 import Button from "../Stream/Button";
 import * as actions from "./actions";
+import { safe } from "../utils";
 
 export class CompleteSignup extends React.Component {
 	state = {
@@ -33,6 +34,13 @@ export class CompleteSignup extends React.Component {
 		this.props.startSignup();
 	};
 
+	getMainText() {
+		const id = safe(() => this.props.authType === "slack")
+			? "signup.complete.withSlack"
+			: "signup.complete.main";
+		return <FormattedMessage id={id}>{text => <p>{text}</p>}</FormattedMessage>;
+	}
+
 	render() {
 		return (
 			<div className="onboarding-page">
@@ -45,9 +53,7 @@ export class CompleteSignup extends React.Component {
 								before continuing.
 							</p>
 						) : (
-							<FormattedMessage id={"signup.complete.main"}>
-								{text => <p>{text}</p>}
-							</FormattedMessage>
+							this.getMainText()
 						)}
 
 						<div id="controls">

@@ -16,14 +16,14 @@ const Loading = props => (
 	</div>
 );
 
-const UnauthenticatedRoutes = connect(state => ({ page: state.route }))(props => {
-	switch (props.page) {
+const UnauthenticatedRoutes = connect(state => state.route)(props => {
+	switch (props.route) {
 		case "signup":
 			return <Signup />;
 		case "login":
 			return <Login />;
 		case "completeSignup":
-			return <CompleteSignup />;
+			return <CompleteSignup {...props.params} />;
 		default:
 			return <Login />;
 	}

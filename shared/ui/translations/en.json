@@ -22,6 +22,7 @@
 	"signUp.legal.learnMore": "Learn more.",
 	"signUp.footer.alreadySignedUp": "Have an account?",
 	"signUp.footer.signIn": "Sign In",
+	"signup.complete.withSlack": "Your web browser should have opened up to a Slack authentication page. Once you've completed the authentication process, return here to get started with CodeStream.",
 	"signup.complete.main": "Your web browser should have opened up to a CodeStream registration page. Once you've completed the sign-up process, return here to get started with CodeStream.",
 	"signup.complete.button": "CONTINUE",
 	"confirmation.invalid": "Uh oh. Invalid code.",
