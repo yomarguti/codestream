@@ -41,6 +41,7 @@ import {
 	CreateDirectStreamRequestType,
 	CreatePostRequestType,
 	CreatePostWithCodeRequestType,
+	CreateRepoRequestType,
 	DeletePostRequestType,
 	DidChangeDocumentMarkersNotification,
 	DidChangeDocumentMarkersNotificationResponse,
@@ -59,12 +60,15 @@ import {
 	FetchMarkerLocationsRequestType,
 	FetchPostsInRangeRequestType,
 	FetchPostsRequestType,
+	FetchReposRequestType,
 	FetchStreamsRequestType,
 	FetchTeamsRequestType,
 	FetchUnreadStreamsRequestType,
 	FetchUsersRequestType,
+	FindRepoRequestType,
 	GetMarkerRequestType,
 	GetPostRequestType,
+	GetRepoRequestType,
 	GetStreamRequestType,
 	GetTeamRequestType,
 	GetUserRequestType,
@@ -455,7 +459,7 @@ export class CodeStreamAgentConnection implements Disposable {
 	private readonly _markers = new class {
 		constructor(private readonly _connection: CodeStreamAgentConnection) {}
 
-		getDocumentMarkers(uri: Uri) {
+		fetch(uri: Uri) {
 			return this._connection.sendRequest(DocumentMarkersRequest, {
 				textDocument: { uri: uri.toString() }
 			});
@@ -464,17 +468,8 @@ export class CodeStreamAgentConnection implements Disposable {
 		get(markerId: string) {
 			return this._connection.sendRequest(GetMarkerRequestType, { markerId });
 		}
-	}(this);
 
-	@started
-	get markerLocations() {
-		return this._markerLocations;
-	}
-
-	private readonly _markerLocations = new class {
-		constructor(private readonly _connection: CodeStreamAgentConnection) {}
-
-		fetch(streamId: string, commitHash: string) {
+		fetchLocations(streamId: string, commitHash: string) {
 			return this._connection.sendRequest(FetchMarkerLocationsRequestType, {
 				streamId,
 				commitHash
@@ -518,6 +513,39 @@ export class CodeStreamAgentConnection implements Disposable {
 		get(teamId: string) {
 			return this._connection.sendRequest(GetTeamRequestType, {
 				teamId
+			});
+		}
+	}(this);
+
+	@started
+	get repos() {
+		return this._repos;
+	}
+
+	private readonly _repos = new class {
+		constructor(private readonly _connection: CodeStreamAgentConnection) {}
+
+		create(url: string, knownCommitHashes: string[]) {
+			return this._connection.sendRequest(CreateRepoRequestType, {
+				url,
+				knownCommitHashes
+			});
+		}
+
+		find(url: string, firstCommitHashes: string[]) {
+			return this._connection.sendRequest(FindRepoRequestType, {
+				url,
+				firstCommitHashes
+			});
+		}
+
+		fetch() {
+			return this._connection.sendRequest(FetchReposRequestType, {});
+		}
+
+		get(repoId: string) {
+			return this._connection.sendRequest(GetRepoRequestType, {
+				repoId
 			});
 		}
 	}(this);
