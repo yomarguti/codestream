@@ -80,6 +80,10 @@ const appReducer = combineReducers({
 
 export default (state, action) => {
 	if (action.type === "RESET")
-		state = { configs: state.configs, pluginVersion: state.pluginVersion };
+		state = {
+			configs: state.configs,
+			pluginVersion: state.pluginVersion,
+			route: { route: "login" }
+		};
 	return appReducer(state, action);
 };
