@@ -1,6 +1,7 @@
 import { bootstrap } from "../actions";
 import { setContext } from "../actions/context";
 export { startSlackSignin } from "../Signup/actions";
+export { validateSignup } from "../CompleteSignup/actions";
 
 export const authenticate = params => async (dispatch, getState, { api }) => {
 	const response = await api.authenticate(params);

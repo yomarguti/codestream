@@ -12,6 +12,9 @@ const isEmailInvalid = email => {
 	return email === "" || emailRegex.test(email) === false;
 };
 
+const TOKEN_INVALID = "TOKEN_INVALID";
+const NOT_CONFIRMED = "NOT_CONFIRMED";
+
 export class Login extends React.Component {
 	constructor(props) {
 		super(props);
@@ -20,7 +23,9 @@ export class Login extends React.Component {
 			password: "",
 			passwordTouched: false,
 			emailTouched: false,
-			error: null
+			error: null,
+			tokenError: null,
+			validatingToken: false
 		};
 	}
 
@@ -47,6 +52,22 @@ export class Login extends React.Component {
 				</small>
 			);
 		}
+	};
+
+	renderTokenError = () => {
+		if (this.state.tokenError === TOKEN_INVALID) {
+			return (
+				<small className="error-message">
+					<span>That token is invalid</span>
+				</small>
+			);
+		}
+		if (this.state.tokenError === NOT_CONFIRMED)
+			return (
+				<small className="error-message">
+					<span>Email not confirmed</span>
+				</small>
+			);
 	};
 
 	renderAccountMessage = () => {
@@ -118,19 +139,36 @@ export class Login extends React.Component {
 		this.props.startSlackSignin();
 	};
 
+	handleSubmitToken = async event => {
+		event.preventDefault();
+		this.setState({ validatingToken: true });
+		try {
+			await this.props.validateSignup(event.target.token.value);
+		} catch (error) {
+			this.setState({ tokenError: error });
+		} finally {
+			this.setState({ validatingToken: false });
+		}
+	};
+
 	render() {
 		return (
 			<div id="login-page" className="onboarding-page">
 				<h2>Sign In to CodeStream</h2>
-				<form className="standard-form">
+				<form className="standard-form" onSubmit={this.handleSubmitToken}>
 					<fieldset className="form-body">
 						<div id="controls">
 							<div className="control-group">
 								<label>Have an access token?</label>
-								<input className="input-text" type="text" />
+								<input className="input-text" name="token" type="text" />
+								{this.renderTokenError()}
 							</div>
 							<div className="button-group">
-								<Button className="control-button" type="button" onClick={this.signInWithToken}>
+								<Button
+									className="control-button"
+									type="submit"
+									loading={this.state.validatingToken}
+								>
 									Sign In with Access Token
 								</Button>
 							</div>
