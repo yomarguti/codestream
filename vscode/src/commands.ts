@@ -191,7 +191,7 @@ export class Commands implements Disposable {
 
 		if (document === undefined || selection === undefined) return undefined;
 
-		const response = await Container.agent.preparePost(document, selection);
+		const response = await Container.agent.posts.prepareCode(document, selection);
 		const streamThread = await Container.streamView.postCode(
 			response.code,
 			document.uri,

@@ -25,7 +25,7 @@ import {
 	ServerOptions,
 	TransportKind
 } from "vscode-languageclient";
-import { CSCodeBlock, CSPost } from "../api/api";
+import { ChannelServiceType, CSCodeBlock, CSPost, StreamType } from "../api/api";
 import { BuiltInCommands } from "../commands";
 import { extensionQualifiedId } from "../constants";
 import { Container } from "../container";
@@ -37,6 +37,11 @@ import {
 	AgentResult,
 	ApiRequest,
 	CodeStreamEnvironment,
+	CreateChannelStreamRequestType,
+	CreateDirectStreamRequestType,
+	CreatePostRequestType,
+	CreatePostWithCodeRequestType,
+	DeletePostRequestType,
 	DidChangeDocumentMarkersNotification,
 	DidChangeDocumentMarkersNotificationResponse,
 	DidChangeVersionCompatibilityNotification,
@@ -49,14 +54,22 @@ import {
 	DocumentLatestRevisionResponse,
 	DocumentMarkersRequest,
 	DocumentMarkersResponse,
-	DocumentPostRequest,
-	DocumentPreparePostRequest,
-	DocumentPreparePostResponse,
-	GetPostsRequest,
+	EditPostRequestType,
+	FetchLatestPostRequestType,
+	FetchPostsRequestType,
+	FetchStreamsRequestType,
+	FetchUnreadStreamsRequestType,
+	GetPostRequestType,
+	GetStreamRequestType,
 	JoinStreamRequestType,
+	LeaveStreamRequestType,
 	LogoutRequest,
 	LogoutRequestParams,
+	MarkPostUnreadRequestType,
+	MarkStreamReadRequestType,
+	PreparePostWithCodeRequestType,
 	ReactToPostRequestType,
+	UpdateStreamRequestType,
 	VersionCompatibility
 } from "../shared/agent.protocol";
 
@@ -197,23 +210,8 @@ export class CodeStreamAgentConnection implements Disposable {
 		}
 	}
 
-	@started
 	async getPosts(streamId: string, limit = 100, beforeSeq?: number) {
-		return this.sendRequest(GetPostsRequest, { streamId, limit, beforeSeq });
-	}
-
-	@started
-	reactToPost(streamId: string, postId: string, reactions: { [emoji: string]: boolean }) {
-		return this.sendRequest(ReactToPostRequestType, {
-			id: postId,
-			streamId: streamId,
-			emojis: reactions
-		});
-	}
-
-	@started
-	joinStream(teamId: string, streamId: string) {
-		return this.sendRequest(JoinStreamRequestType, { teamId, streamId });
+		return this.sendRequest(FetchPostsRequestType, { streamId, limit, beforeSeq });
 	}
 
 	async login(
@@ -258,48 +256,192 @@ export class CodeStreamAgentConnection implements Disposable {
 	}
 
 	@started
-	preparePost(document: TextDocument, range: Range): Promise<DocumentPreparePostResponse> {
-		return this.sendRequest(DocumentPreparePostRequest, {
-			textDocument: { uri: document.uri.toString() },
-			range: range,
-			dirty: document.isDirty
-		});
+	get streams() {
+		return this._streams;
 	}
 
+	private readonly _streams = new class {
+		constructor(private readonly _connection: CodeStreamAgentConnection) {}
+
+		createChannel(
+			name: string,
+			membership?: "auto" | string[],
+			privacy: "public" | "private" = membership === "auto" ? "public" : "private",
+			purpose?: string,
+			service?: {
+				serviceType: ChannelServiceType;
+				serviceKey?: string;
+				serviceInfo?: { [key: string]: any };
+			}
+		) {
+			return this._connection.sendRequest(CreateChannelStreamRequestType, {
+				type: StreamType.Channel,
+				name: name,
+				memberIds: membership === "auto" ? undefined : membership,
+				isTeamStream: membership === "auto",
+				privacy: membership === "auto" ? "public" : privacy,
+				purpose: purpose,
+				...service
+			});
+		}
+
+		createDirect(membership: string[]) {
+			return this._connection.sendRequest(CreateDirectStreamRequestType, {
+				type: StreamType.Direct,
+				memberIds: membership
+			});
+		}
+
+		fetch() {
+			return this._connection.sendRequest(FetchStreamsRequestType, {});
+		}
+
+		fetchUnread() {
+			return this._connection.sendRequest(FetchUnreadStreamsRequestType, {});
+		}
+
+		get(streamId: string) {
+			return this._connection.sendRequest(GetStreamRequestType, {
+				id: streamId
+			});
+		}
+
+		join(streamId: string) {
+			return this._connection.sendRequest(JoinStreamRequestType, {
+				id: streamId
+			});
+		}
+
+		leave(streamId: string) {
+			return this._connection.sendRequest(LeaveStreamRequestType, {
+				id: streamId
+			});
+		}
+
+		markRead(streamId: string, postId?: string) {
+			return this._connection.sendRequest(MarkStreamReadRequestType, {
+				id: streamId,
+				postId: postId
+			});
+		}
+
+		update(streamId: string, changes: { [key: string]: any }) {
+			return this._connection.sendRequest(UpdateStreamRequestType, {
+				id: streamId,
+				data: changes
+			});
+		}
+	}(this);
+
 	@started
-	postCode(
-		uri: Uri,
-		// document: TextDocument,
-		// range: Range,
-		text: string,
-		mentionedUserIds: string[],
-		code: string,
-		location: [number, number, number, number] | undefined,
-		source:
-			| {
-					file: string;
-					repoPath: string;
-					revision: string;
-					authors: { id: string; username: string }[];
-					remotes: { name: string; url: string }[];
-			  }
-			| undefined,
-		parentPostId: string | undefined,
-		streamId: string
-	): Promise<CSPost> {
-		return this.sendRequest(DocumentPostRequest, {
-			textDocument: { uri: uri.toString() },
-			// range: range,
-			// dirty: document.isDirty,
-			mentionedUserIds,
-			text: text,
-			code: code,
-			location: location,
-			source: source,
-			parentPostId: parentPostId,
-			streamId: streamId
-		});
+	get posts() {
+		return this._posts;
 	}
+
+	private readonly _posts = new class {
+		constructor(private readonly _connection: CodeStreamAgentConnection) {}
+
+		create(streamId: string, text: string, mentionedUserIds?: string[], parentPostId?: string) {
+			return this._connection.sendRequest(CreatePostRequestType, {
+				streamId: streamId,
+				text: text,
+				mentionedUserIds: mentionedUserIds,
+				parentPostId: parentPostId
+			});
+		}
+
+		createWithCode(
+			uri: Uri,
+			// document: TextDocument,
+			// range: Range,
+			text: string,
+			mentionedUserIds: string[],
+			code: string,
+			location: [number, number, number, number] | undefined,
+			source:
+				| {
+						file: string;
+						repoPath: string;
+						revision: string;
+						authors: { id: string; username: string }[];
+						remotes: { name: string; url: string }[];
+				  }
+				| undefined,
+			parentPostId: string | undefined,
+			streamId: string
+		): Promise<CSPost> {
+			return this._connection.sendRequest(CreatePostWithCodeRequestType, {
+				textDocument: { uri: uri.toString() },
+				// range: range,
+				// dirty: document.isDirty,
+				mentionedUserIds,
+				text: text,
+				code: code,
+				location: location,
+				source: source,
+				parentPostId: parentPostId,
+				streamId: streamId
+			});
+		}
+
+		fetch(streamId: string, limit = 100, beforeSeq?: number) {
+			return this._connection.sendRequest(FetchPostsRequestType, {
+				streamId: streamId,
+				limit: limit,
+				beforeSeq: beforeSeq
+			});
+		}
+
+		fetchLatest(streamId: string) {
+			return this._connection.sendRequest(FetchLatestPostRequestType, { streamId: streamId });
+		}
+
+		get(streamId: string, postId: string) {
+			return this._connection.sendRequest(GetPostRequestType, {
+				streamId: streamId,
+				id: postId
+			});
+		}
+
+		delete(streamId: string, postId: string) {
+			return this._connection.sendRequest(DeletePostRequestType, {
+				id: postId,
+				streamId: streamId
+			});
+		}
+
+		edit(streamId: string, postId: string, text: string, mentionedUserIds?: string[]) {
+			return this._connection.sendRequest(EditPostRequestType, {
+				id: postId,
+				streamId: streamId,
+				text: text,
+				mentionedUserIds: mentionedUserIds
+			});
+		}
+
+		markUnread(streamId: string, postId: string) {
+			return this._connection.sendRequest(MarkPostUnreadRequestType, {
+				id: postId,
+				streamId: streamId
+			});
+		}
+
+		prepareCode(document: TextDocument, range: Range) {
+			return this._connection.sendRequest(PreparePostWithCodeRequestType, {
+				textDocument: { uri: document.uri.toString() },
+				range: range,
+				dirty: document.isDirty
+			});
+		}
+
+		react(streamId: string, postId: string, reactions: { [emoji: string]: boolean }) {
+			return this._connection.sendRequest(ReactToPostRequestType, {
+				id: postId,
+				streamId: streamId,
+				emojis: reactions
+			});
+		}
+	}(this);
 
 	private onDocumentMarkersChanged(e: DidChangeDocumentMarkersNotificationResponse) {
 		Logger.log("AgentConnection.onDocumentMarkersChanged", e.textDocument.uri);

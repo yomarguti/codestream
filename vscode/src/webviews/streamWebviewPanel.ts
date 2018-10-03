@@ -317,13 +317,7 @@ export class StreamWebviewPanel implements Disposable {
 							let post;
 							try {
 								if (codeBlocks === undefined || codeBlocks.length === 0) {
-									post = await this.session.api.createPost(
-										text,
-										mentions,
-										parentPostId,
-										streamId,
-										teamId
-									);
+									post = await Container.agent.posts.create(text, mentions, parentPostId, streamId);
 								} else {
 									const block = codeBlocks[0] as {
 										code: string;
@@ -341,7 +335,7 @@ export class StreamWebviewPanel implements Disposable {
 									const uri = block.source
 										? Uri.file(path.join(block.source.repoPath, block.source.file))
 										: Uri.parse(fileUri);
-									post = await Container.agent.postCode(
+									post = await Container.agent.posts.createWithCode(
 										uri,
 										text,
 										mentions,
@@ -373,7 +367,7 @@ export class StreamWebviewPanel implements Disposable {
 								type: WebviewIpcMessageType.response,
 								body: {
 									id: body.id,
-									payload: await this.session.api.getPosts(streamId, limit, beforeSeqNum)
+									payload: await Container.agent.posts.fetch(streamId, limit, beforeSeqNum)
 								}
 							});
 							break;
@@ -381,7 +375,7 @@ export class StreamWebviewPanel implements Disposable {
 						case "delete-post": {
 							const { streamId, id } = body.params;
 
-							const post = await this.session.api.deletePost(streamId, id);
+							const post = await Container.agent.posts.delete(streamId, id);
 							this.postMessage({
 								type: WebviewIpcMessageType.response,
 								body: { id: body.id, payload: post }
@@ -392,7 +386,7 @@ export class StreamWebviewPanel implements Disposable {
 						case "react-to-post": {
 							const { streamId, id, emoji, value } = body.params;
 
-							const post = await this.session.api.reactToPost(streamId, id, emoji, value);
+							const post = await Container.agent.posts.react(streamId, id, { [emoji]: value });
 							this.postMessage({
 								type: WebviewIpcMessageType.response,
 								body: { id: body.id, payload: post }
@@ -403,7 +397,7 @@ export class StreamWebviewPanel implements Disposable {
 						case "edit-post": {
 							const { streamId, id, text, mentions } = body.params;
 
-							const post = await this.session.api.editPost(streamId, id, text, mentions);
+							const post = await Container.agent.posts.edit(streamId, id, text, mentions);
 							this.postMessage({
 								type: WebviewIpcMessageType.response,
 								body: { id: body.id, payload: post }
@@ -414,24 +408,18 @@ export class StreamWebviewPanel implements Disposable {
 						case "mark-stream-read": {
 							const { streamId, id } = body.params;
 
-							const stream = await this.session.getStream(streamId);
-							if (stream) {
-								const response = await stream.markRead();
-								this.postMessage({
-									type: WebviewIpcMessageType.response,
-									body: { id: body.id, payload: response }
-								});
-							} else {
-								debugger;
-								// TODO
-							}
+							const response = await Container.agent.streams.markRead(streamId, id);
+							this.postMessage({
+								type: WebviewIpcMessageType.response,
+								body: { id: body.id, payload: response }
+							});
 
 							break;
 						}
 						case "mark-post-unread": {
 							const { streamId, id } = body.params;
 
-							const post = await this.session.api.markPostUnread(streamId, id);
+							const post = await Container.agent.posts.markUnread(streamId, id);
 							this.postMessage({
 								type: WebviewIpcMessageType.response,
 								body: { id: body.id, payload: post }
@@ -440,20 +428,18 @@ export class StreamWebviewPanel implements Disposable {
 							break;
 						}
 						case "create-stream": {
-							const { type, teamId, name, purpose, privacy, memberIds } = body.params;
+							const { type, name, purpose, privacy, memberIds } = body.params;
 
 							let stream;
 							if (type === "channel") {
-								stream = await this.session.api.createChannelStream(
+								stream = await Container.agent.streams.createChannel(
 									name,
 									memberIds,
 									privacy,
-									purpose,
-									undefined,
-									teamId
+									purpose
 								);
 							} else if (type === "direct") {
-								stream = await this.session.api.createDirectStream(memberIds);
+								stream = await Container.agent.streams.createDirect(memberIds);
 							}
 							this.postMessage({
 								type: WebviewIpcMessageType.response,
@@ -486,11 +472,11 @@ export class StreamWebviewPanel implements Disposable {
 							break;
 						}
 						case "join-stream": {
-							const { streamId, teamId } = body.params;
+							const { streamId } = body.params;
 
 							this.postMessage({
 								type: WebviewIpcMessageType.response,
-								body: { id: body.id, payload: await this.session.api.joinStream(streamId, teamId) }
+								body: { id: body.id, payload: await Container.agent.streams.join(streamId) }
 							});
 
 							break;
@@ -499,7 +485,7 @@ export class StreamWebviewPanel implements Disposable {
 							const { streamId } = body.params;
 
 							try {
-								await this.session.api.leaveStream(streamId);
+								await Container.agent.streams.leave(streamId);
 							} catch (e) {
 								/* */
 							}
@@ -513,11 +499,11 @@ export class StreamWebviewPanel implements Disposable {
 							break;
 						}
 						case "update-stream": {
-							const { streamId, update } = body.params;
+							const { streamId, update: changes } = body.params;
 
 							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
 							try {
-								responseBody.payload = await this.session.api.updateStream(streamId, update);
+								responseBody.payload = await Container.agent.streams.update(streamId, changes);
 							} catch (ex) {
 								responseBody.error = ex;
 							}
