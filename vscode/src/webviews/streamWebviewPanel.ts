@@ -259,6 +259,29 @@ export class StreamWebviewPanel implements Disposable {
 							});
 							break;
 						}
+						case "go-to-slack-signin": {
+							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
+							const redirectUri = `${
+								Container.config.webAppUrl
+							}/oauth/callback?cs_token=${this.session.getSignupToken()}`;
+							try {
+								await commands.executeCommand(
+									"vscode.open",
+									Uri.parse(
+										`https://slack.com/oauth/authorize?client_id=251469054195.443134779744&scope=client%20identify&redirect_uri=${redirectUri}`
+									)
+								);
+								responseBody.payload = true;
+							} catch (ex) {
+								responseBody.error = ex.message;
+							}
+
+							this.postMessage({
+								type: WebviewIpcMessageType.response,
+								body: responseBody
+							});
+							break;
+						}
 						case "validate-signup": {
 							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
 							const status = await this.session.loginViaSignupToken();
