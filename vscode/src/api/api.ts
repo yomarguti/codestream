@@ -33,6 +33,7 @@ import {
 	JoinStreamResponse,
 	MarkPostUnreadRequest,
 	MarkPostUnreadResponse,
+	Reactions,
 	ReactToPostRequest,
 	ReactToPostResponse,
 	UpdatePresenceRequest,
@@ -100,8 +101,8 @@ export class CodeStreamApi {
 		return this.delete<DeletePostResponse>(`/posts/${postId}`, token);
 	}
 
-	reactToPost(token: string, postId: string, request: ReactToPostRequest) {
-		return this.put<ReactToPostRequest, ReactToPostResponse>(`/react/${postId}`, request, token);
+	reactToPost(token: string, request: ReactToPostRequest) {
+		return this.put<Reactions, ReactToPostResponse>(`/react/${request.id}`, request.emojis, token);
 	}
 
 	editPost(token: string, request: EditPostRequest) {
@@ -221,12 +222,12 @@ export class CodeStreamApi {
 		return this.get<GetUsersResponse>(`/users?teamId=${teamId}`, token);
 	}
 
-	joinStream(token: string, teamId: string, streamId: string, request: JoinStreamRequest) {
-		return this.put<JoinStreamRequest, JoinStreamResponse>(`/join/${streamId}`, request, token);
+	joinStream(token: string, teamId: string, streamId: string) {
+		return this.put<{}, JoinStreamResponse>(`/join/${streamId}`, {}, token);
 	}
 
-	updateStream(token: string, streamId: string, request: object) {
-		return this.put(`/streams/${streamId}`, request, token);
+	updateStream(token: string, teamId: string, streamId: string, changes: { [key: string]: any }) {
+		return this.put(`/streams/${streamId}`, changes, token);
 	}
 
 	updatePresence(token: string, request: UpdatePresenceRequest) {

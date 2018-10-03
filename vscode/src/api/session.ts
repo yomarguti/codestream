@@ -527,7 +527,7 @@ export class CodeStreamSession implements Disposable {
 
 		this._cache = new Cache(this);
 		this._pubnub = new PubNubReceiver(this._cache);
-		this._api = new CodeStreamApiProvider(this._serverUrl, token, teamId, this._cache);
+		this._api = new CodeStreamApiProvider(this._serverUrl, token, teamId, user.id, this._cache);
 		this._presenceManager = new PresenceManager(this._api, this._id);
 
 		this._state = new SessionState(this, this._api, teamId, result.loginResponse);

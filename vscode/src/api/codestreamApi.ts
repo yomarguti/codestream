@@ -27,6 +27,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	constructor(
 		baseUrl: string,
 		private readonly _token: string,
+		private readonly _userId: string,
 		private readonly _teamId: string,
 		private _cache: Cache
 	) {
@@ -164,29 +165,36 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	async deletePost(streamId: string, postId: string, teamId?: string) {
-		const changes = (await this._codestream.deletePost(this._token, teamId || this._teamId, postId))
-			.post;
-		return await this._cache.resolvePost(changes);
+		return this._cache.resolvePost(
+			(await this._codestream.deletePost(this._token, teamId || this._teamId, postId)).post
+		);
 	}
 
 	async editPost(streamId: string, postId: string, text: string, mentionedUserIds: string[]) {
-		const changes = (await this._codestream.editPost(this._token, {
-			id: postId,
-			streamId,
-			text,
-			mentionedUserIds
-		})).post;
-		return await this._cache.resolvePost(changes);
+		return this._cache.resolvePost(
+			(await this._codestream.editPost(this._token, {
+				id: postId,
+				streamId,
+				text,
+				mentionedUserIds
+			})).post
+		);
 	}
 
 	async reactToPost(streamId: string, postId: string, emoji: string, value: boolean) {
-		const post = await Container.agent.reactToPost(streamId, postId, emoji, value);
-		return await this._cache.resolvePost(post);
+		return this._cache.resolvePost(
+			await this._codestream.reactToPost(this._token, {
+				id: postId,
+				streamId: streamId,
+				emojis: { [emoji]: value }
+			})
+		);
 	}
 
 	async markPostUnread(streamId: string, postId: string) {
-		const changes = (await this._codestream.markPostUnread(this._token, { id: postId, streamId })).post;
-		return await this._cache.resolvePost(changes);
+		return this._cache.resolvePost(
+			(await this._codestream.markPostUnread(this._token, { id: postId, streamId })).post
+		);
 	}
 
 	async getMarker(markerId: string, teamId?: string): Promise<CSMarker> {
@@ -245,7 +253,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		teamId?: string
 	): Promise<CSPost[]> {
 		if (limit !== undefined) {
-			return Container.agent.getPosts(streamId, limit, beforeSeq);
+			return (await Container.agent.getPosts(streamId, limit, beforeSeq)).posts;
 		}
 
 		return (await this._codestream.getPosts(this._token, teamId || this._teamId, streamId)).posts;
@@ -313,15 +321,27 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	async joinStream(streamId: string, teamId?: string): Promise<CSStream> {
-		await Container.agent.joinStream(teamId || this._teamId, streamId);
-		// Hack: because the response to the previous call is a $directive
-		return (await this._codestream.getStream(this._token, teamId || this._teamId, streamId)).stream;
+		return this._cache.resolveStream(
+			await this._codestream.joinStream(this._token, teamId || this._teamId, streamId)
+		);
 	}
 
-	async updateStream(streamId: string, update: object): Promise<CSStream> {
-		await this._codestream.updateStream(this._token, streamId, update);
-		// Hack: because the response to the previous call is a $directive
-		return (await this._codestream.getStream(this._token, this._teamId, streamId)).stream;
+	async leaveStream(streamId: string, teamId?: string): Promise<CSStream> {
+		return this._cache.resolveStream(
+			await this._codestream.updateStream(this._token, teamId || this._teamId, streamId, {
+				$pull: { memberIds: [this._userId] }
+			})
+		);
+	}
+
+	async updateStream(
+		streamId: string,
+		changes: { [key: string]: any },
+		teamId?: string
+	): Promise<CSStream> {
+		return this._cache.resolveStream(
+			await this._codestream.updateStream(this._token, teamId || this._teamId, streamId, changes)
+		);
 	}
 
 	async updatePresence(status: PresenceStatus, sessionId: string) {

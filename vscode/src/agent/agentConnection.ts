@@ -198,37 +198,22 @@ export class CodeStreamAgentConnection implements Disposable {
 	}
 
 	@started
-	async getPosts(streamId: string, limit = 100, beforeSeq?: number): Promise<CSPost[]> {
-		try {
-			return (await this.sendRequest(GetPostsRequest, { streamId, limit, beforeSeq })).posts;
-		} catch (ex) {
-			debugger;
-			Logger.error(ex);
-			throw ex;
-		}
+	async getPosts(streamId: string, limit = 100, beforeSeq?: number) {
+		return this.sendRequest(GetPostsRequest, { streamId, limit, beforeSeq });
 	}
 
 	@started
-	async reactToPost(streamId: string, postId: string, emoji: string, value: boolean): Promise<CSPost> {
-		try {
-			const reactions = { [emoji]: value };
-			return (await this.sendRequest(ReactToPostRequestType, { streamId, postId,  reactions})).post;
-		} catch (ex) {
-			debugger;
-			Logger.error(ex);
-			throw ex;
-		}
+	reactToPost(streamId: string, postId: string, reactions: { [emoji: string]: boolean }) {
+		return this.sendRequest(ReactToPostRequestType, {
+			id: postId,
+			streamId: streamId,
+			emojis: reactions
+		});
 	}
 
 	@started
-	async joinStream(teamId: string, streamId: string) {
-		try {
-			await this.sendRequest(JoinStreamRequestType, { teamId, streamId });
-		} catch (ex) {
-			debugger;
-			Logger.error(ex);
-			throw ex;
-		}
+	joinStream(teamId: string, streamId: string) {
+		return this.sendRequest(JoinStreamRequestType, { teamId, streamId });
 	}
 
 	async login(

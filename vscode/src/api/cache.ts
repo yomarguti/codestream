@@ -34,6 +34,10 @@ export class Cache {
 		return this._resolveById(this.repos, changeSets, id => this.session.api.getRepo(id));
 	}
 
+	async resolveStream(changeSet: object) {
+		return (await this.resolveStreams([changeSet]))[0];
+	}
+
 	resolveStreams(changeSets: object[]) {
 		return this._resolveById(this.streams, changeSets, async id => {
 			try {

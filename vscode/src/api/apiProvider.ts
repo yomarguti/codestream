@@ -96,6 +96,7 @@ export interface ApiProvider {
 	getUser(userId: string, teamId?: string): Promise<CSUser | undefined>;
 	getUsers(teamId?: string): Promise<CSUser[]>;
 	joinStream(streamId: string, teamId?: string): Promise<CSStream>;
+	leaveStream(streamId: string, teamId?: string): Promise<CSStream>;
 	updateStream(streamId: string, update: object): Promise<CSStream>;
 	updatePresence(status: PresenceStatus, sessionId: string): Promise<number>;
 	markStreamRead(streamId: string): Promise<{}>;

@@ -475,10 +475,10 @@ export class StreamWebviewPanel implements Disposable {
 							break;
 						}
 						case "leave-stream": {
-							const { streamId, update } = body.params;
+							const { streamId } = body.params;
 
 							try {
-								await this.session.api.updateStream(streamId, update);
+								await this.session.api.leaveStream(streamId);
 							} catch (e) {
 								/* */
 							}
