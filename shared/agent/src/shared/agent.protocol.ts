@@ -237,18 +237,6 @@ export const FetchMarkerLocationsRequestType = new RequestType<
 	void
 >("codeStream/fetchMarkerLocations");
 
-export interface GetMarkersRequest {
-	teamId: string;
-	streamId: string;
-}
-
-export const GetMarkersRequestType = new RequestType<
-	GetMarkersRequest,
-	GetMarkersResponse,
-	void,
-	void
->("codeStream/getMarkers");
-
 export interface GetRepoRequest {
 	repoId: string;
 }

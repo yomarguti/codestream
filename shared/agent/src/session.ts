@@ -52,8 +52,6 @@ import {
 	FindRepoRequestType,
 	GetMarkerRequest,
 	GetMarkerRequestType,
-	GetMarkersRequest,
-	GetMarkersRequestType,
 	GetMeRequest,
 	GetMeRequestType,
 	GetPostRequest,
@@ -230,7 +228,6 @@ export class CodeStreamSession {
 		this.agent.registerHandler(FindRepoRequestType, this.handleFindRepo);
 		this.agent.registerHandler(GetMarkerRequestType, this.handleGetMarker);
 		this.agent.registerHandler(FetchMarkerLocationsRequestType, this.handleFetchMarkerLocations);
-		this.agent.registerHandler(GetMarkersRequestType, this.handleGetMarkers);
 		this.agent.registerHandler(GetPostRequestType, this.handleGetPost);
 		this.agent.registerHandler(FetchLatestPostRequestType, this.handleFetchLatestPost);
 		this.agent.registerHandler(FetchPostsInRangeRequestType, this.handleFetchPostsInRange);
@@ -502,11 +499,6 @@ export class CodeStreamSession {
 			request.streamId,
 			request.commitHash
 		);
-	}
-
-	handleGetMarkers(request: GetMarkersRequest): Promise<GetMarkersResponse> {
-		const { api, session } = Container.instance();
-		return api.getMarkers(session.apiToken, session.teamId, request.streamId);
 	}
 
 	handleGetPost(request: GetPostRequest): Promise<GetPostResponse> {
