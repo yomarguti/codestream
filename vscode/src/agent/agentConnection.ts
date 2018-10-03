@@ -55,9 +55,12 @@ import {
 	DocumentMarkersRequest,
 	DocumentMarkersResponse,
 	EditPostRequestType,
+	FetchFileStreamsRequestType,
 	FetchLatestPostRequestType,
+	FetchPostsInRangeRequestType,
 	FetchPostsRequestType,
 	FetchStreamsRequestType,
+	FetchStreamsResponse,
 	FetchUnreadStreamsRequestType,
 	GetPostRequestType,
 	GetStreamRequestType,
@@ -292,8 +295,12 @@ export class CodeStreamAgentConnection implements Disposable {
 			});
 		}
 
-		fetch() {
-			return this._connection.sendRequest(FetchStreamsRequestType, {});
+		fetch(types?: (StreamType.Channel | StreamType.Direct)[]) {
+			return this._connection.sendRequest(FetchStreamsRequestType, { types: types });
+		}
+
+		fetchFiles(repoId: string) {
+			return this._connection.sendRequest(FetchFileStreamsRequestType, { repoId: repoId });
 		}
 
 		fetchUnread() {
@@ -394,6 +401,13 @@ export class CodeStreamAgentConnection implements Disposable {
 
 		fetchLatest(streamId: string) {
 			return this._connection.sendRequest(FetchLatestPostRequestType, { streamId: streamId });
+		}
+
+		fetchInRange(streamId: string, start: number, end: number) {
+			return this._connection.sendRequest(FetchPostsInRangeRequestType, {
+				streamId: streamId,
+				range: `${start}-${end}`
+			});
 		}
 
 		get(streamId: string, postId: string) {

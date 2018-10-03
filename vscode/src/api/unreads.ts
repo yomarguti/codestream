@@ -1,4 +1,5 @@
 "use strict";
+import { Container } from "../container";
 import { Logger } from "../logger";
 import { Arrays } from "../system/array";
 import { CSPost, CSStream, StreamType } from "./api";
@@ -78,7 +79,7 @@ export class UnreadCounter {
 		// );
 
 		for (const [streamId, posts] of Object.entries(grouped)) {
-			const stream = await this._api.getStream(streamId);
+			const stream = (await Container.agent.streams.get(streamId)).stream;
 			if (stream == null) continue;
 
 			this.mentions[streamId] = this.mentions[streamId] || 0;
@@ -121,7 +122,7 @@ export class UnreadCounter {
 
 		Logger.log(`Unreads.compute:`, "Computing...");
 
-		const unreadStreams = await this._api.getUnreadStreams();
+		const unreadStreams = (await Container.agent.streams.fetchUnread()).streams;
 		if (unreadStreams.length !== 0) {
 			const entries = Object.entries(lastReads);
 
@@ -133,12 +134,12 @@ export class UnreadCounter {
 					let latestPost;
 					let unreadPosts;
 					try {
-						latestPost = await this._api.getLatestPost(streamId);
-						unreadPosts = await this._api.getPostsInRange(
+						latestPost = (await Container.agent.posts.fetchLatest(streamId)).post;
+						unreadPosts = (await Container.agent.posts.fetchInRange(
 							streamId,
 							lastReadSeqNum + 1,
 							latestPost.seqNum
-						);
+						)).posts;
 						unreadPosts = unreadPosts.filter(
 							p => !p.deactivated && p.creatorId !== this._currentUserId
 						);

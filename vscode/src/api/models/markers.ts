@@ -1,5 +1,6 @@
 "use strict";
 import { Range } from "vscode";
+import { Container } from "../../container";
 import { memoize } from "../../system/decorators";
 import { CSLocationArray, CSMarker } from "../api";
 import { ChannelStream, CodeStreamSession, DirectStream, Post } from "../session";
@@ -29,7 +30,8 @@ export class Marker {
 		if (this._post === undefined) {
 			const stream = await this.stream();
 			if (stream === undefined) {
-				const post = await this.session.api.getPost(this.entity.streamId, this.entity.postId);
+				const post = (await Container.agent.posts.get(this.entity.streamId, this.entity.postId))
+					.post;
 				this._post = new Post(this.session, post);
 			} else {
 				this._post = await stream.posts.get(this.entity.postId);

@@ -329,7 +329,7 @@ export class CodeStreamSession implements Disposable {
 
 	@signedIn
 	async getStream(streamId: string): Promise<Stream | undefined> {
-		const stream = await this.api.getStream(streamId);
+		const stream = (await Container.agent.streams.get(streamId)).stream;
 		if (stream === undefined) return undefined;
 
 		switch (stream.type) {

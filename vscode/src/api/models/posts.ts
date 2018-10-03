@@ -162,6 +162,6 @@ export class PostCollection extends CodeStreamCollection<Post, CSPost> {
 	}
 
 	protected async fetch() {
-		return this.session.api.getPosts(this.stream.id);
+		return (await Container.agent.posts.fetch(this.stream.id)).posts;
 	}
 }

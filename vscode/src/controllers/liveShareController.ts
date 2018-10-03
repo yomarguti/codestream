@@ -266,7 +266,7 @@ export class LiveShareController implements Disposable {
 
 		// Ensure we are a member of the channel
 		if (vslsChannel !== undefined && !vslsChannel.memberOf(Container.session.userId)) {
-			await Container.session.api.joinStream(vslsChannel.id);
+			await Container.agent.streams.join(vslsChannel.id);
 		}
 
 		return vslsChannel;

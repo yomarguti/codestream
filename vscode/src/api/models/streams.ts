@@ -1,4 +1,5 @@
 "use strict";
+import { Container } from "../../container";
 import { ChannelServiceType } from "../../shared/api.protocol";
 import { Iterables, Strings } from "../../system";
 import { CSChannelStream, CSDirectStream, CSFileStream, CSStream, StreamType } from "../api";
@@ -28,20 +29,11 @@ abstract class StreamBase<T extends CSStream> extends CodeStreamItem<T> {
 	}
 
 	async post(text: string, parentPostId?: string) {
-		const post = await this.session.api.createPost(
-			text,
-			[],
-			parentPostId,
-			this.entity.id,
-			this.entity.teamId
-		);
+		const post = (await Container.agent.posts.create(this.entity.id, text, undefined, parentPostId))
+			.post;
 		if (post === undefined) throw new Error(`Unable to post to Stream(${this.entity.id})`);
 
 		return new Post(this.session, post);
-	}
-
-	async markRead(): Promise<any> {
-		return this.session.api.markStreamRead(this.id);
 	}
 }
 
@@ -214,9 +206,9 @@ export class ChannelStreamCollection extends StreamCollectionBase<ChannelStream,
 					id => !stream.entity.memberIds!.includes(id)
 				);
 
-				const entity = (await this.session.api.updateStream(stream.id, {
+				const entity = (await Container.agent.streams.update(stream.id, {
 					$push: { memberIds: missingIds }
-				})) as CSChannelStream;
+				})).stream as CSChannelStream;
 
 				return new ChannelStream(this.session, entity);
 			}
@@ -224,7 +216,7 @@ export class ChannelStreamCollection extends StreamCollectionBase<ChannelStream,
 			return stream;
 		}
 
-		const s = await this.session.api.createChannelStream(
+		const s = (await Container.agent.streams.createChannel(
 			creationOptions.name!,
 			creationOptions.membership,
 			creationOptions.privacy,
@@ -233,9 +225,8 @@ export class ChannelStreamCollection extends StreamCollectionBase<ChannelStream,
 				serviceType: type,
 				serviceKey: key,
 				serviceInfo: creationOptions.serviceInfo
-			},
-			this.teamId
-		);
+			}
+		)).stream;
 		if (s === undefined) throw new Error(`Unable to create stream`);
 
 		return new ChannelStream(this.session, s);
@@ -257,9 +248,9 @@ export class ChannelStreamCollection extends StreamCollectionBase<ChannelStream,
 					id => !stream.entity.memberIds!.includes(id)
 				);
 
-				const entity = (await this.session.api.updateStream(stream.id, {
+				const entity = (await Container.agent.streams.update(stream.id, {
 					$push: { memberIds: missingIds }
-				})) as CSChannelStream;
+				})).stream as CSChannelStream;
 
 				return new ChannelStream(this.session, entity);
 			}
@@ -267,14 +258,12 @@ export class ChannelStreamCollection extends StreamCollectionBase<ChannelStream,
 			return stream;
 		}
 
-		const s = await this.session.api.createChannelStream(
+		const s = (await Container.agent.streams.createChannel(
 			name,
 			creationOptions.membership,
 			creationOptions.privacy,
-			creationOptions.purpose,
-			undefined,
-			this.teamId
-		);
+			creationOptions.purpose
+		)).stream;
 		if (s === undefined) throw new Error(`Unable to create stream`);
 
 		return new ChannelStream(this.session, s);
@@ -285,7 +274,7 @@ export class ChannelStreamCollection extends StreamCollectionBase<ChannelStream,
 	}
 
 	protected async fetch() {
-		return this.session.api.getChannelStreams();
+		return (await Container.agent.streams.fetch([StreamType.Channel])).streams as CSChannelStream[];
 	}
 }
 
@@ -307,7 +296,7 @@ export class DirectStreamCollection extends StreamCollectionBase<DirectStream, C
 		const stream = await this.getByMembers(memberIds);
 		if (stream !== undefined) return stream;
 
-		const s = await this.session.api.createDirectStream(memberIds, this.teamId);
+		const s = (await Container.agent.streams.createDirect(memberIds)).stream;
 		if (s === undefined) throw new Error(`Unable to create stream`);
 
 		return new DirectStream(this.session, s);
@@ -318,7 +307,7 @@ export class DirectStreamCollection extends StreamCollectionBase<DirectStream, C
 	}
 
 	protected async fetch() {
-		return this.session.api.getDirectStreams();
+		return (await Container.agent.streams.fetch([StreamType.Direct])).streams as CSDirectStream[];
 	}
 }
 
@@ -337,7 +326,8 @@ export class ChannelAndDirectStreamCollection extends StreamCollectionBase<
 	}
 
 	protected async fetch() {
-		return this.session.api.getChannelOrDirectStreams();
+		return (await Container.agent.streams.fetch([StreamType.Channel, StreamType.Direct]))
+			.streams as CSChannelStream[];
 	}
 }
 
@@ -355,6 +345,6 @@ export class FileStreamCollection extends StreamCollectionBase<FileStream, CSFil
 	}
 
 	protected async fetch() {
-		return this.session.api.getFileStreams(this.repo.id);
+		return (await Container.agent.streams.fetchFiles(this.repo.id)).streams;
 	}
 }
