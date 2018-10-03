@@ -99,12 +99,6 @@ export class CodeStreamApi {
 		}
 	}
 
-	checkSignup(token: string): Promise<LoginResponse> {
-		return this.put<CompleteSignupRequest, LoginResponse>("/no-auth/check-signup", {
-			token
-		});
-	}
-
 	useMiddleware(middleware: CodeStreamApiMiddleware) {
 		this._middleware.push(middleware);
 		return {
@@ -113,6 +107,12 @@ export class CodeStreamApi {
 				this._middleware.splice(i, 1);
 			}
 		};
+	}
+
+	checkSignup(token: string): Promise<LoginResponse> {
+		return this.put<CompleteSignupRequest, LoginResponse>("/no-auth/check-signup", {
+			token
+		});
 	}
 
 	createMarkerLocation(
@@ -147,11 +147,7 @@ export class CodeStreamApi {
 	}
 
 	reactToPost(token: string, request: ReactToPostRequest) {
-		return this.put<Reactions, ReactToPostResponse>(
-			`/react/${request.postId}`,
-			request.reactions,
-			token
-		);
+		return this.put<Reactions, ReactToPostResponse>(`/react/${request.id}`, request.emojis, token);
 	}
 
 	editPost(token: string, request: EditPostRequest) {
@@ -316,11 +312,11 @@ export class CodeStreamApi {
 	}
 
 	joinStream(token: string, teamId: string, streamId: string) {
-		return this.put<object, JoinStreamResponse>(`/join/${streamId}`, {}, token);
+		return this.put<{}, JoinStreamResponse>(`/join/${streamId}`, {}, token);
 	}
 
-	updateStream(token: string, streamId: string, request: object) {
-		return this.put(`/streams/${streamId}`, request, token);
+	updateStream(token: string, streamId: string, changes: { [key: string]: any }) {
+		return this.put(`/streams/${streamId}`, changes, token);
 	}
 
 	updateMarker(token: string, markerId: string, request: UpdateMarkerRequest) {
