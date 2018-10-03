@@ -318,7 +318,7 @@ export interface EditPostRequest {
 	id: string;
 	streamId: string;
 	text: string;
-	mentionedUserIds: string[];
+	mentionedUserIds?: string[];
 }
 
 export interface ReactToPostResponse {

@@ -4,11 +4,11 @@ import * as path from "path";
 import { Range } from "vscode-languageserver-protocol";
 import URI from "vscode-uri";
 import {
-	DocumentPostRequestParams,
-	DocumentPreparePostRequestParams,
-	DocumentPreparePostResponse,
-	GetPostsRequestParams,
-	GetPostsResponse
+	CreatePostWithCodeRequest,
+	FetchPostsRequest,
+	FetchPostsResponse,
+	PreparePostWithCodeRequest,
+	PreparePostWithCodeResponse
 } from "../agent";
 import { CreatePostRequestCodeBlock, CSMarkerLocation, CSPost, GetPostResponse } from "../api/api";
 import { Container } from "../container";
@@ -19,7 +19,7 @@ import { Iterables, Strings } from "../system";
 export namespace PostHandler {
 	let lastFullCode = "";
 
-	export async function getPosts(params: GetPostsRequestParams): Promise<GetPostsResponse> {
+	export async function getPosts(params: FetchPostsRequest): Promise<FetchPostsResponse> {
 		const { postManager } = Container.instance();
 		const slice = await postManager.getPosts(
 			params.streamId,
@@ -37,7 +37,7 @@ export namespace PostHandler {
 		textDocument: documentId,
 		range,
 		dirty
-	}: DocumentPreparePostRequestParams): Promise<DocumentPreparePostResponse> {
+	}: PreparePostWithCodeRequest): Promise<PreparePostWithCodeResponse> {
 		const { documents, git, session } = Container.instance();
 
 		const document = documents.get(documentId.uri);
@@ -110,7 +110,7 @@ export namespace PostHandler {
 		streamId,
 		parentPostId,
 		mentionedUserIds
-	}: DocumentPostRequestParams): Promise<CSPost | undefined> {
+	}: CreatePostWithCodeRequest): Promise<CSPost | undefined> {
 		const { api, state, git } = Container.instance();
 		const filePath = URI.parse(documentId.uri).fsPath;
 		const fileContents = lastFullCode;

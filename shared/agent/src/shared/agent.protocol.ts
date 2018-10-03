@@ -1,3 +1,4 @@
+"use strict";
 import { RequestInit } from "node-fetch";
 import {
 	InitializeResult,
@@ -7,25 +8,14 @@ import {
 	TextDocumentIdentifier
 } from "vscode-languageserver-protocol";
 import {
-	CreatePostRequest,
-	CreatePostResponse,
 	CreateRepoRequest,
 	CreateRepoResponse,
-	CreateStreamRequest,
-	CreateStreamResponse,
 	CSMarker,
-	CSPost,
-	CSStream,
-	CSUser,
-	DeletePostResponse,
-	EditPostRequest,
-	EditPostResponse,
 	FindRepoResponse,
 	GetMarkerLocationsResponse,
 	GetMarkerResponse,
 	GetMarkersResponse,
 	GetMeResponse,
-	GetPostResponse,
 	GetRepoResponse,
 	GetReposResponse,
 	GetTeamResponse,
@@ -34,19 +24,16 @@ import {
 	GetUsersResponse,
 	InviteRequest,
 	InviteResponse,
-	JoinStreamRequest,
-	JoinStreamResponse,
 	LoginResponse,
 	LoginResult,
-	MarkPostUnreadRequest,
-	MarkPostUnreadResponse,
-	ReactToPostRequest,
-	ReactToPostResponse,
 	UpdatePresenceRequest,
 	UpdatePresenceResponse,
 	UpdateStreamMembershipRequest,
 	UpdateStreamMembershipResponse
 } from "./api.protocol";
+
+export * from "./agent.protocol.posts";
+export * from "./agent.protocol.streams";
 
 export interface AccessToken {
 	email: string;
@@ -193,49 +180,6 @@ export const DocumentMarkersRequest = new RequestType<
 	void
 >("codeStream/textDocument/markers");
 
-export interface CodeBlockSource {
-	file: string;
-	repoPath: string;
-	revision: string;
-	authors: { id: string; username: string }[];
-	remotes: { name: string; url: string }[];
-}
-
-export interface DocumentPreparePostRequestParams {
-	textDocument: TextDocumentIdentifier;
-	range: Range;
-	dirty: boolean;
-}
-
-export interface DocumentPreparePostResponse {
-	code: string;
-	source?: CodeBlockSource;
-	gitError?: string;
-}
-
-export const DocumentPreparePostRequest = new RequestType<
-	DocumentPreparePostRequestParams,
-	DocumentPreparePostResponse,
-	void,
-	void
->("codeStream/textDocument/preparePost");
-
-export interface DocumentPostRequestParams {
-	textDocument: TextDocumentIdentifier;
-	text: string;
-	mentionedUserIds: string[];
-	code: string;
-	location?: [number, number, number, number];
-	source?: CodeBlockSource;
-	parentPostId?: string;
-	streamId: string;
-	teamId?: string;
-}
-
-export const DocumentPostRequest = new RequestType<DocumentPostRequestParams, CSPost, void, void>(
-	"codeStream/textDocument/post"
-);
-
 export enum LogoutReason {
 	Unknown = "unknown"
 }
@@ -248,73 +192,12 @@ export const LogoutRequest = new RequestType<LogoutRequestParams, undefined, voi
 	"codeStream/logout"
 );
 
-export interface GetPostsRequestParams {
-	streamId: string;
-	limit: number;
-	beforeSeq?: number;
-	afterSeq?: number;
-}
-
-export interface GetPostsResponse {
-	posts: CSPost[];
-	maxSeq: number;
-}
-
-export const GetPostsRequest = new RequestType<GetPostsRequestParams, GetPostsResponse, void, void>(
-	"codeStream/posts"
-);
-
-export const CreatePostRequestType = new RequestType<
-	CreatePostRequest,
-	CreatePostResponse,
-	void,
-	void
->("codeStream/createPost");
-
 export const CreateRepoRequestType = new RequestType<
 	CreateRepoRequest,
 	CreateRepoResponse,
 	void,
 	void
 >("codeStream/createRepo");
-
-export const CreateStreamRequestType = new RequestType<
-	CreateStreamRequest,
-	CreateStreamResponse,
-	void,
-	void
->("codeStream/createStream");
-
-export interface DeletePostRequest {
-	teamId: string;
-	streamId: string;
-	postId: string;
-}
-
-export const DeletePostRequestType = new RequestType<
-	DeletePostRequest,
-	DeletePostResponse,
-	void,
-	void
->("codeStream/deletePost");
-
-export const ReactToPostRequestType = new RequestType<
-	ReactToPostRequest,
-	ReactToPostResponse,
-	void,
-	void
->("codeStream/reactToPost");
-
-export const EditPostRequestType = new RequestType<EditPostRequest, EditPostResponse, void, void>(
-	"codeStream/editPost"
-);
-
-export const MarkPostUnreadRequestType = new RequestType<
-	MarkPostUnreadRequest,
-	MarkPostUnreadResponse,
-	void,
-	void
->("codeStream/markPostUnread");
 
 export interface FindRepoRequest {
 	url: string;
@@ -362,49 +245,6 @@ export const GetMarkersRequestType = new RequestType<
 	void
 >("codeStream/getMarkers");
 
-export interface GetPostRequest {
-	teamId: string;
-	postId: string;
-}
-
-export const GetPostRequestType = new RequestType<GetPostRequest, GetPostResponse, void, void>(
-	"codeStream/getPost"
-);
-
-export interface GetLatestPostRequest {
-	teamId: string;
-	streamId: string;
-}
-
-export interface GetLatestPostResponse {
-	post: CSPost;
-}
-
-export const GetLatestPostRequestType = new RequestType<
-	GetLatestPostRequest,
-	GetLatestPostResponse,
-	void,
-	void
->("codeStream/getLatestPost");
-
-export interface GetPostsInRangeRequest {
-	teamId: string;
-	streamId: string;
-	range: string;
-}
-
-export interface GetPostsInRangeResponse {
-	posts: CSPost[];
-	more?: boolean;
-}
-
-export const GetPostsInRangeRequestType = new RequestType<
-	GetPostsInRangeRequest,
-	GetPostsInRangeResponse,
-	void,
-	void
->("codeStream/getPostsInRange");
-
 export interface GetRepoRequest {
 	teamId: string;
 	repoId: string;
@@ -421,53 +261,6 @@ export interface GetReposRequest {
 export const GetReposRequestType = new RequestType<GetReposRequest, GetReposResponse, void, void>(
 	"codeStream/getRepos"
 );
-
-export interface GetStreamRequest {
-	teamId: string;
-	streamId: string;
-}
-
-export interface GetStreamResponse {
-	stream: CSStream;
-}
-
-export const GetStreamRequestType = new RequestType<
-	GetStreamRequest,
-	GetStreamResponse,
-	void,
-	void
->("codeStream/getStream");
-
-export interface GetUnreadStreamsRequest {
-	teamId: string;
-}
-
-export interface GetUnreadStreamsResponse {
-	streams: CSStream[];
-}
-
-export const GetUnreadStreamsRequestType = new RequestType<
-	GetUnreadStreamsRequest,
-	GetUnreadStreamsResponse,
-	void,
-	void
->("codeStream/getUnreadStreams");
-
-export interface GetStreamsRequest {
-	teamId: string;
-	repoId?: string;
-}
-
-export interface GetStreamsResponse {
-	streams: CSStream[];
-}
-
-export const GetStreamsRequestType = new RequestType<
-	GetStreamsRequest,
-	GetStreamsResponse,
-	void,
-	void
->("codeStream/getStreams");
 
 export interface GetTeamRequest {
 	teamId: string;
@@ -502,27 +295,6 @@ export const GetUsersRequestType = new RequestType<GetUsersRequest, GetUsersResp
 	"codeStream/getUsers"
 );
 
-export const JoinStreamRequestType = new RequestType<
-	JoinStreamRequest,
-	JoinStreamResponse,
-	void,
-	void
->("codeStream/joinStream");
-
-export interface UpdateStreamRequest {
-	streamId: string;
-	data: object;
-}
-
-export interface UpdateStreamResponse {}
-
-export const UpdateStreamRequestType = new RequestType<
-	UpdateStreamRequest,
-	UpdateStreamResponse,
-	void,
-	void
->("codeStream/updateStream");
-
 export const UpdatePresenceRequestType = new RequestType<
 	UpdatePresenceRequest,
 	UpdatePresenceResponse,
@@ -540,19 +312,6 @@ export const UpdateStreamMembershipRequestType = new RequestType<
 export const InviteRequestType = new RequestType<InviteRequest, InviteResponse, void, void>(
 	"codeStream/updateStreamMembership"
 );
-
-export interface MarkStreamReadRequest {
-	streamId: string;
-}
-
-export interface MarkStreamReadResponse {}
-
-export const MarkStreamReadRequestType = new RequestType<
-	MarkStreamReadRequest,
-	MarkStreamReadResponse,
-	void,
-	void
->("codeStream/markStreamRead");
 
 export interface SavePreferencesRequest {
 	preferences: object;

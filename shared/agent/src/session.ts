@@ -11,36 +11,44 @@ import {
 	AgentOptions,
 	ApiRequest,
 	CodeStreamAgent,
+	CreateChannelStreamRequest,
+	CreateDirectStreamRequest,
+	CreatePostRequest,
 	CreatePostRequestType,
+	CreatePostResponse,
+	CreatePostWithCodeRequestType,
 	CreateRepoRequestType,
-	CreateStreamRequestType,
 	DeletePostRequest,
 	DeletePostRequestType,
 	DocumentFromCodeBlockRequest,
 	DocumentLatestRevisionRequest,
 	DocumentMarkersRequest,
-	DocumentPostRequest,
-	DocumentPreparePostRequest,
 	EditPostRequestType,
+	FetchLatestPostRequest,
+	FetchLatestPostRequestType,
+	FetchLatestPostResponse,
+	FetchPostsRequestType,
+	FetchStreamsRequest,
+	FetchStreamsRequestType,
+	FetchStreamsResponse,
+	FetchUnreadStreamsRequest,
+	FetchUnreadStreamsRequestType,
+	FetchUnreadStreamsResponse,
 	FindRepoRequest,
 	FindRepoRequestType,
-	GetLatestPostRequest,
-	GetLatestPostRequestType,
-	GetLatestPostResponse,
 	GetMarkerLocationsRequest,
 	GetMarkerLocationsRequestType,
 	GetMarkerRequest,
 	GetMarkerRequestType,
+	// GetPostsInRangeRequest,
+	// GetPostsInRangeRequestType,
+	// GetPostsInRangeResponse,
 	GetMarkersRequest,
 	GetMarkersRequestType,
 	GetMeRequest,
 	GetMeRequestType,
 	GetPostRequest,
 	GetPostRequestType,
-	GetPostsInRangeRequest,
-	GetPostsInRangeRequestType,
-	GetPostsInRangeResponse,
-	GetPostsRequest,
 	GetRepoRequest,
 	GetRepoRequestType,
 	GetReposRequest,
@@ -48,26 +56,23 @@ import {
 	GetStreamRequest,
 	GetStreamRequestType,
 	GetStreamResponse,
-	GetStreamsRequest,
-	GetStreamsRequestType,
-	GetStreamsResponse,
 	GetTeamRequest,
 	GetTeamRequestType,
 	GetTeamsRequest,
 	GetTeamsRequestType,
-	GetUnreadStreamsRequest,
-	GetUnreadStreamsRequestType,
-	GetUnreadStreamsResponse,
 	GetUserRequest,
 	GetUserRequestType,
 	GetUsersRequest,
 	GetUsersRequestType,
 	InviteRequestType,
+	JoinStreamRequest,
 	JoinStreamRequestType,
+	JoinStreamResponse,
 	MarkPostUnreadRequestType,
 	MarkStreamReadRequest,
 	MarkStreamReadRequestType,
 	MarkStreamReadResponse,
+	PreparePostWithCodeRequestType,
 	ReactToPostRequestType,
 	SavePreferencesRequest,
 	SavePreferencesRequestType,
@@ -82,12 +87,8 @@ import { AgentError, ServerError } from "./agentError";
 import {
 	ApiErrors,
 	CodeStreamApi,
-	CreatePostRequest,
-	CreatePostResponse,
 	CreateRepoRequest,
 	CreateRepoResponse,
-	CreateStreamRequest,
-	CreateStreamResponse,
 	CSRepository,
 	CSStream,
 	DeletePostResponse,
@@ -107,8 +108,6 @@ import {
 	GetUsersResponse,
 	InviteRequest,
 	InviteResponse,
-	JoinStreamRequest,
-	JoinStreamResponse,
 	LoginResult,
 	MarkPostUnreadRequest,
 	MarkPostUnreadResponse,
@@ -138,6 +137,10 @@ import {
 	RepositoriesMessageReceivedEvent
 } from "./pubnub/pubnubReceiver";
 import {
+	CreateChannelStreamRequestType,
+	CreateChannelStreamResponse,
+	CreateDirectStreamRequestType,
+	CreateDirectStreamResponse,
 	DidChangeVersionCompatibilityNotification,
 	LogoutReason,
 	LogoutRequest
@@ -202,9 +205,9 @@ export class CodeStreamSession {
 		);
 		this.agent.registerHandler(DocumentFromCodeBlockRequest, MarkerHandler.documentFromCodeBlock);
 		this.agent.registerHandler(DocumentMarkersRequest, MarkerHandler.documentMarkers);
-		this.agent.registerHandler(DocumentPreparePostRequest, PostHandler.documentPreparePost);
-		this.agent.registerHandler(DocumentPostRequest, PostHandler.documentPost);
-		this.agent.registerHandler(GetPostsRequest, PostHandler.getPosts);
+		this.agent.registerHandler(PreparePostWithCodeRequestType, PostHandler.documentPreparePost);
+		this.agent.registerHandler(CreatePostWithCodeRequestType, PostHandler.documentPost);
+		this.agent.registerHandler(FetchPostsRequestType, PostHandler.getPosts);
 
 		this.agent.registerHandler(DocumentLatestRevisionRequest, async e => {
 			const revision = await Container.instance().git.getFileCurrentRevision(
@@ -215,7 +218,8 @@ export class CodeStreamSession {
 
 		this.agent.registerHandler(CreatePostRequestType, this.handleCreatePost);
 		this.agent.registerHandler(CreateRepoRequestType, this.handleCreateRepo);
-		this.agent.registerHandler(CreateStreamRequestType, this.handleCreateStream);
+		this.agent.registerHandler(CreateChannelStreamRequestType, this.handleCreateChannelStream);
+		this.agent.registerHandler(CreateDirectStreamRequestType, this.handleCreateDirectStream);
 		this.agent.registerHandler(DeletePostRequestType, this.handleDeletePost);
 		this.agent.registerHandler(ReactToPostRequestType, this.handleReactToPost);
 		this.agent.registerHandler(EditPostRequestType, this.handleEditPost);
@@ -225,14 +229,14 @@ export class CodeStreamSession {
 		this.agent.registerHandler(GetMarkerLocationsRequestType, this.handleGetMarkerLocations);
 		this.agent.registerHandler(GetMarkersRequestType, this.handleGetMarkers);
 		this.agent.registerHandler(GetPostRequestType, this.handleGetPost);
-		this.agent.registerHandler(GetLatestPostRequestType, this.handleGetLatestPost);
-		this.agent.registerHandler(GetPostsInRangeRequestType, this.handleGetPostsInRange);
+		this.agent.registerHandler(FetchLatestPostRequestType, this.handleGetLatestPost);
+		// this.agent.registerHandler(GetPostsInRangeRequestType, this.handleGetPostsInRange);
 		// this.agent.registerHandler(GetPostsRequestType, this.handleGetPosts);
 		this.agent.registerHandler(GetRepoRequestType, this.handleGetRepo);
 		this.agent.registerHandler(GetReposRequestType, this.handleGetRepos);
 		this.agent.registerHandler(GetStreamRequestType, this.handleGetStream);
-		this.agent.registerHandler(GetUnreadStreamsRequestType, this.handleGetUnreadStreams);
-		this.agent.registerHandler(GetStreamsRequestType, this.handleGetStreams);
+		this.agent.registerHandler(FetchUnreadStreamsRequestType, this.handleGetUnreadStreams);
+		this.agent.registerHandler(FetchStreamsRequestType, this.handleGetStreams);
 		this.agent.registerHandler(GetTeamRequestType, this.handleGetTeam);
 		this.agent.registerHandler(GetTeamsRequestType, this.handleGetTeams);
 		this.agent.registerHandler(GetUserRequestType, this.handleGetUser);
@@ -433,7 +437,7 @@ export class CodeStreamSession {
 
 	handleCreatePost(request: CreatePostRequest): Promise<CreatePostResponse> {
 		const { api, session } = Container.instance();
-		return api.createPost(session.apiToken, request);
+		return api.createPost(session.apiToken, { ...request, teamId: session.teamId });
 	}
 
 	handleCreateRepo(request: CreateRepoRequest): Promise<CreateRepoResponse> {
@@ -441,14 +445,23 @@ export class CodeStreamSession {
 		return api.createRepo(session.apiToken, request);
 	}
 
-	handleCreateStream(request: CreateStreamRequest): Promise<CreateStreamResponse> {
+	handleCreateChannelStream(
+		request: CreateChannelStreamRequest
+	): Promise<CreateChannelStreamResponse> {
 		const { api, session } = Container.instance();
-		return api.createStream(session.apiToken, request);
+		return api.createStream(session.apiToken, { ...request, teamId: session.teamId }) as any;
+	}
+
+	handleCreateDirectStream(
+		request: CreateDirectStreamRequest
+	): Promise<CreateDirectStreamResponse> {
+		const { api, session } = Container.instance();
+		return api.createStream(session.apiToken, { ...request, teamId: session.teamId }) as any;
 	}
 
 	handleDeletePost(request: DeletePostRequest): Promise<DeletePostResponse> {
 		const { api, session } = Container.instance();
-		return api.deletePost(session.apiToken, request.teamId, request.postId);
+		return api.deletePost(session.apiToken, session.teamId, request.id);
 	}
 
 	handleReactToPost(request: ReactToPostRequest): Promise<ReactToPostResponse> {
@@ -490,23 +503,23 @@ export class CodeStreamSession {
 
 	handleGetMarkers(request: GetMarkersRequest): Promise<GetMarkersResponse> {
 		const { api, session } = Container.instance();
-		return api.getMarkers(session.apiToken, request.teamId, request.streamId);
+		return api.getMarkers(session.apiToken, session.teamId, request.streamId);
 	}
 
 	handleGetPost(request: GetPostRequest): Promise<GetPostResponse> {
 		const { api, session } = Container.instance();
-		return api.getPost(session.apiToken, request.teamId, request.postId);
+		return api.getPost(session.apiToken, session.teamId, request.id);
 	}
 
-	handleGetLatestPost(request: GetLatestPostRequest): Promise<GetLatestPostResponse> {
+	handleGetLatestPost(request: FetchLatestPostRequest): Promise<FetchLatestPostResponse> {
 		const { api, session } = Container.instance();
-		return api.getLatestPost(session.apiToken, request.teamId, request.streamId);
+		return api.getLatestPost(session.apiToken, session.teamId, request.streamId);
 	}
 
-	handleGetPostsInRange(request: GetPostsInRangeRequest): Promise<GetPostsInRangeResponse> {
-		const { api, session } = Container.instance();
-		return api.getPostsInRange(session.apiToken, request.teamId, request.streamId, request.range);
-	}
+	// handleGetPostsInRange(request: GetPostsInRangeRequest): Promise<GetPostsInRangeResponse> {
+	// 	const { api, session } = Container.instance();
+	// 	return api.getPostsInRange(session.apiToken, request.teamId, request.streamId, request.range);
+	// }
 
 	handleGetRepo(request: GetRepoRequest): Promise<GetRepoResponse> {
 		const { api, session } = Container.instance();
@@ -520,17 +533,17 @@ export class CodeStreamSession {
 
 	handleGetStream(request: GetStreamRequest): Promise<GetStreamResponse> {
 		const { api, session } = Container.instance();
-		return api.getStream(session.apiToken, request.teamId, request.streamId);
+		return api.getStream(session.apiToken, session.teamId, request.id);
 	}
 
-	handleGetUnreadStreams(request: GetUnreadStreamsRequest): Promise<GetUnreadStreamsResponse> {
+	handleGetUnreadStreams(request: FetchUnreadStreamsRequest): Promise<FetchUnreadStreamsResponse> {
 		const { api, session } = Container.instance();
-		return api.getUnreadStreams(session.apiToken, request.teamId);
+		return api.getUnreadStreams(session.apiToken, session.teamId);
 	}
 
-	handleGetStreams(request: GetStreamsRequest): Promise<GetStreamsResponse> {
+	handleGetStreams(request: FetchStreamsRequest): Promise<FetchStreamsResponse> {
 		const { api, session } = Container.instance();
-		return api.getStreams(session.apiToken, request.teamId, request.repoId);
+		return api.getStreams(session.apiToken, session.teamId, request.repoId);
 	}
 
 	handleGetTeam(request: GetTeamRequest): Promise<GetTeamResponse> {
@@ -555,12 +568,12 @@ export class CodeStreamSession {
 
 	handleJoinStream(request: JoinStreamRequest): Promise<JoinStreamResponse> {
 		const { api, session } = Container.instance();
-		return api.joinStream(session.apiToken, request.teamId, request.streamId);
+		return api.joinStream(session.apiToken, session.teamId, request.id);
 	}
 
 	handleUpdateStream(request: UpdateStreamRequest): Promise<UpdateStreamResponse> {
 		const { api, session } = Container.instance();
-		return api.updateStream(session.apiToken, request.streamId, request.data);
+		return api.updateStream(session.apiToken, request.id, request.data) as any;
 	}
 
 	handleUpdatePresence(request: UpdatePresenceRequest): Promise<UpdatePresenceResponse> {
@@ -587,7 +600,7 @@ export class CodeStreamSession {
 
 	handleMarkStreamRead(request: MarkStreamReadRequest): Promise<MarkStreamReadResponse> {
 		const { api, session } = Container.instance();
-		return api.markStreamRead(session.apiToken, request.streamId);
+		return api.markStreamRead(session.apiToken, request.id);
 	}
 
 	handleSavePreferences(request: SavePreferencesRequest): Promise<SavePreferencesResponse> {

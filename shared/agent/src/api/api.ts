@@ -5,9 +5,9 @@ import { ServerError } from "../agentError";
 import { Logger } from "../logger";
 import {
 	AccessToken,
-	GetLatestPostResponse,
-	GetPostsInRangeResponse,
-	GetUnreadStreamsResponse
+	FetchLatestPostResponse,
+	// GetPostsInRangeResponse,
+	FetchUnreadStreamsResponse
 } from "../shared/agent.protocol";
 import {
 	CompleteSignupRequest,
@@ -202,24 +202,24 @@ export class CodeStreamApi {
 		return this.get<GetPostResponse>(`/posts/${postId}?teamId=${teamId}`, token);
 	}
 
-	getLatestPost(token: string, teamId: string, streamId: string): Promise<GetLatestPostResponse> {
-		return this.get<GetLatestPostResponse>(
+	getLatestPost(token: string, teamId: string, streamId: string): Promise<FetchLatestPostResponse> {
+		return this.get<FetchLatestPostResponse>(
 			`/posts/?teamId=${teamId}&streamId=${streamId}&limit=1`,
 			token
 		);
 	}
 
-	getPostsInRange(
-		token: string,
-		teamId: string,
-		streamId: string,
-		range: string
-	): Promise<GetPostsInRangeResponse> {
-		return this.get<GetPostsInRangeResponse>(
-			`/posts/?teamId=${teamId}&streamId=${streamId}&seqnum=${range}`,
-			token
-		);
-	}
+	// getPostsInRange(
+	// 	token: string,
+	// 	teamId: string,
+	// 	streamId: string,
+	// 	range: string
+	// ): Promise<GetPostsInRangeResponse> {
+	// 	return this.get<GetPostsInRangeResponse>(
+	// 		`/posts/?teamId=${teamId}&streamId=${streamId}&seqnum=${range}`,
+	// 		token
+	// 	);
+	// }
 
 	getPosts(token: string, teamId: string, streamId: string): Promise<GetPostsResponse> {
 		return this.get<GetPostsResponse>(`/posts?teamId=${teamId}&streamId=${streamId}`, token);
@@ -280,8 +280,8 @@ export class CodeStreamApi {
 	getUnreadStreams<T extends CSStream>(
 		token: string,
 		teamId: string
-	): Promise<GetUnreadStreamsResponse> {
-		return this.get<GetUnreadStreamsResponse>(`/streams?teamId=${teamId}&unread`, token);
+	): Promise<FetchUnreadStreamsResponse> {
+		return this.get<FetchUnreadStreamsResponse>(`/streams?teamId=${teamId}&unread`, token);
 	}
 
 	getStreams<T extends CSStream>(
