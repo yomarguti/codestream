@@ -12,6 +12,7 @@ import {
 	CreateRepoResponse,
 	CSMarker,
 	CSMarkerLocations,
+	CSRepository,
 	CSTeam,
 	CSUser,
 	FindRepoResponse,
@@ -249,7 +250,6 @@ export const GetMarkersRequestType = new RequestType<
 >("codeStream/getMarkers");
 
 export interface GetRepoRequest {
-	teamId: string;
 	repoId: string;
 }
 
@@ -257,13 +257,18 @@ export const GetRepoRequestType = new RequestType<GetRepoRequest, GetRepoRespons
 	"codeStream/getRepo"
 );
 
-export interface GetReposRequest {
-	teamId: string;
+export interface FetchReposRequest {}
+
+export interface FetchReposResponse {
+	repos: CSRepository[];
 }
 
-export const GetReposRequestType = new RequestType<GetReposRequest, GetReposResponse, void, void>(
-	"codeStream/getRepos"
-);
+export const FetchReposRequestType = new RequestType<
+	FetchReposRequest,
+	FetchReposResponse,
+	void,
+	void
+>("codeStream/fetchRepos");
 
 export interface GetTeamRequest {
 	teamId: string;

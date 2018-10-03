@@ -34,6 +34,9 @@ import {
 	FetchPostsInRangeRequestType,
 	FetchPostsInRangeResponse,
 	FetchPostsRequestType,
+	FetchReposRequest,
+	FetchReposRequestType,
+	FetchReposResponse,
 	FetchStreamsRequest,
 	FetchStreamsRequestType,
 	FetchStreamsResponse,
@@ -57,8 +60,6 @@ import {
 	GetPostRequestType,
 	GetRepoRequest,
 	GetRepoRequestType,
-	GetReposRequest,
-	GetReposRequestType,
 	GetStreamRequest,
 	GetStreamRequestType,
 	GetStreamResponse,
@@ -102,7 +103,6 @@ import {
 	GetMeResponse,
 	GetPostResponse,
 	GetRepoResponse,
-	GetReposResponse,
 	GetTeamResponse,
 	GetUserResponse,
 	GetUsersResponse,
@@ -235,7 +235,7 @@ export class CodeStreamSession {
 		this.agent.registerHandler(FetchLatestPostRequestType, this.handleFetchLatestPost);
 		this.agent.registerHandler(FetchPostsInRangeRequestType, this.handleFetchPostsInRange);
 		this.agent.registerHandler(GetRepoRequestType, this.handleGetRepo);
-		this.agent.registerHandler(GetReposRequestType, this.handleGetRepos);
+		this.agent.registerHandler(FetchReposRequestType, this.handleFetchRepos);
 		this.agent.registerHandler(GetStreamRequestType, this.handleGetStream);
 		this.agent.registerHandler(FetchUnreadStreamsRequestType, this.handleGetUnreadStreams);
 		this.agent.registerHandler(FetchStreamsRequestType, this.handleGetStreams);
@@ -526,12 +526,12 @@ export class CodeStreamSession {
 
 	handleGetRepo(request: GetRepoRequest): Promise<GetRepoResponse> {
 		const { api, session } = Container.instance();
-		return api.getRepo(session.apiToken, request.teamId, request.repoId);
+		return api.getRepo(session.apiToken, session.teamId, request.repoId);
 	}
 
-	handleGetRepos(request: GetReposRequest): Promise<GetReposResponse> {
+	handleFetchRepos(request: FetchReposRequest): Promise<FetchReposResponse> {
 		const { api, session } = Container.instance();
-		return api.getRepos(session.apiToken, request.teamId);
+		return api.getRepos(session.apiToken, session.teamId);
 	}
 
 	handleGetStream(request: GetStreamRequest): Promise<GetStreamResponse> {
