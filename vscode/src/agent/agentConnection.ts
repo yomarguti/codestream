@@ -53,17 +53,21 @@ import {
 	DocumentLatestRevisionRequest,
 	DocumentLatestRevisionResponse,
 	DocumentMarkersRequest,
-	DocumentMarkersResponse,
 	EditPostRequestType,
 	FetchFileStreamsRequestType,
 	FetchLatestPostRequestType,
+	FetchMarkerLocationsRequestType,
 	FetchPostsInRangeRequestType,
 	FetchPostsRequestType,
 	FetchStreamsRequestType,
-	FetchStreamsResponse,
+	FetchTeamsRequestType,
 	FetchUnreadStreamsRequestType,
+	FetchUsersRequestType,
+	GetMarkerRequestType,
 	GetPostRequestType,
 	GetStreamRequestType,
+	GetTeamRequestType,
+	GetUserRequestType,
 	JoinStreamRequestType,
 	LeaveStreamRequestType,
 	LogoutRequest,
@@ -197,20 +201,6 @@ export class CodeStreamAgentConnection implements Disposable {
 		return this.sendRequest(DocumentLatestRevisionRequest, {
 			textDocument: { uri: uri.toString() }
 		});
-	}
-
-	@started
-	async getMarkers(uri: Uri): Promise<DocumentMarkersResponse | undefined> {
-		try {
-			const response = await this.sendRequest(DocumentMarkersRequest, {
-				textDocument: { uri: uri.toString() }
-			});
-			return response;
-		} catch (ex) {
-			debugger;
-			Logger.error(ex);
-			throw ex;
-		}
 	}
 
 	async getPosts(streamId: string, limit = 100, beforeSeq?: number) {
@@ -453,6 +443,81 @@ export class CodeStreamAgentConnection implements Disposable {
 				id: postId,
 				streamId: streamId,
 				emojis: reactions
+			});
+		}
+	}(this);
+
+	@started
+	get markers() {
+		return this._markers;
+	}
+
+	private readonly _markers = new class {
+		constructor(private readonly _connection: CodeStreamAgentConnection) {}
+
+		getDocumentMarkers(uri: Uri) {
+			return this._connection.sendRequest(DocumentMarkersRequest, {
+				textDocument: { uri: uri.toString() }
+			});
+		}
+
+		get(markerId: string) {
+			return this._connection.sendRequest(GetMarkerRequestType, { markerId });
+		}
+	}(this);
+
+	@started
+	get markerLocations() {
+		return this._markerLocations;
+	}
+
+	private readonly _markerLocations = new class {
+		constructor(private readonly _connection: CodeStreamAgentConnection) {}
+
+		fetch(streamId: string, commitHash: string) {
+			return this._connection.sendRequest(FetchMarkerLocationsRequestType, {
+				streamId,
+				commitHash
+			});
+		}
+	}(this);
+
+	@started
+	get users() {
+		return this._users;
+	}
+
+	private readonly _users = new class {
+		constructor(private readonly _connection: CodeStreamAgentConnection) {}
+
+		fetch() {
+			return this._connection.sendRequest(FetchUsersRequestType, {});
+		}
+
+		get(userId: string) {
+			return this._connection.sendRequest(GetUserRequestType, {
+				userId
+			});
+		}
+	}(this);
+
+	@started
+	get teams() {
+		return this._users;
+	}
+
+	private readonly _teams = new class {
+		constructor(private readonly _connection: CodeStreamAgentConnection) {}
+
+		fetch(teamIds: string[]) {
+			return this._connection.sendRequest(FetchTeamsRequestType, {
+				teamIds
+			});
+		}
+
+		get(teamId: string) {
+			return this._connection.sendRequest(GetTeamRequestType, {
+				teamId
 			});
 		}
 	}(this);
