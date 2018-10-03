@@ -230,9 +230,7 @@ export const leaveChannel = streamId => async (dispatch, getState, { api }) => {
 	const { context, session, streams } = getState();
 
 	try {
-		await api.leaveStream(context.teamId, streamId, {
-			$pull: { memberIds: [session.userId] }
-		});
+		await api.leaveStream(context.teamId, streamId);
 		const stream = getStreamForId(streams, context.currentTeamId, streamId);
 		if (stream.privacy === "private") {
 			dispatch({
