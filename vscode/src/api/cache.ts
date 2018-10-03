@@ -61,10 +61,6 @@ export class Cache {
 		return this._resolveById(this.teams, changeSets, id => this.session.api.getTeam(id));
 	}
 
-	resolveMarkers(changeSets: object[]) {
-		return this._resolveById(this.markers, changeSets, id => this.session.api.getMarker(id));
-	}
-
 	private async _resolveById(
 		cache: Map<string, any>,
 		changeSets: object[],
