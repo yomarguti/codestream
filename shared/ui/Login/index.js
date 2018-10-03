@@ -113,6 +113,11 @@ export class Login extends React.Component {
 		this.props.startSignup();
 	};
 
+	handleClickSlackSignup = event => {
+		event.preventDefault();
+		this.props.startSlackSignin();
+	};
+
 	render() {
 		return (
 			<div id="login-page" className="onboarding-page">
@@ -137,7 +142,11 @@ export class Login extends React.Component {
 					<fieldset className="form-body">
 						<div id="controls">
 							<div className="button-group">
-								<Button className="control-button" type="button" onClick={this.signInWithSlack}>
+								<Button
+									className="control-button"
+									type="button"
+									onClick={this.handleClickSlackSignup}
+								>
 									Sign In with Slack
 								</Button>
 							</div>
