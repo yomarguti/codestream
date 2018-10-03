@@ -27,6 +27,9 @@ import {
 	FetchLatestPostRequest,
 	FetchLatestPostRequestType,
 	FetchLatestPostResponse,
+	FetchMarkerLocationsRequest,
+	FetchMarkerLocationsRequestType,
+	FetchMarkerLocationsResponse,
 	FetchPostsInRangeRequest,
 	FetchPostsInRangeRequestType,
 	FetchPostsInRangeResponse,
@@ -34,13 +37,16 @@ import {
 	FetchStreamsRequest,
 	FetchStreamsRequestType,
 	FetchStreamsResponse,
+	FetchTeamsRequest,
+	FetchTeamsRequestType,
+	FetchTeamsResponse,
 	FetchUnreadStreamsRequest,
 	FetchUnreadStreamsRequestType,
 	FetchUnreadStreamsResponse,
+	FetchUsersRequest,
+	FetchUsersRequestType,
 	FindRepoRequest,
 	FindRepoRequestType,
-	GetMarkerLocationsRequest,
-	GetMarkerLocationsRequestType,
 	GetMarkerRequest,
 	GetMarkerRequestType,
 	GetMarkersRequest,
@@ -58,12 +64,8 @@ import {
 	GetStreamResponse,
 	GetTeamRequest,
 	GetTeamRequestType,
-	GetTeamsRequest,
-	GetTeamsRequestType,
 	GetUserRequest,
 	GetUserRequestType,
-	GetUsersRequest,
-	GetUsersRequestType,
 	InviteRequestType,
 	JoinStreamRequest,
 	JoinStreamRequestType,
@@ -95,7 +97,6 @@ import {
 	EditPostRequest,
 	EditPostResponse,
 	FindRepoResponse,
-	GetMarkerLocationsResponse,
 	GetMarkerResponse,
 	GetMarkersResponse,
 	GetMeResponse,
@@ -103,7 +104,6 @@ import {
 	GetRepoResponse,
 	GetReposResponse,
 	GetTeamResponse,
-	GetTeamsResponse,
 	GetUserResponse,
 	GetUsersResponse,
 	InviteRequest,
@@ -145,8 +145,6 @@ import {
 	FetchFileStreamsRequest,
 	FetchFileStreamsRequestType,
 	FetchFileStreamsResponse,
-	FetchPostsRequest,
-	FetchPostsResponse,
 	LogoutReason,
 	LogoutRequest
 } from "./shared/agent.protocol";
@@ -231,7 +229,7 @@ export class CodeStreamSession {
 		this.agent.registerHandler(MarkPostUnreadRequestType, this.handleMarkPostUnread);
 		this.agent.registerHandler(FindRepoRequestType, this.handleFindRepo);
 		this.agent.registerHandler(GetMarkerRequestType, this.handleGetMarker);
-		this.agent.registerHandler(GetMarkerLocationsRequestType, this.handleGetMarkerLocations);
+		this.agent.registerHandler(FetchMarkerLocationsRequestType, this.handleFetchMarkerLocations);
 		this.agent.registerHandler(GetMarkersRequestType, this.handleGetMarkers);
 		this.agent.registerHandler(GetPostRequestType, this.handleGetPost);
 		this.agent.registerHandler(FetchLatestPostRequestType, this.handleFetchLatestPost);
@@ -243,9 +241,9 @@ export class CodeStreamSession {
 		this.agent.registerHandler(FetchStreamsRequestType, this.handleGetStreams);
 		this.agent.registerHandler(FetchFileStreamsRequestType, this.handleGetFileStreams);
 		this.agent.registerHandler(GetTeamRequestType, this.handleGetTeam);
-		this.agent.registerHandler(GetTeamsRequestType, this.handleGetTeams);
+		this.agent.registerHandler(FetchTeamsRequestType, this.handleFetchTeams);
 		this.agent.registerHandler(GetUserRequestType, this.handleGetUser);
-		this.agent.registerHandler(GetUsersRequestType, this.handleGetUsers);
+		this.agent.registerHandler(FetchUsersRequestType, this.handleFetchUsers);
 		this.agent.registerHandler(JoinStreamRequestType, this.handleJoinStream);
 		this.agent.registerHandler(UpdateStreamRequestType, this.handleUpdateStream);
 		this.agent.registerHandler(UpdatePresenceRequestType, this.handleUpdatePresence);
@@ -494,13 +492,13 @@ export class CodeStreamSession {
 		return api.getMarker(session.apiToken, request.teamId, request.markerId);
 	}
 
-	handleGetMarkerLocations(
-		request: GetMarkerLocationsRequest
-	): Promise<GetMarkerLocationsResponse> {
+	handleFetchMarkerLocations(
+		request: FetchMarkerLocationsRequest
+	): Promise<FetchMarkerLocationsResponse> {
 		const { api, session } = Container.instance();
 		return api.getMarkerLocations(
 			session.apiToken,
-			request.teamId,
+			session.teamId,
 			request.streamId,
 			request.commitHash
 		);
@@ -561,19 +559,19 @@ export class CodeStreamSession {
 		return api.getTeam(session.apiToken, request.teamId);
 	}
 
-	handleGetTeams(request: GetTeamsRequest): Promise<GetTeamsResponse> {
+	handleFetchTeams(request: FetchTeamsRequest): Promise<FetchTeamsResponse> {
 		const { api, session } = Container.instance();
 		return api.getTeams(session.apiToken, request.teamIds);
 	}
 
 	handleGetUser(request: GetUserRequest): Promise<GetUserResponse> {
 		const { api, session } = Container.instance();
-		return api.getUser(session.apiToken, request.teamId, request.userId);
+		return api.getUser(session.apiToken, session.teamId, request.userId);
 	}
 
-	handleGetUsers(request: GetUsersRequest): Promise<GetUsersResponse> {
+	handleFetchUsers(request: FetchUsersRequest): Promise<GetUsersResponse> {
 		const { api, session } = Container.instance();
-		return api.getUsers(session.apiToken, request.teamId);
+		return api.getUsers(session.apiToken, session.teamId);
 	}
 
 	handleJoinStream(request: JoinStreamRequest): Promise<JoinStreamResponse> {

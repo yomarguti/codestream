@@ -11,17 +11,17 @@ import {
 	CreateRepoRequest,
 	CreateRepoResponse,
 	CSMarker,
+	CSMarkerLocations,
+	CSTeam,
+	CSUser,
 	FindRepoResponse,
-	GetMarkerLocationsResponse,
 	GetMarkerResponse,
 	GetMarkersResponse,
 	GetMeResponse,
 	GetRepoResponse,
 	GetReposResponse,
 	GetTeamResponse,
-	GetTeamsResponse,
 	GetUserResponse,
-	GetUsersResponse,
 	InviteRequest,
 	InviteResponse,
 	LoginResponse,
@@ -220,18 +220,21 @@ export const GetMarkerRequestType = new RequestType<
 	void
 >("codeStream/getMarker");
 
-export interface GetMarkerLocationsRequest {
-	teamId: string;
+export interface FetchMarkerLocationsRequest {
 	streamId: string;
 	commitHash: string;
 }
 
-export const GetMarkerLocationsRequestType = new RequestType<
-	GetMarkerLocationsRequest,
-	GetMarkerLocationsResponse,
+export interface FetchMarkerLocationsResponse {
+	markerLocations: CSMarkerLocations;
+}
+
+export const FetchMarkerLocationsRequestType = new RequestType<
+	FetchMarkerLocationsRequest,
+	FetchMarkerLocationsResponse,
 	void,
 	void
->("codeStream/getMarkerLocations");
+>("codeStream/fetchMarkerLocations");
 
 export interface GetMarkersRequest {
 	teamId: string;
@@ -270,16 +273,22 @@ export const GetTeamRequestType = new RequestType<GetTeamRequest, GetTeamRespons
 	"codeStream/getTeam"
 );
 
-export interface GetTeamsRequest {
+export interface FetchTeamsRequest {
 	teamIds: string[];
 }
 
-export const GetTeamsRequestType = new RequestType<GetTeamsRequest, GetTeamsResponse, void, void>(
-	"codeStream/getTeam"
-);
+export interface FetchTeamsResponse {
+	teams: CSTeam[];
+}
+
+export const FetchTeamsRequestType = new RequestType<
+	FetchTeamsRequest,
+	FetchTeamsResponse,
+	void,
+	void
+>("codeStream/fetchTeams");
 
 export interface GetUserRequest {
-	teamId: string;
 	userId: string;
 }
 
@@ -287,13 +296,18 @@ export const GetUserRequestType = new RequestType<GetUserRequest, GetUserRespons
 	"codeStream/getUser"
 );
 
-export interface GetUsersRequest {
-	teamId: string;
+export interface FetchUsersRequest {}
+
+export interface FetchUsersResponse {
+	users: CSUser[];
 }
 
-export const GetUsersRequestType = new RequestType<GetUsersRequest, GetUsersResponse, void, void>(
-	"codeStream/getUsers"
-);
+export const FetchUsersRequestType = new RequestType<
+	FetchUsersRequest,
+	FetchUsersResponse,
+	void,
+	void
+>("codeStream/fetchUsers");
 
 export const UpdatePresenceRequestType = new RequestType<
 	UpdatePresenceRequest,
