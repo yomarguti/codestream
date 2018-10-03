@@ -3,7 +3,14 @@ import { connect } from "react-redux";
 import Button from "../Stream/Button";
 import * as actions from "./actions";
 
-const Signup = props => {
+export default connect(
+	null,
+	actions
+)(props => {
+	const handleClickSlackSignup = e => {
+		e.preventDefault();
+		props.startSlackSignin();
+	};
 	const handleClickSignup = e => {
 		e.preventDefault();
 		props.startSignup();
@@ -24,7 +31,7 @@ const Signup = props => {
 					</p>
 					<div id="controls">
 						<div className="button-group">
-							<Button className="control-button" type="button">
+							<Button className="control-button" type="button" onClick={handleClickSlackSignup}>
 								Sign Up with Slack
 							</Button>
 						</div>
@@ -48,9 +55,4 @@ const Signup = props => {
 			</form>
 		</div>
 	);
-};
-
-export default connect(
-	state => ({ initialEmail: state.configs.email, pluginVersion: state.pluginVersion }),
-	actions
-)(Signup);
+});

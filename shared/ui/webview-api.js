@@ -47,6 +47,10 @@ export default class WebviewApi {
 		return this.postMessage({ action: "go-to-signup" });
 	}
 
+	startSlackSignin() {
+		return this.postMessage({ action: "go-to-slack-signin" });
+	}
+
 	validateSignup() {
 		return this.postMessage({ action: "validate-signup" });
 	}
