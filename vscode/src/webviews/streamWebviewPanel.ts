@@ -261,14 +261,12 @@ export class StreamWebviewPanel implements Disposable {
 						}
 						case "go-to-slack-signin": {
 							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
-							const redirectUri = `${
-								Container.config.webAppUrl
-							}/oauth/callback?cs_token=${this.session.getSignupToken()}`;
+							const redirectUri = `${Container.config.webAppUrl}/oauth/callback`;
 							try {
 								await commands.executeCommand(
 									"vscode.open",
 									Uri.parse(
-										`https://slack.com/oauth/authorize?client_id=251469054195.443134779744&scope=client%20identify&redirect_uri=${redirectUri}`
+										`https://slack.com/oauth/authorize?client_id=251469054195.443134779744&scope=client%20identify&redirect_uri=${redirectUri}&state=${this.session.getSignupToken()}`
 									)
 								);
 								responseBody.payload = true;
@@ -284,7 +282,7 @@ export class StreamWebviewPanel implements Disposable {
 						}
 						case "validate-signup": {
 							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
-							const status = await this.session.loginViaSignupToken();
+							const status = await this.session.loginViaSignupToken(body.params);
 
 							if (status === LoginResult.Success) {
 								try {

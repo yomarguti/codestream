@@ -370,14 +370,19 @@ export class CodeStreamSession implements Disposable {
 		return result;
 	}
 
-	async loginViaSignupToken(): Promise<LoginResult> {
+	async loginViaSignupToken(token?: string): Promise<LoginResult> {
 		// TODO: reuse this._loginPromise
-		if (this._signupToken === undefined) throw new Error("A signup token hasn't been generated");
+		if (this._signupToken === undefined && token === undefined) {
+			throw new Error("A signup token hasn't been generated");
+		}
 
 		this.setServerUrl(Container.config.serverUrl);
 		this.setStatus(SessionStatus.SigningIn);
 
-		const result = await Container.agent.loginViaSignupToken(this._serverUrl, this._signupToken);
+		const result = await Container.agent.loginViaSignupToken(
+			this._serverUrl,
+			this._signupToken || token!
+		);
 
 		if (result.error) {
 			this.setStatus(SessionStatus.SignedOut, SessionSignedOutReason.SignInFailure);
