@@ -27,8 +27,8 @@ export class CodeStreamApiProvider implements ApiProvider {
 	constructor(
 		baseUrl: string,
 		private readonly _token: string,
-		private readonly _userId: string,
 		private readonly _teamId: string,
+		private readonly _userId: string,
 		private _cache: Cache
 	) {
 		this._codestream = new CodeStreamApi(baseUrl);
