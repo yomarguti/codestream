@@ -4,6 +4,11 @@ import Button from "../Stream/Button";
 import * as actions from "./actions";
 
 const Signup = props => {
+	const handleClickSignup = e => {
+		e.preventDefault();
+		props.startSignup();
+	};
+
 	return (
 		<div className="onboarding-page">
 			<h2>Chat in Your IDE!</h2>
@@ -28,7 +33,7 @@ const Signup = props => {
 					<p>Don&#8216;t use Slack? Create Channels using CodeStream.</p>
 					<div id="controls">
 						<div className="button-group">
-							<Button className="control-button" type="button">
+							<Button className="control-button" type="button" onClick={handleClickSignup}>
 								Use CodeStream Channels
 							</Button>
 						</div>
