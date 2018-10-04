@@ -160,14 +160,7 @@ const loginApiErrorMappings: { [k: string]: ApiErrors } = {
 };
 
 export class RepositoriesChangedEvent {
-	constructor(
-		private readonly session: CodeStreamSession,
-		private readonly _event: RepositoriesMessageReceivedEvent
-	) {}
-
-	entities(): CSRepository[] {
-		return this._event.repos;
-	}
+	constructor(private readonly session: CodeStreamSession, readonly entities: CSRepository[]) {}
 }
 
 export type SessionChangedEvent = RepositoriesChangedEvent;
@@ -254,14 +247,13 @@ export class CodeStreamSession {
 	}
 
 	private onMessageReceived(e: MessageReceivedEvent) {
-		const { postManager } = Container.instance();
+		const { postManager, repoManager } = Container.instance();
 		switch (e.type) {
-			case MessageType.Posts: {
+			case MessageType.Posts:
 				postManager.resolve(e.changeSets);
 				break;
-			}
 			case MessageType.Repositories:
-				this._onDidChangeRepositories.fire(new RepositoriesChangedEvent(this, e));
+				repoManager.resolve(e.changeSets);
 				break;
 			case MessageType.Streams:
 				StreamManager.cacheStreams(e.streams);
@@ -397,9 +389,13 @@ export class CodeStreamSession {
 			const streams = await this.getSubscribableStreams(this._userId, this._teamId);
 			this._pubnub.listen(streams.map(s => s.id));
 			this._pubnub.onDidReceiveMessage(this.onMessageReceived, this);
-			const { git } = Container.instance();
+			const { git, repoManager } = Container.instance();
 			git.onRepositoryCommitHashChanged(repo => {
 				MarkerLocationManager.flushUncommittedLocations(repo);
+			});
+
+			repoManager.onEntitiesChanged(entities => {
+				this._onDidChangeRepositories.fire(new RepositoriesChangedEvent(this, entities));
 			});
 
 			return {

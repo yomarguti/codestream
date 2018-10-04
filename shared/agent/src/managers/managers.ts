@@ -1,5 +1,6 @@
 "use strict";
 
+import { Emitter, Event } from "vscode-languageserver";
 import { CodeStreamApi } from "../api/api";
 import { CSEntity } from "../shared/api.protocol";
 import { Cache } from "./cache";
@@ -46,6 +47,11 @@ export abstract class EntityManager<T extends CSEntity> {
 		}
 		this.cache = new Cache<T>(indexes);
 		this.fetchFns = fetchFns;
+	}
+
+	private _onEntitiesChanged = new Emitter<T[]>();
+	get onEntitiesChanged(): Event<T[]> {
+		return this._onEntitiesChanged.event;
 	}
 
 	/**
@@ -194,7 +200,7 @@ export abstract class EntityManager<T extends CSEntity> {
 				if (cached) {
 					const updatedEntity = operations.resolve(cached as any, changes);
 					this.cache.set(updatedEntity as T, cached);
-					return updatedEntity;
+					return updatedEntity as T;
 				} else {
 					// TODO ignore unfetched entities unless they are new, using .version
 					const entity = await this.fetch(changes["id"]);
@@ -206,6 +212,7 @@ export abstract class EntityManager<T extends CSEntity> {
 				}
 			})
 		);
-		return resolved.filter(Boolean);
+		const entities = resolved.filter(Boolean) as T[];
+		this._onEntitiesChanged.fire(entities);
 	}
 }

@@ -38,7 +38,7 @@ export interface PostsMessageReceivedEvent {
 
 export interface RepositoriesMessageReceivedEvent {
 	type: MessageType.Repositories;
-	repos: CSRepository[];
+	changeSets: object[];
 }
 
 export interface StreamsMessageReceivedEvent {
@@ -193,13 +193,10 @@ export class PubnubReceiver {
 						});
 						break;
 					case "repos":
-						// TODO: Need to deal with directives or just fire events with ids or entities
-						let repos;
-						entities = this.stripDirectives(key, entities);
-						if (entities && entities.length) {
-							repos = CodeStreamApi.normalizeResponse(entities) as CSRepository[];
-						}
-						this._onDidReceiveMessage.fire({ type: MessageType.Repositories, repos: repos || [] });
+						this._onDidReceiveMessage.fire({
+							type: MessageType.Repositories,
+							changeSets: entities
+						});
 						break;
 					case "streams":
 						entities = await this.processDirectives(
