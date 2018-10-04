@@ -7,34 +7,14 @@ import {
 	RequestType,
 	TextDocumentIdentifier
 } from "vscode-languageserver-protocol";
-import {
-	CreateRepoRequest,
-	CreateRepoResponse,
-	CSMarker,
-	CSMarkerLocations,
-	CSRepository,
-	CSTeam,
-	CSUser,
-	FindRepoResponse,
-	GetMarkerResponse,
-	GetMarkersResponse,
-	GetMeResponse,
-	GetRepoResponse,
-	GetReposResponse,
-	GetTeamResponse,
-	GetUserResponse,
-	InviteRequest,
-	InviteResponse,
-	LoginResponse,
-	LoginResult,
-	UpdatePresenceRequest,
-	UpdatePresenceResponse,
-	UpdateStreamMembershipRequest,
-	UpdateStreamMembershipResponse
-} from "./api.protocol";
+import { LoginResponse, LoginResult } from "./api.protocol";
 
+export * from "./agent.protocol.markers";
 export * from "./agent.protocol.posts";
+export * from "./agent.protocol.repos";
 export * from "./agent.protocol.streams";
+export * from "./agent.protocol.teams";
+export * from "./agent.protocol.users";
 
 export interface AccessToken {
 	email: string;
@@ -84,30 +64,33 @@ export interface AgentInitializeResult extends InitializeResult {
 	result: AgentResult;
 }
 
-export interface ApiRequestParams {
+export interface ApiRequest {
 	url: string;
 	init?: RequestInit;
 	token?: string;
 }
-export const ApiRequest = new RequestType<ApiRequestParams, any, void, void>("codeStream/api");
+export const ApiRequestType = new RequestType<ApiRequest, any, void, void>("codeStream/api");
 
-export const DidReceivePubNubMessagesNotification = new NotificationType<
-	DidReceivePubNubMessagesNotificationResponse[],
-	void
->("codeStream/didReceivePubNubMessages");
+export enum LogoutReason {
+	Unknown = "unknown"
+}
+
+export interface LogoutRequest {
+	reason?: LogoutReason;
+}
+
+export const LogoutRequestType = new RequestType<LogoutRequest, undefined, void, void>(
+	"codeStream/logout"
+);
 
 export interface DidReceivePubNubMessagesNotificationResponse {
 	[key: string]: any;
 }
 
-export const DidChangeDocumentMarkersNotification = new NotificationType<
-	DidChangeDocumentMarkersNotificationResponse,
+export const DidReceivePubNubMessagesNotificationType = new NotificationType<
+	DidReceivePubNubMessagesNotificationResponse[],
 	void
->("codeStream/didChangeDocumentMarkers");
-
-export interface DidChangeDocumentMarkersNotificationResponse {
-	textDocument: TextDocumentIdentifier;
-}
+>("codeStream/didReceivePubNubMessages");
 
 export enum VersionCompatibility {
 	Compatible = "ok",
@@ -117,18 +100,18 @@ export enum VersionCompatibility {
 	Unknown = "unknownVersion"
 }
 
-export const DidChangeVersionCompatibilityNotification = new NotificationType<
-	DidChangeVersionCompatibilityNotificationResponse,
-	void
->("codeStream/didChangeVersionCompatibility");
-
 export interface DidChangeVersionCompatibilityNotificationResponse {
 	compatibility: VersionCompatibility;
 	downloadUrl: string;
 	version: string | undefined;
 }
 
-export interface DocumentFromCodeBlockRequestParams {
+export const DidChangeVersionCompatibilityNotificationType = new NotificationType<
+	DidChangeVersionCompatibilityNotificationResponse,
+	void
+>("codeStream/didChangeVersionCompatibility");
+
+export interface DocumentFromCodeBlockRequest {
 	file: string;
 	repoId: string;
 	markerId: string;
@@ -140,14 +123,14 @@ export interface DocumentFromCodeBlockResponse {
 	revision?: string;
 }
 
-export const DocumentFromCodeBlockRequest = new RequestType<
-	DocumentFromCodeBlockRequestParams,
+export const DocumentFromCodeBlockRequestType = new RequestType<
+	DocumentFromCodeBlockRequest,
 	DocumentFromCodeBlockResponse | undefined,
 	void,
 	void
 >("codeStream/textDocument/fromCodeBlock");
 
-export interface DocumentLatestRevisionRequestParams {
+export interface DocumentLatestRevisionRequest {
 	textDocument: TextDocumentIdentifier;
 }
 
@@ -155,185 +138,9 @@ export interface DocumentLatestRevisionResponse {
 	revision?: string;
 }
 
-export const DocumentLatestRevisionRequest = new RequestType<
-	DocumentLatestRevisionRequestParams,
+export const DocumentLatestRevisionRequestType = new RequestType<
+	DocumentLatestRevisionRequest,
 	DocumentLatestRevisionResponse,
 	void,
 	void
 >("codeStream/textDocument/scm/revision");
-
-export interface DocumentMarkersRequestParams {
-	textDocument: TextDocumentIdentifier;
-}
-
-export interface MarkerWithRange extends CSMarker {
-	range: Range;
-}
-
-export interface DocumentMarkersResponse {
-	markers: MarkerWithRange[];
-}
-
-export const DocumentMarkersRequest = new RequestType<
-	DocumentMarkersRequestParams,
-	DocumentMarkersResponse | undefined,
-	void,
-	void
->("codeStream/textDocument/markers");
-
-export enum LogoutReason {
-	Unknown = "unknown"
-}
-
-export interface LogoutRequestParams {
-	reason?: LogoutReason;
-}
-
-export const LogoutRequest = new RequestType<LogoutRequestParams, undefined, void, void>(
-	"codeStream/logout"
-);
-
-export const CreateRepoRequestType = new RequestType<
-	CreateRepoRequest,
-	CreateRepoResponse,
-	void,
-	void
->("codeStream/createRepo");
-
-export interface FindRepoRequest {
-	url: string;
-	firstCommitHashes: string[];
-}
-
-export const FindRepoRequestType = new RequestType<FindRepoRequest, FindRepoResponse, void, void>(
-	"codeStream/findRepo"
-);
-
-export interface GetMarkerRequest {
-	teamId: string;
-	markerId: string;
-}
-
-export const GetMarkerRequestType = new RequestType<
-	GetMarkerRequest,
-	GetMarkerResponse,
-	void,
-	void
->("codeStream/getMarker");
-
-export interface FetchMarkerLocationsRequest {
-	streamId: string;
-	commitHash: string;
-}
-
-export interface FetchMarkerLocationsResponse {
-	markerLocations: CSMarkerLocations;
-}
-
-export const FetchMarkerLocationsRequestType = new RequestType<
-	FetchMarkerLocationsRequest,
-	FetchMarkerLocationsResponse,
-	void,
-	void
->("codeStream/fetchMarkerLocations");
-
-export interface GetRepoRequest {
-	repoId: string;
-}
-
-export const GetRepoRequestType = new RequestType<GetRepoRequest, GetRepoResponse, void, void>(
-	"codeStream/getRepo"
-);
-
-export interface FetchReposRequest {}
-
-export interface FetchReposResponse {
-	repos: CSRepository[];
-}
-
-export const FetchReposRequestType = new RequestType<
-	FetchReposRequest,
-	FetchReposResponse,
-	void,
-	void
->("codeStream/fetchRepos");
-
-export interface GetTeamRequest {
-	teamId: string;
-}
-
-export const GetTeamRequestType = new RequestType<GetTeamRequest, GetTeamResponse, void, void>(
-	"codeStream/getTeam"
-);
-
-export interface FetchTeamsRequest {
-	teamIds: string[];
-}
-
-export interface FetchTeamsResponse {
-	teams: CSTeam[];
-}
-
-export const FetchTeamsRequestType = new RequestType<
-	FetchTeamsRequest,
-	FetchTeamsResponse,
-	void,
-	void
->("codeStream/fetchTeams");
-
-export interface GetUserRequest {
-	userId: string;
-}
-
-export const GetUserRequestType = new RequestType<GetUserRequest, GetUserResponse, void, void>(
-	"codeStream/getUser"
-);
-
-export interface FetchUsersRequest {}
-
-export interface FetchUsersResponse {
-	users: CSUser[];
-}
-
-export const FetchUsersRequestType = new RequestType<
-	FetchUsersRequest,
-	FetchUsersResponse,
-	void,
-	void
->("codeStream/fetchUsers");
-
-export const UpdatePresenceRequestType = new RequestType<
-	UpdatePresenceRequest,
-	UpdatePresenceResponse,
-	void,
-	void
->("codeStream/updatePresence");
-
-export const UpdateStreamMembershipRequestType = new RequestType<
-	UpdateStreamMembershipRequest,
-	UpdateStreamMembershipResponse,
-	void,
-	void
->("codeStream/updateStreamMembership");
-
-export const InviteRequestType = new RequestType<InviteRequest, InviteResponse, void, void>(
-	"codeStream/updateStreamMembership"
-);
-
-export interface SavePreferencesRequest {
-	preferences: object;
-}
-export interface SavePreferencesResponse {}
-
-export const SavePreferencesRequestType = new RequestType<
-	SavePreferencesRequest,
-	SavePreferencesResponse,
-	void,
-	void
->("codeStream/savePreferences");
-
-export interface GetMeRequest {}
-
-export const GetMeRequestType = new RequestType<GetMeRequest, GetMeResponse, void, void>(
-	"codeStream/getMe"
-);

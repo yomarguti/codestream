@@ -151,25 +151,35 @@ export interface CSUser extends CSEntity {
 	firstName: string;
 	fullName: string;
 	isRegistered: boolean;
+	iWorkOn: string;
 	lastName: string;
 	lastPostCreatedAt: number;
 	numMentions: number;
 	numInvites: number;
+	providerInfo: { [key: string]: any };
 	registeredAt: number;
+	secondaryEmails?: string[];
 	teamIds: string[];
 	timeZone: string;
 	totalPosts: number;
 	username: string;
+}
 
-	lastReads?: {
-		[streamId: string]: number;
-	};
-	preferences?: any;
-	secondaryEmails?: string[];
+export interface CSMeLastReads {
+	[streamId: string]: number;
+}
 
-	// joinMethod: string; // 'Create Team'
-	// primaryReferral: "internal" | "external";
-	// originTeamId: string;
+export interface CSMePreferences {
+	[key: string]: any;
+}
+
+export interface CSMe extends CSUser {
+	lastReads: CSMeLastReads;
+	preferences: CSMePreferences;
+}
+
+export interface CompleteSignupRequest {
+	token: string;
 }
 
 export interface LoginRequest {
@@ -178,12 +188,8 @@ export interface LoginRequest {
 	token?: string;
 }
 
-export interface CompleteSignupRequest {
-	token: string;
-}
-
 export interface LoginResponse {
-	user: CSUser;
+	user: CSMe;
 	accessToken: string;
 	pubnubKey: string;
 	pubnubToken: string;
@@ -220,7 +226,7 @@ export interface CreateMarkerLocationRequest {
 
 export interface CreateMarkerLocationResponse {}
 
-export interface CreatePostRequestCodeBlock {
+export interface CSCreatePostRequestCodeBlock {
 	code: string;
 	preContext?: string;
 	postContext?: string;
@@ -235,39 +241,39 @@ export interface CreatePostRequestCodeBlock {
 	remotes?: string[];
 }
 
-export interface CreatePostRequestStream {
+export interface CSCreatePostRequestStream {
 	teamId: string;
 	type: StreamType.File;
 	repoId?: string;
 	file: string;
 }
 
-export interface CreatePostRequest {
+export interface CSCreatePostRequest {
 	teamId: string;
 	streamId?: string;
-	stream?: CreatePostRequestStream;
+	stream?: CSCreatePostRequestStream;
 	parentPostId?: string;
 	text: string;
-	codeBlocks?: CreatePostRequestCodeBlock[];
+	codeBlocks?: CSCreatePostRequestCodeBlock[];
 	commitHashWhenPosted?: string;
 	mentionedUserIds?: string[];
 }
 
-export interface CreatePostResponse {
+export interface CSCreatePostResponse {
 	post: CSPost;
 }
 
-export interface CreateRepoRequest {
+export interface CSCreateRepoRequest {
 	teamId: string;
 	url: string;
 	knownCommitHashes: string[];
 }
 
-export interface CreateRepoResponse {
+export interface CSCreateRepoResponse {
 	repo: CSRepository;
 }
 
-export interface CreateChannelStreamRequest {
+export interface CSCreateChannelStreamRequest {
 	teamId: string;
 	type: StreamType.Channel;
 	name: string;
@@ -280,30 +286,43 @@ export interface CreateChannelStreamRequest {
 	serviceInfo?: { [key: string]: any };
 }
 
-export interface CreateDirectStreamRequest {
+export interface CSCreateChannelStreamResponse {
+	stream: CSChannelStream;
+}
+
+export interface CSCreateDirectStreamRequest {
 	teamId: string;
 	type: StreamType.Direct;
 	memberIds: string[];
 }
 
-export interface CreateFileStreamRequest {
+export interface CSCreateDirectStreamResponse {
+	stream: CSDirectStream;
+}
+
+export interface CSCreateFileStreamRequest {
 	teamId: string;
 	repoId: string;
 	type: StreamType.File;
 	file: string;
 }
 
-export type CreateStreamRequest =
-	| CreateChannelStreamRequest
-	| CreateDirectStreamRequest
-	| CreateFileStreamRequest;
-
-export interface CreateStreamResponse {
-	stream: CSStream;
+export interface CSCreateFileStreamResponse {
+	stream: CSFileStream;
 }
 
-export interface DeletePostResponse {
-	post: CSPost;
+export type CSCreateStreamRequest =
+	| CSCreateChannelStreamRequest
+	| CSCreateDirectStreamRequest
+	| CSCreateFileStreamRequest;
+
+export type CSCreateStreamResponse =
+	| CSCreateChannelStreamResponse
+	| CSCreateDirectStreamResponse
+	| CSCreateFileStreamResponse;
+
+export interface CSDeletePostResponse {
+	post: { [key: string]: any };
 }
 
 export interface DeleteTeamContentRequest {
@@ -314,102 +333,103 @@ export interface DeleteTeamContentRequest {
 
 export interface DeleteTeamContentResponse {}
 
-export interface EditPostRequest {
+export interface CSEditPostRequest {
 	id: string;
-	streamId: string;
 	text: string;
 	mentionedUserIds?: string[];
 }
 
-export interface ReactToPostResponse {
-	post: CSPost;
+export interface CSEditPostResponse {
+	post: { [key: string]: any };
 }
 
-export interface Reactions {
+export interface CSReactions {
 	[emoji: string]: boolean;
 }
 
-export interface ReactToPostRequest {
+export interface CSReactToPostRequest {
 	id: string;
-	streamId: string;
-	emojis: Reactions;
+	emojis: CSReactions;
 }
 
-export interface EditPostResponse extends DeletePostResponse {}
-
-export interface MarkPostUnreadRequest {
-	id: string;
-	streamId: string;
+export interface CSReactToPostResponse {
+	post: { [key: string]: any };
 }
 
-export interface MarkPostUnreadResponse extends DeletePostResponse {}
+export interface CSMarkPostUnreadRequest {
+	id: string;
+}
 
-export interface FindRepoResponse {
+export interface CSMarkPostUnreadResponse {
+	post: { [key: string]: any };
+}
+
+export interface CSFindRepoResponse {
 	repo?: CSRepository;
 	usernames?: string[];
 }
 
-export interface GetMarkerLocationsResponse {
+export interface CSGetMarkerLocationsResponse {
 	markerLocations: CSMarkerLocations;
 }
 
-export interface GetMarkerResponse {
+export interface CSGetMarkerResponse {
 	marker: CSMarker;
 }
 
-export interface GetMarkersResponse {
+export interface CSGetMarkersResponse {
 	markers: CSMarker[];
 	numMarkers: number;
 }
 
-export interface GetPostResponse {
+export interface CSGetPostResponse {
 	post: CSPost;
 }
 
-export interface GetPostsResponse {
+export interface CSGetPostsResponse {
 	posts: CSPost[];
 	more?: boolean;
 }
 
-export interface GetRepoResponse {
+export interface CSGetRepoResponse {
 	repo: CSRepository;
 }
 
-export interface GetReposResponse {
+export interface CSGetReposResponse {
 	repos: CSRepository[];
 }
 
-export interface GetStreamResponse<T extends CSStream> {
+export interface CSGetStreamResponse<T extends CSStream> {
 	stream: T;
 }
 
-export interface GetStreamsResponse<T extends CSStream> {
+export interface CSGetStreamsResponse<T extends CSStream> {
 	streams: T[];
 }
 
-export interface GetTeamResponse {
+export interface CSGetTeamResponse {
 	team: CSTeam;
 }
 
-export interface GetTeamsResponse {
+export interface CSGetTeamsResponse {
 	teams: CSTeam[];
 }
 
-export interface GetUserResponse {
+export interface CSGetUserResponse {
 	user: CSUser;
 }
 
-export interface GetUsersResponse {
+export interface CSGetUsersResponse {
 	users: CSUser[];
 }
 
-export interface InviteRequest {
+export interface CSInviteUserRequest {
 	email: string;
 	teamId: string;
 	fullName?: string;
 }
 
-export interface InviteResponse {
+export interface CSInviteUserResponse {
 	user: CSUser;
 }
 
@@ -422,11 +442,11 @@ export interface JoinStreamResponse {
 	stream: CSStream;
 }
 
-export interface GetMeResponse {
-	user: CSUser;
+export interface CSGetMeResponse {
+	user: CSMe;
 }
 
-export enum PresenceStatus {
+export enum CSPresenceStatus {
 	Online = "online",
 	Away = "away"
 }
@@ -439,25 +459,25 @@ export interface UpdateMarkerResponse {
 	marker: CSMarker;
 }
 
-export interface UpdatePresenceRequest {
+export interface CSUpdatePresenceRequest {
 	sessionId: string;
-	status: PresenceStatus;
+	status: CSPresenceStatus;
 }
 
-export interface UpdatePresenceResponse {
+export interface CSUpdatePresenceResponse {
 	awayTimeout: number;
 }
 
-export interface Push {
+export interface CSPush {
 	$push: string;
 }
 
-export interface UpdateStreamMembershipRequest {
+export interface CSUpdateStreamMembershipRequest {
 	teamId: string;
 	streamId: string;
-	push: Push;
+	push: CSPush;
 }
 
-export interface UpdateStreamMembershipResponse {
+export interface CSUpdateStreamMembershipResponse {
 	stream: CSStream;
 }

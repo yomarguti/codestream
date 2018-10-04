@@ -1,27 +1,32 @@
 "use strict";
 import { Range, RequestType, TextDocumentIdentifier } from "vscode-languageserver-protocol";
 import {
-	CreatePostRequestCodeBlock,
-	CreatePostRequestStream,
+	CSCreatePostRequestCodeBlock,
+	CSCreatePostRequestStream,
 	CSPost,
-	DeletePostResponse,
-	EditPostRequest,
-	EditPostResponse,
-	GetPostResponse,
-	MarkPostUnreadRequest,
-	MarkPostUnreadResponse,
-	ReactToPostRequest,
-	ReactToPostResponse
+	CSReactions
 } from "./api.protocol";
 
-export interface CreatePostRequest {
-	streamId?: string;
-	stream?: CreatePostRequestStream;
-	parentPostId?: string;
+export type CreatePostRequest =
+	| CreatePostInChannelOrDirectStreamRequest
+	| CreatePostInFileStreamRequest;
+
+export interface CreatePostInChannelOrDirectStreamRequest {
+	streamId: string;
 	text: string;
-	codeBlocks?: CreatePostRequestCodeBlock[];
-	commitHashWhenPosted?: string;
 	mentionedUserIds?: string[];
+	parentPostId?: string;
+	codeBlocks?: CSCreatePostRequestCodeBlock[];
+	commitHashWhenPosted?: string;
+}
+
+export interface CreatePostInFileStreamRequest {
+	stream: CSCreatePostRequestStream;
+	text: string;
+	mentionedUserIds?: string[];
+	parentPostId?: string;
+	codeBlocks?: CSCreatePostRequestCodeBlock[];
+	commitHashWhenPosted?: string;
 }
 
 export interface CreatePostResponse {
@@ -60,41 +65,6 @@ export const CreatePostWithCodeRequestType = new RequestType<
 	void,
 	void
 >("codeStream/posts/createWithCode");
-export interface FetchPostsRequest {
-	streamId: string;
-	limit: number;
-	beforeSeq?: number;
-	afterSeq?: number;
-}
-
-export interface FetchPostsResponse {
-	posts: CSPost[];
-	maxSeq: number;
-}
-
-export const FetchPostsRequestType = new RequestType<
-	FetchPostsRequest,
-	FetchPostsResponse,
-	void,
-	void
->("codeStream/posts");
-
-export interface FetchPostsInRangeRequest {
-	streamId: string;
-	range: string;
-}
-
-export interface FetchPostsInRangeResponse {
-	posts: CSPost[];
-	more?: boolean;
-}
-
-export const FetchPostsInRangeRequestType = new RequestType<
-	FetchPostsInRangeRequest,
-	FetchPostsInRangeResponse,
-	void,
-	void
->("codeStream/posts/inRange");
 
 export interface FetchLatestPostRequest {
 	streamId: string;
@@ -111,9 +81,65 @@ export const FetchLatestPostRequestType = new RequestType<
 	void
 >("codeStream/posts/latest");
 
+export interface FetchPostRepliesRequest {
+	streamId: string;
+	id: string;
+}
+
+export interface FetchPostRepliesResponse {
+	posts: CSPost[];
+}
+
+export const FetchPostRepliesRequestType = new RequestType<
+	FetchPostRepliesRequest,
+	FetchPostRepliesResponse,
+	void,
+	void
+>("codeStream/post/replies");
+
+export interface FetchPostsRequest {
+	streamId: string;
+	limit: number;
+	beforeSeq?: number;
+	afterSeq?: number;
+}
+
+export interface FetchPostsResponse {
+	posts: CSPost[];
+	maxSeq?: number;
+}
+
+export const FetchPostsRequestType = new RequestType<
+	FetchPostsRequest,
+	FetchPostsResponse,
+	void,
+	void
+>("codeStream/posts");
+
+export interface FetchPostsByRangeRequest {
+	streamId: string;
+	range: string;
+}
+
+export interface FetchPostsByRangeResponse {
+	posts: CSPost[];
+	more?: boolean;
+}
+
+export const FetchPostsByRangeRequestType = new RequestType<
+	FetchPostsByRangeRequest,
+	FetchPostsByRangeResponse,
+	void,
+	void
+>("codeStream/posts/byRange");
+
 export interface DeletePostRequest {
 	streamId: string;
 	id: string;
+}
+
+export interface DeletePostResponse {
+	post: CSPost;
 }
 
 export const DeletePostRequestType = new RequestType<
@@ -122,6 +148,17 @@ export const DeletePostRequestType = new RequestType<
 	void,
 	void
 >("codeStream/post/delete");
+
+export interface EditPostRequest {
+	streamId: string;
+	id: string;
+	text: string;
+	mentionedUserIds?: string[];
+}
+
+export interface EditPostResponse {
+	post: CSPost;
+}
 
 export const EditPostRequestType = new RequestType<EditPostRequest, EditPostResponse, void, void>(
 	"codeStream/post/edit"
@@ -132,9 +169,22 @@ export interface GetPostRequest {
 	id: string;
 }
 
+export interface GetPostResponse {
+	post: CSPost;
+}
+
 export const GetPostRequestType = new RequestType<GetPostRequest, GetPostResponse, void, void>(
 	"codeStream/post"
 );
+
+export interface MarkPostUnreadRequest {
+	streamId: string;
+	id: string;
+}
+
+export interface MarkPostUnreadResponse {
+	post: { [key: string]: any };
+}
 
 export const MarkPostUnreadRequestType = new RequestType<
 	MarkPostUnreadRequest,
@@ -161,6 +211,16 @@ export const PreparePostWithCodeRequestType = new RequestType<
 	void,
 	void
 >("codeStream/post/prepareWithCode");
+
+export interface ReactToPostRequest {
+	streamId: string;
+	id: string;
+	emojis: CSReactions;
+}
+
+export interface ReactToPostResponse {
+	post: CSPost;
+}
 
 export const ReactToPostRequestType = new RequestType<
 	ReactToPostRequest,

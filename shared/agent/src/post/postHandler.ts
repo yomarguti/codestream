@@ -10,7 +10,12 @@ import {
 	PreparePostWithCodeRequest,
 	PreparePostWithCodeResponse
 } from "../agent";
-import { CreatePostRequestCodeBlock, CSMarkerLocation, CSPost, GetPostResponse } from "../api/api";
+import {
+	CSCreatePostRequestCodeBlock,
+	CSGetPostResponse,
+	CSMarkerLocation,
+	CSPost
+} from "../api/api";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { MarkerLocationManager } from "../markerLocation/markerLocationManager";
@@ -115,7 +120,7 @@ export namespace PostHandler {
 		const filePath = URI.parse(documentId.uri).fsPath;
 		const fileContents = lastFullCode;
 
-		let codeBlock: CreatePostRequestCodeBlock | undefined;
+		let codeBlock: CSCreatePostRequestCodeBlock | undefined;
 		let commitHashWhenPosted: string | undefined;
 		let location: CSMarkerLocation | undefined;
 		let backtrackedLocation: CSMarkerLocation | undefined;

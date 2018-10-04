@@ -5,6 +5,7 @@ import * as path from "path";
 import { Disposable, Event } from "vscode-languageserver";
 import URI from "vscode-uri";
 import { CodeStreamApi } from "../api/api";
+import { ApiProvider } from "../api/apiProvider";
 import { Logger } from "../logger";
 import { CodeStreamSession } from "../session";
 import { Strings } from "../system";
@@ -66,7 +67,7 @@ export class GitService implements IGitService, Disposable {
 	private _disposable: Disposable | undefined;
 	private readonly _repositories: GitRepositories;
 
-	constructor(public readonly session: CodeStreamSession, api: CodeStreamApi) {
+	constructor(public readonly session: CodeStreamSession, api: ApiProvider) {
 		this._repositories = new GitRepositories(this, session, api);
 	}
 

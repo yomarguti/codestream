@@ -6,62 +6,63 @@ import { Logger } from "../logger";
 import {
 	AccessToken,
 	FetchLatestPostResponse,
-	FetchPostsInRangeResponse,
+	FetchPostsByRangeResponse,
 	FetchUnreadStreamsResponse
 } from "../shared/agent.protocol";
 import {
 	CompleteSignupRequest,
 	CreateMarkerLocationRequest,
 	CreateMarkerLocationResponse,
-	CreatePostRequest,
-	CreatePostResponse,
-	CreateRepoRequest,
-	CreateRepoResponse,
-	CreateStreamRequest,
-	CreateStreamResponse,
+	CSCreatePostRequest,
+	CSCreatePostResponse,
+	CSCreateRepoRequest,
+	CSCreateRepoResponse,
+	CSCreateStreamRequest,
+	CSCreateStreamResponse,
+	CSDeletePostResponse,
+	CSEditPostRequest,
+	CSEditPostResponse,
+	CSFindRepoResponse,
+	CSGetMarkerLocationsResponse,
+	CSGetMarkerResponse,
+	CSGetMarkersResponse,
+	CSGetMeResponse,
+	CSGetPostResponse,
+	CSGetPostsResponse,
+	CSGetRepoResponse,
+	CSGetReposResponse,
+	CSGetStreamResponse,
+	CSGetStreamsResponse,
+	CSGetTeamResponse,
+	CSGetTeamsResponse,
+	CSGetUserResponse,
+	CSGetUsersResponse,
+	CSInviteUserRequest,
+	CSInviteUserResponse,
+	CSMarkPostUnreadRequest,
+	CSMarkPostUnreadResponse,
+	CSPush,
+	CSReactions,
+	CSReactToPostRequest,
+	CSReactToPostResponse,
 	CSStream,
-	DeletePostResponse,
+	CSUpdatePresenceRequest,
+	CSUpdatePresenceResponse,
+	CSUpdateStreamMembershipRequest,
+	CSUpdateStreamMembershipResponse,
 	DeleteTeamContentRequest,
 	DeleteTeamContentResponse,
-	EditPostRequest,
-	EditPostResponse,
-	FindRepoResponse,
-	GetMarkerLocationsResponse,
-	GetMarkerResponse,
-	GetMarkersResponse,
-	GetMeResponse,
-	GetPostResponse,
-	GetPostsResponse,
-	GetRepoResponse,
-	GetReposResponse,
-	GetStreamResponse,
-	GetStreamsResponse,
-	GetTeamResponse,
-	GetTeamsResponse,
-	GetUserResponse,
-	GetUsersResponse,
-	InviteRequest,
-	InviteResponse,
 	JoinStreamRequest,
 	JoinStreamResponse,
 	LoginRequest,
 	LoginResponse,
-	MarkPostUnreadRequest,
-	MarkPostUnreadResponse,
-	Push,
-	Reactions,
-	ReactToPostRequest,
-	ReactToPostResponse,
 	StreamType,
 	UpdateMarkerRequest,
-	UpdateMarkerResponse,
-	UpdatePresenceRequest,
-	UpdatePresenceResponse,
-	UpdateStreamMembershipRequest,
-	UpdateStreamMembershipResponse
+	UpdateMarkerResponse
 } from "../shared/api.protocol";
 import { Functions } from "../system/function";
 import { Strings } from "../system/string";
+import { CodeStreamApiMiddleware, CodeStreamApiMiddlewareContext } from "./apiProvider";
 
 export { AccessToken } from "../shared/agent.protocol";
 export * from "../shared/api.protocol";
@@ -126,36 +127,40 @@ export class CodeStreamApi {
 		);
 	}
 
-	createPost(token: string, request: CreatePostRequest): Promise<CreatePostResponse> {
-		return this.post<CreatePostRequest, CreatePostResponse>(`/posts`, request, token);
+	createPost(token: string, request: CSCreatePostRequest): Promise<CSCreatePostResponse> {
+		return this.post<CSCreatePostRequest, CSCreatePostResponse>(`/posts`, request, token);
 	}
 
-	createRepo(token: string, request: CreateRepoRequest): Promise<CreateRepoResponse> {
-		return this.post<CreateRepoRequest, CreateRepoResponse>(`/repos`, request, token);
+	createRepo(token: string, request: CSCreateRepoRequest): Promise<CSCreateRepoResponse> {
+		return this.post<CSCreateRepoRequest, CSCreateRepoResponse>(`/repos`, request, token);
 	}
 
-	createStream(token: string, request: CreateStreamRequest): Promise<CreateStreamResponse> {
-		return this.post<CreateStreamRequest, CreateStreamResponse>(`/streams`, request, token);
+	createStream(token: string, request: CSCreateStreamRequest): Promise<CSCreateStreamResponse> {
+		return this.post<CSCreateStreamRequest, CSCreateStreamResponse>(`/streams`, request, token);
 	}
 
 	deletePost(token: string, teamId: string, postId: string) {
-		return this.delete<DeletePostResponse>(`/posts/${postId}`, token);
+		return this.delete<CSDeletePostResponse>(`/posts/${postId}`, token);
 	}
 
 	deleteStream(token: string, teamId: string, streamId: string) {
 		return this.delete<any /*DeleteStreamResponse*/>(`/streams/${streamId}`, token);
 	}
 
-	reactToPost(token: string, request: ReactToPostRequest) {
-		return this.put<Reactions, ReactToPostResponse>(`/react/${request.id}`, request.emojis, token);
+	reactToPost(token: string, request: CSReactToPostRequest) {
+		return this.put<CSReactions, CSReactToPostResponse>(
+			`/react/${request.id}`,
+			request.emojis,
+			token
+		);
 	}
 
-	editPost(token: string, request: EditPostRequest) {
-		return this.put<EditPostRequest, EditPostResponse>(`/posts/${request.id}`, request, token);
+	editPost(token: string, request: CSEditPostRequest) {
+		return this.put<CSEditPostRequest, CSEditPostResponse>(`/posts/${request.id}`, request, token);
 	}
 
-	markPostUnread(token: string, request: MarkPostUnreadRequest) {
-		return this.put<MarkPostUnreadRequest, MarkPostUnreadResponse>(
+	markPostUnread(token: string, request: CSMarkPostUnreadRequest) {
+		return this.put<CSMarkPostUnreadRequest, CSMarkPostUnreadResponse>(
 			`/unread/${request.id}`,
 			request,
 			token
@@ -171,15 +176,15 @@ export class CodeStreamApi {
 	}
 
 	findRepo(url: string, firstCommitHashes: string[]) {
-		return this.get<FindRepoResponse>(
+		return this.get<CSFindRepoResponse>(
 			`/no-auth/find-repo?url=${encodeURIComponent(url)}&knownCommitHashes=${firstCommitHashes.join(
 				","
 			)}&firstCommitHash=${firstCommitHashes[0]}`
 		);
 	}
 
-	getMarker(token: string, teamId: string, markerId: string): Promise<GetMarkerResponse> {
-		return this.get<GetMarkerResponse>(`/markers/${markerId}?teamId=${teamId}`, token);
+	getMarker(token: string, teamId: string, markerId: string): Promise<CSGetMarkerResponse> {
+		return this.get<CSGetMarkerResponse>(`/markers/${markerId}?teamId=${teamId}`, token);
 	}
 
 	getMarkerLocations(
@@ -187,19 +192,19 @@ export class CodeStreamApi {
 		teamId: string,
 		streamId: string,
 		commitHash: string
-	): Promise<GetMarkerLocationsResponse> {
-		return this.get<GetMarkerLocationsResponse>(
+	): Promise<CSGetMarkerLocationsResponse> {
+		return this.get<CSGetMarkerLocationsResponse>(
 			`/marker-locations?teamId=${teamId}&streamId=${streamId}&commitHash=${commitHash}`,
 			token
 		);
 	}
 
-	getMarkers(token: string, teamId: string, streamId: string): Promise<GetMarkersResponse> {
-		return this.get<GetMarkersResponse>(`/markers?teamId=${teamId}&streamId=${streamId}`, token);
+	getMarkers(token: string, teamId: string, streamId: string): Promise<CSGetMarkersResponse> {
+		return this.get<CSGetMarkersResponse>(`/markers?teamId=${teamId}&streamId=${streamId}`, token);
 	}
 
-	getPost(token: string, teamId: string, postId: string): Promise<GetPostResponse> {
-		return this.get<GetPostResponse>(`/posts/${postId}?teamId=${teamId}`, token);
+	getPost(token: string, teamId: string, postId: string): Promise<CSGetPostResponse> {
+		return this.get<CSGetPostResponse>(`/posts/${postId}?teamId=${teamId}`, token);
 	}
 
 	getLatestPost(token: string, teamId: string, streamId: string): Promise<FetchLatestPostResponse> {
@@ -214,15 +219,15 @@ export class CodeStreamApi {
 		teamId: string,
 		streamId: string,
 		range: string
-	): Promise<FetchPostsInRangeResponse> {
-		return this.get<FetchPostsInRangeResponse>(
+	): Promise<FetchPostsByRangeResponse> {
+		return this.get<FetchPostsByRangeResponse>(
 			`/posts/?teamId=${teamId}&streamId=${streamId}&seqnum=${range}`,
 			token
 		);
 	}
 
-	getPosts(token: string, teamId: string, streamId: string): Promise<GetPostsResponse> {
-		return this.get<GetPostsResponse>(`/posts?teamId=${teamId}&streamId=${streamId}`, token);
+	getPosts(token: string, teamId: string, streamId: string): Promise<CSGetPostsResponse> {
+		return this.get<CSGetPostsResponse>(`/posts?teamId=${teamId}&streamId=${streamId}`, token);
 	}
 
 	getPostsBySequence(
@@ -231,11 +236,11 @@ export class CodeStreamApi {
 		streamId: string,
 		minSeq: number,
 		maxSeq: number
-	): Promise<GetPostsResponse> {
+	): Promise<CSGetPostsResponse> {
 		const teamParam = `teamId=${teamId}`;
 		const streamParam = `streamId=${streamId}`;
 		const seqParam = `seqnum=${minSeq}-${maxSeq}`;
-		return this.get<GetPostsResponse>(`/posts?${teamParam}&${streamParam}&${seqParam}`, token);
+		return this.get<CSGetPostsResponse>(`/posts?${teamParam}&${streamParam}&${seqParam}`, token);
 	}
 
 	getPostsLesserThan(
@@ -244,37 +249,37 @@ export class CodeStreamApi {
 		streamId: string,
 		limit: number,
 		lt?: string
-	): Promise<GetPostsResponse> {
+	): Promise<CSGetPostsResponse> {
 		const teamParam = `?teamId=${teamId}`;
 		const streamParam = `&streamId=${streamId}`;
 		const ltParam = lt ? `&lt=${lt}` : "";
 		const limitParam = `&limit=${limit}`;
-		return this.get<GetPostsResponse>(
+		return this.get<CSGetPostsResponse>(
 			`/posts${teamParam}${streamParam}${ltParam}${limitParam}`,
 			token
 		);
 	}
 
-	getChildPosts(token: string, teamId: string, parentPostId: string): Promise<GetPostsResponse> {
+	getChildPosts(token: string, teamId: string, parentPostId: string): Promise<CSGetPostsResponse> {
 		const teamParam = `?teamId=${teamId}`;
 		const parentParam = `?parentPostId=${parentPostId}`;
-		return this.get<GetPostsResponse>(`/posts${teamParam}${parentParam}`, token);
+		return this.get<CSGetPostsResponse>(`/posts${teamParam}${parentParam}`, token);
 	}
 
-	getRepo(token: string, teamId: string, repoId: string): Promise<GetRepoResponse> {
-		return this.get<GetRepoResponse>(`/repos/${repoId}`, token);
+	getRepo(token: string, teamId: string, repoId: string): Promise<CSGetRepoResponse> {
+		return this.get<CSGetRepoResponse>(`/repos/${repoId}`, token);
 	}
 
-	getRepos(token: string, teamId: string): Promise<GetReposResponse> {
-		return this.get<GetReposResponse>(`/repos?teamId=${teamId}`, token);
+	getRepos(token: string, teamId: string): Promise<CSGetReposResponse> {
+		return this.get<CSGetReposResponse>(`/repos?teamId=${teamId}`, token);
 	}
 
 	getStream<T extends CSStream>(
 		token: string,
 		teamId: string,
 		streamId: string
-	): Promise<GetStreamResponse<T>> {
-		return this.get<GetStreamResponse<T>>(`/streams/${streamId}`, token);
+	): Promise<CSGetStreamResponse<T>> {
+		return this.get<CSGetStreamResponse<T>>(`/streams/${streamId}`, token);
 	}
 
 	getUnreadStreams<T extends CSStream>(
@@ -289,8 +294,8 @@ export class CodeStreamApi {
 		teamId: string,
 		types?: (StreamType.Channel | StreamType.Direct)[],
 		repoId?: string
-	): Promise<GetStreamsResponse<T>> {
-		const response = await this.get<GetStreamsResponse<T>>(
+	): Promise<CSGetStreamsResponse<T>> {
+		const response = await this.get<CSGetStreamsResponse<T>>(
 			`/streams?teamId=${teamId}${repoId === undefined ? "" : `&repoId=${repoId}`}`,
 			token
 		);
@@ -306,20 +311,20 @@ export class CodeStreamApi {
 		return response;
 	}
 
-	getTeam(token: string, teamId: string): Promise<GetTeamResponse> {
-		return this.get<GetTeamResponse>(`/teams/${teamId}`, token);
+	getTeam(token: string, teamId: string): Promise<CSGetTeamResponse> {
+		return this.get<CSGetTeamResponse>(`/teams/${teamId}`, token);
 	}
 
-	getTeams(token: string, teamIds: string[]): Promise<GetTeamsResponse> {
-		return this.get<GetTeamsResponse>(`/teams?ids=${teamIds.join(",")}`, token);
+	getTeams(token: string, teamIds: string[]): Promise<CSGetTeamsResponse> {
+		return this.get<CSGetTeamsResponse>(`/teams?ids=${teamIds.join(",")}`, token);
 	}
 
-	getUser(token: string, teamId: string, userId: string): Promise<GetUserResponse> {
-		return this.get<GetUserResponse>(`/users/${userId}`, token);
+	getUser(token: string, teamId: string, userId: string): Promise<CSGetUserResponse> {
+		return this.get<CSGetUserResponse>(`/users/${userId}`, token);
 	}
 
-	getUsers(token: string, teamId: string): Promise<GetUsersResponse> {
-		return this.get<GetUsersResponse>(`/users?teamId=${teamId}`, token);
+	getUsers(token: string, teamId: string): Promise<CSGetUsersResponse> {
+		return this.get<CSGetUsersResponse>(`/users?teamId=${teamId}`, token);
 	}
 
 	joinStream(token: string, teamId: string, streamId: string) {
@@ -338,16 +343,16 @@ export class CodeStreamApi {
 		);
 	}
 
-	updatePresence(token: string, request: UpdatePresenceRequest) {
-		return this.put<UpdatePresenceRequest, UpdatePresenceResponse>(`/presence`, request, token);
+	updatePresence(token: string, request: CSUpdatePresenceRequest) {
+		return this.put<CSUpdatePresenceRequest, CSUpdatePresenceResponse>(`/presence`, request, token);
 	}
 
-	updateStreamMembership(token: string, teamId: string, streamId: string, push: Push) {
-		return this.put<Push, UpdateStreamMembershipResponse>(`/streams/${streamId}`, push, token);
+	updateStreamMembership(token: string, teamId: string, streamId: string, push: CSPush) {
+		return this.put<CSPush, CSUpdateStreamMembershipResponse>(`/streams/${streamId}`, push, token);
 	}
 
-	invite(token: string, request: InviteRequest) {
-		return this.post<InviteRequest, InviteResponse>("/users", request, token);
+	invite(token: string, request: CSInviteUserRequest) {
+		return this.post<CSInviteUserRequest, CSInviteUserResponse>("/users", request, token);
 	}
 
 	markStreamRead(token: string, streamId: string) {
@@ -359,7 +364,7 @@ export class CodeStreamApi {
 	}
 
 	getMe(token: string) {
-		return this.get<GetMeResponse>("/users/me", token);
+		return this.get<CSGetMeResponse>("/users/me", token);
 	}
 
 	grant(token: string, channel: string): Promise<any> {
@@ -619,21 +624,4 @@ export class CodeStreamApi {
 			.replace(/("password":)".*?"/gi, '$1"<hidden>"')
 			.replace(/("token":)".*?"/gi, '$1"<hidden>"');
 	}
-}
-
-export interface CodeStreamApiMiddlewareContext {
-	url: string;
-	method: string;
-	request: RequestInit | undefined;
-	response?: Response;
-}
-
-export interface CodeStreamApiMiddleware {
-	readonly name: string;
-	onRequest?(context: Readonly<CodeStreamApiMiddlewareContext>): Promise<void>;
-	onProvideResponse?<R>(context: Readonly<CodeStreamApiMiddlewareContext>): Promise<R>;
-	onResponse?<R>(
-		context: Readonly<CodeStreamApiMiddlewareContext>,
-		responseJson: Promise<R> | undefined
-	): Promise<void>;
 }

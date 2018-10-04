@@ -3,9 +3,9 @@ import * as path from "path";
 import { Range } from "vscode-languageserver";
 import URI from "vscode-uri";
 import {
-	DocumentFromCodeBlockRequestParams,
+	DocumentFromCodeBlockRequest,
 	DocumentFromCodeBlockResponse,
-	DocumentMarkersRequestParams,
+	DocumentMarkersRequest,
 	DocumentMarkersResponse,
 	MarkerWithRange
 } from "../agent";
@@ -27,7 +27,7 @@ export namespace MarkerHandler {
 
 	export async function documentMarkers({
 		textDocument: documentId
-	}: DocumentMarkersRequestParams): Promise<DocumentMarkersResponse> {
+	}: DocumentMarkersRequest): Promise<DocumentMarkersResponse> {
 		try {
 			const filePath = URI.parse(documentId.uri).fsPath;
 			Logger.log(`MARKERS: requested markers for ${filePath}`);
@@ -69,7 +69,7 @@ export namespace MarkerHandler {
 		repoId,
 		file,
 		markerId
-	}: DocumentFromCodeBlockRequestParams): Promise<DocumentFromCodeBlockResponse | undefined> {
+	}: DocumentFromCodeBlockRequest): Promise<DocumentFromCodeBlockResponse | undefined> {
 		const { git } = Container.instance();
 
 		const repo = await git.getRepositoryById(repoId);

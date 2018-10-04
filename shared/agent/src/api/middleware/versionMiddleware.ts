@@ -1,7 +1,11 @@
 "use strict";
 import { Disposable, Emitter, Event } from "vscode-languageserver";
 import { VersionCompatibility } from "../../agent";
-import { CodeStreamApi, CodeStreamApiMiddleware, CodeStreamApiMiddlewareContext } from "../api";
+import {
+	ApiProvider,
+	CodeStreamApiMiddleware,
+	CodeStreamApiMiddlewareContext
+} from "../apiProvider";
 
 export interface VersionCompatibilityChangedEvent {
 	compatibility: VersionCompatibility;
@@ -18,7 +22,7 @@ export class VersionMiddlewareManager implements Disposable {
 	private readonly _disposable: Disposable;
 	private _compatibility: VersionCompatibility | undefined;
 
-	constructor(private readonly _api: CodeStreamApi) {
+	constructor(private readonly _api: ApiProvider) {
 		this._disposable = this._api.useMiddleware(new VersionMiddleware(this));
 	}
 

@@ -1,6 +1,7 @@
 "use strict";
 import { AgentOptions, AgentState, CodeStreamEnvironment } from "./agent";
 import { CodeStreamApi, LoginResponse } from "./api/api";
+import { ApiProvider } from "./api/apiProvider";
 import { Config } from "./config";
 import { DocumentManager } from "./documentManager";
 import { GitService } from "./git/gitService";
@@ -21,6 +22,7 @@ class ServiceContainer {
 	constructor(
 		public readonly session: CodeStreamSession,
 		public readonly api: CodeStreamApi,
+		public readonly api2: ApiProvider,
 		options: AgentOptions,
 		loginResponse: LoginResponse
 	) {
@@ -37,7 +39,7 @@ class ServiceContainer {
 			userId: loginResponse.user.id
 		};
 
-		this._git = new GitService(session, api);
+		this._git = new GitService(session, api2);
 
 		this._documents = new DocumentManager();
 		this._documents.listen(session.connection);
@@ -92,10 +94,11 @@ export namespace Container {
 	export async function initialize(
 		session: CodeStreamSession,
 		api: CodeStreamApi,
+		api2: ApiProvider,
 		options: AgentOptions,
 		loginResponse: LoginResponse
 	) {
-		container = new ServiceContainer(session, api, options, loginResponse);
+		container = new ServiceContainer(session, api, api2, options, loginResponse);
 	}
 
 	export function instance(): ServiceContainer {

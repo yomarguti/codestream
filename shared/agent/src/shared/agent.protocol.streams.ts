@@ -5,6 +5,7 @@ import {
 	CSChannelStream,
 	CSDirectStream,
 	CSFileStream,
+	CSPush,
 	CSStream,
 	StreamType
 } from "./api.protocol";
@@ -165,3 +166,20 @@ export const UpdateStreamRequestType = new RequestType<
 	void,
 	void
 >("codeStream/stream/update");
+
+export interface UpdateStreamMembershipRequest {
+	streamId: string;
+	// TODO: Fix this
+	push: CSPush;
+}
+
+export interface UpdateStreamMembershipResponse {
+	stream: CSStream;
+}
+
+export const UpdateStreamMembershipRequestType = new RequestType<
+	UpdateStreamMembershipRequest,
+	UpdateStreamMembershipResponse,
+	void,
+	void
+>("codeStream/stream/updateMembership");

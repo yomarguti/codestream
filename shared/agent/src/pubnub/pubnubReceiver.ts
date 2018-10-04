@@ -1,7 +1,7 @@
 "use strict";
 import { Disposable, Emitter, Event } from "vscode-languageserver";
 import { CodeStreamAgent } from "../agent";
-import { DidReceivePubNubMessagesNotification } from "../agent";
+import { DidReceivePubNubMessagesNotificationType } from "../agent";
 import {
 	CodeStreamApi,
 	CSMarker,
@@ -155,7 +155,7 @@ export class PubnubReceiver {
 
 	private onPubNubMessagesReceived(messages: { [key: string]: any }[]) {
 		this.debug("PubNub messages", messages);
-		this._agent.sendNotification(DidReceivePubNubMessagesNotification, messages);
+		this._agent.sendNotification(DidReceivePubNubMessagesNotificationType, messages);
 
 		for (const message of messages) {
 			this.processMessage(message);

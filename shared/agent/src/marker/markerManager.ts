@@ -1,5 +1,5 @@
 "use strict";
-import { DidChangeDocumentMarkersNotification } from "../agent";
+import { DidChangeDocumentMarkersNotificationType } from "../agent";
 import { CSMarker, CSStream, StreamType } from "../api/api";
 import { Container } from "../container";
 import { StreamManager } from "../stream/streamManager";
@@ -83,9 +83,12 @@ export class MarkerManager {
 		for (const streamId of streamIds) {
 			const textDocument = await StreamManager.getTextDocument(streamId);
 			if (textDocument) {
-				Container.instance().session.agent.sendNotification(DidChangeDocumentMarkersNotification, {
-					textDocument
-				});
+				Container.instance().session.agent.sendNotification(
+					DidChangeDocumentMarkersNotificationType,
+					{
+						textDocument
+					}
+				);
 			}
 		}
 	}

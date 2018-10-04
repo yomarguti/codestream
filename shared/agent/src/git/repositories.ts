@@ -10,6 +10,7 @@ import {
 } from "vscode-languageserver";
 import URI from "vscode-uri";
 import { CodeStreamApi, CSRepository } from "../api/api";
+import { ApiProvider } from "../api/apiProvider";
 import { Logger } from "../logger";
 import { CodeStreamSession, RepositoriesChangedEvent } from "../session";
 import { Iterables, Objects, Strings, TernarySearchTree } from "../system";
@@ -34,7 +35,7 @@ export class GitRepositories {
 	constructor(
 		private readonly _git: GitService,
 		private readonly _session: CodeStreamSession,
-		private readonly _api: CodeStreamApi
+		private readonly _api: ApiProvider
 	) {
 		this._repositoryTree = TernarySearchTree.forPaths();
 
@@ -180,7 +181,7 @@ export class GitRepositories {
 	}
 
 	private async getKnownRepositories() {
-		const resp = await this._api.getRepos(this._session.apiToken, this._session.teamId);
+		const resp = await this._api.fetchRepos();
 		const remotesToRepo = Iterables.flatMap(
 			resp.repos,
 			r =>
