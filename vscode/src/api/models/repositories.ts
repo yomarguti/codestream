@@ -1,4 +1,5 @@
 "use strict";
+import { Container } from "../../container";
 import { CSRepository } from "../api";
 import { CodeStreamSession, RepositoriesChangedEvent } from "../session";
 import { CodeStreamCollection, CodeStreamItem } from "./collection";
@@ -46,8 +47,7 @@ export class RepositoryCollection extends CodeStreamCollection<Repository, CSRep
 	}
 
 	protected async fetch() {
-		const repos = await this.session.api.getRepos();
-
-		return repos.map(repo => this.entityMapper(repo));
+		const response = await Container.agent.repos.fetch();
+		return response.repos.map(repo => this.entityMapper(repo));
 	}
 }
