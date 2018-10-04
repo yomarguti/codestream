@@ -126,9 +126,9 @@ export const reactToPost = (post, emoji, value) => async (dispatch, getState, { 
 		const { session } = getState();
 		// optimistically set it on the client... waiting for the server
 		const reactions = { ...(post.reactions || {}) };
-		if (!reactions[emoji]) reactions[emoji] = [];
+		reactions[emoji] = [...(reactions[emoji] || [])];
 		if (value) reactions[emoji].push(session.userId);
-		else reactions[emoji] = reactions[emoji].filter(id => id === session.userId);
+		else reactions[emoji] = reactions[emoji].filter(id => id !== session.userId);
 
 		dispatch({ type: "UPDATE_POST", payload: { ...post, reactions } });
 
