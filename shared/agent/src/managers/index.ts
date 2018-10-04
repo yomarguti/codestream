@@ -1,6 +1,7 @@
 "use strict";
 
 import { CSEntity } from "../shared/api.protocol";
+import { FetchFn } from "./cache";
 import { Id } from "./managers";
 import { SequentialSlice } from "./sequentialSlice";
 
@@ -10,52 +11,55 @@ export enum IndexType {
 	GroupSequential = "group-sequential"
 }
 
-interface MakeIndexParams<T extends CSEntity> {
+export interface IndexParams<T extends CSEntity> {
 	type: IndexType;
-	field: keyof T;
+	fields: (keyof T)[];
 	seqField?: keyof T;
+	fetchFn: FetchFn<T>;
 }
 
 /**
  * Factory function to create indexes
  *
- * @param {MakeIndexParams} params
+ * @param {IndexParams} params
  *
  * @return {Index} Index object
  */
-export function makeIndex<T extends CSEntity>(params: MakeIndexParams<T>): Index<T> {
+export function makeIndex<T extends CSEntity>(params: IndexParams<T>): Index<T> {
 	switch (params.type) {
 		case IndexType.Unique:
-			return new UniqueIndex(params.field);
+			return new UniqueIndex(params.fields, params.fetchFn);
 		case IndexType.Group:
-			return new GroupIndex(params.field);
+			return new GroupIndex(params.fields, params.fetchFn);
 		case IndexType.GroupSequential:
-			return new GroupSequentialIndex(params.field, params.seqField!);
+			return new GroupSequentialIndex(params.fields, params.seqField!, params.fetchFn);
 	}
 }
 
-function ensureArray<T>(data: T | T[]): T[] {
-	if (!Array.isArray(data)) {
-		data = [data];
-	}
-	return data;
+export function encodeArray(array: any): string {
+	array = Array.isArray(array) ? array : [array];
+	return array.join("|");
 }
 
 abstract class BaseIndex<T extends CSEntity> {
-	protected constructor(protected readonly field: keyof T) {}
+	protected constructor(readonly fields: (keyof T)[], readonly fetchFn: FetchFn<T>) {}
 
 	abstract set(value: any, entity: T, oldEntity?: T): void;
 
-	requireIndexValue(entity: T): any {
-		const value = (entity as any)[this.field];
-		if (value == null) {
-			throw new Error(
-				`Entity id=${entity.id} cannot be indexed by ${
-					this.field
-				} because it lacks a value for this field`
-			);
+	protected requireIndexValue(entity: T): string {
+		const values = [];
+		for (const field of this.fields) {
+			const value = (entity as any)[field];
+			if (value == null) {
+				throw new Error(
+					`Entity id=${
+						entity.id
+					} cannot be indexed by ${field} because it lacks a value for this field`
+				);
+			}
+			values.push(value);
 		}
-		return value;
+		return encodeArray(values);
 	}
 }
 
@@ -66,10 +70,10 @@ abstract class BaseIndex<T extends CSEntity> {
 export class UniqueIndex<T extends CSEntity> extends BaseIndex<T> {
 	readonly type = IndexType.Unique;
 
-	private readonly _data = new Map<any, T>();
+	private readonly _data = new Map<string, any>();
 
-	constructor(field: keyof T) {
-		super(field);
+	constructor(fields: (keyof T)[], fetchFn: FetchFn<T>) {
+		super(fields, fetchFn);
 	}
 
 	set(entity: T, oldEntity?: T) {
@@ -85,20 +89,20 @@ export class UniqueIndex<T extends CSEntity> extends BaseIndex<T> {
 		this._data.set(value, entity);
 	}
 
-	get(value: any): T | undefined {
-		return this._data.get(value);
+	get(...value: any[]): T | undefined {
+		return this._data.get(encodeArray(value));
 	}
 
 	getAll(): T[] {
 		return Array.from(this._data.values());
 	}
 
-	has(value: any): boolean {
-		return this._data.has(value);
+	has(...value: any[]): boolean {
+		return this._data.has(encodeArray(value));
 	}
 
-	delete(value: any) {
-		this._data.delete(value);
+	delete(...value: any[]) {
+		this._data.delete(encodeArray(value));
 	}
 }
 
@@ -113,21 +117,22 @@ export class UniqueIndex<T extends CSEntity> extends BaseIndex<T> {
 export class GroupIndex<T extends CSEntity> extends BaseIndex<T> {
 	readonly type = IndexType.Group;
 
-	private readonly groups = new Map<any, Map<Id, T>>();
+	private readonly groups = new Map<string, Map<Id, T>>();
 
-	constructor(groupField: keyof T) {
-		super(groupField);
+	constructor(fields: (keyof T)[], fetchFn: FetchFn<T>) {
+		super(fields, fetchFn);
 	}
 
 	/**
 	 * Returns a group of entities that share the same group value.
 	 * If the group is not initialized, returns `undefined`.
 	 *
-	 * @param groupValue The group value
+	 * @param values The group value
 	 * @return Array of entities or `undefined`
 	 */
-	getManyBy(groupValue: any): T[] | undefined {
-		const group = this.groups.get(groupValue);
+	getGroup(...values: any[]): T[] | undefined {
+		const indexValue = encodeArray(values);
+		const group = this.groups.get(indexValue);
 		if (group) {
 			return Array.from(group.values());
 		} else {
@@ -160,36 +165,25 @@ export class GroupIndex<T extends CSEntity> extends BaseIndex<T> {
 	/**
 	 * Initializes a group of entities
 	 *
-	 * @param {any} groupValue The value of the group
-	 * @param {T[]} entities The entities
+	 * @param {any[]} values The value of the group
+	 * @param {[]} entities The entities
 	 */
-	initGroup(groupValue: any, entities: T[]) {
-		if (this.groups.has(groupValue)) {
+	initGroup(values: any[], entities: T[]) {
+		const indexValue = encodeArray(values);
+		if (this.groups.has(indexValue)) {
 			return;
 		}
-		this.groups.set(groupValue, new Map());
-		this.addToGroup(groupValue, entities);
-	}
 
-	addToGroup(groupValue: any, entities: T | T[]) {
-		const group = this.groups.get(groupValue);
-		if (!group) {
-			throw this.errUninitializedGroup(groupValue);
-		}
-
-		entities = ensureArray(entities);
+		const group = new Map();
 		for (const entity of entities) {
 			group.set(entity.id, entity);
 		}
+		this.groups.set(indexValue, group);
 	}
 
 	private getGroupForEntity(entity: T): Map<Id, T> | undefined {
-		const groupValue = this.requireIndexValue(entity);
-		return this.groups.get(groupValue);
-	}
-
-	private errUninitializedGroup(groupValue: any) {
-		throw new Error(`Cannot add entities to uninitialized index group ${this.field}=${groupValue}`);
+		const indexValue = this.requireIndexValue(entity);
+		return this.groups.get(indexValue);
 	}
 }
 
@@ -219,38 +213,30 @@ class SequentialGroup<T extends CSEntity> {
 
 export class GroupSequentialIndex<T extends CSEntity> extends BaseIndex<T> {
 	readonly type = IndexType.GroupSequential;
-	private readonly groups = new Map<any, SequentialGroup<T>>();
+	private readonly groups = new Map<string, SequentialGroup<T>>();
 	private readonly seqField: keyof T;
 
-	constructor(groupField: keyof T, seqField: keyof T) {
-		super(groupField);
+	constructor(field: (keyof T)[], seqField: keyof T, fetchFn: FetchFn<T>) {
+		super(field, fetchFn);
 		this.seqField = seqField;
 	}
 
 	set(entity: T, oldEntity?: T) {
-		const groupValue = this.requireIndexValue(entity);
-		const group = this.groups.get(groupValue);
+		const indexValue = this.requireIndexValue(entity);
+		const group = this.groups.get(indexValue);
 		if (group) {
 			const seqValue = this.requireSeqValue(entity);
 			group.set(seqValue, entity);
 		}
 	}
 
-	initGroup(groupValue: any, entities: T[]) {
-		if (this.groups.has(groupValue)) {
+	initGroup(values: any[], entities: T[]) {
+		const indexValue = encodeArray(values);
+		if (this.groups.has(indexValue)) {
 			return;
 		}
-		this.groups.set(groupValue, new SequentialGroup<T>());
-		this.addToGroup(groupValue, entities);
-	}
 
-	addToGroup(groupValue: any, entities: T | T[]) {
-		const group = this.groups.get(groupValue);
-		if (!group) {
-			throw this.errUninitializedGroup(groupValue);
-		}
-
-		entities = ensureArray(entities);
+		const group = new SequentialGroup<T>();
 		for (const entity of entities) {
 			const seqValue = (entity as any)[this.seqField];
 			if (typeof seqValue !== "number") {
@@ -258,10 +244,12 @@ export class GroupSequentialIndex<T extends CSEntity> extends BaseIndex<T> {
 			}
 			group.set(seqValue, entity);
 		}
+		this.groups.set(indexValue, group);
 	}
 
-	getGroupSlice(groupValue: any, seqStart: number, seqEnd: number): SequentialSlice<T> | undefined {
-		const group = this.groups.get(groupValue);
+	getGroupSlice(values: any[], seqStart: number, seqEnd: number): SequentialSlice<T> | undefined {
+		const indexValue = encodeArray(values);
+		const group = this.groups.get(indexValue);
 		if (group) {
 			const dataSlice = group.dataSlice(seqStart, seqEnd);
 			return new SequentialSlice(dataSlice, this.seqField, seqStart, seqEnd, group.maxSeq);
@@ -270,8 +258,9 @@ export class GroupSequentialIndex<T extends CSEntity> extends BaseIndex<T> {
 		}
 	}
 
-	getGroupTail(groupValue: any, limit: number): SequentialSlice<T> | undefined {
-		const group = this.groups.get(groupValue);
+	getGroupTail(values: any[], limit: number): SequentialSlice<T> | undefined {
+		const indexValue = encodeArray(values);
+		const group = this.groups.get(indexValue);
 		if (group) {
 			const dataSlice = group.dataTail(limit);
 			const last = dataSlice[dataSlice.length - 1];
@@ -301,14 +290,10 @@ export class GroupSequentialIndex<T extends CSEntity> extends BaseIndex<T> {
 		return seqValue;
 	}
 
-	private errUninitializedGroup(groupValue: any) {
-		throw new Error(`Cannot add entities to uninitialized index group ${this.field}=${groupValue}`);
-	}
-
 	private errSeqNonNumeric(id: Id, seqValue: any): Error {
 		return new Error(
 			`Cannot add entity with id=${id} to group sequential index ${
-				this.field
+				this.fields
 			}: value for sequence field ${
 				this.seqField
 			} should be a number, but is ${seqValue}:${typeof seqValue}`

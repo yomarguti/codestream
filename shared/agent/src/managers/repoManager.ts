@@ -2,7 +2,7 @@
 
 import { Container } from "../container";
 import { CSRepository } from "../shared/api.protocol";
-import { EntityManager, Id, IndexedField } from "./managers";
+import { EntityManager, Id } from "./managers";
 
 export class RepoManager extends EntityManager<CSRepository> {
 	private loaded = false;
@@ -24,9 +24,5 @@ export class RepoManager extends EntityManager<CSRepository> {
 		const { api, session } = Container.instance();
 		const response = await api.getRepo(session.apiToken, session.teamId, repoId);
 		return response.repo;
-	}
-
-	protected getIndexedFields(): IndexedField<CSRepository>[] {
-		return [];
 	}
 }

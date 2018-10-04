@@ -11,28 +11,20 @@ import {
 	AgentOptions,
 	ApiRequestType,
 	CodeStreamAgent,
-	CreateChannelStreamRequest,
-	CreateDirectStreamRequest,
-	CreatePostRequest,
 	CreatePostRequestType,
-	CreatePostResponse,
 	CreatePostWithCodeRequestType,
 	CreateRepoRequestType,
-	DeletePostRequest,
 	DeletePostRequestType,
+	DidEntitiesChangeNotificationType,
 	DocumentFromCodeBlockRequestType,
 	DocumentLatestRevisionRequestType,
 	DocumentMarkersRequestType,
 	EditPostRequestType,
-	FetchLatestPostRequest,
 	FetchLatestPostRequestType,
-	FetchLatestPostResponse,
 	FetchMarkerLocationsRequest,
 	FetchMarkerLocationsRequestType,
 	FetchMarkerLocationsResponse,
-	FetchPostsByRangeRequest,
 	FetchPostsByRangeRequestType,
-	FetchPostsByRangeResponse,
 	FetchPostsRequestType,
 	FetchReposRequest,
 	FetchReposRequestType,
@@ -52,9 +44,7 @@ import {
 	FindRepoRequestType,
 	GetMarkerRequest,
 	GetMarkerRequestType,
-	GetMeRequest,
 	GetMeRequestType,
-	GetPostRequest,
 	GetPostRequestType,
 	GetRepoRequest,
 	GetRepoRequestType,
@@ -73,11 +63,10 @@ import {
 	MarkStreamReadRequest,
 	MarkStreamReadRequestType,
 	MarkStreamReadResponse,
+	MessageType,
 	PreparePostWithCodeRequestType,
 	ReactToPostRequestType,
-	UpdatePreferencesRequest,
 	UpdatePreferencesRequestType,
-	UpdatePreferencesResponse,
 	UpdatePresenceRequestType,
 	UpdateStreamMembershipRequestType,
 	UpdateStreamRequest,
@@ -85,9 +74,19 @@ import {
 	UpdateStreamResponse
 } from "./agent";
 import { AgentError, ServerError } from "./agentError";
-import { ApiErrors, CodeStreamApi, CSRepository, CSStream, LoginResult } from "./api/api";
+import {
+	ApiErrors,
+	CodeStreamApi,
+	CSMarker,
+	CSMarkerLocations,
+	CSPost,
+	CSRepository,
+	CSStream,
+	CSTeam,
+	CSUser,
+	LoginResult
+} from "./api/api";
 import { ApiProvider, LoginOptions } from "./api/apiProvider";
-import { Cache } from "./api/cache";
 import { CodeStreamApiProvider } from "./api/codestreamApi";
 import {
 	VersionCompatibilityChangedEvent,
@@ -98,21 +97,14 @@ import { Container } from "./container";
 import { setGitPath } from "./git/git";
 import { Logger } from "./logger";
 import { MarkerHandler } from "./marker/markerHandler";
-import { MarkerManager } from "./marker/markerManager";
+import { MarkerManager } from "./managers/markerManager";
 import { MarkerLocationManager } from "./markerLocation/markerLocationManager";
 import { PostHandler } from "./post/postHandler";
-import { MessageReceivedEvent, MessageType, PubnubReceiver } from "./pubnub/pubnubReceiver";
+import { PubnubReceiver } from "./pubnub/pubnubReceiver";
 import {
 	CreateChannelStreamRequestType,
-	CreateChannelStreamResponse,
 	CreateDirectStreamRequestType,
-	CreateDirectStreamResponse,
-	CreateRepoRequest,
-	CreateRepoResponse,
-	DeletePostResponse,
 	DidChangeVersionCompatibilityNotificationType,
-	EditPostRequest,
-	EditPostResponse,
 	FetchFileStreamsRequest,
 	FetchFileStreamsRequestType,
 	FetchFileStreamsResponse,
@@ -120,26 +112,17 @@ import {
 	FetchUsersResponse,
 	FindRepoResponse,
 	GetMarkerResponse,
-	GetMeResponse,
-	GetPostResponse,
 	GetRepoResponse,
 	GetTeamResponse,
 	GetUserResponse,
-	InviteUserRequest,
-	InviteUserResponse,
 	LogoutReason,
 	LogoutRequestType,
-	MarkPostUnreadRequest,
-	MarkPostUnreadResponse,
-	ReactToPostRequest,
-	ReactToPostResponse,
-	UpdatePresenceRequest,
-	UpdatePresenceResponse,
 	UpdateStreamMembershipRequest,
 	UpdateStreamMembershipResponse
 } from "./shared/agent.protocol";
-import { StreamManager } from "./stream/streamManager";
+import { StreamManager } from "./managers/streamManager";
 import { Strings } from "./system";
+import { RealTimeMessage } from "./managers/realTimeMessage";
 
 const loginApiErrorMappings: { [k: string]: ApiErrors } = {
 	"USRC-1001": ApiErrors.InvalidCredentials,
@@ -152,22 +135,50 @@ const loginApiErrorMappings: { [k: string]: ApiErrors } = {
 	"USRC-1012": ApiErrors.NotOnTeam
 };
 
-export class RepositoriesChangedEvent {
-	constructor(public readonly session: CodeStreamSession, readonly entities: CSRepository[]) {}
-}
-
-export type SessionChangedEvent = RepositoriesChangedEvent;
-
 export class CodeStreamSession {
-	private _onDidChangeRepositories = new Emitter<RepositoriesChangedEvent>();
-	get onDidChangeRepositories(): Event<RepositoriesChangedEvent> {
-		return this._onDidChangeRepositories.event;
+	private _onPostsChanged = new Emitter<CSPost[]>();
+	get onPostsChanged(): Event<CSPost[]> {
+		return this._onPostsChanged.event;
+	}
+
+	private _onReposChanged = new Emitter<CSRepository[]>();
+	get onReposChanged(): Event<CSRepository[]> {
+		return this._onReposChanged.event;
+	}
+
+	private _onStreamsChanged = new Emitter<CSStream[]>();
+	get onStreamsChanged(): Event<CSStream[]> {
+		return this._onStreamsChanged.event;
+	}
+
+	private _onUsersChanged = new Emitter<CSUser[]>();
+	get onUsersChanged(): Event<CSUser[]> {
+		return this._onUsersChanged.event;
+	}
+
+	private _onTeamsChanged = new Emitter<CSTeam[]>();
+	get onTeamsChanged(): Event<CSTeam[]> {
+		return this._onTeamsChanged.event;
+	}
+
+	private _onMarkersChanged = new Emitter<CSMarker[]>();
+	get onMarkersChanged(): Event<CSMarker[]> {
+		return this._onMarkersChanged.event;
+	}
+
+	private _onMarkerLocationsChanged = new Emitter<CSMarker[]>();
+	get onMarkerLocationsChanged(): Event<CSMarker[]> {
+		return this._onMarkerLocationsChanged.event;
 	}
 
 	private readonly _api: CodeStreamApi;
 	private readonly _api2: ApiProvider;
-	private _pubnub: PubnubReceiver | undefined;
 	private readonly _readyPromise: Promise<void>;
+
+	private _pubnub: PubnubReceiver | undefined;
+	get pubnub() {
+		return this._pubnub!;
+	}
 
 	constructor(
 		public readonly agent: CodeStreamAgent,
@@ -260,27 +271,66 @@ export class CodeStreamSession {
 		this.agent.registerHandler(MarkStreamReadRequestType, this.handleMarkStreamRead);
 	}
 
-	private onMessageReceived(e: MessageReceivedEvent) {
-		const { postManager, repoManager } = Container.instance();
+	private async onRealTimeMessageReceived(e: RealTimeMessage) {
+		const {
+			postManager,
+			repoManager,
+			streamManager,
+			userManager,
+			teamManager,
+			markerManager,
+			markerLocationManager
+		} = Container.instance();
 		switch (e.type) {
 			case MessageType.Posts:
-				postManager.resolve(e.changeSets);
+				const posts = await postManager.resolve(e);
+				this._onPostsChanged.fire(posts);
+				this.agent.sendNotification(DidEntitiesChangeNotificationType, {
+					type: MessageType.Posts,
+					posts
+				});
 				break;
 			case MessageType.Repositories:
-				repoManager.resolve(e.changeSets);
+				const repos = await repoManager.resolve(e);
+				this.agent.sendNotification(DidEntitiesChangeNotificationType, {
+					type: MessageType.Repositories,
+					repos
+				});
 				break;
 			case MessageType.Streams:
-				StreamManager.cacheStreams(e.streams);
+				const streams = await streamManager.resolve(e);
+				this.agent.sendNotification(DidEntitiesChangeNotificationType, {
+					type: MessageType.Streams,
+					streams
+				});
 				break;
 			case MessageType.Users:
+				const users = await userManager.resolve(e);
+				this.agent.sendNotification(DidEntitiesChangeNotificationType, {
+					type: MessageType.Users,
+					users
+				});
 				break;
 			case MessageType.Teams:
+				const teams = await teamManager.resolve(e);
+				this.agent.sendNotification(DidEntitiesChangeNotificationType, {
+					type: MessageType.Teams,
+					teams
+				});
 				break;
 			case MessageType.Markers:
-				MarkerManager.cacheMarkers(e.markers);
+				const markers = await markerManager.resolve(e);
+				this.agent.sendNotification(DidEntitiesChangeNotificationType, {
+					type: MessageType.Markers,
+					markers
+				});
 				break;
 			case MessageType.MarkerLocations:
-				MarkerLocationManager.cacheMarkerLocations(e.markerLocations);
+				// const markerLocations = await markerLocationManager.resolve(e);
+				// this.agent.sendNotification(DidEntitiesChangeNotificationType, {
+				// 	type: MessageType.MarkerLocations,
+				// 	markerLocations
+				// });
 				break;
 		}
 	}
@@ -386,14 +436,10 @@ export class CodeStreamSession {
 
 			const streams = await this.getSubscribableStreams(this._userId, this._teamId);
 			this._pubnub.listen(streams.map(s => s.id));
-			this._pubnub.onDidReceiveMessage(this.onMessageReceived, this);
+			this._pubnub.onDidReceiveMessage(this.onRealTimeMessageReceived, this);
 			const { git, repoManager } = Container.instance();
 			git.onRepositoryCommitHashChanged(repo => {
 				MarkerLocationManager.flushUncommittedLocations(repo);
-			});
-
-			repoManager.onEntitiesChanged(entities => {
-				this._onDidChangeRepositories.fire(new RepositoriesChangedEvent(this, entities));
 			});
 
 			return {
@@ -449,9 +495,9 @@ export class CodeStreamSession {
 
 	async handleGetRepo(request: GetRepoRequest): Promise<GetRepoResponse> {
 		const { repoManager } = Container.instance();
-		const repo = await repoManager.get(request.repoId);
+		const repo = await repoManager.getById(request.repoId);
 		return {
-			repo
+			repo: repo
 		};
 	}
 

@@ -2,23 +2,23 @@
 
 import { Container } from "../container";
 import { CSPost } from "../shared/api.protocol";
-import { IndexType } from "./index";
-import { EntityManager, Id, IndexedField } from "./managers";
+import { IndexParams, IndexType } from "./index";
+import { EntityManager, Id } from "./managers";
 import { SequentialSlice } from "./sequentialSlice";
 
 export class PostManager extends EntityManager<CSPost> {
-	protected getIndexedFields(): IndexedField<CSPost>[] {
+	protected getIndexedFields(): IndexParams<CSPost>[] {
 		return [
 			{
-				field: "streamId",
+				fields: ["streamId"],
 				seqField: "seqNum",
 				type: IndexType.GroupSequential,
 				fetchFn: this.fetchByStreamId.bind(this)
 			},
 			{
-				field: "parentPostId",
+				fields: ["parentPostId"],
 				type: IndexType.Group,
-				fetchFn: this.fetchChildPosts.bind(this)
+				fetchFn: this.fetchByParentPostId.bind(this)
 			}
 		];
 	}
@@ -45,22 +45,29 @@ export class PostManager extends EntityManager<CSPost> {
 		before?: number,
 		limit?: number
 	): Promise<SequentialSlice<CSPost>> {
-		// TODO math max 0
+		let seqStart;
+		let seqEnd;
+
 		if (after != null && before != null) {
-			return await this.getGroupSlice("streamId", streamId, after + 1, before);
+			seqStart = Math.max(after + 1, 1);
+			seqEnd = before;
 		} else if (after != null && limit != null) {
-			return await this.getGroupSlice("streamId", streamId, after + 1, after + limit + 1);
+			seqStart = Math.max(after + 1, 1);
+			seqEnd = seqStart + limit + 1;
 		} else if (before != null && limit != null) {
-			const seqStart = Math.max(before - limit, 1);
-			return await this.getGroupSlice("streamId", streamId, seqStart, before);
-		} else if (limit != null) {
-			return await this.getGroupTail("streamId", streamId, limit);
+			seqStart = Math.max(before - limit, 1);
+			seqEnd = before;
 		}
-		throw new Error("Missing required arguments in invocation to PostManager.getPosts()");
+
+		if (seqStart !== undefined && seqEnd !== undefined) {
+			return this.cache.getGroupSlice([["streamId", streamId]], seqStart, seqEnd);
+		} else {
+			return await this.cache.getGroupTail([["streamId", streamId]], limit || 100);
+		}
 	}
 
-	getChildPosts(parentPostId: Id): Promise<CSPost[]> {
-		return this.getManyBy("parentPostId", parentPostId);
+	getByParentPostId(parentPostId: Id): Promise<CSPost[]> {
+		return this.cache.getGroup([["parentPostId", parentPostId]]);
 	}
 
 	protected async fetch(id: Id): Promise<CSPost> {
@@ -69,18 +76,20 @@ export class PostManager extends EntityManager<CSPost> {
 		return response.post;
 	}
 
-	protected async fetchChildPosts(parentPostId: Id): Promise<CSPost[]> {
+	protected async fetchByParentPostId(values: any[]): Promise<CSPost[]> {
+		const [parentPostId] = values;
 		const { api, state } = Container.instance();
 		const response = await api.getChildPosts(state.apiToken, state.teamId, parentPostId);
 		return response.posts;
 	}
 
 	protected async fetchByStreamId(
-		streamId: string,
+		values: any[],
 		seqStart?: number,
 		seqEnd?: number,
 		limit: number = 100
 	): Promise<CSPost[]> {
+		const [streamId] = values;
 		const { api, state } = Container.instance();
 		if (seqStart && seqEnd) {
 			const minSeq = seqStart;

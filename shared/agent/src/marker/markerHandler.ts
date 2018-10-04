@@ -12,8 +12,6 @@ import {
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { MarkerLocationManager } from "../markerLocation/markerLocationManager";
-import { StreamManager } from "../stream/streamManager";
-import { MarkerManager } from "./markerManager";
 
 export namespace MarkerHandler {
 	const emptyResponse = {
@@ -29,15 +27,16 @@ export namespace MarkerHandler {
 		textDocument: documentId
 	}: DocumentMarkersRequest): Promise<DocumentMarkersResponse> {
 		try {
+			const { streamManager, markerManager } = Container.instance();
 			const filePath = URI.parse(documentId.uri).fsPath;
 			Logger.log(`MARKERS: requested markers for ${filePath}`);
-			const streamId = await StreamManager.getStreamId(filePath);
-			if (!streamId) {
+			const stream = await streamManager.getByPath(filePath);
+			if (!stream) {
 				Logger.log(`MARKERS: no streamId found for ${filePath} - returning empty response`);
 				return emptyResponse;
 			}
 
-			const markersById = await MarkerManager.getMarkersForStream(streamId, true);
+			const markersById = await markerManager.getByStreamId(stream.id, true);
 			const markers = Array.from(markersById.values());
 			Logger.log(`MARKERS: found ${markers.length} markers - retrieving current locations`);
 			const locations = await MarkerLocationManager.getCurrentLocations(documentId.uri);

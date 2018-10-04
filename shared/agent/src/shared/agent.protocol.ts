@@ -7,7 +7,17 @@ import {
 	RequestType,
 	TextDocumentIdentifier
 } from "vscode-languageserver-protocol";
-import { LoginResponse, LoginResult } from "./api.protocol";
+import {
+	CSMarker,
+	CSMarkerLocations,
+	CSPost,
+	CSRepository,
+	CSStream,
+	CSTeam,
+	CSUser,
+	LoginResponse,
+	LoginResult
+} from "./api.protocol";
 
 export * from "./agent.protocol.markers";
 export * from "./agent.protocol.posts";
@@ -83,14 +93,63 @@ export const LogoutRequestType = new RequestType<LogoutRequest, undefined, void,
 	"codeStream/logout"
 );
 
-export interface DidReceivePubNubMessagesNotificationResponse {
-	[key: string]: any;
+export enum MessageType {
+	Posts = "posts",
+	Repositories = "repos",
+	Streams = "streams",
+	Users = "users",
+	Teams = "teams",
+	Markers = "markers",
+	MarkerLocations = "markerLocations"
 }
 
-export const DidReceivePubNubMessagesNotificationType = new NotificationType<
-	DidReceivePubNubMessagesNotificationResponse[],
+export interface PostsChangedNotificationResponse {
+	type: MessageType.Posts;
+	posts: CSPost[];
+}
+export interface ReposChangedNotificationResponse {
+	type: MessageType.Repositories;
+	repos: CSRepository[];
+}
+
+export interface StreamsChangedNotificationResponse {
+	type: MessageType.Streams;
+	streams: CSStream[];
+}
+
+export interface UsersChangedNotificationResponse {
+	type: MessageType.Users;
+	users: CSUser[];
+}
+
+export interface TeamsChangedNotificationResponse {
+	type: MessageType.Teams;
+	teams: CSTeam[];
+}
+
+export interface MarkersChangedNotificationResponse {
+	type: MessageType.Markers;
+	markers: CSMarker[];
+}
+
+export interface MarkerLocationsChangedNotificationResponse {
+	type: MessageType.MarkerLocations;
+	markerLocations: CSMarkerLocations;
+}
+
+export type EntitiesChangedNotificationResponse =
+	| PostsChangedNotificationResponse
+	| ReposChangedNotificationResponse
+	| StreamsChangedNotificationResponse
+	| UsersChangedNotificationResponse
+	| TeamsChangedNotificationResponse
+	| MarkersChangedNotificationResponse
+	| MarkerLocationsChangedNotificationResponse;
+
+export const DidEntitiesChangeNotificationType = new NotificationType<
+	EntitiesChangedNotificationResponse,
 	void
->("codeStream/didReceivePubNubMessages");
+>("codeStream/didEntitiesChange");
 
 export enum VersionCompatibility {
 	Compatible = "ok",

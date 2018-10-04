@@ -9,6 +9,11 @@ import { Logger } from "./logger";
 import { PostManager } from "./managers/postManager";
 import { RepoManager } from "./managers/repoManager";
 import { CodeStreamSession } from "./session";
+import { MarkerLocationManager } from "./markerLocation/markerLocationManager";
+import { StreamManager } from "./managers/streamManager";
+import { MarkerManager } from "./managers/markerManager";
+import { UserManager } from "./managers/userManager";
+import { TeamManager } from "./managers/teamManager";
 
 const envRegex = /https?:\/\/(pd-|qa-)?api.codestream.(?:us|com)/;
 
@@ -55,11 +60,13 @@ class ServiceContainer {
 		return this._git;
 	}
 
-	// public readonly markers = new MarkerManager();
-	// public readonly markerLocations = new MarkerLocationManager();
 	public readonly postManager = new PostManager();
 	public readonly repoManager = new RepoManager();
-	// public readonly streams = new StreamManager();
+	public readonly streamManager = new StreamManager();
+	public readonly userManager = new UserManager();
+	public readonly teamManager = new TeamManager();
+	public readonly markerManager = new MarkerManager();
+	public readonly markerLocationManager = new MarkerLocationManager();
 
 	updateConfig(config: Config) {
 		// 	const prevCfg = this._config;

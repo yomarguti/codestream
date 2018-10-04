@@ -15,8 +15,6 @@ import { getCache } from "../cache";
 import { Container } from "../container";
 import { GitRepository } from "../git/models/repository";
 import { Logger } from "../logger";
-import { MarkerManager } from "../marker/markerManager";
-import { StreamManager } from "../stream/streamManager";
 import { xfs } from "../xfs";
 import { calculateLocation, calculateLocations } from "./calculator";
 
@@ -202,21 +200,20 @@ export class MarkerLocationManager {
 	}
 
 	static async getCommitLocations(filePath: string, commitHash: string): Promise<LocationsById> {
-		const { git, api, session } = Container.instance();
+		const { git, api, session, streamManager, markerManager } = Container.instance();
 
 		Logger.log(`MARKERS: getting locations for ${filePath}@${commitHash}`);
-		const streamId = await StreamManager.getStreamId(filePath);
-		if (!streamId) {
+		const stream = await streamManager.getByPath(filePath);
+		if (!stream) {
 			Logger.log(`MARKERS: cannot find streamId for ${filePath}`);
 			return {};
 		}
 
-		const markersById = await MarkerManager.getMarkersForStream(streamId);
-		const markers = Array.from(markersById.values());
-		Logger.log(`MARKERS: found ${markers.length} markers for stream ${streamId}`);
+		const markers = await markerManager.getByStreamId(stream.id);
+		Logger.log(`MARKERS: found ${markers.length} markers for stream ${stream.id}`);
 
 		const currentCommitLocations = await MarkerLocationManager.getMarkerLocations(
-			streamId,
+			stream.id,
 			commitHash
 		);
 		const missingMarkersByCommit = MarkerLocationManager.getMissingMarkersByCommit(
@@ -240,7 +237,7 @@ export class MarkerLocationManager {
 			);
 
 			const allCommitLocations = await MarkerLocationManager.getMarkerLocations(
-				streamId,
+				stream.id,
 				commitHashWhenCreated
 			);
 			const locationsToCalculate: LocationsById = {};
@@ -275,7 +272,7 @@ export class MarkerLocationManager {
 			);
 			await api.createMarkerLocation(session.apiToken, {
 				teamId: session.teamId,
-				streamId,
+				streamId: stream.id,
 				commitHash,
 				locations: MarkerLocationManager.arraysById(calculatedLocations)
 			});
@@ -333,13 +330,13 @@ export class MarkerLocationManager {
 
 	static async flushUncommittedLocations(repo: GitRepository) {
 		Logger.log(`MARKERS: flushing uncommitted locations`);
-		const { api, git, session } = Container.instance();
+		const { api, git, session, markerManager, streamManager } = Container.instance();
 		const cache = await getCache(repo.path);
 		const uncommittedLocations = cache.getCollection("uncommittedLocations");
 		for (const id of uncommittedLocations.keys()) {
 			Logger.log(`MARKERS: checking uncommitted marker ${id}`);
-			const marker = await MarkerManager.getMarker(id);
-			const stream = (await StreamManager.getStream(marker.streamId)) as CSFileStream;
+			const marker = await markerManager.getById(id);
+			const stream = (await streamManager.getById(marker!.streamId)) as CSFileStream;
 			const uncommittedLocation = uncommittedLocations.get(id) as UncommittedLocation;
 			const originalContents = uncommittedLocation.fileContents;
 			const relPath = stream.file;

@@ -1,19 +1,9 @@
 "use strict";
 import { Disposable, Emitter, Event } from "vscode-languageserver";
-import { CodeStreamAgent } from "../agent";
-import { DidReceivePubNubMessagesNotificationType } from "../agent";
-import {
-	CodeStreamApi,
-	CSMarker,
-	CSMarkerLocations,
-	CSPost,
-	CSRepository,
-	CSStream,
-	CSTeam,
-	CSUser
-} from "../api/api";
+import { CodeStreamAgent, MessageType } from "../agent";
+import { CodeStreamApi } from "../api/api";
 import { Logger, TraceLevel } from "../logger";
-import { Iterables } from "../system";
+import { MessageSource, PubNubMessage } from "../managers/realTimeMessage";
 import {
 	ChannelDescriptor,
 	PubnubConnection,
@@ -21,63 +11,19 @@ import {
 	StatusChangeEvent
 } from "./pubnubConnection";
 
-export enum MessageType {
-	Posts = "posts",
-	Repositories = "repos",
-	Streams = "streams",
-	Users = "users",
-	Teams = "teams",
-	Markers = "markers",
-	MarkerLocations = "markerLocations"
-}
-
-export interface PostsMessageReceivedEvent {
-	type: MessageType.Posts;
-	changeSets: object[];
-}
-
-export interface RepositoriesMessageReceivedEvent {
-	type: MessageType.Repositories;
-	changeSets: object[];
-}
-
-export interface StreamsMessageReceivedEvent {
-	type: MessageType.Streams;
-	streams: CSStream[];
-}
-
-export interface UsersMessageReceivedEvent {
-	type: MessageType.Users;
-	users: CSUser[];
-}
-
-export interface TeamsMessageReceivedEvent {
-	type: MessageType.Teams;
-	teams: CSTeam[];
-}
-
-export interface MarkersMessageReceivedEvent {
-	type: MessageType.Markers;
-	markers: CSMarker[];
-}
-
-export interface MarkerLocationsMessageReceivedEvent {
-	type: MessageType.MarkerLocations;
-	markerLocations: CSMarkerLocations;
-}
-
-export type MessageReceivedEvent =
-	| PostsMessageReceivedEvent
-	| RepositoriesMessageReceivedEvent
-	| StreamsMessageReceivedEvent
-	| UsersMessageReceivedEvent
-	| MarkersMessageReceivedEvent
-	| MarkerLocationsMessageReceivedEvent
-	| TeamsMessageReceivedEvent;
+const messageType = {
+	post: MessageType.Posts,
+	repo: MessageType.Repositories,
+	stream: MessageType.Streams,
+	user: MessageType.Users,
+	team: MessageType.Teams,
+	marker: MessageType.Markers,
+	markerLocations: MessageType.MarkerLocations
+};
 
 export class PubnubReceiver {
-	private _onDidReceiveMessage = new Emitter<MessageReceivedEvent>();
-	get onDidReceiveMessage(): Event<MessageReceivedEvent> {
+	private _onDidReceiveMessage = new Emitter<PubNubMessage>();
+	get onDidReceiveMessage(): Event<PubNubMessage> {
 		return this._onDidReceiveMessage.event;
 	}
 
@@ -155,129 +101,33 @@ export class PubnubReceiver {
 
 	private onPubNubMessagesReceived(messages: { [key: string]: any }[]) {
 		this.debug("PubNub messages", messages);
-		this._agent.sendNotification(DidReceivePubNubMessagesNotificationType, messages);
 
 		for (const message of messages) {
 			this.processMessage(message);
 		}
 	}
 
-	private async processMessage(message: { [key: string]: any }) {
+	private processMessage(message: { [key: string]: any }) {
 		const { requestId, ...messages } = message;
 		requestId;
 
-		for (let [key, obj] of Object.entries(messages)) {
-			let entities;
+		for (const [key, obj] of Object.entries(messages)) {
 			try {
-				switch (key) {
-					case "post":
-					case "repo":
-					case "user":
-					case "team":
-					case "marker":
-					case "stream":
-						key += "s";
-						entities = [obj];
-						break;
-					// case "markerLocations"
-					default:
-						entities = obj;
-						break;
-				}
-
-				switch (key) {
-					case "posts":
-						this._onDidReceiveMessage.fire({
-							type: MessageType.Posts,
-							changeSets: entities
-						});
-						break;
-					case "repos":
-						this._onDidReceiveMessage.fire({
-							type: MessageType.Repositories,
-							changeSets: entities
-						});
-						break;
-					case "streams":
-						entities = await this.processDirectives(
-							key,
-							entities,
-							async id => (await this._api.getStream(this._accessToken, this._teamId, id)).stream
-						);
-						if (!entities || !entities.length) continue;
-
-						const streams = CodeStreamApi.normalizeResponse(entities) as CSStream[];
-						// Subscribe to any new non-file, non-team streams
-						this._pubnubConnection.subscribe([
-							...Iterables.filterMap(
-								streams,
-								s =>
-									CodeStreamApi.isStreamSubscriptionRequired(s, this._userId!)
-										? `stream-${s.id}`
-										: undefined
-							)
-						]);
-						this._onDidReceiveMessage.fire({ type: MessageType.Streams, streams });
-						break;
-					// case "users": {
-					// 	const users = (await this._cache.resolveUsers(entities)) as CSUser[];
-					// 	this._onDidReceiveMessage.fire({ type: MessageType.Users, users });
-					// 	break;
-					// }
-					// case "teams": {
-					// 	const teams = (await this._cache.resolveTeams(entities)) as CSTeam[];
-					// 	this._onDidReceiveMessage.fire({ type: MessageType.Teams, teams });
-					// 	break;
-					// }
-					case "markers": {
-						const markers = CodeStreamApi.normalizeResponse(entities) as CSMarker[];
-						this._onDidReceiveMessage.fire({ type: MessageType.Markers, markers });
-						break;
-					}
-					case "markerLocations": {
-						const markerLocations = CodeStreamApi.normalizeResponse(entities) as CSMarkerLocations;
-						this._onDidReceiveMessage.fire({ type: MessageType.MarkerLocations, markerLocations });
-						break;
-					}
+				const changeSets = Array.isArray(obj) ? obj : [obj];
+				const type = (messageType as any)[key];
+				if (type) {
+					this._onDidReceiveMessage.fire({
+						source: MessageSource.PubNub,
+						type,
+						changeSets
+					});
+				} else {
+					Logger.warn(`Unknown message type received from PubNub: ${key}`);
 				}
 			} catch (ex) {
 				Logger.error(ex, `PubNub '${key}' FAILED`);
 			}
 		}
-	}
-
-	private async processDirectives(
-		key: string,
-		entities: any[] | undefined,
-		fetch: (id: string) => Promise<any>
-	): Promise<any[] | undefined> {
-		if (!entities || !entities.length) return entities;
-
-		const fetched = await Promise.all(
-			entities.map(async e => {
-				if (Object.keys(e).some(k => k.startsWith("$"))) {
-					try {
-						return await fetch(e._id);
-					} catch {
-						return undefined;
-					}
-				}
-				return e;
-			})
-		);
-		return fetched.filter(e => e !== undefined);
-	}
-
-	private stripDirectives(key: string, entities: any[] | undefined) {
-		if (!entities || !entities.length) return entities;
-
-		return entities.filter(e => {
-			if (Object.keys(e).some(k => k.startsWith("$"))) {
-				Logger.log(`PubNub '${key}' message with directive skipped\n${JSON.stringify(e)}`);
-				return false;
-			}
-			return true;
-		});
 	}
 
 	private debug(msg: string, info?: any) {

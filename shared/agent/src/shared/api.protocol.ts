@@ -6,7 +6,7 @@ export interface CSEntity {
 	creatorId: string;
 }
 
-export interface CSMarker {
+export interface CSMarker extends CSEntity {
 	id: string;
 	teamId: string;
 	streamId: string;
