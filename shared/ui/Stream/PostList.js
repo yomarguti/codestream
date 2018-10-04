@@ -122,16 +122,23 @@ export default infiniteLoadable(
 		};
 
 		onNeedsResize = index => {
-			const { startIndex, stopIndex } = this.lastRenderedRowsData;
-			if (index >= startIndex && index <= stopIndex) {
-				this.recomputeVisibleRowHeights(startIndex, stopIndex);
-				if (!this.scrolledOffBottom) requestAnimationFrame(this.scrollToBottom); // TODO: be more selective about which things change
-			}
+			this.recomputeHeight(index);
+			// if bottom-most post, scroll it all into view
+			if (index === this.props.posts.length) this.scrollToBottom();
+		};
+
+		recomputeHeight = index => {
+			this.cache.clear(index);
+			this.list.recomputeRowHeights(index);
 		};
 
 		focusOnRow = index => {
 			const { startIndex, stopIndex } = this.lastRenderedRowsData;
 			if (index <= startIndex || index >= stopIndex) this.list.scrollToRow(index);
+		};
+
+		onRowDidResize = index => {
+			this.recomputeHeight(index);
 		};
 
 		onScroll = data => {
@@ -151,6 +158,7 @@ export default infiniteLoadable(
 			return null;
 		};
 
+		// TODO: still necessary?
 		recomputeVisibleRowHeights = debounceToAnimationFrame((start, stop) => {
 			this.cache.clearAll();
 			this.list.recomputeRowHeights();
@@ -335,8 +343,9 @@ export default infiniteLoadable(
 													unread={post.seqNum >= this.props.firstUnreadPostSeqNum}
 													editing={isActive && post.id === editingPostId}
 													action={postAction}
-													index={index}
+													index={data.index}
 													focusOnRow={this.focusOnRow}
+													onRowDidResize={this.onRowDidResize}
 													onNeedsResize={this.onNeedsResize}
 													showDetails={this.props.showDetails}
 													streamId={this.props.streamId}

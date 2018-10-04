@@ -27,7 +27,8 @@ let renderCount = 0;
 class Post extends React.Component {
 	static defaultProps = {
 		onNeedsResize: () => {},
-		focusOnRow: () => {}
+		focusOnRow: () => {},
+		onRowDidResize: () => {}
 	};
 	state = {
 		emojiOpen: false,
@@ -71,8 +72,7 @@ class Post extends React.Component {
 
 		const editStateToggledOn = this.props.editing && !prevProps.editing;
 		if (editStateToggledOn) {
-			this.props.focusOnRow(this.props.index);
-			this.props.onNeedsResize(this.props.index);
+			this.props.onRowDidResize(this.props.index);
 			requestAnimationFrame(() => document.getElementById(this.getEditInputId()).focus());
 		}
 
