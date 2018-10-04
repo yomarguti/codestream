@@ -183,11 +183,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	async reactToPost(streamId: string, postId: string, emoji: string, value: boolean) {
 		return this._cache.resolvePost(
-			await this._codestream.reactToPost(this._token, {
+			(await this._codestream.reactToPost(this._token, {
 				id: postId,
 				streamId: streamId,
 				emojis: { [emoji]: value }
-			})
+			})).post
 		);
 	}
 
