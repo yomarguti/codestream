@@ -7,6 +7,8 @@ export default (state = initialState, { type, payload }) => {
 	switch (type) {
 		case "GO_TO_COMPLETE_SIGNUP":
 			return { ...state, route: "completeSignup", params: payload };
+		case "GO_TO_SIGNUP":
+			return { ...state, route: "signup", params: payload };
 		case "GO_TO_LOGIN":
 			return { ...state, route: "login", params: payload };
 		default:

@@ -131,7 +131,7 @@ export class Login extends React.Component {
 
 	handleClickSignup = event => {
 		event.preventDefault();
-		this.props.startSignup();
+		this.props.goToSignup();
 	};
 
 	handleClickSlackSignup = event => {

@@ -19,3 +19,5 @@ export const startSignup = () => async (dispatch, getState, { api }) => {
 		console.error(error);
 	}
 };
+
+export const goToSignup = () => ({ type: "GO_TO_SIGNUP" });
