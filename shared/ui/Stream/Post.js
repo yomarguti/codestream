@@ -57,18 +57,17 @@ class Post extends React.Component {
 	}
 
 	componentDidUpdate(prevProps, _prevState) {
-		if (this.props.deactivated) return;
+		if (!safe(() => prevProps.post.id === this.props.post.id)) return;
 
-		const isNewPost = prevProps.deactivated && !this.props.deactivated;
 		const editStateToggledOff = !this.props.editing && prevProps.editing;
-		const postContentChanged = !isNewPost && this.props.post.text !== prevProps.post.text;
+		const postContentChanged = this.props.post.text !== prevProps.post.text;
 		if (
 			postContentChanged ||
-			isNewPost ||
 			editStateToggledOff ||
 			!isEqual(prevProps.post.reactions, this.props.post.reactions)
-		)
+		) {
 			this.props.onNeedsResize(this.props.index);
+		}
 
 		const editStateToggledOn = this.props.editing && !prevProps.editing;
 		if (editStateToggledOn) {
