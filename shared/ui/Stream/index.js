@@ -172,9 +172,7 @@ export class SimpleStream extends Component {
 		// if we are switching from a non-main panel
 		if (this.props.activePanel === "main" && prevProps.activePanel !== "main") {
 			this.checkMarkStreamRead();
-			setTimeout(() => {
-				this.focusInput();
-			}, 500);
+			this.focusInput();
 		}
 
 		// when going in and out of threads, make sure the streams are all
@@ -858,8 +856,10 @@ export class SimpleStream extends Component {
 	// }
 
 	focusInput = () => {
-		const input = document.getElementById("input-div");
-		if (input) input.focus();
+		setTimeout(() => {
+			const input = document.getElementById("input-div");
+			if (input) input.focus();
+		}, 500);
 	};
 
 	handleEscape(event) {
