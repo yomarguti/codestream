@@ -1,8 +1,8 @@
 "use strict";
 import { Uri } from "vscode";
+import { StreamType } from "../agent/agentConnection";
 import { memoize } from "../system";
 import { WebviewIpcMessage, WebviewIpcMessageType } from "../webviews/webviewIpc";
-import { StreamType } from "./api";
 import {
 	PostsMessageReceivedEvent,
 	RepositoriesMessageReceivedEvent,

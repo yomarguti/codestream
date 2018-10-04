@@ -1,8 +1,8 @@
 "use strict";
 import { Range } from "vscode";
+import { CSLocationArray, CSMarker } from "../../agent/agentConnection";
 import { Container } from "../../container";
 import { memoize } from "../../system/decorators";
-import { CSLocationArray, CSMarker } from "../api";
 import { ChannelStream, CodeStreamSession, DirectStream, Post } from "../session";
 
 export class Marker {

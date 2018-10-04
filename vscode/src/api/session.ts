@@ -4,17 +4,15 @@ import {
 	AccessToken,
 	AgentResult,
 	CodeStreamEnvironment,
-	DocumentMarkersChangedEvent
+	CSMe,
+	DocumentMarkersChangedEvent,
+	LoginResult
 } from "../agent/agentConnection";
 import { WorkspaceState } from "../common";
 import { configuration } from "../configuration";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { Functions, Strings } from "../system";
-import { LoginResult, PresenceStatus } from "./api";
-import { ApiProvider } from "./apiProvider";
-import { Cache } from "./cache";
-import { CodeStreamApiProvider } from "./codestreamApi";
 import { Marker } from "./models/markers";
 import { Post } from "./models/posts";
 import { Repository } from "./models/repositories";
@@ -29,8 +27,6 @@ import {
 } from "./models/streams";
 import { Team } from "./models/teams";
 import { User } from "./models/users";
-import { PresenceManager } from "./presence";
-import { PresenceMiddleware } from "./presenceMiddleware";
 import { MessageReceivedEvent, MessageType, PubNubReceiver } from "./pubnub";
 import {
 	MergeableEvent,
@@ -60,7 +56,6 @@ export {
 	DocumentMarkersChangedEvent,
 	Post,
 	PostsChangedEvent,
-	PresenceStatus,
 	Repository,
 	RepositoriesChangedEvent,
 	SessionChangedEventType,
@@ -149,14 +144,11 @@ export class CodeStreamSession implements Disposable {
 
 	private _disposable: Disposable | undefined;
 
-	private _api: ApiProvider | undefined;
 	private _email: string | undefined;
 	private _environment = CodeStreamEnvironment.Unknown;
 	private _id: string | undefined;
 	private _loginPromise: Promise<LoginResult> | undefined;
-	private _presenceManager: PresenceManager | undefined;
 	private _pubnub: PubNubReceiver | undefined;
-	private _cache: Cache | undefined;
 	private _state: SessionState | undefined;
 	private _signupToken: string | undefined;
 
@@ -191,7 +183,7 @@ export class CodeStreamSession implements Disposable {
 				this.fireDidChangeTeams(new TeamsChangedEvent(this, e));
 				break;
 			case MessageType.Users:
-				const user = e.users.find(u => u.id === this.userId);
+				const user = e.users.find(u => u.id === this.userId) as CSMe;
 				if (user != null) {
 					this._state!.updateUser(user);
 					this._state!.unreads.compute(user.lastReads, this.fireDidChangeUnreads);
@@ -211,11 +203,6 @@ export class CodeStreamSession implements Disposable {
 	}
 
 	@signedIn
-	get api(): ApiProvider {
-		return this._api!;
-	}
-
-	@signedIn
 	get channels() {
 		return this._state!.channels;
 	}
@@ -228,11 +215,6 @@ export class CodeStreamSession implements Disposable {
 	@signedIn
 	get directMessages() {
 		return this._state!.directMessages;
-	}
-
-	@signedIn
-	get presence() {
-		return this._presenceManager!;
 	}
 
 	@signedIn
@@ -421,9 +403,7 @@ export class CodeStreamSession implements Disposable {
 			}
 		} finally {
 			// Clean up saved state
-			this._presenceManager = undefined;
 			this._pubnub = undefined;
-			this._api = undefined;
 			this._state = undefined;
 			this._signupToken = undefined;
 
@@ -530,12 +510,8 @@ export class CodeStreamSession implements Disposable {
 			await Container.context.workspaceState.update(WorkspaceState.TeamId, teamId);
 		}
 
-		this._cache = new Cache(this);
-		this._pubnub = new PubNubReceiver(this._cache);
-		this._api = new CodeStreamApiProvider(this._serverUrl, token, teamId, user.id, this._cache);
-		this._presenceManager = new PresenceManager(this._api, this._id);
-
-		this._state = new SessionState(this, this._api, teamId, result.loginResponse);
+		this._pubnub = new PubNubReceiver();
+		this._state = new SessionState(this, teamId, result.loginResponse);
 
 		this._disposable = Disposable.from(
 			Container.agent.onDidChangeDocumentMarkers(
@@ -543,14 +519,10 @@ export class CodeStreamSession implements Disposable {
 				this
 			),
 			this._pubnub.onDidReceiveMessage(this.onMessageReceived, this),
-			this._pubnub,
-			this._presenceManager,
-			this._api.useMiddleware(new PresenceMiddleware(this._presenceManager))
+			this._pubnub
 		);
 
 		const unreads = await this._state.unreads.compute(user.lastReads, undefined);
-
-		this._presenceManager.online();
 
 		Logger.log(
 			`${email} signed into CodeStream (${this.serverUrl}); userId=${this.userId}, teamId=${teamId}`

@@ -1,9 +1,8 @@
 "use strict";
 import { Disposable, Event, EventEmitter } from "vscode";
+import { CSPost, CSRepository, CSStream, CSTeam, CSUser } from "../agent/agentConnection";
 import { Container } from "../container";
 import { Logger } from "../logger";
-import { CSPost, CSRepository, CSStream, CSTeam, CSUser } from "./api";
-import { Cache } from "./cache";
 
 export enum MessageType {
 	Posts = "posts",
@@ -52,12 +51,9 @@ export class PubNubReceiver implements Disposable {
 		return this._onDidReceiveMessage.event;
 	}
 
-	private _cache: Cache;
 	private _disposable: Disposable;
 
-	constructor(cache: Cache) {
-		this._cache = cache;
-
+	constructor() {
 		this._disposable = Disposable.from(
 			Container.agent.onDidReceivePubNubMessages(this.onPubNubMessagesReceived, this)
 		);
@@ -100,43 +96,24 @@ export class PubNubReceiver implements Disposable {
 
 				switch (key as MessageType) {
 					case "posts":
-						const posts = (await this._cache.resolvePosts(entities)) as CSPost[];
-						this._onDidReceiveMessage.fire({
-							type: MessageType.Posts,
-							posts
-						});
+						const posts = entities as CSPost[];
+						this._onDidReceiveMessage.fire({ type: MessageType.Posts, posts });
 						break;
 					case "repos":
-						const repos = (await this._cache.resolveRepos(entities)) as CSRepository[];
-
-						this._onDidReceiveMessage.fire({
-							type: MessageType.Repositories,
-							repos
-						});
+						const repos = entities as CSRepository[];
+						this._onDidReceiveMessage.fire({ type: MessageType.Repositories, repos });
 						break;
 					case "streams":
-						const streams = (await this._cache.resolveStreams(entities)) as CSStream[];
-
-						// // Subscribe to any new non-file, non-team streams
-						// this.subscribeCore([
-						// 	...Iterables.filterMap(
-						// 		streams,
-						// 		s =>
-						// 			CodeStreamApi.isStreamSubscriptionRequired(s, this._userId!)
-						// 				? `stream-${s.id}`
-						// 				: undefined
-						// 	)
-						// ]);
-
+						const streams = entities as CSStream[];
 						this._onDidReceiveMessage.fire({ type: MessageType.Streams, streams: streams });
 						break;
 					case "users": {
-						const users = (await this._cache.resolveUsers(entities)) as CSUser[];
+						const users = entities as CSUser[];
 						this._onDidReceiveMessage.fire({ type: MessageType.Users, users });
 						break;
 					}
 					case "teams": {
-						const teams = (await this._cache.resolveTeams(entities)) as CSTeam[];
+						const teams = entities as CSTeam[];
 						this._onDidReceiveMessage.fire({ type: MessageType.Teams, teams });
 						break;
 					}
@@ -147,26 +124,3 @@ export class PubNubReceiver implements Disposable {
 		}
 	}
 }
-
-// interface PubNubErrorStatus {
-// 	error: boolean;
-// 	category: string; // Pubnub.Categories;
-// 	operation: Pubnub.Operations;
-// 	statusCode: number;
-// 	errorData: {
-// 		status: number;
-// 		response: {
-// 			text: string;
-// 		};
-// 	};
-// }
-
-// interface PubNubAccessDeniedErrorResponse {
-// 	message: string;
-// 	payload: {
-// 		channels: string[];
-// 		error: boolean;
-// 		service: string;
-// 		status: number;
-// 	};
-// }

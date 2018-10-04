@@ -1,8 +1,8 @@
 "use strict";
 import { Disposable, Event, EventEmitter } from "vscode";
+import { CSEntity } from "../../agent/agentConnection";
 import { Logger } from "../../logger";
 import { Functions, Iterables } from "../../system";
-import { CSEntity } from "../api";
 import { CodeStreamSession } from "../session";
 
 export const CollectionItem = Symbol("codestream-item");

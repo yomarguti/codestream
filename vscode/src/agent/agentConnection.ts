@@ -25,7 +25,6 @@ import {
 	ServerOptions,
 	TransportKind
 } from "vscode-languageclient";
-import { ChannelServiceType, CSCodeBlock, CSPost, StreamType } from "../api/api";
 import { BuiltInCommands } from "../commands";
 import { extensionQualifiedId } from "../constants";
 import { Container } from "../container";
@@ -35,7 +34,7 @@ import {
 	AgentInitializeResult,
 	AgentOptions,
 	AgentResult,
-	ApiRequest,
+	ApiRequestType,
 	CodeStreamEnvironment,
 	CreateChannelStreamRequestType,
 	CreateDirectStreamRequestType,
@@ -43,22 +42,22 @@ import {
 	CreatePostWithCodeRequestType,
 	CreateRepoRequestType,
 	DeletePostRequestType,
-	DidChangeDocumentMarkersNotification,
 	DidChangeDocumentMarkersNotificationResponse,
-	DidChangeVersionCompatibilityNotification,
+	DidChangeDocumentMarkersNotificationType,
 	DidChangeVersionCompatibilityNotificationResponse,
-	DidReceivePubNubMessagesNotification,
+	DidChangeVersionCompatibilityNotificationType,
 	DidReceivePubNubMessagesNotificationResponse,
-	DocumentFromCodeBlockRequest,
+	DidReceivePubNubMessagesNotificationType,
+	DocumentFromCodeBlockRequestType,
 	DocumentFromCodeBlockResponse,
-	DocumentLatestRevisionRequest,
+	DocumentLatestRevisionRequestType,
 	DocumentLatestRevisionResponse,
-	DocumentMarkersRequest,
+	DocumentMarkersRequestType,
 	EditPostRequestType,
 	FetchFileStreamsRequestType,
 	FetchLatestPostRequestType,
 	FetchMarkerLocationsRequestType,
-	FetchPostsInRangeRequestType,
+	FetchPostsByRangeRequestType,
 	FetchPostsRequestType,
 	FetchReposRequestType,
 	FetchStreamsRequestType,
@@ -67,6 +66,7 @@ import {
 	FetchUsersRequestType,
 	FindRepoRequestType,
 	GetMarkerRequestType,
+	GetMeRequestType,
 	GetPostRequestType,
 	GetRepoRequestType,
 	GetStreamRequestType,
@@ -75,14 +75,25 @@ import {
 	JoinStreamRequestType,
 	LeaveStreamRequestType,
 	LogoutRequest,
-	LogoutRequestParams,
+	LogoutRequestType,
 	MarkPostUnreadRequestType,
 	MarkStreamReadRequestType,
 	PreparePostWithCodeRequestType,
 	ReactToPostRequestType,
+	UpdatePreferencesRequestType,
+	UpdatePresenceRequestType,
 	UpdateStreamRequestType,
 	VersionCompatibility
 } from "../shared/agent.protocol";
+import { InviteUserRequestType } from "../shared/agent.protocol.users";
+import {
+	ChannelServiceType,
+	CSCodeBlock,
+	CSMePreferences,
+	CSPost,
+	CSPresenceStatus,
+	StreamType
+} from "../shared/api.protocol";
 
 export {
 	AccessToken,
@@ -90,6 +101,7 @@ export {
 	AgentResult,
 	CodeStreamEnvironment
 } from "../shared/agent.protocol";
+export * from "../shared/api.protocol";
 
 export interface PubNubMessagesReceivedEvent {
 	[key: string]: any;
@@ -184,7 +196,7 @@ export class CodeStreamAgentConnection implements Disposable {
 
 	@started
 	async api<R>(url: string, init?: RequestInit, token?: string): Promise<R> {
-		return this.sendRequest(ApiRequest, {
+		return this.sendRequest(ApiRequestType, {
 			url: url,
 			init: init,
 			token: token
@@ -193,7 +205,7 @@ export class CodeStreamAgentConnection implements Disposable {
 
 	@started
 	getDocumentFromCodeBlock(block: CSCodeBlock): Promise<DocumentFromCodeBlockResponse | undefined> {
-		return this.sendRequest(DocumentFromCodeBlockRequest, {
+		return this.sendRequest(DocumentFromCodeBlockRequestType, {
 			repoId: block.repoId,
 			file: block.file,
 			markerId: block.markerId
@@ -202,13 +214,9 @@ export class CodeStreamAgentConnection implements Disposable {
 
 	@started
 	async getLatestRevision(uri: Uri): Promise<DocumentLatestRevisionResponse> {
-		return this.sendRequest(DocumentLatestRevisionRequest, {
+		return this.sendRequest(DocumentLatestRevisionRequestType, {
 			textDocument: { uri: uri.toString() }
 		});
-	}
-
-	async getPosts(streamId: string, limit = 100, beforeSeq?: number) {
-		return this.sendRequest(FetchPostsRequestType, { streamId, limit, beforeSeq });
 	}
 
 	async login(
@@ -251,6 +259,182 @@ export class CodeStreamAgentConnection implements Disposable {
 	logout() {
 		return this.stop();
 	}
+
+	@started
+	get markers() {
+		return this._markers;
+	}
+
+	private readonly _markers = new class {
+		constructor(private readonly _connection: CodeStreamAgentConnection) {}
+
+		fetch(uri: Uri) {
+			return this._connection.sendRequest(DocumentMarkersRequestType, {
+				textDocument: { uri: uri.toString() }
+			});
+		}
+
+		get(markerId: string) {
+			return this._connection.sendRequest(GetMarkerRequestType, { markerId });
+		}
+
+		fetchLocations(streamId: string, commitHash: string) {
+			return this._connection.sendRequest(FetchMarkerLocationsRequestType, {
+				streamId,
+				commitHash
+			});
+		}
+	}(this);
+
+	@started
+	get posts() {
+		return this._posts;
+	}
+
+	private readonly _posts = new class {
+		constructor(private readonly _connection: CodeStreamAgentConnection) {}
+
+		create(streamId: string, text: string, mentionedUserIds?: string[], parentPostId?: string) {
+			return this._connection.sendRequest(CreatePostRequestType, {
+				streamId: streamId,
+				text: text,
+				mentionedUserIds: mentionedUserIds,
+				parentPostId: parentPostId
+			});
+		}
+
+		createWithCode(
+			uri: Uri,
+			// document: TextDocument,
+			// range: Range,
+			text: string,
+			mentionedUserIds: string[],
+			code: string,
+			location: [number, number, number, number] | undefined,
+			source:
+				| {
+						file: string;
+						repoPath: string;
+						revision: string;
+						authors: { id: string; username: string }[];
+						remotes: { name: string; url: string }[];
+				  }
+				| undefined,
+			parentPostId: string | undefined,
+			streamId: string
+		): Promise<CSPost> {
+			return this._connection.sendRequest(CreatePostWithCodeRequestType, {
+				textDocument: { uri: uri.toString() },
+				// range: range,
+				// dirty: document.isDirty,
+				mentionedUserIds,
+				text: text,
+				code: code,
+				location: location,
+				source: source,
+				parentPostId: parentPostId,
+				streamId: streamId
+			});
+		}
+
+		fetch(streamId: string, limit = 100, beforeSeq?: number) {
+			return this._connection.sendRequest(FetchPostsRequestType, {
+				streamId: streamId,
+				limit: limit,
+				beforeSeq: beforeSeq
+			});
+		}
+
+		fetchByRange(streamId: string, start: number, end: number) {
+			return this._connection.sendRequest(FetchPostsByRangeRequestType, {
+				streamId: streamId,
+				range: `${start}-${end}`
+			});
+		}
+
+		fetchLatest(streamId: string) {
+			return this._connection.sendRequest(FetchLatestPostRequestType, { streamId: streamId });
+		}
+
+		get(streamId: string, postId: string) {
+			return this._connection.sendRequest(GetPostRequestType, {
+				streamId: streamId,
+				id: postId
+			});
+		}
+
+		delete(streamId: string, postId: string) {
+			return this._connection.sendRequest(DeletePostRequestType, {
+				id: postId,
+				streamId: streamId
+			});
+		}
+
+		edit(streamId: string, postId: string, text: string, mentionedUserIds?: string[]) {
+			return this._connection.sendRequest(EditPostRequestType, {
+				id: postId,
+				streamId: streamId,
+				text: text,
+				mentionedUserIds: mentionedUserIds
+			});
+		}
+
+		markUnread(streamId: string, postId: string) {
+			return this._connection.sendRequest(MarkPostUnreadRequestType, {
+				id: postId,
+				streamId: streamId
+			});
+		}
+
+		prepareCode(document: TextDocument, range: Range) {
+			return this._connection.sendRequest(PreparePostWithCodeRequestType, {
+				textDocument: { uri: document.uri.toString() },
+				range: range,
+				dirty: document.isDirty
+			});
+		}
+
+		react(streamId: string, postId: string, reactions: { [emoji: string]: boolean }) {
+			return this._connection.sendRequest(ReactToPostRequestType, {
+				id: postId,
+				streamId: streamId,
+				emojis: reactions
+			});
+		}
+	}(this);
+
+	@started
+	get repos() {
+		return this._repos;
+	}
+
+	private readonly _repos = new class {
+		constructor(private readonly _connection: CodeStreamAgentConnection) {}
+
+		create(url: string, knownCommitHashes: string[]) {
+			return this._connection.sendRequest(CreateRepoRequestType, {
+				url,
+				knownCommitHashes
+			});
+		}
+
+		find(url: string, firstCommitHashes: string[]) {
+			return this._connection.sendRequest(FindRepoRequestType, {
+				url,
+				firstCommitHashes
+			});
+		}
+
+		fetch() {
+			return this._connection.sendRequest(FetchReposRequestType, {});
+		}
+
+		get(repoId: string) {
+			return this._connection.sendRequest(GetRepoRequestType, {
+				repoId
+			});
+		}
+	}(this);
 
 	@started
 	get streams() {
@@ -335,144 +519,22 @@ export class CodeStreamAgentConnection implements Disposable {
 	}(this);
 
 	@started
-	get posts() {
-		return this._posts;
+	get teams() {
+		return this._teams;
 	}
 
-	private readonly _posts = new class {
+	private readonly _teams = new class {
 		constructor(private readonly _connection: CodeStreamAgentConnection) {}
 
-		create(streamId: string, text: string, mentionedUserIds?: string[], parentPostId?: string) {
-			return this._connection.sendRequest(CreatePostRequestType, {
-				streamId: streamId,
-				text: text,
-				mentionedUserIds: mentionedUserIds,
-				parentPostId: parentPostId
+		fetch(teamIds: string[]) {
+			return this._connection.sendRequest(FetchTeamsRequestType, {
+				teamIds
 			});
 		}
 
-		createWithCode(
-			uri: Uri,
-			// document: TextDocument,
-			// range: Range,
-			text: string,
-			mentionedUserIds: string[],
-			code: string,
-			location: [number, number, number, number] | undefined,
-			source:
-				| {
-						file: string;
-						repoPath: string;
-						revision: string;
-						authors: { id: string; username: string }[];
-						remotes: { name: string; url: string }[];
-				  }
-				| undefined,
-			parentPostId: string | undefined,
-			streamId: string
-		): Promise<CSPost> {
-			return this._connection.sendRequest(CreatePostWithCodeRequestType, {
-				textDocument: { uri: uri.toString() },
-				// range: range,
-				// dirty: document.isDirty,
-				mentionedUserIds,
-				text: text,
-				code: code,
-				location: location,
-				source: source,
-				parentPostId: parentPostId,
-				streamId: streamId
-			});
-		}
-
-		fetch(streamId: string, limit = 100, beforeSeq?: number) {
-			return this._connection.sendRequest(FetchPostsRequestType, {
-				streamId: streamId,
-				limit: limit,
-				beforeSeq: beforeSeq
-			});
-		}
-
-		fetchLatest(streamId: string) {
-			return this._connection.sendRequest(FetchLatestPostRequestType, { streamId: streamId });
-		}
-
-		fetchInRange(streamId: string, start: number, end: number) {
-			return this._connection.sendRequest(FetchPostsInRangeRequestType, {
-				streamId: streamId,
-				range: `${start}-${end}`
-			});
-		}
-
-		get(streamId: string, postId: string) {
-			return this._connection.sendRequest(GetPostRequestType, {
-				streamId: streamId,
-				id: postId
-			});
-		}
-
-		delete(streamId: string, postId: string) {
-			return this._connection.sendRequest(DeletePostRequestType, {
-				id: postId,
-				streamId: streamId
-			});
-		}
-
-		edit(streamId: string, postId: string, text: string, mentionedUserIds?: string[]) {
-			return this._connection.sendRequest(EditPostRequestType, {
-				id: postId,
-				streamId: streamId,
-				text: text,
-				mentionedUserIds: mentionedUserIds
-			});
-		}
-
-		markUnread(streamId: string, postId: string) {
-			return this._connection.sendRequest(MarkPostUnreadRequestType, {
-				id: postId,
-				streamId: streamId
-			});
-		}
-
-		prepareCode(document: TextDocument, range: Range) {
-			return this._connection.sendRequest(PreparePostWithCodeRequestType, {
-				textDocument: { uri: document.uri.toString() },
-				range: range,
-				dirty: document.isDirty
-			});
-		}
-
-		react(streamId: string, postId: string, reactions: { [emoji: string]: boolean }) {
-			return this._connection.sendRequest(ReactToPostRequestType, {
-				id: postId,
-				streamId: streamId,
-				emojis: reactions
-			});
-		}
-	}(this);
-
-	@started
-	get markers() {
-		return this._markers;
-	}
-
-	private readonly _markers = new class {
-		constructor(private readonly _connection: CodeStreamAgentConnection) {}
-
-		fetch(uri: Uri) {
-			return this._connection.sendRequest(DocumentMarkersRequest, {
-				textDocument: { uri: uri.toString() }
-			});
-		}
-
-		get(markerId: string) {
-			return this._connection.sendRequest(GetMarkerRequestType, { markerId });
-		}
-
-		fetchLocations(streamId: string, commitHash: string) {
-			return this._connection.sendRequest(FetchMarkerLocationsRequestType, {
-				streamId,
-				commitHash
+		get(teamId: string) {
+			return this._connection.sendRequest(GetTeamRequestType, {
+				teamId
 			});
 		}
 	}(this);
@@ -494,58 +556,28 @@ export class CodeStreamAgentConnection implements Disposable {
 				userId
 			});
 		}
-	}(this);
 
-	@started
-	get teams() {
-		return this._users;
-	}
-
-	private readonly _teams = new class {
-		constructor(private readonly _connection: CodeStreamAgentConnection) {}
-
-		fetch(teamIds: string[]) {
-			return this._connection.sendRequest(FetchTeamsRequestType, {
-				teamIds
+		invite(email: string, fullName?: string) {
+			return this._connection.sendRequest(InviteUserRequestType, {
+				email: email,
+				fullName: fullName
 			});
 		}
 
-		get(teamId: string) {
-			return this._connection.sendRequest(GetTeamRequestType, {
-				teamId
-			});
+		me() {
+			return this._connection.sendRequest(GetMeRequestType, {});
 		}
-	}(this);
 
-	@started
-	get repos() {
-		return this._repos;
-	}
-
-	private readonly _repos = new class {
-		constructor(private readonly _connection: CodeStreamAgentConnection) {}
-
-		create(url: string, knownCommitHashes: string[]) {
-			return this._connection.sendRequest(CreateRepoRequestType, {
-				url,
-				knownCommitHashes
+		updatePresence(status: CSPresenceStatus) {
+			return this._connection.sendRequest(UpdatePresenceRequestType, {
+				sessionId: Container.session.id,
+				status: status
 			});
 		}
 
-		find(url: string, firstCommitHashes: string[]) {
-			return this._connection.sendRequest(FindRepoRequestType, {
-				url,
-				firstCommitHashes
-			});
-		}
-
-		fetch() {
-			return this._connection.sendRequest(FetchReposRequestType, {});
-		}
-
-		get(repoId: string) {
-			return this._connection.sendRequest(GetRepoRequestType, {
-				repoId
+		updatePreferences(preferences: CSMePreferences) {
+			return this._connection.sendRequest(UpdatePreferencesRequestType, {
+				preferences
 			});
 		}
 	}(this);
@@ -555,7 +587,7 @@ export class CodeStreamAgentConnection implements Disposable {
 		this._onDidChangeDocumentMarkers.fire({ uri: Uri.parse(e.textDocument.uri) });
 	}
 
-	private onLogout(e: LogoutRequestParams) {
+	private onLogout(e: LogoutRequest) {
 		Logger.log("AgentConnection.onLogout", `reason=${e.reason}`);
 
 		void Container.session.goOffline();
@@ -642,11 +674,11 @@ export class CodeStreamAgentConnection implements Disposable {
 	private async sendRequest(type: any, params?: any): Promise<any> {
 		try {
 			const traceParams =
-				type.method === ApiRequest.method ? params.init && params.init.body : params;
+				type.method === ApiRequestType.method ? params.init && params.init.body : params;
 
 			Logger.log(
 				`AgentConnection.sendRequest(${type.method})${
-					type.method === ApiRequest.method ? `: ${params.url}` : ""
+					type.method === ApiRequestType.method ? `: ${params.url}` : ""
 				}`,
 				traceParams ? `params=${sanitize(JSON.stringify(traceParams))}` : ""
 			);
@@ -680,20 +712,20 @@ export class CodeStreamAgentConnection implements Disposable {
 		this._disposable = this._client.start();
 		void (await this._client.onReady());
 
-		this._client.onRequest(LogoutRequest, this.onLogout.bind(this));
+		this._client.onRequest(LogoutRequestType, this.onLogout.bind(this));
 
 		this._client.onNotification(
-			DidReceivePubNubMessagesNotification,
+			DidReceivePubNubMessagesNotificationType,
 			this.onPubNubMessagesReceived.bind(this)
 		);
 
 		this._client.onNotification(
-			DidChangeDocumentMarkersNotification,
+			DidChangeDocumentMarkersNotificationType,
 			this.onDocumentMarkersChanged.bind(this)
 		);
 
 		this._client.onNotification(
-			DidChangeVersionCompatibilityNotification,
+			DidChangeVersionCompatibilityNotificationType,
 			this.onVersionCompatibilityChanged.bind(this)
 		);
 

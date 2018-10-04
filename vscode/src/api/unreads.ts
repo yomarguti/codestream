@@ -1,9 +1,8 @@
 "use strict";
+import { CSPost, CSStream, StreamType } from "../agent/agentConnection";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { Arrays } from "../system/array";
-import { CSPost, CSStream, StreamType } from "./api";
-import { ApiProvider } from "./apiProvider";
 import { CodeStreamSession, UnreadsChangedEvent } from "./session";
 
 export interface Unreads {
@@ -18,7 +17,6 @@ export class UnreadCounter {
 
 	constructor(
 		public readonly session: CodeStreamSession,
-		private readonly _api: ApiProvider,
 		private readonly _currentUserId: string
 	) {}
 
@@ -135,7 +133,7 @@ export class UnreadCounter {
 					let unreadPosts;
 					try {
 						latestPost = (await Container.agent.posts.fetchLatest(streamId)).post;
-						unreadPosts = (await Container.agent.posts.fetchInRange(
+						unreadPosts = (await Container.agent.posts.fetchByRange(
 							streamId,
 							lastReadSeqNum + 1,
 							latestPost.seqNum

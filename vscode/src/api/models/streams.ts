@@ -1,15 +1,21 @@
 "use strict";
+import {
+	ChannelServiceType,
+	CSChannelStream,
+	CSDirectStream,
+	CSFileStream,
+	CSStream,
+	StreamType
+} from "../../agent/agentConnection";
 import { Container } from "../../container";
-import { ChannelServiceType } from "../../shared/api.protocol";
 import { Iterables, Strings } from "../../system";
-import { CSChannelStream, CSDirectStream, CSFileStream, CSStream, StreamType } from "../api";
 import { CodeStreamSession, StreamsChangedEvent, StreamsMembershipChangedEvent } from "../session";
 import { CodeStreamCollection, CodeStreamItem } from "./collection";
 import { Post, PostCollection } from "./posts";
 import { Repository } from "./repositories";
 import { User } from "./users";
 
-export { StreamType } from "../api";
+export { StreamType } from "../../agent/agentConnection";
 
 abstract class StreamBase<T extends CSStream> extends CodeStreamItem<T> {
 	constructor(session: CodeStreamSession, stream: T) {

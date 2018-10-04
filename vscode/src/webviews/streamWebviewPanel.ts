@@ -24,7 +24,7 @@ import {
 	CSTeam,
 	CSUser,
 	LoginResult
-} from "../api/api";
+} from "../agent/agentConnection";
 import {
 	CodeStreamEnvironment,
 	CodeStreamSession,
@@ -449,7 +449,7 @@ export class StreamWebviewPanel implements Disposable {
 							break;
 						}
 						case "save-user-preference": {
-							const response = await this.session.api.savePreferences(body.params);
+							const response = await Container.agent.users.updatePreferences(body.params);
 
 							this.postMessage({
 								type: WebviewIpcMessageType.response,
@@ -459,13 +459,13 @@ export class StreamWebviewPanel implements Disposable {
 							break;
 						}
 						case "invite": {
-							const { email, teamId, fullName } = body.params;
+							const { email, fullName } = body.params;
 
 							this.postMessage({
 								type: WebviewIpcMessageType.response,
 								body: {
 									id: body.id,
-									payload: await this.session.api.invite(email, teamId, fullName)
+									payload: await Container.agent.users.invite(email, fullName)
 								}
 							});
 

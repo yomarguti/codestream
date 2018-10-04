@@ -1,7 +1,5 @@
 "use strict";
-import { LoginResponse } from "./api";
-import { CSUser } from "./api";
-import { ApiProvider } from "./apiProvider";
+import { CSMe, LoginResponse } from "../agent/agentConnection";
 import { RepositoryCollection } from "./models/repositories";
 import {
 	ChannelAndDirectStreamCollection,
@@ -18,11 +16,10 @@ export class SessionState {
 
 	constructor(
 		private readonly _session: CodeStreamSession,
-		api: ApiProvider,
 		public readonly teamId: string,
 		private readonly _data: LoginResponse
 	) {
-		this._unreads = new UnreadCounter(this._session, api, this._data.user.id);
+		this._unreads = new UnreadCounter(this._session, this._data.user.id);
 	}
 
 	get pubnubKey() {
@@ -114,7 +111,7 @@ export class SessionState {
 		this._team = undefined;
 	}
 
-	updateUser(user: CSUser) {
+	updateUser(user: CSMe) {
 		this._data.user = user;
 		this._user = undefined;
 	}

@@ -1,7 +1,7 @@
 "use strict";
 import { Disposable, Extension, extensions, Uri } from "vscode";
 import * as vslsApi from "vsls/vscode";
-import { ChannelServiceType } from "../api/api";
+import { ChannelServiceType } from "../agent/agentConnection";
 import { ServiceChannelStreamCreationOptions } from "../api/models/streams";
 import { SessionStatus, SessionStatusChangedEvent, StreamThread, StreamType } from "../api/session";
 import { ContextKeys, setContext } from "../common";

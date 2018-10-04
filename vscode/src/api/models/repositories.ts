@@ -1,6 +1,6 @@
 "use strict";
+import { CSRepository } from "../../agent/agentConnection";
 import { Container } from "../../container";
-import { CSRepository } from "../api";
 import { CodeStreamSession, RepositoriesChangedEvent } from "../session";
 import { CodeStreamCollection, CodeStreamItem } from "./collection";
 import { FileStreamCollection } from "./streams";

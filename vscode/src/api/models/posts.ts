@@ -1,8 +1,8 @@
 "use strict";
 import { Range, Uri } from "vscode";
+import { CSPost } from "../../agent/agentConnection";
 import { Container } from "../../container";
 import { Dates, memoize } from "../../system";
-import { CSPost } from "../api";
 import { CodeStreamSession, PostsChangedEvent } from "../session";
 import { CodeStreamCollection, CodeStreamItem } from "./collection";
 import { Stream } from "./streams";

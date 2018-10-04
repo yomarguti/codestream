@@ -1,5 +1,6 @@
 "use strict";
-import { CSTeam } from "../api";
+import { CSTeam } from "../../agent/agentConnection";
+import { Container } from "../../container";
 import { CodeStreamSession, TeamsChangedEvent } from "../session";
 import { CodeStreamCollection, CodeStreamItem } from "./collection";
 
@@ -28,7 +29,8 @@ export class TeamCollection extends CodeStreamCollection<Team, CSTeam> {
 		return new Team(this.session, e);
 	}
 
-	protected fetch(): Promise<CSTeam[]> {
-		return this.session.api.getTeams(this._ids);
+	protected async fetch(): Promise<CSTeam[]> {
+		const response = await Container.agent.teams.fetch(this._ids);
+		return response.teams;
 	}
 }

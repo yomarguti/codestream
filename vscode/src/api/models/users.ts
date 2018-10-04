@@ -1,6 +1,7 @@
 "use strict";
+import { CSMe, CSUser } from "../../agent/agentConnection";
+import { Container } from "../../container";
 import { Iterables } from "../../system";
-import { CSUser } from "../api";
 import { CodeStreamSession, UsersChangedEvent } from "../session";
 import { CodeStreamCollection, CodeStreamItem } from "./collection";
 
@@ -30,11 +31,11 @@ export class User extends CodeStreamItem<CSUser> {
 	}
 
 	get lastReads(): { [streamId: string]: number } {
-		return this.entity.lastReads || Object.create(null);
+		return (this.entity as CSMe).lastReads || Object.create(null);
 	}
 
 	hasMutedChannel(streamId: string) {
-		const preferences = this.entity.preferences;
+		const preferences = (this.entity as CSMe).preferences;
 		if (preferences === undefined) return false;
 		const mutedStreams = preferences.mutedStreams;
 		if (mutedStreams === undefined) return false;
@@ -97,7 +98,7 @@ export class UserCollection extends CodeStreamCollection<User, CSUser> {
 	}
 
 	protected async fetch() {
-		const users = await this.session.api.getUsers();
-		return users;
+		const response = await Container.agent.users.fetch();
+		return response.users;
 	}
 }
