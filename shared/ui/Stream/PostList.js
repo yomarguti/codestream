@@ -121,8 +121,7 @@ export default infiniteLoadable(
 			this.list = element;
 		};
 
-		// TODO: maybe this should be more like `onNeedsResize`
-		onUpdatePost = index => {
+		onNeedsResize = index => {
 			const { startIndex, stopIndex } = this.lastRenderedRowsData;
 			if (index >= startIndex && index <= stopIndex) {
 				this.recomputeVisibleRowHeights(startIndex, stopIndex);
@@ -153,10 +152,12 @@ export default infiniteLoadable(
 		};
 
 		recomputeVisibleRowHeights = debounceToAnimationFrame((start, stop) => {
-			for (let i = start; i < stop; i++) {
-				this.cache.clear(i);
-				safe(() => this.list.recomputeRowHeights(i));
-			}
+			this.cache.clearAll();
+			this.list.recomputeRowHeights();
+			// for (let i = start; i < stop; i++) {
+			// 	this.cache.clear(i);
+			// 	safe(() => this.list.recomputeRowHeights(i));
+			// }
 		});
 
 		onRowsRendered = data => {
@@ -336,7 +337,7 @@ export default infiniteLoadable(
 													action={postAction}
 													index={index}
 													focusOnRow={this.focusOnRow}
-													onNeedsResize={this.onUpdatePost}
+													onNeedsResize={this.onNeedsResize}
 													showDetails={this.props.showDetails}
 													streamId={this.props.streamId}
 												/>
