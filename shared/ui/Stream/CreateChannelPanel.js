@@ -12,8 +12,8 @@ import { FormattedMessage } from "react-intl";
 import Select from "react-select";
 
 const isNameInvalid = name => {
-	const nameRegex = new RegExp("[.~#%&*{}+/:<>?|'\"]");
-	return nameRegex.test(name);
+	const nameRegex = new RegExp("[.~#%&*{}+/:<>?|'\"A-Z]");
+	return name.length > 21 || nameRegex.test(name);
 };
 
 export class SimpleCreateChannelPanel extends Component {
@@ -52,7 +52,7 @@ export class SimpleCreateChannelPanel extends Component {
 			"off-right": inactive && !shrink
 		});
 
-		const tooltipTitle = "We don't support these characters: .~#%&*{}+/:<>?|'\".";
+		const tooltipTitle = "We don't support these characters: .~#%&*{}+/:<>?|'\"A-Z.";
 
 		this.tabIndexCount = 0;
 
@@ -107,6 +107,7 @@ export class SimpleCreateChannelPanel extends Component {
 										type="text"
 										name="name"
 										tabIndex={this.tabIndex()}
+										maxLength={21}
 										id="channel-name-input"
 										value={this.state.name}
 										onChange={e => this.setState({ name: e.target.value })}
