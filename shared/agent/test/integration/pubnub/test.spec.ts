@@ -30,7 +30,7 @@ import { SubscriptionTimeoutRecoveryTest } from "./subscriptionTimeoutRecoveryTe
 import { SubscriptionTimeoutTest } from "./subscriptionTimeoutTest";
 
 const TesterConfig: PubnubTesterConfig = {
-	apiOrigin: process.env.CS_AGENT_API_ORIGIN || "https://127.0.0.1:12079"
+	apiOrigin: process.env.LSPAGENT_API_ORIGIN || "https://localhost.codestream.us:12079"
 };
 
 const Tests: PubnubTester[] = [

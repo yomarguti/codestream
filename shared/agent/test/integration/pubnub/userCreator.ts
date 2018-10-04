@@ -4,7 +4,7 @@ import * as Randomstring from "randomstring";
 import { ApiRequester } from "./apiRequester";
 import { ConfirmRequest, LoginResponse, RegisterRequest, RegisterResponse } from "./types";
 
-const CONFIRMATION_CHEAT = process.env.CS_AGENT_CONFIRMATION_CHEAT || "";
+const CONFIRMATION_CHEAT = process.env.LSPAGENT_CONFIRMATION_CHEAT || "";
 
 export class UserCreator {
 	private _registerResponse: RegisterResponse | undefined;

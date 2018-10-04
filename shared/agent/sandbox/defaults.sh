@@ -10,6 +10,12 @@
 #         (eg. this file is LSPAGENT_TOP/sandbox/defaults.sh)
 #  LSPAGENT_SANDBOX  Path to the root directory of the sandbox tree
 
+# Installation options
+if [ -f "$LSPAGENT_SANDBOX/sb.options" ]; then
+	echo "Loading extra params from sb.options"
+	. $LSPAGENT_SANDBOX/sb.options
+	export `grep ^LSPAGENT_ $LSPAGENT_SANDBOX/sb.options|cut -f1 -d=`
+fi
 
 # Uncomment and setup if yarn is required. Available versions can be seen
 # with the command:
@@ -38,3 +44,9 @@ export LSPAGENT_CONFS=$LSPAGENT_SANDBOX/conf  # config files directory
 export LSPAGENT_DATA=$LSPAGENT_SANDBOX/data   # data directory
 export LSPAGENT_PIDS=$LSPAGENT_SANDBOX/pid    # pid files directory
 [ -z "$LSPAGENT_ASSET_ENV" ] && export LSPAGENT_ASSET_ENV=local
+
+# API service origin (default is specified)
+# [ -z "$LSPAGENT_API_ORIGIN" ] && export LSPAGENT_API_ORIGIN=https://localhost.codestream.us:12079
+
+# description required
+# [ -z "$LSPAGENT_CONFIRMATION_CHEAT" ] && export LSPAGENT_CONFIRMATION_CHEAT=""
