@@ -367,7 +367,7 @@ export class StreamWebviewPanel implements Disposable {
 								type: WebviewIpcMessageType.response,
 								body: {
 									id: body.id,
-									payload: await Container.agent.posts.fetch(streamId, limit, beforeSeqNum)
+									payload: (await Container.agent.posts.fetch(streamId, limit, beforeSeqNum)).posts
 								}
 							});
 							break;
