@@ -58,7 +58,7 @@ export class Login extends React.Component {
 		if (this.state.tokenError === TOKEN_INVALID) {
 			return (
 				<small className="error-message">
-					<span>That token is invalid</span>
+					<span>Invalid Token</span>
 				</small>
 			);
 		}
@@ -141,6 +141,7 @@ export class Login extends React.Component {
 
 	handleSubmitToken = async event => {
 		event.preventDefault();
+		if (event.target.token.value.trim() === "") return;
 		this.setState({ validatingToken: true });
 		try {
 			await this.props.validateSignup(event.target.token.value);
