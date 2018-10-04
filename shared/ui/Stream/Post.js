@@ -165,9 +165,15 @@ class Post extends React.Component {
 			extension = extension.substring(1);
 			if (extension === "tsx") extension = "jsx"; // Placeholder until https://github.com/highlightjs/highlight.js/pull/1663 get's merged
 		}
-		const codeHTML = extension
-			? hljs.highlight(extension, codeBlock.code).value
-			: hljs.highlightAuto(codeBlock.code).value;
+		let codeHTML;
+		if (extension) {
+			try {
+				codeHTML = hljs.highlight(extension, codeBlock.code).value;
+			} catch (e) {
+				/* the language for that file extension may not be supported */
+				codeHTML = hljs.highlightAuto(codeBlock.code).value;
+			}
+		} else codeHTML = hljs.highlightAuto(codeBlock.code).value;
 
 		return <div className="code" dangerouslySetInnerHTML={{ __html: codeHTML }} />;
 	}
