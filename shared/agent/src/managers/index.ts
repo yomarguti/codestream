@@ -89,6 +89,10 @@ export class UniqueIndex<T extends CSEntity> extends BaseIndex<T> {
 		return this._data.get(value);
 	}
 
+	getAll(): T[] {
+		return Array.from(this._data.values());
+	}
+
 	has(value: any): boolean {
 		return this._data.has(value);
 	}

@@ -97,7 +97,6 @@ import {
 	EditPostResponse,
 	FindRepoResponse,
 	GetMarkerResponse,
-	GetMarkersResponse,
 	GetMeResponse,
 	GetPostResponse,
 	GetRepoResponse,
@@ -516,14 +515,20 @@ export class CodeStreamSession {
 		return api.getPostsInRange(session.apiToken, session.teamId, request.streamId, request.range);
 	}
 
-	handleGetRepo(request: GetRepoRequest): Promise<GetRepoResponse> {
-		const { api, session } = Container.instance();
-		return api.getRepo(session.apiToken, session.teamId, request.repoId);
+	async handleGetRepo(request: GetRepoRequest): Promise<GetRepoResponse> {
+		const { repoManager } = Container.instance();
+		const repo = await repoManager.get(request.repoId);
+		return {
+			repo
+		};
 	}
 
-	handleFetchRepos(request: FetchReposRequest): Promise<FetchReposResponse> {
-		const { api, session } = Container.instance();
-		return api.getRepos(session.apiToken, session.teamId);
+	async handleFetchRepos(request: FetchReposRequest): Promise<FetchReposResponse> {
+		const { repoManager } = Container.instance();
+		const repos = await repoManager.getAll();
+		return {
+			repos
+		};
 	}
 
 	handleGetStream(request: GetStreamRequest): Promise<GetStreamResponse> {

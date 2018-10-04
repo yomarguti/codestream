@@ -54,6 +54,11 @@ export class Cache<T extends CSEntity> {
 		return index.get(id);
 	}
 
+	getAll(): T[] {
+		const index = this.indexes.get("id") as UniqueIndex<T>;
+		return index.getAll();
+	}
+
 	/**
 	 * Get an entity by field. Requires an unique index.
 	 *

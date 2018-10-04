@@ -6,6 +6,7 @@ import { DocumentManager } from "./documentManager";
 import { GitService } from "./git/gitService";
 import { Logger } from "./logger";
 import { PostManager } from "./managers/postManager";
+import { RepoManager } from "./managers/repoManager";
 import { CodeStreamSession } from "./session";
 
 const envRegex = /https?:\/\/(pd-|qa-)?api.codestream.(?:us|com)/;
@@ -55,6 +56,7 @@ class ServiceContainer {
 	// public readonly markers = new MarkerManager();
 	// public readonly markerLocations = new MarkerLocationManager();
 	public readonly postManager = new PostManager();
+	public readonly repoManager = new RepoManager();
 	// public readonly streams = new StreamManager();
 
 	updateConfig(config: Config) {
