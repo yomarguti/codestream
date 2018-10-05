@@ -199,6 +199,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 		return { ...response, teamId: options.teamId };
 	}
 
+	grantPubNubChannelAccess(token: string, channel: string): Promise<{}> {
+		return this.put(`/grant/${channel}`, {}, token);
+	}
+
 	getMe() {
 		return this.get<CSGetMeResponse>("/users/me", this._token);
 	}
@@ -518,10 +522,17 @@ export class CodeStreamApiProvider implements ApiProvider {
 	// // }
 
 	fetchTeams(request: FetchTeamsRequest): Promise<FetchTeamsResponse> {
+		let params = "";
+		if (request.mine) {
+			params = `&mine`;
+		}
+
+		if (request.teamIds && request.teamIds.length) {
+			params += `&ids=${request.teamIds.join(",")}`;
+		}
+
 		return this.get<CSGetTeamsResponse>(
-			`/teams${
-				request.teamIds && request.teamIds.length ? `?ids=${request.teamIds.join(",")}` : ""
-			}`,
+			`/teams${params ? `?${params.substring(1)}` : ""}`,
 			this._token
 		);
 	}

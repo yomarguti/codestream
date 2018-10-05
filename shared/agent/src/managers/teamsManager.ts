@@ -18,7 +18,7 @@ export class TeamsManager extends EntityManager<CSTeam> {
 
 	async getAll(): Promise<CSTeam[]> {
 		if (!this.loaded) {
-			const response = await Container.instance().api2.fetchTeams({ mine: true });
+			const response = await Container.instance().api.fetchTeams({ mine: true });
 			for (const team of response.teams) {
 				this.cache.set(team);
 			}
@@ -29,7 +29,7 @@ export class TeamsManager extends EntityManager<CSTeam> {
 	}
 
 	protected async fetch(teamId: Id): Promise<CSTeam> {
-		const response = await Container.instance().api2.getTeam({ teamId: teamId });
+		const response = await Container.instance().api.getTeam({ teamId: teamId });
 		return response.team;
 	}
 

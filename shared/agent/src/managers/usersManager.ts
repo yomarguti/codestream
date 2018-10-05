@@ -33,7 +33,7 @@ export class UsersManager extends EntityManager<CSUser> {
 
 	async getAll(): Promise<CSUser[]> {
 		if (!this.loaded) {
-			const response = await Container.instance().api2.fetchUsers({});
+			const response = await Container.instance().api.fetchUsers({});
 			for (const user of response.users) {
 				this.cache.set(user);
 			}
@@ -45,21 +45,21 @@ export class UsersManager extends EntityManager<CSUser> {
 
 	@lspHandler(InviteUserRequestType)
 	inviteUser(request: InviteUserRequest) {
-		return Container.instance().api2.inviteUser(request);
+		return Container.instance().api.inviteUser(request);
 	}
 
 	@lspHandler(UpdatePreferencesRequestType)
 	updatePreferences(request: UpdatePreferencesRequest) {
-		return Container.instance().api2.updatePreferences(request);
+		return Container.instance().api.updatePreferences(request);
 	}
 
 	@lspHandler(UpdatePresenceRequestType)
 	updatePresence(request: UpdatePresenceRequest) {
-		return Container.instance().api2.updatePresence(request);
+		return Container.instance().api.updatePresence(request);
 	}
 
 	protected async fetch(userId: Id): Promise<CSUser> {
-		const response = await Container.instance().api2.getUser({ userId: userId });
+		const response = await Container.instance().api.getUser({ userId: userId });
 		return response.user;
 	}
 

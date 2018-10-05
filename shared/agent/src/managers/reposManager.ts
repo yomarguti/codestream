@@ -24,17 +24,17 @@ export class ReposManager extends EntityManager<CSRepository> {
 
 	@lspHandler(CreateRepoRequestType)
 	createRepo(request: CreateRepoRequest): Promise<CreateRepoResponse> {
-		return Container.instance().api2.createRepo(request);
+		return Container.instance().api.createRepo(request);
 	}
 
 	@lspHandler(FindRepoRequestType)
 	findRepo(request: FindRepoRequest): Promise<FindRepoResponse> {
-		return Container.instance().api2.findRepo(request);
+		return Container.instance().api.findRepo(request);
 	}
 
 	async getAll(): Promise<CSRepository[]> {
 		if (!this.loaded) {
-			const response = await Container.instance().api2.fetchRepos({});
+			const response = await Container.instance().api.fetchRepos({});
 			for (const repo of response.repos) {
 				this.cache.set(repo);
 			}
@@ -45,7 +45,7 @@ export class ReposManager extends EntityManager<CSRepository> {
 	}
 
 	protected async fetch(repoId: Id): Promise<CSRepository> {
-		const response = await Container.instance().api2.getRepo({ repoId: repoId });
+		const response = await Container.instance().api.getRepo({ repoId: repoId });
 		return response.repo;
 	}
 

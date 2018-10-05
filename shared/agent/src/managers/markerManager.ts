@@ -6,8 +6,8 @@ import { EntityManager, Id } from "./managers";
 
 export class MarkerManager extends EntityManager<CSMarker> {
 	protected async fetch(id: Id): Promise<CSMarker> {
-		const { api, state } = Container.instance();
-		const response = await api.getMarker(state.apiToken, state.teamId, id);
+		const { apiDeprecated, state } = Container.instance();
+		const response = await apiDeprecated.getMarker(state.apiToken, state.teamId, id);
 		return response.marker;
 	}
 
@@ -28,8 +28,8 @@ export class MarkerManager extends EntityManager<CSMarker> {
 
 	protected async fetchByStreamId(values: any[]): Promise<CSMarker[]> {
 		const [streamId] = values;
-		const { api, state } = Container.instance();
-		const response = await api.getMarkers(state.apiToken, state.teamId, streamId);
+		const { apiDeprecated, state } = Container.instance();
+		const response = await apiDeprecated.getMarkers(state.apiToken, state.teamId, streamId);
 		return response.markers;
 	}
 

@@ -105,6 +105,8 @@ export interface ApiProvider {
 
 	login(options: LoginOptions): Promise<LoginResponse & { teamId: string }>;
 
+	grantPubNubChannelAccess(token: string, channel: string): Promise<{}>;
+
 	getMe(): Promise<GetMeResponse>;
 	updatePreferences(request: UpdatePreferencesRequest): Promise<GetMeResponse>;
 	updatePresence(request: UpdatePresenceRequest): Promise<UpdatePresenceResponse>;

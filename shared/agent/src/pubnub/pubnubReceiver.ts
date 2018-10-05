@@ -1,7 +1,6 @@
 "use strict";
 import { Disposable, Emitter, Event } from "vscode-languageserver";
-import { CodeStreamAgent } from "../agent";
-import { CodeStreamApi } from "../api/api";
+import { ApiProvider } from "../api/apiProvider";
 import { Logger, TraceLevel } from "../logger";
 import { CodeStreamRTEMessage, MessageSource } from "../managers/realTimeMessage";
 import { MessageType } from "../shared/agent.protocol";
@@ -32,8 +31,7 @@ export class PubnubReceiver {
 	private _connection: Disposable | undefined;
 
 	constructor(
-		private _agent: CodeStreamAgent,
-		private readonly _api: CodeStreamApi,
+		api: ApiProvider,
 		pubnubKey: string,
 		pubnubToken: string,
 		private readonly _accessToken: string,
@@ -42,7 +40,7 @@ export class PubnubReceiver {
 	) {
 		this._pubnubConnection = new PubnubConnection();
 		this._connection = this._pubnubConnection.initialize({
-			api: _api,
+			api: api,
 			accessToken: _accessToken,
 			subscribeKey: pubnubKey,
 			authKey: pubnubToken,

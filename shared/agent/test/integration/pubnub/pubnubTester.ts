@@ -3,6 +3,7 @@
 import * as Randomstring from "randomstring";
 import { Disposable } from "vscode-languageserver";
 import { CodeStreamApi } from "../../../src/api/api";
+import { CodeStreamApiProvider } from "../../../src/api/codestreamApi";
 import { PubnubConnection, PubnubInitializer } from "../../../src/pubnub/pubnubConnection";
 import { ApiRequester, ApiRequestOverrides } from "./apiRequester";
 import {
@@ -50,7 +51,7 @@ export abstract class PubnubTester {
 	protected _postData: PostData | undefined;
 	protected _pubnubConnection: PubnubConnection | undefined;
 	private _pubnubDisposable: Disposable | undefined;
-	protected _api: CodeStreamApi | undefined;
+	protected _api: CodeStreamApiProvider | undefined;
 	protected _apiRequester: ApiRequester;
 	protected _apiSimulator: CodeStreamApiSimulator | undefined;
 	protected _successTimeout: NodeJS.Timer | undefined;
@@ -64,9 +65,13 @@ export abstract class PubnubTester {
 
 	constructor(config: PubnubTesterConfig) {
 		this._apiRequester = new ApiRequester({ origin: config.apiOrigin });
-		this._api = new CodeStreamApi("", "", "", "");
+		this._api = new CodeStreamApiProvider("", {
+			extensionBuild: "",
+			extensionVersion: "",
+			ideVersion: ""
+		});
 		this._apiSimulator = new CodeStreamApiSimulator(this._apiRequester);
-		this._api.grant = this._apiSimulator.grant.bind(this._apiSimulator);
+		this._api.grantPubNubChannelAccess = this._apiSimulator.grant.bind(this._apiSimulator);
 		this.testNum = ++TEST_NUM;
 	}
 

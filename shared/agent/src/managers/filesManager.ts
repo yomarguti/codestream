@@ -94,7 +94,7 @@ export class FilesManager extends EntityManager<CSFileStream> {
 
 	protected async fetch(id: Id): Promise<CSFileStream> {
 		try {
-			const response = await Container.instance().api2.getStream({ streamId: id });
+			const response = await Container.instance().api.getStream({ streamId: id });
 			return response.stream as CSFileStream;
 		} catch (err) {
 			// When the user doesn't have access to the stream, the server returns a 403. If
@@ -107,7 +107,7 @@ export class FilesManager extends EntityManager<CSFileStream> {
 
 	private async fetchByRepoId(values: any[]): Promise<CSFileStream[]> {
 		const [repoId] = values;
-		const response = await Container.instance().api2.fetchFileStreams({ repoId: repoId });
+		const response = await Container.instance().api.fetchFileStreams({ repoId: repoId });
 		return response.streams as CSFileStream[];
 	}
 

@@ -225,7 +225,7 @@ export class MarkerLocationManager {
 			Logger.log(`MARKERS: missing locations detected - will calculate`);
 		}
 
-		const { git, api, session } = Container.instance();
+		const { git, apiDeprecated, session } = Container.instance();
 
 		for (const entry of missingMarkersByCommit.entries()) {
 			const commitHashWhenCreated = entry[0];
@@ -270,7 +270,7 @@ export class MarkerLocationManager {
 					Object.keys(calculatedLocations).length
 				} calculated locations to API server`
 			);
-			await api.createMarkerLocation(session.apiToken, {
+			await apiDeprecated.createMarkerLocation(session.apiToken, {
 				teamId: session.teamId,
 				streamId: stream.id,
 				commitHash,
@@ -330,7 +330,7 @@ export class MarkerLocationManager {
 
 	static async flushUncommittedLocations(repo: GitRepository) {
 		Logger.log(`MARKERS: flushing uncommitted locations`);
-		const { api, files, git, markers, session } = Container.instance();
+		const { apiDeprecated, files, git, markers, session } = Container.instance();
 		const cache = await getCache(repo.path);
 		const uncommittedLocations = cache.getCollection("uncommittedLocations");
 
@@ -367,14 +367,14 @@ export class MarkerLocationManager {
 					location.lineEnd
 				}, ${location.colEnd}] - saving to API server`
 			);
-			await api.createMarkerLocation(session.apiToken, {
+			await apiDeprecated.createMarkerLocation(session.apiToken, {
 				teamId: session.teamId,
 				streamId: stream.id,
 				commitHash,
 				locations: locationArraysById
 			});
 			Logger.log(`MARKERS: updating marker => commitHashWhenCreated:${commitHash}`);
-			await api.updateMarker(session.apiToken, id, {
+			await apiDeprecated.updateMarker(session.apiToken, id, {
 				commitHashWhenCreated: commitHash
 			});
 			uncommittedLocations.delete(id);
@@ -385,7 +385,7 @@ export class MarkerLocationManager {
 	}
 
 	static async getMarkerLocations(streamId: string, commitHash: string): Promise<LocationsById> {
-		const { api, state } = Container.instance();
+		const { apiDeprecated, state } = Container.instance();
 		const commitsCache =
 			MarkerLocationManager.streamsCache[streamId] ||
 			(MarkerLocationManager.streamsCache[streamId] = {});
@@ -395,7 +395,7 @@ export class MarkerLocationManager {
 			Logger.log(
 				`MARKERS: no cached locations for stream ${streamId} and commit hash ${commitHash} - fetching from API server`
 			);
-			const response = await api.getMarkerLocations(
+			const response = await apiDeprecated.getMarkerLocations(
 				state.apiToken,
 				state.teamId,
 				streamId,

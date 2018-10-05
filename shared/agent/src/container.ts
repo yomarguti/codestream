@@ -28,8 +28,8 @@ class ServiceContainer {
 
 	constructor(
 		public readonly session: CodeStreamSession,
-		public readonly api: CodeStreamApi,
-		public readonly api2: ApiProvider,
+		public readonly apiDeprecated: CodeStreamApi,
+		public readonly api: ApiProvider,
 		options: AgentOptions,
 		loginResponse: LoginResponse
 	) {
@@ -55,7 +55,7 @@ class ServiceContainer {
 		this._teams = new TeamsManager(session);
 		this._users = new UsersManager(session);
 
-		this._git = new GitService(session, api2);
+		this._git = new GitService(session, api);
 
 		this._documents = new DocumentManager();
 		this._documents.listen(session.connection);

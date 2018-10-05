@@ -4,12 +4,12 @@
 import * as Pubnub from "pubnub";
 import { Disposable, Emitter, Event } from "vscode-languageserver";
 import { ServerError } from "../agentError";
-import { CodeStreamApi } from "../api/api";
+import { ApiProvider } from "../api/apiProvider";
 import { PubnubHistory, PubnubHistoryInput, PubnubHistoryOutput } from "./pubnubHistory";
 
 // use this interface to initialize the PubnubConnection class
 export interface PubnubInitializer {
-	api: CodeStreamApi; // api server object, for making direct requests to api server
+	api: ApiProvider; // api server object, for making direct requests to api server
 	accessToken: string; // access token for api requests
 	subscribeKey: string; // identifies our Pubnub account, comes from pubnubKey returned with the login response from the API
 	authKey: string; // unique Pubnub token provided in the login response
@@ -69,7 +69,7 @@ const THRESHOLD_FOR_CATCHUP = ONE_MONTH - TEN_MINUTES;
 const THRESHOLD_BUFFER = 12000;
 
 export class PubnubConnection {
-	private _api: CodeStreamApi | undefined;
+	private _api: ApiProvider | undefined;
 	private _subscriptionsPending: boolean = false;
 	private _lastSuccessfulSubscription: number = 0;
 	private _subscriptions: SubscriptionMap = {};
@@ -772,7 +772,7 @@ export class PubnubConnection {
 				throw new ServerError("invalid token", { code: "RAPI-1009" }, 403);
 			}
 			this._debug("Explicitly requesting access for", channel);
-			await this._api!.grant(this._accessToken!, channel);
+			await this._api!.grantPubNubChannelAccess(this._accessToken!, channel);
 		} catch (error) {
 			this._debug("Grant error", error);
 			// a RAPI-1009 error from the server is an explicit refusal to grant access

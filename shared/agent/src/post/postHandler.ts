@@ -95,7 +95,7 @@ export namespace PostHandler {
 		parentPostId,
 		mentionedUserIds
 	}: CreatePostWithCodeRequest): Promise<CSPost | undefined> {
-		const { api, state, git } = Container.instance();
+		const { git } = Container.instance();
 		const filePath = URI.parse(documentId.uri).fsPath;
 		const fileContents = lastFullCode;
 
@@ -134,8 +134,7 @@ export namespace PostHandler {
 		}
 
 		try {
-			const post = (await api.createPost(state.apiToken, {
-				teamId: state.teamId,
+			const post = (await Container.instance().posts.createPost({
 				streamId,
 				text,
 				parentPostId,

@@ -6,8 +6,6 @@ import { Logger } from "../logger";
 import {
 	CSCreateMarkerLocationRequest,
 	CSCreateMarkerLocationResponse,
-	CSCreatePostRequest,
-	CSCreatePostResponse,
 	CSGetMarkerLocationsResponse,
 	CSGetMarkerResponse,
 	CSGetMarkersResponse,
@@ -53,10 +51,6 @@ export class CodeStreamApi {
 		);
 	}
 
-	createPost(token: string, request: CSCreatePostRequest): Promise<CSCreatePostResponse> {
-		return this.post<CSCreatePostRequest, CSCreatePostResponse>(`/posts`, request, token);
-	}
-
 	getMarker(token: string, teamId: string, markerId: string): Promise<CSGetMarkerResponse> {
 		return this.get<CSGetMarkerResponse>(`/markers/${markerId}?teamId=${teamId}`, token);
 	}
@@ -83,10 +77,6 @@ export class CodeStreamApi {
 			request,
 			token
 		);
-	}
-
-	grant(token: string, channel: string): Promise<any> {
-		return this.put(`/grant/${channel}`, {}, token);
 	}
 
 	private delete<R extends object>(url: string, token?: string): Promise<R> {
