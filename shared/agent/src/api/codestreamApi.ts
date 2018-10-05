@@ -337,9 +337,9 @@ export class CodeStreamApiProvider implements ApiProvider {
 		} else if (request.before && request.after) {
 			params += `&seqnum=${request.after}-${request.before}`;
 		} else if (request.before) {
-			params += `&lt${request.inclusive === true ? "e" : ""}=${request.before}`;
+			params += `&seqnum=${Math.max(+request.before - request.limit, 1)}-${request.before}`;
 		} else if (request.after) {
-			params += `&gt${request.inclusive === true ? "e" : ""}=${request.after}`;
+			params += `seqnum=${request.after}-${+request.after + request.limit}`;
 		}
 
 		return this.get<CSGetPostsResponse>(
