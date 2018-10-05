@@ -138,7 +138,7 @@ export class CodeStreamAgentConnection implements Disposable {
 				module: context.asAbsolutePath("../codestream-lsp-agent/dist/agent.js"),
 				transport: TransportKind.ipc,
 				options: {
-					execArgv: ["--nolazy", "--inspect-brk=6009"] // "--inspect-brk=6009"
+					execArgv: ["--nolazy", "--inspect=6009"] // "--inspect-brk=6009"
 				}
 			}
 		};
