@@ -42,7 +42,7 @@ import {
 	CreatePostWithCodeRequestType,
 	CreateRepoRequestType,
 	DeletePostRequestType,
-	DidChangeDocumentMarkersNotificationResponse,
+	DidChangeDocumentMarkersNotification,
 	DidChangeDocumentMarkersNotificationType,
 	DidChangeItemsNotification,
 	DidChangeItemsNotificationType,
@@ -582,7 +582,7 @@ export class CodeStreamAgentConnection implements Disposable {
 		}
 	}(this);
 
-	private onDocumentMarkersChanged(e: DidChangeDocumentMarkersNotificationResponse) {
+	private onDocumentMarkersChanged(e: DidChangeDocumentMarkersNotification) {
 		Logger.log("AgentConnection.onDocumentMarkersChanged", e.textDocument.uri);
 		this._onDidChangeDocumentMarkers.fire({ uri: Uri.parse(e.textDocument.uri) });
 	}

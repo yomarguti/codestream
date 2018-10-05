@@ -308,8 +308,7 @@ export class StreamWebviewPanel implements Disposable {
 								codeBlocks,
 								mentions,
 								parentPostId,
-								streamId,
-								teamId
+								streamId
 							} = body.params;
 
 							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
@@ -317,7 +316,7 @@ export class StreamWebviewPanel implements Disposable {
 							let post;
 							try {
 								if (codeBlocks === undefined || codeBlocks.length === 0) {
-									post = await Container.agent.posts.create(text, mentions, parentPostId, streamId);
+									post = await Container.agent.posts.create(streamId, text, mentions, parentPostId);
 								} else {
 									const block = codeBlocks[0] as {
 										code: string;
