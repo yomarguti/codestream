@@ -20,7 +20,6 @@ const mapStateToProps = (state, props) => {
 };
 
 export default Child => {
-	const initializePostCount = 150;
 	const batchCount = 100;
 
 	const DataProvider = connect(
@@ -28,45 +27,41 @@ export default Child => {
 		{ fetchPosts }
 	)(
 		class Provider extends React.Component {
-			isFetching = false;
-			hasMore = true;
-			state = { isInitialized: false, posts: [] };
+			state = { isFetching: false, isInitialized: false, posts: [], hasMore: true };
 
 			componentDidMount() {
 				this.initialize();
 			}
 
 			componentDidUpdate(prevProps, _prevState) {
-				if (!this.isFetching && prevProps.streamId !== this.props.streamId) {
+				if (!this.state.isFetching && prevProps.streamId !== this.props.streamId) {
 					return this.initialize();
 				}
-				if (!this.isFetching && !isEqual(prevProps.postIds, this.props.postIds)) {
+				if (!this.state.isFetching && !isEqual(prevProps.postIds, this.props.postIds)) {
 					this.setState({ posts: this.props.posts });
 				}
 			}
 
 			async initialize() {
-				this.hasMore = true;
 				this.setState({ isInitialized: false });
 
 				if (this.props.posts.length === 0) {
-					this.isFetching = true;
 					const { streamId, teamId, fetchPosts } = this.props;
-					const posts = await fetchPosts({ streamId, teamId, limit: initializePostCount });
-					if (posts.length < initializePostCount) this.hasMore = false;
-					this.setState(
-						{ isInitialized: true, posts: this.props.posts },
-						() => (this.isFetching = false)
-					);
+					const posts = await fetchPosts({ streamId, teamId, limit: batchCount });
+					this.setState({
+						isInitialized: true,
+						posts: this.props.posts,
+						hasMore: posts.length === batchCount
+					});
 				} else {
-					this.setState({ isInitialized: true, posts: this.props.posts });
+					this.setState({ isInitialized: true, posts: this.props.posts, hasMore: true });
 				}
 			}
 
 			onSectionRendered = debounceToAnimationFrame(data => {
 				this.lastRenderedRowsData = data;
 
-				if (this.hasMore && data.startIndex < batchCount) {
+				if (this.state.hasMore && data.startIndex === 0) {
 					const { posts } = this.state;
 					const earliestLocalSeqNum = safe(() => posts[0].seqNum);
 					if (earliestLocalSeqNum && earliestLocalSeqNum > 1) {
@@ -76,47 +71,23 @@ export default Child => {
 			});
 
 			loadMore = async seqNum => {
-				const title = "FETCH + SCROLL";
-				console.group(title);
 				if (!this.state.isInitialized || this.isFetching) {
-					console.debug("already fetching");
-					console.groupEnd(title);
 					return;
 				}
 
-				this.isFetching = true;
+				this.setState({ isFetching: true });
 				const { fetchPosts, streamId, teamId } = this.props;
 
-				console.warn("FETCHING POSTS");
 				const posts = await fetchPosts({
 					streamId,
 					teamId,
 					limit: batchCount,
 					beforeSeqNum: seqNum
 				});
-				if (posts.length < batchCount) this.hasMore = false;
-				console.warn("GOT POSTS");
+				this.setState({ hasMore: posts.length === batchCount });
 
 				this.onScrollStop(() => {
-					const newPostsRange = posts.length;
-					// const previousScrollTop = this.lastScrollData.scrollTop;
-					const lastFirstPostIndex = this.lastRenderedRowsData.startIndex;
-					console.warn("Render new posts");
-					this.setState({ posts: this.props.posts }, () => {
-						// const additionalHeight = newPostsRange * this.cache.defaultHeight;
-						const scrollTo = lastFirstPostIndex + newPostsRange;
-						// const newScrollPos = this.list.Grid.getTotalRowsHeight() * scrollRatio;
-						console.warn("maintain user scroll position");
-						console.groupEnd(title);
-						// this.list.scrollToPosition(previousScrollTop + additionalHeight);
-						this.cache.clearAll();
-						this.postList.recomputeVisibleRowHeights(
-							this.lastRenderedRowsData.startIndex,
-							this.lastRenderedRowsData.stopIndex
-						);
-						this.list.scrollToRow(scrollTo);
-						this.isFetching = false;
-					});
+					this.setState({ posts: this.props.posts, isFetching: false });
 				});
 			};
 
@@ -144,11 +115,14 @@ export default Child => {
 				}
 				this.scrollTimeout = setTimeout(() => {
 					this.scrollTimeout = null;
-					safe(() => {
-						this.onDidStopScrolling();
+					try {
+						this.onDidStopScrolling && this.onDidStopScrolling();
+					} catch (e) {
+						console.error(e);
+					} finally {
 						this.onDidStopScrolling = null;
-					});
-				}, 50);
+					}
+				}, 500);
 			};
 
 			render() {
@@ -169,7 +143,10 @@ export default Child => {
 							posts: this.state.posts,
 							onSectionRendered: this.onSectionRendered,
 							register: this.register,
-							onScroll: this.onScroll
+							onScroll: this.onScroll,
+							isFetchingMore: this.state.isFetching,
+							scrollProps: this.state.scrollProps,
+							hasMore: this.state.hasMore
 						}}
 					/>
 				);

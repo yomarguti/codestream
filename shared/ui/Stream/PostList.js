@@ -42,6 +42,11 @@ export default infiniteLoadable(
 				this.scrollToBottom();
 			}
 			if (!streamChanged && prevPosts.length !== posts.length) {
+				if (prevProps.isFetchingMore && !this.props.isFetchingMore) {
+					this.cache.clearAll();
+					this.list.recomputeRowHeights();
+					this.maintainScroll(this.props.posts.length - prevPosts.length);
+				}
 				if (prevPosts.length === 0 || !this.scrolledOffBottom) {
 					// FIXME only scroll to the first unread message
 					this.scrollToBottom();
@@ -67,6 +72,17 @@ export default infiniteLoadable(
 			});
 		};
 
+		maintainScroll = scrollTo => {
+			this.setState(
+				{
+					scrollProps: {
+						scrollToIndex: scrollTo,
+						scrollToAlignment: "start"
+					}
+				},
+				() => this.setState({ scrollProps: null })
+			);
+		};
 		scrollToBottom = () => {
 			requestAnimationFrame(() => {
 				this.setState(
@@ -252,7 +268,9 @@ export default infiniteLoadable(
 				postAction,
 				postWithNewMessageIndicator,
 				posts,
-				renderIntro
+				renderIntro,
+				isFetchingMore,
+				hasMore
 			} = this.props;
 			let unread = false;
 
@@ -261,15 +279,18 @@ export default infiniteLoadable(
 			if (this.state.shouldScrollTo) {
 				listProps.scrollToIndex = this.state.shouldScrollTo;
 			}
+			if (this.state.scrollProps) listProps = this.state.scrollProps;
 
 			console.debug("PostList.render", { props: this.props, state: this.state, listProps });
+
 			return (
 				<AutoSizer>
 					{({ height, width }) => {
 						this.maxHeight = height;
 						const listStyle = {};
 						let introHeight = 0;
-						if (renderIntro) {
+						if (isFetchingMore || hasMore) introHeight = this.cache.defaultHeight;
+						else if (renderIntro) {
 							const heightForPosts = posts.length * this.cache.defaultHeight;
 							if (heightForPosts > 0 && heightForPosts < height / 2) {
 								introHeight = height - heightForPosts / 2;
@@ -293,7 +314,7 @@ export default infiniteLoadable(
 								noRowsRenderer={renderIntro}
 								onRowsRendered={this.onRowsRendered}
 								rowRenderer={data => {
-									if (data.index === 0 && renderIntro) {
+									if (data.index === 0) {
 										return (
 											<CellMeasurer
 												cache={this.cache}
@@ -302,7 +323,18 @@ export default infiniteLoadable(
 												rowIndex={data.index}
 												parent={data.parent}
 											>
-												<div style={{ ...data.style }}>{renderIntro()}</div>
+												<div style={{ ...data.style, borderColor: "blue", textAlign: "center" }}>
+													{hasMore || isFetchingMore ? (
+														<div>
+															<p>
+																<span className="loading loading-spinner-small inline-block" />
+															</p>
+															<p>Loading more posts...</p>
+														</div>
+													) : (
+														renderIntro()
+													)}
+												</div>
 											</CellMeasurer>
 										);
 									}
