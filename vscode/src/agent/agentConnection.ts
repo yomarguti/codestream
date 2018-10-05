@@ -55,9 +55,7 @@ import {
 	DocumentMarkersRequestType,
 	EditPostRequestType,
 	FetchFileStreamsRequestType,
-	FetchLatestPostRequestType,
 	FetchMarkerLocationsRequestType,
-	FetchPostsByRangeRequestType,
 	FetchPostsRequestType,
 	FetchReposRequestType,
 	FetchStreamsRequestType,
@@ -337,23 +335,32 @@ export class CodeStreamAgentConnection implements Disposable {
 			});
 		}
 
-		fetch(streamId: string, limit = 100, beforeSeq?: number) {
+		fetch(
+			streamId: string,
+			options: {
+				limit?: number;
+				before?: number | string;
+				after?: number | string;
+				inclusive?: boolean;
+			} = {}
+		) {
 			return this._connection.sendRequest(FetchPostsRequestType, {
 				streamId: streamId,
-				limit: limit,
-				beforeSeq: beforeSeq
+				...options
 			});
 		}
 
 		fetchByRange(streamId: string, start: number, end: number) {
-			return this._connection.sendRequest(FetchPostsByRangeRequestType, {
-				streamId: streamId,
-				range: `${start}-${end}`
+			return this.fetch(streamId, {
+				before: end,
+				after: start,
+				inclusive: true
 			});
 		}
 
-		fetchLatest(streamId: string) {
-			return this._connection.sendRequest(FetchLatestPostRequestType, { streamId: streamId });
+		async fetchLatest(streamId: string) {
+			const response = await this.fetch(streamId, { limit: 1 });
+			return { post: response.posts[0] };
 		}
 
 		get(streamId: string, postId: string) {
