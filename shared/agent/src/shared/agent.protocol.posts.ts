@@ -66,21 +66,6 @@ export const CreatePostWithCodeRequestType = new RequestType<
 	void
 >("codeStream/posts/createWithCode");
 
-export interface FetchLatestPostRequest {
-	streamId: string;
-}
-
-export interface FetchLatestPostResponse {
-	post: CSPost;
-}
-
-export const FetchLatestPostRequestType = new RequestType<
-	FetchLatestPostRequest,
-	FetchLatestPostResponse,
-	void,
-	void
->("codeStream/posts/latest");
-
 export interface FetchPostRepliesRequest {
 	streamId: string;
 	postId: string;
@@ -99,14 +84,15 @@ export const FetchPostRepliesRequestType = new RequestType<
 
 export interface FetchPostsRequest {
 	streamId: string;
-	limit: number;
-	beforeSeq?: number;
-	afterSeq?: number;
+	limit?: number;
+	after?: number | string; // equiv to slack.oldest
+	before?: number | string; // equiv to slack.latest
+	inclusive?: boolean;
 }
 
 export interface FetchPostsResponse {
 	posts: CSPost[];
-	maxSeq?: number;
+	more?: boolean;
 }
 
 export const FetchPostsRequestType = new RequestType<
@@ -115,23 +101,6 @@ export const FetchPostsRequestType = new RequestType<
 	void,
 	void
 >("codeStream/posts");
-
-export interface FetchPostsByRangeRequest {
-	streamId: string;
-	range: string;
-}
-
-export interface FetchPostsByRangeResponse {
-	posts: CSPost[];
-	more?: boolean;
-}
-
-export const FetchPostsByRangeRequestType = new RequestType<
-	FetchPostsByRangeRequest,
-	FetchPostsByRangeResponse,
-	void,
-	void
->("codeStream/posts/byRange");
 
 export interface DeletePostRequest {
 	streamId: string;

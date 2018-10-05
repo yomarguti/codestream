@@ -10,15 +10,9 @@ import {
 	EditPostRequest,
 	EditPostRequestType,
 	EditPostResponse,
-	FetchLatestPostRequest,
-	FetchLatestPostRequestType,
-	FetchLatestPostResponse,
 	FetchPostRepliesRequest,
 	FetchPostRepliesRequestType,
 	FetchPostRepliesResponse,
-	FetchPostsByRangeRequest,
-	FetchPostsByRangeRequestType,
-	FetchPostsByRangeResponse,
 	FetchPostsRequest,
 	FetchPostsRequestType,
 	FetchPostsResponse,
@@ -71,20 +65,12 @@ export class PostsManager extends EntityManager<CSPost> {
 		return Container.instance().api.editPost(request);
 	}
 
-	@lspHandler(FetchLatestPostRequestType)
-	fetchLatestPost(request: FetchLatestPostRequest): Promise<FetchLatestPostResponse> {
-		return Container.instance().api.fetchLatestPost(request);
-	}
-
 	@lspHandler(FetchPostRepliesRequestType)
 	async fetchPostReplies(request: FetchPostRepliesRequest): Promise<FetchPostRepliesResponse> {
-		const posts = await this.cache.getGroup([["parentPostId", request.postId]]);
-		return { posts: posts };
-	}
+		return Container.instance().api.fetchPostReplies(request);
 
-	@lspHandler(FetchPostsByRangeRequestType)
-	fetchPostsByRange(request: FetchPostsByRangeRequest): Promise<FetchPostsByRangeResponse> {
-		return Container.instance().api.fetchPostsByRange(request);
+		// const posts = await this.cache.getGroup([["parentPostId", request.postId]]);
+		// return { posts: posts };
 	}
 
 	@lspHandler(MarkPostUnreadRequestType)
@@ -105,57 +91,59 @@ export class PostsManager extends EntityManager<CSPost> {
 
 	@lspHandler(FetchPostsRequestType)
 	private async fetchPosts(request: FetchPostsRequest): Promise<FetchPostsResponse> {
-		const posts = await this.getPosts(
-			request.streamId,
-			request.afterSeq,
-			request.beforeSeq,
-			request.limit
-		);
-		return { posts: posts.data };
+		return Container.instance().api.fetchPosts(request);
+
+		// const posts = await this.getPosts(
+		// 	request.streamId,
+		// 	request.after,
+		// 	request.before,
+		// 	request.limit
+		// );
+		// return { posts: posts.data };
 	}
 
-	/**
-	 * Retrieve posts in a stream. One of the following combination of arguments must be supplied:
-	 * - after and before
-	 * - after and limit
-	 * - before and limit
-	 * - limit
-	 * After and before refer to sequence numbers. If neither is specified, then the latest posts
-	 * will be returned.
-	 *
-	 * @param streamId {Id} The streamId
-	 * @param after {number} If specified, returns only posts after this sequence number
-	 * @param before {number} If specified, returns only posts before this sequence number
-	 * @param limit {number} Maximum number of posts to be retrieved
-	 *
-	 * @return {SequentialSlice}
-	 */
-	async getPosts(
-		streamId: Id,
-		after?: number,
-		before?: number,
-		limit?: number
-	): Promise<SequentialSlice<CSPost>> {
-		let seqStart;
-		let seqEnd;
+	// /**
+	//  * Retrieve posts in a stream. One of the following combination of arguments must be supplied:
+	//  * - after and before
+	//  * - after and limit
+	//  * - before and limit
+	//  * - limit
+	//  * After and before refer to sequence numbers. If neither is specified, then the latest posts
+	//  * will be returned.
+	//  *
+	//  * @param streamId {Id} The streamId
+	//  * @param after {number} If specified, returns only posts after this sequence number
+	//  * @param before {number} If specified, returns only posts before this sequence number
+	//  * @param limit {number} Maximum number of posts to be retrieved
+	//  *
+	//  * @return {SequentialSlice}
+	//  */
+	// async getPosts(
+	// 	streamId: Id,
+	// 	after?: number | string,
+	// 	before?: number | string,
+	// 	limit?: number
+	// ): Promise<SequentialSlice<CSPost>> {
+	// 	let seqStart;
+	// 	let seqEnd;
 
-		if (after != null && before != null) {
-			seqStart = Math.max(after + 1, 1);
-			seqEnd = before;
-		} else if (after != null && limit != null) {
-			seqStart = Math.max(after + 1, 1);
-			seqEnd = seqStart + limit + 1;
-		} else if (before != null && limit != null) {
-			seqStart = Math.max(before - limit, 1);
-			seqEnd = before;
-		}
+	// 	if (after != null && before != null) {
+	// 		seqStart = Math.max(after + 1, 1);
+	// 		seqEnd = before;
+	// 	} else if (after != null && limit != null) {
+	// 		seqStart = Math.max(after + 1, 1);
+	// 		seqEnd = seqStart + limit + 1;
+	// 	} else if (before != null && limit != null) {
+	// 		seqStart = Math.max(before - limit, 1);
+	// 		seqEnd = before;
+	// 	}
 
-		if (seqStart !== undefined && seqEnd !== undefined) {
-			return this.cache.getGroupSlice([["streamId", streamId]], seqStart, seqEnd);
-		} else {
-			return await this.cache.getGroupTail([["streamId", streamId]], limit || 100);
-		}
-	}
+	// 	if (seqStart !== undefined && seqEnd !== undefined) {
+	// 		return this.cache.getGroupSlice([["streamId", streamId]], seqStart, seqEnd);
+	// 	} else {
+	// 		return await this.cache.getGroupTail([["streamId", streamId]], limit || 100);
+	// 	}
+	// }
 
 	protected async fetch(id: Id): Promise<CSPost> {
 		// TODO: Must fix this for slack
@@ -183,9 +171,11 @@ export class PostsManager extends EntityManager<CSPost> {
 		if (seqStart && seqEnd) {
 			const minSeq = seqStart;
 			const maxSeq = seqEnd - 1;
-			const response = await Container.instance().api.fetchPostsByRange({
+			const response = await Container.instance().api.fetchPosts({
 				streamId: streamId,
-				range: `${minSeq}-${maxSeq}`
+				before: maxSeq,
+				after: minSeq,
+				inclusive: true
 			});
 			return response.posts;
 		}
@@ -194,11 +184,11 @@ export class PostsManager extends EntityManager<CSPost> {
 		const posts: CSPost[] = [];
 
 		while (true) {
-			const response = await Container.instance().api.fetchPostsLesserThan(
-				streamId,
-				limit,
-				lessThan
-			);
+			const response = await Container.instance().api.fetchPosts({
+				streamId: streamId,
+				limit: limit,
+				before: lessThan
+			});
 			posts.push(...response.posts);
 
 			if (!response.more) return posts;

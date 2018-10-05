@@ -18,16 +18,12 @@ import {
 	EditPostResponse,
 	FetchFileStreamsRequest,
 	FetchFileStreamsResponse,
-	FetchLatestPostRequest,
-	FetchLatestPostResponse,
 	FetchMarkerLocationsRequest,
 	FetchMarkerLocationsResponse,
 	FetchMarkersRequest,
 	FetchMarkersResponse,
 	FetchPostRepliesRequest,
 	FetchPostRepliesResponse,
-	FetchPostsByRangeRequest,
-	FetchPostsByRangeResponse,
 	FetchPostsRequest,
 	FetchPostsResponse,
 	FetchReposRequest,
@@ -134,12 +130,8 @@ export interface ApiProvider {
 	createPost(request: CreatePostRequest): Promise<CreatePostResponse>;
 	deletePost(request: DeletePostRequest): Promise<DeletePostResponse>;
 	editPost(request: EditPostRequest): Promise<EditPostResponse>;
-	fetchLatestPost(request: FetchLatestPostRequest): Promise<FetchLatestPostResponse>;
 	fetchPostReplies(request: FetchPostRepliesRequest): Promise<FetchPostRepliesResponse>;
 	fetchPosts(request: FetchPostsRequest): Promise<FetchPostsResponse>;
-	fetchPostsByRange(request: FetchPostsByRangeRequest): Promise<FetchPostsByRangeResponse>;
-	// TODO: Needs to be remove or consolidated into another request type
-	fetchPostsLesserThan(streamId: string, limit: number, lt?: string): Promise<CSGetPostsResponse>;
 	getPost(request: GetPostRequest): Promise<GetPostResponse>;
 	markPostUnread(request: MarkPostUnreadRequest): Promise<MarkPostUnreadResponse>;
 	reactToPost(request: ReactToPostRequest): Promise<ReactToPostResponse>;

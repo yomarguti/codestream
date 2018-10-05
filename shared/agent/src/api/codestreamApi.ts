@@ -14,11 +14,9 @@ import {
 	DeletePostRequest,
 	EditPostRequest,
 	FetchFileStreamsRequest,
-	FetchLatestPostRequest,
 	FetchMarkerLocationsRequest,
 	FetchMarkersRequest,
 	FetchPostRepliesRequest,
-	FetchPostsByRangeRequest,
 	FetchPostsRequest,
 	FetchStreamsRequest,
 	FetchTeamsRequest,
@@ -310,16 +308,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 		return { ...response, post: post };
 	}
 
-	async fetchLatestPost(request: FetchLatestPostRequest) {
-		const response = await this.get<CSGetPostsResponse>(
-			`/posts/?teamId=${this.teamId}&streamId=${request.streamId}&limit=1`,
-			this._token
-		);
-
-		const { posts, ...rest } = response;
-		return { ...rest, post: posts[0] };
-	}
-
 	fetchPostReplies(request: FetchPostRepliesRequest) {
 		return this.get<CSGetPostsResponse>(
 			`/posts?teamId=${this.teamId}?parentPostId=${request.postId}`,
@@ -328,38 +316,34 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	async fetchPosts(request: FetchPostsRequest) {
-		// if (request.limit !== undefined) {
-		// 	return (await Container.agent.getPosts(streamId, limit, beforeSeq)).posts;
+		if (!request.limit || request.limit > 100) {
+			request.limit = 100;
+		}
+
+		let params = `&limit=${request.limit}`;
+		// TODO: Use once colin's new api is ready
+		// if (request.before) {
+		// 	params += `&before=${request.before}`;
+		// }
+		// if (request.after) {
+		// 	params += `&after=${request.after}`;
+		// }
+		// if (request.inclusive === true) {
+		// 	params += `&inclusive`;
 		// }
 
-		return this.get<CSGetPostsResponse>(
-			`/posts?teamId=${this.teamId}&streamId=${request.streamId}`,
-			this._token
-		);
-	}
+		if (request.before && request.after && request.inclusive) {
+			params += `&seqnum=${request.after}-${request.before}`;
+		} else if (request.before && request.after) {
+			params += `&seqnum=${request.after}-${request.before}`;
+		} else if (request.before) {
+			params += `&lt${request.inclusive === true ? "e" : ""}=${request.before}`;
+		} else if (request.after) {
+			params += `&gt${request.inclusive === true ? "e" : ""}=${request.after}`;
+		}
 
-	// fetchPostsBySequence(
-	// 	streamId: string,
-	// 	minSeq: number,
-	// 	maxSeq: number
-	// ): Promise<CSGetPostsResponse> {
-	// 	return this.get<CSGetPostsResponse>(
-	// 		`/posts?teamId=${this._teamId}&streamId=${streamId}&seqnum=${minSeq}-${maxSeq}`,
-	// 		this._token
-	// 	);
-	// }
-
-	// TODO: Needs to be remove or consolidated into another request type
-	fetchPostsLesserThan(streamId: string, limit: number, lt?: string) {
 		return this.get<CSGetPostsResponse>(
-			`/posts?teamId=${this.teamId}&streamId=${streamId}&limit=${limit}${lt ? `&lt=${lt}` : ""}`,
-			this._token
-		);
-	}
-
-	fetchPostsByRange(request: FetchPostsByRangeRequest) {
-		return this.get<CSGetPostsResponse>(
-			`/posts/?teamId=${this.teamId}&streamId=${request.streamId}&seqnum=${request.range}`,
+			`/posts?teamId=${this.teamId}&streamId=${request.streamId}${params}`,
 			this._token
 		);
 	}
