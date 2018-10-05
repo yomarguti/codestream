@@ -63,7 +63,7 @@ export default (state = initialState, { type, payload }) => {
 // Selectors
 export const getStreamForTeam = (state, teamId) => {
 	const streams = state.byTeam[teamId] || {};
-	return Object.values(streams).find(stream => stream.isTeamStream && stream.name === "general");
+	return _.sortBy(Object.values(streams).filter(stream => stream.isTeamStream), "createdAt")[0];
 };
 
 export const getChannelStreamsForTeam = (state, teamId, userId) => {
