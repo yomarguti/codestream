@@ -1,13 +1,23 @@
 "use strict";
 import { Container } from "../container";
+import {
+	GetMarkerRequest,
+	GetMarkerRequestType,
+	GetMarkerResponse
+} from "../shared/agent.protocol";
 import { CSMarker, CSStream, StreamType } from "../shared/api.protocol";
+import { lspHandler } from "../system";
 import { IndexParams, IndexType } from "./index";
 import { EntityManager, Id } from "./managers";
 
-export class MarkerManager extends EntityManager<CSMarker> {
+export class MarkersManager extends EntityManager<CSMarker> {
+	async getByStreamId(streamId: Id, visibleOnly?: boolean): Promise<CSMarker[]> {
+		const markers = await this.cache.getGroup([["streamId", streamId]]);
+		return visibleOnly ? await this.filterMarkers(markers) : markers;
+	}
+
 	protected async fetch(id: Id): Promise<CSMarker> {
-		const { apiDeprecated, state } = Container.instance();
-		const response = await apiDeprecated.getMarker(state.apiToken, state.teamId, id);
+		const response = await Container.instance().api.getMarker({ markerId: id });
 		return response.marker;
 	}
 
@@ -21,15 +31,9 @@ export class MarkerManager extends EntityManager<CSMarker> {
 		];
 	}
 
-	async getByStreamId(streamId: Id, visibleOnly?: boolean): Promise<CSMarker[]> {
-		const markers = await this.cache.getGroup([["streamId", streamId]]);
-		return visibleOnly ? await this.filterMarkers(markers) : markers;
-	}
-
 	protected async fetchByStreamId(values: any[]): Promise<CSMarker[]> {
 		const [streamId] = values;
-		const { apiDeprecated, state } = Container.instance();
-		const response = await apiDeprecated.getMarkers(state.apiToken, state.teamId, streamId);
+		const response = await Container.instance().api.fetchMarkers({ streamId: streamId });
 		return response.markers;
 	}
 
@@ -59,5 +63,11 @@ export class MarkerManager extends EntityManager<CSMarker> {
 			if (!stream.memberIds.includes(userId)) return false;
 		}
 		return true;
+	}
+
+	@lspHandler(GetMarkerRequestType)
+	private async getMarker(request: GetMarkerRequest): Promise<GetMarkerResponse> {
+		const marker = await this.getById(request.markerId);
+		return { marker: marker };
 	}
 }

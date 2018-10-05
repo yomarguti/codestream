@@ -6,6 +6,8 @@ import {
 	CreateChannelStreamResponse,
 	CreateDirectStreamRequest,
 	CreateDirectStreamResponse,
+	CreateMarkerLocationRequest,
+	CreateMarkerLocationResponse,
 	CreatePostRequest,
 	CreatePostResponse,
 	CreateRepoRequest,
@@ -18,6 +20,10 @@ import {
 	FetchFileStreamsResponse,
 	FetchLatestPostRequest,
 	FetchLatestPostResponse,
+	FetchMarkerLocationsRequest,
+	FetchMarkerLocationsResponse,
+	FetchMarkersRequest,
+	FetchMarkersResponse,
 	FetchPostRepliesRequest,
 	FetchPostRepliesResponse,
 	FetchPostsByRangeRequest,
@@ -36,6 +42,8 @@ import {
 	FetchUsersResponse,
 	FindRepoRequest,
 	FindRepoResponse,
+	GetMarkerRequest,
+	GetMarkerResponse,
 	GetMeResponse,
 	GetPostRequest,
 	GetPostResponse,
@@ -59,6 +67,8 @@ import {
 	MarkStreamReadResponse,
 	ReactToPostRequest,
 	ReactToPostResponse,
+	UpdateMarkerRequest,
+	UpdateMarkerResponse,
 	UpdatePreferencesRequest,
 	UpdatePresenceRequest,
 	UpdatePresenceResponse,
@@ -114,13 +124,12 @@ export interface ApiProvider {
 	// createFileStream(request: CreateFileStreamRequest): Promise<CreateFileStreamResponse>;
 	fetchFileStreams(request: FetchFileStreamsRequest): Promise<FetchFileStreamsResponse>;
 
-	// getMarker(markerId: string, teamId?: string): Promise<CSMarker>;
-	// getMarkers(commitHash: string, streamId: string, teamId?: string): Promise<CSMarker[]>;
-	// getMarkerLocations(
-	// 	commitHash: string,
-	// 	streamId: string,
-	// 	teamId?: string
-	// ): Promise<CSMarkerLocations>;
+	createMarkerLocation(request: CreateMarkerLocationRequest): Promise<CreateMarkerLocationResponse>;
+	fetchMarkerLocations(request: FetchMarkerLocationsRequest): Promise<FetchMarkerLocationsResponse>;
+
+	fetchMarkers(request: FetchMarkersRequest): Promise<FetchMarkersResponse>;
+	getMarker(request: GetMarkerRequest): Promise<GetMarkerResponse>;
+	updateMarker(request: UpdateMarkerRequest): Promise<UpdateMarkerResponse>;
 
 	createPost(request: CreatePostRequest): Promise<CreatePostResponse>;
 	deletePost(request: DeletePostRequest): Promise<DeletePostResponse>;

@@ -46,19 +46,17 @@ abstract class BaseIndex<T extends CSEntity> {
 
 	abstract set(value: any, entity: T, oldEntity?: T): void;
 
-	protected requireIndexValue(entity: T): string {
+	protected requireIndexValue(entity: T): string | undefined {
 		const values = [];
 		for (const field of this.fields) {
 			const value = (entity as any)[field];
-			if (value == null) {
-				throw new Error(
-					`Entity id=${
-						entity.id
-					} cannot be indexed by ${field} because it lacks a value for this field`
-				);
+			if (value != null) {
+				values.push(value);
 			}
-			values.push(value);
 		}
+
+		if (values.length === 0) return undefined;
+
 		return encodeArray(values);
 	}
 }
@@ -78,10 +76,11 @@ export class UniqueIndex<T extends CSEntity> extends BaseIndex<T> {
 
 	set(entity: T, oldEntity?: T) {
 		const value = this.requireIndexValue(entity);
+		if (value === undefined) return;
 
 		if (oldEntity) {
 			const oldValue = this.requireIndexValue(oldEntity);
-			if (oldValue !== value) {
+			if (oldValue !== undefined && oldValue !== value) {
 				this._data.delete(oldValue);
 			}
 		}
@@ -183,7 +182,7 @@ export class GroupIndex<T extends CSEntity> extends BaseIndex<T> {
 
 	private getGroupForEntity(entity: T): Map<Id, T> | undefined {
 		const indexValue = this.requireIndexValue(entity);
-		return this.groups.get(indexValue);
+		return indexValue === undefined ? undefined : this.groups.get(indexValue);
 	}
 }
 
@@ -223,6 +222,8 @@ export class GroupSequentialIndex<T extends CSEntity> extends BaseIndex<T> {
 
 	set(entity: T, oldEntity?: T) {
 		const indexValue = this.requireIndexValue(entity);
+		if (indexValue === undefined) return;
+
 		const group = this.groups.get(indexValue);
 		if (group) {
 			const seqValue = this.requireSeqValue(entity);

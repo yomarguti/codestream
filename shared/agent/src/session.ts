@@ -9,7 +9,6 @@ import {
 import URI from "vscode-uri";
 import { CodeStreamAgent } from "./agent";
 import { AgentError, ServerError } from "./agentError";
-import { CodeStreamApi } from "./api/api";
 import { ApiProvider, LoginOptions } from "./api/apiProvider";
 import { CodeStreamApiProvider } from "./api/codestreamApi";
 import {
@@ -34,12 +33,7 @@ import {
 	DocumentFromCodeBlockRequestType,
 	DocumentLatestRevisionRequestType,
 	DocumentMarkersRequestType,
-	FetchMarkerLocationsRequest,
 	FetchMarkerLocationsRequestType,
-	FetchMarkerLocationsResponse,
-	GetMarkerRequest,
-	GetMarkerRequestType,
-	GetMarkerResponse,
 	LogoutReason,
 	LogoutRequestType,
 	MessageType,
@@ -48,7 +42,6 @@ import {
 import {
 	ApiErrors,
 	CSMarker,
-	CSMarkerLocations,
 	CSPost,
 	CSRepository,
 	CSStream,
@@ -106,7 +99,6 @@ export class CodeStreamSession {
 		return this._onDidChangeMarkerLocations.event;
 	}
 
-	private readonly _apiDeprecated: CodeStreamApi;
 	private readonly _api: ApiProvider;
 	private readonly _readyPromise: Promise<void>;
 
@@ -120,13 +112,6 @@ export class CodeStreamSession {
 		public readonly connection: Connection,
 		private readonly _options: AgentOptions
 	) {
-		this._apiDeprecated = new CodeStreamApi(
-			_options.serverUrl,
-			_options.ideVersion,
-			_options.extensionVersion,
-			_options.extensionBuild
-		);
-
 		this._api = new CodeStreamApiProvider(_options.serverUrl, {
 			ideVersion: _options.ideVersion,
 			extensionVersion: _options.extensionVersion,
@@ -157,8 +142,9 @@ export class CodeStreamSession {
 			return { revision: revision };
 		});
 
-		this.agent.registerHandler(GetMarkerRequestType, this.handleGetMarker);
-		this.agent.registerHandler(FetchMarkerLocationsRequestType, this.handleFetchMarkerLocations);
+		this.agent.registerHandler(FetchMarkerLocationsRequestType, r =>
+			this._api.fetchMarkerLocations(r)
+		);
 	}
 
 	private async onRealTimeMessageReceived(e: RealTimeMessage) {
@@ -309,13 +295,7 @@ export class CodeStreamSession {
 			this._userId = response.user.id;
 
 			setGitPath(this._options.gitPath);
-			void (await Container.initialize(
-				this,
-				this._apiDeprecated,
-				this._api,
-				this._options,
-				response
-			));
+			void (await Container.initialize(this, this._api, this._options, response));
 
 			this._pubnub = new PubnubReceiver(
 				this._api,
@@ -362,21 +342,6 @@ export class CodeStreamSession {
 	private async getSubscribableStreams(userId: string, teamId?: string): Promise<CSStream[]> {
 		return (await this._api.fetchStreams({
 			types: [StreamType.Channel, StreamType.Direct]
-		})).streams.filter(s => CodeStreamApi.isStreamSubscriptionRequired(s, userId));
-	}
-
-	handleGetMarker(request: GetMarkerRequest): Promise<GetMarkerResponse> {
-		return this._apiDeprecated.getMarker(this.apiToken, this.teamId, request.markerId);
-	}
-
-	handleFetchMarkerLocations(
-		request: FetchMarkerLocationsRequest
-	): Promise<FetchMarkerLocationsResponse> {
-		return this._apiDeprecated.getMarkerLocations(
-			this.apiToken,
-			this.teamId,
-			request.streamId,
-			request.commitHash
-		);
+		})).streams.filter(s => CodeStreamApiProvider.isStreamSubscriptionRequired(s, userId));
 	}
 }

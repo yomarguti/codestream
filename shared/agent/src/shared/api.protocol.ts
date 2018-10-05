@@ -369,8 +369,16 @@ export interface CSGetMarkerResponse {
 	marker: CSMarker;
 }
 
+export interface CSGetMarkersRequest {
+	streamId: string;
+	teamId: string;
+	commitHash?: string;
+	markerIds?: string[];
+}
+
 export interface CSGetMarkersResponse {
 	markers: CSMarker[];
+	markerLocations: CSMarkerLocation[];
 	numMarkers: number;
 }
 

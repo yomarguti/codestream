@@ -1,12 +1,11 @@
 "use strict";
-import { CodeStreamApi } from "./api/api";
 import { ApiProvider } from "./api/apiProvider";
 import { Config } from "./config";
 import { DocumentManager } from "./documentManager";
 import { GitService } from "./git/gitService";
 import { Logger } from "./logger";
 import { FilesManager } from "./managers/filesManager";
-import { MarkerManager } from "./managers/markerManager";
+import { MarkersManager } from "./managers/markersManager";
 import { PostsManager } from "./managers/postsManager";
 import { ReposManager } from "./managers/reposManager";
 import { StreamsManager } from "./managers/streamsManager";
@@ -28,7 +27,6 @@ class ServiceContainer {
 
 	constructor(
 		public readonly session: CodeStreamSession,
-		public readonly apiDeprecated: CodeStreamApi,
 		public readonly api: ApiProvider,
 		options: AgentOptions,
 		loginResponse: LoginResponse
@@ -48,7 +46,7 @@ class ServiceContainer {
 
 		this._files = new FilesManager(session);
 		this._markerLocations = new MarkerLocationManager();
-		this._markers = new MarkerManager(session);
+		this._markers = new MarkersManager(session);
 		this._posts = new PostsManager(session);
 		this._repos = new ReposManager(session);
 		this._streams = new StreamsManager(session);
@@ -81,8 +79,8 @@ class ServiceContainer {
 		return this._markerLocations;
 	}
 
-	private readonly _markers: MarkerManager;
-	get markers(): MarkerManager {
+	private readonly _markers: MarkersManager;
+	get markers(): MarkersManager {
 		return this._markers;
 	}
 
@@ -143,12 +141,11 @@ let container: ServiceContainer | undefined;
 export namespace Container {
 	export async function initialize(
 		session: CodeStreamSession,
-		api: CodeStreamApi,
-		api2: ApiProvider,
+		api: ApiProvider,
 		options: AgentOptions,
 		loginResponse: LoginResponse
 	) {
-		container = new ServiceContainer(session, api, api2, options, loginResponse);
+		container = new ServiceContainer(session, api, options, loginResponse);
 	}
 
 	export function instance(): ServiceContainer {

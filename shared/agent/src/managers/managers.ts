@@ -1,5 +1,5 @@
 "use strict";
-import { CodeStreamApi } from "../api/api";
+import { CodeStreamApiProvider } from "../api/codestreamApi";
 import { CodeStreamSession } from "../session";
 import { CSEntity } from "../shared/api.protocol";
 import { LspHandler } from "../system";
@@ -58,8 +58,8 @@ export abstract class EntityManager<T extends CSEntity> {
 	async resolvePubNubMessage(message: CodeStreamRTEMessage): Promise<T[]> {
 		const resolved = await Promise.all(
 			message.changeSets.map(async c => {
-				const changes = CodeStreamApi.normalizeResponse(c) as { [key: string]: any };
-				const cached = await this.cache.get(changes["id"], { avoidFetch: true });
+				const changes = CodeStreamApiProvider.normalizeResponse(c) as { [key: string]: any };
+				const cached = await this.cache.get([["id" as any, changes["id"]]], { avoidFetch: true });
 				if (cached) {
 					const updatedEntity = operations.resolve(cached as any, changes);
 					this.cache.set(updatedEntity as T, cached);

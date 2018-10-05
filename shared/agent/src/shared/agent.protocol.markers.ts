@@ -5,16 +5,33 @@ import {
 	RequestType,
 	TextDocumentIdentifier
 } from "vscode-languageserver-protocol";
-import { CSMarker, CSMarkerLocations } from "./api.protocol";
+import { CSLocationArray, CSMarker, CSMarkerLocation, CSMarkerLocations } from "./api.protocol";
 
-export interface DidChangeDocumentMarkersNotificationResponse {
+export interface DidChangeDocumentMarkersNotification {
 	textDocument: TextDocumentIdentifier;
 }
 
 export const DidChangeDocumentMarkersNotificationType = new NotificationType<
-	DidChangeDocumentMarkersNotificationResponse,
+	DidChangeDocumentMarkersNotification,
 	void
 >("codeStream/didChangeDocumentMarkers");
+
+export interface CreateMarkerLocationRequest {
+	streamId: string;
+	commitHash: string;
+	locations: {
+		[id: string]: CSLocationArray;
+	};
+}
+
+export interface CreateMarkerLocationResponse {}
+
+export const CreateMarkerLocationRequestType = new RequestType<
+	CreateMarkerLocationRequest,
+	CreateMarkerLocationResponse,
+	void,
+	void
+>("codeStream/markerLocations/create");
 
 export interface DocumentMarkersRequest {
 	textDocument: TextDocumentIdentifier;
@@ -51,6 +68,25 @@ export const FetchMarkerLocationsRequestType = new RequestType<
 	void
 >("codeStream/marker/locations");
 
+export interface FetchMarkersRequest {
+	streamId: string;
+	commitHash?: string;
+	markerIds?: string[];
+}
+
+export interface FetchMarkersResponse {
+	markers: CSMarker[];
+	markerLocations: CSMarkerLocation[];
+	numMarkers: number;
+}
+
+export const FetchMarkersRequestType = new RequestType<
+	FetchMarkersRequest,
+	FetchMarkersResponse,
+	void,
+	void
+>("codeStream/markers");
+
 export interface GetMarkerRequest {
 	markerId: string;
 }
@@ -65,3 +101,19 @@ export const GetMarkerRequestType = new RequestType<
 	void,
 	void
 >("codeStream/marker");
+
+export interface UpdateMarkerRequest {
+	markerId: string;
+	commitHashWhenCreated?: string;
+}
+
+export interface UpdateMarkerResponse {
+	marker: CSMarker;
+}
+
+export const UpdateMarkerRequestType = new RequestType<
+	UpdateMarkerRequest,
+	UpdateMarkerResponse,
+	void,
+	void
+>("codeStream/marker/update");
