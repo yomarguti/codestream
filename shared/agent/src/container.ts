@@ -6,14 +6,15 @@ import { Config } from "./config";
 import { DocumentManager } from "./documentManager";
 import { GitService } from "./git/gitService";
 import { Logger } from "./logger";
-import { PostManager } from "./managers/postManager";
-import { RepoManager } from "./managers/repoManager";
-import { CodeStreamSession } from "./session";
-import { MarkerLocationManager } from "./markerLocation/markerLocationManager";
-import { StreamManager } from "./managers/streamManager";
+import { FilesManager } from "./managers/filesManager";
 import { MarkerManager } from "./managers/markerManager";
-import { UserManager } from "./managers/userManager";
-import { TeamManager } from "./managers/teamManager";
+import { PostsManager } from "./managers/postsManager";
+import { ReposManager } from "./managers/reposManager";
+import { StreamsManager } from "./managers/streamsManager";
+import { TeamsManager } from "./managers/teamsManager";
+import { UsersManager } from "./managers/usersManager";
+import { MarkerLocationManager } from "./markerLocation/markerLocationManager";
+import { CodeStreamSession } from "./session";
 
 const envRegex = /https?:\/\/(pd-|qa-)?api.codestream.(?:us|com)/;
 
@@ -44,6 +45,15 @@ class ServiceContainer {
 			userId: loginResponse.user.id
 		};
 
+		this._files = new FilesManager(session);
+		this._markerLocations = new MarkerLocationManager();
+		this._markers = new MarkerManager(session);
+		this._posts = new PostsManager(session);
+		this._repos = new ReposManager(session);
+		this._streams = new StreamsManager(session);
+		this._teams = new TeamsManager(session);
+		this._users = new UsersManager(session);
+
 		this._git = new GitService(session, api2);
 
 		this._documents = new DocumentManager();
@@ -55,18 +65,50 @@ class ServiceContainer {
 		return this._documents;
 	}
 
+	private readonly _files: FilesManager;
+	get files(): FilesManager {
+		return this._files;
+	}
+
 	private readonly _git: GitService;
 	get git() {
 		return this._git;
 	}
 
-	public readonly postManager = new PostManager();
-	public readonly repoManager = new RepoManager();
-	public readonly streamManager = new StreamManager();
-	public readonly userManager = new UserManager();
-	public readonly teamManager = new TeamManager();
-	public readonly markerManager = new MarkerManager();
-	public readonly markerLocationManager = new MarkerLocationManager();
+	private readonly _markerLocations: MarkerLocationManager;
+	get markerLocations(): MarkerLocationManager {
+		return this._markerLocations;
+	}
+
+	private readonly _markers: MarkerManager;
+	get markers(): MarkerManager {
+		return this._markers;
+	}
+
+	private readonly _posts: PostsManager;
+	get posts(): PostsManager {
+		return this._posts;
+	}
+
+	private readonly _repos: ReposManager;
+	get repos(): ReposManager {
+		return this._repos;
+	}
+
+	private readonly _streams: StreamsManager;
+	get streams(): StreamsManager {
+		return this._streams;
+	}
+
+	private readonly _teams: TeamsManager;
+	get teams(): TeamsManager {
+		return this._teams;
+	}
+
+	private readonly _users: UsersManager;
+	get users(): UsersManager {
+		return this._users;
+	}
 
 	updateConfig(config: Config) {
 		// 	const prevCfg = this._config;

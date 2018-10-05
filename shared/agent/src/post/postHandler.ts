@@ -5,17 +5,10 @@ import { Range } from "vscode-languageserver-protocol";
 import URI from "vscode-uri";
 import {
 	CreatePostWithCodeRequest,
-	FetchPostsRequest,
-	FetchPostsResponse,
 	PreparePostWithCodeRequest,
 	PreparePostWithCodeResponse
 } from "../agent";
-import {
-	CSCreatePostRequestCodeBlock,
-	CSGetPostResponse,
-	CSMarkerLocation,
-	CSPost
-} from "../api/api";
+import { CSCreatePostRequestCodeBlock, CSMarkerLocation, CSPost } from "../api/api";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { MarkerLocationManager } from "../markerLocation/markerLocationManager";
@@ -23,20 +16,6 @@ import { Iterables, Strings } from "../system";
 
 export namespace PostHandler {
 	let lastFullCode = "";
-
-	export async function getPosts(params: FetchPostsRequest): Promise<FetchPostsResponse> {
-		const { postManager } = Container.instance();
-		const slice = await postManager.getPosts(
-			params.streamId,
-			params.afterSeq,
-			params.beforeSeq,
-			params.limit
-		);
-		return {
-			posts: slice.data,
-			maxSeq: slice.maxSeq
-		};
-	}
 
 	export async function documentPreparePost({
 		textDocument: documentId,

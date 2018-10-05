@@ -51,6 +51,7 @@ export const CreateDirectStreamRequestType = new RequestType<
 
 export interface FetchStreamsRequest {
 	types?: (StreamType.Channel | StreamType.Direct)[];
+	streamIds?: string[];
 }
 
 export interface FetchStreamsResponse {
@@ -93,7 +94,7 @@ export const FetchUnreadStreamsRequestType = new RequestType<
 >("codeStream/streams/unread");
 
 export interface GetStreamRequest {
-	id: string;
+	streamId: string;
 }
 
 export interface GetStreamResponse {
@@ -108,7 +109,7 @@ export const GetStreamRequestType = new RequestType<
 >("codeStream/stream");
 
 export interface JoinStreamRequest {
-	id: string;
+	streamId: string;
 }
 
 export interface JoinStreamResponse {
@@ -123,7 +124,7 @@ export const JoinStreamRequestType = new RequestType<
 >("codeStream/stream/join");
 
 export interface LeaveStreamRequest {
-	id: string;
+	streamId: string;
 }
 
 export interface LeaveStreamResponse {
@@ -138,7 +139,7 @@ export const LeaveStreamRequestType = new RequestType<
 >("codeStream/stream/leave");
 
 export interface MarkStreamReadRequest {
-	id: string;
+	streamId: string;
 	postId?: string;
 }
 
@@ -152,8 +153,8 @@ export const MarkStreamReadRequestType = new RequestType<
 >("codeStream/stream/markRead");
 
 export interface UpdateStreamRequest {
-	id: string;
-	data: { [key: string]: any };
+	streamId: string;
+	changes: { [key: string]: any };
 }
 
 export interface UpdateStreamResponse {

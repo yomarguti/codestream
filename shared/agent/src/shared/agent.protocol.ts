@@ -94,62 +94,63 @@ export const LogoutRequestType = new RequestType<LogoutRequest, undefined, void,
 );
 
 export enum MessageType {
+	Markers = "markers",
+	MarkerLocations = "markerLocations",
 	Posts = "posts",
 	Repositories = "repos",
 	Streams = "streams",
-	Users = "users",
 	Teams = "teams",
-	Markers = "markers",
-	MarkerLocations = "markerLocations"
+	Users = "users"
 }
 
-export interface PostsChangedNotificationResponse {
-	type: MessageType.Posts;
-	posts: CSPost[];
-}
-export interface ReposChangedNotificationResponse {
-	type: MessageType.Repositories;
-	repos: CSRepository[];
-}
-
-export interface StreamsChangedNotificationResponse {
-	type: MessageType.Streams;
-	streams: CSStream[];
-}
-
-export interface UsersChangedNotificationResponse {
-	type: MessageType.Users;
-	users: CSUser[];
-}
-
-export interface TeamsChangedNotificationResponse {
-	type: MessageType.Teams;
-	teams: CSTeam[];
-}
-
-export interface MarkersChangedNotificationResponse {
+export interface MarkersChangedNotification {
 	type: MessageType.Markers;
 	markers: CSMarker[];
 }
 
-export interface MarkerLocationsChangedNotificationResponse {
+export interface MarkerLocationsChangedNotification {
 	type: MessageType.MarkerLocations;
 	markerLocations: CSMarkerLocations;
 }
 
-export type EntitiesChangedNotificationResponse =
-	| PostsChangedNotificationResponse
-	| ReposChangedNotificationResponse
-	| StreamsChangedNotificationResponse
-	| UsersChangedNotificationResponse
-	| TeamsChangedNotificationResponse
-	| MarkersChangedNotificationResponse
-	| MarkerLocationsChangedNotificationResponse;
+export interface PostsChangedNotification {
+	type: MessageType.Posts;
+	posts: CSPost[];
+}
 
-export const DidEntitiesChangeNotificationType = new NotificationType<
-	EntitiesChangedNotificationResponse,
+export interface ReposChangedNotification {
+	type: MessageType.Repositories;
+	repos: CSRepository[];
+}
+
+export interface StreamsChangedNotification {
+	type: MessageType.Streams;
+	streams: CSStream[];
+}
+
+export interface TeamsChangedNotification {
+	type: MessageType.Teams;
+	teams: CSTeam[];
+}
+
+export interface UsersChangedNotification {
+	type: MessageType.Users;
+	users: CSUser[];
+}
+
+export type DidChangeItemsNotification =
+	| MarkersChangedNotification
+	| MarkerLocationsChangedNotification
+	| PostsChangedNotification
+	| ReposChangedNotification
+	| StreamsChangedNotification
+	| UsersChangedNotification
+	| TeamsChangedNotification;
+
+export const DidChangeItemsNotificationType = new NotificationType<
+	DidChangeItemsNotification,
 	void
->("codeStream/didEntitiesChange");
+>("codeStream/didChangeItems");
 
 export enum VersionCompatibility {
 	Compatible = "ok",

@@ -200,16 +200,14 @@ export class MarkerLocationManager {
 	}
 
 	static async getCommitLocations(filePath: string, commitHash: string): Promise<LocationsById> {
-		const { git, api, session, streamManager, markerManager } = Container.instance();
-
 		Logger.log(`MARKERS: getting locations for ${filePath}@${commitHash}`);
-		const stream = await streamManager.getByPath(filePath);
+		const stream = await Container.instance().files.getByPath(filePath);
 		if (!stream) {
 			Logger.log(`MARKERS: cannot find streamId for ${filePath}`);
 			return {};
 		}
 
-		const markers = await markerManager.getByStreamId(stream.id);
+		const markers = await Container.instance().markers.getByStreamId(stream.id);
 		Logger.log(`MARKERS: found ${markers.length} markers for stream ${stream.id}`);
 
 		const currentCommitLocations = await MarkerLocationManager.getMarkerLocations(
@@ -226,6 +224,8 @@ export class MarkerLocationManager {
 		} else {
 			Logger.log(`MARKERS: missing locations detected - will calculate`);
 		}
+
+		const { git, api, session } = Container.instance();
 
 		for (const entry of missingMarkersByCommit.entries()) {
 			const commitHashWhenCreated = entry[0];
@@ -330,13 +330,14 @@ export class MarkerLocationManager {
 
 	static async flushUncommittedLocations(repo: GitRepository) {
 		Logger.log(`MARKERS: flushing uncommitted locations`);
-		const { api, git, session, markerManager, streamManager } = Container.instance();
+		const { api, files, git, markers, session } = Container.instance();
 		const cache = await getCache(repo.path);
 		const uncommittedLocations = cache.getCollection("uncommittedLocations");
+
 		for (const id of uncommittedLocations.keys()) {
 			Logger.log(`MARKERS: checking uncommitted marker ${id}`);
-			const marker = await markerManager.getById(id);
-			const stream = (await streamManager.getById(marker!.streamId)) as CSFileStream;
+			const marker = await markers.getById(id);
+			const stream = (await files.getById(marker!.streamId)) as CSFileStream;
 			const uncommittedLocation = uncommittedLocations.get(id) as UncommittedLocation;
 			const originalContents = uncommittedLocation.fileContents;
 			const relPath = stream.file;

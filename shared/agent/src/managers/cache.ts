@@ -146,7 +146,7 @@ export class Cache<T extends CSEntity> {
 			throw new Error(`No group index declared for field ${keys}`);
 		}
 
-		let entities = index.getGroup(values);
+		const entities = index.getGroup(values);
 		if (!entities) {
 			const fetch = index.fetchFn as GroupFetchFn<T>;
 			const entities = await fetch(values);

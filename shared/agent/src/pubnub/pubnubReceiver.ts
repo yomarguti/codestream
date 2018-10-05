@@ -1,9 +1,10 @@
 "use strict";
 import { Disposable, Emitter, Event } from "vscode-languageserver";
-import { CodeStreamAgent, MessageType } from "../agent";
+import { CodeStreamAgent } from "../agent";
 import { CodeStreamApi } from "../api/api";
 import { Logger, TraceLevel } from "../logger";
-import { MessageSource, PubNubMessage } from "../managers/realTimeMessage";
+import { CodeStreamRTEMessage, MessageSource } from "../managers/realTimeMessage";
+import { MessageType } from "../shared/agent.protocol";
 import {
 	ChannelDescriptor,
 	PubnubConnection,
@@ -22,8 +23,8 @@ const messageType = {
 };
 
 export class PubnubReceiver {
-	private _onDidReceiveMessage = new Emitter<PubNubMessage>();
-	get onDidReceiveMessage(): Event<PubNubMessage> {
+	private _onDidReceiveMessage = new Emitter<CodeStreamRTEMessage>();
+	get onDidReceiveMessage(): Event<CodeStreamRTEMessage> {
 		return this._onDidReceiveMessage.event;
 	}
 
@@ -117,7 +118,7 @@ export class PubnubReceiver {
 				const type = (messageType as any)[key];
 				if (type) {
 					this._onDidReceiveMessage.fire({
-						source: MessageSource.PubNub,
+						source: MessageSource.CodeStream,
 						type,
 						changeSets
 					});

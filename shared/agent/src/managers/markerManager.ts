@@ -35,14 +35,14 @@ export class MarkerManager extends EntityManager<CSMarker> {
 
 	private async filterMarkers(markers: CSMarker[]): Promise<CSMarker[]> {
 		const includedMarkers = [];
-		const { session, streamManager } = Container.instance();
+		const { session, streams } = Container.instance();
 
 		for (const marker of markers) {
 			if (!marker.postStreamId || marker.deactivated) {
 				continue;
 			}
 
-			const stream = await streamManager.getById(marker.postStreamId);
+			const stream = await streams.getById(marker.postStreamId);
 			if (stream && this.canSeeMarkers(stream, session.userId)) {
 				includedMarkers.push(marker);
 			}

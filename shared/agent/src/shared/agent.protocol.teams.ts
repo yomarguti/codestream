@@ -3,7 +3,8 @@ import { RequestType } from "vscode-languageserver-protocol";
 import { CSTeam } from "./api.protocol";
 
 export interface FetchTeamsRequest {
-	teamIds: string[];
+	mine?: boolean;
+	teamIds?: string[];
 }
 
 export interface FetchTeamsResponse {

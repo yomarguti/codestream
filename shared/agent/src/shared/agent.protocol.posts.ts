@@ -83,7 +83,7 @@ export const FetchLatestPostRequestType = new RequestType<
 
 export interface FetchPostRepliesRequest {
 	streamId: string;
-	id: string;
+	postId: string;
 }
 
 export interface FetchPostRepliesResponse {
@@ -135,7 +135,7 @@ export const FetchPostsByRangeRequestType = new RequestType<
 
 export interface DeletePostRequest {
 	streamId: string;
-	id: string;
+	postId: string;
 }
 
 export interface DeletePostResponse {
@@ -151,7 +151,7 @@ export const DeletePostRequestType = new RequestType<
 
 export interface EditPostRequest {
 	streamId: string;
-	id: string;
+	postId: string;
 	text: string;
 	mentionedUserIds?: string[];
 }
@@ -166,7 +166,7 @@ export const EditPostRequestType = new RequestType<EditPostRequest, EditPostResp
 
 export interface GetPostRequest {
 	streamId: string;
-	id: string;
+	postId: string;
 }
 
 export interface GetPostResponse {
@@ -179,12 +179,10 @@ export const GetPostRequestType = new RequestType<GetPostRequest, GetPostRespons
 
 export interface MarkPostUnreadRequest {
 	streamId: string;
-	id: string;
+	postId: string;
 }
 
-export interface MarkPostUnreadResponse {
-	post: { [key: string]: any };
-}
+export interface MarkPostUnreadResponse {}
 
 export const MarkPostUnreadRequestType = new RequestType<
 	MarkPostUnreadRequest,
@@ -214,7 +212,7 @@ export const PreparePostWithCodeRequestType = new RequestType<
 
 export interface ReactToPostRequest {
 	streamId: string;
-	id: string;
+	postId: string;
 	emojis: CSReactions;
 }
 

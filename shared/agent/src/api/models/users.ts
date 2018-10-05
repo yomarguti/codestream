@@ -78,8 +78,7 @@ export class UserCollection extends CodeStreamCollection<User, CSUser> {
 		return new User(this.session, e);
 	}
 
-	protected async fetch() {
-		return (await Container.instance().api.getUsers(this.session.apiToken, this.session.teamId))
-			.users;
+	protected fetch() {
+		return Container.instance().users.getAll();
 	}
 }

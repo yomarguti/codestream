@@ -18,7 +18,9 @@ export const CreateRepoRequestType = new RequestType<
 	void
 >("codeStream/repos/create");
 
-export interface FetchReposRequest {}
+export interface FetchReposRequest {
+	repoIds?: string[];
+}
 
 export interface FetchReposResponse {
 	repos: CSRepository[];

@@ -1,12 +1,17 @@
 "use strict";
-
 import { CodeStreamApi } from "../api/api";
+import { CodeStreamSession } from "../session";
 import { CSEntity } from "../shared/api.protocol";
+import { LspHandler } from "../system";
 import { Cache } from "./cache";
 import { IndexParams } from "./index";
 import * as operations from "./operations";
-import { MessageSource, PubNubMessage, RealTimeMessage, SlackMessage } from "./realTimeMessage";
-import { SequentialSlice } from "./sequentialSlice";
+import {
+	CodeStreamRTEMessage,
+	MessageSource,
+	RealTimeMessage,
+	SlackRTEMessage
+} from "./realTimeMessage";
 
 export type Id = string;
 
@@ -16,8 +21,16 @@ export type Id = string;
 export abstract class EntityManager<T extends CSEntity> {
 	protected readonly cache: Cache<T>;
 
-	public constructor() {
+	public constructor(public session: CodeStreamSession) {
 		this.cache = new Cache<T>(this.getIndexedFields(), this.fetch.bind(this));
+
+		const handlerRegistry = (this as any).handlerRegistry as LspHandler[] | undefined;
+		if (handlerRegistry !== undefined) {
+			for (const handler of handlerRegistry) {
+				this.session.agent.registerHandler(handler.type, handler.method.bind(this));
+			}
+		}
+
 		this.init();
 	}
 
@@ -35,14 +48,14 @@ export abstract class EntityManager<T extends CSEntity> {
 
 	resolve(realTimeMessage: RealTimeMessage): Promise<T[]> {
 		switch (realTimeMessage.source) {
-			case MessageSource.PubNub:
+			case MessageSource.CodeStream:
 				return this.resolvePubNubMessage(realTimeMessage);
 			case MessageSource.Slack:
 				return this.resolveSlackMessage(realTimeMessage);
 		}
 	}
 
-	async resolvePubNubMessage(message: PubNubMessage): Promise<T[]> {
+	async resolvePubNubMessage(message: CodeStreamRTEMessage): Promise<T[]> {
 		const resolved = await Promise.all(
 			message.changeSets.map(async c => {
 				const changes = CodeStreamApi.normalizeResponse(c) as { [key: string]: any };
@@ -66,7 +79,7 @@ export abstract class EntityManager<T extends CSEntity> {
 		return resolved.filter(Boolean) as T[];
 	}
 
-	async resolveSlackMessage(message: SlackMessage): Promise<T[]> {
+	async resolveSlackMessage(message: SlackRTEMessage): Promise<T[]> {
 		// TODO Eric good luck
 		// GOOD Luck anyway
 		return [];

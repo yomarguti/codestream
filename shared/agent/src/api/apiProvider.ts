@@ -24,33 +24,48 @@ import {
 	FetchPostsResponse,
 	FetchReposRequest,
 	FetchReposResponse,
+	FetchStreamsRequest,
+	FetchStreamsResponse,
+	FetchTeamsRequest,
+	FetchTeamsResponse,
+	FetchUnreadStreamsRequest,
+	FetchUnreadStreamsResponse,
+	FetchUsersRequest,
+	FetchUsersResponse,
+	FindRepoRequest,
+	FindRepoResponse,
 	GetMeResponse,
 	GetPostRequest,
 	GetPostResponse,
+	GetRepoRequest,
+	GetRepoResponse,
+	GetStreamRequest,
+	GetStreamResponse,
+	GetTeamRequest,
+	GetTeamResponse,
+	GetUserRequest,
+	GetUserResponse,
 	InviteUserRequest,
 	InviteUserResponse,
+	JoinStreamRequest,
+	JoinStreamResponse,
+	LeaveStreamRequest,
+	LeaveStreamResponse,
 	MarkPostUnreadRequest,
 	MarkPostUnreadResponse,
+	MarkStreamReadRequest,
+	MarkStreamReadResponse,
 	ReactToPostRequest,
 	ReactToPostResponse,
-	UpdatePreferencesRequest
-} from "../agent";
-import { UpdatePresenceRequest, UpdatePresenceResponse } from "../shared/agent.protocol";
-import {
-	CSChannelStream,
-	CSDirectStream,
-	CSFileStream,
-	CSMarker,
-	CSMarkerLocations,
-	CSMePreferences,
-	CSPost,
-	CSPresenceStatus,
-	CSRepository,
-	CSStream,
-	CSTeam,
-	CSUser,
-	LoginResponse
-} from "../shared/api.protocol";
+	UpdatePreferencesRequest,
+	UpdatePresenceRequest,
+	UpdatePresenceResponse,
+	UpdateStreamMembershipRequest,
+	UpdateStreamMembershipResponse,
+	UpdateStreamRequest,
+	UpdateStreamResponse
+} from "../shared/agent.protocol";
+import { CSGetPostsResponse, LoginResponse } from "../shared/api.protocol";
 
 export interface VersionInfo {
 	readonly ideVersion: string;
@@ -89,20 +104,11 @@ export interface ApiProvider {
 	login(options: LoginOptions): Promise<LoginResponse & { teamId: string }>;
 
 	getMe(): Promise<GetMeResponse>;
-	inviteUser(request: InviteUserRequest): Promise<InviteUserResponse>;
 	updatePreferences(request: UpdatePreferencesRequest): Promise<GetMeResponse>;
 	updatePresence(request: UpdatePresenceRequest): Promise<UpdatePresenceResponse>;
 
-	createPost(request: CreatePostRequest): Promise<CreatePostResponse>;
-	deletePost(request: DeletePostRequest): Promise<DeletePostResponse>;
-	editPost(request: EditPostRequest): Promise<EditPostResponse>;
-	fetchLatestPost(request: FetchLatestPostRequest): Promise<FetchLatestPostResponse>;
-	fetchPostReplies(request: FetchPostRepliesRequest): Promise<FetchPostRepliesResponse>;
-	fetchPosts(request: FetchPostsRequest): Promise<FetchPostsResponse>;
-	fetchPostsByRange(request: FetchPostsByRangeRequest): Promise<FetchPostsByRangeResponse>;
-	getPost(request: GetPostRequest): Promise<GetPostResponse>;
-	markPostUnread(request: MarkPostUnreadRequest): Promise<MarkPostUnreadResponse>;
-	reactToPost(request: ReactToPostRequest): Promise<ReactToPostResponse>;
+	// createFileStream(request: CreateDirectStreamRequest): Promise<CreateFileStreamResponse>;
+	// fetchFileStreams(repoId: string, teamId?: string): Promise<CSFileStream[]>;
 
 	// getMarker(markerId: string, teamId?: string): Promise<CSMarker>;
 	// getMarkers(commitHash: string, streamId: string, teamId?: string): Promise<CSMarker[]>;
@@ -112,30 +118,43 @@ export interface ApiProvider {
 	// 	teamId?: string
 	// ): Promise<CSMarkerLocations>;
 
+	createPost(request: CreatePostRequest): Promise<CreatePostResponse>;
+	deletePost(request: DeletePostRequest): Promise<DeletePostResponse>;
+	editPost(request: EditPostRequest): Promise<EditPostResponse>;
+	fetchLatestPost(request: FetchLatestPostRequest): Promise<FetchLatestPostResponse>;
+	fetchPostReplies(request: FetchPostRepliesRequest): Promise<FetchPostRepliesResponse>;
+	fetchPosts(request: FetchPostsRequest): Promise<FetchPostsResponse>;
+	fetchPostsByRange(request: FetchPostsByRangeRequest): Promise<FetchPostsByRangeResponse>;
+	// TODO: Needs to be remove or consolidated into another request type
+	fetchPostsLesserThan(streamId: string, limit: number, lt?: string): Promise<CSGetPostsResponse>;
+	getPost(request: GetPostRequest): Promise<GetPostResponse>;
+	markPostUnread(request: MarkPostUnreadRequest): Promise<MarkPostUnreadResponse>;
+	reactToPost(request: ReactToPostRequest): Promise<ReactToPostResponse>;
+
 	createRepo(request: CreateRepoRequest): Promise<CreateRepoResponse>;
-	fetchRepos(): Promise<FetchReposResponse>;
-	// getRepo(repoId: string, teamId?: string): Promise<CSRepository | undefined>;
+	fetchRepos(request: FetchReposRequest): Promise<FetchReposResponse>;
+	findRepo(request: FindRepoRequest): Promise<FindRepoResponse>;
+	getRepo(request: GetRepoRequest): Promise<GetRepoResponse>;
 
 	createChannelStream(request: CreateChannelStreamRequest): Promise<CreateChannelStreamResponse>;
 	createDirectStream(request: CreateDirectStreamRequest): Promise<CreateDirectStreamResponse>;
-	// createFileStream(request: CreateDirectStreamRequest): Promise<CreateFileStreamResponse>;
+	fetchStreams(request: FetchStreamsRequest): Promise<FetchStreamsResponse>;
+	fetchUnreadStreams(request: FetchUnreadStreamsRequest): Promise<FetchUnreadStreamsResponse>;
+	getStream(request: GetStreamRequest): Promise<GetStreamResponse>;
+	joinStream(request: JoinStreamRequest): Promise<JoinStreamResponse>;
+	leaveStream(request: LeaveStreamRequest): Promise<LeaveStreamResponse>;
+	markStreamRead(request: MarkStreamReadRequest): Promise<MarkStreamReadResponse>;
+	updateStream(request: UpdateStreamRequest): Promise<UpdateStreamResponse>;
+	updateStreamMembership(
+		request: UpdateStreamMembershipRequest
+	): Promise<UpdateStreamMembershipResponse>;
 
-	// getStream(streamId: string, teamId?: string): Promise<CSStream | undefined>;
-	// getUnreadStreams(teamId?: string): Promise<CSStream[]>;
-	// getChannelStreams(teamId?: string): Promise<CSChannelStream[]>;
-	// getChannelOrDirectStreams(teamId?: string): Promise<(CSChannelStream | CSDirectStream)[]>;
-	// getDirectStreams(teamId?: string): Promise<CSDirectStream[]>;
-	// getFileStreams(repoId: string, teamId?: string): Promise<CSFileStream[]>;
-	// joinStream(streamId: string, teamId?: string): Promise<CSStream>;
-	// leaveStream(streamId: string, teamId?: string): Promise<CSStream>;
-	// markStreamRead(streamId: string): Promise<{}>;
-	// updateStream(streamId: string, update: object): Promise<CSStream>;
+	fetchTeams(request: FetchTeamsRequest): Promise<FetchTeamsResponse>;
+	getTeam(request: GetTeamRequest): Promise<GetTeamResponse>;
 
-	// getTeam(teamId: string): Promise<CSTeam | undefined>;
-	// getTeams(ids: string[]): Promise<CSTeam[]>;
-
-	// getUser(userId: string, teamId?: string): Promise<CSUser | undefined>;
-	// getUsers(teamId?: string): Promise<CSUser[]>;
+	fetchUsers(request: FetchUsersRequest): Promise<FetchUsersResponse>;
+	getUser(request: GetUserRequest): Promise<GetUserResponse>;
+	inviteUser(request: InviteUserRequest): Promise<InviteUserResponse>;
 }
 
 export interface CodeStreamApiMiddlewareContext {

@@ -7,13 +7,11 @@ export interface CSEntity {
 }
 
 export interface CSMarker extends CSEntity {
-	id: string;
 	teamId: string;
 	streamId: string;
 	postId: string;
 	postStreamId: string;
 	commitHashWhenCreated: string;
-	deactivated: boolean;
 }
 
 export interface CSLocationMeta {
@@ -215,7 +213,7 @@ export enum LoginResult {
 	Unknown = "UNKNOWN"
 }
 
-export interface CreateMarkerLocationRequest {
+export interface CSCreateMarkerLocationRequest {
 	teamId: string;
 	streamId: string;
 	commitHash: string;
@@ -224,7 +222,7 @@ export interface CreateMarkerLocationRequest {
 	};
 }
 
-export interface CreateMarkerLocationResponse {}
+export interface CSCreateMarkerLocationResponse {}
 
 export interface CSCreatePostRequestCodeBlock {
 	code: string;
@@ -325,16 +323,15 @@ export interface CSDeletePostResponse {
 	post: { [key: string]: any };
 }
 
-export interface DeleteTeamContentRequest {
+export interface CSDeleteTeamContentRequest {
 	teamId: string;
 	includeStreams?: boolean;
 	newerThan?: number;
 }
 
-export interface DeleteTeamContentResponse {}
+export interface CSDeleteTeamContentResponse {}
 
 export interface CSEditPostRequest {
-	id: string;
 	text: string;
 	mentionedUserIds?: string[];
 }
@@ -348,7 +345,6 @@ export interface CSReactions {
 }
 
 export interface CSReactToPostRequest {
-	id: string;
 	emojis: CSReactions;
 }
 
@@ -356,13 +352,9 @@ export interface CSReactToPostResponse {
 	post: { [key: string]: any };
 }
 
-export interface CSMarkPostUnreadRequest {
-	id: string;
-}
+export interface CSMarkPostUnreadRequest {}
 
-export interface CSMarkPostUnreadResponse {
-	post: { [key: string]: any };
-}
+export interface CSMarkPostUnreadResponse {}
 
 export interface CSFindRepoResponse {
 	repo?: CSRepository;
@@ -433,13 +425,10 @@ export interface CSInviteUserResponse {
 	user: CSUser;
 }
 
-export interface JoinStreamRequest {
-	teamId: string;
-	streamId: string;
-}
+export interface CSJoinStreamRequest {}
 
-export interface JoinStreamResponse {
-	stream: CSStream;
+export interface CSJoinStreamResponse {
+	stream: { [key: string]: any };
 }
 
 export interface CSGetMeResponse {
@@ -451,11 +440,11 @@ export enum CSPresenceStatus {
 	Away = "away"
 }
 
-export interface UpdateMarkerRequest {
+export interface CSUpdateMarkerRequest {
 	commitHashWhenCreated?: string;
 }
 
-export interface UpdateMarkerResponse {
+export interface CSUpdateMarkerResponse {
 	marker: CSMarker;
 }
 

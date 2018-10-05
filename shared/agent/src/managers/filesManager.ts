@@ -2,18 +2,16 @@
 import * as path from "path";
 import { TextDocumentIdentifier } from "vscode-languageserver-protocol";
 import URI from "vscode-uri";
-import { CodeStreamApi, CSFileStream, CSStream, StreamType } from "../api/api";
+import { CSFileStream, CSStream, StreamType } from "../api/api";
 import { Container } from "../container";
-import { EntityManager, Id } from "./managers";
-import { IndexParams, IndexType } from "./index";
 import { Logger } from "../logger";
-import { Iterables } from "../system/iterable";
+import { IndexParams, IndexType } from "./index";
+import { EntityManager, Id } from "./managers";
 
-export class StreamManager extends EntityManager<CSStream> {
+export class FilesManager extends EntityManager<CSFileStream> {
 	private idsByPath = new Map<string, Id>();
 
-	protected getIndexedFields(): IndexParams<CSStream>[] {
-		// @ts-ignore
+	protected getIndexedFields(): IndexParams<CSFileStream>[] {
 		return [
 			{
 				fields: ["repoId"],
@@ -23,21 +21,20 @@ export class StreamManager extends EntityManager<CSStream> {
 		];
 	}
 
-	protected init() {
-		const { session } = Container.instance();
-		session.onStreamsChanged(this.onStreamsChanged, this);
-	}
+	// protected init() {
+	// 	this.session.onStreamsChanged(this.onStreamsChanged, this);
+	// }
 
-	protected onStreamsChanged(streams: CSStream[]) {
-		const { pubnub, userId } = Container.instance().session;
-		// TODO Eric help!!!
-		// pubnub.subscribe([
-		// 	...Iterables.filterMap(
-		// 		streams,
-		// 		s => (CodeStreamApi.isStreamSubscriptionRequired(s, userId) ? `stream-${s.id}` : undefined)
-		// 	)
-		// ]);
-	}
+	// protected onStreamsChanged(streams: CSStream[]) {
+	// 	// const { pubnub, userId } = this.session;
+	// 	// TODO Eric help!!!
+	// 	// pubnub.subscribe([
+	// 	// 	...Iterables.filterMap(
+	// 	// 		streams,
+	// 	// 		s => (CodeStreamApi.isStreamSubscriptionRequired(s, userId) ? `stream-${s.id}` : undefined)
+	// 	// 	)
+	// 	// ]);
+	// }
 
 	async getByPath(filePath: string): Promise<CSStream | undefined> {
 		let id = this.idsByPath.get(filePath);
@@ -89,25 +86,23 @@ export class StreamManager extends EntityManager<CSStream> {
 		return TextDocumentIdentifier.create(documentUri);
 	}
 
-	// @ts-ignore
-	protected async fetch(id: Id): Promise<CSStream | undefined> {
-		const { api, session } = Container.instance();
+	protected async fetch(id: Id): Promise<CSFileStream> {
 		try {
-			const response = await api.getStream(session.apiToken, session.teamId, id);
-			return response.stream;
+			const response = await Container.instance().api2.getStream({ streamId: id });
+			return response.stream as CSFileStream;
 		} catch (err) {
 			// When the user doesn't have access to the stream, the server returns a 403. If
 			// this error occurs, it could be that we're subscribed to streams we're not
 			// supposed to be subscribed to.
 			Logger.warn(`Error fetching stream id=${id}`);
-			return undefined;
+			return undefined!;
 		}
 	}
 
 	private async fetchByRepoId(values: any[]): Promise<CSFileStream[]> {
-		const { api, session } = Container.instance();
+		const { api } = Container.instance();
 		const [repoId] = values;
-		const response = await api.getStreams(session.apiToken, session.teamId, repoId);
+		const response = await api.getStreams(this.session.apiToken, this.session.teamId, repoId);
 		return response.streams as CSFileStream[];
 	}
 }

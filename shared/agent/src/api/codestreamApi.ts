@@ -2,7 +2,9 @@
 import fetch, { Headers, RequestInit, Response } from "node-fetch";
 import { URLSearchParams } from "url";
 import { ServerError } from "../agentError";
+import { Container } from "../container";
 import { Logger } from "../logger";
+import { MessageSource } from "../managers/realTimeMessage";
 import {
 	AccessToken,
 	CreateChannelStreamRequest,
@@ -15,12 +17,40 @@ import {
 	FetchPostRepliesRequest,
 	FetchPostsByRangeRequest,
 	FetchPostsRequest,
+	FetchStreamsRequest,
+	FetchStreamsResponse,
+	FetchTeamsRequest,
+	FetchTeamsResponse,
+	FetchUnreadStreamsRequest,
+	FetchUnreadStreamsResponse,
+	FetchUsersRequest,
+	FetchUsersResponse,
+	FindRepoRequest,
 	GetPostRequest,
+	GetRepoRequest,
+	GetRepoResponse,
+	GetStreamRequest,
+	GetStreamResponse,
+	GetTeamRequest,
+	GetTeamResponse,
+	GetUserRequest,
+	GetUserResponse,
 	InviteUserRequest,
+	JoinStreamRequest,
+	JoinStreamResponse,
+	LeaveStreamRequest,
+	LeaveStreamResponse,
 	MarkPostUnreadRequest,
+	MarkStreamReadRequest,
+	MarkStreamReadResponse,
+	MessageType,
 	ReactToPostRequest,
 	UpdatePreferencesRequest,
-	UpdatePresenceRequest
+	UpdatePresenceRequest,
+	UpdateStreamMembershipRequest,
+	UpdateStreamMembershipResponse,
+	UpdateStreamRequest,
+	UpdateStreamResponse
 } from "../shared/agent.protocol";
 import {
 	CompleteSignupRequest,
@@ -38,18 +68,29 @@ import {
 	CSEditPostRequest,
 	CSEditPostResponse,
 	CSFileStream,
+	CSFindRepoResponse,
 	CSGetMeResponse,
 	CSGetPostResponse,
 	CSGetPostsResponse,
+	CSGetRepoResponse,
 	CSGetReposResponse,
+	CSGetStreamResponse,
+	CSGetStreamsResponse,
+	CSGetTeamResponse,
+	CSGetTeamsResponse,
+	CSGetUserResponse,
+	CSGetUsersResponse,
 	CSInviteUserRequest,
 	CSInviteUserResponse,
+	CSJoinStreamRequest,
+	CSJoinStreamResponse,
 	CSMarker,
 	CSMarkerLocations,
 	CSMarkPostUnreadRequest,
 	CSMarkPostUnreadResponse,
 	CSMePreferences,
 	CSPresenceStatus,
+	CSPush,
 	CSReactions,
 	CSReactToPostResponse,
 	CSRepository,
@@ -57,6 +98,7 @@ import {
 	CSTeam,
 	CSUpdatePresenceRequest,
 	CSUpdatePresenceResponse,
+	CSUpdateStreamMembershipResponse,
 	CSUser,
 	LoginRequest,
 	LoginResponse,
@@ -164,14 +206,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 		return this.get<CSGetMeResponse>("/users/me", this._token);
 	}
 
-	inviteUser(request: InviteUserRequest) {
-		return this.post<CSInviteUserRequest, CSInviteUserResponse>(
-			"/users",
-			{ ...request, teamId: this.teamId },
-			this._token
-		);
-	}
-
 	async updatePreferences(request: UpdatePreferencesRequest) {
 		void (await this.put<CSMePreferences, any>("/preferences", request.preferences, this._token));
 		return this.getMe();
@@ -185,6 +219,45 @@ export class CodeStreamApiProvider implements ApiProvider {
 		);
 	}
 
+	// async createFileStream(relativePath: string, repoId: string) {
+	// 	return this.createStream<CSCreateFileStreamRequest, CSCreateFileStreamResponse>({
+	// 		teamId: this._teamId,
+	// 		type: StreamType.File,
+	// 		repoId: repoId,
+	// 		file: relativePath
+	// 	});
+	// }
+
+	// async fetchFileStreams(repoId: string, teamId?: string): Promise<CSFileStream[]> {
+	// 	return (await this._codestream.getStreams<CSFileStream>(
+	// 		this._token,
+	// 		teamId || this._teamId,
+	// 		repoId
+	// 	)).streams;
+	// }
+
+	// async getMarker(markerId: string, teamId?: string): Promise<CSMarker> {
+	// 	return (await this._codestream.getMarker(this._token, teamId || this._teamId, markerId)).marker;
+	// }
+
+	// async getMarkers(commitHash: string, streamId: string, teamId?: string): Promise<CSMarker[]> {
+	// 	return (await this._codestream.getMarkers(this._token, teamId || this._teamId, streamId))
+	// 		.markers;
+	// }
+
+	// async getMarkerLocations(
+	// 	commitHash: string,
+	// 	streamId: string,
+	// 	teamId?: string
+	// ): Promise<CSMarkerLocations> {
+	// 	return (await this._codestream.getMarkerLocations(
+	// 		this._token,
+	// 		teamId || this._teamId,
+	// 		streamId,
+	// 		commitHash
+	// 	)).markerLocations;
+	// }
+
 	createPost(request: CreatePostRequest) {
 		return this.post<CSCreatePostRequest, CSCreatePostResponse>(
 			`/posts`,
@@ -194,7 +267,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	async deletePost(request: DeletePostRequest) {
-		const response = await this.delete<CSDeletePostResponse>(`/posts/${request.id}`, this._token);
+		const response = await this.delete<CSDeletePostResponse>(
+			`/posts/${request.postId}`,
+			this._token
+		);
 
 		const post = await this._cache.resolvePost(response.post);
 		return { ...response, post: post };
@@ -202,7 +278,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	async editPost(request: EditPostRequest) {
 		const response = await this.put<CSEditPostRequest, CSEditPostResponse>(
-			`/posts/${request.id}`,
+			`/posts/${request.postId}`,
 			request,
 			this._token
 		);
@@ -223,7 +299,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	fetchPostReplies(request: FetchPostRepliesRequest) {
 		return this.get<CSGetPostsResponse>(
-			`/posts?teamId=${this.teamId}?parentPostId=${request.id}`,
+			`/posts?teamId=${this.teamId}?parentPostId=${request.postId}`,
 			this._token
 		);
 	}
@@ -250,22 +326,13 @@ export class CodeStreamApiProvider implements ApiProvider {
 	// 	);
 	// }
 
-	// fetchPostsLesserThan(
-	// 	token: string,
-	// 	teamId: string,
-	// 	streamId: string,
-	// 	limit: number,
-	// 	lt?: string
-	// ): Promise<CSGetPostsResponse> {
-	// 	const teamParam = `?teamId=${teamId}`;
-	// 	const streamParam = `&streamId=${streamId}`;
-	// 	const ltParam = lt ? `&lt=${lt}` : "";
-	// 	const limitParam = `&limit=${limit}`;
-	// 	return this.get<CSGetPostsResponse>(
-	// 		`/posts${teamParam}${streamParam}${ltParam}${limitParam}`,
-	// 		token
-	// 	);
-	// }
+	// TODO: Needs to be remove or consolidated into another request type
+	fetchPostsLesserThan(streamId: string, limit: number, lt?: string): Promise<CSGetPostsResponse> {
+		return this.get<CSGetPostsResponse>(
+			`/posts?teamId=${this.teamId}&streamId=${streamId}&limit=${limit}${lt ? `&lt=${lt}` : ""}`,
+			this._token
+		);
+	}
 
 	fetchPostsByRange(request: FetchPostsByRangeRequest) {
 		return this.get<CSGetPostsResponse>(
@@ -275,23 +342,23 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	getPost(request: GetPostRequest) {
-		return this.get<CSGetPostResponse>(`/posts/${request.id}?teamId=${this.teamId}`, this._token);
+		return this.get<CSGetPostResponse>(
+			`/posts/${request.postId}?teamId=${this.teamId}`,
+			this._token
+		);
 	}
 
-	async markPostUnread(request: MarkPostUnreadRequest) {
-		const response = await this.put<CSMarkPostUnreadRequest, CSMarkPostUnreadResponse>(
-			`/unread/${request.id}`,
+	markPostUnread(request: MarkPostUnreadRequest) {
+		return this.put<CSMarkPostUnreadRequest, CSMarkPostUnreadResponse>(
+			`/unread/${request.postId}`,
 			request,
 			this._token
 		);
-
-		const post = await this._cache.resolvePost(response.post);
-		return { ...response, post: post };
 	}
 
 	async reactToPost(request: ReactToPostRequest) {
 		const response = await this.put<CSReactions, CSReactToPostResponse>(
-			`/react/${request.id}`,
+			`/react/${request.postId}`,
 			request.emojis,
 			this._token
 		);
@@ -299,28 +366,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 		const post = await this._cache.resolvePost(response.post);
 		return { ...response, post: post };
 	}
-
-	// async getMarker(markerId: string, teamId?: string): Promise<CSMarker> {
-	// 	return (await this._codestream.getMarker(this._token, teamId || this._teamId, markerId)).marker;
-	// }
-
-	// async getMarkers(commitHash: string, streamId: string, teamId?: string): Promise<CSMarker[]> {
-	// 	return (await this._codestream.getMarkers(this._token, teamId || this._teamId, streamId))
-	// 		.markers;
-	// }
-
-	// async getMarkerLocations(
-	// 	commitHash: string,
-	// 	streamId: string,
-	// 	teamId?: string
-	// ): Promise<CSMarkerLocations> {
-	// 	return (await this._codestream.getMarkerLocations(
-	// 		this._token,
-	// 		teamId || this._teamId,
-	// 		streamId,
-	// 		commitHash
-	// 	)).markerLocations;
-	// }
 
 	createRepo(request: CreateRepoRequest) {
 		return this.post<CSCreateRepoRequest, CSCreateRepoResponse>(
@@ -334,9 +379,19 @@ export class CodeStreamApiProvider implements ApiProvider {
 		return this.get<CSGetReposResponse>(`/repos?teamId=${this.teamId}`, this._token);
 	}
 
-	// async getRepo(repoId: string, teamId?: string): Promise<CSRepository | undefined> {
-	// 	return (await this._codestream.getRepo(this._token, teamId || this._teamId, repoId)).repo;
-	// }
+	findRepo(request: FindRepoRequest) {
+		return this.get<CSFindRepoResponse>(
+			`/no-auth/find-repo?url=${encodeURIComponent(
+				request.url
+			)}&knownCommitHashes=${request.firstCommitHashes.join(",")}&firstCommitHash=${
+				request.firstCommitHashes[0]
+			}`
+		);
+	}
+
+	getRepo(request: GetRepoRequest): Promise<GetRepoResponse> {
+		return this.get<CSGetRepoResponse>(`/repos/${request.repoId}`, this._token);
+	}
 
 	createChannelStream(request: CreateChannelStreamRequest) {
 		return this.post<CSCreateChannelStreamRequest, CSCreateChannelStreamResponse>(
@@ -354,81 +409,88 @@ export class CodeStreamApiProvider implements ApiProvider {
 		);
 	}
 
-	// async createFileStream(relativePath: string, repoId: string) {
-	// 	return this.createStream<CSCreateFileStreamRequest, CSCreateFileStreamResponse>({
-	// 		teamId: this._teamId,
-	// 		type: StreamType.File,
-	// 		repoId: repoId,
-	// 		file: relativePath
-	// 	});
-	// }
+	fetchStreams(request: FetchStreamsRequest): Promise<FetchStreamsResponse> {
+		if (
+			request.types == null ||
+			request.types.length === 0 ||
+			(request.types.includes(StreamType.Channel) && request.types.includes(StreamType.Direct))
+		) {
+			return this.get<CSGetStreamsResponse<CSChannelStream | CSDirectStream>>(
+				`/streams?teamId=${this.teamId}`,
+				this._token
+			);
+		}
 
-	// async getStream(streamId: string, teamId?: string): Promise<CSStream | undefined> {
-	// 	return (await this._codestream.getStream(this._token, teamId || this._teamId, streamId)).stream;
-	// }
+		return this.get<CSGetStreamsResponse<CSChannelStream | CSDirectStream>>(
+			`/streams?teamId=${this.teamId}&type=${request.types[0]}`,
+			this._token
+		);
+	}
 
-	// async getUnreadStreams(teamId?: string): Promise<CSStream[]> {
-	// 	return (await this._codestream.getUnreadStreams(this._token, teamId || this._teamId)).streams;
-	// }
+	fetchUnreadStreams(request: FetchUnreadStreamsRequest): Promise<FetchUnreadStreamsResponse> {
+		return this.get<CSGetStreamsResponse<CSChannelStream | CSDirectStream>>(
+			`/streams?teamId=${this.teamId}&unread`,
+			this._token
+		);
+	}
 
-	// async getChannelStreams(teamId?: string): Promise<CSChannelStream[]> {
-	// 	return (await this._codestream.getStreams<CSChannelStream>(
-	// 		this._token,
-	// 		teamId || this._teamId
-	// 	)).streams.filter(s => s.type === StreamType.Channel);
-	// }
+	async getStream(request: GetStreamRequest): Promise<GetStreamResponse> {
+		return this.get<CSGetStreamResponse<CSChannelStream | CSDirectStream>>(
+			`/streams/${request.streamId}`,
+			this._token
+		);
+	}
 
-	// async getChannelOrDirectStreams(teamId?: string): Promise<(CSChannelStream | CSDirectStream)[]> {
-	// 	return (await this._codestream.getStreams<CSChannelStream | CSDirectStream>(
-	// 		this._token,
-	// 		teamId || this._teamId
-	// 	)).streams.filter(s => s.type === StreamType.Channel || s.type === StreamType.Direct);
-	// }
+	async joinStream(request: JoinStreamRequest): Promise<JoinStreamResponse> {
+		const response = await this.put<CSJoinStreamRequest, CSJoinStreamResponse>(
+			`/join/${request.streamId}`,
+			{},
+			this._token
+		);
 
-	// async getDirectStreams(teamId?: string): Promise<CSDirectStream[]> {
-	// 	return (await this._codestream.getStreams<CSDirectStream>(
-	// 		this._token,
-	// 		teamId || this._teamId
-	// 	)).streams.filter(s => s.type === StreamType.Direct);
-	// }
+		// const stream = Container.instance().streams.resolve({
+		// 	source: MessageSource.CodeStream,
+		// 	type: MessageType.Streams,
+		// 	changeSets: response
+		// });
+		return { stream: response.stream as CSChannelStream | CSDirectStream };
+	}
 
-	// async getFileStreams(repoId: string, teamId?: string): Promise<CSFileStream[]> {
-	// 	return (await this._codestream.getStreams<CSFileStream>(
-	// 		this._token,
-	// 		teamId || this._teamId,
-	// 		repoId
-	// 	)).streams;
-	// }
+	async leaveStream(request: LeaveStreamRequest): Promise<LeaveStreamResponse> {
+		const response = await this.updateStream({
+			streamId: request.streamId,
+			changes: {
+				$pull: { memberIds: [this._userId] }
+			}
+		});
 
-	// async getTeam(teamId: string): Promise<CSTeam | undefined> {
-	// 	return (await this._codestream.getTeam(this._token, teamId)).team;
-	// }
+		// const stream = Container.instance().streams.resolve({
+		// 	source: MessageSource.CodeStream,
+		// 	type: MessageType.Streams,
+		// 	changeSets: response
+		// });
+		return { stream: response.stream as CSChannelStream | CSDirectStream };
+	}
 
-	// async getTeams(ids: string[]): Promise<CSTeam[]> {
-	// 	return (await this._codestream.getTeams(this._token, ids)).teams;
-	// }
+	markStreamRead(request: MarkStreamReadRequest): Promise<MarkStreamReadResponse> {
+		// TODO - this needs to resolve the data
+		return this.put(`/read/${request.streamId}`, {}, this._token);
+	}
 
-	// async getUser(userId: string, teamId?: string): Promise<CSUser | undefined> {
-	// 	return (await this._codestream.getUser(this._token, teamId || this._teamId, userId)).user;
-	// }
+	updateStream(request: UpdateStreamRequest): Promise<UpdateStreamResponse> {
+		// TODO - this needs to resolve the data
+		return this.put(`/streams/${request.streamId}`, request.changes, this._token);
+	}
 
-	// async getUsers(teamId?: string): Promise<CSUser[]> {
-	// 	return (await this._codestream.getUsers(this._token, teamId || this._teamId)).users;
-	// }
-
-	// async joinStream(streamId: string, teamId?: string): Promise<CSStream> {
-	// 	return this._cache.resolveStream(
-	// 		await this._codestream.joinStream(this._token, teamId || this._teamId, streamId)
-	// 	);
-	// }
-
-	// async leaveStream(streamId: string, teamId?: string): Promise<CSStream> {
-	// 	return this._cache.resolveStream(
-	// 		await this._codestream.updateStream(this._token, teamId || this._teamId, streamId, {
-	// 			$pull: { memberIds: [this._userId] }
-	// 		})
-	// 	);
-	// }
+	updateStreamMembership(
+		request: UpdateStreamMembershipRequest
+	): Promise<UpdateStreamMembershipResponse> {
+		return this.put<CSPush, CSUpdateStreamMembershipResponse>(
+			`/streams/${request.streamId}`,
+			request.push,
+			this._token
+		);
+	}
 
 	// // async addUserToStream(streamId: string, userId: string, teamId?: string) {
 	// // 	return (await this._api.updateStreamMembership(this.token, teamId || this.teamId, streamId, {
@@ -436,19 +498,34 @@ export class CodeStreamApiProvider implements ApiProvider {
 	// // 	})).stream;
 	// // }
 
-	// async updateStream(
-	// 	streamId: string,
-	// 	changes: { [key: string]: any },
-	// 	teamId?: string
-	// ): Promise<CSStream> {
-	// 	return this._cache.resolveStream(
-	// 		await this._codestream.updateStream(this._token, teamId || this._teamId, streamId, changes)
-	// 	);
-	// }
+	fetchTeams(request: FetchTeamsRequest): Promise<FetchTeamsResponse> {
+		return this.get<CSGetTeamsResponse>(
+			`/teams${
+				request.teamIds && request.teamIds.length ? `?ids=${request.teamIds.join(",")}` : ""
+			}`,
+			this._token
+		);
+	}
 
-	// async markStreamRead(streamId: string) {
-	// 	return await this._codestream.markStreamRead(this._token, streamId);
-	// }
+	getTeam(request: GetTeamRequest): Promise<GetTeamResponse> {
+		return this.get<CSGetTeamResponse>(`/teams/${request.teamId}`, this._token);
+	}
+
+	fetchUsers(request: FetchUsersRequest): Promise<FetchUsersResponse> {
+		return this.get<CSGetUsersResponse>(`/users?teamId=${this.teamId}`, this._token);
+	}
+
+	getUser(request: GetUserRequest): Promise<GetUserResponse> {
+		return this.get<CSGetUserResponse>(`/users/${request.userId}`, this._token);
+	}
+
+	inviteUser(request: InviteUserRequest) {
+		return this.post<CSInviteUserRequest, CSInviteUserResponse>(
+			"/users",
+			{ ...request, teamId: this.teamId },
+			this._token
+		);
+	}
 
 	private delete<R extends object>(url: string, token?: string): Promise<R> {
 		let resp = undefined;

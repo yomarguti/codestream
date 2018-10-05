@@ -3,20 +3,20 @@
 import { MessageType } from "../shared/agent.protocol";
 
 export enum MessageSource {
-	PubNub,
-	Slack
+	CodeStream = "codestream",
+	Slack = "slack"
 }
 
-export interface PubNubMessage {
-	source: MessageSource.PubNub;
+export interface CodeStreamRTEMessage {
+	source: MessageSource.CodeStream;
 	type: MessageType;
-	changeSets: object[];
+	changeSets: { [key: string]: any }[];
 }
 
-export interface SlackMessage {
+export interface SlackRTEMessage {
 	source: MessageSource.Slack;
 	type: MessageType;
 	// ?????
 }
 
-export type RealTimeMessage = PubNubMessage | SlackMessage;
+export type RealTimeMessage = CodeStreamRTEMessage | SlackRTEMessage;

@@ -27,16 +27,15 @@ export namespace MarkerHandler {
 		textDocument: documentId
 	}: DocumentMarkersRequest): Promise<DocumentMarkersResponse> {
 		try {
-			const { streamManager, markerManager } = Container.instance();
 			const filePath = URI.parse(documentId.uri).fsPath;
 			Logger.log(`MARKERS: requested markers for ${filePath}`);
-			const stream = await streamManager.getByPath(filePath);
+			const stream = await Container.instance().files.getByPath(filePath);
 			if (!stream) {
 				Logger.log(`MARKERS: no streamId found for ${filePath} - returning empty response`);
 				return emptyResponse;
 			}
 
-			const markersById = await markerManager.getByStreamId(stream.id, true);
+			const markersById = await Container.instance().markers.getByStreamId(stream.id, true);
 			const markers = Array.from(markersById.values());
 			Logger.log(`MARKERS: found ${markers.length} markers - retrieving current locations`);
 			const locations = await MarkerLocationManager.getCurrentLocations(documentId.uri);

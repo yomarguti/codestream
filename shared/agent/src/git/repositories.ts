@@ -181,7 +181,7 @@ export class GitRepositories {
 	}
 
 	private async getKnownRepositories() {
-		const resp = await this._api.fetchRepos();
+		const resp = await this._api.fetchRepos({});
 		const remotesToRepo = Iterables.flatMap(
 			resp.repos,
 			r =>

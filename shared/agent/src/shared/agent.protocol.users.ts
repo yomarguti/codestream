@@ -2,7 +2,9 @@
 import { RequestType } from "vscode-languageserver-protocol";
 import { CSMe, CSMePreferences, CSPresenceStatus, CSUser } from "./api.protocol";
 
-export interface FetchUsersRequest {}
+export interface FetchUsersRequest {
+	userIds?: string[];
+}
 
 export interface FetchUsersResponse {
 	users: CSUser[];

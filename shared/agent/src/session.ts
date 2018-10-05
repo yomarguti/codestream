@@ -15,7 +15,7 @@ import {
 	CreatePostWithCodeRequestType,
 	CreateRepoRequestType,
 	DeletePostRequestType,
-	DidEntitiesChangeNotificationType,
+	DidChangeItemsNotificationType,
 	DocumentFromCodeBlockRequestType,
 	DocumentLatestRevisionRequestType,
 	DocumentMarkersRequestType,
@@ -96,8 +96,11 @@ import { UserCollection } from "./api/models/users";
 import { Container } from "./container";
 import { setGitPath } from "./git/git";
 import { Logger } from "./logger";
-import { MarkerHandler } from "./marker/markerHandler";
+import { FilesManager } from "./managers/filesManager";
 import { MarkerManager } from "./managers/markerManager";
+import { RealTimeMessage } from "./managers/realTimeMessage";
+import { StreamsManager } from "./managers/streamsManager";
+import { MarkerHandler } from "./marker/markerHandler";
 import { MarkerLocationManager } from "./markerLocation/markerLocationManager";
 import { PostHandler } from "./post/postHandler";
 import { PubnubReceiver } from "./pubnub/pubnubReceiver";
@@ -120,9 +123,7 @@ import {
 	UpdateStreamMembershipRequest,
 	UpdateStreamMembershipResponse
 } from "./shared/agent.protocol";
-import { StreamManager } from "./managers/streamManager";
 import { Strings } from "./system";
-import { RealTimeMessage } from "./managers/realTimeMessage";
 
 const loginApiErrorMappings: { [k: string]: ApiErrors } = {
 	"USRC-1001": ApiErrors.InvalidCredentials,
@@ -214,7 +215,6 @@ export class CodeStreamSession {
 		this.agent.registerHandler(DocumentMarkersRequestType, MarkerHandler.documentMarkers);
 		this.agent.registerHandler(PreparePostWithCodeRequestType, PostHandler.documentPreparePost);
 		this.agent.registerHandler(CreatePostWithCodeRequestType, PostHandler.documentPost);
-		this.agent.registerHandler(FetchPostsRequestType, PostHandler.getPosts);
 
 		this.agent.registerHandler(DocumentLatestRevisionRequestType, async e => {
 			const revision = await Container.instance().git.getFileCurrentRevision(
@@ -223,110 +223,58 @@ export class CodeStreamSession {
 			return { revision: revision };
 		});
 
-		this.agent.registerHandler(GetMeRequestType, r => this._api2.getMe());
-		this.agent.registerHandler(InviteUserRequestType, r => this._api2.inviteUser(r));
-		this.agent.registerHandler(UpdatePreferencesRequestType, r => this._api2.updatePreferences(r));
-		this.agent.registerHandler(UpdatePresenceRequestType, r => this._api2.updatePresence(r));
-
+		this.agent.registerHandler(FetchFileStreamsRequestType, this.handleGetFileStreams);
 		this.agent.registerHandler(GetMarkerRequestType, this.handleGetMarker);
 		this.agent.registerHandler(FetchMarkerLocationsRequestType, this.handleFetchMarkerLocations);
-
-		this.agent.registerHandler(CreatePostRequestType, r => this._api2.createPost(r));
-		this.agent.registerHandler(DeletePostRequestType, r => this._api2.deletePost(r));
-		this.agent.registerHandler(EditPostRequestType, r => this._api2.editPost(r));
-		this.agent.registerHandler(FetchLatestPostRequestType, r => this._api2.fetchLatestPost(r));
-		this.agent.registerHandler(FetchPostRepliesRequestType, r => this._api2.fetchPostReplies(r));
-		this.agent.registerHandler(FetchPostsRequestType, r => this._api2.fetchPosts(r));
-		this.agent.registerHandler(FetchPostsByRangeRequestType, r => this._api2.fetchPostsByRange(r));
-		this.agent.registerHandler(GetPostRequestType, r => this._api2.getPost(r));
-		this.agent.registerHandler(MarkPostUnreadRequestType, r => this._api2.markPostUnread(r));
-		this.agent.registerHandler(ReactToPostRequestType, r => this._api2.reactToPost(r));
-
-		this.agent.registerHandler(FindRepoRequestType, this.handleFindRepo);
-		this.agent.registerHandler(GetRepoRequestType, this.handleGetRepo);
-		this.agent.registerHandler(FetchReposRequestType, this.handleFetchRepos);
-
-		this.agent.registerHandler(CreateChannelStreamRequestType, r =>
-			this._api2.createChannelStream(r)
-		);
-		this.agent.registerHandler(CreateDirectStreamRequestType, r =>
-			this._api2.createDirectStream(r)
-		);
-		this.agent.registerHandler(CreateRepoRequestType, r => this._api2.createRepo(r));
-
-		this.agent.registerHandler(GetStreamRequestType, this.handleGetStream);
-		this.agent.registerHandler(FetchUnreadStreamsRequestType, this.handleGetUnreadStreams);
-		this.agent.registerHandler(FetchStreamsRequestType, this.handleGetStreams);
-		this.agent.registerHandler(FetchFileStreamsRequestType, this.handleGetFileStreams);
-		this.agent.registerHandler(GetTeamRequestType, this.handleGetTeam);
-		this.agent.registerHandler(FetchTeamsRequestType, this.handleFetchTeams);
-		this.agent.registerHandler(GetUserRequestType, this.handleGetUser);
-		this.agent.registerHandler(FetchUsersRequestType, this.handleFetchUsers);
-		this.agent.registerHandler(JoinStreamRequestType, this.handleJoinStream);
-		this.agent.registerHandler(UpdateStreamRequestType, this.handleUpdateStream);
-		this.agent.registerHandler(
-			UpdateStreamMembershipRequestType,
-			this.handleUpdateStreamMembership
-		);
-		this.agent.registerHandler(MarkStreamReadRequestType, this.handleMarkStreamRead);
 	}
 
 	private async onRealTimeMessageReceived(e: RealTimeMessage) {
-		const {
-			postManager,
-			repoManager,
-			streamManager,
-			userManager,
-			teamManager,
-			markerManager,
-			markerLocationManager
-		} = Container.instance();
 		switch (e.type) {
 			case MessageType.Posts:
-				const posts = await postManager.resolve(e);
+				const posts = await Container.instance().posts.resolve(e);
 				this._onPostsChanged.fire(posts);
-				this.agent.sendNotification(DidEntitiesChangeNotificationType, {
+				this.agent.sendNotification(DidChangeItemsNotificationType, {
 					type: MessageType.Posts,
 					posts
 				});
 				break;
 			case MessageType.Repositories:
-				const repos = await repoManager.resolve(e);
-				this.agent.sendNotification(DidEntitiesChangeNotificationType, {
+				const repos = await Container.instance().repos.resolve(e);
+				this.agent.sendNotification(DidChangeItemsNotificationType, {
 					type: MessageType.Repositories,
 					repos
 				});
 				break;
 			case MessageType.Streams:
-				const streams = await streamManager.resolve(e);
-				this.agent.sendNotification(DidEntitiesChangeNotificationType, {
+				const streams = await Container.instance().streams.resolve(e);
+				this.agent.sendNotification(DidChangeItemsNotificationType, {
 					type: MessageType.Streams,
 					streams
 				});
 				break;
 			case MessageType.Users:
-				const users = await userManager.resolve(e);
-				this.agent.sendNotification(DidEntitiesChangeNotificationType, {
+				const users = await Container.instance().users.resolve(e);
+				this.agent.sendNotification(DidChangeItemsNotificationType, {
 					type: MessageType.Users,
 					users
 				});
 				break;
 			case MessageType.Teams:
-				const teams = await teamManager.resolve(e);
-				this.agent.sendNotification(DidEntitiesChangeNotificationType, {
+				const teams = await Container.instance().teams.resolve(e);
+				this.agent.sendNotification(DidChangeItemsNotificationType, {
 					type: MessageType.Teams,
 					teams
 				});
 				break;
 			case MessageType.Markers:
-				const markers = await markerManager.resolve(e);
-				this.agent.sendNotification(DidEntitiesChangeNotificationType, {
+				const markers = await Container.instance().markers.resolve(e);
+				this.agent.sendNotification(DidChangeItemsNotificationType, {
 					type: MessageType.Markers,
 					markers
 				});
 				break;
 			case MessageType.MarkerLocations:
-				// const markerLocations = await markerLocationManager.resolve(e);
+				// const markerLocations = await Container.instance().markerLocations.resolve(e);
 				// this.agent.sendNotification(DidEntitiesChangeNotificationType, {
 				// 	type: MessageType.MarkerLocations,
 				// 	markerLocations
@@ -437,7 +385,7 @@ export class CodeStreamSession {
 			const streams = await this.getSubscribableStreams(this._userId, this._teamId);
 			this._pubnub.listen(streams.map(s => s.id));
 			this._pubnub.onDidReceiveMessage(this.onRealTimeMessageReceived, this);
-			const { git, repoManager } = Container.instance();
+			const { git, repos } = Container.instance();
 			git.onRepositoryCommitHashChanged(repo => {
 				MarkerLocationManager.flushUncommittedLocations(repo);
 			});
@@ -474,10 +422,6 @@ export class CodeStreamSession {
 		)).streams.filter(s => CodeStreamApi.isStreamSubscriptionRequired(s, userId));
 	}
 
-	handleFindRepo(request: FindRepoRequest): Promise<FindRepoResponse> {
-		return this._api.findRepo(request.url, request.firstCommitHashes);
-	}
-
 	handleGetMarker(request: GetMarkerRequest): Promise<GetMarkerResponse> {
 		return this._api.getMarker(this.apiToken, this.teamId, request.markerId);
 	}
@@ -493,85 +437,8 @@ export class CodeStreamSession {
 		);
 	}
 
-	async handleGetRepo(request: GetRepoRequest): Promise<GetRepoResponse> {
-		const { repoManager } = Container.instance();
-		const repo = await repoManager.getById(request.repoId);
-		return {
-			repo: repo
-		};
-	}
-
-	async handleFetchRepos(request: FetchReposRequest): Promise<FetchReposResponse> {
-		const { repoManager } = Container.instance();
-		const repos = await repoManager.getAll();
-		return {
-			repos
-		};
-	}
-
-	handleGetStream(request: GetStreamRequest): Promise<GetStreamResponse> {
-		const { api, session } = Container.instance();
-		return this._api.getStream(session.apiToken, session.teamId, request.id);
-	}
-
-	handleGetUnreadStreams(request: FetchUnreadStreamsRequest): Promise<FetchUnreadStreamsResponse> {
-		const { api, session } = Container.instance();
-		return this._api.getUnreadStreams(session.apiToken, session.teamId);
-	}
-
-	handleGetStreams(request: FetchStreamsRequest): Promise<FetchStreamsResponse> {
-		const { api, session } = Container.instance();
-		return this._api.getStreams(session.apiToken, session.teamId, request.types);
-	}
-
 	handleGetFileStreams(request: FetchFileStreamsRequest): Promise<FetchFileStreamsResponse> {
 		const { api, session } = Container.instance();
 		return this._api.getStreams(session.apiToken, session.teamId, undefined, request.repoId);
-	}
-
-	handleGetTeam(request: GetTeamRequest): Promise<GetTeamResponse> {
-		const { api, session } = Container.instance();
-		return this._api.getTeam(session.apiToken, request.teamId);
-	}
-
-	handleFetchTeams(request: FetchTeamsRequest): Promise<FetchTeamsResponse> {
-		const { api, session } = Container.instance();
-		return this._api.getTeams(session.apiToken, request.teamIds);
-	}
-
-	handleGetUser(request: GetUserRequest): Promise<GetUserResponse> {
-		const { api, session } = Container.instance();
-		return this._api.getUser(session.apiToken, session.teamId, request.userId);
-	}
-
-	handleFetchUsers(request: FetchUsersRequest): Promise<FetchUsersResponse> {
-		const { api, session } = Container.instance();
-		return this._api.getUsers(session.apiToken, session.teamId);
-	}
-
-	handleJoinStream(request: JoinStreamRequest): Promise<JoinStreamResponse> {
-		const { api, session } = Container.instance();
-		return this._api.joinStream(session.apiToken, session.teamId, request.id);
-	}
-
-	handleUpdateStream(request: UpdateStreamRequest): Promise<UpdateStreamResponse> {
-		const { api, session } = Container.instance();
-		return this._api.updateStream(session.apiToken, request.id, request.data) as any;
-	}
-
-	handleUpdateStreamMembership(
-		request: UpdateStreamMembershipRequest
-	): Promise<UpdateStreamMembershipResponse> {
-		const { api, session } = Container.instance();
-		return this._api.updateStreamMembership(
-			session.apiToken,
-			this._teamId!,
-			request.streamId,
-			request.push
-		);
-	}
-
-	handleMarkStreamRead(request: MarkStreamReadRequest): Promise<MarkStreamReadResponse> {
-		return this._api.markStreamRead(this.apiToken, request.id);
 	}
 }
