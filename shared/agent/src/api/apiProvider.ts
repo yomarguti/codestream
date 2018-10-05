@@ -14,6 +14,8 @@ import {
 	DeletePostResponse,
 	EditPostRequest,
 	EditPostResponse,
+	FetchFileStreamsRequest,
+	FetchFileStreamsResponse,
 	FetchLatestPostRequest,
 	FetchLatestPostResponse,
 	FetchPostRepliesRequest,
@@ -107,8 +109,8 @@ export interface ApiProvider {
 	updatePreferences(request: UpdatePreferencesRequest): Promise<GetMeResponse>;
 	updatePresence(request: UpdatePresenceRequest): Promise<UpdatePresenceResponse>;
 
-	// createFileStream(request: CreateDirectStreamRequest): Promise<CreateFileStreamResponse>;
-	// fetchFileStreams(repoId: string, teamId?: string): Promise<CSFileStream[]>;
+	// createFileStream(request: CreateFileStreamRequest): Promise<CreateFileStreamResponse>;
+	fetchFileStreams(request: FetchFileStreamsRequest): Promise<FetchFileStreamsResponse>;
 
 	// getMarker(markerId: string, teamId?: string): Promise<CSMarker>;
 	// getMarkers(commitHash: string, streamId: string, teamId?: string): Promise<CSMarker[]>;

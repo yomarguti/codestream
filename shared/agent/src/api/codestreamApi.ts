@@ -6,13 +6,14 @@ import { Container } from "../container";
 import { Logger } from "../logger";
 import { MessageSource } from "../managers/realTimeMessage";
 import {
-	AccessToken,
 	CreateChannelStreamRequest,
 	CreateDirectStreamRequest,
 	CreatePostRequest,
 	CreateRepoRequest,
 	DeletePostRequest,
 	EditPostRequest,
+	FetchFileStreamsRequest,
+	FetchFileStreamsResponse,
 	FetchLatestPostRequest,
 	FetchPostRepliesRequest,
 	FetchPostsByRangeRequest,
@@ -84,22 +85,18 @@ import {
 	CSInviteUserResponse,
 	CSJoinStreamRequest,
 	CSJoinStreamResponse,
-	CSMarker,
-	CSMarkerLocations,
 	CSMarkPostUnreadRequest,
 	CSMarkPostUnreadResponse,
 	CSMePreferences,
-	CSPresenceStatus,
 	CSPush,
 	CSReactions,
 	CSReactToPostResponse,
-	CSRepository,
 	CSStream,
-	CSTeam,
 	CSUpdatePresenceRequest,
 	CSUpdatePresenceResponse,
 	CSUpdateStreamMembershipResponse,
-	CSUser,
+	CSUpdateStreamRequest,
+	CSUpdateStreamResponse,
 	LoginRequest,
 	LoginResponse,
 	StreamType
@@ -228,13 +225,12 @@ export class CodeStreamApiProvider implements ApiProvider {
 	// 	});
 	// }
 
-	// async fetchFileStreams(repoId: string, teamId?: string): Promise<CSFileStream[]> {
-	// 	return (await this._codestream.getStreams<CSFileStream>(
-	// 		this._token,
-	// 		teamId || this._teamId,
-	// 		repoId
-	// 	)).streams;
-	// }
+	async fetchFileStreams(request: FetchFileStreamsRequest): Promise<FetchFileStreamsResponse> {
+		return this.get<CSGetStreamsResponse<CSFileStream>>(
+			`/streams?teamId=${this.teamId}&repoId=${request.repoId}`,
+			this._token
+		);
+	}
 
 	// async getMarker(markerId: string, teamId?: string): Promise<CSMarker> {
 	// 	return (await this._codestream.getMarker(this._token, teamId || this._teamId, markerId)).marker;
@@ -272,6 +268,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 			this._token
 		);
 
+		// Container.instance().posts.resolve({
+		// 	source: MessageSource.CodeStream,
+		// 	type: MessageType.Posts,
+		// 	changeSets: response
+		// });
 		const post = await this._cache.resolvePost(response.post);
 		return { ...response, post: post };
 	}
@@ -453,7 +454,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 		// 	type: MessageType.Streams,
 		// 	changeSets: response
 		// });
-		return { stream: response.stream as CSChannelStream | CSDirectStream };
+		const stream = (await this._cache.resolveStream(response.stream)) as
+			| CSChannelStream
+			| CSDirectStream;
+		return { stream: stream };
 	}
 
 	async leaveStream(request: LeaveStreamRequest): Promise<LeaveStreamResponse> {
@@ -469,17 +473,32 @@ export class CodeStreamApiProvider implements ApiProvider {
 		// 	type: MessageType.Streams,
 		// 	changeSets: response
 		// });
-		return { stream: response.stream as CSChannelStream | CSDirectStream };
+		const stream = (await this._cache.resolveStream(response.stream)) as
+			| CSChannelStream
+			| CSDirectStream;
+		return { stream: stream };
 	}
 
 	markStreamRead(request: MarkStreamReadRequest): Promise<MarkStreamReadResponse> {
-		// TODO - this needs to resolve the data
 		return this.put(`/read/${request.streamId}`, {}, this._token);
 	}
 
-	updateStream(request: UpdateStreamRequest): Promise<UpdateStreamResponse> {
-		// TODO - this needs to resolve the data
-		return this.put(`/streams/${request.streamId}`, request.changes, this._token);
+	async updateStream(request: UpdateStreamRequest): Promise<UpdateStreamResponse> {
+		const response = await this.put<CSUpdateStreamRequest, CSUpdateStreamResponse>(
+			`/streams/${request.streamId}`,
+			{ changes: request.changes },
+			this._token
+		);
+
+		// const stream = Container.instance().streams.resolve({
+		// 	source: MessageSource.CodeStream,
+		// 	type: MessageType.Streams,
+		// 	changeSets: response
+		// });
+		const stream = (await this._cache.resolveStream(response.stream)) as
+			| CSChannelStream
+			| CSDirectStream;
+		return { stream: stream };
 	}
 
 	updateStreamMembership(

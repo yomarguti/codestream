@@ -4,17 +4,17 @@ import * as path from "path";
 import { TextDocumentIdentifier } from "vscode-languageserver";
 import { Range } from "vscode-languageserver-protocol";
 import URI from "vscode-uri";
+import { getCache } from "../cache";
+import { Container } from "../container";
+import { GitRepository } from "../git/models/repository";
+import { Logger } from "../logger";
 import {
 	CSFileStream,
 	CSLocationArray,
 	CSMarker,
 	CSMarkerLocation,
 	CSMarkerLocations
-} from "../api/api";
-import { getCache } from "../cache";
-import { Container } from "../container";
-import { GitRepository } from "../git/models/repository";
-import { Logger } from "../logger";
+} from "../shared/api.protocol";
 import { xfs } from "../xfs";
 import { calculateLocation, calculateLocations } from "./calculator";
 

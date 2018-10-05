@@ -3,9 +3,7 @@ import fetch, { Headers, RequestInit, Response } from "node-fetch";
 import { URLSearchParams } from "url";
 import { ServerError } from "../agentError";
 import { Logger } from "../logger";
-import { AccessToken, FetchUnreadStreamsResponse } from "../shared/agent.protocol";
 import {
-	CompleteSignupRequest,
 	CSCreateMarkerLocationRequest,
 	CSCreateMarkerLocationResponse,
 	CSCreatePostRequest,
@@ -13,25 +11,14 @@ import {
 	CSGetMarkerLocationsResponse,
 	CSGetMarkerResponse,
 	CSGetMarkersResponse,
-	CSGetPostsResponse,
-	CSGetStreamResponse,
-	CSGetStreamsResponse,
-	CSJoinStreamResponse,
-	CSPush,
 	CSStream,
 	CSUpdateMarkerRequest,
 	CSUpdateMarkerResponse,
-	CSUpdateStreamMembershipResponse,
-	LoginRequest,
-	LoginResponse,
 	StreamType
 } from "../shared/api.protocol";
 import { Functions } from "../system/function";
 import { Strings } from "../system/string";
 import { CodeStreamApiMiddleware, CodeStreamApiMiddlewareContext } from "./apiProvider";
-
-export { AccessToken } from "../shared/agent.protocol";
-export * from "../shared/api.protocol";
 
 export class CodeStreamApi {
 	private readonly _middleware: CodeStreamApiMiddleware[] = [];
@@ -90,46 +77,12 @@ export class CodeStreamApi {
 		return this.get<CSGetMarkersResponse>(`/markers?teamId=${teamId}&streamId=${streamId}`, token);
 	}
 
-	getStream<T extends CSStream>(
-		token: string,
-		teamId: string,
-		streamId: string
-	): Promise<CSGetStreamResponse<T>> {
-		return this.get<CSGetStreamResponse<T>>(`/streams/${streamId}`, token);
-	}
-
-	async getStreams<T extends CSStream>(
-		token: string,
-		teamId: string,
-		types?: (StreamType.Channel | StreamType.Direct)[],
-		repoId?: string
-	): Promise<CSGetStreamsResponse<T>> {
-		const response = await this.get<CSGetStreamsResponse<T>>(
-			`/streams?teamId=${teamId}${repoId === undefined ? "" : `&repoId=${repoId}`}`,
-			token
-		);
-		if (types) {
-			return {
-				...response,
-				streams: response.streams.filter(s =>
-					types.includes(s.type as StreamType.Channel | StreamType.Direct)
-				)
-			};
-		}
-
-		return response;
-	}
-
 	updateMarker(token: string, markerId: string, request: CSUpdateMarkerRequest) {
 		return this.put<CSUpdateMarkerRequest, CSUpdateMarkerResponse>(
 			`/markers/${markerId}`,
 			request,
 			token
 		);
-	}
-
-	updateStreamMembership(token: string, teamId: string, streamId: string, push: CSPush) {
-		return this.put<CSPush, CSUpdateStreamMembershipResponse>(`/streams/${streamId}`, push, token);
 	}
 
 	grant(token: string, channel: string): Promise<any> {

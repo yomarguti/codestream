@@ -7,85 +7,9 @@ import {
 	MessageActionItem
 } from "vscode-languageserver";
 import URI from "vscode-uri";
-import {
-	AgentOptions,
-	ApiRequestType,
-	CodeStreamAgent,
-	CreatePostRequestType,
-	CreatePostWithCodeRequestType,
-	CreateRepoRequestType,
-	DeletePostRequestType,
-	DidChangeItemsNotificationType,
-	DocumentFromCodeBlockRequestType,
-	DocumentLatestRevisionRequestType,
-	DocumentMarkersRequestType,
-	EditPostRequestType,
-	FetchLatestPostRequestType,
-	FetchMarkerLocationsRequest,
-	FetchMarkerLocationsRequestType,
-	FetchMarkerLocationsResponse,
-	FetchPostsByRangeRequestType,
-	FetchPostsRequestType,
-	FetchReposRequest,
-	FetchReposRequestType,
-	FetchReposResponse,
-	FetchStreamsRequest,
-	FetchStreamsRequestType,
-	FetchStreamsResponse,
-	FetchTeamsRequest,
-	FetchTeamsRequestType,
-	FetchTeamsResponse,
-	FetchUnreadStreamsRequest,
-	FetchUnreadStreamsRequestType,
-	FetchUnreadStreamsResponse,
-	FetchUsersRequest,
-	FetchUsersRequestType,
-	FindRepoRequest,
-	FindRepoRequestType,
-	GetMarkerRequest,
-	GetMarkerRequestType,
-	GetMeRequestType,
-	GetPostRequestType,
-	GetRepoRequest,
-	GetRepoRequestType,
-	GetStreamRequest,
-	GetStreamRequestType,
-	GetStreamResponse,
-	GetTeamRequest,
-	GetTeamRequestType,
-	GetUserRequest,
-	GetUserRequestType,
-	InviteUserRequestType,
-	JoinStreamRequest,
-	JoinStreamRequestType,
-	JoinStreamResponse,
-	MarkPostUnreadRequestType,
-	MarkStreamReadRequest,
-	MarkStreamReadRequestType,
-	MarkStreamReadResponse,
-	MessageType,
-	PreparePostWithCodeRequestType,
-	ReactToPostRequestType,
-	UpdatePreferencesRequestType,
-	UpdatePresenceRequestType,
-	UpdateStreamMembershipRequestType,
-	UpdateStreamRequest,
-	UpdateStreamRequestType,
-	UpdateStreamResponse
-} from "./agent";
+import { CodeStreamAgent } from "./agent";
 import { AgentError, ServerError } from "./agentError";
-import {
-	ApiErrors,
-	CodeStreamApi,
-	CSMarker,
-	CSMarkerLocations,
-	CSPost,
-	CSRepository,
-	CSStream,
-	CSTeam,
-	CSUser,
-	LoginResult
-} from "./api/api";
+import { CodeStreamApi } from "./api/api";
 import { ApiProvider, LoginOptions } from "./api/apiProvider";
 import { CodeStreamApiProvider } from "./api/codestreamApi";
 import {
@@ -96,33 +20,43 @@ import { UserCollection } from "./api/models/users";
 import { Container } from "./container";
 import { setGitPath } from "./git/git";
 import { Logger } from "./logger";
-import { FilesManager } from "./managers/filesManager";
-import { MarkerManager } from "./managers/markerManager";
 import { RealTimeMessage } from "./managers/realTimeMessage";
-import { StreamsManager } from "./managers/streamsManager";
 import { MarkerHandler } from "./marker/markerHandler";
 import { MarkerLocationManager } from "./markerLocation/markerLocationManager";
 import { PostHandler } from "./post/postHandler";
 import { PubnubReceiver } from "./pubnub/pubnubReceiver";
 import {
-	CreateChannelStreamRequestType,
-	CreateDirectStreamRequestType,
+	AgentOptions,
+	ApiRequestType,
+	CreatePostWithCodeRequestType,
+	DidChangeItemsNotificationType,
 	DidChangeVersionCompatibilityNotificationType,
-	FetchFileStreamsRequest,
-	FetchFileStreamsRequestType,
-	FetchFileStreamsResponse,
-	FetchPostRepliesRequestType,
-	FetchUsersResponse,
-	FindRepoResponse,
+	DocumentFromCodeBlockRequestType,
+	DocumentLatestRevisionRequestType,
+	DocumentMarkersRequestType,
+	FetchMarkerLocationsRequest,
+	FetchMarkerLocationsRequestType,
+	FetchMarkerLocationsResponse,
+	GetMarkerRequest,
+	GetMarkerRequestType,
 	GetMarkerResponse,
-	GetRepoResponse,
-	GetTeamResponse,
-	GetUserResponse,
 	LogoutReason,
 	LogoutRequestType,
-	UpdateStreamMembershipRequest,
-	UpdateStreamMembershipResponse
+	MessageType,
+	PreparePostWithCodeRequestType
 } from "./shared/agent.protocol";
+import {
+	ApiErrors,
+	CSMarker,
+	CSMarkerLocations,
+	CSPost,
+	CSRepository,
+	CSStream,
+	CSTeam,
+	CSUser,
+	LoginResult,
+	StreamType
+} from "./shared/api.protocol";
 import { Strings } from "./system";
 
 const loginApiErrorMappings: { [k: string]: ApiErrors } = {
@@ -137,39 +71,39 @@ const loginApiErrorMappings: { [k: string]: ApiErrors } = {
 };
 
 export class CodeStreamSession {
-	private _onPostsChanged = new Emitter<CSPost[]>();
-	get onPostsChanged(): Event<CSPost[]> {
-		return this._onPostsChanged.event;
+	private _onDidChangePosts = new Emitter<CSPost[]>();
+	get onDidChangePosts(): Event<CSPost[]> {
+		return this._onDidChangePosts.event;
 	}
 
-	private _onReposChanged = new Emitter<CSRepository[]>();
-	get onReposChanged(): Event<CSRepository[]> {
-		return this._onReposChanged.event;
+	private _onDidChangeRepos = new Emitter<CSRepository[]>();
+	get onDidChangeRepos(): Event<CSRepository[]> {
+		return this._onDidChangeRepos.event;
 	}
 
-	private _onStreamsChanged = new Emitter<CSStream[]>();
-	get onStreamsChanged(): Event<CSStream[]> {
-		return this._onStreamsChanged.event;
+	private _onDidChangeStreams = new Emitter<CSStream[]>();
+	get onDidChangeStreams(): Event<CSStream[]> {
+		return this._onDidChangeStreams.event;
 	}
 
-	private _onUsersChanged = new Emitter<CSUser[]>();
-	get onUsersChanged(): Event<CSUser[]> {
-		return this._onUsersChanged.event;
+	private _onDidChangeUsers = new Emitter<CSUser[]>();
+	get onDidChangeUsers(): Event<CSUser[]> {
+		return this._onDidChangeUsers.event;
 	}
 
-	private _onTeamsChanged = new Emitter<CSTeam[]>();
-	get onTeamsChanged(): Event<CSTeam[]> {
-		return this._onTeamsChanged.event;
+	private _onDidChangeTeams = new Emitter<CSTeam[]>();
+	get onDidChangeTeams(): Event<CSTeam[]> {
+		return this._onDidChangeTeams.event;
 	}
 
-	private _onMarkersChanged = new Emitter<CSMarker[]>();
-	get onMarkersChanged(): Event<CSMarker[]> {
-		return this._onMarkersChanged.event;
+	private _onDidChangeMarkers = new Emitter<CSMarker[]>();
+	get onDidChangeMarkers(): Event<CSMarker[]> {
+		return this._onDidChangeMarkers.event;
 	}
 
-	private _onMarkerLocationsChanged = new Emitter<CSMarker[]>();
-	get onMarkerLocationsChanged(): Event<CSMarker[]> {
-		return this._onMarkerLocationsChanged.event;
+	private _onDidChangeMarkerLocations = new Emitter<CSMarker[]>();
+	get onDidChangeMarkerLocations(): Event<CSMarker[]> {
+		return this._onDidChangeMarkerLocations.event;
 	}
 
 	private readonly _api: CodeStreamApi;
@@ -223,7 +157,6 @@ export class CodeStreamSession {
 			return { revision: revision };
 		});
 
-		this.agent.registerHandler(FetchFileStreamsRequestType, this.handleGetFileStreams);
 		this.agent.registerHandler(GetMarkerRequestType, this.handleGetMarker);
 		this.agent.registerHandler(FetchMarkerLocationsRequestType, this.handleFetchMarkerLocations);
 	}
@@ -232,7 +165,7 @@ export class CodeStreamSession {
 		switch (e.type) {
 			case MessageType.Posts:
 				const posts = await Container.instance().posts.resolve(e);
-				this._onPostsChanged.fire(posts);
+				this._onDidChangePosts.fire(posts);
 				this.agent.sendNotification(DidChangeItemsNotificationType, {
 					type: MessageType.Posts,
 					posts
@@ -240,6 +173,7 @@ export class CodeStreamSession {
 				break;
 			case MessageType.Repositories:
 				const repos = await Container.instance().repos.resolve(e);
+				this._onDidChangeRepos.fire(repos);
 				this.agent.sendNotification(DidChangeItemsNotificationType, {
 					type: MessageType.Repositories,
 					repos
@@ -247,6 +181,7 @@ export class CodeStreamSession {
 				break;
 			case MessageType.Streams:
 				const streams = await Container.instance().streams.resolve(e);
+				this._onDidChangeStreams.fire(streams);
 				this.agent.sendNotification(DidChangeItemsNotificationType, {
 					type: MessageType.Streams,
 					streams
@@ -254,6 +189,7 @@ export class CodeStreamSession {
 				break;
 			case MessageType.Users:
 				const users = await Container.instance().users.resolve(e);
+				this._onDidChangeUsers.fire(users);
 				this.agent.sendNotification(DidChangeItemsNotificationType, {
 					type: MessageType.Users,
 					users
@@ -261,6 +197,7 @@ export class CodeStreamSession {
 				break;
 			case MessageType.Teams:
 				const teams = await Container.instance().teams.resolve(e);
+				this._onDidChangeTeams.fire(teams);
 				this.agent.sendNotification(DidChangeItemsNotificationType, {
 					type: MessageType.Teams,
 					teams
@@ -268,6 +205,7 @@ export class CodeStreamSession {
 				break;
 			case MessageType.Markers:
 				const markers = await Container.instance().markers.resolve(e);
+				this._onDidChangeMarkers.fire(markers);
 				this.agent.sendNotification(DidChangeItemsNotificationType, {
 					type: MessageType.Markers,
 					markers
@@ -275,6 +213,7 @@ export class CodeStreamSession {
 				break;
 			case MessageType.MarkerLocations:
 				// const markerLocations = await Container.instance().markerLocations.resolve(e);
+				// this._onDidChangeMarkerLocations.fire(markerLocations);
 				// this.agent.sendNotification(DidEntitiesChangeNotificationType, {
 				// 	type: MessageType.MarkerLocations,
 				// 	markerLocations
@@ -416,10 +355,9 @@ export class CodeStreamSession {
 	}
 
 	private async getSubscribableStreams(userId: string, teamId?: string): Promise<CSStream[]> {
-		return (await this._api.getStreams<CSStream>(
-			this._apiToken!,
-			teamId || this._teamId!
-		)).streams.filter(s => CodeStreamApi.isStreamSubscriptionRequired(s, userId));
+		return (await this._api2.fetchStreams({
+			types: [StreamType.Channel, StreamType.Direct]
+		})).streams.filter(s => CodeStreamApi.isStreamSubscriptionRequired(s, userId));
 	}
 
 	handleGetMarker(request: GetMarkerRequest): Promise<GetMarkerResponse> {
@@ -435,10 +373,5 @@ export class CodeStreamSession {
 			request.streamId,
 			request.commitHash
 		);
-	}
-
-	handleGetFileStreams(request: FetchFileStreamsRequest): Promise<FetchFileStreamsResponse> {
-		const { api, session } = Container.instance();
-		return this._api.getStreams(session.apiToken, session.teamId, undefined, request.repoId);
 	}
 }

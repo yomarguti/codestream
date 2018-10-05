@@ -1,6 +1,6 @@
 "use strict";
 import { Disposable, Emitter, Event } from "vscode-languageserver";
-import { VersionCompatibility } from "../../agent";
+import { VersionCompatibility } from "../../shared/agent.protocol";
 import {
 	ApiProvider,
 	CodeStreamApiMiddleware,

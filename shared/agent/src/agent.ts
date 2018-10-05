@@ -27,7 +27,7 @@ import { CodeStreamSession } from "./session";
 import { AgentOptions } from "./shared/agent.protocol";
 import { Disposables, memoize } from "./system";
 
-export * from "./shared/agent.protocol";
+// export * from "./shared/agent.protocol";
 
 export class CodeStreamAgent implements Disposable {
 	private _onReady = new Emitter<void>();

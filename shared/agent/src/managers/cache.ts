@@ -98,7 +98,10 @@ export class Cache<T extends CSEntity> {
 	 *
 	 * @return Entity or `undefined`
 	 */
-	async get(criteria: KeyValue<T>[]): Promise<T | undefined> {
+	async get(
+		criteria: KeyValue<T>[],
+		options: { avoidFetch?: boolean } = {}
+	): Promise<T | undefined> {
 		const keys = getKeys(criteria);
 		const index = this.getIndex(keys);
 		const values = getValues(criteria);
@@ -107,7 +110,7 @@ export class Cache<T extends CSEntity> {
 		}
 
 		let entity = index.get(values);
-		if (!entity) {
+		if (!entity && options.avoidFetch !== true) {
 			const fetch = index.fetchFn as UniqueFetchFn<T>;
 			entity = await fetch(values);
 			this.set(entity);

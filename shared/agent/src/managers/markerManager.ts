@@ -1,6 +1,6 @@
 "use strict";
-import { CSMarker, CSStream, StreamType } from "../api/api";
 import { Container } from "../container";
+import { CSMarker, CSStream, StreamType } from "../shared/api.protocol";
 import { IndexParams, IndexType } from "./index";
 import { EntityManager, Id } from "./managers";
 

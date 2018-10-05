@@ -1,4 +1,5 @@
 "use strict";
+import { Container } from "../container";
 import {
 	CreatePostRequest,
 	CreatePostRequestType,
@@ -30,8 +31,7 @@ import {
 	ReactToPostRequest,
 	ReactToPostRequestType,
 	ReactToPostResponse
-} from "../agent";
-import { Container } from "../container";
+} from "../shared/agent.protocol";
 import { CSPost } from "../shared/api.protocol";
 import { lspHandler } from "../system/decorators";
 import { IndexParams, IndexType } from "./index";

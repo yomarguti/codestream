@@ -461,6 +461,14 @@ export interface CSPush {
 	$push: string;
 }
 
+export interface CSUpdateStreamRequest {
+	changes: { [key: string]: any };
+}
+
+export interface CSUpdateStreamResponse {
+	stream: { [key: string]: any };
+}
+
 export interface CSUpdateStreamMembershipRequest {
 	teamId: string;
 	streamId: string;

@@ -1,6 +1,5 @@
 "use strict";
-import { AgentOptions, AgentState, CodeStreamEnvironment } from "./agent";
-import { CodeStreamApi, LoginResponse } from "./api/api";
+import { CodeStreamApi } from "./api/api";
 import { ApiProvider } from "./api/apiProvider";
 import { Config } from "./config";
 import { DocumentManager } from "./documentManager";
@@ -15,6 +14,8 @@ import { TeamsManager } from "./managers/teamsManager";
 import { UsersManager } from "./managers/usersManager";
 import { MarkerLocationManager } from "./markerLocation/markerLocationManager";
 import { CodeStreamSession } from "./session";
+import { AgentOptions, AgentState, CodeStreamEnvironment } from "./shared/agent.protocol";
+import { LoginResponse } from "./shared/api.protocol";
 
 const envRegex = /https?:\/\/(pd-|qa-)?api.codestream.(?:us|com)/;
 

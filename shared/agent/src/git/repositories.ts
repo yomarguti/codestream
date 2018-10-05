@@ -9,10 +9,10 @@ import {
 	WorkspaceFoldersChangeEvent
 } from "vscode-languageserver";
 import URI from "vscode-uri";
-import { CSRepository } from "../api/api";
 import { ApiProvider } from "../api/apiProvider";
 import { Logger } from "../logger";
 import { CodeStreamSession } from "../session";
+import { CSRepository } from "../shared/api.protocol";
 import { Iterables, Objects, Strings, TernarySearchTree } from "../system";
 import { Disposables } from "../system/disposable";
 import { GitRepository, GitService } from "./gitService";
@@ -91,7 +91,7 @@ export class GitRepositories {
 		await this._session.ready();
 
 		this._disposable = Disposables.from(
-			this._session.onReposChanged(this.onRepositoriesChanged, this),
+			this._session.onDidChangeRepos(this.onRepositoriesChanged, this),
 			this._session.workspace.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this)
 		);
 

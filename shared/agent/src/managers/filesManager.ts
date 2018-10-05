@@ -2,9 +2,15 @@
 import * as path from "path";
 import { TextDocumentIdentifier } from "vscode-languageserver-protocol";
 import URI from "vscode-uri";
-import { CSFileStream, CSStream, StreamType } from "../api/api";
 import { Container } from "../container";
 import { Logger } from "../logger";
+import {
+	FetchFileStreamsRequest,
+	FetchFileStreamsRequestType,
+	FetchFileStreamsResponse
+} from "../shared/agent.protocol";
+import { CSFileStream, CSStream, StreamType } from "../shared/api.protocol";
+import { lspHandler } from "../system";
 import { IndexParams, IndexType } from "./index";
 import { EntityManager, Id } from "./managers";
 
@@ -100,9 +106,16 @@ export class FilesManager extends EntityManager<CSFileStream> {
 	}
 
 	private async fetchByRepoId(values: any[]): Promise<CSFileStream[]> {
-		const { api } = Container.instance();
 		const [repoId] = values;
-		const response = await api.getStreams(this.session.apiToken, this.session.teamId, repoId);
+		const response = await Container.instance().api2.fetchFileStreams({ repoId: repoId });
 		return response.streams as CSFileStream[];
+	}
+
+	@lspHandler(FetchFileStreamsRequestType)
+	private async fetchFileStreams(
+		request: FetchFileStreamsRequest
+	): Promise<FetchFileStreamsResponse> {
+		const streams = await this.getByRepoId(request.repoId);
+		return { streams: streams };
 	}
 }

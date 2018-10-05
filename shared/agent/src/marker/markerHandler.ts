@@ -2,16 +2,16 @@
 import * as path from "path";
 import { Range } from "vscode-languageserver";
 import URI from "vscode-uri";
+import { Container } from "../container";
+import { Logger } from "../logger";
+import { MarkerLocationManager } from "../markerLocation/markerLocationManager";
 import {
 	DocumentFromCodeBlockRequest,
 	DocumentFromCodeBlockResponse,
 	DocumentMarkersRequest,
 	DocumentMarkersResponse,
 	MarkerWithRange
-} from "../agent";
-import { Container } from "../container";
-import { Logger } from "../logger";
-import { MarkerLocationManager } from "../markerLocation/markerLocationManager";
+} from "../shared/agent.protocol";
 
 export namespace MarkerHandler {
 	const emptyResponse = {

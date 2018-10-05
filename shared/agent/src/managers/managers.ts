@@ -59,8 +59,7 @@ export abstract class EntityManager<T extends CSEntity> {
 		const resolved = await Promise.all(
 			message.changeSets.map(async c => {
 				const changes = CodeStreamApi.normalizeResponse(c) as { [key: string]: any };
-				const cached = await this.cache.get(changes["id"]);
-				// TODO marcelo - cache always have it
+				const cached = await this.cache.get(changes["id"], { avoidFetch: true });
 				if (cached) {
 					const updatedEntity = operations.resolve(cached as any, changes);
 					this.cache.set(updatedEntity as T, cached);

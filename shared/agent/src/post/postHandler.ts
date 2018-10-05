@@ -3,15 +3,15 @@
 import * as path from "path";
 import { Range } from "vscode-languageserver-protocol";
 import URI from "vscode-uri";
+import { Container } from "../container";
+import { Logger } from "../logger";
+import { MarkerLocationManager } from "../markerLocation/markerLocationManager";
 import {
 	CreatePostWithCodeRequest,
 	PreparePostWithCodeRequest,
 	PreparePostWithCodeResponse
-} from "../agent";
-import { CSCreatePostRequestCodeBlock, CSMarkerLocation, CSPost } from "../api/api";
-import { Container } from "../container";
-import { Logger } from "../logger";
-import { MarkerLocationManager } from "../markerLocation/markerLocationManager";
+} from "../shared/agent.protocol";
+import { CSCreatePostRequestCodeBlock, CSMarkerLocation, CSPost } from "../shared/api.protocol";
 import { Iterables, Strings } from "../system";
 
 export namespace PostHandler {

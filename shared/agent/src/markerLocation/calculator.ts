@@ -2,7 +2,7 @@
 
 import { IUniDiff } from "diff";
 import { compareTwoStrings, findBestMatch, Rating } from "string-similarity";
-import { CSLocationMeta, CSMarkerLocation } from "../api/api";
+import { CSLocationMeta, CSMarkerLocation } from "../shared/api.protocol";
 import { buildChangeset, Change, Changeset } from "./changeset";
 import { LocationsById } from "./markerLocationManager";
 

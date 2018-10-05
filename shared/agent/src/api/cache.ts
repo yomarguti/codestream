@@ -1,4 +1,4 @@
-import { CodeStreamApi, CSMarker, CSPost, CSRepository, CSStream, CSTeam, CSUser } from "./api";
+import { CSMarker, CSPost, CSRepository, CSStream, CSTeam, CSUser } from "../shared/api.protocol";
 import { CodeStreamApiProvider } from "./codestreamApi";
 
 export class Cache {
@@ -9,7 +9,7 @@ export class Cache {
 	private teams: Map<string, CSTeam>;
 	private markers: Map<string, CSMarker>;
 
-	constructor(private _api: any /*CodeStreamApiProvider*/) {
+	constructor(private _api: CodeStreamApiProvider) {
 		this.posts = new Map();
 		this.repos = new Map();
 		this.streams = new Map();
@@ -24,12 +24,12 @@ export class Cache {
 
 	resolvePosts(changeSets: object[]): Promise<CSPost[]> {
 		return this._resolveById(this.posts, changeSets, id =>
-			this._api.getPost({ streamId: undefined!, id: id })
+			this._api.getPost({ streamId: undefined!, postId: id })
 		);
 	}
 
 	resolveRepos(changeSets: object[]): Promise<CSRepository[]> {
-		return this._resolveById(this.repos, changeSets, id => this._api.getRepo(id));
+		return this._resolveById(this.repos, changeSets, id => this._api.getRepo({ repoId: id }));
 	}
 
 	async resolveStream(changeSet: object): Promise<CSStream> {
@@ -39,7 +39,7 @@ export class Cache {
 	resolveStreams(changeSets: object[]): Promise<CSStream[]> {
 		return this._resolveById(this.streams, changeSets, async id => {
 			try {
-				return this._api.getStream(id);
+				return this._api.getStream({ streamId: id });
 			} catch (error) {
 				return;
 			}
@@ -51,17 +51,17 @@ export class Cache {
 			if (id === this._api.userId) {
 				return this._api.getMe();
 			}
-			return this._api.getUser(id);
+			return this._api.getUser({ userId: id });
 		});
 	}
 
 	resolveTeams(changeSets: object[]): Promise<CSTeam[]> {
-		return this._resolveById(this.teams, changeSets, id => this._api.getTeam(id));
+		return this._resolveById(this.teams, changeSets, id => this._api.getTeam({ teamId: id }));
 	}
 
-	resolveMarkers(changeSets: object[]): Promise<CSMarker[]> {
-		return this._resolveById(this.markers, changeSets, id => this._api.getMarker(id));
-	}
+	// resolveMarkers(changeSets: object[]): Promise<CSMarker[]> {
+	// 	return this._resolveById(this.markers, changeSets, id => this._api.getMarker(id));
+	// }
 
 	private async _resolveById(
 		cache: Map<string, any>,
@@ -70,7 +70,7 @@ export class Cache {
 	) {
 		const resolved = await Promise.all(
 			changeSets.map(async c => {
-				const changes = CodeStreamApi.normalizeResponse(c) as { [key: string]: any };
+				const changes = CodeStreamApiProvider.normalizeResponse(c) as { [key: string]: any };
 				const record = cache.get(changes["id"]);
 				if (record) {
 					const updatedRecord = this._resolve(record, changes);

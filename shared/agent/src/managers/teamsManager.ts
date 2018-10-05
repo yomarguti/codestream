@@ -1,9 +1,9 @@
 "use strict";
 
-import { FetchTeamsRequestType } from "../agent";
 import { Container } from "../container";
 import {
 	FetchTeamsRequest,
+	FetchTeamsRequestType,
 	FetchTeamsResponse,
 	GetTeamRequest,
 	GetTeamRequestType,
