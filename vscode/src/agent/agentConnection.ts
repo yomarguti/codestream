@@ -44,10 +44,10 @@ import {
 	DeletePostRequestType,
 	DidChangeDocumentMarkersNotificationResponse,
 	DidChangeDocumentMarkersNotificationType,
+	DidChangeItemsNotification,
+	DidChangeItemsNotificationType,
 	DidChangeVersionCompatibilityNotificationResponse,
 	DidChangeVersionCompatibilityNotificationType,
-	DidReceivePubNubMessagesNotificationResponse,
-	DidReceivePubNubMessagesNotificationType,
 	DocumentFromCodeBlockRequestType,
 	DocumentFromCodeBlockResponse,
 	DocumentLatestRevisionRequestType,
@@ -72,6 +72,7 @@ import {
 	GetStreamRequestType,
 	GetTeamRequestType,
 	GetUserRequestType,
+	InviteUserRequestType,
 	JoinStreamRequestType,
 	LeaveStreamRequestType,
 	LogoutRequest,
@@ -85,7 +86,6 @@ import {
 	UpdateStreamRequestType,
 	VersionCompatibility
 } from "../shared/agent.protocol";
-import { InviteUserRequestType } from "../shared/agent.protocol.users";
 import {
 	ChannelServiceType,
 	CSCodeBlock,
@@ -138,7 +138,7 @@ export class CodeStreamAgentConnection implements Disposable {
 				module: context.asAbsolutePath("../codestream-lsp-agent/dist/agent.js"),
 				transport: TransportKind.ipc,
 				options: {
-					execArgv: ["--nolazy", "--inspect=6009"] // "--inspect-brk=6009"
+					execArgv: ["--nolazy", "--inspect-brk=6009"] // "--inspect-brk=6009"
 				}
 			}
 		};
@@ -359,20 +359,20 @@ export class CodeStreamAgentConnection implements Disposable {
 		get(streamId: string, postId: string) {
 			return this._connection.sendRequest(GetPostRequestType, {
 				streamId: streamId,
-				id: postId
+				postId: postId
 			});
 		}
 
 		delete(streamId: string, postId: string) {
 			return this._connection.sendRequest(DeletePostRequestType, {
-				id: postId,
+				postId: postId,
 				streamId: streamId
 			});
 		}
 
 		edit(streamId: string, postId: string, text: string, mentionedUserIds?: string[]) {
 			return this._connection.sendRequest(EditPostRequestType, {
-				id: postId,
+				postId: postId,
 				streamId: streamId,
 				text: text,
 				mentionedUserIds: mentionedUserIds
@@ -381,7 +381,7 @@ export class CodeStreamAgentConnection implements Disposable {
 
 		markUnread(streamId: string, postId: string) {
 			return this._connection.sendRequest(MarkPostUnreadRequestType, {
-				id: postId,
+				postId: postId,
 				streamId: streamId
 			});
 		}
@@ -396,7 +396,7 @@ export class CodeStreamAgentConnection implements Disposable {
 
 		react(streamId: string, postId: string, reactions: { [emoji: string]: boolean }) {
 			return this._connection.sendRequest(ReactToPostRequestType, {
-				id: postId,
+				postId: postId,
 				streamId: streamId,
 				emojis: reactions
 			});
@@ -487,33 +487,33 @@ export class CodeStreamAgentConnection implements Disposable {
 
 		get(streamId: string) {
 			return this._connection.sendRequest(GetStreamRequestType, {
-				id: streamId
+				streamId: streamId
 			});
 		}
 
 		join(streamId: string) {
 			return this._connection.sendRequest(JoinStreamRequestType, {
-				id: streamId
+				streamId: streamId
 			});
 		}
 
 		leave(streamId: string) {
 			return this._connection.sendRequest(LeaveStreamRequestType, {
-				id: streamId
+				streamId: streamId
 			});
 		}
 
 		markRead(streamId: string, postId?: string) {
 			return this._connection.sendRequest(MarkStreamReadRequestType, {
-				id: streamId,
+				streamId: streamId,
 				postId: postId
 			});
 		}
 
 		update(streamId: string, changes: { [key: string]: any }) {
 			return this._connection.sendRequest(UpdateStreamRequestType, {
-				id: streamId,
-				data: changes
+				streamId: streamId,
+				changes: changes
 			});
 		}
 	}(this);
@@ -593,7 +593,7 @@ export class CodeStreamAgentConnection implements Disposable {
 		void Container.session.goOffline();
 	}
 
-	private onPubNubMessagesReceived(...messages: DidReceivePubNubMessagesNotificationResponse[]) {
+	private onPubNubMessagesReceived(...messages: DidChangeItemsNotification[]) {
 		Logger.log("AgentConnection.onPubNubMessagesReceived", messages);
 		this._onDidReceivePubNubMessages.fire(messages);
 	}
@@ -715,7 +715,7 @@ export class CodeStreamAgentConnection implements Disposable {
 		this._client.onRequest(LogoutRequestType, this.onLogout.bind(this));
 
 		this._client.onNotification(
-			DidReceivePubNubMessagesNotificationType,
+			DidChangeItemsNotificationType,
 			this.onPubNubMessagesReceived.bind(this)
 		);
 
