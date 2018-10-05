@@ -161,7 +161,7 @@ export class GroupIndex<T extends CSEntity> extends BaseIndex<T> {
 	 */
 	initGroup(groupValue: any, entities: T[]) {
 		if (this.groups.has(groupValue)) {
-			throw new Error(`Group ${groupValue} already initialized for field ${this.field}`);
+			return;
 		}
 		this.groups.set(groupValue, new Map());
 		this.addToGroup(groupValue, entities);
@@ -234,7 +234,7 @@ export class GroupSequentialIndex<T extends CSEntity> extends BaseIndex<T> {
 
 	initGroup(groupValue: any, entities: T[]) {
 		if (this.groups.has(groupValue)) {
-			throw new Error(`Group ${groupValue} already initialized for field ${this.field}`);
+			return;
 		}
 		this.groups.set(groupValue, new SequentialGroup<T>());
 		this.addToGroup(groupValue, entities);

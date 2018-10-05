@@ -117,7 +117,7 @@ describe("Indexes", function() {
 			expect(bars).to.be.undefined;
 		});
 
-		it("Throws error if a group is initialized twice", function() {
+		xit("Throws error if a group is initialized twice", function() {
 			index.initGroup("Foo", [joeFoo]);
 			expect(() => {
 				index.initGroup("Foo", [joeFoo]);
