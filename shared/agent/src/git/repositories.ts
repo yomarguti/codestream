@@ -32,11 +32,7 @@ export class GitRepositories {
 	private readonly _repositoryTree: TernarySearchTree<GitRepository>;
 	private _searchPromise: Promise<void> | undefined;
 
-	constructor(
-		private readonly _git: GitService,
-		private readonly _session: CodeStreamSession,
-		private readonly _api: ApiProvider
-	) {
+	constructor(private readonly _git: GitService, public readonly session: CodeStreamSession) {
 		this._repositoryTree = TernarySearchTree.forPaths();
 
 		this._searchPromise = this.start();
@@ -88,11 +84,11 @@ export class GitRepositories {
 
 	private async start() {
 		// Wait for the session to be ready first
-		await this._session.ready();
+		await this.session.ready();
 
 		this._disposable = Disposables.from(
-			this._session.onDidChangeRepos(this.onRepositoriesChanged, this),
-			this._session.workspace.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this)
+			this.session.onDidChangeRepos(this.onRepositoriesChanged, this),
+			this.session.workspace.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this)
 		);
 
 		return this.onWorkspaceFoldersChanged();
@@ -111,7 +107,7 @@ export class GitRepositories {
 		if (e === undefined) {
 			initializing = true;
 			e = {
-				added: (await this._session.workspace.getWorkspaceFolders()) || [],
+				added: (await this.session.workspace.getWorkspaceFolders()) || [],
 				removed: []
 			} as WorkspaceFoldersChangeEvent;
 
@@ -181,7 +177,7 @@ export class GitRepositories {
 	}
 
 	private async getKnownRepositories() {
-		const resp = await this._api.fetchRepos({});
+		const resp = await this.session.api.fetchRepos({});
 		const remotesToRepo = Iterables.flatMap(
 			resp.repos,
 			r =>
@@ -208,7 +204,7 @@ export class GitRepositories {
 	}
 
 	private async repositorySearch(folder: WorkspaceFolder): Promise<GitRepository[]> {
-		const workspace = this._session.workspace;
+		const workspace = this.session.workspace;
 		const folderUri = URI.parse(folder.uri);
 
 		// TODO: Make this configurable

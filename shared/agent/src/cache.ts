@@ -69,14 +69,13 @@ export async function getCache(repoPath: string): Promise<Cache> {
 }
 
 async function load(repoPath: string): Promise<Cache> {
-	const { state } = Container.instance();
-	const { userId } = state;
+	const { session } = Container.instance();
 
 	if (!repoPath.endsWith(".git")) {
 		repoPath = path.join(repoPath, ".git");
 	}
 
-	const cachePath = path.join(repoPath, `codestream-${userId}.cache`);
+	const cachePath = path.join(repoPath, `codestream-${session.userId}.cache`);
 	const data = await xfs.readJson(cachePath);
 
 	return new Cache(cachePath, data || {});

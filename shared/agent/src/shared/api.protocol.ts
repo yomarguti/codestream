@@ -149,12 +149,13 @@ export interface CSUser extends CSEntity {
 	firstName: string;
 	fullName: string;
 	isRegistered: boolean;
-	iWorkOn: string;
+	iWorkOn?: string;
 	lastName: string;
 	lastPostCreatedAt: number;
 	numMentions: number;
 	numInvites: number;
-	providerInfo: { [key: string]: any };
+	// Is this on me only?
+	providerInfo?: { [key: string]: any };
 	registeredAt: number;
 	secondaryEmails?: string[];
 	teamIds: string[];

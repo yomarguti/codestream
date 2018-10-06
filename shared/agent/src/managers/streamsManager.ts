@@ -57,17 +57,17 @@ export class StreamsManager extends EntityManager<CSChannelStream | CSDirectStre
 
 	@lspHandler(CreateChannelStreamRequestType)
 	createChannelStream(request: CreateChannelStreamRequest): Promise<CreateChannelStreamResponse> {
-		return Container.instance().api.createChannelStream(request);
+		return this.session.api.createChannelStream(request);
 	}
 
 	@lspHandler(CreateDirectStreamRequestType)
 	createDirectStream(request: CreateDirectStreamRequest): Promise<CreateDirectStreamResponse> {
-		return Container.instance().api.createDirectStream(request);
+		return this.session.api.createDirectStream(request);
 	}
 
 	async getAll(): Promise<(CSChannelStream | CSDirectStream)[]> {
 		if (!this.loaded) {
-			const response = await Container.instance().api.fetchStreams({});
+			const response = await this.session.api.fetchStreams({});
 			for (const stream of response.streams) {
 				this.cache.set(stream);
 			}
@@ -79,33 +79,33 @@ export class StreamsManager extends EntityManager<CSChannelStream | CSDirectStre
 
 	@lspHandler(JoinStreamRequestType)
 	joinStream(request: JoinStreamRequest): Promise<JoinStreamResponse> {
-		return Container.instance().api.joinStream(request);
+		return this.session.api.joinStream(request);
 	}
 
 	@lspHandler(LeaveStreamRequestType)
 	leaveStream(request: LeaveStreamRequest): Promise<LeaveStreamResponse> {
-		return Container.instance().api.leaveStream(request);
+		return this.session.api.leaveStream(request);
 	}
 
 	@lspHandler(MarkStreamReadRequestType)
 	markStreamRead(request: MarkStreamReadRequest): Promise<MarkStreamReadResponse> {
-		return Container.instance().api.markStreamRead(request);
+		return this.session.api.markStreamRead(request);
 	}
 
 	@lspHandler(UpdateStreamRequestType)
 	updateStream(request: UpdateStreamRequest): Promise<UpdateStreamResponse> {
-		return Container.instance().api.updateStream(request);
+		return this.session.api.updateStream(request);
 	}
 
 	@lspHandler(UpdateStreamMembershipRequestType)
 	updateStreamMembership(
 		request: UpdateStreamMembershipRequest
 	): Promise<UpdateStreamMembershipResponse> {
-		return Container.instance().api.updateStreamMembership(request);
+		return this.session.api.updateStreamMembership(request);
 	}
 	protected async fetch(id: Id): Promise<CSChannelStream | CSDirectStream> {
 		try {
-			const response = await Container.instance().api.getStream({ streamId: id });
+			const response = await this.session.api.getStream({ streamId: id });
 			return response.stream as CSChannelStream | CSDirectStream;
 		} catch (err) {
 			// When the user doesn't have access to the stream, the server returns a 403. If
@@ -136,6 +136,6 @@ export class StreamsManager extends EntityManager<CSChannelStream | CSDirectStre
 	private async fetchUnreadStreams(
 		request: FetchUnreadStreamsRequest
 	): Promise<FetchUnreadStreamsResponse> {
-		return Container.instance().api.fetchUnreadStreams({});
+		return this.session.api.fetchUnreadStreams({});
 	}
 }

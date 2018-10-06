@@ -225,7 +225,7 @@ export class MarkerLocationManager {
 			Logger.log(`MARKERS: missing locations detected - will calculate`);
 		}
 
-		const { api, git } = Container.instance();
+		const { git, session } = Container.instance();
 
 		for (const entry of missingMarkersByCommit.entries()) {
 			const commitHashWhenCreated = entry[0];
@@ -270,7 +270,7 @@ export class MarkerLocationManager {
 					Object.keys(calculatedLocations).length
 				} calculated locations to API server`
 			);
-			await api.createMarkerLocation({
+			await session.api.createMarkerLocation({
 				streamId: stream.id,
 				commitHash,
 				locations: MarkerLocationManager.arraysById(calculatedLocations)
@@ -329,7 +329,7 @@ export class MarkerLocationManager {
 
 	static async flushUncommittedLocations(repo: GitRepository) {
 		Logger.log(`MARKERS: flushing uncommitted locations`);
-		const { api, files, git, markers, session } = Container.instance();
+		const { files, git, markers, session } = Container.instance();
 		const cache = await getCache(repo.path);
 		const uncommittedLocations = cache.getCollection("uncommittedLocations");
 
@@ -366,13 +366,13 @@ export class MarkerLocationManager {
 					location.lineEnd
 				}, ${location.colEnd}] - saving to API server`
 			);
-			await api.createMarkerLocation({
+			await session.api.createMarkerLocation({
 				streamId: stream.id,
 				commitHash,
 				locations: locationArraysById
 			});
 			Logger.log(`MARKERS: updating marker => commitHashWhenCreated:${commitHash}`);
-			await api.updateMarker({
+			await session.api.updateMarker({
 				markerId: id,
 				commitHashWhenCreated: commitHash
 			});
@@ -384,7 +384,7 @@ export class MarkerLocationManager {
 	}
 
 	static async getMarkerLocations(streamId: string, commitHash: string): Promise<LocationsById> {
-		const { api, state } = Container.instance();
+		const { session } = Container.instance();
 		const commitsCache =
 			MarkerLocationManager.streamsCache[streamId] ||
 			(MarkerLocationManager.streamsCache[streamId] = {});
@@ -394,7 +394,7 @@ export class MarkerLocationManager {
 			Logger.log(
 				`MARKERS: no cached locations for stream ${streamId} and commit hash ${commitHash} - fetching from API server`
 			);
-			const response = await api.fetchMarkerLocations({
+			const response = await session.api.fetchMarkerLocations({
 				streamId: streamId,
 				commitHash: commitHash
 			});

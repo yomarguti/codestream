@@ -4,7 +4,8 @@ import { URLSearchParams } from "url";
 import { ServerError } from "../agentError";
 import { Container } from "../container";
 import { Logger } from "../logger";
-import { MessageSource } from "../managers/realTimeMessage";
+import { MessageSource, RealTimeMessage } from "../managers/realTimeMessage";
+import { PubnubReceiver } from "../pubnub/pubnubReceiver";
 import {
 	CreateChannelStreamRequest,
 	CreateDirectStreamRequest,
@@ -109,11 +110,15 @@ import { Cache } from "./cache";
 
 export class CodeStreamApiProvider implements ApiProvider {
 	private readonly _middleware: CodeStreamApiMiddleware[] = [];
-	private _token: string | undefined;
 	private _teamId: string | undefined;
+	private _token: string | undefined;
 	private _userId: string | undefined;
 
+	// TODO: Remove this cache in favor of resolves from *Manager
 	private readonly _cache: Cache;
+	private _pubnub: PubnubReceiver | undefined;
+	private _pubnubKey: string | undefined;
+	private _pubnubToken: string | undefined;
 
 	constructor(public readonly baseUrl: string, private readonly _version: VersionInfo) {
 		this._cache = new Cache(this);
@@ -188,15 +193,39 @@ export class CodeStreamApiProvider implements ApiProvider {
 			options.teamId = response.teams[0].id;
 		}
 
-		this._teamId = options.teamId;
 		this._token = response.accessToken;
+		this._pubnubKey = response.pubnubKey;
+		this._pubnubToken = response.pubnubToken;
+
+		this._teamId = options.teamId;
 		this._userId = response.user.id;
 
 		return { ...response, teamId: options.teamId };
 	}
 
+	async subscribe(listener: (e: RealTimeMessage) => any, thisArgs?: any) {
+		this._pubnub = new PubnubReceiver(
+			this,
+			this._pubnubKey!,
+			this._pubnubToken!,
+			this._token!,
+			this.userId,
+			this.teamId
+		);
+
+		const streams = await this.getSubscribableStreams(this.userId);
+		this._pubnub.listen(streams.map(s => s.id));
+		this._pubnub.onDidReceiveMessage(listener, thisArgs);
+	}
+
 	grantPubNubChannelAccess(token: string, channel: string): Promise<{}> {
 		return this.put(`/grant/${channel}`, {}, token);
+	}
+
+	async getSubscribableStreams(userId: string): Promise<CSStream[]> {
+		return (await this.fetchStreams({
+			types: [StreamType.Channel, StreamType.Direct]
+		})).streams.filter(s => CodeStreamApiProvider.isStreamSubscriptionRequired(s, userId));
 	}
 
 	getMe() {

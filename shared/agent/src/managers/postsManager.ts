@@ -52,22 +52,22 @@ export class PostsManager extends EntityManager<CSPost> {
 
 	@lspHandler(CreatePostRequestType)
 	createPost(request: CreatePostRequest): Promise<CreatePostResponse> {
-		return Container.instance().api.createPost(request);
+		return this.session.api.createPost(request);
 	}
 
 	@lspHandler(DeletePostRequestType)
 	deletePost(request: DeletePostRequest): Promise<DeletePostResponse> {
-		return Container.instance().api.deletePost(request);
+		return this.session.api.deletePost(request);
 	}
 
 	@lspHandler(EditPostRequestType)
 	editPost(request: EditPostRequest): Promise<EditPostResponse> {
-		return Container.instance().api.editPost(request);
+		return this.session.api.editPost(request);
 	}
 
 	@lspHandler(FetchPostRepliesRequestType)
 	async fetchPostReplies(request: FetchPostRepliesRequest): Promise<FetchPostRepliesResponse> {
-		return Container.instance().api.fetchPostReplies(request);
+		return this.session.api.fetchPostReplies(request);
 
 		// const posts = await this.cache.getGroup([["parentPostId", request.postId]]);
 		// return { posts: posts };
@@ -75,12 +75,12 @@ export class PostsManager extends EntityManager<CSPost> {
 
 	@lspHandler(MarkPostUnreadRequestType)
 	markPostUnread(request: MarkPostUnreadRequest): Promise<MarkPostUnreadResponse> {
-		return Container.instance().api.markPostUnread(request);
+		return this.session.api.markPostUnread(request);
 	}
 
 	@lspHandler(ReactToPostRequestType)
 	reactToPost(request: ReactToPostRequest): Promise<ReactToPostResponse> {
-		return Container.instance().api.reactToPost(request);
+		return this.session.api.reactToPost(request);
 	}
 
 	@lspHandler(GetPostRequestType)
@@ -91,7 +91,7 @@ export class PostsManager extends EntityManager<CSPost> {
 
 	@lspHandler(FetchPostsRequestType)
 	private async fetchPosts(request: FetchPostsRequest): Promise<FetchPostsResponse> {
-		return Container.instance().api.fetchPosts(request);
+		return this.session.api.fetchPosts(request);
 
 		// const posts = await this.getPosts(
 		// 	request.streamId,
@@ -147,13 +147,13 @@ export class PostsManager extends EntityManager<CSPost> {
 
 	protected async fetch(id: Id): Promise<CSPost> {
 		// TODO: Must fix this for slack
-		const response = await Container.instance().api.getPost({ streamId: undefined!, postId: id });
+		const response = await this.session.api.getPost({ streamId: undefined!, postId: id });
 		return response.post;
 	}
 
 	protected async fetchByParentPostId(values: any[]): Promise<CSPost[]> {
 		const [parentPostId] = values;
-		const response = await Container.instance().api.fetchPostReplies({
+		const response = await this.session.api.fetchPostReplies({
 			streamId: undefined!,
 			postId: parentPostId
 		});
@@ -171,7 +171,7 @@ export class PostsManager extends EntityManager<CSPost> {
 		if (seqStart && seqEnd) {
 			const minSeq = seqStart;
 			const maxSeq = seqEnd - 1;
-			const response = await Container.instance().api.fetchPosts({
+			const response = await this.session.api.fetchPosts({
 				streamId: streamId,
 				before: maxSeq,
 				after: minSeq,
@@ -184,7 +184,7 @@ export class PostsManager extends EntityManager<CSPost> {
 		const posts: CSPost[] = [];
 
 		while (true) {
-			const response = await Container.instance().api.fetchPosts({
+			const response = await this.session.api.fetchPosts({
 				streamId: streamId,
 				limit: limit,
 				before: lessThan

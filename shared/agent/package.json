@@ -26,16 +26,14 @@
         "lint": "tslint --project tsconfig.json",
         "pretty": "prettier --config .prettierrc --write \"./src/**/*.ts\" ./package.json ./.prettierrc",
         "rebuild": "npm run clean && npm install --no-save && npm run build",
-		"watch": "webpack --watch --env.development --info-verbosity verbose",
-
-		"test-integration": "cross-env TS_NODE_COMPILER_OPTIONS=\"{ \\\"module\\\": \\\"commonjs\\\", \\\"types\\\": [\\\"node\\\"] }\" mocha --require ts-node/register --recursive \"test/integration/**/*.spec.ts\"",
-		"test-unit": "cross-env TS_NODE_COMPILER_OPTIONS=\"{ \\\"module\\\": \\\"commonjs\\\", \\\"types\\\": [\\\"node\\\"] }\" mocha --require ts-node/register --recursive \"test/unit/**/*.spec.ts\"",
-		"test-unit-ci": "cross-env TS_NODE_COMPILER_OPTIONS=\"{ \\\"module\\\": \\\"commonjs\\\", \\\"types\\\": [\\\"node\\\"] }\" mocha --require ts-node/register --reporter mocha-teamcity-reporter --recursive \"test/unit/**/*.spec.ts\"",
-		
-		"bash-test-integration": "export TS_NODE_COMPILER_OPTIONS=`cat tsnode-options.json` && mocha --require ts-node/register --recursive \"test/integration/**/*.spec.ts\"",
-		"bash-test-integration-ci": "npm run bash-test-integration -- --reporter mocha-teamcity-reporter",
-		"bash-test-unit": "export TS_NODE_COMPILER_OPTIONS=`cat tsnode-options.json` && mocha --require ts-node/register --recursive \"test/unit/**/*.spec.ts\"",
-		"bash-test-unit-ci": "npm run bash-test-unit -- --reporter mocha-teamcity-reporter"
+        "watch": "webpack --watch --env.development --info-verbosity verbose",
+        "test-integration": "cross-env TS_NODE_COMPILER_OPTIONS=\"{ \\\"module\\\": \\\"commonjs\\\", \\\"types\\\": [\\\"node\\\"] }\" mocha --require ts-node/register --recursive \"test/integration/**/*.spec.ts\"",
+        "test-unit": "cross-env TS_NODE_COMPILER_OPTIONS=\"{ \\\"module\\\": \\\"commonjs\\\", \\\"types\\\": [\\\"node\\\"] }\" mocha --require ts-node/register --recursive \"test/unit/**/*.spec.ts\"",
+        "test-unit-ci": "cross-env TS_NODE_COMPILER_OPTIONS=\"{ \\\"module\\\": \\\"commonjs\\\", \\\"types\\\": [\\\"node\\\"] }\" mocha --require ts-node/register --reporter mocha-teamcity-reporter --recursive \"test/unit/**/*.spec.ts\"",
+        "bash-test-integration": "export TS_NODE_COMPILER_OPTIONS=`cat tsnode-options.json` && mocha --require ts-node/register --recursive \"test/integration/**/*.spec.ts\"",
+        "bash-test-integration-ci": "npm run bash-test-integration -- --reporter mocha-teamcity-reporter",
+        "bash-test-unit": "export TS_NODE_COMPILER_OPTIONS=`cat tsnode-options.json` && mocha --require ts-node/register --recursive \"test/unit/**/*.spec.ts\"",
+        "bash-test-unit-ci": "npm run bash-test-unit -- --reporter mocha-teamcity-reporter"
     },
     "dependencies": {
         "date-fns": "1.29.0",
@@ -64,6 +62,7 @@
         "@types/string-similarity": "1.2.0",
         "@types/tmp": "0.0.33",
         "@types/write-file-atomic": "2.1.1",
+        "@slack/client": "4.8.0",
         "chai": "4.2.0",
         "clean-webpack-plugin": "0.1.19",
         "cross-env": "5.2.0",

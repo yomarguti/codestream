@@ -1,5 +1,6 @@
 import { RequestInit, Response } from "node-fetch";
 import { Disposable } from "vscode-languageserver";
+import { RealTimeMessage } from "../managers/realTimeMessage";
 import {
 	AccessToken,
 	CreateChannelStreamRequest,
@@ -73,7 +74,7 @@ import {
 	UpdateStreamRequest,
 	UpdateStreamResponse
 } from "../shared/agent.protocol";
-import { CSGetPostsResponse, LoginResponse } from "../shared/api.protocol";
+import { CSStream, LoginResponse } from "../shared/api.protocol";
 
 export interface VersionInfo {
 	readonly ideVersion: string;
@@ -110,8 +111,10 @@ export interface ApiProvider {
 	useMiddleware(middleware: CodeStreamApiMiddleware): Disposable;
 
 	login(options: LoginOptions): Promise<LoginResponse & { teamId: string }>;
+	subscribe(listener: (e: RealTimeMessage) => any, thisArgs?: any): Promise<void>;
 
 	grantPubNubChannelAccess(token: string, channel: string): Promise<{}>;
+	getSubscribableStreams(userId: string): Promise<CSStream[]>;
 
 	getMe(): Promise<GetMeResponse>;
 	updatePreferences(request: UpdatePreferencesRequest): Promise<GetMeResponse>;

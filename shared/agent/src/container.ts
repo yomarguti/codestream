@@ -1,5 +1,4 @@
 "use strict";
-import { ApiProvider } from "./api/apiProvider";
 import { Config } from "./config";
 import { DocumentManager } from "./documentManager";
 import { GitService } from "./git/gitService";
@@ -13,37 +12,9 @@ import { TeamsManager } from "./managers/teamsManager";
 import { UsersManager } from "./managers/usersManager";
 import { MarkerLocationManager } from "./markerLocation/markerLocationManager";
 import { CodeStreamSession } from "./session";
-import { AgentOptions, AgentState, CodeStreamEnvironment } from "./shared/agent.protocol";
-import { LoginResponse } from "./shared/api.protocol";
-
-const envRegex = /https?:\/\/(pd-|qa-)?api.codestream.(?:us|com)/;
 
 class ServiceContainer {
-	public readonly extensionVersion: string;
-	public readonly gitPath: string;
-	public readonly ideVersion: string;
-
-	public readonly state: AgentState;
-
-	constructor(
-		public readonly session: CodeStreamSession,
-		public readonly api: ApiProvider,
-		options: AgentOptions,
-		loginResponse: LoginResponse
-	) {
-		this.gitPath = options.gitPath;
-		this.extensionVersion = options.extensionVersion;
-		this.ideVersion = options.ideVersion;
-
-		this.state = {
-			apiToken: loginResponse.accessToken,
-			email: options.email,
-			environment: this.getEnvironment(options.serverUrl),
-			teamId: options.teamId,
-			serverUrl: options.serverUrl,
-			userId: loginResponse.user.id
-		};
-
+	constructor(public readonly session: CodeStreamSession) {
 		this._files = new FilesManager(session);
 		this._markerLocations = new MarkerLocationManager();
 		this._markers = new MarkersManager(session);
@@ -53,7 +24,7 @@ class ServiceContainer {
 		this._teams = new TeamsManager(session);
 		this._users = new UsersManager(session);
 
-		this._git = new GitService(session, api);
+		this._git = new GitService(session);
 
 		this._documents = new DocumentManager();
 		this._documents.listen(session.connection);
@@ -119,33 +90,13 @@ class ServiceContainer {
 		// 		this.api.baseUrl = this.config.serverUrl;
 		// 	}
 	}
-
-	private getEnvironment(url: string) {
-		const match = envRegex.exec(url);
-		if (match == null) return CodeStreamEnvironment.Unknown;
-
-		const [, env] = match;
-		switch (env == null ? env : env.toLowerCase()) {
-			case "pd-":
-				return CodeStreamEnvironment.PD;
-			case "qa-":
-				return CodeStreamEnvironment.QA;
-			default:
-				return CodeStreamEnvironment.Production;
-		}
-	}
 }
 
 let container: ServiceContainer | undefined;
 
 export namespace Container {
-	export async function initialize(
-		session: CodeStreamSession,
-		api: ApiProvider,
-		options: AgentOptions,
-		loginResponse: LoginResponse
-	) {
-		container = new ServiceContainer(session, api, options, loginResponse);
+	export function initialize(session: CodeStreamSession) {
+		container = new ServiceContainer(session);
 	}
 
 	export function instance(): ServiceContainer {

@@ -59,6 +59,7 @@ export namespace PostHandler {
 					});
 					const authorEmails = gitAuthors.map(a => a.email);
 
+					// TODO: This needs to be replaced by the UsersManager!
 					const users = await session.users.getByEmails(authorEmails);
 					authors = [...Iterables.map(users, u => ({ id: u.id, username: u.name }))];
 				}

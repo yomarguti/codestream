@@ -16,6 +16,7 @@ import {
 	VersionMiddlewareManager
 } from "./api/middleware/versionMiddleware";
 import { UserCollection } from "./api/models/users";
+import { SlackApiProvider } from "./api/slackApi";
 import { Container } from "./container";
 import { setGitPath } from "./git/git";
 import { Logger } from "./logger";
@@ -23,10 +24,10 @@ import { RealTimeMessage } from "./managers/realTimeMessage";
 import { MarkerHandler } from "./marker/markerHandler";
 import { MarkerLocationManager } from "./markerLocation/markerLocationManager";
 import { PostHandler } from "./post/postHandler";
-import { PubnubReceiver } from "./pubnub/pubnubReceiver";
 import {
 	AgentOptions,
 	ApiRequestType,
+	CodeStreamEnvironment,
 	CreatePostWithCodeRequestType,
 	DidChangeItemsNotificationType,
 	DidChangeVersionCompatibilityNotificationType,
@@ -47,10 +48,11 @@ import {
 	CSStream,
 	CSTeam,
 	CSUser,
-	LoginResult,
-	StreamType
+	LoginResult
 } from "./shared/api.protocol";
 import { Strings } from "./system";
+
+const envRegex = /https?:\/\/(pd-|qa-)?api.codestream.(?:us|com)/;
 
 const loginApiErrorMappings: { [k: string]: ApiErrors } = {
 	"USRC-1001": ApiErrors.InvalidCredentials,
@@ -99,24 +101,26 @@ export class CodeStreamSession {
 		return this._onDidChangeMarkerLocations.event;
 	}
 
-	private readonly _api: ApiProvider;
 	private readonly _readyPromise: Promise<void>;
-
-	private _pubnub: PubnubReceiver | undefined;
-	get pubnub() {
-		return this._pubnub!;
-	}
 
 	constructor(
 		public readonly agent: CodeStreamAgent,
 		public readonly connection: Connection,
 		private readonly _options: AgentOptions
 	) {
+		Container.initialize(this);
+
 		this._api = new CodeStreamApiProvider(_options.serverUrl, {
 			ideVersion: _options.ideVersion,
 			extensionVersion: _options.extensionVersion,
 			extensionBuild: _options.extensionBuild
 		});
+
+		// this._api = new SlackApiProvider(_options.serverUrl, {
+		// 	ideVersion: _options.ideVersion,
+		// 	extensionVersion: _options.extensionVersion,
+		// 	extensionBuild: _options.extensionBuild
+		// });
 
 		const versionManager = new VersionMiddlewareManager(this._api);
 		versionManager.onDidChangeCompatibility(this.onVersionCompatibilityChanged, this);
@@ -125,7 +129,7 @@ export class CodeStreamSession {
 		// this.connection.onHover(e => MarkerHandler.onHover(e));
 
 		this.agent.registerHandler(ApiRequestType, (e, cancellationToken: CancellationToken) =>
-			this._api.fetch(e.url, e.init, e.token)
+			this.api.fetch(e.url, e.init, e.token)
 		);
 		this.agent.registerHandler(
 			DocumentFromCodeBlockRequestType,
@@ -143,7 +147,7 @@ export class CodeStreamSession {
 		});
 
 		this.agent.registerHandler(FetchMarkerLocationsRequestType, r =>
-			this._api.fetchMarkerLocations(r)
+			this.api.fetchMarkerLocations(r)
 		);
 	}
 
@@ -212,9 +216,9 @@ export class CodeStreamSession {
 		this.agent.sendNotification(DidChangeVersionCompatibilityNotificationType, e);
 	}
 
-	private _apiToken: string | undefined;
-	get apiToken() {
-		return this._apiToken!;
+	private _api: ApiProvider | undefined;
+	get api() {
+		return this._api!;
 	}
 
 	private _teamId: string | undefined;
@@ -227,6 +231,7 @@ export class CodeStreamSession {
 		return this._userId!;
 	}
 
+	// TODO: Needs to be removed
 	private _users: UserCollection | undefined;
 	get users() {
 		if (this._users === undefined) {
@@ -237,10 +242,6 @@ export class CodeStreamSession {
 
 	get workspace() {
 		return this.connection.workspace;
-	}
-
-	async ready() {
-		return this._readyPromise;
 	}
 
 	async login() {
@@ -272,7 +273,7 @@ export class CodeStreamSession {
 
 			let response;
 			try {
-				response = await this._api.login(opts);
+				response = await this.api.login(opts);
 			} catch (ex) {
 				if (ex instanceof ServerError) {
 					if (ex.statusCode !== undefined && ex.statusCode >= 400 && ex.statusCode < 500) {
@@ -285,7 +286,6 @@ export class CodeStreamSession {
 				throw AgentError.wrap(ex, `Login failed:\n${ex.message}`);
 			}
 
-			this._apiToken = response.accessToken;
 			this._options.passwordOrToken = {
 				url: serverUrl,
 				email: email,
@@ -295,28 +295,23 @@ export class CodeStreamSession {
 			this._userId = response.user.id;
 
 			setGitPath(this._options.gitPath);
-			void (await Container.initialize(this, this._api, this._options, response));
 
-			this._pubnub = new PubnubReceiver(
-				this._api,
-				response.pubnubKey,
-				response.pubnubToken,
-				this._apiToken,
-				this._userId,
-				this._teamId
-			);
+			this.api.subscribe(this.onRealTimeMessageReceived, this);
 
-			const streams = await this.getSubscribableStreams(this._userId, this._teamId);
-			this._pubnub.listen(streams.map(s => s.id));
-			this._pubnub.onDidReceiveMessage(this.onRealTimeMessageReceived, this);
-			const { git, repos } = Container.instance();
-			git.onRepositoryCommitHashChanged(repo => {
+			Container.instance().git.onRepositoryCommitHashChanged(repo => {
 				MarkerLocationManager.flushUncommittedLocations(repo);
 			});
 
 			return {
 				loginResponse: { ...response },
-				state: { ...Container.instance().state }
+				state: {
+					apiToken: response.accessToken,
+					email: email,
+					environment: this.getEnvironment(serverUrl),
+					serverUrl: serverUrl,
+					teamId: this._teamId,
+					userId: this._userId
+				}
 			};
 		} finally {
 			Logger.log(`Login completed in ${Strings.getDurationMilliseconds(start)} ms`);
@@ -325,6 +320,10 @@ export class CodeStreamSession {
 
 	logout(reason?: LogoutReason) {
 		return this.agent.sendRequest(LogoutRequestType, { reason: reason });
+	}
+
+	async ready() {
+		return this._readyPromise;
 	}
 
 	showErrorMessage<T extends MessageActionItem>(message: string, ...actions: T[]) {
@@ -339,9 +338,18 @@ export class CodeStreamSession {
 		return this.connection.window.showWarningMessage(message, ...actions);
 	}
 
-	private async getSubscribableStreams(userId: string, teamId?: string): Promise<CSStream[]> {
-		return (await this._api.fetchStreams({
-			types: [StreamType.Channel, StreamType.Direct]
-		})).streams.filter(s => CodeStreamApiProvider.isStreamSubscriptionRequired(s, userId));
+	private getEnvironment(url: string) {
+		const match = envRegex.exec(url);
+		if (match == null) return CodeStreamEnvironment.Unknown;
+
+		const [, env] = match;
+		switch (env == null ? env : env.toLowerCase()) {
+			case "pd-":
+				return CodeStreamEnvironment.PD;
+			case "qa-":
+				return CodeStreamEnvironment.QA;
+			default:
+				return CodeStreamEnvironment.Production;
+		}
 	}
 }

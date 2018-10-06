@@ -17,7 +17,7 @@ export class MarkersManager extends EntityManager<CSMarker> {
 	}
 
 	protected async fetch(id: Id): Promise<CSMarker> {
-		const response = await Container.instance().api.getMarker({ markerId: id });
+		const response = await this.session.api.getMarker({ markerId: id });
 		return response.marker;
 	}
 
@@ -33,13 +33,13 @@ export class MarkersManager extends EntityManager<CSMarker> {
 
 	protected async fetchByStreamId(values: any[]): Promise<CSMarker[]> {
 		const [streamId] = values;
-		const response = await Container.instance().api.fetchMarkers({ streamId: streamId });
+		const response = await this.session.api.fetchMarkers({ streamId: streamId });
 		return response.markers;
 	}
 
 	private async filterMarkers(markers: CSMarker[]): Promise<CSMarker[]> {
 		const includedMarkers = [];
-		const { session, streams } = Container.instance();
+		const { streams } = Container.instance();
 
 		for (const marker of markers) {
 			if (!marker.postStreamId || marker.deactivated) {
@@ -47,7 +47,7 @@ export class MarkersManager extends EntityManager<CSMarker> {
 			}
 
 			const stream = await streams.getById(marker.postStreamId);
-			if (stream && this.canSeeMarkers(stream, session.userId)) {
+			if (stream && this.canSeeMarkers(stream, this.session.userId)) {
 				includedMarkers.push(marker);
 			}
 		}
