@@ -1,6 +1,4 @@
 "use strict";
-
-import { Container } from "../container";
 import {
 	FetchTeamsRequest,
 	FetchTeamsRequestType,

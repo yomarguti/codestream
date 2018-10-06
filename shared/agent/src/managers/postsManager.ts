@@ -1,5 +1,4 @@
 "use strict";
-import { Container } from "../container";
 import {
 	CreatePostRequest,
 	CreatePostRequestType,

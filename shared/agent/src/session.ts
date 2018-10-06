@@ -15,7 +15,6 @@ import {
 	VersionCompatibilityChangedEvent,
 	VersionMiddlewareManager
 } from "./api/middleware/versionMiddleware";
-import { UserCollection } from "./api/models/users";
 import { SlackApiProvider } from "./api/slackApi";
 import { Container } from "./container";
 import { setGitPath } from "./git/git";
@@ -223,15 +222,6 @@ export class CodeStreamSession {
 	private _userId: string | undefined;
 	get userId() {
 		return this._userId!;
-	}
-
-	// TODO: Needs to be removed
-	private _users: UserCollection | undefined;
-	get users() {
-		if (this._users === undefined) {
-			this._users = new UserCollection(this);
-		}
-		return this._users;
 	}
 
 	get workspace() {

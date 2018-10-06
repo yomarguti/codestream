@@ -1,5 +1,4 @@
 "use strict";
-import { Container } from "../container";
 import { Logger } from "../logger";
 import {
 	CreateChannelStreamRequest,

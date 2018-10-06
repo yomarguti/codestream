@@ -1,6 +1,4 @@
 "use strict";
-
-import { Container } from "../container";
 import {
 	FetchUsersRequest,
 	FetchUsersRequestType,
@@ -25,12 +23,6 @@ import { EntityManager, Id } from "./managers";
 export class UsersManager extends EntityManager<CSUser> {
 	private loaded = false;
 
-	@lspHandler(GetMeRequestType)
-	async getMe(request: GetMeRequest): Promise<GetMeResponse> {
-		const me = (await this.getById(this.session.userId)) as CSMe;
-		return { user: me };
-	}
-
 	async getAll(): Promise<CSUser[]> {
 		if (!this.loaded) {
 			const response = await this.session.api.fetchUsers({});
@@ -41,6 +33,20 @@ export class UsersManager extends EntityManager<CSUser> {
 		}
 
 		return this.cache.getAll();
+	}
+
+	async getByEmails(
+		emails: string[],
+		options: { ignoreCase?: boolean } = { ignoreCase: true }
+	): Promise<CSUser[]> {
+		if (options.ignoreCase) {
+			emails = emails.map(email => email.toLocaleUpperCase());
+		}
+
+		const users = await this.getAll();
+		return users.filter(u =>
+			emails.includes(options.ignoreCase ? u.email.toLocaleUpperCase() : u.email)
+		);
 	}
 
 	@lspHandler(InviteUserRequestType)
@@ -63,12 +69,6 @@ export class UsersManager extends EntityManager<CSUser> {
 		return response.user;
 	}
 
-	@lspHandler(GetUserRequestType)
-	private async getUser(request: GetUserRequest): Promise<GetUserResponse> {
-		const user = await this.getById(request.userId);
-		return { user: user };
-	}
-
 	@lspHandler(FetchUsersRequestType)
 	private async fetchUsers(request: FetchUsersRequest): Promise<FetchUsersResponse> {
 		const users = await this.getAll();
@@ -77,5 +77,17 @@ export class UsersManager extends EntityManager<CSUser> {
 		}
 
 		return { users: users.filter(u => request.userIds!.includes(u.id)) };
+	}
+
+	@lspHandler(GetMeRequestType)
+	private async getMe(request: GetMeRequest): Promise<GetMeResponse> {
+		const me = (await this.getById(this.session.userId)) as CSMe;
+		return { user: me };
+	}
+
+	@lspHandler(GetUserRequestType)
+	private async getUser(request: GetUserRequest): Promise<GetUserResponse> {
+		const user = await this.getById(request.userId);
+		return { user: user };
 	}
 }
