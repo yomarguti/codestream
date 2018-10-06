@@ -49,12 +49,13 @@ import {
 	CSDirectStream,
 	CSMe,
 	CSPost,
+	CSSlackProviderInfo,
 	CSStream,
 	CSUser,
 	LoginResponse,
 	StreamType
 } from "../shared/api.protocol";
-import { ApiProvider, CodeStreamApiMiddleware, LoginOptions, VersionInfo } from "./apiProvider";
+import { ApiProvider, CodeStreamApiMiddleware, LoginOptions } from "./apiProvider";
 import { CodeStreamApiProvider } from "./codestreamApi";
 
 const defaultCreatedAt = 165816000000;
@@ -65,20 +66,27 @@ const mentionsRegex = /(^|\s)@(\w+)(?:\b(?!@|[\(\{\[\<\-])|$)/g;
 const slackMentionsRegex = /(^|\s)\<[@|!](\w+)\>(\s|$)/g;
 
 export class SlackApiProvider implements ApiProvider {
-	private readonly _codestream: CodeStreamApiProvider;
 	private _slack: WebClient | undefined;
 
 	private _codestreamUserId: string | undefined;
-	private _teamId: string | undefined;
-	private _user: CSUser | undefined;
 
 	private _streams: (CSChannelStream | CSDirectStream)[] | undefined;
 	private _users: CSUser[] | undefined;
 	private _usersById: Map<string, CSUser> | undefined;
 	private _usersByName: Map<string, CSUser> | undefined;
 
-	constructor(public readonly baseUrl: string, version: VersionInfo) {
-		this._codestream = new CodeStreamApiProvider(baseUrl, version);
+	constructor(
+		private _codestream: CodeStreamApiProvider,
+		providerInfo: CSSlackProviderInfo,
+		private readonly _user: CSMe,
+		private readonly _teamId: string
+	) {
+		const slackToken = providerInfo.accessToken;
+		const slackOptions: WebClientOptions = { retryConfig: { retries: 1 } };
+		this._slack = new WebClient(slackToken, slackOptions);
+
+		this._codestreamUserId = _user.id;
+		_user.id = providerInfo.userId;
 	}
 
 	private get slack() {
@@ -90,11 +98,7 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	get slackUserId(): string {
-		return this._user!.id;
-	}
-
-	get teamId(): string {
-		return this._teamId!;
+		return this._user.id;
 	}
 
 	fetch<R extends object>(url: string, init?: RequestInit, token?: string) {
@@ -106,25 +110,7 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	async login(options: LoginOptions): Promise<LoginResponse & { teamId: string }> {
-		const response = await this._codestream.login(options);
-
-		const slackToken = "<your-token-here>";
-		const slackOptions: WebClientOptions = { retryConfig: { retries: 1 } };
-		this._slack = new WebClient(slackToken, slackOptions);
-
-		// const identityResponse = await this._slack.users.identity();
-
-		// const { ok, error, user } = identityResponse as WebAPICallResult & { user: any };
-		// if (!ok) throw new Error(error);
-
-		this._teamId = response.teamId;
-		this._user = response.user;
-		this._codestreamUserId = this._user.id;
-
-		// this._user.id = user.id;
-		this._user.id = "<your-slack-user-id-here>";
-
-		return response;
+		throw new Error("Not supported");
 	}
 
 	async subscribe(listener: (e: RealTimeMessage) => any, thisArgs?: any) {
@@ -170,7 +156,7 @@ export class SlackApiProvider implements ApiProvider {
 
 		const { ok, error, member } = response as WebAPICallResult & { member: any };
 		if (ok) {
-			const user = CSUser.fromSlack(member, this.teamId);
+			const user = CSUser.fromSlack(member, this._teamId);
 			return {
 				user: {
 					...me,
@@ -259,7 +245,7 @@ export class SlackApiProvider implements ApiProvider {
 
 		const usersById = await this.ensureUsersById();
 
-		const post = CSPost.fromSlack(message, streamId, usersById, this.teamId);
+		const post = CSPost.fromSlack(message, streamId, usersById, this._teamId);
 
 		return { post: post };
 	}
@@ -357,7 +343,7 @@ export class SlackApiProvider implements ApiProvider {
 		messages.sort((a: any, b: any) => a.ts - b.ts);
 
 		const posts = messages.map((m: any) =>
-			CSPost.fromSlack(m, request.streamId, usersById, this.teamId)
+			CSPost.fromSlack(m, request.streamId, usersById, this._teamId)
 		) as CSPost[];
 
 		return { posts: posts, more: has_more };
@@ -377,7 +363,7 @@ export class SlackApiProvider implements ApiProvider {
 		const usersById = await this.ensureUsersById();
 
 		const posts = messages.map((m: any) =>
-			CSPost.fromSlack(m, request.streamId, usersById, this.teamId)
+			CSPost.fromSlack(m, request.streamId, usersById, this._teamId)
 		);
 
 		return { post: posts[0] };
@@ -474,7 +460,7 @@ export class SlackApiProvider implements ApiProvider {
 
 			const users = (await this.fetchUsers({})).users;
 			const streams: (CSChannelStream | CSDirectStream)[] = channels
-				.map((c: any) => CSStream.fromSlack(c, users, this.teamId))
+				.map((c: any) => CSStream.fromSlack(c, users, this._teamId))
 				.filter(Boolean);
 
 			this._streams = streams;
@@ -507,7 +493,7 @@ export class SlackApiProvider implements ApiProvider {
 		if (!ok) throw new Error(error);
 
 		const users = (await this.fetchUsers({})).users;
-		const stream = CSStream.fromSlack(channel, users, this.teamId);
+		const stream = CSStream.fromSlack(channel, users, this._teamId);
 
 		return { stream: stream! };
 	}
@@ -521,7 +507,7 @@ export class SlackApiProvider implements ApiProvider {
 		if (!ok) throw new Error(error);
 
 		const users = (await this.fetchUsers({})).users;
-		const stream = CSStream.fromSlack(channel, users, this.teamId);
+		const stream = CSStream.fromSlack(channel, users, this._teamId);
 
 		return { stream: stream! };
 	}
@@ -590,7 +576,7 @@ export class SlackApiProvider implements ApiProvider {
 			const { ok, error, members } = response as WebAPICallResult & { members: any };
 			if (!ok) throw new Error(error);
 
-			const users: CSUser[] = members.map((m: any) => CSUser.fromSlack(m, this.teamId));
+			const users: CSUser[] = members.map((m: any) => CSUser.fromSlack(m, this._teamId));
 
 			users.splice(0, 0, this._user!);
 
@@ -620,7 +606,7 @@ export class SlackApiProvider implements ApiProvider {
 		const { ok, error, member } = response as WebAPICallResult & { member: any };
 		if (!ok) throw new Error(error);
 
-		const user = CSUser.fromSlack(member, this.teamId);
+		const user = CSUser.fromSlack(member, this._teamId);
 
 		return { user: user };
 	}

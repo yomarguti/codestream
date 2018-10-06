@@ -135,12 +135,25 @@ export interface CSFileStream extends CSEntity {
 
 export type CSStream = CSChannelStream | CSDirectStream | CSFileStream;
 
+export interface CSTeamSlackProviderInfo {
+	teamId: string;
+}
+
 export interface CSTeam extends CSEntity {
 	companyId: string;
 	memberIds: string[];
 	name: string;
 	primaryReferral: "internal" | "external";
 	integrations?: { [key: string]: { enabled: boolean } };
+	providerInfo?: {
+		slack?: CSTeamSlackProviderInfo;
+	};
+}
+
+export interface CSSlackProviderInfo {
+	accessToken: string;
+	teamId: string;
+	userId: string;
 }
 
 export interface CSUser extends CSEntity {
@@ -155,7 +168,9 @@ export interface CSUser extends CSEntity {
 	numMentions: number;
 	numInvites: number;
 	// Is this on me only?
-	providerInfo?: { [key: string]: any };
+	providerInfo?: {
+		slack?: CSSlackProviderInfo;
+	};
 	registeredAt: number;
 	secondaryEmails?: string[];
 	teamIds: string[];

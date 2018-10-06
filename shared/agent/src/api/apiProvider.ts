@@ -106,7 +106,6 @@ export interface TokenLoginOptions extends BasicLoginOptions {
 export type LoginOptions = CredentialsLoginOptions | OneTimeCodeLoginOptions | TokenLoginOptions;
 
 export interface ApiProvider {
-	baseUrl: string;
 	fetch<R extends object>(url: string, init?: RequestInit, token?: string): Promise<R>;
 	useMiddleware(middleware: CodeStreamApiMiddleware): Disposable;
 

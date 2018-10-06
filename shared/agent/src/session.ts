@@ -116,12 +116,6 @@ export class CodeStreamSession {
 			extensionBuild: _options.extensionBuild
 		});
 
-		// this._api = new SlackApiProvider(_options.serverUrl, {
-		// 	ideVersion: _options.ideVersion,
-		// 	extensionVersion: _options.extensionVersion,
-		// 	extensionBuild: _options.extensionBuild
-		// });
-
 		const versionManager = new VersionMiddlewareManager(this._api);
 		versionManager.onDidChangeCompatibility(this.onVersionCompatibilityChanged, this);
 
@@ -293,6 +287,15 @@ export class CodeStreamSession {
 			};
 			this._teamId = this._options.teamId = response.teamId;
 			this._userId = response.user.id;
+
+			if (response.user.providerInfo && response.user.providerInfo.slack) {
+				this._api = new SlackApiProvider(
+					this._api! as CodeStreamApiProvider,
+					response.user.providerInfo.slack,
+					response.user,
+					this._teamId
+				);
+			}
 
 			setGitPath(this._options.gitPath);
 

@@ -185,7 +185,17 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 			// If we still can't find a team, then just pick the first one
 			if (options.teamId == null) {
-				options.teamId = response.teams[0].id;
+				// Pick the first slack team if there is one
+				if (response.user.providerInfo && response.user.providerInfo.slack) {
+					const team = response.teams.find(t => Boolean(t.providerInfo));
+					if (team) {
+						options.teamId = team.id;
+					}
+				}
+
+				if (options.teamId == null) {
+					options.teamId = response.teams[0].id;
+				}
 			}
 		}
 
@@ -350,26 +360,26 @@ export class CodeStreamApiProvider implements ApiProvider {
 		}
 
 		let params = `&limit=${request.limit}`;
-		// TODO: Use once colin's new api is ready
-		// if (request.before) {
-		// 	params += `&before=${request.before}`;
-		// }
-		// if (request.after) {
-		// 	params += `&after=${request.after}`;
-		// }
-		// if (request.inclusive === true) {
-		// 	params += `&inclusive`;
-		// }
-
-		if (request.before && request.after && request.inclusive) {
-			params += `&seqnum=${request.after}-${request.before}`;
-		} else if (request.before && request.after) {
-			params += `&seqnum=${request.after}-${request.before}`;
-		} else if (request.before) {
-			params += `&seqnum=${Math.max(+request.before - request.limit, 1)}-${request.before}`;
-		} else if (request.after) {
-			params += `seqnum=${request.after}-${+request.after + request.limit}`;
+		if (request.before) {
+			params += `&before=${request.before}`;
 		}
+		if (request.after) {
+			params += `&after=${request.after}`;
+		}
+		if (request.inclusive === true) {
+			params += `&inclusive`;
+		}
+
+		// Remove once we verify the new api works
+		// if (request.before && request.after && request.inclusive) {
+		// 	params += `&seqnum=${request.after}-${request.before}`;
+		// } else if (request.before && request.after) {
+		// 	params += `&seqnum=${request.after}-${request.before}`;
+		// } else if (request.before) {
+		// 	params += `&seqnum=${Math.max(+request.before - request.limit, 1)}-${request.before}`;
+		// } else if (request.after) {
+		// 	params += `seqnum=${request.after}-${+request.after + request.limit}`;
+		// }
 
 		return this.get<CSGetPostsResponse>(
 			`/posts?teamId=${this.teamId}&streamId=${request.streamId}${params}`,
