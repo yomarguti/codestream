@@ -1,4 +1,5 @@
 "use strict";
+import { Container } from "../container";
 import { Logger } from "../logger";
 import {
 	CreateChannelStreamRequest,
@@ -32,7 +33,7 @@ import {
 	UpdateStreamRequestType,
 	UpdateStreamResponse
 } from "../shared/agent.protocol";
-import { CSChannelStream, CSDirectStream } from "../shared/api.protocol";
+import { CSChannelStream, CSDirectStream, CSStream, StreamType } from "../shared/api.protocol";
 import { lspHandler } from "../system";
 import { EntityManager, Id } from "./managers";
 
@@ -54,16 +55,6 @@ export class StreamsManager extends EntityManager<CSChannelStream | CSDirectStre
 	// 	// ]);
 	// }
 
-	@lspHandler(CreateChannelStreamRequestType)
-	createChannelStream(request: CreateChannelStreamRequest): Promise<CreateChannelStreamResponse> {
-		return this.session.api.createChannelStream(request);
-	}
-
-	@lspHandler(CreateDirectStreamRequestType)
-	createDirectStream(request: CreateDirectStreamRequest): Promise<CreateDirectStreamResponse> {
-		return this.session.api.createDirectStream(request);
-	}
-
 	async getAll(): Promise<(CSChannelStream | CSDirectStream)[]> {
 		if (!this.loaded) {
 			const response = await this.session.api.fetchStreams({});
@@ -74,6 +65,48 @@ export class StreamsManager extends EntityManager<CSChannelStream | CSDirectStre
 		}
 
 		return this.cache.getAll();
+	}
+
+	protected async fetch(id: Id): Promise<CSChannelStream | CSDirectStream> {
+		try {
+			const response = await this.session.api.getStream({ streamId: id });
+			return response.stream as CSChannelStream | CSDirectStream;
+		} catch (err) {
+			// When the user doesn't have access to the stream, the server returns a 403. If
+			// this error occurs, it could be that we're subscribed to streams we're not
+			// supposed to be subscribed to.
+			Logger.warn(`Error fetching stream id=${id}`);
+			return undefined!;
+		}
+	}
+
+	async cacheGet(id: Id): Promise<CSChannelStream | CSDirectStream | undefined> {
+		const cached = await super.cacheGet(id);
+		if (cached) {
+			return cached;
+		} else {
+			return (await Container.instance().files.cacheGet(id)) as any;
+		}
+	}
+
+	cacheSet(entity: CSStream, oldEntity?: CSStream) {
+		switch (entity.type) {
+			case StreamType.Channel:
+			case StreamType.Direct:
+				return super.cacheSet(entity, oldEntity as any);
+			case StreamType.File:
+				return Container.instance().files.cacheSet(entity, oldEntity as any);
+		}
+	}
+
+	@lspHandler(CreateChannelStreamRequestType)
+	createChannelStream(request: CreateChannelStreamRequest): Promise<CreateChannelStreamResponse> {
+		return this.session.api.createChannelStream(request);
+	}
+
+	@lspHandler(CreateDirectStreamRequestType)
+	createDirectStream(request: CreateDirectStreamRequest): Promise<CreateDirectStreamResponse> {
+		return this.session.api.createDirectStream(request);
 	}
 
 	@lspHandler(JoinStreamRequestType)
@@ -101,18 +134,6 @@ export class StreamsManager extends EntityManager<CSChannelStream | CSDirectStre
 		request: UpdateStreamMembershipRequest
 	): Promise<UpdateStreamMembershipResponse> {
 		return this.session.api.updateStreamMembership(request);
-	}
-	protected async fetch(id: Id): Promise<CSChannelStream | CSDirectStream> {
-		try {
-			const response = await this.session.api.getStream({ streamId: id });
-			return response.stream as CSChannelStream | CSDirectStream;
-		} catch (err) {
-			// When the user doesn't have access to the stream, the server returns a 403. If
-			// this error occurs, it could be that we're subscribed to streams we're not
-			// supposed to be subscribed to.
-			Logger.warn(`Error fetching stream id=${id}`);
-			return undefined!;
-		}
 	}
 
 	@lspHandler(GetStreamRequestType)

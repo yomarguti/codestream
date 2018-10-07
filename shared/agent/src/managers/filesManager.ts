@@ -54,8 +54,7 @@ export class FilesManager extends EntityManager<CSFileStream> {
 			return undefined;
 		}
 
-		// @ts-ignore
-		const streams = await this.cache.getManyBy("repoId", repo.id);
+		const streams = await this.getByRepoId(repo.id);
 		for (const stream of streams) {
 			this.idsByPath.set(path.join(repo.path, stream.file), stream.id);
 		}
@@ -69,8 +68,7 @@ export class FilesManager extends EntityManager<CSFileStream> {
 	}
 
 	async getByRepoId(repoId: string): Promise<CSFileStream[]> {
-		// @ts-ignore
-		return this.cache.getManyBy("repoId", repoId);
+		return this.cache.getGroup([["repoId", repoId]]);
 	}
 
 	async getTextDocument(streamId: string): Promise<TextDocumentIdentifier | undefined> {
