@@ -339,7 +339,11 @@ export class CodeStreamAgentConnection implements Disposable {
 				  }
 				| undefined,
 			parentPostId: string | undefined,
-			streamId: string
+			streamId: string,
+			title?: string,
+			type?: string,
+			assignees?: [],
+			color?: string
 		): Promise<CSPost> {
 			return this._connection.sendRequest(CreatePostWithCodeRequestType, {
 				textDocument: { uri: uri.toString() },
@@ -351,7 +355,11 @@ export class CodeStreamAgentConnection implements Disposable {
 				location: location,
 				source: source,
 				parentPostId: parentPostId,
-				streamId: streamId
+				streamId: streamId,
+				title: title,
+				type: type,
+				assignees: assignees,
+				color: color
 			});
 		}
 

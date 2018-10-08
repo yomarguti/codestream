@@ -29,92 +29,55 @@ import { Container } from "../container";
 import { Logger } from "../logger";
 import { Functions } from "../system/function";
 
-const inlineIcon = "display: inline-block; margin: 0 0.5em 0 0; vertical-align: middle";
-const inlineShape = "display: inline-block; margin: 0 0.5em 0 0; vertical-align: middle";
-const overlayIcon = "display: inline-block; left: 0; position: absolute; top: 0";
-const overlayShape =
-	"display: inline-block; left: 0; position: absolute; top: 50%; transform: translateY(-50%)";
+const positionStyleMap: { [key: string]: string } = {
+	inline: "display: inline-block; margin: 0 0.5em 0 0; vertical-align: middle",
+	overlay:
+		"display: inline-block; left: 0; position: absolute; top: 50%; transform: translateY(-50%)"
+};
 
-const squircleDecoration = (position: string) => ({
-	backgroundColor: "#3193f1",
-	contentText: "",
-	height: "0.75em",
-	width: "0.75em",
-	borderRadius: "25%",
-	textDecoration: `none; ${position}`
-});
-
-const triangleDecoration = (position: string) => ({
-	contentText: "",
-	height: "0.75em",
-	width: "0.75em",
-	borderRadius: "25%",
-	textDecoration: `none; border-left: 0.75em solid #3193f1; border-top: 0.5em solid transparent; border-bottom: 0.5em solid transparent; ${position}`
-});
-
-const bubbleDecoration = (position: string) => ({
+const buildDecoration = (position: string, type: string, color: string, status: string) => ({
 	contentText: "",
 	height: "16px",
 	width: "16px",
 	textDecoration: `none; background-image: url(${Uri.file(
-		Container.context.asAbsolutePath("assets/images/marker-comment.svg")
-	).toString()}); background-position: center; background-repeat: no-repeat; background-size: contain; ${position}`
+		Container.context.asAbsolutePath(`assets/images/marker-${type}-${color}.png`)
+	).toString()}); background-position: center; background-repeat: no-repeat; background-size: contain; ${
+		positionStyleMap[position]
+	}`
 });
 
-const logoDecoration = (position: string) => ({
-	contentText: "",
-	height: "16px",
-	width: "16px",
-	textDecoration: `none; background-image: url(${Uri.file(
-		Container.context.asAbsolutePath("assets/images/marker-codestream.svg")
-	).toString()}); background-position: center; background-repeat: no-repeat; background-size: contain; ${position}`
-});
+const MarkerPositions = ["inline", "overlay"];
+const MarkerTypes = ["comment", "question", "issue", "trap"];
+const MarkerColors = ["blue", "green", "yellow", "orange", "red", "purple", "aqua", "gray"];
+const MarkerStatuses = ["open", "closed"];
 
 export class MarkerDecorationProvider implements HoverProvider, Disposable {
 	private readonly _disposable: Disposable | undefined;
-	private readonly _inlineDecorationType: TextEditorDecorationType;
-	private readonly _overlayDecorationType: TextEditorDecorationType;
+	private readonly _decorationType: { [key: string]: TextEditorDecorationType };
 
 	private readonly _markersCache = new Map<string, Promise<Marker[]>>();
 	private _watchedEditorsMap: Map<string, () => void> | undefined;
 
 	constructor() {
-		let inline;
-		let overlay;
-		switch (Container.config.markerStyle) {
-			case MarkerStyle.Logo:
-				inline = logoDecoration(inlineIcon);
-				overlay = logoDecoration(overlayIcon);
-				break;
-			case MarkerStyle.Squircle:
-				inline = squircleDecoration(inlineIcon);
-				overlay = squircleDecoration(overlayIcon);
-				break;
-			case MarkerStyle.Triangle:
-				inline = triangleDecoration(inlineShape);
-				overlay = triangleDecoration(overlayShape);
-				break;
-			default:
-				inline = bubbleDecoration(inlineShape);
-				overlay = bubbleDecoration(overlayShape);
-				break;
+		this._decorationType = {};
+
+		for (const position of MarkerPositions) {
+			for (const type of MarkerTypes) {
+				for (const color of MarkerColors) {
+					for (const status of MarkerStatuses) {
+						const key = `${position}-${type}-${color}-${status}`;
+						this._decorationType[key] = window.createTextEditorDecorationType({
+							before: buildDecoration(position, type, color, status),
+							overviewRulerColor: "#3193f1",
+							overviewRulerLane: OverviewRulerLane.Center
+						});
+					}
+				}
+			}
 		}
 
-		this._inlineDecorationType = window.createTextEditorDecorationType({
-			before: inline,
-			overviewRulerColor: "#3193f1",
-			overviewRulerLane: OverviewRulerLane.Center
-		});
-
-		this._overlayDecorationType = window.createTextEditorDecorationType({
-			before: overlay,
-			overviewRulerColor: "#3193f1",
-			overviewRulerLane: OverviewRulerLane.Center
-		});
-
 		this._disposable = Disposable.from(
-			this._inlineDecorationType,
-			this._overlayDecorationType,
+			...Object.values(this._decorationType),
 			languages.registerHoverProvider({ scheme: "file" }, this),
 			Container.session.onDidChangeTextDocumentMarkers(this.onMarkersChanged, this),
 			Container.session.onDidChangeSessionStatus(this.onSessionStatusChanged, this),
@@ -178,12 +141,13 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 	async apply(editor: TextEditor | undefined, force: boolean = false) {
 		if (!Container.session.signedIn || !this.isApplicableEditor(editor)) return;
 
-		if (force) {
-			this._markersCache.delete(editor!.document.uri.toString());
-		}
+		if (force) this._markersCache.delete(editor!.document.uri.toString());
+
 		const decorations = await this.provideDecorations(editor!);
-		editor!.setDecorations(this._inlineDecorationType, decorations.inline);
-		editor!.setDecorations(this._overlayDecorationType, decorations.overlay);
+
+		Object.keys(decorations).forEach(key => {
+			editor!.setDecorations(this._decorationType[key], decorations[key]);
+		});
 	}
 
 	applyToApplicableVisibleEditors(editors = window.visibleTextEditors) {
@@ -206,33 +170,38 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 	clear(editor: TextEditor | undefined = window.activeTextEditor) {
 		if (editor === undefined) return;
 
-		editor.setDecorations(this._inlineDecorationType, []);
-		editor.setDecorations(this._overlayDecorationType, []);
+		Object.values(this._decorationType).forEach(decoration => {
+			editor.setDecorations(decoration, []);
+		});
 	}
 
 	async provideDecorations(
 		editor: TextEditor /*, token: CancellationToken */
-	): Promise<{ inline: DecorationOptions[]; overlay: DecorationOptions[] }> {
+	): Promise<{ [key: string]: DecorationOptions[] }> {
 		const markers = await this.getMarkers(editor.document.uri);
-		if (markers.length === 0) return { inline: [], overlay: [] };
+		if (markers.length === 0) return {};
 
-		const inlineDecorations: DecorationOptions[] = [];
-		const overlayDecorations: DecorationOptions[] = [];
+		const decorations: { [key: string]: DecorationOptions[] } = {};
 
 		const starts = new Set();
 		for (const marker of markers) {
 			const start = marker.range.start.line;
+			if (marker.type === "issue" && marker.status === "closed") continue;
 			if (starts.has(start)) continue;
 
 			// Determine if the marker needs to be inline (i.e. part of the content or overlayed)
-			const inline = editor.document.lineAt(start).firstNonWhitespaceCharacterIndex === 0;
-			(inline ? inlineDecorations : overlayDecorations).push({
+			const position =
+				editor.document.lineAt(start).firstNonWhitespaceCharacterIndex === 0 ? "inline" : "overlay";
+			const key = `${position}-${marker.type}-${marker.color}-${marker.status}`;
+
+			if (!decorations[key]) decorations[key] = [];
+			decorations[key].push({
 				range: marker.hoverRange // editor.document.validateRange(marker.hoverRange)
 			});
 			starts.add(start);
 		}
 
-		return { inline: inlineDecorations, overlay: overlayDecorations };
+		return decorations;
 	}
 
 	private _hoverPromise: Promise<Hover | undefined> | undefined;

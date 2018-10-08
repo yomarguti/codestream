@@ -316,7 +316,13 @@ export class CodeStreamWebviewPanel implements Disposable {
 						case "create-post": {
 							const {
 								text,
-								extra: { fileUri } = { fileUri: undefined },
+								extra: { fileUri, title, type, assignees, color } = {
+									fileUri: undefined,
+									title,
+									type,
+									assignees,
+									color
+								},
 								codeBlocks,
 								mentions,
 								parentPostId,
@@ -360,7 +366,11 @@ export class CodeStreamWebviewPanel implements Disposable {
 										block.location,
 										block.source,
 										parentPostId,
-										streamId
+										streamId,
+										title,
+										type,
+										assignees,
+										color
 									);
 								}
 							} catch (ex) {
@@ -435,6 +445,17 @@ export class CodeStreamWebviewPanel implements Disposable {
 								type: WebviewIpcMessageType.response,
 								body: { id: body.id, payload: response.post }
 							});
+
+							break;
+						}
+						case "set-post-status": {
+							const { id, status } = body.params;
+
+							// const post = await this.session.api.setPostStatus(id, status);
+							// this.postMessage({
+							// type: WebviewIpcMessageType.response,
+							// body: { id: body.id, payload: post }
+							// });
 
 							break;
 						}

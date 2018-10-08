@@ -45,4 +45,16 @@ export class Marker {
 	get range() {
 		return this._range;
 	}
+
+	get color(): string {
+		return this.entity.color || "blue";
+	}
+
+	get type(): string {
+		return this.entity.type || "comment";
+	}
+
+	get status(): string {
+		return this.entity.status || "open";
+	}
 }

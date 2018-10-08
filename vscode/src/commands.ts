@@ -1,4 +1,13 @@
-import { commands, Disposable, Range, TextDocument, Uri, ViewColumn, window } from "vscode";
+import {
+	commands,
+	Disposable,
+	Position,
+	Range,
+	TextDocument,
+	Uri,
+	ViewColumn,
+	window
+} from "vscode";
 import {
 	CodeStreamSession,
 	Post,
@@ -131,11 +140,14 @@ export class Commands implements Disposable {
 			}
 		}
 
+		const pos = new Position(block.range.start.line, 0);
+		const range = new Range(pos, pos);
+
 		// TODO: Need to follow marker to current sha
 		return openEditor(block.uri, {
 			preview: true,
 			viewColumn: column || ViewColumn.Beside,
-			selection: block.range,
+			selection: range,
 			preserveFocus: args.preserveFocus
 		});
 	}
