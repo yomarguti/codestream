@@ -13,7 +13,13 @@ export const slashCommands = [
 	// { id: "muteall", help: "mute codestream" },
 	// { id: "open", help: "open channel" },
 	// { id: "prefs", help: "open preferences" },
-	{ id: "purpose", help: "set purpose", description: "text", channelOnly: true },
+	{
+		id: "purpose",
+		help: "set purpose",
+		description: "text",
+		channelOnly: true,
+		requires: "codestream"
+	},
 	{ id: "remove", help: "remove from channel", description: "@user", channelOnly: true },
 	{ id: "rename", help: "rename channel", description: "newname", channelOnly: true },
 	{ id: "slack", help: "connect to slack", requires: "codestream" },
