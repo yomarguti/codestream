@@ -13,11 +13,17 @@ import {
 
 const messageType = {
 	post: MessageType.Posts,
+	posts: MessageType.Posts,
 	repo: MessageType.Repositories,
+	repos: MessageType.Repositories,
 	stream: MessageType.Streams,
+	streams: MessageType.Streams,
 	user: MessageType.Users,
+	users: MessageType.Users,
 	team: MessageType.Teams,
+	teams: MessageType.Teams,
 	marker: MessageType.Markers,
+	markers: MessageType.Markers,
 	markerLocations: MessageType.MarkerLocations
 };
 
@@ -107,8 +113,9 @@ export class PubnubReceiver {
 	}
 
 	private processMessage(message: { [key: string]: any }) {
-		const { requestId, ...messages } = message;
+		const { requestId, messageId, ...messages } = message;
 		requestId;
+		messageId;
 
 		for (const [key, obj] of Object.entries(messages)) {
 			try {
