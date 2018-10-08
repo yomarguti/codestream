@@ -1,4 +1,5 @@
 "use strict";
+const fs = require("fs");
 const path = require("path");
 // const BabelExternalHelpersPlugin = require("webpack-babel-external-helpers-2");
 const CleanPlugin = require("clean-webpack-plugin");
@@ -8,31 +9,49 @@ const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 module.exports = function(env, argv) {
 	env = env || {};
-	env.production = !!env.production;
-	env.watch = !!(argv.watch || argv.w);
+	env.production = Boolean(env.production);
+	env.watch = Boolean(argv.watch || argv.w);
+
+	env.copyShared = Boolean(env.copyShared);
+	if (!env.copyShared && !fs.existsSync(path.resolve(__dirname, "src/shared"))) {
+		env.copyShared = true;
+	}
 
 	return [getExtensionConfig(env), getWebviewConfig(env)];
 };
 
 function getExtensionConfig(env) {
-	let clean = ["dist"];
-	let onStartCopy = [];
-	if (!env.watch) {
-		clean.push("src/shared");
-		onStartCopy.push(
-			// Copy in the type declarations from the agent, because referencing them directly is a nightmare
-			{
-				// TODO: Use environment variable if exists
-				source: path.resolve(__dirname, "../codestream-lsp-agent/src/shared/*"),
-				destination: "src/shared/"
-			}
-		);
+	let onStart = [];
+	// TODO: Need to figure out why webpack isn't waiting for the copy to be completed
+	// See https://github.com/gregnb/filemanager-webpack-plugin/issues/47
+	if (!env.watch && env.copyShared) {
+		onStart.push({
+			copy: [
+				// Copy in the type declarations from the agent, because referencing them directly is a nightmare
+				{
+					// TODO: Use environment variable if exists
+					source: path.resolve(__dirname, "../codestream-lsp-agent/src/shared/*"),
+					destination: "src/shared/"
+				}
+			]
+		});
 	}
 
 	const plugins = [
-		new CleanPlugin(clean, { verbose: false }),
+		new CleanPlugin(["dist"], { verbose: false }),
 		new FileManagerPlugin({
-			onStart: [{ copy: onStartCopy }],
+			onStart: [
+				{
+					copy: [
+						// Copy in the type declarations from the agent, because referencing them directly is a nightmare
+						{
+							// TODO: Use environment variable if exists
+							source: path.resolve(__dirname, "../codestream-lsp-agent/src/shared/*"),
+							destination: "src/shared/"
+						}
+					]
+				}
+			],
 			onEnd: [
 				{
 					copy: [
