@@ -202,8 +202,23 @@ export class SimpleChannelPanel extends Component {
 					) : (
 						<Icon className="person" name="person" />
 					);
+				console.log(stream);
+				const sortTimestamp =
+					stream.name === "slackbot"
+						? 1
+						: stream.isMeStream
+							? 2
+							: stream.mostRecentPostCreatedAt || stream.modifiedAt || 528593114636;
+				const sortName =
+					stream.name === "slackbot"
+						? "."
+						: stream.isMeStream
+							? ".."
+							: (stream.name || "").toLowerCase();
+
 				return {
-					name: (stream.name || "").toLowerCase(),
+					sortName,
+					sortTimestamp,
 					element: (
 						<li
 							className={createClassString({
@@ -225,7 +240,7 @@ export class SimpleChannelPanel extends Component {
 			})
 			.filter(Boolean);
 
-		unsortedStreams.concat(
+		unsortedStreams = unsortedStreams.concat(
 			this.props.teammates
 				.map(teammate => {
 					if (_.contains(this.props.oneOnOnePeople, teammate.id)) return null;
@@ -248,6 +263,8 @@ export class SimpleChannelPanel extends Component {
 				.filter(Boolean)
 		);
 
+		const recentStreams = _.sortBy(unsortedStreams, x => x.sortTimestamp).slice(0, 20);
+
 		return (
 			<div
 				className={createClassString("section", "has-children", {
@@ -264,7 +281,7 @@ export class SimpleChannelPanel extends Component {
 					</div>
 				</div>
 				<ul onClick={this.handleClickSelectStream}>
-					{_.sortBy(unsortedStreams, stream => stream.name).map(stream => stream.element)}
+					{_.sortBy(recentStreams, stream => stream.sortName).map(stream => stream.element)}
 					<li className="invite" onClick={() => this.props.setActivePanel("invite")}>
 						<span>
 							<Icon name="plus-small" />

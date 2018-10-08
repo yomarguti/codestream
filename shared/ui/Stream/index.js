@@ -1378,6 +1378,7 @@ const mapStateToProps = ({
 
 	const teamMembers = teams[context.currentTeamId].memberIds.map(id => users[id]).filter(Boolean);
 	console.log("MEMBER IDS ARE: ", teams[context.currentTeamId].memberIds);
+	console.log("USERS ARE: ", users);
 	// this usenames regexp is a pipe-separated list of
 	// either usernames or if no username exists for the
 	// user then his email address. it is sorted by length
