@@ -44,7 +44,7 @@ export class SimplePublicChannelPanel extends Component {
 						<Icon name="plus" />
 					</span>
 				</div>
-				<div className="channel-list postslist">
+				<div className="channel-list postslist vscroll">
 					<p className="explainer">
 						Channels are where your dev team discusses projects, repos, or code in general. You
 						might create one channel per repo, or one per client.
@@ -61,12 +61,14 @@ export class SimplePublicChannelPanel extends Component {
 							{this.renderChannels(this.props.channelStreams)}
 						</ul>
 					</div>
-					<div className="section">
-						<div className="header">Archived Channels</div>
-						<ul onClick={this.handleClickUnArchive}>
-							{this.renderChannels(this.props.archivedStreams)}
-						</ul>
-					</div>
+					{this.props.isCodeStreamTeam && (
+						<div className="section">
+							<div className="header">Archived Channels</div>
+							<ul onClick={this.handleClickUnArchive}>
+								{this.renderChannels(this.props.archivedStreams)}
+							</ul>
+						</div>
+					)}
 				</div>
 			</div>
 		);
