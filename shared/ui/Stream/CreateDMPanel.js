@@ -16,7 +16,7 @@ export class SimpleCreateDMPanel extends Component {
 	constructor(props) {
 		super(props);
 
-		this.state = { members: []};
+		this.state = { members: [] };
 		this._createDMPanel = React.createRef();
 	}
 
@@ -39,7 +39,7 @@ export class SimpleCreateDMPanel extends Component {
 					</span>
 					<span className="panel-title">Direct Messages</span>
 				</div>
-				<form id="create-dm-form" className="standard-form postslist">
+				<form id="create-dm-form" className="standard-form postslist vscroll">
 					<fieldset className="form-body" disabled={inactive}>
 						{this.renderError()}
 						<p className="explainer">
@@ -170,9 +170,8 @@ export class SimpleCreateDMPanel extends Component {
 			.filter(Boolean);
 		// console.log("MEMBERS ARE: ", memberIds);
 		// return;
-		if (memberIds.length)
-			await this.props.createStream({ type: "direct", memberIds });
-						
+		if (memberIds.length) await this.props.createStream({ type: "direct", memberIds });
+
 		this.resetForm();
 	};
 }
