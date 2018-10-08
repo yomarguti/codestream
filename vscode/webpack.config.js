@@ -40,18 +40,7 @@ function getExtensionConfig(env) {
 	const plugins = [
 		new CleanPlugin(["dist"], { verbose: false }),
 		new FileManagerPlugin({
-			onStart: [
-				{
-					copy: [
-						// Copy in the type declarations from the agent, because referencing them directly is a nightmare
-						{
-							// TODO: Use environment variable if exists
-							source: path.resolve(__dirname, "../codestream-lsp-agent/src/shared/*"),
-							destination: "src/shared/"
-						}
-					]
-				}
-			],
+			onStart: onStart,
 			onEnd: [
 				{
 					copy: [
@@ -135,14 +124,14 @@ function getWebviewConfig(env) {
 			inject: true,
 			minify: env.production
 				? {
-						removeComments: true,
-						collapseWhitespace: true,
-						removeRedundantAttributes: true,
-						useShortDoctype: true,
-						removeEmptyAttributes: true,
-						removeStyleLinkTypeAttributes: true,
-						keepClosingSlash: true
-				  }
+					removeComments: true,
+					collapseWhitespace: true,
+					removeRedundantAttributes: true,
+					useShortDoctype: true,
+					removeEmptyAttributes: true,
+					removeStyleLinkTypeAttributes: true,
+					keepClosingSlash: true
+				}
 				: false
 		})
 	];
