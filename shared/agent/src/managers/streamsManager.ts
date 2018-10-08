@@ -35,7 +35,8 @@ import {
 } from "../shared/agent.protocol";
 import { CSChannelStream, CSDirectStream, CSStream, StreamType } from "../shared/api.protocol";
 import { lspHandler } from "../system";
-import { EntityManager, Id } from "./managers";
+import { KeyValue } from "./baseCache";
+import { EntityManager, Id } from "./entityManager";
 
 export class StreamsManager extends EntityManager<CSChannelStream | CSDirectStream> {
 	private loaded = false;
@@ -67,7 +68,7 @@ export class StreamsManager extends EntityManager<CSChannelStream | CSDirectStre
 		return this.cache.getAll();
 	}
 
-	protected async fetch(id: Id): Promise<CSChannelStream | CSDirectStream> {
+	protected async fetchById(id: Id): Promise<CSChannelStream | CSDirectStream> {
 		try {
 			const response = await this.session.api.getStream({ streamId: id });
 			return response.stream as CSChannelStream | CSDirectStream;
@@ -80,12 +81,14 @@ export class StreamsManager extends EntityManager<CSChannelStream | CSDirectStre
 		}
 	}
 
-	async cacheGet(id: Id): Promise<CSChannelStream | CSDirectStream | undefined> {
-		const cached = await super.cacheGet(id);
+	async cacheGet(
+		criteria: KeyValue<CSStream>[]
+	): Promise<CSChannelStream | CSDirectStream | undefined> {
+		const cached = await super.cacheGet(criteria);
 		if (cached) {
 			return cached;
 		} else {
-			return (await Container.instance().files.cacheGet(id)) as any;
+			return (await Container.instance().files.cacheGet(criteria)) as any;
 		}
 	}
 

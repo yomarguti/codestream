@@ -1,24 +1,23 @@
 "use strict";
 
-import { CSEntity } from "../shared/api.protocol";
-import { encodeArray, Index, IndexParams, IndexType, makeIndex, UniqueIndex } from "./index";
-import { Id } from "./managers";
+import { encodeArray, Index, IndexParams, IndexType, makeIndex } from "./index";
+
+import { Id } from "./entityManager";
 import { SequentialSlice } from "./sequentialSlice";
 
-export type UniqueFetchFn<T extends CSEntity> = (value: any[]) => Promise<T | undefined>;
-export type GroupFetchFn<T extends CSEntity> = (value: any[]) => Promise<T[]>;
-export type GroupSequentialFetchFn<T extends CSEntity> = (
+export type UniqueFetchFn<T> = (value: any[]) => Promise<T | undefined>;
+export type GroupFetchFn<T> = (value: any[]) => Promise<T[]>;
+export type GroupSequentialFetchFn<T> = (
 	groupValue: any[],
 	seqStart?: number,
 	seqEnd?: number,
 	limit?: number
 ) => Promise<T[]>;
-export type FetchFn<T extends CSEntity> =
-	| UniqueFetchFn<T>
-	| GroupFetchFn<T>
-	| GroupSequentialFetchFn<T>;
+export type FetchFn<T> = UniqueFetchFn<T> | GroupFetchFn<T> | GroupSequentialFetchFn<T>;
 
-type KeyValue<T> = [keyof T, any];
+export type IdFn<T> = (obj: T) => Id;
+
+export type KeyValue<T> = [keyof T, any];
 
 function getKeys<T>(keyValues: KeyValue<T>[]): (keyof T)[] {
 	return keyValues.map(kv => kv[0]);
@@ -28,67 +27,20 @@ function getValues<T>(keyValues: KeyValue<T>[]): any[] {
 	return keyValues.map(kv => kv[1]);
 }
 
-/**
- * <p>Cache for entities. All entities are indexed by Id. Indexes for additional fields can be
- * declared, allowing to efficiently retrieve entities or groups of entities by their values.</p>
- *
- * <p>The following types of indexes are supported:</p>
- *
- * <ul>
- * 		<li>#UniqueIndex: For unique fields such as person's SSN; allows to retrieve entities via
- * 		{#getGroup}</li>
- *
- * 		<li>#GroupIndex: For grouping fields such as user's teamId; allows to retrieve groups of
- * 		entities via {#getGroup}</li>
- *
- * 		<li>#GroupSequentialIndex: For grouping fields accompanied by a sequence field which defines
- * 		the order within the group such as post's streamId/seqNum; allows to retrieve slices of groups
- * 		via #getGroupSlice and #getGroupTail</li>
- * </ul>
- */
-export class Cache<T extends CSEntity> {
-	private readonly indexes: Map<string, Index<T>>;
+export class BaseCache<T> {
+	protected readonly indexes: Map<string, Index<T>>;
 
 	/**
 	 * Create a cache
 	 *
 	 * @param idxFields Indexed fields
-	 * @param fetchById Function to fetch an entity by Id
 	 */
-	constructor(idxFields: IndexParams<T>[], fetchById: FetchFn<T>) {
+	constructor(idxFields: IndexParams<T>[]) {
 		const indexes = new Map();
 		for (const idxField of idxFields) {
 			indexes.set(encodeArray(idxField.fields), makeIndex(idxField));
 		}
-		indexes.set(
-			"id",
-			makeIndex({
-				fields: ["id"],
-				type: IndexType.Unique,
-				fetchFn: fetchById
-			})
-		);
 		this.indexes = indexes;
-	}
-
-	/**
-	 * Get an entity by Id
-	 *
-	 * @param id Id
-	 *
-	 * @return Entity or `undefined`
-	 */
-	async getById(id: Id): Promise<T> {
-		const entity = await this.get([["id", id]]);
-		if (!entity) {
-			throw new Error(`Could not find entity with ID ${id}`);
-		}
-		return entity;
-	}
-
-	getAll(): T[] {
-		const index = this.indexes.get("id") as UniqueIndex<T>;
-		return index.getAll();
 	}
 
 	/**

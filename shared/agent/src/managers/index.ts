@@ -1,8 +1,7 @@
 "use strict";
 
-import { CSEntity } from "../shared/api.protocol";
-import { FetchFn } from "./cache";
-import { Id } from "./managers";
+import { FetchFn, IdFn } from "./baseCache";
+import { Id } from "./entityManager";
 import { SequentialSlice } from "./sequentialSlice";
 
 export enum IndexType {
@@ -11,11 +10,12 @@ export enum IndexType {
 	GroupSequential = "group-sequential"
 }
 
-export interface IndexParams<T extends CSEntity> {
+export interface IndexParams<T> {
 	type: IndexType;
 	fields: (keyof T)[];
 	seqField?: keyof T;
 	fetchFn: FetchFn<T>;
+	idFn?: IdFn<T>;
 }
 
 /**
@@ -25,14 +25,19 @@ export interface IndexParams<T extends CSEntity> {
  *
  * @return {Index} Index object
  */
-export function makeIndex<T extends CSEntity>(params: IndexParams<T>): Index<T> {
+export function makeIndex<T>(params: IndexParams<T>): Index<T> {
 	switch (params.type) {
 		case IndexType.Unique:
 			return new UniqueIndex(params.fields, params.fetchFn);
 		case IndexType.Group:
-			return new GroupIndex(params.fields, params.fetchFn);
+			return new GroupIndex(params.fields, params.fetchFn, params.idFn!);
 		case IndexType.GroupSequential:
-			return new GroupSequentialIndex(params.fields, params.seqField!, params.fetchFn);
+			return new GroupSequentialIndex(
+				params.fields,
+				params.seqField!,
+				params.fetchFn,
+				params.idFn!
+			);
 	}
 }
 
@@ -41,7 +46,11 @@ export function encodeArray(array: any): string {
 	return array.join("|");
 }
 
-abstract class BaseIndex<T extends CSEntity> {
+function defaultIdFn(entity: any): Id {
+	return entity.id;
+}
+
+abstract class BaseIndex<T> {
 	protected constructor(readonly fields: (keyof T)[], readonly fetchFn: FetchFn<T>) {}
 
 	abstract set(value: any, entity: T, oldEntity?: T): void;
@@ -65,7 +74,7 @@ abstract class BaseIndex<T extends CSEntity> {
  * Index to search for entities by unique values like IDs or SSNs. Accepts
  * only entities with defined values for the key field.
  */
-export class UniqueIndex<T extends CSEntity> extends BaseIndex<T> {
+export class UniqueIndex<T> extends BaseIndex<T> {
 	readonly type = IndexType.Unique;
 
 	private readonly _data = new Map<string, any>();
@@ -113,13 +122,15 @@ export class UniqueIndex<T extends CSEntity> extends BaseIndex<T> {
  * an uninitialized group will return undefined, and setting an entity before
  * its group is initialized results in no-op.
  */
-export class GroupIndex<T extends CSEntity> extends BaseIndex<T> {
+export class GroupIndex<T> extends BaseIndex<T> {
 	readonly type = IndexType.Group;
 
 	private readonly groups = new Map<string, Map<Id, T>>();
+	private readonly idFn: IdFn<T>;
 
-	constructor(fields: (keyof T)[], fetchFn: FetchFn<T>) {
+	constructor(fields: (keyof T)[], fetchFn: FetchFn<T>, idFn?: IdFn<T>) {
 		super(fields, fetchFn);
+		this.idFn = idFn || defaultIdFn;
 	}
 
 	/**
@@ -152,12 +163,12 @@ export class GroupIndex<T extends CSEntity> extends BaseIndex<T> {
 		if (oldEntity) {
 			const oldGroup = this.getGroupForEntity(oldEntity);
 			if (oldGroup && oldGroup !== group) {
-				oldGroup.delete(oldEntity.id);
+				oldGroup.delete(this.idFn(oldEntity));
 			}
 		}
 
 		if (group) {
-			group.set(entity.id, entity);
+			group.set(this.idFn(entity), entity);
 		}
 	}
 
@@ -175,7 +186,7 @@ export class GroupIndex<T extends CSEntity> extends BaseIndex<T> {
 
 		const group = new Map();
 		for (const entity of entities) {
-			group.set(entity.id, entity);
+			group.set(this.idFn(entity), entity);
 		}
 		this.groups.set(indexValue, group);
 	}
@@ -186,7 +197,7 @@ export class GroupIndex<T extends CSEntity> extends BaseIndex<T> {
 	}
 }
 
-class SequentialGroup<T extends CSEntity> {
+class SequentialGroup<T> {
 	private readonly data: T[] = [];
 
 	private _maxSeq = 0;
@@ -210,14 +221,16 @@ class SequentialGroup<T extends CSEntity> {
 	}
 }
 
-export class GroupSequentialIndex<T extends CSEntity> extends BaseIndex<T> {
+export class GroupSequentialIndex<T> extends BaseIndex<T> {
 	readonly type = IndexType.GroupSequential;
 	private readonly groups = new Map<string, SequentialGroup<T>>();
 	private readonly seqField: keyof T;
+	private readonly idFn: IdFn<T>;
 
-	constructor(field: (keyof T)[], seqField: keyof T, fetchFn: FetchFn<T>) {
+	constructor(field: (keyof T)[], seqField: keyof T, fetchFn: FetchFn<T>, idFn?: IdFn<T>) {
 		super(field, fetchFn);
 		this.seqField = seqField;
+		this.idFn = idFn || defaultIdFn;
 	}
 
 	set(entity: T, oldEntity?: T) {
@@ -241,7 +254,7 @@ export class GroupSequentialIndex<T extends CSEntity> extends BaseIndex<T> {
 		for (const entity of entities) {
 			const seqValue = (entity as any)[this.seqField];
 			if (typeof seqValue !== "number") {
-				throw this.errSeqNonNumeric(entity.id, seqValue);
+				throw this.errSeqNonNumeric(this.idFn(entity), seqValue);
 			}
 			group.set(seqValue, entity);
 		}
@@ -286,7 +299,7 @@ export class GroupSequentialIndex<T extends CSEntity> extends BaseIndex<T> {
 	private requireSeqValue(entity: T): number {
 		const seqValue = (entity as any)[this.seqField];
 		if (typeof seqValue !== "number") {
-			throw this.errSeqNonNumeric(entity.id, seqValue);
+			throw this.errSeqNonNumeric(this.idFn(entity), seqValue);
 		}
 		return seqValue;
 	}
@@ -302,4 +315,4 @@ export class GroupSequentialIndex<T extends CSEntity> extends BaseIndex<T> {
 	}
 }
 
-export type Index<T extends CSEntity> = UniqueIndex<T> | GroupIndex<T> | GroupSequentialIndex<T>;
+export type Index<T> = UniqueIndex<T> | GroupIndex<T> | GroupSequentialIndex<T>;

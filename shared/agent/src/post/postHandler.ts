@@ -5,7 +5,6 @@ import { Range } from "vscode-languageserver-protocol";
 import URI from "vscode-uri";
 import { Container } from "../container";
 import { Logger } from "../logger";
-import { MarkerLocationManager } from "../markerLocation/markerLocationManager";
 import {
 	CreatePostWithCodeRequest,
 	PreparePostWithCodeRequest,
@@ -22,7 +21,7 @@ export namespace PostHandler {
 		range,
 		dirty
 	}: PreparePostWithCodeRequest): Promise<PreparePostWithCodeResponse> {
-		const { documents, git, session } = Container.instance();
+		const { documents, git } = Container.instance();
 
 		const document = documents.get(documentId.uri);
 		if (document === undefined) {
@@ -106,19 +105,19 @@ export namespace PostHandler {
 		let remotes: string[] | undefined;
 		if (rangeArray) {
 			const range = Range.create(rangeArray[0], rangeArray[1], rangeArray[2], rangeArray[3]);
-			location = MarkerLocationManager.rangeToLocation(range);
+			location = Container.instance().markerLocations.rangeToLocation(range);
 
 			if (source) {
 				if (source.revision) {
 					commitHashWhenPosted = source.revision;
-					backtrackedLocation = await MarkerLocationManager.backtrackLocation(
+					backtrackedLocation = await Container.instance().markerLocations.backtrackLocation(
 						documentId,
 						fileContents,
 						location
 					);
 				} else {
 					commitHashWhenPosted = (await git.getRepoHeadRevision(source.repoPath))!;
-					backtrackedLocation = MarkerLocationManager.emptyFileLocation();
+					backtrackedLocation = Container.instance().markerLocations.emptyFileLocation();
 				}
 				if (source.remotes && source.remotes.length > 0) {
 					remotes = source.remotes.map(r => r.url);
@@ -129,7 +128,9 @@ export namespace PostHandler {
 				code,
 				remotes,
 				file: source && source.file,
-				location: backtrackedLocation && MarkerLocationManager.locationToArray(backtrackedLocation)
+				location:
+					backtrackedLocation &&
+					Container.instance().markerLocations.locationToArray(backtrackedLocation)
 			};
 		}
 
@@ -151,7 +152,7 @@ export namespace PostHandler {
 						id: post.codeBlocks[0].markerId
 					};
 
-					await MarkerLocationManager.saveUncommittedLocation(
+					await Container.instance().markerLocations.saveUncommittedLocation(
 						filePath,
 						fileContents,
 						uncommittedLocation

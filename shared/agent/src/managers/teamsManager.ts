@@ -9,7 +9,7 @@ import {
 } from "../shared/agent.protocol";
 import { CSTeam } from "../shared/api.protocol";
 import { lspHandler } from "../system";
-import { EntityManager, Id } from "./managers";
+import { EntityManager, Id } from "./entityManager";
 
 export class TeamsManager extends EntityManager<CSTeam> {
 	private loaded = false;
@@ -26,7 +26,7 @@ export class TeamsManager extends EntityManager<CSTeam> {
 		return this.cache.getAll();
 	}
 
-	protected async fetch(teamId: Id): Promise<CSTeam> {
+	protected async fetchById(teamId: Id): Promise<CSTeam> {
 		const response = await this.session.api.getTeam({ teamId: teamId });
 		return response.team;
 	}

@@ -2,9 +2,9 @@
 
 import { IUniDiff } from "diff";
 import { compareTwoStrings, findBestMatch, Rating } from "string-similarity";
+import { LocationsById } from "../managers/markerLocationManager";
 import { CSLocationMeta, CSMarkerLocation } from "../shared/api.protocol";
 import { buildChangeset, Change, Changeset } from "./changeset";
-import { LocationsById } from "./markerLocationManager";
 
 const LINE_SIMILARITY_THRESHOLD = 0.6;
 const CHANGE_SIMILARITY_THRESHOLD = 0.5;

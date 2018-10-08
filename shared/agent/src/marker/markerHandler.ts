@@ -4,7 +4,6 @@ import { Range } from "vscode-languageserver";
 import URI from "vscode-uri";
 import { Container } from "../container";
 import { Logger } from "../logger";
-import { MarkerLocationManager } from "../markerLocation/markerLocationManager";
 import {
 	DocumentFromCodeBlockRequest,
 	DocumentFromCodeBlockResponse,
@@ -38,7 +37,9 @@ export namespace MarkerHandler {
 			const markersById = await Container.instance().markers.getByStreamId(stream.id, true);
 			const markers = Array.from(markersById.values());
 			Logger.log(`MARKERS: found ${markers.length} markers - retrieving current locations`);
-			const locations = await MarkerLocationManager.getCurrentLocations(documentId.uri);
+			const locations = await Container.instance().markerLocations.getCurrentLocations(
+				documentId.uri
+			);
 			for (const mrk of markers) {
 				const loc = locations[mrk.id] || {};
 				Logger.log(
@@ -49,7 +50,7 @@ export namespace MarkerHandler {
 				m =>
 					({
 						...m,
-						range: MarkerLocationManager.locationToRange(locations[m.id])
+						range: Container.instance().markerLocations.locationToRange(locations[m.id])
 					} as MarkerWithRange)
 			);
 
@@ -76,10 +77,12 @@ export namespace MarkerHandler {
 		const filePath = path.join(repo.path, file);
 		const documentUri = URI.file(filePath).toString();
 
-		const locationsById = await MarkerLocationManager.getCurrentLocations(documentUri);
+		const locationsById = await Container.instance().markerLocations.getCurrentLocations(
+			documentUri
+		);
 		const location = locationsById[markerId];
 		const range = location
-			? MarkerLocationManager.locationToRange(location)
+			? Container.instance().markerLocations.locationToRange(location)
 			: Range.create(0, 0, 0, 0);
 
 		return {

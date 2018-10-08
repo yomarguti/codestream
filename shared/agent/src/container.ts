@@ -4,19 +4,19 @@ import { DocumentManager } from "./documentManager";
 import { GitService } from "./git/gitService";
 import { Logger } from "./logger";
 import { FilesManager } from "./managers/filesManager";
+import { MarkerLocationManager } from "./managers/markerLocationManager";
 import { MarkersManager } from "./managers/markersManager";
 import { PostsManager } from "./managers/postsManager";
 import { ReposManager } from "./managers/reposManager";
 import { StreamsManager } from "./managers/streamsManager";
 import { TeamsManager } from "./managers/teamsManager";
 import { UsersManager } from "./managers/usersManager";
-import { MarkerLocationManager } from "./markerLocation/markerLocationManager";
 import { CodeStreamSession } from "./session";
 
 class ServiceContainer {
 	constructor(public readonly session: CodeStreamSession) {
 		this._files = new FilesManager(session);
-		this._markerLocations = new MarkerLocationManager();
+		this._markerLocations = new MarkerLocationManager(session);
 		this._markers = new MarkersManager(session);
 		this._posts = new PostsManager(session);
 		this._repos = new ReposManager(session);

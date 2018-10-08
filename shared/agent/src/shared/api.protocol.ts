@@ -28,7 +28,6 @@ export interface CSMarkerLocations {
 	teamId: string;
 	streamId: string;
 	commitHash: string;
-	// locations: Map<string, CSLocationArray>;
 	locations: { [id: string]: CSLocationArray };
 }
 

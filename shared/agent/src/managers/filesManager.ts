@@ -11,13 +11,13 @@ import {
 } from "../shared/agent.protocol";
 import { CSFileStream, CSStream, StreamType } from "../shared/api.protocol";
 import { lspHandler } from "../system";
+import { EntityManager, Id } from "./entityManager";
 import { IndexParams, IndexType } from "./index";
-import { EntityManager, Id } from "./managers";
 
 export class FilesManager extends EntityManager<CSFileStream> {
 	private idsByPath = new Map<string, Id>();
 
-	protected getIndexedFields(): IndexParams<CSFileStream>[] {
+	getIndexedFields(): IndexParams<CSFileStream>[] {
 		return [
 			{
 				fields: ["repoId"],
@@ -90,7 +90,7 @@ export class FilesManager extends EntityManager<CSFileStream> {
 		return TextDocumentIdentifier.create(documentUri);
 	}
 
-	protected async fetch(id: Id): Promise<CSFileStream> {
+	protected async fetchById(id: Id): Promise<CSFileStream> {
 		try {
 			const response = await this.session.api.getStream({ streamId: id });
 			return response.stream as CSFileStream;

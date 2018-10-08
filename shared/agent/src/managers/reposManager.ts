@@ -15,7 +15,7 @@ import {
 } from "../shared/agent.protocol";
 import { CSRepository } from "../shared/api.protocol";
 import { lspHandler } from "../system";
-import { EntityManager, Id } from "./managers";
+import { EntityManager, Id } from "./entityManager";
 
 export class ReposManager extends EntityManager<CSRepository> {
 	private loaded = false;
@@ -42,7 +42,7 @@ export class ReposManager extends EntityManager<CSRepository> {
 		return this.cache.getAll();
 	}
 
-	protected async fetch(repoId: Id): Promise<CSRepository> {
+	protected async fetchById(repoId: Id): Promise<CSRepository> {
 		const response = await this.session.api.getRepo({ repoId: repoId });
 		return response.repo;
 	}

@@ -18,7 +18,7 @@ import {
 } from "../shared/agent.protocol";
 import { CSMe, CSUser } from "../shared/api.protocol";
 import { lspHandler } from "../system";
-import { EntityManager, Id } from "./managers";
+import { EntityManager, Id } from "./entityManager";
 
 export class UsersManager extends EntityManager<CSUser> {
 	private loaded = false;
@@ -49,6 +49,11 @@ export class UsersManager extends EntityManager<CSUser> {
 		);
 	}
 
+	protected async fetchById(userId: Id): Promise<CSUser> {
+		const response = await this.session.api.getUser({ userId: userId });
+		return response.user;
+	}
+
 	@lspHandler(InviteUserRequestType)
 	inviteUser(request: InviteUserRequest) {
 		return this.session.api.inviteUser(request);
@@ -62,11 +67,6 @@ export class UsersManager extends EntityManager<CSUser> {
 	@lspHandler(UpdatePresenceRequestType)
 	updatePresence(request: UpdatePresenceRequest) {
 		return this.session.api.updatePresence(request);
-	}
-
-	protected async fetch(userId: Id): Promise<CSUser> {
-		const response = await this.session.api.getUser({ userId: userId });
-		return response.user;
 	}
 
 	@lspHandler(FetchUsersRequestType)

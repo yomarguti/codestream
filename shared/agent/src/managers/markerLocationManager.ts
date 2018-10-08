@@ -8,6 +8,7 @@ import { getCache } from "../cache";
 import { Container } from "../container";
 import { GitRepository } from "../git/models/repository";
 import { Logger } from "../logger";
+import { calculateLocation, calculateLocations } from "../markerLocation/calculator";
 import {
 	CSFileStream,
 	CSLocationArray,
@@ -16,7 +17,10 @@ import {
 	CSMarkerLocations
 } from "../shared/api.protocol";
 import { xfs } from "../xfs";
-import { calculateLocation, calculateLocations } from "./calculator";
+import { KeyValue } from "./baseCache";
+import { BaseManager } from "./baseManager";
+import { Id } from "./entityManager";
+import { IndexParams, IndexType } from "./index";
 
 export interface LocationsById {
 	[id: string]: CSMarkerLocation;
@@ -35,16 +39,41 @@ interface UncommittedLocationsById {
 	[id: string]: UncommittedLocation;
 }
 
-export class MarkerLocationManager {
-	private static streamsCache: {
-		[streamId: string]: {
-			[commitHash: string]: {
-				[markerId: string]: CSMarkerLocation;
-			};
-		};
-	} = {};
+export class MarkerLocationManager extends BaseManager<CSMarkerLocations> {
+	getIndexedFields(): IndexParams<CSMarkerLocations>[] {
+		return [
+			{
+				fields: ["streamId", "commitHash"],
+				type: IndexType.Unique,
+				fetchFn: this.fetchByStreamIdAndCommitHash.bind(this)
+			}
+		];
+	}
 
-	static async getCurrentLocations(documentUri: string): Promise<LocationsById> {
+	protected async fetchByStreamIdAndCommitHash(
+		streamId: Id,
+		commitHash: string
+	): Promise<CSMarkerLocations> {
+		const response = await this.session.api.fetchMarkerLocations({
+			streamId,
+			commitHash
+		});
+		return response.markerLocations;
+	}
+
+	protected fetch(criteria: KeyValue<CSMarkerLocations>[]): Promise<CSMarkerLocations> {
+		const [streamCriteria, commitHashCriteria] = criteria;
+		return this.fetchByStreamIdAndCommitHash(
+			streamCriteria[1] as string,
+			commitHashCriteria[1] as string
+		);
+	}
+
+	protected fetchCriteria(obj: CSMarkerLocations): KeyValue<CSMarkerLocations>[] {
+		return [["streamId", obj.streamId], ["commitHash", obj.commitHash]];
+	}
+
+	async getCurrentLocations(documentUri: string): Promise<LocationsById> {
 		const { documents, git } = Container.instance();
 
 		const currentLocations: LocationsById = {};
@@ -56,10 +85,7 @@ export class MarkerLocationManager {
 			return currentLocations;
 		}
 
-		const currentCommitLocations = await MarkerLocationManager.getCommitLocations(
-			filePath,
-			currentCommitHash
-		);
+		const currentCommitLocations = await this.getCommitLocations(filePath, currentCommitHash);
 		if (!Object.keys(currentCommitLocations).length) {
 			Logger.log(`MARKERS: no locations found for ${filePath}@${currentCommitHash}`);
 			return currentLocations;
@@ -168,7 +194,7 @@ export class MarkerLocationManager {
 		return result;
 	}
 
-	static async backtrackLocation(
+	async backtrackLocation(
 		documentId: TextDocumentIdentifier,
 		text: string,
 		location: CSMarkerLocation
@@ -199,7 +225,7 @@ export class MarkerLocationManager {
 		return calculateLocation(location, diff);
 	}
 
-	static async getCommitLocations(filePath: string, commitHash: string): Promise<LocationsById> {
+	async getCommitLocations(filePath: string, commitHash: string): Promise<LocationsById> {
 		Logger.log(`MARKERS: getting locations for ${filePath}@${commitHash}`);
 		const stream = await Container.instance().files.getByPath(filePath);
 		if (!stream) {
@@ -210,14 +236,8 @@ export class MarkerLocationManager {
 		const markers = await Container.instance().markers.getByStreamId(stream.id);
 		Logger.log(`MARKERS: found ${markers.length} markers for stream ${stream.id}`);
 
-		const currentCommitLocations = await MarkerLocationManager.getMarkerLocations(
-			stream.id,
-			commitHash
-		);
-		const missingMarkersByCommit = MarkerLocationManager.getMissingMarkersByCommit(
-			markers,
-			currentCommitLocations
-		);
+		const currentCommitLocations = await this.getLocationsById(stream.id, commitHash);
+		const missingMarkersByCommit = this.getMissingMarkersByCommit(markers, currentCommitLocations);
 
 		if (missingMarkersByCommit.size === 0) {
 			Logger.log(`MARKERS: no missing locations`);
@@ -236,10 +256,7 @@ export class MarkerLocationManager {
 				} markers created at ${commitHashWhenCreated}`
 			);
 
-			const allCommitLocations = await MarkerLocationManager.getMarkerLocations(
-				stream.id,
-				commitHashWhenCreated
-			);
+			const allCommitLocations = await this.getLocationsById(stream.id, commitHashWhenCreated);
 			const locationsToCalculate: LocationsById = {};
 			for (const marker of missingMarkers) {
 				const originalLocation = allCommitLocations[marker.id];
@@ -273,37 +290,22 @@ export class MarkerLocationManager {
 			await session.api.createMarkerLocation({
 				streamId: stream.id,
 				commitHash,
-				locations: MarkerLocationManager.arraysById(calculatedLocations)
+				locations: this.arraysById(calculatedLocations)
 			});
 		}
 
 		return currentCommitLocations;
 	}
 
-	private static arraysById(locations: LocationsById): ArraysById {
+	arraysById(locations: LocationsById): ArraysById {
 		const result: ArraysById = {};
 		for (const id in locations) {
-			result[id] = MarkerLocationManager.locationToArray(locations[id]);
+			result[id] = this.locationToArray(locations[id]);
 		}
 		return result;
 	}
 
-	static async cacheMarkerLocations(markerLocations: CSMarkerLocations | CSMarkerLocations[]) {
-		if (!Array.isArray(markerLocations)) {
-			markerLocations = [markerLocations];
-		}
-
-		for (const markerLocation of markerLocations) {
-			const { streamId, commitHash, locations } = markerLocation;
-			const locationsCache = await MarkerLocationManager.getMarkerLocations(streamId, commitHash);
-			for (const id in locations) {
-				const locationArray = locations[id];
-				locationsCache[id] = MarkerLocationManager.arrayToLocation(id, locationArray);
-			}
-		}
-	}
-
-	static async saveUncommittedLocation(
+	async saveUncommittedLocation(
 		filePath: string,
 		fileContents: string,
 		location: CSMarkerLocation
@@ -327,7 +329,7 @@ export class MarkerLocationManager {
 		Logger.log(`MARKERS: local cache flushed`);
 	}
 
-	static async flushUncommittedLocations(repo: GitRepository) {
+	async flushUncommittedLocations(repo: GitRepository) {
 		Logger.log(`MARKERS: flushing uncommitted locations`);
 		const { files, git, markers, session } = Container.instance();
 		const cache = await getCache(repo.path);
@@ -383,39 +385,20 @@ export class MarkerLocationManager {
 		}
 	}
 
-	static async getMarkerLocations(streamId: string, commitHash: string): Promise<LocationsById> {
-		const { session } = Container.instance();
-		const commitsCache =
-			MarkerLocationManager.streamsCache[streamId] ||
-			(MarkerLocationManager.streamsCache[streamId] = {});
-		let locationsCache = commitsCache[commitHash];
-
-		if (!locationsCache) {
-			Logger.log(
-				`MARKERS: no cached locations for stream ${streamId} and commit hash ${commitHash} - fetching from API server`
-			);
-			const response = await session.api.fetchMarkerLocations({
-				streamId: streamId,
-				commitHash: commitHash
-			});
-			locationsCache = commitsCache[commitHash] = {};
-			const locations = response.markerLocations.locations || {};
-
-			for (const id in locations) {
-				const array = locations[id];
-				locationsCache[id] = MarkerLocationManager.arrayToLocation(id, array);
-			}
-		} else {
-			Logger.log(
-				`MARKERS: found cached locations for stream ${streamId} and commit hash ${commitHash}`
-			);
-		}
-
-		return locationsCache;
+	async getMarkerLocations(
+		streamId: Id,
+		commitHash: string
+	): Promise<CSMarkerLocations | undefined> {
+		return this.cache.get([["streamId", streamId], ["commitHash", commitHash]]);
 	}
 
-	static getMissingMarkersByCommit(markers: CSMarker[], locations: LocationsById) {
-		const missingMarkerIds = MarkerLocationManager.getMissingMarkerIds(markers, locations);
+	async getLocationsById(streamId: Id, commitHash: string): Promise<LocationsById> {
+		const markerLocations = await this.getMarkerLocations(streamId, commitHash);
+		return this.byId(markerLocations);
+	}
+
+	getMissingMarkersByCommit(markers: CSMarker[], locations: LocationsById) {
+		const missingMarkerIds = this.getMissingMarkerIds(markers, locations);
 
 		const missingMarkersByCommitHashWhenCreated = new Map<string, CSMarker[]>();
 		for (const m of markers) {
@@ -434,7 +417,7 @@ export class MarkerLocationManager {
 		return missingMarkersByCommitHashWhenCreated;
 	}
 
-	static getMissingMarkerIds(markers: CSMarker[], locations: { [p: string]: any }): Set<string> {
+	getMissingMarkerIds(markers: CSMarker[], locations: { [p: string]: any }): Set<string> {
 		const missingMarkerIds = new Set<string>();
 		for (const m of markers) {
 			if (!locations[m.id]) {
@@ -444,7 +427,7 @@ export class MarkerLocationManager {
 		return missingMarkerIds;
 	}
 
-	static arrayToLocation(id: string, array: CSLocationArray): CSMarkerLocation {
+	arrayToLocation(id: string, array: CSLocationArray): CSMarkerLocation {
 		return {
 			id,
 			lineStart: array[0],
@@ -454,7 +437,7 @@ export class MarkerLocationManager {
 		};
 	}
 
-	static locationToRange(location: CSMarkerLocation): Range {
+	locationToRange(location: CSMarkerLocation): Range {
 		return Range.create(
 			Math.max(location.lineStart - 1, 0),
 			Math.max(location.colStart - 1, 0),
@@ -463,7 +446,7 @@ export class MarkerLocationManager {
 		);
 	}
 
-	static rangeToLocation(range: Range): CSMarkerLocation {
+	rangeToLocation(range: Range): CSMarkerLocation {
 		return {
 			id: "$transientLocation",
 			lineStart: range.start.line + 1,
@@ -473,7 +456,7 @@ export class MarkerLocationManager {
 		};
 	}
 
-	static locationToArray(location: CSMarkerLocation): CSLocationArray {
+	locationToArray(location: CSMarkerLocation): CSLocationArray {
 		return [
 			location.lineStart,
 			location.colStart,
@@ -483,7 +466,7 @@ export class MarkerLocationManager {
 		];
 	}
 
-	static emptyFileLocation(): CSMarkerLocation {
+	emptyFileLocation(): CSMarkerLocation {
 		return {
 			id: "$transientLocation",
 			lineStart: 1,
@@ -496,5 +479,21 @@ export class MarkerLocationManager {
 				entirelyDeleted: true
 			}
 		};
+	}
+
+	private byId(markerLocations: CSMarkerLocations | undefined): LocationsById {
+		if (!markerLocations) {
+			return {};
+		}
+
+		const result: LocationsById = {};
+		const { locations } = markerLocations;
+
+		for (const id in locations) {
+			const array = locations[id];
+			result[id] = this.arrayToLocation(id, array);
+		}
+
+		return result;
 	}
 }

@@ -1,13 +1,11 @@
 "use strict";
 
-import { CSEntity } from "../shared/api.protocol";
-
 interface SequenceGap {
 	start: number;
 	end: number;
 }
 
-export class SequentialSlice<T extends CSEntity> {
+export class SequentialSlice<T> {
 	constructor(
 		private readonly _data: T[],
 		private readonly seqField: keyof T,

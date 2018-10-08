@@ -21,7 +21,6 @@ import { setGitPath } from "./git/git";
 import { Logger } from "./logger";
 import { RealTimeMessage } from "./managers/realTimeMessage";
 import { MarkerHandler } from "./marker/markerHandler";
-import { MarkerLocationManager } from "./markerLocation/markerLocationManager";
 import { PostHandler } from "./post/postHandler";
 import {
 	AgentOptions,
@@ -42,6 +41,7 @@ import {
 import {
 	ApiErrors,
 	CSMarker,
+	CSMarkerLocations,
 	CSPost,
 	CSRepository,
 	CSStream,
@@ -95,8 +95,8 @@ export class CodeStreamSession {
 		return this._onDidChangeMarkers.event;
 	}
 
-	private _onDidChangeMarkerLocations = new Emitter<CSMarker[]>();
-	get onDidChangeMarkerLocations(): Event<CSMarker[]> {
+	private _onDidChangeMarkerLocations = new Emitter<CSMarkerLocations[]>();
+	get onDidChangeMarkerLocations(): Event<CSMarkerLocations[]> {
 		return this._onDidChangeMarkerLocations.event;
 	}
 
@@ -195,12 +195,12 @@ export class CodeStreamSession {
 				});
 				break;
 			case MessageType.MarkerLocations:
-				// const markerLocations = await Container.instance().markerLocations.resolve(e);
-				// this._onDidChangeMarkerLocations.fire(markerLocations);
-				// this.agent.sendNotification(DidEntitiesChangeNotificationType, {
-				// 	type: MessageType.MarkerLocations,
-				// 	markerLocations
-				// });
+				const markerLocations = await Container.instance().markerLocations.resolve(e);
+				this._onDidChangeMarkerLocations.fire(markerLocations);
+				this.agent.sendNotification(DidChangeItemsNotificationType, {
+					type: MessageType.MarkerLocations,
+					markerLocations
+				});
 				break;
 		}
 	}
@@ -292,7 +292,7 @@ export class CodeStreamSession {
 			this.api.subscribe(this.onRealTimeMessageReceived, this);
 
 			Container.instance().git.onRepositoryCommitHashChanged(repo => {
-				MarkerLocationManager.flushUncommittedLocations(repo);
+				Container.instance().markerLocations.flushUncommittedLocations(repo);
 			});
 
 			return {

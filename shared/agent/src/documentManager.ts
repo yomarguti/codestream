@@ -6,7 +6,6 @@ import {
 	TextDocumentChangeEvent,
 	TextDocuments
 } from "vscode-languageserver";
-import { MarkerLocationManager } from "./markerLocation/markerLocationManager";
 import { Disposables } from "./system";
 
 export class DocumentManager implements Disposable {

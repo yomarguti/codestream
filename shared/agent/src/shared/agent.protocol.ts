@@ -110,7 +110,7 @@ export interface MarkersChangedNotification {
 
 export interface MarkerLocationsChangedNotification {
 	type: MessageType.MarkerLocations;
-	markerLocations: CSMarkerLocations;
+	markerLocations: CSMarkerLocations[];
 }
 
 export interface PostsChangedNotification {

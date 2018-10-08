@@ -1,9 +1,9 @@
 "use strict";
+
 import { CodeStreamApiProvider } from "../api/codestreamApi";
 import { CodeStreamSession } from "../session";
-import { CSEntity } from "../shared/api.protocol";
-import { LspHandler } from "../system";
-import { Cache } from "./cache";
+import { LspHandler } from "../system/decorators";
+import { BaseCache, KeyValue } from "./baseCache";
 import { IndexParams } from "./index";
 import * as operations from "./operations";
 import {
@@ -13,17 +13,10 @@ import {
 	SlackRTEMessage
 } from "./realTimeMessage";
 
-export type Id = string;
-
-/**
- * Base class for entity managers.
- */
-export abstract class EntityManager<T extends CSEntity> {
-	protected readonly cache: Cache<T>;
+export abstract class BaseManager<T> {
+	protected readonly cache: BaseCache<T> = new BaseCache<T>(this.getIndexedFields());
 
 	public constructor(public session: CodeStreamSession) {
-		this.cache = new Cache<T>(this.getIndexedFields(), this.fetch.bind(this));
-
 		const handlerRegistry = (this as any).handlerRegistry as LspHandler[] | undefined;
 		if (handlerRegistry !== undefined) {
 			for (const handler of handlerRegistry) {
@@ -36,15 +29,13 @@ export abstract class EntityManager<T extends CSEntity> {
 
 	protected init() {}
 
-	protected abstract async fetch(id: Id): Promise<T>;
-
-	protected getIndexedFields(): IndexParams<T>[] {
+	getIndexedFields(): IndexParams<T>[] {
 		return [];
 	}
 
-	async getById(id: Id): Promise<T> {
-		return this.cache.getById(id);
-	}
+	protected abstract fetch(criteria: KeyValue<T>[]): Promise<T>;
+
+	protected abstract fetchCriteria(obj: T): KeyValue<T>[];
 
 	resolve(realTimeMessage: RealTimeMessage): Promise<T[]> {
 		switch (realTimeMessage.source) {
@@ -59,15 +50,15 @@ export abstract class EntityManager<T extends CSEntity> {
 		const resolved = await Promise.all(
 			message.changeSets.map(async c => {
 				const changes = CodeStreamApiProvider.normalizeResponse(c) as { [key: string]: any };
-				const id = changes["id"];
-				const cached = await this.cacheGet(id);
+				const criteria = this.fetchCriteria(changes as T);
+				const cached = await this.cacheGet(criteria);
 				if (cached) {
 					const updatedEntity = operations.resolve(cached as any, changes);
 					this.cacheSet(updatedEntity as T, cached);
 					return updatedEntity as T;
 				} else {
 					// TODO ignore unfetched entities unless they are new, using .version
-					const entity = await this.fetch(id);
+					const entity = await this.fetch(criteria);
 					if (entity) {
 						this.cacheSet(entity);
 						return entity;
@@ -79,17 +70,15 @@ export abstract class EntityManager<T extends CSEntity> {
 		return resolved.filter(Boolean) as T[];
 	}
 
-	cacheGet(id: Id): Promise<T | undefined> {
-		return this.cache.get([["id", id]], { avoidFetch: true });
+	async resolveSlackMessage(message: SlackRTEMessage): Promise<T[]> {
+		return [];
+	}
+
+	cacheGet(criteria: KeyValue<T>[]): Promise<T | undefined> {
+		return this.cache.get(criteria, { avoidFetch: true });
 	}
 
 	cacheSet(entity: T, oldEntity?: T) {
 		this.cache.set(entity, oldEntity);
-	}
-
-	async resolveSlackMessage(message: SlackRTEMessage): Promise<T[]> {
-		// TODO Eric good luck
-		// GOOD Luck anyway
-		return [];
 	}
 }

@@ -7,8 +7,8 @@ import {
 } from "../shared/agent.protocol";
 import { CSMarker, CSStream, StreamType } from "../shared/api.protocol";
 import { lspHandler } from "../system";
+import { EntityManager, Id } from "./entityManager";
 import { IndexParams, IndexType } from "./index";
-import { EntityManager, Id } from "./managers";
 
 export class MarkersManager extends EntityManager<CSMarker> {
 	async getByStreamId(streamId: Id, visibleOnly?: boolean): Promise<CSMarker[]> {
@@ -16,12 +16,12 @@ export class MarkersManager extends EntityManager<CSMarker> {
 		return visibleOnly ? await this.filterMarkers(markers) : markers;
 	}
 
-	protected async fetch(id: Id): Promise<CSMarker> {
+	protected async fetchById(id: Id): Promise<CSMarker> {
 		const response = await this.session.api.getMarker({ markerId: id });
 		return response.marker;
 	}
 
-	protected getIndexedFields(): IndexParams<CSMarker>[] {
+	getIndexedFields(): IndexParams<CSMarker>[] {
 		return [
 			{
 				fields: ["streamId"],

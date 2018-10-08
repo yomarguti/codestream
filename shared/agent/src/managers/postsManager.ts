@@ -27,12 +27,11 @@ import {
 } from "../shared/agent.protocol";
 import { CSPost } from "../shared/api.protocol";
 import { lspHandler } from "../system/decorators";
+import { EntityManager, Id } from "./entityManager";
 import { IndexParams, IndexType } from "./index";
-import { EntityManager, Id } from "./managers";
-import { SequentialSlice } from "./sequentialSlice";
 
 export class PostsManager extends EntityManager<CSPost> {
-	protected getIndexedFields(): IndexParams<CSPost>[] {
+	getIndexedFields(): IndexParams<CSPost>[] {
 		return [
 			{
 				fields: ["streamId"],
@@ -144,7 +143,7 @@ export class PostsManager extends EntityManager<CSPost> {
 	// 	}
 	// }
 
-	protected async fetch(id: Id): Promise<CSPost> {
+	protected async fetchById(id: Id): Promise<CSPost> {
 		// TODO: Must fix this for slack
 		const response = await this.session.api.getPost({ streamId: undefined!, postId: id });
 		return response.post;
