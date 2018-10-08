@@ -50,10 +50,8 @@ export class MarkerLocationManager extends BaseManager<CSMarkerLocations> {
 		];
 	}
 
-	protected async fetchByStreamIdAndCommitHash(
-		streamId: Id,
-		commitHash: string
-	): Promise<CSMarkerLocations> {
+	protected async fetchByStreamIdAndCommitHash(value: [Id, string]): Promise<CSMarkerLocations> {
+		const [streamId, commitHash] = value;
 		const response = await this.session.api.fetchMarkerLocations({
 			streamId,
 			commitHash
@@ -63,10 +61,10 @@ export class MarkerLocationManager extends BaseManager<CSMarkerLocations> {
 
 	protected fetch(criteria: KeyValue<CSMarkerLocations>[]): Promise<CSMarkerLocations> {
 		const [streamCriteria, commitHashCriteria] = criteria;
-		return this.fetchByStreamIdAndCommitHash(
-			streamCriteria[1] as string,
+		return this.fetchByStreamIdAndCommitHash([
+			streamCriteria[1] as Id,
 			commitHashCriteria[1] as string
-		);
+		]);
 	}
 
 	protected fetchCriteria(obj: CSMarkerLocations): KeyValue<CSMarkerLocations>[] {

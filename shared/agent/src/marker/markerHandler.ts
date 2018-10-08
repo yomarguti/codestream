@@ -34,8 +34,7 @@ export namespace MarkerHandler {
 				return emptyResponse;
 			}
 
-			const markersById = await Container.instance().markers.getByStreamId(stream.id, true);
-			const markers = Array.from(markersById.values());
+			const markers = await Container.instance().markers.getByStreamId(stream.id, true);
 			Logger.log(`MARKERS: found ${markers.length} markers - retrieving current locations`);
 			const locations = await Container.instance().markerLocations.getCurrentLocations(
 				documentId.uri

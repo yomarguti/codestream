@@ -97,7 +97,7 @@ export class UniqueIndex<T> extends BaseIndex<T> {
 		this._data.set(value, entity);
 	}
 
-	get(...value: any[]): T | undefined {
+	get(value: any[]): T | undefined {
 		return this._data.get(encodeArray(value));
 	}
 
@@ -105,11 +105,11 @@ export class UniqueIndex<T> extends BaseIndex<T> {
 		return Array.from(this._data.values());
 	}
 
-	has(...value: any[]): boolean {
+	has(value: any[]): boolean {
 		return this._data.has(encodeArray(value));
 	}
 
-	delete(...value: any[]) {
+	delete(value: any[]) {
 		this._data.delete(encodeArray(value));
 	}
 }
@@ -140,8 +140,8 @@ export class GroupIndex<T> extends BaseIndex<T> {
 	 * @param values The group value
 	 * @return Array of entities or `undefined`
 	 */
-	getGroup(...values: any[]): T[] | undefined {
-		const indexValue = encodeArray(values);
+	getGroup(value: any[]): T[] | undefined {
+		const indexValue = encodeArray(value);
 		const group = this.groups.get(indexValue);
 		if (group) {
 			return Array.from(group.values());
