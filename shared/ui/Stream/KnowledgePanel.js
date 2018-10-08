@@ -2,17 +2,8 @@ import React, { Component } from "react";
 import { connect } from "react-redux";
 import createClassString from "classnames";
 import _ from "underscore";
-import { createStream, setCurrentStream, setUserPreference } from "./actions";
-import {
-	getChannelStreamsForTeam,
-	getDirectMessageStreamsForTeam,
-	getServiceStreamsForTeam,
-	getPostsForStream,
-	getStreamForTeam,
-	getStreamForId,
-	getDMName
-} from "../reducers/streams";
-import { toMapBy } from "../utils";
+import { createStream, setCurrentStream, setUserPreference, showCode } from "./actions";
+import { getAllPostsOfType } from "../reducers/streams";
 import Icon from "./Icon";
 import Tooltip from "./Tooltip";
 import Post from "./Post";
@@ -22,13 +13,109 @@ export class SimpleKnowledgePanel extends Component {
 		super(props);
 
 		this.state = {
-			openPosts: {},
-			statusPosts: {}
+			openPost: null,
+			expanded: {
+				inThisFile: true,
+				recent: true,
+				mine: true,
+				open: true,
+				closed: true,
+				unanswered: true
+			}
+		};
+
+		this.typeLabels = {
+			comment: "Code Comments",
+			question: "Questions & Answers",
+			issue: "Issues",
+			trap: "Code Traps",
+			snippet: "Snippets"
+		};
+		this.sectionLabel = {
+			inThisFile: "In This File",
+			mine: "Open and Assigned To Me",
+			open: "Open",
+			recent: "Recent",
+			closed: "Closed",
+			unanswered: "Unanswered"
+		};
+		this.sectionsByType = {
+			comment: ["inThisFile", "recent"],
+			question: ["inThisFile", "unanswered", "recent"],
+			issue: ["inThisFile", "mine", "open", "recent", "closed"],
+			trap: ["inThisFile", "recent"]
+		};
+		this.sectionsFilterOrder = {
+			comment: ["inThisFile", "recent"],
+			question: ["inThisFile", "unanswered", "recent"],
+			issue: ["closed", "inThisFile", "mine", "open", "recent"],
+			trap: ["inThisFile", "recent"]
 		};
 	}
 
-	render() {
+	toggleSection = (e, section) => {
+		e.stopPropagation();
+		this.setState({
+			expanded: { ...this.state.expanded, [section]: !this.state.expanded[section] }
+		});
+	};
+
+	renderPosts = posts => {
 		const { knowledgeType } = this.props;
+		if (posts.length === 0)
+			return <div className="no-matches">No {knowledgeType}s in file foo/bar/baz.js</div>;
+		else {
+			return posts.map(post => {
+				const collapsed = this.state.openPost !== post.id;
+				return (
+					<div key={post.id}>
+						<Post
+							id={post.id}
+							streamId={post.streamId}
+							q={this.state.q}
+							showStatus={post.type === "issue"}
+							showAssigneeHeadshots={true}
+							teammates={this.props.teammates}
+							collapsed={collapsed}
+							showFileAfterTitle={collapsed}
+							context="knowledge"
+							headshotSize={18}
+							usernames={this.props.usernames}
+							currentUserId={this.props.currentUserId}
+							currentUserName={this.props.currentUserName}
+							currentCommit={this.props.currentCommit}
+							action={this.props.postAction}
+						/>
+					</div>
+				);
+			});
+		}
+	};
+
+	renderSection = (section, posts) => {
+		const { knowledgeType } = this.props;
+
+		if (posts.length === 0) return null;
+
+		return (
+			<div
+				className={createClassString("section", "has-children", {
+					expanded: this.state.expanded[section]
+				})}
+			>
+				<div className="header" onClick={e => this.toggleSection(e, section)}>
+					<Icon name="triangle-right" className="triangle-right" />
+					<span className="clickable">{this.sectionLabel[section]}</span>
+				</div>
+				<ul>{this.renderPosts(posts)}</ul>
+			</div>
+		);
+	};
+
+	render() {
+		const { knowledgeType, posts, currentUserId } = this.props;
+
+		if (!knowledgeType) return null;
 
 		const inactive = this.props.activePanel !== "knowledge";
 		const shrink = this.props.activePanel === "main";
@@ -39,24 +126,56 @@ export class SimpleKnowledgePanel extends Component {
 			shrink,
 			"off-right": inactive && !shrink
 		});
-		let knowledgeLabel = "";
-		switch (knowledgeType) {
-			case "comment":
-				knowledgeLabel = "Code Comments";
-				break;
-			case "question":
-				knowledgeLabel = "Questions & Answers";
-				break;
-			case "issue":
-				knowledgeLabel = "Issues";
-				break;
-			case "trap":
-				knowledgeLabel = "Code Traps";
-				break;
-			case "snippet":
-				knowledgeLabel = "Snippets";
-				break;
-		}
+
+		const knowledgeLabel = this.typeLabels[knowledgeType];
+		const sections = this.sectionsByType[knowledgeType];
+
+		let displayPosts = {};
+		let assignedPosts = {};
+		let sectionFilters = this.sectionsFilterOrder[knowledgeType] || [];
+
+		const assignPost = (post, section) => {
+			if (!displayPosts[section]) displayPosts[section] = [];
+			displayPosts[section].push(post);
+			assignedPosts[post.id] = true;
+		};
+
+		posts.forEach(post => {
+			const postType = post.type || "comment";
+			if (post.deactivated) return null;
+			if (postType !== knowledgeType) return null;
+			if (postType === "comment" && (!post.codeBlocks || !post.codeBlocks.length)) return null;
+			sectionFilters.forEach(section => {
+				if (assignedPosts[post.id]) return;
+				// if (!this.state.expanded[section]) return;
+				if (this.state.q && !post.text.includes(this.state.q) && !post.title.includes(this.state.q))
+					return;
+				switch (section) {
+					case "inThisFile":
+						if (Math.random() < 0) assignPost(post, "inThisFile");
+						break;
+					case "mine":
+						if (
+							post.status === "open" ||
+							(!post.status && _.contains(post.assignees || [], currentUserId))
+						)
+							assignPost(post, "mine");
+						break;
+					case "open":
+						if (post.status === "open" || !post.status) assignPost(post, "open");
+						break;
+					case "unanswered":
+						if (!post.hasReplies) assignPost(post, "unanswered");
+						break;
+					case "recent":
+						assignPost(post, "recent");
+						break;
+					case "closed":
+						if (post.status === "closed") assignPost(post, "closed");
+						break;
+				}
+			});
+		});
 
 		return (
 			<div className={knowledgePanelClass}>
@@ -98,34 +217,11 @@ export class SimpleKnowledgePanel extends Component {
 						<div className="shadow shadow-bottom" />
 					</div>
 					<div className="channel-panel vscroll" onClick={this.handleClickPost}>
-						<div class="shadow-cover-top" />
-						{this.props.posts.map(post => {
-							if (post.deactivated) return null;
-							if (this.state.q && !(post.text || "").includes(this.state.q)) return null;
-							return (
-								<div key={post.id}>
-									<Post
-										post={post}
-										q={this.state.q}
-										showStatus={true}
-										status={
-											post.id in this.state.statusPosts
-												? this.state.statusPosts[post.id]
-												: post.text.match(/w/)
-										}
-										extraClass={this.state.openPosts[post.id] ? "expanded" : "collapsed"}
-										context="knowledge"
-										headshotSize={18}
-										usernames={this.props.usernames}
-										currentUserId={this.props.currentUserId}
-										currentUserName={this.props.currentUserName}
-										currentCommit={this.props.currentCommit}
-										action={this.props.postAction}
-									/>
-								</div>
-							);
+						<div className="shadow-cover-top" />
+						{sections.map(section => {
+							return this.renderSection(section, displayPosts[section] || []);
 						})}
-						<div class="shadow-cover-bottom" />
+						<div className="shadow-cover-bottom" />
 					</div>
 				</div>
 			</div>
@@ -134,7 +230,7 @@ export class SimpleKnowledgePanel extends Component {
 
 	handleClickAddKnowledge = e => {
 		e.stopPropagation();
-		this.props.setActivePanel("main");
+		this.props.setMultiCompose(this.props.knowledgeType);
 	};
 
 	handleClickSearch = e => {
@@ -150,7 +246,6 @@ export class SimpleKnowledgePanel extends Component {
 		var postDiv = event.target.closest(".post");
 		if (!postDiv) return;
 
-		console.log("CL: ", event.target.classList);
 		// if they clicked a link, follow the link rather than selecting the post
 		if (event && event.target && event.target.tagName === "A") return false;
 
@@ -175,8 +270,10 @@ export class SimpleKnowledgePanel extends Component {
 			// we are editing, then do nothing.
 			return;
 		} else if (event.target.closest(".status-button")) {
+			console.log("RETURNING FALSE");
+			return true;
 			// if the user clicked on the checkmark; toggle status
-			return this.toggleStatus(postDiv.id);
+			// return this.toggleStatus(postDiv.id);
 		} else if (window.getSelection().toString().length > 0) {
 			// in this case the user has selected a string
 			// by dragging
@@ -192,7 +289,13 @@ export class SimpleKnowledgePanel extends Component {
 	};
 
 	selectPost = id => {
-		this.setState({ openPosts: { ...this.state.openPosts, [id]: !this.state.openPosts[id] } });
+		const isOpen = this.state.openPost === id;
+		if (isOpen) this.setState({ openPost: null });
+		else {
+			const post = this.props.posts.find(post => id === post.id);
+			if (post) this.props.showCode(post, true);
+			this.setState({ openPost: id });
+		}
 	};
 
 	handleClickCreateKnowledge = e => {
@@ -223,58 +326,16 @@ const mapStateToProps = ({ context, streams, users, teams, umis, posts, session 
 	const teamMembers = teams[context.currentTeamId].memberIds.map(id => users[id]).filter(Boolean);
 	// .filter(user => user && user.isRegistered);
 
-	const channelStreams = _.sortBy(
-		getChannelStreamsForTeam(streams, context.currentTeamId, session.userId) || [],
-		stream => (stream.name || "").toLowerCase()
-	);
-
 	const user = users[session.userId];
-	const mutedStreams = (user && user.preferences && user.preferences.mutedStreams) || {};
 
-	const directMessageStreams = (
-		getDirectMessageStreamsForTeam(streams, context.currentTeamId) || []
-	).map(stream => ({
-		...stream,
-		name: getDMName(stream, toMapBy("id", teamMembers), session.userId)
-	}));
-
-	const serviceStreams = _.sortBy(
-		getServiceStreamsForTeam(streams, context.currentTeamId, session.userId, users) || [],
-		stream => -stream.createdAt
-	);
-
-	// get a list of the users i have 1:1 streams with
-	const oneOnOnePeople = directMessageStreams
-		.map(stream => {
-			const notMe = _.without(stream.memberIds || [], session.userId);
-			if (notMe.length === 1) return notMe[0];
-
-			// this is my stream with myself, if it exists
-			if (stream.memberIds.length === 1 && stream.memberIds[0] === session.userId) {
-				stream.isMeStream = true;
-				return session.userId;
-			}
-			return;
-		})
-		.filter(Boolean);
-
-	const teamStream = getStreamForTeam(streams, context.currentTeamId) || {};
-	const postStream =
-		getStreamForId(streams, context.currentTeamId, context.currentStreamId) || teamStream;
-	const streamPosts = getPostsForStream(posts, postStream.id);
+	const postsByType = getAllPostsOfType(posts);
 
 	return {
 		umis,
 		users,
-		posts,
-		channelStreams,
-		directMessageStreams,
-		serviceStreams,
-		mutedStreams,
 		teammates: teamMembers,
-		oneOnOnePeople,
 		team: teams[context.currentTeamId],
-		posts: streamPosts.map(post => {
+		posts: postsByType.map(post => {
 			let user = users[post.creatorId];
 			if (!user) {
 				if (post.creatorId === "codestream") {
@@ -313,6 +374,7 @@ export default connect(
 	{
 		createStream,
 		setUserPreference,
-		setCurrentStream
+		setCurrentStream,
+		showCode
 	}
 )(SimpleKnowledgePanel);

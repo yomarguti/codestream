@@ -20,7 +20,7 @@ import { getPost } from "../reducers/posts";
 import { markdownify, emojify } from "./Markdowner";
 import hljs from "highlight.js";
 import _ from "underscore";
-import { reactToPost } from "./actions";
+import { reactToPost, setPostStatus } from "./actions";
 import { safe } from "../utils";
 
 // let renderCount = 0;
@@ -171,6 +171,8 @@ class Post extends React.Component {
 		const mine = post.creatorId === this.props.currentUserId;
 		const systemPost = post.creatorId === "codestream";
 
+		// if (post.title && post.title.match(/assigned/)) console.log(post);
+
 		const postClass = createClassString({
 			post: true,
 			mine: mine,
@@ -181,7 +183,11 @@ class Post extends React.Component {
 			unread: this.props.unread,
 			"new-separator": this.props.newMessageIndicator,
 			[`thread-key-${this.props.threadKey}`]: true,
-			[this.props.extraClass]: true
+			[post.color]: true,
+			collapsed: this.props.collapsed,
+			question: post.type === "question",
+			issue: post.type === "issue",
+			trap: post.type === "trap"
 		});
 
 		let codeBlock = null;
@@ -291,26 +297,32 @@ class Post extends React.Component {
 				) : (
 					<Timestamp time={post.createdAt} />
 				)}
-				<div className="body">
-					{parentPost && (
-						<div className="replying-to">
-							<span>reply to</span> <b>{(parentPost.text || "").substr(0, 80)}</b>
-						</div>
+				{parentPost && (
+					<div className="replying-to">
+						<span>reply to</span> <b>{(parentPost.title || parentPost.text).substr(0, 80)}</b>
+					</div>
+				)}
+				{post.creatorId === "codestream" && (
+					<div className="replying-to">
+						<span>only visible to you</span>
+					</div>
+				)}
+				{codeBlock}
+				{this.renderAttachments(post)}
+				{this.props.showDetails &&
+					!this.state.warning && (
+						<PostDetails post={post} currentCommit={this.props.currentCommit} />
 					)}
-					{post.creatorId === "codestream" && (
-						<div className="replying-to">
-							<span>only visible to you</span>
-						</div>
-					)}
-					{codeBlock}
-					{this.renderAttachments(post)}
-					{this.props.showDetails &&
-						!this.state.warning && (
-							<PostDetails post={post} currentCommit={this.props.currentCommit} />
-						)}
-					{this.renderBody(post)}
-					{!this.props.editing && post.hasBeenEdited && <span className="edited">(edited)</span>}
-				</div>
+				{this.renderTitle(post)}
+				{this.renderAssignees(post)}
+				{(this.props.editing || post.text.length > 0) && (
+					<div className="body">
+						{this.renderBody(post)}
+						{!this.props.editing && post.hasBeenEdited && <span className="edited">(edited)</span>}
+						{this.renderCodeBlockFile(post)}
+					</div>
+				)}
+				{this.renderInstructions(post)}
 				{this.renderReactions(post)}
 			</div>
 		);
@@ -350,15 +362,124 @@ class Post extends React.Component {
 		return null;
 	};
 
+	renderInstructions = post => {
+		let button = null;
+		switch (post.type) {
+			case "question":
+				if (this.props.showDetails) return null;
+				button = <Button className="action">Post an Answer</Button>;
+				break;
+			case "trap":
+				break;
+		}
+		if (!button) return null;
+		return <div className="button-group">{button}</div>;
+	};
+
+	toggleStatus = () => {
+		console.log("WE CLICKED TOG STAT", this.props.post);
+		if (this.props.post.status === "closed") this.reopenIssue();
+		else this.closeIssue();
+	};
+
+	submitReply = text => {
+		const { post, action } = this.props;
+		const forceThreadId = post.parentPostId || post.id;
+		action("submit-post", post, { forceStreamId: post.streamId, forceThreadId, text });
+	};
+
+	closeIssue = e => {
+		this.props.setPostStatus(this.props.post, "closed");
+		this.submitReply("/me closed this issue");
+	};
+
+	reopenIssue = e => {
+		this.props.setPostStatus(this.props.post, "open");
+		this.submitReply("/me reopened this issue");
+		// this.props.action("submit-post", this.props.post, { postStreamId, threadId, text: "/me reopened this issue" });
+	};
+
+	renderTitle = post => {
+		let icon = null;
+		switch (post.type) {
+			case "question":
+				icon = <Icon name="question" />;
+				break;
+			case "trap":
+				icon = <Icon name="stop" />;
+				break;
+			case "issue":
+				icon = <Icon name="bug" />;
+		}
+		if (post.title)
+			return (
+				<div className="title">
+					{icon} {this.renderTextLinkified(post.title)}
+					{this.renderCodeBlockFile(post)}
+				</div>
+			);
+		else return null;
+	};
+
+	renderAssignees = post => {
+		const { collapsed } = this.props;
+
+		if (collapsed) return null;
+
+		const assignees = post.assignees || [];
+
+		if (assignees.length == 0) return null;
+		if (!this.props.teammates) return null;
+
+		return (
+			<div className="assignees">
+				<b>Assignees</b>
+				<br />
+				{assignees
+					.map(userId => {
+						const person = this.props.teammates.find(user => user.id === userId);
+						return person.username;
+					})
+					.join(", ")}
+
+				<br />
+			</div>
+		);
+	};
+
+	renderCodeBlockFile = post => {
+		const { collapsed, showFileAfterTitle } = this.props;
+
+		const codeBlock = post.codeBlocks ? post.codeBlocks[0] || {} : {};
+
+		if (!collapsed || !showFileAfterTitle || !codeBlock.file) return null;
+		return <span className="file-name">{codeBlock.file}</span>;
+	};
+
 	renderStatus = () => {
-		console.log("STATUS IS: ", this.props.status);
+		// console.log("STATUS IS: ", this.props.status);
+		const status = this.props.post.status || "open";
+		const assignees = this.props.post.assignees || [];
+
 		const statusClass = createClassString({
 			"status-button": true,
-			checked: this.props.status
+			checked: status === "closed"
 		});
+
 		return (
-			<div class={statusClass} onclick={this.toggleStatus}>
-				{this.props.status && <Icon name="check" className="check" />}
+			<div className="align-far-right">
+				{this.props.showAssigneeHeadshots &&
+					assignees.map(userId => {
+						const person = this.props.teammates.find(user => user.id === userId);
+						return (
+							<Tooltip key={userId} title={"hi"} placement="above">
+								<Headshot size={18} person={person} />
+							</Tooltip>
+						);
+					})}
+				<div className={statusClass} onClick={this.toggleStatus}>
+					{<Icon name="check" className="check" />}
+				</div>
 			</div>
 		);
 	};
@@ -366,13 +487,13 @@ class Post extends React.Component {
 	renderIcons = () => {
 		return (
 			<div className="align-right">
-				<Tooltip title="Add Reaction">
+				<Tooltip title="Add Reaction" placement="above">
 					<Icon name="smiley" className="smiley" onClick={this.handleReactionClick} />
 				</Tooltip>
 				{this.state.emojiOpen && (
 					<EmojiPicker addEmoji={this.addReaction} target={this.state.emojiTarget} />
 				)}
-				<Tooltip title="More Options...">
+				<Tooltip title="More Options..." placement="above">
 					<Icon name="gear" className="gear" onClick={this.handleMenuClick} />
 				</Tooltip>
 			</div>
@@ -382,6 +503,9 @@ class Post extends React.Component {
 	renderEmote = post => {
 		let matches = (post.text || "").match(/^\/me\s+(.*)/);
 		if (matches) return <span className="emote">{this.renderTextLinkified(matches[1])}</span>;
+		if (post.type === "question") return <span className="emote">has a question</span>;
+		if (post.type === "issue") return <span className="emote">posted an issue</span>;
+		if (post.type === "trap") return <span className="emote">created a code trap</span>;
 		else return null;
 	};
 
@@ -594,5 +718,5 @@ const mapStateToProps = (state, props) => {
 
 export default connect(
 	mapStateToProps,
-	{ cancelPost, retryPost, showCode, reactToPost }
+	{ cancelPost, retryPost, showCode, reactToPost, setPostStatus }
 )(injectIntl(Post));

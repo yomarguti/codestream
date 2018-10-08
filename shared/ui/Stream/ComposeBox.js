@@ -12,6 +12,7 @@ const emojiData = require("../node_modules/markdown-it-emoji-mart/lib/data/full.
 import Select from "react-select";
 import Tooltip from "./Tooltip";
 import hljs from "highlight.js";
+import { compose } from "../../../Library/Caches/typescript/3.0/node_modules/redux";
 const Path = require("path");
 
 const arrayToRange = ([startRow, startCol, endRow, endCol]) => {
@@ -85,6 +86,17 @@ class ComposeBox extends React.Component {
 		this.disposables.forEach(d => d.dispose());
 	}
 
+	componentDidUpdate(prevProps, prevState) {
+		const { multiCompose } = this.props;
+
+		if (prevProps.multiCompose !== multiCompose) {
+			this.setState({ commentType: multiCompose === true ? "comment" : multiCompose });
+			setTimeout(() => {
+				this.focus();
+			}, 20);
+		}
+	}
+
 	handleCodeHighlightEvent = body => {
 		// make sure we have a compose box to type into
 		this.props.ensureStreamIsActive();
@@ -123,7 +135,9 @@ class ComposeBox extends React.Component {
 		this.insertTextAtCursor(newText + ":\u00A0");
 	}
 
-	focus = () => {
+	focus = forceMainInput => {
+		if (forceMainInput) return this._contentEditable.htmlEl.focus();
+
 		switch (this.state.commentType) {
 			case "question":
 				this._titleInput.focus();
@@ -145,8 +159,11 @@ class ComposeBox extends React.Component {
 
 		// console.log("SERVICES: ", this.props.services);
 
+		//filter out yourself
+
 		if (type === "at-mentions") {
-			Object.values(this.props.teammates).forEach(person => {
+			const teammates = this.props.teammates.filter(({ id }) => id !== this.props.currentUserId);
+			Object.values(teammates).forEach(person => {
 				let toMatch = person.fullName + "*" + person.username;
 				if (toMatch.toLowerCase().indexOf(prefix) !== -1) {
 					itemsToShow.push({
@@ -262,7 +279,7 @@ class ComposeBox extends React.Component {
 		event.preventDefault();
 		if (eventType == "escape") {
 			if (this.state.popupOpen) this.hidePopup();
-			if (this.state.emojiOpen) this.hideEmojiPicker();
+			else if (this.state.emojiOpen) this.hideEmojiPicker();
 			// else this.handleDismissThread();
 		} else {
 			let newIndex = 0;
@@ -330,9 +347,9 @@ class ComposeBox extends React.Component {
 			toInsert = user.username + "\u00A0";
 		}
 		this.hidePopup();
-		setTimeout(() => {
-			this.focus();
-		}, 20);
+		// setTimeout(() => {
+		this.focus(true);
+		// }, 20);
 		// the reason for this unicode space is that chrome will
 		// not render a space at the end of a contenteditable div
 		// unless it is a &nbsp;, which is difficult to insert
@@ -385,7 +402,8 @@ class ComposeBox extends React.Component {
 			}
 		} else {
 			if (peopleMatch) this.showPopupSelectors(peopleMatch[1].replace(/@/, ""), "at-mentions");
-			if (slashMatch) this.showPopupSelectors(slashMatch[0].replace(/\//, ""), "slash-commands");
+			if (slashMatch && !this.props.multiCompose)
+				this.showPopupSelectors(slashMatch[0].replace(/\//, ""), "slash-commands");
 			if (channelMatch) this.showPopupSelectors(channelMatch[1].replace(/#/, ""), "channels");
 			if (emojiMatch) this.showPopupSelectors(emojiMatch[1].replace(/:/, ""), "emojis");
 		}
@@ -433,11 +451,13 @@ class ComposeBox extends React.Component {
 
 	handleKeyPress = event => {
 		let newPostText = this.state.postTextByStream[this.props.streamId] || "";
+		const { quote, popupOpen } = this.state;
+		const multiCompose = quote || this.props.multiCompose;
 
 		// if we have the at-mentions popup open, then the keys
 		// do something different than if we have the focus in
 		// the textarea
-		if (this.state.popupOpen) {
+		if (popupOpen) {
 			if (event.key == "Escape") {
 				this.hidePopup();
 			} else if (event.key == "Enter" && !event.shiftKey) {
@@ -448,35 +468,65 @@ class ComposeBox extends React.Component {
 			this.showPopupSelectors("", "at-mentions");
 		} else if (event.key === ":") {
 			this.showPopupSelectors("", "emojis");
-		} else if (event.key === "/" && newPostText.length === 0) {
+		} else if (!multiCompose && event.key === "/" && newPostText.length === 0) {
 			this.showPopupSelectors("", "slash-commands");
 		} else if (event.key === "#") {
 			this.showPopupSelectors("", "channels");
-		} else if (event.key === "Enter" && !event.shiftKey) {
+		} else if (event.key === "Enter" && !event.shiftKey && !multiCompose) {
 			event.preventDefault();
-			if (newPostText.trim().length > 0 && !this.props.disabled) {
-				// convert the text to plaintext so there is no HTML
-				let text = newPostText.replace(/<br>/g, "\n");
-				const doc = new DOMParser().parseFromString(text, "text/html");
-				text = doc.documentElement.textContent;
+			this.submitThePost();
+		} else if (event.key == "Escape" && multiCompose) {
+			this.handleClickDismissMultiCompose();
+		}
+	};
 
-				let title = this.state.title;
+	isFormInvalid = () => {
+		return;
+		// return isNameInvalid(this.state.name);
+	};
 
-				this.props.onSubmit({
-					text,
-					title,
-					quote: this.state.quote,
-					mentionedUserIds: this.props.findMentionedUserIds(text, this.props.teammates),
-					autoMentions: this.state.autoMentions
-				});
-				this.reset();
-			} else {
-				// don't submit blank posts
-			}
+	submitThePost = event => {
+		let newPostText = this.state.postTextByStream[this.props.streamId] || "";
+		const { quote, title, assignees, color, commentType, streamId } = this.state;
+
+		if (this.props.disabled) return;
+
+		// don't submit blank posts
+		if (newPostText.trim().length === 0 && title.length === 0) return;
+
+		// convert the text to plaintext so there is no HTML
+		let text = newPostText.replace(/<br>/g, "\n");
+		const doc = new DOMParser().parseFromString(text, "text/html");
+		text = doc.documentElement.textContent;
+		const assigneeIds = (assignees || [])
+			.map(item => {
+				return item.value;
+			})
+			.filter(Boolean);
+
+		this.props.onSubmit({
+			type: commentType,
+			text,
+			title,
+			quote,
+			mentionedUserIds: this.props.findMentionedUserIds(text, this.props.teammates),
+			autoMentions: this.state.autoMentions,
+			assignees: assigneeIds,
+			color,
+			forceStreamId: streamId
+		});
+
+		if (event.metaKey) this.softReset();
+		else {
+			this.reset();
+			this.handleClickDismissMultiCompose();
 		}
 	};
 
 	handleKeyDown = event => {
+		const { quote, popupOpen } = this.state;
+		const multiCompose = quote || this.props.multiCompose;
+
 		if (this.state.popupOpen) {
 			if (event.key === "ArrowUp") {
 				event.stopPropagation();
@@ -498,14 +548,24 @@ class ComposeBox extends React.Component {
 				event.persist();
 				event.stopPropagation();
 				this.props.onEmptyUpArrow(event);
+			} else if (event.key == "Escape" && multiCompose) {
+				this.handleClickDismissMultiCompose();
 			}
 		}
 	};
 
-	handleClickDismissQuote = event => {
-		event.preventDefault();
+	handleClickDismissMultiCompose = event => {
+		if (event) event.preventDefault();
+		this.setState({
+			quote: null,
+			title: null,
+			assignees: null,
+			commentType: "comment",
+			autoMentions: []
+		});
+		this.props.setMultiCompose(false);
 		this.focus();
-		this.reset();
+		// this.reset();
 	};
 
 	toggleEmojiPicker = event => {
@@ -527,10 +587,30 @@ class ComposeBox extends React.Component {
 		}
 	};
 
-	reset() {
+	softReset() {
+		let postTextByStream = this.state.postTextByStream;
+		postTextByStream[this.props.streamId] = "";
+
 		this.setState({
-			postTextByStream: [],
+			postTextByStream,
 			quote: null,
+			title: "",
+			assignees: [],
+			autoMentions: [],
+			emojiOpen: false
+		});
+		this.focus();
+	}
+
+	reset() {
+		let postTextByStream = this.state.postTextByStream;
+		postTextByStream[this.props.streamId] = "";
+
+		this.setState({
+			postTextByStream,
+			quote: null,
+			title: "",
+			assignees: [],
 			autoMentions: [],
 			emojiOpen: false,
 			multiCompose: false
@@ -538,7 +618,7 @@ class ComposeBox extends React.Component {
 	}
 
 	openMultiCompose = () => {
-		this.setState({ multiCompose: true });
+		this.props.setMultiCompose("comment");
 		setTimeout(() => {
 			this.focus();
 		}, 20);
@@ -552,20 +632,22 @@ class ComposeBox extends React.Component {
 	};
 
 	renderCommentForm = quote => {
-		const { commentType } = this.state;
-
-		const multiCompose = quote || this.state.multiCompose;
+		const { commentType = "" } = this.state;
 
 		const trapTip =
 			"Let your teammates know about a critical section of code that should not be changed without discussion or consultation. You will be alerted when a teammate edits code within a Code Trap.";
 
 		let range = quote ? arrayToRange(quote.location) : null;
 		let rangeText = "";
+		let verb = "Commenting on ";
+		if (commentType === "question") verb = "Question about ";
+		if (commentType === "issue") verb = "Issue in ";
+		if (commentType === "trap") verb = "Code Trap for ";
 		if (range) {
 			if (range.start.row === range.end.row) {
-				rangeText = "Commenting on line " + (range.start.row + 1);
+				rangeText = verb + " line " + (range.start.row + 1);
 			} else {
-				rangeText = "Commenting on lines " + (range.start.row + 1) + "-" + (range.end.row + 1);
+				rangeText = verb + " lines " + (range.start.row + 1) + "-" + (range.end.row + 1);
 			}
 		}
 		if (quote && quote.file) {
@@ -577,16 +659,70 @@ class ComposeBox extends React.Component {
 				? "Title (required)"
 				: "Title (optional)";
 
-		// <span>{rangeText}</span>
-		return (
-			<form id="code-comment-form" className="standard-form vscroll">
-				<div className="panel-header">
-					<span className="align-right-button" onClick={this.handleClickDismissQuote}>
-						<Icon name="x" />
-					</span>
-				</div>
+		const teamMembersForSelect = this.props.teammates
+			.map(user => {
+				if (!user.isRegistered) return null;
+				return {
+					value: user.id,
+					label: user.username
+				};
+			})
+			.filter(Boolean);
+
+		let commentString = commentType || "comment";
+		const submitAnotherLabel = "Command-click to submit another " + commentString + " after saving";
+
+		return [
+			<div className="panel-header" key="one">
+				New {commentString.charAt(0).toUpperCase() + commentString.slice(1)}
+				<span className="align-right-button" onClick={this.handleClickDismissMultiCompose}>
+					<Icon name="x" />
+				</span>
+			</div>,
+			<form id="code-comment-form" className="standard-form" key="two">
 				<fieldset className="form-body">
 					<div id="controls" className="control-group">
+						<div className="two-column">
+							<div className="half-width">
+								<label>Post to</label>
+								<div className="styled-select">
+									<select
+										onChange={e => this.setState({ streamId: e.target.value })}
+										defaultValue={this.props.streamId}
+									>
+										{Object.values(this.props.channelStreams).map(channel => {
+											return (
+												<option key={channel.id} value={channel.id} id={channel.id}>
+													#{channel.name}
+												</option>
+											);
+										})}
+										{Object.values(this.props.directMessageStreams).map(channel => {
+											return (
+												<option key={channel.id} value={channel.id} id={channel.id}>
+													@{channel.name}
+												</option>
+											);
+										})}
+									</select>
+								</div>
+							</div>
+							<div className="half-width">
+								<label>Label</label>
+								<div className="styled-select">
+									<select onChange={e => this.setState({ color: e.target.value })}>
+										<option value="blue">Blue</option>
+										<option value="green">Green</option>
+										<option value="yellow">Yellow</option>
+										<option value="orange">Orange</option>
+										<option value="red">Red</option>
+										<option value="purple">Purple</option>
+										<option value="aqua">Aqua</option>
+										<option value="gray">Gray</option>
+									</select>
+								</div>
+							</div>
+						</div>
 						{quote && (
 							<div>
 								<Tooltip
@@ -600,145 +736,171 @@ class ComposeBox extends React.Component {
 							</div>
 						)}
 						{!quote && (
-							<div style={{ padding: "20px", textAlign: "center", fontStyle: "italic" }}>
-								Select a range to comment on a specific block of code.
+							<div style={{ padding: "20px 0px", textAlign: "center", fontStyle: "italic" }}>
+								Select a range to comment on a block of code.
 							</div>
 						)}
-						<label>Post to</label>
-						<div className="styled-select">
-							<select>
-								{Object.values(this.props.channelStreams).map(channel => {
-									if (channel.name.match(/^ls:/)) return null;
-									const selected = channel.id === this.props.streamId ? "selected" : "";
-									return (
-										<option selected={selected} id={channel.id}>
-											#{channel.name}
-										</option>
-									);
-								})}
-							</select>
-						</div>
 						<div className="tab-group">
 							<input
 								id="radio-comment-type-comment"
 								type="radio"
 								name="comment-type"
 								checked={commentType === "comment"}
-								onChange={e => this.setCommentType("comment")}
 							/>
 							<label
 								htmlFor="radio-comment-type-comment"
 								className={createClassString({
 									checked: commentType === "comment"
 								})}
+								onClick={e => this.setCommentType("comment")}
 							>
-								<Icon name="comment" className="chat-bubble" /> <span>Comment</span>
+								<Icon name="comment" className="chat-bubble" /> <b>Comment</b>
 							</label>
 							<input
 								id="radio-comment-type-question"
 								type="radio"
 								name="comment-type"
 								checked={commentType === "question"}
-								onChange={e => this.setCommentType("question")}
 							/>
 							<label
 								htmlFor="radio-comment-type-question"
 								className={createClassString({
 									checked: commentType === "question"
 								})}
+								onClick={e => this.setCommentType("question")}
 							>
-								<Icon name="question" /> <span>Question</span>
+								<Icon name="question" /> <b>Question</b>
 							</label>
 							<input
 								id="radio-comment-type-issue"
 								type="radio"
 								name="comment-type"
 								checked={commentType === "issue"}
-								onChange={e => this.setCommentType("issue")}
 							/>
 							<label
 								htmlFor="radio-comment-type-issue"
 								className={createClassString({
 									checked: commentType === "issue"
 								})}
+								onClick={e => this.setCommentType("issue")}
 							>
-								<Icon name="bug" /> <span>Issue</span>
+								<Icon name="bug" /> <b>Issue</b>
 							</label>
 							<input
 								id="radio-comment-type-trap"
 								type="radio"
 								name="comment-type"
 								checked={commentType === "trap"}
-								onChange={e => this.setCommentType("trap")}
 							/>
 							<label
 								htmlFor="radio-comment-type-trap"
 								className={createClassString({
 									checked: commentType === "trap"
 								})}
+								onClick={e => this.setCommentType("trap")}
 							>
-								<Icon name="stop" /> <span>Code Trap</span>
-							</label>
-							<input
-								id="radio-comment-type-snippet"
-								type="radio"
-								name="comment-type"
-								checked={commentType === "snippet"}
-								onChange={e => this.setCommentType("snippet")}
-							/>
-							<label
-								htmlFor="radio-comment-type-snippet"
-								className={createClassString({
-									checked: commentType === "snippet"
-								})}
-							>
-								<Icon name="code" /> <span>Snippet</span>
+								<Icon name="stop" /> <b>Code Trap</b>
 							</label>
 						</div>
-						{commentType === "trap" && <div className="hint frame">{trapTip}</div>}
+						{commentType === "trap" && (
+							<div className="hint frame control-group" style={{ marginBottom: "10px" }}>
+								{trapTip}
+							</div>
+						)}
+						{(commentType === "issue" ||
+							commentType === "question" ||
+							commentType === "snippet") && (
+							<div className="control-group">
+								<input
+									type="text"
+									name="title"
+									className="native-key-bindings input-text control"
+									value={this.state.title}
+									onChange={e => this.setState({ title: e.target.value })}
+									placeholder={titlePlaceholder}
+									ref={ref => (this._titleInput = ref)}
+								/>
+							</div>
+						)}
+						{commentType === "issue" && (
+							<div id="members-controls" className="control-group" style={{ marginBottom: "10px" }}>
+								<Select
+									id="input-assignees"
+									name="assignees"
+									classNamePrefix="native-key-bindings react-select"
+									isMulti={true}
+									value={this.state.assignees || []}
+									options={teamMembersForSelect}
+									closeMenuOnSelect={false}
+									isClearable={false}
+									placeholder="Assignees (optional)"
+									onChange={value => this.setState({ assignees: value })}
+								/>
+							</div>
+						)}
+						{commentType === "snippet" && (
+							<ContentEditable
+								className={createClassString("native-key-bindings", "message-input")}
+								id="snippet-div"
+								tabIndex="-1"
+								onChange={this.handleChange}
+								onBlur={this.handleBlur}
+								onClick={this.handleClick}
+								html=""
+								placeholder="Code goes here"
+								ref={ref => (this._contentEditableSnippet = ref)}
+							/>
+						)}
+						{this.renderMessageInput()}
 					</div>
-					{(commentType === "issue" || commentType === "question" || commentType === "snippet") && (
-						<input
-							type="text"
-							name="title"
-							className="native-key-bindings input-text control"
-							onChange={value => this.setState({ title: value })}
-							placeholder={titlePlaceholder}
-							ref={ref => (this._titleInput = ref)}
-						/>
-					)}
-					{commentType === "issue" && (
-						<div id="members-controls" className="control-group">
-							<Select
-								id="input-assignees"
-								name="assignees"
-								classNamePrefix="native-key-bindings react-select"
-								isMulti={true}
-								value={this.state.assignees || []}
-								options={this.props.teammates}
-								closeMenuOnSelect={false}
-								isClearable={false}
-								placeholder="Assignees (optional)"
-								onChange={value => this.setState({ assignees: value })}
-							/>
-						</div>
-					)}
-					{commentType === "snippet" && (
-						<ContentEditable
-							className={createClassString("native-key-bindings", "message-input")}
-							id="snippet-div"
-							tabIndex="-1"
-							onChange={this.handleChange}
-							onBlur={this.handleBlur}
-							onClick={this.handleClick}
-							html=""
-							placeholder="Code goes here"
-							ref={ref => (this._contentEditableSnippet = ref)}
-						/>
-					)}
+					<div className="button-group">
+						<Tooltip placement="top" delay=".5" title={submitAnotherLabel}>
+							<Button
+								style={{
+									marginLeft: "10px",
+									float: "right",
+									paddingLeft: "10px",
+									paddingRight: "10px",
+									width: "auto",
+									marginRight: 0
+								}}
+								className="control-button"
+								type="submit"
+								loading={this.state.loading}
+								onClick={e => this.submitThePost(e)}
+							>
+								Submit
+							</Button>
+						</Tooltip>
+						<Button
+							style={{ float: "right", paddingLeft: "10px", paddingRight: "10px", width: "auto" }}
+							className="control-button cancel"
+							type="submit"
+							loading={this.state.loading}
+							onClick={this.handleClickDismissMultiCompose}
+						>
+							Cancel
+						</Button>
+						<span className="hint">Styling with Markdown is supported</span>
+					</div>
 				</fieldset>
 			</form>
-		);
+		];
+		// 	<input
+		// 	id="radio-comment-type-snippet"
+		// 	type="radio"
+		// 	name="comment-type"
+		// 	checked={commentType === "snippet"}
+		// 	onChange={e => this.setCommentType("snippet")}
+		// />
+		// <label
+		// 	htmlFor="radio-comment-type-snippet"
+		// 	className={createClassString({
+		// 		checked: commentType === "snippet"
+		// 	})}
+		// >
+		// 	<Icon name="code" /> <span>Snippet</span>
+		// </label>
 	};
 
 	renderCode(quote) {
@@ -754,13 +916,10 @@ class ComposeBox extends React.Component {
 		return <div className="code" dangerouslySetInnerHTML={{ __html: codeHTML }} />;
 	}
 
-	render() {
+	renderMessageInput = () => {
 		let { placeholder } = this.props;
-		const { forwardedRef } = this.props;
 		const { quote, emojiOpen, commentType } = this.state;
-		const multiCompose = quote || this.state.multiCompose;
-
-		let contentEditableHTML = this.state.postTextByStream[this.props.streamId] || "";
+		const multiCompose = quote || this.props.multiCompose;
 
 		if (multiCompose) {
 			switch (commentType) {
@@ -774,6 +933,55 @@ class ComposeBox extends React.Component {
 					break;
 			}
 		}
+		let contentEditableHTML = this.state.postTextByStream[this.props.streamId] || "";
+		return (
+			<div className="message-input-wrapper">
+				<div style={{ position: "relative" }}>
+					<AtMentionsPopup
+						on={this.state.popupOpen}
+						items={this.state.popupItems}
+						prefix={this.state.popupPrefix}
+						selected={this.state.selectedPopupItem}
+						handleHoverAtMention={this.handleHoverAtMention}
+						handleSelectAtMention={this.handleSelectAtMention}
+					/>
+				</div>
+				{!multiCompose && (
+					<div className="plus-button" onClick={this.openMultiCompose}>
+						<Icon name="plus" className="plus" />
+					</div>
+				)}
+				<Icon
+					name="smiley"
+					className={createClassString("smiley", {
+						hover: emojiOpen
+					})}
+					onClick={event => this.toggleEmojiPicker(event)}
+				/>
+				{emojiOpen && (
+					<EmojiPicker addEmoji={this.addEmoji} target={this.state.emojiTarget} autoFocus={true} />
+				)}
+				<ContentEditable
+					className={createClassString("native-key-bindings", "message-input", btoa(placeholder), {
+						"has-plus": !multiCompose
+					})}
+					id="input-div"
+					tabIndex="-1"
+					onChange={this.handleChange}
+					onBlur={this.handleBlur}
+					onClick={this.handleClick}
+					html={contentEditableHTML}
+					placeholder={placeholder}
+					ref={ref => (this._contentEditable = ref)}
+				/>
+			</div>
+		);
+	};
+
+	render() {
+		const { forwardedRef } = this.props;
+		const { quote } = this.state;
+		const multiCompose = quote || this.props.multiCompose;
 
 		return (
 			<div
@@ -783,81 +991,12 @@ class ComposeBox extends React.Component {
 				className={createClassString("compose", {
 					offscreen: this.props.offscreen,
 					"popup-open": this.state.popupOpen,
-					"full-height": multiCompose
+					"multi-compose": multiCompose
 				})}
 			>
-				<AtMentionsPopup
-					on={this.state.popupOpen}
-					items={this.state.popupItems}
-					prefix={this.state.popupPrefix}
-					selected={this.state.selectedPopupItem}
-					handleHoverAtMention={this.handleHoverAtMention}
-					handleSelectAtMention={this.handleSelectAtMention}
-				/>
-				<div className="multi-compose">
+				<div style={{ position: "relative" }}>
 					{multiCompose && this.renderCommentForm(quote)}
-					<div className="message-input-wrapper">
-						{!multiCompose && <Icon name="plus" className="plus" onClick={this.openMultiCompose} />}
-						{!multiCompose && <div className="plus-sep" />}
-						<Icon
-							name="smiley"
-							className={createClassString("smiley", {
-								hover: emojiOpen
-							})}
-							onClick={event => this.toggleEmojiPicker(event)}
-						/>
-						{emojiOpen && (
-							<EmojiPicker
-								addEmoji={this.addEmoji}
-								target={this.state.emojiTarget}
-								autoFocus={true}
-							/>
-						)}
-						<ContentEditable
-							className={createClassString(
-								"native-key-bindings",
-								"message-input",
-								btoa(placeholder),
-								{ "has-plus": !multiCompose }
-							)}
-							id="input-div"
-							tabIndex="-1"
-							onChange={this.handleChange}
-							onBlur={this.handleBlur}
-							onClick={this.handleClick}
-							html={contentEditableHTML}
-							placeholder={placeholder}
-							ref={ref => (this._contentEditable = ref)}
-						/>
-					</div>
-					{multiCompose && (
-						<div className="button-group">
-							<Button
-								style={{
-									marginLeft: "10px",
-									float: "right",
-									paddingLeft: "10px",
-									paddingRight: "10px"
-								}}
-								className="control-button"
-								type="submit"
-								loading={this.state.loading}
-								onClick={this.handleClickCreateChannel}
-							>
-								Submit
-							</Button>
-							<Button
-								style={{ float: "right", paddingLeft: "10px", paddingRight: "10px" }}
-								className="control-button cancel"
-								type="submit"
-								loading={this.state.loading}
-								onClick={this.handleClickDismissQuote}
-							>
-								Cancel
-							</Button>
-							<span className="hint">Styling with Markdown is supported</span>
-						</div>
-					)}
+					{!multiCompose && this.renderMessageInput()}
 				</div>
 			</div>
 		);

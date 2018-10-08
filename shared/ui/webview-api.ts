@@ -69,6 +69,7 @@ export default class WebviewApi {
 	}
 
 	createPost(post: object) {
+		console.log("Creating a post with: ", post);
 		return this.postMessage({ action: "create-post", params: post });
 	}
 
@@ -78,6 +79,10 @@ export default class WebviewApi {
 
 	reactToPost(params: object) {
 		return this.postMessage({ action: "react-to-post", params });
+	}
+
+	setPostStatus(params: object) {
+		return this.postMessage({ action: "set-post-status", params });
 	}
 
 	deletePost(params: object) {

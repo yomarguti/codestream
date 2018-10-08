@@ -247,6 +247,7 @@ export default infiniteLoadable(
 								<Post
 									id={post.id}
 									usernames={this.props.usernamesRegexp}
+									teammates={this.props.teammates}
 									currentUserId={this.props.currentUserId}
 									currentUserName={this.props.currentUserName}
 									replyingTo={!this.props.isThread && parentPost}

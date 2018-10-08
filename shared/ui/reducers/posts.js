@@ -30,7 +30,7 @@ export default (state = initialState, { type, payload }) => {
 		case "ADD_POSTS_FOR_STREAM": {
 			const { streamId, posts } = payload;
 			const streamPosts = { ...(state.byStream[streamId] || {}) };
-			posts.forEach(post => {
+			posts.filter(Boolean).forEach(post => {
 				streamPosts[post.id] = post;
 			});
 

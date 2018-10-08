@@ -137,12 +137,16 @@ export class SimpleChannelPanel extends Component {
 					<Icon name="stop" className="trap" />
 					Code Traps
 				</li>
-				<li key="snippet" id="snippet">
-					<Icon name="code" className="snippet" />
-					Snippets
+				<li key="pin" id="pin">
+					<Icon name="pin" className="pin" />
+					Pinned Posts
 				</li>
 			</ul>
 		);
+		// <li key="snippet" id="snippet">
+		// 	<Icon name="code" className="snippet" />
+		// 	Snippets
+		// </li>
 	};
 
 	renderUnreadChannels = () => {
@@ -414,10 +418,11 @@ export class SimpleChannelPanel extends Component {
 
 	handleClickCreateKnowledge = e => {
 		e.stopPropagation();
-		this.props.setActivePanel("main");
-		setTimeout(() => {
-			this.props.runSlashCommand("multi-compose");
-		}, 500);
+		this.props.setMultiCompose(true);
+		// this.props.setActivePanel("main");
+		// setTimeout(() => {
+		// 	this.props.runSlashCommand("multi-compose");
+		// }, 500);
 		return;
 	};
 

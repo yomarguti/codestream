@@ -48,7 +48,11 @@ export const createPost = (streamId, parentPostId, text, codeBlocks, mentions, e
 			commitHashWhenPosted: context.currentCommit,
 			creatorId: session.userId,
 			createdAt: new Date().getTime(),
-			pending: true
+			pending: true,
+			title: extra.title,
+			assignees: extra.assignees,
+			type: extra.type,
+			color: extra.color
 		}
 	});
 	try {
@@ -65,6 +69,7 @@ export const createPost = (streamId, parentPostId, text, codeBlocks, mentions, e
 		dispatch(postCreated({ post, ...extra }));
 		return dispatch(resolvePendingPost(pendingId, post));
 	} catch (e) {
+		console.log("DID NOT POST: ", e);
 		return dispatch({ type: "PENDING_POST_FAILED", payload: pendingId });
 	}
 };
@@ -111,6 +116,18 @@ export const editPost = (streamId, id, text, mentions) => async (dispatch, getSt
 	try {
 		const post = await api.editPost({ streamId, id, text, mentions });
 		return dispatch({ type: "UPDATE_POST", payload: post });
+	} catch (e) {
+		// TODO:
+	}
+};
+
+export const setPostStatus = (post, status) => async (dispatch, getState, { api }) => {
+	try {
+		post.status = status;
+		return dispatch({ type: "UPDATE_POST", payload: post });
+
+		// const post = await api.setPostStatus({ id, status });
+		// return dispatch({ type: "UPDATE_POST", payload: post });
 	} catch (e) {
 		// TODO:
 	}

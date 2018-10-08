@@ -29,6 +29,7 @@ import {
 	getStreamForTeam,
 	getStreamForRepoAndFile,
 	getChannelStreamsForTeam,
+	getDirectMessageStreamsForTeam,
 	getDMName
 } from "../reducers/streams";
 
@@ -213,6 +214,9 @@ export class SimpleStream extends Component {
 
 	resizeStream = () => {
 		if (!this._div || !this._compose) return;
+
+		if (this.state.multiCompose) return;
+
 		// const streamHeight = this._div.offsetHeight;
 		// const postslistHeight = this._postslist.offsetHeight;
 		const composeHeight = this._compose.current.offsetHeight;
@@ -301,6 +305,7 @@ export class SimpleStream extends Component {
 						id={post.id}
 						streamId={this.props.postStreamId}
 						usernames={this.props.usernamesRegexp}
+						teammates={this.props.teammates}
 						currentUserId={this.props.currentUserId}
 						currentUserName={this.props.currentUserName}
 						showDetails="1"
@@ -413,6 +418,7 @@ export class SimpleStream extends Component {
 					activePanel={activePanel}
 					setActivePanel={this.setActivePanel}
 					setKnowledgeType={this.setKnowledgeType}
+					setMultiCompose={this.setMultiCompose}
 					runSlashCommand={this.runSlashCommand}
 					isSlackTeam={this.props.isSlackTeam}
 				/>
@@ -421,8 +427,10 @@ export class SimpleStream extends Component {
 					setActivePanel={this.setActivePanel}
 					knowledgeType={this.state.knowledgeType}
 					usernames={this.props.usernamesRegexp}
+					currentUserId={this.props.currentUserId}
 					currentUserName={this.props.currentUserName}
 					postAction={this.postAction}
+					setMultiCompose={this.setMultiCompose}
 				/>
 				<PublicChannelPanel
 					activePanel={activePanel}
@@ -495,6 +503,7 @@ export class SimpleStream extends Component {
 								hasFocus={this.props.hasFocus}
 								newMessagesAfterSeqNum={this.state.newMessagesAfterSeqNum}
 								usernamesRegexp={this.props.usernamesRegexp}
+								teammates={this.props.teammates}
 								currentUserId={this.props.currentUserId}
 								currentUserName={this.props.currentUserName}
 								editingPostId={this.state.editingPostId}
@@ -546,6 +555,7 @@ export class SimpleStream extends Component {
 								isActive={this.props.activePanel === "thread"}
 								hasFocus={this.props.hasFocus}
 								usernamesRegexp={this.props.usernamesRegexp}
+								teammates={this.props.teammates}
 								currentUserId={this.props.currentUserId}
 								currentUserName={this.props.currentUserName}
 								editingPostId={this.state.editingPostId}
@@ -565,22 +575,30 @@ export class SimpleStream extends Component {
 					teammates={this.props.teammates}
 					slashCommands={this.props.slashCommands}
 					channelStreams={this.props.channelStreams}
+					directMessageStreams={this.props.directMessageStreams}
 					streamId={this.props.postStreamId}
 					services={this.props.services}
 					currentUserId={this.props.currentUserId}
 					ensureStreamIsActive={this.ensureStreamIsActive}
 					ref={this._compose}
 					disabled={this.props.isOffline}
-					offscreen={activePanel !== "main" && activePanel !== "thread"}
+					offscreen={activePanel !== "main" && activePanel !== "thread" && !this.state.multiCompose}
 					onSubmit={this.submitPost}
 					onEmptyUpArrow={this.editLastPost}
 					findMentionedUserIds={this.findMentionedUserIds}
 					isDirectMessage={this.props.postStreamType === "direct"}
 					isSlackTeam={this.props.isSlackTeam}
+					multiCompose={this.state.multiCompose}
+					setMultiCompose={this.setMultiCompose}
 				/>
 			</div>
 		);
 	}
+
+	setMultiCompose = value => {
+		this.setState({ multiCompose: value });
+		// if (value) this.focus();
+	};
 
 	setKnowledgeType = type => {
 		this.setState({ knowledgeType: type });
@@ -724,7 +742,7 @@ export class SimpleStream extends Component {
 		}
 	};
 
-	postAction = (action, post) => {
+	postAction = (action, post, args) => {
 		switch (action) {
 			case "make-thread":
 				return this.selectPost(post.id, true);
@@ -744,6 +762,8 @@ export class SimpleStream extends Component {
 				return this.inviteToLiveShare(post.creatorId);
 			case "edit-headshot":
 				return this.headshotInstructions(post.author.email);
+			case "submit-post":
+				return this.submitPost(args);
 		}
 	};
 
@@ -915,12 +935,14 @@ export class SimpleStream extends Component {
 			this.props.postStreamType === "direct" ? "this DM" : this.props.postStreamName;
 
 		let names = [];
+		const teammates = this.props.teammates.filter(({ id }) => id !== this.props.currentUserId);
+
 		if (this.props.postStreamIsTeamStream) {
-			this.props.teammates.map(user => {
+			teammates.map(user => {
 				names.push(user.username);
 			});
 		} else {
-			this.props.teammates.map(user => {
+			teammates.map(user => {
 				if (_.contains(memberIds, user.id)) names.push(user.username);
 			});
 		}
@@ -1291,21 +1313,35 @@ export class SimpleStream extends Component {
 	};
 
 	// create a new post
-	submitPost = ({ text, title, quote, mentionedUserIds, autoMentions }) => {
+	submitPost = ({
+		text,
+		title,
+		quote,
+		mentionedUserIds,
+		autoMentions,
+		forceStreamId,
+		forceThreadId,
+		type,
+		assignees,
+		color
+	}) => {
 		const codeBlocks = [];
-		const { activePanel } = this.props;
-		const { postStreamId, createPost } = this.props;
+		const { activePanel, postStreamId, createPost } = this.props;
 		let fileUri;
 
 		if (this.checkForSlashCommands(text)) return;
 
-		let threadId = activePanel === "thread" ? this.state.threadId : null;
+		let threadId = forceThreadId || (activePanel === "thread" ? this.state.threadId : null);
+		const streamId = forceStreamId || postStreamId;
 
 		const submit = () =>
-			createPost(postStreamId, threadId, text, codeBlocks, mentionedUserIds, {
+			createPost(streamId, threadId, text, codeBlocks, mentionedUserIds, {
 				title,
 				autoMentions,
-				fileUri
+				fileUri,
+				type,
+				assignees,
+				color
 			}).then(this._postslist.scrollToBottom);
 
 		if (quote) {
@@ -1447,9 +1483,17 @@ const mapStateToProps = ({
 		stream => (stream.name || "").toLowerCase()
 	);
 
+	const directMessageStreams = (
+		getDirectMessageStreamsForTeam(streams, context.currentTeamId) || []
+	).map(stream => ({
+		...stream,
+		name: getDMName(stream, toMapBy("id", teamMembers), session.userId)
+	}));
+
 	return {
 		pluginVersion,
 		channelStreams,
+		directMessageStreams,
 		activePanel: context.panel,
 		startOnMainPanel: startupProps.startOnMainPanel,
 		initialThreadId: startupProps.threadId,
@@ -1463,7 +1507,7 @@ const mapStateToProps = ({
 		configs,
 		isOffline,
 		teamMembersById,
-		teammates: teamMembers.filter(({ id, deactivated }) => id !== session.userId && !deactivated),
+		teammates: teamMembers.filter(({ deactivated }) => !deactivated),
 		postStream,
 		postStreamId: postStream.id,
 		postStreamName,
