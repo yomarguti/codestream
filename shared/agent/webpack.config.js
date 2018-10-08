@@ -6,12 +6,10 @@ const FileManagerWebpackPlugin = require("filemanager-webpack-plugin");
 
 module.exports = function(env, argv) {
 	env = env || {};
-	const production = !!env.production;
+	const production = Boolean(env.production);
 
 	const plugins = [
 		new CleanWebpackPlugin(["dist"], { verbose: false }),
-		// Added because of https://github.com/felixge/node-formidable/issues/337
-		new webpack.DefinePlugin({ "global.GENTLY": false }),
 		new FileManagerWebpackPlugin({
 			onEnd: [
 				{
@@ -29,7 +27,9 @@ module.exports = function(env, argv) {
 					]
 				}
 			]
-		})
+		}),
+		// Added because of https://github.com/felixge/node-formidable/issues/337
+		new webpack.DefinePlugin({ "global.GENTLY": false })
 	];
 
 	return {
