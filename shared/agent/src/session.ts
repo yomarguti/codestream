@@ -107,6 +107,7 @@ export class CodeStreamSession {
 		public readonly connection: Connection,
 		private readonly _options: AgentOptions
 	) {
+		this._readyPromise = new Promise<void>(resolve => this.agent.onReady(resolve));
 		Container.initialize(this);
 
 		this._api = new CodeStreamApiProvider(_options.serverUrl, {
@@ -118,7 +119,6 @@ export class CodeStreamSession {
 		const versionManager = new VersionMiddlewareManager(this._api);
 		versionManager.onDidChangeCompatibility(this.onVersionCompatibilityChanged, this);
 
-		this._readyPromise = new Promise<void>(resolve => this.agent.onReady(resolve));
 		// this.connection.onHover(e => MarkerHandler.onHover(e));
 
 		this.agent.registerHandler(ApiRequestType, (e, cancellationToken: CancellationToken) =>
