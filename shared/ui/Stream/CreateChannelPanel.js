@@ -11,11 +11,6 @@ import Tooltip from "./Tooltip";
 import { FormattedMessage } from "react-intl";
 import Select from "react-select";
 
-const isNameInvalid = name => {
-	const nameRegex = new RegExp("[.~#%&*{}+/:<>?|'\"]");
-	return nameRegex.test(name);
-};
-
 export class SimpleCreateChannelPanel extends Component {
 	constructor(props) {
 		super(props);
@@ -31,6 +26,16 @@ export class SimpleCreateChannelPanel extends Component {
 			}, 500);
 		}
 	}
+
+	isNameInvalid = name => {
+		if (this.props.isCodeStreamTeam) {
+			const nameRegex = new RegExp("[.~#%&*{}+/:<>?|'\"]");
+			return nameRegex.test(name);
+		} else {
+			const nameRegex = new RegExp("[ .~#%&*{}+/:<>?|'\"]");
+			return nameRegex.test(name) || name.length > 21;
+		}
+	};
 
 	focusNameInput = () => {
 		const input = document.getElementById("channel-name-input");
@@ -52,7 +57,9 @@ export class SimpleCreateChannelPanel extends Component {
 			"off-right": inactive && !shrink
 		});
 
-		const tooltipTitle = "We don't support these characters: .~#%&*{}+/:<>?|'\".";
+		const tooltipTitle = this.props.isCodeStreamTeam
+			? "We don't support these characters: .~#%&*{}+/:<>?|'\"."
+			: "Names must be lowercase, without spaces or periods, and shorter than 22 characters";
 
 		this.tabIndexCount = 0;
 
@@ -109,7 +116,7 @@ export class SimpleCreateChannelPanel extends Component {
 										tabIndex={this.tabIndex()}
 										id="channel-name-input"
 										value={this.state.name}
-										onChange={e => this.setState({ name: e.target.value })}
+										onChange={e => this.setStateName(e.target.value)}
 										onBlur={this.onBlurName}
 										required={this.state.nameTouched || this.state.formTouched}
 									/>
@@ -179,6 +186,11 @@ export class SimpleCreateChannelPanel extends Component {
 		);
 	}
 
+	setStateName = name => {
+		if (this.props.isCodeStreamTeam) this.setState({ name });
+		else this.setState({ name: name.toLowerCase() });
+	};
+
 	renderError = () => {
 		if (!this.props.errors) return null;
 		if (this.props.errors.invalidCredentials)
@@ -200,7 +212,7 @@ export class SimpleCreateChannelPanel extends Component {
 						<FormattedMessage id="createChannel.name.required" />
 					</small>
 				);
-			else if (isNameInvalid(name))
+			else if (this.isNameInvalid(name))
 				return (
 					<small className="error-message">
 						<FormattedMessage id="createChannel.name.invalid" />
@@ -234,7 +246,7 @@ export class SimpleCreateChannelPanel extends Component {
 	};
 
 	isFormInvalid = () => {
-		return isNameInvalid(this.state.name) || this.state.name.length === 0;
+		return this.isNameInvalid(this.state.name) || this.state.name.length === 0;
 	};
 
 	handleClickCreateChannel = async event => {
