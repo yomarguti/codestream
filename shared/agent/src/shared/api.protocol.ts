@@ -100,6 +100,10 @@ export interface CSCreatePostRequest {
 	codeBlocks?: CSCreatePostRequestCodeBlock[];
 	commitHashWhenPosted?: string;
 	mentionedUserIds?: string[];
+	title?: string;
+	type?: string;
+	assignees?: [];
+	color?: string;
 }
 
 export interface CSCreatePostResponse {
@@ -194,6 +198,14 @@ export interface CSReactToPostRequest {
 }
 
 export interface CSReactToPostResponse {
+	post: { [key: string]: any };
+}
+
+export interface CSSetPostStatusRequest {
+	status: string;
+}
+
+export interface CSSetPostStatusResponse {
 	post: { [key: string]: any };
 }
 

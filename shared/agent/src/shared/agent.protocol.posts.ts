@@ -14,6 +14,10 @@ export interface CreatePostRequest {
 	parentPostId?: string;
 	codeBlocks?: CSCreatePostRequestCodeBlock[];
 	commitHashWhenPosted?: string;
+	title?: string;
+	type?: string;
+	assignees?: [];
+	color?: string;
 }
 
 export interface CreatePostInFileStreamRequest {
@@ -53,6 +57,10 @@ export interface CreatePostWithCodeRequest {
 	source?: CodeBlockSource;
 	parentPostId?: string;
 	streamId: string;
+	title?: string;
+	type?: string;
+	assignees?: [];
+	color?: string;
 }
 
 export const CreatePostWithCodeRequestType = new RequestType<
@@ -191,3 +199,20 @@ export const ReactToPostRequestType = new RequestType<
 	void,
 	void
 >("codeStream/post/react");
+
+export interface SetPostStatusRequest {
+	streamId: string;
+	postId: string;
+	status: string;
+}
+
+export interface SetPostStatusResponse {
+	post: CSPost;
+}
+
+export const SetPostStatusRequestType = new RequestType<
+	SetPostStatusRequest,
+	SetPostStatusResponse,
+	void,
+	void
+>("codeStream/post/setStatus");

@@ -92,7 +92,11 @@ export namespace PostHandler {
 		source,
 		streamId,
 		parentPostId,
-		mentionedUserIds
+		mentionedUserIds,
+		title,
+		type,
+		assignees,
+		color
 	}: CreatePostWithCodeRequest): Promise<CSPost | undefined> {
 		const { git } = Container.instance();
 		const filePath = URI.parse(documentId.uri).fsPath;
@@ -141,7 +145,11 @@ export namespace PostHandler {
 				parentPostId,
 				codeBlocks: codeBlock && [codeBlock],
 				commitHashWhenPosted,
-				mentionedUserIds
+				mentionedUserIds,
+				title,
+				type,
+				assignees,
+				color
 			})).post;
 
 			if (post.codeBlocks && backtrackedLocation) {

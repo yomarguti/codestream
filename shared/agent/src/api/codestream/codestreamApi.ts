@@ -44,6 +44,7 @@ import {
 	OpenStreamRequest,
 	ReactToPostRequest,
 	RenameStreamRequest,
+	SetPostStatusRequest,
 	SetStreamPurposeRequest,
 	UnarchiveStreamRequest,
 	UpdateMarkerRequest,
@@ -96,6 +97,8 @@ import {
 	CSPost,
 	CSReactions,
 	CSReactToPostResponse,
+	CSSetPostStatusRequest,
+	CSSetPostStatusResponse,
 	CSStream,
 	CSUpdateMarkerRequest,
 	CSUpdateMarkerResponse,
@@ -592,6 +595,21 @@ export class CodeStreamApiProvider implements ApiProvider {
 		const response = await this.put<CSReactions, CSReactToPostResponse>(
 			`/react/${request.postId}`,
 			request.emojis,
+			this._token
+		);
+
+		const [post] = await Container.instance().posts.resolve({
+			type: MessageType.Posts,
+			data: [response.post]
+		});
+		return { ...response, post: post };
+	}
+
+	@log()
+	async setPostStatus(request: SetPostStatusRequest) {
+		const response = await this.put<CSSetPostStatusRequest, CSSetPostStatusResponse>(
+			`/set-status/${request.postId}`,
+			request,
 			this._token
 		);
 
