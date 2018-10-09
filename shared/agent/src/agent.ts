@@ -26,6 +26,7 @@ import { Logger } from "./logger";
 import { CodeStreamSession } from "./session";
 import { AgentOptions } from "./shared/agent.protocol";
 import { Disposables, memoize } from "./system";
+import { Functions } from "./system/function";
 
 // export * from "./shared/agent.protocol";
 
@@ -60,11 +61,17 @@ export class CodeStreamAgent implements Disposable {
 		const capabilities = e.capabilities;
 		this._clientCapabilities = capabilities;
 
-		this._session = new CodeStreamSession(
-			this,
-			this._connection,
-			e.initializationOptions! as AgentOptions
-		);
+		const agentOptions = e.initializationOptions! as AgentOptions;
+		this._session = new CodeStreamSession(this, this._connection, agentOptions);
+
+		if (agentOptions.isDebugging) {
+			Logger.overrideIsDebugging();
+		}
+
+		// Give the agent some time to connect
+		if (Logger.isDebugging) {
+			void (await Functions.wait(5000));
+		}
 		const result = await this._session.login();
 
 		return {

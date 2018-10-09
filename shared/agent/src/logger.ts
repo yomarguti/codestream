@@ -75,4 +75,8 @@ export class Logger {
 
 		return this._isDebugging;
 	}
+
+	static overrideIsDebugging() {
+		this._isDebugging = true;
+	}
 }

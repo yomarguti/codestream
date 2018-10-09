@@ -46,6 +46,7 @@ export interface AgentOptions {
 	extensionVersionFormatted: string;
 	gitPath: string;
 	ideVersion: string;
+	isDebugging: boolean;
 
 	email: string;
 	passwordOrToken: string | AccessToken;
