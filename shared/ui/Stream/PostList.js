@@ -326,9 +326,6 @@ export default infiniteLoadable(
 												<div style={{ ...data.style, borderColor: "blue", textAlign: "center" }}>
 													{hasMore || isFetchingMore ? (
 														<div>
-															<p>
-																<span className="loading loading-spinner-small inline-block" />
-															</p>
 															<p>Loading more posts...</p>
 														</div>
 													) : (
