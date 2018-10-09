@@ -1,7 +1,13 @@
 "use strict";
-import { WebAPICallResult, WebClient, WebClientOptions } from "@slack/client";
+import {
+	RTMClient,
+	RTMClientOptions,
+	WebAPICallResult,
+	WebClient,
+	WebClientOptions
+} from "@slack/client";
 import { RequestInit } from "node-fetch";
-import { RealTimeMessage } from "../managers/realTimeMessage";
+import { MessageSource, RealTimeMessage } from "../managers/realTimeMessage";
 import {
 	CreateChannelStreamRequest,
 	CreateChannelStreamResponse,
@@ -35,6 +41,7 @@ import {
 	LeaveStreamRequest,
 	MarkPostUnreadRequest,
 	MarkStreamReadRequest,
+	MessageType,
 	ReactToPostRequest,
 	UpdateMarkerRequest,
 	UpdatePreferencesRequest,
@@ -67,10 +74,30 @@ const multiPartyNameRegEx = /--([^-]+)/g;
 const mentionsRegex = /(^|\s)@(\w+)(?:\b(?!@|[\(\{\[\<\-])|$)/g;
 const slackMentionsRegex = /\<[@|!](\w+)\>/g;
 
+enum SlackEventTypes {
+	Authenticated = "authenticated",
+	ChannelMarked = "channel_marked",
+	GroupMarked = "group_marked",
+	ImMarked = "im_marked",
+	Message = "message",
+	UnableToStart = "unable_to_rtm_start",
+	ReactionAdded = "reaction_added",
+	ReactionRemoved = "reaction_removed"
+}
+
+enum SlackMessageEventSubTypes {
+	Changed = "message_changed",
+	Deleted = "message_deleted",
+	Replied = "message_replied"
+}
+
 export class SlackApiProvider implements ApiProvider {
-	private _slack: WebClient | undefined;
+	private _slack: WebClient;
+	private _slackRTM: RTMClient;
+	private _slackRTMEventListener: ((e: RealTimeMessage) => any) | undefined;
 
 	private readonly _codestreamUserId: string;
+	private readonly _slackToken: string;
 	private readonly _slackUserId: string;
 
 	private _streams: (CSChannelStream | CSDirectStream)[] | undefined;
@@ -85,14 +112,120 @@ export class SlackApiProvider implements ApiProvider {
 		user: CSMe,
 		private readonly _codestreamTeamId: string
 	) {
-		const slackToken = providerInfo.accessToken;
-		const slackOptions: WebClientOptions = { retryConfig: { retries: 1 } };
-		this._slack = new WebClient(slackToken, slackOptions);
+		this._slackToken = providerInfo.accessToken;
+		const slackOptions: WebClientOptions = { retryConfig: { retries: 3 } };
+		this._slack = new WebClient(this._slackToken, slackOptions);
+
+		const rtmOptions: RTMClientOptions = { retryConfig: { retries: 3 } };
+		this._slackRTM = new RTMClient(this._slackToken, rtmOptions);
+		this._slackRTM.on(SlackEventTypes.Message, this.onMessage, this);
+		this._slackRTM.on(SlackEventTypes.ReactionAdded, this.onMessage, this);
+		this._slackRTM.on(SlackEventTypes.ReactionRemoved, this.onMessage, this);
 
 		this._codestreamUserId = user.id;
 		this._slackUserId = providerInfo.userId;
 
 		this._user = user;
+	}
+
+	private async onMessage(e: any & { type: SlackEventTypes; subtype: SlackMessageEventSubTypes }) {
+		const { type, subtype } = e;
+
+		switch (type) {
+			case SlackEventTypes.Message:
+				switch (subtype) {
+					case SlackMessageEventSubTypes.Deleted: {
+						const post = CSPost.fromSlack(
+							e.previous_message,
+							e.channel,
+							this._usersById || new Map(),
+							this._codestreamTeamId
+						);
+						post.deactivated = true;
+						this._slackRTMEventListener!({
+							source: MessageSource.Slack,
+							type: MessageType.Posts,
+							data: [post]
+						});
+						break;
+					}
+					case SlackMessageEventSubTypes.Changed: {
+						const response = await this.getPost({ streamId: e.channel, postId: e.message.ts });
+						this._slackRTMEventListener!({
+							source: MessageSource.Slack,
+							type: MessageType.Posts,
+							data: [response.post]
+						});
+
+						// const post = CSPost.fromSlack(
+						// 	e.message,
+						// 	e.channel,
+						// 	this._usersById || new Map(),
+						// 	this._codestreamTeamId
+						// );
+						// this._slackRTMEventListener!({
+						// 	source: MessageSource.Slack,
+						// 	type: MessageType.Posts,
+						// 	data: [post]
+						// });
+						break;
+					}
+					default: {
+						const post = CSPost.fromSlack(
+							e,
+							e.channel,
+							this._usersById || new Map(),
+							this._codestreamTeamId
+						);
+						this._slackRTMEventListener!({
+							source: MessageSource.Slack,
+							type: MessageType.Posts,
+							data: [post]
+						});
+					}
+					// const { text, attachments, files, thread_ts, ts } = e;
+
+					// if (!!thread_ts && !!ts && thread_ts !== ts) {
+					// 	// This is a thread reply
+					// 	const { user, text, channel } = e;
+					// 	const reply = {
+					// 		userId: user,
+					// 		timestamp: ts,
+					// 		text
+					// 	};
+					// 	//   vscode.commands.executeCommand(
+					// 	// 	SelfCommands.UPDATE_MESSAGE_REPLIES,
+					// 	// 	{
+					// 	// 	  parentTimestamp: thread_ts,
+					// 	// 	  channelId: channel,
+					// 	// 	  reply
+					// 	// 	}
+					// 	//   );
+					// } else {
+					// 	const hasAttachment = attachments && attachments.length > 0;
+					// 	const hasFiles = files && files.length > 0;
+
+					// 	if (!!text || hasAttachment || hasFiles) {
+					// 		// const message = getMessage(event);
+					// 		// newMessages = {
+					// 		//   ...newMessages,
+					// 		//   ...message
+					// 		// };
+					// 		// this.handleMessageLinks(message);
+					// 	}
+					// }
+				}
+				break;
+			case SlackEventTypes.ReactionAdded:
+			case SlackEventTypes.ReactionRemoved:
+				const response = await this.getPost({ streamId: e.item.channel, postId: e.item.ts });
+				this._slackRTMEventListener!({
+					source: MessageSource.Slack,
+					type: MessageType.Posts,
+					data: [response.post]
+				});
+				break;
+		}
 	}
 
 	async processLoginResponse(response: LoginResponse): Promise<void> {
@@ -110,10 +243,6 @@ export class SlackApiProvider implements ApiProvider {
 		}
 
 		response.user = this._user;
-	}
-
-	private get slack() {
-		return this._slack!;
 	}
 
 	get codestreamUserId(): string {
@@ -139,7 +268,27 @@ export class SlackApiProvider implements ApiProvider {
 	async subscribe(listener: (e: RealTimeMessage) => any, thisArgs?: any) {
 		await this._codestream.subscribe(listener, thisArgs);
 
-		// TODO: Slack realtime here
+		this._slackRTMEventListener = listener.bind(thisArgs);
+
+		await new Promise((resolve, reject) => {
+			this._slackRTM.once(SlackEventTypes.Authenticated, response => {
+				const { ok, self, team } = response;
+				if (ok) {
+					resolve({
+						token: this._slackToken,
+						id: self.id,
+						name: self.name,
+						teams: [{ id: team.id, name: team.name }],
+						currentTeamId: team.id,
+						provider: "slack"
+					});
+				}
+			});
+
+			this._slackRTM.once(SlackEventTypes.UnableToStart, reject);
+
+			this._slackRTM.start();
+		});
 	}
 
 	private async ensureUsersById(): Promise<Map<string, CSUser>> {
@@ -180,7 +329,7 @@ export class SlackApiProvider implements ApiProvider {
 		const me = meResponse.user;
 		me.id = this.slackUserId;
 
-		const response = await this.slack.users.info({
+		const response = await this._slack.users.info({
 			user: this.slackUserId
 		});
 
@@ -250,7 +399,7 @@ export class SlackApiProvider implements ApiProvider {
 		}
 
 		const streamId = (request as CreatePostInChannelOrDirectStreamRequest).streamId;
-		const response = await this.slack.chat.postMessage({
+		const response = await this._slack.chat.postMessage({
 			channel: streamId,
 			text: text,
 			as_user: true,
@@ -269,15 +418,16 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	async deletePost(request: DeletePostRequest) {
-		const postResponse = await this.getPost({ streamId: request.streamId, postId: request.postId });
+		const { streamId, postId } = CSPost.fromSlackPostId(request.postId, request.streamId);
+		const postResponse = await this.getPost({ streamId: streamId, postId: postId });
 
-		const response = await this.slack.chat.delete({
-			channel: request.streamId,
-			ts: request.postId,
+		const response = await this._slack.chat.delete({
+			channel: streamId,
+			ts: postId,
 			as_user: true
 		});
 
-		const { ok, error, message } = response as WebAPICallResult & { message: any };
+		const { ok, error } = response as WebAPICallResult;
 		if (!ok) throw new Error(error);
 
 		postResponse.post.deactivated = true;
@@ -285,6 +435,8 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	async editPost(request: EditPostRequest) {
+		const { streamId, postId } = CSPost.fromSlackPostId(request.postId, request.streamId);
+
 		let text;
 		if (request.text && request.mentionedUserIds && request.mentionedUserIds.length) {
 			text = CSPost.toSlackText(
@@ -296,17 +448,17 @@ export class SlackApiProvider implements ApiProvider {
 			text = request.text;
 		}
 
-		const response = await this.slack.chat.update({
-			channel: request.streamId,
-			ts: request.postId,
+		const response = await this._slack.chat.update({
+			channel: streamId,
+			ts: postId,
 			as_user: true,
 			text: text
 		});
 
-		const { ok, error, message } = response as WebAPICallResult & { message: any };
+		const { ok, error } = response as WebAPICallResult;
 		if (!ok) throw new Error(error);
 
-		const postResponse = this.getPost({ streamId: request.streamId, postId: request.postId });
+		const postResponse = this.getPost({ streamId: streamId, postId: postId });
 		return postResponse;
 	}
 
@@ -316,10 +468,11 @@ export class SlackApiProvider implements ApiProvider {
 
 	async fetchPosts(request: FetchPostsRequest) {
 		let response;
+
 		// This isn't ideal, but we can always pack some more info into the id to ensure we call the right thing
 		switch (request.streamId[0]) {
 			case "C":
-				response = await this.slack.channels.history({
+				response = await this._slack.channels.history({
 					channel: request.streamId,
 					count: request.limit || 100,
 					oldest: request.after == null ? undefined : String(request.after),
@@ -330,7 +483,7 @@ export class SlackApiProvider implements ApiProvider {
 				break;
 
 			case "G":
-				response = await this.slack.groups.history({
+				response = await this._slack.groups.history({
 					channel: request.streamId,
 					count: request.limit || 100,
 					oldest: request.after == null ? undefined : String(request.after),
@@ -341,7 +494,7 @@ export class SlackApiProvider implements ApiProvider {
 				break;
 
 			case "D":
-				response = await this.slack.im.history({
+				response = await this._slack.im.history({
 					channel: request.streamId,
 					count: request.limit || 100,
 					oldest: request.after == null ? undefined : String(request.after),
@@ -379,11 +532,13 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	async getPost(request: GetPostRequest) {
-		const response = await this.slack.conversations.history({
-			channel: request.streamId,
+		const { streamId, postId } = CSPost.fromSlackPostId(request.postId, request.streamId);
+
+		const response = await this._slack.conversations.history({
+			channel: streamId,
 			limit: 1,
 			inclusive: true,
-			latest: request.postId
+			latest: postId
 		});
 
 		const { ok, error, messages } = response as WebAPICallResult & { messages: any };
@@ -392,55 +547,60 @@ export class SlackApiProvider implements ApiProvider {
 		const usersById = await this.ensureUsersById();
 
 		const posts = messages.map((m: any) =>
-			CSPost.fromSlack(m, request.streamId, usersById, this._codestreamTeamId)
+			CSPost.fromSlack(m, streamId, usersById, this._codestreamTeamId)
 		);
 
 		return { post: posts[0] };
 	}
 
 	async markPostUnread(request: MarkPostUnreadRequest) {
-		let response = await this.slack.conversations.info({
-			channel: request.streamId
-		});
+		const { streamId, postId } = CSPost.fromSlackPostId(request.postId, request.streamId);
 
-		const { ok, error, channel: c } = response as WebAPICallResult & { channel: any };
-		if (!ok) throw new Error(error);
+		let response;
 
-		if (c.is_channel) {
-			response = await this.slack.channels.mark({ channel: c.id, ts: request.postId });
-			const { ok, error } = response as WebAPICallResult;
-			if (!ok) throw new Error(error);
+		// This isn't ideal, but we can always pack some more info into the id to ensure we call the right thing
+		switch (streamId[0]) {
+			case "C": {
+				response = await this._slack.channels.mark({ channel: streamId, ts: postId });
+				const { ok, error } = response as WebAPICallResult;
+				if (!ok) throw new Error(error);
+
+				break;
+			}
+			case "G": {
+				response = await this._slack.groups.mark({ channel: streamId, ts: postId });
+				const { ok, error } = response as WebAPICallResult;
+				if (!ok) throw new Error(error);
+
+				break;
+			}
+			case "D": {
+				response = await this._slack.im.mark({ channel: streamId, ts: postId });
+				const { ok, error } = response as WebAPICallResult;
+				if (!ok) throw new Error(error);
+				break;
+			}
 		}
 
-		if (c.is_group) {
-			response = await this.slack.groups.mark({ channel: c.id, ts: request.postId });
-			const { ok, error } = response as WebAPICallResult;
-			if (!ok) throw new Error(error);
-		}
-
-		if (c.is_im) {
-			response = await this.slack.im.mark({ channel: c.id, ts: request.postId });
-			const { ok, error } = response as WebAPICallResult;
-			if (!ok) throw new Error(error);
-		}
-
-		return this.getPost({ streamId: request.streamId, postId: request.postId });
+		return this.getPost({ streamId: streamId, postId: postId });
 	}
 
 	async reactToPost(request: ReactToPostRequest) {
+		const { streamId, postId } = CSPost.fromSlackPostId(request.postId, request.streamId);
+
 		let response;
 
 		for (const [name, value] of Object.entries(request.emojis)) {
 			if (value) {
-				response = await this.slack.reactions.add({
-					channel: request.streamId,
-					timestamp: request.postId,
+				response = await this._slack.reactions.add({
+					channel: streamId,
+					timestamp: postId,
 					name: name
 				});
 			} else {
-				response = await this.slack.reactions.remove({
-					channel: request.streamId,
-					timestamp: request.postId,
+				response = await this._slack.reactions.remove({
+					channel: streamId,
+					timestamp: postId,
 					name: name
 				});
 			}
@@ -449,7 +609,7 @@ export class SlackApiProvider implements ApiProvider {
 		const { ok, error } = response as WebAPICallResult;
 		if (!ok) throw new Error(error);
 
-		return this.getPost({ streamId: request.streamId, postId: request.postId });
+		return this.getPost({ streamId: streamId, postId: postId });
 	}
 
 	createRepo(request: CreateRepoRequest) {
@@ -478,7 +638,7 @@ export class SlackApiProvider implements ApiProvider {
 
 	async fetchStreams(request: FetchStreamsRequest) {
 		if (this._streams === undefined) {
-			const response = await this.slack.conversations.list({
+			const response = await this._slack.conversations.list({
 				exclude_archived: true,
 				limit: 1000,
 				types: "public_channel,private_channel,mpim,im"
@@ -514,7 +674,7 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	async getStream(request: GetStreamRequest) {
-		const response = await this.slack.conversations.info({
+		const response = await this._slack.conversations.info({
 			channel: request.streamId
 		});
 
@@ -528,7 +688,7 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	async joinStream(request: JoinStreamRequest) {
-		const response = await this.slack.conversations.join({
+		const response = await this._slack.conversations.join({
 			channel: request.streamId
 		});
 
@@ -542,7 +702,7 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	async leaveStream(request: LeaveStreamRequest) {
-		const response = await this.slack.conversations.leave({
+		const response = await this._slack.conversations.leave({
 			channel: request.streamId
 		});
 
@@ -555,7 +715,7 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	async markStreamRead(request: MarkStreamReadRequest) {
-		let response = await this.slack.conversations.info({
+		let response = await this._slack.conversations.info({
 			channel: request.streamId
 		});
 
@@ -563,17 +723,17 @@ export class SlackApiProvider implements ApiProvider {
 		if (!ok) throw new Error(error);
 
 		if (c.is_channel) {
-			response = await this.slack.channels.mark({ channel: c.id, ts: c.latest.ts });
+			response = await this._slack.channels.mark({ channel: c.id, ts: c.latest.ts });
 			return {};
 		}
 
 		if (c.is_group) {
-			response = await this.slack.groups.mark({ channel: c.id, ts: c.latest.ts });
+			response = await this._slack.groups.mark({ channel: c.id, ts: c.latest.ts });
 			return {};
 		}
 
 		if (c.is_im) {
-			response = await this.slack.im.mark({ channel: c.id, ts: c.latest.ts });
+			response = await this._slack.im.mark({ channel: c.id, ts: c.latest.ts });
 			return {};
 		}
 
@@ -615,7 +775,7 @@ export class SlackApiProvider implements ApiProvider {
 
 	async fetchUsers(request: FetchUsersRequest) {
 		if (this._users === undefined) {
-			const response = await this.slack.users.list();
+			const response = await this._slack.users.list();
 
 			const { ok, error, members } = response as WebAPICallResult & { members: any };
 			if (!ok) throw new Error(error);
@@ -645,7 +805,7 @@ export class SlackApiProvider implements ApiProvider {
 			return this.getMe();
 		}
 
-		const response = await this.slack.users.info({
+		const response = await this._slack.users.info({
 			user: request.userId
 		});
 
@@ -738,6 +898,21 @@ namespace CSDirectStream {
 }
 
 namespace CSPost {
+	export function toSlackPostId(postId: string, streamId: string) {
+		return `${streamId}|${postId}`;
+	}
+
+	export function fromSlackPostId(
+		postId: string,
+		streamId: string
+	): { streamId: string; postId: string } {
+		const [sid, pid] = postId.split("|");
+		if (!pid) {
+			return { streamId: streamId, postId: postId };
+		}
+		return { streamId: sid, postId: pid };
+	}
+
 	export function toSlackText(
 		text: string,
 		mentionedUserIds: string[],
@@ -803,10 +978,12 @@ namespace CSPost {
 			deactivated: false,
 			hasBeenEdited: post.edited !== undefined,
 			hasReplies: post.ts === post.thread_ts,
-			id: post.ts,
+			id: CSPost.toSlackPostId(post.ts, streamId),
 			mentionedUserIds: mentionedUserIds,
 			modifiedAt: timestamp,
-			parentPostId: post.thread_ts,
+			parentPostId: post.thread_ts
+				? CSPost.toSlackPostId(post.thread_ts, streamId)
+				: post.thread_ts,
 			reactions: reactions,
 			text: text,
 			seqNum: post.ts,
@@ -851,7 +1028,7 @@ namespace CSUser {
 			createdAt: defaultCreatedAt,
 			creatorId: user.id,
 			deactivated: user.deleted,
-			email: user.profile.email || "A",
+			email: user.profile.email || "cs@unknown.com",
 			firstName: user.profile.first_name,
 			fullName: user.real_name,
 			id: user.id,

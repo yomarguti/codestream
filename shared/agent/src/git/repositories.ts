@@ -87,7 +87,7 @@ export class GitRepositories {
 		await this.session.ready();
 
 		this._disposable = Disposables.from(
-			this.session.onDidChangeRepos(this.onRepositoriesChanged, this),
+			this.session.onDidChangeRepositories(this.onRepositoriesChanged, this),
 			this.session.workspace.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this)
 		);
 

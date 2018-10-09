@@ -11,7 +11,7 @@ import {
 	StatusChangeEvent
 } from "./pubnubConnection";
 
-const messageType = {
+const messageToType: { [key: string]: MessageType | undefined } = {
 	post: MessageType.Posts,
 	posts: MessageType.Posts,
 	repo: MessageType.Repositories,
@@ -114,18 +114,16 @@ export class PubnubReceiver {
 
 	private processMessage(message: { [key: string]: any }) {
 		const { requestId, messageId, ...messages } = message;
-		requestId;
-		messageId;
 
 		for (const [key, obj] of Object.entries(messages)) {
 			try {
-				const changeSets = Array.isArray(obj) ? obj : [obj];
-				const type = (messageType as any)[key];
+				const data = Array.isArray(obj) ? obj : [obj];
+				const type = messageToType[key];
 				if (type) {
 					this._onDidReceiveMessage.fire({
 						source: MessageSource.CodeStream,
-						type,
-						changeSets
+						type: type,
+						data: data
 					});
 				} else {
 					Logger.warn(`Unknown message type received from PubNub: ${key}`);

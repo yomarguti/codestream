@@ -27,7 +27,7 @@ import {
 	ApiRequestType,
 	CodeStreamEnvironment,
 	CreatePostWithCodeRequestType,
-	DidChangeItemsNotificationType,
+	DidChangeDataNotificationType,
 	DidChangeVersionCompatibilityNotificationType,
 	DocumentFromCodeBlockRequestType,
 	DocumentLatestRevisionRequestType,
@@ -65,14 +65,24 @@ const loginApiErrorMappings: { [k: string]: ApiErrors } = {
 };
 
 export class CodeStreamSession {
+	private _onDidChangeMarkerLocations = new Emitter<CSMarkerLocations[]>();
+	get onDidChangeMarkerLocations(): Event<CSMarkerLocations[]> {
+		return this._onDidChangeMarkerLocations.event;
+	}
+
+	private _onDidChangeMarkers = new Emitter<CSMarker[]>();
+	get onDidChangeMarkers(): Event<CSMarker[]> {
+		return this._onDidChangeMarkers.event;
+	}
+
 	private _onDidChangePosts = new Emitter<CSPost[]>();
 	get onDidChangePosts(): Event<CSPost[]> {
 		return this._onDidChangePosts.event;
 	}
 
-	private _onDidChangeRepos = new Emitter<CSRepository[]>();
-	get onDidChangeRepos(): Event<CSRepository[]> {
-		return this._onDidChangeRepos.event;
+	private _onDidChangeRepositories = new Emitter<CSRepository[]>();
+	get onDidChangeRepositories(): Event<CSRepository[]> {
+		return this._onDidChangeRepositories.event;
 	}
 
 	private _onDidChangeStreams = new Emitter<CSStream[]>();
@@ -88,16 +98,6 @@ export class CodeStreamSession {
 	private _onDidChangeTeams = new Emitter<CSTeam[]>();
 	get onDidChangeTeams(): Event<CSTeam[]> {
 		return this._onDidChangeTeams.event;
-	}
-
-	private _onDidChangeMarkers = new Emitter<CSMarker[]>();
-	get onDidChangeMarkers(): Event<CSMarker[]> {
-		return this._onDidChangeMarkers.event;
-	}
-
-	private _onDidChangeMarkerLocations = new Emitter<CSMarkerLocations[]>();
-	get onDidChangeMarkerLocations(): Event<CSMarkerLocations[]> {
-		return this._onDidChangeMarkerLocations.event;
 	}
 
 	private readonly _readyPromise: Promise<void>;
@@ -149,15 +149,15 @@ export class CodeStreamSession {
 			case MessageType.Posts:
 				const posts = await Container.instance().posts.resolve(e);
 				this._onDidChangePosts.fire(posts);
-				this.agent.sendNotification(DidChangeItemsNotificationType, {
+				this.agent.sendNotification(DidChangeDataNotificationType, {
 					type: MessageType.Posts,
 					posts
 				});
 				break;
 			case MessageType.Repositories:
 				const repos = await Container.instance().repos.resolve(e);
-				this._onDidChangeRepos.fire(repos);
-				this.agent.sendNotification(DidChangeItemsNotificationType, {
+				this._onDidChangeRepositories.fire(repos);
+				this.agent.sendNotification(DidChangeDataNotificationType, {
 					type: MessageType.Repositories,
 					repos
 				});
@@ -165,7 +165,7 @@ export class CodeStreamSession {
 			case MessageType.Streams:
 				const streams = await Container.instance().streams.resolve(e);
 				this._onDidChangeStreams.fire(streams);
-				this.agent.sendNotification(DidChangeItemsNotificationType, {
+				this.agent.sendNotification(DidChangeDataNotificationType, {
 					type: MessageType.Streams,
 					streams
 				});
@@ -173,7 +173,7 @@ export class CodeStreamSession {
 			case MessageType.Users:
 				const users = await Container.instance().users.resolve(e);
 				this._onDidChangeUsers.fire(users);
-				this.agent.sendNotification(DidChangeItemsNotificationType, {
+				this.agent.sendNotification(DidChangeDataNotificationType, {
 					type: MessageType.Users,
 					users
 				});
@@ -181,7 +181,7 @@ export class CodeStreamSession {
 			case MessageType.Teams:
 				const teams = await Container.instance().teams.resolve(e);
 				this._onDidChangeTeams.fire(teams);
-				this.agent.sendNotification(DidChangeItemsNotificationType, {
+				this.agent.sendNotification(DidChangeDataNotificationType, {
 					type: MessageType.Teams,
 					teams
 				});
@@ -189,7 +189,7 @@ export class CodeStreamSession {
 			case MessageType.Markers:
 				const markers = await Container.instance().markers.resolve(e);
 				this._onDidChangeMarkers.fire(markers);
-				this.agent.sendNotification(DidChangeItemsNotificationType, {
+				this.agent.sendNotification(DidChangeDataNotificationType, {
 					type: MessageType.Markers,
 					markers
 				});
@@ -197,7 +197,7 @@ export class CodeStreamSession {
 			case MessageType.MarkerLocations:
 				const markerLocations = await Container.instance().markerLocations.resolve(e);
 				this._onDidChangeMarkerLocations.fire(markerLocations);
-				this.agent.sendNotification(DidChangeItemsNotificationType, {
+				this.agent.sendNotification(DidChangeDataNotificationType, {
 					type: MessageType.MarkerLocations,
 					markerLocations
 				});

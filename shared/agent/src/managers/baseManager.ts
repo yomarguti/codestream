@@ -37,18 +37,9 @@ export abstract class BaseManager<T> {
 
 	protected abstract fetchCriteria(obj: T): KeyValue<T>[];
 
-	resolve(realTimeMessage: RealTimeMessage): Promise<T[]> {
-		switch (realTimeMessage.source) {
-			case MessageSource.CodeStream:
-				return this.resolvePubNubMessage(realTimeMessage);
-			case MessageSource.Slack:
-				return this.resolveSlackMessage(realTimeMessage);
-		}
-	}
-
-	async resolvePubNubMessage(message: CodeStreamRTEMessage): Promise<T[]> {
+	async resolve(message: RealTimeMessage): Promise<T[]> {
 		const resolved = await Promise.all(
-			message.changeSets.map(async c => {
+			message.data.map(async c => {
 				const changes = CodeStreamApiProvider.normalizeResponse(c) as { [key: string]: any };
 				const criteria = this.fetchCriteria(changes as T);
 				const cached = await this.cacheGet(criteria);
@@ -68,10 +59,6 @@ export abstract class BaseManager<T> {
 			})
 		);
 		return resolved.filter(Boolean) as T[];
-	}
-
-	async resolveSlackMessage(message: SlackRTEMessage): Promise<T[]> {
-		return [];
 	}
 
 	cacheGet(criteria: KeyValue<T>[]): Promise<T | undefined> {

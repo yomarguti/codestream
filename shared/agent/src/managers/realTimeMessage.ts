@@ -10,13 +10,13 @@ export enum MessageSource {
 export interface CodeStreamRTEMessage {
 	source: MessageSource.CodeStream;
 	type: MessageType;
-	changeSets: { [key: string]: any }[];
+	data: { [key: string]: any }[];
 }
 
 export interface SlackRTEMessage {
 	source: MessageSource.Slack;
 	type: MessageType;
-	// ?????
+	data: { [key: string]: any }[];
 }
 
 export type RealTimeMessage = CodeStreamRTEMessage | SlackRTEMessage;

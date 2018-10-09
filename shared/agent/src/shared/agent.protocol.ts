@@ -119,7 +119,7 @@ export interface PostsChangedNotification {
 	posts: CSPost[];
 }
 
-export interface ReposChangedNotification {
+export interface RepositoriesChangedNotification {
 	type: MessageType.Repositories;
 	repos: CSRepository[];
 }
@@ -139,19 +139,18 @@ export interface UsersChangedNotification {
 	users: CSUser[];
 }
 
-export type DidChangeItemsNotification =
+export type DidChangeDataNotification =
 	| MarkersChangedNotification
 	| MarkerLocationsChangedNotification
 	| PostsChangedNotification
-	| ReposChangedNotification
+	| RepositoriesChangedNotification
 	| StreamsChangedNotification
 	| UsersChangedNotification
 	| TeamsChangedNotification;
 
-export const DidChangeItemsNotificationType = new NotificationType<
-	DidChangeItemsNotification,
-	void
->("codeStream/didChangeItems");
+export const DidChangeDataNotificationType = new NotificationType<DidChangeDataNotification, void>(
+	"codeStream/didChangeData"
+);
 
 export enum VersionCompatibility {
 	Compatible = "ok",
