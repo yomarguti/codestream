@@ -42,10 +42,10 @@ import {
 	CreatePostWithCodeRequestType,
 	CreateRepoRequestType,
 	DeletePostRequestType,
+	DidChangeDataNotification,
+	DidChangeDataNotificationType,
 	DidChangeDocumentMarkersNotification,
 	DidChangeDocumentMarkersNotificationType,
-	DidChangeItemsNotification,
-	DidChangeItemsNotificationType,
 	DidChangeVersionCompatibilityNotificationResponse,
 	DidChangeVersionCompatibilityNotificationType,
 	DocumentFromCodeBlockRequestType,
@@ -97,13 +97,16 @@ export {
 	AccessToken,
 	AgentOptions,
 	AgentResult,
-	CodeStreamEnvironment
+	CodeStreamEnvironment,
+	DidChangeDataNotification,
+	MessageType,
+	PostsChangedNotification,
+	RepositoriesChangedNotification,
+	StreamsChangedNotification,
+	TeamsChangedNotification,
+	UsersChangedNotification
 } from "../shared/agent.protocol";
 export * from "../shared/api.protocol";
-
-export interface PubNubMessagesReceivedEvent {
-	[key: string]: any;
-}
 
 export interface DocumentMarkersChangedEvent {
 	uri: Uri;
@@ -115,9 +118,9 @@ export class CodeStreamAgentConnection implements Disposable {
 		return this._onDidChangeDocumentMarkers.event;
 	}
 
-	private _onDidReceivePubNubMessages = new EventEmitter<PubNubMessagesReceivedEvent[]>();
-	get onDidReceivePubNubMessages(): Event<PubNubMessagesReceivedEvent[]> {
-		return this._onDidReceivePubNubMessages.event;
+	private _onDidChangeData = new EventEmitter<DidChangeDataNotification>();
+	get onDidChangeData(): Event<DidChangeDataNotification> {
+		return this._onDidChangeData.event;
 	}
 
 	private _client: LanguageClient | undefined;
@@ -590,9 +593,12 @@ export class CodeStreamAgentConnection implements Disposable {
 		this._onDidChangeDocumentMarkers.fire({ uri: Uri.parse(e.textDocument.uri) });
 	}
 
-	private onItemsChanged(...messages: DidChangeItemsNotification[]) {
-		Logger.log("AgentConnection.onItemsChanged", messages);
-		this._onDidReceivePubNubMessages.fire(messages);
+	private async onDataChanged(...messages: DidChangeDataNotification[]) {
+		Logger.log("AgentConnection.onDataChanged", messages);
+
+		for (const message of messages) {
+			this._onDidChangeData.fire(message);
+		}
 	}
 
 	private onLogout(e: LogoutRequest) {
@@ -716,7 +722,7 @@ export class CodeStreamAgentConnection implements Disposable {
 
 		this._client.onRequest(LogoutRequestType, this.onLogout.bind(this));
 
-		this._client.onNotification(DidChangeItemsNotificationType, this.onItemsChanged.bind(this));
+		this._client.onNotification(DidChangeDataNotificationType, this.onDataChanged.bind(this));
 
 		this._client.onNotification(
 			DidChangeDocumentMarkersNotificationType,

@@ -1,15 +1,15 @@
 "use strict";
 import { Uri } from "vscode";
-import { StreamType } from "../agent/agentConnection";
+import {
+	PostsChangedNotification,
+	RepositoriesChangedNotification,
+	StreamsChangedNotification,
+	StreamType,
+	TeamsChangedNotification,
+	UsersChangedNotification
+} from "../agent/agentConnection";
 import { memoize } from "../system";
 import { WebviewIpcMessage, WebviewIpcMessageType } from "../webviews/webviewIpc";
-import {
-	PostsMessageReceivedEvent,
-	RepositoriesMessageReceivedEvent,
-	StreamsMessageReceivedEvent,
-	TeamsMessageReceivedEvent,
-	UsersMessageReceivedEvent
-} from "./pubnub";
 import {
 	ChannelStream,
 	CodeStreamSession,
@@ -63,7 +63,7 @@ export class PostsChangedEvent {
 
 	constructor(
 		public readonly session: CodeStreamSession,
-		private readonly _event: PostsMessageReceivedEvent
+		private readonly _event: PostsChangedNotification
 	) {}
 
 	get count() {
@@ -100,7 +100,7 @@ export class RepositoriesChangedEvent implements MergeableEvent<RepositoriesChan
 
 	constructor(
 		public readonly session: CodeStreamSession,
-		private readonly _event: RepositoriesMessageReceivedEvent
+		private readonly _event: RepositoriesChangedNotification
 	) {}
 
 	get count() {
@@ -137,7 +137,7 @@ export class StreamsChangedEvent implements MergeableEvent<StreamsChangedEvent> 
 
 	constructor(
 		public readonly session: CodeStreamSession,
-		private readonly _event: StreamsMessageReceivedEvent
+		private readonly _event: StreamsChangedNotification
 	) {}
 
 	get count() {
@@ -204,7 +204,7 @@ export class TeamsChangedEvent {
 
 	constructor(
 		public readonly session: CodeStreamSession,
-		private readonly _event: TeamsMessageReceivedEvent
+		private readonly _event: TeamsChangedNotification
 	) {}
 
 	get count() {
@@ -270,7 +270,7 @@ export class UsersChangedEvent {
 
 	constructor(
 		public readonly session: CodeStreamSession,
-		private readonly _event: UsersMessageReceivedEvent
+		private readonly _event: UsersChangedNotification
 	) {}
 
 	get count() {

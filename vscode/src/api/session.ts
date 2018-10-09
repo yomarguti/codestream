@@ -5,8 +5,10 @@ import {
 	AgentResult,
 	CodeStreamEnvironment,
 	CSMe,
+	DidChangeDataNotification,
 	DocumentMarkersChangedEvent,
-	LoginResult
+	LoginResult,
+	MessageType
 } from "../agent/agentConnection";
 import { WorkspaceState } from "../common";
 import { configuration } from "../configuration";
@@ -27,7 +29,6 @@ import {
 } from "./models/streams";
 import { Team } from "./models/teams";
 import { User } from "./models/users";
-import { MessageReceivedEvent, MessageType, PubNubReceiver } from "./pubnub";
 import {
 	MergeableEvent,
 	PostsChangedEvent,
@@ -148,7 +149,6 @@ export class CodeStreamSession implements Disposable {
 	private _environment = CodeStreamEnvironment.Unknown;
 	private _id: string | undefined;
 	private _loginPromise: Promise<LoginResult> | undefined;
-	private _pubnub: PubNubReceiver | undefined;
 	private _state: SessionState | undefined;
 	private _signupToken: string | undefined;
 
@@ -164,7 +164,7 @@ export class CodeStreamSession implements Disposable {
 		this._onDidChangeTextDocumentMarkers.fire(new TextDocumentMarkersChangedEvent(this, e.uri));
 	}
 
-	private onMessageReceived(e: MessageReceivedEvent) {
+	private onDataChanged(e: DidChangeDataNotification) {
 		switch (e.type) {
 			case MessageType.Posts:
 				this._state!.unreads.update(e.posts, this.fireDidChangeUnreads);
@@ -403,7 +403,6 @@ export class CodeStreamSession implements Disposable {
 			}
 		} finally {
 			// Clean up saved state
-			this._pubnub = undefined;
 			this._state = undefined;
 			this._signupToken = undefined;
 
@@ -510,7 +509,6 @@ export class CodeStreamSession implements Disposable {
 			await Container.context.workspaceState.update(WorkspaceState.TeamId, teamId);
 		}
 
-		this._pubnub = new PubNubReceiver();
 		this._state = new SessionState(this, teamId, result.loginResponse);
 
 		this._disposable = Disposable.from(
@@ -518,8 +516,7 @@ export class CodeStreamSession implements Disposable {
 				Functions.debounce(this.onDocumentMarkersChanged, 500),
 				this
 			),
-			this._pubnub.onDidReceiveMessage(this.onMessageReceived, this),
-			this._pubnub
+			Container.agent.onDidChangeData(this.onDataChanged, this)
 		);
 
 		const unreads = await this._state.unreads.compute(user.lastReads, undefined);
