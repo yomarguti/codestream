@@ -886,18 +886,27 @@ export class SlackApiProvider implements ApiProvider {
 		const { ok, error, channel: c } = response as WebAPICallResult & { channel: any };
 		if (!ok) throw new Error(error);
 
+		let postId;
+		if (request.postId) {
+			({ postId } = CSPost.fromSlackPostId(request.postId, request.streamId));
+		} else {
+			postId = c.latest && c.latest.ts;
+		}
+
+		if (postId == null) return {};
+
 		if (c.is_channel) {
-			response = await this._slack.channels.mark({ channel: c.id, ts: c.latest.ts });
+			response = await this._slack.channels.mark({ channel: c.id, ts: postId });
 			return {};
 		}
 
 		if (c.is_group) {
-			response = await this._slack.groups.mark({ channel: c.id, ts: c.latest.ts });
+			response = await this._slack.groups.mark({ channel: c.id, ts: postId });
 			return {};
 		}
 
 		if (c.is_im) {
-			response = await this._slack.im.mark({ channel: c.id, ts: c.latest.ts });
+			response = await this._slack.im.mark({ channel: c.id, ts: postId });
 			return {};
 		}
 
