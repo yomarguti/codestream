@@ -720,23 +720,28 @@ namespace CSPost {
 	): CSPost {
 		const mentionedUserIds: string[] = [];
 
-		const text = post.text
-			.replace(slackMentionsRegex, (match: string, mentionId: string) => {
-				if (mentionId === "everyone" || mentionId === "channel" || mentionId === "here") {
-					return `@${mentionId}`;
-				}
+		let text;
+		if (post.text) {
+			text = post.text
+				.replace(slackMentionsRegex, (match: string, mentionId: string) => {
+					if (mentionId === "everyone" || mentionId === "channel" || mentionId === "here") {
+						return `@${mentionId}`;
+					}
 
-				const user = usersById.get(mentionId);
-				if (user !== undefined) {
-					mentionedUserIds.push(user.id);
-					return `@${user.username}`;
-				}
+					const user = usersById.get(mentionId);
+					if (user !== undefined) {
+						mentionedUserIds.push(user.id);
+						return `@${user.username}`;
+					}
 
-				return match;
-			})
-			// Slack always encodes < & > so decode them
-			.replace("&lt;", "<")
-			.replace("&gt;", ">");
+					return match;
+				})
+				// Slack always encodes < & > so decode them
+				.replace("&lt;", "<")
+				.replace("&gt;", ">");
+		} else {
+			text = post.text;
+		}
 
 		let reactions;
 		if (post.reactions) {
