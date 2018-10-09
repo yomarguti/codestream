@@ -8,9 +8,9 @@ import {
 } from "../shared/agent.protocol";
 import { CSMarker, CSStream, StreamType } from "../shared/api.protocol";
 import { lspHandler } from "../system";
+import { getValues, KeyValue } from "./baseCache";
 import { EntityManager, Id } from "./entityManager";
 import { IndexParams, IndexType } from "./index";
-import { getValues, KeyValue } from "./baseCache";
 
 export class MarkersManager extends EntityManager<CSMarker> {
 	init() {

@@ -5,7 +5,6 @@ import { TextDocumentIdentifier } from "vscode-languageserver";
 import { Range } from "vscode-languageserver-protocol";
 import URI from "vscode-uri";
 import { getCache } from "../cache";
-import { getValues } from "./baseCache";
 import { Container } from "../container";
 import { GitRepository } from "../git/models/repository";
 import { Logger } from "../logger";
@@ -18,6 +17,7 @@ import {
 	CSMarkerLocations
 } from "../shared/api.protocol";
 import { xfs } from "../xfs";
+import { getValues } from "./baseCache";
 import { KeyValue } from "./baseCache";
 import { BaseManager } from "./baseManager";
 import { Id } from "./entityManager";
