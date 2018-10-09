@@ -316,7 +316,13 @@ export class StreamWebviewPanel implements Disposable {
 							let post;
 							try {
 								if (codeBlocks === undefined || codeBlocks.length === 0) {
-									post = await Container.agent.posts.create(streamId, text, mentions, parentPostId);
+									const response = await Container.agent.posts.create(
+										streamId,
+										text,
+										mentions,
+										parentPostId
+									);
+									post = response.post;
 								} else {
 									const block = codeBlocks[0] as {
 										code: string;
