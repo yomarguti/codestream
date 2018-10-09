@@ -348,9 +348,10 @@ export default infiniteLoadable(
 									// if (data.isScrolling)
 									// 	return <div style={{ ...data.style, backgroundColor: "pink", width: 30 }} />;
 
-									const parentPost = post.parentPostId
-										? posts.find(p => p.id === post.parentPostId)
-										: null;
+									const parentPost =
+										post.parentPostId && post.parentPostId !== post.id
+											? posts.find(p => p.id === post.parentPostId)
+											: null;
 									const newMessageIndicator =
 										typeof postWithNewMessageIndicator !== "undefined" &&
 										post.seqNum === postWithNewMessageIndicator + 1;
