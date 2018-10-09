@@ -56,6 +56,7 @@ import {
 	EditPostRequestType,
 	FetchFileStreamsRequestType,
 	FetchMarkerLocationsRequestType,
+	FetchPostRepliesRequestType,
 	FetchPostsRequestType,
 	FetchReposRequestType,
 	FetchStreamsRequestType,
@@ -360,6 +361,13 @@ export class CodeStreamAgentConnection implements Disposable {
 		async fetchLatest(streamId: string) {
 			const response = await this.fetch(streamId, { limit: 1 });
 			return { post: response.posts[0] };
+		}
+
+		fetchReplies(streamId: string, parentPostId: string) {
+			return this._connection.sendRequest(FetchPostRepliesRequestType, {
+				streamId: streamId,
+				postId: parentPostId
+			});
 		}
 
 		get(streamId: string, postId: string) {
