@@ -348,9 +348,10 @@ export default infiniteLoadable(
 									// if (data.isScrolling)
 									// 	return <div style={{ ...data.style, backgroundColor: "pink", width: 30 }} />;
 
+									// if the parent post isn't yet in local collection because it's further back, use the id
 									const parentPost =
-										post.parentPostId && post.parentPostId !== post.id
-											? posts.find(p => p.id === post.parentPostId)
+										post.parentPostId && post.ParentPostId !== post.id
+											? posts.find(p => p.id === post.parentPostId) || post.parentPostId
 											: null;
 									const newMessageIndicator =
 										typeof postWithNewMessageIndicator !== "undefined" &&

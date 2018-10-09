@@ -53,28 +53,33 @@ export default Child => {
 			async initialize() {
 				this.setState({ isInitialized: false });
 
-				if (this.props.posts.length === 0) {
-					const { childProps, isThread, fetchPosts, fetchThread } = this.props;
-					const { streamId, teamId, threadId } = childProps;
-					let hasMore;
-					if (isThread && threadId) {
+				const { childProps, isThread, fetchPosts, fetchThread } = this.props;
+				const { streamId, teamId, threadId } = childProps;
+
+				if (isThread) {
+					if (threadId && !this.props.posts.some(p => p.id === threadId)) {
 						await fetchThread(streamId, threadId);
-						hasMore = false;
-					} else {
-						const posts = await fetchPosts({ streamId, teamId, limit: batchCount });
-						hasMore = posts.length === batchCount;
 					}
 					this.setState({
 						isInitialized: true,
 						posts: this.props.posts,
-						hasMore
+						hasMore: false
 					});
 				} else {
-					this.setState({
-						isInitialized: true,
-						posts: this.props.posts,
-						hasMore: this.props.isThread ? false : true
-					});
+					if (this.props.posts.length === 0) {
+						const posts = await fetchPosts({ streamId, teamId, limit: batchCount });
+						this.setState({
+							isInitialized: true,
+							posts: this.props.posts,
+							hasMore: posts.length === batchCount
+						});
+					} else {
+						this.setState({
+							isInitialized: true,
+							posts: this.props.posts,
+							hasMore: true
+						});
+					}
 				}
 			}
 

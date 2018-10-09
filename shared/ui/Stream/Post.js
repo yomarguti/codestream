@@ -224,6 +224,7 @@ class Post extends React.Component {
 		}
 
 		let parentPost = this.props.replyingTo;
+		if (_.isString(parentPost)) parentPost = { text: "a message" };
 
 		let menuItems = [];
 
