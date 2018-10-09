@@ -115,9 +115,7 @@ export class InvitePage extends Component {
 	renderFieldset = inactive => {
 		const { newMemberEmail, newMemberName } = this.state;
 
-		if (!this.props.isCodeStreamTeam) {
-			return this.renderInviteSlack();
-		}
+		if (this.props.isSlackTeam) return this.renderInviteSlack();
 
 		return (
 			<fieldset className="form-body" disabled={inactive}>

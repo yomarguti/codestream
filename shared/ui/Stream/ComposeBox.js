@@ -143,6 +143,7 @@ class ComposeBox extends React.Component {
 			this.props.slashCommands.map(command => {
 				if (command.channelOnly && this.props.isDirectMessage) return;
 				if (command.requires && !this.props.services[command.requires]) return;
+				if (command.codeStreamTeam && this.props.isSlackTeam) return;
 				let lowered = command.id.toLowerCase();
 				if (lowered.indexOf(prefix) === 0) {
 					command.identifier = command.id;

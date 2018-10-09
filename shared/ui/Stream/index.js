@@ -448,11 +448,24 @@ export class SimpleStream extends Component {
 					activePanel={activePanel}
 					setActivePanel={this.setActivePanel}
 					runSlashCommand={this.runSlashCommand}
+					isSlackTeam={this.props.isSlackTeam}
 				/>
-				<PublicChannelPanel activePanel={activePanel} setActivePanel={this.setActivePanel} />
-				<CreateChannelPanel activePanel={activePanel} setActivePanel={this.setActivePanel} />
+				<PublicChannelPanel
+					activePanel={activePanel}
+					setActivePanel={this.setActivePanel}
+					isSlackTeam={this.props.isSlackTeam}
+				/>
+				<CreateChannelPanel
+					activePanel={activePanel}
+					setActivePanel={this.setActivePanel}
+					isSlackTeam={this.props.isSlackTeam}
+				/>
 				<CreateDMPanel activePanel={activePanel} setActivePanel={this.setActivePanel} />
-				<InvitePanel activePanel={activePanel} setActivePanel={this.setActivePanel} />
+				<InvitePanel
+					activePanel={activePanel}
+					setActivePanel={this.setActivePanel}
+					isSlackTeam={this.props.isSlackTeam}
+				/>
 				<div className={mainPanelClass} ref={ref => (this._mainPanel = ref)}>
 					<div className="panel-header" ref={ref => (this._header = ref)}>
 						<span onClick={this.showChannels} className={umisClass}>
@@ -585,6 +598,7 @@ export class SimpleStream extends Component {
 					onEmptyUpArrow={this.editLastPost}
 					findMentionedUserIds={this.findMentionedUserIds}
 					isDirectMessage={this.props.postStreamType === "direct"}
+					isSlackTeam={this.props.isSlackTeam}
 				/>
 			</div>
 		);
@@ -1463,6 +1477,8 @@ const mapStateToProps = ({
 		team: teams[context.currentTeamId],
 		channelMembers,
 		services,
+		isSlackTeam:
+			teams[context.currentTeamId].providerInfo && teams[context.currentTeamId].providerInfo.slack,
 		posts: streamPosts.map(post => {
 			let user = users[post.creatorId];
 			if (!user) {

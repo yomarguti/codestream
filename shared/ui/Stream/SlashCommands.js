@@ -2,7 +2,7 @@ export const slashCommands = [
 	{ id: "help", help: "get help" },
 	{ id: "add", help: "add member to channel", description: "@user", channelOnly: true },
 	// { id: "apply", help: "apply patch last post" },
-	{ id: "archive", help: "archive channel", channelOnly: true, requires: "codestream" },
+	{ id: "archive", help: "archive channel", channelOnly: true, codeStreamTeam: true },
 	// { id: "diff", help: "diff last post" },
 	{ id: "invite", help: "add to your team", description: "email" },
 	{ id: "leave", help: "leave channel", channelOnly: true },
@@ -18,11 +18,11 @@ export const slashCommands = [
 		help: "set purpose",
 		description: "text",
 		channelOnly: true,
-		requires: "codestream"
+		codeStreamTeam: true
 	},
 	{ id: "remove", help: "remove from channel", description: "@user", channelOnly: true },
 	{ id: "rename", help: "rename channel", description: "newname", channelOnly: true },
-	{ id: "slack", help: "connect to slack", requires: "codestream" },
+	// { id: "slack", help: "connect to slack", codeStreamTeam: true },
 	{ id: "version", help: "show codeStream version" },
 	{ id: "who", help: "show channel members" }
 ];

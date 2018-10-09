@@ -28,12 +28,12 @@ export class SimpleCreateChannelPanel extends Component {
 	}
 
 	isNameInvalid = name => {
-		if (this.props.isCodeStreamTeam) {
-			const nameRegex = new RegExp("[.~#%&*{}+/:<>?|'\"]");
-			return nameRegex.test(name);
-		} else {
+		if (this.props.isSlackTeam) {
 			const nameRegex = new RegExp("[ .~#%&*{}+/:<>?|'\"]");
 			return nameRegex.test(name) || name.length > 21;
+		} else {
+			const nameRegex = new RegExp("[.~#%&*{}+/:<>?|'\"]");
+			return nameRegex.test(name);
 		}
 	};
 
@@ -57,9 +57,9 @@ export class SimpleCreateChannelPanel extends Component {
 			"off-right": inactive && !shrink
 		});
 
-		const tooltipTitle = this.props.isCodeStreamTeam
-			? "We don't support these characters: .~#%&*{}+/:<>?|'\"."
-			: "Names must be lowercase, without spaces or periods, and shorter than 22 characters";
+		const tooltipTitle = this.props.isSlackTeam
+			? "Names must be lowercase, without spaces or periods, and shorter than 22 characters"
+			: "We don't support these characters: .~#%&*{}+/:<>?|'\".";
 
 		this.tabIndexCount = 0;
 
@@ -187,8 +187,8 @@ export class SimpleCreateChannelPanel extends Component {
 	}
 
 	setStateName = name => {
-		if (this.props.isCodeStreamTeam) this.setState({ name });
-		else this.setState({ name: name.toLowerCase() });
+		if (this.props.isSlackTeam) this.setState({ name: name.toLowerCase() });
+		else this.setState({ name });
 	};
 
 	renderError = () => {
