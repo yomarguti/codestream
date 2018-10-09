@@ -1,11 +1,11 @@
 "use strict";
 import { RTMessage } from "../api/apiProvider";
-import { CodeStreamApiProvider } from "../api/codestreamApi";
 import { CodeStreamSession } from "../session";
 import { LspHandler } from "../system/decorators";
 import { BaseCache, KeyValue } from "./baseCache";
 import { IndexParams } from "./index";
 import * as operations from "./operations";
+import { isCompleteObject } from "./operations";
 
 export abstract class BaseManager<T> {
 	protected readonly cache: BaseCache<T> = new BaseCache<T>(this.getIndexedFields());
@@ -41,8 +41,12 @@ export abstract class BaseManager<T> {
 					this.cacheSet(updatedEntity as T, cached);
 					return updatedEntity as T;
 				} else {
-					// TODO ignore unfetched entities unless they are new, using .version
-					const entity = await this.fetch(criteria);
+					let entity;
+					if (isCompleteObject(data)) {
+						entity = data as T;
+					} else {
+						entity = await this.fetch(criteria);
+					}
 					if (entity) {
 						this.cacheSet(entity);
 						return entity;

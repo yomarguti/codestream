@@ -1,5 +1,14 @@
 const NESTED_PROPERTY_REGEX = /^(.+?)\.(.+)$/;
 
+export function isCompleteObject(obj: object): boolean {
+	for (const key of Object.keys(obj)) {
+		if (operations[key]) {
+			return false;
+		}
+	}
+	return true;
+}
+
 export const resolve = (
 	{ id, ...object }: { id: string; object: any[] },
 	changes: { [key: string]: any }

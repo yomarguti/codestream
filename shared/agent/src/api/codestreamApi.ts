@@ -112,7 +112,6 @@ import {
 	RTMessage,
 	VersionInfo
 } from "./apiProvider";
-import { Cache } from "./cache";
 
 export class CodeStreamApiProvider implements ApiProvider {
 	private _onDidReceiveMessage = new Emitter<RTMessage>();
@@ -125,15 +124,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 	private _token: string | undefined;
 	private _userId: string | undefined;
 
-	// TODO: Remove this cache in favor of resolves from *Manager
-	private readonly _cache: Cache;
 	private _pubnub: PubnubReceiver | undefined;
 	private _pubnubKey: string | undefined;
 	private _pubnubToken: string | undefined;
 
-	constructor(public readonly baseUrl: string, private readonly _version: VersionInfo) {
-		this._cache = new Cache(this);
-	}
+	constructor(public readonly baseUrl: string, private readonly _version: VersionInfo) {}
 
 	get teamId(): string {
 		return this._teamId!;
@@ -354,14 +349,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 			`/posts/${request.postId}`,
 			this._token
 		);
-
-		// Container.instance().posts.resolve({
-		// 	source: MessageSource.CodeStream,
-		// 	type: MessageType.Posts,
-		// 	changeSets: response
-		// });
-		const post = await this._cache.resolvePost(response.post);
-		return { ...response, post: post };
+		const [post] = await Container.instance().posts.resolve({
+			type: MessageType.Streams,
+			data: [response.post]
+		});
+		return { ...response, post };
 	}
 
 	async editPost(request: EditPostRequest) {
@@ -370,9 +362,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 			request,
 			this._token
 		);
-
-		const post = await this._cache.resolvePost(response.post);
-		return { ...response, post: post };
+		const [post] = await Container.instance().posts.resolve({
+			type: MessageType.Streams,
+			data: [response.post]
+		});
+		return { ...response, post };
 	}
 
 	fetchPostReplies(request: FetchPostRepliesRequest) {
@@ -437,7 +431,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 			this._token
 		);
 
-		const post = await this._cache.resolvePost(response.post);
+		const [post] = await Container.instance().posts.resolve({
+			type: MessageType.Posts,
+			data: [response.post]
+		});
 		return { ...response, post: post };
 	}
 
@@ -521,16 +518,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 			{},
 			this._token
 		);
-
-		// const stream = Container.instance().streams.resolve({
-		// 	source: MessageSource.CodeStream,
-		// 	type: MessageType.Streams,
-		// 	changeSets: response
-		// });
-		const stream = (await this._cache.resolveStream(response.stream)) as
-			| CSChannelStream
-			| CSDirectStream;
-		return { stream: stream };
+		const [stream] = await Container.instance().streams.resolve({
+			type: MessageType.Streams,
+			data: [response.stream]
+		});
+		return { stream };
 	}
 
 	async leaveStream(request: LeaveStreamRequest) {
@@ -540,16 +532,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 				$pull: { memberIds: [this._userId] }
 			}
 		});
-
-		// const stream = Container.instance().streams.resolve({
-		// 	source: MessageSource.CodeStream,
-		// 	type: MessageType.Streams,
-		// 	changeSets: response
-		// });
-		const stream = (await this._cache.resolveStream(response.stream)) as
-			| CSChannelStream
-			| CSDirectStream;
-		return { stream: stream };
+		const [stream] = await Container.instance().streams.resolve({
+			type: MessageType.Streams,
+			data: [response.stream]
+		});
+		return { stream };
 	}
 
 	markStreamRead(request: MarkStreamReadRequest) {
@@ -562,16 +549,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 			{ changes: request.changes },
 			this._token
 		);
-
-		// const stream = Container.instance().streams.resolve({
-		// 	source: MessageSource.CodeStream,
-		// 	type: MessageType.Streams,
-		// 	changeSets: response
-		// });
-		const stream = (await this._cache.resolveStream(response.stream)) as
-			| CSChannelStream
-			| CSDirectStream;
-		return { stream: stream };
+		const [stream] = await Container.instance().streams.resolve({
+			type: MessageType.Streams,
+			data: [response.stream]
+		});
+		return { stream };
 	}
 
 	updateStreamMembership(request: UpdateStreamMembershipRequest) {
