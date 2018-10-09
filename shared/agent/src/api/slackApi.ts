@@ -925,6 +925,8 @@ export class SlackApiProvider implements ApiProvider {
 
 namespace CSChannelStream {
 	export function fromSlack(channel: any, users: CSUser[], teamId: string): CSChannelStream {
+		const { mostRecentId, mostRecentTimestamp } = CSStream.fromSlackLatest(channel);
+
 		return {
 			createdAt: channel.created,
 			creatorId: channel.creator,
@@ -939,6 +941,8 @@ namespace CSChannelStream {
 					? users.map(u => u.id)
 					: [],
 			modifiedAt: channel.created,
+			mostRecentPostCreatedAt: mostRecentTimestamp,
+			mostRecentPostId: mostRecentId,
 			privacy: channel.is_private ? "private" : "public",
 			purpose: channel.purpose && channel.purpose.value,
 			sortId: undefined!,
@@ -950,6 +954,8 @@ namespace CSChannelStream {
 
 namespace CSDirectStream {
 	export function fromSlack(channel: any, users: CSUser[], teamId: string): CSDirectStream {
+		const { mostRecentId, mostRecentTimestamp } = CSStream.fromSlackLatest(channel);
+
 		if (channel.is_im) {
 			const user = users.find(u => u.id === channel.user);
 			return {
@@ -961,6 +967,8 @@ namespace CSDirectStream {
 				// TODO: Totally wrong
 				memberIds: [channel.user],
 				modifiedAt: channel.created,
+				mostRecentPostCreatedAt: mostRecentTimestamp,
+				mostRecentPostId: mostRecentId,
 				privacy: channel.is_private,
 				sortId: undefined!,
 				teamId: teamId,
@@ -989,6 +997,8 @@ namespace CSDirectStream {
 			// TODO: Totally wrong
 			memberIds: users.map(u => u.id),
 			modifiedAt: channel.created,
+			mostRecentPostCreatedAt: mostRecentTimestamp,
+			mostRecentPostId: mostRecentId,
 			privacy: channel.is_private,
 			purpose: channel.purpose && channel.purpose.value,
 			sortId: undefined!,
@@ -1105,6 +1115,18 @@ namespace CSStream {
 		}
 
 		return undefined;
+	}
+
+	export function fromSlackLatest(channel: { id: string; latest?: { ts: string } }) {
+		const latest = channel.latest && channel.latest.ts;
+		let mostRecentId;
+		let mostRecentTimestamp;
+		if (latest) {
+			mostRecentTimestamp = Number(latest.split(".")[0]) * 1000;
+			mostRecentId = CSPost.toSlackPostId(latest, channel.id);
+		}
+
+		return { mostRecentId: mostRecentId, mostRecentTimestamp: mostRecentTimestamp };
 	}
 }
 
