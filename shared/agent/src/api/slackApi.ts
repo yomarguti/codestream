@@ -24,7 +24,6 @@ import {
 	FetchMarkerLocationsRequest,
 	FetchMarkersRequest,
 	FetchPostRepliesRequest,
-	FetchPostRepliesResponse,
 	FetchPostsRequest,
 	FetchStreamsRequest,
 	FetchTeamsRequest,
@@ -498,8 +497,49 @@ export class SlackApiProvider implements ApiProvider {
 		return postResponse;
 	}
 
-	fetchPostReplies(request: FetchPostRepliesRequest): Promise<FetchPostRepliesResponse> {
-		throw new Error("Method not implemented.");
+	async fetchPostReplies(request: FetchPostRepliesRequest) {
+		const { streamId, postId } = CSPost.fromSlackPostId(request.postId, request.streamId);
+
+		let response;
+
+		// This isn't ideal, but we can always pack some more info into the id to ensure we call the right thing
+		switch (request.streamId[0]) {
+			case "C":
+				response = await this._slack.channels.replies({
+					channel: streamId,
+					thread_ts: postId
+				});
+
+				break;
+
+			case "G":
+				response = await this._slack.groups.replies({
+					channel: streamId,
+					thread_ts: postId as any // Slack has the wrong typing here
+				});
+
+				break;
+
+			case "D":
+				response = await this._slack.im.replies({
+					channel: streamId,
+					thread_ts: postId
+				});
+				break;
+		}
+
+		const { ok, error, messages } = response as WebAPICallResult & { messages: any };
+		if (!ok) throw new Error(error);
+
+		// Ensure the correct ordering
+		messages.sort((a: any, b: any) => a.ts - b.ts);
+
+		const usersById = await this.ensureUsersById();
+		const posts = messages.map((m: any) =>
+			CSPost.fromSlack(m, request.streamId, usersById, this._codestreamTeamId)
+		) as CSPost[];
+
+		return { posts: posts };
 	}
 
 	async fetchPosts(request: FetchPostsRequest) {
@@ -555,11 +595,10 @@ export class SlackApiProvider implements ApiProvider {
 		};
 		if (!ok) throw new Error(error);
 
-		const usersById = await this.ensureUsersById();
-
 		// Ensure the correct ordering
 		messages.sort((a: any, b: any) => a.ts - b.ts);
 
+		const usersById = await this.ensureUsersById();
 		const posts = messages.map((m: any) =>
 			CSPost.fromSlack(m, request.streamId, usersById, this._codestreamTeamId)
 		) as CSPost[];
