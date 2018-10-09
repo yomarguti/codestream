@@ -350,7 +350,7 @@ class Post extends React.Component {
 
 	renderTextLinkified = text => {
 		let usernameRegExp = new RegExp("(@(?:" + this.props.usernames.toLowerCase() + ")\\b)", "i");
-		let bodyParts = markdownify(text).split(usernameRegExp);
+		let bodyParts = markdownify(text || "").split(usernameRegExp);
 		const meLowerCase = "@" + this.props.currentUserName.toLowerCase();
 
 		const html = bodyParts
