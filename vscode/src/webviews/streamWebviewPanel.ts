@@ -380,6 +380,19 @@ export class StreamWebviewPanel implements Disposable {
 							});
 							break;
 						}
+						case "fetch-thread": {
+							const { streamId, parentPostId } = body.params;
+							const posts = (await Container.agent.posts.fetchReplies(streamId, parentPostId))
+								.posts;
+							this.postMessage({
+								type: WebviewIpcMessageType.response,
+								body: {
+									id: body.id,
+									payload: posts
+								}
+							});
+							break;
+						}
 						case "delete-post": {
 							const { streamId, id } = body.params;
 
