@@ -92,6 +92,8 @@ import {
 	CSStream,
 	CSUpdateMarkerRequest,
 	CSUpdateMarkerResponse,
+	CSUpdatePostsCountRequest,
+	CSUpdatePostsCountResponse,
 	CSUpdatePresenceRequest,
 	CSUpdatePresenceResponse,
 	CSUpdateStreamMembershipResponse,
@@ -243,6 +245,14 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	getMe() {
 		return this.get<CSGetMeResponse>("/users/me", this._token);
+	}
+
+	updatePostsCount(request: CSUpdatePostsCountRequest): Promise<CSUpdatePostsCountResponse> {
+		return this.put<CSUpdatePostsCountRequest, CSUpdatePostsCountResponse>(
+			`/bump-posts`,
+			request,
+			this._token
+		);
 	}
 
 	async updatePreferences(request: UpdatePreferencesRequest) {

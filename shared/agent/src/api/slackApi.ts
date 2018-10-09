@@ -7,6 +7,7 @@ import {
 	WebClientOptions
 } from "@slack/client";
 import { RequestInit } from "node-fetch";
+import { Logger } from "../logger";
 import { MessageSource, RealTimeMessage } from "../managers/realTimeMessage";
 import {
 	CreateChannelStreamRequest,
@@ -411,8 +412,14 @@ export class SlackApiProvider implements ApiProvider {
 		const { ok, error, message } = response as WebAPICallResult & { message: any };
 		if (!ok) throw new Error(error);
 
-		const usersById = await this.ensureUsersById();
+		try {
+			void (await this._codestream.updatePostsCount({}));
+		} catch (ex) {
+			debugger;
+			Logger.error(ex, "Failed updating post count");
+		}
 
+		const usersById = await this.ensureUsersById();
 		const post = CSPost.fromSlack(message, streamId, usersById, this._codestreamTeamId);
 
 		if (request.codeBlocks && request.codeBlocks.length) {
