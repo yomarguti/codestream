@@ -47,6 +47,7 @@ import {
 import {
 	CSChannelStream,
 	CSDirectStream,
+	CSGetMeResponse,
 	CSMe,
 	CSPost,
 	CSSlackProviderInfo,
@@ -63,14 +64,16 @@ const multiPartyNamesRegEx = /^mpdm-([^-]+)(--.*)-1$/;
 const multiPartyNameRegEx = /--([^-]+)/g;
 
 const mentionsRegex = /(^|\s)@(\w+)(?:\b(?!@|[\(\{\[\<\-])|$)/g;
-const slackMentionsRegex = /(^|\s)\<[@|!](\w+)\>(\s|$)/g;
+const slackMentionsRegex = /\<[@|!](\w+)\>/g;
 
 export class SlackApiProvider implements ApiProvider {
 	private _slack: WebClient | undefined;
 
-	private _codestreamUserId: string | undefined;
+	private readonly _codestreamUserId: string;
+	private readonly _slackUserId: string;
 
 	private _streams: (CSChannelStream | CSDirectStream)[] | undefined;
+	private _user: CSMe;
 	private _users: CSUser[] | undefined;
 	private _usersById: Map<string, CSUser> | undefined;
 	private _usersByName: Map<string, CSUser> | undefined;
@@ -78,15 +81,23 @@ export class SlackApiProvider implements ApiProvider {
 	constructor(
 		private _codestream: CodeStreamApiProvider,
 		providerInfo: CSSlackProviderInfo,
-		private readonly _user: CSMe,
+		user: CSMe,
 		private readonly _teamId: string
 	) {
 		const slackToken = providerInfo.accessToken;
 		const slackOptions: WebClientOptions = { retryConfig: { retries: 1 } };
 		this._slack = new WebClient(slackToken, slackOptions);
 
-		this._codestreamUserId = _user.id;
-		_user.id = providerInfo.userId;
+		this._codestreamUserId = user.id;
+		this._slackUserId = providerInfo.userId;
+
+		this._user = user;
+	}
+
+	async initialize() {
+		// Mix in slack user info with ours
+		const meResponse = await this.getMeCore({ user: this._user });
+		this._user = meResponse.user;
 	}
 
 	private get slack() {
@@ -98,7 +109,7 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	get slackUserId(): string {
-		return this._user.id;
+		return this._slackUserId;
 	}
 
 	fetch<R extends object>(url: string, init?: RequestInit, token?: string) {
@@ -145,8 +156,15 @@ export class SlackApiProvider implements ApiProvider {
 		return [];
 	}
 
-	async getMe() {
-		const meResponse = await this._codestream.getMe();
+	getMe() {
+		return this.getMeCore();
+	}
+
+	private async getMeCore(meResponse?: CSGetMeResponse) {
+		if (meResponse === undefined) {
+			meResponse = await this._codestream.getMe();
+		}
+
 		const me = meResponse.user;
 		me.id = this.slackUserId;
 
@@ -154,9 +172,9 @@ export class SlackApiProvider implements ApiProvider {
 			user: this.slackUserId
 		});
 
-		const { ok, error, member } = response as WebAPICallResult & { member: any };
+		const { ok, error, user: usr } = response as WebAPICallResult & { user: any };
 		if (ok) {
-			const user = CSUser.fromSlack(member, this._teamId);
+			const user = CSUser.fromSlack(usr, this._teamId);
 			return {
 				user: {
 					...me,
@@ -578,7 +596,9 @@ export class SlackApiProvider implements ApiProvider {
 
 			const users: CSUser[] = members.map((m: any) => CSUser.fromSlack(m, this._teamId));
 
-			users.splice(0, 0, this._user!);
+			// Find ourselves and replace it with our model
+			const index = users.findIndex(u => u.id === this._user.id);
+			users.splice(index, 1, this._user);
 
 			this._users = users;
 
@@ -603,10 +623,10 @@ export class SlackApiProvider implements ApiProvider {
 			user: request.userId
 		});
 
-		const { ok, error, member } = response as WebAPICallResult & { member: any };
+		const { ok, error, user: usr } = response as WebAPICallResult & { user: any };
 		if (!ok) throw new Error(error);
 
-		const user = CSUser.fromSlack(member, this._teamId);
+		const user = CSUser.fromSlack(usr, this._teamId);
 
 		return { user: user };
 	}
@@ -700,22 +720,23 @@ namespace CSPost {
 	): CSPost {
 		const mentionedUserIds: string[] = [];
 
-		const text = post.text.replace(
-			slackMentionsRegex,
-			(match: string, prefix: string, mentionId: string, suffix: string) => {
+		const text = post.text
+			.replace(slackMentionsRegex, (match: string, mentionId: string) => {
 				if (mentionId === "everyone" || mentionId === "channel" || mentionId === "here") {
-					return `${prefix}@${mentionId}${suffix}`;
+					return `@${mentionId}`;
 				}
 
 				const user = usersById.get(mentionId);
 				if (user !== undefined) {
 					mentionedUserIds.push(user.id);
-					return `${prefix}@${user.username}${suffix}`;
+					return `@${user.username}`;
 				}
 
 				return match;
-			}
-		);
+			})
+			// Slack always encodes < & > so decode them
+			.replace("&lt;", "<")
+			.replace("&gt;", ">");
 
 		let reactions;
 		if (post.reactions) {

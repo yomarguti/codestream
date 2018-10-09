@@ -168,16 +168,15 @@ export interface CSUser extends CSEntity {
 	lastPostCreatedAt: number;
 	numMentions: number;
 	numInvites: number;
-	// Is this on me only?
-	providerInfo?: {
-		slack?: CSSlackProviderInfo;
-	};
 	registeredAt: number;
 	secondaryEmails?: string[];
 	teamIds: string[];
 	timeZone: string;
 	totalPosts: number;
 	username: string;
+	avatar?: {
+		url: string;
+	};
 }
 
 export interface CSMeLastReads {
@@ -191,6 +190,9 @@ export interface CSMePreferences {
 export interface CSMe extends CSUser {
 	lastReads: CSMeLastReads;
 	preferences: CSMePreferences;
+	providerInfo?: {
+		slack?: CSSlackProviderInfo;
+	};
 }
 
 export interface CompleteSignupRequest {
