@@ -1452,7 +1452,7 @@ const mapStateToProps = ({
 		configs,
 		isOffline,
 		teamMembersById,
-		teammates: teamMembers.filter(({ id }) => id !== session.userId),
+		teammates: teamMembers.filter(({ id, deactivated }) => id !== session.userId && !deactivated),
 		postStream,
 		postStreamId: postStream.id,
 		postStreamName,
