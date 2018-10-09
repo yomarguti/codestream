@@ -328,7 +328,7 @@ export default infiniteLoadable(
 												rowIndex={data.index}
 												parent={data.parent}
 											>
-												<div style={{ ...data.style, borderColor: "blue", textAlign: "center" }}>
+												<div style={data.style}>
 													{hasMore || isFetchingMore ? (
 														<div>
 															<p>Loading more posts...</p>
