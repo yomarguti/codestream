@@ -299,7 +299,7 @@ class Post extends React.Component {
 				<div className="body">
 					{parentPost && (
 						<div className="replying-to">
-							<span>reply to</span> <b>{parentPost.text.substr(0, 80)}</b>
+							<span>reply to</span> <b>{(parentPost.text || "").substr(0, 80)}</b>
 						</div>
 					)}
 					{post.creatorId === "codestream" && (
@@ -337,14 +337,14 @@ class Post extends React.Component {
 	};
 
 	renderEmote = post => {
-		let matches = post.text.match(/^\/me\s+(.*)/);
+		let matches = (post.text || "").match(/^\/me\s+(.*)/);
 		if (matches) return <span className="emote">{this.renderTextLinkified(matches[1])}</span>;
 		else return null;
 	};
 
 	renderBody = post => {
 		if (this.props.editing) return this.renderBodyEditing(post);
-		else if (post.text.match(/^\/me\s/)) return null;
+		else if ((post.text || "").match(/^\/me\s/)) return null;
 		else return this.renderTextLinkified(post.text);
 	};
 
