@@ -19,6 +19,7 @@ export default class Headshot extends Component {
 
 		if (person.username === "CodeStream") return this.renderCodeStream();
 
+		console.log(person);
 		let defaultImage = encodeURI(
 			"https://images.codestream.com/misc/nothing_transparent-36x36.gif"
 		);
@@ -31,18 +32,27 @@ export default class Headshot extends Component {
 		}
 		const classNameInitials = "headshot-initials color-" + person.color;
 
-		return (
-			<div className="headshot" ref={this._div} onClick={this.props.onClick}>
-				<Gravatar
-					className="headshot-gravatar"
-					size={this.props.size}
-					default={defaultImage}
-					protocol="http://"
-					email={person.email}
-				/>
-				<div className={classNameInitials}>{authorInitials}</div>
-			</div>
-		);
+		if (person.avatar) {
+			const uri = this.props.size > 48 ? person.avatar.image : person.avatar.image48;
+
+			return (
+				<div className="headshot" ref={this._div} onClick={this.props.onClick}>
+					<img className="headshot-image" src={uri} />
+				</div>
+			);
+		} else
+			return (
+				<div className="headshot" ref={this._div} onClick={this.props.onClick}>
+					<Gravatar
+						className="headshot-gravatar"
+						size={this.props.size}
+						default={defaultImage}
+						protocol="http://"
+						email={person.email}
+					/>
+					<div className={classNameInitials}>{authorInitials}</div>
+				</div>
+			);
 	}
 
 	handleEditHeadshot = event => {

@@ -2,7 +2,7 @@ export const slashCommands = [
 	{ id: "help", help: "get help" },
 	{ id: "add", help: "add member to channel", description: "@user", channelOnly: true },
 	// { id: "apply", help: "apply patch last post" },
-	{ id: "archive", help: "archive channel", channelOnly: true },
+	{ id: "archive", help: "archive channel", channelOnly: true, requires: "codestream" },
 	// { id: "diff", help: "diff last post" },
 	{ id: "invite", help: "add to your team", description: "email" },
 	{ id: "leave", help: "leave channel", channelOnly: true },

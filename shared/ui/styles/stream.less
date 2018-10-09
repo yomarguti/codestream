@@ -615,6 +615,13 @@
 					margin-right: 6px;
 					vertical-align: -4px;
 				}
+				.headshot-image {
+					position: absolute;
+					width: 18px;
+					height: 18px;
+					border-radius: 3px;
+					z-index: 2;
+				}
 				.headshot-gravatar {
 					position: absolute;
 					width: 18px;
@@ -718,6 +725,7 @@
 				white-space: nowrap;
 				overflow: hidden;
 				text-overflow: ellipsis;
+				.headshot-image,
 				.headshot-gravatar {
 					width: 18px;
 					height: 18px;
@@ -1211,6 +1219,7 @@
 				}
 			}
 			.headshot-gravatar,
+			.headshot-image,
 			.headshot-system {
 				display: block;
 				position: absolute;
@@ -1448,6 +1457,7 @@
 	.headshot-popup {
 		position: relative;
 		.headshot-gravatar,
+		.headshot-image,
 		.headshot-system {
 			top: 0;
 			left: 0;
@@ -1475,6 +1485,7 @@
 		}
 		.headshot-gravatar,
 		.headshot-system,
+		.headshot-image,
 		.headshot-initials {
 			border-radius: 4px 4px 0 0;
 			margin-top: -5px;
