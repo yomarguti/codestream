@@ -91,7 +91,8 @@ export default Child => {
 				}
 
 				this.setState({ isFetching: true });
-				const { fetchPosts, streamId, teamId } = this.props;
+				const { fetchPosts, childProps } = this.props;
+				const { streamId, teamId } = childProps;
 
 				const posts = await fetchPosts({
 					streamId,
