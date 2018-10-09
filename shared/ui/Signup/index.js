@@ -48,7 +48,7 @@ export default connect(
 					<br />
 					<div className="footer">
 						<p>
-							Have an account or an access token? <a onClick={props.goToLogin}>Sign In</a>
+							Have an account or a CodeStream Code? <a onClick={props.goToLogin}>Sign In</a>
 						</p>
 					</div>
 				</fieldset>

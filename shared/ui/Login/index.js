@@ -160,7 +160,7 @@ export class Login extends React.Component {
 					<fieldset className="form-body">
 						<div id="controls">
 							<div className="control-group">
-								<label>Have an access token?</label>
+								<label>Have a CodeStream Code?</label>
 								<input className="input-text" name="token" type="text" />
 								{this.renderTokenError()}
 							</div>
@@ -170,7 +170,7 @@ export class Login extends React.Component {
 									type="submit"
 									loading={this.state.validatingToken}
 								>
-									Sign In with Access Token
+									Sign In with CodeStream Code
 								</Button>
 							</div>
 						</div>
