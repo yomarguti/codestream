@@ -422,6 +422,7 @@ export class SlackApiProvider implements ApiProvider {
 		}
 
 		const streamId = (request as CreatePostInChannelOrDirectStreamRequest).streamId;
+
 		const response = await this._slack.chat.postMessage({
 			channel: streamId,
 			text: text,
@@ -443,34 +444,73 @@ export class SlackApiProvider implements ApiProvider {
 		const usersById = await this.ensureUsersById();
 		const post = CSPost.fromSlack(message, streamId, usersById, this._codestreamTeamId);
 
-		if (request.codeBlocks && request.codeBlocks.length) {
-			const [codeBlock] = request.codeBlocks;
-			const createMarkerResponse = await this._codestream.createMarker({
+		if (request.codeBlocks && request.codeBlocks.length !== 0) {
+			const [codeblock] = request.codeBlocks;
+
+			const markerResponse = await this._codestream.createMarker({
 				providerType: "slack",
 				postStreamId: post.streamId,
 				postId: post.id,
-				streamId: codeBlock.streamId,
-				file: codeBlock.file,
-				repoId: codeBlock.repoId,
-				remotes: codeBlock.remotes,
+				streamId: codeblock.streamId,
+				file: codeblock.file,
+				repoId: codeblock.repoId,
+				remotes: codeblock.remotes,
 				commitHash: request.commitHashWhenPosted,
-				code: codeBlock.code,
-				location: codeBlock.location
-				// type: codeBlock.type,
-				// color: codeBlock.color,
-				// status: codeBlock.status
+				code: codeblock.code,
+				location: codeblock.location
+				// type: codeblock.type,
+				// color: codeblock.color,
+				// status: codeblock.status
 			});
-			const marker = createMarkerResponse.marker;
+
+			const marker = markerResponse.marker;
 			// const fileStream = await Container.instance().files.getById(marker.streamId);
 			post.codeBlocks = [
 				{
-					...codeBlock,
+					...codeblock,
 					// file: fileStream.file,
 					// repoId: fileStream.repoId,
 					markerId: marker.id
 				} as CSCodeBlock
 			];
+
+			const [start, , end] = codeblock.location!;
+			const title = `${codeblock.file} (Line${start === end ? ` ${start}` : `s ${start}-${end}`})`;
+
+			const githubRemote = codeblock.remotes!.find(r => r.startsWith("github.com"));
+			let titleLink;
+			if (githubRemote) {
+				titleLink = `https://${githubRemote}/blob/HEAD/${codeblock.file}#L${start}${
+					start !== end ? `-L${end}` : ""
+				}`;
+			}
+
+			const code = `\`\`\`${codeblock.code}\`\`\``;
+
+			const attachments = [
+				{
+					fallback: `${title}\n${code}`,
+					title: title,
+					title_link: titleLink,
+					text: code,
+					footer: "Posted via CodeStream",
+					ts: (new Date().getTime() / 1000) as any,
+					callback_id: marker.id
+				}
+			];
+
+			const response = await this._slack.chat.update({
+				channel: streamId,
+				ts: post.seqNum as any,
+				text: text,
+				as_user: true,
+				attachments: attachments
+			});
+
+			const { ok, error, message } = response as WebAPICallResult & { message: any };
+			if (!ok) throw new Error(error);
 		}
+
 		return { post: post };
 	}
 
