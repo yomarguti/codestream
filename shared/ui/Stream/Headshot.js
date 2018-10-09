@@ -19,7 +19,6 @@ export default class Headshot extends Component {
 
 		if (person.username === "CodeStream") return this.renderCodeStream();
 
-		console.log(person);
 		let defaultImage = encodeURI(
 			"https://images.codestream.com/misc/nothing_transparent-36x36.gif"
 		);
