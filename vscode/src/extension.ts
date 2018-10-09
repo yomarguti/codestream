@@ -45,6 +45,7 @@ export async function activate(context: ExtensionContext) {
 		extensionVersionFormatted: formattedVersion,
 		gitPath: git,
 		ideVersion: vscodeVersion,
+		isDebugging: Logger.isDebugging,
 		serverUrl: cfg.serverUrl
 	} as AgentOptions);
 

@@ -176,11 +176,7 @@ export class CodeStreamAgentConnection implements Disposable {
 				{ scheme: "file", language: "*" },
 				{ scheme: "untitled", language: "*" },
 				{ scheme: "vsls", language: "*" }
-			],
-			synchronize: {
-				// Synchronize the setting section 'codestream' to the server
-				configurationSection: "codestream"
-			}
+			]
 		};
 	}
 
@@ -594,15 +590,15 @@ export class CodeStreamAgentConnection implements Disposable {
 		this._onDidChangeDocumentMarkers.fire({ uri: Uri.parse(e.textDocument.uri) });
 	}
 
+	private onItemsChanged(...messages: DidChangeItemsNotification[]) {
+		Logger.log("AgentConnection.onItemsChanged", messages);
+		this._onDidReceivePubNubMessages.fire(messages);
+	}
+
 	private onLogout(e: LogoutRequest) {
 		Logger.log("AgentConnection.onLogout", `reason=${e.reason}`);
 
 		void Container.session.goOffline();
-	}
-
-	private onPubNubMessagesReceived(...messages: DidChangeItemsNotification[]) {
-		Logger.log("AgentConnection.onPubNubMessagesReceived", messages);
-		this._onDidReceivePubNubMessages.fire(messages);
 	}
 
 	private async onVersionCompatibilityChanged(
@@ -714,17 +710,13 @@ export class CodeStreamAgentConnection implements Disposable {
 			{ ...this._serverOptions } as ServerOptions,
 			clientOptions
 		);
-		this._client.registerProposedFeatures();
 
 		this._disposable = this._client.start();
 		void (await this._client.onReady());
 
 		this._client.onRequest(LogoutRequestType, this.onLogout.bind(this));
 
-		this._client.onNotification(
-			DidChangeItemsNotificationType,
-			this.onPubNubMessagesReceived.bind(this)
-		);
+		this._client.onNotification(DidChangeItemsNotificationType, this.onItemsChanged.bind(this));
 
 		this._client.onNotification(
 			DidChangeDocumentMarkersNotificationType,
