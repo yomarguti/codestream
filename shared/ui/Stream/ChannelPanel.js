@@ -69,18 +69,18 @@ export class SimpleChannelPanel extends Component {
 
 	renderUnreadChannels = () => {
 		return;
-		return (
-			<div className="section">
-				<div className="header">
-					<Tooltip title="All Channels With Unread Messages" placement="left" delay=".5">
-						<span className="clickable">UNREADS</span>
-					</Tooltip>
-				</div>
-				<ul onClick={this.handleClickSelectStream}>
-					{this.renderStreams(this.props.channelStreams)}
-				</ul>
-			</div>
-		);
+		// return (
+		// 	<div className="section">
+		// 		<div className="header">
+		// 			<Tooltip title="All Channels With Unread Messages" placement="left" delay="0.5">
+		// 				<span className="clickable">UNREADS</span>
+		// 			</Tooltip>
+		// 		</div>
+		// 		<ul onClick={this.handleClickSelectStream}>
+		// 			{this.renderStreams(this.props.channelStreams)}
+		// 		</ul>
+		// 	</div>
+		// );
 	};
 
 	renderTeamChannels = () => {
@@ -92,13 +92,17 @@ export class SimpleChannelPanel extends Component {
 			>
 				<div className="header top" onClick={e => this.toggleSection(e, "teamChannels")}>
 					<Icon name="triangle-right" className="triangle-right" />
-					<span className="clickable">Team Channels</span>
+					<span className="clickable">Channels</span>
 					<div className="align-right">
-						<Tooltip title="Create a Channel" placement="bottom">
-							<Icon name="list-unordered" onClick={this.handleClickShowPublicChannels} />
+						<Tooltip title="Browse all Channels" placement="bottom" delay="0.5">
+							<span>
+								<Icon name="list-unordered" onClick={this.handleClickShowPublicChannels} />
+							</span>
 						</Tooltip>
-						<Tooltip title="Create a Channel" placement="bottom">
-							<Icon name="plus" onClick={this.handleClickCreateChannel} />
+						<Tooltip title="Create a Channel" placement="bottom" delay="0.5">
+							<span>
+								<Icon name="plus" onClick={this.handleClickCreateChannel} />
+							</span>
 						</Tooltip>
 					</div>
 				</div>
@@ -202,7 +206,6 @@ export class SimpleChannelPanel extends Component {
 					) : (
 						<Icon className="person" name="person" />
 					);
-				console.log(stream);
 				const sortTimestamp =
 					stream.name === "slackbot"
 						? 1
@@ -275,8 +278,10 @@ export class SimpleChannelPanel extends Component {
 					<Icon name="triangle-right" className="triangle-right" />
 					<span className="clickable">Direct Messages</span>
 					<div className="align-right">
-						<Tooltip title="Open a direct message">
-							<Icon name="plus" onClick={this.handleClickCreateDirectMessage} />
+						<Tooltip title="Open a direct message" placement="bottom" delay="0.5">
+							<span>
+								<Icon name="plus" onClick={this.handleClickCreateDirectMessage} />
+							</span>
 						</Tooltip>
 					</div>
 				</div>

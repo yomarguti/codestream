@@ -14,6 +14,7 @@ import { FormattedMessage } from "react-intl";
 import * as routingActions from "../actions/routing";
 import _ from "underscore";
 import Timestamp from "./Timestamp";
+import Tooltip from "./Tooltip";
 
 export class SimplePublicChannelPanel extends Component {
 	constructor(props) {
@@ -41,7 +42,11 @@ export class SimplePublicChannelPanel extends Component {
 					</span>
 					<span className="panel-title">All Channels</span>
 					<span onClick={this.handleClickCreateChannel} className="align-right-button">
-						<Icon name="plus" />
+						<Tooltip title="Create a Channel" placement="bottom" delay="0.5">
+							<span>
+								<Icon name="plus" />
+							</span>
+						</Tooltip>
 					</span>
 				</div>
 				<div className="channel-list postslist vscroll">
