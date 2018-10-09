@@ -545,24 +545,24 @@ export class SimpleStream extends Component {
 							<div className="shadow shadow-bottom" />
 						</div>
 						<div className={threadPostsListClass} onClick={this.handleClickPost}>
-							<div className="shadow-cover-top" />
-							{threadPost && (
-								<Post
-									id={threadPost.id}
-									streamId={this.props.postStreamId}
-									usernames={this.props.usernamesRegexp}
-									currentUserId={this.props.currentUserId}
-									currentUserName={this.props.currentUserName}
-									key={threadPost.id}
-									showDetails="1"
-									currentCommit={this.props.currentCommit}
-									editing={activePanel === "thread" && threadPost.id === this.state.editingPostId}
-									action={this.postAction}
-									didTriggerThread={threadPost.id === this.state.threadTrigger}
-								/>
-							)}
-							{this.renderThreadPosts(threadId)}
-							<div className="shadow-cover-bottom" />
+							{/* <div className="shadow-cover-top" /> */}
+							<PostList
+								id={`posts-list-${threadId}`}
+								ref={this.setThreadListRef}
+								isActive={this.props.activePanel === "thread"}
+								hasFocus={this.props.hasFocus}
+								usernamesRegexp={this.props.usernamesRegexp}
+								currentUserId={this.props.currentUserId}
+								currentUserName={this.props.currentUserName}
+								editingPostId={this.state.editingPostId}
+								postAction={this.postAction}
+								streamId={this.props.postStreamId}
+								isThread
+								threadId={threadId}
+								threadTigger={this.state.threadTrigger}
+								teamId={this.props.teamId}
+							/>
+							{/* <div className="shadow-cover-bottom" /> */}
 						</div>
 					</div>
 				</div>
@@ -611,24 +611,18 @@ export class SimpleStream extends Component {
 			.value();
 	}
 
-	editLastPost = event => {
+	editLastPost = _event => {
 		const { activePanel } = this.props;
 		let list;
+		if (activePanel === "thread") list = this._threadpostslist;
 		if (activePanel === "main") {
 			list = this._postslist;
-			const { post, index } = list.getUsersMostRecentPost();
-			if (post)
-				this.setState({ editingPostId: post.id }, () => {
-					list.scrollTo(index);
-				});
-			//else no recent posts to edit
-		} else {
-			// TODO: make the thread list a PostList
-			const postDiv = event.target.closest(".post");
-			const seqNum = postDiv ? postDiv.dataset.seqNum : 9999999999;
-			const editingPost = this.findMyPostBeforeSeqNum(seqNum);
-			if (editingPost) this.setState({ editingPostId: editingPost.id });
 		}
+		const { post, index } = list.getUsersMostRecentPost();
+		if (post)
+			this.setState({ editingPostId: post.id }, () => {
+				list.scrollTo(index);
+			});
 	};
 
 	showChannels = event => {

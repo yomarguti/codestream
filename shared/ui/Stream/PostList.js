@@ -36,11 +36,13 @@ export default infiniteLoadable(
 			const { firstUnreadPostSeqNum, posts } = this.props;
 
 			const streamChanged = prevProps.streamId !== this.props.streamId;
-			if (streamChanged) {
+			const threadChanged =
+				prevProps.isThread && this.props.isThread && prevProps.threadId !== this.props.threadId;
+			if (streamChanged || threadChanged) {
 				this.cache.clearAll();
 				safe(() => this.list.recomputeRowHeights());
-				this.scrollToBottom();
 			}
+			if (streamChanged) this.scrollToBottom();
 			if (!streamChanged && prevPosts.length !== posts.length) {
 				if (prevProps.isFetchingMore && !this.props.isFetchingMore) {
 					this.cache.clearAll();
@@ -328,13 +330,13 @@ export default infiniteLoadable(
 												rowIndex={data.index}
 												parent={data.parent}
 											>
-												<div style={data.style}>
+												<div style={{ ...data.style, textAlign: "center" }}>
 													{hasMore || isFetchingMore ? (
 														<div>
 															<p>Loading more posts...</p>
 														</div>
 													) : (
-														renderIntro()
+														safe(renderIntro)
 													)}
 												</div>
 											</CellMeasurer>
@@ -372,7 +374,7 @@ export default infiniteLoadable(
 													usernames={this.props.usernamesRegexp}
 													currentUserId={this.props.currentUserId}
 													currentUserName={this.props.currentUserName}
-													replyingTo={parentPost}
+													replyingTo={!this.props.isThread && parentPost}
 													newMessageIndicator={newMessageIndicator}
 													unread={post.seqNum >= this.props.firstUnreadPostSeqNum}
 													editing={isActive && post.id === editingPostId}
@@ -381,8 +383,11 @@ export default infiniteLoadable(
 													focusOnRow={this.focusOnRow}
 													onRowDidResize={this.onRowDidResize}
 													onNeedsResize={this.onNeedsResize}
-													showDetails={this.props.showDetails}
+													showDetails={this.props.isThread}
 													streamId={this.props.streamId}
+													didTriggerThread={
+														this.props.isThread && post.id === this.props.threadTrigger
+													}
 												/>
 											</div>
 										</CellMeasurer>

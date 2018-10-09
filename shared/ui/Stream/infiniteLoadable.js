@@ -6,16 +6,17 @@ import { fetchPosts } from "./actions";
 import { safe, debounceToAnimationFrame } from "../utils";
 
 const mapStateToProps = (state, props) => {
-	let posts = getPostsForStream(state.posts, props.streamId);
-	//
-	// if (props.threadId) {
-	// 	posts = posts.filter(p => p.id === props.threadId || p.parentPostId === props.threadId);
-	// 	console.debug("PostList.mapStateToProps", { props, posts });
-	// }
+	const { streamId, isThread, threadId } = props.childProps;
+	let posts = getPostsForStream(state.posts, streamId);
+
+	if (threadId) {
+		posts = posts.filter(p => p.id === threadId || p.parentPostId === threadId);
+	}
+
 	return {
+		isThread,
 		posts,
-		postIds: posts.map(p => p.id),
-		childProps: props
+		postIds: posts.map(p => p.id)
 	};
 };
 
@@ -34,7 +35,14 @@ export default Child => {
 			}
 
 			componentDidUpdate(prevProps, _prevState) {
-				if (!this.state.isFetching && prevProps.streamId !== this.props.streamId) {
+				if (this.props.isThread && prevProps.isThread) {
+					if (this.props.childProps.threadId !== prevProps.childProps.threadId)
+						return this.initialize();
+				}
+				if (
+					!this.state.isFetching &&
+					prevProps.childProps.streamId !== this.props.childProps.streamId
+				) {
 					return this.initialize();
 				}
 				if (!this.state.isFetching && !isEqual(prevProps.postIds, this.props.postIds)) {
@@ -46,22 +54,27 @@ export default Child => {
 				this.setState({ isInitialized: false });
 
 				if (this.props.posts.length === 0) {
-					const { streamId, teamId, fetchPosts } = this.props;
-					const posts = await fetchPosts({ streamId, teamId, limit: batchCount });
+					const { childProps, isThread, fetchPosts } = this.props;
+					const { streamId, teamId, threadId } = childProps;
+					const posts = await fetchPosts({ streamId, teamId, threadId, limit: batchCount });
 					this.setState({
 						isInitialized: true,
 						posts: this.props.posts,
-						hasMore: posts.length === batchCount
+						hasMore: isThread ? false : posts.length === batchCount
 					});
 				} else {
-					this.setState({ isInitialized: true, posts: this.props.posts, hasMore: true });
+					this.setState({
+						isInitialized: true,
+						posts: this.props.posts,
+						hasMore: this.props.isThread ? false : true
+					});
 				}
 			}
 
 			onSectionRendered = debounceToAnimationFrame(data => {
 				this.lastRenderedRowsData = data;
 
-				if (this.state.hasMore && data.startIndex === 0) {
+				if (!this.props.childProps.threadId && this.state.hasMore && data.startIndex === 0) {
 					const { posts } = this.state;
 					const earliestLocalSeqNum = safe(() => posts[0].seqNum);
 					if (earliestLocalSeqNum && earliestLocalSeqNum > 1) {
@@ -157,6 +170,6 @@ export default Child => {
 	);
 
 	return React.forwardRef((props, ref) => {
-		return <DataProvider {...props} forwardedRef={ref} />;
+		return <DataProvider childProps={props} forwardedRef={ref} />;
 	});
 };
