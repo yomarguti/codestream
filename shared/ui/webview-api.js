@@ -63,6 +63,10 @@ export default class WebviewApi {
 		return this.postMessage({ action: "fetch-posts", params });
 	}
 
+	fetchThread(streamId, parentPostId) {
+		return this.postMessage({ action: "fetch-thread", params: { streamId, parentPostId } });
+	}
+
 	createPost(post) {
 		return this.postMessage({ action: "create-post", params: post });
 	}

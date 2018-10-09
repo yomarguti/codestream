@@ -2,7 +2,7 @@ import * as React from "react";
 import { connect } from "react-redux";
 import { isEqual } from "underscore";
 import { getPostsForStream } from "../reducers/posts";
-import { fetchPosts } from "./actions";
+import { fetchPosts, fetchThread } from "./actions";
 import { safe, debounceToAnimationFrame } from "../utils";
 
 const mapStateToProps = (state, props) => {
@@ -25,7 +25,7 @@ export default Child => {
 
 	const DataProvider = connect(
 		mapStateToProps,
-		{ fetchPosts }
+		{ fetchPosts, fetchThread }
 	)(
 		class Provider extends React.Component {
 			state = { isFetching: false, isInitialized: false, posts: [], hasMore: true };
@@ -54,13 +54,20 @@ export default Child => {
 				this.setState({ isInitialized: false });
 
 				if (this.props.posts.length === 0) {
-					const { childProps, isThread, fetchPosts } = this.props;
+					const { childProps, isThread, fetchPosts, fetchThread } = this.props;
 					const { streamId, teamId, threadId } = childProps;
-					const posts = await fetchPosts({ streamId, teamId, threadId, limit: batchCount });
+					let hasMore;
+					if (isThread && threadId) {
+						await fetchThread(streamId, threadId);
+						hasMore = false;
+					} else {
+						const posts = await fetchPosts({ streamId, teamId, limit: batchCount });
+						hasMore = posts.length === batchCount;
+					}
 					this.setState({
 						isInitialized: true,
 						posts: this.props.posts,
-						hasMore: isThread ? false : posts.length === batchCount
+						hasMore
 					});
 				} else {
 					this.setState({
