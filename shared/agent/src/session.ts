@@ -229,7 +229,7 @@ export class CodeStreamSession {
 	}
 
 	async login() {
-		const { email, passwordOrToken, serverUrl, signupToken } = this._options;
+		const { email, passwordOrToken, serverUrl, signupToken, team, teamId } = this._options;
 		if (!signupToken && typeof passwordOrToken !== "string") {
 			if (passwordOrToken.email !== email || passwordOrToken.url !== serverUrl) {
 				throw new AgentError("Invalid credentials.");
@@ -239,17 +239,19 @@ export class CodeStreamSession {
 		const start = process.hrtime();
 
 		try {
-			let opts: LoginOptions;
+			let opts = { team: team, teamId: teamId } as LoginOptions;
 			if (signupToken) {
-				opts = { type: "otc", code: signupToken };
+				opts = { ...opts, type: "otc", code: signupToken };
 			} else if (typeof passwordOrToken === "string") {
 				opts = {
+					...opts,
 					type: "credentials",
 					email: email,
 					password: passwordOrToken
 				};
 			} else {
 				opts = {
+					...opts,
 					type: "token",
 					token: passwordOrToken
 				};
@@ -279,14 +281,18 @@ export class CodeStreamSession {
 			this._userId = response.user.id;
 
 			if (response.user.providerInfo && response.user.providerInfo.slack) {
-				this._api = new SlackApiProvider(
-					this._api! as CodeStreamApiProvider,
-					response.user.providerInfo.slack,
-					response.user,
-					this._teamId
-				);
+				const currentTeam = response.teams.find(t => t.id === this._teamId)!;
 
-				await (this._api as SlackApiProvider).processLoginResponse(response);
+				if (currentTeam.providerInfo && currentTeam.providerInfo.slack) {
+					this._api = new SlackApiProvider(
+						this._api! as CodeStreamApiProvider,
+						response.user.providerInfo.slack,
+						response.user,
+						this._teamId
+					);
+
+					await (this._api as SlackApiProvider).processLoginResponse(response);
+				}
 			}
 
 			setGitPath(this._options.gitPath);

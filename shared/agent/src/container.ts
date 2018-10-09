@@ -79,17 +79,6 @@ class ServiceContainer {
 	get users(): UsersManager {
 		return this._users;
 	}
-
-	updateConfig(config: Config) {
-		// 	const prevCfg = this._config;
-		// 	this._config = {
-		// 		...this.config,
-		// 		...config
-		// 	};
-		// 	if (prevCfg && prevCfg.serverUrl !== this._config.serverUrl) {
-		// 		this.api.baseUrl = this.config.serverUrl;
-		// 	}
-	}
 }
 
 let container: ServiceContainer | undefined;

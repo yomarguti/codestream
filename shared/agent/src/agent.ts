@@ -21,14 +21,11 @@ import {
 	RequestType0,
 	TextDocumentSyncKind
 } from "vscode-languageserver";
-import { Container } from "./container";
 import { Logger } from "./logger";
 import { CodeStreamSession } from "./session";
 import { AgentOptions } from "./shared/agent.protocol";
 import { Disposables, memoize } from "./system";
 import { Functions } from "./system/function";
-
-// export * from "./shared/agent.protocol";
 
 export class CodeStreamAgent implements Disposable {
 	private _onReady = new Emitter<void>();
@@ -49,8 +46,6 @@ export class CodeStreamAgent implements Disposable {
 
 		this._connection.onInitialize(this.onInitialize.bind(this));
 		this._connection.onInitialized(this.onInitialized.bind(this));
-		this._connection.onDidChangeConfiguration(this.onConfigurationChanged.bind(this));
-		// this._connection.onDidChangeWatchedFiles(this.onWatchedFilesChanged.bind(this));
 	}
 
 	dispose() {
@@ -103,15 +98,6 @@ export class CodeStreamAgent implements Disposable {
 			throw ex;
 		}
 	}
-
-	private async onConfigurationChanged(e: DidChangeConfigurationParams) {
-		Container.instance().updateConfig(e.settings.codestream);
-	}
-
-	// private onWatchedFilesChanged(e: DidChangeWatchedFilesParams) {
-	// 	// Monitored files have change in VSCode
-	// 	this._connection.console.log("Watched Files change event received");
-	// }
 
 	@memoize
 	get supportsConfiguration() {
