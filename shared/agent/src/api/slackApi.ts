@@ -591,7 +591,9 @@ export class SlackApiProvider implements ApiProvider {
 		}
 
 		const { ok, error, messages } = response as WebAPICallResult & { messages: any };
-		if (!ok) throw new Error(error);
+		// TODO: For now don't throw errors until we deal with marker privacy
+		if (!ok) return { posts: [] };
+		// if (!ok) throw new Error(error);
 
 		// Ensure the correct ordering
 		messages.sort((a: any, b: any) => a.ts - b.ts);
