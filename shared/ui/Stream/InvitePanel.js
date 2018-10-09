@@ -87,10 +87,93 @@ export class InvitePage extends Component {
 
 	tabIndex = () => {
 		return global.atom ? this.tabIndexCount++ : "0";
-	}
+	};
+
+	renderInviteSlack = () => {
+		const { teamId } = this.props;
+
+		return (
+			<div style={{ padding: "30px" }}>
+				Invite your teammates to give CodeStream a try by sharing this URL with them:
+				<br />
+				<br />
+				<b>
+					https://app.codestream.com/invite?service=slack&amp;team=
+					{teamId}
+				</b>
+				<br />
+				<br />
+			</div>
+		);
+	};
+	// Post URL to{" "}
+	// <select style={{ width: "auto" }}>
+	// 	<option>#general</option>
+	// </select>
+	// <Button>Go</Button>
+
+	renderFieldset = inactive => {
+		const { newMemberEmail, newMemberName } = this.state;
+
+		if (!this.props.isCodeStreamTeam) {
+			return this.renderInviteSlack();
+		}
+
+		return (
+			<fieldset className="form-body" disabled={inactive}>
+				<div id="controls">
+					<div className="control-group">
+						<label>Email</label>
+						<input
+							className="native-key-bindings input-text"
+							id="invite-email-input"
+							type="text"
+							tabIndex={this.tabIndex()}
+							value={newMemberEmail}
+							onChange={this.onEmailChange}
+							onBlur={this.onEmailBlur}
+							autoFocus
+						/>
+						{this.renderEmailHelp()}
+					</div>
+					<div className="control-group">
+						<label>
+							Name <span className="optional">(optional)</span>
+						</label>
+						<input
+							className="native-key-bindings input-text"
+							type="text"
+							tabIndex={this.tabIndex()}
+							value={newMemberName}
+							onChange={this.onNameChange}
+						/>
+					</div>
+					<div className="button-group">
+						<Button
+							id="add-button"
+							className="control-button"
+							tabIndex={this.tabIndex()}
+							type="submit"
+							loading={this.state.loading}
+						>
+							<FormattedMessage id="teamMemberSelection.invite" defaultMessage="Invite" />
+						</Button>
+						<Button
+							id="discard-button"
+							className="control-button cancel"
+							tabIndex={this.tabIndex()}
+							type="submit"
+							onClick={() => this.props.setActivePanel("channels")}
+						>
+							Cancel
+						</Button>
+					</div>
+				</div>
+			</fieldset>
+		);
+	};
 
 	render() {
-		const { newMemberEmail, newMemberName } = this.state;
 		const inactive = this.props.activePanel !== "invite";
 		const shrink = this.props.activePanel === "main";
 
@@ -112,56 +195,7 @@ export class InvitePage extends Component {
 					<span className="panel-title">Invite People</span>
 				</div>
 				<form className="standard-form vscroll" onSubmit={this.onSubmit}>
-					<fieldset className="form-body" disabled={inactive}>
-						<div id="controls">
-							<div className="control-group">
-								<label>Email</label>
-								<input
-									className="native-key-bindings input-text"
-									id="invite-email-input"
-									type="text"
-									tabIndex={this.tabIndex()}
-									value={newMemberEmail}
-									onChange={this.onEmailChange}
-									onBlur={this.onEmailBlur}
-									autoFocus
-								/>
-								{this.renderEmailHelp()}
-							</div>
-							<div className="control-group">
-								<label>
-									Name <span className="optional">(optional)</span>
-								</label>
-								<input
-									className="native-key-bindings input-text"
-									type="text"
-									tabIndex={this.tabIndex()}
-									value={newMemberName}
-									onChange={this.onNameChange}
-								/>
-							</div>
-							<div className="button-group">
-								<Button
-									id="add-button"
-									className="control-button"
-									tabIndex={this.tabIndex()}
-									type="submit"
-									loading={this.state.loading}
-								>
-									<FormattedMessage id="teamMemberSelection.invite" defaultMessage="Invite" />
-								</Button>
-								<Button
-									id="discard-button"
-									className="control-button cancel"
-									tabIndex={this.tabIndex()}
-									type="submit"
-									onClick={() => this.props.setActivePanel("channels")}
-								>
-									Cancel
-								</Button>
-							</div>
-						</div>
-					</fieldset>
+					{this.renderFieldset(inactive)}
 					{this.props.invited.length > 0 && (
 						<div className="section">
 							<div className="header">
@@ -237,6 +271,9 @@ const mapStateToProps = ({ users, context, teams }) => {
 	};
 };
 
-export default connect(mapStateToProps, {
-	invite
-})(injectIntl(InvitePage));
+export default connect(
+	mapStateToProps,
+	{
+		invite
+	}
+)(injectIntl(InvitePage));

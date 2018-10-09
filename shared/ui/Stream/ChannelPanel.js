@@ -285,7 +285,7 @@ export class SimpleChannelPanel extends Component {
 					<li className="invite" onClick={() => this.props.setActivePanel("invite")}>
 						<span>
 							<Icon name="plus-small" />
-							Invite People
+							{this.props.isCodeStreamTeam ? "Invite People" : "Invite People to CodeStream"}
 						</span>
 					</li>
 				</ul>
