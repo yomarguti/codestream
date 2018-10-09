@@ -1048,7 +1048,7 @@ export class SimpleStream extends Component {
 		}
 		const message = this.props.isPrivate
 			? "Once you leave a private channel, you won't be able to re-join unless you are added by someone in the channel."
-			: "Once you leave a public channel, you may re-join it in the future by looking at the channels list under TEAM CHANNELS.";
+			: "Once you leave a public channel, you may re-join it in the future by looking at CHANNELS YOU CAN JOIN; click the 'Browse all Channels' icon to the right of CHANNELS on the channel panel.";
 		confirmPopup({
 			title: "Are you sure?",
 			message,
