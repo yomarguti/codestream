@@ -50,6 +50,16 @@ export class MarkerLocationManager extends BaseManager<CSMarkerLocations> {
 		];
 	}
 
+	cacheSet(entity: CSMarkerLocations, oldEntity?: CSMarkerLocations) {
+		if (oldEntity) {
+			entity.locations = {
+				...oldEntity.locations,
+				...entity.locations
+			};
+		}
+		super.cacheSet(entity, oldEntity);
+	}
+
 	protected async fetchByStreamIdAndCommitHash(value: [Id, string]): Promise<CSMarkerLocations> {
 		const [streamId, commitHash] = value;
 		const response = await this.session.api.fetchMarkerLocations({
