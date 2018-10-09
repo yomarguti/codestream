@@ -239,23 +239,11 @@ export class SlackApiProvider implements ApiProvider {
 
 	async createPost(request: CreatePostRequest) {
 		let text;
-		if (request.mentionedUserIds && request.mentionedUserIds.length) {
-			const usersByName = await this.ensureUsersByName();
-
-			text = request.text.replace(
-				mentionsRegex,
-				(match: string, prefix: string, mentionName: string, suffix: string) => {
-					if (mentionName === "everyone" || mentionName === "channel" || mentionName === "here") {
-						return `${prefix}<!${mentionName}>${suffix}`;
-					}
-
-					const user = usersByName.get(mentionName);
-					if (user !== undefined) {
-						return `${prefix}<@${user.id}>${suffix}`;
-					}
-
-					return match;
-				}
+		if (request.text && request.mentionedUserIds && request.mentionedUserIds.length) {
+			text = CSPost.toSlackText(
+				request.text,
+				request.mentionedUserIds,
+				await this.ensureUsersByName()
 			);
 		} else {
 			text = request.text;
@@ -297,11 +285,22 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	async editPost(request: EditPostRequest) {
+		let text;
+		if (request.text && request.mentionedUserIds && request.mentionedUserIds.length) {
+			text = CSPost.toSlackText(
+				request.text,
+				request.mentionedUserIds,
+				await this.ensureUsersByName()
+			);
+		} else {
+			text = request.text;
+		}
+
 		const response = await this.slack.chat.update({
 			channel: request.streamId,
 			ts: request.postId,
 			as_user: true,
-			text: request.text
+			text: text
 		});
 
 		const { ok, error, message } = response as WebAPICallResult & { message: any };
@@ -739,6 +738,25 @@ namespace CSDirectStream {
 }
 
 namespace CSPost {
+	export function toSlackText(
+		text: string,
+		mentionedUserIds: string[],
+		usersByName: Map<string, CSUser>
+	) {
+		return text.replace(mentionsRegex, (match: string, prefix: string, mentionName: string) => {
+			if (mentionName === "everyone" || mentionName === "channel" || mentionName === "here") {
+				return `${prefix}<!${mentionName}>`;
+			}
+
+			const user = usersByName.get(mentionName);
+			if (user !== undefined && mentionedUserIds.includes(user.id)) {
+				return `${prefix}<@${user.id}>`;
+			}
+
+			return match;
+		});
+	}
+
 	export function fromSlack(
 		post: any,
 		streamId: string,
