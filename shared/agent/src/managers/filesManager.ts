@@ -13,6 +13,7 @@ import { CSFileStream, CSStream, StreamType } from "../shared/api.protocol";
 import { lspHandler } from "../system";
 import { EntityManager, Id } from "./entityManager";
 import { IndexParams, IndexType } from "./index";
+import { getValues, KeyValue } from "./baseCache";
 
 export class FilesManager extends EntityManager<CSFileStream> {
 	private idsByPath = new Map<string, Id>();
@@ -92,9 +93,10 @@ export class FilesManager extends EntityManager<CSFileStream> {
 
 	protected async fetchById(id: Id): Promise<CSFileStream> {
 		try {
-			const response = await this.session.api.getStream({ streamId: id });
+			const response = await this.session.api.getStream({ streamId: id, type: StreamType.File });
 			return response.stream as CSFileStream;
 		} catch (err) {
+			Logger.error(err);
 			// When the user doesn't have access to the stream, the server returns a 403. If
 			// this error occurs, it could be that we're subscribed to streams we're not
 			// supposed to be subscribed to.
@@ -103,8 +105,8 @@ export class FilesManager extends EntityManager<CSFileStream> {
 		}
 	}
 
-	private async fetchByRepoId(values: any[]): Promise<CSFileStream[]> {
-		const [repoId] = values;
+	private async fetchByRepoId(criteria: KeyValue<CSFileStream>[]): Promise<CSFileStream[]> {
+		const [repoId] = getValues(criteria);
 		const response = await this.session.api.fetchFileStreams({ repoId: repoId });
 		return response.streams as CSFileStream[];
 	}

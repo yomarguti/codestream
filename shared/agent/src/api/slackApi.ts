@@ -703,6 +703,10 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	async getStream(request: GetStreamRequest) {
+		if (request.type === StreamType.File) {
+			return this._codestream.getStream(request);
+		}
+
 		const response = await this._slack.conversations.info({
 			channel: request.streamId
 		});

@@ -29,6 +29,7 @@ import { CSPost } from "../shared/api.protocol";
 import { lspHandler } from "../system/decorators";
 import { EntityManager, Id } from "./entityManager";
 import { IndexParams, IndexType } from "./index";
+import { getValues, KeyValue } from "./baseCache";
 
 export class PostsManager extends EntityManager<CSPost> {
 	getIndexedFields(): IndexParams<CSPost>[] {
@@ -149,8 +150,8 @@ export class PostsManager extends EntityManager<CSPost> {
 		return response.post;
 	}
 
-	protected async fetchByParentPostId(values: any[]): Promise<CSPost[]> {
-		const [parentPostId] = values;
+	protected async fetchByParentPostId(criteria: KeyValue<CSPost>[]): Promise<CSPost[]> {
+		const [parentPostId] = getValues(criteria);
 		const response = await this.session.api.fetchPostReplies({
 			streamId: undefined!,
 			postId: parentPostId
@@ -159,12 +160,12 @@ export class PostsManager extends EntityManager<CSPost> {
 	}
 
 	protected async fetchByStreamId(
-		values: any[],
+		criteria: KeyValue<CSPost>[],
 		seqStart?: number,
 		seqEnd?: number,
 		limit: number = 100
 	): Promise<CSPost[]> {
-		const [streamId] = values;
+		const [streamId] = getValues(criteria);
 
 		if (seqStart && seqEnd) {
 			const minSeq = seqStart;

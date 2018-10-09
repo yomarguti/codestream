@@ -73,6 +73,7 @@ export class StreamsManager extends EntityManager<CSChannelStream | CSDirectStre
 			const response = await this.session.api.getStream({ streamId: id });
 			return response.stream as CSChannelStream | CSDirectStream;
 		} catch (err) {
+			Logger.error(err);
 			// When the user doesn't have access to the stream, the server returns a 403. If
 			// this error occurs, it could be that we're subscribed to streams we're not
 			// supposed to be subscribed to.

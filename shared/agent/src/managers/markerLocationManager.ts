@@ -5,6 +5,7 @@ import { TextDocumentIdentifier } from "vscode-languageserver";
 import { Range } from "vscode-languageserver-protocol";
 import URI from "vscode-uri";
 import { getCache } from "../cache";
+import { getValues } from "./baseCache";
 import { Container } from "../container";
 import { GitRepository } from "../git/models/repository";
 import { Logger } from "../logger";
@@ -45,7 +46,7 @@ export class MarkerLocationManager extends BaseManager<CSMarkerLocations> {
 			{
 				fields: ["streamId", "commitHash"],
 				type: IndexType.Unique,
-				fetchFn: this.fetchByStreamIdAndCommitHash.bind(this)
+				fetchFn: this.fetch.bind(this)
 			}
 		];
 	}
@@ -60,21 +61,13 @@ export class MarkerLocationManager extends BaseManager<CSMarkerLocations> {
 		super.cacheSet(entity, oldEntity);
 	}
 
-	protected async fetchByStreamIdAndCommitHash(value: [Id, string]): Promise<CSMarkerLocations> {
-		const [streamId, commitHash] = value;
+	protected async fetch(criteria: KeyValue<CSMarkerLocations>[]): Promise<CSMarkerLocations> {
+		const [streamId, commitHash] = getValues(criteria);
 		const response = await this.session.api.fetchMarkerLocations({
 			streamId,
 			commitHash
 		});
 		return response.markerLocations;
-	}
-
-	protected fetch(criteria: KeyValue<CSMarkerLocations>[]): Promise<CSMarkerLocations> {
-		const [streamCriteria, commitHashCriteria] = criteria;
-		return this.fetchByStreamIdAndCommitHash([
-			streamCriteria[1] as Id,
-			commitHashCriteria[1] as string
-		]);
 	}
 
 	protected fetchCriteria(obj: CSMarkerLocations): KeyValue<CSMarkerLocations>[] {

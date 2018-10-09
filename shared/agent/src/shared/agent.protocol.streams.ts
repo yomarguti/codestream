@@ -95,6 +95,7 @@ export const FetchUnreadStreamsRequestType = new RequestType<
 
 export interface GetStreamRequest {
 	streamId: string;
+	type?: StreamType;
 }
 
 export interface GetStreamResponse {

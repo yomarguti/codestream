@@ -19,11 +19,11 @@ export type IdFn<T> = (obj: T) => Id;
 
 export type KeyValue<T> = [keyof T, any];
 
-function getKeys<T>(keyValues: KeyValue<T>[]): (keyof T)[] {
+export function getKeys<T>(keyValues: KeyValue<T>[]): (keyof T)[] {
 	return keyValues.map(kv => kv[0]);
 }
 
-function getValues<T>(keyValues: KeyValue<T>[]): any[] {
+export function getValues<T>(keyValues: KeyValue<T>[]): any[] {
 	return keyValues.map(kv => kv[1]);
 }
 
@@ -64,7 +64,7 @@ export class BaseCache<T> {
 		let entity = index.get(values);
 		if (!entity && options.avoidFetch !== true) {
 			const fetch = index.fetchFn as UniqueFetchFn<T>;
-			entity = await fetch(values);
+			entity = await fetch(criteria);
 			this.set(entity);
 		}
 		return entity;
@@ -104,7 +104,7 @@ export class BaseCache<T> {
 		const entities = index.getGroup(values);
 		if (!entities) {
 			const fetch = index.fetchFn as GroupFetchFn<T>;
-			const entities = await fetch(values);
+			const entities = await fetch(criteria);
 			this.initGroup(criteria, entities);
 			return entities;
 		}
@@ -206,7 +206,7 @@ export class BaseCache<T> {
 		const fetch = index.fetchFn as GroupSequentialFetchFn<T>;
 		const gaps = slice.getSequenceGaps();
 		for (const gap of gaps) {
-			const entities = await fetch(values, gap.start, gap.end);
+			const entities = await fetch(criteria, gap.start, gap.end);
 			for (const entity of entities) {
 				this.set(entity);
 			}

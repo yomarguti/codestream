@@ -23,7 +23,7 @@ export type Id = string;
 export abstract class EntityManager<T extends CSEntity> extends BaseManager<T> {
 	protected readonly cache: EntityCache<T> = new EntityCache<T>(
 		this.getIndexedFields(),
-		this.fetchById.bind(this)
+		this.fetch.bind(this)
 	);
 
 	public constructor(public session: CodeStreamSession) {

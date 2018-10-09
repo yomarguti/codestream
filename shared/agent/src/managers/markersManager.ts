@@ -10,6 +10,7 @@ import { CSMarker, CSStream, StreamType } from "../shared/api.protocol";
 import { lspHandler } from "../system";
 import { EntityManager, Id } from "./entityManager";
 import { IndexParams, IndexType } from "./index";
+import { getValues, KeyValue } from "./baseCache";
 
 export class MarkersManager extends EntityManager<CSMarker> {
 	init() {
@@ -54,8 +55,8 @@ export class MarkersManager extends EntityManager<CSMarker> {
 		];
 	}
 
-	protected async fetchByStreamId(values: any[]): Promise<CSMarker[]> {
-		const [streamId] = values;
+	protected async fetchByStreamId(criteria: KeyValue<CSMarker>[]): Promise<CSMarker[]> {
+		const [streamId] = getValues(criteria);
 		const response = await this.session.api.fetchMarkers({ streamId: streamId });
 		return response.markers;
 	}
