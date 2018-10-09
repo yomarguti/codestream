@@ -468,6 +468,29 @@ export enum CSPresenceStatus {
 	Away = "away"
 }
 
+export interface CSCreateMarkerRequest {
+	teamId: string;
+	providerType: string;
+	postStreamId: string;
+	postId: string;
+	streamId?: string;
+	file?: string;
+	repoId?: string;
+	remotes?: string[];
+	commitHash?: string;
+	code: string;
+	location?: CSLocationArray;
+	type?: string;
+	color?: string;
+	status?: string;
+}
+
+export interface CSCreateMarkerResponse {
+	marker: CSMarker;
+	stream?: CSStream;
+	markerLocations: CSMarkerLocations;
+}
+
 export interface CSUpdateMarkerRequest {
 	commitHashWhenCreated?: string;
 }

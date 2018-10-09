@@ -10,6 +10,7 @@ import {
 	CreateChannelStreamRequest,
 	CreateDirectStreamRequest,
 	CreateMarkerLocationRequest,
+	CreateMarkerRequest,
 	CreatePostRequest,
 	CreateRepoRequest,
 	DeletePostRequest,
@@ -52,6 +53,8 @@ import {
 	CSCreateDirectStreamResponse,
 	CSCreateMarkerLocationRequest,
 	CSCreateMarkerLocationResponse,
+	CSCreateMarkerRequest,
+	CSCreateMarkerResponse,
 	CSCreatePostRequest,
 	CSCreatePostResponse,
 	CSCreateRepoRequest,
@@ -309,6 +312,14 @@ export class CodeStreamApiProvider implements ApiProvider {
 		return this.put<CSUpdateMarkerRequest, CSUpdateMarkerResponse>(
 			`/markers/${request.markerId}`,
 			request,
+			this._token
+		);
+	}
+
+	createMarker(request: CreateMarkerRequest) {
+		return this.post<CSCreateMarkerRequest, CSCreateMarkerResponse>(
+			"/markers",
+			{ ...request, teamId: this.teamId },
 			this._token
 		);
 	}

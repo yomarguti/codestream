@@ -53,6 +53,7 @@ import {
 } from "../shared/agent.protocol";
 import {
 	CSChannelStream,
+	CSCodeBlock,
 	CSDirectStream,
 	CSGetMeResponse,
 	CSMe,
@@ -414,6 +415,34 @@ export class SlackApiProvider implements ApiProvider {
 
 		const post = CSPost.fromSlack(message, streamId, usersById, this._codestreamTeamId);
 
+		if (request.codeBlocks && request.codeBlocks.length) {
+			const [codeBlock] = request.codeBlocks;
+			const createMarkerResponse = await this._codestream.createMarker({
+				providerType: "slack",
+				postStreamId: post.streamId,
+				postId: post.id,
+				streamId: codeBlock.streamId,
+				file: codeBlock.file,
+				repoId: codeBlock.repoId,
+				remotes: codeBlock.remotes,
+				commitHash: request.commitHashWhenPosted,
+				code: codeBlock.code,
+				location: codeBlock.location
+				// type: codeBlock.type,
+				// color: codeBlock.color,
+				// status: codeBlock.status
+			});
+			const marker = createMarkerResponse.marker;
+			// const fileStream = await Container.instance().files.getById(marker.streamId);
+			post.codeBlocks = [
+				{
+					...codeBlock,
+					// file: fileStream.file,
+					// repoId: fileStream.repoId,
+					markerId: marker.id
+				} as CSCodeBlock
+			];
+		}
 		return { post: post };
 	}
 

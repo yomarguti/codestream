@@ -107,6 +107,22 @@ export interface UpdateMarkerRequest {
 	commitHashWhenCreated?: string;
 }
 
+export interface CreateMarkerRequest {
+	providerType: string;
+	postStreamId: string;
+	postId: string;
+	streamId?: string;
+	file?: string;
+	repoId?: string;
+	remotes?: string[];
+	commitHash?: string;
+	code: string;
+	location?: CSLocationArray;
+	type?: string;
+	color?: string;
+	status?: string;
+}
+
 export interface UpdateMarkerResponse {
 	marker: CSMarker;
 }
