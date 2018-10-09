@@ -27,20 +27,20 @@ export class FilesManager extends EntityManager<CSFileStream> {
 		];
 	}
 
-	// protected init() {
-	// 	this.session.onStreamsChanged(this.onStreamsChanged, this);
-	// }
+	async getDocumentUri(fileStreamId: Id): Promise<string | undefined> {
+		const { git } = Container.instance();
+		const fileStream = await this.getById(fileStreamId);
 
-	// protected onStreamsChanged(streams: CSStream[]) {
-	// 	// const { pubnub, userId } = this.session;
-	// 	// TODO Eric help!!!
-	// 	// pubnub.subscribe([
-	// 	// 	...Iterables.filterMap(
-	// 	// 		streams,
-	// 	// 		s => (CodeStreamApi.isStreamSubscriptionRequired(s, userId) ? `stream-${s.id}` : undefined)
-	// 	// 	)
-	// 	// ]);
-	// }
+		const repo = await git.getRepositoryById(fileStream.repoId);
+		if (!repo) {
+			return;
+		}
+
+		const filePath = path.join(repo.path, fileStream.file);
+		const documentUri = URI.file(filePath).toString();
+
+		return documentUri;
+	}
 
 	async getByPath(filePath: string): Promise<CSStream | undefined> {
 		let id = this.idsByPath.get(filePath);
