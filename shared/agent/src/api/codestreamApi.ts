@@ -1,10 +1,10 @@
 "use strict";
 import fetch, { Headers, RequestInit, Response } from "node-fetch";
 import { URLSearchParams } from "url";
+import { Emitter, Event } from "vscode-languageserver";
 import { ServerError } from "../agentError";
 import { Container } from "../container";
 import { Logger } from "../logger";
-import { MessageSource, RealTimeMessage } from "../managers/realTimeMessage";
 import { PubnubReceiver } from "../pubnub/pubnubReceiver";
 import {
 	CreateChannelStreamRequest,
@@ -109,11 +109,17 @@ import {
 	CodeStreamApiMiddleware,
 	CodeStreamApiMiddlewareContext,
 	LoginOptions,
+	RTMessage,
 	VersionInfo
 } from "./apiProvider";
 import { Cache } from "./cache";
 
 export class CodeStreamApiProvider implements ApiProvider {
+	private _onDidReceiveMessage = new Emitter<RTMessage>();
+	get onDidReceiveMessage(): Event<RTMessage> {
+		return this._onDidReceiveMessage.event;
+	}
+
 	private readonly _middleware: CodeStreamApiMiddleware[] = [];
 	private _teamId: string | undefined;
 	private _token: string | undefined;
@@ -218,7 +224,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		return { ...response, teamId: options.teamId };
 	}
 
-	async subscribe(listener: (e: RealTimeMessage) => any, thisArgs?: any) {
+	async subscribe() {
 		this._pubnub = new PubnubReceiver(
 			this,
 			this._pubnubKey!,
@@ -228,9 +234,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 			this.teamId
 		);
 
+		this._pubnub.onDidReceiveMessage(e => this._onDidReceiveMessage.fire(e), this);
+
 		const streams = await this.getSubscribableStreams(this.userId);
 		this._pubnub.listen(streams.map(s => s.id));
-		this._pubnub.onDidReceiveMessage(listener, thisArgs);
 	}
 
 	grantPubNubChannelAccess(token: string, channel: string): Promise<{}> {

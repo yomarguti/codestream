@@ -1,17 +1,11 @@
 "use strict";
-
+import { RTMessage } from "../api/apiProvider";
 import { CodeStreamApiProvider } from "../api/codestreamApi";
 import { CodeStreamSession } from "../session";
 import { LspHandler } from "../system/decorators";
 import { BaseCache, KeyValue } from "./baseCache";
 import { IndexParams } from "./index";
 import * as operations from "./operations";
-import {
-	CodeStreamRTEMessage,
-	MessageSource,
-	RealTimeMessage,
-	SlackRTEMessage
-} from "./realTimeMessage";
 
 export abstract class BaseManager<T> {
 	protected readonly cache: BaseCache<T> = new BaseCache<T>(this.getIndexedFields());
@@ -37,14 +31,13 @@ export abstract class BaseManager<T> {
 
 	protected abstract fetchCriteria(obj: T): KeyValue<T>[];
 
-	async resolve(message: RealTimeMessage): Promise<T[]> {
+	async resolve(message: RTMessage): Promise<T[]> {
 		const resolved = await Promise.all(
-			message.data.map(async c => {
-				const changes = CodeStreamApiProvider.normalizeResponse(c) as { [key: string]: any };
-				const criteria = this.fetchCriteria(changes as T);
+			message.data.map(async data => {
+				const criteria = this.fetchCriteria(data as T);
 				const cached = await this.cacheGet(criteria);
 				if (cached) {
-					const updatedEntity = operations.resolve(cached as any, changes);
+					const updatedEntity = operations.resolve(cached as any, data);
 					this.cacheSet(updatedEntity as T, cached);
 					return updatedEntity as T;
 				} else {

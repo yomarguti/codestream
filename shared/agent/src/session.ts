@@ -9,7 +9,7 @@ import {
 import URI from "vscode-uri";
 import { CodeStreamAgent } from "./agent";
 import { AgentError, ServerError } from "./agentError";
-import { ApiProvider, LoginOptions } from "./api/apiProvider";
+import { ApiProvider, LoginOptions, RTMessage } from "./api/apiProvider";
 import { CodeStreamApiProvider } from "./api/codestreamApi";
 import {
 	VersionCompatibilityChangedEvent,
@@ -19,7 +19,6 @@ import { SlackApiProvider } from "./api/slackApi";
 import { Container } from "./container";
 import { setGitPath } from "./git/git";
 import { Logger } from "./logger";
-import { RealTimeMessage } from "./managers/realTimeMessage";
 import { MarkerHandler } from "./marker/markerHandler";
 import { PostHandler } from "./post/postHandler";
 import {
@@ -144,7 +143,7 @@ export class CodeStreamSession {
 		);
 	}
 
-	private async onRealTimeMessageReceived(e: RealTimeMessage) {
+	private async onRTMessageReceived(e: RTMessage) {
 		switch (e.type) {
 			case MessageType.Posts:
 				const posts = await Container.instance().posts.resolve(e);
@@ -297,7 +296,8 @@ export class CodeStreamSession {
 
 			setGitPath(this._options.gitPath);
 
-			this.api.subscribe(this.onRealTimeMessageReceived, this);
+			this.api.onDidReceiveMessage(e => this.onRTMessageReceived(e), this);
+			this.api.subscribe();
 
 			Container.instance().git.onRepositoryCommitHashChanged(repo => {
 				Container.instance().markerLocations.flushUncommittedLocations(repo);

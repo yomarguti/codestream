@@ -7,8 +7,8 @@ import {
 	WebClientOptions
 } from "@slack/client";
 import { RequestInit } from "node-fetch";
+import { Emitter, Event } from "vscode-languageserver";
 import { Logger } from "../logger";
-import { MessageSource, RealTimeMessage } from "../managers/realTimeMessage";
 import {
 	CreateChannelStreamRequest,
 	CreateChannelStreamResponse,
@@ -65,7 +65,7 @@ import {
 	LoginResponse,
 	StreamType
 } from "../shared/api.protocol";
-import { ApiProvider, CodeStreamApiMiddleware, LoginOptions } from "./apiProvider";
+import { ApiProvider, CodeStreamApiMiddleware, LoginOptions, RTMessage } from "./apiProvider";
 import { CodeStreamApiProvider } from "./codestreamApi";
 
 const defaultCreatedAt = 165816000000;
@@ -93,9 +93,13 @@ enum SlackMessageEventSubTypes {
 }
 
 export class SlackApiProvider implements ApiProvider {
+	private _onDidReceiveMessage = new Emitter<RTMessage>();
+	get onDidReceiveMessage(): Event<RTMessage> {
+		return this._onDidReceiveMessage.event;
+	}
+
 	private _slack: WebClient;
 	private _slackRTM: RTMClient;
-	private _slackRTMEventListener: ((e: RealTimeMessage) => any) | undefined;
 
 	private readonly _codestreamUserId: string;
 	private readonly _slackToken: string;
@@ -119,9 +123,6 @@ export class SlackApiProvider implements ApiProvider {
 
 		const rtmOptions: RTMClientOptions = { retryConfig: { retries: 3 } };
 		this._slackRTM = new RTMClient(this._slackToken, rtmOptions);
-		this._slackRTM.on(SlackEventTypes.Message, this.onMessage, this);
-		this._slackRTM.on(SlackEventTypes.ReactionAdded, this.onMessage, this);
-		this._slackRTM.on(SlackEventTypes.ReactionRemoved, this.onMessage, this);
 
 		this._codestreamUserId = user.id;
 		this._slackUserId = providerInfo.userId;
@@ -129,7 +130,30 @@ export class SlackApiProvider implements ApiProvider {
 		this._user = user;
 	}
 
-	private async onMessage(e: any & { type: SlackEventTypes; subtype: SlackMessageEventSubTypes }) {
+	private async onCodeStreamMessage(e: RTMessage) {
+		switch (e.type) {
+			case MessageType.Users:
+				// TODO: Map with slack data
+				const user = (e.data as CSUser[]).find(u => u.id === this._codestreamUserId);
+				if (user === undefined) return;
+
+				const meResponse = await this.getMe();
+				this._onDidReceiveMessage.fire({ type: e.type, data: [meResponse.user] });
+				break;
+
+			case MessageType.Posts:
+			case MessageType.Streams:
+			case MessageType.Teams:
+				break;
+
+			default:
+				this._onDidReceiveMessage.fire(e);
+		}
+	}
+
+	private async onSlackMessage(
+		e: any & { type: SlackEventTypes; subtype: SlackMessageEventSubTypes }
+	) {
 		const { type, subtype } = e;
 
 		switch (type) {
@@ -143,8 +167,7 @@ export class SlackApiProvider implements ApiProvider {
 							this._codestreamTeamId
 						);
 						post.deactivated = true;
-						this._slackRTMEventListener!({
-							source: MessageSource.Slack,
+						this._onDidReceiveMessage.fire({
 							type: MessageType.Posts,
 							data: [post]
 						});
@@ -152,8 +175,7 @@ export class SlackApiProvider implements ApiProvider {
 					}
 					case SlackMessageEventSubTypes.Changed: {
 						const response = await this.getPost({ streamId: e.channel, postId: e.message.ts });
-						this._slackRTMEventListener!({
-							source: MessageSource.Slack,
+						this._onDidReceiveMessage.fire({
 							type: MessageType.Posts,
 							data: [response.post]
 						});
@@ -164,8 +186,7 @@ export class SlackApiProvider implements ApiProvider {
 						// 	this._usersById || new Map(),
 						// 	this._codestreamTeamId
 						// );
-						// this._slackRTMEventListener!({
-						// 	source: MessageSource.Slack,
+						// this._onDidReceiveMessage.fire({
 						// 	type: MessageType.Posts,
 						// 	data: [post]
 						// });
@@ -178,8 +199,7 @@ export class SlackApiProvider implements ApiProvider {
 							this._usersById || new Map(),
 							this._codestreamTeamId
 						);
-						this._slackRTMEventListener!({
-							source: MessageSource.Slack,
+						this._onDidReceiveMessage.fire({
 							type: MessageType.Posts,
 							data: [post]
 						});
@@ -220,8 +240,7 @@ export class SlackApiProvider implements ApiProvider {
 			case SlackEventTypes.ReactionAdded:
 			case SlackEventTypes.ReactionRemoved:
 				const response = await this.getPost({ streamId: e.item.channel, postId: e.item.ts });
-				this._slackRTMEventListener!({
-					source: MessageSource.Slack,
+				this._onDidReceiveMessage.fire({
 					type: MessageType.Posts,
 					data: [response.post]
 				});
@@ -266,10 +285,13 @@ export class SlackApiProvider implements ApiProvider {
 		throw new Error("Not supported");
 	}
 
-	async subscribe(listener: (e: RealTimeMessage) => any, thisArgs?: any) {
-		await this._codestream.subscribe(listener, thisArgs);
+	async subscribe() {
+		this._codestream.onDidReceiveMessage(this.onCodeStreamMessage, this);
+		await this._codestream.subscribe();
 
-		this._slackRTMEventListener = listener.bind(thisArgs);
+		this._slackRTM.on(SlackEventTypes.Message, this.onSlackMessage, this);
+		this._slackRTM.on(SlackEventTypes.ReactionAdded, this.onSlackMessage, this);
+		this._slackRTM.on(SlackEventTypes.ReactionRemoved, this.onSlackMessage, this);
 
 		await new Promise((resolve, reject) => {
 			this._slackRTM.once(SlackEventTypes.Authenticated, response => {

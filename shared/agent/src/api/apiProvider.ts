@@ -1,6 +1,5 @@
 import { RequestInit, Response } from "node-fetch";
-import { Disposable } from "vscode-languageserver";
-import { RealTimeMessage } from "../managers/realTimeMessage";
+import { Disposable, Event } from "vscode-languageserver";
 import {
 	AccessToken,
 	CreateChannelStreamRequest,
@@ -62,6 +61,7 @@ import {
 	MarkPostUnreadResponse,
 	MarkStreamReadRequest,
 	MarkStreamReadResponse,
+	MessageType,
 	ReactToPostRequest,
 	ReactToPostResponse,
 	UpdateMarkerRequest,
@@ -105,12 +105,19 @@ export interface TokenLoginOptions extends BasicLoginOptions {
 
 export type LoginOptions = CredentialsLoginOptions | OneTimeCodeLoginOptions | TokenLoginOptions;
 
+export interface RTMessage {
+	type: MessageType;
+	data: { [key: string]: any }[];
+}
+
 export interface ApiProvider {
+	onDidReceiveMessage: Event<RTMessage>;
+
 	fetch<R extends object>(url: string, init?: RequestInit, token?: string): Promise<R>;
 	useMiddleware(middleware: CodeStreamApiMiddleware): Disposable;
 
 	login(options: LoginOptions): Promise<LoginResponse & { teamId: string }>;
-	subscribe(listener: (e: RealTimeMessage) => any, thisArgs?: any): Promise<void>;
+	subscribe(): Promise<void>;
 
 	grantPubNubChannelAccess(token: string, channel: string): Promise<{}>;
 	getSubscribableStreams(userId: string): Promise<CSStream[]>;

@@ -1,8 +1,8 @@
 "use strict";
 import { Disposable, Emitter, Event } from "vscode-languageserver";
-import { ApiProvider } from "../api/apiProvider";
+import { ApiProvider, RTMessage } from "../api/apiProvider";
+import { CodeStreamApiProvider } from "../api/codestreamApi";
 import { Logger, TraceLevel } from "../logger";
-import { CodeStreamRTEMessage, MessageSource } from "../managers/realTimeMessage";
 import { MessageType } from "../shared/agent.protocol";
 import {
 	ChannelDescriptor,
@@ -28,8 +28,8 @@ const messageToType: { [key: string]: MessageType | undefined } = {
 };
 
 export class PubnubReceiver {
-	private _onDidReceiveMessage = new Emitter<CodeStreamRTEMessage>();
-	get onDidReceiveMessage(): Event<CodeStreamRTEMessage> {
+	private _onDidReceiveMessage = new Emitter<RTMessage>();
+	get onDidReceiveMessage(): Event<RTMessage> {
 		return this._onDidReceiveMessage.event;
 	}
 
@@ -40,14 +40,14 @@ export class PubnubReceiver {
 		api: ApiProvider,
 		pubnubKey: string,
 		pubnubToken: string,
-		private readonly _accessToken: string,
+		accessToken: string,
 		private readonly _userId: string,
 		private readonly _teamId: string
 	) {
 		this._pubnubConnection = new PubnubConnection();
 		this._connection = this._pubnubConnection.initialize({
 			api: api,
-			accessToken: _accessToken,
+			accessToken: accessToken,
 			subscribeKey: pubnubKey,
 			authKey: pubnubToken,
 			userId: _userId,
@@ -108,20 +108,20 @@ export class PubnubReceiver {
 		this.debug("PubNub messages", messages);
 
 		for (const message of messages) {
-			this.processMessage(message);
+			this.fireMessage(message);
 		}
 	}
 
-	private processMessage(message: { [key: string]: any }) {
+	private fireMessage(message: { [key: string]: any }) {
 		const { requestId, messageId, ...messages } = message;
 
 		for (const [key, obj] of Object.entries(messages)) {
 			try {
-				const data = Array.isArray(obj) ? obj : [obj];
+				const changes = CodeStreamApiProvider.normalizeResponse<any>(obj);
+				const data = Array.isArray(changes) ? changes : [changes];
 				const type = messageToType[key];
 				if (type) {
 					this._onDidReceiveMessage.fire({
-						source: MessageSource.CodeStream,
 						type: type,
 						data: data
 					});
