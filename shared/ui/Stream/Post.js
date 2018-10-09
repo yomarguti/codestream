@@ -182,7 +182,7 @@ class Post extends React.Component {
 
 		// console.log(renderCount++);
 		const { post } = this.props;
-		console.log(post);
+		// console.log(post);
 		const { menuOpen, authorMenuOpen, menuTarget } = this.state;
 
 		const mine = post.creatorId === this.props.currentUserId;

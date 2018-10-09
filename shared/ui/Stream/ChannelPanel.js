@@ -212,6 +212,7 @@ export class SimpleChannelPanel extends Component {
 						: stream.isMeStream
 							? 2
 							: stream.mostRecentPostCreatedAt || stream.modifiedAt || 528593114636;
+
 				const sortName =
 					stream.name === "slackbot"
 						? "."
@@ -266,7 +267,8 @@ export class SimpleChannelPanel extends Component {
 				.filter(Boolean)
 		);
 
-		const recentStreams = _.sortBy(unsortedStreams, x => x.sortTimestamp).slice(0, 20);
+		// show them all for now since we don't have a way to sort reliably
+		const recentStreams = _.sortBy(unsortedStreams, x => x.sortTimestamp); //.slice(0, 20);
 
 		return (
 			<div
