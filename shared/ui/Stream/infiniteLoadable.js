@@ -66,12 +66,14 @@ export default Child => {
 					const earliestLocalSeqNum = safe(() => posts[0].seqNum);
 					if (earliestLocalSeqNum && earliestLocalSeqNum > 1) {
 						this.loadMore(earliestLocalSeqNum);
+					} else {
+						this.setState({ hasMore: false });
 					}
 				}
 			});
 
 			loadMore = async seqNum => {
-				if (!this.state.isInitialized || this.isFetching) {
+				if (!this.state.isInitialized || this.state.isFetching) {
 					return;
 				}
 

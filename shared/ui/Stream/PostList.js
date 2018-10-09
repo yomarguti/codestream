@@ -53,6 +53,11 @@ export default infiniteLoadable(
 				}
 			}
 
+			if (prevProps.hasMore && !this.props.hasMore) {
+				this.cache.clearAll();
+				this.list.recomputeRowHeights();
+			}
+
 			const unreadsChanged = prevProps.firstUnreadPostSeqNum !== firstUnreadPostSeqNum;
 			if (unreadsChanged) this.seenPosts.clear();
 			if (
