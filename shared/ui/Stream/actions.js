@@ -22,9 +22,9 @@ const resolvePendingPost = (pendingId, post) => ({
 	payload: { pendingId, post }
 });
 
-export const markStreamRead = streamId => (dispatch, getState, { api }) => {
-	if (!streamId) return;
-	api.markStreamRead(streamId);
+export const markStreamRead = (streamId, postId) => (dispatch, getState, { api }) => {
+	if (!(streamId && postId)) return;
+	api.markStreamRead(streamId, postId);
 };
 
 export const markPostUnread = (streamId, postId) => (dispatch, getState, { api }) => {
