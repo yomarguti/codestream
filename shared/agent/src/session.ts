@@ -285,7 +285,8 @@ export class CodeStreamSession {
 					response.user,
 					this._teamId
 				);
-				await (this._api as SlackApiProvider).initialize();
+
+				await (this._api as SlackApiProvider).processLoginResponse(response);
 			}
 
 			setGitPath(this._options.gitPath);

@@ -175,7 +175,8 @@ export interface CSUser extends CSEntity {
 	totalPosts: number;
 	username: string;
 	avatar?: {
-		url: string;
+		image?: string;
+		image48?: string;
 	};
 }
 

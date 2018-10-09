@@ -52,6 +52,7 @@ import {
 	CSPost,
 	CSSlackProviderInfo,
 	CSStream,
+	CSTeam,
 	CSUser,
 	LoginResponse,
 	StreamType
@@ -82,7 +83,7 @@ export class SlackApiProvider implements ApiProvider {
 		private _codestream: CodeStreamApiProvider,
 		providerInfo: CSSlackProviderInfo,
 		user: CSMe,
-		private readonly _teamId: string
+		private readonly _codestreamTeamId: string
 	) {
 		const slackToken = providerInfo.accessToken;
 		const slackOptions: WebClientOptions = { retryConfig: { retries: 1 } };
@@ -94,10 +95,21 @@ export class SlackApiProvider implements ApiProvider {
 		this._user = user;
 	}
 
-	async initialize() {
+	async processLoginResponse(response: LoginResponse): Promise<void> {
 		// Mix in slack user info with ours
 		const meResponse = await this.getMeCore({ user: this._user });
 		this._user = meResponse.user;
+
+		// TODO: Correlate codestream ids to slack ids once the server returns that info
+		// const users = await this._codestream.fetchUsers({});
+		// users;
+
+		const team = response.teams.find(t => t.id === this._codestreamTeamId);
+		if (team !== undefined) {
+			CSTeam.toSlack(team, await this.ensureUsersById());
+		}
+
+		response.user = this._user;
 	}
 
 	private get slack() {
@@ -174,7 +186,7 @@ export class SlackApiProvider implements ApiProvider {
 
 		const { ok, error, user: usr } = response as WebAPICallResult & { user: any };
 		if (ok) {
-			const user = CSUser.fromSlack(usr, this._teamId);
+			const user = CSUser.fromSlack(usr, this._codestreamTeamId);
 			return {
 				user: {
 					...me,
@@ -263,7 +275,7 @@ export class SlackApiProvider implements ApiProvider {
 
 		const usersById = await this.ensureUsersById();
 
-		const post = CSPost.fromSlack(message, streamId, usersById, this._teamId);
+		const post = CSPost.fromSlack(message, streamId, usersById, this._codestreamTeamId);
 
 		return { post: post };
 	}
@@ -361,7 +373,7 @@ export class SlackApiProvider implements ApiProvider {
 		messages.sort((a: any, b: any) => a.ts - b.ts);
 
 		const posts = messages.map((m: any) =>
-			CSPost.fromSlack(m, request.streamId, usersById, this._teamId)
+			CSPost.fromSlack(m, request.streamId, usersById, this._codestreamTeamId)
 		) as CSPost[];
 
 		return { posts: posts, more: has_more };
@@ -381,7 +393,7 @@ export class SlackApiProvider implements ApiProvider {
 		const usersById = await this.ensureUsersById();
 
 		const posts = messages.map((m: any) =>
-			CSPost.fromSlack(m, request.streamId, usersById, this._teamId)
+			CSPost.fromSlack(m, request.streamId, usersById, this._codestreamTeamId)
 		);
 
 		return { post: posts[0] };
@@ -478,7 +490,7 @@ export class SlackApiProvider implements ApiProvider {
 
 			const users = (await this.fetchUsers({})).users;
 			const streams: (CSChannelStream | CSDirectStream)[] = channels
-				.map((c: any) => CSStream.fromSlack(c, users, this._teamId))
+				.map((c: any) => CSStream.fromSlack(c, users, this._codestreamTeamId))
 				.filter(Boolean);
 
 			this._streams = streams;
@@ -511,7 +523,7 @@ export class SlackApiProvider implements ApiProvider {
 		if (!ok) throw new Error(error);
 
 		const users = (await this.fetchUsers({})).users;
-		const stream = CSStream.fromSlack(channel, users, this._teamId);
+		const stream = CSStream.fromSlack(channel, users, this._codestreamTeamId);
 
 		return { stream: stream! };
 	}
@@ -525,7 +537,7 @@ export class SlackApiProvider implements ApiProvider {
 		if (!ok) throw new Error(error);
 
 		const users = (await this.fetchUsers({})).users;
-		const stream = CSStream.fromSlack(channel, users, this._teamId);
+		const stream = CSStream.fromSlack(channel, users, this._codestreamTeamId);
 
 		return { stream: stream! };
 	}
@@ -579,12 +591,27 @@ export class SlackApiProvider implements ApiProvider {
 		throw new Error("Method not implemented.");
 	}
 
-	fetchTeams(request: FetchTeamsRequest) {
-		return this._codestream.fetchTeams(request);
+	async fetchTeams(request: FetchTeamsRequest) {
+		const response = await this._codestream.fetchTeams(request);
+
+		// Replace the current team's ids with slack ids
+		const team = response.teams.find(t => t.id === this._codestreamTeamId);
+		if (team !== undefined) {
+			CSTeam.toSlack(team, await this.ensureUsersById());
+		}
+
+		return response;
 	}
 
-	getTeam(request: GetTeamRequest) {
-		return this._codestream.getTeam(request);
+	async getTeam(request: GetTeamRequest) {
+		const response = await this._codestream.getTeam(request);
+
+		// Replace the current team's ids with slack ids
+		if (response.team !== undefined && response.team.id === this._codestreamTeamId) {
+			CSTeam.toSlack(response.team, await this.ensureUsersById());
+		}
+
+		return response;
 	}
 
 	async fetchUsers(request: FetchUsersRequest) {
@@ -594,7 +621,7 @@ export class SlackApiProvider implements ApiProvider {
 			const { ok, error, members } = response as WebAPICallResult & { members: any };
 			if (!ok) throw new Error(error);
 
-			const users: CSUser[] = members.map((m: any) => CSUser.fromSlack(m, this._teamId));
+			const users: CSUser[] = members.map((m: any) => CSUser.fromSlack(m, this._codestreamTeamId));
 
 			// Find ourselves and replace it with our model
 			const index = users.findIndex(u => u.id === this._user.id);
@@ -626,7 +653,7 @@ export class SlackApiProvider implements ApiProvider {
 		const { ok, error, user: usr } = response as WebAPICallResult & { user: any };
 		if (!ok) throw new Error(error);
 
-		const user = CSUser.fromSlack(usr, this._teamId);
+		const user = CSUser.fromSlack(usr, this._codestreamTeamId);
 
 		return { user: user };
 	}
@@ -785,9 +812,23 @@ namespace CSStream {
 	}
 }
 
+namespace CSTeam {
+	export function toSlack(team: CSTeam, usersById: Map<string, CSUser>) {
+		team.memberIds = [...usersById.keys()];
+		// team.memberIds = team.memberIds.map(m => {
+		// 	const u = usersById.get(m);
+		// 	return u !== undefined ? u.id : m;
+		// });
+	}
+}
+
 namespace CSUser {
 	export function fromSlack(user: any, teamId: string): CSUser {
 		return {
+			avatar: {
+				image: user.profile.image_original,
+				image48: user.profile.image_48
+			},
 			companyIds: [],
 			createdAt: defaultCreatedAt,
 			creatorId: user.id,
