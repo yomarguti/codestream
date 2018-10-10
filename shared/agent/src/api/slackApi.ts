@@ -107,7 +107,8 @@ enum SlackEventTypes {
 enum SlackMessageEventSubTypes {
 	Changed = "message_changed",
 	Deleted = "message_deleted",
-	Replied = "message_replied"
+	Replied = "message_replied",
+	RepliedBroadcast = "thread_broadcast"
 }
 
 export class SlackApiProvider implements ApiProvider {
@@ -198,17 +199,6 @@ export class SlackApiProvider implements ApiProvider {
 							type: MessageType.Posts,
 							data: [response.post]
 						});
-
-						// const post = CSPost.fromSlack(
-						// 	e.message,
-						// 	e.channel,
-						// 	this._usersById || new Map(),
-						// 	this._codestreamTeamId
-						// );
-						// this._onDidReceiveMessage.fire({
-						// 	type: MessageType.Posts,
-						// 	data: [post]
-						// });
 						break;
 					}
 					default: {
@@ -218,49 +208,7 @@ export class SlackApiProvider implements ApiProvider {
 							type: MessageType.Posts,
 							data: [response.post]
 						});
-
-						// const post = CSPost.fromSlack(
-						// 	e,
-						// 	e.channel,
-						// 	this._usersById || new Map(),
-						// 	this._codestreamTeamId
-						// );
-						// this._onDidReceiveMessage.fire({
-						// 	type: MessageType.Posts,
-						// 	data: [post]
-						// });
 					}
-					// const { text, attachments, files, thread_ts, ts } = e;
-
-					// if (!!thread_ts && !!ts && thread_ts !== ts) {
-					// 	// This is a thread reply
-					// 	const { user, text, channel } = e;
-					// 	const reply = {
-					// 		userId: user,
-					// 		timestamp: ts,
-					// 		text
-					// 	};
-					// 	//   vscode.commands.executeCommand(
-					// 	// 	SelfCommands.UPDATE_MESSAGE_REPLIES,
-					// 	// 	{
-					// 	// 	  parentTimestamp: thread_ts,
-					// 	// 	  channelId: channel,
-					// 	// 	  reply
-					// 	// 	}
-					// 	//   );
-					// } else {
-					// 	const hasAttachment = attachments && attachments.length > 0;
-					// 	const hasFiles = files && files.length > 0;
-
-					// 	if (!!text || hasAttachment || hasFiles) {
-					// 		// const message = getMessage(event);
-					// 		// newMessages = {
-					// 		//   ...newMessages,
-					// 		//   ...message
-					// 		// };
-					// 		// this.handleMessageLinks(message);
-					// 	}
-					// }
 				}
 				break;
 			case SlackEventTypes.ReactionAdded:
@@ -755,23 +703,59 @@ export class SlackApiProvider implements ApiProvider {
 	async getPost(request: GetPostRequest) {
 		const { streamId, postId } = fromSlackPostId(request.postId, request.streamId);
 
-		const response = await this._slack.conversations.history({
-			channel: streamId,
-			limit: 1,
-			inclusive: true,
-			latest: postId
-		});
+		let response;
+
+		// This isn't ideal, but we can always pack some more info into the id to ensure we call the right thing
+		switch (request.streamId[0]) {
+			case "C":
+				response = await this._slack.channels.history({
+					channel: request.streamId,
+					count: 1,
+					latest: postId,
+					inclusive: true
+				});
+
+				break;
+
+			case "G":
+				response = await this._slack.groups.history({
+					channel: request.streamId,
+					count: 1,
+					latest: postId,
+					inclusive: true
+				});
+
+				break;
+
+			case "D":
+				response = await this._slack.im.history({
+					channel: request.streamId,
+					count: 1,
+					latest: postId,
+					inclusive: true
+				});
+				break;
+		}
+
+		// Can't use the Conversations API because replies aren't included in the main channel/group/im
+		// const response = await this._slack.conversations.history({
+		// 	channel: streamId,
+		// 	limit: 1,
+		// 	inclusive: true,
+		// 	latest: postId
+		// });
 
 		const { ok, error, messages } = response as WebAPICallResult & { messages: any };
 		if (!ok) throw new Error(error);
 
+		const message = messages[0];
+		// Since we can end up with a post NEAREST postId rather than postId, make sure we found the right post
+		if (message.ts !== postId) throw new Error(`Unable to find message with id=${postId}`);
+
 		const usersById = await this.ensureUsersById();
+		const post = await fromSlackPost(message, streamId, usersById, this._codestreamTeamId);
 
-		const posts = await Promise.all(messages.map((m: any) =>
-			fromSlackPost(m, streamId, usersById, this._codestreamTeamId)
-		) as Promise<CSPost>[]);
-
-		return { post: posts[0] };
+		return { post: post };
 	}
 
 	async markPostUnread(request: MarkPostUnreadRequest) {
