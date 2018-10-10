@@ -128,7 +128,7 @@ export class SimpleStream extends Component {
 		if (streamId !== this.props.postStreamId) {
 			this.props.setCurrentStream(streamId);
 		}
-		if (threadId) this.selectPost(threadId);
+		if (threadId) this.openThread(threadId);
 	};
 
 	copy(event) {
@@ -863,6 +863,23 @@ export class SimpleStream extends Component {
 		// otherwise use the id. any post can become the head of a thread
 		const threadId = post.parentPostId || post.id;
 		this.setState({ threadId: threadId, threadTrigger: wasClicked && id });
+		this.setActivePanel("thread");
+
+		this.focusInput();
+		if (wasClicked) {
+			EventEmitter.emit("interaction:thread-selected", {
+				threadId,
+				streamId: this.props.postStreamId
+			});
+		}
+	};
+
+	openThread = (threadId, wasClicked = false) => {
+		EventEmitter.emit("analytics", {
+			label: "Page Viewed",
+			payload: { "Page Name": "Thread View" }
+		});
+		this.setState({ threadId, threadTrigger: wasClicked && threadId });
 		this.setActivePanel("thread");
 
 		this.focusInput();
