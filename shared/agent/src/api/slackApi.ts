@@ -72,6 +72,7 @@ const defaultCreatedAt = 165816000000;
 
 const mentionsRegex = /(^|\s)@(\w+)(?:\b(?!@|[\(\{\[\<\-])|$)/g;
 const slackMentionsRegex = /\<[@|!](\w+)\>/g;
+const slackChannelsRegex = /\<#(\w+)\|(\w+)\>/g;
 
 enum SlackEventTypes {
 	Authenticated = "authenticated",
@@ -1284,6 +1285,9 @@ namespace CSPost {
 					}
 
 					return match;
+				})
+				.replace(slackChannelsRegex, (match: string, channel: string, name: string) => {
+					return `#${name}`;
 				})
 				// Slack always encodes < & > so decode them
 				.replace("&lt;", "<")
