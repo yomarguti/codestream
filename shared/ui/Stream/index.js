@@ -725,23 +725,31 @@ export class SimpleStream extends Component {
 
 	invitePerson = args => {
 		let email;
-		let invitedEmails = [];
-		while ((email = EMAIL_MATCH_REGEX.exec(args)) !== null) {
-			this.props.invite({ email: email[0], teamId: this.props.teamId });
-			invitedEmails.push(email[0]);
+
+		if (this.props.isSlackTeam) {
+			const message = `Invite your teammates to give CodeStream a try by sharing this URL with them:\n\nhttps://app.codestream.com/invite?service=slack&amp;team=${
+				this.props.teamId
+			}`;
+			return this.submitSystemPost(message);
+		} else {
+			let invitedEmails = [];
+			while ((email = EMAIL_MATCH_REGEX.exec(args)) !== null) {
+				this.props.invite({ email: email[0], teamId: this.props.teamId });
+				invitedEmails.push(email[0]);
+			}
+			let invited = "";
+			switch (invitedEmails.length) {
+				case 0:
+					return this.submitSystemPost("Usage: /invite [email address]");
+				case 1:
+					invited = invitedEmails[0];
+					break;
+				default:
+					const lastOne = invitedEmails.pop();
+					invited = invitedEmails.join(", ") + " and " + lastOne;
+			}
+			return this.submitSystemPost("Invited " + invited);
 		}
-		let invited = "";
-		switch (invitedEmails.length) {
-			case 0:
-				return this.submitSystemPost("Usage: /invite [email address]");
-			case 1:
-				invited = invitedEmails[0];
-				break;
-			default:
-				const lastOne = invitedEmails.pop();
-				invited = invitedEmails.join(", ") + " and " + lastOne;
-		}
-		return this.submitSystemPost("Invited " + invited);
 	};
 
 	postAction = (action, post) => {

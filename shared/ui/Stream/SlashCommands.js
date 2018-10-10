@@ -4,7 +4,12 @@ export const slashCommands = [
 	// { id: "apply", help: "apply patch last post" },
 	{ id: "archive", help: "archive channel", channelOnly: true, codeStreamTeam: true },
 	// { id: "diff", help: "diff last post" },
-	{ id: "invite", help: "add to your team", description: "email" },
+
+	// these two are going to call the same function but have different descriptions
+	// depending on whether you're a slack team or not
+	{ id: "invite", help: "add to your team", description: "email", codeStreamTeam: true },
+	{ id: "invite", help: "invite teammates to CodeStream", slackTeam: true },
+
 	{ id: "leave", help: "leave channel", channelOnly: true },
 	{ id: "liveshare", help: "start live share", requires: "vsls" },
 	{ id: "me", help: "emote", description: "text" },
