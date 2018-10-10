@@ -180,7 +180,7 @@ const mapStateToProps = ({ context, streams, users, teams, session, umis }) => {
 	const teamMembers = teams[context.currentTeamId].memberIds.map(id => users[id]).filter(Boolean);
 	const members = teamMembers
 		.map(user => {
-			if (!user.isRegistered) return null;
+			if (!user.isRegistered || user.deactivated) return null;
 			return {
 				value: user.id,
 				label: user.username
