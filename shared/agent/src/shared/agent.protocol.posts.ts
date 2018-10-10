@@ -7,11 +7,7 @@ import {
 	CSReactions
 } from "./api.protocol";
 
-export type CreatePostRequest =
-	| CreatePostInChannelOrDirectStreamRequest
-	| CreatePostInFileStreamRequest;
-
-export interface CreatePostInChannelOrDirectStreamRequest {
+export interface CreatePostRequest {
 	streamId: string;
 	text: string;
 	mentionedUserIds?: string[];
