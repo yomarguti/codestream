@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.14.0] - 2018-10-10
+
+### Added
+- Adds the ability to access all of your Slack channels and DMs from within CodeStream. [Learn more.](https://blog.codestream.com/index.php/2018/10/10/codestream-bring…ack-into-vs-code/)
+
 ## [0.13.0] - 2018-09-27
 
 ### Added
