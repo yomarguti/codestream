@@ -50,6 +50,9 @@ import {
 	WebviewIpcMessageType
 } from "./webviewIpc";
 
+const slackClientIdProd = "251469054195.453158514726";
+const slackClientIdDev = "251469054195.443134779744";
+
 interface BootstrapState {
 	currentTeamId: string;
 	currentUserId: string;
@@ -263,10 +266,14 @@ export class StreamWebviewPanel implements Disposable {
 							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
 							const redirectUri = `${Container.config.webAppUrl}/oauth/callback`;
 							try {
+								const slackClientId =
+									Container.session.environment === CodeStreamEnvironment.Production
+										? slackClientIdProd
+										: slackClientIdDev;
 								await commands.executeCommand(
 									"vscode.open",
 									Uri.parse(
-										`https://slack.com/oauth/authorize?client_id=251469054195.443134779744&scope=client%20identify&redirect_uri=${redirectUri}&state=${this.session.getSignupToken()}`
+										`https://slack.com/oauth/authorize?client_id=${slackClientId}&scope=client%20identify&redirect_uri=${redirectUri}&state=${this.session.getSignupToken()}`
 									)
 								);
 								responseBody.payload = true;
