@@ -583,7 +583,7 @@ export class SimpleStream extends Component {
 								streamId={this.props.postStreamId}
 								isThread
 								threadId={threadId}
-								threadTigger={this.state.threadTrigger}
+								threadTrigger={this.state.threadTrigger}
 								teamId={this.props.teamId}
 							/>
 							{/* <div className="shadow-cover-bottom" /> */}
