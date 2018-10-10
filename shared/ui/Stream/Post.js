@@ -309,6 +309,7 @@ class Post extends React.Component {
 						</div>
 					)}
 					{codeBlock}
+					{this.renderAttachments(post)}
 					{this.props.showDetails &&
 						!this.state.warning && (
 							<PostDetails post={post} currentCommit={this.props.currentCommit} />
@@ -320,6 +321,30 @@ class Post extends React.Component {
 			</div>
 		);
 	}
+
+	renderAttachments = post => {
+		if (post.files && post.files.length) {
+			return post.files.map(file => {
+				console.log(file);
+				//<img src={preview.url} width={preview.width} height={preview.height} />
+				const { type, url, name, title, preview } = file;
+				if (type === "image") {
+					return (
+						<div className="thumbnail">
+							<a href={url}>{title}</a>
+						</div>
+					);
+				} else {
+					return (
+						<div className="attachment">
+							<a href={url}>{title}</a>
+						</div>
+					);
+				}
+			});
+		}
+		return null;
+	};
 
 	renderIcons = () => {
 		return (
