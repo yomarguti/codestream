@@ -124,7 +124,7 @@ export class SlackApiProvider implements ApiProvider {
 	private readonly _slackUserId: string;
 
 	private _streams: (CSChannelStream | CSDirectStream)[] | undefined;
-	private _streamUnreadsById: Map<string, { unreads: number; mentions: number }> | undefined;
+	private _streamUnreadsById: Map<string, { messages: number; mentions: number }> | undefined;
 	private _user: CSMe;
 	private _users: CSUser[] | undefined;
 	private _usersById: Map<string, CSUser> | undefined;
@@ -413,8 +413,12 @@ export class SlackApiProvider implements ApiProvider {
 		const mentions = Object.create(null);
 		const messages = Object.create(null);
 		for (const [key, unreads] of this._streamUnreadsById!) {
-			mentions[key] = unreads.mentions;
-			messages[key] = unreads.unreads;
+			if (unreads.mentions > 0) {
+				mentions[key] = unreads.mentions;
+			}
+			if (unreads.messages > 0) {
+				messages[key] = unreads.messages;
+			}
 		}
 
 		return {
@@ -945,7 +949,7 @@ export class SlackApiProvider implements ApiProvider {
 
 				this._user.lastReads[channel.id] = channel.last_read;
 				this._streamUnreadsById!.set(channel.id, {
-					unreads: channel.unread_count_display || 0,
+					messages: channel.unread_count_display || 0,
 					mentions: 0
 				});
 
@@ -985,7 +989,7 @@ export class SlackApiProvider implements ApiProvider {
 
 				this._user.lastReads[group.id] = group.last_read;
 				this._streamUnreadsById!.set(group.id, {
-					unreads: group.unread_count_display || 0,
+					messages: group.unread_count_display || 0,
 					mentions: group.is_mpim ? group.unread_count_display || 0 : 0
 				});
 
@@ -1027,7 +1031,7 @@ export class SlackApiProvider implements ApiProvider {
 
 				this._user.lastReads[channel.id] = channel.last_read;
 				this._streamUnreadsById!.set(channel.id, {
-					unreads: channel.unread_count_display || 0,
+					messages: channel.unread_count_display || 0,
 					mentions: channel.unread_count_display || 0
 				});
 
