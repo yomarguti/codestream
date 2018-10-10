@@ -78,13 +78,30 @@ import {
 
 enum SlackEventTypes {
 	Authenticated = "authenticated",
+	ChannelArchived = "channel_archive",
+	ChannelJoined = "channel_joined",
+	ChannelLeft = "channel_left",
 	ChannelMarked = "channel_marked",
+	ChannelRenamed = "channel_rename",
+	ChannelUnarchived = "channel_unarchive",
+	Goodbye = "goodbye",
+	GroupArchived = "group_archive",
+	GroupClosed = "group_close",
+	GroupDeleted = "group_deleted",
+	GroupJoined = "group_joined",
+	GroupLeft = "group_left",
 	GroupMarked = "group_marked",
+	GroupOpened = "group_open",
+	GroupRenamed = "group_rename",
+	GroupUnarchived = "group_unarchive",
+	ImClosed = "im_close",
+	ImCreated = "im_created",
 	ImMarked = "im_marked",
+	ImOpened = "im_open",
 	Message = "message",
-	UnableToStart = "unable_to_rtm_start",
 	ReactionAdded = "reaction_added",
-	ReactionRemoved = "reaction_removed"
+	ReactionRemoved = "reaction_removed",
+	UnableToStart = "unable_to_rtm_start"
 }
 
 enum SlackMessageEventSubTypes {
@@ -107,6 +124,7 @@ export class SlackApiProvider implements ApiProvider {
 	private readonly _slackUserId: string;
 
 	private _streams: (CSChannelStream | CSDirectStream)[] | undefined;
+	private _streamUnreadsById: Map<string, { unreads: number; unreadsDisplay: number }> | undefined;
 	private _user: CSMe;
 	private _users: CSUser[] | undefined;
 	private _usersById: Map<string, CSUser> | undefined;
@@ -270,6 +288,9 @@ export class SlackApiProvider implements ApiProvider {
 			toSlackTeam(team, await this.ensureUsersById());
 		}
 
+		if (this._user.lastReads == null) {
+			this._user.lastReads = {};
+		}
 		response.user = this._user;
 	}
 
@@ -387,10 +408,19 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	async getUnreads(request: GetUnreadsRequest) {
+		const streams = await this.fetchStreams({});
+
+		const mentions = Object.create(null);
+		const messages = Object.create(null);
+		for (const [key, unreads] of this._streamUnreadsById!) {
+			mentions[key] = unreads.unreadsDisplay;
+			messages[key] = unreads.unreads;
+		}
+
 		return {
-			lastReads: request.lastReads,
-			mentions: {},
-			messages: {}
+			lastReads: this._user.lastReads,
+			mentions: mentions,
+			messages: messages
 		};
 	}
 
@@ -854,6 +884,10 @@ export class SlackApiProvider implements ApiProvider {
 
 	async fetchStreams(request: FetchStreamsRequest) {
 		if (this._streams === undefined) {
+			if (this._streamUnreadsById === undefined) {
+				this._streamUnreadsById = new Map();
+			}
+
 			// const response = await this._slack.conversations.list({
 			// 	exclude_archived: true,
 			// 	limit: 1000,
@@ -901,9 +935,33 @@ export class SlackApiProvider implements ApiProvider {
 		const { ok, error, channels } = response as WebAPICallResult & { channels: any };
 		if (!ok) throw new Error(error);
 
-		const streams: (CSChannelStream | CSDirectStream)[] = channels
-			.map((c: any) => fromSlackChannel(c, usersById, this._slackUserId, this._codestreamTeamId))
-			.filter(Boolean);
+		const streams = (await Promise.all<CSChannelStream | CSDirectStream>(
+			channels.map(async (c: any) => {
+				const response = await this._slack.channels.info({
+					channel: c.id
+				});
+
+				const { ok, channel } = response as WebAPICallResult & { channel: any };
+
+				this._user.lastReads[channel.id] = channel.last_read;
+				this._streamUnreadsById!.set(channel.id, {
+					unreads: channel.unread_count || 0,
+					unreadsDisplay: channel.unread_count_display || 0
+				});
+
+				return fromSlackChannel(
+					ok ? channel : c,
+					usersById,
+					this._slackUserId,
+					this._codestreamTeamId
+				);
+			})
+		)).filter(Boolean);
+
+		// const streams: (CSChannelStream | CSDirectStream)[] = channels
+		// 	.map((c: any) => fromSlackChannel(c, usersById, this._slackUserId, this._codestreamTeamId))
+		// 	.filter(Boolean);
+
 		return streams;
 	}
 
@@ -917,11 +975,35 @@ export class SlackApiProvider implements ApiProvider {
 		const { ok, error, groups } = response as WebAPICallResult & { groups: any };
 		if (!ok) throw new Error(error);
 
-		const streams: (CSChannelStream | CSDirectStream)[] = groups
-			.map((c: any) =>
-				fromSlackChannelOrDirect(c, usersById, this._slackUserId, this._codestreamTeamId)
-			)
-			.filter(Boolean);
+		const streams = (await Promise.all<CSChannelStream | CSDirectStream>(
+			groups.map(async (g: any) => {
+				const response = await this._slack.groups.info({
+					channel: g.id
+				});
+
+				const { ok, group } = response as WebAPICallResult & { group: any };
+
+				this._user.lastReads[group.id] = group.last_read;
+				this._streamUnreadsById!.set(group.id, {
+					unreads: group.unread_count || 0,
+					unreadsDisplay: group.unread_count_display || 0
+				});
+
+				return fromSlackChannelOrDirect(
+					ok ? group : g,
+					usersById,
+					this._slackUserId,
+					this._codestreamTeamId
+				);
+			})
+		)).filter(Boolean);
+
+		// const streams: (CSChannelStream | CSDirectStream)[] = groups
+		// 	.map((c: any) =>
+		// 		fromSlackChannelOrDirect(c, usersById, this._slackUserId, this._codestreamTeamId)
+		// 	)
+		// 	.filter(Boolean);
+
 		return streams;
 	}
 
@@ -935,9 +1017,33 @@ export class SlackApiProvider implements ApiProvider {
 		const { ok, error, ims } = response as WebAPICallResult & { ims: any };
 		if (!ok) throw new Error(error);
 
-		const streams: (CSChannelStream | CSDirectStream)[] = ims
-			.map((c: any) => fromSlackDirect(c, usersById, this._slackUserId, this._codestreamTeamId))
-			.filter(Boolean);
+		const streams = (await Promise.all<CSChannelStream | CSDirectStream>(
+			ims.map(async (im: any) => {
+				const response = await this._slack.conversations.info({
+					channel: im.id
+				});
+
+				const { ok, channel } = response as WebAPICallResult & { channel: any };
+
+				this._user.lastReads[channel.id] = channel.last_read;
+				this._streamUnreadsById!.set(channel.id, {
+					unreads: channel.unread_count || 0,
+					unreadsDisplay: channel.unread_count_display || 0
+				});
+
+				return fromSlackDirect(
+					ok ? { ...im, ...channel } : im,
+					usersById,
+					this._slackUserId,
+					this._codestreamTeamId
+				);
+			})
+		)).filter(Boolean);
+
+		// const streams: (CSChannelStream | CSDirectStream)[] = ims
+		// 	.map((c: any) => fromSlackDirect(c, usersById, this._slackUserId, this._codestreamTeamId))
+		// 	.filter(Boolean);
+
 		return streams;
 	}
 

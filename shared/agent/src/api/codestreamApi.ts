@@ -252,7 +252,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	async getUnreads(request: GetUnreadsRequest) {
 		let lastReads = request.lastReads;
-		if (lastReads === undefined) {
+		if (lastReads == null) {
 			lastReads = Object.create(null) as { [streamId: string]: number };
 		}
 
@@ -302,8 +302,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 							}
 							unreadMessages[post.streamId]++;
 						}
-
-						// this.computeForPosts(unreadPosts, this._currentUserId, stream);
 
 						Logger.log(
 							`Unreads.compute(${streamId}):`,
