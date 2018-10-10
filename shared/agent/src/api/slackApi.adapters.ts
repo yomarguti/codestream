@@ -69,7 +69,11 @@ export function fromSlackChannel(
 		modifiedAt: channel.created,
 		mostRecentPostCreatedAt: mostRecentTimestamp,
 		mostRecentPostId: mostRecentId,
-		privacy: channel.is_private ? "private" : "public",
+		privacy: (channel.is_private == null
+		? channel.is_group
+		: channel.is_private)
+			? "private"
+			: "public",
 		purpose: channel.purpose && channel.purpose.value,
 		sortId: undefined!,
 		teamId: codestreamTeamId,
@@ -98,7 +102,7 @@ export function fromSlackDirect(
 			modifiedAt: channel.created,
 			mostRecentPostCreatedAt: mostRecentTimestamp,
 			mostRecentPostId: mostRecentId,
-			privacy: channel.is_private ? "private" : "public",
+			privacy: "private",
 			sortId: undefined!,
 			teamId: codestreamTeamId,
 			type: StreamType.Direct
@@ -138,7 +142,7 @@ export function fromSlackDirect(
 		modifiedAt: channel.created,
 		mostRecentPostCreatedAt: mostRecentTimestamp,
 		mostRecentPostId: mostRecentId,
-		privacy: channel.is_private ? "private" : "public",
+		privacy: "private",
 		purpose: channel.purpose && channel.purpose.value,
 		sortId: undefined!,
 		teamId: codestreamTeamId,
