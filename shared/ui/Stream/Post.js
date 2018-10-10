@@ -211,7 +211,7 @@ class Post extends React.Component {
 					<div className={createClassString("header", { "no-repo": noRepo })}>
 						<span className="file">{post.codeBlocks[0].file || "-"}</span>
 						{this.state.warning && (
-							<Tooltip placement="left" content={this.getWarningMessage()}>
+							<Tooltip placement="left" title={this.getWarningMessage()}>
 								<span className="icon-wrapper">
 									<Icon name="info" />
 								</span>
@@ -548,10 +548,11 @@ const mapStateToProps = (state, props) => {
 	const post = getPost(state.posts, props.streamId, props.id);
 	if (!post) return { deactivated: true };
 
-	const repoName = safe(() => {
-		const codeBlock = post.codeBlocks[0];
-		return getById(state.repos, codeBlock.repoId);
-	});
+	const repoName =
+		safe(() => {
+			const codeBlock = post.codeBlocks[0];
+			return getById(state.repos, codeBlock.repoId).name;
+		}) || "";
 	let userNames = {};
 	for (var key in users || {}) userNames[key] = users[key].username;
 
@@ -564,7 +565,7 @@ const mapStateToProps = (state, props) => {
 
 	return {
 		userNames,
-		repoName: repoName || "",
+		repoName,
 		canLiveshare: state.services.vsls,
 		post: { ...post, author } // pull author out
 	};
