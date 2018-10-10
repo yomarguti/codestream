@@ -33,7 +33,7 @@ export default infiniteLoadable(
 
 		componentDidUpdate(prevProps, _prevState) {
 			const prevPosts = prevProps.posts;
-			const { firstUnreadPostSeqNum, posts } = this.props;
+			const { lastReadSeqNum, posts } = this.props;
 
 			const streamChanged = prevProps.streamId !== this.props.streamId;
 			const threadChanged =
@@ -60,7 +60,7 @@ export default infiniteLoadable(
 				this.list.recomputeRowHeights();
 			}
 
-			const unreadsChanged = prevProps.firstUnreadPostSeqNum !== firstUnreadPostSeqNum;
+			const unreadsChanged = prevProps.lastReadSeqNum !== lastReadSeqNum;
 			if (unreadsChanged) this.seenPosts.clear();
 			if (
 				unreadsChanged ||
@@ -110,7 +110,7 @@ export default infiniteLoadable(
 		scrollToUnread = location => {
 			if (location === "above") {
 				const unreadIndex = this.props.posts.findIndex(
-					post => post.seqNum === this.props.firstUnreadPostSeqNum
+					(post, i, posts) => (i > 0 ? posts[i - 1].seqNum === this.props.lastReadSeqNum : false)
 				);
 				if (unreadIndex > -1) this.list.scrollToRow(this.listIndexToPostIndex(unreadIndex));
 				// else this.scrollToBottom(); // TODO: get the newPostIndicator when switching streams
@@ -195,7 +195,7 @@ export default infiniteLoadable(
 			this.lastRenderedRowsData = data;
 
 			const {
-				firstUnreadPostSeqNum,
+				lastReadSeqNum,
 				hasFocus,
 				onDidChangeVisiblePosts,
 				onSectionRendered,
@@ -203,16 +203,24 @@ export default infiniteLoadable(
 			} = this.props;
 
 			onSectionRendered(data);
-			const startIndex = this.listIndexToPostIndex(data.startIndex);
+			const startIndex = data.startIndex === 0 ? 1 : this.listIndexToPostIndex(data.startIndex);
 			const stopIndex = this.listIndexToPostIndex(data.stopIndex);
 
-			if (!isNumber(firstUnreadPostSeqNum))
+			if (!isNumber(lastReadSeqNum)) {
 				return onDidChangeVisiblePosts({ unreadsAbove, unreadsBelow });
+			}
+
+			const firstUnreadPost = posts.find((post, i) => {
+				return safe(() => Number(posts[i - 1].seqNum)) === lastReadSeqNum;
+			});
+			if (!firstUnreadPost) return;
+
+			const firstUnreadPostSeqNum = Number(firstUnreadPost.seqNum);
 
 			let unreadsAbove = false;
 			let unreadsBelow = false;
 
-			const visibleSeqNums = posts.slice(startIndex, stopIndex + 1).map(p => p.seqNum);
+			const visibleSeqNums = posts.slice(startIndex, stopIndex + 1).map(p => Number(p.seqNum));
 
 			// consider visible posts seen
 			if (hasFocus) {
@@ -226,7 +234,7 @@ export default infiniteLoadable(
 			// check whether there are unreads below the last visible post
 			if (this.scrolledOffBottom) {
 				let indexOfFirstUnread = visibleSeqNums.indexOf(firstUnreadPostSeqNum);
-				if (indexOfFirstUnread > -1) {
+				if (indexOfFirstUnread > -1 && indexOfFirstUnread > posts.length) {
 					// if first unread is visible and there are unseen unreads below, end here
 					unreadsBelow = posts.slice(startIndex + indexOfFirstUnread).some(post => {
 						if (!this.seenPosts.has(post.seqNum)) {
@@ -236,10 +244,10 @@ export default infiniteLoadable(
 					return onDidChangeVisiblePosts({ unreadsAbove, unreadsBelow });
 				} else {
 					// first unread is not in sight so look for unseen unreads below
-					if (visibleSeqNums[visibleSeqNums.length - 1] < posts[posts.length - 1].seqNum) {
-						for (let i = stopIndex + 2; i < posts.length; i++) {
+					if (visibleSeqNums[visibleSeqNums.length - 1] < Number(posts[posts.length - 1].seqNum)) {
+						for (let i = stopIndex; i < posts.length; i++) {
 							const post = posts[i];
-							if (!this.seenPosts.has(post.seqNum)) {
+							if (!this.seenPosts.has(Number(post.seqNum))) {
 								unreadsBelow = true;
 								break;
 							}
@@ -252,7 +260,7 @@ export default infiniteLoadable(
 			if (visibleSeqNums[0] > firstUnreadPostSeqNum) {
 				for (let i = startIndex - 1; i >= 0; i--) {
 					const post = posts[i];
-					if (!this.seenPosts.has(post.seqNum)) {
+					if (!this.seenPosts.has(Number(post.seqNum))) {
 						unreadsAbove = true;
 						break;
 					}
@@ -272,14 +280,13 @@ export default infiniteLoadable(
 				editingPostId,
 				id,
 				isActive,
+				newMessagesAfterSeqNum,
 				postAction,
-				postWithNewMessageIndicator,
 				posts,
 				renderIntro,
 				isFetchingMore,
 				hasMore
 			} = this.props;
-			let unread = false;
 
 			let listProps = {};
 			// scrollToIndex is easier than `this.list.scrollToPosition` because we don't have to recalc the scrollTop
@@ -353,10 +360,10 @@ export default infiniteLoadable(
 										post.parentPostId && post.ParentPostId !== post.id
 											? posts.find(p => p.id === post.parentPostId) || post.parentPostId
 											: null;
-									const newMessageIndicator =
-										typeof postWithNewMessageIndicator !== "undefined" &&
-										post.seqNum === postWithNewMessageIndicator + 1;
-									unread = unread || newMessageIndicator;
+
+									const firstUnreadPost = this.props.posts.find((p, i, array) => {
+										return safe(() => Number(array[i - 1].seqNum) === newMessagesAfterSeqNum);
+									});
 
 									const element = (
 										<CellMeasurer
@@ -377,8 +384,10 @@ export default infiniteLoadable(
 													currentUserId={this.props.currentUserId}
 													currentUserName={this.props.currentUserName}
 													replyingTo={!this.props.isThread && parentPost}
-													newMessageIndicator={newMessageIndicator}
-													unread={post.seqNum >= this.props.firstUnreadPostSeqNum}
+													newMessageIndicator={
+														firstUnreadPost &&
+														Number(post.seqNum) === Number(firstUnreadPost.seqNum)
+													}
 													editing={isActive && post.id === editingPostId}
 													action={postAction}
 													index={data.index}

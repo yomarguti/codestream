@@ -49,6 +49,7 @@ export class SimpleStream extends Component {
 	}
 
 	componentDidMount() {
+		this.setUmiInfo();
 		this.disposables.push(
 			EventEmitter.on("interaction:stream-thread-selected", this.handleStreamThreadSelected)
 		);
@@ -203,9 +204,9 @@ export class SimpleStream extends Component {
 			// 		this.postWithNewMessageIndicator = this.props.currentUser.lastReads[nextProps.postStreamId];
 			// 	}
 			// }
-			console.log("SETTING PWNMI to NULL!");
-			this.postWithNewMessageIndicator = undefined;
-			this.setState({ firstUnreadPostSeqNum: null });
+			console.log("resetting newMessagesAfterSeqNum");
+			this.newMessagesAfterSeqNum = undefined;
+			this.setState({ lastReadSeqNum: null });
 		}
 		if (this.props.activePanel !== prevProps.activePanel && this.state.editingPostId)
 			this.handleDismissEdit();
@@ -217,15 +218,22 @@ export class SimpleStream extends Component {
 				typeof umis.lastReads[postStreamId] === "undefined" &&
 				typeof prevProps.umis.lastReads[postStreamId] !== "undefined"
 			) {
-				this.setState({ firstUnreadPostSeqNum: null });
+				this.setState({ lastReadSeqNum: null });
 			} else if (
 				umis.lastReads[postStreamId] !== safe(() => prevProps.umis.lastReads[postStreamId])
 			) {
-				console.log("SETTING PWNMI to ", umis.lastReads[postStreamId]);
-				this.postWithNewMessageIndicator = umis.lastReads[postStreamId];
-				this.setState({ firstUnreadPostSeqNum: this.postWithNewMessageIndicator + 1 });
+				this.setUmiInfo();
 			}
 		}
+	}
+
+	setUmiInfo() {
+		const { postStreamId, umis } = this.props;
+		this.newMessagesAfterSeqNum = umis.lastReads[postStreamId];
+		console.log("SETTING newMessagesAfterSeqNum to ", this.newMessagesAfterSeqNum);
+		this.setState({
+			lastReadSeqNum: this.newMessagesAfterSeqNum
+		});
 	}
 
 	setPostsListRef = element => {
@@ -514,8 +522,8 @@ export class SimpleStream extends Component {
 								ref={this.setPostsListRef}
 								isActive={this.props.activePanel === "main"}
 								hasFocus={this.props.hasFocus}
-								postWithNewMessageIndicator={this.postWithNewMessageIndicator}
-								firstUnreadPostSeqNum={this.state.firstUnreadPostSeqNum}
+								newMessagesAfterSeqNum={this.newMessagesAfterSeqNum}
+								lastReadSeqNum={this.state.lastReadSeqNum}
 								usernamesRegexp={this.props.usernamesRegexp}
 								currentUserId={this.props.currentUserId}
 								currentUserName={this.props.currentUserName}
