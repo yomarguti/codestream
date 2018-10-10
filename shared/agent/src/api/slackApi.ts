@@ -11,7 +11,6 @@ import { Emitter, Event } from "vscode-languageserver";
 import { Logger } from "../logger";
 import {
 	CreateChannelStreamRequest,
-	CreateChannelStreamResponse,
 	CreateDirectStreamRequest,
 	CreateDirectStreamResponse,
 	CreateMarkerLocationRequest,
@@ -797,12 +796,41 @@ export class SlackApiProvider implements ApiProvider {
 		return this._codestream.getRepo(request);
 	}
 
-	createChannelStream(request: CreateChannelStreamRequest): Promise<CreateChannelStreamResponse> {
-		throw new Error("Method not implemented.");
+	async createChannelStream(request: CreateChannelStreamRequest) {
+		if (request.isTeamStream || request.memberIds == null || request.memberIds.length === 0) {
+			throw new Error("Cannot create team streams on Slack");
+		}
+
+		const response = await this._slack.conversations.create({
+			name: request.name,
+			is_private: request.privacy === "private",
+			user_ids: request.memberIds.join(",")
+		});
+
+		const { ok, error, channel } = response as WebAPICallResult & { channel: any };
+		if (!ok) throw new Error(error);
+
+		const stream = CSStream.fromSlack(
+			channel,
+			await this.ensureUsersById(),
+			this._slackUserId,
+			this._codestreamTeamId
+		);
+
+		return { stream: stream! as CSChannelStream };
 	}
 
-	createDirectStream(request: CreateDirectStreamRequest): Promise<CreateDirectStreamResponse> {
-		throw new Error("Method not implemented.");
+	async createDirectStream(request: CreateDirectStreamRequest) {
+		const response = await this._slack.conversations.open({
+			users: request.memberIds.join(","),
+			return_im: false
+		});
+
+		const { ok, error, channel } = response as WebAPICallResult & { channel: any };
+		if (!ok) throw new Error(error);
+
+		const streamResponse = await this.getStream({ streamId: channel.id, type: StreamType.Direct });
+		return streamResponse as CreateDirectStreamResponse;
 	}
 
 	async fetchStreams(request: FetchStreamsRequest) {
@@ -909,6 +937,9 @@ export class SlackApiProvider implements ApiProvider {
 		const { ok, error, channel } = response as WebAPICallResult & { channel: any };
 		if (!ok) throw new Error(error);
 
+		const members = await this.getStreamMembers(request.streamId);
+		channel.members = members;
+
 		const stream = CSStream.fromSlack(
 			channel,
 			await this.ensureUsersById(),
@@ -917,6 +948,18 @@ export class SlackApiProvider implements ApiProvider {
 		);
 
 		return { stream: stream! };
+	}
+
+	private async getStreamMembers(streamId: string) {
+		const response = await this._slack.conversations.members({
+			channel: streamId,
+			limit: 1000
+		});
+
+		const { ok, error, members } = response as WebAPICallResult & { members: any };
+		if (!ok) throw new Error(error);
+
+		return members;
 	}
 
 	async joinStream(request: JoinStreamRequest) {
@@ -1008,7 +1051,7 @@ export class SlackApiProvider implements ApiProvider {
 		const response = await this._codestream.getTeam(request);
 
 		// Replace the current team's ids with slack ids
-		if (response.team !== undefined && response.team.id === this._codestreamTeamId) {
+		if (response.team != null && response.team.id === this._codestreamTeamId) {
 			CSTeam.toSlack(response.team, await this.ensureUsersById());
 		}
 
@@ -1134,13 +1177,16 @@ namespace CSDirectStream {
 		// 	} while (match != null);
 		// }
 
-		const names: string[] = channel.members
-			.filter((m: string) => m !== slackUserId)
-			.map((m: string) => {
+		let names: string[];
+		if (channel.members != null) {
+			names = channel.members.filter((m: string) => m !== slackUserId).map((m: string) => {
 				const user = usersById.get(m);
 				return user === undefined ? m : user.username || m;
 			});
-		names.sort((a, b) => a.localeCompare(b));
+			names.sort((a, b) => a.localeCompare(b));
+		} else {
+			names = ["Unknown"];
+		}
 
 		return {
 			createdAt: channel.created,
@@ -1186,7 +1232,7 @@ namespace CSPost {
 		mentionedUserIds: string[] | undefined,
 		usersByName: Map<string, CSUser>
 	) {
-		if (mentionedUserIds !== undefined && mentionedUserIds.length !== 0) {
+		if (mentionedUserIds != null && mentionedUserIds.length !== 0) {
 			text = text.replace(mentionsRegex, (match: string, prefix: string, mentionName: string) => {
 				if (mentionName === "everyone" || mentionName === "channel" || mentionName === "here") {
 					return `${prefix}<!${mentionName}>`;
@@ -1256,7 +1302,7 @@ namespace CSPost {
 			createdAt: timestamp,
 			creatorId: post.user || (post.bot_id && post.username),
 			deactivated: false,
-			hasBeenEdited: post.edited !== undefined,
+			hasBeenEdited: post.edited != null,
 			hasReplies: post.ts === post.thread_ts,
 			id: CSPost.toSlackPostId(post.ts, streamId),
 			mentionedUserIds: mentionedUserIds,
