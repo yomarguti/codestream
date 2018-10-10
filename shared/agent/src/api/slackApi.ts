@@ -191,16 +191,23 @@ export class SlackApiProvider implements ApiProvider {
 						break;
 					}
 					default: {
-						const post = CSPost.fromSlack(
-							e,
-							e.channel,
-							this._usersById || new Map(),
-							this._codestreamTeamId
-						);
+						// Don't trust the payload, since it might not be a full message
+						const response = await this.getPost({ streamId: e.channel, postId: e.ts });
 						this._onDidReceiveMessage.fire({
 							type: MessageType.Posts,
-							data: [post]
+							data: [response.post]
 						});
+
+						// const post = CSPost.fromSlack(
+						// 	e,
+						// 	e.channel,
+						// 	this._usersById || new Map(),
+						// 	this._codestreamTeamId
+						// );
+						// this._onDidReceiveMessage.fire({
+						// 	type: MessageType.Posts,
+						// 	data: [post]
+						// });
 					}
 					// const { text, attachments, files, thread_ts, ts } = e;
 
