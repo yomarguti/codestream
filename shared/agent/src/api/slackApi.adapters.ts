@@ -98,7 +98,7 @@ export function fromSlackDirect(
 			isArchived: Boolean(channel.is_user_deleted),
 			id: channel.id,
 			name: (user && user.username) || channel.user,
-			memberIds: [slackUserId, channel.user],
+			memberIds: channel.user === slackUserId ? [slackUserId] : [slackUserId, channel.user],
 			modifiedAt: channel.created,
 			mostRecentPostCreatedAt: mostRecentTimestamp,
 			mostRecentPostId: mostRecentId,
