@@ -1209,7 +1209,7 @@ export class SimpleStream extends Component {
 		const { activePanel, postStreamId } = this.props;
 		const threadId = activePanel === "thread" ? this.state.threadId : undefined;
 
-		const text = "Starting Live Share session...";
+		const text = "Starting Live Share...";
 		this.submitSystemPost(text);
 
 		EventEmitter.emit("interaction:svc-request", {
@@ -1217,7 +1217,8 @@ export class SimpleStream extends Component {
 			action: {
 				type: "start",
 				streamId: postStreamId,
-				threadId: threadId
+				threadId: threadId,
+				createNewStream: !this.props.isSlackTeam
 			}
 		});
 
