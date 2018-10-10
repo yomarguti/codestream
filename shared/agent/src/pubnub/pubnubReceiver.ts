@@ -33,6 +33,7 @@ export class PubnubReceiver {
 		return this._onDidReceiveMessage.event;
 	}
 
+	private _subscribedStreamIds = new Set<string>();
 	private readonly _pubnubConnection: PubnubConnection;
 	private _connection: Disposable | undefined;
 
@@ -67,6 +68,7 @@ export class PubnubReceiver {
 
 		for (const streamId of streamIds || []) {
 			channels.push({ name: `stream-${streamId}` });
+			this._subscribedStreamIds.add(streamId);
 		}
 
 		this._pubnubConnection.subscribe(channels);
@@ -76,6 +78,20 @@ export class PubnubReceiver {
 				this._connection!.dispose();
 			}
 		};
+	}
+
+	subscribeToStream(streamId: string) {
+		if (!this._subscribedStreamIds.has(streamId)) {
+			this._pubnubConnection.subscribe([`stream-${streamId}`]);
+			this._subscribedStreamIds.add(streamId);
+		}
+	}
+
+	unsubscribeFromStream(streamId: string) {
+		if (this._subscribedStreamIds.has(streamId)) {
+			this._pubnubConnection.unsubscribe([`stream-${streamId}`]);
+			this._subscribedStreamIds.delete(streamId);
+		}
 	}
 
 	private onPubnubStatusChanged(e: StatusChangeEvent) {

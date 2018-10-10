@@ -41,20 +41,13 @@ import { EntityManager, Id } from "./entityManager";
 export class StreamsManager extends EntityManager<CSChannelStream | CSDirectStream> {
 	private loaded = false;
 
-	// protected init() {
-	// 	this.session.onStreamsChanged(this.onStreamsChanged, this);
-	// }
+	protected init() {
+		this.session.onDidChangeStreams(this.onStreamsChanged, this);
+	}
 
-	// protected onStreamsChanged(streams: CSStream[]) {
-	// 	// const { pubnub, userId } = this.session;
-	// 	// TODO Eric help!!!
-	// 	// pubnub.subscribe([
-	// 	// 	...Iterables.filterMap(
-	// 	// 		streams,
-	// 	// 		s => (CodeStreamApi.isStreamSubscriptionRequired(s, userId) ? `stream-${s.id}` : undefined)
-	// 	// 	)
-	// 	// ]);
-	// }
+	private onStreamsChanged(streams: CSStream[]) {
+		return this.session.api.manageStreamSubscriptions(streams);
+	}
 
 	async getAll(): Promise<(CSChannelStream | CSDirectStream)[]> {
 		if (!this.loaded) {

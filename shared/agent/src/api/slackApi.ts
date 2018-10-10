@@ -1162,6 +1162,8 @@ export class SlackApiProvider implements ApiProvider {
 		throw new Error("Method not implemented.");
 	}
 
+	manageStreamSubscriptions(streams: CSStream[]) {}
+
 	async fetchTeams(request: FetchTeamsRequest) {
 		const response = await this._codestream.fetchTeams(request);
 

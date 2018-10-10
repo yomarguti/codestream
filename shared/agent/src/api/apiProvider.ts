@@ -165,6 +165,7 @@ export interface ApiProvider {
 	updateStreamMembership(
 		request: UpdateStreamMembershipRequest
 	): Promise<UpdateStreamMembershipResponse>;
+	manageStreamSubscriptions(streams: CSStream[]): void;
 
 	fetchTeams(request: FetchTeamsRequest): Promise<FetchTeamsResponse>;
 	getTeam(request: GetTeamRequest): Promise<GetTeamResponse>;

@@ -602,9 +602,15 @@ export class CodeStreamApiProvider implements ApiProvider {
 				$pull: { memberIds: [this._userId] }
 			}
 		});
+		this._pubnub && this._pubnub.unsubscribeFromStream(request.streamId);
 		const [stream] = await Container.instance().streams.resolve({
 			type: MessageType.Streams,
-			data: [response.stream]
+			data: [
+				{
+					id: request.streamId,
+					$pull: { memberIds: [this._userId] }
+				}
+			]
 		});
 		return { stream };
 	}
@@ -632,6 +638,19 @@ export class CodeStreamApiProvider implements ApiProvider {
 			request.push,
 			this._token
 		);
+	}
+
+	manageStreamSubscriptions(streams: CSStream[]) {
+		if (!this._pubnub) {
+			return;
+		}
+		for (const stream of streams) {
+			if (CodeStreamApiProvider.isStreamSubscriptionRequired(stream, this.userId)) {
+				this._pubnub.subscribeToStream(stream.id);
+			} else if (CodeStreamApiProvider.isStreamUnsubscriptionRequired(stream, this.userId)) {
+				this._pubnub.unsubscribeFromStream(stream.id);
+			}
+		}
 	}
 
 	// // async addUserToStream(streamId: string, userId: string, teamId?: string) {
@@ -893,6 +912,16 @@ export class CodeStreamApiProvider implements ApiProvider {
 			if (!stream.memberIds.includes(userId)) return false;
 		}
 		return true;
+	}
+
+	static isStreamUnsubscriptionRequired(stream: CSStream, userId: string): boolean {
+		if (stream.type !== StreamType.Channel) {
+			return false;
+		}
+		if (stream.memberIds && !stream.memberIds.includes(userId)) {
+			return true;
+		}
+		return false;
 	}
 
 	static normalizeResponse<R extends object>(obj: { [key: string]: any }): R {
