@@ -106,7 +106,14 @@ export class CodeStreamSession {
 		public readonly connection: Connection,
 		private readonly _options: AgentOptions
 	) {
-		this._readyPromise = new Promise<void>(resolve => this.agent.onReady(resolve));
+		Logger.log("Agent initalizing...");
+
+		this._readyPromise = new Promise<void>(resolve =>
+			this.agent.onReady(() => {
+				Logger.log("Agent is ready");
+				resolve();
+			})
+		);
 		Container.initialize(this);
 
 		this._api = new CodeStreamApiProvider(_options.serverUrl, {
@@ -245,8 +252,12 @@ export class CodeStreamSession {
 		try {
 			let opts = { team: team, teamId: teamId } as LoginOptions;
 			if (signupToken) {
+				Logger.log(`Logging ${email} into CodeStream via credentials...`);
+
 				opts = { ...opts, type: "otc", code: signupToken };
 			} else if (typeof passwordOrToken === "string") {
+				Logger.log(`Logging ${email} into CodeStream via CodeStream code...`);
+
 				opts = {
 					...opts,
 					type: "credentials",
@@ -254,6 +265,8 @@ export class CodeStreamSession {
 					password: passwordOrToken
 				};
 			} else {
+				Logger.log(`Logging ${email} into CodeStream via authentication token...`);
+
 				opts = {
 					...opts,
 					type: "token",
@@ -289,6 +302,12 @@ export class CodeStreamSession {
 				const currentTeam = response.teams.find(t => t.id === this._teamId)!;
 
 				if (currentTeam.providerInfo && currentTeam.providerInfo.slack) {
+					Logger.log(
+						`Logging into Slack because team '${currentTeam.name}' (${
+							currentTeam.id
+						}) is a Slack-based team`
+					);
+
 					this._api = new SlackApiProvider(
 						this._api! as CodeStreamApiProvider,
 						response.user.providerInfo.slack,
@@ -297,6 +316,8 @@ export class CodeStreamSession {
 					);
 
 					await (this._api as SlackApiProvider).processLoginResponse(response);
+
+					Logger.log(`Logged into Slack as '${response.user.username}' (${response.user.id})`);
 				}
 			}
 
@@ -306,6 +327,8 @@ export class CodeStreamSession {
 			setGitPath(this._options.gitPath);
 
 			this.api.onDidReceiveMessage(e => this.onRTMessageReceived(e), this);
+
+			Logger.log(`Subscribing to realtime events...`);
 			this.api.subscribe();
 
 			Container.instance().git.onRepositoryCommitHashChanged(repo => {

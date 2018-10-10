@@ -173,6 +173,12 @@ export class CodeStreamApiProvider implements ApiProvider {
 				throw new Error("Invalid login options");
 		}
 
+		Logger.log(
+			`CodeStream user '${response.user.username}' belongs to ${
+				response.teams.length
+			} team(s)\n${response.teams.map(t => `\t${t.name} (${t.id})`).join("\n")}`
+		);
+
 		// If there is only 1 team, use it regardless of config
 		if (response.teams.length === 1) {
 			options.teamId = response.teams[0].id;
@@ -181,12 +187,15 @@ export class CodeStreamApiProvider implements ApiProvider {
 			response.teams.sort((a, b) => a.createdAt - b.createdAt);
 		}
 
+		let pickedTeamReason;
+
 		if (options.teamId == null) {
 			if (options.team) {
 				const normalizedTeamName = options.team.toLocaleUpperCase();
 				const team = response.teams.find(t => t.name.toLocaleUpperCase() === normalizedTeamName);
 				if (team != null) {
 					options.teamId = team.id;
+					pickedTeamReason = " because the team was saved in settings (user, workspace, or folder)";
 				}
 			}
 
@@ -197,18 +206,28 @@ export class CodeStreamApiProvider implements ApiProvider {
 					const team = response.teams.find(t => Boolean(t.providerInfo));
 					if (team) {
 						options.teamId = team.id;
+						pickedTeamReason = " because the team was the oldest Slack team";
 					}
 				}
 
 				if (options.teamId == null) {
 					options.teamId = response.teams[0].id;
+					pickedTeamReason = " because the team was the oldest team";
 				}
 			}
+		} else {
+			pickedTeamReason = " because the team was the last used team";
 		}
 
-		if (response.teams.find(t => t.id === options.teamId) === undefined) {
-			options.teamId = response.teams[0].id;
+		let team = response.teams.find(t => t.id === options.teamId);
+		if (team === undefined) {
+			team = response.teams[0];
+			options.teamId = team.id;
+			pickedTeamReason =
+				" because the specified team could not be found, defaulting to the oldest team";
 		}
+
+		Logger.log(`Using team '${team.name}' (${team.id})${pickedTeamReason || ""}`);
 
 		this._token = response.accessToken;
 		this._pubnubKey = response.pubnubKey;
