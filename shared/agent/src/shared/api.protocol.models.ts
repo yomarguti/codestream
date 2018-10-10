@@ -8,12 +8,22 @@ export interface CSEntity {
 	creatorId: string;
 }
 
+export interface CSMarkerCodeBlock {
+	code: string;
+	commitHash: string;
+	location: CSLocationArray;
+	file: string;
+	repoId: string;
+	streamId: string;
+}
+
 export interface CSMarker extends CSEntity {
 	teamId: string;
 	streamId: string;
 	postId: string;
 	postStreamId: string;
 	commitHashWhenCreated: string;
+	codeBlock?: CSMarkerCodeBlock;
 }
 
 export interface CSLocationMeta {
@@ -61,7 +71,14 @@ export interface CSPost extends CSEntity {
 	mentionedUserIds?: string[];
 	origin?: "email" | "slack" | "teams";
 	parentPostId?: string;
-	reactions?: object;
+	reactions?: { [key: string]: boolean };
+	files?: [
+		{
+			name: string;
+			url: string;
+			type: string;
+		}
+	];
 }
 
 export interface CSRemote {

@@ -1,5 +1,6 @@
 "use strict";
 import {
+	MessageAttachment,
 	RTMClient,
 	RTMClientOptions,
 	WebAPICallResult,
@@ -8,7 +9,9 @@ import {
 } from "@slack/client";
 import { RequestInit } from "node-fetch";
 import { Emitter, Event } from "vscode-languageserver";
+import { Container } from "../container";
 import { Logger } from "../logger";
+import { PostsManager } from "../managers/postsManager";
 import {
 	CreateChannelStreamRequest,
 	CreateDirectStreamRequest,
@@ -73,6 +76,7 @@ const defaultCreatedAt = 165816000000;
 const mentionsRegex = /(^|\s)@(\w+)(?:\b(?!@|[\(\{\[\<\-])|$)/g;
 const slackMentionsRegex = /\<[@|!](\w+)\>/g;
 const slackChannelsRegex = /\<#(\w+)\|(\w+)\>/g;
+const markerAttachmentRegex = /codestream\:\/\/marker\/(.*)/;
 
 enum SlackEventTypes {
 	Authenticated = "authenticated",
@@ -159,7 +163,7 @@ export class SlackApiProvider implements ApiProvider {
 			case SlackEventTypes.Message:
 				switch (subtype) {
 					case SlackMessageEventSubTypes.Deleted: {
-						const post = CSPost.fromSlack(
+						const post = await CSPost.fromSlack(
 							e.previous_message,
 							e.channel,
 							this._usersById || new Map(),
@@ -462,7 +466,7 @@ export class SlackApiProvider implements ApiProvider {
 			if (!ok) throw new Error(error);
 
 			const usersById = await this.ensureUsersById();
-			const post = CSPost.fromSlack(message, streamId, usersById, this._codestreamTeamId);
+			const post = await CSPost.fromSlack(message, streamId, usersById, this._codestreamTeamId);
 
 			if (request.codeBlocks == null || request.codeBlocks.length === 0) {
 				return { post: post };
@@ -518,7 +522,7 @@ export class SlackApiProvider implements ApiProvider {
 					text: code,
 					footer: "Posted via CodeStream",
 					ts: (new Date().getTime() / 1000) as any,
-					callback_id: marker.id
+					callback_id: `codestream://marker/${marker.id}`
 				}
 			];
 
@@ -636,9 +640,9 @@ export class SlackApiProvider implements ApiProvider {
 		messages.sort((a: any, b: any) => a.ts - b.ts);
 
 		const usersById = await this.ensureUsersById();
-		const posts = messages.map((m: any) =>
+		const posts = await Promise.all(messages.map((m: any) =>
 			CSPost.fromSlack(m, request.streamId, usersById, this._codestreamTeamId)
-		) as CSPost[];
+		) as Promise<CSPost>[]);
 
 		return { posts: posts };
 	}
@@ -700,9 +704,9 @@ export class SlackApiProvider implements ApiProvider {
 		messages.sort((a: any, b: any) => a.ts - b.ts);
 
 		const usersById = await this.ensureUsersById();
-		const posts = messages.map((m: any) =>
+		const posts = await Promise.all(messages.map((m: any) =>
 			CSPost.fromSlack(m, request.streamId, usersById, this._codestreamTeamId)
-		) as CSPost[];
+		) as Promise<CSPost>[]);
 
 		return { posts: posts, more: has_more };
 	}
@@ -722,9 +726,9 @@ export class SlackApiProvider implements ApiProvider {
 
 		const usersById = await this.ensureUsersById();
 
-		const posts = messages.map((m: any) =>
+		const posts = await Promise.all(messages.map((m: any) =>
 			CSPost.fromSlack(m, streamId, usersById, this._codestreamTeamId)
-		);
+		) as Promise<CSPost>[]);
 
 		return { post: posts[0] };
 	}
@@ -1262,12 +1266,48 @@ namespace CSPost {
 		return text;
 	}
 
-	export function fromSlack(
+	export async function fromSlackCodeBlockAttachment(attachments: MessageAttachment[]) {
+		const attachment = attachments.find(
+			(a: any) => a.callback_id != null && markerAttachmentRegex.test(a.callback_id)
+		);
+		if (attachment == null) return undefined;
+
+		const match = markerAttachmentRegex.exec(attachment.callback_id || "");
+		if (match == null) return undefined;
+
+		const [, markerId] = match;
+
+		let marker;
+		try {
+			marker = await Container.instance().markers.getById(markerId);
+		} catch (ex) {
+			Logger.error(ex, `Failed to find marker=${markerId}`);
+			return undefined;
+		}
+
+		if (marker.codeBlock == null) return undefined;
+
+		const { code, commitHash, file, repoId, streamId } = marker.codeBlock;
+		return {
+			commitHashWhenPosted: commitHash,
+			codeBlocks: [
+				{
+					code: code,
+					file: file,
+					repoId: repoId,
+					markerId: marker.id,
+					streamId: streamId
+				}
+			]
+		};
+	}
+
+	export async function fromSlack(
 		post: any,
 		streamId: string,
 		usersById: Map<string, CSUser>,
 		teamId: string
-	): CSPost {
+	): Promise<CSPost> {
 		const mentionedUserIds: string[] = [];
 
 		let text;
@@ -1308,8 +1348,29 @@ namespace CSPost {
 			}
 		}
 
+		let codeBlocks: CSCodeBlock[] | undefined;
+		let commitHashWhenPosted;
+		if (post.attachments && post.attachments.length !== 0) {
+			// Filter out unfurled links
+			const attachments = post.attachments.filter((a: any) => a.from_url == null);
+			if (attachments.length !== 0) {
+				const blocks = await CSPost.fromSlackCodeBlockAttachment(attachments);
+				if (blocks) {
+					({ codeBlocks, commitHashWhenPosted } = blocks);
+				} else {
+					// TODO: Get fallback text?
+					text += "\n";
+					for (const attachment of attachments) {
+						text += `\n${attachment.text || attachment.fallback}`;
+					}
+				}
+			}
+		}
+
 		const timestamp = Number(post.ts.split(".")[0]) * 1000;
 		return {
+			codeBlocks: codeBlocks,
+			commitHashWhenPosted: commitHashWhenPosted,
 			createdAt: timestamp,
 			creatorId: post.user || (post.bot_id && post.username),
 			deactivated: false,
