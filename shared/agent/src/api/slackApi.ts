@@ -369,9 +369,10 @@ export class SlackApiProvider implements ApiProvider {
 			return {
 				user: {
 					...me,
+					avatar: user.avatar,
 					// creatorId: user.id,
 					deactivated: user.deactivated,
-					email: user.email,
+					email: user.email || me.email,
 					firstName: user.firstName,
 					fullName: user.fullName,
 					id: user.id,
