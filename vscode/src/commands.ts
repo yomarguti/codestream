@@ -8,7 +8,7 @@ import {
 	StreamType
 } from "./api/session";
 import { TokenManager } from "./api/tokenManager";
-import { openEditor, ShowCodeResult } from "./common";
+import { openEditor, ShowCodeResult, WorkspaceState } from "./common";
 import { Container } from "./container";
 import { StreamThreadId } from "./controllers/streamViewController";
 import { Command, createCommandDecorator } from "./system";
@@ -206,6 +206,7 @@ export class Commands implements Disposable {
 	async signIn() {
 		const token = await TokenManager.get(Container.config.serverUrl, Container.config.email);
 		if (!token) {
+			await Container.context.workspaceState.update(WorkspaceState.TeamId, undefined);
 			await Container.streamView.show();
 		} else {
 			await Container.session.login(Container.config.email, token);

@@ -387,6 +387,7 @@ export class CodeStreamSession implements Disposable {
 		try {
 			if (reason === SessionSignedOutReason.UserSignedOut) {
 				// Clear the access token
+				await Container.context.workspaceState.update(WorkspaceState.TeamId, undefined);
 				await TokenManager.clear(this._serverUrl, this._email!);
 			}
 
