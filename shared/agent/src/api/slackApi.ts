@@ -446,7 +446,8 @@ export class SlackApiProvider implements ApiProvider {
 				text: text,
 				as_user: true,
 				thread_ts: parentPostId,
-				unfurl_links: true
+				unfurl_links: true,
+				reply_broadcast: parentPostId ? true : undefined
 			});
 
 			// tslint:disable-next-line:prefer-const
