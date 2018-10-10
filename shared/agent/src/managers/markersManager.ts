@@ -70,9 +70,13 @@ export class MarkersManager extends EntityManager<CSMarker> {
 				continue;
 			}
 
-			const stream = await streams.getById(marker.postStreamId);
-			if (stream && this.canSeeMarkers(stream, this.session.userId)) {
-				includedMarkers.push(marker);
+			try {
+				const stream = await streams.getById(marker.postStreamId);
+				if (stream && this.canSeeMarkers(stream, this.session.userId)) {
+					includedMarkers.push(marker);
+				}
+			} catch (ignore) {
+				// TODO the APIs will fail when the user doesn't have access to the channel/dm
 			}
 		}
 
