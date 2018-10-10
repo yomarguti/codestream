@@ -20,6 +20,7 @@ interface JoinCommandArgs {
 
 interface StartCommandArgs {
 	streamThread?: StreamThread;
+	createNewStream?: Boolean;
 }
 
 export const vslsUrlRegex = /https:\/\/insiders\.liveshare\.vsengsaas\.visualstudio\.com\/join\?(.+?)\b/;
@@ -202,7 +203,10 @@ export class LiveShareController implements Disposable {
 				const streamThread =
 					stream !== undefined ? { id: action.threadId, stream: stream } : undefined;
 
-				await this.start({ streamThread: streamThread });
+				await this.start({
+					streamThread: streamThread,
+					createNewStream: action.createNewStream
+				});
 				break;
 		}
 	}
@@ -227,35 +231,38 @@ export class LiveShareController implements Disposable {
 
 		const currentChannel = streamThread.stream;
 
-		// Create a new channel specifically for this live share session, based on the current channel
-		const name = this.getVslsChannelName();
-		let createOptions: ServiceChannelStreamCreationOptions;
-		switch (currentChannel.type) {
-			case StreamType.Direct:
-				createOptions = {
-					name: name,
-					membership: currentChannel.entity.memberIds,
-					privacy: "private"
-				};
-				break;
-			default:
-				createOptions = {
-					name: name,
-					privacy: "public"
-				};
-				break;
-		}
-
-		const vslsChannel = await Container.session.channels.getOrCreateByService(
-			ChannelServiceType.Vsls,
-			vsls.session.id!,
-			createOptions
-		);
-
 		await currentChannel.post(`Join my Live Share session: ${uri.toString()}`, streamThread.id);
-		return Container.commands.openStream({
-			streamThread: { id: undefined, stream: vslsChannel }
-		});
+
+		if (args.createNewStream) {
+			// Create a new channel specifically for this live share session, based on the current channel
+			const name = this.getVslsChannelName();
+			let createOptions: ServiceChannelStreamCreationOptions;
+			switch (currentChannel.type) {
+				case StreamType.Direct:
+					createOptions = {
+						name: name,
+						membership: currentChannel.entity.memberIds,
+						privacy: "private"
+					};
+					break;
+				default:
+					createOptions = {
+						name: name,
+						privacy: "public"
+					};
+					break;
+			}
+
+			const vslsChannel = await Container.session.channels.getOrCreateByService(
+				ChannelServiceType.Vsls,
+				vsls.session.id!,
+				createOptions
+			);
+
+			return Container.commands.openStream({
+				streamThread: { id: undefined, stream: vslsChannel }
+			});
+		}
 	}
 
 	private async getVslsChannel(vslsId: string) {

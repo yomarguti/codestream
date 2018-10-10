@@ -73,6 +73,7 @@ export interface VslsStartServiceRequestAction {
 	type: "start";
 	streamId: string;
 	threadId?: string;
+	createNewStream?: Boolean;
 }
 
 export type VslsServiceRequestAction =
