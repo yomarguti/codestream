@@ -74,9 +74,18 @@ export interface CSPost extends CSEntity {
 	reactions?: { [key: string]: boolean };
 	files?: [
 		{
+			mimetype: string;
 			name: string;
-			url: string;
+			title: string;
 			type: string;
+			url: string;
+			preview?:
+				| string
+				| {
+						url: string;
+						width: number;
+						height: number;
+				  };
 		}
 	];
 }
