@@ -213,6 +213,11 @@ export class CodeStreamSession {
 		return this._api!;
 	}
 
+	private _codestreamUserId: string | undefined;
+	get codestreamUserId() {
+		return this._codestreamUserId!;
+	}
+
 	private _teamId: string | undefined;
 	get teamId() {
 		return this._teamId!;
@@ -276,8 +281,9 @@ export class CodeStreamSession {
 				email: email,
 				value: response.accessToken
 			};
+
 			this._teamId = this._options.teamId = response.teamId;
-			this._userId = response.user.id;
+			this._codestreamUserId = response.user.id;
 
 			if (response.user.providerInfo && response.user.providerInfo.slack) {
 				const currentTeam = response.teams.find(t => t.id === this._teamId)!;
@@ -293,6 +299,9 @@ export class CodeStreamSession {
 					await (this._api as SlackApiProvider).processLoginResponse(response);
 				}
 			}
+
+			// Make sure to update this after the slack switch as the userId will change
+			this._userId = response.user.id;
 
 			setGitPath(this._options.gitPath);
 
