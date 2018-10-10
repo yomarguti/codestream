@@ -281,7 +281,7 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 
 					const args = {
 						streamThread: {
-							id: post.id,
+							id: post.threadId,
 							streamId: post.streamId
 						}
 					} as OpenStreamCommandArgs;

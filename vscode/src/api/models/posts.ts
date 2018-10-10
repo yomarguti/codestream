@@ -57,6 +57,10 @@ export class Post extends CodeStreamItem<CSPost> {
 		return this.entity.text;
 	}
 
+	get threadId() {
+		return this.entity.parentPostId || this.id;
+	}
+
 	// @memoize
 	async codeBlock(): Promise<CodeBlock | undefined> {
 		if (this.entity.codeBlocks === undefined || this.entity.codeBlocks.length === 0) {
