@@ -114,56 +114,13 @@ export class UnreadCounter {
 			lastReads = Object.create(null) as { [streamId: string]: number };
 		}
 
-		// Reset the counters
-		this.unread = Object.create(null);
-		this.mentions = Object.create(null);
-
 		Logger.log(`Unreads.compute:`, "Computing...");
 
-		const unreadStreams = (await Container.agent.streams.fetchUnread()).streams;
-		if (unreadStreams.length !== 0) {
-			const entries = Object.entries(lastReads);
+		const unreads = await Container.agent.users.unreads(lastReads);
+		this.lastReads = unreads.lastReads;
+		this.unread = unreads.messages;
+		this.mentions = unreads.mentions;
 
-			await Promise.all(
-				entries.map(async ([streamId, lastReadSeqNum]) => {
-					const stream = unreadStreams.find(stream => stream.id === streamId);
-					if (stream == null) return;
-
-					let latestPost;
-					let unreadPosts;
-					try {
-						latestPost = (await Container.agent.posts.fetchLatest(streamId)).post;
-						unreadPosts = (await Container.agent.posts.fetchByRange(
-							streamId,
-							lastReadSeqNum + 1,
-							latestPost.seqNum
-						)).posts;
-						unreadPosts = unreadPosts.filter(
-							p => !p.deactivated && p.creatorId !== this._currentUserId
-						);
-					} catch (ex) {
-						// likely an access error because user is no longer in this channel
-						debugger;
-						Logger.error(ex);
-						return;
-					}
-
-					if (unreadPosts != null && unreadPosts.length !== 0) {
-						this.mentions[streamId] = this.mentions[streamId] || 0;
-						this.unread[streamId] = this.unread[streamId] || 0;
-						this.computeForPosts(unreadPosts, this._currentUserId, stream);
-
-						Logger.log(
-							`Unreads.compute(${streamId}):`,
-							`mentions=${this.mentions[streamId]}, unreads=${this.unread[streamId]}`
-						);
-					}
-				})
-			);
-		}
-
-		// Updates our cache with the lastReads from the current user
-		this.lastReads = lastReads;
 		this._computePromise = undefined;
 
 		const values = this.values();

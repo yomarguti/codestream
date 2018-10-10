@@ -70,6 +70,7 @@ import {
 	GetRepoRequestType,
 	GetStreamRequestType,
 	GetTeamRequestType,
+	GetUnreadsRequestType,
 	GetUserRequestType,
 	InviteUserRequestType,
 	JoinStreamRequestType,
@@ -88,6 +89,7 @@ import {
 import {
 	ChannelServiceType,
 	CSCodeBlock,
+	CSMeLastReads,
 	CSMePreferences,
 	CSPost,
 	CSPresenceStatus,
@@ -273,13 +275,13 @@ export class CodeStreamAgentConnection implements Disposable {
 		}
 
 		get(markerId: string) {
-			return this._connection.sendRequest(GetMarkerRequestType, { markerId });
+			return this._connection.sendRequest(GetMarkerRequestType, { markerId: markerId });
 		}
 
 		fetchLocations(streamId: string, commitHash: string) {
 			return this._connection.sendRequest(FetchMarkerLocationsRequestType, {
-				streamId,
-				commitHash
+				streamId: streamId,
+				commitHash: commitHash
 			});
 		}
 	}(this);
@@ -325,7 +327,7 @@ export class CodeStreamAgentConnection implements Disposable {
 				textDocument: { uri: uri.toString() },
 				// range: range,
 				// dirty: document.isDirty,
-				mentionedUserIds,
+				mentionedUserIds: mentionedUserIds,
 				text: text,
 				code: code,
 				location: location,
@@ -350,18 +352,18 @@ export class CodeStreamAgentConnection implements Disposable {
 			});
 		}
 
-		fetchByRange(streamId: string, start: number, end: number) {
-			return this.fetch(streamId, {
-				before: end,
-				after: start,
-				inclusive: true
-			});
-		}
+		// fetchByRange(streamId: string, start: number, end: number) {
+		// 	return this.fetch(streamId, {
+		// 		before: end,
+		// 		after: start,
+		// 		inclusive: true
+		// 	});
+		// }
 
-		async fetchLatest(streamId: string) {
-			const response = await this.fetch(streamId, { limit: 1 });
-			return { post: response.posts[0] };
-		}
+		// async fetchLatest(streamId: string) {
+		// 	const response = await this.fetch(streamId, { limit: 1 });
+		// 	return { post: response.posts[0] };
+		// }
 
 		fetchReplies(streamId: string, parentPostId: string) {
 			return this._connection.sendRequest(FetchPostRepliesRequestType, {
@@ -427,15 +429,15 @@ export class CodeStreamAgentConnection implements Disposable {
 
 		create(url: string, knownCommitHashes: string[]) {
 			return this._connection.sendRequest(CreateRepoRequestType, {
-				url,
-				knownCommitHashes
+				url: url,
+				knownCommitHashes: knownCommitHashes
 			});
 		}
 
 		find(url: string, firstCommitHashes: string[]) {
 			return this._connection.sendRequest(FindRepoRequestType, {
-				url,
-				firstCommitHashes
+				url: url,
+				firstCommitHashes: firstCommitHashes
 			});
 		}
 
@@ -445,7 +447,7 @@ export class CodeStreamAgentConnection implements Disposable {
 
 		get(repoId: string) {
 			return this._connection.sendRequest(GetRepoRequestType, {
-				repoId
+				repoId: repoId
 			});
 		}
 	}(this);
@@ -542,13 +544,13 @@ export class CodeStreamAgentConnection implements Disposable {
 
 		fetch(teamIds: string[]) {
 			return this._connection.sendRequest(FetchTeamsRequestType, {
-				teamIds
+				teamIds: teamIds
 			});
 		}
 
 		get(teamId: string) {
 			return this._connection.sendRequest(GetTeamRequestType, {
-				teamId
+				teamId: teamId
 			});
 		}
 	}(this);
@@ -567,7 +569,7 @@ export class CodeStreamAgentConnection implements Disposable {
 
 		get(userId: string) {
 			return this._connection.sendRequest(GetUserRequestType, {
-				userId
+				userId: userId
 			});
 		}
 
@@ -591,8 +593,12 @@ export class CodeStreamAgentConnection implements Disposable {
 
 		updatePreferences(preferences: CSMePreferences) {
 			return this._connection.sendRequest(UpdatePreferencesRequestType, {
-				preferences
+				preferences: preferences
 			});
+		}
+
+		unreads(lastReads: CSMeLastReads) {
+			return this._connection.sendRequest(GetUnreadsRequestType, { lastReads: lastReads });
 		}
 	}(this);
 
