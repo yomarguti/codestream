@@ -262,7 +262,7 @@ export class LiveShareController implements Disposable {
 			return Container.commands.openStream({
 				streamThread: { id: undefined, stream: vslsChannel }
 			});
-		}
+		} else return;
 	}
 
 	private async getVslsChannel(vslsId: string) {
