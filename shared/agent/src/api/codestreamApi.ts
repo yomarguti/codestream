@@ -30,6 +30,7 @@ import {
 	GetRepoRequest,
 	GetStreamRequest,
 	GetTeamRequest,
+	GetUnreadsRequest,
 	GetUserRequest,
 	InviteUserRequest,
 	JoinStreamRequest,
@@ -247,6 +248,77 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	getMe() {
 		return this.get<CSGetMeResponse>("/users/me", this._token);
+	}
+
+	async getUnreads(request: GetUnreadsRequest) {
+		let lastReads = request.lastReads;
+		if (lastReads === undefined) {
+			lastReads = Object.create(null) as { [streamId: string]: number };
+		}
+
+		// Reset the counters
+		const unreadMessages = Object.create(null);
+		const mentions = Object.create(null);
+
+		Logger.log(`Unreads.compute:`, "Computing...");
+
+		const unreadStreams = (await this.fetchUnreadStreams({})).streams;
+		if (unreadStreams.length !== 0) {
+			const entries = Object.entries(lastReads);
+
+			await Promise.all(
+				entries.map(async ([streamId, lastReadSeqNum]) => {
+					const stream = unreadStreams.find(stream => stream.id === streamId);
+					if (stream == null) return;
+
+					let latestPost;
+					let unreadPosts;
+					try {
+						latestPost = (await this.fetchPosts({ streamId: streamId, limit: 1 })).posts[0];
+						unreadPosts = (await this.fetchPosts({
+							streamId: streamId,
+							before: latestPost.seqNum,
+							after: Number(lastReadSeqNum) + 1,
+							inclusive: true
+						})).posts;
+						unreadPosts = unreadPosts.filter(p => !p.deactivated && p.creatorId !== this._userId);
+					} catch (ex) {
+						// likely an access error because user is no longer in this channel
+						debugger;
+						Logger.error(ex);
+						return;
+					}
+
+					if (unreadPosts != null && unreadPosts.length !== 0) {
+						mentions[streamId] = mentions[streamId] || 0;
+						unreadMessages[streamId] = unreadMessages[streamId] || 0;
+
+						for (const post of unreadPosts) {
+							if (
+								(stream && stream.type) === StreamType.Direct ||
+								(post.mentionedUserIds || []).includes(this._userId!)
+							) {
+								mentions[post.streamId]++;
+							}
+							unreadMessages[post.streamId]++;
+						}
+
+						// this.computeForPosts(unreadPosts, this._currentUserId, stream);
+
+						Logger.log(
+							`Unreads.compute(${streamId}):`,
+							`mentions=${mentions[streamId]}, unreads=${unreadMessages[streamId]}`
+						);
+					}
+				})
+			);
+		}
+
+		return {
+			lastReads: lastReads,
+			mentions: mentions,
+			messages: unreadMessages
+		};
 	}
 
 	updatePostsCount(request: CSUpdatePostsCountRequest): Promise<CSUpdatePostsCountResponse> {

@@ -6,6 +6,9 @@ import {
 	GetMeRequest,
 	GetMeRequestType,
 	GetMeResponse,
+	GetUnreadsRequest,
+	GetUnreadsRequestType,
+	GetUnreadsResponse,
 	GetUserRequest,
 	GetUserRequestType,
 	GetUserResponse,
@@ -83,6 +86,11 @@ export class UsersManager extends EntityManager<CSUser> {
 	private async getMe(request: GetMeRequest): Promise<GetMeResponse> {
 		const me = (await this.getById(this.session.userId)) as CSMe;
 		return { user: me };
+	}
+
+	@lspHandler(GetUnreadsRequestType)
+	private getUnreads(request: GetUnreadsRequest): Promise<GetUnreadsResponse> {
+		return this.session.api.getUnreads(request);
 	}
 
 	@lspHandler(GetUserRequestType)

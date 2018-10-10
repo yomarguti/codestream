@@ -33,6 +33,7 @@ import {
 	GetRepoRequest,
 	GetStreamRequest,
 	GetTeamRequest,
+	GetUnreadsRequest,
 	GetUserRequest,
 	InviteUserRequest,
 	JoinStreamRequest,
@@ -383,6 +384,14 @@ export class SlackApiProvider implements ApiProvider {
 		}
 
 		return meResponse;
+	}
+
+	async getUnreads(request: GetUnreadsRequest) {
+		return {
+			lastReads: request.lastReads,
+			mentions: {},
+			messages: {}
+		};
 	}
 
 	updatePreferences(request: UpdatePreferencesRequest) {

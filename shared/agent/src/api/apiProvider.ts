@@ -49,6 +49,8 @@ import {
 	GetStreamResponse,
 	GetTeamRequest,
 	GetTeamResponse,
+	GetUnreadsRequest,
+	GetUnreadsResponse,
 	GetUserRequest,
 	GetUserResponse,
 	InviteUserRequest,
@@ -123,6 +125,7 @@ export interface ApiProvider {
 	getSubscribableStreams(userId: string): Promise<CSStream[]>;
 
 	getMe(): Promise<GetMeResponse>;
+	getUnreads(request: GetUnreadsRequest): Promise<GetUnreadsResponse>;
 	updatePreferences(request: UpdatePreferencesRequest): Promise<GetMeResponse>;
 	updatePresence(request: UpdatePresenceRequest): Promise<UpdatePresenceResponse>;
 

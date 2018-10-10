@@ -1,6 +1,7 @@
 "use strict";
 import { RequestType } from "vscode-languageserver-protocol";
 import { CSMe, CSMePreferences, CSPresenceStatus, CSUser } from "./api.protocol";
+import { CSMeLastReads } from "./api.protocol.models";
 
 export interface FetchUsersRequest {
 	userIds?: string[];
@@ -83,3 +84,21 @@ export interface GetMeResponse {
 export const GetMeRequestType = new RequestType<GetMeRequest, GetMeResponse, void, void>(
 	"codeStream/users/me"
 );
+
+export interface GetUnreadsRequest {
+	// TODO: Remove this after things stabilize
+	lastReads: CSMeLastReads;
+}
+
+export interface GetUnreadsResponse {
+	lastReads: CSMeLastReads;
+	mentions: { [streamId: string]: number };
+	messages: { [streamId: string]: number };
+}
+
+export const GetUnreadsRequestType = new RequestType<
+	GetUnreadsRequest,
+	GetUnreadsResponse,
+	void,
+	void
+>("codeStream/users/me/unreads");
