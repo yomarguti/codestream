@@ -325,7 +325,7 @@ class Post extends React.Component {
 	renderAttachments = post => {
 		if (post.files && post.files.length) {
 			return post.files.map(file => {
-				console.log(file);
+				// console.log(file);
 				//<img src={preview.url} width={preview.width} height={preview.height} />
 				const { type, url, name, title, preview } = file;
 				if (type === "image") {
@@ -334,10 +334,20 @@ class Post extends React.Component {
 							<a href={url}>{title}</a>
 						</div>
 					);
+				} else if (type === "post") {
+					return (
+						<div className="external-post">
+							<a href={url}>{title}</a>
+							<div className="preview" dangerouslySetInnerHTML={{ __html: preview }} />
+						</div>
+					);
 				} else {
 					return (
 						<div className="attachment">
 							<a href={url}>{title}</a>
+							<pre>
+								<code>{preview}</code>
+							</pre>
 						</div>
 					);
 				}
