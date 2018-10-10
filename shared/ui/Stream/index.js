@@ -850,28 +850,14 @@ export class SimpleStream extends Component {
 	};
 
 	// show the thread related to the given post, and if there is
-	// a codeblock, scroll to it and select it
-	selectPost = (id, wasClicked = false) => {
-		EventEmitter.emit("analytics", {
-			label: "Page Viewed",
-			payload: { "Page Name": "Thread View" }
-		});
+	selectPost = (id, wasClicked) => {
 		const post = this.findPostById(id);
 		if (!post) return;
 
 		// if it is a child in the thread, it'll have a parentPostId,
 		// otherwise use the id. any post can become the head of a thread
 		const threadId = post.parentPostId || post.id;
-		this.setState({ threadId: threadId, threadTrigger: wasClicked && id });
-		this.setActivePanel("thread");
-
-		this.focusInput();
-		if (wasClicked) {
-			EventEmitter.emit("interaction:thread-selected", {
-				threadId,
-				streamId: this.props.postStreamId
-			});
-		}
+		this.openThread(threadId, wasClicked);
 	};
 
 	openThread = (threadId, wasClicked = false) => {
