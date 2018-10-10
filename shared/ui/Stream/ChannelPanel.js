@@ -201,7 +201,9 @@ export class SimpleChannelPanel extends Component {
 				}
 
 				const icon =
-					stream.memberIds.length > 2 ? (
+					stream.name === "slackbot" ? (
+						<Icon className="heart" name="heart" />
+					) : stream.memberIds.length > 2 ? (
 						<Icon className="organization" name="organization" />
 					) : (
 						<Icon className="person" name="person" />
@@ -233,7 +235,7 @@ export class SimpleChannelPanel extends Component {
 							id={stream.id}
 						>
 							{icon}
-							{stream.name}
+							{stream.name} {stream.isMeStream && <span className="you"> (you)</span>}
 							{count > 0 ? <span className="umi">{count}</span> : null}
 							<Tooltip title="Close Conversation">
 								<Icon name="x" onClick={this.handleClickMuteStream} className="align-right" />
@@ -385,6 +387,7 @@ const mapStateToProps = ({ context, streams, users, teams, umis, session }) => {
 	// get a list of the users i have 1:1 streams with
 	const oneOnOnePeople = directMessageStreams
 		.map(stream => {
+			console.log(stream.memberIds);
 			const notMe = _.without(stream.memberIds || [], session.userId);
 			if (notMe.length === 1) return notMe[0];
 
