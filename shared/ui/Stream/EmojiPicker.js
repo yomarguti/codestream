@@ -3,6 +3,7 @@ import React, { Component } from "react";
 import ReactDOM from "react-dom";
 import createClassString from "classnames";
 import * as actions from "./actions";
+import { safe } from "../utils";
 import { connect } from "react-redux";
 
 export class SimpleEmojiPicker extends Component {
@@ -14,7 +15,7 @@ export class SimpleEmojiPicker extends Component {
 		store.setHandlers({
 			// keys are "skin", "frequently", and "last"
 			getter: key => {
-				return this.props.currentUser.preferences["emojiPicker-" + key];
+				return safe(() => this.props.currentUser.preferences["emojiPicker-" + key]);
 			},
 
 			setter: (key, value) => {
