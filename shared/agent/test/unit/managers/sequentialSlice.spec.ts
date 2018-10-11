@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { describe, it } from "mocha";
-import { SequentialSlice } from "../../../src/managers/sequentialSlice";
+import { SequentialSlice } from "../../../src/managers/cache/sequentialSlice";
 import { CSEntity } from "../../../src/shared/api.protocol";
 
 describe("SequentialSlice", function() {

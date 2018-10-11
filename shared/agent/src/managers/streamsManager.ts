@@ -35,7 +35,7 @@ import {
 } from "../shared/agent.protocol";
 import { CSChannelStream, CSDirectStream, CSStream, StreamType } from "../shared/api.protocol";
 import { lspHandler } from "../system";
-import { KeyValue } from "./baseCache";
+import { KeyValue } from "./cache/baseCache";
 import { EntityManager, Id } from "./entityManager";
 
 export class StreamsManager extends EntityManager<CSChannelStream | CSDirectStream> {

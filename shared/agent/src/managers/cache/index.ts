@@ -1,7 +1,7 @@
 "use strict";
 
+import { Id } from "../entityManager";
 import { FetchFn, IdFn } from "./baseCache";
-import { Id } from "./entityManager";
 import { SequentialSlice } from "./sequentialSlice";
 
 export enum IndexType {

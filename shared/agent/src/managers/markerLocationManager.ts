@@ -17,11 +17,10 @@ import {
 	CSMarkerLocations
 } from "../shared/api.protocol";
 import { xfs } from "../xfs";
-import { getValues } from "./baseCache";
-import { KeyValue } from "./baseCache";
 import { BaseManager } from "./baseManager";
+import { getValues, KeyValue } from "./cache/baseCache";
+import { IndexParams, IndexType } from "./cache/index";
 import { Id } from "./entityManager";
-import { IndexParams, IndexType } from "./index";
 
 export interface LocationsById {
 	[id: string]: CSMarkerLocation;

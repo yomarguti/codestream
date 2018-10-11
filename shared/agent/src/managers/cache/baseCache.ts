@@ -2,7 +2,7 @@
 
 import { encodeArray, Index, IndexParams, IndexType, makeIndex } from "./index";
 
-import { Id } from "./entityManager";
+import { Id } from "../entityManager";
 import { SequentialSlice } from "./sequentialSlice";
 
 export type UniqueFetchFn<T> = (value: any[]) => Promise<T | undefined>;

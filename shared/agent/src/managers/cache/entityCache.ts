@@ -1,8 +1,8 @@
 "use strict";
 
-import { CSEntity } from "../shared/api.protocol";
+import { CSEntity } from "../../shared/api.protocol";
+import { Id } from "../entityManager";
 import { BaseCache, UniqueFetchFn } from "./baseCache";
-import { Id } from "./entityManager";
 import { IndexParams, IndexType, makeIndex, UniqueIndex } from "./index";
 
 /**

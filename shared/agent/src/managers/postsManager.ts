@@ -27,9 +27,9 @@ import {
 } from "../shared/agent.protocol";
 import { CSPost } from "../shared/api.protocol";
 import { lspHandler } from "../system/decorators";
-import { getValues, KeyValue } from "./baseCache";
+import { getValues, KeyValue } from "./cache/baseCache";
+import { IndexParams, IndexType } from "./cache/index";
 import { EntityManager, Id } from "./entityManager";
-import { IndexParams, IndexType } from "./index";
 
 export class PostsManager extends EntityManager<CSPost> {
 	getIndexedFields(): IndexParams<CSPost>[] {

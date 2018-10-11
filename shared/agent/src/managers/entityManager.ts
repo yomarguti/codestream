@@ -1,9 +1,9 @@
 "use strict";
 import { CodeStreamSession } from "../session";
 import { CSEntity } from "../shared/api.protocol";
-import { KeyValue } from "./baseCache";
 import { BaseManager } from "./baseManager";
-import { EntityCache } from "./entityCache";
+import { KeyValue } from "./cache/baseCache";
+import { EntityCache } from "./cache/entityCache";
 
 export type Id = string;
 

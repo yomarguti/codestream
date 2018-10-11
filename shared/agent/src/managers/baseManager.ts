@@ -2,8 +2,8 @@
 import { RTMessage } from "../api/apiProvider";
 import { CodeStreamSession } from "../session";
 import { LspHandler } from "../system/decorators";
-import { BaseCache, KeyValue } from "./baseCache";
-import { IndexParams } from "./index";
+import { BaseCache, KeyValue } from "./cache/baseCache";
+import { IndexParams } from "./cache/index";
 import * as operations from "./operations";
 import { isCompleteObject } from "./operations";
 

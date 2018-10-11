@@ -11,9 +11,9 @@ import {
 } from "../shared/agent.protocol";
 import { CSFileStream, CSStream, StreamType } from "../shared/api.protocol";
 import { lspHandler } from "../system";
-import { getValues, KeyValue } from "./baseCache";
+import { getValues, KeyValue } from "./cache/baseCache";
+import { IndexParams, IndexType } from "./cache/index";
 import { EntityManager, Id } from "./entityManager";
-import { IndexParams, IndexType } from "./index";
 
 export class FilesManager extends EntityManager<CSFileStream> {
 	private idsByPath = new Map<string, Id>();
