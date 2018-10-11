@@ -925,6 +925,11 @@ export class SlackApiProvider implements ApiProvider {
 
 		const streams = (await Promise.all<CSChannelStream | CSDirectStream>(
 			channels.map(async (c: any) => {
+				// Don't query for channels we aren't a member of
+				if (!c.is_member) {
+					return fromSlackChannel(c, usersById, this._slackUserId, this._codestreamTeamId);
+				}
+
 				const response = await this._slack.channels.info({
 					channel: c.id
 				});
