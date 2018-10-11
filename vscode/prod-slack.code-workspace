@@ -20,9 +20,7 @@
 		]
 	},
 	"settings": {
-		"codestream.serverUrl": "https://qa-api.codestream.us",
-		"codestream.webAppUrl": "http://qa-app.codestream.us",
-		"codestream.team": "Team CodeStream",
+		"codestream.team": "CodeStream",
 		"editor.insertSpaces": false,
 		"prettier.requireConfig": true,
 		"prettier.tslintIntegration": true,
