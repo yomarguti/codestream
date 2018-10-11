@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.15.1] - 2018-10-11
+
+## Fixed
+
+- Fixes [#5](https://github.com/TeamCodeStream/CodeStream/issues/3) &mdash; Clicking Slack emoji icon produces an unexpected error
+
 ## [0.15.0] - 2018-10-10
 
 ### Added
