@@ -189,46 +189,17 @@ export class SimpleStream extends Component {
 		if (switchedStreams) {
 			this.handleDismissThread({ track: false });
 			safe(() => this._postslist.scrollToBottom());
-
-			// keep track of the new message indicator in "this" instead of looking
-			// directly at currentUser.lastReads, because that will change and trigger
-			// a re-render, which would remove the "new messages" line
-			// console.log("Switch to: ", nextProps.postStreamId);
-			// this.postWithNewMessageIndicator = 10;
-			// if (nextProps.hasFocus && !this.props.hasFocus) {
-			// 	this.postWithNewMessageIndicator = null;
-			// }
-			// if (!nextProps.hasFocus && this.props.hasFocus) {
-			// 	this.postWithNewMessageIndicator = null;
-			// 	if (this.props.currentUser && this.props.currentUser.lastReads) {
-			// 		this.postWithNewMessageIndicator = this.props.currentUser.lastReads[nextProps.postStreamId];
-			// 	}
-			// }
-			console.log("resetting newMessagesAfterSeqNum");
-			this.newMessagesAfterSeqNum = undefined;
-			this.setState({ lastReadSeqNum: null });
+			this.setUmiInfo();
 		}
 		if (this.props.activePanel !== prevProps.activePanel && this.state.editingPostId)
 			this.handleDismissEdit();
-
-		const { umis } = this.props;
-		if (umis.lastReads) {
-			// TODO: refactor this and simplify it
-			if (
-				typeof umis.lastReads[postStreamId] === "undefined" &&
-				typeof prevProps.umis.lastReads[postStreamId] !== "undefined"
-			) {
-				this.setState({ lastReadSeqNum: null });
-			} else if (
-				umis.lastReads[postStreamId] !== safe(() => prevProps.umis.lastReads[postStreamId])
-			) {
-				this.setUmiInfo();
-			}
-		}
 	}
 
 	setUmiInfo() {
 		const { postStreamId, umis } = this.props;
+		// keep track of the new message indicator in instance variable instead of looking
+		// directly at currentUser.lastReads, because that will change and trigger
+		// a re-render, which would remove the "new messages" line
 		this.newMessagesAfterSeqNum = umis.lastReads[postStreamId];
 		console.log("SETTING newMessagesAfterSeqNum to ", this.newMessagesAfterSeqNum);
 		this.setState({
