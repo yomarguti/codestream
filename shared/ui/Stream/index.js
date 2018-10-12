@@ -190,6 +190,9 @@ export class SimpleStream extends Component {
 			this.handleDismissThread({ track: false });
 			safe(() => this._postslist.scrollToBottom());
 			this.setUmiInfo();
+		} else {
+			if (prevProps.umis.lastReads[postStreamId] !== this.props.umis.lastReads[postStreamId])
+				this.setUmiInfo();
 		}
 		if (this.props.activePanel !== prevProps.activePanel && this.state.editingPostId)
 			this.handleDismissEdit();
