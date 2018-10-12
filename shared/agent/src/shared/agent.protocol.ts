@@ -101,7 +101,8 @@ export enum MessageType {
 	Repositories = "repos",
 	Streams = "streams",
 	Teams = "teams",
-	Users = "users"
+	Users = "users",
+	Reconnected = "reconnected"
 }
 
 export interface MarkersChangedNotification {

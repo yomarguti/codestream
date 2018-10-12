@@ -98,7 +98,13 @@ export class PubnubReceiver {
 		this.debug("Connection status", e);
 		switch (e.status) {
 			case PubnubStatus.Connected:
-				// TODO: let the extension know we are connected?
+				if (e.reconnected) {
+					this._onDidReceiveMessage.fire({
+						type: MessageType.Reconnected,
+						data: []
+					});
+
+				}
 				break;
 
 			case PubnubStatus.Trouble:

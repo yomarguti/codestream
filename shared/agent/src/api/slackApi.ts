@@ -166,6 +166,9 @@ export class SlackApiProvider implements ApiProvider {
 			case MessageType.Teams:
 				break;
 
+			case MessageType.Reconnected:
+				break;
+
 			default:
 				this._onDidReceiveMessage.fire(e);
 		}

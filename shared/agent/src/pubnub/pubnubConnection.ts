@@ -34,6 +34,7 @@ export interface ChannelDescriptor {
 export interface StatusChangeEvent {
 	status: PubnubStatus;
 	channels?: string[];
+	reconnected?: boolean
 }
 
 // one of the statuses emitted in StatusChangeEvent above
@@ -89,6 +90,7 @@ export class PubnubConnection {
 	private _lastTick: number = 0;
 	private _tickInterval: NodeJS.Timer | undefined;
 	private _needConnectedMessage: boolean = false;
+	private _hadTrouble: boolean = false;
 	private _testMode: boolean = false;
 	private _simulateConfirmFailure: boolean = false;
 	private _simulateGrantFailure: boolean | string | string[] | undefined;
@@ -819,11 +821,12 @@ export class PubnubConnection {
 	}
 
 	// emit a status update to the client, with channels of interest optionally specified
-	private emitStatus(status: PubnubStatus, channels?: string[]) {
+	private emitStatus(status: PubnubStatus, channels?: string[], reconnected?: boolean) {
 		this._debug(`Emitting status ${status}`, channels);
 		this._statusEmitter.fire({
 			status: status,
-			channels: channels
+			channels: channels,
+			reconnected
 		});
 	}
 
@@ -831,8 +834,9 @@ export class PubnubConnection {
 	// subscribed to
 	private emitConnected() {
 		const channels = this.getAllChannels();
-		this.emitStatus(PubnubStatus.Connected, channels);
+		this.emitStatus(PubnubStatus.Connected, channels, this._hadTrouble);
 		this._needConnectedMessage = false;
+		this._hadTrouble = false;
 	}
 
 	// emit a Trouble event, indicating we're having trouble subscribing to one or more
@@ -840,6 +844,7 @@ export class PubnubConnection {
 	private emitTrouble(channels?: string[]) {
 		this._debug("We are in trouble");
 		// this says we need to notify the client when we get fully connected (again)
+		this._hadTrouble = true;
 		this._needConnectedMessage = true;
 		this.emitStatus(PubnubStatus.Trouble, channels);
 	}
