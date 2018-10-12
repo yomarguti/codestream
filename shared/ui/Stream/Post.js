@@ -385,19 +385,20 @@ class Post extends React.Component {
 	};
 
 	renderTextLinkified = text => {
-		let usernameRegExp = new RegExp("(@(?:" + this.props.usernames.toLowerCase() + ")\\b)", "i");
-		let bodyParts = markdownify(text || "").split(usernameRegExp);
-		const meLowerCase = "@" + this.props.currentUserName.toLowerCase();
+		let html;
+		if (text == null || text === "") {
+			html = "";
+		} else {
+			const me = this.props.currentUserName.toLowerCase();
+			html = markdownify(text).replace(/@(\w+)/g, (match, name) => {
+				const nameNormalized = name.toLowerCase();
+				if (this.props.userNamesNormalized.has(nameNormalized)) {
+					return `<span class="at-mention${nameNormalized === me ? " me" : ""}">${match}</span>`;
+				}
 
-		const html = bodyParts
-			.map(part => {
-				const partLowerCase = part.toLowerCase();
-				if (partLowerCase.match(usernameRegExp)) {
-					const meClass = partLowerCase === meLowerCase ? " me" : "";
-					return "<span class='at-mention" + meClass + "'>" + part + "</span>";
-				} else return part;
-			})
-			.join("");
+				return match;
+			});
+		}
 
 		return <span dangerouslySetInnerHTML={{ __html: html }} />;
 	};
@@ -536,14 +537,25 @@ class Post extends React.Component {
 
 const mapStateToProps = (state, props) => {
 	const { users } = state;
+
 	// TODO: figure out a way to do this elsewhere
-	Object.keys(users).forEach(function(key, index) {
-		users[key].color = index % 10;
-		if (!users[key].username) {
-			let email = users[key].email;
-			if (email) users[key].username = email.replace(/@.*/, "");
+
+	let index = 1;
+
+	let userNames = {};
+	let userNamesNormalized = new Set();
+
+	for (const [userId, user] of Object.entries(users)) {
+		user.color = index % 10;
+		if (!user.username && user.email) {
+			user.username = user.email.replace(/@.*/, "");
 		}
-	});
+
+		userNames[userId] = user.username;
+		if (user.username) {
+			userNamesNormalized.add(user.username.toLowerCase());
+		}
+	}
 
 	const post = getPost(state.posts, props.streamId, props.id);
 	if (!post) return { deactivated: true };
@@ -553,8 +565,6 @@ const mapStateToProps = (state, props) => {
 			const codeBlock = post.codeBlocks[0];
 			return getById(state.repos, codeBlock.repoId).name;
 		}) || "";
-	let userNames = {};
-	for (var key in users || {}) userNames[key] = users[key].username;
 
 	let author = users[post.creatorId];
 	if (!author) {
@@ -565,6 +575,7 @@ const mapStateToProps = (state, props) => {
 
 	return {
 		userNames,
+		userNamesNormalized,
 		repoName,
 		canLiveshare: state.services.vsls,
 		post: { ...post, author } // pull author out
