@@ -118,7 +118,7 @@ export class SimpleKnowledgePanel extends Component {
 		if (!knowledgeType) return null;
 
 		const inactive = this.props.activePanel !== "knowledge";
-		const shrink = this.props.activePanel === "main";
+		const shrink = this.props.activePanel === "main" || this.props.activePanel === "thread";
 
 		const knowledgePanelClass = createClassString({
 			panel: true,
@@ -196,7 +196,13 @@ export class SimpleKnowledgePanel extends Component {
 							</span>
 						</div>
 					)}
-					<span className="align-left-button" onClick={() => this.props.setActivePanel("channels")}>
+					<span
+						className="align-left-button"
+						onClick={() => {
+							this.setState({ openPost: null });
+							this.props.setActivePanel("channels");
+						}}
+					>
 						<Icon name="chevron-left" className="show-channels-icon" />
 					</span>
 					<span className="panel-title">{knowledgeLabel}</span>
@@ -216,8 +222,7 @@ export class SimpleKnowledgePanel extends Component {
 						<div className="shadow shadow-top" />
 						<div className="shadow shadow-bottom" />
 					</div>
-					<div className="channel-panel vscroll" onClick={this.handleClickPost}>
-						<div className="shadow-cover-top" />
+					<div className="channel-list vscroll" onClick={this.handleClickPost}>
 						{sections.map(section => {
 							return this.renderSection(section, displayPosts[section] || []);
 						})}

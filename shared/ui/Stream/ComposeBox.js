@@ -556,13 +556,7 @@ class ComposeBox extends React.Component {
 
 	handleClickDismissMultiCompose = event => {
 		if (event) event.preventDefault();
-		this.setState({
-			quote: null,
-			title: null,
-			assignees: null,
-			commentType: "comment",
-			autoMentions: []
-		});
+		this.resetFields();
 		this.props.setMultiCompose(false);
 		this.focus();
 		// this.reset();
@@ -587,20 +581,26 @@ class ComposeBox extends React.Component {
 		}
 	};
 
-	softReset() {
-		let postTextByStream = this.state.postTextByStream;
-		postTextByStream[this.props.streamId] = "";
-
+	resetFields = clearOutTextToo => {
+		if (clearOutTextToo) {
+			let postTextByStream = this.state.postTextByStream;
+			postTextByStream[this.props.streamId] = "";
+			this.setState({ postTextByStream });
+		}
 		this.setState({
-			postTextByStream,
 			quote: null,
 			title: "",
 			assignees: [],
+			commentType: "comment",
 			autoMentions: [],
 			emojiOpen: false
 		});
+	};
+
+	softReset = () => {
+		this.resetFields(true);
 		this.focus();
-	}
+	};
 
 	reset() {
 		let postTextByStream = this.state.postTextByStream;
@@ -610,6 +610,7 @@ class ComposeBox extends React.Component {
 			postTextByStream,
 			quote: null,
 			title: "",
+			color: "blue",
 			assignees: [],
 			autoMentions: [],
 			emojiOpen: false,
@@ -708,7 +709,7 @@ class ComposeBox extends React.Component {
 								</div>
 							</div>
 							<div className="half-width">
-								<label>Label</label>
+								<label>Marker</label>
 								<div className="styled-select">
 									<select onChange={e => this.setState({ color: e.target.value })}>
 										<option value="blue">Blue</option>
@@ -719,6 +720,8 @@ class ComposeBox extends React.Component {
 										<option value="purple">Purple</option>
 										<option value="aqua">Aqua</option>
 										<option value="gray">Gray</option>
+										<hr />
+										<option value="none">None</option>
 									</select>
 								</div>
 							</div>
@@ -736,7 +739,10 @@ class ComposeBox extends React.Component {
 							</div>
 						)}
 						{!quote && (
-							<div style={{ padding: "20px 0px", textAlign: "center", fontStyle: "italic" }}>
+							<div
+								className="tip hint"
+								style={{ padding: "20px 0px", textAlign: "center", fontStyle: "italic" }}
+							>
 								Select a range to comment on a block of code.
 							</div>
 						)}
