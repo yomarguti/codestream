@@ -756,12 +756,13 @@ class ComposeBox extends React.Component {
 								{this.renderCode(quote)}
 							</div>
 						)}
+						{!quote && <label>CodeBlock</label>}
 						{!quote && (
 							<div
-								className="field-hint-boxed"
-								style={{ padding: "20px 0px", textAlign: "center", fontStyle: "italic" }}
+								className="hint frame control-group"
+								style={{ justifyContent: "center", marginTop: "0" }}
 							>
-								Select a range to comment on a block of code.
+								<Icon name="info" /> &nbsp;Select a range to comment on a block of code.
 							</div>
 						)}
 						<div className="tab-group">
