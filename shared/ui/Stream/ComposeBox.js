@@ -562,6 +562,12 @@ class ComposeBox extends React.Component {
 		// this.reset();
 	};
 
+	handleClickDismissQuote = event => {
+		if (event) event.preventDefault();
+		this.props.setMultiCompose(this.props.commentType || "comment");
+		this.setState({ quote: null });
+	};
+
 	toggleEmojiPicker = event => {
 		this.setState({ emojiOpen: !this.state.emojiOpen, emojiTarget: event.target });
 		// this.focus();
@@ -727,7 +733,19 @@ class ComposeBox extends React.Component {
 							</div>
 						</div>
 						{quote && (
-							<div>
+							<div style={{ position: "relative" }}>
+								<span
+									style={{
+										position: "absolute",
+										right: 0,
+										top: "17px",
+										cursor: "pointer",
+										transform: "scale(0.75)"
+									}}
+									onClick={this.handleClickDismissQuote}
+								>
+									<Icon name="x" />
+								</span>
 								<Tooltip
 									placement="top"
 									delay=".5"
@@ -740,7 +758,7 @@ class ComposeBox extends React.Component {
 						)}
 						{!quote && (
 							<div
-								className="tip hint"
+								className="field-hint-boxed"
 								style={{ padding: "20px 0px", textAlign: "center", fontStyle: "italic" }}
 							>
 								Select a range to comment on a block of code.
