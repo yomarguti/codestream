@@ -393,7 +393,7 @@ export function fromSlackUser(user: any, teamId: string): CSUser {
 		createdAt: defaultCreatedAt,
 		creatorId: user.id,
 		deactivated: user.deleted,
-		email: user.profile.email || "cs@unknown.com",
+		email: user.profile.email || `cs-${user.id}@unknown.com`,
 		firstName: user.profile.first_name,
 		fullName: user.real_name,
 		id: user.id,
