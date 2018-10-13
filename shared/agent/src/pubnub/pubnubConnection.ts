@@ -34,7 +34,7 @@ export interface ChannelDescriptor {
 export interface StatusChangeEvent {
 	status: PubnubStatus;
 	channels?: string[];
-	reconnected?: boolean
+	reconnected?: boolean;
 }
 
 // one of the statuses emitted in StatusChangeEvent above

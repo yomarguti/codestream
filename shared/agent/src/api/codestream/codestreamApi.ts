@@ -2,10 +2,10 @@
 import fetch, { Headers, RequestInit, Response } from "node-fetch";
 import { URLSearchParams } from "url";
 import { Emitter, Event } from "vscode-languageserver";
-import { ServerError } from "../agentError";
-import { Container } from "../container";
-import { Logger } from "../logger";
-import { PubnubReceiver } from "../pubnub/pubnubReceiver";
+import { ServerError } from "../../agentError";
+import { Container } from "../../container";
+import { Logger } from "../../logger";
+import { PubnubReceiver } from "../../pubnub/pubnubReceiver";
 import {
 	CreateChannelStreamRequest,
 	CreateDirectStreamRequest,
@@ -13,6 +13,7 @@ import {
 	CreateMarkerRequest,
 	CreatePostRequest,
 	CreateRepoRequest,
+	CSUnreads,
 	DeletePostRequest,
 	EditPostRequest,
 	FetchFileStreamsRequest,
@@ -37,14 +38,13 @@ import {
 	LeaveStreamRequest,
 	MarkPostUnreadRequest,
 	MarkStreamReadRequest,
-	MessageType,
 	ReactToPostRequest,
 	UpdateMarkerRequest,
 	UpdatePreferencesRequest,
 	UpdatePresenceRequest,
 	UpdateStreamMembershipRequest,
 	UpdateStreamRequest
-} from "../shared/agent.protocol";
+} from "../../shared/agent.protocol";
 import {
 	CompleteSignupRequest,
 	CSChannelStream,
@@ -86,7 +86,9 @@ import {
 	CSJoinStreamResponse,
 	CSMarkPostUnreadRequest,
 	CSMarkPostUnreadResponse,
+	CSMe,
 	CSMePreferences,
+	CSPost,
 	CSPush,
 	CSReactions,
 	CSReactToPostResponse,
@@ -100,19 +102,23 @@ import {
 	CSUpdateStreamMembershipResponse,
 	CSUpdateStreamRequest,
 	CSUpdateStreamResponse,
+	CSUser,
 	LoginRequest,
 	LoginResponse,
 	StreamType
-} from "../shared/api.protocol";
-import { Functions, Strings } from "../system";
+} from "../../shared/api.protocol";
+import { Functions, Objects, Strings } from "../../system";
 import {
 	ApiProvider,
 	CodeStreamApiMiddleware,
 	CodeStreamApiMiddlewareContext,
 	LoginOptions,
+	MessageType,
+	RawRTMessage,
 	RTMessage,
 	VersionInfo
-} from "./apiProvider";
+} from "../apiProvider";
+import { Unreads } from "./unreads";
 
 export class CodeStreamApiProvider implements ApiProvider {
 	private _onDidReceiveMessage = new Emitter<RTMessage>();
@@ -123,11 +129,14 @@ export class CodeStreamApiProvider implements ApiProvider {
 	private readonly _middleware: CodeStreamApiMiddleware[] = [];
 	private _teamId: string | undefined;
 	private _token: string | undefined;
+	private _unreads: Unreads | undefined;
+	private _user: CSMe | undefined;
 	private _userId: string | undefined;
 
 	private _pubnub: PubnubReceiver | undefined;
 	private _pubnubKey: string | undefined;
 	private _pubnubToken: string | undefined;
+	private _subscribedMessageTypes: Set<MessageType> | undefined;
 
 	constructor(public readonly baseUrl: string, private readonly _version: VersionInfo) {}
 
@@ -234,12 +243,21 @@ export class CodeStreamApiProvider implements ApiProvider {
 		this._pubnubToken = response.pubnubToken;
 
 		this._teamId = options.teamId;
+		this._user = response.user;
 		this._userId = response.user.id;
 
 		return { ...response, teamId: options.teamId };
 	}
 
-	async subscribe() {
+	async subscribe(types?: MessageType[]) {
+		this._subscribedMessageTypes = types !== undefined ? new Set(types) : undefined;
+
+		if (types === undefined || types.includes(MessageType.Posts)) {
+			this._unreads = new Unreads(this);
+			this._unreads.onDidChange(this.onUnreadsChanged, this);
+			this._unreads.compute(this._user!.lastReads);
+		}
+
 		this._pubnub = new PubnubReceiver(
 			this,
 			this._pubnubKey!,
@@ -249,20 +267,68 @@ export class CodeStreamApiProvider implements ApiProvider {
 			this.teamId
 		);
 
-		this._pubnub.onDidReceiveMessage(e => this._onDidReceiveMessage.fire(e), this);
+		this._pubnub.onDidReceiveMessage(this.onPubnubMessageReceived, this);
 
-		const streams = await this.getSubscribableStreams(this.userId);
-		this._pubnub.listen(streams.map(s => s.id));
+		if (types === undefined || types.includes(MessageType.Streams)) {
+			const streams = (await Container.instance().streams.getSubscribable()).streams;
+			this._pubnub.listen(streams.map(s => s.id));
+		} else {
+			this._pubnub.listen();
+		}
+	}
+
+	private async onPubnubMessageReceived(e: RawRTMessage) {
+		if (this._subscribedMessageTypes !== undefined && !this._subscribedMessageTypes.has(e.type)) {
+			return;
+		}
+
+		// Resolve any directives in the message data
+		switch (e.type) {
+			case MessageType.MarkerLocations:
+				e.data = await Container.instance().markerLocations.resolve(e);
+				break;
+			case MessageType.Markers:
+				e.data = await Container.instance().markers.resolve(e);
+				break;
+			case MessageType.Posts:
+				e.data = await Container.instance().posts.resolve(e);
+				this._unreads!.update(e.data as CSPost[]);
+				break;
+			case MessageType.Repositories:
+				e.data = await Container.instance().repos.resolve(e);
+				break;
+			case MessageType.Streams:
+				e.data = await Container.instance().streams.resolve(e);
+				break;
+			case MessageType.Teams:
+				e.data = await Container.instance().teams.resolve(e);
+				break;
+			case MessageType.Users:
+				const lastReads = { ...this._user!.lastReads };
+
+				e.data = await Container.instance().users.resolve(e);
+
+				const me = (e.data as CSMe[]).find(u => u.id === this.userId);
+				if (me != null) {
+					this._user = me;
+
+					if (!Objects.shallowEquals(lastReads, me.lastReads)) {
+						this._unreads!.compute(me.lastReads);
+					}
+				}
+
+				break;
+		}
+
+		this._onDidReceiveMessage.fire(e as RTMessage);
+	}
+
+	private onUnreadsChanged(e: CSUnreads) {
+		this._onDidReceiveMessage.fire({ type: MessageType.Unreads, data: e });
 	}
 
 	grantPubNubChannelAccess(token: string, channel: string): Promise<{}> {
 		return this.put(`/grant/${channel}`, {}, token);
-	}
-
-	async getSubscribableStreams(userId: string): Promise<CSStream[]> {
-		return (await this.fetchStreams({
-			types: [StreamType.Channel, StreamType.Direct]
-		})).streams.filter(s => CodeStreamApiProvider.isStreamSubscriptionRequired(s, userId));
 	}
 
 	getMe() {
@@ -270,72 +336,19 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	async getUnreads(request: GetUnreadsRequest) {
-		let lastReads = request.lastReads;
-		if (lastReads == null) {
-			lastReads = Object.create(null) as { [streamId: string]: number };
+		if (this._unreads === undefined) {
+			return {
+				unreads: {
+					lastReads: {},
+					mentions: {},
+					unreads: {},
+					totalMentions: 0,
+					totalUnreads: 0
+				}
+			};
 		}
 
-		// Reset the counters
-		const unreadMessages = Object.create(null);
-		const mentions = Object.create(null);
-
-		Logger.log(`Unreads.compute:`, "Computing...");
-
-		const unreadStreams = (await this.fetchUnreadStreams({})).streams;
-		if (unreadStreams.length !== 0) {
-			const entries = Object.entries(lastReads);
-
-			await Promise.all(
-				entries.map(async ([streamId, lastReadSeqNum]) => {
-					const stream = unreadStreams.find(stream => stream.id === streamId);
-					if (stream == null) return;
-
-					let latestPost;
-					let unreadPosts;
-					try {
-						latestPost = (await this.fetchPosts({ streamId: streamId, limit: 1 })).posts[0];
-						unreadPosts = (await this.fetchPosts({
-							streamId: streamId,
-							before: latestPost.seqNum,
-							after: Number(lastReadSeqNum) + 1,
-							inclusive: true
-						})).posts;
-						unreadPosts = unreadPosts.filter(p => !p.deactivated && p.creatorId !== this._userId);
-					} catch (ex) {
-						// likely an access error because user is no longer in this channel
-						debugger;
-						Logger.error(ex);
-						return;
-					}
-
-					if (unreadPosts != null && unreadPosts.length !== 0) {
-						mentions[streamId] = mentions[streamId] || 0;
-						unreadMessages[streamId] = unreadMessages[streamId] || 0;
-
-						for (const post of unreadPosts) {
-							if (
-								(stream && stream.type) === StreamType.Direct ||
-								(post.mentionedUserIds || []).includes(this._userId!)
-							) {
-								mentions[post.streamId]++;
-							}
-							unreadMessages[post.streamId]++;
-						}
-
-						Logger.log(
-							`Unreads.compute(${streamId}):`,
-							`mentions=${mentions[streamId]}, unreads=${unreadMessages[streamId]}`
-						);
-					}
-				})
-			);
-		}
-
-		return {
-			lastReads: lastReads,
-			mentions: mentions,
-			messages: unreadMessages
-		};
+		return { unreads: await this._unreads!.get() };
 	}
 
 	updatePostsCount(request: CSUpdatePostsCountRequest): Promise<CSUpdatePostsCountResponse> {
@@ -607,10 +620,12 @@ export class CodeStreamApiProvider implements ApiProvider {
 			{},
 			this._token
 		);
+
 		const [stream] = await Container.instance().streams.resolve({
 			type: MessageType.Streams,
 			data: [response.stream]
 		});
+
 		return { stream };
 	}
 
@@ -621,6 +636,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 				$pull: { memberIds: [this._userId] }
 			}
 		});
+
 		this._pubnub && this._pubnub.unsubscribeFromStream(request.streamId);
 		const [stream] = await Container.instance().streams.resolve({
 			type: MessageType.Streams,
@@ -631,6 +647,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 				}
 			]
 		});
+
 		return { stream };
 	}
 
@@ -644,10 +661,12 @@ export class CodeStreamApiProvider implements ApiProvider {
 			{ changes: request.changes },
 			this._token
 		);
+
 		const [stream] = await Container.instance().streams.resolve({
 			type: MessageType.Streams,
 			data: [response.stream]
 		});
+
 		return { stream };
 	}
 
@@ -663,6 +682,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		if (!this._pubnub) {
 			return;
 		}
+
 		for (const stream of streams) {
 			if (CodeStreamApiProvider.isStreamSubscriptionRequired(stream, this.userId)) {
 				this._pubnub.subscribeToStream(stream.id);
@@ -924,6 +944,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		return new ServerError(message, data, response.status);
 	}
 
+	// TODO: Move somewhere more generic
 	static isStreamSubscriptionRequired(stream: CSStream, userId: string): boolean {
 		if (stream.deactivated || stream.type === StreamType.File) return false;
 		if (stream.type === StreamType.Channel) {
@@ -933,6 +954,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		return true;
 	}
 
+	// TODO: Move somewhere more generic
 	static isStreamUnsubscriptionRequired(stream: CSStream, userId: string): boolean {
 		if (stream.type !== StreamType.Channel) {
 			return false;

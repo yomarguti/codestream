@@ -2,7 +2,7 @@
 
 import * as Randomstring from "randomstring";
 import { Disposable } from "vscode-languageserver";
-import { CodeStreamApiProvider } from "../../../src/api/codestreamApi";
+import { CodeStreamApiProvider } from "../../../src/api/codestream/codestreamApi";
 import { PubnubConnection, PubnubInitializer } from "../../../src/pubnub/pubnubConnection";
 import { ApiRequester, ApiRequestOverrides } from "./apiRequester";
 import {

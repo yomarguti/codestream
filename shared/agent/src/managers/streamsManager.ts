@@ -1,4 +1,5 @@
 "use strict";
+import { CodeStreamApiProvider } from "../api/codestream/codestreamApi";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import {
@@ -36,12 +37,10 @@ import {
 import { CSChannelStream, CSDirectStream, CSStream, StreamType } from "../shared/api.protocol";
 import { lspHandler } from "../system";
 import { KeyValue } from "./cache/baseCache";
-import { EntityManager, Id } from "./entityManager";
+import { CachedEntityManagerBase, Id } from "./entityManager";
 
-export class StreamsManager extends EntityManager<CSChannelStream | CSDirectStream> {
-	private loaded = false;
-
-	protected init() {
+export class StreamsManager extends CachedEntityManagerBase<CSChannelStream | CSDirectStream> {
+	protected initialize() {
 		this.session.onDidChangeStreams(this.onStreamsChanged, this);
 	}
 
@@ -49,16 +48,39 @@ export class StreamsManager extends EntityManager<CSChannelStream | CSDirectStre
 		return this.session.api.manageStreamSubscriptions(streams);
 	}
 
-	async getAll(): Promise<(CSChannelStream | CSDirectStream)[]> {
-		if (!this.loaded) {
-			const response = await this.session.api.fetchStreams({});
-			for (const stream of response.streams) {
-				this.cache.set(stream);
+	@lspHandler(FetchStreamsRequestType)
+	async get(request?: FetchStreamsRequest): Promise<FetchStreamsResponse> {
+		let streams = await this.ensureCached();
+		if (request != null) {
+			if (request.streamIds != null && request.streamIds.length !== 0) {
+				streams = streams.filter(s => request.streamIds!.includes(s.id));
 			}
-			this.loaded = true;
+
+			if (request.types != null && request.types.length !== 0) {
+				streams = streams.filter(s => request.types!.includes(s.type));
+			}
 		}
 
-		return this.cache.getAll();
+		return { streams: streams };
+	}
+
+	protected async loadCache() {
+		const response = await this.session.api.fetchStreams({});
+		this.cache.set(response.streams);
+	}
+
+	async getSubscribable() {
+		const response = await this.get({ types: [StreamType.Channel, StreamType.Direct] });
+		return {
+			streams: response.streams.filter(s =>
+				CodeStreamApiProvider.isStreamSubscriptionRequired(s, this.session.userId)
+			)
+		};
+	}
+
+	@lspHandler(FetchUnreadStreamsRequestType)
+	getUnread(request?: FetchUnreadStreamsRequest): Promise<FetchUnreadStreamsResponse> {
+		return this.session.api.fetchUnreadStreams(request || {});
 	}
 
 	protected async fetchById(id: Id): Promise<CSChannelStream | CSDirectStream> {
@@ -137,22 +159,5 @@ export class StreamsManager extends EntityManager<CSChannelStream | CSDirectStre
 	private async getStream(request: GetStreamRequest): Promise<GetStreamResponse> {
 		const stream = await this.getById(request.streamId);
 		return { stream: stream };
-	}
-
-	@lspHandler(FetchStreamsRequestType)
-	private async fetchStreams(request: FetchStreamsRequest): Promise<FetchStreamsResponse> {
-		const streams = await this.getAll();
-		if (request.streamIds == null || request.streamIds.length === 0) {
-			return { streams: streams };
-		}
-
-		return { streams: streams.filter(s => request.streamIds!.includes(s.id)) };
-	}
-
-	@lspHandler(FetchUnreadStreamsRequestType)
-	private async fetchUnreadStreams(
-		request: FetchUnreadStreamsRequest
-	): Promise<FetchUnreadStreamsResponse> {
-		return this.session.api.fetchUnreadStreams({});
 	}
 }

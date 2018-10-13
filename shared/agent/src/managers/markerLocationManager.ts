@@ -17,7 +17,7 @@ import {
 	CSMarkerLocations
 } from "../shared/api.protocol";
 import { xfs } from "../xfs";
-import { BaseManager } from "./baseManager";
+import { ManagerBase } from "./baseManager";
 import { getValues, KeyValue } from "./cache/baseCache";
 import { IndexParams, IndexType } from "./cache/index";
 import { Id } from "./entityManager";
@@ -39,7 +39,7 @@ interface UncommittedLocationsById {
 	[id: string]: UncommittedLocation;
 }
 
-export class MarkerLocationManager extends BaseManager<CSMarkerLocations> {
+export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 	getIndexedFields(): IndexParams<CSMarkerLocations>[] {
 		return [
 			{

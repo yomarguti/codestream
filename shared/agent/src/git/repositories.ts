@@ -10,6 +10,7 @@ import {
 } from "vscode-languageserver";
 import URI from "vscode-uri";
 import { ApiProvider } from "../api/apiProvider";
+import { Container } from "../container";
 import { Logger } from "../logger";
 import { CodeStreamSession } from "../session";
 import { CSRepository } from "../shared/api.protocol";
@@ -177,7 +178,7 @@ export class GitRepositories {
 	}
 
 	private async getKnownRepositories() {
-		const resp = await this.session.api.fetchRepos({});
+		const resp = await Container.instance().repos.get();
 		const remotesToRepo = Iterables.flatMap(
 			resp.repos,
 			r =>

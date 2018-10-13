@@ -72,6 +72,17 @@ export namespace Objects {
 		return results;
 	}
 
+	export function shallowEquals(obj1: { [key: string]: any }, obj2: { [key: string]: any }) {
+		const entries = Object.entries(obj1);
+		if (entries.length !== Object.keys(obj2).length) return false;
+
+		for (const [key, value] of entries) {
+			if (value !== obj2[key]) return false;
+		}
+
+		return true;
+	}
+
 	export function values<T>(o: { [key: string]: T }): IterableIterator<T>;
 	export function values<T>(o: { [key: number]: T }): IterableIterator<T>;
 	export function* values<T>(o: any): IterableIterator<T> {

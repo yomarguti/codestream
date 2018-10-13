@@ -1,5 +1,5 @@
 "use strict";
-import { RTMessage } from "../api/apiProvider";
+import { RawRTMessage } from "../api/apiProvider";
 import { CodeStreamSession } from "../session";
 import { LspHandler } from "../system/decorators";
 import { BaseCache, KeyValue } from "./cache/baseCache";
@@ -7,7 +7,7 @@ import { IndexParams } from "./cache/index";
 import * as operations from "./operations";
 import { isCompleteObject } from "./operations";
 
-export abstract class BaseManager<T> {
+export abstract class ManagerBase<T> {
 	protected readonly cache: BaseCache<T> = new BaseCache<T>(this.getIndexedFields());
 
 	public constructor(public session: CodeStreamSession) {
@@ -18,10 +18,10 @@ export abstract class BaseManager<T> {
 			}
 		}
 
-		this.init();
+		this.initialize();
 	}
 
-	protected init() {}
+	protected initialize() {}
 
 	getIndexedFields(): IndexParams<T>[] {
 		return [];
@@ -31,9 +31,9 @@ export abstract class BaseManager<T> {
 
 	protected abstract fetchCriteria(obj: T): KeyValue<T>[];
 
-	async resolve(message: RTMessage): Promise<T[]> {
+	async resolve(message: RawRTMessage): Promise<T[]> {
 		const resolved = await Promise.all(
-			message.data.map(async data => {
+			message.data.map(async (data: any) => {
 				const criteria = this.fetchCriteria(data as T);
 				const cached = await this.cacheGet(criteria);
 				if (cached) {

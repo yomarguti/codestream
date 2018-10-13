@@ -206,8 +206,8 @@ export interface CSUser extends CSEntity {
 	};
 }
 
-export interface CSMeLastReads {
-	[streamId: string]: number;
+export interface CSLastReads {
+	[streamId: string]: number | string;
 }
 
 export interface CSMePreferences {
@@ -215,7 +215,7 @@ export interface CSMePreferences {
 }
 
 export interface CSMe extends CSUser {
-	lastReads: CSMeLastReads;
+	lastReads: CSLastReads;
 	preferences: CSMePreferences;
 	providerInfo?: {
 		slack?: CSSlackProviderInfo;

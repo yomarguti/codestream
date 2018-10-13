@@ -12,6 +12,7 @@ import {
 	CreatePostResponse,
 	CreateRepoRequest,
 	CreateRepoResponse,
+	CSUnreads,
 	DeletePostRequest,
 	DeletePostResponse,
 	EditPostRequest,
@@ -63,7 +64,6 @@ import {
 	MarkPostUnreadResponse,
 	MarkStreamReadRequest,
 	MarkStreamReadResponse,
-	MessageType,
 	ReactToPostRequest,
 	ReactToPostResponse,
 	UpdateMarkerRequest,
@@ -76,7 +76,18 @@ import {
 	UpdateStreamRequest,
 	UpdateStreamResponse
 } from "../shared/agent.protocol";
-import { CSStream, LoginResponse } from "../shared/api.protocol";
+import {
+	CSChannelStream,
+	CSDirectStream,
+	CSMarker,
+	CSMarkerLocations,
+	CSPost,
+	CSRepository,
+	CSStream,
+	CSTeam,
+	CSUser,
+	LoginResponse
+} from "../shared/api.protocol";
 
 export interface VersionInfo {
 	readonly ideVersion: string;
@@ -107,22 +118,97 @@ export interface TokenLoginOptions extends BasicLoginOptions {
 
 export type LoginOptions = CredentialsLoginOptions | OneTimeCodeLoginOptions | TokenLoginOptions;
 
-export interface RTMessage {
-	type: MessageType;
-	data: { [key: string]: any }[];
+export enum MessageType {
+	Connection = "connection",
+	MarkerLocations = "markerLocations",
+	Markers = "markers",
+	Posts = "posts",
+	Repositories = "repos",
+	Streams = "streams",
+	Teams = "teams",
+	Unreads = "unreads",
+	Users = "users"
 }
+
+export enum ConnectionStatus {
+	Disconnected = "disconnected",
+	Reconnected = "reconnected",
+	Reconnecting = "reconnecting"
+}
+
+export interface ConnectionRTMessage {
+	type: MessageType.Connection;
+	data: { status: ConnectionStatus };
+}
+
+export interface MarkerLocationsRTMessage {
+	type: MessageType.MarkerLocations;
+	data: CSMarkerLocations[];
+}
+
+export interface MarkersRTMessage {
+	type: MessageType.Markers;
+	data: CSMarker[];
+}
+
+export interface PostsRTMessage {
+	type: MessageType.Posts;
+	data: CSPost[];
+}
+
+export interface RepositoriesRTMessage {
+	type: MessageType.Repositories;
+	data: CSRepository[];
+}
+
+export interface StreamsRTMessage {
+	type: MessageType.Streams;
+	data: (CSChannelStream | CSDirectStream)[];
+}
+
+export interface TeamsRTMessage {
+	type: MessageType.Teams;
+	data: CSTeam[];
+}
+
+export interface UnreadsRTMessage {
+	type: MessageType.Unreads;
+	data: CSUnreads;
+}
+
+export interface UsersRTMessage {
+	type: MessageType.Users;
+	data: CSUser[];
+}
+
+export interface RawRTMessage {
+	type: MessageType;
+	data?: any;
+}
+
+export type RTMessage =
+	| ConnectionRTMessage
+	| MarkerLocationsRTMessage
+	| MarkersRTMessage
+	| PostsRTMessage
+	| RepositoriesRTMessage
+	| StreamsRTMessage
+	| TeamsRTMessage
+	| UnreadsRTMessage
+	| UsersRTMessage;
 
 export interface ApiProvider {
 	onDidReceiveMessage: Event<RTMessage>;
+
+	readonly userId: string;
 
 	fetch<R extends object>(url: string, init?: RequestInit, token?: string): Promise<R>;
 	useMiddleware(middleware: CodeStreamApiMiddleware): Disposable;
 
 	login(options: LoginOptions): Promise<LoginResponse & { teamId: string }>;
-	subscribe(): Promise<void>;
+	subscribe(types?: MessageType[]): Promise<void>;
 
 	grantPubNubChannelAccess(token: string, channel: string): Promise<{}>;
-	getSubscribableStreams(userId: string): Promise<CSStream[]>;
 
 	getMe(): Promise<GetMeResponse>;
 	getUnreads(request: GetUnreadsRequest): Promise<GetUnreadsResponse>;

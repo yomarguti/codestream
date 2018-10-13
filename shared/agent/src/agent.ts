@@ -5,7 +5,6 @@ import {
 	Connection,
 	createConnection,
 	DidChangeConfigurationNotification,
-	DidChangeConfigurationParams,
 	Disposable,
 	Emitter,
 	Event,

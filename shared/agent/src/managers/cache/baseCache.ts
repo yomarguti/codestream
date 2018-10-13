@@ -77,12 +77,25 @@ export class BaseCache<T> {
 	 * @param entity The entity
 	 * @param oldEntity The old version of the entity
 	 */
-	set(entity?: T, oldEntity?: T) {
-		if (!entity) {
+	set(entities: T[]): void;
+	set(entity?: T, oldEntity?: T): void;
+	set(entitiesOrEntity?: T | T[], oldEntity?: T): void {
+		if (!entitiesOrEntity) {
 			return;
 		}
-		for (const index of this.indexes.values()) {
-			index.set(entity, oldEntity);
+
+		if (Array.isArray(entitiesOrEntity)) {
+			for (const entity of entitiesOrEntity) {
+				if (!entity) continue;
+
+				for (const index of this.indexes.values()) {
+					index.set(entity);
+				}
+			}
+		} else {
+			for (const index of this.indexes.values()) {
+				index.set(entitiesOrEntity, oldEntity);
+			}
 		}
 	}
 

@@ -1,9 +1,14 @@
 "use strict";
 import { Disposable, Emitter, Event } from "vscode-languageserver";
-import { ApiProvider, RTMessage } from "../api/apiProvider";
-import { CodeStreamApiProvider } from "../api/codestreamApi";
+import {
+	ApiProvider,
+	ConnectionRTMessage,
+	ConnectionStatus,
+	MessageType,
+	RawRTMessage
+} from "../api/apiProvider";
+import { CodeStreamApiProvider } from "../api/codestream/codestreamApi";
 import { Logger, TraceLevel } from "../logger";
-import { MessageType } from "../shared/agent.protocol";
 import {
 	ChannelDescriptor,
 	PubnubConnection,
@@ -11,25 +16,35 @@ import {
 	StatusChangeEvent
 } from "./pubnubConnection";
 
-const messageToType: { [key: string]: MessageType | undefined } = {
+const messageToType: {
+	[key: string]:
+		| MessageType.MarkerLocations
+		| MessageType.Markers
+		| MessageType.Posts
+		| MessageType.Repositories
+		| MessageType.Streams
+		| MessageType.Teams
+		| MessageType.Users
+		| undefined;
+} = {
+	marker: MessageType.Markers,
+	markerLocations: MessageType.MarkerLocations,
+	markers: MessageType.Markers,
 	post: MessageType.Posts,
 	posts: MessageType.Posts,
 	repo: MessageType.Repositories,
 	repos: MessageType.Repositories,
 	stream: MessageType.Streams,
 	streams: MessageType.Streams,
-	user: MessageType.Users,
-	users: MessageType.Users,
 	team: MessageType.Teams,
 	teams: MessageType.Teams,
-	marker: MessageType.Markers,
-	markers: MessageType.Markers,
-	markerLocations: MessageType.MarkerLocations
+	user: MessageType.Users,
+	users: MessageType.Users
 };
 
 export class PubnubReceiver {
-	private _onDidReceiveMessage = new Emitter<RTMessage>();
-	get onDidReceiveMessage(): Event<RTMessage> {
+	private _onDidReceiveMessage = new Emitter<RawRTMessage>();
+	get onDidReceiveMessage(): Event<RawRTMessage> {
 		return this._onDidReceiveMessage.event;
 	}
 
@@ -100,15 +115,17 @@ export class PubnubReceiver {
 			case PubnubStatus.Connected:
 				if (e.reconnected) {
 					this._onDidReceiveMessage.fire({
-						type: MessageType.Reconnected,
-						data: []
-					});
-
+						type: MessageType.Connection,
+						data: { status: ConnectionStatus.Reconnected }
+					} as ConnectionRTMessage);
 				}
 				break;
 
 			case PubnubStatus.Trouble:
-				// TODO: let the extension know we have trouble?
+				this._onDidReceiveMessage.fire({
+					type: MessageType.Connection,
+					data: { status: ConnectionStatus.Reconnecting }
+				} as ConnectionRTMessage);
 				break;
 
 			case PubnubStatus.Reset:
@@ -116,7 +133,10 @@ export class PubnubReceiver {
 				break;
 
 			case PubnubStatus.Offline:
-				// TODO: let the extension know we are offline?
+				this._onDidReceiveMessage.fire({
+					type: MessageType.Connection,
+					data: { status: ConnectionStatus.Disconnected }
+				} as ConnectionRTMessage);
 				break;
 
 			case PubnubStatus.Failed:
@@ -137,21 +157,20 @@ export class PubnubReceiver {
 	private fireMessage(message: { [key: string]: any }) {
 		const { requestId, messageId, ...messages } = message;
 
-		for (const [key, obj] of Object.entries(messages)) {
+		for (const [dataType, rawData] of Object.entries(messages)) {
 			try {
-				const changes = CodeStreamApiProvider.normalizeResponse<any>(obj);
-				const data = Array.isArray(changes) ? changes : [changes];
-				const type = messageToType[key];
+				const type = messageToType[dataType];
 				if (type) {
+					const data = CodeStreamApiProvider.normalizeResponse<any>(rawData);
 					this._onDidReceiveMessage.fire({
 						type: type,
-						data: data
+						data: Array.isArray(data) ? data : [data]
 					});
 				} else {
-					Logger.warn(`Unknown message type received from PubNub: ${key}`);
+					Logger.warn(`Unknown message type received from PubNub: ${dataType}`);
 				}
 			} catch (ex) {
-				Logger.error(ex, `PubNub '${key}' FAILED`);
+				Logger.error(ex, `PubNub '${dataType}' FAILED`);
 			}
 		}
 	}

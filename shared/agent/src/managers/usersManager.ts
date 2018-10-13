@@ -21,21 +21,24 @@ import {
 } from "../shared/agent.protocol";
 import { CSMe, CSUser } from "../shared/api.protocol";
 import { lspHandler } from "../system";
-import { EntityManager, Id } from "./entityManager";
+import { CachedEntityManagerBase, Id } from "./entityManager";
 
-export class UsersManager extends EntityManager<CSUser> {
-	private loaded = false;
-
-	async getAll(): Promise<CSUser[]> {
-		if (!this.loaded) {
-			const response = await this.session.api.fetchUsers({});
-			for (const user of response.users) {
-				this.cache.set(user);
+export class UsersManager extends CachedEntityManagerBase<CSUser> {
+	@lspHandler(FetchUsersRequestType)
+	async get(request?: FetchUsersRequest): Promise<FetchUsersResponse> {
+		let users = await this.ensureCached();
+		if (request != null) {
+			if (request.userIds != null && request.userIds.length !== 0) {
+				users = users.filter(u => request.userIds!.includes(u.id));
 			}
-			this.loaded = true;
 		}
 
-		return this.cache.getAll();
+		return { users: users };
+	}
+
+	protected async loadCache() {
+		const response = await this.session.api.fetchUsers({});
+		this.cache.set(response.users);
 	}
 
 	async getByEmails(
@@ -46,7 +49,7 @@ export class UsersManager extends EntityManager<CSUser> {
 			emails = emails.map(email => email.toLocaleUpperCase());
 		}
 
-		const users = await this.getAll();
+		const users = (await this.get()).users;
 		return users.filter(u =>
 			emails.includes(options.ignoreCase ? u.email.toLocaleUpperCase() : u.email)
 		);
@@ -70,16 +73,6 @@ export class UsersManager extends EntityManager<CSUser> {
 	@lspHandler(UpdatePresenceRequestType)
 	updatePresence(request: UpdatePresenceRequest) {
 		return this.session.api.updatePresence(request);
-	}
-
-	@lspHandler(FetchUsersRequestType)
-	private async fetchUsers(request: FetchUsersRequest): Promise<FetchUsersResponse> {
-		const users = await this.getAll();
-		if (request.userIds == null || request.userIds.length === 0) {
-			return { users: users };
-		}
-
-		return { users: users.filter(u => request.userIds!.includes(u.id)) };
 	}
 
 	@lspHandler(GetMeRequestType)

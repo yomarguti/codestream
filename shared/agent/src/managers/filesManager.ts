@@ -13,9 +13,9 @@ import { CSFileStream, CSStream, StreamType } from "../shared/api.protocol";
 import { lspHandler } from "../system";
 import { getValues, KeyValue } from "./cache/baseCache";
 import { IndexParams, IndexType } from "./cache/index";
-import { EntityManager, Id } from "./entityManager";
+import { EntityManagerBase, Id } from "./entityManager";
 
-export class FilesManager extends EntityManager<CSFileStream> {
+export class FilesManager extends EntityManagerBase<CSFileStream> {
 	private idsByPath = new Map<string, Id>();
 
 	getIndexedFields(): IndexParams<CSFileStream>[] {

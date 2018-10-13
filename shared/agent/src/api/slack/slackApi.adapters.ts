@@ -1,7 +1,7 @@
 "use strict";
 import { MessageAttachment } from "@slack/client";
-import { Container } from "../container";
-import { Logger } from "../logger";
+import { Container } from "../../container";
+import { Logger } from "../../logger";
 import {
 	CSChannelStream,
 	CSCodeBlock,
@@ -10,16 +10,31 @@ import {
 	CSTeam,
 	CSUser,
 	StreamType
-} from "../shared/api.protocol";
+} from "../../shared/api.protocol";
 
 const defaultCreatedAt = 165816000000;
 // const multiPartyNamesRegEx = /^mpdm-([^-]+)(--.*)-1$/;
 // const multiPartyNameRegEx = /--([^-]+)/g;
 
 const mentionsRegex = /(^|\s)@(\w+)(?:\b(?!@|[\(\{\[\<\-])|$)/g;
+const pseudoMentionsRegex = /(^|\s)@(everyone|channel|here)(?:\b(?!@|[\(\{\[\<\-])|$)/g;
 const slackMentionsRegex = /\<[@|!](\w+)\>/g;
 const slackChannelsRegex = /\<#(\w+)\|(\w+)\>/g;
 const markerAttachmentRegex = /codestream\:\/\/marker\/(.*)/;
+
+export function fromSlackChannelIdToType(
+	streamId: string
+): "channel" | "group" | "direct" | undefined {
+	switch (streamId[0]) {
+		case "C":
+			return "channel";
+		case "G":
+			return "group";
+		case "D":
+			return "direct";
+	}
+	return undefined;
+}
 
 export function fromSlackChannelOrDirect(
 	channel: any,
@@ -353,15 +368,18 @@ export function toSlackPostText(
 	mentionedUserIds: string[] | undefined,
 	usersByName: Map<string, CSUser>
 ) {
-	if (mentionedUserIds != null && mentionedUserIds.length !== 0) {
+	const hasMentionedUsers = mentionedUserIds != null && mentionedUserIds.length !== 0;
+	if (hasMentionedUsers || (text != null && pseudoMentionsRegex.test(text))) {
 		text = text.replace(mentionsRegex, (match: string, prefix: string, mentionName: string) => {
 			if (mentionName === "everyone" || mentionName === "channel" || mentionName === "here") {
 				return `${prefix}<!${mentionName}>`;
 			}
 
-			const user = usersByName.get(mentionName);
-			if (user !== undefined && mentionedUserIds.includes(user.id)) {
-				return `${prefix}<@${user.id}>`;
+			if (hasMentionedUsers) {
+				const user = usersByName.get(mentionName);
+				if (user !== undefined && mentionedUserIds!.includes(user.id)) {
+					return `${prefix}<@${user.id}>`;
+				}
 			}
 
 			return match;

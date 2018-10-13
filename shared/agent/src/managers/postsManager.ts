@@ -29,9 +29,9 @@ import { CSPost } from "../shared/api.protocol";
 import { lspHandler } from "../system/decorators";
 import { getValues, KeyValue } from "./cache/baseCache";
 import { IndexParams, IndexType } from "./cache/index";
-import { EntityManager, Id } from "./entityManager";
+import { EntityManagerBase, Id } from "./entityManager";
 
-export class PostsManager extends EntityManager<CSPost> {
+export class PostsManager extends EntityManagerBase<CSPost> {
 	getIndexedFields(): IndexParams<CSPost>[] {
 		return [
 			{
@@ -64,8 +64,21 @@ export class PostsManager extends EntityManager<CSPost> {
 		return this.session.api.editPost(request);
 	}
 
+	@lspHandler(FetchPostsRequestType)
+	get(request: FetchPostsRequest): Promise<FetchPostsResponse> {
+		return this.session.api.fetchPosts(request);
+
+		// const posts = await this.getPosts(
+		// 	request.streamId,
+		// 	request.after,
+		// 	request.before,
+		// 	request.limit
+		// );
+		// return { posts: posts.data };
+	}
+
 	@lspHandler(FetchPostRepliesRequestType)
-	async fetchPostReplies(request: FetchPostRepliesRequest): Promise<FetchPostRepliesResponse> {
+	async getReplies(request: FetchPostRepliesRequest): Promise<FetchPostRepliesResponse> {
 		return this.session.api.fetchPostReplies(request);
 
 		// const posts = await this.cache.getGroup([["parentPostId", request.postId]]);
@@ -86,19 +99,6 @@ export class PostsManager extends EntityManager<CSPost> {
 	private async getPost(request: GetPostRequest): Promise<GetPostResponse> {
 		const post = await this.getById(request.postId);
 		return { post: post };
-	}
-
-	@lspHandler(FetchPostsRequestType)
-	private async fetchPosts(request: FetchPostsRequest): Promise<FetchPostsResponse> {
-		return this.session.api.fetchPosts(request);
-
-		// const posts = await this.getPosts(
-		// 	request.streamId,
-		// 	request.after,
-		// 	request.before,
-		// 	request.limit
-		// );
-		// return { posts: posts.data };
 	}
 
 	// /**

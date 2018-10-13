@@ -9,13 +9,13 @@ import {
 import URI from "vscode-uri";
 import { CodeStreamAgent } from "./agent";
 import { AgentError, ServerError } from "./agentError";
-import { ApiProvider, LoginOptions, RTMessage } from "./api/apiProvider";
-import { CodeStreamApiProvider } from "./api/codestreamApi";
+import { ApiProvider, LoginOptions, MessageType, RTMessage } from "./api/apiProvider";
+import { CodeStreamApiProvider } from "./api/codestream/codestreamApi";
 import {
 	VersionCompatibilityChangedEvent,
 	VersionMiddlewareManager
 } from "./api/middleware/versionMiddleware";
-import { SlackApiProvider } from "./api/slackApi";
+import { SlackApiProvider } from "./api/slack/slackApi";
 import { Container } from "./container";
 import { setGitPath } from "./git/git";
 import { Logger } from "./logger";
@@ -24,6 +24,7 @@ import { PostHandler } from "./post/postHandler";
 import {
 	AgentOptions,
 	ApiRequestType,
+	ChangeDataType,
 	CodeStreamEnvironment,
 	CreatePostWithCodeRequestType,
 	DidChangeDataNotificationType,
@@ -34,7 +35,6 @@ import {
 	FetchMarkerLocationsRequestType,
 	LogoutReason,
 	LogoutRequestType,
-	MessageType,
 	PreparePostWithCodeRequestType
 } from "./shared/agent.protocol";
 import {
@@ -152,60 +152,61 @@ export class CodeStreamSession {
 
 	private async onRTMessageReceived(e: RTMessage) {
 		switch (e.type) {
-			case MessageType.Posts:
-				const posts = await Container.instance().posts.resolve(e);
-				this._onDidChangePosts.fire(posts);
+			case MessageType.MarkerLocations:
+				const markerLocations = await Container.instance().markerLocations.resolve(e);
+				this._onDidChangeMarkerLocations.fire(markerLocations);
 				this.agent.sendNotification(DidChangeDataNotificationType, {
-					type: MessageType.Posts,
-					posts
-				});
-				break;
-			case MessageType.Repositories:
-				const repos = await Container.instance().repos.resolve(e);
-				this._onDidChangeRepositories.fire(repos);
-				this.agent.sendNotification(DidChangeDataNotificationType, {
-					type: MessageType.Repositories,
-					repos
-				});
-				break;
-			case MessageType.Streams:
-				const streams = await Container.instance().streams.resolve(e);
-				this._onDidChangeStreams.fire(streams);
-				this.agent.sendNotification(DidChangeDataNotificationType, {
-					type: MessageType.Streams,
-					streams
-				});
-				break;
-			case MessageType.Users:
-				const users = await Container.instance().users.resolve(e);
-				this._onDidChangeUsers.fire(users);
-				this.agent.sendNotification(DidChangeDataNotificationType, {
-					type: MessageType.Users,
-					users
-				});
-				break;
-			case MessageType.Teams:
-				const teams = await Container.instance().teams.resolve(e);
-				this._onDidChangeTeams.fire(teams);
-				this.agent.sendNotification(DidChangeDataNotificationType, {
-					type: MessageType.Teams,
-					teams
+					type: ChangeDataType.MarkerLocations,
+					data: markerLocations
 				});
 				break;
 			case MessageType.Markers:
 				const markers = await Container.instance().markers.resolve(e);
 				this._onDidChangeMarkers.fire(markers);
 				this.agent.sendNotification(DidChangeDataNotificationType, {
-					type: MessageType.Markers,
-					markers
+					type: ChangeDataType.Markers,
+					data: markers
 				});
 				break;
-			case MessageType.MarkerLocations:
-				const markerLocations = await Container.instance().markerLocations.resolve(e);
-				this._onDidChangeMarkerLocations.fire(markerLocations);
+			case MessageType.Posts:
+				this._onDidChangePosts.fire(e.data);
 				this.agent.sendNotification(DidChangeDataNotificationType, {
-					type: MessageType.MarkerLocations,
-					markerLocations
+					type: ChangeDataType.Posts,
+					data: e.data
+				});
+				break;
+			case MessageType.Repositories:
+				this._onDidChangeRepositories.fire(e.data);
+				this.agent.sendNotification(DidChangeDataNotificationType, {
+					type: ChangeDataType.Repositories,
+					data: e.data
+				});
+				break;
+			case MessageType.Streams:
+				this._onDidChangeStreams.fire(e.data);
+				this.agent.sendNotification(DidChangeDataNotificationType, {
+					type: ChangeDataType.Streams,
+					data: e.data
+				});
+				break;
+			case MessageType.Teams:
+				this._onDidChangeTeams.fire(e.data);
+				this.agent.sendNotification(DidChangeDataNotificationType, {
+					type: ChangeDataType.Teams,
+					data: e.data
+				});
+				break;
+			case MessageType.Unreads:
+				this.agent.sendNotification(DidChangeDataNotificationType, {
+					type: ChangeDataType.Unreads,
+					data: e.data
+				});
+				break;
+			case MessageType.Users:
+				this._onDidChangeUsers.fire(e.data);
+				this.agent.sendNotification(DidChangeDataNotificationType, {
+					type: ChangeDataType.Users,
+					data: e.data
 				});
 				break;
 		}

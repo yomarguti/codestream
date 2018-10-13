@@ -18,6 +18,7 @@ import {
 	LoginResponse,
 	LoginResult
 } from "./api.protocol";
+import { CSLastReads } from "./api.protocol.models";
 
 export * from "./agent.protocol.markers";
 export * from "./agent.protocol.posts";
@@ -94,60 +95,74 @@ export const LogoutRequestType = new RequestType<LogoutRequest, undefined, void,
 	"codeStream/logout"
 );
 
-export enum MessageType {
-	Markers = "markers",
+export enum ChangeDataType {
 	MarkerLocations = "markerLocations",
+	Markers = "markers",
 	Posts = "posts",
 	Repositories = "repos",
 	Streams = "streams",
 	Teams = "teams",
-	Users = "users",
-	Reconnected = "reconnected"
-}
-
-export interface MarkersChangedNotification {
-	type: MessageType.Markers;
-	markers: CSMarker[];
+	Unreads = "unreads",
+	Users = "users"
 }
 
 export interface MarkerLocationsChangedNotification {
-	type: MessageType.MarkerLocations;
-	markerLocations: CSMarkerLocations[];
+	type: ChangeDataType.MarkerLocations;
+	data: CSMarkerLocations[];
+}
+
+export interface MarkersChangedNotification {
+	type: ChangeDataType.Markers;
+	data: CSMarker[];
 }
 
 export interface PostsChangedNotification {
-	type: MessageType.Posts;
-	posts: CSPost[];
+	type: ChangeDataType.Posts;
+	data: CSPost[];
 }
 
 export interface RepositoriesChangedNotification {
-	type: MessageType.Repositories;
-	repos: CSRepository[];
+	type: ChangeDataType.Repositories;
+	data: CSRepository[];
 }
 
 export interface StreamsChangedNotification {
-	type: MessageType.Streams;
-	streams: CSStream[];
+	type: ChangeDataType.Streams;
+	data: CSStream[];
 }
 
 export interface TeamsChangedNotification {
-	type: MessageType.Teams;
-	teams: CSTeam[];
+	type: ChangeDataType.Teams;
+	data: CSTeam[];
+}
+
+export interface CSUnreads {
+	lastReads: CSLastReads;
+	mentions: { [streamId: string]: number };
+	unreads: { [streamId: string]: number };
+	totalMentions: number;
+	totalUnreads: number;
+}
+
+export interface UnreadsChangedNotification {
+	type: ChangeDataType.Unreads;
+	data: CSUnreads;
 }
 
 export interface UsersChangedNotification {
-	type: MessageType.Users;
-	users: CSUser[];
+	type: ChangeDataType.Users;
+	data: CSUser[];
 }
 
 export type DidChangeDataNotification =
-	| MarkersChangedNotification
 	| MarkerLocationsChangedNotification
+	| MarkersChangedNotification
 	| PostsChangedNotification
 	| RepositoriesChangedNotification
 	| StreamsChangedNotification
-	| UsersChangedNotification
-	| TeamsChangedNotification;
+	| TeamsChangedNotification
+	| UnreadsChangedNotification
+	| UsersChangedNotification;
 
 export const DidChangeDataNotificationType = new NotificationType<DidChangeDataNotification, void>(
 	"codeStream/didChangeData"

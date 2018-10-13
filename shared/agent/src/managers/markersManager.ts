@@ -10,10 +10,10 @@ import { CSMarker, CSStream, StreamType } from "../shared/api.protocol";
 import { lspHandler } from "../system";
 import { getValues, KeyValue } from "./cache/baseCache";
 import { IndexParams, IndexType } from "./cache/index";
-import { EntityManager, Id } from "./entityManager";
+import { EntityManagerBase, Id } from "./entityManager";
 
-export class MarkersManager extends EntityManager<CSMarker> {
-	init() {
+export class MarkersManager extends EntityManagerBase<CSMarker> {
+	initialize() {
 		this.session.onDidChangeMarkers(async (markers: CSMarker[]) => {
 			const { files } = Container.instance();
 			const streamIds = new Set<Id>();

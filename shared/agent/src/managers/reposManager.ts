@@ -15,11 +15,9 @@ import {
 } from "../shared/agent.protocol";
 import { CSRepository } from "../shared/api.protocol";
 import { lspHandler } from "../system";
-import { EntityManager, Id } from "./entityManager";
+import { CachedEntityManagerBase, Id } from "./entityManager";
 
-export class ReposManager extends EntityManager<CSRepository> {
-	private loaded = false;
-
+export class ReposManager extends CachedEntityManagerBase<CSRepository> {
 	@lspHandler(CreateRepoRequestType)
 	createRepo(request: CreateRepoRequest): Promise<CreateRepoResponse> {
 		return this.session.api.createRepo(request);
@@ -30,16 +28,21 @@ export class ReposManager extends EntityManager<CSRepository> {
 		return this.session.api.findRepo(request);
 	}
 
-	async getAll(): Promise<CSRepository[]> {
-		if (!this.loaded) {
-			const response = await this.session.api.fetchRepos({});
-			for (const repo of response.repos) {
-				this.cache.set(repo);
+	@lspHandler(FetchReposRequestType)
+	async get(request?: FetchReposRequest): Promise<FetchReposResponse> {
+		let repos = await this.ensureCached();
+		if (request != null) {
+			if (request.repoIds != null && request.repoIds.length !== 0) {
+				repos = repos.filter(r => request.repoIds!.includes(r.id));
 			}
-			this.loaded = true;
 		}
 
-		return this.cache.getAll();
+		return { repos: repos };
+	}
+
+	protected async loadCache() {
+		const response = await this.session.api.fetchRepos({});
+		this.cache.set(response.repos);
 	}
 
 	protected async fetchById(repoId: Id): Promise<CSRepository> {
@@ -51,15 +54,5 @@ export class ReposManager extends EntityManager<CSRepository> {
 	private async getRepo(request: GetRepoRequest): Promise<GetRepoResponse> {
 		const repo = await this.getById(request.repoId);
 		return { repo: repo };
-	}
-
-	@lspHandler(FetchReposRequestType)
-	private async fetchRepos(request: FetchReposRequest): Promise<FetchReposResponse> {
-		const repos = await this.getAll();
-		if (request.repoIds == null || request.repoIds.length === 0) {
-			return { repos: repos };
-		}
-
-		return { repos: repos.filter(r => request.repoIds!.includes(r.id)) };
 	}
 }
