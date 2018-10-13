@@ -14,24 +14,12 @@ export class User extends CodeStreamItem<CSUser> {
 		return this.entity.email;
 	}
 
-	get firstName() {
-		return this.entity.firstName;
-	}
-
-	get lastName() {
-		return this.entity.lastName;
-	}
-
 	get fullName() {
 		return `${this.entity.firstName || ""} ${this.entity.lastName || ""}`.trim();
 	}
 
 	get name() {
 		return this.entity.username || this.fullName;
-	}
-
-	get lastReads(): { [streamId: string]: number } {
-		return (this.entity as CSMe).lastReads || Object.create(null);
 	}
 
 	hasMutedChannel(streamId: string) {

@@ -89,26 +89,13 @@ import {
 import {
 	ChannelServiceType,
 	CSCodeBlock,
-	CSMeLastReads,
 	CSMePreferences,
 	CSPost,
 	CSPresenceStatus,
 	StreamType
 } from "../shared/api.protocol";
 
-export {
-	AccessToken,
-	AgentOptions,
-	AgentResult,
-	CodeStreamEnvironment,
-	DidChangeDataNotification,
-	MessageType,
-	PostsChangedNotification,
-	RepositoriesChangedNotification,
-	StreamsChangedNotification,
-	TeamsChangedNotification,
-	UsersChangedNotification
-} from "../shared/agent.protocol";
+export * from "../shared/agent.protocol";
 export * from "../shared/api.protocol";
 
 export interface DocumentMarkersChangedEvent {
@@ -542,8 +529,9 @@ export class CodeStreamAgentConnection implements Disposable {
 	private readonly _teams = new class {
 		constructor(private readonly _connection: CodeStreamAgentConnection) {}
 
-		fetch(teamIds: string[]) {
+		fetch(teamIds?: string[]) {
 			return this._connection.sendRequest(FetchTeamsRequestType, {
+				mine: teamIds == null,
 				teamIds: teamIds
 			});
 		}
@@ -597,8 +585,8 @@ export class CodeStreamAgentConnection implements Disposable {
 			});
 		}
 
-		unreads(lastReads: CSMeLastReads) {
-			return this._connection.sendRequest(GetUnreadsRequestType, { lastReads: lastReads });
+		unreads() {
+			return this._connection.sendRequest(GetUnreadsRequestType, {});
 		}
 	}(this);
 

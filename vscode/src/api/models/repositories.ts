@@ -1,8 +1,7 @@
 "use strict";
 import { CSRepository } from "../../agent/agentConnection";
-import { Container } from "../../container";
-import { CodeStreamSession, RepositoriesChangedEvent } from "../session";
-import { CodeStreamCollection, CodeStreamItem } from "./collection";
+import { CodeStreamSession } from "../session";
+import { CodeStreamItem } from "./collection";
 import { FileStreamCollection } from "./streams";
 
 export class Repository extends CodeStreamItem<CSRepository> {
@@ -28,26 +27,5 @@ export class Repository extends CodeStreamItem<CSRepository> {
 
 	get url() {
 		return this.entity.remotes[0].url;
-	}
-}
-
-export class RepositoryCollection extends CodeStreamCollection<Repository, CSRepository> {
-	constructor(session: CodeStreamSession, public readonly teamId: string) {
-		super(session);
-
-		this.disposables.push(session.onDidChangeRepositories(this.onRepositoriesChanged, this));
-	}
-
-	private onRepositoriesChanged(e: RepositoriesChangedEvent) {
-		this.invalidate();
-	}
-
-	protected entityMapper(e: CSRepository) {
-		return new Repository(this.session, e);
-	}
-
-	protected async fetch() {
-		const response = await Container.agent.repos.fetch();
-		return response.repos.map(repo => this.entityMapper(repo));
 	}
 }

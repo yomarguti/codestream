@@ -12,7 +12,6 @@ import {
 	SessionStatusChangedEvent,
 	UnreadsChangedEvent
 } from "../api/session";
-import { Unreads } from "../api/unreads";
 import { configuration } from "../configuration";
 import { Container } from "../container";
 
@@ -80,7 +79,10 @@ export class StatusBarController implements Disposable {
 		}
 	}
 
-	private updateStatusBar(status: SessionStatus, unreads: Unreads = { mentions: 0, messages: 0 }) {
+	private updateStatusBar(
+		status: SessionStatus,
+		unreads: { totalMentions: number; totalUnreads: number } = { totalMentions: 0, totalUnreads: 0 }
+	) {
 		if (this._statusBarItem === undefined) {
 			const rightAlign = Container.config.showInStatusBar === "right";
 			this._statusBarItem = window.createStatusBarItem(
@@ -120,14 +122,16 @@ export class StatusBarController implements Disposable {
 				if (!Container.session.hasSingleTeam()) {
 					label += ` - ${Container.session.team.name}`;
 				}
-				if (unreads.mentions > 0) {
-					label += ` (${unreads.mentions})`;
-					tooltip += `\n${unreads.mentions} unread mention${unreads.mentions === 1 ? "" : "s"}`;
-				} else if (unreads.messages > 0) {
+				if (unreads.totalMentions > 0) {
+					label += ` (${unreads.totalMentions})`;
+					tooltip += `\n${unreads.totalMentions} unread mention${
+						unreads.totalMentions === 1 ? "" : "s"
+					}`;
+				} else if (unreads.totalUnreads > 0) {
 					label += ` \u00a0\u2022`;
 				}
 
-				const unreadsOnly = unreads.messages - unreads.mentions;
+				const unreadsOnly = unreads.totalUnreads - unreads.totalMentions;
 				if (unreadsOnly > 0) {
 					tooltip += `\n${unreadsOnly} unread message${unreadsOnly === 1 ? "" : "s"}`;
 				}

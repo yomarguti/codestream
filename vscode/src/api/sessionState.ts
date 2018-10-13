@@ -1,26 +1,21 @@
 "use strict";
 import { CSMe, LoginResponse } from "../agent/agentConnection";
-import { RepositoryCollection } from "./models/repositories";
+import { Container } from "../container";
 import {
 	ChannelAndDirectStreamCollection,
 	ChannelStreamCollection,
 	DirectStreamCollection
 } from "./models/streams";
-import { Team, TeamCollection } from "./models/teams";
+import { Team } from "./models/teams";
 import { User, UserCollection } from "./models/users";
 import { CodeStreamSession } from "./session";
-import { UnreadCounter } from "./unreads";
 
 export class SessionState {
-	private readonly _unreads: UnreadCounter;
-
 	constructor(
 		private readonly _session: CodeStreamSession,
 		public readonly teamId: string,
 		private readonly _data: LoginResponse
-	) {
-		this._unreads = new UnreadCounter(this._session, this._data.user.id);
-	}
+	) {}
 
 	get pubnubKey() {
 		return this._data.pubnubKey;
@@ -58,28 +53,12 @@ export class SessionState {
 		return this._directMessages;
 	}
 
-	private _repos: RepositoryCollection | undefined;
-	get repos() {
-		if (this._repos === undefined) {
-			this._repos = new RepositoryCollection(this._session, this.teamId);
-		}
-		return this._repos;
-	}
-
 	private _team: Team | undefined;
 	get team() {
 		if (this._team === undefined) {
 			this._team = new Team(this._session, this._data.teams.find(t => t.id === this.teamId)!);
 		}
 		return this._team!;
-	}
-
-	private _teams: TeamCollection | undefined;
-	get teams() {
-		if (this._teams === undefined) {
-			this._teams = new TeamCollection(this._session, this._data.teams.map(t => t.id));
-		}
-		return this._teams;
 	}
 
 	private _user: User | undefined;
@@ -98,16 +77,13 @@ export class SessionState {
 		return this._users;
 	}
 
-	get unreads() {
-		return this._unreads;
-	}
-
 	hasSingleTeam(): boolean {
 		return this._data!.teams.length === 1;
 	}
 
 	async updateTeams() {
-		this._data.teams = await this.teams.entities();
+		const response = await Container.agent.teams.fetch();
+		this._data.teams = await response.teams;
 		this._team = undefined;
 	}
 

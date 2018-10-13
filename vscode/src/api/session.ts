@@ -3,12 +3,12 @@ import { ConfigurationTarget, Disposable, Event, EventEmitter } from "vscode";
 import {
 	AccessToken,
 	AgentResult,
+	ChangeDataType,
 	CodeStreamEnvironment,
-	CSMe,
+	CSUnreads,
 	DidChangeDataNotification,
 	DocumentMarkersChangedEvent,
-	LoginResult,
-	MessageType
+	LoginResult
 } from "../agent/agentConnection";
 import { WorkspaceState } from "../common";
 import { configuration } from "../configuration";
@@ -45,7 +45,6 @@ import {
 } from "./sessionEvents";
 import { SessionState } from "./sessionState";
 import { TokenManager } from "./tokenManager";
-import { Unreads } from "./unreads";
 
 export {
 	ChannelStream,
@@ -166,29 +165,24 @@ export class CodeStreamSession implements Disposable {
 
 	private onDataChanged(e: DidChangeDataNotification) {
 		switch (e.type) {
-			case MessageType.Posts:
-				this._state!.unreads.update(e.posts, this.fireDidChangeUnreads);
-
+			case ChangeDataType.Posts:
 				this.fireDidChangePosts(new PostsChangedEvent(this, e));
 				break;
-			case MessageType.Repositories:
+			case ChangeDataType.Repositories:
 				this.fireDidChangeRepositories(new RepositoriesChangedEvent(this, e));
 				break;
-			case MessageType.Streams:
+			case ChangeDataType.Streams:
 				this.fireDidChangeStreams(new StreamsChangedEvent(this, e));
 				break;
-			case MessageType.Teams:
+			case ChangeDataType.Teams:
 				this._state!.updateTeams();
 
 				this.fireDidChangeTeams(new TeamsChangedEvent(this, e));
 				break;
-			case MessageType.Users:
-				const user = e.users.find(u => u.id === this.userId) as CSMe;
-				if (user != null) {
-					this._state!.updateUser(user);
-					this._state!.unreads.compute(user.lastReads, this.fireDidChangeUnreads);
-				}
-
+			case ChangeDataType.Unreads:
+				this.fireDidChangeUnreads(new UnreadsChangedEvent(this, e));
+				break;
+			case ChangeDataType.Users:
 				this.fireDidChangeUsers(new UsersChangedEvent(this, e));
 				break;
 		}
@@ -215,11 +209,6 @@ export class CodeStreamSession implements Disposable {
 	@signedIn
 	get directMessages() {
 		return this._state!.directMessages;
-	}
-
-	@signedIn
-	get repos() {
-		return this._state!.repos;
 	}
 
 	get environment(): CodeStreamEnvironment {
@@ -261,7 +250,7 @@ export class CodeStreamSession implements Disposable {
 	private setStatus(
 		status: SessionStatus,
 		signedOutReason?: SessionSignedOutReason,
-		unreads?: Unreads
+		unreads?: CSUnreads
 	) {
 		this._status = status;
 		const e: SessionStatusChangedEvent = {
@@ -280,11 +269,6 @@ export class CodeStreamSession implements Disposable {
 	}
 
 	@signedIn
-	get teams() {
-		return this._state!.teams;
-	}
-
-	@signedIn
 	get user() {
 		return this._state!.user;
 	}
@@ -296,11 +280,6 @@ export class CodeStreamSession implements Disposable {
 	@signedIn
 	get users() {
 		return this._state!.users;
-	}
-
-	@signedIn
-	get unreads() {
-		return this._state!.unreads;
 	}
 
 	getSignupToken() {
@@ -520,7 +499,8 @@ export class CodeStreamSession implements Disposable {
 			Container.agent.onDidChangeData(this.onDataChanged, this)
 		);
 
-		const unreads = await this._state.unreads.compute(user.lastReads, undefined);
+		const unreadsResponse = await Container.agent.users.unreads();
+		const unreads = unreadsResponse.unreads;
 
 		Logger.log(
 			`${email} signed into CodeStream (${this.serverUrl}); userId=${this.userId}, teamId=${teamId}`

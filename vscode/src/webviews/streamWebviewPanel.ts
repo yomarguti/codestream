@@ -22,6 +22,7 @@ import {
 	CSRepository,
 	CSStream,
 	CSTeam,
+	CSUnreads,
 	CSUser,
 	LoginResult
 } from "../agent/agentConnection";
@@ -65,7 +66,7 @@ interface BootstrapState {
 	streams: CSStream[];
 	teams: CSTeam[];
 	users: CSUser[];
-	unreads: { unread: { [streamId: string]: number }; mentions: { [streamId: string]: number } };
+	unreads: CSUnreads;
 	repos: CSRepository[];
 	services: {
 		vsls?: boolean;
@@ -843,11 +844,11 @@ export class StreamWebviewPanel implements Disposable {
 		}
 
 		const promise = Promise.all([
-			this.session.repos.entities(),
-			this.session.channelsAndDMs.entities(),
-			this.session.teams.entities(),
-			this.session.unreads.entity(),
-			this.session.users.entities()
+			Container.agent.repos.fetch(),
+			Container.agent.streams.fetch(),
+			Container.agent.teams.fetch(),
+			Container.agent.users.unreads(),
+			Container.agent.users.fetch()
 		]);
 
 		state.configs = {
@@ -865,13 +866,21 @@ export class StreamWebviewPanel implements Disposable {
 		state.version = Container.versionFormatted;
 
 		const currentUser = this.session.user.entity;
-		const [repos, streams, teams, unreads, users] = await promise;
+		const [
+			reposResponse,
+			streamsResponse,
+			teamsResponse,
+			unreadsResponse,
+			usersResponse
+		] = await promise;
 
-		state.repos = repos;
-		state.streams = streams;
-		state.teams = teams;
-		state.unreads = unreads;
-		state.users = users.map(user => (user.id === currentUser.id ? currentUser : user));
+		state.repos = reposResponse.repos;
+		state.streams = streamsResponse.streams;
+		state.teams = teamsResponse.teams;
+		state.unreads = unreadsResponse.unreads;
+		state.users = usersResponse.users.map(
+			user => (user.id === currentUser.id ? currentUser : user)
+		);
 
 		if (this._streamThread !== undefined) {
 			state.currentStreamId = this._streamThread.stream.id;

@@ -1,35 +1,24 @@
 "use strict";
 import { Uri } from "vscode";
 import {
+	CSUnreads,
+	DidChangeDataNotification,
 	PostsChangedNotification,
 	RepositoriesChangedNotification,
 	StreamsChangedNotification,
-	StreamType,
 	TeamsChangedNotification,
+	UnreadsChangedNotification,
 	UsersChangedNotification
 } from "../agent/agentConnection";
 import { memoize } from "../system";
 import { WebviewIpcMessage, WebviewIpcMessageType } from "../webviews/webviewIpc";
-import {
-	ChannelStream,
-	CodeStreamSession,
-	DirectStream,
-	FileStream,
-	Post,
-	Repository,
-	SessionSignedOutReason,
-	SessionStatus,
-	Stream,
-	Team,
-	User
-} from "./session";
-import { Unreads } from "./unreads";
+import { CodeStreamSession, Post, SessionSignedOutReason, SessionStatus } from "./session";
 
 export interface SessionStatusChangedEvent {
 	getStatus(): SessionStatus;
 	session: CodeStreamSession;
 	reason?: SessionSignedOutReason;
-	unreads?: Unreads;
+	unreads?: CSUnreads;
 }
 
 export class TextDocumentMarkersChangedEvent {
@@ -42,12 +31,12 @@ export enum SessionChangedEventType {
 	Streams = "streams",
 	StreamsMembership = "streamsMembership",
 	Teams = "teams",
-	Users = "users",
-	Unreads = "unreads"
+	Unreads = "unreads",
+	Users = "users"
 }
 
 export interface SessionChangedEvent {
-	type: SessionChangedEventType;
+	readonly type: SessionChangedEventType;
 }
 
 export interface MergeableEvent<T> extends SessionChangedEvent {
@@ -58,127 +47,67 @@ export function isMergeableEvent<T>(e: SessionChangedEvent): e is MergeableEvent
 	return typeof (e as any).merge === "function";
 }
 
-export class PostsChangedEvent {
+abstract class SessionChangedEventBase<T extends DidChangeDataNotification>
+	implements SessionChangedEvent {
+	abstract readonly type: SessionChangedEventType;
+
+	constructor(public readonly session: CodeStreamSession, protected readonly _event: T) {}
+
+	@memoize
+	toIpcMessage(): WebviewIpcMessage {
+		return {
+			type: WebviewIpcMessageType.didChangeData,
+			body: {
+				type: this.type,
+				payload: this._event.data
+			}
+		};
+	}
+}
+
+export class PostsChangedEvent extends SessionChangedEventBase<PostsChangedNotification>
+	implements MergeableEvent<PostsChangedEvent> {
 	readonly type = SessionChangedEventType.Posts;
 
-	constructor(
-		public readonly session: CodeStreamSession,
-		private readonly _event: PostsChangedNotification
-	) {}
-
 	get count() {
-		return this._event.posts.length;
+		return this._event.data.length;
 	}
 
 	affects(id: string, type: "entity" | "stream" | "team") {
-		return affects(this._event.posts, id, type);
+		return affects(this._event.data, id, type);
 	}
 
 	@memoize
 	items() {
-		return this._event.posts.map(p => new Post(this.session, p));
+		return this._event.data.map(p => new Post(this.session, p));
 	}
 
 	merge(e: PostsChangedEvent) {
-		this._event.posts.push(...e._event.posts);
-	}
-
-	@memoize
-	toIpcMessage(): WebviewIpcMessage {
-		return {
-			type: WebviewIpcMessageType.didChangeData,
-			body: {
-				type: this.type,
-				payload: this._event.posts
-			}
-		};
+		this._event.data.push(...e._event.data);
 	}
 }
 
-export class RepositoriesChangedEvent implements MergeableEvent<RepositoriesChangedEvent> {
+export class RepositoriesChangedEvent
+	extends SessionChangedEventBase<RepositoriesChangedNotification>
+	implements MergeableEvent<RepositoriesChangedEvent> {
 	readonly type = SessionChangedEventType.Repositories;
 
-	constructor(
-		public readonly session: CodeStreamSession,
-		private readonly _event: RepositoriesChangedNotification
-	) {}
-
-	get count() {
-		return this._event.repos.length;
-	}
-
-	affects(id: string, type: "entity" | "team") {
-		return affects(this._event.repos, id, type);
-	}
-
-	@memoize
-	items(): Repository[] {
-		return this._event.repos.map(r => new Repository(this.session, r));
-	}
-
 	merge(e: RepositoriesChangedEvent) {
-		this._event.repos.push(...e._event.repos);
-	}
-
-	@memoize
-	toIpcMessage(): WebviewIpcMessage {
-		return {
-			type: WebviewIpcMessageType.didChangeData,
-			body: {
-				type: this.type,
-				payload: this._event.repos
-			}
-		};
+		this._event.data.push(...e._event.data);
 	}
 }
 
-export class StreamsChangedEvent implements MergeableEvent<StreamsChangedEvent> {
+export class StreamsChangedEvent extends SessionChangedEventBase<StreamsChangedNotification>
+	implements MergeableEvent<StreamsChangedEvent> {
 	readonly type = SessionChangedEventType.Streams;
 
-	constructor(
-		public readonly session: CodeStreamSession,
-		private readonly _event: StreamsChangedNotification
-	) {}
-
-	get count() {
-		return this._event.streams.length;
-	}
-
-	affects(id: string, type: "entity" | "team") {
-		return affects(this._event.streams, id, type);
-	}
-
-	@memoize
-	items(): (Stream | FileStream)[] {
-		return this._event.streams.map(s => {
-			switch (s.type) {
-				case StreamType.Channel:
-					return new ChannelStream(this.session, s);
-				case StreamType.Direct:
-					return new DirectStream(this.session, s);
-				case StreamType.File:
-					return new FileStream(this.session, s);
-			}
-		});
-	}
-
 	merge(e: StreamsChangedEvent) {
-		this._event.streams.push(...e._event.streams);
-	}
-
-	@memoize
-	toIpcMessage(): WebviewIpcMessage {
-		return {
-			type: WebviewIpcMessageType.didChangeData,
-			body: {
-				type: this.type,
-				payload: this._event.streams
-			}
-		};
+		this._event.data.push(...e._event.data);
 	}
 }
 
-export class StreamsMembershipChangedEvent {
+export class StreamsMembershipChangedEvent
+	implements MergeableEvent<StreamsMembershipChangedEvent> {
 	readonly type = SessionChangedEventType.StreamsMembership;
 
 	constructor(
@@ -186,73 +115,26 @@ export class StreamsMembershipChangedEvent {
 		private readonly _streams: { id: string; teamId: string }[]
 	) {}
 
-	get count() {
-		return this._streams.length;
-	}
-
-	affects(id: string, type: "entity" | "team"): boolean {
-		return affects(this._streams, id, type);
-	}
-
 	merge(e: StreamsMembershipChangedEvent) {
 		this._streams.push(...e._streams);
 	}
 }
 
-export class TeamsChangedEvent {
+export class TeamsChangedEvent extends SessionChangedEventBase<TeamsChangedNotification>
+	implements MergeableEvent<TeamsChangedEvent> {
 	readonly type = SessionChangedEventType.Teams;
 
-	constructor(
-		public readonly session: CodeStreamSession,
-		private readonly _event: TeamsChangedNotification
-	) {}
-
-	get count() {
-		return this._event.teams.length;
-	}
-
-	affects(id: string) {
-		return affects(this._event.teams, id, "entity");
-	}
-
-	@memoize
-	items(): Team[] {
-		return this._event.teams.map(t => new Team(this.session, t));
-	}
-
 	merge(e: TeamsChangedEvent) {
-		this._event.teams.push(...e._event.teams);
-	}
-
-	@memoize
-	toIpcMessage(): WebviewIpcMessage {
-		return {
-			type: WebviewIpcMessageType.didChangeData,
-			body: {
-				type: this.type,
-				payload: this._event.teams
-			}
-		};
+		this._event.data.push(...e._event.data);
 	}
 }
 
-export class UnreadsChangedEvent {
+export class UnreadsChangedEvent extends SessionChangedEventBase<UnreadsChangedNotification> {
 	readonly type = SessionChangedEventType.Unreads;
 
-	constructor(
-		public readonly session: CodeStreamSession,
-		private readonly _unreads: {
-			unread: { [key: string]: number };
-			mentions: { [key: string]: number };
-		}
-	) {}
-
 	@memoize
-	unreads(): Unreads {
-		return {
-			mentions: Object.values(this._unreads.mentions).reduce((total, count) => total + count, 0),
-			messages: Object.values(this._unreads.unread).reduce((total, count) => total + count, 0)
-		};
+	unreads(): CSUnreads {
+		return this._event.data;
 	}
 
 	@memoize
@@ -260,45 +142,17 @@ export class UnreadsChangedEvent {
 		// TODO: Change this payload to match the other `codestream:data` events
 		return {
 			type: WebviewIpcMessageType.didChangeUnreads,
-			body: this._unreads
+			body: this._event.data
 		};
 	}
 }
 
-export class UsersChangedEvent {
+export class UsersChangedEvent extends SessionChangedEventBase<UsersChangedNotification>
+	implements MergeableEvent<UsersChangedEvent> {
 	readonly type = SessionChangedEventType.Users;
 
-	constructor(
-		public readonly session: CodeStreamSession,
-		private readonly _event: UsersChangedNotification
-	) {}
-
-	get count() {
-		return this._event.users.length;
-	}
-
-	affects(id: string, type: "entity" | "team") {
-		return affects(this._event.users, id, type);
-	}
-
-	@memoize
-	items(): User[] {
-		return this._event.users.map(u => new User(this.session, u));
-	}
-
 	merge(e: UsersChangedEvent) {
-		this._event.users.push(...e._event.users);
-	}
-
-	@memoize
-	toIpcMessage(): WebviewIpcMessage {
-		return {
-			type: WebviewIpcMessageType.didChangeData,
-			body: {
-				type: this.type,
-				payload: this._event.users
-			}
-		};
+		this._event.data.push(...e._event.data);
 	}
 }
 
