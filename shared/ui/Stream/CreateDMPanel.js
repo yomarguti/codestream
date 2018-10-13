@@ -98,7 +98,7 @@ export class SimpleCreateDMPanel extends Component {
 					</div>
 					<ul onClick={this.handleClickSelectStream}>
 						{this.props.directMessageStreams.map(stream => {
-							let count = this.props.umis.unread[stream.id] || 0;
+							let count = this.props.umis.unreads[stream.id] || 0;
 							// let mentions = this.props.umis.mentions[stream.id] || 0;
 							return (
 								<li

@@ -152,7 +152,7 @@ export class SimpleStream extends Component {
 			// this gets called pretty often, so only ping the API
 			// server if there is an actual change
 			if (
-				this.props.umis.unread[this.props.postStreamId] > 0 ||
+				this.props.umis.unreads[this.props.postStreamId] > 0 ||
 				this.props.umis.mentions[this.props.postStreamId] > 0
 			) {
 				// console.log("Marking within check. StreamID: ", this.props.postStreamId);
@@ -1438,9 +1438,9 @@ const mapStateToProps = ({
 		initialThreadId: startupProps.threadId,
 		umis: {
 			...umis,
-			totalUnread: Object.values(_.omit(umis.unread, postStream.id)).reduce(sum, 0),
+			totalUnread: Object.values(_.omit(umis.unreads, postStream.id)).reduce(sum, 0),
 			totalMentions: Object.values(_.omit(umis.mentions, postStream.id)).reduce(sum, 0)
-			// totalUnread: Object.values(umis.unread).reduce(sum, 0),
+			// totalUnread: Object.values(umis.unreads).reduce(sum, 0),
 			// totalMentions: Object.values(umis.mentions).reduce(sum, 0)
 		},
 		configs,

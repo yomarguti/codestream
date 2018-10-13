@@ -150,7 +150,7 @@ export class SimpleChannelPanel extends Component {
 			) : (
 				<span className="icon hash">#</span>
 			);
-			let count = this.props.umis.unread[stream.id] || 0;
+			let count = this.props.umis.unreads[stream.id] || 0;
 			if (this.props.mutedStreams[stream.id]) count = 0;
 			let mentions = this.props.umis.mentions[stream.id] || 0;
 			let menuActive = this.state.openMenu === stream.id;
@@ -191,7 +191,7 @@ export class SimpleChannelPanel extends Component {
 	renderDirectMessages = () => {
 		let unsortedStreams = this.props.directMessageStreams
 			.map(stream => {
-				let count = this.props.umis.unread[stream.id] || 0;
+				let count = this.props.umis.unreads[stream.id] || 0;
 				// let mentions = this.props.umis.mentions[stream.id] || 0;
 				if (this.props.mutedStreams[stream.id]) {
 					// if you have muted a stream, check to see if there is a UMI.

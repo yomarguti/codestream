@@ -1,14 +1,14 @@
 import { toMapBy } from "./utils";
 import _ from "underscore";
 
-const initialState = { lastReads: {}, mentions: {}, unread: {} };
+const initialState = { lastReads: {}, mentions: {}, unreads: {} };
 
 function getSum(total, num) {
 	return total + Math.round(num);
 }
 
 function calcTotals(state) {
-	state.totalUnread = Object.values(state.unread).reduce(getSum, 0);
+	state.totalUnread = Object.values(state.unreads).reduce(getSum, 0);
 	state.totalMentions = Object.values(state.mentions).reduce(getSum, 0);
 	return state;
 }
@@ -22,7 +22,7 @@ export default (state = initialState, { type, payload }) => {
 		case "INCREMENT_UMI": {
 			// console.log("incrementint umis in the reducer: ", payload);
 			let nextState = { ...state };
-			nextState.unread[payload] = (nextState.unread[payload] || 0) + 1;
+			nextState.unreads[payload] = (nextState.unreads[payload] || 0) + 1;
 			// console.log("STATE IS: ", nextState);
 			return calcTotals(nextState);
 		}
@@ -31,7 +31,7 @@ export default (state = initialState, { type, payload }) => {
 			// payload is a streamId
 			let nextState = { ...state };
 			nextState.mentions[payload] = (nextState.mentions[payload] || 0) + 1;
-			nextState.unread[payload] = (nextState.unread[payload] || 0) + 1;
+			nextState.unreads[payload] = (nextState.unreads[payload] || 0) + 1;
 			return calcTotals(nextState);
 		}
 		case "CLEAR_UMI": {
@@ -41,7 +41,7 @@ export default (state = initialState, { type, payload }) => {
 			// so that when we loop through the keys we can
 			// still reference the fact that this div needs to be cleared
 			if (nextState.mentions[payload]) nextState.mentions[payload] = 0;
-			if (nextState.unread[payload]) nextState.unread[payload] = 0;
+			if (nextState.unreads[payload]) nextState.unreads[payload] = 0;
 			return calcTotals(nextState);
 		}
 		case "SET_UMI": {
