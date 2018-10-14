@@ -84,8 +84,6 @@ export default (state = initialState, { type, payload }) => {
 	}
 };
 
-// If stream for a pending post is created, the pending post will be lost (not displayed)
-// TODO: reconcile pending posts for a file with stream when the stream is created
 export const getPostsForStream = ({ byStream, pending }, streamId) => {
 	if (!streamId) return [];
 	const pendingForStream = pending.filter(it => {

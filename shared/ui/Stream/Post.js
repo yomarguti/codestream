@@ -1,9 +1,8 @@
-import React, { Component } from "react";
+import React from "react";
 import * as Path from "path";
 import { connect } from "react-redux";
 import { injectIntl } from "react-intl";
 import createClassString from "classnames";
-import { isEqual } from "underscore";
 import Headshot from "./Headshot";
 import Icon from "./Icon";
 import Timestamp from "./Timestamp";
@@ -25,11 +24,6 @@ import { safe } from "../utils";
 
 let renderCount = 0;
 class Post extends React.Component {
-	static defaultProps = {
-		onNeedsResize: () => {},
-		focusOnRow: () => {},
-		onRowDidResize: () => {}
-	};
 	state = {
 		emojiOpen: false,
 		emojiTarget: null,
@@ -58,22 +52,9 @@ class Post extends React.Component {
 	}
 
 	componentDidUpdate(prevProps, _prevState) {
-		if (!safe(() => prevProps.post.id === this.props.post.id)) return;
-
-		const editStateToggledOff = !this.props.editing && prevProps.editing;
-		const postContentChanged = this.props.post.text !== prevProps.post.text;
-		if (
-			postContentChanged ||
-			editStateToggledOff ||
-			!isEqual(prevProps.post.reactions, this.props.post.reactions)
-		) {
-			this.props.onNeedsResize(this.props.index);
-		}
-
 		const editStateToggledOn = this.props.editing && !prevProps.editing;
 		if (editStateToggledOn) {
-			this.props.onRowDidResize(this.props.index);
-			requestAnimationFrame(() => document.getElementById(this.getEditInputId()).focus());
+			document.getElementById(this.getEditInputId()).focus();
 		}
 
 		if (!prevProps.didTriggerThread && this.props.didTriggerThread) {

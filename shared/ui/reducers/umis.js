@@ -16,7 +16,7 @@ function calcTotals(state) {
 export default (state = initialState, { type, payload }) => {
 	switch (type) {
 		case "UPDATE_UNREADS": {
-			return payload;
+			return { ...state, ...payload };
 		}
 		// ---- LEGACY: these will be removed once atom is no longer using them
 		case "INCREMENT_UMI": {

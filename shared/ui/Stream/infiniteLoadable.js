@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 import { isEqual } from "underscore";
 import { getPostsForStream } from "../reducers/posts";
 import { fetchPosts, fetchThread } from "./actions";
-import { safe, debounceToAnimationFrame } from "../utils";
+import { safe } from "../utils";
 
 const mapStateToProps = (state, props) => {
 	const { streamId, isThread, threadId } = props.childProps;
@@ -83,10 +83,8 @@ export default Child => {
 				}
 			}
 
-			onSectionRendered = debounceToAnimationFrame(data => {
-				this.lastRenderedRowsData = data;
-
-				if (!this.props.childProps.threadId && this.state.hasMore && data.startIndex === 0) {
+			onDidScrollToTop = () => {
+				if (!this.props.childProps.threadId && this.state.hasMore) {
 					const { posts } = this.state;
 					const earliestLocalSeqNum = safe(() => posts[0].seqNum);
 					if (earliestLocalSeqNum && earliestLocalSeqNum > 1) {
@@ -95,7 +93,7 @@ export default Child => {
 						this.setState({ hasMore: false });
 					}
 				}
-			});
+			};
 
 			loadMore = async seqNum => {
 				if (!this.state.isInitialized || this.state.isFetching) {
@@ -112,17 +110,14 @@ export default Child => {
 					limit: batchCount,
 					beforeSeqNum: seqNum
 				});
-				this.setState({ hasMore: posts.length === batchCount });
 
 				this.onScrollStop(() => {
-					this.setState({ posts: this.props.posts, isFetching: false });
+					this.setState({
+						posts: this.props.posts,
+						isFetching: false,
+						hasMore: posts.length === batchCount
+					});
 				});
-			};
-
-			register = (postList, list, cache) => {
-				this.postList = postList;
-				this.list = list;
-				this.cache = cache;
 			};
 
 			scrollTimeout = null;
@@ -135,9 +130,7 @@ export default Child => {
 				}
 			};
 
-			// debounce scroll events to determine when it ends
-			onScroll = data => {
-				this.lastScrollData = data;
+			onScroll = () => {
 				if (this.scrollTimeout) {
 					clearTimeout(this.scrollTimeout);
 				}
@@ -169,11 +162,10 @@ export default Child => {
 						{...{
 							ref: forwardedRef,
 							posts: this.state.posts,
-							onSectionRendered: this.onSectionRendered,
+							onDidScrollToTop: this.onDidScrollToTop,
 							register: this.register,
 							onScroll: this.onScroll,
 							isFetchingMore: this.state.isFetching,
-							scrollProps: this.state.scrollProps,
 							hasMore: this.state.hasMore
 						}}
 					/>

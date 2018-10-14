@@ -21,8 +21,8 @@ import * as actions from "./actions";
 import { safe, toMapBy } from "../utils";
 import { slashCommands } from "./SlashCommands";
 import { confirmPopup } from "./Confirm";
+import { getPostsForStream } from "../reducers/posts";
 import {
-	getPostsForStream,
 	getStreamForId,
 	getStreamForTeam,
 	getStreamForRepoAndFile,
@@ -137,45 +137,23 @@ export class SimpleStream extends Component {
 		event.abortKeyBinding();
 	}
 
-	checkMarkStreamRead() {
-		// if we have focus, and there are no unread indicators which would mean an
-		// unread is out of view, we assume the entire thread has been observed
-		// and we mark the stream read
-		// console.log("checkMarkStreamRead");
-
+	checkMarkStreamRead = postId => {
+		// this gets called pretty often, so only ping the API
+		// server if there is an actual change
 		if (
-			this.props.hasFocus &&
-			this.props.activePanel === "main" &&
-			!this.state.unreadsAbove &&
-			!this.state.unreadsBelow
+			this.props.umis.unreads[this.props.postStreamId] > 0 ||
+			this.props.umis.mentions[this.props.postStreamId] > 0
 		) {
-			// this gets called pretty often, so only ping the API
-			// server if there is an actual change
-			if (
-				this.props.umis.unreads[this.props.postStreamId] > 0 ||
-				this.props.umis.mentions[this.props.postStreamId] > 0
-			) {
-				// console.log("Marking within check. StreamID: ", this.props.postStreamId);
-				this.props.markStreamRead(
-					this.props.postStreamId,
-					safe(() => this.props.posts[this.props.posts.length - 1].id)
-				);
-			}
+			// console.log("Marking within check. StreamID: ", this.props.postStreamId);
+			this.props.markStreamRead(this.props.postStreamId, postId);
 		}
-	}
+	};
 
 	componentDidUpdate(prevProps, prevState) {
-		const { activePanel, postStreamId } = this.props;
-
-		// if we just switched to a new stream, check to see if we are up-to-date
-		if (activePanel === "main" && postStreamId && postStreamId !== prevProps.postStreamId) {
-			this.checkMarkStreamRead();
-			this.resizeStream();
-		}
+		const { postStreamId } = this.props;
 
 		// if we are switching from a non-main panel
 		if (this.props.activePanel === "main" && prevProps.activePanel !== "main") {
-			this.checkMarkStreamRead();
 			this.focusInput();
 		}
 
@@ -192,22 +170,20 @@ export class SimpleStream extends Component {
 			this.setUmiInfo();
 		} else {
 			if (prevProps.umis.lastReads[postStreamId] !== this.props.umis.lastReads[postStreamId])
-				this.setUmiInfo();
+				this.setUmiInfo(this.props.hasFocus ? false : true);
 		}
 		if (this.props.activePanel !== prevProps.activePanel && this.state.editingPostId)
 			this.handleDismissEdit();
 	}
 
-	setUmiInfo() {
+	setUmiInfo(updateLine = true) {
 		const { postStreamId, umis } = this.props;
-		// keep track of the new message indicator in instance variable instead of looking
-		// directly at currentUser.lastReads, because that will change and trigger
-		// a re-render, which would remove the "new messages" line
-		this.newMessagesAfterSeqNum = umis.lastReads[postStreamId];
-		console.log("SETTING newMessagesAfterSeqNum to ", this.newMessagesAfterSeqNum);
-		this.setState({
-			lastReadSeqNum: this.newMessagesAfterSeqNum
-		});
+		const lastReadSeqNum = umis.lastReads[postStreamId];
+		const nextState = { lastReadSeqNum };
+		if (updateLine) {
+			nextState.newMessagesAfterSeqNum = lastReadSeqNum;
+		}
+		this.setState(nextState);
 	}
 
 	setPostsListRef = element => {
@@ -490,13 +466,12 @@ export class SimpleStream extends Component {
 							<div className="shadow shadow-top" />
 							<div className="shadow shadow-bottom" />
 						</div>
-						<div className={postsListClass} onClick={this.handleClickPost} id={streamDivId}>
+						<div style={{ height: "100%" }} onClick={this.handleClickPost} id={streamDivId}>
 							<PostList
-								id={`posts-list-${this.props.postStreamId}`}
 								ref={this.setPostsListRef}
 								isActive={this.props.activePanel === "main"}
 								hasFocus={this.props.hasFocus}
-								newMessagesAfterSeqNum={this.newMessagesAfterSeqNum}
+								newMessagesAfterSeqNum={this.state.newMessagesAfterSeqNum}
 								lastReadSeqNum={this.state.lastReadSeqNum}
 								usernamesRegexp={this.props.usernamesRegexp}
 								currentUserId={this.props.currentUserId}
@@ -506,6 +481,7 @@ export class SimpleStream extends Component {
 								onDidChangeVisiblePosts={this.handleDidChangeVisiblePosts}
 								streamId={this.props.postStreamId}
 								teamId={this.props.teamId}
+								markRead={this.checkMarkStreamRead}
 								renderIntro={() => (
 									<div className="intro" ref={ref => (this._intro = ref)}>
 										{this.renderIntro(
@@ -543,9 +519,8 @@ export class SimpleStream extends Component {
 							<div className="shadow shadow-bottom" />
 						</div>
 						<div className={threadPostsListClass} onClick={this.handleClickPost}>
-							{/* <div className="shadow-cover-top" /> */}
+							<div className="shadow-cover-top" />
 							<PostList
-								id={`posts-list-${threadId}`}
 								ref={this.setThreadListRef}
 								isActive={this.props.activePanel === "thread"}
 								hasFocus={this.props.hasFocus}
@@ -560,7 +535,7 @@ export class SimpleStream extends Component {
 								threadTrigger={this.state.threadTrigger}
 								teamId={this.props.teamId}
 							/>
-							{/* <div className="shadow-cover-bottom" /> */}
+							<div className="shadow-cover-bottom" />
 						</div>
 					</div>
 				</div>
@@ -617,10 +592,10 @@ export class SimpleStream extends Component {
 		if (activePanel === "main") {
 			list = this._postslist;
 		}
-		const { post, index } = list.getUsersMostRecentPost();
+		const post = list.getUsersMostRecentPost();
 		if (post)
 			this.setState({ editingPostId: post.id }, () => {
-				list.scrollTo(index);
+				list.scrollTo(post.id);
 			});
 	};
 
@@ -641,12 +616,13 @@ export class SimpleStream extends Component {
 	handleDidChangeVisiblePosts = data => {
 		const { unreadsAbove, unreadsBelow } = this.state;
 		if (unreadsAbove !== data.unreadsAbove || unreadsBelow !== data.unreadsBelow) {
-			this.setState(data, this.checkMarkStreamRead);
+			this.setState(data);
 		}
 	};
 
 	handleClickUnreads = event => {
-		this._postslist.scrollToUnread(event.target.getAttribute("type"));
+		event.preventDefault();
+		this._postslist.scrollToUnread();
 	};
 
 	// dismiss the thread stream and return to the main stream
@@ -1290,7 +1266,7 @@ export class SimpleStream extends Component {
 			createPost(postStreamId, threadId, text, codeBlocks, mentionedUserIds, {
 				autoMentions,
 				fileUri
-			}).then(() => safe(() => this._postslist.scrollToBottom()));
+			}).then(this._postslist.onPostSubmitted);
 
 		if (quote) {
 			fileUri = quote.fileUri;

@@ -387,7 +387,6 @@ const mapStateToProps = ({ context, streams, users, teams, umis, session }) => {
 	// get a list of the users i have 1:1 streams with
 	const oneOnOnePeople = directMessageStreams
 		.map(stream => {
-			console.log(stream.memberIds);
 			const notMe = _.without(stream.memberIds || [], session.userId);
 			if (notMe.length === 1) return notMe[0];
 

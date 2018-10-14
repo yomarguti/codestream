@@ -26,6 +26,23 @@ export const debounceToAnimationFrame = fn => {
 	};
 };
 
+export const rAFThrottle = fn => {
+	let requestId;
+	let lastArgs = [];
+
+	return function(...args) {
+		lastArgs = args;
+		if (requestId) {
+			console.debug(`rAFThrottle is throttling a call to ${fn}. new args are`, args);
+			return;
+		}
+		requestId = requestAnimationFrame(() => {
+			requestId = undefined;
+			fn(...lastArgs);
+		});
+	};
+};
+
 export const toMapBy = (key, entities) =>
 	entities.reduce((result, entity) => ({ ...result, [entity[key]]: entity }), {});
 

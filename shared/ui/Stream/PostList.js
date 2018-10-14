@@ -1,10 +1,9 @@
 import * as React from "react";
-import { AutoSizer, CellMeasurer, CellMeasurerCache, List } from "react-virtualized";
-import { isNumber } from "underscore";
+import { debounce, isNumber } from "underscore";
 import DateSeparator from "./DateSeparator";
 import Post from "./Post";
 import infiniteLoadable from "./infiniteLoadable";
-import { debounceToAnimationFrame, safe } from "../utils";
+import { rAFThrottle, safe } from "../utils";
 
 const noop = () => {};
 export default infiniteLoadable(
@@ -12,64 +11,67 @@ export default infiniteLoadable(
 		static defaultProps = {
 			onDidChangeVisiblePosts: noop
 		};
-		list = null;
-		cache = new CellMeasurerCache({
-			defaultHeight: 60, // TODO: still play around with this to find a better estimate maybe?
-			fixedWidth: true
-		});
-		seenPosts = new Set();
+		list = React.createRef();
+		showUnreadBanner = true;
 		scrolledOffBottom = false;
-
-		constructor(props) {
-			super(props);
-			this.state = {
-				shouldScrollTo: false
-			};
-		}
+		state = {};
 
 		async componentDidMount() {
 			this.scrollToBottom();
+			this.markAsRead();
 		}
 
-		componentDidUpdate(prevProps, _prevState) {
+		getSnapshotBeforeUpdate(prevProps, _prevState) {
+			if (prevProps.isFetchingMore && !this.props.isFetchingMore) {
+				const $list = this.list.current;
+				return $list.scrollHeight - $list.scrollTop;
+			}
+			return null;
+		}
+
+		componentDidUpdate(prevProps, _prevState, snapshot) {
+			if (snapshot) this.list.current.scrollTop = this.list.current.scrollHeight - snapshot;
+
 			const prevPosts = prevProps.posts;
-			const { lastReadSeqNum, posts } = this.props;
+			const { posts } = this.props;
 
-			const streamChanged = prevProps.streamId !== this.props.streamId;
-			const threadChanged =
-				prevProps.isThread && this.props.isThread && prevProps.threadId !== this.props.threadId;
-			if (streamChanged || threadChanged) {
-				this.cache.clearAll();
-				safe(() => this.list.recomputeRowHeights());
+			const streamChanged = this.props.streamId && prevProps.streamId !== this.props.streamId;
+			const wasToggled =
+				prevProps.isActive !== this.props.isActive || prevProps.hasFocus !== this.props.hasFocus;
+			if (streamChanged) {
+				this.scrollToBottom();
+				this.resetUnreadBanner();
 			}
-			if (streamChanged) this.scrollToBottom();
+			if (prevProps.isActive && !this.props.isActive) {
+				this.showUnreadBanner = false;
+				this.findFirstUnread(this.list.current);
+			}
+			if (streamChanged || wasToggled) {
+				this.markAsRead();
+			}
 			if (!streamChanged && prevPosts.length !== posts.length) {
-				if (prevProps.isFetchingMore && !this.props.isFetchingMore) {
-					this.cache.clearAll();
-					this.list.recomputeRowHeights();
-					this.maintainScroll(this.props.posts.length - prevPosts.length);
-				}
-				if (prevPosts.length === 0 || !this.scrolledOffBottom) {
-					// FIXME only scroll to the first unread message
+				if (!this.scrolledOffBottom) {
+					this.markAsRead();
+					// TODO: only scroll to the first unread message
 					this.scrollToBottom();
+					this.resetUnreadBanner();
 				}
 			}
 
-			if (prevProps.hasMore && !this.props.hasMore) {
-				this.cache.clearAll();
-				this.list.recomputeRowHeights();
-			}
-
-			const unreadsChanged = prevProps.lastReadSeqNum !== lastReadSeqNum;
-			if (unreadsChanged) this.seenPosts.clear();
 			if (
-				unreadsChanged ||
-				(!prevProps.hasFocus && this.props.hasFocus) ||
-				this.scrolledOffBottom // is this still necessary
+				!streamChanged &&
+				prevProps.newMessagesAfterSeqNum !== this.props.newMessagesAfterSeqNum
 			) {
-				if (this.lastRenderedRowsData) this.onRowsRendered(this.lastRenderedRowsData);
+				this.resetUnreadBanner();
 			}
 		}
+
+		markAsRead = () => {
+			if (this.props.isThread) return;
+
+			const { hasFocus, isActive, posts } = this.props;
+			if (hasFocus && isActive && posts.length > 0) this.props.markRead(posts[posts.length - 1].id);
+		};
 
 		resize = () => {
 			requestAnimationFrame(() => {
@@ -79,206 +81,112 @@ export default infiniteLoadable(
 			});
 		};
 
-		maintainScroll = scrollTo => {
-			this.setState(
-				{
-					scrollProps: {
-						scrollToIndex: scrollTo,
-						scrollToAlignment: "start"
-					}
-				},
-				() => this.setState({ scrollProps: null })
-			);
-		};
 		scrollToBottom = () => {
-			requestAnimationFrame(() => {
-				this.setState(
-					state => {
-						if (!state.shouldScrollTo)
-							return {
-								shouldScrollTo: this.props.posts.length
-							};
-						return null;
-					},
-					() => {
-						requestAnimationFrame(() => this.setState({ shouldScrollTo: null }));
-					}
-				);
-			});
+			if (this.list.current) {
+				this.list.current.scrollTop = 100000;
+			}
 		};
 
-		scrollToUnread = location => {
-			if (location === "above") {
-				const unreadIndex = this.props.posts.findIndex(
-					(post, i, posts) => (i > 0 ? posts[i - 1].seqNum === this.props.lastReadSeqNum : false)
-				);
-				if (unreadIndex > -1) this.list.scrollToRow(this.listIndexToPostIndex(unreadIndex));
-				// else this.scrollToBottom(); // TODO: get the newPostIndicator when switching streams
-			} else this.scrollToBottom();
+		scrollToUnread = () => {
+			const $firstUnreadPost = this.list.current
+				.getElementsByClassName("post new-separator")
+				.item(0);
+			$firstUnreadPost && $firstUnreadPost.scrollIntoView({ behavior: "smooth" });
 		};
 
-		scrollTo = index => this.list.scrollToRow(this.listIndexToPostIndex(index));
+		onPostSubmitted = () => {
+			this.scrollToBottom();
+			if (this.showUnreadBanner) {
+				// need to wait till scroll ends
+				// create `onScrollStop`?
+				setTimeout(() => {
+					this.showUnreadBanner = false;
+					this.findFirstUnread(this.list.current);
+				}, 1000);
+			}
+		};
 
 		getUsersMostRecentPost = () => {
 			const { editingPostId, posts } = this.props;
-			const { overscanStartIndex, stopIndex } = this.lastRenderedRowsData;
-			const beginSearchIndex = this.listIndexToPostIndex(editingPostId ? stopIndex : posts.length);
-
-			const editingPostIndex = posts.findIndex(post => post.id === editingPostId);
-			for (
-				let index = beginSearchIndex;
-				index >= this.listIndexToPostIndex(overscanStartIndex);
-				index--
-			) {
+			const editingPostIndex = editingPostId && posts.findIndex(post => post.id === editingPostId);
+			const beginSearchIndex = editingPostIndex || posts.length - 1;
+			for (let index = beginSearchIndex; index >= 0; index--) {
 				const post = posts[index];
-				if (editingPostIndex > -1 && index >= editingPostIndex) continue;
+				if (editingPostIndex && index >= editingPostIndex) continue;
 				if (post.creatorId === this.props.currentUserId) {
-					return { post, index };
+					return post;
 				}
 			}
-			return {};
 		};
 
-		setRef = element => {
-			this.props.register(this, element, this.cache);
-			this.list = element;
-		};
-
-		onNeedsResize = index => {
-			this.recomputeHeight(index);
-			// if bottom-most post, scroll it all into view
-			if (index === this.props.posts.length) this.scrollToBottom();
-		};
-
-		recomputeHeight = index => {
-			this.cache.clear(index);
-			this.list.recomputeRowHeights(index);
-		};
-
-		focusOnRow = index => {
-			const { startIndex, stopIndex } = this.lastRenderedRowsData;
-			if (index <= startIndex || index >= stopIndex) this.list.scrollToRow(index);
-		};
-
-		onRowDidResize = index => {
-			this.recomputeHeight(index);
-		};
-
-		onScroll = data => {
-			const { clientHeight, scrollHeight, scrollTop } = data;
-			this.props.onScroll(data);
-			let scrolledOffBottom;
-			const lastRowHeight = this.cache.getHeight(this.props.posts.length);
-			const scrollOffset = scrollHeight - clientHeight - scrollTop;
-
-			if (scrollOffset <= lastRowHeight) {
-				scrolledOffBottom = false;
+		scrollTo = id => {
+			const { posts } = this.props;
+			if (id === posts[posts.length - 1].id) {
+				this.scrollToBottom();
 			} else {
-				scrolledOffBottom = true;
+				this.list.current
+					.getElementsByClassName("post")
+					.namedItem(id)
+					.scrollIntoView({ behavior: "smooth" });
 			}
-
-			this.scrolledOffBottom = scrolledOffBottom;
-			return null;
 		};
 
-		// TODO: still necessary?
-		recomputeVisibleRowHeights = debounceToAnimationFrame((start, stop) => {
-			this.cache.clearAll();
-			this.list.recomputeRowHeights();
-			// for (let i = start; i < stop; i++) {
-			// 	this.cache.clear(i);
-			// 	safe(() => this.list.recomputeRowHeights(i));
-			// }
+		handleScroll = rAFThrottle(target => {
+			const { clientHeight, scrollTop } = target;
+			if (scrollTop === 0) this.props.onDidScrollToTop();
+
+			const $posts = target.getElementsByClassName("post");
+			const lastPostPosition = $posts[$posts.length - 1].getBoundingClientRect().y;
+
+			if (lastPostPosition >= clientHeight) {
+				this.scrolledOffBottom = true;
+			} else {
+				this.scrolledOffBottom = false;
+			}
 		});
 
-		onRowsRendered = data => {
-			this.lastRenderedRowsData = data;
-
-			const {
-				lastReadSeqNum,
-				hasFocus,
-				onDidChangeVisiblePosts,
-				onSectionRendered,
-				posts
-			} = this.props;
-
-			onSectionRendered(data);
-			const startIndex = data.startIndex === 0 ? 1 : this.listIndexToPostIndex(data.startIndex);
-			const stopIndex = this.listIndexToPostIndex(data.stopIndex);
-
-			if (!isNumber(lastReadSeqNum)) {
-				return onDidChangeVisiblePosts({ unreadsAbove, unreadsBelow });
+		onScroll = event => {
+			if (!this.props.isThread) {
+				this.props.onScroll();
+				this.handleScroll(event.target);
+				this.findFirstUnread(event.target);
 			}
+		};
 
-			const firstUnreadPost = posts.find((post, i) => {
-				return safe(() => Number(posts[i - 1].seqNum)) === lastReadSeqNum;
-			});
-			if (!firstUnreadPost) return;
-
-			const firstUnreadPostSeqNum = Number(firstUnreadPost.seqNum);
+		findFirstUnread = rAFThrottle($list => {
+			const { newMessagesAfterSeqNum, onDidChangeVisiblePosts } = this.props;
 
 			let unreadsAbove = false;
 			let unreadsBelow = false;
 
-			const visibleSeqNums = posts.slice(startIndex, stopIndex + 1).map(p => Number(p.seqNum));
-
-			// consider visible posts seen
-			if (hasFocus) {
-				visibleSeqNums.forEach(seqNum => {
-					if (seqNum >= firstUnreadPostSeqNum) {
-						this.seenPosts.add(seqNum);
-					}
-				});
+			if (!this.showUnreadBanner || !isNumber(newMessagesAfterSeqNum)) {
+				return onDidChangeVisiblePosts({ unreadsAbove, unreadsBelow });
 			}
 
-			// check whether there are unreads below the last visible post
-			if (this.scrolledOffBottom) {
-				let indexOfFirstUnread = visibleSeqNums.indexOf(firstUnreadPostSeqNum);
-				if (indexOfFirstUnread > -1 && indexOfFirstUnread > posts.length) {
-					// if first unread is visible and there are unseen unreads below, end here
-					unreadsBelow = posts.slice(startIndex + indexOfFirstUnread).some(post => {
-						if (!this.seenPosts.has(post.seqNum)) {
-							return true;
-						}
-					});
-					return onDidChangeVisiblePosts({ unreadsAbove, unreadsBelow });
-				} else {
-					// first unread is not in sight so look for unseen unreads below
-					if (visibleSeqNums[visibleSeqNums.length - 1] < Number(posts[posts.length - 1].seqNum)) {
-						for (let i = stopIndex; i < posts.length; i++) {
-							const post = posts[i];
-							if (!this.seenPosts.has(Number(post.seqNum))) {
-								unreadsBelow = true;
-								break;
-							}
-						}
-					}
-				}
+			let $firstUnreadPost = $list.getElementsByClassName("post new-separator").item(0);
+			if (!$firstUnreadPost) return onDidChangeVisiblePosts({ unreadsAbove, unreadsBelow });
+			const postDimensions = $firstUnreadPost.getBoundingClientRect();
+
+			if (postDimensions.top < $list.getBoundingClientRect().top) {
+				unreadsAbove = true;
+			} else if (
+				this.scrolledOffBottom &&
+				postDimensions.top > $list.getBoundingClientRect().bottom
+			) {
+				unreadsBelow = true;
 			}
+			onDidChangeVisiblePosts({ unreadsBelow, unreadsAbove });
+			if (!(unreadsAbove || unreadsBelow)) this.showUnreadBanner = false;
+		});
 
-			// if what is visible is below the first unread, check for unseen unreads above
-			if (visibleSeqNums[0] > firstUnreadPostSeqNum) {
-				for (let i = startIndex - 1; i >= 0; i--) {
-					const post = posts[i];
-					if (!this.seenPosts.has(Number(post.seqNum))) {
-						unreadsAbove = true;
-						break;
-					}
-				}
-			}
-
-			onDidChangeVisiblePosts({ unreadsAbove, unreadsBelow });
-		};
-
-		// the first item is reserverd for an intro/loading indicator
-		listIndexToPostIndex = index => {
-			return index - 1;
-		};
+		resetUnreadBanner = debounce(() => {
+			this.showUnreadBanner = true;
+			if (!this.props.isThread) this.findFirstUnread(this.list.current);
+		}, 1000);
 
 		render() {
 			const {
 				editingPostId,
-				id,
 				isActive,
 				newMessagesAfterSeqNum,
 				postAction,
@@ -288,128 +196,51 @@ export default infiniteLoadable(
 				hasMore
 			} = this.props;
 
-			let listProps = {};
-			// scrollToIndex is easier than `this.list.scrollToPosition` because we don't have to recalc the scrollTop
-			if (this.state.shouldScrollTo) {
-				listProps.scrollToIndex = this.state.shouldScrollTo;
-			}
-			if (this.state.scrollProps) listProps = this.state.scrollProps;
-
-			console.debug("PostList.render", { props: this.props, state: this.state, listProps });
+			console.debug("PostList.render", { props: this.props, state: this.state });
 
 			return (
-				<AutoSizer>
-					{({ height, width }) => {
-						this.maxHeight = height;
-						const listStyle = {};
-						let introHeight = 0;
-						if (isFetchingMore || hasMore) introHeight = this.cache.defaultHeight;
-						else if (renderIntro) {
-							const heightForPosts = posts.length * this.cache.defaultHeight;
-							if (heightForPosts > 0 && heightForPosts < height / 2) {
-								introHeight = height - heightForPosts / 2;
-								listStyle.paddingTop = height - heightForPosts - introHeight;
-							} else introHeight = 300;
-						}
+				<div className="postslist" ref={this.list} onScroll={this.onScroll}>
+					{hasMore || isFetchingMore ? (
+						<div style={{ textAlign: "center" }}>
+							<p>Loading more posts...</p>
+						</div>
+					) : (
+						safe(renderIntro)
+					)}
+					{this.props.posts.map((post, index) => {
+						// if the parent post isn't yet in local collection because it's further back, use the id
+						const parentPost =
+							post.parentPostId && post.ParentPostId !== post.id
+								? posts.find(p => p.id === post.parentPostId) || post.parentPostId
+								: null;
+
+						const hasNewMessageLine =
+							newMessagesAfterSeqNum &&
+							safe(() => Number(this.props.posts[index - 1].seqNum)) === newMessagesAfterSeqNum;
+
 						return (
-							<List
-								style={listStyle}
-								id={id}
-								ref={this.setRef}
-								height={height}
-								width={width}
-								rowHeight={({ index }) => {
-									return index === 0 ? introHeight : this.cache.rowHeight({ index });
-								}}
-								rowCount={posts.length + 1}
-								overscanRowCount={20}
-								{...listProps}
-								onScroll={this.onScroll}
-								noRowsRenderer={renderIntro}
-								onRowsRendered={this.onRowsRendered}
-								rowRenderer={data => {
-									if (data.index === 0) {
-										return (
-											<CellMeasurer
-												cache={this.cache}
-												key={data.key}
-												columnIndex={0}
-												rowIndex={data.index}
-												parent={data.parent}
-											>
-												<div style={{ ...data.style, textAlign: "center" }}>
-													{hasMore || isFetchingMore ? (
-														<div>
-															<p>Loading more posts...</p>
-														</div>
-													) : (
-														safe(renderIntro)
-													)}
-												</div>
-											</CellMeasurer>
-										);
-									}
-									const index = this.listIndexToPostIndex(data.index);
-									const post = posts[index];
-
-									// if (data.isScrolling)
-									// 	return <div style={{ ...data.style, backgroundColor: "pink", width: 30 }} />;
-
-									// if the parent post isn't yet in local collection because it's further back, use the id
-									const parentPost =
-										post.parentPostId && post.ParentPostId !== post.id
-											? posts.find(p => p.id === post.parentPostId) || post.parentPostId
-											: null;
-
-									const firstUnreadPost = this.props.posts.find((p, i, array) => {
-										return safe(() => Number(array[i - 1].seqNum) === newMessagesAfterSeqNum);
-									});
-
-									const element = (
-										<CellMeasurer
-											cache={this.cache}
-											key={data.key}
-											columnIndex={0}
-											rowIndex={data.index}
-											parent={data.parent}
-										>
-											<div style={data.style}>
-												<DateSeparator
-													timestamp1={safe(() => posts[index - 1].createdAt)}
-													timestamp2={post.createdAt}
-												/>
-												<Post
-													id={post.id}
-													usernames={this.props.usernamesRegexp}
-													currentUserId={this.props.currentUserId}
-													currentUserName={this.props.currentUserName}
-													replyingTo={!this.props.isThread && parentPost}
-													newMessageIndicator={
-														firstUnreadPost &&
-														Number(post.seqNum) === Number(firstUnreadPost.seqNum)
-													}
-													editing={isActive && post.id === editingPostId}
-													action={postAction}
-													index={data.index}
-													focusOnRow={this.focusOnRow}
-													onRowDidResize={this.onRowDidResize}
-													onNeedsResize={this.onNeedsResize}
-													showDetails={this.props.isThread}
-													streamId={this.props.streamId}
-													didTriggerThread={
-														this.props.isThread && post.id === this.props.threadTrigger
-													}
-												/>
-											</div>
-										</CellMeasurer>
-									);
-
-									return element;
-								}}
-							/>
+							<React.Fragment key={post.id}>
+								<DateSeparator
+									timestamp1={safe(() => posts[index - 1].createdAt)}
+									timestamp2={post.createdAt}
+								/>
+								<Post
+									id={post.id}
+									usernames={this.props.usernamesRegexp}
+									currentUserId={this.props.currentUserId}
+									currentUserName={this.props.currentUserName}
+									replyingTo={!this.props.isThread && parentPost}
+									newMessageIndicator={hasNewMessageLine}
+									editing={isActive && post.id === editingPostId}
+									action={postAction}
+									showDetails={this.props.isThread}
+									streamId={this.props.streamId}
+									didTriggerThread={this.props.isThread && post.id === this.props.threadTrigger}
+								/>
+							</React.Fragment>
 						);
-					}}
-				</AutoSizer>
+					})}
+				</div>
 			);
 		}
 	}
