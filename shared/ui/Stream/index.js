@@ -620,8 +620,7 @@ export class SimpleStream extends Component {
 		}
 	};
 
-	handleClickUnreads = event => {
-		event.preventDefault();
+	handleClickUnreads = _event => {
 		this._postslist.scrollToUnread();
 	};
 
