@@ -1,7 +1,8 @@
 "use strict";
 import { Emitter, Event } from "vscode-languageserver";
+import { Logger } from "../../logger";
 import { CSUnreads } from "../../shared/agent.protocol";
-import { CSLastReads, StreamType } from "../../shared/api.protocol";
+import { CSLastReads } from "../../shared/api.protocol";
 import { ApiProvider } from "../apiProvider";
 
 export class Unreads {
@@ -49,15 +50,21 @@ export class Unreads {
 	}
 
 	increment(streamId: string, mentioned: boolean) {
-		const unreads = this._unreads.get(streamId);
+		let unreads = this._unreads.get(streamId);
 		if (unreads !== undefined) {
 			unreads.unreads++;
 			if (mentioned) {
 				unreads.mentions++;
 			}
 		} else {
-			this._unreads.set(streamId, { mentions: mentioned ? 1 : 0, unreads: 1 });
+			unreads = { mentions: mentioned ? 1 : 0, unreads: 1 };
+			this._unreads.set(streamId, unreads);
 		}
+
+		Logger.debug(
+			`Unreads.increment(${streamId}):`,
+			`mentions=${unreads.mentions}, unreads=${unreads.unreads}`
+		);
 
 		this.fireChanged();
 	}
@@ -65,6 +72,11 @@ export class Unreads {
 	update(streamId: string, postId: string, mentions: number, unreads: number) {
 		this._lastReads[streamId] = postId;
 		this._unreads.set(streamId, { mentions: mentions, unreads: unreads });
+
+		Logger.debug(
+			`Unreads.update(${streamId}):`,
+			`lastRead=${postId}, mentions=${mentions}, unreads=${unreads}`
+		);
 
 		this.fireChanged();
 	}
@@ -77,7 +89,11 @@ export class Unreads {
 		}
 
 		this._dirty = false;
-		this._onDidChange.fire(this.values());
+
+		const values = this.values();
+		Logger.debug(`Unreads.changed:`, JSON.stringify(values));
+
+		this._onDidChange.fire(values);
 	}
 
 	private values(): CSUnreads {

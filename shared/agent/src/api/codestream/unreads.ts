@@ -52,7 +52,7 @@ export class Unreads {
 			await this._computePromise;
 		}
 
-		Logger.log(`Unreads.update:`, `Updating unreads for ${posts.length} posts...`);
+		Logger.debug(`Unreads.update:`, `Updating unreads for ${posts.length} posts...`);
 
 		const grouped = Arrays.groupBy(posts, p => p.streamId);
 		const streams = (await Container.instance().streams.get({
@@ -66,7 +66,7 @@ export class Unreads {
 			this._mentions[streamId] = this._mentions[streamId] || 0;
 			this._unreads[streamId] = this._unreads[streamId] || 0;
 
-			Logger.log(
+			Logger.debug(
 				`Unreads.update(${streamId}):`,
 				`Before: mentions=${this._mentions[streamId]}, unreads=${this._unreads[streamId]}`
 			);
@@ -77,14 +77,14 @@ export class Unreads {
 				this._lastReads[streamId] = posts[0].seqNum - 1;
 			}
 
-			Logger.log(
+			Logger.debug(
 				`Unreads.update(${streamId}):`,
 				`After: mentions=${this._mentions[streamId]}, unreads=${this._unreads[streamId]}`
 			);
 		}
 
 		const values = this.values();
-		Logger.log(`Unreads.update:`, `Completed; values=${JSON.stringify(values)}`);
+		Logger.debug(`Unreads.update:`, `Completed; values=${JSON.stringify(values)}`);
 
 		this._onDidChange.fire(values);
 	}
@@ -98,7 +98,7 @@ export class Unreads {
 		this._unreads = Object.create(null);
 		this._mentions = Object.create(null);
 
-		Logger.log(`Unreads.compute:`, "Computing...");
+		Logger.debug(`Unreads.compute:`, "Computing...");
 
 		const unreadStreams = (await Container.instance().streams.getUnread()).streams;
 		if (unreadStreams.length !== 0) {
@@ -140,7 +140,7 @@ export class Unreads {
 
 						this.computeForPosts(unreadPosts, this._api.userId, stream);
 
-						Logger.log(
+						Logger.debug(
 							`Unreads.compute(${streamId}):`,
 							`mentions=${this._mentions[streamId]}, unreads=${this._unreads[streamId]}`
 						);
@@ -153,7 +153,7 @@ export class Unreads {
 		this._computePromise = undefined;
 
 		const values = this.values();
-		Logger.log(`Unreads.compute:`, `Completed; values=${JSON.stringify(values)}`);
+		Logger.debug(`Unreads.compute:`, `Completed; values=${JSON.stringify(values)}`);
 
 		this._onDidChange.fire(values);
 	}

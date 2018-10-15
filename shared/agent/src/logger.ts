@@ -19,6 +19,18 @@ export class Logger {
 		this._agent = agent;
 	}
 
+	static debug(message?: any, ...params: any[]): void {
+		if (this.level !== TraceLevel.Debug) return;
+
+		// if (Logger.isDebugging) {
+		// 	console.log(this.timestamp, ConsolePrefix, message, ...params);
+		// }
+
+		if (this._agent !== undefined) {
+			this._agent.log([this.timestamp, message, ...params].join(" "));
+		}
+	}
+
 	static log(message?: any, ...params: any[]): void {
 		if (this.level !== TraceLevel.Verbose && this.level !== TraceLevel.Debug) return;
 
