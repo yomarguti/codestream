@@ -546,10 +546,10 @@ export class SlackApiProvider implements ApiProvider {
 				remotes: codeblock.remotes,
 				commitHash: request.commitHashWhenPosted,
 				code: codeblock.code,
-				location: codeblock.location
-				// type: codeblock.type,
-				// color: codeblock.color,
-				// status: codeblock.status
+				location: codeblock.location,
+				type: request.type,
+				color: request.color,
+				status: request.status
 			});
 
 			const marker = markerResponse.marker;

@@ -18,6 +18,7 @@ export interface CreatePostRequest {
 	type?: string;
 	assignees?: [];
 	color?: string;
+	status?: string;
 }
 
 export interface CreatePostInFileStreamRequest {
