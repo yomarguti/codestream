@@ -325,7 +325,7 @@ class Post extends React.Component {
 						!this.state.warning && (
 							<PostDetails post={post} currentCommit={this.props.currentCommit} />
 						)}
-					{this.renderInstructions(post)}
+					{this.renderReplyCount(post)}
 				</div>
 				{this.renderReactions(post)}
 			</div>
@@ -366,18 +366,22 @@ class Post extends React.Component {
 		return null;
 	};
 
-	renderInstructions = post => {
-		let button = null;
+	renderReplyCount = post => {
+		let message = null;
+		if (this.props.showDetails || !post.numReplies) return null;
 		switch (post.type) {
 			case "question":
-				if (this.props.showDetails) return null;
-				button = <Button className="action">Post an Answer</Button>;
+				message = post.numReplies === 1 ? "1 Answer" : `${post.numReplies} Answers`;
 				break;
-			case "trap":
+			default:
+				message = post.numReplies === 1 ? "1 Reply" : `${post.numReplies} Replies`;
 				break;
 		}
-		if (!button) return null;
-		return <div className="button-group">{button}</div>;
+		return <a onClick={this.goToThread}>{message}</a>;
+	};
+
+	goToThread = () => {
+		this.props.action("make-thread", this.props.post);
 	};
 
 	toggleStatus = () => {
