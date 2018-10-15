@@ -77,6 +77,8 @@ import {
 	ReactToPostResponse,
 	RenameStreamRequest,
 	RenameStreamResponse,
+	SetPostStatusRequest,
+	SetPostStatusResponse,
 	SetStreamPurposeRequest,
 	SetStreamPurposeResponse,
 	UnarchiveStreamRequest,
@@ -244,6 +246,7 @@ export interface ApiProvider {
 	getPost(request: GetPostRequest): Promise<GetPostResponse>;
 	markPostUnread(request: MarkPostUnreadRequest): Promise<MarkPostUnreadResponse>;
 	reactToPost(request: ReactToPostRequest): Promise<ReactToPostResponse>;
+	setPostStatus(request: SetPostStatusRequest): Promise<SetPostStatusResponse>;
 
 	createRepo(request: CreateRepoRequest): Promise<CreateRepoResponse>;
 	fetchRepos(request: FetchReposRequest): Promise<FetchReposResponse>;

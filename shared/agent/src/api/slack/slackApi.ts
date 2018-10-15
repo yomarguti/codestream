@@ -45,6 +45,8 @@ import {
 	OpenStreamRequest,
 	ReactToPostRequest,
 	RenameStreamRequest,
+	SetPostStatusRequest,
+	SetPostStatusResponse,
 	SetStreamPurposeRequest,
 	UnarchiveStreamRequest,
 	UpdateMarkerRequest,
@@ -950,6 +952,11 @@ export class SlackApiProvider implements ApiProvider {
 		if (!ok) throw new Error(error);
 
 		return this.getPost({ streamId: streamId, postId: postId });
+	}
+
+	@log()
+	setPostStatus(request: SetPostStatusRequest): Promise<SetPostStatusResponse> {
+		throw new Error("Method not implemented.");
 	}
 
 	@log()

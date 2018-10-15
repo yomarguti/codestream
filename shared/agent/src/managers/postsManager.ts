@@ -25,7 +25,10 @@ import {
 	MarkPostUnreadResponse,
 	ReactToPostRequest,
 	ReactToPostRequestType,
-	ReactToPostResponse
+	ReactToPostResponse,
+	SetPostStatusRequest,
+	SetPostStatusRequestType,
+	SetPostStatusResponse
 } from "../shared/agent.protocol";
 import { CSPost } from "../shared/api.protocol";
 import { lsp, lspHandler } from "../system";
@@ -123,6 +126,11 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 	@lspHandler(ReactToPostRequestType)
 	reactToPost(request: ReactToPostRequest): Promise<ReactToPostResponse> {
 		return this.session.api.reactToPost(request);
+	}
+
+	@lspHandler(SetPostStatusRequestType)
+	setPostStatus(request: SetPostStatusRequest): Promise<SetPostStatusResponse> {
+		return this.session.api.setPostStatus(request);
 	}
 
 	@lspHandler(GetPostRequestType)

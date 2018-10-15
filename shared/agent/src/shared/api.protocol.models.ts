@@ -24,9 +24,9 @@ export interface CSMarker extends CSEntity {
 	postStreamId: string;
 	commitHashWhenCreated: string;
 	codeBlock?: CSMarkerCodeBlock;
-	color: string;
-	type: string;
-	status: string;
+	color?: string;
+	type?: string;
+	status?: string;
 }
 
 export interface CSLocationMeta {
