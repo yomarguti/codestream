@@ -313,12 +313,25 @@ export class CodeStreamAgentConnection implements Disposable {
 	private readonly _posts = new class {
 		constructor(private readonly _connection: CodeStreamAgentConnection) {}
 
-		create(streamId: string, text: string, mentionedUserIds?: string[], parentPostId?: string) {
+		create(
+			streamId: string,
+			text: string,
+			mentionedUserIds?: string[],
+			parentPostId?: string,
+			title?: string,
+			type?: string,
+			assignees?: [],
+			color?: string
+		) {
 			return this._connection.sendRequest(CreatePostRequestType, {
 				streamId: streamId,
 				text: text,
 				mentionedUserIds: mentionedUserIds,
-				parentPostId: parentPostId
+				parentPostId: parentPostId,
+				title: title,
+				type: type,
+				assignees: assignees,
+				color: color
 			});
 		}
 

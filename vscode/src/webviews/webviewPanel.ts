@@ -341,7 +341,11 @@ export class CodeStreamWebviewPanel implements Disposable {
 										streamId,
 										text,
 										mentions,
-										parentPostId
+										parentPostId,
+										title,
+										type,
+										assignees,
+										color
 									);
 									post = response.post;
 								} else {
