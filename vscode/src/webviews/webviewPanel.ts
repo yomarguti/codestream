@@ -449,13 +449,13 @@ export class CodeStreamWebviewPanel implements Disposable {
 							break;
 						}
 						case "set-post-status": {
-							const { id, status } = body.params;
+							const { streamId, id, status } = body.params;
 
-							// const post = await this.session.api.setPostStatus(id, status);
-							// this.postMessage({
-							// type: WebviewIpcMessageType.response,
-							// body: { id: body.id, payload: post }
-							// });
+							const response = await Container.agent.posts.setStatus(streamId, id, status);
+							this.postMessage({
+								type: WebviewIpcMessageType.response,
+								body: { id: body.id, payload: response.post }
+							});
 
 							break;
 						}

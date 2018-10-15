@@ -91,6 +91,7 @@ import {
 	ReactToPostRequestType,
 	RenameStreamRequestType,
 	ReportErrorRequestType,
+	SetPostStatusRequestType,
 	SetStreamPurposeRequestType,
 	UnarchiveStreamRequestType,
 	UpdatePreferencesRequestType,
@@ -441,6 +442,14 @@ export class CodeStreamAgentConnection implements Disposable {
 				postId: postId,
 				streamId: streamId,
 				emojis: reactions
+			});
+		}
+
+		setStatus(streamId: string, postId: string, status: string) {
+			return this._connection.sendRequest(SetPostStatusRequestType, {
+				postId: postId,
+				streamId: streamId,
+				status: status
 			});
 		}
 	}(this);
