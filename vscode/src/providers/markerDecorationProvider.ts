@@ -2,6 +2,7 @@
 import {
 	CancellationToken,
 	DecorationOptions,
+	DecorationRangeBehavior,
 	Disposable,
 	Hover,
 	HoverProvider,
@@ -9,6 +10,7 @@ import {
 	MarkdownString,
 	OverviewRulerLane,
 	Position,
+	Range,
 	TextDocument,
 	TextDocumentChangeEvent,
 	TextEditor,
@@ -24,7 +26,6 @@ import {
 	TextDocumentMarkersChangedEvent
 } from "../api/session";
 import { OpenStreamCommandArgs } from "../commands";
-import { MarkerStyle } from "../config";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { Functions } from "../system/function";
@@ -75,6 +76,12 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 				}
 			}
 		}
+
+		this._decorationType["trap-highlight"] = window.createTextEditorDecorationType({
+			rangeBehavior: DecorationRangeBehavior.OpenOpen,
+			isWholeLine: true,
+			backgroundColor: "rgba(0, 255, 0, 0.15)"
+		});
 
 		this._disposable = Disposable.from(
 			...Object.values(this._decorationType),
@@ -145,9 +152,9 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 
 		const decorations = await this.provideDecorations(editor!);
 
-		Object.keys(decorations).forEach(key => {
+		for (const key of Object.keys(decorations)) {
 			editor!.setDecorations(this._decorationType[key], decorations[key]);
-		});
+		}
 	}
 
 	applyToApplicableVisibleEditors(editors = window.visibleTextEditors) {
@@ -194,10 +201,30 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 				editor.document.lineAt(start).firstNonWhitespaceCharacterIndex === 0 ? "inline" : "overlay";
 			const key = `${position}-${marker.type}-${marker.color}-${marker.status}`;
 
-			if (!decorations[key]) decorations[key] = [];
+			if (!decorations[key]) {
+				decorations[key] = [];
+			}
+
+			if (marker.type === "trap") {
+				if (!decorations["trap-highlight"]) {
+					decorations["trap-highlight"] = [];
+				}
+
+				decorations["trap-highlight"].push({
+					range: new Range(
+						marker.range.start.line,
+						marker.range.start.character,
+						marker.range.end.line,
+						1000000
+					)
+				});
+			}
+
 			decorations[key].push({
-				range: marker.hoverRange // editor.document.validateRange(marker.hoverRange)
+				range: marker.hoverRange, // editor.document.validateRange(marker.hoverRange)
+				renderOptions: {}
 			});
+
 			starts.add(start);
 		}
 
