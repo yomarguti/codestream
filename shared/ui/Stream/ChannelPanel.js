@@ -130,19 +130,19 @@ export class SimpleChannelPanel extends Component {
 					Questions &amp; Answers
 				</li>
 				<li key="issue" id="issue">
-					<Icon name="bug" className="issue" />
+					<Icon name="issue" className="issue" />
 					Issues
 				</li>
 				<li key="trap" id="trap">
-					<Icon name="stop" className="trap" />
+					<Icon name="trap" className="trap" />
 					Code Traps
-				</li>
-				<li key="pin" id="pin">
-					<Icon name="pin" className="pin" />
-					Pinned Posts
 				</li>
 			</ul>
 		);
+		// 	<li key="pin" id="pin">
+		// 	<Icon name="pin" className="pin" />
+		// 	Pinned Posts
+		// </li>
 		// <li key="snippet" id="snippet">
 		// 	<Icon name="code" className="snippet" />
 		// 	Snippets

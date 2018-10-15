@@ -1085,11 +1085,8 @@
 						.pin,
 						.snippet,
 						.comment {
-							vertical-align: 1.5px;
+							vertical-align: 2px;
 							margin: 0 7px 0 -2px;
-						}
-						.comment {
-							vertical-align: 0;
 						}
 						.mute,
 						.broadcast,
@@ -1304,43 +1301,90 @@
 				max-width: 100%;
 			}
 
-			&.question .body,
-			&.issue .body {
+			&.question .text,
+			&.issue .text {
 				padding: 10px;
 				padding: 10px 0;
 				// background: @base-background-color;
 				border-top: 1px dashed @base-border-color;
 			}
-			&.blue {
-				border-left: 4px solid #679ad0;
-				border-left: 4px solid #3578ba;
+			&.blue .body {
+				border-left: 3px solid #679ad0;
+				border-left: 3px solid #3578ba;
+				padding: 0 0 0 5px;
+				margin: 10px 0;
 			}
-			&.green {
-				border-left: 4px solid #6fc6b1;
-				border-left: 4px solid #7aba5d;
+			&.green .body {
+				border-left: 3px solid #6fc6b1;
+				border-left: 3px solid #7aba5d;
+				padding: 0 0 0 5px;
+				margin: 10px 0;
 			}
-			&.yellow {
-				border-left: 4px solid #dcdcaa;
-				border-left: 4px solid #edd648;
+			&.yellow .body {
+				border-left: 3px solid #dcdcaa;
+				border-left: 3px solid #edd648;
+				padding: 0 0 0 5px;
+				margin: 10px 0;
 			}
-			&.orange {
-				border-left: 4px solid #ce9178;
-				border-left: 4px solid #f1a340;
+			&.orange .body {
+				border-left: 3px solid #ce9178;
+				border-left: 3px solid #f1a340;
+				padding: 0 0 0 5px;
+				margin: 10px 0;
 			}
-			&.red {
-				border-left: 4px solid #d16969;
-				border-left: 4px solid #d9634f;
+			&.red .body {
+				border-left: 3px solid #d16969;
+				border-left: 3px solid #d9634f;
+				padding: 0 0 0 5px;
+				margin: 10px 0;
 			}
-			&.purple {
-				border-left: 4px solid #c586c0;
-				border-left: 4px solid #b87cda;
+			&.purple .body {
+				border-left: 3px solid #c586c0;
+				border-left: 3px solid #b87cda;
+				padding: 0 0 0 5px;
+				margin: 10px 0;
 			}
-			&.aqua {
-				border-left: 4px solid #9cdcfe;
-				border-left: 4px solid #5abfdc;
+			&.aqua .body {
+				border-left: 3px solid #9cdcfe;
+				border-left: 3px solid #5abfdc;
+				padding: 0 0 0 5px;
+				margin: 10px 0;
 			}
-			&.gray {
-				border-left: 4px solid #888888;
+			&.gray .body {
+				border-left: 3px solid #888888;
+				padding: 0 0 0 5px;
+				margin: 10px 0;
+			}
+			&.collapsed {
+				.body {
+					border-left: none;
+					padding: 0;
+					margin: 0;
+				}
+			}
+			&.blue .icon {
+				color: #3578ba;
+			}
+			&.green .icon {
+				color: #7aba5d;
+			}
+			&.yellow .icon {
+				color: #edd648;
+			}
+			&.orange .icon {
+				color: #f1a340;
+			}
+			&.red .icon {
+				color: #d9634f;
+			}
+			&.purple .icon {
+				color: #b87cda;
+			}
+			&.aqua .icon {
+				color: #5abfdc;
+			}
+			&.gray .icon {
+				color: #888888;
 			}
 			.title {
 				margin-top: 5px;
@@ -1351,6 +1395,9 @@
 					margin-left: -18px;
 				}
 				// background: @base-background-color;
+			}
+			.text .type-icon {
+				padding-right: 5px;
 			}
 			.file-name {
 				padding-left: 10px;
@@ -1474,9 +1521,6 @@
 				.error {
 					color: @text-color-error;
 				}
-			}
-			.body {
-				// padding-left: 46px;
 			}
 			.align-right {
 				// display: none;
@@ -1628,7 +1672,7 @@
 		.post.collapsed {
 			&.question,
 			&.issue {
-				.body {
+				.text {
 					display: none;
 				}
 				.title {
@@ -2088,6 +2132,9 @@
 					padding: 5px 10px;
 					cursor: pointer;
 					opacity: 0.4;
+					.comment {
+						vertical-align: 2px;
+					}
 				}
 				label:first-of-type {
 					padding-left: 0;
@@ -2184,9 +2231,9 @@
 		.align-right-button {
 			right: 0px;
 		}
-		.chat-bubble {
-			vertical-align: -2px;
-		}
+		// .chat-bubble {
+		// 	vertical-align: -2px;
+		// }
 		label {
 			margin-top: 15px !important;
 		}

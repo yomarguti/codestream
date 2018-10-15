@@ -307,22 +307,26 @@ class Post extends React.Component {
 						<span>only visible to you</span>
 					</div>
 				)}
-				{codeBlock}
-				{this.renderAttachments(post)}
-				{this.props.showDetails &&
-					!this.state.warning && (
-						<PostDetails post={post} currentCommit={this.props.currentCommit} />
+				<div className="body">
+					{this.renderTitle(post)}
+					{(this.props.editing || post.text.length > 0) && (
+						<div className="text">
+							{this.props.collapsed && !post.title && this.renderTypeIcon(post)}
+							{this.renderText(post)}
+							{!this.props.editing &&
+								post.hasBeenEdited && <span className="edited">(edited)</span>}
+							{this.renderAssignees(post)}
+							{this.renderCodeBlockFile(post)}
+						</div>
 					)}
-				{this.renderTitle(post)}
-				{this.renderAssignees(post)}
-				{(this.props.editing || post.text.length > 0) && (
-					<div className="body">
-						{this.renderBody(post)}
-						{!this.props.editing && post.hasBeenEdited && <span className="edited">(edited)</span>}
-						{this.renderCodeBlockFile(post)}
-					</div>
-				)}
-				{this.renderInstructions(post)}
+					{codeBlock}
+					{this.renderAttachments(post)}
+					{this.props.showDetails &&
+						!this.state.warning && (
+							<PostDetails post={post} currentCommit={this.props.currentCommit} />
+						)}
+					{this.renderInstructions(post)}
+				</div>
 				{this.renderReactions(post)}
 			</div>
 		);
@@ -399,18 +403,26 @@ class Post extends React.Component {
 		// this.props.action("submit-post", this.props.post, { postStreamId, threadId, text: "/me reopened this issue" });
 	};
 
-	renderTitle = post => {
+	renderTypeIcon = post => {
 		let icon = null;
 		switch (post.type) {
 			case "question":
-				icon = <Icon name="question" />;
+				icon = <Icon name="question" className="type-icon" />;
 				break;
 			case "trap":
-				icon = <Icon name="stop" />;
+				icon = <Icon name="trap" className="type-icon" />;
 				break;
 			case "issue":
-				icon = <Icon name="bug" />;
+				icon = <Icon name="issue" className="type-icon" />;
+				break;
+			default:
+				icon = <Icon name="comment" className="type-icon" />;
 		}
+		return icon;
+	};
+
+	renderTitle = post => {
+		let icon = this.renderTypeIcon(post);
 		if (post.title)
 			return (
 				<div className="title">
@@ -509,8 +521,8 @@ class Post extends React.Component {
 		else return null;
 	};
 
-	renderBody = post => {
-		if (this.props.editing) return this.renderBodyEditing(post);
+	renderText = post => {
+		if (this.props.editing) return this.renderTextEditing(post);
 		else if ((post.text || "").match(/^\/me\s/)) return null;
 		else return this.renderTextLinkified(post.text);
 	};
@@ -545,7 +557,7 @@ class Post extends React.Component {
 		return id;
 	};
 
-	renderBodyEditing = post => {
+	renderTextEditing = post => {
 		const id = this.getEditInputId();
 
 		return (

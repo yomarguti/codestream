@@ -808,7 +808,7 @@ class ComposeBox extends React.Component {
 								})}
 								onClick={e => this.setCommentType("issue")}
 							>
-								<Icon name="bug" /> <b>Issue</b>
+								<Icon name="issue" /> <b>Issue</b>
 							</label>
 							<input
 								id="radio-comment-type-trap"
@@ -823,7 +823,7 @@ class ComposeBox extends React.Component {
 								})}
 								onClick={e => this.setCommentType("trap")}
 							>
-								<Icon name="stop" /> <b>Code Trap</b>
+								<Icon name="trap" /> <b>Code Trap</b>
 							</label>
 						</div>
 						{commentType === "trap" && (
