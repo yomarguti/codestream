@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.16.0] - 2018-10-15
+
+- Fixes syncronization of unread message indicators between CodeStream and Slack.
+- Fixes issues with certain message content that would trigger unexpected errors.
+
 ## [0.15.1] - 2018-10-11
 
 ## Fixed
