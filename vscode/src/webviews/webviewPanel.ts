@@ -8,6 +8,7 @@ import {
 	Event,
 	EventEmitter,
 	Range,
+	TextEditorSelectionChangeEvent,
 	Uri,
 	ViewColumn,
 	WebviewPanel,
@@ -46,7 +47,9 @@ import { Container } from "../container";
 import { Logger } from "../logger";
 import { ApiCapabilities, ConnectionStatus, TraceLevel } from "../shared/agent.protocol";
 import { log } from "../system";
+import { Functions } from "../system";
 import {
+	DidSelectCodeNotification,
 	toLoggableIpcMessage,
 	WebviewIpc,
 	WebviewIpcMessage,
@@ -887,7 +890,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 		}
 
 		void (await this.postMessage({
-			type: WebviewIpcMessageType.didPostCode,
+			type: WebviewIpcMessageType.didSelectCode,
 			body: {
 				code: code,
 				file: file,
@@ -896,7 +899,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 				source: source,
 				gitError
 			}
-		}));
+		} as DidSelectCodeNotification));
 		return this._streamThread;
 	}
 
@@ -1010,6 +1013,10 @@ export class CodeStreamWebviewPanel implements Disposable {
 			this._panel.onDidDispose(this.onPanelDisposed, this),
 			this._panel.onDidChangeViewState(this.onPanelViewStateChanged, this),
 			this._panel.webview.onDidReceiveMessage(this.onPanelWebViewMessageReceived, this),
+			window.onDidChangeTextEditorSelection(
+				Functions.debounce(this.onEditorSelectionChanged, 500),
+				this
+			),
 			window.onDidChangeWindowState(this.onWindowStateChanged, this),
 			configuration.onDidChange(this.onConfigurationChanged, this)
 		);
@@ -1025,6 +1032,18 @@ export class CodeStreamWebviewPanel implements Disposable {
 		this._onDidChangeStream.fire(this._streamThread);
 
 		return this._streamThread;
+	}
+
+	private async onEditorSelectionChanged(e: TextEditorSelectionChangeEvent) {
+		if (e.selections.length === 0) return;
+
+		const selection = e.selections[0];
+		if (selection.start.isEqual(selection.end)) return;
+
+		const uri = e.textEditor.document.uri;
+
+		const response = await Container.agent.posts.prepareCode(e.textEditor.document, selection);
+		await this.postCode(response.code, uri, selection, response.source, response.gitError);
 	}
 
 	private async getBootstrapState() {

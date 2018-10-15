@@ -13,7 +13,7 @@ export enum WebviewIpcMessageType {
 	didChangeUnreads = "codestream:data:unreads",
 	didFileChange = "codestream:publish:file-changed",
 	didFocus = "codestream:interaction:focus",
-	didPostCode = "codestream:interaction:code-highlighted",
+	didSelectCode = "codestream:interaction:code-highlighted",
 	didSignOut = "codestream:interaction:signed-out",
 	onActiveThreadChanged = "codestream:interaction:thread-selected",
 	onActiveThreadClosed = "codestream:interaction:thread-closed",
@@ -60,6 +60,32 @@ export interface WebviewIpcMessageResponseBody {
 	id: string;
 	payload?: any;
 	error?: string;
+}
+
+export interface DidSelectCodeNotification {
+	type: WebviewIpcMessageType.didSelectCode;
+	body: {
+		code: string;
+		file: string | undefined;
+		fileUri: string;
+		location: [number, number, number, number];
+		source:
+			| {
+					file: string;
+					repoPath: string;
+					revision: string;
+					authors: {
+						id: string;
+						username: string;
+					}[];
+					remotes: {
+						name: string;
+						url: string;
+					}[];
+			  }
+			| undefined;
+		gitError: string | undefined;
+	};
 }
 
 export interface VslsInviteServiceRequestAction {
