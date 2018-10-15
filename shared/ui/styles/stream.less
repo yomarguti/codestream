@@ -26,6 +26,8 @@
 	background-color: @background-color-highlight;
 }
 
+@import "../node_modules/highlight.js/styles/hybrid.css";
+
 @panel-header-height: 2.1em;
 
 // for the octicons
@@ -2223,9 +2225,11 @@
 		fieldset {
 			padding: 0;
 			max-width: 100%;
+			width: calc(100vw - 60px) !important;
+			overflow: hidden;
 		}
 		.form-body {
-			width: 100%;
+			width: inherit;
 			padding: 0;
 		}
 		.align-right-button {
@@ -2242,6 +2246,9 @@
 			label {
 				padding-top: 0 !important;
 			}
+		}
+		.code {
+			width: calc(100vw - 60px) !important;
 		}
 	}
 }
