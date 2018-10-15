@@ -12,7 +12,6 @@ const emojiData = require("../node_modules/markdown-it-emoji-mart/lib/data/full.
 import Select from "react-select";
 import Tooltip from "./Tooltip";
 import hljs from "highlight.js";
-import { compose } from "../../../Library/Caches/typescript/3.0/node_modules/redux";
 const Path = require("path");
 
 const arrayToRange = ([startRow, startCol, endRow, endCol]) => {
