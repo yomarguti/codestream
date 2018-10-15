@@ -75,6 +75,7 @@ export class SimpleKnowledgePanel extends Component {
 							q={this.state.q}
 							showStatus={post.type === "issue"}
 							showAssigneeHeadshots={true}
+							alwaysShowReplyCount={!collapsed}
 							teammates={this.props.teammates}
 							collapsed={collapsed}
 							showFileAfterTitle={collapsed}

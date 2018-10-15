@@ -325,9 +325,9 @@ class Post extends React.Component {
 						!this.state.warning && (
 							<PostDetails post={post} currentCommit={this.props.currentCommit} />
 						)}
-					{this.renderReplyCount(post)}
 				</div>
 				{this.renderReactions(post)}
+				{this.renderReplyCount(post)}
 			</div>
 		);
 	}
@@ -368,16 +368,26 @@ class Post extends React.Component {
 
 	renderReplyCount = post => {
 		let message = null;
-		if (this.props.showDetails || !post.numReplies) return null;
+		if (
+			!this.props.alwaysShowReplyCount &&
+			(this.props.showDetails || !post.numReplies || this.props.collapsed)
+		)
+			return null;
+
+		const numReplies = post.numreplies || "0";
 		switch (post.type) {
 			case "question":
-				message = post.numReplies === 1 ? "1 Answer" : `${post.numReplies} Answers`;
+				message = numReplies === 1 ? "1 Answer" : `${numReplies} Answers`;
 				break;
 			default:
-				message = post.numReplies === 1 ? "1 Reply" : `${post.numReplies} Replies`;
+				message = numReplies === 1 ? "1 Reply" : `${numReplies} Replies`;
 				break;
 		}
-		return <a onClick={this.goToThread}>{message}</a>;
+		return (
+			<a className="num-replies" onClick={this.goToThread}>
+				{message}
+			</a>
+		);
 	};
 
 	goToThread = () => {
