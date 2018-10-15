@@ -531,8 +531,8 @@ class Post extends React.Component {
 			});
 
 			if (this.props.q) {
-				// const matchQueryRegexp = new RegExp(this.props.q, "g");
-				// return part.replace(matchQueryRegexp, "<u><b>$&</b></u>");
+				const matchQueryRegexp = new RegExp(this.props.q, "g");
+				html = html.replace(matchQueryRegexp, "<u><b>$&</b></u>");
 			}
 		}
 
