@@ -9,7 +9,7 @@ import {
 } from "../api/session";
 import { WorkspaceState } from "../common";
 import { Container } from "../container";
-import { StreamWebviewPanel } from "../webviews/streamWebviewPanel";
+import { CodeStreamWebviewPanel } from "../webviews/webviewPanel";
 
 export interface StreamThreadId {
 	id: string | undefined;
@@ -21,10 +21,10 @@ export interface WebviewState {
 	streamThread?: StreamThreadId;
 }
 
-export class StreamViewController implements Disposable {
+export class WebviewController implements Disposable {
 	private _disposable: Disposable | undefined;
 	private _disposablePanel: Disposable | undefined;
-	private _panel: StreamWebviewPanel | undefined;
+	private _panel: CodeStreamWebviewPanel | undefined;
 	private _lastStreamThread: StreamThread | undefined;
 
 	constructor(public readonly session: CodeStreamSession) {
@@ -131,7 +131,7 @@ export class StreamViewController implements Disposable {
 				// };
 			}
 
-			this._panel = new StreamWebviewPanel(this.session);
+			this._panel = new CodeStreamWebviewPanel(this.session);
 
 			this._disposablePanel = Disposable.from(
 				this._panel.onDidChangeStream(this.onPanelStreamChanged, this),

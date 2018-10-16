@@ -304,7 +304,7 @@ export class CodeStreamSession implements Disposable {
 	}
 
 	async goOffline() {
-		Container.streamView.hide();
+		Container.webview.hide();
 		return Container.session.logout(SessionSignedOutReason.UserWentOffline);
 	}
 

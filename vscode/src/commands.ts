@@ -10,7 +10,7 @@ import {
 import { TokenManager } from "./api/tokenManager";
 import { openEditor, ShowCodeResult, WorkspaceState } from "./common";
 import { Container } from "./container";
-import { StreamThreadId } from "./controllers/streamViewController";
+import { StreamThreadId } from "./controllers/webviewController";
 import { Command, createCommandDecorator } from "./system";
 
 const commandRegistry: Command[] = [];
@@ -123,7 +123,7 @@ export class Commands implements Disposable {
 		if (block === undefined) return ShowCodeResult.RepoNotInWorkspace;
 
 		// FYI, this doesn't always work, see https://github.com/Microsoft/vscode/issues/56097
-		let column = Container.streamView.viewColumn as number | undefined;
+		let column = Container.webview.viewColumn as number | undefined;
 		if (column !== undefined) {
 			column--;
 			if (column <= 0) {
@@ -167,7 +167,7 @@ export class Commands implements Disposable {
 		});
 		if (streamThread === undefined) return undefined;
 
-		return Container.streamView.show(streamThread);
+		return Container.webview.show(streamThread);
 	}
 
 	@command("postCode", { showErrorMessage: "Unable to add comment" })
@@ -192,7 +192,7 @@ export class Commands implements Disposable {
 		if (document === undefined || selection === undefined) return undefined;
 
 		const response = await Container.agent.posts.prepareCode(document, selection);
-		const streamThread = await Container.streamView.postCode(
+		const streamThread = await Container.webview.postCode(
 			response.code,
 			document.uri,
 			selection,
@@ -207,7 +207,7 @@ export class Commands implements Disposable {
 		const token = await TokenManager.get(Container.config.serverUrl, Container.config.email);
 		if (!token) {
 			await Container.context.workspaceState.update(WorkspaceState.TeamId, undefined);
-			await Container.streamView.show();
+			await Container.webview.show();
 		} else {
 			await Container.session.login(Container.config.email, token);
 		}
@@ -220,7 +220,7 @@ export class Commands implements Disposable {
 
 	@command("toggle")
 	toggle() {
-		return Container.streamView.toggle();
+		return Container.webview.toggle();
 	}
 
 	private async findStreamThread(
@@ -281,7 +281,7 @@ export class Commands implements Disposable {
 
 		let streamThread;
 		if (options.includeActive) {
-			streamThread = Container.streamView.activeStreamThread;
+			streamThread = Container.webview.activeStreamThread;
 		}
 
 		if (streamThread === undefined && options.includeDefault) {

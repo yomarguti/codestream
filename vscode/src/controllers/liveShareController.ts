@@ -215,7 +215,7 @@ export class LiveShareController implements Disposable {
 		const vsls = await this._vslsPromise;
 		if (vsls == null) throw new Error("Live Share is not installed");
 
-		const streamThread = args.streamThread || Container.streamView.activeStreamThread;
+		const streamThread = args.streamThread || Container.webview.activeStreamThread;
 		if (streamThread === undefined) return;
 
 		Logger.log("LiveShareController.start");

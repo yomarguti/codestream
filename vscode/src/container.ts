@@ -7,11 +7,9 @@ import { Config, configuration } from "./configuration";
 import { LiveShareController } from "./controllers/liveShareController";
 import { NotificationsController } from "./controllers/notificationsController";
 import { StatusBarController } from "./controllers/statusBarController";
-import { StreamViewController } from "./controllers/streamViewController";
+import { WebviewController } from "./controllers/webviewController";
 import { CodeStreamCodeActionProvider } from "./providers/codeActionProvider";
 import { MarkerDecorationProvider } from "./providers/markerDecorationProvider";
-// import { CodeStreamCodeLensProvider } from './providers/codeLensProvider';
-// import { UnreadDecorationProvider } from './providers/decorationProvider';
 
 export class Container {
 	static async initialize(context: ExtensionContext, config: Config, agentOptions: AgentOptions) {
@@ -30,12 +28,10 @@ export class Container {
 
 		context.subscriptions.push((this._commands = new Commands()));
 		context.subscriptions.push((this._codeActions = new CodeStreamCodeActionProvider()));
-		// context.subscriptions.push(this._codeLens = new CodeStreamCodeLensProvider());
 		context.subscriptions.push((this._markerDecorations = new MarkerDecorationProvider()));
 		context.subscriptions.push((this._statusBar = new StatusBarController()));
-		// context.subscriptions.push(this._unreadDecorator = new UnreadDecorationProvider());
 
-		context.subscriptions.push((this._streamView = new StreamViewController(this._session)));
+		context.subscriptions.push((this._webview = new WebviewController(this._session)));
 	}
 
 	private static _agent: CodeStreamAgentConnection;
@@ -47,11 +43,6 @@ export class Container {
 	static get codeActions() {
 		return this._codeActions;
 	}
-
-	// private static _codeLens: CodeStreamCodeLensProvider;
-	// static get codeLens() {
-	//     return this._codeLens;
-	// }
 
 	private static _commands: Commands;
 	static get commands() {
@@ -91,16 +82,6 @@ export class Container {
 		return this._session;
 	}
 
-	private static _streamView: StreamViewController;
-	static get streamView() {
-		return this._streamView;
-	}
-
-	// private static _unreadDecorator: UnreadDecorationProvider;
-	// static get unreadDecorator(): UnreadDecorationProvider {
-	//     return this._unreadDecorator;
-	// }
-
 	private static _version: string;
 	static get version(): string {
 		return this._version;
@@ -119,6 +100,11 @@ export class Container {
 	private static _vsls: LiveShareController;
 	static get vsls() {
 		return this._vsls;
+	}
+
+	private static _webview: WebviewController;
+	static get webview() {
+		return this._webview;
 	}
 
 	static resetConfig() {

@@ -108,7 +108,7 @@ class BufferChangeTracker {
 	}
 }
 
-export class StreamWebviewPanel implements Disposable {
+export class CodeStreamWebviewPanel implements Disposable {
 	private _bufferChangeTracker = new BufferChangeTracker();
 
 	private _onDidChangeStream = new EventEmitter<StreamThread>();

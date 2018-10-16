@@ -3,7 +3,7 @@ import { WebviewPanel } from "vscode";
 import { StreamThread } from "../api/session";
 import { Container } from "../container";
 import { Logger } from "../logger";
-import { StreamWebviewPanel } from "./streamWebviewPanel";
+import { CodeStreamWebviewPanel } from "./webviewPanel";
 
 export enum WebviewIpcMessageType {
 	didBlur = "codestream:interaction:blur",
@@ -94,7 +94,7 @@ export class WebviewIpc {
 	private _panel: WebviewPanel | undefined;
 	private readonly _queue: WebviewIpcMessage[] = [];
 
-	constructor(private readonly _webview: StreamWebviewPanel) {}
+	constructor(private readonly _webview: CodeStreamWebviewPanel) {}
 
 	private _paused: boolean = false;
 	get paused() {

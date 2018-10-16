@@ -20,8 +20,8 @@ export class NotificationsController implements Disposable {
 
 	private async onSessionPostsReceived(e: PostsChangedEvent) {
 		const currentUser = Container.session.user;
-		const activeStream = Container.streamView.activeStreamThread;
-		const streamVisible = Container.streamView.visible;
+		const activeStream = Container.webview.activeStreamThread;
+		const streamVisible = Container.webview.visible;
 
 		if (Container.config.notifications === Notifications.None) return;
 
