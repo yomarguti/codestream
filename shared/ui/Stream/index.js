@@ -176,31 +176,25 @@ export class SimpleStream extends Component {
 
 	setUmiInfo(prevProps) {
 		const { postStreamId, umis } = this.props;
-		const lastReadSeqNum = umis.lastReads[postStreamId];
+		let lastReadSeqNum = umis.lastReads[postStreamId];
+		lastReadSeqNum = lastReadSeqNum ? Number(lastReadSeqNum) : null;
 
+		let shouldChangeState = false;
 		if (prevProps) {
 			const switchedStreams = postStreamId && postStreamId !== prevProps.postStreamId;
-			if (switchedStreams) {
-				// reset lastRead && where the new message line should be
-				this.setState({
-					lastReadSeqNum,
-					newMessagesAfterSeqNum: lastReadSeqNum
-				});
-			} else {
-				const newUnread = umis.unreads[postStreamId] && !prevProps.umis.unreads[postStreamId];
-				if (newUnread) {
-					// new message line has moved
-					this.setState({
-						newMessagesAfterSeqNum: lastReadSeqNum
-					});
-				}
+			const newUnreads = umis.unreads[postStreamId] && !prevProps.umis.unreads[postStreamId];
+			if (switchedStreams || newUnreads) {
+				// reset the new message line or it's moved
+				shouldChangeState = true;
 			}
 		} else {
+			shouldChangeState = true;
+		}
+
+		if (shouldChangeState)
 			this.setState({
-				lastReadSeqNum,
 				newMessagesAfterSeqNum: lastReadSeqNum
 			});
-		}
 	}
 
 	setPostsListRef = element => {
@@ -482,7 +476,6 @@ export class SimpleStream extends Component {
 								isActive={this.props.activePanel === "main"}
 								hasFocus={this.props.hasFocus}
 								newMessagesAfterSeqNum={this.state.newMessagesAfterSeqNum}
-								lastReadSeqNum={this.state.lastReadSeqNum}
 								usernamesRegexp={this.props.usernamesRegexp}
 								currentUserId={this.props.currentUserId}
 								currentUserName={this.props.currentUserName}
@@ -1272,7 +1265,7 @@ export class SimpleStream extends Component {
 			createPost(postStreamId, threadId, text, codeBlocks, mentionedUserIds, {
 				autoMentions,
 				fileUri
-			}).then(this._postslist.onPostSubmitted);
+			}).then(this._postslist.scrollToBottom);
 
 		if (quote) {
 			fileUri = quote.fileUri;

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { debounce, isNumber } from "underscore";
+import { debounce } from "underscore";
 import DateSeparator from "./DateSeparator";
 import Post from "./Post";
 import infiniteLoadable from "./infiniteLoadable";
@@ -94,18 +94,6 @@ export default infiniteLoadable(
 			$firstUnreadPost && $firstUnreadPost.scrollIntoView({ behavior: "smooth" });
 		};
 
-		onPostSubmitted = () => {
-			this.scrollToBottom();
-			if (this.showUnreadBanner) {
-				// need to wait till scroll ends
-				// create `onScrollStop`?
-				setTimeout(() => {
-					this.showUnreadBanner = false;
-					this.findFirstUnread(this.list.current);
-				}, 1000);
-			}
-		};
-
 		getUsersMostRecentPost = () => {
 			const { editingPostId, posts } = this.props;
 			const editingPostIndex = editingPostId && posts.findIndex(post => post.id === editingPostId);
@@ -159,7 +147,7 @@ export default infiniteLoadable(
 			let unreadsAbove = false;
 			let unreadsBelow = false;
 
-			if (!this.showUnreadBanner || !isNumber(newMessagesAfterSeqNum)) {
+			if (!this.showUnreadBanner || !newMessagesAfterSeqNum) {
 				return onDidChangeVisiblePosts({ unreadsAbove, unreadsBelow });
 			}
 
@@ -180,8 +168,11 @@ export default infiniteLoadable(
 		});
 
 		resetUnreadBanner = debounce(() => {
-			this.showUnreadBanner = true;
-			if (!this.props.isThread) this.findFirstUnread(this.list.current);
+			const { posts, currentUserId } = this.props;
+			if (posts[posts.length - 1].creatorId !== currentUserId) {
+				this.showUnreadBanner = true;
+				if (!this.props.isThread) this.findFirstUnread(this.list.current);
+			}
 		}, 1000);
 
 		render() {
@@ -218,7 +209,7 @@ export default infiniteLoadable(
 							if (!newMessagesAfterSeqNum) return false;
 
 							const postIsAfterLastRead =
-								Number(this.props.posts[index - 1].seqNum) === Number(newMessagesAfterSeqNum);
+								Number(this.props.posts[index - 1].seqNum) === newMessagesAfterSeqNum;
 							if (postIsAfterLastRead && post.creatorId !== this.props.currentUserId) {
 								return true;
 							}
