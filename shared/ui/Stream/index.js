@@ -332,9 +332,6 @@ export class SimpleStream extends Component {
 			"no-headshots": !configs.showHeadshots,
 			"reduced-motion": configs.reduceMotion
 		});
-		const postsListClass = createClassString({
-			postslist: true
-		});
 		const threadPostsListClass = createClassString({
 			postslist: true,
 			threadlist: true
@@ -411,11 +408,7 @@ export class SimpleStream extends Component {
 		);
 
 		return (
-			<div
-				className={streamClass}
-				onMouseDown={this.handleMouseDown}
-				ref={ref => (this._div = ref)}
-			>
+			<div className={streamClass} ref={ref => (this._div = ref)}>
 				<div id="modal-root" />
 				<div id="confirm-root" />
 				<div id="focus-trap" className={createClassString({ active: !this.props.hasFocus })} />
@@ -578,10 +571,6 @@ export class SimpleStream extends Component {
 		);
 	}
 
-	handleMouseDown = event => {
-		// console.log("mouse is down");
-	};
-
 	handleClickStreamSettings = event => {
 		this.setState({ openMenu: this.props.postStreamId, menuTarget: event.target });
 		event.stopPropagation();
@@ -616,7 +605,7 @@ export class SimpleStream extends Component {
 			});
 	};
 
-	showChannels = event => {
+	showChannels = _event => {
 		this.setActivePanel("channels");
 	};
 
@@ -710,9 +699,10 @@ export class SimpleStream extends Component {
 				case 1:
 					invited = invitedEmails[0];
 					break;
-				default:
+				default: {
 					const lastOne = invitedEmails.pop();
 					invited = invitedEmails.join(", ") + " and " + lastOne;
+				}
 			}
 			return this.submitSystemPost("Invited " + invited);
 		}
@@ -966,7 +956,7 @@ export class SimpleStream extends Component {
 	};
 
 	addMembersToStream = async args => {
-		const { users, usernames, rest } = this.extractUsersFromArgs(args);
+		const { users, usernames } = this.extractUsersFromArgs(args);
 		if (this.props.postStreamIsTeamStream) {
 			const text =
 				"This is an all-hands channel, so every member of your team is automatically added. To invite somone new to the team use the /invite command.";
@@ -1003,7 +993,7 @@ export class SimpleStream extends Component {
 		return true;
 	};
 
-	printSlackInstructions = async args => {
+	printSlackInstructions = async _args => {
 		const { configs, intl } = this.props;
 		const message =
 			intl.formatMessage({ id: "slackInfo.p1" }) +
@@ -1116,7 +1106,7 @@ export class SimpleStream extends Component {
 			const text = "You cannot remove people from direct message streams.";
 			return this.submitSystemPost(text);
 		}
-		const { users, usernames, rest } = this.extractUsersFromArgs(args);
+		const { users, usernames } = this.extractUsersFromArgs(args);
 		if (users.length === 0) {
 			this.submitSystemPost("Usage: `/remove @user`");
 		} else {
@@ -1126,7 +1116,7 @@ export class SimpleStream extends Component {
 		return true;
 	};
 
-	openStream = args => {
+	openStream = _args => {
 		// getChannelStreamsForTeam(streams, context.currentTeamId, session.userId) || [],
 	};
 
@@ -1271,7 +1261,7 @@ export class SimpleStream extends Component {
 	submitPost = ({ text, quote, mentionedUserIds, autoMentions }) => {
 		const codeBlocks = [];
 		const { activePanel } = this.props;
-		const { postStreamId, fileStreamId, createPost, currentFile, repoId } = this.props;
+		const { postStreamId, createPost } = this.props;
 		let fileUri;
 
 		if (this.checkForSlashCommands(text)) return;
