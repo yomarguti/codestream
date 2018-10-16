@@ -63,7 +63,6 @@ import {
 	FetchTeamsRequestType,
 	FetchUnreadStreamsRequestType,
 	FetchUsersRequestType,
-	FindRepoRequestType,
 	GetMarkerRequestType,
 	GetMeRequestType,
 	GetPostRequestType,
@@ -418,13 +417,6 @@ export class CodeStreamAgentConnection implements Disposable {
 			return this._connection.sendRequest(CreateRepoRequestType, {
 				url: url,
 				knownCommitHashes: knownCommitHashes
-			});
-		}
-
-		find(url: string, firstCommitHashes: string[]) {
-			return this._connection.sendRequest(FindRepoRequestType, {
-				url: url,
-				firstCommitHashes: firstCommitHashes
 			});
 		}
 
