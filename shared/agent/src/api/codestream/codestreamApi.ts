@@ -106,7 +106,7 @@ import {
 	LoginResponse,
 	StreamType
 } from "../../shared/api.protocol";
-import { Functions, Objects, Strings } from "../../system";
+import { Functions, log, Objects, Strings } from "../../system";
 import {
 	ApiProvider,
 	CodeStreamApiMiddleware,
@@ -248,6 +248,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		return { ...response, teamId: options.teamId };
 	}
 
+	@log()
 	async subscribe(types?: MessageType[]) {
 		this._subscribedMessageTypes = types !== undefined ? new Set(types) : undefined;
 
@@ -330,10 +331,12 @@ export class CodeStreamApiProvider implements ApiProvider {
 		return this.put(`/grant/${channel}`, {}, token);
 	}
 
+	@log()
 	getMe() {
 		return this.get<CSGetMeResponse>("/users/me", this._token);
 	}
 
+	@log()
 	async getUnreads(request: GetUnreadsRequest) {
 		if (this._unreads === undefined) {
 			return {
@@ -350,6 +353,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		return { unreads: await this._unreads!.get() };
 	}
 
+	@log()
 	updatePostsCount(request: CSUpdatePostsCountRequest): Promise<CSUpdatePostsCountResponse> {
 		return this.put<CSUpdatePostsCountRequest, CSUpdatePostsCountResponse>(
 			`/bump-posts`,
@@ -358,11 +362,13 @@ export class CodeStreamApiProvider implements ApiProvider {
 		);
 	}
 
+	@log()
 	async updatePreferences(request: UpdatePreferencesRequest) {
 		void (await this.put<CSMePreferences, any>("/preferences", request.preferences, this._token));
 		return this.getMe();
 	}
 
+	@log()
 	updatePresence(request: UpdatePresenceRequest) {
 		return this.put<CSUpdatePresenceRequest, CSUpdatePresenceResponse>(
 			`/presence`,
@@ -380,6 +386,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	// 	});
 	// }
 
+	@log()
 	async fetchFileStreams(request: FetchFileStreamsRequest) {
 		return this.get<CSGetStreamsResponse<CSFileStream>>(
 			`/streams?teamId=${this.teamId}&repoId=${request.repoId}`,
@@ -387,6 +394,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		);
 	}
 
+	@log()
 	createMarkerLocation(request: CreateMarkerLocationRequest) {
 		return this.put<CSCreateMarkerLocationRequest, CSCreateMarkerLocationResponse>(
 			`/marker-locations`,
@@ -395,6 +403,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		);
 	}
 
+	@log()
 	fetchMarkerLocations(request: FetchMarkerLocationsRequest) {
 		return this.get<CSGetMarkerLocationsResponse>(
 			`/marker-locations?teamId=${this.teamId}&streamId=${request.streamId}&commitHash=${
@@ -404,6 +413,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		);
 	}
 
+	@log()
 	fetchMarkers(request: FetchMarkersRequest) {
 		// TODO: This doesn't handle all the request params
 		return this.get<CSGetMarkersResponse>(
@@ -414,6 +424,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		);
 	}
 
+	@log()
 	getMarker(request: GetMarkerRequest) {
 		return this.get<CSGetMarkerResponse>(
 			`/markers/${request.markerId}?teamId=${this.teamId}`,
@@ -421,6 +432,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		);
 	}
 
+	@log()
 	updateMarker(request: UpdateMarkerRequest) {
 		return this.put<CSUpdateMarkerRequest, CSUpdateMarkerResponse>(
 			`/markers/${request.markerId}`,
@@ -429,6 +441,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		);
 	}
 
+	@log()
 	createMarker(request: CreateMarkerRequest) {
 		return this.post<CSCreateMarkerRequest, CSCreateMarkerResponse>(
 			"/markers",
@@ -437,6 +450,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		);
 	}
 
+	@log()
 	createPost(request: CreatePostRequest) {
 		return this.post<CSCreatePostRequest, CSCreatePostResponse>(
 			`/posts`,
@@ -445,6 +459,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		);
 	}
 
+	@log()
 	async deletePost(request: DeletePostRequest) {
 		const response = await this.delete<CSDeletePostResponse>(
 			`/posts/${request.postId}`,
@@ -457,6 +472,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		return { ...response, post };
 	}
 
+	@log()
 	async editPost(request: EditPostRequest) {
 		const response = await this.put<CSEditPostRequest, CSEditPostResponse>(
 			`/posts/${request.postId}`,
@@ -470,6 +486,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		return { ...response, post };
 	}
 
+	@log()
 	fetchPostReplies(request: FetchPostRepliesRequest) {
 		return this.get<CSGetPostsResponse>(
 			`/posts?teamId=${this.teamId}?parentPostId=${request.postId}`,
@@ -477,6 +494,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		);
 	}
 
+	@log()
 	async fetchPosts(request: FetchPostsRequest) {
 		if (!request.limit || request.limit > 100) {
 			request.limit = 100;
@@ -510,6 +528,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		);
 	}
 
+	@log()
 	getPost(request: GetPostRequest) {
 		return this.get<CSGetPostResponse>(
 			`/posts/${request.postId}?teamId=${this.teamId}`,
@@ -517,6 +536,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		);
 	}
 
+	@log()
 	markPostUnread(request: MarkPostUnreadRequest) {
 		return this.put<CSMarkPostUnreadRequest, CSMarkPostUnreadResponse>(
 			`/unread/${request.postId}`,
@@ -525,6 +545,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		);
 	}
 
+	@log()
 	async reactToPost(request: ReactToPostRequest) {
 		const response = await this.put<CSReactions, CSReactToPostResponse>(
 			`/react/${request.postId}`,
@@ -539,6 +560,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		return { ...response, post: post };
 	}
 
+	@log()
 	createRepo(request: CreateRepoRequest) {
 		return this.post<CSCreateRepoRequest, CSCreateRepoResponse>(
 			`/repos`,
@@ -547,14 +569,17 @@ export class CodeStreamApiProvider implements ApiProvider {
 		);
 	}
 
+	@log()
 	fetchRepos() {
 		return this.get<CSGetReposResponse>(`/repos?teamId=${this.teamId}`, this._token);
 	}
 
+	@log()
 	getRepo(request: GetRepoRequest) {
 		return this.get<CSGetRepoResponse>(`/repos/${request.repoId}`, this._token);
 	}
 
+	@log()
 	createChannelStream(request: CreateChannelStreamRequest) {
 		return this.post<CSCreateChannelStreamRequest, CSCreateChannelStreamResponse>(
 			`/streams`,
@@ -563,6 +588,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		);
 	}
 
+	@log()
 	createDirectStream(request: CreateDirectStreamRequest) {
 		return this.post<CSCreateDirectStreamRequest, CSCreateDirectStreamResponse>(
 			`/streams`,
@@ -571,6 +597,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		);
 	}
 
+	@log()
 	fetchStreams(request: FetchStreamsRequest) {
 		if (
 			request.types == null ||
@@ -589,6 +616,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		);
 	}
 
+	@log()
 	fetchUnreadStreams(request: FetchUnreadStreamsRequest) {
 		return this.get<CSGetStreamsResponse<CSChannelStream | CSDirectStream>>(
 			`/streams?teamId=${this.teamId}&unread`,
@@ -596,6 +624,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		);
 	}
 
+	@log()
 	async getStream(request: GetStreamRequest) {
 		return this.get<CSGetStreamResponse<CSChannelStream | CSDirectStream>>(
 			`/streams/${request.streamId}`,
@@ -603,6 +632,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		);
 	}
 
+	@log()
 	async joinStream(request: JoinStreamRequest) {
 		const response = await this.put<CSJoinStreamRequest, CSJoinStreamResponse>(
 			`/join/${request.streamId}`,
@@ -618,6 +648,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		return { stream };
 	}
 
+	@log()
 	async leaveStream(request: LeaveStreamRequest) {
 		const response = await this.updateStream({
 			streamId: request.streamId,
@@ -640,10 +671,12 @@ export class CodeStreamApiProvider implements ApiProvider {
 		return { stream };
 	}
 
+	@log()
 	markStreamRead(request: MarkStreamReadRequest) {
 		return this.put(`/read/${request.streamId}`, {}, this._token);
 	}
 
+	@log()
 	async updateStream(request: UpdateStreamRequest) {
 		const response = await this.put<CSUpdateStreamRequest, CSUpdateStreamResponse>(
 			`/streams/${request.streamId}`,
@@ -659,6 +692,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		return { stream };
 	}
 
+	@log()
 	updateStreamMembership(request: UpdateStreamMembershipRequest) {
 		return this.put<CSPush, CSUpdateStreamMembershipResponse>(
 			`/streams/${request.streamId}`,
@@ -667,6 +701,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		);
 	}
 
+	@log()
 	manageStreamSubscriptions(streams: CSStream[]) {
 		if (!this._pubnub) {
 			return;
@@ -687,6 +722,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	// // 	})).stream;
 	// // }
 
+	@log()
 	fetchTeams(request: FetchTeamsRequest) {
 		let params = "";
 		if (request.mine) {
@@ -703,18 +739,22 @@ export class CodeStreamApiProvider implements ApiProvider {
 		);
 	}
 
+	@log()
 	getTeam(request: GetTeamRequest) {
 		return this.get<CSGetTeamResponse>(`/teams/${request.teamId}`, this._token);
 	}
 
+	@log()
 	fetchUsers(request: FetchUsersRequest) {
 		return this.get<CSGetUsersResponse>(`/users?teamId=${this.teamId}`, this._token);
 	}
 
+	@log()
 	getUser(request: GetUserRequest) {
 		return this.get<CSGetUserResponse>(`/users/${request.userId}`, this._token);
 	}
 
+	@log()
 	inviteUser(request: InviteUserRequest) {
 		return this.post<CSInviteUserRequest, CSInviteUserResponse>(
 			"/users",

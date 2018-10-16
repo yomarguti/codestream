@@ -1,8 +1,9 @@
 "use strict";
 import { Emitter, Event } from "vscode-languageserver";
-import { Logger } from "../../logger";
+import { Logger, TraceLevel } from "../../logger";
 import { CSUnreads } from "../../shared/agent.protocol";
 import { CSLastReads } from "../../shared/api.protocol";
+import { Iterables } from "../../system/iterable";
 import { ApiProvider } from "../apiProvider";
 
 export class Unreads {
@@ -73,10 +74,12 @@ export class Unreads {
 		this._lastReads[streamId] = postId;
 		this._unreads.set(streamId, { mentions: mentions, unreads: unreads });
 
-		Logger.debug(
-			`Unreads.update(${streamId}):`,
-			`lastRead=${postId}, mentions=${mentions}, unreads=${unreads}`
-		);
+		if (!this._suspended) {
+			Logger.debug(
+				`Unreads.update(${streamId}):`,
+				`lastRead=${postId}, mentions=${mentions}, unreads=${unreads}`
+			);
+		}
 
 		this.fireChanged();
 	}
@@ -91,7 +94,22 @@ export class Unreads {
 		this._dirty = false;
 
 		const values = this.values();
-		Logger.debug(`Unreads.changed:`, JSON.stringify(values));
+		if (Logger.level === TraceLevel.Debug) {
+			Logger.debug(
+				`Unreads.changed: mentions (${values.totalMentions}), unreads (${
+					values.totalUnreads
+				})\n${Iterables.join(
+					Iterables.filterMap(
+						this._unreads.entries(),
+						([id, count]) =>
+							count.mentions > 0 && count.unreads > 0
+								? `\t${id} = ${count.mentions} mention(s), ${count.unreads} unread(s)`
+								: undefined
+					),
+					"\n"
+				)}`
+			);
+		}
 
 		this._onDidChange.fire(values);
 	}

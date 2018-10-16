@@ -1,5 +1,6 @@
 "use strict";
 import { RequestType } from "vscode-languageserver-protocol";
+import { Logger, TraceLevel } from "../logger";
 import { Functions } from "./function";
 
 export interface LspHandler {
@@ -12,7 +13,7 @@ export function lspHandler(type: RequestType<any, any, void, void>): Function {
 	return (target: any, key: string, descriptor: PropertyDescriptor) => {
 		if (!(typeof descriptor.value === "function")) throw new Error("not supported");
 
-		const method = descriptor.value;
+		const fn = descriptor.value;
 
 		if (target.handlerRegistry === undefined) {
 			target.handlerRegistry = [];
@@ -21,8 +22,43 @@ export function lspHandler(type: RequestType<any, any, void, void>): Function {
 		target.handlerRegistry.push({
 			type: type,
 			key: key,
-			method: method
+			method: fn
 		});
+	};
+}
+
+export function log() {
+	return (target: any, name: string, descriptor: PropertyDescriptor) => {
+		if (!(typeof descriptor.value === "function")) throw new Error("not supported");
+		if (Logger.level !== TraceLevel.Verbose && Logger.level !== TraceLevel.Debug) return;
+
+		const fn = descriptor.value;
+
+		if (target.constructor && target.constructor.name) {
+			name = `${target.constructor.name}.${name}`;
+		}
+
+		const fnBody = fn.toString().replace(/((\/\/.*$)|(\/\*[\s\S]*?\*\/))/gm, "");
+		const parameters: string[] =
+			fnBody.slice(fnBody.indexOf("(") + 1, fnBody.indexOf(")")).match(/([^\s,]+)/g) || [];
+
+		descriptor.value = function(this: any, ...args: any[]) {
+			const loggable = args
+				.map((v: any, index: number) => {
+					let loggable = v.toString();
+					if (loggable === "[object Object]") {
+						loggable = JSON.stringify(v);
+					}
+
+					const p = parameters[index];
+					return p ? `${p}=${loggable}` : loggable;
+				})
+				.join(", ");
+
+			Logger.log(name, loggable);
+
+			return fn.apply(this, args);
+		};
 	};
 }
 

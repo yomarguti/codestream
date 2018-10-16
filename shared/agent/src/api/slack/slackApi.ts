@@ -9,7 +9,7 @@ import {
 import { RequestInit } from "node-fetch";
 import { Emitter, Event } from "vscode-languageserver";
 import { Container } from "../../container";
-import { Logger } from "../../logger";
+import { Logger, TraceLevel } from "../../logger";
 import {
 	CreateChannelStreamRequest,
 	CreateDirectStreamRequest,
@@ -63,6 +63,7 @@ import {
 	LoginResponse,
 	StreamType
 } from "../../shared/api.protocol";
+import { log } from "../../system";
 import {
 	ApiProvider,
 	CodeStreamApiMiddleware,
@@ -456,6 +457,7 @@ export class SlackApiProvider implements ApiProvider {
 		throw new Error("Not supported");
 	}
 
+	@log()
 	async subscribe(types?: MessageType[]) {
 		this._codestream.onDidReceiveMessage(this.onCodeStreamMessage, this);
 		await this._codestream.subscribe([
@@ -553,6 +555,7 @@ export class SlackApiProvider implements ApiProvider {
 		return this._codestream.grantPubNubChannelAccess(token, channel);
 	}
 
+	@log()
 	getMe() {
 		return this.getMeCore();
 	}
@@ -591,42 +594,52 @@ export class SlackApiProvider implements ApiProvider {
 		return meResponse;
 	}
 
+	@log()
 	getUnreads(request: GetUnreadsRequest) {
 		return Promise.resolve({ unreads: this._unreads.get() });
 	}
 
+	@log()
 	updatePreferences(request: UpdatePreferencesRequest) {
 		return this._codestream.updatePreferences(request);
 	}
 
+	@log()
 	updatePresence(request: UpdatePresenceRequest) {
 		return this._codestream.updatePresence(request);
 	}
 
+	@log()
 	fetchFileStreams(request: FetchFileStreamsRequest) {
 		return this._codestream.fetchFileStreams(request);
 	}
 
+	@log()
 	createMarkerLocation(request: CreateMarkerLocationRequest) {
 		return this._codestream.createMarkerLocation(request);
 	}
 
+	@log()
 	fetchMarkerLocations(request: FetchMarkerLocationsRequest) {
 		return this._codestream.fetchMarkerLocations(request);
 	}
 
+	@log()
 	fetchMarkers(request: FetchMarkersRequest) {
 		return this._codestream.fetchMarkers(request);
 	}
 
+	@log()
 	getMarker(request: GetMarkerRequest) {
 		return this._codestream.getMarker(request);
 	}
 
+	@log()
 	updateMarker(request: UpdateMarkerRequest) {
 		return this._codestream.updateMarker(request);
 	}
 
+	@log()
 	async createPost(request: CreatePostRequest) {
 		try {
 			const meMessage = request.text && request.text.startsWith("/me ");
@@ -763,6 +776,7 @@ export class SlackApiProvider implements ApiProvider {
 		}
 	}
 
+	@log()
 	async deletePost(request: DeletePostRequest) {
 		const { streamId, postId } = fromSlackPostId(request.postId, request.streamId);
 		const postResponse = await this.getPost({ streamId: streamId, postId: postId });
@@ -780,6 +794,7 @@ export class SlackApiProvider implements ApiProvider {
 		return { post: postResponse.post };
 	}
 
+	@log()
 	async editPost(request: EditPostRequest) {
 		const { streamId, postId } = fromSlackPostId(request.postId, request.streamId);
 
@@ -808,6 +823,7 @@ export class SlackApiProvider implements ApiProvider {
 		return postResponse;
 	}
 
+	@log()
 	async fetchPostReplies(request: FetchPostRepliesRequest) {
 		const { streamId, postId } = fromSlackPostId(request.postId, request.streamId);
 
@@ -855,6 +871,7 @@ export class SlackApiProvider implements ApiProvider {
 		return { posts: posts };
 	}
 
+	@log()
 	async fetchPosts(request: FetchPostsRequest) {
 		let response;
 
@@ -919,6 +936,7 @@ export class SlackApiProvider implements ApiProvider {
 		return { posts: posts, more: has_more };
 	}
 
+	@log()
 	async getPost(request: GetPostRequest) {
 		const { streamId, postId } = fromSlackPostId(request.postId, request.streamId);
 
@@ -977,6 +995,7 @@ export class SlackApiProvider implements ApiProvider {
 		return { post: post };
 	}
 
+	@log()
 	async markPostUnread(request: MarkPostUnreadRequest) {
 		const { streamId, postId } = fromSlackPostId(request.postId, request.streamId);
 
@@ -1009,6 +1028,7 @@ export class SlackApiProvider implements ApiProvider {
 		return this.getPost({ streamId: streamId, postId: postId });
 	}
 
+	@log()
 	async reactToPost(request: ReactToPostRequest) {
 		const { streamId, postId } = fromSlackPostId(request.postId, request.streamId);
 
@@ -1036,18 +1056,22 @@ export class SlackApiProvider implements ApiProvider {
 		return this.getPost({ streamId: streamId, postId: postId });
 	}
 
+	@log()
 	createRepo(request: CreateRepoRequest) {
 		return this._codestream.createRepo(request);
 	}
 
+	@log()
 	fetchRepos() {
 		return this._codestream.fetchRepos();
 	}
 
+	@log()
 	getRepo(request: GetRepoRequest) {
 		return this._codestream.getRepo(request);
 	}
 
+	@log()
 	async createChannelStream(request: CreateChannelStreamRequest) {
 		if (request.isTeamStream || request.memberIds == null || request.memberIds.length === 0) {
 			throw new Error("Cannot create team streams on Slack");
@@ -1072,6 +1096,7 @@ export class SlackApiProvider implements ApiProvider {
 		return { stream: stream! as CSChannelStream };
 	}
 
+	@log()
 	async createDirectStream(request: CreateDirectStreamRequest) {
 		const response = await this._slack.conversations.open({
 			users: request.memberIds.join(","),
@@ -1085,6 +1110,7 @@ export class SlackApiProvider implements ApiProvider {
 		return streamResponse as CreateDirectStreamResponse;
 	}
 
+	@log()
 	async fetchStreams(request: FetchStreamsRequest) {
 		try {
 			// const response = await this._slack.conversations.list({
@@ -1120,6 +1146,9 @@ export class SlackApiProvider implements ApiProvider {
 				return { streams: streams.filter(s => request.types!.includes(s.type)) };
 			}
 
+			if (Logger.level === TraceLevel.Debug) {
+				Logger.debug(`Slack streams:\n${streams.map(s => `\t${s.id} = ${s.name}`).join("\n")}`);
+			}
 			return { streams: streams };
 		} finally {
 			this._unreads.resume();
@@ -1251,11 +1280,13 @@ export class SlackApiProvider implements ApiProvider {
 		return streams;
 	}
 
+	@log()
 	async fetchUnreadStreams(request: FetchUnreadStreamsRequest) {
 		// TODO:
 		return { streams: [] };
 	}
 
+	@log()
 	async getStream(request: GetStreamRequest) {
 		if (request.type === StreamType.File) {
 			return this._codestream.getStream(request);
@@ -1293,6 +1324,7 @@ export class SlackApiProvider implements ApiProvider {
 		return members;
 	}
 
+	@log()
 	async joinStream(request: JoinStreamRequest) {
 		const response = await this._slack.conversations.join({
 			channel: request.streamId
@@ -1311,6 +1343,7 @@ export class SlackApiProvider implements ApiProvider {
 		return { stream: stream! };
 	}
 
+	@log()
 	async leaveStream(request: LeaveStreamRequest) {
 		const response = await this._slack.conversations.leave({
 			channel: request.streamId
@@ -1324,6 +1357,7 @@ export class SlackApiProvider implements ApiProvider {
 		return stream!;
 	}
 
+	@log()
 	async markStreamRead(request: MarkStreamReadRequest) {
 		let response = await this._slack.conversations.info({
 			channel: request.streamId
@@ -1356,18 +1390,22 @@ export class SlackApiProvider implements ApiProvider {
 		return {};
 	}
 
+	@log()
 	async updateStream(request: UpdateStreamRequest): Promise<UpdateStreamResponse> {
 		throw new Error("Method not implemented.");
 	}
 
+	@log()
 	updateStreamMembership(
 		request: UpdateStreamMembershipRequest
 	): Promise<UpdateStreamMembershipResponse> {
 		throw new Error("Method not implemented.");
 	}
 
+	@log()
 	manageStreamSubscriptions(streams: CSStream[]) {}
 
+	@log()
 	async fetchTeams(request: FetchTeamsRequest) {
 		const response = await this._codestream.fetchTeams(request);
 
@@ -1380,6 +1418,7 @@ export class SlackApiProvider implements ApiProvider {
 		return response;
 	}
 
+	@log()
 	async getTeam(request: GetTeamRequest) {
 		const response = await this._codestream.getTeam(request);
 
@@ -1391,6 +1430,7 @@ export class SlackApiProvider implements ApiProvider {
 		return response;
 	}
 
+	@log()
 	async fetchUsers(request: FetchUsersRequest) {
 		const response = await this._slack.users.list();
 
@@ -1406,6 +1446,7 @@ export class SlackApiProvider implements ApiProvider {
 		return { users: users };
 	}
 
+	@log()
 	async getUser(request: GetUserRequest) {
 		if (request.userId === this.userId) {
 			return this.getMe();
@@ -1423,6 +1464,7 @@ export class SlackApiProvider implements ApiProvider {
 		return { user: user };
 	}
 
+	@log()
 	inviteUser(request: InviteUserRequest) {
 		return this._codestream.inviteUser(request);
 	}
