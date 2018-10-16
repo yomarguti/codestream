@@ -196,7 +196,7 @@ export default infiniteLoadable(
 				hasMore
 			} = this.props;
 
-			console.debug("PostList.render", { props: this.props, state: this.state });
+			// console.debug("PostList.render", { props: this.props, state: this.state });
 
 			return (
 				<div className="postslist" ref={this.list} onScroll={this.onScroll}>
@@ -214,9 +214,15 @@ export default infiniteLoadable(
 								? posts.find(p => p.id === post.parentPostId) || post.parentPostId
 								: null;
 
-						const hasNewMessageLine =
-							newMessagesAfterSeqNum &&
-							safe(() => Number(this.props.posts[index - 1].seqNum)) === newMessagesAfterSeqNum;
+						const hasNewMessageLine = safe(() => {
+							if (!newMessagesAfterSeqNum) return false;
+
+							const postIsAfterLastRead =
+								Number(this.props.posts[index - 1].seqNum) === Number(newMessagesAfterSeqNum);
+							if (postIsAfterLastRead && post.creatorId !== this.props.currentUserId) {
+								return true;
+							}
+						});
 
 						return (
 							<React.Fragment key={post.id}>

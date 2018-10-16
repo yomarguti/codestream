@@ -163,27 +163,44 @@ export class SimpleStream extends Component {
 			this.resizeStream();
 		}
 
+		this.setUmiInfo(prevProps);
+
 		const switchedStreams = postStreamId && postStreamId !== prevProps.postStreamId;
 		if (switchedStreams) {
 			this.handleDismissThread({ track: false });
 			safe(() => this._postslist.scrollToBottom());
-			this.setUmiInfo();
-		} else {
-			if (prevProps.umis.lastReads[postStreamId] !== this.props.umis.lastReads[postStreamId])
-				this.setUmiInfo(this.props.hasFocus ? false : true);
 		}
 		if (this.props.activePanel !== prevProps.activePanel && this.state.editingPostId)
 			this.handleDismissEdit();
 	}
 
-	setUmiInfo(updateLine = true) {
+	setUmiInfo(prevProps) {
 		const { postStreamId, umis } = this.props;
 		const lastReadSeqNum = umis.lastReads[postStreamId];
-		const nextState = { lastReadSeqNum };
-		if (updateLine) {
-			nextState.newMessagesAfterSeqNum = lastReadSeqNum;
+
+		if (prevProps) {
+			const switchedStreams = postStreamId && postStreamId !== prevProps.postStreamId;
+			if (switchedStreams) {
+				// reset lastRead && where the new message line should be
+				this.setState({
+					lastReadSeqNum,
+					newMessagesAfterSeqNum: lastReadSeqNum
+				});
+			} else {
+				const newUnread = umis.unreads[postStreamId] && !prevProps.umis.unreads[postStreamId];
+				if (newUnread) {
+					// new message line has moved
+					this.setState({
+						newMessagesAfterSeqNum: lastReadSeqNum
+					});
+				}
+			}
+		} else {
+			this.setState({
+				lastReadSeqNum,
+				newMessagesAfterSeqNum: lastReadSeqNum
+			});
 		}
-		this.setState(nextState);
 	}
 
 	setPostsListRef = element => {
