@@ -33,20 +33,6 @@ export const FetchReposRequestType = new RequestType<
 	void
 >("codeStream/repos");
 
-export interface FindRepoRequest {
-	url: string;
-	firstCommitHashes: string[];
-}
-
-export interface FindRepoResponse {
-	repo?: CSRepository;
-	usernames?: string[];
-}
-
-export const FindRepoRequestType = new RequestType<FindRepoRequest, FindRepoResponse, void, void>(
-	"codeStream/repos/find"
-);
-
 export interface GetRepoRequest {
 	repoId: string;
 }

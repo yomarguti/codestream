@@ -6,9 +6,6 @@ import {
 	FetchReposRequest,
 	FetchReposRequestType,
 	FetchReposResponse,
-	FindRepoRequest,
-	FindRepoRequestType,
-	FindRepoResponse,
 	GetRepoRequest,
 	GetRepoRequestType,
 	GetRepoResponse
@@ -21,11 +18,6 @@ export class ReposManager extends CachedEntityManagerBase<CSRepository> {
 	@lspHandler(CreateRepoRequestType)
 	createRepo(request: CreateRepoRequest): Promise<CreateRepoResponse> {
 		return this.session.api.createRepo(request);
-	}
-
-	@lspHandler(FindRepoRequestType)
-	findRepo(request: FindRepoRequest): Promise<FindRepoResponse> {
-		return this.session.api.findRepo(request);
 	}
 
 	@lspHandler(FetchReposRequestType)

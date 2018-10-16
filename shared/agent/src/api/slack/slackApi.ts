@@ -29,7 +29,6 @@ import {
 	FetchTeamsRequest,
 	FetchUnreadStreamsRequest,
 	FetchUsersRequest,
-	FindRepoRequest,
 	GetMarkerRequest,
 	GetPostRequest,
 	GetRepoRequest,
@@ -1043,10 +1042,6 @@ export class SlackApiProvider implements ApiProvider {
 
 	fetchRepos() {
 		return this._codestream.fetchRepos();
-	}
-
-	findRepo(request: FindRepoRequest) {
-		return this._codestream.findRepo(request);
 	}
 
 	getRepo(request: GetRepoRequest) {

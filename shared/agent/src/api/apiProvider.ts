@@ -37,8 +37,6 @@ import {
 	FetchUnreadStreamsResponse,
 	FetchUsersRequest,
 	FetchUsersResponse,
-	FindRepoRequest,
-	FindRepoResponse,
 	GetMarkerRequest,
 	GetMarkerResponse,
 	GetMeResponse,
@@ -236,7 +234,6 @@ export interface ApiProvider {
 
 	createRepo(request: CreateRepoRequest): Promise<CreateRepoResponse>;
 	fetchRepos(request: FetchReposRequest): Promise<FetchReposResponse>;
-	findRepo(request: FindRepoRequest): Promise<FindRepoResponse>;
 	getRepo(request: GetRepoRequest): Promise<GetRepoResponse>;
 
 	createChannelStream(request: CreateChannelStreamRequest): Promise<CreateChannelStreamResponse>;

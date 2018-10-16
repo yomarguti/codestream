@@ -25,7 +25,6 @@ import {
 	FetchTeamsRequest,
 	FetchUnreadStreamsRequest,
 	FetchUsersRequest,
-	FindRepoRequest,
 	GetMarkerRequest,
 	GetPostRequest,
 	GetRepoRequest,
@@ -550,16 +549,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	fetchRepos() {
 		return this.get<CSGetReposResponse>(`/repos?teamId=${this.teamId}`, this._token);
-	}
-
-	findRepo(request: FindRepoRequest) {
-		return this.get<CSFindRepoResponse>(
-			`/no-auth/find-repo?url=${encodeURIComponent(
-				request.url
-			)}&knownCommitHashes=${request.firstCommitHashes.join(",")}&firstCommitHash=${
-				request.firstCommitHashes[0]
-			}`
-		);
 	}
 
 	getRepo(request: GetRepoRequest) {
