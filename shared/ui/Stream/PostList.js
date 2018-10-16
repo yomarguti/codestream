@@ -83,7 +83,8 @@ export default infiniteLoadable(
 
 		scrollToBottom = () => {
 			if (this.list.current) {
-				this.list.current.scrollTop = 100000;
+				const { clientHeight, scrollHeight } = this.list.current;
+				this.list.current.scrollTop = scrollHeight - clientHeight + 10000;
 			}
 		};
 
@@ -121,7 +122,7 @@ export default infiniteLoadable(
 
 		handleScroll = rAFThrottle(target => {
 			const { clientHeight, scrollTop } = target;
-			if (scrollTop === 0) this.props.onDidScrollToTop();
+			if (scrollTop < 60) this.props.onDidScrollToTop();
 
 			const $posts = target.getElementsByClassName("post");
 			const lastPostPosition = $posts[$posts.length - 1].getBoundingClientRect().y;
