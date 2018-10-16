@@ -1,5 +1,4 @@
 "use strict";
-import { Config } from "./config";
 import { DocumentManager } from "./documentManager";
 import { GitService } from "./git/gitService";
 import { Logger } from "./logger";
