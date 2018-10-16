@@ -1,15 +1,25 @@
 # CodeStream BETA
 
-CodeStream puts modern messaging tools right inside VS Code, and saves all of your discussions about code, with the code. The end result is that your source files become annotated with your team’s code-related discussions, delivering the full wisdom of every developer who has contributed to your codebase. Your discussions become documentation for your source tree, creating a knowledge base from which future developers can learn.
+CodeStream puts Slack right inside VS Code, and saves all of your discussions about code, with the code. The end result is that your source files become annotated with your team’s code-related discussions, delivering the full wisdom of every developer who has contributed to your codebase. Your discussions become documentation for your source tree, creating a knowledge base from which future developers can learn.
 
 ### Does your team use Slack? ###
-Sign into CodeStream using Slack and all of your team’s channels and direct messages will be accessible from within CodeStream. Leverage your existing chat platform, while still being able to connect discussions to specific blocks of code. If your team doesn’t use Slack, you can create channels using CodeStream.
+Sign into CodeStream using Slack and all of your team’s channels and direct messages will be accessible from within CodeStream. Leverage your existing chat platform, while still being able to connect discussions to specific blocks of code. Slack functionality now available in your editor includes:
+
+- Join and create Slack channels
+- Find and start Slack direct messages
+- Scroll through the entire history of a Slack channel or DM
+- Unread message indicators on Slack get cleared when you read messages on CodeStream
+- @mention your teammates on Slack, even if they aren’t on CodeStream
+- Use emoji and reactions
+- Edit and delete Slack messages from CodeStream
+
+If your team doesn’t use Slack, you can create channels using CodeStream.
 
 
 ![CodeStream](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/CodeStream.png)
 # Requirements
 
-- CodeStream requires a current version of **[Visual Studio Code](https://code.visualstudio.com/)**.
+- CodeStream requires a current version of [Visual Studio Code](https://code.visualstudio.com/).
 - Your repository must be managed by Git, or a Git hosting service like GitHub.
 - In order to sign up with Slack, make sure your company doesn't require Slack apps to be pre-approved by an admin. CodeStream is not yet available in the Slack app directory.
 
