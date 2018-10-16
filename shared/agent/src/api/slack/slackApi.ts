@@ -1168,7 +1168,7 @@ export class SlackApiProvider implements ApiProvider {
 		const streams = (await Promise.all<CSChannelStream | CSDirectStream>(
 			channels.map(async (c: any) => {
 				// Don't query for channels we aren't a member of
-				if (!c.is_member) {
+				if (!c.is_member || c.is_archived) {
 					return fromSlackChannel(c, usersById, this._slackUserId, this._codestreamTeamId);
 				}
 
@@ -1208,6 +1208,10 @@ export class SlackApiProvider implements ApiProvider {
 
 		const streams = (await Promise.all<CSChannelStream | CSDirectStream>(
 			groups.map(async (g: any) => {
+				if (g.is_archived) {
+					return fromSlackChannelOrDirect(g, usersById, this._slackUserId, this._codestreamTeamId);
+				}
+
 				const response = await this._slack.groups.info({
 					channel: g.id
 				});
@@ -1251,6 +1255,10 @@ export class SlackApiProvider implements ApiProvider {
 
 		const streams = (await Promise.all<CSChannelStream | CSDirectStream>(
 			ims.map(async (im: any) => {
+				if (im.is_user_deleted) {
+					return fromSlackDirect(im, usersById, this._slackUserId, this._codestreamTeamId);
+				}
+
 				const response = await this._slack.conversations.info({
 					channel: im.id
 				});
