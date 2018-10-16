@@ -612,7 +612,7 @@ class ComposeBox extends React.Component {
 		postTextByStream[this.props.streamId] = "";
 
 		this.setState({
-			postTextByStream,
+			postTextByStream: {},
 			quote: null,
 			title: "",
 			color: "blue",
@@ -685,230 +685,243 @@ class ComposeBox extends React.Component {
 					<Icon name="x" />
 				</span>
 			</div>,
-			<form id="code-comment-form" className="standard-form" key="two">
-				<fieldset className="form-body">
-					<div id="controls" className="control-group">
-						<div className="two-column">
-							<div className="half-width">
-								<label>Post to</label>
-								<div className="styled-select">
-									<select
-										onChange={e => this.setState({ streamId: e.target.value })}
-										defaultValue={this.props.streamId}
+			<div className="shadow-overlay" key="three">
+				<div className="shadow-container">
+					<div className="shadow shadow-top" />
+					<div className="shadow shadow-bottom" />
+				</div>
+				<form id="code-comment-form" className="standard-form" key="two">
+					<div className="shadow-cover-top" />
+					<fieldset className="form-body">
+						<div id="controls" className="control-group">
+							<div className="two-column">
+								<div className="half-width">
+									<label>Post to</label>
+									<div className="styled-select">
+										<select
+											onChange={e => this.setState({ streamId: e.target.value })}
+											defaultValue={this.props.streamId}
+										>
+											{Object.values(this.props.channelStreams).map(channel => {
+												return (
+													<option key={channel.id} value={channel.id} id={channel.id}>
+														#{channel.name}
+													</option>
+												);
+											})}
+											{Object.values(this.props.directMessageStreams).map(channel => {
+												return (
+													<option key={channel.id} value={channel.id} id={channel.id}>
+														@{channel.name}
+													</option>
+												);
+											})}
+										</select>
+									</div>
+								</div>
+								<div className="half-width">
+									<label>Marker</label>
+									<div className="styled-select">
+										<select onChange={e => this.setState({ color: e.target.value })}>
+											<option value="blue">Blue</option>
+											<option value="green">Green</option>
+											<option value="yellow">Yellow</option>
+											<option value="orange">Orange</option>
+											<option value="red">Red</option>
+											<option value="purple">Purple</option>
+											<option value="aqua">Aqua</option>
+											<option value="gray">Gray</option>
+											<hr />
+											<option value="none">None</option>
+										</select>
+									</div>
+								</div>
+							</div>
+							{quote && (
+								<div style={{ position: "relative" }}>
+									<span
+										style={{
+											position: "absolute",
+											right: 0,
+											top: "17px",
+											cursor: "pointer",
+											transform: "scale(0.75)"
+										}}
+										onClick={this.handleClickDismissQuote}
 									>
-										{Object.values(this.props.channelStreams).map(channel => {
-											return (
-												<option key={channel.id} value={channel.id} id={channel.id}>
-													#{channel.name}
-												</option>
-											);
-										})}
-										{Object.values(this.props.directMessageStreams).map(channel => {
-											return (
-												<option key={channel.id} value={channel.id} id={channel.id}>
-													@{channel.name}
-												</option>
-											);
-										})}
-									</select>
+										<Icon name="x" />
+									</span>
+									<Tooltip
+										placement="top"
+										delay=".5"
+										title="Select a new range and it will update here..."
+									>
+										<label>{rangeText}</label>
+									</Tooltip>
+									{this.renderCode(quote)}
 								</div>
-							</div>
-							<div className="half-width">
-								<label>Marker</label>
-								<div className="styled-select">
-									<select onChange={e => this.setState({ color: e.target.value })}>
-										<option value="blue">Blue</option>
-										<option value="green">Green</option>
-										<option value="yellow">Yellow</option>
-										<option value="orange">Orange</option>
-										<option value="red">Red</option>
-										<option value="purple">Purple</option>
-										<option value="aqua">Aqua</option>
-										<option value="gray">Gray</option>
-										<hr />
-										<option value="none">None</option>
-									</select>
+							)}
+							{!quote && <label>CodeBlock</label>}
+							{!quote && (
+								<div
+									className="hint frame control-group"
+									style={{ justifyContent: "center", marginTop: "0" }}
+								>
+									<Icon name="info" /> &nbsp;Select a range to comment on a block of code.
 								</div>
-							</div>
-						</div>
-						{quote && (
-							<div style={{ position: "relative" }}>
-								<span
-									style={{
-										position: "absolute",
-										right: 0,
-										top: "17px",
-										cursor: "pointer",
-										transform: "scale(0.75)"
-									}}
-									onClick={this.handleClickDismissQuote}
-								>
-									<Icon name="x" />
-								</span>
-								<Tooltip
-									placement="top"
-									delay=".5"
-									title="Select a new range and it will update here..."
-								>
-									<label>{rangeText}</label>
-								</Tooltip>
-								{this.renderCode(quote)}
-							</div>
-						)}
-						{!quote && <label>CodeBlock</label>}
-						{!quote && (
-							<div
-								className="hint frame control-group"
-								style={{ justifyContent: "center", marginTop: "0" }}
-							>
-								<Icon name="info" /> &nbsp;Select a range to comment on a block of code.
-							</div>
-						)}
-						<div className="tab-group">
-							<input
-								id="radio-comment-type-comment"
-								type="radio"
-								name="comment-type"
-								checked={commentType === "comment"}
-							/>
-							<label
-								htmlFor="radio-comment-type-comment"
-								className={createClassString({
-									checked: commentType === "comment"
-								})}
-								onClick={e => this.setCommentType("comment")}
-							>
-								<Icon name="comment" className="chat-bubble" /> <b>Comment</b>
-							</label>
-							<input
-								id="radio-comment-type-question"
-								type="radio"
-								name="comment-type"
-								checked={commentType === "question"}
-							/>
-							<label
-								htmlFor="radio-comment-type-question"
-								className={createClassString({
-									checked: commentType === "question"
-								})}
-								onClick={e => this.setCommentType("question")}
-							>
-								<Icon name="question" /> <b>Question</b>
-							</label>
-							<input
-								id="radio-comment-type-issue"
-								type="radio"
-								name="comment-type"
-								checked={commentType === "issue"}
-							/>
-							<label
-								htmlFor="radio-comment-type-issue"
-								className={createClassString({
-									checked: commentType === "issue"
-								})}
-								onClick={e => this.setCommentType("issue")}
-							>
-								<Icon name="issue" /> <b>Issue</b>
-							</label>
-							<input
-								id="radio-comment-type-trap"
-								type="radio"
-								name="comment-type"
-								checked={commentType === "trap"}
-							/>
-							<label
-								htmlFor="radio-comment-type-trap"
-								className={createClassString({
-									checked: commentType === "trap"
-								})}
-								onClick={e => this.setCommentType("trap")}
-							>
-								<Icon name="trap" /> <b>Code Trap</b>
-							</label>
-						</div>
-						{commentType === "trap" && (
-							<div className="hint frame control-group" style={{ marginBottom: "10px" }}>
-								{trapTip}
-							</div>
-						)}
-						{(commentType === "issue" ||
-							commentType === "question" ||
-							commentType === "snippet") && (
-							<div className="control-group">
+							)}
+							<div className="tab-group">
 								<input
-									type="text"
-									name="title"
-									className="native-key-bindings input-text control"
-									value={this.state.title}
-									onChange={e => this.setState({ title: e.target.value })}
-									placeholder={titlePlaceholder}
-									ref={ref => (this._titleInput = ref)}
+									id="radio-comment-type-comment"
+									type="radio"
+									name="comment-type"
+									checked={commentType === "comment"}
 								/>
-							</div>
-						)}
-						{commentType === "issue" && (
-							<div id="members-controls" className="control-group" style={{ marginBottom: "10px" }}>
-								<Select
-									id="input-assignees"
-									name="assignees"
-									classNamePrefix="native-key-bindings react-select"
-									isMulti={true}
-									value={this.state.assignees || []}
-									options={teamMembersForSelect}
-									closeMenuOnSelect={false}
-									isClearable={false}
-									placeholder="Assignees (optional)"
-									onChange={value => this.setState({ assignees: value })}
+								<label
+									htmlFor="radio-comment-type-comment"
+									className={createClassString({
+										checked: commentType === "comment"
+									})}
+									onClick={e => this.setCommentType("comment")}
+								>
+									<Icon name="comment" className="chat-bubble" /> <b>Comment</b>
+								</label>
+								<input
+									id="radio-comment-type-question"
+									type="radio"
+									name="comment-type"
+									checked={commentType === "question"}
 								/>
+								<label
+									htmlFor="radio-comment-type-question"
+									className={createClassString({
+										checked: commentType === "question"
+									})}
+									onClick={e => this.setCommentType("question")}
+								>
+									<Icon name="question" /> <b>Question</b>
+								</label>
+								<input
+									id="radio-comment-type-issue"
+									type="radio"
+									name="comment-type"
+									checked={commentType === "issue"}
+								/>
+								<label
+									htmlFor="radio-comment-type-issue"
+									className={createClassString({
+										checked: commentType === "issue"
+									})}
+									onClick={e => this.setCommentType("issue")}
+								>
+									<Icon name="issue" /> <b>Issue</b>
+								</label>
+								<input
+									id="radio-comment-type-trap"
+									type="radio"
+									name="comment-type"
+									checked={commentType === "trap"}
+								/>
+								<label
+									htmlFor="radio-comment-type-trap"
+									className={createClassString({
+										checked: commentType === "trap"
+									})}
+									onClick={e => this.setCommentType("trap")}
+								>
+									<Icon name="trap" /> <b>Code Trap</b>
+								</label>
 							</div>
-						)}
-						{commentType === "snippet" && (
-							<ContentEditable
-								className={createClassString("native-key-bindings", "message-input")}
-								id="snippet-div"
-								tabIndex="-1"
-								onChange={this.handleChange}
-								onBlur={this.handleBlur}
-								onClick={this.handleClick}
-								html=""
-								placeholder="Code goes here"
-								ref={ref => (this._contentEditableSnippet = ref)}
-							/>
-						)}
-						{this.renderMessageInput()}
-					</div>
-					<div className="button-group">
-						<Tooltip placement="top" delay=".5" title={submitAnotherLabel}>
+							{commentType === "trap" && (
+								<div className="hint frame control-group" style={{ marginBottom: "10px" }}>
+									{trapTip}
+								</div>
+							)}
+							{(commentType === "issue" ||
+								commentType === "question" ||
+								commentType === "snippet") && (
+								<div className="control-group">
+									<input
+										type="text"
+										name="title"
+										className="native-key-bindings input-text control"
+										value={this.state.title}
+										onChange={e => this.setState({ title: e.target.value })}
+										placeholder={titlePlaceholder}
+										ref={ref => (this._titleInput = ref)}
+									/>
+								</div>
+							)}
+							{commentType === "issue" && (
+								<div
+									id="members-controls"
+									className="control-group"
+									style={{ marginBottom: "10px" }}
+								>
+									<Select
+										id="input-assignees"
+										name="assignees"
+										classNamePrefix="native-key-bindings react-select"
+										isMulti={true}
+										value={this.state.assignees || []}
+										options={teamMembersForSelect}
+										closeMenuOnSelect={false}
+										isClearable={false}
+										placeholder="Assignees (optional)"
+										onChange={value => this.setState({ assignees: value })}
+									/>
+								</div>
+							)}
+							{commentType === "snippet" && (
+								<ContentEditable
+									className={createClassString("native-key-bindings", "message-input")}
+									id="snippet-div"
+									tabIndex="-1"
+									onChange={this.handleChange}
+									onBlur={this.handleBlur}
+									onClick={this.handleClick}
+									html=""
+									placeholder="Code goes here"
+									ref={ref => (this._contentEditableSnippet = ref)}
+								/>
+							)}
+							{this.renderMessageInput()}
+						</div>
+						<div className="button-group">
+							<Tooltip placement="top" delay=".5" title={submitAnotherLabel}>
+								<Button
+									style={{
+										marginLeft: "10px",
+										float: "right",
+										paddingLeft: "10px",
+										paddingRight: "10px",
+										width: "auto",
+										marginRight: 0
+									}}
+									className="control-button"
+									type="submit"
+									loading={this.state.loading}
+									onClick={e => this.submitThePost(e)}
+								>
+									Submit
+								</Button>
+							</Tooltip>
 							<Button
-								style={{
-									marginLeft: "10px",
-									float: "right",
-									paddingLeft: "10px",
-									paddingRight: "10px",
-									width: "auto",
-									marginRight: 0
-								}}
-								className="control-button"
+								style={{ float: "right", paddingLeft: "10px", paddingRight: "10px", width: "auto" }}
+								className="control-button cancel"
 								type="submit"
 								loading={this.state.loading}
-								onClick={e => this.submitThePost(e)}
+								onClick={this.handleClickDismissMultiCompose}
 							>
-								Submit
+								Cancel
 							</Button>
-						</Tooltip>
-						<Button
-							style={{ float: "right", paddingLeft: "10px", paddingRight: "10px", width: "auto" }}
-							className="control-button cancel"
-							type="submit"
-							loading={this.state.loading}
-							onClick={this.handleClickDismissMultiCompose}
-						>
-							Cancel
-						</Button>
-						<span className="hint">Styling with Markdown is supported</span>
-					</div>
-				</fieldset>
-			</form>
+							<span className="hint">Styling with Markdown is supported</span>
+						</div>
+						<div style={{ clear: "both" }} />
+						<div className="shadow-cover-bottom" />
+					</fieldset>
+				</form>
+			</div>
 		];
 		// 	<input
 		// 	id="radio-comment-type-snippet"
