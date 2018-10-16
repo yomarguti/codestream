@@ -688,7 +688,6 @@ class ComposeBox extends React.Component {
 			<div className="shadow-overlay" key="three">
 				<div className="shadow-container">
 					<div className="shadow shadow-top" />
-					<div className="shadow shadow-bottom" />
 				</div>
 				<form id="code-comment-form" className="standard-form" key="two">
 					<div className="shadow-cover-top" />
@@ -918,7 +917,6 @@ class ComposeBox extends React.Component {
 							<span className="hint">Styling with Markdown is supported</span>
 						</div>
 						<div style={{ clear: "both" }} />
-						<div className="shadow-cover-bottom" />
 					</fieldset>
 				</form>
 			</div>
