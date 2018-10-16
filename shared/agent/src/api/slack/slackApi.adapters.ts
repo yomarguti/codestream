@@ -16,11 +16,15 @@ const defaultCreatedAt = 165816000000;
 // const multiPartyNamesRegEx = /^mpdm-([^-]+)(--.*)-1$/;
 // const multiPartyNameRegEx = /--([^-]+)/g;
 
+const markerAttachmentRegex = /codestream\:\/\/marker\/(.*)/;
 const mentionsRegex = /(^|\s)@(\w+)(?:\b(?!@|[\(\{\[\<\-])|$)/g;
 const pseudoMentionsRegex = /(^|\s)@(everyone|channel|here)(?:\b(?!@|[\(\{\[\<\-])|$)/g;
-const slackMentionsRegex = /\<[@|!](\w+)\>/g;
+
+// Docs here: https://api.slack.com/docs/message-formatting
+const slackCommandsRegex = /\<!(\w+)\|(\w+)\>/g;
 const slackChannelsRegex = /\<#(\w+)\|(\w+)\>/g;
-const markerAttachmentRegex = /codestream\:\/\/marker\/(.*)/;
+const slackMentionsRegex = /\<[@|!](\w+)\>/g;
+const slackLinkRegex = /\<((?:https?:\/\/|mailto:).*?)(?:\|(.*?))?\>/g;
 
 export function fromSlackChannelIdToType(
 	streamId: string
@@ -107,6 +111,7 @@ export function fromSlackDirect(
 	if (channel.is_im) {
 		const user = usersById.get(channel.user);
 
+		// TODO: Set muted when channel.is_open = false
 		return {
 			createdAt: channel.created,
 			creatorId: slackUserId,
@@ -352,7 +357,16 @@ export function fromSlackPostText(
 		.replace(slackChannelsRegex, (match: string, channel: string, name: string) => {
 			return `#${name}`;
 		})
-		// Slack always encodes < & > so decode them
+		.replace(
+			slackCommandsRegex,
+			(match: string, command: string, label: string) => (label == null ? command : label)
+		)
+		.replace(
+			slackLinkRegex,
+			(match: string, url: string, label: string) => (label == null ? url : `[${label}](url)`)
+		)
+		// Slack always encodes &, <, > so decode them
+		.replace("&amp;", "&")
 		.replace("&lt;", "<")
 		.replace("&gt;", ">");
 
@@ -368,6 +382,13 @@ export function toSlackPostText(
 	mentionedUserIds: string[] | undefined,
 	usersByName: Map<string, CSUser>
 ) {
+	if (text != null) {
+		text = text
+			.replace("&", "&amp;")
+			.replace("<", "&lt;")
+			.replace(">", "&gt;");
+	}
+
 	const hasMentionedUsers = mentionedUserIds != null && mentionedUserIds.length !== 0;
 	if (hasMentionedUsers || (text != null && pseudoMentionsRegex.test(text))) {
 		text = text.replace(mentionsRegex, (match: string, prefix: string, mentionName: string) => {
@@ -387,7 +408,7 @@ export function toSlackPostText(
 	}
 
 	if (text.startsWith("/me ")) {
-		return text.substring(4);
+		text = text.substring(4);
 	}
 
 	return text;
