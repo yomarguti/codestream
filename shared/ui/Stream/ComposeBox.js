@@ -512,11 +512,11 @@ class ComposeBox extends React.Component {
 			mentionedUserIds: this.props.findMentionedUserIds(text, this.props.teammates),
 			autoMentions: this.state.autoMentions,
 			assignees: multiCompose ? assigneeIds : [],
-			color: multiCompose ? "" : color,
+			color: multiCompose ? color : "",
 			forceStreamId: streamId
 		});
 
-		if (event.metaKey) this.softReset();
+		if (event && event.metaKey) this.softReset();
 		else {
 			this.reset();
 			this.handleClickDismissMultiCompose();
@@ -564,7 +564,6 @@ class ComposeBox extends React.Component {
 
 	handleClickDismissQuote = event => {
 		if (event) event.preventDefault();
-		this.props.setMultiCompose(this.props.commentType || "comment");
 		this.setState({ quote: null });
 	};
 
@@ -616,11 +615,10 @@ class ComposeBox extends React.Component {
 			postTextByStream: {},
 			quote: null,
 			title: "",
-			color: "blue",
+			color: "",
 			assignees: [],
 			autoMentions: [],
-			emojiOpen: false,
-			multiCompose: false
+			emojiOpen: false
 		});
 	}
 
