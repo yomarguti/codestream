@@ -82,10 +82,12 @@ export default infiniteLoadable(
 		};
 
 		scrollToBottom = () => {
-			if (this.list.current) {
-				const { clientHeight, scrollHeight } = this.list.current;
-				this.list.current.scrollTop = scrollHeight - clientHeight + 10000;
-			}
+			requestAnimationFrame(() => {
+				if (this.list.current) {
+					const { clientHeight, scrollHeight } = this.list.current;
+					this.list.current.scrollTop = scrollHeight - clientHeight + 10000;
+				}
+			});
 		};
 
 		scrollToUnread = () => {
