@@ -63,7 +63,7 @@ import {
 	LoginResponse,
 	StreamType
 } from "../../shared/api.protocol";
-import { log } from "../../system";
+import { log, Strings } from "../../system";
 import {
 	ApiProvider,
 	CodeStreamApiMiddleware,
@@ -201,13 +201,18 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	private async onSlackConnectionChanged(e: any) {
-		e;
+		Logger.logWithDebugParams(`SlackApiProvider.onSlackConnectionChanged`, e);
 	}
 
 	private async onSlackChannelChanged(
 		e: any & { type: SlackRtmEventTypes; subtype: SlackRtmMessageEventSubTypes }
 	) {
 		const { type, subtype } = e;
+
+		Logger.logWithDebugParams(
+			`SlackApiProvider.onSlackChannelChanged(${type}${subtype ? `:${subtype}` : ""})`,
+			e
+		);
 
 		switch (type) {
 			case SlackRtmEventTypes.ChannelMarked:
@@ -327,6 +332,11 @@ export class SlackApiProvider implements ApiProvider {
 		e: any & { type: SlackRtmEventTypes; subtype: SlackRtmMessageEventSubTypes }
 	) {
 		const { type, subtype } = e;
+
+		Logger.logWithDebugParams(
+			`SlackApiProvider.onSlackMessageChanged(${type}${subtype ? `:${subtype}` : ""})`,
+			e
+		);
 
 		switch (type) {
 			case SlackRtmEventTypes.Message:
@@ -499,21 +509,22 @@ export class SlackApiProvider implements ApiProvider {
 		// 	this.onSlackConnectionChanged,
 		// 	this
 		// );
-		// this._slackRTM.on(
-		// 	SlackRtmLifeCycleEventTypes.Disconnected,
-		// 	this.onSlackConnectionChanged,
-		// 	this
-		// );
-		// this._slackRTM.on(
-		// 	SlackRtmLifeCycleEventTypes.Disconnecting,
-		// 	this.onSlackConnectionChanged,
-		// 	this
-		// );
-		// this._slackRTM.on(
-		// 	SlackRtmLifeCycleEventTypes.Reconnecting,
-		// 	this.onSlackConnectionChanged,
-		// 	this
-		// );
+
+		this._slackRTM.on(
+			SlackRtmLifeCycleEventTypes.Disconnected,
+			this.onSlackConnectionChanged,
+			this
+		);
+		this._slackRTM.on(
+			SlackRtmLifeCycleEventTypes.Disconnecting,
+			this.onSlackConnectionChanged,
+			this
+		);
+		this._slackRTM.on(
+			SlackRtmLifeCycleEventTypes.Reconnecting,
+			this.onSlackConnectionChanged,
+			this
+		);
 
 		void (await this._slackRTM.start());
 	}
@@ -1112,6 +1123,8 @@ export class SlackApiProvider implements ApiProvider {
 
 	@log()
 	async fetchStreams(request: FetchStreamsRequest) {
+		const start = process.hrtime();
+
 		try {
 			// const response = await this._slack.conversations.list({
 			// 	exclude_archived: true,
@@ -1150,7 +1163,14 @@ export class SlackApiProvider implements ApiProvider {
 				Logger.debug(`Slack streams:\n${streams.map(s => `\t${s.id} = ${s.name}`).join("\n")}`);
 			}
 			return { streams: streams };
+		} catch (ex) {
+			Logger.error(ex);
+			throw ex;
 		} finally {
+			Logger.debug(
+				`SlackApiProvider.fetchStreams`,
+				`Completed in ${Strings.getDurationMilliseconds(start)} ms`
+			);
 			this._unreads.resume();
 		}
 	}
@@ -1172,20 +1192,29 @@ export class SlackApiProvider implements ApiProvider {
 					return fromSlackChannel(c, usersById, this._slackUserId, this._codestreamTeamId);
 				}
 
-				const response = await this._slack.channels.info({
-					channel: c.id
-				});
-
-				const { ok, channel } = response as WebAPICallResult & { channel: any };
-
-				this._unreads.update(channel.id, channel.last_read, 0, channel.unread_count_display || 0);
-
-				return fromSlackChannel(
-					ok ? channel : c,
-					usersById,
-					this._slackUserId,
-					this._codestreamTeamId
+				Logger.debug(
+					`SlackApiProvider.fetchChannels(${c.id})`,
+					`Fetching info for channel '${c.name}'...`
 				);
+				try {
+					const response = await this._slack.channels.info({
+						channel: c.id
+					});
+
+					const { ok, channel } = response as WebAPICallResult & { channel: any };
+
+					this._unreads.update(channel.id, channel.last_read, 0, channel.unread_count_display || 0);
+
+					return fromSlackChannel(
+						ok ? channel : c,
+						usersById,
+						this._slackUserId,
+						this._codestreamTeamId
+					);
+				} catch (ex) {
+					Logger.error(ex);
+					return fromSlackChannel(c, usersById, this._slackUserId, this._codestreamTeamId);
+				}
 			})
 		)).filter(Boolean);
 
@@ -1212,25 +1241,34 @@ export class SlackApiProvider implements ApiProvider {
 					return fromSlackChannelOrDirect(g, usersById, this._slackUserId, this._codestreamTeamId);
 				}
 
-				const response = await this._slack.groups.info({
-					channel: g.id
-				});
-
-				const { ok, group } = response as WebAPICallResult & { group: any };
-
-				this._unreads.update(
-					group.id,
-					group.last_read,
-					group.is_mpim ? group.unread_count_display || 0 : 0,
-					group.unread_count_display || 0
+				Logger.debug(
+					`SlackApiProvider.fetchGroups(${g.id})`,
+					`Fetching info for ${g.is_mpim ? "multi-party dm" : "private channel"} '${g.name}'...`
 				);
+				try {
+					const response = await this._slack.groups.info({
+						channel: g.id
+					});
 
-				return fromSlackChannelOrDirect(
-					ok ? group : g,
-					usersById,
-					this._slackUserId,
-					this._codestreamTeamId
-				);
+					const { ok, group } = response as WebAPICallResult & { group: any };
+
+					this._unreads.update(
+						group.id,
+						group.last_read,
+						group.is_mpim ? group.unread_count_display || 0 : 0,
+						group.unread_count_display || 0
+					);
+
+					return fromSlackChannelOrDirect(
+						ok ? group : g,
+						usersById,
+						this._slackUserId,
+						this._codestreamTeamId
+					);
+				} catch (ex) {
+					Logger.error(ex);
+					return fromSlackChannelOrDirect(g, usersById, this._slackUserId, this._codestreamTeamId);
+				}
 			})
 		)).filter(Boolean);
 
@@ -1259,25 +1297,31 @@ export class SlackApiProvider implements ApiProvider {
 					return fromSlackDirect(im, usersById, this._slackUserId, this._codestreamTeamId);
 				}
 
-				const response = await this._slack.conversations.info({
-					channel: im.id
-				});
+				Logger.debug(`SlackApiProvider.fetchIMs(${im.id})`, `Fetching info for dm '${im.user}'...`);
+				try {
+					const response = await this._slack.conversations.info({
+						channel: im.id
+					});
 
-				const { ok, channel } = response as WebAPICallResult & { channel: any };
+					const { ok, channel } = response as WebAPICallResult & { channel: any };
 
-				this._unreads.update(
-					channel.id,
-					channel.last_read,
-					channel.unread_count_display || 0,
-					channel.unread_count_display || 0
-				);
+					this._unreads.update(
+						channel.id,
+						channel.last_read,
+						channel.unread_count_display || 0,
+						channel.unread_count_display || 0
+					);
 
-				return fromSlackDirect(
-					ok ? { ...im, ...channel } : im,
-					usersById,
-					this._slackUserId,
-					this._codestreamTeamId
-				);
+					return fromSlackDirect(
+						ok ? { ...im, ...channel } : im,
+						usersById,
+						this._slackUserId,
+						this._codestreamTeamId
+					);
+				} catch (ex) {
+					Logger.error(ex);
+					return fromSlackDirect(im, usersById, this._slackUserId, this._codestreamTeamId);
+				}
 			})
 		)).filter(Boolean);
 
