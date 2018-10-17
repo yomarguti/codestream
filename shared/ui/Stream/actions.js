@@ -90,11 +90,10 @@ export const cancelPost = id => ({ type: "CANCEL_PENDING_POST", payload: id });
 
 export const createSystemPost = (streamId, parentPostId, text, seqNum) => async (
 	dispatch,
-	getState,
-	{ http }
+	getState
 ) => {
 	const state = getState();
-	const { session, context } = state;
+	const { context } = state;
 	const pendingId = createTempId();
 
 	const post = {
