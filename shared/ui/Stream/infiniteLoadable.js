@@ -151,7 +151,12 @@ export default Child => {
 				if (!this.state.isInitialized)
 					return (
 						<div className="loading-page">
-							<span className="loading loading-spinner-large inline-block" />
+							<div className="loader-ring">
+								<div className="loader-ring__segment" />
+								<div className="loader-ring__segment" />
+								<div className="loader-ring__segment" />
+								<div className="loader-ring__segment" />
+							</div>
 							<p>Loading posts...</p>
 						</div>
 					);
