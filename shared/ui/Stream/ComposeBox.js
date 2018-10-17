@@ -487,6 +487,7 @@ class ComposeBox extends React.Component {
 	submitThePost = event => {
 		let newPostText = this.state.postTextByStream[this.props.streamId] || "";
 		const { quote, title, assignees, color, commentType, streamId } = this.state;
+		const multiCompose = quote || this.props.multiCompose;
 
 		if (this.props.disabled) return;
 
@@ -510,8 +511,8 @@ class ComposeBox extends React.Component {
 			quote,
 			mentionedUserIds: this.props.findMentionedUserIds(text, this.props.teammates),
 			autoMentions: this.state.autoMentions,
-			assignees: assigneeIds,
-			color,
+			assignees: multiCompose ? assigneeIds : [],
+			color: multiCompose ? "" : color,
 			forceStreamId: streamId
 		});
 
