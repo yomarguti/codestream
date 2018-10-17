@@ -252,7 +252,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	async subscribe(types?: MessageType[]) {
 		this._subscribedMessageTypes = types !== undefined ? new Set(types) : undefined;
 
-		if (types === undefined || types.includes(MessageType.Posts)) {
+		if (types === undefined || types.includes(MessageType.Unreads)) {
 			this._unreads = new Unreads(this);
 			this._unreads.onDidChange(this.onUnreadsChanged, this);
 			this._unreads.compute(this._user!.lastReads);
@@ -292,7 +292,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 				break;
 			case MessageType.Posts:
 				e.data = await Container.instance().posts.resolve(e);
-				this._unreads!.update(e.data as CSPost[]);
+
+				if (this._unreads !== undefined) {
+					this._unreads.update(e.data as CSPost[]);
+				}
 				break;
 			case MessageType.Repositories:
 				e.data = await Container.instance().repos.resolve(e);
@@ -312,8 +315,8 @@ export class CodeStreamApiProvider implements ApiProvider {
 				if (me != null) {
 					this._user = me;
 
-					if (!Objects.shallowEquals(lastReads, me.lastReads)) {
-						this._unreads!.compute(me.lastReads);
+					if (this._unreads !== undefined && !Objects.shallowEquals(lastReads, me.lastReads)) {
+						this._unreads.compute(me.lastReads);
 					}
 				}
 
@@ -751,6 +754,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	@log()
 	getUser(request: GetUserRequest) {
+		if (request.userId === this.userId) {
+			return this.getMe();
+		}
+
 		return this.get<CSGetUserResponse>(`/users/${request.userId}`, this._token);
 	}
 

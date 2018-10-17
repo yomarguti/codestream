@@ -1460,6 +1460,11 @@ export class SlackApiProvider implements ApiProvider {
 			return this.getMe();
 		}
 
+		// HACK: Forward to CodeStream if this isn't a slack user id
+		if (!request.userId.startsWith("U")) {
+			return this._codestream.getUser(request);
+		}
+
 		const response = await this._slack.users.info({
 			user: request.userId
 		});
