@@ -53,7 +53,7 @@ export class SimpleChannelPanel extends Component {
 						{this.renderTeamChannels()}
 						{this.renderDirectMessages()}
 						{this.renderServiceChannels()}
-						<div class="shadow-cover-bottom" />
+						<div className="shadow-cover-bottom" />
 					</div>
 				</div>
 			</div>
