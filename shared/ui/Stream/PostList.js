@@ -66,6 +66,11 @@ export default infiniteLoadable(
 			}
 		}
 
+		componentWillUnmount() {
+			this.handleScroll.cancel();
+			this.findFirstUnread.cancel();
+		}
+
 		markAsRead = () => {
 			if (this.props.isThread) return;
 
@@ -172,6 +177,7 @@ export default infiniteLoadable(
 
 		resetUnreadBanner = debounce(() => {
 			const { posts, currentUserId } = this.props;
+			if (posts.length === 0) return;
 			if (posts[posts.length - 1].creatorId !== currentUserId) {
 				this.showUnreadBanner = true;
 				if (!this.props.isThread) this.findFirstUnread(this.list.current);

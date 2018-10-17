@@ -26,11 +26,11 @@ export const debounceToAnimationFrame = (fn: Function) => {
 	};
 };
 
-export const rAFThrottle = (fn: Function) => {
+export const rAFThrottle = (fn: Function): Function => {
 	let requestId: number | undefined;
 	let lastArgs: any[] = [];
 
-	return function(...args: any[]) {
+	const throttledFn = function(...args: any[]) {
 		lastArgs = args;
 		if (requestId) {
 			console.debug(`rAFThrottle is throttling a call to ${fn}. new args are`, args);
@@ -41,6 +41,12 @@ export const rAFThrottle = (fn: Function) => {
 			fn(...lastArgs);
 		});
 	};
+
+	throttledFn.cancel = () => {
+		if (requestId) cancelAnimationFrame(requestId);
+	};
+
+	return throttledFn;
 };
 
 export const toMapBy = (key: string, entities: any[]) =>
