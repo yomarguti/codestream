@@ -23,6 +23,7 @@ Then there are general-purpose communication tools, such as Slack or Microsoft T
 Imagine if every time you wanted to ask a question about a Google Doc you had to…
 - Copy the URL of the document
 - Switch to a new tab in your browser and open up Gmail
+- Click "Compose"
 - Type the recipients in the To field
 - Paste in the URL of the document
 - Describe your question: “In the above-linked document, on page three, in the second paragraph, in the third sentence right after the first clause where you say ‘foo bar’, what did you mean?”
