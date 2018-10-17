@@ -1,36 +1,36 @@
 import * as uuidv4 from "uuid/v4";
 
-export const safe = f => {
+export const safe = <T>(fn: () => T): T | undefined => {
 	try {
-		return f();
+		return fn();
 	} catch (e) {
 		return undefined;
 	}
 };
 
-export const rangeTo = size => [...Array(size).keys()];
+export const rangeTo = (size: number) => [...Array(size).keys()];
 
-export const debounceToAnimationFrame = fn => {
-	let result;
-	let requestId;
+export const debounceToAnimationFrame = (fn: Function) => {
+	let result: any;
+	let requestId: number | undefined;
 
-	return function() {
+	return function(...args: any[]) {
 		if (requestId) {
 			cancelAnimationFrame(requestId);
 		}
 		requestId = requestAnimationFrame(() => {
 			requestId = undefined;
-			result = fn.apply(undefined, rangeTo(arguments.length).map(i => arguments[i]));
+			result = fn(args);
 		});
 		return result;
 	};
 };
 
-export const rAFThrottle = fn => {
-	let requestId;
-	let lastArgs = [];
+export const rAFThrottle = (fn: Function) => {
+	let requestId: number | undefined;
+	let lastArgs: any[] = [];
 
-	return function(...args) {
+	return function(...args: any[]) {
 		lastArgs = args;
 		if (requestId) {
 			console.debug(`rAFThrottle is throttling a call to ${fn}. new args are`, args);
@@ -43,7 +43,7 @@ export const rAFThrottle = fn => {
 	};
 };
 
-export const toMapBy = (key, entities) =>
+export const toMapBy = (key: string, entities: any[]) =>
 	entities.reduce((result, entity) => ({ ...result, [entity[key]]: entity }), {});
 
 export const uuid = () => uuidv4();
@@ -58,7 +58,7 @@ export const shortUuid = () => {
 		.substring(0, 22); // Drop '==' padding;
 };
 
-export const isChildOf = (node, parentId) => {
+export const isChildOf = (node: any, parentId: string) => {
 	while (node !== null) {
 		if (node.id === parentId) {
 			return true;
@@ -69,10 +69,10 @@ export const isChildOf = (node, parentId) => {
 	return false;
 };
 
-export const getCurrentCursorPosition = parentId => {
+export const getCurrentCursorPosition = (parentId: string) => {
 	var selection = window.getSelection(),
 		charCount = -1,
-		node;
+		node: any;
 
 	// console.log(selection);
 	if (selection.focusNode) {
@@ -100,7 +100,7 @@ export const getCurrentCursorPosition = parentId => {
 	return charCount;
 };
 
-export const createRange = (node, chars, range) => {
+export const createRange = (node: any, chars: any, range: any) => {
 	if (!range) {
 		range = document.createRange();
 		range.selectNode(node);

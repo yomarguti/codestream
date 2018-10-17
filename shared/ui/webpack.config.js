@@ -4,7 +4,7 @@ const path = require("path");
 const CleanPlugin = require("clean-webpack-plugin");
 const FileManagerWebpackPlugin = require("filemanager-webpack-plugin");
 
-module.exports = function(env, argv) {
+module.exports = function(env) {
 	env = env || {};
 	const production = !!env.production;
 
@@ -62,6 +62,11 @@ module.exports = function(env, argv) {
 					test: /\.jsx?$/,
 					use: "babel-loader",
 					exclude: /node_modules/
+				},
+				{
+					test: /\.tsx?$/,
+					use: "ts-loader",
+					exclude: /node_modules|\.d\.ts$/
 				}
 			]
 		},
