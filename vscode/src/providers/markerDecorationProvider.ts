@@ -31,7 +31,7 @@ import { Logger } from "../logger";
 import { Functions } from "../system/function";
 
 const positionStyleMap: { [key: string]: string } = {
-	inline: "display: inline-block; margin: 0 0.5em 0 0; vertical-align: middle",
+	inline: "display: inline-block; margin: 0 0.5em 0 0; vertical-align: middle;",
 	overlay:
 		"display: inline-block; left: 0; position: absolute; top: 50%; transform: translateY(-50%)"
 };
@@ -51,6 +51,16 @@ const MarkerPositions = ["inline", "overlay"];
 const MarkerTypes = ["comment", "question", "issue", "trap"];
 const MarkerColors = ["blue", "green", "yellow", "orange", "red", "purple", "aqua", "gray"];
 const MarkerStatuses = ["open", "closed"];
+const MarkerHighlights: { [key: string]: string } = {
+	blue: "rgba(53, 120, 186, .25)",
+	green: "rgba(122, 186, 93, .25)",
+	yellow: "rgba(237, 214, 72, .25)",
+	orange: "rgba(241, 163, 64, .25)",
+	red: "rgba(217, 99, 79, .25)",
+	purple: "rgba(184, 124, 218, .25)",
+	aqua: "rgba(90, 191, 220, .25)",
+	gray: "rgba(127, 127, 127, .25)"
+};
 
 export class MarkerDecorationProvider implements HoverProvider, Disposable {
 	private readonly _disposable: Disposable | undefined;
@@ -77,11 +87,13 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 			}
 		}
 
-		this._decorationType["trap-highlight"] = window.createTextEditorDecorationType({
-			rangeBehavior: DecorationRangeBehavior.OpenOpen,
-			isWholeLine: true,
-			backgroundColor: "rgba(0, 255, 0, 0.15)"
-		});
+		for (const color of MarkerColors) {
+			this._decorationType[`trap-highlight-${color}`] = window.createTextEditorDecorationType({
+				rangeBehavior: DecorationRangeBehavior.OpenOpen,
+				isWholeLine: true,
+				backgroundColor: MarkerHighlights[color]
+			});
+		}
 
 		this._disposable = Disposable.from(
 			...Object.values(this._decorationType),
@@ -206,11 +218,11 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 			}
 
 			if (marker.type === "trap") {
-				if (!decorations["trap-highlight"]) {
-					decorations["trap-highlight"] = [];
+				if (!decorations[`trap-highlight-${marker.color}`]) {
+					decorations[`trap-highlight-${marker.color}`] = [];
 				}
 
-				decorations["trap-highlight"].push({
+				decorations[`trap-highlight-${marker.color}`].push({
 					range: new Range(
 						marker.range.start.line,
 						marker.range.start.character,
