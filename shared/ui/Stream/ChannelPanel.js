@@ -9,7 +9,7 @@ import {
 	getServiceStreamsForTeam,
 	getDMName
 } from "../reducers/streams";
-import { toMapBy } from "../utils";
+import { safe, toMapBy } from "../utils";
 import Icon from "./Icon";
 import Tooltip from "./Tooltip";
 import ChannelMenu from "./ChannelMenu";
@@ -203,7 +203,7 @@ export class SimpleChannelPanel extends Component {
 				const icon =
 					stream.name === "slackbot" ? (
 						<Icon className="heart" name="heart" />
-					) : stream.memberIds.length > 2 ? (
+					) : safe(() => stream.memberIds.length > 2) ? (
 						<Icon className="organization" name="organization" />
 					) : (
 						<Icon className="person" name="person" />
@@ -391,7 +391,7 @@ const mapStateToProps = ({ context, streams, users, teams, umis, session }) => {
 			if (notMe.length === 1) return notMe[0];
 
 			// this is my stream with myself, if it exists
-			if (stream.memberIds.length === 1 && stream.memberIds[0] === session.userId) {
+			if (safe(() => stream.memberIds.length === 1) && stream.memberIds[0] === session.userId) {
 				stream.isMeStream = true;
 				return session.userId;
 			}
