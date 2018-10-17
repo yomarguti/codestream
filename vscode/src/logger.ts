@@ -35,41 +35,87 @@ export class Logger {
 		}
 	}
 
-	static log(message?: any, ...params: any[]): void {
-		if (this.level !== TraceLevel.Verbose && this.level !== TraceLevel.Debug) return;
+	static debug(message?: any, ...params: any[]): void {
+		if (this.level !== TraceLevel.Debug && !Logger.isDebugging) return;
 
 		if (Logger.isDebugging) {
 			console.log(this.timestamp, ConsolePrefix, message, ...params);
 		}
 
 		if (this.output !== undefined) {
-			this.output.appendLine([this.timestamp, message, ...params].join(" "));
+			this.output.appendLine(
+				[this.timestamp, message, this.toLoggableParams(true, params)].join(" ")
+			);
 		}
 	}
 
 	static error(ex: Error, classOrMethod?: string, ...params: any[]): void {
-		if (this.level === TraceLevel.Silent) return;
+		if (this.level === TraceLevel.Silent && !Logger.isDebugging) return;
 
 		if (Logger.isDebugging) {
 			console.error(this.timestamp, ConsolePrefix, classOrMethod, ...params, ex);
 		}
 
 		if (this.output !== undefined) {
-			this.output.appendLine([this.timestamp, classOrMethod, ...params, ex].join(" "));
+			this.output.appendLine(
+				[this.timestamp, classOrMethod, this.toLoggableParams(false, params), "\n", ex].join(" ")
+			);
 		}
 
 		// Telemetry.trackException(ex);
 	}
 
+	static log(message?: any, ...params: any[]): void {
+		if (
+			this.level !== TraceLevel.Verbose &&
+			this.level !== TraceLevel.Debug &&
+			!Logger.isDebugging
+		) {
+			return;
+		}
+
+		if (Logger.isDebugging) {
+			console.log(this.timestamp, ConsolePrefix, message, ...params);
+		}
+
+		if (this.output !== undefined) {
+			this.output.appendLine(
+				[this.timestamp, message, this.toLoggableParams(false, params)].join(" ")
+			);
+		}
+	}
+
+	static logWithDebugParams(message?: any, ...params: any[]): void {
+		if (
+			this.level !== TraceLevel.Verbose &&
+			this.level !== TraceLevel.Debug &&
+			!Logger.isDebugging
+		) {
+			return;
+		}
+
+		// if (Logger.isDebugging) {
+		// 	console.log(this.timestamp, ConsolePrefix, message, ...params);
+		// }
+
+		if (this.output !== undefined) {
+			this.output.appendLine(
+				[this.timestamp, message, this.toLoggableParams(true, params)].join(" ")
+			);
+		}
+	}
+
 	static warn(message?: any, ...params: any[]): void {
-		if (this.level === TraceLevel.Silent) return;
+		if (this.level === TraceLevel.Silent && !Logger.isDebugging) return;
 
 		if (Logger.isDebugging) {
 			console.warn(this.timestamp, ConsolePrefix, message, ...params);
 		}
 
 		if (this.output !== undefined) {
-			this.output.appendLine([this.timestamp, message, ...params].join(" "));
+			this.output.appendLine(
+				[this.timestamp, message, this.toLoggableParams(false, params)].join(" ")
+			);
 		}
 	}
 
@@ -79,12 +125,33 @@ export class Logger {
 		this.output.show();
 	}
 
+	private static sanitizeSerializableParam(key: string, value: any) {
+		return /(password|token)/i.test(key) ? `<${key}>` : value;
+	}
+
 	private static get timestamp(): string {
 		const now = new Date();
 		return `[${now
 			.toISOString()
 			.replace(/T/, " ")
 			.replace(/\..+/, "")}:${("00" + now.getUTCMilliseconds()).slice(-3)}]`;
+	}
+
+	private static toLoggableParams(debugOnly: boolean, params: any[]) {
+		if (
+			params.length === 0 ||
+			(debugOnly && this.level !== TraceLevel.Debug && !Logger.isDebugging)
+		) {
+			return "";
+		}
+
+		const loggableParams = params
+			.map(
+				p => (typeof p === "object" ? JSON.stringify(p, this.sanitizeSerializableParam) : String(p))
+			)
+			.join(", ");
+
+		return loggableParams || "";
 	}
 
 	private static _isDebugging: boolean | undefined;

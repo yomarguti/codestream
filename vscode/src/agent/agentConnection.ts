@@ -583,14 +583,16 @@ export class CodeStreamAgentConnection implements Disposable {
 	}(this);
 
 	private onDocumentMarkersChanged(e: DidChangeDocumentMarkersNotification) {
-		Logger.log("AgentConnection.onDocumentMarkersChanged", e.textDocument.uri);
+		Logger.log(`AgentConnection.onDocumentMarkersChanged(${e.textDocument.uri})`);
+
 		this._onDidChangeDocumentMarkers.fire({ uri: Uri.parse(e.textDocument.uri) });
 	}
 
 	private async onDataChanged(...messages: DidChangeDataNotification[]) {
-		Logger.log("AgentConnection.onDataChanged", messages);
+		Logger.log(`AgentConnection.onDataChanged(${messages.map(m => m.type).join(", ")})`);
 
 		for (const message of messages) {
+			Logger.debug(`\tAgentConnection.onDataChanged(${message.type})`, message.data);
 			this._onDidChangeData.fire(message);
 		}
 	}
@@ -675,21 +677,20 @@ export class CodeStreamAgentConnection implements Disposable {
 	): Promise<R>;
 	@started
 	private async sendRequest(type: any, params?: any): Promise<any> {
-		try {
-			const traceParams =
-				type.method === ApiRequestType.method ? params.init && params.init.body : params;
+		const traceParams =
+			type.method === ApiRequestType.method ? params.init && params.init.body : params;
 
-			Logger.log(
+		try {
+			Logger.logWithDebugParams(
 				`AgentConnection.sendRequest(${type.method})${
 					type.method === ApiRequestType.method ? `: ${params.url}` : ""
 				}`,
-				traceParams ? `params=${sanitize(JSON.stringify(traceParams))}` : ""
+				traceParams
 			);
 			const response = await this._client!.sendRequest(type, params);
 			return response;
 		} catch (ex) {
-			// debugger;
-			Logger.error(ex, `AgentConnection.sendRequest(${type.method})`, params);
+			Logger.error(ex, `AgentConnection.sendRequest(${type.method})`, traceParams);
 			throw ex;
 		}
 	}
@@ -739,14 +740,6 @@ export class CodeStreamAgentConnection implements Disposable {
 
 		this._client = undefined;
 	}
-}
-
-function sanitize(json: string) {
-	if (json === undefined || typeof json !== "string") return "";
-
-	return json
-		.replace(/("password":)".*?"/gi, '$1"<hidden>"')
-		.replace(/("token":)".*?"/gi, '$1"<hidden>"');
 }
 
 function started(
