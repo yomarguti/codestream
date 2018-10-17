@@ -176,8 +176,10 @@ export class PubnubReceiver {
 	}
 
 	private debug(msg: string, info?: any) {
-		if (Logger.level !== TraceLevel.Debug && !Logger.isDebugging) return;
-
-		Logger.log(`PUBNUB: ${msg}${info ? `: ${JSON.stringify(info, undefined, 10)}` : ""}`);
+		if (arguments.length === 1) {
+			Logger.logWithDebugParams(`PUBNUB: ${msg}`);
+		} else {
+			Logger.logWithDebugParams(`PUBNUB: ${msg}`, info);
+		}
 	}
 }

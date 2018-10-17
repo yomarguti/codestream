@@ -95,19 +95,24 @@ export class Unreads {
 
 		const values = this.values();
 		if (Logger.level === TraceLevel.Debug) {
+			let loggableUnreads = Iterables.join(
+				Iterables.filterMap(
+					this._unreads.entries(),
+					([id, count]) =>
+						count.mentions > 0 || count.unreads > 0
+							? `\t${id} = ${count.mentions} mention(s), ${count.unreads} unread(s)`
+							: undefined
+				),
+				"\n"
+			);
+			if (loggableUnreads) {
+				loggableUnreads = `\n${loggableUnreads}`;
+			}
+
 			Logger.debug(
 				`Unreads.changed: mentions (${values.totalMentions}), unreads (${
 					values.totalUnreads
-				})\n${Iterables.join(
-					Iterables.filterMap(
-						this._unreads.entries(),
-						([id, count]) =>
-							count.mentions > 0 && count.unreads > 0
-								? `\t${id} = ${count.mentions} mention(s), ${count.unreads} unread(s)`
-								: undefined
-					),
-					"\n"
-				)}`
+				})${loggableUnreads}`
 			);
 		}
 

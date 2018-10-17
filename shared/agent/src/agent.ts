@@ -22,7 +22,7 @@ import {
 } from "vscode-languageserver";
 import { Logger } from "./logger";
 import { CodeStreamSession } from "./session";
-import { AgentOptions } from "./shared/agent.protocol";
+import { AgentOptions, DidChangeDataNotificationType } from "./shared/agent.protocol";
 import { Disposables, memoize } from "./system";
 import { Functions } from "./system/function";
 
@@ -129,7 +129,7 @@ export class CodeStreamAgent implements Disposable {
 	): void;
 	registerHandler(type: any, handler: any): void {
 		try {
-			Logger.log(`Agent.registerHandler(${type.method})`);
+			Logger.debug(`Agent.registerHandler(${type.method})`);
 			return this._connection.onRequest(type, handler);
 		} catch (ex) {
 			Logger.error(ex, `Agent.registerHandler(${type.method})`);
@@ -141,10 +141,21 @@ export class CodeStreamAgent implements Disposable {
 	sendNotification<P, RO>(type: NotificationType<P, RO>, params: P): void;
 	sendNotification(type: any, params?: any): void {
 		try {
-			Logger.log(`Agent.sendNotification(${type.method})`);
+			Logger.logWithDebugParams(
+				`Agent.sendNotification(${type.method}${
+					type.method === DidChangeDataNotificationType.method ? `:${params.type}` : ""
+				})`,
+				params
+			);
 			return this._connection.sendNotification(type, params);
 		} catch (ex) {
-			Logger.error(ex, `Agent.sendNotification(${type.method})`, params);
+			Logger.error(
+				ex,
+				`Agent.sendNotification(${type.method}${
+					type.method === DidChangeDataNotificationType.method ? `:${params.type}` : ""
+				})`,
+				params
+			);
 			throw ex;
 		}
 	}
@@ -162,7 +173,7 @@ export class CodeStreamAgent implements Disposable {
 		}
 
 		try {
-			Logger.log(`Agent.sendRequest(${type.method})`);
+			Logger.logWithDebugParams(`Agent.sendRequest(${type.method})`, params);
 			return this._connection.sendRequest(type, params, token);
 		} catch (ex) {
 			Logger.error(ex, `Agent.sendRequest(${type.method})`, params);

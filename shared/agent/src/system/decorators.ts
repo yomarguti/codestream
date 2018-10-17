@@ -30,7 +30,6 @@ export function lspHandler(type: RequestType<any, any, void, void>): Function {
 export function log() {
 	return (target: any, name: string, descriptor: PropertyDescriptor) => {
 		if (!(typeof descriptor.value === "function")) throw new Error("not supported");
-		if (Logger.level !== TraceLevel.Verbose && Logger.level !== TraceLevel.Debug) return;
 
 		const fn = descriptor.value;
 
@@ -43,19 +42,24 @@ export function log() {
 			fnBody.slice(fnBody.indexOf("(") + 1, fnBody.indexOf(")")).match(/([^\s,]+)/g) || [];
 
 		descriptor.value = function(this: any, ...args: any[]) {
-			const loggable = args
-				.map((v: any, index: number) => {
-					let loggable = v.toString();
-					if (loggable === "[object Object]") {
-						loggable = JSON.stringify(v);
-					}
+			if (Logger.level === TraceLevel.Verbose || Logger.level === TraceLevel.Debug) {
+				if (args.length === 0) {
+					Logger.log(name);
+				} else {
+					const loggableParams = args
+						.map((v: any, index: number) => {
+							const loggable =
+								typeof v === "object"
+									? JSON.stringify(v, this.sanitizeSerializableParam)
+									: String(v);
 
-					const p = parameters[index];
-					return p ? `${p}=${loggable}` : loggable;
-				})
-				.join(", ");
-
-			Logger.log(name, loggable);
+							const p = parameters[index];
+							return p ? `${p}=${loggable}` : loggable;
+						})
+						.join(", ");
+					Logger.logWithDebugParams(name, loggableParams);
+				}
+			}
 
 			return fn.apply(this, args);
 		};
