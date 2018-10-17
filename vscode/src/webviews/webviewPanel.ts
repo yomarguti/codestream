@@ -380,10 +380,10 @@ export class CodeStreamWebviewPanel implements Disposable {
 								type: WebviewIpcMessageType.response,
 								body: {
 									id: body.id,
-									payload: (await Container.agent.posts.fetch(streamId, {
+									payload: await Container.agent.posts.fetch(streamId, {
 										limit: limit,
 										before: beforeSeqNum
-									})).posts
+									})
 								}
 							});
 							break;
