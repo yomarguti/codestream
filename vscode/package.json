@@ -133,7 +133,7 @@
                 },
                 "codestream.traceLevel": {
                     "type": "string",
-                    "default": "debug",
+                    "default": "verbose",
                     "enum": [
                         "silent",
                         "errors",
