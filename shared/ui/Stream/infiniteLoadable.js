@@ -67,11 +67,11 @@ export default Child => {
 					});
 				} else {
 					if (this.props.posts.length === 0) {
-						const posts = await fetchPosts({ streamId, teamId, limit: batchCount });
+						const { more } = await fetchPosts({ streamId, teamId, limit: batchCount });
 						this.setState({
 							isInitialized: true,
 							posts: this.props.posts,
-							hasMore: posts.length === batchCount
+							hasMore: more
 						});
 					} else {
 						this.setState({
@@ -104,7 +104,7 @@ export default Child => {
 				const { fetchPosts, childProps } = this.props;
 				const { streamId, teamId } = childProps;
 
-				const posts = await fetchPosts({
+				const { more } = await fetchPosts({
 					streamId,
 					teamId,
 					limit: batchCount,
@@ -115,7 +115,7 @@ export default Child => {
 					this.setState({
 						posts: this.props.posts,
 						isFetching: false,
-						hasMore: posts.length === batchCount
+						hasMore: more
 					});
 				});
 			};

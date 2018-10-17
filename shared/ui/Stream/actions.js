@@ -340,12 +340,12 @@ export const invite = attributes => async (dispatch, getState, { api }) => {
 
 export const fetchPosts = params => async (dispatch, getState, { api }) => {
 	try {
-		const posts = await api.fetchPosts(params);
+		const response = await api.fetchPosts(params);
 		dispatch({
 			type: "ADD_POSTS_FOR_STREAM",
-			payload: { posts, streamId: params.streamId }
+			payload: { posts: response.posts, streamId: params.streamId }
 		});
-		return posts;
+		return response;
 	} catch (error) {
 		console.error(error);
 	}
