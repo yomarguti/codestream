@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.17.0] - 2018-10-17
+
+- Fixes [#6](https://github.com/TeamCodeStream/CodeStream/issues/6) &mdash; Github Links in Slack messages are broken
+- Fixes an unexpected error when creating a new direct messages
+- Fixes an issue that would incorrectly redisplay the "unread messages above" banner
+- Fixes an issue that prevented the display of the new-message separator in the stream
+
 ## [0.16.0] - 2018-10-15
 
 - Fixes syncronization of unread message indicators between CodeStream and Slack.
