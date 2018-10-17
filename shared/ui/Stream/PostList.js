@@ -155,7 +155,7 @@ export default infiniteLoadable(
 			let unreadsAbove = false;
 			let unreadsBelow = false;
 
-			if (!this.showUnreadBanner || !newMessagesAfterSeqNum) {
+			if (!$list || !this.showUnreadBanner || !newMessagesAfterSeqNum) {
 				return onDidChangeVisiblePosts({ unreadsAbove, unreadsBelow });
 			}
 
