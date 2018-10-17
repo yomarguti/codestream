@@ -124,14 +124,14 @@ function getWebviewConfig(env) {
 			inject: true,
 			minify: env.production
 				? {
-					removeComments: true,
-					collapseWhitespace: true,
-					removeRedundantAttributes: true,
-					useShortDoctype: true,
-					removeEmptyAttributes: true,
-					removeStyleLinkTypeAttributes: true,
-					keepClosingSlash: true
-				}
+						removeComments: true,
+						collapseWhitespace: true,
+						removeRedundantAttributes: true,
+						useShortDoctype: true,
+						removeEmptyAttributes: true,
+						removeStyleLinkTypeAttributes: true,
+						keepClosingSlash: true
+				  }
 				: false
 		})
 	];
@@ -172,6 +172,11 @@ function getWebviewConfig(env) {
 					test: /\.jsx?$/,
 					use: "babel-loader",
 					exclude: /node_modules/
+				},
+				{
+					test: /\.tsx?$/,
+					use: "ts-loader",
+					exclude: /node_modules|\.d\.ts$/
 				},
 				{
 					test: /\.less$/,
