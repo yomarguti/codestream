@@ -40,6 +40,13 @@ export enum CodeStreamEnvironment {
 	Unknown = "unknown"
 }
 
+export enum TraceLevel {
+	Silent = "silent",
+	Errors = "errors",
+	Verbose = "verbose",
+	Debug = "debug"
+}
+
 export interface AgentOptions {
 	extensionBuild: string;
 	extensionBuildEnv: string;
@@ -48,6 +55,7 @@ export interface AgentOptions {
 	gitPath: string;
 	ideVersion: string;
 	isDebugging: boolean;
+	traceLevel: TraceLevel;
 
 	email: string;
 	passwordOrToken: string | AccessToken;

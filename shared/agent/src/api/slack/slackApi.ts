@@ -1,11 +1,5 @@
 "use strict";
-import {
-	RTMClient,
-	RTMClientOptions,
-	WebAPICallResult,
-	WebClient,
-	WebClientOptions
-} from "@slack/client";
+import { LogLevel, RTMClient, WebAPICallResult, WebClient } from "@slack/client";
 import { RequestInit } from "node-fetch";
 import { Emitter, Event } from "vscode-languageserver";
 import { Container } from "../../container";
@@ -26,6 +20,7 @@ import {
 	FetchPostRepliesRequest,
 	FetchPostsRequest,
 	FetchStreamsRequest,
+	FetchStreamsResponse,
 	FetchTeamsRequest,
 	FetchUnreadStreamsRequest,
 	FetchUsersRequest,
@@ -63,7 +58,7 @@ import {
 	LoginResponse,
 	StreamType
 } from "../../shared/api.protocol";
-import { log, Strings } from "../../system";
+import { log } from "../../system";
 import {
 	ApiProvider,
 	CodeStreamApiMiddleware,
@@ -155,11 +150,18 @@ export class SlackApiProvider implements ApiProvider {
 		private readonly _codestreamTeamId: string
 	) {
 		this._slackToken = providerInfo.accessToken;
-		const slackOptions: WebClientOptions = { retryConfig: { retries: 3 } };
-		this._slack = new WebClient(this._slackToken, slackOptions);
+		this._slack = new WebClient(this._slackToken, {
+			logLevel: Logger.level === TraceLevel.Debug ? LogLevel.DEBUG : LogLevel.INFO,
+			logger: (level, message) => Logger.log(`SLACK[${level}]: ${message}`)
+		});
 
-		const rtmOptions: RTMClientOptions = { retryConfig: { retries: 3 } };
-		this._slackRTM = new RTMClient(this._slackToken, rtmOptions);
+		this._slack.on("rate_limited", retryAfter => {
+			Logger.log(
+				`SlackApiProvider request was rate limited and future requests will be paused for ${retryAfter} seconds`
+			);
+		});
+
+		this._slackRTM = new RTMClient(this._slackToken);
 
 		this._unreads = new Unreads(this);
 		this._unreads.onDidChange(this.onUnreadsChanged, this);
@@ -1121,10 +1123,10 @@ export class SlackApiProvider implements ApiProvider {
 		return streamResponse as CreateDirectStreamResponse;
 	}
 
-	@log()
+	@log({
+		exit: (r: FetchStreamsResponse) => `\n${r.streams.map(s => `\t${s.id} = ${s.name}`).join("\n")}`
+	})
 	async fetchStreams(request: FetchStreamsRequest) {
-		const start = process.hrtime();
-
 		try {
 			// const response = await this._slack.conversations.list({
 			// 	exclude_archived: true,
@@ -1160,17 +1162,13 @@ export class SlackApiProvider implements ApiProvider {
 			}
 
 			if (Logger.level === TraceLevel.Debug) {
-				Logger.debug(`Slack streams:\n${streams.map(s => `\t${s.id} = ${s.name}`).join("\n")}`);
+				Logger.debug();
 			}
 			return { streams: streams };
 		} catch (ex) {
 			Logger.error(ex);
 			throw ex;
 		} finally {
-			Logger.debug(
-				`SlackApiProvider.fetchStreams`,
-				`Completed in ${Strings.getDurationMilliseconds(start)} ms`
-			);
 			this._unreads.resume();
 		}
 	}
@@ -1178,8 +1176,8 @@ export class SlackApiProvider implements ApiProvider {
 	private async fetchChannels(usersById: Map<string, CSUser>) {
 		const response = await this._slack.channels.list({
 			exclude_archived: true,
-			exclude_members: false,
-			limit: 1000
+			exclude_members: false
+			// limit: 1000
 		});
 
 		const { ok, error, channels } = response as WebAPICallResult & { channels: any };
@@ -1192,29 +1190,7 @@ export class SlackApiProvider implements ApiProvider {
 					return fromSlackChannel(c, usersById, this._slackUserId, this._codestreamTeamId);
 				}
 
-				Logger.debug(
-					`SlackApiProvider.fetchChannels(${c.id})`,
-					`Fetching info for channel '${c.name}'...`
-				);
-				try {
-					const response = await this._slack.channels.info({
-						channel: c.id
-					});
-
-					const { ok, channel } = response as WebAPICallResult & { channel: any };
-
-					this._unreads.update(channel.id, channel.last_read, 0, channel.unread_count_display || 0);
-
-					return fromSlackChannel(
-						ok ? channel : c,
-						usersById,
-						this._slackUserId,
-						this._codestreamTeamId
-					);
-				} catch (ex) {
-					Logger.error(ex);
-					return fromSlackChannel(c, usersById, this._slackUserId, this._codestreamTeamId);
-				}
+				return await this.fetchChannel(c, usersById);
 			})
 		)).filter(Boolean);
 
@@ -1225,11 +1201,38 @@ export class SlackApiProvider implements ApiProvider {
 		return streams;
 	}
 
+	@log({
+		args: false,
+		decorate: c => `(${c.id})`,
+		enter: c => `fetching channel '${c.name}'...`
+	})
+	private async fetchChannel(c: any, usersById: Map<string, CSUser>) {
+		try {
+			const response = await this._slack.channels.info({
+				channel: c.id
+			});
+
+			const { ok, channel } = response as WebAPICallResult & { channel: any };
+
+			this._unreads.update(channel.id, channel.last_read, 0, channel.unread_count_display || 0);
+
+			return fromSlackChannel(
+				ok ? channel : c,
+				usersById,
+				this._slackUserId,
+				this._codestreamTeamId
+			);
+		} catch (ex) {
+			Logger.error(ex);
+			return fromSlackChannel(c, usersById, this._slackUserId, this._codestreamTeamId);
+		}
+	}
+
 	private async fetchGroups(usersById: Map<string, CSUser>) {
 		const response = await this._slack.groups.list({
 			exclude_archived: true,
-			exclude_members: false,
-			limit: 1000
+			exclude_members: false
+			// limit: 1000
 		});
 
 		const { ok, error, groups } = response as WebAPICallResult & { groups: any };
@@ -1241,34 +1244,7 @@ export class SlackApiProvider implements ApiProvider {
 					return fromSlackChannelOrDirect(g, usersById, this._slackUserId, this._codestreamTeamId);
 				}
 
-				Logger.debug(
-					`SlackApiProvider.fetchGroups(${g.id})`,
-					`Fetching info for ${g.is_mpim ? "multi-party dm" : "private channel"} '${g.name}'...`
-				);
-				try {
-					const response = await this._slack.groups.info({
-						channel: g.id
-					});
-
-					const { ok, group } = response as WebAPICallResult & { group: any };
-
-					this._unreads.update(
-						group.id,
-						group.last_read,
-						group.is_mpim ? group.unread_count_display || 0 : 0,
-						group.unread_count_display || 0
-					);
-
-					return fromSlackChannelOrDirect(
-						ok ? group : g,
-						usersById,
-						this._slackUserId,
-						this._codestreamTeamId
-					);
-				} catch (ex) {
-					Logger.error(ex);
-					return fromSlackChannelOrDirect(g, usersById, this._slackUserId, this._codestreamTeamId);
-				}
+				return await this.fetchGroup(g, usersById);
 			})
 		)).filter(Boolean);
 
@@ -1281,11 +1257,43 @@ export class SlackApiProvider implements ApiProvider {
 		return streams;
 	}
 
+	@log({
+		args: false,
+		decorate: g => `(${g.id})`,
+		enter: g => `fetching ${g.is_mpim ? "mpim" : "group"} '${g.name}'...`
+	})
+	private async fetchGroup(g: any, usersById: Map<string, CSUser>) {
+		try {
+			const response = await this._slack.groups.info({
+				channel: g.id
+			});
+
+			const { ok, group } = response as WebAPICallResult & { group: any };
+
+			this._unreads.update(
+				group.id,
+				group.last_read,
+				group.is_mpim ? group.unread_count_display || 0 : 0,
+				group.unread_count_display || 0
+			);
+
+			return fromSlackChannelOrDirect(
+				ok ? group : g,
+				usersById,
+				this._slackUserId,
+				this._codestreamTeamId
+			);
+		} catch (ex) {
+			Logger.error(ex);
+			return fromSlackChannelOrDirect(g, usersById, this._slackUserId, this._codestreamTeamId);
+		}
+	}
+
 	private async fetchIMs(usersById: Map<string, CSUser>) {
 		const response = await this._slack.im.list({
 			exclude_archived: true,
-			exclude_members: false,
-			limit: 1000
+			exclude_members: false
+			// limit: 1000
 		});
 
 		const { ok, error, ims } = response as WebAPICallResult & { ims: any };
@@ -1297,31 +1305,7 @@ export class SlackApiProvider implements ApiProvider {
 					return fromSlackDirect(im, usersById, this._slackUserId, this._codestreamTeamId);
 				}
 
-				Logger.debug(`SlackApiProvider.fetchIMs(${im.id})`, `Fetching info for dm '${im.user}'...`);
-				try {
-					const response = await this._slack.conversations.info({
-						channel: im.id
-					});
-
-					const { ok, channel } = response as WebAPICallResult & { channel: any };
-
-					this._unreads.update(
-						channel.id,
-						channel.last_read,
-						channel.unread_count_display || 0,
-						channel.unread_count_display || 0
-					);
-
-					return fromSlackDirect(
-						ok ? { ...im, ...channel } : im,
-						usersById,
-						this._slackUserId,
-						this._codestreamTeamId
-					);
-				} catch (ex) {
-					Logger.error(ex);
-					return fromSlackDirect(im, usersById, this._slackUserId, this._codestreamTeamId);
-				}
+				return await this.fetchIM(im, usersById);
 			})
 		)).filter(Boolean);
 
@@ -1330,6 +1314,38 @@ export class SlackApiProvider implements ApiProvider {
 		// 	.filter(Boolean);
 
 		return streams;
+	}
+
+	@log({
+		args: false,
+		decorate: im => `(${im.id})`,
+		enter: im => `fetching im with '${im.user}'...`
+	})
+	private async fetchIM(im: any, usersById: Map<string, CSUser>) {
+		try {
+			const response = await this._slack.conversations.info({
+				channel: im.id
+			});
+
+			const { ok, channel } = response as WebAPICallResult & { channel: any };
+
+			this._unreads.update(
+				channel.id,
+				channel.last_read,
+				channel.unread_count_display || 0,
+				channel.unread_count_display || 0
+			);
+
+			return fromSlackDirect(
+				ok ? { ...im, ...channel } : im,
+				usersById,
+				this._slackUserId,
+				this._codestreamTeamId
+			);
+		} catch (ex) {
+			Logger.error(ex);
+			return fromSlackDirect(im, usersById, this._slackUserId, this._codestreamTeamId);
+		}
 	}
 
 	@log()
@@ -1364,10 +1380,11 @@ export class SlackApiProvider implements ApiProvider {
 		return { stream: stream! };
 	}
 
+	@log()
 	private async getStreamMembers(streamId: string) {
 		const response = await this._slack.conversations.members({
-			channel: streamId,
-			limit: 1000
+			channel: streamId
+			// limit: 1000
 		});
 
 		const { ok, error, members } = response as WebAPICallResult & { members: any };

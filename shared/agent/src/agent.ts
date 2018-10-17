@@ -56,11 +56,12 @@ export class CodeStreamAgent implements Disposable {
 		this._clientCapabilities = capabilities;
 
 		const agentOptions = e.initializationOptions! as AgentOptions;
-		this._session = new CodeStreamSession(this, this._connection, agentOptions);
-
+		Logger.level = agentOptions.traceLevel;
 		if (agentOptions.isDebugging) {
 			Logger.overrideIsDebugging();
 		}
+
+		this._session = new CodeStreamSession(this, this._connection, agentOptions);
 
 		// Give the agent some time to connect
 		if (Logger.isDebugging) {

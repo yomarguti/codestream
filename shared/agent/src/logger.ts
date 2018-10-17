@@ -12,7 +12,7 @@ export enum TraceLevel {
 }
 
 export class Logger {
-	static level: TraceLevel = TraceLevel.Debug;
+	static level: TraceLevel = TraceLevel.Silent;
 	private static _agent: CodeStreamAgent | undefined;
 
 	static initialize(agent: CodeStreamAgent) {
