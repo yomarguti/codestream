@@ -58,7 +58,7 @@ Ideally, markers should:
 - Mark a line or a range of code, providing specific context.
 - Move with the code they refer to, as needed, when the code changes, across commits and branches, remaining relevant to future versions of functions and files, and for every developer on the team regardless of which version is checked out.
 - Be created and updated at any time, independent of git commit cadence.
-Enable comment conversation with real-time messaging.
+- Enable comment conversation with real-time messaging.
 - Cross-post to existing communication tools, such as Slack, MS Teams or Email.
 - Automatically at-mention the author(s) of the code they are referring to.
 - Connect with third-party tools, so PR, CI, code review, and crash reporting tools can create and update markers within your source tree.
