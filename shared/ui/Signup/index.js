@@ -22,8 +22,8 @@ export default connect(
 			<form className="standard-form">
 				<fieldset className="form-body">
 					<p>
-						Access your team&#8216;s existing channels and DMs right inside your IDE, and make it
-						unbelievably easy to talk about code.
+						Access your team&#8216;s existing Slack channels and DMs right inside your IDE, and make
+						it unbelievably easy to talk about code.
 					</p>
 					<p>
 						CodeStream saves all of these discussions as annotations to your codebase, so your team
