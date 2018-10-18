@@ -94,12 +94,12 @@ export class SimpleChannelPanel extends Component {
 					<Icon name="triangle-right" className="triangle-right" />
 					<span className="clickable">Channels</span>
 					<div className="align-right">
-						<Tooltip title="Browse all Channels" placement="bottom" delay="0.5">
+						<Tooltip title="Browse all Channels" placement="left" delay="0.5">
 							<span>
 								<Icon name="list-unordered" onClick={this.handleClickShowPublicChannels} />
 							</span>
 						</Tooltip>
-						<Tooltip title="Create a Channel" placement="bottom" delay="0.5">
+						<Tooltip title="Create a Channel" placement="left" delay="0.5">
 							<span>
 								<Icon name="plus" onClick={this.handleClickCreateChannel} />
 							</span>
