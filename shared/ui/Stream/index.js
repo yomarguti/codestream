@@ -43,7 +43,7 @@ export class SimpleStream extends Component {
 
 		this.state = {
 			threadId: props.initialThreadId,
-			threadTrigger: props.initialThreadId
+			threadTrigger: null
 		};
 		this._compose = React.createRef();
 	}
