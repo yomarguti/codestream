@@ -259,6 +259,7 @@ export const removeUsersFromStream = (streamId, userIds) => async (dispatch, get
 	};
 
 	try {
+		// await api.removeUsersFromStream(streamId, userIds)
 		const returnStream = await api.updateStream(streamId, update);
 		console.log("return stream: ", returnStream);
 		// if (streams.length > 0) dispatch(saveStreams(normalize(streams)));
@@ -273,6 +274,7 @@ export const addUsersToStream = (streamId, userIds) => async (dispatch, getState
 	};
 
 	try {
+		// await api.addUsersToStream(streamId, userIds)
 		const returnStream = await api.updateStream(streamId, update);
 		console.log("return stream: ", returnStream);
 		// if (streams.length > 0) dispatch(saveStreams(normalize(streams)));
@@ -295,6 +297,7 @@ export const renameStream = (streamId, name) => async (dispatch, getState, { api
 	const update = { name };
 
 	try {
+		// await api.renameStream(streamId, name)
 		const returnStream = await api.updateStream(streamId, update);
 		console.log("return stream: ", returnStream);
 		return returnStream;
@@ -308,6 +311,7 @@ export const setPurpose = (streamId, purpose) => async (dispatch, getState, { ap
 	const update = { purpose };
 
 	try {
+		// await api.setStreamPurpose(streamId, purpose)
 		const returnStream = await api.updateStream(streamId, update);
 		console.log("return stream: ", returnStream);
 		return returnStream;
@@ -321,6 +325,7 @@ export const archiveStream = (streamId, value) => async (dispatch, getState, { a
 	const update = { isArchived: value };
 
 	try {
+		// await api.archiveStream(teamId, streamId)
 		const stream = await api.updateStream(streamId, update);
 		if (stream) return dispatch({ type: "UPDATE_STREAM", payload: stream });
 	} catch (error) {

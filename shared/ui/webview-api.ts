@@ -88,6 +88,14 @@ export default class WebviewApi {
 		return this.postMessage({ action: "create-stream", params: stream });
 	}
 
+	renameStream(streamId: string, name: string) {
+		return this.postMessage({ action: "rename-stream", params: { streamId, name } });
+	}
+
+	setStreamPurpose(streamId: string, purpose: string) {
+		return this.postMessage({ action: "set-stream-purpose", params: { streamId, purpose } });
+	}
+
 	updateStream(streamId: string, update: object) {
 		return this.postMessage({
 			action: "update-stream",
@@ -104,6 +112,18 @@ export default class WebviewApi {
 
 	leaveStream(teamId: string, streamId: string) {
 		return this.postMessage({ action: "leave-stream", params: { teamId, streamId } });
+	}
+
+	archiveStream(teamId: string, streamId: string) {
+		return this.postMessage({ action: "archive-stream", params: { teamId, streamId } });
+	}
+
+	removeUsersFromStream(streamId: string, userIds: string[]) {
+		return this.postMessage({ action: "remove-users-from-stream", params: { streamId, userIds } });
+	}
+
+	addUsersToStream(streamId: string, userIds: string[]) {
+		return this.postMessage({ action: "add-users-to-stream", params: { streamId, userIds } });
 	}
 
 	invite(attributes: object) {
