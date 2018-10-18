@@ -29,7 +29,8 @@ export class SimpleKnowledgePanel extends Component {
 			question: "Questions & Answers",
 			issue: "Issues",
 			trap: "Code Traps",
-			snippet: "Snippets"
+			snippet: "Snippets",
+			bookmark: "Bookmarks"
 		};
 		this.sectionLabel = {
 			inThisFile: "In This File",
@@ -43,13 +44,15 @@ export class SimpleKnowledgePanel extends Component {
 			comment: ["inThisFile", "recent"],
 			question: ["inThisFile", "unanswered", "recent"],
 			issue: ["inThisFile", "mine", "open", "recent", "closed"],
-			trap: ["inThisFile", "recent"]
+			trap: ["inThisFile", "recent"],
+			bookmark: ["inThisFile", "recent"]
 		};
 		this.sectionsFilterOrder = {
 			comment: ["inThisFile", "recent"],
 			question: ["inThisFile", "unanswered", "recent"],
 			issue: ["closed", "inThisFile", "mine", "open", "recent"],
-			trap: ["inThisFile", "recent"]
+			trap: ["inThisFile", "recent"],
+			bookmark: ["inThisFile", "recent"]
 		};
 	}
 

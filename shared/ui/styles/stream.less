@@ -1067,6 +1067,7 @@
 						.question,
 						.issue,
 						.trap,
+						.bookmark,
 						.pin,
 						.snippet,
 						.comment {
@@ -1081,6 +1082,7 @@
 						.question,
 						.issue,
 						.trap,
+						.bookmark,
 						.pin,
 						.snippet,
 						.comment {
@@ -2128,7 +2130,7 @@
 				}
 				label {
 					display: inline-block;
-					padding: 5px 10px;
+					padding: 5px 8px;
 					cursor: pointer;
 					opacity: 0.4;
 					.comment {
@@ -2137,6 +2139,9 @@
 				}
 				label:first-of-type {
 					padding-left: 0;
+				}
+				label:last-of-type {
+					padding-right: 0;
 				}
 				label:hover {
 					opacity: 0.8;
@@ -2221,10 +2226,11 @@
 		overflow-x: hidden;
 		max-height: 100vh !important;
 		overflow-y: auto !important;
+		max-width: auto;
 		fieldset {
-			padding: 0 30px 40px 30px !important;
+			padding: 0 0 40px 0 !important;
 			// padding: 0 0 40px 0 !important;
-			max-width: 100%;
+			max-width: 100% !important;
 			width: calc(100vw - 60px) !important;
 		}
 		.form-body {
@@ -2249,6 +2255,14 @@
 		.code {
 			width: calc(100vw - 60px) !important;
 		}
+		.tab-group {
+			width: calc(100vw - 60px) !important;
+			label {
+				overflow: hidden;
+				text-overflow: ellipsis;
+				display: inline-block;
+			}
+		}
 	}
 }
 
@@ -2265,14 +2279,17 @@
 		}
 	}
 }
-@media only screen and (max-width: 300px) {
+@media only screen and (max-width: 320px) {
 	.two-column {
 		grid-template-columns: 1fr !important;
 	}
-}
-@media only screen and (max-width: 410px) {
-	.multi-compose .tab-group label b {
+	#code-comment-form .tab-group label b {
 		display: none;
+	}
+}
+@media only screen and (max-width: 500px) {
+	#code-comment-form .tab-group label {
+		max-width: calc(20%);
 	}
 }
 

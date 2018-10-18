@@ -187,7 +187,8 @@ class Post extends React.Component {
 			collapsed: this.props.collapsed,
 			question: post.type === "question",
 			issue: post.type === "issue",
-			trap: post.type === "trap"
+			trap: post.type === "trap",
+			bookmark: post.type === "bookmark"
 		});
 
 		let codeBlock = null;
@@ -423,6 +424,9 @@ class Post extends React.Component {
 			case "question":
 				icon = <Icon name="question" className="type-icon" />;
 				break;
+			case "bookmark":
+				icon = <Icon name="bookmark" className="type-icon" />;
+				break;
 			case "trap":
 				icon = <Icon name="trap" className="type-icon" />;
 				break;
@@ -530,6 +534,7 @@ class Post extends React.Component {
 		let matches = (post.text || "").match(/^\/me\s+(.*)/);
 		if (matches) return <span className="emote">{this.renderTextLinkified(matches[1])}</span>;
 		if (post.type === "question") return <span className="emote">has a question</span>;
+		if (post.type === "bookmark") return <span className="emote">set a bookmark</span>;
 		if (post.type === "issue") return <span className="emote">posted an issue</span>;
 		if (post.type === "trap") return <span className="emote">created a code trap</span>;
 		else return null;

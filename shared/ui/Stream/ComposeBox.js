@@ -144,6 +144,9 @@ class ComposeBox extends React.Component {
 			case "issue":
 				this._titleInput.focus();
 				break;
+			// case "bookmark":
+			// this._titleInput.focus();
+			// break;
 			case "snippet":
 				this._contentEditableSnippet.htmlEl.focus();
 				break;
@@ -641,6 +644,8 @@ class ComposeBox extends React.Component {
 
 		const trapTip =
 			"Let your teammates know about a critical section of code that should not be changed without discussion or consultation. You will be alerted when a teammate edits code within a Code Trap.";
+		const bookmarkTip =
+			'Save a bookmark either for yourself, or for your team (select the appropriate "Post to" setting above).';
 
 		let range = quote ? arrayToRange(quote.location) : null;
 		let rangeText = "";
@@ -648,6 +653,7 @@ class ComposeBox extends React.Component {
 		if (commentType === "question") verb = "Question about ";
 		if (commentType === "issue") verb = "Issue in ";
 		if (commentType === "trap") verb = "Code Trap for ";
+		if (commentType === "bookmark") verb = "Bookmark for ";
 		if (range) {
 			if (range.start.row === range.end.row) {
 				rangeText = verb + " line " + (range.start.row + 1);
@@ -677,6 +683,10 @@ class ComposeBox extends React.Component {
 		let commentString = commentType || "comment";
 		const submitAnotherLabel = "Command-click to submit another " + commentString + " after saving";
 
+		const requiredCodeBlockMessage =
+			commentType === "bookmark" || commentType === "trap"
+				? ` (required for ${commentType}s)`
+				: " (optional)";
 		return [
 			<div className="panel-header" key="one">
 				New {commentString.charAt(0).toUpperCase() + commentString.slice(1)}
@@ -759,7 +769,12 @@ class ComposeBox extends React.Component {
 									{this.renderCode(quote)}
 								</div>
 							)}
-							{!quote && <label>CodeBlock</label>}
+							{!quote && (
+								<label>
+									Code Block
+									{requiredCodeBlockMessage}
+								</label>
+							)}
 							{!quote && (
 								<div
 									className="hint frame control-group"
@@ -829,10 +844,24 @@ class ComposeBox extends React.Component {
 								>
 									<Icon name="trap" /> <b>Code Trap</b>
 								</label>
+								<label
+									htmlFor="radio-comment-type-bookmark"
+									className={createClassString({
+										checked: commentType === "bookmark"
+									})}
+									onClick={e => this.setCommentType("bookmark")}
+								>
+									<Icon name="bookmark" /> <b>Bookmark</b>
+								</label>
 							</div>
 							{commentType === "trap" && (
 								<div className="hint frame control-group" style={{ marginBottom: "10px" }}>
 									{trapTip}
+								</div>
+							)}
+							{commentType === "bookmark" && (
+								<div className="hint frame control-group" style={{ marginBottom: "10px" }}>
+									{bookmarkTip}
 								</div>
 							)}
 							{(commentType === "issue" ||
@@ -913,13 +942,19 @@ class ComposeBox extends React.Component {
 							>
 								Cancel
 							</Button>
-							<span className="hint">Styling with Markdown is supported</span>
+							{commentType !== "bookmark" && (
+								<span className="hint">Styling with Markdown is supported</span>
+							)}
 						</div>
 						<div style={{ clear: "both" }} />
 					</fieldset>
 				</form>
 			</div>
 		];
+		// 	<span className="hixnt" style={{ grid: "none" }}>
+		// 	<input type="checkbox" />
+		// 	Open automatically on selection
+		// </span>
 		// 	<input
 		// 	id="radio-comment-type-snippet"
 		// 	type="radio"
@@ -963,7 +998,10 @@ class ComposeBox extends React.Component {
 					placeholder = "Description (optional)";
 					break;
 				case "trap":
-					placeholder = "Description (required)";
+					placeholder = "Justification for Code Trap (required)";
+					break;
+				case "bookmark":
+					placeholder = "Label (required)";
 					break;
 			}
 		}

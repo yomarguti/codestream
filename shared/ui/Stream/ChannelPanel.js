@@ -137,6 +137,10 @@ export class SimpleChannelPanel extends Component {
 					<Icon name="trap" className="trap" />
 					Code Traps
 				</li>
+				<li key="bookmark" id="bookmark">
+					<Icon name="bookmark" className="bookmark" />
+					Bookmarks
+				</li>
 			</ul>
 		);
 		// 	<li key="pin" id="pin">
