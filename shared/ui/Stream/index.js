@@ -626,7 +626,7 @@ export class SimpleStream extends Component {
 	// dismiss the thread stream and return to the main stream
 	handleDismissThread = ({ track = true } = {}) => {
 		EventEmitter.emit("interaction:thread-closed", this.state.threadId);
-		this.setState({ threadId: null });
+		this.setState({ threadId: null, threadTrigger: null });
 		this.setActivePanel("main");
 		this.focusInput();
 		if (track)
@@ -798,7 +798,7 @@ export class SimpleStream extends Component {
 		this.selectPost(postDiv.id, true);
 	};
 
-	// show the thread related to the given post, and if there is
+	// show the thread related to the given post
 	selectPost = (id, wasClicked) => {
 		const post = this.findPostById(id);
 		if (!post) return;
