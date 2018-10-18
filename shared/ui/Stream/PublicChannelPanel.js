@@ -9,9 +9,6 @@ import {
 	getArchivedChannelStreamsForTeam
 } from "../reducers/streams";
 import Icon from "./Icon";
-import Button from "./Button";
-import { FormattedMessage } from "react-intl";
-import * as routingActions from "../actions/routing";
 import _ from "underscore";
 import Timestamp from "./Timestamp";
 import Tooltip from "./Tooltip";
