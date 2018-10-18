@@ -1,14 +1,32 @@
+export interface IpcMessage {
+	type: string;
+	body: any;
+}
+
+export interface IpcHost {
+	postMessage(message: IpcMessage, origin: string): undefined;
+}
+
+export interface IpcResponse {
+	id: string;
+	payload?: any;
+	error?: any;
+}
+
+declare function acquireVsCodeApi(): IpcHost;
+
 const findHost = () => {
 	try {
 		return acquireVsCodeApi();
 	} catch (e) {
 		/* probably not in vscode */
-		return window.parent;
+		return window.parent as IpcHost;
 	}
 };
 
 class EventEmitter {
-	listenersByEvent = new Map();
+	listenersByEvent = new Map<string, Function[]>();
+	host: IpcHost;
 
 	constructor() {
 		this.host = findHost();
@@ -19,7 +37,7 @@ class EventEmitter {
 		return this.host;
 	}
 
-	handler = ({ data }) => {
+	handler = ({ data }: MessageEvent) => {
 		if (data.type.startsWith("codestream")) {
 			const event = data.type.replace("codestream:", "");
 			if (event !== "response") console.debug(`[${event}] event received`, data.body);
@@ -28,23 +46,23 @@ class EventEmitter {
 		}
 	};
 
-	on(thing, listener) {
+	on(thing: string, listener: Function) {
 		return this.subscribe(thing, listener);
 	}
 
-	subscribe(thing, listener) {
+	subscribe(thing: string, listener: Function) {
 		const listeners = this.listenersByEvent.get(thing) || [];
 		listeners.push(listener);
 		this.listenersByEvent.set(thing, listeners);
 		return {
 			dispose: () => {
-				const listeners = this.listenersByEvent.get(thing).filter(l => l !== listener);
+				const listeners = this.listenersByEvent.get(thing)!.filter(l => l !== listener);
 				this.listenersByEvent.set(thing, listeners);
 			}
 		};
 	}
 
-	emit(event, body) {
+	emit(event: string, body: any) {
 		this.host.postMessage(
 			{
 				type: `codestream:${event}`,
@@ -54,7 +72,7 @@ class EventEmitter {
 		);
 	}
 
-	onFileChanged(block, listener) {
+	onFileChanged(block: any, listener: any) {
 		this.emit("subscription:file-changed", block);
 		const disposable = this.on("publish:file-changed", listener);
 		return {

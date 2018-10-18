@@ -1,14 +1,15 @@
-import EventEmitter from "./event-emitter";
+import EventEmitter, { IpcHost, IpcResponse } from "./event-emitter";
 import { shortUuid } from "./utils";
 
 let sequence = 0;
 
 export default class WebviewApi {
 	pendingRequests = new Map();
+	host: IpcHost;
 
 	constructor() {
 		this.host = EventEmitter.getHost();
-		EventEmitter.on("response", ({ id, payload, error }) => {
+		EventEmitter.on("response", ({ id, payload, error }: IpcResponse) => {
 			const request = this.pendingRequests.get(id);
 			if (request) {
 				console.debug("codestream:response", { id, payload, error });
@@ -24,7 +25,7 @@ export default class WebviewApi {
 		});
 	}
 
-	postMessage(message) {
+	postMessage(message: { [key: string]: any }) {
 		if (sequence === Number.MAX_SAFE_INTEGER) {
 			sequence = 1;
 		} else {
@@ -51,43 +52,43 @@ export default class WebviewApi {
 		return this.postMessage({ action: "go-to-slack-signin" });
 	}
 
-	validateSignup(token) {
+	validateSignup(token: string) {
 		return this.postMessage({ action: "validate-signup", params: token });
 	}
 
-	authenticate(params) {
+	authenticate(params: object) {
 		return this.postMessage({ action: "authenticate", params });
 	}
 
-	fetchPosts(params) {
+	fetchPosts(params: object) {
 		return this.postMessage({ action: "fetch-posts", params });
 	}
 
-	fetchThread(streamId, parentPostId) {
+	fetchThread(streamId: string, parentPostId: string) {
 		return this.postMessage({ action: "fetch-thread", params: { streamId, parentPostId } });
 	}
 
-	createPost(post) {
+	createPost(post: object) {
 		return this.postMessage({ action: "create-post", params: post });
 	}
 
-	editPost(params) {
+	editPost(params: object) {
 		return this.postMessage({ action: "edit-post", params });
 	}
 
-	reactToPost(params) {
+	reactToPost(params: object) {
 		return this.postMessage({ action: "react-to-post", params });
 	}
 
-	deletePost(params) {
+	deletePost(params: object) {
 		return this.postMessage({ action: "delete-post", params });
 	}
 
-	createStream(stream) {
+	createStream(stream: object) {
 		return this.postMessage({ action: "create-stream", params: stream });
 	}
 
-	updateStream(streamId, update) {
+	updateStream(streamId: string, update: object) {
 		return this.postMessage({
 			action: "update-stream",
 			params: {
@@ -97,34 +98,34 @@ export default class WebviewApi {
 		});
 	}
 
-	joinStream(params) {
+	joinStream(params: object) {
 		return this.postMessage({ action: "join-stream", params });
 	}
 
-	leaveStream(teamId, streamId) {
+	leaveStream(teamId: string, streamId: string) {
 		return this.postMessage({ action: "leave-stream", params: { teamId, streamId } });
 	}
 
-	invite(attributes) {
+	invite(attributes: object) {
 		return this.postMessage({ action: "invite", params: attributes });
 	}
 
-	markStreamRead(streamId, postId) {
+	markStreamRead(streamId: string, postId: string) {
 		return this.postMessage({ action: "mark-stream-read", params: { streamId, id: postId } });
 	}
 
-	markPostUnread(streamId, postId) {
+	markPostUnread(streamId: string, postId: string) {
 		return this.postMessage({
 			action: "mark-post-unread",
 			params: { streamId: streamId, id: postId }
 		});
 	}
 
-	saveUserPreference(newPreference) {
+	saveUserPreference(newPreference: object) {
 		return this.postMessage({ action: "save-user-preference", params: newPreference });
 	}
 
-	async showCode(post, enteringThread) {
+	async showCode(post: object, enteringThread: boolean) {
 		return this.postMessage({ action: "show-code", params: { post, enteringThread } });
 	}
 }
