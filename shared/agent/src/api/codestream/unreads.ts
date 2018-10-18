@@ -78,7 +78,7 @@ export class CodeStreamUnreads {
 			this.computeForPosts(posts, this._api.userId, stream);
 
 			if (this._lastReads[streamId] === undefined) {
-				this._lastReads[streamId] = posts[0].seqNum - 1;
+				this._lastReads[streamId] = Number(posts[0].seqNum) - 1;
 			}
 
 			Logger.debug(

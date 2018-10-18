@@ -1,20 +1,22 @@
 "use strict";
 
-import { encodeArray, Index, IndexParams, IndexType, makeIndex } from "./index";
+import {
+	BaseIndex,
+	encodeArray,
+	GroupIndex,
+	IndexParams,
+	IndexType,
+	makeIndex,
+	UniqueIndex
+} from "./index";
 
 import { Logger } from "../../logger";
+import { Strings } from "../../system/string";
 import { Id } from "../entityManager";
-import { SequentialSlice } from "./sequentialSlice";
 
-export type UniqueFetchFn<T> = (value: any[]) => Promise<T | undefined>;
-export type GroupFetchFn<T> = (value: any[]) => Promise<T[]>;
-export type GroupSequentialFetchFn<T> = (
-	groupValue: any[],
-	seqStart?: number,
-	seqEnd?: number,
-	limit?: number
-) => Promise<T[]>;
-export type FetchFn<T> = UniqueFetchFn<T> | GroupFetchFn<T> | GroupSequentialFetchFn<T>;
+export type UniqueFetchFn<T> = (criteria: KeyValue<T>[]) => Promise<T | undefined>;
+export type GroupFetchFn<T> = (criteria: KeyValue<T>[]) => Promise<T[]>;
+export type FetchFn<T> = UniqueFetchFn<T> | GroupFetchFn<T>;
 
 export type IdFn<T> = (obj: T) => Id;
 
@@ -29,7 +31,7 @@ export function getValues<T>(keyValues: KeyValue<T>[]): any[] {
 }
 
 export class BaseCache<T> {
-	protected readonly indexes: Map<string, Index<T>>;
+	protected readonly indexes: Map<string, BaseIndex<T>>;
 
 	/**
 	 * Create a cache
@@ -62,19 +64,31 @@ export class BaseCache<T> {
 		criteria: KeyValue<T>[],
 		options: { fromCacheOnly?: boolean } = {}
 	): Promise<T | undefined> {
+		const start = process.hrtime();
 		const keys = getKeys(criteria);
-		const index = this.getIndex(keys);
+		const index = this.getIndex<UniqueIndex<T>>(keys);
 		const values = getValues(criteria);
 		if (!index || index.type !== IndexType.Unique) {
 			throw new Error(`No unique index declared for fields ${keys}`);
 		}
 
+		Logger.log(`BaseCache: retrieving entity ${keys}=${values}`);
 		let entity = index.get(values);
 		if (!entity && options.fromCacheOnly !== true) {
+			Logger.log(`BaseCache: cache miss ${keys}=${values}`);
 			const fetch = index.fetchFn as UniqueFetchFn<T>;
 			entity = await fetch(criteria);
+			Logger.log(`BaseCache: caching entity ${keys}=${values}`);
 			this.set(entity);
+		} else if (entity) {
+			Logger.log(`BaseCache: cache hit ${keys}=${values}`);
 		}
+
+		Logger.log(
+			`PostManager: returning entity in ${Strings.getDurationMilliseconds(
+				start
+			)}ms ${keys}=${values}`
+		);
 		return entity;
 	}
 
@@ -115,90 +129,36 @@ export class BaseCache<T> {
 	 * @return Array of entities or `undefined` if group is not initialized
 	 */
 	async getGroup(criteria: KeyValue<T>[]): Promise<T[]> {
+		const start = process.hrtime();
 		const keys = getKeys(criteria);
 		const values = getValues(criteria);
-		const index = this.getIndex(keys);
+		const index = this.getIndex<GroupIndex<T>>(keys);
 		if (!index || index.type !== IndexType.Group) {
 			throw new Error(`No group index declared for field ${keys}`);
 		}
 
-		const entities = index.getGroup(values);
+		Logger.log(`BaseCache: retrieving entities ${keys}=${values}`);
+		let entities = index.getGroup(values);
 		if (!entities) {
+			Logger.log(`BaseCache: cache miss ${keys}=${values}`);
 			const fetch = index.fetchFn as GroupFetchFn<T>;
-			const entities = await fetch(criteria);
+			entities = await fetch(criteria);
+			Logger.log(`BaseCache: caching entities ${keys}=${values}`);
 			this.initGroup(criteria, entities);
-			return entities;
+		} else {
+			Logger.log(`BaseCache: cache hit ${keys}=${values}`);
 		}
+
+		Logger.log(
+			`BaseCache: returning ${entities.length} entities in ${Strings.getDurationMilliseconds(
+				start
+			)}ms ${keys}=${values}`
+		);
 		return entities;
 	}
 
 	/**
-	 * Get a slice of a group of entities. Returned array will contain entities in the specified
-	 * group with sequences from seqStart to seqEnd-1. Requires a group-sequential index.
-	 *
-	 * @param criteria Search criteria as an array of key/value tuples
-	 * @param seqStart The starting sequence
-	 * @param seqEnd The ending sequence
-	 *
-	 * @return {SequentialSlice} of entities or `undefined` if group is not initialized
-	 */
-	async getGroupSlice(
-		criteria: KeyValue<T>[],
-		seqStart: number,
-		seqEnd: number
-	): Promise<SequentialSlice<T>> {
-		const keys = getKeys(criteria);
-		const values = getValues(criteria);
-		const index = this.getIndex(keys);
-		if (!index || index.type !== IndexType.GroupSequential) {
-			throw new Error(`No group-sequential index declared for field ${keys}`);
-		}
-
-		const slice = index.getGroupSlice(values, seqStart, seqEnd);
-		if (slice) {
-			await this.fillSliceGaps(slice, criteria);
-			return slice;
-		} else {
-			const fetchFn = index.fetchFn as GroupSequentialFetchFn<T>;
-			const entities = await fetchFn(values, undefined, undefined, 1);
-			this.initGroup(criteria, entities);
-			return this.getGroupSlice(criteria, seqStart, seqEnd);
-		}
-	}
-
-	/**
-	 * Get the tail (trailing slice) of a group of entities. Returned array will contain `n`
-	 * elements as specified via #limit parameter, unless the whole group contain less than `n`
-	 * entities. Requires a group-sequential index.
-	 *
-	 * @param criteria Search criteria as an array of key/value tuples
-	 * @param limit Maximum number of entities to be included in the result
-	 *
-	 * @return {SequentialSlice} of entities or `undefined` if group is not initialized
-	 */
-	async getGroupTail(criteria: KeyValue<T>[], limit: number): Promise<SequentialSlice<T>> {
-		const keys = getKeys(criteria);
-		const values = getValues(criteria);
-		const index = this.getIndex(keys);
-		if (!index || index.type !== IndexType.GroupSequential) {
-			throw new Error(`No group-sequential index declared for field ${keys}`);
-		}
-
-		const tail = index.getGroupTail(values, limit);
-		if (tail) {
-			await this.fillSliceGaps(tail, criteria);
-			return tail;
-		} else {
-			const fetchFn = index.fetchFn as GroupSequentialFetchFn<T>;
-			const entities = await fetchFn(values, undefined, undefined, limit);
-			this.initGroup(criteria, entities);
-			return this.getGroupTail(criteria, limit);
-		}
-	}
-
-	/**
-	 * Initializes a group of entities. For group indexes, all entities must be specified. For
-	 * group-sequential indexes, the trailing (last sequences) entities must be specified.
+	 * Initializes a group of entities. For group indexes, all entities must be specified.
 	 *
 	 * @param groupField The group field
 	 * @param groupValue The group field value
@@ -207,10 +167,10 @@ export class BaseCache<T> {
 	initGroup(criteria: KeyValue<T>[], entities: T[]) {
 		const keys = getKeys(criteria);
 		const values = getValues(criteria);
-		const index = this.requireIndex(keys);
-		if (index.type !== IndexType.Group && index.type !== IndexType.GroupSequential) {
+		const index = this.requireIndex<GroupIndex<T>>(keys);
+		if (index.type !== IndexType.Group) {
 			throw new Error(
-				`Cannot initialize group ${keys}=${values} because it doesn't have an associated group or group-sequential index`
+				`Cannot initialize group ${keys}=${values} because it doesn't have an associated group index`
 			);
 		}
 
@@ -220,30 +180,15 @@ export class BaseCache<T> {
 		index.initGroup(values, entities);
 	}
 
-	private async fillSliceGaps(slice: SequentialSlice<T>, criteria: KeyValue<T>[]) {
-		const keys = getKeys(criteria);
-		const values = getValues(criteria);
-		const index = this.getIndex(keys)!;
-		const fetch = index.fetchFn as GroupSequentialFetchFn<T>;
-		const gaps = slice.getSequenceGaps();
-		for (const gap of gaps) {
-			const entities = await fetch(criteria, gap.start, gap.end);
-			for (const entity of entities) {
-				this.set(entity);
-			}
-			slice.add(entities);
-		}
-	}
-
-	private requireIndex(keys: (keyof T)[]): Index<T> {
-		const index = this.getIndex(keys);
+	protected requireIndex<I extends BaseIndex<T>>(keys: (keyof T)[]): I {
+		const index = this.getIndex<I>(keys);
 		if (index == null) {
 			throw new Error(`No index declared for field ${keys}`);
 		}
 		return index;
 	}
 
-	private getIndex(fields: (keyof T)[]): Index<T> | undefined {
-		return this.indexes.get(encodeArray(fields));
+	private getIndex<I extends BaseIndex<T>>(fields: (keyof T)[]): I | undefined {
+		return this.indexes.get(encodeArray(fields)) as I;
 	}
 }

@@ -50,12 +50,12 @@ function defaultIdFn(entity: any): Id {
 	return entity.id;
 }
 
-abstract class BaseIndex<T> {
+export abstract class BaseIndex<T> {
 	protected constructor(readonly fields: (keyof T)[], readonly fetchFn: FetchFn<T>) {}
 
 	abstract invalidate(): void;
 
-	abstract set(value: any, entity: T, oldEntity?: T): void;
+	abstract set(entity: T, oldEntity?: T): void;
 
 	protected requireIndexValue(entity: T): string | undefined {
 		const values = [];

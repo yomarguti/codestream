@@ -65,7 +65,7 @@ export interface CSPost extends CSEntity {
 	teamId: string;
 	streamId: string;
 	repoId?: string;
-	seqNum: number;
+	seqNum: number | string;
 	text: string;
 	codeBlocks?: CSCodeBlock[];
 	commitHashWhenPosted?: string;
