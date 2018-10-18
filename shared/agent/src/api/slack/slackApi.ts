@@ -860,7 +860,7 @@ export class SlackApiProvider implements ApiProvider {
 		let response;
 
 		// This isn't ideal, but we can always pack some more info into the id to ensure we call the right thing
-		switch (fromSlackChannelIdToType(request.streamId)) {
+		switch (fromSlackChannelIdToType(streamId)) {
 			case "channel":
 				response = await this._slack.channels.replies({
 					channel: streamId,
@@ -895,7 +895,7 @@ export class SlackApiProvider implements ApiProvider {
 
 		const usersById = await this.ensureUsersById();
 		const posts = await Promise.all(messages.map((m: any) =>
-			fromSlackPost(m, request.streamId, usersById, this._codestreamTeamId)
+			fromSlackPost(m, streamId, usersById, this._codestreamTeamId)
 		) as Promise<CSPost>[]);
 
 		return { posts: posts };
@@ -973,10 +973,10 @@ export class SlackApiProvider implements ApiProvider {
 		let response;
 
 		// This isn't ideal, but we can always pack some more info into the id to ensure we call the right thing
-		switch (fromSlackChannelIdToType(request.streamId)) {
+		switch (fromSlackChannelIdToType(streamId)) {
 			case "channel":
 				response = await this._slack.channels.history({
-					channel: request.streamId,
+					channel: streamId,
 					count: 1,
 					latest: postId,
 					inclusive: true
@@ -986,7 +986,7 @@ export class SlackApiProvider implements ApiProvider {
 
 			case "group":
 				response = await this._slack.groups.history({
-					channel: request.streamId,
+					channel: streamId,
 					count: 1,
 					latest: postId,
 					inclusive: true
@@ -996,7 +996,7 @@ export class SlackApiProvider implements ApiProvider {
 
 			case "direct":
 				response = await this._slack.im.history({
-					channel: request.streamId,
+					channel: streamId,
 					count: 1,
 					latest: postId,
 					inclusive: true
