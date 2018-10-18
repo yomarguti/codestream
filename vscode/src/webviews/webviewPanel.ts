@@ -547,6 +547,86 @@ export class CodeStreamWebviewPanel implements Disposable {
 
 							break;
 						}
+						case "rename-stream": {
+							// const { streamId, name } = body.params;
+							//
+							// const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
+							// try {
+							// 	const response = await Container.agent.streams.rename(streamId, name);
+							// 	responseBody.payload = response.stream;
+							// } catch (ex) {
+							// 	responseBody.error = ex;
+							// }
+							// this.postMessage({
+							// 	type: WebviewIpcMessageType.response,
+							// 	body: responseBody
+							// });
+							return;
+						}
+						case "set-stream-purpose": {
+							// const { streamId, purpose } = body.params;
+							//
+							// const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
+							// try {
+							// 	const response = await Container.agent.streams.setPurpose(streamId, purpose);
+							// 	responseBody.payload = response.stream;
+							// } catch (ex) {
+							// 	responseBody.error = ex;
+							// }
+							// this.postMessage({
+							// 	type: WebviewIpcMessageType.response,
+							// 	body: responseBody
+							// });
+							return;
+						}
+						case "archive-stream": {
+							// const { streamId} = body.params;
+							//
+							// const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
+							// try {
+							// 	const response = await Container.agent.streams.setPurpose(streamId);
+							// 	responseBody.payload = response.stream;
+							// } catch (ex) {
+							// 	responseBody.error = ex;
+							// }
+							// this.postMessage({
+							// 	type: WebviewIpcMessageType.response,
+							// 	body: responseBody
+							// });
+							return;
+						}
+						case "remove-users-from-stream": {
+							// const { streamId, userIds } = body.params;
+							//
+							// const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
+							// try {
+							// 	const response = await Container.agent.streams.removeUsers(streamId, userIds);
+							// 	responseBody.payload = response.stream;
+							// } catch (ex) {
+							// 	responseBody.error = ex;
+							// }
+							// this.postMessage({
+							// 	type: WebviewIpcMessageType.response,
+							// 	body: responseBody
+							// });
+							return;
+						}
+						case "add-users-to-stream": {
+							// const { streamId, userIds } = body.params;
+							//
+							// const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
+							// try {
+							// 	const response = await Container.agent.streams.addUsers(streamId, userIds);
+							// 	responseBody.payload = response.stream;
+							// } catch (ex) {
+							// 	responseBody.error = ex;
+							// }
+							// this.postMessage({
+							// 	type: WebviewIpcMessageType.response,
+							// 	body: responseBody
+							// });
+							return;
+						}
 						case "show-code": {
 							const { post, enteringThread } = e.body.params;
 							if (post.codeBlocks == null || post.codeBlocks.length === 0) return;
