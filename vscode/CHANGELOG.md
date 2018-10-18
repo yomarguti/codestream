@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.17.1] - 2018-10-17
+
+- Fixes an issue with markers not working
+
 ## [0.17.0] - 2018-10-17
 
 - Fixes [#6](https://github.com/TeamCodeStream/CodeStream/issues/6) &mdash; Github Links in Slack messages are broken
