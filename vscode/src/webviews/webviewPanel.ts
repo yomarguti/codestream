@@ -756,7 +756,14 @@ export class CodeStreamWebviewPanel implements Disposable {
 		return this._streamThread;
 	}
 
-	show(streamThread?: StreamThread) {
+	async show(streamThread?: StreamThread) {
+		if (streamThread && streamThread.id) {
+			const { post } = await Container.agent.posts.get(streamThread.stream.id, streamThread.id);
+			return Container.commands.openPostWorkingFile(
+				new Post(this.session, post, streamThread.stream)
+			);
+		}
+
 		if (this._panel === undefined) return this.createWebview(streamThread);
 
 		if (
