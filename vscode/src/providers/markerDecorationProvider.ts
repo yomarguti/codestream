@@ -48,7 +48,7 @@ const buildDecoration = (position: string, type: string, color: string, status: 
 });
 
 const MarkerPositions = ["inline", "overlay"];
-const MarkerTypes = ["comment", "question", "issue", "trap"];
+const MarkerTypes = ["comment", "question", "issue", "trap", "bookmark"];
 const MarkerColors = ["blue", "green", "yellow", "orange", "red", "purple", "aqua", "gray"];
 const MarkerStatuses = ["open", "closed"];
 const MarkerHighlights: { [key: string]: string } = {
