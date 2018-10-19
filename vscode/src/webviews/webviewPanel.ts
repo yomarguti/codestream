@@ -942,7 +942,8 @@ export class CodeStreamWebviewPanel implements Disposable {
 			serverUrl: this.session.serverUrl,
 			reduceMotion: Container.config.reduceMotion,
 			showHeadshots: Container.config.avatars,
-			email: Container.config.email
+			email: Container.config.email,
+			debug: Container.config.traceLevel === "debug"
 		};
 		state.currentTeamId = this.session.team.id;
 		state.currentUserId = this.session.userId;
