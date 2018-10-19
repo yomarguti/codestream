@@ -1458,9 +1458,9 @@ const mapStateToProps = ({
 						fullName: ""
 					};
 				} else {
-					console.warn(
-						`Redux store doesn't have a user with id ${post.creatorId} for post with id ${post.id}`
-					);
+					// console.warn(
+					// 	`Redux store doesn't have a user with id ${post.creatorId} for post with id ${post.id}`
+					// );
 					user = {
 						username: "Unknown user",
 						email: "",
