@@ -16,6 +16,7 @@ import Post from "./Post";
 import Icon from "./Icon";
 import Tooltip from "./Tooltip";
 import OfflineBanner from "./OfflineBanner";
+import Debug from "./Debug";
 import EventEmitter from "../event-emitter";
 import * as actions from "./actions";
 import { safe, toMapBy } from "../utils";
@@ -434,11 +435,13 @@ export class SimpleStream extends Component {
 							<Icon name="chevron-left" className="show-channels-icon" />
 							{totalUMICount}
 						</span>
-						<Tooltip title={this.props.postStreamPurpose} placement="bottom">
-							<span>
-								{channelIcon} {this.props.postStreamName}
-							</span>
-						</Tooltip>
+						<Debug text={this.props.postStreamId}>
+							<Tooltip title={this.props.postStreamPurpose} placement="bottom">
+								<span>
+									{channelIcon} {this.props.postStreamName}
+								</span>
+							</Tooltip>
+						</Debug>
 						{this.props.postStreamType !== "direct" && (
 							<span className="align-right-button" onClick={this.handleClickStreamSettings}>
 								<Tooltip title="Channel Settings">

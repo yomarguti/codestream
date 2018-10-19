@@ -2,6 +2,7 @@ import * as React from "react";
 import { debounce } from "underscore";
 import DateSeparator from "./DateSeparator";
 import Post from "./Post";
+import Debug from "./Debug";
 import infiniteLoadable from "./infiniteLoadable";
 import { rAFThrottle, safe } from "../utils";
 
@@ -230,19 +231,21 @@ export default infiniteLoadable(
 									timestamp1={safe(() => posts[index - 1].createdAt)}
 									timestamp2={post.createdAt}
 								/>
-								<Post
-									id={post.id}
-									usernames={this.props.usernamesRegexp}
-									currentUserId={this.props.currentUserId}
-									currentUserName={this.props.currentUserName}
-									replyingTo={!this.props.isThread && parentPost}
-									newMessageIndicator={hasNewMessageLine}
-									editing={isActive && post.id === editingPostId}
-									action={postAction}
-									showDetails={this.props.isThread}
-									streamId={this.props.streamId}
-									didTriggerThread={this.props.isThread && post.id === this.props.threadTrigger}
-								/>
+								<Debug text={post.id}>
+									<Post
+										id={post.id}
+										usernames={this.props.usernamesRegexp}
+										currentUserId={this.props.currentUserId}
+										currentUserName={this.props.currentUserName}
+										replyingTo={!this.props.isThread && parentPost}
+										newMessageIndicator={hasNewMessageLine}
+										editing={isActive && post.id === editingPostId}
+										action={postAction}
+										showDetails={this.props.isThread}
+										streamId={this.props.streamId}
+										didTriggerThread={this.props.isThread && post.id === this.props.threadTrigger}
+									/>
+								</Debug>
 							</React.Fragment>
 						);
 					})}

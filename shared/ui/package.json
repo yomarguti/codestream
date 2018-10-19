@@ -41,6 +41,7 @@
 		"uuid": "3.3.2"
 	},
 	"devDependencies": {
+		"@types/react-redux": "^6.0.9",
 		"@types/uuid": "3.4.4",
 		"babel-cli": "6.26.0",
 		"babel-eslint": "8.2.6",

@@ -9,12 +9,14 @@
 		"moduleResolution": "node",
 		"noFallthroughCasesInSwitch": true,
 		"noImplicitReturns": true,
+		"noImplicitAny": false,
 		"noUnusedLocals": false,
 		"outDir": "dist",
 		"rootDir": "./",
 		"sourceMap": true,
 		"strict": true,
-		"target": "es2017"
+		"target": "es2017",
+		"jsx": "react"
 	},
 	"exclude": ["node_modules"]
 }

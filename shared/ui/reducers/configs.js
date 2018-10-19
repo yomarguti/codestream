@@ -1,6 +1,7 @@
 const initialState = {
 	showHeadshots: true,
-	reduceMotion: false
+	reduceMotion: false,
+	debug: false
 };
 
 export default (state = initialState, { type, payload }) => {

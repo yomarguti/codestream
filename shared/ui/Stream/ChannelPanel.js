@@ -12,6 +12,7 @@ import {
 import { safe, toMapBy } from "../utils";
 import Icon from "./Icon";
 import Tooltip from "./Tooltip";
+import Debug from "./Debug";
 import ChannelMenu from "./ChannelMenu";
 
 export class SimpleChannelPanel extends Component {
@@ -165,7 +166,7 @@ export class SimpleChannelPanel extends Component {
 					id={stream.id}
 				>
 					{icon}
-					{stream.name}
+					<Debug text={stream.id}>{stream.name}</Debug>
 					{mentions > 0 ? <span className="umi">{mentions}</span> : null}
 					<span>
 						<Tooltip title="Channel Settings">
@@ -360,7 +361,7 @@ export class SimpleChannelPanel extends Component {
 	};
 }
 
-const mapStateToProps = ({ context, streams, users, teams, umis, session }) => {
+const mapStateToProps = ({ configs, context, streams, users, teams, umis, session }) => {
 	const teamMembers = teams[context.currentTeamId].memberIds.map(id => users[id]).filter(Boolean);
 	// .filter(user => user && user.isRegistered);
 
@@ -400,6 +401,7 @@ const mapStateToProps = ({ context, streams, users, teams, umis, session }) => {
 		.filter(Boolean);
 
 	return {
+		debug: configs.debug,
 		umis,
 		users,
 		channelStreams,
