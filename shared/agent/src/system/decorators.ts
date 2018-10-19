@@ -34,6 +34,7 @@ export function log(
 	options: {
 		args?: boolean;
 		decorate?(...args: any[]): string;
+		correlate?: boolean;
 		enter?(...args: any[]): string;
 		exit?(result: any): string;
 		timed?: boolean;
@@ -41,14 +42,16 @@ export function log(
 ) {
 	options = { args: true, timed: true, ...options };
 
-	return (target: any, methodName: string, descriptor: PropertyDescriptor) => {
+	return (target: any, key: string, descriptor: PropertyDescriptor) => {
 		if (!(typeof descriptor.value === "function")) throw new Error("not supported");
 
 		const fn = descriptor.value;
 
-		if (target.constructor && target.constructor.name) {
-			methodName = `${target.constructor.name}.${methodName}`;
-		}
+		const isClass = Boolean(target && target.constructor);
+		const methodName = isClass ? `${target.constructor.name}.${key}` : key;
+
+		// If we are timing, get the class fn in order to store the correlationId if needed
+		const classFn = isClass && (options.correlate || options.timed) ? target[key] : undefined;
 
 		const fnBody = fn.toString().replace(/((\/\/.*$)|(\/\*[\s\S]*?\*\/))/gm, "");
 		const parameters: string[] =
@@ -56,13 +59,17 @@ export function log(
 
 		descriptor.value = function(this: any, ...args: any[]) {
 			if (Logger.level === TraceLevel.Verbose || Logger.level === TraceLevel.Debug) {
-				let correlator;
+				let correlationId;
 				let name: string;
-				if (options.timed) {
-					correlator = correlationCounter++;
-					name = `[${correlator.toString(16)}] ${methodName}`;
+				if (options.correlate || options.timed) {
+					correlationId = correlationCounter++;
+					name = `[${correlationId.toString(16)}] ${methodName}`;
 				} else {
 					name = methodName;
+				}
+
+				if (options.correlate) {
+					(isClass ? target[key] : fn).logCorrelationId = correlationId;
 				}
 
 				if (options.decorate !== undefined) {
