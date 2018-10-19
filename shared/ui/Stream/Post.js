@@ -22,7 +22,7 @@ import _ from "underscore";
 import { reactToPost } from "./actions";
 import { safe } from "../utils";
 
-let renderCount = 0;
+// let renderCount = 0;
 class Post extends React.Component {
 	state = {
 		emojiOpen: false,

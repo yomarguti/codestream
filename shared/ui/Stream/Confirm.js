@@ -67,10 +67,18 @@ export default class Confirm extends Component {
 									onClick={async e => {
 										if (button.action) {
 											this.setState({ loading: button.label });
-											if (button.wait) await button.action(e);
-											else button.action(e);
+											try {
+												const result = button.action(e);
+												if (button.wait) await result;
+											} catch (error) {
+												if (button.wait) {
+													/* TODO communicate error */
+												}
+											} finally {
+												this.setState({ loading: false });
+												this.closePopup();
+											}
 										}
-										this.closePopup();
 									}}
 									key={button.label}
 									loading={this.state.loading === button.label}

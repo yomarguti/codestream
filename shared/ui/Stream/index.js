@@ -656,6 +656,7 @@ export class SimpleStream extends Component {
 			buttons: [
 				{
 					label: "Delete Post",
+					wait: true,
 					action: () => this.props.deletePost(this.props.postStreamId, postId)
 				},
 				{ label: "Cancel" }
