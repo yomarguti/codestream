@@ -8,6 +8,7 @@ import {
 	Event,
 	EventEmitter,
 	Range,
+	TextEditor,
 	TextEditorSelectionChangeEvent,
 	Uri,
 	ViewColumn,
@@ -1017,8 +1018,9 @@ export class CodeStreamWebviewPanel implements Disposable {
 			this._panel.onDidDispose(this.onPanelDisposed, this),
 			this._panel.onDidChangeViewState(this.onPanelViewStateChanged, this),
 			this._panel.webview.onDidReceiveMessage(this.onPanelWebViewMessageReceived, this),
+			window.onDidChangeActiveTextEditor(Functions.debounce(this.onActiveEditorChanged, 100), this),
 			window.onDidChangeTextEditorSelection(
-				Functions.debounce(this.onEditorSelectionChanged, 500),
+				Functions.debounce(this.onEditorSelectionChanged, 250, { maxWait: 250 }),
 				this
 			),
 			window.onDidChangeWindowState(this.onWindowStateChanged, this),
@@ -1036,6 +1038,10 @@ export class CodeStreamWebviewPanel implements Disposable {
 		this._onDidChangeStream.fire(this._streamThread);
 
 		return this._streamThread;
+	}
+
+	private async onActiveEditorChanged(editor: TextEditor | undefined) {
+		this._ipc.sendDidChangeActiveEditor(editor);
 	}
 
 	private async onEditorSelectionChanged(e: TextEditorSelectionChangeEvent) {

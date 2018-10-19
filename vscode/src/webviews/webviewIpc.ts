@@ -1,5 +1,6 @@
 "use strict";
-import { WebviewPanel } from "vscode";
+import * as path from "path";
+import { TextEditor, WebviewPanel, workspace } from "vscode";
 import { StreamThread } from "../api/session";
 import { Container } from "../container";
 import { Logger } from "../logger";
@@ -7,10 +8,14 @@ import { CodeStreamWebviewPanel } from "./webviewPanel";
 
 export enum WebviewIpcMessageType {
 	didBlur = "codestream:interaction:blur",
+	didChangeActiveEditor = "codestream:interaction:active-editor-changed",
 	didChangeConfiguration = "codestream:configs",
 	didChangeData = "codestream:data",
+	didChangePreferences = "codestream:data:preferences",
 	didChangeStreamThread = "codestream:interaction:stream-thread-selected",
 	didChangeUnreads = "codestream:data:unreads",
+	didConnect = "codestream:connectivity:online",
+	didDisconnect = "codestream:connectivity:offline",
 	didFileChange = "codestream:publish:file-changed",
 	didFocus = "codestream:interaction:focus",
 	didSelectCode = "codestream:interaction:code-highlighted",
@@ -25,10 +30,7 @@ export enum WebviewIpcMessageType {
 	onServiceRequest = "codestream:interaction:svc-request",
 	onReloadRequest = "codestream:interaction:clicked-reload-webview",
 	onViewReady = "codestream:view-ready",
-	response = "codestream:response",
-	didDisconnect = "codestream:connectivity:offline",
-	didConnect = "codestream:connectivity:online",
-	didChangePreferences = "codestream:data:preferences"
+	response = "codestream:response"
 }
 
 export function toLoggableIpcMessage(msg: WebviewIpcMessage) {
@@ -60,6 +62,19 @@ export interface WebviewIpcMessageResponseBody {
 	id: string;
 	payload?: any;
 	error?: string;
+}
+
+export interface DidChangeActiveEditorNotification {
+	type: WebviewIpcMessageType.didChangeActiveEditor;
+	body: {
+		editor:
+			| {
+					uri: string;
+					fileName: string;
+					languageId: string;
+			  }
+			| undefined;
+	};
 }
 
 export interface DidSelectCodeNotification {
@@ -186,6 +201,34 @@ export class WebviewIpc {
 			type: WebviewIpcMessageType.didFocus,
 			body: {}
 		});
+	}
+
+	sendDidChangeActiveEditor(editor: TextEditor | undefined) {
+		const message: DidChangeActiveEditorNotification = {
+			type: WebviewIpcMessageType.didChangeActiveEditor,
+			body: {
+				editor: undefined
+			}
+		};
+
+		if (editor != null) {
+			const uri = editor.document.uri;
+			if (uri.scheme === "file") {
+				const folder = workspace.getWorkspaceFolder(uri);
+				const fileName =
+					folder !== undefined
+						? path.relative(folder.uri.fsPath, uri.fsPath)
+						: editor.document.fileName;
+
+				message.body.editor = {
+					uri: uri.toString(),
+					fileName: fileName,
+					languageId: editor.document.languageId
+				};
+			}
+		}
+
+		return this.postMessage(message);
 	}
 
 	sendDidChangeStreamThread(streamThread: StreamThread) {
