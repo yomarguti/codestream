@@ -755,14 +755,16 @@ export class CodeStreamWebviewPanel implements Disposable {
 	private onConfigurationChanged(e: ConfigurationChangeEvent) {
 		if (
 			configuration.changed(e, configuration.name("avatars").value) ||
-			configuration.changed(e, configuration.name("reduceMotion").value)
+			configuration.changed(e, configuration.name("reduceMotion").value) ||
+			configuration.changed(e, configuration.name("traceLevel").value)
 		) {
 			this.postMessage({
 				type: WebviewIpcMessageType.didChangeConfiguration,
 				body: {
 					serverUrl: this.session.serverUrl,
 					showHeadshots: Container.config.avatars,
-					reduceMotion: Container.config.reduceMotion
+					reduceMotion: Container.config.reduceMotion,
+					debug: Container.config.traceLevel === "debug"
 				}
 			});
 		}
