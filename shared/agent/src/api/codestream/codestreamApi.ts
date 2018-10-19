@@ -556,21 +556,16 @@ export class CodeStreamApiProvider implements ApiProvider {
 			params += `&inclusive`;
 		}
 
-		// Remove once we verify the new api works
-		// if (request.before && request.after && request.inclusive) {
-		// 	params += `&seqnum=${request.after}-${request.before}`;
-		// } else if (request.before && request.after) {
-		// 	params += `&seqnum=${request.after}-${request.before}`;
-		// } else if (request.before) {
-		// 	params += `&seqnum=${Math.max(+request.before - request.limit, 1)}-${request.before}`;
-		// } else if (request.after) {
-		// 	params += `seqnum=${request.after}-${+request.after + request.limit}`;
-		// }
-
-		return this.get<CSGetPostsResponse>(
+		const response = await this.get<CSGetPostsResponse>(
 			`/posts?teamId=${this.teamId}&streamId=${request.streamId}${params}`,
 			this._token
 		);
+
+		if (response.posts) {
+			response.posts.sort((a: CSPost, b: CSPost) => (a.seqNum as number) - (b.seqNum as number));
+		}
+
+		return response;
 	}
 
 	@log()
