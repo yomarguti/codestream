@@ -113,17 +113,8 @@ class PostCollection {
 			return;
 		}
 
-		const { after, limit } = request;
-		const { posts, more } = response;
-
-		Logger.log(`updateComplete - response.more=${more}`);
-
-		if (limit !== undefined && after === undefined) {
-			if (!posts.length) {
-				this.complete = true;
-			} else if (posts.length < limit && !more) {
-				this.complete = true;
-			}
+		if (request.after === undefined && !response.more) {
+			this.complete = true;
 		}
 	}
 
@@ -257,7 +248,6 @@ class PostCollection {
 		if (before === firstExistingSeq && lastNewSeqNum < firstExistingSeqNum) {
 			this.posts = posts.concat(this.posts);
 		} else if (firstNewSeqNum < firstExistingSeqNum) {
-			debugger;
 			const { index } = search(this.posts, lastNewSeq);
 			if (index !== undefined) {
 				this.posts = posts.concat(this.posts.slice(index + 1));
