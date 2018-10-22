@@ -1,10 +1,27 @@
 # Change Log
 
+## [0.18.0] - 2018-10-22
+
+### Changed
+
+- Decouple the loading of Slack channels from the loading of unread and latest-post information.
+
+### Fixed
+
+- Fixes an issue with deactivated users appearing in list of DMs and in list of current team members.
+- Fixes an issue where code block wasn't being highlighted in source file when entering thread view.
+- Fixes an issue that prevented the deletion of multiple posts.
+
+
 ## [0.17.1] - 2018-10-17
+
+### Fixed
 
 - Fixes an issue with markers not working
 
 ## [0.17.0] - 2018-10-17
+
+### Fixed
 
 - Fixes [#6](https://github.com/TeamCodeStream/CodeStream/issues/6) &mdash; Github Links in Slack messages are broken
 - Fixes an unexpected error when creating a new direct messages
@@ -13,12 +30,14 @@
 
 ## [0.16.0] - 2018-10-15
 
+### Fixed
+
 - Fixes syncronization of unread message indicators between CodeStream and Slack.
 - Fixes issues with certain message content that would trigger unexpected errors.
 
 ## [0.15.1] - 2018-10-11
 
-## Fixed
+### Fixed
 
 - Fixes [#5](https://github.com/TeamCodeStream/CodeStream/issues/3) &mdash; Clicking Slack emoji icon produces an unexpected error
 
@@ -31,7 +50,7 @@
 ## Fixed
 
 - Fixes possible incorrect team selection when signing into a Slack team
-- Fixes missing slack thread replies from showing up in the channel
+- Fixes missing Slack thread replies from showing up in the channel
 
 ## [0.13.0] - 2018-09-27
 
