@@ -1220,7 +1220,7 @@ export class SlackApiProvider implements ApiProvider {
 
 	@log({
 		args: false,
-		decorate: c => `(${c.id})`,
+		prefix: (context, c) => `${context.prefix}(${c.id})`,
 		enter: c => `fetching channel '${c.name}'...`
 	})
 	private async fetchChannel(c: any, usersById: Map<string, CSUser>) {
@@ -1276,7 +1276,7 @@ export class SlackApiProvider implements ApiProvider {
 
 	@log({
 		args: false,
-		decorate: g => `(${g.id})`,
+		prefix: (context, g) => `${context.prefix}(${g.id})`,
 		enter: g => `fetching ${g.is_mpim ? "mpim" : "group"} '${g.name}'...`
 	})
 	private async fetchGroup(g: any, usersById: Map<string, CSUser>) {
@@ -1335,7 +1335,7 @@ export class SlackApiProvider implements ApiProvider {
 
 	@log({
 		args: false,
-		decorate: im => `(${im.id})`,
+		prefix: (context, im) => `${context.prefix}(${im.id})`,
 		enter: im => `fetching im with '${im.user}'...`
 	})
 	private async fetchIM(im: any, usersById: Map<string, CSUser>) {

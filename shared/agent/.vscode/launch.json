@@ -7,7 +7,12 @@
 			"name": "Attach to Agent",
 			"port": 6009,
 			"outFiles": ["${workspaceFolder}/dist/**/*.js"],
-			"skipFiles": ["<node_internals>/**", "**/node_modules/**", "**/extensions/**"],
+			"skipFiles": [
+				"<node_internals>/**",
+				"**/node_modules/**",
+				"**/app/out/vs/**",
+				"**/extensions/**"
+			],
 			"smartStep": true,
 			"sourceMaps": true
 		}

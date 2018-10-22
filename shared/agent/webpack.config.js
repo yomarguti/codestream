@@ -3,6 +3,7 @@ const webpack = require("webpack");
 const path = require("path");
 const CleanWebpackPlugin = require("clean-webpack-plugin");
 const FileManagerWebpackPlugin = require("filemanager-webpack-plugin");
+const TerserPlugin = require("terser-webpack-plugin");
 
 module.exports = function(env, argv) {
 	env = env || {};
@@ -38,10 +39,28 @@ module.exports = function(env, argv) {
 		},
 		mode: production ? "production" : "development",
 		target: "node",
-		devtool: !production ? "eval-source-map" : undefined,
+		node: {
+			__dirname: false
+		},
+		devtool: !production ? "source-map" : undefined,
 		output: {
 			filename: "[name].js",
 			devtoolModuleFilenameTemplate: "file:///[absolute-resource-path]"
+		},
+		optimization: {
+			minimizer: [
+				new TerserPlugin({
+					cache: true,
+					parallel: true,
+					sourceMap: env.production,
+					terserOptions: {
+						ecma: 8,
+						// Keep the class names otherwise @log won't provide a useful name
+						keep_classnames: true,
+						module: true
+					}
+				})
+			]
 		},
 		externals: {
 			encoding: "encoding"
