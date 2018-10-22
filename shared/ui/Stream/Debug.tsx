@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 import Tooltip from "../Stream/Tooltip";
 
 interface Props {
-	children: JSX.Element;
+	children: any;
 	enabled: boolean;
 	text: string;
 }
