@@ -1413,15 +1413,34 @@ export class SlackApiProvider implements ApiProvider {
 			return this._codestream.getStream(request);
 		}
 
-		const response = await this._slack.conversations.info({
-			channel: request.streamId
-		});
+		let response;
+		switch (fromSlackChannelIdToType(request.streamId)) {
+			case "channel":
+				response = await this._slack.channels.info({
+					channel: request.streamId
+				});
+
+				break;
+
+			case "group":
+				response = await this._slack.groups.info({
+					channel: request.streamId
+				});
+
+				break;
+
+			case "direct":
+				response = await this._slack.conversations.info({
+					channel: request.streamId
+				});
+				break;
+		}
 
 		const { ok, error, channel } = response as WebAPICallResult & { channel: any };
 		if (!ok) throw new Error(error);
 
-		const members = await this.getStreamMembers(request.streamId);
-		channel.members = members;
+		// const members = await this.getStreamMembers(request.streamId);
+		// channel.members = members;
 
 		const stream = fromSlackChannelOrDirect(
 			channel,
