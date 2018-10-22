@@ -175,6 +175,8 @@ export class SlackApiProvider implements ApiProvider {
 
 	private async onCodeStreamMessage(e: RTMessage) {
 		try {
+			Logger.logWithDebugParams(`SlackApiProvider.onCodeStreamMessage(${e.type})`, e);
+
 			switch (e.type) {
 				case MessageType.Connection:
 					switch (e.data.status) {
@@ -202,7 +204,7 @@ export class SlackApiProvider implements ApiProvider {
 					this._onDidReceiveMessage.fire(e);
 			}
 		} catch (ex) {
-			Logger.error(ex);
+			Logger.error(ex, `SlackApiProvider.onCodeStreamMessage(${e.type})`);
 		}
 	}
 
@@ -213,9 +215,9 @@ export class SlackApiProvider implements ApiProvider {
 	private async onSlackChannelChanged(
 		e: any & { type: SlackRtmEventTypes; subtype: SlackRtmMessageEventSubTypes }
 	) {
-		try {
-			const { type, subtype } = e;
+		const { type, subtype } = e;
 
+		try {
 			Logger.logWithDebugParams(
 				`SlackApiProvider.onSlackChannelChanged(${type}${subtype ? `:${subtype}` : ""})`,
 				e
@@ -334,16 +336,19 @@ export class SlackApiProvider implements ApiProvider {
 					break;
 			}
 		} catch (ex) {
-			Logger.error(ex);
+			Logger.error(
+				ex,
+				`SlackApiProvider.onSlackChannelChanged(${type}${subtype ? `:${subtype}` : ""})`
+			);
 		}
 	}
 
 	private async onSlackMessageChanged(
 		e: any & { type: SlackRtmEventTypes; subtype: SlackRtmMessageEventSubTypes }
 	) {
-		try {
-			const { type, subtype } = e;
+		const { type, subtype } = e;
 
+		try {
 			Logger.logWithDebugParams(
 				`SlackApiProvider.onSlackMessageChanged(${type}${subtype ? `:${subtype}` : ""})`,
 				e
@@ -354,31 +359,37 @@ export class SlackApiProvider implements ApiProvider {
 					switch (subtype) {
 						case undefined: {
 							if (e.user !== this._slackUserId) {
-								let mentioned;
-								switch (fromSlackChannelIdToType(e.channel)) {
-									case "direct":
-										mentioned = true;
-										break;
-
-									case "group":
-										if (e.text != null && this._meMentionRegex.test(e.text)) {
+								let mentioned = false;
+								try {
+									switch (fromSlackChannelIdToType(e.channel)) {
+										case "direct":
 											mentioned = true;
-										} else {
-											// Need to look this up to see if this channel is a private channel or multi-party dm
-											const stream = await Container.instance().streams.getById(e.channel);
-											mentioned = stream.type === StreamType.Direct;
-										}
-										break;
+											break;
 
-									default:
-										if (e.text != null && this._meMentionRegex.test(e.text)) {
-											mentioned = true;
-										} else {
-											mentioned = false;
-										}
-										break;
+										case "group":
+											if (e.text != null && this._meMentionRegex.test(e.text)) {
+												mentioned = true;
+											} else {
+												// Need to look this up to see if this channel is a private channel or multi-party dm
+												const stream = await Container.instance().streams.getById(e.channel);
+												mentioned = stream.type === StreamType.Direct;
+											}
+											break;
+
+										default:
+											if (e.text != null && this._meMentionRegex.test(e.text)) {
+												mentioned = true;
+											} else {
+												mentioned = false;
+											}
+											break;
+									}
+								} catch (ex) {
+									Logger.error(
+										ex,
+										`SlackApiProvider.onSlackMessageChanged(${type}${subtype ? `:${subtype}` : ""})`
+									);
 								}
-
 								this._unreads.increment(e.channel, mentioned);
 							}
 
@@ -433,7 +444,10 @@ export class SlackApiProvider implements ApiProvider {
 					break;
 			}
 		} catch (ex) {
-			Logger.error(ex);
+			Logger.error(
+				ex,
+				`SlackApiProvider.onSlackMessageChanged(${type}${subtype ? `:${subtype}` : ""})`
+			);
 		}
 	}
 
@@ -441,7 +455,7 @@ export class SlackApiProvider implements ApiProvider {
 		try {
 			this._onDidReceiveMessage.fire({ type: MessageType.Unreads, data: e });
 		} catch (ex) {
-			Logger.error(ex);
+			Logger.error(ex, "SlackApiProvider.onUnreadsChanged");
 		}
 	}
 
