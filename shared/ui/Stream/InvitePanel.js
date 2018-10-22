@@ -4,10 +4,9 @@ import { connect } from "react-redux";
 import _ from "underscore";
 import Icon from "./Icon";
 import Button from "./Button";
-import Tooltip from "./Tooltip";
 import createClassString from "classnames";
-// import { exitInvitePage } from "../actions/routing";
 import { invite } from "./actions";
+import { mapFilter } from "../utils";
 
 const EMAIL_REGEX = new RegExp(
 	"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
@@ -240,26 +239,22 @@ export class InvitePage extends Component {
 
 const mapStateToProps = ({ users, context, teams }) => {
 	const team = teams[context.currentTeamId];
-	const members = team.memberIds
-		.map(id => {
-			const user = users[id];
-			if (!user || !user.isRegistered) return;
-			if (!user.fullName) {
-				let email = user.email;
-				if (email) user.fullName = email.replace(/@.*/, "");
-			}
-			return user;
-		})
-		.filter(Boolean);
-	const invited = team.memberIds
-		.map(id => {
-			const user = users[id];
-			if (!user || user.isRegistered) return;
+	const members = mapFilter(team.memberIds, id => {
+		const user = users[id];
+		if (!user || !user.isRegistered || user.deactivated) return;
+		if (!user.fullName) {
 			let email = user.email;
 			if (email) user.fullName = email.replace(/@.*/, "");
-			return user;
-		})
-		.filter(Boolean);
+		}
+		return user;
+	});
+	const invited = mapFilter(team.memberIds, id => {
+		const user = users[id];
+		if (!user || user.isRegistered || user.deactivated) return;
+		let email = user.email;
+		if (email) user.fullName = email.replace(/@.*/, "");
+		return user;
+	});
 
 	return {
 		teamId: team.id,

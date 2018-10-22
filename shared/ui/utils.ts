@@ -8,6 +8,17 @@ export const safe = <T>(fn: () => T): T | undefined => {
 	}
 };
 
+export function mapFilter<A, B>(array: A[], fn: (A) => B | undefined): B[] {
+	const result: B[] = [];
+	array.forEach(a => {
+		const mapped = fn(a);
+		if (mapped) {
+			result.push(mapped);
+		}
+	});
+	return result;
+}
+
 export const rangeTo = (size: number) => [...Array(size).keys()];
 
 export const debounceToAnimationFrame = (fn: Function) => {

@@ -9,7 +9,7 @@ import {
 	getServiceStreamsForTeam,
 	getDMName
 } from "../reducers/streams";
-import { safe, toMapBy } from "../utils";
+import { safe, mapFilter, toMapBy } from "../utils";
 import Icon from "./Icon";
 import Tooltip from "./Tooltip";
 import Debug from "./Debug";
@@ -190,43 +190,45 @@ export class SimpleChannelPanel extends Component {
 	};
 
 	renderDirectMessages = () => {
-		let unsortedStreams = this.props.directMessageStreams
-			.map(stream => {
-				let count = this.props.umis.unreads[stream.id] || 0;
-				// let mentions = this.props.umis.mentions[stream.id] || 0;
-				if (this.props.mutedStreams[stream.id]) {
-					// if you have muted a stream, check to see if there is a UMI.
-					// if so, unmute the stream. if not, don't display it.
-					if (count) this.props.setUserPreference(["mutedStreams", stream.id], false);
-					else return null;
-				}
+		let unsortedStreams = mapFilter(this.props.directMessageStreams, stream => {
+			if (stream.memberIds.some(id => this.props.deactivatedUserIds.includes(id))) return;
 
-				const icon =
-					stream.name === "slackbot" ? (
-						<Icon className="heart" name="heart" />
-					) : safe(() => stream.memberIds.length > 2) ? (
-						<Icon className="organization" name="organization" />
-					) : (
-						<Icon className="person" name="person" />
-					);
-				const sortTimestamp =
-					stream.name === "slackbot"
-						? 1539191617 * 10000
-						: stream.isMeStream
-							? 1539191617 * 90000
-							: stream.mostRecentPostCreatedAt || stream.modifiedAt || 1;
+			let count = this.props.umis.unreads[stream.id] || 0;
+			// let mentions = this.props.umis.mentions[stream.id] || 0;
+			if (this.props.mutedStreams[stream.id]) {
+				// if you have muted a stream, check to see if there is a UMI.
+				// if so, unmute the stream. if not, don't display it.
+				if (count) this.props.setUserPreference(["mutedStreams", stream.id], false);
+				else return null;
+			}
 
-				const sortName =
-					stream.name === "slackbot"
-						? "."
-						: stream.isMeStream
-							? ".."
-							: (stream.name || "").toLowerCase();
+			const icon =
+				stream.name === "slackbot" ? (
+					<Icon className="heart" name="heart" />
+				) : safe(() => stream.memberIds.length > 2) ? (
+					<Icon className="organization" name="organization" />
+				) : (
+					<Icon className="person" name="person" />
+				);
+			const sortTimestamp =
+				stream.name === "slackbot"
+					? 1539191617 * 10000
+					: stream.isMeStream
+						? 1539191617 * 90000
+						: stream.mostRecentPostCreatedAt || stream.modifiedAt || 1;
 
-				return {
-					sortName,
-					sortTimestamp,
-					element: (
+			const sortName =
+				stream.name === "slackbot"
+					? "."
+					: stream.isMeStream
+						? ".."
+						: (stream.name || "").toLowerCase();
+
+			return {
+				sortName,
+				sortTimestamp,
+				element: (
+					<Debug text={stream.id}>
 						<li
 							className={createClassString({
 								direct: true,
@@ -242,10 +244,10 @@ export class SimpleChannelPanel extends Component {
 								<Icon name="x" onClick={this.handleClickMuteStream} className="align-right" />
 							</Tooltip>
 						</li>
-					)
-				};
-			})
-			.filter(Boolean);
+					</Debug>
+				)
+			};
+		});
 
 		unsortedStreams = unsortedStreams.concat(
 			this.props.teammates
@@ -361,7 +363,7 @@ export class SimpleChannelPanel extends Component {
 	};
 }
 
-const mapStateToProps = ({ configs, context, streams, users, teams, umis, session }) => {
+const mapStateToProps = ({ context, streams, users, teams, umis, session }) => {
 	const teamMembers = teams[context.currentTeamId].memberIds.map(id => users[id]).filter(Boolean);
 	// .filter(user => user && user.isRegistered);
 
@@ -401,7 +403,7 @@ const mapStateToProps = ({ configs, context, streams, users, teams, umis, sessio
 		.filter(Boolean);
 
 	return {
-		debug: configs.debug,
+		deactivatedUserIds: teamMembers.filter(member => member.deactivated),
 		umis,
 		users,
 		channelStreams,
