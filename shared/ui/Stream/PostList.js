@@ -231,7 +231,7 @@ export default infiniteLoadable(
 									timestamp1={safe(() => posts[index - 1].createdAt)}
 									timestamp2={post.createdAt}
 								/>
-								<Debug text={post.id}>
+								<Debug object={post}>
 									<Post
 										id={post.id}
 										usernames={this.props.usernamesRegexp}

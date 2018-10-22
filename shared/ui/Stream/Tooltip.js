@@ -37,7 +37,7 @@ export default class Tooltip extends React.Component {
 	}
 
 	render() {
-		if (!this.props.title) return this.props.children;
+		// if (!this.props.title) return this.props.children; // TODO: deprecate `title` for `content`
 
 		try {
 			if (this.isInAtom) {
