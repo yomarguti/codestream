@@ -1,6 +1,5 @@
 {
 	"compilerOptions": {
-		"emitDecoratorMetadata": true,
 		"experimentalDecorators": true,
 		"forceConsistentCasingInFileNames": true,
 		"importHelpers": true,
@@ -14,8 +13,7 @@
 		"rootDir": "./src",
 		"sourceMap": true,
 		"strict": true,
-		"target": "es2017",
-		"types": ["reflect-metadata"]
+		"target": "es2017"
 	},
 	"exclude": ["node_modules", "src/webviews/app"]
 }

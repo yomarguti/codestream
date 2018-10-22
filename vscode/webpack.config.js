@@ -6,6 +6,7 @@ const CleanPlugin = require("clean-webpack-plugin");
 const FileManagerPlugin = require("filemanager-webpack-plugin");
 const HtmlPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const TerserPlugin = require("terser-webpack-plugin");
 
 module.exports = function(env, argv) {
 	env = env || {};
@@ -64,11 +65,29 @@ function getExtensionConfig(env) {
 		entry: "./src/extension.ts",
 		mode: env.production ? "production" : "development",
 		target: "node",
-		devtool: !env.production ? "eval-source-map" : undefined,
+		node: {
+			__dirname: false
+		},
+		devtool: !env.production ? "source-map" : undefined,
 		output: {
 			libraryTarget: "commonjs2",
 			filename: "extension.js",
 			devtoolModuleFilenameTemplate: "file:///[absolute-resource-path]"
+		},
+		optimization: {
+			minimizer: [
+				new TerserPlugin({
+					cache: true,
+					parallel: true,
+					sourceMap: env.production,
+					terserOptions: {
+						ecma: 8,
+						// Keep the class names otherwise @log won't provide a useful name
+						keep_classnames: true,
+						module: true
+					}
+				})
+			]
 		},
 		externals: {
 			vscode: "commonjs vscode"
@@ -143,13 +162,20 @@ function getWebviewConfig(env) {
 			webview: ["./index.js", "./styles/webview.less"]
 		},
 		mode: env.production ? "production" : "development",
-		devtool: !env.production ? "eval-source-map" : undefined,
+		devtool: !env.production ? "source-map" : undefined,
 		output: {
 			filename: "[name].js",
 			path: path.resolve(__dirname, "dist/webview"),
 			publicPath: "{{root}}/dist/webview/"
 		},
 		optimization: {
+			minimizer: [
+				new TerserPlugin({
+					cache: true,
+					parallel: true,
+					sourceMap: env.production
+				})
+			],
 			splitChunks: {
 				chunks: "all",
 				cacheGroups: {

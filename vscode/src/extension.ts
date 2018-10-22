@@ -1,6 +1,4 @@
 "use strict";
-import "reflect-metadata";
-
 import { ExtensionContext, extensions, version as vscodeVersion } from "vscode";
 import { AgentOptions } from "./agent/agentConnection";
 import { SessionStatusChangedEvent } from "./api/session";
