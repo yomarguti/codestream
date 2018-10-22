@@ -1214,20 +1214,28 @@ export class SlackApiProvider implements ApiProvider {
 		const { ok, error, channels } = response as WebAPICallResult & { channels: any };
 		if (!ok) throw new Error(error);
 
-		const streams = (await Promise.all<CSChannelStream | CSDirectStream>(
-			channels.map(async (c: any) => {
-				// Don't query for channels we aren't a member of
-				if (!c.is_member || c.is_archived) {
-					return fromSlackChannel(c, usersById, this._slackUserId, this._codestreamTeamId);
-				}
+		const streams: (CSChannelStream | CSDirectStream)[] = channels
+			.map((c: any) => fromSlackChannel(c, usersById, this._slackUserId, this._codestreamTeamId))
+			.filter(Boolean);
 
-				return await this.fetchChannel(c, usersById);
-			})
-		)).filter(Boolean);
+		// const streams = (await Promise.all<CSChannelStream | CSDirectStream>(
+		// 	channels.map(async (c: any) => {
+		// 		if (c.is_archived || !c.is_member) {
+		// 			return fromSlackChannel(c, usersById, this._slackUserId, this._codestreamTeamId);
+		// 		}
 
-		// const streams: (CSChannelStream | CSDirectStream)[] = channels
-		// 	.map((c: any) => fromSlackChannel(c, usersById, this._slackUserId, this._codestreamTeamId))
-		// 	.filter(Boolean);
+		// 		return await this.fetchChannel(c, usersById);
+		// 	})
+		// )).filter(Boolean);
+
+		const infos: Promise<CSChannelStream>[] = channels
+			.map(
+				(c: any) => (c.is_archived || !c.is_member ? undefined : this.fetchChannel(c, usersById))
+			)
+			.filter(Boolean);
+		Promise.all(infos).then(streams => {
+			this._onDidReceiveMessage.fire({ type: MessageType.Streams, data: streams });
+		});
 
 		return streams;
 	}
@@ -1269,21 +1277,28 @@ export class SlackApiProvider implements ApiProvider {
 		const { ok, error, groups } = response as WebAPICallResult & { groups: any };
 		if (!ok) throw new Error(error);
 
-		const streams = (await Promise.all<CSChannelStream | CSDirectStream>(
-			groups.map(async (g: any) => {
-				if (g.is_archived) {
-					return fromSlackChannelOrDirect(g, usersById, this._slackUserId, this._codestreamTeamId);
-				}
+		const streams: (CSChannelStream | CSDirectStream)[] = groups
+			.map((c: any) =>
+				fromSlackChannelOrDirect(c, usersById, this._slackUserId, this._codestreamTeamId)
+			)
+			.filter(Boolean);
 
-				return await this.fetchGroup(g, usersById);
-			})
-		)).filter(Boolean);
+		// const streams = (await Promise.all<CSChannelStream | CSDirectStream>(
+		// 	groups.map(async (g: any) => {
+		// 		if (g.is_archived) {
+		// 			return fromSlackChannelOrDirect(g, usersById, this._slackUserId, this._codestreamTeamId);
+		// 		}
 
-		// const streams: (CSChannelStream | CSDirectStream)[] = groups
-		// 	.map((c: any) =>
-		// 		fromSlackChannelOrDirect(c, usersById, this._slackUserId, this._codestreamTeamId)
-		// 	)
-		// 	.filter(Boolean);
+		// 		return await this.fetchGroup(g, usersById);
+		// 	})
+		// )).filter(Boolean);
+
+		const infos: Promise<CSChannelStream | CSDirectStream>[] = groups
+			.map((g: any) => (g.is_archived ? undefined : this.fetchGroup(g, usersById)))
+			.filter(Boolean);
+		Promise.all(infos).then(streams => {
+			this._onDidReceiveMessage.fire({ type: MessageType.Streams, data: streams });
+		});
 
 		return streams;
 	}
@@ -1313,10 +1328,10 @@ export class SlackApiProvider implements ApiProvider {
 				usersById,
 				this._slackUserId,
 				this._codestreamTeamId
-			);
+			)!;
 		} catch (ex) {
 			Logger.error(ex);
-			return fromSlackChannelOrDirect(g, usersById, this._slackUserId, this._codestreamTeamId);
+			return fromSlackChannelOrDirect(g, usersById, this._slackUserId, this._codestreamTeamId)!;
 		}
 	}
 
@@ -1330,19 +1345,26 @@ export class SlackApiProvider implements ApiProvider {
 		const { ok, error, ims } = response as WebAPICallResult & { ims: any };
 		if (!ok) throw new Error(error);
 
-		const streams = (await Promise.all<CSChannelStream | CSDirectStream>(
-			ims.map(async (im: any) => {
-				if (im.is_user_deleted) {
-					return fromSlackDirect(im, usersById, this._slackUserId, this._codestreamTeamId);
-				}
+		const streams: (CSChannelStream | CSDirectStream)[] = ims
+			.map((c: any) => fromSlackDirect(c, usersById, this._slackUserId, this._codestreamTeamId))
+			.filter(Boolean);
 
-				return await this.fetchIM(im, usersById);
-			})
-		)).filter(Boolean);
+		// const streams = (await Promise.all<CSChannelStream | CSDirectStream>(
+		// 	ims.map(async (im: any) => {
+		// 		if (im.is_user_deleted) {
+		// 			return fromSlackDirect(im, usersById, this._slackUserId, this._codestreamTeamId);
+		// 		}
 
-		// const streams: (CSChannelStream | CSDirectStream)[] = ims
-		// 	.map((c: any) => fromSlackDirect(c, usersById, this._slackUserId, this._codestreamTeamId))
-		// 	.filter(Boolean);
+		// 		return await this.fetchIM(im, usersById);
+		// 	})
+		// )).filter(Boolean);
+
+		const infos: Promise<CSDirectStream>[] = ims
+			.map((im: any) => (im.is_user_deleted ? undefined : this.fetchIM(im, usersById)))
+			.filter(Boolean);
+		Promise.all(infos).then(streams => {
+			this._onDidReceiveMessage.fire({ type: MessageType.Streams, data: streams });
+		});
 
 		return streams;
 	}
