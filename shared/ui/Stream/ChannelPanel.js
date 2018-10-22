@@ -403,7 +403,7 @@ const mapStateToProps = ({ context, streams, users, teams, umis, session }) => {
 		.filter(Boolean);
 
 	return {
-		deactivatedUserIds: teamMembers.filter(member => member.deactivated),
+		deactivatedUserIds: mapFilter(teamMembers, member => (member.deactivated ? member.id : null)),
 		umis,
 		users,
 		channelStreams,
