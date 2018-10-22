@@ -228,23 +228,23 @@ export class SimpleChannelPanel extends Component {
 				sortName,
 				sortTimestamp,
 				element: (
-					<Debug text={stream.id}>
-						<li
-							className={createClassString({
-								direct: true,
-								unread: count > 0
-							})}
-							key={stream.id}
-							id={stream.id}
-						>
+					<li
+						className={createClassString({
+							direct: true,
+							unread: count > 0
+						})}
+						key={stream.id}
+						id={stream.id}
+					>
+						<Debug text={stream.id}>
 							{icon}
 							{stream.name} {stream.isMeStream && <span className="you"> (you)</span>}
 							{count > 0 ? <span className="umi">{count}</span> : null}
 							<Tooltip title="Close Conversation">
 								<Icon name="x" onClick={this.handleClickMuteStream} className="align-right" />
 							</Tooltip>
-						</li>
-					</Debug>
+						</Debug>
+					</li>
 				)
 			};
 		});
