@@ -394,11 +394,29 @@ export class SlackApiProvider implements ApiProvider {
 							}
 
 							// Don't trust the payload, since it might not be a full message
-							const response = await this.getPost({ streamId: e.channel, postId: e.ts });
+							const { post } = await this.getPost({ streamId: e.channel, postId: e.ts });
 							this._onDidReceiveMessage.fire({
 								type: MessageType.Posts,
-								data: [response.post]
+								data: [post]
 							});
+
+							// Update the stream with the post data
+							const message = {
+								type: MessageType.Streams,
+								data: [
+									{
+										id: post.streamId,
+										$set: {
+											modifiedAt: post.createdAt,
+											mostRecentPostCreatedAt: post.createdAt,
+											mostRecentPostId: post.id
+										}
+									} as unknown
+								]
+							} as StreamsRTMessage;
+
+							message.data = await Container.instance().streams.resolve(message);
+							this._onDidReceiveMessage.fire(message);
 							break;
 						}
 						case SlackRtmMessageEventSubTypes.Deleted: {
