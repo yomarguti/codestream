@@ -552,19 +552,19 @@ export class CodeStreamWebviewPanel implements Disposable {
 							break;
 						}
 						case "rename-stream": {
-							// const { streamId, name } = body.params;
-							//
-							// const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
-							// try {
-							// 	const response = await Container.agent.streams.rename(streamId, name);
-							// 	responseBody.payload = response.stream;
-							// } catch (ex) {
-							// 	responseBody.error = ex;
-							// }
-							// this.postMessage({
-							// 	type: WebviewIpcMessageType.response,
-							// 	body: responseBody
-							// });
+							const { streamId, name } = body.params;
+
+							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
+							try {
+								const response = await Container.agent.streams.rename(streamId, name);
+								responseBody.payload = response.stream;
+							} catch (ex) {
+								responseBody.error = ex;
+							}
+							this.postMessage({
+								type: WebviewIpcMessageType.response,
+								body: responseBody
+							});
 							return;
 						}
 						case "set-stream-purpose": {
