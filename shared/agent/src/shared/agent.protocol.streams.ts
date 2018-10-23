@@ -192,7 +192,7 @@ export interface SetStreamPurposeRequest {
 }
 
 export interface SetStreamPurposeResponse {
-	stream: CSStream;
+	stream: CSChannelStream | CSDirectStream;
 }
 
 export const SetStreamPurposeRequestType = new RequestType<
@@ -208,7 +208,7 @@ export interface RenameStreamRequest {
 }
 
 export interface RenameStreamResponse {
-	stream: CSStream;
+	stream: CSChannelStream | CSDirectStream;
 }
 
 export const RenameStreamRequestType = new RequestType<
