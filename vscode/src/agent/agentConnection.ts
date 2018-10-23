@@ -80,6 +80,7 @@ import {
 	MarkStreamReadRequestType,
 	PreparePostWithCodeRequestType,
 	ReactToPostRequestType,
+	SetStreamPurposeRequestType,
 	UpdatePreferencesRequestType,
 	UpdatePresenceRequestType,
 	UpdateStreamRequestType,
@@ -509,6 +510,13 @@ export class CodeStreamAgentConnection implements Disposable {
 			return this._connection.sendRequest(UpdateStreamRequestType, {
 				streamId: streamId,
 				changes: changes
+			});
+		}
+
+		setPurpose(streamId: string, purpose: string) {
+			return this._connection.sendRequest(SetStreamPurposeRequestType, {
+				streamId,
+				purpose
 			});
 		}
 	}(this);
