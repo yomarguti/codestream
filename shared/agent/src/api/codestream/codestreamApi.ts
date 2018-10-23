@@ -5,6 +5,7 @@ import { Emitter, Event } from "vscode-languageserver";
 import { ServerError } from "../../agentError";
 import { Container } from "../../container";
 import { Logger } from "../../logger";
+import { VersionInfo } from "../../session";
 import {
 	CreateChannelStreamRequest,
 	CreateDirectStreamRequest,
@@ -111,8 +112,7 @@ import {
 	LoginOptions,
 	MessageType,
 	RawRTMessage,
-	RTMessage,
-	VersionInfo
+	RTMessage
 } from "../apiProvider";
 import { PubnubEvents } from "./events";
 import { CodeStreamUnreads } from "./unreads";
