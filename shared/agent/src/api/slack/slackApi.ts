@@ -37,15 +37,15 @@ import {
 	MarkPostUnreadRequest,
 	MarkStreamReadRequest,
 	ReactToPostRequest,
+	SetStreamPurposeRequest,
+	SetStreamPurposeResponse,
 	UpdateMarkerRequest,
 	UpdatePreferencesRequest,
 	UpdatePresenceRequest,
 	UpdateStreamMembershipRequest,
 	UpdateStreamMembershipResponse,
 	UpdateStreamRequest,
-	UpdateStreamResponse,
-	SetStreamPurposeRequest,
-	SetStreamPurposeResponse
+	UpdateStreamResponse
 } from "../../shared/agent.protocol";
 import {
 	CSChannelStream,

@@ -1,8 +1,6 @@
 import { RequestInit, Response } from "node-fetch";
 import { Disposable, Event } from "vscode-languageserver";
 import {
-	SetStreamPurposeRequest,
-	SetStreamPurposeResponse,
 	AccessToken,
 	CreateChannelStreamRequest,
 	CreateChannelStreamResponse,
@@ -66,6 +64,8 @@ import {
 	MarkStreamReadResponse,
 	ReactToPostRequest,
 	ReactToPostResponse,
+	SetStreamPurposeRequest,
+	SetStreamPurposeResponse,
 	UpdateMarkerRequest,
 	UpdateMarkerResponse,
 	UpdatePreferencesRequest,

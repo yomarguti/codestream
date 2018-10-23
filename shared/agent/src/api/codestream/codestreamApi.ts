@@ -38,12 +38,12 @@ import {
 	MarkPostUnreadRequest,
 	MarkStreamReadRequest,
 	ReactToPostRequest,
+	SetStreamPurposeRequest,
 	UpdateMarkerRequest,
 	UpdatePreferencesRequest,
 	UpdatePresenceRequest,
 	UpdateStreamMembershipRequest,
-	UpdateStreamRequest,
-	SetStreamPurposeRequest
+	UpdateStreamRequest
 } from "../../shared/agent.protocol";
 import {
 	CompleteSignupRequest,
