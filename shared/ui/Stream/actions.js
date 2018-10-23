@@ -308,16 +308,11 @@ export const renameStream = (streamId, name) => async (dispatch, getState, { api
 };
 
 export const setPurpose = (streamId, purpose) => async (dispatch, getState, { api }) => {
-	const update = { purpose };
-
 	try {
-		// await api.setStreamPurpose(streamId, purpose)
-		const returnStream = await api.updateStream(streamId, update);
-		console.log("return stream: ", returnStream);
-		return returnStream;
-		// if (streams.length > 0) dispatch(saveStreams(normalize(streams)));
+		const stream = await api.setStreamPurpose(streamId, purpose);
+		dispatch({ type: "UPDATE_STREAM", payload: stream });
 	} catch (error) {
-		console.log("Error: ", error);
+		console.error("Error setting stream purpose:", error);
 	}
 };
 
