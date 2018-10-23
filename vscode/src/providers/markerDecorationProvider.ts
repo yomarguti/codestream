@@ -1,6 +1,7 @@
 "use strict";
 import {
 	CancellationToken,
+	ConfigurationChangeEvent,
 	DecorationOptions,
 	DecorationRangeBehavior,
 	Disposable,
@@ -26,6 +27,7 @@ import {
 	TextDocumentMarkersChangedEvent
 } from "../api/session";
 import { OpenStreamCommandArgs } from "../commands";
+import { configuration } from "../configuration";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { Functions } from "../system/function";
@@ -102,11 +104,23 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 			Container.session.onDidChangeSessionStatus(this.onSessionStatusChanged, this),
 			window.onDidChangeVisibleTextEditors(this.onEditorVisibilityChanged, this),
 			workspace.onDidChangeTextDocument(this.onDocumentChanged, this),
-			workspace.onDidCloseTextDocument(this.onDocumentClosed, this)
+			workspace.onDidCloseTextDocument(this.onDocumentClosed, this),
+			configuration.onDidChange(this.onConfigurationChanged, this)
 		);
 
 		if (Container.session.status === SessionStatus.SignedIn) {
 			this.applyToApplicableVisibleEditors();
+		}
+	}
+
+	private onConfigurationChanged(e: ConfigurationChangeEvent) {
+		if (configuration.changed(e, configuration.name("showMarkers").value)) {
+			const cfg = Container.config;
+
+			window.visibleTextEditors.forEach(editor => {
+				if (cfg.showMarkers) Container.markerDecorations.apply(editor, true);
+				else Container.markerDecorations.clear(editor);
+			});
 		}
 	}
 
@@ -197,6 +211,8 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 	async provideDecorations(
 		editor: TextEditor /*, token: CancellationToken */
 	): Promise<{ [key: string]: DecorationOptions[] }> {
+		if (!Container.config.showMarkers) return {};
+
 		const markers = await this.getMarkers(editor.document.uri);
 		if (markers.length === 0) return {};
 
@@ -301,7 +317,9 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 						post.text
 					}\n\n[__Open Comment \u2197__](command:codestream.openStream?${encodeURIComponent(
 						JSON.stringify(args)
-					)} "Open Comment")`;
+					)} "Open Comment")  &nbsp; &middot; &nbsp; [__Unpin Marker \u1F4CC__](command:codestream.openStream?${encodeURIComponent(
+						JSON.stringify(args)
+					)} "Unpin Marker")`;
 
 					if (range) {
 						range.union(m.hoverRange); // document.validateRange(m.hoverRange));

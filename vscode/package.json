@@ -125,6 +125,16 @@
                     "description": "Specifies whether to show CodeStream in the status bar",
                     "scope": "window"
                 },
+                "codestream.showMarkers": {
+                    "type": "boolean",
+                    "default": "true",
+                    "description": "Specifies whether to show CodeStream markers in editor buffers"
+                },
+                "codestream.muteAll": {
+                    "type": "boolean",
+                    "default": "false",
+                    "description": "Specifies whether to indicate when new messages arrive"
+                },
                 "codestream.team": {
                     "type": "string",
                     "default": null,

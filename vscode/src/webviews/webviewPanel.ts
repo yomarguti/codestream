@@ -4,6 +4,7 @@ import * as path from "path";
 import {
 	commands,
 	ConfigurationChangeEvent,
+	ConfigurationTarget,
 	Disposable,
 	Event,
 	EventEmitter,
@@ -498,6 +499,26 @@ export class CodeStreamWebviewPanel implements Disposable {
 
 							break;
 						}
+						case "show-markers": {
+							const value = body.params;
+							// set the config
+							await configuration.update(
+								configuration.name("showMarkers").value,
+								value,
+								ConfigurationTarget.Global
+							);
+							break;
+						}
+						case "mute-all": {
+							const value = body.params;
+							// set the config
+							await configuration.update(
+								configuration.name("muteAll").value,
+								value,
+								ConfigurationTarget.Global
+							);
+							break;
+						}
 						case "create-stream": {
 							const { type, name, purpose, privacy, memberIds } = body.params;
 
@@ -837,16 +858,20 @@ export class CodeStreamWebviewPanel implements Disposable {
 	private onConfigurationChanged(e: ConfigurationChangeEvent) {
 		if (
 			configuration.changed(e, configuration.name("avatars").value) ||
+			configuration.changed(e, configuration.name("muteAll").value) ||
 			configuration.changed(e, configuration.name("reduceMotion").value) ||
+			configuration.changed(e, configuration.name("showMarkers").value) ||
 			configuration.changed(e, configuration.name("traceLevel").value)
 		) {
 			this.postMessage({
 				type: WebviewIpcMessageType.didChangeConfiguration,
 				body: {
+					debug: Container.config.traceLevel === "debug",
+					muteAll: Container.config.muteAll,
+					reduceMotion: Container.config.reduceMotion,
 					serverUrl: this.session.serverUrl,
 					showHeadshots: Container.config.avatars,
-					reduceMotion: Container.config.reduceMotion,
-					debug: Container.config.traceLevel === "debug"
+					showMarkers: Container.config.showMarkers
 				}
 			});
 		}
@@ -1079,11 +1104,13 @@ export class CodeStreamWebviewPanel implements Disposable {
 
 		state.capabilities = this.session.capabilities;
 		state.configs = {
-			serverUrl: this.session.serverUrl,
-			reduceMotion: Container.config.reduceMotion,
-			showHeadshots: Container.config.avatars,
+			debug: Container.config.traceLevel === "debug",
 			email: Container.config.email,
-			debug: Container.config.traceLevel === "debug"
+			muteAll: Container.config.muteAll,
+			reduceMotion: Container.config.reduceMotion,
+			serverUrl: this.session.serverUrl,
+			showHeadshots: Container.config.avatars,
+			showMarkers: Container.config.showMarkers
 		};
 		state.currentTeamId = this.session.team.id;
 		state.currentUserId = this.session.userId;
