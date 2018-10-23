@@ -38,3 +38,6 @@ export VSCSB_CONFS=$VSCSB_SANDBOX/conf  # config files directory
 export VSCSB_DATA=$VSCSB_SANDBOX/data   # data directory
 export VSCSB_PIDS=$VSCSB_SANDBOX/pid    # pid files directory
 export VSCSB_ASSET_ENV=local
+
+# If this variable is defined, the build command will not publish to the VS Code marketplace
+export VSCSB_NOPUBLISH=1

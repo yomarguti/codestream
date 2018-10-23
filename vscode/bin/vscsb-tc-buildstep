@@ -7,6 +7,7 @@ import sys
 
 sys.path.append(os.environ['DT_TOP'] + "/lib")
 import devTools
+import gitCS
 from sysUtils import dumpDict, shellExecNoBuffer, someValueOrNone
 from buildUtils import *
 
@@ -20,14 +21,15 @@ buildData = buildInit(__file__, dt, args)
 os.chdir(buildData['sandboxTop'])
 if args.verbose: print("current directory is", buildData['sandboxTop'])
 if args.debug: dumpDict(buildData, None, buildData)
+git = {}
+for repo in allRepos:
+	git[repo] = gitCS.gitCS(os.environ['VSCSB_SANDBOX'] + "/" + repo)
 
 if args.update_repos:
 	for repo in supplementalRepos:
-		print("git pull --rebase origin:", repo)
-		shellExecNoBuffer("git pull --rebase origin",
-			abortOnFail = True,
-			captureOutput = False,
-			workingDir = os.environ['VSCSB_SANDBOX'] + "/" + repo)
+		if not git[repo].pull("origin", rebase = True):
+			print("pull/rebase failed for", repo)
+			exit(1)
 
 if args.action == 'prep':
 	buildstepPrep(args)
@@ -45,20 +47,25 @@ if args.action == 'destroy':
 #   npm run pack (create the vsix with a generic name - no build number)
 #   create build number specific info file (includes md5sum of vsix)
 #   rename generic vsix to build specific vsix
-if args.action in ['build','info']:
+pkgInfo = None
+vsixFile = None
+infoFile = None
+gitVSCode = gitCS.gitCS(buildData['sandboxTop'])
+if args.action in ['build','info','release']:
 	if args.action == 'build':
 		# build the extension
 		shellExecNoBuffer("npm run bundle", abortOnFail = True, printCmd = args.verbose)
 
 	# create asset info file (w/o md5sum)
-	pkgInfo = getPackageInfo(buildData = buildData, getRepoCommitDir = buildData['sandboxTop'])
+	pkgInfo = getPackageInfo(buildData = buildData, gitRepoCommitDir = buildData['sandboxTop'])
 	genericName = pkgInfo['name'] + "-" + pkgInfo['version']
 	genericVsixFile = genericName + ".vsix"
 	genericInfoFile = genericName + ".info"
 	vsixFile = pkgInfo['localAssetFilePrefix'] + ".vsix"
 	infoFile = pkgInfo['localAssetFilePrefix'] + ".info"
 	for repo in supplementalRepos:
-		pkgInfo['repoCommitId'][repo] = gitGetCommitId(workingDir = os.environ['VSCSB_SANDBOX'] + "/" + repo)
+		git = gitCS.gitCS(os.environ['VSCSB_SANDBOX'] + "/" + repo)
+		pkgInfo['repoCommitId'][repo] = git.getCommitId()
 	pkgInfo['assetsMD5'][vsixFile] = "0"
 	dumpDict(pkgInfo, genericInfoFile)
 	if args.verbose: print("created preliminary info file", genericInfoFile)
@@ -73,10 +80,23 @@ if args.action in ['build','info']:
 		os.rename(genericVsixFile, vsixFile)
 		if args.verbose:
 			dumpDict(pkgInfo, None, "packageInfo:")
-			shellExecNoBuffer("ls -l " + pkgInfo['localAssetFilePrefix'] + ".*", workingDir = buildData['sandboxTop'], printCmd = True)
+			shellExecNoBuffer("ls -l " + pkgInfo['localAssetFilePrefix'] + ".*", printCmd = True)
 
 if args.action == 'citest':
-	buildstepGeneric(args, cmd = "echo Testing not configured", workingDir = buildData['sandboxTop'])
+	buildstepGeneric(args, cmd = "echo Testing not configured")
 
 if args.action == 'publish':
 	publishArtifacts(args, buildData, assetExtensionList)
+
+if args.action == 'release':
+	if not os.path.exists(vsixFile):
+		print("asset not found:", vsixFile)
+		exit(1)
+	if not os.path.exists(infoFile):
+		print("asset not found:", infoFile)
+		exit(1)
+	applyTagToRepos(os.environ['VSCSB_SANDBOX'], "vscode-" + pkgInfo['version'], pkgInfo['repoCommitId'])
+	updatePackageVersion(buildData['sandboxTop'] + "/package.json", "develop", pkgInfo['version'], bumpLevel = 'patch')
+	if not someValueOrNone(os.environ, 'VSCSB_NOPUBLISH'):
+		buildstepGeneric(args, cmd = "vscsb-publish-assets-to-cloudfront --asset-env prod")
+		buildstepGeneric(args, cmd = "vsce publish --packagePath " + vsixFile)
