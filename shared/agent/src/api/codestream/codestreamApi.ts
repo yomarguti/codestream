@@ -686,7 +686,9 @@ export class CodeStreamApiProvider implements ApiProvider {
 	async updateStream(request: UpdateStreamRequest) {
 		const response = await this.put<CSUpdateStreamRequest, CSUpdateStreamResponse>(
 			`/streams/${request.streamId}`,
-			{ changes: request.changes },
+			{
+				...request.changes
+			},
 			this._token
 		);
 

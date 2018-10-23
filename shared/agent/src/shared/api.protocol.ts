@@ -336,7 +336,15 @@ export interface CSPush {
 }
 
 export interface CSUpdateStreamRequest {
-	changes: { [key: string]: any };
+	name?: string;
+	purpose?: string;
+	isArchived?: boolean;
+	$push?: {
+		memberIds: string[];
+	};
+	$pull?: {
+		memberIds: string[];
+	};
 }
 
 export interface CSUpdateStreamResponse {
