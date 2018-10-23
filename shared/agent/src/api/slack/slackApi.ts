@@ -224,7 +224,9 @@ export class SlackApiProvider implements ApiProvider {
 	@log()
 	async subscribe(types?: MessageType[]) {
 		this._events = new SlackEvents(this._slackToken, this);
-		this._events.onDidReceiveMessage(this._onDidReceiveMessage.fire, this);
+		this._events.onDidReceiveMessage(e => {
+			this._onDidReceiveMessage.fire(e);
+		}, this);
 		await this._events.connect();
 
 		this._codestream.onDidReceiveMessage(this.onCodeStreamMessage, this);
