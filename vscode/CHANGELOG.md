@@ -1,6 +1,6 @@
 # Change Log
 
-## [0.18.0] - 2018-10-22
+## [0.18.0] - 2018-10-23
 
 ### Changed
 
@@ -8,10 +8,12 @@
 
 ### Fixed
 
+- Fixes an issue with new direct messages not appearing on the channel switcher without a reload.
 - Fixes an issue with deactivated users appearing in list of DMs and in list of current team members.
 - Fixes an issue where code block wasn't being highlighted in source file when entering thread view.
 - Fixes an issue that prevented the deletion of multiple posts.
-
+- Fixes an issue with adding and removing people from CodeStream channels.
+- Fixes an issue with renaming or setting the purpose of a CodeStream channel.
 
 ## [0.17.1] - 2018-10-17
 
