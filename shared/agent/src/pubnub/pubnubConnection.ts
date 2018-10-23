@@ -163,6 +163,10 @@ export class PubnubConnection {
 		};
 	}
 
+	get online() {
+		return this._online;
+	}
+
 	// subscribe to the passed channels
 	subscribe(channels: (ChannelDescriptor | string)[]) {
 		this._debug("Request to subscribe to channels", channels);

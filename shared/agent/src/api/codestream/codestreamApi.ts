@@ -5,7 +5,6 @@ import { Emitter, Event } from "vscode-languageserver";
 import { ServerError } from "../../agentError";
 import { Container } from "../../container";
 import { Logger } from "../../logger";
-import { PubnubReceiver } from "../../pubnub/pubnubReceiver";
 import {
 	CreateChannelStreamRequest,
 	CreateDirectStreamRequest,
@@ -64,7 +63,6 @@ import {
 	CSEditPostRequest,
 	CSEditPostResponse,
 	CSFileStream,
-	CSFindRepoResponse,
 	CSGetMarkerLocationsResponse,
 	CSGetMarkerResponse,
 	CSGetMarkersResponse,
@@ -101,7 +99,6 @@ import {
 	CSUpdateStreamMembershipResponse,
 	CSUpdateStreamRequest,
 	CSUpdateStreamResponse,
-	CSUser,
 	LoginRequest,
 	LoginResponse,
 	StreamType
@@ -117,7 +114,8 @@ import {
 	RTMessage,
 	VersionInfo
 } from "../apiProvider";
-import { Unreads } from "./unreads";
+import { PubnubEvents } from "./events";
+import { CodeStreamUnreads } from "./unreads";
 
 export class CodeStreamApiProvider implements ApiProvider {
 	private _onDidReceiveMessage = new Emitter<RTMessage>();
@@ -125,17 +123,16 @@ export class CodeStreamApiProvider implements ApiProvider {
 		return this._onDidReceiveMessage.event;
 	}
 
+	private _events: PubnubEvents | undefined;
 	private readonly _middleware: CodeStreamApiMiddleware[] = [];
-	private _teamId: string | undefined;
-	private _token: string | undefined;
-	private _unreads: Unreads | undefined;
-	private _user: CSMe | undefined;
-	private _userId: string | undefined;
-
-	private _pubnub: PubnubReceiver | undefined;
 	private _pubnubKey: string | undefined;
 	private _pubnubToken: string | undefined;
 	private _subscribedMessageTypes: Set<MessageType> | undefined;
+	private _teamId: string | undefined;
+	private _token: string | undefined;
+	private _unreads: CodeStreamUnreads | undefined;
+	private _user: CSMe | undefined;
+	private _userId: string | undefined;
 
 	constructor(public readonly baseUrl: string, private readonly _version: VersionInfo) {}
 
@@ -253,27 +250,19 @@ export class CodeStreamApiProvider implements ApiProvider {
 		this._subscribedMessageTypes = types !== undefined ? new Set(types) : undefined;
 
 		if (types === undefined || types.includes(MessageType.Unreads)) {
-			this._unreads = new Unreads(this);
+			this._unreads = new CodeStreamUnreads(this);
 			this._unreads.onDidChange(this.onUnreadsChanged, this);
 			this._unreads.compute(this._user!.lastReads);
 		}
 
-		this._pubnub = new PubnubReceiver(
-			this,
-			this._pubnubKey!,
-			this._pubnubToken!,
-			this._token!,
-			this.userId,
-			this.teamId
-		);
-
-		this._pubnub.onDidReceiveMessage(this.onPubnubMessageReceived, this);
+		this._events = new PubnubEvents(this._token!, this._pubnubKey!, this._pubnubToken!, this);
+		this._events.onDidReceiveMessage(this.onPubnubMessageReceived, this);
 
 		if (types === undefined || types.includes(MessageType.Streams)) {
 			const streams = (await Container.instance().streams.getSubscribable()).streams;
-			this._pubnub.listen(streams.map(s => s.id));
+			this._events.connect(streams.map(s => s.id));
 		} else {
-			this._pubnub.listen();
+			this._events.connect();
 		}
 	}
 
@@ -302,6 +291,17 @@ export class CodeStreamApiProvider implements ApiProvider {
 				break;
 			case MessageType.Streams:
 				e.data = await Container.instance().streams.resolve(e);
+
+				if (this._events !== undefined) {
+					for (const stream of e.data as (CSChannelStream | CSDirectStream)[]) {
+						if (CodeStreamApiProvider.isStreamSubscriptionRequired(stream, this.userId)) {
+							this._events.subscribeToStream(stream.id);
+						} else if (CodeStreamApiProvider.isStreamUnsubscribeRequired(stream, this.userId)) {
+							this._events.unsubscribeFromStream(stream.id);
+						}
+					}
+				}
+
 				break;
 			case MessageType.Teams:
 				e.data = await Container.instance().teams.resolve(e);
@@ -660,7 +660,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 			}
 		});
 
-		this._pubnub && this._pubnub.unsubscribeFromStream(request.streamId);
+		if (this._events !== undefined) {
+			this._events.unsubscribeFromStream(request.streamId);
+		}
+
 		const [stream] = await Container.instance().streams.resolve({
 			type: MessageType.Streams,
 			data: [
@@ -702,21 +705,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 			request.push,
 			this._token
 		);
-	}
-
-	@log()
-	manageStreamSubscriptions(streams: CSStream[]) {
-		if (!this._pubnub) {
-			return;
-		}
-
-		for (const stream of streams) {
-			if (CodeStreamApiProvider.isStreamSubscriptionRequired(stream, this.userId)) {
-				this._pubnub.subscribeToStream(stream.id);
-			} else if (CodeStreamApiProvider.isStreamUnsubscriptionRequired(stream, this.userId)) {
-				this._pubnub.unsubscribeFromStream(stream.id);
-			}
-		}
 	}
 
 	// // async addUserToStream(streamId: string, userId: string, teamId?: string) {
@@ -991,7 +979,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	// TODO: Move somewhere more generic
-	static isStreamUnsubscriptionRequired(stream: CSStream, userId: string): boolean {
+	static isStreamUnsubscribeRequired(stream: CSStream, userId: string): boolean {
 		if (stream.type !== StreamType.Channel) {
 			return false;
 		}

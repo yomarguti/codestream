@@ -7,7 +7,7 @@ import { CSLastReads, CSPost, CSStream, StreamType } from "../../shared/api.prot
 import { Arrays } from "../../system/array";
 import { ApiProvider } from "../apiProvider";
 
-export class Unreads {
+export class CodeStreamUnreads {
 	private _onDidChange = new Emitter<CSUnreads>();
 	get onDidChange(): Event<CSUnreads> {
 		return this._onDidChange.event;

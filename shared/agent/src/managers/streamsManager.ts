@@ -40,14 +40,6 @@ import { KeyValue } from "./cache/baseCache";
 import { CachedEntityManagerBase, Id } from "./entityManager";
 
 export class StreamsManager extends CachedEntityManagerBase<CSChannelStream | CSDirectStream> {
-	protected initialize() {
-		this.session.onDidChangeStreams(this.onStreamsChanged, this);
-	}
-
-	private onStreamsChanged(streams: CSStream[]) {
-		return this.session.api.manageStreamSubscriptions(streams);
-	}
-
 	@lspHandler(FetchStreamsRequestType)
 	async get(request?: FetchStreamsRequest): Promise<FetchStreamsResponse> {
 		let streams = await this.ensureCached();

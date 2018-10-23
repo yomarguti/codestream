@@ -12,7 +12,7 @@ import {
 	StreamType
 } from "../../shared/api.protocol";
 
-const defaultCreatedAt = 165816000000;
+const defaultCreatedAt = 181886400000;
 // const multiPartyNamesRegEx = /^mpdm-([^-]+)(--.*)-1$/;
 // const multiPartyNameRegEx = /--([^-]+)/g;
 
@@ -47,7 +47,7 @@ export function fromSlackChannelOrDirect(
 	codestreamTeamId: string
 ) {
 	if (channel.is_channel || (channel.is_group && !channel.is_mpim)) {
-		return fromSlackChannel(channel, usersById, slackUserId, codestreamTeamId);
+		return fromSlackChannel(channel, codestreamTeamId);
 	}
 
 	if (channel.is_mpim || channel.is_im) {
@@ -69,23 +69,18 @@ export function fromSlackChannelOrDirectLatest(channel: { id: string; latest?: {
 	return { mostRecentId: mostRecentId, mostRecentTimestamp: mostRecentTimestamp };
 }
 
-export function fromSlackChannel(
-	channel: any,
-	usersById: Map<string, CSUser>,
-	slackUserId: string,
-	codestreamTeamId: string
-): CSChannelStream {
+export function fromSlackChannel(channel: any, codestreamTeamId: string): CSChannelStream {
 	const { mostRecentId, mostRecentTimestamp } = fromSlackChannelOrDirectLatest(channel);
 
 	return {
-		createdAt: channel.created,
+		createdAt: channel.created * 1000,
 		creatorId: channel.creator,
 		isArchived: Boolean(channel.is_archived),
 		id: channel.id,
 		isTeamStream: Boolean(channel.is_general),
 		name: channel.name || "",
 		memberIds: Boolean(channel.is_general) ? undefined : channel.members,
-		modifiedAt: mostRecentTimestamp || channel.created,
+		modifiedAt: mostRecentTimestamp || channel.created * 1000,
 		mostRecentPostCreatedAt: mostRecentTimestamp,
 		mostRecentPostId: mostRecentId,
 		privacy: (channel.is_private == null
@@ -113,14 +108,17 @@ export function fromSlackDirect(
 
 		// TODO: Set muted when channel.is_open = false
 		return {
-			createdAt: channel.created,
+			createdAt: channel.created * 1000,
 			creatorId: slackUserId,
 			isArchived: Boolean(channel.is_user_deleted),
 			id: channel.id,
 			name: (user && user.username) || channel.user,
 			memberIds: channel.user === slackUserId ? [slackUserId] : [slackUserId, channel.user],
-			modifiedAt: mostRecentTimestamp || channel.created,
-			mostRecentPostCreatedAt: mostRecentTimestamp,
+			modifiedAt:
+				channel.is_open === false
+					? channel.created * 1000
+					: mostRecentTimestamp || channel.created * 1000,
+			mostRecentPostCreatedAt: channel.is_open === false ? undefined : mostRecentTimestamp,
 			mostRecentPostId: mostRecentId,
 			privacy: "private",
 			sortId: undefined!,
@@ -153,13 +151,13 @@ export function fromSlackDirect(
 	}
 
 	return {
-		createdAt: channel.created,
+		createdAt: channel.created * 1000,
 		creatorId: channel.creator,
 		isArchived: Boolean(channel.is_archived),
 		id: channel.id,
 		name: names.join(", "),
 		memberIds: channel.members,
-		modifiedAt: mostRecentTimestamp || channel.created,
+		modifiedAt: mostRecentTimestamp || channel.created * 1000,
 		mostRecentPostCreatedAt: mostRecentTimestamp,
 		mostRecentPostId: mostRecentId,
 		privacy: "private",
@@ -225,7 +223,7 @@ export async function fromSlackPost(
 		hasReplies: post.ts === post.thread_ts,
 		id: toSlackPostId(post.ts, streamId),
 		mentionedUserIds: mentionedUserIds,
-		modifiedAt: timestamp,
+		modifiedAt: post.edited != null ? Number(post.edited.ts.split(".")[0]) * 1000 : timestamp,
 		parentPostId: post.thread_ts ? toSlackPostId(post.thread_ts, streamId) : post.thread_ts,
 		reactions: reactions,
 		text: text,

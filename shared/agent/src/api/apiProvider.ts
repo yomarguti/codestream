@@ -198,6 +198,7 @@ export type RTMessage =
 export interface ApiProvider {
 	onDidReceiveMessage: Event<RTMessage>;
 
+	readonly teamId: string;
 	readonly userId: string;
 
 	fetch<R extends object>(url: string, init?: RequestInit, token?: string): Promise<R>;
@@ -248,7 +249,6 @@ export interface ApiProvider {
 	updateStreamMembership(
 		request: UpdateStreamMembershipRequest
 	): Promise<UpdateStreamMembershipResponse>;
-	manageStreamSubscriptions(streams: CSStream[]): void;
 
 	fetchTeams(request: FetchTeamsRequest): Promise<FetchTeamsResponse>;
 	getTeam(request: GetTeamRequest): Promise<GetTeamResponse>;

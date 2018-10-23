@@ -6,7 +6,7 @@ import { CSLastReads } from "../../shared/api.protocol";
 import { Iterables } from "../../system/iterable";
 import { ApiProvider } from "../apiProvider";
 
-export class Unreads {
+export class SlackUnreads {
 	private _onDidChange = new Emitter<CSUnreads>();
 	get onDidChange(): Event<CSUnreads> {
 		return this._onDidChange.event;

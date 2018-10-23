@@ -1,20 +1,14 @@
 "use strict";
 import { Disposable, Emitter, Event } from "vscode-languageserver";
-import {
-	ApiProvider,
-	ConnectionRTMessage,
-	ConnectionStatus,
-	MessageType,
-	RawRTMessage
-} from "../api/apiProvider";
-import { CodeStreamApiProvider } from "../api/codestream/codestreamApi";
-import { Logger, TraceLevel } from "../logger";
+import { Logger } from "../../logger";
 import {
 	ChannelDescriptor,
 	PubnubConnection,
 	PubnubStatus,
 	StatusChangeEvent
-} from "./pubnubConnection";
+} from "../../pubnub/pubnubConnection";
+import { ConnectionRTMessage, ConnectionStatus, MessageType, RawRTMessage } from "../apiProvider";
+import { CodeStreamApiProvider } from "./codestreamApi";
 
 const messageToType: {
 	[key: string]:
@@ -42,43 +36,45 @@ const messageToType: {
 	users: MessageType.Users
 };
 
-export class PubnubReceiver {
+export class PubnubEvents {
 	private _onDidReceiveMessage = new Emitter<RawRTMessage>();
 	get onDidReceiveMessage(): Event<RawRTMessage> {
 		return this._onDidReceiveMessage.event;
 	}
 
-	private _subscribedStreamIds = new Set<string>();
+	private _disposable: Disposable | undefined;
 	private readonly _pubnubConnection: PubnubConnection;
-	private _connection: Disposable | undefined;
+	private _subscribedStreamIds = new Set<string>();
 
 	constructor(
-		api: ApiProvider,
-		pubnubKey: string,
-		pubnubToken: string,
-		accessToken: string,
-		private readonly _userId: string,
-		private readonly _teamId: string
+		private readonly _accessToken: string,
+		private readonly _pubnubKey: string,
+		private readonly _pubnubToken: string,
+		private readonly _api: CodeStreamApiProvider
 	) {
 		this._pubnubConnection = new PubnubConnection();
-		this._connection = this._pubnubConnection.initialize({
-			api: api,
-			accessToken: accessToken,
-			subscribeKey: pubnubKey,
-			authKey: pubnubToken,
-			userId: _userId,
+		this._pubnubConnection.onDidStatusChange(this.onPubnubStatusChanged, this);
+		this._pubnubConnection.onDidReceiveMessages(this.onPubnubMessagesReceived, this);
+	}
+
+	get connected() {
+		return this._pubnubConnection.online;
+	}
+
+	connect(streamIds?: string[]): Disposable {
+		this._disposable = this._pubnubConnection.initialize({
+			api: this._api,
+			accessToken: this._accessToken,
+			subscribeKey: this._pubnubKey,
+			authKey: this._pubnubToken,
+			userId: this._api.userId,
 			online: true,
 			debug: this.debug.bind(this)
 		});
 
-		this._pubnubConnection.onDidStatusChange(this.onPubnubStatusChanged, this);
-		this._pubnubConnection.onDidReceiveMessages(this.onPubNubMessagesReceived, this);
-	}
-
-	listen(streamIds?: string[]): Disposable {
 		const channels: ChannelDescriptor[] = [
-			{ name: `user-${this._userId}` },
-			{ name: `team-${this._teamId}`, withPresence: true }
+			{ name: `user-${this._api.userId}` },
+			{ name: `team-${this._api.teamId}`, withPresence: true }
 		];
 
 		for (const streamId of streamIds || []) {
@@ -88,11 +84,14 @@ export class PubnubReceiver {
 
 		this._pubnubConnection.subscribe(channels);
 
-		return {
-			dispose: () => {
-				this._connection!.dispose();
-			}
-		};
+		return this._disposable;
+	}
+
+	disconnect() {
+		if (this._disposable === undefined) return;
+
+		this._disposable.dispose();
+		this._disposable = undefined;
 	}
 
 	subscribeToStream(streamId: string) {
@@ -146,7 +145,7 @@ export class PubnubReceiver {
 		}
 	}
 
-	private onPubNubMessagesReceived(messages: { [key: string]: any }[]) {
+	private onPubnubMessagesReceived(messages: { [key: string]: any }[]) {
 		this.debug("PubNub messages", messages);
 
 		for (const message of messages) {
