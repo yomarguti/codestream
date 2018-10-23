@@ -162,7 +162,7 @@ function getWebviewConfig(env) {
 			webview: ["./index.js", "./styles/webview.less"]
 		},
 		mode: env.production ? "production" : "development",
-		devtool: !env.production ? "source-map" : undefined,
+		devtool: !env.production ? "eval-source-map" : undefined,
 		output: {
 			filename: "[name].js",
 			path: path.resolve(__dirname, "dist/webview"),
