@@ -113,7 +113,7 @@ export class CodeStreamSession {
 		public readonly connection: Connection,
 		private readonly _options: AgentOptions
 	) {
-		Logger.log("Agent initalizing...");
+		Logger.log(`Agent for extension v${_options.extensionVersionFormatted} initializing...`);
 
 		this._readyPromise = new Promise<void>(resolve =>
 			this.agent.onReady(() => {
