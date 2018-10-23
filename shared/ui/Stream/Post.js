@@ -515,14 +515,14 @@ class Post extends React.Component {
 	};
 
 	renderIcons = () => {
-		if (this.props.collapsed)
-			return (
-				<div className="align-right">
-					<Tooltip title="View Details" placement="above">
-						<Icon name="chevron-right" className="chevron-right" onClick={this.goToThread} />
-					</Tooltip>
-				</div>
-			);
+		if (this.props.collapsed) return null;
+		// return (
+		// 	<div className="align-right">
+		// 		<Tooltip title="View Details" placement="above">
+		// 			<Icon name="chevron-right" className="chevron-right" onClick={this.goToThread} />
+		// 		</Tooltip>
+		// 	</div>
+		// );
 		else
 			return (
 				<div className="align-right">

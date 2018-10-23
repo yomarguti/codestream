@@ -464,13 +464,14 @@ export class SimpleKnowledgePanel extends Component {
 	};
 
 	selectPost = id => {
-		const isOpen = this.state.openPost === id;
-		if (isOpen) this.setState({ openPost: null });
-		else {
-			const post = this.props.posts.find(post => id === post.id);
-			if (post) this.props.showCode(post, true);
-			this.setState({ openPost: id });
-		}
+		// const isOpen = this.state.openPost === id;
+		// if (isOpen) this.setState({ openPost: null });
+		// else {
+		const post = this.props.posts.find(post => id === post.id);
+		if (post) this.props.showCode(post, true);
+		// this.setState({ openPost: id });
+		this.props.postAction("make-thread", post);
+		// }
 	};
 
 	handleClickCreateKnowledge = e => {

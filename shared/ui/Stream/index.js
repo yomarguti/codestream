@@ -232,6 +232,7 @@ export class SimpleStream extends Component {
 		// 	let newHeight = streamHeight - postslistHeight + this._intro.offsetHeight - composeHeight;
 		// 	this._intro.style.height = newHeight + "px";
 		// }
+
 		const padding = composeHeight + headerHeight;
 		// this._div.style.paddingBottom = padding + "px";
 
@@ -339,8 +340,12 @@ export class SimpleStream extends Component {
 		let postStreamPurpose = "For the benefit of Mr. Kite";
 		if (searchBarOpen && q) activePanel = "knowledge";
 
+		let threadId = this.state.threadId;
+		let threadPost = this.findPostById(threadId);
+
 		const streamClass = createClassString({
 			stream: true,
+			"has-overlay": threadId,
 			"no-headshots": !configs.showHeadshots,
 			"reduced-motion": configs.reduceMotion
 		});
@@ -361,13 +366,10 @@ export class SimpleStream extends Component {
 				activePanel === "invite"
 		});
 		const threadPanelClass = createClassString({
-			panel: true,
-			"thread-panel": true,
-			"off-right": activePanel !== "thread"
+			// panel: true,
+			"thread-panel": true
+			// "off-right": activePanel !== "thread"
 		});
-
-		let threadId = this.state.threadId;
-		let threadPost = this.findPostById(threadId);
 
 		let placeholderText = "Message #" + this.props.postStreamName;
 		if (this.props.postStreamType === "direct") {
@@ -425,12 +427,15 @@ export class SimpleStream extends Component {
 		// </span>
 
 		const memberCount = (this.props.postStreamMemberIds || []).length;
+		const lower = threadPost ? threadPost.type || "Comment" : "";
+		const commentTypeLabel = lower.charAt(0).toUpperCase() + lower.substr(1);
 
 		return (
 			<div className={streamClass}>
 				<div id="modal-root" />
 				<div id="confirm-root" />
 				<div id="focus-trap" className={createClassString({ active: !this.props.hasFocus })} />
+				{threadId && <div id="thread-blanket" />}
 				{this.state.searchBarOpen && (
 					<div className="search-bar">
 						<input
@@ -684,21 +689,18 @@ export class SimpleStream extends Component {
 							</div>
 						</div>
 					)}
-					{activePanel === "thread" && (
+					{threadId && (
 						<div className={threadPanelClass} ref={ref => (this._threadPanel = ref)}>
 							<div id="close-thread" className="panel-header" onClick={this.handleDismissThread}>
-								<span className="align-left-button">
-									<Icon
-										name="chevron-left"
-										onClick={this.showChannels}
-										className="show-channels-icon"
-									/>
-									<label>
-										Back <span className="keybinding">(esc)</span>
-									</label>
-								</span>
+								<Tooltip title="Close thread" placement="bottomRight">
+									<span className="align-right-button">
+										<Icon name="x" />
+									</span>
+								</Tooltip>
 								<span>
-									<label>Thread</label>
+									<label>
+										{commentTypeLabel} in {channelIcon} {this.props.postStreamName}
+									</label>
 								</span>
 							</div>
 							<OfflineBanner />
@@ -728,33 +730,41 @@ export class SimpleStream extends Component {
 									<div className="shadow-cover-bottom" />
 								</div>
 							</div>
+							{this.renderComposeBox(placeholderText)}
 						</div>
 					)}
 				</div>
-				<ComposeBox
-					placeholder={placeholderText}
-					teammates={this.props.teammates}
-					slashCommands={this.props.slashCommands}
-					channelStreams={this.props.channelStreams}
-					directMessageStreams={this.props.directMessageStreams}
-					streamId={this.props.postStreamId}
-					services={this.props.services}
-					currentUserId={this.props.currentUserId}
-					ensureStreamIsActive={this.ensureStreamIsActive}
-					ref={this._compose}
-					disabled={this.props.isOffline}
-					offscreen={activePanel !== "main" && activePanel !== "thread" && !this.state.multiCompose}
-					onSubmit={this.submitPost}
-					onEmptyUpArrow={this.editLastPost}
-					findMentionedUserIds={this.findMentionedUserIds}
-					isDirectMessage={this.props.postStreamType === "direct"}
-					isSlackTeam={this.props.isSlackTeam}
-					multiCompose={this.state.multiCompose}
-					setMultiCompose={this.setMultiCompose}
-				/>
+				{!threadId &&
+					(activePanel === "main" || this.state.multiCompose) &&
+					this.renderComposeBox(placeholderText)}
 			</div>
 		);
 	}
+
+	renderComposeBox = placeholderText => {
+		return (
+			<ComposeBox
+				placeholder={placeholderText}
+				teammates={this.props.teammates}
+				slashCommands={this.props.slashCommands}
+				channelStreams={this.props.channelStreams}
+				directMessageStreams={this.props.directMessageStreams}
+				streamId={this.props.postStreamId}
+				services={this.props.services}
+				currentUserId={this.props.currentUserId}
+				ensureStreamIsActive={this.ensureStreamIsActive}
+				ref={this._compose}
+				disabled={this.props.isOffline}
+				onSubmit={this.submitPost}
+				onEmptyUpArrow={this.editLastPost}
+				findMentionedUserIds={this.findMentionedUserIds}
+				isDirectMessage={this.props.postStreamType === "direct"}
+				isSlackTeam={this.props.isSlackTeam}
+				multiCompose={this.state.multiCompose}
+				setMultiCompose={this.setMultiCompose}
+			/>
+		);
+	};
 
 	starChannel = () => {
 		this.setState({ postChannelStarred: !this.state.postChannelStarred });
@@ -855,7 +865,7 @@ export class SimpleStream extends Component {
 	handleDismissThread = ({ track = true } = {}) => {
 		EventEmitter.emit("interaction:thread-closed", this.state.threadId);
 		this.setState({ threadId: null, threadTrigger: null });
-		this.setActivePanel("main");
+		// this.setActivePanel("main");
 		this.focusInput();
 		if (track)
 			EventEmitter.emit("analytics", {
@@ -1048,7 +1058,7 @@ export class SimpleStream extends Component {
 			payload: { "Page Name": "Thread View" }
 		});
 		this.setState({ threadId, threadTrigger: wasClicked && threadId });
-		this.setActivePanel("thread");
+		// this.setActivePanel("thread");
 
 		this.focusInput();
 		if (wasClicked) {
@@ -1071,7 +1081,7 @@ export class SimpleStream extends Component {
 		setTimeout(() => {
 			const input = document.getElementById("input-div");
 			if (input) input.focus();
-		}, 500);
+		}, 20);
 	};
 
 	handleEscape(event) {
@@ -1385,7 +1395,7 @@ export class SimpleStream extends Component {
 
 	submitSystemPost = text => {
 		const { activePanel, postStreamId, createSystemPost, posts } = this.props;
-		const threadId = activePanel === "thread" ? this.state.threadId : null;
+		const threadId = this.state.threadId;
 		const lastPost = _.last(posts);
 		const seqNum = lastPost ? lastPost.seqNum + 0.001 : 0.001;
 		createSystemPost(postStreamId, threadId, text, seqNum);
@@ -1427,7 +1437,7 @@ export class SimpleStream extends Component {
 
 	startLiveShare = () => {
 		const { activePanel, postStreamId } = this.props;
-		const threadId = activePanel === "thread" ? this.state.threadId : undefined;
+		const threadId = this.state.threadId;
 
 		const text = "Starting Live Share...";
 		this.submitSystemPost(text);
@@ -1521,7 +1531,7 @@ export class SimpleStream extends Component {
 
 		if (this.checkForSlashCommands(text)) return;
 
-		let threadId = forceThreadId || (activePanel === "thread" ? this.state.threadId : null);
+		let threadId = forceThreadId || this.state.threadId;
 		const streamId = forceStreamId || postStreamId;
 
 		const submit = () =>

@@ -31,10 +31,19 @@ export class SimpleChannelPanel extends Component {
 			expanded: {
 				knowledgeBase: true,
 				teamChannels: true,
+				unreadChannels: true,
+				starredChannels: true,
 				directMessages: true,
 				liveShareSessions: true,
 				unreads: true
-			}
+			},
+			showChannels: "all"
+		};
+		this.showChannelsLabel = {
+			all: "all conversations",
+			"unreads-starred": "unread & starred conversations",
+			unreads: "unread conversations",
+			selected: "selected conversations"
 		};
 		this._channelPanel = React.createRef();
 	}
@@ -57,8 +66,9 @@ export class SimpleChannelPanel extends Component {
 
 		let menuItems = [
 			{ label: "All Conversations", action: "set-channels-all" },
-			{ label: "Unreads & Starred Conversations", action: "set-channels-unreads-starred" },
+			{ label: "Unread & Starred Conversations", action: "set-channels-unreads-starred" },
 			{ label: "Unread Conversations", action: "set-channels-unreads" },
+			{ label: "-" },
 			{ label: "Selected Conversations", action: "set-channels-selected" }
 		];
 
@@ -76,7 +86,7 @@ export class SimpleChannelPanel extends Component {
 					</Tooltip>
 					Show{" "}
 					<span className="filter" onClick={this.toggleMenu}>
-						all conversations
+						{this.showChannelsLabel[this.state.showChannels]}
 						<Icon name="triangle-down" className="triangle-down" />
 						{this.state.menuOpen && (
 							<Menu
@@ -94,17 +104,31 @@ export class SimpleChannelPanel extends Component {
 						<div className="shadow shadow-bottom" />
 					</div>
 					<div className="channel-list vscroll">
-						{this.renderKnowledgeBase()}
-						{this.renderUnreadChannels()}
-						{this.renderTeamChannels()}
-						{this.renderDirectMessages()}
-						{this.renderServiceChannels()}
+						{this.renderChannels()}
 						<div className="shadow-cover-bottom" />
 					</div>
 				</div>
 			</div>
 		);
 	}
+
+	renderChannels = () => {
+		switch (this.state.showChannels) {
+			case "unreads-starred":
+				return [this.renderUnreadChannels(), this.renderStarredChannels()];
+			case "unreads":
+				return this.renderUnreadChannels();
+			case "selected":
+				break;
+			default:
+				return [
+					// this.renderUnreadChannels(),
+					this.renderTeamChannels(),
+					this.renderDirectMessages(),
+					this.renderServiceChannels()
+				];
+		}
+	};
 
 	toggleMuteAll = () => {
 		this.props.muteAllConversations(!this.props.muteAll);
@@ -116,6 +140,20 @@ export class SimpleChannelPanel extends Component {
 
 	handleSelectMenu = action => {
 		this.setState({ menuOpen: false });
+		switch (action) {
+			case "set-channels-all":
+				this.setState({ showChannels: "all" });
+				break;
+			case "set-channels-unreads-starred":
+				this.setState({ showChannels: "unreads-starred" });
+				break;
+			case "set-channels-unreads":
+				this.setState({ showChannels: "unreads" });
+				break;
+			case "set-channels-selected":
+				this.selectChannels();
+				break;
+		}
 	};
 
 	toggleSection = (e, section) => {
@@ -125,93 +163,82 @@ export class SimpleChannelPanel extends Component {
 		});
 	};
 
-	renderUnreadChannels = () => {
-		return;
-		// return (
-		// 	<div className="section">
-		// 		<div className="header">
-		// 			<Tooltip title="All Channels With Unread Messages" placement="left" delay="0.5">
-		// 				<span className="clickable">UNREADS</span>
-		// 			</Tooltip>
-		// 		</div>
-		// 		<ul onClick={this.handleClickSelectStream}>
-		// 			{this.renderStreams(this.props.channelStreams)}
-		// 		</ul>
-		// 	</div>
-		// );
+	renderBrowsePublicIcon = () => {
+		return (
+			<Tooltip title="Browse Public Channels" placement="bottomRight">
+				<span>
+					<Icon name="list-unordered" onClick={this.handleClickShowPublicChannels} />
+				</span>
+			</Tooltip>
+		);
 	};
 
-	renderKnowledgeBase = () => {
-		return null;
+	renderCreateChannelIcon = () => {
+		return (
+			<Tooltip title="Create a Channel" placement="bottomRight">
+				<span>
+					<Icon name="plus" onClick={this.handleClickCreateChannel} />
+				</span>
+			</Tooltip>
+		);
+	};
+
+	renderCreateDMIcon = () => {
+		return (
+			<Tooltip title="Create a DM" placement="bottomRight">
+				<span>
+					<Icon name="plus" onClick={this.handleClickCreateDirectMessage} />
+				</span>
+			</Tooltip>
+		);
+	};
+
+	renderUnreadChannels = () => {
 		return (
 			<div
 				className={createClassString("section", "has-children", {
-					expanded: this.state.expanded["knowledgeBase"]
+					expanded: this.state.expanded["unreadChannels"]
 				})}
 			>
-				<div className="header top" onClick={e => this.toggleSection(e, "knowledgeBase")}>
+				<div className="header top" onClick={e => this.toggleSection(e, "unreadChannels")}>
 					<Icon name="triangle-right" className="triangle-right" />
-					<span className="clickable">Knowledge Base</span>
+					<span className="clickable">Unread</span>
 					<div className="align-right">
-						<Tooltip title="Add to Knowledge Base" placement="bottom">
-							<Icon name="plus" onClick={this.handleClickCreateKnowledge} />
-						</Tooltip>
+						{this.renderBrowsePublicIcon()}
+						{this.renderCreateChannelIcon()}
+						{this.renderCreateDMIcon()}
 					</div>
 				</div>
-				{this.renderKnowledgeItems()}
+				<ul onClick={this.handleClickSelectStream}>
+					{this.renderStreams(this.props.channelStreams, { unreadsOnly: true })}
+					{this.renderStreams(this.props.directMessageStreams, { unreadsOnly: true })}
+				</ul>
 			</div>
 		);
 	};
 
-	renderKnowledgeItems = () => {
+	renderStarredChannels = () => {
 		return (
-			<ul onClick={this.handleClickSelectKnowledge}>
-				<li key="comment" id="comment">
-					<Icon name="comment" className="comment" />
-					Code Comments
-				</li>
-				<li key="question" id="question">
-					<Icon name="question" className="question" />
-					Questions &amp; Answers
-				</li>
-				<li key="issue" id="issue">
-					<Icon name="issue" className="issue" />
-					Issues
-				</li>
-				<li key="trap" id="trap">
-					<Icon name="trap" className="trap" />
-					Code Traps
-				</li>
-				<li key="bookmark" id="bookmark">
-					<Icon name="bookmark" className="bookmark" />
-					Bookmarks
-				</li>
-			</ul>
+			<div
+				className={createClassString("section", "has-children", {
+					expanded: this.state.expanded["starredChannels"]
+				})}
+			>
+				<div className="header top" onClick={e => this.toggleSection(e, "starredChannels")}>
+					<Icon name="triangle-right" className="triangle-right" />
+					<span className="clickable">Starred</span>
+					<div className="align-right">
+						{this.renderBrowsePublicIcon()}
+						{this.renderCreateChannelIcon()}
+						{this.renderCreateDMIcon()}
+					</div>
+				</div>
+				<ul onClick={this.handleClickSelectStream}>
+					{this.renderStreams(this.props.channelStreams, { starredOnly: true })}
+					{this.renderStreams(this.props.directMessageStreams, { starredOnly: true })}
+				</ul>
+			</div>
 		);
-		// 	<li key="pin" id="pin">
-		// 	<Icon name="pin" className="pin" />
-		// 	Pinned Posts
-		// </li>
-		// <li key="snippet" id="snippet">
-		// 	<Icon name="code" className="snippet" />
-		// 	Snippets
-		// </li>
-	};
-
-	renderUnreadChannels = () => {
-		return;
-		// return (
-		// 	<div className="section">
-		// 		<div className="header">
-		// 			<Tooltip title="All Channels With Unread Messages" placement="left" delay=".5">
-		// 				<span className="clickable">UNREADS</span>
-		// 			</Tooltip>
-		// 		</div>
-		// 		<ul onClick={this.handleClickSelectStream}>
-		// 			{this.renderStreams(this.props.channelStreams)}
-		// 		</ul>
-		// 	</div>
-		// );
 	};
 
 	renderTeamChannels = () => {
@@ -225,16 +252,8 @@ export class SimpleChannelPanel extends Component {
 					<Icon name="triangle-right" className="triangle-right" />
 					<span className="clickable">Channels</span>
 					<div className="align-right">
-						<Tooltip title="Browse Public Channels" placement="bottomRight">
-							<span>
-								<Icon name="list-unordered" onClick={this.handleClickShowPublicChannels} />
-							</span>
-						</Tooltip>
-						<Tooltip title="Create a Channel" placement="bottomRight">
-							<span>
-								<Icon name="plus" onClick={this.handleClickCreateChannel} />
-							</span>
-						</Tooltip>
+						{this.renderBrowsePublicIcon()}
+						{this.renderCreateChannelIcon()}
 					</div>
 				</div>
 				<ul onClick={this.handleClickSelectStream}>
@@ -264,7 +283,7 @@ export class SimpleChannelPanel extends Component {
 		);
 	};
 
-	renderStreams = streams => {
+	renderStreams = (streams, { unreadsOnly, starredOnly } = {}) => {
 		return streams.map(stream => {
 			if (stream.isArchived) return null;
 
@@ -285,6 +304,8 @@ export class SimpleChannelPanel extends Component {
 			if (this.props.mutedStreams[stream.id]) count = 0;
 			let mentions = this.props.umis.mentions[stream.id] || 0;
 			let menuActive = this.state.openMenu === stream.id;
+			if (unreadsOnly && count == 0 && mentions == 0) return;
+			if (starredOnly && !stream.starred) return;
 			return (
 				<li
 					className={createClassString({
