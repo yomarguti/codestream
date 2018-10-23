@@ -38,9 +38,7 @@ export class StatusBarController implements Disposable {
 	}
 
 	private onConfigurationChanged(e: ConfigurationChangeEvent) {
-		const initializing = configuration.initializing(e);
-
-		if (initializing || configuration.changed(e, configuration.name("showInStatusBar").value)) {
+		if (configuration.changed(e, configuration.name("showInStatusBar").value)) {
 			const cfg = Container.config;
 
 			if (this._enabledDisposable !== undefined) {
