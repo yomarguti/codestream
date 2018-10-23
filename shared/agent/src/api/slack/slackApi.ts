@@ -53,7 +53,6 @@ import {
 	CSMe,
 	CSPost,
 	CSSlackProviderInfo,
-	CSStream,
 	CSUser,
 	LoginResponse,
 	StreamType
@@ -224,9 +223,7 @@ export class SlackApiProvider implements ApiProvider {
 	@log()
 	async subscribe(types?: MessageType[]) {
 		this._events = new SlackEvents(this._slackToken, this);
-		this._events.onDidReceiveMessage(e => {
-			this._onDidReceiveMessage.fire(e);
-		}, this);
+		this._events.onDidReceiveMessage(e => this._onDidReceiveMessage.fire(e), this);
 		await this._events.connect();
 
 		this._codestream.onDidReceiveMessage(this.onCodeStreamMessage, this);
@@ -832,6 +829,7 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	@log({
+		correlate: true,
 		exit: (r: FetchStreamsResponse) => `\n${r.streams.map(s => `\t${s.id} = ${s.name}`).join("\n")}`
 	})
 	async fetchStreams(request: FetchStreamsRequest) {
@@ -854,7 +852,11 @@ export class SlackApiProvider implements ApiProvider {
 
 			const usersById = await this.ensureUsersById();
 
-			const [[channels, channelInfos], [groups, groupInfos], [ims, imInfos]] = await Promise.all([
+			const [
+				[channels, channelRequests],
+				[groups, groupRequests],
+				[ims, imRequests]
+			] = await Promise.all([
 				this.fetchChannels(),
 				this.fetchGroups(usersById),
 				this.fetchIMs(usersById)
@@ -862,12 +864,55 @@ export class SlackApiProvider implements ApiProvider {
 
 			const streams = channels.concat(...groups, ...ims);
 
-			Promise.all(channelInfos.concat(...groupInfos, ...imInfos)).then(async streams => {
-				this._unreads.resume();
+			const pendingStreamRequests = channelRequests.concat(...groupRequests, ...imRequests);
+
+			const logCorrelationId = (this.fetchStreams as any).logCorrelationId;
+			const prefix = `${
+				logCorrelationId ? `[${logCorrelationId}] ` : ""
+			}SlackApiProvider.fetchStreams`;
+			Logger.debug(
+				`${prefix}: fetching ${pendingStreamRequests.length} stream(s) in the background...`
+			);
+
+			let timedout = false;
+			const promises = Promise.all(pendingStreamRequests).then(async streams => {
+				if (timedout) {
+					Logger.warn(
+						`${prefix}: Completed (AFTER TIMEOUT) while fetching ${
+							pendingStreamRequests.length
+						} stream(s) in the background`
+					);
+				} else {
+					Logger.debug(
+						`${prefix}: Completed fetching ${
+							pendingStreamRequests.length
+						} stream(s) in the background`
+					);
+
+					// Only resume if we haven't timed out, since we would have already resumed
+					this._unreads.resume();
+				}
 
 				const message: StreamsRTMessage = { type: MessageType.Streams, data: streams };
 				message.data = await Container.instance().streams.resolve(message);
 				this._onDidReceiveMessage.fire(message);
+			});
+
+			const pendingRequestsTimeoutMs = 120000;
+			Promise.race([
+				promises,
+				new Promise((resolve, reject) => setTimeout(resolve, pendingRequestsTimeoutMs, "timeout"))
+			]).then(v => {
+				if (v === "timeout") {
+					Logger.warn(
+						`${prefix}: TIMEOUT ${pendingRequestsTimeoutMs / 1000}s exceeded while fetching ${
+							pendingStreamRequests.length
+						} stream(s) in the background`
+					);
+					timedout = true;
+
+					this._unreads.resume();
+				}
 			});
 
 			if (
@@ -919,11 +964,12 @@ export class SlackApiProvider implements ApiProvider {
 				channel: c.id
 			});
 
-			const { ok, channel } = response as WebAPICallResult & { channel: any };
+			const { ok, error, channel } = response as WebAPICallResult & { channel: any };
+			if (!ok) throw new Error(error);
 
 			this._unreads.update(channel.id, channel.last_read, 0, channel.unread_count_display || 0);
 
-			return fromSlackChannel(ok ? channel : c, this._codestreamTeamId);
+			return fromSlackChannel(channel, this._codestreamTeamId);
 		} catch (ex) {
 			Logger.error(ex);
 			return fromSlackChannel(c, this._codestreamTeamId);
@@ -966,7 +1012,8 @@ export class SlackApiProvider implements ApiProvider {
 				channel: g.id
 			});
 
-			const { ok, group } = response as WebAPICallResult & { group: any };
+			const { ok, error, group } = response as WebAPICallResult & { group: any };
+			if (!ok) throw new Error(error);
 
 			this._unreads.update(
 				group.id,
@@ -975,12 +1022,7 @@ export class SlackApiProvider implements ApiProvider {
 				group.unread_count_display || 0
 			);
 
-			return fromSlackChannelOrDirect(
-				ok ? group : g,
-				usersById,
-				this._slackUserId,
-				this._codestreamTeamId
-			)!;
+			return fromSlackChannelOrDirect(group, usersById, this._slackUserId, this._codestreamTeamId)!;
 		} catch (ex) {
 			Logger.error(ex);
 			return fromSlackChannelOrDirect(g, usersById, this._slackUserId, this._codestreamTeamId)!;
@@ -1021,7 +1063,8 @@ export class SlackApiProvider implements ApiProvider {
 				channel: im.id
 			});
 
-			const { ok, channel } = response as WebAPICallResult & { channel: any };
+			const { ok, error, channel } = response as WebAPICallResult & { channel: any };
+			if (!ok) throw new Error(error);
 
 			this._unreads.update(
 				channel.id,
@@ -1031,7 +1074,7 @@ export class SlackApiProvider implements ApiProvider {
 			);
 
 			return fromSlackDirect(
-				ok ? { ...im, ...channel } : im,
+				{ ...im, ...channel },
 				usersById,
 				this._slackUserId,
 				this._codestreamTeamId
@@ -1056,41 +1099,55 @@ export class SlackApiProvider implements ApiProvider {
 
 		let response;
 		switch (fromSlackChannelIdToType(request.streamId)) {
-			case "channel":
+			case "channel": {
 				response = await this._slack.channels.info({
 					channel: request.streamId
 				});
 
-				break;
+				const { ok, error, channel } = response as WebAPICallResult & { channel: any };
+				if (!ok) throw new Error(error);
 
-			case "group":
+				const stream = fromSlackChannel(channel, this._codestreamTeamId);
+
+				return { stream: stream! };
+			}
+			case "group": {
 				response = await this._slack.groups.info({
 					channel: request.streamId
 				});
 
-				break;
+				const { ok, error, group } = response as WebAPICallResult & { group: any };
+				if (!ok) throw new Error(error);
 
-			case "direct":
+				const stream = fromSlackChannelOrDirect(
+					group,
+					await this.ensureUsersById(),
+					this._slackUserId,
+					this._codestreamTeamId
+				);
+
+				return { stream: stream! };
+			}
+			case "direct": {
 				response = await this._slack.conversations.info({
 					channel: request.streamId
 				});
-				break;
+
+				const { ok, error, channel } = response as WebAPICallResult & { channel: any };
+				if (!ok) throw new Error(error);
+
+				const stream = fromSlackDirect(
+					channel,
+					await this.ensureUsersById(),
+					this._slackUserId,
+					this._codestreamTeamId
+				);
+
+				return { stream: stream! };
+			}
+			default:
+				throw new Error(`Invalid stream type: ${request.streamId}`);
 		}
-
-		const { ok, error, channel } = response as WebAPICallResult & { channel: any };
-		if (!ok) throw new Error(error);
-
-		// const members = await this.getStreamMembers(request.streamId);
-		// channel.members = members;
-
-		const stream = fromSlackChannelOrDirect(
-			channel,
-			await this.ensureUsersById(),
-			this._slackUserId,
-			this._codestreamTeamId
-		);
-
-		return { stream: stream! };
 	}
 
 	@log()

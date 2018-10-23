@@ -81,7 +81,6 @@ import {
 	CSMarkerLocations,
 	CSPost,
 	CSRepository,
-	CSStream,
 	CSTeam,
 	CSUser,
 	LoginResponse
