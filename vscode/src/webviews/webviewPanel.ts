@@ -124,7 +124,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 	private _bootstrapPromise: Promise<BootstrapState> | undefined;
 	private _disposable: Disposable | undefined;
 	private readonly _ipc: WebviewIpc;
-	private _onReadyResolver: ((value?: {} | PromiseLike<{}> | undefined) => void) | undefined;
+	private _onReadyResolver: ((cancelled: boolean) => void) | undefined;
 	private _panel: WebviewPanel | undefined;
 	private _streamThread: StreamThread | undefined;
 
@@ -138,6 +138,10 @@ export class CodeStreamWebviewPanel implements Disposable {
 	}
 
 	private onPanelDisposed() {
+		if (this._onReadyResolver !== undefined) {
+			this._onReadyResolver(true);
+		}
+
 		this._onDidClose.fire();
 	}
 
@@ -174,7 +178,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 				case WebviewIpcMessageType.onViewReady: {
 					// view is rendered and ready to receive messages
 					if (this._onReadyResolver !== undefined) {
-						this._onReadyResolver();
+						this._onReadyResolver(false);
 					}
 					break;
 				}
@@ -833,7 +837,8 @@ export class CodeStreamWebviewPanel implements Disposable {
 		this._panel.webview.html = await this.getHtml();
 		this._panel.reveal(this._panel.viewColumn, false);
 
-		await this.waitUntilReady();
+		const cancelled = await this.waitUntilReady();
+		if (cancelled) return undefined;
 
 		return this._streamThread;
 	}
@@ -913,7 +918,8 @@ export class CodeStreamWebviewPanel implements Disposable {
 
 		this._streamThread = streamThread;
 
-		await this.waitUntilReady();
+		const cancelled = await this.waitUntilReady();
+		if (cancelled) return undefined;
 
 		this._onDidChangeStream.fire(this._streamThread);
 
@@ -1022,12 +1028,18 @@ export class CodeStreamWebviewPanel implements Disposable {
 			const timer = setTimeout(() => {
 				Logger.warn("Webview: FAILED waiting for webview ready event; closing webview...");
 				this.dispose();
-				resolve();
+				resolve(true);
 			}, 30000);
 
-			this._onReadyResolver = () => {
+			this._onReadyResolver = (cancelled: boolean) => {
 				clearTimeout(timer);
-				resolve();
+
+				if (cancelled) {
+					Logger.log("Webview: CANCELLED waiting for webview ready event");
+				}
+
+				this._onReadyResolver = undefined;
+				resolve(cancelled);
 			};
 		});
 	}
