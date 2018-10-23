@@ -1,5 +1,6 @@
 "use strict";
-import { ExtensionContext, extensions, version as vscodeVersion } from "vscode";
+import { ExtensionContext, extensions, version as vscodeVersion, workspace } from "vscode";
+import { GitExtension } from "./@types/git";
 import { AgentOptions } from "./agent/agentConnection";
 import { SessionStatusChangedEvent } from "./api/session";
 import { ContextKeys, setContext } from "./common";
@@ -66,31 +67,22 @@ function onSessionStatusChanged(e: SessionStatusChangedEvent) {
 	setContext(ContextKeys.Status, status);
 }
 
-interface GitExtensionApi {
-	getGitPath(): Promise<string>;
-}
-
-let _gitApi: GitExtensionApi | undefined;
-async function gitApi() {
-	if (_gitApi === undefined) {
-		try {
-			const git = extensions.getExtension("vscode.git");
-			if (git === undefined) throw new Error("Git extension not found!");
-
-			_gitApi = git.isActive ? git.exports : await git.activate();
-		} catch (ex) {
-			debugger;
-			Logger.error(ex);
-			throw ex;
-		}
-	}
-	return _gitApi!;
-}
-
 let _gitPath: string | undefined;
 export async function gitPath(): Promise<string> {
 	if (_gitPath === undefined) {
-		_gitPath = await (await gitApi()).getGitPath();
+		try {
+			const gitExtension = extensions.getExtension("vscode.git");
+			if (gitExtension !== undefined) {
+				const gitApi = ((gitExtension.isActive
+					? gitExtension.exports
+					: await gitExtension.activate()) as GitExtension).getAPI(1);
+				_gitPath = gitApi.git.path;
+			}
+		} catch {}
+
+		if (_gitPath === undefined) {
+			_gitPath = workspace.getConfiguration("git").get<string>("path") || "git";
+		}
 	}
 	return _gitPath;
 }
