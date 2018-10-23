@@ -63,7 +63,9 @@ module.exports = function(env, argv) {
 			]
 		},
 		externals: {
-			encoding: "encoding"
+			bufferutil: "bufferutil",
+			encoding: "encoding",
+			"utf-8-validate": "utf-8-validate"
 		},
 		module: {
 			rules: [
