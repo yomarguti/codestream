@@ -28,7 +28,7 @@
 
 @import "../node_modules/highlight.js/styles/hybrid.css";
 
-@panel-header-height: 2.1em;
+@panel-header-height: 2.6em;
 
 // for the octicons
 .octicon {
@@ -134,14 +134,14 @@
 	}
 
 	#confirm-root {
-		animation: 0.2s slideout;
+		//no-animation: 0.2s slideout;
 	}
 	#confirm-root.active {
 		background: @app-background-color;
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
-		animation: 0.2s slidein;
+		//no-animation: 0.2s slidein;
 	}
 
 	.stream {
@@ -150,12 +150,39 @@
 		background: @app-background-color;
 		overflow-x: hidden;
 
+		.umis .unread-badge {
+			width: 7px;
+			height: 7px;
+			border-radius: 5px;
+			background: @background-color-umi;
+			display: inline-block;
+			vertical-align: 4px;
+			margin-left: 3px;
+		}
+		// x.umis.unread {
+		// 	background-color: @text-color;
+		// 	color: @base-background-color;
+		// }
+		.umis.mentions,
+		.umis.mentions:hover {
+			// background-color: @text-color-info-muted;
+			background: @background-color-umi;
+			border-radius: 12.5px;
+			// vertical-align: 3px;
+			color: white;
+			padding: 0 3px;
+			display: inline-block;
+			margin-left: 5px;
+			font-size: 11px;
+			min-width: 15px;
+		}
+
 		.panel-header {
 			position: relative;
 			text-align: center;
 			background-color: @app-background-color;
 			border-bottom: 1px solid @base-border-color;
-			padding: 5px 35px 10px 35px;
+			padding: 18px 35px 10px 35px;
 			z-index: 30;
 			user-select: none;
 
@@ -214,31 +241,10 @@
 				}
 			}
 			.align-right-button {
-				right: 5px;
+				right: 10px;
 			}
 			.align-right-button-second {
 				right: 35px;
-			}
-			.umis .unread-badge {
-				width: 7px;
-				height: 7px;
-				border-radius: 5px;
-				background: @background-color-umi;
-				display: inline-block;
-				vertical-align: 4px;
-				margin-left: 3px;
-			}
-			// x.umis.unread {
-			// 	background-color: @text-color;
-			// 	color: @base-background-color;
-			// }
-			.umis.mentions,
-			.umis.mentions:hover {
-				// background-color: @text-color-info-muted;
-				background: @background-color-umi;
-				border-radius: 12.5px;
-				vertical-align: 3px;
-				color: white;
 			}
 			// .icon.show-channels-icon::before {
 			// margin-right: 0;
@@ -256,16 +262,10 @@
 				font-size: 0.8em;
 				margin-right: 0;
 			}
-
-			.search-bar {
-				input {
-					width: 100%;
-				}
-			}
 		}
 
 		.unreads {
-			animation: 0.4s slidein;
+			// no-animation: 0.4s slidein;
 			left: 0;
 			// position: absolute !important;
 			// background: @background-color-highlight;
@@ -306,7 +306,7 @@
 			color: white;
 		}
 		.unreads[type="above"] {
-			top: -3em;
+			top: -6em;
 			// margin-top: -3em;
 			border-radius: 0 0 5px 5px;
 			border-top: none;
@@ -400,7 +400,7 @@
 			// left: 100% !important;
 			pointer-events: none;
 			opacity: 0;
-			animation: 0.2s slideout;
+			//no-animation: 0.2s slideout;
 			// transition: bottom 0.4s;
 		}
 		.message-input-wrapper {
@@ -911,7 +911,7 @@
 			.no-matches {
 				font-style: italic;
 				// text-align: center;
-				padding: 5px 10px;
+				padding: 5px 20px;
 			}
 			.section {
 				padding: 10px 0;
@@ -922,6 +922,10 @@
 
 				> .header {
 					text-transform: uppercase;
+					.filename {
+						text-transform: none;
+						font-weight: normal !important;
+					}
 					font-weight: normal;
 					padding: 2px 10px 2px 5px;
 					// color: @text-color-info;
@@ -1184,7 +1188,7 @@
 			overflow-y: scroll;
 		}
 
-		.panel.shrink {
+		.panel.no-animation.shrink {
 			max-height: 100%;
 			overflow: hidden;
 
@@ -1208,12 +1212,20 @@
 		// .channel-panel {
 		// 	background-color: @app-background-color-hover;
 		// }
+		.channel-panel.muted {
+			.channel-list {
+				opacity: 0.25;
+			}
+			.umi {
+				display: none;
+			}
+		}
 		.vscroll {
 			padding-bottom: 50px;
 		}
 		.panel {
 			// min-height: 100%;
-			animation: 0.4s slidein;
+			//no-animation: 0.4s slidein;
 			background-color: @app-background-color;
 			// box-sizing: border-box;
 		}
@@ -1248,7 +1260,7 @@
 		.panel.off-right {
 			transform: none;
 			left: 100%;
-			animation: 0.2s slideout;
+			//no-animation: 0.2s slideout;
 		}
 
 		.post-details {
@@ -1716,6 +1728,11 @@
 			}
 			min-height: 40px;
 			padding-left: 38px;
+			min-height: 25px;
+			padding: 4px 15px;
+			.headshot {
+				display: none;
+			}
 		}
 		.post.has-status {
 			.status-button {
@@ -2130,7 +2147,7 @@
 				}
 				label {
 					display: inline-block;
-					padding: 5px 8px;
+					padding: 5px 1vw 0 1vw;
 					cursor: pointer;
 					opacity: 0.4;
 					.comment {
@@ -2264,6 +2281,190 @@
 			}
 		}
 	}
+	.top-tab-group {
+		// font-size: bigger;
+		white-space: nowrap;
+		overflow: hidden;
+		// width: 100%;
+		display: flex;
+		padding: 10px;
+		margin-bottom: 5px;
+		background-color: @app-background-color;
+		z-index: 5;
+		label {
+			user-select: none;
+			flex-grow: 1;
+			text-align: center;
+			display: inline-block;
+			cursor: pointer;
+			margin: 0 0 0 0;
+			> span {
+				display: inline-block;
+				padding: 8px 10px;
+				border-bottom: 1px solid rgba(127, 127, 127, 0.5);
+			}
+			&.checked > span {
+				color: @text-color-highlight;
+				border-bottom: 1px solid @text-color-highlight;
+				font-weight: 500;
+			}
+			&:hover > span {
+				color: @text-color-highlight;
+			}
+			.open-menu {
+				display: inline-block;
+				transform: scale(0.75);
+			}
+			&.muted > span {
+				color: @text-color-subtle;
+			}
+		}
+		.fill-tab {
+			padding: 8px 0 0 0;
+			border-bottom: 1px solid rgba(127, 127, 127, 0.5);
+			text-align: right;
+			flex-basis: 90%;
+			flex-grow: 100;
+		}
+		.icon.mute {
+			margin-right: 5px;
+		}
+	}
+	.icon.button,
+	.search-bar .icon {
+		cursor: pointer;
+		display: inline-block;
+		padding: 2px 8px;
+		text-align: center;
+		border-radius: 3px;
+		&:hover {
+			color: @text-color-highlight;
+			background-color: @base-background-color;
+		}
+	}
+	.search-bar {
+		padding: 17px 10px 17px 15px;
+		input {
+			width: calc(100% - 38px);
+			margin-right: 10px;
+		}
+		.icon {
+		}
+	}
+	.filters {
+		z-index: 15;
+		background-color: @app-background-color;
+		color: @text-color-subtle;
+		padding: 0 20px 15px 20px;
+		.icon.triangle-down,
+		.icon.smaller {
+			display: inline-block;
+			transform: scale(0.75);
+			margin: 0;
+		}
+		.icon.triangle-down {
+			margin-right: 5px;
+		}
+		.icon.checked {
+			color: @text-color-warning !important;
+		}
+		.sep {
+			display: inline-block;
+			width: 1px;
+			height: 10px;
+			border-right: 1px solid @text-color;
+			opacity: 0.5;
+			margin: 0 10px;
+		}
+		.filter {
+			display: inline-block;
+			cursor: pointer;
+		}
+		.filter:hover,
+		.icon:hover,
+		.clickable:hover {
+			color: @text-color-highlight;
+		}
+		.align-right-button {
+			float: right;
+		}
+		.switch {
+			float: right;
+		}
+		.show-settings,
+		.clickable {
+			cursor: pointer;
+		}
+	}
+	.switch {
+		position: relative;
+		display: inline-block;
+		margin-top: 2px;
+		width: 36px;
+		height: 16px;
+		background-color: rgba(0, 0, 0, 0.25);
+		border-radius: 16px;
+		transition: all 0.1s;
+	}
+	.switch::after {
+		content: "";
+		position: absolute;
+		width: 14px;
+		height: 14px;
+		border-radius: 14px;
+		background-color: @text-color-highlight;
+		top: 1px;
+		left: 1px;
+		transition: all 0.1s;
+	}
+	.switch.checked::after {
+		transform: translateX(20px);
+	}
+	.switch.checked {
+		background-color: rgba(127, 127, 127, 0.25);
+	}
+	.offscreen {
+		width: 0px;
+		height: 0px;
+		// position: absolute;
+		// left: -9999px;
+	}
+	.switch.public-private {
+		width: 90px;
+		height: 26px;
+		border-radius: 26px;
+		background-color: #7aba5d;
+		color: white;
+		&.checked {
+			background-color: #d9634f;
+		}
+		&::after {
+			top: 2px;
+			left: 2px;
+			width: 22px;
+			height: 22px;
+			border-radius: 22px;
+			transform: translateX(64px);
+			background-color: white;
+		}
+		&.checked::after {
+			transform: none;
+		}
+		&::before {
+			position: absolute;
+			content: "Public";
+			top: 3px;
+			left: 15px;
+			transition: all 0.1s;
+		}
+		&.checked::before {
+			content: "Private";
+			left: 34px;
+		}
+	}
+	// .switch.public-private
+	// <input type="checkbox" id="toggle" class="offscreen" />
+	// <label for="toggle" class="switch"></label>
 }
 
 @media only screen and (max-width: 250px) {

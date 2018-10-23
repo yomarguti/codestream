@@ -40,8 +40,11 @@ export class SimpleCreateDMPanel extends Component {
 		return (
 			<div className={createDMPanelClass} ref={this._createDMPanel}>
 				<div className="panel-header">
-					<span className="align-left-button" onClick={() => this.props.setActivePanel("channels")}>
-						<Icon name="chevron-left" className="show-channels-icon" />
+					<span
+						className="align-right-button"
+						onClick={() => this.props.setActivePanel("channels")}
+					>
+						<Icon name="x" className="clickable" />
 					</span>
 					<span className="panel-title">Direct Messages</span>
 				</div>

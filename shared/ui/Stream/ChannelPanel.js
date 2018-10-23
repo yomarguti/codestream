@@ -6,7 +6,9 @@ import {
 	changeStreamMuteState,
 	closeDirectMessage,
 	createStream,
-	setCurrentStream
+	muteAllConversations,
+	setCurrentStream,
+	setUserPreference
 } from "./actions";
 import {
 	getChannelStreamsForTeam,
@@ -18,6 +20,7 @@ import { isActiveMixin, mapFilter, toMapBy } from "../utils";
 import Icon from "./Icon";
 import Tooltip from "./Tooltip";
 import Debug from "./Debug";
+import Menu from "./Menu";
 import ChannelMenu from "./ChannelMenu";
 
 export class SimpleChannelPanel extends Component {
@@ -48,13 +51,42 @@ export class SimpleChannelPanel extends Component {
 		const channelPanelClass = createClassString({
 			panel: true,
 			"channel-panel": true,
-			shrink: this.props.activePanel !== "channels"
+			shrink: this.props.activePanel !== "channels",
+			muted: this.props.muteAll
 		});
+
+		let menuItems = [
+			{ label: "All Conversations", action: "set-channels-all" },
+			{ label: "Unreads & Starred Conversations", action: "set-channels-unreads-starred" },
+			{ label: "Unread Conversations", action: "set-channels-unreads" },
+			{ label: "Selected Conversations", action: "set-channels-selected" }
+		];
 
 		return (
 			<div className={channelPanelClass} ref={this._channelPanel}>
-				<div className="panel-header">
-					<span className="panel-title">{teamName}</span>
+				<div className="filters">
+					<Tooltip title="Mute All" placement="left">
+						<label
+							htmlFor="toggle"
+							className={createClassString("switch", {
+								checked: !this.props.muteAll
+							})}
+							onClick={this.toggleMuteAll}
+						/>
+					</Tooltip>
+					Show{" "}
+					<span className="filter" onClick={this.toggleMenu}>
+						all conversations
+						<Icon name="triangle-down" className="triangle-down" />
+						{this.state.menuOpen && (
+							<Menu
+								items={menuItems}
+								target={this.state.menuTarget}
+								action={this.handleSelectMenu}
+								align="left"
+							/>
+						)}
+					</span>
 				</div>
 				<div className="shadow-overlay">
 					<div className="shadow-container">
@@ -73,6 +105,18 @@ export class SimpleChannelPanel extends Component {
 			</div>
 		);
 	}
+
+	toggleMuteAll = () => {
+		this.props.muteAllConversations(!this.props.muteAll);
+	};
+
+	toggleMenu = event => {
+		this.setState({ menuOpen: !this.state.menuOpen, menuTarget: event.target });
+	};
+
+	handleSelectMenu = action => {
+		this.setState({ menuOpen: false });
+	};
 
 	toggleSection = (e, section) => {
 		e.stopPropagation();
@@ -98,6 +142,7 @@ export class SimpleChannelPanel extends Component {
 	};
 
 	renderKnowledgeBase = () => {
+		return null;
 		return (
 			<div
 				className={createClassString("section", "has-children", {
@@ -180,10 +225,12 @@ export class SimpleChannelPanel extends Component {
 					<Icon name="triangle-right" className="triangle-right" />
 					<span className="clickable">Channels</span>
 					<div className="align-right">
-						<Tooltip title="Browse Public Channels" placement="left" delay="0.5">
-							<Icon name="list-unordered" onClick={this.handleClickShowPublicChannels} />
+						<Tooltip title="Browse Public Channels" placement="bottomRight">
+							<span>
+								<Icon name="list-unordered" onClick={this.handleClickShowPublicChannels} />
+							</span>
 						</Tooltip>
-						<Tooltip title="Create a Channel" placement="left" delay="0.5">
+						<Tooltip title="Create a Channel" placement="bottomRight">
 							<span>
 								<Icon name="plus" onClick={this.handleClickCreateChannel} />
 							</span>
@@ -499,7 +546,16 @@ export class SimpleChannelPanel extends Component {
 	};
 }
 
-const mapStateToProps = ({ context, preferences, streams, users, teams, umis, session }) => {
+const mapStateToProps = ({
+	configs,
+	context,
+	preferences,
+	streams,
+	users,
+	teams,
+	umis,
+	session
+}) => {
 	const team = teams[context.currentTeamId];
 
 	const teamMembers = team.memberIds.map(id => users[id]).filter(Boolean);
@@ -552,10 +608,11 @@ const mapStateToProps = ({ context, preferences, streams, users, teams, umis, se
 		channelStreams,
 		directMessageStreams,
 		serviceStreams,
+		muteAll: configs.muteAll,
 		mutedStreams: preferences.mutedStreams || {},
 		meStreamId,
 		streamPresence,
-		team: teams[context.currentTeamId]
+		team: team
 	};
 };
 
@@ -565,6 +622,8 @@ export default connect(
 		changeStreamMuteState,
 		closeDirectMessage,
 		createStream,
-		setCurrentStream
+		setUserPreference,
+		setCurrentStream,
+		muteAllConversations
 	}
 )(SimpleChannelPanel);

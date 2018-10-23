@@ -136,6 +136,20 @@ export default class WebviewApi {
 		});
 	}
 
+	showMarkersInEditor(value: Boolean) {
+		return this.postMessage({
+			action: "show-markers",
+			params: value
+		});
+	}
+
+	muteAllConversations(value: Boolean) {
+		return this.postMessage({
+			action: "mute-all",
+			params: value
+		});
+	}
+
 	saveUserPreference(newPreference: object) {
 		return this.postMessage({ action: "save-user-preference", params: newPreference });
 	}

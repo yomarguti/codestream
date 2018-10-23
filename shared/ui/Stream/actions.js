@@ -30,6 +30,14 @@ export const markPostUnread = (streamId, postId) => (dispatch, getState, { api }
 	// return dispatch({ type: "CLEAR_UMI", payload: streamId });
 };
 
+export const showMarkersInEditor = value => (dispatch, getState, { api }) => {
+	api.showMarkersInEditor(value);
+};
+
+export const muteAllConversations = value => (dispatch, getState, { api }) => {
+	api.muteAllConversations(value);
+};
+
 export const createPost = (streamId, parentPostId, text, codeBlocks, mentions, extra) => async (
 	dispatch,
 	getState,

@@ -73,8 +73,11 @@ export class SimpleCreateChannelPanel extends Component {
 		return (
 			<div className={createChannelPanelClass} ref={this._createChannelPanel}>
 				<div className="panel-header">
-					<span className="align-left-button" onClick={() => this.props.setActivePanel("channels")}>
-						<Icon name="chevron-left" className="show-channels-icon" />
+					<span
+						className="align-right-button"
+						onClick={() => this.props.setActivePanel("channels")}
+					>
+						<Icon name="x" className="clickable" />
 					</span>
 					<span className="panel-title">New Channel</span>
 				</div>
@@ -87,31 +90,12 @@ export class SimpleCreateChannelPanel extends Component {
 						</p>
 						<div id="controls">
 							<div id="privacy-controls" className="control-group">
-								<label>Privacy</label>
-								<Tooltip
-									title="Private channels are only visible to people you invite"
-									placement="bottom"
-									delay=".5"
-								>
-									<div className="radio-group">
-										<input
-											id="radio-privacy-public"
-											type="radio"
-											name="privacy"
-											checked={this.state.privacy === "public"}
-											onChange={e => this.setState({ privacy: "public" })}
-										/>
-										<label htmlFor="radio-privacy-public">Public</label>
-										<input
-											id="radio-privacy-private"
-											type="radio"
-											name="privacy"
-											checked={this.state.privacy === "private"}
-											onChange={e => this.setState({ privacy: "private" })}
-										/>
-										<label htmlFor="radio-privacy-private">Private</label>
-									</div>
-								</Tooltip>
+								<div
+									className={createClassString("switch public-private", {
+										checked: this.state.privacy === "private"
+									})}
+									onClick={this.togglePrivacy}
+								/>
 							</div>
 							<div id="name-controls" className="control-group">
 								<label>Channel Name</label>
@@ -192,6 +176,10 @@ export class SimpleCreateChannelPanel extends Component {
 			</div>
 		);
 	}
+
+	togglePrivacy = () => {
+		this.setState({ privacy: this.state.privacy === "public" ? "private" : "public" });
+	};
 
 	setStateName = name => {
 		if (this.props.isSlackTeam) this.setState({ name: name.toLowerCase() });

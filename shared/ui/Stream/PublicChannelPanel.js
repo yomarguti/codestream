@@ -38,26 +38,34 @@ export class SimplePublicChannelPanel extends Component {
 			"off-right": inactive && !shrink
 		});
 
+		// 	<span onClick={this.showChannels} className="align-left-button">
+		// 	<Icon name="chevron-left" className="show-channels-icon" />
+		// </span>
+		// <span className="panel-title">All Channels</span>
+		// <span onClick={this.handleClickCreateChannel} className="align-right-button">
+		// 	<Tooltip title="Create a Channel" placement="bottom" delay="0.5">
+		// 		<span>
+		// 			<Icon name="plus" />
+		// 		</span>
+		// 	</Tooltip>
+		// </span>
 		return (
 			<div className={panelClass}>
-				<div className="panel-header">
-					<span onClick={this.showChannels} className="align-left-button">
-						<Icon name="chevron-left" className="show-channels-icon" />
-					</span>
-					<span className="panel-title">All Channels</span>
-					<span onClick={this.handleClickCreateChannel} className="align-right-button">
-						<Tooltip title="Create a Channel" placement="bottom" delay="0.5">
+				<div className="filters">
+					<span
+						onClick={() => this.props.setActivePanel("channels")}
+						className="align-right-button"
+					>
+						<Tooltip title="Cancel" placement="bottom" delay="0.5">
 							<span>
-								<Icon name="plus" />
+								<Icon name="x" className="button" />
 							</span>
 						</Tooltip>
 					</span>
+					Channels are where your dev team discusses projects, repos, or code in general. You might
+					create one channel per repo, or one per client.
 				</div>
 				<div className="channel-list postslist vscroll">
-					<p className="explainer">
-						Channels are where your dev team discusses projects, repos, or code in general. You
-						might create one channel per repo, or one per client.
-					</p>
 					<div className="section">
 						<div className="header">Channels you can join</div>
 						<ul onClick={this.handleClickJoinStream}>

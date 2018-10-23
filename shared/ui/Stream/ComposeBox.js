@@ -115,7 +115,9 @@ class ComposeBox extends React.Component {
 			// unless it is a &nbsp;, which is difficult to insert
 			// so we insert this unicode character instead
 			const newText = usernames.join(", ") + ":\u00A0";
-			this.insertTextAtCursor(newText);
+			this.focus(true);
+			this.insertIfEmpty(usernames.join(", "));
+			// this.insertTextAtCursor(newText);
 		}
 	};
 
@@ -717,6 +719,7 @@ class ComposeBox extends React.Component {
 													</option>
 												);
 											})}
+											<hr />
 											{Object.values(this.props.directMessageStreams).map(channel => {
 												return (
 													<option key={channel.id} value={channel.id} id={channel.id}>

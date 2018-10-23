@@ -392,11 +392,11 @@ class Post extends React.Component {
 	};
 
 	goToThread = () => {
-		this.props.action("make-thread", this.props.post);
+		this.props.action("goto-thread", this.props.post);
 	};
 
 	toggleStatus = () => {
-		console.log("WE CLICKED TOG STAT", this.props.post);
+		// console.log("WE CLICKED TOG STAT", this.props.post);
 		if (this.props.post.status === "closed") this.reopenIssue();
 		else this.closeIssue();
 	};
@@ -515,19 +515,28 @@ class Post extends React.Component {
 	};
 
 	renderIcons = () => {
-		return (
-			<div className="align-right">
-				<Tooltip title="Add Reaction" placement="above">
-					<Icon name="smiley" className="smiley" onClick={this.handleReactionClick} />
-				</Tooltip>
-				{this.state.emojiOpen && (
-					<EmojiPicker addEmoji={this.addReaction} target={this.state.emojiTarget} />
-				)}
-				<Tooltip title="More Options..." placement="above">
-					<Icon name="gear" className="gear" onClick={this.handleMenuClick} />
-				</Tooltip>
-			</div>
-		);
+		if (this.props.collapsed)
+			return (
+				<div className="align-right">
+					<Tooltip title="View Details" placement="above">
+						<Icon name="chevron-right" className="chevron-right" onClick={this.goToThread} />
+					</Tooltip>
+				</div>
+			);
+		else
+			return (
+				<div className="align-right">
+					<Tooltip title="Add Reaction" placement="above">
+						<Icon name="smiley" className="smiley" onClick={this.handleReactionClick} />
+					</Tooltip>
+					{this.state.emojiOpen && (
+						<EmojiPicker addEmoji={this.addReaction} target={this.state.emojiTarget} />
+					)}
+					<Tooltip title="More Options..." placement="above">
+						<Icon name="gear" className="gear" onClick={this.handleMenuClick} />
+					</Tooltip>
+				</div>
+			);
 	};
 
 	renderEmote = post => {

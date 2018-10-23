@@ -45,6 +45,7 @@ export class SimpleStream extends Component {
 		super(props);
 
 		this.state = {
+			topTab: "chat",
 			threadId: props.initialThreadId,
 			threadTrigger: null
 		};
@@ -62,7 +63,8 @@ export class SimpleStream extends Component {
 		// this listener pays attention to when the input field resizes,
 		// presumably because the user has typed more than one line of text
 		// in it, and calls a function to handle the new size
-		new ResizeObserver(this.handleResizeCompose).observe(this._compose.current);
+		if (this._compose.current)
+			new ResizeObserver(this.handleResizeCompose).observe(this._compose.current);
 
 		// go ahead and do resizing because some environments (VS Code) have a
 		// polyfill for ResizeObserver which won't be triggered automatically
@@ -123,9 +125,14 @@ export class SimpleStream extends Component {
 		}
 	}
 
-	componentWillUnmount() {
+	componentWillUnmount = () => {
 		this.disposables.forEach(d => d.dispose());
-	}
+	};
+
+	goToThread = post => {
+		const threadId = post.parentPostId || post.id;
+		this.handleStreamThreadSelected({ streamId: post.postStreamId, threadId });
+	};
 
 	handleStreamThreadSelected = async ({ streamId, threadId }) => {
 		if (streamId !== this.props.postStreamId) {
@@ -213,7 +220,7 @@ export class SimpleStream extends Component {
 	};
 
 	resizeStream = () => {
-		if (!this._div || !this._compose) return;
+		if (!this._div || !this._compose || !this._header) return;
 
 		if (this.state.multiCompose) return;
 
@@ -228,8 +235,8 @@ export class SimpleStream extends Component {
 		const padding = composeHeight + headerHeight;
 		// this._div.style.paddingBottom = padding + "px";
 
-		this._mainPanel.style.paddingBottom = padding + "px";
-		this._threadPanel.style.paddingBottom = padding + "px";
+		if (this._mainPanel) this._mainPanel.style.paddingBottom = padding + "px";
+		if (this._threadPanel) this._threadPanel.style.paddingBottom = padding + "px";
 
 		safe(() => this._postslist.resize());
 		// safe(() => this._threadpostslist.resize());
@@ -326,7 +333,11 @@ export class SimpleStream extends Component {
 	// to be able to animate between the two streams, since they will both be
 	// visible during the transition
 	render() {
-		const { activePanel, configs, umis } = this.props;
+		const { configs, umis, postStreamStarred } = this.props;
+		let { activePanel } = this.props;
+		const { searchBarOpen, q } = this.state;
+		let postStreamPurpose = "For the benefit of Mr. Kite";
+		if (searchBarOpen && q) activePanel = "knowledge";
 
 		const streamClass = createClassString({
 			stream: true,
@@ -409,166 +420,316 @@ export class SimpleStream extends Component {
 			""
 		);
 
+		// 	<span className="open-menu">
+		// 	<Icon name="triangle-down" />
+		// </span>
+
+		const memberCount = (this.props.postStreamMemberIds || []).length;
+
 		return (
-			<div className={streamClass} ref={ref => (this._div = ref)}>
+			<div className={streamClass}>
 				<div id="modal-root" />
 				<div id="confirm-root" />
 				<div id="focus-trap" className={createClassString({ active: !this.props.hasFocus })} />
-				<ChannelPanel
-					activePanel={activePanel}
-					setActivePanel={this.setActivePanel}
-					setKnowledgeType={this.setKnowledgeType}
-					setMultiCompose={this.setMultiCompose}
-					runSlashCommand={this.runSlashCommand}
-					isSlackTeam={this.props.isSlackTeam}
-				/>
-				<KnowledgePanel
-					activePanel={activePanel}
-					setActivePanel={this.setActivePanel}
-					knowledgeType={this.state.knowledgeType}
-					usernames={this.props.usernamesRegexp}
-					currentUserId={this.props.currentUserId}
-					currentUserName={this.props.currentUserName}
-					postAction={this.postAction}
-					setMultiCompose={this.setMultiCompose}
-				/>
-				<PublicChannelPanel
-					activePanel={activePanel}
-					setActivePanel={this.setActivePanel}
-					isSlackTeam={this.props.isSlackTeam}
-				/>
-				<CreateChannelPanel
-					activePanel={activePanel}
-					setActivePanel={this.setActivePanel}
-					isSlackTeam={this.props.isSlackTeam}
-				/>
-				<CreateDMPanel
-					activePanel={activePanel}
-					setActivePanel={this.setActivePanel}
-					isSlackTeam={this.props.isSlackTeam}
-				/>
-				<InvitePanel
-					activePanel={activePanel}
-					setActivePanel={this.setActivePanel}
-					isSlackTeam={this.props.isSlackTeam}
-				/>
-				<div className={mainPanelClass} ref={ref => (this._mainPanel = ref)}>
-					<div className="panel-header" ref={ref => (this._header = ref)}>
-						<span onClick={this.showChannels} className={umisClass}>
-							<Icon name="chevron-left" className="show-channels-icon" />
-							{totalUMICount}
-						</span>
-						<Debug text={this.props.postStreamId}>
-							<Tooltip title={this.props.postStreamPurpose} placement="bottom">
-								<span>
-									{channelIcon} {this.props.postStreamName}
-								</span>
+				{this.state.searchBarOpen && (
+					<div className="search-bar">
+						<input
+							name="q"
+							className="native-key-bindings input-text control"
+							type="text"
+							ref={ref => (this._searchInput = ref)}
+							onChange={e => this.setState({ q: e.target.value })}
+							placeholder="Search Markers"
+						/>
+						<span className="align-right-button" onClick={this.handleClickSearch}>
+							<Tooltip title="Cancel">
+								<Icon name="x" className="cancel-icon" />
 							</Tooltip>
-						</Debug>
-						{this.props.postStreamType !== "direct" && (
-							<span className="align-right-button" onClick={this.handleClickStreamSettings}>
-								<Tooltip title="Channel Settings">
-									<Icon name="gear" className="show-settings" />
-								</Tooltip>
-								{menuActive && (
-									<ChannelMenu
-										stream={this.props.postStream}
-										target={this.state.menuTarget}
-										umiCount={0}
-										isMuted={this.props.mutedStreams[this.props.postStreamId]}
-										setActivePanel={this.setActivePanel}
-										runSlashCommand={this.runSlashCommand}
-										closeMenu={this.closeMenu}
-									/>
-								)}
+						</span>
+					</div>
+				)}
+				{!this.state.searchBarOpen && (
+					<div className="top-tab-group">
+						<label
+							className={createClassString({
+								checked: activePanel === "knowledge",
+								muted: !this.props.configs.showMarkers
+							})}
+							onClick={e => this.setActivePanel("knowledge")}
+						>
+							<span>
+								{!this.props.configs.showMarkers && <Icon name="mute" className="mute" />}
+								Markers
 							</span>
-						)}
+						</label>
+						<label
+							className={createClassString({
+								checked: activePanel === "channels",
+								muted: this.props.configs.muteAll
+							})}
+							onClick={e => this.setActivePanel("channels")}
+						>
+							<span>
+								{this.props.configs.muteAll && <Icon name="mute" className="mute" />}
+								Channels
+								{!this.props.configs.muteAll && <span className={umisClass}>{totalUMICount}</span>}
+							</span>
+						</label>
+						<label
+							className={createClassString({ checked: activePanel === "main" })}
+							onClick={e => this.setActivePanel("main")}
+						>
+							<span>
+								{channelIcon} {this.props.postStreamName}
+							</span>
+						</label>
+						<div className="fill-tab">
+							<span className="align-right-button" onClick={this.handleClickSearch}>
+								<Tooltip title="Search Markers" placement="bottomRight">
+									<span>
+										<Icon name="search" className="search-icon button" />
+									</span>
+								</Tooltip>
+							</span>
+							<span
+								className="align-right-button"
+								onClick={e => {
+									this.setMultiCompose(true);
+								}}
+							>
+								<Tooltip title="Create Marker" placement="bottomRight">
+									<span>
+										<Icon name="plus" className="button" />
+									</span>
+								</Tooltip>
+							</span>
+						</div>
 					</div>
-					<OfflineBanner />
-					<div className="shadow-overlay">
-						<div className={unreadsAboveClass} type="above" onClick={this.handleClickUnreads}>
-							&uarr; Unread Messages &uarr;
-						</div>
-						<div className={unreadsBelowClass} type="below" onClick={this.handleClickUnreads}>
-							&darr; Unread Messages &darr;
-						</div>
-						<div className="shadow-container">
-							<div className="shadow shadow-top" />
-							<div className="shadow shadow-bottom" />
-						</div>
-						<div style={{ height: "100%" }} onClick={this.handleClickPost} id={streamDivId}>
-							<PostList
-								ref={this.setPostsListRef}
-								isActive={this.props.activePanel === "main"}
-								hasFocus={this.props.hasFocus}
-								newMessagesAfterSeqNum={this.state.newMessagesAfterSeqNum}
-								usernamesRegexp={this.props.usernamesRegexp}
-								teammates={this.props.teammates}
-								currentUserId={this.props.currentUserId}
-								currentUserName={this.props.currentUserName}
-								editingPostId={this.state.editingPostId}
-								postAction={this.postAction}
-								onDidChangeVisiblePosts={this.handleDidChangeVisiblePosts}
-								streamId={this.props.postStreamId}
-								teamId={this.props.teamId}
-								markRead={this.checkMarkStreamRead}
-								renderIntro={() => (
-									<div className="intro" ref={ref => (this._intro = ref)}>
-										{this.renderIntro(
+				)}
+				<div
+					style={{ position: "relative", height: "90%", overflow: "hidden" }}
+					ref={ref => (this._div = ref)}
+				>
+					{activePanel === "knowledge" && (
+						<KnowledgePanel
+							activePanel={activePanel}
+							setActivePanel={this.setActivePanel}
+							knowledgeType="comment"
+							q={q}
+							usernames={this.props.usernamesRegexp}
+							currentUserId={this.props.currentUserId}
+							currentUserName={this.props.currentUserName}
+							postAction={this.postAction}
+							setMultiCompose={this.setMultiCompose}
+						/>
+					)}
+					{activePanel === "channels" && (
+						<ChannelPanel
+							activePanel={activePanel}
+							setActivePanel={this.setActivePanel}
+							setKnowledgeType={this.setKnowledgeType}
+							setMultiCompose={this.setMultiCompose}
+							runSlashCommand={this.runSlashCommand}
+							isSlackTeam={this.props.isSlackTeam}
+						/>
+					)}
+
+					{activePanel === "public-channels" && (
+						<PublicChannelPanel
+							activePanel={activePanel}
+							setActivePanel={this.setActivePanel}
+							isSlackTeam={this.props.isSlackTeam}
+						/>
+					)}
+					{activePanel === "create-channel" && (
+						<CreateChannelPanel
+							activePanel={activePanel}
+							setActivePanel={this.setActivePanel}
+							isSlackTeam={this.props.isSlackTeam}
+						/>
+					)}
+					{activePanel === "create-dm" && (
+						<CreateDMPanel activePanel={activePanel} setActivePanel={this.setActivePanel} />
+					)}
+					{activePanel === "invite" && (
+						<InvitePanel
+							activePanel={activePanel}
+							setActivePanel={this.setActivePanel}
+							isSlackTeam={this.props.isSlackTeam}
+						/>
+					)}
+					{activePanel === "main" && (
+						<div className={mainPanelClass} ref={ref => (this._mainPanel = ref)}>
+							<div
+								style={{ display: "none" }}
+								className="panel-header"
+								ref={ref => (this._header = ref)}
+							>
+								<span onClick={this.showChannels} className="align-left-button">
+									<Icon name="chevron-left" className="show-channels-icon" />
+								</span>
+								<Tooltip title={this.props.postStreamPurpose} placement="bottom">
+									<span>
+										{channelIcon} {this.props.postStreamName}
+									</span>
+								</Tooltip>
+								{this.props.postStreamType !== "direct" && (
+									<span className="align-right-button" onClick={this.handleClickStreamSettings}>
+										<Tooltip title="Channel Settings" placement="bottomRight">
 											<span>
-												{channelIcon}
-												{this.props.postStreamName}
+												<Icon name="gear" className="show-settings" />
 											</span>
+										</Tooltip>
+										{menuActive && (
+											<ChannelMenu
+												stream={this.props.postStream}
+												target={this.state.menuTarget}
+												umiCount={0}
+												isMuted={this.props.mutedStreams[this.props.postStreamId]}
+												setActivePanel={this.setActivePanel}
+												runSlashCommand={this.runSlashCommand}
+												closeMenu={this.closeMenu}
+											/>
 										)}
-									</div>
+									</span>
 								)}
-							/>
+							</div>
+							<div className="filters">
+								<span className="align-right-button" onClick={this.handleClickStreamSettings}>
+									<Tooltip title="Channel Settings" placement="left">
+										<span>
+											<Icon name="gear" className="show-settings" />
+										</span>
+									</Tooltip>
+									{menuActive && (
+										<ChannelMenu
+											stream={this.props.postStream}
+											target={this.state.menuTarget}
+											umiCount={0}
+											isMuted={this.props.mutedStreams[this.props.postStreamId]}
+											setActivePanel={this.setActivePanel}
+											runSlashCommand={this.runSlashCommand}
+											closeMenu={this.closeMenu}
+										/>
+									)}
+								</span>
+								<Tooltip title="Star this channel" placement="bottomLeft">
+									<span className="clickable" onClick={this.starChannel}>
+										<Icon
+											name="star"
+											className={createClassString("smaller", {
+												checked: this.state.postChannelStarred
+												// checked: postStreamStarred
+											})}
+										/>
+									</span>
+								</Tooltip>
+								<div className="sep" />
+								{memberCount > 2 && (
+									<Tooltip title="View member list" placement="bottomLeft">
+										<span className="clickable" onClick={e => this.runSlashCommand("who")}>
+											<Icon name="person" className="smaller" /> {memberCount}
+										</span>
+									</Tooltip>
+								)}
+								{memberCount > 2 && <div className="sep" />}
+								<Tooltip title="View pinned items" placement="bottomLeft">
+									<span className="clickable" onClick={this.showPinnedPosts}>
+										<Icon name="pin" className="smaller" />
+									</span>
+								</Tooltip>
+								{postStreamPurpose && <div className="sep" />}
+								{postStreamPurpose}
+							</div>
+							<OfflineBanner />
+							<div className="shadow-overlay">
+								<div className={unreadsAboveClass} type="above" onClick={this.handleClickUnreads}>
+									&uarr; Unread Messages &uarr;
+								</div>
+								<div className={unreadsBelowClass} type="below" onClick={this.handleClickUnreads}>
+									&darr; Unread Messages &darr;
+								</div>
+								<div className="shadow-container">
+									<div className="shadow shadow-top" />
+									<div className="shadow shadow-bottom" />
+								</div>
+								<div style={{ height: "100%" }} onClick={this.handleClickPost} id={streamDivId}>
+									<PostList
+										ref={this.setPostsListRef}
+										isActive={this.props.activePanel === "main"}
+										hasFocus={this.props.hasFocus}
+										newMessagesAfterSeqNum={this.state.newMessagesAfterSeqNum}
+										usernamesRegexp={this.props.usernamesRegexp}
+										teammates={this.props.teammates}
+										currentUserId={this.props.currentUserId}
+										currentUserName={this.props.currentUserName}
+										editingPostId={this.state.editingPostId}
+										postAction={this.postAction}
+										onDidChangeVisiblePosts={this.handleDidChangeVisiblePosts}
+										streamId={this.props.postStreamId}
+										teamId={this.props.teamId}
+										markRead={this.checkMarkStreamRead}
+										renderIntro={() => (
+											<div className="intro" ref={ref => (this._intro = ref)}>
+												{this.renderIntro(
+													<span>
+														{channelIcon}
+														{this.props.postStreamName}
+													</span>
+												)}
+											</div>
+										)}
+									/>
+								</div>
+							</div>
 						</div>
-					</div>
-				</div>
-				<div className={threadPanelClass} ref={ref => (this._threadPanel = ref)}>
-					<div id="close-thread" className="panel-header" onClick={this.handleDismissThread}>
-						<span className="align-left-button">
-							<Icon
-								name="chevron-left"
-								onClick={this.showChannels}
-								className="show-channels-icon"
-							/>
-							<label>
-								Back <span className="keybinding">(esc)</span>
-							</label>
-						</span>
-						<span>
-							<label>Thread</label>
-						</span>
-					</div>
-					<OfflineBanner />
-					<div className="shadow-overlay">
-						<div className="shadow-container">
-							<div className="shadow shadow-top" />
-							<div className="shadow shadow-bottom" />
+					)}
+					{activePanel === "thread" && (
+						<div className={threadPanelClass} ref={ref => (this._threadPanel = ref)}>
+							<div id="close-thread" className="panel-header" onClick={this.handleDismissThread}>
+								<span className="align-left-button">
+									<Icon
+										name="chevron-left"
+										onClick={this.showChannels}
+										className="show-channels-icon"
+									/>
+									<label>
+										Back <span className="keybinding">(esc)</span>
+									</label>
+								</span>
+								<span>
+									<label>Thread</label>
+								</span>
+							</div>
+							<OfflineBanner />
+							<div className="shadow-overlay">
+								<div className="shadow-container">
+									<div className="shadow shadow-top" />
+									<div className="shadow shadow-bottom" />
+								</div>
+								<div className={threadPostsListClass} onClick={this.handleClickPost}>
+									<div className="shadow-cover-top" />
+									<PostList
+										ref={this.setThreadListRef}
+										isActive={this.props.activePanel === "thread"}
+										hasFocus={this.props.hasFocus}
+										usernamesRegexp={this.props.usernamesRegexp}
+										teammates={this.props.teammates}
+										currentUserId={this.props.currentUserId}
+										currentUserName={this.props.currentUserName}
+										editingPostId={this.state.editingPostId}
+										postAction={this.postAction}
+										streamId={this.props.postStreamId}
+										isThread
+										threadId={threadId}
+										threadTrigger={this.state.threadTrigger}
+										teamId={this.props.teamId}
+									/>
+									<div className="shadow-cover-bottom" />
+								</div>
+							</div>
 						</div>
-						<div className={threadPostsListClass} onClick={this.handleClickPost}>
-							<div className="shadow-cover-top" />
-							<PostList
-								ref={this.setThreadListRef}
-								isActive={this.props.activePanel === "thread"}
-								hasFocus={this.props.hasFocus}
-								usernamesRegexp={this.props.usernamesRegexp}
-								teammates={this.props.teammates}
-								currentUserId={this.props.currentUserId}
-								currentUserName={this.props.currentUserName}
-								editingPostId={this.state.editingPostId}
-								postAction={this.postAction}
-								streamId={this.props.postStreamId}
-								isThread
-								threadId={threadId}
-								threadTrigger={this.state.threadTrigger}
-								teamId={this.props.teamId}
-							/>
-							<div className="shadow-cover-bottom" />
-						</div>
-					</div>
+					)}
 				</div>
 				<ComposeBox
 					placeholder={placeholderText}
@@ -594,6 +755,33 @@ export class SimpleStream extends Component {
 			</div>
 		);
 	}
+
+	starChannel = () => {
+		this.setState({ postChannelStarred: !this.state.postChannelStarred });
+	};
+
+	showPinnedPosts = () => {
+		return this.notImplementedYet();
+	};
+
+	handleClickSearch = e => {
+		e.stopPropagation();
+		const { searchBarOpen } = this.state;
+
+		if (searchBarOpen) this.setState({ q: null });
+		else
+			setTimeout(() => {
+				this._searchInput.focus();
+			}, 20);
+		this.setState({ searchBarOpen: !searchBarOpen });
+	};
+
+	setTopTab = type => {
+		this.setState({ topTab: type });
+		setTimeout(() => {
+			// this.focusInput();
+		}, 20);
+	};
 
 	setMultiCompose = value => {
 		this.setState({ multiCompose: value });
@@ -746,6 +934,8 @@ export class SimpleStream extends Component {
 		switch (action) {
 			case "make-thread":
 				return this.selectPost(post.id, true);
+			case "goto-thread":
+				return this.goToThread(post);
 			case "edit-post":
 				return this.setState({ editingPostId: post.id });
 			case "delete-post":
@@ -1435,7 +1625,8 @@ const mapStateToProps = ({
 	const fileStream =
 		getStreamForRepoAndFile(streams, context.currentRepoId, context.currentFile) || {};
 
-	const teamMembers = teams[context.currentTeamId].memberIds.map(id => users[id]).filter(Boolean);
+	const team = teams[context.currentTeamId];
+	const teamMembers = team.memberIds.map(id => users[id]).filter(Boolean);
 	// console.log("MEMBER IDS ARE: ", teams[context.currentTeamId].memberIds);
 	// console.log("USERS ARE: ", users);
 	// this usenames regexp is a pipe-separated list of
@@ -1512,12 +1703,14 @@ const mapStateToProps = ({
 		postStreamId: postStream.id,
 		postStreamName,
 		postStreamPurpose: postStream.purpose,
+		postStreamStarred: postStream.starred,
 		postStreamType: postStream.type,
 		postStreamIsTeamStream: postStream.isTeamStream,
 		postStreamMemberIds: postStream.memberIds,
 		isPrivate: postStream.privacy === "private",
 		fileStreamId: fileStream.id,
 		teamId: context.currentTeamId,
+		teamName: team.name || "",
 		repoId: context.currentRepoId,
 		hasFocus: context.hasFocus,
 		firstTimeInAtom: onboarding.firstTimeInAtom,

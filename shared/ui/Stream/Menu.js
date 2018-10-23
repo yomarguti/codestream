@@ -25,6 +25,11 @@ export default class Menu extends Component {
 			if (this.props.align === "left") {
 				// const left = rect.right - this._div.offsetWidth + 5;
 				// this._div.style.left = left + "px";
+			} else if (this.props.align === "center") {
+				const targetMiddle = (rect.right + rect.left) / 2;
+				const left = targetMiddle - this._div.offsetWidth / 2 + 5;
+				this._div.style.left = left + "px";
+				console.log("LEFT IS: ", left);
 			} else {
 				const left = rect.right - this._div.offsetWidth + 5;
 				this._div.style.left = left + "px";
