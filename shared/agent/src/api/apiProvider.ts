@@ -1,6 +1,8 @@
 import { RequestInit, Response } from "node-fetch";
 import { Disposable, Event } from "vscode-languageserver";
 import {
+	SetStreamPurposeRequest,
+	SetStreamPurposeResponse,
 	AccessToken,
 	CreateChannelStreamRequest,
 	CreateChannelStreamResponse,
@@ -242,6 +244,7 @@ export interface ApiProvider {
 	updateStreamMembership(
 		request: UpdateStreamMembershipRequest
 	): Promise<UpdateStreamMembershipResponse>;
+	setStreamPurpose(request: SetStreamPurposeRequest): Promise<SetStreamPurposeResponse>;
 
 	fetchTeams(request: FetchTeamsRequest): Promise<FetchTeamsResponse>;
 	getTeam(request: GetTeamRequest): Promise<GetTeamResponse>;

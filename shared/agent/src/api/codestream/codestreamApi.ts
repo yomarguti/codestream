@@ -42,7 +42,8 @@ import {
 	UpdatePreferencesRequest,
 	UpdatePresenceRequest,
 	UpdateStreamMembershipRequest,
-	UpdateStreamRequest
+	UpdateStreamRequest,
+	SetStreamPurposeRequest
 } from "../../shared/agent.protocol";
 import {
 	CompleteSignupRequest,
@@ -707,6 +708,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 			request.push,
 			this._token
 		);
+	}
+
+	@log()
+	setStreamPurpose(request: SetStreamPurposeRequest) {
+		return this.updateStream({ streamId: request.streamId, changes: { purpose: request.purpose } });
 	}
 
 	// // async addUserToStream(streamId: string, userId: string, teamId?: string) {

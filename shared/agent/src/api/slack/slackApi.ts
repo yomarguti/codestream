@@ -43,7 +43,9 @@ import {
 	UpdateStreamMembershipRequest,
 	UpdateStreamMembershipResponse,
 	UpdateStreamRequest,
-	UpdateStreamResponse
+	UpdateStreamResponse,
+	SetStreamPurposeRequest,
+	SetStreamPurposeResponse
 } from "../../shared/agent.protocol";
 import {
 	CSChannelStream,
@@ -1238,6 +1240,11 @@ export class SlackApiProvider implements ApiProvider {
 	updateStreamMembership(
 		request: UpdateStreamMembershipRequest
 	): Promise<UpdateStreamMembershipResponse> {
+		throw new Error("Method not implemented.");
+	}
+
+	@log()
+	setStreamPurpose(request: SetStreamPurposeRequest): Promise<SetStreamPurposeResponse> {
 		throw new Error("Method not implemented.");
 	}
 

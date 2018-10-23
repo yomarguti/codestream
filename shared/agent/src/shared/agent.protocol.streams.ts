@@ -185,3 +185,19 @@ export const UpdateStreamMembershipRequestType = new RequestType<
 	void,
 	void
 >("codeStream/stream/updateMembership");
+
+export interface SetStreamPurposeRequest {
+	streamId: string;
+	purpose: string;
+}
+
+export interface SetStreamPurposeResponse {
+	stream: CSStream;
+}
+
+export const SetStreamPurposeRequestType = new RequestType<
+	SetStreamPurposeRequest,
+	SetStreamPurposeResponse,
+	void,
+	void
+>("codeStream/stream/setPurpose");
