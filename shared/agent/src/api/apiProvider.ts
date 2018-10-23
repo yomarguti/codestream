@@ -64,6 +64,8 @@ import {
 	MarkStreamReadResponse,
 	ReactToPostRequest,
 	ReactToPostResponse,
+	RenameStreamRequest,
+	RenameStreamResponse,
 	SetStreamPurposeRequest,
 	SetStreamPurposeResponse,
 	UpdateMarkerRequest,
@@ -245,6 +247,7 @@ export interface ApiProvider {
 		request: UpdateStreamMembershipRequest
 	): Promise<UpdateStreamMembershipResponse>;
 	setStreamPurpose(request: SetStreamPurposeRequest): Promise<SetStreamPurposeResponse>;
+	renameStream(request: RenameStreamRequest): Promise<RenameStreamResponse>;
 
 	fetchTeams(request: FetchTeamsRequest): Promise<FetchTeamsResponse>;
 	getTeam(request: GetTeamRequest): Promise<GetTeamResponse>;

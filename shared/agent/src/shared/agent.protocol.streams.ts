@@ -201,3 +201,19 @@ export const SetStreamPurposeRequestType = new RequestType<
 	void,
 	void
 >("codeStream/stream/setPurpose");
+
+export interface RenameStreamRequest {
+	streamId: string;
+	name: string;
+}
+
+export interface RenameStreamResponse {
+	stream: CSStream;
+}
+
+export const RenameStreamRequestType = new RequestType<
+	RenameStreamRequest,
+	RenameStreamResponse,
+	void,
+	void
+>("codeStream/stream/rename");

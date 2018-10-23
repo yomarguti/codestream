@@ -38,6 +38,7 @@ import {
 	MarkPostUnreadRequest,
 	MarkStreamReadRequest,
 	ReactToPostRequest,
+	RenameStreamRequest,
 	SetStreamPurposeRequest,
 	UpdateMarkerRequest,
 	UpdatePreferencesRequest,
@@ -713,6 +714,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 	@log()
 	setStreamPurpose(request: SetStreamPurposeRequest) {
 		return this.updateStream({ streamId: request.streamId, changes: { purpose: request.purpose } });
+	}
+
+	@log()
+	renameStream(request: RenameStreamRequest) {
+		return this.updateStream({ streamId: request.streamId, changes: { name: request.name } });
 	}
 
 	// // async addUserToStream(streamId: string, userId: string, teamId?: string) {

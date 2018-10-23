@@ -27,6 +27,9 @@ import {
 	MarkStreamReadRequest,
 	MarkStreamReadRequestType,
 	MarkStreamReadResponse,
+	RenameStreamRequest,
+	RenameStreamRequestType,
+	RenameStreamResponse,
 	SetStreamPurposeRequest,
 	SetStreamPurposeRequestType,
 	SetStreamPurposeResponse,
@@ -153,6 +156,11 @@ export class StreamsManager extends CachedEntityManagerBase<CSChannelStream | CS
 	@lspHandler(SetStreamPurposeRequestType)
 	setStreamPurpose(request: SetStreamPurposeRequest): Promise<SetStreamPurposeResponse> {
 		return this.session.api.setStreamPurpose(request);
+	}
+
+	@lspHandler(RenameStreamRequestType)
+	renameStream(request: RenameStreamRequest): Promise<RenameStreamResponse> {
+		return this.session.api.renameStream(request);
 	}
 
 	@lspHandler(GetStreamRequestType)

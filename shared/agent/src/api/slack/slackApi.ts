@@ -37,6 +37,8 @@ import {
 	MarkPostUnreadRequest,
 	MarkStreamReadRequest,
 	ReactToPostRequest,
+	RenameStreamRequest,
+	RenameStreamResponse,
 	SetStreamPurposeRequest,
 	SetStreamPurposeResponse,
 	UpdateMarkerRequest,
@@ -1245,6 +1247,11 @@ export class SlackApiProvider implements ApiProvider {
 
 	@log()
 	setStreamPurpose(request: SetStreamPurposeRequest): Promise<SetStreamPurposeResponse> {
+		throw new Error("Method not implemented.");
+	}
+
+	@log()
+	renameStream(request: RenameStreamRequest): Promise<RenameStreamResponse> {
 		throw new Error("Method not implemented.");
 	}
 
