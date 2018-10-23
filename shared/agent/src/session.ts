@@ -49,6 +49,7 @@ import {
 	LoginResult
 } from "./shared/api.protocol";
 import { Strings } from "./system";
+import { memoize } from "./system/decorators";
 
 const envRegex = /https?:\/\/(pd-|qa-)?api.codestream.(?:us|com)/;
 
@@ -62,6 +63,12 @@ const loginApiErrorMappings: { [k: string]: ApiErrors } = {
 	"RAPI-1003": ApiErrors.NotFound,
 	"USRC-1012": ApiErrors.NotOnTeam
 };
+
+export interface VersionInfo {
+	readonly ideVersion: string;
+	readonly extensionVersion: string;
+	readonly extensionBuild: string;
+}
 
 export class CodeStreamSession {
 	private _onDidChangeMarkerLocations = new Emitter<CSMarkerLocations[]>();
@@ -116,11 +123,7 @@ export class CodeStreamSession {
 		);
 		Container.initialize(this);
 
-		this._api = new CodeStreamApiProvider(_options.serverUrl, {
-			ideVersion: _options.ideVersion,
-			extensionVersion: _options.extensionVersion,
-			extensionBuild: _options.extensionBuild
-		});
+		this._api = new CodeStreamApiProvider(_options.serverUrl, this.versionInfo);
 
 		const versionManager = new VersionMiddlewareManager(this._api);
 		versionManager.onDidChangeCompatibility(this.onVersionCompatibilityChanged, this);
@@ -234,6 +237,15 @@ export class CodeStreamSession {
 	private _userId: string | undefined;
 	get userId() {
 		return this._userId!;
+	}
+
+	@memoize
+	get versionInfo() {
+		return {
+			ideVersion: this._options.ideVersion,
+			extensionVersion: this._options.extensionVersion,
+			extensionBuild: this._options.extensionBuild
+		};
 	}
 
 	get workspace() {

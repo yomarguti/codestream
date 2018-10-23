@@ -86,12 +86,6 @@ import {
 	LoginResponse
 } from "../shared/api.protocol";
 
-export interface VersionInfo {
-	readonly ideVersion: string;
-	readonly extensionVersion: string;
-	readonly extensionBuild: string;
-}
-
 interface BasicLoginOptions {
 	team?: string;
 	teamId?: string;
