@@ -311,6 +311,7 @@ export const setPurpose = (streamId, purpose) => async (dispatch, getState, { ap
 	try {
 		const stream = await api.setStreamPurpose(streamId, purpose);
 		dispatch({ type: "UPDATE_STREAM", payload: stream });
+		return stream;
 	} catch (error) {
 		console.error("Error setting stream purpose:", error);
 	}

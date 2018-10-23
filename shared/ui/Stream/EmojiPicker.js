@@ -1,7 +1,6 @@
 import { Picker, store } from "emoji-mart";
 import React, { Component } from "react";
 import ReactDOM from "react-dom";
-import createClassString from "classnames";
 import * as actions from "./actions";
 import { safe } from "../utils";
 import { connect } from "react-redux";
