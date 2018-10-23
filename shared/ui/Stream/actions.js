@@ -294,16 +294,12 @@ export const joinStream = streamId => async (dispatch, getState, { api }) => {
 };
 
 export const renameStream = (streamId, name) => async (dispatch, getState, { api }) => {
-	const update = { name };
-
 	try {
-		// await api.renameStream(streamId, name)
-		const returnStream = await api.updateStream(streamId, update);
-		console.log("return stream: ", returnStream);
-		return returnStream;
-		// if (streams.length > 0) dispatch(saveStreams(normalize(streams)));
+		const stream = await api.renameStream(streamId, name);
+		dispatch({ type: "UPDATE_STREAM", payload: stream });
+		return stream;
 	} catch (error) {
-		console.log("Error: ", error);
+		console.error("Error renaming stream:", error);
 	}
 };
 
