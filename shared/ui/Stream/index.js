@@ -105,6 +105,8 @@ export class SimpleStream extends Component {
 				if (event.key === "Escape") {
 					if (event.target.id.includes("input-div-")) {
 						this.handleEscape(event);
+					} else if (this.state.searchBarOpen) {
+						this.handleClickSearch(event);
 					} else if (this.state.threadId) {
 						this.handleDismissThread();
 					}
@@ -785,7 +787,7 @@ export class SimpleStream extends Component {
 	};
 
 	handleClickSearch = e => {
-		e.stopPropagation();
+		if (e) e.stopPropagation();
 		const { searchBarOpen } = this.state;
 
 		if (searchBarOpen) this.setState({ q: null });
@@ -1096,6 +1098,7 @@ export class SimpleStream extends Component {
 
 	handleEscape(event) {
 		if (this.state.editingPostId) this.handleDismissEdit();
+		else if (this.state.searchBarOpen) this.handleClickSearch(event);
 		else if (this.props.activePanel === "thread") this.handleDismissThread();
 		else event.abortKeyBinding();
 	}
