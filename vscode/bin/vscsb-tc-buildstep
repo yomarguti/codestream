@@ -98,5 +98,5 @@ if args.action == 'release':
 	applyTagToRepos(os.environ['VSCSB_SANDBOX'], "vscode-" + pkgInfo['version'], pkgInfo['repoCommitId'])
 	updatePackageVersion(buildData['sandboxTop'] + "/package.json", "develop", pkgInfo['version'], bumpLevel = 'patch')
 	if not someValueOrNone(os.environ, 'VSCSB_NOPUBLISH'):
-		buildstepGeneric(args, cmd = "vscsb-publish-assets-to-cloudfront --asset-env prod")
+		buildstepGeneric(args, cmd = "vscsb-publish-assets-to-cloudfront --no-prompt --asset-env prod")
 		buildstepGeneric(args, cmd = "vsce publish --packagePath " + vsixFile)

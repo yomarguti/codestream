@@ -17,6 +17,7 @@ parser = argparse.ArgumentParser(description = "Publish prod VS Code asset to Cl
 parser.add_argument('--build-number', type=str, required = False, default="codestream-latest", help = "build to promote (codestream-X.Y.Z+N or codestream-latest)")
 parser.add_argument('--dryrun', action='store_true', default=False, help='dry run')
 parser.add_argument('--debug', action='store_true', default=False, help='debug')
+parser.add_argument('-y','--no-prompt', action='store_true', default=False, help="answer yes to all interactive prompts")
 parser.add_argument('--asset-env', type = str, required = True, choices = ['dev', 'prod'])
 args = parser.parse_args()
 
@@ -36,11 +37,12 @@ if not os.path.isfile(infoFile):
 	print("could not get info file")
 	exit(1)
 shellExecNoBuffer("cat " + infoFile)
-yesno = input("\nPublish this asset (y/N)? ")
-if not re.search(r'^\s*y', yesno, re.I):
-	print("ok, never mind")
-	os.unlink(infoFile)
-	exit(1)
+if not args.no_prompt:
+	yesno = input("\nPublish this asset (y/N)? ")
+	if not re.search(r'^\s*y', yesno, re.I):
+		print("ok, never mind")
+		os.unlink(infoFile)
+		exit(1)
 
 vsixFile = tmpDir + "/" + args.build_number + ".vsix"
 cmd = "curl -fs -o " + vsixFile + " " + artifactUrlPrefix + "/" + args.asset_env + "/vscode-codestream/" + args.build_number + ".vsix"
