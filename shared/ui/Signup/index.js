@@ -25,15 +25,14 @@ export default connect(
 						Access your team&#8216;s existing Slack channels and DMs right inside your IDE, and make
 						it unbelievably easy to talk about code.
 					</p>
-					<p>
-						CodeStream saves all of these discussions as annotations to your codebase, so your team
-						builds up a knowledge base over time.
-					</p>
 					<div id="controls">
 						<div className="button-group">
 							<Button className="control-button" type="button" onClick={handleClickSlackSignup}>
 								Sign Up with Slack
 							</Button>
+							<p style={{ textAlign: "center", fontSize: "11px" }}>
+								Adds CodeStream to your workspace
+							</p>
 						</div>
 					</div>
 					<br />
