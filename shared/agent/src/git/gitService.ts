@@ -151,16 +151,17 @@ export class GitService implements IGitService, Disposable {
 		initialCommitHash: string,
 		finalCommitHash: string,
 		filePath: string
-	): Promise<IUniDiff> {
+	): Promise<IUniDiff | undefined> {
 		const [dir, filename] = Strings.splitPath(filePath);
 		let data;
 		try {
 			data = await git({ cwd: dir }, "diff", initialCommitHash, finalCommitHash, "--", filename);
 		} catch (err) {
+			Logger.error(err);
 			Logger.warn(
 				`Error getting diff from ${initialCommitHash} to ${finalCommitHash} for ${filename}`
 			);
-			throw err;
+			return;
 		}
 
 		const patches = parsePatch(data);

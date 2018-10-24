@@ -269,6 +269,12 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 
 			Logger.log(`MARKERS: diffing ${filePath} from ${commitHashWhenCreated} to ${commitHash}`);
 			const diff = await git.getDiffBetweenCommits(commitHashWhenCreated, commitHash, filePath);
+			if (!diff) {
+				Logger.log(
+					`MARKERS: cannot obtain diff - skipping calculation from ${commitHashWhenCreated} to ${commitHash}`
+				);
+				continue;
+			}
 			Logger.log(`MARKERS: calculating locations`);
 			const calculatedLocations = await calculateLocations(locationsToCalculate, diff);
 			for (const id in calculatedLocations) {
