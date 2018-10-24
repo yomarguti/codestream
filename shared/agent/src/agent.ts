@@ -23,8 +23,7 @@ import {
 import { Logger } from "./logger";
 import { CodeStreamSession } from "./session";
 import { AgentOptions, DidChangeDataNotificationType } from "./shared/agent.protocol";
-import { Disposables, memoize } from "./system";
-import { Functions } from "./system/function";
+import { Disposables, Functions, log, memoize } from "./system";
 
 export class CodeStreamAgent implements Disposable {
 	private _onReady = new Emitter<void>();
@@ -128,37 +127,26 @@ export class CodeStreamAgent implements Disposable {
 		type: RequestType<P, R, E, RO>,
 		handler: RequestHandler<P, R, E>
 	): void;
+	@log({
+		args: false,
+		prefix: (context, type) => `${context.prefix}(${type.method})`,
+		timed: false
+	})
 	registerHandler(type: any, handler: any): void {
-		try {
-			Logger.debug(`Agent.registerHandler(${type.method})`);
-			return this._connection.onRequest(type, handler);
-		} catch (ex) {
-			Logger.error(ex, `Agent.registerHandler(${type.method})`);
-			throw ex;
-		}
+		return this._connection.onRequest(type, handler);
 	}
 
 	sendNotification<RO>(type: NotificationType0<RO>): void;
 	sendNotification<P, RO>(type: NotificationType<P, RO>, params: P): void;
+	@log({
+		args: { 0: type => type.method },
+		prefix: (context, type, params) =>
+			`${context.prefix}(${type.method}${
+				type.method === DidChangeDataNotificationType.method ? `:${params.type}` : ""
+			})`
+	})
 	sendNotification(type: any, params?: any): void {
-		try {
-			Logger.logWithDebugParams(
-				`Agent.sendNotification(${type.method}${
-					type.method === DidChangeDataNotificationType.method ? `:${params.type}` : ""
-				})`,
-				params
-			);
-			return this._connection.sendNotification(type, params);
-		} catch (ex) {
-			Logger.error(
-				ex,
-				`Agent.sendNotification(${type.method}${
-					type.method === DidChangeDataNotificationType.method ? `:${params.type}` : ""
-				})`,
-				params
-			);
-			throw ex;
-		}
+		return this._connection.sendNotification(type, params);
 	}
 
 	sendRequest<R, E, RO>(type: RequestType0<R, E, RO>, token?: CancellationToken): Thenable<R>;
@@ -167,19 +155,23 @@ export class CodeStreamAgent implements Disposable {
 		params: P,
 		token?: CancellationToken
 	): Thenable<R>;
+	@log({
+		args: {
+			0: type => type.method,
+			1: params => (CancellationToken.is(params) ? undefined : params)
+		},
+		prefix: (context, type, params) =>
+			`${context.prefix}(${type.method}${
+				type.method === DidChangeDataNotificationType.method ? `:${params.type}` : ""
+			})`
+	})
 	sendRequest(type: any, params?: any, token?: CancellationToken): Thenable<any> {
 		if (CancellationToken.is(params)) {
 			token = params;
 			params = undefined;
 		}
 
-		try {
-			Logger.logWithDebugParams(`Agent.sendRequest(${type.method})`, params);
-			return this._connection.sendRequest(type, params, token);
-		} catch (ex) {
-			Logger.error(ex, `Agent.sendRequest(${type.method})`, params);
-			throw ex;
-		}
+		return this._connection.sendRequest(type, params, token);
 	}
 
 	error(exception: Error): void;
