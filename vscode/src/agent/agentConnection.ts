@@ -35,6 +35,7 @@ import {
 	AgentOptions,
 	AgentResult,
 	ApiRequestType,
+	CloseStreamRequestType,
 	CodeStreamEnvironment,
 	CreateChannelStreamRequestType,
 	CreateDirectStreamRequestType,
@@ -78,6 +79,7 @@ import {
 	LogoutRequestType,
 	MarkPostUnreadRequestType,
 	MarkStreamReadRequestType,
+	MuteStreamRequestType,
 	PreparePostWithCodeRequestType,
 	ReactToPostRequestType,
 	RenameStreamRequestType,
@@ -488,6 +490,12 @@ export class CodeStreamAgentConnection implements Disposable {
 			});
 		}
 
+		close(streamId: string) {
+			return this._connection.sendRequest(CloseStreamRequestType, {
+				streamId: streamId
+			});
+		}
+
 		join(streamId: string) {
 			return this._connection.sendRequest(JoinStreamRequestType, {
 				streamId: streamId
@@ -507,24 +515,31 @@ export class CodeStreamAgentConnection implements Disposable {
 			});
 		}
 
-		update(streamId: string, changes: { [key: string]: any }) {
-			return this._connection.sendRequest(UpdateStreamRequestType, {
+		mute(streamId: string, mute: boolean) {
+			return this._connection.sendRequest(MuteStreamRequestType, {
 				streamId: streamId,
-				changes: changes
-			});
-		}
-
-		setPurpose(streamId: string, purpose: string) {
-			return this._connection.sendRequest(SetStreamPurposeRequestType, {
-				streamId,
-				purpose
+				mute: mute
 			});
 		}
 
 		rename(streamId: string, name: string) {
 			return this._connection.sendRequest(RenameStreamRequestType, {
-				streamId,
-				name
+				streamId: streamId,
+				name: name
+			});
+		}
+
+		setPurpose(streamId: string, purpose: string) {
+			return this._connection.sendRequest(SetStreamPurposeRequestType, {
+				streamId: streamId,
+				purpose: purpose
+			});
+		}
+
+		update(streamId: string, changes: { [key: string]: any }) {
+			return this._connection.sendRequest(UpdateStreamRequestType, {
+				streamId: streamId,
+				changes: changes
 			});
 		}
 	}(this);
