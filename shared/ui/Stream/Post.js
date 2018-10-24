@@ -431,12 +431,10 @@ class Post extends React.Component {
 	};
 
 	addReaction = emoji => {
-		let { post } = this.props;
-
 		this.setState({ emojiOpen: false });
 		if (!emoji || !emoji.id) return;
 
-		this.props.reactToPost(post, emoji.id, true);
+		this.toggleReaction(emoji.id);
 	};
 
 	postHasReactionFromUser = emojiId => {

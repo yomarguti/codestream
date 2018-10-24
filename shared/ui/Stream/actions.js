@@ -140,7 +140,7 @@ export const reactToPost = (post, emoji, value) => async (dispatch, getState, { 
 		});
 		return dispatch({ type: "UPDATE_POST", payload: updatedPost });
 	} catch (e) {
-		// TODO:
+		console.error("failed to react", e);
 	}
 };
 
