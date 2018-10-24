@@ -14,6 +14,7 @@
 - Fixes an issue that prevented the deletion of multiple posts.
 - Fixes an issue with adding and removing people from CodeStream channels.
 - Fixes an issue with renaming or setting the purpose of a CodeStream channel.
+- Fixes an issue with being able to react to a message multiple times with the same emoji.
 
 ## [0.17.1] - 2018-10-17
 
