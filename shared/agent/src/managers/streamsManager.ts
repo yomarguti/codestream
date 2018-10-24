@@ -3,6 +3,9 @@ import { CodeStreamApiProvider } from "../api/codestream/codestreamApi";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import {
+	CloseStreamRequest,
+	CloseStreamRequestType,
+	CloseStreamResponse,
 	CreateChannelStreamRequest,
 	CreateChannelStreamRequestType,
 	CreateChannelStreamResponse,
@@ -27,6 +30,9 @@ import {
 	MarkStreamReadRequest,
 	MarkStreamReadRequestType,
 	MarkStreamReadResponse,
+	MuteStreamRequest,
+	MuteStreamRequestType,
+	MuteStreamResponse,
 	RenameStreamRequest,
 	RenameStreamRequestType,
 	RenameStreamResponse,
@@ -126,19 +132,39 @@ export class StreamsManager extends CachedEntityManagerBase<CSChannelStream | CS
 		return this.session.api.createDirectStream(request);
 	}
 
+	@lspHandler(CloseStreamRequestType)
+	close(request: CloseStreamRequest): Promise<CloseStreamResponse> {
+		return this.session.api.closeStream(request);
+	}
+
 	@lspHandler(JoinStreamRequestType)
-	joinStream(request: JoinStreamRequest): Promise<JoinStreamResponse> {
+	join(request: JoinStreamRequest): Promise<JoinStreamResponse> {
 		return this.session.api.joinStream(request);
 	}
 
 	@lspHandler(LeaveStreamRequestType)
-	leaveStream(request: LeaveStreamRequest): Promise<LeaveStreamResponse> {
+	leave(request: LeaveStreamRequest): Promise<LeaveStreamResponse> {
 		return this.session.api.leaveStream(request);
 	}
 
 	@lspHandler(MarkStreamReadRequestType)
-	markStreamRead(request: MarkStreamReadRequest): Promise<MarkStreamReadResponse> {
+	markRead(request: MarkStreamReadRequest): Promise<MarkStreamReadResponse> {
 		return this.session.api.markStreamRead(request);
+	}
+
+	@lspHandler(MuteStreamRequestType)
+	mute(request: MuteStreamRequest): Promise<MuteStreamResponse> {
+		return this.session.api.muteStream(request);
+	}
+
+	@lspHandler(RenameStreamRequestType)
+	rename(request: RenameStreamRequest): Promise<RenameStreamResponse> {
+		return this.session.api.renameStream(request);
+	}
+
+	@lspHandler(SetStreamPurposeRequestType)
+	setPurpose(request: SetStreamPurposeRequest): Promise<SetStreamPurposeResponse> {
+		return this.session.api.setStreamPurpose(request);
 	}
 
 	@lspHandler(UpdateStreamRequestType)
@@ -147,20 +173,10 @@ export class StreamsManager extends CachedEntityManagerBase<CSChannelStream | CS
 	}
 
 	@lspHandler(UpdateStreamMembershipRequestType)
-	updateStreamMembership(
+	updateMembership(
 		request: UpdateStreamMembershipRequest
 	): Promise<UpdateStreamMembershipResponse> {
 		return this.session.api.updateStreamMembership(request);
-	}
-
-	@lspHandler(SetStreamPurposeRequestType)
-	setStreamPurpose(request: SetStreamPurposeRequest): Promise<SetStreamPurposeResponse> {
-		return this.session.api.setStreamPurpose(request);
-	}
-
-	@lspHandler(RenameStreamRequestType)
-	renameStream(request: RenameStreamRequest): Promise<RenameStreamResponse> {
-		return this.session.api.renameStream(request);
 	}
 
 	@lspHandler(GetStreamRequestType)

@@ -93,6 +93,21 @@ export const FetchUnreadStreamsRequestType = new RequestType<
 	void
 >("codeStream/streams/unread");
 
+export interface CloseStreamRequest {
+	streamId: string;
+}
+
+export interface CloseStreamResponse {
+	stream: CSDirectStream;
+}
+
+export const CloseStreamRequestType = new RequestType<
+	CloseStreamRequest,
+	CloseStreamResponse,
+	void,
+	void
+>("codeStream/stream/close");
+
 export interface GetStreamRequest {
 	streamId: string;
 	type?: StreamType;
@@ -153,6 +168,54 @@ export const MarkStreamReadRequestType = new RequestType<
 	void
 >("codeStream/stream/markRead");
 
+export interface MuteStreamRequest {
+	streamId: string;
+	mute: boolean;
+}
+
+export interface MuteStreamResponse {
+	stream: CSChannelStream | CSDirectStream;
+}
+
+export const MuteStreamRequestType = new RequestType<
+	MuteStreamRequest,
+	MuteStreamResponse,
+	void,
+	void
+>("codeStream/stream/mute");
+
+export interface RenameStreamRequest {
+	streamId: string;
+	name: string;
+}
+
+export interface RenameStreamResponse {
+	stream: CSChannelStream | CSDirectStream;
+}
+
+export const RenameStreamRequestType = new RequestType<
+	RenameStreamRequest,
+	RenameStreamResponse,
+	void,
+	void
+>("codeStream/stream/rename");
+
+export interface SetStreamPurposeRequest {
+	streamId: string;
+	purpose: string;
+}
+
+export interface SetStreamPurposeResponse {
+	stream: CSChannelStream | CSDirectStream;
+}
+
+export const SetStreamPurposeRequestType = new RequestType<
+	SetStreamPurposeRequest,
+	SetStreamPurposeResponse,
+	void,
+	void
+>("codeStream/stream/setPurpose");
+
 export interface UpdateStreamRequest {
 	streamId: string;
 	changes: { [key: string]: any };
@@ -185,35 +248,3 @@ export const UpdateStreamMembershipRequestType = new RequestType<
 	void,
 	void
 >("codeStream/stream/updateMembership");
-
-export interface SetStreamPurposeRequest {
-	streamId: string;
-	purpose: string;
-}
-
-export interface SetStreamPurposeResponse {
-	stream: CSChannelStream | CSDirectStream;
-}
-
-export const SetStreamPurposeRequestType = new RequestType<
-	SetStreamPurposeRequest,
-	SetStreamPurposeResponse,
-	void,
-	void
->("codeStream/stream/setPurpose");
-
-export interface RenameStreamRequest {
-	streamId: string;
-	name: string;
-}
-
-export interface RenameStreamResponse {
-	stream: CSChannelStream | CSDirectStream;
-}
-
-export const RenameStreamRequestType = new RequestType<
-	RenameStreamRequest,
-	RenameStreamResponse,
-	void,
-	void
->("codeStream/stream/rename");

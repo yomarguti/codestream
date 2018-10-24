@@ -7,6 +7,7 @@ import { Container } from "../../container";
 import { Logger } from "../../logger";
 import { VersionInfo } from "../../session";
 import {
+	CloseStreamRequest,
 	CreateChannelStreamRequest,
 	CreateDirectStreamRequest,
 	CreateMarkerLocationRequest,
@@ -37,6 +38,7 @@ import {
 	LeaveStreamRequest,
 	MarkPostUnreadRequest,
 	MarkStreamReadRequest,
+	MuteStreamRequest,
 	ReactToPostRequest,
 	RenameStreamRequest,
 	SetStreamPurposeRequest,
@@ -638,6 +640,16 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	@log()
+	async closeStream(request: CloseStreamRequest) {
+		const response = await this.muteStream({
+			streamId: request.streamId,
+			mute: true
+		});
+
+		return { stream: response.stream as CSDirectStream };
+	}
+
+	@log()
 	async joinStream(request: JoinStreamRequest) {
 		const response = await this.put<CSJoinStreamRequest, CSJoinStreamResponse>(
 			`/join/${request.streamId}`,
@@ -685,6 +697,30 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	@log()
+	async muteStream(request: MuteStreamRequest) {
+		void (await this.updatePreferences({
+			preferences: {
+				mutedStreams: request.mute
+					? { $addToSet: { mutedStreams: [request.streamId] } }
+					: { $pull: { mutedStreams: [request.streamId] } }
+			}
+		}));
+
+		const stream = await Container.instance().streams.getById(request.streamId);
+		return { stream: stream };
+	}
+
+	@log()
+	renameStream(request: RenameStreamRequest) {
+		return this.updateStream({ streamId: request.streamId, changes: { name: request.name } });
+	}
+
+	@log()
+	setStreamPurpose(request: SetStreamPurposeRequest) {
+		return this.updateStream({ streamId: request.streamId, changes: { purpose: request.purpose } });
+	}
+
+	@log()
 	async updateStream(request: UpdateStreamRequest) {
 		const response = await this.put<CSUpdateStreamRequest, CSUpdateStreamResponse>(
 			`/streams/${request.streamId}`,
@@ -709,16 +745,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 			request.push,
 			this._token
 		);
-	}
-
-	@log()
-	setStreamPurpose(request: SetStreamPurposeRequest) {
-		return this.updateStream({ streamId: request.streamId, changes: { purpose: request.purpose } });
-	}
-
-	@log()
-	renameStream(request: RenameStreamRequest) {
-		return this.updateStream({ streamId: request.streamId, changes: { name: request.name } });
 	}
 
 	// // async addUserToStream(streamId: string, userId: string, teamId?: string) {

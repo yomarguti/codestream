@@ -2,6 +2,8 @@ import { RequestInit, Response } from "node-fetch";
 import { Disposable, Event } from "vscode-languageserver";
 import {
 	AccessToken,
+	CloseStreamRequest,
+	CloseStreamResponse,
 	CreateChannelStreamRequest,
 	CreateChannelStreamResponse,
 	CreateDirectStreamRequest,
@@ -62,6 +64,8 @@ import {
 	MarkPostUnreadResponse,
 	MarkStreamReadRequest,
 	MarkStreamReadResponse,
+	MuteStreamRequest,
+	MuteStreamResponse,
 	ReactToPostRequest,
 	ReactToPostResponse,
 	RenameStreamRequest,
@@ -239,15 +243,17 @@ export interface ApiProvider {
 	fetchStreams(request: FetchStreamsRequest): Promise<FetchStreamsResponse>;
 	fetchUnreadStreams(request: FetchUnreadStreamsRequest): Promise<FetchUnreadStreamsResponse>;
 	getStream(request: GetStreamRequest): Promise<GetStreamResponse>;
+	closeStream(request: CloseStreamRequest): Promise<CloseStreamResponse>;
 	joinStream(request: JoinStreamRequest): Promise<JoinStreamResponse>;
 	leaveStream(request: LeaveStreamRequest): Promise<LeaveStreamResponse>;
 	markStreamRead(request: MarkStreamReadRequest): Promise<MarkStreamReadResponse>;
+	muteStream(request: MuteStreamRequest): Promise<MuteStreamResponse>;
+	renameStream(request: RenameStreamRequest): Promise<RenameStreamResponse>;
+	setStreamPurpose(request: SetStreamPurposeRequest): Promise<SetStreamPurposeResponse>;
 	updateStream(request: UpdateStreamRequest): Promise<UpdateStreamResponse>;
 	updateStreamMembership(
 		request: UpdateStreamMembershipRequest
 	): Promise<UpdateStreamMembershipResponse>;
-	setStreamPurpose(request: SetStreamPurposeRequest): Promise<SetStreamPurposeResponse>;
-	renameStream(request: RenameStreamRequest): Promise<RenameStreamResponse>;
 
 	fetchTeams(request: FetchTeamsRequest): Promise<FetchTeamsResponse>;
 	getTeam(request: GetTeamRequest): Promise<GetTeamResponse>;

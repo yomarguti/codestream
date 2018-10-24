@@ -5,6 +5,7 @@ import { Emitter, Event } from "vscode-languageserver";
 import { Container } from "../../container";
 import { Logger, TraceLevel } from "../../logger";
 import {
+	CloseStreamRequest,
 	CreateChannelStreamRequest,
 	CreateDirectStreamRequest,
 	CreateDirectStreamResponse,
@@ -36,6 +37,8 @@ import {
 	LeaveStreamRequest,
 	MarkPostUnreadRequest,
 	MarkStreamReadRequest,
+	MuteStreamRequest,
+	MuteStreamResponse,
 	ReactToPostRequest,
 	RenameStreamRequest,
 	RenameStreamResponse,
@@ -1168,6 +1171,25 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	@log()
+	async closeStream(request: CloseStreamRequest) {
+		const response = await this._slack.conversations.close({
+			channel: request.streamId
+		});
+
+		const { ok, error, channel } = response as WebAPICallResult & { channel: any };
+		if (!ok) throw new Error(error);
+
+		const stream = fromSlackDirect(
+			channel,
+			await this.ensureUsersById(),
+			this._slackUserId,
+			this._codestreamTeamId
+		);
+
+		return { stream: stream! };
+	}
+
+	@log()
 	async joinStream(request: JoinStreamRequest) {
 		const response = await this._slack.conversations.join({
 			channel: request.streamId
@@ -1234,7 +1256,7 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	@log()
-	async updateStream(request: UpdateStreamRequest): Promise<UpdateStreamResponse> {
+	async muteStream(request: MuteStreamRequest): Promise<MuteStreamResponse> {
 		throw new Error("Method not implemented.");
 	}
 
