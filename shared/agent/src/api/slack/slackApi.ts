@@ -41,9 +41,7 @@ import {
 	MuteStreamResponse,
 	ReactToPostRequest,
 	RenameStreamRequest,
-	RenameStreamResponse,
 	SetStreamPurposeRequest,
-	SetStreamPurposeResponse,
 	UpdateMarkerRequest,
 	UpdatePreferencesRequest,
 	UpdatePresenceRequest,
@@ -1261,19 +1259,54 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	@log()
+	async renameStream(request: RenameStreamRequest) {
+		const response = await this._slack.conversations.rename({
+			channel: request.streamId,
+			name: request.name
+		});
+
+		const { ok, error, channel } = response as WebAPICallResult & { channel: any };
+		if (!ok) throw new Error(error);
+
+		const stream = fromSlackChannelOrDirect(
+			channel,
+			await this.ensureUsersById(),
+			this._slackUserId,
+			this._codestreamTeamId
+		);
+
+		return { stream: stream! };
+	}
+
+	@log()
+	async setStreamPurpose(request: SetStreamPurposeRequest) {
+		const response = await this._slack.conversations.setPurpose({
+			channel: request.streamId,
+			purpose: request.purpose
+		});
+
+		const { ok, error, channel } = response as WebAPICallResult & { channel: any };
+		if (!ok) throw new Error(error);
+
+		const stream = fromSlackChannelOrDirect(
+			channel,
+			await this.ensureUsersById(),
+			this._slackUserId,
+			this._codestreamTeamId
+		);
+
+		return { stream: stream! };
+	}
+
+	@log()
+	async updateStream(request: UpdateStreamRequest): Promise<UpdateStreamResponse> {
+		throw new Error("Method not implemented.");
+	}
+
+	@log()
 	updateStreamMembership(
 		request: UpdateStreamMembershipRequest
 	): Promise<UpdateStreamMembershipResponse> {
-		throw new Error("Method not implemented.");
-	}
-
-	@log()
-	setStreamPurpose(request: SetStreamPurposeRequest): Promise<SetStreamPurposeResponse> {
-		throw new Error("Method not implemented.");
-	}
-
-	@log()
-	renameStream(request: RenameStreamRequest): Promise<RenameStreamResponse> {
 		throw new Error("Method not implemented.");
 	}
 
