@@ -334,7 +334,7 @@ export class SimpleStream extends Component {
 	// to be able to animate between the two streams, since they will both be
 	// visible during the transition
 	render() {
-		const { configs, umis, postStreamStarred } = this.props;
+		const { configs, umis } = this.props;
 		let { activePanel } = this.props;
 		const { searchBarOpen, q } = this.state;
 		let postStreamPurpose = "For the benefit of Mr. Kite";
@@ -429,6 +429,12 @@ export class SimpleStream extends Component {
 		const memberCount = (this.props.postStreamMemberIds || []).length;
 		const lower = threadPost ? threadPost.type || "Comment" : "";
 		const commentTypeLabel = lower.charAt(0).toUpperCase() + lower.substr(1);
+		const postStreamStarred = this.props.starredStreams[this.props.postStreamId];
+		const tooltip = (
+			<span>
+				Cancel <span className="keybinding">ESC</span>
+			</span>
+		);
 
 		return (
 			<div className={streamClass}>
@@ -447,8 +453,10 @@ export class SimpleStream extends Component {
 							placeholder="Search Markers"
 						/>
 						<span className="align-right-button" onClick={this.handleClickSearch}>
-							<Tooltip title="Cancel">
-								<Icon name="x" className="cancel-icon" />
+							<Tooltip title={tooltip} placement="bottomRight">
+								<span>
+									<Icon name="x" className="cancel-icon" />
+								</span>
 							</Tooltip>
 						</span>
 					</div>
@@ -623,8 +631,7 @@ export class SimpleStream extends Component {
 										<Icon
 											name="star"
 											className={createClassString("smaller", {
-												checked: this.state.postChannelStarred
-												// checked: postStreamStarred
+												checked: postStreamStarred
 											})}
 										/>
 									</span>
@@ -767,7 +774,10 @@ export class SimpleStream extends Component {
 	};
 
 	starChannel = () => {
-		this.setState({ postChannelStarred: !this.state.postChannelStarred });
+		const { starredStreams, postStreamId } = this.props;
+		const starred = starredStreams[postStreamId];
+		this.props.setUserPreference(["starredStreams", postStreamId], !starred);
+		// this.setState({ postChannelStarred: !this.state.postChannelStarred });
 	};
 
 	showPinnedPosts = () => {
@@ -1713,7 +1723,6 @@ const mapStateToProps = ({
 		postStreamId: postStream.id,
 		postStreamName,
 		postStreamPurpose: postStream.purpose,
-		postStreamStarred: postStream.starred,
 		postStreamType: postStream.type,
 		postStreamIsTeamStream: postStream.isTeamStream,
 		postStreamMemberIds: postStream.memberIds,
@@ -1731,6 +1740,7 @@ const mapStateToProps = ({
 		currentUserId: user.id,
 		currentUserName: user.username,
 		mutedStreams: preferences.mutedStreams || {},
+		starredStreams: preferences.starredStreams || {},
 		slashCommands: getSlashCommands(capabilities),
 		team: teams[context.currentTeamId],
 		channelMembers,

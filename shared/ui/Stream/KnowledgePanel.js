@@ -244,6 +244,7 @@ export class SimpleKnowledgePanel extends Component {
 
 		let typeMenuItems = [
 			{ label: "All Markers", action: "set-type-all" },
+			{ label: "-" },
 			{ label: "Code Comments", action: "set-type-comment" },
 			{ label: "Questions & Answers", action: "set-type-question" },
 			{ label: "Issues", action: "set-type-issue" },

@@ -119,7 +119,7 @@ export class SimpleChannelPanel extends Component {
 			case "unreads":
 				return this.renderUnreadChannels();
 			case "selected":
-				break;
+				return this.renderSelectedChannels();
 			default:
 				return [
 					// this.renderUnreadChannels(),
@@ -241,6 +241,30 @@ export class SimpleChannelPanel extends Component {
 		);
 	};
 
+	renderSelectedChannels = () => {
+		return (
+			<div
+				className={createClassString("section", "has-children", {
+					expanded: this.state.expanded["starredChannels"]
+				})}
+			>
+				<div className="header top" onClick={e => this.toggleSection(e, "starredChannels")}>
+					<Icon name="triangle-right" className="triangle-right" />
+					<span className="clickable">Starred</span>
+					<div className="align-right">
+						{this.renderBrowsePublicIcon()}
+						{this.renderCreateChannelIcon()}
+						{this.renderCreateDMIcon()}
+					</div>
+				</div>
+				<ul onClick={this.handleClickSelectStream}>
+					{this.renderStreams(this.props.channelStreams, { selectedOnly: true })}
+					{this.renderStreams(this.props.directMessageStreams, { selectedOnly: true })}
+				</ul>
+			</div>
+		);
+	};
+
 	renderTeamChannels = () => {
 		return (
 			<div
@@ -283,7 +307,9 @@ export class SimpleChannelPanel extends Component {
 		);
 	};
 
-	renderStreams = (streams, { unreadsOnly, starredOnly } = {}) => {
+	renderStreams = (streams, { unreadsOnly, starredOnly, selectedOnly } = {}) => {
+		const { starredStreams, selectedStreams } = this.props;
+
 		return streams.map(stream => {
 			if (stream.isArchived) return null;
 
@@ -305,7 +331,8 @@ export class SimpleChannelPanel extends Component {
 			let mentions = this.props.umis.mentions[stream.id] || 0;
 			let menuActive = this.state.openMenu === stream.id;
 			if (unreadsOnly && count == 0 && mentions == 0) return;
-			if (starredOnly && !stream.starred) return;
+			if (starredOnly && !starredStreams[stream.id]) return;
+			if (selectedOnly && !selectedStreams[stream.id]) return;
 			return (
 				<li
 					className={createClassString({
@@ -589,6 +616,7 @@ const mapStateToProps = ({
 
 	let meStreamId;
 	let streamPresence = Object.create(null);
+
 	const directMessageStreams = mapFilter(
 		getDirectMessageStreamsForTeam(streams, context.currentTeamId) || [],
 		stream => {
@@ -631,6 +659,8 @@ const mapStateToProps = ({
 		serviceStreams,
 		muteAll: configs.muteAll,
 		mutedStreams: preferences.mutedStreams || {},
+		starredStreams: preferences.starredStreams || {},
+		selectedStreams: preferences.selectedStreams || {},
 		meStreamId,
 		streamPresence,
 		team: team

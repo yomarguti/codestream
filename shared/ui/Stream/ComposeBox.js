@@ -689,12 +689,19 @@ class ComposeBox extends React.Component {
 			commentType === "bookmark" || commentType === "trap"
 				? ` (required for ${commentType}s)`
 				: " (optional)";
+		const tooltip = (
+			<span>
+				Cancel <span className="keybinding">ESC</span>
+			</span>
+		);
 		return [
 			<div className="panel-header" key="one">
 				New {commentString.charAt(0).toUpperCase() + commentString.slice(1)}
-				<span className="align-right-button" onClick={this.handleClickDismissMultiCompose}>
-					<Icon name="x" />
-				</span>
+				<Tooltip title={tooltip}>
+					<span className="align-right-button" onClick={this.handleClickDismissMultiCompose}>
+						<Icon name="x" />
+					</span>
+				</Tooltip>
 			</div>,
 			<div className="shadow-overlay" key="three">
 				<div className="shadow-container">
