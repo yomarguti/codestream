@@ -13,19 +13,23 @@ import { FileSystem, Strings } from "./system";
 const extension = extensions.getExtension(extensionQualifiedId)!;
 export const extensionVersion = extension.packageJSON.version;
 
+interface BuildInfoMetadata {
+	buildNumber: string;
+	assetEnvironment: string;
+}
+
 export async function activate(context: ExtensionContext) {
 	const start = process.hrtime();
 
 	Configuration.configure(context);
 	Logger.configure(context);
 
-	// Check for an optional build number
-	let info = { buildNumber: "", assetEnvironment: "dev" };
-	try {
-		info = await FileSystem.loadJsonFromFile<{ buildNumber: string; assetEnvironment: string }>(
-			context.asAbsolutePath(`codestream-${extensionVersion}.info`)
-		);
-	} catch {}
+	let info = await FileSystem.loadJsonFromFile<BuildInfoMetadata>(
+		context.asAbsolutePath(`codestream-${extensionVersion}.info`)
+	);
+	if (info === undefined) {
+		info = { buildNumber: "", assetEnvironment: "dev" };
+	}
 
 	const formattedVersion = `${extensionVersion}${info.buildNumber ? `-${info.buildNumber}` : ""}${
 		info.assetEnvironment && info.assetEnvironment !== "prod" ? ` (${info.assetEnvironment})` : ""
