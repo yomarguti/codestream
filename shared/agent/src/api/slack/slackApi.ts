@@ -190,10 +190,17 @@ export class SlackApiProvider implements ApiProvider {
 			toSlackTeam(team, await this.ensureUsersById());
 		}
 
-		if (this._user.lastReads == null) {
-			this._user.lastReads = {};
-		}
 		response.user = this._user;
+	}
+
+	private async getSlackPreferences() {
+		// Undocumented: https://github.com/ErikKalkoken/slackApiDoc/blob/master/users.prefs.get.md
+		const response = await this._slack.apiCall("users.prefs.get");
+
+		const { ok, error, prefs } = response as WebAPICallResult & { prefs: any };
+		if (!ok) throw new Error(error);
+
+		return prefs as { [key: string]: any };
 	}
 
 	get codestreamUserId(): string {
@@ -279,8 +286,10 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	@log()
-	getMe() {
-		return this.getMeCore();
+	async getMe() {
+		const response = await this.getMeCore();
+		this._user = response.user;
+		return response;
 	}
 
 	private async getMeCore(meResponse?: CSGetMeResponse) {
@@ -288,33 +297,53 @@ export class SlackApiProvider implements ApiProvider {
 			meResponse = await this._codestream.getMe();
 		}
 
-		const me = meResponse.user;
+		let me = meResponse.user;
 		me.id = this.userId;
 
 		const response = await this._slack.users.info({
 			user: this.userId
 		});
 
+		let user;
+
 		const { ok, error, user: usr } = response as WebAPICallResult & { user: any };
 		if (ok) {
-			const user = fromSlackUser(usr, this._codestreamTeamId);
-			return {
-				user: {
-					...me,
-					avatar: user.avatar,
-					// creatorId: user.id,
-					deactivated: user.deactivated,
-					email: user.email || me.email,
-					firstName: user.firstName,
-					fullName: user.fullName,
-					id: user.id,
-					lastName: user.lastName,
-					username: user.username
-				}
+			user = fromSlackUser(usr, this._codestreamTeamId);
+			me = {
+				...me,
+				avatar: user.avatar,
+				// creatorId: user.id,
+				deactivated: user.deactivated,
+				email: user.email || me.email,
+				firstName: user.firstName,
+				fullName: user.fullName,
+				id: user.id,
+				lastName: user.lastName,
+				username: user.username
 			};
 		}
 
-		return meResponse;
+		if (me.lastReads == null) {
+			me.lastReads = {};
+		}
+
+		try {
+			const { muted_channels } = await this.getSlackPreferences();
+			const mutedStreams = muted_channels.split(",");
+
+			// Don't update our prefs, since they aren't per-team
+			// void this.updatePreferences({
+			// 	preferences: {
+			// 		$set: { mutedStreams: mutedStreams }
+			// 	}
+			// });
+
+			me.preferences.mutedStreams = mutedStreams;
+		} catch (ex) {
+			Logger.error(ex);
+		}
+
+		return { user: me };
 	}
 
 	@log()
