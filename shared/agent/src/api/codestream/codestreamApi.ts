@@ -866,12 +866,12 @@ export class CodeStreamApiProvider implements ApiProvider {
 						init.headers.append("Authorization", `Bearer ${token}`);
 					}
 
-					init.headers.append("X-CS-Plugin-IDE", "VS Code");
+					init.headers.append("X-CS-Plugin-IDE", this._version.ide.name);
 					init.headers.append(
 						"X-CS-Plugin-Version",
-						`${this._version.extensionVersion}-${this._version.extensionBuild}`
+						`${this._version.extension.version}-${this._version.extension.build}`
 					);
-					init.headers.append("X-CS-IDE-Version", this._version.ideVersion);
+					init.headers.append("X-CS-IDE-Version", this._version.ide.version);
 				}
 			}
 

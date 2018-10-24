@@ -65,9 +65,17 @@ const loginApiErrorMappings: { [k: string]: ApiErrors } = {
 };
 
 export interface VersionInfo {
-	readonly ideVersion: string;
-	readonly extensionVersion: string;
-	readonly extensionBuild: string;
+	extension: {
+		build: string;
+		buildEnv: string;
+		version: string;
+		versionFormatted: string;
+	};
+
+	ide: {
+		name: string;
+		version: string;
+	};
 }
 
 export class CodeStreamSession {
@@ -113,7 +121,11 @@ export class CodeStreamSession {
 		public readonly connection: Connection,
 		private readonly _options: AgentOptions
 	) {
-		Logger.log(`Agent for extension v${_options.extensionVersionFormatted} initializing...`);
+		Logger.log(
+			`Agent for CodeStream v${_options.extension.versionFormatted} in ${_options.ide.name} (v${
+				_options.ide.version
+			}) initializing...`
+		);
 
 		this._readyPromise = new Promise<void>(resolve =>
 			this.agent.onReady(() => {
@@ -240,11 +252,10 @@ export class CodeStreamSession {
 	}
 
 	@memoize
-	get versionInfo() {
+	get versionInfo(): Readonly<VersionInfo> {
 		return {
-			ideVersion: this._options.ideVersion,
-			extensionVersion: this._options.extensionVersion,
-			extensionBuild: this._options.extensionBuild
+			extension: { ...this._options.extension },
+			ide: { ...this._options.ide }
 		};
 	}
 

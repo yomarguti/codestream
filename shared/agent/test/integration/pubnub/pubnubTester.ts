@@ -65,9 +65,13 @@ export abstract class PubnubTester {
 	constructor(config: PubnubTesterConfig) {
 		this._apiRequester = new ApiRequester({ origin: config.apiOrigin });
 		this._api = new CodeStreamApiProvider("", {
-			extensionBuild: "",
-			extensionVersion: "",
-			ideVersion: ""
+			extension: {
+				build: "",
+				buildEnv: "",
+				version: "",
+				versionFormatted: ""
+			},
+			ide: { name: "", version: "" }
 		});
 		this._apiSimulator = new CodeStreamApiSimulator(this._apiRequester);
 		this._api.grantPubNubChannelAccess = this._apiSimulator.grant.bind(this._apiSimulator);

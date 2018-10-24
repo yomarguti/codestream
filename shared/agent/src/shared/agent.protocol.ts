@@ -48,12 +48,17 @@ export enum TraceLevel {
 }
 
 export interface AgentOptions {
-	extensionBuild: string;
-	extensionBuildEnv: string;
-	extensionVersion: string;
-	extensionVersionFormatted: string;
+	extension: {
+		build: string;
+		buildEnv: string;
+		version: string;
+		versionFormatted: string;
+	};
 	gitPath: string;
-	ideVersion: string;
+	ide: {
+		name: string;
+		version: string;
+	};
 	isDebugging: boolean;
 	traceLevel: TraceLevel;
 
