@@ -75,8 +75,12 @@ export default infiniteLoadable(
 		markAsRead = () => {
 			if (this.props.isThread) return;
 
-			const { hasFocus, isActive, posts } = this.props;
-			if (hasFocus && isActive && posts.length > 0) this.props.markRead(posts[posts.length - 1].id);
+			const { hasFocus, isActive, posts, streamId } = this.props;
+
+			const lastPost = posts.length > 0 && posts[posts.length - 1];
+			if (hasFocus && isActive && lastPost) {
+				if (lastPost.streamId === streamId) this.props.markRead(lastPost.id);
+			}
 		};
 
 		resize = () => {

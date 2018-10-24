@@ -168,7 +168,6 @@ export default Child => {
 							ref: forwardedRef,
 							posts: this.state.posts,
 							onDidScrollToTop: this.onDidScrollToTop,
-							register: this.register,
 							onScroll: this.onScroll,
 							isFetchingMore: this.state.isFetching,
 							hasMore: this.state.hasMore
