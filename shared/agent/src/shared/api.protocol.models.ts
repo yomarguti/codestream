@@ -132,6 +132,7 @@ export interface CSChannelStream extends CSEntity {
 
 export interface CSDirectStream extends CSEntity {
 	isArchived: boolean;
+	isClosed?: boolean;
 	privacy: "public" | "private";
 	sortId: string;
 	teamId: string;

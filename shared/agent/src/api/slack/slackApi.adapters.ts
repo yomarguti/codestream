@@ -75,8 +75,8 @@ export function fromSlackChannel(channel: any, codestreamTeamId: string): CSChan
 	return {
 		createdAt: channel.created * 1000,
 		creatorId: channel.creator,
-		isArchived: Boolean(channel.is_archived),
 		id: channel.id,
+		isArchived: Boolean(channel.is_archived),
 		isTeamStream: Boolean(channel.is_general),
 		name: channel.name || "",
 		memberIds: Boolean(channel.is_general) ? undefined : channel.members,
@@ -110,8 +110,9 @@ export function fromSlackDirect(
 		return {
 			createdAt: channel.created * 1000,
 			creatorId: slackUserId,
-			isArchived: Boolean(channel.is_user_deleted),
 			id: channel.id,
+			isArchived: Boolean(channel.is_user_deleted),
+			isClosed: channel.is_open == null ? undefined : !Boolean(channel.is_open),
 			name: (user && user.username) || channel.user,
 			memberIds: channel.user === slackUserId ? [slackUserId] : [slackUserId, channel.user],
 			modifiedAt:
