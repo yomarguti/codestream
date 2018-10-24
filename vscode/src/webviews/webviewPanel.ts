@@ -270,8 +270,28 @@ export class CodeStreamWebviewPanel implements Disposable {
 						case "go-to-slack-signin": {
 							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
 							const redirectUri = `${Container.config.webAppUrl}/oauth/callback`;
-							const scopes =
-								"channels:history%20channels:read%20channels:write%20chat:write:user%20groups:history%20groups:read%20groups:write%20im:history%20im:read%20im:write%20users:read%20users.profile:read%20mpim:history%20mpim:read%20mpim:write";
+
+							const scopes = [
+								"channels:history",
+								"channels:read",
+								"channels:write",
+								"chat:write:user",
+								"groups:history",
+								"groups:read",
+								"groups:write",
+								"im:history",
+								"im:read",
+								"im:write",
+								"users:read",
+								"users:read.email",
+								"users.profile:read",
+								"mpim:history",
+								"mpim:read",
+								"mpim:write"
+							];
+
+							const scopesStr = scopes.join("%20");
+
 							try {
 								const slackClientId =
 									Container.session.environment === CodeStreamEnvironment.Production
@@ -280,7 +300,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 								await commands.executeCommand(
 									"vscode.open",
 									Uri.parse(
-										`https://slack.com/oauth/authorize?client_id=${slackClientId}&scope=${scopes}&redirect_uri=${redirectUri}&state=${this.session.getSignupToken()}`
+										`https://slack.com/oauth/authorize?client_id=${slackClientId}&scope=${scopesStr}&redirect_uri=${redirectUri}&state=${this.session.getSignupToken()}`
 									)
 								);
 								responseBody.payload = true;
