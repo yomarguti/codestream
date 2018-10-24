@@ -37,6 +37,10 @@ export class Post extends CodeStreamItem<CSPost> {
 		return this.entity.codeBlocks !== undefined && this.entity.codeBlocks.length !== 0;
 	}
 
+	get hasReactions() {
+		return this.entity.reactions != null;
+	}
+
 	get hasReplies() {
 		return !!this.entity.hasReplies;
 	}
