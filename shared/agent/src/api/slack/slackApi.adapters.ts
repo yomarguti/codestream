@@ -154,8 +154,9 @@ export function fromSlackDirect(
 	return {
 		createdAt: channel.created * 1000,
 		creatorId: channel.creator,
-		isArchived: Boolean(channel.is_archived),
 		id: channel.id,
+		isArchived: Boolean(channel.is_archived),
+		isClosed: channel.is_open == null ? undefined : !Boolean(channel.is_open),
 		name: names.join(", "),
 		memberIds: channel.members,
 		modifiedAt: mostRecentTimestamp || channel.created * 1000,
