@@ -14,6 +14,7 @@ import Button from "./Button";
 import Menu from "./Menu";
 import EmojiPicker from "./EmojiPicker";
 import Tooltip from "./Tooltip";
+import Debug from "./Debug";
 import { getById } from "../reducers/repos";
 import { getPost } from "../reducers/posts";
 import { markdownify, emojify } from "./Markdowner";
@@ -268,7 +269,9 @@ class Post extends React.Component {
 						align="left"
 					/>
 				)}
-				<Headshot size={36} person={post.author} mine={mine} onClick={this.handleHeadshotClick} />
+				<Debug object={post} placement="top">
+					<Headshot size={36} person={post.author} mine={mine} onClick={this.handleHeadshotClick} />
+				</Debug>
 				<span className="author" ref={ref => (this._authorDiv = ref)}>
 					{post.author.username}
 					{this.renderEmote(post)}

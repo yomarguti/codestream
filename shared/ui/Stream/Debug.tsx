@@ -7,6 +7,7 @@ interface Props {
 	enabled: boolean;
 	text?: string;
 	object?: { [key: string]: any };
+	placement?: string;
 }
 
 const renderObject = (object: object) => {
@@ -26,12 +27,16 @@ function Debug(props: Props) {
 		const title = props.object ? renderObject(props.object) : props.text;
 
 		return (
-			<Tooltip placement="right" title={title} delay={0.5}>
+			<Tooltip placement={props.placement} title={title} delay={0.5}>
 				<span>{props.children}</span>
 			</Tooltip>
 		);
 	} else return props.children;
 }
+
+Debug.defaultProps = {
+	placement: "right"
+};
 
 const mapStateToProps = (state: any) => ({ enabled: state.configs.debug });
 export default connect(mapStateToProps)(Debug);

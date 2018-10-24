@@ -375,12 +375,16 @@ const mapStateToProps = ({ context, streams, users, teams, umis, session }) => {
 	const user = users[session.userId];
 	const mutedStreams = (user && user.preferences && user.preferences.mutedStreams) || {};
 
-	const directMessageStreams = (
-		getDirectMessageStreamsForTeam(streams, context.currentTeamId) || []
-	).map(stream => ({
-		...stream,
-		name: getDMName(stream, toMapBy("id", teamMembers), session.userId)
-	}));
+	const directMessageStreams = mapFilter(
+		getDirectMessageStreamsForTeam(streams, context.currentTeamId) || [],
+		stream => {
+			if (stream.isClosed) return;
+			return {
+				...stream,
+				name: getDMName(stream, toMapBy("id", teamMembers), session.userId)
+			};
+		}
+	);
 
 	const serviceStreams = _.sortBy(
 		getServiceStreamsForTeam(streams, context.currentTeamId, session.userId, users) || [],
