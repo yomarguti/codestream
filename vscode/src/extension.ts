@@ -35,19 +35,26 @@ export async function activate(context: ExtensionContext) {
 		info.assetEnvironment && info.assetEnvironment !== "prod" ? ` (${info.assetEnvironment})` : ""
 	}`;
 	Logger.log(
-		`CodeStream v${formattedVersion} starting ${Logger.isDebugging ? "in debug mode" : ""}...`
+		`CodeStream v${formattedVersion} in VS Code (v${vscodeVersion}) starting${
+			Logger.isDebugging ? " in debug mode" : ""
+		}...`
 	);
 
 	const git = await gitPath();
 
 	const cfg = configuration.get<Config>();
 	await Container.initialize(context, cfg, {
-		extensionBuild: info.buildNumber,
-		extensionBuildEnv: info.assetEnvironment,
-		extensionVersion: extensionVersion,
-		extensionVersionFormatted: formattedVersion,
+		extension: {
+			build: info.buildNumber,
+			buildEnv: info.assetEnvironment,
+			version: extensionVersion,
+			versionFormatted: formattedVersion
+		},
 		gitPath: git,
-		ideVersion: vscodeVersion,
+		ide: {
+			name: "VS Code",
+			version: vscodeVersion
+		},
 		isDebugging: Logger.isDebugging,
 		traceLevel: Logger.level,
 		serverUrl: cfg.serverUrl

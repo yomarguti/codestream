@@ -16,9 +16,9 @@ export class Container {
 		this._context = context;
 		this._config = config;
 
-		this._version = agentOptions.extensionVersion;
-		this._versionBuild = agentOptions.extensionBuild;
-		this._versionFormatted = agentOptions.extensionVersionFormatted;
+		this._version = agentOptions.extension.version;
+		this._versionBuild = agentOptions.extension.build;
+		this._versionFormatted = agentOptions.extension.versionFormatted;
 		this._agent = new CodeStreamAgentConnection(context, agentOptions);
 
 		context.subscriptions.push((this._session = new CodeStreamSession(config.serverUrl)));
