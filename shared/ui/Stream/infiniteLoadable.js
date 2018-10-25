@@ -21,6 +21,7 @@ const mapStateToProps = (state, props) => {
 };
 
 export default Child => {
+	const initializeCount = 50;
 	const batchCount = 100;
 
 	const DataProvider = connect(
@@ -67,7 +68,7 @@ export default Child => {
 					});
 				} else {
 					if (this.props.posts.length === 0) {
-						const { more } = await fetchPosts({ streamId, teamId, limit: batchCount });
+						const { more } = await fetchPosts({ streamId, teamId, limit: initializeCount });
 						this.setState({
 							isInitialized: true,
 							posts: this.props.posts,
