@@ -487,8 +487,9 @@ body.preload * {
 		margin: 4px 0;
 	}
 
-	// from https://codepen.io/TofuBot/pen/obydpM
-	.shadow-top {
+	.scrollbox.off-top:before {
+		content: "";
+		position: absolute;
 		top: 0;
 		left: 0;
 		background: linear-gradient(rgba(0, 0, 0, 0.3) 10%, rgba(255, 255, 255, 0)) 100% 0;
@@ -496,9 +497,13 @@ body.preload * {
 		background-size: 100% 4px;
 		width: inherit;
 		height: 5px;
+		z-index: 5;
+		width: 100%;
 	}
 
-	.shadow-bottom {
+	.scrollbox.off-bottom:after {
+		content: "";
+		position: absolute;
 		bottom: 0;
 		left: 0;
 		background: linear-gradient(rgba(255, 255, 255, 0), rgba(0, 0, 0, 0.3) 90%) 0 100%;
@@ -506,35 +511,17 @@ body.preload * {
 		background-size: 100% 4px;
 		width: inherit;
 		height: 5px;
+		z-index: 5;
+		width: 100%;
 	}
 
 	.vscode-light& {
-		.shadow-top,
-		.shadow-bottom {
+		.scrollbox.off-top:before,
+		.scrollbox.off-top:after {
 			opacity: 0.2;
 		}
 	}
 
-	.shadow-cover-top {
-		float: top;
-		height: 7px;
-		width: 100%;
-		background: @app-background-color;
-		position: relative;
-		z-index: 5;
-	}
-
-	.shadow-cover-bottom {
-		float: bottom;
-		height: 6px;
-		width: 100%;
-		background: @app-background-color;
-		// background: red;
-		position: relative;
-		// position: absolute;
-		bottom: -1px;
-		z-index: 5;
-	}
 	.vscroll,
 	.code {
 		&::-webkit-scrollbar-thumb {
