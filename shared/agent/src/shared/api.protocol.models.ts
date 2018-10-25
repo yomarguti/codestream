@@ -201,10 +201,13 @@ export interface CSUser extends CSEntity {
 	timeZone: string;
 	totalPosts: number;
 	username: string;
+
 	avatar?: {
 		image?: string;
 		image48?: string;
 	};
+	dnd?: boolean;
+	presence?: string;
 }
 
 export interface CSLastReads {

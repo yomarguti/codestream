@@ -102,9 +102,9 @@ export class SlackApiProvider implements ApiProvider {
 	private readonly _unreads: SlackUnreads;
 	private _user: CSMe;
 	// TODO: Convert to index on UserManager?
-	private _usersById: Map<string, CSUser> | undefined;
+	private _usernamesById: Map<string, string> | undefined;
 	// TODO: Convert to index on UserManager?
-	private _usersByName: Map<string, CSUser> | undefined;
+	private _userIdsByName: Map<string, string> | undefined;
 
 	constructor(
 		private _codestream: CodeStreamApiProvider,
@@ -178,8 +178,7 @@ export class SlackApiProvider implements ApiProvider {
 
 	async processLoginResponse(response: LoginResponse): Promise<void> {
 		// Mix in slack user info with ours
-		const meResponse = await this.getMeCore({ user: this._user });
-		this._user = meResponse.user;
+		void (await this.getMeCore({ user: this._user }));
 
 		// TODO: Correlate codestream ids to slack ids once the server returns that info
 		// const users = await this._codestream.fetchUsers({});
@@ -187,7 +186,7 @@ export class SlackApiProvider implements ApiProvider {
 
 		const team = response.teams.find(t => t.id === this._codestreamTeamId);
 		if (team !== undefined) {
-			toSlackTeam(team, await this.ensureUsersById());
+			toSlackTeam(team, await this.ensureUsernamesById());
 		}
 
 		response.user = this._user;
@@ -236,7 +235,9 @@ export class SlackApiProvider implements ApiProvider {
 	async subscribe(types?: MessageType[]) {
 		this._events = new SlackEvents(this._slackToken, this);
 		this._events.onDidReceiveMessage(e => this._onDidReceiveMessage.fire(e), this);
-		await this._events.connect();
+
+		const usernamesById = await this.ensureUsernamesById();
+		await this._events.connect([...usernamesById.keys()]);
 
 		this._codestream.onDidReceiveMessage(this.onCodeStreamMessage, this);
 		await this._codestream.subscribe([
@@ -248,31 +249,31 @@ export class SlackApiProvider implements ApiProvider {
 		]);
 	}
 
-	async ensureUsersById(): Promise<Map<string, CSUser>> {
-		if (this._usersById === undefined) {
-			void (await this.ensureUsersByIdAndName());
+	async ensureUsernamesById(): Promise<Map<string, string>> {
+		if (this._usernamesById === undefined) {
+			void (await this.ensureUserMaps());
 		}
-		return this._usersById!;
+		return this._usernamesById!;
 	}
 
-	private async ensureUsersByName(): Promise<Map<string, CSUser>> {
-		if (this._usersByName === undefined) {
-			void (await this.ensureUsersByIdAndName());
+	private async ensureUserIdsByName(): Promise<Map<string, string>> {
+		if (this._userIdsByName === undefined) {
+			void (await this.ensureUserMaps());
 		}
 
-		return this._usersByName!;
+		return this._userIdsByName!;
 	}
 
-	private async ensureUsersByIdAndName(): Promise<void> {
-		if (this._usersById === undefined || this._usersByName === undefined) {
+	private async ensureUserMaps(): Promise<void> {
+		if (this._usernamesById === undefined || this._userIdsByName === undefined) {
 			const users = (await Container.instance().users.get()).users;
 
-			this._usersById = new Map();
-			this._usersByName = new Map();
+			this._usernamesById = new Map();
+			this._userIdsByName = new Map();
 
 			for (const user of users) {
-				this._usersById.set(user.id, user);
-				this._usersByName.set(user.username, user);
+				this._usernamesById.set(user.id, user.username);
+				this._userIdsByName.set(user.username, user.id);
 			}
 		}
 	}
@@ -286,10 +287,8 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	@log()
-	async getMe() {
-		const response = await this.getMeCore();
-		this._user = response.user;
-		return response;
+	getMe() {
+		return this.getMeCore();
 	}
 
 	private async getMeCore(meResponse?: CSGetMeResponse) {
@@ -342,6 +341,9 @@ export class SlackApiProvider implements ApiProvider {
 		} catch (ex) {
 			Logger.error(ex);
 		}
+
+		Container.instance().users.resolve({ type: MessageType.Users, data: [me] });
+		this._user = me;
 
 		return { user: me };
 	}
@@ -401,7 +403,7 @@ export class SlackApiProvider implements ApiProvider {
 				text = toSlackPostText(
 					request.text,
 					request.mentionedUserIds,
-					await this.ensureUsersByName()
+					await this.ensureUserIdsByName()
 				);
 			} else {
 				text = request.text;
@@ -438,8 +440,8 @@ export class SlackApiProvider implements ApiProvider {
 			let { ok, error, message } = response as WebAPICallResult & { message?: any; ts?: any };
 			if (!ok) throw new Error(error);
 
-			const usersById = await this.ensureUsersById();
-			const post = await fromSlackPost(message, streamId, usersById, this._codestreamTeamId);
+			const usernamesById = await this.ensureUsernamesById();
+			const post = await fromSlackPost(message, streamId, usernamesById, this._codestreamTeamId);
 
 			if (request.codeBlocks == null || request.codeBlocks.length === 0) {
 				return { post: post };
@@ -555,7 +557,7 @@ export class SlackApiProvider implements ApiProvider {
 			text = toSlackPostText(
 				request.text,
 				request.mentionedUserIds,
-				await this.ensureUsersByName()
+				await this.ensureUserIdsByName()
 			);
 		} else {
 			text = request.text;
@@ -615,9 +617,9 @@ export class SlackApiProvider implements ApiProvider {
 		// Ensure the correct ordering
 		messages.sort((a: any, b: any) => a.ts - b.ts);
 
-		const usersById = await this.ensureUsersById();
+		const usernamesById = await this.ensureUsernamesById();
 		const posts = await Promise.all(messages.map((m: any) =>
-			fromSlackPost(m, streamId, usersById, this._codestreamTeamId)
+			fromSlackPost(m, streamId, usernamesById, this._codestreamTeamId)
 		) as Promise<CSPost>[]);
 
 		return { posts: posts };
@@ -680,9 +682,9 @@ export class SlackApiProvider implements ApiProvider {
 		// Ensure the correct ordering
 		messages.sort((a: any, b: any) => a.ts - b.ts);
 
-		const usersById = await this.ensureUsersById();
+		const usernamesById = await this.ensureUsernamesById();
 		const posts = await Promise.all(messages.map((m: any) =>
-			fromSlackPost(m, request.streamId, usersById, this._codestreamTeamId)
+			fromSlackPost(m, request.streamId, usernamesById, this._codestreamTeamId)
 		) as Promise<CSPost>[]);
 
 		return { posts: posts, more: has_more };
@@ -741,8 +743,8 @@ export class SlackApiProvider implements ApiProvider {
 		// Since we can end up with a post NEAREST postId rather than postId, make sure we found the right post
 		if (message.ts !== postId) throw new Error(`Unable to find message with id=${postId}`);
 
-		const usersById = await this.ensureUsersById();
-		const post = await fromSlackPost(message, streamId, usersById, this._codestreamTeamId);
+		const usernamesById = await this.ensureUsernamesById();
+		const post = await fromSlackPost(message, streamId, usernamesById, this._codestreamTeamId);
 
 		return { post: post };
 	}
@@ -840,7 +842,7 @@ export class SlackApiProvider implements ApiProvider {
 
 		const stream = fromSlackChannelOrDirect(
 			channel,
-			await this.ensureUsersById(),
+			await this.ensureUsernamesById(),
 			this._slackUserId,
 			this._codestreamTeamId
 		);
@@ -884,7 +886,7 @@ export class SlackApiProvider implements ApiProvider {
 
 			this._unreads.reset();
 
-			const usersById = await this.ensureUsersById();
+			const usernamesById = await this.ensureUsernamesById();
 
 			const [
 				[channels, channelRequests],
@@ -892,8 +894,8 @@ export class SlackApiProvider implements ApiProvider {
 				[ims, imRequests]
 			] = await Promise.all([
 				this.fetchChannels(),
-				this.fetchGroups(usersById),
-				this.fetchIMs(usersById)
+				this.fetchGroups(usernamesById),
+				this.fetchIMs(usernamesById)
 			]);
 
 			const streams = channels.concat(...groups, ...ims);
@@ -1011,7 +1013,7 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	private async fetchGroups(
-		usersById: Map<string, CSUser>
+		usernamesById: Map<string, string>
 	): Promise<[(CSChannelStream | CSDirectStream)[], Promise<CSChannelStream | CSDirectStream>[]]> {
 		const response = await this._slack.groups.list({
 			exclude_archived: true,
@@ -1024,12 +1026,12 @@ export class SlackApiProvider implements ApiProvider {
 
 		const streams: (CSChannelStream | CSDirectStream)[] = groups
 			.map((c: any) =>
-				fromSlackChannelOrDirect(c, usersById, this._slackUserId, this._codestreamTeamId)
+				fromSlackChannelOrDirect(c, usernamesById, this._slackUserId, this._codestreamTeamId)
 			)
 			.filter(Boolean);
 
 		const infos: Promise<CSChannelStream | CSDirectStream>[] = groups
-			.map((g: any) => (g.is_archived ? undefined : this.fetchGroup(g, usersById)))
+			.map((g: any) => (g.is_archived ? undefined : this.fetchGroup(g, usernamesById)))
 			.filter(Boolean);
 
 		return [streams, infos];
@@ -1040,7 +1042,7 @@ export class SlackApiProvider implements ApiProvider {
 		prefix: (context, g) => `${context.prefix}(${g.id})`,
 		enter: g => `fetching ${g.is_mpim ? "mpim" : "group"} '${g.name}'...`
 	})
-	private async fetchGroup(g: any, usersById: Map<string, CSUser>) {
+	private async fetchGroup(g: any, usernamesById: Map<string, string>) {
 		try {
 			const response = await this._slack.groups.info({
 				channel: g.id
@@ -1056,15 +1058,20 @@ export class SlackApiProvider implements ApiProvider {
 				group.unread_count_display || 0
 			);
 
-			return fromSlackChannelOrDirect(group, usersById, this._slackUserId, this._codestreamTeamId)!;
+			return fromSlackChannelOrDirect(
+				group,
+				usernamesById,
+				this._slackUserId,
+				this._codestreamTeamId
+			)!;
 		} catch (ex) {
 			Logger.error(ex);
-			return fromSlackChannelOrDirect(g, usersById, this._slackUserId, this._codestreamTeamId)!;
+			return fromSlackChannelOrDirect(g, usernamesById, this._slackUserId, this._codestreamTeamId)!;
 		}
 	}
 
 	private async fetchIMs(
-		usersById: Map<string, CSUser>
+		usernamesById: Map<string, string>
 	): Promise<[(CSChannelStream | CSDirectStream)[], Promise<CSChannelStream | CSDirectStream>[]]> {
 		const response = await this._slack.im.list({
 			exclude_archived: true,
@@ -1076,11 +1083,11 @@ export class SlackApiProvider implements ApiProvider {
 		if (!ok) throw new Error(error);
 
 		const streams: (CSChannelStream | CSDirectStream)[] = ims
-			.map((c: any) => fromSlackDirect(c, usersById, this._slackUserId, this._codestreamTeamId))
+			.map((c: any) => fromSlackDirect(c, usernamesById, this._slackUserId, this._codestreamTeamId))
 			.filter(Boolean);
 
 		const infos: Promise<CSChannelStream | CSDirectStream>[] = ims
-			.map((im: any) => (im.is_user_deleted ? undefined : this.fetchIM(im, usersById)))
+			.map((im: any) => (im.is_user_deleted ? undefined : this.fetchIM(im, usernamesById)))
 			.filter(Boolean);
 
 		return [streams, infos];
@@ -1091,7 +1098,7 @@ export class SlackApiProvider implements ApiProvider {
 		prefix: (context, im) => `${context.prefix}(${im.id})`,
 		enter: im => `fetching im with '${im.user}'...`
 	})
-	private async fetchIM(im: any, usersById: Map<string, CSUser>) {
+	private async fetchIM(im: any, usernamesById: Map<string, string>) {
 		try {
 			const response = await this._slack.conversations.info({
 				channel: im.id
@@ -1109,13 +1116,13 @@ export class SlackApiProvider implements ApiProvider {
 
 			return fromSlackDirect(
 				{ ...im, ...channel },
-				usersById,
+				usernamesById,
 				this._slackUserId,
 				this._codestreamTeamId
 			);
 		} catch (ex) {
 			Logger.error(ex);
-			return fromSlackDirect(im, usersById, this._slackUserId, this._codestreamTeamId);
+			return fromSlackDirect(im, usernamesById, this._slackUserId, this._codestreamTeamId);
 		}
 	}
 
@@ -1155,7 +1162,7 @@ export class SlackApiProvider implements ApiProvider {
 
 				const stream = fromSlackChannelOrDirect(
 					group,
-					await this.ensureUsersById(),
+					await this.ensureUsernamesById(),
 					this._slackUserId,
 					this._codestreamTeamId
 				);
@@ -1172,7 +1179,7 @@ export class SlackApiProvider implements ApiProvider {
 
 				const stream = fromSlackDirect(
 					channel,
-					await this.ensureUsersById(),
+					await this.ensureUsernamesById(),
 					this._slackUserId,
 					this._codestreamTeamId
 				);
@@ -1208,7 +1215,7 @@ export class SlackApiProvider implements ApiProvider {
 
 		const stream = fromSlackDirect(
 			channel,
-			await this.ensureUsersById(),
+			await this.ensureUsernamesById(),
 			this._slackUserId,
 			this._codestreamTeamId
 		);
@@ -1227,7 +1234,7 @@ export class SlackApiProvider implements ApiProvider {
 
 		const stream = fromSlackChannelOrDirect(
 			channel,
-			await this.ensureUsersById(),
+			await this.ensureUsernamesById(),
 			this._slackUserId,
 			this._codestreamTeamId
 		);
@@ -1299,7 +1306,7 @@ export class SlackApiProvider implements ApiProvider {
 
 		const stream = fromSlackChannelOrDirect(
 			channel,
-			await this.ensureUsersById(),
+			await this.ensureUsernamesById(),
 			this._slackUserId,
 			this._codestreamTeamId
 		);
@@ -1319,7 +1326,7 @@ export class SlackApiProvider implements ApiProvider {
 
 		const stream = fromSlackChannelOrDirect(
 			channel,
-			await this.ensureUsersById(),
+			await this.ensureUsernamesById(),
 			this._slackUserId,
 			this._codestreamTeamId
 		);
@@ -1346,7 +1353,7 @@ export class SlackApiProvider implements ApiProvider {
 		// Replace the current team's ids with slack ids
 		const team = response.teams.find(t => t.id === this._codestreamTeamId);
 		if (team !== undefined) {
-			toSlackTeam(team, await this.ensureUsersById());
+			toSlackTeam(team, await this.ensureUsernamesById());
 		}
 
 		return response;
@@ -1358,7 +1365,7 @@ export class SlackApiProvider implements ApiProvider {
 
 		// Replace the current team's ids with slack ids
 		if (response.team != null && response.team.id === this._codestreamTeamId) {
-			toSlackTeam(response.team, await this.ensureUsersById());
+			toSlackTeam(response.team, await this.ensureUsernamesById());
 		}
 
 		return response;

@@ -25,6 +25,7 @@ const slackCommandsRegex = /\<!(\w+)\|(\w+)\>/g;
 const slackChannelsRegex = /\<#(\w+)\|(\w+)\>/g;
 const slackMentionsRegex = /\<[@|!](\w+)\>/g;
 const slackLinkRegex = /\<((?:https?:\/\/|mailto:).*?)(?:\|(.*?))?\>/g;
+const slackSlashCommandRegex = /^\/(\w+)(?:\b(?!@|[\(\{\[\<\-])|$)/;
 
 export function fromSlackChannelIdToType(
 	streamId: string
@@ -42,7 +43,7 @@ export function fromSlackChannelIdToType(
 
 export function fromSlackChannelOrDirect(
 	channel: any,
-	usersById: Map<string, CSUser>,
+	usernamesById: Map<string, string>,
 	slackUserId: string,
 	codestreamTeamId: string
 ) {
@@ -51,7 +52,7 @@ export function fromSlackChannelOrDirect(
 	}
 
 	if (channel.is_mpim || channel.is_im) {
-		return fromSlackDirect(channel, usersById, slackUserId, codestreamTeamId);
+		return fromSlackDirect(channel, usernamesById, slackUserId, codestreamTeamId);
 	}
 
 	return undefined;
@@ -97,14 +98,14 @@ export function fromSlackChannel(channel: any, codestreamTeamId: string): CSChan
 
 export function fromSlackDirect(
 	channel: any,
-	usersById: Map<string, CSUser>,
+	usernamesById: Map<string, string>,
 	slackUserId: string,
 	codestreamTeamId: string
 ): CSDirectStream {
 	const { mostRecentId, mostRecentTimestamp } = fromSlackChannelOrDirectLatest(channel);
 
 	if (channel.is_im) {
-		const user = usersById.get(channel.user);
+		const username = usernamesById.get(channel.user);
 
 		// TODO: Set muted when channel.is_open = false
 		return {
@@ -113,7 +114,7 @@ export function fromSlackDirect(
 			id: channel.id,
 			isArchived: Boolean(channel.is_user_deleted),
 			isClosed: channel.is_open == null ? undefined : !Boolean(channel.is_open),
-			name: (user && user.username) || channel.user,
+			name: username || channel.user,
 			memberIds: channel.user === slackUserId ? [slackUserId] : [slackUserId, channel.user],
 			modifiedAt:
 				channel.is_open === false
@@ -143,8 +144,8 @@ export function fromSlackDirect(
 	let names: string[];
 	if (channel.members != null) {
 		names = channel.members.filter((m: string) => m !== slackUserId).map((m: string) => {
-			const user = usersById.get(m);
-			return user === undefined ? m : user.username || m;
+			const username = usernamesById.get(m);
+			return username === undefined ? m : username || m;
 		});
 		names.sort((a, b) => a.localeCompare(b));
 	} else {
@@ -173,12 +174,12 @@ export function fromSlackDirect(
 export async function fromSlackPost(
 	post: any,
 	streamId: string,
-	usersById: Map<string, CSUser>,
+	usernamesById: Map<string, string>,
 	teamId: string
 ): Promise<CSPost> {
 	const mentionedUserIds: string[] = [];
 
-	let text = fromSlackPostText(post, usersById, mentionedUserIds);
+	let text = fromSlackPostText(post, usernamesById, mentionedUserIds);
 
 	let reactions;
 	if (post.reactions) {
@@ -335,7 +336,7 @@ export function toSlackPostId(postId: string, streamId: string) {
 
 export function fromSlackPostText(
 	post: any,
-	usersById: Map<string, CSUser>,
+	usernamesById: Map<string, string>,
 	mentionedUserIds: string[]
 ): string {
 	if (!post.text) return post.text || "";
@@ -346,10 +347,10 @@ export function fromSlackPostText(
 				return `@${mentionId}`;
 			}
 
-			const user = usersById.get(mentionId);
-			if (user !== undefined) {
-				mentionedUserIds.push(user.id);
-				return `@${user.username}`;
+			const username = usernamesById.get(mentionId);
+			if (username !== undefined) {
+				mentionedUserIds.push(mentionId);
+				return `@${username}`;
 			}
 
 			return match;
@@ -380,26 +381,26 @@ export function fromSlackPostText(
 export function toSlackPostText(
 	text: string,
 	mentionedUserIds: string[] | undefined,
-	usersByName: Map<string, CSUser>
+	userIdsByName: Map<string, string>
 ) {
-	if (text != null) {
-		text = text
-			.replace("&", "&amp;")
-			.replace("<", "&lt;")
-			.replace(">", "&gt;");
-	}
+	if (text == null || text.length === 0) return text;
+
+	text = text
+		.replace("&", "&amp;")
+		.replace("<", "&lt;")
+		.replace(">", "&gt;");
 
 	const hasMentionedUsers = mentionedUserIds != null && mentionedUserIds.length !== 0;
-	if (hasMentionedUsers || (text != null && pseudoMentionsRegex.test(text))) {
+	if (hasMentionedUsers || pseudoMentionsRegex.test(text)) {
 		text = text.replace(mentionsRegex, (match: string, prefix: string, mentionName: string) => {
 			if (mentionName === "everyone" || mentionName === "channel" || mentionName === "here") {
 				return `${prefix}<!${mentionName}>`;
 			}
 
 			if (hasMentionedUsers) {
-				const user = usersByName.get(mentionName);
-				if (user !== undefined && mentionedUserIds!.includes(user.id)) {
-					return `${prefix}<@${user.id}>`;
+				const userId = userIdsByName.get(mentionName);
+				if (userId !== undefined && mentionedUserIds!.includes(userId)) {
+					return `${prefix}<@${userId}>`;
 				}
 			}
 
@@ -414,10 +415,10 @@ export function toSlackPostText(
 	return text;
 }
 
-export function toSlackTeam(team: CSTeam, usersById: Map<string, CSUser>) {
-	team.memberIds = [...usersById.keys()];
+export function toSlackTeam(team: CSTeam, usernamesById: Map<string, string>) {
+	team.memberIds = [...usernamesById.keys()];
 	// team.memberIds = team.memberIds.map(m => {
-	// 	const u = usersById.get(m);
+	// 	const u = usernamesById.get(m);
 	// 	return u !== undefined ? u.id : m;
 	// });
 }
