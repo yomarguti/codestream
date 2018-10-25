@@ -121,12 +121,6 @@ export class CodeStreamSession {
 		public readonly connection: Connection,
 		private readonly _options: AgentOptions
 	) {
-		Logger.log(
-			`Agent for CodeStream v${_options.extension.versionFormatted} in ${_options.ide.name} (v${
-				_options.ide.version
-			}) initializing...`
-		);
-
 		this._readyPromise = new Promise<void>(resolve =>
 			this.agent.onReady(() => {
 				Logger.log("Agent is ready");

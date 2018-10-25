@@ -20,27 +20,27 @@ export class Logger {
 	}
 
 	static debug(message?: any, ...params: any[]): void {
-		if (this.level !== TraceLevel.Debug && !Logger.isDebugging) return;
-
 		// if (Logger.isDebugging) {
-		// 	console.log(this.timestamp, ConsolePrefix, message, ...params);
+		// 	console.log(this.timestamp, ConsolePrefix, message || "", ...params);
 		// }
 
+		if (this.level !== TraceLevel.Debug && !Logger.isDebugging) return;
+
 		if (this._agent !== undefined) {
-			this._agent.log([this.timestamp, message, this.toLoggableParams(true, params)].join(" "));
+			this._agent.log(`${this.timestamp} ${message || ""} ${this.toLoggableParams(true, params)}`);
 		}
 	}
 
-	static error(ex: Error, classOrMethod?: string, ...params: any[]): void {
-		if (this.level === TraceLevel.Silent && !Logger.isDebugging) return;
-
+	static error(ex: Error, message?: string, ...params: any[]): void {
 		// if (Logger.isDebugging) {
-		// 	console.error(this.timestamp, ConsolePrefix, classOrMethod, ...params, ex);
+		// 	console.error(this.timestamp, ConsolePrefix, message || "", ...params, ex);
 		// }
+
+		if (this.level === TraceLevel.Silent && !Logger.isDebugging) return;
 
 		if (this._agent !== undefined) {
 			this._agent.error(
-				[this.timestamp, classOrMethod, this.toLoggableParams(false, params), "\n", ex].join(" ")
+				`${this.timestamp} ${message || ""} ${this.toLoggableParams(false, params)}\n${ex}`
 			);
 		}
 
@@ -48,50 +48,44 @@ export class Logger {
 	}
 
 	static log(message?: any, ...params: any[]): void {
-		if (
-			this.level !== TraceLevel.Verbose &&
-			this.level !== TraceLevel.Debug &&
-			!Logger.isDebugging
-		) {
+		// if (Logger.isDebugging) {
+		// 	console.log(this.timestamp, ConsolePrefix, message || "", ...params);
+		// }
+
+		if (this.level !== TraceLevel.Verbose && this.level !== TraceLevel.Debug && !Logger.isDebugging) {
 			return;
 		}
 
-		// if (Logger.isDebugging) {
-		// 	console.log(this.timestamp, ConsolePrefix, message, ...params);
-		// }
-
 		if (this._agent !== undefined) {
-			this._agent.log([this.timestamp, message, this.toLoggableParams(false, params)].join(" "));
+			this._agent.log(`${this.timestamp} ${message || ""} ${this.toLoggableParams(false, params)}`);
 		}
 	}
 
 	static logWithDebugParams(message?: any, ...params: any[]): void {
-		if (
-			this.level !== TraceLevel.Verbose &&
-			this.level !== TraceLevel.Debug &&
-			!Logger.isDebugging
-		) {
+		// if (Logger.isDebugging) {
+		// 	console.log(this.timestamp, ConsolePrefix, message || "", ...params);
+		// }
+
+		if (this.level !== TraceLevel.Verbose && this.level !== TraceLevel.Debug && !Logger.isDebugging) {
 			return;
 		}
 
-		// if (Logger.isDebugging) {
-		// 	console.log(this.timestamp, ConsolePrefix, message, ...params);
-		// }
-
 		if (this._agent !== undefined) {
-			this._agent.log([this.timestamp, message, this.toLoggableParams(true, params)].join(" "));
+			this._agent.log(`${this.timestamp} ${message || ""} ${this.toLoggableParams(true, params)}`);
 		}
 	}
 
 	static warn(message?: any, ...params: any[]): void {
-		if (this.level === TraceLevel.Silent && !Logger.isDebugging) return;
-
 		// if (Logger.isDebugging) {
-		// 	console.warn(this.timestamp, ConsolePrefix, message, ...params);
+		// 	console.warn(this.timestamp, ConsolePrefix, message || "", ...params);
 		// }
 
+		if (this.level === TraceLevel.Silent && !Logger.isDebugging) return;
+
 		if (this._agent !== undefined) {
-			this._agent.warn([this.timestamp, message, this.toLoggableParams(false, params)].join(" "));
+			this._agent.warn(
+				`${this.timestamp} ${message || ""} ${this.toLoggableParams(false, params)}`
+			);
 		}
 	}
 

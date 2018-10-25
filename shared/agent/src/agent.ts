@@ -51,30 +51,44 @@ export class CodeStreamAgent implements Disposable {
 	}
 
 	private async onInitialize(e: InitializeParams) {
-		const capabilities = e.capabilities;
-		this._clientCapabilities = capabilities;
+		try {
+			const capabilities = e.capabilities;
+			this._clientCapabilities = capabilities;
 
-		const agentOptions = e.initializationOptions! as AgentOptions;
-		Logger.level = agentOptions.traceLevel;
-		if (agentOptions.isDebugging) {
-			Logger.overrideIsDebugging();
+			const agentOptions = e.initializationOptions! as AgentOptions;
+
+			Logger.level = agentOptions.traceLevel;
+			if (agentOptions.isDebugging) {
+				Logger.overrideIsDebugging();
+			}
+
+			Logger.log(
+				`Agent for CodeStream v${agentOptions.extension.versionFormatted} in ${
+					agentOptions.ide.name
+				} (v${agentOptions.ide.version}) initializing...`
+			);
+
+			this._session = new CodeStreamSession(this, this._connection, agentOptions);
+
+			// Pause for a bit to give the debugger a window of time to connect -- mainly for startup issues
+			if (Logger.isDebugging) {
+				void (await Functions.wait(5000));
+			}
+			const result = await this._session.login();
+
+			return {
+				capabilities: {
+					textDocumentSync: TextDocumentSyncKind.Full
+					// hoverProvider: true
+				},
+				result: result
+			} as InitializeResult;
+		} catch (ex) {
+			debugger;
+			Logger.error(ex);
+			// TODO: Probably should avoid throwing here and return better error reporting to the extension
+			throw ex;
 		}
-
-		this._session = new CodeStreamSession(this, this._connection, agentOptions);
-
-		// Give the agent some time to connect
-		if (Logger.isDebugging) {
-			void (await Functions.wait(5000));
-		}
-		const result = await this._session.login();
-
-		return {
-			capabilities: {
-				textDocumentSync: TextDocumentSyncKind.Full
-				// hoverProvider: true
-			},
-			result: result
-		} as InitializeResult;
 	}
 
 	private async onInitialized(e: InitializedParams) {
@@ -94,6 +108,7 @@ export class CodeStreamAgent implements Disposable {
 		} catch (ex) {
 			debugger;
 			Logger.error(ex);
+			// TODO: Probably should avoid throwing here and return better error reporting to the extension
 			throw ex;
 		}
 	}
