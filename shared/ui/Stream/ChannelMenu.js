@@ -53,7 +53,7 @@ export class SimpleChannelMenu extends Component {
 				}, 500);
 				return;
 			case "mute-channel":
-				this.props.setUserPreference(["mutedStreams", streamId], !this.props.isMuted);
+				this.props.changeStreamMuteState(streamId, !this.props.isMuted);
 				return;
 			case "add-members":
 				this.props.setActivePanel("main");
@@ -83,9 +83,12 @@ export class SimpleChannelMenu extends Component {
 	};
 }
 
-const mapStateToProps = ({ users, session }) => ({ session });
-export default connect(mapStateToProps, {
-	...contextActions,
-	...streamActions
-	// ...userActions
-})(SimpleChannelMenu);
+const mapStateToProps = ({ session }) => ({ session });
+export default connect(
+	mapStateToProps,
+	{
+		...contextActions,
+		...streamActions
+		// ...userActions
+	}
+)(SimpleChannelMenu);

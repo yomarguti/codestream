@@ -149,7 +149,11 @@ export default class WebviewApi {
 		return this.postMessage({ action: "show-code", params: { post, enteringThread } });
 	}
 
-	closeDirectMessage(streamId) {
+	closeDirectMessage(streamId: string) {
 		return this.postMessage({ action: "close-direct-message", params: streamId });
+	}
+
+	changeStreamMuteState(streamId: string, muted: boolean) {
+		return this.postMessage({ action: "change-stream-mute-state", params: { streamId, muted } });
 	}
 }

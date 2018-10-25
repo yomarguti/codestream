@@ -385,3 +385,11 @@ export const closeDirectMessage = id => (dispatch, getState, { api }) => {
 		console.error(error);
 	}
 };
+
+export const changeStreamMuteState = (streamId, muted) => async (dispatch, getState, { api }) => {
+	try {
+		await api.changeStreamMuteState(streamId, muted);
+	} catch (error) {
+		console.error(error);
+	}
+};
