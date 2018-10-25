@@ -5,7 +5,6 @@ import {
 	CSChannelStream,
 	CSDirectStream,
 	CSFileStream,
-	CSPush,
 	CSStream,
 	StreamType
 } from "./api.protocol";
@@ -92,6 +91,21 @@ export const FetchUnreadStreamsRequestType = new RequestType<
 	void,
 	void
 >("codeStream/streams/unread");
+
+export interface ArchiveStreamRequest {
+	streamId: string;
+}
+
+export interface ArchiveStreamResponse {
+	stream: CSChannelStream | CSDirectStream;
+}
+
+export const ArchiveStreamRequestType = new RequestType<
+	ArchiveStreamRequest,
+	ArchiveStreamResponse,
+	void,
+	void
+>("codeStream/stream/archive");
 
 export interface CloseStreamRequest {
 	streamId: string;
@@ -216,6 +230,21 @@ export const SetStreamPurposeRequestType = new RequestType<
 	void
 >("codeStream/stream/setPurpose");
 
+export interface UnarchiveStreamRequest {
+	streamId: string;
+}
+
+export interface UnarchiveStreamResponse {
+	stream: CSChannelStream | CSDirectStream;
+}
+
+export const UnarchiveStreamRequestType = new RequestType<
+	UnarchiveStreamRequest,
+	UnarchiveStreamResponse,
+	void,
+	void
+>("codeStream/stream/unarchive");
+
 export interface UpdateStreamRequest {
 	streamId: string;
 	changes: { [key: string]: any };
@@ -234,8 +263,8 @@ export const UpdateStreamRequestType = new RequestType<
 
 export interface UpdateStreamMembershipRequest {
 	streamId: string;
-	// TODO: Fix this
-	push: CSPush;
+	add?: string[];
+	remove?: string[];
 }
 
 export interface UpdateStreamMembershipResponse {

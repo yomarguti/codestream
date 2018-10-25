@@ -7,6 +7,7 @@ import { Container } from "../../container";
 import { Logger } from "../../logger";
 import { VersionInfo } from "../../session";
 import {
+	ArchiveStreamRequest,
 	CloseStreamRequest,
 	CreateChannelStreamRequest,
 	CreateDirectStreamRequest,
@@ -42,6 +43,7 @@ import {
 	ReactToPostRequest,
 	RenameStreamRequest,
 	SetStreamPurposeRequest,
+	UnarchiveStreamRequest,
 	UpdateMarkerRequest,
 	UpdatePreferencesRequest,
 	UpdatePresenceRequest,
@@ -91,7 +93,6 @@ import {
 	CSMe,
 	CSMePreferences,
 	CSPost,
-	CSPush,
 	CSReactions,
 	CSReactToPostResponse,
 	CSStream,
@@ -101,7 +102,6 @@ import {
 	CSUpdatePostsCountResponse,
 	CSUpdatePresenceRequest,
 	CSUpdatePresenceResponse,
-	CSUpdateStreamMembershipResponse,
 	CSUpdateStreamRequest,
 	CSUpdateStreamResponse,
 	LoginRequest,
@@ -640,6 +640,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	@log()
+	async archiveStream(request: ArchiveStreamRequest) {
+		return this.updateStream({ streamId: request.streamId, changes: { isArchived: true } });
+	}
+
+	@log()
 	async closeStream(request: CloseStreamRequest) {
 		const response = await this.muteStream({
 			streamId: request.streamId,
@@ -721,6 +726,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	@log()
+	async unarchiveStream(request: UnarchiveStreamRequest) {
+		return this.updateStream({ streamId: request.streamId, changes: { isArchived: false } });
+	}
+
+	@log()
 	async updateStream(request: UpdateStreamRequest) {
 		const response = await this.put<CSUpdateStreamRequest, CSUpdateStreamResponse>(
 			`/streams/${request.streamId}`,
@@ -739,19 +749,23 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	@log()
-	updateStreamMembership(request: UpdateStreamMembershipRequest) {
-		return this.put<CSPush, CSUpdateStreamMembershipResponse>(
+	async updateStreamMembership(request: UpdateStreamMembershipRequest) {
+		const response = await this.put<CSUpdateStreamRequest, CSUpdateStreamResponse>(
 			`/streams/${request.streamId}`,
-			request.push,
+			{
+				$push: request.add == null ? undefined : { memberIds: request.add },
+				$pull: request.remove == null ? undefined : { memberIds: request.remove }
+			},
 			this._token
 		);
-	}
 
-	// // async addUserToStream(streamId: string, userId: string, teamId?: string) {
-	// // 	return (await this._api.updateStreamMembership(this.token, teamId || this.teamId, streamId, {
-	// // 		$push: userId
-	// // 	})).stream;
-	// // }
+		const [stream] = await Container.instance().streams.resolve({
+			type: MessageType.Streams,
+			data: [response.stream]
+		});
+
+		return { stream };
+	}
 
 	@log()
 	fetchTeams(request: FetchTeamsRequest) {

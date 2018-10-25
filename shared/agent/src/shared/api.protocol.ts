@@ -331,10 +331,6 @@ export interface CSUpdatePresenceResponse {
 	awayTimeout: number;
 }
 
-export interface CSPush {
-	$push: string;
-}
-
 export interface CSUpdateStreamRequest {
 	name?: string;
 	purpose?: string;
@@ -349,16 +345,6 @@ export interface CSUpdateStreamRequest {
 
 export interface CSUpdateStreamResponse {
 	stream: { [key: string]: any };
-}
-
-export interface CSUpdateStreamMembershipRequest {
-	teamId: string;
-	streamId: string;
-	push: CSPush;
-}
-
-export interface CSUpdateStreamMembershipResponse {
-	stream: CSStream;
 }
 
 export interface CSUpdatePostsCountRequest {}

@@ -5,7 +5,9 @@ import { Emitter, Event } from "vscode-languageserver";
 import { Container } from "../../container";
 import { Logger, TraceLevel } from "../../logger";
 import {
+	ArchiveStreamRequest,
 	CloseStreamRequest,
+	CloseStreamResponse,
 	CreateChannelStreamRequest,
 	CreateDirectStreamRequest,
 	CreateDirectStreamResponse,
@@ -42,6 +44,7 @@ import {
 	ReactToPostRequest,
 	RenameStreamRequest,
 	SetStreamPurposeRequest,
+	UnarchiveStreamRequest,
 	UpdateMarkerRequest,
 	UpdatePreferencesRequest,
 	UpdatePresenceRequest,
@@ -848,6 +851,11 @@ export class SlackApiProvider implements ApiProvider {
 			this._codestreamTeamId
 		);
 
+		Container.instance().streams.resolve({
+			type: MessageType.Streams,
+			data: [stream]
+		});
+
 		return { stream: stream! as CSChannelStream };
 	}
 
@@ -855,14 +863,25 @@ export class SlackApiProvider implements ApiProvider {
 	async createDirectStream(request: CreateDirectStreamRequest) {
 		const response = await this._slack.conversations.open({
 			users: request.memberIds.join(","),
-			return_im: false
+			return_im: true
 		});
 
 		const { ok, error, channel } = response as WebAPICallResult & { channel: any };
 		if (!ok) throw new Error(error);
 
-		const streamResponse = await this.getStream({ streamId: channel.id, type: StreamType.Direct });
-		return streamResponse as CreateDirectStreamResponse;
+		const stream = fromSlackChannelOrDirect(
+			channel,
+			await this.ensureUsernamesById(),
+			this._slackUserId,
+			this._codestreamTeamId
+		);
+
+		Container.instance().streams.resolve({
+			type: MessageType.Streams,
+			data: [stream]
+		});
+
+		return { stream: stream! as CSDirectStream };
 	}
 
 	@log({
@@ -1199,10 +1218,28 @@ export class SlackApiProvider implements ApiProvider {
 			// limit: 1000
 		});
 
-		const { ok, error, members } = response as WebAPICallResult & { members: any };
+		const { ok, error, members } = response as WebAPICallResult & { members: string[] };
 		if (!ok) throw new Error(error);
 
 		return members;
+	}
+
+	@log()
+	async archiveStream(request: ArchiveStreamRequest) {
+		const response = await this._slack.conversations.archive({
+			channel: request.streamId
+		});
+
+		const { ok, error } = response as WebAPICallResult;
+		if (!ok) throw new Error(error);
+
+		const streamResponse = await this.getStream({ streamId: request.streamId });
+		Container.instance().streams.resolve({
+			type: MessageType.Streams,
+			data: [streamResponse.stream]
+		});
+
+		return streamResponse;
 	}
 
 	@log()
@@ -1211,17 +1248,21 @@ export class SlackApiProvider implements ApiProvider {
 			channel: request.streamId
 		});
 
-		const { ok, error, channel } = response as WebAPICallResult & { channel: any };
+		const { ok, error, no_op } = response as WebAPICallResult & { no_op: boolean };
 		if (!ok) throw new Error(error);
 
-		const stream = fromSlackDirect(
-			channel,
-			await this.ensureUsernamesById(),
-			this._slackUserId,
-			this._codestreamTeamId
-		);
+		if (no_op) {
+			const stream = await Container.instance().streams.getById(request.streamId);
+			return { stream: stream! as CSDirectStream };
+		}
 
-		return { stream: stream! };
+		const streamResponse = await this.getStream({ streamId: request.streamId });
+		Container.instance().streams.resolve({
+			type: MessageType.Streams,
+			data: [streamResponse.stream]
+		});
+
+		return streamResponse as CloseStreamResponse;
 	}
 
 	@log()
@@ -1233,14 +1274,13 @@ export class SlackApiProvider implements ApiProvider {
 		const { ok, error, channel } = response as WebAPICallResult & { channel: any };
 		if (!ok) throw new Error(error);
 
-		const stream = fromSlackChannelOrDirect(
-			channel,
-			await this.ensureUsernamesById(),
-			this._slackUserId,
-			this._codestreamTeamId
-		);
+		const streamResponse = await this.getStream({ streamId: request.streamId });
+		Container.instance().streams.resolve({
+			type: MessageType.Streams,
+			data: [streamResponse.stream]
+		});
 
-		return { stream: stream! };
+		return streamResponse;
 	}
 
 	@log()
@@ -1249,12 +1289,23 @@ export class SlackApiProvider implements ApiProvider {
 			channel: request.streamId
 		});
 
-		const { ok, error, channel } = response as WebAPICallResult & { channel: any };
+		const { ok, error, not_in_channel } = response as WebAPICallResult & {
+			not_in_channel: boolean;
+		};
 		if (!ok) throw new Error(error);
 
-		const stream = await this.getStream({ streamId: request.streamId })!;
+		if (not_in_channel) {
+			const stream = await Container.instance().streams.getById(request.streamId);
+			return { stream: stream! as CSDirectStream };
+		}
 
-		return stream!;
+		const streamResponse = await this.getStream({ streamId: request.streamId });
+		Container.instance().streams.resolve({
+			type: MessageType.Streams,
+			data: [streamResponse.stream]
+		});
+
+		return streamResponse;
 	}
 
 	@log()
@@ -1305,14 +1356,13 @@ export class SlackApiProvider implements ApiProvider {
 		const { ok, error, channel } = response as WebAPICallResult & { channel: any };
 		if (!ok) throw new Error(error);
 
-		const stream = fromSlackChannelOrDirect(
-			channel,
-			await this.ensureUsernamesById(),
-			this._slackUserId,
-			this._codestreamTeamId
-		);
+		const streamResponse = await this.getStream({ streamId: request.streamId });
+		Container.instance().streams.resolve({
+			type: MessageType.Streams,
+			data: [streamResponse.stream]
+		});
 
-		return { stream: stream! };
+		return streamResponse as CloseStreamResponse;
 	}
 
 	@log()
@@ -1322,17 +1372,34 @@ export class SlackApiProvider implements ApiProvider {
 			purpose: request.purpose
 		});
 
-		const { ok, error, channel } = response as WebAPICallResult & { channel: any };
+		const { ok, error, purpose } = response as WebAPICallResult & { purpose: any };
 		if (!ok) throw new Error(error);
 
-		const stream = fromSlackChannelOrDirect(
-			channel,
-			await this.ensureUsernamesById(),
-			this._slackUserId,
-			this._codestreamTeamId
-		);
+		const streamResponse = await this.getStream({ streamId: request.streamId });
+		Container.instance().streams.resolve({
+			type: MessageType.Streams,
+			data: [streamResponse.stream]
+		});
 
-		return { stream: stream! };
+		return streamResponse as CloseStreamResponse;
+	}
+
+	@log()
+	async unarchiveStream(request: UnarchiveStreamRequest) {
+		const response = await this._slack.conversations.unarchive({
+			channel: request.streamId
+		});
+
+		const { ok, error } = response as WebAPICallResult;
+		if (!ok) throw new Error(error);
+
+		const streamResponse = await this.getStream({ streamId: request.streamId });
+		Container.instance().streams.resolve({
+			type: MessageType.Streams,
+			data: [streamResponse.stream]
+		});
+
+		return streamResponse;
 	}
 
 	@log()
@@ -1341,10 +1408,45 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	@log()
-	updateStreamMembership(
+	async updateStreamMembership(
 		request: UpdateStreamMembershipRequest
 	): Promise<UpdateStreamMembershipResponse> {
-		throw new Error("Method not implemented.");
+		const errors = [];
+		if (request.add != null && request.add.length !== 0) {
+			const response = await this._slack.conversations.invite({
+				channel: request.streamId,
+				users: request.add.join(",")
+			});
+
+			const { ok, error } = response as WebAPICallResult;
+			if (!ok) {
+				errors.push(error);
+			}
+		}
+
+		if (request.remove != null && request.remove.length !== 0) {
+			for (const userId of request.remove) {
+				const response = await this._slack.conversations.kick({
+					channel: request.streamId,
+					user: userId
+				});
+
+				const { ok, error } = response as WebAPICallResult;
+				if (!ok) {
+					errors.push(error);
+				}
+			}
+		}
+
+		if (errors.length !== 0) throw new Error(errors.join(", "));
+
+		const streamResponse = await this.getStream({ streamId: request.streamId });
+		Container.instance().streams.resolve({
+			type: MessageType.Streams,
+			data: [streamResponse.stream]
+		});
+
+		return streamResponse;
 	}
 
 	@log()

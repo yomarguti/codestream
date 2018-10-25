@@ -3,6 +3,9 @@ import { CodeStreamApiProvider } from "../api/codestream/codestreamApi";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import {
+	ArchiveStreamRequest,
+	ArchiveStreamRequestType,
+	ArchiveStreamResponse,
 	CloseStreamRequest,
 	CloseStreamRequestType,
 	CloseStreamResponse,
@@ -39,6 +42,9 @@ import {
 	SetStreamPurposeRequest,
 	SetStreamPurposeRequestType,
 	SetStreamPurposeResponse,
+	UnarchiveStreamRequest,
+	UnarchiveStreamRequestType,
+	UnarchiveStreamResponse,
 	UpdateStreamMembershipRequest,
 	UpdateStreamMembershipRequestType,
 	UpdateStreamMembershipResponse,
@@ -132,6 +138,11 @@ export class StreamsManager extends CachedEntityManagerBase<CSChannelStream | CS
 		return this.session.api.createDirectStream(request);
 	}
 
+	@lspHandler(ArchiveStreamRequestType)
+	archive(request: ArchiveStreamRequest): Promise<ArchiveStreamResponse> {
+		return this.session.api.archiveStream(request);
+	}
+
 	@lspHandler(CloseStreamRequestType)
 	close(request: CloseStreamRequest): Promise<CloseStreamResponse> {
 		return this.session.api.closeStream(request);
@@ -165,6 +176,11 @@ export class StreamsManager extends CachedEntityManagerBase<CSChannelStream | CS
 	@lspHandler(SetStreamPurposeRequestType)
 	setPurpose(request: SetStreamPurposeRequest): Promise<SetStreamPurposeResponse> {
 		return this.session.api.setStreamPurpose(request);
+	}
+
+	@lspHandler(UnarchiveStreamRequestType)
+	unarchive(request: UnarchiveStreamRequest): Promise<UnarchiveStreamResponse> {
+		return this.session.api.unarchiveStream(request);
 	}
 
 	@lspHandler(UpdateStreamRequestType)

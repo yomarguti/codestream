@@ -2,6 +2,8 @@ import { RequestInit, Response } from "node-fetch";
 import { Disposable, Event } from "vscode-languageserver";
 import {
 	AccessToken,
+	ArchiveStreamRequest,
+	ArchiveStreamResponse,
 	CloseStreamRequest,
 	CloseStreamResponse,
 	CreateChannelStreamRequest,
@@ -72,6 +74,8 @@ import {
 	RenameStreamResponse,
 	SetStreamPurposeRequest,
 	SetStreamPurposeResponse,
+	UnarchiveStreamRequest,
+	UnarchiveStreamResponse,
 	UpdateMarkerRequest,
 	UpdateMarkerResponse,
 	UpdatePreferencesRequest,
@@ -243,6 +247,7 @@ export interface ApiProvider {
 	fetchStreams(request: FetchStreamsRequest): Promise<FetchStreamsResponse>;
 	fetchUnreadStreams(request: FetchUnreadStreamsRequest): Promise<FetchUnreadStreamsResponse>;
 	getStream(request: GetStreamRequest): Promise<GetStreamResponse>;
+	archiveStream(request: ArchiveStreamRequest): Promise<ArchiveStreamResponse>;
 	closeStream(request: CloseStreamRequest): Promise<CloseStreamResponse>;
 	joinStream(request: JoinStreamRequest): Promise<JoinStreamResponse>;
 	leaveStream(request: LeaveStreamRequest): Promise<LeaveStreamResponse>;
@@ -250,6 +255,7 @@ export interface ApiProvider {
 	muteStream(request: MuteStreamRequest): Promise<MuteStreamResponse>;
 	renameStream(request: RenameStreamRequest): Promise<RenameStreamResponse>;
 	setStreamPurpose(request: SetStreamPurposeRequest): Promise<SetStreamPurposeResponse>;
+	unarchiveStream(request: UnarchiveStreamRequest): Promise<UnarchiveStreamResponse>;
 	updateStream(request: UpdateStreamRequest): Promise<UpdateStreamResponse>;
 	updateStreamMembership(
 		request: UpdateStreamMembershipRequest
