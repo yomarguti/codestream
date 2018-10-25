@@ -168,6 +168,7 @@ export class SimpleCreateDMPanel extends Component {
 						})}
 						key={stream.id}
 						id={stream.id}
+						onClick={() => this.handleClickSelectStream(stream)}
 					>
 						{stream.name}
 						<Timestamp time={stream.mostRecentPostCreatedAt} />
@@ -195,7 +196,7 @@ export class SimpleCreateDMPanel extends Component {
 						<span style={{ float: "right" }}>Last Post</span>
 						Recent DMs
 					</div>
-					<ul onClick={this.handleClickSelectStream}>{dms.map(stream => stream.element)}</ul>
+					<ul>{dms.map(stream => stream.element)}</ul>
 				</div>
 			</div>
 		);
@@ -226,12 +227,29 @@ export class SimpleCreateDMPanel extends Component {
 		this.props.setActivePanel("channels");
 	};
 
-	handleClickSelectStream = event => {
-		var liDiv = event.target.closest("li");
-		if (!liDiv || !liDiv.id) return; // FIXME throw error
-		this.props.setActivePanel("main");
-		this.props.setCurrentStream(liDiv.id);
-		this.props.openDirectMessage(liDiv.id);
+	handleClickSelectStream = stream => {
+		if (!stream) return;
+		const { members } = this.state;
+		const memberIds = members
+			.map(member => {
+				return member.value;
+			})
+			.filter(Boolean);
+		const newMemberIds = _.union(memberIds, stream.memberIds).filter(Boolean);
+		const newMembers = this.props.teamMembers
+			.map(user => {
+				if (user.deactivated) return null;
+				if (!_.contains(newMemberIds, user.id)) return null;
+				if (this.props.currentUserId === user.id) return null;
+				return {
+					value: user.id,
+					label: user.username
+				};
+			})
+			.filter(Boolean);
+		this.setState({ members: newMembers });
+		// this.props.setActivePanel("main");
+		// this.props.setCurrentStream(liDiv.id);
 	};
 
 	isFormInvalid = () => {
@@ -250,10 +268,9 @@ export class SimpleCreateDMPanel extends Component {
 				return member.value;
 			})
 			.filter(Boolean);
-		// console.log("MEMBERS ARE: ", memberIds);
-		// return;
 		if (memberIds.length) await this.props.createStream({ type: "direct", memberIds });
 
+		// FIXME -- shouldn't this select the stream?
 		this.resetForm();
 	};
 }
@@ -294,9 +311,13 @@ const mapStateToProps = ({ context, streams, users, teams, session, umis }) => {
 	// 	stream => stream.mostRecentPostCreatedAt || 528593114636
 	// ).reverse();
 
+	const user = users[session.userId];
+
 	return {
 		umis,
+		teamMembers,
 		directMessageStreams,
+		currentUserId: user.id,
 		teammates: _.sortBy(members, member => member.label.toLowerCase()),
 		team: teams[context.currentTeamId]
 	};

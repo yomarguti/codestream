@@ -300,10 +300,9 @@ export class SimpleStream extends Component {
 	// to be able to animate between the two streams, since they will both be
 	// visible during the transition
 	render() {
-		const { configs, umis } = this.props;
+		const { configs, umis, postStreamPurpose } = this.props;
 		let { activePanel } = this.props;
 		const { searchBarOpen, q } = this.state;
-		let postStreamPurpose = "For the benefit of Mr. Kite";
 		if (searchBarOpen && q) activePanel = "knowledge";
 
 		let threadId = this.state.threadId;
