@@ -212,9 +212,8 @@ export class ChannelStreamCollection extends StreamCollectionBase<ChannelStream,
 					id => !stream.entity.memberIds!.includes(id)
 				);
 
-				const entity = (await Container.agent.streams.update(stream.id, {
-					$push: { memberIds: missingIds }
-				})).stream as CSChannelStream;
+				const entity = (await Container.agent.streams.invite(stream.id, missingIds))
+					.stream as CSChannelStream;
 
 				return new ChannelStream(this.session, entity);
 			}
@@ -254,9 +253,8 @@ export class ChannelStreamCollection extends StreamCollectionBase<ChannelStream,
 					id => !stream.entity.memberIds!.includes(id)
 				);
 
-				const entity = (await Container.agent.streams.update(stream.id, {
-					$push: { memberIds: missingIds }
-				})).stream as CSChannelStream;
+				const entity = (await Container.agent.streams.invite(stream.id, missingIds))
+					.stream as CSChannelStream;
 
 				return new ChannelStream(this.session, entity);
 			}

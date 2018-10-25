@@ -35,6 +35,7 @@ import {
 	AgentOptions,
 	AgentResult,
 	ApiRequestType,
+	ArchiveStreamRequestType,
 	CloseStreamRequestType,
 	CodeStreamEnvironment,
 	CreateChannelStreamRequestType,
@@ -84,8 +85,11 @@ import {
 	ReactToPostRequestType,
 	RenameStreamRequestType,
 	SetStreamPurposeRequestType,
+	UnarchiveStreamRequestType,
 	UpdatePreferencesRequestType,
 	UpdatePresenceRequestType,
+	UpdateStreamMembershipRequestType,
+	UpdateStreamMembershipResponse,
 	UpdateStreamRequestType,
 	VersionCompatibility
 } from "../shared/agent.protocol";
@@ -490,15 +494,45 @@ export class CodeStreamAgentConnection implements Disposable {
 			});
 		}
 
+		archive(streamId: string) {
+			return this._connection.sendRequest(ArchiveStreamRequestType, {
+				streamId: streamId
+			});
+		}
+
 		close(streamId: string) {
 			return this._connection.sendRequest(CloseStreamRequestType, {
 				streamId: streamId
 			});
 		}
 
+		invite(streamId: string, userId: string): Promise<UpdateStreamMembershipResponse>;
+		invite(streamId: string, userIds: string[]): Promise<UpdateStreamMembershipResponse>;
+		invite(streamId: string, userIds: string | string[]) {
+			if (typeof userIds === "string") {
+				userIds = [userIds];
+			}
+			return this._connection.sendRequest(UpdateStreamMembershipRequestType, {
+				streamId: streamId,
+				add: userIds
+			});
+		}
+
 		join(streamId: string) {
 			return this._connection.sendRequest(JoinStreamRequestType, {
 				streamId: streamId
+			});
+		}
+
+		kick(streamId: string, userId: string): Promise<UpdateStreamMembershipResponse>;
+		kick(streamId: string, userIds: string[]): Promise<UpdateStreamMembershipResponse>;
+		kick(streamId: string, userIds: string | string[]) {
+			if (typeof userIds === "string") {
+				userIds = [userIds];
+			}
+			return this._connection.sendRequest(UpdateStreamMembershipRequestType, {
+				streamId: streamId,
+				remove: userIds
 			});
 		}
 
@@ -536,6 +570,13 @@ export class CodeStreamAgentConnection implements Disposable {
 			});
 		}
 
+		unarchive(streamId: string) {
+			return this._connection.sendRequest(UnarchiveStreamRequestType, {
+				streamId: streamId
+			});
+		}
+
+		// TODO: Remove
 		update(streamId: string, changes: { [key: string]: any }) {
 			return this._connection.sendRequest(UpdateStreamRequestType, {
 				streamId: streamId,

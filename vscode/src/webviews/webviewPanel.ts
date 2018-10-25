@@ -546,6 +546,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 								/* */
 							}
 
+							// TODO: This needs to be cleaned up and moved into the agent
 							this.session.notifyDidLeaveChannel(streamId);
 							this.postMessage({
 								type: WebviewIpcMessageType.response,
@@ -554,6 +555,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 
 							break;
 						}
+						// TODO: Remove
 						case "update-stream": {
 							const { streamId, update: changes } = body.params;
 
@@ -604,51 +606,51 @@ export class CodeStreamWebviewPanel implements Disposable {
 							return;
 						}
 						case "archive-stream": {
-							// const { streamId} = body.params;
-							//
-							// const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
-							// try {
-							// 	const response = await Container.agent.streams.setPurpose(streamId);
-							// 	responseBody.payload = response.stream;
-							// } catch (ex) {
-							// 	responseBody.error = ex;
-							// }
-							// this.postMessage({
-							// 	type: WebviewIpcMessageType.response,
-							// 	body: responseBody
-							// });
+							const { streamId } = body.params;
+
+							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
+							try {
+								const response = await Container.agent.streams.archive(streamId);
+								responseBody.payload = response.stream;
+							} catch (ex) {
+								responseBody.error = ex;
+							}
+							this.postMessage({
+								type: WebviewIpcMessageType.response,
+								body: responseBody
+							});
 							return;
 						}
 						case "remove-users-from-stream": {
-							// const { streamId, userIds } = body.params;
-							//
-							// const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
-							// try {
-							// 	const response = await Container.agent.streams.removeUsers(streamId, userIds);
-							// 	responseBody.payload = response.stream;
-							// } catch (ex) {
-							// 	responseBody.error = ex;
-							// }
-							// this.postMessage({
-							// 	type: WebviewIpcMessageType.response,
-							// 	body: responseBody
-							// });
+							const { streamId, userIds } = body.params;
+
+							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
+							try {
+								const response = await Container.agent.streams.kick(streamId, userIds);
+								responseBody.payload = response.stream;
+							} catch (ex) {
+								responseBody.error = ex;
+							}
+							this.postMessage({
+								type: WebviewIpcMessageType.response,
+								body: responseBody
+							});
 							return;
 						}
 						case "add-users-to-stream": {
-							// const { streamId, userIds } = body.params;
-							//
-							// const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
-							// try {
-							// 	const response = await Container.agent.streams.addUsers(streamId, userIds);
-							// 	responseBody.payload = response.stream;
-							// } catch (ex) {
-							// 	responseBody.error = ex;
-							// }
-							// this.postMessage({
-							// 	type: WebviewIpcMessageType.response,
-							// 	body: responseBody
-							// });
+							const { streamId, userIds } = body.params;
+
+							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
+							try {
+								const response = await Container.agent.streams.invite(streamId, userIds);
+								responseBody.payload = response.stream;
+							} catch (ex) {
+								responseBody.error = ex;
+							}
+							this.postMessage({
+								type: WebviewIpcMessageType.response,
+								body: responseBody
+							});
 							return;
 						}
 						case "show-code": {
