@@ -980,9 +980,11 @@ export class SimpleStream extends Component {
 		if (args) {
 			const oldName = this.props.postStreamName;
 			const newStream = await this.props.renameStream(this.props.postStreamId, args);
-			if (newStream && newStream.name === args)
-				this.submitPost({ text: "/me renamed the channel from #" + oldName + " to #" + args });
-			else
+			if (newStream && newStream.name === args) {
+				if (!this.props.isSlackTeam) {
+					this.submitPost({ text: "/me renamed the channel from #" + oldName + " to #" + args });
+				}
+			} else
 				this.submitSystemPost(
 					"Unable to rename channel. Channel names must be unique. CodeStream doesn't support these characters: .~#%&*{}+/:<>?|'\"."
 				);
@@ -1017,9 +1019,11 @@ export class SimpleStream extends Component {
 		}
 		if (args) {
 			const newStream = await this.props.setPurpose(this.props.postStreamId, args);
-			if (newStream.purpose === args)
-				this.submitPost({ text: "/me set the channel purpose to " + args });
-			else this.submitSystemPost("Unable to set channel purpose.");
+			if (newStream.purpose === args) {
+				if (!this.props.isSlackTeam) {
+					this.submitPost({ text: "/me set the channel purpose to " + args });
+				}
+			} else this.submitSystemPost("Unable to set channel purpose.");
 		} else this.submitSystemPost("Set a channel purpose by typing `/purpose [new purpose]`");
 		return true;
 	};

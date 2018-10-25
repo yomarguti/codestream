@@ -8,7 +8,7 @@ export const slashCommands = [
 		codeStreamTeam: true
 	},
 	// { id: "apply", help: "apply patch last post" },
-	{ id: "archive", help: "archive channel", channelOnly: true, codeStreamTeam: true },
+	{ id: "archive", help: "archive channel", channelOnly: true },
 	// { id: "diff", help: "diff last post" },
 
 	// these two are going to call the same function but have different descriptions
@@ -19,7 +19,7 @@ export const slashCommands = [
 	{ id: "leave", help: "leave channel", channelOnly: true },
 	{ id: "liveshare", help: "start live share", requires: "vsls" },
 	{ id: "me", help: "emote", description: "text" },
-	{ id: "msg", help: "message member", description: "@user text", codeStreamTeam: true },
+	{ id: "msg", help: "message member", description: "@user text" },
 	{ id: "mute", help: "mute channel", channelOnly: true, codeStreamTeam: true },
 	// { id: "muteall", help: "mute codestream" },
 	// { id: "open", help: "open channel" },
@@ -28,8 +28,7 @@ export const slashCommands = [
 		id: "purpose",
 		help: "set purpose",
 		description: "text",
-		channelOnly: true,
-		codeStreamTeam: true
+		channelOnly: true
 	},
 	{
 		id: "remove",
@@ -42,8 +41,7 @@ export const slashCommands = [
 		id: "rename",
 		help: "rename channel",
 		description: "newname",
-		channelOnly: true,
-		codeStreamTeam: true
+		channelOnly: true
 	},
 	// { id: "slack", help: "connect to slack", codeStreamTeam: true },
 	{ id: "version", help: "show codeStream version" },
