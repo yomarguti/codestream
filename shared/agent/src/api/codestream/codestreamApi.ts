@@ -319,8 +319,12 @@ export class CodeStreamApiProvider implements ApiProvider {
 				if (me != null) {
 					this._user = me;
 
-					if (this._unreads !== undefined && !Objects.shallowEquals(lastReads, me.lastReads)) {
-						this._unreads.compute(me.lastReads);
+					try {
+						if (this._unreads !== undefined && !Objects.shallowEquals(lastReads, me.lastReads)) {
+							this._unreads.compute(me.lastReads);
+						}
+					} catch (error) {
+						debugger;
 					}
 				}
 
@@ -705,9 +709,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	async muteStream(request: MuteStreamRequest) {
 		void (await this.updatePreferences({
 			preferences: {
-				mutedStreams: request.mute
-					? { $addToSet: { mutedStreams: [request.streamId] } }
-					: { $pull: { mutedStreams: [request.streamId] } }
+				$set: { [`mutedStreams.${request.streamId}`]: request.mute }
 			}
 		}));
 

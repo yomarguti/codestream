@@ -72,7 +72,7 @@ export namespace Objects {
 		return results;
 	}
 
-	export function shallowEquals(obj1: { [key: string]: any }, obj2: { [key: string]: any }) {
+	export function shallowEquals(obj1: { [key: string]: any }, obj2: { [key: string]: any } = {}) {
 		const entries = Object.entries(obj1);
 		if (entries.length !== Object.keys(obj2).length) return false;
 
