@@ -1,4 +1,6 @@
 "use strict";
+import { Container } from "../container";
+import { Logger } from "../logger";
 import {
 	CreatePostRequest,
 	CreatePostRequestType,
@@ -51,6 +53,13 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 
 	@lspHandler(CreatePostRequestType)
 	createPost(request: CreatePostRequest): Promise<CreatePostResponse> {
+		const analytics = Container.instance().analytics;
+		// TODO: Add Category
+		// TODO: Add First Post?
+		analytics.track("Post Created", {
+			Type: "Chat",
+			Thread: request.parentPostId ? "Reply" : "Parent"
+		});
 		return this.session.api.createPost(request);
 	}
 

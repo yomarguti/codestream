@@ -133,6 +133,9 @@ export class CodeStreamSession {
 				resolve();
 			})
 		);
+
+		this._environment = this.getEnvironment(this._options.serverUrl);
+
 		Container.initialize(this);
 
 		this._api = new CodeStreamApiProvider(_options.serverUrl, this.versionInfo);
@@ -241,6 +244,11 @@ export class CodeStreamSession {
 		return this._codestreamUserId!;
 	}
 
+	private _environment: CodeStreamEnvironment | undefined;
+	get environment() {
+		return this._environment!;
+	}
+
 	private _teamId: string | undefined;
 	get teamId() {
 		return this._teamId!;
@@ -322,10 +330,12 @@ export class CodeStreamSession {
 			this._teamId = this._options.teamId = response.teamId;
 			this._codestreamUserId = response.user.id;
 
-			if (response.user.providerInfo && response.user.providerInfo.slack) {
-				const currentTeam = response.teams.find(t => t.id === this._teamId)!;
+			const currentTeam = response.teams.find(t => t.id === this._teamId)!;
+			let isCurrentTeamSlack = false;
 
+			if (response.user.providerInfo && response.user.providerInfo.slack) {
 				if (currentTeam.providerInfo && currentTeam.providerInfo.slack) {
+					isCurrentTeamSlack = true;
 					Logger.log(
 						`Logging into Slack because team '${currentTeam.name}' (${
 							currentTeam.id
@@ -359,12 +369,30 @@ export class CodeStreamSession {
 				Container.instance().markerLocations.flushUncommittedLocations(repo);
 			});
 
+			// Initialize Mixpanel tracking
+			// TODO: Check for opt in
+			const user = response.user;
+			const analytics = Container.instance().analytics;
+			analytics.setDistinctId(response.user.id);
+			analytics.setSuperProps({
+				"Date Signed Up": new Date(user.registeredAt).toISOString(),
+				"Email Address": user.email,
+				"Team ID": this._teamId,
+				"Team Name": currentTeam.name,
+				"Team Size": currentTeam.memberIds.length,
+				"Plugin Version": this._options.extensionVersionFormatted,
+				Plan: "Free", // will have more options in future
+				Endpoint: "VS Code",
+				Provider: isCurrentTeamSlack ? "Slack" : "CodeStream",
+				"Date of Last Post": new Date(user.lastPostCreatedAt).toISOString()
+			});
+
 			return {
 				loginResponse: { ...response },
 				state: {
 					apiToken: response.accessToken,
 					email: email,
-					environment: this.getEnvironment(serverUrl),
+					environment: this._environment,
 					serverUrl: serverUrl,
 					teamId: this._teamId,
 					userId: this._userId

@@ -1,4 +1,5 @@
 "use strict";
+import { AnalyticsService } from "./analytics";
 import { DocumentManager } from "./documentManager";
 import { GitService } from "./git/gitService";
 import { Logger } from "./logger";
@@ -24,9 +25,15 @@ class ServiceContainer {
 		this._users = new UsersManager(session);
 
 		this._git = new GitService(session);
+		this._analytics = new AnalyticsService(session, false); // TODO: Respect VSCode telemetry opt out
 
 		this._documents = new DocumentManager();
 		this._documents.listen(session.connection);
+	}
+
+	private readonly _analytics: AnalyticsService;
+	get analytics() {
+		return this._analytics;
 	}
 
 	private readonly _documents: DocumentManager;
