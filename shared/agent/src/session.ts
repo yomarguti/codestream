@@ -373,19 +373,36 @@ export class CodeStreamSession {
 			// TODO: Check for opt in
 			const user = response.user;
 			const analytics = Container.instance().analytics;
-			analytics.setDistinctId(response.user.id);
-			analytics.setSuperProps({
-				"Date Signed Up": new Date(user.registeredAt).toISOString(),
+			const props: { [key: string]: any } = {
 				"Email Address": user.email,
 				"Team ID": this._teamId,
-				"Team Name": currentTeam.name,
-				"Team Size": currentTeam.memberIds.length,
 				"Plugin Version": this._options.extension.versionFormatted,
 				Plan: "Free", // will have more options in future
 				Endpoint: "VS Code",
-				Provider: isCurrentTeamSlack ? "Slack" : "CodeStream",
-				"Date of Last Post": new Date(user.lastPostCreatedAt).toISOString()
-			});
+				Provider: isCurrentTeamSlack ? "Slack" : "CodeStream"
+			};
+
+			if (currentTeam != null) {
+				props["Team Name"] = currentTeam.name;
+				if (currentTeam.memberIds != null) {
+					props["Team Size"] = currentTeam.memberIds.length;
+				}
+			}
+
+			try {
+				props["Date Signed Up"] = new Date(user.registeredAt).toISOString();
+			} catch (ex) {
+				Logger.error(ex);
+			}
+
+			try {
+				props["Date of Last Post"] = new Date(user.lastPostCreatedAt).toISOString();
+			} catch (ex) {
+				Logger.error(ex);
+			}
+
+			analytics.setDistinctId(response.user.id);
+			analytics.setSuperProps(props);
 
 			return {
 				loginResponse: { ...response },
