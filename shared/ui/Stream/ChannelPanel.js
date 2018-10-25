@@ -21,6 +21,7 @@ import Icon from "./Icon";
 import Tooltip from "./Tooltip";
 import Debug from "./Debug";
 import Menu from "./Menu";
+import Button from "./Button";
 import ChannelMenu from "./ChannelMenu";
 import ScrollBox from "./ScrollBox";
 
@@ -38,7 +39,8 @@ export class SimpleChannelPanel extends Component {
 				liveShareSessions: true,
 				unreads: true
 			},
-			showChannels: "all"
+			showChannels: "all",
+			checkedStreams: {}
 		};
 		this.showChannelsLabel = {
 			all: "all conversations",
@@ -71,6 +73,8 @@ export class SimpleChannelPanel extends Component {
 			{ label: "-" },
 			{ label: "Selected Conversations", action: "set-channels-selected" }
 		];
+
+		if (this.state.showChannels === "selecting") return this.renderSelectingChannels();
 
 		return (
 			<div className={channelPanelClass}>
@@ -111,6 +115,8 @@ export class SimpleChannelPanel extends Component {
 				return [this.renderUnreadChannels(), this.renderStarredChannels()];
 			case "unreads":
 				return this.renderUnreadChannels();
+			case "selecting":
+				return this.renderSelectingChannels();
 			case "selected":
 				return this.renderSelectedChannels();
 			default:
@@ -132,6 +138,7 @@ export class SimpleChannelPanel extends Component {
 	};
 
 	handleSelectMenu = action => {
+		const { selectedStreams } = this.props;
 		this.setState({ menuOpen: false });
 		switch (action) {
 			case "set-channels-all":
@@ -144,7 +151,7 @@ export class SimpleChannelPanel extends Component {
 				this.setState({ showChannels: "unreads" });
 				break;
 			case "set-channels-selected":
-				this.selectChannels();
+				this.setState({ showChannels: "selecting", checkedStreams: selectedStreams });
 				break;
 		}
 	};
@@ -235,27 +242,134 @@ export class SimpleChannelPanel extends Component {
 	};
 
 	renderSelectedChannels = () => {
-		return (
+		return [
 			<div
 				className={createClassString("section", "has-children", {
-					expanded: this.state.expanded["starredChannels"]
+					expanded: this.state.expanded["teamChannels"]
 				})}
+				key="one"
 			>
-				<div className="header top" onClick={e => this.toggleSection(e, "starredChannels")}>
+				<div className="header top" onClick={e => this.toggleSection(e, "teamChannels")}>
 					<Icon name="triangle-right" className="triangle-right" />
-					<span className="clickable">Starred</span>
+					<span className="clickable">Channels</span>
 					<div className="align-right">
 						{this.renderBrowsePublicIcon()}
 						{this.renderCreateChannelIcon()}
-						{this.renderCreateDMIcon()}
 					</div>
 				</div>
 				<ul onClick={this.handleClickSelectStream}>
 					{this.renderStreams(this.props.channelStreams, { selectedOnly: true })}
+				</ul>
+			</div>,
+			<div
+				className={createClassString("section", "has-children", {
+					expanded: this.state.expanded["directMessages"]
+				})}
+				key="two"
+			>
+				<div className="header top" onClick={e => this.toggleSection(e, "directMessages")}>
+					<Icon name="triangle-right" className="triangle-right" />
+					<span className="clickable">Direct Messages</span>
+					<div className="align-right">{this.renderCreateDMIcon()}</div>
+				</div>
+				<ul onClick={this.handleClickSelectStream}>
 					{this.renderStreams(this.props.directMessageStreams, { selectedOnly: true })}
 				</ul>
 			</div>
+		];
+	};
+
+	renderSelectingChannels = () => {
+		return (
+			<div className="panel select-channels">
+				<div className="panel-header">Select Channels to Show</div>
+				<ScrollBox>
+					<form className="standard-form vscroll">
+						<fieldset className="form-body">
+							<ul>
+								{this.renderStreamsCheckboxes(this.props.channelStreams)}
+								{this.renderStreamsCheckboxes(this.props.directMessageStreams)}
+							</ul>
+							<div className="button-group">
+								<Button className="control-button cancel" onClick={this.selectAll}>
+									Select All
+								</Button>
+								<Button className="control-button cancel" onClick={this.selectNone}>
+									Select None
+								</Button>
+								<Button className="control-button" onClick={this.saveSelected}>
+									Save
+								</Button>
+							</div>
+						</fieldset>
+					</form>
+				</ScrollBox>
+			</div>
 		);
+	};
+
+	selectAll = () => {
+		let checkedStreams = {};
+		this.props.channelStreams.forEach(stream => (checkedStreams[stream.id] = true));
+		this.props.directMessageStreams.forEach(stream => (checkedStreams[stream.id] = true));
+		this.setState({ checkedStreams });
+	};
+
+	selectNone = () => {
+		this.setState({ checkedStreams: {} });
+	};
+
+	saveSelected = async () => {
+		const { checkedStreams } = this.state;
+		await this.props.setUserPreference(["selectedStreams"], checkedStreams);
+		this.setState({ showChannels: "selected" });
+	};
+
+	streamIcon = stream => {
+		if (stream.type === "direct") {
+			return stream.name === "slackbot" ? (
+				<Icon className="heart" name="heart" />
+			) : safe(() => stream.memberIds.length > 2) ? (
+				<Icon className="organization" name="organization" />
+			) : (
+				<Icon className="person" name="person" />
+			);
+		}
+		return this.props.mutedStreams[stream.id] ? (
+			<Icon className="mute" name="mute" />
+		) : stream.privacy === "private" ? (
+			<Icon className="lock" name="lock" />
+		) : stream.serviceType === "vsls" ? (
+			<Icon className="broadcast" name="broadcast" />
+		) : (
+			<span className="icon hash">#</span>
+		);
+	};
+
+	renderStreamsCheckboxes = streams => {
+		return streams.map(stream => {
+			if (stream.isArchived) return null;
+			return (
+				<li key={stream.id} id={stream.id}>
+					<input
+						checked={this.state.checkedStreams[stream.id]}
+						type="checkbox"
+						id={"channel-" + stream.id}
+						onChange={e => this.checkStream(stream.id)}
+					/>
+					&nbsp;
+					<label htmlFor={"channel-" + stream.id}>
+						{this.streamIcon(stream)}
+						{stream.name}
+					</label>
+				</li>
+			);
+		});
+	};
+
+	checkStream = streamId => {
+		const { checkedStreams } = this.state;
+		this.setState({ checkedStreams: { ...checkedStreams, [streamId]: !checkedStreams[streamId] } });
 	};
 
 	renderTeamChannels = () => {
@@ -310,15 +424,6 @@ export class SimpleChannelPanel extends Component {
 			// no new ones are being created
 			if (stream.name.match(/^ls:/)) return null;
 
-			const icon = this.props.mutedStreams[stream.id] ? (
-				<Icon className="mute" name="mute" />
-			) : stream.privacy === "private" ? (
-				<Icon className="lock" name="lock" />
-			) : stream.serviceType === "vsls" ? (
-				<Icon className="broadcast" name="broadcast" />
-			) : (
-				<span className="icon hash">#</span>
-			);
 			let count = this.props.umis.unreads[stream.id] || 0;
 			if (this.props.mutedStreams[stream.id]) count = 0;
 			let mentions = this.props.umis.mentions[stream.id] || 0;
@@ -336,7 +441,7 @@ export class SimpleChannelPanel extends Component {
 					key={stream.id}
 					id={stream.id}
 				>
-					{icon}
+					{this.streamIcon(stream)}
 					<Debug text={stream.id}>{stream.name}</Debug>
 					{mentions > 0 ? <span className="umi">{mentions}</span> : null}
 					<span>

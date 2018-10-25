@@ -410,6 +410,32 @@
 			background-color: lighten(@background-color-info, 5%);
 		}
 
+		.select-channels .standard-form {
+			ul {
+				margin: 0;
+				padding: 0;
+				li {
+					list-style: none;
+					.icon {
+						margin-right: 5px;
+					}
+				}
+				label {
+					cursor: pointer;
+				}
+			}
+			.button-group {
+				display: flex;
+				justify-content: space-between;
+				width: 100%;
+				button {
+					width: auto;
+					margin: 0 5px !important;
+					flex-basis: 30%;
+				}
+			}
+		}
+
 		.edit-post,
 		.standard-form {
 			.button-group {
