@@ -1120,20 +1120,26 @@ export class SimpleStream extends Component {
 	sendDirectMessage = async args => {
 		const { teamMembersById } = this.props;
 
-		let tokens = args.split(/(\s+)/);
-		const id = tokens.shift();
+		const match = /(\w+)\s+(.*)/.exec(args);
 
-		let user = Object.keys(teamMembersById).find(userId => {
-			const username = teamMembersById[userId].username;
-			return id === username || id === "@" + username;
-		});
+		let user;
+		let mention;
+		let text;
+		if (match != null) {
+			[, mention, text] = match;
+
+			if (mention.startsWith("@")) {
+				mention = mention.substr(1);
+			}
+			user = Object.values(teamMembersById).find(user => mention === user.username);
+		}
 
 		if (!user) return this.submitSystemPost("Usage: `/msg @user message`");
 
 		// find or create the stream, then select it, then post the message
-		const stream = await this.props.createStream({ type: "direct", memberIds: [user] });
-		if (stream && (stream._id || stream.id) && tokens.length) {
-			this.submitPost({ text: tokens.join(" ").trim() });
+		const stream = await this.props.createStream({ type: "direct", memberIds: [user.id] });
+		if (stream && (stream._id || stream.id) && text != null && text.length) {
+			this.submitPost({ text: text });
 		}
 		return true;
 	};
