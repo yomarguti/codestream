@@ -879,6 +879,7 @@ class ComposeBox extends React.Component {
 										type="text"
 										name="title"
 										className="native-key-bindings input-text control"
+										tabIndex={this.tabIndex()}
 										value={this.state.title}
 										onChange={e => this.setState({ title: e.target.value })}
 										placeholder={titlePlaceholder}
@@ -903,6 +904,7 @@ class ComposeBox extends React.Component {
 										isClearable={false}
 										placeholder="Assignees (optional)"
 										onChange={value => this.setState({ assignees: value })}
+										tabIndex={this.tabIndex()}
 									/>
 								</div>
 							)}
@@ -910,7 +912,7 @@ class ComposeBox extends React.Component {
 								<ContentEditable
 									className={createClassString("native-key-bindings", "message-input")}
 									id="snippet-div"
-									tabIndex="-1"
+									tabIndex={this.tabIndex()}
 									onChange={this.handleChange}
 									onBlur={this.handleBlur}
 									onClick={this.handleClick}
@@ -1045,7 +1047,7 @@ class ComposeBox extends React.Component {
 						"has-plus": !multiCompose
 					})}
 					id="input-div"
-					tabIndex="-1"
+					tabIndex={this.tabIndex()}
 					onChange={this.handleChange}
 					onBlur={this.handleBlur}
 					onClick={this.handleClick}
@@ -1057,10 +1059,16 @@ class ComposeBox extends React.Component {
 		);
 	};
 
+	tabIndex = () => {
+		return global.atom ? this.tabIndexCount++ : "0";
+	};
+
 	render() {
 		const { forwardedRef } = this.props;
 		const { quote } = this.state;
 		const multiCompose = quote || this.props.multiCompose;
+
+		this.tabIndexCount = 0;
 
 		return (
 			<div
