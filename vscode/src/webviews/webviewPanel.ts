@@ -667,6 +667,21 @@ export class CodeStreamWebviewPanel implements Disposable {
 
 							break;
 						}
+						case "close-direct-message": {
+							const responseBody: { [k: string]: any } = { id: e.body.id };
+							try {
+								const response = await Container.agent.streams.close(e.body.params);
+								responseBody.payload = response.stream;
+							} catch (error) {
+								responseBody.error = error;
+							} finally {
+								this.postMessage({
+									type: WebviewIpcMessageType.response,
+									body: responseBody
+								});
+							}
+							break;
+						}
 					}
 					break;
 				}
