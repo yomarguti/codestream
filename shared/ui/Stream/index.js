@@ -388,6 +388,11 @@ export class SimpleStream extends Component {
 				Cancel <span className="keybinding">ESC</span>
 			</span>
 		);
+		const closeThreadTooltip = (
+			<span>
+				Close thread <span className="keybinding">ESC</span>
+			</span>
+		);
 
 		return (
 			<div className={streamClass}>
@@ -617,7 +622,7 @@ export class SimpleStream extends Component {
 					{threadId && (
 						<div className="thread-panel" ref={ref => (this._threadPanel = ref)}>
 							<div id="close-thread" className="panel-header" onClick={this.handleDismissThread}>
-								<Tooltip title="Close thread" placement="bottomRight">
+								<Tooltip title={closeThreadTooltip} placement="bottomRight">
 									<span className="align-right-button">
 										<Icon name="x" />
 									</span>
