@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { connect } from "react-redux";
 import createClassString from "classnames";
 import _ from "underscore";
-import { createStream, setCurrentStream, setUserPreference } from "./actions";
+import { closeDirectMessage, createStream, setCurrentStream, setUserPreference } from "./actions";
 import {
 	getChannelStreamsForTeam,
 	getDirectMessageStreamsForTeam,
@@ -241,7 +241,11 @@ export class SimpleChannelPanel extends Component {
 							{stream.name} {stream.isMeStream && <span className="you"> (you)</span>}
 							{count > 0 ? <span className="umi">{count}</span> : null}
 							<Tooltip title="Close Conversation">
-								<Icon name="x" onClick={this.handleClickMuteStream} className="align-right" />
+								<Icon
+									name="x"
+									onClick={this.handleClickCloseDirectMessage}
+									className="align-right"
+								/>
 							</Tooltip>
 						</Debug>
 					</li>
@@ -351,6 +355,17 @@ export class SimpleChannelPanel extends Component {
 		return true;
 	};
 
+	handleClickCloseDirectMessage = event => {
+		event.preventDefault();
+		event.stopPropagation();
+		if (!this.props.canCloseDirectMessages) return this.handleClickMuteStream(event);
+
+		var liDiv = event.target.closest("li");
+		if (!liDiv) return; // FIXME throw error
+		const id = liDiv.id || liDiv.getAttribute("teammate");
+		this.props.closeDirectMessage(id);
+	};
+
 	findStream = streamId => {
 		return (
 			this.props.channelStreams.find(stream => stream.id === streamId) ||
@@ -364,7 +379,8 @@ export class SimpleChannelPanel extends Component {
 }
 
 const mapStateToProps = ({ context, streams, users, teams, umis, session }) => {
-	const teamMembers = teams[context.currentTeamId].memberIds.map(id => users[id]).filter(Boolean);
+	const team = teams[context.currentTeamId];
+	const teamMembers = team.memberIds.map(id => users[id]).filter(Boolean);
 	// .filter(user => user && user.isRegistered);
 
 	const channelStreams = _.sortBy(
@@ -416,13 +432,15 @@ const mapStateToProps = ({ context, streams, users, teams, umis, session }) => {
 		mutedStreams,
 		teammates: teamMembers,
 		oneOnOnePeople,
-		team: teams[context.currentTeamId]
+		team: teams[context.currentTeamId],
+		canCloseDirectMessages: safe(() => team.providerInfo.slack)
 	};
 };
 
 export default connect(
 	mapStateToProps,
 	{
+		closeDirectMessage,
 		createStream,
 		setUserPreference,
 		setCurrentStream

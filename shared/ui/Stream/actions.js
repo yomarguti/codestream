@@ -377,3 +377,11 @@ export const fetchPostsForStreams = () => async (dispatch, getState) => {
 export const showCode = (post, enteringThread) => (dispatch, getState, { api }) => {
 	return api.showCode(post, enteringThread);
 };
+
+export const closeDirectMessage = id => (dispatch, getState, { api }) => {
+	try {
+		return api.closeDirectMessage(id);
+	} catch (error) {
+		console.error(error);
+	}
+};
