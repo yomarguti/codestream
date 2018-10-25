@@ -11,6 +11,7 @@ import { TokenManager } from "./api/tokenManager";
 import { openEditor, ShowCodeResult, WorkspaceState } from "./common";
 import { Container } from "./container";
 import { StreamThreadId } from "./controllers/webviewController";
+import { Logger } from "./logger";
 import { Command, createCommandDecorator } from "./system";
 
 const commandRegistry: Command[] = [];
@@ -204,23 +205,35 @@ export class Commands implements Disposable {
 
 	@command("signIn", { customErrorHandling: true })
 	async signIn() {
-		const token = await TokenManager.get(Container.config.serverUrl, Container.config.email);
-		if (!token) {
-			await Container.context.workspaceState.update(WorkspaceState.TeamId, undefined);
-			await Container.webview.show();
-		} else {
-			await Container.session.login(Container.config.email, token);
+		try {
+			const token = await TokenManager.get(Container.config.serverUrl, Container.config.email);
+			if (!token) {
+				await Container.context.workspaceState.update(WorkspaceState.TeamId, undefined);
+				await Container.webview.show();
+			} else {
+				await Container.session.login(Container.config.email, token);
+			}
+		} catch (ex) {
+			Logger.error(ex);
 		}
 	}
 
 	@command("signOut")
-	signOut() {
-		return Container.session.logout();
+	async signOut() {
+		try {
+			return await Container.session.logout();
+		} catch (ex) {
+			Logger.error(ex);
+		}
 	}
 
 	@command("toggle")
-	toggle() {
-		return Container.webview.toggle();
+	async toggle() {
+		try {
+			return await Container.webview.toggle();
+		} catch (ex) {
+			Logger.error(ex);
+		}
 	}
 
 	private async findStreamThread(

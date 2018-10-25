@@ -34,27 +34,29 @@ export class Logger {
 	}
 
 	static debug(message?: any, ...params: any[]): void {
-		if (this.level !== TraceLevel.Debug && !Logger.isDebugging) return;
-
 		if (Logger.isDebugging) {
-			console.log(this.timestamp, ConsolePrefix, message, ...params);
+			console.log(this.timestamp, ConsolePrefix, message || "", ...params);
 		}
 
+		if (this.level !== TraceLevel.Debug) return;
+
 		if (this.output !== undefined) {
-			this.output.appendLine(`${this.timestamp} ${message} ${this.toLoggableParams(true, params)}`);
+			this.output.appendLine(
+				`${this.timestamp} ${message || ""} ${this.toLoggableParams(true, params)}`
+			);
 		}
 	}
 
 	static error(ex: Error, message?: string, ...params: any[]): void {
 		if (Logger.isDebugging) {
-			console.error(this.timestamp, ConsolePrefix, message, ...params, ex);
+			console.error(this.timestamp, ConsolePrefix, message || "", ...params, ex);
 		}
 
-		if (this.level === TraceLevel.Silent) return;
+		if (this.level === TraceLevel.Silent && !Logger.isDebugging) return;
 
 		if (this.output !== undefined) {
 			this.output.appendLine(
-				`${this.timestamp} ${message} ${this.toLoggableParams(false, params)}\n${ex}`
+				`${this.timestamp} ${message || ""} ${this.toLoggableParams(false, params)}\n${ex}`
 			);
 		}
 
@@ -63,40 +65,42 @@ export class Logger {
 
 	static log(message?: any, ...params: any[]): void {
 		if (Logger.isDebugging) {
-			console.log(this.timestamp, ConsolePrefix, message, ...params);
+			console.log(this.timestamp, ConsolePrefix, message || "", ...params);
 		}
 
 		if (this.level !== TraceLevel.Verbose && this.level !== TraceLevel.Debug) return;
 
 		if (this.output !== undefined) {
 			this.output.appendLine(
-				`${this.timestamp} ${message} ${this.toLoggableParams(false, params)}`
+				`${this.timestamp} ${message || ""} ${this.toLoggableParams(false, params)}`
 			);
 		}
 	}
 
 	static logWithDebugParams(message?: any, ...params: any[]): void {
 		if (Logger.isDebugging) {
-			console.log(this.timestamp, ConsolePrefix, message, ...params);
+			console.log(this.timestamp, ConsolePrefix, message || "", ...params);
 		}
 
 		if (this.level !== TraceLevel.Verbose && this.level !== TraceLevel.Debug) return;
 
 		if (this.output !== undefined) {
-			this.output.appendLine(`${this.timestamp} ${message} ${this.toLoggableParams(true, params)}`);
+			this.output.appendLine(
+				`${this.timestamp} ${message || ""} ${this.toLoggableParams(true, params)}`
+			);
 		}
 	}
 
 	static warn(message?: any, ...params: any[]): void {
 		if (Logger.isDebugging) {
-			console.warn(this.timestamp, ConsolePrefix, message, ...params);
+			console.warn(this.timestamp, ConsolePrefix, message || "", ...params);
 		}
 
 		if (this.level === TraceLevel.Silent) return;
 
 		if (this.output !== undefined) {
 			this.output.appendLine(
-				`${this.timestamp} ${message} ${this.toLoggableParams(false, params)}`
+				`${this.timestamp} ${message || ""} ${this.toLoggableParams(false, params)}`
 			);
 		}
 	}
