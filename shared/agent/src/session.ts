@@ -380,7 +380,7 @@ export class CodeStreamSession {
 				"Team ID": this._teamId,
 				"Team Name": currentTeam.name,
 				"Team Size": currentTeam.memberIds.length,
-				"Plugin Version": this._options.extensionVersionFormatted,
+				"Plugin Version": this._options.extension.versionFormatted,
 				Plan: "Free", // will have more options in future
 				Endpoint: "VS Code",
 				Provider: isCurrentTeamSlack ? "Slack" : "CodeStream",
