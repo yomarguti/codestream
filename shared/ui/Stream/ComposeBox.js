@@ -899,7 +899,7 @@ class ComposeBox extends React.Component {
 										isMulti={true}
 										value={this.state.assignees || []}
 										options={teamMembersForSelect}
-										closeMenuOnSelect={false}
+										closeMenuOnSelect={true}
 										isClearable={false}
 										placeholder="Assignees (optional)"
 										onChange={value => this.setState({ assignees: value })}
