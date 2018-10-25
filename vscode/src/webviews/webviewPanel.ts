@@ -684,6 +684,22 @@ export class CodeStreamWebviewPanel implements Disposable {
 							}
 							break;
 						}
+						case "change-stream-mute-state": {
+							const responseBody: { [k: string]: any } = { id: e.body.id };
+							try {
+								const { streamId, muted } = e.body.params;
+								const response = await Container.agent.streams.mute(streamId, muted);
+								responseBody.payload = response.stream;
+							} catch (error) {
+								responseBody.error = error;
+							} finally {
+								this.postMessage({
+									type: WebviewIpcMessageType.response,
+									body: responseBody
+								});
+							}
+							break;
+						}
 					}
 					break;
 				}
