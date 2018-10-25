@@ -82,6 +82,7 @@
 		width: auto;
 		height: auto;
 		height: 100%;
+		overflow: hidden;
 	}
 
 	.shadow-container {
@@ -148,7 +149,16 @@
 		width: 100%;
 		height: 100%;
 		background: @app-background-color;
-		overflow-x: hidden;
+		overflow: hidden;
+		display: flex;
+		flex-direction: column;
+
+		nav {
+		}
+		.content {
+			position: relative;
+			flex-basis: 99%;
+		}
 
 		.umis .unread-badge {
 			width: 7px;
@@ -206,6 +216,8 @@
 				padding-top: 10px;
 			}
 			z-index: 31;
+			display: flex;
+			flex-direction: column;
 		}
 		.panel-header {
 			position: relative;
@@ -336,7 +348,7 @@
 			color: white;
 		}
 		.unreads[type="above"] {
-			top: -6em;
+			top: -3em;
 			// margin-top: -3em;
 			border-radius: 0 0 5px 5px;
 			border-top: none;
@@ -450,7 +462,7 @@
 			border-top: 1px solid @base-border-color;
 			// background-color: inherit;
 			background-color: @app-background-color;
-			position: absolute;
+			// position: absolute;
 			bottom: 0px;
 			padding: 10px;
 			box-sizing: border-box;
@@ -1196,6 +1208,8 @@
 			left: 0;
 			height: 100%;
 			transition: transform 0.2s, opacity 0.2s;
+			display: flex;
+			flex-direction: column;
 		}
 
 		.postslist {
@@ -1214,8 +1228,13 @@
 			overflow: auto;
 		}
 
+		.scrollbox {
+			width: 100%;
+			position: relative;
+		}
+
 		.postslist.threadlist {
-			overflow-y: scroll;
+			// overflow-y: scroll;
 		}
 
 		.panel.no-animation.shrink {
@@ -1251,7 +1270,7 @@
 			}
 		}
 		.vscroll {
-			padding-bottom: 50px;
+			padding-bottom: 10px;
 		}
 		.panel {
 			// min-height: 100%;
@@ -2268,7 +2287,7 @@
 
 	#code-comment-form {
 		width: 100%;
-		padding: 0;
+		padding: 0 0 20px 0;
 		position: relative;
 		overflow-x: hidden;
 		max-height: 100vh !important;
@@ -2380,6 +2399,7 @@
 		}
 	}
 	.filters {
+		flex-basis: 1%;
 		font-size: 12px;
 		z-index: 15;
 		background-color: @app-background-color;

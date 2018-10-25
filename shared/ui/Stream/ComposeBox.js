@@ -6,6 +6,7 @@ import EventEmitter from "../event-emitter";
 import AtMentionsPopup from "./AtMentionsPopup";
 import Icon from "./Icon";
 import Button from "./Button";
+import ScrollBox from "./ScrollBox";
 import EmojiPicker from "./EmojiPicker";
 import { getCurrentCursorPosition, createRange } from "../utils";
 const emojiData = require("../node_modules/markdown-it-emoji-mart/lib/data/full.json");
@@ -703,12 +704,8 @@ class ComposeBox extends React.Component {
 					</span>
 				</Tooltip>
 			</div>,
-			<div className="shadow-overlay" key="three">
-				<div className="shadow-container">
-					<div className="shadow shadow-top" />
-				</div>
+			<ScrollBox>
 				<form id="code-comment-form" className="standard-form" key="two">
-					<div className="shadow-cover-top" />
 					<fieldset className="form-body">
 						<div id="controls" className="control-group">
 							<div className="two-column">
@@ -959,7 +956,7 @@ class ComposeBox extends React.Component {
 						<div style={{ clear: "both" }} />
 					</fieldset>
 				</form>
-			</div>
+			</ScrollBox>
 		];
 		// 	<span className="hixnt" style={{ grid: "none" }}>
 		// 	<input type="checkbox" />

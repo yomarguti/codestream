@@ -10,6 +10,7 @@ import ChannelPanel from "./ChannelPanel";
 import InvitePanel from "./InvitePanel";
 import PublicChannelPanel from "./PublicChannelPanel";
 import CreateChannelPanel from "./CreateChannelPanel";
+import ScrollBox from "./ScrollBox";
 import KnowledgePanel from "./KnowledgePanel";
 import CreateDMPanel from "./CreateDMPanel";
 import ChannelMenu from "./ChannelMenu";
@@ -221,44 +222,7 @@ export class SimpleStream extends Component {
 		this.resizeStream();
 	};
 
-	resizeStream = () => {
-		if (!this._div || !this._compose || !this._header) return;
-
-		if (this.state.multiCompose) return;
-
-		// const streamHeight = this._div.offsetHeight;
-		// const postslistHeight = this._postslist.offsetHeight;
-		const composeHeight = this._compose.current.offsetHeight;
-		const headerHeight = this._header.offsetHeight;
-		// if (postslistHeight < streamHeight) {
-		// 	let newHeight = streamHeight - postslistHeight + this._intro.offsetHeight - composeHeight;
-		// 	this._intro.style.height = newHeight + "px";
-		// }
-
-		const padding = composeHeight + headerHeight;
-		// this._div.style.paddingBottom = padding + "px";
-
-		if (this._mainPanel) this._mainPanel.style.paddingBottom = padding + "px";
-		if (this._threadPanel) this._threadPanel.style.paddingBottom = padding + "px";
-
-		safe(() => this._postslist.resize());
-		// safe(() => this._threadpostslist.resize());
-
-		// // we re-measure the height of postslist here because we just changed
-		// // it with the style declaration immediately above
-		// this._threadpostslist.style.height = this._postslist.offsetHeight + "px";
-		// // this._threadpostslist.style.top = headerHeight + "px";
-		// // if (this._atMentionsPopup)
-		// // this._atMentionsPopup.style.bottom = this._compose.offsetHeight + "px";
-		//
-		// let scrollHeight = this._postslist.scrollHeight;
-		// let currentScroll = this._postslist.scrollTop;
-		// let offBottom = scrollHeight - currentScroll - streamHeight + composeHeight + headerHeight;
-		// if i am manually scrolling, don't programatically scroll to bottom
-		// offBottom is how far we've scrolled off the bottom of the posts list
-		// console.log("OFF BOTTOM IS: ", offBottom);
-		// if (offBottom < 100) this.scrollToBottom();
-	};
+	resizeStream = () => {};
 
 	// return the post, if any, with the given ID
 	findPostById(id) {
@@ -357,20 +321,7 @@ export class SimpleStream extends Component {
 		});
 		const mainPanelClass = createClassString({
 			panel: true,
-			"main-panel": true,
-			shrink: activePanel === "thread",
-			"off-right":
-				activePanel === "channels" ||
-				activePanel === "create-channel" ||
-				activePanel === "create-dm" ||
-				activePanel === "public-channels" ||
-				activePanel === "knowledge" ||
-				activePanel === "invite"
-		});
-		const threadPanelClass = createClassString({
-			// panel: true,
-			"thread-panel": true
-			// "off-right": activePanel !== "thread"
+			"main-panel": true
 		});
 
 		let placeholderText = "Message #" + this.props.postStreamName;
@@ -444,87 +395,88 @@ export class SimpleStream extends Component {
 				<div id="confirm-root" />
 				<div id="focus-trap" className={createClassString({ active: !this.props.hasFocus })} />
 				{threadId && <div id="thread-blanket" />}
-				{this.state.searchBarOpen && (
-					<div className="search-bar">
-						<input
-							name="q"
-							className="native-key-bindings input-text control"
-							type="text"
-							ref={ref => (this._searchInput = ref)}
-							onChange={e => this.setState({ q: e.target.value })}
-							placeholder="Search Markers"
-						/>
-						<span className="align-right-button" onClick={this.handleClickSearch}>
-							<Tooltip title={tooltip} placement="bottomRight">
-								<span>
-									<Icon name="x" className="cancel-icon" />
-								</span>
-							</Tooltip>
-						</span>
-					</div>
-				)}
-				{!this.state.searchBarOpen && (
-					<div className="top-tab-group">
-						<label
-							className={createClassString({
-								checked: activePanel === "knowledge",
-								muted: !this.props.configs.showMarkers
-							})}
-							onClick={e => this.setActivePanel("knowledge")}
-						>
-							<span>
-								{!this.props.configs.showMarkers && <Icon name="mute" className="mute" />}
-								Markers
-							</span>
-						</label>
-						<label
-							className={createClassString({
-								checked: activePanel === "channels",
-								muted: this.props.configs.muteAll
-							})}
-							onClick={e => this.setActivePanel("channels")}
-						>
-							<span>
-								{this.props.configs.muteAll && <Icon name="mute" className="mute" />}
-								Channels
-								{!this.props.configs.muteAll && <span className={umisClass}>{totalUMICount}</span>}
-							</span>
-						</label>
-						<label
-							className={createClassString({ checked: activePanel === "main" })}
-							onClick={e => this.setActivePanel("main")}
-						>
-							<span>
-								{channelIcon} {this.props.postStreamName}
-							</span>
-						</label>
-						<div className="fill-tab">
+				<nav>
+					{this.state.searchBarOpen && (
+						<div className="search-bar">
+							<input
+								name="q"
+								className="native-key-bindings input-text control"
+								type="text"
+								ref={ref => (this._searchInput = ref)}
+								onChange={e => this.setState({ q: e.target.value })}
+								placeholder="Search Markers"
+							/>
 							<span className="align-right-button" onClick={this.handleClickSearch}>
-								<Tooltip title="Search Markers" placement="bottomRight">
+								<Tooltip title={tooltip} placement="bottomRight">
 									<span>
-										<Icon name="search" className="search-icon button" />
-									</span>
-								</Tooltip>
-							</span>
-							<span
-								className="align-right-button"
-								onClick={e => {
-									this.setMultiCompose(true);
-								}}
-							>
-								<Tooltip title="Create Marker" placement="bottomRight">
-									<span>
-										<Icon name="plus" className="button" />
+										<Icon name="x" className="cancel-icon" />
 									</span>
 								</Tooltip>
 							</span>
 						</div>
-					</div>
-				)}
-				<div
-					style={{ position: "relative", height: "90%", overflow: "hidden" }}
-					ref={ref => (this._div = ref)}
-				>
+					)}
+					{!this.state.searchBarOpen && (
+						<div className="top-tab-group">
+							<label
+								className={createClassString({
+									checked: activePanel === "knowledge",
+									muted: !this.props.configs.showMarkers
+								})}
+								onClick={e => this.setActivePanel("knowledge")}
+							>
+								<span>
+									{!this.props.configs.showMarkers && <Icon name="mute" className="mute" />}
+									Markers
+								</span>
+							</label>
+							<label
+								className={createClassString({
+									checked: activePanel === "channels",
+									muted: this.props.configs.muteAll
+								})}
+								onClick={e => this.setActivePanel("channels")}
+							>
+								<span>
+									{this.props.configs.muteAll && <Icon name="mute" className="mute" />}
+									Channels
+									{!this.props.configs.muteAll && (
+										<span className={umisClass}>{totalUMICount}</span>
+									)}
+								</span>
+							</label>
+							<label
+								className={createClassString({ checked: activePanel === "main" })}
+								onClick={e => this.setActivePanel("main")}
+							>
+								<span>
+									{channelIcon} {this.props.postStreamName}
+								</span>
+							</label>
+							<div className="fill-tab">
+								<span className="align-right-button" onClick={this.handleClickSearch}>
+									<Tooltip title="Search Markers" placement="bottomRight">
+										<span>
+											<Icon name="search" className="search-icon button" />
+										</span>
+									</Tooltip>
+								</span>
+								<span
+									className="align-right-button"
+									onClick={e => {
+										this.setMultiCompose(true);
+									}}
+								>
+									<Tooltip title="Create Marker" placement="bottomRight">
+										<span>
+											<Icon name="plus" className="button" />
+										</span>
+									</Tooltip>
+								</span>
+							</div>
+						</div>
+					)}
+				</nav>
+				<div className="content">
 					{activePanel === "knowledge" && (
 						<KnowledgePanel
 							activePanel={activePanel}
@@ -574,41 +526,7 @@ export class SimpleStream extends Component {
 						/>
 					)}
 					{activePanel === "main" && (
-						<div className={mainPanelClass} ref={ref => (this._mainPanel = ref)}>
-							<div
-								style={{ display: "none" }}
-								className="panel-header"
-								ref={ref => (this._header = ref)}
-							>
-								<span onClick={this.showChannels} className="align-left-button">
-									<Icon name="chevron-left" className="show-channels-icon" />
-								</span>
-								<Tooltip title={this.props.postStreamPurpose} placement="bottom">
-									<span>
-										{channelIcon} {this.props.postStreamName}
-									</span>
-								</Tooltip>
-								{this.props.postStreamType !== "direct" && (
-									<span className="align-right-button" onClick={this.handleClickStreamSettings}>
-										<Tooltip title="Channel Settings" placement="bottomRight">
-											<span>
-												<Icon name="gear" className="show-settings" />
-											</span>
-										</Tooltip>
-										{menuActive && (
-											<ChannelMenu
-												stream={this.props.postStream}
-												target={this.state.menuTarget}
-												umiCount={0}
-												isMuted={this.props.mutedStreams[this.props.postStreamId]}
-												setActivePanel={this.setActivePanel}
-												runSlashCommand={this.runSlashCommand}
-												closeMenu={this.closeMenu}
-											/>
-										)}
-									</span>
-								)}
-							</div>
+						<div className={mainPanelClass}>
 							<div className="filters">
 								<span className="align-right-button" onClick={this.handleClickStreamSettings}>
 									<Tooltip title="Channel Settings" placement="left">
@@ -663,43 +581,41 @@ export class SimpleStream extends Component {
 								<div className={unreadsBelowClass} type="below" onClick={this.handleClickUnreads}>
 									&darr; Unread Messages &darr;
 								</div>
-								<div className="shadow-container">
-									<div className="shadow shadow-top" />
-									<div className="shadow shadow-bottom" />
-								</div>
 								<div style={{ height: "100%" }} onClick={this.handleClickPost} id={streamDivId}>
-									<PostList
-										ref={this.setPostsListRef}
-										isActive={this.props.activePanel === "main"}
-										hasFocus={this.props.hasFocus}
-										newMessagesAfterSeqNum={this.state.newMessagesAfterSeqNum}
-										usernamesRegexp={this.props.usernamesRegexp}
-										teammates={this.props.teammates}
-										currentUserId={this.props.currentUserId}
-										currentUserName={this.props.currentUserName}
-										editingPostId={this.state.editingPostId}
-										postAction={this.postAction}
-										onDidChangeVisiblePosts={this.handleDidChangeVisiblePosts}
-										streamId={this.props.postStreamId}
-										teamId={this.props.teamId}
-										markRead={this.checkMarkStreamRead}
-										renderIntro={() => (
-											<div className="intro" ref={ref => (this._intro = ref)}>
-												{this.renderIntro(
-													<span>
-														{channelIcon}
-														{this.props.postStreamName}
-													</span>
-												)}
-											</div>
-										)}
-									/>
+									<ScrollBox>
+										<PostList
+											ref={this.setPostsListRef}
+											isActive={this.props.activePanel === "main"}
+											hasFocus={this.props.hasFocus}
+											newMessagesAfterSeqNum={this.state.newMessagesAfterSeqNum}
+											usernamesRegexp={this.props.usernamesRegexp}
+											teammates={this.props.teammates}
+											currentUserId={this.props.currentUserId}
+											currentUserName={this.props.currentUserName}
+											editingPostId={this.state.editingPostId}
+											postAction={this.postAction}
+											onDidChangeVisiblePosts={this.handleDidChangeVisiblePosts}
+											streamId={this.props.postStreamId}
+											teamId={this.props.teamId}
+											markRead={this.checkMarkStreamRead}
+											renderIntro={() => (
+												<div className="intro" ref={ref => (this._intro = ref)}>
+													{this.renderIntro(
+														<span>
+															{channelIcon}
+															{this.props.postStreamName}
+														</span>
+													)}
+												</div>
+											)}
+										/>
+									</ScrollBox>
 								</div>
 							</div>
 						</div>
 					)}
 					{threadId && (
-						<div className={threadPanelClass} ref={ref => (this._threadPanel = ref)}>
+						<div className="thread-panel" ref={ref => (this._threadPanel = ref)}>
 							<div id="close-thread" className="panel-header" onClick={this.handleDismissThread}>
 								<Tooltip title="Close thread" placement="bottomRight">
 									<span className="align-right-button">
@@ -714,29 +630,25 @@ export class SimpleStream extends Component {
 							</div>
 							<OfflineBanner />
 							<div className="shadow-overlay">
-								<div className="shadow-container">
-									<div className="shadow shadow-top" />
-									<div className="shadow shadow-bottom" />
-								</div>
 								<div className={threadPostsListClass} onClick={this.handleClickPost}>
-									<div className="shadow-cover-top" />
-									<PostList
-										ref={this.setThreadListRef}
-										isActive={this.props.activePanel === "thread"}
-										hasFocus={this.props.hasFocus}
-										usernamesRegexp={this.props.usernamesRegexp}
-										teammates={this.props.teammates}
-										currentUserId={this.props.currentUserId}
-										currentUserName={this.props.currentUserName}
-										editingPostId={this.state.editingPostId}
-										postAction={this.postAction}
-										streamId={this.props.postStreamId}
-										isThread
-										threadId={threadId}
-										threadTrigger={this.state.threadTrigger}
-										teamId={this.props.teamId}
-									/>
-									<div className="shadow-cover-bottom" />
+									<ScrollBox>
+										<PostList
+											ref={this.setThreadListRef}
+											isActive={this.props.activePanel === "thread"}
+											hasFocus={this.props.hasFocus}
+											usernamesRegexp={this.props.usernamesRegexp}
+											teammates={this.props.teammates}
+											currentUserId={this.props.currentUserId}
+											currentUserName={this.props.currentUserName}
+											editingPostId={this.state.editingPostId}
+											postAction={this.postAction}
+											streamId={this.props.postStreamId}
+											isThread
+											threadId={threadId}
+											threadTrigger={this.state.threadTrigger}
+											teamId={this.props.teamId}
+										/>
+									</ScrollBox>
 								</div>
 							</div>
 							{this.renderComposeBox(placeholderText)}

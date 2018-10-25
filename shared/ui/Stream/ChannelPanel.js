@@ -22,6 +22,7 @@ import Tooltip from "./Tooltip";
 import Debug from "./Debug";
 import Menu from "./Menu";
 import ChannelMenu from "./ChannelMenu";
+import ScrollBox from "./ScrollBox";
 
 export class SimpleChannelPanel extends Component {
 	constructor(props) {
@@ -45,7 +46,6 @@ export class SimpleChannelPanel extends Component {
 			unreads: "unread conversations",
 			selected: "selected conversations"
 		};
-		this._channelPanel = React.createRef();
 	}
 
 	isActive = isActiveMixin("channels", this.constructor.name);
@@ -73,7 +73,7 @@ export class SimpleChannelPanel extends Component {
 		];
 
 		return (
-			<div className={channelPanelClass} ref={this._channelPanel}>
+			<div className={channelPanelClass}>
 				<div className="filters">
 					<Tooltip title="Mute All" placement="left">
 						<label
@@ -98,16 +98,9 @@ export class SimpleChannelPanel extends Component {
 						)}
 					</span>
 				</div>
-				<div className="shadow-overlay">
-					<div className="shadow-container">
-						<div className="shadow shadow-top" />
-						<div className="shadow shadow-bottom" />
-					</div>
-					<div className="channel-list vscroll">
-						{this.renderChannels()}
-						<div className="shadow-cover-bottom" />
-					</div>
-				</div>
+				<ScrollBox>
+					<div className="channel-list vscroll">{this.renderChannels()}</div>
+				</ScrollBox>
 			</div>
 		);
 	}

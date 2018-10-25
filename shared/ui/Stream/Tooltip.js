@@ -51,7 +51,7 @@ export default class Tooltip extends React.Component {
 						overlay={content}
 						trigger={["hover", "click"]}
 						overlayStyle={{ opacity: 1 }}
-						mouseEnterDelay={this.props.delay || 0.5}
+						mouseEnterDelay={this.props.delay || 0}
 					>
 						{this.props.children}
 					</RCTooltip>

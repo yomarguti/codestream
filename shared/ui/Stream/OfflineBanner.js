@@ -15,11 +15,6 @@ class OfflineBanner extends PureComponent {
 							/>
 						</div>
 					</div>
-					<div className="shadow-overlay">
-						<div className="shadow-container">
-							<div className="shadow shadow-top" />
-						</div>
-					</div>
 				</div>
 			);
 		else return null;

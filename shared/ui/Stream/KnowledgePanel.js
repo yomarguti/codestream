@@ -14,6 +14,7 @@ import Icon from "./Icon";
 import Tooltip from "./Tooltip";
 import Post from "./Post";
 import Menu from "./Menu";
+import ScrollBox from "./ScrollBox";
 import EventEmitter from "../event-emitter";
 
 export class SimpleKnowledgePanel extends Component {
@@ -179,8 +180,6 @@ export class SimpleKnowledgePanel extends Component {
 		const knowledgePanelClass = createClassString({
 			panel: true,
 			"knowledge-panel": true
-			// shrink,
-			// "off-right": inactive && !shrink
 		});
 
 		const sections = this.sectionsByType[knowledgeType];
@@ -297,18 +296,13 @@ export class SimpleKnowledgePanel extends Component {
 						)}
 					</span>
 				</div>
-				<div className="shadow-overlay">
-					<div className="shadow-container">
-						<div className="shadow shadow-top" />
-						<div className="shadow shadow-bottom" />
-					</div>
+				<ScrollBox>
 					<div className="channel-list vscroll" onClick={this.handleClickPost}>
 						{sections.map(section => {
 							return this.renderSection(section, displayPosts[section] || []);
 						})}
-						<div className="shadow-cover-bottom" />
 					</div>
-				</div>
+				</ScrollBox>
 			</div>
 		);
 	}

@@ -28,14 +28,9 @@ export class SimplePublicChannelPanel extends Component {
 	}
 
 	render() {
-		const inactive = this.props.activePanel !== "public-channels";
-		const shrink = this.props.activePanel === "main" || this.props.activePanel == "create-channel";
-
 		const panelClass = createClassString({
 			panel: true,
-			"public-channel-panel": true,
-			shrink,
-			"off-right": inactive && !shrink
+			"public-channel-panel": true
 		});
 
 		// 	<span onClick={this.showChannels} className="align-left-button">
@@ -65,7 +60,7 @@ export class SimplePublicChannelPanel extends Component {
 					Channels are where your dev team discusses projects, repos, or code in general. You might
 					create one channel per repo, or one per client.
 				</div>
-				<div className="channel-list postslist vscroll">
+				<div className="channel-list vscroll">
 					<div className="section">
 						<div className="header">Channels you can join</div>
 						<ul onClick={this.handleClickJoinStream}>
