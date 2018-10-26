@@ -345,7 +345,11 @@ export class CodeStreamSession {
 
 					await (this._api as SlackApiProvider).processLoginResponse(response);
 
-					Logger.log(`Logged into Slack as '${response.user.username}' (${response.user.id})`);
+					Logger.log(
+						`Logged into Slack as '${response.user.username}' (${response.user.id}), Slack team ${
+							currentTeam.providerInfo.slack.teamId
+						}`
+					);
 				}
 			}
 

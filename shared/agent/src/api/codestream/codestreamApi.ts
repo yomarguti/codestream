@@ -183,7 +183,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		}
 
 		Logger.log(
-			`CodeStream user '${response.user.username}' belongs to ${
+			`CodeStream user '${response.user.username}' (${response.user.id}) belongs to ${
 				response.teams.length
 			} team(s)\n${response.teams.map(t => `\t${t.name} (${t.id})`).join("\n")}`
 		);
