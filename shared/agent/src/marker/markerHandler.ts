@@ -39,19 +39,25 @@ export namespace MarkerHandler {
 			const locations = await Container.instance().markerLocations.getCurrentLocations(
 				documentId.uri
 			);
-			for (const mrk of markers) {
-				const loc = locations[mrk.id] || {};
-				Logger.log(
-					`MARKERS: ${mrk.id}=[${loc.lineStart}, ${loc.colStart}, ${loc.lineEnd}, ${loc.colEnd}]`
-				);
+
+			const markersWithRange: MarkerWithRange[] = [];
+			for (const marker of markers) {
+				const location = locations[marker.id];
+				if (location) {
+					const range = Container.instance().markerLocations.locationToRange(location);
+					markersWithRange.push({
+						...marker,
+						range
+					});
+					Logger.log(
+						`MARKERS: ${marker.id}=[${location.lineStart}, ${location.colStart}, ${
+							location.lineEnd
+						}, ${location.colEnd}]`
+					);
+				} else {
+					Logger.log(`MARKERS: ${marker.id} cannot calculate location - commit might be missing`);
+				}
 			}
-			const markersWithRange = markers.map(
-				m =>
-					({
-						...m,
-						range: Container.instance().markerLocations.locationToRange(locations[m.id])
-					} as MarkerWithRange)
-			);
 
 			return {
 				markers: markersWithRange
