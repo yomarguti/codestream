@@ -191,6 +191,7 @@ export class SimpleChannelPanel extends Component {
 
 	renderDirectMessages = () => {
 		let unsortedStreams = mapFilter(this.props.directMessageStreams, stream => {
+			if (stream.isClosed) return;
 			if (stream.memberIds.some(id => this.props.deactivatedUserIds.includes(id))) return;
 
 			let count = this.props.umis.unreads[stream.id] || 0;
@@ -253,31 +254,9 @@ export class SimpleChannelPanel extends Component {
 			};
 		});
 
-		unsortedStreams = unsortedStreams.concat(
-			this.props.teammates
-				.map(teammate => {
-					if (_.contains(this.props.oneOnOnePeople, teammate.id)) return null;
-					if (this.props.mutedStreams[teammate.id]) return null;
-					if (!teammate.isRegistered) return null;
-					const name = teammate.username || teammate.fullName || "";
-					return {
-						name: name.toLowerCase(),
-						element: (
-							<li key={teammate.id} teammate={teammate.id}>
-								<Icon className="person" name="person" />
-								<span className="name">{name}</span>
-								<Tooltip title="Close Conversation">
-									<Icon name="x" onClick={this.handleClickMuteStream} className="align-right" />
-								</Tooltip>
-							</li>
-						)
-					};
-				})
-				.filter(Boolean)
-		);
-
 		// show them all for now since we don't have a way to sort reliably
-		const recentStreams = _.sortBy(unsortedStreams, x => -x.sortTimestamp).slice(0, 20);
+		// const recentStreams = _.sortBy(unsortedStreams, x => -x.sortTimestamp).slice(0, 20);
+		const recentStreams = _.sortBy(unsortedStreams, x => x.sortName);
 
 		return (
 			<div
