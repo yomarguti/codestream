@@ -593,7 +593,7 @@ export class SimpleChannelPanel extends Component {
 					<Icon name="triangle-right" className="triangle-right" />
 					<span className="clickable">Direct Messages</span>
 					<div className="align-right">
-						<Tooltip title="Open a direct message" placement="bottom" delay="0.5">
+						<Tooltip title="Open a direct message" placement="bottomRight">
 							<span>
 								<Icon name="plus" onClick={this.handleClickCreateDirectMessage} />
 							</span>

@@ -44,19 +44,26 @@ export class SimplePublicChannelPanel extends Component {
 		// 		</span>
 		// 	</Tooltip>
 		// </span>
+		const title = (
+			<span>
+				Close <span className="keybinding">ESC</span>
+			</span>
+		);
+
 		return (
 			<div className={panelClass}>
-				<div className="filters">
-					<span
-						onClick={() => this.props.setActivePanel("channels")}
-						className="align-right-button"
-					>
-						<Tooltip title="Cancel" placement="bottom" delay="0.5">
-							<span>
-								<Icon name="x" className="button" />
-							</span>
-						</Tooltip>
-					</span>
+				<div className="panel-header">
+					<Tooltip title={title} placement="bottomRight">
+						<span
+							className="align-right-button"
+							onClick={() => this.props.setActivePanel("channels")}
+						>
+							<Icon name="x" className="clickable" />
+						</span>
+					</Tooltip>
+					<span className="panel-title">Public Channels</span>
+				</div>
+				<div className="filters" style={{ paddingTop: "10px" }}>
 					Channels are where your dev team discusses projects, repos, or code in general. You might
 					create one channel per repo, or one per client.
 				</div>

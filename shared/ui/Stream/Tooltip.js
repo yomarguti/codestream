@@ -48,6 +48,7 @@ export default class Tooltip extends React.Component {
 				return (
 					<RCTooltip
 						placement={this.props.placement}
+						align={this.props.align}
 						overlay={content}
 						trigger={["hover", "click"]}
 						overlayStyle={{ opacity: 1 }}

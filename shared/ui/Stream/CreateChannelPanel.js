@@ -69,16 +69,23 @@ export class SimpleCreateChannelPanel extends Component {
 			: "We don't support these characters: .~#%&*{}+/:<>?|'\".";
 
 		this.tabIndexCount = 0;
+		const title = (
+			<span>
+				Close <span className="keybinding">ESC</span>
+			</span>
+		);
 
 		return (
 			<div className={createChannelPanelClass} ref={this._createChannelPanel}>
 				<div className="panel-header">
-					<span
-						className="align-right-button"
-						onClick={() => this.props.setActivePanel("channels")}
-					>
-						<Icon name="x" className="clickable" />
-					</span>
+					<Tooltip title={title} placement="bottomRight">
+						<span
+							className="align-right-button"
+							onClick={() => this.props.setActivePanel("channels")}
+						>
+							<Icon name="x" className="clickable" />
+						</span>
+					</Tooltip>
 					<span className="panel-title">New Channel</span>
 				</div>
 				<form id="create-channel-form" className="standard-form vscroll">

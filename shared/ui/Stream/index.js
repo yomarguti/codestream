@@ -393,93 +393,99 @@ export class SimpleStream extends Component {
 			</span>
 		);
 
+		const renderNav = !["create-channel", "create-dm", "public-channels", "invite"].includes(
+			activePanel
+		);
+
 		return (
 			<div className={streamClass}>
 				<div id="modal-root" />
 				<div id="confirm-root" />
 				<div id="focus-trap" className={createClassString({ active: !this.props.hasFocus })} />
 				{threadId && <div id="thread-blanket" />}
-				<nav>
-					{this.state.searchBarOpen && (
-						<div className="search-bar">
-							<input
-								name="q"
-								className="native-key-bindings input-text control"
-								type="text"
-								ref={ref => (this._searchInput = ref)}
-								onChange={e => this.setState({ q: e.target.value })}
-								placeholder="Search Markers"
-							/>
-							<span className="align-right-button" onClick={this.handleClickSearch}>
-								<Tooltip title={tooltip} placement="bottomRight">
-									<span>
-										<Icon name="x" className="cancel-icon" />
-									</span>
-								</Tooltip>
-							</span>
-						</div>
-					)}
-					{!this.state.searchBarOpen && (
-						<div className="top-tab-group">
-							<label
-								className={createClassString({
-									checked: activePanel === "knowledge",
-									muted: !this.props.configs.showMarkers
-								})}
-								onClick={e => this.setActivePanel("knowledge")}
-							>
-								<span>
-									{!this.props.configs.showMarkers && <Icon name="mute" className="mute" />}
-									Markers
-								</span>
-							</label>
-							<label
-								className={createClassString({
-									checked: activePanel === "channels",
-									muted: this.props.configs.muteAll
-								})}
-								onClick={e => this.setActivePanel("channels")}
-							>
-								<span>
-									{this.props.configs.muteAll && <Icon name="mute" className="mute" />}
-									Channels
-									{!this.props.configs.muteAll && (
-										<span className={umisClass}>{totalUMICount}</span>
-									)}
-								</span>
-							</label>
-							<label
-								className={createClassString({ checked: activePanel === "main" })}
-								onClick={e => this.setActivePanel("main")}
-							>
-								<span>
-									{channelIcon} {this.props.postStreamName}
-								</span>
-							</label>
-							<div className="fill-tab">
+				{renderNav && (
+					<nav>
+						{this.state.searchBarOpen && (
+							<div className="search-bar">
+								<input
+									name="q"
+									className="native-key-bindings input-text control"
+									type="text"
+									ref={ref => (this._searchInput = ref)}
+									onChange={e => this.setState({ q: e.target.value })}
+									placeholder="Search Markers"
+								/>
 								<span className="align-right-button" onClick={this.handleClickSearch}>
-									<Tooltip title="Search Markers" placement="bottomRight">
+									<Tooltip title={tooltip} placement="bottomRight">
 										<span>
-											<Icon name="search" className="search-icon button" />
-										</span>
-									</Tooltip>
-								</span>
-								<span
-									className="align-right-button"
-									onClick={e => {
-										this.setMultiCompose(true);
-									}}
-								>
-									<Tooltip title="Create Marker" placement="bottomRight">
-										<span>
-											<Icon name="plus" className="button" />
+											<Icon name="x" className="cancel-icon" />
 										</span>
 									</Tooltip>
 								</span>
 							</div>
-						</div>
-					)}
-				</nav>
+						)}
+						{!this.state.searchBarOpen && (
+							<div className="top-tab-group">
+								<label
+									className={createClassString({
+										checked: activePanel === "knowledge",
+										muted: !this.props.configs.showMarkers
+									})}
+									onClick={e => this.setActivePanel("knowledge")}
+								>
+									<span>
+										{!this.props.configs.showMarkers && <Icon name="mute" className="mute" />}
+										Markers
+									</span>
+								</label>
+								<label
+									className={createClassString({
+										checked: activePanel === "channels",
+										muted: this.props.configs.muteAll
+									})}
+									onClick={e => this.setActivePanel("channels")}
+								>
+									<span>
+										{this.props.configs.muteAll && <Icon name="mute" className="mute" />}
+										Channels
+										{!this.props.configs.muteAll && (
+											<span className={umisClass}>{totalUMICount}</span>
+										)}
+									</span>
+								</label>
+								<label
+									className={createClassString({ checked: activePanel === "main" })}
+									onClick={e => this.setActivePanel("main")}
+								>
+									<span>
+										{channelIcon} {this.props.postStreamName}
+									</span>
+								</label>
+								<div className="fill-tab">
+									<span className="align-right-button" onClick={this.handleClickSearch}>
+										<Tooltip title="Search Markers" placement="bottomRight">
+											<span>
+												<Icon name="search" className="search-icon button" />
+											</span>
+										</Tooltip>
+									</span>
+									<span
+										className="align-right-button"
+										onClick={e => {
+											this.setMultiCompose(true);
+										}}
+									>
+										<Tooltip title="Create Marker" placement="bottomRight">
+											<span>
+												<Icon name="plus" className="button" />
+											</span>
+										</Tooltip>
+									</span>
+								</div>
+							</div>
+						)}
+					</nav>
+				)}
 				<div className="content">
 					{activePanel === "knowledge" && (
 						<KnowledgePanel
@@ -786,7 +792,11 @@ export class SimpleStream extends Component {
 	};
 
 	handleClickUnreads = _event => {
-		this._postslist.scrollToUnread();
+		this._postslist && this._postslist.scrollToUnread();
+	};
+
+	scrollPostsListToBottom = () => {
+		this._postslist && this._postslist.scrollToBottom();
 	};
 
 	// dismiss the thread stream and return to the main stream
@@ -1471,7 +1481,7 @@ export class SimpleStream extends Component {
 				type,
 				assignees,
 				color
-			}).then(this._postslist.scrollToBottom);
+			}).then(this.scrollPostsListToBottom);
 
 		if (quote) {
 			fileUri = quote.fileUri;

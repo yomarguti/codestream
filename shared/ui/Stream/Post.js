@@ -526,14 +526,18 @@ class Post extends React.Component {
 		else
 			return (
 				<div className="align-right">
-					<Tooltip title="Add Reaction" placement="above">
-						<Icon name="smiley" className="smiley" onClick={this.handleReactionClick} />
+					<Tooltip title="Add Reaction" placement="bottomRight">
+						<span>
+							<Icon name="smiley" className="smiley" onClick={this.handleReactionClick} />
+						</span>
 					</Tooltip>
 					{this.state.emojiOpen && (
 						<EmojiPicker addEmoji={this.addReaction} target={this.state.emojiTarget} />
 					)}
-					<Tooltip title="More Options..." placement="above">
-						<Icon name="gear" className="gear" onClick={this.handleMenuClick} />
+					<Tooltip title="More Options..." placement="bottomRight">
+						<span>
+							<Icon name="gear" className="gear" onClick={this.handleMenuClick} />
+						</span>
 					</Tooltip>
 				</div>
 			);

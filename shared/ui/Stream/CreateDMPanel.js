@@ -11,6 +11,7 @@ import Select from "react-select";
 import Timestamp from "./Timestamp";
 import Icon from "./Icon";
 import { isActiveMixin, toMapBy, mapFilter } from "../utils";
+import Tooltip from "./Tooltip";
 
 export class SimpleCreateDMPanel extends Component {
 	constructor(props) {
@@ -36,16 +37,23 @@ export class SimpleCreateDMPanel extends Component {
 			shrink,
 			"off-right": inactive && !shrink
 		});
+		const title = (
+			<span>
+				Close <span className="keybinding">ESC</span>
+			</span>
+		);
 
 		return (
 			<div className={createDMPanelClass} ref={this._createDMPanel}>
 				<div className="panel-header">
-					<span
-						className="align-right-button"
-						onClick={() => this.props.setActivePanel("channels")}
-					>
-						<Icon name="x" className="clickable" />
-					</span>
+					<Tooltip title={title} placement="bottomRight">
+						<span
+							className="align-right-button"
+							onClick={() => this.props.setActivePanel("channels")}
+						>
+							<Icon name="x" className="clickable" />
+						</span>
+					</Tooltip>
 					<span className="panel-title">Direct Messages</span>
 				</div>
 				<form id="create-dm-form" className="standard-form postslist vscroll">
