@@ -1,5 +1,24 @@
 # Change Log
 
+## [0.19.0] - 2018-10-26
+
+### Added
+
+- Adds ability to archive a Slack channel via the /archive slash command
+- Adds ability to rename a Slack channel via the /rename slash command
+- Adds ability to set the purpose of a Slack channel via the /purpose slash command
+- Adds /msg command for Slack channels
+
+### Changed
+
+- Reduced our default post fetch count to 50 for better performance
+
+### Fixed
+
+- Fixes an issue with the /msg slash command adding extra spaces in the message
+- Fixes an issue with seeing replies in some case with CodeStream channels
+- Fixes issues where in certain cases marker recalculation failed
+
 ## [0.18.0] - 2018-10-24
 
 ### Changed
