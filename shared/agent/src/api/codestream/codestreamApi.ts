@@ -500,7 +500,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	@log()
 	fetchPostReplies(request: FetchPostRepliesRequest) {
 		return this.get<CSGetPostsResponse>(
-			`/posts?teamId=${this.teamId}?parentPostId=${request.postId}`,
+			`/posts?teamId=${this.teamId}&streamId=${request.streamId}&parentPostId=${request.postId}`,
 			this._token
 		);
 	}
