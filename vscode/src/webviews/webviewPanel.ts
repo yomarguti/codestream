@@ -53,9 +53,6 @@ import {
 	WebviewIpcMessageType
 } from "./webviewIpc";
 
-const slackClientIdProd = "251469054195.453158514726";
-const slackClientIdDev = "251469054195.443134779744";
-
 interface BootstrapState {
 	currentTeamId: string;
 	currentUserId: string;
