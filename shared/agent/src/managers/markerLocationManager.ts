@@ -80,22 +80,23 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 		const filePath = URI.parse(documentUri).fsPath;
 		const repoRoot = await git.getRepoRoot(filePath);
 		const currentCommitHash = await git.getFileCurrentRevision(filePath);
-		if (!repoRoot || !currentCommitHash) {
-			Logger.log(`MARKERS: no repo root or no current commit hash for ${filePath}`);
+		if (!repoRoot) {
+			Logger.log(`MARKERS: no repo root for ${filePath}`);
 			return currentLocations;
 		}
 
-		const currentCommitLocations = await this.getCommitLocations(filePath, currentCommitHash);
-		if (!Object.keys(currentCommitLocations).length) {
-			Logger.log(`MARKERS: no locations found for ${filePath}@${currentCommitHash}`);
-			return currentLocations;
-		}
+		const currentCommitLocations = currentCommitHash
+			? await this.getCommitLocations(filePath, currentCommitHash)
+			: {};
 
 		Logger.log(`MARKERS: classifying locations`);
+		const stream = await Container.instance().files.getByPath(filePath);
+		const markers = await Container.instance().markers.getByStreamId(stream!.id, true);
+		Logger.log(`MARKERS: found ${markers.length} markers - retrieving current locations`);
 		const {
 			committedLocations,
 			uncommittedLocations
-		} = await MarkerLocationManager.classifyLocations(repoRoot, currentCommitLocations);
+		} = await MarkerLocationManager.classifyLocations(repoRoot, markers, currentCommitLocations);
 		const doc = documents.get(documentUri);
 		Logger.log(`MARKERS: retrieving current text from document manager`);
 		let currentBufferText = doc && doc.getText();
@@ -111,7 +112,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 
 		if (Object.keys(committedLocations).length) {
 			Logger.log(`MARKERS: calculating current location for committed locations`);
-			const currentCommitText = await git.getFileContentForRevision(filePath, currentCommitHash);
+			const currentCommitText = await git.getFileContentForRevision(filePath, currentCommitHash!);
 			if (currentCommitText === undefined) {
 				throw new Error(`Could not retrieve contents for ${filePath}@${currentCommitHash}`);
 			}
@@ -167,7 +168,8 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 
 	private static async classifyLocations(
 		repoPath: string,
-		locations: LocationsById
+		markers: CSMarker[],
+		committedLocations: LocationsById
 	): Promise<{
 		committedLocations: LocationsById;
 		uncommittedLocations: UncommittedLocationsById;
@@ -179,15 +181,15 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 		Logger.log(`MARKERS: retrieving uncommitted locations from local cache`);
 		const cache = await getCache(repoPath);
 		const cachedUncommittedLocations = cache.getCollection("uncommittedLocations");
-		for (const id in locations) {
-			const location = locations[id];
-			const uncommittedLocation = cachedUncommittedLocations.get(location.id);
+		for (const { id } of markers) {
+			const committedLocation = committedLocations[id];
+			const uncommittedLocation = cachedUncommittedLocations.get(id);
 			if (uncommittedLocation) {
 				Logger.log(`MARKERS: ${id}: uncommitted`);
 				result.uncommittedLocations[id] = uncommittedLocation;
-			} else {
+			} else if (committedLocation) {
 				Logger.log(`MARKERS: ${id}: committed`);
-				result.committedLocations[id] = location;
+				result.committedLocations[id] = committedLocation;
 			}
 		}
 
