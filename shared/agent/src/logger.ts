@@ -52,7 +52,11 @@ export class Logger {
 		// 	console.log(this.timestamp, ConsolePrefix, message || "", ...params);
 		// }
 
-		if (this.level !== TraceLevel.Verbose && this.level !== TraceLevel.Debug && !Logger.isDebugging) {
+		if (
+			this.level !== TraceLevel.Verbose &&
+			this.level !== TraceLevel.Debug &&
+			!Logger.isDebugging
+		) {
 			return;
 		}
 
@@ -66,7 +70,11 @@ export class Logger {
 		// 	console.log(this.timestamp, ConsolePrefix, message || "", ...params);
 		// }
 
-		if (this.level !== TraceLevel.Verbose && this.level !== TraceLevel.Debug && !Logger.isDebugging) {
+		if (
+			this.level !== TraceLevel.Verbose &&
+			this.level !== TraceLevel.Debug &&
+			!Logger.isDebugging
+		) {
 			return;
 		}
 
