@@ -174,6 +174,7 @@ api.bootstrap().then(data => {
 				userId: data.currentUserId
 			},
 			umis: data.unreads,
+			preferences: data.preferences,
 			...(data.configs.email ? { route: "login" } : {})
 		},
 		{ api },
@@ -189,6 +190,10 @@ api.bootstrap().then(data => {
 
 	EventEmitter.on("data:unreads", unreads => {
 		store.dispatch(actions.updateUnreads(unreads));
+	});
+
+	EventEmitter.on("data:preferences", preferences => {
+		store.dispatch(actions.updatePreferences(preferences));
 	});
 
 	EventEmitter.on("configs", configs => store.dispatch(actions.updateConfigs(configs)));

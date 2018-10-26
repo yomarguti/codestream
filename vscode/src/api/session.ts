@@ -32,6 +32,7 @@ import { User } from "./models/users";
 import {
 	MergeableEvent,
 	PostsChangedEvent,
+	PreferencesChangedEvent,
 	RepositoriesChangedEvent,
 	SessionChangedEvent,
 	SessionChangedEventType,
@@ -56,6 +57,7 @@ export {
 	DocumentMarkersChangedEvent,
 	Post,
 	PostsChangedEvent,
+	PreferencesChangedEvent,
 	Repository,
 	RepositoriesChangedEvent,
 	SessionChangedEventType,
@@ -100,6 +102,12 @@ export class CodeStreamSession implements Disposable {
 		return this._onDidChangePosts.event;
 	}
 	private fireDidChangePosts = createMergableDebouncedEvent(this._onDidChangePosts);
+
+	private _onDidChangePreferences = new EventEmitter<PreferencesChangedEvent>();
+	get onDidChangePreferences(): Event<PreferencesChangedEvent> {
+		return this._onDidChangePreferences.event;
+	}
+	private fireDidChangePreferences = createMergableDebouncedEvent(this._onDidChangePreferences);
 
 	private _onDidChangeRepositories = new EventEmitter<RepositoriesChangedEvent>();
 	get onDidChangeRepositories(): Event<RepositoriesChangedEvent> {
@@ -167,6 +175,9 @@ export class CodeStreamSession implements Disposable {
 		switch (e.type) {
 			case ChangeDataType.Posts:
 				this.fireDidChangePosts(new PostsChangedEvent(this, e));
+				break;
+			case ChangeDataType.Preferences:
+				this.fireDidChangePreferences(new PreferencesChangedEvent(this, e));
 				break;
 			case ChangeDataType.Repositories:
 				this.fireDidChangeRepositories(new RepositoriesChangedEvent(this, e));

@@ -68,6 +68,7 @@ import {
 	GetMarkerRequestType,
 	GetMeRequestType,
 	GetPostRequestType,
+	GetPreferencesRequestType,
 	GetRepoRequestType,
 	GetStreamRequestType,
 	GetTeamRequestType,
@@ -651,6 +652,10 @@ export class CodeStreamAgentConnection implements Disposable {
 
 		unreads() {
 			return this._connection.sendRequest(GetUnreadsRequestType, {});
+		}
+
+		preferences() {
+			return this._connection.sendRequest(GetPreferencesRequestType, undefined);
 		}
 	}(this);
 

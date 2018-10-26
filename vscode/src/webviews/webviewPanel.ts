@@ -18,6 +18,7 @@ import {
 } from "vscode";
 import {
 	CSCodeBlock,
+	CSMePreferences,
 	CSPost,
 	CSRepository,
 	CSStream,
@@ -31,6 +32,7 @@ import {
 	CodeStreamSession,
 	Post,
 	PostsChangedEvent,
+	PreferencesChangedEvent,
 	RepositoriesChangedEvent,
 	SessionChangedEventType,
 	StreamsChangedEvent,
@@ -72,6 +74,7 @@ interface BootstrapState {
 		vsls?: boolean;
 	};
 	version: string;
+	preferences: CSMePreferences;
 	configs: {
 		[k: string]: any;
 	};
@@ -752,6 +755,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 	private onSessionDataChanged(
 		e:
 			| PostsChangedEvent
+			| PreferencesChangedEvent
 			| RepositoriesChangedEvent
 			| StreamsChangedEvent
 			| StreamsMembershipChangedEvent
@@ -761,6 +765,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 	) {
 		switch (e.type) {
 			case SessionChangedEventType.Posts:
+			case SessionChangedEventType.Preferences:
 			case SessionChangedEventType.Repositories:
 			case SessionChangedEventType.Streams:
 			case SessionChangedEventType.Teams:
@@ -934,6 +939,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 			this.session.onDidChangeTeams(this.onSessionDataChanged, this),
 			this.session.onDidChangeUnreads(this.onSessionDataChanged, this),
 			this.session.onDidChangeUsers(this.onSessionDataChanged, this),
+			this.session.onDidChangePreferences(this.onSessionDataChanged, this),
 			this._panel,
 			this._panel.onDidDispose(this.onPanelDisposed, this),
 			this._panel.onDidChangeViewState(this.onPanelViewStateChanged, this),
@@ -972,7 +978,8 @@ export class CodeStreamWebviewPanel implements Disposable {
 			Container.agent.streams.fetch(),
 			Container.agent.teams.fetch(),
 			Container.agent.users.unreads(),
-			Container.agent.users.fetch()
+			Container.agent.users.fetch(),
+			Container.agent.users.preferences()
 		]);
 
 		state.configs = {
@@ -996,7 +1003,8 @@ export class CodeStreamWebviewPanel implements Disposable {
 			streamsResponse,
 			teamsResponse,
 			unreadsResponse,
-			usersResponse
+			usersResponse,
+			preferencesResponse
 		] = await promise;
 
 		state.repos = reposResponse.repos;
@@ -1006,6 +1014,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 		state.users = usersResponse.users.map(
 			user => (user.id === currentUser.id ? currentUser : user)
 		);
+		state.preferences = preferencesResponse.preferences;
 
 		if (this._streamThread !== undefined) {
 			state.currentStreamId = this._streamThread.stream.id;

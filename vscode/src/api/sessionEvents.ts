@@ -1,9 +1,11 @@
 "use strict";
 import { Uri } from "vscode";
 import {
+	CSMePreferences,
 	CSUnreads,
 	DidChangeDataNotification,
 	PostsChangedNotification,
+	PreferencesChangedNotification,
 	RepositoriesChangedNotification,
 	StreamsChangedNotification,
 	TeamsChangedNotification,
@@ -27,6 +29,7 @@ export class TextDocumentMarkersChangedEvent {
 
 export enum SessionChangedEventType {
 	Posts = "posts",
+	Preferences = "preferences",
 	Repositories = "repos",
 	Streams = "streams",
 	StreamsMembership = "streamsMembership",
@@ -84,6 +87,29 @@ export class PostsChangedEvent extends SessionChangedEventBase<PostsChangedNotif
 
 	merge(e: PostsChangedEvent) {
 		this._event.data.push(...e._event.data);
+	}
+}
+
+export class PreferencesChangedEvent extends SessionChangedEventBase<PreferencesChangedNotification>
+	implements MergeableEvent<PreferencesChangedEvent> {
+	readonly type = SessionChangedEventType.Preferences;
+
+	@memoize
+	preferences(): CSMePreferences {
+		return this._event.data;
+	}
+
+	@memoize
+	toIpcMessage(): WebviewIpcMessage {
+		// TODO: Change this payload to match the other `codestream:data` events
+		return {
+			type: WebviewIpcMessageType.didChangePreferences,
+			body: this._event.data
+		};
+	}
+
+	merge(e: PreferencesChangedEvent) {
+		return { ...this.preferences, ...e.preferences };
 	}
 }
 

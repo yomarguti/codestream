@@ -25,7 +25,8 @@ export enum WebviewIpcMessageType {
 	onViewReady = "codestream:view-ready",
 	response = "codestream:response",
 	didDisconnect = "codestream:connectivity:offline",
-	didConnect = "codestream:connectivity:online"
+	didConnect = "codestream:connectivity:online",
+	didChangePreferences = "codestream:data:preferences"
 }
 
 export function toLoggableIpcMessage(msg: WebviewIpcMessage) {
