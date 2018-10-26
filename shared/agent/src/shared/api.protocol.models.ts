@@ -128,6 +128,8 @@ export interface CSChannelStream extends CSEntity {
 	serviceType?: ChannelServiceType.Vsls;
 	serviceKey?: string;
 	serviceInfo?: { [key: string]: any };
+
+	priority?: number;
 }
 
 export interface CSDirectStream extends CSEntity {
@@ -143,6 +145,8 @@ export interface CSDirectStream extends CSEntity {
 	type: StreamType.Direct;
 	name?: string;
 	memberIds: string[];
+
+	priority?: number;
 }
 
 export interface CSFileStream extends CSEntity {

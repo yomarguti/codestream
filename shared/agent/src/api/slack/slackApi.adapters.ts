@@ -84,6 +84,7 @@ export function fromSlackChannel(channel: any, codestreamTeamId: string): CSChan
 		modifiedAt: mostRecentTimestamp || channel.created * 1000,
 		mostRecentPostCreatedAt: mostRecentTimestamp,
 		mostRecentPostId: mostRecentId,
+		priority: channel.priority,
 		privacy: (channel.is_private == null
 		? channel.is_group
 		: channel.is_private)
@@ -122,6 +123,7 @@ export function fromSlackDirect(
 					: mostRecentTimestamp || channel.created * 1000,
 			mostRecentPostCreatedAt: channel.is_open === false ? undefined : mostRecentTimestamp,
 			mostRecentPostId: mostRecentId,
+			priority: channel.priority,
 			privacy: "private",
 			sortId: undefined!,
 			teamId: codestreamTeamId,
@@ -163,6 +165,7 @@ export function fromSlackDirect(
 		modifiedAt: mostRecentTimestamp || channel.created * 1000,
 		mostRecentPostCreatedAt: mostRecentTimestamp,
 		mostRecentPostId: mostRecentId,
+		priority: channel.priority,
 		privacy: "private",
 		purpose: channel.purpose && channel.purpose.value,
 		sortId: undefined!,

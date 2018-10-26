@@ -10,7 +10,6 @@ import {
 	CloseStreamResponse,
 	CreateChannelStreamRequest,
 	CreateDirectStreamRequest,
-	CreateDirectStreamResponse,
 	CreateMarkerLocationRequest,
 	CreatePostRequest,
 	CreateRepoRequest,
@@ -65,7 +64,7 @@ import {
 	LoginResponse,
 	StreamType
 } from "../../shared/api.protocol";
-import { log } from "../../system";
+import { Functions, log } from "../../system";
 import {
 	ApiProvider,
 	CodeStreamApiMiddleware,
@@ -89,6 +88,13 @@ import {
 	toSlackTeam
 } from "./slackApi.adapters";
 import { SlackUnreads } from "./unreads";
+
+interface DeferredStreamRequest<TResult> {
+	action(): Promise<TResult>;
+	id: string;
+	order: number;
+	priority: number;
+}
 
 export class SlackApiProvider implements ApiProvider {
 	private _onDidReceiveMessage = new Emitter<RTMessage>();
@@ -885,8 +891,10 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	@log({
-		correlate: true,
-		exit: (r: FetchStreamsResponse) => `\n${r.streams.map(s => `\t${s.id} = ${s.name}`).join("\n")}`
+		exit: (r: FetchStreamsResponse) =>
+			`\n${r.streams
+				.map(s => `\t${s.id} = ${s.name}, p=${s.priority == null ? "" : s.priority}`)
+				.join("\n")}`
 	})
 	async fetchStreams(request: FetchStreamsRequest) {
 		try {
@@ -904,72 +912,18 @@ export class SlackApiProvider implements ApiProvider {
 			// 	.map((c: any) => CSStream.fromSlack(c, users, this._slackUserId, this._codestreamTeamId))
 			// 	.filter(Boolean);
 
-			this._unreads.reset();
-
 			const usernamesById = await this.ensureUsernamesById();
 
-			const [
-				[channels, channelRequests],
-				[groups, groupRequests],
-				[ims, imRequests]
-			] = await Promise.all([
-				this.fetchChannels(),
-				this.fetchGroups(usernamesById),
-				this.fetchIMs(usernamesById)
+			const pendingRequestsQueue: DeferredStreamRequest<CSChannelStream | CSDirectStream>[] = [];
+			const [channels, groups, ims] = await Promise.all([
+				this.fetchChannels(pendingRequestsQueue),
+				this.fetchGroups(usernamesById, pendingRequestsQueue),
+				this.fetchIMs(usernamesById, pendingRequestsQueue)
 			]);
 
 			const streams = channels.concat(...groups, ...ims);
 
-			const pendingStreamRequests = channelRequests.concat(...groupRequests, ...imRequests);
-
-			const logCorrelationId = (this.fetchStreams as any).logCorrelationId;
-			const prefix = `${
-				logCorrelationId ? `[${logCorrelationId}] ` : ""
-			}SlackApiProvider.fetchStreams`;
-			Logger.debug(
-				`${prefix}: fetching ${pendingStreamRequests.length} stream(s) in the background...`
-			);
-
-			let timedout = false;
-			const promises = Promise.all(pendingStreamRequests).then(async streams => {
-				if (timedout) {
-					Logger.warn(
-						`${prefix}: Completed (AFTER TIMEOUT) while fetching ${
-							pendingStreamRequests.length
-						} stream(s) in the background`
-					);
-				} else {
-					Logger.debug(
-						`${prefix}: Completed fetching ${
-							pendingStreamRequests.length
-						} stream(s) in the background`
-					);
-
-					// Only resume if we haven't timed out, since we would have already resumed
-					this._unreads.resume();
-				}
-
-				const message: StreamsRTMessage = { type: MessageType.Streams, data: streams };
-				message.data = await Container.instance().streams.resolve(message);
-				this._onDidReceiveMessage.fire(message);
-			});
-
-			const pendingRequestsTimeoutMs = 120000;
-			Promise.race([
-				promises,
-				new Promise((resolve, reject) => setTimeout(resolve, pendingRequestsTimeoutMs, "timeout"))
-			]).then(v => {
-				if (v === "timeout") {
-					Logger.warn(
-						`${prefix}: TIMEOUT ${pendingRequestsTimeoutMs / 1000}s exceeded while fetching ${
-							pendingStreamRequests.length
-						} stream(s) in the background`
-					);
-					timedout = true;
-
-					this._unreads.resume();
-				}
-			});
+			this.processPendingStreamsQueue(pendingRequestsQueue);
 
 			if (
 				request.types != null &&
@@ -986,38 +940,124 @@ export class SlackApiProvider implements ApiProvider {
 		}
 	}
 
-	private async fetchChannels(): Promise<
-		[(CSChannelStream | CSDirectStream)[], Promise<CSChannelStream | CSDirectStream>[]]
-	> {
+	@log({
+		args: false,
+		correlate: true,
+		enter: q => `fetching ${q.length} stream(s) in the background...`
+	})
+	private async processPendingStreamsQueue(
+		queue: DeferredStreamRequest<CSChannelStream | CSDirectStream>[]
+	) {
+		queue.sort((a, b) => b.priority - a.priority || a.order - b.order);
+
+		const { streams } = Container.instance();
+
+		const logCorrelationId = (this.processPendingStreamsQueue as any).logCorrelationId;
+		const prefix = `${
+			logCorrelationId ? `[${logCorrelationId}] ` : ""
+		}SlackApiProvider.processPendingStreamsQueue`;
+
+		const notifyThrottle = 2000;
+		let timeSinceLastNotification = new Date().getTime();
+		const completed: (CSChannelStream | CSDirectStream)[] = [];
+
+		let failed = 0;
+		while (queue.length) {
+			const deferred = queue.shift();
+			if (deferred === undefined) continue;
+
+			try {
+				const timeoutMs = 30000;
+				const timer = setTimeout(async () => {
+					Logger.warn(
+						`${prefix}: TIMEOUT ${timeoutMs / 1000}s exceeded while fetching stream '${
+							deferred.id
+						}' in the background`
+					);
+
+					if (completed.length !== 0) {
+						const message: StreamsRTMessage = { type: MessageType.Streams, data: completed };
+						message.data = await streams.resolve(message);
+						this._onDidReceiveMessage.fire(message);
+
+						completed.length = 0;
+						timeSinceLastNotification = new Date().getTime();
+					}
+				}, timeoutMs);
+
+				const stream = await deferred.action();
+				clearTimeout(timer);
+				completed.push(stream);
+			} catch {
+				failed++;
+			}
+
+			if (
+				queue.length === 0 ||
+				(completed.length !== 0 &&
+					new Date().getTime() - timeSinceLastNotification > notifyThrottle)
+			) {
+				const message: StreamsRTMessage = { type: MessageType.Streams, data: completed };
+				message.data = await streams.resolve(message);
+				this._onDidReceiveMessage.fire(message);
+
+				completed.length = 0;
+				timeSinceLastNotification = new Date().getTime();
+			}
+		}
+
+		if (failed > 0) {
+			Logger.debug(`${prefix}: Failed fetching ${failed} stream(s) in the background`);
+		}
+	}
+
+	private async fetchChannels(
+		pendingQueue: DeferredStreamRequest<CSChannelStream | CSDirectStream>[]
+	): Promise<(CSChannelStream | CSDirectStream)[]> {
 		const response = await this._slack.channels.list({
 			exclude_archived: true,
 			exclude_members: false
 			// limit: 1000
 		});
 
-		const { ok, error, channels } = response as WebAPICallResult & { channels: any };
+		const { ok, error, channels } = response as WebAPICallResult & { channels: any[] };
 		if (!ok) throw new Error(error);
 
-		const streams: (CSChannelStream | CSDirectStream)[] = channels
-			.map((c: any) => fromSlackChannel(c, this._codestreamTeamId))
-			.filter(Boolean);
+		const streams = [];
+		const pending = [];
+		for (const c of channels) {
+			const s = fromSlackChannel(c, this._codestreamTeamId);
+			if (s !== undefined) {
+				streams.push(s);
+			}
 
-		const infos: Promise<CSChannelStream | CSDirectStream>[] = channels
-			.map((c: any) => (c.is_archived || !c.is_member ? undefined : this.fetchChannel(c)))
-			.filter(Boolean);
+			if (!c.is_archived && c.is_member) {
+				pending.push({
+					action: () => this.fetchChannel(c.id),
+					id: c.id,
+					sortBy: c.name as string
+				});
+			}
+		}
 
-		return [streams, infos];
+		pending.sort((a, b) => a.sortBy.localeCompare(b.sortBy));
+
+		const index = 0;
+		for (const p of pending) {
+			pendingQueue.push({ action: p.action, id: p.id, order: index, priority: 10 });
+		}
+
+		return streams;
 	}
 
 	@log({
 		args: false,
-		prefix: (context, c) => `${context.prefix}(${c.id})`,
-		enter: c => `fetching channel '${c.name}'...`
+		prefix: (context, id) => `${context.prefix}(${id})`
 	})
-	private async fetchChannel(c: any) {
+	private async fetchChannel(id: string) {
 		try {
 			const response = await this._slack.channels.info({
-				channel: c.id
+				channel: id
 			});
 
 			const { ok, error, channel } = response as WebAPICallResult & { channel: any };
@@ -1028,44 +1068,64 @@ export class SlackApiProvider implements ApiProvider {
 			return fromSlackChannel(channel, this._codestreamTeamId);
 		} catch (ex) {
 			Logger.error(ex);
-			return fromSlackChannel(c, this._codestreamTeamId);
+			throw ex;
 		}
 	}
 
 	private async fetchGroups(
-		usernamesById: Map<string, string>
-	): Promise<[(CSChannelStream | CSDirectStream)[], Promise<CSChannelStream | CSDirectStream>[]]> {
+		usernamesById: Map<string, string>,
+		pendingQueue: DeferredStreamRequest<CSChannelStream | CSDirectStream>[]
+	): Promise<(CSChannelStream | CSDirectStream)[]> {
 		const response = await this._slack.groups.list({
 			exclude_archived: true,
 			exclude_members: false
 			// limit: 1000
 		});
 
-		const { ok, error, groups } = response as WebAPICallResult & { groups: any };
+		const { ok, error, groups } = response as WebAPICallResult & { groups: any[] };
 		if (!ok) throw new Error(error);
 
-		const streams: (CSChannelStream | CSDirectStream)[] = groups
-			.map((c: any) =>
-				fromSlackChannelOrDirect(c, usernamesById, this._slackUserId, this._codestreamTeamId)
-			)
-			.filter(Boolean);
+		const streams = [];
+		const pending = [];
+		for (const g of groups) {
+			const s = fromSlackChannelOrDirect(
+				g,
+				usernamesById,
+				this._slackUserId,
+				this._codestreamTeamId
+			);
+			if (s !== undefined) {
+				streams.push(s);
+			}
 
-		const infos: Promise<CSChannelStream | CSDirectStream>[] = groups
-			.map((g: any) => (g.is_archived ? undefined : this.fetchGroup(g, usernamesById)))
-			.filter(Boolean);
+			if (!g.is_archived) {
+				pending.push({
+					action: () => this.fetchGroup(g.id, usernamesById),
+					priority: g.is_mpim ? 1 : 5,
+					id: g.id,
+					sortBy: (g.priority || 0) as number
+				});
+			}
+		}
 
-		return [streams, infos];
+		pending.sort((a, b) => b.sortBy - a.sortBy);
+
+		const index = 0;
+		for (const p of pending) {
+			pendingQueue.push({ action: p.action, id: p.id, order: index, priority: p.priority });
+		}
+
+		return streams;
 	}
 
 	@log({
 		args: false,
-		prefix: (context, g) => `${context.prefix}(${g.id})`,
-		enter: g => `fetching ${g.is_mpim ? "mpim" : "group"} '${g.name}'...`
+		prefix: (context, id) => `${context.prefix}(${id})`
 	})
-	private async fetchGroup(g: any, usernamesById: Map<string, string>) {
+	private async fetchGroup(id: any, usernamesById: Map<string, string>) {
 		try {
 			const response = await this._slack.groups.info({
-				channel: g.id
+				channel: id
 			});
 
 			const { ok, error, group } = response as WebAPICallResult & { group: any };
@@ -1086,42 +1146,58 @@ export class SlackApiProvider implements ApiProvider {
 			)!;
 		} catch (ex) {
 			Logger.error(ex);
-			return fromSlackChannelOrDirect(g, usernamesById, this._slackUserId, this._codestreamTeamId)!;
+			throw ex;
 		}
 	}
 
 	private async fetchIMs(
-		usernamesById: Map<string, string>
-	): Promise<[(CSChannelStream | CSDirectStream)[], Promise<CSChannelStream | CSDirectStream>[]]> {
+		usernamesById: Map<string, string>,
+		pendingQueue: DeferredStreamRequest<CSChannelStream | CSDirectStream>[]
+	): Promise<(CSChannelStream | CSDirectStream)[]> {
 		const response = await this._slack.im.list({
 			exclude_archived: true,
 			exclude_members: false
 			// limit: 1000
 		});
 
-		const { ok, error, ims } = response as WebAPICallResult & { ims: any };
+		const { ok, error, ims } = response as WebAPICallResult & { ims: any[] };
 		if (!ok) throw new Error(error);
 
-		const streams: (CSChannelStream | CSDirectStream)[] = ims
-			.map((c: any) => fromSlackDirect(c, usernamesById, this._slackUserId, this._codestreamTeamId))
-			.filter(Boolean);
+		const streams = [];
+		const pending = [];
+		for (const im of ims) {
+			const s = fromSlackDirect(im, usernamesById, this._slackUserId, this._codestreamTeamId);
+			if (s !== undefined) {
+				streams.push(s);
+			}
 
-		const infos: Promise<CSChannelStream | CSDirectStream>[] = ims
-			.map((im: any) => (im.is_user_deleted ? undefined : this.fetchIM(im, usernamesById)))
-			.filter(Boolean);
+			if (!im.is_user_deleted) {
+				pending.push({
+					action: () => this.fetchIM(im.id, usernamesById),
+					id: im.id,
+					order: (im.priority || 0) as number
+				});
+			}
+		}
 
-		return [streams, infos];
+		pending.sort((a, b) => b.order - a.order);
+
+		const index = 0;
+		for (const p of pending) {
+			pendingQueue.push({ action: p.action, id: p.id, order: index, priority: 0 });
+		}
+
+		return streams;
 	}
 
 	@log({
 		args: false,
-		prefix: (context, im) => `${context.prefix}(${im.id})`,
-		enter: im => `fetching im with '${im.user}'...`
+		prefix: (context, id) => `${context.prefix}(${id})`
 	})
-	private async fetchIM(im: any, usernamesById: Map<string, string>) {
+	private async fetchIM(id: string, usernamesById: Map<string, string>) {
 		try {
 			const response = await this._slack.conversations.info({
-				channel: im.id
+				channel: id
 			});
 
 			const { ok, error, channel } = response as WebAPICallResult & { channel: any };
@@ -1134,15 +1210,10 @@ export class SlackApiProvider implements ApiProvider {
 				channel.unread_count_display || 0
 			);
 
-			return fromSlackDirect(
-				{ ...im, ...channel },
-				usernamesById,
-				this._slackUserId,
-				this._codestreamTeamId
-			);
+			return fromSlackDirect(channel, usernamesById, this._slackUserId, this._codestreamTeamId);
 		} catch (ex) {
 			Logger.error(ex);
-			return fromSlackDirect(im, usernamesById, this._slackUserId, this._codestreamTeamId);
+			throw ex;
 		}
 	}
 
@@ -1158,57 +1229,22 @@ export class SlackApiProvider implements ApiProvider {
 			return this._codestream.getStream(request);
 		}
 
-		let response;
+		let stream;
 		switch (fromSlackChannelIdToType(request.streamId)) {
-			case "channel": {
-				response = await this._slack.channels.info({
-					channel: request.streamId
-				});
-
-				const { ok, error, channel } = response as WebAPICallResult & { channel: any };
-				if (!ok) throw new Error(error);
-
-				const stream = fromSlackChannel(channel, this._codestreamTeamId);
-
-				return { stream: stream! };
-			}
-			case "group": {
-				response = await this._slack.groups.info({
-					channel: request.streamId
-				});
-
-				const { ok, error, group } = response as WebAPICallResult & { group: any };
-				if (!ok) throw new Error(error);
-
-				const stream = fromSlackChannelOrDirect(
-					group,
-					await this.ensureUsernamesById(),
-					this._slackUserId,
-					this._codestreamTeamId
-				);
-
-				return { stream: stream! };
-			}
-			case "direct": {
-				response = await this._slack.conversations.info({
-					channel: request.streamId
-				});
-
-				const { ok, error, channel } = response as WebAPICallResult & { channel: any };
-				if (!ok) throw new Error(error);
-
-				const stream = fromSlackDirect(
-					channel,
-					await this.ensureUsernamesById(),
-					this._slackUserId,
-					this._codestreamTeamId
-				);
-
-				return { stream: stream! };
-			}
+			case "channel":
+				stream = await this.fetchChannel(request.streamId);
+				break;
+			case "group":
+				stream = await this.fetchGroup(request.streamId, await this.ensureUsernamesById());
+				break;
+			case "direct":
+				stream = await this.fetchIM(request.streamId, await this.ensureUsernamesById());
+				break;
 			default:
 				throw new Error(`Invalid stream type: ${request.streamId}`);
 		}
+
+		return { stream: stream };
 	}
 
 	@log()
