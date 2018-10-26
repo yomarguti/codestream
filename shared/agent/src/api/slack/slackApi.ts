@@ -28,6 +28,7 @@ import {
 	FetchUsersRequest,
 	GetMarkerRequest,
 	GetPostRequest,
+	GetPreferencesResponse,
 	GetRepoRequest,
 	GetStreamRequest,
 	GetTeamRequest,
@@ -938,6 +939,10 @@ export class SlackApiProvider implements ApiProvider {
 			Logger.error(ex);
 			throw ex;
 		}
+	}
+
+	getPreferences(): Promise<GetPreferencesResponse> {
+		throw new Error("method not implemented");
 	}
 
 	@log({

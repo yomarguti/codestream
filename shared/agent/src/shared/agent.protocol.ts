@@ -10,6 +10,7 @@ import {
 import {
 	CSMarker,
 	CSMarkerLocations,
+	CSMePreferences,
 	CSPost,
 	CSRepository,
 	CSStream,
@@ -112,6 +113,7 @@ export enum ChangeDataType {
 	MarkerLocations = "markerLocations",
 	Markers = "markers",
 	Posts = "posts",
+	Preferences = "preferences",
 	Repositories = "repos",
 	Streams = "streams",
 	Teams = "teams",
@@ -132,6 +134,11 @@ export interface MarkersChangedNotification {
 export interface PostsChangedNotification {
 	type: ChangeDataType.Posts;
 	data: CSPost[];
+}
+
+export interface PreferencesChangedNotification {
+	type: ChangeDataType.Preferences;
+	data: CSMePreferences;
 }
 
 export interface RepositoriesChangedNotification {
@@ -171,6 +178,7 @@ export type DidChangeDataNotification =
 	| MarkerLocationsChangedNotification
 	| MarkersChangedNotification
 	| PostsChangedNotification
+	| PreferencesChangedNotification
 	| RepositoriesChangedNotification
 	| StreamsChangedNotification
 	| TeamsChangedNotification

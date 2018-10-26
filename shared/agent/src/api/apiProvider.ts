@@ -46,6 +46,7 @@ import {
 	GetMeResponse,
 	GetPostRequest,
 	GetPostResponse,
+	GetPreferencesResponse,
 	GetRepoRequest,
 	GetRepoResponse,
 	GetStreamRequest,
@@ -91,6 +92,7 @@ import {
 	CSDirectStream,
 	CSMarker,
 	CSMarkerLocations,
+	CSMePreferences,
 	CSPost,
 	CSRepository,
 	CSTeam,
@@ -126,6 +128,7 @@ export enum MessageType {
 	MarkerLocations = "markerLocations",
 	Markers = "markers",
 	Posts = "posts",
+	Preferences = "preferences",
 	Repositories = "repos",
 	Streams = "streams",
 	Teams = "teams",
@@ -157,6 +160,11 @@ export interface MarkersRTMessage {
 export interface PostsRTMessage {
 	type: MessageType.Posts;
 	data: CSPost[];
+}
+
+export interface PreferencesRTMessage {
+	type: MessageType.Preferences;
+	data: CSMePreferences;
 }
 
 export interface RepositoriesRTMessage {
@@ -194,6 +202,7 @@ export type RTMessage =
 	| MarkerLocationsRTMessage
 	| MarkersRTMessage
 	| PostsRTMessage
+	| PreferencesRTMessage
 	| RepositoriesRTMessage
 	| StreamsRTMessage
 	| TeamsRTMessage
@@ -217,6 +226,7 @@ export interface ApiProvider {
 	getMe(): Promise<GetMeResponse>;
 	getUnreads(request: GetUnreadsRequest): Promise<GetUnreadsResponse>;
 	updatePreferences(request: UpdatePreferencesRequest): Promise<GetMeResponse>;
+	getPreferences(): Promise<GetPreferencesResponse>;
 	updatePresence(request: UpdatePresenceRequest): Promise<UpdatePresenceResponse>;
 
 	// createFileStream(request: CreateFileStreamRequest): Promise<CreateFileStreamResponse>;

@@ -119,6 +119,7 @@ import {
 	RTMessage
 } from "../apiProvider";
 import { PubnubEvents } from "./events";
+import { CodeStreamPreferences } from "./preferences";
 import { CodeStreamUnreads } from "./unreads";
 
 export class CodeStreamApiProvider implements ApiProvider {
@@ -137,6 +138,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	private _unreads: CodeStreamUnreads | undefined;
 	private _user: CSMe | undefined;
 	private _userId: string | undefined;
+	private _preferences: CodeStreamPreferences | undefined;
 
 	constructor(public readonly baseUrl: string, private readonly _version: VersionInfo) {}
 
@@ -258,6 +260,12 @@ export class CodeStreamApiProvider implements ApiProvider {
 			this._unreads.onDidChange(this.onUnreadsChanged, this);
 			this._unreads.compute(this._user!.lastReads);
 		}
+		if (types === undefined || types.includes(MessageType.Preferences)) {
+			this._preferences = new CodeStreamPreferences(this._user!.preferences);
+			this._preferences.onDidChange(preferences => {
+				this._onDidReceiveMessage.fire({ type: MessageType.Preferences, data: preferences });
+			});
+		}
 
 		this._events = new PubnubEvents(this._token!, this._pubnubKey!, this._pubnubToken!, this);
 		this._events.onDidReceiveMessage(this.onPubnubMessageReceived, this);
@@ -317,11 +325,14 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 				const me = (e.data as CSMe[]).find(u => u.id === this.userId);
 				if (me != null) {
-					this._user = me;
+					this._user = (await Container.instance().users.getMe()).user;
 
 					try {
 						if (this._unreads !== undefined && !Objects.shallowEquals(lastReads, me.lastReads)) {
 							this._unreads.compute(me.lastReads);
+						}
+						if (this._preferences && me.preferences) {
+							this._preferences.update(this._user.preferences);
 						}
 					} catch (error) {
 						debugger;
@@ -812,6 +823,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 			{ ...request, teamId: this.teamId },
 			this._token
 		);
+	}
+
+	@log()
+	async getPreferences() {
+		return { preferences: this._preferences!.get() };
 	}
 
 	private delete<R extends object>(url: string, token?: string): Promise<R> {

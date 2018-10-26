@@ -187,6 +187,12 @@ export class CodeStreamSession {
 					data: e.data
 				});
 				break;
+			case MessageType.Preferences:
+				this.agent.sendNotification(DidChangeDataNotificationType, {
+					type: ChangeDataType.Preferences,
+					data: e.data
+				});
+				break;
 			case MessageType.Repositories:
 				this._onDidChangeRepositories.fire(e.data);
 				this.agent.sendNotification(DidChangeDataNotificationType, {

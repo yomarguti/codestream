@@ -3,9 +3,10 @@ import {
 	FetchUsersRequest,
 	FetchUsersRequestType,
 	FetchUsersResponse,
-	GetMeRequest,
 	GetMeRequestType,
 	GetMeResponse,
+	GetPreferencesRequestType,
+	GetPreferencesResponse,
 	GetUnreadsRequest,
 	GetUnreadsRequestType,
 	GetUnreadsResponse,
@@ -76,8 +77,8 @@ export class UsersManager extends CachedEntityManagerBase<CSUser> {
 	}
 
 	@lspHandler(GetMeRequestType)
-	private async getMe(request: GetMeRequest): Promise<GetMeResponse> {
-		const me = (await this.getById(this.session.userId)) as CSMe;
+	async getMe(): Promise<GetMeResponse> {
+		const me = (await this.session.api.getMe()).user;
 		return { user: me };
 	}
 
@@ -90,5 +91,10 @@ export class UsersManager extends CachedEntityManagerBase<CSUser> {
 	private async getUser(request: GetUserRequest): Promise<GetUserResponse> {
 		const user = await this.getById(request.userId);
 		return { user: user };
+	}
+
+	@lspHandler(GetPreferencesRequestType)
+	private async getPreferences(): Promise<GetPreferencesResponse> {
+		return this.session.api.getPreferences();
 	}
 }

@@ -2,7 +2,6 @@
 import { RequestType } from "vscode-languageserver-protocol";
 import { CSUnreads } from "./agent.protocol";
 import { CSMe, CSMePreferences, CSPresenceStatus, CSUser } from "./api.protocol";
-import { CSLastReads } from "./api.protocol.models";
 
 export interface FetchUsersRequest {
 	userIds?: string[];
@@ -98,3 +97,11 @@ export const GetUnreadsRequestType = new RequestType<
 	void,
 	void
 >("codeStream/users/me/unreads");
+
+export interface GetPreferencesResponse {
+	preferences: CSMePreferences;
+}
+
+export const GetPreferencesRequestType = new RequestType<void, GetPreferencesResponse, void, void>(
+	"codeStream/users/me/preferences"
+);
