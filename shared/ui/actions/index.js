@@ -7,6 +7,11 @@ export const updatePreferences = preferences => ({
 	payload: preferences
 });
 
+export const updateCapabilities = capabilities => ({
+	type: "UPDATE_CAPABILITIES",
+	payload: capabilities
+});
+
 export const reset = () => ({ type: "RESET" });
 
 export const bootstrap = (data = {}) => async dispatch => {
@@ -16,6 +21,7 @@ export const bootstrap = (data = {}) => async dispatch => {
 	dispatch({ type: "BOOTSTRAP_REPOS", payload: data.repos || [] });
 	dispatch({ type: "BOOTSTRAP_SERVICES", payload: data.services || {} });
 	dispatch(updateUnreads(data.unreads || {}));
+	dispatch(updateCapabilities(data.capabilities || {}));
 	dispatch({ type: "BOOTSTRAP_COMPLETE" });
 };
 
