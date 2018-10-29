@@ -196,9 +196,6 @@ export class SimpleChannelPanel extends Component {
 
 	renderDirectMessages = () => {
 		let unsortedStreams = mapFilter(this.props.directMessageStreams, stream => {
-			if (stream.isClosed) return;
-			if (stream.memberIds.some(id => this.props.deactivatedUserIds.includes(id))) return;
-
 			let count = this.props.umis.unreads[stream.id] || 0;
 			// let mentions = this.props.umis.mentions[stream.id] || 0;
 			if (this.props.mutedStreams[stream.id]) {
@@ -208,27 +205,31 @@ export class SimpleChannelPanel extends Component {
 				else return null;
 			}
 
-			const icon =
-				stream.name === "slackbot" ? (
-					<Icon className="heart" name="heart" />
-				) : safe(() => stream.memberIds.length > 2) ? (
-					<Icon className="organization" name="organization" />
-				) : (
-					<Icon className="person" name="person" />
-				);
+			let icon;
+			if (stream.name === "slackbot") {
+				icon = <Icon className="heart active" name="heart" />;
+			} else if (stream.memberIds == null || stream.memberIds.length > 2) {
+				icon = <Icon className="organization" name="organization" />;
+			} else {
+				const presence = this.props.streamPresence[stream.id];
+				if (presence) {
+					icon = <Icon className={`person ${presence}`} name="person" />;
+				} else {
+					icon = <Icon className="person" name="person" />;
+				}
+			}
+
+			const isMeStream = stream.id === this.props.meStreamId;
+
 			const sortTimestamp =
 				stream.name === "slackbot"
 					? 1539191617 * 10000
-					: stream.isMeStream
+					: isMeStream
 						? 1539191617 * 90000
 						: stream.mostRecentPostCreatedAt || stream.modifiedAt || 1;
 
 			const sortName =
-				stream.name === "slackbot"
-					? "."
-					: stream.isMeStream
-						? ".."
-						: (stream.name || "").toLowerCase();
+				stream.name === "slackbot" ? "." : isMeStream ? ".." : (stream.name || "").toLowerCase();
 
 			return {
 				sortName,
@@ -244,7 +245,7 @@ export class SimpleChannelPanel extends Component {
 					>
 						<Debug text={stream.id}>
 							{icon}
-							{stream.name} {stream.isMeStream && <span className="you"> (you)</span>}
+							{stream.name} {isMeStream && <span className="you"> (you)</span>}
 							{count > 0 ? <span className="umi">{count}</span> : null}
 							<Tooltip title="Close Conversation">
 								<Icon
@@ -352,6 +353,7 @@ export class SimpleChannelPanel extends Component {
 
 const mapStateToProps = ({ context, preferences, streams, users, teams, umis, session }) => {
 	const team = teams[context.currentTeamId];
+
 	const teamMembers = team.memberIds.map(id => users[id]).filter(Boolean);
 	// .filter(user => user && user.isRegistered);
 
@@ -360,10 +362,30 @@ const mapStateToProps = ({ context, preferences, streams, users, teams, umis, se
 		stream => (stream.name || "").toLowerCase()
 	);
 
+	let meStreamId;
+	let streamPresence = Object.create(null);
 	const directMessageStreams = mapFilter(
 		getDirectMessageStreamsForTeam(streams, context.currentTeamId) || [],
 		stream => {
-			if (stream.isClosed) return;
+			if (
+				stream.isClosed ||
+				(stream.memberIds != null &&
+					stream.memberIds.some(id => users[id] != null && users[id].deactivated))
+			) {
+				return;
+			}
+
+			if (stream.memberIds != null && stream.memberIds.length <= 2) {
+				// this is my stream with myself, if it exists
+				if (stream.memberIds.length === 1 && stream.memberIds[0] === session.userId) {
+					meStreamId = stream.id;
+					streamPresence[stream.id] = users[session.userId].presence;
+				} else {
+					const id = stream.memberIds[stream.memberIds[0] === session.userId ? 1 : 0];
+					streamPresence[stream.id] = users[id].presence;
+				}
+			}
+
 			return {
 				...stream,
 				name: getDMName(stream, toMapBy("id", teamMembers), session.userId)
@@ -376,31 +398,15 @@ const mapStateToProps = ({ context, preferences, streams, users, teams, umis, se
 		stream => -stream.createdAt
 	);
 
-	// get a list of the users i have 1:1 streams with
-	const oneOnOnePeople = directMessageStreams
-		.map(stream => {
-			const notMe = _.without(stream.memberIds || [], session.userId);
-			if (notMe.length === 1) return notMe[0];
-
-			// this is my stream with myself, if it exists
-			if (safe(() => stream.memberIds.length === 1) && stream.memberIds[0] === session.userId) {
-				stream.isMeStream = true;
-				return session.userId;
-			}
-			return;
-		})
-		.filter(Boolean);
-
 	return {
-		deactivatedUserIds: mapFilter(teamMembers, member => (member.deactivated ? member.id : null)),
 		umis,
 		users,
 		channelStreams,
 		directMessageStreams,
 		serviceStreams,
 		mutedStreams: preferences.mutedStreams || {},
-		teammates: teamMembers,
-		oneOnOnePeople,
+		meStreamId,
+		streamPresence,
 		team: teams[context.currentTeamId]
 	};
 };
