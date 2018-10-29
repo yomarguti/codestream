@@ -179,13 +179,10 @@ export class InvitePage extends Component {
 
 	render() {
 		const inactive = this.props.activePanel !== "invite";
-		const shrink = this.props.activePanel === "main";
 
 		const panelClass = createClassString({
 			panel: true,
-			"invite-panel": true,
-			shrink,
-			"off-right": inactive && !shrink
+			"invite-panel": true
 		});
 
 		this.tabIndexCount = 0;

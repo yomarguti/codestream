@@ -15,7 +15,7 @@ export default class ScrollBox extends Component {
 		if (target.scrollTop > 1) {
 			if (!offTop) this.setState({ offTop: true });
 		} else if (offTop) this.setState({ offTop: false });
-		if (target.scrollHeight - target.scrollTop > target.clientHeight) {
+		if (target.scrollHeight - target.scrollTop > target.clientHeight + 2) {
 			if (!offBottom) this.setState({ offBottom: true });
 		} else if (offBottom) this.setState({ offBottom: false });
 	};

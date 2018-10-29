@@ -87,9 +87,9 @@ export class SimpleKnowledgePanel extends Component {
 	}
 
 	componentDidMount() {
-		this.disposables.push(
-			EventEmitter.subscribe("interaction:active-editor-changed", this.handleFileChangedEvent)
-		);
+		// this.disposables.push(
+		// 	EventEmitter.subscribe("interaction:active-editor-changed", this.handleFileChangedEvent)
+		// );
 	}
 
 	componentWillUnmount() {
@@ -97,8 +97,8 @@ export class SimpleKnowledgePanel extends Component {
 	}
 
 	handleFileChangedEvent = body => {
-		if (body && body.editor && body.editor.fileName)
-			this.setState({ thisFile: body.editor.fileName, thisRepo: body.editor.repoId });
+		// if (body && body.editor && body.editor.fileName)
+		// 	this.setState({ thisFile: body.editor.fileName, thisRepo: body.editor.repoId });
 		// else this.setState({ thisFile: null });
 	};
 
@@ -146,9 +146,9 @@ export class SimpleKnowledgePanel extends Component {
 		if (posts.length === 0) return null;
 
 		const sectionLabel =
-			section === "inThisFile" && this.state.thisFile ? (
+			section === "inThisFile" && this.props.mostRecentSourceFile ? (
 				<span>
-					In This File: <span className="filename">{this.state.thisFile}</span>
+					In This File: <span className="filename">{this.props.mostRecentSourceFile}</span>
 				</span>
 			) : (
 				this.sectionLabel[section]
@@ -169,13 +169,8 @@ export class SimpleKnowledgePanel extends Component {
 	};
 
 	render() {
-		const { posts, currentUserId } = this.props;
-		const { knowledgeType, thisFile, thisRepo, fileFilter } = this.state;
-
-		// if (!knowledgeType) return null;
-
-		const inactive = this.props.activePanel !== "knowledge";
-		const shrink = this.props.activePanel === "main" || this.props.activePanel === "thread";
+		const { posts, currentUserId, mostRecentSourceFile } = this.props;
+		const { knowledgeType, thisRepo, fileFilter } = this.state;
 
 		const knowledgePanelClass = createClassString({
 			panel: true,
@@ -216,7 +211,8 @@ export class SimpleKnowledgePanel extends Component {
 				if (this.state.fileFilter === "unseparated" && section === "inThisFile") return;
 				switch (section) {
 					case "inThisFile":
-						if (thisFile && codeBlockFile === thisFile) assignPost(post, "inThisFile");
+						if (mostRecentSourceFile && codeBlockFile === mostRecentSourceFile)
+							assignPost(post, "inThisFile");
 						break;
 					case "mine":
 						if (
@@ -507,6 +503,7 @@ const mapStateToProps = ({ context, streams, users, teams, umis, posts, session,
 		showMarkers: configs.showMarkers,
 		teammates: teamMembers,
 		team: teams[context.currentTeamId],
+		mostRecentSourceFile: context.mostRecentSourceFile,
 		posts: postsByType.map(post => {
 			let user = users[post.creatorId];
 			if (!user) {

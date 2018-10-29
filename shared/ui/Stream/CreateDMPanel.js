@@ -29,14 +29,7 @@ export class SimpleCreateDMPanel extends Component {
 
 	render() {
 		const inactive = this.props.activePanel !== "create-dm";
-		const shrink = this.props.activePanel === "main";
 
-		const createDMPanelClass = createClassString({
-			panel: true,
-			"create-dm-panel": true,
-			shrink,
-			"off-right": inactive && !shrink
-		});
 		const title = (
 			<span>
 				Close <span className="keybinding">ESC</span>
@@ -44,7 +37,7 @@ export class SimpleCreateDMPanel extends Component {
 		);
 
 		return (
-			<div className={createDMPanelClass} ref={this._createDMPanel}>
+			<div className="panel create-dm-panel" ref={this._createDMPanel}>
 				<div className="panel-header">
 					<Tooltip title={title} placement="bottomRight">
 						<span

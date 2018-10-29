@@ -62,7 +62,6 @@ export class SimpleChannelPanel extends Component {
 		const channelPanelClass = createClassString({
 			panel: true,
 			"channel-panel": true,
-			shrink: this.props.activePanel !== "channels",
 			muted: this.props.muteAll
 		});
 
@@ -122,6 +121,7 @@ export class SimpleChannelPanel extends Component {
 			default:
 				return [
 					// this.renderUnreadChannels(),
+					this.renderStarredChannels(),
 					this.renderTeamChannels(),
 					this.renderDirectMessages(),
 					this.renderServiceChannels()

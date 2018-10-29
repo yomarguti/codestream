@@ -55,13 +55,10 @@ export class SimpleCreateChannelPanel extends Component {
 
 	render() {
 		const inactive = this.props.activePanel !== "create-channel";
-		const shrink = this.props.activePanel === "main";
 
 		const createChannelPanelClass = createClassString({
 			panel: true,
-			"create-channel-panel": true,
-			shrink,
-			"off-right": inactive && !shrink
+			"create-channel-panel": true
 		});
 
 		const tooltipTitle = this.props.isSlackTeam

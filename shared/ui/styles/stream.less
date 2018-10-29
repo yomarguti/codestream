@@ -1267,21 +1267,6 @@
 			// overflow-y: scroll;
 		}
 
-		.panel.no-animation.shrink {
-			max-height: 100%;
-			overflow: hidden;
-
-			.postslist,
-			.vscroll {
-				transform: scale(0.9);
-			}
-
-			.code {
-				overflow-x: hidden;
-				overflow-y: hidden;
-			}
-		}
-
 		.thread-panel {
 			.banner {
 				position: relative;
@@ -1335,11 +1320,6 @@
 				right: 0;
 				bottom: 1px;
 			}
-		}
-		.panel.off-right {
-			transform: none;
-			left: 100%;
-			//no-animation: 0.2s slideout;
 		}
 
 		.post-details {
@@ -1972,37 +1952,6 @@
 			.headshot {
 				display: none;
 			}
-		}
-	}
-	.stream.reduced-motion {
-		.shrink,
-		.off-right {
-			z-index: -1 !important;
-			.panel-header {
-				z-index: -1 !important;
-			}
-			opacity: 0;
-			animation: none;
-			transition: opacity 0.25s;
-			.postslist {
-				transform: none;
-			}
-		}
-		.panel {
-			left: 0 !important;
-			animation: none;
-			display: block;
-			z-index: 2;
-			transition: opacity 0.25s;
-		}
-		.compose.offscreen,
-		.unreads.offscreen {
-			opacity: 0;
-			transition: opacity 0.25s;
-			animation: none !important;
-		}
-		.compose {
-			animation: none !important;
 		}
 	}
 	.intro {

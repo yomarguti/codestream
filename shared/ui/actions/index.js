@@ -28,3 +28,5 @@ export const bootstrap = (data = {}) => async dispatch => {
 
 export const offline = () => ({ type: "OFFLINE" });
 export const online = () => ({ type: "ONLINE" });
+
+export const fileChanged = body => ({ type: "SET_CURRENT_FILE", payload: body || {} });

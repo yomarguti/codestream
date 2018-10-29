@@ -1,8 +1,8 @@
 import EventEmitter from "../event-emitter";
 import { getChannelStreamsForTeam, getDirectMessageStreamsForTeam } from "../reducers/streams";
-import { setPanel } from "../actions/context";
+import { setPanel, closePanel } from "../actions/context";
 
-export { setPanel };
+export { setPanel, closePanel };
 
 // uuid generator taken from: https://gist.github.com/jed/982883
 const createTempId = a =>

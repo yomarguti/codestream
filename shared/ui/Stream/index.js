@@ -311,8 +311,7 @@ export class SimpleStream extends Component {
 		const streamClass = createClassString({
 			stream: true,
 			"has-overlay": threadId,
-			"no-headshots": !configs.showHeadshots,
-			"reduced-motion": configs.reduceMotion
+			"no-headshots": !configs.showHeadshots
 		});
 		const threadPostsListClass = createClassString({
 			postslist: true,
@@ -781,7 +780,9 @@ export class SimpleStream extends Component {
 	};
 
 	setActivePanel = panel => {
-		if (panel !== this.props.activePanel) this.props.setPanel(panel);
+		if (panel !== this.props.activePanel) {
+			this.props.setPanel(panel);
+		}
 	};
 
 	handleDidChangeVisiblePosts = data => {

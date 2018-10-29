@@ -1,6 +1,5 @@
 const initialState = {
 	showHeadshots: true,
-	reduceMotion: false,
 	debug: false
 };
 
