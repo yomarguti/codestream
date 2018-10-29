@@ -175,6 +175,7 @@ api.bootstrap().then(data => {
 			},
 			umis: data.unreads,
 			preferences: data.preferences,
+			capabilities: data.capabilities,
 			...(data.configs.email ? { route: "login" } : {})
 		},
 		{ api },

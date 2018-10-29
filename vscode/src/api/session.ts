@@ -3,6 +3,7 @@ import { ConfigurationTarget, Disposable, Event, EventEmitter } from "vscode";
 import {
 	AccessToken,
 	AgentResult,
+	ApiCapabilities,
 	ChangeDataType,
 	CodeStreamEnvironment,
 	CSUnreads,
@@ -149,6 +150,11 @@ export class CodeStreamSession implements Disposable {
 		return this._onDidChangeUsers.event;
 	}
 	private fireDidChangeUsers = createMergableDebouncedEvent(this._onDidChangeUsers);
+
+	private _capabilities: ApiCapabilities | undefined;
+	get capabilities() {
+		return this._capabilities;
+	}
 
 	private _disposable: Disposable | undefined;
 
@@ -467,6 +473,7 @@ export class CodeStreamSession implements Disposable {
 		const email = user.email;
 		this._email = email;
 		this._environment = result.state.environment;
+		this._capabilities = result.state.capabilities;
 
 		// Create an id for this session
 		this._id = Strings.sha1(`${instanceId}|${this.serverUrl}|${email}|${teamId}`.toLowerCase());

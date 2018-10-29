@@ -45,6 +45,7 @@ import {
 import { configuration } from "../configuration";
 import { Container } from "../container";
 import { Logger } from "../logger";
+import { ApiCapabilities } from "../shared/agent.protocol";
 import {
 	toLoggableIpcMessage,
 	WebviewIpc,
@@ -54,6 +55,7 @@ import {
 } from "./webviewIpc";
 
 interface BootstrapState {
+	capabilities?: ApiCapabilities;
 	currentTeamId: string;
 	currentUserId: string;
 	currentStreamId: string;
@@ -979,6 +981,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 			Container.agent.users.preferences()
 		]);
 
+		state.capabilities = this.session.capabilities;
 		state.configs = {
 			serverUrl: this.session.serverUrl,
 			reduceMotion: Container.config.reduceMotion,
