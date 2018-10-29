@@ -63,6 +63,7 @@ export interface WebviewIpcMessageResponseBody {
 export interface VslsInviteServiceRequestAction {
 	type: "invite";
 	userId: string;
+	createNewStream?: Boolean;
 }
 
 export interface VslsJoinServiceRequestAction {

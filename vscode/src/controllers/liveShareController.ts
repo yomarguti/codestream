@@ -12,6 +12,7 @@ import { VslsServiceRequestAction } from "../webviews/webviewIpc";
 
 interface InviteCommandArgs {
 	userIds: string | string[];
+	createNewStream?: Boolean;
 }
 
 interface JoinCommandArgs {
@@ -159,17 +160,22 @@ export class LiveShareController implements Disposable {
 
 		this.setVslsId(vsls.session.id);
 
-		// Create a new channel specifically for this live share session
-		const name = this.getVslsChannelName();
-		const vslsChannel = await Container.session.channels.getOrCreateByService(
-			ChannelServiceType.Vsls,
-			vsls.session.id!,
-			{
-				name: name,
-				membership: memberIds,
-				privacy: "private"
-			}
-		);
+		let vslsChannel;
+		if (args.createNewStream) {
+			// Create a new channel specifically for this live share session
+			const name = this.getVslsChannelName();
+			vslsChannel = await Container.session.channels.getOrCreateByService(
+				ChannelServiceType.Vsls,
+				vsls.session.id!,
+				{
+					name: name,
+					membership: memberIds,
+					privacy: "private"
+				}
+			);
+		} else {
+			vslsChannel = direct;
+		}
 
 		await direct.post(`Join my Live Share session: ${uri.toString()}`);
 		return Container.commands.openStream({
@@ -193,7 +199,7 @@ export class LiveShareController implements Disposable {
 	async processRequest(action: VslsServiceRequestAction) {
 		switch (action.type) {
 			case "invite":
-				await this.invite({ userIds: [action.userId] });
+				await this.invite({ userIds: [action.userId], createNewStream: action.createNewStream });
 				break;
 			case "join":
 				await this.join({ url: action.url });
@@ -233,36 +239,36 @@ export class LiveShareController implements Disposable {
 
 		await currentChannel.post(`Join my Live Share session: ${uri.toString()}`, streamThread.id);
 
-		if (args.createNewStream) {
-			// Create a new channel specifically for this live share session, based on the current channel
-			const name = this.getVslsChannelName();
-			let createOptions: ServiceChannelStreamCreationOptions;
-			switch (currentChannel.type) {
-				case StreamType.Direct:
-					createOptions = {
-						name: name,
-						membership: currentChannel.entity.memberIds,
-						privacy: "private"
-					};
-					break;
-				default:
-					createOptions = {
-						name: name,
-						privacy: "public"
-					};
-					break;
-			}
+		if (!args.createNewStream) return;
 
-			const vslsChannel = await Container.session.channels.getOrCreateByService(
-				ChannelServiceType.Vsls,
-				vsls.session.id!,
-				createOptions
-			);
+		// Create a new channel specifically for this live share session, based on the current channel
+		const name = this.getVslsChannelName();
+		let createOptions: ServiceChannelStreamCreationOptions;
+		switch (currentChannel.type) {
+			case StreamType.Direct:
+				createOptions = {
+					name: name,
+					membership: currentChannel.entity.memberIds,
+					privacy: "private"
+				};
+				break;
+			default:
+				createOptions = {
+					name: name,
+					privacy: "public"
+				};
+				break;
+		}
 
-			return Container.commands.openStream({
-				streamThread: { id: undefined, stream: vslsChannel }
-			});
-		} else return;
+		const vslsChannel = await Container.session.channels.getOrCreateByService(
+			ChannelServiceType.Vsls,
+			vsls.session.id!,
+			createOptions
+		);
+
+		return Container.commands.openStream({
+			streamThread: { id: undefined, stream: vslsChannel }
+		});
 	}
 
 	private async getVslsChannel(vslsId: string) {
