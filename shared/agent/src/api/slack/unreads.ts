@@ -70,8 +70,12 @@ export class SlackUnreads {
 		this.fireChanged();
 	}
 
-	update(streamId: string, postId: string, mentions: number, unreads: number) {
+	async update(streamId: string, postId: string, mentions: number, unreads: number) {
 		this._lastReads[streamId] = postId;
+
+		const { preferences } = await this._api.getPreferences();
+		if (preferences.mutedStreams[streamId]) return;
+
 		this._unreads.set(streamId, { mentions: mentions, unreads: unreads });
 
 		if (!this._suspended) {

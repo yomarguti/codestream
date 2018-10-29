@@ -497,7 +497,11 @@ export class SlackEvents {
 						`SlackEvents.onSlackMessageChanged(${type}${subtype ? `:${subtype}` : ""})`
 					);
 				}
-				this._api.unreads.increment(e.channel, mentioned);
+
+				const { preferences } = await this._api.getPreferences();
+				if (!preferences.mutedStreams[e.channel]) {
+					this._api.unreads.increment(e.channel, mentioned);
+				}
 			}
 
 			// Don't trust the payload, since it might not be a full message
