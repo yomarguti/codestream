@@ -1,5 +1,16 @@
 # Change Log
 
+## [0.20.0] - 2018-10-29
+
+### Added
+
+- Adds the display of Slack-based presence next to DMs on the channel switcher
+- Adds the synchronization of closed DMs between Slack and CodeStream
+
+### Changed
+
+- Optimizes startup performance to avoid rate-limiting and slow foreground requests due to background fetching when using Slack channels
+
 ## [0.19.0] - 2018-10-26
 
 ### Added
