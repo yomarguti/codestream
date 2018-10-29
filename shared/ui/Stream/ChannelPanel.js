@@ -340,10 +340,7 @@ export class SimpleChannelPanel extends Component {
 	};
 
 	handleClickCloseDirectMessage = event => {
-		event.preventDefault();
 		event.stopPropagation();
-		if (!this.props.canCloseDirectMessages) return this.handleClickMuteStream(event);
-
 		var liDiv = event.target.closest("li");
 		if (!liDiv) return; // FIXME throw error
 		const id = liDiv.id || liDiv.getAttribute("teammate");
@@ -413,8 +410,7 @@ const mapStateToProps = ({ context, preferences, streams, users, teams, umis, se
 		mutedStreams: preferences.mutedStreams || {},
 		teammates: teamMembers,
 		oneOnOnePeople,
-		team: teams[context.currentTeamId],
-		canCloseDirectMessages: safe(() => team.providerInfo.slack)
+		team: teams[context.currentTeamId]
 	};
 };
 
