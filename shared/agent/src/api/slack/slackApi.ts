@@ -115,6 +115,9 @@ export class SlackApiProvider implements ApiProvider {
 	private _usernamesById: Map<string, string> | undefined;
 	// TODO: Convert to index on UserManager?
 	private _userIdsByName: Map<string, string> | undefined;
+	readonly capabilities = {
+		mute: false
+	};
 
 	constructor(
 		private _codestream: CodeStreamApiProvider,

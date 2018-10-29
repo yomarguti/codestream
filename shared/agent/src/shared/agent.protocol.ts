@@ -28,6 +28,10 @@ export * from "./agent.protocol.streams";
 export * from "./agent.protocol.teams";
 export * from "./agent.protocol.users";
 
+export interface ApiCapabilities {
+	mute: boolean;
+}
+
 export interface AccessToken {
 	email: string;
 	url: string;
@@ -73,6 +77,7 @@ export interface AgentOptions {
 
 export interface AgentState {
 	apiToken: string;
+	capabilities: ApiCapabilities;
 	email: string;
 	environment: CodeStreamEnvironment;
 	serverUrl: string;

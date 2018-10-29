@@ -412,6 +412,7 @@ export class CodeStreamSession {
 				loginResponse: { ...response },
 				state: {
 					apiToken: response.accessToken,
+					capabilities: this.api.capabilities,
 					email: email,
 					environment: this._environment,
 					serverUrl: serverUrl,

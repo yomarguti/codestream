@@ -139,6 +139,9 @@ export class CodeStreamApiProvider implements ApiProvider {
 	private _user: CSMe | undefined;
 	private _userId: string | undefined;
 	private _preferences: CodeStreamPreferences | undefined;
+	readonly capabilities = {
+		mute: true
+	};
 
 	constructor(public readonly baseUrl: string, private readonly _version: VersionInfo) {}
 
