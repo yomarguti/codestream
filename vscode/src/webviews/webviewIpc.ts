@@ -105,7 +105,12 @@ export class WebviewIpc {
 
 	connect(panel: WebviewPanel) {
 		this._panel = panel;
-		this._paused = false;
+		// Don't start the ipc right away, we need to wait until the webview is ready to receive
+		this._paused = true;
+		this._queue.length = 0;
+	}
+
+	clear() {
 		this._queue.length = 0;
 	}
 
@@ -169,6 +174,12 @@ export class WebviewIpc {
 		}
 
 		if (this._paused) {
+			// HACK: If this is a response to a request try to service it
+			if (msg.type === WebviewIpcMessageType.response) {
+				const success = await this.postMessageCore(msg);
+				if (success) return true;
+			}
+
 			this.enqueue(msg);
 
 			Logger.log(
@@ -189,7 +200,7 @@ export class WebviewIpc {
 			}
 		}
 
-		const success = this.postMessageCore(msg);
+		const success = await this.postMessageCore(msg);
 		if (!success) {
 			this.enqueue(msg);
 		}

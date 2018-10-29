@@ -1079,6 +1079,9 @@ export class CodeStreamWebviewPanel implements Disposable {
 
 				if (cancelled) {
 					Logger.log("Webview: CANCELLED waiting for webview ready event");
+					this._ipc.clear();
+				} else {
+					this._ipc.resume();
 				}
 
 				this._onReadyResolver = undefined;
