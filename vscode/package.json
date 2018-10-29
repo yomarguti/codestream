@@ -57,24 +57,6 @@
                     "description": "Specifies the email address to use to connect to the CodeStream service",
                     "scope": "window"
                 },
-                "codestream.markerStyle": {
-                    "type": "string",
-                    "default": "bubble",
-                    "enum": [
-                        "bubble",
-                        "logo",
-                        "squircle",
-                        "triangle"
-                    ],
-                    "enumDescriptions": [
-                        "Chat bubble indicators",
-                        "CodeStream logo indicators",
-                        "Squircle indicators",
-                        "Triangle indicators"
-                    ],
-                    "description": "Specifies the indicator style to use for CodeStream code markers",
-                    "scope": "window"
-                },
                 "codestream.notifications": {
                     "type": "string",
                     "default": "mentions",
@@ -95,12 +77,6 @@
                     "type": "string",
                     "default": null,
                     "description": "Specifies the password to use to connect to the CodeStream service",
-                    "scope": "window"
-                },
-                "codestream.reduceMotion": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Specifies whether to reduce animation/transition motions",
                     "scope": "window"
                 },
                 "codestream.serverUrl": {

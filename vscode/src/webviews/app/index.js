@@ -202,6 +202,10 @@ api.bootstrap().then(data => {
 	EventEmitter.on("connectivity:offline", () => store.dispatch(actions.offline()));
 	EventEmitter.on("connectivity:online", () => store.dispatch(actions.online()));
 
+	EventEmitter.on("interaction:active-editor-changed", body =>
+		store.dispatch(actions.fileChanged(body))
+	);
+
 	EventEmitter.on("interaction:focus", () => {
 		setTimeout(() => {
 			store.dispatch(actions.focus());

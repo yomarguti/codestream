@@ -113,10 +113,8 @@ npm run pack
 | `codestream.autoSignIn`    | Specifies whether to automatically sign in to CodeStream                         |
 | `codestream.avatars`       | Specifies whether to show avatars                                                |
 | `codestream.email`         | Specifies the email to use to connect to the CodeStream service                  |
-| `"codestream.markerStyle`  | Specifies the indicator style to use for CodeStream code markers                 |
 | `codestream.notifications` | Specifies when to show notifications for incoming messages                       |
 | `codestream.password`      | Specifies the password to use to connect to the CodeStream service               |
-| `codestream.reduceMotion`  | Specifies whether to reduce animation/transition motions                         |
 | `codestream.serverUrl`     | Specifies the url to use to connect to the CodeStream service                    |
 | `codestream.team`          | Specifies an optional team to use to connect to the CodeStream service           |
 | `codestream.traceLevel`    | Specifies how much (if any) output will be sent to the CodeStream output channel |
@@ -228,6 +226,7 @@ Example workspace file &mdash; save as prod.code-workspace
 #### Best Practices (according to Eric)
 
 Here's what I do --
+
 1. Install the latest approved vsix in the insiders version of vscode (which is what I use for development/debugging) and I open the `codestream.code-workspace` running in prod
 2. Install the latest approved vsix running in qa or pd or prod (currently qa) by using `qa.code-workspace` or `pd.code-workspace` or just opening a folder (or nothing) for prod
 

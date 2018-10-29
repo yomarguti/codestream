@@ -26,7 +26,6 @@ export interface Config {
 	email: string;
 	markerStyle: MarkerStyle;
 	notifications: Notifications;
-	reduceMotion: boolean;
 	serverUrl: string;
 	showInStatusBar: "left" | "right" | false;
 	showMarkers: boolean;

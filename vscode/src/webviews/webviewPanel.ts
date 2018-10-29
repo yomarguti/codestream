@@ -859,7 +859,6 @@ export class CodeStreamWebviewPanel implements Disposable {
 		if (
 			configuration.changed(e, configuration.name("avatars").value) ||
 			configuration.changed(e, configuration.name("muteAll").value) ||
-			configuration.changed(e, configuration.name("reduceMotion").value) ||
 			configuration.changed(e, configuration.name("showMarkers").value) ||
 			configuration.changed(e, configuration.name("traceLevel").value)
 		) {
@@ -868,7 +867,6 @@ export class CodeStreamWebviewPanel implements Disposable {
 				body: {
 					debug: Container.config.traceLevel === "debug",
 					muteAll: Container.config.muteAll,
-					reduceMotion: Container.config.reduceMotion,
 					serverUrl: this.session.serverUrl,
 					showHeadshots: Container.config.avatars,
 					showMarkers: Container.config.showMarkers
@@ -1107,7 +1105,6 @@ export class CodeStreamWebviewPanel implements Disposable {
 			debug: Container.config.traceLevel === "debug",
 			email: Container.config.email,
 			muteAll: Container.config.muteAll,
-			reduceMotion: Container.config.reduceMotion,
 			serverUrl: this.session.serverUrl,
 			showHeadshots: Container.config.avatars,
 			showMarkers: Container.config.showMarkers
