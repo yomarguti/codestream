@@ -94,6 +94,11 @@ export class SimpleCreateChannelPanel extends Component {
 						</p>
 						<div id="controls">
 							<div id="privacy-controls" className="control-group">
+								<div className="public-private-hint">
+									{this.state.privacy === "private"
+										? "This channel can only be joined or viewed by invite."
+										: "Anyone on your team can view and join this channel."}
+								</div>
 								<div
 									className={createClassString("switch public-private", {
 										checked: this.state.privacy === "private"
