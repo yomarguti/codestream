@@ -942,8 +942,14 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	async getPreferences(): Promise<GetPreferencesResponse> {
-		// throw new Error("method not implemented");
-		return { preferences: {} };
+		const { muted_channels } = await this.getSlackPreferences();
+		return {
+			preferences: {
+				mutedStreams: muted_channels
+					.split(",")
+					.reduce((result: object, streamId: string) => ({ ...result, [streamId]: true }), {})
+			}
+		};
 	}
 
 	@log({
