@@ -2,6 +2,7 @@ import { combineReducers } from "redux";
 import companies from "./companies";
 import onboarding from "./onboarding";
 import posts from "./posts";
+import capabilities from "./capabilities";
 import context from "./context";
 import configs from "./configs";
 import streams from "./streams";
@@ -56,6 +57,7 @@ const pluginVersion = (state = "", { type }) => {
 
 const appReducer = combineReducers({
 	bootstrapped,
+	capabilities,
 	companies,
 	configs,
 	connectivity,

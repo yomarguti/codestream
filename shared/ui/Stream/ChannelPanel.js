@@ -330,15 +330,6 @@ export class SimpleChannelPanel extends Component {
 		return true;
 	};
 
-	handleClickMuteStream = event => {
-		var liDiv = event.target.closest("li");
-		if (!liDiv) return; // FIXME throw error
-		const id = liDiv.id || liDiv.getAttribute("teammate");
-		this.props.changeStreamMuteState(id, !this.props.mutedStreams[id]);
-		event.stopPropagation();
-		return true;
-	};
-
 	handleClickCloseDirectMessage = event => {
 		event.stopPropagation();
 		var liDiv = event.target.closest("li");

@@ -12,7 +12,7 @@ export class SimpleChannelMenu extends Component {
 	}
 
 	render() {
-		const { stream, target, umiCount, isMuted } = this.props;
+		const { canMute, stream, target, umiCount, isMuted } = this.props;
 
 		const streamName = stream.privacy === "private" ? stream.name : "#" + stream.name;
 		let cantLeave = false,
@@ -29,12 +29,12 @@ export class SimpleChannelMenu extends Component {
 			{ label: "-" },
 			{ label: "Mark Read", action: "mark-read", disabled: upToDate },
 			{ label: "-" },
-			{ label: muteLabel + streamName, action: "mute-channel" },
+			canMute ? { label: muteLabel + streamName, action: "mute-channel" } : false,
 			{ label: "Leave " + streamName, action: "leave-channel", disabled: cantLeave }
 			// { label: "-" },
 			// { label: "Connect to Slack", action: "connect-slack" },
 			// { label: "Connect to MS Teams", action: "connect-ms-teams" }
-		];
+		].filter(Boolean);
 
 		return <Menu items={items} target={target} action={this.menuAction} />;
 	}
@@ -83,7 +83,7 @@ export class SimpleChannelMenu extends Component {
 	};
 }
 
-const mapStateToProps = ({ session }) => ({ session });
+const mapStateToProps = ({ capabilities, session }) => ({ canMute: capabilities.mute, session });
 export default connect(
 	mapStateToProps,
 	{

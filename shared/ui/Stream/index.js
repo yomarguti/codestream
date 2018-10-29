@@ -20,7 +20,7 @@ import Debug from "./Debug";
 import EventEmitter from "../event-emitter";
 import * as actions from "./actions";
 import { safe, toMapBy } from "../utils";
-import { slashCommands } from "./SlashCommands";
+import { getSlashCommands } from "./SlashCommands";
 import { confirmPopup } from "./Confirm";
 import { getPostsForStream } from "../reducers/posts";
 import {
@@ -1352,6 +1352,7 @@ export class SimpleStream extends Component {
 const sum = (total, num) => total + Math.round(num);
 
 const mapStateToProps = ({
+	capabilities,
 	configs,
 	connectivity,
 	session,
@@ -1456,7 +1457,7 @@ const mapStateToProps = ({
 		currentUserId: user.id,
 		currentUserName: user.username,
 		mutedStreams: preferences.mutedStreams || {},
-		slashCommands,
+		slashCommands: getSlashCommands(capabilities),
 		team: teams[context.currentTeamId],
 		channelMembers,
 		services,

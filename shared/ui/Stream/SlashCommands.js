@@ -1,3 +1,9 @@
+export function getSlashCommands(capabilities) {
+	return slashCommands.filter(
+		command => capabilities[command.id] === undefined || capabilities[command.id] === true
+	);
+}
+
 export const slashCommands = [
 	{ id: "help", help: "get help" },
 	{
