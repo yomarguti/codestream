@@ -941,8 +941,9 @@ export class SlackApiProvider implements ApiProvider {
 		}
 	}
 
-	getPreferences(): Promise<GetPreferencesResponse> {
-		throw new Error("method not implemented");
+	async getPreferences(): Promise<GetPreferencesResponse> {
+		// throw new Error("method not implemented");
+		return { preferences: {} };
 	}
 
 	@log({
