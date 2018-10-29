@@ -1180,7 +1180,8 @@ export class SimpleStream extends Component {
 			service: "vsls",
 			action: {
 				type: "invite",
-				userId: userId
+				userId: userId,
+				createNewStream: false
 			}
 		});
 
@@ -1200,7 +1201,7 @@ export class SimpleStream extends Component {
 				type: "start",
 				streamId: postStreamId,
 				threadId: threadId,
-				createNewStream: !this.props.isSlackTeam
+				createNewStream: false
 			}
 		});
 
