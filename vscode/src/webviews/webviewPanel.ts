@@ -45,7 +45,7 @@ import {
 import { configuration } from "../configuration";
 import { Container } from "../container";
 import { Logger } from "../logger";
-import { ApiCapabilities } from "../shared/agent.protocol";
+import { ApiCapabilities, TraceLevel } from "../shared/agent.protocol";
 import {
 	toLoggableIpcMessage,
 	WebviewIpc,
@@ -1063,14 +1063,19 @@ export class CodeStreamWebviewPanel implements Disposable {
 	private waitUntilReady() {
 		// Wait until the webview is ready
 		return new Promise((resolve, reject) => {
-			const timer = setTimeout(() => {
-				Logger.warn("Webview: FAILED waiting for webview ready event; closing webview...");
-				this.dispose();
-				resolve(true);
-			}, 30000);
+			let timer: NodeJS.Timer;
+			if (Logger.level !== TraceLevel.Debug && !Logger.isDebugging) {
+				timer = setTimeout(() => {
+					Logger.warn("Webview: FAILED waiting for webview ready event; closing webview...");
+					this.dispose();
+					resolve(true);
+				}, 30000);
+			}
 
 			this._onReadyResolver = (cancelled: boolean) => {
-				clearTimeout(timer);
+				if (timer !== undefined) {
+					clearTimeout(timer);
+				}
 
 				if (cancelled) {
 					Logger.log("Webview: CANCELLED waiting for webview ready event");
