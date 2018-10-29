@@ -885,7 +885,7 @@ export class SimpleStream extends Component {
 		}
 
 		const isMuted = this.props.mutedStreams[postStreamId];
-		this.props.setUserPreference(["mutedStreams", postStreamId], !isMuted);
+		this.props.changeStreamMuteState(postStreamId, !isMuted);
 		const text = isMuted ? "This stream has been unmuted." : "This stream has been muted.";
 		return this.submitSystemPost(text);
 	};

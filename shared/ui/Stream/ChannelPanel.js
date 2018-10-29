@@ -2,7 +2,12 @@ import React, { Component } from "react";
 import { connect } from "react-redux";
 import createClassString from "classnames";
 import _ from "underscore";
-import { closeDirectMessage, createStream, setCurrentStream, setUserPreference } from "./actions";
+import {
+	changeStreamMuteState,
+	closeDirectMessage,
+	createStream,
+	setCurrentStream
+} from "./actions";
 import {
 	getChannelStreamsForTeam,
 	getDirectMessageStreamsForTeam,
@@ -199,7 +204,7 @@ export class SimpleChannelPanel extends Component {
 			if (this.props.mutedStreams[stream.id]) {
 				// if you have muted a stream, check to see if there is a UMI.
 				// if so, unmute the stream. if not, don't display it.
-				if (count) this.props.setUserPreference(["mutedStreams", stream.id], false);
+				if (count) this.props.changeStreamMuteState(stream.id, false);
 				else return null;
 			}
 
@@ -329,7 +334,7 @@ export class SimpleChannelPanel extends Component {
 		var liDiv = event.target.closest("li");
 		if (!liDiv) return; // FIXME throw error
 		const id = liDiv.id || liDiv.getAttribute("teammate");
-		this.props.setUserPreference(["mutedStreams", id], !this.props.mutedStreams[id]);
+		this.props.changeStreamMuteState(id, !this.props.mutedStreams[id]);
 		event.stopPropagation();
 		return true;
 	};
@@ -416,9 +421,9 @@ const mapStateToProps = ({ context, preferences, streams, users, teams, umis, se
 export default connect(
 	mapStateToProps,
 	{
+		changeStreamMuteState,
 		closeDirectMessage,
 		createStream,
-		setUserPreference,
 		setCurrentStream
 	}
 )(SimpleChannelPanel);
