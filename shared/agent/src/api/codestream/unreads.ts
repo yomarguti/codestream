@@ -60,6 +60,9 @@ export class CodeStreamUnreads {
 		})).streams;
 
 		for (const [streamId, posts] of Object.entries(grouped)) {
+			const { preferences } = await this._api.getPreferences();
+			if (preferences.mutedStreams[streamId]) continue;
+
 			const stream = streams.find(s => s.id === streamId);
 			if (stream == null) continue;
 
@@ -108,6 +111,9 @@ export class CodeStreamUnreads {
 
 			await Promise.all(
 				entries.map(async ([streamId, lastReadSeqNum]) => {
+					const { preferences } = await this._api.getPreferences();
+					if (preferences.mutedStreams[streamId]) return;
+
 					const stream = unreadStreams.find(stream => stream.id === streamId);
 					if (stream == null) return;
 
