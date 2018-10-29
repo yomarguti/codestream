@@ -65,7 +65,7 @@ import {
 	LoginResponse,
 	StreamType
 } from "../../shared/api.protocol";
-import { Functions, log } from "../../system";
+import { log } from "../../system";
 import {
 	ApiProvider,
 	CodeStreamApiMiddleware,
@@ -110,7 +110,6 @@ export class SlackApiProvider implements ApiProvider {
 	private readonly _slackUserId: string;
 
 	private readonly _unreads: SlackUnreads;
-	private _user: CSMe;
 	// TODO: Convert to index on UserManager?
 	private _usernamesById: Map<string, string> | undefined;
 	// TODO: Convert to index on UserManager?
@@ -142,8 +141,6 @@ export class SlackApiProvider implements ApiProvider {
 
 		this._codestreamUserId = user.id;
 		this._slackUserId = providerInfo.userId;
-
-		this._user = user;
 	}
 
 	private async onCodeStreamMessage(e: RTMessage) {
@@ -192,7 +189,8 @@ export class SlackApiProvider implements ApiProvider {
 
 	async processLoginResponse(response: LoginResponse): Promise<void> {
 		// Mix in slack user info with ours
-		void (await this.getMeCore({ user: this._user }));
+		// Make sure to not use the previous state here (it will cause a loop)
+		const meResponse = await this.getMeCore(false, { user: response.user });
 
 		// TODO: Correlate codestream ids to slack ids once the server returns that info
 		// const users = await this._codestream.fetchUsers({});
@@ -203,7 +201,7 @@ export class SlackApiProvider implements ApiProvider {
 			toSlackTeam(team, await this.ensureUsernamesById());
 		}
 
-		response.user = this._user;
+		response.user = meResponse.user;
 	}
 
 	private async getSlackPreferences() {
@@ -302,12 +300,17 @@ export class SlackApiProvider implements ApiProvider {
 
 	@log()
 	getMe() {
-		return this.getMeCore();
+		return this.getMeCore(true);
 	}
 
-	private async getMeCore(meResponse?: CSGetMeResponse) {
+	private async getMeCore(usePrevious: boolean, meResponse?: CSGetMeResponse) {
 		if (meResponse === undefined) {
 			meResponse = await this._codestream.getMe();
+		}
+
+		let prevMe;
+		if (usePrevious) {
+			prevMe = (await Container.instance().users.getById(this._slackUserId)) as CSMe;
 		}
 
 		let me = meResponse.user;
@@ -332,7 +335,8 @@ export class SlackApiProvider implements ApiProvider {
 				fullName: user.fullName,
 				id: user.id,
 				lastName: user.lastName,
-				username: user.username
+				username: user.username,
+				presence: prevMe && prevMe.presence
 			};
 		}
 
@@ -357,7 +361,6 @@ export class SlackApiProvider implements ApiProvider {
 		}
 
 		Container.instance().users.resolve({ type: MessageType.Users, data: [me] });
-		this._user = me;
 
 		return { user: me };
 	}
@@ -1170,8 +1173,6 @@ export class SlackApiProvider implements ApiProvider {
 		pendingQueue: DeferredStreamRequest<CSChannelStream | CSDirectStream>[]
 	): Promise<(CSChannelStream | CSDirectStream)[]> {
 		const response = await this._slack.im.list({
-			exclude_archived: true,
-			exclude_members: false
 			// limit: 1000
 		});
 
@@ -1535,8 +1536,11 @@ export class SlackApiProvider implements ApiProvider {
 		const users: CSUser[] = members.map((m: any) => fromSlackUser(m, this._codestreamTeamId));
 
 		// Find ourselves and replace it with our model
-		const index = users.findIndex(u => u.id === this._user.id);
-		users.splice(index, 1, this._user);
+		const index = users.findIndex(u => u.id === this._slackUserId);
+
+		// Make sure to not use the previous state here (it will cause a loop)
+		const meResponse = await this.getMeCore(false);
+		users.splice(index, 1, meResponse.user);
 
 		return { users: users };
 	}
