@@ -1361,6 +1361,7 @@ const mapStateToProps = ({
 	users,
 	pluginVersion,
 	posts,
+	preferences,
 	messaging,
 	teams,
 	onboarding,
@@ -1399,7 +1400,6 @@ const mapStateToProps = ({
 	const streamPosts = getPostsForStream(posts, postStream.id);
 
 	const user = users[session.userId];
-	const mutedStreams = (user && user.preferences && user.preferences.mutedStreams) || {};
 
 	const channelMembers = postStream.isTeamStream
 		? teamMembers
@@ -1455,7 +1455,7 @@ const mapStateToProps = ({
 		usernamesRegexp: usernamesRegexp,
 		currentUserId: user.id,
 		currentUserName: user.username,
-		mutedStreams,
+		mutedStreams: preferences.mutedStreams || {},
 		slashCommands,
 		team: teams[context.currentTeamId],
 		channelMembers,

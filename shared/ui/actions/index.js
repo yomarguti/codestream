@@ -2,6 +2,11 @@ export const updateConfigs = configs => ({ type: "UPDATE_CONFIGS", payload: conf
 
 export const updateUnreads = unreads => ({ type: "UPDATE_UNREADS", payload: unreads });
 
+export const updatePreferences = preferences => ({
+	type: "UPDATE_PREFERENCES",
+	payload: preferences
+});
+
 export const reset = () => ({ type: "RESET" });
 
 export const bootstrap = (data = {}) => async dispatch => {

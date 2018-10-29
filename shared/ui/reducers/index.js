@@ -16,6 +16,7 @@ import connectivity from "./connectivity";
 import currentPage from "./currentPage"; // TODO: remove this
 import route from "./route";
 import services from "./services";
+import preferences from "./preferences";
 
 const session = (state = {}, { type, payload }) => {
 	switch (type) {
@@ -66,6 +67,7 @@ const appReducer = combineReducers({
 	onboarding,
 	pluginVersion,
 	posts,
+	preferences,
 	repoAttributes,
 	repos,
 	route,

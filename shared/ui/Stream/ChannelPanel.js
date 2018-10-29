@@ -357,7 +357,7 @@ export class SimpleChannelPanel extends Component {
 	};
 }
 
-const mapStateToProps = ({ context, streams, users, teams, umis, session }) => {
+const mapStateToProps = ({ context, preferences, streams, users, teams, umis, session }) => {
 	const team = teams[context.currentTeamId];
 	const teamMembers = team.memberIds.map(id => users[id]).filter(Boolean);
 	// .filter(user => user && user.isRegistered);
@@ -366,9 +366,6 @@ const mapStateToProps = ({ context, streams, users, teams, umis, session }) => {
 		getChannelStreamsForTeam(streams, context.currentTeamId, session.userId) || [],
 		stream => (stream.name || "").toLowerCase()
 	);
-
-	const user = users[session.userId];
-	const mutedStreams = (user && user.preferences && user.preferences.mutedStreams) || {};
 
 	const directMessageStreams = mapFilter(
 		getDirectMessageStreamsForTeam(streams, context.currentTeamId) || [],
@@ -408,7 +405,7 @@ const mapStateToProps = ({ context, streams, users, teams, umis, session }) => {
 		channelStreams,
 		directMessageStreams,
 		serviceStreams,
-		mutedStreams,
+		mutedStreams: preferences.mutedStreams || {},
 		teammates: teamMembers,
 		oneOnOnePeople,
 		team: teams[context.currentTeamId],
