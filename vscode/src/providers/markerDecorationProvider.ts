@@ -54,13 +54,21 @@ const MarkerTypes = ["comment", "question", "issue", "trap", "bookmark"];
 const MarkerColors = ["blue", "green", "yellow", "orange", "red", "purple", "aqua", "gray"];
 const MarkerStatuses = ["open", "closed"];
 const MarkerHighlights: { [key: string]: string } = {
-	blue: "rgba(53, 120, 186, .25)",
-	green: "rgba(122, 186, 93, .25)",
-	yellow: "rgba(237, 214, 72, .25)",
-	orange: "rgba(241, 163, 64, .25)",
-	red: "rgba(217, 99, 79, .25)",
-	purple: "rgba(184, 124, 218, .25)",
-	aqua: "rgba(90, 191, 220, .25)",
+	// blue: "rgba(53, 120, 186, .25)",
+	// green: "rgba(122, 186, 93, .25)",
+	// yellow: "rgba(237, 214, 72, .25)",
+	// orange: "rgba(241, 163, 64, .25)",
+	// red: "rgba(217, 99, 79, .25)",
+	// purple: "rgba(184, 124, 218, .25)",
+	// aqua: "rgba(90, 191, 220, .25)",
+	// gray: "rgba(127, 127, 127, .25)"
+	blue: "rgba(0, 110, 183, .25)",
+	green: "rgba(88, 181, 71, .25)",
+	yellow: "rgba(240, 208, 5, .25)",
+	orange: "rgba(255, 147, 25, .25)",
+	red: "rgba(232, 78, 62, .25)",
+	purple: "rgba(187, 108, 220, .25)",
+	aqua: "rgba(0, 186, 220, .25)",
 	gray: "rgba(127, 127, 127, .25)"
 };
 
