@@ -245,22 +245,6 @@ export const UnarchiveStreamRequestType = new RequestType<
 	void
 >("codeStream/stream/unarchive");
 
-export interface UpdateStreamRequest {
-	streamId: string;
-	changes: { [key: string]: any };
-}
-
-export interface UpdateStreamResponse {
-	stream: CSStream;
-}
-
-export const UpdateStreamRequestType = new RequestType<
-	UpdateStreamRequest,
-	UpdateStreamResponse,
-	void,
-	void
->("codeStream/stream/update");
-
 export interface UpdateStreamMembershipRequest {
 	streamId: string;
 	add?: string[];

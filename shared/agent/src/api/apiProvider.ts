@@ -84,9 +84,7 @@ import {
 	UpdatePresenceRequest,
 	UpdatePresenceResponse,
 	UpdateStreamMembershipRequest,
-	UpdateStreamMembershipResponse,
-	UpdateStreamRequest,
-	UpdateStreamResponse
+	UpdateStreamMembershipResponse
 } from "../shared/agent.protocol";
 import {
 	CSChannelStream,
@@ -268,7 +266,6 @@ export interface ApiProvider {
 	renameStream(request: RenameStreamRequest): Promise<RenameStreamResponse>;
 	setStreamPurpose(request: SetStreamPurposeRequest): Promise<SetStreamPurposeResponse>;
 	unarchiveStream(request: UnarchiveStreamRequest): Promise<UnarchiveStreamResponse>;
-	updateStream(request: UpdateStreamRequest): Promise<UpdateStreamResponse>;
 	updateStreamMembership(
 		request: UpdateStreamMembershipRequest
 	): Promise<UpdateStreamMembershipResponse>;

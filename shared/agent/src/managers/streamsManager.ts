@@ -47,10 +47,7 @@ import {
 	UnarchiveStreamResponse,
 	UpdateStreamMembershipRequest,
 	UpdateStreamMembershipRequestType,
-	UpdateStreamMembershipResponse,
-	UpdateStreamRequest,
-	UpdateStreamRequestType,
-	UpdateStreamResponse
+	UpdateStreamMembershipResponse
 } from "../shared/agent.protocol";
 import { CSChannelStream, CSDirectStream, CSStream, StreamType } from "../shared/api.protocol";
 import { lspHandler } from "../system";
@@ -181,11 +178,6 @@ export class StreamsManager extends CachedEntityManagerBase<CSChannelStream | CS
 	@lspHandler(UnarchiveStreamRequestType)
 	unarchive(request: UnarchiveStreamRequest): Promise<UnarchiveStreamResponse> {
 		return this.session.api.unarchiveStream(request);
-	}
-
-	@lspHandler(UpdateStreamRequestType)
-	updateStream(request: UpdateStreamRequest): Promise<UpdateStreamResponse> {
-		return this.session.api.updateStream(request);
 	}
 
 	@lspHandler(UpdateStreamMembershipRequestType)

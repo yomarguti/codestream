@@ -49,9 +49,7 @@ import {
 	UpdatePreferencesRequest,
 	UpdatePresenceRequest,
 	UpdateStreamMembershipRequest,
-	UpdateStreamMembershipResponse,
-	UpdateStreamRequest,
-	UpdateStreamResponse
+	UpdateStreamMembershipResponse
 } from "../../shared/agent.protocol";
 import {
 	CSChannelStream,
@@ -1452,11 +1450,6 @@ export class SlackApiProvider implements ApiProvider {
 		});
 
 		return streamResponse;
-	}
-
-	@log()
-	async updateStream(request: UpdateStreamRequest): Promise<UpdateStreamResponse> {
-		throw new Error("Method not implemented.");
 	}
 
 	@log()

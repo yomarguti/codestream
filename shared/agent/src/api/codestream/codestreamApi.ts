@@ -47,8 +47,7 @@ import {
 	UpdateMarkerRequest,
 	UpdatePreferencesRequest,
 	UpdatePresenceRequest,
-	UpdateStreamMembershipRequest,
-	UpdateStreamRequest
+	UpdateStreamMembershipRequest
 } from "../../shared/agent.protocol";
 import {
 	CompleteSignupRequest,
@@ -659,7 +658,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	@log()
 	async archiveStream(request: ArchiveStreamRequest) {
-		return this.updateStream({ streamId: request.streamId, changes: { isArchived: true } });
+		return this.updateStream(request.streamId, { isArchived: true });
 	}
 
 	@log()
@@ -685,16 +684,13 @@ export class CodeStreamApiProvider implements ApiProvider {
 			data: [response.stream]
 		});
 
-		return { stream };
+		return { stream: stream as CSChannelStream };
 	}
 
 	@log()
 	async leaveStream(request: LeaveStreamRequest) {
-		const response = await this.updateStream({
-			streamId: request.streamId,
-			changes: {
-				$pull: { memberIds: [this._userId] }
-			}
+		const response = await this.updateStream(request.streamId, {
+			$pull: { memberIds: [this._userId] }
 		});
 
 		if (this._events !== undefined) {
@@ -711,7 +707,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 			]
 		});
 
-		return { stream };
+		return { stream: stream as CSChannelStream };
 	}
 
 	@log()
@@ -733,25 +729,24 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	@log()
 	renameStream(request: RenameStreamRequest) {
-		return this.updateStream({ streamId: request.streamId, changes: { name: request.name } });
+		return this.updateStream(request.streamId, { name: request.name });
 	}
 
 	@log()
 	setStreamPurpose(request: SetStreamPurposeRequest) {
-		return this.updateStream({ streamId: request.streamId, changes: { purpose: request.purpose } });
+		return this.updateStream(request.streamId, { purpose: request.purpose });
 	}
 
 	@log()
 	async unarchiveStream(request: UnarchiveStreamRequest) {
-		return this.updateStream({ streamId: request.streamId, changes: { isArchived: false } });
+		return this.updateStream(request.streamId, { isArchived: false });
 	}
 
-	@log()
-	async updateStream(request: UpdateStreamRequest) {
+	private async updateStream(streamId: string, changes: { [key: string]: any }) {
 		const response = await this.put<CSUpdateStreamRequest, CSUpdateStreamResponse>(
-			`/streams/${request.streamId}`,
+			`/streams/${streamId}`,
 			{
-				...request.changes
+				...changes
 			},
 			this._token
 		);
@@ -761,7 +756,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 			data: [response.stream]
 		});
 
-		return { stream };
+		return { stream: stream as CSChannelStream };
 	}
 
 	@log()
@@ -780,7 +775,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 			data: [response.stream]
 		});
 
-		return { stream };
+		return { stream: stream as CSChannelStream };
 	}
 
 	@log()
