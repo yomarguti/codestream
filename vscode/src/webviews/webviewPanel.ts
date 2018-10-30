@@ -439,12 +439,21 @@ export class CodeStreamWebviewPanel implements Disposable {
 							break;
 						}
 						case "mark-stream-read": {
-							const { streamId, id } = body.params;
+							const { streamId } = body.params;
+							let postId = body.params.postId;
 
-							const response = await Container.agent.streams.markRead(streamId, id);
+							if (!postId) {
+								const { posts } = await Container.agent.posts.fetch(streamId, { limit: 1 });
+								if (posts.length === 1) {
+									postId = posts[0].id;
+								}
+							}
+
+							if (postId) await Container.agent.streams.markRead(streamId, postId);
+
 							this.postMessage({
 								type: WebviewIpcMessageType.response,
-								body: { id: body.id, payload: response }
+								body: { id: body.id, payload: true }
 							});
 
 							break;
