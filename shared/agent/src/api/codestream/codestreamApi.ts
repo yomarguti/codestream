@@ -117,8 +117,8 @@ import {
 	RawRTMessage,
 	RTMessage
 } from "../apiProvider";
+import { CodeStreamPreferences } from "../preferences";
 import { PubnubEvents } from "./events";
-import { CodeStreamPreferences } from "./preferences";
 import { CodeStreamUnreads } from "./unreads";
 
 export class CodeStreamApiProvider implements ApiProvider {

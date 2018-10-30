@@ -57,6 +57,7 @@ import {
 	CSDirectStream,
 	CSGetMeResponse,
 	CSMe,
+	CSMePreferences,
 	CSPost,
 	CSSlackProviderInfo,
 	CSUser,
@@ -74,6 +75,7 @@ import {
 	StreamsRTMessage
 } from "../apiProvider";
 import { CodeStreamApiProvider } from "../codestream/codestreamApi";
+import { CodeStreamPreferences } from "../preferences";
 import { SlackEvents } from "./events";
 import {
 	fromSlackChannel,
@@ -112,6 +114,7 @@ export class SlackApiProvider implements ApiProvider {
 	private _usernamesById: Map<string, string> | undefined;
 	// TODO: Convert to index on UserManager?
 	private _userIdsByName: Map<string, string> | undefined;
+	private _preferences: CodeStreamPreferences;
 	readonly capabilities = {
 		mute: false
 	};
@@ -136,6 +139,8 @@ export class SlackApiProvider implements ApiProvider {
 
 		this._unreads = new SlackUnreads(this);
 		this._unreads.onDidChange(this.onUnreadsChanged, this);
+
+		this._preferences = new CodeStreamPreferences(user.preferences);
 
 		this._codestreamUserId = user.id;
 		this._slackUserId = providerInfo.userId;
@@ -244,7 +249,21 @@ export class SlackApiProvider implements ApiProvider {
 	@log()
 	async subscribe(types?: MessageType[]) {
 		this._events = new SlackEvents(this._slackToken, this);
-		this._events.onDidReceiveMessage(e => this._onDidReceiveMessage.fire(e), this);
+		this._events.onDidReceiveMessage(e => {
+			if (e.type === MessageType.Preferences) {
+				this._preferences.update(e.data);
+			} else {
+				this._onDidReceiveMessage.fire(e);
+			}
+		});
+
+		this._preferences.onDidChange(preferences => {
+			this._onDidReceiveMessage.fire({ type: MessageType.Preferences, data: preferences });
+		});
+
+		this.getInitialPreferences().then(preferences => {
+			this._preferences.update(preferences);
+		});
 
 		const usernamesById = await this.ensureUsernamesById();
 		await this._events.connect([...usernamesById.keys()]);
@@ -344,7 +363,6 @@ export class SlackApiProvider implements ApiProvider {
 
 		try {
 			const { muted_channels } = await this.getSlackPreferences();
-			const mutedStreams = muted_channels.split(",");
 
 			// Don't update our prefs, since they aren't per-team
 			// void this.updatePreferences({
@@ -353,7 +371,12 @@ export class SlackApiProvider implements ApiProvider {
 			// 	}
 			// });
 
-			me.preferences.mutedStreams = mutedStreams;
+			me.preferences = {
+				...me.preferences,
+				mutedStreams: muted_channels
+					.split(",")
+					.reduce((result: object, streamId: string) => ({ ...result, [streamId]: true }), {})
+			};
 		} catch (ex) {
 			Logger.error(ex);
 		}
@@ -975,15 +998,17 @@ export class SlackApiProvider implements ApiProvider {
 		}
 	}
 
+	@log()
 	async getPreferences(): Promise<GetPreferencesResponse> {
-		const { muted_channels } = await this.getSlackPreferences();
 		return {
-			preferences: {
-				mutedStreams: muted_channels
-					.split(",")
-					.reduce((result: object, streamId: string) => ({ ...result, [streamId]: true }), {})
-			}
+			preferences: this._preferences.get()
 		};
+	}
+
+	@log()
+	private async getInitialPreferences() {
+		const { user } = await this.getMe();
+		return user.preferences;
 	}
 
 	@log({

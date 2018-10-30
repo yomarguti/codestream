@@ -212,6 +212,7 @@ export interface CSUser extends CSEntity {
 	};
 	dnd?: boolean;
 	presence?: string;
+	preferences?: CSMePreferences;
 }
 
 export interface CSLastReads {

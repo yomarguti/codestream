@@ -4,7 +4,13 @@ import { Emitter, Event } from "vscode-languageserver";
 import { Container } from "../../container";
 import { Logger } from "../../logger";
 import { StreamType } from "../../shared/api.protocol";
-import { MessageType, RTMessage, StreamsRTMessage, UsersRTMessage } from "../apiProvider";
+import {
+	MessageType,
+	PreferencesRTMessage,
+	RTMessage,
+	StreamsRTMessage,
+	UsersRTMessage
+} from "../apiProvider";
 import { SlackApiProvider } from "./slackApi";
 import {
 	fromSlackChannelIdToType,
@@ -561,19 +567,38 @@ export class SlackEvents {
 				case SlackRtmEventTypes.PreferenceChanged: {
 					// TODO: Handle other prefs?
 					if (e.name === "muted_channels") {
+						const { preferences } = await this._api.getPreferences();
+
+						const mutedIds = e.value.split(",").filter(Boolean);
+						const unMute = Object.keys(preferences.mutedStreams || {}).filter(
+							streamId => !mutedIds.includes(streamId)
+						);
+
 						const message = {
-							type: MessageType.Users,
+							type: MessageType.Preferences,
 							data: [
 								{
 									id: this._api.userId,
-									$set: {
-										"preferences.mutedStreams": e.value.split(",")
-									}
+									$set: mutedIds.reduce(
+										(result: object, streamId: string) => ({
+											...result,
+											[`preferences.mutedStreams.${streamId}`]: true
+										}),
+										{}
+									),
+									$unset: unMute.reduce(
+										(result: object, streamId: string) => ({
+											...result,
+											[`preferences.mutedStreams.${streamId}`]: true
+										}),
+										{}
+									)
 								} as unknown
 							]
-						} as UsersRTMessage;
+						} as PreferencesRTMessage;
 
-						message.data = await Container.instance().users.resolve(message);
+						const resolvedUser = await Container.instance().users.resolve(message);
+						message.data = resolvedUser[0].preferences!;
 						this._onDidReceiveMessage.fire(message);
 					}
 					break;
