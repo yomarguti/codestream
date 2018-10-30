@@ -9,7 +9,7 @@ import {
 } from "../../agent/agentConnection";
 import { Container } from "../../container";
 import { Iterables, Strings } from "../../system";
-import { CodeStreamSession, StreamsChangedEvent, StreamsMembershipChangedEvent } from "../session";
+import { CodeStreamSession, StreamsChangedEvent } from "../session";
 import { CodeStreamCollection, CodeStreamItem } from "./collection";
 import { Post, PostCollection } from "./posts";
 import { Repository } from "./repositories";
@@ -152,7 +152,7 @@ abstract class StreamCollectionBase<
 		this.disposables.push(session.onDidChangeStreams(this.onStreamsChanged, this));
 	}
 
-	protected onStreamsChanged(e: StreamsChangedEvent | StreamsMembershipChangedEvent) {
+	protected onStreamsChanged(e: StreamsChangedEvent) {
 		this.invalidate();
 	}
 }

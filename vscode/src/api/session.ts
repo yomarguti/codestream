@@ -39,7 +39,6 @@ import {
 	SessionChangedEventType,
 	SessionStatusChangedEvent,
 	StreamsChangedEvent,
-	StreamsMembershipChangedEvent,
 	TeamsChangedEvent,
 	TextDocumentMarkersChangedEvent,
 	UnreadsChangedEvent,
@@ -65,7 +64,6 @@ export {
 	SessionStatusChangedEvent,
 	Stream,
 	StreamsChangedEvent,
-	StreamsMembershipChangedEvent,
 	StreamThread,
 	StreamType,
 	Team,
@@ -121,10 +119,8 @@ export class CodeStreamSession implements Disposable {
 		return this._onDidChangeSessionStatus.event;
 	}
 
-	private _onDidChangeStreams = new EventEmitter<
-		StreamsChangedEvent | StreamsMembershipChangedEvent
-	>();
-	get onDidChangeStreams(): Event<StreamsChangedEvent | StreamsMembershipChangedEvent> {
+	private _onDidChangeStreams = new EventEmitter<StreamsChangedEvent>();
+	get onDidChangeStreams(): Event<StreamsChangedEvent> {
 		return this._onDidChangeStreams.event;
 	}
 	private fireDidChangeStreams = createMergableDebouncedEvent(this._onDidChangeStreams);
@@ -411,14 +407,6 @@ export class CodeStreamSession implements Disposable {
 				})
 			);
 		}
-	}
-
-	@signedIn
-	// HACK: Hate exposing this here -- should ideally be wrapped up all the way in the agent
-	notifyDidLeaveChannel(id: string, teamId?: string) {
-		this.fireDidChangeStreams(
-			new StreamsMembershipChangedEvent(this, [{ id: id, teamId: teamId || this._state!.teamId }])
-		);
 	}
 
 	private async loginCore(

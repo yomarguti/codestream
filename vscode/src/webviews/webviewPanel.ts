@@ -36,7 +36,6 @@ import {
 	RepositoriesChangedEvent,
 	SessionChangedEventType,
 	StreamsChangedEvent,
-	StreamsMembershipChangedEvent,
 	StreamThread,
 	TeamsChangedEvent,
 	UnreadsChangedEvent,
@@ -527,17 +526,17 @@ export class CodeStreamWebviewPanel implements Disposable {
 						case "leave-stream": {
 							const { streamId } = body.params;
 
+							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
 							try {
-								await Container.agent.streams.leave(streamId);
-							} catch (e) {
-								/* */
+								const response = await Container.agent.streams.leave(streamId);
+								responseBody.payload = response.stream;
+							} catch (ex) {
+								responseBody.error = ex;
 							}
 
-							// TODO: This needs to be cleaned up and moved into the agent
-							this.session.notifyDidLeaveChannel(streamId);
 							this.postMessage({
 								type: WebviewIpcMessageType.response,
-								body: { id: body.id, payload: true }
+								body: responseBody
 							});
 
 							break;
@@ -750,7 +749,6 @@ export class CodeStreamWebviewPanel implements Disposable {
 			| PreferencesChangedEvent
 			| RepositoriesChangedEvent
 			| StreamsChangedEvent
-			| StreamsMembershipChangedEvent
 			| TeamsChangedEvent
 			| UnreadsChangedEvent
 			| UsersChangedEvent

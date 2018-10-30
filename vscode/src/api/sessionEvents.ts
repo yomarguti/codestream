@@ -132,20 +132,6 @@ export class StreamsChangedEvent extends SessionChangedEventBase<StreamsChangedN
 	}
 }
 
-export class StreamsMembershipChangedEvent
-	implements MergeableEvent<StreamsMembershipChangedEvent> {
-	readonly type = SessionChangedEventType.StreamsMembership;
-
-	constructor(
-		public readonly session: CodeStreamSession,
-		private readonly _streams: { id: string; teamId: string }[]
-	) {}
-
-	merge(e: StreamsMembershipChangedEvent) {
-		this._streams.push(...e._streams);
-	}
-}
-
 export class TeamsChangedEvent extends SessionChangedEventBase<TeamsChangedNotification>
 	implements MergeableEvent<TeamsChangedEvent> {
 	readonly type = SessionChangedEventType.Teams;
