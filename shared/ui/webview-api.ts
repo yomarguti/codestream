@@ -120,8 +120,8 @@ export default class WebviewApi {
 		return this.postMessage({ action: "invite", params: attributes });
 	}
 
-	markStreamRead(streamId: string, postId: string) {
-		return this.postMessage({ action: "mark-stream-read", params: { streamId, id: postId } });
+	markStreamRead(streamId: string, postId?: string) {
+		return this.postMessage({ action: "mark-stream-read", params: { streamId, postId } });
 	}
 
 	markPostUnread(streamId: string, postId: string) {
