@@ -212,7 +212,10 @@ export class SlackApiProvider implements ApiProvider {
 		const response = await this._slack.apiCall("users.prefs.get");
 
 		const { ok, error, prefs } = response as WebAPICallResult & { prefs: any };
-		if (!ok) throw new Error(error);
+		if (!ok) {
+			Logger.error(new Error(error));
+			return { muted_channels: "" };
+		}
 
 		return prefs as { [key: string]: any };
 	}
