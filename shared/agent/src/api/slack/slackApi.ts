@@ -842,32 +842,53 @@ export class SlackApiProvider implements ApiProvider {
 
 	@log()
 	async createChannelStream(request: CreateChannelStreamRequest) {
-		if (request.isTeamStream || request.memberIds == null || request.memberIds.length === 0) {
+		if (request.isTeamStream || request.memberIds == null) {
 			throw new Error("Cannot create team streams on Slack");
+		}
+
+		// Remove ourselves from the membership list
+		const index = request.memberIds.findIndex(m => m === this._slackUserId);
+		if (index !== -1) {
+			request.memberIds.splice(index, 1);
 		}
 
 		const response = await this._slack.conversations.create({
 			name: request.name,
 			is_private: request.privacy === "private",
-			user_ids: request.memberIds.join(",")
+			user_ids: request.memberIds.length === 0 ? undefined : request.memberIds.join(",")
 		});
 
 		const { ok, error, channel } = response as WebAPICallResult & { channel: any };
 		if (!ok) throw new Error(error);
+
+		if (channel.members == null || channel.members.length === 0) {
+			const members = await this.getStreamMembers(channel.id);
+			if (request.memberIds.length !== members.length - 1) {
+				const membershipResponse = await this.updateStreamMembership({
+					streamId: channel.id,
+					add: request.memberIds
+				});
+
+				// Since updateStreamMembership already updated the cache we can just return the response
+				return membershipResponse;
+			} else {
+				channel.members = members;
+			}
+		}
 
 		const stream = fromSlackChannelOrDirect(
 			channel,
 			await this.ensureUsernamesById(),
 			this._slackUserId,
 			this._codestreamTeamId
-		);
+		)!;
 
-		Container.instance().streams.resolve({
+		const streams = await Container.instance().streams.resolve({
 			type: MessageType.Streams,
 			data: [stream]
 		});
 
-		return { stream: stream! as CSChannelStream };
+		return { stream: streams[0] as CSChannelStream };
 	}
 
 	@log()
@@ -880,19 +901,28 @@ export class SlackApiProvider implements ApiProvider {
 		const { ok, error, channel } = response as WebAPICallResult & { channel: any };
 		if (!ok) throw new Error(error);
 
+		try {
+			const members = await this.getStreamMembers(channel.id);
+			channel.members = members;
+		} catch (ex) {
+			Logger.error(ex);
+
+			channel.members = request.memberIds;
+		}
+
 		const stream = fromSlackChannelOrDirect(
 			channel,
 			await this.ensureUsernamesById(),
 			this._slackUserId,
 			this._codestreamTeamId
-		);
+		)!;
 
-		Container.instance().streams.resolve({
+		const streams = await Container.instance().streams.resolve({
 			type: MessageType.Streams,
 			data: [stream]
 		});
 
-		return { stream: stream! as CSDirectStream };
+		return { stream: streams[0] as CSDirectStream };
 	}
 
 	@log({

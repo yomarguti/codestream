@@ -234,9 +234,11 @@ export class SlackEvents {
 					break;
 				}
 				case SlackRtmEventTypes.ChannelCreated:
-				case SlackRtmEventTypes.ImCreated: {
-					// Don't trust the payload, since it might not be a full channel
-					const response = await this._api.getStream({ streamId: e.channel });
+				case SlackRtmEventTypes.ImCreated:
+				case SlackRtmEventTypes.ChannelJoined:
+				case SlackRtmEventTypes.GroupJoined: {
+					// Don't trust the payload, since it might not be a full channel (e.g containing members)
+					const response = await this._api.getStream({ streamId: e.channel.id });
 					const message = {
 						type: MessageType.Streams,
 						data: [response.stream]
@@ -307,24 +309,6 @@ export class SlackEvents {
 								id: e.channel,
 								$pull: { memberIds: [e.user] }
 							} as unknown
-						]
-					} as StreamsRTMessage;
-					message.data = await Container.instance().streams.resolve(message);
-
-					this._onDidReceiveMessage.fire(message);
-					break;
-				}
-				case SlackRtmEventTypes.ChannelJoined:
-				case SlackRtmEventTypes.GroupJoined: {
-					const message = {
-						type: MessageType.Streams,
-						data: [
-							fromSlackChannelOrDirect(
-								e.channel,
-								await this._api.ensureUsernamesById(),
-								this._api.userId,
-								this._api.teamId
-							)
 						]
 					} as StreamsRTMessage;
 					message.data = await Container.instance().streams.resolve(message);
