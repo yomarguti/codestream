@@ -91,7 +91,6 @@ import {
 	UpdatePresenceRequestType,
 	UpdateStreamMembershipRequestType,
 	UpdateStreamMembershipResponse,
-	UpdateStreamRequestType,
 	VersionCompatibility
 } from "../shared/agent.protocol";
 import {
@@ -574,14 +573,6 @@ export class CodeStreamAgentConnection implements Disposable {
 		unarchive(streamId: string) {
 			return this._connection.sendRequest(UnarchiveStreamRequestType, {
 				streamId: streamId
-			});
-		}
-
-		// TODO: Remove
-		update(streamId: string, changes: { [key: string]: any }) {
-			return this._connection.sendRequest(UpdateStreamRequestType, {
-				streamId: streamId,
-				changes: changes
 			});
 		}
 	}(this);

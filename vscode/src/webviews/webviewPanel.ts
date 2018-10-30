@@ -533,24 +533,6 @@ export class CodeStreamWebviewPanel implements Disposable {
 
 							break;
 						}
-						// TODO: Remove
-						case "update-stream": {
-							const { streamId, update: changes } = body.params;
-
-							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
-							try {
-								const response = await Container.agent.streams.update(streamId, changes);
-								responseBody.payload = response.stream;
-							} catch (ex) {
-								responseBody.error = ex;
-							}
-							this.postMessage({
-								type: WebviewIpcMessageType.response,
-								body: responseBody
-							});
-
-							break;
-						}
 						case "rename-stream": {
 							const { streamId, name } = body.params;
 
