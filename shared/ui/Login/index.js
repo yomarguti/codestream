@@ -58,7 +58,7 @@ export class Login extends React.Component {
 		if (this.state.tokenError === TOKEN_INVALID) {
 			return (
 				<small className="error-message">
-					<span>Invalid Token</span>
+					<span>Invalid code</span>
 				</small>
 			);
 		}
