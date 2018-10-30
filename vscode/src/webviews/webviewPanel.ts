@@ -566,11 +566,13 @@ export class CodeStreamWebviewPanel implements Disposable {
 							return;
 						}
 						case "archive-stream": {
-							const { streamId } = body.params;
+							const { streamId, archive } = body.params;
 
 							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
 							try {
-								const response = await Container.agent.streams.archive(streamId);
+								const response = archive
+									? await Container.agent.streams.archive(streamId)
+									: await Container.agent.streams.unarchive(streamId);
 								responseBody.payload = response.stream;
 							} catch (ex) {
 								responseBody.error = ex;
