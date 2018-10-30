@@ -22,6 +22,7 @@ export const bootstrap = (data = {}) => async dispatch => {
 	dispatch({ type: "BOOTSTRAP_SERVICES", payload: data.services || {} });
 	dispatch(updateUnreads(data.unreads || {}));
 	dispatch(updateCapabilities(data.capabilities || {}));
+	dispatch(updatePreferences(data.preferences || {}));
 	dispatch({ type: "BOOTSTRAP_COMPLETE" });
 };
 
