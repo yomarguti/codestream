@@ -968,7 +968,9 @@ export class SimpleStream extends Component {
 			return this.submitSystemPost("Add members to this channel by typing\n`/add @nickname`");
 		} else {
 			await this.props.addUsersToStream(this.props.postStreamId, users);
-			return this.submitPost({ text: "/me added " + usernames });
+			if (!this.props.isSlackTeam) {
+				return this.submitPost({ text: "/me added " + usernames });
+			}
 		}
 	};
 
@@ -1112,7 +1114,9 @@ export class SimpleStream extends Component {
 			this.submitSystemPost("Usage: `/remove @user`");
 		} else {
 			await this.props.removeUsersFromStream(this.props.postStreamId, users);
-			this.submitPost({ text: "/me removed " + usernames });
+			if (!this.props.isSlackTeam) {
+				this.submitPost({ text: "/me removed " + usernames });
+			}
 		}
 		return true;
 	};
