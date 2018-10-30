@@ -23,7 +23,7 @@ const pseudoMentionsRegex = /(^|\s)@(everyone|channel|here)(?:\b(?!@|[\(\{\[\<\-
 // Docs here: https://api.slack.com/docs/message-formatting
 const slackCommandsRegex = /\<!(\w+)\|(\w+)\>/g;
 const slackChannelsRegex = /\<#(\w+)\|(\w+)\>/g;
-const slackMentionsRegex = /\<[@|!](\w+)\>/g;
+const slackMentionsRegex = /\<[@!](\w+)(?:\|(\w+))?\>/g;
 const slackLinkRegex = /\<((?:https?:\/\/|mailto:).*?)(?:\|(.*?))?\>/g;
 const slackSlashCommandRegex = /^\/(\w+)(?:\b(?!@|[\(\{\[\<\-])|$)/;
 
@@ -345,7 +345,7 @@ export function fromSlackPostText(
 	if (!post.text) return post.text || "";
 
 	let text = post.text
-		.replace(slackMentionsRegex, (match: string, mentionId: string) => {
+		.replace(slackMentionsRegex, (match: string, mentionId: string, label?: string) => {
 			if (mentionId === "everyone" || mentionId === "channel" || mentionId === "here") {
 				return `@${mentionId}`;
 			}
@@ -354,6 +354,10 @@ export function fromSlackPostText(
 			if (username !== undefined) {
 				mentionedUserIds.push(mentionId);
 				return `@${username}`;
+			}
+
+			if (label != null) {
+				return label;
 			}
 
 			return match;
