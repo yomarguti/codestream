@@ -10,8 +10,7 @@ export const slashCommands = [
 		id: "add",
 		help: "add member to channel",
 		description: "@user",
-		channelOnly: true,
-		codeStreamTeam: true
+		channelOnly: true
 	},
 	// { id: "apply", help: "apply patch last post" },
 	{ id: "archive", help: "archive channel", channelOnly: true },
@@ -40,8 +39,7 @@ export const slashCommands = [
 		id: "remove",
 		help: "remove from channel",
 		description: "@user",
-		channelOnly: true,
-		codeStreamTeam: true
+		channelOnly: true
 	},
 	{
 		id: "rename",
