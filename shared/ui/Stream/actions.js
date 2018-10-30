@@ -226,11 +226,10 @@ export const setCurrentStream = streamId => (dispatch, getState) => {
 };
 
 export const leaveChannel = streamId => async (dispatch, getState, { api }) => {
-	const { context, session, streams } = getState();
+	const { context, session } = getState();
 
 	try {
-		await api.leaveStream(context.teamId, streamId);
-		const stream = getStreamForId(streams, context.currentTeamId, streamId);
+		const stream = await api.leaveStream(context.teamId, streamId);
 		if (stream.privacy === "private") {
 			dispatch({
 				type: "REMOVE_STREAM",
