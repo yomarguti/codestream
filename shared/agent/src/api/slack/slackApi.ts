@@ -1393,6 +1393,12 @@ export class SlackApiProvider implements ApiProvider {
 
 	@log()
 	async leaveStream(request: LeaveStreamRequest) {
+		// Get a copy of the original stream & copy its membership array (since it will be mutated)
+		const originalStream = { ...(await Container.instance().streams.getById(request.streamId)) };
+		if (originalStream.memberIds != null) {
+			originalStream.memberIds = originalStream.memberIds.slice(0);
+		}
+
 		const response = await this._slack.conversations.leave({
 			channel: request.streamId
 		});
@@ -1407,13 +1413,30 @@ export class SlackApiProvider implements ApiProvider {
 			return { stream: stream! as CSChannelStream };
 		}
 
-		const streamResponse = await this.getStream({ streamId: request.streamId });
-		const streams = await Container.instance().streams.resolve({
-			type: MessageType.Streams,
-			data: [streamResponse.stream]
-		});
+		try {
+			const [stream] = await Container.instance().streams.resolve({
+				type: MessageType.Streams,
+				data: [
+					{
+						id: request.streamId,
+						$pull: { memberIds: [this._slackUserId] }
+					}
+				]
+			});
+			return { stream: stream as CSChannelStream };
+		} catch (ex) {
+			Logger.error(ex);
 
-		return { stream: streams[0] as CSChannelStream };
+			// Since this can happen because we have no permission to the stream anymore,
+			// simulate removing ourselves from the membership list
+			if (originalStream.memberIds != null) {
+				const index = originalStream.memberIds.findIndex(m => m === this._slackUserId);
+				if (index !== -1) {
+					originalStream.memberIds.splice(index, 1);
+				}
+			}
+			return { stream: originalStream as CSChannelStream };
+		}
 	}
 
 	@log()

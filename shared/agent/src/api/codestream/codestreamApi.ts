@@ -689,25 +689,34 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	@log()
 	async leaveStream(request: LeaveStreamRequest) {
-		const response = await this.updateStream(request.streamId, {
-			$pull: { memberIds: [this._userId] }
-		});
+		// Get a copy of the original stream & copy its membership array (since it will be mutated)
+		const originalStream = { ...(await Container.instance().streams.getById(request.streamId)) };
+		if (originalStream.memberIds != null) {
+			originalStream.memberIds = originalStream.memberIds.slice(0);
+		}
 
 		if (this._events !== undefined) {
 			this._events.unsubscribeFromStream(request.streamId);
 		}
 
-		const [stream] = await Container.instance().streams.resolve({
-			type: MessageType.Streams,
-			data: [
-				{
-					id: request.streamId,
-					$pull: { memberIds: [this._userId] }
-				}
-			]
-		});
+		try {
+			const response = await this.updateStream(request.streamId, {
+				$pull: { memberIds: [this._userId] }
+			});
+			return { stream: response.stream as CSChannelStream };
+		} catch (ex) {
+			Logger.error(ex);
 
-		return { stream: stream as CSChannelStream };
+			// Since this can happen because we have no permission to the stream anymore,
+			// simulate removing ourselves from the membership list
+			if (originalStream.memberIds != null) {
+				const index = originalStream.memberIds.findIndex(m => m === this._userId);
+				if (index !== -1) {
+					originalStream.memberIds.splice(index, 1);
+				}
+			}
+			return { stream: originalStream as CSChannelStream };
+		}
 	}
 
 	@log()
