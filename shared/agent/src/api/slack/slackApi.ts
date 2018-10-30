@@ -1284,12 +1284,12 @@ export class SlackApiProvider implements ApiProvider {
 		if (!ok) throw new Error(error);
 
 		const streamResponse = await this.getStream({ streamId: request.streamId });
-		Container.instance().streams.resolve({
+		const streams = await Container.instance().streams.resolve({
 			type: MessageType.Streams,
 			data: [streamResponse.stream]
 		});
 
-		return streamResponse;
+		return { stream: streams[0] as CSChannelStream };
 	}
 
 	@log()
@@ -1307,12 +1307,12 @@ export class SlackApiProvider implements ApiProvider {
 		}
 
 		const streamResponse = await this.getStream({ streamId: request.streamId });
-		Container.instance().streams.resolve({
+		const streams = await Container.instance().streams.resolve({
 			type: MessageType.Streams,
 			data: [streamResponse.stream]
 		});
 
-		return streamResponse as CloseStreamResponse;
+		return { stream: streams[0] as CSDirectStream };
 	}
 
 	@log()
@@ -1325,12 +1325,12 @@ export class SlackApiProvider implements ApiProvider {
 		if (!ok) throw new Error(error);
 
 		const streamResponse = await this.getStream({ streamId: request.streamId });
-		Container.instance().streams.resolve({
+		const streams = await Container.instance().streams.resolve({
 			type: MessageType.Streams,
 			data: [streamResponse.stream]
 		});
 
-		return streamResponse;
+		return { stream: streams[0] as CSChannelStream };
 	}
 
 	@log()
@@ -1346,16 +1346,16 @@ export class SlackApiProvider implements ApiProvider {
 
 		if (not_in_channel) {
 			const stream = await Container.instance().streams.getById(request.streamId);
-			return { stream: stream! as CSDirectStream };
+			return { stream: stream! as CSChannelStream };
 		}
 
 		const streamResponse = await this.getStream({ streamId: request.streamId });
-		Container.instance().streams.resolve({
+		const streams = await Container.instance().streams.resolve({
 			type: MessageType.Streams,
 			data: [streamResponse.stream]
 		});
 
-		return streamResponse;
+		return { stream: streams[0] as CSChannelStream };
 	}
 
 	@log()
@@ -1407,12 +1407,12 @@ export class SlackApiProvider implements ApiProvider {
 		if (!ok) throw new Error(error);
 
 		const streamResponse = await this.getStream({ streamId: request.streamId });
-		Container.instance().streams.resolve({
+		const streams = await Container.instance().streams.resolve({
 			type: MessageType.Streams,
 			data: [streamResponse.stream]
 		});
 
-		return streamResponse as CloseStreamResponse;
+		return { stream: streams[0] as CSChannelStream };
 	}
 
 	@log()
@@ -1426,12 +1426,12 @@ export class SlackApiProvider implements ApiProvider {
 		if (!ok) throw new Error(error);
 
 		const streamResponse = await this.getStream({ streamId: request.streamId });
-		Container.instance().streams.resolve({
+		const streams = await Container.instance().streams.resolve({
 			type: MessageType.Streams,
 			data: [streamResponse.stream]
 		});
 
-		return streamResponse as CloseStreamResponse;
+		return { stream: streams[0] as CSChannelStream };
 	}
 
 	@log()
@@ -1444,12 +1444,12 @@ export class SlackApiProvider implements ApiProvider {
 		if (!ok) throw new Error(error);
 
 		const streamResponse = await this.getStream({ streamId: request.streamId });
-		Container.instance().streams.resolve({
+		const streams = await Container.instance().streams.resolve({
 			type: MessageType.Streams,
 			data: [streamResponse.stream]
 		});
 
-		return streamResponse;
+		return { stream: streams[0] as CSChannelStream };
 	}
 
 	@log()
@@ -1486,12 +1486,12 @@ export class SlackApiProvider implements ApiProvider {
 		if (errors.length !== 0) throw new Error(errors.join(", "));
 
 		const streamResponse = await this.getStream({ streamId: request.streamId });
-		Container.instance().streams.resolve({
+		const streams = await Container.instance().streams.resolve({
 			type: MessageType.Streams,
 			data: [streamResponse.stream]
 		});
 
-		return streamResponse;
+		return { stream: streams[0] as CSChannelStream };
 	}
 
 	@log()

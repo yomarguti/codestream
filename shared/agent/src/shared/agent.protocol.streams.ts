@@ -97,7 +97,7 @@ export interface ArchiveStreamRequest {
 }
 
 export interface ArchiveStreamResponse {
-	stream: CSChannelStream | CSDirectStream;
+	stream: CSChannelStream;
 }
 
 export const ArchiveStreamRequestType = new RequestType<
@@ -143,7 +143,7 @@ export interface JoinStreamRequest {
 }
 
 export interface JoinStreamResponse {
-	stream: CSStream;
+	stream: CSChannelStream;
 }
 
 export const JoinStreamRequestType = new RequestType<
@@ -158,7 +158,7 @@ export interface LeaveStreamRequest {
 }
 
 export interface LeaveStreamResponse {
-	stream: CSStream;
+	stream: CSChannelStream;
 }
 
 export const LeaveStreamRequestType = new RequestType<
@@ -204,7 +204,7 @@ export interface RenameStreamRequest {
 }
 
 export interface RenameStreamResponse {
-	stream: CSChannelStream | CSDirectStream;
+	stream: CSChannelStream;
 }
 
 export const RenameStreamRequestType = new RequestType<
@@ -235,7 +235,7 @@ export interface UnarchiveStreamRequest {
 }
 
 export interface UnarchiveStreamResponse {
-	stream: CSChannelStream | CSDirectStream;
+	stream: CSChannelStream;
 }
 
 export const UnarchiveStreamRequestType = new RequestType<
@@ -252,7 +252,7 @@ export interface UpdateStreamMembershipRequest {
 }
 
 export interface UpdateStreamMembershipResponse {
-	stream: CSStream;
+	stream: CSChannelStream;
 }
 
 export const UpdateStreamMembershipRequestType = new RequestType<
