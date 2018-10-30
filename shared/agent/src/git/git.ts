@@ -56,7 +56,7 @@ export async function git(
 		// See https://stackoverflow.com/questions/4144417/how-to-handle-asian-characters-in-file-names-in-git-on-os-x
 		args.splice(0, 0, "-c", "core.quotepath=false", "-c", "color.ui=false");
 
-		promise = runCommand(await gitPath(), args, runOpts);
+		promise = runCommand(gitPath(), args, runOpts);
 
 		pendingCommands.set(command, promise);
 	} else {
