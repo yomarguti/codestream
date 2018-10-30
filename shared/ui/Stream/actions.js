@@ -254,32 +254,22 @@ export const leaveChannel = streamId => async (dispatch, getState, { api }) => {
 };
 
 export const removeUsersFromStream = (streamId, userIds) => async (dispatch, getState, { api }) => {
-	const update = {
-		$pull: { memberIds: userIds }
-	};
-
 	try {
-		// await api.removeUsersFromStream(streamId, userIds)
-		const returnStream = await api.updateStream(streamId, update);
-		console.log("return stream: ", returnStream);
+		const stream = await api.removeUsersFromStream(streamId, userIds);
+		console.log("return stream: ", stream);
 		// if (streams.length > 0) dispatch(saveStreams(normalize(streams)));
 	} catch (error) {
-		console.log("Error: ", error);
+		console.log("Error removing user(s) from stream: ", error);
 	}
 };
 
 export const addUsersToStream = (streamId, userIds) => async (dispatch, getState, { api }) => {
-	const update = {
-		$push: { memberIds: userIds }
-	};
-
 	try {
-		// await api.addUsersToStream(streamId, userIds)
-		const returnStream = await api.updateStream(streamId, update);
-		console.log("return stream: ", returnStream);
+		const stream = await api.addUsersToStream(streamId, userIds);
+		console.log("return stream: ", stream);
 		// if (streams.length > 0) dispatch(saveStreams(normalize(streams)));
 	} catch (error) {
-		console.log("Error: ", error);
+		console.log("Error adding user(s) to stream: ", error);
 	}
 };
 
@@ -289,7 +279,7 @@ export const joinStream = streamId => async (dispatch, getState, { api }) => {
 		const stream = await api.joinStream({ streamId, teamId });
 		return dispatch({ type: "UPDATE_STREAM", payload: stream });
 	} catch (error) {
-		console.log("Error joining team:", error);
+		console.log("Error joining stream: ", error);
 	}
 };
 
@@ -299,7 +289,7 @@ export const renameStream = (streamId, name) => async (dispatch, getState, { api
 		dispatch({ type: "UPDATE_STREAM", payload: stream });
 		return stream;
 	} catch (error) {
-		console.error("Error renaming stream:", error);
+		console.error("Error renaming stream: ", error);
 	}
 };
 
@@ -309,19 +299,16 @@ export const setPurpose = (streamId, purpose) => async (dispatch, getState, { ap
 		dispatch({ type: "UPDATE_STREAM", payload: stream });
 		return stream;
 	} catch (error) {
-		console.error("Error setting stream purpose:", error);
+		console.error("Error setting stream purpose: ", error);
 	}
 };
 
-export const archiveStream = (streamId, value) => async (dispatch, getState, { api }) => {
-	const update = { isArchived: value };
-
+export const archiveStream = (streamId, archive) => async (dispatch, getState, { api }) => {
 	try {
-		// await api.archiveStream(teamId, streamId)
-		const stream = await api.updateStream(streamId, update);
+		const stream = await api.archiveStream(streamId, archive);
 		if (stream) return dispatch({ type: "UPDATE_STREAM", payload: stream });
 	} catch (error) {
-		console.log("Error: ", error);
+		console.log(`Error ${archive ? "" : "un"}archiving stream: `, error);
 	}
 };
 

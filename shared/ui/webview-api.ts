@@ -96,16 +96,6 @@ export default class WebviewApi {
 		return this.postMessage({ action: "set-stream-purpose", params: { streamId, purpose } });
 	}
 
-	updateStream(streamId: string, update: object) {
-		return this.postMessage({
-			action: "update-stream",
-			params: {
-				streamId,
-				update
-			}
-		});
-	}
-
 	joinStream(params: object) {
 		return this.postMessage({ action: "join-stream", params });
 	}
@@ -114,8 +104,8 @@ export default class WebviewApi {
 		return this.postMessage({ action: "leave-stream", params: { teamId, streamId } });
 	}
 
-	archiveStream(teamId: string, streamId: string) {
-		return this.postMessage({ action: "archive-stream", params: { teamId, streamId } });
+	archiveStream(streamId: string, archive: boolean) {
+		return this.postMessage({ action: "archive-stream", params: { streamId, archive } });
 	}
 
 	removeUsersFromStream(streamId: string, userIds: string[]) {
