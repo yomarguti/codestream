@@ -24,6 +24,7 @@ import Menu from "./Menu";
 import Button from "./Button";
 import ChannelMenu from "./ChannelMenu";
 import ScrollBox from "./ScrollBox";
+import Filter from "./Filter";
 
 export class SimpleChannelPanel extends Component {
 	constructor(props) {
@@ -39,7 +40,6 @@ export class SimpleChannelPanel extends Component {
 				liveShareSessions: true,
 				unreads: true
 			},
-			showChannels: "all",
 			checkedStreams: {}
 		};
 		this.showChannelsLabel = {
@@ -48,6 +48,13 @@ export class SimpleChannelPanel extends Component {
 			unreads: "unread conversations",
 			selected: "selected conversations"
 		};
+		this.menuItems = [
+			{ label: "All Conversations", action: "all" },
+			{ label: "Unread & Starred Conversations", action: "unreads-starred" },
+			{ label: "Unread Conversations", action: "unreads" },
+			{ label: "-" },
+			{ label: "Selected Conversations", action: "selecting" }
+		];
 	}
 
 	isActive = isActiveMixin("channels", this.constructor.name);
@@ -56,27 +63,22 @@ export class SimpleChannelPanel extends Component {
 		return this.isActive(this.props, nextProps);
 	}
 
+	componentDidUpdate(prevProps, prevState) {
+		if (this.props.showChannels === "selecting" && prevProps.showChannels !== "selecting")
+			this.setState({ checkedStreams: this.props.selectedStreams });
+	}
+
 	render() {
-		const teamName = this.props.team ? this.props.team.name : "";
+		const { showChannels } = this.props;
 
-		const channelPanelClass = createClassString({
-			panel: true,
-			"channel-panel": true,
-			muted: this.props.muteAll
-		});
-
-		let menuItems = [
-			{ label: "All Conversations", action: "set-channels-all" },
-			{ label: "Unread & Starred Conversations", action: "set-channels-unreads-starred" },
-			{ label: "Unread Conversations", action: "set-channels-unreads" },
-			{ label: "-" },
-			{ label: "Selected Conversations", action: "set-channels-selected" }
-		];
-
-		if (this.state.showChannels === "selecting") return this.renderSelectingChannels();
+		if (showChannels === "selecting") return this.renderSelectingChannels();
 
 		return (
-			<div className={channelPanelClass}>
+			<div
+				className={createClassString("panel", "channel-panel", {
+					muted: this.props.muteAll
+				})}
+			>
 				<div className="filters">
 					<Tooltip title="Mute All" placement="left">
 						<label
@@ -88,18 +90,12 @@ export class SimpleChannelPanel extends Component {
 						/>
 					</Tooltip>
 					Show{" "}
-					<span className="filter" onClick={this.toggleMenu}>
-						{this.showChannelsLabel[this.state.showChannels]}
-						<Icon name="triangle-down" className="triangle-down" />
-						{this.state.menuOpen && (
-							<Menu
-								items={menuItems}
-								target={this.state.menuTarget}
-								action={this.handleSelectMenu}
-								align="left"
-							/>
-						)}
-					</span>
+					<Filter
+						preferenceId="showChannels"
+						selected={showChannels}
+						labels={this.showChannelsLabel}
+						items={this.menuItems}
+					/>
 				</div>
 				<ScrollBox>
 					<div className="channel-list vscroll">{this.renderChannels()}</div>
@@ -109,7 +105,7 @@ export class SimpleChannelPanel extends Component {
 	}
 
 	renderChannels = () => {
-		switch (this.state.showChannels) {
+		switch (this.props.showChannels) {
 			case "unreads-starred":
 				return [this.renderUnreadChannels(), this.renderStarredChannels()];
 			case "unreads":
@@ -280,9 +276,24 @@ export class SimpleChannelPanel extends Component {
 	};
 
 	renderSelectingChannels = () => {
+		const title = (
+			<span>
+				Close <span className="keybinding">ESC</span>
+			</span>
+		);
 		return (
 			<div className="panel select-channels">
-				<div className="panel-header">Select Channels to Show</div>
+				<div className="panel-header">
+					<Tooltip title={title} placement="bottomRight">
+						<span
+							className="align-right-button"
+							onClick={() => this.props.setUserPreference(["showChannels"], "all")}
+						>
+							<Icon name="x" className="clickable" />
+						</span>
+					</Tooltip>
+					Select Channels to Show
+				</div>
 				<ScrollBox>
 					<form className="standard-form vscroll">
 						<fieldset className="form-body">
@@ -322,7 +333,7 @@ export class SimpleChannelPanel extends Component {
 	saveSelected = async () => {
 		const { checkedStreams } = this.state;
 		await this.props.setUserPreference(["selectedStreams"], checkedStreams);
-		this.setState({ showChannels: "selected" });
+		await this.props.setUserPreference(["showChannels"], "selected");
 	};
 
 	streamIcon = stream => {
@@ -761,7 +772,8 @@ const mapStateToProps = ({
 		selectedStreams: preferences.selectedStreams || {},
 		meStreamId,
 		streamPresence,
-		team: team
+		team: team,
+		showChannels: preferences.showChannels || "all"
 	};
 };
 

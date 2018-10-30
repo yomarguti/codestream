@@ -735,7 +735,7 @@ class ComposeBox extends React.Component {
 									</div>
 								</div>
 								<div className="half-width">
-									<label>Marker</label>
+									<label>Marker Icon</label>
 									<div className="styled-select">
 										<select onChange={e => this.setState({ color: e.target.value })}>
 											<option value="blue">Blue</option>

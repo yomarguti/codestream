@@ -7,6 +7,7 @@ import ComposeBox from "./ComposeBox";
 import PostList from "./PostList";
 import DateSeparator from "./DateSeparator";
 import ChannelPanel from "./ChannelPanel";
+import PeoplePanel from "./PeoplePanel";
 import InvitePanel from "./InvitePanel";
 import PublicChannelPanel from "./PublicChannelPanel";
 import CreateChannelPanel from "./CreateChannelPanel";
@@ -341,9 +342,7 @@ export class SimpleStream extends Component {
 			// offscreen: activePanel === "main",
 			active: this.state.unreadsBelow && activePanel === "main"
 		});
-		const umisClass = createClassString("align-left-button", {
-			umis: true,
-			"align-left-button": true,
+		const umisClass = createClassString("umis", {
 			mentions: umis.totalMentions > 0,
 			unread: umis.totalMentions == 0 && umis.totalUnread > 0
 		});
@@ -392,9 +391,7 @@ export class SimpleStream extends Component {
 			</span>
 		);
 
-		const renderNav = !["create-channel", "create-dm", "public-channels", "invite"].includes(
-			activePanel
-		);
+		const renderNav = !["create-channel", "create-dm", "public-channels"].includes(activePanel);
 
 		return (
 			<div className={streamClass}>
@@ -456,8 +453,9 @@ export class SimpleStream extends Component {
 									className={createClassString({ checked: activePanel === "main" })}
 									onClick={e => this.setActivePanel("main")}
 								>
-									<span>
-										{channelIcon} {this.props.postStreamName}
+									<span className="channel-name">
+										{channelIcon}
+										{this.props.postStreamName}
 									</span>
 								</label>
 								<div className="fill-tab">
@@ -534,6 +532,13 @@ export class SimpleStream extends Component {
 							isSlackTeam={this.props.isSlackTeam}
 						/>
 					)}
+					{activePanel === "people" && (
+						<PeoplePanel
+							activePanel={activePanel}
+							setActivePanel={this.setActivePanel}
+							isSlackTeam={this.props.isSlackTeam}
+						/>
+					)}
 					{activePanel === "main" && (
 						<div className={mainPanelClass}>
 							<div className="filters">
@@ -565,22 +570,26 @@ export class SimpleStream extends Component {
 										/>
 									</span>
 								</Tooltip>
-								<div className="sep" />
-								{memberCount > 2 && (
+								{memberCount > 2 && [
+									<div className="sep" />,
 									<Tooltip title="View member list" placement="bottomLeft">
 										<span className="clickable" onClick={e => this.runSlashCommand("who")}>
 											<Icon name="person" className="smaller" /> {memberCount}
 										</span>
 									</Tooltip>
-								)}
-								{memberCount > 2 && <div className="sep" />}
+								]}
+								<div className="sep" />
 								<Tooltip title="View pinned items" placement="bottomLeft">
 									<span className="clickable" onClick={this.showPinnedPosts}>
 										<Icon name="pin" className="smaller" />
 									</span>
 								</Tooltip>
-								{postStreamPurpose && <div className="sep" />}
-								{postStreamPurpose}
+								{postStreamPurpose && [
+									<div className="sep" />,
+									<span onClick={() => this.setPurpose()} className="purpose-header">
+										{postStreamPurpose}
+									</span>
+								]}
 							</div>
 							<OfflineBanner />
 							<div className="shadow-overlay">

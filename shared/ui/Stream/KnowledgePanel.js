@@ -2,19 +2,14 @@ import React, { Component } from "react";
 import { connect } from "react-redux";
 import createClassString from "classnames";
 import _ from "underscore";
-import {
-	createStream,
-	setCurrentStream,
-	setUserPreference,
-	showCode,
-	showMarkersInEditor
-} from "./actions";
+import { createStream, setCurrentStream, showCode, showMarkersInEditor } from "./actions";
 import { getAllPostsOfType } from "../reducers/streams";
 import Icon from "./Icon";
 import Tooltip from "./Tooltip";
 import Post from "./Post";
 import Menu from "./Menu";
 import ScrollBox from "./ScrollBox";
+import Filter from "./Filter";
 import EventEmitter from "../event-emitter";
 
 export class SimpleKnowledgePanel extends Component {
@@ -24,8 +19,6 @@ export class SimpleKnowledgePanel extends Component {
 		super(props);
 
 		this.state = {
-			knowledgeType: "all",
-			fileFilter: "all",
 			openPost: null,
 			expanded: {
 				inThisFile: true,
@@ -55,7 +48,7 @@ export class SimpleKnowledgePanel extends Component {
 			bookmark: "bookmarks"
 		};
 		this.fileFiltersLabelsLower = {
-			only: "in current file only",
+			current: "in current file only",
 			unseparated: "from all files, unseparated",
 			repo: "in the current repo only",
 			all: "from all files"
@@ -110,9 +103,9 @@ export class SimpleKnowledgePanel extends Component {
 	};
 
 	renderPosts = posts => {
-		const { knowledgeType } = this.state;
+		const { typeFilter } = this.props;
 		if (posts.length === 0)
-			return <div className="no-matches">No {knowledgeType}s in file foo/bar/baz.js</div>;
+			return <div className="no-matches">No {typeFilter}s in file foo/bar/baz.js</div>;
 		else {
 			return posts.map(post => {
 				const collapsed = this.state.openPost !== post.id;
@@ -169,19 +162,14 @@ export class SimpleKnowledgePanel extends Component {
 	};
 
 	render() {
-		const { posts, currentUserId, mostRecentSourceFile } = this.props;
-		const { knowledgeType, thisRepo, fileFilter } = this.state;
+		const { posts, currentUserId, mostRecentSourceFile, fileFilter, typeFilter } = this.props;
+		const { thisRepo } = this.state;
 
-		const knowledgePanelClass = createClassString({
-			panel: true,
-			"knowledge-panel": true
-		});
-
-		const sections = this.sectionsByType[knowledgeType];
+		const sections = this.sectionsByType[typeFilter];
 
 		let displayPosts = {};
 		let assignedPosts = {};
-		let sectionFilters = this.sectionsFilterOrder[knowledgeType] || [];
+		let sectionFilters = this.sectionsFilterOrder[typeFilter] || [];
 
 		const assignPost = (post, section) => {
 			if (!displayPosts[section]) displayPosts[section] = [];
@@ -192,7 +180,7 @@ export class SimpleKnowledgePanel extends Component {
 		posts.forEach(post => {
 			const postType = post.type || "comment";
 			if (post.deactivated) return null;
-			if (knowledgeType !== "all" && postType !== knowledgeType) return null;
+			if (typeFilter !== "all" && postType !== typeFilter) return null;
 			if (postType === "comment" && (!post.codeBlocks || !post.codeBlocks.length)) return null;
 			const codeBlock = post.codeBlocks && post.codeBlocks.length && post.codeBlocks[0];
 			const codeBlockFile = codeBlock && codeBlock.file;
@@ -206,9 +194,9 @@ export class SimpleKnowledgePanel extends Component {
 					!(post.title || "").includes(this.props.q)
 				)
 					return;
-				if (this.state.fileFilter === "only" && section !== "inThisFile") return;
-				if (this.state.fileFilter === "repo" && codeBlockRepo !== thisRepo) return;
-				if (this.state.fileFilter === "unseparated" && section === "inThisFile") return;
+				if (fileFilter === "current" && section !== "inThisFile") return;
+				if (fileFilter === "repo" && codeBlockRepo !== thisRepo) return;
+				if (fileFilter === "unseparated" && section === "inThisFile") return;
 				switch (section) {
 					case "inThisFile":
 						if (mostRecentSourceFile && codeBlockFile === mostRecentSourceFile)
@@ -238,24 +226,24 @@ export class SimpleKnowledgePanel extends Component {
 		});
 
 		let typeMenuItems = [
-			{ label: "All Markers", action: "set-type-all" },
+			{ label: "All Markers", action: "all" },
 			{ label: "-" },
-			{ label: "Code Comments", action: "set-type-comment" },
-			{ label: "Questions & Answers", action: "set-type-question" },
-			{ label: "Issues", action: "set-type-issue" },
-			{ label: "Code Traps", action: "set-type-trap" },
-			{ label: "Bookmarks", action: "set-type-bookmark" }
+			{ label: "Code Comments", action: "comment" },
+			{ label: "Questions & Answers", action: "question" },
+			{ label: "Issues", action: "issue" },
+			{ label: "Code Traps", action: "trap" },
+			{ label: "Bookmarks", action: "bookmark" }
 		];
 
 		let fileMenuItems = [
-			{ label: "From All Files", action: "set-files-all" },
-			{ label: "From All Files, Unseparated", action: "set-files-unseparated" },
-			{ label: "In Current Repo Only", action: "set-files-repo" },
-			{ label: "In Current File Only", action: "set-files-only" }
+			{ label: "From All Files", action: "all" },
+			{ label: "From All Files, Unseparated", action: "unseparated" },
+			{ label: "In Current Repo Only", action: "repo" },
+			{ label: "In Current File Only", action: "current" }
 		];
 
 		return (
-			<div className={knowledgePanelClass}>
+			<div className="panel knowledge-panel">
 				<div className="filters">
 					<Tooltip title="Show markers in editor gutter" placement="left">
 						<label
@@ -267,30 +255,18 @@ export class SimpleKnowledgePanel extends Component {
 						/>
 					</Tooltip>
 					Show{" "}
-					<span className="filter" onClick={this.toggleTypeMenu}>
-						{this.typeLabelsLower[knowledgeType]}
-						<Icon name="triangle-down" className="triangle-down" />
-						{this.state.typeMenuOpen && (
-							<Menu
-								items={typeMenuItems}
-								target={this.state.menuTarget}
-								action={this.handleSelectMenu}
-								align="center"
-							/>
-						)}
-					</span>
-					<span className="filter" onClick={this.toggleFileMenu}>
-						{this.fileFiltersLabelsLower[fileFilter]}
-						<Icon name="triangle-down" className="triangle-down" />
-						{this.state.fileMenuOpen && (
-							<Menu
-								items={fileMenuItems}
-								target={this.state.menuTarget}
-								action={this.handleSelectMenu}
-								align="center"
-							/>
-						)}
-					</span>
+					<Filter
+						preferenceId="markerTypeFilter"
+						selected={typeFilter}
+						labels={this.typeLabelsLower}
+						items={typeMenuItems}
+					/>
+					<Filter
+						preferenceId="markerFileFilter"
+						selected={fileFilter}
+						labels={this.fileFiltersLabelsLower}
+						items={fileMenuItems}
+					/>
 				</div>
 				<ScrollBox>
 					<div className="channel-list vscroll" onClick={this.handleClickPost}>
@@ -309,50 +285,9 @@ export class SimpleKnowledgePanel extends Component {
 		// this.setState({ showMarkers });
 	};
 
-	handleSelectMenu = action => {
-		this.setState({ typeMenuOpen: false, fileMenuOpen: false });
-		switch (action) {
-			case "set-type-all":
-				this.setState({ knowledgeType: "all" });
-				break;
-			case "set-type-comment":
-				this.setState({ knowledgeType: "comment" });
-				break;
-			case "set-type-question":
-				this.setState({ knowledgeType: "question" });
-				break;
-			case "set-type-issue":
-				this.setState({ knowledgeType: "issue" });
-				break;
-			case "set-type-trap":
-				this.setState({ knowledgeType: "trap" });
-				break;
-			case "set-type-bookmark":
-				this.setState({ knowledgeType: "bookmark" });
-				break;
-			case "set-files-all":
-				this.setState({ fileFilter: "all" });
-				break;
-			case "set-files-only":
-				this.setState({ fileFilter: "only" });
-				break;
-			case "set-files-unseparated":
-				this.setState({ fileFilter: "unseparated" });
-				break;
-		}
-	};
-
-	toggleTypeMenu = event => {
-		this.setState({ typeMenuOpen: !this.state.typeMenuOpen, menuTarget: event.target });
-	};
-
-	toggleFileMenu = event => {
-		this.setState({ fileMenuOpen: !this.state.fileMenuOpen, menuTarget: event.target });
-	};
-
 	renderHeader = () => {
-		const { knowledgeType } = this.state;
-		const knowledgeLabel = this.typeLabels[knowledgeType];
+		const { typeFilter } = this.props;
+		const knowledgeLabel = this.typeLabels[typeFilter];
 
 		<div className="panel-header">
 			{this.state.searchBarOpen && (
@@ -396,7 +331,7 @@ export class SimpleKnowledgePanel extends Component {
 
 	handleClickAddKnowledge = e => {
 		e.stopPropagation();
-		this.props.setMultiCompose(this.state.knowledgeType);
+		this.props.setMultiCompose(this.props.typeFilter);
 	};
 
 	handleClickSearch = e => {
@@ -489,13 +424,14 @@ export class SimpleKnowledgePanel extends Component {
 	};
 }
 
-const mapStateToProps = ({ context, streams, users, teams, umis, posts, session, configs }) => {
+const mapStateToProps = ({ context, users, teams, umis, posts, session, configs }) => {
 	const teamMembers = teams[context.currentTeamId].memberIds.map(id => users[id]).filter(Boolean);
 	// .filter(user => user && user.isRegistered);
 
-	const user = users[session.userId];
-
 	const postsByType = getAllPostsOfType(posts);
+	const user = users[session.userId];
+	const fileFilter = (user && user.preferences && user.preferences.markerFileFilter) || "all";
+	const typeFilter = (user && user.preferences && user.preferences.markerTypeFilter) || "all";
 
 	return {
 		umis,
@@ -503,6 +439,8 @@ const mapStateToProps = ({ context, streams, users, teams, umis, posts, session,
 		showMarkers: configs.showMarkers,
 		teammates: teamMembers,
 		team: teams[context.currentTeamId],
+		fileFilter,
+		typeFilter,
 		mostRecentSourceFile: context.mostRecentSourceFile,
 		posts: postsByType.map(post => {
 			let user = users[post.creatorId];
@@ -542,7 +480,6 @@ export default connect(
 	mapStateToProps,
 	{
 		createStream,
-		setUserPreference,
 		setCurrentStream,
 		showCode,
 		showMarkersInEditor
