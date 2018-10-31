@@ -84,6 +84,7 @@ import {
 	MarkPostUnreadRequestType,
 	MarkStreamReadRequestType,
 	MuteStreamRequestType,
+	OpenStreamRequestType,
 	PreparePostWithCodeRequestType,
 	ReactToPostRequestType,
 	RenameStreamRequestType,
@@ -567,6 +568,12 @@ export class CodeStreamAgentConnection implements Disposable {
 			return this._connection.sendRequest(MuteStreamRequestType, {
 				streamId: streamId,
 				mute: mute
+			});
+		}
+
+		open(streamId: string) {
+			return this._connection.sendRequest(OpenStreamRequestType, {
+				streamId: streamId
 			});
 		}
 
