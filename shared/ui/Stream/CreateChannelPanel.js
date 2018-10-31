@@ -10,6 +10,7 @@ import Button from "./Button";
 import Tooltip from "./Tooltip";
 import { FormattedMessage } from "react-intl";
 import Select from "react-select";
+import { isActiveMixin } from "../utils";
 
 export class SimpleCreateChannelPanel extends Component {
 	constructor(props) {
@@ -17,6 +18,12 @@ export class SimpleCreateChannelPanel extends Component {
 
 		this.state = { privacy: "public", name: "", loading: false };
 		this._createChannelPanel = React.createRef();
+	}
+
+	isActive = isActiveMixin("create-channel", this.constructor.name);
+
+	shouldComponentUpdate(nextProps) {
+		return this.isActive(nextProps);
 	}
 
 	componentDidUpdate(prevProps, prevState) {

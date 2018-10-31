@@ -12,12 +12,19 @@ import Icon from "./Icon";
 import _ from "underscore";
 import Timestamp from "./Timestamp";
 import Tooltip from "./Tooltip";
+import { isActiveMixin } from "../utils";
 
 export class SimplePublicChannelPanel extends Component {
 	constructor(props) {
 		super(props);
 
 		this.state = { loading: null };
+	}
+
+	isActive = isActiveMixin("public-channels", this.constructor.name);
+
+	shouldComponentUpdate(nextProps) {
+		return this.isActive(nextProps);
 	}
 
 	render() {

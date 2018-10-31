@@ -6,7 +6,7 @@ import Icon from "./Icon";
 import Button from "./Button";
 import createClassString from "classnames";
 import { invite } from "./actions";
-import { mapFilter } from "../utils";
+import { isActiveMixin, mapFilter } from "../utils";
 
 const EMAIL_REGEX = new RegExp(
 	"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
@@ -22,6 +22,12 @@ export class InvitePage extends Component {
 	};
 
 	state = this.initialState;
+
+	isActive = isActiveMixin("invite", this.constructor.name);
+
+	shouldComponentUpdate(nextProps) {
+		return this.isActive(nextProps);
+	}
 
 	onEmailChange = event => this.setState({ newMemberEmail: event.target.value });
 

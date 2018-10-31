@@ -10,7 +10,7 @@ import { FormattedMessage } from "react-intl";
 import Select from "react-select";
 import Timestamp from "./Timestamp";
 import Icon from "./Icon";
-import { toMapBy } from "../utils";
+import { isActiveMixin, toMapBy } from "../utils";
 
 export class SimpleCreateDMPanel extends Component {
 	constructor(props) {
@@ -18,6 +18,12 @@ export class SimpleCreateDMPanel extends Component {
 
 		this.state = { members: [] };
 		this._createDMPanel = React.createRef();
+	}
+
+	isActive = isActiveMixin("create-dm", this.constructor.name);
+
+	shouldComponentUpdate(nextProps) {
+		return this.isActive(nextProps);
 	}
 
 	render() {

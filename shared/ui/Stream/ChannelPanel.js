@@ -14,7 +14,7 @@ import {
 	getServiceStreamsForTeam,
 	getDMName
 } from "../reducers/streams";
-import { safe, mapFilter, toMapBy } from "../utils";
+import { isActiveMixin, mapFilter, toMapBy } from "../utils";
 import Icon from "./Icon";
 import Tooltip from "./Tooltip";
 import Debug from "./Debug";
@@ -33,6 +33,12 @@ export class SimpleChannelPanel extends Component {
 			}
 		};
 		this._channelPanel = React.createRef();
+	}
+
+	isActive = isActiveMixin("channels", this.constructor.name);
+
+	shouldComponentUpdate(nextProps) {
+		return this.isActive(nextProps);
 	}
 
 	render() {

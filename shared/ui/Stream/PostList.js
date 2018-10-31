@@ -16,6 +16,10 @@ export default infiniteLoadable(
 		scrolledOffBottom = false;
 		state = {};
 
+		shouldComponentUpdate(nextProps) {
+			return nextProps.isActive;
+		}
+
 		async componentDidMount() {
 			this.scrollToBottom();
 			this.markAsRead();
