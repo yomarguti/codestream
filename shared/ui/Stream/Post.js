@@ -163,7 +163,7 @@ class Post extends React.Component {
 		if (this.props.deactivated) return null;
 
 		// console.log(renderCount++);
-		const { post, showStatus } = this.props;
+		const { post, showStatus, showAssigneeHeadshots } = this.props;
 		const { menuOpen, authorMenuOpen, menuTarget } = this.state;
 
 		const headshotSize = this.props.headshotSize || 36;
@@ -270,6 +270,7 @@ class Post extends React.Component {
 				ref={ref => (this._div = ref)}
 			>
 				{showStatus && this.renderStatus()}
+				{showAssigneeHeadshots && this.renderAssigneeHeadshots()}
 				{showIcons && this.renderIcons()}
 				{menuOpen && <Menu items={menuItems} target={menuTarget} action={this.handleSelectMenu} />}
 				{authorMenuOpen && (
@@ -489,7 +490,6 @@ class Post extends React.Component {
 	renderStatus = () => {
 		// console.log("STATUS IS: ", this.props.status);
 		const status = this.props.post.status || "open";
-		const assignees = this.props.post.assignees || [];
 
 		const statusClass = createClassString({
 			"status-button": true,
@@ -497,19 +497,29 @@ class Post extends React.Component {
 		});
 
 		return (
-			<div className="align-far-right">
-				{this.props.showAssigneeHeadshots &&
-					assignees.map(userId => {
-						const person = this.props.teammates.find(user => user.id === userId);
-						return (
-							<Tooltip key={userId} title={"hi"} placement="above">
-								<Headshot size={18} person={person} />
-							</Tooltip>
-						);
-					})}
+			<div className="align-far-left">
 				<div className={statusClass} onClick={this.toggleStatus}>
-					{<Icon name="check" className="check" />}
+					<Icon name="check" className="check" />
 				</div>
+			</div>
+		);
+	};
+
+	renderAssigneeHeadshots = () => {
+		const assignees = this.props.post.assignees || [];
+
+		if (assignees.length == 0) return null;
+
+		return (
+			<div className="align-far-right">
+				{assignees.map(userId => {
+					const person = this.props.teammates.find(user => user.id === userId);
+					return (
+						<Tooltip key={userId} title={"hi"} placement="above">
+							<Headshot size={18} person={person} />
+						</Tooltip>
+					);
+				})}
 			</div>
 		);
 	};
