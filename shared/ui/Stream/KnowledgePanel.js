@@ -170,11 +170,13 @@ export class SimpleKnowledgePanel extends Component {
 		let displayPosts = {};
 		let assignedPosts = {};
 		let sectionFilters = this.sectionsFilterOrder[typeFilter] || [];
+		let totalPosts = 0;
 
 		const assignPost = (post, section) => {
 			if (!displayPosts[section]) displayPosts[section] = [];
 			displayPosts[section].push(post);
 			assignedPosts[post.id] = true;
+			totalPosts++;
 		};
 
 		posts.forEach(post => {
@@ -270,9 +272,11 @@ export class SimpleKnowledgePanel extends Component {
 				</div>
 				<ScrollBox>
 					<div className="channel-list vscroll" onClick={this.handleClickPost}>
-						{sections.map(section => {
-							return this.renderSection(section, displayPosts[section] || []);
-						})}
+						{totalPosts > 0 &&
+							sections.map(section => {
+								return this.renderSection(section, displayPosts[section] || []);
+							})}
+						{!totalPosts && <div className="no-matches">No markers match this type.</div>}
 					</div>
 				</ScrollBox>
 			</div>
