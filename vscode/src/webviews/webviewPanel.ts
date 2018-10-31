@@ -490,7 +490,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 							break;
 						}
 						case "open-stream": {
-							const { streamId } = body.params;
+							const streamId = body.params;
 
 							const response = await Container.agent.streams.open(streamId);
 							this.postMessage({
