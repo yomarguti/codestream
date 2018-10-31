@@ -92,9 +92,12 @@ import { SlackUnreads } from "./unreads";
 
 interface DeferredStreamRequest<TResult> {
 	action(): Promise<TResult>;
-	id: string;
+	grouping: number;
 	order: number;
-	priority: number;
+	stream: {
+		id: string;
+		priority?: number;
+	};
 }
 
 export class SlackApiProvider implements ApiProvider {
@@ -1037,7 +1040,7 @@ export class SlackApiProvider implements ApiProvider {
 	private async processPendingStreamsQueue(
 		queue: DeferredStreamRequest<CSChannelStream | CSDirectStream>[]
 	) {
-		queue.sort((a, b) => b.priority - a.priority || a.order - b.order);
+		queue.sort((a, b) => b.grouping - a.grouping || a.order - b.order);
 
 		const { streams } = Container.instance();
 
@@ -1060,7 +1063,7 @@ export class SlackApiProvider implements ApiProvider {
 				const timer = setTimeout(async () => {
 					Logger.warn(
 						`${prefix}: TIMEOUT ${timeoutMs / 1000}s exceeded while fetching stream '${
-							deferred.id
+							deferred.stream.id
 						}' in the background`
 					);
 
@@ -1075,6 +1078,11 @@ export class SlackApiProvider implements ApiProvider {
 				}, timeoutMs);
 
 				const stream = await deferred.action();
+				// Since the info calls may not return the priority, preserve the existing state
+				if (stream.type === StreamType.Direct && stream.priority == null) {
+					stream.priority = deferred.stream.priority;
+				}
+
 				clearTimeout(timer);
 				completed.push(stream);
 			} catch {
@@ -1124,16 +1132,16 @@ export class SlackApiProvider implements ApiProvider {
 				pending.push({
 					action: () => this.fetchChannel(c.id),
 					id: c.id,
-					sortBy: c.name as string
+					name: c.name as string
 				});
 			}
 		}
 
-		pending.sort((a, b) => a.sortBy.localeCompare(b.sortBy));
+		pending.sort((a, b) => a.name.localeCompare(b.name));
 
 		const index = 0;
 		for (const p of pending) {
-			pendingQueue.push({ action: p.action, id: p.id, order: index, priority: 10 });
+			pendingQueue.push({ action: p.action, grouping: 10, order: index, stream: { id: p.id } });
 		}
 
 		return streams;
@@ -1190,18 +1198,23 @@ export class SlackApiProvider implements ApiProvider {
 			if (!g.is_archived) {
 				pending.push({
 					action: () => this.fetchGroup(g.id, usernamesById),
-					priority: g.is_mpim ? 1 : 5,
+					grouping: g.is_mpim ? 1 : 5,
 					id: g.id,
-					sortBy: (g.priority || 0) as number
+					priority: (g.priority || 0) as number
 				});
 			}
 		}
 
-		pending.sort((a, b) => b.sortBy - a.sortBy);
+		pending.sort((a, b) => b.priority - a.priority);
 
 		const index = 0;
 		for (const p of pending) {
-			pendingQueue.push({ action: p.action, id: p.id, order: index, priority: p.priority });
+			pendingQueue.push({
+				action: p.action,
+				grouping: p.grouping,
+				order: index,
+				stream: { id: p.id, priority: p.priority }
+			});
 		}
 
 		return streams;
@@ -1262,16 +1275,21 @@ export class SlackApiProvider implements ApiProvider {
 				pending.push({
 					action: () => this.fetchIM(im.id, usernamesById),
 					id: im.id,
-					order: (im.priority || 0) as number
+					priority: (im.priority || 0) as number
 				});
 			}
 		}
 
-		pending.sort((a, b) => b.order - a.order);
+		pending.sort((a, b) => b.priority - a.priority);
 
 		const index = 0;
 		for (const p of pending) {
-			pendingQueue.push({ action: p.action, id: p.id, order: index, priority: 0 });
+			pendingQueue.push({
+				action: p.action,
+				grouping: 0,
+				order: index,
+				stream: { id: p.id, priority: p.priority }
+			});
 		}
 
 		return streams;

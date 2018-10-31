@@ -105,6 +105,19 @@ export function fromSlackDirect(
 ): CSDirectStream {
 	const { mostRecentId, mostRecentTimestamp } = fromSlackChannelOrDirectLatest(channel);
 
+	let closed;
+	if (channel.is_open == null) {
+		if (
+			channel.priority <= 0.015082787818972 &&
+			channel.user !== "USLACKBOT" &&
+			channel.user !== slackUserId
+		) {
+			closed = true;
+		}
+	} else {
+		closed = !Boolean(channel.is_open);
+	}
+
 	if (channel.is_im) {
 		const username = usernamesById.get(channel.user);
 
@@ -114,14 +127,7 @@ export function fromSlackDirect(
 			creatorId: slackUserId,
 			id: channel.id,
 			isArchived: Boolean(channel.is_user_deleted),
-			isClosed:
-				channel.is_open == null
-					? channel.priority == null
-						? undefined
-						: channel.priority === 0.015082787818972
-							? true
-							: undefined
-					: !Boolean(channel.is_open),
+			isClosed: closed,
 			name: username || channel.user,
 			memberIds: channel.user === slackUserId ? [slackUserId] : [slackUserId, channel.user],
 			modifiedAt:
@@ -166,14 +172,7 @@ export function fromSlackDirect(
 		creatorId: channel.creator,
 		id: channel.id,
 		isArchived: Boolean(channel.is_archived),
-		isClosed:
-			channel.is_open == null
-				? channel.priority == null
-					? undefined
-					: channel.priority === 0.015082787818972
-						? true
-						: undefined
-				: !Boolean(channel.is_open),
+		isClosed: closed,
 		name: names.join(", "),
 		memberIds: channel.members,
 		modifiedAt: mostRecentTimestamp || channel.created * 1000,
