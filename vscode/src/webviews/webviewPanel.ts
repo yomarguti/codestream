@@ -656,7 +656,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 								const response = await Container.agent.streams.close(e.body.params);
 								responseBody.payload = response.stream;
 							} catch (error) {
-								responseBody.error = error;
+								responseBody.error = error.message;
 							} finally {
 								this.postMessage({
 									type: WebviewIpcMessageType.response,
