@@ -53,6 +53,8 @@ function defaultIdFn(entity: any): Id {
 abstract class BaseIndex<T> {
 	protected constructor(readonly fields: (keyof T)[], readonly fetchFn: FetchFn<T>) {}
 
+	abstract invalidate(): void;
+
 	abstract set(value: any, entity: T, oldEntity?: T): void;
 
 	protected requireIndexValue(entity: T): string | undefined {
@@ -81,6 +83,10 @@ export class UniqueIndex<T> extends BaseIndex<T> {
 
 	constructor(fields: (keyof T)[], fetchFn: FetchFn<T>) {
 		super(fields, fetchFn);
+	}
+
+	invalidate() {
+		this._data.clear();
 	}
 
 	set(entity: T, oldEntity?: T) {
@@ -131,6 +137,10 @@ export class GroupIndex<T> extends BaseIndex<T> {
 	constructor(fields: (keyof T)[], fetchFn: FetchFn<T>, idFn?: IdFn<T>) {
 		super(fields, fetchFn);
 		this.idFn = idFn || defaultIdFn;
+	}
+
+	invalidate() {
+		this.groups.clear();
 	}
 
 	/**
@@ -231,6 +241,10 @@ export class GroupSequentialIndex<T> extends BaseIndex<T> {
 		super(field, fetchFn);
 		this.seqField = seqField;
 		this.idFn = idFn || defaultIdFn;
+	}
+
+	invalidate() {
+		this.groups.clear();
 	}
 
 	set(entity: T, oldEntity?: T) {

@@ -81,6 +81,11 @@ export interface VersionInfo {
 }
 
 export class CodeStreamSession {
+	private _onWillResetData = new Emitter<void>();
+	get onWillResetData(): Event<void> {
+		return this._onWillResetData.event;
+	}
+
 	private _onDidChangeMarkerLocations = new Emitter<CSMarkerLocations[]>();
 	get onDidChangeMarkerLocations(): Event<CSMarkerLocations[]> {
 		return this._onDidChangeMarkerLocations.event;

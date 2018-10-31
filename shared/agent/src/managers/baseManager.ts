@@ -18,6 +18,10 @@ export abstract class ManagerBase<T> {
 			}
 		}
 
+		this.session.onWillResetData(() => {
+			this.invalidateCache();
+		});
+
 		this.initialize();
 	}
 
@@ -30,6 +34,10 @@ export abstract class ManagerBase<T> {
 	protected abstract fetch(criteria: KeyValue<T>[]): Promise<T>;
 
 	protected abstract fetchCriteria(obj: T): KeyValue<T>[];
+
+	protected invalidateCache() {
+		this.cache.invalidate();
+	}
 
 	async resolve(message: RawRTMessage): Promise<T[]> {
 		const resolved = await Promise.all(

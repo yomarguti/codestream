@@ -43,6 +43,12 @@ export class BaseCache<T> {
 		this.indexes = indexes;
 	}
 
+	invalidate() {
+		for (const index of this.indexes.values()) {
+			index.invalidate();
+		}
+	}
+
 	/**
 	 * Get an entity by field. Requires an unique index.
 	 *
