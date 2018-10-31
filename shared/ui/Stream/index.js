@@ -545,7 +545,7 @@ export class SimpleStream extends Component {
 								<span className="align-right-button" onClick={this.handleClickStreamSettings}>
 									<Tooltip title="Channel Settings" placement="left">
 										<span>
-											<Icon name="gear" className="show-settings" />
+											<Icon name="gear" className="show-settings clickable" />
 										</span>
 									</Tooltip>
 									{menuActive && (
@@ -634,15 +634,22 @@ export class SimpleStream extends Component {
 					)}
 					{threadId && (
 						<div className="thread-panel" ref={ref => (this._threadPanel = ref)}>
-							<div id="close-thread" className="panel-header" onClick={this.handleDismissThread}>
+							<div className="panel-header">
 								<Tooltip title={closeThreadTooltip} placement="bottomRight">
-									<span className="align-right-button">
+									<span className="align-right-button" onClick={this.handleDismissThread}>
 										<Icon name="x" />
 									</span>
 								</Tooltip>
 								<span>
 									<label>
-										{commentTypeLabel} in {channelIcon} {this.props.postStreamName}
+										{commentTypeLabel} in{" "}
+										<span
+											className="clickable"
+											onClick={() => this.handleGotoStream(threadPost.streamId)}
+										>
+											{channelIcon}
+											{this.props.postStreamName}
+										</span>
 									</label>
 								</span>
 							</div>
@@ -703,6 +710,12 @@ export class SimpleStream extends Component {
 				setMultiCompose={this.setMultiCompose}
 			/>
 		);
+	};
+
+	handleGotoStream = streamId => {
+		this.setState({ threadId: null, threadTrigger: null });
+		this.props.setCurrentStream(streamId);
+		this.setActivePanel("main");
 	};
 
 	starChannel = () => {

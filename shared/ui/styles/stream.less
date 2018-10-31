@@ -240,6 +240,10 @@
 			font-size: 16px;
 			color: @text-color-highlight;
 
+			.clickable:hover {
+				text-decoration: underline;
+			}
+
 			.organization {
 				vertical-align: -2px;
 			}
@@ -391,27 +395,6 @@
 		}
 		.unreads[type="below"].active {
 			bottom: 0px !important;
-		}
-
-		#close-thread {
-			// margin: 0 10px 5px 10px;
-			// width: calc(~"100% - 20px");
-			// width: 100%;
-			// margin: 0;
-			padding-left: 0;
-			padding-right: 0;
-			cursor: pointer;
-			// padding: 1px 0;
-			// z-index: 10;
-			// height: 30px;
-			// color: @text-color-info;
-			.keybinding {
-				color: @text-color-subtle;
-				font-weight: normal;
-				// display: none;
-				// padding: 2px;
-				padding-right: 5px;
-			}
 		}
 
 		.new-messages-below {
@@ -996,7 +979,12 @@
 				}
 			}
 		}
-
+		.clickable {
+			cursor: pointer;
+			&:hover {
+				opacity: 1;
+			}
+		}
 		.channel-list,
 		.invite-panel {
 			.no-matches {
@@ -1007,9 +995,6 @@
 			.section {
 				padding: 10px 0;
 				font-size: 15px;
-				.clickable {
-					cursor: pointer;
-				}
 
 				> .header {
 					text-transform: uppercase;
@@ -2444,8 +2429,7 @@
 		.switch {
 			float: right;
 		}
-		.show-settings,
-		.clickable {
+		.show-settings {
 			cursor: pointer;
 		}
 	}
