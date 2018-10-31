@@ -114,7 +114,14 @@ export function fromSlackDirect(
 			creatorId: slackUserId,
 			id: channel.id,
 			isArchived: Boolean(channel.is_user_deleted),
-			isClosed: channel.is_open == null ? undefined : !Boolean(channel.is_open),
+			isClosed:
+				channel.is_open == null
+					? channel.priority == null
+						? undefined
+						: channel.priority === 0.015082787818972
+							? true
+							: undefined
+					: !Boolean(channel.is_open),
 			name: username || channel.user,
 			memberIds: channel.user === slackUserId ? [slackUserId] : [slackUserId, channel.user],
 			modifiedAt:
@@ -159,7 +166,14 @@ export function fromSlackDirect(
 		creatorId: channel.creator,
 		id: channel.id,
 		isArchived: Boolean(channel.is_archived),
-		isClosed: channel.is_open == null ? undefined : !Boolean(channel.is_open),
+		isClosed:
+			channel.is_open == null
+				? channel.priority == null
+					? undefined
+					: channel.priority === 0.015082787818972
+						? true
+						: undefined
+				: !Boolean(channel.is_open),
 		name: names.join(", "),
 		memberIds: channel.members,
 		modifiedAt: mostRecentTimestamp || channel.created * 1000,
