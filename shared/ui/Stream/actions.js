@@ -1,9 +1,5 @@
 import EventEmitter from "../event-emitter";
-import {
-	getStreamForId,
-	getChannelStreamsForTeam,
-	getDirectMessageStreamsForTeam
-} from "../reducers/streams";
+import { getChannelStreamsForTeam, getDirectMessageStreamsForTeam } from "../reducers/streams";
 import { setPanel } from "../actions/context";
 
 export { setPanel };
@@ -367,6 +363,14 @@ export const showCode = (post, enteringThread) => (dispatch, getState, { api }) 
 export const closeDirectMessage = id => (dispatch, getState, { api }) => {
 	try {
 		return api.closeDirectMessage(id);
+	} catch (error) {
+		console.error(error);
+	}
+};
+
+export const openDirectMessage = id => (dispatch, getState, { api }) => {
+	try {
+		return api.openDirectMessage(id);
 	} catch (error) {
 		console.error(error);
 	}

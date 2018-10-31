@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { connect } from "react-redux";
 import * as contextActions from "../actions/context";
 import _ from "underscore";
-import { createStream, setCurrentStream } from "./actions";
+import { createStream, openDirectMessage, setCurrentStream } from "./actions";
 import createClassString from "classnames";
 import { getDirectMessageStreamsForTeam, getDMName } from "../reducers/streams";
 import Button from "./Button";
@@ -156,6 +156,7 @@ export class SimpleCreateDMPanel extends Component {
 		if (!liDiv || !liDiv.id) return; // FIXME throw error
 		this.props.setActivePanel("main");
 		this.props.setCurrentStream(liDiv.id);
+		this.props.openDirectMessage(liDiv.id);
 	};
 
 	isFormInvalid = () => {
@@ -219,6 +220,7 @@ export default connect(
 	{
 		...contextActions,
 		createStream,
-		setCurrentStream
+		setCurrentStream,
+		openDirectMessage
 	}
 )(SimpleCreateDMPanel);
