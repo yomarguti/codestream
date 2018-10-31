@@ -333,7 +333,9 @@ export class CodeStreamApiProvider implements ApiProvider {
 				e.data = await Container.instance().teams.resolve(e);
 				break;
 			case MessageType.Users:
-				const lastReads = { ...this._user!.lastReads };
+				const lastReads = this._unreads
+					? (await this._unreads.get()).lastReads
+					: { ...this._user!.lastReads };
 
 				e.data = await Container.instance().users.resolve(e);
 
@@ -342,7 +344,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 					this._user = (await Container.instance().users.getMe()).user;
 
 					try {
-						if (this._unreads !== undefined && !Objects.shallowEquals(lastReads, me.lastReads)) {
+						if (
+							this._unreads !== undefined &&
+							!Objects.shallowEquals(lastReads, this._user.lastReads)
+						) {
 							this._unreads.compute(me.lastReads);
 						}
 						if (this._preferences && me.preferences) {
