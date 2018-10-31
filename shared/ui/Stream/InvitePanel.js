@@ -26,7 +26,7 @@ export class InvitePage extends Component {
 	isActive = isActiveMixin("invite", this.constructor.name);
 
 	shouldComponentUpdate(nextProps) {
-		return this.isActive(nextProps);
+		return this.isActive(this.props, nextProps);
 	}
 
 	onEmailChange = event => this.setState({ newMemberEmail: event.target.value });

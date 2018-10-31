@@ -38,7 +38,7 @@ export class SimpleChannelPanel extends Component {
 	isActive = isActiveMixin("channels", this.constructor.name);
 
 	shouldComponentUpdate(nextProps) {
-		return this.isActive(nextProps);
+		return this.isActive(this.props, nextProps);
 	}
 
 	render() {

@@ -1,13 +1,17 @@
 import * as uuidv4 from "uuid/v4";
 
-export const isActiveMixin = (panel: string, componentName) => (props: { activePanel: string }) => {
-	const isActive = props.activePanel === panel;
+export const isActiveMixin = (panel: string, componentName) => (
+	props: { activePanel: string },
+	nextProps: { activePanel: string }
+) => {
+	const isBecomingActive = nextProps.activePanel === panel;
+	const isNoLongerActive = props.activePanel === panel && !isBecomingActive;
 	// if (!isActive) {
 	// 	console.warn(`${componentName} is skipping a render`);
 	// } else {
 	// 	console.warn(`${componentName} is re-rendering`);
 	// }
-	return isActive;
+	return isBecomingActive || isNoLongerActive;
 };
 
 export const safe = <T>(fn: () => T): T | undefined => {

@@ -23,7 +23,7 @@ export class SimpleCreateChannelPanel extends Component {
 	isActive = isActiveMixin("create-channel", this.constructor.name);
 
 	shouldComponentUpdate(nextProps) {
-		return this.isActive(nextProps);
+		return this.isActive(this.props, nextProps);
 	}
 
 	componentDidUpdate(prevProps, prevState) {
