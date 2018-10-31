@@ -36,6 +36,9 @@ import {
 	MuteStreamRequest,
 	MuteStreamRequestType,
 	MuteStreamResponse,
+	OpenStreamRequest,
+	OpenStreamRequestType,
+	OpenStreamResponse,
 	RenameStreamRequest,
 	RenameStreamRequestType,
 	RenameStreamResponse,
@@ -163,6 +166,11 @@ export class StreamsManager extends CachedEntityManagerBase<CSChannelStream | CS
 	@lspHandler(MuteStreamRequestType)
 	mute(request: MuteStreamRequest): Promise<MuteStreamResponse> {
 		return this.session.api.muteStream(request);
+	}
+
+	@lspHandler(OpenStreamRequestType)
+	open(request: OpenStreamRequest): Promise<OpenStreamResponse> {
+		return this.session.api.openStream(request);
 	}
 
 	@lspHandler(RenameStreamRequestType)

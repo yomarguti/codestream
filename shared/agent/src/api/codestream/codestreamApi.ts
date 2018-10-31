@@ -41,6 +41,7 @@ import {
 	MarkPostUnreadRequest,
 	MarkStreamReadRequest,
 	MuteStreamRequest,
+	OpenStreamRequest,
 	ReactToPostRequest,
 	RenameStreamRequest,
 	SetStreamPurposeRequest,
@@ -675,17 +676,12 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	@log()
 	async archiveStream(request: ArchiveStreamRequest) {
-		return this.updateStream(request.streamId, { isArchived: true });
+		return this.updateStream<CSChannelStream>(request.streamId, { isArchived: true });
 	}
 
 	@log()
-	async closeStream(request: CloseStreamRequest) {
-		const response = await this.muteStream({
-			streamId: request.streamId,
-			mute: true
-		});
-
-		return { stream: response.stream as CSDirectStream };
+	closeStream(request: CloseStreamRequest) {
+		return this.updateStream<CSDirectStream>(request.streamId, { isClosed: true });
 	}
 
 	@log()
@@ -754,21 +750,29 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	@log()
+	openStream(request: OpenStreamRequest) {
+		return this.updateStream<CSDirectStream>(request.streamId, { isClosed: false });
+	}
+
+	@log()
 	renameStream(request: RenameStreamRequest) {
-		return this.updateStream(request.streamId, { name: request.name });
+		return this.updateStream<CSChannelStream>(request.streamId, { name: request.name });
 	}
 
 	@log()
 	setStreamPurpose(request: SetStreamPurposeRequest) {
-		return this.updateStream(request.streamId, { purpose: request.purpose });
+		return this.updateStream<CSChannelStream>(request.streamId, { purpose: request.purpose });
 	}
 
 	@log()
-	async unarchiveStream(request: UnarchiveStreamRequest) {
-		return this.updateStream(request.streamId, { isArchived: false });
+	unarchiveStream(request: UnarchiveStreamRequest) {
+		return this.updateStream<CSChannelStream>(request.streamId, { isArchived: false });
 	}
 
-	private async updateStream(streamId: string, changes: { [key: string]: any }) {
+	private async updateStream<T extends CSChannelStream | CSDirectStream>(
+		streamId: string,
+		changes: { [key: string]: any }
+	) {
 		const response = await this.put<CSUpdateStreamRequest, CSUpdateStreamResponse>(
 			`/streams/${streamId}`,
 			{
@@ -782,7 +786,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 			data: [response.stream]
 		});
 
-		return { stream: stream as CSChannelStream };
+		return { stream: stream as T };
 	}
 
 	@log()

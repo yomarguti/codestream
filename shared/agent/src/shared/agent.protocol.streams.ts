@@ -198,6 +198,21 @@ export const MuteStreamRequestType = new RequestType<
 	void
 >("codeStream/stream/mute");
 
+export interface OpenStreamRequest {
+	streamId: string;
+}
+
+export interface OpenStreamResponse {
+	stream: CSDirectStream;
+}
+
+export const OpenStreamRequestType = new RequestType<
+	OpenStreamRequest,
+	OpenStreamResponse,
+	void,
+	void
+>("codeStream/stream/open");
+
 export interface RenameStreamRequest {
 	streamId: string;
 	name: string;

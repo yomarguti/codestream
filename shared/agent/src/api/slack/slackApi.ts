@@ -41,6 +41,7 @@ import {
 	MarkStreamReadRequest,
 	MuteStreamRequest,
 	MuteStreamResponse,
+	OpenStreamRequest,
 	ReactToPostRequest,
 	RenameStreamRequest,
 	SetStreamPurposeRequest,
@@ -1489,6 +1490,41 @@ export class SlackApiProvider implements ApiProvider {
 	@log()
 	async muteStream(request: MuteStreamRequest): Promise<MuteStreamResponse> {
 		throw new Error("Method not implemented.");
+	}
+
+	@log()
+	async openStream(request: OpenStreamRequest) {
+		const response = await this._slack.conversations.open({
+			channel: request.streamId,
+			return_im: true
+		});
+
+		const { ok, error, channel } = response as WebAPICallResult & { channel: any };
+		if (!ok) throw new Error(error);
+
+		try {
+			const members = await this.getStreamMembers(channel.id);
+			channel.members = members;
+		} catch (ex) {
+			Logger.error(ex);
+
+			const stream = await Container.instance().streams.getById(request.streamId);
+			channel.members = stream.memberIds;
+		}
+
+		const stream = fromSlackChannelOrDirect(
+			channel,
+			await this.ensureUsernamesById(),
+			this._slackUserId,
+			this._codestreamTeamId
+		)!;
+
+		const streams = await Container.instance().streams.resolve({
+			type: MessageType.Streams,
+			data: [stream]
+		});
+
+		return { stream: streams[0] as CSDirectStream };
 	}
 
 	@log()

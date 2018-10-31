@@ -70,6 +70,8 @@ import {
 	MarkStreamReadResponse,
 	MuteStreamRequest,
 	MuteStreamResponse,
+	OpenStreamRequest,
+	OpenStreamResponse,
 	ReactToPostRequest,
 	ReactToPostResponse,
 	RenameStreamRequest,
@@ -263,6 +265,7 @@ export interface ApiProvider {
 	leaveStream(request: LeaveStreamRequest): Promise<LeaveStreamResponse>;
 	markStreamRead(request: MarkStreamReadRequest): Promise<MarkStreamReadResponse>;
 	muteStream(request: MuteStreamRequest): Promise<MuteStreamResponse>;
+	openStream(request: OpenStreamRequest): Promise<OpenStreamResponse>;
 	renameStream(request: RenameStreamRequest): Promise<RenameStreamResponse>;
 	setStreamPurpose(request: SetStreamPurposeRequest): Promise<SetStreamPurposeResponse>;
 	unarchiveStream(request: UnarchiveStreamRequest): Promise<UnarchiveStreamResponse>;
