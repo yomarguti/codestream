@@ -1,5 +1,6 @@
 "use strict";
 import { RTMClient } from "@slack/client";
+import HttpsProxyAgent from "https-proxy-agent";
 import { Emitter, Event } from "vscode-languageserver";
 import { Container } from "../../container";
 import { Logger } from "../../logger";
@@ -12,11 +13,7 @@ import {
 	UsersRTMessage
 } from "../apiProvider";
 import { SlackApiProvider } from "./slackApi";
-import {
-	fromSlackChannelIdToType,
-	fromSlackChannelOrDirect,
-	fromSlackPost
-} from "./slackApi.adapters";
+import { fromSlackChannelIdToType, fromSlackPost } from "./slackApi.adapters";
 
 enum SlackRtmEventTypes {
 	ChannelArchived = "channel_archive",
@@ -101,8 +98,12 @@ export class SlackEvents {
 	private readonly _meMentionRegex: RegExp;
 	private readonly _slackRTM: RTMClient;
 
-	constructor(slackToken: string, private readonly _api: SlackApiProvider) {
-		this._slackRTM = new RTMClient(slackToken);
+	constructor(
+		slackToken: string,
+		private readonly _api: SlackApiProvider,
+		proxyAgent: HttpsProxyAgent | undefined
+	) {
+		this._slackRTM = new RTMClient(slackToken, { agent: proxyAgent });
 
 		this._slackRTM.on(SlackRtmEventTypes.Message, this.onSlackMessageChanged, this);
 		this._slackRTM.on(SlackRtmEventTypes.ReactionAdded, this.onSlackMessageChanged, this);

@@ -1,5 +1,6 @@
 "use strict";
 import { LogLevel, WebAPICallResult, WebClient } from "@slack/client";
+import HttpsProxyAgent from "https-proxy-agent";
 import { RequestInit } from "node-fetch";
 import { Emitter, Event } from "vscode-languageserver";
 import { Container } from "../../container";
@@ -7,7 +8,6 @@ import { Logger, TraceLevel } from "../../logger";
 import {
 	ArchiveStreamRequest,
 	CloseStreamRequest,
-	CloseStreamResponse,
 	CreateChannelStreamRequest,
 	CreateDirectStreamRequest,
 	CreateMarkerLocationRequest,
@@ -57,7 +57,6 @@ import {
 	CSDirectStream,
 	CSGetMeResponse,
 	CSMe,
-	CSMePreferences,
 	CSPost,
 	CSSlackProviderInfo,
 	CSUser,
@@ -115,6 +114,7 @@ export class SlackApiProvider implements ApiProvider {
 	// TODO: Convert to index on UserManager?
 	private _userIdsByName: Map<string, string> | undefined;
 	private _preferences: CodeStreamPreferences;
+
 	readonly capabilities = {
 		mute: false
 	};
@@ -123,10 +123,12 @@ export class SlackApiProvider implements ApiProvider {
 		private _codestream: CodeStreamApiProvider,
 		providerInfo: CSSlackProviderInfo,
 		user: CSMe,
-		private readonly _codestreamTeamId: string
+		private readonly _codestreamTeamId: string,
+		private readonly _proxyAgent: HttpsProxyAgent | undefined
 	) {
 		this._slackToken = providerInfo.accessToken;
 		this._slack = new WebClient(this._slackToken, {
+			agent: this._proxyAgent,
 			logLevel: Logger.level === TraceLevel.Debug ? LogLevel.DEBUG : LogLevel.INFO,
 			logger: (level, message) => Logger.log(`SLACK[${level}]: ${message}`)
 		});
@@ -251,7 +253,7 @@ export class SlackApiProvider implements ApiProvider {
 
 	@log()
 	async subscribe(types?: MessageType[]) {
-		this._events = new SlackEvents(this._slackToken, this);
+		this._events = new SlackEvents(this._slackToken, this, this._proxyAgent);
 		this._events.onDidReceiveMessage(e => {
 			if (e.type === MessageType.Preferences) {
 				this._preferences.update(e.data);

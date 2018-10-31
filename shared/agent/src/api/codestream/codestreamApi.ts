@@ -1,4 +1,5 @@
 "use strict";
+import HttpsProxyAgent from "https-proxy-agent";
 import fetch, { Headers, RequestInit, Response } from "node-fetch";
 import { URLSearchParams } from "url";
 import { Emitter, Event } from "vscode-languageserver";
@@ -138,11 +139,16 @@ export class CodeStreamApiProvider implements ApiProvider {
 	private _user: CSMe | undefined;
 	private _userId: string | undefined;
 	private _preferences: CodeStreamPreferences | undefined;
+
 	readonly capabilities = {
 		mute: true
 	};
 
-	constructor(public readonly baseUrl: string, private readonly _version: VersionInfo) {}
+	constructor(
+		public readonly baseUrl: string,
+		private readonly _version: VersionInfo,
+		private readonly _proxyAgent: HttpsProxyAgent | undefined
+	) {}
 
 	get teamId(): string {
 		return this._teamId!;
@@ -269,7 +275,13 @@ export class CodeStreamApiProvider implements ApiProvider {
 			});
 		}
 
-		this._events = new PubnubEvents(this._token!, this._pubnubKey!, this._pubnubToken!, this);
+		this._events = new PubnubEvents(
+			this._token!,
+			this._pubnubKey!,
+			this._pubnubToken!,
+			this,
+			this._proxyAgent
+		);
 		this._events.onDidReceiveMessage(this.onPubnubMessageReceived, this);
 
 		if (types === undefined || types.includes(MessageType.Streams)) {
@@ -912,6 +924,14 @@ export class CodeStreamApiProvider implements ApiProvider {
 					);
 					init.headers.append("X-CS-IDE-Version", this._version.ide.version);
 				}
+			}
+
+			if (this._proxyAgent !== undefined) {
+				if (init === undefined) {
+					init = {};
+				}
+
+				init.agent = this._proxyAgent;
 			}
 
 			const method = (init && init.method) || "GET";

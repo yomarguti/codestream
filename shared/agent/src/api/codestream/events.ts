@@ -1,4 +1,5 @@
 "use strict";
+import HttpsProxyAgent from "https-proxy-agent";
 import { Disposable, Emitter, Event } from "vscode-languageserver";
 import { Logger } from "../../logger";
 import {
@@ -50,9 +51,10 @@ export class PubnubEvents {
 		private readonly _accessToken: string,
 		private readonly _pubnubKey: string,
 		private readonly _pubnubToken: string,
-		private readonly _api: CodeStreamApiProvider
+		private readonly _api: CodeStreamApiProvider,
+		proxyAgent: HttpsProxyAgent | undefined
 	) {
-		this._pubnubConnection = new PubnubConnection();
+		this._pubnubConnection = new PubnubConnection(_api, proxyAgent);
 		this._pubnubConnection.onDidStatusChange(this.onPubnubStatusChanged, this);
 		this._pubnubConnection.onDidReceiveMessages(this.onPubnubMessagesReceived, this);
 	}
@@ -63,7 +65,6 @@ export class PubnubEvents {
 
 	connect(streamIds?: string[]): Disposable {
 		this._disposable = this._pubnubConnection.initialize({
-			api: this._api,
 			accessToken: this._accessToken,
 			subscribeKey: this._pubnubKey,
 			authKey: this._pubnubToken,

@@ -1,6 +1,7 @@
 // Provide the PubnubConnection class, which encapsulates communications with Pubnub to receive
 // messages in real-time
 "use strict";
+import HttpsProxyAgent from "https-proxy-agent";
 import * as Pubnub from "pubnub";
 import { Disposable, Emitter, Event } from "vscode-languageserver";
 import { ServerError } from "../agentError";
@@ -9,7 +10,6 @@ import { PubnubHistory, PubnubHistoryInput, PubnubHistoryOutput } from "./pubnub
 
 // use this interface to initialize the PubnubConnection class
 export interface PubnubInitializer {
-	api: ApiProvider; // api server object, for making direct requests to api server
 	accessToken: string; // access token for api requests
 	subscribeKey: string; // identifies our Pubnub account, comes from pubnubKey returned with the login response from the API
 	authKey: string; // unique Pubnub token provided in the login response
@@ -70,7 +70,6 @@ const THRESHOLD_FOR_CATCHUP = ONE_MONTH - TEN_MINUTES;
 const THRESHOLD_BUFFER = 12000;
 
 export class PubnubConnection {
-	private _api: ApiProvider | undefined;
 	private _subscriptionsPending: boolean = false;
 	private _lastSuccessfulSubscription: number = 0;
 	private _subscriptions: SubscriptionMap = {};
@@ -113,6 +112,11 @@ export class PubnubConnection {
 		return this._messageEmitter.event;
 	}
 
+	constructor(
+		private readonly _api: ApiProvider,
+		private readonly _proxyAgent: HttpsProxyAgent | undefined
+	) {}
+
 	// initialize PubnubConnection and optionally subscribe to channels
 	initialize(options: PubnubInitializer): Disposable {
 		this._debug(`Pubnub Connection initializing...`);
@@ -120,7 +124,6 @@ export class PubnubConnection {
 			this._debug = options.debug;
 		}
 
-		this._api = options.api;
 		this._subscribeKey = options.subscribeKey;
 		this._authKey = options.authKey;
 		this._accessToken = options.accessToken;
@@ -147,7 +150,8 @@ export class PubnubConnection {
 			restore: true,
 			logVerbosity: false,
 			heartbeatInterval: 30,
-			autoNetworkDetection: true
+			autoNetworkDetection: true,
+			proxy: this._proxyAgent != null ? this._proxyAgent.proxy : undefined
 		} as Pubnub.PubnubConfig);
 
 		this.addListener();

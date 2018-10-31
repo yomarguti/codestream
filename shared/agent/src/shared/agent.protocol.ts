@@ -52,7 +52,7 @@ export enum TraceLevel {
 	Debug = "debug"
 }
 
-export interface AgentOptions {
+export interface BaseAgentOptions {
 	extension: {
 		build: string;
 		buildEnv: string;
@@ -65,11 +65,17 @@ export interface AgentOptions {
 		version: string;
 	};
 	isDebugging: boolean;
+	proxy?: {
+		url: string;
+		strictSSL: boolean;
+	};
+	serverUrl: string;
 	traceLevel: TraceLevel;
+}
 
+export interface AgentOptions extends BaseAgentOptions {
 	email: string;
 	passwordOrToken: string | AccessToken;
-	serverUrl: string;
 	signupToken: string;
 	team: string;
 	teamId: string;

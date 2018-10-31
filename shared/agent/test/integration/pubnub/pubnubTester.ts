@@ -64,15 +64,19 @@ export abstract class PubnubTester {
 
 	constructor(config: PubnubTesterConfig) {
 		this._apiRequester = new ApiRequester({ origin: config.apiOrigin });
-		this._api = new CodeStreamApiProvider("", {
-			extension: {
-				build: "",
-				buildEnv: "",
-				version: "",
-				versionFormatted: ""
+		this._api = new CodeStreamApiProvider(
+			"",
+			{
+				extension: {
+					build: "",
+					buildEnv: "",
+					version: "",
+					versionFormatted: ""
+				},
+				ide: { name: "", version: "" }
 			},
-			ide: { name: "", version: "" }
-		});
+			undefined
+		);
 		this._apiSimulator = new CodeStreamApiSimulator(this._apiRequester);
 		this._api.grantPubNubChannelAccess = this._apiSimulator.grant.bind(this._apiSimulator);
 		this.testNum = ++TEST_NUM;
@@ -122,9 +126,8 @@ export abstract class PubnubTester {
 	}
 
 	private initializeConnection() {
-		this._pubnubConnection = new PubnubConnection();
+		this._pubnubConnection = new PubnubConnection(this._api!, undefined);
 		this._pubnubDisposable = this._pubnubConnection.initialize({
-			api: this._api,
 			subscribeKey: this._userData!.pubnubKey,
 			authKey: this._pubnubToken || this._userData!.pubnubToken,
 			accessToken: this._userData!.accessToken,

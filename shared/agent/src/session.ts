@@ -1,4 +1,6 @@
 "use strict";
+import HttpsProxyAgent from "https-proxy-agent";
+import * as url from "url";
 import {
 	CancellationToken,
 	Connection,
@@ -114,6 +116,7 @@ export class CodeStreamSession {
 		return this._onDidChangeTeams.event;
 	}
 
+	private readonly _proxyAgent: HttpsProxyAgent | undefined;
 	private readonly _readyPromise: Promise<void>;
 
 	constructor(
@@ -132,7 +135,14 @@ export class CodeStreamSession {
 
 		Container.initialize(this);
 
-		this._api = new CodeStreamApiProvider(_options.serverUrl, this.versionInfo);
+		if (_options.proxy != null) {
+			this._proxyAgent = new HttpsProxyAgent({
+				...url.parse(_options.proxy.url),
+				rejectUnauthorized: _options.proxy.strictSSL
+			});
+		}
+
+		this._api = new CodeStreamApiProvider(_options.serverUrl, this.versionInfo, this._proxyAgent);
 
 		const versionManager = new VersionMiddlewareManager(this._api);
 		versionManager.onDidChangeCompatibility(this.onVersionCompatibilityChanged, this);
@@ -346,7 +356,8 @@ export class CodeStreamSession {
 						this._api! as CodeStreamApiProvider,
 						response.user.providerInfo.slack,
 						response.user,
-						this._teamId
+						this._teamId,
+						this._proxyAgent
 					);
 
 					await (this._api as SlackApiProvider).processLoginResponse(response);
