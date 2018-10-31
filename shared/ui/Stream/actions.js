@@ -180,22 +180,21 @@ export const setUserPreference = (prefPath, value) => async (dispatch, getState,
 	let user = users[session.userId];
 	if (!user) return;
 
-	if (!user.preferences) user.preferences = {};
-
 	// we walk down the existing user preference to set the value
 	// and simultaneously create a new preference object to pass
 	// to the API server
-	let preferences = { ...user.preferences };
+	let preferences = JSON.parse(JSON.stringify(user.preferences || {}));
+	let preferencesPointer = preferences;
 	let newPreference = {};
 	let newPreferencePointer = newPreference;
 	while (prefPath.length > 1) {
 		let part = prefPath.shift().replace(/\./g, "*");
-		if (!preferences[part]) preferences[part] = {};
-		preferences = preferences[part];
+		if (!preferencesPointer[part]) preferencesPointer[part] = {};
+		preferencesPointer = preferencesPointer[part];
 		newPreferencePointer[part] = {};
 		newPreferencePointer = newPreferencePointer[part];
 	}
-	preferences[prefPath[0].replace(/\./g, "*")] = value;
+	preferencesPointer[prefPath[0].replace(/\./g, "*")] = value;
 	newPreferencePointer[prefPath[0].replace(/\./g, "*")] = value;
 
 	console.log("Saving preferences: ", newPreference);
