@@ -12,6 +12,7 @@ export default (state = initialState, { type, payload }) => {
 		case "BOOTSTRAP_USERS":
 			return toMapBy("id", payload);
 		case "USERS-UPDATE_FROM_PUBNUB":
+		case "UPDATE_USER":
 		case "ADD_USER":
 			return { ...state, [payload.id]: updateUser(payload, state) };
 		case "ADD_USERS": {

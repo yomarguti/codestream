@@ -185,7 +185,7 @@ export const setUserPreference = (prefPath, value) => async (dispatch, getState,
 	// we walk down the existing user preference to set the value
 	// and simultaneously create a new preference object to pass
 	// to the API server
-	let preferences = user.preferences;
+	let preferences = { ...user.preferences };
 	let newPreference = {};
 	let newPreferencePointer = newPreference;
 	while (prefPath.length > 1) {
@@ -202,8 +202,9 @@ export const setUserPreference = (prefPath, value) => async (dispatch, getState,
 	try {
 		dispatch({
 			type: "UPDATE_USER",
-			payload: await api.saveUserPreference(newPreference)
+			payload: { ...user, preferences }
 		});
+		api.saveUserPreference(newPreference);
 	} catch (error) {
 		console.error("error trying to update preferences", error);
 	}
