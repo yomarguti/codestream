@@ -166,6 +166,11 @@ export class SlackApiProvider implements ApiProvider {
 					}
 					break;
 
+				// TODO: I think we need to handle these
+				// case MessageType.Preferences:
+				// 	this._preferences.update(e.data);
+				// 	break;
+
 				case MessageType.Users:
 					// TODO: Map with slack data
 					const user = e.data.find(u => u.id === this._codestreamUserId);
@@ -210,16 +215,21 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	private async getSlackPreferences() {
-		// Undocumented: https://github.com/ErikKalkoken/slackApiDoc/blob/master/users.prefs.get.md
-		const response = await this._slack.apiCall("users.prefs.get");
+		try {
+			// Undocumented: https://github.com/ErikKalkoken/slackApiDoc/blob/master/users.prefs.get.md
+			const response = await this._slack.apiCall("users.prefs.get");
 
-		const { ok, error, prefs } = response as WebAPICallResult & { prefs: any };
-		if (!ok) {
-			Logger.error(new Error(error));
+			const { ok, error, prefs } = response as WebAPICallResult & { prefs: any };
+			if (!ok) {
+				Logger.error(new Error(error));
+				return { muted_channels: "" };
+			}
+
+			return prefs as { [key: string]: any };
+		} catch (ex) {
+			Logger.error(ex);
 			return { muted_channels: "" };
 		}
-
-		return prefs as { [key: string]: any };
 	}
 
 	get codestreamUserId(): string {
@@ -278,6 +288,8 @@ export class SlackApiProvider implements ApiProvider {
 			MessageType.Connection,
 			MessageType.MarkerLocations,
 			MessageType.Markers,
+			// TODO: I think we need to subscribe to these
+			// MessageType.Preferences,
 			MessageType.Repositories,
 			MessageType.Users
 		]);
