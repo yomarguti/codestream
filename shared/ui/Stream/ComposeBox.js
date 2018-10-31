@@ -30,6 +30,7 @@ const arrayToRange = ([startRow, startCol, endRow, endCol]) => {
 
 class ComposeBox extends React.Component {
 	state = {
+		color: "blue",
 		postTextByStream: {},
 		quote: null,
 		autoMentions: [],
@@ -621,7 +622,7 @@ class ComposeBox extends React.Component {
 			postTextByStream: {},
 			quote: null,
 			title: "",
-			color: "",
+			color: "blue",
 			assignees: [],
 			autoMentions: [],
 			emojiOpen: false
