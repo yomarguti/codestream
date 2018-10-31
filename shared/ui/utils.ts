@@ -19,6 +19,13 @@ export function mapFilter<A, B>(array: A[], fn: (A) => B | undefined): B[] {
 	return result;
 }
 
+export const findLast = (array: any[], fn: (any) => boolean): any | undefined => {
+	for (let i = array.length - 1; i >= 0; i--) {
+		let item = array[i];
+		if (fn(item)) return item;
+	}
+};
+
 export const rangeTo = (size: number) => [...Array(size).keys()];
 
 export const debounceToAnimationFrame = (fn: Function) => {

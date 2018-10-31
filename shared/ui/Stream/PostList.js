@@ -3,7 +3,7 @@ import { debounce } from "underscore";
 import DateSeparator from "./DateSeparator";
 import Post from "./Post";
 import infiniteLoadable from "./infiniteLoadable";
-import { rAFThrottle, safe } from "../utils";
+import { findLast, rAFThrottle, safe } from "../utils";
 
 const noop = () => {};
 export default infiniteLoadable(
@@ -76,7 +76,7 @@ export default infiniteLoadable(
 
 			const { hasFocus, isActive, posts, streamId } = this.props;
 
-			const lastPost = posts.length > 0 && posts[posts.length - 1];
+			const lastPost = findLast(posts, post => post.isSystemPost !== "codestream");
 			if (hasFocus && isActive && lastPost) {
 				if (lastPost.streamId === streamId) this.props.markRead(lastPost.id);
 			}
