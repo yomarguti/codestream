@@ -9,7 +9,8 @@ import {
 	Range,
 	TextDocument,
 	Uri,
-	window
+	window,
+	workspace
 } from "vscode";
 import {
 	CancellationToken,
@@ -36,6 +37,7 @@ import {
 	AgentResult,
 	ApiRequestType,
 	ArchiveStreamRequestType,
+	BaseAgentOptions,
 	CloseStreamRequestType,
 	CodeStreamEnvironment,
 	CreateChannelStreamRequestType,
@@ -126,7 +128,7 @@ export class CodeStreamAgentConnection implements Disposable {
 	private _clientOptions: LanguageClientOptions;
 	private _serverOptions: ServerOptions;
 
-	constructor(context: ExtensionContext, options: AgentOptions) {
+	constructor(context: ExtensionContext, options: BaseAgentOptions) {
 		this._serverOptions = {
 			run: {
 				module: context.asAbsolutePath("dist/agent.js"),
@@ -220,14 +222,26 @@ export class CodeStreamAgentConnection implements Disposable {
 		teamId?: string,
 		team?: string
 	): Promise<AgentResult> {
-		const response = await this.start({
+		const options: Required<AgentOptions> = {
 			...this._clientOptions.initializationOptions,
 			serverUrl: serverUrl,
+			traceLevel: Logger.level,
 			email: email,
 			passwordOrToken: passwordOrToken,
 			team,
 			teamId
-		});
+		};
+
+		const httpSettings = workspace.getConfiguration("http");
+		const proxy = httpSettings.get<string | undefined>("proxy", "");
+		if (proxy) {
+			options.proxy = {
+				url: proxy,
+				strictSSL: httpSettings.get<boolean>("proxyStrictSSL", true)
+			};
+		}
+
+		const response = await this.start(options);
 
 		if (response.result!.error) {
 			await this.stop();

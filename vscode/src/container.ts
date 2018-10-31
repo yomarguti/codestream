@@ -1,6 +1,6 @@
 "use strict";
 import { ExtensionContext } from "vscode";
-import { AgentOptions, CodeStreamAgentConnection } from "./agent/agentConnection";
+import { BaseAgentOptions, CodeStreamAgentConnection } from "./agent/agentConnection";
 import { CodeStreamSession } from "./api/session";
 import { Commands } from "./commands";
 import { Config, configuration } from "./configuration";
@@ -12,7 +12,11 @@ import { CodeStreamCodeActionProvider } from "./providers/codeActionProvider";
 import { MarkerDecorationProvider } from "./providers/markerDecorationProvider";
 
 export class Container {
-	static async initialize(context: ExtensionContext, config: Config, agentOptions: AgentOptions) {
+	static async initialize(
+		context: ExtensionContext,
+		config: Config,
+		agentOptions: BaseAgentOptions
+	) {
 		this._context = context;
 		this._config = config;
 

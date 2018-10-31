@@ -1,7 +1,6 @@
 "use strict";
 import { ExtensionContext, extensions, version as vscodeVersion, workspace } from "vscode";
 import { GitExtension } from "./@types/git";
-import { AgentOptions } from "./agent/agentConnection";
 import { SessionStatusChangedEvent } from "./api/session";
 import { ContextKeys, setContext } from "./common";
 import { Config, configuration, Configuration } from "./configuration";
@@ -56,9 +55,9 @@ export async function activate(context: ExtensionContext) {
 			version: vscodeVersion
 		},
 		isDebugging: Logger.isDebugging,
-		traceLevel: Logger.level,
-		serverUrl: cfg.serverUrl
-	} as AgentOptions);
+		serverUrl: cfg.serverUrl,
+		traceLevel: Logger.level
+	});
 
 	context.subscriptions.push(Container.session.onDidChangeSessionStatus(onSessionStatusChanged));
 
