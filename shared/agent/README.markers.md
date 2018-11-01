@@ -117,8 +117,8 @@ to set its ```commitHashWhenCreated``` property to the current commit. See [unco
 
 When a marker is created, the location of the code block selected by the user is backtracked to the contents of the
 file at its current commit. In case it is detected that this code block does not exist in the committed version of
-the file, this is considered an ***uncommitted location***. Note that this only happens if the code block is entirely new,
-so it is not a code block that was modified and/or moved. 
+the file, or the file itself is new this is considered an ***uncommitted location***. Note that this only happens
+if the code block is entirely new, so it is not a code block that was modified and/or moved.
 
 ### Saving uncommitted locations
 
