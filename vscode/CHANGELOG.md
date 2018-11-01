@@ -1,5 +1,28 @@
 # Change Log
 
+## [0.21.0] - 2018-11-1
+
+### Added
+
+- Adds support for network connections via proxies
+- Adds the ability to add people to or remove people from a Slack channel via CodeStream
+- Adds the ability to set a Slack's channel's purpose via CodeStream
+- Adds the ability to archive a Slack channel via CodeStream
+- Adds the synchronization of a channel's muted status from Slack
+
+### Changed
+
+- Prioritize Slack DMs to reduce the number that need to be loaded 
+
+### Fixed
+
+- Fixes an issue with leaving a Slack channel from within CodeStream
+- Fixes an issue with adding people while creating a Slack channel from CodeStream
+- Fixes an issue where creating a Slack DM could result in an unexpected error
+- Fixes an issue with marking a stream as read
+- Fixes [#12](https://github.com/TeamCodeStream/CodeStream/issues/12) &mdash; Webview: FAILED waiting for webview ready event
+- Fixes an issue with CodeStream's ephemeral system posts sometimes causing errors
+
 ## [0.20.0] - 2018-10-29
 
 ### Added
