@@ -7,6 +7,7 @@ import Login from "../Login";
 import Signup from "../Signup";
 import CompleteSignup from "../CompleteSignup";
 import Logger from "../logger";
+import EventEmitter from "../event-emitter";
 
 addLocaleData(englishLocaleData);
 
@@ -43,10 +44,18 @@ const Root = connect(mapStateToProps)(props => {
 export default class Container extends React.Component {
 	state = { hasError: false };
 
+	static getDerivedStateFromError(error) {
+		return { hasError: true };
+	}
+
 	componentDidCatch(error, info) {
-		this.setState({ hasError: true });
 		Logger.error(error, info);
 	}
+
+	handleClickReload = event => {
+		event.preventDefault();
+		EventEmitter.emit("interaction:clicked-reload-webview");
+	};
 
 	render() {
 		const { i18n, store } = this.props;
@@ -55,7 +64,10 @@ export default class Container extends React.Component {
 		if (this.state.hasError)
 			content = (
 				<div id="oops">
-					<p>An unexpected error has occurred. Please reload the window.</p>
+					<p>
+						An unexpected error has occurred. <a onClick={this.handleClickReload}>Click here</a> to
+						reload this tab.
+					</p>
 				</div>
 			);
 		else content = <Root />;
