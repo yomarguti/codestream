@@ -178,6 +178,61 @@ export namespace Functions {
 		};
 	}
 
+	export function progress<T>(
+		promise: Promise<T>,
+		intervalMs: number,
+		onProgress: () => boolean
+	): Promise<T> {
+		return new Promise((resolve, reject) => {
+			let timer: NodeJS.Timer | undefined;
+			timer = setInterval(() => {
+				if (onProgress()) {
+					if (timer !== undefined) {
+						clearInterval(timer);
+						timer = undefined;
+					}
+				}
+			}, intervalMs);
+
+			promise.then(() => {
+				if (timer !== undefined) {
+					clearInterval(timer);
+					timer = undefined;
+				}
+
+				resolve(promise);
+			});
+		});
+	}
+
+	export function timeout<T>(
+		promise: Promise<T>,
+		timeoutMs: number,
+		options: {
+			message?: string;
+			onTimeout?(
+				resolve: (value?: T | PromiseLike<T> | undefined) => void,
+				reject: (reason?: any) => void,
+				message: string | undefined
+			): void;
+		} = {}
+	): Promise<T> {
+		return new Promise((resolve, reject) => {
+			const timer = setTimeout(() => {
+				if (typeof options.onTimeout === "function") {
+					options.onTimeout(resolve, reject, options.message);
+				} else {
+					reject(new Error(options.message ? `${options.message} TIMED OUT` : "TIMED OUT"));
+				}
+			}, timeoutMs);
+
+			promise.then(() => {
+				clearTimeout(timer);
+				resolve(promise);
+			});
+		});
+	}
+
 	export async function wait(ms: number) {
 		await new Promise(resolve => setTimeout(resolve, ms));
 	}
