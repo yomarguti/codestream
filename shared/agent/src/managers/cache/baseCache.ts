@@ -2,6 +2,7 @@
 
 import { encodeArray, Index, IndexParams, IndexType, makeIndex } from "./index";
 
+import { Logger } from "../../logger";
 import { Id } from "../entityManager";
 import { SequentialSlice } from "./sequentialSlice";
 
@@ -44,7 +45,8 @@ export class BaseCache<T> {
 	}
 
 	invalidate() {
-		for (const index of this.indexes.values()) {
+		for (const [field, index] of this.indexes.entries()) {
+			Logger.log(`${this.constructor.name}: Invalidating index ${field}`);
 			index.invalidate();
 		}
 	}

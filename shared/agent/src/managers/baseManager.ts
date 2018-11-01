@@ -1,9 +1,10 @@
 "use strict";
 import { RawRTMessage } from "../api/apiProvider";
+import { Logger } from "../logger";
 import { CodeStreamSession } from "../session";
 import { LspHandler } from "../system/decorators";
+import { IndexParams } from "./cache";
 import { BaseCache, KeyValue } from "./cache/baseCache";
-import { IndexParams } from "./cache/index";
 import * as operations from "./operations";
 import { isCompleteObject } from "./operations";
 
@@ -36,6 +37,7 @@ export abstract class ManagerBase<T> {
 	protected abstract fetchCriteria(obj: T): KeyValue<T>[];
 
 	protected invalidateCache() {
+		Logger.log(`${this.constructor.name}: Invalidating cache`);
 		this.cache.invalidate();
 	}
 
