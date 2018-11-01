@@ -138,7 +138,7 @@ export const getDirectMessageStreamsForTeam = (state, teamId) => {
 	return Object.values(streams).filter(stream => stream.type === "direct");
 };
 
-export const getServiceStreamsForTeam = (state, teamId, userId, users) => {
+export const getServiceStreamsForTeam = (state, teamId, userId) => {
 	const streams = state.byTeam[teamId] || {};
 	const serviceStreams = Object.values(streams).filter(
 		stream =>
