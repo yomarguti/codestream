@@ -748,9 +748,10 @@ export class CodeStreamWebviewPanel implements Disposable {
 					break;
 				}
 				case WebviewIpcMessageType.onLog: {
-					const { type, log } = e.body;
+					const { type, message, extra } = e.body;
 					if (type === "error") {
-						Logger.error(new Error(log.message), log.message, log);
+						Logger.error(new Error(message), message, extra);
+						Container.agent.reportError(message, "webview", extra);
 					}
 					break;
 				}

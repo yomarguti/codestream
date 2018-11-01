@@ -88,6 +88,7 @@ import {
 	PreparePostWithCodeRequestType,
 	ReactToPostRequestType,
 	RenameStreamRequestType,
+	ReportErrorRequestType,
 	SetStreamPurposeRequestType,
 	UnarchiveStreamRequestType,
 	UpdatePreferencesRequestType,
@@ -214,6 +215,11 @@ export class CodeStreamAgentConnection implements Disposable {
 		return this.sendRequest(DocumentLatestRevisionRequestType, {
 			textDocument: { uri: uri.toString() }
 		});
+	}
+
+	@started
+	async reportError(message: string, source: "webview" | "extension", extra?: object) {
+		this.sendRequest(ReportErrorRequestType, { source, message, extra });
 	}
 
 	async login(
