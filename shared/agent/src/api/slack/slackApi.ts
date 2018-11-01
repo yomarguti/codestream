@@ -1124,7 +1124,7 @@ export class SlackApiProvider implements ApiProvider {
 			logCorrelationId ? `[${logCorrelationId}] ` : ""
 		}SlackApiProvider.processPendingStreamsQueue`;
 
-		const notifyThrottle = 2000;
+		const notifyThrottle = 4000;
 		let timeSinceLastNotification = new Date().getTime();
 		const completed: (CSChannelStream | CSDirectStream)[] = [];
 
