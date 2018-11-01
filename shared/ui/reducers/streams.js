@@ -71,6 +71,7 @@ export const getChannelStreamsForTeam = (state, teamId, userId) => {
 	return Object.values(streams).filter(
 		stream =>
 			stream.type === "channel" &&
+			!stream.deactivated &&
 			!stream.isArchived &&
 			!stream.serviceType &&
 			(stream.isTeamStream || _.contains(stream.memberIds, userId))
@@ -82,6 +83,7 @@ export const getPublicChannelStreamsForTeam = (state, teamId, userId) => {
 	return Object.values(streams).filter(
 		stream =>
 			stream.type === "channel" &&
+			!stream.deactivated &&
 			!stream.isArchived &&
 			!stream.isTeamStream &&
 			!stream.serviceType &&
@@ -141,6 +143,7 @@ export const getServiceStreamsForTeam = (state, teamId, userId, users) => {
 	const serviceStreams = Object.values(streams).filter(
 		stream =>
 			stream.type === "channel" &&
+			!stream.deactivated &&
 			!stream.isArchived &&
 			stream.serviceType &&
 			(stream.isTeamStream || _.contains(stream.memberIds, userId))
