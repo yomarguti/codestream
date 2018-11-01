@@ -4,14 +4,16 @@ export const isActiveMixin = (panel: string, componentName) => (
 	props: { activePanel: string },
 	nextProps: { activePanel: string }
 ) => {
-	const isBecomingActive = nextProps.activePanel === panel;
-	const isNoLongerActive = props.activePanel === panel && !isBecomingActive;
-	// if (!isActive) {
+	return true;
+	// const isBecomingActive = nextProps.activePanel === panel;
+	// const isNoLongerActive = props.activePanel === panel && !isBecomingActive;
+	// const shouldUpdate = isBecomingActive || isNoLongerActive;
+	// if (!shouldUpdate) {
 	// 	console.warn(`${componentName} is skipping a render`);
 	// } else {
 	// 	console.warn(`${componentName} is re-rendering`);
 	// }
-	return isBecomingActive || isNoLongerActive;
+	// return shouldUpdate;
 };
 
 export const safe = <T>(fn: () => T): T | undefined => {
