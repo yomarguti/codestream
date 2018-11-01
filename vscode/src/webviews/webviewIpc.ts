@@ -23,6 +23,7 @@ export enum WebviewIpcMessageType {
 	onLog = "codestream:log",
 	onRequest = "codestream:request",
 	onServiceRequest = "codestream:interaction:svc-request",
+	onReloadRequest = "codestream:interaction:clicked-reload-webview",
 	onViewReady = "codestream:view-ready",
 	response = "codestream:response",
 	didDisconnect = "codestream:connectivity:offline",

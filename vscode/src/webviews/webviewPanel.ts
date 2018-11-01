@@ -755,6 +755,10 @@ export class CodeStreamWebviewPanel implements Disposable {
 					}
 					break;
 				}
+				case WebviewIpcMessageType.onReloadRequest: {
+					this.reload();
+					break;
+				}
 			}
 		} catch (ex) {
 			debugger;
