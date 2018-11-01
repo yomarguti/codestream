@@ -3,7 +3,7 @@ import { debounce } from "underscore";
 import DateSeparator from "./DateSeparator";
 import Post from "./Post";
 import infiniteLoadable from "./infiniteLoadable";
-import { findLast, rAFThrottle, safe } from "../utils";
+import { findLast, isActiveMixin, rAFThrottle, safe } from "../utils";
 
 const noop = () => {};
 export default infiniteLoadable(
@@ -16,8 +16,16 @@ export default infiniteLoadable(
 		scrolledOffBottom = false;
 		state = {};
 
+		isActive = isActiveMixin(
+			"postlist",
+			`${this.constructor.name}${this.props.isThread ? "-thread" : ""}`
+		);
+
 		shouldComponentUpdate(nextProps) {
-			return nextProps.isActive;
+			const props = {
+				activePanel: this.props.isActive ? "postlist" : ""
+			};
+			return this.isActive(props, { activePanel: nextProps.isActive ? "postlist" : "" });
 		}
 
 		async componentDidMount() {
