@@ -6,6 +6,7 @@ import Stream from "../Stream";
 import Login from "../Login";
 import Signup from "../Signup";
 import CompleteSignup from "../CompleteSignup";
+import Logger from "../logger";
 
 addLocaleData(englishLocaleData);
 
@@ -44,6 +45,7 @@ export default class Container extends React.Component {
 
 	componentDidCatch(error, info) {
 		this.setState({ hasError: true });
+		Logger.error(error, info);
 	}
 
 	render() {

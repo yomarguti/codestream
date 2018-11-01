@@ -212,8 +212,6 @@ export default infiniteLoadable(
 				hasMore
 			} = this.props;
 
-			// console.debug("PostList.render", { props: this.props, state: this.state });
-
 			return (
 				<div className="postslist" ref={this.list} onScroll={this.onScroll}>
 					{hasMore || isFetchingMore ? (
