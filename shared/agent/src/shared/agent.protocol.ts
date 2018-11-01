@@ -252,3 +252,13 @@ export const DocumentLatestRevisionRequestType = new RequestType<
 	void,
 	void
 >("codeStream/textDocument/scm/revision");
+
+export interface ReportErrorRequest {
+	message: string;
+	source: "webview" | "extension";
+	extra?: object;
+}
+
+export const ReportErrorRequestType = new RequestType<ReportErrorRequest, void, void, void>(
+	"codeStream/reporting/error"
+);

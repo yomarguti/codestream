@@ -36,6 +36,7 @@
         "bash-test-unit-ci": "npm run bash-test-unit -- --reporter mocha-teamcity-reporter"
     },
     "dependencies": {
+        "@sentry/node": "4.2.3",
         "date-fns": "1.29.0",
         "diff": "3.5.0",
         "https-proxy-agent": "2.2.1",
@@ -51,6 +52,7 @@
         "write-file-atomic": "2.3.0"
     },
     "devDependencies": {
+        "@sentry/types": "4.2.3",
         "@types/chai": "4.1.6",
         "@types/diff": "3.5.1",
         "@types/mocha": "5.2.5",

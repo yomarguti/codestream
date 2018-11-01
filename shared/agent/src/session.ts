@@ -274,6 +274,11 @@ export class CodeStreamSession {
 		return this._userId!;
 	}
 
+	private _userEmail: string | undefined;
+	get userEmail() {
+		return this._userEmail!;
+	}
+
 	@memoize
 	get versionInfo(): Readonly<VersionInfo> {
 		return {
@@ -377,6 +382,7 @@ export class CodeStreamSession {
 
 			// Make sure to update this after the slack switch as the userId will change
 			this._userId = response.user.id;
+			this._userEmail = response.user.email;
 
 			setGitPath(this._options.gitPath);
 
