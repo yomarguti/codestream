@@ -6,8 +6,6 @@
 
 - Adds support for network connections via proxies
 - Adds the ability to add people to or remove people from a Slack channel via CodeStream
-- Adds the ability to set a Slack's channel's purpose via CodeStream
-- Adds the ability to archive a Slack channel via CodeStream
 - Adds the synchronization of a channel's muted status from Slack
 
 ### Changed
