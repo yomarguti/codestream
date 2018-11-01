@@ -10,7 +10,7 @@ import { FormattedMessage } from "react-intl";
 import Select from "react-select";
 import Timestamp from "./Timestamp";
 import Icon from "./Icon";
-import { isActiveMixin, toMapBy } from "../utils";
+import { isActiveMixin, toMapBy, mapFilter } from "../utils";
 
 export class SimpleCreateDMPanel extends Component {
 	constructor(props) {
@@ -95,6 +95,96 @@ export class SimpleCreateDMPanel extends Component {
 		if (this.props.directMessageStreams.length === 0) {
 			return null;
 		}
+
+		const now = new Date().getTime();
+		const futureTimestamp = 32503698000000; // Jan 1, 3000
+
+		let canUseTimestamp = true;
+		let dms = this.props.directMessageStreams.map(stream => {
+			let count = this.props.umis.unreads[stream.id] || 0;
+
+			const isMeStream = stream.id === this.props.meStreamId;
+
+			let sortName;
+			let sortPriority;
+			let sortTimestamp;
+			if (this.props.isSlackTeam) {
+				sortTimestamp = stream.mostRecentPostCreatedAt;
+				if (sortTimestamp == null) {
+					canUseTimestamp = false;
+				}
+				sortPriority = stream.priority;
+
+				if (stream.name === "slackbot") {
+					// Jan 1, 3000
+					sortTimestamp = futureTimestamp + 1;
+					sortPriority = 100;
+					sortName = ".";
+				} else if (isMeStream) {
+					sortTimestamp = futureTimestamp;
+					sortPriority = 99;
+					sortName = "..";
+				} else {
+					sortName = stream.name ? stream.name.toLowerCase() : "";
+				}
+
+				if (count) {
+					sortPriority += 1;
+					if (sortTimestamp != null) {
+						sortTimestamp = now + (now - sortTimestamp);
+					}
+				}
+			} else {
+				sortTimestamp = isMeStream
+					? futureTimestamp
+					: stream.mostRecentPostCreatedAt || stream.modifiedAt || 1;
+				sortPriority = 0;
+
+				if (isMeStream) {
+					sortName = "..";
+				} else {
+					sortName = stream.name ? stream.name.toLowerCase() : "";
+				}
+
+				if (count) {
+					if (sortTimestamp != null) {
+						sortTimestamp = now + (now - sortTimestamp);
+					}
+				}
+			}
+
+			return {
+				sortName,
+				sortPriority,
+				sortTimestamp,
+				element: (
+					<li
+						className={createClassString({
+							direct: true,
+							unread: count > 0
+						})}
+						key={stream.id}
+						id={stream.id}
+					>
+						{stream.name}
+						<Timestamp time={stream.mostRecentPostCreatedAt} />
+					</li>
+				)
+			};
+		});
+
+		// Sort the streams by our best priority guess
+		if (canUseTimestamp) {
+			dms.sort((a, b) => b.sortTimestamp - a.sortTimestamp);
+		} else {
+			dms.sort((a, b) => a.sortPriority - b.sortPriority);
+		}
+		if (this.props.isSlackTeam) {
+			// then truncate, and then sort by timestamp (if available)
+			dms = dms.slice(0, 20);
+			dms.sort((a, b) => (b.sortTimestamp || 0) - (a.sortTimestamp || 0));
+		}
+
 		return (
 			<div className="channel-list">
 				<div className="section">
@@ -102,25 +192,7 @@ export class SimpleCreateDMPanel extends Component {
 						<span style={{ float: "right" }}>Last Post</span>
 						Recent DMs
 					</div>
-					<ul onClick={this.handleClickSelectStream}>
-						{this.props.directMessageStreams.map(stream => {
-							let count = this.props.umis.unreads[stream.id] || 0;
-							// let mentions = this.props.umis.mentions[stream.id] || 0;
-							return (
-								<li
-									className={createClassString({
-										direct: true,
-										unread: count > 0
-									})}
-									key={stream.id}
-									id={stream.id}
-								>
-									{stream.name}
-									<Timestamp time={stream.mostRecentPostCreatedAt} />
-								</li>
-							);
-						})}
-					</ul>
+					<ul onClick={this.handleClickSelectStream}>{dms.map(stream => stream.element)}</ul>
 				</div>
 			</div>
 		);
@@ -195,17 +267,29 @@ const mapStateToProps = ({ context, streams, users, teams, session, umis }) => {
 		})
 		.filter(Boolean);
 
-	const dmStreams = (getDirectMessageStreamsForTeam(streams, context.currentTeamId) || []).map(
-		stream => ({
-			...stream,
-			name: getDMName(stream, toMapBy("id", teamMembers), session.userId)
-		})
+	const directMessageStreams = mapFilter(
+		getDirectMessageStreamsForTeam(streams, context.currentTeamId) || [],
+		stream => {
+			if (
+				!stream.isClosed ||
+				(stream.memberIds != null &&
+					stream.memberIds.some(id => users[id] != null && users[id].deactivated))
+			) {
+				return;
+			}
+
+			return {
+				...stream,
+				name: getDMName(stream, toMapBy("id", teamMembers), session.userId)
+			};
+		}
 	);
-	// the integer 528593114636 is simply a number far, far in the past
-	const directMessageStreams = _.sortBy(
-		dmStreams,
-		stream => stream.mostRecentPostCreatedAt || 528593114636
-	).reverse();
+
+	// // the integer 528593114636 is simply a number far, far in the past
+	// const directMessageStreams = _.sortBy(
+	// 	dmStreams,
+	// 	stream => stream.mostRecentPostCreatedAt || 528593114636
+	// ).reverse();
 
 	return {
 		umis,

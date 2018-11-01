@@ -423,7 +423,11 @@ export class SimpleStream extends Component {
 					setActivePanel={this.setActivePanel}
 					isSlackTeam={this.props.isSlackTeam}
 				/>
-				<CreateDMPanel activePanel={activePanel} setActivePanel={this.setActivePanel} />
+				<CreateDMPanel
+					activePanel={activePanel}
+					setActivePanel={this.setActivePanel}
+					isSlackTeam={this.props.isSlackTeam}
+				/>
 				<InvitePanel
 					activePanel={activePanel}
 					setActivePanel={this.setActivePanel}

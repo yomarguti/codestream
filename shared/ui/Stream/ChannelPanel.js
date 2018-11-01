@@ -201,8 +201,11 @@ export class SimpleChannelPanel extends Component {
 	};
 
 	renderDirectMessages = () => {
+		const now = new Date().getTime();
+		const futureTimestamp = 32503698000000; // Jan 1, 3000
+
 		let canUseTimestamp = true;
-		let unsortedStreams = mapFilter(this.props.directMessageStreams, stream => {
+		let dms = mapFilter(this.props.directMessageStreams, stream => {
 			let count = this.props.umis.unreads[stream.id] || 0;
 			// let mentions = this.props.umis.mentions[stream.id] || 0;
 			if (this.props.mutedStreams[stream.id]) {
@@ -240,11 +243,11 @@ export class SimpleChannelPanel extends Component {
 				sortPriority = stream.priority;
 
 				if (stream.name === "slackbot") {
-					sortTimestamp = 1539191617 * 10000;
+					sortTimestamp = futureTimestamp + 1;
 					sortPriority = 100;
 					sortName = ".";
 				} else if (isMeStream) {
-					sortTimestamp = 1539191617 * 90000;
+					sortTimestamp = futureTimestamp;
 					sortPriority = 99;
 					sortName = "..";
 				} else {
@@ -253,10 +256,13 @@ export class SimpleChannelPanel extends Component {
 
 				if (count) {
 					sortPriority += 1;
+					if (sortTimestamp != null) {
+						sortTimestamp = now + (now - sortTimestamp);
+					}
 				}
 			} else {
 				sortTimestamp = isMeStream
-					? 1539191617 * 90000
+					? futureTimestamp
 					: stream.mostRecentPostCreatedAt || stream.modifiedAt || 1;
 				sortPriority = 0;
 
@@ -264,6 +270,12 @@ export class SimpleChannelPanel extends Component {
 					sortName = "..";
 				} else {
 					sortName = stream.name ? stream.name.toLowerCase() : "";
+				}
+
+				if (count) {
+					if (sortTimestamp != null) {
+						sortTimestamp = now + (now - sortTimestamp);
+					}
 				}
 			}
 
@@ -297,16 +309,14 @@ export class SimpleChannelPanel extends Component {
 			};
 		});
 
-		// show them all for now since we don't have a way to sort reliably
-		let recentStreams;
+		// Sort the streams by our best priority guess, then truncate and sort alphabetically
 		if (canUseTimestamp) {
-			recentStreams = _.sortBy(unsortedStreams, s => -s.sortTimestamp);
+			dms.sort((a, b) => b.sortTimestamp - a.sortTimestamp);
 		} else {
-			recentStreams = _.sortBy(unsortedStreams, s => -s.sortPriority);
+			dms.sort((a, b) => a.sortPriority - b.sortPriority);
 		}
-
-		recentStreams = recentStreams.slice(0, 20);
-		recentStreams.sort((a, b) => a.sortName.localeCompare(b.sortName));
+		dms = dms.slice(0, 20);
+		dms.sort((a, b) => a.sortName.localeCompare(b.sortName));
 
 		return (
 			<div
@@ -326,7 +336,7 @@ export class SimpleChannelPanel extends Component {
 					</div>
 				</div>
 				<ul onClick={this.handleClickSelectStream}>
-					{_.sortBy(recentStreams, stream => stream.sortName).map(stream => stream.element)}
+					{dms.map(stream => stream.element)}
 					<li className="invite" onClick={() => this.props.setActivePanel("invite")}>
 						<span>
 							<Icon name="plus-small" />
