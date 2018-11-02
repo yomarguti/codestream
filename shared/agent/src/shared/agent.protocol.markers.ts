@@ -41,8 +41,21 @@ export interface MarkerWithRange extends CSMarker {
 	range: Range;
 }
 
+export enum MarkerNotLocatedReason {
+	MISSING_ORIGINAL_LOCATION,
+	MISSING_ORIGINAL_COMMIT,
+	CODEBLOCK_DELETED,
+	UNKNOWN
+}
+
+export interface MarkerNotLocated extends CSMarker {
+	notLocatedReason: MarkerNotLocatedReason;
+	notLocatedDetails?: string;
+}
+
 export interface DocumentMarkersResponse {
 	markers: MarkerWithRange[];
+	markersNotLocated: MarkerNotLocated[];
 }
 
 export const DocumentMarkersRequestType = new RequestType<

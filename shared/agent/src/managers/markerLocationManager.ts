@@ -9,6 +9,7 @@ import { Container } from "../container";
 import { GitRepository } from "../git/models/repository";
 import { Logger } from "../logger";
 import { calculateLocation, calculateLocations } from "../markerLocation/calculator";
+import { MarkerNotLocatedReason } from "../shared/agent.protocol.markers";
 import {
 	CSFileStream,
 	CSLocationArray,
@@ -18,12 +19,19 @@ import {
 } from "../shared/api.protocol";
 import { xfs } from "../xfs";
 import { ManagerBase } from "./baseManager";
+import { IndexParams, IndexType } from "./cache";
 import { getValues, KeyValue } from "./cache/baseCache";
-import { IndexParams, IndexType } from "./cache/index";
 import { Id } from "./entityManager";
 
 export interface LocationsById {
 	[id: string]: CSMarkerLocation;
+}
+
+export interface MissingLocationsById {
+	[id: string]: {
+		reason: MarkerNotLocatedReason;
+		details?: string;
+	};
 }
 
 interface ArraysById {
@@ -37,6 +45,18 @@ interface UncommittedLocation {
 
 interface UncommittedLocationsById {
 	[id: string]: UncommittedLocation;
+}
+
+interface GetLocationsResult {
+	locations: LocationsById;
+	missingLocations: MissingLocationsById;
+}
+
+function newGetLocationsResult(): GetLocationsResult {
+	return {
+		locations: {},
+		missingLocations: {}
+	};
 }
 
 export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
@@ -73,21 +93,22 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 		return [["streamId", obj.streamId], ["commitHash", obj.commitHash]];
 	}
 
-	async getCurrentLocations(documentUri: string): Promise<LocationsById> {
+	async getCurrentLocations(documentUri: string): Promise<GetLocationsResult> {
 		const { documents, git } = Container.instance();
+		const result = newGetLocationsResult();
 
-		const currentLocations: LocationsById = {};
 		const filePath = URI.parse(documentUri).fsPath;
 		const repoRoot = await git.getRepoRoot(filePath);
-		const currentCommitHash = await git.getFileCurrentRevision(filePath);
 		if (!repoRoot) {
 			Logger.log(`MARKERS: no repo root for ${filePath}`);
-			return currentLocations;
+			return result;
 		}
 
+		const currentCommitHash = await git.getFileCurrentRevision(filePath);
 		const currentCommitLocations = currentCommitHash
 			? await this.getCommitLocations(filePath, currentCommitHash)
-			: {};
+			: newGetLocationsResult();
+		Object.assign(result.missingLocations, currentCommitLocations.missingLocations);
 
 		Logger.log(`MARKERS: classifying locations`);
 		const stream = await Container.instance().files.getByPath(filePath);
@@ -96,7 +117,11 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 		const {
 			committedLocations,
 			uncommittedLocations
-		} = await MarkerLocationManager.classifyLocations(repoRoot, markers, currentCommitLocations);
+		} = await MarkerLocationManager.classifyLocations(
+			repoRoot,
+			markers,
+			currentCommitLocations.locations
+		);
 		const doc = documents.get(documentUri);
 		Logger.log(`MARKERS: retrieving current text from document manager`);
 		let currentBufferText = doc && doc.getText();
@@ -107,8 +132,6 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 		if (!currentBufferText) {
 			throw new Error(`Could not retrieve contents for ${filePath}`);
 		}
-
-		const result: LocationsById = {};
 
 		if (Object.keys(committedLocations).length) {
 			Logger.log(`MARKERS: calculating current location for committed locations`);
@@ -134,7 +157,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 					}] => [${currLoc.lineStart}, ${currLoc.colStart}, ${currLoc.lineEnd}, ${currLoc.colEnd}]`
 				);
 			}
-			Object.assign(result, calculatedLocations);
+			Object.assign(result.locations, calculatedLocations);
 		}
 
 		if (Object.keys(uncommittedLocations).length) {
@@ -151,7 +174,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 					""
 				);
 				const currLoc = (await calculateLocation(uncommittedLocation.location, diff)) || {};
-				result[id] = currLoc;
+				result.locations[id] = currLoc;
 
 				const uncommLoc = uncommittedLocation.location || {};
 
@@ -227,18 +250,19 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 		return calculateLocation(location, diff);
 	}
 
-	async getCommitLocations(filePath: string, commitHash: string): Promise<LocationsById> {
+	async getCommitLocations(filePath: string, commitHash: string): Promise<GetLocationsResult> {
 		Logger.log(`MARKERS: getting locations for ${filePath}@${commitHash}`);
 		const stream = await Container.instance().files.getByPath(filePath);
 		if (!stream) {
 			Logger.log(`MARKERS: cannot find streamId for ${filePath}`);
-			return {};
+			return newGetLocationsResult();
 		}
 
 		const markers = await Container.instance().markers.getByStreamId(stream.id);
 		Logger.log(`MARKERS: found ${markers.length} markers for stream ${stream.id}`);
 
 		const currentCommitLocations = await this.getLocationsById(stream.id, commitHash);
+		const missingLocations: MissingLocationsById = {};
 		const missingMarkersByCommit = this.getMissingMarkersByCommit(markers, currentCommitLocations);
 
 		if (missingMarkersByCommit.size === 0) {
@@ -265,16 +289,26 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 				if (originalLocation) {
 					locationsToCalculate[marker.id] = originalLocation;
 				} else {
-					Logger.warn(`Could not find original location for marker ${marker.id}`);
+					const details = `Could not find original location for marker ${marker.id}`;
+					missingLocations[marker.id] = {
+						reason: MarkerNotLocatedReason.MISSING_ORIGINAL_LOCATION,
+						details
+					};
+					Logger.warn(details);
 				}
 			}
 
 			Logger.log(`MARKERS: diffing ${filePath} from ${commitHashWhenCreated} to ${commitHash}`);
 			const diff = await git.getDiffBetweenCommits(commitHashWhenCreated, commitHash, filePath);
 			if (!diff) {
-				Logger.log(
-					`MARKERS: cannot obtain diff - skipping calculation from ${commitHashWhenCreated} to ${commitHash}`
-				);
+				const details = `cannot obtain diff - skipping calculation from ${commitHashWhenCreated} to ${commitHash}`;
+				for (const marker of missingMarkers) {
+					missingLocations[marker.id] = {
+						reason: MarkerNotLocatedReason.MISSING_ORIGINAL_COMMIT,
+						details
+					};
+				}
+				Logger.log(`MARKERS: ${details}`);
 				continue;
 			}
 			Logger.log(`MARKERS: calculating locations`);
@@ -302,7 +336,10 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 			});
 		}
 
-		return currentCommitLocations;
+		return {
+			locations: currentCommitLocations,
+			missingLocations
+		};
 	}
 
 	arraysById(locations: LocationsById): ArraysById {
