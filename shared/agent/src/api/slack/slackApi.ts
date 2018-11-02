@@ -1858,7 +1858,7 @@ export class SlackApiProvider implements ApiProvider {
 }
 
 function slackTimeout<T>(promise: Promise<T>, message: string): Promise<T> {
-	const timeoutMs = 10000;
+	const timeoutMs = 30000;
 	return Functions.timeout(promise, timeoutMs, {
 		message: message,
 		onTimeout: (resolve, reject, message) => {
