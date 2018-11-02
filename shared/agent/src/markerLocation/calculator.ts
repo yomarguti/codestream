@@ -286,16 +286,23 @@ class Calculation {
 
 	private calculateColumns() {
 		for (const location of this._calculatedLocations.values()) {
-			const colStartNew = calculateColumn(
-				location.colStartOld,
-				location.lineStartOldContent,
-				location.lineStartNewContent
-			);
-			const colEndNew = calculateColumn(
-				location.colEndOld,
-				location.lineEndOldContent,
-				location.lineEndNewContent
-			);
+			// when locations are trimmed, colStartNew and/or colEndNew will be already set
+			const colStartNew =
+				location.colStartNew > 0
+					? location.colStartNew
+					: calculateColumn(
+							location.colStartOld,
+							location.lineStartOldContent,
+							location.lineStartNewContent
+					  );
+			const colEndNew =
+				location.colEndNew > 0
+					? location.colEndNew
+					: calculateColumn(
+							location.colEndOld,
+							location.lineEndOldContent,
+							location.lineEndNewContent
+					  );
 
 			if (location.lineStartNew === location.lineEndNew && colStartNew > colEndNew) {
 				location.colStartNew = 1;
