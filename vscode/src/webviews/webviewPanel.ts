@@ -45,6 +45,7 @@ import { configuration } from "../configuration";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { ApiCapabilities, TraceLevel } from "../shared/agent.protocol";
+import { log } from "../system";
 import {
 	toLoggableIpcMessage,
 	WebviewIpc,
@@ -833,6 +834,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 		return this._panel === undefined ? false : this._panel.visible;
 	}
 
+	@log()
 	hide() {
 		if (this._panel === undefined) return;
 
@@ -876,6 +878,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 		return this._streamThread;
 	}
 
+	@log()
 	async reload() {
 		if (this._panel === undefined) return this.createWebview(this._streamThread);
 
@@ -890,6 +893,9 @@ export class CodeStreamWebviewPanel implements Disposable {
 		return this._streamThread;
 	}
 
+	@log({
+		args: false
+	})
 	async show(streamThread?: StreamThread) {
 		if (streamThread && streamThread.id) {
 			const { post } = await Container.agent.posts.get(streamThread.stream.id, streamThread.id);
@@ -917,6 +923,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 		return this._streamThread;
 	}
 
+	@log()
 	signedOut() {
 		if (this._panel !== undefined) {
 			this._streamThread = undefined;

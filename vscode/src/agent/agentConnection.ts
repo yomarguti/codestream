@@ -50,8 +50,12 @@ import {
 	DidChangeDataNotificationType,
 	DidChangeDocumentMarkersNotification,
 	DidChangeDocumentMarkersNotificationType,
-	DidChangeVersionCompatibilityNotificationResponse,
+	DidChangeVersionCompatibilityNotification,
 	DidChangeVersionCompatibilityNotificationType,
+	DidLogoutNotification,
+	DidLogoutNotificationType,
+	DidResetNotification,
+	DidResetNotificationType,
 	DocumentFromCodeBlockRequestType,
 	DocumentFromCodeBlockResponse,
 	DocumentLatestRevisionRequestType,
@@ -79,8 +83,6 @@ import {
 	InviteUserRequestType,
 	JoinStreamRequestType,
 	LeaveStreamRequestType,
-	LogoutRequest,
-	LogoutRequestType,
 	MarkPostUnreadRequestType,
 	MarkStreamReadRequestType,
 	MuteStreamRequestType,
@@ -105,6 +107,7 @@ import {
 	CSPresenceStatus,
 	StreamType
 } from "../shared/api.protocol";
+import { log } from "../system";
 
 export * from "../shared/agent.protocol";
 export * from "../shared/api.protocol";
@@ -692,15 +695,18 @@ export class CodeStreamAgentConnection implements Disposable {
 		}
 	}
 
-	private onLogout(e: LogoutRequest) {
-		Logger.log("AgentConnection.onLogout", `reason=${e.reason}`);
-
+	@log()
+	private onLogout(e: DidLogoutNotification) {
 		void Container.session.goOffline();
 	}
 
-	private async onVersionCompatibilityChanged(
-		e: DidChangeVersionCompatibilityNotificationResponse
-	) {
+	@log()
+	private onReset(e: DidResetNotification) {
+		void Container.webview.reload();
+	}
+
+	@log()
+	private async onVersionCompatibilityChanged(e: DidChangeVersionCompatibilityNotification) {
 		switch (e.compatibility) {
 			case VersionCompatibility.CompatibleUpgradeAvailable: {
 				if (Container.session.environment === CodeStreamEnvironment.Production) return;
@@ -810,19 +816,17 @@ export class CodeStreamAgentConnection implements Disposable {
 		this._disposable = this._client.start();
 		void (await this._client.onReady());
 
-		this._client.onRequest(LogoutRequestType, this.onLogout.bind(this));
-
 		this._client.onNotification(DidChangeDataNotificationType, this.onDataChanged.bind(this));
-
 		this._client.onNotification(
 			DidChangeDocumentMarkersNotificationType,
 			this.onDocumentMarkersChanged.bind(this)
 		);
-
 		this._client.onNotification(
 			DidChangeVersionCompatibilityNotificationType,
 			this.onVersionCompatibilityChanged.bind(this)
 		);
+		this._client.onNotification(DidLogoutNotificationType, this.onLogout.bind(this));
+		this._client.onNotification(DidResetNotificationType, this.onReset.bind(this));
 
 		return this._client.initializeResult! as AgentInitializeResult;
 	}

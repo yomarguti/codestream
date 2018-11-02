@@ -9,6 +9,7 @@ import {
 } from "../api/session";
 import { WorkspaceState } from "../common";
 import { Container } from "../container";
+import { log } from "../system";
 import { CodeStreamWebviewPanel } from "../webviews/webviewPanel";
 
 export interface StreamThreadId {
@@ -98,6 +99,7 @@ export class WebviewController implements Disposable {
 		return this._panel === undefined ? false : this._panel.visible;
 	}
 
+	@log()
 	hide() {
 		if (this._panel === undefined) return;
 
@@ -121,6 +123,16 @@ export class WebviewController implements Disposable {
 		return this._panel!.postCode(code, uri, range, source, gitError);
 	}
 
+	@log()
+	reload() {
+		if (this._panel === undefined || !this.visible) return;
+
+		return this._panel.reload();
+	}
+
+	@log({
+		args: false
+	})
 	async show(streamThread?: StreamThread) {
 		if (this._panel === undefined) {
 			if (streamThread === undefined) {
@@ -144,6 +156,7 @@ export class WebviewController implements Disposable {
 		return this._panel.show(streamThread);
 	}
 
+	@log()
 	toggle() {
 		return this.visible ? this.hide() : this.show();
 	}
