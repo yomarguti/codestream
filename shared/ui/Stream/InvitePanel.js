@@ -240,8 +240,10 @@ export class InvitePage extends Component {
 						<ul>
 							{this.props.members.map(user => (
 								<li key={user.email}>
-									<div className="committer-name">{user.fullName}</div>
-									<div className="committer-email">{user.email}</div>
+									<div className="committer-name">
+										{user.fullName} (@
+										{user.username})<span className="committer-email"> {user.email}</span>
+									</div>
 								</li>
 							))}
 						</ul>
