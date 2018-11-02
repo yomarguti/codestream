@@ -5,7 +5,10 @@ import {
 	AgentResult,
 	ApiCapabilities,
 	ChangeDataType,
+	ChannelServiceType,
 	CodeStreamEnvironment,
+	CSChannelStream,
+	CSDirectStream,
 	CSUnreads,
 	DidChangeDataNotification,
 	DocumentMarkersChangedEvent,
@@ -16,20 +19,20 @@ import { configuration } from "../configuration";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { Functions, Strings } from "../system";
-import { Marker } from "./models/markers";
-import { Post } from "./models/posts";
-import { Repository } from "./models/repositories";
+import { Marker } from "./models/marker";
+import { Post } from "./models/post";
+import { Repository } from "./models/repository";
 import {
 	ChannelStream,
 	ChannelStreamCreationOptions,
 	DirectStream,
-	FileStream,
+	ServiceChannelStreamCreationOptions,
 	Stream,
 	StreamThread,
 	StreamType
-} from "./models/streams";
-import { Team } from "./models/teams";
-import { User } from "./models/users";
+} from "./models/stream";
+import { Team } from "./models/team";
+import { User } from "./models/user";
 import {
 	MergeableEvent,
 	PostsChangedEvent,
@@ -52,7 +55,6 @@ export {
 	ChannelStreamCreationOptions,
 	CodeStreamEnvironment,
 	DirectStream,
-	FileStream,
 	Marker,
 	DocumentMarkersChangedEvent,
 	Post,
@@ -209,21 +211,6 @@ export class CodeStreamSession implements Disposable {
 		return this._id;
 	}
 
-	@signedIn
-	get channels() {
-		return this._state!.channels;
-	}
-
-	@signedIn
-	get channelsAndDMs() {
-		return this._state!.channelsAndDMs;
-	}
-
-	@signedIn
-	get directMessages() {
-		return this._state!.directMessages;
-	}
-
 	get environment(): CodeStreamEnvironment {
 		return this._environment;
 	}
@@ -290,15 +277,133 @@ export class CodeStreamSession implements Disposable {
 		return this._state!.userId;
 	}
 
-	@signedIn
-	get users() {
-		return this._state!.users;
-	}
-
 	getSignupToken() {
 		if (!this._signupToken) this._signupToken = Functions.uuid();
 
 		return this._signupToken;
+	}
+
+	@signedIn
+	async getChannelByName(name: string): Promise<ChannelStream | undefined> {
+		const response = await Container.agent.streams.fetch([StreamType.Channel]);
+		const stream = (response.streams as CSChannelStream[]).find(s => s.name === name);
+		if (stream === undefined) return stream;
+
+		return new ChannelStream(this, stream);
+	}
+
+	@signedIn
+	async getChannelByService(
+		type: ChannelServiceType,
+		key: string
+	): Promise<ChannelStream | undefined> {
+		const response = await Container.agent.streams.fetch([StreamType.Channel]);
+		const stream = (response.streams as CSChannelStream[]).find(
+			s => s.serviceType === type && s.serviceKey === key
+		);
+		if (stream === undefined) return stream;
+
+		return new ChannelStream(this, stream);
+	}
+
+	@signedIn
+	async getOrCreateChannelByService(
+		type: ChannelServiceType,
+		key: string,
+		creationOptions: ServiceChannelStreamCreationOptions = {}
+	) {
+		const stream = await this.getChannelByService(type, key);
+		if (stream !== undefined) {
+			if (
+				stream.memberIds != null &&
+				creationOptions.membership != null &&
+				typeof creationOptions.membership !== "string"
+			) {
+				// Ensure correct membership
+				const missingIds = creationOptions.membership.filter(id => !stream.memberIds!.includes(id));
+
+				const entity = (await Container.agent.streams.invite(stream.id, missingIds))
+					.stream as CSChannelStream;
+
+				return new ChannelStream(this, entity);
+			}
+
+			return stream;
+		}
+
+		const s = (await Container.agent.streams.createChannel(
+			creationOptions.name!,
+			creationOptions.membership,
+			creationOptions.privacy,
+			creationOptions.purpose,
+			{
+				serviceType: type,
+				serviceKey: key,
+				serviceInfo: creationOptions.serviceInfo
+			}
+		)).stream;
+		if (s === undefined) throw new Error(`Unable to create stream`);
+
+		return new ChannelStream(this, s);
+	}
+
+	@signedIn
+	async getOrCreateChannelByName(
+		name: string,
+		creationOptions: ChannelStreamCreationOptions = {}
+	): Promise<ChannelStream> {
+		const stream = await this.getChannelByName(name);
+		if (stream !== undefined) {
+			if (
+				stream.memberIds != null &&
+				creationOptions.membership != null &&
+				typeof creationOptions.membership !== "string"
+			) {
+				// Ensure correct membership
+				const missingIds = creationOptions.membership.filter(id => !stream.memberIds!.includes(id));
+
+				const entity = (await Container.agent.streams.invite(stream.id, missingIds))
+					.stream as CSChannelStream;
+
+				return new ChannelStream(this, entity);
+			}
+
+			return stream;
+		}
+
+		const s = (await Container.agent.streams.createChannel(
+			name,
+			creationOptions.membership,
+			creationOptions.privacy,
+			creationOptions.purpose
+		)).stream;
+		if (s === undefined) throw new Error(`Unable to create stream`);
+
+		return new ChannelStream(this, s);
+	}
+
+	@signedIn
+	async getDMByMembers(memberIds: string[]): Promise<DirectStream | undefined> {
+		const sortedMembers = memberIds.sort();
+
+		const response = await Container.agent.streams.fetch([StreamType.Direct]);
+		const stream = (response.streams as CSDirectStream[]).find(s =>
+			s.memberIds.sort().every((value, index) => value === sortedMembers[index])
+		);
+		if (stream === undefined) return stream;
+
+		return new DirectStream(this, stream);
+	}
+
+	@signedIn
+	async getOrCreateDMByMembers(memberIds: string[]): Promise<DirectStream> {
+		const stream = await this.getDMByMembers(memberIds);
+		if (stream !== undefined) return stream;
+
+		const s = (await Container.agent.streams.createDirect(memberIds)).stream;
+		if (s === undefined) throw new Error(`Unable to create stream`);
+
+		return new DirectStream(this, s);
 	}
 
 	@signedIn
@@ -316,9 +421,15 @@ export class CodeStreamSession implements Disposable {
 		}
 	}
 
-	async goOffline() {
+	goOffline() {
 		Container.webview.hide();
 		return Container.session.logout(SessionSignedOutReason.UserWentOffline);
+	}
+
+	async reconnect() {
+		Container.webview.hide();
+		await Container.session.logout(SessionSignedOutReason.UserWentOffline);
+		return Container.commands.signIn();
 	}
 
 	@signedIn

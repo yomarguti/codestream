@@ -1011,7 +1011,6 @@ export class CodeStreamWebviewPanel implements Disposable {
 		};
 		state.version = Container.versionFormatted;
 
-		const currentUser = this.session.user.entity;
 		const [
 			reposResponse,
 			streamsResponse,
@@ -1025,9 +1024,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 		state.streams = streamsResponse.streams;
 		state.teams = teamsResponse.teams;
 		state.unreads = unreadsResponse.unreads;
-		state.users = usersResponse.users.map(
-			user => (user.id === currentUser.id ? currentUser : user)
-		);
+		state.users = usersResponse.users;
 		state.preferences = preferencesResponse.preferences;
 
 		if (this._streamThread !== undefined) {

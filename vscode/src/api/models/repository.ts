@@ -1,8 +1,7 @@
 "use strict";
 import { CSRepository } from "../../agent/agentConnection";
 import { CodeStreamSession } from "../session";
-import { CodeStreamItem } from "./collection";
-import { FileStreamCollection } from "./streams";
+import { CodeStreamItem } from "./item";
 
 export class Repository extends CodeStreamItem<CSRepository> {
 	constructor(session: CodeStreamSession, repo: CSRepository) {
@@ -15,14 +14,6 @@ export class Repository extends CodeStreamItem<CSRepository> {
 
 	get normalizedUrl() {
 		return this.entity.remotes[0].normalizedUrl;
-	}
-
-	private _streams: FileStreamCollection | undefined;
-	get streams() {
-		if (this._streams === undefined) {
-			this._streams = new FileStreamCollection(this.session, this.entity.teamId, this);
-		}
-		return this._streams;
 	}
 
 	get url() {

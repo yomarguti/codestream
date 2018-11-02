@@ -2,8 +2,14 @@
 import { Disposable, Extension, extensions, Uri } from "vscode";
 import * as vslsApi from "vsls/vscode";
 import { ChannelServiceType } from "../agent/agentConnection";
-import { ServiceChannelStreamCreationOptions } from "../api/models/streams";
-import { SessionStatus, SessionStatusChangedEvent, StreamThread, StreamType } from "../api/session";
+import { ServiceChannelStreamCreationOptions } from "../api/models/stream";
+import {
+	SessionStatus,
+	SessionStatusChangedEvent,
+	StreamThread,
+	StreamType,
+	User
+} from "../api/session";
 import { ContextKeys, setContext } from "../common";
 import { Container } from "../container";
 import { Logger } from "../logger";
@@ -125,15 +131,15 @@ export class LiveShareController implements Disposable {
 
 		const users = [];
 		if (typeof args.userIds === "string") {
-			const user = await Container.session.users.get(args.userIds);
+			const user = (await Container.agent.users.get(args.userIds)).user;
 			if (user !== undefined) {
-				users.push(user);
+				users.push(new User(Container.session, user));
 			}
 		} else {
 			for (const id of args.userIds) {
-				const user = await Container.session.users.get(id);
+				const user = (await Container.agent.users.get(id)).user;
 				if (user !== undefined) {
-					users.push(user);
+					users.push(new User(Container.session, user));
 				}
 			}
 		}
@@ -141,7 +147,7 @@ export class LiveShareController implements Disposable {
 		const currentUserId = Container.session.userId;
 		const memberIds = [currentUserId, ...users.map(u => u.id)];
 
-		const direct = await Container.session.directMessages.getOrCreateByMembers(memberIds);
+		const direct = await Container.session.getOrCreateDMByMembers(memberIds);
 
 		Logger.log(
 			"LiveShareController.invite:",
@@ -164,7 +170,7 @@ export class LiveShareController implements Disposable {
 		if (args.createNewStream) {
 			// Create a new channel specifically for this live share session
 			const name = this.getVslsChannelName();
-			vslsChannel = await Container.session.channels.getOrCreateByService(
+			vslsChannel = await Container.session.getOrCreateChannelByService(
 				ChannelServiceType.Vsls,
 				vsls.session.id!,
 				{
@@ -248,7 +254,7 @@ export class LiveShareController implements Disposable {
 			case StreamType.Direct:
 				createOptions = {
 					name: name,
-					membership: currentChannel.entity.memberIds,
+					membership: currentChannel.memberIds,
 					privacy: "private"
 				};
 				break;
@@ -260,7 +266,7 @@ export class LiveShareController implements Disposable {
 				break;
 		}
 
-		const vslsChannel = await Container.session.channels.getOrCreateByService(
+		const vslsChannel = await Container.session.getOrCreateChannelByService(
 			ChannelServiceType.Vsls,
 			vsls.session.id!,
 			createOptions
@@ -272,7 +278,7 @@ export class LiveShareController implements Disposable {
 	}
 
 	private async getVslsChannel(vslsId: string) {
-		const vslsChannel = await Container.session.channels.getByService(
+		const vslsChannel = await Container.session.getChannelByService(
 			ChannelServiceType.Vsls,
 			vslsId
 		);

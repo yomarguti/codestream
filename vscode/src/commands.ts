@@ -1,6 +1,5 @@
 import { commands, Disposable, Range, TextDocument, Uri, ViewColumn, window } from "vscode";
 import {
-	ChannelStreamCreationOptions,
 	CodeStreamSession,
 	Post,
 	Stream,
@@ -36,9 +35,9 @@ export enum BuiltInCommands {
 }
 
 type StreamLocator =
-	| { type: StreamType.Channel; name: string; create?: ChannelStreamCreationOptions }
-	| { type: StreamType.Direct; members: string[]; create?: boolean }
-	| { type: StreamType.File; uri: Uri; create?: boolean };
+	| { type: StreamType.Channel; name: string }
+	| { type: StreamType.Direct; members: string[] }
+	| { type: StreamType.File; uri: Uri };
 
 interface IRequiresStream {
 	streamThread: StreamThread | StreamThreadId | StreamLocator | undefined;
@@ -256,25 +255,11 @@ export class Commands implements Disposable {
 			let stream;
 			switch (locator.type) {
 				case StreamType.Channel:
-					if (locator.create) {
-						return {
-							id: undefined,
-							stream: await session.channels.getOrCreateByName(locator.name, locator.create)
-						};
-					}
-
-					stream = await session.channels.getByName(locator.name);
+					stream = await session.getChannelByName(locator.name);
 					break;
 
 				case StreamType.Direct:
-					if (locator.create) {
-						return {
-							id: undefined,
-							stream: await session.directMessages.getOrCreateByMembers(locator.members)
-						};
-					}
-
-					stream = await session.directMessages.getByMembers(locator.members);
+					stream = await session.getDMByMembers(locator.members);
 					break;
 
 				// case StreamType.File:
@@ -297,9 +282,9 @@ export class Commands implements Disposable {
 			streamThread = Container.webview.activeStreamThread;
 		}
 
-		if (streamThread === undefined && options.includeDefault) {
-			streamThread = { id: undefined, stream: await session.channels.getDefaultTeamChannel() };
-		}
+		// if (streamThread === undefined && options.includeDefault) {
+		// 	streamThread = { id: undefined, stream: await session.getDefaultTeamChannel() };
+		// }
 
 		return streamThread;
 	}

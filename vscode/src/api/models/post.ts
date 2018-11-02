@@ -3,10 +3,10 @@ import { Range, Uri } from "vscode";
 import { CSPost } from "../../agent/agentConnection";
 import { Container } from "../../container";
 import { Dates, memoize } from "../../system";
-import { CodeStreamSession, PostsChangedEvent } from "../session";
-import { CodeStreamCollection, CodeStreamItem } from "./collection";
-import { Stream } from "./streams";
-import { User } from "./users";
+import { CodeStreamSession } from "../session";
+import { CodeStreamItem } from "./item";
+import { Stream } from "./stream";
+import { User } from "./user";
 
 interface CodeBlock {
 	readonly code: string;
@@ -115,8 +115,12 @@ export class Post extends CodeStreamItem<CSPost> {
 	}
 
 	@memoize
-	sender(): Promise<User | undefined> {
-		return this.session.users.get(this.entity.creatorId);
+	async sender(): Promise<User | undefined> {
+		// TODO: Bake this into the post model to avoid this lookup??
+		const response = await Container.agent.users.get(this.entity.creatorId);
+		if (response.user === undefined) return undefined;
+
+		return new User(this.session, response.user);
 	}
 
 	@memoize
@@ -130,46 +134,5 @@ export class Post extends CodeStreamItem<CSPost> {
 			if (this._stream === undefined) throw new Error(`Stream(${streamId}) could not be found`);
 		}
 		return this._stream;
-	}
-}
-
-export class PostCollection extends CodeStreamCollection<Post, CSPost> {
-	constructor(
-		session: CodeStreamSession,
-		public readonly teamId: string,
-		public readonly stream: Stream
-	) {
-		super(session);
-
-		this.disposables.push(session.onDidChangePosts(this.onPostsChanged, this));
-	}
-
-	private onPostsChanged(e: PostsChangedEvent) {
-		if (e.affects(this.stream.id, "stream")) {
-			this.invalidate();
-		}
-	}
-
-	async mostRecent() {
-		const collection = await this.ensureLoaded();
-		if (collection.size === 0) return undefined;
-
-		const posts = [...collection.values()];
-		posts.sort(
-			(a, b) =>
-				(this.isItem(a) ? a.date.getTime() : a.createdAt) -
-				(this.isItem(b) ? b.date.getTime() : b.createdAt)
-		);
-
-		const post = posts[posts.length - 1];
-		return this.ensureItem(collection, post.id, post);
-	}
-
-	protected entityMapper(e: CSPost) {
-		return new Post(this.session, e, this.stream);
-	}
-
-	protected async fetch() {
-		return (await Container.agent.posts.fetch(this.stream.id)).posts;
 	}
 }
