@@ -1,6 +1,7 @@
 "use strict";
 import { CodeStreamSession } from "../session";
 import { CSEntity } from "../shared/api.protocol";
+import { log } from "../system";
 import { ManagerBase } from "./baseManager";
 import { KeyValue } from "./cache/baseCache";
 import { EntityCache } from "./cache/entityCache";
@@ -54,6 +55,12 @@ export abstract class CachedEntityManagerBase<T extends CSEntity> extends Entity
 		}
 
 		return this.cache.getAll();
+	}
+
+	@log()
+	protected invalidateCache() {
+		this._cached = false;
+		return super.invalidateCache();
 	}
 
 	protected abstract async loadCache(): Promise<void>;
