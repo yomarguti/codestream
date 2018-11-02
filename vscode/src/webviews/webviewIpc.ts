@@ -123,6 +123,7 @@ export class WebviewIpc {
 		if (this._queue.length > WebviewIpc.QueueThreshold) {
 			Logger.log("WebviewPanel: Too out of date; reloading...");
 
+			this._queue.length = 0;
 			await this._webview.reload();
 
 			return false;
