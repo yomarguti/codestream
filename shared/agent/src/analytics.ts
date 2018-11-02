@@ -39,7 +39,7 @@ export class AnalyticsService {
 			Logger.error(ex);
 		}
 
-		const props = { ...opts, Endpoint: "agent" };
+		const props = { ...opts, Endpoint: "VS Code" };
 
 		this._superProps = props;
 		this._hasOptedOut = hasOptedOut;
