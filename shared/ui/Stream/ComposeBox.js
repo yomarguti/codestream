@@ -952,9 +952,7 @@ class ComposeBox extends React.Component {
 							>
 								Cancel
 							</Button>
-							{commentType !== "bookmark" && (
-								<span className="hint">Styling with Markdown is supported</span>
-							)}
+							<span className="hint">Styling with Markdown is supported</span>
 						</div>
 						<div style={{ clear: "both" }} />
 					</fieldset>

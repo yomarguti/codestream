@@ -39,7 +39,7 @@ export class SimpleKnowledgePanel extends Component {
 			bookmark: "Bookmarks"
 		};
 		this.typeLabelsLower = {
-			all: "all markers",
+			all: "all codemarks",
 			comment: "code comments",
 			question: "questions & answers",
 			issue: "issues",
@@ -228,7 +228,7 @@ export class SimpleKnowledgePanel extends Component {
 		});
 
 		let typeMenuItems = [
-			{ label: "All Markers", action: "all" },
+			{ label: "All Codemarks", action: "all" },
 			{ label: "-" },
 			{ label: "Code Comments", action: "comment" },
 			{ label: "Questions & Answers", action: "question" },
@@ -247,7 +247,7 @@ export class SimpleKnowledgePanel extends Component {
 		return (
 			<div className="panel knowledge-panel">
 				<div className="filters">
-					<Tooltip title="Show markers in editor gutter" placement="left">
+					<Tooltip title="Show codemarks in editor gutter" placement="left">
 						<label
 							htmlFor="toggle"
 							className={createClassString("switch", {
@@ -276,7 +276,7 @@ export class SimpleKnowledgePanel extends Component {
 							sections.map(section => {
 								return this.renderSection(section, displayPosts[section] || []);
 							})}
-						{!totalPosts && <div className="no-matches">No markers match this type.</div>}
+						{!totalPosts && <div className="no-matches">No codemarks match this type.</div>}
 					</div>
 				</ScrollBox>
 			</div>

@@ -409,7 +409,7 @@ export class SimpleStream extends Component {
 									type="text"
 									ref={ref => (this._searchInput = ref)}
 									onChange={e => this.setState({ q: e.target.value })}
-									placeholder="Search Markers"
+									placeholder="Search Codemarks"
 								/>
 								<span className="align-right-button" onClick={this.handleClickSearch}>
 									<Tooltip title={tooltip} placement="bottomRight">
@@ -431,7 +431,7 @@ export class SimpleStream extends Component {
 								>
 									<span>
 										{!this.props.configs.showMarkers && <Icon name="mute" className="mute" />}
-										Markers
+										Codemarks
 									</span>
 								</label>
 								<label
@@ -460,7 +460,7 @@ export class SimpleStream extends Component {
 								</label>
 								<div className="fill-tab">
 									<span className="align-right-button" onClick={this.handleClickSearch}>
-										<Tooltip title="Search Markers" placement="bottomRight">
+										<Tooltip title="Search Codemarks" placement="bottomRight">
 											<span>
 												<Icon name="search" className="search-icon button" />
 											</span>

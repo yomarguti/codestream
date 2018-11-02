@@ -214,6 +214,8 @@ export class SimpleChannelPanel extends Component {
 	};
 
 	renderStarredChannels = () => {
+		const { starredStreams } = this.props;
+		if (starredStreams.length === 0) return null;
 		return (
 			<div
 				className={createClassString("section", "has-children", {
@@ -230,8 +232,7 @@ export class SimpleChannelPanel extends Component {
 					</div>
 				</div>
 				<ul onClick={this.handleClickSelectStream}>
-					{this.renderStreams(this.props.channelStreams, { starredOnly: true })}
-					{this.renderStreams(this.props.directMessageStreams, { starredOnly: true })}
+					{this.renderStreams(this.props.starredStreams)}
 				</ul>
 			</div>
 		);
@@ -426,7 +427,7 @@ export class SimpleChannelPanel extends Component {
 	};
 
 	renderStreams = (streams, { unreadsOnly, starredOnly, selectedOnly } = {}) => {
-		const { starredStreams, selectedStreams } = this.props;
+		const { selectedStreams } = this.props;
 
 		return streams.map(stream => {
 			if (stream.isArchived) return null;
@@ -440,7 +441,6 @@ export class SimpleChannelPanel extends Component {
 			let mentions = this.props.umis.mentions[stream.id] || 0;
 			let menuActive = this.state.openMenu === stream.id;
 			if (unreadsOnly && count == 0 && mentions == 0) return;
-			if (starredOnly && !starredStreams[stream.id]) return;
 			if (selectedOnly && !selectedStreams[stream.id]) return;
 			return (
 				<li
@@ -760,6 +760,11 @@ const mapStateToProps = ({
 		stream => -stream.createdAt
 	);
 
+	const starredStreamIds = preferences.starredStreams || {};
+	const starredStreams = [...channelStreams, ...directMessageStreams].filter(stream => {
+		return starredStreamIds[stream.id];
+	});
+
 	return {
 		umis,
 		users,
@@ -768,7 +773,7 @@ const mapStateToProps = ({
 		serviceStreams,
 		muteAll: configs.muteAll,
 		mutedStreams: preferences.mutedStreams || {},
-		starredStreams: preferences.starredStreams || {},
+		starredStreams: starredStreams,
 		selectedStreams: preferences.selectedStreams || {},
 		meStreamId,
 		streamPresence,
