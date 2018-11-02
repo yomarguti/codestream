@@ -112,12 +112,20 @@ export enum LogoutReason {
 	Unknown = "unknown"
 }
 
-export interface LogoutRequest {
-	reason?: LogoutReason;
+export interface DidLogoutNotification {
+	reason: LogoutReason;
 }
 
-export const LogoutRequestType = new RequestType<LogoutRequest, undefined, void, void>(
-	"codeStream/logout"
+export const DidLogoutNotificationType = new NotificationType<DidLogoutNotification, void>(
+	"codeStream/didLogout"
+);
+
+export interface DidResetNotification {
+	reason: ResetReason;
+}
+
+export const DidResetNotificationType = new NotificationType<DidResetNotification, void>(
+	"codeStream/didReset"
 );
 
 export enum ChangeDataType {
@@ -208,16 +216,21 @@ export enum VersionCompatibility {
 	Unknown = "unknownVersion"
 }
 
-export interface DidChangeVersionCompatibilityNotificationResponse {
+export interface DidChangeVersionCompatibilityNotification {
 	compatibility: VersionCompatibility;
 	downloadUrl: string;
 	version: string | undefined;
 }
 
 export const DidChangeVersionCompatibilityNotificationType = new NotificationType<
-	DidChangeVersionCompatibilityNotificationResponse,
+	DidChangeVersionCompatibilityNotification,
 	void
 >("codeStream/didChangeVersionCompatibility");
+
+export enum ResetReason {
+	Reconnected = "reconnected",
+	Unknown = "unknown"
+}
 
 export interface DocumentFromCodeBlockRequest {
 	file: string;

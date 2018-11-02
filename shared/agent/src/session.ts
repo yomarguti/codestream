@@ -31,13 +31,15 @@ import {
 	CreatePostWithCodeRequestType,
 	DidChangeDataNotificationType,
 	DidChangeVersionCompatibilityNotificationType,
+	DidLogoutNotificationType,
+	DidResetNotificationType,
 	DocumentFromCodeBlockRequestType,
 	DocumentLatestRevisionRequestType,
 	DocumentMarkersRequestType,
 	FetchMarkerLocationsRequestType,
 	LogoutReason,
-	LogoutRequestType,
-	PreparePostWithCodeRequestType
+	PreparePostWithCodeRequestType,
+	ResetReason
 } from "./shared/agent.protocol";
 import {
 	ApiErrors,
@@ -81,11 +83,6 @@ export interface VersionInfo {
 }
 
 export class CodeStreamSession {
-	private _onWillResetData = new Emitter<void>();
-	get onWillResetData(): Event<void> {
-		return this._onWillResetData.event;
-	}
-
 	private _onDidChangeMarkerLocations = new Emitter<CSMarkerLocations[]>();
 	get onDidChangeMarkerLocations(): Event<CSMarkerLocations[]> {
 		return this._onDidChangeMarkerLocations.event;
@@ -119,6 +116,11 @@ export class CodeStreamSession {
 	private _onDidChangeTeams = new Emitter<CSTeam[]>();
 	get onDidChangeTeams(): Event<CSTeam[]> {
 		return this._onDidChangeTeams.event;
+	}
+
+	private _onDidRequestReset = new Emitter<void>();
+	get onDidRequestReset(): Event<void> {
+		return this._onDidRequestReset.event;
 	}
 
 	private readonly _proxyAgent: HttpsProxyAgent | undefined;
@@ -447,12 +449,17 @@ export class CodeStreamSession {
 		}
 	}
 
-	logout(reason?: LogoutReason) {
-		return this.agent.sendRequest(LogoutRequestType, { reason: reason });
+	logout(reason: LogoutReason) {
+		return this.agent.sendNotification(DidLogoutNotificationType, { reason: reason });
 	}
 
 	async ready() {
 		return this._readyPromise;
+	}
+
+	async reset(reason: ResetReason) {
+		this._onDidRequestReset.fire(undefined);
+		this.agent.sendNotification(DidResetNotificationType, { reason: reason });
 	}
 
 	showErrorMessage<T extends MessageActionItem>(message: string, ...actions: T[]) {

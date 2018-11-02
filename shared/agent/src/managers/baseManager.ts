@@ -1,8 +1,7 @@
 "use strict";
 import { RawRTMessage } from "../api/apiProvider";
-import { Logger } from "../logger";
 import { CodeStreamSession } from "../session";
-import { LspHandler } from "../system/decorators";
+import { debug, log, LspHandler } from "../system";
 import { IndexParams } from "./cache";
 import { BaseCache, KeyValue } from "./cache/baseCache";
 import * as operations from "./operations";
@@ -19,7 +18,7 @@ export abstract class ManagerBase<T> {
 			}
 		}
 
-		this.session.onWillResetData(() => {
+		this.session.onDidRequestReset(() => {
 			this.invalidateCache();
 		});
 
@@ -36,11 +35,12 @@ export abstract class ManagerBase<T> {
 
 	protected abstract fetchCriteria(obj: T): KeyValue<T>[];
 
+	@log()
 	protected invalidateCache() {
-		Logger.log(`${this.constructor.name}: Invalidating cache`);
 		this.cache.invalidate();
 	}
 
+	@debug()
 	async resolve(message: RawRTMessage): Promise<T[]> {
 		const resolved = await Promise.all(
 			message.data.map(async (data: any) => {

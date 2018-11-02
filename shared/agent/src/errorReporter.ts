@@ -54,5 +54,5 @@ export class ErrorReporter {
 				source: request.source
 			}
 		});
-	};
+	}
 }

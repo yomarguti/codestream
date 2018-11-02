@@ -1056,7 +1056,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 			}
 			return [resp, count];
 		} catch (ex) {
-			debugger;
 			Logger.error(ex);
 
 			count++;

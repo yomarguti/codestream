@@ -44,6 +44,7 @@ import {
 	OpenStreamRequest,
 	ReactToPostRequest,
 	RenameStreamRequest,
+	ResetReason,
 	SetStreamPurposeRequest,
 	UnarchiveStreamRequest,
 	UpdateMarkerRequest,
@@ -165,6 +166,13 @@ export class SlackApiProvider implements ApiProvider {
 						// case ConnectionStatus.Reconnecting:
 						case ConnectionStatus.Reconnected:
 							if (!this._events!.connected) {
+								Logger.log(
+									`SlackApiProvider.onCodeStreamMessage(${
+										e.type
+									}); Reconnected, but Slack lost its connection, so resetting...`
+								);
+								void Container.instance().session.reset(ResetReason.Reconnected);
+
 								void (await this._events!.reconnect());
 							}
 					}
