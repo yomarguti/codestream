@@ -194,14 +194,24 @@ export namespace Functions {
 				}
 			}, intervalMs);
 
-			promise.then(() => {
-				if (timer !== undefined) {
-					clearInterval(timer);
-					timer = undefined;
-				}
+			promise.then(
+				() => {
+					if (timer !== undefined) {
+						clearInterval(timer);
+						timer = undefined;
+					}
 
-				resolve(promise);
-			});
+					resolve(promise);
+				},
+				ex => {
+					if (timer !== undefined) {
+						clearInterval(timer);
+						timer = undefined;
+					}
+
+					reject(ex);
+				}
+			);
 		});
 	}
 
@@ -226,10 +236,16 @@ export namespace Functions {
 				}
 			}, timeoutMs);
 
-			promise.then(() => {
-				clearTimeout(timer);
-				resolve(promise);
-			});
+			promise.then(
+				() => {
+					clearTimeout(timer);
+					resolve(promise);
+				},
+				ex => {
+					clearTimeout(timer);
+					reject(ex);
+				}
+			);
 		});
 	}
 
