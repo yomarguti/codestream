@@ -9,10 +9,7 @@ import {
 } from "./shared/agent.protocol";
 
 export class ErrorReporter {
-	private _session: CodeStreamSession;
-
 	constructor(session: CodeStreamSession) {
-		this._session = session;
 		if (
 			true
 			// (session.environment !== CodeStreamEnvironment.PD &&
@@ -20,36 +17,40 @@ export class ErrorReporter {
 		) {
 			Sentry.init({
 				dsn: "https://7c34949981cc45848fc4e3548363bb17@sentry.io/1314159",
-				release: this._session.versionInfo.extension.versionFormatted,
-				environment: this._session.environment
+				release: session.versionInfo.extension.versionFormatted,
+				environment: session.environment
 			});
+
+			session.ready().then(() => {
+				Sentry.configureScope(async scope => {
+					scope.setTag("platform", os.platform());
+					const team = await Container.instance().teams.getById(session.teamId);
+					const isSlackTeam = !!(team.providerInfo && team.providerInfo.slack);
+					//  TODO: acknowledge telemetryConsent
+					scope.setUser({
+						id: session.userId,
+						email: session.userEmail,
+						team: {
+							id: team.id,
+							name: team.name,
+							isSlackTeam
+						}
+					});
+					scope.setExtra("ideVersion", session.versionInfo.ide.version);
+					scope.setTag("source", "agent");
+				});
+			});
+
 			session.agent.registerHandler(ReportErrorRequestType, this.reportError);
 		}
 	}
 
 	private reportError = async (request: ReportErrorRequest) => {
-		//  TODO: acknowledge telemetryConsent
-		const team = await Container.instance().teams.getById(this._session.teamId);
-		const isSlackTeam = !!(team.providerInfo && team.providerInfo.slack);
-
 		Sentry.captureEvent({
 			level: Sentry.Severity.Error,
-			user: {
-				id: this._session.userId,
-				email: this._session.userEmail,
-				team: {
-					id: team.id,
-					name: team.name,
-					isSlackTeam
-				}
-			},
 			timestamp: Date.now(),
-			platform: os.platform(),
 			message: request.message,
-			extra: {
-				ideVersion: this._session.versionInfo.ide.version,
-				...request.extra
-			},
+			extra: request.extra,
 			tags: {
 				source: request.source
 			}
