@@ -6,6 +6,7 @@
 
 - Fixes an issue with logging into some Slack teams
 - Fixes issues with reconnecting to Slack after a network connection loss
+- Fixes an issue where channels deleted from Slack wouldn't get removed from CodeStream
 
 ## [0.21.0] - 2018-11-1
 
