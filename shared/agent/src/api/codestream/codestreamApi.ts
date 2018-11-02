@@ -831,8 +831,21 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	@log()
-	fetchUsers(request: FetchUsersRequest) {
-		return this.get<CSGetUsersResponse>(`/users?teamId=${this.teamId}`, this._token);
+	async fetchUsers(request: FetchUsersRequest) {
+		const response = await this.get<CSGetUsersResponse>(
+			`/users?teamId=${this.teamId}`,
+			this._token
+		);
+
+		if (this._user === undefined) {
+			const meResponse = await this.getMe();
+			this._user = meResponse.user;
+		}
+
+		// Find ourselves and replace it with our model
+		const index = response.users.findIndex(u => u.id === this._userId);
+		response.users.splice(index, 1, this._user);
+		return response;
 	}
 
 	@log()
