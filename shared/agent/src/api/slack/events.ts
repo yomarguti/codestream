@@ -186,12 +186,22 @@ export class SlackEvents {
 		void (await this._slackRTM.start());
 	}
 
-	disconnect() {
-		return this._slackRTM.disconnect();
+	async disconnect() {
+		try {
+			return await this._slackRTM.disconnect();
+		} catch (ex) {
+			Logger.error(ex);
+		}
 	}
 
-	reconnect() {
-		return this._slackRTM.start();
+	async reconnect() {
+		try {
+			await this._slackRTM.disconnect();
+			return await this._slackRTM.start();
+		} catch (ex) {
+			Logger.error(ex);
+			throw ex;
+		}
 	}
 
 	private async onSlackConnectionChanged(e: any) {
