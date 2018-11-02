@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.22.0] - 2018-11-2
+
+### Fixed
+
+- Fixes an issue with logging into some Slack teams
+- Fixes issues with reconnecting to Slack after a network connection loss
+
 ## [0.21.0] - 2018-11-1
 
 ### Added
@@ -10,7 +17,7 @@
 
 ### Changed
 
-- Prioritize Slack DMs to reduce the number that need to be loaded 
+- Prioritize Slack DMs to reduce the number that need to be loaded
 
 ### Fixed
 
