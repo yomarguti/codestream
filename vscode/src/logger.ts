@@ -111,7 +111,7 @@ export class Logger {
 		this.output.show();
 	}
 
-	private static sanitizeSerializableParam(key: string, value: any) {
+	static sanitizeSerializableParam(key: string, value: any) {
 		return /(password|token)/i.test(key) ? `<${key}>` : value;
 	}
 
@@ -132,9 +132,15 @@ export class Logger {
 		}
 
 		const loggableParams = params
-			.map(
-				p => (typeof p === "object" ? JSON.stringify(p, this.sanitizeSerializableParam) : String(p))
-			)
+			.map(p => {
+				if (typeof p !== "object") return String(p);
+
+				try {
+					return JSON.stringify(p, this.sanitizeSerializableParam);
+				} catch {
+					return `<error>`;
+				}
+			})
 			.join(", ");
 
 		return loggableParams || "";
