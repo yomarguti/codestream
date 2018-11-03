@@ -705,7 +705,7 @@ class ComposeBox extends React.Component {
 					</span>
 				</Tooltip>
 			</div>,
-			<ScrollBox>
+			<ScrollBox key="two">
 				<form id="code-comment-form" className="standard-form" key="two">
 					<fieldset className="form-body">
 						<div id="controls" className="control-group">
@@ -717,7 +717,7 @@ class ComposeBox extends React.Component {
 											onChange={e => this.setState({ streamId: e.target.value })}
 											defaultValue={this.props.streamId}
 										>
-											{Object.values(this.props.channelStreams).map(channel => {
+											{this.props.channelStreams.map(channel => {
 												return (
 													<option key={channel.id} value={channel.id} id={channel.id}>
 														#{channel.name}
@@ -725,7 +725,9 @@ class ComposeBox extends React.Component {
 												);
 											})}
 											<hr />
-											{Object.values(this.props.directMessageStreams).map(channel => {
+											{_.sortBy(this.props.directMessageStreams, stream =>
+												(stream.name || "").toLowerCase()
+											).map(channel => {
 												return (
 													<option key={channel.id} value={channel.id} id={channel.id}>
 														@{channel.name}
@@ -767,11 +769,7 @@ class ComposeBox extends React.Component {
 									>
 										<Icon name="x" />
 									</span>
-									<Tooltip
-										placement="top"
-										delay=".5"
-										title="Select a new range and it will update here..."
-									>
+									<Tooltip placement="top" title="Select a new range and it will update here...">
 										<label>{rangeText}</label>
 									</Tooltip>
 									{this.renderCode(quote)}

@@ -11,18 +11,18 @@ export default class AtMentionsPopup extends Component {
 	render() {
 		if (!this.props.on) return null;
 
-		const items = this.props.items;
+		const { items, prefix } = this.props;
 
 		return (
-			<div className="mentions-popup" ref={ref => (this._div = ref)}>
+			<div className="mentions-popup">
 				<div className="body">
-					<div className="instructions" onClick={event => this.handleClickInstructions()}>
+					<div className="instructions" onClick={this.handleClickInstructions}>
 						{this.props.on === "slash-commands" ? (
 							<span>
 								Commands matching{" "}
 								<b>
 									"/
-									{this.props.prefix}"
+									{prefix}"
 								</b>
 							</span>
 						) : this.props.on === "channels" ? (
@@ -30,7 +30,7 @@ export default class AtMentionsPopup extends Component {
 								Channels matching{" "}
 								<b>
 									"#
-									{this.props.prefix}"
+									{prefix}"
 								</b>
 							</span>
 						) : this.props.on === "emojis" ? (
@@ -38,7 +38,7 @@ export default class AtMentionsPopup extends Component {
 								Emoji matching{" "}
 								<b>
 									":
-									{this.props.prefix}"
+									{prefix}"
 								</b>
 							</span>
 						) : (
@@ -46,7 +46,7 @@ export default class AtMentionsPopup extends Component {
 								People matching{" "}
 								<b>
 									"@
-									{this.props.prefix}"
+									{prefix}"
 								</b>
 							</span>
 						)}

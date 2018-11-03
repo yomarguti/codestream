@@ -765,6 +765,8 @@
 				background: @base-background-color;
 				padding: 5px 0;
 				border-radius: 0 0 5px 5px;
+				max-height: 60vh;
+				overflow-y: auto;
 			}
 			li {
 				padding: 5px 10px;
@@ -2329,6 +2331,9 @@
 				display: inline-block;
 			}
 		}
+		.mentions-popup ul {
+			max-height: 150px;
+		}
 	}
 	.top-tab-group {
 		// font-size: bigger;
@@ -2401,7 +2406,7 @@
 	.filters {
 		flex-basis: 1%;
 		font-size: 12px;
-		z-index: 15;
+		// z-index: 15;
 		background-color: @app-background-color;
 		color: @text-color-subtle;
 		padding: 0 20px 15px 20px;
