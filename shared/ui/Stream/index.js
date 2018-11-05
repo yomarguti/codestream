@@ -19,7 +19,6 @@ import Post from "./Post";
 import Icon from "./Icon";
 import Tooltip from "./Tooltip";
 import OfflineBanner from "./OfflineBanner";
-import Debug from "./Debug";
 import EventEmitter from "../event-emitter";
 import * as actions from "./actions";
 import { safe, toMapBy } from "../utils";
@@ -1355,12 +1354,13 @@ export class SimpleStream extends Component {
 		return true;
 	};
 
-	submitSystemPost = text => {
-		const { activePanel, postStreamId, createSystemPost, posts } = this.props;
+	submitSystemPost = async text => {
+		const { postStreamId, createSystemPost, posts } = this.props;
 		const threadId = this.state.threadId;
 		const lastPost = _.last(posts);
 		const seqNum = lastPost ? lastPost.seqNum + 0.001 : 0.001;
-		createSystemPost(postStreamId, threadId, text, seqNum);
+		await createSystemPost(postStreamId, threadId, text, seqNum);
+		safe(() => this._postslist.scrollToBottom());
 		return true;
 	};
 

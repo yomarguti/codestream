@@ -3,7 +3,7 @@ import { debounce } from "underscore";
 import DateSeparator from "./DateSeparator";
 import Post from "./Post";
 import infiniteLoadable from "./infiniteLoadable";
-import { findLast, isActiveMixin, rAFThrottle, safe } from "../utils";
+import { findLast, rAFThrottle, safe } from "../utils";
 
 const noop = () => {};
 export default infiniteLoadable(
@@ -16,19 +16,7 @@ export default infiniteLoadable(
 		scrolledOffBottom = false;
 		state = {};
 
-		isActive = isActiveMixin(
-			"postlist",
-			`${this.constructor.name}${this.props.isThread ? "-thread" : ""}`
-		);
-
-		shouldComponentUpdate(nextProps) {
-			const props = {
-				activePanel: this.props.isActive ? "postlist" : ""
-			};
-			return this.isActive(props, { activePanel: nextProps.isActive ? "postlist" : "" });
-		}
-
-		async componentDidMount() {
+		componentDidMount() {
 			this.scrollToBottom();
 			this.markAsRead();
 		}
@@ -145,12 +133,13 @@ export default infiniteLoadable(
 
 		handleScroll = rAFThrottle(target => {
 			const { clientHeight, scrollTop } = target;
+			const bottomOfListViewPort = clientHeight + target.getBoundingClientRect().y;
 			if (scrollTop < 60) this.props.onDidScrollToTop();
 
 			const $posts = target.getElementsByClassName("post");
 			const lastPostPosition = $posts[$posts.length - 1].getBoundingClientRect().y;
 
-			if (lastPostPosition >= clientHeight) {
+			if (lastPostPosition >= bottomOfListViewPort) {
 				this.scrolledOffBottom = true;
 			} else {
 				this.scrolledOffBottom = false;
