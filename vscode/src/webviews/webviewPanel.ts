@@ -763,6 +763,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 			}
 		} catch (ex) {
 			debugger;
+			Container.agent.reportError(ex.message, "extension", ex);
 			Logger.error(ex);
 		}
 	}
