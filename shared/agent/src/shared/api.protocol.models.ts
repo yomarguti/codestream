@@ -225,6 +225,7 @@ export interface CSMePreferences {
 
 export interface CSMe extends CSUser {
 	lastReads: CSLastReads;
+	joinMethod: string;
 	preferences: CSMePreferences;
 	providerInfo?: {
 		slack?: CSSlackProviderInfo;
