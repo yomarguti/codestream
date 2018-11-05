@@ -74,7 +74,7 @@ export class SlackUnreads {
 		this._lastReads[streamId] = postId;
 
 		const { preferences } = await this._api.getPreferences();
-		if (preferences.mutedStreams[streamId]) return;
+		if (preferences.mutedStreams && preferences.mutedStreams[streamId]) return;
 
 		this._unreads.set(streamId, { mentions: mentions, unreads: unreads });
 

@@ -7,7 +7,7 @@ export class CodeStreamPreferences {
 		return this._onDidChange.event;
 	}
 
-	constructor(private _preferences: CSMePreferences) {}
+	constructor(private _preferences: CSMePreferences = {}) {}
 
 	update(preferences: CSMePreferences) {
 		this._preferences = preferences;
