@@ -429,7 +429,7 @@ export class CodeStreamSession {
 				Logger.error(ex);
 			}
 
-			analytics.setDistinctId(response.user.id);
+			analytics.setDistinctId(this._codestreamUserId);
 			analytics.setSuperProps(props);
 
 			return {
