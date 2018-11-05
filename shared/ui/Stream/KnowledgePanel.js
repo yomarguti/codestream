@@ -428,14 +428,11 @@ export class SimpleKnowledgePanel extends Component {
 	};
 }
 
-const mapStateToProps = ({ context, users, teams, umis, posts, session, configs }) => {
+const mapStateToProps = ({ context, users, teams, preferences, umis, posts, session, configs }) => {
 	const teamMembers = teams[context.currentTeamId].memberIds.map(id => users[id]).filter(Boolean);
 	// .filter(user => user && user.isRegistered);
 
 	const postsByType = getAllPostsOfType(posts);
-	const user = users[session.userId];
-	const fileFilter = (user && user.preferences && user.preferences.markerFileFilter) || "all";
-	const typeFilter = (user && user.preferences && user.preferences.markerTypeFilter) || "all";
 
 	return {
 		umis,
@@ -443,8 +440,8 @@ const mapStateToProps = ({ context, users, teams, umis, posts, session, configs 
 		showMarkers: configs.showMarkers,
 		teammates: teamMembers,
 		team: teams[context.currentTeamId],
-		fileFilter,
-		typeFilter,
+		fileFilter: preferences.markerFileFilter || "all",
+		typeFilter: preferences.markerTypeFilter || "all",
 		mostRecentSourceFile: context.mostRecentSourceFile,
 		posts: postsByType.map(post => {
 			let user = users[post.creatorId];

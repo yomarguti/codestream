@@ -25,6 +25,7 @@ import Button from "./Button";
 import ChannelMenu from "./ChannelMenu";
 import ScrollBox from "./ScrollBox";
 import Filter from "./Filter";
+import { safe } from "../utils";
 
 export class SimpleChannelPanel extends Component {
 	constructor(props) {
@@ -131,25 +132,6 @@ export class SimpleChannelPanel extends Component {
 
 	toggleMenu = event => {
 		this.setState({ menuOpen: !this.state.menuOpen, menuTarget: event.target });
-	};
-
-	handleSelectMenu = action => {
-		const { selectedStreams } = this.props;
-		this.setState({ menuOpen: false });
-		switch (action) {
-			case "set-channels-all":
-				this.setState({ showChannels: "all" });
-				break;
-			case "set-channels-unreads-starred":
-				this.setState({ showChannels: "unreads-starred" });
-				break;
-			case "set-channels-unreads":
-				this.setState({ showChannels: "unreads" });
-				break;
-			case "set-channels-selected":
-				this.setState({ showChannels: "selecting", checkedStreams: selectedStreams });
-				break;
-		}
 	};
 
 	toggleSection = (e, section) => {
