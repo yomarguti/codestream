@@ -415,7 +415,6 @@ export class CodeStreamSession {
 				Company: companyName,
 				"Join Method": response.user.joinMethod,
 				"Plugin Version": this._options.extension.versionFormatted,
-				Plan: "Free", // will have more options in future
 				Endpoint: "VS Code",
 				Provider: isCurrentTeamSlack ? "Slack" : "CodeStream"
 			};
