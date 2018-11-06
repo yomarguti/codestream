@@ -95,6 +95,7 @@ import {
 	ReportErrorRequestType,
 	SetPostStatusRequestType,
 	SetStreamPurposeRequestType,
+	TelemetryRequestType,
 	UnarchiveStreamRequestType,
 	UpdateCodemarkRequestType,
 	UpdatePreferencesRequestType,
@@ -490,6 +491,23 @@ export class CodeStreamAgentConnection implements Disposable {
 				postId: postId,
 				streamId: streamId,
 				status: status
+			});
+		}
+	}(this);
+
+	@started
+	get telemetry() {
+		return this._telemetry;
+	}
+
+	private readonly _telemetry = new class {
+		constructor(private readonly _connection: CodeStreamAgentConnection) {}
+
+		track(eventName: string, properties?: { [key: string]: string | number | boolean }) {
+			Logger.debug("track called from agentConnection.ts");
+			return this._connection.sendRequest(TelemetryRequestType, {
+				eventName: eventName,
+				properties: properties
 			});
 		}
 	}(this);
