@@ -207,7 +207,7 @@ export const setUserPreference = (prefPath, value) => async (dispatch, getState,
 };
 
 export const createStream = attributes => async (dispatch, getState, { api }) => {
-	const { context, session } = getState();
+	const { context } = getState();
 
 	const stream = {
 		teamId: context.currentTeamId,
