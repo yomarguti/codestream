@@ -1,7 +1,7 @@
 import EventEmitter from "../event-emitter";
 import { getChannelStreamsForTeam, getDirectMessageStreamsForTeam } from "../reducers/streams";
+import { updatePreferences } from "../actions";
 import { setPanel, closePanel } from "../actions/context";
-
 export { setPanel, closePanel };
 
 // uuid generator taken from: https://gist.github.com/jed/982883
@@ -402,9 +402,15 @@ export const openDirectMessage = id => async (dispatch, getState, { api }) => {
 };
 
 export const changeStreamMuteState = (streamId, muted) => async (dispatch, getState, { api }) => {
+	const mutedStreams = getState().preferences.mutedStreams || {};
+
 	try {
+		dispatch(updatePreferences({ mutedStreams: { ...mutedStreams, [streamId]: muted } }));
 		await api.changeStreamMuteState(streamId, muted);
 	} catch (error) {
 		console.error(error);
+		// undo optimistic update
+		// TODO: communicate failure
+		dispatch(updatePreferences({ mutedStreams: { ...mutedStreams, [streamId]: !muted } }));
 	}
 };
