@@ -199,10 +199,7 @@ export const setUserPreference = (prefPath, value) => async (dispatch, getState,
 
 	console.log("Saving preferences: ", newPreference);
 	try {
-		dispatch({
-			type: "UPDATE_USER",
-			payload: { ...user, preferences }
-		});
+		dispatch(updatePreferences(newPreference));
 		api.saveUserPreference(newPreference);
 	} catch (error) {
 		console.error("error trying to update preferences", error);
