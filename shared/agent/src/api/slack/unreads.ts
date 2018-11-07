@@ -5,6 +5,7 @@ import { CSUnreads } from "../../shared/agent.protocol";
 import { CSLastReads } from "../../shared/api.protocol";
 import { Iterables } from "../../system/iterable";
 import { ApiProvider } from "../apiProvider";
+import { Functions } from "../../system/function";
 
 export class SlackUnreads {
 	private _onDidChange = new Emitter<CSUnreads>();
@@ -74,7 +75,7 @@ export class SlackUnreads {
 		this._lastReads[streamId] = postId;
 
 		const { preferences } = await this._api.getPreferences();
-		if (preferences.mutedStreams && preferences.mutedStreams[streamId]) return;
+		if (Functions.safe(() => preferences.mutedStreams[streamId] === true)) return;
 
 		this._unreads.set(streamId, { mentions: mentions, unreads: unreads });
 

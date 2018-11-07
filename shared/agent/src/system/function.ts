@@ -267,4 +267,12 @@ export namespace Functions {
 			counter++;
 		}
 	}
+
+	export function safe<T>(fn: () => T | undefined): T | undefined {
+		try {
+			return fn();
+		} catch (e) {
+			return;
+		}
+	}
 }

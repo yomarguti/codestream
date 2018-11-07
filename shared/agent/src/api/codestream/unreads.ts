@@ -6,6 +6,7 @@ import { CSUnreads } from "../../shared/agent.protocol";
 import { CSLastReads, CSPost, CSStream, StreamType } from "../../shared/api.protocol";
 import { Arrays } from "../../system/array";
 import { ApiProvider } from "../apiProvider";
+import { Functions } from "../../system/function";
 
 export class CodeStreamUnreads {
 	private _onDidChange = new Emitter<CSUnreads>();
@@ -112,7 +113,7 @@ export class CodeStreamUnreads {
 			await Promise.all(
 				entries.map(async ([streamId, lastReadSeqNum]) => {
 					const { preferences } = await this._api.getPreferences();
-					if (preferences.mutedStreams[streamId]) return;
+					if (Functions.safe(() => preferences.mutedStreams[streamId] === true)) return;
 
 					const stream = unreadStreams.find(stream => stream.id === streamId);
 					if (stream == null) return;
