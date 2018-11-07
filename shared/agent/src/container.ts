@@ -3,6 +3,7 @@ import { DocumentManager } from "./documentManager";
 import { ErrorReporter } from "./errorReporter";
 import { GitService } from "./git/gitService";
 import { Logger } from "./logger";
+import { CodemarksManager } from "./managers/codemarksManager";
 import { FilesManager } from "./managers/filesManager";
 import { MarkerLocationManager } from "./managers/markerLocationManager";
 import { MarkersManager } from "./managers/markersManager";
@@ -18,6 +19,7 @@ class ServiceContainer {
 	constructor(public readonly session: CodeStreamSession) {
 		this._files = new FilesManager(session);
 		this._markerLocations = new MarkerLocationManager(session);
+		this._codemarks = new CodemarksManager(session);
 		this._markers = new MarkersManager(session);
 		this._posts = new PostsManager(session);
 		this._repos = new ReposManager(session);
@@ -56,6 +58,11 @@ class ServiceContainer {
 	private readonly _git: GitService;
 	get git() {
 		return this._git;
+	}
+
+	private readonly _codemarks: CodemarksManager;
+	get codemarks(): CodemarksManager {
+		return this._codemarks;
 	}
 
 	private readonly _markerLocations: MarkerLocationManager;

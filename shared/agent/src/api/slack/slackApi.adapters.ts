@@ -5,6 +5,7 @@ import { Logger } from "../../logger";
 import {
 	CSChannelStream,
 	CSCodeBlock,
+	CSCodemark,
 	CSDirectStream,
 	CSPost,
 	CSTeam,
@@ -205,17 +206,15 @@ export async function fromSlackPost(
 		}
 	}
 
-	let codeBlocks: CSCodeBlock[] | undefined;
+	let codemark: CSCodemark | undefined;
 	let commitHashWhenPosted;
 	if (post.attachments && post.attachments.length !== 0) {
 		// Filter out unfurled links
 		// TODO: Turn unfurled images into files
 		const attachments = post.attachments.filter((a: any) => a.from_url == null);
 		if (attachments.length !== 0) {
-			const blocks = await fromSlackPostCodeBlock(attachments);
-			if (blocks) {
-				({ codeBlocks, commitHashWhenPosted } = blocks);
-			} else {
+			const codemark = await fromSlackPostCodeBlock(attachments);
+			if (!codemark) {
 				// Get text/fallback for attachments
 				text += "\n";
 				for (const attachment of attachments) {
@@ -232,14 +231,13 @@ export async function fromSlackPost(
 
 	const timestamp = Number(post.ts.split(".")[0]) * 1000;
 	return {
-		codeBlocks: codeBlocks,
-		commitHashWhenPosted: commitHashWhenPosted,
+		codemark: codemark,
 		createdAt: timestamp,
 		creatorId: post.user || (post.bot_id && post.username),
 		deactivated: false,
 		files: files,
 		hasBeenEdited: post.edited != null,
-		hasReplies: post.ts === post.thread_ts,
+		numReplies: post.numReplies, // FIXME KB - what's the Slack post property?
 		id: toSlackPostId(post.ts, streamId),
 		mentionedUserIds: mentionedUserIds,
 		modifiedAt: post.edited != null ? Number(post.edited.ts.split(".")[0]) * 1000 : timestamp,
@@ -252,7 +250,9 @@ export async function fromSlackPost(
 	};
 }
 
-export async function fromSlackPostCodeBlock(attachments: MessageAttachment[]) {
+export async function fromSlackPostCodeBlock(
+	attachments: MessageAttachment[]
+): Promise<CSCodemark | undefined> {
 	const attachment = attachments.find(
 		(a: any) => a.callback_id != null && markerAttachmentRegex.test(a.callback_id)
 	);
@@ -261,31 +261,14 @@ export async function fromSlackPostCodeBlock(attachments: MessageAttachment[]) {
 	const match = markerAttachmentRegex.exec(attachment.callback_id || "");
 	if (match == null) return undefined;
 
-	const [, markerId] = match;
+	const [, codemarkId] = match;
 
-	let marker;
 	try {
-		marker = await Container.instance().markers.getById(markerId);
+		return await Container.instance().codemarks.getById(codemarkId);
 	} catch (ex) {
-		Logger.error(ex, `Failed to find marker=${markerId}`);
+		Logger.error(ex, `Failed to find codemark=${codemarkId}`);
 		return undefined;
 	}
-
-	if (marker.codeBlock == null) return undefined;
-
-	const { code, commitHash, file, repoId, streamId } = marker.codeBlock;
-	return {
-		commitHashWhenPosted: commitHash,
-		codeBlocks: [
-			{
-				code: code,
-				file: file,
-				repoId: repoId,
-				markerId: marker.id,
-				streamId: streamId
-			}
-		]
-	};
 }
 
 export function fromSlackPostFile(file: any) {

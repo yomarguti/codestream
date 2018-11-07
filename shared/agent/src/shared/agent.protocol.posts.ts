@@ -1,6 +1,8 @@
 "use strict";
 import { Range, RequestType, TextDocumentIdentifier } from "vscode-languageserver-protocol";
+import { CreateCodemarkRequest } from "./agent.protocol.markers";
 import {
+	CodemarkType,
 	CSCreatePostRequestCodeBlock,
 	CSCreatePostRequestStream,
 	CSPost,
@@ -12,7 +14,7 @@ export interface CreatePostRequest {
 	text: string;
 	mentionedUserIds?: string[];
 	parentPostId?: string;
-	codeBlocks?: CSCreatePostRequestCodeBlock[];
+	codemark?: CreateCodemarkRequest;
 	commitHashWhenPosted?: string;
 	title?: string;
 	type?: string;
@@ -49,27 +51,27 @@ export interface CodeBlockSource {
 	remotes: { name: string; url: string }[];
 }
 
-export interface CreatePostWithCodeRequest {
+export interface CreatePostWithCodemarkRequest {
 	textDocument: TextDocumentIdentifier;
 	text: string;
 	mentionedUserIds: string[];
 	code: string;
-	location?: [number, number, number, number];
+	rangeArray?: [number, number, number, number];
 	source?: CodeBlockSource;
 	parentPostId?: string;
 	streamId: string;
 	title?: string;
-	type?: string;
+	type: CodemarkType;
 	assignees?: [];
 	color?: string;
 }
 
-export const CreatePostWithCodeRequestType = new RequestType<
-	CreatePostWithCodeRequest,
+export const CreatePostWithCodemarkRequestType = new RequestType<
+	CreatePostWithCodemarkRequest,
 	CSPost,
 	void,
 	void
->("codeStream/posts/createWithCode");
+>("codeStream/posts/createWithCodemark");
 
 export interface FetchPostRepliesRequest {
 	streamId: string;

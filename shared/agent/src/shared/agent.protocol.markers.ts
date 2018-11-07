@@ -5,7 +5,17 @@ import {
 	RequestType,
 	TextDocumentIdentifier
 } from "vscode-languageserver-protocol";
-import { CSLocationArray, CSMarker, CSMarkerLocation, CSMarkerLocations } from "./api.protocol";
+import {
+	CodemarkType,
+	CSCodemark,
+	CSCreateCodemarkRequestMarker,
+	CSLocationArray,
+	CSMarker,
+	CSMarkerLocation,
+	CSMarkerLocations,
+	CSPost,
+	ProviderType
+} from "./api.protocol";
 
 export interface DidChangeDocumentMarkersNotification {
 	textDocument: TextDocumentIdentifier;
@@ -15,6 +25,16 @@ export const DidChangeDocumentMarkersNotificationType = new NotificationType<
 	DidChangeDocumentMarkersNotification,
 	void
 >("codeStream/didChangeDocumentMarkers");
+
+export interface GetCodemarkRequest {
+	codemarkId: string;
+}
+
+export interface GetCodemarkResponse {
+	codemark: CSCodemark;
+	post: CSPost;
+	markers: CSMarker[];
+}
 
 export interface CreateMarkerLocationRequest {
 	streamId: string;
@@ -120,20 +140,24 @@ export interface UpdateMarkerRequest {
 	commitHashWhenCreated?: string;
 }
 
-export interface CreateMarkerRequest {
-	providerType: string;
-	postStreamId: string;
-	postId: string;
+export interface CreateCodemarkRequest {
+	providerType?: ProviderType;
+	type: CodemarkType;
 	streamId?: string;
-	file?: string;
-	repoId?: string;
-	remotes?: string[];
-	commitHash?: string;
-	code: string;
-	location?: CSLocationArray;
-	type?: string;
+	postId?: string;
 	color?: string;
 	status?: string;
+	title?: string;
+	assignees?: string[];
+	markers?: CreateCodemarkRequestMarker[];
+	remotes?: string[];
+}
+
+export interface CreateCodemarkRequestMarker {
+	code: string;
+	remotes?: string[];
+	file?: string;
+	location?: CSLocationArray;
 }
 
 export interface UpdateMarkerResponse {

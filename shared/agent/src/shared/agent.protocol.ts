@@ -235,24 +235,24 @@ export const DidChangeVersionCompatibilityNotificationType = new NotificationTyp
 	void
 >("codeStream/didChangeVersionCompatibility");
 
-export interface DocumentFromCodeBlockRequest {
+export interface DocumentFromMarkerRequest {
 	file: string;
 	repoId: string;
 	markerId: string;
 }
 
-export interface DocumentFromCodeBlockResponse {
+export interface DocumentFromMarkerResponse {
 	textDocument: TextDocumentIdentifier;
 	range: Range;
 	revision?: string;
 }
 
-export const DocumentFromCodeBlockRequestType = new RequestType<
-	DocumentFromCodeBlockRequest,
-	DocumentFromCodeBlockResponse | undefined,
+export const DocumentFromMarkerRequestType = new RequestType<
+	DocumentFromMarkerRequest,
+	DocumentFromMarkerResponse | undefined,
 	void,
 	void
->("codeStream/textDocument/fromCodeBlock");
+>("codeStream/textDocument/fromMarker");
 
 export interface DocumentLatestRevisionRequest {
 	textDocument: TextDocumentIdentifier;

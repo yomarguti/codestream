@@ -27,6 +27,7 @@ import {
 	FetchTeamsRequest,
 	FetchUnreadStreamsRequest,
 	FetchUsersRequest,
+	GetCodemarkRequest,
 	GetMarkerRequest,
 	GetPostRequest,
 	GetPreferencesResponse,
@@ -450,6 +451,11 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	@log()
+	getCodemark(request: GetCodemarkRequest) {
+		return this._codestream.getCodemark(request);
+	}
+
+	@log()
 	createMarkerLocation(request: CreateMarkerLocationRequest) {
 		return this._codestream.createMarkerLocation(request);
 	}
@@ -492,7 +498,7 @@ export class SlackApiProvider implements ApiProvider {
 
 			const { streamId, postId: parentPostId } = fromSlackPostId(
 				request.parentPostId,
-				request.streamId
+				request.streamId!
 			);
 
 			if (meMessage) {
@@ -530,51 +536,33 @@ export class SlackApiProvider implements ApiProvider {
 			const usernamesById = await this.ensureUsernamesById();
 			const post = await fromSlackPost(message, streamId, usernamesById, this._codestreamTeamId);
 
-			if (request.codeBlocks == null || request.codeBlocks.length === 0) {
+			if (request.codemark == null) {
 				return { post: post };
 			}
 
-			const [codeblock] = request.codeBlocks;
+			const codemarkResponse = await this._codestream.createCodemark(request.codemark);
+			const { codemark, markers, markerLocations } = codemarkResponse;
+			post.codemarkId = codemark.id;
 
-			const markerResponse = await this._codestream.createMarker({
-				providerType: "slack",
-				postStreamId: post.streamId,
-				postId: post.id,
-				streamId: codeblock.streamId,
-				file: codeblock.file,
-				repoId: codeblock.repoId,
-				remotes: codeblock.remotes,
-				commitHash: request.commitHashWhenPosted,
-				code: codeblock.code,
-				location: codeblock.location,
-				type: request.type,
-				color: request.color,
-				status: request.status
-			});
+			if (!markers || !markers.length) {
+				return { post: post };
+			}
 
-			const marker = markerResponse.marker;
-			// const fileStream = await Container.instance().files.getById(marker.streamId);
-			post.codeBlocks = [
-				{
-					...codeblock,
-					// file: fileStream.file,
-					// repoId: fileStream.repoId,
-					markerId: marker.id
-				} as CSCodeBlock
-			];
+			// FIXME KB - support multiple markers per codeblock
+			const marker = markers[0];
+			const location = markerLocations!.locations[marker.id];
+			const [start, , end] = location!;
+			const title = `${marker.file} (Line${start === end ? ` ${start}` : `s ${start}-${end}`})`;
 
-			const [start, , end] = codeblock.location!;
-			const title = `${codeblock.file} (Line${start === end ? ` ${start}` : `s ${start}-${end}`})`;
-
-			const githubRemote = codeblock.remotes!.find(r => r != null && r.startsWith("github.com"));
+			const githubRemote = request.codemark.remotes!.find(r => r.startsWith("github.com"));
 			let titleLink;
 			if (githubRemote) {
-				titleLink = `https://${githubRemote}/blob/HEAD/${codeblock.file}#L${start}${
+				titleLink = `https://${githubRemote}/blob/HEAD/${marker.file}#L${start}${
 					start !== end ? `-L${end}` : ""
 				}`;
 			}
 
-			const code = `\`\`\`${codeblock.code}\`\`\``;
+			const code = `\`\`\`${marker.code}\`\`\``;
 
 			const attachments = [
 				{

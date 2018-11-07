@@ -8,8 +8,8 @@ import {
 } from "../shared/agent.protocol";
 import { CSMarker, CSStream, StreamType } from "../shared/api.protocol";
 import { lsp, lspHandler } from "../system";
+import { IndexParams, IndexType } from "./cache";
 import { getValues, KeyValue } from "./cache/baseCache";
-import { IndexParams, IndexType } from "./cache/index";
 import { EntityManagerBase, Id } from "./entityManager";
 
 @lsp
@@ -17,14 +17,14 @@ export class MarkersManager extends EntityManagerBase<CSMarker> {
 	initialize() {
 		this.session.onDidChangeMarkers(async (markers: CSMarker[]) => {
 			const { files } = Container.instance();
-			const streamIds = new Set<Id>();
+			const fileStreamIds = new Set<Id>();
 
 			for (const marker of markers) {
-				streamIds.add(marker.streamId);
+				fileStreamIds.add(marker.fileStreamId);
 			}
 
-			for (const streamId of streamIds) {
-				const uri = await files.getDocumentUri(streamId);
+			for (const fileStreamId of fileStreamIds) {
+				const uri = await files.getDocumentUri(fileStreamId);
 				if (uri) {
 					this.session.agent.sendNotification(DidChangeDocumentMarkersNotificationType, {
 						textDocument: {
@@ -37,7 +37,7 @@ export class MarkersManager extends EntityManagerBase<CSMarker> {
 	}
 
 	async getByStreamId(streamId: Id, visibleOnly?: boolean): Promise<CSMarker[]> {
-		const markers = await this.cache.getGroup([["streamId", streamId]]);
+		const markers = await this.cache.getGroup([["fileStreamId", streamId]]);
 		return visibleOnly ? await this.filterMarkers(markers) : markers;
 	}
 
@@ -49,7 +49,7 @@ export class MarkersManager extends EntityManagerBase<CSMarker> {
 	getIndexedFields(): IndexParams<CSMarker>[] {
 		return [
 			{
-				fields: ["streamId"],
+				fields: ["fileStreamId"],
 				type: IndexType.Group,
 				fetchFn: this.fetchByStreamId.bind(this)
 			}

@@ -5,8 +5,8 @@ import URI from "vscode-uri";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import {
-	DocumentFromCodeBlockRequest,
-	DocumentFromCodeBlockResponse,
+	DocumentFromMarkerRequest,
+	DocumentFromMarkerResponse,
 	DocumentMarkersRequest,
 	DocumentMarkersResponse,
 	MarkerNotLocated,
@@ -94,11 +94,11 @@ export namespace MarkerHandler {
 		}
 	}
 
-	export async function documentFromCodeBlock({
+	export async function documentFromMarker({
 		repoId,
 		file,
 		markerId
-	}: DocumentFromCodeBlockRequest): Promise<DocumentFromCodeBlockResponse | undefined> {
+	}: DocumentFromMarkerRequest): Promise<DocumentFromMarkerResponse | undefined> {
 		const { git } = Container.instance();
 
 		const repo = await git.getRepositoryById(repoId);

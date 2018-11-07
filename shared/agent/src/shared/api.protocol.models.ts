@@ -6,27 +6,50 @@ export interface CSEntity {
 	modifiedAt: number;
 	id: string;
 	creatorId: string;
+	version?: number;
 }
 
-export interface CSMarkerCodeBlock {
-	code: string;
-	commitHash: string;
-	location: CSLocationArray;
-	file: string;
-	repoId: string;
+export enum ProviderType {
+	Slack = "slack"
+}
+
+export enum CodemarkType {
+	Comment = "comment",
+	Question = "question",
+	Trap = "trap"
+}
+
+export interface CSCodemark extends CSEntity {
+	teamId: string;
 	streamId: string;
+	postId: string;
+	markerIds?: string[];
+	markers?: CSMarker[];
+	fileStreamIds: string[];
+	providerType?: ProviderType;
+	type: CodemarkType;
+	color: string;
+	status: string;
+	title: string;
+	assignees: string[];
+	text: string;
+	numReplies: number;
 }
 
 export interface CSMarker extends CSEntity {
 	teamId: string;
-	streamId: string;
-	postId: string;
+	fileStreamId: string;
 	postStreamId: string;
+	postId: string;
+	codemarkId: string;
+	codemark: CSCodemark;
+	providerType?: ProviderType;
 	commitHashWhenCreated: string;
-	codeBlock?: CSMarkerCodeBlock;
-	color?: string;
-	type?: string;
-	status?: string;
+	locationWhenCreated: CSLocationArray;
+	code: string;
+	file: string;
+	repo: string;
+	repoId: string;
 }
 
 export interface CSLocationMeta {
@@ -64,17 +87,16 @@ export interface CSCodeBlock {
 export interface CSPost extends CSEntity {
 	teamId: string;
 	streamId: string;
-	repoId?: string;
-	seqNum: number | string;
+	parentPostId?: string;
+	numReplies: number;
 	text: string;
-	codeBlocks?: CSCodeBlock[];
-	commitHashWhenPosted?: string;
+	seqNum: number | string;
 	hasBeenEdited: boolean;
-	hasReplies: boolean;
 	mentionedUserIds?: string[];
 	origin?: "email" | "slack" | "teams";
-	parentPostId?: string;
 	reactions?: { [key: string]: boolean };
+	codemarkId?: string;
+	codemark?: CSCodemark;
 	files?: [
 		{
 			mimetype: string;

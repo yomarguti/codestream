@@ -383,10 +383,10 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 		for (const id of uncommittedLocations.keys()) {
 			Logger.log(`MARKERS: checking uncommitted marker ${id}`);
 			const marker = await markers.getById(id);
-			const stream = (await files.getById(marker!.streamId)) as CSFileStream;
+			const fileStream = await files.getById(marker!.fileStreamId);
 			const uncommittedLocation = uncommittedLocations.get(id) as UncommittedLocation;
 			const originalContents = uncommittedLocation.fileContents;
-			const relPath = stream.file;
+			const relPath = fileStream.file;
 			const absPath = path.join(repo.path, relPath);
 			const commitHash = await git.getFileCurrentRevision(absPath);
 			if (!commitHash) {
@@ -414,7 +414,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 				}, ${location.colEnd}] - saving to API server`
 			);
 			await session.api.createMarkerLocation({
-				streamId: stream.id,
+				streamId: fileStream.id,
 				commitHash,
 				locations: locationArraysById
 			});

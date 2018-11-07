@@ -11,9 +11,9 @@ import {
 	ArchiveStreamRequest,
 	CloseStreamRequest,
 	CreateChannelStreamRequest,
+	CreateCodemarkRequest,
 	CreateDirectStreamRequest,
 	CreateMarkerLocationRequest,
-	CreateMarkerRequest,
 	CreatePostRequest,
 	CreateRepoRequest,
 	CSUnreads,
@@ -28,6 +28,8 @@ import {
 	FetchTeamsRequest,
 	FetchUnreadStreamsRequest,
 	FetchUsersRequest,
+	GetCodemarkRequest,
+	GetCodemarkResponse,
 	GetMarkerRequest,
 	GetPostRequest,
 	GetRepoRequest,
@@ -57,12 +59,12 @@ import {
 	CSChannelStream,
 	CSCreateChannelStreamRequest,
 	CSCreateChannelStreamResponse,
+	CSCreateCodemarkRequest,
+	CSCreateCodemarkResponse,
 	CSCreateDirectStreamRequest,
 	CSCreateDirectStreamResponse,
 	CSCreateMarkerLocationRequest,
 	CSCreateMarkerLocationResponse,
-	CSCreateMarkerRequest,
-	CSCreateMarkerResponse,
 	CSCreatePostRequest,
 	CSCreatePostResponse,
 	CSCreateRepoRequest,
@@ -487,12 +489,17 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	@log()
-	createMarker(request: CreateMarkerRequest) {
-		return this.post<CSCreateMarkerRequest, CSCreateMarkerResponse>(
-			"/markers",
+	createCodemark(request: CreateCodemarkRequest) {
+		return this.post<CSCreateCodemarkRequest, CSCreateCodemarkResponse>(
+			"/codemarks",
 			{ ...request, teamId: this.teamId },
 			this._token
 		);
+	}
+
+	@log()
+	getCodemark(request: GetCodemarkRequest): Promise<GetCodemarkResponse> {
+		return this.get<GetCodemarkResponse>(`/codemarks/${request.codemarkId}`, this._token);
 	}
 
 	@log()

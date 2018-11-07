@@ -6,11 +6,13 @@ import URI from "vscode-uri";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import {
-	CreatePostWithCodeRequest,
+	CreateCodemarkRequest,
+	CreateCodemarkRequestMarker,
+	CreatePostWithCodemarkRequest,
 	PreparePostWithCodeRequest,
 	PreparePostWithCodeResponse
 } from "../shared/agent.protocol";
-import { CSCreatePostRequestCodeBlock, CSMarkerLocation, CSPost } from "../shared/api.protocol";
+import { CSMarkerLocation, CSPost } from "../shared/api.protocol";
 import { Iterables, Strings } from "../system";
 
 export namespace PostHandler {
@@ -86,7 +88,7 @@ export namespace PostHandler {
 
 	export async function documentPost({
 		textDocument: documentId,
-		location: rangeArray,
+		rangeArray,
 		text,
 		code,
 		source,
@@ -97,12 +99,13 @@ export namespace PostHandler {
 		type,
 		assignees,
 		color
-	}: CreatePostWithCodeRequest): Promise<CSPost | undefined> {
+	}: CreatePostWithCodemarkRequest): Promise<CSPost | undefined> {
 		const { git } = Container.instance();
 		const filePath = URI.parse(documentId.uri).fsPath;
 		const fileContents = lastFullCode;
 
-		let codeBlock: CSCreatePostRequestCodeBlock | undefined;
+		let codemark: CreateCodemarkRequest | undefined;
+		let marker: CreateCodemarkRequestMarker | undefined;
 		let commitHashWhenPosted: string | undefined;
 		let location: CSMarkerLocation | undefined;
 		let backtrackedLocation: CSMarkerLocation | undefined;
@@ -128,13 +131,24 @@ export namespace PostHandler {
 				}
 			}
 
-			codeBlock = {
+			marker = {
 				code,
 				remotes,
 				file: source && source.file,
 				location:
 					backtrackedLocation &&
 					Container.instance().markerLocations.locationToArray(backtrackedLocation)
+			};
+
+			codemark = {
+				type: type,
+				streamId: streamId,
+				color: color,
+				// status:
+				title: title,
+				assignees: assignees,
+				markers: marker && [marker],
+				remotes: remotes
 			};
 		}
 
@@ -143,7 +157,7 @@ export namespace PostHandler {
 				streamId,
 				text,
 				parentPostId,
-				codeBlocks: codeBlock && [codeBlock],
+				codemark,
 				commitHashWhenPosted,
 				mentionedUserIds,
 				title,
@@ -152,12 +166,12 @@ export namespace PostHandler {
 				color
 			})).post;
 
-			if (post.codeBlocks && backtrackedLocation) {
+			if (post.codemark && post.codemark.markerIds && backtrackedLocation) {
 				const meta = backtrackedLocation.meta;
 				if (meta && (meta.startWasDeleted || meta.endWasDeleted)) {
 					const uncommittedLocation = {
 						...location!,
-						id: post.codeBlocks[0].markerId
+						id: post.codemark.markerIds[0]
 					};
 
 					await Container.instance().markerLocations.saveUncommittedLocation(

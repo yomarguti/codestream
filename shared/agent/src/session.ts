@@ -30,12 +30,14 @@ import {
 	ChangeDataType,
 	CodeStreamEnvironment,
 	ConnectionStatus,
+	CreatePostWithCodemarkRequestType,
 	CreatePostWithCodeRequestType,
 	DidChangeConnectionStatusNotificationType,
 	DidChangeDataNotificationType,
 	DidChangeVersionCompatibilityNotificationType,
 	DidLogoutNotificationType,
 	DocumentFromCodeBlockRequestType,
+	DocumentFromMarkerRequestType,
 	DocumentLatestRevisionRequestType,
 	DocumentMarkersRequestType,
 	FetchMarkerLocationsRequestType,
@@ -167,13 +169,10 @@ export class CodeStreamSession {
 		this.agent.registerHandler(ApiRequestType, (e, cancellationToken: CancellationToken) =>
 			this.api.fetch(e.url, e.init, e.token)
 		);
-		this.agent.registerHandler(
-			DocumentFromCodeBlockRequestType,
-			MarkerHandler.documentFromCodeBlock
-		);
+		this.agent.registerHandler(DocumentFromMarkerRequestType, MarkerHandler.documentFromMarker);
 		this.agent.registerHandler(DocumentMarkersRequestType, MarkerHandler.documentMarkers);
 		this.agent.registerHandler(PreparePostWithCodeRequestType, PostHandler.documentPreparePost);
-		this.agent.registerHandler(CreatePostWithCodeRequestType, PostHandler.documentPost);
+		this.agent.registerHandler(CreatePostWithCodemarkRequestType, PostHandler.documentPost);
 
 		this.agent.registerHandler(DocumentLatestRevisionRequestType, async e => {
 			const revision = await Container.instance().git.getFileCurrentRevision(

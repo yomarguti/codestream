@@ -1,7 +1,9 @@
 "use strict";
 import {
 	ChannelServiceType,
+	CodemarkType,
 	CSChannelStream,
+	CSCodemark,
 	CSCompany,
 	CSDirectStream,
 	CSFileStream,
@@ -15,6 +17,7 @@ import {
 	CSStream,
 	CSTeam,
 	CSUser,
+	ProviderType,
 	StreamType
 } from "./api.protocol.models";
 
@@ -305,27 +308,33 @@ export enum CSPresenceStatus {
 	Away = "away"
 }
 
-export interface CSCreateMarkerRequest {
+export interface CSCreateCodemarkRequest {
 	teamId: string;
-	providerType: string;
-	postStreamId: string;
-	postId: string;
+	providerType?: ProviderType;
+	type: CodemarkType;
 	streamId?: string;
-	file?: string;
-	repoId?: string;
-	remotes?: string[];
-	commitHash?: string;
-	code: string;
-	location?: CSLocationArray;
-	type?: string;
+	postId?: string;
 	color?: string;
 	status?: string;
+	title?: string;
+	assignees?: string[];
+	markers?: CSCreateCodemarkRequestMarker[];
+	remotes?: string[];
 }
 
-export interface CSCreateMarkerResponse {
-	marker: CSMarker;
-	stream?: CSStream;
-	markerLocations: CSMarkerLocations;
+export interface CSCreateCodemarkRequestMarker {
+	code: string;
+	remotes?: string[];
+	file?: string;
+	location?: CSLocationArray;
+}
+
+export interface CSCreateCodemarkResponse {
+	codemark: CSCodemark;
+	markers?: CSMarker[];
+	markerLocations?: CSMarkerLocations;
+	streams?: CSStream[];
+	repos?: CSRepository[];
 }
 
 export interface CSUpdateMarkerRequest {
