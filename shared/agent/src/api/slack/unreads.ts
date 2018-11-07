@@ -3,9 +3,9 @@ import { Emitter, Event } from "vscode-languageserver";
 import { Logger, TraceLevel } from "../../logger";
 import { CSUnreads } from "../../shared/agent.protocol";
 import { CSLastReads } from "../../shared/api.protocol";
+import { Functions } from "../../system/function";
 import { Iterables } from "../../system/iterable";
 import { ApiProvider } from "../apiProvider";
-import { Functions } from "../../system/function";
 
 export class SlackUnreads {
 	private _onDidChange = new Emitter<CSUnreads>();

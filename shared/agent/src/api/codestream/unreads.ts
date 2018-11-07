@@ -5,8 +5,8 @@ import { Logger } from "../../logger";
 import { CSUnreads } from "../../shared/agent.protocol";
 import { CSLastReads, CSPost, CSStream, StreamType } from "../../shared/api.protocol";
 import { Arrays } from "../../system/array";
-import { ApiProvider } from "../apiProvider";
 import { Functions } from "../../system/function";
+import { ApiProvider } from "../apiProvider";
 
 export class CodeStreamUnreads {
 	private _onDidChange = new Emitter<CSUnreads>();
