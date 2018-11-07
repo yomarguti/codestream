@@ -73,12 +73,6 @@
                     "description": "Specifies when to show notifications for incoming messages",
                     "scope": "window"
                 },
-                "codestream.password": {
-                    "type": "string",
-                    "default": null,
-                    "description": "Specifies the password to use to connect to the CodeStream service",
-                    "scope": "window"
-                },
                 "codestream.serverUrl": {
                     "type": "string",
                     "default": "https://api.codestream.com",

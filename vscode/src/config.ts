@@ -24,7 +24,6 @@ export interface Config {
 	autoSignIn: boolean;
 	avatars: boolean;
 	email: string;
-	markerStyle: MarkerStyle;
 	notifications: Notifications;
 	serverUrl: string;
 	showInStatusBar: "left" | "right" | false;
