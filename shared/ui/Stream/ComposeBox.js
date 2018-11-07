@@ -8,12 +8,13 @@ import Icon from "./Icon";
 import Button from "./Button";
 import ScrollBox from "./ScrollBox";
 import EmojiPicker from "./EmojiPicker";
-import { getCurrentCursorPosition, createRange } from "../utils";
+import { getCurrentCursorPosition, createRange, isInVscode } from "../utils";
 const emojiData = require("../node_modules/markdown-it-emoji-mart/lib/data/full.json");
 import Select from "react-select";
 import Tooltip from "./Tooltip";
 import hljs from "highlight.js";
 const Path = require("path");
+import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 
 const arrayToRange = ([startRow, startCol, endRow, endCol]) => {
 	return {
@@ -78,6 +79,15 @@ class ComposeBox extends React.Component {
 				atom.commands.add(".codestream .native-key-bindings", "codestream:move-up", {
 					didDispatch: event => this.handleNonCapturedKeyPress(event, "up"),
 					hiddenInCommandPalette: true
+				})
+			);
+		}
+		if (isInVscode()) {
+			this.disposables.push(
+				VsCodeKeystrokeDispatcher.on("keydown", event => {
+					if (event.key === "Escape" && event.target.id !== "input-div") {
+						this.handleKeyDown(event);
+					}
 				})
 			);
 		}
@@ -531,7 +541,7 @@ class ComposeBox extends React.Component {
 	};
 
 	handleKeyDown = event => {
-		const { quote, popupOpen } = this.state;
+		const { quote } = this.state;
 		const multiCompose = quote || this.props.multiCompose;
 
 		if (this.state.popupOpen) {
