@@ -221,7 +221,7 @@ class Post extends React.Component {
 		let menuItems = [];
 
 		if (!this.props.showDetails) {
-			const threadLabel = parentPost || post.hasReplies ? "View Thread" : "Start a Thread";
+			const threadLabel = parentPost || post.numReplies > 0 ? "View Thread" : "Start a Thread";
 			menuItems.push({ label: threadLabel, action: "make-thread" });
 		}
 		// menuItems.push({ label: "Add Reaction", action: "add-reaction" });

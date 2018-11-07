@@ -215,7 +215,7 @@ export class SimpleKnowledgePanel extends Component {
 						if (post.status === "open" || !post.status) assignPost(post, "open");
 						break;
 					case "unanswered":
-						if (!post.hasReplies) assignPost(post, "unanswered");
+						if (post.numReplies > 0) assignPost(post, "unanswered");
 						break;
 					case "recent":
 						assignPost(post, "recent");
