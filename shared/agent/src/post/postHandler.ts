@@ -135,6 +135,7 @@ export namespace PostHandler {
 				code,
 				remotes,
 				file: source && source.file,
+				commitHash: commitHashWhenPosted,
 				location:
 					backtrackedLocation &&
 					Container.instance().markerLocations.locationToArray(backtrackedLocation)

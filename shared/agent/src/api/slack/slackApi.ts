@@ -66,6 +66,7 @@ import {
 	CSSlackProviderInfo,
 	CSUser,
 	LoginResponse,
+	ProviderType,
 	StreamType
 } from "../../shared/api.protocol";
 import { Functions, log } from "../../system";
@@ -540,7 +541,10 @@ export class SlackApiProvider implements ApiProvider {
 				return { post: post };
 			}
 
-			const codemarkResponse = await this._codestream.createCodemark(request.codemark);
+			const codemarkResponse = await this._codestream.createCodemark({
+				...request.codemark,
+				providerType: ProviderType.Slack
+			});
 			const { codemark, markers, markerLocations } = codemarkResponse;
 			post.codemarkId = codemark.id;
 
@@ -550,7 +554,7 @@ export class SlackApiProvider implements ApiProvider {
 
 			// FIXME KB - support multiple markers per codeblock
 			const marker = markers[0];
-			const location = markerLocations!.locations[marker.id];
+			const location = markerLocations![0].locations[marker.id];
 			const [start, , end] = location!;
 			const title = `${marker.file} (Line${start === end ? ` ${start}` : `s ${start}-${end}`})`;
 

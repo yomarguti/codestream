@@ -157,6 +157,7 @@ export interface CreateCodemarkRequestMarker {
 	code: string;
 	remotes?: string[];
 	file?: string;
+	commitHash?: string;
 	location?: CSLocationArray;
 }
 

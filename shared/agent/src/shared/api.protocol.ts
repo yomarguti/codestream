@@ -326,13 +326,14 @@ export interface CSCreateCodemarkRequestMarker {
 	code: string;
 	remotes?: string[];
 	file?: string;
+	commitHash?: string;
 	location?: CSLocationArray;
 }
 
 export interface CSCreateCodemarkResponse {
 	codemark: CSCodemark;
 	markers?: CSMarker[];
-	markerLocations?: CSMarkerLocations;
+	markerLocations?: CSMarkerLocations[];
 	streams?: CSStream[];
 	repos?: CSRepository[];
 }
