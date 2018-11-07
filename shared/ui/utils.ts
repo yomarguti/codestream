@@ -1,5 +1,9 @@
 import * as uuidv4 from "uuid/v4";
 
+export function isInVscode() {
+	return !!document.querySelector("body.codestream");
+}
+
 export const isActiveMixin = (panel: string, componentName) => (
 	props: { activePanel: string },
 	nextProps: { activePanel: string }

@@ -21,7 +21,7 @@ import Tooltip from "./Tooltip";
 import OfflineBanner from "./OfflineBanner";
 import EventEmitter from "../event-emitter";
 import * as actions from "./actions";
-import { safe, toMapBy } from "../utils";
+import { isInVscode, safe, toMapBy } from "../utils";
 import { getSlashCommands } from "./SlashCommands";
 import { confirmPopup } from "./Confirm";
 import { getPostsForStream } from "../reducers/posts";
@@ -33,6 +33,7 @@ import {
 	getDirectMessageStreamsForTeam,
 	getDMName
 } from "../reducers/streams";
+import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 
 const EMAIL_MATCH_REGEX = new RegExp(
 	"[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*",
@@ -100,36 +101,38 @@ export class SimpleStream extends Component {
 			);
 		}
 
-		const rootInVscode = document.querySelector("body.codestream");
-		if (rootInVscode) {
-			rootInVscode.onkeydown = event => {
-				if (event.key === "Escape") {
-					if (event.target.id.includes("input-div-")) {
-						this.handleEscape(event);
-					} else if (this.state.searchBarOpen) {
-						this.handleClickSearch(event);
-					} else if (this.state.threadId) {
-						this.handleDismissThread();
+		if (isInVscode()) {
+			this.disposables.push(
+				VsCodeKeystrokeDispatcher.on("keydown", event => {
+					if (event.key === "Escape") {
+						if (event.target.id.includes("input-div-")) {
+							this.handleEscape(event);
+						} else if (this.state.searchBarOpen) {
+							this.handleClickSearch(event);
+						} else if (this.state.threadId) {
+							this.handleDismissThread();
+						}
 					}
-				}
-				if (event.key === "Enter" && !event.shiftKey && event.target.id.includes("input-div-")) {
-					// save post edit
-					const postId = event.target.id.split("-").pop();
-					return this.editPost(postId);
-				}
-				if (event.key === "ArrowUp") {
-					if (event.target.id === "input-div") {
-						if (event.target.textContent.length === 0) this.editLastPost(event);
-					} else {
-						this.editLastPost(event);
+					if (event.key === "Enter" && !event.shiftKey && event.target.id.includes("input-div-")) {
+						// save post edit
+						const postId = event.target.id.split("-").pop();
+						return this.editPost(postId);
 					}
-				}
-			};
+					if (event.key === "ArrowUp") {
+						if (event.target.id === "input-div") {
+							if (event.target.textContent.length === 0) this.editLastPost(event);
+						} else {
+							this.editLastPost(event);
+						}
+					}
+				})
+			);
 		}
 	}
 
 	componentWillUnmount = () => {
 		this.disposables.forEach(d => d.dispose());
+		this.disposables = [];
 	};
 
 	goToThread = post => {
