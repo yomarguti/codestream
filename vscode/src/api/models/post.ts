@@ -34,7 +34,9 @@ export class Post extends CodeStreamItem<CSPost> {
 	}
 
 	get hasCode() {
-		return this.entity.codeBlocks !== undefined && this.entity.codeBlocks.length !== 0;
+		return (
+			this.entity.codemark && this.entity.codemark.markers && this.entity.codemark.markers.length
+		);
 	}
 
 	get hasReactions() {
@@ -42,7 +44,7 @@ export class Post extends CodeStreamItem<CSPost> {
 	}
 
 	get hasReplies() {
-		return !!this.entity.hasReplies;
+		return this.entity.numReplies > 0;
 	}
 
 	get senderId() {
@@ -67,16 +69,20 @@ export class Post extends CodeStreamItem<CSPost> {
 
 	// @memoize
 	async codeBlock(): Promise<CodeBlock | undefined> {
-		if (this.entity.codeBlocks === undefined || this.entity.codeBlocks.length === 0) {
+		if (
+			!this.entity.codemark ||
+			!this.entity.codemark.markers ||
+			!this.entity.codemark.markers.length
+		) {
 			return undefined;
 		}
 
-		const block = this.entity.codeBlocks[0];
-		const resp = await Container.agent.getDocumentFromCodeBlock(block);
+		const marker = this.entity.codemark.markers[0];
+		const resp = await Container.agent.getDocumentFromMarker(marker);
 		if (resp === undefined || resp === null) return undefined;
 
 		return {
-			code: block.code,
+			code: marker.code,
 			range: new Range(
 				resp.range.start.line,
 				resp.range.start.character,

@@ -28,7 +28,8 @@ export class Marker {
 	private _post: Post | undefined;
 	async post() {
 		if (this._post === undefined) {
-			const post = (await Container.agent.posts.get(this.entity.streamId, this.entity.postId)).post;
+			const post = (await Container.agent.posts.get(this.entity.postStreamId, this.entity.postId))
+				.post;
 			this._post = new Post(this.session, post);
 		}
 		return this._post;
@@ -39,7 +40,7 @@ export class Marker {
 	}
 
 	get postStreamId() {
-		return this.entity.streamId;
+		return this.entity.postStreamId;
 	}
 
 	get range() {
@@ -47,14 +48,14 @@ export class Marker {
 	}
 
 	get color(): string {
-		return this.entity.color || "blue";
+		return this.entity.codemark.color || "blue";
 	}
 
 	get type(): string {
-		return this.entity.type || "comment";
+		return this.entity.codemark.type || "comment";
 	}
 
 	get status(): string {
-		return this.entity.status || "open";
+		return this.entity.codemark.status || "open";
 	}
 }

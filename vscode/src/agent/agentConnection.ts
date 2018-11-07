@@ -43,7 +43,7 @@ import {
 	CreateChannelStreamRequestType,
 	CreateDirectStreamRequestType,
 	CreatePostRequestType,
-	CreatePostWithCodeRequestType,
+	CreatePostWithCodemarkRequestType,
 	CreateRepoRequestType,
 	DeletePostRequestType,
 	DidChangeConnectionStatusNotification,
@@ -58,6 +58,8 @@ import {
 	DidLogoutNotificationType,
 	DocumentFromCodeBlockRequestType,
 	DocumentFromCodeBlockResponse,
+	DocumentFromMarkerRequestType,
+	DocumentFromMarkerResponse,
 	DocumentLatestRevisionRequestType,
 	DocumentLatestRevisionResponse,
 	DocumentMarkersRequestType,
@@ -102,7 +104,9 @@ import {
 } from "../shared/agent.protocol";
 import {
 	ChannelServiceType,
+	CodemarkType,
 	CSCodeBlock,
+	CSMarker,
 	CSMePreferences,
 	CSPost,
 	CSPresenceStatus,
@@ -206,11 +210,11 @@ export class CodeStreamAgentConnection implements Disposable {
 	}
 
 	@started
-	getDocumentFromCodeBlock(block: CSCodeBlock): Promise<DocumentFromCodeBlockResponse | undefined> {
-		return this.sendRequest(DocumentFromCodeBlockRequestType, {
-			repoId: block.repoId,
-			file: block.file,
-			markerId: block.markerId
+	getDocumentFromMarker(marker: CSMarker): Promise<DocumentFromMarkerResponse | undefined> {
+		return this.sendRequest(DocumentFromMarkerRequestType, {
+			repoId: marker.repoId,
+			file: marker.file,
+			markerId: marker.id
 		});
 	}
 
@@ -342,7 +346,7 @@ export class CodeStreamAgentConnection implements Disposable {
 			text: string,
 			mentionedUserIds: string[],
 			code: string,
-			location: [number, number, number, number] | undefined,
+			rangeArray: [number, number, number, number] | undefined,
 			source:
 				| {
 						file: string;
@@ -355,23 +359,23 @@ export class CodeStreamAgentConnection implements Disposable {
 			parentPostId: string | undefined,
 			streamId: string,
 			title?: string,
-			type?: string,
+			type?: CodemarkType,
 			assignees?: [],
 			color?: string
 		): Promise<CSPost> {
-			return this._connection.sendRequest(CreatePostWithCodeRequestType, {
+			return this._connection.sendRequest(CreatePostWithCodemarkRequestType, {
 				textDocument: { uri: uri.toString() },
 				// range: range,
 				// dirty: document.isDirty,
 				mentionedUserIds: mentionedUserIds,
 				text: text,
 				code: code,
-				location: location,
+				rangeArray: rangeArray,
 				source: source,
 				parentPostId: parentPostId,
 				streamId: streamId,
 				title: title,
-				type: type,
+				type: type || CodemarkType.Comment,
 				assignees: assignees,
 				color: color
 			});
