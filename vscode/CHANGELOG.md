@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.22.1] - 2018-11-7
+
+### Fixed
+
+- Fixes an undefined property error while calculating count of unread messages
+
 ## [0.22.0] - 2018-11-2
 
 ### Fixed
