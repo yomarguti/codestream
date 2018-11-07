@@ -168,8 +168,12 @@ export class SimpleStream extends Component {
 	componentDidUpdate(prevProps, prevState) {
 		const { postStreamId } = this.props;
 
-		// if we are switching from a non-main panel
+		if (!!prevState.searchBarOpen === false && this.state.searchBarOpen) {
+			requestAnimationFrame(() => this._searchInput.focus());
+		}
+
 		if (this.props.activePanel === "main" && prevProps.activePanel !== "main") {
+			// if we are switching from a non-main panel
 			this.focusInput();
 		}
 
@@ -733,13 +737,11 @@ export class SimpleStream extends Component {
 
 	handleClickSearch = e => {
 		if (e) e.stopPropagation();
-		const { searchBarOpen } = this.state;
 
-		if (searchBarOpen) this.setState({ q: null });
-		else
-			setTimeout(() => {
-				this._searchInput.focus();
-			}, 20);
+		const { searchBarOpen } = this.state;
+		if (searchBarOpen) {
+			this.setState({ q: null });
+		}
 		this.setState({ searchBarOpen: !searchBarOpen });
 	};
 
