@@ -191,6 +191,7 @@ class Post extends React.Component {
 			bookmark: post.type === "bookmark"
 		});
 
+		console.log(post);
 		let codeBlock = null;
 		if (post.codemark) {
 			const noRepo = !post.codemark.markers[0].repoId;
@@ -226,6 +227,7 @@ class Post extends React.Component {
 		// menuItems.push({ label: "Add Reaction", action: "add-reaction" });
 
 		menuItems.push({ label: "Mark Unread", action: "mark-unread" });
+		menuItems.push({ label: "Quote", action: "quote" });
 		// { label: "Add Reaction", action: "add-reaction" },
 		// { label: "Pin to Stream", action: "pin-to-stream" }
 
@@ -314,18 +316,18 @@ class Post extends React.Component {
 						<div className="text">
 							{this.props.collapsed && !post.title && this.renderTypeIcon(post)}
 							{this.renderText(post)}
-							{!this.props.editing &&
-								post.hasBeenEdited && <span className="edited">(edited)</span>}
+							{!this.props.editing && post.hasBeenEdited && (
+								<span className="edited">(edited)</span>
+							)}
 							{this.renderAssignees(post)}
 							{this.renderCodeBlockFile(post)}
 						</div>
 					)}
 					{codeBlock}
 					{this.renderAttachments(post)}
-					{this.props.showDetails &&
-						!this.state.warning && (
-							<PostDetails post={post} currentCommit={this.props.currentCommit} />
-						)}
+					{this.props.showDetails && !this.state.warning && (
+						<PostDetails post={post} currentCommit={this.props.currentCommit} />
+					)}
 				</div>
 				{this.renderReactions(post)}
 				{this.renderReplyCount(post)}

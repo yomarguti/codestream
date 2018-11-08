@@ -17,6 +17,7 @@ import CreateDMPanel from "./CreateDMPanel";
 import ChannelMenu from "./ChannelMenu";
 import Post from "./Post";
 import Icon from "./Icon";
+import CancelButton from "./CancelButton";
 import Tooltip from "./Tooltip";
 import OfflineBanner from "./OfflineBanner";
 import EventEmitter from "../event-emitter";
@@ -395,18 +396,16 @@ export class SimpleStream extends Component {
 		const lower = threadPost ? threadPost.type || "Comment" : "";
 		const commentTypeLabel = lower.charAt(0).toUpperCase() + lower.substr(1);
 		const postStreamStarred = this.props.starredStreams[this.props.postStreamId];
-		const tooltip = (
-			<span>
-				Cancel <span className="keybinding">ESC</span>
-			</span>
-		);
 		const closeThreadTooltip = (
 			<span>
 				Close thread <span className="keybinding">ESC</span>
 			</span>
 		);
 
-		const renderNav = !["create-channel", "create-dm", "public-channels"].includes(activePanel);
+		// these panels do not have global nav
+		const renderNav = !["create-channel", "create-dm", "public-channels", "invite"].includes(
+			activePanel
+		);
 
 		return (
 			<div className={streamClass}>
@@ -426,13 +425,7 @@ export class SimpleStream extends Component {
 									onChange={e => this.setState({ q: e.target.value })}
 									placeholder="Search Codemarks"
 								/>
-								<span className="align-right-button" onClick={this.handleClickSearch}>
-									<Tooltip title={tooltip} placement="bottomRight">
-										<span>
-											<Icon name="x" className="cancel-icon" />
-										</span>
-									</Tooltip>
-								</span>
+								<CancelButton onClick={this.handleClickSearch} />
 							</div>
 						)}
 						{!this.state.searchBarOpen && (
@@ -653,11 +646,7 @@ export class SimpleStream extends Component {
 					{threadId && (
 						<div className="thread-panel" ref={ref => (this._threadPanel = ref)}>
 							<div className="panel-header">
-								<Tooltip title={closeThreadTooltip} placement="bottomRight">
-									<span className="align-right-button" onClick={this.handleDismissThread}>
-										<Icon name="x" />
-									</span>
-								</Tooltip>
+								<CancelButton title={closeThreadTooltip} onClick={this.handleDismissThread} />
 								<span>
 									<label>
 										{commentTypeLabel} in{" "}
@@ -879,6 +868,8 @@ export class SimpleStream extends Component {
 		this.props.markPostUnread(this.props.postStreamId, postId);
 	};
 
+	quotePost = post => {};
+
 	notImplementedYet = () => {
 		return this.submitSystemPost("Not implemented yet");
 	};
@@ -925,6 +916,8 @@ export class SimpleStream extends Component {
 				return this.confirmDeletePost(post.id);
 			case "mark-unread":
 				return this.markUnread(post.id);
+			case "quote":
+				return this.quotePost(post);
 			case "add-reaction":
 				return this.notImplementedYet();
 			case "pin-to-stream":
@@ -1644,8 +1637,8 @@ const mapStateToProps = ({
 	const channelMembers = postStream.isTeamStream
 		? teamMembers
 		: postStream.memberIds
-			? postStream.memberIds.map(id => users[id])
-			: [];
+		? postStream.memberIds.map(id => users[id])
+		: [];
 
 	const teamMembersById = toMapBy("id", teamMembers);
 

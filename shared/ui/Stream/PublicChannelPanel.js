@@ -14,6 +14,7 @@ import Timestamp from "./Timestamp";
 import Tooltip from "./Tooltip";
 import { isInVscode } from "../utils";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
+import CancelButton from "./CancelButton";
 
 export class SimplePublicChannelPanel extends Component {
 	constructor(props) {
@@ -60,11 +61,7 @@ export class SimplePublicChannelPanel extends Component {
 		return (
 			<div className={panelClass}>
 				<div className="panel-header">
-					<Tooltip title={title} placement="bottomRight">
-						<span className="align-right-button" onClick={this.goToChannels}>
-							<Icon name="x" className="clickable" />
-						</span>
-					</Tooltip>
+					<CancelButton onClick={() => this.props.setActivePanel("channels")} />
 					<span className="panel-title">Public Channels</span>
 				</div>
 				<div className="filters" style={{ paddingTop: "10px" }}>

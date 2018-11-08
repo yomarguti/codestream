@@ -5,7 +5,7 @@ import _ from "underscore";
 import { createStream } from "./actions";
 import createClassString from "classnames";
 import { getChannelStreamsForTeam } from "../reducers/streams";
-import Icon from "./Icon";
+import CancelButton from "./CancelButton";
 import Button from "./Button";
 import Tooltip from "./Tooltip";
 import { FormattedMessage } from "react-intl";
@@ -66,23 +66,10 @@ export class SimpleCreateChannelPanel extends Component {
 			: "We don't support these characters: .~#%&*{}+/:<>?|'\".";
 
 		this.tabIndexCount = 0;
-		const title = (
-			<span>
-				Close <span className="keybinding">ESC</span>
-			</span>
-		);
-
 		return (
 			<div className={createChannelPanelClass} ref={this._createChannelPanel}>
 				<div className="panel-header">
-					<Tooltip title={title} placement="bottomRight">
-						<span
-							className="align-right-button"
-							onClick={() => this.props.setActivePanel("channels")}
-						>
-							<Icon name="x" className="clickable" />
-						</span>
-					</Tooltip>
+					<CancelButton placement="left" onClick={() => this.props.setActivePanel("channels")} />
 					<span className="panel-title">New Channel</span>
 				</div>
 				<form id="create-channel-form" className="standard-form vscroll">

@@ -4,6 +4,7 @@ import ContentEditable from "react-contenteditable";
 import createClassString from "classnames";
 import AtMentionsPopup from "./AtMentionsPopup";
 import Icon from "./Icon";
+import CancelButton from "./CancelButton";
 import Button from "./Button";
 import ScrollBox from "./ScrollBox";
 import EmojiPicker from "./EmojiPicker";
@@ -700,19 +701,10 @@ class ComposeBox extends React.Component {
 			commentType === "bookmark" || commentType === "trap"
 				? ` (required for ${commentType}s)`
 				: " (optional)";
-		const tooltip = (
-			<span>
-				Cancel <span className="keybinding">ESC</span>
-			</span>
-		);
 		return [
 			<div className="panel-header" key="one">
 				New {commentString.charAt(0).toUpperCase() + commentString.slice(1)}
-				<Tooltip title={tooltip}>
-					<span className="align-right-button" onClick={this.handleClickDismissMultiCompose}>
-						<Icon name="x" />
-					</span>
-				</Tooltip>
+				<CancelButton placement="left" onClick={this.handleClickDismissMultiCompose} />
 			</div>,
 			<ScrollBox key="two">
 				<form id="code-comment-form" className="standard-form" key="two">

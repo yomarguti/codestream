@@ -289,64 +289,6 @@ export class SimpleKnowledgePanel extends Component {
 		// this.setState({ showMarkers });
 	};
 
-	renderHeader = () => {
-		const { typeFilter } = this.props;
-		const knowledgeLabel = this.typeLabels[typeFilter];
-
-		<div className="panel-header">
-			{this.state.searchBarOpen && (
-				<div className="search-bar">
-					<input
-						name="q"
-						className="native-key-bindings input-text control"
-						type="text"
-						ref={ref => (this._searchInput = ref)}
-						onChange={e => this.setState({ q: e.target.value })}
-					/>
-					<span className="align-right-button" onClick={this.handleClickSearch}>
-						<Tooltip title="Cancel">
-							<Icon name="x" className="cancel-icon" />
-						</Tooltip>
-					</span>
-				</div>
-			)}
-			<span
-				className="align-left-button"
-				onClick={() => {
-					this.setState({ openPost: null });
-					this.props.setActivePanel("channels");
-				}}
-			>
-				<Icon name="chevron-left" className="show-channels-icon" />
-			</span>
-			<span className="panel-title">{knowledgeLabel}</span>
-			<span className="align-right-button-second" onClick={this.handleClickAddKnowledge}>
-				<Tooltip title="New Thing">
-					<Icon name="plus" className="plus-icon" />
-				</Tooltip>
-			</span>
-			<span className="align-right-button" onClick={this.handleClickSearch}>
-				<Tooltip title="Search">
-					<Icon name="search" className="search-icon" />
-				</Tooltip>
-			</span>
-		</div>;
-	};
-
-	handleClickAddKnowledge = e => {
-		e.stopPropagation();
-		this.props.setMultiCompose(this.props.typeFilter);
-	};
-
-	handleClickSearch = e => {
-		e.stopPropagation();
-		if (!this.state.searchBarOpen)
-			setTimeout(() => {
-				this._searchInput.focus();
-			}, 20);
-		this.setState({ searchBarOpen: !this.state.searchBarOpen });
-	};
-
 	handleClickPost = event => {
 		var postDiv = event.target.closest(".post");
 		if (!postDiv) return;
