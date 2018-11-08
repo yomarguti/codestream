@@ -716,6 +716,7 @@ export class SimpleStream extends Component {
 				multiCompose={this.state.multiCompose}
 				setMultiCompose={this.setMultiCompose}
 				quote={this.state.quote}
+				quotePost={this.state.quotePost}
 			/>
 		);
 	};
@@ -868,7 +869,10 @@ export class SimpleStream extends Component {
 		this.props.markPostUnread(this.props.postStreamId, postId);
 	};
 
-	quotePost = post => {};
+	// this tells the composebox to insert quoted text
+	quotePost = post => {
+		this.setState({ quotePost: post });
+	};
 
 	notImplementedYet = () => {
 		return this.submitSystemPost("Not implemented yet");

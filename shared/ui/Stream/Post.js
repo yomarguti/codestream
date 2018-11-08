@@ -191,7 +191,7 @@ class Post extends React.Component {
 			bookmark: post.type === "bookmark"
 		});
 
-		console.log(post);
+		// console.log(post);
 		let codeBlock = null;
 		if (post.codemark) {
 			const noRepo = !post.codemark.markers[0].repoId;

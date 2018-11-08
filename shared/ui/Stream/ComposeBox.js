@@ -94,7 +94,7 @@ class ComposeBox extends React.Component {
 	}
 
 	componentDidUpdate(prevProps, prevState) {
-		const { multiCompose, quote } = this.props;
+		const { multiCompose, quote, quotePost } = this.props;
 
 		if (prevProps.multiCompose !== multiCompose) {
 			this.setState({ commentType: multiCompose === true ? "comment" : multiCompose });
@@ -106,7 +106,19 @@ class ComposeBox extends React.Component {
 		if (prevProps.quote !== quote) {
 			this.handleCodeHighlightEvent(quote);
 		}
+
+		if (quotePost && prevProps.quotePost !== quotePost) {
+			this.handleQuotePostEvent(quotePost);
+		}
 	}
+
+	handleQuotePostEvent = post => {
+		this.focus(true);
+		this.insertTextAtCursor("@" + post.author.username + " said:");
+		this.insertNewlineAtCursor();
+		this.insertTextAtCursor(">" + post.text);
+		this.insertNewlineAtCursor();
+	};
 
 	handleCodeHighlightEvent = body => {
 		// make sure we have a compose box to type into
@@ -271,6 +283,45 @@ class ComposeBox extends React.Component {
 		var textNode = document.createTextNode(text);
 		range.insertNode(textNode);
 		range.setStartAfter(textNode);
+		sel.removeAllRanges();
+		sel.addRange(range);
+		this._contentEditable.htmlEl.normalize();
+		// sel.collapse(textNode);
+		sel.modify("move", "backward", "character");
+		sel.modify("move", "forward", "character");
+		// window.getSelection().empty();
+		// this.focus();
+
+		let postTextByStream = this.state.postTextByStream;
+		postTextByStream[this.props.streamId] = this._contentEditable.htmlEl.innerHTML;
+
+		this.setState({
+			postTextByStream,
+			cursorPosition: getCurrentCursorPosition("input-div")
+		});
+	}
+
+	insertNewlineAtCursor() {
+		var sel, range;
+		sel = window.getSelection();
+
+		// if for some crazy reason we can't find a selection, return
+		// to avoid an error.
+		// https://stackoverflow.com/questions/22935320/uncaught-indexsizeerror-failed-to-execute-getrangeat-on-selection-0-is-not
+		if (sel.rangeCount == 0) return;
+
+		range = sel.getRangeAt(0);
+
+		// delete the X characters before the caret
+		range.setStart(range.commonAncestorContainer, range.startOffset);
+		// range.moveEnd("character", toDelete.length);
+
+		range.deleteContents();
+		var br1 = document.createElement("BR");
+		var br2 = document.createElement("BR");
+		range.insertNode(br1);
+		range.insertNode(br2);
+		range.setStartAfter(br2);
 		sel.removeAllRanges();
 		sel.addRange(range);
 		this._contentEditable.htmlEl.normalize();
