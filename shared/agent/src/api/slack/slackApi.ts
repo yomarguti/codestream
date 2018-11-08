@@ -58,12 +58,16 @@ import {
 } from "../../shared/agent.protocol";
 import {
 	CSChannelStream,
-	CSCodeBlock,
+	CSCodemark,
 	CSDirectStream,
 	CSGetMeResponse,
+	CSMarker,
+	CSMarkerLocations,
 	CSMe,
 	CSPost,
+	CSRepository,
 	CSSlackProviderInfo,
+	CSStream,
 	CSUser,
 	LoginResponse,
 	ProviderType,
@@ -102,6 +106,58 @@ interface DeferredStreamRequest<TResult> {
 		id: string;
 		priority?: number;
 	};
+}
+
+function resolve(entities: {
+	codemarks?: CSCodemark[];
+	markers?: CSMarker[];
+	markerLocations?: CSMarkerLocations[];
+	repos?: CSRepository[];
+	streams?: CSStream[];
+}) {
+	const container = Container.instance();
+	const promises: Promise<any>[] = [];
+	if (entities.codemarks) {
+		promises.push(
+			container.codemarks.resolve({
+				type: MessageType.Codemarks,
+				data: [entities.codemarks]
+			})
+		);
+	}
+	if (entities.markers) {
+		promises.push(
+			container.markers.resolve({
+				type: MessageType.Codemarks,
+				data: [entities.markers]
+			})
+		);
+	}
+	if (entities.markerLocations) {
+		promises.push(
+			container.markerLocations.resolve({
+				type: MessageType.MarkerLocations,
+				data: [entities.markerLocations]
+			})
+		);
+	}
+	if (entities.repos) {
+		promises.push(
+			container.repos.resolve({
+				type: MessageType.Repositories,
+				data: [entities.repos]
+			})
+		);
+	}
+	if (entities.streams) {
+		promises.push(
+			container.streams.resolve({
+				type: MessageType.Streams,
+				data: [entities.streams]
+			})
+		);
+	}
+	return Promise.all(promises);
 }
 
 export class SlackApiProvider implements ApiProvider {
@@ -519,16 +575,25 @@ export class SlackApiProvider implements ApiProvider {
 			}
 
 			let attachments;
-			let codemark;
-			let markers;
-			let markerLocations;
+			let codemark: CSCodemark | undefined;
+			let markers: CSMarker[] | undefined;
+			let markerLocations: CSMarkerLocations[] | undefined;
+			let streams: CSStream[] | undefined;
+			let repos: CSRepository[] | undefined;
+
 			if (request.codemark) {
 				const codemarkResponse = await this._codestream.createCodemark({
 					...request.codemark,
 					providerType: ProviderType.Slack
 				});
-				({ codemark, markers, markerLocations } = codemarkResponse);
-
+				({ codemark, markers, markerLocations, streams, repos } = codemarkResponse);
+				await resolve({
+					codemarks: [codemark],
+					markers,
+					markerLocations,
+					streams,
+					repos
+				});
 				if (markers && markers.length) {
 					// FIXME KB - support multiple markers per codemark
 					const marker = markers[0];
@@ -553,7 +618,7 @@ export class SlackApiProvider implements ApiProvider {
 							text: code,
 							footer: "Posted via CodeStream",
 							ts: (new Date().getTime() / 1000) as any,
-							callback_id: `codestream://marker/${marker.id}`
+							callback_id: `codestream://codemark/${codemark.id}`
 						}
 					];
 				}
@@ -580,10 +645,14 @@ export class SlackApiProvider implements ApiProvider {
 			const { postId } = fromSlackPostId(post.id, post.streamId);
 
 			if (codemark) {
-				await this._codestream.updateCodemark({
+				const response = await this._codestream.updateCodemark({
 					codemarkId: codemark.id,
 					streamId: post.streamId,
 					postId: post.id
+				});
+				codemark = response.codemark;
+				await resolve({
+					codemarks: [codemark]
 				});
 			}
 

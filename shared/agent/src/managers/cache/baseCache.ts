@@ -85,9 +85,7 @@ export class BaseCache<T> {
 		}
 
 		Logger.log(
-			`PostManager: returning entity in ${Strings.getDurationMilliseconds(
-				start
-			)}ms ${keys}=${values}`
+			`BaseCache: returning entity in ${Strings.getDurationMilliseconds(start)}ms ${keys}=${values}`
 		);
 		return entity;
 	}

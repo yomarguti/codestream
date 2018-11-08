@@ -17,7 +17,7 @@ const defaultCreatedAt = 181886400000;
 // const multiPartyNamesRegEx = /^mpdm-([^-]+)(--.*)-1$/;
 // const multiPartyNameRegEx = /--([^-]+)/g;
 
-const markerAttachmentRegex = /codestream\:\/\/marker\/(.*)/;
+const codemarkAttachmentRegex = /codestream\:\/\/codemark\/(.*)/;
 const mentionsRegex = /(^|\s)@(\w+)(?:\b(?!@|[\(\{\[\<\-])|$)/g;
 const pseudoMentionsRegex = /(^|\s)@(everyone|channel|here)(?:\b(?!@|[\(\{\[\<\-])|$)/g;
 
@@ -253,11 +253,11 @@ export async function fromSlackPostCodemark(
 	attachments: MessageAttachment[]
 ): Promise<CSCodemark | undefined> {
 	const attachment = attachments.find(
-		(a: any) => a.callback_id != null && markerAttachmentRegex.test(a.callback_id)
+		(a: any) => a.callback_id != null && codemarkAttachmentRegex.test(a.callback_id)
 	);
 	if (attachment == null) return undefined;
 
-	const match = markerAttachmentRegex.exec(attachment.callback_id || "");
+	const match = codemarkAttachmentRegex.exec(attachment.callback_id || "");
 	if (match == null) return undefined;
 
 	const [, codemarkId] = match;
@@ -266,6 +266,7 @@ export async function fromSlackPostCodemark(
 		return await Container.instance().codemarks.getById(codemarkId);
 	} catch (ex) {
 		Logger.error(ex, `Failed to find codemark=${codemarkId}`);
+		debugger;
 		return undefined;
 	}
 }
