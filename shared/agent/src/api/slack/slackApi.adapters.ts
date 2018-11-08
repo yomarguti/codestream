@@ -212,7 +212,7 @@ export async function fromSlackPost(
 		// TODO: Turn unfurled images into files
 		const attachments = post.attachments.filter((a: any) => a.from_url == null);
 		if (attachments.length !== 0) {
-			codemark = await fromSlackPostCodeBlock(attachments);
+			codemark = await fromSlackPostCodemark(attachments);
 			if (!codemark) {
 				// Get text/fallback for attachments
 				text += "\n";
