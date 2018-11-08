@@ -207,13 +207,12 @@ export async function fromSlackPost(
 	}
 
 	let codemark: CSCodemark | undefined;
-	let commitHashWhenPosted;
 	if (post.attachments && post.attachments.length !== 0) {
 		// Filter out unfurled links
 		// TODO: Turn unfurled images into files
 		const attachments = post.attachments.filter((a: any) => a.from_url == null);
 		if (attachments.length !== 0) {
-			const codemark = await fromSlackPostCodeBlock(attachments);
+			codemark = await fromSlackPostCodemark(attachments);
 			if (!codemark) {
 				// Get text/fallback for attachments
 				text += "\n";
@@ -237,7 +236,7 @@ export async function fromSlackPost(
 		deactivated: false,
 		files: files,
 		hasBeenEdited: post.edited != null,
-		numReplies: post.numReplies, // FIXME KB - what's the Slack post property?
+		numReplies: post.ts === post.thread_ts ? 1 : 0, // FIXME KB - what's the Slack post property?
 		id: toSlackPostId(post.ts, streamId),
 		mentionedUserIds: mentionedUserIds,
 		modifiedAt: post.edited != null ? Number(post.edited.ts.split(".")[0]) * 1000 : timestamp,
@@ -250,7 +249,7 @@ export async function fromSlackPost(
 	};
 }
 
-export async function fromSlackPostCodeBlock(
+export async function fromSlackPostCodemark(
 	attachments: MessageAttachment[]
 ): Promise<CSCodemark | undefined> {
 	const attachment = attachments.find(

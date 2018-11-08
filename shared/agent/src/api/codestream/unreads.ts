@@ -44,7 +44,7 @@ export class CodeStreamUnreads {
 			p =>
 				!p.deactivated &&
 				!p.hasBeenEdited &&
-				!p.numReplies &&
+				p.numReplies > 0 &&
 				p.creatorId !== this._api.userId &&
 				(p.reactions == null || Object.keys(p.reactions).length === 0)
 		);
