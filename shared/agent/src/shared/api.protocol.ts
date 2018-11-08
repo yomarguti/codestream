@@ -338,6 +338,15 @@ export interface CSCreateCodemarkResponse {
 	repos?: CSRepository[];
 }
 
+export interface CSUpdateCodemarkRequest {
+	streamId?: string;
+	postId?: string;
+}
+
+export interface CSUpdateCodemarkResponse {
+	codemark: CSCodemark;
+}
+
 export interface CSUpdateMarkerRequest {
 	commitHashWhenCreated?: string;
 }

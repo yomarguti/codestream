@@ -15,6 +15,7 @@ import { CodeStreamApiProvider } from "./codestreamApi";
 
 const messageToType: {
 	[key: string]:
+		| MessageType.Codemarks
 		| MessageType.MarkerLocations
 		| MessageType.Markers
 		| MessageType.Posts
@@ -24,6 +25,8 @@ const messageToType: {
 		| MessageType.Users
 		| undefined;
 } = {
+	codemark: MessageType.Codemarks,
+	codemarks: MessageType.Codemarks,
 	marker: MessageType.Markers,
 	markerLocations: MessageType.MarkerLocations,
 	markers: MessageType.Markers,

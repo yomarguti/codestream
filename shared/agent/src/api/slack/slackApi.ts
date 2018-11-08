@@ -518,6 +518,47 @@ export class SlackApiProvider implements ApiProvider {
 				return postResponse;
 			}
 
+			let attachments;
+			let codemark;
+			let markers;
+			let markerLocations;
+			if (request.codemark) {
+				const codemarkResponse = await this._codestream.createCodemark({
+					...request.codemark,
+					providerType: ProviderType.Slack
+				});
+				({ codemark, markers, markerLocations } = codemarkResponse);
+
+				if (markers && markers.length) {
+					// FIXME KB - support multiple markers per codemark
+					const marker = markers[0];
+					const location = markerLocations![0].locations[marker.id];
+					const [start, , end] = location!;
+					const title = `${marker.file} (Line${start === end ? ` ${start}` : `s ${start}-${end}`})`;
+
+					const githubRemote = request.codemark.remotes!.find(r => r.startsWith("github.com"));
+					let titleLink;
+					if (githubRemote) {
+						titleLink = `https://${githubRemote}/blob/HEAD/${marker.file}#L${start}${
+							start !== end ? `-L${end}` : ""
+						}`;
+					}
+					const code = `\`\`\`${marker.code}\`\`\``;
+
+					attachments = [
+						{
+							fallback: `${title}\n${code}`,
+							title: title,
+							title_link: titleLink,
+							text: code,
+							footer: "Posted via CodeStream",
+							ts: (new Date().getTime() / 1000) as any,
+							callback_id: `codestream://marker/${marker.id}`
+						}
+					];
+				}
+			}
+
 			const response = await slackTimeout(
 				this._slack.chat.postMessage({
 					channel: streamId,
@@ -525,78 +566,33 @@ export class SlackApiProvider implements ApiProvider {
 					as_user: true,
 					thread_ts: parentPostId,
 					unfurl_links: true,
-					reply_broadcast: parentPostId ? true : undefined
+					reply_broadcast: parentPostId ? true : undefined,
+					attachments: attachments
 				}),
 				`chat.postMessage(${streamId})`
 			);
 
-			// tslint:disable-next-line:prefer-const
-			let { ok, error, message } = response as WebAPICallResult & { message?: any; ts?: any };
+			const { ok, error, message } = response as WebAPICallResult & { message?: any; ts?: any };
 			if (!ok) throw new Error(error);
 
 			const usernamesById = await this.ensureUsernamesById();
 			const post = await fromSlackPost(message, streamId, usernamesById, this._codestreamTeamId);
-
-			if (request.codemark == null) {
-				return { post: post };
-			}
-
-			const codemarkResponse = await this._codestream.createCodemark({
-				...request.codemark,
-				providerType: ProviderType.Slack
-			});
-			const { codemark, markers, markerLocations } = codemarkResponse;
-			post.codemarkId = codemark.id;
-
-			if (!markers || !markers.length) {
-				return { post: post };
-			}
-
-			// FIXME KB - support multiple markers per codeblock
-			const marker = markers[0];
-			const location = markerLocations![0].locations[marker.id];
-			const [start, , end] = location!;
-			const title = `${marker.file} (Line${start === end ? ` ${start}` : `s ${start}-${end}`})`;
-
-			const githubRemote = request.codemark.remotes!.find(r => r.startsWith("github.com"));
-			let titleLink;
-			if (githubRemote) {
-				titleLink = `https://${githubRemote}/blob/HEAD/${marker.file}#L${start}${
-					start !== end ? `-L${end}` : ""
-				}`;
-			}
-
-			const code = `\`\`\`${marker.code}\`\`\``;
-
-			const attachments = [
-				{
-					fallback: `${title}\n${code}`,
-					title: title,
-					title_link: titleLink,
-					text: code,
-					footer: "Posted via CodeStream",
-					ts: (new Date().getTime() / 1000) as any,
-					callback_id: `codestream://marker/${marker.id}`
-				}
-			];
-
 			const { postId } = fromSlackPostId(post.id, post.streamId);
 
-			const updateResponse = await slackTimeout(
-				this._slack.chat.update({
-					channel: streamId,
-					ts: postId,
-					text: text,
-					as_user: true,
-					attachments: attachments
-				}),
-				`chat.update(${streamId}, ${postId})`
-			);
-
-			({ ok, error } = updateResponse as WebAPICallResult);
-			if (!ok) throw new Error(error);
+			if (codemark) {
+				await this._codestream.updateCodemark({
+					codemarkId: codemark.id,
+					streamId: post.streamId,
+					postId: post.id
+				});
+			}
 
 			const postResponse = await this.getPost({ streamId: streamId, postId: postId });
+
+			if (codemark) {
+				postResponse.post.codemarkId = codemark.id;
+				postResponse.post.codemark = codemark;
+			}
 			return postResponse;
 		} finally {
 			this.updatePostsCount();

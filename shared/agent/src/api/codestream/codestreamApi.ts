@@ -49,6 +49,7 @@ import {
 	SetPostStatusRequest,
 	SetStreamPurposeRequest,
 	UnarchiveStreamRequest,
+	UpdateCodemarkRequest,
 	UpdateMarkerRequest,
 	UpdatePreferencesRequest,
 	UpdatePresenceRequest,
@@ -102,6 +103,8 @@ import {
 	CSSetPostStatusRequest,
 	CSSetPostStatusResponse,
 	CSStream,
+	CSUpdateCodemarkRequest,
+	CSUpdateCodemarkResponse,
 	CSUpdateMarkerRequest,
 	CSUpdateMarkerResponse,
 	CSUpdatePostsCountRequest,
@@ -305,6 +308,9 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 		// Resolve any directives in the message data
 		switch (e.type) {
+			case MessageType.Codemarks:
+				e.data = await Container.instance().codemarks.resolve(e);
+				break;
 			case MessageType.MarkerLocations:
 				e.data = await Container.instance().markerLocations.resolve(e);
 				break;
@@ -493,6 +499,18 @@ export class CodeStreamApiProvider implements ApiProvider {
 		return this.post<CSCreateCodemarkRequest, CSCreateCodemarkResponse>(
 			"/codemarks",
 			{ ...request, teamId: this.teamId },
+			this._token
+		);
+	}
+
+	@log()
+	updateCodemark(request: UpdateCodemarkRequest) {
+		return this.put<CSUpdateCodemarkRequest, CSUpdateCodemarkResponse>(
+			`/codemarks/${request.codemarkId}`,
+			{
+				streamId: request.streamId,
+				postId: request.postId
+			},
 			this._token
 		);
 	}

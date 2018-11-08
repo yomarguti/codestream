@@ -131,6 +131,7 @@ export type LoginOptions = CredentialsLoginOptions | OneTimeCodeLoginOptions | T
 
 export enum MessageType {
 	Connection = "connection",
+	Codemarks = "codemarks",
 	MarkerLocations = "markerLocations",
 	Markers = "markers",
 	Posts = "posts",

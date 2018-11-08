@@ -161,6 +161,12 @@ export interface CreateCodemarkRequestMarker {
 	location?: CSLocationArray;
 }
 
+export interface UpdateCodemarkRequest {
+	codemarkId: string;
+	streamId?: string;
+	postId?: string;
+}
+
 export interface UpdateMarkerResponse {
 	marker: CSMarker;
 }
