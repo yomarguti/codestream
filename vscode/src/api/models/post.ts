@@ -1,6 +1,6 @@
 "use strict";
 import { Range, Uri } from "vscode";
-import { CSPost } from "../../agent/agentConnection";
+import { CSFullPost } from "../../agent/agentConnection";
 import { Container } from "../../container";
 import { Dates, memoize } from "../../system";
 import { CodeStreamSession } from "../session";
@@ -15,8 +15,8 @@ interface CodeBlock {
 	readonly uri: Uri;
 }
 
-export class Post extends CodeStreamItem<CSPost> {
-	constructor(session: CodeStreamSession, post: CSPost, private _stream?: Stream) {
+export class Post extends CodeStreamItem<CSFullPost> {
+	constructor(session: CodeStreamSession, post: CSFullPost, private _stream?: Stream) {
 		super(session, post);
 	}
 
