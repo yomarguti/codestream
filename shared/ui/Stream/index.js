@@ -594,12 +594,14 @@ export class SimpleStream extends Component {
 										</span>
 									</Tooltip>
 								]}
-								<div className="sep" />
-								<Tooltip title="View pinned items" placement="bottomLeft">
-									<span className="clickable" onClick={this.showPinnedPosts}>
-										<Icon name="pin" className="smaller" />
-									</span>
-								</Tooltip>
+								{
+									// <div className="sep" />
+									// <Tooltip title="View pinned items" placement="bottomLeft">
+									// 	<span className="clickable" onClick={this.showPinnedPosts}>
+									// 		<Icon name="pin" className="smaller" />
+									// 	</span>
+									// </Tooltip>
+								}
 								{postStreamPurpose && [
 									<div className="sep" />,
 									<span onClick={() => this.setPurpose()} className="purpose-header">

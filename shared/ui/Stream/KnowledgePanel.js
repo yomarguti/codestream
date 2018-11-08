@@ -400,6 +400,7 @@ export class SimpleKnowledgePanel extends Component {
 		const post = this.props.posts.find(post => id === post.id);
 		if (post) this.props.showCode(post, true);
 		// this.setState({ openPost: id });
+		// this.props.setCurrentStream(post.streamId);
 		this.props.postAction("make-thread", post);
 		// }
 	};
