@@ -105,7 +105,7 @@ export namespace PostHandler {
 		const filePath = URI.parse(documentId.uri).fsPath;
 		const fileContents = lastFullCode;
 
-		let codemarkRequest = {
+		const codemarkRequest = {
 			title,
 			type,
 			assignees,

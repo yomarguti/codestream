@@ -6,6 +6,7 @@ import {
 	CreatePostRequestType,
 	CreatePostResponse,
 	CSFullCodemark,
+	CSFullPost,
 	DeletePostRequest,
 	DeletePostRequestType,
 	DeletePostResponse,
@@ -436,12 +437,16 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 	@lspHandler(FetchPostsRequestType)
 	async get(request: FetchPostsRequest): Promise<FetchPostsResponse> {
 		const cacheResponse = await this.cache.getPosts(request);
-		const response = {
-			posts: [],
+		const fullPosts = await this.fullPosts(cacheResponse.posts);
+		return {
+			posts: fullPosts,
 			more: cacheResponse.more
-		} as FetchPostsResponse;
+		};
+	}
 
-		for (const csPost of cacheResponse.posts) {
+	async fullPosts(csPosts: CSPost[]): Promise<CSFullPost[]> {
+		const fullPosts = [];
+		for (const csPost of csPosts) {
 			let fullCodemark: CSFullCodemark | undefined;
 			if (csPost.codemarkId) {
 				const csCodemark = await Container.instance().codemarks.getById(csPost.codemarkId);
@@ -455,13 +460,12 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					}
 				}
 			}
-			response.posts.push({
+			fullPosts.push({
 				...csPost,
 				codemark: fullCodemark
 			});
 		}
-
-		return response;
+		return fullPosts;
 	}
 
 	@lspHandler(FetchPostRepliesRequestType)

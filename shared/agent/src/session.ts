@@ -215,11 +215,13 @@ export class CodeStreamSession {
 				});
 				break;
 			case MessageType.Posts:
-				const posts = await Container.instance().posts.resolve(e);
+				const postManager = Container.instance().posts;
+				const posts = await postManager.resolve(e);
 				this._onDidChangePosts.fire(posts);
+				const fullPosts = await postManager.fullPosts(posts);
 				this.agent.sendNotification(DidChangeDataNotificationType, {
 					type: ChangeDataType.Posts,
-					data: posts
+					data: fullPosts
 				});
 				break;
 			case MessageType.Preferences:
