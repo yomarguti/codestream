@@ -98,13 +98,20 @@ export namespace PostHandler {
 		title,
 		type,
 		assignees,
-		color
+		color,
+		status
 	}: CreatePostWithCodemarkRequest): Promise<CSPost | undefined> {
 		const { git } = Container.instance();
 		const filePath = URI.parse(documentId.uri).fsPath;
 		const fileContents = lastFullCode;
 
-		let codemarkRequest: CreateCodemarkRequest | undefined;
+		let codemarkRequest = {
+			title,
+			type,
+			assignees,
+			color,
+			status
+		} as CreateCodemarkRequest;
 		let marker: CreateCodemarkRequestMarker | undefined;
 		let commitHashWhenPosted: string | undefined;
 		let location: CSMarkerLocation | undefined;
@@ -141,16 +148,9 @@ export namespace PostHandler {
 					Container.instance().markerLocations.locationToArray(backtrackedLocation)
 			};
 
-			codemarkRequest = {
-				type: type,
-				streamId: streamId,
-				color: color,
-				// status:
-				title: title,
-				assignees: assignees,
-				markers: marker && [marker],
-				remotes: remotes
-			};
+			codemarkRequest.streamId = streamId;
+			codemarkRequest.markers = marker && [marker];
+			codemarkRequest.remotes = remotes;
 		}
 
 		try {
@@ -159,12 +159,7 @@ export namespace PostHandler {
 				text,
 				parentPostId,
 				codemark: codemarkRequest,
-				commitHashWhenPosted,
-				mentionedUserIds,
-				title,
-				type,
-				assignees,
-				color
+				mentionedUserIds
 			});
 
 			if (markers && markers.length && backtrackedLocation) {

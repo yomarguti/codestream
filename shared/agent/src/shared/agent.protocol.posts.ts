@@ -24,12 +24,6 @@ export interface CreatePostRequest {
 	mentionedUserIds?: string[];
 	parentPostId?: string;
 	codemark?: CreateCodemarkRequest;
-	commitHashWhenPosted?: string;
-	title?: string;
-	type?: string;
-	assignees?: [];
-	color?: string;
-	status?: string;
 }
 
 export interface CreatePostInFileStreamRequest {
@@ -78,6 +72,7 @@ export interface CreatePostWithCodemarkRequest {
 	type: CodemarkType;
 	assignees?: [];
 	color?: string;
+	status?: string;
 }
 
 export const CreatePostWithCodemarkRequestType = new RequestType<
