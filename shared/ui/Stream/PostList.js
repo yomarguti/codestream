@@ -1,6 +1,7 @@
 import * as React from "react";
 import { debounce } from "underscore";
 import DateSeparator from "./DateSeparator";
+import Icon from "./Icon";
 import Post from "./Post";
 import infiniteLoadable from "./infiniteLoadable";
 import { findLast, rAFThrottle, safe } from "../utils";
@@ -205,7 +206,9 @@ export default infiniteLoadable(
 				<div className="postslist" ref={this.list} onScroll={this.onScroll}>
 					{hasMore || isFetchingMore ? (
 						<div style={{ textAlign: "center" }}>
-							<p>Loading more posts...</p>
+							<p>
+								<Icon name="sync" className="spin" /> Loading more posts...
+							</p>
 						</div>
 					) : (
 						safe(renderIntro)
