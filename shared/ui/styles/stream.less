@@ -48,6 +48,14 @@
 	.error-message {
 		color: @text-color-error;
 	}
+	.loading-message {
+		text-align: center;
+		padding: 20px;
+		font-size: 16px;
+		.icon {
+			vertical-align: 2px;
+		}
+	}
 
 	.banner {
 		height: @panel-header-height;
@@ -1030,7 +1038,7 @@
 					}
 					.align-right {
 						position: absolute;
-						right: 9px;
+						right: 10px;
 						top: 2px;
 						z-index: 1;
 						// opacity: 0.5;
@@ -1119,17 +1127,21 @@
 							// the gear icon is 2px wider than the + icon
 							margin-right: -1px;
 						}
-						.icon.align-right {
+						span.align-right {
 							float: none;
 							position: absolute;
-							right: 9px;
-							top: 3px !important;
+							right: 0;
 							margin: 0;
+							top: 0;
 							display: none;
 							// visibility: hidden;
-							opacity: 0.6;
+							.icon {
+								display: inline-block;
+								opacity: 0.6;
+								margin-right: 10px;
+							}
 						}
-						.icon.align-right:hover {
+						span.align-right .icon:hover {
 							opacity: 1;
 						}
 						.icon-lock::before,
@@ -1207,8 +1219,10 @@
 							}
 						}
 					}
-					li:hover .icon.align-right {
-						display: block;
+					li:hover {
+						span.align-right {
+							display: inline-block;
+						}
 					}
 					li.muted {
 						opacity: 0.5;

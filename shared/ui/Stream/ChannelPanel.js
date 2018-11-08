@@ -436,23 +436,26 @@ export class SimpleChannelPanel extends Component {
 				>
 					{this.streamIcon(stream)}
 					<Debug text={stream.id}>{stream.name}</Debug>
-					{mentions > 0 ? <span className="umi">{mentions}</span> : null}
-					<span>
-						<Tooltip title="Channel Settings">
-							<Icon name="gear" className="align-right" onClick={this.handleClickStreamSettings} />
-						</Tooltip>
-						{menuActive && (
-							<ChannelMenu
-								stream={stream}
-								target={this.state.menuTarget}
-								umiCount={count}
-								isMuted={this.props.mutedStreams[stream.id]}
-								setActivePanel={this.props.setActivePanel}
-								runSlashCommand={this.props.runSlashCommand}
-								closeMenu={this.closeMenu}
-							/>
-						)}
-					</span>
+					{mentions > 0 && <span className="umi">{mentions}</span>}
+					{mentions == 0 && (
+						<span className="align-right">
+							{this.props.services.vsls && (
+								<Icon name="link-external" onClick={this.handleClickStartLiveShare} />
+							)}
+							<Icon name="gear" onClick={this.handleClickStreamSettings} />
+							{menuActive && (
+								<ChannelMenu
+									stream={stream}
+									target={this.state.menuTarget}
+									umiCount={count}
+									isMuted={this.props.mutedStreams[stream.id]}
+									setActivePanel={this.props.setActivePanel}
+									runSlashCommand={this.props.runSlashCommand}
+									closeMenu={this.closeMenu}
+								/>
+							)}
+						</span>
+					)}
 				</li>
 			);
 		});
@@ -553,14 +556,15 @@ export class SimpleChannelPanel extends Component {
 						<Debug text={stream.id}>
 							{icon}
 							{stream.name} {isMeStream && <span className="you"> (you)</span>}
-							{count > 0 ? <span className="umi">{count}</span> : null}
-							<Tooltip title="Close Conversation">
-								<Icon
-									name="x"
-									onClick={this.handleClickCloseDirectMessage}
-									className="align-right"
-								/>
-							</Tooltip>
+							{count > 0 && <span className="umi">{count}</span>}
+							{count == 0 && (
+								<span className="align-right">
+									{this.props.services.vsls && (
+										<Icon name="link-external" onClick={this.handleClickStartLiveShare} />
+									)}
+									<Icon name="x" onClick={this.handleClickCloseDirectMessage} />
+								</span>
+							)}
 						</Debug>
 					</li>
 				)
@@ -604,6 +608,13 @@ export class SimpleChannelPanel extends Component {
 				</ul>
 			</div>
 		);
+	};
+
+	handleClickStartLiveShare = event => {
+		this.handleClickSelectStream(event);
+		setTimeout(() => {
+			this.props.runSlashCommand("liveshare");
+		}, 500);
 	};
 
 	handleClickCreateKnowledge = e => {

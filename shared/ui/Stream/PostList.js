@@ -205,10 +205,8 @@ export default infiniteLoadable(
 			return (
 				<div className="postslist" ref={this.list} onScroll={this.onScroll}>
 					{hasMore || isFetchingMore ? (
-						<div style={{ textAlign: "center" }}>
-							<p>
-								<Icon name="sync" className="spin" /> Loading more posts...
-							</p>
+						<div className="loading-message">
+							<Icon name="sync" className="spin" /> Loading more posts...
 						</div>
 					) : (
 						safe(renderIntro)

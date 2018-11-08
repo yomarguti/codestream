@@ -173,8 +173,6 @@ class ComposeBox extends React.Component {
 	showPopupSelectors(prefix, type) {
 		let itemsToShow = [];
 
-		// console.log("SERVICES: ", this.props.services);
-
 		//filter out yourself
 
 		if (type === "at-mentions") {
@@ -933,7 +931,11 @@ class ComposeBox extends React.Component {
 							{this.renderMessageInput()}
 						</div>
 						<div className="button-group">
-							<Tooltip placement="top" delay=".5" title={submitAnotherLabel}>
+							<Tooltip
+								placement="bottomRight"
+								title={submitAnotherLabel}
+								align={{ targetOffset: ["-40%", "0"] }}
+							>
 								<Button
 									style={{
 										marginLeft: "10px",

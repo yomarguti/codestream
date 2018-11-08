@@ -511,6 +511,7 @@ export class SimpleStream extends Component {
 							setMultiCompose={this.setMultiCompose}
 							runSlashCommand={this.runSlashCommand}
 							isSlackTeam={this.props.isSlackTeam}
+							services={this.props.services}
 						/>
 					)}
 
@@ -1403,7 +1404,7 @@ export class SimpleStream extends Component {
 	};
 
 	startLiveShare = () => {
-		const { activePanel, postStreamId } = this.props;
+		const { postStreamId } = this.props;
 		const threadId = this.state.threadId;
 
 		const text = "Starting Live Share...";
