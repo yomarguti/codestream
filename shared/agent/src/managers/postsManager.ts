@@ -53,14 +53,34 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 
 	@lspHandler(CreatePostRequestType)
 	createPost(request: CreatePostRequest): Promise<CreatePostResponse> {
-		const analytics = Container.instance().analytics;
-		// TODO: Add Category
-		// TODO: Add First Post?
-		analytics.track("Post Created", {
-			Type: "Chat",
-			Thread: request.parentPostId ? "Reply" : "Parent"
+		const resp = this.session.api.createPost(request);
+		resp.then(() => {
+			try {
+				const telemetry = Container.instance().telemetry;
+				let isMarker = false;
+				// Check if it's a marker
+				if (request.codeBlocks != null && request.codeBlocks.length > 0) {
+					isMarker = true;
+				}
+				const payload: {
+					[key: string]: any;
+				} = {
+					Type: "Chat",
+					Thread: request.parentPostId ? "Reply" : "Parent",
+					Marker: isMarker
+				};
+				// TODO: Add Category
+				if (!Container.instance().session.telemetryData.hasCreatedPost) {
+					payload["First Post?"] = new Date().toISOString();
+					Container.instance().session.telemetryData.hasCreatedPost = true;
+				}
+				telemetry.track("Post Created", payload);
+			} catch (ex) {
+				Logger.error(ex);
+			}
 		});
-		return this.session.api.createPost(request);
+
+		return resp;
 	}
 
 	@lspHandler(DeletePostRequestType)

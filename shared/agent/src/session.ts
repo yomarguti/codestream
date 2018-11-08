@@ -54,6 +54,7 @@ import {
 } from "./shared/api.protocol";
 import { Strings } from "./system";
 import { memoize } from "./system/decorators";
+import { MixPanelTelemetryService } from "./telemetry";
 
 const envRegex = /https?:\/\/(pd-|qa-)?api.codestream.(?:us|com)/;
 
@@ -67,6 +68,10 @@ const loginApiErrorMappings: { [k: string]: ApiErrors } = {
 	"RAPI-1003": ApiErrors.NotFound,
 	"USRC-1012": ApiErrors.NotOnTeam
 };
+
+export interface TelemetryData {
+	hasCreatedPost: boolean;
+}
 
 export interface VersionInfo {
 	extension: {
@@ -256,6 +261,11 @@ export class CodeStreamSession {
 		return this._api!;
 	}
 
+	private _telemetryService: MixPanelTelemetryService | undefined;
+	get telemetryService() {
+		return this._telemetryService!;
+	}
+
 	private _codestreamUserId: string | undefined;
 	get codestreamUserId() {
 		return this._codestreamUserId!;
@@ -279,6 +289,17 @@ export class CodeStreamSession {
 	private _userEmail: string | undefined;
 	get userEmail() {
 		return this._userEmail!;
+	}
+
+	private _telemetryData: TelemetryData = {
+		hasCreatedPost: false
+	};
+	get telemetryData() {
+		return this._telemetryData;
+	}
+
+	set telemetryData(data: TelemetryData) {
+		this._telemetryData = data;
 	}
 
 	@memoize
@@ -408,7 +429,11 @@ export class CodeStreamSession {
 			// Initialize Mixpanel tracking
 			// TODO: Check for opt in
 			const user = response.user;
-			const analytics = Container.instance().analytics;
+			const { telemetry } = Container.instance();
+
+			// Set super props
+			this._telemetryData.hasCreatedPost = user.totalPosts > 0;
+
 			const props: { [key: string]: any } = {
 				"Email Address": user.email,
 				"Team ID": this._teamId,
@@ -438,8 +463,8 @@ export class CodeStreamSession {
 				Logger.error(ex);
 			}
 
-			analytics.setDistinctId(this._codestreamUserId);
-			analytics.setSuperProps(props);
+			telemetry.setDistinctId(this._codestreamUserId);
+			telemetry.setSuperProps(props);
 
 			return {
 				loginResponse: { ...response },

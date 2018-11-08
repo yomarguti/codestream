@@ -275,3 +275,16 @@ export interface ReportErrorRequest {
 export const ReportErrorRequestType = new RequestType<ReportErrorRequest, void, void, void>(
 	"codeStream/reporting/error"
 );
+
+/**
+ * @param eventName The name of the Mixpanel you want to track, eg: "Page Viewed"
+ * @param properties Optional properties to pass along with eventName
+ */
+export interface TelemetryRequest {
+	eventName: string;
+	properties?: { [key: string]: string | number | boolean };
+}
+
+export const TelemetryRequestType = new RequestType<TelemetryRequest, void, void, void>(
+	"codeStream/telemetry"
+);

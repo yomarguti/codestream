@@ -8,7 +8,7 @@ import { CodeStreamEnvironment } from "./shared/agent.protocol";
  *
  * Would like for this to eventually be abstracted to swap out analytics services
  */
-export class AnalyticsService {
+export class MixPanelTelemetryService {
 	private _mpInstance: any;
 	private _superProps: object;
 	private _distinctId?: string;

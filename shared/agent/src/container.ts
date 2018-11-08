@@ -1,5 +1,4 @@
 "use strict";
-import { AnalyticsService } from "./analytics";
 import { DocumentManager } from "./documentManager";
 import { ErrorReporter } from "./errorReporter";
 import { GitService } from "./git/gitService";
@@ -13,6 +12,7 @@ import { StreamsManager } from "./managers/streamsManager";
 import { TeamsManager } from "./managers/teamsManager";
 import { UsersManager } from "./managers/usersManager";
 import { CodeStreamSession } from "./session";
+import { MixPanelTelemetryService } from "./telemetry";
 
 class ServiceContainer {
 	constructor(public readonly session: CodeStreamSession) {
@@ -26,7 +26,7 @@ class ServiceContainer {
 		this._users = new UsersManager(session);
 
 		this._git = new GitService(session);
-		this._analytics = new AnalyticsService(session, false); // TODO: Respect VSCode telemetry opt out
+		this._telemetry = new MixPanelTelemetryService(session, false); // TODO: Respect VSCode telemetry opt out
 		this._errorReporter = new ErrorReporter(session);
 
 		this._documents = new DocumentManager();
@@ -38,9 +38,9 @@ class ServiceContainer {
 		return this._errorReporter;
 	}
 
-	private readonly _analytics: AnalyticsService;
-	get analytics() {
-		return this._analytics;
+	private readonly _telemetry: MixPanelTelemetryService;
+	get telemetry() {
+		return this._telemetry;
 	}
 
 	private readonly _documents: DocumentManager;

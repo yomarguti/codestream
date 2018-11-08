@@ -1870,8 +1870,8 @@ function slackTimeout<T>(promise: Promise<T>, message: string): Promise<T> {
 	return Functions.timeout(promise, timeoutMs, {
 		message: message,
 		onTimeout: (resolve, reject, message) => {
-			const analytics = Container.instance().analytics;
-			analytics.track("Slack Timeout", {
+			const telemetry = Container.instance().telemetry;
+			telemetry.track("Slack Timeout", {
 				Message: message || "N/A"
 			});
 			Logger.warn(`SLACK: ${message}: TIMEOUT ${timeoutMs / 1000}s exceeded`);
