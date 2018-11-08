@@ -1,6 +1,6 @@
 "use strict";
 import { Range, RequestType, TextDocumentIdentifier } from "vscode-languageserver-protocol";
-import { CreateCodemarkRequest } from "./agent.protocol.markers";
+import { CreateCodemarkRequest, CSFullCodemark } from "./agent.protocol.markers";
 import {
 	CodemarkType,
 	CSCodemark,
@@ -15,7 +15,7 @@ import {
 } from "./api.protocol";
 
 export interface CSFullPost extends CSPost {
-	codemark?: CSCodemark;
+	codemark?: CSFullCodemark;
 }
 
 export interface CreatePostRequest {

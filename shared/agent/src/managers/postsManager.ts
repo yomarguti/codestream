@@ -5,6 +5,7 @@ import {
 	CreatePostRequest,
 	CreatePostRequestType,
 	CreatePostResponse,
+	CSFullCodemark,
 	DeletePostRequest,
 	DeletePostRequestType,
 	DeletePostResponse,
@@ -440,14 +441,23 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			more: cacheResponse.more
 		} as FetchPostsResponse;
 
-		for (const post of cacheResponse.posts) {
-			let codemark: CSCodemark | undefined;
-			if (post.codemarkId) {
-				codemark = await Container.instance().codemarks.getById(post.codemarkId);
+		for (const csPost of cacheResponse.posts) {
+			let fullCodemark: CSFullCodemark | undefined;
+			if (csPost.codemarkId) {
+				const csCodemark = await Container.instance().codemarks.getById(csPost.codemarkId);
+				fullCodemark = {
+					...csCodemark
+				};
+				if (csCodemark.markerIds) {
+					fullCodemark.markers = [];
+					for (const markerId of csCodemark.markerIds) {
+						fullCodemark.markers.push(await Container.instance().markers.getById(markerId));
+					}
+				}
 			}
 			response.posts.push({
-				...post,
-				codemark
+				...csPost,
+				codemark: fullCodemark
 			});
 		}
 

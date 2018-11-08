@@ -109,7 +109,7 @@ interface DeferredStreamRequest<TResult> {
 	};
 }
 
-function resolve(entities: {
+function cacheSet(entities: {
 	codemarks?: CSCodemark[];
 	markers?: CSMarker[];
 	markerLocations?: CSMarkerLocations[];
@@ -117,48 +117,31 @@ function resolve(entities: {
 	streams?: CSStream[];
 }) {
 	const container = Container.instance();
-	const promises: Promise<any>[] = [];
 	if (entities.codemarks) {
-		promises.push(
-			container.codemarks.resolve({
-				type: MessageType.Codemarks,
-				data: [entities.codemarks]
-			})
-		);
+		for (const codemark of entities.codemarks) {
+			container.codemarks.cacheSet(codemark);
+		}
 	}
 	if (entities.markers) {
-		promises.push(
-			container.markers.resolve({
-				type: MessageType.Codemarks,
-				data: [entities.markers]
-			})
-		);
+		for (const marker of entities.markers) {
+			container.markers.cacheSet(marker);
+		}
 	}
 	if (entities.markerLocations) {
-		promises.push(
-			container.markerLocations.resolve({
-				type: MessageType.MarkerLocations,
-				data: [entities.markerLocations]
-			})
-		);
+		for (const markerLocations of entities.markerLocations) {
+			container.markerLocations.cacheSet(markerLocations);
+		}
 	}
 	if (entities.repos) {
-		promises.push(
-			container.repos.resolve({
-				type: MessageType.Repositories,
-				data: [entities.repos]
-			})
-		);
+		for (const repos of entities.repos) {
+			container.repos.cacheSet(repos);
+		}
 	}
 	if (entities.streams) {
-		promises.push(
-			container.streams.resolve({
-				type: MessageType.Streams,
-				data: [entities.streams]
-			})
-		);
+		for (const stream of entities.streams) {
+			container.streams.cacheSet(stream);
+		}
 	}
-	return Promise.all(promises);
 }
 
 export class SlackApiProvider implements ApiProvider {
@@ -588,7 +571,7 @@ export class SlackApiProvider implements ApiProvider {
 					providerType: ProviderType.Slack
 				});
 				({ codemark, markers, markerLocations, streams, repos } = codemarkResponse);
-				await resolve({
+				cacheSet({
 					codemarks: [codemark],
 					markers,
 					markerLocations,
@@ -652,7 +635,7 @@ export class SlackApiProvider implements ApiProvider {
 					postId: post.id
 				});
 				codemark = response.codemark;
-				await resolve({
+				cacheSet({
 					codemarks: [codemark]
 				});
 			}

@@ -17,6 +17,10 @@ import {
 	ProviderType
 } from "./api.protocol";
 
+export interface CSFullCodemark extends CSCodemark {
+	markers?: CSMarker[];
+}
+
 export interface DidChangeDocumentMarkersNotification {
 	textDocument: TextDocumentIdentifier;
 }
