@@ -172,7 +172,10 @@ export class CodeStreamSession {
 		this.agent.registerHandler(DocumentFromMarkerRequestType, MarkerHandler.documentFromMarker);
 		this.agent.registerHandler(DocumentMarkersRequestType, MarkerHandler.documentMarkers);
 		this.agent.registerHandler(PreparePostWithCodeRequestType, PostHandler.documentPreparePost);
-		this.agent.registerHandler(CreatePostWithCodemarkRequestType, PostHandler.documentPost);
+		this.agent.registerHandler(
+			CreatePostWithCodemarkRequestType,
+			PostHandler.createPostWithCodemark
+		);
 
 		this.agent.registerHandler(DocumentLatestRevisionRequestType, async e => {
 			const revision = await Container.instance().git.getFileCurrentRevision(

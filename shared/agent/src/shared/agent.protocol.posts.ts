@@ -3,11 +3,20 @@ import { Range, RequestType, TextDocumentIdentifier } from "vscode-languageserve
 import { CreateCodemarkRequest } from "./agent.protocol.markers";
 import {
 	CodemarkType,
+	CSCodemark,
 	CSCreatePostRequestCodeBlock,
 	CSCreatePostRequestStream,
+	CSMarker,
+	CSMarkerLocations,
 	CSPost,
-	CSReactions
+	CSReactions,
+	CSRepository,
+	CSStream
 } from "./api.protocol";
+
+export interface CSFullPost extends CSPost {
+	codemark?: CSCodemark;
+}
 
 export interface CreatePostRequest {
 	streamId: string;
@@ -34,6 +43,11 @@ export interface CreatePostInFileStreamRequest {
 
 export interface CreatePostResponse {
 	post: CSPost;
+	codemark?: CSCodemark;
+	markers?: CSMarker[];
+	markerLocations?: CSMarkerLocations[];
+	streams?: CSStream[];
+	repos?: CSRepository[];
 }
 
 export const CreatePostRequestType = new RequestType<
@@ -98,7 +112,9 @@ export interface FetchPostsRequest {
 }
 
 export interface FetchPostsResponse {
-	posts: CSPost[];
+	posts: CSFullPost[];
+	codemarks?: CSCodemark[];
+	markers?: CSMarker[];
 	more?: boolean;
 }
 

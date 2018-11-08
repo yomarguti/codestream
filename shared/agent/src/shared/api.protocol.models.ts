@@ -96,7 +96,6 @@ export interface CSPost extends CSEntity {
 	origin?: "email" | "slack" | "teams";
 	reactions?: { [key: string]: boolean };
 	codemarkId?: string;
-	codemark?: CSCodemark;
 	files?: [
 		{
 			mimetype: string;

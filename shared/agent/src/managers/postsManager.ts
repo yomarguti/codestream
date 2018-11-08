@@ -30,7 +30,7 @@ import {
 	SetPostStatusRequestType,
 	SetPostStatusResponse
 } from "../shared/agent.protocol";
-import { CSPost } from "../shared/api.protocol";
+import { CSCodemark, CSPost } from "../shared/api.protocol";
 import { lsp, lspHandler, Strings } from "../system";
 import { BaseIndex, IndexParams, IndexType } from "./cache";
 import { getValues, KeyValue, UniqueFetchFn } from "./cache/baseCache";
@@ -407,11 +407,23 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		return response.post;
 	}
 
-	fetchPosts(request: FetchPostsRequest): Promise<FetchPostsResponse> {
-		return this.session.api.fetchPosts(request);
+	private async fetchPosts(request: FetchPostsRequest): Promise<FetchPostsResponse> {
+		const response = await this.session.api.fetchPosts(request);
+		const container = Container.instance();
+		if (response.codemarks) {
+			for (const codemark of response.codemarks) {
+				container.codemarks.cacheSet(codemark);
+			}
+		}
+		if (response.markers) {
+			for (const marker of response.markers) {
+				container.markers.cacheSet(marker);
+			}
+		}
+		return response;
 	}
 
-	protected async fetchByParentPostId(criteria: KeyValue<CSPost>[]): Promise<CSPost[]> {
+	private async fetchByParentPostId(criteria: KeyValue<CSPost>[]): Promise<CSPost[]> {
 		const [streamId, parentPostId] = getValues(criteria);
 		const response = await this.session.api.fetchPostReplies({
 			streamId,
@@ -421,8 +433,25 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 	}
 
 	@lspHandler(FetchPostsRequestType)
-	get(request: FetchPostsRequest): Promise<FetchPostsResponse> {
-		return this.cache.getPosts(request);
+	async get(request: FetchPostsRequest): Promise<FetchPostsResponse> {
+		const cacheResponse = await this.cache.getPosts(request);
+		const response = {
+			posts: [],
+			more: cacheResponse.more
+		} as FetchPostsResponse;
+
+		for (const post of cacheResponse.posts) {
+			let codemark: CSCodemark | undefined;
+			if (post.codemarkId) {
+				codemark = await Container.instance().codemarks.getById(post.codemarkId);
+			}
+			response.posts.push({
+				...post,
+				codemark
+			});
+		}
+
+		return response;
 	}
 
 	@lspHandler(FetchPostRepliesRequestType)

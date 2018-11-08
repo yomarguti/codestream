@@ -159,10 +159,12 @@ export function fromSlackDirect(
 
 	let names: string[];
 	if (channel.members != null) {
-		names = channel.members.filter((m: string) => m !== slackUserId).map((m: string) => {
-			const username = usernamesById.get(m);
-			return username === undefined ? m : username || m;
-		});
+		names = channel.members
+			.filter((m: string) => m !== slackUserId)
+			.map((m: string) => {
+				const username = usernamesById.get(m);
+				return username === undefined ? m : username || m;
+			});
 		names.sort((a, b) => a.localeCompare(b));
 	} else {
 		names = ["Unknown"];
@@ -230,7 +232,7 @@ export async function fromSlackPost(
 
 	const timestamp = Number(post.ts.split(".")[0]) * 1000;
 	return {
-		codemark: codemark,
+		codemarkId: codemark && codemark.id,
 		createdAt: timestamp,
 		creatorId: post.user || (post.bot_id && post.username),
 		deactivated: false,
@@ -361,13 +363,11 @@ export function fromSlackPostText(
 		.replace(slackChannelsRegex, (match: string, channel: string, name: string) => {
 			return `#${name}`;
 		})
-		.replace(
-			slackCommandsRegex,
-			(match: string, command: string, label: string) => (label == null ? command : label)
+		.replace(slackCommandsRegex, (match: string, command: string, label: string) =>
+			label == null ? command : label
 		)
-		.replace(
-			slackLinkRegex,
-			(match: string, url: string, label: string) => (label == null ? url : `[${label}](url)`)
+		.replace(slackLinkRegex, (match: string, url: string, label: string) =>
+			label == null ? url : `[${label}](url)`
 		)
 		// Slack always encodes &, <, > so decode them
 		.replace("&amp;", "&")

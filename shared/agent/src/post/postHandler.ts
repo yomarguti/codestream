@@ -86,7 +86,7 @@ export namespace PostHandler {
 		};
 	}
 
-	export async function documentPost({
+	export async function createPostWithCodemark({
 		textDocument: documentId,
 		rangeArray,
 		text,
@@ -104,7 +104,7 @@ export namespace PostHandler {
 		const filePath = URI.parse(documentId.uri).fsPath;
 		const fileContents = lastFullCode;
 
-		let codemark: CreateCodemarkRequest | undefined;
+		let codemarkRequest: CreateCodemarkRequest | undefined;
 		let marker: CreateCodemarkRequestMarker | undefined;
 		let commitHashWhenPosted: string | undefined;
 		let location: CSMarkerLocation | undefined;
@@ -141,7 +141,7 @@ export namespace PostHandler {
 					Container.instance().markerLocations.locationToArray(backtrackedLocation)
 			};
 
-			codemark = {
+			codemarkRequest = {
 				type: type,
 				streamId: streamId,
 				color: color,
@@ -154,25 +154,25 @@ export namespace PostHandler {
 		}
 
 		try {
-			const post = (await Container.instance().posts.createPost({
+			const { post, markers } = await Container.instance().posts.createPost({
 				streamId,
 				text,
 				parentPostId,
-				codemark,
+				codemark: codemarkRequest,
 				commitHashWhenPosted,
 				mentionedUserIds,
 				title,
 				type,
 				assignees,
 				color
-			})).post;
+			});
 
-			if (post.codemark && post.codemark.markerIds && backtrackedLocation) {
+			if (markers && markers.length && backtrackedLocation) {
 				const meta = backtrackedLocation.meta;
 				if (meta && (meta.startWasDeleted || meta.endWasDeleted)) {
 					const uncommittedLocation = {
 						...location!,
-						id: post.codemark.markerIds[0]
+						id: markers[0].id
 					};
 
 					await Container.instance().markerLocations.saveUncommittedLocation(

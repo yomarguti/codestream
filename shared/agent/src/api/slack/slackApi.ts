@@ -13,6 +13,7 @@ import {
 	CreateDirectStreamRequest,
 	CreateMarkerLocationRequest,
 	CreatePostRequest,
+	CreatePostResponse,
 	CreateRepoRequest,
 	CSUnreads,
 	DeletePostRequest,
@@ -538,7 +539,7 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	@log()
-	async createPost(request: CreatePostRequest) {
+	async createPost(request: CreatePostRequest): Promise<CreatePostResponse> {
 		try {
 			const meMessage = request.text != null && request.text.startsWith("/me ");
 
@@ -657,12 +658,14 @@ export class SlackApiProvider implements ApiProvider {
 			}
 
 			const postResponse = await this.getPost({ streamId: streamId, postId: postId });
-
-			if (codemark) {
-				postResponse.post.codemarkId = codemark.id;
-				postResponse.post.codemark = codemark;
-			}
-			return postResponse;
+			return {
+				post: postResponse.post,
+				codemark,
+				markers,
+				markerLocations,
+				streams,
+				repos
+			};
 		} finally {
 			this.updatePostsCount();
 		}

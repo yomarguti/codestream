@@ -111,6 +111,11 @@ export interface CSCreatePostRequest {
 
 export interface CSCreatePostResponse {
 	post: CSPost;
+	codemarks?: CSCodemark[];
+	markers?: CSMarker[];
+	markerLocations?: CSMarkerLocations[];
+	streams?: CSStream[];
+	repos?: CSRepository[];
 }
 
 export interface CSCreateRepoRequest {
@@ -248,6 +253,8 @@ export interface CSGetPostResponse {
 
 export interface CSGetPostsResponse {
 	posts: CSPost[];
+	codemarks?: CSCodemark[];
+	markers?: CSMarker[];
 	more?: boolean;
 }
 
