@@ -105,7 +105,6 @@ import {
 import {
 	ChannelServiceType,
 	CodemarkType,
-	CSCodeBlock,
 	CSMarker,
 	CSMePreferences,
 	CSPost,
@@ -323,19 +322,26 @@ export class CodeStreamAgentConnection implements Disposable {
 			mentionedUserIds?: string[],
 			parentPostId?: string,
 			title?: string,
-			type?: string,
+			type?: CodemarkType,
 			assignees?: [],
 			color?: string
 		) {
+			let codemark;
+			if (type || title || assignees || color) {
+				codemark = {
+					title: title,
+					type: type || CodemarkType.Comment,
+					assignees: assignees,
+					color: color
+				};
+			}
+
 			return this._connection.sendRequest(CreatePostRequestType, {
 				streamId: streamId,
 				text: text,
 				mentionedUserIds: mentionedUserIds,
 				parentPostId: parentPostId,
-				title: title,
-				type: type,
-				assignees: assignees,
-				color: color
+				codemark: codemark
 			});
 		}
 
