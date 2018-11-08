@@ -46,7 +46,7 @@ export class BaseCache<T> {
 
 	invalidate() {
 		for (const [field, index] of this.indexes.entries()) {
-			Logger.log(`${this.constructor.name}: Invalidating index ${field}`);
+			Logger.debug(`${Logger.toLoggableName(this)}: Invalidating index ${field}`);
 			index.invalidate();
 		}
 	}

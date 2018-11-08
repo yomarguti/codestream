@@ -2,9 +2,8 @@
 import { Emitter, Event } from "vscode-languageserver";
 import { Logger, TraceLevel } from "../../logger";
 import { CSUnreads } from "../../shared/agent.protocol";
-import { CSLastReads } from "../../shared/api.protocol";
-import { Functions } from "../../system/function";
-import { Iterables } from "../../system/iterable";
+import { CSLastReads, CSMePreferences } from "../../shared/api.protocol";
+import { Iterables, log } from "../../system";
 import { ApiProvider } from "../apiProvider";
 
 export class SlackUnreads {
@@ -16,9 +15,7 @@ export class SlackUnreads {
 	private _lastReads: CSLastReads = Object.create(null);
 	private _unreads = new Map<string, { mentions: number; unreads: number }>();
 
-	private _dirty = false;
-	private _suspended = false;
-	private _values: CSUnreads | undefined;
+	private _readChanges = new Set<string>();
 
 	constructor(private readonly _api: ApiProvider) {}
 
@@ -26,31 +23,7 @@ export class SlackUnreads {
 		return this.values();
 	}
 
-	reset() {
-		this.suspend();
-
-		this._lastReads = Object.create(null);
-		this._unreads.clear();
-	}
-
-	resume() {
-		if (!this._suspended) return;
-
-		this._suspended = false;
-		this._values = undefined;
-
-		if (this._dirty) {
-			this.fireChanged();
-		}
-	}
-
-	suspend() {
-		if (this._suspended) return;
-
-		this._suspended = true;
-		this._values = this.values();
-	}
-
+	@log()
 	increment(streamId: string, mentioned: boolean) {
 		let unreads = this._unreads.get(streamId);
 		if (unreads !== undefined) {
@@ -71,42 +44,121 @@ export class SlackUnreads {
 		this.fireChanged();
 	}
 
-	async update(streamId: string, postId: string, mentions: number, unreads: number) {
-		this._lastReads[streamId] = postId;
+	@log()
+	async update(streamId: string, lastReadPostId: string, mentions: number, unreads: number) {
+		const { preferences } = await this._api.getPreferences();
+
+		const changed = this.updateCore(streamId, lastReadPostId, mentions, unreads, preferences);
+		if (changed) {
+			this.fireChanged();
+		}
+	}
+
+	@log()
+	async updateFromCounts(counts: {
+		channels: { [id: string]: any };
+		groups: { [id: string]: any };
+		ims: { [id: string]: any };
+	}) {
+		let changed;
 
 		const { preferences } = await this._api.getPreferences();
-		if (Functions.safe(() => preferences.mutedStreams[streamId] === true)) return;
 
-		this._unreads.set(streamId, { mentions: mentions, unreads: unreads });
-
-		if (!this._suspended) {
-			Logger.debug(
-				`Unreads.update(${streamId}):`,
-				`lastRead=${postId}, mentions=${mentions}, unreads=${unreads}`
-			);
+		for (const [id, c] of Object.entries(counts.channels)) {
+			if (
+				this.updateCore(
+					id,
+					c.last_read,
+					c.mention_count_display || 0,
+					c.unread_count_display || 0,
+					preferences
+				)
+			) {
+				changed = true;
+			}
 		}
 
-		this.fireChanged();
+		for (const [id, g] of Object.entries(counts.groups)) {
+			if (
+				this.updateCore(
+					id,
+					g.last_read,
+					g.mention_count_display || 0,
+					g.unread_count_display || 0,
+					preferences
+				)
+			) {
+				changed = true;
+			}
+		}
+
+		for (const [id, im] of Object.entries(counts.ims)) {
+			if (this.updateCore(id, im.last_read, im.dm_count || 0, im.dm_count || 0, preferences)) {
+				changed = true;
+			}
+		}
+
+		if (changed) {
+			this.fireChanged();
+		}
+	}
+
+	private async updateCore(
+		streamId: string,
+		lastReadPostId: string | undefined,
+		mentions: number,
+		unreads: number,
+		preferences: CSMePreferences | undefined
+	) {
+		let changed = false;
+		if (
+			lastReadPostId !== undefined &&
+			(this._lastReads[streamId] !== undefined || lastReadPostId !== "0000000000.000000")
+		) {
+			if (this._lastReads[streamId] !== lastReadPostId) {
+				changed = true;
+				this._lastReads[streamId] = lastReadPostId;
+
+				this._readChanges.add(streamId);
+			}
+		}
+
+		if (
+			preferences != null &&
+			preferences.mutedStreams != null &&
+			preferences.mutedStreams[streamId] === true
+		) {
+			// Make sure the muted stream shows 0 mentions & unreads
+			mentions = 0;
+			unreads = 0;
+		}
+
+		let unreadsChanged = true;
+		const previous = this._unreads.get(streamId);
+		if (previous != null) {
+			if (previous.mentions === mentions && previous.unreads === unreads) {
+				unreadsChanged = false;
+			}
+		} else if (mentions === 0 && unreads === 0) {
+			unreadsChanged = false;
+		}
+
+		if (unreadsChanged) {
+			changed = true;
+			this._unreads.set(streamId, { mentions: mentions, unreads: unreads });
+		}
+
+		return changed;
 	}
 
 	private fireChanged() {
-		if (this._suspended) {
-			this._dirty = true;
-
-			return;
-		}
-
-		this._dirty = false;
-
 		const values = this.values();
 		if (Logger.level === TraceLevel.Debug) {
 			let loggableUnreads = Iterables.join(
-				Iterables.filterMap(
-					this._unreads.entries(),
-					([id, count]) =>
-						count.mentions > 0 || count.unreads > 0
-							? `\t${id} = ${count.mentions} mention(s), ${count.unreads} unread(s)`
-							: undefined
+				Iterables.filterMap(this._unreads.entries(), ([id, count]) =>
+					count.mentions > 0 || count.unreads > 0
+						? `\t${id} = ${count.mentions} mention(s), ${count.unreads} unread(s)`
+						: undefined
 				),
 				"\n"
 			);
@@ -125,8 +177,6 @@ export class SlackUnreads {
 	}
 
 	private values(): CSUnreads {
-		if (this._values !== undefined) return this._values;
-
 		const mentions = Object.create(null);
 		const unreads = Object.create(null);
 
@@ -143,8 +193,14 @@ export class SlackUnreads {
 			}
 		}
 
+		const lastReads: CSLastReads = Object.create(null);
+		for (const streamId of this._readChanges) {
+			lastReads[streamId] = this._lastReads[streamId];
+		}
+		this._readChanges.clear();
+
 		return {
-			lastReads: this._lastReads,
+			lastReads: lastReads,
 			mentions: mentions,
 			unreads: unreads,
 			totalMentions: totalMentions,

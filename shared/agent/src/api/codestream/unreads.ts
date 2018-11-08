@@ -4,8 +4,7 @@ import { Container } from "../../container";
 import { Logger } from "../../logger";
 import { CSUnreads } from "../../shared/agent.protocol";
 import { CSLastReads, CSPost, CSStream, StreamType } from "../../shared/api.protocol";
-import { Arrays } from "../../system/array";
-import { Functions } from "../../system/function";
+import { Arrays, Functions, log } from "../../system";
 import { ApiProvider } from "../apiProvider";
 
 export class CodeStreamUnreads {
@@ -21,6 +20,7 @@ export class CodeStreamUnreads {
 	constructor(private readonly _api: ApiProvider) {}
 
 	private _computePromise: Promise<void> | undefined;
+	@log()
 	async compute(lastReads: CSLastReads | undefined) {
 		if (this._computePromise !== undefined) {
 			await this._computePromise;

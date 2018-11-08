@@ -8,6 +8,7 @@ import {
 	PubnubStatus,
 	StatusChangeEvent
 } from "../../pubnub/pubnubConnection";
+import { log } from "../../system";
 import { ConnectionRTMessage, ConnectionStatus, MessageType, RawRTMessage } from "../apiProvider";
 import { CodeStreamApiProvider } from "./codestreamApi";
 
@@ -63,6 +64,7 @@ export class PubnubEvents {
 		return this._pubnubConnection.online;
 	}
 
+	@log()
 	connect(streamIds?: string[]): Disposable {
 		this._disposable = this._pubnubConnection.initialize({
 			accessToken: this._accessToken,
@@ -88,6 +90,7 @@ export class PubnubEvents {
 		return this._disposable;
 	}
 
+	@log()
 	disconnect() {
 		if (this._disposable === undefined) return;
 
@@ -95,6 +98,7 @@ export class PubnubEvents {
 		this._disposable = undefined;
 	}
 
+	@log()
 	subscribeToStream(streamId: string) {
 		if (!this._subscribedStreamIds.has(streamId)) {
 			this._pubnubConnection.subscribe([`stream-${streamId}`]);
@@ -102,6 +106,7 @@ export class PubnubEvents {
 		}
 	}
 
+	@log()
 	unsubscribeFromStream(streamId: string) {
 		if (this._subscribedStreamIds.has(streamId)) {
 			this._pubnubConnection.unsubscribe([`stream-${streamId}`]);

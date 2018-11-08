@@ -5,6 +5,7 @@ import { Emitter, Event } from "vscode-languageserver";
 import { Container } from "../../container";
 import { Logger } from "../../logger";
 import { StreamType } from "../../shared/api.protocol";
+import { log } from "../../system";
 import {
 	MessageType,
 	PreferencesRTMessage,
@@ -178,6 +179,7 @@ export class SlackEvents {
 		return this._slackRTM.connected;
 	}
 
+	@log()
 	async connect(userIds?: string[]) {
 		if (userIds !== undefined && userIds.length !== 0) {
 			this._slackRTM.subscribePresence(userIds);
@@ -186,20 +188,22 @@ export class SlackEvents {
 		void (await this._slackRTM.start());
 	}
 
+	@log()
 	async disconnect() {
 		try {
 			return await this._slackRTM.disconnect();
 		} catch (ex) {
-			Logger.error(ex);
+			Logger.error(ex, this.disconnect);
 		}
 	}
 
+	@log()
 	async reconnect() {
 		try {
 			await this._slackRTM.disconnect();
 			return await this._slackRTM.start();
 		} catch (ex) {
-			Logger.error(ex);
+			Logger.error(ex, this.reconnect);
 			throw ex;
 		}
 	}
@@ -208,15 +212,14 @@ export class SlackEvents {
 		Logger.logWithDebugParams(`SlackEvents.onSlackConnectionChanged`, e);
 	}
 
+	@log({
+		prefix: (context, e: SlackEvent) =>
+			`${context.prefix}(${e.type}${e.subtype ? `:${e.subtype}` : ""})`
+	})
 	private async onSlackChannelChanged(e: SlackEvent) {
 		const { type, subtype } = e;
 
 		try {
-			Logger.logWithDebugParams(
-				`SlackEvents.onSlackChannelChanged(${type}${subtype ? `:${subtype}` : ""})`,
-				e
-			);
-
 			switch (type) {
 				case SlackRtmEventTypes.ChannelArchived:
 				case SlackRtmEventTypes.GroupArchived: {
@@ -394,19 +397,18 @@ export class SlackEvents {
 				}
 			}
 		} catch (ex) {
-			Logger.error(ex, `SlackEvents.onSlackChannelChanged(${type}${subtype ? `:${subtype}` : ""})`);
+			Logger.error(ex, this.onSlackChannelChanged);
 		}
 	}
 
+	@log({
+		prefix: (context, e: SlackEvent) =>
+			`${context.prefix}(${e.type}${e.subtype ? `:${e.subtype}` : ""})`
+	})
 	private async onSlackMessageChanged(e: SlackEvent) {
 		const { type, subtype } = e;
 
 		try {
-			Logger.logWithDebugParams(
-				`SlackEvents.onSlackMessageChanged(${type}${subtype ? `:${subtype}` : ""})`,
-				e
-			);
-
 			switch (type) {
 				case SlackRtmEventTypes.Message:
 					switch (subtype) {
@@ -493,10 +495,7 @@ export class SlackEvents {
 							break;
 					}
 				} catch (ex) {
-					Logger.error(
-						ex,
-						`SlackEvents.onSlackMessageChanged(${type}${subtype ? `:${subtype}` : ""})`
-					);
+					Logger.error(ex, this.onSlackMessageChanged);
 				}
 
 				const { preferences } = await this._api.getPreferences();
@@ -530,16 +529,17 @@ export class SlackEvents {
 			message.data = await Container.instance().streams.resolve(message);
 			this._onDidReceiveMessage.fire(message);
 		} catch (ex) {
-			Logger.error(ex, `SlackEvents.onSlackMessageChanged(${type}${subtype ? `:${subtype}` : ""})`);
+			Logger.error(ex, this.onSlackMessageChanged);
 		}
 	}
 
+	@log({
+		prefix: (context, e: SlackEvent) => `${context.prefix}(${e.type})`
+	})
 	private async onSlackUserChanged(e: SlackEvent) {
 		const { type } = e;
 
 		try {
-			Logger.logWithDebugParams(`SlackEvents.onSlackUserChanged(${type}})`, e);
-
 			switch (type) {
 				case SlackRtmEventTypes.DndChanged: {
 					const message = {
@@ -689,7 +689,7 @@ export class SlackEvents {
 				}
 			}
 		} catch (ex) {
-			Logger.error(ex, `SlackEvents.onSlackUserChanged(${type})`);
+			Logger.error(ex, this.onSlackUserChanged);
 		}
 	}
 }

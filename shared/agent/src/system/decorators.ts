@@ -1,6 +1,6 @@
 "use strict";
 import { RequestType } from "vscode-languageserver-protocol";
-import { Logger, TraceLevel } from "../logger";
+import { LogCallerContext, Logger, TraceLevel } from "../logger";
 import { Functions } from "./function";
 import { Strings } from "./string";
 
@@ -93,13 +93,7 @@ export function log<T>(
 			) {
 				let instanceName: string;
 				if (this != null) {
-					instanceName = this.constructor != null ? this.constructor.name : "";
-					// Strip webpack module name (since I never name classes with an _)
-					const index = instanceName.indexOf("_");
-					if (index !== -1) {
-						instanceName = instanceName.substr(index + 1);
-					}
-
+					instanceName = Logger.toLoggableName(this);
 					if (this.constructor != null && this.constructor[LogInstanceNameFn]) {
 						instanceName = target.constructor[LogInstanceNameFn](this, instanceName);
 					}
@@ -111,10 +105,6 @@ export function log<T>(
 				let prefix: string;
 				if (options.correlate || options.timed) {
 					correlationId = correlationCounter++;
-					if (options.correlate) {
-						// If we are correlating, get the class fn in order to store the correlationId if needed
-						(isClass ? target[key] : fn).logCorrelationId = correlationId;
-					}
 					prefix = `[${correlationId.toString(16)}] ${
 						instanceName ? `${instanceName}.` : ""
 					}${key}`;
@@ -134,6 +124,12 @@ export function log<T>(
 						...args
 					);
 				}
+
+				// Get the class fn in order to store the current log context
+				(isClass ? target[key] : fn).$log = {
+					correlationId: correlationId,
+					prefix: prefix
+				} as LogCallerContext;
 
 				if (!options.args || args.length === 0) {
 					if (options.enter != null) {
